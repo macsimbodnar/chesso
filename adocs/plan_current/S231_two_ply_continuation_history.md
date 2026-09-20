@@ -670,3 +670,28 @@ holds the machine, because this step's own verdict commit is the first one that
 block is owed in -- PLAN's "strictly necessary" clause, as `status.md` recorded
 before launch. Its brief forbids every build, test run and match until the lane
 ends; the Tier-1 gate over its result is the coordinator's, after `SPSA-DONE`.
+
+**Mid-run read at a quarter, 20:52, iteration 313 of 1250 (coordinator).**
+The three pre-registered readings, recorded whatever they say: `c_scale`
+2.055 -> **1.150**, the same figure S222's lane showed at its quarter; `y`
+centred with real spread -- mean -0.67, standard deviation 5.64, range -17 to
++18, 8.9 % of iterations at exactly zero -- not the "barely changing" trajectory
+the fishtest wiki calls useless; **no axis has touched a bound** (0.0 % pinned
+on all six). The vector itself has barely moved: `ContHistBonus` 17 -> 18,
+`ContHistMalus` 18 -> 19, `ContHistWeight` 26 -> 24 (range so far 22 to 26),
+`ContHist2Bonus` 17 -> 20, `ContHist2Malus` 18 -> 18, `ContHist2Weight`
+26 -> 26 (range 25 to 29). W 5121 L 5331 D 4620 over 15072 games in the
+trajectory; `tools/forfeit_report.py` over the run's PGN: **0 forfeits on either
+side** of 15089 games. Load 11.8 on twelve threads, no second load. Nothing
+here is a result (DEC-019): the fit is read at the end and the SPRT decides.
+
+**Mid-run read at a half, 23:02, iteration 625 of 1250 (coordinator).**
+`c_scale` **1.072**, again the figure S222's lane showed at its half, decaying
+towards 1 as designed; `y` mean -0.21, standard deviation 5.45, range -17 to
++18, 7.7 % of iterations at exactly zero; **no axis has touched a bound**.
+Vector at the half: `ContHistBonus` 18, `ContHistMalus` 18, `ContHistWeight`
+25 (range so far 22 to 26), `ContHist2Bonus` 18, `ContHist2Malus` 20,
+`ContHist2Weight` **23** (range 21 to 29). W 10394 L 10527 D 9127 over 30048
+games; **0 forfeits either side** of 30078 games in the PGN. Load 12.1, no
+second load. The pace holds at 25.2 s an iteration, so `SPSA-DONE` is expected
+near 03:27. Nothing here is a result (DEC-019).
