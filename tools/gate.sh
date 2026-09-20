@@ -32,6 +32,23 @@ set -euo pipefail
 # "Ends with" in the COMMITS rule is read as "carries in its trailer block":
 # commits here end with `Co-Authored-By:`, so the whole message is searched.
 #
+# THE SECOND RULE, DEC-220 and S233. A commit that closes an SPRT verdict --
+# H1, H0 or no verdict -- carries the run's result block in fastchess's own
+# line names, so that `git log` is the measurement ledger and
+# `tools/ledger.py` can regenerate `plan.md`'s table from it:
+#
+#   SPRT | cand <sha> vs ref <sha>, <tc>, Hash=<n>, <book>, {e0, e1} nElo
+#   Elo | <x> +/- <y>, nElo <x> +/- <y>
+#   LLR | <l> (<a>, <b>) -> H1|H0|none
+#   Games | N: <n> W: <w> L: <l> D: <d>, Ptnml [<5>]
+#   Wall | <h> h <m> m, <g> games/h, forfeits <f>
+#   Log | adocs/data/<file>
+#
+# An `SPRT |` line is the trigger: with one in the message all six are owed,
+# each in that shape, and the two shas have to be the `cand-<sha>` and
+# `ref-<sha>` of the named log's own `Results of` line. A message with no
+# `SPRT |` line is not touched by any of this.
+#
 # ON THIS MACHINE: `clang-format.sh` pins major 23 and the workstation has 22,
 # so `export CLANG_FORMAT_MAJOR=22` before running this (`.moltke.local.md`,
 # DEC-146). The pin is not overridden here: a gate that silences its own
@@ -142,6 +159,68 @@ if [[ -n "$message_file" ]]; then
 else
   touched="$(git diff-tree --no-commit-id --name-only -r "$ref" -- src/)"
   message="$(git log -1 --format=%B "$ref")"
+fi
+
+# DEC-220'S RESULT BLOCK, checked here -- immediately after the message is
+# read and before the `Bench:` line it sits above -- rather than ahead of the
+# suite. The order of everything else is left exactly as it was and the whole
+# of S233's diff to this script is this block; the price is that a typo in a
+# block is reported after the build rather than before it.
+sprt_lines="$(printf '%s\n' "$message" | grep -cE '^SPRT \|' || true)"
+
+if ((sprt_lines != 0)); then
+  # One of each of the six, in any order. The order is DEC-220's prose and
+  # nothing downstream reads it -- `tools/ledger.py` parses by line name. Two
+  # `SPRT |` lines are a different matter: "the block's shas" would stop
+  # meaning one thing, so a repeat of any line is refused.
+  for name in SPRT Elo LLR Games Wall Log; do
+    case "$name" in
+      SPRT)
+        shape='^SPRT \| cand [0-9a-f]{7,40} vs ref [0-9a-f]{7,40}, [^,]+, Hash=[0-9]+, [^,]+, \{-?[0-9]+(\.[0-9]+)?, -?[0-9]+(\.[0-9]+)?\} nElo$' ;;
+      Elo)
+        shape='^Elo \| [-+]?[0-9]+(\.[0-9]+)? \+/- [0-9]+(\.[0-9]+)?, nElo [-+]?[0-9]+(\.[0-9]+)? \+/- [0-9]+(\.[0-9]+)?$' ;;
+      LLR)
+        shape='^LLR \| [-+]?[0-9]+(\.[0-9]+)? \([-+]?[0-9]+(\.[0-9]+)?, [-+]?[0-9]+(\.[0-9]+)?\) -> (H1|H0|none)$' ;;
+      Games)
+        shape='^Games \| N: [0-9]+ W: [0-9]+ L: [0-9]+ D: [0-9]+, Ptnml \[[0-9]+, [0-9]+, [0-9]+, [0-9]+, [0-9]+\]$' ;;
+      Wall)
+        shape='^Wall \| [0-9]+ h [0-9]+ m, [0-9]+(\.[0-9]+)? games/h, forfeits [0-9]+$' ;;
+      Log)
+        shape='^Log \| adocs/data/[A-Za-z0-9._/-]+$' ;;
+    esac
+
+    present="$(printf '%s\n' "$message" | grep -cE "^$name \|" || true)"
+    ((present != 0)) \
+      || fail "the message carries an 'SPRT |' line, so DEC-220's block is owed, and its '$name |' line is missing"
+    ((present == 1)) \
+      || fail "the message carries $present '$name |' lines; DEC-220's block has exactly one of each"
+
+    shaped="$(printf '%s\n' "$message" | grep -cE "$shape" || true)"
+    ((shaped == 1)) \
+      || fail "the '$name |' line is not in DEC-220's shape: [$(printf '%s\n' "$message" | grep -E "^$name \|" | head -1)]"
+  done
+
+  # The block against its own evidence. Without this the six lines are only a
+  # claim; with it a verdict in `git log` is pinned to the log that produced
+  # it, which is what DEC-020 made attribution depend on.
+  sprt_line="$(printf '%s\n' "$message" | grep -E '^SPRT \|' | head -1)"
+  cand_sha="$(printf '%s\n' "$sprt_line" | sed -E 's/^SPRT \| cand ([0-9a-f]+) vs ref ([0-9a-f]+),.*/\1/')"
+  ref_sha="$(printf '%s\n' "$sprt_line" | sed -E 's/^SPRT \| cand ([0-9a-f]+) vs ref ([0-9a-f]+),.*/\2/')"
+  log_path="$(printf '%s\n' "$message" | grep -E '^Log \|' | head -1 | sed -E 's/^Log \| //')"
+
+  [[ -f "$log_path" ]] \
+    || fail "the 'Log |' line names [$log_path], which is not a file in this repository"
+  git ls-files --error-unmatch "$log_path" > /dev/null 2>&1 \
+    || fail "the log [$log_path] is not tracked; a verdict's evidence is committed with it"
+
+  if ! grep -qE "^Results of cand-$cand_sha vs ref-$ref_sha( |\$)" "$log_path"; then
+    results_line="$(grep -E '^Results of ' "$log_path" | head -1 || true)"
+    [[ -n "$results_line" ]] \
+      || fail "[$log_path] carries no 'Results of cand-<sha> vs ref-<sha>' line; it is not a fastchess run log"
+    fail "the block says cand $cand_sha vs ref $ref_sha, [$log_path] says [$results_line]"
+  fi
+
+  echo "SPRT block checked: cand $cand_sha vs ref $ref_sha against $log_path"
 fi
 
 bench_lines="$(printf '%s\n' "$message" | grep -cE '^Bench: [0-9]+$' || true)"

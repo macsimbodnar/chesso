@@ -5,26 +5,72 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-19, by hand.
+Updated: 2026-09-20, by hand.
 
-- **S231's SPSA lane is running, launched 2026-09-19 18:41:56 by the
-  coordinator; expected end near 03:27 on 2026-09-20, ceiling 12:42.** Pid
-  3430959 (`.tuning/spsa_s231.pid`), log `.tuning/spsa_s231.log`, output
-  `.tuning/spsa_s231_20260919_184156`, HEAD `0c3f0eb` clean, governor
-  `performance` as found (DEC-195, recorded not set), load 2.27 before launch
-  and no engine alive. `check` passed 6 of 6 with node counts identical to
-  phase one's. Watcher armed (`Monitor`, persistent, 60 s poll of the whole
-  log, four exits, mid-run reads announced at iterations 313 and 625). Open
-  findings named in the step file's launch section: none reachable in play;
-  S231's I03 mutant gap is filler. **Meanwhile S233 is in work by a fresh
-  Opus 5 subagent** (brief `.tuning/coord/S233_brief.md`): agent-only, no
-  build, no test run and no match until `SPSA-DONE`; the coordinator runs the
-  Tier-1 gate over its result after the lane and commits. Then S232 the same
-  way. After `SPSA-DONE`: read the trajectory against the header's six
-  pre-registered readings, then phase three by a fresh agent (fitted defaults,
-  census re-run, `gate_extra`, the SPRT's pre-registration naming the fitted
-  values), then the gainer SPRT `{0, 5}` against `3a649c0`, whose closing
-  commit is the first to carry DEC-220's block.
+- **S231's lane is done, 2026-09-20 03:22:41 -- `SPSA-DONE`, 8 h 40 m 45 s
+  against the 8 h 45 m estimate, 25.00 s an iteration, 60000 games, W 20794
+  L 20774 D 18432, 0 forfeits either side -- and S233 is complete and
+  committed on the gate the freed machine allowed.** The driver's rounded
+  vector: `ContHistBonus` 17 -> 18, `ContHistMalus` 18 -> 17,
+  `ContHistWeight` 26 -> 24, `ContHist2Bonus` 17 -> 18, `ContHist2Malus`
+  18 -> 20, `ContHist2Weight` 26 -> **24**. Against the lane's pre-registered
+  readings: the vector moved (not stuck, the SPRT owed either way);
+  `ContHist2Weight` ended **near 26**, so the SPRT alone decides and no
+  pinned-zero attribution run is owed; `ContHistWeight` moved two units, not
+  "a long way", and the SPRT's pre-registration names every carried value.
+  No axis touched a bound at any point; `c_scale` 1.150 / 1.072 / 1.000 at a
+  quarter, a half and the end -- S222's exact figures -- and `y` centred (mean
+  0.016, sd 5.47, 8.1 % zeros); both mid-run reads are in the step file's
+  lane section. **Gate over the tree with S233 and S232: 40 of 40 in both
+  builds, format clean** (`.tuning/coord/gate_2026-09-20_s233_s232.log`).
+  **S233 done** (stamp, `plan_done/`, DEC-223 for the ledger's class rule);
+  the ledger and its figures in `plan.md` are now `tools/ledger.py`'s output.
+  **Next, in order:** S232's completion commit (docs only, F06 to closed);
+  then phase three of S231 by a fresh Opus 5 agent from
+  `.tuning/coord/S231_phase3_brief.md` (filled with the fit): the six
+  defaults, goldens, `bench` and `search_bench`, the census on the fitted
+  build, `adocs/data/S231_sprt.sh` pre-registered with `REF=3a649c0`; then
+  the landing commit with its `Bench:` line, Debug self-play, `gate_extra`,
+  and the gainer SPRT `{0, 5}` -- whose closing commit is the first to carry
+  DEC-220's block (subject "Record S231's <verdict> for ...", `CAND=<sha>`
+  on the run). Machine idle; no watcher armed; the lane's watcher exited on
+  its marker.
+
+- **Handover, 2026-09-19 19:40 (superseded by the 2026-09-20 entry above):
+  the lane runs, S233 and S232 are both implemented, fast-checked and
+  repaired, and neither is committed -- the Tier-1 gate over S233's tooling
+  waits for `SPSA-DONE`.** The lane
+  (launched 18:41:56, pid 3430959, `.tuning/spsa_s231.log`, output
+  `.tuning/spsa_s231_20260919_184156`) ran 132 iterations by 19:37 at 25.2 s
+  each, 0 forfeits, so it ends near 03:27; `check` passed 6 of 6 with phase
+  one's node counts; watcher armed (`Monitor`, persistent, four exits,
+  mid-run reads announced at 313 and 625). **S233** (in `plan_current/`):
+  the gate's block check, `tools/ledger.py`, `adocs/data/ledger_seed.tsv`
+  (twenty rows), `test_ledger` (19 cases) and `test_gate_script` cases 11 to
+  17, `plan.md`'s ledger section regenerated (table byte-identical, four
+  figures digit for digit), DEV_MANUAL's block section; fast check "trivial
+  fixes", all applied; the coordinator re-derived the class arithmetic for
+  DEC-222's seven added verdicts (46 to 56 slow, 325 to 394 h, floor 218 to
+  263 h) and the slow-class sentence (6 h 56 m, 16200 games). Its class rule
+  -- nElo interval against the bounds pair, S149 and S207 kept hand-classed
+  -- is DEC-223, drafted at `.tuning/coord/DEC-223_draft.md` and appended
+  at the completing commit. **S232** (in `plan_current/`): eighteen seeds
+  reformed in S099/S110/S111, S110's twelve figures struck, S111's PR
+  record-only, the wiki weight formula found to be another engine's code and
+  made a (b); fast check "trivial fixes", applied; one reviewer finding
+  withdrawn on evidence (`RfpMaxDepth`'s comment still records the median
+  11). Prose checks green over the whole tree with both steps' edits.
+  **Commit order after the lane:** gate (`CLANG_FORMAT_MAJOR=22`, both
+  builds) -> complete S233 (stamp, `plan_done/`, lists via
+  `.tuning/coord/complete_step_lists.py`, DEC-223, F06 stays planned) ->
+  complete S232 (docs only; flip F06 to closed) -> fill and spawn
+  `.tuning/coord/S231_phase3_brief.md` -> landing commit with `Bench:` ->
+  Debug self-play and `gate_extra` -> the gainer SPRT against `3a649c0`,
+  whose closing commit is the first to carry DEC-220's block (subject in
+  the form "Record S231's H1 for ...", `CAND=<sha>` set on the run).
+  Also
+  regenerable `.ref-builds/` worktrees were pruned for disk (root FS 97 %
+  -> 96 %, 18 GB free); `3a649c0` will be rebuilt by `fastchess.sh`.
 
 - **The 2026-09-19 analysis of literature and open-source resources was
   adversarially reviewed and the owner ruled on nine items the same day; nothing is measured

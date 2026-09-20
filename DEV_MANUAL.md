@@ -734,6 +734,64 @@ is the staged one, so the run is refused outright when the working tree has
 unstaged edits: a signature taken from a tree the commit will not contain is
 worse than no signature.
 
+**The second thing it enforces is DEC-220's result block, from S233.** A
+commit that closes an SPRT verdict -- H1, H0 or no verdict, every one --
+carries the run's result after its body and before `Bench:`, in fastchess's
+own line names:
+
+```
+SPRT | cand 8d60551 vs ref efdbc9b, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 5.75 +/- 4.37, nElo 7.44 +/- 5.65
+LLR | 2.97 (-2.94, 2.94) -> H1
+Games | N: 14510 W: 4559 L: 4319 D: 5632, Ptnml [603, 1695, 2522, 1729, 706]
+Wall | 6 h 49 m, 2129.6 games/h, forfeits 0
+Log | adocs/data/S098_v3_leg1_sprt.log
+```
+
+Every number there is in fastchess's own final block except the wall time and
+the rate: `Total Time: hh:mm:ss` is fastchess's own last line, and the rate is
+the games divided by it. What `fastchess.sh` itself prints after that block is
+the census -- its closing `awk` writes the `draws`, `decisive` and `forfeits`
+lines, and `forfeits  0 of 14510, 0.00 %` is where the block's forfeit count
+comes from. The two shas are the ones the banner pinned, as `cand-<sha>` and
+`ref-<sha>` label them throughout the log.
+
+**The block can only be written for a run launched with `CAND=<sha>`.**
+`fastchess.sh` sets `cand_name` to `candidate` and overwrites it with
+`cand-<sha>` only when `CAND` named a commit, so a default `./fastchess.sh
+--fast` log says `Results of candidate vs ref-<sha>` and no block over it can
+ever pass the gate: there is no candidate sha in the log for the block to
+agree with. Of the 25 logs under `adocs/data/` carrying a `Results of` line,
+10 are in the `cand-<sha>` form and 15 are not -- 9 bare `candidate` and 6
+with an ad-hoc `candidate-<label>`. Every verdict from S091 on used `CAND`.
+
+**Any line starting at column 0 with `SPRT |` is a block**, to the gate and to
+`tools/ledger.py` both. A commit message that *quotes* the format -- a
+documentation commit, for instance -- must indent the quoted lines, or the
+gate will demand the other five and a log to check them against. The patterns
+are anchored at both ends, so a trailing space on a block line is refused too;
+that is reachable in `--message` mode, where nothing has stripped the file
+yet, and the refusal echoes the offending line in brackets, which is where the
+space becomes visible.
+
+An `SPRT |` line is the trigger. With one in the message the gate requires all
+six lines, one of each, each matching a tight pattern -- the six in `BLOCK_RE`
+in `tools/ledger.py` are the same patterns -- and it then reads the `Log |`
+path, which must exist, must be tracked, and must carry a `Results of
+cand-<sha> vs ref-<sha>` line whose two shas are the `SPRT |` line's. A
+missing line, a repeated line, a line out of shape, an untracked or absent log
+and a sha disagreement are each a `GATE-FAILED` naming what is wrong; a
+message with no `SPRT |` line is not touched by any of it. On success the gate
+prints one extra line, `SPRT block checked: cand <sha> vs ref <sha> against
+<log>`, before it reaches the signature. The check runs immediately after the
+message is read, which is after the suite: a typo in a block is reported when
+the build finishes, not before it starts.
+
+Why the commit and not only the step file: `git log` becomes the measurement
+ledger, and `tools/ledger.py` regenerates `plan.md`'s ledger table from it
+(see "What a verdict costs, measured"). Cases 11 to 17 of
+`tests/test_gate_script.sh` are the gate half of that.
+
 `tools/search_bench.py` keeps its own role, which is timing and per-position
 counts. The gate is one number for the whole tree; `search_bench.py` is three
 numbers you can attribute.
@@ -3027,6 +3085,50 @@ throughput is the machine and games-to-verdict is the size of the effect. A
 verdict cost 3 to 4.5 hours at four cores on the Apple machine (S027, six
 verdicts in roughly twenty hours over 13462 games); those figures do not carry
 here and neither does the four-core baseline they were taken against.
+
+#### The ledger, `tools/ledger.py` (S233, DEC-220)
+
+What a verdict has actually cost is `adocs/plan.md`'s "What this costs" ledger,
+and that table is no longer typed:
+
+```bash
+python3 tools/ledger.py                     # the table and the figures
+python3 tools/ledger.py --table             # the table alone
+python3 tools/ledger.py --figures           # the figures paragraph alone
+python3 tools/ledger.py --no-git            # the seed rows only, no git call
+python3 tools/ledger.py --audit-seed-class  # the seed's class column vs the rule
+```
+
+The first command prints the markdown table in the ledger's own column order
+-- run, what it measured, wall, games, bounds, verdict -- then one paragraph
+carrying the count, the mean, the median, the total games, the total hours,
+the games an hour and the two class means. **Both replace what stands in
+`plan.md` at every verdict, whole.** It reads two sources: every commit whose
+message carries DEC-220's `SPRT |` block, parsed by `parse_block`, and
+`adocs/data/ledger_seed.tsv`, the twenty verdicts taken before that decision,
+copied once from the table and never rewritten.
+
+A block carries shas, not step ids, so `split_run_and_what` takes the run and
+the description from the commit subject: the first `S<nnn>` plus any ` v<n>`,
+` leg <n>` or ` F<nn>` after it is the run, and what is left once a leading
+`Record `, the possessive, a verdict word and a leading `for ` are stripped is
+the description. So write the subject as **"Record S231's H1 for the null
+child's two-ply key"** and the row reads `S231 | the null child's two-ply
+key`. A subject with no `S<nnn>` is a hard error, as is any malformed block:
+the script refuses to print rather than drop a verdict.
+
+The class of a run is `classify`'s: the `Elo |` line's **nElo** estimate and
+interval against the `SPRT |` line's bounds pair, which is also nElo under
+`model=normalized`. Disjoint is fast class, overlapping is slow -- "on a
+bound" and "a true zero" are statements about the truth, so an interval that
+reaches the pair is not outside it. Seed rows carry the class in the file;
+eighteen of the twenty are what the rule says and the two that are not,
+S149 and S207, are recorded in the seed's header and in `plan.md`.
+
+Durations print truncated to the whole minute, hours to two decimals and games
+an hour to one. `tests/test_ledger.py` holds the four figures and the row count
+as goldens with the command that re-derives them (DEC-142) and covers every
+refusal the parser owes.
 
 
 ### Detach the run, and arm a watcher that outlives the turn

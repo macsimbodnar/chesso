@@ -425,6 +425,21 @@ add_test(NAME test_mutation_check
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_mutation_check.py)
 set_tests_properties(test_mutation_check PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S233, DEC-220: tools/ledger.py, which is now the only author of plan.md's
+# cost section. Two things in it can break where nothing else would notice. Its
+# arithmetic over adocs/data/ledger_seed.tsv sets the mean, the median and the
+# two class means every cost projection in the plan is derived from, and a
+# wall time parsed wrong moves them quietly; its parser is the
+# only reader of DEC-220's commit block, so a line it silently skips is a
+# verdict dropped from the ledger rather than a refusal. The four figures and
+# the row count are goldens with the command that re-derives them (DEC-142),
+# taken with --no-git so they do not move as commits land, and every refusal
+# the parser owes is a case. 19 cases, ~0.1 s, stdlib only, nothing built and
+# no git call.
+add_test(NAME test_ledger
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_ledger.py)
+set_tests_properties(test_ledger PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S141: `--touches`, the one mode of tools/plan_prose_check.py that is in the
 # suite. The other two are not, and DEV_MANUAL.md says why: any source commit
 # shifts lines under fifty step files at once, so gating on citation freshness

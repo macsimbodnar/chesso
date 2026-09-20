@@ -12489,3 +12489,48 @@ Consequences: Seven step files (S232 to S238) and four amended ones (S095,
               commit). The study is corrected in place with a dated section
               (`adocs/data/2026-09-19_search_technique_study.md`) and its
               parser is committed beside it.
+
+## DEC-223  2026-09-19  The ledger's class of a verdict is the nElo interval against the bounds pair, from DEC-220 on; the twenty seed rows keep their hand classes
+Tags:         measurement, ledger, workflow, dec-136, dec-220
+Context:      `plan.md`'s "Priced by class" split the ledger by where the
+              truth sat -- an effect outside the bounds interval is fast
+              class, inside it or a true zero is slow -- and applied it by
+              hand to eleven rows in 2026-09-05, from each run's Elo and its
+              stopping time. S233 made the ledger mechanical (DEC-220):
+              `tools/ledger.py` regenerates the table and the class means
+              from `git log` and needs a rule it can compute. Two candidate
+              rules were tried against the eleven hand classes: the nElo
+              interval disjoint from the bounds pair reproduces nine, the
+              point estimate outside the pair reproduces six and would file
+              S210 F22's 13 h 17 m run, S098 v1, its leg 2 and S098 v3 leg 1
+              as fast, which is what the class exists to separate. No
+              mechanical rule reproduces all eleven: S149 (-14.21 +/- 13.56
+              nElo against `{-5, 5}`, the interval reaching -0.65) and S207
+              (+4.47 +/- 6.72 against `{-5, 0}`, reaching -2.25, which the
+              plan's own prose calls "close to the near bound") were classed
+              fast by hand and read slow under the interval rule.
+Decision:     By the coordinator, 2026-09-19, under the owner's delegation of
+              engine and measurement questions; the owner may overrule. From
+              DEC-220 on a verdict's class is `classify`'s: the `Elo |`
+              line's nElo estimate and interval against the `SPRT |` line's
+              bounds pair, both in nElo under `model=normalized`; disjoint is
+              fast, an interval that reaches the pair is slow. The twenty
+              seed rows keep the class `adocs/data/ledger_seed.tsv` records
+              -- the eleven hand classes because the published class means
+              were computed from them and no published figure moves under a
+              tooling step, the nine after them the rule's own answer -- and
+              the two disagreements are recorded in the seed's header, in
+              `plan.md` and by `tools/ledger.py --audit-seed-class`, not
+              resolved by editing either.
+Rejected:     The point-estimate rule -- fewer matches and it misfiles the
+              runs that ran to the wall. Reclassifying S149 and S207 to the
+              rule -- it would move the published fast-class mean under a
+              step whose accepts is "reproduces the table as it stands to
+              the digit". Leaving the class to hand judgement per row -- the
+              class of number DEC-136 exists to derive rather than type.
+Consequences: `plan.md`'s "Priced by class" states the rule and names the two
+              exceptions; every verdict-closing commit from S231's on is
+              classed by the script, and the class means in "What this
+              costs" are re-derived by running it, never typed. A correction
+              to a seed row is a new decision, not an edit.
+

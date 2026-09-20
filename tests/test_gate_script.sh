@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 #
-# Smoke test for tools/gate.sh, the commit gate. S189, DEC-140.
+# Smoke test for tools/gate.sh, the commit gate. S189, DEC-140; S233, DEC-220.
 #
-# The gate's whole job is to compare one number the binary prints with one
-# number the commit message claims, and to be right about when the number is
-# owed. That is nine cases, and none of them needs a real engine or a real
-# suite: the sandbox is a throwaway git repository whose PATH holds stubs for
-# cmake, ctest and clang-format.sh that exit 0, and a `build/src/chesso` that
-# prints a canned signature line. So this test measures the gate's logic and
-# nothing about the machine it runs on.
+# The gate has two jobs. The first is to compare one number the binary prints
+# with one number the commit message claims, and to be right about when the
+# number is owed. The second, from S233, is to hold a verdict-closing commit's
+# result block to DEC-220's shape and to the log it names. That is seventeen
+# cases, and none of them needs a real engine or a real suite: the sandbox is a
+# throwaway git repository whose PATH holds stubs for cmake, ctest and
+# clang-format.sh that exit 0, and a `build/src/chesso` that prints a canned
+# signature line. So this test measures the gate's logic and nothing about the
+# machine it runs on.
 #
 #   1. `Bench: <n>` matching the binary, src/ touched      -> GATE-DONE, exit 0
 #   2. `Bench: <n>` not matching                           -> GATE-FAILED, both
@@ -24,6 +26,23 @@
 #      MacBook's bash 3.2 does not have
 #  10. `No functional change` with no `Bench:` anywhere in the ancestry ->
 #      exactly one GATE-FAILED, and it names --build-parent
+#
+# DEC-220's result block, S233. An `SPRT |` line in the message is the trigger
+# and the log it names is the evidence:
+#
+#  11. a whole block over a tracked log whose `Results of` line carries the
+#      same two shas                                        -> GATE-DONE
+#  12. one of the six lines missing                         -> GATE-FAILED
+#                                                              naming that line
+#  13. one of the six malformed                             -> GATE-FAILED
+#                                                              naming that line
+#  14. one of the six written twice                         -> GATE-FAILED
+#  15. a block whose shas are not the log's                 -> GATE-FAILED
+#                                                              naming both
+#  16. a `Log |` path that is untracked, and one that does not exist at all
+#                                                           -> GATE-FAILED each
+#  17. the same commit with no `SPRT |` line                -> GATE-DONE, and
+#                                                              no block check
 #
 # Usage: test_gate_script.sh <gate.sh>
 
@@ -308,6 +327,170 @@ if ! grep -q 'build-parent' "$tmp/out.txt"; then
 fi
 if grep -q 'GATE-FAILED: exited' "$tmp/out.txt"; then
   fail "10: the trap's generic marker won over the specific one"; show
+fi
+
+# --- DEC-220's result block, cases 11 to 17 (S233) -------------------------
+#
+# The evidence a block is checked against: a fastchess log, tracked, carrying
+# the `Results of cand-<sha> vs ref-<sha>` line the two shas have to match.
+# Four lines of it are enough -- the gate reads that one line and nothing else.
+mkdir -p "$tmp/repo/adocs/data"
+cat > "$tmp/repo/adocs/data/S999_sprt.log" <<'LOG'
+--------------------------------------------------
+Results of cand-1a2b3c4 vs ref-5d6e7f8 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 5.75 +/- 4.37, nElo: 7.44 +/- 5.65
+LLR: 2.97 (100.9%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+LOG
+git -C "$tmp/repo" add adocs/data/S999_sprt.log
+git -C "$tmp/repo" commit -q -m "the run log a block points at"
+
+# The six lines, as DEC-220 states them, built one at a time so a case can
+# drop, bend or repeat exactly one of them.
+line_SPRT="SPRT | cand 1a2b3c4 vs ref 5d6e7f8, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo"
+line_Elo="Elo | 5.75 +/- 4.37, nElo 7.44 +/- 5.65"
+line_LLR="LLR | 2.97 (-2.94, 2.94) -> H1"
+line_Games="Games | N: 14510 W: 4559 L: 4319 D: 5632, Ptnml [603, 1695, 2522, 1729, 706]"
+line_Wall="Wall | 6 h 49 m, 2129.6 games/h, forfeits 0"
+line_Log="Log | adocs/data/S999_sprt.log"
+
+# block [skip] [extra] -- the whole block, minus one line by name, plus one
+# raw line. A verdict-closing commit touches no src/, so these carry no
+# signature and the docs-only path is the one under test.
+block()
+{
+  local skip="${1:-}"
+  local extra="${2:-}"
+  local name value
+  echo "Record S999's verdict"
+  echo ""
+  for name in SPRT Elo LLR Games Wall Log; do
+    [[ "$name" == "$skip" ]] && continue
+    eval "value=\$line_$name"
+    echo "$value"
+  done
+  [[ -n "$extra" ]] && echo "$extra"
+  echo "Co-Authored-By: nobody <nobody@example.invalid>"
+}
+
+# 11. The whole block over its own log. The commit touches no src/, so the
+#     `Bench:` half is not owed and the block check is the only thing between
+#     it and GATE-DONE -- which also shows the check runs before the early
+#     exit the no-src/ path takes.
+commit "$(block)" docs/manual.md
+status="$(run_gate)"
+if [[ "$status" -ne 0 ]]; then
+  fail "11: a whole block over its own log exited $status"; show
+fi
+if [[ "$(done_markers)" -ne 1 || "$(failed_markers)" -ne 0 ]]; then
+  fail "11: expected exactly one GATE-DONE"; show
+fi
+if ! grep -q 'SPRT block checked: cand 1a2b3c4 vs ref 5d6e7f8' "$tmp/out.txt"; then
+  fail "11: the gate does not say it checked the block"; show
+fi
+
+# 12. One line missing. Each of the six in turn, because a loop that checks
+#     only the first would not notice a name misspelled in the script.
+for missing in SPRT Elo LLR Games Wall Log; do
+  # Dropping `SPRT |` drops the trigger with it, so that one is tested by
+  # replacing the line rather than removing it.
+  if [[ "$missing" == "SPRT" ]]; then
+    git -C "$tmp/repo" commit -q --amend \
+      -m "$(block SPRT "SPRT | cand 1a2b3c4 vs ref 5d6e7f8")"
+  else
+    git -C "$tmp/repo" commit -q --amend -m "$(block "$missing")"
+  fi
+  status="$(run_gate)"
+  if [[ "$status" -eq 0 ]]; then
+    fail "12/$missing: a block missing its '$missing |' line exited 0"; show
+  fi
+  if [[ "$(failed_markers)" -ne 1 ]]; then
+    fail "12/$missing: expected exactly one GATE-FAILED"; show
+  fi
+  if ! grep -q "$missing |" "$tmp/out.txt"; then
+    fail "12/$missing: the marker does not name the line"; show
+  fi
+done
+
+# 13. One line bent out of shape: an LLR outcome that is not one of the three.
+git -C "$tmp/repo" commit -q --amend -m "$(block LLR "LLR | 2.97 (-2.94, 2.94) -> YES")"
+status="$(run_gate)"
+if [[ "$status" -eq 0 ]]; then
+  fail "13: a malformed LLR line exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 ]]; then
+  fail "13: expected exactly one GATE-FAILED"; show
+fi
+if ! grep -q "shape" "$tmp/out.txt" || ! grep -q "LLR |" "$tmp/out.txt"; then
+  fail "13: the marker does not say the LLR line is out of shape"; show
+fi
+
+# 14. One line twice. Two `Games |` lines and the block stops meaning one run.
+git -C "$tmp/repo" commit -q --amend -m "$(block "" "$line_Games")"
+status="$(run_gate)"
+if [[ "$status" -eq 0 ]]; then
+  fail "14: a repeated Games line exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 ]]; then
+  fail "14: expected exactly one GATE-FAILED"; show
+fi
+
+# 15. The shas the block claims are not the shas the log recorded -- the case
+#     DEC-220 names, and the one a copy-pasted block from the previous verdict
+#     lands in.
+line_SPRT="SPRT | cand deadbee vs ref 5d6e7f8, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo"
+git -C "$tmp/repo" commit -q --amend -m "$(block)"
+status="$(run_gate)"
+if [[ "$status" -eq 0 ]]; then
+  fail "15: a block whose shas are not the log's exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 ]]; then
+  fail "15: expected exactly one GATE-FAILED"; show
+fi
+if ! grep -q 'deadbee' "$tmp/out.txt" || ! grep -q '1a2b3c4' "$tmp/out.txt"; then
+  fail "15: the marker does not name both the claimed and the recorded sha"; show
+fi
+line_SPRT="SPRT | cand 1a2b3c4 vs ref 5d6e7f8, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo"
+
+# 16. The log the block names is untracked, then absent. Untracked first: the
+#     file is there and the run happened, and the evidence still is not in the
+#     repository, which is the whole point of naming it.
+cp "$tmp/repo/adocs/data/S999_sprt.log" "$tmp/repo/adocs/data/S998_sprt.log"
+line_Log="Log | adocs/data/S998_sprt.log"
+git -C "$tmp/repo" commit -q --amend -m "$(block)"
+status="$(run_gate)"
+if [[ "$status" -eq 0 ]]; then
+  fail "16: an untracked log exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 ]] || ! grep -q 'not tracked' "$tmp/out.txt"; then
+  fail "16: expected one GATE-FAILED saying the log is not tracked"; show
+fi
+rm -f "$tmp/repo/adocs/data/S998_sprt.log"
+status="$(run_gate)"
+if [[ "$status" -eq 0 ]]; then
+  fail "16: an absent log exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 ]] || ! grep -q 'S998_sprt.log' "$tmp/out.txt"; then
+  fail "16: expected one GATE-FAILED naming the missing log"; show
+fi
+line_Log="Log | adocs/data/S999_sprt.log"
+
+# 17. The same commit with the block removed: a message with no `SPRT |` line
+#     takes exactly the path it took before S233, and the gate says nothing
+#     about blocks. This is the unaffected-path case in the suite; the
+#     twenty-message replay in the step file is the wider proof.
+git -C "$tmp/repo" commit -q --amend -m "Record S999's verdict
+
+Co-Authored-By: nobody <nobody@example.invalid>"
+status="$(run_gate)"
+if [[ "$status" -ne 0 ]]; then
+  fail "17: a message with no SPRT line exited $status"; show
+fi
+if [[ "$(done_markers)" -ne 1 || "$(failed_markers)" -ne 0 ]]; then
+  fail "17: expected exactly one GATE-DONE"; show
+fi
+if grep -q 'SPRT block' "$tmp/out.txt"; then
+  fail "17: the gate checked a block that is not there"; show
 fi
 
 # 9. Static. bash 3.2 on the MacBook has none of these (S167, S177), and the
