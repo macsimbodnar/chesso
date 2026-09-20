@@ -247,11 +247,13 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # written before that commit exists; the coordinator pins it to the sha after
 # committing, and `fastchess.sh`'s banner prints both shas with their commit
 # dates before the first game, so what the run measures is on screen and never
+# **Pinned 2026-09-20 04:25: CAND is `55891bb`, "Land S231's phase three: the
+# lane's fitted vector becomes the defaults" -- the default below carries it.**
 # assumed. REF in the environment overrides for any follow-up leg.
 [[ -x ./fastchess.sh ]] || { echo "SPRT-RUN-FAILED: no executable ./fastchess.sh" >&2; exit 1; }
 shopt -s execfail
 exec env REF="${REF:-3a649c0}" \
-     CAND="${CAND:-HEAD}" \
+     CAND="${CAND:-55891bb}" \
      OUT="/home/max/ws/chesso/.tuning/sprt_s231_$(date +%Y%m%d_%H%M%S)" \
      ./fastchess.sh
 echo "SPRT-RUN-FAILED: exec env ./fastchess.sh" >&2; exit 127
