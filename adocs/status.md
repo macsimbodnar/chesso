@@ -7,6 +7,35 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S097 verdict 2 is landed, 2026-09-21 20:27, as `63ad848`, `bench` 5066204
+  -> 4493659; second tier in progress, SPRT not yet pinned.** One default,
+  `SeMultiCut` 0 -> 1, and the coverage it makes possible: the rule's direct
+  guard case with three legs (the fail-soft score returned and never the
+  bound, no fire at a PV node, no fire at a beta on the negative mate-band
+  edge -- the third added after the cold fast check found that term
+  unpinned), the off-value case moved to the tune build, the accepts' mate
+  row mined from 269 of this project's own labelled mates and observed red
+  with the guard removed (`4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5
+  46`, depth 14, oracle `#+5`), mutants E20 to E23 and E05 repaired, **22 of
+  22 killed in one clean run** after the fast check found the first score
+  was two runs; `search_bench` identical at depth 9 and smaller at 12 with no
+  best move moving; fixed-node depths 16/13/15 -> 17/13/15. The specs
+  passage describes the multicut with a `<verdict>` placeholder. Debug
+  self-play 8 games with 0 `Assertion`; `tools/gate_extra.sh` launched on
+  `63ad848` at 20:29 with a watcher (four exits, 55-minute ceiling). **On its
+  marker:** pin `REF` f02f59a (the tree with the extension, S132 complete)
+  and `CAND` 63ad848 in `adocs/data/S097_v2_sprt.sh`, launch the SPRT
+  (`nohup adocs/data/S097_v2_sprt.sh > .tuning/sprt_s097_v2.log 2>&1 &`),
+  banner check, watcher, the launch recorded here. **When that marker
+  fires:** the verdict-closing commit with DEC-220's block (subject "Record
+  S097 v2's <verdict> for the multicut"); **H1** keeps both rules and
+  completes S097 with the extension's zero on record; **H0** or a stalled
+  walk (DEC-063) removes the whole block -- code, cases, mutants, six
+  settings -- in one revert to `5c76ea9`'s search proved by `bench` 4579468
+  and `search_bench` identity (DEC-227), then completes S097 on two zeros.
+  The worktree `../chesso-s097v2` (branch `s097-v2`, four WIP commits now
+  squashed into `63ad848`) is removed after the landing is confirmed.
+
 - **S132 is done, 2026-09-21 19:45, on an H1, and `plan_current/` holds S097
   alone.** The node-fraction time manager ships at its census seeds
   (`TmNodeScalePct` 151, `TmNodeBasePct` 120, the gate at
