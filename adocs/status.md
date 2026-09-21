@@ -21,7 +21,16 @@ Updated: 2026-09-21, by hand.
   **Next: S188**, the in-loop check extension, first in the Open list, whose
   ply guard is S097's `SePlyFactor * depth` -- a fresh Opus 5 agent starts it
   with the machine idle (brief `.tuning/coord/S188_brief.md`). Machine idle
-  from 01:47; no watcher armed.
+  from 01:47; no watcher armed. **S188 started 2026-09-22 02:20 by a fresh
+  Opus 5 agent** with the machine free for builds, suites, mutants, the
+  S145 mate-set re-run and the node-explosion check, no match: the rule
+  inside S097's ply guard and one-ply cap, its off switch and depth cap,
+  guard cases with the reds observed, mutants, `adocs/data/S188_sprt.sh`,
+  one report when measured. **S239 created** (`ebdfe0a`, second in the
+  Open list as filler behind S188): `tools/mutation_check.py` refuses a
+  zero-test baseline and a fixture dirty outside `src/`, the two gaps
+  verdict 2's agent walked into; named by id in every pre-registration
+  while open.
 
 - **S097 verdict 2 is H1, 2026-09-22 01:46:50: `Elo 7.17 +/- 5.13`, `nElo
   9.31 +/- 6.66`, LLR 2.95 over 10470 games in 4 h 58 m at 2109.9 an hour, 0
