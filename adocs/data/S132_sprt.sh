@@ -271,8 +271,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 #
 # Until both are pinned this script refuses: a candidate guessed from `HEAD`
 # is a candidate nobody checked, and DEC-020 is what that costs.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-778c7b0}"
+CAND="${CAND:-474c288}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then

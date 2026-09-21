@@ -591,3 +591,27 @@ builds and at the off value, `search_bench` at depth 9 identical to
 `.ref-builds/88ec74f` (21479 / 102462 / 33148, `g5f6` / `e2a6` / `d7c8q`),
 the census's quartiles, seeds and factor readings from the TSV, and the seven
 mutant anchors unique.
+
+**Landed as `474c288`**, `bench` 5066204 (the parent's total; the message carries
+`Bench:` and not `No functional change` because the commit changes play at a
+clock, which the fixed-depth signature cannot see -- `tools/gate.sh`'s rule).
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 187073 trace lines
+with 1281 `bestmove` lines (`.tuning/coord/s132_debug_selfplay/`), 15:52 to
+15:53.
+
+`tools/gate_extra.sh` launched detached on `474c288` at 15:54
+(`.tuning/gate_extra_2026-09-21_s132.log`), watcher armed with four exits and
+a 90-minute ceiling; its marker is recorded below before `CAND` is pinned and
+the SPRT starts.
+
+**`tools/gate_extra.sh` on `474c288`: `GATE-EXTRA-DONE 5 stages 1145 s`**
+(15:54 to 16:13, `.tuning/gate_extra_2026-09-21_s132/`), prose, citations,
+debug, sanitize (710 s) and perft (58 s) green. **`CAND` pinned to `474c288`
+and `REF` to `778c7b0`**, the commit the landing sits on (its `src/` is
+`88ec74f`'s, the tree INV-6 was discharged against; the three commits between
+are documents only), in `adocs/data/S132_sprt.sh`. The SPRT is the
+coordinator's next machine action after S097 verdict 2's measurements, which
+take the idle afternoon first (DEC-155); launch by 19:30 at the latest.
