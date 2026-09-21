@@ -40,7 +40,15 @@ Updated: 2026-09-21, by hand.
   a worktree of its own (`../chesso-s097v2`, branch `s097-v2`) in
   code-writing mode, to land after S132 completes, take its second tier, and
   run its own SPRT the night after. Machine idle from 14:18; no watcher
-  armed.
+  armed. **Done at 14:45:** the record (`00e0209`) and the plan carry
+  (`b9ae156`) are in; S132's agent has "machine free" with its seven
+  Report-1 questions answered (none overruled) and is measuring; **S097
+  verdict 2 started 2026-09-21 14:43 by a fresh Opus 5 agent in
+  code-writing mode** in the linked worktree `../chesso-s097v2` (branch
+  `s097-v2` at `b9ae156`; brief `.tuning/coord/S097_v2_brief.md`): the
+  flip, its guard case, the mined mate row's script, E20 to E22, the
+  pre-registration amended to DEC-227's outcomes, no build until the
+  machine is free. The two agents share no file.
 
 - **S097 verdict 1 is landed and its gainer SPRT is running, launched
   2026-09-21 04:51:09: `88ec74f` (the singular extension) against `5c76ea9`
