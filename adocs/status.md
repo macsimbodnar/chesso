@@ -7,6 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S132 is landed, 2026-09-21 15:50, as `474c288`, second tier green, SPRT
+  pinned and not yet launched.** The landing (`bench` 5066204, the parent's
+  total -- fixed depth cannot see a clock rule, so the message carries
+  `Bench:` and not `No functional change`): per-root-move node buckets in
+  `search_state_t` (snapshot before `make_move`, add after `unmake_move`,
+  root only), behaviour-neutral by INV-6 -- `search_bench` identical at
+  depths 9 and 12 against `88ec74f`'s tree (21479 / 102462 / 33148 and
+  154388 / 459115 / 239314, same best moves), bench identical, the snapshot
+  priced at -0.10 % +/- 0.48 over twelve interleaved pairs -- and the soft
+  limit scaled by `(TmNodeBasePct - share) * TmNodeScalePct / 100` from
+  `TmNodeMinDepth` on, the 30 % floor moved onto the product of the three
+  scalers. Seeds are chesso's own (DEC-105 (b)): a census of 300 stratified
+  positions at depth 12 (`adocs/data/S132_node_share_census.py`, median share
+  53.5 %, q1 35.8, q3 73.0) gives scale 151 and base 120; the off value at a
+  scale of 0 is proved by the probe (bench cannot see it). Mutants K01 to K07
+  7 of 7 killed. Fast check by a cold reviewer before the landing: no real
+  defect, four stale counts fixed. `specs.md`'s time-management row states
+  the three factors with a `<verdict>` placeholder. Second tier: Debug
+  self-play 8 games with 0 `Assertion`; `gate_extra` 5 stages green in
+  1145 s. **`REF` 778c7b0, `CAND` 474c288** pinned in
+  `adocs/data/S132_sprt.sh` (`e346ceb`). **The machine is S097 verdict 2's
+  until 19:15** (its branch `s097-v2` was rebased onto `474c288` cleanly and
+  its agent is measuring in `../chesso-s097v2`); **at 19:15 or on its Report
+  2, whichever first: launch S132's SPRT** (`nohup adocs/data/S132_sprt.sh >
+  .tuning/sprt_s132.log 2>&1 &`, banner checked for both shas and `OUT` under
+  `.tuning/`, watcher with four exits, hourly progress, 40 h ceiling), then
+  the launch record in this file. **When its marker fires:** the
+  verdict-closing commit with DEC-220's block (subject "Record S132's
+  <verdict> for the node-fraction time manager"); **H1** keeps the census
+  seeds for S127 and puts the second-control confirmation to the owner as a
+  question at completion; **H0** or a stalled walk flips `TmNodeScalePct` to 0
+  as the pre-registered one-default revert and keeps the counting, the zero
+  recorded; then S132 completes (stamp, `plan_done/`, ledger, the specs
+  placeholder). S097 verdict 2 lands after that, on the completed tree.
+
 - **S097 verdict 1 is H0, 2026-09-21 14:18:33: `Elo -0.81 +/- 3.70`, `nElo
   -1.06 +/- 4.81`, LLR -2.96 over 20080 games in 9 h 27 m at 2124.6 an hour,
   0 forfeits, `Ptnml [925, 2332, 3507, 2417, 859]`, LOS 33.32 %.** A zero and
