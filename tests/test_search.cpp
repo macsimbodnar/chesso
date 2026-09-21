@@ -9135,3 +9135,132 @@ TEST_SUITE("search: pruning and reduction guards")
     }
   }
 }
+
+
+TEST_SUITE("search: root node attribution")
+{
+  // S132's accepts, and the identity the whole node-fraction time manager
+  // stands on: every node a search() call visits is inside exactly one root
+  // move's bucket, except the root's own, which is inside none.
+  //
+  // **Not a golden** (DEC-142): both sides are read off the same run, so any
+  // tree, any depth and any machine satisfy it, and a search change moves both
+  // together. What it fails on is a bucket that misses a subtree, one that
+  // counts a subtree twice, or a key that collides -- which is the whole of
+  // what the published record got wrong at this technique three separate
+  // times, each fixed in a follow-up commit (the step file's section 5).
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the root's per-move buckets account for every node")
+  {
+    struct case_t
+    {
+      std::string fen;
+      int depth;
+      bool shares_from_to;  // has moves that differ only in the promotion
+    };
+
+    const std::vector<case_t> cases = {
+        {DEFAULT_POSITION, 6, false},
+        {KIWIPETE_POS, 5, false},
+        {KILLER_POS, 5, true},
+    };
+
+    static std::atomic_bool never_stop = false;
+
+    for (const case_t& test : cases) {
+      REQUIRE_MESSAGE(load_FEN(test.fen, &game), ("FEN: " + test.fen));
+
+      // The engine's own generator answers how many moves the root has; no
+      // count is written out here (DEC-023 in its small form -- a position's
+      // move list is a tool's answer and not an author's).
+      move_t root_moves[MAX_MOVES];
+      const size_t root_legal = legal_moves(&game, root_moves);
+
+      REQUIRE(root_legal > 1);
+
+      // The precondition that makes the third row the promotion case: several
+      // of its moves share a (from, to) pair and differ only in what the pawn
+      // becomes. A bucket keyed on squares would hold fewer buckets than the
+      // root has moves, which is exactly what the count below would catch.
+      size_t distinct_squares = 0;
+
+      for (size_t i = 0; i < root_legal; ++i) {
+        bool seen = false;
+
+        for (size_t j = 0; j < i; ++j) {
+          seen =
+              seen || (MOVE_FROM(root_moves[i]) == MOVE_FROM(root_moves[j]) &&
+                       MOVE_TO(root_moves[i]) == MOVE_TO(root_moves[j]));
+        }
+
+        if (!seen) { distinct_squares++; }
+      }
+
+      REQUIRE_MESSAGE(
+          (distinct_squares < root_legal) == test.shares_from_to,
+          ("FEN: " + test.fen + " has " + std::to_string(distinct_squares) +
+           " distinct (from, to) pairs over " + std::to_string(root_legal) +
+           " moves, which is not what this row is here for"));
+
+      never_stop = false;
+      tt_reset(&tt);
+      tt_new_search(&tt);
+
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      const search_t first = search(test.depth, &game, &state);
+
+      REQUIRE_MESSAGE(first.best_move != 0, ("FEN: " + test.fen));
+      REQUIRE_FALSE(state.aborted);
+
+      const std::string where =
+          test.fen + " at depth " + std::to_string(test.depth);
+
+      // THE IDENTITY. The root counts itself at the top of negamax and nothing
+      // else at ply 0 counts a node before the move loop, so the residual is
+      // exactly one. A root-level feature added later that searches anything
+      // of its own breaks this loudly, which is the second reason it is here.
+      CHECK_MESSAGE(
+          state.explored_nodes == 1 + root_nodes_total(&state),
+          ("nodes " + std::to_string(state.explored_nodes) + " against 1 + " +
+           std::to_string(root_nodes_total(&state)) + " bucketed, " + where));
+
+      // One bucket per legal root move, which is the keying: a window this
+      // wide cannot cut the root off, so every legal move is searched, and
+      // fewer buckets than moves means two moves shared a key.
+      CHECK_MESSAGE(state.root_move_count == root_legal,
+                    (std::to_string(state.root_move_count) + " buckets over " +
+                     std::to_string(root_legal) + " legal moves, " + where));
+
+      // Every key is a move this root actually has, and no bucket is empty: a
+      // subtree is at least the child's own node.
+      for (size_t i = 0; i < state.root_move_count; ++i) {
+        CHECK_MESSAGE(move_is_legal(&game, state.root_move_keys[i]),
+                      ("bucket " + std::to_string(i) + " is keyed on a move " +
+                       "this position does not have, " + where));
+        CHECK_MESSAGE(state.root_move_nodes[i] > 0,
+                      ("empty bucket at " + std::to_string(i) + ", " + where));
+      }
+
+      // AND THEY ACCUMULATE. A second call on the same state is what an
+      // aspiration re-search and the next iteration both are -- search() does
+      // not clear the counter and does not clear the buckets -- so the
+      // identity's residual grows by exactly one per call and the denominator
+      // is the whole `go`'s and not one iteration's. Stormphrax shipped the
+      // other reading and had to fix it (section 1).
+      const uint64_t after_first = state.explored_nodes;
+
+      search(test.depth, &game, &state);
+
+      REQUIRE_FALSE(state.aborted);
+      CHECK_MESSAGE(state.explored_nodes > after_first, where);
+      CHECK_MESSAGE(state.explored_nodes == 2 + root_nodes_total(&state),
+                    ("after two calls: nodes " +
+                     std::to_string(state.explored_nodes) + " against 2 + " +
+                     std::to_string(root_nodes_total(&state)) + ", " + where));
+      CHECK_MESSAGE(state.root_move_count == root_legal, where);
+    }
+  }
+}

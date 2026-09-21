@@ -846,7 +846,84 @@ struct search_state_t
   // read back. The UCI layer owns the instance because the store has to
   // outlive a `go`, which this struct does not.
   proven_mate_line_t* proven_mate = nullptr;
+
+  // PER-ROOT-MOVE NODE ATTRIBUTION, S132. How many nodes the subtree under
+  // each root move has cost, as two parallel arrays -- the move, and its
+  // nodes -- filled at ply 0 only and reached through root_nodes_* below.
+  //
+  // Keyed on the **whole move encoding** and not on an index, because
+  // pick_next_move() reorders the root's list in place and index i is a
+  // different move from one iteration to the next; and not on (from, to)
+  // either, because the four promotions of one pawn push share that pair and
+  // the best move is allowed to be a promotion.
+  //
+  // It lives here because this struct is what survives a `go`: the iterative
+  // deepening loop builds one per search and every iteration and every
+  // aspiration re-search of that `go` writes into the same buckets, which is
+  // the accumulation the published form reads -- the denominator is the whole
+  // search's root nodes so far, not one iteration's.
+  //
+  // Zeroed with the struct, so a caller that never reaches ply 0 sees an
+  // empty census rather than a stale one.
+  move_t root_move_keys[MAX_MOVES];
+  uint64_t root_move_nodes[MAX_MOVES];
+  size_t root_move_count = 0;
 };
+
+
+// THE ONE KEY INTO THE ROOT BUCKETS, S132, for the reason continuation_entry()
+// below is one function: the write in negamax's root branch and the two reads
+// in iterative_deepening_search() cannot disagree about what identifies a root
+// move if there is only one place that decides.
+//
+// Linear, and deliberately so. The root has at most MAX_MOVES moves, the scan
+// runs once per root move per iteration -- never below ply 0 -- and a hash of
+// a 32-bit key would cost more to write and to reason about than the whole
+// thing saves. A root whose move list somehow overflows the array drops the
+// overflow rather than writing past it: the fraction is then taken over fewer
+// moves, which moves a time decision and never the tree.
+inline void root_nodes_add(search_state_t* state, move_t move, uint64_t nodes)
+{
+  for (size_t i = 0; i < state->root_move_count; ++i) {
+    if (state->root_move_keys[i] == move) {
+      state->root_move_nodes[i] += nodes;
+      return;
+    }
+  }
+
+  if (state->root_move_count >= MAX_MOVES) { return; }
+
+  state->root_move_keys[state->root_move_count] = move;
+  state->root_move_nodes[state->root_move_count] = nodes;
+  state->root_move_count++;
+}
+
+
+// What one root move has cost, 0 for a move this search never made.
+inline uint64_t root_nodes_of(const search_state_t* state, move_t move)
+{
+  for (size_t i = 0; i < state->root_move_count; ++i) {
+    if (state->root_move_keys[i] == move) { return state->root_move_nodes[i]; }
+  }
+
+  return 0;
+}
+
+
+// What every root move has cost together. This is the fraction's denominator
+// and it is **not** the search's node count: the root's own node is outside
+// every bucket by construction, which is what the sum identity in
+// tests/test_search.cpp pins.
+inline uint64_t root_nodes_total(const search_state_t* state)
+{
+  uint64_t total = 0;
+
+  for (size_t i = 0; i < state->root_move_count; ++i) {
+    total += state->root_move_nodes[i];
+  }
+
+  return total;
+}
 
 
 // The one index into cont_hist. Both the write in history_on_quiet_cutoff and

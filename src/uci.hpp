@@ -128,6 +128,13 @@ search_time_budget_t compute_search_time_budget(int remaining_ms,
 // proves the search uses it is uci_last_time_scale_percent() below.
 int search_time_scale_percent(int best_move_stability, int score_drop_cp);
 
+// The third factor on the same soft limit, S132: what the share of the root's
+// nodes the best move took is worth, the share given in percent. Pure for the
+// reason the one above is pure, and 100 at TmNodeScalePct 0, which is the
+// rule's off value (DEC-215). What proves the loop uses it is
+// uci_last_node_factor_percent() below.
+int search_time_node_factor_percent(int bestmove_node_percent);
+
 bool set_position(const std::string& fen);
 bool check_move_legality(move_t move);
 move_t first_legal_move();
@@ -155,4 +162,35 @@ int uci_last_aspiration_failures();
 // scale it actually used. S089.
 int uci_last_best_move_stability();
 int uci_last_score_drop_cp();
+
+// **S089's two scalers alone**, which is what it has always been: the product
+// the soft limit is actually computed from is the one below.
 int uci_last_time_scale_percent();
+
+// The node-fraction scaler's state after that same iteration, S132. Test
+// instrumentation like the three above, and three numbers rather than one so
+// that a case can hold the loop to the rule without recomputing the tree:
+//
+//   bestmove_node_percent  the share of the root's nodes the best move took,
+//                          in percent. Recorded on every completed iteration,
+//                          clock or no clock, because it is a property of the
+//                          tree and a fixed-depth case has to be able to read
+//                          it
+//   node_factor_percent    what that share was worth, and 100 wherever the
+//                          rule did not apply -- the depth gate, an unscaled
+//                          time, the off value
+//   soft_scale_percent     the three scalers multiplied and floored, which is
+//                          the number soft_limit_ms was computed from
+//   soft_limit_ms          the limit those three produced, after the clamp to
+//                          the hard limit -- the one step of the calculation
+//                          that is not a percentage, and the only way to hold
+//                          the clamp to a number instead of to a stopwatch
+//   root_nodes_total       the share's denominator, which the share itself
+//                          cannot show: a loop that cleared the buckets
+//                          between iterations reports a plausible percentage
+//                          of the wrong tree
+int uci_last_bestmove_node_percent();
+int uci_last_node_factor_percent();
+int uci_last_soft_scale_percent();
+int64_t uci_last_soft_limit_ms();
+uint64_t uci_last_root_nodes_total();

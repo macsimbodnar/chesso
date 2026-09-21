@@ -342,7 +342,7 @@ The probes are a ladder, cheapest first, stopping at the first one that
 separates: depth 9 on the midgame position, depth 13 on it, depth 13 on the
 tactical position, then a one-second clock with an increment
 (`go wtime 1000 btime 1000 winc 200 binc 200`). The clock rung exists because
-nothing under `go depth` consults a clock, so the nine `Tm*` parameters are
+nothing under `go depth` consults a clock, so the twelve `Tm*` parameters are
 invisible to a fixed-depth probe however deep it goes.
 
 A clock probe's node count is not a function of the options alone, so a clock
@@ -2325,6 +2325,30 @@ signature, so the off tree is still exactly the engine before the verdict.
 There is no ablation row to add: the removal does not move the tree, and the
 by-depth row the tune build prints is leg 1's above.
 
+**At `S132`, the node-fraction time manager: `5066204`, unchanged, and the
+equality is the entry.** The step adds two things and only one of them could
+move a tree. The counting half -- a snapshot of the node counter before each
+root move and a bucket keyed on the move after it -- reads the counter and
+writes a number nothing in the search consults, so `bench` prints the
+parent's total **to the node with all eight `bestmove` replies identical**,
+and `tools/search_bench.py` reproduces `9fdd9fb` exactly at both depths:
+21479 / 102462 / 33148 with `g5f6` / `e2a6` / `d7c8q` at depth 9, and
+154388 / 459115 / 239314 with `c3d5` / `e2a6` / `d7c8q` at depth 12. That is
+INV-6's own form of "behaviour-neutral", and it is why no SPRT is owed for
+that half (DEC-083). What it is not is *free*, and "expected to be free" was
+not taken on trust: the `ply == 0` test sits in the move loop every node
+runs, and 12 interleaved `bench` pairs price it at **-0.10 %, sd 1.65 %, se
+0.48 %, 95 % [-1.03, +0.83]** of nodes per second -- 3583659 nps against
+3579527 -- with `hyperfine -w 1 -r 10` agreeing at 1.434 s +/- 0.023 against
+1.438 s +/- 0.019, at a one-minute load of 1.1 to 1.5 on twelve threads.
+Inside this machine's noise floor either way. The multiplier half moves no
+node at any fixed depth by construction -- it decides when iterations stop --
+and the tune build says so rather than the sentence: `bench` is `5066204` at
+`TmNodeScalePct` 0, at its shipped 151 and at `TmNodeBasePct` 400 alike. So
+this ledger cannot see the rule at all, the off value's proof is the probe
+and not the total (DEC-215), and `adocs/data/S132_sprt.sh` is the only thing
+that can price it.
+
 A bench total is quoted
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
@@ -2500,6 +2524,40 @@ The budget is enforced exactly (`check_limits` in `src/search.cpp` compares the
 count, it does not sample a clock), so the depth reached is a property of the
 tree and not of the machine's load. Depth at a fixed budget is not Elo and
 nothing reads it as Elo (DEC-019): what decides a step is its SPRT.
+
+### What share of the root's nodes the best move took
+
+```bash
+cmake --build build -j12 --target node_share_census
+build/tools/node_share_census --depth 12 --hash 16 < fens.txt
+
+# the census S132's two constants are solved from: 300 stratified positions,
+# the distribution, and the pair the two constraints then give
+adocs/data/S132_node_share_census.py build/tools/node_share_census \
+    --depth 12 --out adocs/data/S132_node_share_census.tsv
+```
+
+One row per FEN — `fen depth best total_nodes root_nodes best_nodes
+share_pct` — where `root_nodes` is the sum of the per-root-move buckets,
+`share_pct` is the engine's own integer percentage, the number the time
+manager reads, and `best_nodes` is `share_pct * root_nodes / 100`, re-derived
+from that percentage rather than read on its own, so it carries no information
+the two columns beside it do not. The instrument links the engine and drives the real UCI layer
+instead of talking to a pipe, for `mate_trace`'s reason: the buckets live in
+`search_state_t`, which is built and destroyed inside one `go`, so nothing
+outside the process can see them. It captures the engine's channel rather than
+printing it, so its stdout is the rows and nothing else, and it sends
+`ucinewgame` before every position, which is what makes a row independent of
+the order it was asked in (the warm-search trap above).
+
+`root_nodes` is **not** the search's node count: every `search()` call counts
+its own root node outside every bucket, and the loop makes one call per
+iteration plus one per aspiration widening, so
+`nodes == root_nodes + iterations + widenings` exactly. That identity is
+asserted in `tests/test_engine.cpp` "the share is taken over the whole search,
+not over one iteration" and is the thing that catches a denominator taken over
+the wrong tree. A distribution is not Elo either (DEC-019): what this decides
+is where a sweep starts.
 
 ## Size the lazy evaluation margin
 

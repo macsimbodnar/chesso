@@ -872,7 +872,92 @@
   X(TM_STABILITY_PERCENT, "TmStabilityPercent", 4,   0, 50)                    \
   X(TM_FALLING_MAX_CP,    "TmFallingMaxCp",     100, 1, 2000)                  \
   X(TM_FALLING_PERCENT,   "TmFallingPercent",   50,  0, 400)                   \
-  X(TM_SCALE_MIN_PERCENT, "TmScaleMinPercent",  30,  1, 100)
+  X(TM_SCALE_MIN_PERCENT, "TmScaleMinPercent",  30,  1, 100)                   \
+                                                                               \
+  /* THE THIRD SOFT-LIMIT SCALER, S132: how much of the root's own node        \
+     count the best move took. A root move that has eaten most of the          \
+     search's nodes is a choice that is not in doubt, and the iteration        \
+     after it is worth less clock; nodes spread over many moves is a           \
+     position that is genuinely unclear and worth more. This multiplies        \
+     the two scalers above and changes neither of them -- the three meet       \
+     in src/chesso.cpp iterative_deepening_search, and the floor below is      \
+     applied to their product there rather than to any one of them.            \
+                                                                               \
+     The rule, in the percent units the rest of this block works in, with      \
+     `f_pct` the best move's share of the root's nodes in percent              \
+     (src/chesso.cpp search_time_node_factor_percent):                         \
+                                                                               \
+       factor_pct = (TmNodeBasePct - f_pct) * TmNodeScalePct / 100             \
+                                                                               \
+     SEEDS, DEC-105's three forms, and the pair is **(b), a derivation         \
+     over chesso's own tree**. There is no (a) to take: the wiki's Time        \
+     Management page names the ratio of the best move's subtree to the         \
+     whole tree as a consideration and gives no method and no number           \
+     (https://www.chessprogramming.org/Time_Management, fetched                \
+     2026-09-05), and every number the open-source record carries for          \
+     this technique is another engine's tuned constant, which DEC-084 as       \
+     amended by DEC-105 refuses as a seed wherever it is republished --        \
+     the one pair traced as prose was retuned by its own engine when its       \
+     base allocation moved, which is the record's own evidence that such       \
+     a pair does not travel.                                                   \
+                                                                               \
+     So the pair is solved from two constraints of chesso's own over           \
+     chesso's own census (adocs/data/S132_node_share_census.py, 300            \
+     stratified positions at `go depth 12` on the release build):              \
+                                                                               \
+       factor_pct = 100 at the census median share f_med, so the seed          \
+       spends today's allocation in expectation and the SPRT measures a        \
+       redistribution of the clock rather than a longer one;                   \
+                                                                               \
+       factor_pct = TmScaleMinPercent at a share of 100 %, chesso's own        \
+       floor for a scaled soft limit, so the rule's hardest cut lands on       \
+       the floor that already exists instead of under it.                      \
+                                                                               \
+     Solving the two: TmNodeScalePct = 7000 / (100 - 100 f_med) and            \
+     TmNodeBasePct = 100 + 3000 / TmNodeScalePct, both rounded. **The          \
+     values below are that arithmetic at chesso's own median**, measured       \
+     2026-09-21 over the 300 positions at `go depth 12` on the release         \
+     build with this step's counting in it: f_med 0.5350, quartiles 35.8       \
+     and 73.0, deciles 22 31 40 47 54 59 69 78 89, one position of the         \
+     300 at a share of 100 % and none at 0 %                                   \
+     (adocs/data/S132_node_share_census.tsv). At that median the factor        \
+     reads 99 at the median share, 30 at a share of 100 % and 181 at a         \
+     share of 0 %: the first is 100 to the rounding of two integer             \
+     divisions and the second is the floor exactly.                            \
+                                                                               \
+     RANGES BY PURPOSE. TmNodeBasePct's floor is arithmetic: below 100         \
+     the factor goes negative at a share near 100 %, and a negative scale      \
+     is not a shorter time, it is a nonsense. Its top is where the             \
+     neutral share sits above every share there is, so the rule can only       \
+     grant time and never take it. TmNodeScalePct is the whole swing --        \
+     the factor moves by exactly TmNodeScalePct points across the full         \
+     range of shares -- so at 300 one point of a percent-resolution input      \
+     moves the soft limit by three, which is the rule resolving noise in       \
+     its own input.                                                            \
+                                                                               \
+     **TmNodeScalePct 0 IS THE OFF VALUE, AND IT IS A SWITCH, DEC-215.**       \
+     The formula alone reads 0 there, which floors every iteration and is      \
+     the opposite of off, so search_time_node_factor_percent answers 100       \
+     at 0 before it computes anything and the release build folds the          \
+     rule away. That makes the axis discontinuous at its own floor: a          \
+     tuning lane that wants a continuous axis declares its floor at 1 and      \
+     leaves 0 to the one-default revert this step's SPRT pre-registers.        \
+                                                                               \
+     TmNodeMinDepth is **(b)** as well, ASPIRATION_MIN_DEPTH as this           \
+     step's HEAD compiles it: chesso's own answer to the question below        \
+     which depth a root's node distribution is noise, and the depth its        \
+     own aspiration windows start trusting the previous iteration at. 0,       \
+     no gate at all, is a valid swept outcome and is the range floor.          \
+     **(c) is refused here and the refusal is the point**: the midpoint        \
+     32 of [0, 64] is above every depth this engine reaches, so it would       \
+     seed the feature switched off and a sweep would start from a rule         \
+     that never fires. All three join S127's set with S085's caveat            \
+     doubled -- the TM family is the most control-sensitive there is, and      \
+     a fit of these three wants the playing control or a second-control        \
+     verification. */                                                          \
+  X(TM_NODE_BASE_PCT,  "TmNodeBasePct",  120, 100, 400)                        \
+  X(TM_NODE_SCALE_PCT, "TmNodeScalePct", 151, 0,   300)                        \
+  X(TM_NODE_MIN_DEPTH, "TmNodeMinDepth", 2,   0,   64)
 // clang-format on
 
 

@@ -98,3 +98,13 @@ target_link_libraries(make_book PRIVATE chesso_engine)
 add_executable(magic_gen magic_gen.cpp)
 target_include_directories(magic_gen PRIVATE ../src)
 target_link_libraries(magic_gen PRIVATE chesso_engine)
+
+# S132. What share of the root's own nodes the best move took, per position --
+# the census the node-fraction time manager's two constants are solved from.
+# Links the engine because the per-root-move buckets live inside
+# search_state_t, which is built and destroyed inside one `go`: no process
+# outside this one can see them, which is mate_trace's reason above and the
+# same reason here.
+add_executable(node_share_census node_share_census.cpp)
+target_include_directories(node_share_census PRIVATE ../src)
+target_link_libraries(node_share_census PRIVATE chesso_engine)

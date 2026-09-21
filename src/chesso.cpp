@@ -87,6 +87,31 @@ static int last_best_move_stability = 0;
 static int last_score_drop_cp = 0;
 static int last_time_scale_percent = 100;
 
+// The node-fraction scaler's half of the same state, S132. Read by nothing in
+// the engine either, and three numbers because the rule has three observable
+// parts: the share the tree produced, what that share was worth, and the
+// product the soft limit was taken from. A test that saw only the product
+// could not tell a fraction computed wrongly from a factor applied wrongly.
+static int last_bestmove_node_percent = 0;
+static int last_node_factor_percent = 100;
+static int last_soft_scale_percent = 100;
+
+// The fraction's denominator, kept beside the percentage because the
+// percentage cannot show what it was taken over: a loop that cleared the
+// buckets between iterations, or one that missed the aspiration re-searches,
+// reports a plausible percentage of the wrong tree. With this a test holds the
+// loop to an exact identity instead -- the nodes it reported are the buckets
+// plus one per search() call, and the loop makes one call per iteration and
+// one per widening.
+static uint64_t last_root_nodes_total = 0;
+
+// And the limit those three produced, in milliseconds, after the clamp to the
+// hard limit. The percentages above cannot show the clamp -- it is the one
+// step of the calculation that is not a percentage -- and the clamp is the
+// promise compute_search_time_budget() makes about the clock, so it gets a
+// number a test can read instead of a duration a test has to measure. S132.
+static int64_t last_soft_limit_ms = 0;
+
 
 //-#############################   DECLARATIONS  ############################-//
 typedef bool (*process_func)(std::queue<std::string>&);
@@ -114,6 +139,26 @@ int uci_last_score_drop_cp()
 
 int uci_last_time_scale_percent()
 { return last_time_scale_percent; }
+
+
+int uci_last_bestmove_node_percent()
+{ return last_bestmove_node_percent; }
+
+
+int uci_last_node_factor_percent()
+{ return last_node_factor_percent; }
+
+
+int uci_last_soft_scale_percent()
+{ return last_soft_scale_percent; }
+
+
+int64_t uci_last_soft_limit_ms()
+{ return last_soft_limit_ms; }
+
+
+uint64_t uci_last_root_nodes_total()
+{ return last_root_nodes_total; }
 
 
 void uci_reply(const std::string& response)
@@ -638,7 +683,38 @@ int search_time_scale_percent(int best_move_stability, int score_drop_cp)
   // either range, so the floor is what keeps the soft limit off zero. Without
   // it a stability discount large enough to go negative would end every search
   // at depth one.
+  //
+  // S132 adds a third factor on top of this one and floors the **product** of
+  // the three at the same TM_SCALE_MIN_PERCENT, in
+  // iterative_deepening_search(). Flooring here as well costs nothing and is
+  // kept: this function is the pure answer to "what are the last iterations
+  // worth", it has callers of its own in the tests, and a floor applied twice
+  // to a value that is already above it is the identity.
   return std::max(scale, TM_SCALE_MIN_PERCENT);
+}
+
+
+int search_time_node_factor_percent(int bestmove_node_percent)
+{
+  assert(bestmove_node_percent >= 0);
+  assert(bestmove_node_percent <= 100);
+
+  // THE OFF VALUE, DEC-215, and it is a switch and not a range end that
+  // happens to look inert. The formula below reads 0 at TM_NODE_SCALE_PCT 0 --
+  // every soft limit crushed onto the floor, which is the opposite of off --
+  // so the neutral answer is returned before any arithmetic runs. In the
+  // release build the constant folds and the whole rule disappears with it,
+  // which is what makes the SPRT's H0 reading one default flip rather than a
+  // revert of the commit.
+  if (TM_NODE_SCALE_PCT == 0) { return 100; }
+
+  // More of the root's nodes under the best move is less doubt about it, so
+  // the factor falls as the share rises -- linearly, in the percent units the
+  // rest of the time manager works in. Both ends are bounded by the declared
+  // ranges rather than by a clamp: the share is at most 100 and
+  // TM_NODE_BASE_PCT is at least 100, so the product is never negative, and at
+  // the range tops it reaches 400 * 300 / 100 = 1200, four orders inside int.
+  return ((TM_NODE_BASE_PCT - bestmove_node_percent) * TM_NODE_SCALE_PCT) / 100;
 }
 
 
@@ -929,6 +1005,11 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   last_best_move_stability = 0;
   last_score_drop_cp = 0;
   last_time_scale_percent = 100;
+  last_bestmove_node_percent = 0;
+  last_node_factor_percent = 100;
+  last_soft_scale_percent = 100;
+  last_soft_limit_ms = 0;
+  last_root_nodes_total = 0;
 
   // The hard limit is armed as a timer by the caller, and it is what stops the
   // search inside an iteration. What is decided down here is the other half:
@@ -1120,7 +1201,49 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
                                               best_move_stability, score_drop)
                                         : 100;
 
-      soft_limit_ms = (soft_base_ms * scale) / 100;
+      // THE THIRD SCALER, S132, AND THE ONE PLACE ALL THREE MEET. The share of
+      // this search's root nodes that went under the move it is about to play:
+      // near 100 % the choice was never in doubt and the next iteration is
+      // worth little, spread out and the position is unclear and worth more.
+      //
+      // The denominator is every root move's nodes since this `go` began --
+      // buckets live in search_state_t and accumulate across iterations and
+      // across aspiration re-searches -- and not this iteration's alone, which
+      // is the reading the published record settled on. It excludes the root's
+      // own node by construction (src/data_structures.hpp root_nodes_total),
+      // so max(1, ...) is the divide-by-zero guard for a root that searched
+      // nothing rather than a correction. A root with no legal move at all
+      // reads 0 % and is granted time it has nothing to spend on; its
+      // iterations are one node each and it is not worth a branch.
+      const uint64_t root_nodes = root_nodes_total(&state);
+      const uint64_t best_nodes =
+          root_nodes_of(&state, search_result.best_move);
+
+      last_bestmove_node_percent = static_cast<int>(
+          (100 * best_nodes) / std::max<uint64_t>(1, root_nodes));
+      last_root_nodes_total = root_nodes;
+
+      // Gated on depth for the reason TM_NODE_MIN_DEPTH exists: a shallow
+      // iteration's distribution is noise. Gated on scale_time for the reason
+      // the whole block is -- a time the GUI named with `go movetime` is never
+      // moved by anything the search thinks.
+      const int node_factor =
+          (conf.scale_time && current_depth >= TM_NODE_MIN_DEPTH)
+              ? search_time_node_factor_percent(last_bestmove_node_percent)
+              : 100;
+
+      // **The floor belongs to the product and not to either factor.** A
+      // stability discount already at the floor times a node factor at a
+      // fraction near 100 % craters it -- 30 % of 30 % is 9 % of the
+      // allocation, which is a search that stops after its second iteration --
+      // and each factor on its own is inside its own bounds while the product
+      // is not. search_time_scale_percent() floors its own answer as well;
+      // that is the identity here and is kept so the pure function stays
+      // meaningful on its own.
+      const int combined_scale =
+          std::max((scale * node_factor) / 100, TM_SCALE_MIN_PERCENT);
+
+      soft_limit_ms = (soft_base_ms * combined_scale) / 100;
 
       // The hard limit is the ceiling on both. Scaling may bring the soft
       // limit up to it and never past it, which is what keeps every promise
@@ -1132,6 +1255,9 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
       last_best_move_stability = best_move_stability;
       last_score_drop_cp = score_drop;
       last_time_scale_percent = scale;
+      last_node_factor_percent = node_factor;
+      last_soft_scale_percent = combined_scale;
+      last_soft_limit_ms = soft_limit_ms;
     }
 
     // Reported whenever there is a line to report, aborted iteration included.

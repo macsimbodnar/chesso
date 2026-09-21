@@ -2039,6 +2039,20 @@ static int negamax_at(int alpha0,
         depth >= 3 && legal_moves_counter + 1 > 3 && !is_in_check &&
         !MOVE_PROMOTED(moves[i]) && !see_ge(&game->board, moves[i], 0);
 
+    // S132, the first half of the node-fraction time manager: what this root
+    // move is about to cost. Read here, immediately before the move is made,
+    // because everything above is decided on the parent's board and counts no
+    // nodes -- so a snapshot taken any earlier in the loop would be the same
+    // number and one taken after `make_move` would already be missing the
+    // child's own node. The published record's own bug of this class is a
+    // snapshot that drifted away from the move (section 5 of the step file).
+    //
+    // Zero below the root, where the ternary folds to a constant the branch
+    // predictor never has to think about; it is the one line of this step that
+    // every node in the tree runs, and DEC-083's interleaved timing is what
+    // prices it rather than an argument that it is free.
+    const uint64_t nodes_before_move = (ply == 0) ? state->explored_nodes : 0;
+
     if (!make_move(game, moves[i])) { continue; }
 
     // The late move reduction guard below is the only consumer: a move that
@@ -2246,6 +2260,20 @@ static int negamax_at(int alpha0,
     }
 
     unmake_move(game);
+
+    // S132. The delta lands in the move's own bucket, and it lands **before**
+    // the abort check above all else: an iteration the hard timer cut in half
+    // still spent those nodes on that move, and the buckets are the whole
+    // search's and not one iteration's. The other exit from this loop that
+    // runs past a make_move -- the pruning block's `unmake_move; continue` --
+    // is unreachable at ply 0, because every rule behind it reads
+    // `pruning_node`, which is false at the root; and it explores no node
+    // anyway, so the identity `1 + sum(buckets) == the call's node growth`
+    // holds whether or not that ever changes.
+    if (ply == 0) {
+      root_nodes_add(state, moves[i],
+                     state->explored_nodes - nodes_before_move);
+    }
 
     if (state->aborted) { return 0; }
 

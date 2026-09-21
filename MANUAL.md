@@ -270,7 +270,10 @@ of a refusal is the only confirmation the value was taken.
 | `TmStabilityPercent` | 4 | 0 to 50 | how much each of those iterations takes off the soft limit |
 | `TmFallingMaxCp` | 100 | 1 to 2000 | the fall in score since the previous iteration that earns the whole extension. Linear below, flat above |
 | `TmFallingPercent` | 50 | 0 to 400 | the whole extension, as a percentage added to the soft limit |
-| `TmScaleMinPercent` | 30 | 1 to 100 | the floor on the scaled soft limit, as a percentage of the unscaled one. 100 switches the stability discount off |
+| `TmScaleMinPercent` | 30 | 1 to 100 | the floor on the scaled soft limit, as a percentage of the unscaled one. 100 switches the stability discount off. Since S132 it is the floor on the **product** of the three scalers, not on the two above alone |
+| `TmNodeBasePct` | 120 | 100 to 400 | the third scaler's level: the soft limit is multiplied by `(TmNodeBasePct - share) * TmNodeScalePct / 100`, where `share` is the percentage of the root's own nodes that went under the move about to be played. Below 100 the factor would go negative at a share near 100 %; at the range top the neutral share sits above every share there is and the rule can only grant time |
+| `TmNodeScalePct` | 151 | 0 to 300 | that factor's slope, and the whole swing: the factor moves by exactly this many points across the full range of shares. **0 switches the rule off** and is a real off value rather than a range end that looks inert — the formula alone would read 0 there, so the factor answers 100 at 0 before it computes anything. At 300 one point of a percent-resolution input moves the limit by three |
+| `TmNodeMinDepth` | 2 | 0 to 64 | the shallowest completed iteration whose node distribution the rule believes. Below it the soft limit is the two scalers above alone, while the share is still measured. 0 is no gate at all |
 
 ## Commands
 

@@ -2077,6 +2077,371 @@ TEST_SUITE("engine: uci layer")
     }
   }
 
+
+  // S132. The third factor on the same soft limit, held against its own
+  // arithmetic. What this case cannot show is that the search ever calls it,
+  // which is what the loop case below is for -- the S089 pair above is split
+  // the same way and for the same reason.
+  TEST_CASE("the node factor falls as the best move takes more of the tree")
+  {
+    // Monotone over the whole range of shares there is. Non-strict because
+    // the arithmetic is integer: at TmNodeScalePct 151 a point of share is
+    // 1.51 points of factor, so some steps are 1 and some are 2.
+    for (int share = 0; share < 100; ++share) {
+      const int here = search_time_node_factor_percent(share);
+      const int next = search_time_node_factor_percent(share + 1);
+
+      REQUIRE_MESSAGE(
+          next <= here,
+          ("the factor rose from share " + std::to_string(share) + ": " +
+           std::to_string(here) + " then " + std::to_string(next)));
+      REQUIRE_MESSAGE(here >= 0,
+                      ("negative factor at share " + std::to_string(share)));
+    }
+
+    // **TmNodeScalePct 0 is the rule's off value and one of this step's
+    // pre-registered outcomes**, so everything below it is asserted about a
+    // rule that is switched on. A suite that went red on the one-line revert
+    // its own SPRT names would make that revert a rewrite.
+    if (TM_NODE_SCALE_PCT == 0) {
+      for (const int share : {0, 37, 50, 99, 100}) {
+        CHECK_EQ(search_time_node_factor_percent(share), 100);
+      }
+
+      MESSAGE(
+          "TmNodeScalePct is 0: the factor is 100 at every share and the "
+          "soft limit is S089's alone");
+      return;
+    }
+
+    // And it really falls. A rule that answered one constant would satisfy
+    // every line above.
+    CHECK(search_time_node_factor_percent(100) <
+          search_time_node_factor_percent(0));
+
+    // The whole swing is TmNodeScalePct, exactly: the two ends differ by
+    // 100 * TmNodeScalePct / 100 in the reals and their truncations differ by
+    // the same integer, because the two products differ by a whole number of
+    // hundredths. This is the setting's declared meaning turned into an
+    // assertion -- "the factor moves by exactly TmNodeScalePct points across
+    // the full range of shares" is what src/search_params.hpp says it is.
+    CHECK_EQ(search_time_node_factor_percent(0) -
+                 search_time_node_factor_percent(100),
+             TM_NODE_SCALE_PCT);
+
+    // THE NEUTRAL SHARE, which is the census median the pair was solved for
+    // (adocs/data/S132_node_share_census.py re-derives it, and the step's
+    // stamp records it with its quartiles). Reported always, asserted only
+    // where the constants keep it inside the range of shares that exist: a
+    // later fit is allowed to move it out, and a case that went red for that
+    // would be asserting a seeding constraint rather than a rule.
+    REQUIRE(TM_NODE_SCALE_PCT > 0);
+
+    const int neutral =
+        TM_NODE_BASE_PCT - (10000 / std::max(1, TM_NODE_SCALE_PCT));
+
+    MESSAGE("neutral share "
+            << neutral << " %, factor there "
+            << search_time_node_factor_percent(std::clamp(neutral, 0, 100))
+            << " %, at a share of 100 % "
+            << search_time_node_factor_percent(100) << " %, floor "
+            << TM_SCALE_MIN_PERCENT << " %");
+
+    if (neutral >= 0 && neutral <= 100) {
+      CHECK(std::abs(search_time_node_factor_percent(neutral) - 100) <= 2);
+    }
+
+#ifdef CHESSO_TUNE
+    // THE OFF VALUE, DEC-215, and this is the build that can prove it here: at
+    // TmNodeScalePct 0 the factor is 100 at every share, so the soft limit is
+    // S089's alone and the engine is the one before this step. The release
+    // build proves the same thing on the tree instead -- the bench total and
+    // the eight replies, recorded in this step's file -- because a constant it
+    // folded cannot be moved from a test.
+    //
+    // The formula alone would answer 0 here, which floors every iteration and
+    // is the opposite of off. That is the whole reason the function has a
+    // branch in front of it.
+    const int shipped_scale = TM_NODE_SCALE_PCT;
+
+    REQUIRE(search_param_set("TmNodeScalePct", 0));
+
+    for (const int share : {0, 37, 50, 99, 100}) {
+      CHECK_EQ(search_time_node_factor_percent(share), 100);
+    }
+
+    // Restored, and the restoration checked: a case that left the parameter at
+    // 0 would switch the rule off for every case that runs after it.
+    REQUIRE(search_param_set("TmNodeScalePct", shipped_scale));
+    REQUIRE(TM_NODE_SCALE_PCT == shipped_scale);
+    CHECK(search_time_node_factor_percent(100) < 100);
+#endif
+  }
+
+
+  // S132, and the same division of labour as S089's pair above: the function
+  // is pure, so a loop could compute it correctly on every iteration and never
+  // look at the answer. What is pinned here is the loop -- the share it
+  // measured, the factor it derived, the product it floored and the limit that
+  // produced, all four read back from the search that ran.
+  //
+  // The root is two bare kings with exactly one legal move, and every
+  // precondition it is chosen for is asserted rather than described: one legal
+  // move makes the best move's share of the root's nodes exactly 100 %, and a
+  // position nothing can be won in scores the same at every depth, so the fall
+  // is 0 and the stability is the iteration count less one, on any machine and
+  // after any search change. The mate-in-one root the S089 case uses cannot do
+  // this job: it has twenty-odd root moves and its share is a property of the
+  // tree (DEC-142, and S192's reason for rebuilding that case by
+  // construction).
+  TEST_CASE_FIXTURE(
+      engine_fixture_t,
+      "the iteration loop scales its soft limit by the share it measured")
+  {
+    struct probe_t
+    {
+      int stability;
+      int drop;
+      int scale;         // S089's two scalers, floored, as before
+      int node_percent;  // the share of the root's nodes the best move took
+      int node_factor;   // what that share was worth
+      int soft_scale;    // the three multiplied and floored
+      int64_t soft_ms;   // and the limit that produced, after the clamp
+    };
+
+    // Two kings, black to move, boxed so that a8b8 is the only legal move.
+    const std::string one_move_fen = "k7/8/1K6/8/8/8/8/8 b - - 0 1";
+
+    auto probe = [](const std::string& fen, int depth, bool scale_time,
+                    int hard_ms, int soft_base_ms) -> probe_t {
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position fen " + fen);
+
+        // [position] stops whatever was running and [go] is the only path that
+        // clears the stop flag again, exactly as the S089 probe above
+        // documents: without this the direct call below aborts at its first
+        // check_limits() and the probe reads the fallback.
+        uci_process_line("go depth 1");
+        uci_wait_for_search();
+      }
+
+      uci_search_options_t options = {};
+      options.depth = depth;
+      options.scale_time = scale_time;
+      options.search_time_ms = hard_ms;
+      options.search_soft_time_ms = soft_base_ms;
+
+      uci_search_result_t result = {};
+      {
+        stdout_capture_t capture;
+        result = iterative_deepening_search(options);
+      }
+
+      REQUIRE(result.best_move != 0);
+
+      const probe_t out = {
+          uci_last_best_move_stability(), uci_last_score_drop_cp(),
+          uci_last_time_scale_percent(),  uci_last_bestmove_node_percent(),
+          uci_last_node_factor_percent(), uci_last_soft_scale_percent(),
+          uci_last_soft_limit_ms()};
+
+      uci_shutdown();
+
+      return out;
+    };
+
+    SUBCASE("one legal move is the whole tree and buys the floor")
+    {
+      // The construction, asserted. Everything below is read off a root whose
+      // only move is forced and whose score cannot move.
+      REQUIRE(load_FEN(one_move_fen, &game));
+
+      move_t moves[MAX_MOVES];
+
+      REQUIRE_EQ(legal_moves(&game, moves), 1u);
+
+      for (const int depth : {4, 6, 8}) {
+        const probe_t p = probe(one_move_fen, depth, true, 0, 0);
+
+        const std::string where = "depth " + std::to_string(depth);
+
+        REQUIRE_MESSAGE(p.stability == depth - 1, where);
+        REQUIRE_MESSAGE(p.drop == 0, where);
+
+        // The share. One legal move takes every node under the root.
+        CHECK_MESSAGE(p.node_percent == 100, where);
+
+        // What that share was worth, and THE IDENTITY: the product the loop
+        // used is the three numbers it recorded, floored. Both hold whatever
+        // the settings are, the off value included.
+        CHECK_MESSAGE(
+            p.node_factor == search_time_node_factor_percent(p.node_percent),
+            where);
+        CHECK_MESSAGE(p.soft_scale == std::max((p.scale * p.node_factor) / 100,
+                                               TM_SCALE_MIN_PERCENT),
+                      where);
+
+        // The rest of the subcase is about a rule that is switched on.
+        // TmNodeScalePct 0 is this step's own pre-registered revert and not a
+        // failure of anything.
+        if (TM_NODE_SCALE_PCT == 0) {
+          CHECK_MESSAGE(p.node_factor == 100, where);
+          CHECK_MESSAGE(p.soft_scale == p.scale, where);
+          continue;
+        }
+
+        // It is a discount, which is the rule's whole claim: a choice that
+        // was never in doubt does not need the next iteration.
+        CHECK_MESSAGE(p.node_factor < 100, where);
+
+        // And the floor is on the product. The precondition is what makes it
+        // non-vacuous here: S089's discount at this stability times a factor
+        // at a share of 100 % lands under TmScaleMinPercent, which is the
+        // multiplicative-stacking hazard the step file's section 5 names,
+        // arriving on the first position anyone would try.
+        REQUIRE_MESSAGE((p.scale * p.node_factor) / 100 < TM_SCALE_MIN_PERCENT,
+                        ("the construction no longer under-spends: scale " +
+                         std::to_string(p.scale) + " times factor " +
+                         std::to_string(p.node_factor) + ", " + where));
+
+        CHECK_MESSAGE(p.soft_scale == TM_SCALE_MIN_PERCENT, where);
+      }
+    }
+
+    SUBCASE("below the depth gate the share is measured and not used")
+    {
+      // TmNodeMinDepth is chesso's own guard against a shallow iteration's
+      // distribution being noise. Below it the soft limit is S089's alone,
+      // while the share is still recorded -- it is a property of the tree and
+      // the census reads it at every depth.
+      if (TM_NODE_MIN_DEPTH < 2 || TM_NODE_SCALE_PCT == 0) {
+        MESSAGE("TmNodeMinDepth is "
+                << TM_NODE_MIN_DEPTH << " and TmNodeScalePct is "
+                << TM_NODE_SCALE_PCT
+                << ", so there is no depth below the gate to probe or no rule "
+                   "to gate, and this subcase is empty");
+      } else {
+        const probe_t gated =
+            probe(one_move_fen, TM_NODE_MIN_DEPTH - 1, true, 0, 0);
+
+        // Same share as above, and the factor neutral anyway.
+        CHECK_EQ(gated.node_percent, 100);
+        CHECK_EQ(gated.node_factor, 100);
+        CHECK_EQ(gated.soft_scale, gated.scale);
+
+        // Non-vacuous: at the gate's own depth the same position is scaled.
+        const probe_t open = probe(one_move_fen, TM_NODE_MIN_DEPTH, true, 0, 0);
+
+        CHECK_EQ(open.node_percent, 100);
+        CHECK(open.node_factor < 100);
+        CHECK(open.soft_scale < open.scale);
+      }
+    }
+
+    SUBCASE("the scaled soft limit never passes the hard limit")
+    {
+      // The clamp is the promise compute_search_time_budget() makes about the
+      // clock and this step does not touch it -- but it now sits downstream of
+      // a factor that can grant as well as cut, so it is asserted rather than
+      // assumed. Deterministic on both sides: the two limits are handed to the
+      // loop directly, so neither this case's reading nor its precondition
+      // depends on what the tree did.
+      const probe_t clamped = probe(one_move_fen, 8, true, 100, 1000);
+
+      CHECK_EQ(clamped.soft_ms, 100);
+
+      // And it binds only where it should: the same soft base under a hard
+      // limit far above it keeps the scaled number.
+      const probe_t free_run = probe(one_move_fen, 8, true, 100000, 1000);
+
+      CHECK_EQ(free_run.soft_ms, (1000 * free_run.soft_scale) / 100);
+      CHECK(free_run.soft_ms > clamped.soft_ms);
+    }
+
+    SUBCASE("the share is taken over the whole search, not over one iteration")
+    {
+      // The loop-level identity, and it is exact on any tree and any machine:
+      // every search() call counts its own root node outside every bucket,
+      // and the loop makes one call per iteration plus one per aspiration
+      // widening. So the nodes it reported are the buckets plus that many.
+      //
+      // What it fails on is the published record's own pair of bugs at this
+      // technique -- buckets cleared between iterations, and re-searches left
+      // out of the accumulation, which one engine shipped and fixed
+      // afterwards (the step file's section 1). A percentage alone cannot see
+      // either: both report a plausible share of the wrong tree.
+      const int depth = 8;
+
+      uci_init();
+
+      uci_search_result_t result = {};
+      {
+        stdout_capture_t capture;
+        uci_process_line("position fen " + std::string(KIWIPETE_POS));
+        uci_process_line("go depth 1");
+        uci_wait_for_search();
+
+        uci_search_options_t options = {};
+        options.depth = depth;
+        options.scale_time = true;
+
+        result = iterative_deepening_search(options);
+      }
+
+      const uint64_t buckets = uci_last_root_nodes_total();
+      const int widenings = uci_last_aspiration_failures();
+
+      const std::string measured =
+          "nodes " + std::to_string(result.total_node_explored) + ", buckets " +
+          std::to_string(buckets) + ", " + std::to_string(depth) +
+          " iterations, " + std::to_string(widenings) + " widenings";
+
+      MESSAGE(measured);
+
+      // Preconditions: the search really ran, and the accumulation really
+      // spans more than one call -- without the second the identity would be
+      // satisfied by a loop that accumulated nothing at all.
+      REQUIRE_MESSAGE(result.best_move != 0, measured);
+      REQUIRE_MESSAGE(buckets > 0, measured);
+      REQUIRE_MESSAGE(depth + widenings > 1, measured);
+
+      CHECK_MESSAGE(result.total_node_explored ==
+                        buckets + static_cast<uint64_t>(depth + widenings),
+                    measured);
+
+      uci_shutdown();
+    }
+
+    SUBCASE("a time the GUI named with movetime is not scaled by any of it")
+    {
+      // The accepts' own clause, through the real command path rather than
+      // through a direct call: `go movetime` sets both limits to the named
+      // time and clears scale_time, so all three factors are neutral and the
+      // limit is the number that arrived. The share is still measured, which
+      // is what makes this a claim about the scaling and not about the
+      // counting.
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position fen " + one_move_fen);
+        uci_process_line("go movetime 120");
+        uci_wait_for_search();
+      }
+
+      CHECK_EQ(uci_last_soft_limit_ms(), 120);
+      CHECK_EQ(uci_last_node_factor_percent(), 100);
+      CHECK_EQ(uci_last_soft_scale_percent(), 100);
+      CHECK_EQ(uci_last_time_scale_percent(), 100);
+      CHECK_EQ(uci_last_bestmove_node_percent(), 100);
+
+      uci_shutdown();
+    }
+  }
+
   // Regression, S037: the info line carried the *current iteration's* node
   // count, so `nodes` fell between depths and tools/search_bench.py - which
   // keeps the last info line and is how INV-6 is discharged for a change
