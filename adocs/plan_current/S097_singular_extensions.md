@@ -1082,3 +1082,80 @@ the SPRT starts.
 debug, sanitize and perft green. **`CAND` pinned to `88ec74f`** in
 `adocs/data/S097_v1_sprt.sh`; `REF` is `5c76ea9`. The SPRT is the
 coordinator's next action.
+
+## Verdict 1, 2026-09-21: H0, a zero (coordinator)
+
+The gainer SPRT of `88ec74f` (the singular extension, `SeExtend` 1,
+`SeMultiCut` 0) against `5c76ea9` (the tree without the verification search),
+`{0, 5}` nElo at 8+0.08 with Hash 16 on `noob_3moves.epd`, seed
+20260921045106, launched 2026-09-21 04:51:09 and `SPRT-RUN-DONE` at 14:18:33,
+**accepted H0 after 20080 games**:
+
+```
+SPRT | cand 88ec74f vs ref 5c76ea9, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | -0.81 +/- 3.70, nElo -1.06 +/- 4.81
+LLR | -2.96 (-2.94, 2.94) -> H0
+Games | N: 20080 W: 6123 L: 6170 D: 7787, Ptnml [925, 2332, 3507, 2417, 859]
+Wall | 9 h 27 m, 2124.6 games/h, forfeits 0
+Log | adocs/data/S097_v1_sprt.log
+```
+
+LOS 33.32 %, draw ratio 34.93 %, pairs ratio 1.01. **0 time forfeits on
+either side** over the PGN's 20082 games (13969 adjudications, 6113 natural
+ends); `Incomplete mating PV` 14 candidate against 9 reference, an
+observation and not a diagnosis (CHESS). `adocs/data/S105_pairs.py`: 10040
+complete pairs, pair score mean 1.0156, variance 0.3160, sd 0.5622, buckets
+9.4 / 23.0 / 32.9 / 24.3 / 10.4 %, white winning both of 947 pairs (9.4 %),
+117.2 plies and 19.8 s a game. The abort rule was never near: 2124.6 games an
+hour against the 2110 budgeted, and the load of 17 on twelve threads was
+fastchess alone. Evidence: `adocs/data/S097_v1_sprt.log`,
+`adocs/data/S097_v1_sprt_pairs.txt`; the run directory
+`.tuning/sprt_s097_v1_20260921_045106`.
+
+### The reading
+
+The extension alone does not gain 5 nElo over the tree without it. The nElo
+interval is [-5.87, +3.75], its centre within about one nElo of zero and its
+top short of the bound: a zero, not the loss DEC-194 refused in S231's
+[-9.60, +2.80], and the walk reached the bound in fewer games than a truth at
+zero expects (25591 on a bound, DEC-143). The pre-registration's H0 text
+(`adocs/data/S097_v1_sprt.sh`) wrote two things before the number, and the
+coordinator reads both here rather than following them blind:
+
+- **The one-line flip of `SeExtend` to 0 is not one line.** The release build
+  compiles the switch as a constant, and the fifteen cases and eighteen
+  mutants that pin the block assert it fires; a flip to 0 guards or retires
+  every one of them, and the removal or the keep that verdict 2 decides would
+  undo that pass either way. The flip buys nothing measurable meanwhile --
+  S132's reference and candidate share the tree whichever value the switch
+  holds -- so the block stays at `SeExtend` 1, recorded as a zero and not as a
+  gain, as the carrier of verdict 2.
+- **"Drop both" was priced for a loss, and this is a walk.** The
+  recommendation's argument -- the multicut would have to pay for the
+  verification search alone -- is the argument for a multicut without the
+  extension. With the extension in the tree the search is paid for at zero
+  (its gain matched its cost, which is what the interval says), and the
+  multicut's verdict is a pure-margin question, the most favourable form the
+  pair can be measured in. The pre-registration's own exception, a walk near
+  the bounds rather than a measured loss, is this reading; the owner's
+  standing priority of strength and correctness over machine time
+  (2026-09-19) is why a night is spent on the answer rather than saved.
+
+**DEC-227** records the decision: verdict 2 runs exactly as
+`adocs/data/S097_v2_sprt.sh` pre-registered it -- one default, `SeMultiCut` 0
+to 1, with its guard case, its mined mate row and mutants E20 to E22, against
+the tree with the extension -- and its reading decides the block whole: H1
+keeps both with the extension's zero on record; H0 or a stalled walk
+(DEC-063) removes the block -- code, cases, mutants and the six settings -- in
+one revert to `5c76ea9`'s search, proved by the bench signature 4579468 and
+not argued.
+
+### What comes next, and in which order
+
+The machine goes to **S132 first**: its code is written, its agent is waiting
+for "machine free", and its increments are the better work DEC-155 wants done
+while a night run is not yet ready. Verdict 2's landing is written meanwhile
+by the step's agent **in a separate worktree**, so the two agents never share
+a file, and lands after S132's completion; verdict 2's SPRT follows S132's.
+The fixed-node depth instrument runs again at that landing (section 6, per
+verdict).

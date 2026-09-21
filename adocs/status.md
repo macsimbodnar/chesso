@@ -7,6 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S097 verdict 1 is H0, 2026-09-21 14:18:33: `Elo -0.81 +/- 3.70`, `nElo
+  -1.06 +/- 4.81`, LLR -2.96 over 20080 games in 9 h 27 m at 2124.6 an hour,
+  0 forfeits, `Ptnml [925, 2332, 3507, 2417, 859]`, LOS 33.32 %.** A zero and
+  not a loss: the nElo interval [-5.87, +3.75] is centred within one nElo of
+  zero and the walk reached the bound in fewer games than a truth at zero
+  expects. **DEC-227** reads the pre-registration's own exception (a walk
+  rather than a measured loss) and says why the H0 text's one-line flip is
+  not taken: the release build compiles `SeExtend` as a constant and fifteen
+  cases and eighteen mutants assert the block fires, so a flip is a guarding
+  pass over all of them for nothing S132 could measure, and "drop both" was
+  priced for a multicut paying for the verification search alone, which with
+  the extension in the tree it does not. So the block stays at `SeExtend` 1,
+  recorded as a zero and not as a gain, as the carrier of verdict 2, which
+  runs exactly as `adocs/data/S097_v2_sprt.sh` pre-registered it --
+  `SeMultiCut` 0 -> 1 with its guard case, mined mate row and mutants E20 to
+  E22, against the tree with the extension -- and decides the block whole:
+  H1 keeps both, H0 or a stalled walk (DEC-063) removes code, cases, mutants
+  and the six settings in one revert to `5c76ea9`'s search (`bench` 4579468).
+  `Incomplete mating PV` 14 candidate against 9 reference, an observation.
+  Evidence `adocs/data/S097_v1_sprt.log`, `S097_v1_sprt_pairs.txt` (variance
+  0.3160). The third verdict-closing commit under DEC-220. **Next, in
+  order:** the ledger regenerated and the plan's Open entry and pending count
+  carried (45 to 55 -> 44 to 54); "machine free" to S132's agent, whose
+  Report 1 is in and whose uncommitted increments sit in the tree (per-root-
+  move node buckets, the accessor, the soft-limit multiplier with its three
+  constants, `tools/node_share_census.cpp`, tests, mutants, the
+  pre-registration), for Report 2 -- build, INV-6 identical counts, the
+  interleaved timing on a quiet machine, the census and its seeds, gate,
+  mutants -- then its fast check, landing, Debug self-play and `gate_extra`,
+  and its SPRT tonight; meanwhile S097's agent writes verdict 2's landing in
+  a worktree of its own (`../chesso-s097v2`, branch `s097-v2`) in
+  code-writing mode, to land after S132 completes, take its second tier, and
+  run its own SPRT the night after. Machine idle from 14:18; no watcher
+  armed.
+
 - **S097 verdict 1 is landed and its gainer SPRT is running, launched
   2026-09-21 04:51:09: `88ec74f` (the singular extension) against `5c76ea9`
   (the tree without the verification search), `{0, 5}` nElo at 8+0.08 on

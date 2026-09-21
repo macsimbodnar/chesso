@@ -12686,3 +12686,76 @@ Consequences: `specs.md`'s search row states both; S097's verdict 2 (the
               multicut) inherits them unchanged; S127 refits the four
               constants and may revisit the depth and margin but not these
               two rules.
+
+## DEC-227  2026-09-21  S097 verdict 1's zero is a walk, not a loss: the extension stays as the carrier of the pre-registered multicut verdict, and the block leaves whole if that reads H0
+Tags:         search, extensions, singular, multicut, sprt, dec-143, dec-063, dec-215, s097, s132
+Context:      S097 verdict 1 -- the singular extension alone, `88ec74f`
+              against `5c76ea9` at `{0, 5}` nElo -- read H0 after 20080
+              games: `Elo -0.81 +/- 3.70`, `nElo -1.06 +/- 4.81`, 0
+              forfeits. Its pre-registration (`adocs/data/S097_v1_sprt.sh`)
+              wrote the H0 path before the number: flip `SeExtend` to 0 as a
+              one-line default revert, and "drop both and record the zero,
+              unless the run's own reading is a walk near the bounds rather
+              than a measured loss". The reading is that walk: the nElo
+              interval [-5.87, +3.75] is centred within one nElo of zero
+              with its top short of the bound, unlike S231's [-9.60, +2.80]
+              that DEC-194's shape refused, and the bound was reached in
+              fewer games than a truth at zero expects (DEC-143). Two of the
+              text's premises do not hold on the tree. The flip is not one
+              line: the release build compiles `SeExtend` as a constant, and
+              the fifteen cases and eighteen mutants that pin the block
+              assert it fires, so a flip to 0 is a guarding pass over all of
+              them that verdict 2's keep or removal undoes either way, and
+              it buys nothing measurable meanwhile because S132's reference
+              and candidate share the tree whichever value the switch holds.
+              And "the multicut would have to pay for the verification
+              search alone" is the argument for a multicut without the
+              extension: with the extension in the tree the search is paid
+              for at zero -- its gain matched its cost, which is what the
+              interval says -- and the multicut's verdict is a pure-margin
+              question, the most favourable form the pair can be measured
+              in. The owner's standing instruction of 2026-09-19 puts
+              strength and correctness above machine time.
+Decision:     By the coordinator, 2026-09-21, under the owner's delegation
+              of engine questions; the owner may overrule. Verdict 1 is
+              recorded as a zero. The block stays in the tree at `SeExtend`
+              1, unflipped and not claimed as a gain, as the carrier of
+              verdict 2, which runs exactly as `adocs/data/S097_v2_sprt.sh`
+              pre-registered it: one default, `SeMultiCut` 0 to 1, with its
+              guard case, its mined mate row and mutants E20 to E22, against
+              the tree with the extension, after S132's verdict so no night
+              is idle. Verdict 2's reading decides the block whole. H1: both
+              stay, the extension's zero on record and the reason it is kept
+              being that it carries a measured gain (S005, S006 and S015 are
+              the precedent). H0, or a stalled walk terminated under
+              DEC-063: the block leaves -- code, cases, mutants and the six
+              settings -- in one revert to `5c76ea9`'s search, proved by the
+              bench signature 4579468 and not argued. Verdict 2's landing is
+              written while S132 holds the machine, in a worktree of its own
+              so the two agents share no file, and lands after S132
+              completes.
+Rejected:     Flipping `SeExtend` to 0 now, as the H0 text has it -- a
+              guarding pass over every case and mutant of the block, undone
+              by either reading of verdict 2, for a tree S132 measures the
+              same either way; and a rule at an off value the next verdict
+              switches back on is the flip-flop the plan's history is full
+              of. Dropping both now, the text's recommendation -- priced for
+              a loss the run did not measure; the pair is the form every
+              engine in the band above ships, and a night is the price the
+              owner said to pay for the answer. Measuring the pair against
+              `5c76ea9`, both switches at once -- the same question with
+              worse attribution, verdict 1 having already priced one half
+              alone. Measuring the multicut without the extension -- the
+              harder form, the multicut paying for the verification search
+              by itself. Removing the block now and re-landing it for
+              verdict 2 -- two signatures and two second tiers for one
+              verdict.
+Consequences: `SeExtend` 1 is a measured zero, and the ledger says so: the
+              plan carries no gain for it. `specs.md`'s passage records the
+              zero and the block's status as verdict 2's carrier. S127 fits
+              the four settings only if verdict 2 keeps the block. S188, the
+              in-loop check extension bounded by this step's ply guard,
+              waits on verdict 2 as it waited on verdict 1 and builds its own
+              guard if the block leaves. The removal, if it comes, is a whole
+              revert and not a flip, and it lands with `Bench: 4579468` and
+              `search_bench` identical to `5c76ea9` at both depths (INV-6).
