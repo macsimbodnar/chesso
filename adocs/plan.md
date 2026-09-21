@@ -497,13 +497,13 @@ whole with their evidence; they are 3100-band techniques by the record.
 
 ## What this costs
 
-The pending order owes **roughly 45 to 55 SPRT verdicts** once multi-verdict
-steps are counted honestly (S097 and S022 two each, the evaluation groups
+The pending order owes **roughly 44 to 54 SPRT verdicts** once multi-verdict
+steps are counted honestly (S097's second and S022's two, the evaluation groups
 per-term; five more since 2026-09-19 by DEC-222 -- S236's block, S234, S235,
 S237 and S238), the three the reduction rebuild took having been spent on
 2026-09-18, the two-ply table's one on 2026-09-20 (DEC-224; the two removals
 DEC-222 attached to an H1 there are not owed) and the no-table-move term's
-one on 2026-09-21 -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
+one on 2026-09-21, the singular extension's first the same day -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
 and S152's two five-hour gauntlets at the end.
 
 **Struck 2026-09-11 by S182** (`2026-09-04_plan_review-F03`, DEC-136):
@@ -570,8 +570,9 @@ found stale (its F03).
 | S098 v3 leg 1 | the same rule with the shallower path switched off, the deeper path alone, the pre-registered bisection, `noob_3moves.epd` | 6 h 49 m 01 s | 14510 | `{0, 5}` | **H1**, +5.75 +/- 4.37 |
 | S231 | the two-ply continuation history | 5 h 37 m | 12070 | `{0, 5}` | H0, -2.65 +/- 4.82 |
 | S095 | the no-table-move reduction term | 6 h 39 m | 14252 | `{0, 5}` | H1, +5.92 +/- 4.50 |
+| S097 v1 | the singular extension | 9 h 27 m | 20080 | `{0, 5}` | H0, -0.81 +/- 3.70 |
 
-**The ledger holds twenty-two: mean 4 h 36 m, median 4 h 56 m, 225581 games in 101.47 hours, 2223.2 an hour across the set.** **Fast class**, an effect outside the bounds interval -- ten runs, mean **1 h 58 m**. **Slow class**, inside it, on a bound or a true zero -- twelve runs, mean **6 h 48 m**.
+**The ledger holds twenty-three: mean 4 h 49 m, median 5 h 25 m, 245661 games in 110.92 hours, 2214.8 an hour across the set.** **Fast class**, an effect outside the bounds interval -- ten runs, mean **1 h 58 m**. **Slow class**, inside it, on a bound or a true zero -- thirteen runs, mean **7 h 00 m**.
 
 **Why the throughput moves**, read at the runs themselves and kept because the
 reasons do not re-derive from a row. Eight of the first nine sit between 2328 and
@@ -604,7 +605,7 @@ against and here was worth the extra leg.
 
 ### Priced by class, which is what the spread is
 
-The twenty-two split in two and the split is not luck — it is where the truth
+The twenty-three split in two and the split is not luck — it is where the truth
 sat relative to the bounds. The class of a row is
 `tools/ledger.py`'s: the nElo estimate's interval either misses the bounds
 pair, which is fast, or reaches it, which is slow.
@@ -622,8 +623,8 @@ pair, which is fast, or reaches it, which is slow.
 - **Slow class, an effect inside the interval or a true zero**: S024 v1
   4 h 10 m, S098 v1 5 h 26 m, S108 5 h 27 m, S231 5 h 37 m, S098 v1 leg 2
   6 h 11 m, S148 6 h 20 m, S093 v2 6 h 35 m, S095 6 h 39 m, S098 v3 leg 1 6 h 49 m, S130
-  7 h 12 m, S165 7 h 58 m, S210 F22 13 h 17 m.
-  **Mean 6 h 48 m.** Every one of the twelve has an nElo interval that reaches
+  7 h 12 m, S165 7 h 58 m, S097 v1 9 h 27 m, S210 F22 13 h 17 m.
+  **Mean 7 h 00 m.** Every one of the thirteen has an nElo interval that reaches
   inside its bounds pair — that is the rule — and that is what DEC-063 says a
   `{0, 5}` or `{-5, 0}` pair does to a true zero: it runs to the wall.
 
@@ -644,13 +645,13 @@ sourced figure above +20 at a comparable band, S024 (+44.68 / +33.95, Weiss
 single digits to +25, which is inside or beside the interval. So:
 
         3 fast-class verdicts    x 1 h 58 m  =    5.9 h
-    42 to 52 slow-class      x 6 h 48 m  =  286 to 354 h
+    41 to 51 slow-class      x 7 h 00 m  =  287 to 357 h
     --------------------------------------------------
-    total                                =  291 to 359 machine-hours
+    total                                =  293 to 363 machine-hours
 
-against the struck 75 to 110. The flat mean gives **207 to 253 hours**
-(4 h 36 m x 45 to 55) and that is the **floor**, not the estimate: the ledger's
-fast runs are ten of twenty-two where the pending list's fast-class effects are
+against the struck 75 to 110. The flat mean gives **212 to 260 hours**
+(4 h 49 m x 44 to 54) and that is the **floor**, not the estimate: the ledger's
+fast runs are ten of twenty-three where the pending list's fast-class effects are
 three of about fifty. Add the two SPSA nights, the one to three datagen nights
 and S152's two gauntlets on top, none of which is in either figure.
 
@@ -1140,7 +1141,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S097  **in `plan_current/`, verdict 1 landed 2026-09-21, its SPRT running** -- extend the one move a verification search says is singular, and take the multicut the same search offers. The extension (`SeExtend` 1, four settings at DEC-105 (c), DEC-226's two rules) landed in `88ec74f` with the multicut inert behind `SeMultiCut` 0, `bench` 4579468 -> 5066204; the gainer SPRT `{0, 5}` against `5c76ea9` runs from 04:51 (`adocs/data/S097_v1_sprt.sh`); H1 keeps it and verdict 2 flips the multicut for its own SPRT, H0 flips `SeExtend` off
+1. S097  **in `plan_current/`, verdict 1 H0 on 2026-09-21, verdict 2 pending behind S132** -- extend the one move a verification search says is singular, and take the multicut the same search offers. The extension (`SeExtend` 1, four settings at DEC-105 (c), DEC-226's two rules) landed in `88ec74f` with the multicut inert behind `SeMultiCut` 0, `bench` 4579468 -> 5066204, and its gainer SPRT `{0, 5}` against `5c76ea9` read **H0, `Elo -0.81 +/- 3.70`, `nElo -1.06 +/- 4.81`** over 20080 games, 0 forfeits (`adocs/data/S097_v1_sprt.log`) -- a zero and not a loss, so under DEC-227 the block stays, recorded as a zero, as the carrier of verdict 2: `SeMultiCut` 0 -> 1 with its guard case, mined mate row and mutants E20 to E22, measured against the tree with the extension once S132 has had the machine (`adocs/data/S097_v2_sprt.sh`); H1 keeps both, H0 or a stalled walk removes the block whole (`bench` back to 4579468)
 2. S132  the soft time limit scales with the share of the root's nodes the best move consumed, spending less when the choice is not in doubt
 3. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
 4. S236  the late move reduction is accumulated in fixed point and rounded once, and S098 verdict 1's history-scaled term returns as a fraction of a ply -- one block, one SPRT, bisected on H0 (DEC-222, DEC-213)
