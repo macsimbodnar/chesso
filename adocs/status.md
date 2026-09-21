@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S097 verdict 2's gainer SPRT is running, launched 2026-09-21 20:48:32:
+  `63ad848` (the multicut on, beside the extension) against `f02f59a` (the
+  tree with the extension alone, S132 complete), `{0, 5}` nElo at 8+0.08 on
+  `noob_3moves.epd`, seed 20260921204832, output `.tuning/sprt_s097_v2_20260921_204832`, pid 1193529.** Banner
+  checked: both shas, `OUT` under `.tuning/`. `gate_extra` on the landing
+  green (5 stages, 1119 s); `REF`/`CAND` pinned in `0d9a4cf`. Watcher armed
+  with four exits, hourly progress and a 40 h ceiling; worst case 41861 games
+  (19.8 h at 2110 an hour), 25591 on a bound (12.1 h). Machine held by the
+  match; nothing else runs until the marker. **When it fires:** the
+  verdict-closing commit with DEC-220's block (subject "Record S097 v2's
+  <verdict> for the multicut"), the forfeit report per side and the
+  `S105_pairs.py` reading; **H1** keeps both rules and completes S097 with
+  the extension's zero on record (stamp, `plan_done/`, ledger, the specs
+  placeholder, the pending count 43 to 53 -> 42 to 52); **H0** or a stalled
+  walk (DEC-063) removes the whole block -- code, cases, mutants, six
+  settings -- in one revert to `5c76ea9`'s search proved by `bench` 4579468
+  and `search_bench` identity (DEC-227), by a fresh agent in the main tree,
+  then completes S097 on two zeros. Next Open entry after S097: S188, the
+  in-loop check extension, which waits on this verdict for its ply guard.
+  No other agent is active; the worktree `../chesso-s097v2` is removed and
+  the branch `s097-v2` kept as history of the four WIP commits.
+
 - **S097 verdict 2 is landed, 2026-09-21 20:27, as `63ad848`, `bench` 5066204
   -> 4493659; second tier in progress, SPRT not yet pinned.** One default,
   `SeMultiCut` 0 -> 1, and the coverage it makes possible: the rule's direct
