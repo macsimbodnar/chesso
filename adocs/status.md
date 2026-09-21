@@ -7,6 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S132's gainer SPRT is running, launched 2026-09-21 17:24:43: `474c288`
+  (the node-fraction time manager at its census seeds) against `778c7b0` (the
+  tree without it), `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed
+  20260921172443, output `.tuning/sprt_s132_20260921_172443`, pid 615771.**
+  Banner checked: both shas, `OUT` under `.tuning/`. Watcher armed with four
+  exits, hourly progress and a 40 h ceiling; worst case 41861 games (19.8 h
+  at 2110 an hour), 25591 on a bound (12.1 h). Machine held by the match;
+  nothing else runs until the marker. **S097 verdict 2 is measured and waits
+  to land on the tree S132's verdict leaves** (Report 2 at 17:23, inside its
+  19:15 box, which is why the SPRT started at 17:24 and not 19:15): both fast
+  suites green in the worktree but for the `specs.md` sentence, which the
+  coordinator has since written on the branch (the multicut paragraph, with a
+  `<verdict>` placeholder); `bench` 5066204 -> 4493659 (-11.3 %), the off
+  value proved with the full signature; `search_bench` byte-identical at
+  depth 9 and moved at 12 with no best move changed; fixed-node depths
+  16/13/15 -> 17/13/15, one of the extension's two plies back; the mate row
+  mined from S230's pool -- 269 oracle-confirmed candidates swept at depths 11
+  to 14 shipped and under E21, one loses the mate:
+  `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`, mate in 5 at depth
+  14, Stockfish `#+5` -- observed red with the guard removed; mutants E01 to
+  E22 21 of 21 killed once E05 was found stillborn on the landed tree
+  (orphaned by verdict 1's copy-out, repaired with the header's `(void)`) and
+  a first launch's `--label` misuse was caught and re-run; goldens
+  re-derived by their scripts, none moved. Branch `s097-v2` holds it as two
+  WIP commits (`003f552`) on `474c288`; a cold read-only fast check runs over
+  that diff tonight. **Tomorrow, on S132's marker:** the S132 record commit
+  with DEC-220's block and its completion (H1 keeps the seeds, H0 flips
+  `TmNodeScalePct` to 0 first); then rebase `s097-v2` onto the completed
+  tree, apply the fast check's findings, squash-land with `Bench: 4493659`
+  and the specs passage (its landing date reads 2026-09-22 and is corrected
+  if the day differs), Debug self-play and `gate_extra`, pin `REF` to the
+  landing's parent, launch verdict 2's SPRT. Leftovers to prune first:
+  `../chesso-s097v2/.ref-builds/474c288`, `../chesso-s097v2/.ref-builds/mut`,
+  `../chesso-s097v2/build-e21`.
+
 - **S132 is landed, 2026-09-21 15:50, as `474c288`, second tier green, SPRT
   pinned and not yet launched.** The landing (`bench` 5066204, the parent's
   total -- fixed depth cannot see a clock rule, so the message carries
