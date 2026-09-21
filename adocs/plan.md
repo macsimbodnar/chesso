@@ -1140,7 +1140,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S097  extend the one move a verification search says is singular, and take the multicut the same search offers
+1. S097  **in `plan_current/`, verdict 1 landed 2026-09-21, its SPRT running** -- extend the one move a verification search says is singular, and take the multicut the same search offers. The extension (`SeExtend` 1, four settings at DEC-105 (c), DEC-226's two rules) landed in `88ec74f` with the multicut inert behind `SeMultiCut` 0, `bench` 4579468 -> 5066204; the gainer SPRT `{0, 5}` against `5c76ea9` runs from 04:51 (`adocs/data/S097_v1_sprt.sh`); H1 keeps it and verdict 2 flips the multicut for its own SPRT, H0 flips `SeExtend` off
 2. S132  the soft time limit scales with the share of the root's nodes the best move consumed, spending less when the choice is not in doubt
 3. S188  a move that gives check is extended by one ply inside the move loop, bounded by S097's extension plumbing, decided by SPRT -- the in-loop form the retired S096's evidence turned out not to cover (DEC-133)
 4. S236  the late move reduction is accumulated in fixed point and rounded once, and S098 verdict 1's history-scaled term returns as a fraction of a ply -- one block, one SPRT, bisected on H0 (DEC-222, DEC-213)
