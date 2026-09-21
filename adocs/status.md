@@ -31,8 +31,19 @@ Updated: 2026-09-21, by hand.
   (orphaned by verdict 1's copy-out, repaired with the header's `(void)`) and
   a first launch's `--label` misuse was caught and re-run; goldens
   re-derived by their scripts, none moved. Branch `s097-v2` holds it as two
-  WIP commits (`003f552`) on `474c288`; a cold read-only fast check runs over
-  that diff tonight. **Tomorrow, on S132's marker:** the S132 record commit
+  WIP commits (`003f552`) on `474c288`. **The cold read-only fast check over
+  that diff (17:40) found nothing in `src/` and three real gaps of record,
+  being fixed on the branch in writing tonight:** the specs sentence's
+  "each pinned by a case and a mutant" is true of two of the multicut's
+  three exclusions -- the `beta > -MATE_MIN` term has no case and no mutant,
+  so a third guard leg and mutant E23 are owed; the "21 of 21" mutation
+  score is the union of two runs (the first ended FAILED with E21
+  surviving before the mate row existed, the second ran on a dirty
+  `.ref-builds/mut`) and must be reported as such, with one clean re-run
+  tomorrow; and the mined row's GOLDEN recipe cannot be followed as written
+  (sweep lines without `--fens`, an undocumented separator set, two
+  documents disagreeing on the order). Two trivial: sixteen cases not
+  fifteen, one comment on the guard case's assertion order. **Tomorrow, on S132's marker:** the S132 record commit
   with DEC-220's block and its completion (H1 keeps the seeds, H0 flips
   `TmNodeScalePct` to 0 first); then rebase `s097-v2` onto the completed
   tree, apply the fast check's findings, squash-land with `Bench: 4493659`
