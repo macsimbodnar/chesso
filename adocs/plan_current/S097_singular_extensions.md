@@ -1760,3 +1760,34 @@ it against the value the engine compiles and flags it. The proposed ending:
 > the tree is verdict 1's exactly.
 
 The first verdict's own passage is unchanged by this except for that ending.
+
+## Second tier on verdict 2's landing commit `63ad848`, 2026-09-21 (coordinator)
+
+**Landed as `63ad848`**, `bench` 5066204 -> 4493659, squashed from the branch
+`s097-v2`'s four WIP commits after the rebase onto S132's completion
+`f02f59a`; the specs passage's landing date corrected to 2026-09-21 and the
+S096 paragraph's pointer moved from "pending" to "landed the same day for its
+own SPRT". The cold fast check's three findings of record (the unpinned
+`beta > -MATE_MIN` term, the two-run mutation score, the recipe that did not
+reproduce) were closed by the agent and verified by the machine rather than
+re-reviewed: the third guard leg passes first time with 92 assertions, E23 is
+killed by it alone, the clean run reads 22 of 22, and the recipe re-run from
+the recorded sweeps returns the same row.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 103247 trace lines
+with 924 `bestmove` lines (`.tuning/coord/s097_v2_debug_selfplay/`), 20:28.
+
+`tools/gate_extra.sh` launched detached on `63ad848` at 20:30
+(`.tuning/gate_extra_2026-09-21_s097v2.log`), watcher armed with four exits
+and a 55-minute ceiling; its marker is recorded below before `CAND` is pinned
+and the SPRT starts.
+
+**`tools/gate_extra.sh` on `63ad848`: `GATE-EXTRA-DONE 5 stages 1119 s`**
+(20:29 to 20:48, `.tuning/gate_extra_2026-09-21_s097v2/`), prose, citations,
+debug, sanitize and perft green. **`CAND` pinned to `63ad848` and `REF` to
+`f02f59a`**, the commit the landing sits on -- the tree with the extension and
+S132 complete, whose `src/` differs from the candidate's by the one X-macro
+row (`git diff --stat f02f59a 63ad848 -- src`) -- in
+`adocs/data/S097_v2_sprt.sh`. The SPRT is the coordinator's next action.
