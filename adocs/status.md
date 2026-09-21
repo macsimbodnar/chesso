@@ -38,7 +38,14 @@ Updated: 2026-09-21, by hand.
   `SeExtend` to 0 as a one-default revert, records the zero, and decides with
   the reason stated whether the multicut is still worth a night; **no
   verdict** is a zero decided with the reason stated. Machine held by the
-  match; nothing else runs until the marker.
+  match; nothing else runs until the marker. **S132 started 2026-09-21
+  ~05:15 by a fresh Opus 5 agent in code-writing mode** (brief
+  `.tuning/coord/S132_brief.md`): per-root-move node buckets (behaviour-neutral,
+  INV-6 by identical node counts and an interleaved timing when the machine is
+  free), then the soft-limit multiplier on the best move's share with its
+  three constants seeded from a census of chesso's own tree (P3), tests,
+  mutants and `adocs/data/S132_sprt.sh`; no build, test, census or binary
+  until the coordinator says "machine free" after S097 verdict 1's marker.
 
 - **S095 is done, 2026-09-21, on an H1, and `plan_current/` is empty.** The
   fifth reduction term stays at its seed (`LmrNoTtMove` 1) for S127 to fit;
