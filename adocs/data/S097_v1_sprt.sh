@@ -281,8 +281,11 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # reduction term ships on an H1", whose `bench` is 4579468 -- the commit this
 # landing sits on, pinned by the coordinator before the landing existed. CAND
 # is pinned the same way after the landing commit is made.
+# **Pinned 2026-09-21 04:51: CAND is `88ec74f`, "Extend the one move a
+# verification search says is singular"** -- V1's landing commit, whose second
+# tier (Debug self-play, gate_extra) is green.
 REF="${REF:-5c76ea9}"
-CAND="${CAND:-PIN_ME}"
+CAND="${CAND:-88ec74f}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then

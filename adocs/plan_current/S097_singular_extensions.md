@@ -1052,3 +1052,33 @@ dropped it at ~3000). A stalled V2 near +3 straddles the {0,5} bounds
   cost.
 - - Unreachable this pass: ccrl.chessdom.com (DNS), computerchess.org.uk (403)
   — Weiss 1.1 / Berserk 3.x-4.x blitz numbers untraced, said so above.
+
+## Second tier on V1's landing commit `88ec74f`, 2026-09-21 (coordinator)
+
+**Fast check** by a cold reviewer over the landing diff before it landed: one
+real finding -- the verification gate read the entry's depth, bound and score
+through the raw slot pointer after the null-move recursion, masked at today's
+seeds only -- repaired by copying the three fields out beside the table move
+before any recursion; plus `SeExtend`, the off switch DEC-215 clause 2 asks
+for, proved to the node against the parent (4579468, eight identical
+`bestmove` replies); the twelve re-pointed older mutants re-run and killed
+with the switch's own (13 of 13); one instrument described as it prints. The
+reviewer reproduced the bench, the multicut's off value, `search_bench` at
+both depths, the fixed-node depths and the mutant kills. DEC-226 records the
+two rules the verification search needed where the record was silent.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 186396 trace lines
+with 1261 `bestmove` lines (`.tuning/coord/s097_v1_debug_selfplay/`).
+
+`tools/gate_extra.sh` launched detached on `88ec74f` at 04:31
+(`.tuning/gate_extra_2026-09-21_s097v1.log`), watcher armed with four exits and
+a 90-minute ceiling; its marker is recorded below before `CAND` is pinned and
+the SPRT starts.
+
+**`tools/gate_extra.sh` on `88ec74f`: `GATE-EXTRA-DONE 5 stages 1132 s`**
+(04:31 to 04:50, `.tuning/gate_extra_2026-09-21_s097v1/`), prose, citations,
+debug, sanitize and perft green. **`CAND` pinned to `88ec74f`** in
+`adocs/data/S097_v1_sprt.sh`; `REF` is `5c76ea9`. The SPRT is the
+coordinator's next action.
