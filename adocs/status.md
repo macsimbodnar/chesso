@@ -48,7 +48,20 @@ Updated: 2026-09-21, by hand.
   `s097-v2` at `b9ae156`; brief `.tuning/coord/S097_v2_brief.md`): the
   flip, its guard case, the mined mate row's script, E20 to E22, the
   pre-registration amended to DEC-227's outcomes, no build until the
-  machine is free. The two agents share no file.
+  machine is free. The two agents share no file. **Verdict 2's Report 1 is
+  in, 15:10:** `SeMultiCut` 1 in the X-macro and no line of the rule moved;
+  the guard case "the multicut returns the verification's score and
+  searches nothing" (fail-soft score, never `singular_beta`, outside the
+  mate band, with a PV leg where it does not fire), the off-value case
+  made tune-only as the extension's is, `adocs/data/S097_mine_mate_row.py`
+  over S230's pool with a tune-library witness that the rule fires, E20 to
+  E22 with 108 anchors unique, the pre-registration amended to DEC-227's
+  outcomes with `REF` the flip's parent; `DEV_MANUAL.md`'s golden list
+  corrected (57 defaults, six S097 rows). Nothing compiled. **Owed by the
+  coordinator at the landing:** the `specs.md` passage's `SeMultiCut`
+  sentence, which `plan_prose_check.py --params` reads as a stale
+  current-value claim once the default is 1 -- red in the worktree until
+  the passage lands with the flip.
 
 - **S097 verdict 1 is landed and its gainer SPRT is running, launched
   2026-09-21 04:51:09: `88ec74f` (the singular extension) against `5c76ea9`
