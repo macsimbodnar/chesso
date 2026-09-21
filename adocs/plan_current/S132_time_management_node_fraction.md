@@ -615,3 +615,53 @@ and `REF` to `778c7b0`**, the commit the landing sits on (its `src/` is
 are documents only), in `adocs/data/S132_sprt.sh`. The SPRT is the
 coordinator's next machine action after S097 verdict 2's measurements, which
 take the idle afternoon first (DEC-155); launch by 19:30 at the latest.
+
+## 16. Verdict, 2026-09-21: H1 (coordinator)
+
+The gainer SPRT of `474c288` (the node-fraction time manager at its census
+seeds) against `778c7b0` (the tree without it), `{0, 5}` nElo at 8+0.08 with
+Hash 16 on `noob_3moves.epd`, seed 20260921172443, launched 2026-09-21
+17:24:43 and `SPRT-RUN-DONE` at 19:13:32, **accepted H1 after 3822 games**:
+
+```
+SPRT | cand 474c288 vs ref 778c7b0, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 16.28 +/- 8.47, nElo 21.21 +/- 11.01
+LLR | 2.95 (-2.94, 2.94) -> H1
+Games | N: 3822 W: 1239 L: 1060 D: 1523, Ptnml [149, 406, 664, 501, 191]
+Wall | 1 h 48 m, 2115.5 games/h, forfeits 0
+Log | adocs/data/S132_sprt.log
+```
+
+LOS 99.99 %, draw ratio 34.75 %, pairs ratio 1.25. **0 time forfeits on
+either side** over the PGN's 3825 games (2603 adjudications, 1222 natural
+ends) -- the abort rule this clock change was taken under never came near.
+`Incomplete mating PV` 2 candidate against 11 reference, an observation and
+not a diagnosis (CHESS). `adocs/data/S105_pairs.py`: 1911 complete pairs, pair
+score mean 1.0154, variance 0.3047, sd 0.5520, buckets 8.7 / 23.3 / 33.9 /
+24.1 / 9.9 %, white winning both of 167 pairs (8.7 %), 117.1 plies and 19.9 s
+a game. Evidence: `adocs/data/S132_sprt.log`, `adocs/data/S132_sprt_pairs.txt`;
+the run directory `.tuning/sprt_s132_20260921_172443`.
+
+### The reading
+
+The pre-registered H1 reading binds. **The multiplier stays at the census
+seeds it was measured at** -- `TmNodeScalePct` 151, `TmNodeBasePct` 120,
+`TmNodeMinDepth` at `AspirationMinDepth`'s value -- and the claim is "at least
+5 nElo", never the stopping estimate (DEC-063): the nElo interval
+[10.2, 32.2] misses the bounds pair on the high side, which is DEC-223's
+fast class, and 3822 games is the shortest gainer since S098 verdict 2. The
+three constants are refitted by S127's lane and not here, **with S085's
+caveat doubled**: the time-management family is the one S085 recommends
+excluding from a tune at a control the verification does not share (an
+SPSA'd time manager measured +23.8 at 20+0.2 and -22.9 at 10+0.1), so a fit
+of these three wants the playing control or a second-control verification,
+and S127's file says so before it runs.
+
+**The one question this step asks the owner rather than deciding** (section
+6 and the pre-registration): before the constants are called shipped, one
+confirmation at a second control -- a 40+0.4-class run, or folded into S152's
+rated run at the list's own control (DEC-108) -- for the S085 reason and
+because every published node-TM patch this step read was verified at two to
+four controls. It is stated in `status.md`'s Parked list as a question with
+the coordinator's recommendation, and no night is spent on it on the
+coordinator's authority.

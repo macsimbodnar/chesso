@@ -7,6 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S132's verdict is H1, 2026-09-21 19:13:32: `Elo 16.28 +/- 8.47`, `nElo
+  21.21 +/- 11.01`, LLR 2.95 over 3822 games in 1 h 48 m at 2115.5 an hour, 0
+  forfeits either side, `Ptnml [149, 406, 664, 501, 191]`, LOS 99.99 %.** The
+  pre-registered H1 reading binds: the multiplier stays at its census seeds
+  (`TmNodeScalePct` 151, `TmNodeBasePct` 120, the gate at
+  `AspirationMinDepth`'s value) for S127 to fit with S085's caveat doubled --
+  the time-management family wants the playing control or a second-control
+  verification; the claim is at least 5 nElo (DEC-063); the nElo interval
+  [10.2, 32.2] misses the pair on the high side, DEC-223's fast class.
+  `Incomplete mating PV` 2 candidate against 11 reference, an observation.
+  Evidence `adocs/data/S132_sprt.log`, `S132_sprt_pairs.txt` (variance
+  0.3047). The fourth verdict-closing commit under DEC-220. **The step's one
+  question for the owner is parked below** (a second-control confirmation
+  before the constants are called shipped). **Next, in order:** S132's
+  completion (stamp, `plan_done/`, the ledger regenerated, the specs
+  placeholder, the pending count 44 to 54 -> 43 to 53); then S097 verdict
+  2: rebase `s097-v2` onto the completed tree, "machine free" to its agent
+  for the verification pass (the third guard leg and E23 compiled, both
+  suites, one clean E01 to E23 run, `bench` 4493659 re-taken, `pick`/`fires`
+  from the existing sweeps), its Report 4, the squash-landing with the specs
+  passage, Debug self-play and `gate_extra`, pin, and its SPRT tonight.
+  Machine idle from 19:13; no watcher armed.
+
 - **S132's gainer SPRT is running, launched 2026-09-21 17:24:43: `474c288`
   (the node-fraction time manager at its census seeds) against `778c7b0` (the
   tree without it), `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed
@@ -4596,6 +4619,23 @@ Updated: 2026-09-21, by hand.
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
 
 - Parked:
+  - **S132's question for the owner, 2026-09-21 (pre-registered, not decided by
+    the coordinator):** the node-fraction time manager read H1 at 8+0.08
+    (`Elo 16.28 +/- 8.47`); its constants are census seeds at the playing
+    control. Does it get one confirmation at a second control before they are
+    called shipped -- a 40+0.4-class run of its own (about 3 h 45 m at the
+    block boundary's 534 games an hour for 1000 pairs, or a full `{0, 5}`
+    night), or folded into S152's rated run at the list's own control
+    (DEC-108)? The reason is S085's: an SPSA'd time manager once measured
+    +23.8 at 20+0.2 and -22.9 at 10+0.1, and every published node-TM patch
+    the step read was verified at two to four controls. **Coordinator's
+    recommendation: fold it into the next block boundary's longer-control
+    reading (DEC-202, 1000 pairs at 32+0.32) rather than spend a night now**
+    -- that reading is already owed, it runs the whole tree at the second
+    control, and a time-manager regression there would show as the boundary
+    drift it is designed to catch; a dedicated run is bought only if that
+    reading moves. S127 excludes the three from any lane at a control the
+    verification does not share either way.
   - ~~pixello's two test sounds~~ **closed 2026-09-13 by DEC-207**: the
     submodule leaves the branch with S227.
   - ~~**Three findings filed by S195, none of them planned.**~~ **Closed
