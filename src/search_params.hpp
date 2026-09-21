@@ -741,21 +741,23 @@
      SE_MULTICUT IS A SWITCH AND NOT A SETTING, and it is the whole of the      \
      step's second verdict (DEC-215). The extension and the multicut are two    \
      changes off one verification search and each is priced by its own SPRT, so \
-     the multicut ships **inert** with the extension's landing and is turned on \
-     by moving this default to 1 and nothing else. 0 is the off value and it is \
-     off by construction rather than by argument: the release build compiles it \
-     as a constant, so the branch folds away entirely and the binary holds no   \
-     multicut at all. Proved on the tree and not declared from the range's end  \
-     -- the tune build at `SeMultiCut` 0 benches the extension landing's total  \
-     to the node, and at 1 it does not. Range 0 to 1 by stated purpose: the     \
-     rule either returns the verification's score or it does not, and there is  \
-     no third setting of it. */                                                 \
+     the multicut shipped **inert** with the extension's landing and verdict 2  \
+     is this default moved to 1 and nothing else in src/. 0 is still the off    \
+     value and it is off by construction rather than by argument: the release   \
+     build compiles the switch as a constant, so at 0 the branch folds away     \
+     entirely and the binary holds no multicut at all -- which is why the       \
+     rule's own guard case and its three mutants could not land until this      \
+     flip. Proved on the tree and not declared from the range's end: the tune   \
+     build at `SeMultiCut` 0 benches the extension landing's total to the node, \
+     and at 1 it does not. Range 0 to 1 by stated purpose: the rule either      \
+     returns the verification's score or it does not, and there is no third     \
+     setting of it. */                                                          \
   X(SE_EXTEND,           "SeExtend",           1, 0,  1)                       \
   X(SE_MIN_DEPTH,        "SeMinDepth",        10, 4, 16)                       \
   X(SE_TT_DEPTH_MARGIN,  "SeTtDepthMargin",    4, 0,  8)                       \
   X(SE_PLY_FACTOR,       "SePlyFactor",        5, 2,  8)                       \
   X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
-  X(SE_MULTICUT,         "SeMultiCut",         0, 0,  1)                       \
+  X(SE_MULTICUT,         "SeMultiCut",         1, 0,  1)                       \
                                                                                \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \

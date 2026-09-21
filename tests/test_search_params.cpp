@@ -40,7 +40,9 @@
 // that **adds** one adds a row here in the same commit, which is what S095's
 // LmrNoTtMove is doing below, and S097's six singular-extension rows after
 // it -- four settings and two switches, `SeExtend` and `SeMultiCut`, whose
-// defaults are what the step's two verdicts move.
+// defaults are what the step's two verdicts move. **S097 verdict 2 moves
+// `SeMultiCut` from 0 to 1** and that one row is the whole of the candidate in
+// `src/`: the rule it turns on shipped with verdict 1 and no line of it moved.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -110,7 +112,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"SeTtDepthMargin",           4,     0,       8},
   {"SePlyFactor",               5,     2,       8},
   {"SeMarginPerDepth",          9,     1,      18},
-  {"SeMultiCut",                0,     0,       1},
+  {"SeMultiCut",                1,     0,       1},
   {"LazyEvalMargin",          184,     0,    2000},
   {"AspirationMinDepth",        2,     2,      64},
   {"AspirationDelta",          21,     1,    2000},

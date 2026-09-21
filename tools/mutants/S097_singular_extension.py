@@ -1,9 +1,10 @@
 """The singular extension, its verification search and the gates on it. S097.
 
-Eighteen mutants over one block and the plumbing it needs, and the split is
-the step's own: **one per rule, one per gate**. The rule is two lines -- a
-window under the table entry's score and a ply added to one move -- and the
-gates are what keep the search that decides it from answering itself.
+Twenty-two mutants over one block and the plumbing it needs, and the split is
+the step's own: **one per rule, one per gate**. The rules are three lines -- a
+window under the table entry's score, a ply added to one move, and a score
+returned where some other move already clears the node's beta -- and the gates
+are what keep the search that decides them from answering itself.
 
 WHAT EACH CLASS IS.
 
@@ -37,21 +38,33 @@ WHAT EACH CLASS IS.
                    switch the gate reads backwards would hand the candidate
                    back under the name of the parent
 
-WHAT IS NOT HERE, AND WHY. **The multicut's own mutants are not in this file
-and are not expected to be until `SeMultiCut`'s default moves.** The switch is
-`inline constexpr int` in the release build, which is the only build this tool
-compiles, so the branch folds away and a mutant of a rule that is not in the
-binary is equivalent by construction -- it would be scored as a survivor and
-would mean nothing. The step's second verdict is one default flip, and the
-three mutants it brings with it are named here so the ids are allocated and the
-work is not re-invented:
+  the multicut     what the same verification search returns where it fails
+                   high: the bound instead of the score it found, the mate
+                   band dropped off the value that leaves the node, the PV
+                   gate dropped, and the defender's own window admitted. E20
+                   to E23, and they are the whole of the step's second
+                   verdict. E21 and E23 look like one guard and are two --
+                   one on the value the node hands back, one on the window it
+                   was asked under -- so each has its own mutant and its own
+                   killer, which is what DEC-141 asks of a condition
 
-  E20  the multicut returns `singular_beta` instead of the fail-soft `vscore`
-  E21  the mate-range guard on the returned value is dropped
-  E22  the `!is_pv` guard is dropped
+WHEN E20 TO E23 ARRIVED, AND WHY NOT SOONER. E20 to E22 were **named and
+reserved** in this header at verdict 1 and are written here at verdict 2;
+**E23 is not one of the three the header reserved** and was added after the
+verdict's own fast check found the defender's-beta term pinned by nothing.
+Verdict 2 is one default: `SeMultiCut` 0 to 1 in `src/search_params.hpp` and no line of the rule
+moved. Until that flip the switch was `inline constexpr int` at 0 in the
+release build -- the only build this tool compiles -- so the branch folded away
+entirely and a mutant of a rule that is not in the binary is equivalent by
+construction: it would have been scored as a survivor and would have meant
+nothing. That is also why the rule's direct guard case could not land with
+verdict 1, and why **every E mutant is re-run at the flip** rather than
+inherited: the flip changes what the release build compiles, so verdict 1's
+kills are re-proved and not assumed.
 
 Nothing here moves a constant. `SeMultiCut` at 0 is the off value DEC-215 asks
-to be proved on the tree, and the four settings beside it are seeds S127
+to be proved on the tree -- held by a tune-build case and by the bench
+signature, as `SeExtend`'s is -- and the four settings beside it are seeds S127
 refits; what these break is a guard, a sign or a variable.
 
 The list is data: `m` is bound by tools/mutation_check.py, which execs this
@@ -109,10 +122,18 @@ m("E05_entry_depth_margin_dropped", S, "search/extension",
   'any entry is deep enough. A move stored by a search two plies deep decides '
   'that a node ten plies deep extends it, which is the condition the published '
   'form states first and the one that keeps the verification from being run on '
-  'a guess',
+  'a guess. **The `(void)` below is a repair and not decoration**: the gate is '
+  'the only reader of `tt_entry_depth`, and that local arrived with the fast '
+  'check\'s copy-out *after* verdict 1\'s mutation run, so from the landing on '
+  'this mutant orphaned it and Release with -Werror refused to compile it -- '
+  'stillborn, scored as neither killed nor survived, and invisible until the '
+  'mutants were re-run. Verdict 2 re-ran them, saw it, and fixed it the way '
+  'S095\'s J-class and S098\'s T-class already do',
   ('      tt_entry != nullptr && depth >= SE_MIN_DEPTH &&\n'
    '      tt_entry_depth >= depth - SE_TT_DEPTH_MARGIN &&',
    '      tt_entry != nullptr && depth >= SE_MIN_DEPTH &&'),
+  ('  int se_extension = 0;\n',
+   '  (void) tt_entry_depth;\n  int se_extension = 0;\n'),
   origin="S097")
 
 m("E06_bound_type_gate_widened", S, "search/extension",
@@ -243,4 +264,69 @@ m("E17_window_mate_band_gate_dropped", S, "search/extension",
   ('    if (tt_entry_score < MATE_MIN && tt_entry_score > -MATE_MIN &&\n'
    '        singular_beta > -MATE_MIN) {',
    '    if (tt_entry_score < MATE_MIN && tt_entry_score > -MATE_MIN) {'),
+  origin="S097")
+
+m("E20_multicut_returns_singular_beta", S, "search/extension",
+  'the multicut hands back the **bound** the window was set to instead of the '
+  'fail-soft score the verification actually found. The two are the same sign '
+  'and within a margin of each other, so no node count and no mate test has to '
+  'move: what changes is the value every parent above this node reasons with, '
+  'and the record says the difference is the whole rule -- one engine measured '
+  'the score form at +6.2 LTC and withdrew the bound form at -0.8. Killed by '
+  '"the multicut returns the verification\'s score and searches nothing", '
+  'which asserts the two are different numbers at its drive before it asserts '
+  'which one came back',
+  ('        return vscore;\n',
+   '        return singular_beta;\n'),
+  origin="S097")
+
+m("E21_multicut_mate_band_gate_dropped", S, "search/extension",
+  'the value the multicut returns is not kept out of the mate band. A '
+  'half-depth search under a window below the entry\'s score is the instrument '
+  'that **misses** a mate, and a mate distance out of one is a distance '
+  'nothing proved: the node ends on it, its parent carries it, and a mate is '
+  'reported or a real one is hidden behind a fabricated shorter distance. The '
+  '`beta > -MATE_MIN` term beside it is S165\'s guard on the node\'s own '
+  'window and is a different rule, so it is left in place here. Killed by the '
+  'mined row of "pruning does not hide a forced mate"',
+  ('      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
+   '                 vscore < MATE_MIN && vscore > -MATE_MIN && '
+   'beta > -MATE_MIN) {',
+   '      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
+   '                 beta > -MATE_MIN) {'),
+  origin="S097")
+
+m("E22_multicut_pv_gate_dropped", S, "search/extension",
+  'the multicut fires at a PV node. That line is reported and played, and the '
+  'node would end on a score no move of its own was ever searched for -- the '
+  'house rule every other bound-returning rule in this function follows, '
+  'reverse futility and the null move alike, and this project\'s own choice '
+  'where the published record is silent (DEC-221). Killed by the second leg of '
+  '"the multicut returns the verification\'s score and searches nothing", the '
+  'same drive relabelled',
+  ('      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
+   '                 vscore < MATE_MIN && vscore > -MATE_MIN && '
+   'beta > -MATE_MIN) {',
+   '      } else if (SE_MULTICUT != 0 && vscore >= beta &&\n'
+   '                 vscore < MATE_MIN && vscore > -MATE_MIN && '
+   'beta > -MATE_MIN) {'),
+  origin="S097")
+
+m("E23_multicut_defender_beta_gate_dropped", S, "search/extension",
+  'the multicut fires at a node whose own beta sits inside the **negative** '
+  'mate band. That node is inside a mate proof as the defender: every score '
+  'it can produce clears beta, so a reduced search fails high there by '
+  'construction and its word says nothing about whether the mate is held -- '
+  'and the node ends on that word instead of searching. S165 found the same '
+  'shape in the null move and this guard is its rule applied here. E21 '
+  'deliberately leaves this term in place, because a guard on the node\'s own '
+  'window is a different rule from the guard on the value the node returns, '
+  'so it needs a mutant of its own. Killed by the third leg of "the multicut '
+  'returns the verification\'s score and searches nothing", the same drive '
+  'with its window moved into the band',
+  ('      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
+   '                 vscore < MATE_MIN && vscore > -MATE_MIN && '
+   'beta > -MATE_MIN) {',
+   '      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
+   '                 vscore < MATE_MIN && vscore > -MATE_MIN) {'),
   origin="S097")

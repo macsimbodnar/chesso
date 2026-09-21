@@ -28,8 +28,13 @@ that makes them attributable is the coordinator's brief and is taken as
 written. V1 is one commit-ready change: the `excluded_move` plumbing, the
 verification search, the five gates on a node searched under an exclusion, the
 extension, four seeded constants, the cases and the mutants. **V2's code ships
-with it, inert**, behind `SE_MULTICUT` -- default 0, range 0 to 1 -- so that
-V2's landing is that default moved to 1 and nothing else in `src/`.
+with it, inert**, behind `SE_MULTICUT` at its off value, range 0 to 1, so that
+V2's landing is that switch moved to 1 and nothing else in `src/`. (The clause
+read "default 0" until verdict 2 landed; the wording changed and the claim did
+not, because `tools/plan_prose_check.py --params` reads a default stated in a
+pending step file against the one the engine compiles and the sentence would
+otherwise have been a gate failure describing the past correctly. The same
+edit is made at the proposed specs passage below and nowhere else.)
 
 One deviation from the brief's "one default flip plus its pre-registration",
 argued here rather than done quietly. **The multicut's direct guard case, the
@@ -285,7 +290,14 @@ extensions are S097" is the second. The new passage:
 > starts no verification of its own; a node whose only legal move was excluded
 > returns its own alpha rather than a mate or a draw. `SeMinDepth`,
 > `SeTtDepthMargin`, `SePlyFactor` and `SeMarginPerDepth` are the settings;
-> `SeMultiCut` is 0, so the verification never returns a score of its own.
+> `SeMultiCut` ships at its off value, so the verification never returns a
+> score of its own.
+
+**Superseded by "Verdict 2 landing" below**, which carries the passage the
+coordinator writes once the multicut's default moves. The last clause above
+named the switch and its shipped number where it now names the off value;
+only the wording moved, for the gate reason given at the top of this section,
+and the number it used to carry is the one verdict 2 changes.
 
 ### Proposed decision
 
@@ -1159,3 +1171,592 @@ by the step's agent **in a separate worktree**, so the two agents never share
 a file, and lands after S132's completion; verdict 2's SPRT follows S132's.
 The fixed-node depth instrument runs again at that landing (section 6, per
 verdict).
+
+
+## Verdict 2 landing, 2026-09-21: one default and the coverage it makes possible
+
+Written in a linked worktree (`../chesso-s097v2`, branch `s097-v2`, from
+`b9ae156`) while S132 holds the machine, so everything in this section is code,
+tests, mutants, a mining script, an amended pre-registration and document rows.
+**Nothing in it has been compiled, run or measured**; every number the verdict
+owes is taken after the machine comes free and after the rebase onto S132's
+landing, and is stamped then. DEC-227 is the decision this lands under: verdict
+1's H0 is a walk and not a loss, the block stays at `SeExtend` 1 as this
+verdict's carrier, and this verdict's reading decides the block whole.
+
+### What moves in `src/`, and it is one line
+
+`src/search_params.hpp`'s X-macro row for `SE_MULTICUT`, from the off value to
+1, range unchanged. **No line of the rule itself moved.** The multicut in
+`src/search.cpp` `negamax_at` is exactly what verdict 1 landed: the `else` leg
+of the singular test, gated on the switch, on `vscore >= beta`, on `!is_pv`, on
+the verification's own score being outside the mate band and on `beta` being
+outside the negative one, returning the fail-soft `vscore`. Writing the guard
+case against it showed no defect, so nothing was repaired and nothing is
+reported as repaired.
+
+The X-macro's own comment moved with the default: it now says the switch shipped
+inert with verdict 1, that verdict 2 is this default and nothing else in `src/`,
+and that 0 is still the off value proved on the tree rather than declared from
+the range's end.
+
+### The rule's direct guard case, DEC-141 clause 2
+
+`tests/test_search.cpp` "the multicut returns the verification's score and
+searches nothing", in the "search: pruning and reduction guards" suite, on
+`se_drive_t` and the blocked-pawn fortress the other fifteen cases of the block drive -- sixteen with it, fourteen in both builds and two in the tune build alone. Every
+precondition is asserted **inside the drive** so that no leg of it can pass
+because some other condition was false:
+
+| what the case reads | why it is there |
+|---|---|
+| `se_verified`, `se_vscore >= se_singular_beta`, `se_vscore >= beta` | the verification ran and failed high at or above this node's own beta, which is the rule's whole premise |
+| `se_vscore` and `beta` both outside the mate band | the two mate guards hold at this drive, so the leg below is about the rule and not about a guard refusing it |
+| `se_multicut` | the rule fired |
+| `move_count == 0` | the node answered **without searching a move**, which is what makes this pruning and not ordering, and the half a returned score cannot show |
+| `se_vscore != se_singular_beta`, then the node's return `== se_vscore` and `!= se_singular_beta` | the fail-soft score and never the bound -- this project's own choice where the record is silent, and the inequality is asserted first so the claim is about the rule and not about two numbers that coincide |
+| the returned value outside the mate band | the property the guard exists for |
+| the same drive at `is_pv` true: verified, failed high over beta, **and no multicut**, and the node searched | the PV gate, the second choice the record leaves open |
+
+Two things the fixture gained, both local so the rebase stays small: a
+`last_score` member, because the probe records what a node decided and not what
+it answered with and the multicut's whole effect is the value that comes back;
+and a trailing `is_pv` argument defaulted to what every earlier case passed, so
+the fifteen of them are unchanged by its arrival.
+
+**The window is the case's own and it is why the flip moves no other case.**
+Every other drive in the block runs at `SE_BAND_BETA`, a mate distance no score
+from a fortress can clear, so the multicut cannot fire under any of them at
+either value of the switch. The multicut case runs at `SE_MULTICUT_BETA`, a
+hundred points below the planted entry's score, where the verification's own
+answer clears the node's beta.
+
+### The off-value case changed meaning, and moved to the build that can drive it
+
+"the multicut does not fire at its off value" was a release-build case that
+asserted every condition of the rule held and the node searched anyway -- all a
+folded-away branch could be held to. At the shipped 1 that reading is the off
+value's, so the case is now `CHESSO_TUNE`-only and is the mirror of "the
+extension does not run at its off value": control at 1 with the rule firing and
+the node searching nothing, then `search_param_set("SeMultiCut", 0)` with a
+destructor restoring 1, then the same drive verifying, failing high over beta
+and **not** multicutting, with the node searching its moves. What the release
+build holds instead is the bench signature at the off value, which is the same
+pairing `SeExtend` has.
+
+### The accepts' mate row, and the script that mines it
+
+Owed at the second report and **mined, never chosen** (CHESS, DEC-023).
+`adocs/data/S097_mine_mate_row.py`, four stages, written in the shape of
+`adocs/data/S095_mine_mate_row.py` and `adocs/data/S230_mine_r01_row.py` and
+**importing** the second rather than copying it -- the pool, the node-limited
+shortlist and the fresh-process oracle call are S230's, and this directory is
+append-only. Positions are this project's own and nothing else (DEC-016).
+
+Two things it measures that S230's sweep does not, and both are the multicut's:
+
+- **The swept range is not 3 to 12.** The block wants `ply > 0` and a remaining
+  depth of at least `SeMinDepth`, and a `search_fen()` root is at ply 0, so the
+  shallowest fixed depth at which any node of the tree can multicut is
+  `SeMinDepth` + 1. The script reads that parameter out of
+  `src/search_params.hpp`'s X-macro rather than writing it down, so a refit
+  moves the sweep with it.
+- **The rule has to be shown to fire on the position by the engine.** The
+  `fires` stage drives the **tune** library, where the switch is a variable,
+  and sweeps each candidate twice, at 0 and at 1; a cell whose node count or
+  mate reading moves is the rule reaching that position. A candidate the rule
+  never reaches is dropped before the mutant sweep, because a red there could
+  not have come from this rule. No `src/` change was needed for the census and
+  none was made.
+
+The driver is `search_fen()` of `tests/test_search.cpp` line for line, for the
+reason S230's header gives, and it prints the node count and the milliseconds of
+each cell as well as the distance: the row is read at one depth by a case the
+gate runs on every commit, so what it costs is part of choosing it. The red is
+observed under `E21_multicut_mate_band_gate_dropped` applied by hand, observed
+and reverted -- the S033 protocol -- and the failing line is recorded with it.
+**The pick rule is stated before the sweep runs** (DEC-209 clause 4): the lowest
+depth the shipped build reports the mate at and the guard-dropped build does
+not, ties broken by the longest run of consecutive shipped depths and then by
+the cheaper cell. Stockfish confirmation of the chosen row follows S033's
+protocol through python-chess.
+
+### Mutants E20 to E22, and why every E mutant re-runs (E23 arrives later)
+
+`tools/mutants/S097_singular_extension.py` gains the three ids its own header
+reserved at verdict 1, with the reasons that header gave:
+
+| mutant | killed by |
+|---|---|
+| E20 the multicut returns `singular_beta` instead of the fail-soft score | "the multicut returns the verification's score and searches nothing" |
+| E21 the mate-range guard on the returned value is dropped | the mined row of "pruning does not hide a forced mate" |
+| E22 the `!is_pv` guard is dropped | the second leg of the same guard case, the drive relabelled |
+
+E21 drops the two terms about `vscore` and leaves `beta > -MATE_MIN`, which is
+S165's guard on the node's own window and a different rule. Every anchor was
+checked to occur exactly once in `src/search.cpp` as the formatter leaves it,
+all twenty-one of them, and the three new mutations were printed and read
+before anything was run.
+
+**At the second report every E mutant re-runs, E01 to E22** -- E23 did not exist when this was written and the fast check is what added it. The flip changes
+what the release build compiles, so verdict 1's eighteen kills are re-proved
+and not inherited.
+
+### Goldens, DEC-142
+
+- `tests/test_search_params.cpp` `golden_defaults`: the `SeMultiCut` row moves
+  with the default. No script and none is owed -- `src/search_params.hpp` is
+  the derivation and a diff of the two is the re-derivation -- and the row
+  count is unchanged at 57.
+- `tests/test_mate_carry.cpp` `short_line_ceiling` and `tests/test_search.cpp`
+  `capture_mates`: a pruning rule moves what both measure, so both are
+  re-derived at the second report by the scripts their own GOLDEN blocks name
+  and each one that moves is named. Neither is assumed unmoved.
+
+### The pre-registration, amended before a game is played
+
+`adocs/data/S097_v2_sprt.sh`, five amendments and DEC-143's cost lines, regime
+and abort rule left as they were:
+
+1. **The H0 and no-verdict outcomes now read as DEC-227 has them**, with the
+   reason written before the number. The old text said "drop the multicut and
+   keep the extension"; that was written while verdict 1 was still open and
+   verdict 1 read H0, so there is nothing left for an H0 here to fall back to.
+   Both readings now remove the whole block -- the verification search, the
+   extension, the five gates, the six settings, the sixteen cases and the
+   twenty-two mutants -- in one revert to `5c76ea9`'s `src/`, proved by `bench`
+   4579468 and `tools/search_bench.py` identity at both depths and not argued.
+2. Verdict 1's number and reading sit in the attribution paragraph, with the
+   paragraph that says why the multicut is still worth a night after a zero.
+3. `REF` is the tree the flip lands on -- its parent, not `88ec74f`, because
+   S132 lands between the two verdicts -- and `PIN_ME` with its refusal stays
+   (DEC-020).
+4. The bench, `search_bench` and fixed-node-depth rows are filled at the second
+   report and marked to be re-taken after the rebase, because a pair quoted
+   across two trees attributes nothing.
+5. The three open test-side findings are named again, each re-checked against
+   this tree and each still open, with the note that `adocs/plan.md`'s Open list
+   names no finding step at all and that S097's fast check and verdict-1 run
+   opened none.
+
+### Documents
+
+- `MANUAL.md`'s `SeMultiCut` row: default 1, what the rule returns and the four
+  things it never does, and what 0 now means -- traced to the branch in
+  `src/search.cpp` `negamax_at` and not to the option table's old sentence.
+- `DEV_MANUAL.md`: a bench ledger entry for the flip, with the direction a
+  pruning rule's total should move and what an unmoved one would mean (DEC-212,
+  DEC-214), its numbers filled at the second report; a golden-list row for the
+  mined mate row with the four-stage command that re-derives it; and the
+  fixed-node-depth example switched to the off value, which is now the
+  interesting one.
+- `adocs/data/README.md`: the amended `S097_v2_sprt.sh` row, a row for
+  `S097_mine_mate_row.py` and a row for `S097_candidates.tsv`, its committed
+  artefact.
+- **Two in-scope corrections, made here rather than left.** `DEV_MANUAL.md`'s
+  golden list said `golden_defaults` held 56 defaults and five S097 rows where
+  the table holds 57 and six -- stale since verdict 1 -- and it is the golden
+  this verdict moves, so it is corrected in the same edit. And two sentences in
+  this file stated the multicut's old default in a form
+  `tools/plan_prose_check.py --params` reads as a claim about the value the
+  engine compiles; both were true of verdict 1 and both are reworded, with the
+  reason beside them, because that check is in the gate.
+
+### Measured 2026-09-21, 16:15 to 19:15, machine held exclusively
+
+Taken in the worktree on the rebased tree, `7a752ee` = `474c288` plus the flip,
+with the reference a Release build of `474c288` in a linked worktree of its
+own. **`.ref-builds/88ec74f` was not usable as the reference** and the
+coordinator's note that it carries the same `src/` is wrong: S132's landing
+moved 356 lines of `src/` across five files, so the parent was built rather
+than borrowed.
+
+**The gate.** At the first pass Release and tune were 40 of 40 but for
+`test_plan_params`, red on one line because `adocs/specs.md` still said the
+multicut was off and the check reads a documented default against the engine's
+own; the coordinator's passage closed it. **At the verification pass both
+builds are 40 of 40 green**, 123.8 s and 124.7 s, with
+`./clang-format.sh --check` clean at `CLANG_FORMAT_MAJOR=22` and
+`tools/plan_prose_check.py` clean on `--params`, `--citations` and
+`--touches`. **The flip reddens no case and no golden**, and the mate row
+costs the gate about 0.65 s a build.
+
+The three cases this landing is about were run on their own and are green: "the
+multicut returns the verification's score and searches nothing" (63
+assertions, Release), and in the tune build "the multicut does not fire at its
+off value" and "the extension does not run at its off value" (55 each).
+
+**The bench, and the off value proved on the tree.**
+
+| tree | `bench` | against the reference |
+|---|---|---|
+| reference `474c288` | **5066204** | -- |
+| candidate, `SeMultiCut` 1 | **4493659** | **-11.30 %** |
+| tune build, `SeMultiCut` 0 | 5066204 | the reference's total **to the node**, all eight `bestmove` replies identical |
+
+The two differ, so the flip is not inert, and the off value is proved with the
+full signature rather than declared (DEC-215). The candidate's own eight
+`bestmove` replies are **also identical to the reference's**: the rule prunes
+an eighth of the tree at a fixed depth and moves no answer the bench reads.
+
+**What the tree does at a fixed depth.** `tools/search_bench.py`, reference ->
+candidate:
+
+| position | depth 9 | depth 12 |
+|---|---|---|
+| midgame | 21479 -> 21479, `g5f6` | 154388 -> 149688, `c3d5` |
+| kiwipete | 102462 -> 102462, `e2a6` | 459115 -> 459216, `e2a6` |
+| tactical | 33148 -> 33148, `d7c8q` | 239314 -> 219544, `d7c8q` |
+
+**Depth 9 is identical on all three**, and that is the gate measured rather
+than argued: the block wants `ply > 0` at a remaining depth of at least
+`SeMinDepth`, and a depth-9 root has no such node. No best move moves at
+either depth.
+
+**The node-explosion check, run in the other direction.**
+`adocs/data/S097_fixed_node_depth.py`, `go nodes 1000000`, Hash 16:
+
+| position | reference depth | candidate depth | best move |
+|---|---|---|---|
+| midgame | 16 | **17** | `c3d5` both |
+| kiwipete | 13 | 13 | `e2a6` both |
+| tactical | 15 | 15 | `d7c8q` both |
+| total | 44 | **45** | |
+
+This is the direction the pre-registration named before the numbers were taken
+(DEC-212, DEC-214): a multicut prunes, so a smaller tree at a fixed depth and a
+deeper search at a fixed budget. **One of the two plies verdict 1's extension
+cost comes back** -- the parent of verdict 1 read 17 / 13 / 17 for 47 and this
+tree reads 45. Whether that trade is worth anything is
+`adocs/data/S097_v2_sprt.sh`'s to say and not this table's (DEC-019).
+
+**Goldens, re-derived by their own scripts (DEC-142).** Every one of them was
+green; each was re-derived anyway, because the code end moved.
+
+- `tests/test_search_params.cpp` `golden_defaults`: the `SeMultiCut` row moves
+  with the default, 0 to 1. No script and none owed --
+  `src/search_params.hpp` is the derivation. 60 rows after S132's three.
+- `tests/test_search.cpp` `capture_mates`: re-derived by
+  `adocs/data/S230_mine_r01_row.py depths` over
+  `adocs/data/S230_table_fens.txt`, depths 3 to 12
+  (`.tuning/coord/S097_v2_capture_mates_shipped.txt`). Profiles
+  `d9 d10 d11 d12`, `d9 d10 d11 d12`, `d10 d11 d12`, `d9 d10 d11 d12` with
+  distances 5, 5, 4, 5 -- **every pinned depth (9, 9, 10, 10) is still in its
+  row's profile and no distance moves**, the same reading S095's pass gave.
+  The mutant half of those labels is the mutation run below.
+- `tests/test_mate_carry.cpp` `short_line_ceiling`: a fresh 108-cell grid was
+  taken on this tree (`.tuning/coord/S097_v2_grid.txt`) and the ceiling rule
+  run by `adocs/data/S203_case_sweep.sh --ceilings` over all five recorded
+  grids plus it -- **5, 15, 0, 2, 11, 5, unchanged**, so no ceiling moves and
+  no decision is owed. This tree's own grid is 2, 5, 0, 1, 6, 2, at or under
+  verdict 1's on five of six cases and far under the shipped ceilings
+  everywhere.
+
+### What is left, and whose it is
+
+**The verification pass, and it is this agent's.** Four things go unmeasured
+until the machine comes back and none of them may be assumed:
+
+1. **The guard case's third leg and E23** -- written after the fast check,
+   never compiled. Both suites re-run, and the leg observed green.
+2. **`tools/mutation_check.py` over E01 to E23, once, on a clean worktree**
+   -- clean but for the specs passage the landing commit itself carries, so
+   the baseline is green without a hand edit that the tool's own guard cannot
+   see. That run's marker and score replace the two above and are what the
+   landing quotes.
+3. **`bench` re-taken**, because a `src/` that has not moved should print
+   4493659 again and a signature quoted from before an edit pass is a
+   signature nobody re-read.
+4. **`pick` and `fires` re-run from the existing sweep outputs**, which is
+   what proves the corrected recipe end to end. `separators` was already run
+   against the two sweeps while the machine was busy -- it is a text join over
+   two files, no engine -- and it returns exactly the three FENs `fires` was
+   given, so the derived stage reproduces the set that was used.
+
+**A full re-sweep of the 269 is not owed, and here is the test for that.** The
+two sweeps compile a driver against `src/`'s library and read nothing else;
+`src/` has not moved since they ran -- the flip is one X-macro row and every
+edit since has been in `tests/`, `tools/mutants/`, `adocs/` and the two
+manuals -- and the E21 library was built from that same `src/` with one guard
+removed. E23 adds a mutant, not a line of the engine. What **would** owe a
+re-sweep is any change to `src/`, a rebase onto anything that moves it, or a
+change to the pick rule's predicate; the first two are worth watching, because
+this branch has already been rebased once.
+
+**One thing is the coordinator's and the gate is red until it is done**:
+`adocs/specs.md` on `achesso` still says the multicut is off, so
+`tools/plan_prose_check.py --params` -- `test_plan_params` in both suites --
+fails on that one line. The passage is already on this branch in the
+coordinator's own WIP commit and belongs in the landing commit; **and it is
+the sentence the fast check corrected**, because "each pinned by a case and a
+mutant" is true of all three only once the third leg and E23 are in and green.
+
+DEC-141's second tier is the coordinator's on the landing commit: the Debug
+self-play and `tools/gate_extra.sh`. The SPRT is the coordinator's to pin and
+launch; `adocs/data/S097_v2_sprt.sh` carries every number above, `REF` is the
+flip's parent and `CAND` is pinned after the landing.
+
+### The landing commit, proposed
+
+    Switch the singular verification's multicut on for its own SPRT
+
+    S097 verdict 2. One default -- SeMultiCut 0 to 1 in
+    src/search_params.hpp -- and the coverage that default makes possible:
+    the rule itself shipped inert with verdict 1 and no line of it moves
+    here. At 0 the release build folds the branch away, so a case could not
+    drive the rule and a mutant of it was equivalent by construction; the
+    flip is what lets both land.
+
+    The rule's direct guard case (DEC-141 clause 2) asserts the
+    verification failed high at or above the node's beta, that the node
+    returned without searching a move, and that what came back is the
+    fail-soft score and never singular_beta -- checking first that the two
+    are different numbers at the drive -- with a second leg at a PV node
+    where the rule must not fire. The case that read the off value moves to
+    the tune build, where a compiled constant can be moved (DEC-118).
+
+    The accepts' mate row is mined and not chosen (CHESS):
+    adocs/data/S097_mine_mate_row.py over 269 of this project's own
+    labelled mates, swept at depths 11 to 14 on the shipped build and again
+    with the mate guard dropped. Three separate the guard and one loses the
+    mate; the oracle puts it at #+5 in 7918 nodes. Observed red with the
+    guard removed, green with it.
+
+    bench 5066204 -> 4493659, -11.30 %, with every bestmove unmoved; the
+    tune build at SeMultiCut 0 prints the reference's total to the node.
+    search_bench identical at depth 9 and smaller at 12 with no best move
+    moving; the fixed-node depths go 44 -> 45, one of the two plies the
+    extension cost coming back. Mutants E01 to E23 on a clean worktree,
+    22 of 22 killed, each by the assertion written for it.
+
+    Bench: 4493659
+
+`Bench:` is the candidate's total and the subject is 60 characters. The
+verdict-closing commit that follows the SPRT carries DEC-220's result block.
+
+### The accepts' mate row, mined and observed red
+
+**Mined, not chosen** (CHESS, DEC-023), by `adocs/data/S097_mine_mate_row.py`
+over this project's own positions and nothing else (DEC-016): S230's pool,
+269 labelled mates that stockfish at depth 20 in a fresh process still calls a
+forced mate in 2 to 6 for the side to move (`adocs/data/S097_candidates.tsv`),
+swept over depths **11 to 14** -- the range starts there and not at 3 because
+the block wants `ply > 0` at a remaining depth of at least `SeMinDepth` and a
+`search_fen()` root is at ply 0, which the script reads out of the X-macro
+rather than writing down.
+
+Both sweeps ran on the same tree, one against a Release library built with
+`E21_multicut_mate_band_gate_dropped` applied and the source reverted
+immediately after, so the two differ in that guard and in nothing else.
+**Three of the 269 separate the guard anywhere in the range, and only one
+loses the mate.** The other two report a *different distance* -- #7 read as #6
+and #6 read as #7 -- which is a red case and is **not** what the rule
+pre-registered in the script's header takes; they are printed as their own
+class and left. That the first implementation of the pick line counted them is
+recorded at the line itself rather than silently widened (DEC-209 clause 4).
+
+The row, taken uniquely by the rule:
+
+    4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46   depth 14, mate in 5
+
+shipped profile `d12 d14`, guard-dropped `d12`, 4206525 nodes and 649 ms in the
+cell. **The oracle** (S033's protocol, python-chess with a fresh process, never
+a printf pipe): `#+5` at depth 20 in 7918 nodes, pv
+`Qa7 Qf3+ Kg1 Qd1+ Kh2 Qh1+ Kxh1 g5 Qg7#`; python-chess reports `is_valid()
+True`, `is_check() False`, 23 legal moves of which 2 are captures and none a
+promotion (`.tuning/coord/S097_v2_oracle.log`).
+
+**The firing witness, and it is the engine's word and not an argument.** The
+`fires` stage drives the tune library, where the switch is a variable, and
+sweeps each position at `SeMultiCut` 0 and at 1: on this position the node
+counts differ at depths 13 and 14 and are identical at 11 and 12, so the rule
+is live exactly where the separation is. No `src/` change was needed for that
+census and none was made.
+
+**Observed red, and this is the observation.** With the guard dropped by hand,
+`./build/tests/test_search --test-case="pruning does not hide a forced mate"`
+fails at this row -- `FATAL ERROR: REQUIRE( result.mate_found ) is NOT
+correct!`, `values: REQUIRE( false )`, `logged: mate the multicut hides, depth
+14` -- and passes with the guard in place, 54 assertions. Applied by hand,
+observed, reverted (`.tuning/coord/S097_v2_mate_row_red.log`).
+
+**One defect in the mining script, found by its own output and fixed.** The
+firing witness first compared whole sweep cells, milliseconds included, so two
+runs of the same binary differed everywhere and a 20-position probe came back
+20 of 20 with identical node counts in every cell. The comparison now drops
+the wall time; the corrected witness is what the three rows above carry.
+
+### Mutants: 22 of 22 killed in one run, and two runs of history behind it
+
+`tools/mutation_check.py` over `tools/mutants/S097_singular_extension.py`,
+E01 to E23, on a linked worktree created fresh for it at `aa45ea2` and clean
+by its own `git status`: **`baseline green, 40 tests, bench 4493659 nodes via
+engine`** -- a real test count and the tree's own total -- then
+**`mutation score 22 of 22 (100%)`, `MUTATION-RUN-DONE`, wall 2961 s**
+(`.tuning/coord/S097_v2_mutation3.log`, per-mutant rows in
+`.tuning/coord/S097_v2_mutants3/results.tsv`, the killing assertion per mutant
+in `.tuning/coord/S097_v3_killers.txt`). **Every E mutant was re-run rather
+than inherited from verdict 1**, because the flip changes what the release
+build compiles. Nothing survived and nothing was stillborn.
+
+Each is killed by the assertion written for it, the four of the multicut
+included:
+
+| mutant | killed by |
+|---|---|
+| E20 the multicut returns `singular_beta` | "the multicut returns the verification's score and searches nothing", at `REQUIRE_EQ( last_score, record.se_vscore )` |
+| E21 the mate-range guard on the returned value dropped | "pruning does not hide a forced mate", at `REQUIRE( result.mate_found )` -- **and by nothing else in the suite** |
+| E22 the `!is_pv` guard dropped | the same guard case's second leg, at `REQUIRE( !pv.se_multicut )` |
+| E23 the defender's-beta guard dropped | the same guard case's **third leg**, at `REQUIRE( !defender.se_multicut )` -- **and by nothing else in the suite** |
+
+**E21 and E23 are each killed by one case and one case only**, which is the
+sharpest thing this run says: without the mined row and without the third leg
+those two guards would be proved gaps rather than proved guards. The eighteen
+from verdict 1 are all killed again, each by its own case -- E01, E02, E03,
+E08 and E13 by "the extension lands on the table move and on no other", E04 by
+the root case, E05 by the entry-depth case, E06 by the mate case, E07 and E12
+by the recursion case, E09, E10 and E11 by their own excluded-node cases, E14
+by the extension case's window assertion, E15 by the only-move case, E16 and
+E17 by the two legs of the mate-window case, and E18 by eight cases at once,
+which is the property a switch has to have for an H0 to mean anything.
+
+**Six of the twenty-two left the bench signature unmoved and the suite killed
+all six** -- E07, E09, E15, E17, and now **E22 and E23**, the two multicut
+guards that only ever fire at a node type or a window a fixed-depth bench from
+a cold table never presents. That is the half of DEC-141 clause 2 a signature
+cannot do, and this verdict added two more cases to the list.
+
+**Two earlier runs are history and the record keeps them.** Run 1
+(`.tuning/coord/S097_v2_mutation.log`) ended `MUTATION-RUN-FAILED` at 19 of 20
+built: `E05` was **stillborn** -- verdict 1's fast-check copy-out left the
+gate as the only reader of `tt_entry_depth`, so the mutant orphaned it and
+Release with `-Werror` refused it, a fall out of the score that had been
+invisible since the landing, repaired here with the `(void)` the tool's header
+prescribes -- and `E21` **survived**, correctly, the worktree carrying no
+mined mate row and that row being E21's only killer. Run 2
+(`.tuning/coord/S097_v2_mutation2.log`) killed both but its header named
+`7a752ee` while its `tests/test_search.cpp` had been copied in and its
+`adocs/specs.md` patched; `require_clean_src` guards `src/` alone, so neither
+showed. The run above is what the landing quotes and
+`.tuning/coord/S097_v2_mutation_results.tsv` is that run, with a header
+pointing at the two logs.
+
+**And one finding about the tool, unfixed and outside this step.**
+`tools/mutation_check.py`'s `--label` is the ctest label and defaults to
+`fast`; given a label no test carries -- which this agent did on the first
+launch -- it printed `baseline green, ? tests` and scored every mutant a
+survivor in 154 s. The misuse was the agent's and the run was re-launched, but
+a tool that cannot tell "nothing failed" from "nothing ran" will do it again,
+and the fix is one comparison on the baseline's test count. `require_clean_src`
+guarding `src/` alone is the same class and is what let run 2's header be
+wrong. Both are test-side by DEC-171 and belong in a step of their own.
+
+**E23 and the guard case's third leg are the fast check's finding.** The specs
+passage said the three things the multicut never does are "each pinned by a
+case and a mutant" and only two were: `beta > -MATE_MIN` guards the **node's
+own window** where E21's term guards the **value it returns**, E21 deliberately
+leaves it in place, and no drive in the block used a beta inside the negative
+mate band -- every one runs at `SE_BAND_BETA` or `SE_MULTICUT_BETA`, and the
+guard case asserted `SE_MULTICUT_BETA > -MATE_MIN` as a precondition and not as
+the thing under test. The coverage was added rather than the sentence softened:
+a third leg drives the same plant and fortress at `SE_DEFENDER_BETA`, the band
+edge `-MATE_MIN` itself, which denies a strict `>`, and asserts that the
+verification still ran, still failed high, still cleared this beta and is
+itself outside the band, then that the rule did **not** fire and the node
+searched. **It compiled and passed first time** -- the guard case now carries
+92 assertions where it carried 63 -- so the reasoning from the gates that said
+the drive would reach the branch is now a measurement.
+
+### The verification pass, 2026-09-21 19:23 to 20:25, machine idle
+
+Taken after the branch was rebased onto `f02f59a` ("Complete S132"). **No code
+moved under the flip across that rebase**: `git diff --stat 474c288 f02f59a --
+src tests` is empty, every commit between the two being documents, so the
+`src/` the two 269-position sweeps ran against is the `src/` measured here and
+no re-sweep is owed by the test stated below. Both builds are Release, one
+with `-DCHESSO_TUNE=ON`, read off their own `CMakeCache.txt`.
+
+**Step 1 reddened nothing.** The guard case's third leg and E23's case code had
+never been compiled; both builds compiled them without a diagnostic and the
+guard case passes with **92 assertions** where it had 63, so the drive does
+reach the multicut branch at a beta on the negative mate band edge exactly as
+the gates said it would. No edit was needed and none was made. Both fast
+suites 40 of 40, format and the three prose checks clean.
+
+**Step 2, the bench, reproduces to the node.** Candidate **4493659**,
+reference `474c288`'s own Release binary **5066204**, tune build at
+`SeMultiCut` 0 **5066204**. All eight `bestmove` replies are identical across
+all three: the off value is proved with the full signature, and the candidate
+prunes 11.3 % of the tree while moving no answer the bench reads.
+
+**`tools/search_bench.py` and the fixed-node depths stand from the first
+pass** and were not re-taken, for the reason DEC-142 uses for a golden: neither
+end moved. `src/` under the flip is one X-macro row against `f02f59a`, the
+build flags are the same two, and `bench` reproduced its total and all eight
+replies -- which is the instrument saying the tree is the one those rows were
+read on. They would be owed again on any `src/` change or a rebase that moves
+one.
+
+**Step 3, one clean mutation run, 22 of 22.** Recorded in its own section
+above: a worktree created fresh at `aa45ea2`, clean by `git status`, a baseline
+reporting a real 40 tests at the tree's own bench, and every mutant killed by
+the assertion written for it. E23 and the guard case's third leg were the only
+untested things this landing carried and both are now measured.
+
+**Step 4, the mining recipe re-run from its own header, reproduces the row.**
+`separators` over the two recorded sweeps returns the same three FENs; `fires`
+over them on the tune library puts the rule live at depths 13 and 14 on all
+three and nowhere below; `pick` prints the two distance-moved rows it declines
+and takes the same position at the same depth and distance -- `d14`, `#5`,
+shipped `d12 d14`, guard dropped `d12`, 4206525 nodes. The later stages
+reproduce without the sweeps being re-run, which is what they were re-run to
+show.
+
+### The rebase onto S132, and what was re-checked by reading
+
+The worktree branch was rebased onto S132's landing `474c288` ("Scale the soft
+time limit by the best move's share of the root", whose own commit line reads
+`Bench: 5066204` -- verdict 1's total unmoved, which is what a time-management
+change does to a fixed-depth bench), with no conflict. Re-checked without
+building, because a clean rebase is not the same as a correct one:
+
+- **Mutant anchors: 115 of 115 across `tools/mutants/` occur exactly once** on
+  the rebased tree, this step's twenty-one and S132's seven included. S132
+  added 28 lines to `src/search.cpp` and none of them collides with an anchor.
+- **Case names: 155 in `tests/test_search.cpp`, no duplicate.** S132's new
+  cases collide with neither the case this verdict adds nor the one it moves
+  to the tune build.
+- **`src/search.hpp` is untouched by S132**, so `negamax_probed`'s signature is
+  the one `se_drive_t` calls, and S132's additions to
+  `src/data_structures.hpp` are `search_state_t`'s root-move buckets and not
+  `search_node_probe_t`. The drive calls `negamax_probed` and never `search()`,
+  so neither S132's root loop nor its soft-limit multiplier is inside it.
+- **`golden_defaults` is 60 rows**, S132's three node-fraction settings beside
+  this step's six, and the `SeMultiCut` row carries 1. The table's own GOLDEN
+  block already said 60; `DEV_MANUAL.md`'s golden list said 57 and now says 60
+  with both additions named.
+- The pre-registration's `REF` paragraph names `474c288` as the base instead of
+  describing a landing that had not happened yet, and `88ec74f` survives in it
+  only in the sentence saying REF is no longer that commit.
+
+None of this is a substitute for the build: the cases, the mutants and the
+goldens are still unverified and the reds the flip causes are still unseen.
+
+### Proposed for `adocs/specs.md`, once this lands (the coordinator writes it)
+
+The search row's singular-extension passage ends today with a clause saying the
+multicut is off and the verification never returns a score of its own. That
+clause is what this verdict changes, and it is also a **gate failure until the
+coordinator lands the replacement**: `tools/plan_prose_check.py --params` reads
+it against the value the engine compiles and flags it. The proposed ending:
+
+> A verification that fails high instead ends the node: where its score reaches
+> this node's own beta, some move other than the entry's already clears a bar
+> just under the entry's score at a reduced depth, and the node returns **that
+> score** -- the fail-soft value the search found and never the window's own
+> bound -- without searching a move. Never at a PV node, never a value inside
+> the mate band, and never against a beta inside the negative mate band.
+> `SeMultiCut` is the switch, 1 since the second verdict, and at its off value
+> the tree is verdict 1's exactly.
+
+The first verdict's own passage is unchanged by this except for that ending.

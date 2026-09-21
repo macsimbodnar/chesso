@@ -3247,6 +3247,66 @@ TEST_SUITE("search: draws")
       REQUIRE_MESSAGE(result.mate_in == 2, title);
     }
 
+    // S097 verdict 2's own row, and the accepts' clause for the multicut: a
+    // forced mate **inside the depth the multicut prunes**. The rule lets the
+    // verification search end the node on its own fail-soft score wherever
+    // that score reaches the node's beta, and the guard this row holds is the
+    // one that keeps a mate-range value from being what it hands back -- a
+    // half-depth search under a window below the entry's score is the
+    // instrument that misses a mate, so a mate distance out of one is a
+    // distance nothing proved.
+    //
+    // GOLDEN (DEC-142): the depth 14 below, and the position with it.
+    // Re-derive with the six commands in `adocs/data/S097_mine_mate_row.py`'s
+    // own header, which are the ones that were run and are written out there
+    // with every input named -- candidates, the shipped sweep, the same sweep
+    // against a library built with `E21_multicut_mate_band_gate_dropped`
+    // applied, the derived separator set, the firing witness over it, and the
+    // pick. Every stage takes `--fens` explicitly: a stage defaulting to a
+    // file a later stage writes is a recipe that cannot be followed, which is
+    // what this block said until the fast check read it.
+    // Moves legitimately on: any change to the singular block, to pruning or
+    // to ordering. Margin: exact -- the row asserts the distance too.
+    //
+    // **Mined, not chosen** (CHESS): 269 candidates, every labelled mate of
+    // S230's own pool that stockfish at depth 20 in a fresh process still
+    // calls a forced mate in 2 to 6, swept over depths 11 to 14 -- the range
+    // starts there because the block wants `ply > 0` at a remaining depth of
+    // at least `SeMinDepth` and a `search_fen()` root is at ply 0 -- on the
+    // shipped build and again with the mate guard dropped. **Three of the 269
+    // separate the guard anywhere in that range and only this one loses the
+    // mate**: the other two report a different distance instead, #7 read as
+    // #6 and #6 read as #7, which is a red case the rule in the script's
+    // header deliberately does not take. That the rule is live here is the
+    // engine's word and not an argument -- the tune build at `SeMultiCut` 0
+    // against 1 gives different node counts on this position at depths 13 and
+    // 14 and identical ones at 11 and 12.
+    //
+    // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
+    // True`, `is_check() False`, 23 legal moves of which 2 are captures and
+    // none a promotion, and stockfish at depth 20 through python-chess reports
+    // **`#+5` in 7918 nodes, pv Qa7 Qf3+ Kg1 Qd1+ Kh2 Qh1+ Kxh1 g5 Qg7#**.
+    // **Observed red, then green**: with the guard dropped,
+    // `./test_search --test-case="pruning does not hide a forced mate"` fails
+    // here at `REQUIRE( result.mate_found )`, a fatal REQUIRE, and passes with
+    // the guard in place. The mutation was applied by hand, observed and
+    // reverted -- the S033 protocol -- and the log is
+    // `.tuning/coord/S097_v2_mate_row_red.log`.
+    //
+    // The cell costs 4206525 nodes and about 0.65 s, which is what a row that
+    // has to reach depth 14 costs; the rule's last tie-break is the cheaper
+    // cell and this was the only candidate it had to choose from.
+    const std::string mate_the_multicut_hides =
+        "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46";
+
+    {
+      const std::string title = "mate the multicut hides, depth 14";
+      const search_t result = search_fen(mate_the_multicut_hides, 14);
+
+      REQUIRE_MESSAGE(result.mate_found, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
+    }
+
     // S091's own cases, for the two rules that act on a **capture**. The one
     // above is answered by a quiet the block throws away; each of these is a
     // forced mate whose line runs through a capture, and each is lost when one
@@ -8281,8 +8341,10 @@ TEST_SUITE("search: pruning and reduction guards")
   // SINGULAR EXTENSION AND MULTICUT, S097. One verification search and the
   // two answers it gives: the table move extended where every alternative
   // fails below a window under the entry's score, and the multicut where one
-  // of them clears it instead. The second ships at its off value and the case
-  // that reads it says so.
+  // of them clears it instead. Each is its own verdict and its own default --
+  // `SeExtend` and `SeMultiCut`, both 1 since verdict 2 -- and each has a case
+  // in the tune build that drives its off value, because a compiled constant
+  // cannot be moved by a case in the build that folds it away (DEC-118).
   // ----------------------------------------------------------------------
 
   // The position every drive of the block runs at, and the same one "reverse
@@ -8347,11 +8409,22 @@ TEST_SUITE("search: pruning and reduction guards")
     // the generator emits.
     move_t table_move = 0;
 
+    // What the drive's node returned. The probe records what the node decided
+    // and not what it answered with, and the multicut is a rule whose whole
+    // effect is the value that comes back -- returning `singular_beta` where
+    // the fail-soft score was meant is a bound in place of a score, which no
+    // field of the probe can see. S097 verdict 2.
+    int last_score = 0;
+
+    // `is_pv` is the drive's own and defaults to the label every case before
+    // verdict 2 used, so the fifteen of them are unchanged by its arrival. The
+    // multicut's PV gate is the one rule here that needs the other label.
     search_node_probe_t run(size_t ply,
                             const se_plant_t& plant,
                             int alpha,
                             int beta,
-                            move_t excluded)
+                            move_t excluded,
+                            bool is_pv = false)
     {
       load(SE_DRIVE_POS, static_cast<int>(ply));
 
@@ -8393,8 +8466,8 @@ TEST_SUITE("search: pruning and reduction guards")
       state.root_history_size = game.history.size;
       state.node_limit = SE_DRIVE_NODE_LIMIT;
 
-      negamax_probed(alpha, beta, node_depth(), ply, &game, &state, 0, false,
-                     false, excluded);
+      last_score = negamax_probed(alpha, beta, node_depth(), ply, &game, &state,
+                                  0, is_pv, false, excluded);
 
       REQUIRE_MESSAGE(!state.aborted,
                       "the drive hit its node ceiling, so nothing it recorded "
@@ -8502,46 +8575,139 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // THE OFF VALUE IS OFF, DEC-215, and this is the case that says so on the
-  // tree rather than from the range's end. Every condition of the multicut
-  // holds at this drive except the switch: the verification failed high, its
-  // score clears the node's own beta, the score is nowhere near the mate band
-  // and the node is not a PV node. At `SeMultiCut` 0 the node searches its
-  // moves anyway.
-  //
-  // In the release build the branch is folded away by the compiler and this
-  // reads as a tautology; in the tune build it is a variable and the case is a
-  // real one. Both builds run it, which is the whole reason the switch is a
-  // parameter and not a preprocessor symbol.
-  //
-  // Mutation: none -- a mutant of a rule the shipping build compiles out is
-  // equivalent by construction, which is why the multicut's own mutants land
-  // with the default flip and not here. The file header of
-  // tools/mutants/S097_singular_extension.py names them.
-  TEST_CASE_FIXTURE(se_drive_t, "the multicut does not fire at its off value")
-  {
-    // The step's second verdict has not been taken, so this is the shipped
-    // setting and the case states it rather than assuming it.
-    REQUIRE_EQ(SE_MULTICUT, 0);
+  // The node's own beta, set below the entry's score so that the verification
+  // search's own answer clears it. Every other drive in this block runs at
+  // `SE_BAND_BETA`, a mate distance, and the multicut wants `vscore >= beta`,
+  // so it cannot fire under any of them at either value of the switch -- which
+  // is why verdict 2's flip leaves every other case in this block reading
+  // exactly what it read before.
+  static constexpr int SE_MULTICUT_BETA = SE_NOT_SINGULAR_SCORE - 100;
 
-    const int beta = SE_NOT_SINGULAR_SCORE - 100;
+  // And the same drive's beta moved into the **negative** mate band, which is
+  // the one guard of the rule no other window here can deny. `SE_BAND_BETA` is
+  // the positive band and `SE_MULTICUT_BETA` is an ordinary number; a node
+  // whose beta sits at or below `-MATE_MIN` is a node inside a mate proof as
+  // the defender, where every score clears beta and a reduced search's word is
+  // exactly what must not end it (S165). The edge itself is the value that
+  // denies the guard, because the guard is a strict `beta > -MATE_MIN`.
+  static constexpr int SE_DEFENDER_BETA = -MATE_MIN_LOCAL;
+
+
+  // THE MULTICUT ITSELF, S097 verdict 2, and the direct guard case DEC-141
+  // clause 2 asks of a new pruning rule. Every condition is established at the
+  // drive rather than assumed, and what is read back is the whole of the rule:
+  // the verification failed high at or above this node's own beta, the node
+  // returned without searching a move, and the value that left it is the
+  // **fail-soft score the verification found** and never `singular_beta`, the
+  // bound the window was set to.
+  //
+  // The two choices this project made where the published record is silent are
+  // both pinned here (DEC-221, and the step file records them): the fail-soft
+  // score rather than the bound, and no firing at a PV node. The drive asserts
+  // the score and the bound are different numbers, so "never `singular_beta`"
+  // is a claim about the rule and not about two values that coincide.
+  //
+  // Three legs, one per thing the rule never does, and the third is the only
+  // guard of the block a window can deny at this fortress. The guard on the
+  // **returned value** -- never a mate-range score -- is not pinned here: this
+  // drive asserts the verification's score is outside the band rather than
+  // assuming it, which is what makes the first two legs about the rule, but a
+  // drive whose scores sit there cannot show what that guard refuses. What
+  // holds it is the mined row in "pruning does not hide a forced mate", and
+  // its mutant is E21.
+  //
+  // Mutation: E20_multicut_returns_singular_beta,
+  // E22_multicut_pv_gate_dropped, E23_multicut_defender_beta_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    the multicut returns the verification's score and searches nothing
+  //   REQUIRE( record.se_multicut )
+  TEST_CASE_FIXTURE(se_drive_t,
+                    "the multicut returns the verification's score and "
+                    "searches nothing")
+  {
+    // The default this case is written for, stated rather than assumed: at 0
+    // the release build folds the branch away and there is no rule to drive.
+    REQUIRE_EQ(SE_MULTICUT, 1);
+
     const se_plant_t plant = {deep_enough(), TT_BETA_NODE,
                               SE_NOT_SINGULAR_SCORE};
-    const search_node_probe_t record = run(1, plant, beta - 1, beta, 0);
+    const search_node_probe_t record =
+        run(1, plant, SE_MULTICUT_BETA - 1, SE_MULTICUT_BETA, 0);
 
+    // Every condition of the rule, read off the drive.
     REQUIRE(record.se_verified);
-
-    // Every condition of the rule but the switch, read off the drive.
     REQUIRE(record.se_vscore >= record.se_singular_beta);
-    REQUIRE(record.se_vscore >= beta);
+    REQUIRE(record.se_vscore >= SE_MULTICUT_BETA);
     REQUIRE(record.se_vscore < MATE_MIN_LOCAL);
     REQUIRE(record.se_vscore > -MATE_MIN_LOCAL);
-    REQUIRE(beta > -MATE_MIN_LOCAL);
+    REQUIRE(SE_MULTICUT_BETA > -MATE_MIN_LOCAL);
 
-    REQUIRE(!record.se_multicut);
+    REQUIRE(record.se_multicut);
 
-    // And the node did what a node that takes no cutoff does: it searched.
-    REQUIRE(record.move_count > 0);
+    // The whole point of a cutoff, and the half a returned score cannot show:
+    // the node answered without searching a move. `move_count` counts searched
+    // moves, so 0 is a move loop never reached and not a loop that found
+    // nothing.
+    REQUIRE_EQ(record.move_count, 0);
+
+    // What the node answered with. The bound and the score are different
+    // numbers at this drive, and that is asserted **first**: without it the
+    // two lines below would both hold at a drive where the rule returned the
+    // bound, and "never `singular_beta`" would be a tautology rather than a
+    // claim. It is also the line that reddens, and says why, if a later tree
+    // makes the verification come back at exactly its own window here -- a
+    // reason that is not the rule, and one a reader should be told about at
+    // the site rather than left to find.
+    REQUIRE(record.se_vscore != record.se_singular_beta);
+    REQUIRE_EQ(last_score, record.se_vscore);
+    REQUIRE(last_score != record.se_singular_beta);
+
+    // And it left the node outside the mate band, which is the property the
+    // guard exists for: a reduced search is the instrument that misses a mate
+    // and a mate score out of one is a distance nothing proved.
+    REQUIRE(last_score < MATE_MIN_LOCAL);
+    REQUIRE(last_score > -MATE_MIN_LOCAL);
+
+    // THE PV GATE, the same drive relabelled and nothing else changed, so what
+    // this leg denies is the node's type alone. A PV node's line is reported
+    // and played, and a score no move was searched for is not a line.
+    const search_node_probe_t pv =
+        run(1, plant, SE_MULTICUT_BETA - 1, SE_MULTICUT_BETA, 0, true);
+
+    REQUIRE(pv.se_verified);
+    REQUIRE(pv.se_vscore >= pv.se_singular_beta);
+    REQUIRE(pv.se_vscore >= SE_MULTICUT_BETA);
+    REQUIRE(pv.se_vscore < MATE_MIN_LOCAL);
+    REQUIRE(pv.se_vscore > -MATE_MIN_LOCAL);
+
+    REQUIRE(!pv.se_multicut);
+    REQUIRE(pv.move_count > 0);
+
+    // THE DEFENDER'S BETA, S165's guard on this rule, and the third thing the
+    // multicut never does. The same plant and the same fortress with the
+    // node's window moved into the negative mate band: the node is then inside
+    // a mate proof as the defender, every score it can produce clears beta,
+    // and a reduced search's fail-high says nothing about whether the mate is
+    // held. Every other condition still holds -- the verification ran, failed
+    // high, cleared this beta easily and is itself nowhere near the band --
+    // so what this leg denies is `beta > -MATE_MIN` and nothing else.
+    //
+    // The edge is the value that denies it, the guard being a strict `>`, and
+    // the drive asserts that rather than assuming it.
+    const search_node_probe_t defender =
+        run(1, plant, SE_DEFENDER_BETA - 1, SE_DEFENDER_BETA, 0);
+
+    REQUIRE(SE_DEFENDER_BETA <= -MATE_MIN_LOCAL);
+
+    REQUIRE(defender.se_verified);
+    REQUIRE(defender.se_vscore >= defender.se_singular_beta);
+    REQUIRE(defender.se_vscore >= SE_DEFENDER_BETA);
+    REQUIRE(defender.se_vscore < MATE_MIN_LOCAL);
+    REQUIRE(defender.se_vscore > -MATE_MIN_LOCAL);
+
+    REQUIRE(!defender.se_multicut);
+    REQUIRE(defender.move_count > 0);
   }
 
 
@@ -8600,6 +8766,70 @@ TEST_SUITE("search: pruning and reduction guards")
     for (int k = 0; k < off.move_count; ++k) {
       REQUIRE_EQ(off.child_depth[k], node_depth() - 1);
     }
+  }
+
+
+  // THE MULTICUT'S OWN OFF VALUE, DEC-215, and the mirror of the case above.
+  // Until verdict 2 this case lived in both builds and read the other way
+  // round -- the switch shipped at 0, so a release-build case could assert
+  // that every condition of the rule held and the node searched anyway, which
+  // was all a folded-away branch could be held to. The flip makes that reading
+  // the off value's, so the case moves here with the rest of the off values:
+  // `SeMultiCut` is a compiled constant in the release build too, and the tune
+  // build is in the gate for exactly this class of difference (DEC-118).
+  //
+  // What the release build holds instead is the bench signature -- at
+  // `SeMultiCut` 0 the tune build prints the reference tree's own total to the
+  // node -- which is the same pairing `SeExtend` has above.
+  //
+  // The restorer is not decoration: doctest runs a binary's cases in one
+  // process, so a parameter left at 0 by a failing assertion would switch the
+  // rule off for every case after this one.
+  //
+  // Mutation: none of this step's own -- E20 to E23 mutate the rule and are
+  // killed in the release build, where the rule is compiled in at the shipped
+  // default. A switch read the wrong way round is E18's shape and the multicut
+  // has no equivalent, because its gate is one term of a condition the release
+  // build folds rather than a block of its own.
+  TEST_CASE_FIXTURE(se_drive_t, "the multicut does not fire at its off value")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("SeMultiCut", 1); }
+    } restore;
+
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE,
+                              SE_NOT_SINGULAR_SCORE};
+
+    // The control: at the shipped value this exact drive fires, so what the
+    // drive below denies is the switch and nothing else.
+    REQUIRE_EQ(SE_MULTICUT, 1);
+
+    const search_node_probe_t on =
+        run(1, plant, SE_MULTICUT_BETA - 1, SE_MULTICUT_BETA, 0);
+
+    REQUIRE(on.se_multicut);
+    REQUIRE_EQ(on.move_count, 0);
+
+    REQUIRE(search_param_set("SeMultiCut", 0));
+    REQUIRE_EQ(SE_MULTICUT, 0);
+
+    const search_node_probe_t off =
+        run(1, plant, SE_MULTICUT_BETA - 1, SE_MULTICUT_BETA, 0);
+
+    // Every condition of the rule but the switch, read off the drive, so the
+    // node that searched anyway did it because the switch said to.
+    REQUIRE(off.se_verified);
+    REQUIRE(off.se_vscore >= off.se_singular_beta);
+    REQUIRE(off.se_vscore >= SE_MULTICUT_BETA);
+    REQUIRE(off.se_vscore < MATE_MIN_LOCAL);
+    REQUIRE(off.se_vscore > -MATE_MIN_LOCAL);
+    REQUIRE(SE_MULTICUT_BETA > -MATE_MIN_LOCAL);
+
+    REQUIRE(!off.se_multicut);
+
+    // And the node did what a node that takes no cutoff does: it searched.
+    REQUIRE(off.move_count > 0);
   }
 #endif
 
