@@ -21,7 +21,7 @@ Updated: 2026-09-21, by hand.
   **Next: S188**, the in-loop check extension, first in the Open list, whose
   ply guard is S097's `SePlyFactor * depth` -- a fresh Opus 5 agent starts it
   with the machine idle (brief `.tuning/coord/S188_brief.md`). Machine idle
-  from 01:47; no watcher armed. **S188 started 2026-09-22 02:20 by a fresh
+  from 01:47; no watcher armed. **S188 started 2026-09-22 01:57 by a fresh
   Opus 5 agent** with the machine free for builds, suites, mutants, the
   S145 mate-set re-run and the node-explosion check, no match: the rule
   inside S097's ply guard and one-ply cap, its off switch and depth cap,
