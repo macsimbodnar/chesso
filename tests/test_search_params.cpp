@@ -38,7 +38,9 @@
 // history lane moved eleven: QuietHistoryMax, plain history's six bonus and
 // malus coefficients, the three continuation axes and HistPruneCoeff. A step
 // that **adds** one adds a row here in the same commit, which is what S095's
-// LmrNoTtMove is doing below.
+// LmrNoTtMove is doing below, and S097's six singular-extension rows after
+// it -- four settings and two switches, `SeExtend` and `SeMultiCut`, whose
+// defaults are what the step's two verdicts move.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -51,7 +53,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 51 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 57 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -103,6 +105,12 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"SeeCaptureCoeff",          50,     0,   10000},
   {"SeeCaptureMaxLmrDepth",     8,     0,      16},
   {"SeeLmrExtra",               1,     0,       3},
+  {"SeExtend",                  1,     0,       1},
+  {"SeMinDepth",               10,     4,      16},
+  {"SeTtDepthMargin",           4,     0,       8},
+  {"SePlyFactor",               5,     2,       8},
+  {"SeMarginPerDepth",          9,     1,      18},
+  {"SeMultiCut",                0,     0,       1},
   {"LazyEvalMargin",          184,     0,    2000},
   {"AspirationMinDepth",        2,     2,      64},
   {"AspirationDelta",          21,     1,    2000},

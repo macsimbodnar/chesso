@@ -47,17 +47,22 @@ m("H02_cont_hist_no_prev_guard", S, "search/ordering",
 # through `negamax_at` and labels the null-move child by Kannan's rule rather
 # than passing a literal `false`. The mutation is unchanged -- the `0` becomes
 # `prev_move` and nothing else -- and it was re-observed at that step.
+#
+# **It gained a third at S097**, which threads `excluded_move` through the same
+# function, so the site's last argument is now a literal `0` of its own. The
+# anchor is the argument line alone rather than the whole call, which is what
+# it should have been: a mutant that names the arguments it does not touch is a
+# mutant that breaks every time the signature grows. The mutation is unchanged
+# again and **was re-run at S097 on the re-pointed anchor**: killed, by "the
+# node after a null move has no previous move to index" and by nothing else.
 m("H03_null_child_keeps_prev", S, "search/ordering",
   'the null-move child is handed the node\'s own previous move instead of 0, '
   'so everything it writes is keyed on a move that is two plies back and on '
   'the wrong side of the pass',
-  ('        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
-   'ply + 1,\n'
-   '                           game, state, 0, child.is_pv, child.cut_node);',
-   '        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, '
-   'ply + 1,\n'
-   '                           game, state, prev_move, child.is_pv, '
-   'child.cut_node);'),
+  ('                           game, state, 0, child.is_pv, '
+   'child.cut_node, 0);',
+   '                           game, state, prev_move, child.is_pv,\n'
+   '                           child.cut_node, 0);'),
   origin="S222")
 
 m("H04_cont_hist_unread", E, "search/ordering",

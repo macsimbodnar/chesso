@@ -1946,7 +1946,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
 | `test_search.cpp` `capture_mates` depths and mutant labels | 9, 9, 10, 10 and the mutants beside them — `no S091 mutant, since S095` twice, then `R02` and `R02`. **Re-derived at S095**, which adds a ply of reduction at every node whose table entry carries no move and so moves the same rule again: the seven sweeps were re-taken and three of the four depths moved with no mate distance moving. Row 2 loses the depth 8 reading it had and now separates nothing; row 3 comes back from 11 to 10 with R02 alone; row 4 stays at 10 with R02. R01 is separated by no row at any depth, the fifth consecutive pass reading that way. The history of the earlier passes is in the GOLDEN block at the table itself | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
 | `test_search.cpp` `mate_the_extra_ply_hides` and its depth | the position and **11**, the lowest depth the shipped build reports its mate at and the tree with S095's guard opened does not. Mined at S095 over this project's own positions: 297 labelled mates, 141 whose oracle line carries a quiet move of the class late move reduction touches, 28 separating the two builds, and the rule in the script's header returns this one. The row's own comment records what the tie-break cost — its shipped profile is every depth from 3 to 12 and the unguarded build loses exactly one of them | `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py candidates`, then `adocs/data/S230_mine_r01_row.py depths --fens .tuning/coord/S095_candidates.fen --lo 3 --hi 12` once on the shipped tree and once with `const bool no_tt_move = tt_move == 0;` made `= true`, then `S095_mine_mate_row.py pick` |
-| `test_search_params.cpp` `golden_defaults` | 51 defaults and their ranges — 50 until S095 added `LmrNoTtMove` | no script: `src/search_params.hpp` is the derivation |
+| `test_search_params.cpp` `golden_defaults` | 56 defaults and their ranges — 50 until S095 added `LmrNoTtMove`, and S097's five singular-extension rows after it | no script: `src/search_params.hpp` is the derivation |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2199,6 +2199,25 @@ better one is `adocs/data/S095_sprt.sh`'s to say and not this number's
 positions at both depths and moves kiwipete's best move at depth 12, which
 is the ordinary signature of a reordering.
 
+**At `S097` verdict 1, the singular extension: `5066204`, +10.63 %.** The first
+number in this ledger that goes **up** for a reason other than a reordering: the
+node whose table entry names a move much better than every alternative is
+searched again at half depth with that move set aside, and the move is then
+searched a ply deeper. Both halves cost nodes at a fixed depth by construction,
+which is why the step's own instrument is the other one --
+`adocs/data/S097_fixed_node_depth.py`, the depth reached at `go nodes 1000000`,
+which reads 17/13/17 on the parent and 16/13/15 here. `tools/search_bench.py` is
+**identical on all three positions at depth 9**, because `SeMinDepth` is 10 and
+no node in a depth-9 iteration is deep enough to verify anything; at depth 12
+kiwipete falls 578047 to 459115 with its best move moving `d5e6` to `e2a6`,
+tactical grows 173394 to 239314 and midgame does not move. The multicut ships
+inert beside it and its off value is proved on the tree with the full bench
+signature: the tune build at `SeMultiCut` 0 prints `5066204` and all eight
+`bestmove` replies of the Release binary, and at 1 it prints `4493659`, which is
+what verdict 2 will be measured on. Whether a bigger tree that reaches a
+shallower depth is a better one is `adocs/data/S097_v1_sprt.sh`'s to say and not
+this number's (DEC-019).
+
 **What the four settings cost, kept because the shape is worth more than the
 verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,
 where the term read `5968045`, +4.96 %; the step's own census then measured
@@ -2450,6 +2469,37 @@ hyperfine --warmup 1 --runs 10 './bench_before -r 2' './bench_after -r 2'
 ```
 
 Check the machine is idle first: `ps aux | sort -rnk3 | head`.
+
+### Depth at a fixed node budget, and the one thing a node count cannot see
+
+`bench` and `tools/search_bench.py` both hold the **depth** fixed and report
+nodes. That is the right question for a reordering or a pruning rule and the
+wrong one for anything that spends depth: an extension trades nodes for plies by
+construction, so its total can move in either direction and say nothing about
+whether the trade was a good one.
+
+```bash
+adocs/data/S097_fixed_node_depth.py ./build/src/chesso
+adocs/data/S097_fixed_node_depth.py ./build/src/chesso --nodes 1000000 --hash 16
+adocs/data/S097_fixed_node_depth.py ./build-tune/src/chesso --option SeMultiCut=1
+```
+
+One row per `search_bench` position, and the columns are
+`position depth nodes best score`: the depth the search reached at
+`go nodes N`, the nodes actually spent, the best move and the score. There is
+no seldepth column, because this engine prints no such field (`MANUAL.md`,
+"What a search prints"); the depth is the **last completed** iteration's,
+which is what the engine's own `info` line carries (`src/chesso.cpp`,
+`last_complete_depth`) and what this instrument is about. Run it on the tree before a change and on the tree after it. **A depth
+that falls on every position is the explosion signature** — the rule is
+spending the budget on one line — and it is worth knowing before a night is
+spent on a match rather than after. A depth that holds while a best move moves
+is the rule doing what it is for.
+
+The budget is enforced exactly (`check_limits` in `src/search.cpp` compares the
+count, it does not sample a clock), so the depth reached is a property of the
+tree and not of the machine's load. Depth at a fixed budget is not Elo and
+nothing reads it as Elo (DEC-019): what decides a step is its SPRT.
 
 ## Size the lazy evaluation margin
 

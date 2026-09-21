@@ -12644,3 +12644,45 @@ Consequences: `short_line_ceiling` returns 5, 15, 0, 2, 11, 5;
               is the same, larger by two lines on one case. If S095's SPRT
               reads H0 and the term leaves, the ceilings return with the
               revert to the tree they described.
+
+## DEC-226  2026-09-21  A verification search is answered only by moves: no reverse futility at an excluded node, and a node whose only legal move is excluded returns its own alpha
+Tags:         search, extensions, singular, verification, dec-141, dec-215, s097
+Context:      S097's singular extension asks a verification search one
+              question -- does any move other than the table move reach a
+              window `SeMarginPerDepth * depth` below the table score? -- and
+              the published descriptions the step worked from say what the
+              excluded node does not do (no table cutoff, no store, no null
+              move, no verification of its own) but are silent on two things
+              chesso's own search reaches there. Reverse futility can answer
+              a node from its static evaluation with no move searched: at an
+              excluded node that answer can only be "not singular", and under
+              the multicut it would return a static margin as the node's
+              value. And a node whose only legal move is the excluded one has
+              no move left to search: the mate and draw scores it would
+              otherwise return are claims about a position nobody is in, and
+              the draw reads as a fail-high to a window below zero, which the
+              multicut would act on.
+Decision:     By the coordinator, 2026-09-21, on the implementing agent's
+              argument, under the owner's delegation of engine questions; the
+              owner may overrule. At a node searched under an exclusion the
+              reverse-futility test is suppressed along with the table cutoff,
+              the store, the null move and the verification, so the
+              verification is answered by searched moves alone; a node whose
+              only legal move was excluded returns the alpha it was called
+              with, a fail-low that reads as "singular" -- the only legal move
+              is by construction much better than every alternative. Each
+              half is pinned by a direct case and a mutant that case kills
+              (DEC-141).
+Rejected:     Letting reverse futility run at the excluded node -- it decides
+              singularity without a move, and it is exactly the static
+              fail-high the multicut would return as a score. Returning the
+              mate or draw score of the no-move position -- the position with
+              one move removed is not the position on the board, and a
+              stalemate reading fails high against a below-zero window.
+              Skipping the verification when the entry's move is the only
+              legal move -- one more legal-move count before the search, paid
+              at every node that verifies, to reach the same reading.
+Consequences: `specs.md`'s search row states both; S097's verdict 2 (the
+              multicut) inherits them unchanged; S127 refits the four
+              constants and may revisit the depth and margin but not these
+              two rules.

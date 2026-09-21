@@ -21,6 +21,15 @@ here. `origin` says which step or review wrote it.
 
 S = "src/search.cpp"
 
+# **Five of these anchors were re-pointed at S097**, which gates the table
+# cutoff, reverse futility and the null move on `excluded_move == 0`: M02 and
+# M03 on the null-move condition, M06a and M06b on reverse futility's ply
+# floor, M11 on the cutoff. The mutations are unchanged -- each still removes
+# or moves exactly what its note names -- and `tools/mutation_check.py` is what
+# caught the stale ones, by refusing the run rather than skipping them. **All
+# five were re-run on the re-pointed anchors and all five are killed.**
+
+
 m("M01_nmp_in_check", S, "search/pruning",
   'null move allowed while in check',
   ('if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&',
@@ -29,14 +38,14 @@ m("M01_nmp_in_check", S, "search/pruning",
 
 m("M02_nmp_mate_band_neg", S, "search/pruning",
   'S165 guard dropped: null move at beta <= -MATE_MIN',
-  ('depth - 1 - null_reduction >= 1 && beta < MATE_MIN && beta > -MATE_MIN &&',
-   'depth - 1 - null_reduction >= 1 && beta < MATE_MIN &&'),
+  ('      beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {',
+   '      beta < MATE_MIN && game_phase(&game->board) > 0) {'),
   origin="2026-09-04_test_review")
 
 m("M03_nmp_zugzwang", S, "search/pruning",
   'null move in pawn endings (game_phase 0)',
-  ('      game_phase(&game->board) > 0) {\n    const int reduction = null_reduction;',
-   '      true) {\n    const int reduction = null_reduction;'),
+  ('&& game_phase(&game->board) > 0) {\n    const int reduction = null_reduction;',
+   '&& true) {\n    const int reduction = null_reduction;'),
   origin="2026-09-04_test_review")
 
 m("M04_nmp_mate_artifact", S, "search/pruning",
@@ -53,14 +62,14 @@ m("M05_rfp_margin_flat", S, "search/pruning",
 
 m("M06a_rfp_ply_floor_minus1", S, "search/pruning",
   'RFP ply floor one ply lower',
-  ('static_cast<int>(ply) >= RFP_MIN_PLY &&\n      depth <= RFP_MAX_DEPTH &&',
-   'static_cast<int>(ply) >= RFP_MIN_PLY - 1 &&\n      depth <= RFP_MAX_DEPTH &&'),
+  ('static_cast<int>(ply) >= RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&',
+   'static_cast<int>(ply) >= RFP_MIN_PLY - 1 && depth <= RFP_MAX_DEPTH &&'),
   origin="2026-09-04_test_review")
 
 m("M06b_rfp_ply_floor_minus2", S, "search/pruning",
   'RFP ply floor two plies lower',
-  ('static_cast<int>(ply) >= RFP_MIN_PLY &&\n      depth <= RFP_MAX_DEPTH &&',
-   'static_cast<int>(ply) >= RFP_MIN_PLY - 2 &&\n      depth <= RFP_MAX_DEPTH &&'),
+  ('static_cast<int>(ply) >= RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&',
+   'static_cast<int>(ply) >= RFP_MIN_PLY - 2 && depth <= RFP_MAX_DEPTH &&'),
   origin="2026-09-04_test_review")
 
 m("M07_lmr_captures", S, "search/reduction",
@@ -114,8 +123,8 @@ m("M10_pvs_no_research", S, "search/pvs",
 
 m("M11_tt_cut_on_pv", S, "search/tt",
   'TT cutoffs taken at PV nodes',
-  ('if (!is_pv && ply > 0) {\n    int tt_score = 0;',
-   'if (ply > 0) {\n    int tt_score = 0;'),
+  ('if (!is_pv && ply > 0 && excluded_move == 0) {\n    int tt_score = 0;',
+   'if (ply > 0 && excluded_move == 0) {\n    int tt_score = 0;'),
   origin="2026-09-04_test_review")
 
 m("M12_tt_depth_ignored", S, "search/tt",

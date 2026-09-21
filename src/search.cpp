@@ -1180,7 +1180,8 @@ static int negamax_at(int alpha0,
                       search_state_t* state,
                       move_t prev_move,
                       bool is_pv,
-                      bool cut_node)
+                      bool cut_node,
+                      move_t excluded_move)
 {
   assert(game != nullptr);
   assert(state != nullptr);
@@ -1286,7 +1287,45 @@ static int negamax_at(int alpha0,
   // S103.
   const int tt_eval = (tt_entry != nullptr) ? tt_entry->eval : TT_EVAL_NONE;
 
-  if (!is_pv && ply > 0) {
+  // THE THREE FIELDS THE SINGULAR EXTENSION READS, copied out here for exactly
+  // the reason `tt_move` and `tt_eval` are, S097: `tt_entry` is the slot's own
+  // address and the block that reads them sits **below the null-move search**,
+  // which recurses. A node in that subtree can store into this slot -- another
+  // position whose key lands on the same index -- and the gate would then
+  // derive its window from that position's score while extending the move this
+  // entry named. Nothing would crash and no node count would be wrong.
+  //
+  // It is masked at today's seeds and that is not a reason to leave it: the
+  // null subtree stores below `depth - SeTtDepthMargin` at the shipped 4, and
+  // at 8 -- inside the declared range S127 sweeps -- or at a smaller null
+  // reduction it is not masked at all.
+  //
+  // The score is de-normalised here rather than at the gate because this is
+  // where the entry is still known to be the one the probe found; this is the
+  // second reader of that field beside `tt_entry_answers` and S106's round
+  // trip applies to it. The three no-entry values are never read -- the gate
+  // tests the pointer before it reads a copy -- and are the ones that would
+  // fail it anyway: a depth below every main-search depth and the one bound
+  // type the rule refuses.
+  const int tt_entry_depth =
+      (tt_entry != nullptr) ? tt_entry->depth : TT_DEPTH_QS;
+  const uint8_t tt_entry_type = (tt_entry != nullptr)
+                                    ? tt_entry->type
+                                    : static_cast<uint8_t>(TT_ALPHA_NODE);
+  const int tt_entry_score =
+      (tt_entry != nullptr) ? de_normalize_score(tt_entry->score, ply) : 0;
+
+  // No cutoff while a move is excluded, S097. The entry was written by a
+  // search of this position that was allowed to play the very move this node
+  // is being asked to do without, so letting it answer would answer the
+  // verification with the thing being verified -- an entry whose lower bound
+  // already clears the verification's window would fail the node high every
+  // time, vacuously, and the table move would never be called singular. The
+  // probe above still runs and `tt_move` is still copied out: the subtree below
+  // orders and cuts on the table exactly as it always did, and masking the move
+  // here would switch a later step's rules on and off inside the verification
+  // for no stated reason.
+  if (!is_pv && ply > 0 && excluded_move == 0) {
     int tt_score = 0;
 
     if (tt_entry_answers(tt_entry, depth, ply, alpha, beta, &tt_score)) {
@@ -1436,8 +1475,20 @@ static int negamax_at(int alpha0,
   //
   // The cast on ply is the tune build's, for the reason quiescence's depth
   // bound carries: a parameter is a plain int there and ply is a size_t.
-  if (!is_pv && !is_in_check && static_cast<int>(ply) >= RFP_MIN_PLY &&
-      depth <= RFP_MAX_DEPTH && beta < MATE_MIN && beta > -MATE_MIN) {
+  //
+  // **Off while a move is excluded, S097, and that is this step's decision
+  // rather than a traced practice.** The verification search asks whether any
+  // move other than the table move reaches a window below the entry's score,
+  // and a static bound answers that with no move searched at all: it can only
+  // fail the node high -- the rule returns nothing below its own beta -- so it
+  // can only say "not singular", and under the multicut it would return a
+  // static margin as the node's value at a depth the parent's own reverse
+  // futility already refused. The verification is cheap and there is one of it
+  // per eligible node; a second pruning rule folded inside it is a change
+  // nothing could attribute.
+  if (!is_pv && !is_in_check && excluded_move == 0 &&
+      static_cast<int>(ply) >= RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&
+      beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
 
     // Fail soft, and the bound returned is the one actually argued for: the
@@ -1499,9 +1550,14 @@ static int negamax_at(int alpha0,
   // and the pass looks safe. That is not a theoretical risk: it lost a mate in
   // two at depth 4, where this node had three plies left and the null search
   // had none.
+  //   excluded_move  S097. A null-move bound answers the verification search
+  //                 without any alternative having been searched, which is the
+  //                 one thing that search exists to do. Gated on the exclusion
+  //                 directly and never by abusing `prev_move`, which has to
+  //                 keep flowing for the countermove and continuation tables
   if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&
-      depth - 1 - null_reduction >= 1 && beta < MATE_MIN && beta > -MATE_MIN &&
-      game_phase(&game->board) > 0) {
+      excluded_move == 0 && depth - 1 - null_reduction >= 1 &&
+      beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {
     const int reduction = null_reduction;
     const child_label_t child = null_move_child(is_pv, cut_node);
 
@@ -1517,7 +1573,7 @@ static int negamax_at(int alpha0,
 
     const int null_score =
         -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
-                           game, state, 0, child.is_pv, child.cut_node);
+                           game, state, 0, child.is_pv, child.cut_node, 0);
 
     unmake_null_move(game);
 
@@ -1527,6 +1583,141 @@ static int negamax_at(int alpha0,
       // A mate score out of a null move search is not a mate anyone can force,
       // it is an artefact of the pass. Report the bound instead.
       return (null_score >= MATE_MIN) ? beta : null_score;
+    }
+  }
+
+  // SINGULAR EXTENSION AND MULTICUT, S097. One verification search, two
+  // answers, and the second of them ships switched off.
+  //
+  // The table's move at a node deep enough to be worth the nodes is searched
+  // one ply deeper when **every other move** fails a search against a window a
+  // margin below the entry's own score: nothing else here is close, so the line
+  // is the node, and the plies are better spent inside it. The same search
+  // failing high says the opposite -- some other move already clears a bar just
+  // under the entry's score -- and that is the multicut, which returns the
+  // score rather than searching the node at all.
+  //
+  // Below the null-move block on purpose: a node the pass already cut off never
+  // pays for a verification, and the ordering makes the cheap answer first.
+  //
+  // WHAT EACH CONDITION IS FOR. `SE_EXTEND` is the switch and not a setting:
+  // at 0 the whole block is skipped and the tree is the one before this step,
+  // exactly, which is the off value DEC-215 requires a shipped rule to have and
+  // which `SeMinDepth`'s range top is not. `ply > 0` keeps it off the root,
+  // which has to produce a move and whose one move is not a candidate for
+  // anything.
+  // `excluded_move == 0` is the no-recursion rule: a verification inside a
+  // verification asks about a node two moves have been taken from.
+  // `tt_move != 0` with a non-null entry is the technique's whole premise --
+  // there is a move to call singular and an entry to measure it against -- and
+  // at ply 0 the root hint could make the first true with the second false,
+  // which is why the entry is tested in its own right and not inferred.
+  // `tt_entry_depth >= depth - SE_TT_DEPTH_MARGIN` is how deep that entry had
+  // to have been searched for its move to be worth verifying, and the bound
+  // types are the two that certify a score at or above the entry's number: an
+  // upper bound says the position is worth *at most* this, which is not a claim
+  // a margin can be subtracted from.
+  //
+  // MATE SCORES, TWICE. The entry's score arrives de-normalised from the
+  // copy-out above, where the round trip is done once and where the entry is
+  // still known to be the one the probe found. A mate score is a distance and
+  // not a value: a margin subtracted from one means nothing, so the band is
+  // excluded outright, and the derived window is checked in its own right
+  // because a score just inside the band minus a margin lands outside it.
+  int se_extension = 0;
+
+  if (SE_EXTEND != 0 && ply > 0 && excluded_move == 0 && tt_move != 0 &&
+      tt_entry != nullptr && depth >= SE_MIN_DEPTH &&
+      tt_entry_depth >= depth - SE_TT_DEPTH_MARGIN &&
+      (tt_entry_type == TT_BETA_NODE || tt_entry_type == TT_PV_NODE) &&
+      static_cast<int>(ply) < SE_PLY_FACTOR * depth) {
+    const int singular_beta = tt_entry_score - SE_MARGIN_PER_DEPTH * depth;
+
+    if (tt_entry_score < MATE_MIN && tt_entry_score > -MATE_MIN &&
+        singular_beta > -MATE_MIN) {
+      // About half of what is left, so the verification costs a fraction of the
+      // node it is about. Never zero: the shallowest eligible node is
+      // SeMinDepth's floor of 4 and `(4 - 1) / 2` is 1, so the search that
+      // answers is always a real one and never quiescence.
+      const int verification_depth = (depth - 1) / 2;
+
+      assert(verification_depth >= 1);
+
+      // `negamax_at<false>` and not the probing instantiation, whatever this
+      // node is. A probe records exactly one ply, and this search is at **this
+      // node's own ply** -- the one place in the engine where that is true --
+      // so the probing instantiation would overwrite the record of the node
+      // that asked the question with the record of the question. S191's
+      // parameter is what makes that a compile-time fact rather than a
+      // convention.
+      //
+      // Not a PV node and not a cut node: a zero window under the entry's score
+      // is asked in the expectation that everything fails low, which is CPW's
+      // ALL node. The label is a prediction and a wrong one costs rating and
+      // nothing else.
+      const int vscore = negamax_at<false>(singular_beta - 1, singular_beta,
+                                           verification_depth, ply, game, state,
+                                           prev_move, false, false, tt_move);
+
+      if (state->aborted) { return 0; }
+
+      // The verification is a search of this ply and it wrote this ply's PV
+      // row. The row belongs to a node that was searched without one of its
+      // moves, so it is cleared again here for the same reason the top of the
+      // function clears it: every path out of this function leaves the row
+      // either valid or empty, and a line this node never played is neither.
+      state->pv_length[ply] = 0;
+
+      if constexpr (PROBING) {
+        if (probe != nullptr) {
+          probe->se_verified = true;
+          probe->se_singular_beta = singular_beta;
+          probe->se_vscore = vscore;
+          probe->se_vdepth = verification_depth;
+        }
+      }
+
+      if (vscore < singular_beta) {
+        // Singular: nothing else here reached a window the table move already
+        // clears. One ply, once, at this node -- the published amount at every
+        // traced introduction, and the cap that keeps the line finite together
+        // with `ply < SE_PLY_FACTOR * depth` and the MAX_PLY walls.
+        se_extension = 1;
+
+        if constexpr (PROBING) {
+          if (probe != nullptr) { probe->se_extended = true; }
+        }
+      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&
+                 vscore < MATE_MIN && vscore > -MATE_MIN && beta > -MATE_MIN) {
+        // MULTICUT, and it is the step's second verdict: at `SeMultiCut` 0 the
+        // release build compiles this branch away entirely and the engine is
+        // the one the extension landed as.
+        //
+        // The verification failed high, so some move other than the table's
+        // reaches a bar just under the entry's score -- and here it reaches
+        // this node's own beta as well, at a reduced depth. Two moves are then
+        // claimed to be worth at least beta and the node is taken to fail high
+        // without being searched.
+        //
+        // **The fail-soft score and never `singular_beta`**: the bound is what
+        // the window was set to and the score is what the search found, and
+        // returning the bound throws away everything the search established
+        // above it.
+        //
+        // Guarded like every other bound-returning rule in this function. Not
+        // at a PV node, whose line gets reported and played. Never a mate-range
+        // value -- a reduced search is the instrument that misses mates, and a
+        // mate score returned from one is a distance nothing proved. And never
+        // against a beta inside the negative mate band, which is S165's guard:
+        // there the node sits inside a mate proof as the defender, every score
+        // clears beta, and a reduced search's word is exactly what must not
+        // decide it.
+        if constexpr (PROBING) {
+          if (probe != nullptr) { probe->se_multicut = true; }
+        }
+
+        return vscore;
+      }
     }
   }
 
@@ -1728,6 +1919,20 @@ static int negamax_at(int alpha0,
 
     pick_next_move(moves, scores, moves_count, i);
 
+    // S097, and the whole mechanism of a verification search: this node is
+    // being asked what it is worth without this move. Skipped before make_move
+    // and before `legal_moves_counter`, so the move is not a legal move this
+    // node searched by any of the counts the rules below read -- the move
+    // number the reduction table is indexed at, the first-move guard, and the
+    // no-legal-move return at the bottom.
+    //
+    // score_move() still ranks it first, so the selection sort above has
+    // already spent one pick on it. That is one comparison pass per
+    // verification and is left alone deliberately: a stale or colliding table
+    // move that the generator never emits costs the same pick whether it is
+    // tested for here or not.
+    if (moves[i] == excluded_move) { continue; }
+
     const bool is_capture = MOVE_CAPTURE(moves[i]);
     const bool is_quiet = !is_capture && !MOVE_PROMOTED(moves[i]);
 
@@ -1898,7 +2103,20 @@ static int negamax_at(int alpha0,
     // has to be searched again properly. That costs a whole re-search, which is
     // why this is a win only while the first move really is usually best; it
     // pays for the move ordering the rest of the engine does.
-    const int child_depth = depth - 1;
+    //
+    // **The extension is here and nowhere else, S097**: the one move the
+    // verification called singular is searched a ply deeper, and `child_depth`
+    // is where every rule below reads the move's depth from -- the reduction's
+    // clamp to `child_depth - 1`, S098 verdict 3's re-search and the four
+    // recursion sites. Folding it into this line is what makes them all follow
+    // the extended depth instead of each needing to know about it, which is the
+    // edit S098's file assigns to this step.
+    //
+    // `se_extension` is 0 at every node that ran no verification and at every
+    // one whose verification failed high, and `tt_move` is non-zero wherever it
+    // is not, so a move can only match the table's own.
+    const int child_depth =
+        depth - 1 + ((moves[i] == tt_move) ? se_extension : 0);
 
     // Late move reduction. Move ordering puts the moves worth searching first,
     // so a quiet move this far down the list is unlikely to be the best one.
@@ -1956,6 +2174,7 @@ static int negamax_at(int alpha0,
 
         probe->moves[k] = moves[i];
         probe->reduction[k] = reduction;
+        probe->child_depth[k] = child_depth;
         probe->researched[k] = false;
         probe->child_is_pv[k] = child.is_pv;
         probe->child_cut_node[k] = child.cut_node;
@@ -1965,12 +2184,13 @@ static int negamax_at(int alpha0,
 
     if (legal_moves_counter == 1) {
       // The first legal move of a PV node continues the principal variation.
-      score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
-                                 state, moves[i], child.is_pv, child.cut_node);
+      score =
+          -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game, state,
+                             moves[i], child.is_pv, child.cut_node, 0);
     } else {
       score = -negamax_at<false>(-alpha - 1, -alpha, child_depth - reduction,
                                  ply + 1, game, state, moves[i], child.is_pv,
-                                 child.cut_node);
+                                 child.cut_node, 0);
 
       // A reduced search that beats alpha has proved only that the reduction
       // was wrong, not what the move is worth. Repeat it before believing
@@ -2009,7 +2229,7 @@ static int negamax_at(int alpha0,
 
         score = -negamax_at<false>(-alpha - 1, -alpha, research.depth, ply + 1,
                                    game, state, moves[i], again.is_pv,
-                                   again.cut_node);
+                                   again.cut_node, 0);
       }
 
       // Beat alpha without reaching beta, so the null window has told us the
@@ -2021,7 +2241,7 @@ static int negamax_at(int alpha0,
 
         score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
                                    state, moves[i], on_the_line.is_pv,
-                                   on_the_line.cut_node);
+                                   on_the_line.cut_node, 0);
       }
     }
 
@@ -2104,6 +2324,20 @@ static int negamax_at(int alpha0,
   }
 
   if (legal_moves_counter == 0) {
+    // S097. A node whose only legal move was the excluded one is neither mated
+    // nor stalemated: the move that answers is on the board and this search set
+    // it aside. Both terminal scores would be a claim about a position nobody
+    // is in -- a mate score is a distance nothing proved, and DRAW_SCORE reads
+    // as a **fail-high** to a verification whose window sits below zero, which
+    // under the multicut would hand the parent 0 as the node's value on the
+    // strength of a stalemate that does not exist.
+    //
+    // What is true is that nothing here reached the window, so the node fails
+    // low against it -- and the table move is then singular in the only sense
+    // the rule means, being the one legal move there is. `alpha0` and not
+    // `alpha`: no move was searched, so nothing raised it.
+    if (excluded_move != 0) { return alpha0; }
+
     return is_in_check ? -(MATE_MAX - static_cast<int>(ply)) : DRAW_SCORE;
   }
 
@@ -2137,9 +2371,17 @@ static int negamax_at(int alpha0,
     }
   }
 
-  const int to_store = normalize_score(best_so_far, ply);
-  tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
-                 static_eval);
+  // No store while a move is excluded, S097. What this node just computed is
+  // the value of a position **with one of its moves removed**, and the key it
+  // would be written under is the position with the move in it. Stored, it
+  // poisons every later probe of the position -- including the one the
+  // verification's own parent is about to make -- with a score that is wrong by
+  // construction and an ordering move that is not the best one.
+  if (excluded_move == 0) {
+    const int to_store = normalize_score(best_so_far, ply);
+    tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
+                   static_eval);
+  }
 
   return best_so_far;
 }
@@ -2154,10 +2396,11 @@ int negamax(int alpha0,
             search_state_t* state,
             move_t prev_move,
             bool is_pv,
-            bool cut_node)
+            bool cut_node,
+            move_t excluded_move)
 {
   return negamax_at<false>(alpha0, beta, depth, ply, game, state, prev_move,
-                           is_pv, cut_node);
+                           is_pv, cut_node, excluded_move);
 }
 
 
@@ -2171,10 +2414,11 @@ int negamax_probed(int alpha0,
                    search_state_t* state,
                    move_t prev_move,
                    bool is_pv,
-                   bool cut_node)
+                   bool cut_node,
+                   move_t excluded_move)
 {
   return negamax_at<true>(alpha0, beta, depth, ply, game, state, prev_move,
-                          is_pv, cut_node);
+                          is_pv, cut_node, excluded_move);
 }
 
 
@@ -2543,7 +2787,7 @@ search_t search(int depth,
   // published lists, and the one this search has always followed through
   // `is_pv`. `cut_node` false is the other half of that label. S098.
   int score =
-      negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true, false);
+      negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true, false, 0);
 
   search_result.best_move = state->best_move;
 

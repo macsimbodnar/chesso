@@ -103,6 +103,12 @@ m("D06_deeper_two_plies", S, "search/reduction",
    '  if (depth > child_depth + 2) { depth = child_depth + 2; }'),
   origin="S098")
 
+# The anchor gained a trailing `0` at S097, which threads `excluded_move`
+# through `negamax_at`: every recursion hands its children 0, this one
+# included. The mutation is unchanged -- `research.depth` becomes
+# `child_depth` -- and **was re-run at S097 on the re-pointed anchor**:
+# killed, by "pruning does not hide a forced mate" and by "a re-search that
+# went a ply deeper left a table entry a ply deeper".
 m("D08_site_ignores_the_rule", S, "search/reduction",
   'the recursion re-searches at `child_depth` and the rule is computed and '
   'thrown away, which is the whole step wired up and switched off in one line. '
@@ -111,11 +117,11 @@ m("D08_site_ignores_the_rule", S, "search/reduction",
   ('        score = -negamax_at<false>(-alpha - 1, -alpha, research.depth, '
    'ply + 1,\n'
    '                                   game, state, moves[i], again.is_pv,\n'
-   '                                   again.cut_node);',
+   '                                   again.cut_node, 0);',
    '        score = -negamax_at<false>(-alpha - 1, -alpha, child_depth, '
    'ply + 1,\n'
    '                                   game, state, moves[i], again.is_pv,\n'
-   '                                   again.cut_node);'),
+   '                                   again.cut_node, 0);'),
 
   origin="S098")
 

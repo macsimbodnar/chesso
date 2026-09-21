@@ -641,9 +641,17 @@ struct search_node_probe_t
   // nothing but the fail-soft best: it is the site's own precondition and it is
   // the variable the margin could be measured from by mistake, which is the bug
   // the field below exists to catch.
+  //
+  // `child_depth` is the depth that first search actually ran at before the
+  // reduction was taken off it, which is `depth - 1` at every move but the one
+  // S097's verification search called singular: that one is searched a ply
+  // deeper, and an extension landing on the wrong move is silent -- no crash,
+  // no wrong node count, only rating -- so the site's own number is recorded
+  // rather than inferred from the tree it left behind. S097.
   int move_count = 0;
   move_t moves[MAX_MOVES];
   int reduction[MAX_MOVES];
+  int child_depth[MAX_MOVES];
   bool researched[MAX_MOVES];
   bool child_is_pv[MAX_MOVES];
   bool child_cut_node[MAX_MOVES];
@@ -659,6 +667,27 @@ struct search_node_probe_t
   // best score is a disagreement a case can read. A replay cannot see that bug:
   // it moves both sides of its comparison together. S098 verdict 3.
   int research_base[MAX_MOVES];
+
+  // The singular extension block, S097, and what it decided at this node.
+  //
+  // `se_verified` is "the verification search ran here", which is the whole of
+  // the gate list: a case that plants an entry and asserts no verification
+  // happened is reading this field and not a node count. The five beside it are
+  // valid only where it is true -- whether the table move was extended, whether
+  // the multicut returned the verification's score as the node's own, the
+  // window that search was run against, the score it came back with, and the
+  // depth it ran at.
+  //
+  // `se_multicut` is false in every release build the gate runs, because
+  // `SE_MULTICUT` is 0 there and the compiler folds the branch away. That is
+  // the point: the field is what the tune build's case reads to show the off
+  // value is off rather than assumed (DEC-215).
+  bool se_verified = false;
+  bool se_extended = false;
+  bool se_multicut = false;
+  int se_singular_beta = 0;
+  int se_vscore = 0;
+  int se_vdepth = 0;
 
   // Late move pruning set its flag at this node, so the quiet stage ended
   // early -- either ungenerated or unsearched from the first quiet on.

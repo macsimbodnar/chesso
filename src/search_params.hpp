@@ -667,6 +667,96 @@
      S127 re-tries the ply count and the bar. */                                \
   X(SEE_LMR_EXTRA,     "SeeLmrExtra",     1,      0, 3)                        \
                                                                                \
+  /* SINGULAR EXTENSION AND MULTICUT, S097, off one verification search. At a   \
+     node whose table entry carries a move, is deep enough and certifies a      \
+     lower bound, the node is searched again with that move set aside, at about \
+     half depth and against a window a margin below the entry's score           \
+     (`negamax_at` in src/search.cpp). Every alternative failing low means the  \
+     table move is much better than anything else here, so it is searched a ply \
+     deeper; an alternative failing high instead means some other move already  \
+     clears a bar just under the entry's score, which is the multicut.          \
+                                                                               \
+     UNITS, and they differ per axis (P6). `SeMarginPerDepth` multiplies the    \
+     remaining depth into a margin compared against search scores, so it is in  \
+     chesso's material scale -- `piece_value` in src/eval_tables.hpp, where     \
+     PAWN is 94 and not `see_value`'s 100. The other three count plies or       \
+     depths and have no unit at all.                                            \
+                                                                               \
+     Under DEC-105 every default here is one of three things and says which,    \
+     and **no engine's shipped depth, margin or ply count seeds any of them**,  \
+     wherever it is republished (DEC-084 as amended by DEC-105, DEC-134). The   \
+     published record decides that the technique is tried and never what the    \
+     numbers are (DEC-019). All four are first settings and S127 sweeps them.   \
+                                                                               \
+     SE_MIN_DEPTH is **(c) the midpoint** of a declared 4 to 16. The floor is   \
+     the shallowest node where the halved verification still keeps a real ply   \
+     -- `(4 - 1) / 2` is 1 -- and the ceiling is where the rule reaches only    \
+     the top of a deep iteration. No (a) exists to take: the wiki's Singular    \
+     Extensions page states no depth                                            \
+     (https://www.chessprogramming.org/Singular_Extensions, fetched             \
+     2026-09-05) and the papers behind the technique are paywalled. The (b)     \
+     alternative the step file offers -- profiling how often this engine's own  \
+     stored move survives a full-width search at the same depth -- was          \
+     available and was not taken, which the step's stamp records.               \
+                                                                               \
+     SE_TT_DEPTH_MARGIN is **(c) the midpoint** of 0 to 8, exactly. It is how   \
+     far below this node's remaining depth the entry may have been searched and \
+     still be trusted to name the move worth verifying: at 0 only an entry as   \
+     deep as this search counts, and 8 is where an entry is half the depth of   \
+     the node reading it at the seed above.                                     \
+                                                                               \
+     SE_PLY_FACTOR is **(c) the midpoint** of 2 to 8, exactly. `ply <           \
+     SE_PLY_FACTOR * depth` is the explosion cap: an extension adds depth, and  \
+     a line that keeps extending is bounded first by this and only then by the  \
+     MAX_PLY walls. At 2 it binds early in a deep line; at 8 it is the walls    \
+     that bind.                                                                 \
+                                                                               \
+     SE_MARGIN_PER_DEPTH is **(c) the midpoint** of a range stated by purpose.  \
+     The form is `margin = SeMarginPerDepth * depth`, the floor of 1 is the     \
+     smallest margin that is not zero, and the top of 18 is where the margin at \
+     the SeMinDepth seed reaches two pawns -- `2 * PAWN / 10` is 18.8, floored  \
+     -- past which the verification window is wider than the material a         \
+     singular move is being claimed to win. The midpoint of 1 to 18 is 9.5 and  \
+     the seed is the integer below it, 9. **No off value exists inside this     \
+     range** and that is stated rather than fudged: at the top the margin is    \
+     still two pawns at the seed depth and the extension keeps firing.          \
+                                                                               \
+     THE VERIFICATION DEPTH IS NOT A PARAMETER. It is `(depth - 1) / 2`,        \
+     written at the site, which is the halving the step file's section 4 leaves \
+     as this project's own choice; S127 is where it becomes an axis if a sweep  \
+     wants one.                                                                 \
+                                                                               \
+     SE_EXTEND IS A SWITCH AND NOT A SETTING, and it is what DEC-215 clause 2  \
+     requires of a rule whose settings have no off value between them: at 0 the \
+     whole block is skipped -- no verification search, no extension -- and the  \
+     tree is the one before this step, exactly. `SeMinDepth` at its range top   \
+     is **not** that value and the step file records why: it benches the        \
+     parent's total only because `bench` stops at depth 14, while a game at the \
+     harness control reaches depth 16 and beyond, where the rule still fires.   \
+     Proved on the tree and not declared: the tune build at `SeExtend` 0 prints \
+     the parent's total with all eight `bestmove` replies identical to a build  \
+     of the parent commit. Range 0 to 1 by stated purpose -- the block runs or  \
+     it does not -- and it is a verdict switch, not something S127 sweeps.      \
+                                                                                \
+     SE_MULTICUT IS A SWITCH AND NOT A SETTING, and it is the whole of the      \
+     step's second verdict (DEC-215). The extension and the multicut are two    \
+     changes off one verification search and each is priced by its own SPRT, so \
+     the multicut ships **inert** with the extension's landing and is turned on \
+     by moving this default to 1 and nothing else. 0 is the off value and it is \
+     off by construction rather than by argument: the release build compiles it \
+     as a constant, so the branch folds away entirely and the binary holds no   \
+     multicut at all. Proved on the tree and not declared from the range's end  \
+     -- the tune build at `SeMultiCut` 0 benches the extension landing's total  \
+     to the node, and at 1 it does not. Range 0 to 1 by stated purpose: the     \
+     rule either returns the verification's score or it does not, and there is  \
+     no third setting of it. */                                                 \
+  X(SE_EXTEND,           "SeExtend",           1, 0,  1)                       \
+  X(SE_MIN_DEPTH,        "SeMinDepth",        10, 4, 16)                       \
+  X(SE_TT_DEPTH_MARGIN,  "SeTtDepthMargin",    4, 0,  8)                       \
+  X(SE_PLY_FACTOR,       "SePlyFactor",        5, 2,  8)                       \
+  X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
+  X(SE_MULTICUT,         "SeMultiCut",         0, 0,  1)                       \
+                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \

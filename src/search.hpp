@@ -66,6 +66,19 @@ int quiescence(int alpha,
 // to ask its question at, and `false` is the choice every case made before this
 // step existed -- PV where `is_pv`, ALL otherwise, which is the label that adds
 // nothing to the reduction.
+//
+// `excluded_move` is S097's, and it is a property of **this node alone**: the
+// node is searched as though that move did not exist. Every recursion below
+// hands its children 0, because the exclusion belongs to the question being
+// asked here and not to the position. One caller in the engine ever passes a
+// move -- the verification search, which asks what this node is worth without
+// its table move -- and a node searched under an exclusion takes no table
+// cutoff, writes no entry, makes no null move, runs no reverse futility and
+// starts no verification of its own.
+//
+// Defaulted to 0 here and on negamax_probed for the reason `cut_node` is: 0 is
+// what every caller that is not the verification wants, and it is what every
+// case written before this step drove.
 int negamax(int alpha0,
             int beta,
             int depth,
@@ -74,7 +87,8 @@ int negamax(int alpha0,
             search_state_t* state,
             move_t prev_move,
             bool is_pv,
-            bool cut_node = false);
+            bool cut_node = false,
+            move_t excluded_move = 0);
 
 
 // The same node with `state->probe` honoured, so a test can watch this node's
@@ -93,7 +107,8 @@ int negamax_probed(int alpha0,
                    search_state_t* state,
                    move_t prev_move,
                    bool is_pv,
-                   bool cut_node = false);
+                   bool cut_node = false,
+                   move_t excluded_move = 0);
 
 // Completes a reported mate line so that it reaches the mate it claims, and
 // keeps a line that does reach one for the searches that follow.

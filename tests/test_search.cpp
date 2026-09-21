@@ -8275,4 +8275,863 @@ TEST_SUITE("search: pruning and reduction guards")
                                                   << unchanged << ", shallower "
                                                   << shallower);
   }
+
+
+  // ----------------------------------------------------------------------
+  // SINGULAR EXTENSION AND MULTICUT, S097. One verification search and the
+  // two answers it gives: the table move extended where every alternative
+  // fails below a window under the entry's score, and the multicut where one
+  // of them clears it instead. The second ships at its off value and the case
+  // that reads it says so.
+  // ----------------------------------------------------------------------
+
+  // The position every drive of the block runs at, and the same one "reverse
+  // futility does not fire above its depth bound" uses for the same reason.
+  // Four blocked pawn pairs two files apart and the two kings: from a tool
+  // (CLAUDE.md), python-chess reports `is_valid() True`, `is_check() False`
+  // and 5 legal moves, all of them king moves. No pawn can advance and none
+  // can capture, on either side, ever.
+  //
+  // That is what makes a node at `SeMinDepth` affordable in a suite the gate
+  // runs. Five quiet moves per node, no capture anywhere below so quiescence
+  // stands pat immediately, and a king that walks back to a square it came
+  // from repeats a position the search has already been at -- which
+  // negamax_at() answers with DRAW_SCORE above the probe, the search and the
+  // store alike, for every position **inside** the tree. The drive position
+  // itself is the one exception and it is the engine's own rule, not this
+  // fixture's: `classify_repetition` counts the root's own entry as pre-root,
+  // so the first return to it is searched and any later one is a draw.
+  static const std::string SE_DRIVE_POS =
+      "4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/4K3 w - - 0 1";
+
+  // A ceiling on the drives, so a rule that stopped bounding the tree fails
+  // loudly instead of hanging the suite. Every case asserts `!state.aborted`
+  // after its drive, which is what makes this a safety net and not a setting:
+  // a drive that reaches it is a red case and not a shorter measurement.
+  static constexpr uint64_t SE_DRIVE_NODE_LIMIT = 5000000;
+
+  // What the table has to say about this position for the block to fire, as
+  // three numbers a case can deny one of at a time.
+  struct se_plant_t
+  {
+    int entry_depth;
+    ::node_type_t type;
+    int score;
+  };
+
+  // One drive of the singular-extension block at SE_DRIVE_POS.
+  //
+  // Every number is derived from the parameters rather than written out: a fit
+  // that moves `SeMinDepth` moves the drive with it, where a literal would
+  // leave a case that silently stops verifying anything and goes on passing.
+  struct se_drive_t : guard_fixture_t
+  {
+    // The node's own remaining depth: the shallowest one the block admits, so
+    // the drive is the cheapest node that can verify at all.
+    static int node_depth() { return SE_MIN_DEPTH; }
+
+    // The shallowest entry the depth margin still accepts, and one ply below
+    // it. Both are entries this node cannot take a cutoff from --
+    // `tt_entry_answers` wants `entry->depth >= depth` -- which is what makes
+    // the block, and not the table, what the drive observes.
+    static int deep_enough() { return SE_MIN_DEPTH - SE_TT_DEPTH_MARGIN; }
+    static int too_shallow() { return deep_enough() - 1; }
+
+    // The window the block derives from an entry saying `score`.
+    static int singular_beta_for(int score)
+    { return score - SE_MARGIN_PER_DEPTH * node_depth(); }
+
+    // The move planted as the entry's, which is the move the block is about.
+    // A king step this position really has, through the generator: a move
+    // built by hand carries the flags the test expected rather than the ones
+    // the generator emits.
+    move_t table_move = 0;
+
+    search_node_probe_t run(size_t ply,
+                            const se_plant_t& plant,
+                            int alpha,
+                            int beta,
+                            move_t excluded)
+    {
+      load(SE_DRIVE_POS, static_cast<int>(ply));
+
+      REQUIRE(!is_check(&game));
+
+      table_move = quiet_move(&game, e1, e2);
+
+      REQUIRE(table_move != 0);
+
+      tt_store_entry(&tt, &game.board, plant.entry_depth, plant.score,
+                     plant.type, table_move);
+
+      // The precondition every case rests on, established in the same sequence
+      // as the drive and not in one that might not be what the node reads.
+      const tt_entry_t* planted = tt_get_entry(&tt, &game.board);
+
+      REQUIRE_MESSAGE(planted != nullptr,
+                      "the planted entry is not in the table, so this drive is "
+                      "about a node the table has nothing for");
+      REQUIRE_EQ(planted->best_move, table_move);
+      REQUIRE_EQ(planted->depth, plant.entry_depth);
+
+      // The entry orders this node and never answers it, at every plant these
+      // cases use. Without this a case reading `se_verified` false would be
+      // reading a node that returned before the block.
+      REQUIRE(plant.entry_depth < node_depth());
+
+      // The rest of the block's conditions, so each case denies exactly one.
+      // `ply` and the entry's own fields are the case's to choose; these two
+      // are properties of the drive.
+      REQUIRE(node_depth() >= SE_MIN_DEPTH);
+      REQUIRE(static_cast<int>(ply) < SE_PLY_FACTOR * node_depth());
+
+      // What search() does at the root, written here because a drive that
+      // calls negamax() directly does not go through it. `load_FEN` leaves the
+      // history empty, so this is 0 either way and the drive is not changed by
+      // it; what it buys is that the repetition rule this node searches under
+      // is the one the engine searches under, whatever a later fixture loads.
+      state.root_history_size = game.history.size;
+      state.node_limit = SE_DRIVE_NODE_LIMIT;
+
+      negamax_probed(alpha, beta, node_depth(), ply, &game, &state, 0, false,
+                     false, excluded);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      return probe;
+    }
+  };
+
+  // An entry score far above anything this position can produce, so every
+  // alternative fails below the window the block derives from it and the table
+  // move is singular. The fortress evaluates near zero and every line in it is
+  // a draw, so the verification comes back at DRAW_SCORE.
+  static constexpr int SE_SINGULAR_SCORE = 500;
+
+  // And one far below it, so an alternative clears the window instead and the
+  // verification fails high -- the multicut's own precondition.
+  static constexpr int SE_NOT_SINGULAR_SCORE = -500;
+
+  // A window inside the mate band, for the reason "search: pruning and
+  // reduction guards" already drives the node-type cases with one: it switches
+  // the shallow-depth block, the null move and reverse futility off at this
+  // node **and in its whole subtree**, because every one of them requires
+  // `beta < MATE_MIN`. Nothing beats an alpha of MATE_MIN short of a forced
+  // mate, so the node runs its whole move loop and the depth recorded per move
+  // is the one the block decided on rather than one a pruned sibling moved.
+  //
+  // The verification search below is not affected: its window is derived from
+  // the entry's score, so the rules are live inside it -- which is what S097
+  // section 5 asks for, the quiet tail pruned there as it is everywhere else.
+  static constexpr int SE_BAND_ALPHA = MATE_MIN_LOCAL;
+  static constexpr int SE_BAND_BETA = MATE_MIN_LOCAL + 1;
+
+
+  // Mutation: E01_extension_on_every_move, E03_extension_dropped,
+  // E13_verification_depth_full, E14_singular_beta_sign.
+  //
+  //   search: pruning and reduction guards
+  //    the extension lands on the table move and on no other
+  //   REQUIRE_EQ( probe.child_depth[k], se_drive_t::node_depth() - 1 )
+  TEST_CASE_FIXTURE(se_drive_t,
+                    "the extension lands on the table move and on no other")
+  {
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE, SE_SINGULAR_SCORE};
+    const search_node_probe_t record =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    // The block ran, and it ran on the window the entry's score and the margin
+    // define -- the form is the assertion, so a sign slip or a margin read at
+    // the wrong depth fails here rather than costing rating quietly.
+    REQUIRE(record.se_verified);
+    REQUIRE_EQ(record.se_singular_beta, singular_beta_for(SE_SINGULAR_SCORE));
+    REQUIRE_EQ(record.se_vdepth, (node_depth() - 1) / 2);
+
+    // ... and it came back below that window, which is what "singular" is.
+    REQUIRE(record.se_vscore < record.se_singular_beta);
+    REQUIRE(record.se_extended);
+
+    // The whole of the extension, read off the site: the table move's child
+    // was searched a ply deeper than the node's own remaining depth allows,
+    // and every other move's was not. A ply landing on the wrong move is
+    // silent -- no crash, no wrong node count, only rating -- which is why the
+    // depth per move is recorded rather than inferred from the tree.
+    REQUIRE(record.move_count > 1);
+
+    int extended = 0;
+
+    for (int k = 0; k < record.move_count; ++k) {
+      if (record.moves[k] == table_move) {
+        REQUIRE_EQ(record.child_depth[k], node_depth());
+        extended++;
+      } else {
+        REQUIRE_EQ(record.child_depth[k], node_depth() - 1);
+      }
+    }
+
+    REQUIRE_EQ(extended, 1);
+  }
+
+
+  // Mutation: E02_extension_condition_inverted.
+  //
+  //   search: pruning and reduction guards
+  //    a verification that fails high extends nothing
+  //   REQUIRE( !record.se_extended )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(se_drive_t,
+                    "a verification that fails high extends nothing")
+  {
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE,
+                              SE_NOT_SINGULAR_SCORE};
+    const search_node_probe_t record =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    // The precondition, and it is the inverse of the case above: an
+    // alternative reached the window, so nothing here is singular.
+    REQUIRE(record.se_verified);
+    REQUIRE(record.se_vscore >= record.se_singular_beta);
+
+    REQUIRE(!record.se_extended);
+
+    for (int k = 0; k < record.move_count; ++k) {
+      REQUIRE_EQ(record.child_depth[k], node_depth() - 1);
+    }
+  }
+
+
+  // THE OFF VALUE IS OFF, DEC-215, and this is the case that says so on the
+  // tree rather than from the range's end. Every condition of the multicut
+  // holds at this drive except the switch: the verification failed high, its
+  // score clears the node's own beta, the score is nowhere near the mate band
+  // and the node is not a PV node. At `SeMultiCut` 0 the node searches its
+  // moves anyway.
+  //
+  // In the release build the branch is folded away by the compiler and this
+  // reads as a tautology; in the tune build it is a variable and the case is a
+  // real one. Both builds run it, which is the whole reason the switch is a
+  // parameter and not a preprocessor symbol.
+  //
+  // Mutation: none -- a mutant of a rule the shipping build compiles out is
+  // equivalent by construction, which is why the multicut's own mutants land
+  // with the default flip and not here. The file header of
+  // tools/mutants/S097_singular_extension.py names them.
+  TEST_CASE_FIXTURE(se_drive_t, "the multicut does not fire at its off value")
+  {
+    // The step's second verdict has not been taken, so this is the shipped
+    // setting and the case states it rather than assuming it.
+    REQUIRE_EQ(SE_MULTICUT, 0);
+
+    const int beta = SE_NOT_SINGULAR_SCORE - 100;
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE,
+                              SE_NOT_SINGULAR_SCORE};
+    const search_node_probe_t record = run(1, plant, beta - 1, beta, 0);
+
+    REQUIRE(record.se_verified);
+
+    // Every condition of the rule but the switch, read off the drive.
+    REQUIRE(record.se_vscore >= record.se_singular_beta);
+    REQUIRE(record.se_vscore >= beta);
+    REQUIRE(record.se_vscore < MATE_MIN_LOCAL);
+    REQUIRE(record.se_vscore > -MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+
+    REQUIRE(!record.se_multicut);
+
+    // And the node did what a node that takes no cutoff does: it searched.
+    REQUIRE(record.move_count > 0);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE EXTENSION'S OWN OFF VALUE, DEC-215 clause 2, and the only build that
+  // can drive it. `SeExtend` is a compiled constant in the release build, so a
+  // case there cannot turn the block off; in the tune build it is a variable
+  // and `search_param_set` is the setter the tuner uses. Both builds run this
+  // file and the gate runs both builds (DEC-118), so the switch is held by a
+  // case in the one build that can hold it and by a bench equality in the one
+  // that cannot: the tune build at `SeExtend` 0 prints the parent commit's
+  // total with all eight `bestmove` replies identical.
+  //
+  // The restorer is not decoration. doctest runs the cases of a binary in one
+  // process, so a parameter left at 0 by a failing assertion would silently
+  // switch the feature off for every case after this one.
+  //
+  // Mutation: E18_extend_switch_inverted -- the gate reads `SE_EXTEND == 0`,
+  // so the block runs at the off value and not at the on one. Killed in the
+  // release build by "the extension lands on the table move and on no other",
+  // which is why the mutant is written against the gate and not against this
+  // case.
+  TEST_CASE_FIXTURE(se_drive_t, "the extension does not run at its off value")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("SeExtend", 1); }
+    } restore;
+
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE, SE_SINGULAR_SCORE};
+
+    // The control: at the shipped value this exact drive verifies and extends,
+    // so what the drive below denies is the switch and nothing else.
+    REQUIRE_EQ(SE_EXTEND, 1);
+
+    const search_node_probe_t on =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(on.se_verified);
+    REQUIRE(on.se_extended);
+
+    REQUIRE(search_param_set("SeExtend", 0));
+    REQUIRE_EQ(SE_EXTEND, 0);
+
+    const search_node_probe_t off =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(!off.se_verified);
+    REQUIRE(!off.se_extended);
+
+    // And the node searched its moves at the depth it would have searched them
+    // at before this step: no move is extended, so every child depth is the
+    // node's own remaining depth less one.
+    REQUIRE(off.move_count > 1);
+
+    for (int k = 0; k < off.move_count; ++k) {
+      REQUIRE_EQ(off.child_depth[k], node_depth() - 1);
+    }
+  }
+#endif
+
+
+  // Mutation: E04_root_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    the root never runs a verification search
+  //   REQUIRE( !at_root.se_verified )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(se_drive_t, "the root never runs a verification search")
+  {
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE, SE_SINGULAR_SCORE};
+
+    const search_node_probe_t at_root =
+        run(0, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(!at_root.se_verified);
+
+    // The precondition: the same plant one ply down does verify, so what the
+    // drive above denied is the ply and not some other condition of the block.
+    const search_node_probe_t below =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(below.se_verified);
+  }
+
+
+  // Mutation: E05_entry_depth_margin_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    an entry shallower than the depth margin verifies nothing
+  //   REQUIRE( !shallow.se_verified )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(se_drive_t,
+                    "an entry shallower than the depth margin verifies nothing")
+  {
+    const se_plant_t shallow_plant = {too_shallow(), TT_BETA_NODE,
+                                      SE_SINGULAR_SCORE};
+
+    // The margin has to leave room for a shallower entry to exist at all: at
+    // SeTtDepthMargin's own range top this drive would be asking for an entry
+    // at a depth the table cannot hold apart from a quiescence one.
+    REQUIRE(too_shallow() >= 0);
+
+    const search_node_probe_t shallow =
+        run(1, shallow_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(!shallow.se_verified);
+
+    const se_plant_t deep_plant = {deep_enough(), TT_BETA_NODE,
+                                   SE_SINGULAR_SCORE};
+    const search_node_probe_t deep =
+        run(1, deep_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(deep.se_verified);
+  }
+
+
+  // Mutation: E06_bound_type_gate_widened.
+  //
+  //   search: pruning and reduction guards
+  //    an upper-bound entry verifies nothing
+  //   REQUIRE( !upper.se_verified )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(se_drive_t, "an upper-bound entry verifies nothing")
+  {
+    // A TT_ALPHA_NODE score is a ceiling: the position is worth *at most* this
+    // much, which is not a claim a margin can be subtracted from to build a
+    // bar the alternatives have to clear.
+    const se_plant_t upper_plant = {deep_enough(), TT_ALPHA_NODE,
+                                    SE_SINGULAR_SCORE};
+    const search_node_probe_t upper =
+        run(1, upper_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(!upper.se_verified);
+
+    // Both bounds the rule does admit, so the case is about the type and not
+    // about the score or the depth beside it.
+    const se_plant_t lower_plant = {deep_enough(), TT_BETA_NODE,
+                                    SE_SINGULAR_SCORE};
+    const search_node_probe_t lower =
+        run(1, lower_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(lower.se_verified);
+
+    const se_plant_t exact_plant = {deep_enough(), TT_PV_NODE,
+                                    SE_SINGULAR_SCORE};
+    const search_node_probe_t exact =
+        run(1, exact_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(exact.se_verified);
+  }
+
+
+  // Mutation: E16_entry_mate_band_gate_dropped, E17_window_mate_band_gate_
+  // dropped.
+  //
+  //   search: pruning and reduction guards
+  //    a mate score never becomes a verification window
+  //   REQUIRE( !mate_entry.se_verified )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(se_drive_t,
+                    "a mate score never becomes a verification window")
+  {
+    // A mate score is a distance and not a value, so a margin subtracted from
+    // one is arithmetic on two different units.
+    const se_plant_t mate_plant = {deep_enough(), TT_BETA_NODE,
+                                   MATE_MAX_LOCAL - 20};
+    const search_node_probe_t mate_entry =
+        run(1, mate_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(mate_plant.score > MATE_MIN_LOCAL);
+    REQUIRE(!mate_entry.se_verified);
+
+    // The second half, and it is the one an eye misses: a score one point
+    // **outside** the band passes the first guard and still lands inside it
+    // once the margin comes off. The window itself has to be checked in its
+    // own right, which is what the guard beside it does.
+    const int just_outside = -MATE_MIN_LOCAL + 1;
+
+    REQUIRE(just_outside > -MATE_MIN_LOCAL);
+    REQUIRE(singular_beta_for(just_outside) <= -MATE_MIN_LOCAL);
+
+    const se_plant_t edge_plant = {deep_enough(), TT_BETA_NODE, just_outside};
+    const search_node_probe_t edge =
+        run(1, edge_plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(!edge.se_verified);
+  }
+
+
+  // Mutation: E07_recursion_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    a node searched under an exclusion starts no verification of its own
+  //   REQUIRE( !excluded.se_verified )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      se_drive_t,
+      "a node searched under an exclusion starts no verification of its own")
+  {
+    const se_plant_t plant = {deep_enough(), TT_BETA_NODE, SE_SINGULAR_SCORE};
+
+    // The move the entry carries is the move this drive excludes, which is
+    // exactly the node a verification search creates. Taken from the first
+    // drive's own plant so the two are the same move.
+    const search_node_probe_t ordinary =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, 0);
+
+    REQUIRE(ordinary.se_verified);
+
+    const move_t excluded_here = table_move;
+
+    REQUIRE(excluded_here != 0);
+
+    const search_node_probe_t excluded =
+        run(1, plant, SE_BAND_ALPHA, SE_BAND_BETA, excluded_here);
+
+    REQUIRE(!excluded.se_verified);
+
+    // And the exclusion really took the move out of the node: the record holds
+    // every move the node searched, and this one is not among them.
+    REQUIRE(excluded.move_count > 0);
+    REQUIRE_EQ(searched_index(excluded, excluded_here), -1);
+  }
+
+
+  // Mutation: E08_tt_cutoff_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    an excluded node takes no table cutoff
+  //   REQUIRE( with_exclusion.move_count > 0 )
+  //   values: REQUIRE( 0 > 0 )
+  TEST_CASE_FIXTURE(guard_fixture_t, "an excluded node takes no table cutoff")
+  {
+    // An entry deep enough to answer this node outright and a lower bound
+    // above the window: `tt_entry_answers` returns its score and the node
+    // searches nothing. That is the answer the verification must not be given
+    // -- the entry was written by a search that was allowed to play the very
+    // move the verification is asking the node to do without, so it would
+    // answer the question with the thing being asked about.
+    const int depth = 4;
+    const int beta = 100;
+    const int planted_score = 500;
+
+    load(SE_DRIVE_POS, 1);
+
+    const move_t table_move = quiet_move(&game, e1, e2);
+
+    REQUIRE(table_move != 0);
+
+    tt_store_entry(&tt, &game.board, depth, planted_score, TT_BETA_NODE,
+                   table_move);
+
+    REQUIRE(planted_score >= beta);
+
+    // The control: with nothing excluded the entry answers and the node never
+    // reaches its move loop. Without this the case below would pass at a node
+    // whose entry could not have answered anyway.
+    const int answered =
+        negamax_probed(beta - 1, beta, depth, 1, &game, &state, 0, false);
+
+    REQUIRE_EQ(answered, planted_score);
+    REQUIRE_EQ(probe.move_count, 0);
+
+    // The same node, the same entry, one move set aside. The table may still
+    // order the node -- `tt_move` is copied out as it always was -- and it may
+    // not end it.
+    probe = {};
+    probe.ply = 1;
+
+    negamax_probed(beta - 1, beta, depth, 1, &game, &state, 0, false, false,
+                   table_move);
+
+    REQUIRE(probe.move_count > 0);
+    REQUIRE_EQ(searched_index(probe, table_move), -1);
+  }
+
+
+  // Mutation: E09_store_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    an excluded node writes no entry for the position
+  //   REQUIRE( tt_get_entry(&tt, &game.board) == nullptr )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "an excluded node writes no entry for the position")
+  {
+    // Shallow on purpose: the store is the last thing negamax_at does and it
+    // does not care how deep the node was.
+    const int depth = 3;
+
+    load(SE_DRIVE_POS, 1);
+
+    const move_t excluded = quiet_move(&game, e1, e2);
+
+    REQUIRE(excluded != 0);
+
+    // The table was wiped by load(), so an entry for this position afterwards
+    // was written by this drive or by something below it -- and nothing below
+    // it can be this position at all. The shallowest recurrence of any position
+    // is four plies away: the side to move has to be the same again, so the
+    // count is even, and two plies cannot do it because each of them changes
+    // something. This drive is three deep and quiescence adds no move, there
+    // being no capture in the position to make.
+    REQUIRE(tt_get_entry(&tt, &game.board) == nullptr);
+
+    negamax_probed(-30000, 30000, depth, 1, &game, &state, 0, false, false,
+                   excluded);
+
+    REQUIRE(probe.move_count > 0);
+    REQUIRE_MESSAGE(tt_get_entry(&tt, &game.board) == nullptr,
+                    "the verification's own score was written under the key of "
+                    "the position it was computed without a move of");
+
+    // The control: the same drive with nothing excluded does store, so what
+    // the assertion above read is the gate and not a node that stores nowhere.
+    load(SE_DRIVE_POS, 1);
+
+    REQUIRE(tt_get_entry(&tt, &game.board) == nullptr);
+
+    negamax_probed(-30000, 30000, depth, 1, &game, &state, 0, false);
+
+    REQUIRE(tt_get_entry(&tt, &game.board) != nullptr);
+  }
+
+
+  // Mutation: E10_nmp_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    an excluded node makes no null move
+  //   REQUIRE( !probe.null_move_made )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t, "an excluded node makes no null move")
+  {
+    // The position the null-move cases already drive: both sides castled
+    // behind an untouched pawn wall, so the phase is off zero and no capture
+    // exists for either colour.
+    const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+    load(fen, 1);
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA, PREV_MOVE);
+
+    // The control first: this node does pass, so the drive below is a decision
+    // the guard took and not a block that was never entered.
+    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, PREV_MOVE, false);
+
+    REQUIRE(probe.null_move_made);
+
+    load(fen, 1);
+
+    const move_t excluded = quiet_move(&game, a7, a6);
+
+    REQUIRE(excluded != 0);
+
+    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, PREV_MOVE, false, false, excluded);
+
+    // A null-move bound answers the verification with no alternative searched,
+    // which is the one thing that search exists to do.
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
+  }
+
+
+  // Mutation: E11_rfp_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    an excluded node runs no reverse futility
+  //   REQUIRE( !probe.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "an excluded node runs no reverse futility")
+  {
+    const std::string fen =
+        "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+
+    const int depth = 3;
+
+    load(fen, RFP_MIN_PLY);
+
+    REQUIRE(!is_check(&game));
+
+    // The table was just wiped, so negamax computes this number itself. Beta
+    // is the exact value that makes `static_eval - margin >= beta` true by
+    // equality, so the only thing between this node and a cutoff is the guard
+    // the case is named for.
+    const int beta = evaluate(&game.board) - (RFP_MARGIN * depth);
+
+    REQUIRE(depth <= RFP_MAX_DEPTH);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+
+    // The control: the cutoff really is on offer here.
+    negamax_probed(beta - 1, beta, depth, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, false);
+
+    REQUIRE(probe.rfp_cutoff);
+
+    load(fen, RFP_MIN_PLY);
+
+    const move_t excluded = quiet_move(&game, a7, a6);
+
+    REQUIRE(excluded != 0);
+
+    negamax_probed(beta - 1, beta, depth, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, false, false, excluded);
+
+    // A static bound can only fail the node high, so inside a verification it
+    // can only ever answer "not singular" -- and it answers it without a move
+    // having been searched, which is what the verification is for. This
+    // engine's choice and not a traced practice; S097 records it.
+    REQUIRE(!probe.rfp_cutoff);
+    REQUIRE(state.explored_nodes > 1);
+  }
+
+
+  // Mutation: E12_loop_skip_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    the excluded move is the one move the node does not search
+  //   REQUIRE( without_the_mate < MATE_MIN_LOCAL )
+  //   values: REQUIRE( 48998 < 48000 )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "the excluded move is the one move the node does not search")
+  {
+    // A mate in one with **exactly one** mating move, which is what makes the
+    // exclusion observable in the score: take that move away and no mate is
+    // left, take any other away and the mate is still there. Not read off the
+    // board (CLAUDE.md): python-chess reports `is_valid() True`,
+    // `is_check() False`, 16 legal moves and exactly one of them -- a1a8 --
+    // giving checkmate, and stockfish at depth 20 through python-chess answers
+    // `#+1` in 320 nodes with `pv a1a8` (S033's protocol; the same position is
+    // TOOLCHAIN.md's own oracle example). It is the third row of "mate in one"
+    // in this file, where the engine is already required to find it.
+    const std::string fen = "7k/6pp/8/8/8/8/8/R6K w - - 0 1";
+
+    // One ply, so that "no mate is left" is a property of the position and not
+    // a hope about the tree. Enumerated rather than reasoned about: after every
+    // one of White's 16 legal moves python-chess reports Black with **no
+    // capture at all** and in check only after a1a8, so every child of this
+    // node is a quiescence that stands pat, and the one score in the mate band
+    // this drive can produce is the one the excluded move delivers.
+    const int depth = 1;
+
+    // A window inside the mate band, which switches reverse futility, the null
+    // move and the whole shallow-depth block off at this node and below it:
+    // each of them requires `beta < MATE_MIN`. Nothing then stands between the
+    // three drives below but the exclusion.
+    const int alpha = MATE_MIN_LOCAL;
+    const int beta = MATE_MIN_LOCAL + 1;
+
+    load(fen, 1);
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    REQUIRE_EQ(legal_count, 16u);
+
+    const move_t mating = quiet_move(&game, a1, a8);
+    const move_t ordinary = quiet_move(&game, a1, a7);
+
+    REQUIRE(mating != 0);
+    REQUIRE(ordinary != 0);
+    REQUIRE(mating != ordinary);
+
+    // The control: the mate is there, at the seam this case drives. The
+    // previous move is 0 and not `PREV_MOVE`: White is to move here, so a
+    // White previous move is one no game reaches, and the null-move block this
+    // file's other cases need it for is already off under this window.
+    const int found = negamax(alpha, beta, depth, 1, &game, &state, 0, false);
+
+    REQUIRE(found >= MATE_MIN_LOCAL);
+
+    // The mating move set aside: the node has to come back with an ordinary
+    // score, because the one move that mates is the one move it may not play.
+    load(fen, 1);
+
+    const int without_the_mate =
+        negamax(alpha, beta, depth, 1, &game, &state, 0, false, false, mating);
+
+    REQUIRE(without_the_mate < MATE_MIN_LOCAL);
+    REQUIRE(without_the_mate > -MATE_MIN_LOCAL);
+
+    // Any other move set aside: exactly one move is excluded and it is the one
+    // that was named, so the mate survives.
+    load(fen, 1);
+
+    const int with_another_gone = negamax(alpha, beta, depth, 1, &game, &state,
+                                          0, false, false, ordinary);
+
+    REQUIRE(with_another_gone >= MATE_MIN_LOCAL);
+
+    // The same fact read off the node instead of off the score: every legal
+    // move but the excluded one was searched.
+    //
+    // **It is the mating move that is excluded here and not the ordinary one,
+    // and the reason is a measured red.** With any other move set aside the
+    // mate is still on the list, it scores above beta, and the loop breaks on
+    // it -- the count then measures where the ordering put the mate and not
+    // what the exclusion did: this case read `REQUIRE_EQ( 1, 15 )` written the
+    // other way round. With the mating move gone nothing in the position can
+    // beat an alpha of MATE_MIN, so every legal move fails low, the loop runs
+    // to the end, and the count is exact. The window admits no pruning either,
+    // so no legal move is skipped for a second reason.
+    load(fen, 1);
+
+    negamax_probed(alpha, beta, depth, 1, &game, &state, 0, false, false,
+                   mating);
+
+    REQUIRE_EQ(searched_index(probe, mating), -1);
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count - 1);
+  }
+
+
+  // Mutation: E15_no_legal_alternative_return_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    a node whose only move is excluded is neither mated nor stalemated
+  //   REQUIRE_EQ( in_check, alpha )
+  //   values: REQUIRE_EQ( -48999, -1234 )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "a node whose only move is excluded is neither mated nor stalemated")
+  {
+    // An alpha nothing in either position can produce, so the value the rule
+    // returns is distinguishable from a real score as well as from the two
+    // terminal ones.
+    const int alpha = -1234;
+    const int beta = alpha + 1;
+    const int depth = 2;
+    const size_t ply = 1;
+
+    // In check with exactly one legal escape. From a tool (CLAUDE.md):
+    // python-chess reports `is_valid() True`, `is_check() True`,
+    // `is_checkmate() False` and one legal move, h8g8; stockfish at depth 20
+    // answers `#-2` with `pv h8g8 g6f6`, so the side to move is lost and is
+    // not mated here -- which is the whole distinction this case is about.
+    {
+      load("7k/8/6K1/8/8/8/8/7R b - - 0 1", static_cast<int>(ply));
+
+      REQUIRE(is_check(&game));
+
+      move_t buffer[MAX_MOVES];
+
+      REQUIRE_EQ(legal_moves(&game, buffer), 1u);
+
+      const move_t only = quiet_move(&game, h8, g8);
+
+      REQUIRE(only != 0);
+
+      const int score = negamax(alpha, beta, depth, ply, &game, &state, 0,
+                                false, false, only);
+
+      // Not a mate score. The move that answers the check is on the board and
+      // this search set it aside; saying "mated" would be a claim about a
+      // position nobody is in, and it would reach the block that asked as a
+      // distance it never proved.
+      REQUIRE(score > -MATE_MIN_LOCAL);
+      REQUIRE_EQ(score, alpha);
+    }
+
+    // Not in check, and exactly one legal move. python-chess reports
+    // `is_valid() True`, `is_check() False`, `is_stalemate() False` and one
+    // legal move, a8a7; stockfish at depth 20 answers `#-7` with `pv a8a7
+    // b1b5`, so this is a lost position and not a drawn one, which is what
+    // makes a returned DRAW_SCORE a wrong answer and not a harmless one.
+    {
+      load("k7/8/8/8/8/8/8/KQ6 b - - 0 1", static_cast<int>(ply));
+
+      REQUIRE(!is_check(&game));
+
+      move_t buffer[MAX_MOVES];
+
+      REQUIRE_EQ(legal_moves(&game, buffer), 1u);
+
+      const move_t only = quiet_move(&game, a8, a7);
+
+      REQUIRE(only != 0);
+
+      const int score = negamax(alpha, beta, depth, ply, &game, &state, 0,
+                                false, false, only);
+
+      // And not a draw. DRAW_SCORE here reads as a **fail-high** to a
+      // verification whose window sits below zero, which is the multicut's own
+      // precondition: the node would be cut on the strength of a stalemate
+      // that does not exist.
+      REQUIRE_NE(score, DRAW_SCORE_LOCAL);
+      REQUIRE_EQ(score, alpha);
+    }
+  }
 }
