@@ -1791,3 +1791,50 @@ debug, sanitize and perft green. **`CAND` pinned to `63ad848` and `REF` to
 S132 complete, whose `src/` differs from the candidate's by the one X-macro
 row (`git diff --stat f02f59a 63ad848 -- src`) -- in
 `adocs/data/S097_v2_sprt.sh`. The SPRT is the coordinator's next action.
+
+## Verdict 2, 2026-09-22: H1 (coordinator)
+
+The gainer SPRT of `63ad848` (the multicut on, beside the extension) against
+`f02f59a` (the tree with the extension alone, S132 complete), `{0, 5}` nElo
+at 8+0.08 with Hash 16 on `noob_3moves.epd`, seed 20260921204832, launched
+2026-09-21 20:48:32 and `SPRT-RUN-DONE` at 2026-09-22 01:46:50, **accepted H1
+after 10470 games**:
+
+```
+SPRT | cand 63ad848 vs ref f02f59a, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 7.17 +/- 5.13, nElo 9.31 +/- 6.66
+LLR | 2.95 (-2.94, 2.94) -> H1
+Games | N: 10470 W: 3333 L: 3117 D: 4020, Ptnml [444, 1176, 1829, 1292, 494]
+Wall | 4 h 57 m, 2109.9 games/h, forfeits 0
+Log | adocs/data/S097_v2_sprt.log
+```
+
+LOS 99.69 %, draw ratio 34.94 %, pairs ratio 1.10. **0 time forfeits on
+either side** over the PGN's 10470 games (7309 adjudications, 3161 natural
+ends). `Incomplete mating PV` 6 candidate against 8 reference, an observation
+and not a diagnosis (CHESS). `adocs/data/S105_pairs.py`: 5235 complete pairs,
+pair score mean 1.0078, variance 0.3189, sd 0.5648, buckets 9.9 / 23.2 / 32.7
+/ 24.0 / 10.3 %, white winning both of 516 pairs (9.9 %), 117.6 plies and
+20.0 s a game. The walk: LLR 1.03 at one hour, 1.77 at three, back to 0.93 at
+four, the bound at five -- the estimate dipped to +3.95 at 8453 games and
+recovered, so DEC-063's stall reading was watched for and never applied.
+Evidence: `adocs/data/S097_v2_sprt.log`, `adocs/data/S097_v2_sprt_pairs.txt`;
+the run directory `.tuning/sprt_s097_v2_20260921_204832`.
+
+### The reading
+
+The pre-registered H1 reading binds, and so does DEC-227's. **Both rules
+stay, both defaults at 1.** The multicut gains at least 5 nElo over the tree
+with the extension alone; the claim is "at least 5 nElo" and never the
+stopping estimate (DEC-063). The nElo interval [2.65, 15.97] reaches inside
+the bounds pair, DEC-223's slow class, and 4 h 57 m is what a truth near the
+pair's upper bound costs. The extension's own zero (verdict 1, `Elo -0.81
++/- 3.70`) stays on the record, and the reason it is kept is the one DEC-227
+wrote before this number: it carries a measured gain -- S005, S006 and S015
+are the precedent for a feature kept with its own zero stated. Read together
+the two verdicts say what the pre-registration's cost argument predicted: the
+extension's gain paid for the verification search, and the multicut's pruning
+was pure margin on top of it -- the two-verdict shape attributed the pair
+where one run would not have. The six settings stay at DEC-105 (c) seeds for
+S127 to fit; DEC-226's two rules and the `!is_pv` and fail-soft choices stand
+as the step recorded them. The step completes with two verdicts.

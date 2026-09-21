@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S097 verdict 2 is H1, 2026-09-22 01:46:50: `Elo 7.17 +/- 5.13`, `nElo
+  9.31 +/- 6.66`, LLR 2.95 over 10470 games in 4 h 58 m at 2109.9 an hour, 0
+  forfeits either side, `Ptnml [444, 1176, 1829, 1292, 494]`, LOS 99.69 %.**
+  The pre-registered H1 reading and DEC-227's bind: **both rules stay, both
+  defaults at 1** -- the multicut gains at least 5 nElo over the extension
+  alone (DEC-063), the nElo interval [2.65, 15.97] reaching inside the pair
+  (DEC-223's slow class); the extension's own zero stays on the record and it
+  is kept because it carries a measured gain (S005, S006, S015). The walk
+  dipped to +3.95 at 8453 games and recovered; DEC-063's stall reading was
+  never applied. `Incomplete mating PV` 6 candidate against 8 reference, an
+  observation. Evidence `adocs/data/S097_v2_sprt.log`, `S097_v2_sprt_pairs.txt`
+  (variance 0.3189). The fifth verdict-closing commit under DEC-220. **Next,
+  in order:** S097's completion with two verdicts (stamp, `plan_done/`, the
+  ledger regenerated, the specs placeholder, the pending count 43 to 53 -> 42
+  to 52); then the next Open entry, S188 (the in-loop check extension, whose
+  ply guard is this step's), started by a fresh Opus 5 agent in code-writing
+  mode with the machine idle. Machine idle from 01:47; no watcher armed.
+
 - **S097 verdict 2's gainer SPRT is running, launched 2026-09-21 20:48:32:
   `63ad848` (the multicut on, beside the extension) against `f02f59a` (the
   tree with the extension alone, S132 complete), `{0, 5}` nElo at 8+0.08 on
