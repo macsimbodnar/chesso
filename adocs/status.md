@@ -43,7 +43,18 @@ Updated: 2026-09-21, by hand.
   tomorrow; and the mined row's GOLDEN recipe cannot be followed as written
   (sweep lines without `--fens`, an undocumented separator set, two
   documents disagreeing on the order). Two trivial: sixteen cases not
-  fifteen, one comment on the guard case's assertion order. **Tomorrow, on S132's marker:** the S132 record commit
+  fifteen, one comment on the guard case's assertion order. **All five fixed
+  in writing by 18:10 (Report 3, WIP `8232aff` on `s097-v2`):** a third
+  guard leg at a beta on the negative mate-band edge (`SE_DEFENDER_BETA`)
+  and mutant E23 dropping the `beta > -MATE_MIN` term; the mutation record
+  retold as two runs with the survivor and its cause; a `separators` stage
+  that derives the three disagreeing FENs from the two sweeps, run as a
+  text join and matching what `fires` was given; the recipe written once in
+  the script's header and pointed at from the GOLDEN block and
+  `DEV_MANUAL.md`. **Owed at tomorrow's "machine free", before the landing:**
+  compile the leg and E23, both suites, one clean E01 to E23 run, `bench`
+  re-taken (4493659 expected), `pick`/`fires` re-run from the existing
+  sweeps; no full re-sweep owed while `src/` is one X-macro row. **Tomorrow, on S132's marker:** the S132 record commit
   with DEC-220's block and its completion (H1 keeps the seeds, H0 flips
   `TmNodeScalePct` to 0 first); then rebase `s097-v2` onto the completed
   tree, apply the fast check's findings, squash-land with `Bench: 4493659`
