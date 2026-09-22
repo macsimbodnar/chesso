@@ -7,6 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S188's gainer SPRT is running, launched 2026-09-22 11:07:04: `dbb54f5`
+  (the safe check extension near the horizon) against `d819a09` (the tree
+  without it), `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260922110704,
+  output `.tuning/sprt_s188_20260922_110704`, pid 3893331.** Banner checked: both shas, `OUT` under
+  `.tuning/`. `gate_extra` on the landing green (5 stages, 1835 s);
+  `REF`/`CAND` pinned in `e17d6b0`. Watcher armed with four exits, hourly
+  progress and a 40 h ceiling; worst case 41861 games (19.8 h at 2110 an
+  hour), 25591 on a bound (12.1 h); DEC-222's prior is small or zero, so a
+  long walk is the likeliest shape and DEC-063's stall reading applies at
+  the coordinator's call. A day run under DEC-155 because nothing else needs
+  the machine. **When it fires:** the verdict-closing commit with DEC-220's
+  block (subject "Record S188's <verdict> for the safe check extension"),
+  forfeit report per side, the `S105_pairs.py` reading; **H1** keeps the rule
+  at its seeds and completes S188 (stamp, `plan_done/`, ledger, the specs
+  placeholder, pending 42 to 52 -> 41 to 51); **H0** or a stalled walk
+  removes the rule in the same step -- the switch's proved off value is the
+  tree before, and the code leaves with it unless a reason is stated -- the
+  zero recorded, then completes S188. **Then S132's confirmation (DEC-229)
+  takes the machine**: `nohup adocs/data/S132_confirm_sprt.sh >
+  .tuning/sprt_s132_confirm.log 2>&1 &`, banner checked for 32+0.32 / Hash
+  64 / the pair, a watcher that stops the run at 6400 games (the harness
+  cannot cap an SPRT itself) with a 14 h wall ceiling as the belt.
+
 - **S188 is landed, 2026-09-22 10:33, as `dbb54f5`, `bench` 4493659 -> 5756104;
   second tier in progress, SPRT not yet pinned.** Form 3 of DEC-228: a
   checking move -- capture or quiet -- searched one ply deeper at a non-root
