@@ -30,7 +30,12 @@ Updated: 2026-09-21, by hand.
   binaries from a clamp-0 source that must bench alike); four cases, six
   mutants W01 to W06, `adocs/data/S236_sprt.sh` with both bisection legs.
   Branch `s236` WIP-committed (`74ac399`) and rebased onto `3b0fbe6` cleanly.
-  Nothing compiled; waits for the confirmation's marker.
+  Nothing compiled; waits for the confirmation's marker. Its writing closed at
+  22:20: seven older mutant anchors its change moved (S098's T02 to T06,
+  S095's J01 and J02) re-cut so all 122 mutants validate against the tree;
+  a stale `specs.md` sentence (the shallow-depth gate still written as
+  `lmr_reduction(depth, move_number)`, a symbol that no longer exists) is
+  the coordinator's to fix at the landing, together with the passage.
 
 - **Power outage at about 14:04 on 2026-09-22, workstation back at 21:25.**
   What it took: S132's confirmation at 253 games (`Elo -12.93 +/- 30.21`,
