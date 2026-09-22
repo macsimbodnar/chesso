@@ -1,0 +1,11 @@
+# form 3 (DEC-228's horizon restriction on the gated form), tune build, 2026-09-22
+# CheckExtPlyFactor held at its seed 4; CheckExtend 0 is the rule off.
+CheckExtend=0 (off):    bench 4493659 nodes 3680102 nps  depths 17 13 15  total 45
+CheckExtMaxDepth=1:  bench 4282248 nodes 3599595 nps  depths 17 13 16  total 46
+CheckExtMaxDepth=2:  bench 4772731 nodes 3476409 nps  depths 17 13 16  total 46
+CheckExtMaxDepth=4:  bench 4930329 nodes 3360885 nps  depths 16 12 15  total 43
+CheckExtMaxDepth=6:  bench 6368966 nodes 3217330 nps  depths 15 12 14  total 41
+CheckExtMaxDepth=8:  bench 5756104 nodes 3387952 nps  depths 16 13 15  total 44
+CheckExtMaxDepth=10:  bench 6708619 nodes 3458452 nps  depths 16 12 15  total 43
+CheckExtMaxDepth=12:  bench 7748314 nodes 3417013 nps  depths 16 12 15  total 43
+CheckExtMaxDepth=16:  bench 7748319 nodes 3505952 nps  depths 17 12 15  total 44

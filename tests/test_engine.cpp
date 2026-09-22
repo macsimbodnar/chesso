@@ -3853,8 +3853,10 @@ TEST_SUITE("engine: aspiration windows")
   // Both positions were found by measurement, not chosen: the reference binary
   // at 2b54a4f, which has no windows at all, was run over every FEN in
   // tests/assets/test_jsons/ and asked where a mate first appears. These two
-  // score around ten centipawns-times-a-hundred for eight iterations and then
-  // report a mate at depth 9, which is the shape that matters here - the
+  // score around ten centipawns-times-a-hundred for seven iterations and then
+  // report a mate at depth 8 -- it was nine until S188's extension found both
+  // an iteration earlier, and the GOLDEN block below is what re-derives it --
+  // which is the shape that matters here: the
   // window is +/-AspirationDelta around a normal score when a mate score
   // arrives, so the iteration must fail high and be repeated wide.
   //
@@ -3877,10 +3879,28 @@ TEST_SUITE("engine: aspiration windows")
       int first_mate_depth;
     };
 
+    // GOLDEN (DEC-142): `first_mate_depth`, the iteration a mate score first
+    // appears at, one per position. It was **9 and 9** against the reference
+    // binary the comment above names, and it is **8 and 8** since S188's check
+    // extension: an extension along a forcing line finds a forced mate an
+    // iteration earlier, which is what the technique is for (DEC-228).
+    //
+    // A bare measurement until now, with no way to re-take it -- itself a
+    // DEC-142 finding, closed here. Moves legitimately on: any change to
+    // extensions, pruning, reduction or ordering.
+    // Margin: exact. The constant is read as `first_mate_depth - 2` and
+    // `- 1` by the preconditions below, so a value one off makes them
+    // vacuous rather than red.
+    // Re-derive with `adocs/data/S188_repair_goldens.py first-mate`, which
+    // drives `deepen()`'s own `go depth 10` over both positions and prints
+    // every iteration's kind and value beside the first mate, the precondition
+    // below it and the distances from there on. `mate_in` is re-derived by the
+    // same command: it is the distance every iteration from the first mate on
+    // reports, and the script prints the set.
     // clang-format off
     const std::vector<case_t> cases = {
-      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
-      {"r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2",                             5, 9},
+      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 8},
+      {"r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2",                             5, 8},
     };
     // clang-format on
 

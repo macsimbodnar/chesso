@@ -1,0 +1,25 @@
+# S188, 2026-09-22, tune build build-tune/src/chesso, machine idle.
+# What `CheckExtPlyFactor` does to the tree, over its whole range and against
+# the rule switched off. Depth at a fixed node budget
+# (adocs/data/S097_fixed_node_depth.py, go nodes 1000000, Hash 16) below;
+# `bench` totals from the same binary:
+#
+#   CheckExtend=0 (rule off)   4493659
+#   CheckExtPlyFactor=1        6883468
+#   CheckExtPlyFactor=2        6530817
+#   CheckExtPlyFactor=3        7425849
+#   CheckExtPlyFactor=4        8744373   <- the shipped seed, DEC-105 (c)
+#   CheckExtPlyFactor=5        7820838
+#   CheckExtPlyFactor=6        8621011
+#   CheckExtPlyFactor=7        8174606
+#
+#   CheckExtend=0 (rule off)   midgame 17  kiwipete 13  tactical 15  total 45
+#
+# A measurement and not a verdict (DEC-019).
+CheckExtPlyFactor=1  midgame:15 kiwipete:13 tactical:15  total 43
+CheckExtPlyFactor=2  midgame:16 kiwipete:13 tactical:15  total 44
+CheckExtPlyFactor=3  midgame:15 kiwipete:13 tactical:15  total 43
+CheckExtPlyFactor=4  midgame:15 kiwipete:11 tactical:14  total 40
+CheckExtPlyFactor=5  midgame:14 kiwipete:12 tactical:15  total 41
+CheckExtPlyFactor=6  midgame:15 kiwipete:12 tactical:15  total 42
+CheckExtPlyFactor=7  midgame:16 kiwipete:12 tactical:14  total 42

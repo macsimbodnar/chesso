@@ -1946,8 +1946,10 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
 | `test_search.cpp` `capture_mates` depths and mutant labels | 9, 9, 10, 10 and the mutants beside them — `no S091 mutant, since S095` twice, then `R02` and `R02`. **Re-derived at S095**, which adds a ply of reduction at every node whose table entry carries no move and so moves the same rule again: the seven sweeps were re-taken and three of the four depths moved with no mate distance moving. Row 2 loses the depth 8 reading it had and now separates nothing; row 3 comes back from 11 to 10 with R02 alone; row 4 stays at 10 with R02. R01 is separated by no row at any depth, the fifth consecutive pass reading that way. The history of the earlier passes is in the GOLDEN block at the table itself | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
 | `test_search.cpp` `mate_the_extra_ply_hides` and its depth | the position and **11**, the lowest depth the shipped build reports its mate at and the tree with S095's guard opened does not. Mined at S095 over this project's own positions: 297 labelled mates, 141 whose oracle line carries a quiet move of the class late move reduction touches, 28 separating the two builds, and the rule in the script's header returns this one. The row's own comment records what the tie-break cost — its shipped profile is every depth from 3 to 12 and the unguarded build loses exactly one of them | `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py candidates`, then `adocs/data/S230_mine_r01_row.py depths --fens .tuning/coord/S095_candidates.fen --lo 3 --hi 12` once on the shipped tree and once with `const bool no_tt_move = tt_move == 0;` made `= true`, then `S095_mine_mate_row.py pick` |
-| `test_search.cpp` `mate_the_multicut_hides` and its depth | the position and **14**, the lowest depth the shipped build reports its mate at and the tree with the multicut's mate-range guard dropped does not. Its shipped profile over 11 to 14 is `d12 d14` and the guard-dropped build's is `d12`; the cell costs 4206525 nodes and about 0.65 s, which is what a row reaching depth 14 costs. Mined at S097 verdict 2 over this project's own positions and the rule is in the script's header before the sweep ran (DEC-209 clause 4): 269 labelled mates swept, three separate the guard anywhere in the range and **only this one loses the mate**, the other two reporting a different distance, which the rule prints as its own class and never takes. The firing witness is the tune build at `SeMultiCut` 0 against 1 and it puts the rule live on this position at depths 13 and 14 | the six commands in `adocs/data/S097_mine_mate_row.py`'s own header, in that order and with every input named: `candidates`, `sweep` over them against the shipped library, `sweep` again against a library built with `E21_multicut_mate_band_gate_dropped` of `tools/mutants/S097_singular_extension.py` applied out of tree, `separators` to derive the FENs the two disagree on, `fires` over those on the **tune** library, and `pick`. Each stage takes `--fens`: the first version of this row gave a different order from the one that ran and its sweeps defaulted to a file a later stage writes |
-| `test_search_params.cpp` `golden_defaults` | 60 defaults and their ranges — 50 until S095 added `LmrNoTtMove`, then S097's **six** singular-extension rows (four settings and the two switches `SeExtend` and `SeMultiCut`) and S132's three node-fraction rows (`TmNodeScalePct`, `TmNodeBasePct`, `TmNodeMinDepth`). S097's second verdict moves one of the 60 values, `SeMultiCut` 0 to 1, and that row is the whole of the candidate in `src/` | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` `mate_the_multicut_hides` and its depth | the position and **14**, the lowest depth the shipped build reports its mate at and the tree with the multicut's mate-range guard dropped does not. **Re-mined at S188 and this is the second row the clause has carried**: S188's check extension made the search reach further and the row S097 mined stopped separating -- its shipped profile stayed `d12 d14` while the guard-dropped build's went from `d12` to `d12 d14` -- which the mutation pass caught as `E21_multicut_mate_band_gate_dropped` surviving a green suite, the only way a row going quiet can be caught. The row now is `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54`, shipped profile **`d11 d12 d13 d14`** against the guard-dropped build's **`d11 d12 d13`** -- the whole swept range against one depth short of it -- and the cell costs 4227541 nodes and about 0.56 s, where the row it replaces cost 4206525 and 0.65 s. Two of the 269 candidates separate the two builds on this tree; the other was skipped by the script's own rule because the firing witness shows the multicut never reaching it, and its depth-14 cell costs 43758845 nodes | the commands in `adocs/data/S097_mine_mate_row.py`'s own header, in that order and with every input named. The S188 re-mine skipped stage 1 -- `adocs/data/S097_candidates.tsv` is committed and the pool is not what moved -- and ran `sweep` shipped, `sweep` against a library built out of tree with E21 applied, `separators`, `fires` on the tune library and `pick`, 73 minutes a sweep; the evidence is `adocs/data/S188_remine.log` |
+| `test_search_params.cpp` `golden_defaults` | 63 defaults and their ranges — 50 until S095 added `LmrNoTtMove`, then S097's **six** singular-extension rows (four settings and the two switches `SeExtend` and `SeMultiCut`), S132's three node-fraction rows (`TmNodeScalePct`, `TmNodeBasePct`, `TmNodeMinDepth`) and S188's three (`CheckExtend`, the check extension's switch, `CheckExtPlyFactor`, its explosion cap, and `CheckExtMaxDepth`, its horizon restriction) | no script: `src/search_params.hpp` is the derivation |
+| `test_search.cpp` "search() hands the rule the root's own index" `DRIVE_DEPTH` | **3** — the depth at which the cycle's return to the root's own entry is inside the tree and its return to the ply-1 position is not. It was 4 until S188: an extension makes a search reach past its nominal depth and the check extension fires on that cycle, so the separating depth moved down one (DEC-228). The same sweep answers 4 on the parent commit, which is what the case held before | `adocs/data/S188_repair_goldens.py s207`, and `--lib` at another tree's engine library to compare two trees |
+| `test_engine.cpp` `first_mate_depth` and `mate_in` | **8** and 5 on both positions — the iteration a mate score first appears at, and the distance every iteration from there on reports. Both were 9 until S188: an extension along a forcing line finds a forced mate an iteration earlier. A bare measurement with no re-derivation until then, which was itself a DEC-142 finding | `adocs/data/S188_repair_goldens.py first-mate`, which prints every iteration's kind and value, the first mate's depth, the precondition below it and the set of distances |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
 
@@ -2254,6 +2256,38 @@ buys: **16 / 13 / 15 to 17 / 13 / 15**, total 44 to 45, so the multicut gives
 back one of the two plies the extension cost at a fixed budget. Whether a
 smaller tree that reaches further at a fixed budget is a better one is
 `adocs/data/S097_v2_sprt.sh`'s to say and not this number's (DEC-019).
+
+**At `S188`, the check extension: three forms measured before a game, and the
+ledger carries all three.** An extension grows a fixed-depth tree by
+construction -- it buys depth along forcing lines and pays for it everywhere
+else -- so the number that decides is the other instrument,
+`adocs/data/S097_fixed_node_depth.py` at `go nodes 1000000`, Hash 16, against
+the parent's 17 / 13 / 15:
+
+| form | `bench` | | fixed-node depths | `test_mate_breadth` |
+|---|---|---|---|---|
+| every move that gives check | `8744373` | +94.6 % | 15 / 11 / 14, total 40 | 212 s, over its 120 s ceiling |
+| + the safe-check gate, `see_ge(board, move, 0)` | `7748319` | +72.4 % | 17 / 12 / 15, total 44 | 114.9 s |
+| + the horizon restriction, `depth <= CheckExtMaxDepth` | `5756104` | **+28.1 %** | 16 / 13 / 15, total 44 | 109.2 s |
+
+**The third row is what landed.** DEC-228 is the decision that read the first
+row and re-formed the step before a night was spent on it, and it states the bar the other two are measured against:
+at most one ply lost on any position and at most two in total, `bench` under
++30 %, every fast-suite case inside its ceiling. The first form misses every
+clause, the second misses the bench clause, the third meets all three. The off
+value is proved on the tree with the full signature at every form (DEC-215): the
+tune build at `CheckExtend` 0 prints `4493659`, the parent's own total, with all
+eight `bestmove` replies identical to a Release build of the parent commit.
+`tools/search_bench.py` grows at both depths and moves a best move at depth 9.
+What the growth buys, on the same trees: `adocs/data/S145_mined_set.py score
+--depth 10` goes from 146 exact / 148 right sign to 189 / 203 at the first form
+and 180 / 190 at the other two, 0 wrong sign everywhere, against a floor of 143
+-- the largest move that instrument has recorded. The three axes are swept in
+`adocs/data/S188_cap_sweep.log`, `adocs/data/S188_cap_sweep_gated.log` and
+`adocs/data/S188_horizon_sweep.log`; at the horizon restriction's floor the tree
+is **smaller** at a fixed depth and **deeper** at a fixed budget than the
+parent, which no other cell in this step manages. Whether any of it is worth its
+nodes is `adocs/data/S188_sprt.sh`'s to say and not these numbers' (DEC-019).
 
 **What the four settings cost, kept because the shape is worth more than the
 verdict.** `LmrHistDiv` was seeded at half the saturated history band, 8675,

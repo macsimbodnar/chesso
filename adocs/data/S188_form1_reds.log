@@ -1,0 +1,133 @@
+# S188, 2026-09-22. The ten mutants of the step's FIRST form, each applied by
+# hand to src/search.cpp, built, run against the six release cases of the
+# block and reverted -- the S033 protocol, taken because
+# tools/mutation_check.py refuses a baseline that is not green and the tree
+# was not green at that point (four pre-existing cases had moved under that
+# form). The driver is .tuning/coord/S188_observe_reds.py, which reads the
+# anchors out of the mutant file itself. Ten of ten red, and the failing
+# line and values of each are recorded at the case that kills it.
+#
+# The form that landed is the third (DEC-228) and its mutation pass is
+# adocs/data/S188_mutation_pass.tsv, on a green baseline and with the
+# E mutants re-proved beside the X ones.
+
+== X01_extension_on_every_move: rc=1
+   [doctest] test cases:   6 |   0 passed | 6 failed | 153 skipped
+   TEST CASE:  a checking move is extended and no other move is
+   /home/max/ws/chesso/tests/test_search.cpp:9522: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9522: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+   TEST CASE:  the root extends no checking move
+   /home/max/ws/chesso/tests/test_search.cpp:9522: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+   TEST CASE:  no checking move is extended past the ply cap
+   /home/max/ws/chesso/tests/test_search.cpp:9522: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+   TEST CASE:  every checking move at a node is extended, not only the first
+   /home/max/ws/chesso/tests/test_search.cpp:9522: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+   TEST CASE:  a move that is both singular and checking is extended one ply
+   /home/max/ws/chesso/tests/test_search.cpp:9490: FATAL ERROR: REQUIRE( !state.aborted ) is NOT correct!
+   values: REQUIRE( false )
+== X02_extension_dropped: rc=1
+   [doctest] test cases:   6 |   0 passed | 6 failed | 153 skipped
+   TEST CASE:  a checking move is extended and no other move is
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  the root extends no checking move
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  no checking move is extended past the ply cap
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  every checking move at a node is extended, not only the first
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  a move that is both singular and checking is extended one ply
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 9, 10 )
+== X03_root_gate_dropped: rc=1
+   [doctest] test cases:    6 |    5 passed | 1 failed | 153 skipped
+   TEST CASE:  the root extends no checking move
+   /home/max/ws/chesso/tests/test_search.cpp:9624: FATAL ERROR: REQUIRE_EQ( root.child_depth[k], CE_DRIVE_DEPTH - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+== X04_ply_cap_dropped: rc=1
+   [doctest] test cases:    6 |    5 passed | 1 failed | 153 skipped
+   TEST CASE:  no checking move is extended past the ply cap
+   /home/max/ws/chesso/tests/test_search.cpp:9683: FATAL ERROR: REQUIRE_EQ( at.child_depth[k], CE_DRIVE_DEPTH - 1 ) is NOT correct!
+   values: REQUIRE_EQ( 4, 3 )
+== X05_quiet_checks_only: rc=1
+   [doctest] test cases:    6 |    5 passed | 1 failed | 153 skipped
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+== X06_capture_scan_window_dropped: rc=1
+   [doctest] test cases:    6 |    5 passed | 1 failed | 153 skipped
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+== X07_budget_is_a_sum: rc=1
+   [doctest] test cases:    6 |    5 passed | 1 failed | 153 skipped
+   TEST CASE:  a move that is both singular and checking is extended one ply
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 11, 10 )
+== X08_extend_switch_inverted: rc=1
+   [doctest] test cases:   6 |   1 passed | 5 failed | 153 skipped
+   TEST CASE:  a checking move is extended and no other move is
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  the root extends no checking move
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  no checking move is extended past the ply cap
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  every checking move at a node is extended, not only the first
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+== X09_node_in_check_not_move: rc=1
+   [doctest] test cases:   6 |   1 passed | 5 failed | 153 skipped
+   TEST CASE:  a checking move is extended and no other move is
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  the root extends no checking move
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  no checking move is extended past the ply cap
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+   TEST CASE:  every checking move at a node is extended, not only the first
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 3, 4 )
+== X10_extends_two_plies: rc=1
+   [doctest] test cases:   6 |   0 passed | 6 failed | 153 skipped
+   TEST CASE:  a checking move is extended and no other move is
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 5, 4 )
+   TEST CASE:  a capture that gives check is extended too
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 5, 4 )
+   TEST CASE:  the root extends no checking move
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 5, 4 )
+   TEST CASE:  no checking move is extended past the ply cap
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 5, 4 )
+   TEST CASE:  every checking move at a node is extended, not only the first
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 5, 4 )
+   TEST CASE:  a move that is both singular and checking is extended one ply
+   /home/max/ws/chesso/tests/test_search.cpp:9519: FATAL ERROR: REQUIRE_EQ( record.child_depth[k], depth ) is NOT correct!
+   values: REQUIRE_EQ( 11, 10 )
+reverted

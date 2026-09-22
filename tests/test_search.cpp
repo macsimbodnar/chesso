@@ -3063,7 +3063,16 @@ TEST_SUITE("search: transposition table")
 
   // A table cutoff hands back a score without a move sequence, so taking one
   // on the principal variation chops the reported line short. Outside of a
-  // mate the line is exactly as long as the search was deep.
+  // mate the line is **at least** as long as the search was deep.
+  //
+  // At least, and no longer exactly, since S188 (DEC-228): an extension makes
+  // a line longer than the search that started it, so a reported principal
+  // variation may run past the nominal depth of its iteration -- which
+  // `adocs/specs.md` now says in so many words. The claim this case exists for
+  // is unchanged and is the lower bound: a line shorter than the search is a
+  // line a table cutoff chopped. Nothing bounds it above today; the check
+  // extension's cap bounds plies of search and not plies of line, and a case
+  // that pinned an upper bound would be pinning the shape of the tree.
   TEST_CASE_FIXTURE(search_fixture_t, "the reported line runs the full depth")
   {
     for (int depth = 4; depth <= 5; ++depth) {
@@ -3078,7 +3087,7 @@ TEST_SUITE("search: transposition table")
 
         if (warm.mate_found) { continue; }
 
-        REQUIRE_MESSAGE(warm.pv.length == static_cast<size_t>(depth), title);
+        REQUIRE_MESSAGE(warm.pv.length >= static_cast<size_t>(depth), title);
 
         REQUIRE(load_FEN(fen, &game));
         REQUIRE_MESSAGE(is_pv_legal(&game, &warm.pv), title);
@@ -3257,47 +3266,74 @@ TEST_SUITE("search: draws")
     // distance nothing proved.
     //
     // GOLDEN (DEC-142): the depth 14 below, and the position with it.
-    // Re-derive with the six commands in `adocs/data/S097_mine_mate_row.py`'s
-    // own header, which are the ones that were run and are written out there
-    // with every input named -- candidates, the shipped sweep, the same sweep
-    // against a library built with `E21_multicut_mate_band_gate_dropped`
+    // **Re-mined at S188 and this is the second row this clause has carried.**
+    // S188's check extension made the search reach further, and the row S097
+    // verdict 2 mined -- `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`
+    // -- stopped separating the two builds: its shipped profile stayed `d12
+    // d14` while the guard-dropped build's went from `d12` to `d12 d14`, so
+    // the deeper tree finds that mate with or without the guard. The mutation
+    // pass caught it as `E21_multicut_mate_band_gate_dropped` surviving a
+    // green suite, which is the only way a row going quiet can be caught, and
+    // DEC-142's rule -- a mined row is re-derived by its script whenever
+    // either end moves -- is why this is a re-mine and not a finding.
+    //
+    // Re-derive with the commands in `adocs/data/S097_mine_mate_row.py`'s own
+    // header, which are the ones that were run and are written out there with
+    // every input named -- the candidate set, the shipped sweep, the same
+    // sweep against a library built with `E21_multicut_mate_band_gate_dropped`
     // applied, the derived separator set, the firing witness over it, and the
     // pick. Every stage takes `--fens` explicitly: a stage defaulting to a
-    // file a later stage writes is a recipe that cannot be followed, which is
-    // what this block said until the fast check read it.
-    // Moves legitimately on: any change to the singular block, to pruning or
-    // to ordering. Margin: exact -- the row asserts the distance too.
+    // file a later stage writes is a recipe that cannot be followed. The
+    // re-mine skipped stage 1 and swept `adocs/data/S097_candidates.tsv`'s own
+    // 269 FENs, because that file is committed and the pool it came from is
+    // not the thing that moved. The script's `--fens` default points at a
+    // scratch file stage 1 writes, so the committed input is derived with
+    // `grep -v '^#' adocs/data/S097_candidates.tsv | cut -f1` and handed to
+    // both sweeps explicitly.
+    // Moves legitimately on: any change to the singular block, to pruning, to
+    // ordering or to extensions. Margin: exact -- the row asserts the distance
+    // too.
     //
-    // **Mined, not chosen** (CHESS): 269 candidates, every labelled mate of
-    // S230's own pool that stockfish at depth 20 in a fresh process still
-    // calls a forced mate in 2 to 6, swept over depths 11 to 14 -- the range
-    // starts there because the block wants `ply > 0` at a remaining depth of
-    // at least `SeMinDepth` and a `search_fen()` root is at ply 0 -- on the
-    // shipped build and again with the mate guard dropped. **Three of the 269
-    // separate the guard anywhere in that range and only this one loses the
-    // mate**: the other two report a different distance instead, #7 read as
-    // #6 and #6 read as #7, which is a red case the rule in the script's
-    // header deliberately does not take. That the rule is live here is the
-    // engine's word and not an argument -- the tune build at `SeMultiCut` 0
-    // against 1 gives different node counts on this position at depths 13 and
-    // 14 and identical ones at 11 and 12.
+    // **Mined, not chosen** (CHESS): the same 269 candidates, swept over
+    // depths 11 to 14 -- the range starts there because the block wants
+    // `ply > 0` at a remaining depth of at least `SeMinDepth` and a
+    // `search_fen()` root is at ply 0 -- on the shipped build and again with
+    // the mate guard dropped. **Two of the 269 separate the two builds on this
+    // tree and the pick took this one**; the other,
+    // `r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35`, was skipped
+    // by the rule in the script's header because the firing witness shows the
+    // multicut never reaching it, so its depth-14 separation cannot have come
+    // from this rule. That the rule is live here is the engine's word and not
+    // an argument: the tune build at `SeMultiCut` 0 against 1 gives different
+    // node counts on this position at depths 13 and 14 and identical ones at
+    // 11 and 12.
+    //
+    // This row is a better one than it replaces on the property the tie-break
+    // is about: its shipped profile is **the whole swept range**, `d11 d12 d13
+    // d14`, where the old row's was `d12 d14` with a gap, so an ordinary
+    // ordering change has three other depths to take before the row goes
+    // quiet.
     //
     // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
-    // True`, `is_check() False`, 23 legal moves of which 2 are captures and
-    // none a promotion, and stockfish at depth 20 through python-chess reports
-    // **`#+5` in 7918 nodes, pv Qa7 Qf3+ Kg1 Qd1+ Kh2 Qh1+ Kxh1 g5 Qg7#**.
+    // True`, `is_check() False`, 19 legal moves of which none is a capture,
+    // four are promotions and two give check; stockfish through python-chess
+    // in a fresh process reports **`#+5`, pv `Kf2 Rf8+ Bf5 Rxf5+ gxf5 Kh3
+    // g1=Q a6 Qh1#`**, and `adocs/data/S097_candidates.tsv` carries the same
+    // label from the pool's own oracle run, mate in 5 in 4586 nodes.
     // **Observed red, then green**: with the guard dropped,
     // `./test_search --test-case="pruning does not hide a forced mate"` fails
     // here at `REQUIRE( result.mate_found )`, a fatal REQUIRE, and passes with
     // the guard in place. The mutation was applied by hand, observed and
     // reverted -- the S033 protocol -- and the log is
-    // `.tuning/coord/S097_v2_mate_row_red.log`.
+    // `adocs/data/S188_remine.log`.
     //
-    // The cell costs 4206525 nodes and about 0.65 s, which is what a row that
-    // has to reach depth 14 costs; the rule's last tie-break is the cheaper
-    // cell and this was the only candidate it had to choose from.
+    // The cell costs 4227541 nodes and about 0.56 s, which is what a row that
+    // has to reach depth 14 costs and is what the row it replaces cost
+    // (4206525 nodes, 0.65 s). The rule's last tie-break is the cheaper cell
+    // and it decided between the two separators here: the skipped one's
+    // depth-14 cell is 43758845 nodes and 5.4 s.
     const std::string mate_the_multicut_hides =
-        "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46";
+        "1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54";
 
     {
       const std::string title = "mate the multicut hides, depth 14";
@@ -3901,13 +3937,15 @@ TEST_SUITE("search: draws")
   // This case reaches the assignment through `search()` and separates
   // `history.size` from both of its neighbours. One board, three searches:
   //
-  //   1. root P, nothing like it behind the root, depth 4. The cycle comes
-  //      back to the root's own entry, which is not inside the tree, so there
-  //      is no draw. `- 1` calls it one and answers `0`.
-  //   2. the same board and history, depth 5. The position at ply 1 comes
-  //      back at ply 5, strictly above the root's entry, which is a draw.
-  //      `+ 1` calls it pre-root and answers the material instead.
-  //   3. the same board with the cycle played *before* the root, depth 4.
+  //   1. root P, nothing like it behind the root, at the drive depth the case
+  //      derives below. The cycle comes back to the root's own entry, which is
+  //      not inside the tree, so there is no draw. `- 1` calls it one and
+  //      answers `0`.
+  //   2. the same board and history, one ply deeper. The position at ply 1
+  //      comes back at ply 5, strictly above the root's entry, which is a
+  //      draw. `+ 1` calls it pre-root and answers the material instead.
+  //   3. the same board with the cycle played *before* the root, at the drive
+  //      depth.
   //      Two occurrences at or below the root are a draw wherever they lie,
   //      which is S207's rule from the other side: same position as 1, other
   //      history, other score. Both neighbours agree with the engine here,
@@ -3995,11 +4033,34 @@ TEST_SUITE("search: draws")
                  repetition_kind_t::DRAW);
     }
 
+    // THE DRIVE DEPTH, AND IT IS A MEASURED CONSTANT (GOLDEN, DEC-142). The
+    // three searches need a depth at which the cycle's return to the **root's
+    // own** entry is inside the tree and its return to the **ply-1** position
+    // is not, and the case cannot derive that for itself: nothing in the
+    // fixture can see which ply a search reached. It was 4 until S188. An
+    // extension makes a search reach past its nominal depth, and the check
+    // extension fires on this cycle -- every white move in it gives check, and
+    // static exchange calls each of them safe -- so the separating depth moved
+    // down by one (DEC-228).
+    //
+    // Moves legitimately on: any change to extensions, pruning or reduction
+    // that alters how far a search of a given depth reaches.
+    // Margin: exact, and the whole sweep is what says so. On this tree
+    //   depth 2  -841  -813  -841      the tree is too short for any draw
+    //   depth 3  -813     0     0      <- the separating depth, and the case
+    //   depth 4     0     0     0      the in-tree draw is inside both
+    // and on the parent commit the same sweep separates at 4, which is the
+    // number this case held before.
+    // Re-derive with `adocs/data/S188_repair_goldens.py s207`, and with
+    // `--lib` at another tree's engine library to compare two trees. The
+    // driver is `search_after()` below, line for line.
+    static constexpr int DRIVE_DEPTH = 3;
+
     // 1. The root's own occurrence, reached through search(). No draw, so the
     // score is the material. The bound is not a golden: it separates `0` from
     // a rook and three pawns with most of the rook as margin.
     const search_t root_recurrence =
-        search_after(one_ply_before, forced_reply, 4);
+        search_after(one_ply_before, forced_reply, DRIVE_DEPTH);
     const uint64_t root_board = game.board.hash;
     const size_t shallow_history = game.history.size;
 
@@ -4007,13 +4068,22 @@ TEST_SUITE("search: draws")
 
     // 2. One ply deeper on the same board and the same history: the draw is
     // an in-tree one and it is the only one available.
-    const search_t in_tree = search_after(one_ply_before, forced_reply, 5);
+    const search_t in_tree =
+        search_after(one_ply_before, forced_reply, DRIVE_DEPTH + 1);
 
     REQUIRE_EQ(in_tree.score, 0);
 
     // 3. The same board, the cycle played before the root instead of inside
     // it: a draw at the same depth that answered the material above.
-    const search_t pre_root = search_after(root_fen, cycle, 4);
+    //
+    // **This is the pair that makes 1 non-vacuous**, and the reason it is
+    // asserted at the same depth: 1 and 3 are the same position searched to
+    // the same depth, and 3 finds a draw where 1 does not. So 1's material
+    // score is the boundary classifying that occurrence and not a tree too
+    // short to have reached it -- which is what a case reading "no draw here"
+    // has to rule out, and what the depth sweep above rules out for the
+    // sweep's own row.
+    const search_t pre_root = search_after(root_fen, cycle, DRIVE_DEPTH);
 
     REQUIRE_EQ(pre_root.score, 0);
 
@@ -7446,7 +7516,17 @@ TEST_SUITE("search: pruning and reduction guards")
   //   LMR_NO_TT_MOVE )
   //   values: REQUIRE_EQ( 2, 3 )      J01
   //
-  // J03 also takes "pruning does not hide a forced mate" with it.
+  // J03 **used to** take "pruning does not hide a forced mate" with it, and
+  // on the tree S188 leaves it does not: a targeted re-run of J01, J02 and
+  // J03 on 2026-09-22 has the mate case red under the first two and green
+  // under this one, which the case below kills on its own. S095's mined
+  // row `mate_the_extra_ply_hides` is not dead -- it still takes J01 and
+  // J02 -- but a deeper search narrowed what it reaches, which is the same
+  // motion that made S097's multicut row go quiet and be re-mined at that
+  // step. No coverage is lost, because this case is J03's own killer and
+  // was always its first; the sentence is corrected rather than left
+  // standing as a claim the tree no longer supports
+  // (`adocs/data/S188_mutation_targeted.tsv`).
   TEST_CASE_FIXTURE(node_type_drive_t,
                     "a node whose table entry carries no move reduces its late "
                     "quiets by LmrNoTtMove more")
@@ -9364,6 +9444,702 @@ TEST_SUITE("search: pruning and reduction guards")
       REQUIRE_EQ(score, alpha);
     }
   }
+
+
+  // ----------------------------------------------------------------------
+  // CHECK EXTENSION, S188. A move that gives check is searched one ply
+  // deeper, decided inside the move loop after the move is made. Two bounds
+  // hold it: the budget, one ply per node whichever rule asks -- so a move
+  // that is both S097's singular move and a checking move gets one ply and
+  // not two -- and the cap `ply < CheckExtPlyFactor * depth`, which is what
+  // makes a chain of checks finite, because an extended child keeps its
+  // parent's remaining depth and only the ply rises.
+  // ----------------------------------------------------------------------
+
+  // THE POSITIONS, and every property named below is a tool's answer and not
+  // an author's (CLAUDE.md, DEC-023). python-chess, 2026-09-22.
+  //
+  // The quiet-check position is the S097 fortress with a white rook added on
+  // b1, which is what gives it a checking move at all: `is_valid() True`,
+  // `is_check() False`, **15 legal moves, exactly one of which gives check --
+  // b1b8 -- and no capture anywhere in the list**. The pawn wall is the
+  // fortress's own and nothing in it can move or capture, ever, which is what
+  // keeps a drive at `SeMinDepth` affordable in a suite the gate runs.
+  static const std::string CE_QUIET_CHECK_POS =
+      "4k3/8/8/p1p1p1p1/P1P1P1P1/8/8/1R2K3 w - - 0 1";
+
+  // The same position with a black rook on b8, so that the one checking move
+  // is also the one capture: `is_valid() True`, `is_check() False`, **15 legal
+  // moves, exactly one capture and exactly one check, and they are the same
+  // move, b1b8**. That coincidence is the point -- a rule restricted to quiet
+  // checks extends nothing here, and a rule that reads `is_check_move` (which
+  // src/search.cpp hardcodes false on a capture) cannot see this move at all.
+  static const std::string CE_CAPTURE_CHECK_POS =
+      "1r2k3/8/8/p1p1p1p1/P1P1P1P1/8/8/1R2K3 w - - 0 1";
+
+  // A white queen against a bare king: `is_valid() True`, `is_check() False`,
+  // **28 legal moves of which 6 give check** -- g2g8, g2a8, g2g6, g2c6, g2e4,
+  // g2e2 -- and no capture. Six checking moves a node is what makes a chain
+  // that is not capped cost what the case below reads.
+  static const std::string CE_CHECK_RICH_POS =
+      "4k3/8/8/8/8/8/6Q1/4K3 w - - 0 1";
+
+  // A white queen and king against a bare king, and it is the position the
+  // exchange gate is read on: python-chess, 2026-09-22, reports `is_valid()
+  // True`, `is_check() False`, **21 legal moves of which 5 give check and none
+  // is a capture**, and the five split two ways -- after `d1d8` and `d1d7` the
+  // black king attacks the square the queen just landed on, and after `d1h5`,
+  // `d1a4` and `d1e2` nothing of Black's does. Nothing of White's defends
+  // either of the first two, so the exchange at threshold zero fails on them
+  // and holds on the other three, which the case asserts through the engine's
+  // own `see_ge` rather than taking on trust.
+  static const std::string CE_HANGING_CHECK_POS =
+      "4k3/8/8/8/8/8/8/3QK3 w - - 0 1";
+
+  // A ceiling on the ordinary drives, for the reason SE_DRIVE_NODE_LIMIT is
+  // one: a rule that stopped bounding the tree fails loudly instead of hanging
+  // the suite. Every drive asserts `!state.aborted` after it, so reaching it
+  // is a red case and not a shorter measurement.
+  static constexpr uint64_t CE_DRIVE_NODE_LIMIT = 5000000;
+
+  // What the table is made to say about the drive position, where a case wants
+  // S097's block to run as well. `move` 0 is "nothing planted", which is what
+  // every case but the budget one drives: with no entry there is no table move,
+  // so the singular block cannot run and every ply this node adds is S188's.
+  struct ce_plant_t
+  {
+    move_t move;
+    int entry_depth;
+    int score;
+  };
+
+  // One drive of the check extension at a named position, ply and depth.
+  struct check_ext_drive_t : guard_fixture_t
+  {
+    int last_score = 0;
+
+    // The three terms of the window the rule is allowed to ask in, asserted as
+    // a precondition so that a case reading "nothing was extended" cannot pass
+    // because some other term was false. `expected` is what this drive is for:
+    // a case about the cap asserts the window is shut, every other case
+    // asserts it is open.
+    static void require_window(size_t ply, int depth, bool expected)
+    {
+      REQUIRE_EQ(CHECK_EXTEND, 1);
+
+      const bool open = ply > 0 && depth <= CHECK_EXT_MAX_DEPTH &&
+                        static_cast<int>(ply) < CHECK_EXT_PLY_FACTOR * depth;
+
+      REQUIRE_EQ(open, expected);
+    }
+
+    search_node_probe_t run(const std::string& fen,
+                            size_t ply,
+                            int depth,
+                            int alpha,
+                            int beta,
+                            const ce_plant_t& plant = {0, 0, 0},
+                            uint64_t node_limit = CE_DRIVE_NODE_LIMIT)
+    {
+      load(fen, static_cast<int>(ply));
+
+      // The rule is about a node that chooses between moves. A node in check
+      // generates evasions and every case here would be about a different
+      // question.
+      REQUIRE(!is_check(&game));
+      REQUIRE(depth >= 1);
+
+      if (plant.move == 0) {
+        // load() wiped the table, so this is the precondition that S097's
+        // block cannot run at this node: no entry, therefore no table move,
+        // therefore nothing for it to call singular. Asserted rather than
+        // assumed, because `se_verified` false would otherwise be evidence
+        // about nothing.
+        REQUIRE(tt_get_entry(&tt, &game.board) == nullptr);
+      } else {
+        tt_store_entry(&tt, &game.board, plant.entry_depth, plant.score,
+                       TT_BETA_NODE, plant.move);
+
+        const tt_entry_t* planted = tt_get_entry(&tt, &game.board);
+
+        REQUIRE(planted != nullptr);
+        REQUIRE_EQ(planted->best_move, plant.move);
+        REQUIRE_EQ(planted->depth, plant.entry_depth);
+
+        // The entry orders this node and never answers it, which is what makes
+        // the drive about the two extension rules and not about the table.
+        REQUIRE(plant.entry_depth < depth);
+      }
+
+      // What search() does at the root, written here because a drive that
+      // calls negamax_probed() directly does not go through it (S097).
+      state.root_history_size = game.history.size;
+      state.node_limit = node_limit;
+
+      last_score = negamax_probed(alpha, beta, depth, ply, &game, &state, 0,
+                                  false, false, 0);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the rule");
+
+      return probe;
+    }
+
+    // The whole of the rule, read off the site: every move whose (from, to) is
+    // in `extended` was searched a ply deeper than this node's remaining depth
+    // allows, every other move was not, and the count matches. A ply landing on
+    // the wrong move is silent -- no crash, no wrong node count, only rating --
+    // which is why the depth per move is read and not inferred from the tree.
+    static void require_extended_exactly(const search_node_probe_t& record,
+                                         int depth,
+                                         const std::vector<move_t>& extended)
+    {
+      REQUIRE(record.move_count > static_cast<int>(extended.size()));
+
+      size_t seen = 0;
+
+      for (int k = 0; k < record.move_count; ++k) {
+        bool wanted = false;
+
+        for (const move_t move : extended) {
+          REQUIRE(move != 0);
+          wanted = wanted || move == record.moves[k];
+        }
+
+        if (wanted) {
+          REQUIRE_EQ(record.child_depth[k], depth);
+          seen++;
+        } else {
+          REQUIRE_EQ(record.child_depth[k], depth - 1);
+        }
+      }
+
+      REQUIRE_EQ(seen, extended.size());
+    }
+  };
+
+  // The drive depth for the cases that are about which move is extended: deep
+  // enough that a child depth of `depth - 1` is still a main-search node and
+  // shallow enough to cost nothing. Nothing here reads a score.
+  static constexpr int CE_DRIVE_DEPTH = 4;
+
+
+  // Mutation: X01_extension_on_every_move, X02_extension_dropped,
+  // X08_extend_switch_inverted, X09_node_in_check_not_move,
+  // X10_extends_two_plies. This is the rule's direct guard case (DEC-141): the
+  // node is not in check, so a rule that read the node instead of the move
+  // extends nothing here, and the shipped one extends exactly one move.
+  //
+  //   search: pruning and reduction guards
+  //    a checking move is extended and no other move is
+  //   REQUIRE_EQ( record.child_depth[k], depth - 1 )
+  //   values: REQUIRE_EQ( 4, 3 )        -- X01
+  //   REQUIRE_EQ( record.child_depth[k], depth )
+  //   values: REQUIRE_EQ( 3, 4 )        -- X02, X08, X09
+  //   values: REQUIRE_EQ( 5, 4 )        -- X10
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "a checking move is extended and no other move is")
+  {
+    require_window(1, CE_DRIVE_DEPTH, true);
+
+    const search_node_probe_t record =
+        run(CE_QUIET_CHECK_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    // No entry was planted, so S097's block never ran: every ply added at this
+    // node is this rule's.
+    REQUIRE(!record.se_verified);
+    REQUIRE(!record.se_extended);
+
+    // The node searched its whole move list -- the window is inside the mate
+    // band, which switches the shallow-depth block off at this node and below
+    // it -- so what the loop below reads is every legal move and not a tail
+    // some rule dropped.
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 15u);
+    REQUIRE_EQ(record.move_count, 15);
+
+    const move_t check = quiet_move(&game, b1, b8);
+
+    REQUIRE(check != 0);
+
+    require_extended_exactly(record, CE_DRIVE_DEPTH, {check});
+  }
+
+
+  // Mutation: X05_quiet_checks_only, X06_capture_scan_window_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    a capture that gives check is extended too
+  //   REQUIRE_EQ( record.child_depth[k], depth )
+  //   values: REQUIRE_EQ( 3, 4 )
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "a capture that gives check is extended too")
+  {
+    require_window(1, CE_DRIVE_DEPTH, true);
+
+    const search_node_probe_t record = run(
+        CE_CAPTURE_CHECK_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    REQUIRE(!record.se_verified);
+
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 15u);
+    REQUIRE_EQ(record.move_count, 15);
+
+    // Through the generator and as a capture, so the flags are the ones the
+    // rules read and not the ones this case expected: `is_check_move` is
+    // hardcoded false on a capture in src/search.cpp, so a rule reading it
+    // rather than the shared scan extends nothing here.
+    const move_t capture = capture_move(&game, b1, b8);
+
+    REQUIRE(capture != 0);
+    REQUIRE(MOVE_CAPTURE(capture));
+    REQUIRE_EQ(quiet_move(&game, b1, b8), 0);
+
+    require_extended_exactly(record, CE_DRIVE_DEPTH, {capture});
+  }
+
+
+  // Mutation: X03_root_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    the root extends no checking move
+  //   REQUIRE_EQ( root.child_depth[k], CE_DRIVE_DEPTH - 1 )
+  //   values: REQUIRE_EQ( 4, 3 )
+  TEST_CASE_FIXTURE(check_ext_drive_t, "the root extends no checking move")
+  {
+    require_window(0, CE_DRIVE_DEPTH, false);
+
+    const search_node_probe_t root =
+        run(CE_QUIET_CHECK_POS, 0, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    REQUIRE(root.move_count > 1);
+
+    for (int k = 0; k < root.move_count; ++k) {
+      REQUIRE_EQ(root.child_depth[k], CE_DRIVE_DEPTH - 1);
+    }
+
+    // The control, and it is the whole of what makes the loop above evidence:
+    // the same position one ply lower, where the checking move is extended. So
+    // the root's zero is the gate and not a position with nothing to extend.
+    require_window(1, CE_DRIVE_DEPTH, true);
+
+    const search_node_probe_t below =
+        run(CE_QUIET_CHECK_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    const move_t check = quiet_move(&game, b1, b8);
+
+    REQUIRE(check != 0);
+
+    require_extended_exactly(below, CE_DRIVE_DEPTH, {check});
+  }
+
+
+  // Mutation: X04_ply_cap_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    no checking move is extended past the ply cap
+  //   REQUIRE_EQ( at.child_depth[k], CE_DRIVE_DEPTH - 1 )
+  //   values: REQUIRE_EQ( 4, 3 )
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "no checking move is extended past the ply cap")
+  {
+    // The first ply at which the cap binds at this depth, derived from the
+    // parameter rather than written out, so a refit moves the case with it.
+    const size_t at_cap =
+        static_cast<size_t>(CHECK_EXT_PLY_FACTOR * CE_DRIVE_DEPTH);
+
+    REQUIRE(at_cap + static_cast<size_t>(CE_DRIVE_DEPTH) < MAX_PLY);
+
+    // One ply below it the rule still fires, which is what makes the drive at
+    // the cap a decision the guard took.
+    require_window(at_cap - 1, CE_DRIVE_DEPTH, true);
+
+    const search_node_probe_t under =
+        run(CE_QUIET_CHECK_POS, at_cap - 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA,
+            SE_BAND_BETA);
+
+    const move_t check = quiet_move(&game, b1, b8);
+
+    REQUIRE(check != 0);
+
+    require_extended_exactly(under, CE_DRIVE_DEPTH, {check});
+
+    // And at the cap itself nothing is extended -- the checking move included,
+    // which is the one the loop would otherwise find a ply deeper.
+    require_window(at_cap, CE_DRIVE_DEPTH, false);
+
+    const search_node_probe_t at =
+        run(CE_QUIET_CHECK_POS, at_cap, CE_DRIVE_DEPTH, SE_BAND_ALPHA,
+            SE_BAND_BETA);
+
+    REQUIRE_EQ(at.move_count, under.move_count);
+
+    for (int k = 0; k < at.move_count; ++k) {
+      REQUIRE_EQ(at.child_depth[k], CE_DRIVE_DEPTH - 1);
+    }
+  }
+
+
+  // Mutation: X11_see_gate_dropped. **The gate's own direct guard case**
+  // (DEC-141): DEC-228 re-formed this step around it, so it gets a case that
+  // reads both halves at one node rather than one that reads the half it
+  // wants.
+  //
+  //   search: pruning and reduction guards
+  //    a checking move the exchange calls unsafe is not extended
+  //   REQUIRE_EQ( record.child_depth[k], depth - 1 )
+  //   values: REQUIRE_EQ( 4, 3 )
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "a checking move the exchange calls unsafe is not extended")
+  {
+    require_window(1, CE_DRIVE_DEPTH, true);
+
+    // The split, asserted on the parent board and through the engine's own
+    // exchange evaluation, before the drive that reads its consequence. Two
+    // of the five checks hang the queen and three do not; a case that named
+    // the moves and not the verdicts would pass with the gate inverted.
+    REQUIRE(load_FEN(CE_HANGING_CHECK_POS, &game));
+
+    const move_t hangs[] = {quiet_move(&game, d1, d8),
+                            quiet_move(&game, d1, d7)};
+    const std::vector<move_t> safe = {quiet_move(&game, d1, h5),
+                                      quiet_move(&game, d1, a4),
+                                      quiet_move(&game, d1, e2)};
+
+    for (const move_t move : hangs) {
+      REQUIRE(move != 0);
+      REQUIRE_FALSE(see_ge(&game.board, move, 0));
+    }
+
+    for (const move_t move : safe) {
+      REQUIRE(move != 0);
+      REQUIRE(see_ge(&game.board, move, 0));
+    }
+
+    const search_node_probe_t record = run(
+        CE_HANGING_CHECK_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    REQUIRE(!record.se_verified);
+
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 21u);
+    REQUIRE_EQ(record.move_count, 21);
+
+    // The three the exchange holds are a ply deeper and the two it refuses are
+    // not -- and the two are checks, which is what makes this the gate and not
+    // a position with nothing to extend.
+    require_extended_exactly(record, CE_DRIVE_DEPTH, safe);
+  }
+
+
+  // Mutation: X12_horizon_restriction_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    no checking move is extended above the horizon restriction
+  //   REQUIRE_EQ( above.child_depth[k], CHECK_EXT_MAX_DEPTH )
+  //   values: REQUIRE_EQ( 9, 8 )
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "no checking move is extended above the horizon "
+                    "restriction")
+  {
+    // DEC-228's third form: only the last `CheckExtMaxDepth` plies before the
+    // horizon extend. At the restriction itself the rule fires and one ply
+    // above it nothing does, which is the boundary derived from the parameter
+    // so a refit moves the case with it.
+    const int at = CHECK_EXT_MAX_DEPTH;
+    const int above = at + 1;
+
+    REQUIRE(above <= 16);
+    require_window(1, at, true);
+    require_window(1, above, false);
+
+    const search_node_probe_t inside =
+        run(CE_QUIET_CHECK_POS, 1, at, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    const move_t check = quiet_move(&game, b1, b8);
+
+    REQUIRE(check != 0);
+    require_extended_exactly(inside, at, {check});
+
+    const search_node_probe_t outside =
+        run(CE_QUIET_CHECK_POS, 1, above, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    // Nothing extended, the checking move included, and the node is not one
+    // S097 could have extended instead: no entry was planted, so its block
+    // never ran.
+    REQUIRE(!outside.se_verified);
+    REQUIRE_EQ(outside.move_count, inside.move_count);
+
+    for (int k = 0; k < outside.move_count; ++k) {
+      REQUIRE_EQ(outside.child_depth[k], above - 1);
+    }
+  }
+
+
+  // The depth the chain cases below drive, and the one case that reads the
+  // whole move list of a node with more than one checking move in it.
+  static constexpr int CE_CHAIN_DEPTH = 6;
+
+
+  // Mutation: X01_extension_on_every_move. Six checking moves of twenty-eight
+  // is what this case adds over the one above: a rule that extends the node
+  // rather than the move is a different tree here and the same tree there.
+  //
+  //   search: pruning and reduction guards
+  //    every checking move at a node is extended, not only the first
+  //   REQUIRE_EQ( record.child_depth[k], depth - 1 )
+  //   values: REQUIRE_EQ( 4, 3 )
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "every checking move at a node is extended, not only the "
+                    "first")
+  {
+    require_window(1, CE_DRIVE_DEPTH, true);
+
+    const search_node_probe_t record =
+        run(CE_CHECK_RICH_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    REQUIRE(!record.se_verified);
+
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 28u);
+    REQUIRE_EQ(record.move_count, 28);
+
+    // The six python-chess names, each built through the generator, so a case
+    // that got a square wrong fails at the build and not at the assertion.
+    const std::vector<move_t> checks = {
+        quiet_move(&game, g2, g8), quiet_move(&game, g2, a8),
+        quiet_move(&game, g2, g6), quiet_move(&game, g2, c6),
+        quiet_move(&game, g2, e4), quiet_move(&game, g2, e2)};
+
+    require_extended_exactly(record, CE_DRIVE_DEPTH, checks);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE SHARED BUDGET, and why this case is in this build since DEC-228's
+  // third form. S097 extends the table's move at a node whose remaining depth
+  // is **at least** `SeMinDepth` 10; S188 extends a checking move at a node
+  // whose remaining depth is **at most** `CheckExtMaxDepth` 8. At the shipped
+  // seeds the two ranges are disjoint, so no node in the release build can
+  // reach both rules and no release-build case can drive the budget at all --
+  // a case that tried would pass because S097 extended the move on its own,
+  // which is the "green for the wrong reason" this block's discipline exists
+  // against.
+  //
+  // So the drive raises `CheckExtMaxDepth` to the node's own depth, which puts
+  // one node inside both rules, and the destructor puts the shipped value back
+  // -- doctest runs a binary's cases in one process, so a parameter left
+  // raised would widen the rule for every case after this one.
+  //
+  // **What holds the budget in the release build** is the site's own
+  // `assert(child_depth >= depth - 1 && child_depth <= depth)` in
+  // `src/search.cpp` `negamax_at`, live in the Debug binary the second tier
+  // self-plays (DEC-141). X07 is declared equivalent for the release build in
+  // `tools/mutants/S188_check_extension.py` for exactly the reason above, with
+  // this case and that assertion named as what does kill it.
+  //
+  // Mutation: X07_budget_is_a_sum, in this build.
+  //
+  //   search: pruning and reduction guards
+  //    a move that is both singular and checking is extended one ply
+  //   REQUIRE_EQ( record.child_depth[k], depth )
+  //   values: REQUIRE_EQ( 11, 10 )
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "a move that is both singular and checking is extended one "
+                    "ply")
+  {
+    struct restore_t
+    {
+      int value;
+      ~restore_t() { search_param_set("CheckExtMaxDepth", value); }
+    } restore{CHECK_EXT_MAX_DEPTH};
+
+    // S097's block and this one have to reach the same move at the same node,
+    // so the drive is at `SeMinDepth` with an entry the depth margin accepts,
+    // and the entry's move is the position's one checking move.
+    const int depth = SE_MIN_DEPTH;
+    const int entry_depth = SE_MIN_DEPTH - SE_TT_DEPTH_MARGIN;
+
+    // The one parameter that has to move, and the case says what it was: at
+    // the shipped 8 this drive's node is outside S188's rule entirely and the
+    // window below would be shut.
+    REQUIRE(CHECK_EXT_MAX_DEPTH < depth);
+    require_window(1, depth, false);
+
+    REQUIRE(search_param_set("CheckExtMaxDepth", depth));
+    REQUIRE_EQ(CHECK_EXT_MAX_DEPTH, depth);
+    require_window(1, depth, true);
+
+    // An entry score no line in this position can reach, so every alternative
+    // fails below the window S097 derives from it and the table move is
+    // singular. White is a rook up here, which is why the plant is well above
+    // the score the fortress itself produces.
+    const int plant_score = 1500;
+
+    REQUIRE(plant_score - SE_MARGIN_PER_DEPTH * depth > 900);
+
+    load(CE_QUIET_CHECK_POS, 1);
+
+    const move_t check = quiet_move(&game, b1, b8);
+
+    REQUIRE(check != 0);
+
+    const search_node_probe_t record =
+        run(CE_QUIET_CHECK_POS, 1, depth, SE_BAND_ALPHA, SE_BAND_BETA,
+            {check, entry_depth, plant_score});
+
+    // Both rules want this one move, which is the precondition the case is
+    // about: S097's verification ran and called it singular, and it is the
+    // position's checking move.
+    REQUIRE(record.se_verified);
+    REQUIRE(record.se_extended);
+    REQUIRE(record.se_vscore < record.se_singular_beta);
+
+    // And it is searched one ply deeper than the node's own depth allows, not
+    // two. A sum of the two rules reads `depth + 1` here.
+    require_extended_exactly(record, depth, {check});
+  }
+
+
+  // THE CHECK EXTENSION'S OFF VALUE, DEC-215 clause 2, and the only build that
+  // can drive it: `CheckExtend` is a compiled constant in the release build,
+  // so the branch folds away there and a case cannot move it. The release
+  // build's half of the pairing is the bench signature -- the tune build at
+  // `CheckExtend` 0 prints the parent commit's total with all eight
+  // `bestmove` replies identical -- exactly as `SeExtend` and `SeMultiCut` are
+  // held (DEC-118).
+  //
+  // The restorer is not decoration: doctest runs a binary's cases in one
+  // process, so a parameter left at 0 by a failing assertion would switch the
+  // rule off for every case after this one.
+  //
+  // Mutation: X08_extend_switch_inverted -- the gate reads `CHECK_EXTEND == 0`,
+  // so the rule runs at the off value and not at the on one. Killed in the
+  // release build by "a checking move is extended and no other move is", which
+  // is why the mutant is written against the gate and not against this case.
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "the check extension does not run at its off value")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("CheckExtend", 1); }
+    } restore;
+
+    REQUIRE_EQ(CHECK_EXTEND, 1);
+    require_window(1, CE_DRIVE_DEPTH, true);
+
+    const search_node_probe_t on =
+        run(CE_QUIET_CHECK_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    const move_t check = quiet_move(&game, b1, b8);
+
+    REQUIRE(check != 0);
+
+    require_extended_exactly(on, CE_DRIVE_DEPTH, {check});
+
+    REQUIRE(search_param_set("CheckExtend", 0));
+    REQUIRE_EQ(CHECK_EXTEND, 0);
+
+    const search_node_probe_t off =
+        run(CE_QUIET_CHECK_POS, 1, CE_DRIVE_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    REQUIRE_EQ(off.move_count, on.move_count);
+
+    for (int k = 0; k < off.move_count; ++k) {
+      REQUIRE_EQ(off.child_depth[k], CE_DRIVE_DEPTH - 1);
+    }
+  }
+
+
+  // THE CHAIN, why a node count is what reads it, and why it is in this build.
+  // The probe records one node at one ply and no child is at that ply
+  // (src/search.hpp `negamax_probed`), so no field of it can see what a line
+  // twenty plies below the drive did. What can be seen is what the subtree
+  // costs -- and the exact form of that claim needs the same drive with the
+  // rule switched off, which is a variable here and a compiled constant in the
+  // release build (DEC-118).
+  //
+  // THE CAP BINDS DOWNWARDS, which is the whole of the chain argument: a child
+  // sits at a higher ply with a remaining depth no greater than its parent's,
+  // so `ply < CheckExtPlyFactor * depth` is false at every node under a node
+  // it is false at. A drive at exactly `CheckExtPlyFactor * depth` therefore
+  // has to cost **the same number of nodes as the rule switched off** -- not
+  // fewer than some ceiling, exactly the same -- and one check extended
+  // anywhere in that subtree breaks the equality. One ply lower the two counts
+  // differ, which is what makes the equality the cap doing its work and not a
+  // position the rule has nothing to do in.
+  //
+  // A node ceiling was measured and rejected as the instrument: at this drive
+  // the uncapped subtree costs 11982 nodes against 2226 capped, 5.4 times, and
+  // the ratio falls with depth rather than rising (the step file has the
+  // table). Only the checking side's plies are extended, so a chain loses a
+  // ply of depth every second ply and grows by a constant factor rather than
+  // without bound -- which is a fact about this rule worth knowing, and a
+  // threshold no honest margin could straddle.
+  //
+  // Mutation: X04_ply_cap_dropped, killed in the release build by "no checking
+  // move is extended past the ply cap". This case is the chain half of that
+  // guard and the release build cannot hold it.
+  TEST_CASE_FIXTURE(check_ext_drive_t,
+                    "a chain of checking moves stops extending at the cap")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("CheckExtend", 1); }
+    } restore;
+
+    const size_t at_cap =
+        static_cast<size_t>(CHECK_EXT_PLY_FACTOR * CE_CHAIN_DEPTH);
+
+    REQUIRE(at_cap + static_cast<size_t>(CE_CHAIN_DEPTH) < MAX_PLY);
+    require_window(at_cap, CE_CHAIN_DEPTH, false);
+
+    const search_node_probe_t at = run(
+        CE_CHECK_RICH_POS, at_cap, CE_CHAIN_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+    const uint64_t at_cap_on = state.explored_nodes;
+
+    // The position offers the rule six checking moves of twenty-eight, so a
+    // subtree that extended them would be a different tree and not this one.
+    move_t buffer[MAX_MOVES];
+
+    REQUIRE_EQ(legal_moves(&game, buffer), 28u);
+    REQUIRE_EQ(at.move_count, 28);
+
+    for (int k = 0; k < at.move_count; ++k) {
+      REQUIRE_EQ(at.child_depth[k], CE_CHAIN_DEPTH - 1);
+    }
+
+    REQUIRE(search_param_set("CheckExtend", 0));
+
+    run(CE_CHECK_RICH_POS, at_cap, CE_CHAIN_DEPTH, SE_BAND_ALPHA, SE_BAND_BETA);
+
+    // Every node of this subtree, and not only the one the probe watched.
+    REQUIRE_EQ(at_cap_on, state.explored_nodes);
+
+    // One ply under the cap the same pair differs, so the equality above is
+    // the guard and not a drive nothing could have extended anyway.
+    REQUIRE(search_param_set("CheckExtend", 1));
+    require_window(at_cap - 1, CE_CHAIN_DEPTH, true);
+
+    run(CE_CHECK_RICH_POS, at_cap - 1, CE_CHAIN_DEPTH, SE_BAND_ALPHA,
+        SE_BAND_BETA);
+
+    const uint64_t under_on = state.explored_nodes;
+
+    REQUIRE(search_param_set("CheckExtend", 0));
+
+    run(CE_CHECK_RICH_POS, at_cap - 1, CE_CHAIN_DEPTH, SE_BAND_ALPHA,
+        SE_BAND_BETA);
+
+    REQUIRE_NE(under_on, state.explored_nodes);
+  }
+#endif
 }
 
 

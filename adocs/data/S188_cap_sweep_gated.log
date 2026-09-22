@@ -1,0 +1,9 @@
+# gated form (DEC-228), tune build, 2026-09-22
+CheckExtend=0 (off): bench 4493659 nodes 3774236 nps
+CheckExtPlyFactor=1: bench 5561200 nodes 3782717 nps  depths 16 12 15  total 43
+CheckExtPlyFactor=2: bench 6926317 nodes 3593395 nps  depths 16 12 16  total 44
+CheckExtPlyFactor=3: bench 6339123 nodes 3805112 nps  depths 17 13 15  total 45
+CheckExtPlyFactor=4: bench 7748319 nodes 3478691 nps  depths 17 12 15  total 44
+CheckExtPlyFactor=5: bench 7713797 nodes 3524114 nps  depths 16 12 15  total 43
+CheckExtPlyFactor=6: bench 7651587 nodes 3475471 nps  depths 15 12 14  total 41
+CheckExtPlyFactor=7: bench 8578334 nodes 3443649 nps  depths 16 12 15  total 43
