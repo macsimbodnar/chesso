@@ -12826,3 +12826,53 @@ Consequences: S188's step file records the first form's numbers as the
               on the tree (DEC-215 clause 2). The pre-registration states the
               bar's readings beside the outcomes. S097's `SePlyFactor` guard
               is unchanged; the check extension carries its own factor.
+
+## DEC-229  2026-09-22  S132's time manager gets a second-control confirmation of its own, the same pair at 32+0.32, capped at one night
+Tags:         time-management, sprt, second-control, s132, s085, dec-143, dec-155, dec-202
+Context:      S132 read H1 at 8+0.08 on 2026-09-21 -- `Elo 16.28 +/- 8.47`,
+              `nElo 21.21 +/- 11.01`, 3822 games -- and its pre-registration
+              put one question to the owner rather than deciding it: a
+              confirmation at a second control before the constants are
+              called shipped, for S085's reason (an SPSA'd time manager once
+              measured +23.8 at 20+0.2 and -22.9 at 10+0.1) and because every
+              published node-TM patch the step read was verified at two to
+              four controls. The coordinator recommended folding it into the
+              block boundary's longer-control reading (DEC-202) rather than
+              spending a night.
+Decision:     By the owner, 2026-09-22: a dedicated run -- "better to spend a
+              night so we are sure the results are correct and the change
+              makes us stronger"; a significant test, expected to stop well
+              inside the night given how clear the first result was. The
+              shape is the coordinator's under that decision: **the same pair
+              of shas as the first verdict, `474c288` against `778c7b0`, at
+              DEC-202's longer control -- `32+0.32`, Hash 64,
+              `noob_3moves.epd`, concurrency 12 -- `{0, 5}` nElo, capped at
+              6400 games**, about twelve hours at the 534 games an hour S151
+              measured there, pre-registered in
+              `adocs/data/S132_confirm_sprt.sh`. Readings, written before a
+              game: **H1** -- confirmed at the second control; the constants
+              are called shipped and S127 may fit them, S085's caveat still
+              written into that lane. **H0, or the cap, with the nElo
+              interval's top below zero** -- a regression at the longer
+              control; `TmNodeScalePct` flips to 0 as the step's
+              pre-registered revert, the zero recorded, the counting kept.
+              **H0, or the cap, with the interval reaching above zero** -- kept
+              on the playing control's verdict, the second-control interval
+              recorded beside it, and S127 fits the three at the playing
+              control only. It runs when S188's SPRT frees the machine,
+              tonight if that is before 22:00, otherwise the night after.
+Rejected:     Folding it into the boundary reading -- the coordinator's
+              recommendation; the owner prefers a dedicated answer and the
+              boundary's 1000 pairs are an estimate, not a verdict. A
+              40+0.4-class control, which the step file named -- this project
+              has no throughput figure there, and 32+0.32 has S151's. An
+              uncapped walk -- 25591 games on a bound at 534 an hour is two
+              days. Measuring the current tree with the multiplier switched
+              off on one side -- it needs a revert commit or a tune-build
+              pair, and the question is about S132's own change, which the
+              first verdict's pair isolates.
+Consequences: One night of machine after S188's verdict run; the ledger
+              takes it as `S132 v2` with DEC-220's block; the Parked question
+              in `status.md` closes; a second-control confirmation becomes the
+              precedent for the time-management family (S085), stated in
+              S127's file before its lane runs.
