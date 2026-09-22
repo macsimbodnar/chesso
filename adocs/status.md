@@ -46,7 +46,20 @@ Updated: 2026-09-21, by hand.
   given its re-derivation script), mutants, report, landing, SPRT. Bar
   missed: one more form (the gate in the last `CheckExtMaxDepth` plies),
   then the step closes on the instrument's reading and goes to the owner.
-  The agent is on it; the machine is its except for matches.
+  The agent is on it; the machine is its except for matches. **Measured
+  ~03:50: the gate alone (form 2) missed on bench, +72.4 % with 44 plies;
+  the gate in the last `CheckExtMaxDepth` plies (form 3, cap 8 as the (c)
+  midpoint of 1..16) met every clause -- `bench` +28.1 % (5756104),
+  fixed-node 16/13/15 = 44, `test_mate_breadth` 109 s, mined mates 180 exact
+  against the parent's 146 -- so form 3 is the form, per DEC-228's own
+  text.** Two readings kept for S127 and not used as seeds: the ply factor
+  is load-bearing on cost only under the gate; at cap 1 the tree is smaller
+  and deeper than the parent (bench -4.7 %, 46 plies). Now: three moved
+  cases repaired as consequences, the singular-plus-checking case to the
+  tune build (at the shipped seeds no node reaches both rules), the
+  mutation pass via the detached-fixture route, then the report, the fast
+  check, the landing, the second tier and the SPRT -- started when ready,
+  day or night, since nothing else needs the machine (DEC-155).
 
 - **S097 verdict 2 is H1, 2026-09-22 01:46:50: `Elo 7.17 +/- 5.13`, `nElo
   9.31 +/- 6.66`, LLR 2.95 over 10470 games in 4 h 58 m at 2109.9 an hour, 0
