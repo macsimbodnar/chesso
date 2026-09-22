@@ -17,12 +17,16 @@ next needs it, and the moment somebody next needs this one is the moment they
 are adding a pruning rule and want to know their new test bites (DEC-141
 clause 2). It costs a second.
 
-THE STUBS' CONTRACT. `ctest` reads the worktree's src/x.cpp and goes red when it
-holds the marker MUTANT_SEEN, times out on TIMEOUT_ONLY, does both at once on
-TIMEOUT_PLUS_FAIL, and refuses to run at all on CTEST_BROKEN; the engine's bench
-total moves when it holds BENCH_MOVES and it prints no bench line at all on
-BENCH_BROKEN; `cmake` fails with an `error:` line on WILL_NOT_COMPILE, which is
-the -Werror class the two `(void)` mutants exist for. So the four squares of the verdict table -- suite red, suite green
+THE STUBS' CONTRACT. `ctest` knows one label, `fast`, and answers any other the
+way the real one answers a label no test carries -- "No tests were found!!!",
+no summary line, exit 0; `empty_summary` is that emptiness in its other shape,
+a summary line counting to zero. Otherwise it reads the worktree's src/x.cpp
+and goes red when it holds the marker MUTANT_SEEN, times out on TIMEOUT_ONLY,
+does both at once on TIMEOUT_PLUS_FAIL, and refuses to run at all on
+CTEST_BROKEN; the engine's bench total moves when it holds BENCH_MOVES and it
+prints no bench line at all on BENCH_BROKEN; `cmake` fails with an `error:` on
+WILL_NOT_COMPILE, which is the -Werror class the two `(void)` mutants exist
+for. So the four squares of the verdict table -- suite red, suite green
 with a moved signature, suite green with a still signature declared equivalent,
 suite green with a still signature not declared -- are each reachable by one
 mutant, and that is what the cases below drive.
@@ -48,7 +52,40 @@ int twice = 0;
 int twice_again = 0;
 """
 
+# The rest of the fixture the tool now holds to its own sha -- the suite that
+# judges a mutant and the documents a run's evidence is written against, both
+# of which S097 verdict 2 edited in place while the header said nothing -- and
+# the .gitignore that makes the real fixture clean whole, since the tool checks
+# the whole tree and the build directory it writes into lives inside it.
+FIXTURE_FILES = {
+    "tests/test_x.cpp": "// the suite the sandbox pretends to run\n",
+    "adocs/specs.md": "the document a run's evidence is written against\n",
+    "CMakeLists.txt": "# outside the paths an allowlist would have named\n",
+    ".gitignore": "build/\n",
+}
+
 CTEST_RED = r"""#!/bin/sh
+# One label exists here. Any other gets what the real ctest gives a label no
+# test carries: a project line, "No tests were found!!!", no summary line at
+# all, and a zero exit -- which is the green an empty suite fakes.
+label=
+prev=
+for arg in "$@"; do
+  if [ "$prev" = "-L" ]; then label="$arg"; fi
+  prev="$arg"
+done
+if [ "$label" = "empty_summary" ]; then
+  # The other shape of an empty run: a summary line that counts to zero, which
+  # a parser reading only the failure count reads as a clean green.
+  echo "Test project /sandbox"
+  echo "100% tests passed, 0 tests failed out of 0"
+  exit 0
+fi
+if [ "$label" != "fast" ]; then
+  echo "Test project /sandbox"
+  echo "No tests were found!!!"
+  exit 0
+fi
 if grep -q TIMEOUT_PLUS_FAIL "$MUT_SRC"; then
   cat <<'EOF'
 Test project /sandbox
@@ -103,7 +140,7 @@ TEST CASE:  a fabricated case the stub reports
 
 /sandbox/tests/test_x.cpp:12: ERROR: CHECK( guard_one_holds() ) is NOT correct!
   values: CHECK( false )
-
+100% tests passed, 0 tests failed out of 0
 
 0% tests passed, 1 tests failed out of 1
 
@@ -172,8 +209,13 @@ class Sandbox:
 
         with open(os.path.join(self.repo, "src", "x.cpp"), "w") as handle:
             handle.write(SOURCE)
+        for rel, text in FIXTURE_FILES.items():
+            path = os.path.join(self.repo, rel)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as handle:
+                handle.write(text)
         self.git(self.repo, "init", "--quiet")
-        self.git(self.repo, "add", "src/x.cpp")
+        self.git(self.repo, "add", "src/x.cpp", *FIXTURE_FILES)
         self.git(self.repo, "-c", "user.email=t@example.invalid",
                  "-c", "user.name=test", "commit", "--quiet", "-m", "sandbox")
         self.git(self.repo, "worktree", "add", "--detach", "--quiet",
@@ -218,10 +260,19 @@ class Sandbox:
         return proc
 
     def worktree_dirty(self):
+        """Over the whole fixture, not src/ alone: what the tool now guards."""
         out = subprocess.run(["git", "-C", self.worktree, "status",
-                              "--porcelain", "--", "src"],
+                              "--porcelain", "--", "src", "tests", "adocs",
+                              "tools/mutants"],
                              stdout=subprocess.PIPE, text=True, check=True)
         return out.stdout.strip()
+
+    def dirty_the_fixture(self, *rels):
+        """Edit committed files in place, leaving src/ clean -- S097 verdict
+        2's second run, which the header called by a sha whose tests differed."""
+        for rel in rels:
+            with open(os.path.join(self.worktree, rel), "a") as handle:
+                handle.write("an edit the fixture's sha does not carry\n")
 
     def close(self):
         shutil.rmtree(self.root, ignore_errors=True)
@@ -381,9 +432,66 @@ class MutationCheckTest(unittest.TestCase):
         self.assertIn("no such mutant: M99", proc.stdout)
         self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
 
+    def test_a_fixture_dirty_outside_src_refused(self):
+        """S097 verdict 2's second run: src/ clean, tests/ and adocs/ edited in
+        place. The header named a commit whose tests did not hold the mined row
+        the run's kill depended on, and nothing in the run said so."""
+        self.box.dirty_the_fixture("tests/test_x.cpp", "adocs/specs.md")
+        proc = self.box.run(self.box.mutant_file(KILLED))
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("the fixture is dirty", proc.stdout)
+        self.assertIn("tests/test_x.cpp", proc.stdout)
+        self.assertIn("adocs/specs.md", proc.stdout)
+        # No row was scored against a tree nobody can name.
+        self.assertNotIn("K01_killed", proc.stdout)
+        self.assertNotIn("mutation score", proc.stdout)
+        self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_the_header_names_the_fixture_sha_and_what_dirties_it(self):
+        """The header is the whole record of what a run measured, so it is
+        printed before the guards and carries the paths when the tree is not
+        the sha beside them. The file dirtied here is the root CMakeLists,
+        which the allowlist this guard started as would not have looked at."""
+        clean = self.box.run(self.box.mutant_file(KILLED))
+        self.assertEqual(clean.returncode, 0, clean.stdout)
+        self.assertRegex(clean.stdout, r"worktree \S+ at [0-9a-f]{7,} clean")
+        self.box.dirty_the_fixture("CMakeLists.txt")
+        dirty = self.box.run(self.box.mutant_file(KILLED))
+        self.assertNotEqual(dirty.returncode, 0)
+        self.assertRegex(
+            dirty.stdout, r"worktree \S+ at [0-9a-f]{7,} dirty: CMakeLists\.txt")
+        self.assertIn("the fixture is dirty", dirty.stdout)
+
+    def test_the_header_names_where_the_mutant_list_was_read_from(self):
+        """The list is the one thing a run reads that the fixture's sha does
+        not describe: load_mutants resolves it against this process's cwd, so
+        the documented invocation reads the main tree's copy while the
+        worktree's own is never opened."""
+        outside = self.box.run(self.box.mutant_file(KILLED))
+        self.assertRegex(outside.stdout,
+                         r"list\s+\S+/mutants\.py\s+outside any git tree")
+
+        listed = os.path.join(self.box.repo, "tools", "mutants", "listed.py")
+        os.makedirs(os.path.dirname(listed))
+        with open(listed, "w") as handle:
+            handle.write(KILLED)
+        untracked = self.box.run(listed)
+        self.assertRegex(untracked.stdout,
+                         r"list\s+\S+/listed\.py\s+dirty: tools/mutants/listed\.py")
+
+        self.box.git(self.box.repo, "add", "tools/mutants/listed.py")
+        self.box.git(self.box.repo, "-c", "user.email=t@example.invalid",
+                     "-c", "user.name=test", "commit", "--quiet", "-m", "list")
+        tracked = self.box.run(listed)
+        self.assertRegex(tracked.stdout, r"list\s+\S+/listed\.py\s+clean")
+
     # -- verdicts -----------------------------------------------------------
 
     def test_killed_row_carries_the_failing_assertion(self):
+        """The failing test's own output holds a summary-shaped line of its
+        own -- this suite is exactly such a binary, and --output-on-failure
+        prints it before ctest's real summary. The row reads 1/1 because the
+        count comes from the last summary in the log and not the first."""
         proc = self.box.run(self.box.mutant_file(KILLED))
         self.assertEqual(proc.returncode, 0, proc.stdout)
         self.assertRegex(proc.stdout, r"K01_killed\s+yes\s+1/1\s+\S+\s+killed")
@@ -551,6 +659,53 @@ class MutationCheckTest(unittest.TestCase):
         proc = self.box.run(self.box.mutant_file(KILLED))
         self.assertNotEqual(proc.returncode, 0)
         self.assertIn("the unmutated worktree is red", proc.stdout)
+        self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_a_label_that_selects_no_test_stops_the_run(self):
+        """S097 verdict 2's first launch passed `--label S097_v2`, a label no
+        test carries. ctest selected nothing, exited 0 and printed no summary;
+        the run read `baseline green, ? tests` and scored twenty mutants as
+        survivors over an empty suite in 154 s."""
+        proc = self.box.run(self.box.mutant_file(KILLED),
+                            extra=("--label", "S097_v2"))
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("the baseline ran no tests", proc.stdout)
+        self.assertIn("ctest printed no summary line", proc.stdout)
+        self.assertIn("'S097_v2'", proc.stdout)
+        self.assertNotIn("baseline green", proc.stdout)
+        self.assertNotIn("K01_killed", proc.stdout)
+        self.assertNotIn("mutation score", proc.stdout)
+        self.assertEqual(self.box.worktree_dirty(), "")
+        self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_a_baseline_whose_ctest_never_ran_is_not_blamed_on_the_label(self):
+        """A missing count has two causes and they are different faults: a
+        label that selects nothing, and a ctest that would not run. The second
+        gets its exit code, not a sentence about the label."""
+        with open(self.box.src, "a") as handle:
+            handle.write("// CTEST_BROKEN planted before the run\n")
+        self.box.git(self.box.worktree, "-c", "user.email=t@example.invalid",
+                     "-c", "user.name=test", "commit", "--quiet", "-a",
+                     "-m", "a tree whose ctest will not start")
+        proc = self.box.run(self.box.mutant_file(KILLED))
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("the baseline printed no test count", proc.stdout)
+        self.assertIn("ctest exited 1", proc.stdout)
+        self.assertNotIn("the baseline ran no tests", proc.stdout)
+        self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
+
+    def test_a_baseline_summary_counting_to_zero_stops_the_run(self):
+        """The same emptiness in the shape that does print a summary: zero
+        failed out of zero is a green a failure count alone cannot tell from a
+        real one, and the count is what the tool reads."""
+        proc = self.box.run(self.box.mutant_file(KILLED),
+                            extra=("--label", "empty_summary"))
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("the baseline ran no tests", proc.stdout)
+        self.assertIn("ctest ran 0 tests", proc.stdout)
+        self.assertIn("'empty_summary'", proc.stdout)
+        self.assertNotIn("K01_killed", proc.stdout)
+        self.assertNotIn("mutation score", proc.stdout)
         self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-FAILED")
 
     def test_results_tsv_is_written_under_the_build_directory(self):

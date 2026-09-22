@@ -53,6 +53,19 @@ carried nlohmann/json as a committed single header instead: without it cmake
 fails on doctest.h and the run refuses at "the unmutated worktree does not
 build".
 
+Two things about that fixture are refused rather than assumed, both from what
+S097 verdict 2 walked into on 2026-09-21 (S239). It must be the tree its header
+names -- clean everywhere at its own HEAD, not in src/ alone -- and the
+baseline must report a test count above zero, because a --label no test carries
+selects nothing, exits green, and scores every mutant a survivor over an empty
+suite.
+
+The mutant list is the one exception to that: the first argument is resolved
+against this process's cwd, not against the worktree, so the documented
+invocation above reads the MAIN tree's tools/mutants while the fixture's own
+copy is never opened. The header names the path that was read and whether the
+tree holding it has it clean, because the fixture's sha does not describe it.
+
 Release only. The root CMakeLists adds -Wall -Wextra -Werror everywhere and
 turns the unused-* warnings off in Debug alone, so a mutant that deletes the
 last use of a local does not compile in Release -- which is a fact about the
@@ -107,9 +120,9 @@ class Terminated(Exception):
 
     Python's default SIGTERM disposition exits without unwinding, so a plain
     `kill` on a detached run skips the per-mutant `finally` and leaves the
-    worktree mutated -- every later run then refuses at require_clean_src until
-    somebody reverts it by hand. Observed on 2026-09-10, stopping a pass that
-    was running the wrong version of this tool. SIGINT already unwinds.
+    worktree mutated -- every later run then refuses at require_clean_fixture
+    until somebody reverts it by hand. Observed on 2026-09-10, stopping a pass
+    that was running the wrong version of this tool. SIGINT already unwinds.
     """
 
 
@@ -255,10 +268,108 @@ def require_linked_worktree(worktree):
                       "git worktree add --detach .ref-builds/mut HEAD")
 
 
-def require_clean_src(worktree, when):
-    dirty = git(worktree, "status", "--porcelain", "--", "src")
+def fixture_state(worktree):
+    """(short sha, `git status --porcelain`) of the tree the run measures.
+
+    The whole tree, with no pathspec. S239 first listed the paths that matter
+    -- src/, tests/, adocs/ -- and an allowlist leaves the root CMakeLists,
+    cmake/ and clang-format.sh outside it for no gain: a healthy fixture is
+    clean everywhere, because the build directories and .ref-builds/ are
+    gitignored. Before S239 this was src/ alone, which is how S097 verdict 2
+    measured a worktree whose tests/test_search.cpp and adocs/specs.md were
+    edited in place while its header named a commit whose tests did not hold
+    the mined row the kill depended on.
+    """
+    return (git(worktree, "rev-parse", "--short", "HEAD"),
+            git(worktree, "status", "--porcelain"))
+
+
+def dirty_paths(dirty):
+    """The paths out of porcelain's `XY path` rows, for the one-line header.
+
+    Split off the status rather than sliced at its fixed column: git() strips
+    its whole output, so an unstaged row -- ` M path` -- loses its leading
+    space when it lands first, and a slice then eats a character of the path.
+    """
+    return [line.split(None, 1)[-1]
+            for line in dirty.splitlines() if line.strip()]
+
+
+def require_clean_fixture(worktree, when, dirty=None):
+    """The fixture has to be the tree its header names, in all of it.
+
+    Passed the status already read for the header, or it reads its own: the
+    per-mutant call after a revert wants a fresh one.
+    """
+    if dirty is None:
+        dirty = git(worktree, "status", "--porcelain")
     if dirty:
-        raise Refused(f"src/ is dirty in {worktree} {when}:\n{dirty}")
+        raise Refused(f"the fixture is dirty in {worktree} {when}, so it is "
+                      f"not the tree its header names:\n{dirty}")
+
+
+def git_try(cwd, *args):
+    """(returncode, output) -- for a question whose answer may be "no repository".
+
+    git() raises on a non-zero status, which is right for the fixture and wrong
+    for asking whether some other directory is in a git tree at all.
+    """
+    proc = subprocess.run(["git", "-C", cwd, *args], stdout=subprocess.PIPE,
+                          stderr=subprocess.DEVNULL, text=True)
+    return proc.returncode, proc.stdout.strip()
+
+
+def mutants_state(path):
+    """(the path the list was read from, its status there) -- or (path, None).
+
+    The list is NOT part of the fixture: load_mutants resolves this argument
+    against the process's own cwd, so the documented invocation reads the main
+    tree's tools/mutants while the worktree holds an untouched copy of it that
+    nothing opens. What a run measured therefore depends on a file the
+    fixture's sha does not describe, and the header names it and says whether
+    the tree it does live in has it clean. None means it is in no git tree, so
+    nothing can say.
+    """
+    full = os.path.abspath(path)
+    where = full if os.path.isdir(full) else os.path.dirname(full)
+    code, top = git_try(where, "rev-parse", "--show-toplevel")
+    if code != 0 or not os.path.isdir(top):
+        return full, None
+    code, dirty = git_try(top, "status", "--porcelain", "--", full)
+    return full, (dirty if code == 0 else None)
+
+
+def require_baseline_tests(baseline, label, build_dir):
+    """A green suite that ran nothing is not a green suite.
+
+    S097 verdict 2's first launch passed `--label S097_v2`, a label no test
+    carries: ctest selected nothing, exited 0, printed no summary, the header
+    read `baseline green, ? tests`, and twenty mutants scored as survivors over
+    an empty suite in 154 s. The count ctest prints is what separates that from
+    a real green, so it is read and never assumed.
+
+    A count can also be missing because ctest never got to print one, and that
+    is a different fault: the exit code is branched on first, so a ceiling or a
+    ctest that would not start is never reported as a label that selects
+    nothing.
+    """
+    total = baseline["total"]
+    if total != "?" and int(total) > 0:
+        return
+    if baseline["code"] is None:
+        raise Refused(f"the baseline printed no test count: ctest hit this "
+                      f"tool's {CTEST_TIMEOUT_S}s ceiling in {build_dir}, so "
+                      "nothing was measured and the label is not what failed")
+    if baseline["code"] != 0:
+        raise Refused(f"the baseline printed no test count: ctest exited "
+                      f"{baseline['code']} in {build_dir} without a summary "
+                      f"line (label {label!r}), which is ctest failing to run "
+                      "rather than a suite that ran")
+    how = ("ctest printed no summary line"
+           if total == "?" else "ctest ran 0 tests")
+    raise Refused(f"the baseline ran no tests: {how} for label {label!r} in "
+                  f"{build_dir}; every mutant would score a survivor over an "
+                  "empty suite")
 
 
 def apply_mutant(worktree, mut):
@@ -345,7 +456,13 @@ def ctest(build_dir, label, log_path):
     code, output = run(["ctest", "--test-dir", build_dir, "-L", label,
                         "--output-on-failure"],
                        log_path=log_path, timeout=CTEST_TIMEOUT_S)
-    summary = CTEST_SUMMARY_RE.search(output)
+    # The LAST summary line, not the first: --output-on-failure prints a failing
+    # test's own output before ctest's summary, and a test binary that drives
+    # ctest itself prints summary-shaped lines there -- tests/test_mutation_check
+    # does, through its stub. Reading the first would take a nested one for the
+    # run's own count, which a zero in it turns into a false refusal.
+    summaries = list(CTEST_SUMMARY_RE.finditer(output))
+    summary = summaries[-1] if summaries else None
     failed = summary.group(2) if summary else "?"
     total = summary.group(3) if summary else "?"
     rows = CTEST_FAILED_RE.findall(output)
@@ -560,7 +677,14 @@ def main(argv=None):
     only = [item for group in (args.only or []) for item in group]
 
     require_linked_worktree(worktree)
-    require_clean_src(worktree, "before the run")
+    head, dirty = fixture_state(worktree)
+    # Printed before the guard refuses, and before the mutant list is read, so
+    # even a refused run leaves in its log what the fixture actually was. A sha
+    # on its own is a claim about a tree nobody checked.
+    print(f"worktree {worktree} at {head}"
+          + (f" dirty: {' '.join(dirty_paths(dirty))}" if dirty else " clean"),
+          flush=True)
+    require_clean_fixture(worktree, "before the run", dirty)
     mutants = load_mutants([args.mutants])
     validate(mutants, worktree)
     chosen = selected(mutants, only)
@@ -569,9 +693,16 @@ def main(argv=None):
     engine = os.path.join(build_dir, "src", "chesso")
 
     started = time.time()
-    print(f"worktree {worktree} at {git(worktree, 'rev-parse', '--short', 'HEAD')}")
     print(f"build    {build_dir}   jobs {args.jobs}   label {args.label}")
     print(f"logs     {log_dir}")
+    # Named separately from the fixture because it is not part of it: this is
+    # the path load_mutants actually opened, and the state of that path in
+    # whatever tree holds it.
+    list_path, list_dirty = mutants_state(args.mutants)
+    print(f"list     {list_path}   "
+          + ("outside any git tree" if list_dirty is None else
+             f"dirty: {' '.join(dirty_paths(list_dirty))}"
+             if list_dirty else "clean"))
     # Flushed: stdout to a file is block-buffered, and a detached run whose log
     # is empty for the two minutes the baseline takes reads as one that failed
     # to start.
@@ -588,6 +719,10 @@ def main(argv=None):
                       f"{baseline_display}")
     baseline = ctest(build_dir, args.label,
                      os.path.join(log_dir, "baseline_ctest.log"))
+    # Before the red check: a run that selected nothing exits 0 with no summary,
+    # so the red check would pass it, and when it does exit non-zero its
+    # `? of ? failed ()` says nothing about the label that is the real fault.
+    require_baseline_tests(baseline, args.label, build_dir)
     if baseline["code"] != 0:
         # Every later row would be uninterpretable: a test already red cannot
         # say whether it saw the mutant.
@@ -603,7 +738,7 @@ def main(argv=None):
         # Inside the try, not before it: a mutant's pairs are applied in
         # sequence and an earlier one can move a later anchor, so apply_mutant
         # can raise with pair 0 already on disk. Outside, that mutant stays in
-        # the worktree and every later run refuses at require_clean_src.
+        # the worktree and every later run refuses at require_clean_fixture.
         try:
             apply_mutant(worktree, mut)
             code, first_error = build(
@@ -648,7 +783,7 @@ def main(argv=None):
                     row["unmeasured"] = True
         finally:
             revert_mutant(worktree, mut)
-            require_clean_src(worktree, f"after reverting {mut['id']}")
+            require_clean_fixture(worktree, f"after reverting {mut['id']}")
         row["seconds"] = time.time() - mutant_started
         row["verdict"] = verdict_of(row)
         rows.append(row)

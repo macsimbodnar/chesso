@@ -1997,6 +1997,43 @@ it `test_clang_format_script` is red on the unmutated tree and the run refuses
 before the first mutant, which is the guard working — a suite already red
 cannot say whether it saw the mutant.
 
+**The fixture has to be the tree its header names, and the baseline has to
+have run something.** Two refusals, S239, both from what S097 verdict 2 walked
+into on 2026-09-21. `require_clean_fixture` checks the whole worktree, not
+`src/` alone: that step measured one clean in `src/` whose
+`tests/test_search.cpp` and `adocs/specs.md` were edited in place, so its
+header named a commit whose tests did not hold the mined row the run's kill
+depended on. No pathspec, because a healthy fixture is clean everywhere — the
+build directories and `.ref-builds/` are gitignored — and an allowlist would
+leave the root `CMakeLists.txt`, `cmake/` and `clang-format.sh` outside it. The
+header is printed before the guard refuses, so even a refused run records what
+the fixture was:
+
+```
+worktree /home/max/ws/chesso/.ref-builds/mut at 0a9eddb clean
+worktree /home/max/ws/chesso/.ref-builds/mut at 0a9eddb dirty: tests/test_search.cpp adocs/specs.md
+list     /home/max/ws/chesso/tools/mutants   clean
+```
+
+**The mutant list is the exception, and the `list` line is why it is printed.**
+`load_mutants` resolves the first argument against the shell's working
+directory, not against the worktree, so the invocation above reads the **main
+tree's** `tools/mutants/` while the fixture's own copy of it is never opened.
+The fixture's sha therefore says nothing about the mutants a run applied: the
+header names the path that was read and, when that path is inside a git tree,
+whether that tree has it clean (`outside any git tree` when it is not).
+
+And `require_baseline_tests` reads the test count out of ctest's own summary —
+its last one in the log, since `--output-on-failure` prints a failing binary's
+own output first and a binary that drives ctest, this suite included, has
+summary-shaped lines in it — and refuses at zero. `--label S097_v2` is a label
+no test carries: ctest selected nothing, exited 0, printed no summary line, and
+the run read `baseline green, ? tests` and scored twenty mutants as survivors
+over an empty suite in 154 s. A count missing because ctest hit its ceiling or
+would not start is a different fault and says so with its exit code, rather
+than blaming the label. Both refusals name the label or the paths, end at
+`MUTATION-RUN-FAILED`, and print no score.
+
 **Release only.** The root `CMakeLists.txt` adds `-Wall -Wextra -Werror`
 everywhere and turns the unused-* warnings off in `Debug` alone, so a mutant
 that deletes the last use of a local does not compile in the build the gate
@@ -2068,18 +2105,27 @@ Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
 `.ref-builds/mut/build/mutation/`, which `.gitignore` covers.
 
 `tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
-throwaway git repository, a four-line `src/x.cpp`, and `cmake`, `ctest` and the
-engine as stubs on PATH. Twenty-four cases in about 1.6 s, and it is what
-catches an anchor counted wrong, a revert that leaves a mutant behind, a verdict
-on the wrong branch or a missing marker. Each was observed red under a cut to
-the guard it names before it was kept -- the tool held to its own rule
-(DEC-141). Three of them come from S196's own fast check and are worth knowing
-before you edit the loop: a mutant whose pairs interact can fail while being
-applied, with the first pair already on disk, so `apply_mutant` sits inside the
-`try` that reverts; `SIGTERM` is caught and raised, because Python's default
-disposition exits without unwinding and a detached run is stopped with `kill`;
-and ctest's trailing summary belongs to no binary, so the chunk that collects a
-failing test's output ends at it rather than at end of file.
+throwaway git repository, a four-line `src/x.cpp` beside a committed `tests/`,
+`adocs/`, root `CMakeLists.txt` and `.gitignore` to dirty, and `cmake`, `ctest`
+and the engine as stubs on PATH. Thirty cases — 1.6 s when S196 wrote the first
+twenty-four on an idle machine, 6.9 s on 2026-09-22 with a match on every core
+— and it is what catches an anchor counted wrong, a revert that leaves a mutant
+behind, a verdict on the wrong branch or a missing marker. Each was observed
+red under a cut to the guard it names before it was kept -- the tool held to
+its own rule (DEC-141). Three of them come from S196's own fast check and are
+worth knowing before you edit the loop: a mutant whose pairs interact can fail
+while being applied, with the first pair already on disk, so `apply_mutant`
+sits inside the `try` that reverts; `SIGTERM` is caught and raised, because
+Python's default disposition exits without unwinding and a detached run is
+stopped with `kill`; and ctest's trailing summary belongs to no binary, so the
+chunk that collects a failing test's output ends at it rather than at end of
+file. S239's six went red under five cuts: the baseline count guard deleted,
+which scored the mutant `survived` over `fast ?/?` exactly as 2026-09-21 did;
+its exit-code branch removed, which blamed the label for a ctest that never
+started; the status narrowed back to `src/`, which measured a tree whose
+`tests/` was not the one its header claimed; the `list` line dropped; and the
+count read from the first summary line in the log instead of the last, which
+alone broke three cases.
 
 ## Format
 
