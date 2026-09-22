@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **Power outage at about 14:04 on 2026-09-22, workstation back at 21:25.**
+  What it took: S132's confirmation at 253 games (`Elo -12.93 +/- 30.21`,
+  LLR -0.21 -- void, aborted rather than reported, S024's precedent; the
+  dead log and its PGN kept under `.tuning/coord/outage_2026-09-22/`); S239's
+  landing commit, written seconds before the cut and never flushed (six
+  zero-byte objects, the branch ref pointing at one, `git status` failing on
+  a bad HEAD); S236's agent mid-edit and every watcher. **Repair, 21:30:** the
+  six empty objects deleted, `refs/heads/achesso` reset to `9d21ada` (the
+  reflog's last intact line), the index rebuilt, `git fsck --full` clean;
+  S239's working tree had been flushed and was intact, so it went through the
+  gate again and landed as `4c583ce`. **The confirmation relaunched fresh at
+  21:37:17** on the same pinned pair, `474c288` against `778c7b0` at 32+0.32,
+  Hash 64, `{0, 5}` nElo, seed 20260922213717, output `.tuning/sprt_s132_confirm_20260922_213717`, pid 236622; banner
+  checked; watcher re-armed with hourly progress, the marker, the 6400-game
+  cap stop and a 14 h ceiling -- the cap now falls at about 09:40 on
+  2026-09-23. S236's agent resumed in code-writing mode after its worktree was
+  checked (one editor temp file removed). For the owner: `git config
+  core.fsync=objects` on this workstation would make the next cut lose the
+  working tree's last seconds instead of the repository's.
+
 - **S132's second-control confirmation is running, launched 2026-09-22
   13:35:26 (DEC-229, the owner's decision): `474c288` against `778c7b0` at
   32+0.32, Hash 64, `{0, 5}` nElo on `noob_3moves.epd`, seed 20260922133526,
@@ -54,6 +74,9 @@ Updated: 2026-09-21, by hand.
   "machine free", tests, mutants, `adocs/data/S236_sprt.sh` with the H0
   bisection's two legs written in advance; no build until the machine is
   free. The two agents share no file.
+  **S239 landed as `4c583ce` at 21:35**, re-committed after the outage below
+  from the intact working tree, the gate green (both fast suites, the format
+  check), no `Bench:` owed.
 
 - **S188's verdict is H0, 2026-09-22 12:50:17: `Elo -13.84 +/- 8.95`, `nElo
   -17.71 +/- 11.44`, LLR -2.96 over 3542 games in 1 h 42 m at 2081.8 an hour,
