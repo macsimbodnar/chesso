@@ -60,6 +60,14 @@ Updated: 2026-09-21, by hand.
   mutation pass via the detached-fixture route, then the report, the fast
   check, the landing, the second tier and the SPRT -- started when ready,
   day or night, since nothing else needs the machine (DEC-155).
+  **06:00: the 34-mutant pass found `E21_multicut_mate_band_gate_dropped`
+  surviving** -- S097's multicut mate-band guard's mined row no longer
+  separates the guard-dropped build on the deeper tree, the fragility
+  S097's file predicted. Treatment before the landing, DEC-142's own: the
+  row is re-mined by `adocs/data/S097_mine_mate_row.py` on the S188 tree,
+  E21 re-run killed, and the two other mined-row mutants (S095's J row,
+  S230's R01) re-proved targeted; if no row separates, E21 stays open
+  under DEC-171, named in the pre-registration, with a step of its own.
 
 - **S097 verdict 2 is H1, 2026-09-22 01:46:50: `Elo 7.17 +/- 5.13`, `nElo
   9.31 +/- 6.66`, LLR 2.95 over 10470 games in 4 h 58 m at 2109.9 an hour, 0
@@ -4761,6 +4769,16 @@ Updated: 2026-09-21, by hand.
   result. Before it, S198's A/A finished at 02:39 on 2026-09-08.
 
 - Parked:
+  - **A full mutation pass over `tools/mutants/` on the current tree, a night
+    job (2026-09-22):** S188's 34-mutant pass found S097's E21 unpinned by the
+    deeper tree -- its mined row stopped separating the guard-dropped build
+    -- and the pass covered only the X and E prefixes, so every other mined
+    row and every older guard is unproved on a tree that has moved three
+    times since it was killed. 128 mutants at about 240 s each is 8.5 h;
+    schedule it for a night the machine has no run, or fold it into
+    `tools/gate_extra.sh`'s weekly run as a sixth stage if the tool learns to
+    run in the background of nothing. The two mined-row mutants outside S188's
+    pass (S095's J row, S230's R01) are re-proved targeted before S188 lands.
   - **S132's question for the owner, 2026-09-21 (pre-registered, not decided by
     the coordinator):** the node-fraction time manager read H1 at 8+0.08
     (`Elo 16.28 +/- 8.47`); its constants are census seeds at the playing
