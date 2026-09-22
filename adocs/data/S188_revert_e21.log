@@ -1,0 +1,32 @@
+# S188, 2026-09-22, after the step's H0. Two targeted mutation runs on
+# fixtures of the REVERTED tree (src/ byte-identical to d819a09), asking
+# what the row S188 re-mined is worth once the extension is gone.
+#
+# 1. --only E21 J03, fixture 1d35683, the re-mined row in place:
+#     J03_site_entry_absent_only         killed      fast 1/40  bench moved  129.9s
+#     E21_multicut_mate_band_gate_dropped survived    fast 0/40  bench moved  127.5s
+#     E21_multicut_mate_band_gate_dropped: survived, expected killed -- the value the multicut returns is not kept out of the mate band. A half-depth search under a window below the entry's score is the instrument that **misses** a mate, and a mate distance out of one is a distance nothing proved: the node ends on it, its parent carries it, and a mate is reported or a real one is hidden behind a fabricated shorter distance. The `beta > -MATE_MIN` term beside it is S165's guard on the node's own window and is a different rule, so it is left in place here. Killed by the mined row of "pruning does not hide a forced mate"
+#   mutation score 1 of 2 (50%)   killed 1, survived 1
+#
+#   E21 SURVIVED. The row mined on the deeper tree does not separate the
+#   two builds here, so it is not the golden this tree should carry.
+#   J03 was killed with "pruning does not hide a forced mate" among its
+#   killers again, where on the S188 tree that case was green under it --
+#   S095's row reaches J03 again once the extension is out.
+#
+# 2. --only E21, fixture ddac3a4, the pre-S188 row restored:
+#     E21_multicut_mate_band_gate_dropped killed      fast 1/40  bench moved  131.6s
+#   mutation score 1 of 1 (100%)   killed 1
+#      [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+#
+#   Killed, by the row's own case. The golden that separates on the tree
+#   that ships is the one that stays.
+#
+# THE LESSON, and it is the step's: a mined row is a property of the tree it
+# was mined on. Both directions were observed here within a day -- the S097
+# row went quiet under a deeper search and the row that replaced it went
+# quiet when that search left -- and neither was visible to the fast suite,
+# which was green throughout. Only a mutation run over the mutant the row
+# exists for can see it, which is what tools/mutation_check.py is for.
+#
+# Both baselines green at 40 tests and bench 4493659, d819a09's own total.

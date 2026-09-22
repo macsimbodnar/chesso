@@ -1723,27 +1723,6 @@ static int negamax_at(int alpha0,
 
   node_type_t type = TT_ALPHA_NODE;
 
-  // THE CHECK EXTENSION'S WINDOW, S188, decided once for the node because
-  // every term of it is the node's and not a move's. A move that gives check
-  // is searched one ply deeper -- the wiki's one-ply form -- and this is where
-  // the rule is allowed to ask at all.
-  //
-  // `CHECK_EXTEND` is the switch DEC-215 clause 2 requires: at 0 the release
-  // build folds this to false, the capture scan in the loop returns to exactly
-  // the moves S091 asks it of, and the tree is the one before this step.
-  //
-  // `ply > 0` keeps it off the root, which has to produce a move and extends
-  // nothing to choose one, and `ply < CHECK_EXT_PLY_FACTOR * depth` is the
-  // explosion cap. The cap is what makes a chain of checks finite: an extended
-  // child keeps its parent's remaining depth, so along a chain the depth never
-  // falls and only the ply rises, and without this the MAX_PLY walls would be
-  // the first thing to stop it. Same form as S097's own guard and a number of
-  // its own, because the two rules extend different amounts of the move list
-  // -- S097 at most one move per node, this one every checking move there is.
-  const bool check_extension_window =
-      CHECK_EXTEND != 0 && ply > 0 && depth <= CHECK_EXT_MAX_DEPTH &&
-      static_cast<int>(ply) < CHECK_EXT_PLY_FACTOR * depth;
-
   // The shallow-depth pruning block's node-level guards, S109. Four rules --
   // late move pruning, futility, history pruning and quiet SEE -- and not one
   // of them fires at a node that fails any of these:
@@ -2060,28 +2039,6 @@ static int negamax_at(int alpha0,
         depth >= 3 && legal_moves_counter + 1 > 3 && !is_in_check &&
         !MOVE_PROMOTED(moves[i]) && !see_ge(&game->board, moves[i], 0);
 
-    // S188'S OWN EXCHANGE QUESTION, and it is asked here for the reason the
-    // three above are: `see_ge` reads the position the move is made from, and
-    // after `make_move` the board is the child's.
-    //
-    // **The safe-check gate, DEC-228.** A check that hangs the checking piece
-    // is a tempo the opponent is delighted to take, and extending it is how
-    // the count of extended moves runs away: the first form of this step
-    // extended every check and grew the tree 94.6 % while losing five plies of
-    // iteration depth at a fixed node budget. The gate is the move's own
-    // exchange at threshold zero -- captures and quiets alike, promotions
-    // included, with no class exempted, because a queen that gives check on a
-    // defended square is the same mistake whatever the move was.
-    //
-    // It cannot share an answer with either rule above. S109's two ask whether
-    // the move loses more than a margin scaled by the reduced depth; S091's
-    // asks the same threshold as this one but only inside late move
-    // reduction's eligibility, which is a different set of moves. What keeps
-    // this call off the hot path is the window in front of it, which is the
-    // node's own and folds to a constant false at `CheckExtend` 0.
-    const bool check_extension_safe =
-        check_extension_window && see_ge(&game->board, moves[i], 0);
-
     // S132, the first half of the node-fraction time manager: what this root
     // move is about to cost. Read here, immediately before the move is made,
     // because everything above is decided on the parent's board and counts no
@@ -2116,26 +2073,9 @@ static int negamax_at(int alpha0,
     // one of those two rules is about to act on, which is what keeps
     // `is_check_move` above hardcoded false: reusing it for capture logic is
     // the trap S107 left the comment against.
-    //
-    // S188 is the third asker and it wants the scan on **every** capture the
-    // extension could fire on, so the three share one scan and never two. A
-    // capture that gives check is the most forcing move there is and the step
-    // extends a move that gives check, not a quiet that does; paying the scan
-    // inside the extension's own window -- narrowed by DEC-228's exchange gate,
-    // so a capture the exchange already refused never pays it -- is what keeps
-    // that from costing a capture anything at a node the rule cannot reach.
-    //
-    // `capture_gives_check` keeps exactly the moves S091 gave it -- the same
-    // two askers, ANDed onto the shared scan -- because which moves the
-    // reduction exempts is not S188's to move.
-    const bool capture_is_check =
-        is_capture &&
-        (prune_rule != PRUNE_NONE || see_loses_material ||
-         check_extension_safe) &&
-        is_check(game);
-
     const bool capture_gives_check =
-        capture_is_check && (prune_rule != PRUNE_NONE || see_loses_material);
+        is_capture && (prune_rule != PRUNE_NONE || see_loses_material) &&
+        is_check(game);
 
     // Late move pruning's own skip, here rather than at the generation stage
     // so that the exemption above it can bind. A quiet past the count is
@@ -2189,26 +2129,8 @@ static int negamax_at(int alpha0,
     // `se_extension` is 0 at every node that ran no verification and at every
     // one whose verification failed high, and `tt_move` is non-zero wherever it
     // is not, so a move can only match the table's own.
-    //
-    // **S188 is the second rule that asks and the budget is one ply, not two**:
-    // a move that is both the table's singular move and a checking move is
-    // searched one ply deeper and no more, which is what `?:` says and a sum
-    // would not. The whole of the check extension is the line below -- the
-    // window is the node's, decided above the loop, `check_extension_safe` is
-    // that window and the move's own exchange at threshold zero (DEC-228), and
-    // `gives_check` is the scan that was already paid: `is_check_move` on a
-    // quiet, the shared capture scan on a capture.
-    const bool gives_check = is_capture ? capture_is_check : is_check_move;
-
-    const int child_depth = depth - 1 +
-                            ((check_extension_safe && gives_check)
-                                 ? 1
-                                 : ((moves[i] == tt_move) ? se_extension : 0));
-
-    // The budget, asserted at the site rather than trusted to the expression
-    // above: a child is searched one ply deeper than this node's own remaining
-    // depth allows, or it is not, and no pair of rules may add.
-    assert(child_depth >= depth - 1 && child_depth <= depth);
+    const int child_depth =
+        depth - 1 + ((moves[i] == tt_move) ? se_extension : 0);
 
     // Late move reduction. Move ordering puts the moves worth searching first,
     // so a quiet move this far down the list is unlikely to be the best one.

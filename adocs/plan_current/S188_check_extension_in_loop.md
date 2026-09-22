@@ -783,3 +783,63 @@ that verdict on the tree's own instrument, and this is it. Three forms were
 measured before a game and the one that met the bar lost at the playing
 control. The check-extension question has no successor step, recorded as a
 decision at completion.
+
+## Removed, 2026-09-22: what left, what stayed, and the proofs
+
+The verdict's own H0 reading, executed. **`src/` is `d819a09`'s to the byte**
+-- `git diff d819a09 -- src` is empty -- and everything the rule needed left
+with it: the node-level window, the exchange gate, the shared capture scan's
+third asker (back to S091's two, byte for byte), the ply in `child_depth`, the
+budget assertion, the three X-macro rows and their `MANUAL.md` rows, the ten
+cases, `tools/mutants/S188_check_extension.py` and its twelve mutants, and
+`golden_defaults` back to its 60 rows by its own declaration.
+`tools/mutants/S097_singular_extension.py`'s E01 anchor is back at the two
+lines it named before -- the check extension shared that expression -- and
+**every anchor in every file of `tools/mutants/` occurs exactly once on the
+reverted source**, checked by reading each one against it.
+
+**The proofs, and none of them is an argument** (INV-6's own discharge of a
+removal):
+
+| | |
+|---|---|
+| `git diff d819a09 -- src` | empty |
+| `bench` | **4493659**, and all eight `bestmove` replies identical to `.ref-builds/d819a09`'s binary, which the SPRT itself built |
+| `tools/search_bench.py` depths 9 and 12 | identical to that binary, **node counts and best moves both** |
+| both fast suites | 40 of 40, Release and tune |
+| format, `--citations`, `--touches`, `--params` | clean |
+
+### What stayed, because it is better than before and independent of the rule
+
+- **`adocs/data/S188_repair_goldens.py` and the GOLDEN blocks at both sites.**
+  The values are re-derived on the reverted tree by the script itself and are
+  the ones they were: `s207` prints the whole sweep and **`separating depth: 4
+  (the case drives 4, 5 and 4)`**; `first-mate` prints `d1..d8 cp`, `d9 mate5`,
+  `d10 mate5` on both positions -- **`first_mate_depth: 9`**, precondition 2
+  true, distances `[5]`. Neither constant had a re-derivation before this step
+  and `first_mate_depth`'s absence was itself a DEC-142 finding; both keep one
+  now, and the blocks say what the extension did to each and what its removal
+  undid.
+- **The reported-line invariant is an equality again**, with the reason: an
+  extension is what makes a line longer than the search that started it.
+- **Every evidence file under `adocs/data/S188_*` and its README row**, as the
+  record of three forms measured, a bar, a verdict and two mutation passes.
+
+### The mined row, and the lesson the step actually bought
+
+S188's landing re-mined S097's multicut row because the deeper tree had made
+the old one stop separating. **On the reverted tree the re-mined row does not
+separate either**: `tools/mutation_check.py --only E21 J03` on a fixture of
+this `src/` scored **E21 a survivor** under it. So the pre-S188 row --
+`4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46` -- is restored with its
+own GOLDEN text out of `d819a09`, and a second targeted run proves it: **E21
+killed, `fast 1/40`, by "pruning does not hide a forced mate"**. Both baselines
+green at 40 tests and `bench 4493659`. J03 tells the same story one size
+smaller: green under the mate case on the S188 tree, red under it again here,
+so its sentence in `tests/test_search.cpp` is the original one with the
+observation beside it.
+
+**A mined row is a property of the tree it was mined on.** Both directions were
+observed inside a day, neither was visible to the fast suite -- green
+throughout -- and only a mutation run over the mutant the row exists for could
+see either. That is worth more than the rule was: `adocs/data/S188_revert_e21.log`.

@@ -76,13 +76,12 @@ behaviourally equivalent, which no tool can decide.
 Ids are never reused: E is this file's own prefix and nothing else in
 tools/mutants/ uses it.
 
-E01's anchor was **re-pointed at S188's landing** and its mutation is
-unchanged. S188 adds the check extension to the same `child_depth` expression,
-so the two lines E01 used to name became four; the anchor is now the inner
-ternary alone, which is still the whole of "the ply is added to every move
-instead of the one the verification called singular". Nothing else in this file
-moved, and the twenty-two mutants are re-run at that landing for the reason
-verdict 2 re-ran verdict 1's: the release build compiles a different tree.
+E01's anchor was re-pointed at S188's landing and **put back when that step's
+H0 removed the rule**: the check extension shared this expression, the two
+lines E01 names became four while it was in the tree, and with `src/` back to
+the byte the anchor is the two lines again. The mutation never changed. The
+twenty-two were re-proved at that landing and again on the reverted tree for
+E21 alone, which is the one a mined row carries.
 """
 
 S = "src/search.cpp"
@@ -93,9 +92,9 @@ m("E01_extension_on_every_move", S, "search/extension",
   'searches the rest a ply deeper too -- the extension inverted into a '
   'node-level deepening, and silent: the tree grows, no count is wrong and '
   'nothing crashes',
-  ('                                 : ((moves[i] == tt_move) ? se_extension '
-   ': 0));',
-   '                                 : se_extension);'),
+  ('    const int child_depth =\n'
+   '        depth - 1 + ((moves[i] == tt_move) ? se_extension : 0);',
+   '    const int child_depth = depth - 1 + se_extension;'),
   origin="S097")
 
 m("E02_extension_condition_inverted", S, "search/extension",

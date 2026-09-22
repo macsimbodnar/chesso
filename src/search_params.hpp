@@ -759,68 +759,6 @@
   X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
   X(SE_MULTICUT,         "SeMultiCut",         1, 0,  1)                       \
                                                                                \
-  /* CHECK EXTENSION, S188. A move that gives check is searched one ply        \
-     deeper, decided inside the move loop after the move is made and where the \
-     side to move is in check (`negamax_at` in src/search.cpp). It shares      \
-     S097's budget: one ply per node whichever rule asks for it, so a move     \
-     that is both the table's singular move and a checking move is searched    \
-     one ply deeper and not two.                                               \
-                                                                               \
-     THE ONE PLY IS **(a)**, and it is written at the site rather than being a \
-     parameter, exactly as S097's halved verification depth is. The Chess      \
-     Programming Wiki's Check Extensions page states "typical depth to extend  \
-     is one ply" (https://www.chessprogramming.org/Check_Extensions, fetched   \
-     2026-09-22) and every engine the step file traces carries the same one.   \
-     Fractional plies are a second mechanism and not a setting of this one.    \
-                                                                               \
-     CHECK_EXT_PLY_FACTOR is **(c) the midpoint** of a range stated by         \
-     purpose, and no (a) exists to take: the wiki's Extensions page warns that \
-     "care must be taken so that the search is not extended infinitely"        \
-     (https://www.chessprogramming.org/Extensions, fetched 2026-09-22) and     \
-     states no factor, no ratio and no formula for the bound.                  \
-                                                                               \
-     `ply < CheckExtPlyFactor * depth` is that bound and it is the one S097    \
-     already carries, in the same form and with its own number. It is what     \
-     makes a chain of checks finite: along a chain the extension holds the     \
-     child's remaining depth at the node's own, so the depth never falls and   \
-     only the ply rises -- the MAX_PLY walls would otherwise be the first      \
-     thing to stop it. The floor is 1, where the line may not outgrow the      \
-     remaining depth of the node that started it and which is the tightest cap \
-     that still extends anything; 0 would switch the rule off from inside a    \
-     setting's range, which is what `CheckExtend` is for. The ceiling is 7     \
-     because 8 is not a cap: at a node one ply below a depth-17 root -- the    \
-     deepest adocs/data/S097_fixed_node_depth.py reads at a million nodes --   \
-     `8 * 16` is 128, the MAX_PLY wall itself, so from 8 up the walls bind and \
-     this setting never does. The midpoint of 1 to 7 is 4 exactly. S127        \
-     refits it.                                                                \
-                                                                               \
-     CHECK_EXTEND IS A SWITCH AND NOT A SETTING, for DEC-215 clause 2's        \
-     reason: the cap above has no off value inside its range, so the rule      \
-     needs one of its own. At 0 no move is extended for giving check, the      \
-     capture scan below returns to exactly the moves S091 asks it of, and the  \
-     tree is the one before this step. Proved on the tree and not declared:    \
-     the tune build at `CheckExtend` 0 prints the parent's bench total with    \
-     all eight `bestmove` replies identical to a build of the parent commit.   \
-     Range 0 to 1 by stated purpose -- the rule runs or it does not -- and it  \
-     is a verdict switch, not something S127 sweeps.                           \
-                                                                               \
-     CHECK_EXT_MAX_DEPTH is the horizon restriction DEC-228 names as the one   \
-     further form to try, and it is **(c) the midpoint** of a range stated by  \
-     purpose: the rule fires only at a node with `depth <= CheckExtMaxDepth`,  \
-     which is the last that many plies before the horizon. Extending near the  \
-     root multiplies a subtree that is most of the search; extending near the  \
-     horizon buys the same forcing line for a fraction of it. The floor is 1,  \
-     the shallowest node an extension can apply at at all -- at 0 the rule     \
-     never fires and that is an off value, which is `CheckExtend`'s job. The   \
-     ceiling is 16, one below the deepest root                                 \
-     adocs/data/S097_fixed_node_depth.py reads at a million nodes: from 17 up  \
-     every node of such a search is inside the restriction and it stops being  \
-     one. The midpoint of 1 to 16 is 8.5 and the seed is the integer below it, \
-     8, which is SeMarginPerDepth's convention. */                             \
-  X(CHECK_EXTEND,          "CheckExtend",         1, 0, 1)                     \
-  X(CHECK_EXT_PLY_FACTOR,  "CheckExtPlyFactor",   4, 1, 7)                     \
-  X(CHECK_EXT_MAX_DEPTH,   "CheckExtMaxDepth",    8, 1, 16)                    \
-                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \
