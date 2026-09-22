@@ -12759,3 +12759,70 @@ Consequences: `SeExtend` 1 is a measured zero, and the ledger says so: the
               guard if the block leaves. The removal, if it comes, is a whole
               revert and not a flip, and it lands with `Bench: 4579468` and
               `search_bench` identical to `5c76ea9` at both depths (INV-6).
+
+## DEC-228  2026-09-22  S188's check extension is re-formed before a game is played: only a checking move static exchange calls safe is extended, and the run is booked against a stated explosion bar
+Tags:         search, extensions, check-extension, node-explosion, dec-019, dec-143, dec-155, s188, s097
+Context:      S188's first form -- every move that gives check, capture or
+              quiet, searched at `depth` instead of `depth - 1` inside the
+              move loop, one ply per node by the child-depth cap and never
+              past `ply < CheckExtPlyFactor * depth` -- was measured on the
+              tree before any game, as S097's section 6 instrument asks:
+              `bench` 4493659 -> 8744373 (+94.6 %), the fixed-node depths at
+              `go nodes 1000000` 17/13/15 -> 15/11/14 (five plies lost over
+              the three positions), `test_mate_breadth` 19 s -> 212 s past
+              its 120 s ceiling, and four pre-existing cases red because the
+              tree under them grew. The ply factor is not the cost: swept 1
+              to 7, the cheapest setting still reads +53 %. S097 verdict 1's
+              signature was three plies lost and it measured a zero; five
+              plies with a prior DEC-222 recorded as small or zero is a
+              night spent to confirm the instrument. The step file's own
+              hazard section names this failure -- a chain of checks that
+              blows the tree up at the horizon -- and the accepts asks for
+              the extension to be bounded, not for every check to be
+              extended.
+Decision:     By the coordinator, 2026-09-22, under the owner's delegation
+              of engine questions; the owner may overrule. The step is
+              re-formed before its SPRT, DEC-019's way -- the record decides
+              what to try, the tree decides what to measure. **Only a
+              checking move that static exchange calls safe is extended**:
+              the move's SEE at threshold zero on its destination square
+              holds, so a check that hangs the checking piece is not
+              extended; captures and quiets alike; the one-ply budget, the
+              ply guard and the root exclusion stay as coded. The form is the
+              published one (CPW Check Extensions and the safe-check gate the
+              literature describes), implemented from the description and
+              seeded in DEC-105's forms (DEC-221). **The run is booked only
+              against a bar stated here**: on the three `search_bench`
+              positions at `go nodes 1000000` the gated form loses at most
+              one ply on any position and at most two in total against the
+              parent, `bench` grows by less than 30 %, and every fast-suite
+              case stays inside its ceiling. Meeting the bar, the four cases
+              the tree moved are repaired as consequences and not weakened:
+              the reported-line invariant becomes "at least the full depth"
+              with a specs sentence, the S095 mined row is re-mined by its
+              own GOLDEN scripts if it still moves, S207's repetition case is
+              re-based on a cycle the gate does not extend, and
+              `first_mate_depth` is re-derived by a script that then exists
+              (DEC-142). Missing the bar, one further form may be tried --
+              the same gate restricted to the last `CheckExtMaxDepth` plies
+              before the horizon -- and if that misses too the step closes
+              on the instrument's reading with no game played, recorded as a
+              zero-with-reason and put to the owner, since DEC-133 is the
+              owner's decision that the step exists.
+Rejected:     Booking the SPRT on the first form because the accepts says
+              "decided by SPRT whatever it returns" -- the instrument exists
+              so that a night is not spent confirming a five-ply loss, and
+              landing that form means re-mining goldens and re-basing cases
+              for a rule that leaves the tree the next morning. Raising
+              `test_mate_breadth`'s ceiling or relaxing the moved cases to
+              get green -- never (TESTS). Extending quiet checks only, no
+              gate -- the explosion is in the count of checks, not in the
+              captures among them. Keeping the first form but tightening the
+              ply factor -- measured, +53 % at its tightest.
+Consequences: S188's step file records the first form's numbers as the
+              instrument's finding and the gate as the form measured; its
+              accepts is amended to name the safe-check gate and this bar,
+              citing this decision. `CheckExtend` stays the off switch proved
+              on the tree (DEC-215 clause 2). The pre-registration states the
+              bar's readings beside the outcomes. S097's `SePlyFactor` guard
+              is unchanged; the check extension carries its own factor.
