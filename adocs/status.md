@@ -19,6 +19,18 @@ Updated: 2026-09-21, by hand.
   ends (its marker or the cap at about 09:40 on 2026-09-23). The parked
   128-mutant night pass now runs under the repaired tool when the machine is
   next free for a night.
+  **S236's Report 1 is in, 22:10:** `LMR_SCALE` 1024 beside `build_lmr_table`,
+  the table in ticks (`int32_t`), `lmr_adjusted_reduction` summing table,
+  node terms and the history term in ticks and rounding once through
+  `LmrRoundBias` (512, the (c) midpoint: round-to-nearest, confirmed by the
+  coordinator because the accepts makes truncation the off value and leg 1 a
+  run -- half a ply of reduction on average against the parent, which leg 1
+  prices); `LmrHistDiv` / `LmrHistClamp` provisional until the census at
+  "machine free" (`adocs/data/S236_hist_census.py`, DEC-212's pattern, two
+  binaries from a clamp-0 source that must bench alike); four cases, six
+  mutants W01 to W06, `adocs/data/S236_sprt.sh` with both bisection legs.
+  Branch `s236` WIP-committed (`74ac399`) and rebased onto `3b0fbe6` cleanly.
+  Nothing compiled; waits for the confirmation's marker.
 
 - **Power outage at about 14:04 on 2026-09-22, workstation back at 21:25.**
   What it took: S132's confirmation at 253 games (`Elo -12.93 +/- 30.21`,
