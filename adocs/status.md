@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **Machine queue, 2026-09-22 10:20 (DEC-229, the owner's decision).** S188's
+  landing pipeline first -- its cold fast check is in (five findings of
+  record, none in `src/`, being fixed), then the gate, Debug self-play,
+  `gate_extra`, pin and its SPRT by day; **then S132's second-control
+  confirmation: `474c288` against `778c7b0` at 32+0.32, Hash 64, `{0, 5}`
+  nElo, capped at 6400 games**, pre-registered today by S132's agent in
+  `adocs/data/S132_confirm_sprt.sh`, launched tonight if S188's marker comes
+  before 22:00 and otherwise the night after. Readings per DEC-229: H1
+  confirms; H0 or the cap with the interval's top below zero flips
+  `TmNodeScalePct` to 0; H0 or the cap with the interval reaching above zero
+  keeps the playing control's verdict with the second-control interval
+  recorded beside it.
+
 - **S097 is done, 2026-09-22 02:05, on a zero and an H1, and `plan_current/`
   is empty.** The singular extension (verdict 1, `Elo -0.81 +/- 3.70`, H0,
   kept as the carrier under DEC-227) and the multicut (verdict 2, `Elo 7.17
@@ -4779,8 +4792,10 @@ Updated: 2026-09-21, by hand.
     `tools/gate_extra.sh`'s weekly run as a sixth stage if the tool learns to
     run in the background of nothing. The two mined-row mutants outside S188's
     pass (S095's J row, S230's R01) are re-proved targeted before S188 lands.
-  - **S132's question for the owner, 2026-09-21 (pre-registered, not decided by
-    the coordinator):** the node-fraction time manager read H1 at 8+0.08
+  - ~~**S132's question for the owner, 2026-09-21**~~ **decided 2026-09-22 by
+    the owner, DEC-229: a dedicated confirmation at 32+0.32, the same pair,
+    capped at one night, run when S188's SPRT frees the machine.** The
+    question as it was put: the node-fraction time manager read H1 at 8+0.08
     (`Elo 16.28 +/- 8.47`); its constants are census seeds at the playing
     control. Does it get one confirmation at a second control before they are
     called shipped -- a 40+0.4-class run of its own (about 3 h 45 m at the
