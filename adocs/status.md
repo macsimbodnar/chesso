@@ -7,6 +7,33 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S188 is landed, 2026-09-22 10:33, as `dbb54f5`, `bench` 4493659 -> 5756104;
+  second tier in progress, SPRT not yet pinned.** Form 3 of DEC-228: a
+  checking move -- capture or quiet -- searched one ply deeper at a non-root
+  node whose remaining depth is at most `CheckExtMaxDepth` 8 and whose ply is
+  under `CheckExtPlyFactor` 4 times the depth, provided its own static
+  exchange at threshold zero holds; one ply per node shared with the singular
+  extension by the `?:` budget; `CheckExtend` the proved off switch. Ten
+  cases (three tune-only), twelve mutants: 31 of 32 scored killed in one
+  pass, X07 equivalent, X10 unmeasured by the tool and killed by hand; the
+  deeper tree unpinned S097's E21, whose row was re-mined to one separating
+  at all four swept depths, and E21, R01, R02, J01 to J03 re-proved 6 of 6.
+  Three moved goldens repaired with re-derivation scripts
+  (`adocs/data/S188_repair_goldens.py`); fixed-node depths 17/13/15 ->
+  16/13/15; S145 mined mates 146 -> 180 exact. Cold fast check: nothing in
+  `src/`, five findings of record closed. `specs.md`'s search row carries the
+  rule with a `<verdict>` placeholder. Debug self-play 8 games with 0
+  `Assertion`; `gate_extra` launched at 10:35 with a watcher. **On its
+  marker:** pin `REF` d819a09 (the tree without the rule; its `src/` is
+  `63ad848`'s) and `CAND` dbb54f5 in `adocs/data/S188_sprt.sh`, launch the
+  SPRT by day (`nohup adocs/data/S188_sprt.sh > .tuning/sprt_s188.log 2>&1
+  &`), banner check, watcher, the launch recorded here. **When that marker
+  fires:** the verdict-closing commit with DEC-220's block (subject "Record
+  S188's <verdict> for the safe check extension"); **H1** keeps the rule at
+  its seeds and completes S188; **H0** or a stalled walk removes it by the
+  switch's proved off value and the code with it in the same step, the zero
+  recorded; either way S132's confirmation (DEC-229) takes the machine next.
+
 - **Machine queue, 2026-09-22 10:20 (DEC-229, the owner's decision).** S188's
   landing pipeline first -- its cold fast check is in (five findings of
   record, none in `src/`, being fixed), then the gate, Debug self-play,

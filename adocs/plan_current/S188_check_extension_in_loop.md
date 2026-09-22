@@ -686,3 +686,36 @@ the re-mine's GOLDEN block named the committed candidates file without the
 `grep -v '^#' ... | cut -f1` that derives the FEN list the script's `--fens`
 actually wants; and `DEV_MANUAL.md` wrote the guard-dropped profile as "d12 d13
 plus d11" where the log reads `d11 d12 d13`.
+
+## Fast check, landing and second tier (coordinator, 2026-09-22)
+
+**Fast check** by a cold Opus 5 reviewer over the uncommitted diff before it
+landed: **nothing in `src/`** -- the `child_depth` budget traced to exactly
+`{depth - 1, depth}` with the Debug assert tight, the reduction-exemption set
+bit-identical by algebra, no extended move reducible, the chain bound holding
+at the range extremes under `MAX_PLY`, `see_ge` on the parent board before
+`make_move`, all twelve X anchors unique, X07's equivalence sound; five
+findings of record, all closed before the landing: `test_mate_breadth`'s
+headroom under its ceiling (109 s and 117 s measured against 120 s, named
+open and the ceiling untouched), the README row describing the rejected
+first form, X10 unmeasured by the tool (killed by assertion by hand on this
+tree), the "hangs the checking piece" wording wrong on a discovered check
+(the exchange weighs the moved piece's destination), and R02 not yet
+re-proved (killed); four trivial wordings. The reviewer reproduced `bench`
+5756104, the off value 4493659 with the eight replies identical, the
+fixed-node 16/13/15, both re-derivation scripts' outputs and the mutation
+tables.
+
+**Landed as `dbb54f5`**, `bench` 4493659 -> 5756104, with the specs passage
+and the reported-line sentence in the same commit; the re-mine log followed
+in `de0c517`.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 90545 trace lines
+with 836 `bestmove` lines (`.tuning/coord/s188_debug_selfplay/`), 10:35.
+
+`tools/gate_extra.sh` launched detached on `dbb54f5` at 10:35
+(`.tuning/gate_extra_2026-09-22_s188.log`), watcher armed with four exits and
+a 55-minute ceiling; its marker is recorded below before `CAND` is pinned and
+the SPRT starts.
