@@ -30,7 +30,23 @@ Updated: 2026-09-21, by hand.
   Open list as filler behind S188): `tools/mutation_check.py` refuses a
   zero-test baseline and a fixture dirty outside `src/`, the two gaps
   verdict 2's agent walked into; named by id in every pre-registration
-  while open.
+  while open. **S188's first form was measured and not booked, 2026-09-22
+  ~03:00 (DEC-228):** every check extended one ply inside the ply guard
+  read `bench` 4493659 -> 8744373 (+94.6 %), fixed-node depths 17/13/15 ->
+  15/11/14 (five plies lost), `test_mate_breadth` 19 s -> 212 s past its
+  ceiling, four pre-existing cases red from the grown tree; the ply factor
+  swept 1 to 7 still +53 % at its tightest. The step is re-formed before
+  any game to the safe-check gate (`see_ge` at threshold zero on the
+  checking move) and its run is booked only against DEC-228's bar: at
+  most one ply lost on any position and two in total at a fixed node
+  budget, `bench` under +30 %, every case inside its ceiling. Bar met: the
+  four moved cases are repaired as consequences (the reported-line
+  invariant becomes at-least-the-depth, the S095 row re-mined by its
+  scripts if it still moves, S207's cycle re-based, `first_mate_depth`
+  given its re-derivation script), mutants, report, landing, SPRT. Bar
+  missed: one more form (the gate in the last `CheckExtMaxDepth` plies),
+  then the step closes on the instrument's reading and goes to the owner.
+  The agent is on it; the machine is its except for matches.
 
 - **S097 verdict 2 is H1, 2026-09-22 01:46:50: `Elo 7.17 +/- 5.13`, `nElo
   9.31 +/- 6.66`, LLR 2.95 over 10470 games in 4 h 58 m at 2109.9 an hour, 0
