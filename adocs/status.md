@@ -44,7 +44,7 @@ Updated: 2026-09-21, by hand.
   `.tuning/coord/S239_brief.md`) under the match's machine rule: the tool's
   own Python suite is the only thing it runs; the gate over its commit waits
   for the machine.
-  **S239's code is written (report at 13:55; four cases observed red under a
+  **S239's code is written (report at 13:49; four cases observed red under a
   cut, the tool's suite 28 of 28, one bug of its own found and fixed) and a
   read-only fast check runs over it. S236 started 2026-09-22 13:51 by a
   fresh Opus 5 agent in code-writing mode** in the linked worktree
