@@ -1,0 +1,75 @@
+# S188, 2026-09-22. The re-mine of `tests/test_search.cpp` "pruning does not
+# hide a forced mate"'s multicut row, after the 34-mutant pass scored
+# E21_multicut_mate_band_gate_dropped a survivor on this tree (fast 0/40, bench
+# moved). DEC-142: a mined row is re-derived by its script whenever either end
+# moves, and S188's extension moved the search.
+#
+# Stages run, all of adocs/data/S097_mine_mate_row.py's own: stage 1 skipped
+# (adocs/data/S097_candidates.tsv is committed and the pool is not what moved),
+# then `sweep` shipped, `sweep` against a library built out of tree with E21
+# applied, `separators`, `fires` on the tune library, `pick`. Measured: 73
+# minutes a sweep on the machine .moltke.local.md describes, 269 candidates
+# over depths 11 to 14.
+#
+# WHERE THE OLD ROW WENT, `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`
+# at depths 11..14, `distance:nodes:ms`:
+#   shipped  -:518327:91  m5:1961277:285  -:2615072:453  m5:11878601:1609
+#   dropped  -:518327:89  m5:1961277:279  -:2615072:449  m5:12370187:1602
+# The shipped profile is unmoved at d12 d14; the guard-dropped one went from
+# d12 to d12 d14, so the row no longer separates. The rule still reaches the
+# position -- the depth-14 counts differ by 4.1 % -- so this is a deeper tree
+# finding the mate either way and not a rule that stopped firing.
+#
+# THE TWO SEPARATORS OF THE 269, and the pick:
+#   r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35
+#     shipped m5:2715232:328 m5:7974642:1013 m5:13779870:1742 m5:43758845:5360 
+#     dropped m5:2715232:365 m5:7974642:995 m5:13779870:1711 -:37126290:4482 
+#     SKIPPED by the script's own rule: the firing witness shows the
+#     multicut never reaching it, so its depth-14 separation cannot have
+#     come from this rule.
+#   1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+#     shipped m5:519172:73 m5:520971:73 m5:1417273:198 m5:4227541:562 
+#     dropped m5:519172:63 m5:520971:63 m5:1417273:185 -:2505042:367 
+#     TAKEN.
+#
+# THE PICK'S OWN OUTPUT
+#     skipped, the rule never fires here: r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35
+#     d14	#5	run 4	4227541 nodes	562 ms	shipped [d11 d12 d13 d14]	open [d11 d12 d13]	fires [d13 d14]	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+#   
+#   take: 1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+#     depth 14, mate in 5, shipped [d11 d12 d13 d14], guard dropped [d11 d12 d13], 4227541 nodes, 562 ms
+#
+# THE FIRING WITNESS, tune library, SeMultiCut 0 then 1 per depth:
+#   # S097 firing witness, SeMultiCut 0 against 1, depths 11..14, tune library build-tune/src/libchesso_engine.a.
+#   # fen	depths_the_rule_changes	off	on
+#   r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35	none	m5:2715232:348 m5:7974642:1038 m5:13779870:1716 m5:43758845:5354	m5:2715232:374 m5:7974642:1008 m5:13779870:1683 m5:43758845:5356
+#   1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54	d13 d14	m5:519172:63 m5:520971:70 m5:1417261:203 m5:3322083:428	m5:519172:76 m5:520971:74 m5:1417273:201 m5:4227541:534
+#
+# THE ORACLE, and it is not chesso (CHESS, DEC-023): stockfish through
+# python-chess in a fresh process at a node limit answers `#+5`, pv
+# `Kf2 Rf8+ Bf5 Rxf5+ gxf5 Kh3 g1=Q a6 Qh1#`, and adocs/data/S097_candidates.tsv
+# carries the same label from the pool's own oracle run -- mate in 5, 4586
+# nodes. python-chess: is_valid() True, is_check() False, 19 legal moves, no
+# capture, four promotions, two checks.
+#
+# THE RED, observed by hand with E21 applied, then reverted (S033 protocol).
+# src/search.cpp was restored from a pristine copy and never with
+# `git checkout --`: this tree is uncommitted and that command would have
+# discarded the step.
+  [doctest] doctest version is "2.4.11"
+  [doctest] run with "--help" for options
+  ===============================================================================
+  /home/max/ws/chesso/tests/test_search.cpp:3148:
+  TEST SUITE: search: draws
+  TEST CASE:  pruning does not hide a forced mate
+  
+  /home/max/ws/chesso/tests/test_search.cpp:3339: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    values: REQUIRE( false )
+    logged: mate the multicut hides, depth 14
+  
+  ===============================================================================
+  [doctest] test cases:  1 |  0 passed | 1 failed | 159 skipped
+  [doctest] assertions: 41 | 40 passed | 1 failed |
+  [doctest] Status: FAILURE!
+
+# And green again on the restored tree: 1 test case passed, 54 assertions.
