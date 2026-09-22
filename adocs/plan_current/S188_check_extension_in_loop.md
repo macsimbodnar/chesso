@@ -719,3 +719,13 @@ with 836 `bestmove` lines (`.tuning/coord/s188_debug_selfplay/`), 10:35.
 (`.tuning/gate_extra_2026-09-22_s188.log`), watcher armed with four exits and
 a 55-minute ceiling; its marker is recorded below before `CAND` is pinned and
 the SPRT starts.
+
+**`tools/gate_extra.sh` on `dbb54f5`: `GATE-EXTRA-DONE 5 stages 1835 s`**
+(10:35 to 11:06, `.tuning/gate_extra_2026-09-22_s188/`), prose, citations,
+debug, sanitize and perft green -- 700 s longer than S097's runs, the slower
+suite under the extension being the reason. **`CAND` pinned to `dbb54f5` and
+`REF` to `d819a09`**, the commit the landing sits on (its `src/` is
+`63ad848`'s, the tree with both S097 rules and S132; the diff to the
+candidate is `src/search.cpp` and `src/search_params.hpp`), in
+`adocs/data/S188_sprt.sh`. The SPRT is the coordinator's next action, by day:
+nothing else needs the machine (DEC-155), and S132's confirmation follows it.
