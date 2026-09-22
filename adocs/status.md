@@ -44,6 +44,16 @@ Updated: 2026-09-21, by hand.
   `.tuning/coord/S239_brief.md`) under the match's machine rule: the tool's
   own Python suite is the only thing it runs; the gate over its commit waits
   for the machine.
+  **S239's code is written (report at 13:55; four cases observed red under a
+  cut, the tool's suite 28 of 28, one bug of its own found and fixed) and a
+  read-only fast check runs over it. S236 started 2026-09-22 13:51 by a
+  fresh Opus 5 agent in code-writing mode** in the linked worktree
+  `../chesso-s236` (branch `s236` at `4b49a40`; brief
+  `.tuning/coord/S236_brief.md`): the fixed-point accumulator with one
+  rounding, the history term back as a fraction seeded from a census at
+  "machine free", tests, mutants, `adocs/data/S236_sprt.sh` with the H0
+  bisection's two legs written in advance; no build until the machine is
+  free. The two agents share no file.
 
 - **S188's verdict is H0, 2026-09-22 12:50:17: `Elo -13.84 +/- 8.95`, `nElo
   -17.71 +/- 11.44`, LLR -2.96 over 3542 games in 1 h 42 m at 2081.8 an hour,
