@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S188's verdict is H0, 2026-09-22 12:50:17: `Elo -13.84 +/- 8.95`, `nElo
+  -17.71 +/- 11.44`, LLR -2.96 over 3542 games in 1 h 42 m at 2081.8 an hour,
+  0 forfeits either side, `Ptnml [186, 453, 593, 394, 145]`, LOS 0.12 %.** A
+  loss and not a zero: the nElo interval [-29.15, -6.27] sits wholly below
+  zero (DEC-223's fast class; DEC-194's shape). The pre-registered H0 reading
+  binds: **the rule leaves the tree in the same step** -- window, gate, the
+  scan's third term, the ply, three settings, ten cases, twelve mutants, the
+  MANUAL rows -- the three repaired cases go back by their scripts (4 and 9,
+  the equality), the removal proved by `bench` 4493659 and `search_bench`
+  identity with `d819a09` at 9 and 12 (INV-6); the re-mined S097 row stays if
+  a targeted E21 run kills it on the reverted tree. The mined mate set's
+  146 -> 180 is a fixed-depth reading of a larger tree and not a reason to
+  keep it. `Incomplete mating PV` 2 against 0, an observation. Evidence
+  `adocs/data/S188_sprt.log`, `S188_sprt_pairs.txt`. The sixth verdict-closing
+  commit under DEC-220. **Next, in order:** S188's agent removes the rule
+  (writing, builds, the identity proofs, E21 targeted), a cold fast check
+  over the removal diff, the gate and the removal commit with `Bench:
+  4493659`; then **S132's confirmation launches** (DEC-229), the machine
+  being free from then to its marker; S188 completes with a decision that the
+  check-extension question has no successor step. Machine idle from 12:50; no
+  watcher armed.
+
 - **S188's gainer SPRT is running, launched 2026-09-22 11:07:04: `dbb54f5`
   (the safe check extension near the horizon) against `d819a09` (the tree
   without it), `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260922110704,

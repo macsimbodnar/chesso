@@ -729,3 +729,57 @@ suite under the extension being the reason. **`CAND` pinned to `dbb54f5` and
 candidate is `src/search.cpp` and `src/search_params.hpp`), in
 `adocs/data/S188_sprt.sh`. The SPRT is the coordinator's next action, by day:
 nothing else needs the machine (DEC-155), and S132's confirmation follows it.
+
+## Verdict, 2026-09-22: H0, a measured loss (coordinator)
+
+The gainer SPRT of `dbb54f5` (the safe check extension near the horizon)
+against `d819a09` (the tree without it), `{0, 5}` nElo at 8+0.08 with Hash 16
+on `noob_3moves.epd`, seed 20260922110704, launched 2026-09-22 11:07:04 and
+`SPRT-RUN-DONE` at 12:50:17, **accepted H0 after 3542 games**:
+
+```
+SPRT | cand dbb54f5 vs ref d819a09, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | -13.84 +/- 8.95, nElo -17.71 +/- 11.44
+LLR | -2.96 (-2.94, 2.94) -> H0
+Games | N: 3542 W: 1022 L: 1163 D: 1357, Ptnml [186, 453, 593, 394, 145]
+Wall | 1 h 42 m, 2081.8 games/h, forfeits 0
+Log | adocs/data/S188_sprt.log
+```
+
+LOS 0.12 %, draw ratio 33.48 %, pairs ratio 0.84. **0 time forfeits on either
+side** over the PGN's 3545 games (2486 adjudications, 1059 natural ends).
+`Incomplete mating PV` 2 candidate against 0 reference, an observation and not
+a diagnosis (CHESS). `adocs/data/S105_pairs.py`: 1771 complete pairs, pair
+score mean 0.9811, variance 0.3101, sd 0.5568, 120.2 plies a game. The
+throughput, 2081.8 an hour, is the slowest of the ledger's runs on this book:
+the candidate's larger tree at a fixed clock thinks longer per move. Evidence:
+`adocs/data/S188_sprt.log`, `adocs/data/S188_sprt_pairs.txt`; the run
+directory `.tuning/sprt_s188_20260922_110704`.
+
+### The reading
+
+A loss, not a zero: the nElo interval [-29.15, -6.27] sits wholly below zero,
+DEC-223's fast class, and the walk went straight to the bound in 1 h 42 m --
+the same shape as S098 verdict 3's -9.97. **The pre-registered H0 reading
+binds: the rule leaves the tree in the same step** -- the window, the exchange
+gate, the shared capture scan's third term, the ply, the three settings, the
+ten cases, the twelve mutants and the `MANUAL.md` rows -- and the three
+repaired cases go back by the route they were repaired: the re-derivation
+scripts answer 4 and 9 on the reverted tree and the reported-line invariant
+returns to an equality. The removal is proved and not argued: `bench` 4493659
+and `tools/search_bench.py` identical to `d819a09` at depths 9 and 12, node
+counts and best moves both (INV-6's own discharge), the switch's proved off
+value being that same tree. DEC-194 is the precedent for not keeping a
+feature whose interval sits below the bound, and the one candidate reason to
+keep it -- the mined mate set's 146 -> 180 exact at depth 10 -- is a
+fixed-depth reading of a larger tree, which is exactly what the games priced
+and refused. The re-mined S097 row stays if a targeted E21 run kills it on
+the reverted tree, since a row that separates on both trees is the better
+golden; otherwise the row that separated on this tree before S188 returns.
+
+What the step has settled: DEC-087 retired the pre-move-loop check extension
+on the record; DEC-133 kept the in-loop form for one verdict; DEC-228 formed
+that verdict on the tree's own instrument, and this is it. Three forms were
+measured before a game and the one that met the bar lost at the playing
+control. The check-extension question has no successor step, recorded as a
+decision at completion.
