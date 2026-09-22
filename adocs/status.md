@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S239 is done, 2026-09-22 21:45, and the main tree's `plan_current/` is
+  empty; S236 is current on its own branch.** The mutation tool refuses a
+  zero-test baseline and a dirty fixture, its header names the fixture's sha,
+  the dirty paths and where the mutant list was read from; six cases each
+  observed red under a cut; no verdict owed, the ledger and the pending count
+  unchanged (41 to 51 verdicts). **Next Open entry: S236**, the fixed-point
+  reduction block, whose agent writes in `../chesso-s236` (branch `s236` at
+  `4b49a40`, to be rebased onto this HEAD before its measurements); after its
+  Report 1 it waits for "machine free", which comes when the confirmation
+  ends (its marker or the cap at about 09:40 on 2026-09-23). The parked
+  128-mutant night pass now runs under the repaired tool when the machine is
+  next free for a night.
+
 - **Power outage at about 14:04 on 2026-09-22, workstation back at 21:25.**
   What it took: S132's confirmation at 253 games (`Elo -12.93 +/- 30.21`,
   LLR -0.21 -- void, aborted rather than reported, S024's precedent; the
