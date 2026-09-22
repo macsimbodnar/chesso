@@ -12876,3 +12876,45 @@ Consequences: One night of machine after S188's verdict run; the ledger
               in `status.md` closes; a second-control confirmation becomes the
               precedent for the time-management family (S085), stated in
               S127's file before its lane runs.
+
+## DEC-230  2026-09-22  The check-extension question closes on S188's loss: no successor step, both forms on the record
+Tags:         search, extensions, check-extension, s188, s096, dec-087, dec-133, dec-228, dec-194
+Context:      DEC-087 (a) retired S096, check extensions, on two removal
+              records; DEC-133 kept the in-loop form as S188 for one verdict,
+              because the retirement's evidence turned out to be about the
+              pre-move-loop form. S188 measured three forms on the tree
+              before a game (DEC-228) and ran the one that met the bar --
+              only a checking move static exchange calls safe, in the last
+              `CheckExtMaxDepth` plies before the horizon -- at `{0, 5}`
+              nElo against the tree without it: **H0, `Elo -13.84 +/- 8.95`,
+              `nElo -17.71 +/- 11.44` over 3542 games**, the interval wholly
+              below zero (DEC-194's shape). Every check extended lost five
+              plies at a fixed node budget; the gate alone still cost
+              `bench` +72.4 %; the gated horizon form cost +28.1 % and lost
+              at the clock. The engine already refuses to reduce a checking
+              quiet move, which is the part of the idea the record's engines
+              kept.
+Decision:     By the coordinator, 2026-09-22, under the owner's delegation of
+              engine questions; the owner may overrule. The rule leaves the
+              tree whole, as S188's pre-registration wrote before the number,
+              and **the check-extension question has no successor step**: the
+              pre-move-loop form is retired on the record (DEC-087), the
+              in-loop form is measured here, and the safe-check gate and the
+              horizon restriction were the two remedies the literature
+              offers for its cost. A future step may reopen it only with a
+              new form and a new reading of the fixed-node instrument first.
+              The reduction exemption for a checking quiet stays as it is.
+Rejected:     Keeping the rule for its fixed-depth mate-finding gain (the
+              S145 mined set 146 -> 180 exact at depth 10) -- a fixed-depth
+              reading of a larger tree, which is exactly what the games
+              priced and refused. A `{-5, 0}` non-regression pair to keep a
+              cheaper variant -- there is no cheaper variant left that the
+              instrument passed. Fitting the cap or the factor by SPSA first
+              -- the sweep at cap 1 read a smaller and deeper tree, but a fit
+              on a rule that loses 14 Elo at its seeds is S127's question
+              only if the rule ships, and it does not.
+Consequences: `specs.md`'s search row states the trial and the loss beside
+              S097's passage; the "absent, search" entry names it as tried
+              and left; the two re-derivation scripts S188 gave S207's drive
+              depth and `first_mate_depth` stay (DEC-142); the ledger holds
+              the verdict as fast class; the pending count falls by one.

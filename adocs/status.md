@@ -7,6 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S132's second-control confirmation is running, launched 2026-09-22
+  13:35:26 (DEC-229, the owner's decision): `474c288` against `778c7b0` at
+  32+0.32, Hash 64, `{0, 5}` nElo on `noob_3moves.epd`, seed 20260922133526,
+  output `.tuning/sprt_s132_confirm_20260922_133526`, pid 3127893.** Banner
+  checked: the control, the hash, both shas, `OUT` under `.tuning/`. Watcher
+  armed with hourly progress, the marker, process death, **a stop at 6400
+  finished games** (the harness cannot cap an SPRT itself; the stop reads as
+  `SPRT-RUN-FAILED: exited 143` and is the cap, not a crash) and a 14 h
+  ceiling. Expected: a truth of about 13.6 nElo or more reaches H1 inside
+  the cap, 7.6 h at 20 nElo and 534 games an hour. **When it ends:** the
+  record commit with DEC-220's block as `S132 v2` (subject "Record S132 v2's
+  <verdict> for the node-fraction time manager at 32+0.32"), the forfeit
+  report per side, the pairs reading; the reading per DEC-229 -- H1 confirms
+  and the constants are called shipped; H0 or the cap with the interval's
+  top below zero flips `TmNodeScalePct` to 0 (a fresh agent, the flip proved
+  by the probe, the zero recorded); H0 or the cap with the interval reaching
+  above zero keeps the playing control's verdict with the second-control
+  interval recorded beside it. Machine held by the match until then.
+
+- **S188 is done, 2026-09-22 13:50, on an H0 that removed it, and
+  `plan_current/` is empty.** Three forms measured before a game (DEC-228),
+  the one that met the bar lost `Elo -13.84 +/- 8.95` at 8+0.08 and left in
+  the same step, `src/` back to `d819a09` byte for byte; the re-derivation
+  scripts and the evidence stay; DEC-230 closes the check-extension question
+  with no successor. The ledger holds twenty-six (regenerated: mean
+  4 h 35 m, median 4 h 41 m, 263495 games in
+  119.37 h; fast class twelve at 1 h 56 m, slow fourteen at
+  6 h 51 m) and the pending count is 41 to 51 verdicts, 266 to
+  335 machine-hours. `specs.md`'s search row carries the trial and the
+  loss. **Next Open entries: S239** (the mutation tool's two refusals,
+  test-side filler, no machine) **then S236** (the fixed-point reduction
+  block); S239 is started by a fresh Opus 5 agent while the confirmation
+  holds the machine, S236's agent in code-writing mode after it.
+
 - **S188's verdict is H0, 2026-09-22 12:50:17: `Elo -13.84 +/- 8.95`, `nElo
   -17.71 +/- 11.44`, LLR -2.96 over 3542 games in 1 h 42 m at 2081.8 an hour,
   0 forfeits either side, `Ptnml [186, 453, 593, 394, 145]`, LOS 0.12 %.** A
