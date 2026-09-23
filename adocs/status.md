@@ -7,6 +7,25 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236 v2's gainer SPRT is running, launched 2026-09-23 18:03:11: `85901b3`
+  (the history term at one ply of reach, `LmrHistClamp` 1024) against
+  `666b5a0` (the tree without the term), `{0, 5}` nElo at 8+0.08 on
+  `noob_3moves.epd`, seed 20260923180311, output `.tuning/sprt_s236_v2_20260923_180311`, pid 2031942.** Banner
+  checked: both shas, `OUT` under `.tuning/`. `gate_extra` on the landing
+  green (5 stages, 1259 s); `REF`/`CAND` pinned in `ca9ef24`. Watcher armed
+  with four exits, hourly progress and a 40 h ceiling; worst case 41861
+  games (19.8 h at 2110 an hour), 25591 on a bound (12.1 h); verdict 1's
+  tree ran at 2081 an hour and this one is a third smaller. The night run.
+  **When it fires:** the record as `S236 v2` with DEC-220's block (subject
+  "Record S236 v2's <verdict> for the history term at one ply"), the forfeit
+  report per side, the pairs reading; readings per DEC-231 -- **H1** keeps
+  (734, 1024), re-mines E21 if unpinned on the shipping tree, completes
+  S236; **H0** or a stalled walk removes the term, its settings, cases,
+  mutants, the two re-mined rows and the raised ceiling, keeps the
+  accumulator, completes S236 on three H0s, no third run. **Then S234** gets
+  "machine free" for its measurements (its Report 1 is in, branch `s234`
+  WIP `c6fe49a` on `7480ed3`, to be rebased onto the tree S236 leaves).
+
 - **S236 v2 is landed, 2026-09-23 17:39, as `85901b3`, `bench` 6858745 ->
   5193174 (+15.6 % over the tree without the term, the census's prediction to
   a tenth of a per cent, all eight replies the parent's); second tier in
