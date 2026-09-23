@@ -31,6 +31,22 @@ Updated: 2026-09-21, by hand.
   S236's agent at 03:52**: census, seeds, builds, identity proofs, suites,
   reds, mutation pass, then Report 2. The eight reference worktrees and the
   stale `.ref-builds/mut` were pruned (17 GB free).
+  **S236's Reports 2 and 3 are in (06:06):** the census (202483 sites at depth
+  12: p90 318, p99 4815, 68 % of sums zero) seeds `LmrHistDiv` 636 and
+  `LmrHistClamp` on its declared top 2048 (the p99 rule asked 7752); the
+  rounding bias ships at 0 because every bias from one tick up with the
+  term live loses the mate row the accepts requires -- ten builds -- so the
+  accumulator is the parent's tree to the node (`bench` 4493659, eight
+  replies identical, `search_bench` identical at 9 and 12) and the
+  candidate is the history term alone, `bench` 6873143 (+52.9 %); both
+  suites 40 of 40, mutation 12 of 12 (W01 equivalent at bias 0, the seven
+  re-cut older anchors re-killed); E21 survives on this tree and is killed
+  on the parent, named in the pre-registration. The coordinator's readings
+  (no bisection; H1 keeps and re-mines E21; a loss removes the term and
+  keeps the accumulator; a walk gets one follow-up at clamp 1024) are
+  written in `adocs/data/S236_sprt.sh`. Branch `s236` at WIP `039d632`; a
+  cold fast check runs over the diff, then the landing, second tier, pin
+  and the SPRT by day.
 
 - **S239 is done, 2026-09-22 21:45, and the main tree's `plan_current/` is
   empty; S236 is current on its own branch.** The mutation tool refuses a
