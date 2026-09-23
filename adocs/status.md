@@ -26,7 +26,11 @@ Updated: 2026-09-21, by hand.
   record commit, the ledger regenerated; then "machine free" to S236's agent
   for its census, seeds, builds, identity proofs, suites, reds and mutation
   pass (its Report 2), the fast check, the landing, second tier, pin and
-  SPRT. Machine idle from 03:46; no watcher armed.
+  SPRT. Machine idle from 03:46; no watcher armed. **Recorded (`2643297`),
+  the ledger carried (`444b808`, twenty-seven), and "machine free" given to
+  S236's agent at 03:52**: census, seeds, builds, identity proofs, suites,
+  reds, mutation pass, then Report 2. The eight reference worktrees and the
+  stale `.ref-builds/mut` were pruned (17 GB free).
 
 - **S239 is done, 2026-09-22 21:45, and the main tree's `plan_current/` is
   empty; S236 is current on its own branch.** The mutation tool refuses a
