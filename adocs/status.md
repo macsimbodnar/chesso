@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236's verdict is H0, 2026-09-23 15:35:32: `Elo -1.60 +/- 4.25`, `nElo
+  -2.05 +/- 5.44`, LLR -2.95 over 15658 games in 7 h 32 m at 2081.1 an hour,
+  0 forfeits either side, `Ptnml [752, 1843, 2665, 1863, 706]`, LOS 23.05 %.**
+  The nElo interval [-7.49, +3.39] reaches above zero: DEC-231's third
+  reading, a zero read as a walk, not the loss that removes the term. **The
+  one pre-registered follow-up binds:** the same term at `LmrHistClamp` 1024
+  (the census: the same 13.6 % of sites move, all by one ply, +15.6 % of tree
+  against +52.6 %), one default flip on this tree, as `S236 v2` at `{0, 5}`
+  against `8b1bc79`'s tree with the flip's parent as `REF`; an H0 there
+  removes the term and keeps the accumulator; there is no third run.
+  `Incomplete mating PV` 8 candidate against 0 reference, an observation.
+  Evidence `adocs/data/S236_sprt.log`, `S236_sprt_pairs.txt` (variance
+  0.3051). The eighth verdict-closing commit under DEC-220. **Next, in
+  order:** the record commit and the ledger; "machine free" to S236's agent
+  for the flip (the `golden_defaults` and `MANUAL.md` rows with it), the
+  identity and bench re-taken, the mate rows checked at the new clamp (the
+  re-mined row re-derived by its script if it does not hold), the mutation
+  pass on the flipped tree, its report; then the fast check, the landing,
+  Debug self-play and `gate_extra`, pin and the `S236 v2` SPRT tonight. S234
+  stays in code-writing mode behind it. Machine idle from 15:35; no watcher
+  armed.
+
 - **S236's gainer SPRT is running, launched 2026-09-23 08:03:15: `8b1bc79`
   (the fractional history reduction term) against `666b5a0` (the tree without
   it), `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260923080315, output

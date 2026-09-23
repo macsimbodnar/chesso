@@ -642,3 +642,52 @@ whose `src/` is `3b0fbe6`'s and `444b808`'s (the parent every identity above
 was proved against; the commits between are documents only) -- in
 `adocs/data/S236_sprt.sh`. The SPRT is the coordinator's next action, by day:
 nothing else needs the machine (DEC-155).
+
+## Verdict, 2026-09-23: H0 read as a walk (coordinator)
+
+The gainer SPRT of `8b1bc79` (the fractional history term at its census seeds,
+`LmrHistDiv` 734, `LmrHistClamp` 2048) against `666b5a0` (the tree without
+it), `{0, 5}` nElo at 8+0.08 with Hash 16 on `noob_3moves.epd`, seed
+20260923080315, launched 2026-09-23 08:03:15 and `SPRT-RUN-DONE` at 15:35:32,
+**accepted H0 after 15658 games**:
+
+```
+SPRT | cand 8b1bc79 vs ref 666b5a0, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | -1.60 +/- 4.25, nElo -2.05 +/- 5.44
+LLR | -2.95 (-2.94, 2.94) -> H0
+Games | N: 15658 W: 4737 L: 4809 D: 6112, Ptnml [752, 1843, 2665, 1863, 706]
+Wall | 7 h 31 m, 2081.1 games/h, forfeits 0
+Log | adocs/data/S236_sprt.log
+```
+
+LOS 23.05 %, draw ratio 34.04 %, pairs ratio 0.99. **0 time forfeits on either
+side** over the PGN's 15660 games (10797 adjudications, 4863 natural ends).
+`Incomplete mating PV` 8 candidate against 0 reference, an observation and not
+a diagnosis (CHESS) -- the candidate's larger tree at a fixed clock reaches
+fewer plies on mating lines. `adocs/data/S105_pairs.py`: 7829 complete pairs,
+pair score mean 1.0056, variance 0.3051, sd 0.5523, 119.6 plies a game;
+2081.1 games an hour, the candidate's tree being half again the parent's at a
+fixed depth. The walk: LLR +0.20 at one hour, -0.83 at three, -2.17 at four,
+back to -1.83 at six, the bound at seven and a half. Evidence:
+`adocs/data/S236_sprt.log`, `adocs/data/S236_sprt_pairs.txt`; the run
+directory `.tuning/sprt_s236_20260923_080315`.
+
+### The reading
+
+The nElo interval is [-7.49, +3.39]: it reaches above zero, so this is not the
+loss DEC-231's second reading names (an interval wholly below zero) but its
+third -- a zero read as a walk. The term at the census clamp does not gain 5
+nElo, and it does not measurably lose either; the point estimate is two nElo
+under zero with a tree half again the parent's. **DEC-231's pre-registered
+follow-up binds, and it is the only one**: the same term at `LmrHistClamp`
+1024 -- the census said before any game that the same 13.6 % of reduction
+sites move, all by one ply, at +15.6 % of tree against +52.6 % -- as its own
+pinned pair at `{0, 5}`, `S236 v2`. It is one default flip on this tree
+(`LmrHistClamp` 2048 -> 1024 in `src/search_params.hpp`, its `golden_defaults`
+row and its `MANUAL.md` row), landed by the step's agent with the bench
+signature and `search_bench` re-taken, the mate rows re-checked at the new
+clamp (the re-mined row was picked on the 2048 tree; the fast suite decides
+whether it holds at 1024, and if not the row is re-derived by its script
+before the landing, as before), the pre-registration's measured rows filled,
+then the second tier and the SPRT. If that reads H0 the term leaves and the
+accumulator stays, as DEC-231 wrote; there is no third run.
