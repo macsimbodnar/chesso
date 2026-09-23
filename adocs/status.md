@@ -15,7 +15,8 @@ Updated: 2026-09-21, by hand.
   one pre-registered follow-up binds:** the same term at `LmrHistClamp` 1024
   (the census: the same 13.6 % of sites move, all by one ply, +15.6 % of tree
   against +52.6 %), one default flip on this tree, as `S236 v2` at `{0, 5}`
-  against `8b1bc79`'s tree with the flip's parent as `REF`; an H0 there
+  against `666b5a0`, the tree without the term, as the pre-registration says
+  (the flip lands on `8b1bc79`, so its parent is not the reference); an H0 there
   removes the term and keeps the accumulator; there is no third run.
   `Incomplete mating PV` 8 candidate against 0 reference, an observation.
   Evidence `adocs/data/S236_sprt.log`, `S236_sprt_pairs.txt` (variance
