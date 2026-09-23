@@ -850,3 +850,13 @@ with 1270 `bestmove` lines (`.tuning/coord/s236_v2_debug_selfplay/`), 17:41.
 (`.tuning/gate_extra_2026-09-23_s236v2.log`), watcher armed with four exits
 and a 55-minute ceiling; its marker is recorded below before `CAND` is pinned
 and the SPRT starts.
+
+**`tools/gate_extra.sh` on `85901b3`: `GATE-EXTRA-DONE 5 stages 1259 s`**
+(17:41 to 18:02, `.tuning/gate_extra_2026-09-23_s236v2/`), prose, citations,
+debug, sanitize and perft green. **`CAND` pinned to `85901b3` and `REF` to
+`666b5a0`**, the tree without the term -- the pre-registration's own pair,
+not the flip's parent, because the question is the term at one ply of reach
+against no term; the `src/` between them is the accumulator (identical to the
+parent at its shipped rounding) and the term at (734, 1024) -- in
+`adocs/data/S236_v2_sprt.sh`. The SPRT is the coordinator's next action, the
+night run.

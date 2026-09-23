@@ -179,8 +179,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 #
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates before the first game.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-666b5a0}"
+CAND="${CAND:-85901b3}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then
