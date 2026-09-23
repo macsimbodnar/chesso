@@ -633,3 +633,12 @@ with 1061 `bestmove` lines (`.tuning/coord/s236_debug_selfplay/`), 07:43.
 (`.tuning/gate_extra_2026-09-23_s236.log`), watcher armed with four exits and
 a 55-minute ceiling; its marker is recorded below before `CAND` is pinned and
 the SPRT starts.
+
+**`tools/gate_extra.sh` on `8b1bc79`: `GATE-EXTRA-DONE 5 stages 1140 s`**
+(07:43 to 08:02, `.tuning/gate_extra_2026-09-23_s236/`), prose, citations,
+debug, sanitize and perft green. **`CAND` pinned to `8b1bc79` and `REF` to
+`666b5a0`**, the commit the landing sits on -- the tree without the term,
+whose `src/` is `3b0fbe6`'s and `444b808`'s (the parent every identity above
+was proved against; the commits between are documents only) -- in
+`adocs/data/S236_sprt.sh`. The SPRT is the coordinator's next action, by day:
+nothing else needs the machine (DEC-155).
