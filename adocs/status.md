@@ -25,8 +25,16 @@ Updated: 2026-09-21, by hand.
   accumulator, restoring the old mate row, then completes on three H0s for
   the idea; **H0 with the interval reaching above zero or a stalled walk**
   gets the one follow-up at `LmrHistClamp` 1024 as `S236 v2`. Meanwhile the
-  next Open entry, S234, is briefed for a fresh agent in code-writing mode
-  once its step file has been read against the tree S236 left.
+  next Open entry, **S234, started 08:06 by a fresh Opus 5 agent in
+  code-writing mode** in the linked worktree `../chesso-s234` (branch `s234`
+  at `7480ed3`; brief `.tuning/coord/S234_brief.md`). Reading the tree for
+  the brief found the step smaller than its file: S109 already landed the
+  estimate (`pruning_eval`, the entry's score where its bound points the
+  same way as its gap from `static_eval`) for the futility site, and the
+  null-move block has no static-score condition here; so the step routes
+  reverse futility through the existing estimate behind an off switch,
+  proves the off value on the tree, and measures that. No build until the
+  machine is free.
 
 - **S236 is landed, 2026-09-23 07:41, as `8b1bc79`, `bench` 4493659 -> 6858745;
   second tier in progress, SPRT not yet pinned.** The reduction accumulated in
