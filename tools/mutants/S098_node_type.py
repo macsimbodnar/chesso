@@ -32,6 +32,16 @@ mutant is behaviourally equivalent to the engine, which no tool can decide.
 
 Ids are never reused: a new mutant takes the next free number across every file
 here, and this file opens the `T` prefix because `N` is S191's.
+
+**Five anchors were re-cut by S236 and no mutant here changed meaning.** That
+step put the reduction in fixed point: the four terms are summed as ticks of a
+ply (`LMR_CUTNODE * LMR_SCALE` and so on) and `lmr_adjusted_reduction` rounds
+the sum once, so the five lines T02 to T06 anchored on no longer exist
+verbatim. Each pair below names the line as it reads now and inverts, drops or
+flips exactly what it inverted, dropped or flipped before -- an anchor is a
+coordinate, and a coordinate that has moved is re-read rather than retired. The
+alternative, retiring the ids and opening new ones, would have lost the kills
+these five are on record for.
 """
 
 S = "src/search.cpp"
@@ -50,32 +60,32 @@ m("T02_cutnode_inverted", S, "search/reduction",
   'the cut-node ply is added at every node that is **not** predicted to fail '
   'high, which is the inverse of the published adjustment and reduces hardest '
   'exactly where the node is expected to have to look at everything',
-  ('  if (cut_node) { adjustment += LMR_CUTNODE; }',
-   '  if (!cut_node) { adjustment += LMR_CUTNODE; }'),
+  ('  if (cut_node) { adjustment += LMR_CUTNODE * LMR_SCALE; }',
+   '  if (!cut_node) { adjustment += LMR_CUTNODE * LMR_SCALE; }'),
   origin="S098")
 
 m("T03_improving_inverted", S, "search/reduction",
   'the ply is added when the side to move **is** improving -- the direction '
   'the published record tried first and closed, against the asymmetry it then '
   'shipped',
-  ('  if (!improving) { adjustment += LMR_NOT_IMPROVING; }',
-   '  if (improving) { adjustment += LMR_NOT_IMPROVING; }'),
+  ('  if (!improving) { adjustment += LMR_NOT_IMPROVING * LMR_SCALE; }',
+   '  if (improving) { adjustment += LMR_NOT_IMPROVING * LMR_SCALE; }'),
   origin="S098")
 
 m("T04_ttcapture_inverted", S, "search/reduction",
   "the ply is added where the entry's move is **not** a capture, which "
   'includes every node the table has nothing for at all -- so the term fires '
   'on the majority of nodes and means nothing about any of them',
-  ('  if (tt_move_is_capture) { adjustment += LMR_TT_CAPTURE; }',
-   '  if (!tt_move_is_capture) { adjustment += LMR_TT_CAPTURE; }'),
+  ('  if (tt_move_is_capture) { adjustment += LMR_TT_CAPTURE * LMR_SCALE; }',
+   '  if (!tt_move_is_capture) { adjustment += LMR_TT_CAPTURE * LMR_SCALE; }'),
   origin="S098")
 
 m("T05_pv_added", S, "search/reduction",
   'the PV term is added instead of subtracted, so the lines that get reported '
   'and played are the ones searched shallowest. A sign slip with no symptom '
   'but rating, which is the class S093 and S109 both left a comment against',
-  ('  if (is_pv) { adjustment -= LMR_PV; }',
-   '  if (is_pv) { adjustment += LMR_PV; }'),
+  ('  if (is_pv) { adjustment -= LMR_PV * LMR_SCALE; }',
+   '  if (is_pv) { adjustment += LMR_PV * LMR_SCALE; }'),
   origin="S098")
 
 m("T06_adjusted_reduction_ignores_node", S, "search/reduction",
@@ -84,8 +94,8 @@ m("T06_adjusted_reduction_ignores_node", S, "search/reduction",
   'terms reach nothing. The step wired up and switched off in one line. The '
   '`(void)` orphans the parameter, which the Release build this tool runs '
   "refuses under -Werror; search.py's header carries the reason in full",
-  ('{ return lmr_reduction(depth, move_number) + node_adjustment; }',
-   '{\n  (void) node_adjustment;\n  return lmr_reduction(depth, move_number);\n}'),
+  ('  return lmr_plies_of(lmr_reduction_ticks(depth, move_number) +\n                      node_adjustment - lmr_history_ticks(hist_sum));',
+   '  (void) node_adjustment;\n  return lmr_plies_of(lmr_reduction_ticks(depth, move_number) -\n                      lmr_history_ticks(hist_sum));'),
   origin="S098")
 
 m("T07_site_first_child", S, "search/reduction",

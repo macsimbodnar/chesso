@@ -173,14 +173,36 @@ void history_on_quiet_cutoff(search_state_t* state,
                              int depth,
                              move_t prev_move);
 
-// The reduction the built table holds for a (depth, move number) pair. It
-// exists for two tests. S073's: LMR_BASE and LMR_DIVISOR are read once, when
-// the table is built, so a setoption that moved a coefficient without
-// rebuilding would be invisible from outside. And S191's, which is why it is
-// no longer tune-only -- a case asserting that a guard refused to reduce a
-// move says nothing unless the table would have reduced it, and that has to be
-// checkable in the build the gate ships as well as the one it tunes.
+// The reduction the built table holds for a (depth, move number) pair, **in
+// whole plies under this tree's own rounding rule**. It exists for two tests.
+// S073's: LMR_BASE and LMR_DIVISOR are read once, when the table is built, so a
+// setoption that moved a coefficient without rebuilding would be invisible from
+// outside. And S191's, which is why it is no longer tune-only -- a case
+// asserting that a guard refused to reduce a move says nothing unless the table
+// would have reduced it, and that has to be checkable in the build the gate
+// ships as well as the one it tunes.
+//
+// S236 kept the unit and moved the table under it: the two probes below are the
+// accumulator's own, and every case that asks "would this move be reduced at
+// all" still reads this one and still reads plies.
 int search_lmr_reduction_probe(int depth, int move_number);
+
+// The ticks one whole ply is worth: LMR_SCALE, the accumulator's compile-time
+// scale, so a case can state a fraction of a ply without writing the constant
+// a second time and letting the two drift. S236.
+int search_lmr_scale_probe();
+
+// The same table cell as `search_lmr_reduction_probe`, **unrounded**, in those
+// ticks. The difference between the two is the whole of what the rounding rule
+// does, which is what the boundary case reads. S236.
+int search_lmr_reduction_ticks_probe(int depth, int move_number);
+
+// What a move's history sum is worth against the table, in ticks, already
+// clamped: `clamp(hist_sum * LMR_SCALE / LmrHistDiv, +/-LmrHistClamp)`, the
+// value the reduction **subtracts**. Positive for a sum the tables like. It is
+// the term as a function, so the sign, the scale and the clamp are each
+// assertable at inputs the search's own band never produces. S236.
+int search_lmr_history_ticks_probe(int hist_sum);
 
 // The node-type adjustment S098 verdict 2 adds to that table, as a function of
 // the five conditions, so a case can hold the arithmetic and the signs
@@ -192,18 +214,29 @@ int search_lmr_reduction_probe(int depth, int move_number);
 // positions: the node's table entry carries no move -- no entry, or one
 // quiescence wrote without a move -- and a late quiet there is reduced by
 // LMR_NO_TT_MOVE more.
+//
+// **In ticks since S236**, one ply being `search_lmr_scale_probe()` of them:
+// the five constants are still whole plies, and this is where they enter the
+// accumulator's unit.
 int search_lmr_node_adjustment_probe(bool cut_node,
                                      bool improving,
                                      bool tt_move_is_capture,
                                      bool is_pv,
                                      bool no_tt_move);
 
-// The reduction the two consumers share: the raw table plus that adjustment,
-// unclamped, which is what makes "at the off values the engine is the one
-// before this step" a property a test can assert rather than a claim. S098.
+// The reduction the two consumers share: the table plus that adjustment plus
+// the move's own history term, summed in ticks and rounded to plies once,
+// unclamped against the depth -- which is what makes "at the off values the
+// engine is the one before this step" a property a test can assert rather than
+// a claim. S098, and S236 for the last two words of that sum.
+//
+// **`node_adjustment` is in ticks**, as `search_lmr_node_adjustment_probe`
+// returns it; `hist_sum` is a raw history sum, not a tick count, because that
+// is what the site passes and what the term's own scaling is about.
 int search_lmr_adjusted_reduction_probe(int depth,
                                         int move_number,
-                                        int node_adjustment);
+                                        int node_adjustment,
+                                        int hist_sum);
 
 // The depth the zero-window re-search of a reduced move runs at, as a pure
 // function of the five numbers the site has: the child's depth, the reduction

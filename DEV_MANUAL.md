@@ -2460,6 +2460,61 @@ this ledger cannot see the rule at all, the off value's proof is the probe
 and not the total (DEC-215), and `adocs/data/S132_sprt.sh` is the only thing
 that can price it.
 
+**At `S236`, history as a fraction of a ply: `4493659` -> `6858745`, +52.6 %.**
+The step ships two things and only one of them moves a node. The accumulator --
+the reduction table in ticks of a ply, the node terms scaled to match, the sum
+rounded once -- is **bit-identical to the parent at the rounding it ships**,
+`LmrRoundBias` 0: the tune build at `LmrHistClamp` 0 prints `4493659` with all
+eight `bestmove` replies identical and `tools/search_bench.py` reproduces
+`444b808` exactly at both depths, 21479 / 102462 / 33148 with g5f6 / e2a6 /
+d7c8q at depth 9 and 149688 / 459216 / 219544 with c3d5 / e2a6 / d7c8q at depth
+12. That is INV-6's own form and it is what DEC-215 asks an off value to be
+proved by. It is not free in principle -- the table grew from 4 KB to 16 KB --
+and twelve interleaved bench pairs of those two identical trees price it at
+**the candidate a half per cent faster, not slower**: 3826388 nodes per second
+for the parent against 3845136 for the candidate, +0.49 % on the means and
++0.52 % paired, where the run-to-run spread is 1.8 % and 1.2 % and the paired
+spread 2.1 %, at a one-minute load of 1.3 on twelve cores. Half a per cent
+inside a two per cent spread shows no cost and no speed-up either: the growth
+is below this machine's noise floor, which CLAUDE.md puts at 3 %. The runs are
+`adocs/data/S236_nps_interleaved.txt`, and the tune build is deliberately not
+the binary they use -- its parameters are mutable globals and it would price
+its own indirection.
+
+What moves the total is the history term, and it moves it a long way in the
+direction that costs time: a quiet the history tables like is reduced **less**,
+so the tree grows. The census behind the two constants
+(`adocs/data/S236_hist_census.txt`) says the term changes the whole-ply
+reduction at 12.54 % of reduction sites and 5.42 % of them by two plies, because
+`LmrHistClamp` ships on its declared cap. At a clamp of 1024 the same divisor
+moves the same 12.54 % by one ply each and `bench` reads 5193174, +15.6 %; at
+512, 5406957, +20.3 %. **So half of this entry's +52.6 % is the cap**, and the
+number to watch when either constant moves is this one.
+
+**One golden moved with the tree and was re-derived, not relaxed.**
+`tests/test_search.cpp` "pruning does not hide a forced mate" carried a row
+S095 mined -- a mate in 2 the unguarded no-table-move term hides at depth 11.
+On this tree the shipped build reports that position as a mate in **3** at
+depth 11 and finds no mate at 12, so the row stopped being true of the engine
+it guards. It was re-mined by its own script on the candidate tree
+(`adocs/data/S236_remine.log`, DEC-142), and the row it returned holds at
+distance 2 over **all ten swept depths** with the unguarded build losing
+exactly one of them. The old row's text is kept in the case's GOLDEN block
+because an H0 on this step restores the tree it was mined on -- the S188
+sequence, which did the same thing and then undid it.
+
+**The rounding the step was written for is not in the tree.** `LmrRoundBias`
+512, round-to-nearest, loses the mate in `tests/test_search.cpp` "pruning does
+not hide a forced mate" -- and so does every bias from one tick upward with the
+term live, which was established by building six of them. The row is knife-edge
+at depth 14 from a cold table and any upward move of the reduction loses it. The
+parameter therefore ships at 0 with its rule live behind it, the shape
+`LmpDepthCoeff` has had since S109, and the release suite cannot see the rule at
+all: `tests/test_search_params.cpp` "the rounding bias moves the boundary it is
+the rule for" is where it is guarded, in the build that can set it, and W01 in
+`tools/mutants/S236_fixed_point_lmr.py` is declared equivalent for the same
+reason.
+
 A bench total is quoted
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
@@ -2669,6 +2724,35 @@ asserted in `tests/test_engine.cpp` "the share is taken over the whole search,
 not over one iteration" and is the thing that catches a denominator taken over
 the wrong tree. A distribution is not Elo either (DEC-019): what this decides
 is where a sweep starts.
+
+### What the history sum looks like where the reduction reads it
+
+```bash
+# S236's census: the distribution of quiet_history_sum at the reduction's own
+# sites, over the eight bench positions, and the two seeds it derives
+~/.venv/chess/bin/python adocs/data/S236_hist_census.py census
+~/.venv/chess/bin/python adocs/data/S236_hist_census.py census --depth 12
+~/.venv/chess/bin/python adocs/data/S236_hist_census.py census --keep
+```
+
+Builds **two** binaries in a throwaway `.ref-builds/` worktree from the working
+tree's `src/` — a control and an instrumented copy, both with `LmrHistClamp`
+forced to 0 — and refuses to report unless their `bench` totals are equal. That
+comparison is the whole guarantee: the counters are write-only, so a difference
+would mean the patch is not what it claims and the distribution belongs to some
+other tree. Forcing the clamp off is deliberate and is what makes the numbers
+the term's **input** rather than its output.
+
+It prints the percentiles of the absolute sum at depths 10 and 12, then the two
+seeds its own stated rules give — `LmrHistDiv` at twice the p90, so the p90 site
+is worth half a ply, and `LmrHistClamp` at the p99's contribution under that
+divisor — and then drives the same binary once more with
+`CHESSO_HIST_TRY_DIV` and `CHESSO_HIST_TRY_CLAMP` set to that pair, counting per
+site whether it would have moved the whole-ply reduction and by how much. The
+last number is the one worth reading: for a fractional term the percentiles say
+how large the term is and only the crossing count says how often it does
+anything. A distribution is not Elo (DEC-019); it decides where two constants
+start and `adocs/data/S236_sprt.sh` decides the step.
 
 ## Size the lazy evaluation margin
 

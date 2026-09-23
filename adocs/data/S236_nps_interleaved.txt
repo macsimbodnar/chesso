@@ -1,0 +1,49 @@
+# S236: what the reduction table's growth costs, measured rather than argued.
+# Taken 2026-09-23 on the machine .moltke.local.md describes, idle, one-minute
+# load 1.3 before and 1.6 after. Regenerate by running `bench` alternately on
+# the two binaries below and reading the last line of each; the raw run is
+# .tuning/coord/S236_nps_interleaved.log.
+#
+# WHY THIS EXISTS. S236 widens the late move reduction table from 4 KB of
+# uint8_t to 16 KB of int32_t, because the table holds ticks of a ply now. That
+# is a working-set change in the hottest loop the search has, and 'expected to
+# be free' is not a measurement (CLAUDE.md). The two builds compared here
+# search the **same tree** -- both print bench 4493659 with the same eight
+# bestmove replies -- so nodes per second is the only thing that can differ and
+# the comparison is INV-6's own shape.
+#
+#   A  parent      .ref-builds/parent/build/src/chesso, worktree at 444b808
+#   B  candidate   .ref-builds/off/build/src/chesso, this tree's src/ with
+#                  LmrHistClamp's default forced to 0 -- the accumulator with
+#                  no history term, which is the tree A searches
+#
+# Both are Release, -DCHESSO_ARCH=native, TUNE=OFF. **Not the tune build**: its
+# parameters are mutable globals rather than constants, so it would price its
+# own indirection and not the table.
+#
+# pair   A nodes/s    B nodes/s
+#    1     3903202     3886004
+#    2     3730691     3844700
+#    3     3874161     3809192
+#    4     3746023     3881318
+#    5     3822243     3771952
+#    6     3848770     3917223
+#    7     3846201     3789367
+#    8     3856959     3893873
+#    9     3709356     3813210
+#   10     3867079     3849156
+#   11     3793881     3866926
+#   12     3918084     3818706
+#
+#   A mean 3826388   sd 67730  (1.77 %)
+#   B mean 3845136   sd 45245  (1.18 %)
+#   B / A  100.49 %   -- the candidate's mean is +0.49 % against the parent's,
+#   paired +0.52 %, sd 2.10 %
+#
+# THE DIRECTION IN WORDS. The candidate ran **faster**, not slower: the wider
+# table did not cost nodes per second on this machine. The difference is half a
+# per cent where the run-to-run spread is one to two per cent, so what this
+# shows is not a speed-up either -- it is that the growth is **below the noise
+# floor**, which CLAUDE.md puts at 3 % without hyperfine and a tight sigma.
+# Nothing here is Elo and nothing reads it as Elo (DEC-019).
+

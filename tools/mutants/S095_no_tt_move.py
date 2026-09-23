@@ -34,6 +34,12 @@ can decide.
 
 Ids are never reused: J is this file's own prefix and nothing else in
 tools/mutants/ uses it.
+
+**Both anchors were re-cut by S236 and neither mutant changed meaning.** That
+step sums the node terms as ticks of a ply, so the line these two anchor on
+reads `LMR_NO_TT_MOVE * LMR_SCALE` now. The inversion and the drop are the same
+two bugs on the same site; an anchor is a coordinate, and one that has moved is
+re-read rather than retired.
 """
 
 S = "src/search.cpp"
@@ -43,8 +49,8 @@ m("J01_no_tt_move_inverted", S, "search/reduction",
   'reduces hardest exactly at the nodes an earlier search already resolved and '
   'not at all at the ones nothing has looked at -- the inverse of the '
   'published condition, and silent: no crash, no wrong node count, only rating',
-  ('  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE; }',
-   '  if (!no_tt_move) { adjustment += LMR_NO_TT_MOVE; }'),
+  ('  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE * LMR_SCALE; }',
+   '  if (!no_tt_move) { adjustment += LMR_NO_TT_MOVE * LMR_SCALE; }'),
   origin="S095")
 
 m("J02_no_tt_move_dropped", S, "search/reduction",
@@ -54,7 +60,7 @@ m("J02_no_tt_move_dropped", S, "search/reduction",
   'deletes its only use orphans it and -Werror=unused-parameter refuses the '
   "Release build this tool runs -- which reads as `stillborn` and proves "
   "nothing. search.py's header carries the reason in full",
-  ('  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE; }',
+  ('  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE * LMR_SCALE; }',
    '  (void) no_tt_move;'),
   origin="S095")
 

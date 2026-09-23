@@ -140,7 +140,54 @@ void history_on_quiet_cutoff(search_state_t* state,
 }
 
 
-using lmr_table_t = std::array<std::array<uint8_t, 64>, 64>;
+// THE ACCUMULATOR'S UNIT, S236. Every input to a late move reduction -- the
+// table below, the five node terms, the move's own history -- is carried in
+// **ticks of a ply** and the sum is rounded to whole plies once, at
+// `lmr_adjusted_reduction`'s return. Before this step the table truncated a
+// `double` into a `uint8_t` and the node terms were whole plies added to it, so
+// a term that wanted to say "reduce a third of a ply less here" could say
+// nothing or say a whole ply, and S098 verdict 1's history term had to be the
+// second (DEC-213, two recorded zeros).
+//
+// **A power of two, and it is a design constant and not a tuned one** (DEC-134
+// (c)). Two properties decide it and neither is a guess at a good value:
+//
+//   the shift    a power of two makes the rounding divide an arithmetic right
+//                shift, which is an exact floor for a negative sum where C's
+//                `/` is a truncation toward zero -- and the sum is negative
+//                whenever LmrPv or the history term outweighs a small table
+//                value. C++20 defines `>>` on a signed value as a floor
+//                division; the static_assert below pins that rather than
+//                trusting the sentence.
+//   the range    the widest intermediate in the accumulator is
+//                `hist_sum * LMR_SCALE` in `lmr_history_ticks`. `hist_sum`'s
+//                own band is `QuietHistoryMax + ContHistWeight *
+//                CONT_HIST_BOUND / 100`, which is 17350 at the shipped values
+//                and 688107 at the two range tops, so the product at 1024 is
+//                7.05e8 -- a factor of three inside `int32_t` at the worst
+//                vector a tune build can be driven to, and a factor of 121
+//                inside it at the shipped one. The next power of two would
+//                leave that
+//                worst case at 1.41e9, inside the type but with no headroom
+//                worth the extra bit of resolution.
+//
+// One tick is under a thousandth of a ply, which is finer than any term this
+// engine has: the history term's own seed puts the 90th percentile sum at half
+// a ply, 512 ticks.
+inline constexpr int LMR_SCALE_SHIFT = 10;
+inline constexpr int LMR_SCALE = 1 << LMR_SCALE_SHIFT;
+
+static_assert((-1 >> 1) == -1,
+              "the reduction's rounding is an arithmetic shift: a negative sum "
+              "must floor, not truncate toward zero");
+
+
+// The table is `int32_t` and no longer `uint8_t`: at the range tops of LmrBase
+// and LmrDivisor the formula reaches 1720.5 plies, which is 1.76e6 ticks, so
+// nothing narrower holds the whole of what a tune build can ask for. That is
+// 16 KB against the 4 KB of whole plies, and the price is paid for the
+// resolution rather than saved by capping a value a sweep can still reach.
+using lmr_table_t = std::array<std::array<int32_t, 64>, 64>;
 
 
 // How much depth a late quiet move gives up, by remaining depth and by how far
@@ -150,6 +197,13 @@ using lmr_table_t = std::array<std::array<uint8_t, 64>, 64>;
 //
 // Built once rather than computed per move - two logarithms in the innermost
 // loop of the search is not a trade worth making.
+//
+// **In ticks since S236.** The cast still truncates and the formula is
+// untouched, so the whole-ply value the engine shipped before this step is
+// `table[depth][move_number] >> LMR_SCALE_SHIFT` exactly: flooring a floored
+// product by a power of two is flooring the real value once
+// (`floor(floor(r * S) / S) == floor(r)` for `r >= 0`, and `r` is
+// non-negative here because LmrBase is and both logarithms are).
 static lmr_table_t build_lmr_table()
 {
   lmr_table_t table{};
@@ -159,7 +213,7 @@ static lmr_table_t build_lmr_table()
       const double r =
           (LMR_BASE / 100.0) +
           (std::log(depth) * std::log(move_number)) / (LMR_DIVISOR / 100.0);
-      table[depth][move_number] = static_cast<uint8_t>(r);
+      table[depth][move_number] = static_cast<int32_t>(r * LMR_SCALE);
     }
   }
 
@@ -179,7 +233,7 @@ static const lmr_table_t lmr_table = build_lmr_table();
 #endif
 
 
-static inline int lmr_reduction(int depth, int move_number)
+static inline int lmr_reduction_ticks(int depth, int move_number)
 {
   const int d = (depth < 63) ? depth : 63;
   const int m = (move_number < 63) ? move_number : 63;
@@ -187,8 +241,31 @@ static inline int lmr_reduction(int depth, int move_number)
 }
 
 
+// The one place ticks become plies, S236. `LMR_ROUND_BIAS` is added before the
+// shift, so the parameter *is* the rounding rule: 0 floors, which is what the
+// `uint8_t` cast did to the table before this step and is therefore the rule's
+// off value; LMR_SCALE / 2 rounds to nearest, which is the shipped seed and the
+// midpoint of the declared range; the range top rounds up. Nothing else in the
+// search rounds a reduction, which is the property the accumulator exists for.
+//
+// The shift and not `/ LMR_SCALE`: the sum is negative at a PV node whose table
+// value is small, and C's division would truncate that toward zero -- the same
+// input rounding two ways depending on its sign. The static_assert above holds
+// the shift to a floor.
+static inline int lmr_plies_of(int ticks)
+{ return (ticks + LMR_ROUND_BIAS) >> LMR_SCALE_SHIFT; }
+
+
+int search_lmr_scale_probe()
+{ return LMR_SCALE; }
+
+
+int search_lmr_reduction_ticks_probe(int depth, int move_number)
+{ return lmr_reduction_ticks(depth, move_number); }
+
+
 int search_lmr_reduction_probe(int depth, int move_number)
-{ return lmr_reduction(depth, move_number); }
+{ return lmr_plies_of(lmr_reduction_ticks(depth, move_number)); }
 
 
 // What the table above is worth once the **node's own type** is taken into
@@ -196,6 +273,14 @@ int search_lmr_reduction_probe(int depth, int move_number)
 // constant whose off value is 0, and every one of them a property of the node
 // rather than of the move -- which is why the whole adjustment is computed once
 // per node and passed in here as a single integer.
+//
+// **Returned in the accumulator's ticks since S236**, one ply being LMR_SCALE
+// of them, so the sum this joins is in one unit and rounds once. The five
+// constants stay whole plies on the UCI surface and in their declared ranges:
+// what changed is where they are scaled, not what they mean, and a whole
+// number of plies added to a tick sum survives the rounding unchanged --
+// `(t + k * LMR_SCALE + bias) >> shift` is `((t + bias) >> shift) + k` for any
+// integer k, which is why the off configuration is the parent exactly.
 //
 //   + LMR_CUTNODE        this node is predicted to fail high, so a late quiet
 //                        is even less likely to be the move that does it
@@ -227,11 +312,11 @@ static inline int lmr_node_adjustment(bool cut_node,
 {
   int adjustment = 0;
 
-  if (cut_node) { adjustment += LMR_CUTNODE; }
-  if (!improving) { adjustment += LMR_NOT_IMPROVING; }
-  if (tt_move_is_capture) { adjustment += LMR_TT_CAPTURE; }
-  if (is_pv) { adjustment -= LMR_PV; }
-  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE; }
+  if (cut_node) { adjustment += LMR_CUTNODE * LMR_SCALE; }
+  if (!improving) { adjustment += LMR_NOT_IMPROVING * LMR_SCALE; }
+  if (tt_move_is_capture) { adjustment += LMR_TT_CAPTURE * LMR_SCALE; }
+  if (is_pv) { adjustment -= LMR_PV * LMR_SCALE; }
+  if (no_tt_move) { adjustment += LMR_NO_TT_MOVE * LMR_SCALE; }
 
   return adjustment;
 }
@@ -248,20 +333,91 @@ int search_lmr_node_adjustment_probe(bool cut_node,
 }
 
 
+// What this **move's own history** is worth against the table's guess, S236 and
+// the return of S098 verdict 1 in the unit that step did not have.
+//
+//   ticks -= clamp(hist_sum * LMR_SCALE / LmrHistDiv, +/-LmrHistClamp)
+//
+// `hist_sum` is `quiet_history_sum` -- the raw butterfly entry plus S222's
+// weighted continuation entry, the same number score_move returns for a quiet
+// that is neither killer, countermove nor table move. **Positive history
+// shrinks the reduction.** A sign slip here reduces the good quiets and has no
+// symptom but lost rating, which is why the direction is a case and not a
+// comment ("a quiet the history tables like is reduced less").
+//
+// **The divisor is the sum that buys one whole ply**, which is the unit that
+// makes the seed readable: at the seeded value the 90th percentile sum moves
+// the reduction by half a ply, and the typical site by less. S098 verdict 1's
+// fitted 699 and clamp 3 are **not** reused and are not comparable -- they were
+// fitted against a term whose smallest step was a whole ply (DEC-213).
+//
+// Symmetric on the sign: the division truncates toward zero on both halves, so
+// a sum and its negation move the reduction by the same number of ticks in
+// opposite directions.
+//
+// **With LmrHistClamp at 0 this returns 0 for every sum and every divisor.**
+// That is the off value the bisection rests on, and it is proved on the tree
+// rather than declared from a range's end (DEC-215).
+static inline int lmr_history_ticks(int hist_sum)
+{
+  // The widest intermediate the accumulator has, and the one LMR_SCALE was
+  // chosen against: the product below reaches 7.05e8 at the widest band a tune
+  // build can be driven to, a factor of three inside the type. A sum past this
+  // would be a history band nothing here knows about, and it would wrap in
+  // silence -- INV-2's kind of guard, live in the Debug binaries the second
+  // tier self-plays (DEC-141).
+  assert(hist_sum <= std::numeric_limits<int>::max() / LMR_SCALE &&
+         hist_sum >= std::numeric_limits<int>::min() / LMR_SCALE);
+
+  int ticks = (hist_sum * LMR_SCALE) / LMR_HIST_DIV;
+
+  if (ticks > LMR_HIST_CLAMP) { ticks = LMR_HIST_CLAMP; }
+  if (ticks < -LMR_HIST_CLAMP) { ticks = -LMR_HIST_CLAMP; }
+
+  return ticks;
+}
+
+
+// The history a move has when there is none to read: the sum passed at the two
+// sites that decide before a move is picked, or about a move no history table
+// has an entry for. Named rather than written as a bare 0, because the number
+// is a statement -- "this site reads the table and the node, and no move's
+// history" -- and not a value. S098 verdict 1's constant, back with its term.
+static constexpr int NO_HISTORY_SUM = 0;
+
+
 // The reduction a move actually gets: the table's own guess at this (depth,
-// move number), moved by the node's type. With all four constants at 0 this is
-// the raw table and the engine is the one before S098 verdict 2, bench
-// signature included -- the property the bisection protocol rests on.
+// move number), moved by the node's type and by the move's history, summed in
+// ticks and **rounded to whole plies once, here**. This is the only rounding
+// site in the reduction, which is what S236 bought: a term worth a third of a
+// ply now moves the reduction at the sites where a third of a ply crosses the
+// boundary, instead of having to choose between nothing and a whole ply.
+//
+// With the four node constants at 0 this is the table and the move's history;
+// with `LmrHistClamp` at 0 as well and `LmrRoundBias` at 0 it is the truncated
+// table plus whole plies -- the engine before this step, bench signature
+// included, which is the property the bisection protocol rests on.
 static inline int lmr_adjusted_reduction(int depth,
                                          int move_number,
-                                         int node_adjustment)
-{ return lmr_reduction(depth, move_number) + node_adjustment; }
+                                         int node_adjustment,
+                                         int hist_sum)
+{
+  return lmr_plies_of(lmr_reduction_ticks(depth, move_number) +
+                      node_adjustment - lmr_history_ticks(hist_sum));
+}
+
+
+int search_lmr_history_ticks_probe(int hist_sum)
+{ return lmr_history_ticks(hist_sum); }
 
 
 int search_lmr_adjusted_reduction_probe(int depth,
                                         int move_number,
-                                        int node_adjustment)
-{ return lmr_adjusted_reduction(depth, move_number, node_adjustment); }
+                                        int node_adjustment,
+                                        int hist_sum)
+{
+  return lmr_adjusted_reduction(depth, move_number, node_adjustment, hist_sum);
+}
 
 
 // The depth the shallow-depth rules are gated on: what late move reduction
@@ -278,10 +434,20 @@ int search_lmr_adjusted_reduction_probe(int depth,
 // site of this function -- the PV term is the only negative one and a PV node
 // is not a pruning node -- but nothing here depends on that, since the clamp
 // below is on the result.
-static inline int lmr_depth_of(int depth, int move_number, int node_adjustment)
+//
+// **The move's history is part of that one number again, S236**, as it was
+// under S098 verdict 1: a quiet whose history buys it a fraction of a ply back
+// is gated at the depth it is going to be searched at and not at the table's
+// guess. The two sites that have no move to read a history for pass
+// NO_HISTORY_SUM and say why; at `LmrHistClamp` 0 every site reads the same
+// number it read before this step.
+static inline int lmr_depth_of(int depth,
+                               int move_number,
+                               int node_adjustment,
+                               int hist_sum)
 {
-  const int left =
-      depth - lmr_adjusted_reduction(depth, move_number, node_adjustment);
+  const int left = depth - lmr_adjusted_reduction(depth, move_number,
+                                                  node_adjustment, hist_sum);
 
   return (left > 0) ? left : 0;
 }
@@ -597,10 +763,17 @@ lmp_census_t::~lmp_census_t()
   // The reduction table the analysis turns (depth, move) into an lmr depth
   // with, emitted by the same binary so the script does none of the engine's
   // own arithmetic a second time.
+  //
+  // **Whole plies, under this tree's own rounding rule, and four columns.**
+  // Since S236 the table holds ticks, and what this row carries is what the
+  // engine would use for that cell -- `LmrRoundBias` applied -- because that is
+  // the number `adocs/data/S109_lmp_census.py` turns into an lmr depth. The
+  // column count is part of that file's parser, so the ticks are not appended
+  // here: `search_lmr_reduction_ticks_probe` is where a reader gets them.
   for (int depth = 1; depth < CENSUS_DEPTHS; ++depth) {
     for (int move = 1; move < CENSUS_MOVES; ++move) {
       out << "reduction\t" << depth << '\t' << move << '\t'
-          << lmr_reduction(depth, move) << '\n';
+          << lmr_plies_of(lmr_reduction_ticks(depth, move)) << '\n';
     }
   }
 }
@@ -1881,9 +2054,15 @@ static int negamax_at(int alpha0,
     // checking move inside it -- so what the rule saves is the subtrees and not
     // the move list, and every quiet it skips costs one make, one unmake and
     // one attack scan.
+    // The gate reads no move's history here and it is the only one of the four
+    // sites that reads none. This decision is taken before `pick_next_move`, so
+    // there is no move yet to read a history entry for -- the rule is about the
+    // count and not about a move -- and NO_HISTORY_SUM is what makes that
+    // explicit rather than implicit. S098 verdict 1, S236.
     if (!skip_quiets && may_prune) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
+      const int lmr_depth =
+          lmr_depth_of(depth, move_number, node_adjustment, NO_HISTORY_SUM);
 
       if (lmr_depth < LMP_MAX_LMRDEPTH &&
           100 * move_number > lmp_threshold_x100(lmr_depth, improving)) {
@@ -1936,6 +2115,21 @@ static int negamax_at(int alpha0,
     const bool is_capture = MOVE_CAPTURE(moves[i]);
     const bool is_quiet = !is_capture && !MOVE_PROMOTED(moves[i]);
 
+    // This move's raw history, read **here** and used twice: by the
+    // shallow-depth block's gate below and by the reduction after make_move.
+    // Here because the butterfly table is indexed by the side to move and after
+    // make_move that is the other side -- a read down there would score the
+    // move against the opponent's half of the table, silently. S098 verdict 1,
+    // back with S236's fractional term.
+    //
+    // Quiets only, and that is the move class the reduction table itself
+    // covers: a capture is not reduced by late move reduction at all, and
+    // neither table has an entry for one, so the cell at its (from, to) belongs
+    // to some quiet move and is not this move's history in any sense.
+    const int hist_sum =
+        is_quiet ? quiet_history_sum(game, state, moves[i], prev_move)
+                 : NO_HISTORY_SUM;
+
     // The three per-move rules. Their inputs are all properties of **this**
     // position -- the node's own static score, the history table and the
     // exchange evaluation -- so the decision is taken before make_move, where
@@ -1947,7 +2141,8 @@ static int negamax_at(int alpha0,
 
     if (may_prune && is_quiet) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
+      const int lmr_depth =
+          lmr_depth_of(depth, move_number, node_adjustment, hist_sum);
 
       // A node in check has no static score and `pruning_node` excludes one,
       // so the margin below never reads the sentinel.
@@ -2013,9 +2208,15 @@ static int negamax_at(int alpha0,
     // they do not, which is where the quiet rules leave them: a promotion that
     // takes nothing is pruned by no rule in this loop, deliberately, because a
     // promotion mate is the shape the hazard likes best.
+    // NO_HISTORY_SUM and not `hist_sum`: the two are the same number here --
+    // `hist_sum` is NO_HISTORY_SUM on every capture by the read above -- and
+    // the constant is what says the gate on a capture reads no history because
+    // there is none to read, rather than by way of a variable that happens to
+    // hold zero.
     if (may_prune && is_capture) {
       const int move_number = legal_moves_counter + 1;
-      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
+      const int lmr_depth =
+          lmr_depth_of(depth, move_number, node_adjustment, NO_HISTORY_SUM);
 
       if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH &&
           !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {
@@ -2159,8 +2360,9 @@ static int negamax_at(int alpha0,
 
     if (may_reduce) {
       if (!is_capture && !MOVE_PROMOTED(moves[i])) {
-        reduction = lmr_adjusted_reduction(
-            depth, static_cast<int>(legal_moves_counter), node_adjustment);
+        reduction =
+            lmr_adjusted_reduction(depth, static_cast<int>(legal_moves_counter),
+                                   node_adjustment, hist_sum);
       }
 
       // S091. A move that loses material is one the ordering already put late

@@ -1,0 +1,87 @@
+# S236: the history sum where the fractional reduction term reads it.
+# Regenerate with:
+#   ~/.venv/chess/bin/python adocs/data/S236_hist_census.py census
+# The script's docstring is the method; it holds the instrumentation
+# patch, so this file is reproducible from the repository alone.
+# The eight bench positions of src/chesso.cpp's bench_positions, one
+# persistent UCI process, ucinewgame between positions, go depth N.
+# A site is one call of lmr_adjusted_reduction in negamax_at.
+# Percentiles are nearest-rank, so every number is one the census saw.
+# Instrumented bench signature: 4493659, equal to a control binary built
+# from the same source without the counters -- which is what says the
+# write-only counters do not move the tree the census is taken on.
+# The censused tree has LmrHistClamp forced to 0, the term's own off
+# value, so this is the distribution the term is added to and not one
+# a provisional term has already moved. It ships at 2048.
+# Accumulator scale: 1024 ticks to the ply (LMR_SCALE, src/search.cpp).
+#
+# THE SEED RULES, stated in the script before these numbers existed:
+#   LmrHistDiv   = 2 * p90(|sum|), so the p90 site is half a ply
+#   LmrHistClamp = p99(|sum|) * scale / LmrHistDiv, capped at the
+#                  declared range top of 2048 ticks
+#
+# ONE PASS, AND THAT IS A LIMIT ON WHAT A PERCENTILE FROM IT MEANS.
+# The distribution belongs to the tree the census ran on. A divisor
+# taken from it changes the reduction, which changes the tree, which
+# changes the distribution -- so the percentile is the 90th of the
+# tree that was measured and not of the tree that then ships. The
+# fixed point is not iterated here; S127's lane fits both constants
+# against games, which is what a second pass would not give.
+#
+# Not Elo and not a verdict (DEC-019): it sizes two seeds.
+depth 10
+  positions: 8   nodes: 808202   wall: 0.2 s
+  sites: 74595   of them with a non-zero raw table value: 74595 (100.00 %)
+  clipped at the histogram bound: 0
+  |sum|, all sites             p50       0  p75      53  p90     174  p95     383  p99    3885
+  |sum|, raw table non-zero    p50       0  p75      53  p90     174  p95     383  p99    3885
+  signed sum, all sites        p50       0  p75       0  p90       0  p95     383  p99    3885
+  zero sums: 50879 (68.21 %)
+  seed rules at this depth: LmrHistDiv = 2 * p90 = 348, LmrHistClamp = p99 * 1024 / LmrHistDiv = 11431  ticks, which is 11.2 plies -- CAPPED to the declared top 2048
+  at that divisor the p50 site is worth 0.000 of a ply and the p90 site 0.500
+
+depth 12
+  positions: 8   nodes: 2040778   wall: 0.5 s
+  sites: 232136   of them with a non-zero raw table value: 232136 (100.00 %)
+  clipped at the histogram bound: 0
+  |sum|, all sites             p50       0  p75      53  p90     367  p95    1219  p99    4883
+  |sum|, raw table non-zero    p50       0  p75      53  p90     367  p95    1219  p99    4883
+  signed sum, all sites        p50       0  p75       0  p90     325  p95    1219  p99    4883
+  zero sums: 156674 (67.49 %)
+  seed rules at this depth: LmrHistDiv = 2 * p90 = 734, LmrHistClamp = p99 * 1024 / LmrHistDiv = 6812  ticks, which is 6.7 plies -- CAPPED to the declared top 2048
+  at that divisor the p50 site is worth 0.000 of a ply and the p90 site 0.500
+
+what the seeded pair would do to this tree (a counterfactual on the tree without the term, not an observation of one with it)
+  LmrHistDiv 734   LmrHistClamp 2048 (2.000 of a ply)
+  sites whose whole-ply reduction moves: 29113 of 232136 (12.54 %)
+    by 0 ply: 203023 (87.46 %)
+    by 1 ply: 16523 (7.12 %)
+    by 2 ply: 12590 (5.42 %)
+  of the moves, the ones that reduce **more** (a negative history sum): 7026
+
+# A SECOND READING, taken the same day with --clamp-top 1024, because the cap
+# above binds and the question it forces is what the cap is worth. The
+# distribution is the same run's -- the census is deterministic -- and only the
+# counterfactual differs:
+#
+#   LmrHistDiv 734   LmrHistClamp 1024 (1.000 of a ply)
+#   sites whose whole-ply reduction moves: 29113 of 232136 (12.54 %)
+#     by 1 ply: 29113 (12.54 %)
+#   of the moves, the ones that reduce more (a negative sum): 7026
+#
+# So the cap does not change WHICH sites the term moves, only how far 5.42 %
+# of them go. On the bench that difference is 6858745 nodes against 5193174,
+# +52.6 % against +15.6 % over the parent's 4493659. Recorded as data; which
+# pair ships is a decision and DEC-134 (b) forbids choosing it from this file
+# after the fact. Appended by hand from the console output of the second run,
+# which is the only part of this file a run did not write.
+#
+# THIS FILE SUPERSEDES A FIRST CENSUS TAKEN THE SAME MORNING, and the
+# difference is the point. That run was taken while the working tree still
+# carried LmrRoundBias 512, so the tree it measured -- instrumented bench
+# 3928807 -- was the round-to-nearest accumulator, which the fast suite then
+# rejected. It read p90 318 and p99 4815 and gave LmrHistDiv 636. This one is
+# taken on the tree that ships minus the term, instrumented bench **4493659,
+# the parent's own signature**, and reads p90 367, p99 4883, LmrHistDiv 734.
+# Same script, same rules, different tree, and a percentile belongs to its
+# tree: that is the header's one-pass caveat happening in the small.
