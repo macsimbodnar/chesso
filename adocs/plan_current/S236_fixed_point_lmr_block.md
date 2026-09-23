@@ -820,3 +820,33 @@ whether it holds at 1024, and if not the row is re-derived by its script
 before the landing, as before), the pre-registration's measured rows filled,
 then the second tier and the SPRT. If that reads H0 the term leaves and the
 accumulator stays, as DEC-231 wrote; there is no third run.
+
+## The follow-up's fast check, landing and second tier (coordinator, 2026-09-23)
+
+**Fast check** by a cold Opus 5 reviewer over the flip diff: one code line in
+`src/` (the X-macro default 2048 -> 1024), everything else comment; the two
+re-mined rows kept under the GOLDEN block with the tree each belongs to;
+`REF` documented as `666b5a0` with its reason; the reviewer reproduced
+`bench` 5193174 with the parent's eight replies, the off value 4493659,
+`search_bench` exact at both depths, `test_search` at 9.5 s inside its 60 s
+ceiling and `test_mate_carry` at 58 s inside its 120 s. Two findings of
+record, both closed before the landing: the mate-carry golden's own header
+and re-derivation command still quoted the ceiling of 0 and four grids
+(brought to 2 and five, the command as written now reproducing the number
+shipped), and the pre-registration's H0 removal list omitted the raised
+ceiling and its grid (added, with the README row); two trivial wordings in
+`DEV_MANUAL.md`.
+
+**Landed as `85901b3`**, `bench` 6858745 -> 5193174, squashed from the branch
+`s236-v2`'s two WIP commits; the specs passage now carries verdict 1's result
+and the follow-up with a placeholder for its verdict.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 182674 trace lines
+with 1270 `bestmove` lines (`.tuning/coord/s236_v2_debug_selfplay/`), 17:41.
+
+`tools/gate_extra.sh` launched detached on `85901b3` at 17:41
+(`.tuning/gate_extra_2026-09-23_s236v2.log`), watcher armed with four exits
+and a 55-minute ceiling; its marker is recorded below before `CAND` is pinned
+and the SPRT starts.

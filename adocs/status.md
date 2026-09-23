@@ -7,14 +7,38 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236 v2 is landed, 2026-09-23 17:39, as `85901b3`, `bench` 6858745 ->
+  5193174 (+15.6 % over the tree without the term, the census's prediction to
+  a tenth of a per cent, all eight replies the parent's); second tier in
+  progress, SPRT not yet pinned.** One default, `LmrHistClamp` 2048 -> 1024,
+  DEC-231's pre-registered follow-up; two goldens moved with the tree and
+  were re-derived by their scripts -- S097's multicut mate row (the one
+  candidate of 269 that separates here, mate in 6 at depth 14, red observed
+  under E21) and `test_mate_carry`'s `C_mate7_depth11` ceiling 0 -> 2 over a
+  fifth tracked grid -- both predecessors kept for the H0 that restores them;
+  E21 is killed on this tree; mutation 14 of 14 (W01 equivalent); both suites
+  40 of 40; cold fast check reproduced every number, two findings of record
+  closed. Debug self-play 8 games with 0 `Assertion`; `gate_extra` launched
+  at 17:41 with a watcher. **On its marker:** pin `REF` 666b5a0 (the tree
+  without the term, as the pre-registration says) and `CAND` 85901b3 in
+  `adocs/data/S236_v2_sprt.sh`, launch the SPRT tonight, banner, watcher.
+  **When that marker fires:** the record as `S236 v2` with DEC-220's block
+  (subject "Record S236 v2's <verdict> for the history term at one ply");
+  **H1** keeps the term at (734, 1024), re-mines E21 on the shipping tree if
+  it is unpinned there, and completes S236; **H0** or a stalled walk removes
+  the term, its two settings, cases, mutants, both re-mined rows and the
+  raised ceiling, keeps the accumulator at bias 0, and completes S236 on
+  three H0s for the idea -- no third run (DEC-231). Then S234 gets the
+  machine.
+
 - **S236's verdict is H0, 2026-09-23 15:35:32: `Elo -1.60 +/- 4.25`, `nElo
   -2.05 +/- 5.44`, LLR -2.95 over 15658 games in 7 h 32 m at 2081.1 an hour,
   0 forfeits either side, `Ptnml [752, 1843, 2665, 1863, 706]`, LOS 23.05 %.**
   The nElo interval [-7.49, +3.39] reaches above zero: DEC-231's third
   reading, a zero read as a walk, not the loss that removes the term. **The
   one pre-registered follow-up binds:** the same term at `LmrHistClamp` 1024
-  (the census: the same 13.6 % of sites move, all by one ply, +15.6 % of tree
-  against +52.6 %), one default flip on this tree, as `S236 v2` at `{0, 5}`
+  (the corrected census: the same 12.54 % of sites move, all by one ply,
+  +15.6 % of tree against +52.6 %), one default flip on this tree, as `S236 v2` at `{0, 5}`
   against `666b5a0`, the tree without the term, as the pre-registration says
   (the flip lands on `8b1bc79`, so its parent is not the reference); an H0 there
   removes the term and keeps the accumulator; there is no third run.
