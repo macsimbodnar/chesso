@@ -29,6 +29,13 @@ Updated: 2026-09-21, by hand.
   Debug self-play and `gate_extra`, pin and the `S236 v2` SPRT tonight. S234
   stays in code-writing mode behind it. Machine idle from 15:35; no watcher
   armed.
+  **Recorded (`3243c3f`), the ledger carried (`c060eda`, twenty-eight, slow
+  class fifteen at 6 h 54 m), and "machine free" given to S236's agent at
+  15:42** in a fresh worktree `../chesso-s236` (branch `s236-v2` at `c060eda`)
+  for the flip to `LmrHistClamp` 1024, the mate rows at the new clamp, the
+  measurements against `666b5a0`'s tree, the mutation pass and
+  `adocs/data/S236_v2_sprt.sh` (REF to be pinned to `666b5a0`, the tree
+  without the term).
 
 - **S236's gainer SPRT is running, launched 2026-09-23 08:03:15: `8b1bc79`
   (the fractional history reduction term) against `666b5a0` (the tree without
