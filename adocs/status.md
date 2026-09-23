@@ -7,6 +7,32 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236 is landed, 2026-09-23 07:41, as `8b1bc79`, `bench` 4493659 -> 6858745;
+  second tier in progress, SPRT not yet pinned.** The reduction accumulated in
+  ticks (1024 to the ply) and rounded once at `lmr_adjusted_reduction`'s
+  return with `LmrRoundBias` 0 -- the parent's truncation, a measurement:
+  every bias from one tick up with the term live loses a mate row the
+  accepts requires (DEC-231) -- so the accumulator is the parent's tree to the
+  node and the candidate is the history term alone: `clamp(hist_sum * 1024 /
+  LmrHistDiv, +/-LmrHistClamp)` subtracted, `LmrHistDiv` 734 and
+  `LmrHistClamp` 2048 from a census on the tree the term is added to (p90
+  367, p99 4883; the clamp on its declared top). Four cases plus a re-mined
+  mate row, mutants W01 to W06 with W01 equivalent, the seven older anchors
+  the unit moved re-cut and re-killed, E21 named as this tree's gap; both
+  suites 40 of 40; cold fast check clean on the arithmetic. `specs.md`'s
+  search row carries the passage with a `<verdict>` placeholder and the
+  corrected shallow-depth gate sentence. Debug self-play 8 games with 0
+  `Assertion`; `gate_extra` launched at 07:43 with a watcher. **On its
+  marker:** pin `REF` 666b5a0 (the tree without the term; its `src/` is
+  `3b0fbe6`'s) and `CAND` 8b1bc79 in `adocs/data/S236_sprt.sh`, launch the
+  SPRT by day, banner, watcher, the launch recorded here. **When that marker
+  fires:** the record with DEC-220's block (subject "Record S236's <verdict>
+  for the fractional history reduction"); readings per DEC-231 -- H1 keeps
+  the seeds and re-mines E21 on the shipping tree before completion; a loss
+  removes the term and keeps the accumulator, restoring the old mate row; a
+  walk gets one follow-up at `LmrHistClamp` 1024 as `S236 v2`. The worktree
+  `../chesso-s236` and its branch are removed.
+
 - **S132's second-control confirmation is H1, 2026-09-23 03:46:02 (DEC-229):
   `Elo 17.99 +/- 8.70`, `nElo 24.91 +/- 12.02`, LLR 2.95 over 3208 games in
   6 h 09 m at 522.6 an hour at 32+0.32 with Hash 64, 0 forfeits either side,

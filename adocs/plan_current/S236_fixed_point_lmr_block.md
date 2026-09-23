@@ -592,3 +592,44 @@ verdict is clean either way. The difference between a follow-up written before
 the first game and a number picked off the bench after the last one is the whole
 of DEC-213's objection, and it is why the paragraph is in the script and not in
 a later conversation.
+
+## Fast check, landing and second tier (coordinator, 2026-09-23)
+
+**Fast check** by a cold Opus 5 reviewer over the diff before it landed:
+**nothing in the arithmetic** -- no `int32` overflow at the ranges' extremes
+(the widest intermediate 3.05x inside the type), the sign matching
+`quiet_history_sum` and DEC-213's form, the shift flooring negative ticks
+with both consumers clamping at zero as the parent did, the truncation
+against floor asymmetry stated and tested, the shallow-depth gate reached
+only through `lmr_depth_of`, the pre-make read confirmed, the cases not
+vacuous, W01's equivalence sound, the seven re-cut anchors mutating what
+their notes say; the reviewer reproduced `bench` 4493659 on the parent and
+6873143 on the then-candidate, the identity at `LmrHistClamp` 0 with all
+eight replies, the UCI declarations and the targeted cases. Three findings
+of record: the branch base (the coordinator rebased before applying), the
+census file's stale clamp line, and the decision the accepts deviation owed
+(**DEC-231**); seven trivial wordings. **Fixing the census line exposed that
+the census had run on the rejected round-to-nearest tree**: re-taken on the
+tree the term is added to, `LmrHistDiv` 636 -> 734, and at those seeds the
+mined row "mate the extra ply hides" reported the mate one ply long in the
+cold fixed-depth search; the row was re-derived by its own script (DEC-142,
+S188's precedent) to `8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1` at
+depth 9 (distance 2 at all ten swept depths, Stockfish `#+2`, red observed
+with the guard opened), the old row kept in the GOLDEN block as the one an
+H0 restores; the mutation pass re-run on the final seeds (13 of 14, W01
+equivalent, E21 the named gap); the nps of the accumulator alone re-measured
+over twelve interleaved pairs, +0.5 % for the candidate inside a 2 % spread.
+
+**Landed as `8b1bc79`**, `bench` 4493659 -> 6858745, squashed from the branch
+`s236`'s three WIP commits after the rebase onto `666b5a0`; the specs passage
+and the corrected shallow-depth gate sentence landed in the same commit.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 138548 trace lines
+with 1061 `bestmove` lines (`.tuning/coord/s236_debug_selfplay/`), 07:43.
+
+`tools/gate_extra.sh` launched detached on `8b1bc79` at 07:43
+(`.tuning/gate_extra_2026-09-23_s236.log`), watcher armed with four exits and
+a 55-minute ceiling; its marker is recorded below before `CAND` is pinned and
+the SPRT starts.
