@@ -47,6 +47,18 @@ Updated: 2026-09-21, by hand.
   written in `adocs/data/S236_sprt.sh`. Branch `s236` at WIP `039d632`; a
   cold fast check runs over the diff, then the landing, second tier, pin
   and the SPRT by day.
+  **Fast check (06:20): nothing in the arithmetic**, three of record -- the
+  branch base (rebased), the census file's stale clamp line, and the DEC the
+  accepts deviation owes (**DEC-231**, `518f730`) -- and seven trivial.
+  **Fixing the census line exposed that the census had run on the rejected
+  round-to-nearest tree**; re-taken on the tree the term is added to, p90
+  367, p99 4883, `LmrHistDiv` 734, and at those seeds the mined row "mate
+  the extra ply hides" (S095, depth 11) reports the mate one ply long in
+  the cold fixed-depth search -- the one green divisor was the superseded
+  census's, luck not structure. Coordinator's call under DEC-142: re-mine
+  that row on the candidate tree by its own script before landing (S188's
+  precedent), the old row restored by the H0 reading; the mutation pass is
+  re-owed on the final seeds. `bench` at the shipped seeds 6858745.
 
 - **S239 is done, 2026-09-22 21:45, and the main tree's `plan_current/` is
   empty; S236 is current on its own branch.** The mutation tool refuses a
