@@ -12918,3 +12918,69 @@ Consequences: `specs.md`'s search row states the trial and the loss beside
               and left; the two re-derivation scripts S188 gave S207's drive
               depth and `first_mate_depth` stay (DEC-142); the ledger holds
               the verdict as fast class; the pending count falls by one.
+
+## DEC-231  2026-09-23  S236 ships the reduction accumulator at the parent's rounding and measures the fractional history term alone: no bisection, the accumulator kept on any reading, one follow-up at the half clamp on a walk
+Tags:         search, reduction, history, fixed-point, sprt, dec-213, dec-082, dec-215, dec-212, s236, s127
+Context:      S236's accepts, written on 2026-09-19, named the block as two
+              parts measured together -- the reduction accumulated in ticks
+              and rounded once, with the history term back as a fraction --
+              and pre-registered a bisection on H0: leg 1 the accumulator
+              alone at `{-5, 0}`, leg 2 the term alone at `{0, 5}`. That
+              shape assumed the accumulator would ship with a rounding that
+              differs from the parent's truncation, since at truncation it
+              is bit-identical to the parent and leg 1 is an A/A. The
+              implementing agent measured the rounding before any game:
+              with the term live, every `LmrRoundBias` from one tick up to
+              512 loses the mate in "pruning does not hide a forced mate",
+              which the same accepts requires green, and 0 keeps it -- ten
+              builds, the shape being that nothing that moves the reduction
+              upward passes at any size. The census seeding the term's
+              clamp asked for 7752 ticks (7.6 plies) from a tail four times
+              longer than the rule was written for, so the declared top of
+              2048 bound it: the shipped clamp is a range bound, not a
+              measured value. Both facts were on the record before the
+              pre-registration was booked.
+Decision:     By the coordinator, 2026-09-23, under the owner's delegation
+              of engine questions; the owner may overrule. `LmrRoundBias`
+              ships at 0. The accumulator is therefore a proved-neutral
+              refactor (INV-6: `bench` 4493659 with all eight replies
+              identical to the parent, `search_bench` identical at depths 9
+              and 12) and the candidate is one change, the fractional
+              history term at its census seeds, `LmrHistDiv` 636 and
+              `LmrHistClamp` 2048. **There is no bisection**: leg 1 is
+              struck as an identity and DEC-082's forfeit of attribution is
+              void, since the run reads about the term alone. Readings,
+              written before a game (`adocs/data/S236_sprt.sh`): **H1**
+              keeps the seeds for S127 to fit and re-mines S097's E21 row on
+              the shipping tree before completion, proved by a targeted
+              `--only E21`; **H0 with the nElo interval's top below zero**
+              removes the term, its two settings, cases and mutants -- three
+              H0s on the idea, DEC-213 reaffirmed on the fractional form --
+              and keeps the accumulator at bias 0 as behaviour-neutral
+              scaffolding S237 and S238 both need; **H0 with the interval
+              reaching above zero, or a stalled walk (DEC-063)**, gets one
+              pre-registered follow-up and only one, the same term at
+              `LmrHistClamp` 1024 (the census says the same 13.6 % of sites
+              move, all by one ply, at +19.4 % of tree against +52.9 %),
+              its own pinned pair at `{0, 5}`; an H0 there removes the term
+              as above. Round-to-nearest is untested, not rejected: the
+              mate row binds it as it binds S237 and S238.
+Rejected:     Shipping the bias at 512 as the accepts' shape wanted -- it
+              fails a case the accepts requires green, at every size.
+              Choosing the half clamp now off the bench figure -- a seed
+              picked from a measurement it was not derived by; the census
+              rule's output ships and the cheaper clamp is a hypothesis the
+              walk would make worth a night, stated before the first game.
+              Widening the clamp's range to fit the rule's 7752 -- two
+              plies is the purpose the range was declared for, and the
+              census measured a tail, not a reason to reduce a liked quiet
+              seven plies less. Removing the accumulator on an H0 -- it is
+              proved neutral and it is the precondition F13 named for every
+              fractional term the plan still carries.
+Consequences: `adocs/data/S236_sprt.sh` carries the three readings; the
+              step's `accepts` is read as amended here and its stamp says
+              so; `specs.md`'s search row states the accumulator, the
+              measured rounding and the term; S127 widens `LmrHistClamp`'s
+              range before fitting the axis, as the step file states; the
+              ledger takes the run as `S236` and a follow-up, if any, as
+              `S236 v2`.
