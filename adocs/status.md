@@ -35,6 +35,17 @@ Updated: 2026-09-21, by hand.
   reverse futility through the existing estimate behind an off switch,
   proves the off value on the tree, and measures that. No build until the
   machine is free.
+  **S234's Report 1 is in (08:33):** `RfpTtEstimate` 1 (0..1) selecting
+  `pruning_eval` or `static_eval` for one local that feeds both the
+  reverse-futility comparison and its returned bound (`rfp_eval - margin`,
+  the agent's stated choice); the null-move block confirmed to have no
+  static-score condition and no history update reads a static evaluation,
+  so those accepts clauses hold by absence; six cases over a new drive
+  (both tightening branches with the stored eval read back, both
+  non-tightening ones, the mate band at two points, the off value
+  tune-only), mutants G01 to G04, `adocs/data/S234_sprt.sh` with the three
+  readings; nothing compiled. Branch `s234` WIP-committed; waits for the
+  machine after S236's marker.
 
 - **S236 is landed, 2026-09-23 07:41, as `8b1bc79`, `bench` 4493659 -> 6858745;
   second tier in progress, SPRT not yet pinned.** The reduction accumulated in
