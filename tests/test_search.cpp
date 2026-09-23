@@ -3323,11 +3323,57 @@ TEST_SUITE("search: draws")
     // reverted -- the S033 protocol -- and the log is
     // `.tuning/coord/S097_v2_mate_row_red.log`.
     //
-    // The cell costs 4206525 nodes and about 0.65 s, which is what a row that
-    // has to reach depth 14 costs; the rule's last tie-break is the cheaper
-    // cell and this was the only candidate it had to choose from.
+    // **RE-MINED AT S236 v2, AND BOTH OLDER ROWS ARE NAMED BELOW BECAUSE A
+    // VERDICT CAN BRING EITHER BACK.** S236 v2 halves the fractional history
+    // term's reach -- `LmrHistClamp` 2048 to 1024, DEC-231's one pre-registered
+    // follow-up -- and on that tree the row this case carried,
+    // `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46` at depth 14,
+    // distance 5, stopped being true of the shipped build: `mate_found` is
+    // false there. A golden whose derivation moved is re-derived by its own
+    // script and not relaxed (DEC-142), which is what S188 did and what S236
+    // did for S095's row one clamp earlier. **The rows this case has carried,
+    // and the tree each belongs to**, so that a revert is a revert:
+    //
+    //     pre-S236, and again if the term leaves:
+    //         "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46"
+    //         depth 14, mate_in 5, 4206525 nodes, about 0.65 s
+    //     S236 v1, the term at LmrHistClamp 2048: the row above still held
+    //     S236 v2, the term at LmrHistClamp 1024: the row below
+    //
+    // Mined, not chosen (CHESS), by the six stages of that script's header run
+    // again on this tree: the 269 candidates unchanged -- they are the corpus
+    // and the oracle, neither of which moved -- swept at depths 11 to 14, the
+    // range the script derives from `SeMinDepth` and does not write out, once
+    // against this tree's library and once against one built with
+    // `E21_multicut_mate_band_gate_dropped` applied out of tree. **Exactly one
+    // of the 269 separates the two builds here**, so the pick rule had nothing
+    // to choose between: the row below is the only one this corpus offers at
+    // this clamp. The firing witness confirms the multicut reaches the position
+    // at the row's own depth, which is what makes a red under E21 attributable
+    // to this rule.
+    //
+    // Not read off the board (CLAUDE.md): a fresh stockfish process through
+    // `chess.engine.SimpleEngine` at depth 20 reports **`#+6` for White in
+    // 70199 nodes, pv `Nxc5+ Kb8 Nxb7 Rxc4 Qb6 Kc8 Nd6+ Nxd6 Ra8+ Kd7 Qxd6#`**,
+    // and python-chess reports the position `is_valid()` True, not in check, 38
+    // legal moves of which two are captures and none a promotion.
+    //
+    // The cell costs **38927874 nodes and about 4.5 s**, against the 0.65 s of
+    // the row it replaces. That is what this corpus charges for a depth-14
+    // mate that separates on this tree, and it is recorded rather than traded
+    // away: the pick rule's cheaper-cell tie-break never came up, because only
+    // one candidate qualified.
+    //
+    // **Observed red, then green, and this is that observation**: with E21
+    // applied by hand to `src/search.cpp` -- the multicut's two mate-band terms
+    // taken off its condition -- this case fails here, `REQUIRE(
+    // result.mate_found )`, `values: REQUIRE( false )`, and passes with them in
+    // place. The mutation was applied, observed and reverted against its own
+    // sha -- the S033 protocol -- and the log is
+    // `.tuning/coord/S236v2_observe_red.log`. The whole re-mine is
+    // `adocs/data/S236_v2_remine.log`.
     const std::string mate_the_multicut_hides =
-        "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46";
+        "2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31";
 
     // **S188 re-mined this row and its H0 put the old one back.** While the
     // check extension was in the tree the row above stopped separating -- the
@@ -3347,7 +3393,7 @@ TEST_SUITE("search: draws")
       const search_t result = search_fen(mate_the_multicut_hides, 14);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 5, title);
+      REQUIRE_MESSAGE(result.mate_in == 6, title);
     }
 
     // S091's own cases, for the two rules that act on a **capture**. The one

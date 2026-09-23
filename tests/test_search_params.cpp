@@ -93,7 +93,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"LmrDivisor",              182,     1,    2000},
   {"LmrRoundBias",              0,     0,    1023},
   {"LmrHistDiv",              734,     1, 35532800},
-  {"LmrHistClamp",           2048,     0,    2048},
+  {"LmrHistClamp",           1024,     0,    2048},
   {"LmrCutNode",                1,     0,       2},
   {"LmrNotImproving",           1,     0,       2},
   {"LmrTtCapture",              1,     0,       2},

@@ -172,10 +172,13 @@ p95 1219, p99 **4883**, and **67.12 % of the sums are exactly zero**. At depth
 
 The two rules give `LmrHistDiv` **734**, which is twice that p90, and a clamp
 of 4883 * 1024 / 734 = 6812 ticks -- **6.7 plies, so the declared top of two
-plies binds and `LmrHistClamp` ships at 2048, a range bound and not a fit**. The
-rule's own assumption is what failed: it sized the clamp from the p99 on the
-expectation of S098's tail, where p99 / p90 was 3.7; here it is **15**. The cap
-was pre-registered for exactly this case and the file says it bound.
+plies bound it and S236 shipped `LmrHistClamp` at 2048, a range bound and not a
+fit** (v2 flips it to `LmrHistClamp` 1024, which is the verdict's own
+pre-registered follow-up and not a re-reading of the census -- the last section
+of this file). The rule's own assumption is what failed: it sized the clamp from
+the p99 on the expectation of S098's tail, where p99 / p90 was 3.7; here it is
+**13.3**. The cap was pre-registered for exactly this case and the file says it
+bound.
 
 What the cap costs was measured rather than argued, in the census's second pass
 and again on the bench. The counterfactual says **12.54 % of sites see their
@@ -387,6 +390,132 @@ who finds 636 quoted in an earlier draft can tell which tree it belonged to.
 `pruning does not hide a forced mate` fails its row "mate the extra ply hides,
 depth 11": the engine finds a forced mate and reports it as **mate in 3 where
 the position is mate in 2**. That is the next section.
+
+## S236 v2: the flip, and S097's row re-mined with it
+
+DEC-231's third reading binds and the follow-up is one default:
+`LmrHistClamp` 2048 -> **1024**, with its `golden_defaults` row and its
+`MANUAL.md` row. Nothing else in `src/` moves.
+
+**The flip turns a second mined row false.** At 1024 the case
+`pruning does not hide a forced mate` fails at S097's own row, "mate the
+multicut hides, depth 14" -- `REQUIRE( result.mate_found )`, `values:
+REQUIRE( false )` -- while S095's row, the one this step re-mined on the 2048
+tree, passes. The same rule applies as before: a golden whose derivation moved
+is re-derived by its own script, `adocs/data/S097_mine_mate_row.py`, and both
+rows stay in the GOLDEN block with the tree each belongs to.
+
+**A third golden moved with the flip, and a second estimate, 2026-09-23 16:24
+(RUNS, DEC-155):** `tests/test_mate_carry.cpp` "a mate score carried across
+searches keeps a line that reaches it" reports **2 short mating PVs for
+`C_mate7_depth11` against a recorded ceiling of 0**. The case's own comment says
+what to do and forbids the shortcut: re-run `adocs/data/S203_case_sweep.sh`
+before deciding whether it is a regression or a cell the grid does not cover,
+and never raise the ceiling to match a run. The grid is 6 cases x 2 strides x 9
+budgets, 108 cells, the largest at 4 M nodes: **about forty minutes**, and the
+ceilings are then re-derived by the script's `--ceilings` mode over the tracked
+grids.
+
+**Estimated before it ran, 2026-09-23 15:46 (RUNS, DEC-155):** about forty
+minutes. Two sweeps of 269 candidates over depths 11 to 14 -- the range the
+script derives from `SeMinDepth` and does not write out -- one against this
+tree's engine library and one against a library built with `E21` applied, the
+separator set derived from the two, the firing witness over the separators on
+the tune library at `SeMultiCut` 0 and 1, and the pick. The candidate set is
+not re-derived: it is the corpus and the oracle, neither of which moved.
+
+### The mutation pass on the flipped tree, and E21 closed
+
+Re-run on a fixture of the final tree, `baf1721` clean at its own HEAD with the
+mutant list clean too, baseline green over 40 tests at bench 5193174:
+**`mutation score 14 of 14 (100%)   equivalent 1, killed 14`**, 2197 s
+(`.tuning/coord/S236v2_mutation.log`, results in `S236v2_mutation.tsv`). The six
+W mutants, the seven anchors this step re-cut, S095's J03 and E21 -- all killed
+but W01, which is equivalent at a shipped bias of 0 with its bench unmoved, as
+it has been since the bias was measured out of the tree.
+
+**`E21_multicut_mate_band_gate_dropped` is killed here**, where it survived
+verdict 1's tree, and that closes the finding this step opened: the row that
+kills it had been mined on a tree the term does not produce, the flip turned
+that row false outright, and the row the re-mine returned kills the mutant --
+1 of 40 cases with the **bench signature unmoved**, which is the tool's own
+example of a mutant the signature cannot see and the suite can. What remains is
+a dependency rather than a hole: the kill rests on a row that belongs to this
+tree, so an H0 restores the predecessor and E21's kill goes back to resting on
+that.
+
+### The follow-up's own verdict
+
+`adocs/data/S236_v2_sprt.sh` is written and unpinned. It is **DEC-231's one
+follow-up and not a second try**: the value was in verdict 1's own
+pre-registration before its first game, with the reason -- the shipped clamp was
+a range bound rather than a fit, and the census had already said what the
+cheaper one does. The file quotes verdict 1's result block as what is being
+followed up, pins `REF` to **`666b5a0`**, the tree without the term, rather than
+to the flip's own parent, because the question is what the term at this reach is
+worth against no term at all.
+
+The two readings, DEC-231's own words:
+
+- **H1** -- keep the term at (734, 1024) for S127 to fit, noting that fitting
+  the clamp upward needs the range widened past its top; and re-mine the E21 row
+  on whatever tree then ships before the step completes.
+- **H0, or a stalled walk** -- **the term leaves the tree.** Its two settings,
+  the cases that read them, the three mutants that break them, both re-mined
+  mate rows and the raised mate-carry ceiling go with it, and their predecessors
+  come back from where each is kept -- a revert, not a third re-mine. DEC-213 is
+  then reaffirmed on the form it did not have: whole-ply zero twice, fractional
+  twice more. **The accumulator stays** at `LmrRoundBias` 0, behaviour-neutral
+  by the identity proved above and needed by S237 and S238. **There is no third
+  run.**
+
+### What the flip measured
+
+| | |
+|---|---|
+| `bench`, parent `666b5a0` -> candidate | 4493659 -> **5193174, +15.6 %** -- the census's own prediction, to a tenth of a per cent |
+| the eight replies | **all eight are the parent's**; at 2048 two of them moved |
+| `search_bench` at 9 | 21479 / 102462 / 33148 -> 25231 / 104152 / 29307, best moves unchanged |
+| `search_bench` at 12 | 149688 / 459216 / 219544 -> 221227 / 485833 / 204838, best moves unchanged |
+| the off value, `LmrHistClamp` 0 | 4493659 with all eight replies identical, and `search_bench` identical at both depths |
+| verdict 1's tree, for the record | 6858745, +52.6 % -- the follow-up buys back two thirds of what the term cost |
+
+The third bench position **shrinks** at both fixed depths while the first two
+grow, which one total hides.
+
+### The rows this flip moved
+
+S095's row, re-mined for the term at 2048, still holds at 1024. Two other
+goldens did not:
+
+1. **S097's own row** -- "mate the multicut hides", depth 14 -- reports no mate
+   at all on this tree where it reported 5 at 2048. Re-mined by its own script;
+   the section below is the whole record. Exactly one of the 269 candidates
+   separates here, so there was nothing to choose between, and the row it
+   returned costs **4.5 s against the old row's 0.65 s**. That is the price of a
+   depth-14 mate that separates on this tree and it is recorded, not traded
+   away.
+2. **`test_mate_carry`'s short-line ceiling** for `C_mate7_depth11`: 2 short
+   mating PVs against a recorded ceiling of 0. The case's own comment forbids
+   raising the ceiling to match a run and names the re-derivation, so
+   `adocs/data/S203_case_sweep.sh` was re-run over its whole grid -- 108 cells,
+   committed as `adocs/data/S236_v2_sweep.txt` -- and the ceilings re-derived by
+   the script's own `--ceilings` rule over the **tracked** grids, which are now
+   five. The derivation was verified before it was used: the four grids the case
+   already names reproduce its current numbers exactly, 5, 15, 0, 2, 11, 5.
+   Adding this tree's grid moves **one** of them, C from 0 to 2, and leaves the
+   other five alone. C's worst cell at its own stride is 2 short of 2 mate lines
+   at 1500000 nodes, and `unreached.empty()` -- the clause that says a published
+   line ends in mate -- holds on all six cases, so what rose is the residue
+   DEC-122 calls expected and not the promise. S095 did the same thing one rule
+   earlier and its grid is the fourth of the five.
+
+**Three mined goldens in two clamps is the pattern worth naming**: this term
+does not make the engine miss mates, it **shuffles which fixed depth finds
+them**, and every golden that pins a mate at a fixed depth from a cold table is
+therefore a property of the reduction vector. The two re-mined rows and the
+re-derived ceiling all belong to trees this verdict can remove, so each keeps
+its predecessor beside it.
 
 ## The mate row was re-mined, because the candidate made the old one false
 

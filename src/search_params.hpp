@@ -385,36 +385,39 @@
      not on the shape; on this tree's tail it does not, and the paragraph      \
      below says what it does instead.                                          \
                                                                                \
-     **THE TWO VALUES BELOW ARE THIS STEP'S OWN CENSUS**, taken 2026-09-23 on  \
-     the tree the term is added to -- the accumulator with this clamp forced   \
-     to 0, whose instrumented bench is 4493659, the parent's own signature --  \
-     and recorded in adocs/data/S236_hist_census.txt: 232136 sites at depth 12 \
+     **THE DIVISOR IS THIS STEP'S OWN CENSUS; THE CLAMP IS ITS VERDICT'S OWN   \
+     FOLLOW-UP.** The census was taken 2026-09-23 on the tree the term is      \
+     added to -- the accumulator with this clamp forced to 0, whose            \
+     instrumented bench is 4493659, the parent's own signature -- and is       \
+     recorded in adocs/data/S236_hist_census.txt: 232136 sites at depth 12     \
      over the eight bench positions, p50 0, p75 53, p90 367, p95 1219, p99     \
      4883, and **67.49 % of the sums are exactly zero**. The two rules above   \
-     give a divisor of 2 * 367 = 734 and a clamp of 4883 * 1024 / 734 = 6812   \
-     ticks, which is 6.7 plies -- **so the declared top binds and              \
-     LMR_HIST_CLAMP ships at 2048, a range bound and not a fit.** It is said   \
-     plainly because it matters: this tree's tail is more than three times     \
-     longer than the one S098 verdict 1's census showed (p99 / p90 is 13.3     \
-     here against 3.7 there), and the rule that sized the clamp from the p99   \
-     was written for the shorter tail. What the cap costs is measured rather   \
-     than argued, in the same census's second pass: at this divisor **12.54 %  \
-     of sites see their whole-ply reduction move, and that share is the same   \
-     at a clamp of 1024 as at 2048** -- the cap changes how far 5.42 % of      \
-     sites move, from one ply to two, and changes which sites move not at all. \
-     The shipped 2048 is a term that reaches two plies at the top twentieth; a \
-     clamp of one ply would be a fraction everywhere and a whole ply at its    \
-     worst. Both are inside the declared range, the census sizes neither       \
-     better than the other, and choosing between them after seeing these       \
-     numbers is a decision and not a seed -- so the pre-registered rule's own  \
-     output ships and the alternative is a pre-registered follow-up in         \
-     adocs/data/S236_sprt.sh, not a value picked here. One pass bounds what a  \
-     percentile means either way: the distribution belongs to the tree it was  \
-     measured on -- a first census taken the same morning, on the round-to-    \
-     nearest tree the suite then rejected, read p90 318 and gave 636 -- the    \
-     seed changes that tree in turn, and the fixed point is not iterated.      \
-     S127's lane fits both against games, which is the answer a second pass    \
-     would not give.                                                           \
+     give a divisor of 2 * 367 = 734, which is what LMR_HIST_DIV holds, and a  \
+     clamp of 4883 * 1024 / 734 = 6812 ticks -- 6.7 plies, past the declared   \
+     top, so the rule's own output for the clamp was the range bound 2048 and  \
+     S236 shipped it there. **That vector was measured and read as a walk**:   \
+     Elo -1.60 +/- 4.25, nElo -2.05 +/- 5.44 over 15658 games, an interval     \
+     reaching above zero, and the tree half again the parent's at a fixed      \
+     depth. DEC-231's third reading binds and its one pre-registered follow-up \
+     is what this file now carries: **LMR_HIST_CLAMP 1024, one whole ply**, as \
+     S236 v2, its own pinned pair at {0, 5}.                                   \
+                                                                               \
+     The census said before any game what the flip does and that is why it     \
+     could be pre-registered rather than picked: at this divisor **12.54 % of  \
+     sites see their whole-ply reduction move, and that share is the same at   \
+     1024 as at 2048** -- the cap only changed how far 5.42 % of them went,    \
+     from one ply to two, and changed which sites move not at all. What it     \
+     changed instead was the price: 6858745 nodes against 5193174 on the       \
+     bench, +52.6 % against +15.6 % over the parent's 4493659. So 1024 is the  \
+     same rule at a third of the cost, and the question the follow-up asks is  \
+     whether the term's judgement was ever worth paying for. This value is a   \
+     **pre-registered follow-up and not a fit**; S127's lane is what fits it,  \
+     and it may not fit it upward until the range widens (below). One pass     \
+     bounds what a percentile means either way: the distribution belongs to    \
+     the tree it was measured on -- a first census taken the same morning, on  \
+     the round-to-nearest tree the suite then rejected, read p90 318 and gave  \
+     636 -- the seed changes that tree in turn, and the fixed point is not     \
+     iterated.                                                                 \
                                                                                \
      The floor is arithmetic -- the value is a divisor. The range top is twice \
      the saturated sum in ticks, S098's own shape: the band is                 \
@@ -453,7 +456,7 @@
      table's estimate is for. That is a decision for the step that widens it   \
      and not a line to change quietly. */                                      \
   X(LMR_HIST_DIV,      "LmrHistDiv",      734,    1, 35532800)                 \
-  X(LMR_HIST_CLAMP,    "LmrHistClamp",    2048,   0, 2048)                     \
+  X(LMR_HIST_CLAMP,    "LmrHistClamp",    1024,   0, 2048)                     \
                                                                                \
   /* LATE MOVE REDUCTION BY NODE TYPE, S098 verdict 2. Four signed plies on     \
      top of the table above, each behind its own constant and each with 0 as    \

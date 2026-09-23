@@ -1,0 +1,58 @@
+# S236 v2: S097's mate row re-mined on the flipped tree, 2026-09-23.
+#
+# WHY. DEC-231's one pre-registered follow-up halves the fractional history
+# term's reach -- LmrHistClamp 2048 -> 1024 -- and on that tree the row
+# "pruning does not hide a forced mate" carried for S097 verdict 2,
+# 4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46 at depth 14, distance 5,
+# stopped being true of the shipped build: mate_found is false there. The same
+# row survived S236 v1 at clamp 2048; it is the flip that turned it false. A
+# golden whose derivation moved is re-derived by its own script (DEC-142), the
+# way S188 did for this very row and the way S236 v1 did for S095's.
+#
+# WHAT RAN. adocs/data/S097_mine_mate_row.py's stages 2 to 6, kept at
+# .tuning/coord/S236v2_remine_s097.sh:
+#   * stage 1 is not re-run: the 269 candidates are the corpus and the oracle,
+#     neither of which moved, and adocs/data/S097_candidates.tsv still holds it
+#   * both sweeps at depths 11 to 14 -- the range the script derives from
+#     SeMinDepth and does not write out -- one against this tree's engine
+#     library, one against a library built with E21 applied out of tree, the
+#     source reverted against its own sha between them
+#   * the separator set derived from the two sweeps, the firing witness run
+#     over it on the tune library at SeMultiCut 0 and 1, and the pick
+#
+# THE RESULT, and the pick rule had nothing to choose between:
+#
+#   1 of 269 candidates separates the two sweeps on this tree.
+#
+#   take: 2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+#     depth 14, mate in 6, shipped [d11 d12 d13 d14], guard dropped
+#     [d11 d12 d13], fires [d14], 38927874 nodes, 4536 ms
+#
+# The cell costs 38927874 nodes and about 4.5 s against the 0.65 s of the row it
+# replaces. That is what this corpus charges for a depth-14 mate that separates
+# here; the script's cheaper-cell tie-break never came up because only one
+# candidate qualified, and the cost is recorded rather than traded away.
+#
+# Oracle, fresh process through chess.engine.SimpleEngine at depth 20:
+# #+6 for White in 70199 nodes, pv Nxc5+ Kb8 Nxb7 Rxc4 Qb6 Kc8 Nd6+ Nxd6 Ra8+
+# Kd7 Qxd6#; python-chess reports the position valid, not in check, 38 legal
+# moves, two captures, no promotion.
+#
+# Red observed with E21 applied by hand and green with it reverted, sha
+# checked: .tuning/coord/S236v2_observe_red.log. The row it replaces stays in
+# the case's GOLDEN block with the tree it belongs to, so an H0 on S236 v2 is a
+# revert and not a third re-mine.
+#
+# ==== the pick, as the script printed it ====
+  d14	#6	run 4	38927874 nodes	4536 ms	shipped [d11 d12 d13 d14]	open [d11 d12 d13]	fires [d14]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+take: 2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  depth 14, mate in 6, shipped [d11 d12 d13 d14], guard dropped [d11 d12 d13], 38927874 nodes, 4536 ms
+
+# ==== the two sweeps' own cells for the old row and the new one ====
+# depths 11..14, one cell per depth, '-' where no mate is reported
+# shipped tree:
+#   -:291434:44 m5:822751:113 -:817797:111 -:2316147:358 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   m6:3535383:392 m6:8198272:998 m6:18928979:2025 m6:38927874:4536 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+# guard dropped (E21):
+#   -:291434:43 m5:822749:114 -:806355:111 -:2245449:331 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   m6:3535383:395 m6:8198272:999 m6:18928979:2015 -:22636747:2649 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31

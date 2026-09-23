@@ -2486,10 +2486,11 @@ direction that costs time: a quiet the history tables like is reduced **less**,
 so the tree grows. The census behind the two constants
 (`adocs/data/S236_hist_census.txt`) says the term changes the whole-ply
 reduction at 12.54 % of reduction sites and 5.42 % of them by two plies, because
-`LmrHistClamp` ships on its declared cap. At a clamp of 1024 the same divisor
-moves the same 12.54 % by one ply each and `bench` reads 5193174, +15.6 %; at
-512, 5406957, +20.3 %. **So half of this entry's +52.6 % is the cap**, and the
-number to watch when either constant moves is this one.
+`LmrHistClamp` **shipped on its declared cap at this verdict** -- the entry
+below is S236 v2, which flipped it to 1024. At that clamp the same divisor moves
+the same 12.54 % by one ply each and `bench` reads 5193174, +15.6 %; at 512,
+5406957, +20.3 %. **So half of this entry's +52.6 % is the cap**, and the number
+to watch when either constant moves is this one.
 
 **One golden moved with the tree and was re-derived, not relaxed.**
 `tests/test_search.cpp` "pruning does not hide a forced mate" carried a row
@@ -2514,6 +2515,25 @@ all: `tests/test_search_params.cpp` "the rounding bias moves the boundary it is
 the rule for" is where it is guarded, in the build that can set it, and W01 in
 `tools/mutants/S236_fixed_point_lmr.py` is declared equivalent for the same
 reason.
+
+**At `S236` v2, the same term at half the reach: `5193174`, +15.6 %.**
+Verdict 1 read a walk -- nElo -2.05 +/- 5.44 over 15658 games, an interval
+reaching above zero -- and DEC-231's one pre-registered follow-up is a single
+default: `LmrHistClamp` 2048 -> 1024. The census had said before any game what
+that does, and the bench agrees to a tenth of a per cent: the same 12.54 % of
+reduction sites move, every one of them by one ply instead of a twentieth of
+them by two, and the tree grows **+15.6 %** over the parent instead of +52.6 %.
+So this entry's number is the same rule at a third of the price. **The eight
+replies are the parent's, all of them** -- at 2048 two of the eight moved -- so
+on the bench set this reach changes how much tree the engine spends and not
+what it decides; `search_bench` says the same at fixed depth, 25231 / 104152 /
+29307 at 9 and 221227 / 485833 / 204838 at 12 with every best move unchanged,
+the third position shrinking at both while the first two grow. The off value is unchanged and
+still proves itself: at `LmrHistClamp` 0 the engine is `666b5a0` to the node
+with all eight replies identical. **A second mined mate row moved with the
+flip** -- S097's, "mate the multicut hides", which the 2048 tree still passed --
+and it was re-derived by `adocs/data/S097_mine_mate_row.py` on this tree, both
+old rows kept in the case's GOLDEN block against an H0 that restores them.
 
 A bench total is quoted
 with its commit, the way every other number on this page is quoted — it moves
