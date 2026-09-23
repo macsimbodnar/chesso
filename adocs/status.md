@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236's gainer SPRT is running, launched 2026-09-23 08:03:15: `8b1bc79`
+  (the fractional history reduction term) against `666b5a0` (the tree without
+  it), `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260923080315, output
+  `.tuning/sprt_s236_20260923_080315`, pid 2268562.** Banner checked: both shas, `OUT` under `.tuning/`.
+  `gate_extra` on the landing green (5 stages, 1140 s); `REF`/`CAND` pinned in
+  `657c660`. Watcher armed with four exits, hourly progress and a 40 h
+  ceiling; worst case 41861 games (19.8 h at 2110 an hour), 25591 on a bound
+  (12.1 h) -- the candidate's tree is half again the parent's at a fixed
+  depth, so the throughput may read below 2110. A day run under DEC-155
+  because nothing else needs the machine. **When it fires:** the record with
+  DEC-220's block (subject "Record S236's <verdict> for the fractional
+  history reduction"), the forfeit report per side, the pairs reading;
+  readings per DEC-231 -- **H1** keeps the seeds and re-mines E21 on the
+  shipping tree before completion; **H0 with the interval's top below zero**
+  removes the term (its two settings, cases, mutants) and keeps the
+  accumulator, restoring the old mate row, then completes on three H0s for
+  the idea; **H0 with the interval reaching above zero or a stalled walk**
+  gets the one follow-up at `LmrHistClamp` 1024 as `S236 v2`. Meanwhile the
+  next Open entry, S234, is briefed for a fresh agent in code-writing mode
+  once its step file has been read against the tree S236 left.
+
 - **S236 is landed, 2026-09-23 07:41, as `8b1bc79`, `bench` 4493659 -> 6858745;
   second tier in progress, SPRT not yet pinned.** The reduction accumulated in
   ticks (1024 to the ply) and rounded once at `lmr_adjusted_reduction`'s
