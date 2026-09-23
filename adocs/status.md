@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S132's second-control confirmation is H1, 2026-09-23 03:46:02 (DEC-229):
+  `Elo 17.99 +/- 8.70`, `nElo 24.91 +/- 12.02`, LLR 2.95 over 3208 games in
+  6 h 09 m at 522.6 an hour at 32+0.32 with Hash 64, 0 forfeits either side,
+  `Ptnml [97, 343, 588, 449, 127]`, LOS 100.00 %.** The gain the playing
+  control measured (`Elo 16.28 +/- 8.47` at 8+0.08) holds at four times the
+  control: DEC-229's first reading binds -- **the constants are called
+  shipped** (`TmNodeScalePct` 151, `TmNodeBasePct` 120, the gate at
+  `AspirationMinDepth`'s value), and S127 may fit them with S085's caveat
+  written into that lane; the claim at either control is at least 5 nElo
+  (DEC-063). Draws 45.0 % against the playing control's 38 to 40 %, 121.9
+  plies and 81.8 s a game. `Incomplete mating PV` 0 candidate against 1
+  reference. Evidence `adocs/data/S132_confirm_sprt.log`,
+  `S132_confirm_sprt_pairs.txt` (variance 0.2865). The ledger takes it as
+  `S132 v2`, the seventh verdict-closing commit under DEC-220. The time
+  management family's second-control confirmation is now the precedent
+  (DEC-229), stated in S127's file before its lane runs. **Next:** the
+  record commit, the ledger regenerated; then "machine free" to S236's agent
+  for its census, seeds, builds, identity proofs, suites, reds and mutation
+  pass (its Report 2), the fast check, the landing, second tier, pin and
+  SPRT. Machine idle from 03:46; no watcher armed.
+
 - **S239 is done, 2026-09-22 21:45, and the main tree's `plan_current/` is
   empty; S236 is current on its own branch.** The mutation tool refuses a
   zero-test baseline and a dirty fixture, its header names the fixture's sha,
