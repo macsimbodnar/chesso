@@ -497,7 +497,7 @@ whole with their evidence; they are 3100-band techniques by the record.
 
 ## What this costs
 
-The pending order owes **roughly 40 to 50 SPRT verdicts** once multi-verdict
+The pending order owes **roughly 39 to 49 SPRT verdicts** once multi-verdict
 steps are counted honestly (S022's two, the evaluation groups
 per-term; five more since 2026-09-19 by DEC-222 -- the fixed-point block, now spent,
 S234, S235, S237 and S238), the three the reduction rebuild took having been spent on
@@ -508,7 +508,9 @@ manager's one the same day, the multicut's and the check extension's on
 2026-09-22, the time manager's second-control confirmation on 2026-09-23
 (DEC-229, not in the count), and the fractional history term's first the same
 day, and its pre-registered follow-up at the half clamp on 2026-09-24, a
-zero at the harness's game limit (DEC-231) -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
+zero at the harness's game limit (DEC-231), and the table-tightened
+estimate's one at the reverse-futility margin on 2026-09-25, an H1 in
+9 h 32 m -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
 and S152's two five-hour gauntlets at the end.
 
 **Struck 2026-09-11 by S182** (`2026-09-04_plan_review-F03`, DEC-136):
@@ -582,8 +584,9 @@ found stale (its F03).
 | S132 v2 | the node-fraction time manager at 32+0.32 | 6 h 8 m | 3208 | `{0, 5}` | H1, +17.99 +/- 8.70 |
 | S236 | the fractional history reduction | 7 h 31 m | 15658 | `{0, 5}` | H0, -1.60 +/- 4.25 |
 | S236 v2 | the history term at one ply | 19 h 8 m | 40000 | `{0, 5}` | **no verdict** |
+| S234 | reverse futility on the table-tightened estimate | 9 h 32 m | 20062 | `{0, 5}` | H1, +4.73 +/- 3.74 |
 
-**The ledger holds twenty-nine: mean 5 h 14 m, median 5 h 25 m, 322361 games in 152.15 hours, 2118.7 an hour across the set.** **Fast class**, an effect outside the bounds interval -- thirteen runs, mean **2 h 15 m**. **Slow class**, inside it, on a bound or a true zero -- sixteen runs, mean **7 h 40 m**.
+**The ledger holds thirty: mean 5 h 23 m, median 5 h 26 m, 342423 games in 161.68 hours, 2117.9 an hour across the set.** **Fast class**, an effect outside the bounds interval -- thirteen runs, mean **2 h 15 m**. **Slow class**, inside it, on a bound or a true zero -- seventeen runs, mean **7 h 46 m**.
 
 **Why the throughput moves**, read at the runs themselves and kept because the
 reasons do not re-derive from a row. Eight of the first nine sit between 2328 and
@@ -616,7 +619,7 @@ against and here was worth the extra leg.
 
 ### Priced by class, which is what the spread is
 
-The twenty-nine split in two and the split is not luck — it is where the truth
+The thirty split in two and the split is not luck — it is where the truth
 sat relative to the bounds. The class of a row is
 `tools/ledger.py`'s: the nElo estimate's interval either misses the bounds
 pair, which is fast, or reaches it, which is slow.
@@ -636,10 +639,10 @@ pair, which is fast, or reaches it, which is slow.
 - **Slow class, an effect inside the interval or a true zero**: S024 v1
   4 h 10 m, S097 v2 4 h 58 m, S098 v1 5 h 26 m, S108 5 h 27 m, S231 5 h 37 m, S098 v1 leg 2
   6 h 11 m, S148 6 h 20 m, S093 v2 6 h 35 m, S095 6 h 39 m, S098 v3 leg 1 6 h 49 m, S130
-  7 h 12 m, S236 7 h 31 m, S165 7 h 58 m, S097 v1 9 h 27 m, S210 F22 13 h 17 m,
+  7 h 12 m, S236 7 h 31 m, S165 7 h 58 m, S097 v1 9 h 27 m, S234 9 h 32 m, S210 F22 13 h 17 m,
   S236 v2 19 h 08 m (no verdict at the harness's 40000-game limit, the
   longest row).
-  **Mean 7 h 40 m.** Every one of the sixteen has an nElo interval that reaches
+  **Mean 7 h 46 m.** Every one of the seventeen has an nElo interval that reaches
   inside its bounds pair — that is the rule — and that is what DEC-063 says a
   `{0, 5}` or `{-5, 0}` pair does to a true zero: it runs to the wall.
 
@@ -660,13 +663,13 @@ sourced figure above +20 at a comparable band, S024 (+44.68 / +33.95, Weiss
 single digits to +25, which is inside or beside the interval. So:
 
         3 fast-class verdicts    x 2 h 15 m  =    6.8 h
-    37 to 47 slow-class      x 7 h 40 m  =  284 to 360 h
+    36 to 46 slow-class      x 7 h 46 m  =  280 to 357 h
     --------------------------------------------------
-    total                                =  290 to 367 machine-hours
+    total                                =  286 to 364 machine-hours
 
-against the struck 75 to 110. The flat mean gives **209 to 262 hours**
-(5 h 14 m x 40 to 50) and that is the **floor**, not the estimate: the ledger's
-fast runs are thirteen of twenty-nine where the pending list's fast-class effects are
+against the struck 75 to 110. The flat mean gives **210 to 264 hours**
+(5 h 23 m x 39 to 49) and that is the **floor**, not the estimate: the ledger's
+fast runs are thirteen of thirty where the pending list's fast-class effects are
 three of about fifty. Add the two SPSA nights, the one to three datagen nights
 and S152's two gauntlets on top, none of which is in either figure.
 
