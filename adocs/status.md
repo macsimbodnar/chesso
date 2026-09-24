@@ -7,6 +7,21 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236 is done, 2026-09-24 14:34, on two zeros, with the accumulator kept and
+  the main tree's `plan_current/` empty; S234 is current on its branch.** The
+  fixed-point reduction (ticks, one rounding, bias 0 by measurement) stays as
+  the parent's tree to the node; the fractional history term measured a
+  walk at two plies and a stalled walk at one and left, three mined goldens
+  restored; `gate_extra` on the removal green (1098 s). The ledger holds
+  twenty-nine (slow class sixteen at 7 h 40 m), the pending count 40 to 50
+  verdicts. `specs.md`'s search row states the accumulator and the trial.
+  **Next: S234** -- its branch `s234` (WIP `faada18`) is rebased onto this
+  tree with two document conflicts and one comment conflict resolved by
+  the coordinator (both sides kept; `golden_defaults` 62 rows); "machine
+  free" goes to its agent for the measurements, then the fast check, the
+  landing, second tier, pin and the night SPRT. Machine idle; no watcher
+  armed.
+
 - **S236's term is removed, 2026-09-24 14:14, as `0792ef1`, `bench` 5193174 ->
   4493659; second tier in progress on the removal, then the completion.**
   `src/` against `666b5a0` is the accumulator alone (the `int32_t` table in
