@@ -356,3 +356,22 @@ with 1098 `bestmove` lines (`.tuning/coord/s234_debug_selfplay/`), 15:28.
 (`.tuning/gate_extra_2026-09-24_s234.log`), watcher armed with four exits and
 a 55-minute ceiling; its marker is recorded below before `CAND` is pinned and
 the SPRT starts.
+
+**`tools/gate_extra.sh` on `169b4cb`, first run: `GATE-EXTRA-FAILED: prose`**
+(15:28 to 15:47, `.tuning/gate_extra_2026-09-24_s234/`) -- the four engine
+stages green (debug 379 s, sanitize 664 s, perft 57 s, citations clean) and
+the prose stage flagging one sentence in `adocs/plan.md`: the pending-count
+paragraph still named S236 among the steps owed after S236 had completed at
+14:35, the coordinator's own edit of the morning. Reworded (`686a83e`, "the
+fixed-point block, now spent"), `tools/plan_prose_check.py --prose` 0 flagged,
+and the whole of `gate_extra` re-run on the tree with that fix (`src/`
+unchanged from `169b4cb`) at 15:47, watcher re-armed; its marker follows.
+
+**`tools/gate_extra.sh` re-run on `686a83e` (`src/` = `169b4cb`'s):
+`GATE-EXTRA-DONE 5 stages 1038 s`** (15:47 to 16:05,
+`.tuning/gate_extra_2026-09-24_s234b/`), prose, citations, debug, sanitize
+and perft green. **`CAND` pinned to `169b4cb` and `REF` to `5180a10`**, the
+commit the landing sits on -- the tree without the routing, whose `src/` is
+`7c12686`'s (documents only between); the diff to the candidate is the
+reverse-futility block and one X-macro row -- in `adocs/data/S234_sprt.sh`.
+The SPRT is the coordinator's next action, the night run.
