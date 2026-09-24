@@ -1,0 +1,54 @@
+=== markers
+SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s236_v2_20260923_180311
+=== banner
+candidate  85901b3  2026-09-23
+reference  666b5a0  2026-09-23
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260923180311
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s236_v2_20260923_180311
+id name    cand-85901b3  Chesso 85901b3 native
+id name    ref-666b5a0  Chesso 666b5a0 native
+=== fastchess final block
+Results of cand-85901b3 vs ref-666b5a0 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 2.61 +/- 2.64, nElo: 3.38 +/- 3.40
+LOS: 97.41 %, DrawRatio: 34.48 %, PairsRatio: 1.03
+Games: 40000, Wins: 12382, Losses: 12081, Draws: 15537, Points: 20150.5 (50.38 %)
+Ptnml(0-2): [1743, 4725, 6895, 4762, 1875], WL/DD Ratio: 1.28
+LLR: 1.46 (49.4%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+=== timing
+Total Time: 19:08:03 (hours:minutes:seconds)
+launched 2026-09-23 18:03:11, SPRT-RUN-DONE 2026-09-24 13:11:42; 40000 games in the final block over 19:08:03
+=== terminations
+=== 40000 games in /home/max/ws/chesso/.tuning/sprt_s236_v2_20260923_180311/games.pgn ===
+  27671 [Termination "adjudication"]
+  12329 [Termination "normal"]
+draws     15537 of 40000, 38.8 %
+decisive  24463 of 40000, 61.2 %
+forfeits  0 of 40000, 0.00 %
+SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s236_v2_20260923_180311
+=== forfeit report, per side (tools/forfeit_report.py)
+  cand-85901b3     40000 games, 0 forfeits, 0.00 %
+  ref-666b5a0      40000 games, 0 forfeits, 0.00 %
+=== Incomplete mating PV, per side
+cand-85901b3 25  ref-666b5a0 23
+=== adocs/data/S105_pairs.py over the run's PGN
+=== .tuning/sprt_s236_v2_20260923_180311/games.pgn ===
+games            40000
+draws            15537, 38.8 %
+decisive         24463, 61.2 %
+plies per game   mean 119.7, median 107
+seconds per game mean 20.1, median 19
+seconds per ply  0.1683
+complete pairs   20000
+  pair score 0.0   1919    9.6 %
+  pair score 0.5   4757   23.8 %
+  pair score 1.0   6643   33.2 %
+  pair score 1.5   4730   23.6 %
+  pair score 2.0   1951    9.8 %
+white won both   1919 of 20000, 9.6 %  (the pair Pohl's floor is about)
+pair score       mean 1.0009, variance 0.3121, sd 0.5586
+

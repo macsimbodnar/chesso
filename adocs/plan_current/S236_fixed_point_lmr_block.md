@@ -860,3 +860,59 @@ against no term; the `src/` between them is the accumulator (identical to the
 parent at its shipped rounding) and the term at (734, 1024) -- in
 `adocs/data/S236_v2_sprt.sh`. The SPRT is the coordinator's next action, the
 night run.
+
+## The follow-up's verdict, 2026-09-24: no verdict, a zero (coordinator)
+
+The gainer SPRT of `85901b3` (the fractional history term at one ply of reach,
+`LmrHistDiv` 734, `LmrHistClamp` 1024) against `666b5a0` (the tree without the
+term), `{0, 5}` nElo at 8+0.08 with Hash 16 on `noob_3moves.epd`, seed
+20260923180311, launched 2026-09-23 18:03:11, **reached the harness's own
+40000-game limit at 13:11:42 on 2026-09-24 with neither bound crossed**:
+
+```
+SPRT | cand 85901b3 vs ref 666b5a0, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 2.61 +/- 2.64, nElo 3.38 +/- 3.40
+LLR | 1.46 (-2.94, 2.94) -> none
+Games | N: 40000 W: 12382 L: 12081 D: 15537, Ptnml [1743, 4725, 6895, 4762, 1875]
+Wall | 19 h 8 m, 2090.5 games/h, forfeits 0
+Log | adocs/data/S236_v2_sprt.log
+```
+
+LOS 97.41 %, draw ratio 34.48 %, pairs ratio 1.03. **0 time forfeits on either
+side** over the PGN's 40000 games (27671 adjudications, 12329 natural ends).
+`Incomplete mating PV` 25 candidate against 23 reference, an observation and
+not a diagnosis (CHESS). `adocs/data/S105_pairs.py`: 20000 complete pairs,
+pair score mean 1.0009, variance 0.3121, sd 0.5586, 119.7 plies a game. The
+walk, from the watcher's hourly rows: LLR -0.65 at one hour, +0.36 at two,
+-0.41 at three, +1.29 at six, -0.25 at seven, +1.28 at twelve, -0.33 at
+fourteen, -0.63 at sixteen, +1.67 at eighteen, 1.46 at the limit -- six
+crossings of zero and never within 1.2 of either bound; the estimate sat
+between +2 and +4 nElo from the ninth hour on. Evidence:
+`adocs/data/S236_v2_sprt.log`, `adocs/data/S236_v2_sprt_pairs.txt`; the run
+directory `.tuning/sprt_s236_v2_20260923_180311`.
+
+### The reading
+
+This is the stalled walk the pre-registration and DEC-063 name, and it ran to
+the pre-registered worst case and a little short of it (41861 games) before the
+harness's round limit ended it: **a zero, read by the pre-registration's third
+row**. The interval [-0.02, +6.78] nElo says what such a walk always says --
+the truth sits inside the pair, most likely around +3 nElo, which is neither
+the 5 the step booked nor a loss -- and the reading is the interval, not the
+point estimate (S068 run 1's precedent; DEC-063). **The pre-registered outcome
+binds: the term leaves the tree**, its two settings, its cases and mutants, the
+two mate rows re-mined on its trees and the raised mate-carry ceiling with it,
+each predecessor restored as its GOLDEN block says; **the accumulator stays**
+at `LmrRoundBias` 0, behaviour-neutral by the identity proved at every landing
+and the precondition S237 and S238 need; and **there is no third run**
+(DEC-231). The removal is proved and not argued: `bench` 4493659 with all eight
+replies identical to `666b5a0`'s binary and `tools/search_bench.py` identical
+at depths 9 and 12 (INV-6).
+
+What the two runs together say about the idea: at two plies of reach the term
+read `nElo -2.05 +/- 5.44` on a tree half again the parent's, at one ply
+`+3.38 +/- 3.40` on a tree a third larger. The fractional form does not repeat
+S098 verdict 1's whole-ply loss, and it does not clear the bar either; DEC-213
+stands on the record's shape, and S127's lane is where a pair for this term
+would be fitted against games if the idea is ever reopened -- not by a third
+run picking a value after two zeros.

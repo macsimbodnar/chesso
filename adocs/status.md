@@ -7,6 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236 v2 reached the harness's 40000-game limit with no verdict,
+  2026-09-24 13:11:42: `Elo 2.61 +/- 2.64`, `nElo 3.38 +/- 3.40`, LLR 1.46
+  over 40000 games in 19 h 08 m at 2090.5 an hour, 0 forfeits either side,
+  `Ptnml [1743, 4725, 6895, 4762, 1875]`, LOS 97.41 %.** The stalled walk the
+  pre-registration named -- six crossings of zero, the estimate between +2 and
+  +4 nElo from the ninth hour, never within 1.2 of a bound -- read as a zero
+  by its third row (DEC-063, S068 run 1): the nElo interval [-0.02, +6.78]
+  says the truth sits inside the pair, most likely near +3, neither the bar
+  nor a loss. **The pre-registered outcome binds (DEC-231): the term leaves**
+  -- `LmrHistDiv`, `LmrHistClamp`, its cases, mutants W03 to W06, the two mate
+  rows re-mined on its trees and the raised mate-carry ceiling, each
+  predecessor restored -- **the accumulator stays** at `LmrRoundBias` 0,
+  proved neutral, and **there is no third run**. `Incomplete mating PV` 25
+  against 23, an observation. Evidence `adocs/data/S236_v2_sprt.log`,
+  `S236_v2_sprt_pairs.txt` (variance 0.3121). The ninth verdict-closing
+  commit under DEC-220, the ledger's second `no verdict`. **Next, in order:**
+  the record commit and the ledger; "machine free" to S236's agent for the
+  removal (the identity proofs `bench` 4493659 with eight identical replies
+  and `search_bench` identical at 9 and 12 against `666b5a0`, both suites, a
+  targeted mutation run over the accumulator's mutants and the restored
+  rows' killers), a cold fast check over the removal diff, the removal commit
+  with `Bench: 4493659`, S236's completion on two zeros with the accumulator
+  kept; **then S234 gets the machine.** Machine idle from 13:11; no watcher
+  armed.
+
 - **S236 v2's gainer SPRT is running, launched 2026-09-23 18:03:11: `85901b3`
   (the history term at one ply of reach, `LmrHistClamp` 1024) against
   `666b5a0` (the tree without the term), `{0, 5}` nElo at 8+0.08 on
