@@ -7,6 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S234 is landed, 2026-09-24 15:26, as `169b4cb`, `bench` 4493659 -> 4803214;
+  second tier in progress, SPRT not yet pinned.** Reverse futility decides on
+  S109's table-tightened estimate and returns it less the margin, behind
+  `RfpTtEstimate` 1 whose 0 is the tree before to the node (proved twice); the
+  null-move block has no static-score condition and razoring does not exist,
+  so that one site is the routing. Six cases, mutants G01 to G04 4 of 4; two
+  older cases repaired without weakening (S103's filler plant, S095's mined
+  row re-derived to depth 8 by its script, the 489-against-497 mate-cell cost
+  stated for the SPRT to price); both suites 40 of 40; cold fast check: no
+  defect, every number reproduced. `specs.md`'s search row carries the
+  routing with a `<verdict>` placeholder and the stored-eval invariant. Debug
+  self-play 8 games with 0 `Assertion`; `gate_extra` launched at 15:28 with a
+  watcher. **On its marker:** pin `REF` 5180a10 (the tree without the routing;
+  its `src/` is `7c12686`'s) and `CAND` 169b4cb in `adocs/data/S234_sprt.sh`,
+  launch the night SPRT, banner, watcher. **When that marker fires:** the
+  record with DEC-220's block (subject "Record S234's <verdict> for reverse
+  futility on the table-tightened estimate"); **H1** keeps the switch at 1 and
+  completes S234; **H0** with the interval wholly below zero flips it to 0 as
+  the proved one-default revert and the code leaves with it; **no verdict or
+  an interval reaching above zero** is a zero read the same way, no
+  follow-up. **S235** (the reverse-futility return blended toward beta) starts
+  in code-writing mode once this SPRT holds the machine.
+
 - **S236 is done, 2026-09-24 14:34, on two zeros, with the accumulator kept and
   the main tree's `plan_current/` empty; S234 is current on its branch.** The
   fixed-point reduction (ticks, one rounding, bias 0 by measurement) stays as

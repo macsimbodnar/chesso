@@ -324,3 +324,35 @@ revert -- the S033 protocol, with a sha check on `src/search.cpp`,
 `setoption name RfpTtEstimate value 0` benches 4493659 with all eight of the
 parent's replies, which proves the switch itself routes rather than only its
 compiled default.
+
+## Fast check, landing and second tier (coordinator, 2026-09-24)
+
+**Fast check** by a cold Opus 5 reviewer over the diff before it landed: **no
+defect** -- `rfp_eval` read at exactly the comparison and the return and
+nowhere else, `pruning_eval`'s computation byte-identical to S109's, the
+returned bound always strictly inside the mate band and never written to the
+table (reverse futility returns before the store), the upper-bound branch
+returning a lower fail-soft bound than before, the `TT_EVAL_NONE` hole shared
+with and unchanged from S109's assert, S103's repaired leg still
+discriminating the stored eval from a fresh evaluation, the re-mined row's
+GOLDEN block naming its scripts and keeping depth 11 with its tree, the six
+cases' preconditions real, the four anchors unique, `golden_defaults` 62 by
+declaration and count; the reviewer reproduced `bench` 4803214 with the moved
+reply, the off value 4493659 with eight identical replies through the tune
+binary, `search_bench` at depth 12 and the targeted cases. One trivial blank
+line in `DEV_MANUAL.md` fixed; the outstanding item was the second tier, the
+coordinator's, below.
+
+**Landed as `169b4cb`**, `bench` 4493659 -> 4803214, squashed from the branch
+`s234`'s four WIP commits; the specs passage, the S109 parenthesis and the
+stored-eval invariant landed in the same commit.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build: four
+rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8, `-log level=trace
+engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**, 142668 trace lines
+with 1098 `bestmove` lines (`.tuning/coord/s234_debug_selfplay/`), 15:28.
+
+`tools/gate_extra.sh` launched detached on `169b4cb` at 15:28
+(`.tuning/gate_extra_2026-09-24_s234.log`), watcher armed with four exits and
+a 55-minute ceiling; its marker is recorded below before `CAND` is pinned and
+the SPRT starts.
