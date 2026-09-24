@@ -31,6 +31,13 @@ Updated: 2026-09-21, by hand.
   with `Bench: 4493659`, S236's completion on two zeros with the accumulator
   kept; **then S234 gets the machine.** Machine idle from 13:11; no watcher
   armed.
+  **Recorded (`7b47d9f`), the ledger carried (`a717f46`: twenty-nine, slow
+  class sixteen at 7 h 40 m, pending 40 to 50), and "machine free" given to
+  S236's agent at 13:19** in a fresh worktree `../chesso-s236` (branch
+  `s236-removal` at `a717f46`) for the removal: the term, its settings,
+  cases and mutants out, the three goldens restored, the accumulator kept,
+  proved by the bench signature and `search_bench` identity against
+  `666b5a0`, a targeted mutation run over what stays.
 
 - **S236 v2's gainer SPRT is running, launched 2026-09-23 18:03:11: `85901b3`
   (the history term at one ply of reach, `LmrHistClamp` 1024) against
