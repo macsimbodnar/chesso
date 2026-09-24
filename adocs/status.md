@@ -21,6 +21,19 @@ Updated: 2026-09-21, by hand.
   free" goes to its agent for the measurements, then the fast check, the
   landing, second tier, pin and the night SPRT. Machine idle; no watcher
   armed.
+  **S234's Report 2 is in (15:14):** the off value proved twice (a Release
+  build with the default at 0 and the tune build at `setoption` 0 both
+  bench 4493659 with eight replies identical to a `7c12686` parent and
+  `search_bench` identical at 9 and 12); candidate `bench` 4803214
+  (+6.9 %), one reply moved, `search_bench` smaller at depth 12 on all
+  three positions; both suites 40 of 40 after two reds -- S103's plant had
+  a filler entry score the estimate now reads (precondition moved, the
+  assertion untouched) and S095's mined row was re-derived by its script
+  to depth 8 on this tree (489 mate cells against the parent's 497 over the
+  corpus at depths 3 to 12, stated in the pre-registration for the SPRT to
+  price); mutants G01 to G04 4 of 4. Branch `s234` WIP `23fd8f7` on
+  `7c12686`; a cold fast check runs over the diff, then the landing, second
+  tier, pin and the night SPRT.
 
 - **S236's term is removed, 2026-09-24 14:14, as `0792ef1`, `bench` 5193174 ->
   4493659; second tier in progress on the removal, then the completion.**
