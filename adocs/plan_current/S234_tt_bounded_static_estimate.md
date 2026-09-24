@@ -375,3 +375,62 @@ commit the landing sits on -- the tree without the routing, whose `src/` is
 `7c12686`'s (documents only between); the diff to the candidate is the
 reverse-futility block and one X-macro row -- in `adocs/data/S234_sprt.sh`.
 The SPRT is the coordinator's next action, the night run.
+
+## The verdict, 2026-09-25: H1 (coordinator)
+
+The gainer SPRT of `169b4cb` (reverse futility decided on the table-tightened
+estimate, `RfpTtEstimate` 1) against `5180a10` (the tree without the routing),
+`{0, 5}` nElo at 8+0.08 with Hash 16 on `noob_3moves.epd`, seed 20260924160533,
+launched 2026-09-24 16:05:33, **accepted H1 at 01:38:52 on 2026-09-25**:
+
+```
+SPRT | cand 169b4cb vs ref 5180a10, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 4.73 +/- 3.74, nElo 6.09 +/- 4.81
+LLR | 2.98 (-2.94, 2.94) -> H1
+Games | N: 20062 W: 6336 L: 6063 D: 7663, Ptnml [891, 2284, 3479, 2415, 962]
+Wall | 9 h 32 m, 2103.2 games/h, forfeits 0
+Log | adocs/data/S234_sprt.log
+```
+
+LOS 99.35 %, draw ratio 34.68 %, pairs ratio 1.06. **0 time forfeits on either
+side** over the PGN's 20063 games (14000 adjudications, 6063 natural ends), so
+the abort rule never bound; no crash and no disconnect. `Incomplete mating PV`
+15 candidate against 6 reference, an observation and not a diagnosis (CHESS):
+the site cannot return a mate score (the band is excluded before the margin),
+and what the split means for a line is a tool's question, not this record's.
+`adocs/data/S105_pairs.py`: 10031 complete pairs, pair score mean 1.0136,
+variance 0.3017, sd 0.5492, 119.0 plies a game. The walk, from the watcher's
+hourly rows: LLR -0.18 at one hour, +0.07 at two, -0.08 at three, +0.81 at
+four, +2.20 at five, +2.10 at six, +1.35 at seven, +1.96 at eight, +2.77 at
+nine and the bound at 01:38 -- two crossings of zero in the first three hours,
+then a climb that turned back once from 2.20 to 1.35 before crossing. Evidence:
+`adocs/data/S234_sprt.log`, `adocs/data/S234_sprt_pairs.txt`; the run directory
+`.tuning/sprt_s234_20260924_160533`.
+
+### The reading
+
+**H1, read by the pre-registration's first row and by nothing else.** The
+estimate at the reverse-futility margin gains at least 5 nElo against the tree
+without it, with one switch, one site and one change behind the candidate, so
+the attribution is the site's and there is no bisection to run. **`RfpTtEstimate`
+stays at 1** and the switch stays in the parameter set, because it is what a
+later step needs to re-ask the question when S116's razoring brings a second
+margin site; that site joins under S116's own verdict and not under this one.
+**The re-mined mate row ships**: S095's row in "pruning does not hide a forced
+mate" at depth 8 with depth 11 kept in its GOLDEN block as the parent tree's
+history (DEC-142), and the eight mate cells the cold fixed-depth sweep loses
+(489 against 497 over 1410 cells) are what the gain was bought with -- a reading
+of a different tree and not of a worse engine (DEC-019), priced by this run.
+
+The stopping run's `Elo 4.73 +/- 3.74` is upward-biased and is not the effect
+size (DEC-063); the interval it reports, [1.28, 10.90] nElo, contains the bar,
+so the verdict is the slow class by DEC-223's rule -- the interval is not
+disjoint from the bounds -- at 9 h 32 m, a little under the pair's 12.1 h
+expectation on a bound and half of the 19.8 h midpoint worst case. What the H1
+says about the priors is exactly this: the wide form of the tightening gains
+where the narrow quiescence form (S130, DEC-103) read zero on this engine, and
+the record's +6.07 was a direction and not a number (DEC-019). Documents only in
+this commit; the completion -- the `done:` stamp, the move to `plan_done/`, the
+lists, `specs.md`'s `<verdict>` placeholder, the ledger's thirtieth row -- is
+the coordinator's next action, and S235 (the blended return) is rebased onto
+this tree, which is the one it was written on.

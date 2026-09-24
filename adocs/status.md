@@ -5,7 +5,21 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-21, by hand.
+Updated: 2026-09-25, by hand.
+
+- **S234's SPRT is H1, 2026-09-25 01:38:52, recorded: `169b4cb` against
+  `5180a10`, `Elo 4.73 +/- 3.74`, `nElo 6.09 +/- 4.81`, LLR 2.98, 20062 games
+  in 9 h 32 m, 0 forfeits either side.** Read by the pre-registration's
+  first row: `RfpTtEstimate` stays at 1, the re-mined mate row ships, the
+  eight cold-sweep mate cells are the price, S116's site joins under its own
+  verdict; `Incomplete mating PV` 15 against 6 is an observation (CHESS).
+  Artefacts `adocs/data/S234_sprt.log` and `S234_sprt_pairs.txt`, README rows,
+  the step file's verdict section. **Next, in order:** the ledger's thirtieth
+  row and `plan.md`'s costs, then S234's completion (stamp, `plan_done/`,
+  lists, `specs.md`'s `<verdict>`), then S235 -- its branch `s235` (WIP
+  `e2a0985`) already sits on this tree's `src/`, "machine free" to its agent
+  for the measurements, cold fast check, landing, second tier, pin, SPRT.
+  Machine idle; no watcher armed.
 
 - **S234's gainer SPRT is running, launched 2026-09-24 16:05:33: `169b4cb`
   (reverse futility decided on the table-tightened estimate) against
