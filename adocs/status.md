@@ -27,8 +27,13 @@ Updated: 2026-09-21, by hand.
   completes S234; **H0** with the interval wholly below zero flips it to 0 as
   the proved one-default revert and the code leaves with it; **no verdict or
   an interval reaching above zero** is a zero read the same way, no
-  follow-up. **S235** (the reverse-futility return blended toward beta) starts
-  in code-writing mode once this SPRT holds the machine.
+  follow-up. **S235 (the reverse-futility return blended toward beta) started
+  15:31 by a fresh Opus 5 agent in code-writing mode** in the linked worktree
+  `../chesso-s235` (branch `s235` at `2b6f2ff`; brief
+  `.tuning/coord/S235_brief.md`): one parameter whose one range end returns
+  today's `rfp_eval - margin` and whose other returns beta, seeded at the
+  midpoint (c), orthogonal to S234's switch; no build until the machine is
+  free after S234's SPRT.
 
 - **S236 is done, 2026-09-24 14:34, on two zeros, with the accumulator kept and
   the main tree's `plan_current/` empty; S234 is current on its branch.** The
