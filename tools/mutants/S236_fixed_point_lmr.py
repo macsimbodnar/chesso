@@ -1,9 +1,14 @@
-"""The late move reduction accumulated in fixed point, and the history term as
-a fraction of a ply. S236.
+"""The late move reduction accumulated in fixed point. S236, and what is left
+of it after DEC-231.
 
-Six mutants over three parts, and the parts are what the step's own bisection
-splits on, so each mutant belongs to one of them and no mutant breaks two at
-once:
+**Three mutants over two parts, and three more left with the term.** S236
+shipped six: three for the accumulator's unit and its rounding, three for the
+history term it added. That term's two verdicts read a walk and then a zero and
+it was removed (DEC-231), so W03 (its clamp), W04 (its sign) and W05 (its
+whole-ply form) went with the code they broke -- a mutant whose anchor is not in
+`src/` is a mutant nobody can run, and keeping one as a comment would be a
+guard that guards nothing. What remains is the unit, which stayed because it
+plays as the whole-ply engine does:
 
   the unit          W02, W06. The table holds ticks and the node terms are
                     scaled into the same ticks. A build where the two disagree
@@ -15,29 +20,18 @@ once:
                     is then worth a thousandth of the ply it names.
   the rounding      W01. The bias is the rule, not a coefficient of it, so
                     dropping it is not "rounding slightly differently" -- it is
-                    the parent's truncation shipped under a parameter that
-                    reports success and changes nothing, which is exactly the
-                    shape DEC-215 asks an off value to be proved against.
-  the term          W03, W04, W05. The clamp is the whole term's bound, the
-                    sign decides whether history reduces the moves it likes or
-                    the moves it has written off, and W05 is the interesting
-                    one: it is S098 verdict 1's own shape, a whole-ply
-                    quotient, re-expressed in ticks. That verdict measured zero
-                    twice (DEC-213) and this step's hypothesis is that the unit
-                    is why, so a suite that cannot tell the two forms apart
-                    cannot tell whether this step did anything.
+                    the whole-ply engine's truncation shipped under a parameter
+                    that reports success and changes nothing, which is exactly
+                    the shape DEC-215 asks an off value to be proved against.
 
-Nothing here moves a constant. `LmrHistClamp` at 0 is the off value DEC-215
-asks to be proved on the tree and is not a bug; `LmrRoundBias` at 0 is the
-parent's own rounding and is the same; `LmrHistDiv` and `LmrHistClamp` at their
-census seeds are values a later SPSA lane may move. What these break is an
-expression or its unit.
+Nothing here moves a constant. `LmrRoundBias` at 0 is the whole-ply engine's
+own rounding and is the off value DEC-215 asks to be proved on the tree, not a
+bug. What these break is an expression or its unit.
 
-**W03, W04 and W05 need the term switched on to be killable at all.** At
-`LmrHistClamp` 0 the helper returns 0 for every sum, which makes all three
-equivalent mutants by construction -- so this file is only meaningful on a tree
-whose clamp is the census seed, and the three cases that kill them assert that
-clamp is non-zero before they assert anything else.
+**W01 is a declared equivalent and stays one while `LmrRoundBias` ships at 0.**
+Its own entry carries the argument in full; the short form is that at a bias of
+0 the term it deletes is provably zero, so the mutated engine is the same
+engine, and the rule is guarded in the tune build instead.
 
 The list is data: `m` is bound by tools/mutation_check.py, which execs this
 file, so nothing here is a driver of its own. `old` must occur exactly once in
@@ -82,35 +76,6 @@ m("W02_table_unit_halved", S, "search/reduction",
   'formula and against the parent\'s line at the off configuration',
   ('      table[depth][move_number] = static_cast<int32_t>(r * LMR_SCALE);',
    '      table[depth][move_number] = static_cast<int32_t>(r * (LMR_SCALE / 2));'),
-  origin="S236")
-
-m("W03_hist_clamp_dropped", S, "search/reduction",
-  'the clamp is not applied, so a saturated history sum replaces the table\'s '
-  'estimate instead of adjusting it: at the shipped divisor the band\'s own '
-  'edge is worth six plies, which is more reduction than the table returns '
-  'anywhere this engine searches',
-  ('  if (ticks > LMR_HIST_CLAMP) { ticks = LMR_HIST_CLAMP; }\n'
-   '  if (ticks < -LMR_HIST_CLAMP) { ticks = -LMR_HIST_CLAMP; }\n',
-   '  // W03: the clamp is not applied.\n'),
-  origin="S236")
-
-m("W04_hist_sign_flipped", S, "search/reduction",
-  'the term is added where it is subtracted, so the quiets the history tables '
-  'have endorsed are the ones reduced hardest and the ones they have written '
-  'off are searched deepest. The exact inversion of the rule, and silent: no '
-  'crash, no wrong node count, only rating',
-  ('                      node_adjustment - lmr_history_ticks(hist_sum));',
-   '                      node_adjustment + lmr_history_ticks(hist_sum));'),
-  origin="S236")
-
-m("W05_hist_whole_plies", S, "search/reduction",
-  'the term is computed as a whole-ply quotient and then scaled, which is '
-  'S098 verdict 1\'s own shape in this step\'s unit: a sum under the divisor '
-  'contributes nothing at all and the fraction this step exists to express is '
-  'gone. The mutant that decides whether this step\'s suite can tell the two '
-  'forms apart',
-  ('  int ticks = (hist_sum * LMR_SCALE) / LMR_HIST_DIV;',
-   '  int ticks = (hist_sum / LMR_HIST_DIV) * LMR_SCALE;'),
   origin="S236")
 
 m("W06_node_terms_unscaled", S, "search/reduction",

@@ -37,7 +37,9 @@ here, and this file opens the `T` prefix because `N` is S191's.
 step put the reduction in fixed point: the four terms are summed as ticks of a
 ply (`LMR_CUTNODE * LMR_SCALE` and so on) and `lmr_adjusted_reduction` rounds
 the sum once, so the five lines T02 to T06 anchored on no longer exist
-verbatim. Each pair below names the line as it reads now and inverts, drops or
+verbatim. **T06's was re-cut a second time when that step's history term left
+the tree** (DEC-231) and the helper lost its third argument: same bug, same id,
+the line as it reads now. Each pair below names the line as it reads now and inverts, drops or
 flips exactly what it inverted, dropped or flipped before -- an anchor is a
 coordinate, and a coordinate that has moved is re-read rather than retired. The
 alternative, retiring the ids and opening new ones, would have lost the kills
@@ -94,8 +96,8 @@ m("T06_adjusted_reduction_ignores_node", S, "search/reduction",
   'terms reach nothing. The step wired up and switched off in one line. The '
   '`(void)` orphans the parameter, which the Release build this tool runs '
   "refuses under -Werror; search.py's header carries the reason in full",
-  ('  return lmr_plies_of(lmr_reduction_ticks(depth, move_number) +\n                      node_adjustment - lmr_history_ticks(hist_sum));',
-   '  (void) node_adjustment;\n  return lmr_plies_of(lmr_reduction_ticks(depth, move_number) -\n                      lmr_history_ticks(hist_sum));'),
+  ('  return lmr_plies_of(lmr_reduction_ticks(depth, move_number) +\n                      node_adjustment);',
+   '  (void) node_adjustment;\n  return lmr_plies_of(lmr_reduction_ticks(depth, move_number));'),
   origin="S098")
 
 m("T07_site_first_child", S, "search/reduction",

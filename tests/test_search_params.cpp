@@ -43,10 +43,11 @@
 // defaults are what the step's two verdicts move. **S097 verdict 2 moves
 // `SeMultiCut` from 0 to 1** and that one row is the whole of the candidate in
 // `src/`: the rule it turns on shipped with verdict 1 and no line of it moved.
-// S236 adds three: `LmrRoundBias`, which is the accumulator's rounding rule
-// and whose range is stated against a compile-time scale in src/search.cpp,
-// and `LmrHistDiv` and `LmrHistClamp`, whose two values are that step's own
-// census and not S098 verdict 1's fitted pair (DEC-213).
+// S236 added three and **kept one**: `LmrRoundBias`, the accumulator's
+// rounding rule, whose range is stated against a compile-time scale in
+// src/search.cpp. `LmrHistDiv` and `LmrHistClamp` went with the history term
+// its two verdicts removed (DEC-231), and a row leaving is the same kind of
+// commit as a row arriving -- this list is where either is visible.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -59,7 +60,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 63 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 61 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -92,8 +93,6 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"LmrBase",                  52,     0,     400},
   {"LmrDivisor",              182,     1,    2000},
   {"LmrRoundBias",              0,     0,    1023},
-  {"LmrHistDiv",              734,     1, 35532800},
-  {"LmrHistClamp",           1024,     0,    2048},
   {"LmrCutNode",                1,     0,       2},
   {"LmrNotImproving",           1,     0,       2},
   {"LmrTtCapture",              1,     0,       2},
@@ -514,22 +513,25 @@ TEST_SUITE("search parameters")
   {
     // DEC-215: an off value is proved on the tree and not assumed from a
     // range's end. This is the arithmetic half of that proof -- the whole
-    // reduction, over the whole table, at every node adjustment and every
-    // history sum -- and the tree half is the bench signature the step file
-    // records beside it.
+    // reduction, over the whole table, at every node adjustment -- and the tree
+    // half is the bench signature the step file records beside it.
     //
-    // S236's claim is exact and this case is written to be exact with it: with
-    // `LmrRoundBias` at 0 and `LmrHistClamp` at 0, `lmr_adjusted_reduction` is
-    // the truncated table plus whole plies of node adjustment, which is the
-    // line the engine ran before the accumulator existed. That line is restated
-    // below -- `static_cast<uint8_t>` of the double, exactly as
-    // build_lmr_table() wrote it -- rather than derived from the tick table, so
-    // an accumulator that is self-consistently wrong cannot pass.
+    // S236's claim is exact and this case is written to be exact with it: at
+    // `LmrRoundBias` 0, `lmr_adjusted_reduction` is the truncated table plus
+    // whole plies of node adjustment, which is the line the engine ran before
+    // the accumulator existed. That line is restated below --
+    // `static_cast<uint8_t>` of the double, exactly as build_lmr_table() wrote
+    // it -- rather than derived from the tick table, so an accumulator that is
+    // self-consistently wrong cannot pass.
+    //
+    // The case had a second half while S236's history term was in the tree: a
+    // `LmrHistClamp` of 0 was the other thing the off configuration needed, and
+    // every cell was checked at three history sums as well. The term left at
+    // its second verdict (DEC-231) and that half left with it; what the
+    // accumulator claims is unchanged and is still checked over the whole
+    // table.
     const int bias_default =
         search_param_info(static_cast<size_t>(index_of("LmrRoundBias")))
-            .default_value;
-    const int clamp_default =
-        search_param_info(static_cast<size_t>(index_of("LmrHistClamp")))
             .default_value;
 
     const int base_default =
@@ -540,7 +542,6 @@ TEST_SUITE("search parameters")
             .default_value;
 
     REQUIRE(search_param_set("LmrRoundBias", 0));
-    REQUIRE(search_param_set("LmrHistClamp", 0));
 
     // The `uint8_t` is the parent's own and not a narrowing this case chose:
     // at the shipped fit the table's largest value is under ten plies, so the
@@ -555,9 +556,9 @@ TEST_SUITE("search parameters")
 
     const int scale = search_lmr_scale_probe();
 
-    // One string rather than a check per cell: the grid below is 63 * 63 * 3 *
-    // 3 and a doctest assertion per cell would dominate the suite's runtime.
-    // The first disagreement is reported in full, which is what a reader needs.
+    // One string rather than a check per cell: the grid below is 63 * 63 * 3
+    // and a doctest assertion per cell would dominate the suite's runtime. The
+    // first disagreement is reported in full, which is what a reader needs.
     std::string first_mismatch;
 
     for (int depth = 1; depth < 64 && first_mismatch.empty(); ++depth) {
@@ -566,27 +567,20 @@ TEST_SUITE("search parameters")
         // is the negative one and the other four are positive, so the range
         // covers a sum from either side of zero.
         for (int plies : {-1, 0, 2}) {
-          // Any sum at all, including ones outside the band the tables can
-          // hold: at the off clamp the term is 0 for every one of them, which
-          // is the half of the off configuration the history rule owns.
-          for (int hist : {0, 5000, -1000000}) {
-            const int got = search_lmr_adjusted_reduction_probe(
-                depth, move_number, plies * scale, hist);
-            const int want = parent(depth, move_number) + plies;
+          const int got = search_lmr_adjusted_reduction_probe(
+              depth, move_number, plies * scale);
+          const int want = parent(depth, move_number) + plies;
 
-            if (got != want) {
-              first_mismatch =
-                  "depth " + std::to_string(depth) + " move " +
-                  std::to_string(move_number) + " plies " +
-                  std::to_string(plies) + " hist " + std::to_string(hist) +
-                  ": the off configuration answers " + std::to_string(got) +
-                  " where the engine before S236 answered " +
-                  std::to_string(want);
-              break;
-            }
+          if (got != want) {
+            first_mismatch = "depth " + std::to_string(depth) + " move " +
+                             std::to_string(move_number) + " plies " +
+                             std::to_string(plies) +
+                             ": the off configuration answers " +
+                             std::to_string(got) +
+                             " where the engine before S236 answered " +
+                             std::to_string(want);
+            break;
           }
-
-          if (!first_mismatch.empty()) { break; }
         }
 
         if (!first_mismatch.empty()) { break; }
@@ -600,12 +594,9 @@ TEST_SUITE("search parameters")
     // a restore that silently failed would leave them measuring the off
     // configuration instead.
     REQUIRE(search_param_set("LmrRoundBias", bias_default));
-    REQUIRE(search_param_set("LmrHistClamp", clamp_default));
 
     CHECK_EQ(search_param_value(static_cast<size_t>(index_of("LmrRoundBias"))),
              bias_default);
-    CHECK_EQ(search_param_value(static_cast<size_t>(index_of("LmrHistClamp"))),
-             clamp_default);
   }
 
 
@@ -622,14 +613,14 @@ TEST_SUITE("search parameters")
   //   and not from a prediction
   TEST_CASE("the rounding bias moves the boundary it is the rule for")
   {
-    // `LmrRoundBias` ships at 0 -- the parent's own truncation, because with
-    // the history term live every non-zero bias loses the mate row
-    // `tests/test_search.cpp` "pruning does not hide a forced mate" guards, and
-    // S236's step file records the six builds that established it. At 0 the
-    // bias term is zero and a build with the addition deleted is the same
-    // engine, so the release suite cannot see this rule at all. It is a live
-    // rule with an off default, the shape `LmpDepthCoeff` has shipped in since
-    // S109, and this is where it is guarded: the build that can set it.
+    // `LmrRoundBias` ships at 0 -- the whole-ply engine's own truncation,
+    // because every non-zero bias lost a row of `tests/test_search.cpp`
+    // "pruning does not hide a forced mate" while S236's history term was in
+    // the tree, and S236's step file records the ten builds that established
+    // it. At 0 the bias term is zero and a build with the addition deleted is
+    // the same engine, so the release suite cannot see this rule at all. It is
+    // a live rule with an off default, the shape `LmpDepthCoeff` has shipped in
+    // since S109, and this is where it is guarded: the build that can set it.
     const int scale = search_lmr_scale_probe();
     const int bias_default =
         search_param_info(static_cast<size_t>(index_of("LmrRoundBias")))
@@ -643,7 +634,7 @@ TEST_SUITE("search parameters")
 
     auto plies_at = [&](int ticks) {
       return search_lmr_adjusted_reduction_probe(depth, move_number,
-                                                 ticks - table, 0);
+                                                 ticks - table);
     };
 
     // Four settings across the range, each asserted at its own boundary: the

@@ -916,3 +916,58 @@ S098 verdict 1's whole-ply loss, and it does not clear the bar either; DEC-213
 stands on the record's shape, and S127's lane is where a pair for this term
 would be fitted against games if the idea is ever reopened -- not by a third
 run picking a value after two zeros.
+
+## Removed, 2026-09-24
+
+DEC-231's reading of the second verdict is executed: **the term is out, the
+accumulator stays, and the tree is the whole-ply engine's again**.
+
+**What went.** `LmrHistDiv` and `LmrHistClamp` with their X-macro block, their
+`golden_defaults` rows and their `MANUAL.md` rows; `lmr_history_ticks` and
+`NO_HISTORY_SUM`; the third argument through `lmr_adjusted_reduction`,
+`lmr_depth_of` and `search_lmr_adjusted_reduction_probe`;
+`search_lmr_history_ticks_probe`; the pre-make read of `quiet_history_sum` for
+the reduction and the four call sites' arguments; the term's two cases and the
+history half of the tune-only off-value case; the fixture's flat-fill argument;
+and mutants **W03, W04 and W05**. A mutant whose anchor is not in `src/` is a
+mutant nobody can run, so they went with the code they broke rather than staying
+as comments.
+
+**What stayed, and why.** `LMR_SCALE` and its shift, the `static_assert` on the
+arithmetic shift, the `int32_t` table in ticks, `lmr_plies_of`, `LmrRoundBias`
+at 0, the two probes the accumulator owns, its rounding case and its tune-only
+case, **W01 (equivalent) and W02** -- and **W06**, which the removal brief's
+range would have taken but which is the accumulator's own: its anchor
+`if (cut_node) { adjustment += LMR_CUTNODE * LMR_SCALE; }` is live and the case
+that kills it is live, so removing it would have dropped a working guard on the
+surviving code. Flagged rather than done silently.
+
+**The proofs.**
+
+| | |
+|---|---|
+| `src/` against `666b5a0` | the only code hunks left are the accumulator's: the scale constants and the static_assert, `uint8_t` -> `int32_t`, `r * LMR_SCALE` into the table, `lmr_reduction_ticks` and `lmr_plies_of`, the five node terms scaled, the helper rounding once, the census dump reading plies, and `LmrRoundBias`'s row. Everything else is comments |
+| `bench` | **4493659** with all eight `bestmove` replies identical to a binary built from `666b5a0` -- c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 |
+| `tools/search_bench.py` | identical at both depths: 21479 / 102462 / 33148 with g5f6 / e2a6 / d7c8q at 9, and 149688 / 459216 / 219544 with c3d5 / e2a6 / d7c8q at 12 |
+| both fast suites | 40 of 40, Release and tune; `./clang-format.sh --check` clean; the prose checks clean |
+| `adocs/data/S188_repair_goldens.py` | re-run on this tree: `s207` answers **4** and `first-mate` answers **9**, both unmoved, which is what says this removal did not reach them |
+| mutation | fixture `003eeff` clean at its own HEAD, baseline green over 40 tests at bench 4493659: **`mutation score 11 of 11 (100%)   equivalent 1, killed 11`**, 1685 s. W01 equivalent with its bench unmoved, W02 and W06 killed, the seven re-cut anchors killed, J03 killed -- and **E21 killed**, which is the restored S097 row doing again what the row that replaced it did, and the closing of the dependency S236 v2 left open |
+
+**The three goldens the term moved are back, each by its own derivation and not
+by an edited number.** S095's row returns to
+`4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1` at depth 11, S097's to
+`4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46` at depth 14 distance 5,
+and `test_mate_carry`'s `C_mate7_depth11` ceiling to 0 by dropping
+`adocs/data/S236_v2_sweep.txt` from the `--ceilings` command -- the same rule
+that raised it, run with one grid fewer. Each block keeps the row the term's
+tree used, with the tree it belonged to, because that is what made these three
+reverts one line each. The evidence files stay under `adocs/data/`: the census
+and its script, both re-mine logs, the sweep grid and the interleaved nps table
+are the record of what was measured, and nothing in them is invalidated by the
+term leaving.
+
+**What the two verdicts bought.** A term this project had already measured at
+zero twice in whole plies (DEC-213) has now been measured at zero twice more as
+a fraction, which closes the question rather than leaving it open, and the unit
+that made the fractional form expressible is in the tree at no cost for S237 and
+S238 to use. That is the result; it is not a gain.

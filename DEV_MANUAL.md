@@ -1947,7 +1947,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_search.cpp` `capture_mates` depths and mutant labels | 9, 9, 10, 10 and the mutants beside them — `no S091 mutant, since S095` twice, then `R02` and `R02`. **Re-derived at S095**, which adds a ply of reduction at every node whose table entry carries no move and so moves the same rule again: the seven sweeps were re-taken and three of the four depths moved with no mate distance moving. Row 2 loses the depth 8 reading it had and now separates nothing; row 3 comes back from 11 to 10 with R02 alone; row 4 stays at 10 with R02. R01 is separated by no row at any depth, the fifth consecutive pass reading that way. The history of the earlier passes is in the GOLDEN block at the table itself | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
 | `test_search.cpp` `mate_the_extra_ply_hides` and its depth | the position and **11**, the lowest depth the shipped build reports its mate at and the tree with S095's guard opened does not. Mined at S095 over this project's own positions: 297 labelled mates, 141 whose oracle line carries a quiet move of the class late move reduction touches, 28 separating the two builds, and the rule in the script's header returns this one. The row's own comment records what the tie-break cost — its shipped profile is every depth from 3 to 12 and the unguarded build loses exactly one of them | `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py candidates`, then `adocs/data/S230_mine_r01_row.py depths --fens .tuning/coord/S095_candidates.fen --lo 3 --hi 12` once on the shipped tree and once with `const bool no_tt_move = tt_move == 0;` made `= true`, then `S095_mine_mate_row.py pick` |
 | `test_search.cpp` `mate_the_multicut_hides` and its depth | the position and **14**, the lowest depth the shipped build reports its mate at and the tree with the multicut's mate-range guard dropped does not. **Re-mined at S188 and this is the second row the clause has carried**: S188's check extension made the search reach further and the row S097 mined stopped separating -- its shipped profile stayed `d12 d14` while the guard-dropped build's went from `d12` to `d12 d14` -- which the mutation pass caught as `E21_multicut_mate_band_gate_dropped` surviving a green suite, the only way a row going quiet can be caught. The row now is `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54`, shipped profile **`d11 d12 d13 d14`** against the guard-dropped build's **`d11 d12 d13`** -- the whole swept range against one depth short of it -- and the cell costs 4227541 nodes and about 0.56 s, where the row it replaces cost 4206525 and 0.65 s. Two of the 269 candidates separate the two builds on this tree; the other was skipped by the script's own rule because the firing witness shows the multicut never reaching it, and its depth-14 cell costs 43758845 nodes | the commands in `adocs/data/S097_mine_mate_row.py`'s own header, in that order and with every input named. The S188 re-mine skipped stage 1 -- `adocs/data/S097_candidates.tsv` is committed and the pool is not what moved -- and ran `sweep` shipped, `sweep` against a library built out of tree with E21 applied, `separators`, `fires` on the tune library and `pick`, 73 minutes a sweep; the evidence is `adocs/data/S188_remine.log` |
-| `test_search_params.cpp` `golden_defaults` | 60 defaults and their ranges — 50 until S095 added `LmrNoTtMove`, then S097's **six** singular-extension rows (four settings and the two switches `SeExtend` and `SeMultiCut`) and S132's three node-fraction rows (`TmNodeScalePct`, `TmNodeBasePct`, `TmNodeMinDepth`). S188 added three and its H0 took them out again | no script: `src/search_params.hpp` is the derivation |
+| `test_search_params.cpp` `golden_defaults` | **61** defaults and their ranges — 50 until S095 added `LmrNoTtMove`, then S097's **six** singular-extension rows (four settings and the two switches `SeExtend` and `SeMultiCut`) and S132's three node-fraction rows (`TmNodeScalePct`, `TmNodeBasePct`, `TmNodeMinDepth`). S188 added three and its H0 took them out again; S236 added three and its two verdicts took **two** of them out again — `LmrHistDiv` and `LmrHistClamp` left with the history term (DEC-231) and `LmrRoundBias` stayed with the accumulator, which is why the count is 61 and not 60 | no script: `src/search_params.hpp` is the derivation |
 | `test_search.cpp` "search() hands the rule the root's own index" `DRIVE_DEPTH` | **4** — the depth at which the cycle's return to the root's own entry is inside the tree and its return to the ply-1 position is not. Written out with no re-derivation until S188 gave it one: that step's extension made a search reach further and moved the separating depth to 3, its H0 moved it back, and the script answered both times | `adocs/data/S188_repair_goldens.py s207`, and `--lib` at another tree's engine library to compare two trees |
 | `test_engine.cpp` `first_mate_depth` and `mate_in` | **9** and 5 on both positions — the iteration a mate score first appears at, and the distance every iteration from there on reports. A bare measurement with no re-derivation until S188, whose extension found both an iteration earlier (8) and whose H0 put them back at 9; the absence of a script was itself a DEC-142 finding and it is closed | `adocs/data/S188_repair_goldens.py first-mate`, which prints every iteration's kind and value, the first mate's depth, the precondition below it and the set of distances |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
@@ -2534,6 +2534,31 @@ with all eight replies identical. **A second mined mate row moved with the
 flip** -- S097's, "mate the multicut hides", which the 2048 tree still passed --
 and it was re-derived by `adocs/data/S097_mine_mate_row.py` on this tree, both
 old rows kept in the case's GOLDEN block against an H0 that restores them.
+
+**At `S236`'s removal, the term out and the accumulator kept: `4493659`, the
+whole-ply engine's own total again.** Two verdicts and no gain: the fractional
+history reduction read a walk at two plies of reach (nElo -2.05 +/- 5.44 over
+15658 games, `3243c3f`) and a second walk at one (nElo 3.38 +/- 3.40 over 40000,
+the harness's limit, `7b47d9f`), so DEC-231's pre-registered reading took the
+term out. What went: `LmrHistDiv`, `LmrHistClamp`, `lmr_history_ticks`, the
+pre-make read of the sum for the reduction, the third argument through
+`lmr_adjusted_reduction` and `lmr_depth_of`, the term's cases and mutants W03 to
+W05. **What stayed is the accumulator** -- the table in ticks of a ply,
+`LMR_SCALE`, `lmr_plies_of` and `LmrRoundBias` at 0 -- because it is
+behaviour-neutral at that bias and because S237 and S238 both need a reduction
+that can carry a fraction. This entry is the proof of the first half of that
+sentence: `bench` is `666b5a0`'s to the node with all eight `bestmove` replies
+identical, and `tools/search_bench.py` reproduces it exactly at depths 9 and 12,
+21479 / 102462 / 33148 and 149688 / 459216 / 219544. A reduction table of
+`int32_t` ticks that plays as a `uint8_t` table of plies is what the engine now
+carries, and the nps cost of that width was measured at the first landing and is
+below this machine's noise floor (`adocs/data/S236_nps_interleaved.txt`).
+
+Three mined goldens moved with the term and came back with it: S095's mate row,
+S097's mate row and `test_mate_carry`'s `C_mate7_depth11` ceiling, each restored
+by dropping the candidate's own grid from its re-derivation rather than by
+editing a number (DEC-142 in both directions). The rows the term's trees used
+stay recorded beside them.
 
 A bench total is quoted
 with its commit, the way every other number on this page is quoted — it moves

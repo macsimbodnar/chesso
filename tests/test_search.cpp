@@ -3205,73 +3205,67 @@ TEST_SUITE("search: draws")
     // move reduction reduced the mating move at the root, and both were caught
     // by a case like this one and by no benchmark.
     //
-    // GOLDEN (DEC-142): the position, the depth 9 and the distance 2 below.
+    // GOLDEN (DEC-142): the position, the depth 11 and the distance 2 below.
     // Re-derive: `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py
     // candidates` then `adocs/data/S230_mine_r01_row.py depths` on the shipped
     // tree and again with the guard opened, then `S095_mine_mate_row.py pick`.
     // Moves legitimately on: any change to ordering, pruning or reduction.
     // Margin: exact -- the row asserts the distance too.
     //
-    // **RE-MINED AT S236, AND THE ROW BEFORE IT IS NAMED BELOW BECAUSE A
-    // VERDICT CAN BRING IT BACK.** S236 gives a late quiet's reduction a
-    // fraction of a ply of the move's own history, which searches half again as
-    // many nodes per depth, and on that tree the row this case carried --
-    // `4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1` at depth 11, distance
-    // 2 -- stopped being true of the shipped build: it reports the mate as a
-    // **3** there and no mate at all at 12, where on the parent it reported 2
-    // at every depth from 3 to 11. A golden whose derivation moved is
-    // re-derived by its own script and not relaxed, which is what DEC-142 says
-    // and what S188 did when its check extension stopped the multicut row
-    // below separating. **If S236's SPRT reads H0 the term leaves the tree and
-    // the old row is the right one again**; its own line is kept here so that
-    // restoring it is a revert and not a re-mine:
-    //
-    //     const std::string mate_the_extra_ply_hides =
-    //         "4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1";
-    //     ... search_fen(mate_the_extra_ply_hides, 11), mate_in == 2
+    // **RE-MINED AT S236 AND RESTORED WHEN THAT STEP'S TERM LEFT, AND BOTH
+    // FACTS ARE HISTORY THIS BLOCK KEEPS.** S236 gave a late quiet's reduction
+    // a fraction of a ply of the move's own history. On that tree this row
+    // stopped being true of the shipped build -- it reported the mate as a 3 at
+    // depth 11 and no mate at all at 12 -- so it was re-derived by the script
+    // above, and the row the pick rule returned was
+    // `8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1` at depth 9, distance 2,
+    // whose shipped profile was every depth from 3 to 12 with the unguarded
+    // build losing 9 alone (`adocs/data/S236_remine.log`). That step's two
+    // verdicts then read a walk and a zero, the term left the tree (DEC-231),
+    // and **the row below came back with it** -- a revert of one line, which is
+    // why the replacement was recorded here rather than the old row deleted.
+    // The lesson is S188's and this is its third instance: a mined row is a
+    // property of the tree it was mined on.
     //
     // **Mined, not chosen** (CHESS): 297 labelled mates from this project's own
     // positions, 141 of them keeping a quiet, non-checking, non-promotion move
     // of the mating side on the oracle's line -- the only class late move
     // reduction can touch -- swept over depths 3 to 12 on the shipped tree and
     // again with the site's `const bool no_tt_move = tt_move == 0;` made
-    // `= true`, so the ply lands whether or not the entry has a move. 103 of
-    // the 141 carry a mate the shipped build finds at some depth, 28 of those
-    // separate the two builds somewhere, and this is the one the rule
+    // `= true`, so the ply lands whether or not the entry has a move. 28 of the
+    // 141 separate the two builds somewhere and this is the one the rule
     // pre-registered in the script's header returns: the lowest depth the
     // shipped build reports the mate at and the unguarded build does not,
     // tie-broken by the longest run of consecutive shipped depths.
     //
-    // What that rule bought, stated rather than hidden: this row's shipped
-    // profile is **every depth from 3 to 12 at distance 2**, the longest run
-    // the sweep can return, and the unguarded build loses exactly one of them,
-    // **9**, finding the mate again at 10. A row that holds over ten
-    // consecutive depths is a row an ordinary ordering change will not
-    // silently take away -- which is the property the row it replaces turned
-    // out not to have.
+    // What that rule bought and what it cost, stated rather than hidden: this
+    // row's shipped profile is **every depth from 3 to 12** and the unguarded
+    // build loses exactly one of them, 11, finding the mate again at 12. Rows
+    // with a wider separation are in the same recorded sweep -- one loses the
+    // two lowest depths of its profile, three lose their profile outright --
+    // and each has a shipped run of one or two depths, which is what the
+    // tie-break was written to avoid. One of them was read and rejected on a
+    // second ground the rule does not cover: the engine reports its distance as
+    // 5, 5, 6, 5 over its four depths, and a row whose distance moves cannot
+    // carry `mate_in`.
     //
-    // Not read off the board (CLAUDE.md): a fresh stockfish process through
-    // `chess.engine.SimpleEngine` at depth 20 -- TOOLCHAIN.md's safe
-    // invocation, never a printf pipe -- reports **`#+2` for Black in 1386
-    // nodes, pv `Kd4 Ke1 Qg1#`**, and python-chess reports the position
-    // `is_valid()` True, not in check, 30 legal moves of which one is a
-    // capture and none a promotion. The mating side's own move on that line,
-    // `Kd4`, is quiet, gives no check and is played out of no check: the exact
-    // class late move reduction is allowed to touch, which is what makes the
-    // row a test of this term and not of the search in general.
+    // Not read off the board (CLAUDE.md): row 19 of
+    // `adocs/data/S145_mate_set.tsv`, motif `rook0_flip`, proved mate in 2 by
+    // that file's exhaustive AND/OR search with `g5c5` -- a **quiet** rook
+    // move, the class this term reduces -- as its key, and stockfish through
+    // python-chess agrees at depth 20 with `Rc5 Ka1 Rc1#`.
     // **Observed red, then green, and this is that observation**: with the
-    // guard opened, `./build/tests/test_search --test-case="pruning does not
-    // hide a forced mate"` fails at this row -- `REQUIRE( result.mate_found )`,
-    // `values: REQUIRE( false )`, a fatal REQUIRE, so the rows below it are not
-    // reached in that run -- and passes with the guard in place. The mutation
-    // was applied by hand, observed and reverted -- the S033 protocol -- and
-    // the log is `.tuning/coord/S236_observe_red.log`.
+    // guard opened, `./test_search --test-case="pruning does not hide a forced
+    // mate"` fails here at `REQUIRE( result.mate_found )`, `values:
+    // REQUIRE( false )`, a fatal REQUIRE, and passes with the guard in place.
+    // The mutation was applied by hand, observed and reverted -- the S033
+    // protocol -- and the log is `.tuning/coord/S095_observe_red.log`.
     const std::string mate_the_extra_ply_hides =
-        "8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1";
+        "4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1";
 
     {
-      const std::string title = "mate the extra ply hides, depth 9";
-      const search_t result = search_fen(mate_the_extra_ply_hides, 9);
+      const std::string title = "mate the extra ply hides, depth 11";
+      const search_t result = search_fen(mate_the_extra_ply_hides, 11);
 
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == 2, title);
@@ -3323,57 +3317,30 @@ TEST_SUITE("search: draws")
     // reverted -- the S033 protocol -- and the log is
     // `.tuning/coord/S097_v2_mate_row_red.log`.
     //
-    // **RE-MINED AT S236 v2, AND BOTH OLDER ROWS ARE NAMED BELOW BECAUSE A
-    // VERDICT CAN BRING EITHER BACK.** S236 v2 halves the fractional history
-    // term's reach -- `LmrHistClamp` 2048 to 1024, DEC-231's one pre-registered
-    // follow-up -- and on that tree the row this case carried,
-    // `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46` at depth 14,
-    // distance 5, stopped being true of the shipped build: `mate_found` is
-    // false there. A golden whose derivation moved is re-derived by its own
-    // script and not relaxed (DEC-142), which is what S188 did and what S236
-    // did for S095's row one clamp earlier. **The rows this case has carried,
-    // and the tree each belongs to**, so that a revert is a revert:
+    // **RE-MINED AT S236 v2 AND RESTORED WHEN THAT STEP'S TERM LEFT.** S236 v2
+    // halved the fractional history term's reach -- `LmrHistClamp` 2048 to
+    // 1024, DEC-231's one pre-registered follow-up -- and on that tree the row
+    // below stopped being true of the shipped build: `mate_found` was false at
+    // its own depth 14, where the same row had held at 2048. It was re-derived
+    // by its own script (DEC-142) and **exactly one of the 269 candidates
+    // separated there**, `2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1
+    // w - - 1 31` at depth 14, mate in 6, a cell costing 38927874 nodes and
+    // 4.5 s against this row's 0.65 s (`adocs/data/S236_v2_remine.log`). That
+    // verdict then read a zero, the term left the tree and **this row came back
+    // with it** -- a revert of one line and one distance, which is why the
+    // replacement was recorded rather than this row deleted. The cost came back
+    // too: the case is a second and a half shorter for it.
     //
-    //     pre-S236, and again if the term leaves:
-    //         "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46"
-    //         depth 14, mate_in 5, 4206525 nodes, about 0.65 s
-    //     S236 v1, the term at LmrHistClamp 2048: the row above still held
-    //     S236 v2, the term at LmrHistClamp 1024: the row below
+    // The rows this case has carried, and the tree each belongs to:
     //
-    // Mined, not chosen (CHESS), by the six stages of that script's header run
-    // again on this tree: the 269 candidates unchanged -- they are the corpus
-    // and the oracle, neither of which moved -- swept at depths 11 to 14, the
-    // range the script derives from `SeMinDepth` and does not write out, once
-    // against this tree's library and once against one built with
-    // `E21_multicut_mate_band_gate_dropped` applied out of tree. **Exactly one
-    // of the 269 separates the two builds here**, so the pick rule had nothing
-    // to choose between: the row below is the only one this corpus offers at
-    // this clamp. The firing witness confirms the multicut reaches the position
-    // at the row's own depth, which is what makes a red under E21 attributable
-    // to this rule.
+    //     pre-S236, and again now: the row below, depth 14, mate_in 5
+    //     S236 v1, the term at LmrHistClamp 2048: the row below still held
+    //     S236 v2, the term at 1024:
+    //         "2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31"
+    //         depth 14, mate_in 6, 38927874 nodes, about 4.5 s
     //
-    // Not read off the board (CLAUDE.md): a fresh stockfish process through
-    // `chess.engine.SimpleEngine` at depth 20 reports **`#+6` for White in
-    // 70199 nodes, pv `Nxc5+ Kb8 Nxb7 Rxc4 Qb6 Kc8 Nd6+ Nxd6 Ra8+ Kd7 Qxd6#`**,
-    // and python-chess reports the position `is_valid()` True, not in check, 38
-    // legal moves of which two are captures and none a promotion.
-    //
-    // The cell costs **38927874 nodes and about 4.5 s**, against the 0.65 s of
-    // the row it replaces. That is what this corpus charges for a depth-14
-    // mate that separates on this tree, and it is recorded rather than traded
-    // away: the pick rule's cheaper-cell tie-break never came up, because only
-    // one candidate qualified.
-    //
-    // **Observed red, then green, and this is that observation**: with E21
-    // applied by hand to `src/search.cpp` -- the multicut's two mate-band terms
-    // taken off its condition -- this case fails here, `REQUIRE(
-    // result.mate_found )`, `values: REQUIRE( false )`, and passes with them in
-    // place. The mutation was applied, observed and reverted against its own
-    // sha -- the S033 protocol -- and the log is
-    // `.tuning/coord/S236v2_observe_red.log`. The whole re-mine is
-    // `adocs/data/S236_v2_remine.log`.
     const std::string mate_the_multicut_hides =
-        "2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31";
+        "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46";
 
     // **S188 re-mined this row and its H0 put the old one back.** While the
     // check extension was in the tree the row above stopped separating -- the
@@ -3393,7 +3360,7 @@ TEST_SUITE("search: draws")
       const search_t result = search_fen(mate_the_multicut_hides, 14);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 6, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
     }
 
     // S091's own cases, for the two rules that act on a **capture**. The one
@@ -5805,20 +5772,17 @@ TEST_SUITE("search: pruning and reduction guards")
   // otherwise disagree with this line silently, which is what a default of 0
   // would now do at every one of these sites.
   //
-  // **Two units since S236**: the adjustment is given here in plies and scaled
-  // into the accumulator's ticks at the call, which is how the engine's own
-  // `lmr_node_adjustment` hands it over; the history sum is raw. The sum is 0
-  // at every call site below -- these are the rules the gate decides before a
-  // move is picked, or about a move class no history table has an entry for,
-  // which is `NO_HISTORY_SUM` in src/search.cpp.
+  // **The adjustment is given here in plies and scaled into the accumulator's
+  // ticks at the call**, which is how the engine's own `lmr_node_adjustment`
+  // hands it over. A third argument carried a move's history sum while S236's
+  // term was in the tree; the term left at its second verdict and the argument
+  // with it (DEC-231).
   static int lmr_depth_of(int depth, int move_number,
-                          int node_adjustment = LMR_NO_TT_MOVE,
-                          int hist_sum = 0)
+                          int node_adjustment = LMR_NO_TT_MOVE)
   {
-    const int left =
-        depth - search_lmr_adjusted_reduction_probe(
-                    depth, move_number,
-                    node_adjustment * search_lmr_scale_probe(), hist_sum);
+    const int left = depth - search_lmr_adjusted_reduction_probe(
+                                 depth, move_number,
+                                 node_adjustment * search_lmr_scale_probe());
 
     return (left > 0) ? left : 0;
   }
@@ -7142,43 +7106,24 @@ TEST_SUITE("search: pruning and reduction guards")
   // It is a separate argument rather than a zero `table_move` because a zero
   // there already means "plant nothing", and the two are different nodes.
   //
-  // `quiet_history` is S236's, and it is a **flat fill of the side to move's
-  // whole butterfly table** rather than a bonus on one move. Two reasons, both
-  // about keeping two drives comparable. `quiet_history_sum` is what the
-  // reduction reads, and with `prev_move` 0 at this drive the continuation term
-  // is skipped, so a flat fill makes that sum exactly this number at every
-  // quiet -- the case controls the input instead of reading it back. And
-  // score_move adds the same entry to every quiet's order, so a flat fill moves
-  // the whole quiet band together and cannot reorder it; a bonus on one move
-  // would promote that move and shift every index after it, which is the thing
-  // `aligned_reduced_index` refuses.
+  // A sixth argument filled the side to move's whole butterfly table flat,
+  // while S236's history term was in the tree and a case needed two drives that
+  // differ only in what the term reads. The term left at its second verdict
+  // (DEC-231) and the argument with it; the fill was flat rather than a bonus
+  // on one move because score_move adds the same entry to every quiet's order,
+  // so a flat fill moves the whole quiet band together and cannot reorder it --
+  // worth keeping on the record for whoever needs the same trick next.
   struct node_type_drive_t : guard_fixture_t
   {
     search_node_probe_t run(node_type_t type,
                             size_t ply,
                             move_t table_move,
                             const int* improving_anchor,
-                            bool plant_moveless_entry = false,
-                            int quiet_history = 0)
+                            bool plant_moveless_entry = false)
     {
       load(QUIET_NODE_POS, static_cast<int>(ply));
 
       REQUIRE(!is_check(&game));
-
-      if (quiet_history != 0) {
-        // Inside the band the tables can actually hold, because the reduction's
-        // divisor is stated against that band and because score_move's quiet
-        // band has to stay clear of the one above it.
-        REQUIRE(quiet_history <= QUIET_HISTORY_MAX);
-        REQUIRE(quiet_history >= -QUIET_HISTORY_MAX);
-
-        for (int from = 0; from < 64; ++from) {
-          for (int to = 0; to < 64; ++to) {
-            state.quiet_history[game.board.active_color][from][to] =
-                static_cast<int16_t>(quiet_history);
-          }
-        }
-      }
 
       if (table_move != 0 || plant_moveless_entry) {
         // Shallower than the node, so the entry orders and never answers:
@@ -7437,8 +7382,8 @@ TEST_SUITE("search: pruning and reduction guards")
   //
   //   search: pruning and reduction guards
   //    the node-type adjustment is the sum of its four terms
-  //   CHECK_EQ( search_lmr_adjusted_reduction_probe(depth, move_number, 2 *
-  //   scale, 0), raw + 2 )
+  //   CHECK_EQ( search_lmr_adjusted_reduction_probe(depth, move_number,
+  //   2 * scale), raw + 2 )
   //   values: CHECK_EQ( 1, 3 )
   TEST_CASE("the node-type adjustment is the sum of its four terms")
   {
@@ -7484,13 +7429,13 @@ TEST_SUITE("search: pruning and reduction guards")
       for (int move_number = 4; move_number <= 40; ++move_number) {
         const int raw = search_lmr_reduction_probe(depth, move_number);
 
-        CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number, 0, 0),
+        CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number, 0),
                  raw);
-        CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number,
-                                                     2 * scale, 0),
-                 raw + 2);
         CHECK_EQ(
-            search_lmr_adjusted_reduction_probe(depth, move_number, -scale, 0),
+            search_lmr_adjusted_reduction_probe(depth, move_number, 2 * scale),
+            raw + 2);
+        CHECK_EQ(
+            search_lmr_adjusted_reduction_probe(depth, move_number, -scale),
             raw - 1);
       }
     }
@@ -7631,7 +7576,7 @@ TEST_SUITE("search: pruning and reduction guards")
         const int raw = search_lmr_reduction_probe(depth, move_number);
 
         CHECK_EQ(search_lmr_adjusted_reduction_probe(
-                     depth, move_number, worst * search_lmr_scale_probe(), 0),
+                     depth, move_number, worst * search_lmr_scale_probe()),
                  raw + worst);
       }
     }
@@ -7736,27 +7681,23 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // ---- S236: the accumulator, its rounding, and history as a fraction -----
+  // ---- S236: the accumulator and its rounding ----------------------------
   //
-  // Three things, held apart on purpose. The rounding rule is a function of one
+  // Two things, held apart on purpose. The rounding rule is a function of one
   // integer and is asserted as one, at both sides of its own boundary and at
-  // both signs. The history term is a function of one integer too -- its sign,
-  // its scale and its clamp, at inputs the search's own band never reaches.
-  // And the site is the third: a node driven twice with a history table the
-  // case controls, where the term has to move a real reduction by **less than
-  // a ply**, which is the thing S098 verdict 1's whole-ply form could not do
-  // and the reason its two fitted constants are not reused here (DEC-213).
+  // both signs. And the table's own unit is pinned against the scale, because a
+  // mutant that scales the table and the terms differently is invisible to
+  // every case that reads both through the probes: the expectation is computed
+  // from src/search.cpp's own formula here rather than read off the engine, the
+  // way tests/test_search_params.cpp computes it for the same reason.
   //
-  // The table's own unit is pinned against the scale as well, because a mutant
-  // that scales the table and the terms differently is invisible to every case
-  // that reads both through the probes: the expectation is computed from
-  // src/search.cpp's own formula here rather than read off the engine, the way
-  // tests/test_search_params.cpp computes it for the same reason.
-
-  // The sum passed where no move's history is in play, which is
-  // `NO_HISTORY_SUM` in src/search.cpp. Named here too, for the same reason it
-  // is named there: it is a statement and not a value.
-  static constexpr int NO_HISTORY = 0;
+  // **A third thing was here and is gone.** S236's own candidate was a history
+  // term carried in these ticks -- its sign, its scale and its clamp as a
+  // function, and a node driven twice to show it moving a real reduction by
+  // less than a ply, which S098 verdict 1's whole-ply form could not do. Two
+  // verdicts read a walk and then a zero, the term left the tree and its cases
+  // with it (DEC-231, DEC-213). What stays is the unit, which plays as the
+  // whole-ply engine did and is what S237 and S238 will express a fraction in.
 
 
   // Mutation: W01_round_bias_dropped -- the bias is not added before the shift,
@@ -7801,7 +7742,7 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(bias >= 0);
     REQUIRE(bias < scale);
 
-    // The probe sums table, node adjustment and history in ticks, so a node
+    // The probe sums the table and the node adjustment in ticks, so a node
     // adjustment of `-table` puts the sum exactly where this case wants it and
     // the table cell itself decides nothing.
     const int depth = 8;
@@ -7810,7 +7751,7 @@ TEST_SUITE("search: pruning and reduction guards")
 
     auto plies_at = [&](int ticks) {
       return search_lmr_adjusted_reduction_probe(depth, move_number,
-                                                 ticks - table, NO_HISTORY);
+                                                 ticks - table);
     };
 
     // A whole number of plies is a whole number of plies at every bias in the
@@ -7854,190 +7795,6 @@ TEST_SUITE("search: pruning and reduction guards")
                  (search_lmr_reduction_ticks_probe(d, m) + bias) / scale);
       }
     }
-  }
-
-
-  // Mutation: W03_hist_clamp_dropped -- the clamp is not applied, so a
-  // saturated history sum replaces the table's estimate instead of adjusting
-  // it; W04_hist_sign_flipped -- the term is added where it is subtracted, so
-  // the quiets the history tables endorse are the ones reduced hardest.
-  //
-  //   search: pruning and reduction guards
-  //    the history term is a signed fraction of a ply inside its clamp
-  //   CHECK_EQ( search_lmr_history_ticks_probe(sum), LMR_HIST_CLAMP )
-  //   values: written at this step's own mutation pass, from the observed
-  //   red and not from a prediction
-  TEST_CASE("the history term is a signed fraction of a ply inside its clamp")
-  {
-    const int scale = search_lmr_scale_probe();
-
-    // Without this the case asserts nothing: at a clamp of 0 the term returns
-    // 0 for every sum and a rule wired to no input at all would pass. It is
-    // also the step's own off value, proved separately in the tune build.
-    REQUIRE_MESSAGE(LMR_HIST_CLAMP > 0,
-                    "the history term ships switched off, so this case decides "
-                    "nothing");
-    REQUIRE(LMR_HIST_DIV > 0);
-
-    // No history is no term, whatever the divisor holds.
-    CHECK_EQ(search_lmr_history_ticks_probe(NO_HISTORY), 0);
-
-    // The direction, and it is the whole rule: a quiet the tables like is
-    // reduced **less**, so the term the reduction subtracts is positive there.
-    // A sign slip reduces exactly the moves history has endorsed and has no
-    // symptom but lost rating.
-    CHECK(search_lmr_history_ticks_probe(LMR_HIST_DIV) > 0);
-    CHECK(search_lmr_history_ticks_probe(-LMR_HIST_DIV) < 0);
-
-    // The divisor is the sum that buys one whole ply, which is the unit the
-    // seed is stated in, and half of it is half a ply -- the fraction the
-    // accumulator exists for.
-    const int one_ply = (scale < LMR_HIST_CLAMP) ? scale : LMR_HIST_CLAMP;
-    const int half_ply =
-        (scale / 2 < LMR_HIST_CLAMP) ? scale / 2 : LMR_HIST_CLAMP;
-
-    CHECK_EQ(search_lmr_history_ticks_probe(LMR_HIST_DIV), one_ply);
-
-    // Within one tick on the half, and the tolerance is the integer division's
-    // rather than a hedge: an odd divisor -- which a tune build can set even
-    // though the seed rule cannot produce one -- loses half a unit twice over.
-    const int half = search_lmr_history_ticks_probe(LMR_HIST_DIV / 2);
-
-    CHECK(half <= half_ply);
-    CHECK(half >= half_ply - 1);
-
-    // The clamp binds on both signs, and at sums past anything the tables can
-    // hold: the tune build sweeps the divisor down and a later step could
-    // widen the band, so the guard is asserted outside it rather than at it.
-    // The widest sum here is 1000000, which is sixty times the shipped band's
-    // own edge and still leaves the helper's `sum * scale` two doublings
-    // inside int32.
-    for (int sum : {LMR_HIST_DIV * 4, 100000, 1000000}) {
-      CHECK_EQ(search_lmr_history_ticks_probe(sum), LMR_HIST_CLAMP);
-      CHECK_EQ(search_lmr_history_ticks_probe(-sum), -LMR_HIST_CLAMP);
-    }
-
-    // **Exactly symmetric on the sign, including where the division is not
-    // exact.** C's `/` truncates toward zero, which is the one rounding rule
-    // that treats a value and its negation alike, so a sum and its negation
-    // move the reduction by the same number of ticks in opposite directions --
-    // no site is reduced a tick less for having a negative history than its
-    // mirror is reduced more. A floor or a shift here would break that and
-    // nothing else in the suite would say so, because every other assertion in
-    // this case is stated on one side. The sums below are deliberately not
-    // multiples of the divisor: at a multiple the quotient is exact and the
-    // property holds for any rounding rule at all.
-    for (int sum : {1, 7, LMR_HIST_DIV / 3, LMR_HIST_DIV / 2 + 1,
-                    LMR_HIST_DIV + 1, 5000}) {
-      REQUIRE(sum % LMR_HIST_DIV != 0);
-      CHECK_EQ(search_lmr_history_ticks_probe(-sum),
-               -search_lmr_history_ticks_probe(sum));
-    }
-
-    // What the term does to a reduction, as a function: at a sum whose
-    // contribution is a fraction of a ply, the sum sitting exactly at the
-    // rounding boundary drops by one ply and no more. This is the sign of the
-    // **application** -- `lmr_adjusted_reduction` subtracts -- where the
-    // assertions above are the sign of the term.
-    const int depth = 8;
-    const int move_number = 8;
-    const int table = search_lmr_reduction_ticks_probe(depth, move_number);
-    const int boundary = 2 * scale + (scale - LMR_ROUND_BIAS);
-
-    const int fraction = LMR_HIST_DIV / 3;
-
-    REQUIRE(fraction > 0);
-    REQUIRE(search_lmr_history_ticks_probe(fraction) > 0);
-    REQUIRE(search_lmr_history_ticks_probe(fraction) < scale);
-
-    CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number,
-                                                 boundary - table, NO_HISTORY),
-             3);
-    CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number,
-                                                 boundary - table, fraction),
-             2);
-    CHECK_EQ(search_lmr_adjusted_reduction_probe(depth, move_number,
-                                                 boundary - table, -fraction),
-             3);
-  }
-
-
-  // Mutation: W05_hist_whole_plies -- the term is computed in whole plies, the
-  // shape S098 verdict 1 shipped, so a sum under the divisor moves nothing.
-  //
-  //   search: pruning and reduction guards
-  //    a fraction of a ply of history moves a real reduction
-  //   REQUIRE_MESSAGE( moved > 0, ... )
-  //   values: written at this step's own mutation pass, from the observed
-  //   red and not from a prediction
-  TEST_CASE_FIXTURE(node_type_drive_t,
-                    "a fraction of a ply of history moves a real reduction")
-  {
-    const int scale = search_lmr_scale_probe();
-
-    REQUIRE_MESSAGE(LMR_HIST_CLAMP > 0,
-                    "the history term ships switched off, so this case decides "
-                    "nothing");
-
-    // A history sum a third of the way to one whole ply. Three properties make
-    // it the case the step is about, and each is asserted rather than argued:
-    // the term it produces is non-zero, it is **under one ply**, and the
-    // whole-ply form of the same rule -- `hist_sum / LmrHistDiv`, which is
-    // exactly what S098 verdict 1 computed -- answers zero at it. So every
-    // difference read below is a difference that form could not have produced.
-    const int history = LMR_HIST_DIV / 3;
-
-    REQUIRE(history > 0);
-    REQUIRE(history <= QUIET_HISTORY_MAX);
-    REQUIRE_EQ(history / LMR_HIST_DIV, 0);
-
-    const int term = search_lmr_history_ticks_probe(history);
-
-    REQUIRE(term > 0);
-    REQUIRE(term < scale);
-
-    // Two drives of the same node with the same table entry -- a quiet one, so
-    // S095's term and LmrTtCapture are equal in both -- differing only in the
-    // butterfly table the sum is read from. `prev_move` is 0 at this drive, so
-    // the continuation half of `quiet_history_sum` is skipped and the sum at
-    // every quiet is exactly `history`.
-    const search_node_probe_t flat = run(ALL_NODE, 1, QUIET_ENTRY, nullptr);
-    const search_node_probe_t liked =
-        run(ALL_NODE, 1, QUIET_ENTRY, nullptr, false, history);
-
-    // The two drives searched the same moves in the same order. Without this
-    // the reductions below are read at indices that hold different moves --
-    // the one way a flat fill could still reorder the node.
-    REQUIRE_EQ(flat.move_count, liked.move_count);
-
-    for (int i = 0; i < flat.move_count; ++i) {
-      REQUIRE_EQ(flat.moves[i], liked.moves[i]);
-    }
-
-    int moved = 0;
-
-    for (int i = 3; i < flat.move_count; ++i) {
-      if (MOVE_CAPTURE(flat.moves[i]) != 0) { continue; }
-      if (MOVE_PROMOTED(flat.moves[i]) != TO_NONE) { continue; }
-
-      const int delta = flat.reduction[i] - liked.reduction[i];
-
-      // Direction and magnitude at once: a quiet the tables like is never
-      // reduced **more**, and a term under one ply can move a floor by one ply
-      // and never by two.
-      CHECK(delta >= 0);
-      CHECK(delta <= 1);
-
-      if (delta > 0) { moved++; }
-    }
-
-    REQUIRE_MESSAGE(moved > 0,
-                    "a third of a ply of history moved no reduction at this "
-                    "node: either the term is not reaching the site, or every "
-                    "late quiet's table value sits far enough from the "
-                    "rounding boundary that a third of a ply cannot cross it "
-                    "-- which is a property of QUIET_NODE_POS and LmrBase, and "
-                    "is what a larger fill or another node would settle");
   }
 
 

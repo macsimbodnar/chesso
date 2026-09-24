@@ -316,32 +316,32 @@
      0 floors, which is exactly what the `uint8_t` cast did to the table       \
      before this step; LMR_SCALE / 2 rounds to nearest; the top rounds up.     \
                                                                                \
-     **0 is the off value and it is a true one** (DEC-215): at 0, with         \
-     LmrHistClamp also 0, every consumer reads the number it read before S236  \
-     -- the truncated table plus whole plies -- and the engine is the parent   \
-     commit, bench signature included. Proved on the tree and not declared     \
-     from a range's end: the tune build at those two settings prints 4493659   \
-     with all eight bestmove replies identical, and tools/search_bench.py      \
-     reproduces the parent at depths 9 and 12.                                 \
+     **0 is the off value, it is a true one (DEC-215), and it is what ships.** \
+     At 0 every consumer reads the number it read before S236 -- the truncated \
+     table plus whole plies -- and the engine is the whole-ply engine, bench   \
+     signature included. Proved on the tree and not declared from a range's    \
+     end: the build prints 4493659 with all eight bestmove replies identical   \
+     and tools/search_bench.py reproduces the pre-S236 tree at depths 9 and    \
+     12.                                                                       \
                                                                                \
-     **IT SHIPS AT 0, THE PARENT'S OWN TRUNCATION, AND THE REASON IS           \
-     MEASURED.** The seed was to be 512 -- (c), the midpoint of the declared   \
-     range, which is round-to-nearest, the ordinary rounding rule and not a    \
-     value chosen for this engine -- and at 512 the engine loses a mate the    \
-     fast suite guards: tests/test_search.cpp "pruning does not hide a forced  \
-     mate", row "mate the multicut hides" at depth 14, goes red. It is not a   \
-     question of how much rounding: with the history term below live, **every  \
-     bias from 1 tick upward loses that row** -- 1, 8, 64, 128, 256 and 512    \
-     were each built and run -- while 0 with the term live keeps it, and so    \
-     does a bias of 1 with the term off. The row is knife-edge on this tree,   \
-     which is a property of the row and is reported as one; what it means here \
-     is that the shipped rounding is the parent's and this parameter's own     \
-     hypothesis is untested, not rejected. S127 may sweep it with LmrBase and  \
-     LmrDivisor, which it interacts with directly, and a step that re-mines    \
-     that row may free it sooner. At 0 the accumulator is bit-identical to the \
-     parent, so this step's candidate is exactly one change -- the history     \
-     term below -- and the bisection's leg 1 is an identity a rebuild proves   \
-     rather than a run.                                                        \
+     **THE REASON IT SHIPS AT ITS OFF VALUE IS MEASURED.** The seed was to be  \
+     512 -- (c), the midpoint of the declared range, which is round-to-        \
+     nearest, the ordinary rounding rule and not a value chosen for this       \
+     engine -- and at 512 the engine loses a mate the fast suite guards:       \
+     tests/test_search.cpp "pruning does not hide a forced mate" goes red. It  \
+     was not a question of how much rounding: with S236's history term live,   \
+     every bias from 1 tick upward lost a row of that case -- 1, 8, 64, 128,   \
+     256 and 512 were each built and run -- while 0 kept it. Those rows are    \
+     knife-edge, which is a property of the rows and was reported as one; what \
+     it means here is that the shipped rounding is the whole-ply engine's and  \
+     this parameter's own hypothesis is **untested, not rejected**. S127 may   \
+     sweep it with LmrBase and LmrDivisor, which it interacts with directly,   \
+     and a step that re-mines those rows may free it sooner.                   \
+                                                                               \
+     At 0 the accumulator is bit-identical to the engine before S236, which is \
+     why the unit could stay when that step's history term left at its second  \
+     verdict (DEC-231): what remains here plays no differently and is the      \
+     scaffolding S237 and S238 need to express a fraction of a ply.            \
                                                                                \
      The range is arithmetic at both ends. Below 0 the bias would round a      \
      positive sum down past its own floor; at LMR_SCALE it would add a whole   \
@@ -350,113 +350,6 @@
      is the bias added before the shift" holds both ends against the scale     \
      probe, so a scale that moved without this range moving fails there. */    \
   X(LMR_ROUND_BIAS,    "LmrRoundBias",    0,      0, 1023)                     \
-                                                                               \
-  /* HISTORY SCALING OF THAT REDUCTION AS A FRACTION OF A PLY, S236, and the   \
-     return of S098 verdict 1 in a unit that step did not have. A quiet the    \
-     history tables like is reduced less and one they have written off is      \
-     reduced more:                                                             \
-                                                                               \
-       ticks -= clamp(hist_sum * LMR_SCALE / LMR_HIST_DIV, +/-LMR_HIST_CLAMP)  \
-                                                                               \
-     in `lmr_history_ticks` in src/search.cpp, where `hist_sum` is             \
-     `quiet_history_sum` -- the **raw** butterfly entry plus S222's weighted   \
-     continuation entry, never score_move's banded return, for the reason      \
-     history pruning states below. It is the same **expression** the ordering  \
-     scores a quiet with and not the same number: score_move fills the list's  \
-     scores once, at generation, and the plies searched between that and a     \
-     late quiet's reduction may have written to either table, so the reduction \
-     reads the rule again rather than reading the ordering's answer.           \
-                                                                               \
-     **THE TWO CONSTANTS ARE NOT S098 VERDICT 1'S AND ARE NOT COMPARABLE TO    \
-     THEM.** That step's fitted 699 and clamp 3 were fitted against a term     \
-     whose smallest step was a whole ply, and it measured zero at three scales \
-     (DEC-213). Reusing them here would be seeding a fraction from a fit over  \
-     integers. Both are seeded **(b)** instead, from a census of the sum this  \
-     engine's own search reads at the reduction's own sites, run at this       \
-     step's start on the tree the term is added to:                            \
-     adocs/data/S236_hist_census.py and the .txt beside it.                    \
-                                                                               \
-     LMR_HIST_DIV is **the sum that buys one whole ply**, which is what makes  \
-     the seed readable: the census's p90 of |sum| at depth 12 doubled, so the  \
-     ninetieth percentile site moves the reduction by half a ply and the       \
-     typical site -- whose sum is 0, at more than two thirds of them -- by     \
-     nothing at all. LMR_HIST_CLAMP was to be the p99's own contribution under \
-     that divisor, so that the clamp bound on the top hundredth of sites and   \
-     not on the shape; on this tree's tail it does not, and the paragraph      \
-     below says what it does instead.                                          \
-                                                                               \
-     **THE DIVISOR IS THIS STEP'S OWN CENSUS; THE CLAMP IS ITS VERDICT'S OWN   \
-     FOLLOW-UP.** The census was taken 2026-09-23 on the tree the term is      \
-     added to -- the accumulator with this clamp forced to 0, whose            \
-     instrumented bench is 4493659, the parent's own signature -- and is       \
-     recorded in adocs/data/S236_hist_census.txt: 232136 sites at depth 12     \
-     over the eight bench positions, p50 0, p75 53, p90 367, p95 1219, p99     \
-     4883, and **67.49 % of the sums are exactly zero**. The two rules above   \
-     give a divisor of 2 * 367 = 734, which is what LMR_HIST_DIV holds, and a  \
-     clamp of 4883 * 1024 / 734 = 6812 ticks -- 6.7 plies, past the declared   \
-     top, so the rule's own output for the clamp was the range bound 2048 and  \
-     S236 shipped it there. **That vector was measured and read as a walk**:   \
-     Elo -1.60 +/- 4.25, nElo -2.05 +/- 5.44 over 15658 games, an interval     \
-     reaching above zero, and the tree half again the parent's at a fixed      \
-     depth. DEC-231's third reading binds and its one pre-registered follow-up \
-     is what this file now carries: **LMR_HIST_CLAMP 1024, one whole ply**, as \
-     S236 v2, its own pinned pair at {0, 5}.                                   \
-                                                                               \
-     The census said before any game what the flip does and that is why it     \
-     could be pre-registered rather than picked: at this divisor **12.54 % of  \
-     sites see their whole-ply reduction move, and that share is the same at   \
-     1024 as at 2048** -- the cap only changed how far 5.42 % of them went,    \
-     from one ply to two, and changed which sites move not at all. What it     \
-     changed instead was the price: 6858745 nodes against 5193174 on the       \
-     bench, +52.6 % against +15.6 % over the parent's 4493659. So 1024 is the  \
-     same rule at a third of the cost, and the question the follow-up asks is  \
-     whether the term's judgement was ever worth paying for. This value is a   \
-     **pre-registered follow-up and not a fit**; S127's lane is what fits it,  \
-     and it may not fit it upward until the range widens (below). One pass     \
-     bounds what a percentile means either way: the distribution belongs to    \
-     the tree it was measured on -- a first census taken the same morning, on  \
-     the round-to-nearest tree the suite then rejected, read p90 318 and gave  \
-     636 -- the seed changes that tree in turn, and the fixed point is not     \
-     iterated.                                                                 \
-                                                                               \
-     The floor is arithmetic -- the value is a divisor. The range top is twice \
-     the saturated sum in ticks, S098's own shape: the band is                 \
-     `QuietHistoryMax + ContHistWeight * CONT_HIST_BOUND / 100`, **17350 at    \
-     the shipped values of those two**, so 2 * 17350 * 1024 = 35532800 and no  \
-     sum the band admits reaches one tick there -- a second off value. At the  \
-     two contributing parameters' own declared tops the band is 688107 and the \
-     same divisor leaves 19 ticks, so the top is an off value for the engine   \
-     as it ships and not for every vector a tune build can be driven to; that  \
-     is stated rather than rounded up, because a range top whose meaning       \
-     depends on two other ranges is worth knowing the dependence of.           \
-                                                                               \
-     LMR_HIST_CLAMP is in ticks. **0 is the off value and it is a true one**:  \
-     the clamp is the whole term, so at 0 the helper returns 0 for every sum   \
-     and every divisor, and at 0 with the bias also 0 the engine is the parent \
-     commit. Since the bias ships at 0 already, this one value is the whole    \
-     candidate's switch. The top is two plies, 2 * LMR_SCALE, by the argument  \
-     the node terms' range top uses: `search_lmr_reduction_probe(11, 4)` is 2  \
-     at the shipped fit, the table's own value for the first reducible move at \
-     the census median depth, and a term allowed more than that replaces the   \
-     ordering's estimate instead of adjusting it. A whole ply of it is S098    \
-     verdict 1's form, which measured zero twice.                              \
-                                                                               \
-     Both are first settings and S127 sweeps them with the rest of the         \
-     reduction vector; no engine's coefficient is behind either, and the       \
-     published records that say history scaling is worth trying are records    \
-     and not seeds (DEC-084 as amended by DEC-105, DEC-134, DEC-221).          \
-     **LMR_HIST_CLAMP's range has to widen before that sweep can fit it**: a   \
-     default sitting on its own top can only be moved downward, so a fit would \
-     be one-sided and would read as a preference for smaller values that the   \
-     data never expressed. The number to widen to is the census's own uncapped \
-     ask, 6812 ticks, because it is the only non-arbitrary value in sight --   \
-     and widening means replacing the top's purpose statement above, which     \
-     says two plies is where the term equals the table's own value for the     \
-     first reducible move, with one that says what a term larger than the      \
-     table's estimate is for. That is a decision for the step that widens it   \
-     and not a line to change quietly. */                                      \
-  X(LMR_HIST_DIV,      "LmrHistDiv",      734,    1, 35532800)                 \
-  X(LMR_HIST_CLAMP,    "LmrHistClamp",    1024,   0, 2048)                     \
                                                                                \
   /* LATE MOVE REDUCTION BY NODE TYPE, S098 verdict 2. Four signed plies on     \
      top of the table above, each behind its own constant and each with 0 as    \

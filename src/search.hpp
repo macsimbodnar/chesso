@@ -197,13 +197,6 @@ int search_lmr_scale_probe();
 // does, which is what the boundary case reads. S236.
 int search_lmr_reduction_ticks_probe(int depth, int move_number);
 
-// What a move's history sum is worth against the table, in ticks, already
-// clamped: `clamp(hist_sum * LMR_SCALE / LmrHistDiv, +/-LmrHistClamp)`, the
-// value the reduction **subtracts**. Positive for a sum the tables like. It is
-// the term as a function, so the sign, the scale and the clamp are each
-// assertable at inputs the search's own band never produces. S236.
-int search_lmr_history_ticks_probe(int hist_sum);
-
 // The node-type adjustment S098 verdict 2 adds to that table, as a function of
 // the five conditions, so a case can hold the arithmetic and the signs
 // directly: four terms lengthen the reduction and the PV term shortens it,
@@ -224,19 +217,19 @@ int search_lmr_node_adjustment_probe(bool cut_node,
                                      bool is_pv,
                                      bool no_tt_move);
 
-// The reduction the two consumers share: the table plus that adjustment plus
-// the move's own history term, summed in ticks and rounded to plies once,
-// unclamped against the depth -- which is what makes "at the off values the
-// engine is the one before this step" a property a test can assert rather than
-// a claim. S098, and S236 for the last two words of that sum.
+// The reduction the two consumers share: the table plus that adjustment,
+// summed in ticks and rounded to plies once, unclamped against the depth --
+// which is what makes "at the off values the engine is the one before this
+// step" a property a test can assert rather than a claim. S098, and S236 for
+// the rounding.
 //
 // **`node_adjustment` is in ticks**, as `search_lmr_node_adjustment_probe`
-// returns it; `hist_sum` is a raw history sum, not a tick count, because that
-// is what the site passes and what the term's own scaling is about.
+// returns it. A third input was here while S236's history term was in the
+// tree; the term left at its second verdict and the argument with it
+// (DEC-231).
 int search_lmr_adjusted_reduction_probe(int depth,
                                         int move_number,
-                                        int node_adjustment,
-                                        int hist_sum);
+                                        int node_adjustment);
 
 // The depth the zero-window re-search of a reduced move runs at, as a pure
 // function of the five numbers the site has: the child's depth, the reduction

@@ -1178,8 +1178,10 @@ int score_move(const game_t* game,
   // The quiet ordering band, and it is the raw history sum, factored out into
   // src/evaluation.hpp so that this is not the only place that arithmetic
   // exists. S098 read it there too and its term measured zero and left
-  // (DEC-213); the factoring stayed, because it is behaviour-neutral and
-  // because the next consumer of a move's history should read the number this
-  // function returns rather than write its own copy.
+  // (DEC-213); S236 read it again, as a fraction of a ply this time, and its
+  // two verdicts read a walk and then a zero, so that term left as well
+  // (DEC-231). The factoring stayed through both, because it is
+  // behaviour-neutral and because the next consumer of a move's history should
+  // read the number this function returns rather than write its own copy.
   return quiet_history_sum(game, state, move, prev_move);
 }
