@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S236's term is removed, 2026-09-24 14:14, as `0792ef1`, `bench` 5193174 ->
+  4493659; second tier in progress on the removal, then the completion.**
+  `src/` against `666b5a0` is the accumulator alone (the `int32_t` table in
+  ticks, `LMR_SCALE`, `lmr_plies_of`, `LmrRoundBias` 0) and comments; `bench`
+  4493659 with all eight replies identical to a `666b5a0` binary and
+  `search_bench` identical at 9 and 12 (INV-6); the three mined goldens back
+  byte for byte (S095's row, S097's row, the mate-carry ceiling at 0 with the
+  v2 grid dropped from its command), each block keeping the rows the term's
+  trees used; mutation 11 of 11 with W01 equivalent and E21 killed again by
+  the restored row; both suites 40 of 40; W06 kept because it guards the
+  accumulator's own scaling. `specs.md`'s search row states the accumulator
+  as what stays and the term as tried and left with both results. Debug
+  self-play on the removal 8 games with 0 `Assertion`; `gate_extra` launched
+  at 14:16 with a watcher. **On its marker:** S236 completes (stamp, `plan_done/`,
+  the Open list, `status.md`) on two zeros with the accumulator kept; then
+  **S234's branch, rebased onto this HEAD with two document conflicts
+  (`DEV_MANUAL.md`, `adocs/data/README.md`, both sides' additions kept),
+  gets "machine free"** for its measurements, fast check, landing, second
+  tier, pin and the night SPRT.
+
 - **S236 v2 reached the harness's 40000-game limit with no verdict,
   2026-09-24 13:11:42: `Elo 2.61 +/- 2.64`, `nElo 3.38 +/- 3.40`, LLR 1.46
   over 40000 games in 19 h 08 m at 2090.5 an hour, 0 forfeits either side,
