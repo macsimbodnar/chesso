@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-21, by hand.
 
+- **S234's gainer SPRT is running, launched 2026-09-24 16:05:33: `169b4cb`
+  (reverse futility decided on the table-tightened estimate) against
+  `5180a10` (the tree without the routing), `{0, 5}` nElo at 8+0.08 on
+  `noob_3moves.epd`, seed 20260924160533, output `.tuning/sprt_s234_20260924_160533`, pid 90927.** Banner
+  checked: both shas, `OUT` under `.tuning/`. `gate_extra` on the landing
+  tree green on its second run (1038 s) after the first flagged a `plan.md`
+  sentence naming the completed S236, reworded in `686a83e`; `REF`/`CAND`
+  pinned in `288caaf`. Watcher armed with four exits, hourly progress and a
+  40 h ceiling; worst case 41861 games (19.8 h at 2110 an hour), 25591 on a
+  bound (12.1 h). The night run. **When it fires:** the record with
+  DEC-220's block (subject "Record S234's <verdict> for reverse futility on
+  the table-tightened estimate"), the forfeit report per side, the pairs
+  reading; **H1** keeps `RfpTtEstimate` at 1 and completes S234; **H0** with
+  the interval wholly below zero flips it to 0 as the proved one-default
+  revert and the code leaves with it; **no verdict or an interval reaching
+  above zero** is a zero read the same way, no follow-up. **S235's Report 1
+  is in (16:00):** `RfpReturnWeight` 50 (0..100, (c)), the blended return
+  `beta + (rfp_bound - beta) * w / 100` floored toward beta with the off end
+  at 100 returning today's bound, five cases, mutants H01 to H04 (H03
+  equivalent at the midpoint seed by arithmetic), S103's case repaired for
+  the return value, `adocs/data/S235_sprt.sh`; branch `s235` WIP `e2a0985`
+  on `2b6f2ff`; nothing compiled; waits for S234's marker and the tree it
+  leaves.
+
 - **S234 is landed, 2026-09-24 15:26, as `169b4cb`, `bench` 4493659 -> 4803214;
   second tier in progress, SPRT not yet pinned.** Reverse futility decides on
   S109's table-tightened estimate and returns it less the margin, behind
