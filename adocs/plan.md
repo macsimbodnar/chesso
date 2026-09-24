@@ -499,8 +499,8 @@ whole with their evidence; they are 3100-band techniques by the record.
 
 The pending order owes **roughly 40 to 50 SPRT verdicts** once multi-verdict
 steps are counted honestly (S022's two, the evaluation groups
-per-term; five more since 2026-09-19 by DEC-222 -- S236's block, S234, S235,
-S237 and S238), the three the reduction rebuild took having been spent on
+per-term; five more since 2026-09-19 by DEC-222 -- the fixed-point block, now spent,
+S234, S235, S237 and S238), the three the reduction rebuild took having been spent on
 2026-09-18, the two-ply table's one on 2026-09-20 (DEC-224; the two removals
 DEC-222 attached to an H1 there are not owed) and the no-table-move term's
 one on 2026-09-21, the singular extension's first and the node-fraction time
