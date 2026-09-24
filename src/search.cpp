@@ -1531,6 +1531,13 @@ static int negamax_at(int alpha0,
   // score against one, and the entry this node stores must hold what
   // `evaluate()` said or the correction compounds through the table, which is
   // the rule S099 inherits.
+  //
+  // **Two consumers since S234, and one switch over the second of them.** The
+  // futility margin in the move loop has read this value since S109 and is not
+  // switched: it is the tree the S109 block's own verdict measured. Reverse
+  // futility below reads it at `RfpTtEstimate` 1 and `static_eval` at 0, which
+  // is this step's candidate and its off value. The rule computing the value
+  // does not move; what moves is how many margins consult it.
   int pruning_eval = static_eval;
 
   if (tt_entry != nullptr && !is_in_check) {
@@ -1545,9 +1552,15 @@ static int negamax_at(int alpha0,
   }
 
   // Reverse futility pruning, also called static null move pruning. The null
-  // move observation without the null move: if the static score is so far
+  // move observation without the null move: if the node's own price is so far
   // above beta that the opponent cannot claw the difference back in the plies
   // that are left, the node fails high and nothing below it is worth searching.
+  //
+  // **That price is `pruning_eval` and not `static_eval` since S234**, at
+  // `RfpTtEstimate` 1: where the table's entry certifies which way its score
+  // has moved from the static one, the searched number is the better input to
+  // a margin than the standing-still one. The site is at the foot of this
+  // comment and the switch is what a verdict moves.
   //
   // Where null move pruning pays a reduced search to find that out, this pays
   // one evaluate() and assumes RFP_MARGIN per ply. That is an assumption, not a
@@ -1609,14 +1622,38 @@ static int negamax_at(int alpha0,
       beta < MATE_MIN && beta > -MATE_MIN) {
     const int margin = RFP_MARGIN * depth;
 
+    // WHICH NUMBER THE MARGIN IS SUBTRACTED FROM, S234. `pruning_eval` is the
+    // estimate computed above -- the static score, or the table's own score
+    // where the entry's bound certifies the direction it moved in -- and it is
+    // read here rather than re-derived, so this site and the futility site
+    // below decide on the same number at the same node. One local, used by
+    // both the comparison and the return, so `RfpTtEstimate` at 0 is the tree
+    // before this step and cannot be half taken (DEC-215).
+    //
+    // The block excludes a node in check, where the estimate is the sentinel;
+    // the futility site asserts the same thing for the same reason.
+    const int rfp_eval = (RFP_TT_ESTIMATE != 0) ? pruning_eval : static_eval;
+
+    assert(rfp_eval != TT_EVAL_NONE);
+
     // Fail soft, and the bound returned is the one actually argued for: the
-    // static score minus everything the opponent was assumed able to win back.
-    if (static_eval - margin >= beta) {
+    // number this node was priced at minus everything the opponent was assumed
+    // able to win back. **The estimate and not the static score**, where the
+    // two differ. On the lower-bound branch that is a weaker claim than the
+    // entry already carries -- a TT_BETA_NODE says a search of this position
+    // came back at or above its score, so `score - margin` is below something
+    // already proved -- and on the upper-bound branch it lowers the bound,
+    // which a fail-soft return may always do. Returning `static_eval - margin`
+    // while deciding on the estimate was the alternative and it is rejected:
+    // it would hand a parent a bound the node's own test did not argue for,
+    // and on the lower-bound branch that bound is the smaller of the two,
+    // which throws away the certificate the entry brought.
+    if (rfp_eval - margin >= beta) {
       if constexpr (PROBING) {
         if (probe != nullptr) { probe->rfp_cutoff = true; }
       }
 
-      return static_eval - margin;
+      return rfp_eval - margin;
     }
   }
 

@@ -48,6 +48,9 @@
 // src/search.cpp. `LmrHistDiv` and `LmrHistClamp` went with the history term
 // its two verdicts removed (DEC-231), and a row leaving is the same kind of
 // commit as a row arriving -- this list is where either is visible.
+// S234 adds one, and it is a switch rather than a setting: `RfpTtEstimate`
+// decides which number the reverse-futility margin is subtracted from, and
+// its 0 is the off value that step's verdict returns to.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -60,7 +63,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 61 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 62 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -88,6 +91,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
   {"RfpMinPly",                 3,     2,      63},
+  {"RfpTtEstimate",             1,     0,       1},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},
   {"LmrBase",                  52,     0,     400},

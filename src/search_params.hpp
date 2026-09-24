@@ -283,6 +283,33 @@
      geometry, which is what S145 exists to have replaced. */                  \
   X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)                       \
                                                                                \
+  /* WHICH NUMBER REVERSE FUTILITY COMPARES AGAINST, S234. The static score,   \
+     or the node's estimate -- the table's own score where the entry's bound   \
+     certifies the direction that score has moved in from the static one.      \
+     `negamax_at` computes the estimate once, beside `static_eval`, and S109   \
+     has read it at the futility site since the shallow-depth block landed;    \
+     this switch routes the **other** margin site through the same value, and  \
+     there is exactly one other today. Null move pruning has no static-score   \
+     condition in this engine -- its guards are the position's and the         \
+     window's -- and razoring does not exist until S116, whose site joins      \
+     under its own verdict.                                                    \
+                                                                               \
+     RFP_TT_ESTIMATE IS A SWITCH AND NOT A SETTING, DEC-215. At 0 the site     \
+     reads `static_eval` and returns `static_eval - margin`, which is the      \
+     tree before this step exactly; at 1 both the comparison and the bound it  \
+     returns read the estimate. One local decides both, so the off value       \
+     cannot be half taken. Range 0 to 1 by stated purpose -- the site reads    \
+     one number or the other -- and it is a verdict switch, not something      \
+     S127 sweeps.                                                              \
+                                                                               \
+     NO CONSTANT OF ITS OWN, which is why no seed is stated (DEC-134): the     \
+     tightening is a comparison between two numbers the node already has, and  \
+     what guards it -- the two bound types, the mate band, in check -- are     \
+     conditions rather than margins. S234 found no guard wanted; a later one,  \
+     a minimum entry depth say, arrives with its own range and its own seed    \
+     form. Implemented from the description, DEC-221. */                       \
+  X(RFP_TT_ESTIMATE,   "RfpTtEstimate",   1,      0, 1)                        \
+                                                                               \
   /* Null move pruning gives the opponent a free move and searches what is     \
      left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \
      Deeper searches can afford to give up more, since what is left is still   \

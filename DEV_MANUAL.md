@@ -2560,6 +2560,52 @@ by dropping the candidate's own grid from its re-derivation rather than by
 editing a number (DEC-142 in both directions). The rows the term's trees used
 stay recorded beside them.
 
+**At `S234`, the table's score as the node's estimate at the reverse-futility
+margin: `4493659` -> `4803214`, +6.89 %.** The rule is S109's and is not new --
+the estimate has fed the futility margin in the move loop since that block
+landed -- so what this step changes is the number the **reverse-futility** test
+is decided on and the bound it returns. The total moves by construction and in
+both directions: a node whose entry carries a certified lower bound above its
+static score now cuts off where it used to search, and one whose entry carries a
+certified upper bound below it now searches where it used to cut off, so the two
+do not cancel at a fixed depth and INV-6 does not discharge this step. One of
+the eight `bestmove` replies moves, kiwipete's `e2a6` -> `d5e6`.
+
+**The off value is proved on the tree and not declared from a range's end**
+(DEC-215): a Release build with `RfpTtEstimate` defaulted to 0 prints
+`4493659`, `7c12686`'s own total to the node, with all eight replies identical
+(c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6), and `tools/search_bench.py`
+reproduces that commit exactly at both depths -- 21479 / 102462 / 33148 with
+g5f6 / e2a6 / d7c8q at depth 9 and 149688 / 459216 / 219544 with
+c3d5 / e2a6 / d7c8q at depth 12. That equality is what an H0's revert returns
+to and it is INV-6's own form.
+
+**`search_bench` disagrees with `bench` about the sign, and the disagreement is
+the shape of the change.** At depth 9 midgame **grows** 21479 -> 48522 with its
+best move moving `g5f6` -> `c3d5` while kiwipete falls 102462 -> 85714 and
+tactical 33148 -> 28080; at depth 12 all three shrink, 149688 -> 129499,
+459216 -> 411457 and 219544 -> 172984, with every best move the parent's. A
+rule that both buys cutoffs and takes them away does not move every tree the
+same way, and a single total hides that. Whether the tree this leaves is a
+better one is `adocs/data/S234_sprt.sh`'s to say and not this number's
+(DEC-019).
+
+**What it costs on a cold fixed-depth mate sweep, stated because it is not
+flattering.** Over the 141 positions of S095's mate candidate set at depths 3 to
+12 -- 1410 cells, the regime `search_fen()` and the mining driver use, not the
+iterative deepening a game plays -- the candidate reports **489 mate cells
+against the parent's 497**, sixteen rows losing one somewhere and nine gaining
+one (`adocs/data/S234_remine.log`). One of the sixteen is the row
+`tests/test_search.cpp` "pruning does not hide a forced mate" carried for S095,
+which is why that golden was re-mined; the position and its distance survived
+and only the depth moved, 11 to 8. A fixed-depth mate count is a reading of a
+different tree and not of a better one (DEC-019) -- S188's check extension found
+180 against 146 on the S145 set and lost 13.84 Elo -- and the instruments that
+are not cold single-depth searches are unmoved: `test_engine`'s mate safety over
+48 constructed mates, `test_mate_carry`'s grid, and the engine driven through
+iterative deepening, where that row's mate in 2 comes back at every depth from 3
+to 12 with node counts identical to the parent's at Hash 16 and at Hash 4.
+
 A bench total is quoted
 with its commit, the way every other number on this page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is

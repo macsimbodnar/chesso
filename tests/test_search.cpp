@@ -2045,12 +2045,28 @@ TEST_SUITE("search: quiescence transposition entries")
     // this position's. Stored at TT_DEPTH_QS, which a depth 1 node may not cut
     // on, so anything but 563 - margin coming back has to have come from the
     // eval field.
+    //
+    // **S234 made the entry's score load-bearing here and the plant moved with
+    // it.** This leg is about the eval field, and until that step the score
+    // beside it was filler -- a TT_DEPTH_QS entry answers no depth-1 node
+    // whatever it says -- so it read `-9999` under a `TT_ALPHA_NODE` bound.
+    // Reverse futility is now decided on the node's estimate, and an upper
+    // bound **below** the static score is one of the two entries that replace
+    // it, so the old filler would have put -9999 into the margin and suppressed
+    // the cutoff this leg exists to observe. Observed, not reasoned about: with
+    // the old plant the leg returns 0 against the 300 asserted below.
+    //
+    // The score is now one point **above** the planted evaluation, which is an
+    // upper bound the estimate rule refuses -- "an upper-bound entry above the
+    // static score changes nothing" in tests/test_search.cpp's guards suite is
+    // that branch's own case -- so this leg reads the eval field alone, as it
+    // always did, and its assertion is unchanged.
     tt_reset(&tt);
     tt_new_search(&tt);
 
     REQUIRE(load_FEN(fen, &game));
     const int planted = static_score - 200;
-    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, -9999, TT_ALPHA_NODE, 0,
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, planted + 1, TT_ALPHA_NODE, 0,
                    planted);
 
     const int planted_pruned = planted - RFP_MARGIN * DEPTH;
@@ -3205,12 +3221,25 @@ TEST_SUITE("search: draws")
     // move reduction reduced the mating move at the root, and both were caught
     // by a case like this one and by no benchmark.
     //
-    // GOLDEN (DEC-142): the position, the depth 11 and the distance 2 below.
+    // GOLDEN (DEC-142): the position, the depth 8 and the distance 2 below.
     // Re-derive: `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py
     // candidates` then `adocs/data/S230_mine_r01_row.py depths` on the shipped
     // tree and again with the guard opened, then `S095_mine_mate_row.py pick`.
     // Moves legitimately on: any change to ordering, pruning or reduction.
     // Margin: exact -- the row asserts the distance too.
+    //
+    // **RE-MINED AT S234, AND ONLY THE DEPTH MOVED: 11 -> 8.** That step
+    // decides reverse futility on the table-tightened estimate, which prunes
+    // more where an entry carries a certified lower bound. On its tree this
+    // position keeps its mate in 2 at every swept depth **but 11** -- d3 to
+    // d10 and d12 all report 2 -- so the old depth stopped being true of the
+    // shipped build while the position did not. The script's own pick rule,
+    // re-run whole on that tree, returned **this same position** at depth 8,
+    // where the shipped build reports the mate and the unguarded one does not
+    // (`adocs/data/S234_remine.log`). The old depth is kept in this block for
+    // the same reason S236's old row was: an H0 on S234 flips `RfpTtEstimate`
+    // to 0, which restores the parent's tree to the node, and 11 comes back as
+    // a revert rather than a second re-mine.
     //
     // **RE-MINED AT S236 AND RESTORED WHEN THAT STEP'S TERM LEFT, AND BOTH
     // FACTS ARE HISTORY THIS BLOCK KEEPS.** S236 gave a late quiet's reduction
@@ -3238,9 +3267,11 @@ TEST_SUITE("search: draws")
     // shipped build reports the mate at and the unguarded build does not,
     // tie-broken by the longest run of consecutive shipped depths.
     //
-    // What that rule bought and what it cost, stated rather than hidden: this
-    // row's shipped profile is **every depth from 3 to 12** and the unguarded
-    // build loses exactly one of them, 11, finding the mate again at 12. Rows
+    // What that rule bought and what it cost, stated rather than hidden: on the
+    // tree S095 mined it on, this row's shipped profile was **every depth from
+    // 3 to 12** and the unguarded build lost exactly one of them, 11, finding
+    // the mate again at 12; on S234's tree the shipped profile is d3 to d10 and
+    // d12, and the unguarded build loses 8. Rows
     // with a wider separation are in the same recorded sweep -- one loses the
     // two lowest depths of its profile, three lose their profile outright --
     // and each has a shipped run of one or two depths, which is what the
@@ -3259,13 +3290,14 @@ TEST_SUITE("search: draws")
     // mate"` fails here at `REQUIRE( result.mate_found )`, `values:
     // REQUIRE( false )`, a fatal REQUIRE, and passes with the guard in place.
     // The mutation was applied by hand, observed and reverted -- the S033
-    // protocol -- and the log is `.tuning/coord/S095_observe_red.log`.
+    // protocol -- and the log is `.tuning/coord/S095_observe_red.log`, re-taken
+    // at the new depth in `.tuning/coord/S234_observe_red.log`.
     const std::string mate_the_extra_ply_hides =
         "4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1";
 
     {
-      const std::string title = "mate the extra ply hides, depth 11";
-      const search_t result = search_fen(mate_the_extra_ply_hides, 11);
+      const std::string title = "mate the extra ply hides, depth 8";
+      const search_t result = search_fen(mate_the_extra_ply_hides, 8);
 
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == 2, title);
@@ -5391,6 +5423,476 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(!probe.rfp_cutoff);
     REQUIRE(state.explored_nodes > 1);
   }
+
+
+  // WHICH NUMBER REVERSE FUTILITY IS DECIDED ON, S234. The node's estimate --
+  // `pruning_eval` in negamax_at, the table's own score where the entry's bound
+  // certifies which way that score has moved from the static one -- instead of
+  // the static score, at `RfpTtEstimate` 1.
+  //
+  // Every case below plants an entry and moves the *decision*, which is the
+  // only thing that can be observed from outside: the substitution has no probe
+  // field of its own and deliberately gets none, because a field would let a
+  // case pass by reading the number the site computed rather than the choice
+  // the site made with it. So the drive puts beta exactly where the two numbers
+  // disagree, and each case asserts which way the site went and, where the site
+  // returned, what value it returned.
+  //
+  // WHAT MUST NOT MOVE, and where a case can see it. The eval field of the
+  // entry this node stores and `state.static_evals[ply]`, the improving flag's
+  // input, are the whole of the observable set: **no history update in this
+  // engine reads a static evaluation at all** -- `history_on_quiet_cutoff` and
+  // the continuation update take the move, the depth and the previous move and
+  // nothing else -- so the accepts clause about history updates is satisfied by
+  // there being no such reader, not by a case. The two that do exist are
+  // asserted: the stack slot in every case, and the stored field in the three
+  // cases whose node reaches its store. A node that takes the cutoff returns
+  // before the store, which is why the field is read where the estimate
+  // *suppresses* the cutoff rather than where it causes one.
+  struct rfp_plant_t
+  {
+    int entry_depth;
+    ::node_type_t type;
+
+    // As stored. The node de-normalises it by the ply it reads it at, so a
+    // case that wants a mate-band score at the node plants that score plus the
+    // ply -- the arithmetic is done at the case, as everywhere else in this
+    // file, because normalize_score() is internal to src/search.cpp.
+    int score;
+  };
+
+
+  struct rfp_estimate_drive_t : guard_fixture_t
+  {
+    // The position the reverse-futility guard cases above already drive. From
+    // a tool and not from the board (CLAUDE.md), python-chess reports
+    // `is_valid() True`, `is_check() False`, black to move and 31 legal
+    // replies, so nothing but the rules under test decides anything here, and
+    // a depth-3 search of it is cheap enough for six drives.
+    static const std::string& position()
+    {
+      static const std::string fen =
+          "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+      return fen;
+    }
+
+    // Inside RfpMaxDepth and above the shallowest depth the block admits.
+    static constexpr int NODE_DEPTH = 3;
+
+    static int margin() { return RFP_MARGIN * NODE_DEPTH; }
+
+    // What evaluate() says about the drive position, read before the drive so
+    // a case can put beta on either side of it. It is the number negamax_at
+    // computes for itself: the table is wiped by load() and the plant carries
+    // no eval field, so the node has nothing stored to reuse (S103).
+    int raw_eval = 0;
+
+    // What the drive's node returned. The bound reverse futility hands back is
+    // the estimate less the margin since this step, and the probe cannot see a
+    // return value.
+    int last_score = 0;
+
+    search_node_probe_t run(const rfp_plant_t& plant, int beta)
+    {
+      load(position(), RFP_MIN_PLY);
+
+      REQUIRE(!is_check(&game));
+
+      raw_eval = evaluate(&game.board);
+
+      // No move on the entry. A moveless entry is what quiescence writes
+      // (S094) and it keeps the plant from injecting an ordering move that
+      // would decide something other than the rule under test.
+      tt_store_entry(&tt, &game.board, plant.entry_depth, plant.score,
+                     plant.type, 0);
+
+      const tt_entry_t* planted = tt_get_entry(&tt, &game.board);
+
+      REQUIRE_MESSAGE(planted != nullptr,
+                      "the planted entry is not in the table, so this drive is "
+                      "about a node the table has nothing for");
+      REQUIRE_EQ(planted->depth, plant.entry_depth);
+      REQUIRE_EQ(planted->type, plant.type);
+      REQUIRE_EQ(planted->score, plant.score);
+
+      // The entry carries no evaluation, so `static_eval` at the node is a
+      // fresh evaluate() and equals `raw_eval` above. Without this the case
+      // would be comparing its own number against one the node never had.
+      REQUIRE_EQ(planted->eval, TT_EVAL_NONE);
+
+      // The entry orders this node and never answers it: tt_entry_answers
+      // wants `entry->depth >= depth`, so a shallower plant cannot cut off
+      // whatever its score says, and what the drive observes is the estimate
+      // and not the table cutoff.
+      REQUIRE(plant.entry_depth < NODE_DEPTH);
+
+      // The rest of the block's conditions, so each case denies or satisfies
+      // exactly the one it is named for. `!is_pv`, `ply` and `excluded_move`
+      // are properties of the drive below.
+      REQUIRE(NODE_DEPTH <= RFP_MAX_DEPTH);
+      REQUIRE(beta < MATE_MIN_LOCAL);
+      REQUIRE(beta > -MATE_MIN_LOCAL);
+
+      // The switch is at the value the engine ships, so a case that reads a
+      // tightened decision is reading the shipped rule. doctest runs a
+      // binary's cases in one process and the off-value case below sets this
+      // to 0, so an escaped restore fails here rather than silently turning
+      // every case after it into a test of the parent.
+      REQUIRE_EQ(RFP_TT_ESTIMATE, 1);
+
+      // What search() does at the root, written here because a drive that
+      // calls negamax_probed() directly does not go through it: `load_FEN`
+      // leaves the history empty, so this is 0 either way and the drive is
+      // unchanged by it, but the repetition rule this node searches under is
+      // then the engine's.
+      state.root_history_size = game.history.size;
+
+      // A ceiling and not a setting. A depth-3 search of this position is a
+      // few thousand nodes and nothing here comes near this; it bounds a drive
+      // that goes wrong rather than hanging the suite, and the assertion below
+      // is what says it never bound.
+      state.node_limit = 2000000;
+
+      last_score = negamax_probed(beta - 1, beta, NODE_DEPTH,
+                                  static_cast<size_t>(RFP_MIN_PLY), &game,
+                                  &state, 0, false);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      return probe;
+    }
+
+    // The node's own static evaluation, read back off the search stack. The
+    // improving flag compares this slot across plies and must never see a
+    // search score in it.
+    void require_the_stack_kept_the_raw_static_score() const
+    {
+      REQUIRE_EQ(state.static_evals[static_cast<size_t>(RFP_MIN_PLY)],
+                 raw_eval);
+    }
+
+    // And the entry this node wrote on its way out. Only reachable where the
+    // node did not return from the reverse-futility block.
+    void require_the_store_kept_the_raw_static_score()
+    {
+      const tt_entry_t* stored = tt_get_entry(&tt, &game.board);
+
+      REQUIRE_MESSAGE(stored != nullptr,
+                      "the node stored no entry, so there is nothing here to "
+                      "read the evaluation field off");
+      REQUIRE_EQ(stored->depth, NODE_DEPTH);
+      REQUIRE_EQ(stored->eval, raw_eval);
+    }
+  };
+
+  // How far the plant sits from the static evaluation: two pawns in the scale
+  // evaluate() returns, src/eval_tables.hpp's `piece_value`, where a pawn is
+  // 94. All any case below needs of it is that it is **positive** -- each puts
+  // beta exactly on one of the two numbers and asks whether the other reaches
+  // it, so the margin cancels and the separation is the gap itself. Two pawns
+  // rather than one point because a gap has to survive a refit of the tables
+  // it is measured against.
+  static constexpr int RFP_PLANT_GAP = 188;
+
+
+  // Mutation: G01_estimate_bound_direction (the bound test inverted), and the
+  // control for G02_estimate_switch_inverted.
+  //
+  //   search: pruning and reduction guards
+  //    a lower-bound entry above the static score moves reverse futility
+  //   REQUIRE( record.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      rfp_estimate_drive_t,
+      "a lower-bound entry above the static score moves reverse futility")
+  {
+    load(position(), RFP_MIN_PLY);
+
+    // The entry's score, chosen against the position's own evaluation: a lower
+    // bound two pawns above what standing still is worth. A search of this
+    // position came back at or above that, so the margin has a better number
+    // to be subtracted from than the static one.
+    const int tt_score = evaluate(&game.board) + RFP_PLANT_GAP;
+    const int beta = tt_score - margin();
+
+    const search_node_probe_t record =
+        run({NODE_DEPTH - 1, TT_BETA_NODE, tt_score}, beta);
+
+    // The preconditions, in the two directions that make this case an
+    // experiment rather than an observation: the estimate meets beta exactly,
+    // and the static score does not reach it. So the cutoff below is the
+    // substitution's and nothing else's.
+    REQUIRE_EQ(tt_score, raw_eval + RFP_PLANT_GAP);
+    REQUIRE(tt_score - margin() >= beta);
+    REQUIRE(raw_eval - margin() < beta);
+
+    REQUIRE(record.rfp_cutoff);
+
+    // The bound handed back is the one the site argued for: the estimate less
+    // the margin, and not the static score less the margin, which is the
+    // smaller of the two and the claim the entry did not certify.
+    REQUIRE_EQ(last_score, tt_score - margin());
+    REQUIRE(last_score != raw_eval - margin());
+
+    // The node returned from the block, so it searched nothing.
+    REQUIRE_EQ(record.move_count, 0);
+
+    // And what the substitution must not have touched.
+    require_the_stack_kept_the_raw_static_score();
+  }
+
+
+  // Mutation: G01_estimate_bound_direction, from the other side, and
+  // G04_estimate_stored_as_eval.
+  //
+  //   search: pruning and reduction guards
+  //    an upper-bound entry below the static score moves reverse futility
+  //   REQUIRE( !record.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      rfp_estimate_drive_t,
+      "an upper-bound entry below the static score moves reverse futility")
+  {
+    load(position(), RFP_MIN_PLY);
+
+    // The mirror of the case above: an upper bound two pawns below the static
+    // score, so a search of this position came back at or below that number
+    // and the margin must be subtracted from the lower one. Beta is where the
+    // *static* score would have cut off, so the estimate is what stops it.
+    const int tt_score = evaluate(&game.board) - RFP_PLANT_GAP;
+    const int beta = evaluate(&game.board) - margin();
+
+    const search_node_probe_t record =
+        run({NODE_DEPTH - 1, TT_ALPHA_NODE, tt_score}, beta);
+
+    REQUIRE_EQ(tt_score, raw_eval - RFP_PLANT_GAP);
+    REQUIRE(raw_eval - margin() >= beta);
+    REQUIRE(tt_score - margin() < beta);
+
+    // The decision moved the other way: the node that would have cut off on
+    // its static score searched instead.
+    REQUIRE(!record.rfp_cutoff);
+    REQUIRE(record.move_count > 0);
+
+    // This node reached its store, which is where the raw static evaluation
+    // has to be -- the entry a later node reads, and what a correction table
+    // would learn from (S099's rule). The estimate is a pruning input and
+    // never a stored one.
+    require_the_stack_kept_the_raw_static_score();
+    require_the_store_kept_the_raw_static_score();
+  }
+
+
+  // Mutation: G01_estimate_bound_direction.
+  //
+  //   search: pruning and reduction guards
+  //    a lower-bound entry below the static score changes nothing
+  //   REQUIRE( record.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      rfp_estimate_drive_t,
+      "a lower-bound entry below the static score changes nothing")
+  {
+    load(position(), RFP_MIN_PLY);
+
+    // A lower bound may raise the input and never lower it: "worth at least
+    // this much" says nothing against a static score that is already higher.
+    const int tt_score = evaluate(&game.board) - RFP_PLANT_GAP;
+    const int beta = evaluate(&game.board) - margin();
+
+    const search_node_probe_t record =
+        run({NODE_DEPTH - 1, TT_BETA_NODE, tt_score}, beta);
+
+    // The precondition is the counterfactual: taking this entry would have
+    // suppressed a cutoff the static score earns, so the case separates the
+    // rule from a rule that takes every entry.
+    REQUIRE_EQ(tt_score, raw_eval - RFP_PLANT_GAP);
+    REQUIRE(raw_eval - margin() >= beta);
+    REQUIRE(tt_score - margin() < beta);
+
+    REQUIRE(record.rfp_cutoff);
+    REQUIRE_EQ(last_score, raw_eval - margin());
+    REQUIRE_EQ(record.move_count, 0);
+
+    require_the_stack_kept_the_raw_static_score();
+  }
+
+
+  // Mutation: G01_estimate_bound_direction.
+  //
+  //   search: pruning and reduction guards
+  //    an upper-bound entry above the static score changes nothing
+  //   REQUIRE( !record.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(rfp_estimate_drive_t,
+                    "an upper-bound entry above the static score changes "
+                    "nothing")
+  {
+    load(position(), RFP_MIN_PLY);
+
+    // An upper bound may lower the input and never raise it: "worth at most
+    // this much" is no licence to prune against a number above the static one.
+    const int tt_score = evaluate(&game.board) + RFP_PLANT_GAP;
+    const int beta = tt_score - margin();
+
+    const search_node_probe_t record =
+        run({NODE_DEPTH - 1, TT_ALPHA_NODE, tt_score}, beta);
+
+    REQUIRE_EQ(tt_score, raw_eval + RFP_PLANT_GAP);
+    REQUIRE(tt_score - margin() >= beta);
+    REQUIRE(raw_eval - margin() < beta);
+
+    REQUIRE(!record.rfp_cutoff);
+    REQUIRE(record.move_count > 0);
+
+    require_the_stack_kept_the_raw_static_score();
+    require_the_store_kept_the_raw_static_score();
+  }
+
+
+  // Mutation: G03_estimate_mate_band_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    a mate score in the entry never becomes the estimate
+  //   REQUIRE( !inside.rfp_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(rfp_estimate_drive_t,
+                    "a mate score in the entry never becomes the estimate")
+  {
+    // A mate score is a distance and not a value: a margin subtracted from one
+    // means nothing, and a decision taken on one prunes against a number in
+    // the wrong unit. The band is excluded outright, and it is the one guard
+    // here that no bound-direction case can see -- both plants below are lower
+    // bounds far above the static score, which is exactly what the direction
+    // test admits.
+    //
+    // Two legs, because the guard has an inside and an edge.
+
+    // LEG 1, well inside the band. The node de-normalises the stored score by
+    // the ply it reads it at, so the plant carries that ply and the assertions
+    // below are written against what the node reads. Beta is the largest value
+    // the block itself admits, one below the band, which is what leaves room
+    // for a score this far inside it.
+    load(position(), RFP_MIN_PLY);
+
+    const int inside_score = MATE_MIN_LOCAL + 500;
+    const int inside_beta = MATE_MIN_LOCAL - 1;
+
+    const search_node_probe_t inside =
+        run({NODE_DEPTH - 1, TT_BETA_NODE, inside_score + RFP_MIN_PLY},
+            inside_beta);
+
+    // The plant is in the band at the value the node reads, and the value
+    // stored is inside the range de_normalize_score() treats as a mate score.
+    REQUIRE(inside_score > MATE_MIN_LOCAL);
+    REQUIRE(inside_score + RFP_MIN_PLY <= MATE_MAX_LOCAL);
+
+    // The block's own guard on beta is satisfied, so what refuses the plant is
+    // the mate-band test on the **entry's** score and not the one on beta.
+    REQUIRE(inside_beta < MATE_MIN_LOCAL);
+
+    // And the counterfactual: taken, this score would have cut the node off.
+    REQUIRE(inside_score - margin() >= inside_beta);
+    REQUIRE(raw_eval - margin() < inside_beta);
+
+    REQUIRE(!inside.rfp_cutoff);
+    REQUIRE(inside.move_count > 0);
+
+    require_the_stack_kept_the_raw_static_score();
+    require_the_store_kept_the_raw_static_score();
+
+    // LEG 2, the edge. The guard admits `tt_score < MATE_MIN`, so MATE_MIN
+    // itself is the first score it excludes and the edge is the value that
+    // denies it. No ply term on this plant, and that is not an oversight:
+    // de_normalize_score()'s own band starts strictly above MATE_MIN, so this
+    // value is stored and read as itself -- which is the same asymmetry the
+    // guard has, at the same number.
+    load(position(), RFP_MIN_PLY);
+
+    const int edge_beta = MATE_MIN_LOCAL - margin();
+
+    const search_node_probe_t edge =
+        run({NODE_DEPTH - 1, TT_BETA_NODE, MATE_MIN_LOCAL}, edge_beta);
+
+    REQUIRE(edge_beta < MATE_MIN_LOCAL);
+    REQUIRE(MATE_MIN_LOCAL - margin() >= edge_beta);
+    REQUIRE(raw_eval - margin() < edge_beta);
+
+    REQUIRE(!edge.rfp_cutoff);
+    REQUIRE(edge.move_count > 0);
+
+    require_the_stack_kept_the_raw_static_score();
+    require_the_store_kept_the_raw_static_score();
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE SWITCH'S OWN OFF VALUE, DEC-215, and the only build that can drive it.
+  // `RfpTtEstimate` is a compiled constant in the release build, so a case
+  // there cannot turn the substitution off; in the tune build it is a variable
+  // and `search_param_set` is the setter the tuner uses. Both builds run this
+  // file and the gate runs both (DEC-118), so the off value is held by a case
+  // in the build that can hold it and by a bench equality in the build that
+  // cannot: a release build with the default forced to 0 prints the parent
+  // commit's total with all eight `bestmove` replies identical.
+  //
+  // The restorer is not decoration. doctest runs a binary's cases in one
+  // process, so a parameter left at 0 by a failing assertion would switch the
+  // rule off for every case after this one; `run()` asserts the shipped value
+  // for the same reason, from the other end.
+  //
+  // Mutation: G02_estimate_switch_inverted -- the site reads the estimate at 0
+  // and the static score at 1. Killed in the release build by the first case
+  // above, which is why the mutant is written against the switch and not
+  // against this case.
+  TEST_CASE_FIXTURE(rfp_estimate_drive_t,
+                    "the estimate is not read at its off value")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("RfpTtEstimate", 1); }
+    } restore;
+
+    load(position(), RFP_MIN_PLY);
+
+    const int tt_score = evaluate(&game.board) + RFP_PLANT_GAP;
+    const int beta = tt_score - margin();
+    const rfp_plant_t plant = {NODE_DEPTH - 1, TT_BETA_NODE, tt_score};
+
+    // The control: at the shipped value this exact drive cuts off, so what the
+    // drive below denies is the switch and nothing else.
+    const search_node_probe_t on = run(plant, beta);
+
+    REQUIRE(on.rfp_cutoff);
+    REQUIRE_EQ(last_score, tt_score - margin());
+
+    REQUIRE(search_param_set("RfpTtEstimate", 0));
+    REQUIRE_EQ(RFP_TT_ESTIMATE, 0);
+
+    // run() asserts the shipped value, so the off drive is written out here.
+    load(position(), RFP_MIN_PLY);
+    tt_store_entry(&tt, &game.board, plant.entry_depth, plant.score, plant.type,
+                   0);
+
+    state.root_history_size = game.history.size;
+    state.node_limit = 2000000;
+
+    negamax_probed(beta - 1, beta, NODE_DEPTH, static_cast<size_t>(RFP_MIN_PLY),
+                   &game, &state, 0, false);
+
+    REQUIRE(!state.aborted);
+
+    // The parent's decision: the static score does not clear this beta, so the
+    // node searches, and the estimate the entry offers is not consulted.
+    REQUIRE(raw_eval - margin() < beta);
+    REQUIRE(!probe.rfp_cutoff);
+    REQUIRE(probe.move_count > 0);
+
+    REQUIRE_EQ(state.static_evals[static_cast<size_t>(RFP_MIN_PLY)], raw_eval);
+  }
+#endif
 
 
   // A window no move can beat without a forced mate. Every legal move then
