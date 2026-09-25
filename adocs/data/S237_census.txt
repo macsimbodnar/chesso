@@ -1,0 +1,47 @@
+# S237: the rule's inputs where hindsight reductions read them.
+# Regenerate with:
+#   ~/.venv/chess/bin/python adocs/data/S237_census.py census
+# The script's docstring is the method and holds the patch.
+# The eight bench positions, one persistent UCI process, ucinewgame
+# between positions, go depth N.
+# A site is one node where negamax_at computes the mover's delta.
+# Percentiles are nearest-rank, so every number is one the census saw.
+# Instrumented bench signature: 4803214, equal to a control binary built
+# from the same forced source without the counters.
+# The censused tree has the two reduction thresholds forced to their
+# off values (126, 0); the source it was copied from held HindsightHeavyReduction 3, HindsightLightReduction 1.
+#
+# THE SEED RULES, stated in the script before these numbers existed:
+#   HindsightHeavyReduction = p75(applied reduction)
+#   HindsightWorseMargin = HindsightBetterMargin = p50(|mover delta|)
+#   HindsightLightReduction: (c), the range midpoint, not from here
+#
+# One pass: the fixed point is not iterated; S127 fits against games.
+# Not Elo and not a verdict (DEC-019): it sizes three seeds.
+depth 10
+  positions: 8   nodes: 822803   wall: 0.2 s
+  arrivals through a reduced first search that reached the rule: 25281
+  sites (the rule's guards passed): 25281 (100.00 % of arrivals, 3.07 % of nodes)
+  clipped at the histogram bounds (r 63, |delta| 4000): 0
+  applied reduction           p25      1  p50      2  p75      3  p90      3  p95      4  p99      4
+  |mover delta|               p25     10  p50     24  p75     47  p90     85  p95    118  p99    183
+  signed mover delta          p25    -31  p50     -6  p75     18  p90     47  p95     95  p99    162
+  reduction histogram: 1:38.37%  2:33.07%  3:19.90%  4:7.79%  5:0.87%
+  sites at depth >= 2: 8887 (35.15 %)
+  seed rules at this depth: HindsightHeavyReduction = p75 = 3, HindsightWorseMargin = HindsightBetterMargin = p50(|delta|) = 24
+  at those seeds with HindsightLightReduction 1: give back on 2196 sites (8.69 %), give up on 723 (2.86 %), neither on 88.45 %
+
+depth 12
+  positions: 8   nodes: 2108720   wall: 0.6 s
+  arrivals through a reduced first search that reached the rule: 78661
+  sites (the rule's guards passed): 78661 (100.00 % of arrivals, 3.73 % of nodes)
+  clipped at the histogram bounds (r 63, |delta| 4000): 0
+  applied reduction           p25      1  p50      2  p75      3  p90      4  p95      4  p99      5
+  |mover delta|               p25     10  p50     24  p75     45  p90     87  p95    122  p99    182
+  signed mover delta          p25    -26  p50     -3  p75     21  p90     52  p95     98  p99    158
+  reduction histogram: 1:36.70%  2:31.24%  3:21.02%  4:9.30%  5:1.61%  6:0.12%  7:0.02%
+  sites at depth >= 2: 28143 (35.78 %)
+  seed rules at this depth: HindsightHeavyReduction = p75 = 3, HindsightWorseMargin = HindsightBetterMargin = p50(|delta|) = 24
+  at those seeds with HindsightLightReduction 1: give back on 6915 sites (8.79 %), give up on 1986 (2.52 %), neither on 88.68 %
+
+seeds (depth 12): HindsightHeavyReduction 3, HindsightWorseMargin 24, HindsightBetterMargin 24; HindsightLightReduction 1 is (c), not from this census

@@ -12984,3 +12984,31 @@ Consequences: `adocs/data/S236_sprt.sh` carries the three readings; the
               range before fitting the axis, as the step file states; the
               ledger takes the run as `S236` and a follow-up, if any, as
               `S236 v2`.
+
+## DEC-232  2026-09-25  S237's accepts is read as four thresholds and a fixed one-ply correction, not two thresholds and two adjustments
+Tags:         search, reduction, hindsight, params, dec-215, dec-134, s237
+Context:      S237's `accepts:` names "two thresholds and two adjustments" in
+              `src/search_params.hpp`. The description it implements (row N5
+              of `adocs/data/2026-09-19_search_technique_study.md`) fixes the
+              correction at one ply either way, and the depth it corrects is
+              whole plies, so an adjustment constant could only be 0 or 1.
+              The implementing agent built four thresholds -- heavy and light
+              reduction, worse and better evaluation margin -- and recorded
+              the gap in the step file.
+Decision:     By the owner, 2026-09-25, on the coordinator's proposal. The
+              accepts is read as amended: four thresholds
+              (`HindsightHeavyReduction`, `HindsightLightReduction`,
+              `HindsightWorseMargin`, `HindsightBetterMargin`), the
+              correction a fixed ply. Each branch is switched off by its
+              reduction threshold (heavy 126, light 0); the two margins keep
+              their natural ranges and have no off end of their own (DEC-215).
+Rejected:     Two adjustment constants as written -- each would be a 0/1
+              switch duplicating the off ends the reduction thresholds
+              already give, and a fitted non-integer amount is excluded
+              because the correction is to a whole-ply depth and S237's
+              `excludes:` keeps the reduction formula untouched. An off end
+              on the margins -- widening a range only to give a tool an off
+              value, which DEC-215 refuses.
+Consequences: S237's stamp says its accepts was read as amended here; S127
+              fits four constants for this rule, not four of two kinds; a
+              later fractional-depth form is a new step, not a refit.

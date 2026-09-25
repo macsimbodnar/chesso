@@ -668,6 +668,17 @@ struct search_node_probe_t
   // it moves both sides of its comparison together. S098 verdict 3.
   int research_base[MAX_MOVES];
 
+  // S237's hindsight correction at this node: +1 where the parent's heavy
+  // reduction was given back, -1 where a light one was given up, 0 where
+  // neither fired. `parent_reduction` is the reduction the node was told it
+  // arrived with, echoed back so a case can read its own plant.
+  // `handed_reduction` is what the reduced first search of move k told its
+  // child the parent took off it -- `reduction[k]`, or 0 where this node
+  // corrected its own depth, which is the no-compounding bound.
+  int hindsight = 0;
+  int parent_reduction = 0;
+  int handed_reduction[MAX_MOVES];
+
   // The singular extension block, S097, and what it decided at this node.
   //
   // `se_verified` is "the verification search ran here", which is the whole of

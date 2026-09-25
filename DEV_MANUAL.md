@@ -2636,6 +2636,24 @@ the one the paragraph above measured at that off value and is `3b717a7`'s, node
 for node, with all eight `bestmove` replies identical -- which is what says the
 removal put the tree back rather than approximately back (INV-6).
 
+**At `S237`, hindsight reductions: `4803214` -> `4845333`, +0.88 %.** A node
+reached through a reduced first search reads the plies its parent took off the
+move beside the mover's static-evaluation delta across it and corrects its own
+depth by one ply -- back for a heavy reduction whose evaluation got worse, up
+for a light one whose evaluation improved -- at the seeds
+`HindsightHeavyReduction` 3, `HindsightLightReduction` 1 and both margins 24
+(`adocs/data/S237_census.txt`). All eight `bestmove` replies are unchanged;
+`search_bench` moves at both depths and changes two best moves (midgame at 9,
+kiwipete at 12). Nothing about the direction is a prediction (DEC-019);
+`adocs/data/S237_sprt.sh` is what prices it.
+
+**The off values are proved on the tree** (DEC-215): a Release build with
+`HindsightHeavyReduction` 126 and `HindsightLightReduction` 0 prints
+**`4803214`**, `6d9c5ce`'s own total, with all eight replies identical -- c3d5
+d5e6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- and `search_bench` reproducing that
+commit at depths 9 and 12, 48522 / 85714 / 28080 and 129499 / 411457 / 172984,
+every best move the parent's.
+
 A bench total is quoted with its commit, the way every other number on this
 page is quoted — it moves
 with every functional change by design, which is the whole point of it. S203 is
