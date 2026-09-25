@@ -200,3 +200,18 @@ at the seeds: give-back on 8.79 % of sites, give-up on 2.52 %.
 > check, with the parent's slot empty or on a mate-band static score; a node
 > that corrected its depth hands its children no reduction. At 126 and 0 the
 > two thresholds switch the rule off and the engine is the tree before it.
+
+## Landing and second tier (2026-09-25, the coordinator)
+
+Landed as `4d8c501` on `cd9d0e7`, `bench` 4803214 -> 4845333; the accepts read
+as amended by DEC-232 (four thresholds, a fixed ply), the owner's ruling. Cold
+fast check: no defect; the delta's sign, the hand-down only on the reduced
+first search, the corrected depth's use after the table cutoff and the off
+values all read correct. Two test-side gaps, neither reaching play, carried
+into the pre-registration's open findings: no mutant moves `handed_reduction`
+onto another call site, and none targets the `depth >= 2` or mate-band guards
+(the guard cases assert them directly). Both suites 40 of 40 and the format
+check on the landing tree. Debug self-play 8 games, 0 `Assertion`, 0
+`disconnect` (`.tuning/coord/S237_selfplay/`); `tools/gate_extra.sh` 5 stages
+green in 1130 s (`.tuning/gate_extra_2026-09-25_S237.log`) (DEC-141). SPRT
+pair pinned: `REF` `cd9d0e7`, `CAND` `4d8c501`.

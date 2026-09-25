@@ -108,8 +108,16 @@
 #      again" pinning depth 6 where `adocs/data/S231_research_witness.py`
 #      answers 4.
 #
+#   3. S237's own cold fast check, 2026-09-25, test-side only: no mutant
+#      moves `handed_reduction` onto the re-search or the first move's call
+#      (the no-compounding case reads the recorded value, not the passed one),
+#      and none targets the give-up `depth >= 2` guard or the mate-band guards,
+#      which the guard cases assert directly. Neither reaches play.
+#
 #   The coordinator re-reads the list on the day it pins the pair and amends
 #   this block if it has moved.
+#   Re-read by the coordinator on 2026-09-25 at pinning: nothing closed,
+#   item 3 added.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -162,8 +170,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates before the first game, so what the run measures
 # is on screen and not assumed.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-cd9d0e7}"
+CAND="${CAND:-4d8c501}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then
