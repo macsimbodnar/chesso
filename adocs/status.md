@@ -8,7 +8,9 @@ missed edit and not a tool's opinion.
 Updated: 2026-09-25, by hand.
 
 - **S235 is landed, 2026-09-25 03:08, as `a993084`, `bench` 4803214 -> 4823539;
-  second tier in progress, SPRT not yet pinned.** A node pruned by reverse
+  second tier green (Debug self-play 8 games 0 `Assertion`; `gate_extra` 5
+  stages 1112 s), `REF` 3b717a7 / `CAND` a993084 pinned at 03:34; the SPRT
+  is next.** A node pruned by reverse
   futility returns `beta + (bound - beta) * RfpReturnWeight / 100`, the
   weight 50 in [0, 100] with 100 the off value proved the parent's tree to
   the node (eight replies, `search_bench` at 9 and 12); five cases, mutants

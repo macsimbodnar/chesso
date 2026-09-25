@@ -361,3 +361,20 @@ a `<verdict>` placeholder for the run. The tree's `src/`, `tests/` and
 `tools/` are the branch's byte for byte (`git diff s235 --cached -- src tests
 tools` empty before the commit). The second tier follows on this tree: Debug
 self-play, then `tools/gate_extra.sh`, then `REF`/`CAND` pinned and the SPRT.
+
+**Debug self-play, DEC-141 clause 1**, on the landing tree's Debug build (the
+binary names `31da214`, the documents-only commit above the landing; `src/` is
+`a993084`'s): four rounds at 4+0.04 on `books/noob_3moves.epd`, concurrency 8,
+`-log level=trace engine=true` -- **8 games, 0 `Assertion`, 0 `disconnect`**,
+171417 trace lines with 1249 `bestmove` lines
+(`.tuning/coord/s235_debug_selfplay/`), 03:14. The three new asserts in
+`negamax_at` were live in every one of those searches.
+
+**`tools/gate_extra.sh` on the landing tree: `GATE-EXTRA-DONE 5 stages 1112 s`**
+(03:15 to 03:34, `.tuning/gate_extra_2026-09-25_s235/`), prose, citations, debug,
+sanitize and perft green -- the Debug and sanitizer stages being where the
+asserts fire under the fast suite. **`CAND` pinned to `a993084` and `REF` to
+`3b717a7`**, the commit the landing sits on: the tree S234's verdict left,
+whose `src/` is `169b4cb`'s, one X-macro row and the reverse-futility return
+away from the candidate -- in `adocs/data/S235_sprt.sh`. The SPRT is the
+coordinator's next action.
