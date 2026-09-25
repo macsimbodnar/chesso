@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S237's SPRT is running, launched 2026-09-25 22:11:05: `4d8c501` (hindsight
+  reductions at their census seeds) against `cd9d0e7`, `{0, 5}` nElo at 8+0.08 on
+  `noob_3moves.epd`, seed 20260925221105, 12 of 12 cores, output
+  `.tuning/sprt_s237_20260925_221105`, log `.tuning/coord/S237_sprt.log`, pid
+  2881604.** Banner checked. Watcher `.tuning/coord/S237_watch.sh` armed with
+  four exits and a 40 h ceiling; worst case 41861 games (19.8 h), 25591 on a
+  bound (12.1 h). Landed as `4d8c501` with the accepts read as amended by
+  DEC-232; second tier green (self-play 8 games 0 `Assertion`, `gate_extra`
+  1130 s). **Meanwhile S238's agent works in `../chesso-s238` with every
+  CPU-bound command at `nice -n 19`** (the owner's 2026-09-25 instruction to
+  keep moving while a long run waits): node counts and pass/fail are
+  load-independent and the match keeps nearly all of every core. No timing,
+  match or SPSA from it. **When the SPRT fires:** the record with DEC-220's
+  block, the pre-registration's three rows, then S238 lands on the tree the
+  verdict leaves (rebased and re-proved if S237 is reverted).
+
 - **The machine is S237's agent's, 2026-09-25 11:41: worktree
   `../chesso-s237`, branch `s237` at `6d9c5ce`, a fresh Opus 5 agent briefed
   from `.tuning/coord/S237_brief.md`** -- hindsight reductions (DEC-222): the
