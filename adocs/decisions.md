@@ -13012,3 +13012,37 @@ Rejected:     Two adjustment constants as written -- each would be a 0/1
 Consequences: S237's stamp says its accepts was read as amended here; S127
               fits four constants for this rule, not four of two kinds; a
               later fractional-depth form is a new step, not a refit.
+
+## DEC-233  2026-09-26  S238's reds at its seeds are resolved by DEC-142's re-derivation and by restoring the node-type cases' own premise, never by relaxing an assertion; the SPRT decides the rule
+Tags:         search, reduction, cutoff-count, tests, goldens, dec-142, dec-209, dec-231, s238, s095, s098
+Context:      S238's cutoff count at its seeds (`CutoffCountThreshold` 5
+              from the census p75, `CutoffCountReduction` 1024 ticks, the
+              midpoint) turns the fast suite red in both builds: the mined
+              capture-mate row 3 of "pruning does not hide a forced mate"
+              (DEC-209's depth rule), `test_mate_carry` at 2 of 5 guarded
+              cases, and four node-type cases whose precondition "the
+              difference is this term alone" breaks because the new term
+              fires in their drives. Every non-zero adjustment swept (256 to
+              1024) is red; only the off value is green -- DEC-231's shape.
+              The implementing agent edited no test and asked.
+Decision:     By the coordinator, 2026-09-26, under the owner's delegation
+              of 2026-09-25 (run the plan, pick the best path, few
+              questions); the owner may overrule. A mined golden moves with
+              the tree and is re-derived by its own script, the old row kept
+              in its GOLDEN block as history, as S236 did three times
+              (DEC-142). The node-type cases keep every assertion; their
+              drives are arranged so the cutoff count is off in both, the
+              way S095's term was kept off in them, which restores what the
+              cases state rather than weakening it. A red that neither
+              repair applies to -- a guard that loses a forced mate at a
+              depth no script derives, or a case whose premise cannot be
+              restored without changing what it asserts -- is a finding and
+              stops the step. The rule is then measured at its seeds and
+              the SPRT decides, not the fixed-depth mate rows.
+Rejected:     Shipping at the off value without a run -- the rule would
+              never be measured and the zero would be assumed, not recorded.
+              A smaller adjustment chosen to keep the rows green -- the
+              sweep shows no non-zero value does, and picking a seed by a
+              test's pass is not a DEC-134 form.
+Consequences: S238's step file and stamp cite this; the re-derived rows are
+              restored byte for byte if the rule leaves on its verdict.

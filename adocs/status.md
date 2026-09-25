@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S238's first pass is in, red at its seeds; a second agent resolves the reds
+  under DEC-233, 2026-09-26, niced beside S237's SPRT.** The cutoff count
+  (the parent's children's fail-highs so far, a per-ply slot cleared before the
+  loop) at `CutoffCountThreshold` 5 (census p75) and `CutoffCountReduction`
+  1024 ticks: `bench` 4845333 -> 3727164; off value identical to `1a35f16`.
+  Red: mined capture-mate row 3, `test_mate_carry` 2 of 5, four node-type
+  cases' premise; every non-zero adjustment swept is red. DEC-233: mined rows
+  re-derived by their scripts (DEC-142), node-type drives arranged so the new
+  term is off in both, any other red stops the step. Brief
+  `.tuning/coord/S238_phase2_brief.md`.
+
 - **S237's SPRT is running, launched 2026-09-25 22:11:05: `4d8c501` (hindsight
   reductions at their census seeds) against `cd9d0e7`, `{0, 5}` nElo at 8+0.08 on
   `noob_3moves.epd`, seed 20260925221105, 12 of 12 cores, output
