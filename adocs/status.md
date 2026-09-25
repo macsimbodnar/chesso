@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S235 is done, 2026-09-25 11:41, on its H0 read as a zero, with the code out and
+  `plan_current/` empty; S237 is next.** The blended return measured
+  `nElo -3.45 +/- 6.22` at the seed and left; the tree is `3b717a7`'s to the
+  node (`bench` 4803214, eight replies, `search_bench` identical), `gate_extra`
+  on the removal green (1042 s). The ledger holds thirty-one (slow class
+  eighteen at 7 h 39 m), the pending count 38 to 48 verdicts. `specs.md`'s
+  search row states the trial. **Next: S237** (a child reads the reduction its
+  parent applied and how the static evaluation moved, DEC-222) -- a fresh Opus 5
+  agent briefed by the coordinator in a worktree; the machine is idle and the
+  step's measurements can start at once. No watcher armed.
+
 - **S235's removal is landed, 2026-09-25, as `db1b6fa`, `bench` 4823539 ->
   4803214; Debug self-play 8 games 0 `Assertion` 0 `disconnect`
   (`.tuning/coord/S235rm_selfplay/`); `gate_extra` running detached on it,
