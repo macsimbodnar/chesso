@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S234 is done, 2026-09-25 01:55, on its H1; `plan_current/` is empty and S235 is
+  next.** Reverse futility decides on S109's table-tightened estimate and
+  returns it less the margin at `RfpTtEstimate` 1; the null-move and razoring
+  sites the step file assumed do not exist on this tree, so one site is the
+  routing and S116's joins under its own verdict. Recorded (`13b45cf`), the
+  ledger carried (`5edc45a`: thirty, slow class seventeen), `specs.md`'s search
+  row states the rule with its verdict, the stamp names the price (eight
+  cold-sweep mate cells, S095's row re-mined). **Next: S235** -- rebase
+  `s235` (WIP `e2a0985` on `2b6f2ff`, `src/` already this tree's) onto this
+  commit, a fresh Opus 5 agent takes Report 2 with the machine (the one
+  briefed before the compaction is gone), then the cold fast check, the
+  landing with the specs edit, Debug self-play, `gate_extra`, pin and the
+  SPRT. Machine idle; no watcher armed.
+
 - **S234's SPRT is H1, 2026-09-25 01:38:52, recorded: `169b4cb` against
   `5180a10`, `Elo 4.73 +/- 3.74`, `nElo 6.09 +/- 4.81`, LLR 2.98, 20062 games
   in 9 h 32 m, 0 forfeits either side.** Read by the pre-registration's
