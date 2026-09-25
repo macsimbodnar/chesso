@@ -192,6 +192,13 @@ int search_lmr_reduction_probe(int depth, int move_number);
 // a second time and letting the two drift. S236.
 int search_lmr_scale_probe();
 
+// The hundred `RfpReturnWeight` is stated in: RFP_RETURN_SCALE, the scale the
+// reverse-futility return is blended on, for the reason above and one more --
+// the weight's declared range top **is** this number, since that is the end
+// that returns the site's own bound and is the rule's off value, and a case
+// holds the two equal so neither can move alone. S235.
+int search_rfp_return_scale_probe();
+
 // The same table cell as `search_lmr_reduction_probe`, **unrounded**, in those
 // ticks. The difference between the two is the whole of what the rounding rule
 // does, which is what the boundary case reads. S236.

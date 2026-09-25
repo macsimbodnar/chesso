@@ -310,6 +310,66 @@
      form. Implemented from the description, DEC-221. */                       \
   X(RFP_TT_ESTIMATE,   "RfpTtEstimate",   1,      0, 1)                        \
                                                                                \
+  /* WHAT A NODE PRUNED BY REVERSE FUTILITY HANDS BACK, S235. The site         \
+     returns a fail-soft lower bound, and until this step that bound was the   \
+     whole of what the test argued -- the node's estimate less the margin,     \
+     `rfp_eval - margin` in negamax_at(). This weight returns a point between  \
+     **beta** and that bound instead:                                          \
+                                                                               \
+       returned = beta + (bound - beta) * RfpReturnWeight / RFP_RETURN_SCALE   \
+                                                                               \
+     UNITS: hundredths of the gap the test cleared beta by. The scale is       \
+     `RFP_RETURN_SCALE` in src/search.cpp, beside the reduction's own scale,   \
+     and it is a definition and not a setting.                                 \
+     `search_rfp_return_scale_probe()` is how tests/test_search.cpp holds it   \
+     against this row's own range top, so a scale that moved without the range \
+     moving fails there rather than silently making 100 something other than   \
+     the off value.                                                            \
+                                                                               \
+     THE TWO ENDS, and the range is 0 to 100 by stated purpose. At **100**     \
+     the second term is the whole gap and the site returns `bound` exactly --  \
+     today's tree, the off value, and the one an H0 reverts to. At **0** the   \
+     second term is 0 and the site returns beta exactly, which is the fail-    \
+     soft bound at its weakest and still a legal one. Nothing outside [0, 100] \
+     is a setting of this rule: above 100 the node would return more than its  \
+     own test argued for, and below 0 it would return less than beta and stop  \
+     failing high at all.                                                      \
+                                                                               \
+     ROUNDING IS TOWARD BETA. The gap is non-negative at the one site -- the   \
+     block returns only where `bound >= beta` -- so the integer division       \
+     floors, and every value the rule returns sits in [beta, bound]. At 100 it \
+     is exact and no rounding happens.                                         \
+                                                                               \
+     THE MATE BAND AND THE OVERFLOW. Both ends are strictly inside the band -- \
+     beta by the block's own guard, `bound` because the number the margin came \
+     off is either the static score, which tests/test_evaluation.cpp "the      \
+     static score never reaches the mate band" holds outside it, or a table    \
+     score the tightening in negamax_at() refuses from inside the band (S109,  \
+     S234) -- so the point between them is inside it too, and no setting of    \
+     this weight can return a mate score. The same fact                        \
+     bounds the product: the gap is under 2 * MATE_MIN, 96000, so the          \
+     multiplication reaches 9.6e6 and sits four orders inside int32.           \
+     negamax_at() asserts the bracket and the band rather than arguing them.   \
+                                                                               \
+     THE OFF VALUE IS PROVED ON THE TREE and not declared from the range's end \
+     (DEC-215): at 100 a Release build prints the parent commit's own bench    \
+     total with all eight `bestmove` replies identical and                     \
+     tools/search_bench.py reproduces it at depths 9 and 12 (INV-6).           \
+                                                                               \
+     SEED: **DEC-105 (c), the midpoint of the declared range**, 50, and it is  \
+     a midpoint and nothing else. The technique is implemented from the        \
+     description in adocs/data/2026-09-19_search_technique_study.md row N2     \
+     (DEC-221); the record's +9.71 over 4654 games there is a direction and    \
+     never a value (DEC-019), and the interpolation weight another engine      \
+     ships is that engine's tuned output and is not a seed here wherever it is \
+     republished (DEC-084 as amended by DEC-105, DEC-134). S127 fits it after  \
+     the block.                                                                \
+                                                                               \
+     INDEPENDENT OF RfpTtEstimate above. This row moves what the site returns  \
+     and never what it compares, so it blends whichever number that switch     \
+     leaves the margin to be subtracted from. */                               \
+  X(RFP_RETURN_WEIGHT, "RfpReturnWeight", 50,     0, 100)                      \
+                                                                               \
   /* Null move pruning gives the opponent a free move and searches what is     \
      left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \
      Deeper searches can afford to give up more, since what is left is still   \

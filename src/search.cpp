@@ -277,6 +277,26 @@ int search_lmr_reduction_probe(int depth, int move_number)
 { return lmr_plies_of(lmr_reduction_ticks(depth, move_number)); }
 
 
+// THE SCALE THE REVERSE-FUTILITY RETURN IS BLENDED ON, S235. `RfpReturnWeight`
+// is in hundredths of the gap between beta and the bound that site's own test
+// argued for, and this is the hundred. A definition and not a setting: it fixes
+// the unit the parameter's range is declared in, and the probe below is how
+// tests/test_search.cpp holds the two together, so a scale that moved without
+// the range moving fails there instead of quietly making 100 something other
+// than the rule's off value.
+//
+// Percent and not a power of two. The blend divides a gap that is non-negative
+// at its one site, where `/` already floors, so the exact shift LMR_SCALE's
+// power of two buys the reduction buys nothing here; percent is the unit this
+// engine states its other shares in (TmSoftPercent, ContHistWeight,
+// TmNodeScalePct).
+inline constexpr int RFP_RETURN_SCALE = 100;
+
+
+int search_rfp_return_scale_probe()
+{ return RFP_RETURN_SCALE; }
+
+
 // What the table above is worth once the **node's own type** is taken into
 // account, S098 verdict 2 and S095. Five signed plies, each behind its own
 // constant whose off value is 0, and every one of them a property of the node
@@ -1648,12 +1668,47 @@ static int negamax_at(int alpha0,
     // it would hand a parent a bound the node's own test did not argue for,
     // and on the lower-bound branch that bound is the smaller of the two,
     // which throws away the certificate the entry brought.
+    //
+    // **WHAT IS ACTUALLY HANDED BACK IS A POINT BETWEEN BETA AND THAT BOUND,
+    // S235**, `RfpReturnWeight` hundredths of the way from the first to the
+    // second. The bound above is what the node's own test argued and the node
+    // did not search: it is a claim about a static number extrapolated over
+    // the remaining plies, and the further above beta it sits the more of it
+    // is assumption rather than evidence. Beta is the other end and is the
+    // part the parent asked about -- returning it alone is a legal fail-soft
+    // answer, because every fail-soft return may weaken its own bound. The
+    // weight is which of the two the parent is told, and where it sits between
+    // them is what the SPRT prices.
+    //
+    // Independent of `RfpTtEstimate` above: this blends whichever number that
+    // switch left the margin to be subtracted from, so the two verdicts do not
+    // interact through the code.
+    //
+    // THE ARITHMETIC, and all three of its properties are asserted rather than
+    // argued. The gap is non-negative because the block returns only where the
+    // bound reaches beta, so the integer division floors and the returned point
+    // rounds **toward beta**, never past it; at `RfpReturnWeight`
+    // RFP_RETURN_SCALE the second term is the whole gap and the site returns
+    // the bound itself, which is the tree before this step exactly. Both ends
+    // are strictly inside the mate band -- beta by this block's own guard,
+    // the bound because the number the margin came off is either the static
+    // score, which never reaches the band, or a table score the tightening
+    // above refused from inside it -- so the point between them is too, and
+    // this rule can no more return a mate score than the rule it blends could.
     if (rfp_eval - margin >= beta) {
       if constexpr (PROBING) {
         if (probe != nullptr) { probe->rfp_cutoff = true; }
       }
 
-      return rfp_eval - margin;
+      const int rfp_bound = rfp_eval - margin;
+      const int rfp_blended =
+          beta + (rfp_bound - beta) * RFP_RETURN_WEIGHT / RFP_RETURN_SCALE;
+
+      assert(rfp_blended >= beta);
+      assert(rfp_blended <= rfp_bound);
+      assert(rfp_blended > -MATE_MIN && rfp_blended < MATE_MIN);
+
+      return rfp_blended;
     }
   }
 

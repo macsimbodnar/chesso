@@ -2028,18 +2028,33 @@ TEST_SUITE("search: quiescence transposition entries")
     const int pruned = static_score - RFP_MARGIN * DEPTH;
     REQUIRE(pruned >= BETA);
 
+    // **S235 moved what the site returns and this leg's numbers moved with
+    // it.** The bound above is still what the site's test argues and is still
+    // what this case is about -- which number the margin was subtracted from --
+    // but the node hands back a point between beta and that bound,
+    // `RfpReturnWeight` hundredths of the way up, so the value to compare
+    // against is the blend of it. The claim is unchanged and so is what it
+    // discriminates: the blend is strictly increasing in the bound at every
+    // weight above zero, which the precondition below asserts rather than
+    // assumes.
+    auto returned_for = [](int bound) -> int {
+      return BETA + (bound - BETA) * RFP_RETURN_WEIGHT /
+                        search_rfp_return_scale_probe();
+    };
+
     // Precondition: with nothing in the table the site works the number out
-    // for itself, and the node returns the bound reverse futility argues for.
+    // for itself, and the node returns the blend of the bound reverse futility
+    // argues for.
     tt_reset(&tt);
     tt_new_search(&tt);
-    REQUIRE_EQ(run(false), pruned);
+    REQUIRE_EQ(run(false), returned_for(pruned));
 
     // Second precondition, and the one that makes the number above reverse
     // futility's rather than the search's. The same node as a PV node is the
     // one place the site is not allowed to fire, and it does not return this.
     tt_reset(&tt);
     tt_new_search(&tt);
-    REQUIRE_NE(run(true), pruned);
+    REQUIRE_NE(run(true), returned_for(pruned));
 
     // Now an entry for this position carrying a static evaluation that is not
     // this position's. Stored at TT_DEPTH_QS, which a depth 1 node may not cut
@@ -2071,7 +2086,14 @@ TEST_SUITE("search: quiescence transposition entries")
 
     const int planted_pruned = planted - RFP_MARGIN * DEPTH;
     REQUIRE(planted_pruned >= BETA);
-    REQUIRE_EQ(run(false), planted_pruned);
+
+    // The discrimination, asserted and not assumed (S235): the two bounds
+    // reach the parent as two different numbers, so the value below really does
+    // say which of them the margin was taken from. At a weight of zero the
+    // blend would return beta for both and this leg would pass while observing
+    // nothing, which is the one setting that makes it vacuous.
+    REQUIRE_NE(returned_for(pruned), returned_for(planted_pruned));
+    REQUIRE_EQ(run(false), returned_for(planted_pruned));
   }
 
 
@@ -5891,6 +5913,390 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(probe.move_count > 0);
 
     REQUIRE_EQ(state.static_evals[static_cast<size_t>(RFP_MIN_PLY)], raw_eval);
+  }
+#endif
+
+
+  // WHAT A PRUNED NODE HANDS BACK, S235. The site's own test argues one number
+  // -- the estimate less the margin, `rfp_eval - margin` in negamax_at -- and
+  // what it returns is a point between **beta** and that number,
+  // `RfpReturnWeight` hundredths of the way up from the first to the second.
+  //
+  // THE DRIVE PLANTS NOTHING, and that is the difference from the drive above.
+  // S234's cases move *which* number the margin is subtracted from and have to
+  // plant an entry to do it; these are about what happens to that number
+  // afterwards, so the table is left as `load()` wiped it and the estimate is
+  // the node's own static score at either setting of `RfpTtEstimate`. Every
+  // case below therefore says the same thing whichever way that switch's own
+  // verdict goes.
+  //
+  // BETA IS THE INPUT THESE CASES VARY, and it is exactly what the older
+  // reverse-futility cases do not: each of them puts beta where the test passes
+  // by equality, a gap of zero, and the blend is the identity there -- which is
+  // why this step leaves every one of them, and S234's six, asserting the
+  // numbers they always did. A gap is what this rule is about, so the drive
+  // takes one and states it.
+  struct rfp_return_drive_t : guard_fixture_t
+  {
+    // The position the reverse-futility guard cases above drive. From a tool
+    // and not from the board (CLAUDE.md), python-chess reports
+    // `is_valid() True`, `is_check() False`, black to move and 31 legal
+    // replies, so nothing but the rule under test decides anything here.
+    static const std::string& position()
+    {
+      static const std::string fen =
+          "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+      return fen;
+    }
+
+    // Inside RfpMaxDepth and above the shallowest depth the block admits.
+    static constexpr int NODE_DEPTH = 3;
+
+    static int margin() { return RFP_MARGIN * NODE_DEPTH; }
+
+    // What evaluate() says about the drive position, and the two numbers the
+    // blend runs between: `bound` is what the site's test argues and `beta` is
+    // where the case put the other end.
+    int raw_eval = 0;
+    int bound = 0;
+    int beta = 0;
+
+    // What the drive's node returned. The probe cannot see a return value, and
+    // this rule has nothing else to observe.
+    int last_score = 0;
+
+    search_node_probe_t run(int gap)
+    {
+      REQUIRE(gap > 0);
+
+      load(position(), RFP_MIN_PLY);
+
+      REQUIRE(!is_check(&game));
+
+      // Nothing planted and nothing left over: the estimate is this node's own
+      // static score whatever `RfpTtEstimate` holds, so what these cases read
+      // is the return and only the return.
+      REQUIRE(tt_get_entry(&tt, &game.board) == nullptr);
+
+      raw_eval = evaluate(&game.board);
+      bound = raw_eval - margin();
+      beta = bound - gap;
+
+      // The block's own conditions, so a case reading a blended value is
+      // reading a node that really was pruned here. `!is_pv`, the ply and the
+      // exclusion are properties of the drive below.
+      REQUIRE_EQ(bound - beta, gap);
+      REQUIRE(bound >= beta);
+      REQUIRE(NODE_DEPTH <= RFP_MAX_DEPTH);
+      REQUIRE(beta < MATE_MIN_LOCAL);
+      REQUIRE(beta > -MATE_MIN_LOCAL);
+
+      // What search() does at the root, written here because a drive calling
+      // negamax_probed() directly does not go through it.
+      state.root_history_size = game.history.size;
+
+      // A ceiling and not a setting, as in the drive above: it bounds a drive
+      // that goes wrong rather than hanging the suite, and the assertion below
+      // is what says it never bound.
+      state.node_limit = 2000000;
+
+      last_score = negamax_probed(beta - 1, beta, NODE_DEPTH,
+                                  static_cast<size_t>(RFP_MIN_PLY), &game,
+                                  &state, 0, false);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      // THE PRECONDITION, COUNTED: this node pruned by reverse futility and
+      // returned from that block, so `last_score` is the point the rule
+      // returned and not a score some search came back with.
+      REQUIRE(probe.rfp_cutoff);
+      REQUIRE_EQ(probe.move_count, 0);
+
+      return probe;
+    }
+
+    // What the rule says this drive's own gap becomes at a weight, from the
+    // scale the engine compiles rather than from a number written here twice.
+    int blended_at(int weight) const
+    { return beta + (bound - beta) * weight / search_rfp_return_scale_probe(); }
+  };
+
+
+  // Mutation: H01_blend_below_beta.
+  //
+  //   search: pruning and reduction guards
+  //    a pruned node returns a point between beta and the bound its own test
+  //    argued
+  //   REQUIRE( last_score >= beta )
+  //   values: REQUIRE( false )
+  //
+  // Mutation: H02_blend_scale_dropped, on the other bracket.
+  //
+  //   REQUIRE( last_score <= bound )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(rfp_return_drive_t,
+                    "a pruned node returns a point between beta and the bound "
+                    "its own test argued")
+  {
+    // A gap the blend divides exactly at every whole weight: two points of
+    // score per point of weight, so the ends and the middle are integers and
+    // rounding does not enter this case. The case after it is the rounding.
+    const int gap = 200;
+
+    run(gap);
+
+    const int scale = search_rfp_return_scale_probe();
+
+    REQUIRE_EQ(last_score, blended_at(RFP_RETURN_WEIGHT));
+
+    // The two properties that are the rule rather than its arithmetic. What
+    // comes back is still a fail-soft lower bound -- at least beta, or the
+    // node would not have failed high at all -- and it never claims more than
+    // the node's own test argued for.
+    REQUIRE(last_score >= beta);
+    REQUIRE(last_score <= bound);
+
+    // Where it sits, stated over the whole declared range and not at the value
+    // that ships: an H0 that returns the weight to its off end leaves this case
+    // true instead of red, and the interior is where the seed is.
+    if (RFP_RETURN_WEIGHT == scale) {
+      REQUIRE_EQ(last_score, bound);
+      REQUIRE_EQ(last_score, raw_eval - margin());
+    } else if (RFP_RETURN_WEIGHT == 0) {
+      REQUIRE_EQ(last_score, beta);
+    } else {
+      REQUIRE(last_score > beta);
+      REQUIRE(last_score < bound);
+    }
+
+    // And it is an ordinary score at every setting: both ends of the blend are
+    // strictly inside the mate band, so everything between them is.
+    REQUIRE(last_score < MATE_MIN_LOCAL);
+    REQUIRE(last_score > -MATE_MIN_LOCAL);
+  }
+
+
+  // The rounding direction, which is a choice and not an accident: the gap is
+  // non-negative at this site, so integer division floors and the point
+  // returned is the one below the exact share. A rule that rounded the other
+  // way would return more than the weight says on exactly the nodes where the
+  // weight is doing the most work.
+  TEST_CASE_FIXTURE(rfp_return_drive_t, "the blend rounds toward beta")
+  {
+    // Three points of gap: at the shipped weight the exact share is a point and
+    // a half, so flooring, rounding to nearest and rounding up are three
+    // different integers here.
+    const int gap = 3;
+
+    run(gap);
+
+    const int scale = search_rfp_return_scale_probe();
+
+    // The floor property, written without repeating the site's own expression:
+    // what was taken is at or below the exact share of the gap, and one more
+    // point would be above it. Both sides are in the scale's own units so no
+    // division happens here at all.
+    const long exact = static_cast<long>(gap) * RFP_RETURN_WEIGHT;
+    const long taken = static_cast<long>(last_score - beta) * scale;
+
+    REQUIRE(taken <= exact);
+    REQUIRE(taken + scale > exact);
+
+    REQUIRE(last_score >= beta);
+    REQUIRE(last_score <= bound);
+  }
+
+
+  // THE SCALE AND THE WEIGHT'S RANGE TOP ARE ONE NUMBER, and nothing else holds
+  // them together. The top is the off value -- the end that returns the site's
+  // own bound and the tree before this step -- so a scale that moved on its own
+  // would leave the parameter with no off value at all and an H0 with nothing
+  // to revert to. S236's `LmrRoundBias` carries the same case for the same
+  // reason.
+  TEST_CASE("the blend's scale is the weight's own declared range top")
+  {
+    const int scale = search_rfp_return_scale_probe();
+
+    int top = 0;
+    int bottom = 0;
+    int shipped = 0;
+    bool found = false;
+
+    for (size_t i = 0; i < search_param_count(); ++i) {
+      if (std::string(search_param_info(i).name) == "RfpReturnWeight") {
+        top = search_param_info(i).max_value;
+        bottom = search_param_info(i).min_value;
+        shipped = search_param_info(i).default_value;
+        found = true;
+      }
+    }
+
+    REQUIRE(found);
+    REQUIRE_EQ(top, scale);
+
+    // The other end returns beta exactly and is the floor by the same purpose.
+    REQUIRE_EQ(bottom, 0);
+
+    // The shipped value is inside its own range, which is all this case says
+    // about it: which value ships is the SPRT's to decide and
+    // tests/test_search_params.cpp's golden to hold.
+    REQUIRE(shipped >= bottom);
+    REQUIRE(shipped <= top);
+  }
+
+
+  // Mutation: H04_blend_over_a_mate_estimate.
+  //
+  //   search: pruning and reduction guards
+  //    a mate-band estimate is never the number the blend is taken over
+  //   REQUIRE( !inside.rfp_cutoff )
+  //   values: REQUIRE( false )
+  //
+  // What this adds to "a mate score in the entry never becomes the estimate"
+  // above, which plants the same two scores: that case asks whether a mate
+  // score can decide the cutoff, and this one asks whether one can reach the
+  // **blend** -- a second consumer of S109's guard, arriving with this step,
+  // and the reason the mutant that drops that guard is in this step's own list
+  // as well as S234's. The observable is the same and has to be: the block
+  // never fires on such an entry, so nothing is returned and nothing is
+  // interpolated. Both legs state the counterfactual, which is what makes them
+  // experiments rather than observations.
+  TEST_CASE_FIXTURE(rfp_estimate_drive_t,
+                    "a mate-band estimate is never the number the blend is "
+                    "taken over")
+  {
+    // LEG 1, well inside the band. The node de-normalises the stored score by
+    // the ply it reads it at, so the plant carries that ply. Beta is the
+    // largest value the block itself admits, one below the band, which is what
+    // leaves room for a score this far inside it.
+    load(position(), RFP_MIN_PLY);
+
+    // The margin is carried in the plant rather than assumed to be smaller than
+    // the 500, so the hazard below is stated at every setting of RfpMargin.
+    const int inside_score = MATE_MIN_LOCAL + margin() + 500;
+    const int inside_beta = MATE_MIN_LOCAL - 1;
+
+    const search_node_probe_t inside =
+        run({NODE_DEPTH - 1, TT_BETA_NODE, inside_score + RFP_MIN_PLY},
+            inside_beta);
+
+    // The plant is in the band at the value the node reads, and the value
+    // stored is inside the range de_normalize_score() treats as a mate score.
+    REQUIRE(inside_score > MATE_MIN_LOCAL);
+    REQUIRE(inside_score + RFP_MIN_PLY <= MATE_MAX_LOCAL);
+
+    // The hazard, as arithmetic and not as a worry: the number the blend would
+    // have been taken over is itself a mate score, at every weight, because it
+    // is the plant less the margin. A point between beta and that is a mate
+    // claim this node never searched for.
+    REQUIRE(inside_score - margin() >= MATE_MIN_LOCAL);
+
+    // The block's own guard on beta is satisfied, so what refuses the plant is
+    // the mate-band test on the **entry's** score and not the one on beta.
+    REQUIRE(inside_beta < MATE_MIN_LOCAL);
+
+    // And the counterfactual: taken, this score would have cut the node off,
+    // where the static score would not have.
+    REQUIRE(inside_score - margin() >= inside_beta);
+    REQUIRE(raw_eval - margin() < inside_beta);
+
+    // Nothing was returned, so nothing was blended.
+    REQUIRE(!inside.rfp_cutoff);
+    REQUIRE(inside.move_count > 0);
+
+    // LEG 2, the edge. The guard admits `tt_score < MATE_MIN`, so MATE_MIN
+    // itself is the first score it excludes. No ply term on this plant:
+    // de_normalize_score()'s own band starts strictly above MATE_MIN, so the
+    // value is stored and read as itself.
+    load(position(), RFP_MIN_PLY);
+
+    const int edge_beta = MATE_MIN_LOCAL - margin();
+
+    const search_node_probe_t edge =
+        run({NODE_DEPTH - 1, TT_BETA_NODE, MATE_MIN_LOCAL}, edge_beta);
+
+    REQUIRE(edge_beta < MATE_MIN_LOCAL);
+    REQUIRE(MATE_MIN_LOCAL - margin() >= edge_beta);
+    REQUIRE(raw_eval - margin() < edge_beta);
+
+    REQUIRE(!edge.rfp_cutoff);
+    REQUIRE(edge.move_count > 0);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE WEIGHT WALKED ACROSS ITS RANGE, and the only build that can walk it.
+  // `RfpReturnWeight` is a compiled constant in the release build, so a case
+  // there reads one point of the range and no more; in the tune build it is a
+  // variable and `search_param_set` is the setter the tuner uses. Both builds
+  // run this file and the gate runs both (DEC-118), so the range is held by a
+  // case in the build that can hold it and its off end by a bench equality in
+  // the build that cannot -- a release build with the default at the range top
+  // prints the parent commit's total with all eight `bestmove` replies
+  // identical (DEC-215).
+  //
+  // The restorer is not decoration: doctest runs a binary's cases in one
+  // process, so a weight left behind by a failing assertion would blend every
+  // case after this one at the wrong value. It restores what the build
+  // compiled rather than a literal, so an H0 that moves the default needs no
+  // edit here.
+  //
+  // Mutation: H03_blend_weight_inverted, which is the identity at the shipped
+  // midpoint and is declared equivalent in the release list for exactly that
+  // reason -- this is the case that separates the two, at 25 and 75.
+  TEST_CASE_FIXTURE(rfp_return_drive_t,
+                    "the returned bound walks from beta to the site's own "
+                    "bound as the weight walks its range")
+  {
+    struct restore_t
+    {
+      int shipped;
+      ~restore_t() { search_param_set("RfpReturnWeight", shipped); }
+    } restore{RFP_RETURN_WEIGHT};
+
+    const int scale = search_rfp_return_scale_probe();
+    const int gap = 200;
+
+    const std::vector<int> weights = {0, scale / 4, scale / 2, (3 * scale) / 4,
+                                      scale};
+
+    int previous = 0;
+    bool have_previous = false;
+
+    for (const int weight : weights) {
+      REQUIRE(search_param_set("RfpReturnWeight", weight));
+      REQUIRE_EQ(RFP_RETURN_WEIGHT, weight);
+
+      run(gap);
+
+      // The bound this weight returns, and the bracket it stays inside. The
+      // decision itself never moves: run() asserts the cutoff and the empty
+      // move loop at every one of these weights, so what the parameter changes
+      // is what the node says and never whether it says it.
+      REQUIRE_EQ(last_score, blended_at(weight));
+      REQUIRE(last_score >= beta);
+      REQUIRE(last_score <= bound);
+
+      // And it walks: a larger weight keeps more of the gap, strictly, because
+      // this drive's gap is divisible by every step of the sweep.
+      if (have_previous) { REQUIRE(last_score > previous); }
+
+      previous = last_score;
+      have_previous = true;
+    }
+
+    // The two ends, driven again so the case states them rather than leaving
+    // them to the loop's first and last iterations.
+    REQUIRE(search_param_set("RfpReturnWeight", 0));
+    run(gap);
+    REQUIRE_EQ(last_score, beta);
+
+    REQUIRE(search_param_set("RfpReturnWeight", scale));
+    run(gap);
+    REQUIRE_EQ(last_score, bound);
+    REQUIRE_EQ(last_score, raw_eval - margin());
   }
 #endif
 
