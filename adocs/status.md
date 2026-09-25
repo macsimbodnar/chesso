@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **The machine is S235's removal agent's, 2026-09-25 09:32: worktree
+  `../chesso-s235rm`, branch `s235rm` at `b13ecc6`, a fresh Opus 5 agent briefed
+  from `.tuning/coord/S235_removal_brief.md`** -- the weight to its off value
+  100 and the code out (row, locals, scale and probe, cases, mutants, the
+  `MANUAL.md` row; S103's case restored byte for byte), proved neutral by
+  `bench` 4803214 with the eight replies and `search_bench` identity against
+  a fresh `3b717a7`, both suites, the mutation tool over S234's list. The
+  coordinator then runs the cold fast check, lands with the specs edit
+  (`.tuning/coord/S235_removal_specs_edit.py`), Debug self-play, `gate_extra`,
+  and completes S235. No watcher armed.
+
 - **S235's SPRT is H0, 2026-09-25 09:21:36, recorded and read as a zero:
   `a993084` against `3b717a7`, `Elo -2.64 +/- 4.76`, `nElo -3.45 +/- 6.22`,
   LLR -2.95, 11978 games in 5 h 42 m, 0 forfeits either side.** The nElo
