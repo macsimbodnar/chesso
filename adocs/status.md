@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S235's SPRT is H0, 2026-09-25 09:21:36, recorded and read as a zero:
+  `a993084` against `3b717a7`, `Elo -2.64 +/- 4.76`, `nElo -3.45 +/- 6.22`,
+  LLR -2.95, 11978 games in 5 h 42 m, 0 forfeits either side.** The nElo
+  interval reaches above zero, so the pre-registration's third row binds:
+  `RfpReturnWeight` goes to 100 and the code leaves with it, no follow-up.
+  `Incomplete mating PV` 13 against 3 is an observation (CHESS). Artefacts
+  `adocs/data/S235_sprt.log` and `S235_sprt_pairs.txt`, README rows, the step
+  file's verdict section. **Next, in order:** the ledger's thirty-first row
+  and `plan.md`'s costs; the removal by a fresh Opus 5 agent in a worktree
+  from `.tuning/coord/S235_removal_brief.md` (proofs: bench 4803214 with the
+  eight replies and `search_bench` identity against a fresh `3b717a7`); cold
+  fast check; landing with the specs edit; Debug self-play; `gate_extra`;
+  completion; then S237. Machine idle; no watcher armed.
+
 - **S235's gainer SPRT is running, launched 2026-09-25 03:39:03: `a993084`
   (the reverse-futility return blended toward beta, `RfpReturnWeight` 50)
   against `3b717a7` (the tree without it), `{0, 5}` nElo at 8+0.08 on

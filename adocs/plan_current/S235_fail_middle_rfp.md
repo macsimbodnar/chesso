@@ -378,3 +378,61 @@ asserts fire under the fast suite. **`CAND` pinned to `a993084` and `REF` to
 whose `src/` is `169b4cb`'s, one X-macro row and the reverse-futility return
 away from the candidate -- in `adocs/data/S235_sprt.sh`. The SPRT is the
 coordinator's next action.
+
+## The verdict, 2026-09-25: H0, read as a zero (coordinator)
+
+The gainer SPRT of `a993084` (the reverse-futility return blended toward beta,
+`RfpReturnWeight` 50) against `3b717a7` (the tree without it), `{0, 5}` nElo
+at 8+0.08 with Hash 16 on `noob_3moves.epd`, seed 20260925033903, launched
+2026-09-25 03:39:03, **accepted H0 at 09:21:36**:
+
+```
+SPRT | cand a993084 vs ref 3b717a7, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | -2.64 +/- 4.76, nElo -3.45 +/- 6.22
+LLR | -2.95 (-2.94, 2.94) -> H0
+Games | N: 11978 W: 3608 L: 3699 D: 4671, Ptnml [535, 1444, 2082, 1433, 495]
+Wall | 5 h 42 m, 2099.7 games/h, forfeits 0
+Log | adocs/data/S235_sprt.log
+```
+
+LOS 13.83 %, draw ratio 34.76 %, pairs ratio 0.97. **0 time forfeits on either
+side** over the PGN's 11979 games (8314 adjudications, 3665 natural ends), so
+the abort rule never bound; no crash and no disconnect. `Incomplete mating PV`
+13 candidate against 3 reference, an observation and not a diagnosis (CHESS);
+the site cannot return a mate score at any weight, which the Debug and
+sanitizer runs of the second tier asserted live. `adocs/data/S105_pairs.py`:
+5989 complete pairs, pair score mean 0.9924, variance 0.2920, sd 0.5404,
+119.4 plies a game. The walk, from the watcher's hourly rows: LLR +0.40 at one
+hour, -1.03 at two, -2.34 at three, -2.21 at four, -2.70 at five and the bound
+at 5 h 42 m -- one crossing of zero in the second hour, then a drift to the
+bound with one step back. Evidence: `adocs/data/S235_sprt.log`,
+`adocs/data/S235_sprt_pairs.txt`; the run directory
+`.tuning/sprt_s235_20260925_033903`.
+
+### The reading
+
+**H0 whose nElo interval, [-9.67, +2.77], reaches above zero: the
+pre-registration's third row, a zero and not a loss.** A rule that cannot be
+told from its own off value in 11978 games has not been shown to exist; the
+point estimate is not the effect size and the reading is the interval
+(DEC-063). What binds is the same either way and was written before the first
+game: **`RfpReturnWeight` goes to 100**, the off value proved the parent's
+tree to the node at the landing (bench 4803214, eight replies, `search_bench`
+at 9 and 12), **and the code leaves with it** -- the row, the two locals, the
+scale and its probe, the five cases and the four mutants, with S103's case
+restored to its pre-S235 form -- because no later step wants the scale and
+none of the other three fail-middle sites shares this weight. That removal is
+behaviour-neutral at the reverted default and INV-6 discharges it; no second
+SPRT is owed for it, and **there is no follow-up run and no second weight**:
+a second weight is a second experiment, and S127's fit is where one would be
+asked (the pre-registration's own words).
+
+What this run says about the idea, at this one site and this one seed: the
+record's +9.71 over 4654 games was a direction (DEC-019) and the direction did
+not transfer -- returning less than the node's own test argued for, halfway to
+beta, read `-3.45 +/- 6.22` nElo on a tree 0.42 % larger. The other three
+fail-middle sites (S113's, S097's, the quiescence stand pat) keep their own
+steps and their own verdicts; nothing here prices them. The interval is the
+result and it is recorded as zero. Documents only in this commit; the ledger's
+thirty-first row, then the removal by a fresh agent from
+`.tuning/coord/S235_removal_brief.md`, are the coordinator's next actions.
