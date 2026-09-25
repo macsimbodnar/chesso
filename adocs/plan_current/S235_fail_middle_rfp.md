@@ -321,3 +321,43 @@ later. The red is real and is the first of the two above; it was observed on
 self-play, four rounds of `fastchess` at 4+0.04 grepped for `Assertion`, and
 `tools/gate_extra.sh`. Both load the machine the way a match does and this
 step's brief reserves that to the coordinator.
+
+## Fast check, landing and second tier (coordinator, 2026-09-25)
+
+**Fast check** by a cold Opus 5 reviewer over the branch's diff before it
+landed: **no defect in the code**, and four items of record, each closed
+before the landing:
+
+1. The mate-band justification named the wrong guard, in `negamax_at`'s
+   comment, the `RfpReturnWeight` row and this file's arithmetic paragraph: at
+   `RfpTtEstimate` 1 the bound comes off a table score, which S109's
+   tightening keeps outside the band by refusing every score inside it -- not
+   "the static score's own arithmetic". Reworded in all three places; the
+   assert was right all along, and this step's own H04 rationale had named
+   the guard correctly.
+2. The three new asserts are dead in the Release builds the commit gate runs.
+   The Debug self-play and `gate_extra`'s Debug and sanitizer stages below are
+   what fire them, which is DEC-141's reason for existing.
+3. The pre-registration said the node "prunes exactly the nodes it pruned
+   before", a per-node truth stated as a whole-search one: the drive proves
+   the decision at a node is weight-independent, while the node set a search
+   reaches moves by construction (bench +0.42 %, kiwipete's depth-12 best move
+   `e2a6` -> `d5e6`). Reworded before the first game, as a pre-registration
+   may be and a log may not.
+4. The equality legs of the new cases compute the site's own expression, so
+   they can catch a wrong bound and never a wrong formula; what kills H01 and
+   H02 is the bracket pair and the rounding case, as the mutation log's kill
+   lists show. Recorded here; no change.
+
+The reviewer reproduced `bench` 4823539 and the off value's 4803214 with all
+eight replies on both binaries, the `search_bench` equalities, both suites 40
+of 40, the format check, the goldens (63 rows to 63), the three anchors unique
+and the pre-registration's refusal, `OUT` and outcomes.
+
+**Landed as `a993084`**, `bench` 4803214 -> 4823539 (+0.42 %), squashed from the
+branch's three WIP commits (the code as written, Report 2's measurements, the
+fast-check wordings); `specs.md`'s two passages landed in the same commit with
+a `<verdict>` placeholder for the run. The tree's `src/`, `tests/` and
+`tools/` are the branch's byte for byte (`git diff s235 --cached -- src tests
+tools` empty before the commit). The second tier follows on this tree: Debug
+self-play, then `tools/gate_extra.sh`, then `REF`/`CAND` pinned and the SPRT.

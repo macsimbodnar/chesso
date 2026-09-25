@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S235 is landed, 2026-09-25 03:08, as `a993084`, `bench` 4803214 -> 4823539;
+  second tier in progress, SPRT not yet pinned.** A node pruned by reverse
+  futility returns `beta + (bound - beta) * RfpReturnWeight / 100`, the
+  weight 50 in [0, 100] with 100 the off value proved the parent's tree to
+  the node (eight replies, `search_bench` at 9 and 12); five cases, mutants
+  H01 to H04 3 of 3 killed with H03 equivalent at the seed by arithmetic and
+  separated in the tune build; S103's case repaired without weakening. Cold
+  fast check: no defect, four wordings and observations closed before the
+  landing (the step file's landing section). **Next:** Debug self-play,
+  `gate_extra`, pin `REF` to the landing's parent and `CAND` to the landing
+  in `adocs/data/S235_sprt.sh`, launch the `{0, 5}` SPRT (worst case 41861
+  games, 19.8 h), watcher with four exits. The worktree `../chesso-s235`
+  and branch `s235` are removed once the landing's equality is checked.
+
 - **The machine is S235's, 2026-09-25 02:01: `s235` rebased onto `f4c6737` as WIP
   `02a98e8` (one document conflict, the S234 rows and the S235 row in
   `adocs/data/README.md`, both sides kept) and a fresh Opus 5 agent briefed
