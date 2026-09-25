@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S238 is ready to land, 2026-09-26, and waits for S237's verdict.** Phase 2
+  resolved the reds under DEC-233 (capture-mate rows 3 and 4 re-derived by
+  `S230_mine_r01_row.py`, row 3 now separating R01; `test_mate_carry` budgets
+  re-swept by `S203_case_sweep.sh` for all six rows per DEC-156 and DEC-162
+  after the fast check caught a three-row application; node-type drives with
+  children answering from the table, count 0 asserted). Both suites 40 of 40,
+  mutation 7 of 7, `bench` 3727164, off value identical to `1a35f16`. Cold fast
+  check: no defect. **Next:** on S237's verdict, S238 lands on the tree it
+  leaves (rebased and its identity re-proved if S237 is reverted), second
+  tier, pin, SPRT; S112 is briefed to start beside that SPRT, niced.
+
 - **S238's first pass is in, red at its seeds; a second agent resolves the reds
   under DEC-233, 2026-09-26, niced beside S237's SPRT.** The cutoff count
   (the parent's children's fail-highs so far, a per-ply slot cleared before the
