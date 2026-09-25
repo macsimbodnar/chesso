@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **The machine is S235's, 2026-09-25 02:01: `s235` rebased onto `f4c6737` as WIP
+  `02a98e8` (one document conflict, the S234 rows and the S235 row in
+  `adocs/data/README.md`, both sides kept) and a fresh Opus 5 agent briefed
+  from `.tuning/coord/S235_resume_brief.md` for Report 2** -- the identity
+  proofs against a fresh `169b4cb`, `bench`, `search_bench`, both suites,
+  the reds, the mutation pass on a clean fixture. The coordinator then runs
+  the cold fast check, lands from the branch with the specs edit, the
+  Debug self-play, `gate_extra`, pins and launches. No watcher armed.
+
 - **S234 is done, 2026-09-25 01:55, on its H1; `plan_current/` is empty and S235 is
   next.** Reverse futility decides on S109's table-tightened estimate and
   returns it less the margin at `RfpTtEstimate` 1; the null-move and razoring
