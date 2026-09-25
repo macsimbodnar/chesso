@@ -7,6 +7,21 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S235's gainer SPRT is running, launched 2026-09-25 03:39:03: `a993084`
+  (the reverse-futility return blended toward beta, `RfpReturnWeight` 50)
+  against `3b717a7` (the tree without it), `{0, 5}` nElo at 8+0.08 on
+  `noob_3moves.epd`, seed 20260925033903, output `.tuning/sprt_s235_20260925_033903`, pid 1865913.** Banner
+  checked: both shas, `OUT` under `.tuning/`. Watcher armed with four exits,
+  hourly progress and a 40 h ceiling; worst case 41861 games (19.8 h at
+  2110 an hour), 25591 on a bound (12.1 h). **When it fires:** the record
+  with DEC-220's block (subject "Record S235's <verdict> for the reverse-futility
+  return blended toward beta"), the forfeit report per side, the pairs
+  reading; **H1** keeps the weight at 50 for S127's fit and completes S235;
+  **H0** with the interval wholly below zero moves it to 100 as the proved
+  one-default revert and the code leaves with it; **no verdict or an
+  interval reaching above zero** is a zero read the same way, no follow-up.
+  Nothing else is on the machine; S237 is next in the Open list and waits.
+
 - **S235 is landed, 2026-09-25 03:08, as `a993084`, `bench` 4803214 -> 4823539;
   second tier green (Debug self-play 8 games 0 `Assertion`; `gate_extra` 5
   stages 1112 s), `REF` 3b717a7 / `CAND` a993084 pinned at 03:34; the SPRT
