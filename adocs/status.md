@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **The machine is S237's agent's, 2026-09-25 11:41: worktree
+  `../chesso-s237`, branch `s237` at `6d9c5ce`, a fresh Opus 5 agent briefed
+  from `.tuning/coord/S237_brief.md`** -- hindsight reductions (DEC-222): the
+  plumbing, four constants with off ends, the depth-12 census seeds, cases,
+  mutants, the off-value identity, the pre-registration. The coordinator then
+  runs the cold fast check, lands, runs the second tier, pins and launches the
+  `{0, 5}` SPRT. No watcher armed.
+
 - **S235 is done, 2026-09-25 11:41, on its H0 read as a zero, with the code out and
   `plan_current/` empty; S237 is next.** The blended return measured
   `nElo -3.45 +/- 6.22` at the seed and left; the tree is `3b717a7`'s to the
