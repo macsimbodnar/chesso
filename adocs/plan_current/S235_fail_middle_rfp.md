@@ -436,3 +436,204 @@ steps and their own verdicts; nothing here prices them. The interval is the
 result and it is recorded as zero. Documents only in this commit; the ledger's
 thirty-first row, then the removal by a fresh agent from
 `.tuning/coord/S235_removal_brief.md`, are the coordinator's next actions.
+
+## The removal, 2026-09-25
+
+Written by a fresh Opus 5 agent on the linked worktree `s235rm` at `b13ecc6`,
+briefed from `.tuning/coord/S235_removal_brief.md`. The pre-registration's H0
+row and its third row read the same way and were written before the first game:
+**the weight goes to 100, its off value, and the code leaves with it.** That is
+executed here. No second SPRT is owed -- the removal is behaviour-neutral at
+the reverted default and INV-6 discharges it, which is the shape S098 verdict
+3's leg-1 removal and S236's removal already have.
+
+### What left
+
+| what | where |
+|---|---|
+| the X-macro row `RFP_RETURN_WEIGHT` / `RfpReturnWeight` and its comment block | `src/search_params.hpp` |
+| `RFP_RETURN_SCALE`, its comment, and `search_rfp_return_scale_probe()` | `src/search.cpp`, declared in `src/search.hpp` |
+| the two locals `rfp_bound` and `rfp_blended`, the three asserts and the four S235 paragraphs of the block's comment -- the site returns `rfp_eval - margin` again, and a five-line note saying the blend was tried and what it read stands in their place | `negamax_at`, `src/search.cpp` |
+| the drive `rfp_return_drive_t` and this step's five cases | `tests/test_search.cpp` |
+| the golden row `RfpReturnWeight` and the count, 63 back to 62 | `tests/test_search_params.cpp` |
+| the mutant list, H01 to H04 | `tools/mutants/S235_fail_middle_return.py`, deleted |
+| the option row | `MANUAL.md` |
+
+**S103's case "reverse futility prunes on the stored static score" is restored
+byte for byte** to its pre-S235 form, `returned_for` and its two rewritten legs
+gone, from `3b717a7`. It is a restoration and not a deletion: the whole of
+`tests/test_search.cpp` is `3b717a7`'s file, so the discrimination the repair
+added goes with the blend that made it necessary and the case asserts again
+what it asserted before the step.
+
+**No reason to keep any of the code was found and none was stated.** The scale
+and its probe have one consumer, which was this weight; the other three
+fail-middle sites (S113's ProbCut return, S097's multicut return, the
+quiescence stand pat) each bring their own weight under their own verdict.
+
+### What stayed
+
+The evidence, which is never removed: `adocs/data/S235_sprt.sh`,
+`adocs/data/S235_sprt.log`, `adocs/data/S235_sprt_pairs.txt` and their
+`adocs/data/README.md` rows. `DEV_MANUAL.md`'s node-signature ledger **gains**
+an entry for the removal, `4823539` -> `4803214`, beneath S235's landing entry
+rather than losing it, and its `golden_defaults` row states 62 with the row's
+arrival and departure both on the record. This step file is extended and not
+rewritten.
+
+### The proofs
+
+**The remaining difference to `3b717a7` is one comment and nothing else.**
+`git diff --stat 3b717a7 <this tree> -- src tests tools` is
+`src/search.cpp | 5 +++++`, and those five lines are the comment above the
+reverse-futility block's condition in `negamax_at` recording that the blend was
+tried and what its SPRT read. `tests/`, `tools/` and the rest of `src/` are
+`3b717a7` byte for byte, which `git diff` says by printing nothing for them.
+
+| | |
+|---|---|
+| `bench` | **4803214** with all eight `bestmove` replies identical to a binary built fresh from `3b717a7` in this step's own throwaway worktree -- c3d5 d5e6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6. That worktree was checked against the commit before it was called the parent: `git diff --stat 3b717a7 <its HEAD> -- src tests` empty, HEAD `3b717a7` detached and clean |
+| `tools/search_bench.py` | identical at both depths, node for node and move for move: 48522 / 85714 / 28080 with c3d5 / e2a6 / d7c8q at 9, and 129499 / 411457 / 172984 with c3d5 / e2a6 / d7c8q at 12 (INV-6) |
+| both fast suites | **40 of 40**, Release and `-DCHESSO_TUNE=ON`; `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` |
+| prose | `tools/plan_prose_check.py` clean in all three modes, one invocation each: `--citations` 0 flagged over 43 files, `--touches` 0 flagged over 43 files, `--params` no finding |
+| the UCI surface | `MANUAL.md` has no `RfpReturnWeight` row and the option is gone from `search_param_info()` with it, so `test_uci_surface` is green in both builds with **no refresh**: it builds its expected option lines from the parameter table and the two sides moved together |
+| the golden | `tests/test_search_params.cpp` is `3b717a7`'s file byte for byte. DEC-142's re-derivation for `golden_defaults` is the diff against `src/search_params.hpp`, which is what the block itself names as its derivation -- no script exists for it and none is owed |
+| mutation | S234's list re-run, header and score below |
+
+Machine: the loads read 4.13 and 3.05 at the two ends of the measurement block
+and the main checkout was running its own suite throughout. Nothing above is a
+timing -- every number is a node count, a best move or a pass -- so none of it
+is load-sensitive, and no match, fit or timing run was started here.
+
+**Mutation: S234's list on a clean detached fixture.** `tools/mutation_check.py`
+has no `--list-only`, so the list was run. The fixture is `3b717a7`, which is
+this removal's own tree: `tests/` is byte-identical to it and `src/` differs by
+the five-line comment above, which no anchor in the list reaches and no compiler
+emits. The tool's baseline benching `4803214` -- this tree's own total -- is
+what says so from the other side. The header's three lines:
+
+```
+worktree .ref-builds/mut at 3b717a7 clean
+list     tools/mutants/S234_tt_estimate_margins.py   clean
+baseline green, 40 tests, bench 4803214 nodes via engine
+```
+
+**Mutation score 4 of 4 (100%), killed 4, wall 709 s**, every mutant caught by
+one fast case and by a moved bench, each as its list expects
+(`.tuning/coord/S235rm_mutation.log`, `MUTATION-RUN-DONE`). S234's list still
+validates on the tree the removal leaves, so none of its guards leaned on the
+blend.
+
+### Proposed commit text, for the coordinator
+
+Subject 45 characters. The body says why by the verdict and carries DEC-220's
+result block before `Bench:`, because this commit closes an SPRT verdict.
+
+```
+Remove S235's blended return, keep its record
+
+The reverse-futility return blended toward beta read a zero. Its gainer
+SPRT of a993084 against 3b717a7, {0, 5} nElo at 8+0.08, accepted H0 at
+11978 games: nElo -3.45 +/- 6.22, an interval reaching above zero, which
+adocs/data/S235_sprt.sh's third row reads as a zero and not a loss. That
+reading and its consequence were written before the first game -- the
+weight goes to 100, its off value, and the code leaves with it -- so this
+is the pre-registration executed and not a judgement made after a number.
+
+Out: RfpReturnWeight and its X-macro block, its golden_defaults row (63
+back to 62) and its MANUAL row; RFP_RETURN_SCALE, its comment and
+search_rfp_return_scale_probe; rfp_bound, rfp_blended and the three
+asserts in negamax_at, which returns rfp_eval - margin again;
+rfp_return_drive_t and this step's five cases; mutants H01 to H04 with
+the file that held them. S103's "reverse futility prunes on the stored
+static score" is restored byte for byte to its pre-S235 form: its repair
+asserted the blend, so it goes back with the blend rather than being
+weakened.
+
+In: one five-line comment at the site saying the blend was tried and what
+it read, so a later reader does not propose it again unaware; and every
+piece of evidence -- the pre-registration, the log, the pairs file and
+their adocs/data/README.md rows. DEV_MANUAL's node-signature ledger gains
+the removal's entry beneath the landing's rather than losing it.
+
+src, tests and tools are 3b717a7's byte for byte apart from that comment.
+bench is 4803214 with all eight bestmove replies identical to a fresh
+build of 3b717a7 and tools/search_bench.py is identical at depths 9 and
+12, node for node (INV-6, DEC-215): no second SPRT is owed, which is the
+shape S098 verdict 3's leg-1 removal and S236's removal already have.
+Both fast suites 40 of 40, the format check and the three prose checks
+clean, and S234's mutant list still validates on a clean fixture.
+
+S235, DEC-063, DEC-019. What the run says about the idea is at this one
+site and this one seed: the record's +9.71 over 4654 games was a
+direction and it did not transfer. The other three fail-middle sites keep
+their own steps and their own verdicts.
+
+SPRT | cand a993084 vs ref 3b717a7, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | -2.64 +/- 4.76, nElo -3.45 +/- 6.22
+LLR | -2.95 (-2.94, 2.94) -> H0
+Games | N: 11978 W: 3608 L: 3699 D: 4671, Ptnml [535, 1444, 2082, 1433, 495]
+Wall | 5 h 42 m, 2099.7 games/h, forfeits 0
+Log | adocs/data/S235_sprt.log
+
+Bench: 4803214
+```
+
+### Proposed `adocs/specs.md` edits, for the coordinator
+
+Three edits to the search row, all in its current-state wording, all quoted
+rather than located (DEC-135). The first two put the parent's sentences back;
+the third is the one "tried and left" sentence and it carries the verdict's
+numbers and replaces the `<verdict>` placeholder the landing left.
+
+1. **The first clause comes out whole.** The passage today opens:
+
+   > Reverse futility returns a static lower bound instead of searching and
+   > therefore cannot see a mate -- **and since S235 (landed 2026-09-25) what
+   > it returns is a point between beta and that bound**, `RfpReturnWeight`
+   > hundredths of the way up from the first to the second, rounded toward
+   > beta -- **since S234 (landed 2026-09-24) the number it is decided on is
+   > the node's estimate ...
+
+   Everything from "-- **and since S235" up to and including "rounded toward
+   beta -- " is deleted, so it reads as it did before the landing:
+
+   > Reverse futility returns a static lower bound instead of searching and
+   > therefore cannot see a mate -- **since S234 (landed 2026-09-24) the number
+   > it is decided on is the node's estimate ...
+
+2. **S234's own wording comes back**, four words further on: "and the bound the
+   rule argues is that same estimate less the margin" returns to "and the bound
+   returned is that same estimate less the margin". Nothing else in that clause
+   moves.
+
+3. **The second inserted clause becomes the "tried and left" sentence**, which
+   is where the verdict's numbers go and where the landing's `<verdict>`
+   placeholder is discharged. Everything from "; **what the node hands its
+   parent is" through the placeholder at the end of "Decided by one `{0, 5}`
+   nElo SPRT against the tree without it (`adocs/data/S235_sprt.sh`):
+   \<verdict\>" -- one clause, deleted entire -- becomes:
+
+   > . **S235 tried handing the parent a point between beta and that bound
+   > instead**, one weight of the gap seeded at its range's midpoint, and its
+   > `{0, 5}` nElo SPRT against the tree without it
+   > (`adocs/data/S235_sprt.sh`) **accepted H0 at 11978 games on 2026-09-25 --
+   > `Elo -2.64 +/- 4.76`, `nElo -3.45 +/- 6.22`, LLR -2.95, 0 forfeits either
+   > side** (`adocs/data/S235_sprt.log`); the nElo interval reaches above zero,
+   > so the pre-registration reads it as a zero and not a loss, and the weight
+   > went to its off value with the code behind it -- the site returns the
+   > bound its own test argued again, `bench` 4803214, `3b717a7`'s own total
+   > node for node
+
+   The sentence after it is untouched and still begins "; `RfpTtEstimate` 0
+   puts both the comparison and the bound back on the raw static evaluation".
+
+### Owed to the coordinator, not run here
+
+The second tier (DEC-141): this removal touches the search, so Debug self-play
+-- four rounds of `fastchess` at 4+0.04 grepped for `Assertion` -- and
+`tools/gate_extra.sh` are owed on the landing tree. Both load the machine the
+way a match does and this step's brief reserves that to the coordinator. No
+guard test and no mutant are owed with them: the removal adds no pruning,
+reduction or extension rule, it takes one away, and what proves it is the
+identity above.
