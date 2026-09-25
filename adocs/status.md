@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S235's removal is landed, 2026-09-25, as `db1b6fa`, `bench` 4823539 ->
+  4803214; Debug self-play 8 games 0 `Assertion` 0 `disconnect`
+  (`.tuning/coord/S235rm_selfplay/`); `gate_extra` running detached on it,
+  log `.tuning/gate_extra_2026-09-25_S235rm.log`, watcher armed with four
+  exits and a 1 h ceiling.** The removal agent's session ended on a credit
+  limit before it reported; its work was complete bar the two mutation
+  placeholders, filled by the coordinator from `S235rm_mutation.log` (4 of 4
+  killed). The coordinator re-ran `bench` (4803214) and the diff against
+  `3b717a7` (the one comment); the cold fast check found no defect. Both
+  suites 40 of 40 and the format check on the landing tree; `specs.md`'s
+  search row edited by `.tuning/coord/S235_removal_specs_edit.py`. **Next:**
+  `gate_extra`'s marker, then completion (`.tuning/coord/S235_complete.py`),
+  removal of the `../chesso-s235rm` worktree and branch, then S237.
+
 - **The machine is S235's removal agent's, 2026-09-25 09:32: worktree
   `../chesso-s235rm`, branch `s235rm` at `b13ecc6`, a fresh Opus 5 agent briefed
   from `.tuning/coord/S235_removal_brief.md`** -- the weight to its off value
