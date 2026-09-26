@@ -611,3 +611,11 @@ assertion "neither side over the threshold" was written first and **failed**
 (the ALL side reads 11), so the case now asserts what its difference needs:
 the count is over the threshold on both sides or on neither
 (`REQUIRE_EQ` of the two firing states), green.
+
+**Second tier on the landing** (DEC-141): Debug self-play 8 games, 0
+`Assertion`, 0 `disconnect` (`.tuning/coord/S238_selfplay/`);
+`tools/gate_extra.sh` 5 stages green in 1117 s
+(`.tuning/gate_extra_2026-09-26_S238.log`). Landed as `257c8fe` on `1680439`,
+`bench` 4803214 -> 4722025. SPRT pair pinned: `REF` `1680439`, `CAND`
+`257c8fe`; open findings re-read at pinning, nothing closed or added since
+the rebase agent's block.
