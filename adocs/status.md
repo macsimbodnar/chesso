@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S237's SPRT is H0, 2026-09-26 02:01:46, read as a zero: `4d8c501` against
+  `cd9d0e7`, `Elo -5.08 +/- 6.07`, `nElo -6.34 +/- 7.58`, LLR -2.96, 8072 games
+  in 3 h 50 m, 0 forfeits.** The interval reaches above zero, so the
+  pre-registration's third row binds: the thresholds to 126 and 0 and the code
+  leaves. **Next, in order:** ledger row; the removal by a fresh agent in a
+  worktree; cold fast check; landing; second tier; S237 completes; S238
+  rebased onto the removal with its identity re-proved, then its landing,
+  second tier and SPRT.
+
 - **S238 is ready to land, 2026-09-26, and waits for S237's verdict.** Phase 2
   resolved the reds under DEC-233 (capture-mate rows 3 and 4 re-derived by
   `S230_mine_r01_row.py`, row 3 now separating R01; `test_mate_carry` budgets

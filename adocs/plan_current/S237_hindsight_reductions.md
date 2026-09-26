@@ -215,3 +215,20 @@ check on the landing tree. Debug self-play 8 games, 0 `Assertion`, 0
 `disconnect` (`.tuning/coord/S237_selfplay/`); `tools/gate_extra.sh` 5 stages
 green in 1130 s (`.tuning/gate_extra_2026-09-25_S237.log`) (DEC-141). SPRT
 pair pinned: `REF` `cd9d0e7`, `CAND` `4d8c501`.
+
+## The verdict (2026-09-26, the coordinator)
+
+**H0, 2026-09-26 02:01:46: `4d8c501` against `cd9d0e7`, `Elo -5.08 +/- 6.07`,
+`nElo -6.34 +/- 7.58`, LLR -2.96, 8072 games in 3 h 50 m, 0 forfeits either
+side** (`adocs/data/S237_sprt.log`, `adocs/data/S237_sprt_pairs.txt`). The
+nElo interval [-13.92, +1.24] reaches above zero, so the pre-registration's
+third row binds and reads it as a zero, not a loss: `HindsightHeavyReduction`
+goes to 126 and `HindsightLightReduction` to 0, the off values proved the
+parent's tree to the node, and the code leaves with them -- the trailing
+parameter, the rule, the four rows, the probe fields, the cases and the
+mutants -- as a behaviour-neutral removal INV-6 discharges. No follow-up run
+and no second setting (DEC-063, DEC-019): the record's +6.03 was a direction
+and did not transfer at this seed. `Incomplete mating PV` 15 against 14, an
+observation (CHESS). The removal is a fresh agent's; S238, built on
+`4d8c501`, is rebased onto the removal and its off-value identity re-proved
+before it lands.
