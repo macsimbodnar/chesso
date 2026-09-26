@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S238's SPRT is running, launched 2026-09-26 14:54:34: `257c8fe` (the cutoff
+  count at its seeds, rebased onto S237's removal) against `1680439`, `{0, 5}`
+  nElo at 8+0.08 on `noob_3moves.epd`, seed 20260926145434, 12 of 12 cores,
+  output `.tuning/sprt_s238_20260926_145434`, log `.tuning/coord/S238_sprt.log`,
+  pid 1827055.** Banner checked; watcher `.tuning/coord/S238_watch.sh` armed
+  with four exits and a 40 h ceiling. Landed with the second tier green
+  (self-play 8 games 0 `Assertion`, `gate_extra` 1117 s). `test_mate_carry`'s
+  budgets left as they were (green; C's new short lines are S202's class,
+  open finding 5 of the pre-registration). **Beside it S112's agent works in
+  `../chesso-s112` at `nice -n 19`**, built on `1680439` and rebased onto
+  S238's outcome before it is pinned.
+
 - **S237 is done, 2026-09-26, on its H0 read as a zero, with the code out
   (`1680439`, `bench` 4803214, `cd9d0e7`'s tree to the node); second tier green
   on the removal (self-play 8 games 0 `Assertion`, `gate_extra` 1221 s).**
