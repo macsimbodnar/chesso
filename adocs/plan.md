@@ -497,10 +497,10 @@ whole with their evidence; they are 3100-band techniques by the record.
 
 ## What this costs
 
-The pending order owes **roughly 38 to 48 SPRT verdicts** once multi-verdict
+The pending order owes **roughly 37 to 47 SPRT verdicts** once multi-verdict
 steps are counted honestly (S022's two, the evaluation groups
-per-term; five more since 2026-09-19 by DEC-222 -- the fixed-point block, the table-tightened estimate and the
-blended return, all three spent, then S237 and S238), the three the reduction rebuild took having been spent on
+per-term; five more since 2026-09-19 by DEC-222 -- the fixed-point block, the table-tightened estimate, the
+blended return and hindsight reductions, all four spent, then S238), the three the reduction rebuild took having been spent on
 2026-09-18, the two-ply table's one on 2026-09-20 (DEC-224; the two removals
 DEC-222 attached to an H1 there are not owed) and the no-table-move term's
 one on 2026-09-21, the singular extension's first and the node-fraction time
@@ -511,7 +511,8 @@ day, and its pre-registered follow-up at the half clamp on 2026-09-24, a
 zero at the harness's game limit (DEC-231), and the table-tightened
 estimate's one at the reverse-futility margin on 2026-09-25, an H1 in
 9 h 32 m, and the blended reverse-futility return's one the same day, an
-H0 read as a zero in 5 h 42 m -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
+H0 read as a zero in 5 h 42 m, and hindsight reductions' one on
+2026-09-26, an H0 read as a zero in 3 h 50 m -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
 and S152's two five-hour gauntlets at the end.
 
 **Struck 2026-09-11 by S182** (`2026-09-04_plan_review-F03`, DEC-136):
@@ -587,8 +588,9 @@ found stale (its F03).
 | S236 v2 | the history term at one ply | 19 h 8 m | 40000 | `{0, 5}` | **no verdict** |
 | S234 | reverse futility on the table-tightened estimate | 9 h 32 m | 20062 | `{0, 5}` | H1, +4.73 +/- 3.74 |
 | S235 | the reverse-futility return blended toward beta | 5 h 42 m | 11978 | `{0, 5}` | H0, -2.64 +/- 4.76 |
+| S237 | hindsight reductions | 3 h 50 m | 8072 | `{0, 5}` | H0, -5.08 +/- 6.07 |
 
-**The ledger holds 31: mean 5 h 23 m, median 5 h 26 m, 354401 games in 167.38 hours, 2117.3 an hour across the set.** **Fast class**, an effect outside the bounds interval -- thirteen runs, mean **2 h 15 m**. **Slow class**, inside it, on a bound or a true zero -- eighteen runs, mean **7 h 39 m**.
+**The ledger holds 32: mean 5 h 21 m, median 5 h 26 m, 362473 games in 171.22 hours, 2117.1 an hour across the set.** **Fast class**, an effect outside the bounds interval -- thirteen runs, mean **2 h 15 m**. **Slow class**, inside it, on a bound or a true zero -- nineteen runs, mean **7 h 27 m**.
 
 **Why the throughput moves**, read at the runs themselves and kept because the
 reasons do not re-derive from a row. Eight of the first nine sit between 2328 and
@@ -621,7 +623,7 @@ against and here was worth the extra leg.
 
 ### Priced by class, which is what the spread is
 
-The thirty-one split in two and the split is not luck — it is where the truth
+The thirty-two split in two and the split is not luck — it is where the truth
 sat relative to the bounds. The class of a row is
 `tools/ledger.py`'s: the nElo estimate's interval either misses the bounds
 pair, which is fast, or reaches it, which is slow.
@@ -638,13 +640,13 @@ pair, which is fast, or reaches it, which is slow.
   outside" and "just outside" are not the same price**, and the formula below
   is what separates them — 10258 is under half the 25591 its pair costs with
   the truth sitting *on* a bound, which is the case S207 nearly was.
-- **Slow class, an effect inside the interval or a true zero**: S024 v1
-  4 h 10 m, S097 v2 4 h 58 m, S098 v1 5 h 26 m, S108 5 h 27 m, S231 5 h 37 m, S235 5 h 42 m, S098 v1 leg 2
+- **Slow class, an effect inside the interval or a true zero**: S237
+  3 h 50 m, S024 v1 4 h 10 m, S097 v2 4 h 58 m, S098 v1 5 h 26 m, S108 5 h 27 m, S231 5 h 37 m, S235 5 h 42 m, S098 v1 leg 2
   6 h 11 m, S148 6 h 20 m, S093 v2 6 h 35 m, S095 6 h 39 m, S098 v3 leg 1 6 h 49 m, S130
   7 h 12 m, S236 7 h 31 m, S165 7 h 58 m, S097 v1 9 h 27 m, S234 9 h 32 m, S210 F22 13 h 17 m,
   S236 v2 19 h 08 m (no verdict at the harness's 40000-game limit, the
   longest row).
-  **Mean 7 h 39 m.** Every one of the eighteen has an nElo interval that reaches
+  **Mean 7 h 27 m.** Every one of the nineteen has an nElo interval that reaches
   inside its bounds pair — that is the rule — and that is what DEC-063 says a
   `{0, 5}` or `{-5, 0}` pair does to a true zero: it runs to the wall.
 

@@ -261,7 +261,23 @@ def parse_block(sha, subject, body):
         "seconds": int(wall.group("h")) * 3600 + int(wall.group("m")) * 60,
         "games_n": int(games.group("n")),
         "origin": "commit %s" % sha,
+        "verdict_key": (sprt.group("cand"), sprt.group("ref"),
+                        found["Log"].group("path")),
     }
+
+
+def drop_repeated_verdicts(rows):
+    """One row per verdict. A removal that closes a verdict may carry the
+    record commit's block again (S235's db1b6fa did), and history is never
+    rewritten, so the first commit to carry a pair and log is the row."""
+    seen, kept = set(), []
+    for row in rows:
+        key = row.get("verdict_key")
+        if key is not None and key in seen:
+            continue
+        seen.add(key)
+        kept.append(row)
+    return kept
 
 
 def read_commits():
@@ -286,7 +302,7 @@ def read_commits():
             rows.append(parse_block(sha, subject, body))
         except LedgerError as error:
             die(str(error))
-    return rows
+    return drop_repeated_verdicts(rows)
 
 
 def figures(rows):

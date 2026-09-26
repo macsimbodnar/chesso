@@ -155,6 +155,23 @@ class BlockParser(unittest.TestCase):
         self.assertEqual(row["class"], "slow")
         self.assertEqual(row["source"], "adocs/data/S098_v3_leg1_sprt.log")
 
+    def test_a_verdict_carried_by_two_commits_is_one_row(self):
+        # S235's removal commit db1b6fa carried the result block its record
+        # commit b13ecc6 already had, and the ledger printed S235 twice. A
+        # block names its verdict by its pair and its log; the first commit
+        # to carry it is the row, a later carrier is the same verdict.
+        first = ledger.parse_block("b13ecc6", SUBJECT, body())
+        again = ledger.parse_block("db1b6fa",
+                                   "Remove S098 v3 leg 1's term, keep its record",
+                                   body())
+        other = ledger.parse_block("abc1234", SUBJECT,
+                                   body(bend="SPRT | cand 1111111 vs ref "
+                                        "2222222, 8+0.08, Hash=16, "
+                                        "noob_3moves.epd, {0, 5} nElo"))
+        rows = ledger.drop_repeated_verdicts([first, again, other])
+        self.assertEqual([row["origin"] for row in rows],
+                         ["commit b13ecc6", "commit abc1234"])
+
     def test_no_verdict_prints_as_no_verdict(self):
         row = ledger.parse_block("abc1234", SUBJECT,
                                  body(bend="LLR | 0.41 (-2.94, 2.94) -> none"))
