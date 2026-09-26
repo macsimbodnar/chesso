@@ -1,0 +1,43 @@
+# S238: the cutoff count where the rule reads it.
+# Regenerate with:
+#   ~/.venv/chess/bin/python adocs/data/S238_census.py census
+# The script's docstring is the method and holds the patch.
+# The eight bench positions, one persistent UCI process, ucinewgame
+# between positions, go depth N.
+# A site is one late quiet whose reduction negamax_at computes;
+# the count is state->cutoff_counts[ply + 1] at that moment.
+# Percentiles are nearest-rank, so every number is one the census saw.
+# Instrumented bench signature: 4803214, equal to a control binary built
+# from the same forced source without the counters.
+# The censused tree has CutoffCountReduction forced to its off value
+# 0; the source it was copied from held CutoffCountReduction 1024.
+#
+# THE SEED RULE, stated in the script before these numbers existed:
+#   CutoffCountThreshold = p75(count); fires on count > threshold
+#   CutoffCountReduction: (c), the range midpoint, not from here
+#
+# One pass: the fixed point is not iterated; S127 fits against games.
+# Not Elo and not a verdict (DEC-019): it sizes one seed.
+depth 10
+  positions: 8   nodes: 822803   wall: 0.2 s
+  sites (late quiets reduced through lmr_adjusted_reduction): 75706 (9.20 % of nodes)
+  clipped at the histogram bounds (count 255, move 255): 0
+  cutoff count            p25     1  p50     3  p75     6  p90    10  p95    14  p99    27
+  move number             p25     8  p50    15  p75    23  p90    28  p95    30  p99    41
+  count histogram: 0:12.79%  1:15.66%  2:14.50%  3:14.84%  4:9.33%  5:6.44%  6:5.12%  7:3.87%  8:3.65%  9:3.03%  10:2.14%  11:1.53%  12:1.02%  13:0.86%  14:0.69%  15:0.61%  16:0.46%  17:0.36%  18:0.33%  19:0.32%  20:0.24%  21:0.24%  22:0.22%  23:0.18%  24:0.15%  25:0.16%  26:0.14%  27:0.14%  28:0.11%  29:0.13%  30:0.10%  31:0.09%  32:0.08%  33:0.08%  34:0.06%  35:0.05%  36:0.06%  37:0.04%  38:0.04%  39:0.03%  40:0.03%  41:0.02%  42:0.02%  43:0.01%  44:0.01%
+  sites where every earlier child failed high (count == move - 1): 3532 (4.67 %); count above move - 1 (re-searches counted): 0 (0.00 %)
+  seed rule at this depth: CutoffCountThreshold = p75(count) = 6
+  at that threshold the rule fires on 16146 sites (21.33 %)
+
+depth 12
+  positions: 8   nodes: 2108720   wall: 0.6 s
+  sites (late quiets reduced through lmr_adjusted_reduction): 238386 (11.30 % of nodes)
+  clipped at the histogram bounds (count 255, move 255): 0
+  cutoff count            p25     1  p50     2  p75     5  p90     9  p95    13  p99    25
+  move number             p25     8  p50    14  p75    22  p90    27  p95    30  p99    38
+  count histogram: 0:21.07%  1:15.92%  2:13.72%  3:13.25%  4:8.53%  5:5.71%  6:4.26%  7:3.23%  8:2.90%  9:2.33%  10:1.69%  11:1.18%  12:0.90%  13:0.73%  14:0.57%  15:0.53%  16:0.43%  17:0.34%  18:0.31%  19:0.29%  20:0.26%  21:0.22%  22:0.18%  23:0.17%  24:0.15%  25:0.14%  26:0.12%  27:0.11%  28:0.10%  29:0.10%  30:0.08%  31:0.08%  32:0.06%  33:0.06%  34:0.05%  35:0.04%  36:0.04%  37:0.03%  38:0.02%  39:0.02%  40:0.02%  41:0.01%  42:0.01%
+  sites where every earlier child failed high (count == move - 1): 11968 (5.02 %); count above move - 1 (re-searches counted): 0 (0.00 %)
+  seed rule at this depth: CutoffCountThreshold = p75(count) = 5
+  at that threshold the rule fires on 51983 sites (21.81 %)
+
+seed (depth 12): CutoffCountThreshold 5; CutoffCountReduction is (c), not from this census

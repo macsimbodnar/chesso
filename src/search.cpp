@@ -375,6 +375,20 @@ int search_lmr_adjusted_reduction_probe(int depth,
 { return lmr_adjusted_reduction(depth, move_number, node_adjustment); }
 
 
+// CUTOFF COUNT, S238: what a late quiet's reduction gains, in ticks, from how
+// many of this node's children have failed high so far. A child that fails
+// high refuted the move that reached it; a node whose children keep doing so
+// is one whose later moves are not worth the depth. Over the threshold the
+// reduction rises by CUTOFF_COUNT_REDUCTION ticks, which joins the sum
+// `lmr_adjusted_reduction` rounds once, so it may be a fraction of a ply.
+//
+// At CUTOFF_COUNT_REDUCTION 0 this is 0 whatever the count, and the reduction
+// is the parent commit's to the tick (DEC-215). Implemented from the
+// analysis's description, DEC-221.
+static inline int cutoff_count_ticks(int count)
+{ return (count > CUTOFF_COUNT_THRESHOLD) ? CUTOFF_COUNT_REDUCTION : 0; }
+
+
 // The depth the shallow-depth rules are gated on: what late move reduction
 // would leave below this move, and not the node's own remaining depth. A move
 // the ordering put late is already searched shallower than the node is deep, so
@@ -2005,6 +2019,16 @@ static int negamax_at(int alpha0,
   // publishes an unsearched move as the search result or as the TT move.
   move_t best_move = 0;
 
+  // S238. The slot this node's children count their cutoffs in starts empty
+  // here, just before the move loop and not at the top of the node: the null
+  // move's child and S097's verification children search at ply + 1 too, and
+  // a cutoff there is not one of this loop's children failing high.
+  state->cutoff_counts[ply + 1] = 0;
+
+  if constexpr (PROBING) {
+    if (probe != nullptr) { probe->node_adjustment = node_adjustment; }
+  }
+
   for (size_t i = 0;; ++i) {
     // Everything the four shallow-depth rules require of the node and of the
     // window, read once per candidate. `alpha` is read live rather than from
@@ -2323,9 +2347,16 @@ static int negamax_at(int alpha0,
                             !capture_gives_check;
 
     if (may_reduce) {
+      // S238's term joins the node's own before the one rounding. The slot is
+      // read here, per move, so each late quiet sees every child searched
+      // before it, the one just returned included.
       if (!is_capture && !MOVE_PROMOTED(moves[i])) {
-        reduction = lmr_adjusted_reduction(
-            depth, static_cast<int>(legal_moves_counter), node_adjustment);
+        const int cutoff_ticks =
+            cutoff_count_ticks(state->cutoff_counts[ply + 1]);
+
+        reduction =
+            lmr_adjusted_reduction(depth, static_cast<int>(legal_moves_counter),
+                                   node_adjustment + cutoff_ticks);
       }
 
       // S091. A move that loses material is one the ordering already put late
@@ -2353,6 +2384,7 @@ static int negamax_at(int alpha0,
 
         probe->moves[k] = moves[i];
         probe->reduction[k] = reduction;
+        probe->cutoff_count[k] = state->cutoff_counts[ply + 1];
         probe->child_depth[k] = child_depth;
         probe->researched[k] = false;
         probe->child_is_pv[k] = child.is_pv;
@@ -2453,6 +2485,12 @@ static int negamax_at(int alpha0,
     if (score >= beta) {
       // Fail-high
       type = TT_BETA_NODE;
+
+      // S238: one more child of the node a ply up failed high, counted in the
+      // slot that parent cleared. Not from S097's verification, which is a
+      // search of this node's own position without one move rather than one
+      // of the parent's children; its window is not this node's.
+      if (excluded_move == 0) { state->cutoff_counts[ply]++; }
 
       // Store killing move, history, and counter move
       if (!is_capture) {

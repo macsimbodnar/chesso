@@ -3567,6 +3567,32 @@ TEST_SUITE("search: draws")
     // build and not a separation. R01 is separated by no row at any depth of
     // this pass either, the fifth consecutive pass reading that way.
     //
+    // **Re-derived at S238 (DEC-233), the seven sweeps taken once more.** The
+    // cutoff count at its seeds (`CutoffCountThreshold` 5,
+    // `CutoffCountReduction` 1024) raises the reduction of a late quiet once
+    // enough of the node's children have failed high, which is "any change to
+    // reduction", and row 3 at depth 10 is the row this case went red on. Same
+    // script, same range, same rule, on S238's tree over 1680439 -- the tree
+    // S237's removal left -- and once more at 1680439 itself, so that what
+    // moved is the tree's and not the rule's: there the rule returns the rows
+    // below as they stood (row 3's pass is separated by C05 as well as R02, a
+    // label the row did not carry). Evidence in `.tuning/coord/S238b_capmates/`
+    // and `.tuning/coord/S238b_capmates_parent/`. Shipped profiles on S238's
+    // tree: `d7 d9 d10 d11 d12`, `d7 d9 d10 d11 d12`, `d11 d12`,
+    // `d9 d10 d11 d12`, against `d9 d10 d11 d12`, `d9 d10 d11 d12`,
+    // `d10 d12`, `d9 d10 d11 d12` at the parent. **All four rows move and no
+    // mate distance does.** Rows 1 and 2 gain a depth 7 reading and it
+    // separates: C02 loses row 1 there, and C02, C05 and R02 lose row 2.
+    // Row 3's profile starts at 11, where C02 and R02 lose it. Row 4 keeps its
+    // profile and R02 now loses it at 9 rather than at 10. R01 is separated by
+    // no row at any depth of this pass. The rows before this pass, the ones to
+    // restore byte for byte if S238's verdict removes the rule:
+    //
+    //   "3krb1r/...", 9, 5, "no S091 mutant, since S095"
+    //   "2b5/4k2P/...", 9, 5, "no S091 mutant, since S095"
+    //   "3N1bk1/...", 10, 4, "R02"
+    //   "1r3r1k/...", 10, 5, "R02"
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -3575,18 +3601,21 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "no S091 mutant, since S095"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
+         "C02"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 9, 5,
-         "no S091 mutant, since S095"},
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5,
+         "C02, C05 and R02"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4, "R02"},
+        //
+        // S238 moved it to 11, where its shipped profile starts on that tree.
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
+         "C02 and R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -3616,8 +3645,10 @@ TEST_SUITE("search: draws")
         // is `d9 d10 d11 d12` still, R02 now reads `d9 d11 d12` and loses the
         // mate at **10** rather than at 9, so the rule takes 10 and the label
         // is R02 as before. Nothing else separates this row at any of its
-        // depths.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
+        // depths. **S238 moves it back to 9 and keeps the mutant**: the
+        // shipped profile is unchanged and R02 reads `d11 d12`, losing the
+        // mate at 9 itself.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
          5, "R02"},
     };
 
@@ -6069,6 +6100,283 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // CUTOFF COUNT, S238. One node driven on FAIL_LOW_BETA's window, so every
+  // child it searches is handed a window it clears with its first reply: each
+  // child fails high in its own move loop and the node's count of them grows by
+  // one per move searched. The node is at ply 1 and 5 plies deep so that
+  // nothing but a child's move loop can end a child high -- its children are
+  // at ply 2, under RfpMinPly's 3; the deepest of them has 4 plies, one short
+  // of what the null move needs to keep a real ply; SeMinDepth is 10; the
+  // table is fresh and the children are distinct positions. Those are the
+  // reasons the count is the stated number, and the case counts it rather
+  // than trusting them.
+  //
+  // A PV node for FAIL_LOW_BETA's reason: no shallow-depth pruning, so the
+  // loop runs to its end and every legal move has a row in the probe.
+  struct cutoff_count_drive_t : guard_fixture_t
+  {
+    // The position S237's hindsight drives used before that rule left:
+    // python-chess reports `is_valid() True`, `is_check() False`, black to
+    // move, 31 legal replies.
+    static const std::string& position()
+    {
+      static const std::string fen =
+          "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+      return fen;
+    }
+
+    static constexpr size_t NODE_PLY = 1;
+    static constexpr int NODE_DEPTH = 5;
+
+    // A stale count is planted in the children's slot before the drive, so a
+    // node that forgot to clear it reads this and not zero.
+    static constexpr int STALE = 99;
+
+    void run()
+    {
+      load(position(), static_cast<int>(NODE_PLY));
+
+      REQUIRE(!is_check(&game));
+
+      state.cutoff_counts[NODE_PLY + 1] = STALE;
+      state.root_history_size = game.history.size;
+      state.node_limit = 2000000;
+
+      negamax_probed(FAIL_LOW_BETA - 1, FAIL_LOW_BETA, NODE_DEPTH, NODE_PLY,
+                     &game, &state, 0, true);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the rule");
+
+      move_t buffer[MAX_MOVES];
+      REQUIRE_EQ(static_cast<size_t>(probe.move_count),
+                 legal_moves(&game, buffer));
+    }
+
+    // The reduction a late quiet at row k should have got, with the rule's
+    // term or without it: the table and the node's own terms summed in ticks
+    // and rounded once, then clamped the way the site clamps. Only for a
+    // move `replayable` admits, where nothing else touches the number.
+    int replay(int k, bool fires) const
+    {
+      int r = search_lmr_adjusted_reduction_probe(
+          NODE_DEPTH, k + 1,
+          probe.node_adjustment + (fires ? CUTOFF_COUNT_REDUCTION : 0));
+
+      if (r > probe.child_depth[k] - 1) { r = probe.child_depth[k] - 1; }
+      if (r < 0) { r = 0; }
+
+      return r;
+    }
+
+    // A quiet past the third move that gives no check and loses nothing to
+    // the exchange evaluation: late move reduction alone decides its number.
+    // Whether it gives check comes from the engine's own make_move and
+    // is_check, never from reading the board.
+    bool replayable(int k)
+    {
+      const move_t move = probe.moves[k];
+
+      if (k < 3) { return false; }
+      if (MOVE_CAPTURE(move) != 0) { return false; }
+      if (MOVE_PROMOTED(move) != TO_NONE) { return false; }
+      if (!see_ge(&game.board, move, 0)) { return false; }
+
+      REQUIRE(make_move(&game, move));
+      const bool gives_check = is_check(&game);
+      unmake_move(&game);
+
+      return !gives_check;
+    }
+  };
+
+
+  // Mutation: Q03_not_cleared, Q06_cleared_per_move.
+  //
+  //   search: pruning and reduction guards
+  //    a node counts every child that failed high, from zero
+  //   REQUIRE( probe.cutoff_count[k] == k )
+  //   values: REQUIRE( 99 == 0 )
+  TEST_CASE_FIXTURE(cutoff_count_drive_t,
+                    "a node counts every child that failed high, from zero")
+  {
+    run();
+
+    // Every child before move k failed high, so the count move k sees is k:
+    // the stated number, move by move, starting from the stale plant.
+    for (int k = 0; k < probe.move_count; ++k) {
+      CAPTURE(k);
+      REQUIRE_EQ(probe.cutoff_count[k], k);
+    }
+
+    // And the last child too: the slot after the node is the whole count.
+    REQUIRE_EQ(state.cutoff_counts[NODE_PLY + 1], probe.move_count);
+  }
+
+
+  // Mutation: Q01_threshold_inverted, Q02_wrong_sign, Q04_wrong_child,
+  // Q05_read_at_loop_entry.
+  //
+  //   search: pruning and reduction guards
+  //    children failing high raise the reduction of the later quiets
+  //   REQUIRE( probe.reduction[k] == replay(k, fires) )
+  //   values: REQUIRE( 2 == 3 )
+  TEST_CASE_FIXTURE(
+      cutoff_count_drive_t,
+      "children failing high raise the reduction of the later quiets")
+  {
+    // The rule is on. A tune-build case below turns it off and restores it.
+    REQUIRE(CUTOFF_COUNT_REDUCTION > 0);
+
+    run();
+
+    int fired_and_moved = 0;
+    int held = 0;
+
+    for (int k = 0; k < probe.move_count; ++k) {
+      if (!replayable(k)) { continue; }
+
+      CAPTURE(k);
+      CAPTURE(probe.cutoff_count[k]);
+
+      // The count is the stated number, so whether the rule fires here is
+      // decided by the case and not by what the node happened to read.
+      REQUIRE_EQ(probe.cutoff_count[k], k);
+
+      const bool fires = k > CUTOFF_COUNT_THRESHOLD;
+
+      REQUIRE_EQ(probe.reduction[k], replay(k, fires));
+
+      if (fires && replay(k, true) != replay(k, false)) { fired_and_moved++; }
+      if (!fires && replay(k, false) > 0) { held++; }
+    }
+
+    // The preconditions, counted: at least one late quiet over the threshold
+    // whose reduction the term actually moved past the clamp, and at least
+    // one reduced late quiet at or under it that kept the table's number.
+    REQUIRE_MESSAGE(fired_and_moved > 0,
+                    "no late quiet over the threshold had a reduction the "
+                    "term could move, so the rule decided nothing here");
+    REQUIRE_MESSAGE(held > 0,
+                    "no reduced late quiet sat at or under the threshold, so "
+                    "nothing shows the rule waits for the count");
+  }
+
+
+  // Mutation: Q07_verification_counted.
+  //
+  //   search: pruning and reduction guards
+  //    a node's own cutoff counts once in its parent's slot
+  //   REQUIRE( state.cutoff_counts[ply] == STALE + leg.added )
+  //   values: REQUIRE( 100 == 99 )
+  TEST_CASE_FIXTURE(cutoff_count_drive_t,
+                    "a node's own cutoff counts once in its parent's slot")
+  {
+    const size_t ply = NODE_PLY + 1;
+
+    struct leg_t
+    {
+      const char* name;
+      int alpha;
+      int beta;
+      bool excluded;
+      int added;
+    };
+
+    // Fails high in its move loop: one more. Fails low: none. The same fail
+    // high with one move set aside, which is S097's verification searching
+    // this node's own position rather than being one of the parent's
+    // children: none.
+    const leg_t legs[] = {
+        {"fails high", -FAIL_LOW_BETA, -FAIL_LOW_BETA + 1, false, 1},
+        {"fails low", FAIL_LOW_BETA - 1, FAIL_LOW_BETA, false, 0},
+        {"fails high as a verification", -FAIL_LOW_BETA, -FAIL_LOW_BETA + 1,
+         true, 0},
+    };
+
+    for (const leg_t& leg : legs) {
+      CAPTURE(leg.name);
+
+      load(position(), static_cast<int>(ply));
+
+      move_t buffer[MAX_MOVES];
+      const size_t legal_count = legal_moves(&game, buffer);
+      REQUIRE(legal_count > 1);
+
+      // One legal move set aside, so the node still has others to fail high
+      // on; which one does not matter to the count.
+      const move_t excluded = leg.excluded ? buffer[legal_count - 1] : 0;
+
+      state.cutoff_counts[ply] = STALE;
+      state.root_history_size = game.history.size;
+      state.node_limit = 2000000;
+
+      const int score = negamax_probed(leg.alpha, leg.beta, NODE_DEPTH, ply,
+                                       &game, &state, 0, true, false, excluded);
+
+      REQUIRE(!state.aborted);
+
+      // The window did what the leg says, off the node's own score and its
+      // own probe: a move was searched, and the score is on the named side.
+      require_the_node_reached_its_move_loop();
+
+      if (leg.alpha < 0) {
+        REQUIRE(score >= leg.beta);
+      } else {
+        REQUIRE(score <= leg.alpha);
+      }
+
+      REQUIRE_EQ(state.cutoff_counts[ply], STALE + leg.added);
+    }
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE OFF VALUE, DEC-215, in the one build that can set it: at
+  // `CutoffCountReduction` 0 every late quiet keeps the table's reduction
+  // whatever the count. The release build holds the same fact by a bench
+  // equality instead -- a build with the default forced to 0 prints the
+  // parent commit's total and all eight replies.
+  //
+  // The restorer is what keeps a failed assertion here from leaving the rule
+  // off for every case after it; the firing case checks the same from the
+  // other end.
+  TEST_CASE_FIXTURE(cutoff_count_drive_t,
+                    "the cutoff count never moves a reduction at the off value")
+  {
+    const int shipped = CUTOFF_COUNT_REDUCTION;
+
+    struct restore_t
+    {
+      int value;
+      ~restore_t() { search_param_set("CutoffCountReduction", value); }
+    } restore{shipped};
+
+    REQUIRE(shipped > 0);
+    REQUIRE(search_param_set("CutoffCountReduction", 0));
+
+    run();
+
+    int over = 0;
+
+    for (int k = 0; k < probe.move_count; ++k) {
+      if (!replayable(k)) { continue; }
+
+      CAPTURE(k);
+
+      REQUIRE_EQ(probe.cutoff_count[k], k);
+      REQUIRE_EQ(probe.reduction[k], replay(k, false));
+
+      if (k > CUTOFF_COUNT_THRESHOLD) { over++; }
+    }
+
+    // Counts over the threshold were there to fire on.
+    REQUIRE(over > 0);
+  }
+#endif
+
+
   // Mutation: M09_lmr_no_research -- the re-search is never run.
   //
   //   search: pruning and reduction guards
@@ -7617,6 +7925,20 @@ TEST_SUITE("search: pruning and reduction guards")
   // worth keeping on the record for whoever needs the same trick next.
   struct node_type_drive_t : guard_fixture_t
   {
+    // S238, the way the quiet entry is S095's: set by a case whose premise is
+    // "the difference is this term alone", so the cutoff count is off in both
+    // of its drives. Inside the mate-band window every child's own move loop
+    // fails high on its first move, so without this the count passes
+    // CutoffCountThreshold part-way through the move list and adds its ticks
+    // to one late quiet's reduction in both drives -- which pushes the pair
+    // into the clamp the cases assert they are clear of. With it, each child
+    // position carries an entry that answers the child's window before its
+    // move loop starts, a table cutoff counts nothing, and the node decides
+    // every reduction at a count of 0. Children of a non-PV node only: a PV
+    // child never takes a table cutoff, so a PV drive is not covered. The
+    // case asserts the counts it read rather than trusting this comment.
+    bool children_answer_from_table = false;
+
     search_node_probe_t run(node_type_t type,
                             size_t ply,
                             move_t table_move,
@@ -7626,6 +7948,25 @@ TEST_SUITE("search: pruning and reduction guards")
       load(QUIET_NODE_POS, static_cast<int>(ply));
 
       REQUIRE(!is_check(&game));
+
+      move_t children[MAX_MOVES];
+      size_t child_count = 0;
+
+      if (children_answer_from_table) {
+        REQUIRE(!type.is_pv);
+
+        // A lower bound of 0 at the node's own depth: deeper than any child
+        // search the node starts, reduced or not, and above every child's
+        // beta, which is -BAND_ALPHA. The node reads 0 back as a fail low, so
+        // no move is re-searched and none is stored over.
+        child_count = legal_moves(&game, children);
+
+        for (size_t i = 0; i < child_count; ++i) {
+          REQUIRE(make_move(&game, children[i]));
+          tt_store_entry(&tt, &game.board, NODE_TYPE_DEPTH, 0, TT_BETA_NODE, 0);
+          unmake_move(&game);
+        }
+      }
 
       if (table_move != 0 || plant_moveless_entry) {
         // Shallower than the node, so the entry orders and never answers:
@@ -7650,6 +7991,18 @@ TEST_SUITE("search: pruning and reduction guards")
         // is a drive at a node the table has nothing for, which is what makes
         // it the comparison the term cases read.
         REQUIRE(tt_get_entry(&tt, &game.board) == nullptr);
+      }
+
+      // Every child plant is still there after the node's own, read back the
+      // way the child will read it: a planted child lost to a collision would
+      // search its move loop and count.
+      for (size_t i = 0; i < child_count; ++i) {
+        REQUIRE(make_move(&game, children[i]));
+        const tt_entry_t* planted = tt_get_entry(&tt, &game.board);
+        REQUIRE(planted != nullptr);
+        REQUIRE_EQ(planted->type, TT_BETA_NODE);
+        REQUIRE(planted->depth >= NODE_TYPE_DEPTH);
+        unmake_move(&game);
       }
 
       if (improving_anchor != nullptr) {
@@ -7705,6 +8058,18 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // S238's half of the premise, counted off the drive rather than assumed from
+  // `children_answer_from_table`: no reduction this node decided saw a child
+  // fail high, so CutoffCountThreshold was never passed and the cutoff count
+  // added nothing to either side of the difference.
+  static void require_cutoff_count_off(const search_node_probe_t& drive)
+  {
+    for (int i = 0; i < drive.move_count; ++i) {
+      REQUIRE_EQ(drive.cutoff_count[i], 0);
+    }
+  }
+
+
   // Mutation: T02_cutnode_inverted -- the cut-node term is added at every node
   // that is **not** a cut node.
   //
@@ -7721,8 +8086,15 @@ TEST_SUITE("search: pruning and reduction guards")
     // pass. It is also the red-first observation this case was written from.
     REQUIRE(LMR_CUTNODE > 0);
 
+    // S238's term off in both, for the reason the quiet entry keeps S095's
+    // off: every child answers from the table and none counts a cutoff.
+    children_answer_from_table = true;
+
     const search_node_probe_t all = run(ALL_NODE, 1, QUIET_ENTRY, nullptr);
     const search_node_probe_t cut = run(CUT_NODE, 1, QUIET_ENTRY, nullptr);
+
+    require_cutoff_count_off(all);
+    require_cutoff_count_off(cut);
 
     const int k = aligned_reduced_index(all, cut, 1);
 
@@ -7735,7 +8107,8 @@ TEST_SUITE("search: pruning and reduction guards")
     // table move, neither drive is a PV node, and **the entry carries a move,
     // so S095's term is off in both** -- which is also what keeps this node's
     // reductions at the level S098 verdict 2 wrote the case at, one ply below
-    // the clamp asserted below.
+    // the clamp asserted below. S238's cutoff count is the sixth condition and
+    // is 0 at every move of both drives, asserted above.
     REQUIRE(improving_at(&state, 1, false));
 
     // Inside the clamp at both settings -- `child_depth - 1` is 4 here -- so a
@@ -7772,11 +8145,17 @@ TEST_SUITE("search: pruning and reduction guards")
 
     // The quiet entry is planted in both for the reason T02 states: S095's
     // term has to be off on both sides of a difference that is about this
-    // term. It changes no index and carries no capture.
+    // term. It changes no index and carries no capture. The children answer
+    // from the table for T02's other reason: S238's term off in both.
+    children_answer_from_table = true;
+
     const search_node_probe_t better =
         run(ALL_NODE, 2, QUIET_ENTRY, &worse_before);
     const search_node_probe_t worse =
         run(ALL_NODE, 2, QUIET_ENTRY, &better_before);
+
+    require_cutoff_count_off(better);
+    require_cutoff_count_off(worse);
 
     const int k = aligned_reduced_index(better, worse, 1);
 
@@ -7830,9 +8209,15 @@ TEST_SUITE("search: pruning and reduction guards")
     // drives would now differ in two terms at once -- this one on and S095's
     // off against S095's on and this one off -- and the difference would be
     // their sum, which is 0 at the shipped values and asserts nothing.
+    // S238's term is held off in both the same way T02 holds it.
+    children_answer_from_table = true;
+
     const search_node_probe_t plain = run(ALL_NODE, 1, QUIET_ENTRY, nullptr);
     const search_node_probe_t tactical =
         run(ALL_NODE, 1, tactical_entry, nullptr);
+
+    require_cutoff_count_off(plain);
+    require_cutoff_count_off(tactical);
 
     const int k = aligned_reduced_index(plain, tactical, 1);
 
@@ -7871,6 +8256,14 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE_MESSAGE(k >= 3,
                     "no late quiet here is reduced by at least LmrPv, so the "
                     "clamp and not the term would decide");
+
+    // S238: a PV drive cannot take the table-answer plant the other four use,
+    // so the cutoff count is not forced to 0 here (the ALL side reads 11 at
+    // the seed, over the threshold). The premise is still "this term alone",
+    // so it is counted at the move measured: the count is over the threshold
+    // on both sides or on neither, and adds the same to both reductions.
+    REQUIRE_EQ(all.cutoff_count[k] > CUTOFF_COUNT_THRESHOLD,
+               pv.cutoff_count[k] > CUTOFF_COUNT_THRESHOLD);
 
     REQUIRE_EQ(pv.reduction[k], all.reduction[k] - LMR_PV);
   }
@@ -8143,11 +8536,18 @@ TEST_SUITE("search: pruning and reduction guards")
     //
     // Everything else is equal by construction at ply 1: `improving_at` has no
     // ancestor two plies up and is true in all three, neither entry's move is
-    // a capture, and none of the three is a PV node.
+    // a capture, and none of the three is a PV node. S238's cutoff count is
+    // held off in all three the way T02 holds it, and counted below.
+    children_answer_from_table = true;
+
     const search_node_probe_t nothing = run(ALL_NODE, 1, 0, nullptr);
     const search_node_probe_t with_move =
         run(ALL_NODE, 1, quiet_entry, nullptr);
     const search_node_probe_t moveless = run(ALL_NODE, 1, 0, nullptr, true);
+
+    require_cutoff_count_off(nothing);
+    require_cutoff_count_off(with_move);
+    require_cutoff_count_off(moveless);
 
     REQUIRE(improving_at(&state, 1, false));
 

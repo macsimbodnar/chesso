@@ -833,6 +833,47 @@
   X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
   X(SE_MULTICUT,         "SeMultiCut",         1, 0,  1)                       \
                                                                                \
+  /* CUTOFF COUNT, S238. Every child a node searches in its move loop adds one \
+     to a per-ply slot, `search_state_t::cutoff_counts[ply + 1]`, when a move  \
+     of its own reaches the child's beta; the node clears that slot just       \
+     before its move loop. So when the node decides the reduction of a late    \
+     quiet, the slot holds how many of its children so far failed high in      \
+     their own move loops, and over the threshold the reduction rises:         \
+                                                                               \
+       count > CutoffCountThreshold    reduction ticks += CutoffCountReduction \
+                                                                               \
+     in S236's ticks (LMR_SCALE 1024 to the ply), before the one rounding.     \
+     Only the reduction of a late quiet reads it; the shallow-depth gates do   \
+     not (the step's `excludes:`).                                             \
+                                                                               \
+     THE OFF VALUE IS CutoffCountReduction 0, DEC-215: the sum gains 0 ticks,  \
+     so every reduction is the parent's to the tick. Proved on the tree, not   \
+     declared: bench and tools/search_bench.py at depths 9 and 12 identical    \
+     to the parent commit's at 0 (the step file has the numbers).              \
+     CutoffCountThreshold has no off end and is not given one -- a range       \
+     widened until a tool has an off value is DEC-215's own rejected option,   \
+     and the adjustment already is the switch.                                 \
+                                                                               \
+     RANGES BY PURPOSE. The threshold's floor of 0 fires once any child has    \
+     failed high; its top of 63 is where the reduction table's own move-number \
+     axis stops (`lmr_reduction_ticks` clamps there), so a larger count would  \
+     be read against moves the table no longer tells apart. The adjustment's   \
+     top of 2048 is two plies, the reach S236 declared for its own fractional  \
+     term (DEC-231); its floor of 0 is the off value.                          \
+                                                                               \
+     SEEDS, DEC-134. CutoffCountThreshold is form (b): the p75 of the count    \
+     at the sites the rule reads it, 5, over the eight bench positions at      \
+     depth 12 on the tree with the adjustment at 0 (adocs/data/S238_census.py, \
+     adocs/data/S238_census.txt); it fires on 21.81 % of those sites, a        \
+     counterfactual on the tree without the rule. Depth 10 reads 6. Taken      \
+     again on S237's removal, the tree this lands on: the same p75.            \
+     CutoffCountReduction is form (c), the midpoint of 0 to 2048, 1024 -- one  \
+     ply; nothing a census counts measures an amount. No engine's number and   \
+     no published value is behind either (DEC-084 as amended by DEC-105).      \
+     Implemented from the description, DEC-221. S127 refits them. */           \
+  X(CUTOFF_COUNT_THRESHOLD, "CutoffCountThreshold",    5, 0,   63)            \
+  X(CUTOFF_COUNT_REDUCTION, "CutoffCountReduction", 1024, 0, 2048)            \
+                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \
