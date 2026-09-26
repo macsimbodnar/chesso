@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **The machine is S237's removal agent's, 2026-09-26: worktree
+  `../chesso-s237rm`, branch `s237rm` at `211fe04`, briefed from
+  `.tuning/coord/S237_removal_brief.md`.** Recorded in `d9bac46`; the ledger
+  carried in `211fe04` (thirty-two, slow class nineteen), where
+  `tools/ledger.py` also stopped counting S235 twice (its removal commit had
+  carried the block again). Then: cold fast check, landing with the specs
+  edit, second tier, S237 completes, S238 rebased and re-proved. No watcher.
+
 - **S237's SPRT is H0, 2026-09-26 02:01:46, read as a zero: `4d8c501` against
   `cd9d0e7`, `Elo -5.08 +/- 6.07`, `nElo -6.34 +/- 7.58`, LLR -2.96, 8072 games
   in 3 h 50 m, 0 forfeits.** The interval reaches above zero, so the
