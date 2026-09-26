@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S112 is built and fast-checked, 2026-09-26, and waits.** Worktree
+  `../chesso-s112` (branch `s112` on `1680439`, uncommitted): per-move futility
+  in quiescence, `QsFutility` switch (0 proved the parent's tree to the node)
+  and `QsFutilityMargin` 188 (form (a): the wiki's "around 200 cp" as two of
+  chesso's pawns; the coordinator accepts it, S127 fits it); the fold stored as
+  an upper bound where S130's floor was a lower bound, guarded by a case and
+  F06; fire rate 10.47 % at depth 12; `bench` 4803214 -> 4649650; mutation 6 of
+  6; capture-mate rows re-derived under DEC-233 (row 3's mate now found at 11,
+  not 10 -- readers of its SPRT should know). Cold fast check: no defect.
+  **Order:** S238's verdict, then S240's rating run on the machine, then S112
+  rebased onto S238's outcome, `test_mate_carry` re-timed on the idle machine
+  (it read 115 to 124 s against a 120 s ceiling under the SPRT's load), landed,
+  second tier, pinned, run. **Owner question open:** whether to install one or
+  two anchors near 2900 to 3000 CCRL Blitz for S240; it runs on S088's five if
+  not.
+
 - **S238's SPRT is running, launched 2026-09-26 14:54:34: `257c8fe` (the cutoff
   count at its seeds, rebased onto S237's removal) against `1680439`, `{0, 5}`
   nElo at 8+0.08 on `noob_3moves.epd`, seed 20260926145434, 12 of 12 cores,
