@@ -7,6 +7,16 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S237 is done, 2026-09-26, on its H0 read as a zero, with the code out
+  (`1680439`, `bench` 4803214, `cd9d0e7`'s tree to the node); second tier green
+  on the removal (self-play 8 games 0 `Assertion`, `gate_extra` 1221 s).**
+  **Now:** S238's rebase agent works in `../chesso-s238b` (branch `s238b` at
+  `1680439`, brief `.tuning/coord/S238_rebase_brief.md`): the port off S237's
+  plumbing, the off-value identity against `1680439`, the census and every
+  DEC-233 re-derivation redone on the new tree. The old work in
+  `../chesso-s238` stays as the record until S238 lands. Then: fast check,
+  landing, second tier, pin, SPRT, with S112 briefed beside it, niced.
+
 - **The machine is S237's removal agent's, 2026-09-26: worktree
   `../chesso-s237rm`, branch `s237rm` at `211fe04`, briefed from
   `.tuning/coord/S237_removal_brief.md`.** Recorded in `d9bac46`; the ledger
