@@ -833,58 +833,6 @@
   X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
   X(SE_MULTICUT,         "SeMultiCut",         1, 0,  1)                       \
                                                                                \
-  /* HINDSIGHT REDUCTIONS, S237. A node reached through a reduced first        \
-     search reads the plies its parent took off the move (`parent_reduction`,  \
-     a trailing parameter of `negamax_at`) beside the mover's static           \
-     evaluation delta across the move, `-static_evals[ply] -                   \
-     static_evals[ply - 1]`, and corrects its own depth by one ply:            \
-                                                                               \
-       give back  parent_reduction >= HindsightHeavyReduction                  \
-                  and delta < -HindsightWorseMargin            depth + 1       \
-       give up    1 <= parent_reduction <= HindsightLightReduction             \
-                  and delta > HindsightBetterMargin                            \
-                  and depth >= 2                               depth - 1       \
-                                                                               \
-     The ply is fixed at one either way: it is the description's own amount    \
-     and a node's depth is whole plies, so no adjustment constant is exposed.  \
-                                                                               \
-     THE OFF VALUES ARE THE TWO REDUCTION THRESHOLDS, ONE PER BRANCH, DEC-215. \
-     HindsightHeavyReduction at its top of 126 is above every reduction there  \
-     is: a reduction is at most `child_depth - 1`, no node is deeper than its  \
-     root and no root deeper than MAX_DEPTH 126 -- the top                     \
-     LmrDeeperMinReduction uses for the same reason. HindsightLightReduction   \
-     at its floor of 0 admits no reduced move, since a reduced move lost at    \
-     least one ply. At 126 and 0 the engine is the parent commit's: bench      \
-     4803214 with all eight bestmove replies identical and                     \
-     tools/search_bench.py identical at depths 9 and 12, proved on the tree.   \
-     The two margins have no off end and are not given one: a range widened    \
-     until a tool has an off value is DEC-215's own rejected option, and each  \
-     branch already has its switch.                                            \
-                                                                               \
-     RANGES BY PURPOSE. HindsightHeavyReduction's floor of 1 is the smallest   \
-     reduction there is. HindsightLightReduction's top of 2 is what the table  \
-     gives the first reducible move at the median depth, `lmr_reduction(11,    \
-     4)` -- a reduction the engine takes as a matter of course is the most     \
-     that can be called light. The margins' floor of 0 counts any movement of  \
-     the evaluation; below it a margin would admit the opposite direction and  \
-     invert the rule. Their top is a queen, QUEEN 716 in src/eval_tables.hpp.  \
-                                                                               \
-     SEEDS, DEC-134, all from this project's own data or range. Form (b), from \
-     adocs/data/S237_census.py over the eight bench positions at depth 12 on   \
-     the tree with both switches off (adocs/data/S237_census.txt): the heavy   \
-     threshold is the p75 of the reductions a reduced move arrives with, 3,    \
-     and both margins are the p50 of the mover's |delta| across a reduced      \
-     move, 24. HindsightLightReduction is (c), the midpoint of 0 to 2, 1 --    \
-     the step file names no percentile for it. At these seeds the census       \
-     counts the give-back on 8.79 % of its sites and the give-up on 2.52 %, a  \
-     counterfactual on the tree without the rule. No engine's number and no    \
-     published value is behind any of the four (DEC-084 as amended by          \
-     DEC-105). Implemented from the description, DEC-221. S127 refits them. */ \
-  X(HINDSIGHT_HEAVY_REDUCTION, "HindsightHeavyReduction",   3, 1, 126)      \
-  X(HINDSIGHT_LIGHT_REDUCTION, "HindsightLightReduction",   1, 0,   2)      \
-  X(HINDSIGHT_WORSE_MARGIN,    "HindsightWorseMargin",     24, 0, 716)      \
-  X(HINDSIGHT_BETTER_MARGIN,   "HindsightBetterMargin",    24, 0, 716)      \
-                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \

@@ -1299,8 +1299,7 @@ static int negamax_at(int alpha0,
                       move_t prev_move,
                       bool is_pv,
                       bool cut_node,
-                      move_t excluded_move,
-                      int parent_reduction)
+                      move_t excluded_move)
 {
   assert(game != nullptr);
   assert(state != nullptr);
@@ -1512,68 +1511,10 @@ static int negamax_at(int alpha0,
   // write cannot wait for it. S108.
   state->static_evals[ply] = static_eval;
 
-  // HINDSIGHT REDUCTIONS, S237. The parent decided this node's depth before
-  // it had seen the position; this node has, and it corrects the depth by one
-  // ply either way. Two conditions on the reduction the parent took off the
-  // move that got here and on how the static evaluation moved across that
-  // move, **read from the mover's side**: the parent's slot is the mover's own
-  // view and this node's is the opponent's, so the mover's delta is the
-  // negated sum of the two.
-  //
-  //   give back  a heavily reduced move whose evaluation got worse for the
-  //              mover is searched a ply deeper than the parent allowed
-  //   give up    a lightly reduced move whose evaluation improved for the
-  //              mover is searched a ply shallower
-  //
-  // Never both: the two delta tests are strict and their margins are never
-  // negative, so no delta passes both, and the second is an `else` besides.
-  // The inputs have to be numbers. Not at the root, which no move reached;
-  // not in check, where this node's slot is the sentinel; not where the
-  // parent's slot is the sentinel -- a parent in check reduces nothing, so this
-  // is the drive's guard and not the engine's; and not on a mate-band static
-  // score, which is a distance and not a value. The give-up keeps one real ply:
-  // at depth 1 it would make the move loop search at depth 0.
-  //
-  // THE BOUND. A node that corrected its own depth hands every child 0 below,
-  // so a chain of corrections cannot compound ply after ply: a depth this rule
-  // moved is never the input to the same rule one ply down. And the give-back
-  // never lifts a node past the parent's unreduced depth, because a heavily
-  // reduced move lost at least one ply. The extension cannot meet it either:
-  // S097 extends the table move, which is searched first and never reduced,
-  // so an extended child always receives 0.
-  //
-  // At `HindsightHeavyReduction` 126 and `HindsightLightReduction` 0 neither
-  // condition can hold -- no reduction reaches 126 and a reduced move lost at
-  // least one ply -- and the tree is the parent commit's exactly (DEC-215).
-  // Implemented from the analysis's description, DEC-221.
-  int hindsight = 0;
-
-  if (ply > 0 && parent_reduction > 0 && !is_in_check &&
-      state->static_evals[ply - 1] != TT_EVAL_NONE) {
-    const int parent_eval = state->static_evals[ply - 1];
-
-    if (static_eval < MATE_MIN && static_eval > -MATE_MIN &&
-        parent_eval < MATE_MIN && parent_eval > -MATE_MIN) {
-      const int mover_delta = -static_eval - parent_eval;
-
-      if (parent_reduction >= HINDSIGHT_HEAVY_REDUCTION &&
-          mover_delta < -HINDSIGHT_WORSE_MARGIN) {
-        hindsight = 1;
-      } else if (parent_reduction <= HINDSIGHT_LIGHT_REDUCTION &&
-                 mover_delta > HINDSIGHT_BETTER_MARGIN && depth >= 2) {
-        hindsight = -1;
-      }
-    }
-  }
-
-  depth += hindsight;
-
-  if constexpr (PROBING) {
-    if (probe != nullptr) {
-      probe->hindsight = hindsight;
-      probe->parent_reduction = parent_reduction;
-    }
-  }
+  // **S237 tried hindsight reductions here**: a node corrected its depth by a
+  // ply from the parent's reduction and the mover's static-evaluation delta.
+  // Its SPRT accepted H0, `nElo -6.34 +/- 7.58` over 8072 games, read as a
+  // zero. The rule and its parameters left with the verdict.
 
   // S108's deferred layer (c), which the owner made this step's first line.
   // The static evaluation is what this node looks like standing still; the
@@ -1797,7 +1738,7 @@ static int negamax_at(int alpha0,
 
     const int null_score =
         -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
-                           game, state, 0, child.is_pv, child.cut_node, 0, 0);
+                           game, state, 0, child.is_pv, child.cut_node, 0);
 
     unmake_null_move(game);
 
@@ -1881,7 +1822,7 @@ static int negamax_at(int alpha0,
       // nothing else.
       const int vscore = negamax_at<false>(singular_beta - 1, singular_beta,
                                            verification_depth, ply, game, state,
-                                           prev_move, false, false, tt_move, 0);
+                                           prev_move, false, false, tt_move);
 
       if (state->aborted) { return 0; }
 
@@ -2399,11 +2340,6 @@ static int negamax_at(int alpha0,
       if (reduction < 0) { reduction = 0; }
     }
 
-    // What the child is told was taken off it, for S237's rule at the child.
-    // 0 where this node corrected its own depth: that is the bound that keeps
-    // a chain of corrections from compounding (the rule's comment above).
-    const int handed_reduction = (hindsight != 0) ? 0 : reduction;
-
     // The type this node predicts for the child it is about to search: the
     // principal variation continues through the first legal move and every
     // later move is scouted. S098 verdict 2.
@@ -2417,7 +2353,6 @@ static int negamax_at(int alpha0,
 
         probe->moves[k] = moves[i];
         probe->reduction[k] = reduction;
-        probe->handed_reduction[k] = handed_reduction;
         probe->child_depth[k] = child_depth;
         probe->researched[k] = false;
         probe->child_is_pv[k] = child.is_pv;
@@ -2430,11 +2365,11 @@ static int negamax_at(int alpha0,
       // The first legal move of a PV node continues the principal variation.
       score =
           -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game, state,
-                             moves[i], child.is_pv, child.cut_node, 0, 0);
+                             moves[i], child.is_pv, child.cut_node, 0);
     } else {
       score = -negamax_at<false>(-alpha - 1, -alpha, child_depth - reduction,
                                  ply + 1, game, state, moves[i], child.is_pv,
-                                 child.cut_node, 0, handed_reduction);
+                                 child.cut_node, 0);
 
       // A reduced search that beats alpha has proved only that the reduction
       // was wrong, not what the move is worth. Repeat it before believing
@@ -2473,7 +2408,7 @@ static int negamax_at(int alpha0,
 
         score = -negamax_at<false>(-alpha - 1, -alpha, research.depth, ply + 1,
                                    game, state, moves[i], again.is_pv,
-                                   again.cut_node, 0, 0);
+                                   again.cut_node, 0);
       }
 
       // Beat alpha without reaching beta, so the null window has told us the
@@ -2485,7 +2420,7 @@ static int negamax_at(int alpha0,
 
         score = -negamax_at<false>(-beta, -alpha, child_depth, ply + 1, game,
                                    state, moves[i], on_the_line.is_pv,
-                                   on_the_line.cut_node, 0, 0);
+                                   on_the_line.cut_node, 0);
       }
     }
 
@@ -2655,11 +2590,10 @@ int negamax(int alpha0,
             move_t prev_move,
             bool is_pv,
             bool cut_node,
-            move_t excluded_move,
-            int parent_reduction)
+            move_t excluded_move)
 {
   return negamax_at<false>(alpha0, beta, depth, ply, game, state, prev_move,
-                           is_pv, cut_node, excluded_move, parent_reduction);
+                           is_pv, cut_node, excluded_move);
 }
 
 
@@ -2674,11 +2608,10 @@ int negamax_probed(int alpha0,
                    move_t prev_move,
                    bool is_pv,
                    bool cut_node,
-                   move_t excluded_move,
-                   int parent_reduction)
+                   move_t excluded_move)
 {
   return negamax_at<true>(alpha0, beta, depth, ply, game, state, prev_move,
-                          is_pv, cut_node, excluded_move, parent_reduction);
+                          is_pv, cut_node, excluded_move);
 }
 
 
@@ -3046,8 +2979,8 @@ search_t search(int depth,
   // "The root node is a PV-node" -- CPW Node Types, the first rule of both
   // published lists, and the one this search has always followed through
   // `is_pv`. `cut_node` false is the other half of that label. S098.
-  int score = negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true,
-                                false, 0, 0);
+  int score =
+      negamax_at<false>(alpha, beta, depth, 0, game, state, 0, true, false, 0);
 
   search_result.best_move = state->best_move;
 

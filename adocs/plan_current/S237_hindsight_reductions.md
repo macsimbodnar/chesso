@@ -232,3 +232,160 @@ and did not transfer at this seed. `Incomplete mating PV` 15 against 14, an
 observation (CHESS). The removal is a fresh agent's; S238, built on
 `4d8c501`, is rebased onto the removal and its off-value identity re-proved
 before it lands.
+
+## The removal, 2026-09-26
+
+Written by a fresh Opus 5 agent on the linked worktree `s237rm` at `211fe04`,
+briefed from `.tuning/coord/S237_removal_brief.md`. The pre-registration's H0
+row and its "interval reaching above zero" row were written before the first
+game and read the same way: **`HindsightHeavyReduction` to 126 and
+`HindsightLightReduction` to 0, the off values, and the code leaves with
+them.** That is executed here. No second SPRT is owed: the removal is
+behaviour-neutral at the reverted defaults and INV-6 discharges it, the shape
+S235's and S236's removals already have.
+
+### What left
+
+| what | where |
+|---|---|
+| the trailing `parent_reduction` parameter of `negamax_at` and of the two entry points, with its defaults and its header paragraph; every call site's extra `0` | `src/search.cpp`, `src/search.hpp` |
+| the rule after `state->static_evals[ply] = static_eval`, its comment block, the `hindsight` local and its probe writes; `handed_reduction` and its comment | `negamax_at`, `src/search.cpp` |
+| the four X-macro rows `HindsightHeavyReduction`, `HindsightLightReduction`, `HindsightWorseMargin`, `HindsightBetterMargin` and their seed comments | `src/search_params.hpp` |
+| the probe fields `hindsight`, `parent_reduction`, `handed_reduction[]` | `search_node_probe_t`, `src/data_structures.hpp` |
+| `hindsight_drive_t` and this step's five cases | `tests/test_search.cpp` |
+| the four golden rows and the count, 66 back to 62, with the header sentence | `tests/test_search_params.cpp` |
+| the mutant list Y01 to Y04 | `tools/mutants/S237_hindsight.py`, deleted |
+| the four option rows | `MANUAL.md` |
+
+The landing changed no existing test: its diff to `tests/test_search.cpp`
+removes no line, so nothing needed restoring beyond taking its additions out.
+`src/`, `tests/test_search.cpp` and `tests/test_search_params.cpp` were
+restored from `cd9d0e7` whole. **No reason to keep any of the code was found
+and none was stated.**
+
+### What stayed
+
+The evidence: `adocs/data/S237_census.py` and `.txt`, `S237_sprt.sh`,
+`S237_sprt.log`, `S237_sprt_pairs.txt` and their `adocs/data/README.md` rows.
+`DEV_MANUAL.md`'s node-signature ledger **gains** an entry for this removal,
+`4845333` -> `4803214`, beneath S237's landing entry. Its `golden_defaults`
+row, which read 62 throughout S237's landing (stale while the four rows were
+in), now says they came and went. This step file is extended, not rewritten.
+
+### The proofs
+
+**The remaining difference to `cd9d0e7` in `src`, `tests` and `tools` is one
+comment plus `211fe04`'s ledger fix.** `git diff --stat cd9d0e7 -- src tests
+tools`:
+
+- `src/search.cpp | 5 +++++` -- a four-line comment and its blank line after
+  `state->static_evals[ply] = static_eval` in `negamax_at`, saying the rule
+  was tried there and what its SPRT read. No code.
+- `tests/test_ledger.py | 17 +` and `tools/ledger.py | 18 +-` -- `211fe04`'s
+  "count a verdict once" fix to the ledger generator, a commit after the
+  landing and not part of it. It stays.
+
+| | |
+|---|---|
+| `bench` | **4803214**, and the whole `bench` stream -- every `info` line's depth, score, nodes and PV and all eight `bestmove` replies, c3d5 d5e6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- identical to a binary built fresh from `cd9d0e7` in this step's own throwaway worktree `.ref-builds/parent` (compared with times and nps stripped). That worktree was checked before being called the parent: HEAD `cd9d0e7` detached and clean, `git diff --stat cd9d0e7 <its HEAD> -- src tests` empty |
+| `tools/search_bench.py` | identical at both depths, node for node and move for move: 48522 / 85714 / 28080 with c3d5 / e2a6 / d7c8q at 9, and 129499 / 411457 / 172984 with c3d5 / e2a6 / d7c8q at 12 (INV-6) |
+| both fast suites | **40 of 40**, Release `build` and `-DCHESSO_TUNE=ON` `build-tune`; `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` |
+| prose | `tools/plan_prose_check.py`, one mode per invocation: `--citations` 0 flagged over 42 files, `--touches` 0 flagged over 42 files, `--params` no finding (exit 0, no output) |
+| the UCI surface | `MANUAL.md` has no `Hindsight*` row and the options are gone from the parameter table with them, so `test_uci_surface` is green in both builds with **no refresh** |
+| the golden | `tests/test_search_params.cpp` is `cd9d0e7`'s file byte for byte; DEC-142's re-derivation for `golden_defaults` is its diff against `src/search_params.hpp`, as the block names |
+| mutation | S234's list re-run, below |
+
+Nothing above is a timing: every number is a node count, a best move or a
+pass. No match, fit or timing run was started here.
+
+**Mutation: S234's list on a clean detached fixture.** The fixture is
+`.ref-builds/mut` at `cd9d0e7`, detached and clean, since nothing here is
+committed. It is this removal's tree for the purpose: `src`, `tests`, `tools`
+differ from it only by `211fe04`'s ledger test and the four-line comment
+above, which no anchor in the list reaches and no compiler emits, and the
+mutant list read is this worktree's, unchanged since `cd9d0e7`. The baseline's
+`4803214` is this tree's own total. Header:
+
+```
+worktree /home/max/ws/chesso-s237rm/.ref-builds/mut at cd9d0e7 clean
+list     /home/max/ws/chesso-s237rm/tools/mutants/S234_tt_estimate_margins.py   clean
+baseline green, 40 tests, bench 4803214 nodes via engine
+```
+
+**Mutation score 4 of 4 (100%), killed 4, wall 690 s**. Each of G01 to G04
+was caught by one fast case and moved the bench
+(`.tuning/coord/S237rm_mutation.log`, `MUTATION-RUN-DONE`). S234's list still
+validates on the tree the removal leaves.
+
+### Proposed commit text, for the coordinator
+
+Subject 46 characters. No DEC-220 result block: `d9bac46` closed the verdict
+and recorded it, and repeating the block here would count the verdict twice in
+the ledger (the defect `211fe04` fixed after S235's removal).
+
+```
+Remove S237's hindsight reductions on their H0
+
+Hindsight reductions read a zero. Their gainer SPRT of 4d8c501 against
+cd9d0e7, {0, 5} nElo at 8+0.08, accepted H0 at 8072 games: nElo -6.34
++/- 7.58, an interval [-13.92, +1.24] reaching above zero, which
+adocs/data/S237_sprt.sh reads as a zero and not a loss. That reading and
+its consequence were written before the first game -- the two thresholds
+go to their off values, 126 and 0, and the code leaves with them -- so
+this is the pre-registration executed, not a judgement after a number.
+
+Out: negamax_at's trailing parent_reduction and its defaults on negamax
+and negamax_probed; the rule after the static-eval store and
+handed_reduction; the four Hindsight* X-macro rows; the probe fields;
+hindsight_drive_t and the step's five cases; the four golden_defaults
+rows (66 back to 62); tools/mutants/S237_hindsight.py; the four MANUAL
+option rows. The landing changed no existing test.
+
+In: a four-line comment at the site saying the rule was tried and what
+it read; the evidence (census, pre-registration, log, pairs file and
+their README rows); DEV_MANUAL's ledger gains the removal's entry.
+
+src, tests and tools are cd9d0e7's apart from that comment and
+211fe04's ledger fix. bench is 4803214 with the whole bench stream and
+all eight bestmove replies identical to a fresh build of cd9d0e7, and
+tools/search_bench.py is identical at depths 9 and 12 (INV-6, DEC-215):
+no second SPRT is owed. Both fast suites 40 of 40, the format check and
+the three prose checks clean, S234's mutant list 4 of 4 on a clean
+fixture.
+
+S237, DEC-063, DEC-019: the record's +6.03 was a direction and did not
+transfer at this seed.
+
+Bench: 4803214
+```
+
+### Proposed `adocs/specs.md` edit, for the coordinator
+
+One edit in the search row. The whole S237 sentence, from
+"**Hindsight reductions, S237 (landed 2026-09-25, DEC-222, DEC-232)**:"
+through "Decided by one `{0, 5}` nElo SPRT against the tree without it
+(`adocs/data/S237_sprt.sh`): <verdict>." inclusive, becomes:
+
+> **Hindsight reductions were tried and left, S237, 2026-09-25 to 2026-09-26
+> (DEC-222, DEC-232)**: a node reached through a reduced first search corrected
+> its depth by one ply from the parent's reduction and the mover's
+> static-evaluation delta, seeded from a census at depth 12
+> (`adocs/data/S237_census.txt`); its `{0, 5}` nElo SPRT against the tree
+> without it (`adocs/data/S237_sprt.sh`) **accepted H0 at 8072 games on
+> 2026-09-26 -- `Elo -5.08 +/- 6.07`, `nElo -6.34 +/- 7.58`, LLR -2.96, 0
+> forfeits either side** (`adocs/data/S237_sprt.log`); the nElo interval
+> reaches above zero, so the pre-registration reads it as a zero and not a
+> loss, and the two thresholds went to their off values with the code behind
+> them -- `bench` 4803214, `cd9d0e7`'s own total node for node.
+
+The sentence after it, "**A two-ply continuation history table was tried and
+left, S231 ...", is untouched.
+
+### Owed to the coordinator, not run here
+
+The second tier (DEC-141): the removal touches the search, so Debug self-play
+and `tools/gate_extra.sh` are owed on the landing tree; both load the machine
+the way a match does and the brief reserves that to the coordinator. No guard
+test or mutant is owed: the removal takes a rule away, and the identity above
+is its proof. S238, built on `4d8c501`, is rebased onto this removal by its
+own agent.

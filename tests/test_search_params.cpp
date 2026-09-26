@@ -50,9 +50,7 @@
 // commit as a row arriving -- this list is where either is visible.
 // S234 adds one, and it is a switch rather than a setting: `RfpTtEstimate`
 // decides which number the reverse-futility margin is subtracted from, and
-// its 0 is the off value that step's verdict returns to. S237 adds four, the
-// hindsight rule's two reduction thresholds -- each its branch's switch, off
-// at 126 and 0 -- and its two evaluation margins.
+// its 0 is the off value that step's verdict returns to.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -65,7 +63,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 66 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 62 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -125,10 +123,6 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"SePlyFactor",               5,     2,       8},
   {"SeMarginPerDepth",          9,     1,      18},
   {"SeMultiCut",                1,     0,       1},
-  {"HindsightHeavyReduction",   3,     1,     126},
-  {"HindsightLightReduction",   1,     0,       2},
-  {"HindsightWorseMargin",     24,     0,     716},
-  {"HindsightBetterMargin",    24,     0,     716},
   {"LazyEvalMargin",          184,     0,    2000},
   {"AspirationMinDepth",        2,     2,      64},
   {"AspirationDelta",          21,     1,    2000},

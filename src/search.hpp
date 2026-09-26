@@ -79,14 +79,6 @@ int quiescence(int alpha,
 // Defaulted to 0 here and on negamax_probed for the reason `cut_node` is: 0 is
 // what every caller that is not the verification wants, and it is what every
 // case written before this step drove.
-//
-// `parent_reduction` is S237's: the plies the parent took off the move that
-// reached this node on its reduced first search, and 0 on every other search of
-// a move -- the first move, a re-search, the null move, the verification. The
-// node reads it beside the static evaluation's move across that move and may
-// correct its own depth by one ply (hindsight reduction). Defaulted to 0 for
-// the same reason as the two above: 0 is "no reduction to reconsider", which is
-// what search() hands the root and what every case before S237 drove.
 int negamax(int alpha0,
             int beta,
             int depth,
@@ -96,8 +88,7 @@ int negamax(int alpha0,
             move_t prev_move,
             bool is_pv,
             bool cut_node = false,
-            move_t excluded_move = 0,
-            int parent_reduction = 0);
+            move_t excluded_move = 0);
 
 
 // The same node with `state->probe` honoured, so a test can watch this node's
@@ -117,8 +108,7 @@ int negamax_probed(int alpha0,
                    move_t prev_move,
                    bool is_pv,
                    bool cut_node = false,
-                   move_t excluded_move = 0,
-                   int parent_reduction = 0);
+                   move_t excluded_move = 0);
 
 // Completes a reported mate line so that it reaches the mate it claims, and
 // keeps a line that does reach one for the searches that follow.
