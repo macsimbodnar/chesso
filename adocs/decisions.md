@@ -13046,3 +13046,27 @@ Rejected:     Shipping at the off value without a run -- the rule would
               test's pass is not a DEC-134 form.
 Consequences: S238's step file and stamp cite this; the re-derived rows are
               restored byte for byte if the rule leaves on its verdict.
+
+## DEC-234  2026-09-26  A rating checkpoint now, on S088's installed reference set, as S240; S152's near-3000 run stays owed
+Tags:         rating, gauntlet, ccrl, plan, dec-108, dec-074, s240, s152, s088
+Context:      DEC-108 (the owner, 2026-08-23) deferred every absolute rating
+              to one run near 3000 (S152), so the SPRT ledger has been the only
+              evidence of progress since S088's 2559 on 2026-08-18. Eleven
+              gainers and S085's SPSA fit have been kept since; their point
+              estimates sum to roughly +250 self-play Elo, a number DEC-063
+              and the unmeasured self-play-to-gauntlet factor both say
+              overstates the outside gain.
+Decision:     By the owner, 2026-09-26: re-measure the rating next, on the
+              engines installed on this machine, and ask for more engines if
+              needed. S240 is that run, first in the Open list after S238's
+              verdict, on S088's five anchors (all installed, md5s checked)
+              and `rating.sh` unchanged. DEC-108 is amended, not voided: S152
+              still carries the second time control and the near-3000 claim.
+Rejected:     Folding it into S152 -- S152 is written for the 3000 claim and
+              both time controls; this is a checkpoint. Waiting for a new
+              anchor near 3000 before running -- the owner asked for it next,
+              and the existing set brackets the forecast band; an added
+              anchor can join a later read.
+Consequences: The pending order gains one five-hour run; S112 waits behind it
+              for the machine. `specs.md`'s measured-strength paragraph moves
+              to S240's figure when it lands.
