@@ -2694,6 +2694,25 @@ went to its off value of 0 and the code left with it, and the four capture-mate
 rows DEC-233 had re-derived went back to `1680439`'s. The total is the one the
 paragraph above measured at that off value and is `1680439`'s, node for node,
 with all eight `bestmove` replies identical (INV-6).
+**At `S112`, per-move futility in quiescence: `4803214` -> `4649650`, -3.20 %.**
+Out of check, a capture whose best case -- the stand pat, `QsFutilityMargin`
+188 and the victim's price in `qs_futility_value` -- is still at or below
+alpha is skipped before the exchange gate, unless it is a promotion or gives
+check, and the best case is folded into the node's fail-soft value. Built on
+`1680439`; S238 read H0 and left, so the landing tree's engine is
+`1680439`'s and these numbers stand there unchanged. All eight `bestmove` replies are unchanged;
+`search_bench` moves at both depths and changes no best move. Before a game
+was booked the rule skipped 10.47 % of the captures reaching quiescence's
+filter loop over the eight bench positions at depth 12
+(`.tuning/coord/S112_fire_d12.txt`). Nothing about the direction is a
+prediction (DEC-019); `adocs/data/S112_sprt.sh` is what prices it.
+
+**The off value is proved on the tree** (DEC-215): the margin has none -- at 0
+it still skips a capture whose victim alone cannot reach alpha -- so the rule
+has a switch, `QsFutility`, and the tune build at `QsFutility` 0 prints
+**`4803214`**, `1680439`'s own total, with all eight replies identical and
+`search_bench` reproducing that commit at depths 9 and 12, 48522 / 85714 /
+28080 and 129499 / 411457 / 172984, every best move the parent's.
 
 A bench total is quoted with its commit, the way every other number on this
 page is quoted — it moves

@@ -942,6 +942,36 @@ bool improving_at(const search_state_t* state, size_t ply, bool in_check)
 }
 
 
+// What quiescence's per-move futility test (S112) prices a victim at, by
+// piece_t so an en passant capture can be handed the pawn it takes rather than
+// the empty square it lands on. Owned here and by nothing else, on purpose.
+// Not `piece_values_abs`: that is the ordering band table, whose bands clear
+// each other by exactly 100 and which is kept out of tuning for that reason
+// (CLAUDE.md's band hazard); a pruning margin wired to it would be a back
+// door into it. Not `see_value`: file-local to the exchange evaluator, so a
+// retune there would silently move this prune. Not `piece_value`: fitted only
+// as a sum with the piece-square tables, so every refit would move it too.
+//
+// Seed, DEC-134: **(b) chesso's own exchange scale** -- `see_value` in
+// src/bitboard.cpp, {100, 300, 300, 500, 900}, copied here and not shared. A
+// king is never captured and an empty square is no victim, so both are 0.
+// S127 fits this table with QsFutilityMargin; the two do one job.
+// clang-format off
+static constexpr int qs_futility_value[EMPTY + 1] = {
+  100, 300, 300, 500, 900, 0,   // W_PAWN .. W_KING
+  100, 300, 300, 500, 900, 0,   // B_PAWN .. B_KING
+  0,                            // EMPTY
+};
+// clang-format on
+
+
+int search_qs_futility_value_probe(piece_t victim)
+{
+  assert(victim <= EMPTY);
+  return qs_futility_value[victim];
+}
+
+
 int quiescence(int alpha,
                int beta,
                size_t ply,
@@ -1101,6 +1131,27 @@ int quiescence(int alpha,
   // sides are small and non-negative, so it is the same comparison either way.
   if (static_cast<int>(qply) >= MAX_QSEARCH_DEPTH) { return stand_pat; }
 
+  // Per-move futility, S112: a capture whose best case -- the stand pat, a
+  // margin, and what it takes -- still cannot reach alpha is skipped in the
+  // filter loop below. The base is computed once, from the stand pat after
+  // S130's substitution, which is the tightest number this node holds.
+  //
+  // Never in check: every evasion is searched there and `legal_moves == 0`
+  // below declares mate, so a skipped evasion would fake one.
+  //
+  // A skip needs `stand_pat + margin + victim <= alpha` with the margin and
+  // every victim non-negative, so it fires only where the stand pat did not
+  // raise alpha above: alpha is still the alpha the node was entered with and
+  // every folded value is at or below it. No near-mate guard, unlike the main
+  // search's futility: the stand pat is never a mate score (the substitution
+  // refuses one), so the best case tops out far below MATE_MIN, and an alpha
+  // inside the mate band skips every capture as the honest fail-low it is.
+  const bool qs_futility = QS_FUTILITY != 0 && !in_check;
+  const int futility_base = stand_pat + QS_FUTILITY_MARGIN;
+
+  // The largest best case skipped, folded into the fail-soft maximum below.
+  int futility_best = MIN;
+
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
 
@@ -1123,6 +1174,39 @@ int quiescence(int alpha,
   size_t count = 0;
   for (size_t i = 0; i < n; ++i) {
     if (!in_check && !MOVE_CAPTURE(moves[i])) { continue; }
+
+    // The futility test, above the exchange gate because it is three adds and
+    // a compare where see_ge rebuilds attack sets per exchange round.
+    //
+    // A promotion is exempt, and before any arithmetic: its victim does not
+    // price a pawn becoming a queen, and a non-capture promotion would arrive
+    // with no victim at all and be skipped on the base alone.
+    if (qs_futility && !MOVE_PROMOTED(moves[i])) {
+      // En passant lands on an empty square; the pawn it takes is beside it.
+      const piece_t victim =
+          MOVE_EN_PASSANT(moves[i])
+              ? ((game->board.active_color == WHITE) ? B_PAWN : W_PAWN)
+              : game->board.squares[MOVE_TO(moves[i])];
+      const int futility_value = futility_base + qs_futility_value[victim];
+
+      if (futility_value <= alpha) {
+        // A capture that gives check is exempt: it is forcing, and a stand
+        // pat says nothing about a line the opponent has no choice in. There
+        // is no pre-make predicate for it, so the capture is made and asked
+        // -- only here, where the test would otherwise skip it. One that is
+        // not legal is dropped exactly as the search loop would drop it.
+        if (!make_move(game, moves[i])) { continue; }
+        const bool gives_check = is_check(game);
+        unmake_move(game);
+
+        if (!gives_check) {
+          if (futility_value > futility_best) {
+            futility_best = futility_value;
+          }
+          continue;
+        }
+      }
+    }
 
     // A capture that loses material to the recapture is not worth searching:
     // whatever it leads to, the side to move could have declined it and stood
@@ -1155,6 +1239,17 @@ int quiescence(int alpha,
   // What the value currently held is worth as a claim. It follows best_value:
   // while the floor is still the maximum, it is the floor's.
   node_type_t value_type = floor_type;
+
+  // The skipped captures' best cases join the maximum as a ceiling: this is
+  // fail-soft, and returning the stand pat alone would report a bound lower
+  // than the skipped moves might reach. Every one of them is at or below the
+  // entry alpha, so a fold is a fail-low and claims an upper bound whatever
+  // the floor was -- including a stand pat a lower bound raised, whose "at
+  // least this" does not extend to a best case nobody searched.
+  if (futility_best > best_value) {
+    best_value = futility_best;
+    value_type = TT_ALPHA_NODE;
+  }
 
   // Left at zero until a move actually beats what standing pat already gave,
   // so a node that stood pat stores no move rather than an arbitrary one.

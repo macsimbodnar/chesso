@@ -201,6 +201,44 @@
      never generates, which is why the floor is 1. */                          \
   X(MAX_QSEARCH_DEPTH, "MaxQsearchDepth", 19, 1, 64)                            \
                                                                                \
+  /* PER-MOVE FUTILITY IN QUIESCENCE, S112. Out of check, a capture whose best  \
+     case cannot reach alpha is skipped before the exchange evaluation is       \
+     consulted: `stand_pat + QS_FUTILITY_MARGIN + victim <= alpha`, the victim  \
+     priced by `qs_futility_value` in src/search.cpp, and the skipped value is  \
+     folded into the node's fail-soft best rather than dropped. Never while in  \
+     check, never on a promotion, never on a capture that gives check.          \
+                                                                               \
+     QS_FUTILITY IS A SWITCH AND NOT A SETTING, DEC-215 clause 2. No value of   \
+     the margin is off: at 0 the rule still skips every capture whose victim    \
+     alone cannot lift the stand pat to alpha. At 0 the switch skips the whole  \
+     test -- no futility base, no fold, no make/unmake for the check test --    \
+     and the tree is the one before this step exactly. Proved on the tree, not  \
+     declared: the tune build at `QsFutility` 0 prints the parent's bench total \
+     with all eight bestmove replies identical to a build of 1680439, and       \
+     tools/search_bench.py reproduces the parent at depths 9 and 12. Range 0 to \
+     1 by stated purpose, a verdict switch and not something S127 sweeps.       \
+                                                                               \
+     QS_FUTILITY_MARGIN's floor is 0 by stated purpose and it is load-bearing:  \
+     with a non-negative margin and victim a skip fires only when the stand pat \
+     is below the alpha the node was entered with, so the folded value never   \
+     lifts the node above that alpha. The top, 2000, is twenty pawns: past it   \
+     the margin dwarfs every victim the table prices and the test no longer     \
+     tells one capture from another, which is a different rule and not a       \
+     setting of this one.                                                       \
+                                                                               \
+     Seed, DEC-134: **(a) literature**, the wiki's Delta Pruning page --        \
+     https://www.chessprogramming.org/Delta_Pruning, the captured piece's value \
+     plus "some safety margin (typically around 200 centipawns)" -- read as two \
+     pawns in **chesso's own material scale**, src/eval_tables.hpp, where a    \
+     pawn is 94: 2 * 94 = 188. The margin is compared against evaluate(), whose \
+     unit that is; FutBase's comment records the earlier pass that read a      \
+     margin in see_value's units by mistake. The victim table is seeded in its  \
+     own comment. Both are a seed and S127 fits them together, since the two    \
+     share one job -- absorbing the positional part of what a capture is worth. \
+     Implemented from the step file's description, DEC-221. */                  \
+  X(QS_FUTILITY,        "QsFutility",       1, 0, 1)                            \
+  X(QS_FUTILITY_MARGIN, "QsFutilityMargin", 188, 0, 2000)                       \
+                                                                               \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \
      assumption is made at -- `depth <= RFP_MAX_DEPTH` in negamax_at(), so it  \

@@ -1424,6 +1424,358 @@ TEST_SUITE("search: quiescence")
 }
 
 
+// Per-move futility in quiescence, S112. Out of check, a capture whose best
+// case -- the stand pat, a margin, and the victim -- cannot reach alpha is
+// skipped before the exchange evaluation is asked, and the skipped best case
+// is folded into the node's fail-soft value instead of being dropped.
+//
+// Every window below is built from the engine's own numbers and never from a
+// judgement of the position (DEC-023): evaluate_cheap(), LAZY_EVAL_MARGIN, the
+// margin parameter, and the victim table's own probe. Each alpha is placed at
+// least LAZY_EVAL_MARGIN above the cheap score, so evaluate_lazy() takes its
+// alpha-side shortcut and the stand pat is `cheap + LAZY_EVAL_MARGIN` exactly
+// -- which each case re-reads from evaluate_lazy() itself rather than assumes.
+//
+// The exemption cases are green on a tree without the rule, because nothing
+// is pruned there; what makes each one bite is its mutant under
+// tools/mutants/S112_qs_futility.py, which drops exactly that exemption and
+// turns exactly that case red.
+TEST_SUITE("search: quiescence futility")
+{
+  static constexpr int QS_MATE_MIN_LOCAL = 48000;
+
+  struct qs_run_t
+  {
+    int score;
+    uint64_t nodes;
+  };
+
+  // The suite's quiesce() with the node count kept: `explored_nodes` counts
+  // quiescence entries, so 1 is "the root and no child", and a skip is the
+  // only way a node with a legal capture that survives the exchange gate can
+  // report it.
+  static qs_run_t qs_run(const std::string& fen, int alpha, int beta)
+  {
+    REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const int score = quiescence(alpha, beta, 0, 0, &game, &state);
+    return {score, state.explored_nodes};
+  }
+
+  // The stand pat quiescence computes for this window with an empty table,
+  // read from the engine's own lazy evaluation.
+  static int lazy_stand_pat(const std::string& fen, int alpha, int beta)
+  {
+    REQUIRE(load_FEN(fen, &game));
+    bool exact = true;
+    const int value = evaluate_lazy(&game.board, alpha, beta, &exact);
+
+    // The shortcut every window here is built to take. Were it not taken the
+    // stand pat would be the full score and every threshold below would move.
+    REQUIRE_FALSE(exact);
+    REQUIRE_EQ(value, evaluate_cheap(&game.board) + LAZY_EVAL_MARGIN);
+    return value;
+  }
+
+  // The captures quiescence's filter loop sees in this position, legal ones.
+  static std::vector<move_t> legal_captures(const std::string& fen)
+  {
+    REQUIRE(load_FEN(fen, &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    std::vector<move_t> out;
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_CAPTURE(moves[i])) { out.push_back(moves[i]); }
+    }
+    return out;
+  }
+
+  // Whether the move checks, asked the way negamax_at asks it: after the
+  // move is made.
+  static bool gives_check(move_t move)
+  {
+    REQUIRE(make_move(&game, move));
+    const bool check = is_check(&game);
+    unmake_move(&game);
+    return check;
+  }
+
+  // Whether S015's exchange gate would let the capture through. A case that
+  // asserts "searched" is only about futility if the gate would not have
+  // dropped the move on its own.
+  static bool survives_see_gate(move_t move)
+  {
+    return capture_cannot_lose(&game.board, move) ||
+           see_ge(&game.board, move, 0);
+  }
+
+  // One pawn capture, not a check, surviving the exchange gate.
+  static const char* PAWN_TAKES_PAWN = "4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1";
+
+  static void require_pawn_takes_pawn_premise()
+  {
+    const std::vector<move_t> captures = legal_captures(PAWN_TAKES_PAWN);
+    REQUIRE_EQ(captures.size(), 1);
+    REQUIRE_FALSE(MOVE_PROMOTED(captures[0]));
+    REQUIRE_FALSE(MOVE_EN_PASSANT(captures[0]));
+    REQUIRE_FALSE(is_check(&game));
+    REQUIRE_FALSE(gives_check(captures[0]));
+    REQUIRE(survives_see_gate(captures[0]));
+  }
+
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a capture that cannot reach alpha is skipped and its best "
+                    "case is the node's value")
+  {
+    REQUIRE_EQ(QS_FUTILITY, 1);
+    require_pawn_takes_pawn_premise();
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_PAWN);
+    REQUIRE(victim > 0);
+
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    // One above the capture's best case.
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+    const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta);
+    const int futility_value = stand_pat + margin + victim;
+    REQUIRE(futility_value < alpha);
+
+    const qs_run_t run = qs_run(PAWN_TAKES_PAWN, alpha, beta);
+
+    // The capture was never made: the root is the only node entered.
+    CHECK_EQ(run.nodes, 1);
+
+    // And the fail-soft raise. Quiescence is fail-soft, so a skipped move's
+    // best case is a claim about what the node could have reached; dropping it
+    // returns the stand pat, a bound lower than the node has any right to
+    // report. margin + victim is not zero, so the two are told apart.
+    CHECK_EQ(run.score, futility_value);
+    CHECK(run.score > stand_pat);
+  }
+
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a capture that can reach alpha is searched")
+  {
+    require_pawn_takes_pawn_premise();
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_PAWN);
+
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    // One below the capture's best case: the test is `<= alpha`, so this is
+    // the nearest window at which the move must still be searched.
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim - 1;
+    const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta);
+    REQUIRE(stand_pat + margin + victim > alpha);
+
+    CHECK(qs_run(PAWN_TAKES_PAWN, alpha, beta).nodes >= 2);
+  }
+
+  // A capturing promotion is priced by far more than its victim: the pawn
+  // becomes a queen. Victim-only arithmetic would under-price it by
+  // queen-minus-pawn, and a promotion is the published bug site of this very
+  // rule (the step file's section 1). So it is exempt, before any arithmetic.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a capturing promotion below the threshold is searched")
+  {
+    const std::string fen = "r7/1P5k/8/8/8/8/8/4K3 w - - 0 1";
+
+    const std::vector<move_t> captures = legal_captures(fen);
+    REQUIRE_FALSE(captures.empty());
+    for (const move_t move : captures) {
+      REQUIRE(MOVE_PROMOTED(move));
+      REQUIRE_EQ(game.board.squares[MOVE_TO(move)], B_ROOK);
+      REQUIRE_FALSE(gives_check(move));
+      REQUIRE(survives_see_gate(move));
+    }
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_ROOK);
+
+    REQUIRE(load_FEN(fen, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    // Above every capture's victim-only best case, so without the exemption
+    // every one of them would be skipped.
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+    const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
+    REQUIRE(stand_pat + margin + victim < alpha);
+
+    CHECK(qs_run(fen, alpha, beta).nodes >= 2);
+  }
+
+  // In check the side to move may not stand pat and every evasion is
+  // searched. Here the one legal evasion is a capture far below alpha, so a
+  // futility test run in check would skip it, leave `legal_moves` at zero and
+  // report a mate in a position with a legal reply.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "futility does not skip an evasion while in check")
+  {
+    const std::string fen = "4k3/8/8/8/8/8/4q3/4K3 w - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE(is_check(&game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+    REQUIRE_EQ(count, 1);
+    REQUIRE(MOVE_CAPTURE(moves[0]));
+    REQUIRE_FALSE(MOVE_PROMOTED(moves[0]));
+    REQUIRE_FALSE(gives_check(moves[0]));
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_QUEEN);
+    const int cheap = evaluate_cheap(&game.board);
+
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+    const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
+    REQUIRE(stand_pat + margin + victim < alpha);
+
+    const qs_run_t run = qs_run(fen, alpha, beta);
+
+    // Not a mate: a legal evasion exists. The engine's own dead-position rule
+    // scores the one it leads to, which is why the node count cannot carry
+    // this case and the score does.
+    CHECK(run.score > -QS_MATE_MIN_LOCAL);
+  }
+
+  // A capture that gives check is forcing, and a stand pat says nothing about
+  // a line the opponent has no choice in -- the same exemption S091 put on
+  // the main search's capture rule. Asked by make / is_check / unmake, and
+  // only of a capture the test would otherwise skip.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a capture that gives check below the threshold is "
+                    "searched")
+  {
+    const std::string fen = "4k3/8/8/4p3/8/8/8/K3R3 w - - 0 1";
+
+    const std::vector<move_t> captures = legal_captures(fen);
+    REQUIRE_EQ(captures.size(), 1);
+    REQUIRE_FALSE(MOVE_PROMOTED(captures[0]));
+    REQUIRE_EQ(game.board.squares[MOVE_TO(captures[0])], B_PAWN);
+    REQUIRE(gives_check(captures[0]));
+    REQUIRE(survives_see_gate(captures[0]));
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_PAWN);
+
+    REQUIRE(load_FEN(fen, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+    const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
+    REQUIRE(stand_pat + margin + victim < alpha);
+
+    CHECK(qs_run(fen, alpha, beta).nodes >= 2);
+  }
+
+  // En passant lands on an empty square: the pawn it takes is beside it. A
+  // victim read from the target square prices the capture at nothing, and
+  // with alpha between the futility base and base plus a pawn that prunes a
+  // capture the rule must search.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "an en passant capture is priced at the pawn it takes")
+  {
+    const std::string fen = "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1";
+
+    const std::vector<move_t> captures = legal_captures(fen);
+    REQUIRE_EQ(captures.size(), 1);
+    REQUIRE(MOVE_EN_PASSANT(captures[0]));
+    REQUIRE_EQ(game.board.squares[MOVE_TO(captures[0])], EMPTY);
+    REQUIRE_FALSE(gives_check(captures[0]));
+    REQUIRE(survives_see_gate(captures[0]));
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_PAWN);
+    REQUIRE_EQ(search_qs_futility_value_probe(EMPTY), 0);
+
+    REQUIRE(load_FEN(fen, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim / 2;
+    const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
+    const int futility_base = stand_pat + margin;
+    REQUIRE(futility_base <= alpha);
+    REQUIRE(futility_base + victim > alpha);
+
+    CHECK(qs_run(fen, alpha, beta).nodes >= 2);
+  }
+
+  // The fold is an upper-bound claim, never a lower one. Where the stand pat
+  // was raised by a planted lower bound (S130), the floor's claim is "at
+  // least this"; a skipped capture's best case above it is not a line anyone
+  // searched, so storing it with the floor's lower-bound type would certify a
+  // value nothing established. The node fails low, so what it stores is an
+  // upper bound.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a folded futility value is stored as an upper bound")
+  {
+    require_pawn_takes_pawn_premise();
+
+    const int margin = QS_FUTILITY_MARGIN;
+    const int victim = search_qs_futility_value_probe(B_PAWN);
+
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    // A lower bound one above the stand pat the window gives, so it raises
+    // the stand pat and does not answer the node (it is below beta).
+    const int planted = cheap + LAZY_EVAL_MARGIN + 1;
+    const int alpha = planted + margin + victim + 1;
+    const int beta = alpha + 1000;
+    REQUIRE_EQ(lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta), planted - 1);
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    tt_store_entry(&tt, &game.board, TT_DEPTH_QS, planted, TT_BETA_NODE, 0,
+                   TT_EVAL_NONE);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const int score = quiescence(alpha, beta, 0, 0, &game, &state);
+
+    // The capture was skipped and its best case, from the raised stand pat,
+    // is the value.
+    REQUIRE_EQ(state.explored_nodes, 1);
+    REQUIRE_EQ(score, planted + margin + victim);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+    CHECK_EQ(entry->score, score);
+    CHECK_EQ(entry->type, TT_ALPHA_NODE);
+  }
+}
+
+
 // The rule that lets quiescence share one table with the main search: an
 // entry written by quiescence is stored below every depth the main search can
 // ask for, so it answers quiescence and nothing else. S094.
@@ -3567,6 +3919,28 @@ TEST_SUITE("search: draws")
     // build and not a separation. R01 is separated by no row at any depth of
     // this pass either, the fifth consecutive pass reading that way.
     //
+    // **Re-derived at S112, the seven sweeps taken once more (DEC-233).**
+    // S112 adds per-move futility to quiescence, which is "any change to
+    // pruning", and row 3 at depth 10 is the row this case went red on: the
+    // candidate reports that mate at 11 and 12 and no longer at 10. The whole
+    // pass was re-taken rather than that row re-picked -- shipped plus all six
+    // S091 mutants, depths 3 to 12, over `adocs/data/S230_table_fens.txt`,
+    // driven by `adocs/data/S230_mine_r01_row.py depths`, evidence in
+    // `.tuning/coord/S112_capmates/` and the driver
+    // `.tuning/coord/S112_capmates.sh` -- and the same rule applied. Shipped
+    // profiles here: `d7 d9 d10 d11 d12`, `d9 d10 d11 d12`, `d11 d12`,
+    // `d9 d10 d11 d12`, which put the four depths at **7, 9, 11 and 9**.
+    // **Three of the four moved and no mate distance did.** Row 1 comes back
+    // to 7, where C02, C05 and R02 lose it; row 2 stays at 9 and no S091
+    // mutant separates it at any depth; row 3 goes to 11 and keeps R02 alone;
+    // row 4 comes back to 9, where C05 and C07 lose it and R02 -- which now
+    // reports that mate from depth 8 -- no longer does. R01 is separated by
+    // no row at any depth, the sixth consecutive pass reading that way. The
+    // rows as S095's pass left them, which an H0 on S112 restores byte for
+    // byte: `{row 1, 9, 5, "no S091 mutant, since S095"}`,
+    // `{row 2, 9, 5, "no S091 mutant, since S095"}`, `{row 3, 10, 4, "R02"}`,
+    // `{row 4, 10, 5, "R02"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -3575,8 +3949,8 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "no S091 mutant, since S095"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
+         "C02, C05, R02, since S112"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
@@ -3586,7 +3960,7 @@ TEST_SUITE("search: draws")
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4, "R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4, "R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -3616,9 +3990,11 @@ TEST_SUITE("search: draws")
         // is `d9 d10 d11 d12` still, R02 now reads `d9 d11 d12` and loses the
         // mate at **10** rather than at 9, so the rule takes 10 and the label
         // is R02 as before. Nothing else separates this row at any of its
-        // depths.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
-         5, "R02"},
+        // depths. **S112 moves it back to 9**: R02 reports the mate from 8 on
+        // that tree and separates nothing, while C05 and C07 lose it at 9 --
+        // the S112 paragraph above has the pass.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
+         5, "C05, C07, since S112"},
     };
 
     for (const capture_mate_t& row : capture_mates) {

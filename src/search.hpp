@@ -277,3 +277,10 @@ void search_child_label_probe(int kind,
 // that a case asserting a guard refused to prune says nothing unless the rule
 // would otherwise have pruned. S109.
 int search_lmp_threshold_probe(int lmr_depth, bool improving);
+
+
+// What quiescence's per-move futility test prices a victim at -- the
+// dedicated table in src/search.cpp, indexed by piece_t, EMPTY included -- so
+// a case can build its window from the engine's own number instead of
+// restating the table. S112.
+int search_qs_futility_value_probe(piece_t victim);

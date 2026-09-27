@@ -7,6 +7,7 @@ decisions:  DEC-019
 closes:
 blocks:
 paused_by:
+author:     an Opus subagent briefed by the coordinator (DEC-185, DEC-199); started 2026-09-26 14:55 CEST
 done:
 
 ## Why this comes before S022 and re-opens S015
@@ -314,3 +315,152 @@ no diffs (DEC-016 observed).
   publicly.
 - https://api.github.com/search/commits?q=%22delta+pruning%22 — the wider
   commit sweep that surfaced only bundled or unmeasured adds elsewhere.
+
+## What the tree already did, 2026-09-26 (checked at `1680439`)
+
+The step file was written on 2026-08-19; the implementing agent checked each
+assumption on the tree before writing code, by symbol.
+
+- **`quiescence`'s shape** (`src/search.cpp` `quiescence`) is as section 2
+  describes: TT probe, lazy static score (or the entry's stored evaluation,
+  S094), S130's stand-pat substitution by bound type (never a mate score),
+  the in-check test, the stand-pat cutoff and alpha raise, the
+  `MAX_QSEARCH_DEPTH` return -- **19 now, not the 8 section 5 names** (S085's
+  SPSA moved it) -- then the **filter loop** (non-captures dropped out of
+  check; S015's gate `!in_check && !capture_cannot_lose && !see_ge(0)`), then
+  `best_value = in_check ? MIN : stand_pat` with `floor_type` / `value_type`
+  (DEC-102), then the search loop with S210's dead-position test.
+- **No delta pruning exists** anywhere in the tree, before or after this step.
+- **En passant** is `MOVE_EN_PASSANT(move)` with `squares[MOVE_TO]` EMPTY;
+  `capture_score`'s branch is the in-repo pattern and was mirrored.
+  **Promotions** carry `MOVE_PROMOTED(move)` != `TO_NONE`; capturing ones pass
+  the filter today, non-capturing ones are dropped out of check.
+- **The fail-soft argument of section 2 holds for alpha and not for the
+  store.** A skip needs `stand_pat + margin + victim <= alpha` with margin and
+  victim non-negative, so it fires only when the stand pat did not raise
+  alpha, and every folded value is at or below the entry alpha -- that half
+  holds. But "the store stays an alpha node" does **not** follow on its own
+  since DEC-102: when S130 raised the stand pat with a lower bound,
+  `floor_type` is `TT_BETA_NODE`, and a fold that raises `best_value` above
+  that floor would have been stored as a lower bound on a best case nobody
+  searched. The fold therefore sets `value_type = TT_ALPHA_NODE` when it
+  raises the value, and "a folded futility value is stored as an upper bound"
+  plus mutant F06 hold it. Section 2's sentence is kept above as written, with
+  this correction beside it (DEC-215 clause 3's form).
+- **No off value exists in the margin**, so the rule got a switch,
+  `QsFutility`, in `SeExtend`'s and `RfpTtEstimate`'s shape (DEC-215 clause
+  2). The accepts' "margin is a constant in src/search_params.hpp with a
+  range" holds: `QsFutilityMargin`, 0 to 2000.
+
+## What landed
+
+- `src/search_params.hpp`: `QS_FUTILITY` ("QsFutility", 1, 0..1) and
+  `QS_FUTILITY_MARGIN` ("QsFutilityMargin", 188, 0..2000).
+- `src/search.cpp`: `qs_futility_value[EMPTY + 1]` (by piece_t, EMPTY and the
+  kings 0) and `search_qs_futility_value_probe`; in `quiescence`,
+  `futility_base` once under `!in_check`, the test in the filter loop above
+  S015's gate -- not a promotion, victim from the table (en passant a pawn),
+  `<= alpha`, then route (a): make / `is_check` / unmake only for a capture
+  the test would skip, an illegal one dropped as the search loop would -- and
+  the fold into `best_value` after `value_type` is initialised, stored as an
+  upper bound.
+- Nothing else in `src/`. S015's gate untouched.
+
+## Seeds (DEC-134)
+
+- `QsFutilityMargin` 188: **(a) literature** -- the wiki's Delta Pruning page,
+  "some safety margin (typically around 200 centipawns)", read as two pawns in
+  chesso's material scale (`src/eval_tables.hpp` PAWN 94), because the margin
+  is compared against `evaluate()`. **Section 4's "200 cp" is not used as
+  written**: DEC-134 says units are not exempt by name, and FutBase's own
+  comment records the mistake of reading a margin in `see_value`'s units.
+  Whether the wiki's "typically" is a publication's own number rather than an
+  aggregate of engines' constants is the reviewer's call; it names no engine.
+- `qs_futility_value` {100, 300, 300, 500, 900}: **(b)** chesso's own exchange
+  scale, `see_value`, copied, not shared -- section 4's own choice.
+
+## Fire rate, before any game (section 6)
+
+An instrumented copy of the candidate (`.ref-builds/fire`, write-only counters;
+its `bench 12` is the candidate's own 1981759) over the eight bench positions
+at depth 12: 992064 captures reach the filter loop out of check; 37724 are
+promotions and exempt; 954340 are tested; 116176 fall at or below alpha;
+12319 of those give check and are kept; 0 are illegal; **103857 are skipped,
+10.47 % of filter-loop captures.** Not near zero: the zero is not predicted.
+`.tuning/coord/S112_fire_d12.txt`.
+
+## Measurements (2026-09-26, niced beside S238's SPRT; counts only)
+
+- Off value: tune build at `QsFutility` 0 -> `bench` **4803214**, all eight
+  replies identical to a parent built from `1680439`; `search_bench` identical
+  at 9 (48522 / 85714 / 28080) and 12 (129499 / 411457 / 172984), best moves
+  c3d5 e2a6 d7c8q. `.tuning/coord/S112_identity.log`.
+- `bench` 4803214 -> **4649650** (-3.20 %), eight replies unchanged.
+- `search_bench` 9: 48522 -> 53598, 85714 -> 80389, 28080 -> 25691; 12:
+  129499 -> 154098, 411457 -> 472358, 172984 -> 107876; best moves unchanged.
+- "pruning does not hide a forced mate" went red at capture row 3 (depth 10:
+  the candidate reports that mate at 11 and 12 only). Handled under DEC-233:
+  the table re-derived by `adocs/data/S230_mine_r01_row.py depths`, shipped
+  plus the six S091 mutants (`.tuning/coord/S112_capmates/`), depths 7, 9, 11,
+  9, every distance unchanged; S095's rows quoted in the GOLDEN block.
+- Tests, red first and observed: with the two parameters, the table and its
+  probe in place and no rule, the new suite "search: quiescence futility" was
+  2 of 7 red -- the skip case (`nodes` 2 against 1, `score` 364 against 478)
+  and the fold-type case -- and the five exemption and reach cases green, as
+  they must be on a tree that prunes nothing; each of those is red under its
+  own mutant below. `.tuning/coord/S112_red_stageA.log`. "a side in check may
+  not stand pat" and "mate is recognised at depth zero" green throughout.
+- Mutation (DEC-141 clause 2), `tools/mutants/S112_qs_futility.py` on a clean
+  detached fixture `a4f85bb` in `.ref-builds/mut`: header `baseline green, 40
+  tests, bench 4649650 nodes via engine`; **mutation score 6 of 6 (100 %)**.
+  F01 (no raise) by the skip case and the fold-type case; F02 (in check) by
+  "futility does not skip an evasion while in check", with test_engine and
+  test_mate_pv; F03 by the promotion case; F04 by the gives-check case, with
+  the capture-mate table and test_mate_carry; F05 by the en passant case; F06
+  by the fold-type case, with test_mate_breadth. F05 and F06 leave the bench
+  signature unmoved -- only their cases see them.
+  `.tuning/coord/S112_mutation.log`.
+- Both fast suites green: Release 40 of 40 as the mutation fixture's baseline
+  (the working tree byte for byte), tune build 40 of 40 at `-j1`.
+  `test_mate_carry` sits at its 120 s ctest ceiling under the running SPRT --
+  117.13 s in the green tune run, and it timed out in two earlier `-j4` runs;
+  run directly beside the SPRT the parent `1680439` took 114.66 s and the
+  candidate 124.02 s, both passing. A load reading, not a claim about speed;
+  re-run on an idle machine before landing.
+  `./clang-format.sh --check` green. `tools/plan_prose_check.py --citations`,
+  `--touches`, `--params`: 0 flagged.
+- Not run here, by the brief: the Debug self-play and `tools/gate_extra.sh`
+  of DEC-141's second tier (a match holds the machine), and the SPRT.
+
+## Proposed `specs.md` sentence (the coordinator edits specs.md)
+
+Quiescence skips, out of check, a capture that is neither a promotion nor a
+check whose best case -- stand pat plus `QsFutilityMargin` plus the victim's
+price in the search's own `qs_futility_value` table, an en passant victim
+being a pawn -- is at or below alpha, before S015's exchange gate, and folds
+that best case into its fail-soft value as an upper bound (S112);
+`QsFutility` 0 is the tree before it, node for node.
+
+## The coordinator's landing notes (2026-09-27)
+
+**Cold fast check (over the `1680439` tree)**: no defect. It confirmed the
+fold's `TT_ALPHA_NODE` store is right and downgrades only a lower-bound floor
+that would otherwise certify an unsearched value; the switch off is neutral;
+the capture-mate rows equal what `S230_mine_r01_row.py` and DEC-209's rule give.
+Noted, not changed: the margin is in evaluation units (pawn 94) while the
+victim table is in SEE units (pawn 100) -- cosmetic, S127 fits both together;
+a capture the SEE gate would have dropped silently is now folded when futility
+skips it first, which loosens the returned upper bound by design; row 3's mate
+is now found at depth 11, not 10 -- this rule hides that mate at depth 10, which
+DEC-233 accepts and the SPRT's readers should know.
+
+**The seed** `QsFutilityMargin` 188 is accepted by the coordinator as DEC-134
+form (a): the wiki's own prose, naming no engine, expressed in chesso's units.
+
+**The port.** S238 read H0 and its removal returned the engine to `1680439`'s,
+the tree this step was built and proved on, so no rebase was needed: the patch
+applied to `1e9827d` with only document conflicts, both sides kept. On the
+idle machine: both fast suites 40 of 40 (`test_mate_carry` 60.73 s and
+60.15 s, inside its ceiling), the format check clean, `bench` 4649650, and the
+tune build at `QsFutility` 0 prints 4803214 with the whole `bench` stream's
+node counts and best moves identical to `086320c`'s build.
