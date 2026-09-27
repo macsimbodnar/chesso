@@ -668,15 +668,6 @@ struct search_node_probe_t
   // it moves both sides of its comparison together. S098 verdict 3.
   int research_base[MAX_MOVES];
 
-  // S238's cutoff count as the node saw it: `cutoff_count[k]` is the slot of
-  // this node's children, `cutoff_counts[ply + 1]`, when move k's reduction
-  // was decided -- read here from the slot and not from the rule's own
-  // expression, so a site that consults another slot disagrees with it.
-  // `node_adjustment` is the node's sum of S098's and S095's terms in ticks,
-  // so a case can replay the reduction a move should have got.
-  int cutoff_count[MAX_MOVES];
-  int node_adjustment = 0;
-
   // The singular extension block, S097, and what it decided at this node.
   //
   // `se_verified` is "the verification search ran here", which is the whole of
@@ -788,16 +779,6 @@ struct search_state_t
   // Never guard a read on the value: an unwritten slot holds 0 here, and 0 is
   // an ordinary evaluation. Guard on the ply instead. S108.
   int static_evals[MAX_PLY];
-
-  // S238's cutoff count. Slot p holds how many nodes at ply p failed high in
-  // their own move loop since the node at ply p - 1 -- their parent -- cleared
-  // it just before its move loop, so while that parent walks its moves the
-  // slot counts the children it has searched so far that failed high. The
-  // parent reads it when it reduces a late quiet. A per-ply array rather than
-  // a value handed back through the return path: the parent reads the slot
-  // after the child returns without any recursion site carrying it. The step
-  // file prices it. Written only in negamax_at.
-  int cutoff_counts[MAX_PLY];
 
   // Butterfly history: [side to move][from][to], Hartmann 1988. It was
   // [piece][destination] until S093, which conflates a knight on b1 with one on

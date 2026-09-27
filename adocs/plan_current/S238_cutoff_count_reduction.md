@@ -632,3 +632,153 @@ the two rows, the cases, the mutants -- and the capture-mate rows DEC-233
 re-derived on the candidate are restored byte for byte from `1680439`. No
 follow-up run (DEC-063, DEC-019): the record's +6.00 was a direction and did
 not transfer here. The census and both carry sweeps stay as evidence.
+
+## The removal, 2026-09-27
+
+Written by a fresh Opus agent on the linked worktree `s238rm` at `fccb7e0`,
+briefed from `.tuning/coord/S238_removal_brief.md`, beside S240's rating
+gauntlet, which held every core: everything CPU-bound ran under `nice -n 19`,
+and every number below is a node count, a best move or a pass, none a timing.
+The pre-registration's H0 row, written before the first game, is executed:
+**`CutoffCountReduction` to 0, the proved off value, and the code leaves with
+it.** No reason to keep any of it was found and none is stated. No second SPRT
+is owed: the removal is behaviour-neutral against `1680439` and INV-6
+discharges it.
+
+### What left
+
+| what | where |
+|---|---|
+| `cutoff_count_ticks`; the clear of the children's slot before the move loop and the `node_adjustment` probe write beside it; the move-loop increment at the fail-high; the read at each reduced late quiet; the `cutoff_count[]` probe write | `negamax_at` and above it, `src/search.cpp` |
+| `search_state_t::cutoff_counts` and the probe fields `cutoff_count[]`, `node_adjustment` | `src/data_structures.hpp` |
+| the two X-macro rows `CutoffCountThreshold`, `CutoffCountReduction` and their seed comments | `src/search_params.hpp` |
+| `cutoff_count_drive_t` and this step's cases; the node-type drives' `children_answer_from_table` plant, its read-back and `require_cutoff_count_off`; T05's premise assertion | `tests/test_search.cpp` |
+| the two golden rows and the count, 64 back to 62, with the header sentence | `tests/test_search_params.cpp` |
+| the mutant list Q01 to Q07 | `tools/mutants/S238_cutoff_count.py`, deleted |
+| the two option rows | `MANUAL.md` |
+
+**The capture-mate rows DEC-233 re-derived are back to `1680439`'s byte for
+byte** -- 9, 9, 10, 10 with `no S091 mutant, since S095` twice and `R02` twice
+-- a revert from the GOLDEN block and not a re-mine. The landing had edited
+existing lines of `tests/test_search.cpp` (those rows, their GOLDEN paragraph,
+three comments in the node-type cases) and `tests/test_search_params.cpp`'s
+header, so both were restored from `1680439` whole, as were
+`src/data_structures.hpp`, `src/search.cpp` and `src/search_params.hpp`, and
+the comment below was then added.
+
+### What stayed
+
+The evidence: `adocs/data/S238_census.py` and `.txt`, `S238_sprt.sh`,
+`S238_sprt.log`, `S238_sprt_pairs.txt`, `S238_carry_sweep_cand.txt` and
+`_parent.txt`, and their `adocs/data/README.md` rows. `DEV_MANUAL.md`'s bench
+ledger **gains** the removal's entry, `4722025` -> `4803214`, beneath the
+landing's. Its two golden rows are corrected to what is true: `capture_mates`
+reads 9, 9, 10, 10 again and says S238's re-derivation came and went;
+`golden_defaults` reads 62 and says S238's two rows came to 64 and left. This
+step file is extended, not rewritten.
+
+### The proofs
+
+**The remaining difference to `1680439` in `src`, `tests` and `tools` is one
+comment.** `git diff --stat 1680439 -- src tests tools`: `src/search.cpp | 4
+++++`, a four-line comment at the head of `if (may_reduce)` in `negamax_at`,
+where the read sat, saying the rule was tried there and what its SPRT read. No
+code. (`257c8fe..fccb7e0` touched nothing under `src`, `tests` or `tools`.)
+
+| | |
+|---|---|
+| `bench` | **4803214**, and the whole `bench` stream -- every `info` line's depth, score, nodes and PV and all eight `bestmove` replies, c3d5 d5e6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- identical to a Release binary built fresh from `1680439` in the throwaway worktree `.ref-builds/parent` (detached, clean, `git diff --stat 1680439 HEAD -- src tests` empty), compared with times and nps stripped; the only differing line is the final total's nps (`.tuning/coord/S238rm_bench_tree.txt`, `_parent.txt`) |
+| `tools/search_bench.py` | identical node for node and move for move: depth 9 48522 / 85714 / 28080 (c3d5 e2a6 d7c8q), depth 12 129499 / 411457 / 172984 (c3d5 e2a6 d7c8q), on both binaries (`.tuning/coord/S238rm_search_bench.log`) |
+| both fast suites | Release `build` and `-DCHESSO_TUNE=ON` `build-tune`: **39 of 40 each under ctest, the one red `test_mate_carry` as `Timeout` at its 120 s ceiling**, not an assertion; run alone through ctest it timed out again in both builds (load average 17 on 12 cores, the gauntlet). Run directly without the ceiling: **1 of 1 case, 37 of 37 assertions passed, both builds, 122 s and 124 s wall**. Its budgets are node counts, so the pass is the tree's and the ceiling the load's; `1680439` itself times out the same way (below). `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` (`.tuning/coord/S238rm_suites.log`, `S238rm_matecarry.log`, `S238rm_matecarry_direct.log`) |
+| prose | `tools/plan_prose_check.py`, one mode per invocation: `--citations` 0 flagged over 42 files, `--touches` 0 flagged over 42 files, `--params` exit 0, no output (`.tuning/coord/S238rm_prose.log`) |
+| the UCI surface | `MANUAL.md` has no `CutoffCount*` row and is `1680439`'s file byte for byte; `test_uci_surface` green in both builds with **no refresh** |
+| the golden | `tests/test_search_params.cpp` is `1680439`'s file byte for byte; DEC-142's re-derivation for `golden_defaults` is its diff against `src/search_params.hpp` |
+
+**Mutation: not obtained, owed.** `tools/mutation_check.py
+tools/mutants/S234_tt_estimate_margins.py .ref-builds/mut --jobs 4` under
+`nice -n 19` on a clean detached fixture at `1680439`, doctest initialised,
+header `worktree .../.ref-builds/mut at 1680439 clean`, `list
+.../tools/mutants/S234_tt_estimate_margins.py clean`, `mutants 4 of 4`, was
+**refused at the baseline**: "the unmutated worktree is red: 1 of 40 failed
+(test_mate_carry)", `Timeout 120.15 sec` in the baseline's ctest log
+(`.tuning/coord/S238rm_mutation.log`). The fixture is `1680439` itself, so the
+same timeout on the parent is what says the red is the load's. The ceiling was
+not raised to get past it. It is owed to the coordinator once S240's gauntlet
+frees the machine, same command, same fixture (left in place).
+
+### Proposed commit text, for the coordinator
+
+No DEC-220 result block: `95ea28d` closed the verdict and recorded it.
+
+```
+Remove S238's cutoff count on its H0
+
+The cutoff count read a zero. Its gainer SPRT of 257c8fe against
+1680439, {0, 5} nElo at 8+0.08, accepted H0 at 32574 games: nElo 0.31
++/- 3.77, an interval [-3.46, +4.08] reaching above zero, which
+adocs/data/S238_sprt.sh reads as a zero and not a loss. That reading
+and its consequence were written before the first game --
+CutoffCountReduction goes to its off value, 0, and the code leaves with
+it -- so this is the pre-registration executed.
+
+Out: search_state_t::cutoff_counts, the clear before the move loop, the
+move-loop increment, the read at each reduced late quiet and
+cutoff_count_ticks; the two CutoffCount* X-macro rows; the probe fields;
+cutoff_count_drive_t and the step's cases, the node-type drives'
+table-answer plant with require_cutoff_count_off, and T05's premise
+assertion; the two golden_defaults rows (64 back to 62);
+tools/mutants/S238_cutoff_count.py; the two MANUAL option rows. The
+capture-mate rows DEC-233 re-derived go back to 1680439's byte for byte.
+
+In: a four-line comment at the site saying the rule was tried and what
+it read; DEV_MANUAL's ledger gains the removal's entry and its two
+golden rows read true again. The evidence stays under adocs/data/.
+
+src, tests and tools are 1680439's apart from that comment. bench is
+4803214 with the whole bench stream and all eight bestmove replies
+identical to a fresh build of 1680439, and tools/search_bench.py is
+identical at depths 9 and 12 (INV-6, DEC-215): no second SPRT is owed.
+Format and the three prose checks clean; both fast suites green but
+for test_mate_carry's wall-clock ceiling under the S240 gauntlet's
+load, the case passing whole when run without it.
+
+S238, DEC-063, DEC-019: the record's +6.00 was a direction and did not
+transfer here.
+
+Bench: 4803214
+```
+
+### Proposed `adocs/specs.md` edit, for the coordinator
+
+One edit in the search row. The whole S238 sentence, from
+"**The cutoff count, S238 (landed 2026-09-26, DEC-222, DEC-233)**:" through
+"Decided by one `{0, 5}` nElo SPRT against the tree without it
+(`adocs/data/S238_sprt.sh`): <verdict>." inclusive, becomes:
+
+> **A cutoff count was tried and left, S238, 2026-09-25 to 2026-09-27
+> (DEC-222, DEC-233)**: a late quiet was reduced one ply more once more than
+> `CutoffCountThreshold` 5 of the node's children (the census p75,
+> `adocs/data/S238_census.txt`) had failed high in their own move loops; its
+> `{0, 5}` nElo SPRT against the tree without it (`adocs/data/S238_sprt.sh`)
+> **accepted H0 at 32574 games on 2026-09-27 -- `Elo 0.25 +/- 2.96`, `nElo
+> 0.31 +/- 3.77`, LLR -2.95, 0 forfeits** (`adocs/data/S238_sprt.log`); the
+> nElo interval reaches above zero, so the pre-registration reads it as a zero
+> and not a loss, and the adjustment went to its off value with the code
+> behind it, the capture-mate rows re-derived under DEC-233 restored with it
+> -- `bench` 4803214, `1680439`'s own total node for node.
+
+### Owed to the coordinator, not run here
+
+The mutation run above, and the second tier (DEC-141): the removal touches the
+search, so Debug self-play and `tools/gate_extra.sh` are owed on the landing
+tree; both load the machine the way a match does. A clean `ctest -L fast` pass
+of `test_mate_carry` under its ceiling on an unloaded machine, both builds.
+
+### Owed items, discharged by the coordinator on the idle machine (2026-09-27)
+
+After S240's first gauntlet ended: `test_mate_carry` passed inside its 120 s
+ceiling under ctest in both builds (55.10 s Release, 56.68 s tune); the
+mutation proof over S234's list on the fixture at `1680439`: baseline green, 40
+tests, `bench` 4803214, **mutation score 4 of 4 (100%), killed 4**, 644 s
+(`.tuning/coord/S238rm_mutation_idle.log`). Cold fast check over the removal:
+no defect; the specs sentence keeps the landing date it would have dropped.
