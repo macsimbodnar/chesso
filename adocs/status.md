@@ -5,7 +5,107 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-27, by hand.
+Updated: 2026-09-28, by hand.
+
+## HANDOVER, 2026-09-28 00:05 -- read this first in a new session
+
+The coordinator session that wrote this was closed on purpose. Nothing that
+matters depended on it. What runs, why, and what to do when it ends:
+
+**Running in the background (both survive the session and the terminal):**
+
+| what | pid | how detached | output |
+|---|---|---|---|
+| S112's SPRT: `fastchess.sh` (pid 2359703) and its `fastchess` child (2364031) | 2359703 | own session (setsid), parent init, no tty, SIGHUP ignored | log `.tuning/coord/S112_sprt.log`; games `.tuning/sprt_s112_20260927_123143/` |
+| detached watcher `.tuning/coord/S112_watch.sh` | 240736 | setsid + nohup, parent init | `.tuning/coord/S112_watch_detached.out` (hourly `PROGRESS`, then one `MARKER`/`DIED`/`CEILING` line) |
+
+- **Why it runs:** it decides S112, the per-move futility in quiescence,
+  landed as `3d82344`. It plays `3d82344` against `1e9827d`, the tree
+  without it, `{0, 5}` nElo at 8+0.08. It was launched 2026-09-27 12:31:43
+  with seed 20260927123143. The pre-registration is
+  `adocs/data/S112_sprt.sh`, and its "PRE-REGISTERED INTERPRETATION" block
+  is the contract.
+- **Where it stood at 2026-09-27 23:41:** 23444 games, nElo +2.64 +/- 4.45,
+  LLR 0.13. Worst-case expected wall is about 19.8 h, so the verdict is
+  likely by about 08:30 on 2026-09-28, but an SPRT can run longer.
+- **Do not delete** `.ref-builds/1e9827d` (the REF binary) or
+  `/tmp/chesso-candidate.CcT9R8` (the CAND binary) while it runs. A reboot
+  kills the run: re-launch by `adocs/data/S112_sprt.sh` with a fresh seed,
+  and record the dead one as void.
+- **To monitor from a new session:** check the watcher is still alive with
+  `kill -0 240736`, and read `tail -3 .tuning/coord/S112_watch_detached.out`.
+  Re-arm a session-owned watcher with
+  `bash .tuning/coord/S112_watch.sh $PWD/.tuning/coord/S112_sprt.log 2359703`
+  (Bash `run_in_background`). It exits on `SPRT-RUN-(DONE|FAILED|INVALID)`,
+  on pid death, or at a 40 h ceiling from its own start. The live figures
+  are `grep -E '^(Elo|LLR|Games)' .tuning/coord/S112_sprt.log | tail -3`.
+
+**When it ends (the S238/S237 pattern; see `git show 95ea28d`, `086320c`):**
+
+1. **Record the verdict** in one commit, documents only:
+   - `cp .tuning/coord/S112_sprt.log adocs/data/S112_sprt.log`;
+   - the pairs reading with `adocs/data/S105_pairs.py` into
+     `adocs/data/S112_sprt_pairs.txt`;
+   - `adocs/data/README.md` rows;
+   - a verdict section in `adocs/plan_current/S112_*.md`;
+   - this file.
+   The commit body carries the six-line DEC-220 block printed by
+   `python3 .tuning/coord/sprt_block.py adocs/data/S112_sprt.log`. Then run
+   `tools/ledger.py` to carry `plan.md`'s ledger, in its own commit or the
+   same one.
+2. **Read the verdict by the pre-registration**:
+   - **H1:** S112 stays. Complete the step (done stamp, move it to
+     `plan_done`, take it out of Open in `plan.md`, add it to the Done list),
+     and write `specs.md`'s S112 sentence with the verdict in place of its
+     `<verdict>` placeholder.
+   - **H0, or no verdict, or an interval reaching above zero:** it reads as
+     a zero or a loss. A fresh Opus agent does the removal:
+     - brief it from `.tuning/coord/S238_removal_brief.md`'s shape, in a new
+       worktree at HEAD;
+     - the code leaves and the capture-mate rows go back to their GOLDEN
+       block's pre-S112 rows byte for byte;
+     - it proves INV-6 identity to `1e9827d`: `bench` 4803214, the eight
+       bestmoves, `search_bench` at depths 9 and 12;
+     - the removal commit carries **no** result block.
+     Then the specs sentence becomes "tried and left", and the step
+     completes.
+3. **Then S113 (ProbCut) lands.** It is uncommitted in `../chesso-s113`
+   (branch `s113` on `1e9827d`); its report is `.tuning/coord/S113_report.md`
+   and its step file is `adocs/plan_current/S113_probcut.md` in that
+   worktree. The fast check is done and its fix-ups are in (offset 5,
+   margin 49, `bench` 4152835 on `1e9827d`, mutation 14/14).
+   - **Rebase.** A fresh agent rebases it onto the tree S112's verdict
+     leaves. On an H1 that means re-proving the off-value identity to the
+     new parent and re-deriving any golden the combination moves, under
+     DEC-233. On an H0 the base is `1e9827d`'s engine again, and a re-check
+     suffices.
+   - **Re-time `test_mate_carry`** on the idle machine: it hit ctest's
+     120 s limit under load, and passes run directly in about 109-112 s.
+   - **Land** with `specs.md`: remove "ProbCut, " from the absent-search
+     row and add the step file's sentence.
+   - **Second tier (DEC-141):** Debug self-play, 4 rounds at 4+0.04,
+     `level=trace`, grep for `Assertion`; then `tools/gate_extra.sh`.
+   - **Pin** `adocs/data/S113_sprt.sh` (REF = the landing's parent, CAND =
+     the landing), launch it detached, and arm a watcher (copy
+     `S112_watch.sh` with sed). Its worst case is 12-20 h.
+   - **Cleanup:** afterwards remove the throwaway worktrees
+     `../chesso-s113/.ref-builds/{b04,b15,fire,mut,parent}` with
+     `git worktree remove`.
+4. **Next in Open after that:** S131, S022 (both re-read S112's verdict),
+   S114, S115, S116, S202. Fillers are owed for stale "needs fractional
+   reductions" comments naming S237/S238 (`src/search.cpp`,
+   `src/search_params.hpp`, `tests/test_search.cpp`, `DEV_MANUAL.md`) and
+   for `S170_cases.tsv` budgets drifting from the DEC-156 rule.
+5. **Owner question still open:** install one or two anchors above about
+   2850 on the CCRL Blitz scale for the next rating (S240 found Leorik 2.4
+   the only anchor above chesso).
+
+Coordinator mode: the owner's standing instruction (memory
+`autonomous-coordinator-mode.md`) is one fresh Opus agent per step, few
+questions, strength over machine time. Agents run CPU-bound work at
+`nice -n 19` while a match holds the machine. The API session limit cut
+agents twice on 2026-09-27; resume an agent with SendMessage rather than
+starting it again.
 
 - **S112's SPRT is running, launched 2026-09-27 12:31:43: `3d82344` (per-move
   futility in quiescence) against `1e9827d`, `{0, 5}` nElo at 8+0.08, seed
