@@ -1,0 +1,12 @@
+  forfeit: Stash v21.0 lost to chesso, overrun 22ms
+  forfeit: Stash v21.0 lost to chesso, overrun 19951ms
+  forfeit: Stash v21.0 lost to chesso, overrun 55ms
+
+  Blunder 7.1.0      668 games, 0 forfeits, 0.00 %
+  Blunder 8.5.5      668 games, 0 forfeits, 0.00 %
+  Leorik 2.1         668 games, 0 forfeits, 0.00 %
+  Leorik 2.4         668 games, 0 forfeits, 0.00 %
+  Stash v21.0        668 games, 3 forfeits, 0.45 %
+  chesso            3340 games, 0 forfeits, 0.00 %
+
+  chesso gained 3 point(s) from forfeits

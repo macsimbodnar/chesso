@@ -26,6 +26,18 @@ Phase one is to reach the level the published literature describes, by reading
 documented technique and implementing it here. Phase two is to experiment.
 `adocs/plan.md` is phase one. DEC-014.
 
+**Measured strength, 2026-09-27: chesso is approximately 2766 on the CCRL Blitz
+scale, the five-anchor mean, spread 94.1 -- +207 over S088 on the same five
+anchors** (S240, DEC-234, `adocs/data/rating_2026-09-27_S240_ccrl_blitz.md`).
+3340 games at 10+0.2 against S088's reference set, solved with `ordo` anchored
+on each in turn: 2762.0, 2702.6, 2794.2, 2773.1, 2796.7; without Leorik 2.1,
+2781.5 and a spread of 34.7. The interval is no narrower than about +/-60 for
+the reasons given for S088 below, and the run is `rating.sh` at HEAD, not a
+replay of S088's settings (hash 128, concurrency 12, a different opening draw,
+two-sided adjudication). The top anchor, Leorik 2.4 at 2830, still scores
+above chesso, so the set still brackets it, barely. **What follows is S088's
+measurement, kept as the history the new figure is compared against.**
+
 **Measured strength, 2026-08-18: chesso is approximately 2559 on the CCRL Blitz
 scale, 95 % ±25, and the figure is soft.** 3340 games against **five** rated
 engines from **three families**, solved with `ordo` anchored on each in turn.

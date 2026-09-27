@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S240 is done, 2026-09-27: chesso ~= 2766 on the CCRL Blitz scale**, the
+  five-anchor mean of run 2 (spread 94.1), +207 over S088's 2559 on the same
+  anchors; run 1 was void on an anchor's disconnect. `specs.md` opens on it.
+  Leorik 2.4 (2830) still scores 54.7 % against chesso: the next read wants an
+  anchor above ~2850 (owner to install). **Next: S112** -- ported onto HEAD in
+  `../chesso-s112b` (branch `s112b`, only document conflicts, both sides kept);
+  build, suites on the idle machine, landing, second tier, SPRT.
+
 - **S238 is done, 2026-09-27, on its H0 read as a zero, with the code out
   (`086320c`, `bench` 4803214, `1680439`'s engine to the node); second tier
   green on the removal (self-play 8 games 0 `Assertion`, `gate_extra` 1039 s).**

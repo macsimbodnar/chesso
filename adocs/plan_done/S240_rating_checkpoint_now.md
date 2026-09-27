@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     the coordinator, which holds the machine and runs rating.sh itself (a run, not an implementation); started 2026-09-27 06:27
-done:
+done:       2026-09-27 -- chesso ~= 2766 on the CCRL Blitz scale, five-anchor mean, spread 94.1, +207 over S088 on the same anchors. `./rating.sh` on `1680439` (`bench` 4803214), S088's five anchors md5-checked, 10+0.2, hash 128, concurrency 12, 3340 games. Run 1 void (Blunder 8.5.5 disconnected; recorded, not read); run 2 on an idle machine valid: 0 crashes or disconnects, Stash 3 forfeits (0.45 %, inside DEC-075). Per anchor 2762.0 / 2702.6 / 2794.2 / 2773.1 / 2796.7; without Leorik 2.1 2781.5, spread 34.7. Settings differing from S088 named, not patched (excludes). Record `adocs/data/rating_2026-09-27_S240_ccrl_blitz.md`; `specs.md` updated, S088 kept as history. The forecast of 2600 to 2720 was low. Leorik 2.4 (2830) still scores 54.7 % against chesso, so the set brackets it only just: the next read wants an anchor above ~2850, which is the owner's to install. No `src/` change.
 
 ## Why this exists
 
@@ -58,3 +58,15 @@ beside it at `nice -n 19` for the first hour; its load is named here because
 it was present, and the re-run is taken on an otherwise idle machine. **Run 2
 follows on the same tree and settings**; the pooled table of run 1 is not
 used for any figure.
+
+## Run 2, 2026-09-27 09:33 to about 12:05 -- valid (the coordinator)
+
+Same tree (`1680439`, `bench` 4803214), same settings, on an idle machine
+(load 1.13 at launch, nothing else running). **`RATING-RUN-DONE rated OK`**:
+0 crashes, 0 disconnects; Stash v21.0 3 time forfeits (0.45 %), every other
+engine 0. **Five-anchor mean 2765.7, spread 94.1** (2762.0 / 2702.6 / 2794.2 /
+2773.1 / 2796.7); without Leorik 2.1 2781.5, spread 34.7. Against S088's 2558.5
+and 121.8: **+207**. The record is `adocs/data/rating_2026-09-27_S240_ccrl_blitz.md`
+with the run's report, anchors and forfeits beside it; `specs.md`'s measured
+strength paragraph now opens on it, S088's kept below as history. The forecast
+band stated before the run, 2600 to 2720, was too low.

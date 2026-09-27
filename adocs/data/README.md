@@ -777,6 +777,9 @@ engines, 2559 over five. `_S088_` is the current one.
 | `S238_carry_sweep_parent.txt` | the same grid on `1680439`, the parent, the same day: the comparison for the candidate's grid, and the evidence that the TSV's budgets were not the DEC-156 rule's answer before S238 either |
 | `S238_sprt.log` | S238's gainer SPRT, 2026-09-26 14:54:34 to 2026-09-27 06:25, 15 h 29 m: `257c8fe` (the cutoff count at its seeds) against `1680439`, `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, 12 of 12 cores; **H0 at 32574 games, `Elo 0.25 +/- 2.96`, `nElo 0.31 +/- 3.77`**, LLR -2.95, 0 forfeits |
 | `S238_sprt_pairs.txt` | that run read in the pre-registration's order, 2026-09-27: markers, banner, final block, timing, terminations, forfeits, `Incomplete mating PV` per side |
+| `rating_2026-09-27_S240_ccrl_blitz.md` | S240's rating record, 2026-09-27: chesso ~= 2766 on the CCRL Blitz scale over S088's five anchors (five-anchor mean, spread 94.1, +207 over S088), per-anchor solves and scores, the settings against S088's |
+| `S240_rating_report.txt`, `S240_rating_anchors.tsv`, `S240_rating_forfeits.txt` | run 2's `rating.sh` report, the anchors as read from the live list that day, and the per-engine forfeit census |
+| `S240_rating_run1_INVALID_report.txt`, `S240_rating_run1_INVALID_forfeits.txt` | run 1, void at zero on Blunder 8.5.5's disconnect; kept, never read for a figure |
 
 ### The bounds every `*_sprt.sh` here pre-registers are nElo (S157, 2026-08-30)
 
