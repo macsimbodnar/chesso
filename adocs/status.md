@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S240's rating run holds the machine, launched 2026-09-27 06:27**: `rating.sh`
+  from a detached worktree `../chesso-s240` at `1680439` (the engine S238's
+  removal leaves; `bench` 4803214), S088's five anchors, 10+0.2, hash 128,
+  concurrency 12, 3340 games, output `.tuning/rating_S240_20260927_062718`, log
+  `.tuning/coord/S240_rating.log`, pid in `S240_rating.pid`; watcher with
+  marker, death and a 12 h ceiling. The load guard's 6.06 was the build's
+  lag; only the gauntlet's engines were running. **Beside it, niced:** S238's
+  removal agent in `../chesso-s238rm` (brief `.tuning/coord/S238_removal_brief.md`).
+
 - **S238's SPRT is H0, 2026-09-27 06:25, read as a zero: `257c8fe` against
   `1680439`, `Elo 0.25 +/- 2.96`, `nElo 0.31 +/- 3.77`, 32574 games in
   15 h 29 m, 0 forfeits.** The code leaves; the engine after the removal is

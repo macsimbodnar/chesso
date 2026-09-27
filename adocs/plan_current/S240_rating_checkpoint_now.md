@@ -7,6 +7,7 @@ decisions:  DEC-072, DEC-074, DEC-075, DEC-077, DEC-108, DEC-204, DEC-234
 closes:
 blocks:
 paused_by:
+author:     the coordinator, which holds the machine and runs rating.sh itself (a run, not an implementation); started 2026-09-27 06:27
 done:
 
 ## Why this exists
