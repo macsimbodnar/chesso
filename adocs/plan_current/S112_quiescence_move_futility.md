@@ -464,3 +464,11 @@ idle machine: both fast suites 40 of 40 (`test_mate_carry` 60.73 s and
 60.15 s, inside its ceiling), the format check clean, `bench` 4649650, and the
 tune build at `QsFutility` 0 prints 4803214 with the whole `bench` stream's
 node counts and best moves identical to `086320c`'s build.
+
+**Second tier on the landing** (DEC-141): Debug self-play 8 games, 0
+`Assertion`, 0 `disconnect` (`.tuning/coord/S112_selfplay/`);
+`tools/gate_extra.sh` 5 stages green in 1121 s
+(`.tuning/gate_extra_2026-09-27_S112.log`). Landed as `3d82344` on `1e9827d`,
+`bench` 4803214 -> 4649650. SPRT pair pinned: `REF` `1e9827d` (the engine is
+`1680439`'s, S238's verdict left it so), `CAND` `3d82344`; open findings
+re-read at pinning, S238's items closed by its removal.
