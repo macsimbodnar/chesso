@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S112's SPRT is running, launched 2026-09-27 12:31:43: `3d82344` (per-move
+  futility in quiescence) against `1e9827d`, `{0, 5}` nElo at 8+0.08, seed
+  20260927123143, 12 of 12 cores, output `.tuning/sprt_s112_20260927_123143`, log
+  `.tuning/coord/S112_sprt.log`, pid 2359703.** Banner checked; watcher armed,
+  40 h ceiling. Landed with second tier green (self-play 8 games 0
+  `Assertion`, `gate_extra` 1121 s). **Beside it, niced: S113 (ProbCut)** in
+  `../chesso-s113`, built on `1e9827d` (independent of S112's quiescence code)
+  and rebased onto S112's outcome before pinning.
+
 - **S240 is done, 2026-09-27: chesso ~= 2766 on the CCRL Blitz scale**, the
   five-anchor mean of run 2 (spread 94.1), +207 over S088's 2559 on the same
   anchors; run 1 was void on an anchor's disconnect. `specs.md` opens on it.
