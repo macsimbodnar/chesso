@@ -7,6 +7,13 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S238 is done, 2026-09-27, on its H0 read as a zero, with the code out
+  (`086320c`, `bench` 4803214, `1680439`'s engine to the node); second tier
+  green on the removal (self-play 8 games 0 `Assertion`, `gate_extra` 1039 s).**
+  **S240's first gauntlet was void** (an anchor, Blunder 8.5.5, disconnected;
+  `5c373ac`); **run 2 now holds the idle machine**. Then S112: its tree was
+  built on `1680439`, which is the engine now, so it ports without a rebase.
+
 - **S240's rating run holds the machine, launched 2026-09-27 06:27**: `rating.sh`
   from a detached worktree `../chesso-s240` at `1680439` (the engine S238's
   removal leaves; `bench` 4803214), S088's five anchors, 10+0.2, hash 128,
