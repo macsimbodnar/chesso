@@ -1,0 +1,36 @@
+=== markers
+SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s238_20260926_145434
+=== banner
+candidate  257c8fe  2026-09-26
+reference  1680439  2026-09-26
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260926145434
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s238_20260926_145434
+id name    cand-257c8fe  Chesso 257c8fe native
+id name    ref-1680439  Chesso 1680439 native
+=== fastchess final block
+78415:LLR: -2.84 (-96.5%) (-2.94, 2.94) [0.00, 5.00]
+78450:Results of cand-257c8fe vs ref-1680439 (8+0.08, 1t, 16MB, noob_3moves.epd):
+78451:Elo: 0.25 +/- 2.96, nElo: 0.31 +/- 3.77
+78452:LOS: 56.44 %, DrawRatio: 33.60 %, PairsRatio: 1.00
+78453:Games: 32574, Wins: 10067, Losses: 10044, Draws: 12463, Points: 16298.5 (50.04 %)
+78454:Ptnml(0-2): [1538, 3868, 5473, 3849, 1559], WL/DD Ratio: 1.31
+78455:LLR: -2.95 (-100.2%) (-2.94, 2.94) [0.00, 5.00]
+78457:SPRT ([0.00, 5.00]) completed - H0 was accepted
+=== timing
+log created: 2026-09-26 14:54:34
+log last write: 2026-09-27 06:24:43
+=== games / terminations (.tuning/sprt_s238_20260926_145434/games.pgn)
+games: 32577
+  22805 [Termination "adjudication"]
+   9772 [Termination "normal"]
+=== forfeits
+forfeits  0 of 32577, 0.00 %
+=== Incomplete mating PV per side (run log)
+total 48
+  cand-257c8fe: 32
+  ref-1680439: 16
+=== pentanomial: fastchess's own Ptnml above is the one the SPRT used (see S237_sprt_pairs.txt's note on S105_pairs.py ordering)

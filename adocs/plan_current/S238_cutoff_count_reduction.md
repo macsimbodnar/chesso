@@ -619,3 +619,16 @@ the count is over the threshold on both sides or on neither
 `bench` 4803214 -> 4722025. SPRT pair pinned: `REF` `1680439`, `CAND`
 `257c8fe`; open findings re-read at pinning, nothing closed or added since
 the rebase agent's block.
+
+## The verdict (2026-09-27, the coordinator)
+
+**H0, 2026-09-27 06:25: `257c8fe` against `1680439`, `Elo 0.25 +/- 2.96`,
+`nElo 0.31 +/- 3.77`, LLR -2.95, 32574 games in 15 h 29 m, 0 forfeits**
+(`adocs/data/S238_sprt.log`, `adocs/data/S238_sprt_pairs.txt`). The nElo
+interval [-3.46, +4.08] reaches above zero, so the pre-registration reads it
+as a zero, not a loss: `CutoffCountReduction` goes to 0, the proved off value,
+and the code leaves with it -- the slot, the clear, the increment, the read,
+the two rows, the cases, the mutants -- and the capture-mate rows DEC-233
+re-derived on the candidate are restored byte for byte from `1680439`. No
+follow-up run (DEC-063, DEC-019): the record's +6.00 was a direction and did
+not transfer here. The census and both carry sweeps stay as evidence.

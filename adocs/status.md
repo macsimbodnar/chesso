@@ -7,6 +7,12 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-25, by hand.
 
+- **S238's SPRT is H0, 2026-09-27 06:25, read as a zero: `257c8fe` against
+  `1680439`, `Elo 0.25 +/- 2.96`, `nElo 0.31 +/- 3.77`, 32574 games in
+  15 h 29 m, 0 forfeits.** The code leaves; the engine after the removal is
+  `1680439`'s. **Next:** ledger; the removal by a fresh agent; S240's rating
+  run (its engine is `1680439`'s either way); S112 rebased onto the removal.
+
 - **S112 is built and fast-checked, 2026-09-26, and waits.** Worktree
   `../chesso-s112` (branch `s112` on `1680439`, uncommitted): per-move futility
   in quiescence, `QsFutility` switch (0 proved the parent's tree to the node)
