@@ -42,3 +42,19 @@ reads it.
 ## Cost
 
 About five hours of machine, one night or one day slot.
+
+## Run 1, 2026-09-27 06:27 to 08:58 -- void (the coordinator)
+
+`./rating.sh` from a detached worktree at `1680439` (`bench` 4803214, the
+engine S238's removal leaves), S088's five anchors, 10+0.2, hash 128,
+concurrency 12, 3340 games in 2 h 30 m 45 s. **`RATING-RUN-DONE rated
+INVALID`**: Blunder 8.5.5 disconnected in game 6 (`Blunder 8.5.5 vs chesso`,
+"White disconnects", one termination "abandoned"), and the script voids any
+crash or disconnect at zero, so no rating was solved. Recorded, not read:
+`adocs/data/S240_rating_run1_INVALID_report.txt` and `_forfeits.txt`. Chesso
+itself: 0 forfeits, 0 crashes. Stash v21.0 overran the clock 5 times (0.75 %,
+inside DEC-075's 1 %). The machine had the S238 removal agent running
+beside it at `nice -n 19` for the first hour; its load is named here because
+it was present, and the re-run is taken on an otherwise idle machine. **Run 2
+follows on the same tree and settings**; the pooled table of run 1 is not
+used for any figure.
