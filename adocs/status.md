@@ -5,7 +5,7 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-25, by hand.
+Updated: 2026-09-27, by hand.
 
 - **S112's SPRT is running, launched 2026-09-27 12:31:43: `3d82344` (per-move
   futility in quiescence) against `1e9827d`, `{0, 5}` nElo at 8+0.08, seed
@@ -15,6 +15,19 @@ Updated: 2026-09-25, by hand.
   `Assertion`, `gate_extra` 1121 s). **Beside it, niced: S113 (ProbCut)** in
   `../chesso-s113`, built on `1e9827d` (independent of S112's quiescence code)
   and rebased onto S112's outcome before pinning.
+
+- **S113 (ProbCut) is ready to land, 2026-09-27 23:55**, uncommitted in
+  `../chesso-s113` on `1e9827d`; waiting on S112's verdict. Fast check done:
+  one real finding (seed pair) ruled -- `ProbCutDepthOffset` 4 -> 5 so the
+  node-level pair is Jiang/Buro's (4, 8), margin 49 kept from the (4, 8) fit;
+  store depth now the node-level depth the skip reads; margin-0 legs guarded;
+  tune-only child-depth case + B15 (equivalent in Release, red by hand in tune).
+  `bench` 4803214 -> 4152835; identity at `ProbCut` 0 proved; mate row
+  re-mined (d11 #4, red under B04); mutation 14/14 (fixture `cc25326`).
+  Open before landing: `test_mate_carry` re-timed on the idle machine (ctest
+  timeouts under load, direct 108.6/111.7 s); `specs.md` removes ProbCut from
+  the absent list and adds the agent's sentence. After S112's verdict: rebase,
+  re-prove identity, land, second tier, pin, SPRT.
 
 - **S240 is done, 2026-09-27: chesso ~= 2766 on the CCRL Blitz scale**, the
   five-anchor mean of run 2 (spread 94.1), +207 over S088's 2559 on the same
