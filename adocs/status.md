@@ -18,8 +18,10 @@ a zero; the code stays on the one exception that row names -- S022 measures
 S015's gate and delta pruning against it -- recorded as DEC-236. The run
 directory and the S112 scratch are archived as
 `chesso_S112_sprt_run_2026-09-27.tar.xz`. Eleven stale `.ref-builds/`
-worktrees removed (regenerable; disk was at 98 %). **Next:** the ledger and
-S112's completion; then S113 rebased onto this tree by a fresh agent
+worktrees removed (regenerable; disk was at 98 %). S112 is **done** (recorded in `b9f5b96`, the ledger's thirty-fourth row; the
+step file in `plan_done/`; S113 moved to the head of Open, where it was
+built beside S112's SPRT under the PLAN rule). **Next:** S113 rebased onto
+this tree by a fresh agent
 (identity against `3d82344`'s engine, goldens re-derived), landed, second
 tier, pinned, its SPRT launched for the night; S131 and S022 follow in Open.
 
