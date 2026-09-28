@@ -3703,36 +3703,74 @@ TEST_SUITE("search: draws")
     //
     // **RE-MINED AT S236 v2 AND RESTORED WHEN THAT STEP'S TERM LEFT.** S236 v2
     // halved the fractional history term's reach -- `LmrHistClamp` 2048 to
-    // 1024, DEC-231's one pre-registered follow-up -- and on that tree the row
-    // below stopped being true of the shipped build: `mate_found` was false at
+    // 1024, DEC-231's one pre-registered follow-up -- and on that tree S097's
+    // row stopped being true of the shipped build: `mate_found` was false at
     // its own depth 14, where the same row had held at 2048. It was re-derived
     // by its own script (DEC-142) and **exactly one of the 269 candidates
     // separated there**, `2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1
     // w - - 1 31` at depth 14, mate in 6, a cell costing 38927874 nodes and
-    // 4.5 s against this row's 0.65 s (`adocs/data/S236_v2_remine.log`). That
-    // verdict then read a zero, the term left the tree and **this row came back
-    // with it** -- a revert of one line and one distance, which is why the
-    // replacement was recorded rather than this row deleted. The cost came back
-    // too: the case is a second and a half shorter for it.
+    // 4.5 s against S097's row's 0.65 s (`adocs/data/S236_v2_remine.log`).
+    // That verdict then read a zero, the term left the tree and **S097's row
+    // came back with it** -- a revert of one line and one distance, which is
+    // why the replacement was recorded rather than that row deleted. The cost
+    // came back too: the case is a second and a half shorter for it.
+    //
+    // **RE-MINED AT S113, AND THE POSITION MOVED.** Everything above this
+    // paragraph describes S097's own row,
+    // `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`; the row below is
+    // S113's re-mine. ProbCut (S113) ends a non-PV node on a good capture
+    // whose shallow search clears `beta + ProbCutMargin`, which is "any change
+    // to pruning", and on its tree -- rebased onto S112's per-move futility in
+    // the quiescence the preliminary calls (DEC-236) -- S097's row stopped
+    // being true of the shipped build: no mate at its depth 14, and over 11 to
+    // 14 the shipped build reads it `- - m5 -`, the mate at 13 alone. The row
+    // held on each change alone: on `308b388` (S112 without ProbCut) and on
+    // `1e9827d` with ProbCut (without S112). Re-derived by its own script
+    // (DEC-142, DEC-233), stages 2 to 6 on the rebased tree, stage 1 not re-run
+    // because the 269 candidates and their oracle did not move: **three of the
+    // 269 separate E21 there**, and the rule takes
+    // `1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35` at depth 14, mate
+    // in 4 -- shipped `d13 d14`, guard dropped `d13`, the only shipped run of
+    // two; S097's row separates at 13 and the third candidate at 14, each on a
+    // run of one. The multicut changes the tree on it at 12, 13 and 14
+    // (`SeMultiCut` 0 against 1 in the tune build). Its cell costs 16599756
+    // nodes and about 2.4 s where S097's row cost 1434773 nodes at the same
+    // depth on this tree (`adocs/data/S113_remine_s097.log`, the whole pick).
+    // Not read off the board (CLAUDE.md): python-chess reports `is_valid()`
+    // True, `is_check()` False, 38 legal moves of which 2 are captures and none
+    // a promotion, and stockfish at depth 20 in a fresh process through
+    // python-chess reports **`#+4` for White in 332147 nodes, pv Rf7 Qe3+ Kh1
+    // Qh6 Qxh6+ Kg8 Qg7#**, the label `adocs/data/S097_candidates.tsv` already
+    // held. **Observed red, then green**: with E21 applied, `./test_search
+    // --test-case="pruning does not hide a forced mate"` fails here at
+    // `REQUIRE( result.mate_found )` and passes with the guard in place --
+    // `.tuning/coord/S113_rb_red.log`, where B04, ProbCut's own defender-gate
+    // mutant, is red here as well. S097's row is the row of the tree
+    // without ProbCut: `ProbCut` 0 is `308b388`'s engine to the node, so an H0
+    // on S113 restores it as a revert of one line and one distance.
     //
     // The rows this case has carried, and the tree each belongs to:
     //
-    //     pre-S236, and again now: the row below, depth 14, mate_in 5
-    //     S236 v1, the term at LmrHistClamp 2048: the row below still held
+    //     pre-S236, again after S236 v2, and on `308b388`, S097's row:
+    //         "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46"
+    //         depth 14, mate_in 5
+    //     S236 v1, the term at LmrHistClamp 2048: S097's row still held
     //     S236 v2, the term at 1024:
     //         "2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31"
     //         depth 14, mate_in 6, 38927874 nodes, about 4.5 s
+    //     S113, ProbCut on S112's tree: the row below, depth 14, mate_in 4,
+    //         16599756 nodes, about 2.4 s
     //
     const std::string mate_the_multicut_hides =
-        "4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46";
+        "1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35";
 
-    // **S188 re-mined this row and its H0 put the old one back.** While the
-    // check extension was in the tree the row above stopped separating -- the
+    // **S188 re-mined S097's row and its H0 put that row back.** While the
+    // check extension was in the tree S097's row stopped separating -- the
     // guard-dropped build found its mate at depth 14 too -- and the re-mine
     // picked `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54`, which separated
     // there. On the reverted tree that row does not: a targeted
     // `tools/mutation_check.py --only E21` on a fixture of this `src/` scored
-    // **E21 a survivor** under it and the row above kills it again, so the
+    // **E21 a survivor** under it and S097's row killed it again, so the
     // golden that separates on the tree that ships is the one that stays. The
     // re-mine and both runs are recorded in `adocs/data/S188_remine.log`,
     // `adocs/data/S188_mutation_pass.tsv` and
@@ -3742,6 +3780,85 @@ TEST_SUITE("search: draws")
     {
       const std::string title = "mate the multicut hides, depth 14";
       const search_t result = search_fen(mate_the_multicut_hides, 14);
+
+      REQUIRE_MESSAGE(result.mate_found, title);
+      REQUIRE_MESSAGE(result.mate_in == 4, title);
+    }
+
+    // S113's own row, and the accepts' clause for ProbCut: a forced mate
+    // **inside the depth ProbCut prunes**. The block ends a node on a good
+    // capture whose shallow search clears `beta + ProbCutMargin`, and the
+    // guard this row holds is the defender's mate-band edge, `beta >
+    // -MATE_MIN`: at a node losing to a forced mate, beta is a mate bound
+    // against the side to move, every shallow score clears the bar, and the
+    // shallow search is exactly the instrument that misses the mate -- S165's
+    // hazard, and the once-per-thousand miss the origin paper itself reports.
+    //
+    // GOLDEN (DEC-142): the position, the depth 11 and the distance 5 below.
+    // Re-derive with the six commands in `adocs/data/S113_mine_mate_row.py`'s
+    // own header: the candidate list, the shipped sweep, the same sweep
+    // against a library built with `B04_probcut_defender_gate_dropped` applied,
+    // the separator set, the firing witness over it, and the pick.
+    // Moves legitimately on: any change to ProbCut, to pruning or to ordering.
+    // Margin: exact -- the row asserts the distance too.
+    //
+    // **Mined, not chosen** (CHESS): S097's own 269 candidates, every labelled
+    // mate of S230's pool that stockfish at depth 20 in a fresh process calls
+    // a forced mate in 2 to 6, swept over depths 9 to 12 -- the block wants
+    // `ply > 0` at a remaining depth of at least `ProbCutMinDepth` and a
+    // `search_fen()` root is at ply 0 -- on the shipped build and again with
+    // the guard dropped. On the tree this row belongs to -- S113 rebased onto
+    // S112's per-move futility in quiescence, `308b388` (DEC-236) -- **six of
+    // the 269 separate the two builds, two lose the mate and four move its
+    // distance** (the four are a red case the pick rule deliberately does not
+    // take); the `ProbCut` switch moves the tree on all six. This row is the
+    // pick: shipped `d11 d12`, guard dropped `d12`, a shipped run of two tied
+    // with the other and taken on the cheaper cell, 351428 nodes and 50 ms at
+    // its depth against 10748080 and 1792. `adocs/data/S113_mine.log` holds
+    // the whole pick table.
+    //
+    // **RE-MINED AT S113's FAST CHECK, AND THE POSITION MOVED.** The first
+    // landing searched the capture's child at `depth - 4`, a node-level pair
+    // of (5, 8) against a margin fitted on (4, 8); the offset went to 5 and
+    // the row was re-derived by its script rather than carried. The row mined
+    // on the offset-4 tree, `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54` at
+    // depth 12, mate in 5, no longer separates -- both builds report its mate
+    // at every depth from 9 to 12 (`adocs/data/S113_mine_offset4.log`).
+    // Kept here as history, the way S097's rows keep theirs.
+    //
+    // **RE-MINED AGAIN AT S113's REBASE, AND THE POSITION MOVED AGAIN.** The
+    // step was built on `1e9827d` while S112's SPRT ran; S112 read a zero and
+    // its code stayed (DEC-236), so ProbCut landed on a tree whose quiescence
+    // -- the one its preliminary calls -- skips futile captures, and the row
+    // was re-derived there by its script rather than carried (DEC-233). The
+    // row mined at the fast check, `8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60`
+    // at depth 11, mate in 4 -- shipped `d9 d10 d11`, guard dropped
+    // `d9 d10 d12` on `1e9827d` -- no longer separates: on the rebased tree
+    // the shipped build reports its mate at 10 and 12 and not at 11, and the
+    // guard-dropped build at 10, 11 and 12 (`adocs/data/S113_mine_1e9827d.log`
+    // is that tree's pick). Kept here as history too.
+    //
+    // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
+    // True`, `is_check()` **True** -- the root is in check, where the block
+    // never runs, and the firing witness has the switch moving the tree below
+    // it at every depth from 9 to 12 -- 7 legal moves, no capture and no
+    // promotion, and stockfish at depth 20 in a fresh process through
+    // python-chess reports **`#+5` for Black, the side to move, in 6947
+    // nodes, pv Kg8 Qc4+ d5 Qxd5+ Qxd5 Kxh3 Rxf2 c4 Qg2#**, the label
+    // `adocs/data/S097_candidates.tsv` already held. **Observed red, then
+    // green**: with B04 applied, `./test_search --test-case="pruning does not
+    // hide a forced mate"` fails first at the multicut row above -- on this
+    // tree B04 hides that mate too -- and, with that row's two requirements
+    // made non-fatal in a throwaway copy so the case runs on, fails here at
+    // `REQUIRE( result.mate_found )`; it passes with the guard in place --
+    // `.tuning/coord/S113_rb_red.log` (the two earlier rows' observations are
+    // `S113_mate_row_red.log` and `S113_mate_row_red_offset4.log` beside it).
+    const std::string mate_probcut_hides =
+        "5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44";
+
+    {
+      const std::string title = "mate probcut hides, depth 11";
+      const search_t result = search_fen(mate_probcut_hides, 11);
 
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == 5, title);
@@ -3941,6 +4058,32 @@ TEST_SUITE("search: draws")
     // `{row 2, 9, 5, "no S091 mutant, since S095"}`, `{row 3, 10, 4, "R02"}`,
     // `{row 4, 10, 5, "R02"}`.
     //
+    // **Re-derived at S113, the seven sweeps taken once more (DEC-233).**
+    // ProbCut ends a non-PV node on a good capture whose shallow search
+    // clears `beta + ProbCutMargin`, which is "any change to pruning", and on
+    // its tree -- rebased onto S112's -- row 4 at depth 9 is the row this case
+    // went red on: the shipped build reports that mate at 10, 11 and 12 and no
+    // longer at 9. The whole pass was re-taken rather than that row re-picked
+    // -- shipped plus all six S091 mutants, depths 3 to 12, over
+    // `adocs/data/S230_table_fens.txt`, driven by
+    // `adocs/data/S230_mine_r01_row.py depths` on a clean worktree of the
+    // rebased commit, evidence in `.tuning/coord/S113_rb_capmates/` and the
+    // driver `.tuning/coord/S113_rb_capmates.sh` -- and the same rule applied.
+    // Shipped profiles here: `d7 d9 d10 d11 d12`, `d9 d10 d11 d12`,
+    // `d11 d12`, `d10 d11 d12`, which put the four depths at **7, 9, 11 and
+    // 10**. **One of the four moved and no mate distance did.** Rows 1 to 3
+    // read as S112's pass left them, labels included: row 1 at 7, where C02,
+    // C05 and R02 lose it; row 2 at 9, where no S091 mutant separates it at
+    // any depth; row 3 at 11, R02 alone. Row 4 goes to 10 and **no S091
+    // mutant separates it at any depth of its profile**: C05 and C07, which
+    // lost it at 9, report it at 10, 11 and 12 as the shipped build does, and
+    // C02 and R02 report it from 9 and from 8. So no row of this pass
+    // separates C07, as none did in S095's, and C05 keeps row 1. R01 is
+    // separated by no row at any depth, the seventh consecutive pass reading
+    // that way. The rows as S112's pass left them, which an H0 on S113
+    // restores byte for byte: rows 1 to 3 as below and
+    // `{row 4, 9, 5, "C05, C07, since S112"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -3992,9 +4135,11 @@ TEST_SUITE("search: draws")
         // is R02 as before. Nothing else separates this row at any of its
         // depths. **S112 moves it back to 9**: R02 reports the mate from 8 on
         // that tree and separates nothing, while C05 and C07 lose it at 9 --
-        // the S112 paragraph above has the pass.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
-         5, "C05, C07, since S112"},
+        // the S112 paragraph above has the pass. **S113 moves it to 10**: the
+        // shipped build loses the depth 9 reading, and no S091 mutant loses
+        // the mate at 10, 11 or 12 -- the S113 paragraph above has the pass.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
+         5, "no S091 mutant, since S113"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -10517,6 +10662,466 @@ TEST_SUITE("search: pruning and reduction guards")
       REQUIRE_EQ(score, alpha);
     }
   }
+
+
+  // ----------------------------------------------------------------------
+  // PROBCUT, S113. A good capture's shallow search clearing `beta +
+  // ProbCutMargin` ends a non-PV node before its move loop. One drive fires
+  // the block and every other case denies exactly one of its conditions on the
+  // same drive, so a case reading "the block did not run" reads a guard and
+  // not some other early return.
+  // ----------------------------------------------------------------------
+
+  // 1.e4 d6 2.Qg4, Black to move. From a tool (CLAUDE.md): python-chess
+  // reports `is_valid() True`, `is_check() False`, 25 legal moves and exactly
+  // one capture, Bxg4. What the capture is worth is not this file's claim --
+  // the block's own recorded score is, and the fire case asserts it.
+  static const std::string PC_DRIVE_POS =
+      "rnbqkbnr/ppp1pppp/3p4/8/4P1Q1/8/PPPP1PPP/RNB1KBNR b KQkq - 1 2";
+
+  // The node's window. An ordinary beta, and a drive at ply 1 with no
+  // previous move: reverse futility wants `ply >= RfpMinPly` and the null move
+  // wants `prev_move != 0`, so neither can end the node above the block, and
+  // the singular block wants a depth this drive never reaches.
+  static constexpr int PC_BETA = 0;
+
+  // A ceiling on every drive, as S097's drives have one: a drive that reaches
+  // it fails its `!state.aborted` requirement rather than hanging the suite.
+  static constexpr uint64_t PC_DRIVE_NODE_LIMIT = 5000000;
+
+  struct probcut_drive_t : guard_fixture_t
+  {
+    // The shallowest depth the block admits, so the drive is the cheapest
+    // node that can fire. Derived, so a refit moves the drive with it.
+    static int node_depth() { return PROBCUT_MIN_DEPTH; }
+
+    // The capture's child is searched at `child_depth()`; counting the capture
+    // itself, that proves `shallow_depth()` about the node, which is what the
+    // table skip and the store both read.
+    static int child_depth() { return node_depth() - PROBCUT_DEPTH_OFFSET; }
+    static int shallow_depth() { return child_depth() + 1; }
+
+    int last_score = 0;
+
+    // Everything the fire drive rests on that is not the case's to deny,
+    // asserted rather than assumed.
+    static void require_drive_conditions()
+    {
+      REQUIRE(RFP_MIN_PLY > 1);
+      REQUIRE(node_depth() < SE_MIN_DEPTH);
+      REQUIRE(child_depth() >= 1);
+    }
+
+    search_node_probe_t run(const std::string& fen,
+                            size_t ply,
+                            int alpha,
+                            int beta,
+                            int depth,
+                            bool is_pv = false)
+    {
+      require_drive_conditions();
+      load(fen, static_cast<int>(ply));
+
+      state.root_history_size = game.history.size;
+      state.node_limit = PC_DRIVE_NODE_LIMIT;
+
+      last_score = negamax_probed(alpha, beta, depth, ply, &game, &state, 0,
+                                  is_pv, false, 0);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      return probe;
+    }
+  };
+
+
+  // THE BLOCK FIRES, and every part of what it does is read off the node.
+  //
+  // Mutation: B01_probcut_margin_dropped, B03_probcut_tt_skip_inverted,
+  // B07_probcut_no_return.
+  //
+  //   search: pruning and reduction guards
+  //    probcut ends a node whose good capture clears beta by the margin
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut ends a node whose good capture clears beta by "
+                    "the margin")
+  {
+    const search_node_probe_t record =
+        run(PC_DRIVE_POS, 1, PC_BETA - 1, PC_BETA, node_depth());
+
+    REQUIRE(!is_check(&game));
+
+    const move_t bxg4 = capture_move(&game, c8, g4);
+
+    REQUIRE(bxg4 != 0);
+
+    REQUIRE(record.probcut_entered);
+    REQUIRE(!record.probcut_tt_skip);
+    REQUIRE_EQ(record.probcut_tried, 1);
+    REQUIRE_EQ(record.probcut_searched, 1);
+    REQUIRE(record.probcut_cutoff);
+    REQUIRE_EQ(record.probcut_move, bxg4);
+
+    // The bar is the node's beta plus the margin, and never beta alone.
+    REQUIRE_EQ(record.probcut_beta, PC_BETA + PROBCUT_MARGIN);
+    REQUIRE(record.probcut_value >= record.probcut_beta);
+    REQUIRE_EQ(record.probcut_depth, shallow_depth());
+
+    // Fail soft: the node returned the shallow search's score, not the bar.
+    REQUIRE_EQ(last_score, record.probcut_value);
+
+    // And nothing else ran: the node never reached its move loop.
+    REQUIRE_EQ(record.move_count, 0);
+  }
+
+
+  // THE CUT IS STORED, at the node-level depth the shallow search proved --
+  // one more than the depth it ran at, since the capture counts -- and as a
+  // lower bound: a fail-high establishes nothing else. Stored at the node's
+  // own depth it would answer a later full-depth probe with a shallow result.
+  //
+  // Mutation: B05_probcut_store_exact, B06_probcut_store_full_depth.
+  //
+  //   search: pruning and reduction guards
+  //    a probcut cutoff is stored as a lower bound at the shallow depth
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "a probcut cutoff is stored as a lower bound at the "
+                    "shallow depth")
+  {
+    const search_node_probe_t record =
+        run(PC_DRIVE_POS, 1, PC_BETA - 1, PC_BETA, node_depth());
+
+    REQUIRE(record.probcut_cutoff);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+
+    REQUIRE(entry != nullptr);
+    REQUIRE_EQ(static_cast<int>(entry->type), static_cast<int>(TT_BETA_NODE));
+    REQUIRE_EQ(static_cast<int>(entry->depth), shallow_depth());
+    REQUIRE_EQ(entry->best_move, record.probcut_move);
+
+    // Not a mate score, so the stored number is the returned one.
+    REQUIRE(record.probcut_value < MATE_MIN_LOCAL);
+    REQUIRE_EQ(static_cast<int>(entry->score), record.probcut_value);
+  }
+
+
+  // Mutation: B02_probcut_pv_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    probcut does not run at a PV node
+  TEST_CASE_FIXTURE(probcut_drive_t, "probcut does not run at a PV node")
+  {
+    const search_node_probe_t record =
+        run(PC_DRIVE_POS, 1, PC_BETA - 1, PC_BETA, node_depth(), true);
+
+    REQUIRE(!record.probcut_entered);
+    REQUIRE(!record.probcut_cutoff);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // The root is driven as a non-PV node here, so `ply > 0` is the guard this
+  // case reads and not `is_pv`.
+  //
+  // Mutation: B08_probcut_root_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    probcut does not run at the root
+  TEST_CASE_FIXTURE(probcut_drive_t, "probcut does not run at the root")
+  {
+    const search_node_probe_t record =
+        run(PC_DRIVE_POS, 0, PC_BETA - 1, PC_BETA, node_depth());
+
+    REQUIRE(!record.probcut_entered);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // One ply short of the minimum, the drive otherwise unchanged.
+  //
+  // Mutation: B13_probcut_min_depth_off_by_one.
+  //
+  //   search: pruning and reduction guards
+  //    probcut does not run below its minimum depth
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut does not run below its minimum depth")
+  {
+    const search_node_probe_t record =
+        run(PC_DRIVE_POS, 1, PC_BETA - 1, PC_BETA, node_depth() - 1);
+
+    REQUIRE(!record.probcut_entered);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // S097's verification searches its node with the table move set aside, and
+  // the capture loop would search the excluded move itself. The excluded move
+  // here is a quiet the fire drive never looks at, so the only difference from
+  // that drive is the exclusion.
+  //
+  // Mutation: B14_probcut_excluded_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    probcut does not run while a move is excluded
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut does not run while a move is excluded")
+  {
+    require_drive_conditions();
+    load(PC_DRIVE_POS, 1);
+
+    const move_t excluded = quiet_move(&game, e7, e5);
+
+    REQUIRE(excluded != 0);
+
+    state.root_history_size = game.history.size;
+    state.node_limit = PC_DRIVE_NODE_LIMIT;
+    negamax_probed(PC_BETA - 1, PC_BETA, node_depth(), 1, &game, &state, 0,
+                   false, false, excluded);
+
+    REQUIRE(!state.aborted);
+    REQUIRE(!probe.probcut_entered);
+    REQUIRE(probe.move_count > 0);
+  }
+
+
+  // 1.e4 c5 2.Nf3 d6 3.Bb5+, the null-move in-check case's own position. From
+  // a tool, python-chess reports `is_check() True` and four legal replies:
+  // Qd7, Bd7, Nd7, Nc6.
+  //
+  // Mutation: B09_probcut_in_check_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    probcut does not run in check
+  TEST_CASE_FIXTURE(probcut_drive_t, "probcut does not run in check")
+  {
+    const std::string fen =
+        "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3";
+
+    // A beta far under anything the node can return, so the node is one the
+    // block would end if the guard let it in.
+    const int beta = -2000;
+    const search_node_probe_t record =
+        run(fen, 1, beta - 1, beta, node_depth());
+
+    REQUIRE(is_check(&game));
+    REQUIRE(!record.probcut_entered);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // BOTH EDGES OF THE MATE BAND. At or below -MATE_MIN the node is a defender
+  // inside a mate proof, where every shallow score clears the bar and the
+  // shallow search is the instrument that misses the mate (S165). At the top
+  // the bar is what is tested, so a margin cannot lift it into the band.
+  //
+  // Mutation: B04_probcut_defender_gate_dropped,
+  // B10_probcut_attacker_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    probcut does not run with beta in the mate band
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut does not run with beta in the mate band")
+  {
+    {
+      const int beta = -MATE_MIN_LOCAL;
+      const search_node_probe_t record =
+          run(PC_DRIVE_POS, 1, beta - 1, beta, node_depth());
+
+      REQUIRE(!record.probcut_entered);
+      REQUIRE(record.move_count > 0);
+    }
+
+    {
+      // One above that edge, where the block does run: the leg above reads
+      // the edge and not some other early return.
+      const int beta = -MATE_MIN_LOCAL + 1;
+      const search_node_probe_t record =
+          run(PC_DRIVE_POS, 1, beta - 1, beta, node_depth());
+
+      REQUIRE(record.probcut_entered);
+    }
+
+    // At a margin of 0 -- in range -- the bar is beta and the positive edge is
+    // the beta guard's, so these two legs have no bar of their own to deny.
+    if (PROBCUT_MARGIN > 0) {
+      // The lowest beta whose bar reaches the band. Below MATE_MIN itself, so
+      // the other rules still see an ordinary window and the only thing this
+      // leg denies is the bar.
+      const int beta = MATE_MIN_LOCAL - PROBCUT_MARGIN;
+
+      REQUIRE(beta < MATE_MIN_LOCAL);
+
+      const search_node_probe_t record =
+          run(PC_DRIVE_POS, 1, beta - 1, beta, node_depth());
+
+      REQUIRE(!record.probcut_entered);
+
+      // And one below it, where the bar sits just under the band: the block
+      // runs, so the leg above is the edge.
+      const int below = MATE_MIN_LOCAL - PROBCUT_MARGIN - 1;
+      const search_node_probe_t runs =
+          run(PC_DRIVE_POS, 1, below - 1, below, node_depth());
+
+      REQUIRE(runs.probcut_entered);
+    }
+  }
+
+
+  // THE TABLE ENTRY SKIP. An entry at least as deep as the shallow search that
+  // bounds the node from above under the bar answers the block's question
+  // before any capture is tried; a lower bound at the same score does not, and
+  // neither does an upper bound too shallow to speak for the shallow search.
+  // Every plant is shallower than the node, so none answers the node itself.
+  //
+  // Mutation: B03_probcut_tt_skip_inverted, B11_probcut_tt_skip_any_bound,
+  // B12_probcut_tt_skip_any_depth.
+  //
+  //   search: pruning and reduction guards
+  //    probcut skips a node the table already bounds under its bar
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut skips a node the table already bounds under its "
+                    "bar")
+  {
+    require_drive_conditions();
+
+    // Under the bar and above the node's own beta, so a lower bound there
+    // would not answer the node either.
+    const int score = PC_BETA + PROBCUT_MARGIN - 1;
+
+    const auto plant_and_run = [&](int entry_depth, ::node_type_t type) {
+      load(PC_DRIVE_POS, 1);
+      tt_store_entry(&tt, &game.board, entry_depth, score, type, 0);
+
+      const tt_entry_t* planted = tt_get_entry(&tt, &game.board);
+
+      REQUIRE(planted != nullptr);
+      REQUIRE_EQ(static_cast<int>(planted->depth), entry_depth);
+      REQUIRE(entry_depth < node_depth());
+
+      state.root_history_size = game.history.size;
+      state.node_limit = PC_DRIVE_NODE_LIMIT;
+      last_score = negamax_probed(PC_BETA - 1, PC_BETA, node_depth(), 1, &game,
+                                  &state, 0, false, false, 0);
+
+      REQUIRE(!state.aborted);
+
+      return probe;
+    };
+
+    const search_node_probe_t upper =
+        plant_and_run(shallow_depth(), TT_ALPHA_NODE);
+
+    REQUIRE(upper.probcut_entered);
+    REQUIRE(upper.probcut_tt_skip);
+    REQUIRE_EQ(upper.probcut_tried, 0);
+    REQUIRE(!upper.probcut_cutoff);
+
+    const search_node_probe_t exact =
+        plant_and_run(shallow_depth(), TT_PV_NODE);
+
+    REQUIRE(exact.probcut_entered);
+    REQUIRE(exact.probcut_tt_skip);
+    REQUIRE_EQ(exact.probcut_tried, 0);
+
+    const search_node_probe_t lower =
+        plant_and_run(shallow_depth(), TT_BETA_NODE);
+
+    REQUIRE(lower.probcut_entered);
+    REQUIRE(!lower.probcut_tt_skip);
+    REQUIRE(lower.probcut_cutoff);
+
+    const search_node_probe_t shallow =
+        plant_and_run(shallow_depth() - 1, TT_ALPHA_NODE);
+
+    REQUIRE(shallow.probcut_entered);
+    REQUIRE(!shallow.probcut_tt_skip);
+    REQUIRE(shallow.probcut_cutoff);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE OFF VALUE, DEC-215: `ProbCut` 0 skips the block whole, on the drive
+  // that fires it at 1. What the release build holds instead is the bench
+  // signature -- at 0 the tune build prints the parent's total to the node.
+  // The restorer keeps a failed assertion from leaving the rule off for every
+  // later case in the process.
+  //
+  // Mutation: none of its own; B01 to B13 are killed in the release build.
+  TEST_CASE_FIXTURE(probcut_drive_t, "probcut does not run at its off value")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("ProbCut", 1); }
+    } restore;
+
+    REQUIRE_EQ(PROBCUT, 1);
+
+    const search_node_probe_t on =
+        run(PC_DRIVE_POS, 1, PC_BETA - 1, PC_BETA, node_depth());
+
+    REQUIRE(on.probcut_cutoff);
+
+    REQUIRE(search_param_set("ProbCut", 0));
+    REQUIRE_EQ(PROBCUT, 0);
+
+    const search_node_probe_t off =
+        run(PC_DRIVE_POS, 1, PC_BETA - 1, PC_BETA, node_depth());
+
+    REQUIRE(!off.probcut_entered);
+    REQUIRE(off.move_count > 0);
+  }
+
+
+  // THE CHILD KEEPS A REAL PLY. `depth - ProbCutDepthOffset >= 1` is dead at
+  // the seeds -- the minimum depth 8 clears the offset 5 by three plies -- and
+  // live only where the two are set within a ply of each other, which only
+  // the tune build can do. There, at an offset equal to the minimum depth, a
+  // node at that depth would search its captures' children at depth 0, which
+  // is quiescence: the preliminary asked twice. One ply deeper the child keeps
+  // a ply and the block runs, so the refusal is this guard's.
+  //
+  // Mutation: B15_probcut_child_depth_gate_dropped, declared equivalent in
+  // tools/mutants/S113_probcut.py because the release build folds the term to
+  // true; this case is what kills it, observed by hand in the tune build.
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut does not search a capture's child at depth zero")
+  {
+    struct restore_t
+    {
+      const int min_depth = PROBCUT_MIN_DEPTH;
+      const int offset = PROBCUT_DEPTH_OFFSET;
+      ~restore_t()
+      {
+        search_param_set("ProbCutMinDepth", min_depth);
+        search_param_set("ProbCutDepthOffset", offset);
+      }
+    } restore;
+
+    REQUIRE(search_param_set("ProbCutMinDepth", 3));
+    REQUIRE(search_param_set("ProbCutDepthOffset", 3));
+    REQUIRE_EQ(PROBCUT_MIN_DEPTH - PROBCUT_DEPTH_OFFSET, 0);
+
+    load(PC_DRIVE_POS, 1);
+    state.node_limit = PC_DRIVE_NODE_LIMIT;
+    negamax_probed(PC_BETA - 1, PC_BETA, 3, 1, &game, &state, 0, false, false,
+                   0);
+
+    REQUIRE(!state.aborted);
+    REQUIRE(!probe.probcut_entered);
+    REQUIRE(probe.move_count > 0);
+
+    load(PC_DRIVE_POS, 1);
+    state.node_limit = PC_DRIVE_NODE_LIMIT;
+    negamax_probed(PC_BETA - 1, PC_BETA, 4, 1, &game, &state, 0, false, false,
+                   0);
+
+    REQUIRE(!state.aborted);
+    REQUIRE(probe.probcut_entered);
+  }
+#endif
 }
 
 

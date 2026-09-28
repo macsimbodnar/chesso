@@ -871,6 +871,63 @@
   X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
   X(SE_MULTICUT,         "SeMultiCut",         1, 0,  1)                       \
                                                                                \
+  /* PROBCUT, S113 (Buro 1995; Jiang and Buro, ACG 10, 2003). At a non-PV node \
+     out of check, deep enough and with beta outside the mate band, every good \
+     capture and promotion is tried against `probBeta = beta + ProbCutMargin`: \
+     a zero-window quiescence first, then a search of the capture's child at   \
+     `depth - ProbCutDepthOffset`. One that clears probBeta ends the node with \
+     that fail-soft score (`negamax_at` in src/search.cpp).                    \
+                                                                               \
+     UNITS (P6). ProbCutMargin is compared against search scores, so it is in  \
+     chesso's material scale -- `piece_value` in src/eval_tables.hpp, PAWN 94. \
+     The other two count plies.                                                \
+                                                                               \
+     Seeds under DEC-105 and DEC-134, each one of the three forms, and **no    \
+     engine's shipped margin, depth or offset seeds any of them**. Every one   \
+     is a starting point that S127's fit replaces (DEC-084).                   \
+                                                                               \
+     PROBCUT_MARGIN 49 is **(b) a derivation over chesso's own positions**     \
+     at a threshold that is **(a)**: the paper's own method, run by S113 with  \
+     adocs/data/S113_probcut_fit.py -- `go depth 4` against `go depth 8` on    \
+     the 1e9827d build, mate scores and |v'| > 3 pawns dropped, least squares  \
+     `v = a*v' + b` -- and seeded at `round(t * sigma)` with t = 1.0 from      \
+     https://skatgame.net/mburo/ps/chessmpc.pdf (Figure 2, `#define T 1.0`).   \
+     The step's 300-position stratified pick left 180 survivors, under its     \
+     own floor of 200, so the set was widened as the step says to: six offsets \
+     of the same pick, 600 positions, 375 kept, a 0.951, b -1.05, sigma 48.98  \
+     (adocs/data/S113_probcut_fit.tsv; the 300 run beside it). Range 0 to 2000 \
+     by stated purpose: at 0 the bar is beta itself, the least the rule's form \
+     admits, and the top is past every evaluation this engine produces. The    \
+     top is **not** the off value -- the preliminary quiescence still runs at  \
+     every eligible node and moves the tree -- `ProbCut` 0 is.                 \
+                                                                               \
+     PROBCUT_DEPTH_OFFSET is **(a) 5**, from the paper's single-pair           \
+     implementation (Figure 2, `#define S 4`, `#define H 8`), same URL: the    \
+     child is searched at `depth - 5`, so with the capture the shallow search  \
+     is 4 plies of the node's own at the minimum depth 8 -- the pair (4, 8) the\
+     margin was fitted on. S113's fast check caught the first seed, 4, which   \
+     ran the pair as (5, 8) against a (4, 8) fit. Range 2 to 8: 5 with room on \
+     both sides; 2 is a node-level pair one ply apart and 8 leaves nothing at  \
+     the seed minimum depth.                                                   \
+                                                                               \
+     PROBCUT_MIN_DEPTH is **(a) 8**, the check height H of the same pair       \
+     (Figure 2, `#define H 8`), same URL. Range 3 to 10. The block also        \
+     requires `depth - ProbCutDepthOffset >= 1`, so no setting of the pair     \
+     turns the shallow search into a second quiescence.                        \
+                                                                               \
+     PROBCUT IS A SWITCH AND NOT A SETTING (DEC-215 clause 2): no value of the \
+     three above is off -- the margin's top still pays the preliminary, and    \
+     the minimum depth's top is reached by every game at the harness control.  \
+     At 0 the block is skipped whole and the tree is the one before S113,      \
+     proved on the tree: the tune build at 0 benches the parent's total with   \
+     all eight `bestmove` replies and reproduces `tools/search_bench.py` at    \
+     depths 9 and 12. Range 0 to 1 by stated purpose; a verdict switch, not    \
+     something S127 sweeps. */                                                 \
+  X(PROBCUT,              "ProbCut",             1,    0,    1)                \
+  X(PROBCUT_MARGIN,       "ProbCutMargin",      49,    0, 2000)                \
+  X(PROBCUT_DEPTH_OFFSET, "ProbCutDepthOffset",  5,    2,    8)                \
+  X(PROBCUT_MIN_DEPTH,    "ProbCutMinDepth",     8,    3,   10)                \
+                                                                               \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 re-decides it there. */                           \

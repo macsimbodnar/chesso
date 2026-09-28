@@ -1,0 +1,19 @@
+# SUPERSEDED at the fast check: ProbCutDepthOffset 4, the first landing. The row it picked no longer separates at offset 5.
+# S113 mate-row mining, 2026-09-27, adocs/data/S113_mine_mate_row.py over S097's 269 candidates, depths 9..12.
+# shipped: the candidate's build/src/libchesso_engine.a; open: the same with B04_probcut_defender_gate_dropped applied; fires: build-tune, ProbCut 0 against 1.
+# Sweeps: .tuning/coord/S113_shipped.txt, S113_open.txt; separators S113_separators.fen; witness S113_fires.txt. The separators/fires/pick output follows.
+9 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S113_separators.fen
+the multicut changes the tree on 9 of 9 positions in 23 s -> /home/max/ws/chesso/.tuning/coord/S113_fires.txt, /home/max/ws/chesso/.tuning/coord/S113_fires.fen
+  distance moved, not taken by the rule: d11 #5 -> #6	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+  distance moved, not taken by the rule: d11 #5 -> #6	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+  distance moved, not taken by the rule: d11 #6 -> #5	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  d12	#5	run 4	290275 nodes	165 ms	shipped [d9 d10 d11 d12]	open [d9 d10 d11]	fires [d9 d10 d11 d12]	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+  d12	#4	run 2	1057741 nodes	272 ms	shipped [d9 d10 d12]	open [d9 d10 d11]	fires [d9 d10 d11 d12]	8/8/2p2p1k/p3p3/4P1Q1/2PR4/1r3KP1/8 w - - 1 45
+  d11	#5	run 2	1763308 nodes	414 ms	shipped [d11 d12]	open [d12]	fires [d10 d11 d12]	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+  d11	#6	run 1	263193 nodes	61 ms	shipped [d11]	open [d12]	fires [d9 d10 d11 d12]	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+  d11	#6	run 1	733579 nodes	201 ms	shipped [d11]	open [none]	fires [d9 d10 d11 d12]	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+  d12	#3	run 1	20474065 nodes	6199 ms	shipped [d12]	open [none]	fires [d9 d10 d11 d12]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+
+take: 1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+  depth 12, mate in 5, shipped [d9 d10 d11 d12], guard dropped [d9 d10 d11], 290275 nodes, 165 ms
+MINE-DONE

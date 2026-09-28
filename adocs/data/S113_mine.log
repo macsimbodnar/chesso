@@ -1,0 +1,20 @@
+# S113 mate-row mining, re-derived at the rebase onto 308b388 (S112's tree, per-move futility in quiescence kept, DEC-236), 2026-09-28, adocs/data/S113_mine_mate_row.py over S097's 269 candidates, depths 9..12; driver .tuning/coord/S113_rb_mine.sh.
+# shipped: the rebased candidate's build/src/libchesso_engine.a (359ce8a); open: the same src with B04_probcut_defender_gate_dropped applied (.ref-builds/b04); fires: build-tune, ProbCut 0 against 1.
+6 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S113_rb_separators.fen
+the multicut changes the tree on 6 of 6 positions in 10 s -> /home/max/ws/chesso/.tuning/coord/S113_rb_fires.txt, /home/max/ws/chesso/.tuning/coord/S113_rb_fires.fen
+  distance moved, not taken by the rule: d11 #5 -> #6	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+  distance moved, not taken by the rule: d11 #5 -> #6	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+  distance moved, not taken by the rule: d11 #5 -> #6	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+  distance moved, not taken by the rule: d11 #5 -> #6	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  d11	#5	run 2	351428 nodes	50 ms	shipped [d11 d12]	open [d12]	fires [d9 d10 d11 d12]	5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44
+  d12	#3	run 2	10748080 nodes	1792 ms	shipped [d11 d12]	open [d11]	fires [d9 d10 d11 d12]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+
+take: 5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44
+  depth 11, mate in 5, shipped [d11 d12], guard dropped [d12], 351428 nodes, 50 ms
+# the fast check's row on this tree -- shipped - m4 - m4, guard dropped - m4 m4 m4 over d9..d12, no longer separating:
+#   shipped: -:18573:2 m4:61888:9 -:56070:7 m4:249889:36 	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+#   B04:     -:18573:2 m4:61888:8 m4:129847:16 m4:330692:45 	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+# the pick, read by the tools (.tuning/coord/S113_rb_oracle.py: S230's line_facts, one fresh stockfish per position at depth 20, and python-chess):
+#   python-chess: is_valid True, is_check True, 7 legal moves, 0 captures, 0 promotions; side to move Black
+#   stockfish depth 20 (fresh process): #+5 for Black in 6947 nodes, depth 20, pv Kg8 Qc4+ d5 Qxd5+ Qxd5 Kxh3 Rxf2 c4 Qg2#
+MINE-DONE

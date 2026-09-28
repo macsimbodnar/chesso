@@ -689,6 +689,27 @@ struct search_node_probe_t
   int se_vscore = 0;
   int se_vdepth = 0;
 
+  // The ProbCut block, S113, and what it decided at this node.
+  //
+  // `probcut_entered` is "every guard of the block held" -- whether or not the
+  // table then answered: a case asserting a guard refused reads this and not a
+  // node count. `probcut_tt_skip` is the table entry answering the question
+  // before any capture was tried. `probcut_tried` counts the moves that paid
+  // the preliminary quiescence and `probcut_searched` those whose preliminary
+  // held and paid the shallow search. The four after `probcut_cutoff` are
+  // valid only where it is true: the bar, the move, the score returned and the
+  // node-level depth stored, one more than the depth the shallow search ran
+  // at, since the capture counts.
+  bool probcut_entered = false;
+  bool probcut_tt_skip = false;
+  int probcut_tried = 0;
+  int probcut_searched = 0;
+  bool probcut_cutoff = false;
+  int probcut_beta = 0;
+  move_t probcut_move = 0;
+  int probcut_value = 0;
+  int probcut_depth = 0;
+
   // Late move pruning set its flag at this node, so the quiet stage ended
   // early -- either ungenerated or unsearched from the first quiet on.
   bool skip_quiets_set = false;

@@ -1274,7 +1274,11 @@ int quiescence(int alpha,
     // Here rather than at the top of the node, which is the placement
     // negamax_at uses. The two are the same set: material is what this function
     // reads, a quiet move cannot change it, and the node quiescence was entered
-    // at cannot be dead already because negamax_at answered it first. Testing a
+    // at was answered by negamax_at first -- except through ProbCut's
+    // preliminary (S113), which can enter a dead child and scores it on the
+    // material left, at TT_DEPTH_QS; the shallow search that follows returns
+    // DRAW_SCORE before any cut, so the cost is a wasted preliminary (S113's
+    // open finding 6). Testing a
     // made move instead of an entered node skips the child outright -- no
     // probe, no evaluation, no move generation -- and leaves the test off the
     // entry path of every quiescence node there is.
@@ -1843,6 +1847,147 @@ static int negamax_at(int alpha0,
       // A mate score out of a null move search is not a mate anyone can force,
       // it is an artefact of the pass. Report the bound instead.
       return (null_score >= MATE_MIN) ? beta : null_score;
+    }
+  }
+
+  // ProbCut, S113 (Buro 1995; Jiang and Buro, ACG 10, 2003). A shallow search
+  // predicts a deep one up to an error, so a good capture whose shallow search
+  // clears beta by a margin that error is unlikely to cover is taken as proof
+  // the node fails high, and the node is not searched at its own depth.
+  //
+  // Below the null move, so a node the pass already cut off never pays for the
+  // captures, and above the singular block for the same reason. The guards are
+  // the other bound-returning rules' own:
+  //
+  //   PV node       these lines get reported and played. `is_pv` covers the
+  //                 root at every call search() makes; `ply > 0` covers a
+  //                 test driving the root directly
+  //   in check      the move list is evasions, and no static bar is on offer
+  //   excluded_move S097. The capture loop below would search the excluded
+  //                 move itself, and a bound here answers the verification
+  //                 without its question being asked
+  //   beta near mate  both edges, and the negative one is S165's: with beta at
+  //                 or below -MATE_MIN the node is a defender inside a mate
+  //                 proof, every shallow score clears the bar, and the shallow
+  //                 search is exactly the instrument that misses the mate. The
+  //                 positive edge is asked of probBeta and not of beta, so the
+  //                 bar itself never enters the band a margin could lift it
+  //                 into
+  //   depth         the minimum, and a shallow search that keeps a real ply:
+  //                 at zero it would be quiescence, the preliminary repeated
+  //
+  // TWO DEPTHS, and which is which matters. The capture's child is searched
+  // at `depth - ProbCutDepthOffset`; what that proves about **this** node is
+  // one ply more, the capture itself -- the same accounting the move loop
+  // uses when it stores `depth` for children searched at `depth - 1`. So the
+  // node-level shallow depth is `depth - ProbCutDepthOffset + 1`, which at the
+  // seeds is the paper's pair (4, 8), and it is the one number both the table
+  // skip and the store read.
+  const int probcut_child_depth = depth - PROBCUT_DEPTH_OFFSET;
+  const int probcut_depth = probcut_child_depth + 1;
+  const int probcut_beta = beta + PROBCUT_MARGIN;
+
+  if (PROBCUT != 0 && !is_pv && !is_in_check && ply > 0 && excluded_move == 0 &&
+      depth >= PROBCUT_MIN_DEPTH && probcut_child_depth >= 1 &&
+      beta > -MATE_MIN && probcut_beta < MATE_MIN) {
+    if constexpr (PROBING) {
+      if (probe != nullptr) { probe->probcut_entered = true; }
+    }
+
+    // The table already knows the answer when an entry of this node at least
+    // as deep as the shallow search bounds it from above under the bar: an
+    // upper bound or an exact score below probBeta says no capture's shallow
+    // search can clear it. A lower bound says nothing about that and is not
+    // read. The three copies are the ones taken beside the singular block's,
+    // before the null move recursed, and de-normalised there (S106).
+    const bool tt_says_no =
+        tt_entry != nullptr && tt_entry_depth >= probcut_depth &&
+        tt_entry_score < probcut_beta &&
+        (tt_entry_type == TT_ALPHA_NODE || tt_entry_type == TT_PV_NODE);
+
+    if constexpr (PROBING) {
+      if (probe != nullptr) { probe->probcut_tt_skip = tt_says_no; }
+    }
+
+    if (!tt_says_no) {
+      move_t pc_moves[MAX_MOVES];
+      int pc_scores[MAX_MOVES];
+
+      // Its own list: the staged loop below regenerates. Captures and
+      // promotions, and of those only the ones the exchange evaluation does
+      // not write off -- quiescence's own pair of tests, cheap one first.
+      const size_t generated =
+          generate_captures(game_tables(), &game->board, pc_moves);
+      size_t pc_count = 0;
+
+      for (size_t j = 0; j < generated; ++j) {
+        if (!capture_cannot_lose(&game->board, pc_moves[j]) &&
+            !see_ge(&game->board, pc_moves[j], 0)) {
+          continue;
+        }
+
+        pc_scores[pc_count] = capture_score(&game->board, pc_moves[j]);
+        pc_moves[pc_count] = pc_moves[j];
+        pc_count++;
+      }
+
+      for (size_t j = 0; j < pc_count; ++j) {
+        pick_next_move(pc_moves, pc_scores, pc_count, j);
+
+        if (!make_move(game, pc_moves[j])) { continue; }
+
+        if constexpr (PROBING) {
+          if (probe != nullptr) { probe->probcut_tried++; }
+        }
+
+        // The preliminary: quiescence against the same zero window. Only a
+        // capture that holds the bar there pays for the shallow search.
+        int value = -quiescence(-probcut_beta, -probcut_beta + 1, ply + 1, 0,
+                                game, state);
+
+        if (!state->aborted && value >= probcut_beta) {
+          if constexpr (PROBING) {
+            if (probe != nullptr) { probe->probcut_searched++; }
+          }
+
+          // Labelled as the null move's child is, and by the same reading of
+          // Kannan: each capture here is one of the node's "candidate cutoff
+          // moves", searched against a window it hopes the child fails low
+          // on, so a CUT parent's child is ALL and an ALL parent's is CUT.
+          const child_label_t pc_child = null_move_child(is_pv, cut_node);
+
+          value = -negamax_at<false>(
+              -probcut_beta, -probcut_beta + 1, probcut_child_depth, ply + 1,
+              game, state, pc_moves[j], pc_child.is_pv, pc_child.cut_node, 0);
+        }
+
+        unmake_move(game);
+
+        if (state->aborted) { return 0; }
+
+        if (value >= probcut_beta) {
+          // Stored at the depth the shallow search proved at this node, the
+          // number the skip above reads, and never at this node's own: a later
+          // probe at full depth must not take a shallow result for a deep one.
+          // A lower bound, which is all a fail-high establishes. Fail-soft:
+          // the score, not the bar.
+          tt_store_entry(state->tt, &game->board, probcut_depth,
+                         normalize_score(value, ply), TT_BETA_NODE, pc_moves[j],
+                         static_eval);
+
+          if constexpr (PROBING) {
+            if (probe != nullptr) {
+              probe->probcut_cutoff = true;
+              probe->probcut_beta = probcut_beta;
+              probe->probcut_move = pc_moves[j];
+              probe->probcut_value = value;
+              probe->probcut_depth = probcut_depth;
+            }
+          }
+
+          return value;
+        }
+      }
     }
   }
 

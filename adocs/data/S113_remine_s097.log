@@ -1,0 +1,68 @@
+# S113: S097's mate row re-mined on the tree S113 lands on, 2026-09-28.
+#
+# WHY. S113 adds ProbCut, which is "any change to pruning", and was rebased
+# onto 308b388, S112's tree with per-move futility in quiescence kept
+# (DEC-236). On that combination the row "pruning does not hide a forced mate"
+# carried for S097 verdict 2, 4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+# at depth 14, distance 5, stopped being true of the shipped build: mate_found
+# is false at its own depth 14 (both fast suites red there, 2026-09-28). It
+# held on each change alone -- on 308b388 without ProbCut, and on 1e9827d with
+# ProbCut before the rebase. A golden whose derivation moved is re-derived by
+# its own script (DEC-142, DEC-233), the way S188 and S236 v2 did for this row.
+#
+# WHAT RAN. adocs/data/S097_mine_mate_row.py's stages 2 to 6, driven by
+# .tuning/coord/S113_rb_mine.sh:
+#   * stage 1 is not re-run: the 269 candidates are the corpus and the oracle,
+#     neither of which moved, and adocs/data/S097_candidates.tsv still holds it;
+#     its FEN column is the list swept
+#   * both sweeps at depths 11 to 14 -- the range the script derives from
+#     SeMinDepth -- one against the rebased candidate's engine library
+#     (359ce8a), one against a library of the same src with
+#     E21_multicut_mate_band_gate_dropped applied in a separate worktree
+#   * the separator set derived from the two sweeps, the firing witness run
+#     over it on the tune library at SeMultiCut 0 and 1, and the pick
+#
+# THE RESULT. Three of the 269 separate E21 on this tree, S097's row among
+# them -- at depth 13, where the shipped build still reports its mate and E21
+# does not, on a shipped run of one. The rule takes the only shipped run of
+# two:
+#
+#   take: 1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+#     depth 14, mate in 4, shipped [d13 d14], guard dropped [d13],
+#     fires [d12 d13 d14], 16599756 nodes, 2415 ms
+#
+# The cell costs 16599756 nodes and about 2.4 s against S097's row's 1434773
+# nodes and 0.2 s at the same depth on this tree; what the corpus charges, and
+# recorded rather than traded away.
+#
+# Oracle, through the tools (.tuning/coord/S113_rb_oracle.py: S230's
+# line_facts, one fresh stockfish per position at depth 20, and python-chess):
+# #+4 for White in 332147 nodes, pv Rf7 Qe3+ Kh1 Qh6 Qxh6+ Kg8 Qg7# -- the
+# label S097_candidates.tsv already held; python-chess reports the position
+# valid, not in check, 38 legal moves, two captures, no promotion.
+#
+# Red observed with E21 applied and green shipped:
+# .tuning/coord/S113_rb_red.log, where B04 of tools/mutants/S113_probcut.py is
+# red on this row too. S097's row stays in the case's GOLDEN block with the
+# tree it belongs to: ProbCut 0 is 308b388's engine to the node, so an H0 on
+# S113 is a revert and not a re-mine.
+#
+# ==== the separators, the witness and the pick, as the script printed them ====
+3 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S113_rb_s097_separators.fen
+the multicut changes the tree on 3 of 3 positions in 9 s -> /home/max/ws/chesso/.tuning/coord/S113_rb_s097_fires.txt, /home/max/ws/chesso/.tuning/coord/S113_rb_s097_fires.fen
+  d14	#4	run 2	16599756 nodes	2415 ms	shipped [d13 d14]	open [d13]	fires [d12 d13 d14]	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+  d13	#5	run 1	1836528 nodes	238 ms	shipped [d13]	open [none]	fires [d13 d14]	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+  d14	#5	run 1	2412705 nodes	360 ms	shipped [d14]	open [none]	fires [d13 d14]	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+
+take: 1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+  depth 14, mate in 4, shipped [d13 d14], guard dropped [d13], 16599756 nodes, 2415 ms
+
+# ==== the two sweeps' own cells for S097's row and the new one ====
+# depths 11..14, one cell per depth, '-' where no mate is reported
+# shipped tree:
+#   -:248656:45 -:417486:85 m5:1836528:238 -:1434773:212 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   -:183656:42 -:424091:97 m4:11193336:1366 m4:16599756:2415 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+# guard dropped (E21):
+#   -:248656:41 -:417486:74 -:1053430:141 -:1690056:289 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   -:183656:38 -:424091:90 m4:11183863:1410 -:8196161:1349 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+REMINE-DONE
