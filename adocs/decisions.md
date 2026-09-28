@@ -13145,4 +13145,19 @@ Consequences: S112's SPRT, running since 2026-09-27 12:31, plays `3d82344`
               than pulling. `adocs/data/README.md`'s rows say what the
               committed reports are. The map of old to new shas is below,
               appended after the rewrite.
-Sha map:      appended after the rewrite.
+Sha map:      the rewrite of 2026-09-28, run by the owner with
+              `.tuning/coord/S241_rewrite.sh` once the code commit `71b0df4`
+              had left the tree clean, verified pair by pair (only the two
+              report files differ; `src/`, `tests/` and `tools/` identical;
+              authors, dates and messages identical) and force-pushed by the
+              owner the same morning. Old to new:
+                5c373ac -> 5ccbcd7  Record S240's first gauntlet as void
+                086320c -> 822102b  Remove S238's cutoff count on its H0
+                21d27d2 -> d0ab399  Complete S238
+                1e9827d -> 3cede8c  Complete S240 (S112's REF, s113's base)
+                3d82344 -> 85fe6a2  Add per-move futility to quiescence (S112's CAND)
+                4ec9660 -> 1805c49  Pin S112's SPRT pair
+                ebc3ad8 -> df48e35  Record S112's SPRT launch
+                7127d56 -> b4634b8  Record S113 ready to land
+                083fd48 -> d4ae54a  Write the handover
+                71b0df4 -> ec13cf2  Keep run outputs with the run (S241)

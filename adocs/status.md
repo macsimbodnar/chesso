@@ -17,19 +17,24 @@ by a briefed agent: `tools/trim_console.py`, and `rating.sh` writing
 both reports trimmed to 0.6 MB (the tail byte for byte the original's) and
 their run directories archived as `Synckeeper/Chesso Archive/
 chesso_S240_rating_runs_2026-09-27.tar.xz` (sha256 sidecar verified); the
-policy as the DATA rule in `AGENTS.md`. **Still owed, by the owner: the
-rewrite of history from `5c373ac` on, so the trimmed blobs replace the
-originals on `achesso` and `s113`, then the force push.** The session's
-sandbox refused to write the rewrite command, so the owner runs
-`.tuning/coord/S241_rewrite.sh` (guards on every precondition, backs the old
-branch up under `refs/original/`), `.tuning/coord/S241_verify.sh`, then
-pushes; the map of old to new shas is appended to DEC-235 and S241 completes
-in the commit after. Until then `origin/achesso` carries the 59 MB blobs.
-**The names below -- `1e9827d`, `3d82344`, `5c373ac` -- are the shas fastchess
-printed and `.ref-builds/` is named by, and they stay valid as labels after
-the rewrite: S112's log, pre-registration and result block keep them, the gate
-compares the block with the log, and `src/` is identical between each old and
-new sha.** A re-launch of S112 after a reboot may name either.
+policy as the DATA rule in `AGENTS.md`. **History from `5c373ac` on was
+rewritten by the owner on the morning of 2026-09-28 with
+`.tuning/coord/S241_rewrite.sh` and force-pushed: the trimmed blobs replace
+the originals on `achesso` and `s113`, `origin/achesso` is at `ec13cf2` plus
+the completing commit, and the largest blob reachable from either branch is
+S087's 19 MB report.** Verified pair by pair; the map is in DEC-235:
+`1e9827d` is now `3cede8c`, `3d82344` is `85fe6a2`. **The names below --
+`1e9827d`, `3d82344`, `5c373ac` -- are the shas fastchess printed and
+`.ref-builds/` is named by, and they stay valid as labels: S112's log,
+pre-registration and result block keep them, the gate compares the block with
+the log, and `src/` is identical between each old and new sha.**
+**A side effect of S241 for the coordinator:** `fastchess.sh` was rewritten
+in place at 00:33 on 2026-09-28 while S112's detached run of it was alive;
+bash reads a script by byte offset, so when the match ended at 07:35 the
+running script died on a syntax error after fastchess had printed the full
+result block, and the marker read `SPRT-RUN-FAILED: exited 2` for that reason
+and not for the match. Games, PGN and log are intact. Not acted on by S241's
+session, at the owner's instruction.
 
 ## HANDOVER, 2026-09-28 00:05 -- read this first in a new session
 

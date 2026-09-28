@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     the session the owner instructed directly on 2026-09-28, after the push warned -- not a briefed subagent (DEC-185 is for plan steps; DEC-235 records the exception); started 2026-09-28 00:10
-done:
+done:       2026-09-28 -- `tools/trim_console.py` (12 cases), `rating.sh` through it with `console.txt` beside the report, `OUT` under `.tuning/` in both match scripts, `tools/gate.sh` refusing a blob over 20 MB (cases 18 to 20), the two S240 reports at 599345 and 599069 bytes from 59077250 and 58133271 (55065 and 53112 blocks dropped, tails byte for byte), the archive `chesso_S240_rating_runs_2026-09-27.tar.xz` in the owner's Synckeeper folder (sha256 verified), DEC-235, the DATA rule, `.moltke.local.md`, DEV_MANUAL.md and the README rows -- committed as `71b0df4` on a green gate (both suites 41 of 41, format clean, `GATE-DONE 4649650`, no `src/` change; the first gate run was red only on `test_mate_carry`'s 120 s ctest ceiling under S112's load, and that test passed directly in both builds). History from `5c373ac` on rewritten by the owner with `.tuning/coord/S241_rewrite.sh` and force-pushed the same morning: `71b0df4` is `ec13cf2`, `1e9827d` is `3cede8c`, `3d82344` is `85fe6a2`, the full map in DEC-235; verified pair by pair (only the two report files differ, `src/`, `tests/` and `tools/` identical, messages and dates identical), `s113` on `3cede8c` with S113's uncommitted work untouched, the largest blob reachable from either branch now S087's 19 MB. The document checks of the fast suite (`test_ledger`, the five `test_plan_*`) green on the completing commit; the full gate ran on the code commit. **One side effect, the step's own:** `fastchess.sh` was rewritten in place at 00:33 while S112's detached run of it was alive, and bash reads a script by byte offset, so when its match finished at 07:35 the script resumed 311 bytes into the wrong line and died on a syntax error after fastchess had printed the full result block; the games, the PGN and the log are intact, only the script's closing lines did not run. Left to the coordinator, as the owner asked.
 
 ## Why this exists
 
@@ -65,7 +65,7 @@ force-pushes.
   disturbing S113's uncommitted work. The map of old to new shas is appended
   to DEC-235 in a commit after the rewrite. The owner force-pushes.
 
-## Where it stands, 2026-09-28 02:40
+## Where it stood at 2026-09-28 02:40, and the rewrite after
 
 Everything above is in the tree and gated green (`.tuning/coord/S241_gate.log`:
 both suites 41 of 41, format clean, `GATE-DONE 4649650`, no `src/` change; a
@@ -77,6 +77,28 @@ the force push.** The session's sandbox refused to write the rewrite command,
 so it is not run by the agent; the owner runs `.tuning/coord/S241_rewrite.sh`
 on a clean tree after this commit, then `S241_verify.sh`, then pushes. The
 step completes in the commit that appends the sha map to DEC-235.
+
+The owner ran the rewrite and pushed on the morning of 2026-09-28. Checked
+afterwards from this session: `achesso`, `origin/achesso` and the remote all
+at `ec13cf2`; every old-to-new pair differs in the two report files only (the
+three commits before S240's completion in the run-1 report only), `src/`,
+`tests/` and `tools/` identical, authors, dates and messages identical; the
+rewritten S240 commits carry the 599069- and 599345-byte blobs; `s113` on
+`3cede8c` and its worktree's status exactly S113's own seventeen entries;
+`refs/original/` already dropped; the largest blob reachable from either
+branch S087's 19 MB report. `adocs/plan.md`'s ledger names none of the
+rewritten shas; `adocs/data/S112_sprt.sh` and S112's step file name the old
+`1e9827d` and `3d82344` as the pins fastchess printed, which stay valid as
+labels (DEC-235).
+
+**A hazard this step walked into, for the next one that edits a match
+script:** `fastchess.sh` was rewritten in place (the `OUT` default) while
+S112's detached run of it was alive. Bash reads a script incrementally by
+byte offset, so when the match ended the running script resumed 311 bytes
+into the wrong line and died with `syntax error near unexpected token '('`
+at its reported line 951, after fastchess had printed the whole result
+block; `SPRT-RUN-FAILED: exited 2` is that, not the match. A script with a
+run alive is edited on a copy or after the run.
 
 ## What it does not touch
 
