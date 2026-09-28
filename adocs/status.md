@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, 14:49: S113's SPRT is running, S131 built beside it
+
+**S113's SPRT, launched 14:49: `3d97737` (ProbCut at its seeds) against
+`029ff61`, `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260928144916, 12 of
+12 cores, output `.tuning/sprt_s113_20260928_144916`, log `.tuning/coord/S113_sprt.log`, pid 1211234
+(own session, no tty).** Banner checked against the pins. Detached watcher
+`.tuning/coord/S113_watch.sh` (pid 1217358, four exits, 40 h ceiling, hourly
+`PROGRESS` in `.tuning/coord/S113_watch_detached.out`). Worst case 41861
+games, about 19.8 h at 2110 an hour; on a bound 25591, about 12.1 h
+(DEC-143). Pre-registration `adocs/data/S113_sprt.sh`; its interpretation
+block is the contract. **When it ends**: the S112 pattern -- copy the log to
+`adocs/data/S113_sprt.log`, the pairs reading, README rows, the verdict
+section, the DEC-220 block from `.tuning/coord/sprt_block.py`, the ledger;
+then the reading by the pre-registration (H1 keeps; otherwise `ProbCut` to 0
+and the code leaves by a fresh agent, the three re-derived goldens restored
+byte for byte). **Beside it, niced:** S131's agent in `../chesso-s131` on
+`029ff61` (brief `.tuning/coord/S131_brief.md`), rebased onto S113's outcome
+before pinning. A reboot kills the run: re-launch from the pre-registration
+with a fresh seed and record the dead one as void.
+
 ## 2026-09-28, afternoon: S113 (ProbCut) landed as `3d97737`, pinned against `029ff61`
 
 A fresh agent rebased S113 onto S112's tree and re-proved it (identity at
