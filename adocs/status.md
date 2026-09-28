@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, afternoon: S113 (ProbCut) landed as `3d97737`, pinned against `029ff61`
+
+A fresh agent rebased S113 onto S112's tree and re-proved it (identity at
+`ProbCut` 0 exact against `308b388`; `bench` 4649650 -> 3591364, -22.76 %;
+mutation 14 of 14; both suites 41 of 41 with `test_mate_carry` at 57 s and
+58 s idle). Three mined mate rows moved on the combination -- S097's multicut
+row, S112's capture row 4 and S113's own -- and each was re-derived by its own
+script under DEC-233, the old rows kept; the coordinator confirmed that
+reading. Cold fast check: no real defect, six wording findings fixed in the
+landing, one edge recorded as open finding 6 of the pre-registration (the
+preliminary enters `quiescence` on a child `negamax_at` never screened; no
+cut is wrong). Second tier green: Debug self-play 8 games 0 `Assertion`,
+`gate_extra` 5 stages green in 1228 s. **Next:** the SPRT launches from
+`adocs/data/S113_sprt.sh` right after this commit (12 to 20 h; the launch is
+recorded in the next commit), with S131 built beside it, niced, on `029ff61`
+by a fresh agent (brief `.tuning/coord/S131_brief.md`), to be rebased onto
+S113's outcome. Owner questions unchanged (the afternoon section below).
+
 ## 2026-09-28, midday: S112 read as a zero at the cap, the code kept for S022 (DEC-236)
 
 The interrupted run was whole: 40000 games, no verdict, `Elo 1.96 +/- 2.63`,

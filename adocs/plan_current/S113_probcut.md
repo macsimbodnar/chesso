@@ -732,3 +732,11 @@ imported print "the multicut changes the tree"; it is ProbCut's witness.
 `mate_the_extra_ply_hides` corrected to depth 8 (11 at S095, re-derived at
 S234; the agent's flag, verified against the test). Gate green on the staged
 tree after these edits, `bench` 3591364.
+
+**Second tier on the landing** (DEC-141): Debug self-play 8 games at 4+0.04,
+0 `Assertion`, 0 `disconnect` (`.tuning/coord/S113_debug_selfplay/`);
+`tools/gate_extra.sh` 5 stages green in 1228 s (`.tuning/gate_extra_2026-09-28_S113.log`).
+Landed as `3d97737` on `029ff61`, `bench` 4649650 -> 3591364. SPRT pair
+pinned: `REF` `029ff61` (the tree S112's zero left, its engine `3d82344`'s
+node for node), `CAND` `3d97737`; open findings re-read at pinning, item 6
+added by the fast check, nothing else moved since the rebase agent's block.
