@@ -933,3 +933,12 @@ names its guard mode; `MANUAL.md`'s row holds no number that moved and is
 unchanged. The mutant file's header table is the final pass's -- V02's and
 V09's rows lose the forced-mate case, and V04's gains it at the new multicut
 row -- and its pairs did not move.
+
+**Second tier on the landing** (DEC-141): Debug self-play 8 games at 4+0.04,
+0 `Assertion`, 0 `disconnect` (`.tuning/coord/S131_debug_selfplay/`);
+`tools/gate_extra.sh` 5 stages green in 1124 s (`.tuning/gate_extra_2026-09-28_S131.log`).
+Landed as `13caf43` on `2d6b8f1`, `bench` 3591364 -> 3429473. SPRT pair
+pinned: `REF` `2d6b8f1` (the tree S113's H1 left, its engine `3d97737`'s node
+for node), `CAND` `13caf43`; open findings re-read at pinning: items 1 to 10
+as the pre-registration states them, nothing moved since the rebase agent's
+final pass.

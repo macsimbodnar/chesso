@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, late: S131 (quiet queen promotions) landed as `13caf43`, pinned against `2d6b8f1`
+
+The ruling applied: `S097_mine_mate_row.py` gained a guard mode (DEC-238),
+S097's multicut row was re-derived under it (`7k/5p1p/p2p1N2/2p2P2/4P3/
+1r3n1P/3K2R1/6R1 w - - 2 42`, depth 14, mate in 6; red under E21, green
+shipped; S113's row quoted for an H0), mutation 9 of 9 with E21 killed
+again. Cold fast check over the rebased diff: no real defect in the code; the
+manual's golden count (68, now 69), a refusal branch of the miner reading a
+missing argument, a B04 observation comment and three over-claims about
+guard rows were fixed in the landing. **S244 created** as a filler for S113's
+open finding 6 (ProbCut's preliminary entering quiescence on a dead-board
+child), which called itself a filler without a step; the reach is counted
+first and the proof is the cheapest its reach allows. Landed with
+the two `specs.md` sentences; `bench` 3591364 -> 3429473. Second tier
+green: Debug self-play 8 games 0 `Assertion`, `gate_extra` 5 stages green in 1124 s. **Next:**
+the SPRT launches from `adocs/data/S131_sprt.sh` right after this commit
+(12 to 20 h worst case; the launch is recorded in the next commit), with the
+two fillers S242 and S243 done beside it, niced, by one fresh agent. Owner
+questions unchanged.
+
 ## 2026-09-28, night: S131 rebased onto ProbCut's tree; E21 uncovered, DEC-238; S243 created
 
 A fresh agent rebased S131 onto `3c7cf84` and re-proved it (identity at
