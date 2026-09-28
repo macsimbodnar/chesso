@@ -1453,7 +1453,10 @@ TEST_SUITE("search: quiescence futility")
   // The suite's quiesce() with the node count kept: `explored_nodes` counts
   // quiescence entries, so 1 is "the root and no child", and a skip is the
   // only way a node with a legal capture that survives the exchange gate can
-  // report it.
+  // report it. A count above 1 is some move searched -- a capture, or since
+  // S131 a promotion to a queen that takes nothing -- so a case that reads it
+  // as a searched capture first establishes, on its own board, that no such
+  // promotion gets past the exchange gate.
   static qs_run_t qs_run(const std::string& fen, int alpha, int beta)
   {
     REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
@@ -1487,7 +1490,9 @@ TEST_SUITE("search: quiescence futility")
     return value;
   }
 
-  // The captures quiescence's filter loop sees in this position, legal ones.
+  // The legal captures of this position. Not everything quiescence's filter
+  // loop keeps out of check: since S131 it keeps a promotion to a queen that
+  // takes nothing as well, which legal_quiet_promotions() below lists.
   static std::vector<move_t> legal_captures(const std::string& fen)
   {
     REQUIRE(load_FEN(fen, &game));
@@ -1498,6 +1503,24 @@ TEST_SUITE("search: quiescence futility")
     std::vector<move_t> out;
     for (size_t i = 0; i < count; ++i) {
       if (MOVE_CAPTURE(moves[i])) { out.push_back(moves[i]); }
+    }
+    return out;
+  }
+
+  // The legal promotions of this position that take nothing, all four pieces
+  // of each: the moves S131's filter keeps the queen of.
+  static std::vector<move_t> legal_quiet_promotions(const std::string& fen)
+  {
+    REQUIRE(load_FEN(fen, &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    std::vector<move_t> out;
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_PROMOTED(moves[i]) && !MOVE_CAPTURE(moves[i])) {
+        out.push_back(moves[i]);
+      }
     }
     return out;
   }
@@ -1608,6 +1631,19 @@ TEST_SUITE("search: quiescence futility")
       REQUIRE(survives_see_gate(move));
     }
 
+    // Since S131 quiescence also searches a promotion to a queen that takes
+    // nothing, and one the exchange gate let through would be a child of its
+    // own: the count below would then hold with every capturing promotion
+    // skipped. The engine's answer on this board: the pawn's push, b7b8, is
+    // four promotions that take nothing, and the gate declines every one of
+    // them -- the a8 rook takes whatever arrives on b8, see -100 -- so a child
+    // here is a capturing promotion's.
+    const std::vector<move_t> quiet = legal_quiet_promotions(fen);
+    REQUIRE_EQ(quiet.size(), 4);
+    for (const move_t move : quiet) {
+      REQUIRE_FALSE(survives_see_gate(move));
+    }
+
     const int margin = QS_FUTILITY_MARGIN;
     const int victim = search_qs_futility_value_probe(B_ROOK);
 
@@ -1621,7 +1657,15 @@ TEST_SUITE("search: quiescence futility")
     const int stand_pat = lazy_stand_pat(fen, alpha, beta);
     REQUIRE(stand_pat + margin + victim < alpha);
 
-    CHECK(qs_run(fen, alpha, beta).nodes >= 2);
+    const qs_run_t run = qs_run(fen, alpha, beta);
+    CHECK(run.nodes >= 2);
+
+    // And the move the node settled on is a capturing promotion: the root's
+    // own entry names it, whatever else the filter kept.
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+    CHECK(MOVE_CAPTURE(entry->best_move));
+    CHECK(MOVE_PROMOTED(entry->best_move));
   }
 
   // In check the side to move may not stand pat and every evasion is
@@ -1773,6 +1817,450 @@ TEST_SUITE("search: quiescence futility")
     CHECK_EQ(entry->score, score);
     CHECK_EQ(entry->type, TT_ALPHA_NODE);
   }
+}
+
+
+// Quiet queen promotions in quiescence, S131. Out of check quiescence searches
+// every capture and every promotion to a queen, the ones that take nothing
+// included; the three underpromotions that take nothing stay out, and a
+// promotion that takes something is searched as the capture it is.
+//
+// Every move list, check status, exchange value and evaluation below is the
+// engine's own answer (the CHESS rule), and every node count is derived from
+// them rather than read off a run: `explored_nodes` counts quiescence entries,
+// so 1 is the root alone, and each move searched adds exactly one when the
+// position it leaves is a leaf -- not in check, not a dead board, nothing to
+// capture -- which each case asserts before it counts. Which move was
+// searched is read from the table: every child these boards enter writes an
+// entry of its own (`entered` below), so a case names the move it means
+// rather than inferring it from a count.
+//
+// Mutants: tools/mutants/S131_quiet_queen_promotions.py, each killed by the
+// case its row names.
+TEST_SUITE("search: quiescence promotions")
+{
+  static constexpr int QP_INF = 10000000;
+
+  // A pawn a step from queening, with nothing for either side to take. The
+  // second white pawn is there so that no promotion leaves a dead board: with
+  // it gone, a7a8b and a7a8n would leave a lone minor against a bare king, and
+  // quiescence scores such a move a draw without entering its child (S210), so
+  // the four promotions would not each cost one node when searched.
+  static const char* QUIET_QUEENING = "8/P6k/8/8/8/8/7P/K7 w - - 0 1";
+
+  // A pawn whose square ahead is blocked, so every promotion it has captures.
+  static const char* CAPTURE_QUEENING = "rn5k/1P6/8/8/8/8/8/2K5 w - - 0 1";
+
+  struct qp_run_t
+  {
+    int score;
+    uint64_t nodes;
+    move_t stored_move;  // the root's own entry's move, 0 if it stored none
+  };
+
+  // quiescence() from a cold table with the node count and the move the root
+  // stored, which is the move that beat its stand pat.
+  static qp_run_t qp_run(const std::string& fen, int alpha, int beta)
+  {
+    REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const int score = quiescence(alpha, beta, 0, 0, &game, &state);
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    return {score, state.explored_nodes,
+            (entry != nullptr) ? entry->best_move : 0};
+  }
+
+  // The legal promotions of the position loaded in `game` that take nothing,
+  // in generator order.
+  static std::vector<move_t> quiet_promotions()
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    std::vector<move_t> out;
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_PROMOTED(moves[i]) && !MOVE_CAPTURE(moves[i])) {
+        out.push_back(moves[i]);
+      }
+    }
+    return out;
+  }
+
+  static size_t count_legal_captures()
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    size_t captures = 0;
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_CAPTURE(moves[i])) { captures++; }
+    }
+    return captures;
+  }
+
+  // Whether S015's exchange gate lets the move through, asked the way the
+  // filter loop asks it.
+  static bool survives_see_gate(move_t move)
+  {
+    return capture_cannot_lose(&game.board, move) ||
+           see_ge(&game.board, move, 0);
+  }
+
+  // Quiescence enters the position the move leaves at all: it is not a dead
+  // board, which the search loop would score a draw without a child (S210).
+  static void require_entered_after(move_t move)
+  {
+    REQUIRE(make_move(&game, move));
+    const bool dead = is_insufficient_material(&game.board);
+    unmake_move(&game);
+
+    REQUIRE_FALSE(dead);
+  }
+
+  // And is one quiescence node there and no more: the side to move is not in
+  // check and has nothing to capture or promote, so it stands pat.
+  static void require_leaf_after(move_t move)
+  {
+    require_entered_after(move);
+
+    move_t moves[MAX_MOVES];
+
+    REQUIRE(make_move(&game, move));
+    const bool check = is_check(&game);
+    const size_t noisy = generate_captures(game_tables(), &game.board, moves);
+    unmake_move(&game);
+
+    REQUIRE_FALSE(check);
+    REQUIRE_EQ(noisy, 0);
+  }
+
+  static move_t promotion_to(const std::vector<move_t>& moves,
+                             promotion_t piece)
+  {
+    for (const move_t move : moves) {
+      if (MOVE_PROMOTED(move) == piece) { return move; }
+    }
+    return 0;
+  }
+
+  // Whether the run just made entered the position `move` leaves, asked with
+  // the root loaded. Every node quiescence enters on these boards writes its
+  // own entry before it returns -- at a stand-pat cutoff, at a move's cutoff
+  // or at the end -- none aborts or reaches the depth cap, and qp_run()
+  // clears the table first: so an entry for that position is its child's, and
+  // no entry is a child never entered.
+  static bool entered(move_t move)
+  {
+    REQUIRE(make_move(&game, move));
+    const bool found = tt_get_entry(&tt, &game.board) != nullptr;
+    unmake_move(&game);
+    return found;
+  }
+
+  // QUIET_QUEENING's four promotions, each asserted to be a legal move that
+  // takes nothing, gives no check, passes the exchange gate and leaves a leaf:
+  // so the filter is the only thing that decides whether each one is searched,
+  // and each one it admits costs exactly one node.
+  static std::vector<move_t> require_quiet_queening_premise()
+  {
+    REQUIRE(load_FEN(QUIET_QUEENING, &game));
+    REQUIRE_FALSE(is_check(&game));
+    REQUIRE_EQ(count_legal_captures(), 0);
+
+    const std::vector<move_t> promotions = quiet_promotions();
+    REQUIRE_EQ(promotions.size(), 4);
+
+    for (const move_t move : promotions) {
+      REQUIRE(survives_see_gate(move));
+      require_leaf_after(move);
+    }
+    return promotions;
+  }
+
+  // The class this step admits. White has nothing to capture and a pawn a
+  // step from queening, on a square nothing of Black's attacks, so the
+  // exchange gate has nothing to decline. Before S131 the filter dropped all
+  // four promotions here and quiescence stood pat on evaluate(): one node,
+  // the static score, no move stored.
+  //
+  // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
+  // True`, `is_check() False`, 9 legal moves, no capture and the promotions
+  // a7a8q, a7a8r, a7a8b and a7a8n; stockfish at depth 22 through python-chess
+  // answers a7a8q, mate in 9, and the Syzygy tablebase calls the root a win
+  // for White that a7a8q keeps. Recorded so nobody reads more into the case
+  // than it asserts: what quiescence searches, never which move is best.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a queen promotion that takes nothing is searched")
+  {
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+
+    const std::vector<move_t> promotions = require_quiet_queening_premise();
+    const move_t queen = promotion_to(promotions, TO_QUEEN);
+    REQUIRE(queen != 0);
+
+    REQUIRE(load_FEN(QUIET_QUEENING, &game));
+    const int static_score = evaluate(&game.board);
+
+    const qp_run_t run = qp_run(QUIET_QUEENING, -QP_INF, QP_INF);
+
+    // The queen's child was entered: the table holds the entry it wrote. Only
+    // the queen is asked about here. That nothing else was searched is the
+    // next case's claim, so the exact count this case used to carry is split
+    // between the two: at least the root and this child here, at most that
+    // there.
+    CHECK(entered(queen));
+    CHECK(run.nodes >= 1 + 1);
+
+    // The promotion beat the stand pat, so the node reports more than the
+    // static score and stores the move that did it.
+    CHECK(run.score > static_score);
+    CHECK_EQ(run.stored_move, queen);
+  }
+
+  // The other three stay out, and the premise is what makes that separable:
+  // each is legal, takes nothing, passes the exchange gate and leaves a leaf,
+  // so a filter that admitted one would enter its child, which would write
+  // its entry, and would count a node more than the root and the queen's
+  // child. Asked of the three and of nothing else: a filter that dropped the
+  // queen as well leaves this case green, and is the admission case's to see.
+  //
+  // The separation is by each move's own child and not by the exchange gate,
+  // because the gate does not tell the pieces apart: see_ge()'s answer for an
+  // underpromotion that takes nothing equalled its queen twin's on every one
+  // of the 149334 that reached the filter loop over the bench positions at
+  // depths 12 and 14 and the search_bench positions at 12
+  // (.tuning/coord/S131_underpromotion_gate.txt), so no board was found on
+  // which the gate declines the queen and passes an underpromotion.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "an underpromotion that takes nothing is not searched")
+  {
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+
+    const std::vector<move_t> promotions = require_quiet_queening_premise();
+    const std::vector<move_t> under = {promotion_to(promotions, TO_ROOK),
+                                       promotion_to(promotions, TO_BISHOP),
+                                       promotion_to(promotions, TO_KNIGHT)};
+    for (const move_t move : under) {
+      REQUIRE(move != 0);
+    }
+
+    const qp_run_t run = qp_run(QUIET_QUEENING, -QP_INF, QP_INF);
+
+    for (const move_t move : under) {
+      CHECK_FALSE_MESSAGE(entered(move), print_move(move));
+    }
+
+    // And the count agrees: every move this board generates is one of the
+    // four promotions, so at most the root and the queen's child.
+    CHECK(run.nodes <= 1 + 1);
+  }
+
+  // A promotion that takes something passes the filter as a capture, all four
+  // pieces, and the queen test must not become a second condition on it.
+  // Every promotion CAPTURE_QUEENING has is a capture: four of them, each
+  // passing the exchange gate and leaving a leaf.
+  //
+  // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
+  // True`, `is_check() False`, 9 legal moves of which 4 are captures, the four
+  // b7a8 promotions; stockfish at depth 22 answers b7a8q, mate in 12.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a promotion that takes something is searched as a "
+                    "capture")
+  {
+    REQUIRE(load_FEN(CAPTURE_QUEENING, &game));
+    REQUIRE_FALSE(is_check(&game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    size_t captures = 0;
+    for (size_t i = 0; i < count; ++i) {
+      if (!MOVE_CAPTURE(moves[i])) {
+        REQUIRE_FALSE(MOVE_PROMOTED(moves[i]));
+        continue;
+      }
+      REQUIRE(MOVE_PROMOTED(moves[i]));
+      REQUIRE(survives_see_gate(moves[i]));
+      require_leaf_after(moves[i]);
+      captures++;
+    }
+    REQUIRE_EQ(captures, 4);
+
+    // The root and one child per capturing promotion, whatever the switch
+    // says about the promotions that take nothing: there are none here.
+    CHECK_EQ(qp_run(CAPTURE_QUEENING, -QP_INF, QP_INF).nodes, 1 + captures);
+  }
+
+  // A queen promotion that takes nothing meets S015's exchange gate as a
+  // capture does and reaches see_ge(), capture_cannot_lose() answering false
+  // on an empty target; this pins the gate's reach and not the position's
+  // verdict. The e8 rook defends a8, so the engine's own exchange evaluation
+  // prices a7a8q below zero -- the promotion's +800 on see_value's scale, less
+  // the queen the rook takes, is -100 -- and the gate declines it: one node,
+  // the static score. Whether the gate should decline it is S022's question
+  // and is excluded from this step.
+  //
+  // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
+  // True`, `is_check() False`, 7 legal moves, no capture and the same four
+  // promotions. The Syzygy tablebase calls the root lost for White whatever
+  // it plays, and stockfish at depth 22 through python-chess answers a1b2,
+  // or mate in 15 against White with a7a8q as its only root move -- the step
+  // file's reading on 2026-08-19 was a7a8q. None of that is asserted.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the exchange gate declines a queen promotion onto a "
+                    "defended square")
+  {
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+
+    const std::string fen = "4r3/P6k/8/8/8/8/8/K7 w - - 0 1";
+
+    REQUIRE(load_FEN(fen, &game));
+    REQUIRE_FALSE(is_check(&game));
+    REQUIRE_EQ(count_legal_captures(), 0);
+
+    const move_t queen = promotion_to(quiet_promotions(), TO_QUEEN);
+    REQUIRE(queen != 0);
+
+    // The filter admits it, and were the gate to let it through its child
+    // would be entered and the count would be at least 2: so a count of one is
+    // the gate's decision and nothing else's.
+    require_entered_after(queen);
+    REQUIRE_FALSE(capture_cannot_lose(&game.board, queen));
+    REQUIRE(see(&game.board, queen) < 0);
+    REQUIRE_FALSE(see_ge(&game.board, queen, 0));
+
+    const int static_score = evaluate(&game.board);
+    const qp_run_t run = qp_run(fen, -QP_INF, QP_INF);
+
+    CHECK_EQ(run.nodes, 1);
+    CHECK_EQ(run.score, static_score);
+  }
+
+  // S112's futility test exempts every promotion before it prices a victim,
+  // and this is the class that exemption was written for: a queen promotion
+  // that takes nothing arrives with no victim at all, so priced as a capture
+  // its best case is the futility base alone, and an alpha above that base
+  // would skip it. The window is built the way S112's own cases build theirs,
+  // from the engine's numbers: an alpha far enough above the cheap score that
+  // evaluate_lazy() takes its alpha-side shortcut, so the stand pat is `cheap
+  // + LAZY_EVAL_MARGIN` exactly, and one above that plus the margin.
+  //
+  // S112's "a capturing promotion below the threshold is searched" holds the
+  // same exemption for a promotion that takes something, and a narrower
+  // exemption -- promotions that capture -- would leave it green; this case is
+  // the one that sees the class S131 admits.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "futility does not skip a queen promotion that takes "
+                    "nothing")
+  {
+    REQUIRE_EQ(QS_FUTILITY, 1);
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+
+    const std::vector<move_t> promotions = require_quiet_queening_premise();
+    const move_t queen = promotion_to(promotions, TO_QUEEN);
+    REQUIRE(queen != 0);
+
+    REQUIRE(load_FEN(QUIET_QUEENING, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    const int alpha = cheap + LAZY_EVAL_MARGIN + QS_FUTILITY_MARGIN + 1;
+    const int beta = alpha + 1000;
+
+    bool exact = true;
+    const int stand_pat = evaluate_lazy(&game.board, alpha, beta, &exact);
+    REQUIRE_FALSE(exact);
+    REQUIRE_EQ(stand_pat, cheap + LAZY_EVAL_MARGIN);
+
+    // Priced as a capture of the empty square it lands on, its best case is
+    // at or below alpha: absent the exemption the test would skip it.
+    const int as_a_capture =
+        stand_pat + QS_FUTILITY_MARGIN + search_qs_futility_value_probe(EMPTY);
+    REQUIRE(as_a_capture <= alpha);
+
+    // And the skip would not be rescued by the gives-check exemption: the
+    // leaf premise above has the side to move there not in check. So the
+    // queen's child being entered is the promotion exemption's doing.
+    const qp_run_t run = qp_run(QUIET_QUEENING, alpha, beta);
+    CHECK(entered(queen));
+    CHECK(run.nodes >= 1 + 1);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE SWITCH'S OWN OFF VALUE, DEC-215, and the only build that can drive it.
+  // `QsQueenPromotions` is a compiled constant in the release build, so a case
+  // there cannot turn the class off; in the tune build it is a variable and
+  // `search_param_set` is the setter the tuner uses. Both builds run this file
+  // and the gate runs both (DEC-118), so the off value is held by a case in
+  // the build that can hold it and by a bench equality in the build that
+  // cannot: the tune build at 0 prints the parent commit's total with all
+  // eight `bestmove` replies identical.
+  //
+  // The restorer is not decoration: doctest runs a binary's cases in one
+  // process, so a parameter left at 0 by a failing assertion would switch the
+  // class off for every case after this one. It puts back the value it found
+  // and not a literal 1, S132's pattern: were the shipped default ever to
+  // move, a restorer writing 1 would turn the class on for every tune case
+  // after this one instead.
+  //
+  // Mutation: V04_switch_inverted is killed in the release build by "a queen
+  // promotion that takes nothing is searched"; V05_switch_ignored is
+  // equivalent there at the shipped 1 and killed here.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "no promotion that takes nothing is searched at the "
+                    "switch's off value")
+  {
+    const int found = QS_QUEEN_PROMOTIONS;
+
+    struct restore_t
+    {
+      int value;
+      ~restore_t() { search_param_set("QsQueenPromotions", value); }
+    } restore{found};
+
+    const std::vector<move_t> promotions = require_quiet_queening_premise();
+    const move_t queen = promotion_to(promotions, TO_QUEEN);
+    REQUIRE(queen != 0);
+
+    // The control: at the shipped value this exact drive searches the queen.
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+    const qp_run_t on = qp_run(QUIET_QUEENING, -QP_INF, QP_INF);
+    REQUIRE(entered(queen));
+    REQUIRE(on.nodes >= 1 + 1);
+
+    REQUIRE(search_param_set("QsQueenPromotions", 0));
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 0);
+
+    REQUIRE(load_FEN(QUIET_QUEENING, &game));
+    const int static_score = evaluate(&game.board);
+    const qp_run_t off = qp_run(QUIET_QUEENING, -QP_INF, QP_INF);
+
+    // What the tree before S131 does: nothing searched, the static score, no
+    // move stored.
+    CHECK_EQ(off.nodes, 1);
+    CHECK_FALSE(entered(queen));
+    CHECK_EQ(off.score, static_score);
+    CHECK_EQ(off.stored_move, 0);
+
+    // And a promotion that takes something is still a capture at 0.
+    CHECK_EQ(qp_run(CAPTURE_QUEENING, -QP_INF, QP_INF).nodes, 1 + 4);
+
+    // Put back and the putting back checked; the restorer covers the paths a
+    // failed REQUIRE leaves by.
+    REQUIRE(search_param_set("QsQueenPromotions", found));
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, found);
+  }
+#endif
 }
 
 
@@ -3672,7 +4160,11 @@ TEST_SUITE("search: draws")
     // applied, the derived separator set, the firing witness over it, and the
     // pick. Every stage takes `--fens` explicitly: a stage defaulting to a
     // file a later stage writes is a recipe that cannot be followed, which is
-    // what this block said until the fast check read it.
+    // what this block said until the fast check read it. **Since S131 the
+    // witness and the pick run in the script's guard mode**, `--mode guard`
+    // (DEC-238): this row witnesses a guard, so the firing witness is taken
+    // on a tune library built with E21 applied, and the header's guard-mode
+    // stages 5 and 6 are the ones that derived the row below.
     // Moves legitimately on: any change to the singular block, to pruning or
     // to ordering. Margin: exact -- the row asserts the distance too.
     //
@@ -3717,7 +4209,7 @@ TEST_SUITE("search: draws")
     //
     // **RE-MINED AT S113, AND THE POSITION MOVED.** Everything above this
     // paragraph describes S097's own row,
-    // `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`; the row below is
+    // `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`; its successor is
     // S113's re-mine. ProbCut (S113) ends a non-PV node on a good capture
     // whose shallow search clears `beta + ProbCutMargin`, which is "any change
     // to pruning", and on its tree -- rebased onto S112's per-move futility in
@@ -3749,6 +4241,43 @@ TEST_SUITE("search: draws")
     // without ProbCut: `ProbCut` 0 is `308b388`'s engine to the node, so an H0
     // on S113 restores it as a revert of one line and one distance.
     //
+    // **RE-MINED AT S131, IN THE SCRIPT'S GUARD MODE (DEC-238), AND THE
+    // POSITION MOVED AGAIN.** S131 lets quiescence search a queen promotion
+    // that takes nothing, which is "any change to pruning or to ordering",
+    // and on its tree -- rebased onto S113's `3c7cf84` -- S113's row,
+    // `1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35` at depth 14,
+    // mate in 4, stayed green and stopped separating: the shipped and the
+    // guard-dropped builds both report its mate at 12, 13 and 14, and a
+    // targeted `tools/mutation_check.py --only
+    // E21_multicut_mate_band_gate_dropped` scored E21 a survivor of the whole
+    // fast suite. The script re-run in its default mode found one candidate
+    // separating the two builds and refused it, because its first condition
+    // asks the shipped build whether the multicut fires on the row, and on a
+    // row that witnesses a guard the guard is what keeps the shipped rule
+    // still. DEC-238 takes that witness on the mutant's build instead, and
+    // stages 2 to 6 re-run with `--mode guard` take
+    // `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42` at depth 14,
+    // mate in 6 -- shipped `d11 d12 d13 d14`, guard dropped `d11 d12 d13`,
+    // the mutant's multicut changing the tree at 14 and the shipped one at no
+    // depth -- the only candidate that separates. Its cell costs 1688502
+    // nodes and about 0.26 s, where S113's row cost 13206867 and about 2.0 s
+    // at the same depth on this tree (`adocs/data/S131_remine_s097.log`,
+    // both modes' picks and every cell).
+    // Not read off the board (CLAUDE.md): python-chess reports `is_valid()`
+    // True, `is_check()` **True** -- the root is in check and at ply 0, which
+    // the block never reaches -- 4 legal moves, no capture and no promotion,
+    // and stockfish at depth 20 in a fresh process through python-chess
+    // reports **`#+6` for White, the side to move, in 8285 nodes, pv Kc1
+    // Rc3+ Kb2 Ng5 Rxg5 Rb3+ Kxb3 c4+ Kc3 a5 Rg8#**, the label
+    // `adocs/data/S097_candidates.tsv` already held. **Observed red, then
+    // green**: with E21 applied, `./test_search --test-case="pruning does not
+    // hide a forced mate"` fails here at `REQUIRE( result.mate_found )` and
+    // passes with the guard in place (`.tuning/coord/S131_rbg_red.log`).
+    // S113's row is the row of the tree without S131, and on an H0 it has to
+    // come back: `QsQueenPromotions` 0 is `3c7cf84`'s engine to the node, on
+    // which this row reports no mate at 14 and S113's separates E21 again --
+    // a revert of one line and one distance.
+    //
     // The rows this case has carried, and the tree each belongs to:
     //
     //     pre-S236, again after S236 v2, and on `308b388`, S097's row:
@@ -3758,11 +4287,14 @@ TEST_SUITE("search: draws")
     //     S236 v2, the term at 1024:
     //         "2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31"
     //         depth 14, mate_in 6, 38927874 nodes, about 4.5 s
-    //     S113, ProbCut on S112's tree: the row below, depth 14, mate_in 4,
-    //         16599756 nodes, about 2.4 s
+    //     S113, ProbCut on S112's tree, and on `3c7cf84`:
+    //         "1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35"
+    //         depth 14, mate_in 4, 16599756 nodes, about 2.4 s
+    //     S131, quiet queen promotions on `3c7cf84`, guard mode (DEC-238):
+    //         the row below, depth 14, mate_in 6, 1688502 nodes, about 0.26 s
     //
     const std::string mate_the_multicut_hides =
-        "1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35";
+        "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -3782,7 +4314,7 @@ TEST_SUITE("search: draws")
       const search_t result = search_fen(mate_the_multicut_hides, 14);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 4, title);
+      REQUIRE_MESSAGE(result.mate_in == 6, title);
     }
 
     // S113's own row, and the accepts' clause for ProbCut: a forced mate
@@ -3853,6 +4385,8 @@ TEST_SUITE("search: draws")
     // `REQUIRE( result.mate_found )`; it passes with the guard in place --
     // `.tuning/coord/S113_rb_red.log` (the two earlier rows' observations are
     // `S113_mate_row_red.log` and `S113_mate_row_red_offset4.log` beside it).
+    // On S131's tree, where the multicut row above is DEC-238's, B04 fails
+    // first at this row: `.tuning/coord/S131_rbg_mutation.log`.
     const std::string mate_probcut_hides =
         "5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44";
 

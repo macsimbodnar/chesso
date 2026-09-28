@@ -1,0 +1,171 @@
+# S131: S097's mate row re-derived on the tree S131 lands on, 2026-09-28 --
+# and no replacement exists there.
+#
+# WHY. S131 lets quiescence search quiet queen promotions and was rebased onto
+# 3c7cf84, S113's tree with ProbCut kept on its H1. No case went red on the
+# combination, but a targeted `tools/mutation_check.py --only
+# E21_multicut_mate_band_gate_dropped` on a fixture of the rebased tree scored
+# E21 a SURVIVOR: 0 of 41 tests red, bench signature unchanged. E21's only
+# recorded kill is the mined multicut row of "pruning does not hide a forced
+# mate", so the row no longer separates the guard it was mined for -- the way
+# S188's tree made S097's row go quiet, which that step caught the same way
+# and answered with a re-mine. A golden whose derivation moved is re-derived
+# by its own script (DEC-142, DEC-233).
+#
+# WHAT RAN. adocs/data/S097_mine_mate_row.py's stages 2 to 6, driven by
+# .tuning/coord/S131_rb_mine.sh, as S113's rebase ran them:
+#   * stage 1 not re-run: the 269 candidates are the corpus and the oracle,
+#     neither of which moved; adocs/data/S113_mine_mate_row.py `fens` wrote
+#     their FEN column, byte-identical to S113's rebase list
+#   * both sweeps at depths 11 to 14 -- the range the script derives from
+#     SeMinDepth -- one against the rebased candidate's engine library, one
+#     against a library of the same src with E21 applied in a separate
+#     worktree (.ref-builds/e21)
+#   * the separator set, the firing witness over it on the tune library at
+#     SeMultiCut 0 and 1, and the pick
+#
+# THE RESULT. **No candidate qualifies.** One of the 269 separates the two
+# sweeps -- 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42, shipped m6
+# at 11 to 14, E21 m6 at 11 to 13 and none at 14 -- and the firing witness
+# shows the shipped multicut changing nothing on it at any depth, so the
+# pick's first condition, pre-registered in the script's header (DEC-209
+# clause 4), skips it. The row the case carries,
+# 1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35 at depth 14, mate in
+# 4, is still a mate the shipped build reports -- at 12, 13 and 14 here -- but
+# E21's build reports it at the same three depths.
+#
+# ATTRIBUTION, on the same instrument: the four rows below swept on the parent
+# 3c7cf84 with its own copy of the script, shipped and with E21 applied
+# (.ref-builds/e21p). There the row separates as S113's re-mine recorded it,
+# shipped d13 d14 against E21's d13, the same node counts. So the change is
+# S131's: with quiet queen promotions in quiescence both builds find this mate
+# a ply earlier and E21 no longer loses it at 14. An H0 on S131 returns
+# QsQueenPromotions to 0, the parent's engine to the node, and the row
+# separates E21 again with no re-mine.
+#
+# NOT DONE HERE, BY THE BRIEF'S LIMITS: no test changed. The row stays as it
+# stands, and what the gap is owed -- a pick rule whose liveness witness is
+# taken on the mutant for a guard mutant, a direct guard test on the
+# multicut's returned value, a wider corpus, or a recorded acceptance -- is
+# the coordinator's decision, recorded in S131's step file and as open
+# finding 9 of adocs/data/S131_sprt.sh.
+#
+# ==== the separators, the witness and the pick, as the script printed them ====
+1 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S131_rb_s097_separators.fen
+the multicut changes the tree on 0 of 1 positions in 1 s -> /home/max/ws/chesso/.tuning/coord/S131_rb_s097_fires.txt, /home/max/ws/chesso/.tuning/coord/S131_rb_s097_fires.fen
+  skipped, the rule never fires here: 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+no candidate separates the guard in this range
+
+# ==== the cells, depths 11..14, mate:nodes:ms, '-' where no mate is reported ====
+# candidate (S131 rebased onto 3c7cf84), shipped:
+#   -:329113:74 m4:3440946:525 m4:7958275:1085 m4:13206867:1963 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+#   m6:244882:31 m6:337152:49 m6:960962:122 m6:1688502:239 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+#   -:344139:51 -:702182:118 -:1046520:157 -:2483491:407 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   -:68885:12 -:152876:25 -:352995:57 m5:2085072:310 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+# candidate, E21 applied:
+#   -:329113:74 m4:3440946:514 m4:7492617:1020 m4:13148004:1910 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+#   m6:244882:34 m6:337152:54 m6:960962:137 -:1436564:217 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+#   -:344139:51 -:702182:118 -:1041746:159 -:1895659:351 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   -:68885:13 -:152876:28 -:352995:65 m5:2085072:304 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+# parent 3c7cf84, shipped:
+#   -:183656:43 -:424091:95 m4:11193336:1333 m4:16599756:2363 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+#   m6:244882:33 m6:337130:50 m6:883223:112 -:956936:136 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+#   -:248656:38 -:417486:71 m5:1836528:238 -:1434773:239 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   -:103224:16 -:368746:60 -:209287:38 m5:2412705:320 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+# parent 3c7cf84, E21 applied:
+#   -:183656:44 -:424091:102 m4:11183863:1400 -:8196161:1316 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+#   m6:244882:34 m6:337130:54 m6:883223:125 -:956936:154 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+#   -:248656:42 -:417486:76 -:1053430:157 -:1690056:250 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+#   -:103224:16 -:368746:62 -:209287:42 -:1123213:198 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+# firing witness over the one separator (tune library, SeMultiCut 0 against 1):
+#   7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42	none	m6:244882:32 m6:337152:49 m6:960962:123 m6:1688502:238	m6:244882:36 m6:337152:56 m6:960962:142 m6:1688502:259
+REMINE-DONE
+
+# ==== DEC-238: THE ROW RE-DERIVED IN THE SCRIPT'S GUARD MODE, 2026-09-28 ====
+#
+# THE RULING. DEC-238 (the coordinator, under the owner's delegation): for a
+# row that witnesses a *guard* -- a mutant that drops a condition stopping the
+# rule -- the firing witness is taken on the mutant's build: the rule must
+# fire there, the shipped guard must stop it, and the shipped build must keep
+# the mate the mutant loses. adocs/data/S097_mine_mate_row.py gained that
+# mode, `--mode guard` on `fires` and `pick` (its header's "GUARD MODE,
+# DEC-238"); the default, `--mode rule`, is the mode of every derivation
+# before it and above, and the edited script's default-mode pick over three
+# recorded input sets -- S097's own, S113's rebase's and the refusal above --
+# prints byte for byte what the unedited script printed, and S113's miner,
+# which runs S097's `fires` and `pick` with a namespace of its own and no
+# mode, reproduces its recorded pick (.tuning/coord/S113_rb_s113_pick.log)
+# byte for byte.
+#
+# WHAT RAN. Stages 2 to 6 fresh, driven by .tuning/coord/S131_rb_mine_guard.sh,
+# every input named:
+#   * candidates: adocs/data/S113_mine_mate_row.py `fens`, the 269 of
+#     adocs/data/S097_candidates.tsv, byte-identical to S113's rebase list
+#   * sweep, shipped: build/src/libchesso_engine.a (S131's src)
+#   * sweep, E21: .ref-builds/e21/build/src/libchesso_engine.a, the same src
+#     with E21_multicut_mate_band_gate_dropped applied
+#   * separators from the two sweeps
+#   * fires --mode guard: .ref-builds/e21/build-tune/src/libchesso_engine.a,
+#     a tune library of the same src with E21 applied (-DCHESSO_TUNE=ON)
+#   * fires in the default mode, for the record: build-tune/src/libchesso_engine.a
+#   * pick --mode guard, and pick in the default mode over the same sweeps
+# Both sweeps equal the ones above in every mate reading and node count, all
+# 269 rows each; the separator set is the same one position.
+#
+# THE RESULT. **The guard mode takes the position the default mode refused**:
+#
+#   take: 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+#     depth 14, mate in 6, shipped [d11 d12 d13 d14], guard dropped
+#     [d11 d12 d13], mutant fires [d14], 1688502 nodes, 255 ms
+#
+# The two witnesses side by side are the ruling's three clauses in numbers:
+# on the mutant's tune library SeMultiCut 0 -- the shipped engine, since E21
+# edits only the multicut's own condition -- reports m6 at 14 in 1688502
+# nodes and SeMultiCut 1 no mate in 1436564, so the rule fires there and
+# loses the mate; on the shipped tune library 0 and 1 are identical at every
+# depth, so the shipped guard stops it; and the shipped build keeps the mate
+# at 14 that the mutant loses. The cell costs 1688502 nodes and about 0.26 s,
+# where the row it replaces cost 13206867 nodes and about 2.0 s at the same
+# depth on this tree.
+#
+# Oracle, through the tools (.tuning/coord/S131_rb_oracle.py: S230's
+# line_facts, one fresh stockfish at depth 20, and python-chess): #+6 for
+# White, the side to move, in 8285 nodes, pv Kc1 Rc3+ Kb2 Ng5 Rxg5 Rb3+ Kxb3
+# c4+ Kc3 a5 Rg8# -- the label S097_candidates.tsv already held;
+# python-chess reports the position valid, in check, 4 legal moves, no
+# capture, no promotion.
+#
+# Red observed with E21 applied and green shipped, by hand on a Release
+# build of the new test file: .tuning/coord/S131_rbg_red.log ("pruning does
+# not hide a forced mate" fails at the multicut row, `REQUIRE(
+# result.mate_found )`, "mate the multicut hides, depth 14"). The row
+# replaced, 1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35 at depth 14,
+# mate in 4, stays quoted in the case's GOLDEN block with the tree it belongs
+# to: on an H0 for S131 it comes back, since on 3c7cf84's engine this row
+# reports no mate at 14 (the parent's cells above) and that one separates
+# E21 again. The durable fix, a direct test of the multicut's returned value
+# that no corpus decides, is S243.
+#
+# ==== the guard-mode run, as the script printed it ====
+# $ separators:
+1 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S131_rbg_separators.fen
+# $ fires_guard:
+guard mode (DEC-238): the mutant's multicut changes the tree on 1 of 1 positions in 1 s -> /home/max/ws/chesso/.tuning/coord/S131_rbg_fires_guard.txt, /home/max/ws/chesso/.tuning/coord/S131_rbg_fires_guard.fen
+# $ fires_rule:
+the multicut changes the tree on 0 of 1 positions in 1 s -> /home/max/ws/chesso/.tuning/coord/S131_rbg_fires_rule.txt, /home/max/ws/chesso/.tuning/coord/S131_rbg_fires_rule.fen
+# $ pick_guard:
+  d14	#6	run 4	1688502 nodes	255 ms	shipped [d11 d12 d13 d14]	open [d11 d12 d13]	mutant fires [d14]	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+
+take: 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+  depth 14, mate in 6, shipped [d11 d12 d13 d14], guard dropped [d11 d12 d13], 1688502 nodes, 255 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d14]
+# $ pick_rule:
+  skipped, the rule never fires here: 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+no candidate separates the guard in this range
+
+# ==== the two witnesses over the separator, depths 11..14, off (SeMultiCut 0) then on (1) ====
+#   # S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 11..14, tune library .ref-builds/e21/build-tune/src/libchesso_engine.a.
+#   7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42	d14	m6:244882:31 m6:337152:48 m6:960962:126 m6:1688502:237	m6:244882:37 m6:337152:58 m6:960962:142 -:1436564:236
+#   # S097 firing witness, SeMultiCut 0 against 1, depths 11..14, tune library build-tune/src/libchesso_engine.a.
+#   7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42	none	m6:244882:32 m6:337152:52 m6:960962:127 m6:1688502:267	m6:244882:36 m6:337152:56 m6:960962:140 m6:1688502:241
+REMINE-GUARD-DONE

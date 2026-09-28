@@ -13289,8 +13289,10 @@ Decision:     By the coordinator under the owner's delegation. For a row
               must stop it, and the shipped build must keep the mate the
               mutant loses. The script gains that mode, named at its call,
               and the rest of its rule is unchanged (the candidates, both
-              sweeps, the derived separator set, the pick by the fewest
-              shipped runs). S097's row is re-derived on S131's tree under
+              sweeps, the derived separator set, the pick by the longest
+              consecutive shipped run and then the cheaper cell -- corrected
+              2026-09-28 from "the fewest shipped runs", which misread the
+              script). S097's row is re-derived on S131's tree under
               it, the old row quoted in the GOLDEN block, red under E21 and
               green shipped observed and logged; `DEV_MANUAL.md`'s DEC-142
               row says which mode derived it. The durable fix is a direct
@@ -13302,8 +13304,9 @@ Rejected:     Landing with E21 alive: a guard that keeps a pruning rule from
               wider corpus: luck, and the next rebase moves it again.
               Reading the surviving row on the shipped build's firing: the
               condition was written for rows that witness the rule, not its
-              guard, and applied to a guard it refuses the only kind of
-              position that can witness one.
+              guard, and applied to a guard it refuses a kind of position that
+              can witness one -- at S131's rebase the only separating
+              candidate the corpus held.
 Consequences: `S097_mine_mate_row.py` carries the guard mode; every later
               re-derivation of a guard row states which mode it used; S243
               is in `plan_todo/` and named in S131's pre-registration.

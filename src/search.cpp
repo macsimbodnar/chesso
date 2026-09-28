@@ -1155,25 +1155,43 @@ int quiescence(int alpha,
   move_t moves[MAX_MOVES];
   int scores[MAX_MOVES];
 
-  // Out of check, this node only ever searches captures, so only captures are
-  // generated. In check every evasion has to be considered, quiet ones
-  // included, so the full list is needed.
+  // Out of check this node searches only what generate_captures() emits --
+  // every capture and every promotion -- less what the filter below drops. In
+  // check every evasion has to be considered, quiet ones included, so the full
+  // list is needed.
   const size_t n = in_check
                        ? generate_moves(game_tables(), &game->board, moves)
                        : generate_captures(game_tables(), &game->board, moves);
 
-  // Compacted to the front of the same array: captures only, or everything when
-  // the move is forced. capture_score() ranks a quiet evasion below any
-  // capture, which is the order wanted here too.
+  // Compacted to the front of the same array. In check that is every evasion,
+  // the move being forced. Out of check it is every capture and every
+  // promotion to a queen, the ones that take nothing included (S131): a pawn
+  // that queens is a material change the size of a capture, and a node that
+  // stands pat in front of one scores the board as if it could not happen.
+  // generate_captures() emits all four promotions whether they take anything
+  // or not (INV-3), so the moves dropped here are the three underpromotions
+  // that take nothing -- the published quiescence's own set, which considers
+  // queening only -- and a promotion that takes something stays as the
+  // capture it is. QS_QUEEN_PROMOTIONS at 0 drops the queen's too, which is
+  // the tree before S131 node for node.
   //
-  // The filter still runs when out of check: generate_captures() also emits
-  // promotions that capture nothing, and this node did not search those before.
-  // Keeping them out means this change is a pure speed-up with no effect on
-  // what the search explores. Letting them through is very likely an
-  // improvement, but it is a search change and needs to be measured in games.
+  // A promotion that takes nothing meets the two tests below as a capture
+  // does. S112's futility exempts every promotion before it prices a victim.
+  // S015's exchange gate prices it through see_ge(), which it reaches because
+  // capture_cannot_lose() answers false on an empty target, so a queen that
+  // cannot hold its square is declined there; a promotion that takes
+  // something is a pawn's capture, which capture_cannot_lose() passes, and
+  // never reaches see_ge(). capture_score() orders what survives by MVV-LVA
+  // with an empty square worth 0, so a promotion that takes nothing scores
+  // minus a pawn, after every capture of a piece worth at least its taker and
+  // before every other, and a quiet evasion minus the price of the piece that
+  // moves.
   size_t count = 0;
   for (size_t i = 0; i < n; ++i) {
-    if (!in_check && !MOVE_CAPTURE(moves[i])) { continue; }
+    if (!in_check && !MOVE_CAPTURE(moves[i]) &&
+        !(QS_QUEEN_PROMOTIONS != 0 && MOVE_PROMOTED(moves[i]) == TO_QUEEN)) {
+      continue;
+    }
 
     // The futility test, above the exchange gate because it is three adds and
     // a compare where see_ge rebuilds attack sets per exchange round.

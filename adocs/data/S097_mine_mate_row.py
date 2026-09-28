@@ -135,6 +135,50 @@ because the row passes there. Where several candidates qualify, take the one
 whose shipped profile is the longest run of consecutive depths -- a row that
 holds over several depths is a row an ordinary ordering change will not
 silently take away -- and break a remaining tie by the cheaper cell.
+
+GUARD MODE, DEC-238 (2026-09-28). The row this file mines witnesses a
+**guard** -- E21 drops a condition that stops the rule -- and condition 1 above
+asks the **shipped** build whether the rule fires on the position. For a guard
+that is the wrong build to ask: the guard's job is to stop a firing, so a
+position that can witness it is one where the rule fires on the mutant's build
+and the shipped guard stops it, and there the shipped witness can read `none`
+-- it did for the row S131's rebase needed, while S097's own row and S113's
+separated E21 in rule mode with the shipped multicut firing. S131's rebase onto `3c7cf84` met exactly that: E21 survived the
+fast suite, and the one candidate separating it on that tree was refused by
+condition 1 (`adocs/data/S131_remine_s097.log`). `--mode guard`, given to
+`fires` and to `pick`, takes the witness on the mutant's build instead:
+
+  * `fires --mode guard --lib <the mutant's tune library>` sweeps a tune
+    library built with the mutant applied, at `SeMultiCut` 0 and at 1. At 0
+    it is the shipped engine -- E21 edits nothing but the multicut's own
+    condition -- so a moved cell is the **mutant's** rule reaching the
+    position. `--lib` is required in this mode and may not be the shipped
+    tune library, and the file's first line names the mode that wrote it.
+  * `pick --mode guard` reads only a witness file written in guard mode, and
+    the default mode only one written in the default mode, so no derivation
+    mixes the two.
+  * The rest of the rule is unchanged: the candidates, both sweeps, the
+    separator set derived from them, condition 2 -- the shipped build reports
+    the mate at a depth where the guard-dropped build does not -- and the
+    ordering. Condition 2 between two builds that differ by the guard alone
+    is the shipped guard stopping what fires on the mutant.
+
+The default, `--mode rule`, is the mode every derivation before DEC-238 ran
+in, and what it prints and writes is byte for byte what it was. A guard row
+derived after DEC-238 names its mode. Stages 1 to 4 are the same commands;
+stages 5 and 6 become, with the tune library built like stage 3's but with
+`-DCHESSO_TUNE=ON`:
+
+    # 5, guard mode: the witness on a tune library built with E21 applied
+    $P adocs/data/S097_mine_mate_row.py fires --mode guard \
+        --fens $C/S097_separators.fen \
+        --lib build-e21-tune/src/libchesso_engine.a \
+        --out $C/S097_fires_guard.txt --fens-out $C/S097_fires_guard.fen
+
+    # 6, guard mode
+    $P adocs/data/S097_mine_mate_row.py pick --mode guard \
+        --shipped $C/S097_shipped.txt --open $C/S097_open.txt \
+        --fires $C/S097_fires_guard.txt
 """
 
 import argparse
@@ -161,6 +205,13 @@ CANDIDATE_FENS = os.path.join(SCRATCH, "S097_candidates.fen")
 SEPARATORS = os.path.join(SCRATCH, "S097_separators.fen")
 FIRES = os.path.join(SCRATCH, "S097_fires.txt")
 FIRES_FENS = os.path.join(SCRATCH, "S097_fires.fen")
+
+# The two firing witnesses (DEC-238): `rule` asks the shipped tune library,
+# the only mode before DEC-238; `guard` asks the mutant's. GUARD_MARK is how a
+# witness file says it was taken in guard mode, and `pick` reads it back.
+MODES = ("rule", "guard")
+SHIPPED_TUNE_LIB = "build-tune/src/libchesso_engine.a"
+GUARD_MARK = "guard mode (DEC-238)"
 
 
 def se_min_depth():
@@ -407,7 +458,27 @@ def cmd_sweep(args):
 def cmd_fires(args):
     """The firing witness, on the tune library so the switch is a variable.
     Each position is swept twice and a cell where the node count or the mate
-    reading differs is the rule changing this position's tree."""
+    reading differs is the rule changing this position's tree.
+
+    In guard mode (DEC-238) the library is the mutant's, so the cell that
+    moves is the mutant's rule changing the tree: the witness a guard row
+    needs, since the shipped guard is what keeps the shipped rule still.
+    Read with a default because S113's miner calls this with a namespace of
+    its own that has no mode: it runs in the mode it always ran in."""
+    guard = getattr(args, "mode", "rule") == "guard"
+
+    if args.lib is None:
+        if guard:
+            sys.stderr.write("guard mode takes the witness on the mutant's "
+                             "build: name its tune library with --lib\n")
+            return 2
+        args.lib = SHIPPED_TUNE_LIB
+    elif guard and os.path.normpath(args.lib) == SHIPPED_TUNE_LIB:
+        sys.stderr.write(f"guard mode takes the witness on the mutant's "
+                         f"build, and {args.lib} is the shipped tune "
+                         f"library\n")
+        return 2
+
     binary = build_driver(args.lib, True)
 
     if binary is None:
@@ -425,8 +496,14 @@ def cmd_fires(args):
     kept = []
 
     with open(args.out, "w") as handle:
-        handle.write(f"# S097 firing witness, SeMultiCut 0 against 1, depths "
-                     f"{args.lo}..{args.hi}, tune library {args.lib}.\n")
+        if guard:
+            handle.write(f"# S097 firing witness, {GUARD_MARK}: SeMultiCut 0 "
+                         f"against 1 on the mutant's build, depths "
+                         f"{args.lo}..{args.hi}, tune library {args.lib}.\n")
+        else:
+            handle.write(f"# S097 firing witness, SeMultiCut 0 against 1, "
+                         f"depths {args.lo}..{args.hi}, tune library "
+                         f"{args.lib}.\n")
         handle.write("# fen\tdepths_the_rule_changes\toff\ton\n")
 
         for fen, off_cells in off_rows.items():
@@ -452,7 +529,8 @@ def cmd_fires(args):
         for fen in kept:
             handle.write(fen + "\n")
 
-    print(f"the multicut changes the tree on {len(kept)} of "
+    whose = f"{GUARD_MARK}: the mutant's multicut" if guard else "the multicut"
+    print(f"{whose} changes the tree on {len(kept)} of "
           f"{len(off_rows)} positions in {time.time() - start:.0f} s "
           f"-> {args.out}, {args.fens_out}")
     return 0
@@ -552,8 +630,19 @@ def cmd_pick(args):
     shipped = read_sweep_file(args.shipped, args.lo)
     opened = read_sweep_file(args.open, args.lo)
     fires = {}
+    # A caller's own namespace without a mode (S113's miner) is the rule mode.
+    guard = getattr(args, "mode", "rule") == "guard"
 
     if args.fires:
+        with open(args.fires) as handle:
+            first = handle.readline()
+
+        if guard != (GUARD_MARK in first):
+            written = "guard" if GUARD_MARK in first else "rule"
+            sys.stderr.write(f"pick --mode {getattr(args, 'mode', 'rule')} was handed a witness "
+                             f"written in {written} mode: {args.fires}\n")
+            return 2
+
         with open(args.fires) as handle:
             for line in handle:
                 if line.startswith("#") or "\t" not in line:
@@ -599,7 +688,8 @@ def cmd_pick(args):
             continue
 
         if fires and fires.get(fen, "none") == "none":
-            print(f"  skipped, the rule never fires here: {fen}")
+            whose = "the mutant's rule" if guard else "the rule"
+            print(f"  skipped, {whose} never fires here: {fen}")
             continue
 
         depth = separating[0]
@@ -615,14 +705,17 @@ def cmd_pick(args):
 
     rows.sort(key=lambda row: (-row["run"], row["ms"], row["depth"]))
 
+    witness = "mutant fires" if guard else "fires"
+
     for row in rows:
         print(f"  d{row['depth']}\t#{row['mate_in']}\t"
               f"run {row['run']}\t{row['nodes']} nodes\t{row['ms']} ms\t"
               f"shipped [{row['profile']}]\topen [{row['open']}]\t"
-              f"fires [{row['fires']}]\t{row['fen']}")
+              f"{witness} [{row['fires']}]\t{row['fen']}")
 
     if not rows:
-        print("no candidate separates the guard in this range")
+        print("no candidate separates the guard in this range"
+              + (f", {GUARD_MARK}" if guard else ""))
         return 1
 
     taken = rows[0]
@@ -630,6 +723,9 @@ def cmd_pick(args):
           f"mate in {taken['mate_in']}, shipped [{taken['profile']}], "
           f"guard dropped [{taken['open']}], {taken['nodes']} nodes, "
           f"{taken['ms']} ms")
+    if guard:
+        print(f"  witness: {GUARD_MARK}, the rule firing on the mutant's "
+              f"build at [{taken['fires']}]")
     return 0
 
 
@@ -652,7 +748,14 @@ def main():
     two.add_argument("--fens", default=SEPARATORS)
     two.add_argument("--lo", type=int, default=LO)
     two.add_argument("--hi", type=int, default=HI)
-    two.add_argument("--lib", default="build-tune/src/libchesso_engine.a")
+    two.add_argument("--lib", default=None,
+                     help=f"the tune library the witness drives; default "
+                          f"{SHIPPED_TUNE_LIB} in rule mode, required in "
+                          f"guard mode (the mutant's)")
+    two.add_argument("--mode", choices=MODES, default="rule",
+                     help="rule: the shipped build's witness, every "
+                          "derivation before DEC-238; guard: the mutant's "
+                          "(DEC-238)")
     two.add_argument("--out", default=FIRES)
     two.add_argument("--fens-out", default=FIRES_FENS)
     two.set_defaults(run=cmd_fires)
@@ -678,6 +781,9 @@ def main():
     four.add_argument("--shipped", required=True)
     four.add_argument("--open", required=True)
     four.add_argument("--fires", default=FIRES)
+    four.add_argument("--mode", choices=MODES, default="rule",
+                      help="must match the mode the --fires file was "
+                           "written in (DEC-238)")
     four.add_argument("--lo", type=int, default=LO)
     four.set_defaults(run=cmd_pick)
 

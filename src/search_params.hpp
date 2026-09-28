@@ -239,6 +239,33 @@
   X(QS_FUTILITY,        "QsFutility",       1, 0, 1)                            \
   X(QS_FUTILITY_MARGIN, "QsFutilityMargin", 188, 0, 2000)                       \
                                                                                \
+  /* QUIET QUEEN PROMOTIONS IN QUIESCENCE, S131. Out of check, quiescence      \
+     searches every capture and, at 1, every promotion to a queen that takes   \
+     nothing as well; the three underpromotions that take nothing stay out     \
+     either way, and a promotion that takes something is searched as the       \
+     capture it is whatever this is set to. An admitted promotion meets the    \
+     two tests after the filter as a capture does: S112's futility exempts     \
+     every promotion, and S015's exchange gate, which it reaches through       \
+     see_ge() because capture_cannot_lose() answers false on an empty target,  \
+     declines a queen that cannot hold its square -- a promotion that takes    \
+     something is a pawn's capture and never reaches see_ge(). capture_score() \
+     orders it at the empty-victim row, minus a pawn.                          \
+                                                                               \
+     QS_QUEEN_PROMOTIONS IS A SWITCH AND NOT A SETTING (DEC-215). At 0 a       \
+     promotion that takes nothing is dropped, all four, and the tree is the    \
+     one before S131, proved on the tree and not declared: the tune build at 0 \
+     benches the parent's total with all eight `bestmove` replies and          \
+     reproduces `tools/search_bench.py` at depths 9 and 12. Range 0 to 1 by    \
+     stated purpose; a verdict switch, not something S127 sweeps.              \
+                                                                               \
+     No seed (DEC-134): the rule has no number in it. The class admitted is    \
+     the literature's, the wiki's Promotions page,                             \
+     https://www.chessprogramming.org/Promotions -- "In quiescence search most \
+     programs only consider queening" -- and the order is capture_score()'s    \
+     existing row, not a new constant. Implemented from the step file's        \
+     description, DEC-221. */                                                  \
+  X(QS_QUEEN_PROMOTIONS, "QsQueenPromotions", 1, 0, 1)                         \
+                                                                               \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \
      assumption is made at -- `depth <= RFP_MAX_DEPTH` in negamax_at(), so it  \
