@@ -7,6 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, 23:19: S131's SPRT is running, the fillers S242 and S243 beside it
+
+**S131's SPRT, launched 23:19: `13caf43` (quiet queen promotions in quiescence
+behind `QsQueenPromotions` 1) against `2d6b8f1`, `{0, 5}` nElo at 8+0.08 on
+`noob_3moves.epd`, seed 20260928231941, 12 of 12 cores, output `.tuning/sprt_s131_20260928_231941`, log
+`.tuning/coord/S131_sprt.log`, pid 3567236 (own session, no tty).** Banner
+checked against the pins. Detached watcher `.tuning/coord/S131_watch.sh`
+(pid 3573261, four exits, 40 h ceiling, hourly `PROGRESS` in
+`.tuning/coord/S131_watch_detached.out`). Worst case 41861 games, about
+19.8 h at 2110 an hour; on a bound 25591, about 12.1 h (DEC-143). The
+pre-registration's interpretation block is the contract; the census
+predicted a zero (0.85 % admitted, 96.5 % of it declined by the gate), which
+its third row reads as a zero with the switch to 0 and the code out.
+**When it ends**: the S113 pattern -- `.tuning/coord/read_s131.sh` into the
+pairs file, the log copied, README rows, the verdict section, the DEC-220
+block from `.tuning/coord/sprt_block.py`, the ledger; then the reading by
+the pre-registration (H1 keeps; otherwise `QsQueenPromotions` to 0 and the
+code leaves by a fresh agent, S097's row restored to `3c7cf84`'s). **Beside
+it, niced:** one fresh agent on the fillers S242 then S243 in
+`../chesso-fill` on `13caf43` (brief `.tuning/coord/S242_S243_brief.md`). A
+reboot kills the run: re-launch from the pre-registration with a fresh seed
+and record the dead one as void.
+
 ## 2026-09-28, late: S131 (quiet queen promotions) landed as `13caf43`, pinned against `2d6b8f1`
 
 The ruling applied: `S097_mine_mate_row.py` gained a guard mode (DEC-238),
