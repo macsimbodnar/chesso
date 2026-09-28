@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, midday: S112 read as a zero at the cap, the code kept for S022 (DEC-236)
+
+The interrupted run was whole: 40000 games, no verdict, `Elo 1.96 +/- 2.63`,
+`nElo 2.54 +/- 3.40`, LLR 0.06 (inside [-1.22, +2.43] over the whole run),
+0 forfeits, 0 crashes; only the script's epilogue died (S241's in-place
+rewrite), and its census was reproduced by hand from the PGN into
+`adocs/data/S112_sprt_pairs.txt`. Read by the pre-registration's third row as
+a zero; the code stays on the one exception that row names -- S022 measures
+S015's gate and delta pruning against it -- recorded as DEC-236. The run
+directory and the S112 scratch are archived as
+`chesso_S112_sprt_run_2026-09-27.tar.xz`. Eleven stale `.ref-builds/`
+worktrees removed (regenerable; disk was at 98 %). **Next:** the ledger and
+S112's completion; then S113 rebased onto this tree by a fresh agent
+(identity against `3d82344`'s engine, goldens re-derived), landed, second
+tier, pinned, its SPRT launched for the night; S131 and S022 follow in Open.
+
 ## 2026-09-28, later: S241 -- the S240 reports trimmed, history rewritten (DEC-235)
 
 The push of 2026-09-28 carried the two S240 rating reports at 59 MB each and

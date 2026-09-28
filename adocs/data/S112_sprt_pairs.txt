@@ -1,0 +1,52 @@
+=== markers
+SPRT-RUN-FAILED: exited 2
+(the script, not the match: S241 rewrote fastchess.sh in place at 00:33 on
+2026-09-28 while this run was alive; bash reads a script by byte offset, so
+when the match ended the running copy hit "line 951: syntax error near
+unexpected token `('" after fastchess had printed "Finished match" and its
+full result block. No SPRT-RUN-DONE was printed and the epilogue below the
+block never ran. Everything from "games / terminations" on was reproduced by
+hand on 2026-09-28 with the script's own commands, from the run's PGN and
+log; the log is committed byte for byte, syntax error and marker included.)
+=== banner
+candidate  3d82344  2026-09-27
+reference  1e9827d  2026-09-27
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260927123143
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s112_20260927_123143
+id name    cand-3d82344  Chesso 3d82344 native
+id name    ref-1e9827d  Chesso 1e9827d native
+=== fastchess final block
+96338:Results of cand-3d82344 vs ref-1e9827d (8+0.08, 1t, 16MB, noob_3moves.epd):
+96339:Elo: 1.96 +/- 2.63, nElo: 2.54 +/- 3.40
+96340:LOS: 92.81 %, DrawRatio: 34.51 %, PairsRatio: 1.03
+96341:Games: 40000, Wins: 12353, Losses: 12127, Draws: 15520, Points: 20113.0 (50.28 %)
+96342:Ptnml(0-2): [1781, 4677, 6901, 4817, 1824], WL/DD Ratio: 1.29
+96343:LLR: 0.06 (2.2%) (-2.94, 2.94) [0.00, 5.00]
+96345:Finished match
+96346:Total Time: 19:02:24 (hours:minutes:seconds)
+(no "SPRT ([0.00, 5.00]) completed" line: fastchess stopped at its 40000-game
+cap without accepting either hypothesis. Over the run's 2000 printed LLR
+readings the walk stayed inside [-1.22, +2.43] against bounds of +/-2.94.)
+=== timing
+log created: 2026-09-27 12:31:43
+log last write: 2026-09-28 07:34:20
+=== games / terminations (.tuning/sprt_s112_20260927_123143/games.pgn)
+games: 40000
+  27735 [Termination "adjudication"]
+  12265 [Termination "normal"]
+=== forfeits
+forfeits  0 of 40000, 0.00 %
+(tools/forfeit_report.py games.pgn --max-pct 1.0: cand-3d82344 40000 games,
+0 forfeits, 0.00 %; ref-1e9827d 40000 games, 0 forfeits, 0.00 %; exit 0)
+=== crashes / disconnects
+0 terminations outside normal, adjudication and time forfeit (fastchess.sh's
+SPRT-RUN-INVALID test, run by hand over the PGN): the run stands
+=== Incomplete mating PV per side (run log)
+total 65
+  cand-3d82344: 40
+  ref-1e9827d: 25
+=== pentanomial: fastchess's own Ptnml above is the one the SPRT used (see S237_sprt_pairs.txt's note on S105_pairs.py ordering)

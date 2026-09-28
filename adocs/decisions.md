@@ -13161,3 +13161,59 @@ Sha map:      the rewrite of 2026-09-28, run by the owner with
                 7127d56 -> b4634b8  Record S113 ready to land
                 083fd48 -> d4ae54a  Write the handover
                 71b0df4 -> ec13cf2  Keep run outputs with the run (S241)
+
+## DEC-236  2026-09-28  S112's stalled walk is read as a zero and the code stays, on the pre-registration's one stated exception: S022 measures against it
+Tags:         search, quiescence, futility, sprt, s112, s022, s131, s113, dec-063, dec-019, dec-235
+Context:      S112's gainer SPRT -- `3d82344` (per-move futility in
+              quiescence at its seeds) against `1e9827d`, the tree without
+              it, `{0, 5}` nElo at 8+0.08 -- ran to fastchess's 40000-game
+              cap without accepting either hypothesis: `Elo 1.96 +/- 2.63`,
+              `nElo 2.54 +/- 3.40`, LLR 0.06, LOS 92.81 %, 0 forfeits, 19 h
+              2 m. Over the run's 2000 printed LLR readings the walk stayed
+              inside [-1.22, +2.43] against bounds of +/-2.94: a truth
+              sitting inside the interval, DEC-063's case. The
+              pre-registration (`adocs/data/S112_sprt.sh`) reads a stalled
+              walk as a zero and sends the code out on the H0 row's terms
+              "unless a reason is stated", and it names the only reason that
+              counts: S022 wanting the rule present to measure S015's
+              exchange gate and delta pruning against it. S022's step file,
+              re-targeted on 2026-08-19, is written on exactly that premise:
+              its baseline is "futility plus S015's SEE gate, as S112/S131
+              leave the loop", its node-level early-out consumes
+              `QsFutilityMargin`, `qs_futility_value` and `futility_base`,
+              and its two verdicts are F against F+S, then F+D against the
+              winner. Without the rule S022's question is a different one and
+              its file is rewritten first. The run's epilogue never printed
+              (DEC-235's rewrite of `fastchess.sh` in place while the run was
+              alive); its census was reproduced by hand from the PGN.
+Decision:     By the coordinator under the owner's delegation of 2026-09-25
+              (DEC-233's precedent); the owner may overrule. The run is
+              recorded as a zero -- no verdict, the games played, the
+              interval -- and **the code stays at its seeds**, `QsFutility` 1
+              and `QsFutilityMargin` 188, on the pre-registered exception,
+              with the reason in S112's completion stamp as the
+              pre-registration requires. S022 measures on this tree, its two
+              verdicts as its file states them, and it is where the rule
+              leaves if F against F+S or a later fit says it is worthless.
+              S127 fits the margin and the victim table with the rest of the
+              set. No follow-up run and no second pair for S112 itself
+              (DEC-063). S131 lands on this tree, its promotion exemption
+              being S112's. S113 rebases onto it and re-proves its off-value
+              identity against `3d82344`'s engine, any golden the
+              combination moves re-derived (DEC-233).
+Rejected:     Removing the code, the pre-registration's default and the
+              S235, S237 and S238 pattern -- it would leave S022 without the
+              tree its file is written for, and a later S022 wanting the
+              rule back would spend a verdict to re-land what was just
+              measured. A second pair for S112 (`{-5, 5}`, `{0, 3}`): the
+              pre-registration forbids one, and another margin is S127's
+              experiment. Reading LOS 92.81 % or the +1.96 point estimate as
+              a gain: a stalled walk is not a verdict and nothing here is Elo
+              (DEC-019).
+Consequences: The engine carries a rule recorded at zero with the reason
+              stated, as S005, S006 and S015 do (MEASUREMENT rule). Every
+              later verdict is against its own parent, so the rule's presence
+              is the baseline on both sides and contaminates nothing. S022's
+              pre-registration cites this entry and states which of its two
+              verdicts decides whether the rule stays. `specs.md`'s S112
+              sentence carries the verdict and this id.

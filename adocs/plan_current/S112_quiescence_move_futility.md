@@ -472,3 +472,35 @@ node counts and best moves identical to `086320c`'s build.
 `bench` 4803214 -> 4649650. SPRT pair pinned: `REF` `1e9827d` (the engine is
 `1680439`'s, S238's verdict left it so), `CAND` `3d82344`; open findings
 re-read at pinning, S238's items closed by its removal.
+
+## The verdict (2026-09-28, the coordinator)
+
+**No verdict at fastchess's 40000-game cap, 2026-09-28 07:34: `3d82344`
+against `1e9827d`, `Elo 1.96 +/- 2.63`, `nElo 2.54 +/- 3.40`, LLR 0.06,
+LOS 92.81 %, 40000 games in 19 h 2 m, 0 forfeits** (`adocs/data/S112_sprt.log`,
+`adocs/data/S112_sprt_pairs.txt`). Over the run's 2000 printed LLR readings
+the walk stayed inside [-1.22, +2.43] against bounds of +/-2.94: a truth
+inside the interval, DEC-063's case. The nElo interval [-0.86, +5.94] reaches
+above zero, and the pre-registration reads a stalled walk as a zero, not a
+loss. **The code stays**, on the one reason the pre-registration says would
+count: S022 measures S015's exchange gate and delta pruning against this
+rule, and its file is written on that baseline -- "futility plus S015's SEE
+gate", an early-out that consumes `QsFutilityMargin`, `qs_futility_value` and
+`futility_base`, two verdicts F against F+S then F+D against the winner.
+DEC-236 records the reading and its rejected options; the margin and the
+table stay at their seeds for S127. No follow-up run and no second pair
+(DEC-063, DEC-019): the record's 0 to +30 was a direction, and the
+configuration-matched record of about zero is what transferred.
+`Incomplete mating PV` 40 against 25, an observation for open finding 3's
+class (CHESS).
+
+**The epilogue.** `fastchess.sh` was rewritten in place by S241 at 00:33
+while this run was alive; bash reads a script by byte offset, so when the
+match ended the running copy died on a syntax error after fastchess had
+printed its full result block, and the marker reads `SPRT-RUN-FAILED: exited
+2` for that and not for the match. The terminations, forfeit and crash census
+the epilogue prints were reproduced by hand from the run's PGN with the
+script's own commands (0 forfeits either side, 0 terminations outside normal
+and adjudication) and are in the pairs file; the log is committed byte for
+byte. The run directory and this step's coordinator scratch are in the
+owner's archive as `chesso_S112_sprt_run_2026-09-27.tar.xz` (DEC-235).
