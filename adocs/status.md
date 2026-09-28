@@ -7,6 +7,48 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, evening: S131 built beside S113's SPRT, fast-checked; S242 created (filler)
+
+**S131 (quiet queen promotions in quiescence) is built in `../chesso-s131`
+on `029ff61`, uncommitted**, by a fresh agent (brief
+`.tuning/coord/S131_brief.md`, report `.tuning/coord/S131_report.md`): one
+filter condition behind `QsQueenPromotions` (0 proved the parent's tree to
+the node: `bench` 4649650, eight replies, `search_bench` at 9 and 12 identical
+to a parent built from `029ff61`); shipped `bench` 4784357 (+2.90 %); the
+admission-rate census 1.05 % of filter-loop moves at depth 12, SEE declining
+96.1 % of the admitted -- near zero by DEC-079, so the census predicts a
+zero before it is bought; mutation 6 of 6 (V05 equivalent in Release, killed
+in tune by hand); both suites 41 of 41; pre-registration
+`adocs/data/S131_sprt.sh` in S113's shape with `REF`/`CAND` unpinned, REF
+being the tree S113's verdict leaves. The agent changed the step's test FEN
+(the step's own leaves KBvK/KNvK, which S210 scores without entering the
+child) and corrected the step file's ordering claim; both recorded. **Cold
+fast check: no real defect**; four small test-side items and two wording
+items sent back to the agent as fix-ups (S112's capturing-promotion case's
+premise now admits a quiet promotion's node; the underpromotion case holds
+nothing on its own; the tune restorer writes 1 instead of the found value;
+the SEE wording is true only for a promotion that takes nothing; the
+pre-registration names S242). **Fix-ups in (evening)**: S112's capturing-promotion case now asserts its premise from the engine (the four push promotions on its board are declined by the gate at SEE -100) and that the stored move is a capturing promotion; the underpromotion case holds its own evidence through an `entered()` probe of the children (no board exists where the gate declines the queen and passes an underpromotion: 149334 quiet underpromotions censused, 0 disagreements); the tune restorer saves and restores the found value; the SEE wording reads "a promotion that takes nothing" everywhere; S242 is open finding 8 of the pre-registration. Re-run: both suites 41 of 41, format and prose clean, `bench` 4784357 unchanged, off value 4649650; mutation on a fresh fixture **9 of 9 killed, V05 equivalent** (ten mutants now), each by its named case. Ready to land behind S113's verdict.
+
+**S242, a filler (DEC-171), created in `plan_todo/` behind S131:** S131's
+mutation baseline under the match load saw `test_engine` fail 1 assertion of
+870240 with no text, twice, and pass 12 direct runs. The fast check read the
+code: doctest's report goes to `std::cout`, which `stdout_capture_t` swaps
+away, so a failure inside a capture is discarded; the failed assertion was a
+CHECK (the assertion total equalled the passing runs'), and the only
+timing-dependent CHECKs inside a capture are the two `deepest_completed_depth
+< 1` of "the first iteration honours stop and the hard timer", which need a
+`stop` to land inside a 14 ms depth-1 iteration. Not S131's (the case's
+board has no pawn). Agent-only work; named in S131's pre-registration.
+
+**When S113's verdict comes:** record it (the S112 pattern), then S131 lands
+on the tree it leaves -- on an H1 a fresh agent rebases it onto `3d97737`
+(golden count 68 -> 69, S113's anchors survive, its identity re-proved
+against the new parent, any golden the combination moves re-derived under
+DEC-233); on a zero or H0 the removal agent runs first and S131 lands on
+`029ff61`'s engine with a re-check -- then the cold fast check over the
+landing diff, the landing with the specs edit, the second tier, pin, SPRT.
+
 ## 2026-09-28, 14:49: S113's SPRT is running, S131 built beside it
 
 **S113's SPRT, launched 14:49: `3d97737` (ProbCut at its seeds) against
