@@ -13310,3 +13310,34 @@ Rejected:     Landing with E21 alive: a guard that keeps a pruning rule from
 Consequences: `S097_mine_mate_row.py` carries the guard mode; every later
               re-derivation of a guard row states which mode it used; S243
               is in `plan_todo/` and named in S131's pre-registration.
+
+## DEC-239  2026-09-29  A reach census predicts how often a class occurs, not what it is worth: a pre-registration states its census as reach, never as a verdict forecast
+Tags:         measurement, census, sprt, dec-079, dec-107, s131, s022
+Context:      S131's pre-registration took DEC-079's cheap pre-check --
+              count the new class's admissions before a game is booked, a
+              near-zero rate "predicts the zero before it is bought" -- and
+              read 0.85 % of filter-loop moves admitted at depth 12 over the
+              bench positions, 96.5 % of them declined by the exchange
+              gate, 143 searched: "near zero by DEC-079's measure, so the
+              census predicts a zero". The SPRT accepted H1 at 3413 games,
+              `Elo 17.84 +/- 8.83`, `nElo 23.59 +/- 11.66`, the largest
+              gain among the search block's last ten verdicts. The census
+              was right about reach and wrong as a forecast: a class that
+              is rare at fixed depth can decide games when it fires, and the
+              number of moves searched says nothing about what those
+              searches change.
+Decision:     By the coordinator under the owner's delegation. DEC-079's
+              pre-check stays what it is for -- sizing the expectation and
+              catching a rule that never fires -- and DEC-107's discharge (a
+              census of zero reach in place of a run) stays. A
+              pre-registration states its census as reach and does not read
+              a small reach as a predicted zero; its prior sentence names
+              the record and the direction, and the match decides. Where a
+              census is quoted beside a verdict, both numbers are kept, so
+              the record accumulates the cases where they agree and where
+              they do not.
+Rejected:     Dropping the pre-check: it still catches the rule that never
+              fires and prices the expectation. A reach threshold below
+              which a zero is assumed: no count of moves is a value.
+Consequences: S022's and every later pre-registration phrase the census as
+              reach; S131's stamp and DEC-079's readers carry this entry.
