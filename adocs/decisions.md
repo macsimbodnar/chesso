@@ -13070,3 +13070,79 @@ Rejected:     Folding it into S152 -- S152 is written for the 3000 claim and
 Consequences: The pending order gains one five-hour run; S112 waits behind it
               for the machine. `specs.md`'s measured-strength paragraph moves
               to S240's figure when it lands.
+
+## DEC-235  2026-09-28  A run's outputs stay with the run and go to the owner's archive; the tree takes the reading and a trimmed report; S240's two reports rewritten out of history
+Tags:         data, git, archive, rating, gate, s240, s241, dec-220, dec-185
+Context:      The push of 2026-09-28 carried `S240_rating_report.txt` and
+              `S240_rating_run1_INVALID_report.txt` at 59 and 58 MB and GitHub
+              warned (it refuses at 100 MB). Each is fastchess's whole console
+              for a 3340-game gauntlet, and 98.9 % of the bytes are one
+              warning family: "PV continues after threefold repetition" 50827
+              times in run 2 and "after fifty-move rule" 4238 times, each a
+              four-line block repeating the game's move list, from the
+              anchors' PVs (Leorik 2.4 31790, Leorik 2.1 23161, Blunder 8.5.5
+              113, chesso 1), read by nothing. What the record cites is the
+              last 60 lines. S087's reports carry the same at 16 and 19 MB.
+              The packed cost is 2.5 MB a file; the working-tree cost is
+              112 MB of unreadable text, 44 % of `adocs/data/`, and the next
+              gauntlet -- a sixth anchor, more games -- would cross 100 MB.
+Decision:     By the owner, 2026-09-28, executed by the session the owner
+              instructed directly and not by a briefed agent (DEC-185 stands
+              for plan steps; this was the owner's own request to the
+              session at hand). (1) A file enters the tree only when it is
+              useful there: a run's console, PGN and log stay under
+              `.tuning/` while the run is worked -- `OUT` defaults there in
+              `rating.sh` and `fastchess.sh`, no longer under `/tmp`, which
+              this machine wipes at boot -- and `adocs/data/` takes the
+              reading, the log a verdict names (DEC-220) and the report
+              trimmed to it. (2) `rating.sh` keeps the unfiltered console as
+              `console.txt` and writes `report.txt` through
+              `tools/trim_console.py`, which drops that block for both rules
+              and counts it per rule and engine where fastchess's output
+              ends; "Incomplete mating PV", which carries the same three
+              context lines and which S238's pairs reading counts per side,
+              passes whole. (3) Run outputs worth keeping go to the owner's
+              archive, `Synckeeper/Chesso Archive/` -- the path is
+              machine-local in `.moltke.local.md`; on another machine, ask
+              the owner -- as a `tar.xz` with a `.sha256` sidecar. (4)
+              `tools/gate.sh` refuses a commit adding a file over 20 MB,
+              before the suite; an SPRT log, which DEC-220 requires in the
+              tree, read 4 to 7 MB over 30000 games. (5) The two S240 reports
+              are replaced in history by the tool's output over them (the
+              tail from `=== terminations ===` on byte for byte the
+              original's, a banner line naming the archive): a
+              `filter-branch` over `5c373ac^..HEAD` on `achesso`, and `s113`
+              moved to the rewritten `1e9827d`, so the trimmed blobs replace
+              the originals in every commit that carried them; the owner
+              force-pushes `achesso`. The GIT rule for agents -- no history
+              rewriting, no force operations -- stands; this rewrite is the
+              owner's own. The originals are in the archive with both run
+              directories, `chesso_S240_rating_runs_2026-09-27.tar.xz`.
+              The policy is the DATA rule in `AGENTS.md`.
+Rejected:     Git LFS -- tooling on every clone for two files that trim to
+              0.6 MB. Leaving history alone -- the packed cost is 5 MB, but
+              the owner wants no such file on GitHub and the next gauntlet
+              would be refused outright. Deleting the reports -- the step
+              file and the record cite them, and the trimmed report is the
+              evidence's shape. Dropping every `Warning;` line -- "Incomplete
+              mating PV" is counted per side. Trimming S087's reports too --
+              under the gate's line and already in history; the rewrite is
+              kept to the two blobs that reached GitHub oversized. Waiting
+              for S112's verdict before rewriting -- the verdict commit would
+              join the range and change nothing about which shas its log
+              names.
+Consequences: S112's SPRT, running since 2026-09-27 12:31, plays `3d82344`
+              against `1e9827d`; both are in the rewritten range and its log,
+              pre-registration, `.ref-builds/` directories and eventual
+              result block keep naming them. That is correct as written:
+              `tools/gate.sh` compares the block with the log, not with
+              history; `src/` is byte-identical between each old and new sha
+              (proved by `git diff --stat` per pair before the push); and
+              the old commits stay alive locally under `refs/original/`
+              until the owner has pushed and under the `.ref-builds/`
+              worktrees after. A re-launch of S112 after a reboot may name
+              either sha. Any other clone resets to the pushed branch rather
+              than pulling. `adocs/data/README.md`'s rows say what the
+              committed reports are. The map of old to new shas is below,
+              appended after the rewrite.
+Sha map:      appended after the rewrite.

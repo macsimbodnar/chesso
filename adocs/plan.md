@@ -1165,6 +1165,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
+0. S241  a run's outputs stay with the run: `rating.sh` reports through `tools/trim_console.py`, `OUT` under `.tuning/`, the gate refuses a file over 20 MB, the S240 reports trimmed and archived -- **in progress; what is left is the owner's: the history rewrite by `.tuning/coord/S241_rewrite.sh` and the force push (DEC-235)**
 1. S112  quiescence skips a capture whose best case cannot reach alpha, per move, before the exchange evaluation is consulted
 2. S131  quiescence searches non-capture queen promotions instead of filtering them out
 3. S022  decide between delta pruning and the per-move futility S112 adds, by measurement -- deleting delta pruning is a valid recorded outcome

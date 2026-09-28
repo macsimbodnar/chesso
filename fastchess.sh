@@ -422,7 +422,12 @@ esac
 # held 587 games, 87 of them against an earlier reference, and an unfiltered
 # termination count read 421/166 instead of the run's real 359/141. "Filtered
 # to the run" is now the filename rather than a grep nobody remembers to write.
-outdir="${OUT:-/tmp/chesso_sprt_${tag}_${stamp}}"
+#
+# Under the tree's own .tuning/, gitignored, and not under /tmp, which this
+# machine wipes at boot: two launches were restarted on 2026-09-13 for exactly
+# that. The directory is the run's evidence until the owner's archive takes it;
+# adocs/data/ takes the log the verdict names and the reading. DEC-235.
+outdir="${OUT:-$repo/.tuning/sprt_${tag}_${stamp}}"
 mkdir -p "$outdir"
 logfile="$outdir/fastchess.log"
 pgnfile="$outdir/games.pgn"

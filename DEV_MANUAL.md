@@ -3488,8 +3488,9 @@ ends of a curve and not as two outcomes.
 
 ### What the run prints when it ends
 
-Every run writes to its own stamped directory — `/tmp/chesso_sprt_<tag>_<stamp>/`
-with `games.pgn` and `fastchess.log` in it, or wherever `OUT` points — and then
+Every run writes to its own stamped directory — `.tuning/sprt_<tag>_<stamp>/`
+since DEC-235 (it was under `/tmp`, which this machine wipes at boot) with
+`games.pgn` and `fastchess.log` in it, or wherever `OUT` points — and then
 counts the terminations, the draw and decisive rates and the time forfeits out
 of **that run's** PGN. The last line is `SPRT-RUN-DONE <tag> <dir>`, or
 `SPRT-RUN-FAILED:` on any abort, which is the terminal marker a watcher exits
@@ -3897,6 +3898,20 @@ non-zero.
 The run ends with `RATING-RUN-DONE <mode> <OK|INVALID> <outdir>` as its last
 line, which is the terminal marker a watcher exits on. DEC-061.
 
+**What the run leaves, and what the tree takes (DEC-235, S241).** `<outdir>`
+-- `.tuning/rating_<mode>_<stamp>/` unless `OUT` says otherwise -- holds
+`games.pgn`, `fastchess.log`, `console.txt` (fastchess's output, unfiltered),
+`report.txt` (the same through `tools/trim_console.py`, which drops the
+four-line block fastchess prints when an engine's PV runs past a threefold
+repetition or the fifty-move rule and counts them per rule and engine where
+the output ends), `forfeits.txt`, `anchors.tsv` and the `ordo` outputs.
+`adocs/data/` takes the reading and `report.txt`; the run directory goes to
+the owner's archive, a Synckeeper folder named in `.moltke.local.md` on this
+machine -- on another, ask the owner -- as a `tar.xz` with a `.sha256`
+sidecar. `tools/gate.sh` refuses a commit adding a file over 20 MB. S240's
+two reports were 59 MB each before this, 98.9 % that block, 55065 of them;
+trimmed they are 0.6 MB, and history was rewritten to carry the trimmed ones.
+
 **The interval is set by game count and the anchor spread is not.** 1336 games
 gave ±34; 2672 gave ±25. Run twice and concatenate the PGNs when one run is not
 tight enough — `ordo` takes the combined file, and both runs must use the same
@@ -3918,7 +3933,7 @@ the instrument and not the engine.
 Use a watcher that **exits on the marker**, not one that merely reports it:
 
 ```bash
-log=/tmp/chesso_rating.log
+log=.tuning/rating_<what>.log
 until grep -qE "RATING-RUN-(DONE|FAILED|INVALID)" "$log" 2>/dev/null; do sleep 30; done
 grep -E "RATING-RUN-|unexpected terminations|^anchored on" "$log"
 ```
@@ -3934,7 +3949,7 @@ change again, which is a leaked watcher by a different route. Add a liveness
 arm, and **capture the pid from `$!`**:
 
 ```bash
-nohup env OUT=/tmp/rating_out ./rating.sh > "$log" 2>&1 &
+nohup env OUT=.tuning/rating_<what> ./rating.sh > "$log" 2>&1 &
 pid=$!                       # nohup, env and bash all exec in place, so this
                              # is rating.sh's own pid
 while ! grep -qE "RATING-RUN-(DONE|FAILED|INVALID)" "$log" 2>/dev/null; do

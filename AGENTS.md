@@ -123,6 +123,17 @@ migration that way (DEC-109).
 
 - GIT: commit freely; never push — the user pushes. No history rewriting, no
   force operations.
+- DATA: **a run's outputs stay with the run; the tree takes the reading.**
+  `fastchess.sh` and `rating.sh` write under `.tuning/` (gitignored; `OUT`
+  defaults there since DEC-235), and what `adocs/data/` takes is the reading,
+  the log a verdict names and `rating.sh`'s `report.txt`, which
+  `tools/trim_console.py` writes without the block fastchess prints when a PV
+  runs past a threefold repetition or the fifty-move rule (counted per rule
+  and engine instead; `console.txt` beside it is unfiltered). The console,
+  PGN and log of a run worth keeping go to the owner's archive, a Synckeeper
+  folder whose path is machine-local in `.moltke.local.md` -- on a machine
+  without that file, ask the owner -- as a `tar.xz` with a `.sha256` sidecar.
+  `tools/gate.sh` refuses a commit adding a file over 20 MB. DEC-235.
 - COMMITS: commit at each completed step and at any plan change. Every commit
   is green. Imperative subject under 72 characters; the body says **why** and
   references the step id and any `INV-n`. A commit that touches `src/` ends

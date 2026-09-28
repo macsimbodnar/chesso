@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, later: S241 -- the S240 reports trimmed, history rewritten (DEC-235)
+
+The push of 2026-09-28 carried the two S240 rating reports at 59 MB each and
+GitHub warned. Done at the owner's direct instruction, in that session and not
+by a briefed agent: `tools/trim_console.py`, and `rating.sh` writing
+`report.txt` through it with `console.txt` unfiltered beside it; `OUT` under
+`.tuning/` in both match scripts; `tools/gate.sh` refusing a file over 20 MB;
+both reports trimmed to 0.6 MB (the tail byte for byte the original's) and
+their run directories archived as `Synckeeper/Chesso Archive/
+chesso_S240_rating_runs_2026-09-27.tar.xz` (sha256 sidecar verified); the
+policy as the DATA rule in `AGENTS.md`. **Still owed, by the owner: the
+rewrite of history from `5c373ac` on, so the trimmed blobs replace the
+originals on `achesso` and `s113`, then the force push.** The session's
+sandbox refused to write the rewrite command, so the owner runs
+`.tuning/coord/S241_rewrite.sh` (guards on every precondition, backs the old
+branch up under `refs/original/`), `.tuning/coord/S241_verify.sh`, then
+pushes; the map of old to new shas is appended to DEC-235 and S241 completes
+in the commit after. Until then `origin/achesso` carries the 59 MB blobs.
+**The names below -- `1e9827d`, `3d82344`, `5c373ac` -- are the shas fastchess
+printed and `.ref-builds/` is named by, and they stay valid as labels after
+the rewrite: S112's log, pre-registration and result block keep them, the gate
+compares the block with the log, and `src/` is identical between each old and
+new sha.** A re-launch of S112 after a reboot may name either.
+
 ## HANDOVER, 2026-09-28 00:05 -- read this first in a new session
 
 The coordinator session that wrote this was closed on purpose. Nothing that

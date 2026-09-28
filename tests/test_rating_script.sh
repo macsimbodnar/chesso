@@ -18,6 +18,10 @@
 #   3. with `ordo` and no GNU `timeout` or `gtimeout`, the one marker names
 #      timeout, before any engine is asked anything
 #   4. a run that gets past every check and then dies -- fastchess is a stub
+#   7. the report is the console through tools/trim_console.py (DEC-235):
+#      the "PV continues after" blocks a stub fastchess prints are dropped and
+#      counted per rule and engine, "Incomplete mating PV" passes whole, and
+#      console.txt beside the report is unfiltered
 #      that writes no PGN -- still ends on a terminal marker line
 #   5. neither script uses a bare `$(nproc)`, and both parse under `bash -n`
 #   6. the gauntlet's resignation is adjudicated two-sided, which is what this
@@ -61,13 +65,24 @@ mkdir -p "$tmp/stub" "$tmp/build/src" "$tmp/books" "$tmp/tools" "$tmp/out"
 
 # The utilities rating.sh needs up to and through its checks, linked in by name.
 for util in bash sh dirname basename date mkdir mktemp cp chmod rm ps awk sed \
-            head tr cat tee grep sort uniq git env sleep printf; do
+            head tr cat tee grep sort uniq git env sleep printf python3; do
   path="$(command -v "$util")" || { echo "FAIL: no $util on this machine" >&2; exit 1; }
   ln -s "$path" "$tmp/stub/$util"
 done
 
 cp "$rating_script" "$tmp/rating.sh"
 chmod +x "$tmp/rating.sh"
+
+# The filter the report is written through, from the tree beside rating.sh.
+# The sandbox's PATH is the stub directory alone, which is why python3 is
+# linked in above: the tool's shebang finds it there or the pipeline dies.
+trim_tool="$(dirname "$rating_script")/tools/trim_console.py"
+if [[ ! -r "$trim_tool" ]]; then
+  echo "FAIL: no tools/trim_console.py beside $rating_script" >&2
+  exit 1
+fi
+cp "$trim_tool" "$tmp/tools/trim_console.py"
+chmod +x "$tmp/tools/trim_console.py"
 
 # What the script derives from its own location: a candidate, a manifest and
 # the book. Three stub engines answer `uci` with the name the manifest gives
@@ -196,6 +211,65 @@ else
       fail "6: the resign adjudication did not reach fastchess as '$token'"
     fi
   done
+fi
+
+# 7. The report is the console through tools/trim_console.py (DEC-235, S241).
+#    A stub fastchess prints a threefold-repetition block, a fifty-move block
+#    and an "Incomplete mating PV" block: the report keeps the third whole and
+#    the count of the first two per rule and engine, and console.txt beside it
+#    keeps everything. The run still dies after fastchess -- no PGN -- on a
+#    marker, as case 4 established; what is read here is what the pipeline
+#    wrote before that.
+cat > "$tmp/stub/fastchess" << 'STUB'
+#!/bin/sh
+printf '%s\n' "$@" > "$(dirname "$0")/../fastchess_args"
+echo "Started game 1 of 2 (chesso vs alpha)"
+echo "Warning; PV continues after threefold repetition - move a8d8 from alpha"
+echo "Info; info depth 13 score cp 85"
+echo "Position; startpos"
+echo "Moves; d2d4 g8f6 c2c4"
+echo "Warning; PV continues after fifty-move rule - move d6b5 from alpha"
+echo "Info; info depth 9 score cp 12"
+echo "Position; startpos"
+echo "Moves; e2e4 e7e5"
+echo "Warning; Incomplete mating PV - from chesso"
+echo "Info; info score mate 6"
+echo "Position; fen 8/8/8/8/8/8/8/8 w - - 0 1"
+echo "Moves; d2d4 e7e6"
+echo "Finished game 1 (chesso vs alpha): 1-0 {White wins by adjudication}"
+exit 0
+STUB
+chmod +x "$tmp/stub/fastchess"
+status="$(run_sandbox)"
+report="$tmp/out/run/report.txt"
+console="$tmp/out/run/console.txt"
+if [[ ! -r "$report" || ! -r "$console" ]]; then
+  fail "7: no report.txt and console.txt in the run directory"; show
+else
+  # Anchored on the warning line: the summary the tool appends names the
+  # phrase itself, in its heading.
+  if grep -q '^Warning; PV continues after' "$report"; then
+    fail "7: a 'PV continues after' block reached the report"; show
+  fi
+  if ! grep -q '^Warning; Incomplete mating PV - from chesso$' "$report" \
+     || ! grep -q '^Moves; d2d4 e7e6$' "$report"; then
+    fail "7: the 'Incomplete mating PV' block did not reach the report whole"; show
+  fi
+  if ! grep -qE '^  threefold repetition +alpha +1$' "$report" \
+     || ! grep -qE '^  fifty-move rule +alpha +1$' "$report" \
+     || ! grep -q '^  total: 2 blocks, 8 lines$' "$report"; then
+    fail "7: the report does not count the dropped blocks per rule and engine"; show
+  fi
+  if ! grep -q '^Finished game 1 ' "$report"; then
+    fail "7: a game line did not reach the report"; show
+  fi
+  if [[ "$(grep -c '^Warning; PV continues after' "$console")" -ne 2 ]] \
+     || ! grep -q '^Moves; d2d4 g8f6 c2c4$' "$console"; then
+    fail "7: console.txt is not the unfiltered console"; show
+  fi
+  if ! grep -q '^console     console.txt beside this report' "$report"; then
+    fail "7: the banner does not say where the unfiltered console is"; show
+  fi
 fi
 
 # 5. Static: no bare nproc, and both scripts parse.

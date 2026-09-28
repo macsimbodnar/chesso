@@ -328,6 +328,16 @@ add_test(NAME test_gate_extra_script
                       ${CMAKE_SOURCE_DIR}/tools/gate_extra.sh)
 set_tests_properties(test_gate_extra_script PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S241, DEC-235: tools/trim_console.py, the filter rating.sh writes its report
+# through. Ten cases over a planted console stream: the threefold-repetition
+# block goes whole and is counted per engine, and the "Incomplete mating PV"
+# block -- same three context lines, counted per side by S238's pairs reading
+# -- passes untouched. Driven as a subprocess over stdin, the way the pipeline
+# drives it. 0.3 s, stdlib only, nothing built.
+add_test(NAME test_trim_console
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_trim_console.py)
+set_tests_properties(test_trim_console PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S228, 2026-09-12_plan_adversarial-F02: the build stamp follows the tree. The
 # commit in `id name` is generated on every build by cmake/build_info.cmake and
 # not at configure time (DEC-204 (a)), because fastchess.sh refuses a run whose

@@ -44,6 +44,15 @@
 #  17. the same commit with no `SPRT |` line                -> GATE-DONE, and
 #                                                              no block check
 #
+# DEC-235's size line, S241. A commit adds no file over 20 MB; S240's reports
+# reached GitHub at 59 MB each:
+#
+#  18. a commit adding a 21 MB file                          -> GATE-FAILED,
+#                                                              naming file and
+#                                                              size, no suite
+#  19. the same at 19 MB                                     -> GATE-DONE
+#  20. the 21 MB file staged, in --message mode              -> GATE-FAILED
+#
 # Usage: test_gate_script.sh <gate.sh>
 
 set -uo pipefail
@@ -491,6 +500,50 @@ if [[ "$(done_markers)" -ne 1 || "$(failed_markers)" -ne 0 ]]; then
 fi
 if grep -q 'SPRT block' "$tmp/out.txt"; then
   fail "17: the gate checked a block that is not there"; show
+fi
+
+# 18. A commit adding a file over 20 MB is refused by name and size before
+#     the suite runs (DEC-235, S241). 21000000 bytes is over 20 MiB.
+head -c 21000000 /dev/zero > "$tmp/repo/docs/big_report.txt"
+commit "a documentation change carrying a 21 MB report" docs/big_report.txt
+status="$(run_gate)"
+if [[ "$status" -eq 0 ]]; then
+  fail "18: a 21 MB file exited 0"; show
+fi
+if [[ "$(failed_markers)" -ne 1 || "$(done_markers)" -ne 0 ]]; then
+  fail "18: expected exactly one GATE-FAILED and no GATE-DONE"; show
+fi
+if ! grep -q 'docs/big_report.txt' "$tmp/out.txt" || ! grep -q '2100' "$tmp/out.txt"; then
+  fail "18: the marker does not name the file and its size"; show
+fi
+
+# 19. The same commit with the file under the line passes: the line is on the
+#     blob's size, not on the path.
+head -c 19000000 /dev/zero > "$tmp/repo/docs/big_report.txt"
+git -C "$tmp/repo" add docs/big_report.txt
+git -C "$tmp/repo" commit -q --amend --no-edit
+status="$(run_gate)"
+if [[ "$status" -ne 0 ]]; then
+  fail "19: a 19 MB file exited $status"; show
+fi
+if [[ "$(done_markers)" -ne 1 ]]; then
+  fail "19: expected exactly one GATE-DONE"; show
+fi
+
+# 20. Message mode reads the staged tree: the 21 MB file staged and not yet
+#     committed is refused the same way. Unstaged and removed afterwards so
+#     the static case below sees the tree it expects.
+head -c 21000000 /dev/zero > "$tmp/repo/docs/staged_report.txt"
+git -C "$tmp/repo" add docs/staged_report.txt
+printf 'a documentation change, staged\n' > "$tmp/message.txt"
+status="$(run_gate --message "$tmp/message.txt")"
+git -C "$tmp/repo" rm -q --cached docs/staged_report.txt
+rm -f "$tmp/repo/docs/staged_report.txt"
+if [[ "$status" -eq 0 || "$(failed_markers)" -ne 1 ]]; then
+  fail "20: a staged 21 MB file was not refused"; show
+fi
+if ! grep -q 'docs/staged_report.txt' "$tmp/out.txt"; then
+  fail "20: the marker does not name the staged file"; show
 fi
 
 # 9. Static. bash 3.2 on the MacBook has none of these (S167, S177), and the

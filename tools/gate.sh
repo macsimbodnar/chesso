@@ -49,6 +49,14 @@ set -euo pipefail
 # `ref-<sha>` of the named log's own `Results of` line. A message with no
 # `SPRT |` line is not touched by any of this.
 #
+# THE THIRD RULE, DEC-235 and S241. A commit adds no file over 20 MB. S240's
+# two rating reports reached GitHub at 59 MB each -- fastchess's whole console,
+# 98.9 % the block it prints when a PV runs past a game-ending rule -- and
+# GitHub warns at 50 MB and refuses at 100. A run's console, PGN and log stay
+# with the run and go to the owner's archive; the tree takes the reading and
+# a report trimmed to it. Checked before the suite, on the same tree the
+# signature is read from.
+#
 # ON THIS MACHINE: `clang-format.sh` pins major 23 and the workstation has 22,
 # so `export CLANG_FORMAT_MAJOR=22` before running this (`.moltke.local.md`,
 # DEC-146). The pin is not overridden here: a gate that silences its own
@@ -116,6 +124,30 @@ if [[ -n "$message_file" ]]; then
 else
   ref="${ref:-HEAD}"
 fi
+
+# THE SIZE OF WHAT THE COMMIT ADDS, before the suite, so the refusal is
+# immediate. S240's two rating reports reached GitHub at 59 MB each -- a
+# gauntlet's whole fastchess console, 98.9 % one warning family -- and
+# GitHub warns at 50 MB and refuses at 100. A run's console, PGN and log stay
+# with the run under .tuning/ and go to the owner's archive; what adocs/data/
+# takes is the reading and a report trimmed to it (DEC-235). The line is 20 MB:
+# an SPRT log, which DEC-220 requires in the tree, read 4 to 7 MB over 30000
+# games, and nothing above the line has been evidence yet. Read from the
+# staged index in message mode and from the commit otherwise -- the same tree
+# the signature is read from -- as added or modified blobs; a deletion or a
+# pure rename moves no bytes in.
+max_blob_bytes=$((20 * 1024 * 1024))
+if [[ -n "$message_file" ]]; then
+  added="$(git diff --cached --raw --no-abbrev --diff-filter=AM)"
+else
+  added="$(git diff-tree -r --no-commit-id --raw --no-abbrev --diff-filter=AM "$ref")"
+fi
+while read -r _ _ _ blob _ path; do
+  [[ -n "$path" ]] || continue
+  bytes="$(git cat-file -s "$blob")"
+  ((bytes <= max_blob_bytes)) \
+    || fail "[$path] is $bytes bytes, over the $max_blob_bytes this tree takes (DEC-235): keep it with the run, commit its reading"
+done <<< "$added"
 
 # THE SUITE FIRST. Verbatim the TESTS rule's command, and read as one status:
 # piping ctest into anything hides the status behind the pipe's last stage

@@ -119,11 +119,16 @@ else
 fi
 
 stamp="$(date +%Y%m%d_%H%M%S)"
-outdir="${OUT:-/tmp/chesso_rating_${mode}_${stamp}}"
+# Under the tree's own .tuning/, which is gitignored, and not under /tmp, which
+# this machine wipes at boot: two SPRT launches were restarted on 2026-09-13
+# for exactly that. The directory is the run's evidence until the owner's
+# archive takes it; adocs/data/ takes the reading and report.txt. DEC-235.
+outdir="${OUT:-$repo/.tuning/rating_${mode}_${stamp}}"
 mkdir -p "$outdir"
 pgnfile="$outdir/games.pgn"
 logfile="$outdir/fastchess.log"
 report="$outdir/report.txt"
+console="$outdir/console.txt"
 
 [[ -x "$candidate" ]] || fail "no candidate at $candidate, build it first"
 [[ -r "$manifest" ]] || fail "no manifest at $manifest"
@@ -235,6 +240,9 @@ done
   echo "rounds $rounds  -> $((rounds * ${#names[@]} * 2)) games"
   echo "book        $(basename "$book")"
   echo "output      $outdir"
+  echo "console     console.txt beside this report, fastchess's output unfiltered; the report"
+  echo "            drops the blocks it prints when a PV runs past a threefold repetition or the"
+  echo "            fifty-move rule, counted per rule and engine where its output ends (DEC-235)"
   echo
 } | tee "$report"
 
@@ -242,6 +250,16 @@ done
 # it -- they are single-threaded by construction -- and chesso's is min 1 max 1.
 # Sending an option an engine does not have is a way to lose a game to a
 # protocol error rather than to strength. DEC-068.
+#
+# The console goes to console.txt whole and to the report through
+# tools/trim_console.py, which drops the four-line block fastchess prints each
+# time an engine's PV runs past a threefold repetition or the fifty-move rule
+# and counts it per rule and engine where the output ends. S240's two reports
+# were 59 MB each and 98.9 % that block -- 55065 of them, each repeating the
+# game's move list, from the anchors' PVs -- and nothing read them; the PGN
+# has the moves. Under `pipefail` fastchess's status still decides the
+# pipeline: the filter and both tees exit 0 whenever fastchess ran at all.
+# DEC-235.
 fastchess \
   "${engine_args[@]}" \
   -tournament gauntlet -seeds 1 \
@@ -255,6 +273,8 @@ fastchess \
   -recover \
   -pgnout "file=$pgnfile" \
   -log "file=$logfile" \
+  | tee "$console" \
+  | "$repo/tools/trim_console.py" --summary \
   | tee -a "$report"
 
 # Two different failures used to be one check, and DEC-075 split them.
