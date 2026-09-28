@@ -7,6 +7,12 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-29: S131's SPRT is H1 -- H1, the code stays
+
+**`13caf43` against `2d6b8f1`, `Elo 17.84 +/- 8.83`, `nElo 23.59 +/- 11.66`,
+LLR 2.97, 3412 games in 1 h 37 m, 0 forfeits, 2026-09-29 00:57.** **H1**: the class gains at least 5 nElo; `QsQueenPromotions` stays at 1 (the pre-registration's first row). The stopping run's estimate is upward-biased and is not the effect size (DEC-063).
+**Next:** the ledger; S131 completes; the fillers S242 to S244 land on this tree as their reports come; then S022.
+
 ## 2026-09-28, 23:19: S131's SPRT is running, the fillers S242 and S243 beside it
 
 **S131's SPRT, launched 23:19: `13caf43` (quiet queen promotions in quiescence

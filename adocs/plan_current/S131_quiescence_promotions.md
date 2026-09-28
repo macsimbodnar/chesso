@@ -942,3 +942,14 @@ pinned: `REF` `2d6b8f1` (the tree S113's H1 left, its engine `3d97737`'s node
 for node), `CAND` `13caf43`; open findings re-read at pinning: items 1 to 10
 as the pre-registration states them, nothing moved since the rebase agent's
 final pass.
+
+## The verdict (2026-09-29, the coordinator)
+
+**H1, 2026-09-29 00:57: `13caf43` against `2d6b8f1`, `Elo 17.84 +/- 8.83`,
+`nElo 23.59 +/- 11.66`, LLR 2.97, 3412 games in 1 h 37 m, 0 forfeits**
+(`adocs/data/S131_sprt.log`, `adocs/data/S131_sprt_pairs.txt`; marker
+`DONE`). **H1**: the class gains at least 5 nElo; `QsQueenPromotions` stays at 1 (the pre-registration's first row). The stopping run's estimate is upward-biased and is not the effect size (DEC-063). `Incomplete mating PV` 1 against 17,
+an observation for the pre-registration's open finding 3's class (CHESS).
+No follow-up run and no second pair (DEC-063, DEC-019): the record priced
+only the underpromotion margin, and the engine's own comment was the
+direction.
