@@ -13264,3 +13264,46 @@ Rejected:     A new step for the two options: strictly-necessary is the
 Consequences: S082's and S083's briefs carry the notes; the NNUE
               preparation's questions sit in `status.md` until answered;
               `adocs/data/README.md` lists both documents.
+
+## DEC-238  2026-09-28  A mined guard row's firing witness is taken on the mutant's build: the guard's job is to stop a firing, so the shipped rule need not fire on the row
+Tags:         tests, goldens, mining, mate, multicut, s097, s131, s243, dec-142, dec-209, dec-233
+Context:      S131's rebase onto S113's tree (`3c7cf84`) left mutant E21 --
+              S097 verdict 2's multicut with its mate-band gate dropped --
+              alive in the fast suite: the mined row that killed it on
+              `3c7cf84` (S097's multicut row, re-derived at S113's rebase)
+              reads mate in 4 at depths 12 to 14 in both builds once quiet
+              queen promotions are searched, and
+              `adocs/data/S097_mine_mate_row.py`'s stages 2 to 6 over the
+              269 candidates find one position that separates the builds
+              (`7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42`: the
+              shipped build reports mate in 6 at depths 11 to 14, E21's
+              none at 14) and refuse it, because the script's pick rule
+              requires the shipped multicut to fire on the row, and there
+              the gate is what stops it. The agent changed no test and
+              asked (DEC-233's stop). Three rebases in a row have moved a
+              mined mate row (S112's, S113's, this one).
+Decision:     By the coordinator under the owner's delegation. For a row
+              that witnesses a *guard* -- a mutant that drops a condition
+              stopping the rule -- the firing witness is taken on the
+              mutant's build: the rule must fire there, the shipped guard
+              must stop it, and the shipped build must keep the mate the
+              mutant loses. The script gains that mode, named at its call,
+              and the rest of its rule is unchanged (the candidates, both
+              sweeps, the derived separator set, the pick by the fewest
+              shipped runs). S097's row is re-derived on S131's tree under
+              it, the old row quoted in the GOLDEN block, red under E21 and
+              green shipped observed and logged; `DEV_MANUAL.md`'s DEC-142
+              row says which mode derived it. The durable fix is a direct
+              guard test on the multicut's returned value, S243, a filler
+              behind S131 (DEC-141's form for a guard: a direct test and a
+              mutant it kills, independent of any corpus).
+Rejected:     Landing with E21 alive: a guard that keeps a pruning rule from
+              hiding a mate is the recurring bug's fence and stays fenced. A
+              wider corpus: luck, and the next rebase moves it again.
+              Reading the surviving row on the shipped build's firing: the
+              condition was written for rows that witness the rule, not its
+              guard, and applied to a guard it refuses the only kind of
+              position that can witness one.
+Consequences: `S097_mine_mate_row.py` carries the guard mode; every later
+              re-derivation of a guard row states which mode it used; S243
+              is in `plan_todo/` and named in S131's pre-registration.

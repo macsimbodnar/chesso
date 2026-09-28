@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28, night: S131 rebased onto ProbCut's tree; E21 uncovered, DEC-238; S243 created
+
+A fresh agent rebased S131 onto `3c7cf84` and re-proved it (identity at
+`QsQueenPromotions` 0 exact against the parent; `bench` 3591364 -> 3429473;
+admission 0.85 % at depth 12; mutation 9 of 9, V05 equivalent; both suites
+41 of 41; `test_mate_carry` 56 s and 57 s idle). **It stopped on a
+finding**: with S131 in, no fast-suite test kills E21 (S097 verdict 2's
+multicut with its mate-band gate dropped) -- the mined multicut row reads the
+same in both builds now, and the mining script refuses the one candidate
+that separates them because the shipped multicut does not fire on it (the
+gate stops it). **Ruled as DEC-238**: a guard row's firing witness is taken
+on the mutant's build; the script gains that mode; the row is re-derived
+under it, the old row quoted, red under E21 observed. **S243** (a direct
+guard test for the multicut's mate band, DEC-141's form) is the durable fix,
+a filler behind S131 in `plan_todo/`. The agent is applying the ruling; then
+the cold fast check over the landing diff, the landing with the specs
+edits, the second tier, pin, SPRT.
+
 ## 2026-09-28: S113's SPRT is H1 -- H1, the code stays at its seeds
 
 **`3d97737` against `029ff61`, `Elo 7.70 +/- 5.41`, `nElo 9.87 +/- 6.93`,
