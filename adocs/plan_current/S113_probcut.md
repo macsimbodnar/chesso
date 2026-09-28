@@ -740,3 +740,12 @@ Landed as `3d97737` on `029ff61`, `bench` 4649650 -> 3591364. SPRT pair
 pinned: `REF` `029ff61` (the tree S112's zero left, its engine `3d82344`'s
 node for node), `CAND` `3d97737`; open findings re-read at pinning, item 6
 added by the fast check, nothing else moved since the rebase agent's block.
+
+## The verdict (2026-09-28, the coordinator)
+
+**H1, 2026-09-28 19:30: `3d97737` against `029ff61`, `Elo 7.70 +/- 5.41`,
+`nElo 9.87 +/- 6.93`, LLR 2.95, 9654 games in 4 h 34 m, 0 forfeits**
+(`adocs/data/S113_sprt.log`, `adocs/data/S113_sprt_pairs.txt`; marker
+`DONE`). **H1**: the block gains at least 5 nElo at its seeds; the three settings stay at their seeds for S127 (the pre-registration's first row). The stopping run's estimate is upward-biased and is not the effect size (DEC-063). `Incomplete mating PV` 0 against 0,
+an observation for open finding 3's class (CHESS). No follow-up run and no
+second pair (DEC-063, DEC-019): the record's +6.36 was a direction.

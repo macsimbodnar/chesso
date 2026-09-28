@@ -7,6 +7,12 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-28: S113's SPRT is H1 -- H1, the code stays at its seeds
+
+**`3d97737` against `029ff61`, `Elo 7.70 +/- 5.41`, `nElo 9.87 +/- 6.93`,
+LLR 2.95, 9654 games in 4 h 34 m, 0 forfeits, 2026-09-28 19:30.** **H1**: the block gains at least 5 nElo at its seeds; the three settings stay at their seeds for S127 (the pre-registration's first row). The stopping run's estimate is upward-biased and is not the effect size (DEC-063).
+**Next:** the ledger; S113 completes and S131 is rebased onto `3d97737` by a fresh agent; then S131's cold fast check over the landing diff, landing, second tier, pin, SPRT.
+
 ## 2026-09-28, evening: S131 built beside S113's SPRT, fast-checked; S242 created (filler)
 
 **S131 (quiet queen promotions in quiescence) is built in `../chesso-s131`
