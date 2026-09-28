@@ -25,6 +25,29 @@ this tree by a fresh agent
 (identity against `3d82344`'s engine, goldens re-derived), landed, second
 tier, pinned, its SPRT launched for the night; S131 and S022 follow in Open.
 
+## 2026-09-28, afternoon: the 2026-09-27 tuning comparison read (DEC-237), and the owner's open questions
+
+The Medium article's method takes nothing into chesso (its label and update
+rules depart from the published Texel method; its "obsolete" verdict is
+contradicted by DEC-071 and by S028/S065). Two datagen ideas from the report's
+section 6 are now notes in S082 (a coverage print by phase and score band) and
+S083 (a bounded random-move injection, read on the held-out curve); no new
+step. Both 2026-09-27 documents committed with README rows.
+
+**Owner questions open**, carried here until answered:
+
+1. **S240's anchors**: install one or two engines above about 2850 on the CCRL
+   Blitz scale before the next rating run (Leorik 2.4 at 2830 is the only
+   anchor above chesso).
+2. **Network preparation, section 9 of `adocs/data/2026-09-27_nnue_training_preparation.md`**:
+   (1) storage for a corpus of tens of gigabytes -- the root file system is at
+   98 %; (2) the trainer route, own PyTorch or `bullet`, deferred by the owner;
+   (3) human-game positions with chesso's own labels -- the owner's reading is
+   yes, and the DEC amending DEC-002 is drafted at the end of that document
+   for the owner to confirm; (4) who runs the training, the owner or a
+   one-run delegation as at S028; (5) whether its P1 (a binary corpus record)
+   and P2 (datagen options) fold into S082/S083 now.
+
 ## 2026-09-28, later: S241 -- the S240 reports trimmed, history rewritten (DEC-235)
 
 The push of 2026-09-28 carried the two S240 rating reports at 59 MB each and

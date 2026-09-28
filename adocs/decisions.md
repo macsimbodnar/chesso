@@ -13217,3 +13217,50 @@ Consequences: The engine carries a rule recorded at zero with the reason
               pre-registration cites this entry and states which of its two
               verdicts decides whether the rule stays. `specs.md`'s S112
               sentence carries the verdict and this id.
+
+## DEC-237  2026-09-28  The 2026-09-27 tuning comparison adds two measured datagen options to S082 and S083 and nothing else; the network preparation's five owner questions are parked
+Tags:         tuning, datagen, corpus, s082, s083, nnue, s029, dec-016, dec-105, dec-221
+Context:      `adocs/data/2026-09-27_article_finetuning_comparison.md` reads
+              one published account of Texel tuning and a HalfKA network
+              against chesso's own tuning record (S028 to S231) and finds
+              the account's method departing from the published one where it
+              matters -- a per-position win rate for a label, an update rule
+              with no sign and no feature term, an untraceable constant --
+              and its verdict that hand-crafted tuning is obsolete
+              contradicted by DEC-071's table and by chesso's own +188.74
+              and +21.10. Its section 6 keeps two ideas, both as ranges
+              declared by purpose (DEC-105 form (c)) and both measured before
+              they are believed: a bounded random-move injection inside the
+              game, the row after a random move not recorded, read on a
+              held-out curve; and a coverage report by phase and score band
+              printed by the generator or the tuner. It refuses
+              score-stratified resampling, corpus mirroring, depth-gated
+              filters and a fixed optimisation window, each with its reason.
+              The owner asked on 2026-09-28 whether any of it should enter
+              the plan.
+Decision:     By the coordinator under the owner's delegation. Nothing from
+              the account's method enters chesso: no label rule, no update
+              rule, no constant, no data (DEC-016, DEC-105). The two ideas
+              enter as notes in the step files that own the corpus -- the
+              coverage print in S082's, the random-move option in S083's,
+              where its rate is one more setting the held-out curve reads
+              under the stated nights budget -- and neither is a new step
+              (PLAN rule: S082 and S083 are the corpus rewrite and its
+              measurement, and the ideas are cheap inside them). The
+              companion `2026-09-27_nnue_training_preparation.md` changes
+              nothing now: S029 stays parked (DEC-054, DEC-179), and its five
+              owner questions -- storage, the trainer, the human-game data
+              policy whose DEC it drafts, the training-run delegation, and
+              whether its P1 and P2 fold into S082/S083 -- are carried in
+              `status.md` for the owner. Both documents are committed as
+              evidence with their README rows.
+Rejected:     A new step for the two options: strictly-necessary is the
+              bound, and they are measured on S083's corpus anyway.
+              Recording the human-game data DEC from the report's draft now:
+              it amends DEC-002 and the owner records it, through the
+              coordinator, when they confirm. Dropping the report: the
+              reasoning that refuses the account's method is worth keeping
+              where the next reader of that article will look.
+Consequences: S082's and S083's briefs carry the notes; the NNUE
+              preparation's questions sit in `status.md` until answered;
+              `adocs/data/README.md` lists both documents.

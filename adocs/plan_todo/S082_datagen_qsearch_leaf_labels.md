@@ -242,3 +242,13 @@ what the next corpus decision is read against.
   2026-09-13.
 - - `adocs/eval_tuning_strategy.md` sections 2.3 and 2.6 -- the project's own
   strategy document, quoted in "Why this exists". Local, not literature.
+
+## From the 2026-09-27 tuning comparison (the coordinator, 2026-09-28, DEC-237)
+
+`adocs/data/2026-09-27_article_finetuning_comparison.md` section 6 keeps one
+idea for this step: **a coverage report by phase and score band**, printed by
+`tools/datagen` (or the tuner) as a standard part of the corpus rewrite this
+step does -- the matrix S065 measured one cell of by hand (a queen at `phase
+<= 4` on 0.0889 % of rows). A print, not a resampling: score-stratified
+resampling changes the label distribution the objective is defined on and is
+refused there. Tools-only, no verdict owed; the brief carries it.

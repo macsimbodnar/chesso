@@ -224,3 +224,15 @@ zero and the corpus may still be kept with the reason stated.
   <result>", "1x Sets of ~12.5M postitions from FRC". Forum post only; the
   sizes are read, the data is never used (DEC-016). Fetched 2026-09-13 after
   the fast check.
+
+## From the 2026-09-27 tuning comparison (the coordinator, 2026-09-28, DEC-237)
+
+`adocs/data/2026-09-27_article_finetuning_comparison.md` section 6 keeps one
+idea for this step: **a bounded random-move injection inside the game** -- a
+`--random-move-rate`, or a count within a ply window, in `tools/datagen`, the
+row after a random move not recorded -- as one more setting this step's
+held-out curve reads under its stated nights budget, its rate a range
+declared by purpose with its midpoint (DEC-105 form (c)). The published
+generators describe the same thing in prose (the report's references;
+DEC-221), and S065's coverage gap is the symptom it might address. It is this
+step's curve first and its one SPRT second; not a new step (PLAN rule).
