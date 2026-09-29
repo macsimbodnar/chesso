@@ -218,6 +218,28 @@ class CitationChecks(unittest.TestCase):
         self.assertEqual(flagged, 0, out)
         self.assertNotIn("MISSING", out)
 
+    def test_split_title_quoted_across_a_prose_wrap_passes(self):
+        """The case above with the one thing a real step file adds: the prose
+        is hard-wrapped, so the quoted title carries a line break. The title
+        map is keyed on flattened titles and was probed with the phrase as
+        quoted, so it missed; the raw-text fallback flattens but by design
+        does not bridge the `" "` between two literals; and the citation read
+        MISSING -- S242's step file citing tests/test_engine.cpp "a stop inside
+        the first iteration cuts it and the hard timer ends the search within
+        its bound", which refused S243's first mutation fixture. S245. Both a
+        break at the literals' join and one inside a literal are planted.
+        """
+        rel = "tests/S221_split_title_fixture.cpp"
+        self.assertTrue(os.path.isfile(os.path.join(ROOT, rel)), rel)
+        for quoted in ("first half of a\ntitle continued",
+                       "first half\nof a title continued"):
+            with self.subTest(quoted=quoted):
+                body = ('The split-literal fixture is `{}` "{}".\n'
+                        ).format(rel, quoted)
+                flagged, out = self.run_direct(body, {rel})
+                self.assertEqual(flagged, 0, out)
+                self.assertNotIn("MISSING", out)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

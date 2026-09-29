@@ -33,6 +33,36 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, midday: S244 landed (its second tier waits for the idle machine); S245 done
+
+**S244 landed** as `192732f`: in ProbCut's loop a capture that leaves
+insufficient material is answered `DRAW_SCORE` before the preliminary and
+the shallow search, so no dead board is scored on its material or stored at
+`TT_DEPTH_QS`, and S210's comment in `quiescence` reads true for every
+caller. No bench position reaches the class (bench 14, 12 and `search_bench`
+12: 0 of 3040, 1372 and 957 ProbCut captures), the bench stream and
+`search_bench` are node-identical (INV-6's instrument), and a
+11503-position census of ordinary play at depth 10 moved no root answer and
+no score (65 node counts down by 1 to 28; 8 cuts the parent's material
+score had missed are taken on the draw). Accepted without a run on
+**DEC-242**, a bounded extension of DEC-107 recorded for this case; the
+owner may overrule and order the `{-5, 0}` run. A case red on the parent and
+green with the screen; two mutants killed by it. Cold fast check over both fillers' diff: no code defect; the budget rule's pre-DEC-162 wording and the comments the new budgets made false were corrected at its findings. **Owed before it
+completes:** DEC-141's second tier on the idle machine after the running
+SPRT; then the stamp (`.tuning/coord` holds the script).
+
+**S245 done** (this commit): the five stale items closed, each by its own
+rule -- the depth-1 comment, the moot golden, the checker's wrapped-title
+miss (`holds_phrase` flattened whitespace; a test red before, green after),
+the S237/S238 comments, `S170_cases.tsv`'s budgets re-derived on S244's tree
+by `S203_case_sweep.sh` under DEC-162's rule (A 500000, C 1000000, E 500000,
+F 100000; B and D unchanged; the ceilings unmoved; `test_mate_carry` 83 to
+86 s under load against 117 s before), the rule's text corrected in the
+script's header, the test's header and the TSV. The binary is byte-identical
+to S244's; `bench` 3656950. `specs.md`'s S236 sentence loses its sixth copy
+of the stale claim. **Fillers in the plan:** none open. **Next in Open:**
+S114.
+
 ## 2026-09-29, 09:51: S022 verdict 2's SPRT is running
 
 **Launched 09:51: `0c0db1b` (the delta early-out, `QsDeltaEarlyOut` 1) against `58585f8`,

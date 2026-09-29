@@ -474,8 +474,11 @@
                                                                                \
      At 0 the accumulator is bit-identical to the engine before S236, which is \
      why the unit could stay when that step's history term left at its second  \
-     verdict (DEC-231): what remains here plays no differently and is the      \
-     scaffolding S237 and S238 need to express a fraction of a ply.            \
+     verdict (DEC-231): what remains here plays no differently. S237 and       \
+     S238, the two steps it was also kept for, left on their H0s without       \
+     carrying a fraction of a ply in it: S237 moved whole plies and S238 was   \
+     measured at 1024 ticks, one ply. A fraction is left for this bias alone,  \
+     rounding the table's own.                                                 \
                                                                                \
      The range is arithmetic at both ends. Below 0 the bias would round a      \
      positive sum down past its own floor; at LMR_SCALE it would add a whole   \

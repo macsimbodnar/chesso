@@ -1,14 +1,24 @@
 #!/bin/bash
-# Re-derive adocs/data/S170_cases.tsv's `go` budgets and the
-# expected_mate_lines() floors in tests/test_mate_carry.cpp.
+# Re-derive adocs/data/S170_cases.tsv's `go` budgets and, with --ceilings, the
+# short_line_ceiling() ceilings in tests/test_mate_carry.cpp. (Until DEC-162 it
+# re-derived per-case expected_mate_lines() floors there; they are deleted.)
 #
 # S203, DEC-156. The case set is eviction reproductions and the Zobrist keys
 # decide eviction, so a redraw of the keys retires the budgets the rows carry
 # (DEC-154). This is the script that chooses new ones, and the rule it applies
-# is stated once and applied to every row rather than tuned per case:
+# is stated once and applied to every row rather than tuned per case, as
+# DEC-162 left it:
 #
-#   the cheapest budget at which the case reports at least its floor of mate
-#   lines with all of them complete.
+#   the cheapest budget at the row's own stride whose cell reports a mate
+#   line.
+#
+# DEC-156 first wrote it as "the cheapest budget at which the case reports at
+# least its floor of mate lines with all of them complete". DEC-162 deleted
+# the per-case floors and moved short lines to a per-case ceiling, so a
+# re-sweep chooses on the mate count alone and a cell with short lines is not
+# refused for them -- they are counted against the ceiling instead. S238
+# read it so first (D at 1000000, 2 lines, 1 short) and S245 re-swept by it
+# (E at 500000, 2 lines, 1 short).
 #
 # "Cheapest" matters: a budget is not chosen because it is green. A case that is
 # green only far past a window where it is red has that window recorded as an
@@ -32,8 +42,10 @@
 #   adocs/data/S203_case_sweep.sh --ceilings \
 #       adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt
 #
-# Each line is: case, stride, nodes, mate lines reported, short lines. A row is
-# usable when mate lines clears its floor and short is 0.
+# Each line is: case, stride, nodes, mate lines reported, short lines. A cell is
+# a budget's candidate when it reports a mate line at the stride its row
+# carries; its short lines are the ceiling's business, not the budget's
+# (DEC-162, S245).
 set -uo pipefail
 
 cd "$(dirname "$0")/../.." || exit 1

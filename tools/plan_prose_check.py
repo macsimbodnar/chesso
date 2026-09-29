@@ -558,7 +558,12 @@ def holds_phrase(phrase, path):
     src/evaluation.hpp) have no enclosing definition to name. Both sides are
     whitespace-flattened, because the prose is hard-wrapped and so is the code.
     """
-    if phrase in titles_of(path):
+    # Flattened before the title map too, whose keys titles_of() flattens: a
+    # phrase quoted across a line break of the prose carries the break. For a
+    # title in one literal the fallback below used to cover for this; for one
+    # clang-format split across two, nothing did, and a true citation read
+    # MISSING -- S242's, which refused S243's first mutation fixture. S245.
+    if " ".join(phrase.split()) in titles_of(path):
         return True
     # S221: left as it is, on purpose, not taught the same literal-stitching
     # as titles_of() above. A split *string literal* is a lexical rule about

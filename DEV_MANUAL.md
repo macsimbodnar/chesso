@@ -2546,14 +2546,17 @@ pre-make read of the sum for the reduction, the third argument through
 `lmr_adjusted_reduction` and `lmr_depth_of`, the term's cases and mutants W03 to
 W05. **What stayed is the accumulator** -- the table in ticks of a ply,
 `LMR_SCALE`, `lmr_plies_of` and `LmrRoundBias` at 0 -- because it is
-behaviour-neutral at that bias and because S237 and S238 both need a reduction
-that can carry a fraction. This entry is the proof of the first half of that
-sentence: `bench` is `666b5a0`'s to the node with all eight `bestmove` replies
-identical, and `tools/search_bench.py` reproduces it exactly at depths 9 and 12,
-21479 / 102462 / 33148 and 149688 / 459216 / 219544. A reduction table of
-`int32_t` ticks that plays as a `uint8_t` table of plies is what the engine now
-carries, and the nps cost of that width was measured at the first landing and is
-below this machine's noise floor (`adocs/data/S236_nps_interleaved.txt`).
+behaviour-neutral at that bias and because S237 and S238 were to need a
+reduction that can carry a fraction. The second reason did not hold: both
+left on their H0s without carrying one, S237 having moved whole plies and
+S238 measured at 1024 ticks, one ply, so the first is what keeps the unit.
+This entry is the proof of it: `bench` is `666b5a0`'s to the node with all
+eight `bestmove` replies identical, and `tools/search_bench.py` reproduces it
+exactly at depths 9 and 12, 21479 / 102462 / 33148 and 149688 / 459216 /
+219544. A reduction table of `int32_t` ticks that plays as a `uint8_t` table
+of plies is what the engine now carries, and the nps cost of that width was
+measured at the first landing and is below this machine's noise floor
+(`adocs/data/S236_nps_interleaved.txt`).
 
 Three mined goldens moved with the term and came back with it: S095's mate row,
 S097's mate row and `test_mate_carry`'s `C_mate7_depth11` ceiling, each restored
@@ -4174,8 +4177,11 @@ share a transposition-table slot, so the node counts move once — and they also
 retire the `go` budgets in `adocs/data/S170_cases.tsv`, whose cases are eviction
 reproductions. Re-derive them with `adocs/data/S203_case_sweep.sh`, which is
 cheap and needs no match; the games survive a redraw and only the budgets move.
-DEC-154 and DEC-156 are the history, and the grid is a knife edge — one case
-reports 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000.
+DEC-154 and DEC-156 are the history, and the grid is a knife edge — one case,
+`C_mate7_depth11`, reported 13 mate lines at 1500000 nodes and 0 at both
+1000000 and 2000000 when S203 swept it, and on S245's grid
+(`adocs/data/S245_sweep.txt`) reports 16 at 1000000 and 0 in every other
+stride-1 cell, 1500000 and 2000000 included.
 
 **A key redraw is not the only thing that retires those budgets, and since
 2026-09-09 that is measured.** Any change that moves the tree does, which is
@@ -4197,7 +4203,11 @@ the two recorded grids. What is asserted at zero and pinned to nothing is the
 one thing that does not move: a line as long as the distance it claims ends in
 checkmate. So a red `test_mate_carry` now names which of the three fired, and
 only the ceiling one is a budget question. The budgets themselves did not move
-and a redraw still retires them.
+and a redraw still retires them. They are re-derived as a set: the script with
+no argument prints the grid, each row takes the cheapest cell at its own
+stride that reports a mate line -- DEC-162 left the choice on the mate count
+alone -- and `--at` confirms the six cells. S245 did that on 2026-09-29 and
+four moved (`adocs/data/S245_sweep.txt`, the old rows quoted in the TSV).
 
 `zobrist` reports the checks the wiki's linear-independence rule asks for at the
 sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal

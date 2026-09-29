@@ -972,9 +972,16 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   // reads 1.33 and 2.99 -- the same engine (adocs/data/S210_depth1_latency.py;
   // the audit's own 0.56 / 1.04 was taken without the pipe). On a pathological
   // board the reviewer measured 254 ms burned against a 100 ms clock, which is
-  // a forfeit with no rule broken above it, and the board this repository's
-  // case uses spends 13.5 ms and 42371 nodes finishing a depth-1 iteration
-  // that was told to stop before it began.
+  // a forfeit with no rule broken above it, and the board the repository's
+  // case was written on, eight queens a side
+  // (q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1), spent 13.5 ms and
+  // 42371 nodes finishing a depth-1 iteration that was told to stop before it
+  // began. `go depth 1` there reports 10187 nodes since S022's second verdict,
+  // whose early-out in quiescence cuts it, and no case uses that board now:
+  // tests/test_engine.cpp "a stop inside the first iteration cuts it and the
+  // hard timer ends the search within its bound" stops a rook-and-knight board
+  // whose depth 1 is 146994 nodes, and times its hard limit on a board of its
+  // own.
   //
   // A depth-1 iteration that is cut still owes a move and still produces one:
   // it publishes no PV, so the first_legal_move() fallback below answers.

@@ -152,10 +152,14 @@ void history_on_quiet_cutoff(search_state_t* state,
 // quiet's own history, scaled to a fraction of a ply -- and measured it twice:
 // a walk at two plies of reach and a second walk at one, 15658 and 40000 games
 // (DEC-231). The term left and the unit stayed, because it is behaviour-neutral
-// at `LmrRoundBias` 0 and because S237 and S238 both want a reduction that can
-// carry a fraction. What is here is therefore scaffolding that plays exactly as
-// the whole-ply engine did, proved by the bench signature at every landing, and
-// not a rule with an unmeasured effect.
+// at `LmrRoundBias` 0. The two steps it was also kept for have left too, on
+// their H0s, and neither carried a fraction in it: S237's hindsight rule moved
+// a child's depth by whole plies (DEC-232), and S238's cutoff count, written in
+// these ticks, was measured at 1024, one ply. No term in the tree carries a
+// fraction now; what one is left for is `LmrRoundBias` rounding the table's
+// own, which S127 may sweep. What is here is therefore scaffolding that plays
+// exactly as the whole-ply engine did, proved by the bench signature at every
+// landing, and not a rule with an unmeasured effect.
 //
 // **A power of two, and it is a design constant and not a tuned one** (DEC-134
 // (c)). Two properties decide it and neither is a guess at a good value:
@@ -354,8 +358,9 @@ int search_lmr_node_adjustment_probe(bool cut_node,
 // zero at half the reach, so the term left and the unit stayed (DEC-231). The
 // five node constants are whole plies, `LmrRoundBias` ships at 0, and this
 // function is therefore the parent's own arithmetic exactly: the table
-// truncated, plus whole plies. What it buys is that S237 and S238 can express a
-// fraction without moving the rounding again.
+// truncated, plus whole plies. What it buys is that a later term can express a
+// fraction without moving the rounding again; S237 and S238, the two it was
+// kept for, both left on their H0s having moved whole plies.
 //
 // With the four node constants at 0 this is the raw table and the engine is the
 // one before S098 verdict 2, bench signature included -- the property the

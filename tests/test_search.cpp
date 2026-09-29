@@ -9776,7 +9776,8 @@ TEST_SUITE("search: pruning and reduction guards")
   // less than a ply, which S098 verdict 1's whole-ply form could not do. Two
   // verdicts read a walk and then a zero, the term left the tree and its cases
   // with it (DEC-231, DEC-213). What stays is the unit, which plays as the
-  // whole-ply engine did and is what S237 and S238 will express a fraction in.
+  // whole-ply engine did. S237 and S238, the two steps that were to express a
+  // fraction in it, both left on their H0s having moved whole plies.
 
 
   // Mutation: W01_round_bias_dropped -- the bias is not added before the shift,

@@ -85,23 +85,30 @@
 // alone, no game and no mining run: A at 1000000 nodes instead of 300000, C at
 // 1500000 instead of 1000000, D at 4000000 instead of 1000000. The rule is
 // stated once in `adocs/data/S203_case_sweep.sh` and applied to every row --
-// the cheapest budget at which the case reports at least its floor of mate
-// lines with all of them complete -- because a budget chosen per case because
-// it happened to be green would be fitting the fixture to the test.
+// as DEC-162 left it, the cheapest budget at the row's own stride whose cell
+// reports a mate line, chosen on the mate count alone; DEC-156's first form
+// also wanted a floor of lines, all complete, and the floors are gone --
+// because a budget chosen per case because it happened to be green would be
+// fitting the fixture to the test. S245 re-swept every row in that form.
 //
 // The budgets are a knife edge and the file says so rather than implying it:
-// C reports 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000.
+// C reported 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000
+// when S203 swept it, and on S245's grid (adocs/data/S245_sweep.txt) it
+// reports 16 at 1000000 and 0 in every other stride-1 cell, 1500000 and
+// 2000000 included.
 // Re-run that sweep after any change that moves the tree, not only after a key
 // change -- DEC-154, DEC-156. What DEC-162 changed is what depends on the
 // answer: no golden here is a per-case mate count any more, so a re-sweep moves
 // budgets and nothing else, and the assertions below are written so that a case
 // whose cell has moved does not fail on its own.
 //
-// D carries one more thing. Between 1200000 and 3000000 nodes it reproduces a
-// short line -- `mate -6` at ply 35 depth 11 with a 10-of-12-ply PV, at a depth
-// that also publishes a complete 12/12 -- which is the class DEC-122 leaves
-// short and visible and S202 owns. It is recorded there as a reproduction
-// rather than hidden behind the 4000000 that clears it.
+// D carries one more thing. Between 1200000 and 3000000 nodes it reproduced a
+// short line when S203 swept it -- `mate -6` at ply 35 depth 11 with a
+// 10-of-12-ply PV, at a depth that also published a complete 12/12 -- which
+// is the class DEC-122 leaves short and visible and S202 owns. It is recorded
+// there as a reproduction rather than hidden behind the 4000000 that clears
+// it. On S245's grid D reports no mate line in that range and 4, none short,
+// at 4000000.
 
 #ifndef CHESSO_SOURCE_DIR
 #error "CHESSO_SOURCE_DIR must be defined so the test can read the case file"
@@ -440,12 +447,14 @@ static bool line_ends_in_mate(const std::string& fen,
 // from the `--ceilings` command -- which is what "re-derive, never re-read"
 // looks like in both directions. The other five never moved.
 //
-// The number that matters for the reading is not the count alone. At E's own
-// cell -- stride 1, 1500000 nodes, which is the cell this case drives -- the
-// tree reports **22 mate lines with 11 short** where S109's grid reported 13
-// with 9: the count rises past the ceiling and the share of short lines
-// **falls, 69 % to 50 %**. B's worst cell is 15 of 52 at 1200000 against 11 of
-// its own at S204's 1000000.
+// The number that matters for the reading is not the count alone. At the
+// cell E drove until S245 -- stride 1, 1500000 nodes -- S095's tree reported
+// **22 mate lines with 11 short** where S109's grid reported 13 with 9: the
+// count rises past the ceiling and the share of short lines **falls, 69 % to
+// 50 %**. That reading is S095's tree's and does not carry: on S245's grid
+// the same cell reports 10 with 0 short, and E now drives 500000, 2 lines
+// with 1 short. B's worst cell is 15 of 52 at 1200000 against 11 of its own
+// at S204's 1000000.
 //
 // What did not move is again the guarantee beside them: `unreached.empty()`
 // holds on all six cases at their own budgets and strides in both builds, so
