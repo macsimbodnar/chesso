@@ -10652,6 +10652,7 @@ TEST_SUITE("search: pruning and reduction guards")
   //
   //   search: pruning and reduction guards
   //    the multicut never ends a node on a mate from its verification
+  //   CHECK( last_score < MATE_MIN_LOCAL )
   //   REQUIRE( !record.se_multicut )
   TEST_CASE_FIXTURE(se_mate_drive_t,
                     "the multicut never ends a node on a mate from its "
@@ -10674,10 +10675,19 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE_EQ(record.se_vscore, MATE_MAX_LOCAL - static_cast<int>(ply + 1));
     REQUIRE(record.se_vscore >= MATE_MIN_LOCAL);
 
-    // THE GUARD. The node did not end on the verification's word: the rule
-    // did not fire, and the node searched its own moves instead. What is
-    // asserted is the branch and not the number the node returns, because the
-    // node's own search may reach the same mate and that one is proved.
+    // THE GUARD, in the accepts' own words: the node does not return the
+    // verification's mate. The node's own search is a zero window at
+    // `SE_MULTICUT_BETA` and fails high on its first move, the table move,
+    // with a centipawn score (-345 on the tree this was written on, read once
+    // and not asserted), so a mate coming back from this drive can only be the
+    // verification's -- under E21 it is exactly that, 48998. A CHECK and not a
+    // REQUIRE, so the branch below is still read when this fails: were a later
+    // tree to make the node's own search reach Ra8 first, a proved mate, this
+    // line would redden alone, and the branch is what tells the two apart.
+    CHECK(last_score < MATE_MIN_LOCAL);
+
+    // And the branch: the rule did not fire, and the node searched its own
+    // moves instead.
     REQUIRE(!record.se_multicut);
     REQUIRE(record.move_count > 0);
   }

@@ -852,12 +852,19 @@ TEST_SUITE("engine: uci layer")
   // positions, which is why no match ever noticed; on a pathological board the
   // reviewer measured 254 ms burned against a 100 ms clock, which is a forfeit.
   //
-  // What is asserted is not a duration. An iteration that was cut reports no
-  // completed depth -- last_complete_depth stays 0 and an aborted iteration
-  // never raises it -- so "no info line reports depth 1 or more" is exactly
-  // "the first iteration did not finish", and the unfixed engine finishes it
-  // every time.
-  TEST_CASE("the first iteration honours stop and the hard timer")
+  // Two halves, and since S242 each asserts only what the engine guarantees
+  // under any scheduling (DEC-240). The `stop` half asserts no duration: an
+  // iteration that was cut reports no completed depth -- last_complete_depth
+  // stays 0 and an aborted iteration never raises it -- so "no info line
+  // reports depth 1 or more" is exactly "the first iteration did not finish".
+  // The hard-timer half asserts one: `bestmove` within a derived bound of the
+  // timer's due time, on a board whose first iteration runs far past the bound
+  // when nothing stops it. The unfixed engine finishes the first iteration
+  // every time and fails both. Until S242 the case was "the first iteration
+  // honours stop and the hard timer" and asserted the cut for both halves.
+  TEST_CASE(
+      "a stop inside the first iteration cuts it and the hard timer ends the "
+      "search within its bound")
   {
     // Eight queens a side. Depth 1 here is a wide root over deep capture
     // chains in quiescence, so the stop has a window to land in. **Golden**:
@@ -930,29 +937,23 @@ TEST_SUITE("engine: uci layer")
       uci_shutdown();
     }
 
-    // S242. Both claims below rest on a precondition this case cannot arrange:
-    // that the stop lands inside the first iteration, before the last time it
-    // polls the flag (check_limits(), every 2048 nodes). `stop` comes from this
-    // thread and the hard timer from a detached one, both racing the search
-    // thread, and with a match on every core either sender can be held off the
-    // CPU for the whole iteration. A correct engine then finishes it, and the
-    // single attempt this case used to make failed: 5 of 2500 runs of this case
-    // alone beside S131's match, and the four whose text survived were all the
-    // timer's, depth 1 finished 20 to 27 ms after a 1 ms limit.
+    // THE STOP HALF, and its precondition: that `stop` lands inside the first
+    // iteration, before the last time it polls the flag (check_limits(), every
+    // 2048 nodes). This thread sends it and races the search thread, and with
+    // a match on every core it can be held off the CPU for the whole iteration,
+    // after which a correct engine finishes it.
     //
-    // So the precondition is read, attempt by attempt, never assumed. A cut
-    // first iteration establishes it and the claim at once. A finished one
-    // establishes nothing -- the stop may have come after the last poll -- and
-    // is repeated on a fresh engine, up to `attempts` times, each miss kept
-    // for the message. The unfixed engine finishes every attempt and fails as
-    // it always did.
-    //
-    // `stop` is also timed, because this thread sends it. Back within half of
-    // depth_1_floor_ms of sending `go`, it was set before the search thread can
-    // have done half of the iteration's work on any machine the floor admits,
-    // so a finished iteration there is the defect and fails the attempt on the
-    // spot, as the single attempt did. The timer's thread cannot be timed from
-    // here, so its half has only the cut to go by.
+    // So the precondition is read from a clock this thread owns, never from
+    // the claim. `stop` sent and back within `prompt_stop_us` of sending `go`,
+    // half of depth_1_floor_ms, was set before the search thread can have done
+    // half of the iteration's work on any machine the floor admits, and a
+    // finished iteration there is the defect: the attempt fails on the spot and
+    // is not repeated. A slower send says nothing either way, and only that
+    // attempt is repeated, on a fresh engine, up to `attempts` times, with each
+    // miss kept for the message; the half fails when they run out. A cut
+    // iteration is the claim shown, however slow the send -- nothing else here
+    // can cut it, the timer being a hundred seconds out. Measured beside
+    // S131's match: 299 of 300 sends back under 1500 us, the slowest 36941 us.
     const int attempts = 5;
     const int64_t prompt_stop_us = depth_1_floor_ms * 1000 / 2;
 
@@ -1006,35 +1007,72 @@ TEST_SUITE("engine: uci layer")
                      misses));
     }
 
-    // The hard timer, which is the same pointer reached from the other side.
+    // THE HARD-TIMER HALF, DEC-240. The timer is a detached thread that sleeps
+    // and then sets the flag, and no board bounds when a loaded scheduler runs
+    // it: asserting that it lands inside a depth-1 iteration failed 4 of 2000
+    // runs of this case beside S131's match, depth 1 finished 20 to 27 ms after
+    // a 1 ms limit, with nothing wrong in the engine. What the engine does
+    // guarantee is that the search ends within a bound of the timer's due
+    // time, and that is asserted, once per run and never retried:
+    //
+    //   timer_ms                the movetime, when the flag is due
+    //   check_granularity_ms    check_limits() reads it every 2048 nodes, 0.46
+    //                           ms at this board's own depth-1 rate below
+    //   scheduler_allowance_ms  an order of magnitude above the largest latency
+    //                           measured under a full match, 36941 us for
+    //                           `stop` sent and back (S242, 300 runs beside
+    //                           S131's SPRT), rounded up
+    //
+    // The bound has to separate as well, and on the board above it cannot: a
+    // timer that never fires does not leave `go movetime` running to its depth
+    // cap, because the soft limit is the same 1 ms and ends the search at the
+    // first iteration that completes -- one depth-1 iteration, the golden
+    // above, far inside any bound with this allowance. So this half has a
+    // board of its own, the start position's pieces with eight queens on each
+    // pawn rank and no bishops: python-chess reports `is_valid()` True,
+    // `is_check()` False and 94 legal moves. **Golden** (DEC-142): its
+    // depth-1 iteration is 25933707 nodes and about 5.9 s on this machine,
+    // re-derived with `position fen <below>` then `go depth 1`, reading the
+    // `time` field -- and that is what a timer that never fires produces here,
+    // measured once with the timer disarmed in a throwaway fixture: depth 1,
+    // the same 25933707 nodes, `bestmove` after 5913 and 6285 ms, against 1.3
+    // to 1.9 ms for the engine as shipped. The bound sits about 14 times below
+    // it, and a four times faster machine still leaves it separating; under
+    // that the board needs to be heavier, not the bound tighter.
+    const std::string timer_fen =
+        "rn1qk1nr/qqqqqqqq/8/8/8/8/QQQQQQQQ/RN1QK1NR w - - 0 1";
+    const int timer_ms = 1;
+    const int check_granularity_ms = 1;
+    const int scheduler_allowance_ms = 400;
+    const int64_t bestmove_bound_ms =
+        timer_ms + check_granularity_ms + scheduler_allowance_ms;
+
     {
-      bool established = false;
-      std::string misses;
+      uci_init();
 
-      for (int attempt = 1; attempt <= attempts && !established; ++attempt) {
-        uci_init();
+      stdout_capture_t capture;
+      uci_process_line("position fen " + timer_fen);
 
-        stdout_capture_t capture;
-        uci_process_line("position fen " + fen);
-        uci_process_line("go movetime 1");
-        uci_wait_for_search();
+      const auto sent = std::chrono::steady_clock::now();
+      uci_process_line("go movetime " + std::to_string(timer_ms));
+      uci_wait_for_search();
+      const int64_t elapsed_ms =
+          std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::steady_clock::now() - sent)
+              .count();
 
-        const std::string seen =
-            "attempt " + std::to_string(attempt) + ":\n" + capture.str();
+      const std::string seen =
+          "bestmove " + std::to_string(elapsed_ms) + " ms after go movetime " +
+          std::to_string(timer_ms) + ", bound " +
+          std::to_string(bestmove_bound_ms) + " ms:\n" + capture.str();
 
-        established = deepest_completed_depth(capture) < 1;
+      CHECK_MESSAGE(elapsed_ms <= bestmove_bound_ms,
+                    ("the search ran past its hard limit, " + seen));
 
-        if (!established) { misses += seen; }
+      CHECK_MESSAGE(answered_a_playable_move(capture),
+                    ("a cut depth-1 iteration still owes a move, " + seen));
 
-        CHECK_MESSAGE(answered_a_playable_move(capture),
-                      ("a cut depth-1 iteration still owes a move, " + seen));
-
-        uci_shutdown();
-      }
-
-      CHECK_MESSAGE(established,
-                    ("the first iteration ran past its hard limit in all " +
-                     std::to_string(attempts) + " attempts:\n" + misses));
+      uci_shutdown();
     }
   }
 

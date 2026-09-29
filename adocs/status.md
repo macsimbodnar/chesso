@@ -33,6 +33,38 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, morning: verdict 1 reverted as `39841ed`; S246 created for the fillers' missing fix-ups
+
+**The revert** (a fresh agent, cold-checked by its own proofs): `QsSeeGate`
+and its code out, S131's case back to its one form, the four goldens
+restored byte for byte (the capture-mate rows, the node band, S097's
+multicut row to S131's guard-mode row, C's ceiling to 0 by dropping the
+grid from `--ceilings`, DEC-241), `DEV_MANUAL.md`'s golden rows reading
+true again; `src/`, `tests/`, `tools/` and `MANUAL.md` are `d446783`'s apart
+from a five-line comment at the gate; `bench` 3429473 with the whole
+stream and eight replies identical to a fresh `d446783`, `search_bench`
+identical at 9 and 12 (INV-6); both suites 41 of 41; M18, V07, V09, V10
+and E21 killed 5 of 5. Second tier on the revert: Debug self-play 8 games 0 `Assertion` 0 `disconnect`, `gate_extra` 5 stages green in 1190 s (DEC-141). The revert also
+took back an error of the pin commit `05ab85d`, which had lengthened the
+mutation command quoted in S188's older GOLDEN paragraph.
+
+**S246, a blocking discovery, in `plan_current/`:** the verdict-2 agent found
+that `aef0257` (S242) carries the retried hard-timer form DEC-240 rejected
+and `6eb2674` (S243) lacks the returned-score CHECK, because the
+coordinator's landing script read the fillers' worktree index, where the
+first round had been staged, while the fix-ups sat unstaged; the final
+forms survive as fixture `28723ae` and blob `e88103f`, and a fresh agent landed
+them on `39841ed` (this commit): `tests/test_engine.cpp` byte-identical to
+the blob, the CHECK present and red under E21, both suites green, a 200-run
+loop with no retry on the timer half. The DEC-240 form was read by the coordinator at S242's landing and its evidence is re-taken here on the landed tree; no separate cold check was run for this mechanical landing. `plan_done/` is not edited; S246's
+stamp records the correction, and the coordinator's process memory carries
+the rule (a landing patch is cut from the working tree, `git add -A` first).
+**Then** S022 verdict 2 (the delta early-out, built and proved except for
+one stop: the early-out makes the stop half's eight-queens board too cheap
+for its 3 ms floor; ruled as the case's own rule, a heavier board, on
+S246's tree) rebases onto S246's commit, is fast-checked, landed, second
+tier, pinned and run.
+
 ## 2026-09-29: S022 verdict 1's SPRT is H0 -- H0, a regression, the gate stays
 
 **`a97bc1a` against `d446783`, `Elo -65.22 +/- 17.66`, `nElo -85.89 +/- 22.70`,
