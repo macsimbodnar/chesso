@@ -1,0 +1,75 @@
+# S022 verdict 1: S097's multicut mate row re-derived on the candidate (S131's cbaa699 with S015's exchange gate deleted, QsSeeGate 0), 2026-09-29, because a targeted tools/mutation_check.py --only E21 on a fixture of the candidate (d0d21ae) scored E21_multicut_mate_band_gate_dropped a survivor, 0 of 41 red. adocs/data/S097_mine_mate_row.py stages 2 to 6, the witness and the pick in both modes (DEC-238); stage 1 not re-run (the 269 candidates of adocs/data/S097_candidates.tsv and their oracle did not move; the FEN list is identical to S131's).
+# Cells are depth 11..14, each mate:nodes:ms as the miner prints them; ms was taken beside other niced work and is not a timing claim.
+
+## driver
+# Tue Sep 29 02:32:54 AM CEST 2026 worktree cbaa699 + working tree [14 paths], load 2.18 2.39 2.53
+# miner sha256 775e40e2e5465866
+# pre ecc2a4c src vs worktree: [0 differing]; e21 d0d21ae  1 file changed, 1 insertion(+), 1 deletion(-)
+269 candidates -> /home/max/ws/chesso/.tuning/coord/S022_mine_candidates.fen
+# candidates identical to S131's list
+STAGE open exit 0 02:46:37
+STAGE shipped exit 0 02:46:46
+STAGE separators exit 0 02:46:46
+STAGE fires_guard exit 0 02:47:06
+STAGE fires_rule exit 0 02:47:30
+STAGE pick_guard exit 0 02:47:30
+STAGE pick_rule exit 1 02:47:30
+S022-MINE-GUARD-DONE Tue Sep 29 02:47:30 AM CEST 2026
+
+## separators
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py separators --shipped /home/max/ws/chesso/.tuning/coord/S022_mine_shipped.txt --open /home/max/ws/chesso/.tuning/coord/S022_mine_open.txt --out /home/max/ws/chesso/.tuning/coord/S022_mine_separators.fen
+1 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S022_mine_separators.fen
+
+## fires_guard
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --mode guard --fens /home/max/ws/chesso/.tuning/coord/S022_mine_separators.fen --lib /home/max/ws/chesso-s022/.ref-builds/e21/build-tune/src/libchesso_engine.a --out /home/max/ws/chesso/.tuning/coord/S022_mine_fires_guard.txt --fens-out /home/max/ws/chesso/.tuning/coord/S022_mine_fires_guard.fen
+guard mode (DEC-238): the mutant's multicut changes the tree on 1 of 1 positions in 19 s -> /home/max/ws/chesso/.tuning/coord/S022_mine_fires_guard.txt, /home/max/ws/chesso/.tuning/coord/S022_mine_fires_guard.fen
+
+## fires_rule
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --fens /home/max/ws/chesso/.tuning/coord/S022_mine_separators.fen --lib /home/max/ws/chesso-s022/.ref-builds/pre/build-tune/src/libchesso_engine.a --out /home/max/ws/chesso/.tuning/coord/S022_mine_fires_rule.txt --fens-out /home/max/ws/chesso/.tuning/coord/S022_mine_fires_rule.fen
+the multicut changes the tree on 0 of 1 positions in 23 s -> /home/max/ws/chesso/.tuning/coord/S022_mine_fires_rule.txt, /home/max/ws/chesso/.tuning/coord/S022_mine_fires_rule.fen
+
+## pick_guard
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --mode guard --shipped /home/max/ws/chesso/.tuning/coord/S022_mine_shipped.txt --open /home/max/ws/chesso/.tuning/coord/S022_mine_open.txt --fires /home/max/ws/chesso/.tuning/coord/S022_mine_fires_guard.txt
+  d14	#6	run 2	53836648 nodes	7473 ms	shipped [d13 d14]	open [d13]	mutant fires [d14]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+
+take: 2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  depth 14, mate in 6, shipped [d13 d14], guard dropped [d13], 53836648 nodes, 7473 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d14]
+
+## pick_rule
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --shipped /home/max/ws/chesso/.tuning/coord/S022_mine_shipped.txt --open /home/max/ws/chesso/.tuning/coord/S022_mine_open.txt --fires /home/max/ws/chesso/.tuning/coord/S022_mine_fires_rule.txt
+  skipped, the rule never fires here: 2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+no candidate separates the guard in this range
+
+## witness files
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 11..14, tune library /home/max/ws/chesso-s022/.ref-builds/e21/build-tune/src/libchesso_engine.a.
+# fen	depths_the_rule_changes	off	on
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31	d14	-:940911:122 -:1314846:183 m6:28642233:3545 m6:53836648:7232	-:940911:137 -:1314846:200 m6:28642233:3537 -:33567452:4378
+# S097 firing witness, SeMultiCut 0 against 1, depths 11..14, tune library /home/max/ws/chesso-s022/.ref-builds/pre/build-tune/src/libchesso_engine.a.
+# fen	depths_the_rule_changes	off	on
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31	none	-:940911:139 -:1314846:208 m6:28642233:3644 m6:53836648:7364	-:940911:124 -:1314846:203 m6:28642233:3580 m6:53836648:7379
+
+## the separator's cells and S131's row's, shipped then guard dropped
+shipped  -:940911:125 -:1314846:202 m6:28642233:3624 m6:53836648:7473 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+E21      -:940911:129 -:1314846:202 m6:28642233:3699 -:33567452:4549 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+shipped  -:168230:25 m6:381741:57 m6:880175:128 m6:2179530:366 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+E21      -:168230:26 m6:381741:57 m6:880175:124 m6:1790897:303 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+
+## oracle (S230's line_facts, stockfish depth 20, a fresh process, through python-chess)
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  python-chess: is_valid True, is_check False, 38 legal moves, 2 captures, 0 promotions; side to move White
+  stockfish depth 20 (fresh process): #+6 for White in 70199 nodes, depth 20, pv Nxc5+ Kb8 Nxb7 Rxc4 Qb6 Kc8 Nd6+ Nxd6 Ra8+ Kd7 Qxd6#
+
+## observed red under E21, green shipped
+# S022 v1: the re-mined multicut row observed red under E21 and green shipped, Release builds, Tue Sep 29 02:49:58 AM CEST 2026
+## E21 (.ref-builds/e21: d0d21ae + E21 in src/search.cpp, tests/test_search.cpp the worktree's with the new row) -- src diff:
+ src/search.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+## E21 build:
+TEST CASE:  pruning does not hide a forced mate
+/home/max/ws/chesso-s022/.ref-builds/e21/tests/test_search.cpp:4719: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 14
+[doctest] test cases:  1 |  0 passed | 1 failed | 182 skipped
+## shipped build (the worktree):
+[doctest] test cases:  1 |  1 passed | 0 failed | 182 skipped

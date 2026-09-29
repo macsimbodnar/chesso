@@ -156,16 +156,28 @@ m("V06_futility_exemption_capturing_only", S, "search/pruning",
    '    if (qs_futility && !(MOVE_PROMOTED(moves[i]) && MOVE_CAPTURE(moves[i]))) {'),
   origin="S131")
 
+# **V07, V09 and V10 were re-pointed at S022's first verdict**, which puts
+# S015's gate behind `QS_SEE_GATE`: each gate pair now anchors on the switched
+# condition and makes the same edit, the gate asking only about captures. While
+# the switch ships at 0 the gate is dead code in the release build
+# tools/mutation_check.py runs, so V07, whose whole edit is the gate, is
+# declared equivalent there, and its case, "the exchange gate declines a queen
+# promotion onto a defended square", runs in the tune build at `QsSeeGate` 1,
+# where it kills it; V09 and V10 are still killed in the release build by their
+# futility halves. S022's verdict restores these anchors and V07's "killed"
+# with the gate, or retires V07 with it (adocs/data/S022_v1_sprt.sh).
 m("V07_see_gate_skipped_for_quiet_promotions", S, "search/quiescence",
   'the exchange gate asks only about captures, so a queen promotion that '
   'takes nothing is searched onto a square the opponent holds, where the '
   'engine\'s own exchange evaluation says it loses the queen -- the SEE '
   'treatment of promotions this step\'s excludes keep unchanged',
-  ('    if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&\n'
+  ('    if (QS_SEE_GATE != 0 && !in_check &&\n'
+   '        !capture_cannot_lose(&game->board, moves[i]) &&\n'
    '        !see_ge(&game->board, moves[i], 0)) {',
-   '    if (!in_check && MOVE_CAPTURE(moves[i]) &&\n'
+   '    if (QS_SEE_GATE != 0 && !in_check && MOVE_CAPTURE(moves[i]) &&\n'
    '        !capture_cannot_lose(&game->board, moves[i]) &&\n'
    '        !see_ge(&game->board, moves[i], 0)) {'),
+  expected="equivalent",
   origin="S131")
 
 m("V08_knight_admitted_beside_queen", S, "search/quiescence",
@@ -185,9 +197,10 @@ m("V09_capturing_promotions_skipped_quiet_one_searched", S, "search/pruning",
   'try at the masking V10 is, and one the node count alone already sees',
   ('    if (qs_futility && !MOVE_PROMOTED(moves[i])) {',
    '    if (qs_futility) {'),
-  ('    if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&\n'
+  ('    if (QS_SEE_GATE != 0 && !in_check &&\n'
+   '        !capture_cannot_lose(&game->board, moves[i]) &&\n'
    '        !see_ge(&game->board, moves[i], 0)) {',
-   '    if (!in_check && MOVE_CAPTURE(moves[i]) &&\n'
+   '    if (QS_SEE_GATE != 0 && !in_check && MOVE_CAPTURE(moves[i]) &&\n'
    '        !capture_cannot_lose(&game->board, moves[i]) &&\n'
    '        !see_ge(&game->board, moves[i], 0)) {'),
   origin="S131")
@@ -200,9 +213,10 @@ m("V10_capturing_promotions_futile_quiet_one_ungated", S, "search/pruning",
   'place -- a child for the node count and the wrong move for the claim',
   ('    if (qs_futility && !MOVE_PROMOTED(moves[i])) {',
    '    if (qs_futility && (!MOVE_PROMOTED(moves[i]) || MOVE_CAPTURE(moves[i]))) {'),
-  ('    if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&\n'
+  ('    if (QS_SEE_GATE != 0 && !in_check &&\n'
+   '        !capture_cannot_lose(&game->board, moves[i]) &&\n'
    '        !see_ge(&game->board, moves[i], 0)) {',
-   '    if (!in_check && MOVE_CAPTURE(moves[i]) &&\n'
+   '    if (QS_SEE_GATE != 0 && !in_check && MOVE_CAPTURE(moves[i]) &&\n'
    '        !capture_cannot_lose(&game->board, moves[i]) &&\n'
    '        !see_ge(&game->board, moves[i], 0)) {'),
   origin="S131")

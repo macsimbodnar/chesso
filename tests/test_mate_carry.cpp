@@ -343,15 +343,17 @@ static bool line_ends_in_mate(const std::string& fen,
 }
 
 
-// GOLDEN (DEC-142): the most short mating PVs a case may report -- 5, 15, 0, 2,
+// GOLDEN (DEC-142): the most short mating PVs a case may report -- 5, 15, 6, 2,
 // 11 and 5, one per replayed game of adocs/data/S170_cases.tsv at its own
 // budget and stride. (The line read "5, 11, 0, 1, 8 and 2" until S095 and had
 // been stale since S109 moved three of them; it is the function below that
 // ships, and these six are now the same numbers. C's 0 became 2 while S236's
-// history term was in the tree and came back when it left, DEC-231.)
+// history term was in the tree and came back when it left, DEC-231, and is 6
+// while S022's first verdict has S015's exchange gate deleted, DEC-241.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt
 // adocs/data/S109_sweep_block.txt adocs/data/S095_sweep_block.txt
+// adocs/data/S022_v1_sweep.txt
 // (the rule and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); S202 closing
@@ -377,12 +379,14 @@ static bool line_ends_in_mate(const std::string& fen,
 // short-line count any cell of the recorded grid shows for that case, at the
 // stride its TSV row carries, over every recorded sweep. Re-derive it with
 //
-//   adocs/data/S203_case_sweep.sh --ceilings F1 F2 F3 F4
+//   adocs/data/S203_case_sweep.sh --ceilings F1 F2 F3 F4 F5
 //
 // as one command line, where F1 and F2 are `adocs/data/S204_sweep_head.txt` and
 // `adocs/data/S204_sweep_killer_iter_clear.txt`, the two grids S204 recorded,
-// F3 is `adocs/data/S109_sweep_block.txt`, the grid S109 recorded, and F4 is
-// `adocs/data/S095_sweep_block.txt`, the grid S095 recorded. A fifth,
+// F3 is `adocs/data/S109_sweep_block.txt`, the grid S109 recorded, F4 is
+// `adocs/data/S095_sweep_block.txt`, the grid S095 recorded, and F5 is
+// `adocs/data/S022_v1_sweep.txt`, the grid S022's first verdict recorded on
+// the tree with S015's exchange gate deleted. Another,
 // `adocs/data/S236_v2_sweep.txt`, was in this command while S236's history term
 // was in the tree and was what made C's ceiling 2; the term left at its second
 // verdict and the grid left the command with it (DEC-231), which is the revert
@@ -394,17 +398,19 @@ static bool line_ends_in_mate(const std::string& fen,
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  5  3000000, with the killer clear
 //   B_mate6_shallow                 15  1200000 on the S095 grid, 15 of 52
-//   C_mate7_depth11                  0  none: 0 short in all 36 stride-1 cells
+//   C_mate7_depth11                  6  1500000 on the S022 grid, 6 of 19
 //   D_mate_minus6_depth10            2  1500000 with the S109 block
 //   E_mate_minus9                   11  1500000 on the S095 grid, 11 of 22
 //   F_mate6_inherited_no_line        5  1000000 with the S109 block
 //
-// C's zero is earned rather than chosen, which is the difference this file
-// keeps: a ceiling of 0 says the grid has never shown one, and a budget where
-// none happens to appear says nothing. It was 2 for as long as S236's history
-// term was in the tree -- one grid showed two, and the rule is the worst cell
-// and not the usual one -- and the revert is the grid leaving the command
-// above, not a number being lowered to match a run.
+// C's zero was earned rather than chosen, which is the difference this file
+// keeps: a ceiling of 0 said the four grids before S022's had never shown one
+// -- 0 short in all 36 of their stride-1 cells -- and a budget where none
+// happens to appear says nothing. It was 2 for as long as S236's history term
+// was in the tree -- one grid showed two, and the rule is the worst cell and
+// not the usual one -- and the revert was that grid leaving the command above,
+// not a number being lowered to match a run. It is 6 while S022's first verdict
+// is in the tree, the paragraph below, and goes back to 0 the same way.
 //
 // A step that lowers a ceiling is recording progress on S202. A step that
 // raises one is relaxing a test and needs a decision.
@@ -440,6 +446,22 @@ static bool line_ends_in_mate(const std::string& fen,
 // from the `--ceilings` command -- which is what "re-derive, never re-read"
 // looks like in both directions. The other five never moved.
 //
+// **One of them rose at S022's first verdict, and DEC-241 is the decision it
+// owes**, taken by the coordinator in the form DEC-225 set for S095's: C's
+// ceiling is 6 while the candidate ships at 0, and this grid is the fifth
+// recorded sweep. The verdict deletes S015's exchange gate in quiescence behind
+// `QsSeeGate` 0, which is a change to pruning that moves the whole tree
+// (`bench` +76 %), and C went 0 to 6, read off that candidate's own grid
+// (`adocs/data/S022_v1_sweep.txt`, 108 cells) by the script above and never
+// off the failing run that found it. Its worst cell is the case's own, 1500000
+// nodes at stride 1, 19 mate lines with 6 short, which is the count the
+// failing run reported: that ceiling has no headroom left, as E's had at S095.
+// The other five did not move -- the script over the four earlier grids
+// reproduces 5, 15, 0, 2, 11, 5 exactly, and adding S022's moves C alone --
+// and `unreached.empty()` holds on all six cases at their own budgets and
+// strides in both builds. On an H0 or no verdict the gate comes back and the
+// grid leaves the command, C to 0, as S236's did -- DEC-241's own clause.
+//
 // The number that matters for the reading is not the count alone. At E's own
 // cell -- stride 1, 1500000 nodes, which is the cell this case drives -- the
 // tree reports **22 mate lines with 11 short** where S109's grid reported 13
@@ -457,7 +479,7 @@ static size_t short_line_ceiling(const std::string& name)
 {
   if (name == "A_mate8_shallow") { return 5; }
   if (name == "B_mate6_shallow") { return 15; }
-  if (name == "C_mate7_depth11") { return 0; }
+  if (name == "C_mate7_depth11") { return 6; }
   if (name == "D_mate_minus6_depth10") { return 2; }
   if (name == "E_mate_minus9") { return 11; }
   if (name == "F_mate6_inherited_no_line") { return 5; }

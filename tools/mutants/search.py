@@ -165,10 +165,21 @@ m("M17_qs_standpat_in_check", S, "search/quiescence",
    '  if (true) {\n    if (stand_pat >= beta) {'),
   origin="2026-09-04_test_review")
 
+# **Re-pointed at S022's first verdict**, which puts S015's gate behind
+# `QS_SEE_GATE`: the same bug on the switched condition, the gate's `!in_check`
+# dropped. While the switch ships at 0 the gate is dead code in the release
+# build tools/mutation_check.py runs, so the mutant is declared equivalent
+# there; the tune build kills it at `QsSeeGate` 1, in "the gate declines a
+# losing capture at the switch's on value", whose losing evasion is declined in
+# check and read as a mate. S022's verdict restores this anchor and "killed"
+# with the gate, or retires the mutant with it (adocs/data/S022_v1_sprt.sh).
 m("M18_qs_see_prune_in_check", S, "search/quiescence",
   'losing captures pruned even when in check',
-  ('if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&',
-   'if (!capture_cannot_lose(&game->board, moves[i]) &&'),
+  ('if (QS_SEE_GATE != 0 && !in_check &&\n'
+   '        !capture_cannot_lose(&game->board, moves[i]) &&',
+   'if (QS_SEE_GATE != 0 &&\n'
+   '        !capture_cannot_lose(&game->board, moves[i]) &&'),
+  expected="equivalent",
   origin="2026-09-04_test_review")
 
 m("M19_fifty_off_by_one", S, "rules",

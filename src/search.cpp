@@ -1177,11 +1177,12 @@ int quiescence(int alpha,
   //
   // A promotion that takes nothing meets the two tests below as a capture
   // does. S112's futility exempts every promotion before it prices a victim.
-  // S015's exchange gate prices it through see_ge(), which it reaches because
-  // capture_cannot_lose() answers false on an empty target, so a queen that
-  // cannot hold its square is declined there; a promotion that takes
-  // something is a pawn's capture, which capture_cannot_lose() passes, and
-  // never reaches see_ge(). capture_score() orders what survives by MVV-LVA
+  // S015's exchange gate, at QS_SEE_GATE 1, prices it through see_ge(), which
+  // it reaches because capture_cannot_lose() answers false on an empty
+  // target, so a queen that cannot hold its square is declined there; a
+  // promotion that takes something is a pawn's capture, which
+  // capture_cannot_lose() passes, and never reaches see_ge(). At 0 there is
+  // no gate to meet. capture_score() orders what survives by MVV-LVA
   // with an empty square worth 0, so a promotion that takes nothing scores
   // minus a pawn, after every capture of a piece worth at least its taker and
   // before every other, and a quiet evasion minus the price of the piece that
@@ -1236,7 +1237,15 @@ int quiescence(int alpha,
     // The cheap test first: most captures worth searching take something at
     // least as valuable as the piece taking it, and those cannot lose material
     // whatever the defenders do. Only the rest are worth an exchange analysis.
-    if (!in_check && !capture_cannot_lose(&game->board, moves[i]) &&
+    //
+    // S015's gate, measured at zero when it shipped (DEC-019), behind
+    // QS_SEE_GATE since S022: at 1 it declines as above, the tree before S022
+    // node for node; at 0, the value that ships while S022's first verdict
+    // measures deleting it, the test is not made and neither exchange function
+    // is called. Whether the older rule still earns its place with S112's
+    // futility above it is that verdict's question.
+    if (QS_SEE_GATE != 0 && !in_check &&
+        !capture_cannot_lose(&game->board, moves[i]) &&
         !see_ge(&game->board, moves[i], 0)) {
       continue;
     }
@@ -1370,8 +1379,9 @@ int quiescence(int alpha,
 
   // Exact only if something beat the bound this node was given; below it all
   // that was established is a ceiling. The value is what quiescence resolves
-  // to and not what a full search would, since the losing captures were
-  // declined - but that is the number this node already hands its parent, so
+  // to and not what a full search would, since not everything was searched -
+  // the quiet moves, the futile captures and, at QS_SEE_GATE 1, the losing
+  // ones - but that is the number this node already hands its parent, so
   // storing it adds no claim the search was not making already.
   //
   // And exact only where nothing weaker went into it. The window test above is

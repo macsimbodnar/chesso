@@ -245,11 +245,12 @@
      either way, and a promotion that takes something is searched as the       \
      capture it is whatever this is set to. An admitted promotion meets the    \
      two tests after the filter as a capture does: S112's futility exempts     \
-     every promotion, and S015's exchange gate, which it reaches through       \
-     see_ge() because capture_cannot_lose() answers false on an empty target,  \
-     declines a queen that cannot hold its square -- a promotion that takes    \
-     something is a pawn's capture and never reaches see_ge(). capture_score() \
-     orders it at the empty-victim row, minus a pawn.                          \
+     every promotion, and S015's exchange gate, at QsSeeGate 1, which it       \
+     reaches through see_ge() because capture_cannot_lose() answers false on   \
+     an empty target, declines a queen that cannot hold its square -- a        \
+     promotion that takes something is a pawn's capture and never reaches      \
+     see_ge(). capture_score() orders it at the empty-victim row, minus a      \
+     pawn.                                                                     \
                                                                                \
      QS_QUEEN_PROMOTIONS IS A SWITCH AND NOT A SETTING (DEC-215). At 0 a       \
      promotion that takes nothing is dropped, all four, and the tree is the    \
@@ -265,6 +266,30 @@
      existing row, not a new constant. Implemented from the step file's        \
      description, DEC-221. */                                                  \
   X(QS_QUEEN_PROMOTIONS, "QsQueenPromotions", 1, 0, 1)                         \
+                                                                               \
+  /* S015'S EXCHANGE GATE IN QUIESCENCE, behind a switch for S022's verdict 1. \
+     Out of check, a move that passed the filter and S112's futility test is   \
+     declined at 1 when the exchange evaluation writes it off --               \
+     `!capture_cannot_lose(board, move) && !see_ge(board, move, 0)` in         \
+     quiescence() -- the gate S015 shipped and measured at zero, when see()    \
+     was dearer and per-move futility did not exist (DEC-019). At 0 the gate   \
+     is deleted: such a move is searched, and quiescence calls neither         \
+     exchange function. In check it is never asked, at either value, since     \
+     every evasion is searched there.                                          \
+                                                                               \
+     QS_SEE_GATE IS A SWITCH AND NOT A SETTING (DEC-215), and its 1 is the     \
+     tree before S022, proved on the tree and not declared: the tune build at  \
+     1 benches the parent's total with all eight `bestmove` replies and        \
+     reproduces `tools/search_bench.py` at depths 9 and 12. **It ships at 0,   \
+     the deletion**, which verdict 1 measures against that tree at `{-5, 0}`   \
+     nElo (adocs/data/S022_v1_sprt.sh): on H1 the gate leaves and this row     \
+     with it, otherwise the gate stays and this row leaves. Range 0 to 1 by    \
+     stated purpose; a verdict switch, not something S127 sweeps.              \
+                                                                               \
+     No seed (DEC-134): the rule has no number in it, the bar 0 being "the     \
+     exchange loses material", a definition. Implemented from the step         \
+     file's description, DEC-221. */                                           \
+  X(QS_SEE_GATE, "QsSeeGate", 0, 0, 1)                                         \
                                                                                \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \

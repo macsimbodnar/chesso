@@ -1039,7 +1039,7 @@ TEST_SUITE("search: move ordering state")
   // pending 827-constant paste. Tighten it when a fit lands, not before.
   // 2026-08-14_test_review-F06.
   //
-  // GOLDEN (DEC-142): the pair 65024 and 3251, a band around the depth-5
+  // GOLDEN (DEC-142): the pair 509368 and 25468, a band around the depth-5
   // node count of KIWIPETE_POS from a cold table, held inside
   // [count / 5, 4 x count]. Both ratios are the band this case has always
   // carried and neither is a new constant (DEC-105 (b)).
@@ -1057,6 +1057,15 @@ TEST_SUITE("search: move ordering state")
   // the middle half of the S091 pair since S222 while two step files recorded
   // the trigger as not fired. Both numbers are re-derived from that count by
   // the two ratios above, which is what DEC-142 asks when either end moves.
+  // **127342 at S022's first verdict**, the deletion of S015's exchange gate
+  // in quiescence: the parent's own count was 20427, inside the middle half
+  // of the 65024 / 3251 pair derived from 16256, and the candidate's search
+  // aborted at that budget -- quiescence now searches the captures the
+  // exchange evaluation used to write off. The count was taken again by the
+  // script from a scratch build whose case carried a budget the search could
+  // not reach, never read off the red run (.tuning/coord/S022_node_budget.txt),
+  // and the pair below is 4x and a fifth of it; an H0 or no verdict on S022
+  // puts 65024 and 3251 back with the gate.
   // Moves legitimately on: any ordering or search change -- re-derive when the
   // count leaves the middle half of the band, and never widen the budget to
   // clear a red without taking the count again.
@@ -1081,7 +1090,7 @@ TEST_SUITE("search: move ordering state")
     search_state_t state = {};
     state.tt = &tt;
     state.stop = &never_stop;
-    state.node_limit = 65024;
+    state.node_limit = 509368;
 
     const search_t result = search(5, &game, &state);
 
@@ -1095,11 +1104,11 @@ TEST_SUITE("search: move ordering state")
     // The budget has to stay a bound on something, not a number nothing
     // approaches: if the tree ever shrinks far below it the case has stopped
     // discriminating and the budget wants re-measuring rather than leaving.
-    REQUIRE_MESSAGE(result.explored_nodes > 3251,
+    REQUIRE_MESSAGE(result.explored_nodes > 25468,
                     ("depth 5 on KIWIPETE_POS cost " +
                      std::to_string(result.explored_nodes) +
-                     " nodes; the 65024 budget was derived from 16256 and no "
-                     "longer bounds anything - re-measure it"));
+                     " nodes; the 509368 budget was derived from 127342 and "
+                     "no longer bounds anything - re-measure it"));
   }
 }
 
@@ -1636,8 +1645,11 @@ TEST_SUITE("search: quiescence futility")
     // own: the count below would then hold with every capturing promotion
     // skipped. The engine's answer on this board: the pawn's push, b7b8, is
     // four promotions that take nothing, and the gate declines every one of
-    // them -- the a8 rook takes whatever arrives on b8, see -100 -- so a child
-    // here is a capturing promotion's.
+    // them -- the a8 rook takes whatever arrives on b8, see -100 -- so at
+    // `QsSeeGate` 1 a child here is a capturing promotion's. At 0, S022's
+    // deletion of the gate, b7b8q is searched beside them and the count holds
+    // either way: the move the root settles on, below, is what names a
+    // capturing promotion.
     const std::vector<move_t> quiet = legal_quiet_promotions(fen);
     REQUIRE_EQ(quiet.size(), 4);
     for (const move_t move : quiet) {
@@ -2106,9 +2118,11 @@ TEST_SUITE("search: quiescence promotions")
   // on an empty target; this pins the gate's reach and not the position's
   // verdict. The e8 rook defends a8, so the engine's own exchange evaluation
   // prices a7a8q below zero -- the promotion's +800 on see_value's scale, less
-  // the queen the rook takes, is -100 -- and the gate declines it: one node,
-  // the static score. Whether the gate should decline it is S022's question
-  // and is excluded from this step.
+  // the queen the rook takes, is -100. At `QsSeeGate` 1 the gate declines it
+  // (the tune build's case below, this step's own case as it was written);
+  // at 0, the value S022's first verdict ships while it measures deleting the
+  // gate, it is searched, which is this case, the same premise with its
+  // assertion turned the other way.
   //
   // Not read off the board (CLAUDE.md): python-chess reports `is_valid()
   // True`, `is_check() False`, 7 legal moves, no capture and the same four
@@ -2116,35 +2130,78 @@ TEST_SUITE("search: quiescence promotions")
   // it plays, and stockfish at depth 22 through python-chess answers a1b2,
   // or mate in 15 against White with a7a8q as its only root move -- the step
   // file's reading on 2026-08-19 was a7a8q. None of that is asserted.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "the exchange gate declines a queen promotion onto a "
-                    "defended square")
+  static const char* DEFENDED_QUEENING = "4r3/P6k/8/8/8/8/8/K7 w - - 0 1";
+
+  // The board's premise: no capture, the queen promotion admitted by the
+  // filter and written off by the exchange evaluation, and the position it
+  // leaves one quiescence enters.
+  static move_t require_defended_queening_premise()
   {
-    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
-
-    const std::string fen = "4r3/P6k/8/8/8/8/8/K7 w - - 0 1";
-
-    REQUIRE(load_FEN(fen, &game));
+    REQUIRE(load_FEN(DEFENDED_QUEENING, &game));
     REQUIRE_FALSE(is_check(&game));
     REQUIRE_EQ(count_legal_captures(), 0);
 
     const move_t queen = promotion_to(quiet_promotions(), TO_QUEEN);
     REQUIRE(queen != 0);
 
-    // The filter admits it, and were the gate to let it through its child
-    // would be entered and the count would be at least 2: so a count of one is
-    // the gate's decision and nothing else's.
     require_entered_after(queen);
     REQUIRE_FALSE(capture_cannot_lose(&game.board, queen));
     REQUIRE(see(&game.board, queen) < 0);
     REQUIRE_FALSE(see_ge(&game.board, queen, 0));
+    return queen;
+  }
+
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a queen promotion onto a defended square is searched at "
+                    "the gate's off value")
+  {
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+    REQUIRE_EQ(QS_SEE_GATE, 0);
+
+    const move_t queen = require_defended_queening_premise();
+    const qp_run_t run = qp_run(DEFENDED_QUEENING, -QP_INF, QP_INF);
+
+    // No gate: the queen's child is entered, and the count is at least the
+    // root and that child -- the rook takes back there, so not exactly.
+    CHECK(entered(queen));
+    CHECK(run.nodes >= 1 + 1);
+  }
+
+#ifdef CHESSO_TUNE
+  // S131's case as it was written, driven at `QsSeeGate` 1, the tree it was
+  // written on, in the one build that can set it (DEC-215); the restorer is
+  // the S132 pattern the off-value case below explains.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the exchange gate declines a queen promotion onto a "
+                    "defended square")
+  {
+    const int found = QS_SEE_GATE;
+
+    struct restore_t
+    {
+      int value;
+      ~restore_t() { search_param_set("QsSeeGate", value); }
+    } restore{found};
+
+    REQUIRE(search_param_set("QsSeeGate", 1));
+    REQUIRE_EQ(QS_SEE_GATE, 1);
+    REQUIRE_EQ(QS_QUEEN_PROMOTIONS, 1);
+
+    // The filter admits it, and were the gate to let it through its child
+    // would be entered and the count would be at least 2: so a count of one is
+    // the gate's decision and nothing else's.
+    require_defended_queening_premise();
 
     const int static_score = evaluate(&game.board);
-    const qp_run_t run = qp_run(fen, -QP_INF, QP_INF);
+    const qp_run_t run = qp_run(DEFENDED_QUEENING, -QP_INF, QP_INF);
 
     CHECK_EQ(run.nodes, 1);
     CHECK_EQ(run.score, static_score);
+
+    REQUIRE(search_param_set("QsSeeGate", found));
+    REQUIRE_EQ(QS_SEE_GATE, found);
   }
+#endif
 
   // S112's futility test exempts every promotion before it prices a victim,
   // and this is the class that exemption was written for: a queen promotion
@@ -2259,6 +2316,314 @@ TEST_SUITE("search: quiescence promotions")
     // failed REQUIRE leaves by.
     REQUIRE(search_param_set("QsQueenPromotions", found));
     REQUIRE_EQ(QS_QUEEN_PROMOTIONS, found);
+  }
+#endif
+}
+
+
+// S015's exchange gate in quiescence, behind `QsSeeGate` for S022's first
+// verdict. At 1 a move that passed the filter and S112's futility test is
+// declined when the exchange evaluation writes it off -- the tree before S022
+// -- and at 0, the value that ships while the verdict is measured, the gate is
+// deleted and the move is searched. In check the gate is never asked.
+//
+// Every move list, check status and exchange value below is the engine's own
+// answer (the CHESS rule): `see()` prices each capture, and python-chess agrees
+// on each board's legal moves and check status (`is_valid()` True for all
+// three). Which move was searched is read from the table, as S131's suite
+// reads it: every node quiescence enters on these boards writes its own entry
+// before it returns and qg_run() clears the table first, so an entry for the
+// position a move leaves is that child's, and no entry is a child never
+// entered. Every run starts from the full window, so S112's futility never
+// fires at the root: it skips only a move whose best case -- the stand pat, a
+// non-negative margin and the victim -- is at or below alpha, and a full
+// window's alpha there is the stand pat itself.
+//
+// S015's own cases in "search: static exchange evaluation" and "search:
+// see_ge agrees with see" assert see() and see_ge(), which the gate's switch
+// does not touch, and are unchanged. The one case that asserted the gate's
+// decision in quiescence is S131's "the exchange gate declines a queen
+// promotion onto a defended square", now driven at `QsSeeGate` 1 in the tune
+// build, beside its restatement at 0.
+//
+// Mutants: tools/mutants/S022_v1_see_gate.py, each killed by the case its row
+// names.
+TEST_SUITE("search: quiescence exchange gate")
+{
+  static constexpr int QG_INF = 10000000;
+  static constexpr int QG_MATE_MIN_LOCAL = 48000;
+
+  // S015's own "queen grabs a pawn a pawn defends": d1d5 is the one capture,
+  // and the c6 pawn recaptures, so see() prices it at -800.
+  static const char* LOSING_CAPTURE = "4k3/8/2p5/3p4/8/8/8/3QK3 w - - 0 1";
+
+  // The same board without the defender: d1d5 takes a loose pawn, +100. A
+  // queen is worth more than what it takes, so capture_cannot_lose() does not
+  // answer for it and the gate at 1 has to ask see_ge().
+  static const char* WINNING_CAPTURE = "4k3/8/8/3p4/8/8/8/3QK3 w - - 0 1";
+
+  // White is in check from the knight on f2 and the one legal reply is the
+  // queen taking it, which the e3 pawn takes back: -600 by see(). The line
+  // stops there -- the recapture gives no check and leaves nothing to take --
+  // so the root, its reply and the recapture are the whole tree.
+  static const char* LOSING_EVASION = "k7/8/5Q2/8/8/4p3/4nnPP/7K w - - 0 1";
+
+  struct qg_run_t
+  {
+    int score;
+    uint64_t nodes;
+    move_t stored_move;  // the root's own entry's move, 0 if it stored none
+  };
+
+  // quiescence() from a cold table with the node count and the move the root
+  // stored, which is the move that beat its stand pat.
+  static qg_run_t qg_run(const std::string& fen, int alpha, int beta)
+  {
+    REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    const int score = quiescence(alpha, beta, 0, 0, &game, &state);
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    return {score, state.explored_nodes,
+            (entry != nullptr) ? entry->best_move : 0};
+  }
+
+  // Whether the run just made entered the position `move` leaves, asked with
+  // the root loaded. See the suite's comment for why an entry is the child's.
+  static bool entered(move_t move)
+  {
+    REQUIRE(make_move(&game, move));
+    const bool found = tt_get_entry(&tt, &game.board) != nullptr;
+    unmake_move(&game);
+    return found;
+  }
+
+  // The one move quiescence's filter loop sees on this board, out of check:
+  // generate_captures() emits exactly one, and it is a capture that is not a
+  // promotion. Loaded and left loaded.
+  static move_t the_one_capture(const std::string& fen)
+  {
+    REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+    REQUIRE_FALSE(is_check(&game));
+
+    move_t moves[MAX_MOVES];
+    REQUIRE_EQ(generate_captures(game_tables(), &game.board, moves), 1);
+    REQUIRE(MOVE_CAPTURE(moves[0]));
+    REQUIRE_FALSE(MOVE_PROMOTED(moves[0]));
+    return moves[0];
+  }
+
+  // The position the move leaves is one quiescence enters rather than scores
+  // a draw without a child (S210), and gives no check.
+  static void require_entered_quietly_after(move_t move)
+  {
+    REQUIRE(make_move(&game, move));
+    const bool dead = is_insufficient_material(&game.board);
+    const bool check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE_FALSE(dead);
+    REQUIRE_FALSE(check);
+  }
+
+  // LOSING_CAPTURE's premise: the gate at 1 declines its one capture, and
+  // nothing else could keep it from being searched at 0.
+  static move_t require_losing_capture_premise()
+  {
+    const move_t capture = the_one_capture(LOSING_CAPTURE);
+
+    REQUIRE_FALSE(capture_cannot_lose(&game.board, capture));
+    REQUIRE(see(&game.board, capture) < 0);
+    REQUIRE_FALSE(see_ge(&game.board, capture, 0));
+    require_entered_quietly_after(capture);
+    return capture;
+  }
+
+  // WINNING_CAPTURE's premise: the gate at 1 lets its one capture through on
+  // see_ge()'s answer, and the position it leaves is a leaf -- not in check,
+  // nothing to capture or promote -- so searching it costs exactly one node.
+  static move_t require_winning_capture_premise()
+  {
+    const move_t capture = the_one_capture(WINNING_CAPTURE);
+
+    REQUIRE_FALSE(capture_cannot_lose(&game.board, capture));
+    REQUIRE(see(&game.board, capture) > 0);
+    REQUIRE(see_ge(&game.board, capture, 0));
+    require_entered_quietly_after(capture);
+
+    move_t moves[MAX_MOVES];
+    REQUIRE(make_move(&game, capture));
+    const size_t noisy = generate_captures(game_tables(), &game.board, moves);
+    unmake_move(&game);
+    REQUIRE_EQ(noisy, 0);
+    return capture;
+  }
+
+  // LOSING_EVASION's premise: in check, one legal reply, and it is a capture
+  // the exchange evaluation writes off. A gate asked in check would decline
+  // it, find no legal move and report a mate. Past the reply the tree is one
+  // node each: the side to move there is not in check and has one capture,
+  // the recapture, and the position that leaves has no check and nothing to
+  // take, so it stands pat on a static score.
+  static move_t require_losing_evasion_premise()
+  {
+    REQUIRE(load_FEN(LOSING_EVASION, &game));
+    REQUIRE(is_check(&game));
+
+    move_t moves[MAX_MOVES];
+    REQUIRE_EQ(legal_moves(&game, moves), 1);
+    const move_t evasion = moves[0];
+
+    REQUIRE(MOVE_CAPTURE(evasion));
+    REQUIRE_FALSE(MOVE_PROMOTED(evasion));
+    REQUIRE_FALSE(capture_cannot_lose(&game.board, evasion));
+    REQUIRE(see(&game.board, evasion) < 0);
+    REQUIRE_FALSE(see_ge(&game.board, evasion, 0));
+
+    REQUIRE(make_move(&game, evasion));
+    REQUIRE_FALSE(is_insufficient_material(&game.board));
+    REQUIRE_FALSE(is_check(&game));
+    move_t replies[MAX_MOVES];
+    REQUIRE_EQ(generate_captures(game_tables(), &game.board, replies), 1);
+    REQUIRE(make_move(&game, replies[0]));
+    const bool dead = is_insufficient_material(&game.board);
+    const bool check = is_check(&game);
+    const size_t noisy = generate_captures(game_tables(), &game.board, moves);
+    unmake_move(&game);
+    unmake_move(&game);
+
+    REQUIRE_FALSE(dead);
+    REQUIRE_FALSE(check);
+    REQUIRE_EQ(noisy, 0);
+    return evasion;
+  }
+
+  // The deletion. At 1 the gate declines this capture -- the tune build's case
+  // below holds that -- and at 0 it is searched: its child is entered, and
+  // the count is at least the root and that child. The child has the
+  // recapture to search, so the count is not pinned exactly; which child was
+  // entered is the table's to say.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a losing capture is searched at the gate's off value")
+  {
+    REQUIRE_EQ(QS_SEE_GATE, 0);
+
+    const move_t capture = require_losing_capture_premise();
+    const qg_run_t run = qg_run(LOSING_CAPTURE, -QG_INF, QG_INF);
+
+    CHECK(entered(capture));
+    CHECK(run.nodes >= 1 + 1);
+  }
+
+  // A capture the exchange evaluation clears is searched whatever the switch
+  // says. At 0 there is no gate to pass; at 1, in the tune build's case
+  // below, it passes on see_ge(). One node for the root and one for the leaf
+  // it leaves.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a capture the exchange evaluation clears is searched")
+  {
+    REQUIRE_EQ(QS_SEE_GATE, 0);
+
+    const move_t capture = require_winning_capture_premise();
+    const qg_run_t run = qg_run(WINNING_CAPTURE, -QG_INF, QG_INF);
+
+    CHECK(entered(capture));
+    CHECK_EQ(run.nodes, 1 + 1);
+  }
+
+  // In check every evasion is searched and the gate is not asked, at either
+  // value: here the one legal reply is a capture the exchange evaluation
+  // writes off, so a gate that ran in check would leave no legal move and the
+  // node would report a mate in a position with a legal reply. Asked at 0
+  // here, and at 1 in the tune build's case below. The premise pins the tree
+  // at three nodes, and the score the leaf stands pat on is a static one.
+  TEST_CASE_FIXTURE(search_fixture_t, "a losing evasion is searched in check")
+  {
+    REQUIRE_EQ(QS_SEE_GATE, 0);
+
+    const move_t evasion = require_losing_evasion_premise();
+    const qg_run_t run = qg_run(LOSING_EVASION, -QG_INF, QG_INF);
+
+    CHECK(entered(evasion));
+    CHECK_EQ(run.nodes, 1 + 1 + 1);
+    CHECK(run.score > -QG_MATE_MIN_LOCAL);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE SWITCH'S ON VALUE, DEC-215, and the only build that can drive it.
+  // `QsSeeGate` is a compiled constant in the release build, so a case there
+  // cannot turn the gate back on; in the tune build it is a variable and
+  // `search_param_set` is the setter the tuner uses. At 1 the engine is the
+  // tree before S022 -- the tune build at 1 benches the parent's total with
+  // all eight `bestmove` replies identical -- and this case holds, on the
+  // three boards above, that the gate declines as it did: the losing capture
+  // not searched, the winning one searched on see_ge()'s answer, the losing
+  // evasion searched in check.
+  //
+  // The restorer puts back the value it found and not a literal 0, S132's
+  // pattern: doctest runs a binary's cases in one process, so a parameter left
+  // at 1 by a failing assertion would turn the gate on for every case after
+  // this one.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "the gate declines a losing capture at the switch's on "
+                    "value")
+  {
+    const int found = QS_SEE_GATE;
+
+    struct restore_t
+    {
+      int value;
+      ~restore_t() { search_param_set("QsSeeGate", value); }
+    } restore{found};
+
+    // The control: at the shipped value this exact drive searches it.
+    REQUIRE_EQ(QS_SEE_GATE, 0);
+    const move_t capture = require_losing_capture_premise();
+    const qg_run_t off = qg_run(LOSING_CAPTURE, -QG_INF, QG_INF);
+    REQUIRE(entered(capture));
+    REQUIRE(off.nodes >= 1 + 1);
+
+    REQUIRE(search_param_set("QsSeeGate", 1));
+    REQUIRE_EQ(QS_SEE_GATE, 1);
+
+    // What the tree before S022 does: the capture declined, nothing searched,
+    // the static score, no move stored.
+    require_losing_capture_premise();
+    const int static_score = evaluate(&game.board);
+    const qg_run_t on = qg_run(LOSING_CAPTURE, -QG_INF, QG_INF);
+
+    CHECK_EQ(on.nodes, 1);
+    CHECK_FALSE(entered(capture));
+    CHECK_EQ(on.score, static_score);
+    CHECK_EQ(on.stored_move, 0);
+
+    // A capture the exchange evaluation clears is searched at 1 as at 0.
+    const move_t winning = require_winning_capture_premise();
+    const qg_run_t cleared = qg_run(WINNING_CAPTURE, -QG_INF, QG_INF);
+    CHECK(entered(winning));
+    CHECK_EQ(cleared.nodes, 1 + 1);
+
+    // And the gate is not asked in check at 1 either.
+    const move_t evasion = require_losing_evasion_premise();
+    const qg_run_t forced = qg_run(LOSING_EVASION, -QG_INF, QG_INF);
+    CHECK(entered(evasion));
+    CHECK_EQ(forced.nodes, 1 + 1 + 1);
+    CHECK(forced.score > -QG_MATE_MIN_LOCAL);
+
+    // Put back and the putting back checked; the restorer covers the paths a
+    // failed REQUIRE leaves by.
+    REQUIRE(search_param_set("QsSeeGate", found));
+    REQUIRE_EQ(QS_SEE_GATE, found);
   }
 #endif
 }
@@ -4278,6 +4643,43 @@ TEST_SUITE("search: draws")
     // which this row reports no mate at 14 and S113's separates E21 again --
     // a revert of one line and one distance.
     //
+    // **RE-MINED AT S022'S FIRST VERDICT, IN THE SCRIPT'S GUARD MODE, AND THE
+    // POSITION MOVED AGAIN.** That verdict deletes S015's exchange gate in
+    // quiescence behind `QsSeeGate` 0, which is "any change to pruning", and
+    // on its tree -- S131's `cbaa699` with the gate gone -- S131's row,
+    // `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42` at depth 14,
+    // mate in 6, stayed green and stopped separating: the shipped and the
+    // guard-dropped builds both report its mate at 12, 13 and 14, and a
+    // targeted `tools/mutation_check.py --only E21` on a fixture of the
+    // candidate -- on `cbaa699`, before S243's direct case landed -- scored E21
+    // a survivor of the whole fast suite. On the tree this lands on, S243's
+    // "the multicut never ends a node on a mate from its verification" kills
+    // E21 as well, and this row is the second witness it keeps. Stages 2 to 6
+    // re-run with `--mode guard` (DEC-238), stage 1 not re-run because the 269
+    // candidates and their oracle did not move: **one of the 269 separates the
+    // two sweeps, and the pick takes it**,
+    // `2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31` at depth
+    // 14, mate in 6 -- shipped `d13 d14`, guard dropped `d13`, the mutant's
+    // multicut changing the tree at 14 and the shipped one at no depth, so the
+    // default mode refuses it as it refused S131's. It is S236 v2's row come
+    // back on another tree. Its cell costs 53836648 nodes, about 7 s as the
+    // miner timed it beside the fillers, where S131's row cost 2179530 at the
+    // same depth on this tree (`adocs/data/S022_remine_s097.log`, both modes'
+    // picks and every cell): the price of a depth-14 mate that separates
+    // here, recorded and not traded away, as S236 v2's was.
+    // Not read off the board (CLAUDE.md): python-chess reports `is_valid()`
+    // True, `is_check()` False, 38 legal moves of which 2 are captures and none
+    // a promotion, and stockfish at depth 20 in a fresh process through
+    // python-chess reports **`#+6` for White in 70199 nodes, pv Nxc5+ Kb8
+    // Nxb7 Rxc4 Qb6 Kc8 Nd6+ Nxd6 Ra8+ Kd7 Qxd6#**, the label
+    // `adocs/data/S097_candidates.tsv` already held. **Observed red, then
+    // green**: with E21 applied, `./test_search --test-case="pruning does not
+    // hide a forced mate"` fails here at `REQUIRE( result.mate_found )` and
+    // passes with the guard in place (`.tuning/coord/S022_mine_red.log`).
+    // S131's row is the row of the tree with the gate, and on an H0 or no
+    // verdict it comes back: `QsSeeGate` 1 is `cbaa699`'s engine to the node
+    // -- a revert of one line.
+    //
     // The rows this case has carried, and the tree each belongs to:
     //
     //     pre-S236, again after S236 v2, and on `308b388`, S097's row:
@@ -4290,11 +4692,15 @@ TEST_SUITE("search: draws")
     //     S113, ProbCut on S112's tree, and on `3c7cf84`:
     //         "1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35"
     //         depth 14, mate_in 4, 16599756 nodes, about 2.4 s
-    //     S131, quiet queen promotions on `3c7cf84`, guard mode (DEC-238):
-    //         the row below, depth 14, mate_in 6, 1688502 nodes, about 0.26 s
+    //     S131, quiet queen promotions on `3c7cf84`, guard mode (DEC-238),
+    //     and on `cbaa699`:
+    //         "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42"
+    //         depth 14, mate_in 6, 1688502 nodes, about 0.26 s
+    //     S022 verdict 1, the exchange gate deleted on `cbaa699`, guard mode:
+    //         the row below, depth 14, mate_in 6, 53836648 nodes, about 7 s
     //
     const std::string mate_the_multicut_hides =
-        "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42";
+        "2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -4615,8 +5021,33 @@ TEST_SUITE("search: draws")
     // separates C07, as none did in S095's, and C05 keeps row 1. R01 is
     // separated by no row at any depth, the seventh consecutive pass reading
     // that way. The rows as S112's pass left them, which an H0 on S113
-    // restores byte for byte: rows 1 to 3 as below and
+    // restores byte for byte: rows 1 to 3 as S113's pass left them and
     // `{row 4, 9, 5, "C05, C07, since S112"}`.
+    //
+    // **Re-derived at S022's first verdict, the seven sweeps taken once more
+    // (DEC-233).** That verdict deletes S015's exchange gate in quiescence
+    // behind `QsSeeGate` 0, which is "any change to pruning", and row 1 at
+    // depth 7 is the row this case went red on: the candidate reports that
+    // mate from 9 and no longer at 7. The whole pass was re-taken rather than
+    // that row re-picked -- shipped plus all six S091 mutants, depths 3 to 12,
+    // over `adocs/data/S230_table_fens.txt`, driven by
+    // `adocs/data/S230_mine_r01_row.py depths` on a clean worktree of the
+    // candidate, evidence in `.tuning/coord/S022_capmates/` and the driver
+    // `.tuning/coord/S022_capmates.sh` -- and the same rule applied. Shipped
+    // profiles here: `d9 d10 d11 d12`, `d7 d8 d9 d10 d11 d12`, `d10 d11 d12`,
+    // `d9 d10 d11 d12`, which put the four depths at **9, 7, 10 and 12**.
+    // **All four moved and no mate distance did.** Row 1 goes to 9 and no
+    // S091 mutant separates it at any depth of its profile -- C05 and R02
+    // gain a reading, at 7 and at 8, which is a mutant finding the mate
+    // earlier and not a separation; row 2 comes forward to 7 and is still
+    // separated by nothing; row 3 goes to 10 and keeps R02, which loses it at
+    // every depth; row 4 goes to 12, **where R01 loses it**, the first pass
+    // since S230 mined that row for R01 in which any row separates it. C02,
+    // C05 and C07 are separated by no row of this pass. The rows as S113's
+    // pass left them, which an H0 or no verdict on S022 restores byte for
+    // byte: `{row 1, 7, 5, "C02, C05, R02, since S112"}`,
+    // `{row 2, 9, 5, "no S091 mutant, since S095"}`, `{row 3, 11, 4, "R02"}`,
+    // `{row 4, 10, 5, "no S091 mutant, since S113"}`.
     //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
@@ -4626,18 +5057,18 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
-         "C02, C05, R02, since S112"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
+         "no S091 mutant, since S022"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 9, 5,
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5,
          "no S091 mutant, since S095"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4, "R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4, "R02"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -4672,8 +5103,12 @@ TEST_SUITE("search: draws")
         // the S112 paragraph above has the pass. **S113 moves it to 10**: the
         // shipped build loses the depth 9 reading, and no S091 mutant loses
         // the mate at 10, 11 or 12 -- the S113 paragraph above has the pass.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
-         5, "no S091 mutant, since S113"},
+        // **S022 moves it to 12, and the label to R01**: with S015's exchange
+        // gate deleted the shipped profile is `d9 d10 d11 d12` again, and R01
+        // loses the mate at 12 and at no other depth, so the rule takes 12 --
+        // the S022 paragraph above has the pass.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 12,
+         5, "R01"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
