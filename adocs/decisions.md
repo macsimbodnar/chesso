@@ -13433,3 +13433,51 @@ Consequences: `short_line_ceiling` returns 5, 15, 6, 2, 11, 5 while the
               candidate ships at 0; `DEV_MANUAL.md`'s golden list and the
               test's tabled worst cells say so; S202's class is the same,
               larger by six lines on one case.
+
+## DEC-242  2026-09-29  A class that never reaches the bench positions and moves no root answer in the ordinary-play census is accepted without a run when the code shows it can only add exact cuts: S244's discharge, DEC-107 extended and bounded
+Tags:         measurement, sprt, census, inv-6, dec-107, dec-171, s244, s210, probcut
+Context:      S244 answers a ProbCut capture that leaves insufficient
+              material as the draw it is before the preliminary quiescence
+              and the shallow search run. No bench position reaches the
+              class (0 of 3040, 1372 and 957 ProbCut captures at bench 14,
+              bench 12 and `search_bench` 12), so the bench stream and
+              `tools/search_bench.py` are node-identical to the parent --
+              INV-6's instrument is blind to it. S210's census of ordinary
+              play (11503 positions of the S219 A/A at depth 10) shows the
+              class fires: 175 dead captures, 149 passing the preliminary
+              before, 8 cuts now taken on the draw that the parent's
+              material score had missed, 65 of 11503 trees smaller by 1 to
+              28 nodes, and **0 root answers and 0 scores moved**. DEC-107's
+              discharge was written for a class that fires 0 times; its
+              Rejected clause refuses "fires but moves nothing" as a
+              blanket basis. The cold fast check read the code: every cut
+              the parent took remains with the same value, the added cuts
+              are exact draws at or above the bar, sound at any depth, and
+              the sign stays right under a non-zero `DRAW_SCORE`. The
+              census samples ProbCut near the root of the last two
+              iterations only, on few-men boards, so "0 answers moved at
+              depth 10" is evidence about that depth.
+Decision:     By the coordinator under the owner's delegation; the owner may
+              overrule and order the `{-5, 0}` run. S244 is accepted without
+              a run on four conditions, all met and all stated in its stamp:
+              INV-6 identity on the bench positions; an ordinary-play
+              census at S210's depth with no root answer and no score moved;
+              a reading of the code, confirmed by a cold check, that the
+              change keeps every prior cut and adds only exact ones; and
+              node deltas bounded and small. The basis is this entry, not
+              INV-6, whose instrument did not see the class. It is a
+              bounded extension of DEC-107: a class that fires and moves any
+              root answer or score in the census owes its run, as S210's
+              did (194 of 11503 moved there).
+Rejected:     The `{-5, 0}` run: about twelve hours on a bound for a change
+              that can only add exact cuts and remove wasted preliminaries,
+              the night the machine would spend being the plan's binding
+              constraint. Calling INV-6 the basis: its positions never
+              reach the class. Folding S244 into the next ProbCut change's
+              run: every later verdict carries it on both sides and never
+              measures it, which is the same acceptance said less plainly.
+Consequences: S244 completes after its second tier on this basis; its
+              stamp quotes the four conditions and the census depth caveat.
+              A later change that meets INV-6 only because its class misses
+              the bench positions is read against this entry: the census
+              first, and a run unless all four conditions hold.

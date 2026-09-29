@@ -1349,11 +1349,9 @@ int quiescence(int alpha,
     // Here rather than at the top of the node, which is the placement
     // negamax_at uses. The two are the same set: material is what this function
     // reads, a quiet move cannot change it, and the node quiescence was entered
-    // at was answered by negamax_at first -- except through ProbCut's
-    // preliminary (S113), which can enter a dead child and scores it on the
-    // material left, at TT_DEPTH_QS; the shallow search that follows returns
-    // DRAW_SCORE before any cut, so the cost is a wasted preliminary (S113's
-    // open finding 6). Testing a
+    // at cannot be dead already because negamax_at tested it first: at the top
+    // of every node it enters, and in ProbCut's loop on every capture before
+    // its preliminary (S244). Testing a
     // made move instead of an entered node skips the child outright -- no
     // probe, no evaluation, no move generation -- and leaves the test off the
     // entry path of every quiescence node there is.
@@ -2011,16 +2009,29 @@ static int negamax_at(int alpha0,
 
         if (!make_move(game, pc_moves[j])) { continue; }
 
+        // A capture that leaves nothing able to force mate has ended the game
+        // drawn, so the draw is its value and neither search below is asked
+        // for it. This loop is the one caller that enters quiescence at a
+        // child negamax_at never screened: quiescence there would score the
+        // material left and store it at TT_DEPTH_QS, which S210's test on the
+        // moves quiescence makes exists to prevent, and the shallow search
+        // would answer DRAW_SCORE at its first line anyway. The test is
+        // S210's and so is the value, in the child's frame and negated; the
+        // draw then meets the bar like any other value. S244, S113's open
+        // finding 6.
+        const bool pc_dead = is_insufficient_material(&game->board);
+
         if constexpr (PROBING) {
-          if (probe != nullptr) { probe->probcut_tried++; }
+          if (probe != nullptr && !pc_dead) { probe->probcut_tried++; }
         }
 
         // The preliminary: quiescence against the same zero window. Only a
         // capture that holds the bar there pays for the shallow search.
-        int value = -quiescence(-probcut_beta, -probcut_beta + 1, ply + 1, 0,
-                                game, state);
+        int value = pc_dead ? -DRAW_SCORE
+                            : -quiescence(-probcut_beta, -probcut_beta + 1,
+                                          ply + 1, 0, game, state);
 
-        if (!state->aborted && value >= probcut_beta) {
+        if (!pc_dead && !state->aborted && value >= probcut_beta) {
           if constexpr (PROBING) {
             if (probe != nullptr) { probe->probcut_searched++; }
           }

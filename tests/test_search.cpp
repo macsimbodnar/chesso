@@ -12248,6 +12248,106 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // A CAPTURE THAT LEAVES A DEAD BOARD IS ANSWERED AS THE DRAW IT IS, S244
+  // (S113's open finding 6). Nothing left can force mate, so the capture's
+  // value is DRAW_SCORE and neither the preliminary nor the shallow search is
+  // asked for it. Entered, quiescence would score the material left and store
+  // that at TT_DEPTH_QS -- what S210's test in quiescence exists to prevent,
+  // and this loop is the one caller that enters quiescence at a child
+  // negamax_at never screened. The draw then meets the bar like any other
+  // value: a bar above it leaves the node to its move loop, a bar on it ends
+  // the node on the draw.
+  //
+  // White's king takes Black's last pawn, which leaves king against king and
+  // knight. From a tool (CLAUDE.md): python-chess reports `is_valid() True`,
+  // `is_check() False`, 7 legal moves and exactly one capture, Kxd4, after
+  // which `is_insufficient_material()` is True; that the engine agrees is
+  // asserted below. What quiescence would make of the board after Kxd4 is not
+  // this file's claim; the two observables are that it was never asked.
+  //
+  // The betas are derived from the margin, so a refit moves the bar with them:
+  // `DRAW_SCORE - ProbCutMargin` puts the bar on the draw and one more puts it
+  // a point above. The two observables are CHECKs, so a red run shows both.
+  //
+  // Mutation: PD01_probcut_dead_screen_dropped,
+  // PD02_probcut_dead_child_never_cuts.
+  //
+  //   search: pruning and reduction guards
+  //    probcut answers a capture that leaves a dead board as a draw
+  TEST_CASE_FIXTURE(probcut_drive_t,
+                    "probcut answers a capture that leaves a dead board as a "
+                    "draw")
+  {
+    const std::string fen = "n6k/8/8/8/3pK3/8/8/8 w - - 0 1";
+
+    // After a drive: the capture leaves a board the engine calls dead, and
+    // the table holds nothing for that board, which a preliminary entered
+    // there would have stored its material score in.
+    const auto require_dead_child_unstored = [&](move_t capture) {
+      REQUIRE(make_move(&game, capture));
+
+      const bool dead = is_insufficient_material(&game.board);
+      const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+      const int stored_depth = (entry != nullptr) ? entry->depth : 0;
+      const int stored_score = (entry != nullptr) ? entry->score : 0;
+
+      unmake_move(&game);
+
+      REQUIRE(dead);
+      CHECK_MESSAGE(entry == nullptr,
+                    ("the dead child has an entry, depth " +
+                     std::to_string(stored_depth) + " score " +
+                     std::to_string(stored_score)));
+    };
+
+    // A bar one above the draw: the draw does not clear it, the node goes on
+    // to its move loop, and the capture still paid for no search.
+    {
+      const int beta = DRAW_SCORE_LOCAL - PROBCUT_MARGIN + 1;
+      const search_node_probe_t record =
+          run(fen, 1, beta - 1, beta, node_depth());
+
+      REQUIRE(!is_check(&game));
+
+      const move_t kxd4 = capture_move(&game, e4, d4);
+
+      REQUIRE(kxd4 != 0);
+      REQUIRE(record.probcut_entered);
+      REQUIRE(!record.probcut_tt_skip);
+      CHECK_EQ(record.probcut_tried, 0);
+      REQUIRE_EQ(record.probcut_searched, 0);
+      REQUIRE(!record.probcut_cutoff);
+      REQUIRE(record.move_count > 0);
+
+      require_dead_child_unstored(kxd4);
+    }
+
+    // The bar on the draw: the draw clears it, and the node ends on the draw
+    // with the capture as its move, before its move loop.
+    {
+      const int beta = DRAW_SCORE_LOCAL - PROBCUT_MARGIN;
+      const search_node_probe_t record =
+          run(fen, 1, beta - 1, beta, node_depth());
+
+      const move_t kxd4 = capture_move(&game, e4, d4);
+
+      REQUIRE(kxd4 != 0);
+      REQUIRE(record.probcut_entered);
+      REQUIRE(!record.probcut_tt_skip);
+      CHECK_EQ(record.probcut_tried, 0);
+      REQUIRE_EQ(record.probcut_searched, 0);
+      REQUIRE(record.probcut_cutoff);
+      REQUIRE_EQ(record.probcut_beta, DRAW_SCORE_LOCAL);
+      REQUIRE_EQ(record.probcut_move, kxd4);
+      REQUIRE_EQ(record.probcut_value, DRAW_SCORE_LOCAL);
+      REQUIRE_EQ(last_score, DRAW_SCORE_LOCAL);
+      REQUIRE_EQ(record.move_count, 0);
+
+      require_dead_child_unstored(kxd4);
+    }
+  }
+
+
 #ifdef CHESSO_TUNE
   // THE OFF VALUE, DEC-215: `ProbCut` 0 skips the block whole, on the drive
   // that fires it at 1. What the release build holds instead is the bench
