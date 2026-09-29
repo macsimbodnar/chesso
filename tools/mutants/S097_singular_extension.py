@@ -294,8 +294,10 @@ m("E21_multicut_mate_band_gate_dropped", S, "search/extension",
   'nothing proved: the node ends on it, its parent carries it, and a mate is '
   'reported or a real one is hidden behind a fabricated shorter distance. The '
   '`beta > -MATE_MIN` term beside it is S165\'s guard on the node\'s own '
-  'window and is a different rule, so it is left in place here. Killed by the '
-  'mined row of "pruning does not hide a forced mate"',
+  'window and is a different rule, so it is left in place here. Killed by '
+  '"the multicut never ends a node on a mate from its verification", S243\'s '
+  'direct drive of the guard, and by the mined row of "pruning does not hide '
+  'a forced mate", which stays as a second witness',
   ('      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
    '                 vscore < MATE_MIN && vscore > -MATE_MIN && '
    'beta > -MATE_MIN) {',

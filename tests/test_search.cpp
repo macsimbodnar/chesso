@@ -10445,8 +10445,8 @@ TEST_SUITE("search: pruning and reduction guards")
   // drive asserts the verification's score is outside the band rather than
   // assuming it, which is what makes the first two legs about the rule, but a
   // drive whose scores sit there cannot show what that guard refuses. What
-  // holds it is the mined row in "pruning does not hide a forced mate", and
-  // its mutant is E21.
+  // holds it is the case below, S243's, with the mined row in "pruning does
+  // not hide a forced mate" as a second witness, and its mutant is E21.
   //
   // Mutation: E20_multicut_returns_singular_beta,
   // E22_multicut_pv_gate_dropped, E23_multicut_defender_beta_gate_dropped.
@@ -10540,6 +10540,146 @@ TEST_SUITE("search: pruning and reduction guards")
 
     REQUIRE(!defender.se_multicut);
     REQUIRE(defender.move_count > 0);
+  }
+
+
+  // THE MULTICUT'S MATE BAND, S243: the guard on the value the node hands
+  // back, driven directly, where the case above could only assert that its
+  // drive's scores sit outside the band. A half-depth search under a window
+  // below the entry's score is the instrument that misses mates, so a mate
+  // distance out of one is a distance nothing proved, and the rule never ends
+  // a node on one. Until this case the guard was held by a mined row alone
+  // (DEC-238), which moved with the tree at three rebases in a row; that row
+  // stays in "pruning does not hide a forced mate" as a second witness.
+  //
+  // The position, from tools and not from the board (CLAUDE.md): python-chess
+  // reports `is_valid()` True, `is_check()` False, 17 legal moves, no capture
+  // and no promotion, and a1a8 -- Ra8 -- checkmate; stockfish at depth 20
+  // through python-chess reports **`#+1`, pv a1a8**, and over all 17 root
+  // moves (multipv) no other mate. g1f1, the table move planted below, is
+  // legal and neither check nor mate. `.tuning/coord/S243_logs/oracle.py`
+  // asked both and `oracle_candidate1.txt` is what they answered. No capture
+  // means ProbCut has nothing to try, and a drive at ply 1 with no previous
+  // move has neither reverse futility nor the null move, so nothing above the
+  // singular block ends the node first -- `se_verified` is what shows it.
+  static const std::string SE_MATE_DRIVE_POS =
+      "6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1";
+
+  // An entry score whose derived window no move but the mate can reach here,
+  // so every alternative the verification searches fails low under it and its
+  // one fail-high is Ra8. The case asserts that rather than trusting it: the
+  // value that comes back must be the mate itself, so an alternative that
+  // reached the window instead would fail the case at its precondition, and
+  // loudly. Below the mate band by a margin, because the block refuses an
+  // entry score inside it.
+  static constexpr int SE_MATE_WINDOW_SCORE = 3000;
+
+  struct se_mate_drive_t : guard_fixture_t
+  {
+    // The shallowest node the block admits and the shallowest entry its depth
+    // margin accepts, as se_drive_t derives them, so a refit moves this drive
+    // with the rest.
+    static int node_depth() { return SE_MIN_DEPTH; }
+    static int entry_depth() { return SE_MIN_DEPTH - SE_TT_DEPTH_MARGIN; }
+
+    move_t table_move = 0;
+    move_t mating_move = 0;
+    int last_score = 0;
+
+    search_node_probe_t run(size_t ply, int beta)
+    {
+      load(SE_MATE_DRIVE_POS, static_cast<int>(ply));
+
+      REQUIRE(!is_check(&game));
+
+      table_move = quiet_move(&game, g1, f1);
+      mating_move = quiet_move(&game, a1, a8);
+
+      REQUIRE(table_move != 0);
+      REQUIRE(mating_move != 0);
+
+      // The mate, by the engine's own rules as well as the tools': after Ra8
+      // the side to move is in check and has no legal reply.
+      {
+        REQUIRE(make_move(&game, mating_move));
+
+        move_t replies[MAX_MOVES];
+        const bool mated = is_check(&game) && legal_moves(&game, replies) == 0;
+
+        unmake_move(&game);
+
+        REQUIRE(mated);
+      }
+
+      tt_store_entry(&tt, &game.board, entry_depth(), SE_MATE_WINDOW_SCORE,
+                     TT_BETA_NODE, table_move);
+
+      const tt_entry_t* planted = tt_get_entry(&tt, &game.board);
+
+      REQUIRE(planted != nullptr);
+      REQUIRE_EQ(planted->best_move, table_move);
+      REQUIRE_EQ(planted->depth, entry_depth());
+
+      // The entry orders the node and never answers it, as in se_drive_t.
+      REQUIRE(entry_depth() < node_depth());
+      REQUIRE(static_cast<int>(ply) < SE_PLY_FACTOR * node_depth());
+
+      state.root_history_size = game.history.size;
+      state.node_limit = SE_DRIVE_NODE_LIMIT;
+
+      last_score = negamax_probed(beta - 1, beta, node_depth(), ply, &game,
+                                  &state, 0, false, false, 0);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      return probe;
+    }
+  };
+
+
+  // Every condition of the multicut is established at the drive but the one
+  // this case is about, so a node that goes on to search does so because the
+  // value is a mate: the verification ran and failed high, cleared this
+  // node's own beta, the node is not a PV node and its beta is not a defender's
+  // -- and what came back is **mate in one, Ra8, delivered one ply below this
+  // node**. MATE_MAX - (ply + 1) is negamax_at()'s own arithmetic, a mated
+  // node at ply p scoring -(MATE_MAX - p), and not a number read off a run;
+  // the drive reads the same value back.
+  //
+  // Mutation: E21_multicut_mate_band_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    the multicut never ends a node on a mate from its verification
+  //   REQUIRE( !record.se_multicut )
+  TEST_CASE_FIXTURE(se_mate_drive_t,
+                    "the multicut never ends a node on a mate from its "
+                    "verification")
+  {
+    REQUIRE_EQ(SE_MULTICUT, 1);
+
+    const size_t ply = 1;
+    const search_node_probe_t record = run(ply, SE_MULTICUT_BETA);
+
+    REQUIRE(record.se_verified);
+    REQUIRE_EQ(record.se_singular_beta,
+               SE_MATE_WINDOW_SCORE - SE_MARGIN_PER_DEPTH * node_depth());
+    REQUIRE_EQ(record.se_vdepth, (node_depth() - 1) / 2);
+    REQUIRE(record.se_vscore >= record.se_singular_beta);
+    REQUIRE(record.se_vscore >= SE_MULTICUT_BETA);
+    REQUIRE(SE_MULTICUT_BETA > -MATE_MIN_LOCAL);
+
+    // The value, named: the mate the verification found, inside the band.
+    REQUIRE_EQ(record.se_vscore, MATE_MAX_LOCAL - static_cast<int>(ply + 1));
+    REQUIRE(record.se_vscore >= MATE_MIN_LOCAL);
+
+    // THE GUARD. The node did not end on the verification's word: the rule
+    // did not fire, and the node searched its own moves instead. What is
+    // asserted is the branch and not the number the node returns, because the
+    // node's own search may reach the same mate and that one is proved.
+    REQUIRE(!record.se_multicut);
+    REQUIRE(record.move_count > 0);
   }
 
 

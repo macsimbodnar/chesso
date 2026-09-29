@@ -33,6 +33,17 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, early: S243 done (a direct guard test for the multicut's mate band)
+
+`se_mate_drive_t` drives a node whose verification search returns mate in
+one, with every other multicut condition met, and asserts the node's
+returned score is outside the mate band and the rule does not fire; red
+under E21 (`CHECK( 48998 < 48000 )`, then the branch), `mutation_check`
+kills E21 by it and S097's whole list goes 22 of 22. The mined row stays as
+the second witness, and `DEV_MANUAL.md` now says how its going stale shows
+(E21's kill list shrinking from two cases to one). Cold fast check: no real defect; the returned-score assertion the accepts asked for was added at the check and observed red under E21. Tests only; no
+`Bench:` line owed. **Fillers left in the plan:** S244.
+
 ## 2026-09-29: S131's SPRT is H1 -- H1, the code stays
 
 **`13caf43` against `2d6b8f1`, `Elo 17.84 +/- 8.83`, `nElo 23.59 +/- 11.66`,
