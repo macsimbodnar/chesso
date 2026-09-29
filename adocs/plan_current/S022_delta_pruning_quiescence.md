@@ -1418,3 +1418,13 @@ it.
 The SPRT; DEC-141's Debug self-play and `tools/gate_extra.sh` (the
 coordinator's, at the landing); any timing claim -- the milliseconds above are
 the case's own goldens, taken by the command each names.
+
+### Verdict 2 landed and pinned (the coordinator, 2026-09-29)
+
+Cold fast check over the rebased diff: no real defect in the code; the pre-registration's H0 row and REF prose were corrected in the landing. **Second tier on the landing** (DEC-141): Debug self-play 8 games at
+4+0.04, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S022_v2_debug_selfplay/`);
+`tools/gate_extra.sh` 5 stages green in 1119 s (`.tuning/gate_extra_2026-09-29_S022_v2.log`).
+Landed as `0c0db1b` on `58585f8`, `bench` 3429473 -> 3656950. SPRT pair pinned:
+`REF` `58585f8` (the tree verdict 1's revert and S246 left; its engine
+`d446783`'s node for node), `CAND` `0c0db1b`; open findings re-read at
+pinning: items 1 to 15 as the pre-registration states them.

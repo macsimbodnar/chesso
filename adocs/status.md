@@ -33,6 +33,26 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, midday: S022 verdict 2 landed as `0c0db1b`, pinned against `58585f8`
+
+The node-level delta early-out in quiescence behind `QsDeltaEarlyOut` (0
+the parent's tree, proved to the node; 1 shipped) with `QsDeltaPhaseMin` 0:
+`bench` 3429473 -> 3656950 (+6.6 %), one bench reply moving; the reach,
+stated as reach (DEC-239): 12.67 % of the out-of-check quiescence nodes that
+reach generation end before it at depth 12, 72.3 % of them with nothing to
+generate. The stop half of the first-iteration case moved to a heavier board
+by the case's own rule (the early-out had cut its old board under the 3 ms
+floor) and the timer half's dead-timer figure was re-taken; S097's multicut
+row went quiet on the combination and was re-mined in guard mode (DEC-238),
+S243's direct case killing E21 either way. Mutation 7 of 7 (Z05 equivalent
+in Release, killed in tune) plus the extras. Cold fast check over the rebased diff: no real defect in the code; the pre-registration's H0 row and REF prose were corrected in the landing. Second tier green: Debug
+self-play 8 games 0 `Assertion`, `gate_extra` 5 stages green in 1119 s. **Next:** the `{0, 5}`
+SPRT launches from `adocs/data/S022_v2_sprt.sh` right after this commit
+(expected about zero or negative; a true zero terminates on H0 in hours;
+worst case 19.8 h). Then S022 completes on both verdicts; S244 and S245 are
+the fillers beside the next match; S114 is the next strength step in Open.
+Owner questions unchanged.
+
 ## 2026-09-29, morning: verdict 1 reverted as `39841ed`; S246 created for the fillers' missing fix-ups
 
 **The revert** (a fresh agent, cold-checked by its own proofs): `QsSeeGate`
