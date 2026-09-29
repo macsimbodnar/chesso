@@ -1001,3 +1001,420 @@ landing's pin ran on `a97bc1a`: the revert touches the search, though only a
 comment differs from `d446783`, whose engine this is node for node. Whether it
 is owed on a tree identical to a parent's engine is the coordinator's call.
 No match, SPSA or timing was run here.
+
+## Verdict 2: the node-level delta early-out, behind a switch (2026-09-29)
+
+Section 3's second item, built after verdict 1 as it recommends, on
+`05ab85d` (verdict 1's landing `a97bc1a` and its pin, the exchange gate
+deleted behind `QsSeeGate` 0) while verdict 1's SPRT ran. **Verdict 1 read H0
+before this was measured** -- `Elo -65.22 +/- 17.66`, `nElo -85.89 +/- 22.70`,
+LLR -2.96, 900 games (`.tuning/coord/S022_v1_sprt.log`) -- so S015's gate
+stays and its switch's code leaves in the revert. In section 2's naming this
+verdict is therefore **F+S+D against F+S**, not F+D against F: the gate is on
+both sides of the pair, and REF is the tree the revert leaves. The candidate
+asks at `{0, 5}` nElo whether the early-out gains on that tree (section 6).
+**Rebased onto `39841ed`, the revert, and then onto `58585f8`, S246 on it,
+on 2026-09-29**: `src/`, `tools/` and `MANUAL.md` there are `d446783`'s but
+for a five-line comment at the gate, and `tests/` are too but for S246's two
+files; the code was reapplied by anchor and every number below re-taken on
+`58585f8` unless it names another tree.
+
+**It stopped once before completing, and the stop and its resolution are
+first here.** Both fast suites were 40 of 41 on every tree measured before the
+ruling: `test_engine`'s first-iteration case was red at its precondition in
+both builds. Depth 1 on its eight-queens board,
+`q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1`, costs 10187 nodes
+and 1 ms with the early-out against 36165 nodes and 6 to 7 ms without it --
+the early-out ends 199 of its quiescence nodes at depth 1 -- and the case
+asserts 3 ms before it measures anything. Its own comment says what that asks
+for: "under that it needs a heavier position, not a smaller floor". A change
+of the case's board is not a scripted re-derivation, so the agent made none,
+and the step stopped for a ruling.
+
+**The ruling, and a finding on the way to it** (the coordinator, 2026-09-29):
+the case's own rule applies -- a heavier position, not a smaller floor -- a
+re-derivation by the rule at the site (DEC-233's class), not a relaxation, so
+no decision entry; DEC-240 cited for what the case guards. The first ruling
+named the case "a stop inside the first iteration cuts it and the hard timer
+ends the search within its bound" and its timer half's own board, and **that
+case was in no commit**: S242's completing commit `aef0257` had carried its
+first redesign -- still "the first iteration honours stop and the hard
+timer", both halves on the one eight-queens board, the hard-timer claim
+retried up to five times, the form DEC-240 rejected -- while S242's stamp and
+commit message described DEC-240's form, which survived only as blob `e88103f`
+and in `.tuning/coord/S242_logs/s242_only.patch`. The coordinator's landing had
+cut the fillers' patches from their worktree's index, where the first round
+was staged. **S246 landed the missing forms (`58585f8`)**, and the ruling was
+then applied to the letter on that tree:
+
+- **The stop half's board moved** to
+  `r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0 1`, seven
+  rooks and two knights a side (python-chess: valid, not in check, 63 legal
+  moves, 7 captures; reachable by count), chosen over the rook board the
+  first ruling named because it clears the floor about nine times where that
+  one clears it twice, and a faster machine is the risk the floor faces. The
+  floor, `depth_1_floor_ms = 3`, and `prompt_stop_us`, derived from it, are
+  unchanged. The old board is recorded at the site with its numbers and why it
+  left.
+- **Its golden re-taken on `58585f8`**, `position fen <board>` then `go depth
+  1`, the info line's `time`, ten runs each on an idle machine, niced: **146994
+  nodes on the parent and on the candidate, 24 to 31 ms**
+  (`.tuning/coord/S022_v2_board/site_numbers58_small.log`; the parent is
+  `39841ed`'s engine, whose `src/` `58585f8` shares). They agree because the
+  early-out never fires on this board at depth 1: the census build's counters
+  read 0 there with the exchange gate and without it (`boards.log`).
+- **The timer half's board is untouched, and its stated dead-timer figure was
+  re-taken** on this tree, since the early-out moves it: depth 1 on
+  `rn1qk1nr/qqqqqqqq/8/8/8/8/QQQQQQQQ/RN1QK1NR w - - 0 1` is 18594285 nodes and
+  3885 to 3945 ms with the early-out against 25933707 nodes and 5534 to 5602
+  ms without it (`site_numbers58_timer.log`); a throwaway build of this tree
+  with the hard timer disarmed answers `go movetime 1` after 3915 and 3935 ms,
+  depth 1, the same 18594285 nodes, and the engine as shipped after 1.3 to 1.9
+  ms (`timer_probe58.log`, S242's own probe). The 402 ms bound now sits about
+  ten times below the dead timer, where it sat about fourteen, and a four
+  times faster machine still leaves it separating.
+- **Separation, observed**: 200 runs of the case, Release, niced, 0 failed,
+  the timer half asserted once a run and never retried
+  (`.tuning/coord/S022_v2_logs/focused_loop.out`).
+
+Before S246 the boards were measured on the trees then standing, for the
+ruling (`boards.log`, `timer_half.log`, `timer_board_depth1.log`), five runs
+each:
+
+| board | 05ab85d | its candidate | d446783 | its candidate | early-out fires at depth 1 |
+|---|---|---|---|---|---|
+| eight queens (the case's) | 36165, 6 ms | 10187, 1 ms | 36165, 6 ms | 10187, 1 ms | 199 times |
+| `r1r1r1r1/1r1r1r1k/8/8/8/8/1R1R1R1K/R1R1R1R1 w - - 0 1` | 35163, 6 ms | 35163, 6 ms | 35163, 7 ms | 35163, 7 ms | 0, both trees |
+| `r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0 1` | 177816, 33 ms | 177816, 33 ms | 146994, 27 ms | 146994, 27 ms | 0, both trees |
+| S242's timer board | 33794579, 7068 ms | 22625582, 4602 ms | 25933707, 5884 ms | 18594285, 4186 ms | -- |
+
+The knight board's cost moves with the exchange gate (177816 without it,
+146994 with it) and the rook board's does not; the gate stays, so that is
+fine. `go movetime 1` cut depth 1 in 200 of 200 fresh processes on every
+engine and each board on the idle machine; under a match the timer half's
+premise is a scheduler's, which is why DEC-240's form asserts a bound instead.
+
+### What the tree already did, 2026-09-29 (checked at `05ab85d`)
+
+- **The loop's shape**, by symbol, `src/search.cpp` `quiescence`: the probe
+  and S094's static score; S130's stand pat and its substitution; the abort
+  and ply-cap returns; `in_check`; out of check the stand pat's fail-high
+  store and `alpha` raised to it; the qply cap (`MAX_QSEARCH_DEPTH`),
+  returning the stand pat and storing nothing; S112's `qs_futility` and
+  `futility_base`, computed from the substituted stand pat; generation --
+  `generate_moves` in check, `generate_captures` out of it; then the filter
+  loop: S131's drop, S112's block (the promotion exemption, the fold into
+  `futility_best`, the make / `is_check` / unmake exemption for a checking
+  capture), the exchange gate (`QsSeeGate` 1 on the landing tree, where it is
+  unconditional again after the revert), `capture_score()` and the
+  compaction; then the search loop with S210's dead-board test, the mate
+  declaration and the store.
+- **The early-out's site**: after `futility_base` and before `futility_best`
+  and the generation call, so below the qply cap and above the generator, out
+  of check only. Its compare is `delta_ceiling <= alpha` with `alpha` as the
+  stand pat left it; since the ceiling is above the stand pat it can hold
+  only where the stand pat did not raise alpha, so that alpha is the node's
+  own. Its return stores `normalize_score(delta_ceiling, ply)` at
+  `TT_DEPTH_QS` as `TT_ALPHA_NODE`, move 0, `stored_eval`, the shape of the
+  node's other stores, and returns the ceiling: the upper bound the fold's
+  argument (S112, DEC-102) makes whatever the stand pat's own type.
+- **`game_phase()`** (`src/evaluation.cpp` `game_phase`) is the INV-4 phase
+  accumulator clamped to `GAME_PHASE_MAX`, 24, the null-move guard's
+  predicate in `negamax_at` (`game_phase(&game->board) > 0`). One call per
+  node that reaches the site.
+- **"A friendly pawn on the seventh"** is the side to move's pawn bitboard
+  against `rank_masks` at `a7` for White and `a2` for Black -- square 0 is a8
+  (`bb_squares_t`), so the first is squares 8 to 15 and the second 48 to 55.
+  A pawn that cannot move still counts, so the allowance only ever keeps the
+  early-out from firing.
+- **The in-check path is untouched**: the block is guarded by `!in_check`,
+  and in check the node generates every evasion and declares mate on
+  `legal_moves == 0` as before.
+- **ProbCut's preliminary (S113)** enters quiescence at the capture's child
+  with the zero window `(-probcut_beta, -probcut_beta + 1)`, and the early-out
+  meets it like any caller: where the child's own ceiling is at or below
+  `-probcut_beta`, the child ends ungenerated and the preliminary holds;
+  deeper in the preliminary's quiescence values move either way, as anywhere.
+  The preliminary only decides whether the shallow search is paid, and the
+  shallow search, which alone decides a cut, meets the early-out at its own
+  leaves. Nothing structural changes, and S244's class (a dead child scored at
+  `TT_DEPTH_QS`) is still no wrong cut.
+- **The probe pattern does not reach quiescence**: `search_node_probe_t` is
+  loaded only by `negamax_at<true>`, and a runtime read in quiescence would
+  put a load on every node (S191 measured the negamax one at 1.49 % of nodes
+  per second). The cases read the node count and the table instead, as
+  S131's suite and verdict 1's do.
+
+### What lands (one commit on `s022v2`, on `58585f8`)
+
+- `src/search.cpp` `quiescence`: one block, above. Nothing else in `src/`:
+  S112's block, S131's condition, the gate's line, S113's filter, S091's
+  pruning and the generator are untouched.
+- `src/search_params.hpp`: `QS_DELTA_EARLY_OUT` ("QsDeltaEarlyOut", **1**,
+  0..1), a verdict switch in `QsFutility`'s, `ProbCut`'s and
+  `QsQueenPromotions`' shape -- its 0 the parent -- and `QS_DELTA_PHASE_MIN`
+  ("QsDeltaPhaseMin", **0**, 0..24) with its seed's form stated at its site.
+  No new margin.
+- `tests/test_search.cpp`, a new suite "search: quiescence delta early-out":
+  "the early-out ends a node no move can lift to alpha", "the early-out's
+  value is its ceiling and not the stand pat", "the early-out does not fire
+  where a queen's gain reaches alpha", "a pawn on its seventh raises the
+  ceiling by the promotion" (both sides to move), "the early-out is not asked
+  in a pawn ending", "the early-out is never asked in check", and in the tune
+  build "the early-out is off at the switch's off value" and "the endgame
+  disable follows its threshold". Every window is the engine's own numbers:
+  `evaluate_cheap()`, `LAZY_EVAL_MARGIN`, `QsFutilityMargin` and
+  `search_qs_futility_value_probe()`, alpha placed on the ceiling itself or
+  one below it. `tests/test_search_params.cpp`: two golden rows, 69 -> 71
+  (70 -> 72 on `05ab85d`).
+- `tests/test_engine.cpp`, the ruling: the first-iteration case's stop half
+  on the rooks-and-knights board, its golden and the old board recorded at
+  the site; the timer half's dead-timer figure re-taken. Nothing else in the
+  file moves.
+- `tests/test_search.cpp`'s multicut row of "pruning does not hide a forced
+  mate", re-mined (below): S097's row in place of S131's, depth 14, mate in 5,
+  S131's row quoted in the GOLDEN block for an H0; the evidence
+  `adocs/data/S022_v2_remine_s097.log` and its README row; `DEV_MANUAL.md`'s
+  row for the golden.
+- `tools/mutants/S022_v2_delta_early_out.py`, Z01 to Z08.
+- `MANUAL.md` two option rows; `DEV_MANUAL.md` the bench ledger entry and the
+  golden-defaults count; `adocs/data/S022_v2_sprt.sh` and its
+  `adocs/data/README.md` row.
+- **The rebase.** Built on `05ab85d`, where the rows sat after `QsSeeGate`
+  and the defaults were 70 -> 72; before the revert landed, a scratch of the
+  landing tree (`.ref-builds/landing`, `d446783` with the change applied by
+  anchor, the rows after `QsQueenPromotions`, 69 -> 71) carried the landing
+  numbers. The worktree was then fast-forwarded to `39841ed` and the code
+  reapplied by the same anchors (`.tuning/coord/S022_v2_save/rebase_code.py`),
+  which reproduces that scratch byte for byte but for the revert's comment at
+  the gate; the documents were rebased by hand. Then to `58585f8`, where only
+  S246's `tests/test_search.cpp` and `DEV_MANUAL.md` met this change and both
+  took it by anchor (the suite and the two DEV_MANUAL edits).
+
+### Seeds (DEC-134)
+
+One. `QS_DELTA_PHASE_MIN` 0 is **(b), chesso's own phase scale**: pawn
+endgames only, the boundary the null-move zugzwang guard already keys on; the
+wiki names the late-endgame disable and no threshold. Range 0 to 24 by the
+scale's own ends: at 24 the early-out is never asked, which is proved below to
+be the parent's tree, and at the floor pawn endgames are still disabled, so
+section 4's "never disable" is outside the range -- a floor of -1 would admit
+it, and that is S127's to want. **No new margin** (section 4): the ceiling is
+`futility_base` plus `qs_futility_value` at the queen, 900, and the allowance
+that table's queen minus its pawn, 800, both S112's seeds. Implemented from
+this file's description (section 2's early-out bullets, section 4; DEC-221);
+no other project's code was opened.
+
+### The reach, before any game (stated as reach, DEC-239)
+
+An instrumented copy of the candidate (`.ref-builds/census`, the candidate's
+`src/` plus write-only counters from `.tuning/coord/S022_v2_census/apply_census.py`),
+its tune build at `QsSeeGate` 1 -- the landing tree, `d446783`'s engine node
+for node -- and at 0, each at `QsDeltaEarlyOut` 1 and 0: at all eight
+configurations its `bench 12` and `search_bench` 12 totals, replies and best
+moves are the uninstrumented tune build's, and the real block's return count
+equals the census's own recomputed firing count
+(`.tuning/coord/S022_v2_census/census_run.log`, summary
+`S022_v2_census_summary.txt`). The site is an out-of-check node past the
+stand pat's cutoff and the depth cap, the node that generates on the tree
+without the early-out:
+
+| landing tree (`QsSeeGate` 1) | site | ended | no move to generate | every move S112 skips | a move S112 searches | a move the tree searches |
+|---|---|---|---|---|---|---|
+| `bench 12`, eight positions | 246317 | 31200 (12.67 %) | 22569 | 6340 | 2291 (2273 a checking capture, 18 a promotion) | 804 |
+| `search_bench` 12, three positions | 103227 | 4166 (4.04 %) | 753 | 2337 | 1076 | 477 |
+
+At the ended bench nodes a generation holds 23877 moves past the filter's
+drop: S112 skips 21255, and of the 2622 it would search (2498 checking
+captures, 124 promotions) the gate declines 1631, so **991 moves the tree
+without the early-out searches are not searched**. 8247 of the ended nodes
+hold at least one capture S112 skips anyway. The allowance is in the ceiling
+at 18 ended nodes and 8499 asked ones. **The phase disable reaches nothing
+on these positions**: 210 nodes are at phase 0 and the ceiling fires at none
+of them, so its seed is untested by the census. On the tree without the
+early-out the same condition holds at 31778 of 248994 site nodes (12.76 %),
+967 with a move the tree searches. On `05ab85d`, the gate deleted, the
+early-out ends 85426 of 743881 (11.48 %) over the bench positions, 14592 with
+a move the tree searches. This is how often the class occurs, not what it is
+worth: S131's census read 0.85 % and its match H1 at +17.84.
+
+### Measurements (2026-09-29, niced, counts only)
+
+- **The off value** (DEC-215), on the worktree's tree, a parent built from
+  `05ab85d` in `.ref-builds/parent`: the tune build at `QsDeltaEarlyOut` 0
+  prints `bench` **6049266** with all eight replies the parent's (c3d5 e2a6
+  d7c8q g7h8q d8e7 a1b2 e5e6 e5e6), `bench 12` 2393854, and `search_bench`
+  reproduces the parent at 9 (39854 / 249885 / 33736) and 12 (97921 / 567770 /
+  125308), best c3d5 e2a6 d7c8q (`.tuning/coord/S022_v2_logs/identity.log`).
+  **On the rebased tree**, against a build of `39841ed`
+  (`.ref-builds/parent_39841ed`): **3429473** with its eight replies (c3d5
+  e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6), `bench 12` 1694808, `search_bench`
+  48304 / 71580 / 25413 and 104784 / 244824 / 117798, best c3d5 e2a6 d7c8q
+  (`identity_rebased.log`; the landing scratch against `d446783` read the
+  same, `identity_landing.log`). `QsDeltaPhaseMin` 24 with the switch at 1
+  prints the parent's totals on both trees.
+- **`bench` parent -> candidate**, on the rebased tree: 3429473 -> **3656950** (+6.63 %),
+  seven replies unchanged and kiwipete's e2a6 -> d5e6; `bench 12` 1694808 ->
+  1702684, the same one reply. On `05ab85d`: 6049266 -> 7722782 (+27.7 %),
+  replies two (e2a6 -> d5e6) and five (d8e7 -> a7a6) moving; `bench 12`
+  2393854 -> 2826829, reply five moving. The tune build at the defaults prints
+  the Release totals on both.
+- **`search_bench`**, on the rebased tree: 9: 48304 -> 70913, 71580 -> 71220, 25413 ->
+  24293, best moves unchanged; 12: 104784 -> 128099, 244824 -> 258594, 117798
+  -> 83277, kiwipete's best move e2a6 -> d5e6. On `05ab85d`: 9: 39854 ->
+  39853, 249885 -> 245330, 33736 -> 31515; 12: 97921 -> 97058, 567770 ->
+  646712, 125308 -> 183598; best moves unchanged. The change alters play, so
+  INV-6 does not discharge it.
+- **Tests, red first and observed**, three stages on the worktree, both
+  builds (`.tuning/coord/S022_v2_logs/red_stageA.log`, `red_stageB.log`,
+  `green_stageC.log`). **A**, the rows and the suite in and the early-out
+  not written: red in both builds "the early-out ends a node no move can
+  lift to alpha" (3 nodes against 1, the checking capture's child entered,
+  its move stored), "the early-out's value is its ceiling and not the stand
+  pat" (at its node count) and the allowance case's second half (2 nodes, the
+  promotion searched, 1823 against the ceiling 3089, both sides to move); in
+  the tune build also "the early-out is off at the switch's off value" at its
+  control and "the endgame disable follows its threshold" at 1; green, as
+  they must be on a tree without the rule, "does not fire where a queen's
+  gain reaches alpha", "not asked in a pawn ending" and "never asked in
+  check". **B**, the early-out without the allowance: the allowance case
+  alone red in both builds, both halves and both sides to move (the node
+  ended at the window between the ceilings, 2289 against 3089 at the
+  allowance's ceiling). **C**, the block as it lands: the suite 6 of 6
+  Release and 8 of 8 tune. "a side in check may not stand pat" and "mate is
+  recognised at depth zero" green.
+- **Both fast suites, 41 of 41 each, on `58585f8`**, the ruling applied:
+  Release `build` and `-DCHESSO_TUNE=ON` `build-tune`, serial `ctest -L
+  fast`, niced, `-j4` builds (`.tuning/coord/S022_v2_logs/final58_suite_release.log`,
+  `final58_suite_tune.log`); `./clang-format.sh --check` clean;
+  `tools/plan_prose_check.py --citations`, `--touches`, `--params` and
+  `--gate` clean. **`test_mate_carry` alone: 57.91 s Release and 57.66 s
+  tune** (`final58_mate_carry_build.log`, `_build-tune.log`). **No mined
+  row went red**: `test_search` -- "pruning does not hide a forced mate" with
+  every mined row and the capture-mate table, the node band of "ordering
+  keeps the tree small", count 20357 against the parent's 20427, inside the
+  middle half of 65024 / 3251 -- `test_mate_carry` and `test_mate_breadth`
+  green in both builds; one row went quiet, the next bullet. Before the ruling
+  the suites were 40 of 41 on every
+  tree, the one red the stop: on `05ab85d` (`v2a_suite_*.log`, where a
+  re-run once also timed out `test_mutation_check`'s sandbox case
+  `test_sigterm_reverts_the_mutant_before_exiting` beside another agent's
+  builds, green run alone twice), on the landing scratch
+  (`landing_suite_*.log`) and on `39841ed` (`rebased_suite_*.log`).
+- **S097's multicut row went quiet and was re-mined** (DEC-142, DEC-233, and
+  DEC-238's guard mode, a guard row). `tools/mutation_check.py --only E21`
+  over the whole mutant directory on the candidate's fixture `4864cca` scored
+  E21 killed by S243's direct case alone, where S246's run on `58585f8` had
+  listed two, that case and this row -- the sign `DEV_MANUAL.md`'s row names.
+  S131's row, `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42`, reads
+  its mate at 11 to 14 on both builds of this tree. Stages 2 to 6 of
+  `adocs/data/S097_mine_mate_row.py`, stage 1 not re-run (the FEN list is
+  identical to verdict 1's), on libraries of the fixture and of the fixture
+  with E21 applied (`.ref-builds/pre`, `.ref-builds/e21`): **one of the 269
+  candidates separates the sweeps**, and both modes take it, S097's own row,
+  `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`, depth 14, mate in 5 --
+  shipped `d13 d14`, E21 `d13`, the mutant's multicut changing the tree at 12,
+  13 and 14 and the shipped one at 13 and 14 -- a cell of 6580581 nodes.
+  Stockfish at depth 20 in a fresh process through python-chess: `#+5` for
+  White in 7918 nodes, the label the candidates file held; python-chess:
+  valid, not in check, 23 legal moves, 2 captures, no promotion. **Observed
+  red under E21, green shipped**: "pruning does not hide a forced mate" fails
+  at the row's `REQUIRE( result.mate_found )` on a build with E21 applied and
+  passes shipped (`.tuning/coord/S022_v2_remine/red_e21.log`; everything in
+  `adocs/data/S022_v2_remine_s097.log`). The row replaces S131's in the case,
+  S131's quoted in its GOLDEN block for an H0 or no verdict.
+- **Mutation** (DEC-141 clause 2), `tools/mutants/S022_v2_delta_early_out.py`
+  on a clean detached fixture of the tree that lands, `.ref-builds/mut` at
+  `d3382f9` -- a throwaway commit of the worktree on `58585f8`, on no branch,
+  cut after the re-mine, its `src/`, `tests/`, `tools/` and `MANUAL.md` the
+  worktree's byte for byte -- header `baseline green, 41 tests, bench 3656950
+  nodes via engine`; **mutation score 7 of 7 (100 %), equivalent 1, killed
+  7**, wall 1150 s (`.tuning/coord/S022_v2_mutation/final_release.log`):
+
+  | mutant | killed by |
+  |---|---|
+  | Z01 allowance dropped | "a pawn on its seventh raises the ceiling by the promotion"; "pruning does not hide a forced mate" |
+  | Z02 in-check guard dropped | "the early-out is never asked in check"; "pruning does not hide a forced mate" |
+  | Z03 bare stand pat returned | "the early-out's value is its ceiling and not the stand pat", the allowance case; "pruning does not hide a forced mate" |
+  | Z04 phase disable dropped | "the early-out is not asked in a pawn ending"; "pruning does not hide a forced mate"; `bench` unmoved, the bench positions never reaching the disable |
+  | Z05 switch ignored | equivalent in the release build as declared; in the tune build "the early-out is off at the switch's off value" |
+  | Z06 compare's sign flipped | "the early-out does not fire where a queen's gain reaches alpha", the allowance case, and 27 more across `test_search`, `test_engine`, `test_mate_breadth` and `test_mate_carry` |
+  | Z07 switch inverted | "the early-out ends a node no move can lift to alpha", the value case, the allowance case; "pruning does not hide a forced mate" |
+  | Z08 stored with the stand pat's type | "the early-out ends a node no move can lift to alpha", "the table never changes the answer", "pruning does not hide a forced mate", `test_mate_breadth`'s floor |
+
+  "pruning does not hide a forced mate" joined five kill lists with the
+  re-mined multicut row, which is S097's row read on this tree and reddens
+  under each of those mutants too; on the fixture of the tree before the
+  re-mine (`4864cca`, `superseded_4864cca/`) every list was the suite's own
+  cases alone. **The tune build**, `--build-dir build-tune --only Z05`: the
+  same header; **1 of 1 killed**, by "the early-out is off at the switch's
+  off value", wall 289 s (`final_tune.log`); the run closes
+  `MUTATION-RUN-FAILED: a verdict differs from what the mutant list expects`
+  only because Z05 is declared equivalent for the release build. **The mined
+  rows, for the record**, `--only E21 B04 C02 C05 R02` over the whole
+  directory, which validates all 162 anchors first: the same header; **5 of 5
+  killed**, wall 743 s (`final_extras.log`) -- **E21 by "pruning does not hide
+  a forced mate" and by "the multicut never ends a node on a mate from its
+  verification"**, two killers again after the re-mine; B04 by the ProbCut
+  row and "probcut does not run with beta in the mate band"; C02, C05 and R02
+  by "pruning does not hide a forced mate" and their direct guards. The hand
+  pre-check on both earlier trees (`.tuning/coord/S022_v2_precheck/`) and a
+  pre-run on `4263ebe` (`prerun_4263ebe/`) read the same verdicts.
+
+### The pre-registration (`adocs/data/S022_v2_sprt.sh`)
+
+`{0, 5}` nElo, `fastchess.sh`'s default gainer pair, 8+0.08, Hash 16,
+`books/noob_3moves.epd`, concurrency 12; verdict 1's H0 recorded and what it
+fixes (F+S+D against F+S); DEC-063's expectation, about zero or negative, with
+the record (Weiss #455 gaining by deleting delta once futility existed, Lynx
+#731 measuring delta added to a SEE-gated tree negative -- this pair's
+configuration); DEC-143's 41861 and 25591 games, 19.8 h and 12.1 h at 2110 an
+hour, the midpoint past the 40000-game cap; `REF` and `CAND` `PIN_ME` with the
+refusal; `OUT` under `.tuning/`; the abort rule per side; the open findings
+carried from verdict 1's block by id, 1 to 12, with 15 new (S246, closed) --
+S244 and S245 open fillers -- and this verdict's own as 13 (no mined golden
+moved; the two of `tests/test_engine.cpp`'s case re-derived) and 14 (the
+stop, resolved by the ruling's re-derivation); the reach stated as reach;
+DEC-236's clause answered. **THE REFERENCE IS THE TREE VERDICT 1 LEAVES** --
+REF the landing's parent, `58585f8`, whose engine is `39841ed`'s -- and the
+promotion
+allowance is measured with S131's class in the tree. H1: the early-out stays,
+the switch at 1, `QsDeltaPhaseMin` at its seed for S127; H0 with the interval
+wholly below zero: the switch to 0 and the code leaves with it, deleting delta
+pruning the recorded outcome; no verdict or an interval reaching above zero: a
+zero read the same way, no second pair. `bash -n` clean.
+
+### Proposed `specs.md` edits (the coordinator edits specs.md)
+
+Quoted against `39841ed`'s `specs.md`, the tree this lands on.
+
+The `search` row, after verdict 1's sentence (the one ending "-- `bench`
+3429473, `d446783`'s own total node for node."); `58585f8` does not touch
+`specs.md`:
+
+> **The node-level delta early-out in quiescence, S022 verdict 2 (landed
+> <date>, DEC-221)**: out of check, above `QsDeltaPhaseMin` 0 and before
+> anything is generated, a node whose ceiling -- S112's futility base, the
+> queen's price in S112's victim table, and that table's queen less its pawn
+> when a pawn of the side to move stands on its seventh -- is at or below
+> alpha ends there, returning the ceiling as an upper bound; it drops the
+> checking captures S112 searches, whether a capture gives check being unknown
+> before generation, and never runs in check. At 0 `QsDeltaEarlyOut` gives the
+> tree before it, node for node (DEC-215). Before any game it ended 12.67 % of
+> the out-of-check quiescence nodes that reach generation over the bench
+> positions at depth 12, 72.3 % of them with nothing to generate and 804 with
+> a move the tree searches -- reach, not a forecast (DEC-239). Decided by one
+> `{0, 5}` nElo SPRT against the tree with S015's gate and without the
+> early-out (`adocs/data/S022_v2_sprt.sh`): <verdict> -- `bench` 3656950.
+
+The `absent, search` row loses "delta pruning" on an H1 -- "the node-level
+internal iterative reduction (S095 shipped the reduction-term form instead),
+capture history, correction history" -- and on an H0 or no verdict keeps it,
+with "(S022 measured the node-level form and deleted it: <verdict>)" after
+it.
+
+### Not run here, by the brief
+
+The SPRT; DEC-141's Debug self-play and `tools/gate_extra.sh` (the
+coordinator's, at the landing); any timing claim -- the milliseconds above are
+the case's own goldens, taken by the command each names.
