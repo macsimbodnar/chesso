@@ -33,6 +33,28 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, 09:51: S022 verdict 2's SPRT is running
+
+**Launched 09:51: `0c0db1b` (the delta early-out, `QsDeltaEarlyOut` 1) against `58585f8`,
+`{-5, 0}` nElo (`--nonreg`) at 8+0.08 on `noob_3moves.epd`, seed 20260929095144, 12
+of 12 cores, output `.tuning/sprt_s022_v2_20260929_095144`, log `.tuning/coord/S022_v2_sprt.log`, pid
+882345 (own session, no tty).** Banner checked against the pins. Detached
+watcher `.tuning/coord/S022_v2_watch.sh` (pid 888448, four exits, 40 h
+ceiling, hourly `PROGRESS` in `.tuning/coord/S022_v2_watch_detached.out`).
+Worst case 41861 games, about 19.8 h; on a bound 25591, about 12.1 h
+(DEC-143). The pre-registration's readings: H1 -> the early-out stays and
+`QsDeltaPhaseMin` at its seed for S127; H0 wholly below zero -> the switch
+to 0, the code out, S131's multicut row and the stop half's old board back,
+and deleting delta pruning is the recorded outcome; no verdict or an interval
+reaching above zero -> a zero read the same way. **When it ends**: the S131
+pattern -- `.tuning/coord/read_s022_v1.sh` into the pairs file, the log
+copied, README rows, the verdict section, the DEC-220 block, the ledger,
+then the reading. Beside it, niced: the fillers S244 and S245 by one fresh agent
+(brief `.tuning/coord/S244_S245_brief.md`), rebased onto this verdict's
+outcome if their files meet it. A
+reboot kills the run: re-launch from the pre-registration with a fresh seed
+and record the dead one as void.
+
 ## 2026-09-29, midday: S022 verdict 2 landed as `0c0db1b`, pinned against `58585f8`
 
 The node-level delta early-out in quiescence behind `QsDeltaEarlyOut` (0
