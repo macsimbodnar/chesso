@@ -54,10 +54,7 @@
 // S113 adds four: `ProbCut`, the switch whose 0 is the parent's tree, and the
 // margin, depth offset and minimum depth it gates. S131 adds another switch:
 // `QsQueenPromotions` decides whether quiescence searches a queen promotion
-// that takes nothing, and its 0 is that step's off value. S022's first verdict
-// adds `QsSeeGate`, a switch the other way round: its 1 is S015's exchange
-// gate in quiescence, the parent's tree, and its 0 deletes the gate and is
-// the value it ships at while that verdict is measured.
+// that takes nothing, and its 0 is that step's off value.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -70,7 +67,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 70 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 69 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -98,7 +95,6 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"QsFutility",                1,     0,       1},
   {"QsFutilityMargin",        188,     0,    2000},
   {"QsQueenPromotions",         1,     0,       1},
-  {"QsSeeGate",                 0,     0,       1},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
   {"RfpMinPly",                 3,     2,      63},

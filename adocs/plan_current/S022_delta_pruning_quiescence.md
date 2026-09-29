@@ -748,3 +748,256 @@ at pinning: items 1 to 11 as the pre-registration states them.
 an observation for the pre-registration's open finding 3's class (CHESS).
 No follow-up run and no second pair (DEC-063, DEC-019). Verdict 2 measures
 on the tree this leaves.
+
+## Verdict 1's revert, 2026-09-29
+
+Written by a fresh Opus agent on the linked worktree `s022rv` at `775dafd`,
+briefed from `.tuning/coord/S022_v1_revert_brief.md`, beside the agent
+building verdict 2 in `../chesso-s022v2`: every CPU-bound command ran under
+`nice -n 19` with `-j4` builds, and every number below is a node count, a best
+move or a pass, none a timing. The pre-registration's H0 row, written before
+the first game, is executed: **`QsSeeGate` to 1, the parent's tree proved on
+the landing, and the switch's code leaves with it** (the S238 pattern). No
+reason to keep the switch was found and none is stated. No second SPRT is
+owed: the revert is behaviour-neutral against `d446783`, the commit the
+landing sat on, and INV-6 discharges it. Nothing was committed or staged.
+
+**How.** `git restore --source=d446783 --worktree` over the nine files
+`a97bc1a` touched under `src/`, `tests/` and `tools/` and in `MANUAL.md` --
+the pin commit `05ab85d`'s two comment edits in `tests/test_search.cpp` among
+them -- which deletes `tools/mutants/S022_v1_see_gate.py`; then one
+comment at the gate. `a97bc1a..775dafd` touched nothing else under those paths.
+
+### What left
+
+| what | where |
+|---|---|
+| the gate's `QS_SEE_GATE != 0 &&` prefix and the paragraph above it; the filter comment's "at QS_SEE_GATE 1" and "At 0 there is no gate to meet"; the store comment back to "since the losing captures were declined" | `quiescence` in `src/search.cpp` |
+| the `QS_SEE_GATE` row (`QsSeeGate`, 0, 0 to 1) and its comment; S131's row's "at QsSeeGate 1" | `src/search_params.hpp` |
+| the suite "search: quiescence exchange gate" whole -- its three release cases and the tune-only "the gate declines a losing capture at the switch's on value"; in "search: quiescence promotions" the restatement at 0, "a queen promotion onto a defended square is searched at the gate's off value", the premise helper it shared and the tune-only drive of S131's case at 1, S131's case back to its one release form; S112's promotion case's comment back to one reading | `tests/test_search.cpp` |
+| the `QsSeeGate` golden row, 70 back to 69, and the header sentence naming it | `tests/test_search_params.cpp` |
+| the fifth grid of the `--ceilings` command and the DEC-241 paragraphs | `tests/test_mate_carry.cpp` |
+| U01 to U05 | `tools/mutants/S022_v1_see_gate.py`, deleted |
+| M18's re-pointed anchor and its release-build equivalence | `tools/mutants/search.py` |
+| V07, V09 and V10's re-pointed anchors, V07's equivalence and the note above it | `tools/mutants/S131_quiet_queen_promotions.py` |
+| the `QsSeeGate` option row; "at `QsSeeGate` 1" in the `QsFutility` and `QsQueenPromotions` rows | `MANUAL.md` |
+
+**The four goldens of the pre-registration's item 11 are `d446783`'s byte for
+byte**, the test files restored whole -- a revert to the rows each GOLDEN block
+had quoted for an H0, not a re-derivation:
+
+1. "pruning does not hide a forced mate"'s capture-mate rows: S113's pass,
+   depths 7, 9, 11, 10 with `C02, C05, R02, since S112`, `no S091 mutant,
+   since S095`, `R02`, `no S091 mutant, since S113`.
+2. "ordering keeps the tree small": 65024 and 3251. On the reverted Release
+   build `adocs/data/S192_node_budget.py` reads a count of **20427**, inside
+   the middle half of that pair, [18694, 49581]
+   (`.tuning/coord/S022_v1rv_node_band.log`) -- the parent's count as the
+   landing recorded it.
+3. S097's multicut row, `mate_the_multicut_hides`: S131's guard-mode row
+   (DEC-238), `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42` at depth
+   14, mate in 6. **S243's direct case, "the multicut never ends a node on a
+   mate from its verification", keeps E21 killed either way**: beside the
+   re-mined row on the candidate, beside S131's row here (Mutation, below).
+4. `test_mate_carry`'s `short_line_ceiling`: `C_mate7_depth11` back to 0 by
+   `adocs/data/S022_v1_sweep.txt` leaving the `--ceilings` command, DEC-241's
+   own clause, so the command is the four grids again, and run over them the
+   script prints 5, 15, 0, 2, 11, 5, the restored function's six
+   (`.tuning/coord/S022_v1rv_ceilings.log`).
+
+The restored test file also undoes one edit of the pin commit's that did not
+belong to this verdict. `05ab85d` lengthened a quoted mutation command to
+`--only M18 V07 V09 V10 E21 B04` in two GOLDEN paragraphs of the multicut row:
+this verdict's own, which left, and S188's older paragraph, whose runs were
+`--only E21 J03` and `--only E21` on 2026-09-22 (`adocs/data/S188_revert_e21.log`),
+before V07 to V10 existed. S188's paragraph reads its own `--only E21` again.
+
+### What stayed
+
+- The evidence: `adocs/data/S022_v1_sprt.sh`, `S022_v1_sprt.log`,
+  `S022_v1_sprt_pairs.txt`, `S022_v1_sweep.txt` -- a recorded grid, out of the
+  ceilings' command as `S236_v2_sweep.txt` is -- and `S022_remine_s097.log`,
+  with their `adocs/data/README.md` rows, untouched; the census and the
+  landing's logs under `.tuning/coord/`.
+- `DEV_MANUAL.md`: the bench ledger keeps the landing's entry and **gains the
+  revert's, `6049266` -> `3429473`**, beneath it. The five golden-table rows the
+  landing moved are `d446783`'s again -- the node band 65024 and 3251, the six
+  ceilings 5, 15, 0, 2, 11, 5 with the four-grid command, the capture-mate
+  rows, the multicut FEN, the default count 69 -- each with one clause saying
+  S022's re-derivation came and went, the shape S238's rows took
+  (`capture_mates`: "a revert and not a re-mine"; `golden_defaults`: "came to
+  70 and left on its H0, back to 69"; the multicut row says S243's case kills
+  E21 on either tree).
+- This step file, extended and not rewritten. S015's own `see()` and
+  `see_ge()` cases never moved.
+
+### The proofs
+
+**The remaining difference to `d446783` in `src`, `tests`, `tools` and
+`MANUAL.md` is one comment.** `git diff --stat d446783 -- src tests tools
+MANUAL.md`: `src/search.cpp | 5 +++++`, a paragraph above the gate's condition
+in `quiescence` saying S022 tried deleting the gate and what its SPRT read. No
+code. S242's and S243's tests are in `d446783` and in this tree alike, so they
+are no difference.
+
+| | |
+|---|---|
+| `bench` | **3429473**, and the whole `bench` stream -- all 112 `info` lines' depth, score, nodes and PV and all eight `bestmove` replies, c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- identical to a Release binary built fresh from `d446783` in the throwaway worktree `.ref-builds/parent_d446783` (detached, clean, `git diff --stat d446783 HEAD -- src tests` empty), compared with `time` and `nps` stripped (`.tuning/coord/S022_v1rv_identity.log`, both streams beside it in `.tuning/coord/S022_v1rv_identity/`) |
+| `tools/search_bench.py` | identical node for node and move for move on both binaries: depth 9 48304 / 71580 / 25413, depth 12 104784 / 244824 / 117798, best c3d5 e2a6 d7c8q at both -- the numbers the landing's on-value proof recorded at `QsSeeGate` 1 |
+| both fast suites | Release `build` and `-DCHESSO_TUNE=ON` `build-tune`, serial `ctest -L fast`: **41 of 41 each**; `test_mate_carry` alone **58.69 s** Release and **59.00 s** tune against its 120 s ceiling (`.tuning/coord/S022_v1rv_suites.log`); run again on the final tree, documents and all, 41 of 41 each, the format check clean and `test_mate_carry` alone 59.41 s and 59.44 s (`.tuning/coord/S022_v1rv_suites_final.log`) |
+| format | `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` |
+| prose | `tools/plan_prose_check.py` one mode per invocation: `--citations` 0 flagged over 39 files, `--touches` 0 flagged, `--params` exit 0, and `--gate` agreeing -- re-run with this section in the file |
+| the UCI surface | `MANUAL.md` has no `QsSeeGate` row and is `d446783`'s file byte for byte; `test_uci_surface` green in both builds with **no refresh** |
+| the golden | `tests/test_search_params.cpp` is `d446783`'s byte for byte, 69 defaults; DEC-142's re-derivation for `golden_defaults` is its diff against `src/search_params.hpp` |
+
+### Mutation
+
+On a clean detached fixture of this tree, `.ref-builds/mut` at `6ea4176` -- a
+throwaway commit of the reverted working tree on no branch, cut through a
+temporary index so the worktree's own index was never touched, its `src/`,
+`tests/`, `tools/` and `MANUAL.md` equal to this tree's (`git diff --stat
+6ea4176 -- src tests tools MANUAL.md` empty; documents apart) -- with doctest
+cloned into it from the worktree's own copy. Run from the fixture, so the list
+read is the fixture's own, as one run over the whole directory where the brief
+named two (the four re-pointed mutants, and E21 over S097's list):
+`tools/mutation_check.py tools/mutants .ref-builds/mut --only M18 V07 V09 V10
+E21 --jobs 4`, which validates every anchor of the directory's 154 mutants
+first -- U01 to U05 gone with their file, M18 and V07 declared `killed` again.
+Header `worktree .../.ref-builds/mut at 6ea4176 clean`, `list
+.../.ref-builds/mut/tools/mutants clean`, `mutants 5 of 154`, `baseline
+green, 41 tests, bench 3429473 nodes via engine`; **mutation score 5 of 5
+(100%), killed 5**, wall 885 s, `MUTATION-RUN-DONE`, the fixture clean after
+(`.tuning/coord/S022_v1rv_mutation.log`, per-mutant logs in
+`.tuning/coord/S022_v1rv_mutation/`).
+
+| mutant | bench | killed by |
+|---|---|---|
+| E21 | same | "pruning does not hide a forced mate" at the multicut row, S131's row restored, and S243's "the multicut never ends a node on a mate from its verification" -- the two witnesses E21's description names |
+| V07 | moved | S131's "the exchange gate declines a queen promotion onto a defended square", in the release build again |
+| V09 | moved | "a capturing promotion below the threshold is searched", S131's case above, and "futility does not skip a queen promotion that takes nothing" |
+| V10 | moved | "a capturing promotion below the threshold is searched" and S131's case above |
+| M18 | moved | `test_mate_pv`'s "the mined set reports no mate it cannot show" and `test_mate_carry`'s "a mate score carried across searches keeps a line that reaches it" |
+
+### Proposed commit text, for the coordinator
+
+No DEC-220 result block: `775dafd` closed the verdict and recorded it. The
+coordinator appends its own trailer after the `Bench:` line.
+
+```
+Remove S022 v1's QsSeeGate switch on its H0: the exchange gate stays
+
+The deletion of S015's exchange gate in quiescence read a regression.
+The non-regression SPRT of a97bc1a, the gate behind QsSeeGate 0,
+against d446783, the tree with it, {-5, 0} nElo at 8+0.08, accepted H0
+at 900 games: Elo -65.22 +/- 17.66, nElo -85.89 +/- 22.70, LLR -2.96,
+0 forfeits. adocs/data/S022_v1_sprt.sh wrote that reading and its
+consequence before the first game -- QsSeeGate to 1, the parent's tree
+proved on the landing, and the switch's code leaves with it, the S238
+pattern -- so this is the pre-registration executed. S015's zero
+stands with a current number beside it: the interval [-108.59, -63.19]
+nElo, on a tree with per-move futility in it.
+
+Out: the QS_SEE_GATE row and the switch's prefix on the gate in
+quiescence, with the comments the verdict changed to read at both
+values (the filter and store comments, S131's row, MANUAL's QsFutility
+and QsQueenPromotions rows) and the QsSeeGate option row; the suite
+"search: quiescence exchange gate", the defended-square case's
+restatement at 0 and S131's case's tune-only drive at 1, S131's case
+back to its one release form and S112's promotion case's comment to
+one reading; the golden_defaults row, 70 back to 69;
+tools/mutants/S022_v1_see_gate.py; M18, V07, V09 and V10 back to the
+anchors they had, M18 and V07 expected killed again. The four goldens
+of the pre-registration's item 11 go back to d446783's byte for byte:
+the capture-mate rows, the node band 65024 / 3251, S097's multicut row
+to S131's guard-mode row (DEC-238) -- S243's direct case kills E21
+either way -- and C_mate7_depth11's ceiling to 0, S022_v1_sweep.txt
+dropped from the --ceilings command (DEC-241). The restored test file
+also takes the pin commit's lengthened mutation command back out of
+S188's older GOLDEN paragraph, where it did not belong.
+
+In: a five-line comment at the gate saying S022 tried deleting it and
+what its SPRT read; DEV_MANUAL's ledger gains the revert's entry and
+its five golden rows read true again, each saying the re-derivation
+came and went. The evidence stays under adocs/data/.
+
+src, tests, tools and MANUAL.md are d446783's apart from that comment.
+bench is 3429473 with the whole bench stream and all eight bestmove
+replies identical to a fresh build of d446783, and tools/search_bench.py
+is identical at depths 9 and 12 (INV-6, DEC-215): no second SPRT is
+owed. Both fast suites 41 of 41, format and the three prose checks
+clean; M18, V07, V09, V10 and E21 killed, 5 of 5, on a fixture of this
+tree.
+
+S022, DEC-063, DEC-019: the record's overlap claim was a direction and
+did not transfer here. Verdict 2 measures on the tree this leaves.
+
+Bench: 3429473
+```
+
+### Proposed `adocs/specs.md` edits, for the coordinator
+
+Quoted against `specs.md` at `775dafd`. Three edits.
+
+**1. The engine-state table's `exchange evaluation` row**, now:
+
+> `see()` exact, `see_ge()` fast; ProbCut's capture filter and the main
+> search's SEE pruning (S091) call both. **Quiescence's exchange gate is
+> deleted behind `QsSeeGate` 0 while S022's first verdict measures it**: at 1,
+> the tree before S022, quiescence declines losing captures and a queen
+> promotion that takes nothing onto a square it cannot hold -- a pawn's
+> capture, a capturing promotion among them, is let through by
+> `capture_cannot_lose()` before `see_ge()` is asked (S131)
+
+becomes S131's text with the H0 clause this file's landing section wrote for
+the open item:
+
+> `see()` exact, `see_ge()` fast; quiescence declines losing captures and a
+> queen promotion that takes nothing onto a square it cannot hold -- a pawn's
+> capture, a capturing promotion among them, is let through by
+> `capture_cannot_lose()` before `see_ge()` is asked (S131); S022 re-measured
+> the gate against a tree with per-move futility: H0 at 900 games on
+> 2026-09-29, `Elo -65.22 +/- 17.66`, `nElo -85.89 +/- 22.70`, a regression
+> (`adocs/data/S022_v1_sprt.log`), and it stays
+
+**2. The `search` row's verdict-1 sentence**, from "**S015's exchange gate in
+quiescence deleted, S022 verdict 1 (landed 2026-09-29, DEC-221)**:" through
+"<verdict> -- `bench` 6049266." inclusive, becomes, in the form S238's and
+S237's sentences took:
+
+> **Deleting S015's exchange gate in quiescence was tried and left, S022
+> verdict 1, landed and reverted 2026-09-29 (DEC-221)**: out of check
+> quiescence stopped declining a move the exchange evaluation writes off, so
+> every capture and queen promotion that passed the filter's drop and S112's
+> futility test was searched and quiescence called neither
+> `capture_cannot_lose()` nor `see_ge()`, behind `QsSeeGate` 0, whose 1 gave
+> the tree before it node for node (DEC-215). Before any game the exchange
+> evaluation wrote off 48.8 % of the filter loop's moves past the drop over the
+> bench positions at depth 12; per-move futility skipped 7.0 % of those before
+> the gate saw them and the gate declined the rest, 45.4 % of the loop's moves
+> -- reach, not a forecast (DEC-239). Its one `{-5, 0}` nElo SPRT against the
+> tree with the gate (`adocs/data/S022_v1_sprt.sh`) **accepted H0 at 900 games
+> on 2026-09-29 -- `Elo -65.22 +/- 17.66`, `nElo -85.89 +/- 22.70`, LLR -2.96,
+> 0 forfeits** (`adocs/data/S022_v1_sprt.log`), a regression: `QsSeeGate` went
+> to 1 and the switch's code left with it, the four goldens re-derived for the
+> candidate restored with it -- `bench` 3429473, `d446783`'s own total node
+> for node.
+
+The two clauses of that row that describe the gate as present -- S112's "is
+skipped before S015's exchange gate" and S131's "meets S112's promotion
+exemption and S015's exchange gate" -- are true again as they stand.
+
+**3. The "Open items" bullet on S015's rerun leaves the list**, discharged
+into edit 1 (section 3, item 1: "the open item is discharged either way"):
+
+> - The S015 quiescence SEE pruning measured 0 Elo when `see()` cost 12.1 % more
+>   than it does now. Its rerun is S022's first verdict: the gate deleted
+>   behind `QsSeeGate` 0 against the tree with it, `{-5, 0}` nElo
+>   (`adocs/data/S022_v1_sprt.sh`).
+
+### Owed to the coordinator, not run here
+
+DEC-141's second tier -- Debug self-play and `tools/gate_extra.sh` -- which the
+landing's pin ran on `a97bc1a`: the revert touches the search, though only a
+comment differs from `d446783`, whose engine this is node for node. Whether it
+is owed on a tree identical to a parent's engine is the coordinator's call.
+No match, SPSA or timing was run here.
