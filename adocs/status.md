@@ -33,6 +33,27 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, 05:04: S022 verdict 1's SPRT is running
+
+**Launched 05:04: `a97bc1a` (the gate deleted, `QsSeeGate` 0) against `d446783`,
+`{-5, 0}` nElo (`--nonreg`) at 8+0.08 on `noob_3moves.epd`, seed 20260929050437, 12
+of 12 cores, output `.tuning/sprt_s022_v1_20260929_050437`, log `.tuning/coord/S022_v1_sprt.log`, pid
+2993167 (own session, no tty).** Banner checked against the pins. Detached
+watcher `.tuning/coord/S022_v1_watch.sh` (pid 2999204, four exits, 40 h
+ceiling, hourly `PROGRESS` in `.tuning/coord/S022_v1_watch_detached.out`).
+Worst case 41861 games, about 19.8 h; on a bound 25591, about 12.1 h
+(DEC-143). The pre-registration's readings: H1 (not a regression) -> the
+gate, the switch and its cases leave in a removal commit proved by INV-6
+identity to the candidate, and a DEC supersedes S015's kept-at-zero; H0 (a
+regression) -> the switch to 1 and its code out, the four goldens restored;
+no verdict -> the same as H0, recorded as a zero. **When it ends**: the S131
+pattern -- `.tuning/coord/read_s022_v1.sh` into the pairs file, the log
+copied, README rows, the verdict section, the DEC-220 block, the ledger,
+then the reading. Nothing runs beside it: S244 waits for an idle machine
+(its reach census is the first thing), verdict 2 for this verdict's tree. A
+reboot kills the run: re-launch from the pre-registration with a fresh seed
+and record the dead one as void.
+
 ## 2026-09-29, morning: S022 verdict 1 landed as `a97bc1a`, pinned against `d446783`
 
 S015's exchange gate in quiescence deleted behind `QsSeeGate` (1 the parent's
