@@ -13393,3 +13393,43 @@ Consequences: S242 lands in this form and the case's name says what each
               half guards; a later timing case reads its precondition from
               an independent observable or asserts a bound that holds
               under any scheduling.
+
+## DEC-241  2026-09-29  S022 verdict 1 raises C_mate7_depth11's mate-carry ceiling off its own grid, 0 to 6; the guarantee beside it did not move
+Tags:         testing, mate, search, quiescence, dec-122, dec-142, dec-162, dec-225, s022, s202
+Context:      `tests/test_mate_carry.cpp` bounds DEC-122's expected residue
+              -- a mate line published shorter than the distance its score
+              claims, the class S202 owns closing -- by a per-case ceiling,
+              each the worst cell of the recorded sweep grids by
+              `adocs/data/S203_case_sweep.sh --ceilings` (S204, DEC-162), and
+              its own comment says a step that raises one is relaxing a test
+              and needs a decision; DEC-225 is the precedent. S022 verdict 1
+              deletes S015's exchange gate in quiescence behind `QsSeeGate`
+              0, so quiescence searches every losing capture (the bench
+              stream grows 76 %, quiescence nodes from 626337 to 1410143
+              over the eight positions at depth 12), and on its landing tree
+              the 108-cell grid (`adocs/data/S022_v1_sweep.txt`, taken by the
+              script, never read off the failing run) answers C_mate7_depth11
+              6 against the shipped 0, the other five unchanged; the four
+              recorded grids reproduce 5, 15, 0, 2, 11, 5 exactly. At C's own
+              cell the tree reports 19 mate lines with 6 short, the count the
+              failing run showed. `unreached.empty()` -- a line published at
+              its claimed length ends in checkmate -- holds on all six cases
+              in both builds.
+Decision:     By the coordinator under the owner's delegation; the owner may
+              overrule. C's ceiling moves to 6 in the landing commit of S022
+              verdict 1, the grid committed as the fifth recorded sweep and
+              named in the golden's re-derivation line. What rose is the
+              residue DEC-122 calls expected, not the promise; S202 still
+              owns closing the class. If the verdict reads H0 or no verdict
+              and the switch returns to 1, the ceiling returns to 0 by
+              dropping the grid from the `--ceilings` command, which is what
+              "re-derive, never re-read" means for it.
+Rejected:     Leaving the ceiling and not landing the change: a test that
+              counts a residue the plan schedules a step for is not a reason
+              to forgo the measurement the step exists for; the SPRT decides
+              the deletion. Re-pinning from the failing run's cell: the file
+              forbids it by name and the worst cell is what the rule takes.
+Consequences: `short_line_ceiling` returns 5, 15, 6, 2, 11, 5 while the
+              candidate ships at 0; `DEV_MANUAL.md`'s golden list and the
+              test's tabled worst cells say so; S202's class is the same,
+              larger by six lines on one case.
