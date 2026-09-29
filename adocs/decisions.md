@@ -13341,3 +13341,51 @@ Rejected:     Dropping the pre-check: it still catches the rule that never
               which a zero is assumed: no count of moves is a value.
 Consequences: S022's and every later pre-registration phrase the census as
               reach; S131's stamp and DEC-079's readers carry this entry.
+
+## DEC-240  2026-09-29  A test asserts what the engine guarantees under any scheduling: the hard-timer half of test_engine's first-iteration case asserts a bound on when the search ends, once, and no claim is retried until it passes
+Tags:         tests, flake, test_engine, time-management, s242, dec-171
+Context:      S242 found the flake in "the first iteration honours stop and
+              the hard timer" to be its hard-timer half: after `go movetime
+              1` the case asserted that depth 1 did not complete, which
+              needs the detached timer thread to run inside a 14 ms
+              iteration -- the scheduler's property, not the engine's --
+              and under a twelve-core match it failed 4 of 2000 focused
+              runs with a correct engine. The implementing agent's redesign
+              retried a finished iteration up to five times, and the cold
+              fast check showed what that costs: a timer that misses half
+              its searches was red on half the runs before and on about 3 %
+              after, because for this half the precondition (the timer
+              thread ran inside the iteration) and the claim (the search
+              stopped inside it) are the same event. "Never relax a test"
+              applies, so the coordinator rules instead of landing it.
+Decision:     By the coordinator under the owner's delegation; the owner
+              may overrule, the global rule's "stop and tell me" being
+              theirs. A test asserts what the engine guarantees under any
+              scheduling. The hard-timer half asserts that `bestmove`
+              arrives within a stated bound of the timer's due time -- the
+              bound derived and written at the site: the timer's 1 ms, the
+              search's check granularity, and a scheduler allowance an
+              order of magnitude above the largest latency measured under a
+              full match -- and states what a timer that never fires
+              produces on that board (the search running to its depth cap,
+              measured once), so the bound is shown to separate. Asserted
+              once per run, never retried. The stop half keeps the clock
+              precondition S242 gave it (a send-and-back under half the
+              depth-1 floor establishes that the stop landed inside the
+              iteration; a finished iteration under it is the defect) and
+              may retry only a failed precondition, never a failed claim,
+              failing when its attempts run out. The flag check inside an
+              iteration is thereby asserted by the stop half and the
+              timer's firing by the hard-timer half; for a defect that
+              always shows neither claim is weaker than before, and no
+              claim is hidden by a retry.
+Rejected:     Retrying the hard-timer claim: hides an intermittent timer
+              defect. Keeping the depth assertion as it was: a scheduler
+              property, red under load with no engine defect, which the
+              swallowed report had been hiding. Making depth 1 long enough
+              that the timer thread always lands inside it: no position
+              bounds a scheduler's latency.
+Consequences: S242 lands in this form and the case's name says what each
+              half guards; a later timing case reads its precondition from
+              an independent observable or asserts a bound that holds
+              under any scheduling.
