@@ -13516,3 +13516,33 @@ Rejected:     Repairing the nine cases now and shipping the pair (the agent's
 Consequences: S114's accepts is read as two verdicts, each against the
               commit before it, the step file amended by the agent to say
               so; S127 sees the gate's margin only after its verdict.
+
+## DEC-244  2026-09-29  A node-count sweep whose lead is inside its own sample-to-sample disagreement does not re-decide a fitted value: S114 keeps S085's base and divisor and measures the term alone
+Tags:         search, null-move, sweep, seeds, s114, s085, s127, dec-134, dec-243
+Context:      S114's step file re-decides the null move's base and divisor
+              by a node-count sweep over S021's 300 positions (the S021/S068
+              instrument) before the term's SPRT. The sweep at depth 11, gate
+              0, margin 94 and cap 8 ranks (3, 5) first at 26351602 nodes
+              pooled against the shipped seeds (3, 6) at 26572771, a 0.8 %
+              lead -- and the seeds have fewer nodes on two of the three
+              samples (0.9325, 0.9290, 0.9957 against 0.9423, 0.9437, 0.9452
+              of the off row). Shipping (3, 5) also moves the guard suite's
+              drive depth (the null move is never made at depth 5 with R =
+              4) and the mined mate rows a second time; that is a
+              consequence and not the reason.
+Decision:     By the coordinator under the owner's delegation. A lead that
+              flips across the sweep's own samples is inside the
+              instrument's resolution and re-decides nothing; the seeds
+              stay at S085's fitted values (DEC-134 form (b)), the term is
+              measured alone at them, and the sweep's table with its winner
+              is recorded in the step file and the pre-registration as
+              S127's input. A sweep re-decides a fitted value only when its
+              lead holds on every sample.
+Rejected:     Shipping the winner because ruling 3 said "one candidate": the
+              ruling assumed a lead the instrument could see. Choosing the
+              seeds because the tests stay green at them: not a DEC-134
+              form, and not the reason here.
+Consequences: S114's first verdict is the term at (3, 6); the guard suite's
+              drive depth is derived from the constants by the step anyway,
+              so a later refit cannot break its premise; S127's lane over
+              the null move starts from the sweep's table.
