@@ -7,6 +7,32 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-28, by hand.
 
+## 2026-09-29, early: S242 done (the swallowed doctest report, the first-iteration flake)
+
+The fillers' agent reproduced the flake under S131's match (1 in 500 focused
+runs, no text), made doctest's report survive a `stdout_capture_t` scope
+(`capture_report_listener_t`, proved with planted failures), and found the
+failing CHECK to be the hard-timer half of the first-iteration case: it
+asserted that a detached timer thread runs inside a 14 ms iteration, a
+scheduler property. Its first redesign retried the claim; the cold fast
+check showed that hides an intermittent timer defect, and **DEC-240** ruled:
+the half asserts a bound on when `bestmove` arrives (402 ms after `go
+movetime 1`, on a board whose first iteration a dead timer runs to 5.9 s),
+once, never retried; the stop half reads its precondition from the clock
+and retries only a failed precondition. The case is renamed "a stop inside
+the first iteration cuts it and the hard timer ends the search within its
+bound". 500 runs 0 failed; red on both halves with the defect restored and
+on the timer half alone with the timer disarmed. Cold fast check: no real defect in the listener; the first redesign's retry was the one real finding and DEC-240 replaced it. Tests only; no
+`Bench:` line owed. **Fillers owed, unscheduled** (noted by the agents,
+not fixed): a stale comment in `iterative_deepening_search` quoting 42371
+nodes for a depth-1 iteration the engine now reports as 36165, and the
+eight-queens board's 13.8 ms golden reading 6 to 7 ms today (its 3 ms floor
+holds); `tools/plan_prose_check.py`'s `holds_phrase` reporting a citation
+MISSING when its quoted title wraps across two string literals; the stale
+"needs fractional reductions" comments naming S237/S238 and the
+`S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
+the 2026-09-28 handover.
+
 ## 2026-09-29: S131's SPRT is H1 -- H1, the code stays
 
 **`13caf43` against `2d6b8f1`, `Elo 17.84 +/- 8.83`, `nElo 23.59 +/- 11.66`,

@@ -13367,8 +13367,12 @@ Decision:     By the coordinator under the owner's delegation; the owner
               search's check granularity, and a scheduler allowance an
               order of magnitude above the largest latency measured under a
               full match -- and states what a timer that never fires
-              produces on that board (the search running to its depth cap,
-              measured once), so the bound is shown to separate. Asserted
+              produces on that board (measured once -- corrected 2026-09-29: a
+              timer that never fires stops at the soft limit, the first
+              completed iteration, not at the depth cap, so the half runs on
+              a board whose depth-1 iteration takes about 5.9 s, 25933707
+              nodes, and the 402 ms bound separates by about 14 times), so
+              the bound is shown to separate. Asserted
               once per run, never retried. The stop half keeps the clock
               precondition S242 gave it (a send-and-back under half the
               depth-1 floor establishes that the stop landed inside the

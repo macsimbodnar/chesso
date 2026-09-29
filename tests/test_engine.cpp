@@ -930,46 +930,111 @@ TEST_SUITE("engine: uci layer")
       uci_shutdown();
     }
 
+    // S242. Both claims below rest on a precondition this case cannot arrange:
+    // that the stop lands inside the first iteration, before the last time it
+    // polls the flag (check_limits(), every 2048 nodes). `stop` comes from this
+    // thread and the hard timer from a detached one, both racing the search
+    // thread, and with a match on every core either sender can be held off the
+    // CPU for the whole iteration. A correct engine then finishes it, and the
+    // single attempt this case used to make failed: 5 of 2500 runs of this case
+    // alone beside S131's match, and the four whose text survived were all the
+    // timer's, depth 1 finished 20 to 27 ms after a 1 ms limit.
+    //
+    // So the precondition is read, attempt by attempt, never assumed. A cut
+    // first iteration establishes it and the claim at once. A finished one
+    // establishes nothing -- the stop may have come after the last poll -- and
+    // is repeated on a fresh engine, up to `attempts` times, each miss kept
+    // for the message. The unfixed engine finishes every attempt and fails as
+    // it always did.
+    //
+    // `stop` is also timed, because this thread sends it. Back within half of
+    // depth_1_floor_ms of sending `go`, it was set before the search thread can
+    // have done half of the iteration's work on any machine the floor admits,
+    // so a finished iteration there is the defect and fails the attempt on the
+    // spot, as the single attempt did. The timer's thread cannot be timed from
+    // here, so its half has only the cut to go by.
+    const int attempts = 5;
+    const int64_t prompt_stop_us = depth_1_floor_ms * 1000 / 2;
+
     // `stop`, with no timer anywhere: the hard limit is a hundred seconds out
     // and the only thing that can end this search is the signal.
     {
-      uci_init();
+      bool established = false;
+      std::string misses;
 
-      stdout_capture_t capture;
-      uci_process_line("position fen " + fen);
-      uci_process_line("go movetime 100000");
-      uci_process_line("stop");
-      uci_wait_for_search();
+      for (int attempt = 1; attempt <= attempts && !established; ++attempt) {
+        uci_init();
 
-      CHECK_MESSAGE(deepest_completed_depth(capture) < 1,
-                    ("the first iteration ran to the end through a stop:\n" +
-                     capture.str()));
+        stdout_capture_t capture;
+        uci_process_line("position fen " + fen);
 
-      CHECK_MESSAGE(
-          answered_a_playable_move(capture),
-          ("a cut depth-1 iteration still owes a move:\n" + capture.str()));
+        const auto sent = std::chrono::steady_clock::now();
+        uci_process_line("go movetime 100000");
+        uci_process_line("stop");
+        const int64_t stop_us =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now() - sent)
+                .count();
 
-      uci_shutdown();
+        uci_wait_for_search();
+
+        const bool cut = deepest_completed_depth(capture) < 1;
+        const std::string seen =
+            "attempt " + std::to_string(attempt) + ", stop sent and back " +
+            std::to_string(stop_us) + " us after go:\n" + capture.str();
+
+        established = cut || stop_us < prompt_stop_us;
+
+        if (established) {
+          CHECK_MESSAGE(
+              cut,
+              ("the first iteration ran to the end through a stop, " + seen));
+        } else {
+          misses += seen;
+        }
+
+        CHECK_MESSAGE(answered_a_playable_move(capture),
+                      ("a cut depth-1 iteration still owes a move, " + seen));
+
+        uci_shutdown();
+      }
+
+      CHECK_MESSAGE(established,
+                    ("in " + std::to_string(attempts) +
+                     " attempts the stop never landed inside the first "
+                     "iteration by the engine's report or by the clock:\n" +
+                     misses));
     }
 
     // The hard timer, which is the same pointer reached from the other side.
     {
-      uci_init();
+      bool established = false;
+      std::string misses;
 
-      stdout_capture_t capture;
-      uci_process_line("position fen " + fen);
-      uci_process_line("go movetime 1");
-      uci_wait_for_search();
+      for (int attempt = 1; attempt <= attempts && !established; ++attempt) {
+        uci_init();
 
-      CHECK_MESSAGE(
-          deepest_completed_depth(capture) < 1,
-          ("the first iteration ran past its hard limit:\n" + capture.str()));
+        stdout_capture_t capture;
+        uci_process_line("position fen " + fen);
+        uci_process_line("go movetime 1");
+        uci_wait_for_search();
 
-      CHECK_MESSAGE(
-          answered_a_playable_move(capture),
-          ("a cut depth-1 iteration still owes a move:\n" + capture.str()));
+        const std::string seen =
+            "attempt " + std::to_string(attempt) + ":\n" + capture.str();
 
-      uci_shutdown();
+        established = deepest_completed_depth(capture) < 1;
+
+        if (!established) { misses += seen; }
+
+        CHECK_MESSAGE(answered_a_playable_move(capture),
+                      ("a cut depth-1 iteration still owes a move, " + seen));
+
+        uci_shutdown();
+      }
+
+      CHECK_MESSAGE(established,
+                    ("the first iteration ran past its hard limit in all " +
+                     std::to_string(attempts) + " attempts:\n" + misses));
     }
   }
 
