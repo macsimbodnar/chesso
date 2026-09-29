@@ -13481,3 +13481,38 @@ Consequences: S244 completes after its second tier on this basis; its
               A later change that meets INV-6 only because its class misses
               the bench positions is read against this entry: the census
               first, and a run unless all four conditions hold.
+
+## DEC-243  2026-09-29  S114 measures the eval-scaled null-move reduction alone; the entry gate `static_eval >= beta` is a second change and takes its own verdict
+Tags:         search, null-move, sprt, one-change, s114, s127, dec-063, dec-215
+Context:      S114's step file (2026-08-19, re-derived 2026-09-04) lands the
+              eval-scaled reduction and an entry gate together, the gate
+              making the term non-negative. Its implementing agent built
+              both on `6e8bc63` and stopped: the gate refuses the null move
+              before nine existing guard cases reach the guard they test
+              (they search at a beta above the board's static score), five
+              more keep passing without killing their mutants, and the gate
+              alone moves the bench by a third (3656950 -> 4904021) where the
+              term alone moves it by a seventh (4189351) and both together
+              by 7 % (3921066). The term clamped at zero,
+              `min(max(static_eval - beta, 0) / margin, cap)`, no longer
+              needs the gate for its sign. Two changes measured by one SPRT
+              give one number for the pair (CLAUDE.md's rule 6).
+Decision:     By the coordinator under the owner's delegation. S114's first
+              verdict measures the term alone: `NullMoveEvalGate` ships at 0
+              (a switch, DEC-215 clause 2, present so the second verdict
+              flips it and adds no code), the guard cases keep their
+              premises, and only M02's case needs the repair its mutant's
+              arithmetic asks for (its defender set at a depth where the
+              capped R leaves a ply, or a tune-only leg at cap 0). The gate
+              is S114's second verdict on the tree the first leaves, priced
+              and pre-registered then, the guard cases' premises restored
+              under DEC-233's second repair at that time. The sweep of base,
+              divisor, margin and cap runs at gate 0.
+Rejected:     Repairing the nine cases now and shipping the pair (the agent's
+              option A): one SPRT for two changes, and the gate's own effect
+              -- a third of the tree at fixed depth -- would never be read.
+              Dropping the gate: the record names it as a form worth trying,
+              and a switch at 0 costs nothing.
+Consequences: S114's accepts is read as two verdicts, each against the
+              commit before it, the step file amended by the agent to say
+              so; S127 sees the gate's margin only after its verdict.
