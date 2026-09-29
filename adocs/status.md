@@ -33,6 +33,12 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29: S022 verdict 1's SPRT is H0 -- H0, a regression, the gate stays
+
+**`a97bc1a` against `d446783`, `Elo -65.22 +/- 17.66`, `nElo -85.89 +/- 22.70`,
+LLR -2.96, 900 games in 0 h 25 m, 0 forfeits, 2026-09-29 05:32.** **H0**: a regression; the gate stays (the pre-registration's second row). `QsSeeGate` goes to 1, the parent's tree proved on the landing, and the switch's code leaves with it, the four goldens of item 11 restored byte for byte; S015's zero stands with a current number beside it, this run's interval [-108.59, -63.19] nElo against a tree with per-move futility in it.
+**Next:** the ledger; the revert by a fresh agent (`QsSeeGate` to 1 and its code out, the four goldens restored, INV-6 identity to `d446783`'s engine), then verdict 2 rebased onto that tree; the fillers S244 and S245 beside the next match.
+
 ## 2026-09-29, 05:04: S022 verdict 1's SPRT is running
 
 **Launched 05:04: `a97bc1a` (the gate deleted, `QsSeeGate` 0) against `d446783`,

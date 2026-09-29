@@ -1,0 +1,2222 @@
+Building reference a97bc1a ...
+Preparing worktree (detached HEAD a97bc1a)
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Sanitizer OFF
+-- Tune build OFF
+-- PGO off
+-- Test timeout 60s (build type Release)
+Building reference d446783 ...
+Preparing worktree (detached HEAD d446783)
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Sanitizer OFF
+-- Tune build OFF
+-- PGO off
+-- Test timeout 60s (build type Release)
+candidate  a97bc1a  2026-09-29
+reference  d446783  2026-09-29
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260929050437
+bounds     elo0=-5 elo1=0 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s022_v1_20260929_050437
+
+id name    cand-a97bc1a  Chesso a97bc1a native
+id name    ref-d446783  Chesso d446783 native
+
+Indexing opening suite...
+Started game 1 of 40000 (cand-a97bc1a vs ref-d446783)
+Started game 2 of 40000 (ref-d446783 vs cand-a97bc1a)
+Started game 5 of 40000 (cand-a97bc1a vs ref-d446783)
+Started game 3 of 40000 (cand-a97bc1a vs ref-d446783)
+Started game 12 of 40000 (ref-d446783 vs cand-a97bc1a)
+Started game 6 of 40000 (ref-d446783 vs cand-a97bc1a)
+Started game 4 of 40000 (ref-d446783 vs cand-a97bc1a)
+Started game 11 of 40000 (cand-a97bc1a vs ref-d446783)
+Started game 10 of 40000 (ref-d446783 vs cand-a97bc1a)
+Started game 8 of 40000 (ref-d446783 vs cand-a97bc1a)
+Started game 7 of 40000 (cand-a97bc1a vs ref-d446783)
+Started game 9 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 6 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 13 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 5 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 14 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 2 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 15 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 10 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 16 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 3 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 17 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 4 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 18 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 8 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 19 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 11 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 20 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 7 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 21 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 12 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 22 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 1 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 23 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 13 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 24 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 9 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 25 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 16 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 26 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 15 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 27 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 20 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 28 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 19 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -112.33 +/- 142.01, nElo: -154.76 +/- 170.24
+LOS: 3.74 %, DrawRatio: 0.00 %, PairsRatio: 0.14
+Games: 16, Wins: 2, Losses: 7, Draws: 7, Points: 5.5 (34.38 %)
+Ptnml(0-2): [0, 7, 0, 0, 1], WL/DD Ratio: -nan
+LLR: -0.07 (-2.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 29 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 17 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 30 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 14 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 31 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 23 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 32 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 21 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 33 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 22 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 34 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 18 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 35 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 24 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 36 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 27 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 37 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 29 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 38 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 30 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 39 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 28 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 40 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 26 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 41 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 31 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 42 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 34 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 43 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 32 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 44 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 35 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 45 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 33 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 46 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 36 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 47 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 25 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 48 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 42 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 49 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 45 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 50 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 38 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 51 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 41 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 52 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 43 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 53 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 39 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 54 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 40 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -126.97 +/- 79.98, nElo: -191.08 +/- 107.67
+LOS: 0.03 %, DrawRatio: 0.00 %, PairsRatio: 0.18
+Games: 40, Wins: 4, Losses: 18, Draws: 18, Points: 13.0 (32.50 %)
+Ptnml(0-2): [1, 16, 0, 2, 1], WL/DD Ratio: -nan
+LLR: -0.21 (-7.1%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 55 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 44 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 56 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 37 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 57 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 46 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 58 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 54 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 59 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 47 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 60 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 50 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 61 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 49 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 62 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 48 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 63 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 53 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 64 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 52 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 65 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 51 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 66 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 60 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 67 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 55 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 68 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 56 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 69 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 58 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 70 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 61 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 71 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 62 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 72 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 59 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -82.59 +/- 63.73, nElo: -119.82 +/- 87.91
+LOS: 0.38 %, DrawRatio: 16.67 %, PairsRatio: 0.32
+Games: 60, Wins: 9, Losses: 23, Draws: 28, Points: 23.0 (38.33 %)
+Ptnml(0-2): [2, 17, 5, 5, 1], WL/DD Ratio: 0.67
+LLR: -0.24 (-8.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 73 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 57 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 74 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 63 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 75 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 66 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 76 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 64 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 77 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 67 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 78 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 65 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 79 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 68 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 80 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 69 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 81 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 74 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 82 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 73 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 83 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 72 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 84 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 71 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 85 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 70 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 86 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 78 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 87 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 75 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 88 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 77 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 89 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 76 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 90 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 81 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 91 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 84 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 92 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 79 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 93 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 83 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 94 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 85 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 95 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 80 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -81.99 +/- 51.76, nElo: -124.66 +/- 75.20
+LOS: 0.06 %, DrawRatio: 24.39 %, PairsRatio: 0.29
+Games: 82, Wins: 13, Losses: 32, Draws: 37, Points: 31.5 (38.41 %)
+Ptnml(0-2): [3, 21, 10, 6, 1], WL/DD Ratio: 1.00
+LLR: -0.34 (-11.7%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 96 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 89 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 97 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 86 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 98 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 87 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 99 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 88 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 100 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 82 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 101 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 95 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 102 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 90 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 103 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 93 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 104 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 92 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 105 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 94 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 106 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 96 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 107 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 91 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 108 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 104 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 109 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 97 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 110 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 99 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 111 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 105 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 112 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 102 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 113 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 100 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -71.91 +/- 47.22, nElo: -108.52 +/- 68.79
+LOS: 0.10 %, DrawRatio: 28.57 %, PairsRatio: 0.30
+Games: 98, Wins: 16, Losses: 36, Draws: 46, Points: 39.0 (39.80 %)
+Ptnml(0-2): [3, 24, 14, 6, 2], WL/DD Ratio: 0.75
+LLR: -0.36 (-12.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 114 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 101 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 115 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 98 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 116 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 103 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 117 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 106 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 118 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 111 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 119 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 110 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 120 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 108 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 121 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 107 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 122 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 113 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 123 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 115 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 124 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 112 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 125 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 117 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 126 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 114 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 127 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 119 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 128 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 116 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 129 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 120 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -66.70 +/- 45.72, nElo: -95.13 +/- 63.23
+LOS: 0.16 %, DrawRatio: 25.86 %, PairsRatio: 0.34
+Games: 116, Wins: 21, Losses: 43, Draws: 52, Points: 47.0 (40.52 %)
+Ptnml(0-2): [4, 28, 15, 8, 3], WL/DD Ratio: 0.88
+LLR: -0.39 (-13.2%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 130 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 109 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 131 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 118 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 132 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 121 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 133 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 125 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 134 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 123 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 135 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 122 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 136 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 130 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 137 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 127 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 138 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 128 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 139 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 124 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 140 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 129 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 141 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 135 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 142 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 131 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 143 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 134 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 144 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 133 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 145 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 140 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 146 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 126 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 147 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 138 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 148 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 132 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 149 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 139 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -51.47 +/- 43.71, nElo: -70.16 +/- 58.39
+LOS: 0.93 %, DrawRatio: 25.00 %, PairsRatio: 0.46
+Games: 136, Wins: 28, Losses: 48, Draws: 60, Points: 58.0 (42.65 %)
+Ptnml(0-2): [5, 30, 17, 12, 4], WL/DD Ratio: 0.89
+LLR: -0.35 (-12.0%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 150 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 136 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 151 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 137 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 152 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 141 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 153 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 144 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 154 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 142 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 155 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 143 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 156 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 146 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 157 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 147 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 158 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 148 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 159 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 150 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 160 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 149 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 161 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 145 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 162 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 151 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 163 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 153 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 164 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 152 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 165 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 157 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 166 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 155 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 167 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 159 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 168 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 158 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 169 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 154 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 170 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 156 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 171 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 161 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 172 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 163 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 173 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 162 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 174 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 166 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 175 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 164 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 176 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 170 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 177 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 167 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 178 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 165 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 179 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 171 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 180 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 169 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 181 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 160 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -52.09 +/- 37.59, nElo: -74.20 +/- 52.54
+LOS: 0.28 %, DrawRatio: 26.19 %, PairsRatio: 0.44
+Games: 168, Wins: 34, Losses: 59, Draws: 75, Points: 71.5 (42.56 %)
+Ptnml(0-2): [5, 38, 22, 15, 4], WL/DD Ratio: 1.00
+LLR: -0.46 (-15.5%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 182 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 172 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 183 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 173 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 184 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 176 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 185 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 177 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 186 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 178 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 187 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 168 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 188 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 181 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 189 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 180 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 190 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 175 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 191 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 184 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 192 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 183 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 193 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 186 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 194 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 174 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 195 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 179 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -51.93 +/- 36.23, nElo: -73.71 +/- 50.48
+LOS: 0.21 %, DrawRatio: 26.37 %, PairsRatio: 0.46
+Games: 182, Wins: 36, Losses: 63, Draws: 83, Points: 77.5 (42.58 %)
+Ptnml(0-2): [6, 40, 24, 17, 4], WL/DD Ratio: 0.85
+LLR: -0.50 (-16.8%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 196 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 185 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 197 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 182 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 198 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 188 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 199 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 191 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 200 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 189 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 201 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 192 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 202 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 195 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 203 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 187 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 204 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 196 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 205 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 193 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 206 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 194 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 207 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 190 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 208 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 200 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 209 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 197 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 210 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 198 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 211 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 203 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 212 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 206 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 213 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 199 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -50.74 +/- 34.30, nElo: -72.49 +/- 48.15
+LOS: 0.16 %, DrawRatio: 25.00 %, PairsRatio: 0.47
+Games: 200, Wins: 40, Losses: 69, Draws: 91, Points: 85.5 (42.75 %)
+Ptnml(0-2): [6, 45, 25, 20, 4], WL/DD Ratio: 0.92
+LLR: -0.54 (-18.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 214 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 202 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 215 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 204 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 216 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 207 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 217 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 201 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 218 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 205 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 219 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 210 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 220 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 212 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 221 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 211 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 222 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 209 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 223 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 208 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 224 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 213 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 225 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 214 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 226 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 216 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 227 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 215 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 228 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 218 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 229 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 219 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 230 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 220 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -49.74 +/- 33.88, nElo: -68.87 +/- 46.12
+LOS: 0.17 %, DrawRatio: 24.77 %, PairsRatio: 0.46
+Games: 218, Wins: 45, Losses: 76, Draws: 97, Points: 93.5 (42.89 %)
+Ptnml(0-2): [7, 49, 27, 20, 6], WL/DD Ratio: 0.93
+LLR: -0.55 (-18.8%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 231 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 217 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 232 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 222 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 233 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 225 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 234 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 224 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 235 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 223 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 236 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 227 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 237 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 232 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 238 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 221 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 239 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 226 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 240 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 237 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 241 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 230 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 242 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 233 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 243 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 235 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 244 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 229 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 245 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 231 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 246 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 234 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 247 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 236 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 248 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 239 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 249 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 244 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 250 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 246 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 251 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 238 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 252 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 245 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 253 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 241 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 254 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 247 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 255 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 243 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 256 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 228 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 257 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 240 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -50.18 +/- 31.43, nElo: -70.78 +/- 43.59
+LOS: 0.07 %, DrawRatio: 27.05 %, PairsRatio: 0.46
+Games: 244, Wins: 49, Losses: 84, Draws: 111, Points: 104.5 (42.83 %)
+Ptnml(0-2): [8, 53, 33, 22, 6], WL/DD Ratio: 0.83
+LLR: -0.64 (-21.7%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 258 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 242 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 259 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 248 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 260 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 250 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 261 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 253 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 262 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 255 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 263 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 251 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 264 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 260 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 265 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 249 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 266 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 254 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 267 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 256 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 268 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 259 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -51.96 +/- 30.46, nElo: -73.89 +/- 42.56
+LOS: 0.03 %, DrawRatio: 26.56 %, PairsRatio: 0.45
+Games: 256, Wins: 50, Losses: 88, Draws: 118, Points: 109.0 (42.58 %)
+Ptnml(0-2): [8, 57, 34, 23, 6], WL/DD Ratio: 0.79
+LLR: -0.70 (-23.6%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 269 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 258 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 270 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 257 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 271 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 252 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 272 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 263 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 273 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 264 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 274 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 261 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 275 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 262 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 276 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 267 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 277 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 265 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 278 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 271 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 279 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 268 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 280 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 272 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 281 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 269 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 282 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 270 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 283 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 266 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 284 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 273 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 285 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 274 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 286 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 275 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 287 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 287 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 288 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 279 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 289 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 285 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 290 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 286 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 291 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 281 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 292 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 283 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 293 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 277 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 294 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 280 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -59.31 +/- 29.60, nElo: -83.64 +/- 40.84
+LOS: 0.00 %, DrawRatio: 26.62 %, PairsRatio: 0.42
+Games: 278, Wins: 53, Losses: 100, Draws: 125, Points: 115.5 (41.55 %)
+Ptnml(0-2): [11, 61, 37, 24, 6], WL/DD Ratio: 0.85
+LLR: -0.85 (-28.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 295 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 278 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 296 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 284 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 297 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 276 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 298 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 288 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 299 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 289 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 300 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 293 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 301 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 295 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 302 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 292 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 303 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 282 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 304 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 290 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 305 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 297 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 306 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 294 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 307 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 291 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 308 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 298 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 309 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 296 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 310 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 299 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 311 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 303 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 312 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 300 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.42 +/- 28.14, nElo: -92.31 +/- 39.32
+LOS: 0.00 %, DrawRatio: 27.33 %, PairsRatio: 0.38
+Games: 300, Wins: 56, Losses: 111, Draws: 133, Points: 122.5 (40.83 %)
+Ptnml(0-2): [12, 67, 41, 24, 6], WL/DD Ratio: 0.95
+LLR: -1.00 (-33.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 313 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 302 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 314 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 301 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 315 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 307 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 316 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 304 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 317 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 305 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 318 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 314 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 319 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 310 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 320 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 315 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 321 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 308 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 322 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 311 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 323 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 316 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 324 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 312 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 325 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 309 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 326 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 306 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 327 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 318 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 328 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 313 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 329 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 319 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 330 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 325 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 331 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 320 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -66.35 +/- 27.74, nElo: -93.79 +/- 38.19
+LOS: 0.00 %, DrawRatio: 27.67 %, PairsRatio: 0.39
+Games: 318, Wins: 60, Losses: 120, Draws: 138, Points: 129.0 (40.57 %)
+Ptnml(0-2): [15, 68, 44, 26, 6], WL/DD Ratio: 1.00
+LLR: -1.08 (-36.8%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 332 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 317 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 333 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 326 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 334 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 322 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 335 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 327 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 336 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 321 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 337 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 324 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 338 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 323 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 339 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 329 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 340 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 328 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 341 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 330 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 342 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 332 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 343 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 336 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 344 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 341 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 345 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 333 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 346 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 335 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 347 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 334 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 348 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 340 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 349 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 337 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 350 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 331 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 351 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 338 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 352 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 342 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 353 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 339 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -73.19 +/- 27.15, nElo: -102.45 +/- 36.82
+LOS: 0.00 %, DrawRatio: 27.49 %, PairsRatio: 0.36
+Games: 342, Wins: 63, Losses: 134, Draws: 145, Points: 135.5 (39.62 %)
+Ptnml(0-2): [19, 72, 47, 27, 6], WL/DD Ratio: 1.04
+LLR: -1.26 (-42.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 354 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 343 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 355 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 349 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 356 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 351 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 357 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 345 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 358 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 344 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 359 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 346 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 360 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 348 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 361 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 347 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 362 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 354 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 363 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 353 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 364 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 355 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 365 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 350 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 366 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 356 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 367 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 352 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 368 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 360 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 369 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 359 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -70.84 +/- 27.03, nElo: -97.19 +/- 35.99
+LOS: 0.00 %, DrawRatio: 27.37 %, PairsRatio: 0.38
+Games: 358, Wins: 68, Losses: 140, Draws: 150, Points: 143.0 (39.94 %)
+Ptnml(0-2): [21, 73, 49, 29, 7], WL/DD Ratio: 1.04
+LLR: -1.27 (-43.1%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 370 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 357 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 371 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 364 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 372 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 365 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 373 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 361 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 374 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 358 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 375 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 366 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 376 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 363 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 377 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 370 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 378 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 362 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 379 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 371 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 380 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 368 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 381 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 372 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 382 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 367 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 383 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 369 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 384 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 375 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 385 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 376 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 386 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 377 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 387 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 373 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 388 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 383 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 389 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 379 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 390 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 378 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 391 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 385 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 392 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 381 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 393 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 387 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 394 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 382 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 395 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 374 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 396 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 384 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 397 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 380 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.92 +/- 26.50, nElo: -88.73 +/- 34.75
+LOS: 0.00 %, DrawRatio: 28.12 %, PairsRatio: 0.41
+Games: 384, Wins: 77, Losses: 149, Draws: 158, Points: 156.0 (40.62 %)
+Ptnml(0-2): [23, 75, 54, 31, 9], WL/DD Ratio: 1.08
+LLR: -1.25 (-42.6%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 398 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 388 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 399 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 389 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 400 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 386 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 401 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 392 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 402 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 390 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 403 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 394 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 404 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 396 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 405 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 397 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 406 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 400 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 407 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 393 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 408 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 398 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 409 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 391 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 410 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 401 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 411 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 402 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 412 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 395 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 413 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 404 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 414 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 403 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 415 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 406 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 416 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 399 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -68.83 +/- 25.70, nElo: -93.33 +/- 33.88
+LOS: 0.00 %, DrawRatio: 27.72 %, PairsRatio: 0.39
+Games: 404, Wins: 80, Losses: 159, Draws: 165, Points: 162.5 (40.22 %)
+Ptnml(0-2): [24, 81, 56, 32, 9], WL/DD Ratio: 1.15
+LLR: -1.38 (-46.8%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 417 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 407 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 418 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 409 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 419 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 410 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 420 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 405 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 421 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 414 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 422 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 412 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 423 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 411 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 424 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 413 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 425 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 415 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 426 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 418 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 427 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 424 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 428 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 408 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 429 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 416 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 430 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 419 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 431 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 420 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.60 +/- 25.25, nElo: -88.78 +/- 33.31
+LOS: 0.00 %, DrawRatio: 28.23 %, PairsRatio: 0.40
+Games: 418, Wins: 84, Losses: 162, Draws: 172, Points: 170.0 (40.67 %)
+Ptnml(0-2): [24, 83, 59, 33, 10], WL/DD Ratio: 1.11
+LLR: -1.36 (-46.2%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 432 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 421 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 433 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 427 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 434 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 423 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 435 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 426 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 436 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 417 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 437 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 422 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 438 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 429 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 439 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 432 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 440 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 428 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 441 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 435 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 442 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 436 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 443 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 425 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 444 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 433 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 445 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 430 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 446 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 431 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 447 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 437 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 448 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 438 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 449 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 434 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 450 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 442 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 451 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 444 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 452 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 443 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 453 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 440 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 454 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 447 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 455 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 441 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 456 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 439 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -63.29 +/- 24.04, nElo: -87.14 +/- 32.32
+LOS: 0.00 %, DrawRatio: 29.73 %, PairsRatio: 0.41
+Games: 444, Wins: 89, Losses: 169, Draws: 186, Points: 182.0 (40.99 %)
+Ptnml(0-2): [24, 87, 66, 35, 10], WL/DD Ratio: 1.06
+LLR: -1.42 (-48.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 457 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 445 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 458 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 451 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 459 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 446 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 460 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 452 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 461 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 454 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 462 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 450 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 463 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 448 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 464 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 455 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 465 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 459 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 466 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 453 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 467 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 456 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 468 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 458 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 469 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 457 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 470 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 460 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -63.67 +/- 23.60, nElo: -87.91 +/- 31.82
+LOS: 0.00 %, DrawRatio: 30.13 %, PairsRatio: 0.40
+Games: 458, Wins: 92, Losses: 175, Draws: 191, Points: 187.5 (40.94 %)
+Ptnml(0-2): [25, 89, 69, 36, 10], WL/DD Ratio: 1.09
+LLR: -1.48 (-50.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 471 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 449 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 472 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 461 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 473 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 462 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 474 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 466 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 475 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 464 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 476 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 463 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 477 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 467 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 478 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 465 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 479 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 471 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 480 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 470 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 481 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 472 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 482 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 473 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 483 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 468 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 484 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 469 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 485 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 476 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 486 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 474 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 487 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 479 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 488 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 475 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 489 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 477 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 490 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 478 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 491 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 481 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 492 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 480 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -60.69 +/- 22.89, nElo: -84.21 +/- 31.08
+LOS: 0.00 %, DrawRatio: 31.25 %, PairsRatio: 0.42
+Games: 480, Wins: 96, Losses: 179, Draws: 205, Points: 198.5 (41.35 %)
+Ptnml(0-2): [26, 90, 75, 39, 10], WL/DD Ratio: 0.97
+LLR: -1.50 (-50.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 493 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 483 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 494 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 482 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 495 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 486 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 496 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 484 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 497 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 485 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 498 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 492 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 499 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 490 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 500 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 491 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 501 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 487 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 502 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 488 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 503 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 489 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 504 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 493 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 505 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 494 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 506 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 495 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 507 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 497 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 508 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 496 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 509 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 498 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 510 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 499 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 511 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 503 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 512 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 504 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 513 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 506 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 514 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 502 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 515 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 500 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -63.69 +/- 22.74, nElo: -87.18 +/- 30.39
+LOS: 0.00 %, DrawRatio: 30.28 %, PairsRatio: 0.41
+Games: 502, Wins: 100, Losses: 191, Draws: 211, Points: 205.5 (40.94 %)
+Ptnml(0-2): [29, 95, 76, 40, 11], WL/DD Ratio: 1.00
+LLR: -1.62 (-54.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 516 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 507 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 517 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 501 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 518 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 508 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 519 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 505 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 520 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 509 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 521 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 511 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 522 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 512 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 523 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 514 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 524 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 510 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 525 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 520 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 526 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 513 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 527 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 519 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -66.10 +/- 22.54, nElo: -90.20 +/- 29.98
+LOS: 0.00 %, DrawRatio: 31.01 %, PairsRatio: 0.40
+Games: 516, Wins: 103, Losses: 200, Draws: 213, Points: 209.5 (40.60 %)
+Ptnml(0-2): [32, 95, 80, 40, 11], WL/DD Ratio: 1.05
+LLR: -1.72 (-58.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 528 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 517 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 529 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 521 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 530 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 515 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 531 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 516 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 532 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 518 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 533 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 524 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 534 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 522 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 535 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 523 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 536 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 527 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 537 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 529 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 538 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 532 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 539 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 531 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 540 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 525 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 541 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 533 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 542 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 528 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 543 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 526 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 544 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 534 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 545 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 536 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 546 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 537 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 547 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 530 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 548 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 535 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 549 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 539 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 550 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 545 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 551 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 540 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.34 +/- 21.92, nElo: -89.71 +/- 29.36
+LOS: 0.00 %, DrawRatio: 31.60 %, PairsRatio: 0.40
+Games: 538, Wins: 108, Losses: 208, Draws: 222, Points: 219.0 (40.71 %)
+Ptnml(0-2): [33, 98, 85, 42, 11], WL/DD Ratio: 1.07
+LLR: -1.79 (-60.6%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 552 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 541 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 553 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 543 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 554 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 544 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 555 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 549 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 556 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 538 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 557 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 552 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 558 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 553 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 559 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 548 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 560 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 551 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 561 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 547 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 562 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 550 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 563 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 542 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 564 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 546 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 565 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 554 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 566 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 556 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 567 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 555 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 568 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 558 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 569 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 563 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 570 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 559 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 571 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 561 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 572 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 560 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.88 +/- 21.28, nElo: -90.06 +/- 28.83
+LOS: 0.00 %, DrawRatio: 32.26 %, PairsRatio: 0.40
+Games: 558, Wins: 112, Losses: 215, Draws: 231, Points: 227.5 (40.77 %)
+Ptnml(0-2): [33, 102, 90, 43, 11], WL/DD Ratio: 1.09
+LLR: -1.86 (-63.0%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 573 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 565 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 574 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 566 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 575 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 562 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 576 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 564 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 577 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 567 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 578 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 557 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 579 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 569 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 580 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 568 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 581 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 572 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 582 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 576 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 583 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 570 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 584 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 571 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 585 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 580 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 586 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 574 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 587 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 581 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 588 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 573 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 589 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 578 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 590 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 577 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 591 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 579 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -63.20 +/- 21.14, nElo: -86.69 +/- 28.32
+LOS: 0.00 %, DrawRatio: 31.83 %, PairsRatio: 0.42
+Games: 578, Wins: 117, Losses: 221, Draws: 240, Points: 237.0 (41.00 %)
+Ptnml(0-2): [35, 104, 92, 46, 12], WL/DD Ratio: 1.04
+LLR: -1.86 (-63.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 592 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 583 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 593 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 575 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 594 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 582 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 595 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 587 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 596 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 584 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 597 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 586 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 598 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 585 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 599 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 591 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 600 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 592 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 601 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 588 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 602 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 593 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 603 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 589 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 604 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 594 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 605 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 595 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 606 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 598 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 607 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 596 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 608 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 590 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 609 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 599 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 610 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 600 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -67.66 +/- 20.94, nElo: -92.39 +/- 27.85
+LOS: 0.00 %, DrawRatio: 31.77 %, PairsRatio: 0.40
+Games: 598, Wins: 119, Losses: 234, Draws: 245, Points: 241.5 (40.38 %)
+Ptnml(0-2): [39, 107, 95, 46, 12], WL/DD Ratio: 1.07
+LLR: -2.04 (-69.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 611 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 603 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 612 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 597 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 613 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 601 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 614 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 605 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 615 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 610 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 616 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 607 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 617 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 608 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 618 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 609 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 619 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 604 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 620 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 602 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 621 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 611 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 622 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 613 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 623 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 614 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 624 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 606 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 625 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 612 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 626 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 619 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 627 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 616 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 628 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 627 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 629 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 621 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 630 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 622 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 631 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 615 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 632 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 617 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 633 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 618 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 634 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 620 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.41 +/- 20.55, nElo: -87.66 +/- 27.30
+LOS: 0.00 %, DrawRatio: 32.15 %, PairsRatio: 0.43
+Games: 622, Wins: 127, Losses: 241, Draws: 254, Points: 254.0 (40.84 %)
+Ptnml(0-2): [41, 107, 100, 51, 12], WL/DD Ratio: 1.08
+LLR: -2.04 (-69.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 635 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 626 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 636 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 623 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 637 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 624 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 638 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 625 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 639 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 635 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 640 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 634 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 641 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 631 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 642 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 629 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 643 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 628 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 644 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 636 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 645 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 633 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 646 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 630 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 647 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 638 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 648 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 642 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 649 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 632 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 650 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 640 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 651 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 637 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 652 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 639 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -60.87 +/- 20.33, nElo: -82.37 +/- 26.92
+LOS: 0.00 %, DrawRatio: 31.56 %, PairsRatio: 0.45
+Games: 640, Wins: 133, Losses: 244, Draws: 263, Points: 264.5 (41.33 %)
+Ptnml(0-2): [41, 110, 101, 55, 13], WL/DD Ratio: 1.06
+LLR: -1.99 (-67.5%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 653 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 644 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 654 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 643 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 655 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 641 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 656 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 646 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 657 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 647 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 658 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 652 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 659 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 649 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 660 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 653 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 661 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 650 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 662 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 654 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 663 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 656 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 664 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 648 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 665 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 645 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 666 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 655 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 667 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 651 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 668 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 657 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 669 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 663 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 670 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 659 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 671 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 658 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 672 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 665 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 673 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 660 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -60.62 +/- 19.99, nElo: -82.10 +/- 26.51
+LOS: 0.00 %, DrawRatio: 32.12 %, PairsRatio: 0.45
+Games: 660, Wins: 138, Losses: 252, Draws: 270, Points: 273.0 (41.36 %)
+Ptnml(0-2): [43, 111, 106, 57, 13], WL/DD Ratio: 1.08
+LLR: -2.05 (-69.6%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 674 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 661 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 675 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 666 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 676 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 667 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 677 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 662 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 678 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 668 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 679 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 672 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 680 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 664 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 681 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 669 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 682 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 670 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 683 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 671 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 684 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 675 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 685 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 674 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 686 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 673 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 687 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 676 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 688 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 677 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 689 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 678 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 690 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 679 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 691 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 681 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 692 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 683 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 693 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 684 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 694 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 682 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 695 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 680 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -60.54 +/- 19.53, nElo: -82.47 +/- 26.04
+LOS: 0.00 %, DrawRatio: 32.46 %, PairsRatio: 0.45
+Games: 684, Wins: 144, Losses: 262, Draws: 278, Points: 283.0 (41.37 %)
+Ptnml(0-2): [44, 115, 111, 59, 13], WL/DD Ratio: 1.13
+LLR: -2.13 (-72.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 696 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 689 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 697 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 685 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 698 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 692 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 699 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 690 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 700 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 686 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 701 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 687 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 702 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 691 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 703 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 693 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 704 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 688 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 705 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 697 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 706 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 694 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 707 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 703 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 708 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 700 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 709 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 704 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 710 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 695 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 711 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 698 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 712 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 699 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -63.74 +/- 19.45, nElo: -86.36 +/- 25.74
+LOS: 0.00 %, DrawRatio: 32.57 %, PairsRatio: 0.44
+Games: 700, Wins: 144, Losses: 271, Draws: 285, Points: 286.5 (40.93 %)
+Ptnml(0-2): [48, 116, 114, 59, 13], WL/DD Ratio: 1.07
+LLR: -2.28 (-77.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 713 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 701 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 714 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 705 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 715 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 702 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 716 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 706 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 717 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 696 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 718 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 707 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 719 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 711 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 720 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 709 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 721 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 708 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 722 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 715 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 723 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 710 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 724 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 712 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 725 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 714 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 726 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 713 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 727 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 716 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 728 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 724 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 729 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 718 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 730 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 717 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 731 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 719 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 732 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 721 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 733 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 727 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 734 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 725 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 735 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 726 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 736 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 722 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 737 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 728 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 738 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 720 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.38 +/- 19.34, nElo: -86.15 +/- 25.27
+LOS: 0.00 %, DrawRatio: 31.96 %, PairsRatio: 0.44
+Games: 726, Wins: 150, Losses: 283, Draws: 293, Points: 296.5 (40.84 %)
+Ptnml(0-2): [52, 119, 116, 62, 14], WL/DD Ratio: 1.07
+LLR: -2.36 (-80.3%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 739 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 723 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 740 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 730 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 741 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 729 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 742 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 731 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 743 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 732 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 744 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 733 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 745 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 736 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 746 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 735 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 747 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 734 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 748 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 738 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 749 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 743 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 750 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 739 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 751 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 744 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 752 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 740 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.56 +/- 19.20, nElo: -87.63 +/- 25.03
+LOS: 0.00 %, DrawRatio: 31.89 %, PairsRatio: 0.44
+Games: 740, Wins: 153, Losses: 291, Draws: 296, Points: 301.0 (40.68 %)
+Ptnml(0-2): [54, 121, 118, 63, 14], WL/DD Ratio: 1.11
+LLR: -2.45 (-83.2%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 753 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 749 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 754 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 737 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 755 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 741 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 756 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 745 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 757 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 742 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 758 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 747 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 759 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 751 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 760 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 748 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 761 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 746 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 762 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 753 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 763 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 750 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 764 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 756 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 765 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 752 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 766 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 759 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 767 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 761 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 768 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 754 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 769 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 758 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 770 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 755 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 771 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 762 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 772 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 757 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 773 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 765 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 774 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 760 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.57 +/- 18.94, nElo: -86.13 +/- 24.67
+LOS: 0.00 %, DrawRatio: 31.76 %, PairsRatio: 0.45
+Games: 762, Wins: 160, Losses: 300, Draws: 302, Points: 311.0 (40.81 %)
+Ptnml(0-2): [56, 123, 121, 67, 14], WL/DD Ratio: 1.16
+LLR: -2.49 (-84.6%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 775 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 764 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 776 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 763 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 777 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 768 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 778 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 770 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 779 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 767 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 780 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 772 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 781 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 766 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 782 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 774 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 783 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 769 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 784 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 773 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 785 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 775 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 786 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 776 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 787 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 779 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 788 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 778 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 789 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 771 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 790 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 780 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -62.75 +/- 18.67, nElo: -83.95 +/- 24.41
+LOS: 0.00 %, DrawRatio: 31.88 %, PairsRatio: 0.46
+Games: 778, Wins: 166, Losses: 305, Draws: 307, Points: 319.5 (41.07 %)
+Ptnml(0-2): [56, 125, 124, 70, 14], WL/DD Ratio: 1.21
+LLR: -2.49 (-84.5%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 791 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 777 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 792 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 784 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 793 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 787 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 794 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 781 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 795 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 783 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 796 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 782 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 797 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 790 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 798 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 789 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 799 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 785 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 800 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 791 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 801 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 786 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 802 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 792 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 803 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 788 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 804 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 799 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 805 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 796 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 806 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 795 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 807 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 793 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 808 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 798 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 809 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 800 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.00 +/- 18.54, nElo: -85.30 +/- 24.14
+LOS: 0.00 %, DrawRatio: 31.66 %, PairsRatio: 0.46
+Games: 796, Wins: 169, Losses: 314, Draws: 313, Points: 325.5 (40.89 %)
+Ptnml(0-2): [59, 127, 126, 72, 14], WL/DD Ratio: 1.21
+LLR: -2.59 (-87.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 810 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 803 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 811 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 802 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 812 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 801 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 813 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 794 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+Started game 814 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 804 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 815 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 806 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 816 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 797 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 817 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 808 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 818 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 807 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 819 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 805 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 820 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 809 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 821 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 811 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 822 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 813 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 823 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 810 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 824 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 817 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 825 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 818 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 826 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 816 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 827 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 815 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 828 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 812 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 829 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 814 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 830 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 820 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 831 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 821 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 832 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 823 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 833 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 819 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.28 +/- 18.19, nElo: -86.07 +/- 23.78
+LOS: 0.00 %, DrawRatio: 32.44 %, PairsRatio: 0.46
+Games: 820, Wins: 173, Losses: 323, Draws: 324, Points: 335.0 (40.85 %)
+Ptnml(0-2): [61, 129, 133, 73, 14], WL/DD Ratio: 1.18
+LLR: -2.69 (-91.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 834 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 822 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 835 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 826 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 836 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 828 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 837 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 831 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 838 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 825 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 839 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 824 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 840 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 832 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 841 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 829 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 842 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 833 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 843 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 827 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 844 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 836 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 845 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 835 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 846 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 834 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 847 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 838 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 848 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 841 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 849 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 842 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 850 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 830 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by adjudication}
+Started game 851 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 844 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 852 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 837 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 853 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 849 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 854 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 845 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 855 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 839 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 856 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 846 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 857 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 840 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -61.99 +/- 18.00, nElo: -82.51 +/- 23.44
+LOS: 0.00 %, DrawRatio: 32.46 %, PairsRatio: 0.48
+Games: 844, Wins: 181, Losses: 330, Draws: 333, Points: 347.5 (41.17 %)
+Ptnml(0-2): [63, 130, 137, 77, 15], WL/DD Ratio: 1.17
+LLR: -2.67 (-90.6%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 858 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 848 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 859 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 850 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 860 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 843 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 861 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 847 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 862 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 851 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 863 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 854 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 864 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 858 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 865 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 853 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 866 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 852 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 867 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 856 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 868 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 855 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 869 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 857 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 870 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 861 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 871 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 863 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 872 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 864 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 873 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 867 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 874 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 862 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 875 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 869 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 876 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 859 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 877 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 860 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -63.84 +/- 17.91, nElo: -84.53 +/- 23.17
+LOS: 0.00 %, DrawRatio: 32.18 %, PairsRatio: 0.47
+Games: 864, Wins: 183, Losses: 340, Draws: 341, Points: 353.5 (40.91 %)
+Ptnml(0-2): [66, 134, 139, 77, 16], WL/DD Ratio: 1.14
+LLR: -2.79 (-94.7%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 878 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 865 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 879 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 866 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 880 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 870 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 881 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 875 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 882 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 871 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 883 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 873 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 884 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 874 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 885 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 872 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 886 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 878 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 887 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 879 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 888 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 876 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 889 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 883 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 890 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 868 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by insufficient mating material}
+Started game 891 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 885 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 892 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 882 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 893 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 880 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -64.44 +/- 17.82, nElo: -85.11 +/- 22.98
+LOS: 0.00 %, DrawRatio: 31.89 %, PairsRatio: 0.47
+Games: 878, Wins: 185, Losses: 346, Draws: 347, Points: 358.5 (40.83 %)
+Ptnml(0-2): [68, 136, 140, 79, 16], WL/DD Ratio: 1.12
+LLR: -2.85 (-96.9%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+Started game 894 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 884 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 895 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 877 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by insufficient mating material}
+Started game 896 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 888 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 897 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 887 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 898 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 886 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 899 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 881 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by fifty moves rule}
+Started game 900 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 892 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+Started game 901 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 889 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 902 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 891 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 903 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 890 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by stalemate}
+Started game 904 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 896 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 905 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 894 (ref-d446783 vs cand-a97bc1a): 0-1 {Black wins by adjudication}
+Started game 906 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 895 (cand-a97bc1a vs ref-d446783): 1-0 {White wins by adjudication}
+Started game 907 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 898 (ref-d446783 vs cand-a97bc1a): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 908 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 893 (cand-a97bc1a vs ref-d446783): 1/2-1/2 {Draw by adjudication}
+Started game 909 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 901 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 910 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 899 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 911 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 903 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 912 of 40000 (ref-d446783 vs cand-a97bc1a)
+Finished game 897 (cand-a97bc1a vs ref-d446783): 0-1 {Black wins by adjudication}
+Started game 913 of 40000 (cand-a97bc1a vs ref-d446783)
+Finished game 900 (ref-d446783 vs cand-a97bc1a): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.22 +/- 17.66, nElo: -85.89 +/- 22.70
+LOS: 0.00 %, DrawRatio: 31.56 %, PairsRatio: 0.47
+Games: 900, Wins: 189, Losses: 356, Draws: 355, Points: 366.5 (40.72 %)
+Ptnml(0-2): [71, 139, 142, 82, 16], WL/DD Ratio: 1.12
+LLR: -2.96 (-100.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+--------------------------------------------------
+Results of cand-a97bc1a vs ref-d446783 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.22 +/- 17.66, nElo: -85.89 +/- 22.70
+LOS: 0.00 %, DrawRatio: 31.56 %, PairsRatio: 0.47
+Games: 900, Wins: 189, Losses: 356, Draws: 355, Points: 366.5 (40.72 %)
+Ptnml(0-2): [71, 139, 142, 82, 16], WL/DD Ratio: 1.12
+LLR: -2.96 (-100.4%) (-2.94, 2.94) [-5.00, 0.00]
+--------------------------------------------------
+SPRT ([-5.00, 0.00]) completed - H0 was accepted
+Finished match
+Total Time: 00:25:51 (hours:minutes:seconds)
+
+
+=== 902 games in /home/max/ws/chesso/.tuning/sprt_s022_v1_20260929_050437/games.pgn ===
+    617 [Termination "adjudication"]
+    285 [Termination "normal"]
+draws     355 of 902, 39.4 %
+decisive  547 of 902, 60.6 %
+forfeits  0 of 902, 0.00 %
+SPRT-RUN-DONE nonreg /home/max/ws/chesso/.tuning/sprt_s022_v1_20260929_050437

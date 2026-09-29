@@ -738,3 +738,13 @@ Landed as `a97bc1a` on `d446783`, `bench` 3429473 -> 6049266. SPRT pair
 pinned: `REF` `d446783` (the tree S131's H1 left, with S242 and S243's tests;
 its engine `13caf43`'s node for node), `CAND` `a97bc1a`; open findings re-read
 at pinning: items 1 to 11 as the pre-registration states them.
+
+### Verdict 1's outcome (2026-09-29, the coordinator)
+
+**H0, 2026-09-29 05:32: `a97bc1a` against `d446783`, `Elo -65.22 +/- 17.66`,
+`nElo -85.89 +/- 22.70`, LLR -2.96, 900 games in 0 h 25 m, 0 forfeits**
+(`adocs/data/S022_v1_sprt.log`, `adocs/data/S022_v1_sprt_pairs.txt`; marker
+`DONE`). **H0**: a regression; the gate stays (the pre-registration's second row). `QsSeeGate` goes to 1, the parent's tree proved on the landing, and the switch's code leaves with it, the four goldens of item 11 restored byte for byte; S015's zero stands with a current number beside it, this run's interval [-108.59, -63.19] nElo against a tree with per-move futility in it. `Incomplete mating PV` 0 against 0,
+an observation for the pre-registration's open finding 3's class (CHESS).
+No follow-up run and no second pair (DEC-063, DEC-019). Verdict 2 measures
+on the tree this leaves.
