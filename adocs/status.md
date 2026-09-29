@@ -33,6 +33,24 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-29, morning: S022 verdict 1 landed as `a97bc1a`, pinned against `d446783`
+
+S015's exchange gate in quiescence deleted behind `QsSeeGate` (1 the parent's
+tree, proved to the node; 0 the deletion, shipped): `bench` 3429473 ->
+6049266, +76 %, quiescence nodes 626337 -> 1410143 at depth 12 -- the reach
+census, stated as reach (DEC-239): the gate declined 45.4 % of the filter
+loop's moves past the drop, per-move futility having skipped 7.0 % of the
+written-off moves first. Four goldens moved and were re-derived by their
+scripts (the capture-mate table, the ordering floor, S097's multicut row
+under DEC-238's guard mode -- E21 now killed by it and by S243's direct case
+-- and C_mate7_depth11's ceiling 0 -> 6 under DEC-241). Mutation 4 of 4
+(U03 equivalent in Release, killed in tune) plus the extras. Cold fast check over the rebased diff: nothing real; its six document items land with this pin. Second
+tier green: Debug self-play 8 games 0 `Assertion`, `gate_extra` 5 stages green in 1524 s.
+**Next:** the `{-5, 0}` SPRT launches from `adocs/data/S022_v1_sprt.sh`
+right after this commit (12 to 20 h worst case; a regression of 5 nElo or
+more reads H0 fast). Then verdict 2 (the delta early-out) on the tree this
+verdict leaves, S244 a filler beside a match. Owner questions unchanged.
+
 ## 2026-09-29, early: S243 done (a direct guard test for the multicut's mate band)
 
 `se_mate_drive_t` drives a node whose verification search returns mate in

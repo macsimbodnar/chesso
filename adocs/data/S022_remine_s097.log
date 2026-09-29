@@ -73,3 +73,7 @@ TEST CASE:  pruning does not hide a forced mate
 [doctest] test cases:  1 |  0 passed | 1 failed | 182 skipped
 ## shipped build (the worktree):
 [doctest] test cases:  1 |  1 passed | 0 failed | 182 skipped
+
+# Correction, 2026-09-29 (the coordinator): the survivor run named above as
+# `--only E21` was `tools/mutation_check.py --only M18 V07 V09 V10 E21 B04`
+# (`.tuning/coord/S022_mutation_extras.sh`); the header is left as written.

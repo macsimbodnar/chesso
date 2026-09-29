@@ -4650,7 +4650,8 @@ TEST_SUITE("search: draws")
     // `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42` at depth 14,
     // mate in 6, stayed green and stopped separating: the shipped and the
     // guard-dropped builds both report its mate at 12, 13 and 14, and a
-    // targeted `tools/mutation_check.py --only E21` on a fixture of the
+    // targeted `tools/mutation_check.py --only M18 V07 V09 V10 E21 B04`
+    // on a fixture of the
     // candidate -- on `cbaa699`, before S243's direct case landed -- scored E21
     // a survivor of the whole fast suite. On the tree this lands on, S243's
     // "the multicut never ends a node on a mate from its verification" kills
@@ -4707,7 +4708,8 @@ TEST_SUITE("search: draws")
     // guard-dropped build found its mate at depth 14 too -- and the re-mine
     // picked `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54`, which separated
     // there. On the reverted tree that row does not: a targeted
-    // `tools/mutation_check.py --only E21` on a fixture of this `src/` scored
+    // `tools/mutation_check.py --only M18 V07 V09 V10 E21 B04`
+    // on a fixture of this `src/` scored
     // **E21 a survivor** under it and S097's row killed it again, so the
     // golden that separates on the tree that ships is the one that stays. The
     // re-mine and both runs are recorded in `adocs/data/S188_remine.log`,

@@ -728,3 +728,13 @@ cite it.
 
 The SPRT; DEC-141's Debug self-play and `tools/gate_extra.sh` (the
 coordinator's, at the landing); any timing.
+
+### Verdict 1 landed and pinned (the coordinator, 2026-09-29)
+
+Cold fast check over the rebased diff: nothing real; its six document items land with this pin. **Second tier on the landing** (DEC-141): Debug self-play 8 games at
+4+0.04, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S022_v1_debug_selfplay/`);
+`tools/gate_extra.sh` 5 stages green in 1524 s (`.tuning/gate_extra_2026-09-29_S022_v1.log`).
+Landed as `a97bc1a` on `d446783`, `bench` 3429473 -> 6049266. SPRT pair
+pinned: `REF` `d446783` (the tree S131's H1 left, with S242 and S243's tests;
+its engine `13caf43`'s node for node), `CAND` `a97bc1a`; open findings re-read
+at pinning: items 1 to 11 as the pre-registration states them.

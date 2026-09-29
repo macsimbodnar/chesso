@@ -56,8 +56,9 @@
 # and its own worth is S127's fit, as DEC-236 names it.
 #
 # WHAT THE TREE DOES, MEASURED BEFORE THE GAMES, 2026-09-29, on `cbaa699`'s
-# engine (S131's tree; `src/` is byte-identical at `6eb2674`, the tree this
-# lands on), niced. Counts only.
+# engine (S131's tree; `src/` is byte-identical at `6eb2674` and at `d446783`,
+# the landing's parent -- DEC-241's commit, documents only), niced. Counts
+# only.
 #
 #   THE REACH, stated as reach (DEC-239): what the gate declines today, and
 #   how much of what it would decline per-move futility skips first. From an
@@ -105,8 +106,9 @@
 #   Elo (DEC-019).
 #
 # THE REFERENCE IS THE COMMIT THE LANDING SITS ON. `REF` is the landing's
-# parent: the tree this verdict was rebased onto, `6eb2674` (S243's
-# completion), whose `src/` is `cbaa699`'s byte for byte -- the commit every
+# parent, `d446783` (DEC-241's entry, documents only, on `6eb2674`, S243's
+# completion, the tree this verdict was rebased onto), whose `src/` is
+# `cbaa699`'s byte for byte -- the commit every
 # engine number above was measured against; S242 and S243 moved tests and
 # documents only, and the tests were re-run on the rebased tree. If anything
 # lands between that tree and this verdict's landing, the identity above is
@@ -124,7 +126,11 @@
 # interval's midpoint and **25591** with it on a bound
 # (`adocs/testing_strategy.md` section 1.1), at **2110 games an hour** from
 # `.moltke.local.md`: **19.8 h** and **12.1 h**. The midpoint's figure is past
-# `--nonreg`'s 40000-game cap, which is about 19.0 h. A night, scheduled
+# `--nonreg`'s 40000-game cap, which is about 19.0 h. **The cap is that one**:
+# the step file's section 5 (2026-08-19) asked for a cap of about 20000 games
+# as "one night" at the throughput then assumed; DEC-143's pricing on this
+# machine and `fastchess.sh`'s own cap supersede it, and a walk that reaches
+# 40000 games is read as no verdict by the row below. A night, scheduled
 # (DEC-155). The throughput is read off the banner and recorded rather than
 # assumed.
 #
@@ -149,7 +155,7 @@
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS rule as scoped by DEC-171),
 # carried by id from `adocs/data/S131_sprt.sh`'s block as it stood on
 # 2026-09-29, after S131's H1, and re-read on the tree this landing sits on,
-# `6eb2674`, after S242 and S243 completed: **no defect reachable in ordinary
+# `d446783` (`6eb2674` plus DEC-241's entry), after S242 and S243 completed: **no defect reachable in ordinary
 # play, on the UCI surface, or able to move a reported score, move or line is
 # open.** What is open is test-side, and none of it is touched here but items
 # 9 and 11; items 8 and 10 are closed and kept under their ids:
@@ -213,6 +219,14 @@
 #      golden's re-derivation line, in the form DEC-225 set for S095's. On an
 #      H0 or no verdict all four go back byte for byte with the gate, the
 #      ceiling by dropping the grid from the `--ceilings` command (DEC-241).
+#  12. **S245, a filler for five stale things** the fillers of 2026-09-28/29
+#      noted and did not touch (`adocs/plan_todo/S245_*.md`): a source comment
+#      quoting 42371 nodes where the engine reports 36165; the eight-queens
+#      13.8 ms depth-1 golden reading 6 to 7 ms today, its floor holding;
+#      `tools/plan_prose_check.py` reporting a citation MISSING when its quoted
+#      title wraps across two string literals; the S237/S238 "needs fractional
+#      reductions" comments; `S170_cases.tsv`'s budgets against the DEC-156
+#      rule. None reaches play or a reported score; none is touched here.
 #
 #   The coordinator re-reads the list on the day it pins the pair and amends
 #   this block if it has moved.
@@ -244,7 +258,10 @@
 #                   the parent's tree proved above, and **the switch's code
 #                   leaves with it** (the S238 pattern): `src/`, `tests/`,
 #                   `tools/` and `MANUAL.md` go back to the landing's parent,
-#                   the goldens of item 11 byte for byte with them, proved by
+#                   the goldens of item 11 byte for byte with them and
+#                   `DEV_MANUAL.md`'s golden table with those (the node band,
+#                   the six ceilings, the capture-mate rows, the multicut
+#                   row, the default count), proved by
 #                   INV-6 against that parent (`bench` 3429473 with its eight
 #                   replies, `search_bench` identical at 9 and 12). S015's
 #                   zero stands, with a current number beside it: this run's
@@ -279,8 +296,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates before the first game, so what the run measures
 # is on screen and not assumed.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-d446783}"
+CAND="${CAND:-a97bc1a}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then
