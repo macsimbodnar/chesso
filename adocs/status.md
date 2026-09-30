@@ -5,7 +5,23 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-28, by hand.
+Updated: 2026-09-30, by hand.
+
+## 2026-09-30: S022 done on both verdicts; the early-out removed as `6893c0f`; S247 and S248 created
+
+Verdict 2 reached the 40000-game cap without a verdict (`nElo 3.03 +/- 3.40`,
+recorded in `858a0ac`) and was read as a zero by its pre-registration: the
+early-out and its two parameters left as `6893c0f`, three goldens back byte for
+byte, the tree bench-identical to `58585f8` with S244's screen the one engine
+difference. The removal was prepared beside the run, cold fast-checked, and
+S244's census re-taken on it (0 of 11503 answers moved). Second tier on the
+removal tree: Debug self-play of 8 games at 4+0.04 on the removal tree `6893c0f`, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S022rm_S244_debug_selfplay/`); `tools/gate_extra.sh` 5 stages green in 1051 s (`.tuning/gate_extra_2026-09-30_S022rm_S244.log`). S022's stamp is written and the file is in `plan_done/`;
+the ledger has its row. Fillers S247 (the stop half's 13.8 ms figure) and S248
+(the parent's stale capture-mate rows) sit behind S114 in Open (DEC-171).
+**Next:** S244 completes on this tree (its census and second tier are this
+tree's); then S114 verdict 1, rebased onto this tree and cold-checked twice,
+lands with the S170 budgets re-derived on its tree as a separate commit, its
+second tier, pin and `{0, 5}` SPRT. Owner questions unchanged.
 
 ## 2026-09-29, early: S242 done (the swallowed doctest report, the first-iteration flake)
 
