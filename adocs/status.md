@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-10-01, 01:00: S114 verdict 2 (the entry gate) landed as `7c7328f`, pinned against `465b43b`
+
+`NullMoveEvalGate` 0 -> 1: the null move is tried only where the raw static
+evaluation stands at or above beta. Gate 0 is the parent node for node
+(DEC-215); `bench` 3513310 -> 4041913 (+15.05 %). Eight null-move guard cases
+took DEC-233's second repair, every assertion kept and each mutant re-observed
+killed; a new direct case and NG01 to NG03; the multicut row re-mined in guard
+mode (DEC-238) and capture-mate row 4's label moved. Cold fast check
+FIX-FIRST on text only, fixed. Second tier: Debug self-play 8 games, 0
+`Assertion`; `gate_extra` 5 stages green in 1026 s.
+**Owner decision open:** the S170 budgets on this tree -- the rule's C cell
+(500000) reports 4 mate lines, all short, over C's ceiling of 0, so
+`test_mate_carry` goes red at the rule's answer; the patch is held
+(`.tuning/coord/S114_v2/s170_budgets.patch`) and the standing budgets are
+green. Options: A raise C's ceiling to the script's answer with this grid
+recorded (the DEC-225 form; 4, or 6 with S115's grid); B hold C at 1000000
+and move A and D; C keep the standing budgets.
+**Next:** the `{0, 5}` SPRT launches from `adocs/data/S114_v2_sprt.sh` right
+after this commit (worst case 19.8 h at 2110 games/h). Owner question 3
+(DEC-245) open.
+
 ## 2026-09-30, 23:10: S115 done on its H1
 
 Recorded as `d544872` (the ledger's fortieth row, regenerated in the

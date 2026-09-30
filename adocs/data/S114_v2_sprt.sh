@@ -214,7 +214,9 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # CAND is the commit that lands this verdict's candidate, `NullMoveEvalGate` 1;
 # REF is its parent, the commit the landing sits on. Both are pinned as
 # explicit shas after the landing commit exists, by editing the defaults
-# below: **CAND = the landing commit's sha, REF = CAND^**. Never `HEAD` and
+# below: **CAND = the landing commit's sha, REF = CAND^**, pinned as `7c7328f`
+# and `465b43b`, S115's completion commit, whose engine is S115's landing
+# `eb334e3` byte for byte. Never `HEAD` and
 # `HEAD^`: anything that lands after the landing -- the S170 budgets of item
 # 3, this file's own pinning -- makes `HEAD` a later commit and `HEAD^` the
 # landing, one engine against itself.
@@ -225,8 +227,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates before the first game, so what the run measures
 # is on screen and not assumed.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-465b43b}"
+CAND="${CAND:-7c7328f}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then

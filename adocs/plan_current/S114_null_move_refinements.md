@@ -1831,3 +1831,19 @@ format and the three prose checks are clean.
 
 Bench: 4041913
 ```
+
+### Verdict 2 landed and pinned (the coordinator, 2026-10-01)
+
+Landed as `7c7328f` on `465b43b` from the worktree's working tree after a cold
+fast check (FIX-FIRST on three text items, fixed by the implementing agent
+before the landing; the R02 capture sweep re-taken alone matched byte for
+byte). `bench` 3513310 -> 4041913. **Second tier on the landing** (DEC-141):
+Debug self-play of 8 games at 4+0.04 on `7c7328f`, 0 `Assertion`, 0
+`disconnect` (`.tuning/coord/S114_v2_debug_selfplay/`); `tools/gate_extra.sh`
+5 stages green in 1026 s (`.tuning/gate_extra_2026-10-01_S114v2.log`). SPRT
+pair pinned: `REF` `465b43b`, `CAND` `7c7328f`. **The S170 budgets are not
+re-derived on this tree**: the rule's cell for C carries 4 short lines over its
+ceiling of 0, the patch (`.tuning/coord/S114_v2/s170_budgets.patch`) waits on
+the owner, and the standing budgets are green; open finding 3 of the
+pre-registration says so.
+
