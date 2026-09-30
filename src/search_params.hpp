@@ -354,10 +354,12 @@
      `negamax_at` computes the estimate once, beside `static_eval`, and S109   \
      has read it at the futility site since the shallow-depth block landed;    \
      this switch routes the **other** margin site through the same value, and  \
-     there is exactly one other today. Null move pruning's static-score gate   \
-     and term (S114) read `static_eval`, the raw score, and not the estimate   \
-     -- a table-corrected form is S127's to try -- and razoring does not       \
-     exist until S116, whose site joins under its own verdict.                 \
+     there is exactly one other today. Null move pruning has no static-score   \
+     condition in this engine while `NullMoveEvalGate` is at 0 -- its guards   \
+     are the position's and the window's -- and the gate, S114's second        \
+     verdict, reads `static_eval`, the raw score, and not the estimate; a      \
+     table-corrected form is S127's to try. Razoring does not exist until      \
+     S116, whose site joins under its own verdict.                             \
                                                                                \
      RFP_TT_ESTIMATE IS A SWITCH AND NOT A SETTING, DEC-215. At 0 the site     \
      reads `static_eval` and returns `static_eval - margin`, which is the      \
@@ -376,16 +378,9 @@
   X(RFP_TT_ESTIMATE,   "RfpTtEstimate",   1,      0, 1)                        \
                                                                                \
   /* Null move pruning gives the opponent a free move and searches what is     \
-     left `depth - 1 - R` deep, and since S114 R has three parts:              \
-                                                                               \
-       R = NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR                          \
-         + min(max(static_eval - beta, 0) / NULL_MOVE_EVAL_MARGIN,             \
-               NULL_MOVE_EVAL_CAP)                                             \
-                                                                               \
+     left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \
      Deeper searches can afford to give up more, since what is left is still   \
-     enough to answer the question, and so can a node whose static score       \
-     stands far above beta: the further ahead it is, the less evidence a pass  \
-     needs before it is believed. A divisor of zero is a division by zero,     \
+     enough to answer the question. A divisor of zero is a division by zero,   \
      which is the floor.                                                       \
                                                                                \
      THE BASE AND THE DIVISOR are seeds of form (b), DEC-134: 3 and 6 are what \
@@ -394,51 +389,22 @@
      node-count sweep over S021's 300 positions ranked (3, 5) first by 0.8 %   \
      pooled, a lead that flips on two of its three samples, so it re-decided   \
      nothing (DEC-244); its table, adocs/data/S114_null_move_sweep_d11.tsv,    \
-     is S127's input when it fits these two with the two below. */             \
+     was taken with S114's static-score term in, at a margin of 94 and a cap   \
+     of 8, and the term has since left with its verdict. */                    \
   X(NULL_MOVE_BASE,    "NullMoveBase",    3,      0, 16)                       \
   X(NULL_MOVE_DIVISOR, "NullMoveDivisor", 6,      1, 64)                       \
                                                                                \
-  /* THE STATIC-SCORE TERM, S114: how many whole margins the node's static     \
-     score stands above beta, at most the cap, added to the reduction --       \
-     `min(max(static_eval - beta, 0) / margin, cap)`. Clamped at zero, so a    \
-     static score below beta takes nothing off R and the term only ever adds   \
-     reduction. It is read inside the null-move block only, past its guards:   \
-     out of check, where `static_eval` is a number and never the TT_EVAL_NONE  \
-     sentinel (negamax_at asserts it).                                         \
-                                                                               \
-     `NullMoveEvalMargin` 94, range 1 to 2000, is form (b): one pawn in this   \
-     engine's own material scale, `PAWN` in src/eval_tables.hpp, the unit the  \
-     degenerate split with the piece-square tables leaves (a unit is stated    \
-     in chesso's own scale, DEC-134). The wiki's Null Move Pruning page gives  \
-     the eval-scaled factor with no number, so there is no form (a) to take.   \
-     The floor is the division. The top parks the term -- at 2000 it adds a    \
-     ply only 21 pawns above beta -- and is not an off value; the cap's 0 is.  \
-                                                                               \
-     `NullMoveEvalCap` 8, range 0 to 16, is form (c), the range's midpoint,    \
-     and 0 is the term off: at cap 0, the gate below at 0 and the base and     \
-     the divisor at 3 and 6, the engine is the tree before S114 node for node, \
-     which is this verdict's off value (DEC-215). **A midpoint is a poor seed  \
-     for a safety cap, and this says so out loud**: at 8 a large static lead   \
-     takes eight more plies off the null search. What keeps that from hiding   \
-     a mate is the floor in negamax_at, `depth - 1 - R >= 1` tested on the     \
-     whole R, and not the cap: an uncapped term with the floor kept makes the  \
-     pass impossible rather than blind, and the node is searched. With the     \
-     floor and the cap both lifted the null search falls to quiescence, which  \
-     is S114's demolition. The owner's answer of 2026-09-08: seed the          \
-     midpoint, and keep the measured alternative beside it -- the largest cap  \
-     at which both mate suites pass, less one.                                 \
-                                                                               \
-     `NullMoveEvalGate` IS A SWITCH AND NOT A SETTING, DEC-215, AND IT SHIPS   \
-     AT 0, DEC-243. At 1 the null move is tried only where the static score    \
-     is at least beta, the bare entry gate the step file names; at 0 it is     \
-     tried at any static score, as before S114. The gate and the term are two  \
-     changes, so S114's first verdict measures the term alone and its second   \
-     flips this switch on the tree the first leaves, with no code then. No     \
-     setting of the four numbers turns the gate off, which is why the path     \
-     has a switch whose range end does. A verdict switch, not something S127   \
-     sweeps. Implemented from the step file's description, DEC-221. */         \
-  X(NULL_MOVE_EVAL_MARGIN, "NullMoveEvalMargin", 94, 1, 2000)                  \
-  X(NULL_MOVE_EVAL_CAP,    "NullMoveEvalCap",     8, 0,   16)                  \
+  /* THE NULL MOVE'S ENTRY GATE, S114. `NullMoveEvalGate` IS A SWITCH AND NOT  \
+     A SETTING, DEC-215, AND IT SHIPS AT 0, DEC-243. At 1 the null move is     \
+     tried only where the node's raw static score is at least beta, the bare   \
+     entry gate the step file names; at 0 it is tried at any static score,     \
+     as before S114. The gate and S114's static-score term were two changes,   \
+     so the step's first verdict measured the term alone -- the term left on   \
+     that reading -- and its second flips this switch on the tree the first    \
+     leaves, with no code then. No setting of the base or the divisor turns    \
+     the gate off, which is why the path has a switch whose range end does.    \
+     A verdict switch, not something S127 sweeps. Implemented from the step    \
+     file's description, DEC-221. */                                           \
   X(NULL_MOVE_EVAL_GATE,   "NullMoveEvalGate",    0, 0,    1)                  \
                                                                                \
   /* The two coefficients of the late move reduction fit,                      \

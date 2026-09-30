@@ -1857,44 +1857,24 @@ static int negamax_at(int alpha0,
   if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&
       excluded_move == 0 && (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&
       beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {
-    // The one place `static_eval` holds the TT_EVAL_NONE sentinel is a node in
-    // check, and the in-check guard is what keeps every such node out: the
-    // gate alone would not, because the sentinel is INT16_MIN and clears every
-    // beta at or below it that the band guard lets through. The term reads the
-    // number, so that is asserted rather than assumed. S108, S114.
-    assert(static_eval != TT_EVAL_NONE);
-
     // Deeper searches can afford to give up more, since what is left is still
-    // enough to answer the question -- and since S114 so can a node whose
-    // static score stands far above beta: one ply more per whole
-    // `NullMoveEvalMargin` of lead, at most `NullMoveEvalCap` more. Never
-    // negative: the clamp keeps a static score below beta from taking
-    // anything off R, which is what makes cap 0 the tree before S114 with the
-    // gate at 0, where it ships.
-    const int null_eval_term =
-        std::min(std::max(static_eval - beta, 0) / NULL_MOVE_EVAL_MARGIN,
-                 NULL_MOVE_EVAL_CAP);
-    const int null_reduction =
-        NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR) + null_eval_term;
-
-    if constexpr (PROBING) {
-      if (probe != nullptr) { probe->null_reduction = null_reduction; }
-    }
+    // enough to answer the question.
+    //
+    // **S114 tried a static-score term here** (verdict 1): one ply more for
+    // every whole pawn, 94, by which the node's raw static score stood above
+    // beta, at most eight more, clamped at zero. Its `{0, 5}` nElo SPRT
+    // accepted H0, `nElo -23.81 +/- 13.06` over 2720 games, a loss, and the
+    // term and its two parameters left with the verdict.
+    const int null_reduction = NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR);
 
     // The reduced search has to keep at least one real ply. Let it fall to zero
     // and it becomes pure quiescence, which only looks at captures and
     // therefore cannot see a mate that is two plies away - it answers with the
     // static score and the pass looks safe. That is not a theoretical risk: it
     // lost a mate in two at depth 4, where this node had three plies left and
-    // the null search had none.
-    //
-    // **The whole reduction is tested, the static-score term included**
-    // (S114). A large lead then makes the pass impossible at a shallow depth
-    // rather than blind: the node is searched in full, which costs nodes and
-    // never a mate. The cap is not what does that. Without this floor a lead
-    // of `NullMoveEvalCap` 8 margins still leaves the null search no ply at
-    // every depth up to 14 -- R is 3 + depth / 6 + 8 -- so lifting the floor
-    // turns the term back into the bug above whatever the cap.
+    // the null search had none. Tested here and not beside the guards above
+    // since S114, whose term it had to see as well; every guard is a pure
+    // condition, so where the floor sits changes no node.
     if (depth - 1 - null_reduction >= 1) {
       const int reduction = null_reduction;
       const child_label_t child = null_move_child(is_pv, cut_node);

@@ -59,11 +59,13 @@
 // early-out's switch, and `QsDeltaPhaseMin`, the late-endgame threshold it
 // was not asked at or below, and its reading took both out again with the
 // rule: 69 to 71 and back to 69.
-// S114 adds three: `NullMoveEvalMargin` and `NullMoveEvalCap`, the margin
-// and the cap of the null move's static-score term, whose cap at 0 is the
+// S114 added three: `NullMoveEvalMargin` and `NullMoveEvalCap`, the margin
+// and the cap of the null move's static-score term, whose cap at 0 was the
 // term off and the parent's tree, and `NullMoveEvalGate`, the switch over
 // the entry gate, which ships at 0 and whose 1 is that step's second
-// verdict (DEC-243).
+// verdict (DEC-243). Its first verdict's H0 took the margin and the cap out
+// again with the term and kept the gate for the second: 69 to 72 and back
+// to 70.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -76,7 +78,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 72 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 70 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -110,8 +112,6 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RfpTtEstimate",             1,     0,       1},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},
-  {"NullMoveEvalMargin",       94,     1,    2000},
-  {"NullMoveEvalCap",           8,     0,      16},
   {"NullMoveEvalGate",          0,     0,       1},
   {"LmrBase",                  52,     0,     400},
   {"LmrDivisor",              182,     1,    2000},

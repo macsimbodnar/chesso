@@ -33,7 +33,10 @@ S = "src/search.cpp"
 # computation inside the null-move block, so the line after its condition is
 # no longer `const int reduction = null_reduction;`. The mutation is unchanged
 # -- `game_phase(&game->board) > 0` still becomes `true` -- and the anchor now
-# carries the block's first comment line instead.
+# carries the block's first comment line instead. **And a third time at
+# S114's removal**, which takes out the assert whose comment that first line
+# was: the anchor carries the block's first comment line as it now stands, and
+# the mutation is again unchanged.
 
 
 m("M01_nmp_in_check", S, "search/pruning",
@@ -50,8 +53,8 @@ m("M02_nmp_mate_band_neg", S, "search/pruning",
 
 m("M03_nmp_zugzwang", S, "search/pruning",
   'null move in pawn endings (game_phase 0)',
-  ('&& game_phase(&game->board) > 0) {\n    // The one place `static_eval` holds',
-   '&& true) {\n    // The one place `static_eval` holds'),
+  ('&& game_phase(&game->board) > 0) {\n    // Deeper searches can afford',
+   '&& true) {\n    // Deeper searches can afford'),
   origin="2026-09-04_test_review")
 
 m("M04_nmp_mate_artifact", S, "search/pruning",

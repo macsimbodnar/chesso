@@ -845,9 +845,10 @@ reverted after each variant: shipped green; **the floor and the cap lifted
 together, red** -- `CHECK( last_score <= -MATE_MIN_LOCAL )`, values 373 against
 -48000, at depths 5 and 15, R 23 and 25; the floor alone lifted, the mate lost
 at 5 and found at 15; the cap alone lifted, the mate found at both and only the
-case's readings of R and of the pass at 15 red. The case's comment in
-`tests/test_search.cpp` "the static-score term does not hide a forced mate"
-now names this log and says so.
+case's readings of R and of the pass at 15 red. The comment of that case in
+`tests/test_search.cpp`, "the static-score term does not hide a forced mate",
+named this log and said so until the case left with the term (verdict 1's
+removal, below).
 
 ### The two cases the fast check found unobserved, observed again here
 
@@ -1023,3 +1024,417 @@ states them. S022 verdict 2 read as a zero at the cap and its early-out removed 
 `DONE`). **H0 with the interval wholly below zero**: a loss; `NullMoveEvalCap` goes to 0, the proved off value, and the term's code leaves with it on the pre-registration's H0 row (the S238 pattern): its line, the margin and the cap, the probe field, the six S114 cases and the six NT mutants, the manuals with them; the two re-derived rows of item 16 and the defender case's depth go back byte for byte, and S248 re-derives the parent's capture-mate rows; the S170 budgets are re-derived on the reverted tree (DEC-156 as amended by DEC-162). The gate's switch, its clause and its row stay at 0 for S114's second verdict (DEC-243), as does the floor's place inside the block and the derived `NULL_DRIVE_DEPTH`. `Incomplete mating PV` 0 against 3,
 an observation for the pre-registration's open findings (CHESS).
 No follow-up run and no second pair for this verdict (DEC-063, DEC-019).
+
+## Verdict 1's removal, 2026-09-30
+
+Written by a fresh Opus agent on the linked worktree `s114rm` at `b3876f8`,
+briefed from `.tuning/coord/S114_rm_brief.md`. It started beside the SPRT's
+last minutes: until the match ended every CPU-bound command ran under `nice
+-n 19` with `-j4` builds, and after it `-j8`, still niced, beside the S115
+agent's own work. Every number below that decides anything is a node
+count, a best move or a pass; the only seconds quoted are wall times. **The
+reading, from the coordinator**: `794e4c3` against `d946b6f`, `{0, 5}` nElo at
+8+0.08, **accepted H0 on 2026-09-30 at 07:33 -- `Elo -18.54 +/- 10.19`, `nElo
+-23.81 +/- 13.06`, LLR -2.95, 2720 games in 1 h 17 m, 0 forfeits** (the run's
+log becomes `adocs/data/S114_sprt.log`), an interval wholly below zero. That is
+the pre-registration's H0 row exactly, "a loss, and the revert is one default",
+and this section executes it: the term's code leaves with `NullMoveEvalCap`'s
+off value (the S238 pattern), and what the row names stays. The record commit,
+its result block and the shared documents are the coordinator's. Nothing was
+committed or staged by this agent. The logs are this worktree's
+`.tuning/coord/S114_rm/`, cited below by that path, for the coordinator to
+carry into the main tree's. Written against `b3876f8`: the record commit
+`22e00c3` has since appended "Verdict 1's outcome" to this file, and this
+section follows it at the landing.
+
+**How.** By hand against `b3876f8`: the null-move block of `src/search.cpp`
+`negamax_at` edited down to the parent's reduction with the floor left where
+S114 put it, `src/data_structures.hpp` restored from `d946b6f` whole, the two
+rows and their comment taken out of `src/search_params.hpp`, the six cases
+taken out of `tests/test_search.cpp` and its three golden sites restored from
+`d946b6f`'s text -- the multicut row and the capture-mate table each with a
+record paragraph, the defender case byte for byte -- two rows out of
+`tests/test_search_params.cpp`, `tools/mutants/S114_null_move_term.py`
+deleted, M03's anchor re-pointed, `MANUAL.md` and `DEV_MANUAL.md` by hand.
+`adocs/data/S170_cases.tsv` and `tests/test_mate_carry.cpp` are `b3876f8`'s:
+the budgets are their own patch (below).
+
+### Deviations and findings, first
+
+1. **The brief's "what stays" list names two things the row does not, and
+   both left.** The brief keeps "M02's depth 15 case as repaired" and "the
+   fixture's precondition assert"; the pre-registration's H0 row keeps the
+   gate's switch, clause and row, the floor's place and the derived
+   `NULL_DRIVE_DEPTH` and nothing else, and its item 16 -- which the brief's
+   own first paragraph and the launch message repeat -- sends "the defender
+   case's depth" back byte for byte. The defender case *is* M02's case ("no
+   defender node inside the mate band makes a null move"), so the two
+   sentences conflict, and the row was followed. Both repairs read the term's
+   constants, which leave: the depth-15 search is `capped_null_plies` over
+   `NULL_MOVE_EVAL_CAP`, and the fixture's assertion is `evaluate() - beta <
+   NULL_MOVE_EVAL_MARGIN`. Without the term the reduction the fixture's floor
+   checks is the whole reduction, so the assertion guards nothing, and at
+   `NULL_DRIVE_DEPTH` the band guard is again the only thing between a
+   defender node and a pass, which is what the restored depth needs: **M02
+   applied by hand is red there** at `REQUIRE( violations.empty() )` and green
+   shipped (`.tuning/coord/S114_rm/hand_checks.log`). If the coordinator reads
+   the brief's list as meant, both come back as a small follow-up; nothing
+   else here depends on the choice.
+2. **`assert(static_eval != TT_EVAL_NONE)` in the null-move block left with
+   the term.** Its comment gave the term as its reason ("The term reads the
+   number, so that is asserted rather than assumed") and the row does not
+   list it. The gate's clause reads `static_eval` too, but inside the
+   condition and after `!is_in_check`, whose short-circuit is what keeps the
+   sentinel out; a Release build compiles the assert away, so INV-6 cannot
+   see the choice either way.
+3. **M03's anchor was re-pointed a third time.** The assert's comment was the
+   line after the null-move condition that `tools/mutants/search.py`'s M03
+   anchored on; it now anchors on the block's first comment line as it
+   stands, the mutation unchanged, the file's note saying so. E10's anchor,
+   the gate's clause, is untouched and valid. **M03 and E10 applied by hand
+   are red** at their own cases, "a node with only kings and pawns makes no
+   null move" and "an excluded node makes no null move", and green shipped
+   (`hand_checks.log`).
+4. **One citation in this file's earlier sections went stale** with the case
+   it named: "The demolition, on this tree" cited `tests/test_search.cpp` with
+   the demolition case's title, which `--citations` then flagged MISSING. The
+   sentence now says in the past tense that the case's comment named that log
+   until the case left; no other word of the earlier sections moved.
+5. **The S170 patch is at `/home/max/ws/chesso-s114rm/.tuning/coord/S114_rm/s170_budgets.patch`**,
+   in this worktree, and not in the main tree's `.tuning/coord/S114_rm/` as the
+   brief wrote: the launch message allowed no write under `/home/max/ws/chesso`.
+   One `cp` puts it where the brief said.
+6. **Kept and amended, not restored**: `src/search_params.hpp`'s paragraph on
+   the base and divisor seeds (form (b), S085's SPSA output, and DEC-244's
+   sweep that re-decided nothing) stays, since both parameters stay; its
+   "S127's input when it fits these two with the two below" now says the table
+   was taken with the term in, at 94 and 8, and that the term has left. The
+   `RfpTtEstimate` comment's routing sentence reads as `d946b6f`'s with the
+   gate named ("no static-score condition ... while `NullMoveEvalGate` is at
+   0"), the wording proposed for `specs.md` below.
+
+### What left
+
+| what | where |
+|---|---|
+| the static-score term -- `null_eval_term`, `min(max(static_eval - beta, 0) / NULL_MOVE_EVAL_MARGIN, NULL_MOVE_EVAL_CAP)` -- and its share of `null_reduction`; the probe write of the reduction; the `assert(static_eval != TT_EVAL_NONE)` and its comment; the floor comment's S114 paragraph ("The whole reduction is tested, the static-score term included") | `src/search.cpp` `negamax_at`, the null-move block |
+| `NULL_MOVE_EVAL_MARGIN` ("NullMoveEvalMargin", 94, 1 to 2000) and `NULL_MOVE_EVAL_CAP` ("NullMoveEvalCap", 8, 0 to 16) with their comment block; the three-part R in the base and divisor comment | `src/search_params.hpp`, the one X-macro both builds read |
+| the probe field `null_reduction`: the file is `d946b6f`'s byte for byte | `src/data_structures.hpp` `search_node_probe_t` |
+| the six S114 cases of "search: pruning and reduction guards" with their fixture `null_eval_drive_t`, `NULL_EVAL_POS` and `NULL_EVAL_NODE_LIMIT`: "the null move reduction adds a ply per margin the static score stands above beta", "a static score below beta takes nothing off the null move reduction", "the floor refuses a pass the static-score term leaves no ply for", "the static-score term is never computed at a node in check", "the static-score term does not hide a forced mate", and the tune-only "the static-score term moves the tree above beta and holds it still below"; the defender case's depth search (`capped_null_plies`, its loop, its `REQUIRE_EQ` and the per-row term-at-cap check); the fixture's term assertion in `require_null_move_preconditions` | `tests/test_search.cpp` |
+| the two golden rows, 72 back to 70 | `tests/test_search_params.cpp` `golden_defaults` |
+| NT01 to NT06, the file deleted | `tools/mutants/S114_null_move_term.py` |
+| the `NullMoveEvalMargin` and `NullMoveEvalCap` option rows; the `NullMoveDivisor` row back to `d946b6f`'s | `MANUAL.md` |
+
+### What stayed, and why
+
+The row's own words, written before the first game: "**One reason to keep
+code is stated now**: the gate's switch, its clause and its row stay at 0,
+because S114's second verdict flips them on the tree the first leaves and adds
+no code then (DEC-243); so does the floor's place inside the block, which at
+cap 0 tests the reduction before S114 exactly, and the derived
+`NULL_DRIVE_DEPTH`." So:
+
+- `NULL_MOVE_EVAL_GATE` ("NullMoveEvalGate", 0, 0 to 1) in
+  `src/search_params.hpp`, its comment rewritten for a tree without the term;
+  its clause `(NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta)` in the
+  condition of `src/search.cpp` `negamax_at` and its entry in the guard list,
+  unchanged; its `golden_defaults` row and its `MANUAL.md` row, whose one
+  sentence about the term now says the term left.
+- The floor `depth - 1 - null_reduction >= 1` inside the block, the reduction
+  computed there as `NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR`, with one
+  sentence saying why it sits there: every guard is a pure condition, so where
+  the floor sits changes no node. A comment where the term's line was says
+  S114 tried it and what its SPRT read, in the form S237's, S238's and S022's
+  sites took.
+- `NULL_DRIVE_DEPTH`, derived by `null_drive_depth_for` from the base and the
+  divisor, 5 at the seeds; its comment loses the term's clauses and says it
+  stayed by the row.
+- The evidence: `adocs/data/S114_demolition_row.py`,
+  `S114_null_move_sweep.py`, `S114_null_move_sweep_d11.tsv`,
+  `S114_remine_s097.log`, `S114_rb_remine_s097.log`, `S114_sprt.sh`,
+  `S114_sweep_s170.txt` and their `adocs/data/README.md` rows, untouched;
+  `DEV_MANUAL.md`'s two landing paragraphs in the bench ledger, which are
+  their record; this file's earlier sections.
+
+### The goldens' return (DEC-142, DEC-233)
+
+1. **The multicut row** of `tests/test_search.cpp` "pruning does not hide a
+   forced mate" (`mate_the_multicut_hides`). The landing's row,
+   `R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50`, depth 13, `mate_in ==
+   5`, becomes S131's row as `d946b6f` has it,
+   `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42`, depth 14, `mate_in
+   == 6`, with the title's depth and the GOLDEN line ("the depth 14 below")
+   back too. The GOLDEN block keeps the re-mine as history: the landing's
+   paragraph becomes "RE-MINED AT S114'S FIRST VERDICT, IN THE SCRIPT'S GUARD
+   MODE, AND RESTORED WHEN THE TERM LEFT", the rows list keeps S114's row as
+   its own entry, and S131's entry reads "on `58585f8`, again after S022
+   verdict 2's reading, and again after S114 verdict 1's". **S131's row
+   separates E21 again on this tree**: E21 applied by hand to a copy of the
+   reverted `src/`, and the case fails at the row's `REQUIRE(
+   result.mate_found )`, logged "mate the multicut hides, depth 14", after 40
+   of its 41 assertions passed; green shipped (`hand_checks.log`).
+2. **The capture-mate table** of the same case went back to `d946b6f`'s rows
+   first, a revert and not a re-mine -- from the landing's
+   `{row 1, 7, 5, "C02, C05, R02, since S112"}`,
+   `{row 2, 7, 5, "no S091 mutant, since S095"}`,
+   `{row 3, 10, 4, "C05, R02, since S114"}`,
+   `{row 4, 9, 5, "C02, C05, C07, since S114"}` to
+   `{row 1, 7, 5, "C02, C05, R02, since S112"}`,
+   `{row 2, 9, 5, "no S091 mutant, since S095"}`, `{row 3, 11, 4, "R02"}`,
+   `{row 4, 10, 5, "no S091 mutant, since S113"}` -- and S248 then re-derived
+   those, the next subsection. The landing's S114 paragraph at the table
+   becomes the record of both moves.
+3. **The defender case's depth**, "no defender node inside the mate band makes
+   a null move": from the shallowest depth the capped term leaves a ply at, 15
+   at the seeds, back to `NULL_DRIVE_DEPTH`, the case `d946b6f`'s text byte
+   for byte (compared in-process), and so is `require_null_move_preconditions`.
+   Red under M02 at the restored depth (deviation 1).
+4. **`golden_defaults`**: 72 rows back to 70, the gate's row staying; the
+   history comment records the three coming and two going.
+
+### S248's rows, re-derived on the reverted tree
+
+`adocs/data/S230_mine_r01_row.py depths` over `adocs/data/S230_table_fens.txt`
+at depths 3 to 12, the shipped library and one per mutant of
+`tools/mutants/S091_capture_see.py`, each applied to the throwaway worktree
+`.ref-builds/d946b6f` after a plain copy of this worktree's `src/` into it, and
+reverted by copying `src/search.cpp` back (driver
+`.tuning/coord/S114_rm/capmates.sh`, sweeps and build logs in `capmates/`).
+The rule the table's GOLDEN block states, applied to every row: the lowest
+depth in the shipped profile at which some mutant loses the mate, else the
+lowest depth in the profile, said so in the label.
+
+| row | shipped profile | the mutants losing it at that depth | restored (`d946b6f`) | re-derived |
+|---|---|---|---|---|
+| 1 | `d7 d9 d10 d11 d12` | C02, C05, R02 at 7 | 7, 5, "C02, C05, R02, since S112" | 7, 5, "C02, C05, R02, since S112" |
+| 2 | `d7 d8 d9 d10 d11 d12` | none at any depth | 9, 5, "no S091 mutant, since S095" | **7**, 5, "no S091 mutant, since S095" |
+| 3 | `d10 d11 d12` | C02 and R02 (`d12` each) at 10 | 11, 4, "R02" | **10**, 4, **"C02, R02, since S248"** |
+| 4 | `d10 d11 d12` | R02 (`d8 d9 d11 d12`) at 10 | 10, 5, "no S091 mutant, since S113" | 10, 5, **"R02, since S248"** |
+
+No mate distance moved. C06, C07 and R01 are separated by no row at any depth;
+C02 gains row 4's depth 9 reading, a mutant finding the mate earlier and not a
+separation. **All seven sweeps are byte for byte the ones S114's rebase took on
+its parent** (`.tuning/coord/S114b_logs/capmates/parent_*`, on `db1905f`,
+whose `src/` differs from `d946b6f`'s by one comment): the four positions
+read the same on both trees under every S091 mutant, evidence on these four
+positions and no more.
+The site quotes the restored rows and the re-derived ones in a new "Re-derived
+at S248" paragraph, row 4's own comment says S114 moved it and S248 keeps it,
+and `DEV_MANUAL.md`'s golden row leads with 7, 7, 10, 10. S248's step file is
+untouched; the coordinator completes it on this report.
+
+### The proofs
+
+**INV-6 identity to `d946b6f`'s engine** (DEC-215), against a Release build
+of `d946b6f` made in the throwaway worktree `.ref-builds/d946b6f` (`git
+worktree add --detach`, clean, doctest cloned from the main tree's module),
+its binary kept as `.tuning/coord/S114_rm/ref_d946b6f_chesso`, sha256
+`dd15ae13...`; this worktree's Release binary `e0276651...`, the same bytes
+before and after the site comment took the reading's figures:
+
+| | |
+|---|---|
+| `bench` | **3429473**, the whole stream -- all 112 `info` lines' depth, score, nodes and PV and all eight `bestmove` replies, c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- identical with `time` and `nps` stripped, 121 lines (`bench_ref.txt`, `bench_wt.txt`, the `_stripped` pair) |
+| `bench 12` | **1694808**, its 105-line stream identical the same way, the same eight replies |
+| `tools/search_bench.py` | node for node and move for move: depth 9 48304 / 71580 / 25413, depth 12 104784 / 244824 / 117798, best c3d5 e2a6 d7c8q at both (`sb9_*`, `sb12_*`) |
+| the tune build at defaults | `bench` 3429473 with its whole 121-line stream identical to the reference binary's the same way (`bench_tune.txt`, `tune_checks.log`) |
+| the tune build's options | 75 option lines, 70 of them the search table's: `NullMoveBase`, `NullMoveDivisor` and `NullMoveEvalGate` (default 0, 0 to 1) among them and neither `NullMoveEvalMargin` nor `NullMoveEvalCap`; the Release build lists 5 (`tune_uci.txt`) |
+
+The remaining difference to `d946b6f` in `src/`: the gate's row, clause and
+guard-list entry, the floor inside the block, the site comment, and in
+`src/search_params.hpp` the base and divisor seeds' paragraph, the gate's
+comment and the `RfpTtEstimate` sentence. In `tests/`: the derived
+`NULL_DRIVE_DEPTH`, the gate's golden row, the record paragraphs and S248's
+rows at the goldens, and `ad18661`'s sentence in `tests/test_mate_carry.cpp`,
+which the budgets patch moves. In `tools/`: M03's anchor and E10's (S114's,
+still valid). `MANUAL.md`: the gate's row. `adocs/data/S170_cases.tsv` is
+`ad18661`'s, S114's budgets, until the budgets patch.
+
+### Suites and checks
+
+| | |
+|---|---|
+| both fast suites | niced, serial `ctest -L fast`, one build at a time, `-j8` builds after the match: **41 of 41 each** -- Release `build` in 109.0 s, `test_mate_carry` 27.36 s against its 120 s ceiling, and `-DCHESSO_TUNE=ON` `build-tune` in 112.3 s, `test_mate_carry` 27.19 s, both at the TSV's S114 budgets (`suite_build_run1.log`, `suite_build-tune_run1.log`). Run again on the final tree, this section in it but for these figures: 41 of 41 each, Release 99.6 s and tune 100.9 s, `test_mate_carry` 25.03 s and 25.42 s (`suite_build_final.log`, `suite_build-tune_final.log`) |
+| format | `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` |
+| prose | `tools/plan_prose_check.py`, one mode per invocation, on the final tree with this section in it: `--citations` 0 flagged over 38 files, this file's 33 code citations among them, `--touches` 0 flagged over 38 files, `--params` exit 0 with no output (`prose--citations.log`, `prose--touches.log`, `prose--params.log`) |
+| mutant anchors | `tools/mutation_check.py` has no validate-only flag, so its own `load_mutants` and `validate` were run in-process against the working tree over the whole of `tools/mutants/`: **156 mutants in 19 files**, every anchor unique, ids distinct, no NT id left (`mutant_anchors.log`) -- 162 in 20 on the landing |
+| hand-applied mutants | on a copy of the reverted `src/` and `tests/` in the throwaway, each green shipped and red under its mutant at its own case: E21 on S131's restored row, M02 on the defender case at the restored depth, M03 on its re-pointed anchor, E10 on the gate's clause (`hand_checks.log`) |
+| the UCI surface | `test_uci_surface` green in both builds with **no refresh**: the Release build's 5 options are unchanged, and the tune build's lines are generated from the same table, 75 with the two gone |
+
+### S170's budgets, re-derived on the reverted tree -- a separate patch (DEC-156 as DEC-162 left it)
+
+`adocs/data/S203_case_sweep.sh` with no argument, niced, on a copy of this
+tree's Release build (`.tuning/coord/S114_rm/s170/chesso`, the INV-6
+binary's bytes), the full 108-cell grid in 16.5 minutes, 07:34 to 07:51.
+**The rule, stated before the grid was read** in the run's own script
+header (`s170/run_sweep.sh`): each row takes the cheapest cell at its own
+stride that reports a mate line, on the mate count alone, the short lines the
+ceilings' and never a reason to refuse a cell. Applied by `s170/pick.py`,
+which was checked first on S114's own grid, `adocs/data/S114_sweep_s170.txt`,
+where it returns S114's six budgets.
+
+| case | stride | old budget (S114's) | old cell now | new budget | its cell (mates / short) |
+|---|---|---|---|---|---|
+| A_mate8_shallow | 1 | 300000 | **0 / 0** | **500000** | 2 / 0 |
+| B_mate6_shallow | 1 | 100000 | 15 / 0 | 100000 | 15 / 0 |
+| C_mate7_depth11 | 1 | 1200000 | **0 / 0** | **500000** | 2 / 0 |
+| D_mate_minus6_depth10 | 1 | 1200000 | 3 / 0 | 1200000 | 3 / 0 |
+| E_mate_minus9 | 1 | 300000 | 2 / 0 | 300000 | 2 / 0 |
+| F_mate6_inherited_no_line | 2 | 100000 | 4 / 0 | 100000 | 4 / 0 |
+
+**At S114's budgets two of the five guarded cases are silent on this tree**,
+A and C, which DEC-162 makes green by design -- three silent is red -- so the
+removal's `test_mate_carry` is green on the TSV it leaves unchanged (the
+suites above), and the budgets commit is what brings all five back. `--at` on
+the patched TSV reproduces the six cells exactly (`s170/at.txt`), and
+`test_mate_carry` at the new budgets is green in both builds, 20.95 s and
+21.50 s, 55 assertions each (`s170/carry_check.log`), the patch applied for
+the check and reversed, every file's sha256 back to its value before.
+**One ceiling reading moved, and no ceiling was changed**: `--ceilings` over
+the four recorded grids answers the shipped 5, 15, 0, 2, 11, 5; with this
+grid added it would answer 5, 15, **1**, 2, 11, 5, since C's cell at 2000000
+reports 4 lines with 1 short; this grid alone reads 0, 8, 1, 0, 1, 1
+(`s170/ceilings_*.txt`). S245's and S114's re-sweep grids are not in the
+command `tests/test_mate_carry.cpp` names and neither is this one, so C's
+ceiling stays 0 -- adding the grid would raise a ceiling, which that file
+calls relaxing a test, a decision -- and C's own budget cell reports 0 short.
+
+The patch, `/home/max/ws/chesso-s114rm/.tuning/coord/S114_rm/s170_budgets.patch`
+(the same bytes in `s170/`), holds the TSV with a paragraph quoting S114's
+rows, the grid as `adocs/data/S114_rm_sweep_s170.txt`, its
+`adocs/data/README.md` row, the sentence of `tests/test_mate_carry.cpp` about
+E's cell, which this grid made false (all 10 short on S114's tree, 2 with 0
+short here), and `DEV_MANUAL.md`'s sentence naming the steps that re-swept the
+budgets. It applies on this worktree as it stands, and on `51ec924` with the
+removal's `DEV_MANUAL.md` -- its README hunk carries one line of context so
+the record commit's two new rows above it do not stop it -- and lands as its
+own commit after the removal's. A commit text for it, if wanted:
+
+```
+Re-derive the S170 mate-carry budgets on S114's removal tree (DEC-162)
+
+S114 verdict 1's term left on its H0, so the budgets ad18661 derived on
+the term's tree are not this tree's. DEC-156 as amended by DEC-162
+re-derives S170_cases.tsv's go budgets after anything that moves the
+tree, by one rule stated before the grid was read: each row takes the
+cheapest budget at its own stride whose cell reports a mate line,
+chosen on the mate count alone. adocs/data/S203_case_sweep.sh over the
+full 108-cell grid on a copy of the removal's Release build, tracked as
+adocs/data/S114_rm_sweep_s170.txt with its README row.
+
+New budgets: A 300000 -> 500000 and C 1200000 -> 500000, both old cells
+silent on this tree; B, D, E, and F at its stride 2, unchanged. --at
+reproduces the six cells; test_mate_carry at the new budgets is green in
+both builds. --ceilings over the four recorded grids still answers 5,
+15, 0, 2, 11, 5; this grid is not in that command. The TSV quotes the
+old rows; test_mate_carry.cpp's sentence on E's cell and DEV_MANUAL's
+list of the re-sweeps read true again.
+```
+
+### Not run here
+
+- DEC-141's second tier -- the Debug self-play, which is a match, and
+  `tools/gate_extra.sh` -- by the brief; the coordinator's on the idle
+  machine. The Debug guard suite, not required by the brief, was not run.
+- `tools/mutation_check.py` on a fixture: its fixture is a clean commit in a
+  throwaway worktree, which the landed tree gives the coordinator; the four
+  hand-applied mutants above stand in for the touched ones.
+- The budgets' landing: the patch below is prepared and checked, not applied.
+- Any timing.
+
+### Proposed `adocs/specs.md` edits, for the coordinator
+
+Quoted against `specs.md` at `b3876f8`, both in the `search` row, both for the
+removal commit.
+
+**1. The S114 sentence**, from "**The null move's reduction grows with the
+static score's lead over beta since S114**" through "<verdict> -- `bench`
+3429473 -> 4192793." inclusive -- or whatever the record commit wrote in
+place of `<verdict>` -- becomes, in the form S022 verdict 2's took:
+
+> **A static-score term in the null move's reduction was tried and left, S114
+> verdict 1, landed and removed 2026-09-30 (DEC-243)**: past the block's
+> guards R was `NullMoveBase + depth / NullMoveDivisor` (3 + depth/6, S085's
+> fit, kept by DEC-244) plus one ply for every whole `NullMoveEvalMargin` (94,
+> a pawn) the node's raw static evaluation stood above beta, at most
+> `NullMoveEvalCap` (8), clamped at zero, the floor `depth - 1 - R >= 1`
+> testing the whole of it, so a lead that would have left the null search no
+> ply made the pass impossible and the node was searched; `NullMoveEvalCap` 0
+> gave the tree before S114 node for node (DEC-215). Before any game it moved
+> `bench` 3429473 -> 4192793 and the fixed-node depths 47 -> 48 -- reach, not
+> a forecast (DEC-239). Its one `{0, 5}` nElo SPRT against the tree without it
+> (`adocs/data/S114_sprt.sh`) **accepted H0 at 2720 games on 2026-09-30 --
+> `Elo -18.54 +/- 10.19`, `nElo -23.81 +/- 13.06`, LLR -2.95, 0 forfeits**
+> (`adocs/data/S114_sprt.log`), an interval wholly below zero, a loss: the
+> term's code left with its margin and its cap, and the goldens re-derived for
+> the candidate were restored with it -- `bench` 3429473, bench-identical to
+> `d946b6f`'s (INV-6). The entry gate `static_eval >= beta` stays in the tree
+> behind `NullMoveEvalGate` at 0, S114's second verdict, and the floor stays
+> inside the block, where without the term it tests what it tested before
+> S114.
+
+**2. The routing clause** in the reverse-futility estimate's sentence: "This
+engine's null-move term reads the raw static evaluation, never the estimate
+(S114), and razoring does not exist until S116, so reverse futility is the
+whole of the routing." becomes:
+
+> This engine's null-move block has no static-score condition until S114's
+> second verdict flips its gate, `NullMoveEvalGate`, which reads the raw static
+> evaluation and never the estimate, and razoring does not exist until S116,
+> so reverse futility is the whole of the routing.
+
+### Proposed commit text, for the coordinator
+
+Not a verdict-closing commit: the record commit carries the DEC-220 block.
+The coordinator appends its trailer after the `Bench:` line.
+
+```
+Remove S114 v1's static-score null-move term on its H0
+
+The null move's static-score term lost. The SPRT of 794e4c3, the term
+at NullMoveEvalCap 8 with NullMoveEvalGate 0, against d946b6f, the tree
+without it, {0, 5} nElo at 8+0.08, accepted H0 at 2720 games: nElo
+-23.81 +/- 13.06, an interval wholly below zero.
+adocs/data/S114_sprt.sh wrote that reading and its consequence before
+the first game -- the cap to its off value and the term's code out with
+it, the S238 pattern, the goldens the landing re-derived back byte for
+byte -- so this is the pre-registration executed.
+
+Out: the term and its share of the reduction in negamax_at, the probe
+write of the reduction and the assert that guarded the term's input;
+NULL_MOVE_EVAL_MARGIN and NULL_MOVE_EVAL_CAP with their comment;
+search_node_probe_t's null_reduction field; the six S114 cases and
+their fixture, the defender case's depth search and the guard
+fixture's term assertion; the two golden_defaults rows, 72 back to 70;
+tools/mutants/S114_null_move_term.py, NT01 to NT06; the two MANUAL
+option rows.
+
+Stays, by the row: NullMoveEvalGate at 0 with its clause and its row,
+since S114's second verdict flips it on this tree with no code
+(DEC-243); the floor inside the block, which without the term tests
+what it tested before S114; NULL_DRIVE_DEPTH derived from the base and
+the divisor. M03's anchor is re-pointed at the block's first line as
+it now stands, the mutation unchanged.
+
+Back to d946b6f's: S131's multicut row of "pruning does not hide a
+forced mate" at depth 14, mate in 6, which E21 applied by hand turns
+red again; the defender case at NULL_DRIVE_DEPTH, which M02 turns red;
+and the capture-mate table's rows, stale on d946b6f already, so S248
+re-derived them on this tree by adocs/data/S230_mine_r01_row.py, the
+seven sweeps byte for byte the parent sweeps of S114's rebase: 7, 9,
+11, 10 -> 7, 7, 10, 10, rows 3 and 4 labelled C02, R02 and R02. Each
+site records the move and its return (DEC-142, DEC-233); DEV_MANUAL's
+ledger gains the removal's entry and its three golden rows read true
+again.
+
+bench is 3429473 with the whole bench stream and all eight bestmove
+replies identical to a Release build of d946b6f, bench 12 likewise, and
+tools/search_bench.py identical at depths 9 and 12 (INV-6, DEC-215);
+the tune build at its defaults prints the same stream and lists
+NullMoveEvalGate without the margin and the cap. No second SPRT is
+owed. Both fast suites 41 of 41, format and the three prose checks
+clean, all 156 remaining mutant anchors unique. The S170 budgets are
+re-derived on this tree as their own commit, after this one.
+
+Bench: 3429473
+```
