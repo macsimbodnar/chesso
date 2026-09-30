@@ -112,6 +112,12 @@ static uint64_t last_root_nodes_total = 0;
 // number a test can read instead of a duration a test has to measure. S132.
 static int64_t last_soft_limit_ms = 0;
 
+// Every root search of the last iterative_deepening_search(), S115. Read by
+// nothing in the engine either: the loop prints one line per iteration and none
+// per re-search, so without it a test cannot see a window move, and the
+// schedule could be computed right by aspiration_after_fail() and never used.
+static std::vector<aspiration_search_t> last_aspiration_searches;
+
 
 //-#############################   DECLARATIONS  ############################-//
 typedef bool (*process_func)(std::queue<std::string>&);
@@ -159,6 +165,10 @@ int64_t uci_last_soft_limit_ms()
 
 uint64_t uci_last_root_nodes_total()
 { return last_root_nodes_total; }
+
+
+const std::vector<aspiration_search_t>& uci_last_aspiration_searches()
+{ return last_aspiration_searches; }
 
 
 void uci_reply(const std::string& response)
@@ -718,6 +728,54 @@ int search_time_node_factor_percent(int bestmove_node_percent)
 }
 
 
+aspiration_window_t aspiration_after_fail(aspiration_window_t window,
+                                          int score,
+                                          bool mate_found)
+{
+  assert(window.alpha < window.beta);
+  assert(window.delta >= 1);
+  assert(score <= window.alpha || score >= window.beta);
+
+  const bool fail_low = (score <= window.alpha);
+
+  if (mate_found || window.delta > ASPIRATION_MAX_DELTA) {
+    // The escape. A mate score is tens of thousands of centipawns away and a
+    // band widening towards it would pay several full searches to arrive where
+    // one gets to now; past ASPIRATION_MAX_DELTA the band has stopped earning
+    // its cut-offs. Both bounds are replaced, so the pull below is never
+    // computed on this path.
+    window.alpha = -SEARCH_SCORE_INF;
+    window.beta = SEARCH_SCORE_INF;
+  } else if (fail_low) {
+    // THE PULL, S115. The failed search proved the root worth no more than
+    // alpha, so beta comes down toward it by AspirationFailLowPull quarters of
+    // the window before alpha is pushed below the returned score. Only between
+    // two finite bounds: the loop's own windows never reach here with an
+    // infinite one -- the escape above replaces both -- but a top already at
+    // SEARCH_SCORE_INF would be pulled to about a billion, which is neither the
+    // open window nor a band around anything. The width is taken in 64 bits so
+    // the product is defined for any window this is handed.
+    if (window.alpha > -SEARCH_SCORE_INF && window.beta < SEARCH_SCORE_INF) {
+      const int64_t width = static_cast<int64_t>(window.beta) - window.alpha;
+
+      window.beta -= static_cast<int>((width * ASPIRATION_FAIL_LOW_PULL) / 4);
+    }
+
+    window.alpha = std::max(score - window.delta, -SEARCH_SCORE_INF);
+  } else {
+    window.beta = std::min(score + window.delta, SEARCH_SCORE_INF);
+  }
+
+  // Never by less than a centipawn, so the escape is reached at every
+  // AspirationWidenPct in range, its floor of 100 included. At the shipped 200
+  // the product is the larger and this is the doubling S021 shipped.
+  window.delta =
+      std::max(window.delta + 1, (window.delta * ASPIRATION_WIDEN_PCT) / 100);
+
+  return window;
+}
+
+
 bool is_command(const std::string& command)
 {
   auto it = commands.find(command);
@@ -942,6 +1000,31 @@ move_t first_legal_move()
 }
 
 
+// One root search of the aspiration loop, recorded for the tests (S115). The
+// record is written after the search and read by nothing in the engine, so the
+// search is the one the loop would have made without it.
+static search_t aspiration_root_search(int depth,
+                                       const aspiration_window_t& window,
+                                       search_state_t* state)
+{
+  aspiration_search_t record = {};
+  record.iteration = depth;
+  record.window = window;
+
+  search_t result = search(depth, &game, state, window.alpha, window.beta);
+
+  record.score = result.score;
+  record.mate_found = result.mate_found;
+  record.aborted = state->aborted;
+  record.best_move = result.best_move;
+  record.pv_move = (result.pv.length > 0) ? result.pv.table[0] : 0;
+
+  last_aspiration_searches.push_back(record);
+
+  return result;
+}
+
+
 uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
 {
   uci_search_result_t result = {};
@@ -1008,6 +1091,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   bool aspiration_ready = false;
 
   last_aspiration_failures = 0;
+  last_aspiration_searches.clear();
   last_best_move_stability = 0;
   last_score_drop_cp = 0;
   last_time_scale_percent = 100;
@@ -1073,14 +1157,26 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // widening both would give back the cut-offs the other half is still
     // earning.
     //
-    // Widening doubles, and past ASPIRATION_MAX_DELTA it stops doubling and
-    // goes to the full window in one move. The schedule is 25, 50, 100, 200,
-    // 400, full at the shipping defaults, so the worst case is six searches at
-    // one depth and each one of them is rarer than the last.
+    // Widening multiplies the band by AspirationWidenPct, and past
+    // ASPIRATION_MAX_DELTA it stops and goes to the full window in one move. At
+    // the shipping defaults a failure moves its bound 21, 42, 84, 168 and then
+    // 336 past the returned score and the sixth goes to the full window, so the
+    // worst case is seven searches at one depth whichever way each failure
+    // goes, and each is rarer than the last.
     //
     // A mate score ends the schedule immediately. The band is centipawns wide
-    // and a mate score is tens of thousands away, so doubling towards it would
+    // and a mate score is tens of thousands away, so widening towards it would
     // pay several full searches to arrive where one gets to now.
+    //
+    // One thing more since S115, in aspiration_after_fail(): a fail-low pulls
+    // beta toward alpha by AspirationFailLowPull quarters of the window before
+    // alpha is pushed down. The failed search proved the root worth no more
+    // than alpha, so the top of the band has no reason to stay where it was.
+    // Every re-search still runs at the iteration's own depth. S115 also built
+    // the published companion, a ply off the re-search for each consecutive
+    // root fail-high, and it did not ship: it settled iterations with
+    // shallower trees and three of the fast suite's mate guards read their
+    // mates one to three iterations late (DEC-245).
     //
     // What this costs on the mate cases, which is the reason S074 put them in
     // this step's gate: every node below the root inherits these bounds, and
@@ -1089,36 +1185,28 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // appearing mid-iteration is a guaranteed fail-high here - that is what
     // the re-search is for - and the fail-high path is what
     // tests/test_engine.cpp holds the three fast-suite mate positions against.
-    int delta = ASPIRATION_DELTA;
-    int alpha = -SEARCH_SCORE_INF;
-    int beta = SEARCH_SCORE_INF;
+    aspiration_window_t window = {-SEARCH_SCORE_INF, SEARCH_SCORE_INF,
+                                  ASPIRATION_DELTA};
 
     if (aspiration_ready && current_depth >= ASPIRATION_MIN_DEPTH) {
-      alpha = aspiration_score - delta;
-      beta = aspiration_score + delta;
+      window.alpha = aspiration_score - window.delta;
+      window.beta = aspiration_score + window.delta;
     }
 
-    search_t search_result = search(current_depth, &game, &state, alpha, beta);
+    search_t search_result =
+        aspiration_root_search(current_depth, window, &state);
 
-    while (!state.aborted &&
-           (alpha > -SEARCH_SCORE_INF || beta < SEARCH_SCORE_INF) &&
-           (search_result.score <= alpha || search_result.score >= beta)) {
+    while (
+        !state.aborted &&
+        (window.alpha > -SEARCH_SCORE_INF || window.beta < SEARCH_SCORE_INF) &&
+        (search_result.score <= window.alpha ||
+         search_result.score >= window.beta)) {
       ++last_aspiration_failures;
 
-      const bool fail_low = (search_result.score <= alpha);
+      window = aspiration_after_fail(window, search_result.score,
+                                     search_result.mate_found);
 
-      if (search_result.mate_found || delta > ASPIRATION_MAX_DELTA) {
-        alpha = -SEARCH_SCORE_INF;
-        beta = SEARCH_SCORE_INF;
-      } else if (fail_low) {
-        alpha = std::max(search_result.score - delta, -SEARCH_SCORE_INF);
-      } else {
-        beta = std::min(search_result.score + delta, SEARCH_SCORE_INF);
-      }
-
-      delta += delta;
-
-      search_result = search(current_depth, &game, &state, alpha, beta);
+      search_result = aspiration_root_search(current_depth, window, &state);
     }
 
     // Timed from the start of the whole search, not of this iteration: it is

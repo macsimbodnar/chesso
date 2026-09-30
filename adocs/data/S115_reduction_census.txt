@@ -1,0 +1,4 @@
+# 2026-09-30 06:52:48 census over the sweep's 300 positions, go depth 11, the Release candidate (both rules on, shipped defaults), load 18.12 16.12 14.37
+positions 300 iterations 3300 windowed 2956 iterations_that_failed 1517 fail_lows 1206 fail_highs 1095 fail_low_after_fail_high 17
+settled_by_a_shallower_search 848  by gap: 1:670 2:141 3:26 4:9 5:2
+full_window_escapes 8 of_them_shallower 0  by gap:

@@ -66,6 +66,11 @@
 // verdict (DEC-243). Its first verdict's H0 took the margin and the cap out
 // again with the term and kept the gate for the second: 69 to 72 and back
 // to 70.
+// S115 adds two: `AspirationWidenPct`, the widening ratio S021 shipped as a
+// doubling and nothing had a row for, and `AspirationFailLowPull`, the
+// fail-low pull, whose 0 is the parent's tree. A third,
+// `AspirationFailHighReduce`, was built beside them and left with its rule
+// before landing (DEC-245), so the count goes 70 to 72.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -78,7 +83,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 70 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 72 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -150,6 +155,8 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"AspirationMinDepth",        2,     2,      64},
   {"AspirationDelta",          21,     1,    2000},
   {"AspirationMaxDelta",      437,     1,   48000},
+  {"AspirationWidenPct",      200,   100,     400},
+  {"AspirationFailLowPull",     2,     0,       4},
   {"TmSoftPercent",            60,     1,     100},
   {"TmHardPercent",           300,   100,    1000},
   {"TmSuddenDeathPercent",      5,     1,     100},

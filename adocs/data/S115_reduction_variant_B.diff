@@ -1,0 +1,11 @@
+--- src_tree/src/chesso.cpp	2026-09-30 06:41:19.345885460 +0200
++++ tree_B/src/chesso.cpp	2026-09-30 06:49:16.492166978 +0200
+@@ -775,7 +775,7 @@
+   if (fail_low || mate_found) {
+     window.fail_highs = 0;
+   } else {
+-    ++window.fail_highs;
++    window.fail_highs = std::min(window.fail_highs + 1, 1);
+   }
+ 
+   // Never by less than a centipawn, so the escape is reached at every

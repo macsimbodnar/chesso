@@ -1,0 +1,23 @@
+# rows pull, depth 11, engine .ref-builds/sweep/chesso_tune_pull, offsets (0, 37, 71), triple from src/search_params.hpp: AspirationMinDepth 2, AspirationDelta 21, AspirationMaxDelta 437
+sample	row	pull	reduce	widen	min_depth	delta	max_delta	nodes	rel	moves_changed
+0	off	0	-	200	2	21	437	9807857	1.0000	0
+0	pull	2	-	200	2	21	437	10069364	1.0267	9
+0	pull150	2	-	150	2	21	437	10340981	1.0544	16
+0	pull300	2	-	300	2	21	437	10154844	1.0354	10
+37	off	0	-	200	2	21	437	10279061	1.0000	0
+37	pull	2	-	200	2	21	437	10639140	1.0350	20
+37	pull150	2	-	150	2	21	437	10405511	1.0123	24
+37	pull300	2	-	300	2	21	437	10366593	1.0085	23
+71	off	0	-	200	2	21	437	20617106	1.0000	0
+71	pull	2	-	200	2	21	437	21013047	1.0192	15
+71	pull150	2	-	150	2	21	437	20643255	1.0013	18
+71	pull300	2	-	300	2	21	437	21101674	1.0235	23
+# pooled over 300 positions
+pooled	row	nodes	rel	moves_changed	per_sample_rel
+pooled	off	40704024	1.0000	0	1.0000 1.0000 1.0000
+pooled	pull	41721551	1.0250	44	1.0267 1.0350 1.0192
+pooled	pull150	41389747	1.0168	58	1.0544 1.0123 1.0013
+pooled	pull300	41623111	1.0226	56	1.0354 1.0085 1.0235
+# reach: the pull at its seed moves the pooled count by +2.50 % and changes 44 of 300 best moves
+# reading: no ratio leads 200 on every sample: AspirationWidenPct stays 200
+SWEEP-DONE

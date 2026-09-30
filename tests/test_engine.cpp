@@ -17,6 +17,7 @@
 #include "data_structures.hpp"
 #include "evaluation.hpp"
 #include "openings.hpp"  // BOOK_FILE_EMBEDDED
+#include "search.hpp"    // SEARCH_SCORE_INF, the aspiration window's bounds
 #include "search_params.hpp"
 #include "test_helpers.hpp"
 #include "transposition_table.hpp"
@@ -4093,6 +4094,366 @@ TEST_SUITE("engine: aspiration windows")
     }
 
     uci_shutdown();
+  }
+
+
+  // S115, THE FAIL-LOW PULL. A fail-low proves the root worth no more than
+  // alpha, so the re-search brings beta down toward it by AspirationFailLowPull
+  // quarters of the window before alpha is pushed below the returned score.
+  // The rule is aspiration_after_fail() in src/chesso.cpp, pure so that its
+  // arithmetic is held here directly, and the loop is held to it separately
+  // below through uci_last_aspiration_searches(): the S089 lesson, a pure
+  // function can be right and never called.
+  //
+  // A band around 0 of the given half-width, the shape the loop arms. And the
+  // failures the schedule takes from the first band to the full window when
+  // every search fails, the side of each failure chosen by `low`, from a band
+  // at the shipped half-width. Each failure is a score one centipawn outside
+  // the window it was searched with.
+  static aspiration_window_t band_of(int delta)
+  { return {-delta, delta, delta}; }
+
+
+  static int failures_to_full_window(bool (*low)(int failure))
+  {
+    aspiration_window_t window = band_of(ASPIRATION_DELTA);
+
+    for (int failures = 0; failures <= 2 * ASPIRATION_MAX_DELTA; ++failures) {
+      if (window.alpha == -SEARCH_SCORE_INF &&
+          window.beta == SEARCH_SCORE_INF) {
+        return failures;
+      }
+
+      // Finite until the escape, both bounds at once, and never inverted: the
+      // pull brings beta down toward alpha and never past it.
+      REQUIRE(window.alpha > -SEARCH_SCORE_INF);
+      REQUIRE(window.beta < SEARCH_SCORE_INF);
+      REQUIRE(window.alpha < window.beta);
+
+      const int score = low(failures) ? window.alpha - 1 : window.beta + 1;
+      window = aspiration_after_fail(window, score, false);
+    }
+
+    return -1;
+  }
+
+
+  // Mutation: AW01_pull_dropped -- the fail-low leaves beta where it was.
+  // Mutation: AW02_pull_full_weight -- beta is moved all the way to the old
+  //   alpha.
+  TEST_CASE(
+      "a fail-low pulls beta toward alpha and pushes alpha below the score")
+  {
+    // Precondition: the pull is on and short of the whole window, which the
+    // shipped 2 of 0 to 4 is. At 0 there is nothing to hold, and at 4 the
+    // check that separates the pull from beta-to-alpha reads the same.
+    REQUIRE(ASPIRATION_FAIL_LOW_PULL > 0);
+    REQUIRE(ASPIRATION_FAIL_LOW_PULL < 4);
+
+    const aspiration_window_t band = {-21, 21, 21};
+    const aspiration_window_t low = aspiration_after_fail(band, -40, false);
+
+    // alpha: the returned score, less the half-width this failure was
+    // searched with.
+    CHECK_EQ(low.alpha, -40 - 21);
+
+    // beta: down from 21 by AspirationFailLowPull quarters of the 42 between
+    // the old bounds -- at the shipped 2, to the old centre.
+    CHECK_EQ(low.beta, 21 - (42 * ASPIRATION_FAIL_LOW_PULL) / 4);
+    CHECK(low.beta < band.beta);
+    CHECK(low.beta > band.alpha);
+
+    // A fail-high moves beta above the score and leaves alpha alone: the
+    // pull is the fail-low's, and the bound that did not fail is unchanged.
+    const aspiration_window_t high = aspiration_after_fail(band, 30, false);
+
+    CHECK_EQ(high.alpha, band.alpha);
+    CHECK_EQ(high.beta, 30 + 21);
+  }
+
+
+  // Mutation: AW03_pull_infinity_guard_dropped -- the pull is computed on an
+  //   infinite bound.
+  TEST_CASE("the pull is never computed while either bound is infinite")
+  {
+    // The loop's own windows never bring an infinite bound to the pull: a
+    // score is at most 49000 and a band a few hundred thousand centipawns at
+    // the declared ranges, so no clamp reaches SEARCH_SCORE_INF, and the
+    // escape to the full window replaces both bounds at once.
+    // So the guard is the function's contract, and it is held here directly
+    // -- no search can put the loop where it would fire.
+    const aspiration_window_t open_top = {-100, SEARCH_SCORE_INF, 21};
+    const aspiration_window_t top =
+        aspiration_after_fail(open_top, -150, false);
+
+    CHECK_EQ(top.beta, SEARCH_SCORE_INF);
+    CHECK_EQ(top.alpha, -150 - 21);
+
+    const aspiration_window_t open_bottom = {-SEARCH_SCORE_INF, 50, 21};
+    const aspiration_window_t bottom =
+        aspiration_after_fail(open_bottom, -SEARCH_SCORE_INF, false);
+
+    CHECK_EQ(bottom.beta, 50);
+    CHECK_EQ(bottom.alpha, -SEARCH_SCORE_INF);
+
+    // The escape itself. Past AspirationMaxDelta, and on a mate score, both
+    // bounds go and nothing is pulled first.
+    const aspiration_window_t wide = {-100, 100, ASPIRATION_MAX_DELTA + 1};
+    const aspiration_window_t escaped =
+        aspiration_after_fail(wide, -150, false);
+
+    CHECK_EQ(escaped.alpha, -SEARCH_SCORE_INF);
+    CHECK_EQ(escaped.beta, SEARCH_SCORE_INF);
+
+    // A mate score as search() reports one: MATE_MAX (49000 in
+    // src/search.cpp) less the plies to the mate.
+    const aspiration_window_t mated =
+        aspiration_after_fail(band_of(21), -(49000 - 6), true);
+
+    CHECK_EQ(mated.alpha, -SEARCH_SCORE_INF);
+    CHECK_EQ(mated.beta, SEARCH_SCORE_INF);
+  }
+
+
+  // Mutation: AW04_widen_percent_misapplied -- the ratio is added as
+  //   centipawns instead of multiplied as a percentage.
+  TEST_CASE(
+      "each failure widens the band by AspirationWidenPct and the schedule "
+      "ends whichever way it fails")
+  {
+    // The width a failure hands the next one: the ratio in percent, and never
+    // less than a centipawn more, which is what keeps the escape reachable at
+    // the ratio's floor of 100.
+    aspiration_window_t window = band_of(ASPIRATION_DELTA);
+
+    for (int failure = 0; failure < 4; ++failure) {
+      const int before = window.delta;
+      window = aspiration_after_fail(window, window.beta + 1, false);
+
+      CHECK_EQ(window.delta,
+               std::max(before + 1, (before * ASPIRATION_WIDEN_PCT) / 100));
+    }
+
+    // The bound on the loop. Every failure widens the band whichever side it
+    // falls on, so the pull -- which narrows the window from the other side
+    // and makes a fail-low, fail-high, fail-low alternation likelier -- cannot
+    // lengthen the schedule: fail-lows alone, fail-highs alone and the
+    // alternation reach the full window in the same number of failures.
+    const int highs = failures_to_full_window([](int) { return false; });
+    const int lows = failures_to_full_window([](int) { return true; });
+    const int alternating =
+        failures_to_full_window([](int failure) { return failure % 2 == 0; });
+
+    REQUIRE(highs > 0);
+    CHECK_EQ(lows, highs);
+    CHECK_EQ(alternating, highs);
+
+    // And the number itself, at the shipped ratio: 200 is the doubling, so
+    // the escape is the failure after the last doubling that still fits under
+    // AspirationMaxDelta -- 21, 42, 84, 168 and 336 at the shipped 21 and
+    // 437, then the full window, six failures. Counted here by doubling and
+    // not by calling the rule, so a rule that stops multiplying is seen.
+    if (ASPIRATION_WIDEN_PCT == 200) {
+      int doublings = 0;
+
+      for (int d = ASPIRATION_DELTA; d <= ASPIRATION_MAX_DELTA; d *= 2) {
+        ++doublings;
+      }
+
+      CHECK_EQ(highs, doublings + 1);
+    }
+
+#ifdef CHESSO_TUNE
+    // THE RANGE'S FLOOR, and the build that can reach it. At
+    // AspirationWidenPct 100 the product never grows the band and the
+    // centipawn floor is the whole of the widening, so the escape comes one
+    // failure after the band has climbed a centipawn at a time from
+    // AspirationDelta past AspirationMaxDelta: finite, and the same for every
+    // pattern of failures.
+    const int shipped_widen = ASPIRATION_WIDEN_PCT;
+
+    REQUIRE(search_param_set("AspirationWidenPct", 100));
+
+    const int slow_highs = failures_to_full_window([](int) { return false; });
+    const int slow_alternating =
+        failures_to_full_window([](int failure) { return failure % 2 == 0; });
+
+    CHECK_EQ(slow_highs, ASPIRATION_MAX_DELTA - ASPIRATION_DELTA + 2);
+    CHECK_EQ(slow_alternating, slow_highs);
+
+    // Restored, and the restoration checked: a case that left the ratio at
+    // its floor would lengthen every schedule after it.
+    REQUIRE(search_param_set("AspirationWidenPct", shipped_widen));
+    REQUIRE(ASPIRATION_WIDEN_PCT == shipped_widen);
+#endif
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE OFF VALUE, DEC-215, where a test can move it: at AspirationFailLowPull
+  // 0 a fail-low moves alpha alone, which is the loop before S115. The release
+  // build proves the same on the tree instead -- the bench total with its
+  // eight replies and tools/search_bench.py at depths 9 and 12 against the
+  // parent, recorded in the step file -- because a constant it folded cannot
+  // be moved from a test.
+  TEST_CASE("at AspirationFailLowPull 0 a fail-low moves alpha alone")
+  {
+    const int shipped_pull = ASPIRATION_FAIL_LOW_PULL;
+
+    REQUIRE(search_param_set("AspirationFailLowPull", 0));
+
+    const aspiration_window_t low =
+        aspiration_after_fail(band_of(21), -40, false);
+
+    CHECK_EQ(low.beta, 21);
+    CHECK_EQ(low.alpha, -40 - 21);
+
+    REQUIRE(search_param_set("AspirationFailLowPull", shipped_pull));
+    REQUIRE(ASPIRATION_FAIL_LOW_PULL == shipped_pull);
+  }
+#endif
+
+
+  // THE LOOP, held to the schedule through the record of every root search it
+  // made -- the only place a window can be seen, since the loop prints one
+  // line per iteration and none per re-search. S021's four windowed-root
+  // positions, each a fresh game at `go depth 8`, S021's own reach:
+  //
+  //   1. every iteration's first search is the band the rule builds -- the
+  //      last settled score +/- AspirationDelta from AspirationMinDepth on,
+  //      the full window before it and after a mate
+  //   2. every search the loop repeated was a failure, and the search that
+  //      followed it ran with exactly the window aspiration_after_fail()
+  //      gives for it
+  //   3. after a fail-low, beta came down and stayed above the old alpha, and
+  //      alpha went below the returned score: the pull, seen in the loop
+  //   4. no iteration failed more often than the schedule's own bound, the
+  //      count failures_to_full_window() reads off the rule
+  //   5. S021's postcondition on every root search, re-searches included: a
+  //      search that published a line published its best move first
+  //
+  // Non-vacuous by construction: the case REQUIREs that the loop failed low
+  // at least once and re-searched with beta pulled. A set that stops failing
+  // low proves nothing about the pull and says so.
+  TEST_CASE(
+      "the loop re-searches a failed root with the window the schedule gives")
+  {
+    // clang-format off
+    const std::vector<std::string> fens = {
+      DEFAULT_POSITION,
+      "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2",
+      "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
+      "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+    };
+    // clang-format on
+
+    constexpr int depth = 8;
+    const int bound = failures_to_full_window([](int) { return false; });
+    REQUIRE(bound > 0);
+
+    int pulled = 0;
+
+    for (const std::string& fen : fens) {
+      uci_init();
+
+      {
+        stdout_capture_t capture;
+        uci_process_line("position fen " + fen);
+        uci_process_line("go depth " + std::to_string(depth));
+        uci_wait_for_search();
+      }
+
+      const std::vector<aspiration_search_t> searches =
+          uci_last_aspiration_searches();
+      REQUIRE_MESSAGE(!searches.empty(), fen);
+
+      int iteration = 0;
+      int failures = 0;
+      int centre = 0;
+      bool centre_ready = false;
+
+      for (size_t i = 0; i < searches.size(); ++i) {
+        const aspiration_search_t& search_at = searches[i];
+        const std::string at = fen + ", iteration " +
+                               std::to_string(search_at.iteration) +
+                               ", search " + std::to_string(i);
+
+        REQUIRE_MESSAGE(!search_at.aborted, at);
+
+        const bool first =
+            (i == 0) || searches[i - 1].iteration != search_at.iteration;
+        const bool last = (i + 1 == searches.size()) ||
+                          searches[i + 1].iteration != search_at.iteration;
+        const bool full = search_at.window.alpha == -SEARCH_SCORE_INF &&
+                          search_at.window.beta == SEARCH_SCORE_INF;
+        const bool failed = search_at.score <= search_at.window.alpha ||
+                            search_at.score >= search_at.window.beta;
+
+        // 1.
+        if (first) {
+          REQUIRE_MESSAGE(search_at.iteration == iteration + 1, at);
+          iteration = search_at.iteration;
+          failures = 0;
+
+          CHECK_MESSAGE(search_at.window.delta == ASPIRATION_DELTA, at);
+
+          if (centre_ready && iteration >= ASPIRATION_MIN_DEPTH) {
+            CHECK_MESSAGE(search_at.window.alpha == centre - ASPIRATION_DELTA,
+                          at);
+            CHECK_MESSAGE(search_at.window.beta == centre + ASPIRATION_DELTA,
+                          at);
+          } else {
+            CHECK_MESSAGE(full, at);
+          }
+        }
+
+        // 5.
+        if (search_at.pv_move != 0) {
+          CHECK_MESSAGE(search_at.best_move == search_at.pv_move, at);
+        }
+
+        if (!last) {
+          // 2.
+          REQUIRE_MESSAGE(failed, at);
+
+          const aspiration_search_t& next = searches[i + 1];
+          const aspiration_window_t expected = aspiration_after_fail(
+              search_at.window, search_at.score, search_at.mate_found);
+
+          CHECK_MESSAGE(next.window.alpha == expected.alpha, at);
+          CHECK_MESSAGE(next.window.beta == expected.beta, at);
+          CHECK_MESSAGE(next.window.delta == expected.delta, at);
+
+          // 3.
+          if (search_at.score <= search_at.window.alpha &&
+              next.window.alpha > -SEARCH_SCORE_INF) {
+            CHECK_MESSAGE(next.window.beta < search_at.window.beta, at);
+            CHECK_MESSAGE(next.window.beta > search_at.window.alpha, at);
+            CHECK_MESSAGE(next.window.alpha < search_at.score, at);
+            ++pulled;
+          }
+
+          // 4.
+          ++failures;
+          CHECK_MESSAGE(failures <= bound, at);
+        } else {
+          // The search that settled the iteration is inside its window, or
+          // the window was the full one and there was nothing to fail.
+          CHECK_MESSAGE((!failed || full), at);
+
+          centre = search_at.score;
+          centre_ready = !search_at.mate_found;
+        }
+      }
+
+      REQUIRE_MESSAGE(iteration == depth, fen);
+
+      uci_shutdown();
+    }
+
+    // The precondition. Without it every assertion under 3 is skippable by a
+    // run that never failed low.
+    REQUIRE(pulled > 0);
   }
 }
 

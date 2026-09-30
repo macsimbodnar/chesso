@@ -1029,6 +1029,54 @@
   X(ASPIRATION_DELTA,     "AspirationDelta",    21,  1, 2000)                  \
   X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 437, 1, 48000)                 \
                                                                                \
+  /* WHAT A FAILED ROOT SEARCH DOES NEXT, S115. The two rows below act only    \
+     once the root has returned a bound, so a root that never fails is         \
+     searched exactly as it was. src/chesso.cpp aspiration_after_fail is the   \
+     whole of them, and iterative_deepening_search calls it.                   \
+                                                                               \
+     ASPIRATION_WIDEN_PCT is what each failure multiplies the half-width by,   \
+     in percent, and never by less than one centipawn more: 200 is the         \
+     doubling S021 shipped, which nothing had swept. **(b)**, a derivation     \
+     over chesso's own positions: adocs/data/S115_aspiration_sweep.py, the 300 \
+     above at depth 11, swept 150, 200 and 300 with the pull below on: 150 led \
+     200 on two of the three samples and 300 on one, so 200 stays, the         \
+     derivation's value (DEC-244). The floor is arithmetic -- below 100 a      \
+     failure would narrow the band -- and the centipawn of growth is what      \
+     keeps the escape to the full window reachable at the floor itself, so the \
+     loop ends at every value in range. The top is by purpose: at 400 the band \
+     is past AspirationMaxDelta after the third failure from the shipped       \
+     half-width, and a larger ratio is the escape by another name. A setting   \
+     for S127 to fit, the sweep its input.                                     \
+                                                                               \
+     ASPIRATION_FAIL_LOW_PULL is how far a fail-low pulls beta toward alpha    \
+     before alpha is pushed down, in quarters of the window: beta moves by     \
+     `(beta - alpha) * AspirationFailLowPull / 4`. The failed search proved    \
+     the root worth no more than alpha, so the band's top has no reason to     \
+     stay where the first band put it; the score it returned is a bound on a   \
+     tree the re-search will not repeat node for node, so beta is not moved    \
+     all the way down either. 2, one half, is **(c)**, the range midpoint,     \
+     stated as such -- that one half is also a form the published record       \
+     carries is a record and not the number's source (DEC-134). The ends are   \
+     arithmetic: 0 moves nothing and is the off value, and 4 puts beta on the  \
+     old alpha, past which the band would exclude values the fail-low did not  \
+     rule out. Never computed while either bound is infinite; the escape to    \
+     the full window replaces both instead.                                    \
+                                                                               \
+     THE OFF VALUE, DEC-215: AspirationFailLowPull 0, with AspirationWidenPct  \
+     at 200, is the engine before S115 node for node, proved on the tree: the  \
+     tune build there benches the parent's total with all eight replies and    \
+     its whole stream, and reproduces tools/search_bench.py at depths 9 and    \
+     12.                                                                       \
+                                                                               \
+     NOT HERE, AND WHY: the published companion -- a ply off each              \
+     consecutive root fail-high's re-search -- was built beside the pull       \
+     and refused. It settled iterations with shallower trees, and three of     \
+     the fast suite's mate guards read their mates one to three iterations     \
+     late (DEC-245; its code and the three variants tried are                  \
+     adocs/data/S115_reduction_*.diff). */                                     \
+  X(ASPIRATION_WIDEN_PCT,     "AspirationWidenPct",    200, 100, 400)          \
+  X(ASPIRATION_FAIL_LOW_PULL, "AspirationFailLowPull",   2,   0,   4)          \
+                                                                               \
   /* Time management. The clock is turned into an allocation for this move,    \
      and the allocation into two limits: a soft one that decides whether to    \
      begin another iteration, and a hard one a timer is armed at and which     \

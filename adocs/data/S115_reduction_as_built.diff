@@ -1,0 +1,373 @@
+diff --git a/src/chesso.cpp b/src/chesso.cpp
+index d7cd350..58d9c50 100644
+--- a/src/chesso.cpp
++++ b/src/chesso.cpp
+@@ -112,6 +112,13 @@ static uint64_t last_root_nodes_total = 0;
+ // number a test can read instead of a duration a test has to measure. S132.
+ static int64_t last_soft_limit_ms = 0;
+ 
++// Every root search of the last iterative_deepening_search(), S115. Read by
++// nothing in the engine either: the loop prints one line per iteration and none
++// per re-search, so without it a test cannot see a window move or a re-search
++// run shallower than its iteration, and the schedule could be computed right by
++// aspiration_after_fail() and never used.
++static std::vector<aspiration_search_t> last_aspiration_searches;
++
+ 
+ //-#############################   DECLARATIONS  ############################-//
+ typedef bool (*process_func)(std::queue<std::string>&);
+@@ -161,6 +168,10 @@ uint64_t uci_last_root_nodes_total()
+ { return last_root_nodes_total; }
+ 
+ 
++const std::vector<aspiration_search_t>& uci_last_aspiration_searches()
++{ return last_aspiration_searches; }
++
++
+ void uci_reply(const std::string& response)
+ {
+   const std::lock_guard<std::mutex> lock(output_mutex);
+@@ -718,6 +729,78 @@ int search_time_node_factor_percent(int bestmove_node_percent)
+ }
+ 
+ 
++aspiration_window_t aspiration_after_fail(aspiration_window_t window,
++                                          int score,
++                                          bool mate_found)
++{
++  assert(window.alpha < window.beta);
++  assert(window.delta >= 1);
++  assert(score <= window.alpha || score >= window.beta);
++
++  const bool fail_low = (score <= window.alpha);
++
++  if (mate_found || window.delta > ASPIRATION_MAX_DELTA) {
++    // The escape. A mate score is tens of thousands of centipawns away and a
++    // band widening towards it would pay several full searches to arrive where
++    // one gets to now; past ASPIRATION_MAX_DELTA the band has stopped earning
++    // its cut-offs. Both bounds are replaced, so the pull below is never
++    // computed on this path.
++    window.alpha = -SEARCH_SCORE_INF;
++    window.beta = SEARCH_SCORE_INF;
++  } else if (fail_low) {
++    // THE PULL, S115. The failed search proved the root worth no more than
++    // alpha, so beta comes down toward it by AspirationFailLowPull quarters of
++    // the window before alpha is pushed below the returned score. Only between
++    // two finite bounds: the loop's own windows never reach here with an
++    // infinite one -- the escape above replaces both -- but a top already at
++    // SEARCH_SCORE_INF would be pulled to about a billion, which is neither the
++    // open window nor a band around anything. The width is taken in 64 bits so
++    // the product is defined for any window this is handed.
++    if (window.alpha > -SEARCH_SCORE_INF && window.beta < SEARCH_SCORE_INF) {
++      const int64_t width = static_cast<int64_t>(window.beta) - window.alpha;
++
++      window.beta -= static_cast<int>((width * ASPIRATION_FAIL_LOW_PULL) / 4);
++    }
++
++    window.alpha = std::max(score - window.delta, -SEARCH_SCORE_INF);
++  } else {
++    window.beta = std::min(score + window.delta, SEARCH_SCORE_INF);
++  }
++
++  // THE COUNT, S115: consecutive root fail-highs, which is what the next
++  // re-search's depth is taken from. A fail-low ends the run, and so does a
++  // mate score in either direction, which is what keeps a mate from being
++  // re-searched shallower than the iteration it appeared in: the full-window
++  // search the escape asks for runs at the iteration's own depth.
++  if (fail_low || mate_found) {
++    window.fail_highs = 0;
++  } else {
++    ++window.fail_highs;
++  }
++
++  // Never by less than a centipawn, so the escape is reached at every
++  // AspirationWidenPct in range, its floor of 100 included. At the shipped 200
++  // the product is the larger and this is the doubling S021 shipped.
++  window.delta =
++      std::max(window.delta + 1, (window.delta * ASPIRATION_WIDEN_PCT) / 100);
++
++  return window;
++}
++
++
++int aspiration_search_depth(int iteration_depth, int fail_highs)
++{
++  assert(iteration_depth >= 1);
++  assert(fail_highs >= 0);
++
++  if (ASPIRATION_FAIL_HIGH_REDUCE == 0) { return iteration_depth; }
++
++  // Floored at 1 because depth 0 at the root is not a shallower search but no
++  // search at all -- no move loop, no move, no line.
++  return std::max(1, iteration_depth - fail_highs);
++}
++
++
+ bool is_command(const std::string& command)
+ {
+   auto it = commands.find(command);
+@@ -942,6 +1025,36 @@ move_t first_legal_move()
+ }
+ 
+ 
++// One root search of the aspiration loop, recorded for the tests (S115). The
++// table probe reads the root's slot and writes nothing, so the search that
++// follows it is the one the loop would have made without it.
++static search_t aspiration_root_search(int iteration,
++                                       int depth,
++                                       const aspiration_window_t& window,
++                                       search_state_t* state)
++{
++  const tt_entry_t* root_entry = tt_get_entry(state->tt, &game.board);
++
++  aspiration_search_t record = {};
++  record.iteration = iteration;
++  record.depth = depth;
++  record.window = window;
++  record.tt_move = (root_entry != nullptr) ? root_entry->best_move : 0;
++
++  search_t result = search(depth, &game, state, window.alpha, window.beta);
++
++  record.score = result.score;
++  record.mate_found = result.mate_found;
++  record.aborted = state->aborted;
++  record.best_move = result.best_move;
++  record.pv_move = (result.pv.length > 0) ? result.pv.table[0] : 0;
++
++  last_aspiration_searches.push_back(record);
++
++  return result;
++}
++
++
+ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
+ {
+   uci_search_result_t result = {};
+@@ -1008,6 +1121,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
+   bool aspiration_ready = false;
+ 
+   last_aspiration_failures = 0;
++  last_aspiration_searches.clear();
+   last_best_move_stability = 0;
+   last_score_drop_cp = 0;
+   last_time_scale_percent = 100;
+@@ -1073,15 +1187,31 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
+     // widening both would give back the cut-offs the other half is still
+     // earning.
+     //
+-    // Widening doubles, and past ASPIRATION_MAX_DELTA it stops doubling and
+-    // goes to the full window in one move. The schedule is 25, 50, 100, 200,
+-    // 400, full at the shipping defaults, so the worst case is six searches at
+-    // one depth and each one of them is rarer than the last.
++    // Widening multiplies the band by AspirationWidenPct, and past
++    // ASPIRATION_MAX_DELTA it stops and goes to the full window in one move. At
++    // the shipping defaults a failure moves its bound 21, 42, 84, 168 and then
++    // 336 past the returned score and the sixth goes to the full window, so the
++    // worst case is seven searches at one depth whichever way each failure
++    // goes, and each is rarer than the last.
+     //
+     // A mate score ends the schedule immediately. The band is centipawns wide
+-    // and a mate score is tens of thousands away, so doubling towards it would
++    // and a mate score is tens of thousands away, so widening towards it would
+     // pay several full searches to arrive where one gets to now.
+     //
++    // Two things more since S115, both in aspiration_after_fail(). A fail-low
++    // pulls beta toward alpha by AspirationFailLowPull quarters of the window
++    // before alpha is pushed down: the failed search proved the root worth no
++    // more than alpha, so the top of the band has no reason to stay where it
++    // was. And each consecutive root fail-high costs the next re-search a ply
++    // (aspiration_search_depth()), never below depth 1, with the count put back
++    // to zero by a fail-low. The move that failed high is the root's table move
++    // by then, so the shallower re-search searches it first with the band open
++    // above it, and finishes where a re-search at the whole depth would spend
++    // the iteration. A mate score puts the count to zero as well, so the
++    // full-window search that follows a mate runs at the iteration's own depth.
++    // A shallower re-search that settles the iteration settles it: its score,
++    // move and line are the iteration's, reported at the iteration's depth.
++    //
+     // What this costs on the mate cases, which is the reason S074 put them in
+     // this step's gate: every node below the root inherits these bounds, and
+     // DEC-060 measured that a pruning rule's mate exposure is a property of
+@@ -1089,36 +1219,31 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
+     // appearing mid-iteration is a guaranteed fail-high here - that is what
+     // the re-search is for - and the fail-high path is what
+     // tests/test_engine.cpp holds the three fast-suite mate positions against.
+-    int delta = ASPIRATION_DELTA;
+-    int alpha = -SEARCH_SCORE_INF;
+-    int beta = SEARCH_SCORE_INF;
++    aspiration_window_t window = {-SEARCH_SCORE_INF, SEARCH_SCORE_INF,
++                                  ASPIRATION_DELTA, 0};
+ 
+     if (aspiration_ready && current_depth >= ASPIRATION_MIN_DEPTH) {
+-      alpha = aspiration_score - delta;
+-      beta = aspiration_score + delta;
++      window.alpha = aspiration_score - window.delta;
++      window.beta = aspiration_score + window.delta;
+     }
+ 
+-    search_t search_result = search(current_depth, &game, &state, alpha, beta);
++    search_t search_result =
++        aspiration_root_search(current_depth, current_depth, window, &state);
+ 
+-    while (!state.aborted &&
+-           (alpha > -SEARCH_SCORE_INF || beta < SEARCH_SCORE_INF) &&
+-           (search_result.score <= alpha || search_result.score >= beta)) {
++    while (
++        !state.aborted &&
++        (window.alpha > -SEARCH_SCORE_INF || window.beta < SEARCH_SCORE_INF) &&
++        (search_result.score <= window.alpha ||
++         search_result.score >= window.beta)) {
+       ++last_aspiration_failures;
+ 
+-      const bool fail_low = (search_result.score <= alpha);
+-
+-      if (search_result.mate_found || delta > ASPIRATION_MAX_DELTA) {
+-        alpha = -SEARCH_SCORE_INF;
+-        beta = SEARCH_SCORE_INF;
+-      } else if (fail_low) {
+-        alpha = std::max(search_result.score - delta, -SEARCH_SCORE_INF);
+-      } else {
+-        beta = std::min(search_result.score + delta, SEARCH_SCORE_INF);
+-      }
+-
+-      delta += delta;
++      window = aspiration_after_fail(window, search_result.score,
++                                     search_result.mate_found);
+ 
+-      search_result = search(current_depth, &game, &state, alpha, beta);
++      search_result = aspiration_root_search(
++          current_depth,
++          aspiration_search_depth(current_depth, window.fail_highs), window,
++          &state);
+     }
+ 
+     // Timed from the start of the whole search, not of this iteration: it is
+diff --git a/src/search_params.hpp b/src/search_params.hpp
+index b2e5d6b..a54ebf3 100644
+--- a/src/search_params.hpp
++++ b/src/search_params.hpp
+@@ -1063,6 +1063,58 @@
+   X(ASPIRATION_DELTA,     "AspirationDelta",    21,  1, 2000)                  \
+   X(ASPIRATION_MAX_DELTA, "AspirationMaxDelta", 437, 1, 48000)                 \
+                                                                                \
++  /* WHAT A FAILED ROOT SEARCH DOES NEXT, S115. The three rows below act only  \
++     once the root has returned a bound, so a root that never fails is         \
++     searched exactly as it was. src/chesso.cpp aspiration_after_fail and      \
++     aspiration_search_depth are the whole of them, and                        \
++     iterative_deepening_search calls both.                                    \
++                                                                               \
++     ASPIRATION_WIDEN_PCT is what each failure multiplies the half-width by,   \
++     in percent, and never by less than one centipawn more: 200 is the         \
++     doubling S021 shipped, which nothing had swept. **(b)**, a derivation     \
++     over chesso's own positions: adocs/data/S115_aspiration_sweep.py, the 300 \
++     above at depth 11, swept 150, 200 and 300 with both rules below on, and   \
++     no ratio led 200 on every sample, so 200 is that derivation's value       \
++     (DEC-244). The floor is arithmetic -- below 100 a failure would narrow    \
++     the band -- and the centipawn of growth is what keeps the escape to the   \
++     full window reachable at the floor itself, so the loop ends at every      \
++     value in range. The top is by purpose: at 400 the band is past            \
++     AspirationMaxDelta after the third failure from the shipped half-width,   \
++     and a larger ratio is the escape by another name.                         \
++                                                                               \
++     ASPIRATION_FAIL_LOW_PULL is how far a fail-low pulls beta toward alpha    \
++     before alpha is pushed down, in quarters of the window: beta moves by     \
++     `(beta - alpha) * AspirationFailLowPull / 4`. The failed search proved    \
++     the root worth no more than alpha, so the band's top has no reason to     \
++     stay where the first band put it; the score it returned is a bound on a   \
++     tree the re-search will not repeat node for node, so beta is not moved    \
++     all the way down either. 2, one half, is **(c)**, the range midpoint,     \
++     stated as such -- that one half is also a form the published record       \
++     carries is a record and not the number's source (DEC-134). The ends are   \
++     arithmetic: 0 moves nothing, and 4 puts beta on the old alpha, past which \
++     the band would exclude values the fail-low did not rule out. Never        \
++     computed while either bound is infinite; the escape to the full window    \
++     replaces both instead.                                                    \
++                                                                               \
++     ASPIRATION_FAIL_HIGH_REDUCE is a switch. At 1 each consecutive root       \
++     fail-high costs the iteration's next re-search one ply, never below depth \
++     1, and a fail-low puts the count back to zero: the move that failed high  \
++     is the root's table move, so the shallower re-search searches it first    \
++     with the band open above it, and finishes. One ply is the smallest unit a \
++     depth reduction has, stated as such; the count has no cap. A fail on a    \
++     mate score puts the count to zero too, so the full-window search that     \
++     follows a mate runs at the iteration's own depth. A verdict switch, not a \
++     setting to sweep.                                                         \
++                                                                               \
++     THE OFF VALUES, DEC-215: AspirationFailLowPull 0 and                      \
++     AspirationFailHighReduce 0, with AspirationWidenPct at 200, are the       \
++     engine before S115 node for node, proved on the tree: the tune build      \
++     there benches the parent's total with all eight replies and its whole     \
++     stream, and reproduces tools/search_bench.py at depths 9 and 12. */       \
++  X(ASPIRATION_WIDEN_PCT,        "AspirationWidenPct",       200, 100, 400)    \
++  X(ASPIRATION_FAIL_LOW_PULL,    "AspirationFailLowPull",      2,   0,   4)    \
++  X(ASPIRATION_FAIL_HIGH_REDUCE, "AspirationFailHighReduce",   1,   0,   1)    \
++                                                                               \
+   /* Time management. The clock is turned into an allocation for this move,    \
+      and the allocation into two limits: a soft one that decides whether to    \
+      begin another iteration, and a hard one a timer is armed at and which     \
+diff --git a/src/uci.hpp b/src/uci.hpp
+index 6d4c50b..bd10447 100644
+--- a/src/uci.hpp
++++ b/src/uci.hpp
+@@ -135,6 +135,36 @@ int search_time_scale_percent(int best_move_stability, int score_drop_cp);
+ // uci_last_node_factor_percent() below.
+ int search_time_node_factor_percent(int bestmove_node_percent);
+ 
++// The root's aspiration window between two searches of one iteration, S115:
++// the bounds, what the next failure moves the failing bound by, and how many
++// root fail-highs in a row the iteration has had since it began or last
++// failed low.
++struct aspiration_window_t
++{
++  int alpha;
++  int beta;
++  int delta;
++  int fail_highs;
++};
++
++// The window iterative_deepening_search() searches the root with again after
++// the root returned `score` outside `window`. Pure for the reason the two
++// above are pure: a fail-low pulls beta toward alpha by AspirationFailLowPull
++// quarters of the window, never while either bound is infinite, and pushes
++// alpha below the score; a fail-high pushes beta above it and counts; a mate
++// score or a band past AspirationMaxDelta goes to the full window; a fail-low
++// or a mate puts the count back to zero; and the band widens by
++// AspirationWidenPct. What proves the loop uses it is
++// uci_last_aspiration_searches() below.
++aspiration_window_t aspiration_after_fail(aspiration_window_t window,
++                                          int score,
++                                          bool mate_found);
++
++// The depth an iteration's root search runs at after `fail_highs`
++// consecutive root fail-highs: a ply fewer for each, never below 1, and the
++// iteration's own depth at AspirationFailHighReduce 0. S115.
++int aspiration_search_depth(int iteration_depth, int fail_highs);
++
+ bool set_position(const std::string& fen);
+ bool check_move_legality(move_t move);
+ move_t first_legal_move();
+@@ -194,3 +224,24 @@ int uci_last_node_factor_percent();
+ int uci_last_soft_scale_percent();
+ int64_t uci_last_soft_limit_ms();
+ uint64_t uci_last_root_nodes_total();
++
++// Every root search the last iterative_deepening_search() made, in order, S115:
++// the iteration it belongs to, the depth and the window it ran with, what it
++// returned, and the root's table move as it began. Test instrumentation like
++// the counters above -- nothing in the engine reads it -- and the only place a
++// test can see a window move or a re-search run shallower than its iteration,
++// since the loop prints one line per iteration and none per re-search.
++struct aspiration_search_t
++{
++  int iteration;
++  int depth;
++  aspiration_window_t window;
++  int score;
++  bool mate_found;
++  bool aborted;
++  move_t tt_move;  // the root's table move as it began, 0 on a miss
++  move_t best_move;
++  move_t pv_move;  // the first move of its PV, 0 when it has none
++};
++
++const std::vector<aspiration_search_t>& uci_last_aspiration_searches();

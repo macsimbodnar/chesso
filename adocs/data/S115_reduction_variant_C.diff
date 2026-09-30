@@ -1,0 +1,11 @@
+--- src_tree/src/chesso.cpp	2026-09-30 06:41:19.345885460 +0200
++++ tree_C/src/chesso.cpp	2026-09-30 07:02:48.442812602 +0200
+@@ -797,7 +797,7 @@
+ 
+   // Floored at 1 because depth 0 at the root is not a shallower search but no
+   // search at all -- no move loop, no move, no line.
+-  return std::max(1, iteration_depth - fail_highs);
++  return std::max(1, iteration_depth - std::max(0, fail_highs - 1));
+ }
+ 
+ 

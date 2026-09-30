@@ -19,3 +19,16 @@ picker, found S132's docstring calling offsets 0/1/2 "the aspiration rows'
 300" where S021's rows are at 0/37/71. Comments and a docstring, no reach
 into play: a filler behind the next strength step (DEC-171), named by id in
 `adocs/data/S115_sprt.sh`'s open findings while open.
+
+## Amended at S115's landing (2026-09-30, the coordinator)
+
+The accepts' figures were read on `cd50c7a`, which carried S114's
+static-score term. On the tree that term's H0 left, S115's rebase read the
+two again (`.tuning/coord/S115b_logs/`, parent `f5eaa99` and candidate
+alike): the mined set is **146** exact at depth 10, so `test_mate_breadth`'s
+comment (145) is still stale, by one; mates in three are **12 of 24**, what
+the comment beside `MATE_IN_THREE_FLOOR` already says, so that half is no
+longer owed unless the tree moves it again. Whoever takes this step re-reads
+both on the tree of the day before editing either. The S132 docstring item
+stands.
+

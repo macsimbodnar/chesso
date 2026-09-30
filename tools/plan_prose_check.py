@@ -985,7 +985,7 @@ PARAM_PHRASES = (
     ("AspirationDelta",
      r"from depth \d+ in a band \*\*(\d+) centipawns\*\*"),
     ("AspirationMaxDelta",
-     r"doubling the failing side alone and going to the full window past (\d+)"),
+     r"widens the band by `AspirationWidenPct` \(\d+, [^)]*\), going to the full window past (\d+)"),
     ("AspirationMinDepth",
      r"\*Aspiration windows\* are present[^.]*?from depth (\d+)"),
 )

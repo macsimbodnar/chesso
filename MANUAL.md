@@ -271,7 +271,9 @@ of a refusal is the only confirmation the value was taken.
 | `LazyEvalMargin` | 184 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
 | `AspirationMinDepth` | 2 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
 | `AspirationDelta` | 21 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |
-| `AspirationMaxDelta` | 437 | 1 to 48000 | where widening stops doubling and the iteration is repeated with the full window instead |
+| `AspirationMaxDelta` | 437 | 1 to 48000 | where widening stops and the iteration is repeated with the full window instead |
+| `AspirationWidenPct` | 200 | 100 to 400 | what each failure of the root's window multiplies its half-width by, in percent, and never by less than one centipawn more: at 200 the band doubles, as it has since S021. The centipawn is what keeps the schedule finite at 100, where the product alone would never grow the band. Swept at 150, 200 and 300 over 300 positions with `AspirationFailLowPull` at 2 (S115); no ratio led 200 on every sample. To be fitted here |
+| `AspirationFailLowPull` | 2 | 0 to 4 | how far a root search that fails low brings the top of the window down toward its bottom before the bottom is pushed below the returned score, in quarters of the window (S115): at **2** the top comes down half the window, to the old centre on a first failure; at 4 it lands on the old bottom. Never applied to an infinite bound -- a mate score, or a band past `AspirationMaxDelta`, goes to the full window instead. **At 0 the pull is off** and the engine is the one before S115, bench signature included. Seeded at the range's midpoint; to be fitted here |
 | `TmSoftPercent` | 60 | 1 to 100 | time management: the soft limit, as a percentage of the allocation for this move. Another iteration is begun only below it |
 | `TmHardPercent` | 300 | 100 to 1000 | the hard limit, as a percentage of the same allocation. A timer is armed at it and it stops the search inside an iteration. Never above what the clock has |
 | `TmSuddenDeathPercent` | 5 | 1 to 100 | with no `movestogo` on the `go` line, the share of the remaining clock the allocation starts from |
@@ -628,7 +630,13 @@ against d4 and e4 against e5.
   root is searched in a band around the previous iteration's score, widened and
   repeated when the score falls outside it. The depth is `AspirationMinDepth`
   and the option table above is where its live value is documented; S085
-  retuned it from the 5 S021 shipped.
+  retuned it from the 5 S021 shipped. Since S115 a root search that fails low
+  also brings the window's top down toward its bottom before the re-search
+  (`AspirationFailLowPull`), and the ratio the band widens by is a parameter
+  (`AspirationWidenPct`). Every re-search still runs at the iteration's own
+  depth: the published companion that re-searches a repeated root fail-high a
+  ply shallower was built and refused, because it made the fast suite's mate
+  guards read their mates late (DEC-245).
 - **The reported score is unreliable in both directions, and worst in pawn
   endgames.** Measured over 5582 moves in 98 games against Stockfish at 3000000
   nodes, after the evaluation constants were fitted (S028, 2026-08-11). Chesso's

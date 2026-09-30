@@ -1,0 +1,10 @@
+fails 4 fl 0 fl_pulled 0 fh 4 reduced 3 settled_reduced 2 fl_after_fh 0 mate_fails 1 max_fails_per_iter 2 bm_pv_mismatch 0 tt_checks 3 tt_mismatch 0 records 9  1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+  it 1 d 1 [-2000000000, 2000000000] delta 21 fh 0 score -990 tt 0 best 40001 pv 40001
+  it 2 d 2 [-1011, -969] delta 21 fh 0 score -969 tt 40001 best 46932 pv 46932
+  it 2 d 1 [-1011, -948] delta 42 fh 1 score -969 tt 46932 best 46932 pv 46932
+  it 3 d 3 [-990, -948] delta 21 fh 0 score -948 tt 46932 best 46932 pv 46932
+  it 3 d 2 [-990, -927] delta 42 fh 1 score -948 tt 46932 best 46932 pv 46932
+  it 4 d 4 [-969, -927] delta 21 fh 0 score -923 tt 46932 best 37185 pv 37185
+  it 4 d 3 [-969, -902] delta 42 fh 1 score 48997 mate tt 37185 best 46420 pv 46420
+  it 4 d 4 [-2000000000, 2000000000] delta 84 fh 0 score 48997 mate tt 37185 best 46420 pv 46420
+  it 5 d 5 [-2000000000, 2000000000] delta 21 fh 0 score 48997 mate tt 46420 best 46420 pv 46420

@@ -135,6 +135,27 @@ int search_time_scale_percent(int best_move_stability, int score_drop_cp);
 // uci_last_node_factor_percent() below.
 int search_time_node_factor_percent(int bestmove_node_percent);
 
+// The root's aspiration window between two searches of one iteration, S115:
+// the bounds, and what the next failure moves the failing bound by.
+struct aspiration_window_t
+{
+  int alpha;
+  int beta;
+  int delta;
+};
+
+// The window iterative_deepening_search() searches the root with again after
+// the root returned `score` outside `window`. Pure for the reason the two
+// above are pure: a fail-low pulls beta toward alpha by AspirationFailLowPull
+// quarters of the window, never while either bound is infinite, and pushes
+// alpha below the score; a fail-high pushes beta above it; a mate score or a
+// band past AspirationMaxDelta goes to the full window; and the band widens by
+// AspirationWidenPct. What proves the loop uses it is
+// uci_last_aspiration_searches() below.
+aspiration_window_t aspiration_after_fail(aspiration_window_t window,
+                                          int score,
+                                          bool mate_found);
+
 bool set_position(const std::string& fen);
 bool check_move_legality(move_t move);
 move_t first_legal_move();
@@ -194,3 +215,22 @@ int uci_last_node_factor_percent();
 int uci_last_soft_scale_percent();
 int64_t uci_last_soft_limit_ms();
 uint64_t uci_last_root_nodes_total();
+
+// Every root search the last iterative_deepening_search() made, in order, S115:
+// the iteration it belongs to, which is also the depth it ran at, the window it
+// ran with, and what it returned. Test instrumentation like the counters above
+// -- nothing in the engine reads it -- and the only place a test can see a
+// window move, since the loop prints one line per iteration and none per
+// re-search.
+struct aspiration_search_t
+{
+  int iteration;
+  aspiration_window_t window;
+  int score;
+  bool mate_found;
+  bool aborted;
+  move_t best_move;
+  move_t pv_move;  // the first move of its PV, 0 when it has none
+};
+
+const std::vector<aspiration_search_t>& uci_last_aspiration_searches();
