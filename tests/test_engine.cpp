@@ -866,34 +866,27 @@ TEST_SUITE("engine: uci layer")
       "a stop inside the first iteration cuts it and the hard timer ends the "
       "search within its bound")
   {
-    // Seven rooks and two knights a side. Depth 1 here is a wide root over deep
-    // capture chains in quiescence, so the stop has a window to land in.
-    // **Golden**: 146994 nodes and 24 to 31 ms on this machine, re-derived with
+    // Eight queens a side. Depth 1 here is a wide root over deep capture
+    // chains in quiescence, so the stop has a window to land in. **Golden**:
+    // 13.8 ms on this machine, re-derived with
     // `position fen <below>` then `go depth 1`, reading the `time` field of the
-    // info line -- the same on the engine before S022's second verdict and with
-    // it, whose node-level early-out in quiescence never fires on this board at
-    // depth 1, with S015's exchange gate or without it (a census build's
-    // counters, S022's step file). The precondition below asserts 3 ms of it,
-    // which is where a four times faster machine would still leave the case
-    // separating; under that it needs a heavier position, not a smaller floor.
-    // python-chess reports `is_valid()` True, `is_check()` False and 63 legal
-    // moves, 7 of them captures.
+    // info line. The precondition below asserts 3 ms of it, which is where a
+    // four times faster machine would still leave the case separating; under
+    // that it needs a heavier position, not a smaller floor.
     //
-    // **The board moved at S022's second verdict, by that rule** -- a
-    // re-derivation and not a relaxation (DEC-233's class), the floor and the
-    // prompt-stop line below unchanged; DEC-240 is what the case guards. Until
-    // then it was eight queens a side,
-    // `q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1`: 36165 nodes and
-    // 6 to 7 ms at depth 1 before that verdict, recorded here as 13.8 ms when
-    // the case was written. The early-out ends 199 of that board's quiescence
-    // nodes at depth 1 before they generate, which cuts the iteration to 10187
-    // nodes and 1 ms -- under the floor, so the precondition went red and the
-    // case could no longer separate. The rook board with no knights,
-    // `r1r1r1r1/1r1r1r1k/8/8/8/8/1R1R1R1K/R1R1R1R1 w - - 0 1`, also never fires
-    // the early-out and costs 35163 nodes and 6 to 7 ms, twice the floor; this
-    // one clears it about nine times, and a faster machine eats that margin.
+    // **The board moved at S022's second verdict, by that rule, and came back
+    // at its reading.** That verdict's node-level early-out in quiescence
+    // ended 199 of this board's quiescence nodes at depth 1 before they
+    // generated, which cut the iteration from 36165 nodes and 6 to 7 ms -- the
+    // 13.8 ms above is the case's figure from when it was written -- to 10187
+    // nodes and 1 ms, under the floor. The stop half ran on
+    // `r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0 1` while
+    // the early-out was in, 146994 nodes and 24 to 31 ms at depth 1, a board
+    // on which it never fired. The early-out left with the verdict's reading
+    // and this board came back byte for byte: depth 1 here is 36165 nodes
+    // again.
     const std::string fen =
-        "r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0 1";
+        "q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1";
     const int depth_1_floor_ms = 3;
 
     auto deepest_completed_depth = [](const stdout_capture_t& capture) {
@@ -1050,18 +1043,19 @@ TEST_SUITE("engine: uci layer")
     // board of its own, the start position's pieces with eight queens on each
     // pawn rank and no bishops: python-chess reports `is_valid()` True,
     // `is_check()` False and 94 legal moves. **Golden** (DEC-142): its
-    // depth-1 iteration is 18594285 nodes and about 3.9 s on this machine,
+    // depth-1 iteration is 25933707 nodes and about 5.9 s on this machine,
     // re-derived with `position fen <below>` then `go depth 1`, reading the
     // `time` field -- and that is what a timer that never fires produces here,
-    // measured with the timer disarmed in a throwaway fixture: depth 1, the
-    // same 18594285 nodes, `bestmove` after 3915 and 3935 ms, against 1.3 to
-    // 1.9 ms for the engine as shipped. The bound sits about 10 times below it,
-    // and a four times faster machine still leaves it separating; under that
-    // the board needs to be heavier, not the bound tighter. **Re-taken at
-    // S022's second verdict**, whose node-level early-out in quiescence moved
-    // it: before that verdict the iteration was 25933707 nodes and about 5.9 s,
-    // `bestmove` after 5913 and 6285 ms with the timer disarmed, the bound
-    // about 14 times below. The board did not move.
+    // measured once with the timer disarmed in a throwaway fixture: depth 1,
+    // the same 25933707 nodes, `bestmove` after 5913 and 6285 ms, against 1.3
+    // to 1.9 ms for the engine as shipped. The bound sits about 14 times below
+    // it, and a four times faster machine still leaves it separating; under
+    // that the board needs to be heavier, not the bound tighter. **Re-taken
+    // at S022's second verdict and back at its reading**: that verdict's
+    // early-out cut this iteration to 18594285 nodes and about 3.9 s,
+    // `bestmove` after 3915 and 3935 ms with the timer disarmed, the bound
+    // about 10 times below; the early-out left and the figure above is this
+    // tree's again, 25933707 nodes at depth 1. The board did not move.
     const std::string timer_fen =
         "rn1qk1nr/qqqqqqqq/8/8/8/8/QQQQQQQQ/RN1QK1NR w - - 0 1";
     const int timer_ms = 1;

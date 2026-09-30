@@ -1154,57 +1154,14 @@ int quiescence(int alpha,
   const bool qs_futility = QS_FUTILITY != 0 && !in_check;
   const int futility_base = stand_pat + QS_FUTILITY_MARGIN;
 
-  // The node-level delta early-out, S022's second verdict. Out of check and
-  // before anything is generated, the largest gain any move here could bring
-  // is set against alpha: S112's futility base, the queen's price in S112's
-  // victim table -- the largest victim there is -- and, when a pawn of the
-  // side to move stands on its seventh rank, the same table's queen less its
-  // pawn, the promotion S131 searches. A node where even that cannot reach
-  // alpha ends here, ungenerated.
-  //
-  // Its value is the ceiling and not the stand pat: this is fail-soft, and the
-  // moves never generated may be worth up to it -- S112's raise, taken for the
-  // whole node at once. So it is stored as the upper bound it is, whatever
-  // bound the stand pat carried, by the argument the fold below makes. It
-  // fires only where the stand pat did not raise alpha, the ceiling being
-  // above the stand pat, so the alpha it is compared with is the node's own.
-  //
-  // It sees less than S112 does, and that is what its SPRT prices: a
-  // promotion is inside the allowance, but whether a capture gives check is
-  // not known before the capture is generated, so a checking capture S112
-  // would search is dropped here with the rest. Never in check, where every
-  // evasion is searched and `legal_moves == 0` declares mate. Not at
-  // `game_phase() <= QS_DELTA_PHASE_MIN`, the late endgame the wiki switches
-  // it off in, where a capture can buy an ending that piece values do not
-  // price. Below the depth cap, whose return is a truncation that stores
-  // nothing, and above the generator, which is what it saves. At
-  // QS_DELTA_EARLY_OUT 0 none of it runs and the tree is the one before S022's
-  // second verdict, node for node.
-  if (QS_DELTA_EARLY_OUT != 0 && !in_check &&
-      game_phase(&game->board) > QS_DELTA_PHASE_MIN) {
-    const bool white = game->board.active_color == WHITE;
-    const piece_t own_pawn = white ? W_PAWN : B_PAWN;
-    const piece_t own_queen = white ? W_QUEEN : B_QUEEN;
-    const piece_t their_queen = white ? B_QUEEN : W_QUEEN;
-
-    // The rank a pawn of the side to move promotes from: a7's for White,
-    // a2's for Black.
-    const bool pawn_on_seventh =
-        (game->board.bitboards[own_pawn] & rank_masks[white ? a7 : a2]) != 0;
-    const int promotion_allowance =
-        pawn_on_seventh
-            ? qs_futility_value[own_queen] - qs_futility_value[own_pawn]
-            : 0;
-    const int delta_ceiling =
-        futility_base + qs_futility_value[their_queen] + promotion_allowance;
-
-    if (delta_ceiling <= alpha) {
-      tt_store_entry(state->tt, &game->board, TT_DEPTH_QS,
-                     normalize_score(delta_ceiling, ply), TT_ALPHA_NODE, 0,
-                     stored_eval);
-      return delta_ceiling;
-    }
-  }
+  // **S022 tried a node-level delta early-out here** (verdict 2): out of
+  // check, a node whose ceiling -- `futility_base`, a queen's price in the
+  // victim table and, with a pawn of the side to move on its seventh, a queen
+  // less a pawn -- could not reach alpha ended before generating anything,
+  // the checking captures S112 searches dropped with the rest. Its `{0, 5}`
+  // nElo SPRT reached the 40000-game cap without a verdict, `nElo 3.03 +/-
+  // 3.40`, read as a zero by its pre-registration, and the early-out and its
+  // two parameters left with the reading.
 
   // The largest best case skipped, folded into the fail-soft maximum below.
   int futility_best = MIN;

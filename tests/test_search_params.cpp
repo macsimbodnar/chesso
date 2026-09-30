@@ -55,10 +55,10 @@
 // margin, depth offset and minimum depth it gates. S131 adds another switch:
 // `QsQueenPromotions` decides whether quiescence searches a queen promotion
 // that takes nothing, and its 0 is that step's off value.
-// S022's second verdict adds two: `QsDeltaEarlyOut`, the node-level delta
-// early-out's switch, whose 0 is the parent's tree and whose 1 ships while
-// that verdict is measured, and `QsDeltaPhaseMin`, the late-endgame
-// threshold it is not asked at or below, a seed.
+// S022's second verdict added two, `QsDeltaEarlyOut`, the node-level delta
+// early-out's switch, and `QsDeltaPhaseMin`, the late-endgame threshold it
+// was not asked at or below, and its reading took both out again with the
+// rule: 69 to 71 and back to 69.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -71,7 +71,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 71 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 69 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -99,8 +99,6 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"QsFutility",                1,     0,       1},
   {"QsFutilityMargin",        188,     0,    2000},
   {"QsQueenPromotions",         1,     0,       1},
-  {"QsDeltaEarlyOut",           1,     0,       1},
-  {"QsDeltaPhaseMin",           0,     0,      24},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
   {"RfpMinPly",                 3,     2,      63},

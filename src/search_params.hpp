@@ -266,48 +266,6 @@
      description, DEC-221. */                                                  \
   X(QS_QUEEN_PROMOTIONS, "QsQueenPromotions", 1, 0, 1)                         \
                                                                                \
-  /* THE NODE-LEVEL DELTA EARLY-OUT IN QUIESCENCE, S022's verdict 2. Out of    \
-     check, after the stand pat and the depth cap and before anything is       \
-     generated, the node asks whether the largest gain any move could bring    \
-     reaches alpha: S112's futility base -- the stand pat plus                 \
-     QsFutilityMargin -- plus the queen's price in `qs_futility_value` in      \
-     src/search.cpp, plus the same table's queen minus its pawn when a pawn of \
-     the side to move stands on its seventh rank. Where even that ceiling is   \
-     at or below alpha the node ends ungenerated: it returns the ceiling, the  \
-     node-level form of S112's fail-soft raise, and stores it as the upper     \
-     bound it is. It prunes a superset of S112's skips -- the allowance covers \
-     the promotions S112 exempts, but whether a capture gives check cannot be  \
-     known before it is generated -- so it owes an SPRT and never an INV-6     \
-     claim. Never in check.                                                    \
-                                                                               \
-     QS_DELTA_EARLY_OUT IS A SWITCH AND NOT A SETTING (DEC-215), and its 0 is  \
-     the tree before S022's verdict 2, proved on the tree and not declared:    \
-     the tune build at 0 benches the parent's total with all eight `bestmove`  \
-     replies and reproduces `tools/search_bench.py` at depths 9 and 12. **It   \
-     ships at 1**, which verdict 2 measures against that tree at `{0, 5}` nElo \
-     (adocs/data/S022_v2_sprt.sh): on H1 the early-out stays, otherwise the    \
-     switch goes to 0 and the code leaves with it. Range 0 to 1 by stated      \
-     purpose; a verdict switch, not something S127 sweeps.                     \
-                                                                               \
-     No new margin (the step file's section 4): the ceiling is S112's base and \
-     S112's victim table read at the queen, and the allowance, 900 - 100 =     \
-     800, is that table's own and agrees with S131's exchange arithmetic for a \
-     promotion that takes nothing.                                             \
-                                                                               \
-     QS_DELTA_PHASE_MIN is the late-endgame disable the wiki names without a   \
-     threshold, https://www.chessprogramming.org/Delta_Pruning: the early-out  \
-     is not asked at `game_phase() <= QsDeltaPhaseMin`. Seed, DEC-134: **(b)   \
-     chesso's own phase scale** -- 0, pawn endgames only, the boundary the     \
-     null-move zugzwang guard in negamax_at already keys on (`game_phase() >   \
-     0`). Range 0 to 24, the scale's own ends, by stated purpose: the phase    \
-     never exceeds 24, so at the top the early-out never runs and the tree is  \
-     the one at QsDeltaEarlyOut 0; the floor still disables pawn endgames, so  \
-     "never disable" is outside the range. It is a seed, and S127 fits it if   \
-     the early-out stays. Implemented from the step file's description,        \
-     DEC-221. */                                                               \
-  X(QS_DELTA_EARLY_OUT, "QsDeltaEarlyOut", 1, 0,  1)                           \
-  X(QS_DELTA_PHASE_MIN, "QsDeltaPhaseMin", 0, 0, 24)                           \
-                                                                               \
   /* Reverse futility pruning. How much the opponent is assumed to be able to  \
      claw back per remaining ply, and the largest **remaining** depth the      \
      assumption is made at -- `depth <= RFP_MAX_DEPTH` in negamax_at(), so it  \

@@ -1437,3 +1437,282 @@ pinning: items 1 to 15 as the pre-registration states them.
 `DONE`). **No verdict with the nElo interval [-0.37, +6.43] reaching above zero**: read as a zero by the pre-registration's third row -- `QsDeltaEarlyOut` to 0 and the code leaves with it, the three goldens restored; deleting delta pruning is the recorded outcome. `Incomplete mating PV` 20 against 5,
 an observation for the pre-registration's open finding 3's class (CHESS).
 No follow-up run and no second pair (DEC-063, DEC-019). S022 completes on both verdicts.
+
+## Verdict 2's removal, prepared 2026-09-29 (lands on the reading)
+
+Written by a fresh Opus agent on the linked worktree `s022rm` at `51f69ff`,
+briefed from `.tuning/coord/S022_rm_brief.md`, while verdict 2's SPRT
+(`0c0db1b` against `58585f8`, `{0, 5}` nElo) held the machine: every
+CPU-bound command ran under `nice -n 19` with `-j4` builds, and every number
+below that decides anything is a node count, a best move or a pass; the only
+seconds quoted are the suites' wall times under the match. **It is prepared
+ahead of the reading and lands only on an H0 or no verdict**, the
+pre-registration's second and third rows, which read the same way: the switch
+goes to 0, the code leaves with it, and the three goldens of its item 13 go
+back byte for byte (the S238 pattern). On an H1 it is discarded. The reading,
+its result block and the shared documents are the coordinator's, and nothing
+here states the verdict. Nothing was committed or staged by this agent.
+
+**How.** `git show 0c0db1b -- src/search.cpp src/search_params.hpp
+tests/test_search.cpp MANUAL.md | git apply -R`, which applied cleanly beside
+S244's and S245's later hunks in all four; `git restore
+--source=58585f8 --worktree -- tests/test_engine.cpp
+tests/test_search_params.cpp`, which nothing after `0c0db1b` touched;
+`tools/mutants/S022_v2_delta_early_out.py` deleted; then the records, by hand.
+Before the hand edits `git diff 58585f8 -- src tests tools MANUAL.md` equalled
+`git diff 0c0db1b 51f69ff` over the same paths but for hunk offsets: S244's
+screen, S245's comments, cases and checker fix, and nothing else.
+
+### What left
+
+| what | where |
+|---|---|
+| the early-out block, between `futility_base` and `futility_best`, and its three paragraphs | `quiescence` in `src/search.cpp` |
+| `QS_DELTA_EARLY_OUT` ("QsDeltaEarlyOut", 1, 0 to 1) and `QS_DELTA_PHASE_MIN` ("QsDeltaPhaseMin", 0, 0 to 24) with their comment block | `src/search_params.hpp`, the one X-macro both builds read |
+| the suite "search: quiescence delta early-out" whole: its six release cases and the two tune-only ones, "the early-out is off at the switch's off value" and "the endgame disable follows its threshold" | `tests/test_search.cpp` |
+| the two `golden_defaults` rows, 71 back to 69 | `tests/test_search_params.cpp` |
+| Z01 to Z08 | `tools/mutants/S022_v2_delta_early_out.py`, deleted |
+| the `QsDeltaEarlyOut` and `QsDeltaPhaseMin` option rows | `MANUAL.md` |
+
+### What came in: records only
+
+- `src/search.cpp` `quiescence`, where the block stood: a seven-line comment
+  in the form S237's, S238's and verdict 1's sites took -- S022 tried a
+  node-level delta early-out here, what it was, and that its `{0, 5}` SPRT
+  showed no gain, so the early-out and its two parameters left. It carries no
+  figures because none exist yet; the reading adds them in the precedents'
+  form ("accepted H0, `nElo x +/- y` over n games, read as ...").
+- `src/chesso.cpp` `iterative_deepening_search`: S245's sentence about the
+  eight-queens board said `go depth 1` there reports 10187 nodes and that no
+  case uses the board, both false once the early-out is gone. It now says
+  36165 nodes, re-taken below, and names the stop half's board again. Not in
+  the brief's list of files; a comment the removal made false.
+- `tests/test_search_params.cpp`: the history comment says S022's second
+  verdict added the two rows and its reading took them out, 69 to 71 and
+  back to 69.
+- The three goldens' sites each record the move and its return (DEC-142,
+  DEC-233), below.
+- `DEV_MANUAL.md`: the golden table's `mate_the_multicut_hides` and
+  `golden_defaults` rows are `58585f8`'s again with one clause each saying
+  S022's second verdict came and went (the shape S238's and verdict 1's rows
+  took); the bench ledger keeps the landing's two paragraphs, which are its
+  record, and gains the removal's entry, `3656950` -> `3429473`, beneath them.
+
+`adocs/data/S022_v2_sprt.sh`, `S022_v2_remine_s097.log`, their
+`adocs/data/README.md` rows and this file's earlier sections are untouched.
+
+### The three goldens of item 13, back byte for byte
+
+1. **S097's multicut row of "pruning does not hide a forced mate"**
+   (`mate_the_multicut_hides`). The landing's row,
+   `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`, `mate_in == 5`,
+   becomes S131's row as `58585f8` has it,
+   `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42`, `mate_in == 6`, at
+   the same depth 14. The GOLDEN block keeps the re-mine as history: a
+   paragraph "RE-MINED AT S022'S SECOND VERDICT, IN THE SCRIPT'S GUARD MODE,
+   AND RESTORED WHEN THE EARLY-OUT LEFT" in place of the landing's, and the
+   rows list gains "S022 verdict 2, the delta early-out on `58585f8`, guard
+   mode: S097's row, depth 14, mate_in 5, 6580581 nodes, about 0.8 s", S131's
+   entry reading "on `58585f8`, and again after S022 verdict 2's reading".
+   **S131's row separates E21 again on this tree**, S244's screen in it:
+   E21 applied by hand to `src/search.cpp` (the S033 protocol), `test_search`
+   rebuilt, and "pruning does not hide a forced mate" fails at the row's
+   `REQUIRE( result.mate_found )`, logged "mate the multicut hides, depth 14",
+   after 40 of its assertions passed (`.tuning/coord/S022_rm/e21_case.log`);
+   the file restored byte for byte (sha256) and `build/` rebuilt whole, the
+   engine binary's hash the same as before the check. No
+   `tools/mutation_check.py` run: its fixture is a clean commit in a throwaway
+   worktree, which the landed tree gives the coordinator.
+2. **The stop half's board** of `test_engine`'s "a stop inside the first
+   iteration cuts it and the hard timer ends the search within its bound".
+   The landing's `r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0
+   1` with "**Golden**: 146994 nodes and 24 to 31 ms" becomes `58585f8`'s
+   `q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1` with "Eight queens
+   a side ... **Golden**: 13.8 ms on this machine"; `depth_1_floor_ms` is 3 on
+   both. A paragraph beneath the golden records the move by the case's own
+   rule, the rook-and-knight board and its numbers, and the return. Depth 1
+   there is **36165 nodes** on this tree's Release build and on the reference
+   binary alike, three fresh processes each, `bestmove d2h6`; the
+   rook-and-knight board 146994 on both.
+3. **The timer half's dead-timer figure.** The landing's "18594285 nodes and
+   about 3.9 s ... `bestmove` after 3915 and 3935 ms ... The bound sits about
+   10 times below it" becomes `58585f8`'s "25933707 nodes and about 5.9 s ...
+   `bestmove` after 5913 and 6285 ms ... The bound sits about 14 times below
+   it", with one sentence recording the re-take and its return. Depth 1 on the
+   timer board, `rn1qk1nr/qqqqqqqq/8/8/8/8/QQQQQQQQ/RN1QK1NR w - - 0 1`, is
+   **25933707 nodes** on both binaries, `bestmove f2f7`. The time was not
+   re-taken: the machine is the SPRT's.
+
+### The proofs
+
+**Bench-identical to `58585f8`; S244's screen is the one engine difference
+(DEC-242).** Compared against the running SPRT's own reference binary,
+`.ref-builds/58585f8/build/src/chesso`, run and never rebuilt, with INV-6's
+instrument (DEC-215):
+
+| | |
+|---|---|
+| `bench` | **3429473**, the whole stream -- all 112 `info` lines' depth, score, nodes and PV and all eight `bestmove` replies, c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- identical with `time` and `nps` stripped |
+| `bench 12` | 1694808, the whole stream identical the same way, the same eight replies |
+| `tools/search_bench.py` | identical node for node and move for move: depth 9 48304 / 71580 / 25413, depth 12 104784 / 244824 / 117798, best c3d5 e2a6 d7c8q at both -- the figures this file's verdict-2 section recorded for `39841ed` |
+
+That is identity on the bench positions and no more. S244's screen in
+ProbCut's loop changed the search after `58585f8`, and its class -- a capture
+that leaves insufficient material -- never reaches these positions, which is
+why the streams agree and why INV-6's instrument cannot see it: S244 was
+accepted on DEC-242, not on INV-6. **DEC-242's "the census first" is owed on
+the landed tree before S244's stamp**: its ordinary-play census, the
+coordinator's to run once the machine is free. The remaining difference to
+`58585f8` in `src/`, `tests/`, `tools/` and `MANUAL.md` is S244's and S245's
+hunks and the records above.
+
+| | |
+|---|---|
+| both fast suites | niced, serial `ctest -L fast`, one build at a time: **41 of 41 each** -- Release `build` in 284.9 s, `test_mate_carry` 84.07 s against its 120 s ceiling, and `-DCHESSO_TUNE=ON` `build-tune` in 289.1 s, `test_mate_carry` 84.15 s (`release_suite_run1.log`, `tune_suite_run1.log`). Run again on the final tree, this section and the site's E21 sentence in it: 41 of 41 each, Release 278.4 s and tune 285.7 s, `test_mate_carry` 80.86 s and 83.26 s (`release_suite_final.log`, `tune_suite_final.log`) |
+| format | `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` |
+| prose | `tools/plan_prose_check.py`, one mode per invocation: `--citations` 0 flagged over 38 files, `--touches` 0 flagged, `--params` exit 0, `--gate` agreeing |
+| mutant anchors | `tools/mutation_check.py` has no validate-only flag, so its own `load_mutants` and `validate` were run against the working tree over the whole of `tools/mutants/`: 156 mutants in 19 files, every anchor unique, no Z id left |
+| the tune build | compiles with the two X-macro rows gone, nothing else naming them; at its defaults `bench` 3429473 with the whole stream identical to the reference binary's |
+| the UCI surface | `test_uci_surface` green in both builds with **no refresh**; the Release build lists 5 options, the tune build 74, none of them `QsDelta*` |
+
+The logs are in this worktree's `.tuning/coord/S022_rm/`, for the coordinator
+to carry into the main tree's `.tuning/coord/` with the landing:
+`bench_*.txt`, `bench12_*.txt`, `sb_*.txt` and `bench_tune.txt` (INV-6),
+`depth1_boards.txt` and `depth1_timer_board.txt` (the goldens' node counts),
+`e21_*` (the hand check), and the suite logs.
+
+### Found, not changed
+
+- **S245's item 2 is live again.** The eight-queens board's restored golden
+  reads "13.8 ms on this machine", while the board ran 6 to 7 ms on the idle
+  machine at this verdict's ruling -- what S245 found before the landing made
+  it moot. The 3 ms floor holds and the case is green in both builds. The
+  golden goes back byte for byte, as the pre-registration's row says, so the
+  record paragraph names which figure is which and nothing is re-derived
+  here; a re-take of that time needs the idle machine.
+- `adocs/specs.md` goes false in two rows once this lands: the `search` row's
+  verdict-2 sentence, which describes the early-out as present, gives
+  `QsDeltaEarlyOut` 0 as its off value and ends "`bench` 3656950", and the
+  `absent, search` row's "(its node-level early-out is in the tree behind
+  `QsDeltaEarlyOut` 1 while S022 verdict 2 measures it)". Both replacements
+  are proposed below, for the removal commit. The coordinator's file.
+- `adocs/status.md`'s 09:51 entry calls the running pair `{-5, 0}` nElo
+  (`--nonreg`), where the pre-registration, the landing's commit and the run's
+  own banner (`bounds elo0=0 elo1=5`) say `{0, 5}`. The coordinator's file.
+
+### Not run here, by the brief
+
+The reading and its result block; DEC-141's second tier -- the Debug
+self-play and `tools/gate_extra.sh` -- on the idle machine after the verdict;
+`tools/mutation_check.py` on a fixture; any timing. Two more are owed on the
+landed tree, both the coordinator's once the machine is free:
+
+- **`adocs/data/S203_case_sweep.sh` over `adocs/data/S170_cases.tsv`, and the
+  budgets re-derived from it before the next verdict.** `test_mate_carry`'s
+  budgets were re-swept by S245's item 5 on `0c0db1b` with S244's screen -- A
+  500000, C 1000000, E 500000, F 100000, B and D unchanged -- the tree this
+  removal takes back out, and the TSV's header, `tests/test_mate_carry.cpp`
+  and DEC-156 as DEC-162 amended it all say to re-run the sweep after
+  anything that moves the tree. DEC-162's rule: each row takes the cheapest
+  budget at its own stride whose cell reports a mate line, chosen on the mate
+  count alone; `--ceilings` over the recorded grids answers the short-line
+  ceilings. The green suite here proves nothing about the budgets: DEC-162
+  makes one silent guarded case green by design, and only three of the five
+  silent is red.
+- **S244's ordinary-play census** (DEC-242's "the census first"), before
+  S244's stamp -- the proofs above.
+
+### Proposed `adocs/specs.md` edits, for the coordinator
+
+Quoted against `specs.md` at `51f69ff`. Two edits, both for the removal
+commit; `<...>` is the reading's.
+
+**1. The `search` row's verdict-2 sentence**, from "**The node-level delta
+early-out in quiescence, S022 verdict 2 (landed 2026-09-29, DEC-221)**:"
+through "<verdict> -- `bench` 3656950." inclusive, becomes, in the form
+verdict 1's and S238's sentences took:
+
+> **A node-level delta early-out in quiescence was tried and left, S022
+> verdict 2, landed 2026-09-29 and removed <date> (DEC-221)**: out of check,
+> above `QsDeltaPhaseMin` 0 and before anything was generated, a node whose
+> ceiling -- S112's futility base, the queen's price in S112's victim table,
+> and that table's queen less its pawn when a pawn of the side to move stood
+> on its seventh -- was at or below alpha ended there, returning the ceiling
+> as an upper bound; it dropped the checking captures S112 searches, whether
+> a capture gives check being unknown before generation, and never ran in
+> check, behind `QsDeltaEarlyOut` 1, whose 0 gave the tree before it node for
+> node (DEC-215). Before any game it ended 12.67 % of the out-of-check
+> quiescence nodes that reach generation over the bench positions at depth
+> 12, 72.3 % of them with nothing to generate and 804 with a move the tree
+> searches -- reach, not a forecast (DEC-239). Its one `{0, 5}` nElo SPRT
+> against the tree with S015's gate and without the early-out
+> (`adocs/data/S022_v2_sprt.sh`) **<accepted H0 at n games | reached
+> fastchess's 40000-game cap with no verdict> on <date> -- `Elo x +/- y`,
+> `nElo x +/- y`, LLR l, f forfeits** (`adocs/data/S022_v2_sprt.log`), <a
+> loss | a zero>: `QsDeltaEarlyOut` went to 0 and the code left with it,
+> `QsDeltaPhaseMin` with it, the three goldens re-derived for the candidate
+> restored with it -- `bench` 3429473, bench-identical to `58585f8`'s, S244's
+> screen the one engine difference (DEC-242). Deleting delta pruning is
+> S022's recorded outcome; S112's per-move futility is the form that stays.
+
+**2. The `absent, search` row**: "delta pruning (its node-level early-out is
+in the tree behind `QsDeltaEarlyOut` 1 while S022 verdict 2 measures it)"
+becomes, in the form this file's landing section proposed for an H0 or no
+verdict:
+
+> delta pruning (S022 measured the node-level form and deleted it: <H0 at n
+> games, `nElo x +/- y` | no verdict at the cap, `nElo x +/- y`>)
+
+### Proposed commit text, for the coordinator
+
+Not a verdict-closing commit: the reading's own commit carries the DEC-220
+block. `<...>` is the reading's, and the coordinator appends its trailer
+after the `Bench:` line.
+
+```
+Remove S022 v2's delta early-out on its <H0 | zero>
+
+The node-level delta early-out in quiescence showed no gain. The SPRT
+of 0c0db1b, the early-out behind QsDeltaEarlyOut 1, against 58585f8,
+the tree without it, {0, 5} nElo at 8+0.08, <reading: H0 at n games,
+nElo x +/- y | no verdict at the cap, nElo x +/- y>.
+adocs/data/S022_v2_sprt.sh wrote that reading and its consequence
+before the first game -- the switch to 0 and the code leaves with it,
+the S238 pattern, three goldens back byte for byte -- so this is the
+pre-registration executed: deleting delta pruning is S022's recorded
+outcome, S112's per-move futility the form that stays.
+
+Out: the early-out block in quiescence; the QS_DELTA_EARLY_OUT and
+QS_DELTA_PHASE_MIN rows and their comment; the suite "search:
+quiescence delta early-out", six release cases and two tune-only; the
+two golden_defaults rows, 71 back to 69;
+tools/mutants/S022_v2_delta_early_out.py, Z01 to Z08; the two MANUAL
+option rows. The three goldens of the pre-registration's item 13 go
+back to 58585f8's byte for byte: S131's multicut row of "pruning does
+not hide a forced mate" in place of the re-mined S097 row, and in
+test_engine's first-iteration case the stop half's eight-queens board
+with its numbers and the timer half's dead-timer figure.
+
+In: a comment at the site saying S022 tried the early-out and what its
+SPRT read; each golden's GOLDEN block records the move and its return
+(DEC-142, DEC-233); the params test's history comment records the two
+rows coming and going; S245's comment in iterative_deepening_search
+gives the eight-queens board's depth 1 as 36165 nodes and names the
+stop half again; DEV_MANUAL's ledger gains the removal's entry and its
+two golden rows read true again. The evidence stays under adocs/data/.
+
+src, tests, tools and MANUAL.md are 58585f8's apart from S244's and
+S245's hunks and those records. bench is 3429473 with the whole bench
+stream and all eight bestmove replies identical to the SPRT's own
+reference binary of 58585f8, bench 12 likewise, and
+tools/search_bench.py identical at depths 9 and 12 (INV-6, DEC-215):
+the tree is bench-identical to 58585f8, S244's screen the one engine
+difference (DEC-242), and no second SPRT is owed for the removal.
+S244's census is owed on this tree before its stamp, and the S170
+budgets are re-swept by adocs/data/S203_case_sweep.sh before the next
+verdict. Both fast suites 41 of 41, format and the prose checks clean,
+every remaining mutant anchor unique; E21 applied by hand turns S131's
+restored row red again.
+
+Bench: 3429473
+```
