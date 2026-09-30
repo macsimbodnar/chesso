@@ -613,6 +613,13 @@ struct search_node_probe_t
   bool null_child_is_pv = false;
   bool null_child_cut_node = false;
 
+  // The reduction the null-move block computed here, S114: the base, the
+  // depth share and the static-score term together, recorded once every guard
+  // of the block held and before the floor `depth - 1 - R >= 1` decides
+  // whether the pass is made -- so a case can read the term at a depth where
+  // the floor then refuses it. -1 where a guard refused first.
+  int null_reduction = -1;
+
   // Reverse futility returned its bound instead of searching a move.
   bool rfp_cutoff = false;
 

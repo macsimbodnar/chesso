@@ -4152,7 +4152,8 @@ TEST_SUITE("search: draws")
     // instrument that misses a mate, so a mate distance out of one is a
     // distance nothing proved.
     //
-    // GOLDEN (DEC-142): the depth 14 below, and the position with it.
+    // GOLDEN (DEC-142): the depth below, and the position with it -- 13
+    // since S114's re-mine, 14 for every row before it.
     // Re-derive with the six commands in `adocs/data/S097_mine_mate_row.py`'s
     // own header, which are the ones that were run and are written out there
     // with every input named -- candidates, the shipped sweep, the same sweep
@@ -4297,6 +4298,49 @@ TEST_SUITE("search: draws")
     // S244's screen in it, E21 applied by hand turns it red again at
     // `REQUIRE( result.mate_found )` (`.tuning/coord/S022_rm/e21_case.log`).
     //
+    // **RE-MINED AT S114'S FIRST VERDICT, IN THE SCRIPT'S GUARD MODE, AND
+    // THE POSITION MOVED.** That verdict adds the static-score term to the
+    // null move's reduction, which is "any change to pruning", and on its tree
+    // -- the term at `NullMoveEvalCap` 8 and the gate at 0 (DEC-243), on the
+    // tree S022 verdict 2's removal leaves -- S131's row stayed green and
+    // stopped separating: with E21 applied the case passes, the shipped and
+    // the guard-dropped builds both reporting its mate in 6 at 13 and 14 and
+    // neither at 11 or 12 (`.tuning/coord/S114b_logs/e21_case.log`). Stages 2
+    // to 6 re-run with `--mode guard` (DEC-238), stage 1 not re-run because
+    // the 269 candidates and their oracle did not move: **one of the 269
+    // separates the two sweeps**, and both modes take it,
+    // `R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50` at **depth 13**,
+    // mate in 5 -- shipped `d11 d12 d13 d14`, guard dropped `d11 d12 d14`,
+    // the mutant's multicut and the shipped one both changing the tree at 12,
+    // 13 and 14. The depth moves with the row, 14 to 13, by the script's rule:
+    // the lowest depth the shipped build reports the mate at and the
+    // guard-dropped build does not. Its cell costs 6637574 nodes and about
+    // 2.2 s as the miner timed it under S022's SPRT, where S131's row cost
+    // 1687477 at its depth 14 on the same tree
+    // (`adocs/data/S114_rb_remine_s097.log`, both modes' picks and every
+    // cell). Not read off the board (CLAUDE.md): python-chess reports
+    // `is_valid()` True, `is_check()` False, 37 legal moves, 2 captures and no
+    // promotion, White to move. Stockfish at depth 20 in a fresh process
+    // through python-chess reports `#+6`, the label
+    // `adocs/data/S097_candidates.tsv` already held, and at depth 30 the same;
+    // asked for the mate itself, `go mate 5` in a fresh process reports
+    // **`#+5` for White in 147243 nodes, pv Qe7 Qxe7 fxe7 Bc8 Rxc8 Kf7 e8=Q+
+    // Kg7 Qxf8#**, a line python-chess reads as ending in checkmate, and `go
+    // mate 4` under a 120 s cap finds nothing shorter, its search ending at
+    // depth 245 -- every line from `.tuning/coord/S114b_logs/remine/oracle.py`,
+    // a fresh process per question -- so the distance this row asserts is the
+    // oracle's own mate search's. **Observed red, then
+    // green**: with E21 applied, `./test_search --test-case="pruning does not
+    // hide a forced mate"` fails here at `REQUIRE( result.mate_found )` and
+    // passes with the guard in place (`.tuning/coord/S114b_logs/red_e21.log`).
+    // S131's row is the row of the tree without the term, and on an H0 or no
+    // verdict it comes back: `NullMoveEvalCap` 0 is the removal's engine to
+    // the node -- a revert of one line, one depth and one distance. The first
+    // build, on S022 verdict 2's tree `6e8bc63`, had re-mined S097's row,
+    // which that verdict brought back, to S188's
+    // `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54` at depth 14, mate in 5
+    // (`adocs/data/S114_remine_s097.log`), a tree this does not land on.
+    //
     // The rows this case has carried, and the tree each belongs to:
     //
     //     pre-S236, again after S236 v2, and on `308b388`, S097's row:
@@ -4311,12 +4355,16 @@ TEST_SUITE("search: draws")
     //         depth 14, mate_in 4, 16599756 nodes, about 2.4 s
     //     S131, quiet queen promotions on `3c7cf84`, guard mode (DEC-238),
     //     on `58585f8`, and again after S022 verdict 2's reading:
-    //         the row below, depth 14, mate_in 6, 1688502 nodes, about 0.26 s
+    //         "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42"
+    //         depth 14, mate_in 6, 1688502 nodes, about 0.26 s
     //     S022 verdict 2, the delta early-out on `58585f8`, guard mode:
     //         S097's row, depth 14, mate_in 5, 6580581 nodes, about 0.8 s
+    //     S114 verdict 1, the static-score term on the tree S022 verdict 2's
+    //     removal leaves, guard mode:
+    //         the row below, depth 13, mate_in 5, 6637574 nodes, about 2.2 s
     //
     const std::string mate_the_multicut_hides =
-        "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42";
+        "R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -4332,11 +4380,11 @@ TEST_SUITE("search: draws")
     // file: a mined row is a property of the tree it was mined on.
 
     {
-      const std::string title = "mate the multicut hides, depth 14";
-      const search_t result = search_fen(mate_the_multicut_hides, 14);
+      const std::string title = "mate the multicut hides, depth 13";
+      const search_t result = search_fen(mate_the_multicut_hides, 13);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 6, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
     }
 
     // S113's own row, and the accepts' clause for ProbCut: a forced mate
@@ -4640,6 +4688,41 @@ TEST_SUITE("search: draws")
     // restores byte for byte: rows 1 to 3 as below and
     // `{row 4, 9, 5, "C05, C07, since S112"}`.
     //
+    // **Re-derived at S114, the seven sweeps taken once more (DEC-233).**
+    // S114's first verdict adds the static-score term to the null move's
+    // reduction, which is "any change to pruning", and on its tree -- the term
+    // at `NullMoveEvalCap` 8, the gate at 0 (DEC-243), on the tree S022
+    // verdict 2's removal leaves -- every row below still reads its mate at
+    // its old depth, so nothing went red; what moved is the rule's answer, and
+    // DEC-142 re-derives that. The whole pass was re-taken -- shipped plus all
+    // six S091 mutants, depths 3 to 12, over `adocs/data/S230_table_fens.txt`,
+    // driven by `adocs/data/S230_mine_r01_row.py depths` on a throwaway
+    // worktree of the candidate, evidence in
+    // `.tuning/coord/S114b_logs/capmates/` and the driver
+    // `.tuning/coord/S114b_logs/fx1_checks.sh` -- and the same rule applied.
+    // Shipped profiles here: `d7 d9 d10 d11 d12`, `d7 d8 d9 d10 d11 d12`,
+    // `d10 d11 d12`, `d9 d10 d11 d12`, which put the four depths at **7, 7,
+    // 10 and 9**. **Three of the four moved and no mate distance did.** Row 1
+    // reads as S113's pass left it: at 7, where C02, C05 and R02 lose it. Row
+    // 2 reads from 7 and no S091 mutant separates it at any depth, so the rule
+    // takes the lowest, 7, and the label stays. Row 3 goes to 10, where C05
+    // (`d11 d12`) and R02 (`d12`) lose it. Row 4 goes to 9, where the shipped
+    // build gains the reading and C02 (`d8 d11 d12`), C05 (`d11 d12`) and C07
+    // (`d10 d11 d12`) lose it; R02 loses only the depth 10 reading. C06 and
+    // R01 are separated by no row at any depth, R01 the eighth consecutive
+    // pass reading that way. **The same seven sweeps on the parent** put its
+    // table at 7, 7, 10, 10 -- row 2 at 7, row 3 at 10 with C02 and R02, row
+    // 4 at 10 with R02 (`capmates/parent_*`) -- so the rows S113's pass left
+    // were already not the rule's answer there on rows 2 and 3 and on row 4's
+    // label, a staleness older than this step; the term itself moved row 4's
+    // depth and the labels of rows 3 and 4. The first build, on S022 verdict
+    // 2's tree `6e8bc63`, read the same four depths with row 3 at R02 alone
+    // and row 4 at C02 alone (`.tuning/coord/S114_remine/capmates/`). The
+    // rows as S113's pass left them, which an H0 on S114 restores byte for
+    // byte: `{row 1, 7, 5, "C02, C05, R02, since S112"}`,
+    // `{row 2, 9, 5, "no S091 mutant, since S095"}`, `{row 3, 11, 4, "R02"}`,
+    // `{row 4, 10, 5, "no S091 mutant, since S113"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -4653,13 +4736,14 @@ TEST_SUITE("search: draws")
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 9, 5,
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5,
          "no S091 mutant, since S095"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4, "R02"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
+         "C05, R02, since S114"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -4694,8 +4778,11 @@ TEST_SUITE("search: draws")
         // the S112 paragraph above has the pass. **S113 moves it to 10**: the
         // shipped build loses the depth 9 reading, and no S091 mutant loses
         // the mate at 10, 11 or 12 -- the S113 paragraph above has the pass.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
-         5, "no S091 mutant, since S113"},
+        // **S114 moves it to 9**: the shipped build gains the depth 9
+        // reading, and C02, C05 and C07 lose the mate there -- the S114
+        // paragraph above has the pass.
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
+         5, "C02, C05, C07, since S114"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -5850,10 +5937,31 @@ TEST_SUITE("search: pruning and reduction guards")
 
   // The drive depth for every null-move case. The only depth at which the
   // block's own `depth - 1 - null_reduction >= 1` clears by exactly one ply,
-  // which each case asserts rather than assumes: at 4 the reduced search is
-  // zero plies deep and the block is never entered at all, so a case driven
-  // there would pass with the guard removed.
-  static constexpr int NULL_DRIVE_DEPTH = 5;
+  // which each case asserts rather than assumes: a ply shallower the reduced
+  // search is zero plies deep and the block is never entered at all, so a case
+  // driven there would pass with the guard removed.
+  //
+  // **Derived from `NULL_MOVE_BASE` and `NULL_MOVE_DIVISOR` since S114**, with
+  // the static-score term at zero -- the cases written before S114 drive a
+  // static score under their beta, and S114's own read the term on top of
+  // this depth -- so a refit of either cannot strand the cases at a depth the
+  // null move never runs at: at a divisor of 5 the reduction at depth 5 is 4,
+  // and a literal 5 left every one of them red at its own precondition
+  // (DEC-244). At the shipped 3 and 6 it is 5, the literal it replaces, and
+  // every assertion is the one it was. -1 where no depth clears by exactly one
+  // ply, which each case's precondition then reports. Taken once, at the
+  // build's defaults; a tune case that moves either parameter derives its own.
+  static constexpr int null_drive_depth_for(int base, int divisor)
+  {
+    for (int depth = 1; depth < 64; ++depth) {
+      if (depth - 1 - (base + depth / divisor) == 1) { return depth; }
+    }
+
+    return -1;
+  }
+
+  static const int NULL_DRIVE_DEPTH =
+      null_drive_depth_for(NULL_MOVE_BASE, NULL_MOVE_DIVISOR);
 
   // An ordinary beta, inside the mate band by three orders of magnitude. Cases
   // that are about a band edge set their own.
@@ -5906,6 +6014,14 @@ TEST_SUITE("search: pruning and reduction guards")
     void require_null_move_preconditions(int depth, int beta, move_t prev)
     {
       REQUIRE_EQ(depth - 1 - (NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR)), 1);
+
+      // The floor above leaves out S114's static-score term, which is only
+      // right while the term is zero: the static score less than one margin
+      // above beta, as every drive here has it. Asserted, because a drive
+      // whose term went silently to its cap is how M02's case stopped
+      // deciding anything (DEC-243). evaluate() is the node's static score
+      // because load() wiped the table.
+      REQUIRE(evaluate(&game.board) - beta < NULL_MOVE_EVAL_MARGIN);
       REQUIRE(prev != 0);
       REQUIRE(beta < MATE_MIN_LOCAL);
       REQUIRE(beta > -MATE_MIN_LOCAL);
@@ -6217,6 +6333,29 @@ TEST_SUITE("search: pruning and reduction guards")
                      "any more: " +
                      std::to_string(rows.size()) + " rows, expected 104"));
 
+    // **The drive depth is the one the capped term leaves a ply at, S114.**
+    // Every beta here is at or below -MATE_MIN, so the static score stands
+    // tens of thousands above it and the static-score term is always at its
+    // cap: at NULL_DRIVE_DEPTH that reduction leaves the null search no ply,
+    // the floor refuses the pass whether or not the band guard is there, and
+    // M02 went unkilled (DEC-243). At the shallowest depth where the capped
+    // reduction leaves one ply the band guard is again the only thing that
+    // stops the pass, which is what this case asserts; the rows and the
+    // assertion are unchanged. `capped_null_plies` is what the null search
+    // keeps at `d` with the term at its cap.
+    const auto capped_null_plies = [](int d) {
+      return d - 1 -
+             (NULL_MOVE_BASE + d / NULL_MOVE_DIVISOR + NULL_MOVE_EVAL_CAP);
+    };
+
+    int depth = NULL_DRIVE_DEPTH;
+
+    while (depth < 63 && capped_null_plies(depth) < 1) {
+      ++depth;
+    }
+
+    REQUIRE_EQ(capped_null_plies(depth), 1);
+
     std::string violations;
     size_t scored = 0;
 
@@ -6242,9 +6381,13 @@ TEST_SUITE("search: pruning and reduction guards")
                       (row.fen + " has no phase, so the block stops on the "
                                  "wrong guard"));
 
-      negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH,
-                     static_cast<size_t>(row.ply), &game, &state, PREV_MOVE,
-                     false);
+      // The term is at its cap here, as the depth above assumes.
+      REQUIRE_MESSAGE((evaluate(&game.board) - beta) / NULL_MOVE_EVAL_MARGIN >=
+                          NULL_MOVE_EVAL_CAP,
+                      (row.fen + ": the static-score term is not at its cap"));
+
+      negamax_probed(beta - 1, beta, depth, static_cast<size_t>(row.ply), &game,
+                     &state, PREV_MOVE, false);
 
       scored++;
 
@@ -6336,6 +6479,371 @@ TEST_SUITE("search: pruning and reduction guards")
     // parent's window that no line reaches.
     REQUIRE_EQ(score, beta);
   }
+
+
+  // ---- S114: the static-score term of the null move reduction -------------
+  //
+  // The block computes, past its guards,
+  //
+  //   R = NullMoveBase + depth / NullMoveDivisor
+  //     + min(max(static_eval - beta, 0) / NullMoveEvalMargin, NullMoveEvalCap)
+  //
+  // and the floor `depth - 1 - R >= 1` tests the whole of it. The probe
+  // records R once the guards hold and before the floor decides
+  // (search_node_probe_t `null_reduction`), so these cases read the term at
+  // depths where the floor then refuses the pass. Every drive is a node at
+  // ply 1, below RFP_MIN_PLY so reverse futility cannot pre-empt the block,
+  // from a wiped table, so the node's static score is a fresh evaluate() and
+  // never a stored one (S103) -- which is what lets beta be set from it.
+  //
+  // The entry gate ships at 0 (DEC-243): the cases below hold the term, and
+  // where a leg's answer depends on the gate it says which setting it holds.
+
+  // The castled pawn-wall board of the null-move cases above: no capture for
+  // either side, the phase off zero, not in check. 0 for the side to move by
+  // this engine's evaluate(), which is not assumed -- every drive sets beta
+  // from the number it reads.
+  static const std::string NULL_EVAL_POS =
+      "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+  // A ceiling on every drive below, so a mutant that sends the null search
+  // deep reads as an aborted drive rather than as a hang.
+  static constexpr uint64_t NULL_EVAL_NODE_LIMIT = 5000000;
+
+  struct null_eval_drive_t : guard_fixture_t
+  {
+    int last_beta = 0;
+    int last_score = 0;
+
+    // The node's static score less `lead`, so `lead` is how far the static
+    // score stands above the drive's beta; negative puts it below.
+    search_node_probe_t run(const std::string& fen, int lead, int depth)
+    {
+      load(fen, 1);
+      REQUIRE(!is_check(&game));
+      REQUIRE(game_phase(&game.board) > 0);
+
+      last_beta = evaluate(&game.board) - lead;
+
+      REQUIRE(last_beta < MATE_MIN_LOCAL);
+      REQUIRE(last_beta > -MATE_MIN_LOCAL);
+
+      state.root_history_size = game.history.size;
+      state.node_limit = NULL_EVAL_NODE_LIMIT;
+      last_score = negamax_probed(last_beta - 1, last_beta, depth, 1, &game,
+                                  &state, PREV_MOVE, false);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      return probe;
+    }
+
+    // The reduction before S114, the part the term is added to.
+    static int base_reduction(int depth)
+    { return NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR); }
+  };
+
+
+  // THE TERM, READ OFF THE NODE: one ply per whole margin of lead, up to the
+  // cap and never past it. At the drive depth the reduction before S114
+  // leaves the null search exactly one ply, so the pass is made at no lead and
+  // refused from one margin on -- that half is the floor's case below, and it
+  // is read here too because it is the same drive.
+  //
+  // Mutation: NT01_null_eval_cap_dropped, NT03_null_eval_sign_flipped,
+  // NT04_null_eval_reads_table_slot.
+  //
+  //   search: pruning and reduction guards
+  //    the null move reduction adds a ply per margin the static score stands
+  //    above beta
+  TEST_CASE_FIXTURE(null_eval_drive_t,
+                    "the null move reduction adds a ply per margin the static "
+                    "score stands above beta")
+  {
+    const int depth = NULL_DRIVE_DEPTH;
+
+    REQUIRE_EQ(depth - 1 - base_reduction(depth), 1);
+
+    // Twelve past the cap: an uncapped term would read it.
+    for (const int margins :
+         {0, 1, 2, NULL_MOVE_EVAL_CAP, NULL_MOVE_EVAL_CAP + 12}) {
+      const std::string title =
+          "a lead of " + std::to_string(margins) + " margins";
+      const search_node_probe_t record =
+          run(NULL_EVAL_POS, margins * NULL_MOVE_EVAL_MARGIN, depth);
+      const int want =
+          base_reduction(depth) + std::min(margins, NULL_MOVE_EVAL_CAP);
+
+      CHECK_MESSAGE(record.null_reduction == want, title);
+      CHECK_MESSAGE(record.null_move_made == (depth - 1 - want >= 1), title);
+    }
+
+    // Whole margins only: a lead one centipawn short of one adds nothing.
+    const search_node_probe_t short_of =
+        run(NULL_EVAL_POS, NULL_MOVE_EVAL_MARGIN - 1, depth);
+
+    CHECK_EQ(short_of.null_reduction, base_reduction(depth));
+    CHECK(short_of.null_move_made);
+  }
+
+
+  // BELOW BETA THE TERM TAKES NOTHING OFF. The clamp at zero is what makes cap
+  // 0 the tree before S114 with the gate at 0, where it ships: without it a
+  // static score below beta would give the null search plies back, which is a
+  // different rule. At the shipped gate the pass is still made below beta; at
+  // gate 1, S114's second verdict, it is refused before the term is computed.
+  //
+  // Mutation: NT03_null_eval_sign_flipped, NT05_null_eval_gate_switch_ignored,
+  // NT06_null_eval_clamp_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    a static score below beta takes nothing off the null move reduction
+  TEST_CASE_FIXTURE(null_eval_drive_t,
+                    "a static score below beta takes nothing off the null "
+                    "move reduction")
+  {
+    const int depth = NULL_DRIVE_DEPTH;
+
+    REQUIRE_EQ(depth - 1 - base_reduction(depth), 1);
+
+    for (const int margins : {1, 5}) {
+      const std::string title =
+          "a static score " + std::to_string(margins) + " margins below beta";
+      const search_node_probe_t record =
+          run(NULL_EVAL_POS, -margins * NULL_MOVE_EVAL_MARGIN, depth);
+
+      if (NULL_MOVE_EVAL_GATE == 0) {
+        CHECK_MESSAGE(record.null_reduction == base_reduction(depth), title);
+        CHECK_MESSAGE(record.null_move_made, title);
+      } else {
+        CHECK_MESSAGE(record.null_reduction == -1, title);
+        CHECK_MESSAGE(!record.null_move_made, title);
+      }
+    }
+  }
+
+
+  // THE FLOOR TESTS THE WHOLE REDUCTION. At the drive depth the reduction
+  // before S114 leaves the null search one ply, so one margin of lead leaves it
+  // none: the pass is refused and the node searched, where a floor that tested
+  // the old part alone would let the null search fall to quiescence -- the bug
+  // the floor exists for, which lost a mate in two at depth 4.
+  //
+  // Mutation: NT02_null_eval_floor_misses_term.
+  //
+  //   search: pruning and reduction guards
+  //    the floor refuses a pass the static-score term leaves no ply for
+  TEST_CASE_FIXTURE(null_eval_drive_t,
+                    "the floor refuses a pass the static-score term leaves no "
+                    "ply for")
+  {
+    const int depth = NULL_DRIVE_DEPTH;
+
+    REQUIRE_EQ(depth - 1 - base_reduction(depth), 1);
+    REQUIRE(NULL_MOVE_EVAL_CAP >= 1);
+
+    // The control first: the same node with no lead passes, so the refusal
+    // below is the floor's and not some earlier guard's.
+    const search_node_probe_t control = run(NULL_EVAL_POS, 0, depth);
+
+    REQUIRE(control.null_move_made);
+
+    const search_node_probe_t record =
+        run(NULL_EVAL_POS, NULL_MOVE_EVAL_MARGIN, depth);
+
+    REQUIRE_EQ(record.null_reduction, base_reduction(depth) + 1);
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!record.null_move_made);
+  }
+
+
+  // THE TERM NEVER READS THE SENTINEL. In check `static_eval` is TT_EVAL_NONE,
+  // INT16_MIN, and the block is kept out by `!is_in_check` alone once the gate
+  // is off; negamax_at asserts the sentinel is never read, and this is the
+  // same statement made where the release build can see it: at a beta under
+  // the sentinel, where a term computed from it would come out non-zero, no
+  // reduction is computed at all.
+  //
+  // 1.e4 c5 2.Nf3 d6 3.Bb5+, the in-check null-move case's own position. From
+  // a tool (CLAUDE.md): python-chess reports `is_check() True` and four legal
+  // replies.
+  //
+  // Mutation: M01_nmp_in_check, the guard dropped. A whole-suite run never
+  // reaches this case -- M01 makes a null move in check, and test_search
+  // crashes earlier -- so it was observed alone: on a release build with M01
+  // applied it is red at `REQUIRE_EQ( probe.null_reduction, -1 )`, values 11
+  // against -1, the term computed from the sentinel, and green without it
+  // (`.tuning/coord/S114b_logs/m01_sentinel_case.log`, on the tree this lands
+  // on; the first build's `.tuning/coord/S114_logs/m01_sentinel_case.log` read
+  // the same).
+  //
+  //   search: pruning and reduction guards
+  //    the static-score term is never computed at a node in check
+  TEST_CASE_FIXTURE(null_eval_drive_t,
+                    "the static-score term is never computed at a node in "
+                    "check")
+  {
+    const std::string fen =
+        "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3";
+
+    // Under the sentinel and inside the window the band guard admits.
+    const int beta = -40000;
+
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+    REQUIRE((TT_EVAL_NONE - beta) / NULL_MOVE_EVAL_MARGIN >= 1);
+
+    load(fen, 1);
+
+    REQUIRE(is_check(&game));
+
+    state.root_history_size = game.history.size;
+    state.node_limit = NULL_EVAL_NODE_LIMIT;
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
+
+    REQUIRE(!state.aborted);
+    require_the_node_reached_its_move_loop();
+    REQUIRE_EQ(probe.null_reduction, -1);
+    REQUIRE(!probe.null_move_made);
+  }
+
+
+  // THE DEMOLITION TARGET, S114's accepts: a node far ahead statically that is
+  // lost to a forced mate the null search can only miss once it has no ply
+  // left. Black holds two rooks and two bishops behind a locked pawn wall --
+  // material the evaluation counts and the position cannot use -- and every
+  // Black move allows mate in one; after a pass White mates with Qc5, a quiet
+  // move, and White has no capture, so a null search fallen to quiescence
+  // stands pat and never sees it.
+  //
+  // Not read off the board (CLAUDE.md, DEC-023): picked by
+  // `~/.venv/chess/bin/python adocs/data/S114_demolition_row.py pick` from the
+  // mated-in-one rows of adocs/data/S165_defender_set.tsv, S145's constructed
+  // and enumerated mates: 17 of 50 pass its four conditions and this is the
+  // pick rule's first, python-chess enumerating Kd6 Qd5# and Kb6 Qb5# and the
+  // threat Qc5# with no capture on the board, stockfish at depth 20 in its own
+  // process reading `#-1` for Black, pv c6d6 f5d5.
+  //
+  // The window sits twenty margins under the static score, so the uncapped
+  // term would be twenty and the capped one is the cap. Two depths: at the
+  // first the reduction before S114 would leave one ply and the capped term
+  // leaves none, so the floor refuses and the node is searched; at the second,
+  // the shallowest the capped reduction leaves one ply at, the pass is made
+  // and its one ply sees the mate. Green shipped. **Red with the floor and the
+  // cap lifted together** -- R past the depth, the null search is quiescence
+  // and the pass fails high on material -- which is the demolition build this
+  // step's accepts asks for, observed in a throwaway copy and never in `src/`:
+  // `.tuning/coord/S114b_logs/demolition_red.log`, where the node answers 373
+  // at both depths in place of a mate (-715 on the first build's tree, S022
+  // verdict 2's, `.tuning/coord/S114_logs/demolition_red.log`). With the floor
+  // kept and the cap lifted the mate is still found at both, the pass
+  // impossible rather than blind, and only the case's readings of R and of the
+  // pass at the second depth go red; with the cap kept and the floor lifted
+  // the mate is lost at the first depth and found at the second. The
+  // observables are CHECKs so a red run prints every one.
+  //
+  // Mutation: NT02_null_eval_floor_misses_term.
+  //
+  //   search: pruning and reduction guards
+  //    the static-score term does not hide a forced mate
+  TEST_CASE_FIXTURE(null_eval_drive_t,
+                    "the static-score term does not hide a forced mate")
+  {
+    const std::string fen = "rbrb4/p1p1p3/P1k1P3/5Q2/2K5/8/8/8 b - - 1 4";
+    const int lead = 20 * NULL_MOVE_EVAL_MARGIN;
+
+    REQUIRE(lead / NULL_MOVE_EVAL_MARGIN > NULL_MOVE_EVAL_CAP);
+
+    const int shallow = NULL_DRIVE_DEPTH;
+
+    REQUIRE_EQ(shallow - 1 - base_reduction(shallow), 1);
+
+    int deep = shallow;
+
+    while (deep < 63 &&
+           deep - 1 - (base_reduction(deep) + NULL_MOVE_EVAL_CAP) < 1) {
+      ++deep;
+    }
+
+    REQUIRE_EQ(deep - 1 - (base_reduction(deep) + NULL_MOVE_EVAL_CAP), 1);
+
+    for (const int depth : {shallow, deep}) {
+      const std::string title = "depth " + std::to_string(depth);
+      const search_node_probe_t record = run(fen, lead, depth);
+
+      CHECK_MESSAGE(last_score <= -MATE_MIN_LOCAL, title);
+      CHECK_MESSAGE(
+          record.null_reduction == base_reduction(depth) + NULL_MOVE_EVAL_CAP,
+          title);
+      CHECK_MESSAGE(record.null_move_made == (depth == deep), title);
+    }
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE TERM MOVES THE TREE ABOVE BETA AND HOLDS IT STILL BELOW -- the
+  // non-vacuous precondition the step file asks for, read as node counts
+  // against the cap's off value, which only the tune build can set. At the
+  // drive depth no node below the drive can make a null move at any lead
+  // (asserted), so the drive node is the only place the cap reaches: twenty
+  // margins above beta the capped term leaves the pass no ply and the node is
+  // searched in full where at cap 0 the pass is made, and two margins below
+  // beta the two trees are one: the cap does nothing below beta. That leg
+  // cannot see the clamp -- without it the term is min(-2, 8) = min(-2, 0) =
+  // -2 at both caps -- so the clamp's guard is the release case "a static
+  // score below beta takes nothing off the null move reduction", which reads
+  // R itself. The restorer keeps a failed assertion from leaving the cap at 0
+  // for every later case in the process.
+  //
+  // Mutation: none of its own. `tools/mutation_check.py` builds the release
+  // binaries only, where NT01 to NT06 are killed by the cases above; this case
+  // was observed red in a tune build under NT01 and under NT03
+  // (`.tuning/coord/S114b_logs/tune_case_red.log`, on the tree this lands on,
+  // as on the first build's, `.tuning/coord/S114_logs/tune_case_red.log`).
+  TEST_CASE_FIXTURE(null_eval_drive_t,
+                    "the static-score term moves the tree above beta and holds "
+                    "it still below")
+  {
+    struct restore_t
+    {
+      const int cap = NULL_MOVE_EVAL_CAP;
+      ~restore_t() { search_param_set("NullMoveEvalCap", cap); }
+    } restore;
+
+    const int depth = NULL_DRIVE_DEPTH;
+
+    REQUIRE(restore.cap > 0);
+    REQUIRE(depth - 2 - base_reduction(depth - 1) < 1);
+
+    const auto nodes_at = [&](int cap, int lead) {
+      REQUIRE(search_param_set("NullMoveEvalCap", cap));
+      run(NULL_EVAL_POS, lead, depth);
+      return state.explored_nodes;
+    };
+
+    const int above = 20 * NULL_MOVE_EVAL_MARGIN;
+    const int below = -2 * NULL_MOVE_EVAL_MARGIN;
+
+    const uint64_t above_on = nodes_at(restore.cap, above);
+    const uint64_t above_off = nodes_at(0, above);
+    const uint64_t below_on = nodes_at(restore.cap, below);
+    const uint64_t below_off = nodes_at(0, below);
+
+    CHECK(above_on != above_off);
+    CHECK_EQ(below_on, below_off);
+
+    // And at cap 0 the reduction is the one before S114 however far the
+    // static score stands above beta.
+    REQUIRE(search_param_set("NullMoveEvalCap", 0));
+
+    const search_node_probe_t off = run(NULL_EVAL_POS, above, depth);
+
+    CHECK_EQ(off.null_reduction, base_reduction(depth));
+    CHECK(off.null_move_made);
+  }
+#endif
 
 
   // Mutation: S191-N03 -- drop `!is_in_check &&` from the reverse-futility

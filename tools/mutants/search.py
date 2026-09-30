@@ -28,6 +28,12 @@ S = "src/search.cpp"
 # or moves exactly what its note names -- and `tools/mutation_check.py` is what
 # caught the stale ones, by refusing the run rather than skipping them. **All
 # five were re-run on the re-pointed anchors and all five are killed.**
+#
+# **M03's anchor was re-pointed again at S114**, which moves the reduction's
+# computation inside the null-move block, so the line after its condition is
+# no longer `const int reduction = null_reduction;`. The mutation is unchanged
+# -- `game_phase(&game->board) > 0` still becomes `true` -- and the anchor now
+# carries the block's first comment line instead.
 
 
 m("M01_nmp_in_check", S, "search/pruning",
@@ -44,8 +50,8 @@ m("M02_nmp_mate_band_neg", S, "search/pruning",
 
 m("M03_nmp_zugzwang", S, "search/pruning",
   'null move in pawn endings (game_phase 0)',
-  ('&& game_phase(&game->board) > 0) {\n    const int reduction = null_reduction;',
-   '&& true) {\n    const int reduction = null_reduction;'),
+  ('&& game_phase(&game->board) > 0) {\n    // The one place `static_eval` holds',
+   '&& true) {\n    // The one place `static_eval` holds'),
   origin="2026-09-04_test_review")
 
 m("M04_nmp_mate_artifact", S, "search/pruning",

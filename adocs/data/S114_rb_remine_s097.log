@@ -1,0 +1,124 @@
+# S114 verdict 1, rebased: the multicut mate row of "pruning does not hide a forced mate" re-derived on the candidate as it lands -- the tree S022 verdict 2's removal leaves (db1905f, 58585f8's engine node for node) + the null move's static-score term at NullMoveEvalCap 8, NullMoveEvalGate 0, base 3, divisor 6 -- 2026-09-29, because S131's row, which the removal brought back, stopped separating E21 with the term in: under E21 the case stays green and the row reads its mate in 6 at 13 and 14 on both builds (the E21 check below). Stages 2 to 6 of adocs/data/S097_mine_mate_row.py, guard mode (DEC-238) and default mode; stage 1 not re-run. The first build's re-mine, on S022 verdict 2's tree 6e8bc63, is adocs/data/S114_remine_s097.log.
+# Cells are depth 11..14, each mate:nodes:ms as the miner prints them; ms was taken niced beside S022 v2's SPRT and is not a timing claim.
+# Libraries: shipped release and tune are the worktree's build/ and build-tune/ copied before the sweeps; E21 release and tune were built from a plain copy of the worktree's src/ with E21 applied (.ref-builds/e21src), never the worktree's own src/.
+
+## driver (.tuning/coord/S114b_logs/remine.sh)
+# 2026-09-29 18:36:11 worktree db1905f + working tree [18 paths], load 14.71 16.11 16.45
+# miner sha256 775e40e2e5465866
+# e21src src vs worktree: 1 file differs; 2 changed lines
+# e21 build built 18:36:27
+# e21 build-tune built 18:36:39
+e80044b7901fd9a0  e21_release.a
+99feeb2e231ec0d5  e21_tune.a
+8fbed1a2b0029b2e  shipped_release.a
+17bf7bb0d3c9541f  shipped_tune.a
+269 candidates -> /home/max/ws/chesso-s114b/.tuning/coord/S114b_logs/remine/mine_candidates.fen
+# candidates identical to the first build's list
+STAGE shipped exit 0 19:09:49
+STAGE open exit 0 19:10:18
+STAGE separators exit 0 19:10:19
+STAGE fires_guard exit 0 19:10:28
+STAGE fires_rule exit 0 19:10:40
+STAGE pick_guard exit 0 19:10:40
+STAGE pick_rule exit 0 19:10:41
+S114B-REMINE-DONE 2026-09-29 19:10:41
+
+## separators
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py separators --shipped .tuning/coord/S114b_logs/remine/mine_shipped.txt --open .tuning/coord/S114b_logs/remine/mine_open.txt --out .tuning/coord/S114b_logs/remine/mine_separators.fen
+1 of 269 candidates separate the two sweeps -> .tuning/coord/S114b_logs/remine/mine_separators.fen
+
+## fires_guard
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --mode guard --fens .tuning/coord/S114b_logs/remine/mine_separators.fen --lib .tuning/coord/S114b_logs/remine/libs/e21_tune.a --out .tuning/coord/S114b_logs/remine/mine_fires_guard.txt --fens-out .tuning/coord/S114b_logs/remine/mine_fires_guard.fen
+guard mode (DEC-238): the mutant's multicut changes the tree on 1 of 1 positions in 7 s -> .tuning/coord/S114b_logs/remine/mine_fires_guard.txt, .tuning/coord/S114b_logs/remine/mine_fires_guard.fen
+
+## fires_rule
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --fens .tuning/coord/S114b_logs/remine/mine_separators.fen --lib .tuning/coord/S114b_logs/remine/libs/shipped_tune.a --out .tuning/coord/S114b_logs/remine/mine_fires_rule.txt --fens-out .tuning/coord/S114b_logs/remine/mine_fires_rule.fen
+the multicut changes the tree on 1 of 1 positions in 9 s -> .tuning/coord/S114b_logs/remine/mine_fires_rule.txt, .tuning/coord/S114b_logs/remine/mine_fires_rule.fen
+
+## pick_guard
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --mode guard --shipped .tuning/coord/S114b_logs/remine/mine_shipped.txt --open .tuning/coord/S114b_logs/remine/mine_open.txt --fires .tuning/coord/S114b_logs/remine/mine_fires_guard.txt
+  d13	#5	run 4	6637574 nodes	2211 ms	shipped [d11 d12 d13 d14]	open [d11 d12 d14]	mutant fires [d12 d13 d14]	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+
+take: R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  depth 13, mate in 5, shipped [d11 d12 d13 d14], guard dropped [d11 d12 d14], 6637574 nodes, 2211 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d12 d13 d14]
+
+## pick_rule
+$ nice -n 19 /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --shipped .tuning/coord/S114b_logs/remine/mine_shipped.txt --open .tuning/coord/S114b_logs/remine/mine_open.txt --fires .tuning/coord/S114b_logs/remine/mine_fires_rule.txt
+  d13	#5	run 4	6637574 nodes	2211 ms	shipped [d11 d12 d13 d14]	open [d11 d12 d14]	fires [d12 d13 d14]	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+
+take: R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  depth 13, mate in 5, shipped [d11 d12 d13 d14], guard dropped [d11 d12 d14], 6637574 nodes, 2211 ms
+
+## the separator's cells and S131's row's cells, both sweeps
+shipped m5:1143676:299 m6:896263:365 m5:6637574:2211 m5:5216376:1940 	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+open    m5:1143676:290 m6:896263:377 -:1367202:534 m5:5216375:2199 	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+shipped -:117513:33 -:292043:95 m6:915058:301 m6:1687477:1066 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+open    -:117513:159 -:292043:93 m6:901045:465 m6:1664516:528 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+
+## the oracle and python-chess's reading of the root: every line below is printed by .tuning/coord/S114b_logs/remine/oracle.py, one fresh stockfish per question through python-chess (depth 20, depth 30, go mate 5, go mate 4 under a 120 s cap), re-run whole after the go mate 4 probe was added to it
+$ nice -n 19 ~/.venv/chess/bin/python .tuning/coord/S114b_logs/remine/oracle.py "R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50"
+# 2026-09-29 21:53:59 .tuning/coord/S114b_logs/remine/oracle.py, niced, stockfish Stockfish dev-20260810-5062aee5 by the S
+R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  python-chess: is_valid True, is_check False, 37 legal moves, 2 captures, 0 promotions; side to move White
+  stockfish depth 20 (fresh process): #+6 for the side to move, depth 20, 29464 nodes, pv 50. Bg6 Bd7 51. Bxf7+ Kxf7 52. Qxd7+ Kg6 53. Rxf8 h5 54. Rg8+ Kh6 55. Qg7#; pv ends in checkmate: True
+  stockfish depth 30 (fresh process): #+6 for the side to move, depth 30, 91491 nodes, pv 50. Bg6 Bd7 51. Bxf7+ Kxf7 52. Qxd7+ Kg6 53. Rxf8 h5 54. Rg8+ Kh6 55. Qg7#; pv ends in checkmate: True
+  stockfish go mate 5 (fresh process): #+5 for the side to move, depth 33, 147243 nodes, pv 50. Qe7 Qxe7 51. fxe7 Bc8 52. Rxc8 Kf7 53. e8=Q+ Kg7 54. Qxf8#; pv ends in checkmate: True
+  stockfish go mate 4, 120 s cap (fresh process): #+5 for the side to move, depth 245, 105241625 nodes, pv 50. Qe7 Qxe7 51. fxe7 Bc8 52. Rxc8 Kf7 53. e8=Q+ Kg7 54. Qxf8#; pv ends in checkmate: True
+# exit 0 2026-09-29 21:54:52
+
+## S131's row under E21 before the re-mine (.tuning/coord/S114b_logs/e21_case.log)
+# A. E21 on S131's multicut row, 2026-09-29 18:33:45, fx1 at 13ad3b4, load 15.15 16.96 16.74
+## shipped: test_search -tc="pruning does not hide a forced mate"
+===============================================================================
+[doctest] test cases:  1 |  1 passed | 0 failed | 186 skipped
+[doctest] assertions: 57 | 57 passed | 0 failed |
+[doctest] Status: SUCCESS!
+run exit 0
+-:117513:34 -:292043:83 m6:915058:231 m6:1687477:469 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+swept 11..14 at SeMultiCut 1 -> .tuning/coord/S114b_logs/e21/s131_shipped.txt
+sweep exit 0
+## E21_multicut_mate_band_gate_dropped applied
+applied E21_multicut_mate_band_gate_dropped (1 pair(s)) to .ref-builds/fx1/src/search.cpp
+-                 vscore < MATE_MIN && vscore > -MATE_MIN && beta > -MATE_MIN) {
++                 beta > -MATE_MIN) {
+build exit 0
+===============================================================================
+[doctest] test cases:  1 |  1 passed | 0 failed | 186 skipped
+[doctest] assertions: 57 | 57 passed | 0 failed |
+[doctest] Status: SUCCESS!
+run exit 0
+-:117513:61 -:292043:89 m6:901045:238 m6:1664516:553 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+swept 11..14 at SeMultiCut 1 -> .tuning/coord/S114b_logs/e21/s131_open.txt
+sweep exit 0
+reverted: []
+
+## red under E21 and green shipped, observed (.tuning/coord/S114b_logs/red_e21.log)
+# s114b: the re-mined multicut row, observed red under E21 and green shipped, 2026-09-29 19:15:54, fx1 at 13ad3b4 with this worktree's tests/test_search.cpp copied in, load 15.47 15.73 16.33
+## E21 applied
+applied E21_multicut_mate_band_gate_dropped (1 pair(s)) to .ref-builds/fx1/src/search.cpp
+ src/search.cpp        |   2 +-
+ tests/test_search.cpp | 158 ++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 95 insertions(+), 65 deletions(-)
+build exit 0
+===============================================================================
+.ref-builds/fx1/tests/test_search.cpp:4005:
+TEST SUITE: search: draws
+TEST CASE:  pruning does not hide a forced mate
+
+.ref-builds/fx1/tests/test_search.cpp:4384: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 13
+
+===============================================================================
+[doctest] test cases:  1 |  0 passed | 1 failed | 186 skipped
+[doctest] assertions: 41 | 40 passed | 1 failed |
+[doctest] Status: FAILURE!
+## shipped (E21 reverted, the same test_search.cpp)
+build exit 0
+===============================================================================
+[doctest] test cases:  1 |  1 passed | 0 failed | 186 skipped
+[doctest] assertions: 57 | 57 passed | 0 failed |
+[doctest] Status: SUCCESS!
+reverted: []
+RED-E21-DONE 2026-09-29 19:16:56

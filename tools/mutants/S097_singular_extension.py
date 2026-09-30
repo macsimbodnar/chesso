@@ -183,13 +183,17 @@ m("E09_store_gate_dropped", S, "search/extension",
    '    const int to_store = normalize_score(best_so_far, ply);'),
   origin="S097")
 
+# E10's anchor was re-pointed at S114, which moves the null-move floor inside
+# the block and puts the entry gate's switch in the line the exclusion sits
+# on. The mutation is unchanged: `excluded_move == 0 && ` comes off the
+# null-move condition and nothing else does.
 m("E10_nmp_gate_dropped", S, "search/extension",
   'the excluded node passes. A null-move bound answers the verification with '
   'no alternative searched at all, which is the one thing that search exists '
   'to do -- the node fails high on the pass, the table move is called not '
   'singular, and nothing looked at a move',
-  ('      excluded_move == 0 && depth - 1 - null_reduction >= 1 &&',
-   '      depth - 1 - null_reduction >= 1 &&'),
+  ('      excluded_move == 0 && (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&',
+   '      (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&'),
   origin="S097")
 
 m("E11_rfp_gate_dropped", S, "search/extension",

@@ -1839,49 +1839,89 @@ static int negamax_at(int alpha0,
   //                 where it buys two more mates found on the defender sweep
   //                 with no delay regression anywhere.
   //
-  // Deeper searches can afford to give up more, since what is left is still
-  // enough to answer the question.
-  const int null_reduction = NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR);
-
-  // The reduced search has to keep at least one real ply. Let it fall to zero
-  // and it becomes pure quiescence, which only looks at captures and therefore
-  // cannot see a mate that is two plies away - it answers with the static score
-  // and the pass looks safe. That is not a theoretical risk: it lost a mate in
-  // two at depth 4, where this node had three plies left and the null search
-  // had none.
   //   excluded_move  S097. A null-move bound answers the verification search
   //                 without any alternative having been searched, which is the
   //                 one thing that search exists to do. Gated on the exclusion
   //                 directly and never by abusing `prev_move`, which has to
   //                 keep flowing for the countermove and continuation tables
+  //   static score below beta  S114's entry gate, behind `NullMoveEvalGate`,
+  //                 **which ships at 0** (DEC-243): the gate is S114's second
+  //                 verdict, measured on the tree its first leaves, and until
+  //                 then this clause is always true. A pass claims the node
+  //                 stands above beta even without its move, and the published
+  //                 form asks the node's own static score to be there already
+  //                 -- the wiki's Fruit tried the null move only on a static
+  //                 evaluation greater than beta. The raw static score and not
+  //                 the table-tightened estimate; a corrected input is S127's
+  //                 to try
   if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&
-      excluded_move == 0 && depth - 1 - null_reduction >= 1 &&
+      excluded_move == 0 && (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&
       beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {
-    const int reduction = null_reduction;
-    const child_label_t child = null_move_child(is_pv, cut_node);
+    // The one place `static_eval` holds the TT_EVAL_NONE sentinel is a node in
+    // check, and the in-check guard is what keeps every such node out: the
+    // gate alone would not, because the sentinel is INT16_MIN and clears every
+    // beta at or below it that the band guard lets through. The term reads the
+    // number, so that is asserted rather than assumed. S108, S114.
+    assert(static_eval != TT_EVAL_NONE);
+
+    // Deeper searches can afford to give up more, since what is left is still
+    // enough to answer the question -- and since S114 so can a node whose
+    // static score stands far above beta: one ply more per whole
+    // `NullMoveEvalMargin` of lead, at most `NullMoveEvalCap` more. Never
+    // negative: the clamp keeps a static score below beta from taking
+    // anything off R, which is what makes cap 0 the tree before S114 with the
+    // gate at 0, where it ships.
+    const int null_eval_term =
+        std::min(std::max(static_eval - beta, 0) / NULL_MOVE_EVAL_MARGIN,
+                 NULL_MOVE_EVAL_CAP);
+    const int null_reduction =
+        NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR) + null_eval_term;
 
     if constexpr (PROBING) {
-      if (probe != nullptr) {
-        probe->null_move_made = true;
-        probe->null_child_is_pv = child.is_pv;
-        probe->null_child_cut_node = child.cut_node;
-      }
+      if (probe != nullptr) { probe->null_reduction = null_reduction; }
     }
 
-    make_null_move(game);
+    // The reduced search has to keep at least one real ply. Let it fall to zero
+    // and it becomes pure quiescence, which only looks at captures and
+    // therefore cannot see a mate that is two plies away - it answers with the
+    // static score and the pass looks safe. That is not a theoretical risk: it
+    // lost a mate in two at depth 4, where this node had three plies left and
+    // the null search had none.
+    //
+    // **The whole reduction is tested, the static-score term included**
+    // (S114). A large lead then makes the pass impossible at a shallow depth
+    // rather than blind: the node is searched in full, which costs nodes and
+    // never a mate. The cap is not what does that. Without this floor a lead
+    // of `NullMoveEvalCap` 8 margins still leaves the null search no ply at
+    // every depth up to 14 -- R is 3 + depth / 6 + 8 -- so lifting the floor
+    // turns the term back into the bug above whatever the cap.
+    if (depth - 1 - null_reduction >= 1) {
+      const int reduction = null_reduction;
+      const child_label_t child = null_move_child(is_pv, cut_node);
 
-    const int null_score =
-        -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
-                           game, state, 0, child.is_pv, child.cut_node, 0);
+      if constexpr (PROBING) {
+        if (probe != nullptr) {
+          probe->null_move_made = true;
+          probe->null_child_is_pv = child.is_pv;
+          probe->null_child_cut_node = child.cut_node;
+        }
+      }
 
-    unmake_null_move(game);
+      make_null_move(game);
 
-    if (state->aborted) { return 0; }
+      const int null_score =
+          -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
+                             game, state, 0, child.is_pv, child.cut_node, 0);
 
-    if (null_score >= beta) {
-      // A mate score out of a null move search is not a mate anyone can force,
-      // it is an artefact of the pass. Report the bound instead.
-      return (null_score >= MATE_MIN) ? beta : null_score;
+      unmake_null_move(game);
+
+      if (state->aborted) { return 0; }
+
+      if (null_score >= beta) {
+        // A mate score out of a null move search is not a mate anyone can
+        // force, it is an artefact of the pass. Report the bound instead.
+        return (null_score >= MATE_MIN) ? beta : null_score;
+      }
     }
   }
 
