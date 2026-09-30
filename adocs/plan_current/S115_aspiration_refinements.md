@@ -927,3 +927,15 @@ Bench: 3513310
 ### Landed and pinned (the coordinator, 2026-09-30)
 
 Landed as `eb334e3` on `3f9ffa5` from the rebase worktree's working tree, two cold fast checks first (on `cd50c7a` and on this tree). `bench` 3429473 -> 3513310; the off value re-proved on the landed tree before pinning: the tune build at `AspirationFailLowPull` 0 benches 3429473 with the parent's whole 121-line stream (`.tuning/coord/S115_landing/offvalue_on_landing_bench.txt`), and `3f9ffa5`'s `src/` tree is `f5eaa99`'s, object for object. The S170 budgets re-derived on this tree as `001aae4` (DEC-162). At the landing `specs.md`'s aspiration sentence was rewritten and `tools/plan_prose_check.py`'s `AspirationMaxDelta` phrase re-anchored to it (`test_plan_params` red on the stale phrase first). **Second tier on the landing** (DEC-141): Debug self-play of 8 games at 4+0.04 on `001aae4`, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S115_debug_selfplay/`); `tools/gate_extra.sh` 5 stages green in 1027 s (`.tuning/gate_extra_2026-09-30_S115.log`). SPRT pair pinned: `REF` `3f9ffa5` (the commit the landing sits on), `CAND` `eb334e3`; open findings re-read at pinning: as the pre-registration states them. S114 verdict 1 read H0 and its term left first (`f3868fb`); S248 completed (`3f9ffa5`); owner question 3 (DEC-245) open.
+
+### The verdict (2026-09-30, the coordinator)
+
+**H1, 2026-09-30 23:02: `eb334e3` against `3f9ffa5`, `Elo 4.24 +/- 3.39`,
+`nElo 5.58 +/- 4.46`, LLR 2.96, 23276 games in 11 h 7 m, 0 forfeits**
+(`adocs/data/S115_sprt.log`, `adocs/data/S115_sprt_pairs.txt`; marker
+`SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s115_20260930_115218`). **H1**: the pull gains at least 5 nElo at its seed and stays (the pre-registration's first row); `AspirationFailLowPull` 2 and `AspirationWidenPct` 200 join S127's set, the ratio sweep's table as that lane's input -- an H1 says the pull is worth having at the weight tried and not where its maximum is. The stopping run's estimate is upward-biased and is not the effect size (DEC-063). `Incomplete mating PV` 12 for the candidate against 7 for the reference,
+an observation for the pre-registration's open findings (CHESS). The run's
+LLR sat between 0.7 and 1.9 from 12:52 to 21:52 and crossed the bound in the
+last hour: the truth is near the upper bound, not far above it.
+No follow-up run and no second pair for this verdict (DEC-063, DEC-019).
+

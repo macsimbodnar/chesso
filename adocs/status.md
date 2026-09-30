@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30: S115's SPRT is H1 -- H1, the fail-low pull stays
+
+**`eb334e3` against `3f9ffa5`, `Elo 4.24 +/- 3.39`, `nElo 5.58 +/- 4.46`,
+LLR 2.96, 23276 games in 11 h 7 m, 0 forfeits, 2026-09-30 23:02.** **H1**: the pull gains at least 5 nElo at its seed and stays (the pre-registration's first row); `AspirationFailLowPull` 2 and `AspirationWidenPct` 200 join S127's set, the ratio sweep's table as that lane's input -- an H1 says the pull is worth having at the weight tried and not where its maximum is. The stopping run's estimate is upward-biased and is not the effect size (DEC-063).
+**Next:** the ledger and S115's completion; then S114's second verdict, the
+entry gate `static_eval >= beta` flipped to 1 on this tree, built by a fresh
+agent (DEC-243), its pre-registration, pin and SPRT. S247 and S249 the open
+fillers. Owner question 3 (DEC-245) open; the others unchanged.
+
 ## 2026-09-30, 11:52: S115's SPRT is running
 
 **Launched 11:52:18: `eb334e3` (the fail-low pull at `AspirationFailLowPull`
