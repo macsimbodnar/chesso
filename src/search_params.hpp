@@ -354,11 +354,10 @@
      `negamax_at` computes the estimate once, beside `static_eval`, and S109   \
      has read it at the futility site since the shallow-depth block landed;    \
      this switch routes the **other** margin site through the same value, and  \
-     there is exactly one other today. Null move pruning has no static-score   \
-     condition in this engine while `NullMoveEvalGate` is at 0 -- its guards   \
-     are the position's and the window's -- and the gate, S114's second        \
-     verdict, reads `static_eval`, the raw score, and not the estimate; a      \
-     table-corrected form is S127's to try. Razoring does not exist until      \
+     there is exactly one other today. Null move pruning's one static-score    \
+     condition is its entry gate, `NullMoveEvalGate` at 1 since S114's second  \
+     verdict, and it reads `static_eval`, the raw score, and not the estimate; \
+     a table-corrected form is S127's to try. Razoring does not exist until    \
      S116, whose site joins under its own verdict.                             \
                                                                                \
      RFP_TT_ESTIMATE IS A SWITCH AND NOT A SETTING, DEC-215. At 0 the site     \
@@ -395,17 +394,19 @@
   X(NULL_MOVE_DIVISOR, "NullMoveDivisor", 6,      1, 64)                       \
                                                                                \
   /* THE NULL MOVE'S ENTRY GATE, S114. `NullMoveEvalGate` IS A SWITCH AND NOT  \
-     A SETTING, DEC-215, AND IT SHIPS AT 0, DEC-243. At 1 the null move is     \
-     tried only where the node's raw static score is at least beta, the bare   \
-     entry gate the step file names; at 0 it is tried at any static score,     \
-     as before S114. The gate and S114's static-score term were two changes,   \
-     so the step's first verdict measured the term alone -- the term left on   \
-     that reading -- and its second flips this switch on the tree the first    \
-     leaves, with no code then. No setting of the base or the divisor turns    \
-     the gate off, which is why the path has a switch whose range end does.    \
-     A verdict switch, not something S127 sweeps. Implemented from the step    \
-     file's description, DEC-221. */                                           \
-  X(NULL_MOVE_EVAL_GATE,   "NullMoveEvalGate",    0, 0,    1)                  \
+     A SETTING, DEC-215, AND IT SHIPS AT 1 SINCE S114'S SECOND VERDICT,        \
+     DEC-243. At 1 the null move is tried only where the node's raw static     \
+     score is at least beta, the bare entry gate the step file names; at 0 it  \
+     is tried at any static score, as before S114, and the tree is the one     \
+     S114's second verdict is measured against, node for node. The gate and    \
+     S114's static-score term were two changes, so the step's first verdict    \
+     measured the term alone -- the term left on that reading -- and its       \
+     second flips this switch on the tree the first left, with no code then.   \
+     No setting of the base or the divisor turns the gate off, which is why    \
+     the path has a switch whose range end does. A verdict switch, not         \
+     something S127 sweeps. Implemented from the step file's description,      \
+     DEC-221. */                                                               \
+  X(NULL_MOVE_EVAL_GATE,   "NullMoveEvalGate",    1, 0,    1)                  \
                                                                                \
   /* The two coefficients of the late move reduction fit,                      \
      `r = LMR_BASE/100 + log(depth) * log(move_number) / (LMR_DIVISOR/100)`.   \

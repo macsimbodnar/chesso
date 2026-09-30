@@ -71,6 +71,10 @@
 // fail-low pull, whose 0 is the parent's tree. A third,
 // `AspirationFailHighReduce`, was built beside them and left with its rule
 // before landing (DEC-245), so the count goes 70 to 72.
+// **S114's second verdict moves `NullMoveEvalGate` from 0 to 1** and that one
+// row is the whole of the candidate in `src/` but comments: the gate's clause
+// shipped with the first verdict and stayed at 0 through its H0 for this
+// (DEC-243), so the count stays 72.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -117,7 +121,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RfpTtEstimate",             1,     0,       1},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},
-  {"NullMoveEvalGate",          0,     0,       1},
+  {"NullMoveEvalGate",          1,     0,       1},
   {"LmrBase",                  52,     0,     400},
   {"LmrDivisor",              182,     1,    2000},
   {"LmrRoundBias",              0,     0,    1023},

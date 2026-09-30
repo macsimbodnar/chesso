@@ -1238,7 +1238,7 @@ before and after the site comment took the reading's figures:
 | `bench 12` | **1694808**, its 105-line stream identical the same way, the same eight replies |
 | `tools/search_bench.py` | node for node and move for move: depth 9 48304 / 71580 / 25413, depth 12 104784 / 244824 / 117798, best c3d5 e2a6 d7c8q at both (`sb9_*`, `sb12_*`) |
 | the tune build at defaults | `bench` 3429473 with its whole 121-line stream identical to the reference binary's the same way (`bench_tune.txt`, `tune_checks.log`) |
-| the tune build's options | 75 option lines, 70 of them the search table's: `NullMoveBase`, `NullMoveDivisor` and `NullMoveEvalGate` (default 0, 0 to 1) among them and neither `NullMoveEvalMargin` nor `NullMoveEvalCap`; the Release build lists 5 (`tune_uci.txt`) |
+| the tune build's options | 75 option lines, 70 of them the search table's: `NullMoveBase`, `NullMoveDivisor` and `NullMoveEvalGate` (at 0 on that tree, range 0 to 1) among them and neither `NullMoveEvalMargin` nor `NullMoveEvalCap`; the Release build lists 5 (`tune_uci.txt`) |
 
 The remaining difference to `d946b6f` in `src/`: the gate's row, clause and
 guard-list entry, the floor inside the block, the site comment, and in
@@ -1449,3 +1449,385 @@ in 980 s (`.tuning/gate_extra_2026-09-30_S114rm.log`). S115 landed on this
 tree as `eb334e3` and is measured first; this step's second verdict, the gate
 flip (DEC-243), follows it.
 
+
+## Verdict 2, as built: the entry gate
+
+Written by a fresh Opus agent on the linked worktree `s114v2` at `465b43b`,
+the tree S115 leaves, briefed from `.tuning/coord/S114_v2_brief.md`, on the
+idle machine. Nothing was committed. Logs are under the main tree's
+`.tuning/coord/S114_v2/`, cited below by file name. Implemented from this
+file's description (DEC-221); no other engine's code was opened.
+
+**The change.** `NullMoveEvalGate` 0 -> 1 in `src/search_params.hpp`'s
+X-macro, and the comments that describe it: the gate's own block, the
+`RfpTtEstimate` routing sentence, and the guard-list entry above the
+null-move condition in `src/search.cpp` `negamax_at`, which now also says
+that in check `static_eval` is `TT_EVAL_NONE` and `!is_in_check`
+short-circuits before the gate reads it. No other line of `src/` moves.
+
+### Deviations and findings, first
+
+1. **The S170 budgets patch cannot land as the rule gives it.** On this tree
+   the rule moves A 500000 -> 100000, C 1000000 -> 500000 and D 3000000 ->
+   1000000, and C's new cell reports **4 mate lines, all 4 short**, over its
+   ceiling of 0: `test_mate_carry` is red in both builds at `CHECK(
+   short_lines <= short_line_ceiling(game.name) )`, `CHECK( 4 <= 0 )`
+   (`s170/carry_build.log`, `s170/carry_build-tune.log`). Raising the ceiling
+   is relaxing a test, a decision, so the patch is prepared at the rule's
+   answer and marked red, not repaired. Measured for the decision, not
+   chosen: with C held at its current 1000000 (1 line, 0 short) and A and D
+   moved, `test_mate_carry` is green in both builds
+   (`s170/carry_optionC1M_*.log`). **At the standing budgets the landing is
+   green**: the TSV is unchanged in the worktree and both fast suites pass.
+2. **The sentinel assertion lives in the test, not in `src/`.** Item 4 allowed
+   keeping or adding `assert(static_eval != TT_EVAL_NONE)`; it was not added,
+   since the engine change is the default and its comments. Instead "an
+   in-check node makes no null move" now drives beta at `TT_EVAL_NONE`,
+   where the gate would admit the sentinel, so `!is_in_check` is the only
+   thing that keeps the gate from reading it -- observable in Release, and
+   M01 crashes that case (SIGSEGV) where before the gate hid it. If the
+   coordinator wants the Debug assert as well, it is one line inside the
+   block, placed after the first comment line so M03's anchor holds.
+3. **Two mined goldens moved, both re-derived by their own scripts.** The
+   multicut row stopped separating E21 and was re-mined in guard mode to a
+   new board at the same depth and distance. Capture-mate row 4's label moved;
+   its depth did not (below).
+4. **M02 was not blind on this tree.** It was blind on the first build's
+   tree because of the static-score term. Here the defender case is red
+   under M02 at `NULL_DRIVE_DEPTH`, so the case needed no repair.
+5. **N02 is declared equivalent in the release build**
+   (`tools/mutants/S191_guards.py`), with a tune-only leg at gate 0 observed
+   red under N02 (`n02_tune_leg.log`) -- option A's (5), S113's B15 form.
+6. **One stale sentence in this file's removal section** -- the gate's
+   range quoted with its old default -- turned `test_plan_params` red at gate 1. It now
+   reads "(at 0 on that tree, range 0 to 1)". No other word of the earlier
+   sections moved.
+7. **The fixed-node total does not move, but the positions do**: 48 -> 48,
+   the midgame two plies deeper and kiwipete two shallower, with its move
+   changing. Reach, not a forecast (DEC-239).
+
+### Every red at gate 1 before any test was touched
+
+`fast_release_1.log`, the Release build at gate 1 on the unrepaired tests.
+Three binaries failed:
+
+- `test_search`, four guard cases, each at `REQUIRE( probe.null_move_made )`,
+  `values: REQUIRE( false )`: "the node after a null move has no previous
+  move to index" (H03), "a null-move fail-high against a mate returns the
+  bound" (M04), "the child after a null move is labelled the type the parent
+  is not" (T08) and "an excluded node makes no null move" (E10). These are
+  the four the "Stopped" section named, re-observed on this tree.
+- `test_search_params`: `golden_defaults`, `CHECK( 1 == 0 )`, the gate's row.
+- `test_plan_params`: `MANUAL.md`'s row and deviation 6's sentence.
+
+**Green but blind, observed by hand**: each mutant was applied to a
+throwaway copy of the gate-1 tree and the guard suite run
+(`probe_mutants_before_repair.log`). **M01, M03 and N02**: no case of their
+own went red. **N01**: its own case stayed green, and it was killed only
+through the multicut and ProbCut cases. **M02**: killed by its own case
+(deviation 4). No mate case, and nothing outside the null-move premise, went
+red.
+
+### The repairs (DEC-233's second repair; every assertion kept)
+
+- `require_null_move_preconditions` also asserts the gate:
+  `REQUIRE((NULL_MOVE_EVAL_GATE == 0 || evaluate(&game.board) >= beta))`.
+  This is option A's (1), minus the term.
+- H03, T08, E10 and N01 now drive at the node's own static score,
+  `evaluate()` on the wiped table, and no longer at `ORDINARY_BETA`. M03's
+  kings-and-pawns drive does the same, and asserts the gate by hand.
+  `ORDINARY_BETA`'s comment says why the null-move drives no longer use it.
+- M01, the in-check case, drives beta at `TT_EVAL_NONE` and asserts `TT_EVAL_NONE >= beta`
+  (deviation 2).
+- M04 is the same board at the same depth, with beta at its static score,
+  835. The hand-driven precondition still reads a mate: the null search
+  returns 48996 at that beta, so reverse futility at the mating node does
+  not fire. The gate's precondition is asserted beside it.
+- N02 keeps its release leg and gains the tune-only leg (deviation 5).
+- No anchor moved. `tools/mutation_check.py` validates all 163 mutants.
+
+**Each repaired case's mutant, re-observed killed**, by hand on a throwaway
+copy of the repaired tree (`probe_mutants_after_repair.log`;
+`probe_shipped_after_repair.log` is the unmutated run, 83 of 83):
+
+| mutant | red at |
+|---|---|
+| M01 | its own case: SIGSEGV |
+| M02 | the defender case |
+| M03 | its own case |
+| M04 | `REQUIRE_EQ( score, beta )`, 48996 against 835 |
+| N01 | its own case |
+| H03 | `CHECK_EQ( white_movers_under_prev, 0 )`, 1 against 0 |
+| T08 | its own case and the walk |
+| E10 | its own case |
+| N02 | survives in Release, as declared; red in the tune build |
+
+The first `shipped` entry of `probe_mutants_after_repair.log` is red with
+R02's six failures: `capmates.sh` held R02 in the same `.ref-builds/obs` tree
+while the probe started. `probe_shipped_after_repair.log` is the clean
+baseline, and the R02 capture sweep was re-taken alone
+(`capmates/R02_rerun.txt`). The re-run was one build of a fresh throwaway
+worktree holding the candidate's `src/` with R02 applied, and its library
+was passed to `S230_mine_r01_row.py depths` by absolute path. **Its profile
+is byte for byte the original's**: `d9 d10 d11 d12`, `d7 d8 d9 d10 d11
+d12`, `d12` and `d8 d9 d10 d11 d12`. So row 4's new label stands, and no
+row moved.
+
+A first attempt passed the library by a relative path. The script joins
+that path to the repository root, so it swept the worktree's shipped
+library and printed the shipped profile. That file was discarded, not kept
+as evidence.
+
+### The gate's own guard (DEC-141 clause 2)
+
+The new case "the null move's entry gate refuses a static score below beta"
+drives the castled pawn wall twice. At its own static score the pass is
+made. One point above it the node reaches its move loop and makes no pass;
+every other condition is asserted at that beta too.
+
+`tools/mutants/S114_v2_entry_gate.py` holds three mutants, all red at this
+case:
+
+- NG01 drops the clause. Red at the leg one point above.
+- NG02 inverts the comparison, `static_eval < beta`.
+- NG03 moves the boundary, `static_eval > beta`.
+
+The in-check sentinel is covered by M01's case (deviation 2).
+
+### The off value (DEC-215)
+
+The tune build at `NullMoveEvalGate` 0 is `465b43b`'s engine, node for node,
+against a Release build of `465b43b` made in the throwaway worktree
+`.ref-builds/465b43b` (deleted after; its binary is kept as
+`chesso_465b43b`, sha256 `f5b7e895...`):
+
+| instrument | result |
+|---|---|
+| `bench` | **3513310** with all eight replies c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6. The whole 121-line stream is identical with time and nps stripped, apart from the final summary line's nps |
+| `bench 12` | 1619863, its 105-line stream identical the same way |
+| `tools/search_bench.py` | 34236 / 71552 / 25351 at depth 9 and 70283 / 240680 / 80264 at depth 12, best c3d5 e2a6 d7c8q at both. Driven through `search_bench_opt.py`, which runs `search_bench`'s own `run` with `setoption` after `uciok` |
+
+The tune build at its defaults prints the Release candidate's bench stream
+line for line (`bench_*`, `sb*_*`).
+
+### The counts, parent -> candidate
+
+| instrument | parent (`465b43b`) | candidate |
+|---|---|---|
+| `bench` | 3513310 | **4041913** (+15.05 %) |
+| `bench` replies | c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 | c3d5 **d5e6** d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 |
+| `bench 12` | 1619863 | 1776047 (+9.64 %), replies unchanged |
+| `search_bench` 9 | 34236 / 71552 / 25351, c3d5 e2a6 d7c8q | 33312 / 64982 / 25242, same moves |
+| `search_bench` 12 | 70283 / 240680 / 80264, c3d5 e2a6 d7c8q | 71035 / 178581 / 110744, same moves |
+| fixed-node depth, `go nodes 1000000`, Hash 16 | 17 / 15 / 16 = 48, c3d5 e2a6 d7c8q | 19 / 13 / 16 = 48, c3d5 **d5e6** d7c8q |
+
+The fixed-node depths are `adocs/data/S097_fixed_node_depth.py` (`fnd_*`),
+stated as reach (DEC-239).
+
+### The goldens moved (DEC-142, DEC-233, DEC-238)
+
+**The capture-mate table.** Seven sweeps were run: shipped plus C02, C05,
+C06, C07, R01 and R02 of `tools/mutants/S091_capture_see.py`. Each was
+`adocs/data/S230_mine_r01_row.py depths` at 3 to 12 on a throwaway copy of
+the candidate's `src/` (`capmates.sh`, `capmates/`).
+
+The shipped profiles are S248's, row for row: `d7 d9 d10 d11 d12`,
+`d7 d8 d9 d10 d11 d12`, `d10 d11 d12`, `d10 d11 d12`. Depths 7, 7, 10 and 10
+did not move, and no mate distance moved.
+
+**Row 4's label moved**: `{..., 10, 5, "R02, since S248"}` ->
+`{..., 10, 5, "no S091 mutant, since S114"}`. R02 now reads that mate from
+8 to 12 without a gap. R02 is still killed by row 1 and by its direct
+cases. The site has a "Re-derived at S114's second verdict" paragraph, and
+`DEV_MANUAL.md`'s golden row has the same.
+
+**The multicut row.** S131's row, `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1
+w - - 2 42`, depth 14, mate in 6, **stayed green under E21**
+(`e21_multicut_row.log`).
+
+`adocs/data/S097_mine_mate_row.py` stages 2 to 6 were run in guard mode and
+in default mode (`remine.sh`); stage 1 was not re-run, and the 269
+candidates were byte-identical to the rebase's list. Two of the 269
+separate. Both modes take **`4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4
+42`, depth 14, mate in 6**: shipped `d13 d14`, guard dropped `d13`, the
+mutant's multicut firing at 11 to 14. The cell costs 1242164 nodes and
+about 0.22 s. The other separator, S188's `1R6/8/2p3p1/P5P1/1p2b2P/4k3/
+6pK/8 b - - 1 54`, separates on a run of one.
+
+The new row's position, from tools and not from the board:
+
+- python-chess: `is_valid()` True, `is_check()` True, 4 legal moves, no
+  capture, no promotion, Black to move.
+- stockfish at depth 20 and at depth 30, each a fresh process through
+  python-chess: `#+6` for Black, pv Kg4 Qe6+ Kxg3 Qg8+ Ng4 Qxg4+ Kxg4 h5 Kg3
+  c4 Qf1#. python-chess reads the pv as ending in checkmate.
+
+The row was **observed red under E21** at `REQUIRE( result.mate_found )` and
+green shipped (`e21_multicut_row_new.log`). Evidence is in
+`adocs/data/S114_v2_remine_s097.log`, with its README row.
+
+**`golden_defaults`**: the gate's row is now `{"NullMoveEvalGate", 1, 0, 1}`.
+The count stays 72, and the history comment says why.
+
+### Mutation (DEC-141 clause 2)
+
+`tools/mutation_check.py --only` over M01 M02 M03 M04 N01 N02 H03 T08 E10,
+NG01 NG02 NG03, E21 and R02. The fixture was a fresh throwaway commit on no
+branch, `8ff6acd`, made through a temporary index, in `.ref-builds/mut`
+(deleted after). Header: `baseline green, 41 tests, bench 4041913`. All 163
+anchors validated.
+
+**Mutation score 13 of 13 (100 %)**: 13 killed, and N02 declared equivalent
+(wall 1649 s; `mutation/mutation.log`, `mutation/logs/results.tsv`).
+
+| mutant | killed by |
+|---|---|
+| E21 | both killers: the new multicut row and S243's direct case |
+| NG01 | the new case, and the multicut row -- the row is this tree's, so at gate 0 it reads no mate at 14 |
+| NG02, NG03 | the new case and every repaired null-move drive |
+| M01 | a SIGSEGV in its own case |
+| M02, M03, M04, N01, H03, T08, E10 | each by its own case |
+| R02 | capture row 1 and its direct cases |
+
+### The S170 budgets (DEC-156 as amended by DEC-162) -- a separate patch, red as the rule gives it
+
+`adocs/data/S203_case_sweep.sh` was run with no argument on a copy of the
+candidate's Release build (`s170/chesso`, sha256 `72749cc0...`): the full
+108-cell grid, 16 minutes. **The rule, stated before the grid was read** in
+`s170/run_sweep.sh`'s header: each row takes the cheapest cell at its own
+stride that reports a mate line, chosen on the mate count alone. It was
+applied by `s170/pick.py`, which returns S115's six budgets when given
+S115's grid.
+
+| case | stride | old (S115's) | old cell now | new | its cell (mates / short) |
+|---|---|---|---|---|---|
+| A | 1 | 500000 | 13 / 0 | **100000** | 5 / 0 |
+| B | 1 | 100000 | 21 / 0 | 100000 | 21 / 0 |
+| C | 1 | 1000000 | 1 / 0 | **500000** | **4 / 4, over ceiling 0** |
+| D | 1 | 3000000 | 3 / 1 | **1000000** | 5 / 1 |
+| E | 1 | 300000 | 3 / 0 | 300000 | 3 / 0 |
+| F | 2 | 500000 | 12 / 0 | 500000 | 12 / 0 |
+
+- `--at` on the patched TSV reproduces the six cells (`s170/at_new.txt`).
+- `--ceilings` over the four recorded grids gives 5, 15, 0, 2, 11, 5. With
+  this grid added it gives 5, 15, **4**, 2, 11, 5. This grid alone gives 0,
+  1, 4, 1, 8, 2.
+- `/home/max/ws/chesso/.tuning/coord/S114_v2/s170_budgets.patch` holds the
+  TSV at the rule's answer, with a paragraph quoting S115's rows and saying
+  it is red; the grid as `adocs/data/S114_v2_sweep_s170.txt`; its README
+  row; and `DEV_MANUAL.md`'s list of re-sweeps. It applies on this worktree
+  (`git apply --check`). **It is red at C and needs the coordinator's
+  decision** (deviation 1). The worktree's TSV is S115's.
+
+### Suites and checks
+
+- **Both fast suites green on the final tree**: 41 of 41 in Release `build`
+  and 41 of 41 in tune `build-tune` (`fast_release_final.log`,
+  `fast_tune_final.log`).
+- `./clang-format.sh --check` is clean with `CLANG_FORMAT_MAJOR=22`.
+- `tools/plan_prose_check.py`, one mode per call: `--citations` 0 flagged,
+  `--touches` 0 flagged, `--params` exit 0 (`prose--*.log`).
+- **Debug**: the guard suite passes 83 of 83. The whole `test_search` binary
+  passes 183 of 183, 810321 assertions (`debug_guards.log`,
+  `debug_test_search_whole.log`).
+- **After the cold fast check's three fixes** (the pre-registration's item
+  3, the R02 re-run, and two comments that claimed a measurement not yet
+  taken, now in the present tense): both fast suites 41 of 41 again
+  (`fast_release_fix.log`, `fast_tune_fix.log`), format clean, and `bench`
+  4041913 in both builds.
+- Every mate case is green: "pruning does not hide a forced mate",
+  `test_mate_carry`, `test_mate_breadth`, `test_mate_pv` and `test_engine`'s
+  mate safety.
+
+### Not run here
+
+- DEC-141's second tier: the Debug self-play, which is a match, and
+  `tools/gate_extra.sh`. Both were excluded by the brief.
+- The SPRT.
+- The full mutation pass over all 163 mutants. Only the 14 above were run.
+- Any timing.
+
+### The pre-registration
+
+`adocs/data/S114_v2_sprt.sh`, in the form of `S115_sprt.sh`, with its README
+row:
+
+- `{0, 5}` nElo at 8+0.08, Hash 16, `noob_3moves.epd`, 12 of 12 cores, OUT
+  under `.tuning/`.
+- Worst-case games 41861 and 25591, 19.8 h and 12.1 h at 2110 games/h.
+- The abort rule.
+- `REF` and `CAND` are `PIN_ME` and the script refuses to run until they are
+  pinned ("CAND = the landing commit's sha, REF = CAND^").
+- The three readings, written before a game. H1 keeps the gate at 1. H0
+  with the interval wholly below zero removes the switch, its clause, its
+  row, the new case and NG01 to NG03; the re-derived goldens go back byte
+  for byte, and the repaired drives stay, since their premise holds without
+  the gate. A no-verdict, or an interval reaching above zero, reads as a
+  zero the same way.
+- The open findings: S247 and S249 are the open fillers, and item 3 names
+  the S170 budgets and the `--ceilings` reading.
+
+### Proposed `adocs/specs.md` edits, for the coordinator
+
+1. The removal sentence "The entry gate `static_eval >= beta` stays in the
+   tree behind `NullMoveEvalGate` at 0, S114's second verdict, and the floor
+   stays inside the block, where without the term it tests what it tested
+   before S114." becomes: **"Since S114's second verdict the null move is
+   tried only where the node's raw static evaluation stands at or above
+   beta, the entry gate `NullMoveEvalGate` at 1 (DEC-243); in check the
+   evaluation is `TT_EVAL_NONE` and `!is_in_check` keeps the gate from
+   reading it; `NullMoveEvalGate` 0 is the tree before it, node for node
+   (DEC-215); `bench` 3513310 -> 4041913; its `{0, 5}` nElo SPRT
+   (`adocs/data/S114_v2_sprt.sh`) is not yet read. The floor stays inside
+   the block, where without the term it tests what it tested before
+   S114."**
+2. The routing clause "This engine's null-move block has no static-score
+   condition until S114's second verdict flips its gate, `NullMoveEvalGate`,
+   which reads the raw static evaluation and never the estimate, ..."
+   becomes **"This engine's null-move block has one static-score condition,
+   its entry gate `NullMoveEvalGate`, on since S114's second verdict, which
+   reads the raw static evaluation and never the estimate, ..."**, the rest
+   unchanged.
+
+### Proposed commit (not verdict-closing)
+
+```
+Gate the null move on the static score reaching beta (S114 v2)
+
+S114's second verdict (DEC-243): NullMoveEvalGate goes from 0 to 1, so
+the null move is tried only where the node's raw static evaluation
+stands at or above beta. The switch, its clause in negamax_at and its
+row shipped with the first verdict and stayed at 0 through its H0 for
+this; the engine change is the default and the comments that describe
+it. In check static_eval is TT_EVAL_NONE and !is_in_check keeps the
+gate from reading it. Implemented from the step file's description
+(DEC-221); a verdict switch, no seed.
+
+NullMoveEvalGate 0 is the parent node for node (DEC-215): the tune
+build there prints 465b43b's bench 3513310 with all eight replies and
+the whole stream, bench 12 1619863, and search_bench at depths 9 and
+12. The gate: bench 3513310 -> 4041913 (+15.05 %), kiwipete's reply
+e2a6 -> d5e6; fixed-node depths 48 -> 48, stated as reach (DEC-239).
+The counts move, so adocs/data/S114_v2_sprt.sh measures it at {0, 5}
+nElo against this commit's parent.
+
+The gate took the premise from eight null-move guard cases (H03, M04,
+T08, E10 red; M01, M03, N01, N02 blind), and DEC-233's second repair
+restores it with every assertion kept: the drives at the node's own
+static score, the in-check case at beta TT_EVAL_NONE where the gate
+would admit the sentinel, M04 at its static score 835 where the null
+search still returns a mate, N02 declared equivalent in the release
+build with a tune-only leg at gate 0. Each mutant was re-observed
+killed. A new case, "the null move's entry gate refuses a static score
+below beta", and NG01 to NG03 in tools/mutants/S114_v2_entry_gate.py.
+
+Two mined goldens were re-derived by their own scripts: the multicut
+row of "pruning does not hide a forced mate" stopped separating E21 and
+was re-mined in guard mode (DEC-238) to a new board at depth 14, mate in
+6, red under E21 and green shipped; capture-mate row 4 keeps depth 10
+and its label goes R02 -> no S091 mutant. Mutation 13 of 13 over the
+touched and new mutants, N02 equivalent. Both fast suites 41 of 41;
+format and the three prose checks are clean.
+
+Bench: 4041913
+```

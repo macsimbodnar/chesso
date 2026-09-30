@@ -1845,12 +1845,15 @@ static int negamax_at(int alpha0,
   //                 directly and never by abusing `prev_move`, which has to
   //                 keep flowing for the countermove and continuation tables
   //   static score below beta  S114's entry gate, behind `NullMoveEvalGate`,
-  //                 **which ships at 0** (DEC-243): the gate is S114's second
-  //                 verdict, measured on the tree its first leaves, and until
-  //                 then this clause is always true. A pass claims the node
-  //                 stands above beta even without its move, and the published
-  //                 form asks the node's own static score to be there already
-  //                 -- the wiki's Fruit tried the null move only on a static
+  //                 **on at 1 since S114's second verdict** (DEC-243), measured
+  //                 by `adocs/data/S114_v2_sprt.sh` on the tree the first
+  //                 verdict left; at 0 the clause is always true and the tree
+  //                 is that one, node for node. In check `static_eval` is the
+  //                 sentinel `TT_EVAL_NONE`, and `!is_in_check` short-circuits
+  //                 before the gate reads it. A pass claims the node stands
+  //                 above beta even without its move, and the published form
+  //                 asks the node's own static score to be there already -- the
+  //                 wiki's Fruit tried the null move only on a static
   //                 evaluation greater than beta. The raw static score and not
   //                 the table-tightened estimate; a corrected input is S127's
   //                 to try

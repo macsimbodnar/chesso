@@ -1,0 +1,85 @@
+# S114 verdict 2: the multicut mate row of "pruning does not hide a forced mate" re-derived on the candidate -- the tree S115 leaves (465b43b) with NullMoveEvalGate 1 -- 2026-09-30, because S131's row stopped separating E21 with the entry gate on: under E21 the case stays green (the E21 check below). Stages 2 to 6 of adocs/data/S097_mine_mate_row.py, guard mode (DEC-238) and default mode; stage 1 not re-run.
+# Cells are depth 11..14, each mate:nodes:ms as the miner prints them; ms is not a timing claim.
+# Libraries: shipped release and tune are the worktree's build/ and build-tune/ copied before the sweeps; E21 release and tune were built from a copy of the worktree's src/ with E21 applied (.ref-builds/obs), never the worktree's own src/.
+
+## driver (.tuning/coord/S114_v2/remine.sh)
+# 2026-09-30 23:32:34 worktree 465b43b + working tree [7 paths], load 1.08 1.70 3.20
+# miner sha256 775e40e2e5465866
+# e21src src vs worktree: 1 file differs; 2 changed lines
+# e21 build built 23:32:34
+# e21 build-tune built 23:32:38
+7742c1bba18cd115  e21_release.a
+74e8e2655d2ccbed  e21_tune.a
+e57fb4883ef83d0b  shipped_release.a
+51f35762dba19a42  shipped_tune.a
+269 candidates -> /home/max/ws/chesso/.tuning/coord/S114_v2/remine/mine_candidates.fen
+# candidates identical to the S114 rebase's list
+STAGE shipped exit 0 23:45:21
+STAGE open exit 0 23:45:25
+STAGE separators exit 0 23:45:25
+STAGE fires_guard exit 0 23:45:28
+STAGE fires_rule exit 0 23:45:31
+STAGE pick_guard exit 0 23:45:31
+STAGE pick_rule exit 0 23:45:31
+S114V2-REMINE-DONE 2026-09-30 23:45:31
+
+## separators
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py separators --shipped .tuning/coord/S114_v2/remine/mine_shipped.txt --open .tuning/coord/S114_v2/remine/mine_open.txt --out .tuning/coord/S114_v2/remine/mine_separators.fen
+2 of 269 candidates separate the two sweeps -> .tuning/coord/S114_v2/remine/mine_separators.fen
+
+## fires_guard
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --mode guard --fens .tuning/coord/S114_v2/remine/mine_separators.fen --lib .tuning/coord/S114_v2/remine/libs/e21_tune.a --out .tuning/coord/S114_v2/remine/mine_fires_guard.txt --fens-out .tuning/coord/S114_v2/remine/mine_fires_guard.fen
+guard mode (DEC-238): the mutant's multicut changes the tree on 2 of 2 positions in 2 s -> .tuning/coord/S114_v2/remine/mine_fires_guard.txt, .tuning/coord/S114_v2/remine/mine_fires_guard.fen
+
+## fires_rule
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --fens .tuning/coord/S114_v2/remine/mine_separators.fen --lib .tuning/coord/S114_v2/remine/libs/shipped_tune.a --out .tuning/coord/S114_v2/remine/mine_fires_rule.txt --fens-out .tuning/coord/S114_v2/remine/mine_fires_rule.fen
+the multicut changes the tree on 2 of 2 positions in 2 s -> .tuning/coord/S114_v2/remine/mine_fires_rule.txt, .tuning/coord/S114_v2/remine/mine_fires_rule.fen
+
+## pick_guard
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --mode guard --shipped .tuning/coord/S114_v2/remine/mine_shipped.txt --open .tuning/coord/S114_v2/remine/mine_open.txt --fires .tuning/coord/S114_v2/remine/mine_fires_guard.txt
+  d14	#6	run 2	1242164 nodes	217 ms	shipped [d13 d14]	open [d13]	mutant fires [d11 d12 d13 d14]	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  d14	#5	run 1	1125487 nodes	156 ms	shipped [d11 d14]	open [d11]	mutant fires [d12 d13 d14]	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+
+take: 4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  depth 14, mate in 6, shipped [d13 d14], guard dropped [d13], 1242164 nodes, 217 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d11 d12 d13 d14]
+
+## pick_rule
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --shipped .tuning/coord/S114_v2/remine/mine_shipped.txt --open .tuning/coord/S114_v2/remine/mine_open.txt --fires .tuning/coord/S114_v2/remine/mine_fires_rule.txt
+  d14	#6	run 2	1242164 nodes	217 ms	shipped [d13 d14]	open [d13]	fires [d11 d12 d13 d14]	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  d14	#5	run 1	1125487 nodes	156 ms	shipped [d11 d14]	open [d11]	fires [d13 d14]	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+
+take: 4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  depth 14, mate in 6, shipped [d13 d14], guard dropped [d13], 1242164 nodes, 217 ms
+
+## the separating candidates' cells, shipped and E21
+shipped: -:274193:42 -:646422:122 m6:1733256:273 m6:1242164:217 	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+E21:     -:274193:43 -:646422:104 m6:1733256:242 -:1074903:216 	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+shipped: m5:135183:22 -:187304:30 -:650576:80 m5:1125487:156 	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+E21:     m5:135183:20 -:187306:29 -:650567:82 -:773303:104 	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+
+## oracle (.tuning/coord/S114_v2/remine/oracle.py, a fresh stockfish process per question)
+is_valid True is_check True legal 4 captures 0 promotions 0 turn black
+depth 20 #+6 nodes 20307 pv h5g4 e8e6 g4g3 e6g8 e5g4 g8g4 g3g4 h4h5 g4g3 c3c4 f2f1
+  pv ends in checkmate: True
+depth 30 #+6 nodes 34611 pv h5g4 e8e6 g4g3 e6g8 e5g4 g8g4 g3g4 h4h5 g4g3 c3c4 f2f1
+  pv ends in checkmate: True
+
+## the E21 check: S131's row under E21 on this tree (.tuning/coord/S114_v2/e21_multicut_row.log)
+== shipped: exit 0
+   [doctest] test cases:  1 |  1 passed | 0 failed | 182 skipped
+   [doctest] assertions: 57 | 57 passed | 0 failed |
+== E21_multicut_mate_band_gate_dropped: exit 0
+   [doctest] test cases:  1 |  1 passed | 0 failed | 182 skipped
+   [doctest] assertions: 57 | 57 passed | 0 failed |
+
+## the new row: green shipped, red under E21 (.tuning/coord/S114_v2/e21_multicut_row_new.log)
+== shipped: exit 0
+   [doctest] test cases:  1 |  1 passed | 0 failed | 182 skipped
+   [doctest] assertions: 57 | 57 passed | 0 failed |
+== E21_multicut_mate_band_gate_dropped: exit 1
+   TEST CASE:  pruning does not hide a forced mate
+   tests/test_search.cpp:4400: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+     values: REQUIRE( false )
+   [doctest] test cases:  1 |  0 passed | 1 failed | 182 skipped
+   [doctest] assertions: 41 | 40 passed | 1 failed |

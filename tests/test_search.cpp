@@ -4322,6 +4322,34 @@ TEST_SUITE("search: draws")
     // mate in 5 (`adocs/data/S114_remine_s097.log`), a tree S114 never landed
     // on.
     //
+    // **RE-MINED AT S114'S SECOND VERDICT, IN THE SCRIPT'S GUARD MODE.** That
+    // verdict turns on the null move's entry gate, `NullMoveEvalGate` 1, which
+    // is "any change to pruning", and on its tree -- the tree S115 leaves --
+    // S131's row stayed green and stopped separating: with E21 applied the
+    // case passed (`.tuning/coord/S114_v2/e21_multicut_row.log`). Stages 2 to 6
+    // re-run with `--mode guard` (DEC-238) and in the default mode for the
+    // record, stage 1 not re-run -- the 269 candidates, byte-identical to the
+    // S114 rebase's list -- and **two of the 269 separate**; both modes take
+    // `4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42` at depth 14, mate in 6
+    // -- shipped `d13 d14`, guard dropped `d13`, the longer shipped run, the
+    // mutant's multicut changing the tree at 11 to 14 -- a cell of 1242164
+    // nodes and about 0.22 s; the other, S188's `1R6/8/2p3p1/P5P1/1p2b2P/4k3/
+    // 6pK/8 b - - 1 54`, separates on a run of one (`adocs/data/
+    // S114_v2_remine_s097.log`, every stage and both picks). Not read off the
+    // board (CLAUDE.md): python-chess reports `is_valid()` True, `is_check()`
+    // **True** -- the root is in check at ply 0, which the block never reaches
+    // -- 4 legal moves, no capture and no promotion, Black to move, and
+    // stockfish at depth 20 and at depth 30, each in a fresh process through
+    // python-chess, reports **`#+6` for Black, the side to move, pv Kg4 Qe6+
+    // Kxg3 Qg8+ Ng4 Qxg4+ Kxg4 h5 Kg3 c4 Qf1#**, a line python-chess reads as
+    // ending in checkmate, and the label `adocs/data/S097_candidates.tsv`
+    // already held. **Observed red, then green**: with E21 applied the case
+    // fails here at `REQUIRE( result.mate_found )` and passes with the guard
+    // in place (`.tuning/coord/S114_v2/e21_multicut_row_new.log`). S131's row
+    // is the row of the tree without the gate: `NullMoveEvalGate` 0 is
+    // `465b43b`'s engine to the node, so an H0 on this verdict restores it as
+    // a revert of one line.
+    //
     // The rows this case has carried, and the tree each belongs to:
     //
     //     pre-S236, again after S236 v2, and on `308b388`, S097's row:
@@ -4336,17 +4364,21 @@ TEST_SUITE("search: draws")
     //         depth 14, mate_in 4, 16599756 nodes, about 2.4 s
     //     S131, quiet queen promotions on `3c7cf84`, guard mode (DEC-238),
     //     on `58585f8`, again after S022 verdict 2's reading, and again
-    //     after S114 verdict 1's:
-    //         the row below, depth 14, mate_in 6, 1688502 nodes, about 0.26 s
+    //     after S114 verdict 1's, and through S115:
+    //         "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42"
+    //         depth 14, mate_in 6, 1688502 nodes, about 0.26 s
     //     S022 verdict 2, the delta early-out on `58585f8`, guard mode:
     //         S097's row, depth 14, mate_in 5, 6580581 nodes, about 0.8 s
     //     S114 verdict 1, the static-score term on the tree S022 verdict 2's
     //     removal leaves, guard mode:
     //         "R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50"
     //         depth 13, mate_in 5, 6637574 nodes, about 2.2 s
+    //     S114 verdict 2, the null move's entry gate on S115's tree, guard
+    //     mode:
+    //         the row below, depth 14, mate_in 6, 1242164 nodes, about 0.22 s
     //
     const std::string mate_the_multicut_hides =
-        "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42";
+        "4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -4712,6 +4744,26 @@ TEST_SUITE("search: draws")
     // `{row 2, 9, 5, "no S091 mutant, since S095"}`, `{row 3, 11, 4, "R02"}`,
     // `{row 4, 10, 5, "no S091 mutant, since S113"}`.
     //
+    // **Re-derived at S114's second verdict, the seven sweeps taken once more
+    // (DEC-142, DEC-233).** The null move's entry gate at `NullMoveEvalGate` 1
+    // is "any change to pruning". Shipped plus all six S091 mutants, depths 3
+    // to 12, over `adocs/data/S230_table_fens.txt`, driven by
+    // `adocs/data/S230_mine_r01_row.py depths` on a throwaway worktree holding
+    // a copy of the candidate's `src/`, evidence in
+    // `.tuning/coord/S114_v2/capmates/` and the driver
+    // `.tuning/coord/S114_v2/capmates.sh`, and the same rule applied. Shipped
+    // profiles here: `d7 d9 d10 d11 d12`, `d7 d8 d9 d10 d11 d12`,
+    // `d10 d11 d12`, `d10 d11 d12` -- S248's, row for row -- so the four depths
+    // stay **7, 7, 10 and 10**, no row red and no mate distance moving. **One
+    // label moved**: row 4 at 10 was R02's, and R02 now reports that mate from
+    // 8 to 12 without a gap, so no S091 mutant separates row 4 at any depth of
+    // its profile and the rule takes the lowest, 10. Rows 1 to 3 read as
+    // S248's pass left them: C02, C05 and R02 lose row 1 at 7; row 2 is
+    // separated by no S091 mutant; C02 and R02 lose row 3 at 10. C06, C07 and
+    // R01 are separated by no row at any depth. The rows as S248 left them,
+    // which an H0 on this verdict restores byte for byte: rows 1 to 3 as below
+    // and `{row 4, 10, 5, "R02, since S248"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -4770,9 +4822,11 @@ TEST_SUITE("search: draws")
         // **S114 moved it to 9 and its removal put it back**, and **S248 keeps
         // it at 10** on the tree that removal leaves: R02 loses the mate there
         // and no other S091 mutant does -- the S248 paragraph above has the
-        // pass.
+        // pass. **S114's second verdict keeps the depth and moves the label**:
+        // R02 reads the mate at 10 as well, and no S091 mutant separates the
+        // row -- the paragraph above has the pass.
         {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
-         5, "R02, since S248"},
+         5, "no S091 mutant, since S114"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -5955,6 +6009,14 @@ TEST_SUITE("search: pruning and reduction guards")
 
   // An ordinary beta, inside the mate band by three orders of magnitude. Cases
   // that are about a band edge set their own.
+  //
+  // **Not the null-move drives' beta since S114's second verdict**: 100 stands
+  // above the static score of every board those drives search (the castled
+  // pawn wall reads 0 for the side to move, the Italian -55), so the entry
+  // gate refused the pass before the guard each case is about decided. Those
+  // drives take the node's own static score, `evaluate()` on the wiped table,
+  // as the reverse-futility cases already set theirs (DEC-233's second
+  // repair); every assertion is the one it was.
   static constexpr int ORDINARY_BETA = 100;
 
   // A well-formed previous move, which is all the null-move guard reads of it
@@ -6001,6 +6063,12 @@ TEST_SUITE("search: pruning and reduction guards")
     //
     // `!is_pv` and `ply > 0` are properties of the drive and are asserted at
     // the call site; the rest are properties of the position and the window.
+    //
+    // **The entry gate since S114's second verdict** (DEC-243): at
+    // `NullMoveEvalGate` 1 the block wants the node's raw static score at or
+    // above beta, and a drive at a beta above it is refused there before the
+    // guard under test decides anything -- the premise DEC-233's second repair
+    // restores. `static_eval` is `evaluate()` on the table `load()` wiped.
     void require_null_move_preconditions(int depth, int beta, move_t prev)
     {
       REQUIRE_EQ(depth - 1 - (NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR)), 1);
@@ -6009,6 +6077,7 @@ TEST_SUITE("search: pruning and reduction guards")
       REQUIRE(beta > -MATE_MIN_LOCAL);
       REQUIRE(game_phase(&game.board) > 0);
       REQUIRE(!is_check(&game));
+      REQUIRE((NULL_MOVE_EVAL_GATE == 0 || evaluate(&game.board) >= beta));
     }
 
     // The node ran far enough to have made a null move. The block sits above
@@ -6100,6 +6169,15 @@ TEST_SUITE("search: pruning and reduction guards")
     move_t buffer[MAX_MOVES];
     REQUIRE(legal_moves(&game, buffer) > 0);
 
+    // Beta is the sentinel itself since S114's second verdict. In check
+    // `negamax_at` puts `TT_EVAL_NONE` in `static_eval`, under every ordinary
+    // beta, so at `NullMoveEvalGate` 1 the entry gate would refuse the pass
+    // first and the case would pass with `!is_in_check` gone. At this beta the
+    // gate admits the sentinel, so `!is_in_check` is the only thing that keeps
+    // the gate from reading it and the node from passing -- which is also
+    // the assertion that the gate never reads `TT_EVAL_NONE`.
+    const int beta = TT_EVAL_NONE;
+
     // Everything else the block wants, except `!is_in_check` itself. The
     // fixture helper asserts that the node is not in check, which is exactly
     // what this case denies, so the remaining conditions are asserted here.
@@ -6107,16 +6185,17 @@ TEST_SUITE("search: pruning and reduction guards")
                    (NULL_MOVE_BASE + (NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR)),
                1);
     REQUIRE(PREV_MOVE != 0);
-    REQUIRE(ORDINARY_BETA < MATE_MIN_LOCAL);
-    REQUIRE(ORDINARY_BETA > -MATE_MIN_LOCAL);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
     REQUIRE(game_phase(&game.board) > 0);
+    REQUIRE(TT_EVAL_NONE >= beta);
 
     // Reverse futility cannot pre-empt the block at ply 1, which is what makes
     // the move loop below evidence about the null move and nothing else.
     REQUIRE(RFP_MIN_PLY > 1);
 
-    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
-                   &state, PREV_MOVE, false);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
 
     require_the_node_reached_its_move_loop();
     REQUIRE(!probe.null_move_made);
@@ -6151,7 +6230,10 @@ TEST_SUITE("search: pruning and reduction guards")
     const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
 
     load(fen, 1);
-    require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA, PREV_MOVE);
+
+    // The node's own static score, so the entry gate admits the pass.
+    const int beta = evaluate(&game.board);
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, beta, PREV_MOVE);
 
     // Precondition: no capture for the side that moves after the pass, so the
     // cutoff there has to be a quiet. A capture cutoff writes no history at
@@ -6163,8 +6245,8 @@ TEST_SUITE("search: pruning and reduction guards")
     unmake_null_move(&game);
     REQUIRE_EQ(white_captures, 0);
 
-    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
-                   &state, PREV_MOVE, false);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
 
     // Precondition, and the whole reason this case is about the null move: the
     // pass was made. Without it nothing below is evidence.
@@ -6182,6 +6264,67 @@ TEST_SUITE("search: pruning and reduction guards")
     }
 
     CHECK_EQ(white_movers_under_prev, 0);
+  }
+
+
+  // S114's second verdict (DEC-243): the entry gate. At `NullMoveEvalGate` 1
+  // the null move is tried only where the node's raw static score stands at
+  // or above beta. One board, the castled pawn wall the other null-move cases
+  // drive, and two betas one point apart around its static score: at the
+  // static score the pass is made, one above it the pass is refused and the
+  // node searches its moves. Every other condition of the block holds at both
+  // betas, so the gate is the only thing that differs.
+  //
+  // In check the sentinel is kept out by `!is_in_check` before the gate reads
+  // `static_eval`; "an in-check node makes no null move" drives beta at
+  // `TT_EVAL_NONE` itself, where the gate would admit the sentinel.
+  //
+  // Mutation: NG01_null_gate_dropped -- the gate's clause dropped.
+  // Mutation: NG02_null_gate_inverted -- `static_eval < beta`.
+  // Mutation: NG03_null_gate_strict -- `static_eval > beta`.
+  //
+  //   search: pruning and reduction guards
+  //    the null move's entry gate refuses a static score below beta
+  //   REQUIRE( !probe.null_move_made ), REQUIRE( probe.null_move_made )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "the null move's entry gate refuses a static score below "
+                    "beta")
+  {
+    const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
+
+    REQUIRE_EQ(NULL_MOVE_EVAL_GATE, 1);
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    // At the static score: the gate admits, and the block passes.
+    load(fen, 1);
+    const int static_score = evaluate(&game.board);
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, static_score, PREV_MOVE);
+
+    negamax_probed(static_score - 1, static_score, NULL_DRIVE_DEPTH, 1, &game,
+                   &state, PREV_MOVE, false);
+
+    REQUIRE(probe.null_move_made);
+
+    // One point above it: every other condition the helper asserts still
+    // holds, asserted here by hand because the helper asserts the gate too.
+    load(fen, 1);
+    const int beta = static_score + 1;
+
+    REQUIRE_EQ(evaluate(&game.board), static_score);
+    REQUIRE_EQ(NULL_DRIVE_DEPTH - 1 -
+                   (NULL_MOVE_BASE + (NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR)),
+               1);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+    REQUIRE(game_phase(&game.board) > 0);
+    REQUIRE(!is_check(&game));
+    REQUIRE(evaluate(&game.board) < beta);
+
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
+
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
   }
 
 
@@ -6209,17 +6352,22 @@ TEST_SUITE("search: pruning and reduction guards")
     move_t buffer[MAX_MOVES];
     REQUIRE(legal_moves(&game, buffer) > 0);
 
+    // The node's own static score, so the entry gate admits the pass and the
+    // phase is what refuses it.
+    const int beta = evaluate(&game.board);
+
     REQUIRE_EQ(NULL_DRIVE_DEPTH - 1 -
                    (NULL_MOVE_BASE + (NULL_DRIVE_DEPTH / NULL_MOVE_DIVISOR)),
                1);
     REQUIRE(PREV_MOVE != 0);
-    REQUIRE(ORDINARY_BETA < MATE_MIN_LOCAL);
-    REQUIRE(ORDINARY_BETA > -MATE_MIN_LOCAL);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
     REQUIRE(!is_check(&game));
     REQUIRE(RFP_MIN_PLY > 1);
+    REQUIRE((NULL_MOVE_EVAL_GATE == 0 || evaluate(&game.board) >= beta));
 
-    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
-                   &state, PREV_MOVE, false);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
 
     require_the_node_reached_its_move_loop();
     REQUIRE(!probe.null_move_made);
@@ -6244,12 +6392,14 @@ TEST_SUITE("search: pruning and reduction guards")
     load(fen, 1);
 
     // Zero is what negamax passes its own null child, so this drive is the
-    // node one pass below another. Every other condition holds.
-    require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA, PREV_MOVE);
+    // node one pass below another. Every other condition holds, the entry
+    // gate's among them at the node's own static score.
+    const int beta = evaluate(&game.board);
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, beta, PREV_MOVE);
     REQUIRE(RFP_MIN_PLY > 1);
 
-    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
-                   &state, 0, false);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state, 0,
+                   false);
 
     require_the_node_reached_its_move_loop();
     REQUIRE(!probe.null_move_made);
@@ -6291,6 +6441,32 @@ TEST_SUITE("search: pruning and reduction guards")
 
     require_the_node_reached_its_move_loop();
     REQUIRE(!probe.null_move_made);
+
+    // **Blind in the release build since S114's second verdict**: at
+    // `NullMoveEvalGate` 1 the entry gate wants the static score at or above
+    // beta, and the static score never reaches the mate band (test_evaluation,
+    // "the static score never reaches the mate band"), so at this beta the gate
+    // refuses first and N02 is declared equivalent there in
+    // tools/mutants/S191_guards.py. The tune build turns the gate off and
+    // drives the node again, where the positive edge is the only thing between
+    // the node and the pass -- S113's B15 form.
+#ifdef CHESSO_TUNE
+    struct restore_t
+    {
+      const int gate = NULL_MOVE_EVAL_GATE;
+      ~restore_t() { search_param_set("NullMoveEvalGate", gate); }
+    } restore;
+
+    REQUIRE(search_param_set("NullMoveEvalGate", 0));
+    REQUIRE_EQ(NULL_MOVE_EVAL_GATE, 0);
+
+    load(fen, 1);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
+
+    require_the_node_reached_its_move_loop();
+    REQUIRE(!probe.null_move_made);
+#endif
   }
 
 
@@ -6388,15 +6564,19 @@ TEST_SUITE("search: pruning and reduction guards")
     // preference. The mating node sits three plies below this one, which is
     // exactly RFP_MIN_PLY, and it inherits this beta: at 100 reverse futility
     // fires there on a static score a queen up, and 837 came back in place of
-    // a mate -- the precondition below read `REQUIRE( 742 >= 48000 )`. Any
-    // beta above that static score plus RFP_MARGIN keeps the node searching,
-    // and this one clears it by a factor of forty while staying inside the
-    // mate band the null-move guard is about. It is the "mate deeper than
-    // ply 3 can still be missed for an iteration" that the reverse-futility
-    // comment in src/search.cpp already names, met head on.
-    const int beta = 40000;
-
+    // a mate -- the precondition below read `REQUIRE( 742 >= 48000 )`. So the
+    // case drove 40000 until S114's second verdict, whose entry gate at
+    // `NullMoveEvalGate` 1 refuses the pass wherever the node's static score is
+    // under beta, and 40000 was.
+    //
+    // So it drives the node's own static score, `evaluate()` on the wiped
+    // table, 835 when this was written: the gate admits the pass, and the
+    // hand-driven precondition below is what says reverse futility at the
+    // mating node does not fire at it -- measured, the null search returned
+    // 48996 at that beta. Same board, same depth, every assertion the one it
+    // was; DEC-233's second repair.
     load(fen, 1);
+    const int beta = evaluate(&game.board);
 
     REQUIRE_EQ(depth - 1 - reduction, 2);
     REQUIRE(PREV_MOVE != 0);
@@ -6405,6 +6585,7 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(game_phase(&game.board) > 0);
     REQUIRE(!is_check(&game));
     REQUIRE(RFP_MIN_PLY > 1);
+    REQUIRE((NULL_MOVE_EVAL_GATE == 0 || evaluate(&game.board) >= beta));
 
     // The precondition, taken from the engine and not assumed: the search the
     // block is about to run really does come back with a mate score. Driven
@@ -9533,11 +9714,13 @@ TEST_SUITE("search: pruning and reduction guards")
     for (bool parent_cut : {true, false}) {
       load(fen, 1);
 
-      require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA,
-                                      PREV_MOVE);
+      // The node's own static score, so the entry gate admits the pass.
+      const int beta = evaluate(&game.board);
 
-      negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1,
-                     &game, &state, PREV_MOVE, false, parent_cut);
+      require_null_move_preconditions(NULL_DRIVE_DEPTH, beta, PREV_MOVE);
+
+      negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                     PREV_MOVE, false, parent_cut);
 
       REQUIRE(probe.null_move_made);
 
@@ -11215,12 +11398,15 @@ TEST_SUITE("search: pruning and reduction guards")
     const std::string fen = "r4rk1/pppppppp/8/8/8/8/PPPPPPPP/R4RK1 b - - 4 5";
 
     load(fen, 1);
-    require_null_move_preconditions(NULL_DRIVE_DEPTH, ORDINARY_BETA, PREV_MOVE);
+
+    // The node's own static score, so the entry gate admits the pass.
+    const int beta = evaluate(&game.board);
+    require_null_move_preconditions(NULL_DRIVE_DEPTH, beta, PREV_MOVE);
 
     // The control first: this node does pass, so the drive below is a decision
     // the guard took and not a block that was never entered.
-    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
-                   &state, PREV_MOVE, false);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false);
 
     REQUIRE(probe.null_move_made);
 
@@ -11230,8 +11416,8 @@ TEST_SUITE("search: pruning and reduction guards")
 
     REQUIRE(excluded != 0);
 
-    negamax_probed(ORDINARY_BETA - 1, ORDINARY_BETA, NULL_DRIVE_DEPTH, 1, &game,
-                   &state, PREV_MOVE, false, false, excluded);
+    negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH, 1, &game, &state,
+                   PREV_MOVE, false, false, excluded);
 
     // A null-move bound answers the verification with no alternative searched,
     // which is the one thing that search exists to do.
