@@ -599,8 +599,9 @@ found stale (its F03).
 | S131 | quiet queen promotions stay | 1 h 37 m | 3412 | `{0, 5}` | H1, +17.84 +/- 8.83 |
 | S022 | 1's H0: the exchange gate stays | 0 h 25 m | 900 | `{-5, 0}` | H0, -65.22 +/- 17.66 |
 | S022 v2 | the delta early-out leaves | 19 h 3 m | 40000 | `{0, 5}` | **no verdict** |
+| S114 v1 | the static-score term leaves | 1 h 17 m | 2720 | `{0, 5}` | H0, -18.54 +/- 10.19 |
 
-**The ledger holds 38: mean 6 h 05 m, median 5 h 26 m, 489013 games in 231.38 hours, 2113.4 an hour across the set.** **Fast class**, an effect outside the bounds interval -- fifteen runs, mean **2 h 05 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-three runs, mean **8 h 41 m**.
+**The ledger holds 39: mean 5 h 57 m, median 5 h 25 m, 491733 games in 232.67 hours, 2113.5 an hour across the set.** **Fast class**, an effect outside the bounds interval -- sixteen runs, mean **2 h 02 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-three runs, mean **8 h 41 m**.
 
 **Why the throughput moves**, read at the runs themselves and kept because the
 reasons do not re-derive from a row. Eight of the first nine sit between 2328 and
