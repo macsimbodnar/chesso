@@ -1014,3 +1014,12 @@ Debug self-play of 8 games at 4+0.04 on `ad18661`, 0 `Assertion`, 0 `disconnect`
 four stages green in the full run -- citations, debug 446 s, sanitize 582 s, perft 57 s -- and its prose stage red on one stale `plan.md` sentence that still counted S022's two verdicts as owed, corrected in this commit and the stage re-run green (`.tuning/gate_extra_2026-09-30_S114.log`, `.tuning/gate_extra_2026-09-30_S114_prose2.log`). SPRT pair pinned: `REF` `d946b6f` (the commit the landing sits on),
 `CAND` `794e4c3`; open findings re-read at pinning: as the pre-registration
 states them. S022 verdict 2 read as a zero at the cap and its early-out removed first (`6893c0f`); S244 and S022 completed; the S170 budgets re-derived on this tree as `ad18661` (DEC-162).
+
+### Verdict 1's outcome (2026-09-30, the coordinator)
+
+**H0, 2026-09-30 07:33: `794e4c3` against `d946b6f`, `Elo -18.54 +/- 10.19`,
+`nElo -23.81 +/- 13.06`, LLR -2.95, 2720 games in 1 h 17 m, 0 forfeits**
+(`adocs/data/S114_sprt.log`, `adocs/data/S114_sprt_pairs.txt`; marker
+`DONE`). **H0 with the interval wholly below zero**: a loss; `NullMoveEvalCap` goes to 0, the proved off value, and the term's code leaves with it on the pre-registration's H0 row (the S238 pattern): its line, the margin and the cap, the probe field, the six S114 cases and the six NT mutants, the manuals with them; the two re-derived rows of item 16 and the defender case's depth go back byte for byte, and S248 re-derives the parent's capture-mate rows; the S170 budgets are re-derived on the reverted tree (DEC-156 as amended by DEC-162). The gate's switch, its clause and its row stay at 0 for S114's second verdict (DEC-243), as does the floor's place inside the block and the derived `NULL_DRIVE_DEPTH`. `Incomplete mating PV` 0 against 3,
+an observation for the pre-registration's open findings (CHESS).
+No follow-up run and no second pair for this verdict (DEC-063, DEC-019).

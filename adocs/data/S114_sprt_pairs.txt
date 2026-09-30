@@ -1,0 +1,58 @@
+=== markers
+SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s114_v1_20260930_061350
+=== banner
+candidate  794e4c3  2026-09-30
+reference  d946b6f  2026-09-30
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20260930061350
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+out        /home/max/ws/chesso/.tuning/sprt_s114_v1_20260930_061350
+id name    cand-794e4c3  Chesso 794e4c3 native
+id name    ref-d946b6f  Chesso d946b6f native
+=== fastchess final block
+6579:LOS: 0.02 %, DrawRatio: 33.46 %, PairsRatio: 0.80
+6580:Games: 2720, Wins: 748, Losses: 893, Draws: 1079, Points: 1287.5 (47.33 %)
+6581:Ptnml(0-2): [147, 357, 455, 296, 105], WL/DD Ratio: 1.14
+6582:LLR: -2.95 (-100.2%) (-2.94, 2.94) [0.00, 5.00]
+6585:Results of cand-794e4c3 vs ref-d946b6f (8+0.08, 1t, 16MB, noob_3moves.epd):
+6586:Elo: -18.54 +/- 10.19, nElo: -23.81 +/- 13.06
+6587:LOS: 0.02 %, DrawRatio: 33.46 %, PairsRatio: 0.80
+6588:Games: 2720, Wins: 748, Losses: 893, Draws: 1079, Points: 1287.5 (47.33 %)
+6589:Ptnml(0-2): [147, 357, 455, 296, 105], WL/DD Ratio: 1.14
+6590:LLR: -2.95 (-100.2%) (-2.94, 2.94) [0.00, 5.00]
+6592:SPRT ([0.00, 5.00]) completed - H0 was accepted
+6603:SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s114_v1_20260930_061350
+=== timing
+log created: 2026-09-30 06:13:50
+log last write: 2026-09-30 07:31:43
+=== games / terminations (/home/max/ws/chesso/.tuning/sprt_s114_v1_20260930_061350/games.pgn)
+games: 2720
+   1858 [Termination "adjudication"]
+    862 [Termination "normal"]
+=== forfeits
+  cand-794e4c3      2720 games, 0 forfeits, 0.00 %
+  ref-d946b6f       2720 games, 0 forfeits, 0.00 %
+=== Incomplete mating PV per side (run log)
+total 3
+  cand-794e4c3: 0
+  ref-d946b6f: 3
+=== pairs (S105_pairs.py, candidate)
+=== /home/max/ws/chesso/.tuning/sprt_s114_v1_20260930_061350/games.pgn ===
+games            2720
+draws            1079, 39.7 %
+decisive         1641, 60.3 %
+plies per game   mean 121.0, median 109
+seconds per game mean 20.0, median 19
+seconds per ply  0.1653
+complete pairs   1360
+  pair score 0.0    147   10.8 %
+  pair score 0.5    357   26.2 %
+  pair score 1.0    455   33.5 %
+  pair score 1.5    296   21.8 %
+  pair score 2.0    105    7.7 %
+white won both   115 of 1360, 8.5 %  (the pair Pohl's floor is about)
+pair score       mean 0.9467, variance 0.3025, sd 0.5500
+
+=== pentanomial: fastchess's own Ptnml above is the one the SPRT used (see S237_sprt_pairs.txt's note on S105_pairs.py ordering)

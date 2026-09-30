@@ -7,6 +7,12 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30: S114 verdict 1's SPRT is H0 -- H0, a loss, the static-score term leaves
+
+**`794e4c3` against `d946b6f`, `Elo -18.54 +/- 10.19`, `nElo -23.81 +/- 13.06`,
+LLR -2.95, 2720 games in 1 h 17 m, 0 forfeits, 2026-09-30 07:33.** **H0 with the interval wholly below zero**: a loss; `NullMoveEvalCap` goes to 0, the proved off value, and the term's code leaves with it on the pre-registration's H0 row (the S238 pattern): its line, the margin and the cap, the probe field, the six S114 cases and the six NT mutants, the manuals with them; the two re-derived rows of item 16 and the defender case's depth go back byte for byte, and S248 re-derives the parent's capture-mate rows; the S170 budgets are re-derived on the reverted tree (DEC-156 as amended by DEC-162). The gate's switch, its clause and its row stay at 0 for S114's second verdict (DEC-243), as does the floor's place inside the block and the derived `NULL_DRIVE_DEPTH`.
+**Next:** the ledger; the term's removal by a fresh agent on the H0 row's terms (code out, cap 0, the gate switch kept at 0, item-16 rows and the defender depth back byte for byte, S248 and the S170 budgets on the reverted tree), cold-checked, INV-6 to `d946b6f`'s engine; then S114's second verdict on that tree (DEC-243). Owner questions unchanged.
+
 ## 2026-09-30, 06:13: S114 verdict 1's SPRT is running
 
 **Launched 06:13:50: `794e4c3` (the static-score term at `NullMoveEvalCap` 8,
