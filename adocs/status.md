@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30, 23:10: S115 done on its H1
+
+Recorded as `d544872` (the ledger's fortieth row, regenerated in the
+completing commit); the step file moved to `plan_done/` with its stamp.
+**Next:** S114's second verdict, the entry gate `static_eval >= beta` flipped
+to 1 on this tree (`NullMoveEvalGate`, DEC-243), with DEC-233's second
+repair of the null-move guard cases the gate takes the premise from --
+built by a fresh Opus agent in a worktree, cold fast-checked, landed, second
+tier, pinned, `{0, 5}` SPRT. S247 and S249 are the open fillers; S247's
+timing wants the idle machine. Owner question 3 (DEC-245) open; the others
+unchanged.
+
 ## 2026-09-30: S115's SPRT is H1 -- H1, the fail-low pull stays
 
 **`eb334e3` against `3f9ffa5`, `Elo 4.24 +/- 3.39`, `nElo 5.58 +/- 4.46`,
