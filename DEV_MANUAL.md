@@ -4258,7 +4258,9 @@ and a redraw still retires them. They are re-derived as a set: the script with
 no argument prints the grid, each row takes the cheapest cell at its own
 stride that reports a mate line -- DEC-162 left the choice on the mate count
 alone -- and `--at` confirms the six cells. S245 did that on 2026-09-29 and
-four moved (`adocs/data/S245_sweep.txt`, the old rows quoted in the TSV).
+four moved (`adocs/data/S245_sweep.txt`, the old rows quoted in the TSV), and
+S114's first verdict did it again on the tree it lands on and four moved again
+(`adocs/data/S114_sweep_s170.txt`).
 
 `zobrist` reports the checks the wiki's linear-independence rule asks for at the
 sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal
