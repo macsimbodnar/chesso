@@ -7,6 +7,13 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30, 11:48: S115 (the fail-low pull alone) landed as `eb334e3`, pinned against `3f9ffa5`
+
+The rebase onto the tree without S114's static-score term was started by one agent, cut off by a token limit, and finished by a second that reproduced the first's readings; second cold fast check LAND, three text findings fixed. On a root fail-low beta comes down toward alpha by `AspirationFailLowPull` (2) quarters of the window; `AspirationWidenPct` 200 kept (no ratio leads on every sample, DEC-244); pull 0 is the parent node for node (DEC-215), re-proved on the landed tree. `bench` 3429473 -> 3513310 (+2.4 %), fixed-node depths 47 -> 48 as reach (DEC-239); mutation 4 of 4. The S170 budgets re-derived as `001aae4` (C 500000 -> 1000000, D 1200000 -> 3000000, F 100000 -> 500000); `--ceilings` with this grid reads 6 for row C where the test holds 0, a test-only finding, not acted on. S249 amended: one of its two stale comments reads true on this tree. **S114's removal tree, second tier complete (owed since the morning):** Debug self-play of 8 games on `f5eaa99`, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 980 s (`.tuning/gate_extra_2026-09-30_S114rm.log`). Second tier: Debug self-play of 8 games at 4+0.04 on `001aae4`, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 1027 s (`.tuning/gate_extra_2026-09-30_S115.log`). S114 verdict 1 read H0 and its term left first (`f3868fb`); S248 completed (`3f9ffa5`); owner question 3 (DEC-245) open.
+**Next:** the `{0, 5}` SPRT launches from `adocs/data/S115_sprt.sh` right
+after this commit (worst case 19.8 h at 2110 games/h). Owner question 3
+(DEC-245) open; the others unchanged.
+
 ## 2026-09-30: S114 verdict 1's term removed as `f3868fb`; S248 done inside it; the S170 budgets re-derived as `f5eaa99`
 
 The static-score term left on its H0 (`22e00c3`, the ledger's row 39), the

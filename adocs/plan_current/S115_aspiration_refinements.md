@@ -923,3 +923,7 @@ budgets move on this tree and land as their own commit.
 
 Bench: 3513310
 ```
+
+### Landed and pinned (the coordinator, 2026-09-30)
+
+Landed as `eb334e3` on `3f9ffa5` from the rebase worktree's working tree, two cold fast checks first (on `cd50c7a` and on this tree). `bench` 3429473 -> 3513310; the off value re-proved on the landed tree before pinning: the tune build at `AspirationFailLowPull` 0 benches 3429473 with the parent's whole 121-line stream (`.tuning/coord/S115_landing/offvalue_on_landing_bench.txt`), and `3f9ffa5`'s `src/` tree is `f5eaa99`'s, object for object. The S170 budgets re-derived on this tree as `001aae4` (DEC-162). At the landing `specs.md`'s aspiration sentence was rewritten and `tools/plan_prose_check.py`'s `AspirationMaxDelta` phrase re-anchored to it (`test_plan_params` red on the stale phrase first). **Second tier on the landing** (DEC-141): Debug self-play of 8 games at 4+0.04 on `001aae4`, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S115_debug_selfplay/`); `tools/gate_extra.sh` 5 stages green in 1027 s (`.tuning/gate_extra_2026-09-30_S115.log`). SPRT pair pinned: `REF` `3f9ffa5` (the commit the landing sits on), `CAND` `eb334e3`; open findings re-read at pinning: as the pre-registration states them. S114 verdict 1 read H0 and its term left first (`f3868fb`); S248 completed (`3f9ffa5`); owner question 3 (DEC-245) open.

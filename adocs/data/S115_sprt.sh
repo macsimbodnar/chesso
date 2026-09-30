@@ -334,7 +334,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # CAND is the commit that lands this verdict's candidate, the fail-low pull at
 # `AspirationFailLowPull` 2; REF is its parent, the commit the landing sits on.
 # Both are pinned as explicit shas after the landing commit exists, by editing
-# the defaults below: **CAND = the landing commit's sha, REF = CAND^**. Never
+# the defaults below: **CAND = the landing commit's sha, REF = CAND^**, which is
+# `3f9ffa5`, S248's completion commit, whose `src/` tree is `f5eaa99`'s. Never
 # `HEAD` and `HEAD^`: anything that lands after the landing -- the S170 budgets
 # of item 3, this file's own pinning -- makes `HEAD` a later commit
 # and `HEAD^` the landing, one engine against itself.
@@ -345,8 +346,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates before the first game, so what the run measures
 # is on screen and not assumed.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-3f9ffa5}"
+CAND="${CAND:-eb334e3}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then

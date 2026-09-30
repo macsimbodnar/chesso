@@ -1438,3 +1438,14 @@ re-derived on this tree as their own commit, after this one.
 
 Bench: 3429473
 ```
+
+### Second tier on the removal tree (the coordinator, 2026-09-30)
+
+DEC-141's second tier on the tree verdict 1's removal leaves, run on
+`f5eaa99` (the removal `f3868fb` plus the S170 budgets): Debug self-play of 8
+games at 4+0.04, 0 `Assertion`, 0 `disconnect`
+(`.tuning/coord/S114rm_debug_selfplay/`); `tools/gate_extra.sh` 5 stages green
+in 980 s (`.tuning/gate_extra_2026-09-30_S114rm.log`). S115 landed on this
+tree as `eb334e3` and is measured first; this step's second verdict, the gate
+flip (DEC-243), follows it.
+
