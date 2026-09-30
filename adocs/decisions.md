@@ -13582,7 +13582,9 @@ Decision:     By the coordinator under the owner's delegation; the owner may
               variant diffs. S115 ships the fail-low pull alone at its seed,
               one `{0, 5}` SPRT, with the widening ratio kept at 200 as a
               parameter for S127: the sweep's 150 and 300 led on one sample
-              of three (DEC-244).
+              of three (DEC-244) [corrected 2026-09-30: that was the run with
+              both rules; on the shipping tree's own re-sweep 150 led on two
+              samples of three and 300 on one, and the conclusion stands].
 Rejected:     Measuring the reduction anyway and re-specifying the three
               guards to "a mate within k iterations": not the coordinator's
               to decide, and the guards exist because pruning that hides a

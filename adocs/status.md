@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30: S114 verdict 1's term removed as `f3868fb`; S248 done inside it; the S170 budgets re-derived as `f5eaa99`
+
+The static-score term left on its H0 (`22e00c3`, the ledger's row 39), the
+pre-registration's row executed: cap and margin out with the code, the six
+cases and six mutants out, `NullMoveEvalGate` kept at 0 for S114's second
+verdict, the multicut row and the defender case's depth back byte for byte
+to `d946b6f`'s, the engine bench-identical to `d946b6f` (INV-6). S248's
+rows were re-derived in the same commit (7, 9, 11, 10 -> 7, 7, 10, 10) and
+the step is done; the S170 budgets moved on the reverted tree (A 300000 ->
+500000, C 1200000 -> 500000). **Next:** DEC-141's second tier on this tree;
+S115 (the fail-low pull alone, DEC-245) rebased onto it, cold-checked, landed,
+pinned and measured at `{0, 5}`; S114's second verdict, the gate flip, after
+that. S247 and S249 (created here: three stale golden comments) are the open fillers. Owner questions unchanged.
+
 ## 2026-09-30: S114 verdict 1's SPRT is H0 -- H0, a loss, the static-score term leaves
 
 **`794e4c3` against `d946b6f`, `Elo -18.54 +/- 10.19`, `nElo -23.81 +/- 13.06`,

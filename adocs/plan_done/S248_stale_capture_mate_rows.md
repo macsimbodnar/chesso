@@ -7,8 +7,8 @@ decisions:  DEC-142, DEC-233, DEC-171
 closes:
 blocks:
 paused_by:
-author:
-done:
+author:     executed inside S114 verdict 1's removal by its Opus subagent, briefed by the coordinator (DEC-185); the coordinator stamps it
+done:       2026-09-30 -- executed, not moot: S114 verdict 1 read H0 and its removal `f3868fb` restored the parent's capture-mate rows byte for byte, so the same commit re-derived them on the reverted tree by `adocs/data/S230_mine_r01_row.py depths`, seven sweeps byte for byte the parent sweeps of S114's rebase: depths 7, 9, 11, 10 -> **7, 7, 10, 10**, row 3 labelled "C02, R02, since S248", row 4 "R02, since S248", no mate distance moved, the old rows quoted at the site (DEC-142, DEC-233). The removal's cold fast check read the rows; both fast suites green at them; the S170 budgets followed on the same tree as `f5eaa99`. A filler under DEC-171, named by id in `adocs/data/S114_sprt.sh`'s open findings while it was open.
 
 ## Why this exists (2026-09-30)
 
