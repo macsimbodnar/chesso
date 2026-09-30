@@ -1428,3 +1428,12 @@ Landed as `0c0db1b` on `58585f8`, `bench` 3429473 -> 3656950. SPRT pair pinned:
 `REF` `58585f8` (the tree verdict 1's revert and S246 left; its engine
 `d446783`'s node for node), `CAND` `0c0db1b`; open findings re-read at
 pinning: items 1 to 15 as the pre-registration states them.
+
+### Verdict 2's outcome (2026-09-30, the coordinator)
+
+**No verdict at the cap, 2026-09-30 04:57: `0c0db1b` against `58585f8`, `Elo 2.34 +/- 2.63`,
+`nElo 3.03 +/- 3.40`, LLR 0.87, 40000 games in 19 h 3 m, 0 forfeits**
+(`adocs/data/S022_v2_sprt.log`, `adocs/data/S022_v2_sprt_pairs.txt`; marker
+`DONE`). **No verdict with the nElo interval [-0.37, +6.43] reaching above zero**: read as a zero by the pre-registration's third row -- `QsDeltaEarlyOut` to 0 and the code leaves with it, the three goldens restored; deleting delta pruning is the recorded outcome. `Incomplete mating PV` 20 against 5,
+an observation for the pre-registration's open finding 3's class (CHESS).
+No follow-up run and no second pair (DEC-063, DEC-019). S022 completes on both verdicts.

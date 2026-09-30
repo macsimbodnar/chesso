@@ -63,10 +63,16 @@ to S244's; `bench` 3656950. `specs.md`'s S236 sentence loses its sixth copy
 of the stale claim. **Fillers in the plan:** none open. **Next in Open:**
 S114.
 
+## 2026-09-30: S022 verdict 2's SPRT is without a verdict at the cap -- read as a zero, the early-out leaves
+
+**`0c0db1b` against `58585f8`, `Elo 2.34 +/- 2.63`, `nElo 3.03 +/- 3.40`,
+LLR 0.87, 40000 games in 19 h 3 m, 0 forfeits, 2026-09-30 04:57.** **No verdict with the nElo interval [-0.37, +6.43] reaching above zero**: read as a zero by the pre-registration's third row -- `QsDeltaEarlyOut` to 0 and the code leaves with it, the three goldens restored; deleting delta pruning is the recorded outcome.
+**Next:** the ledger; the removal, prepared beside this run by a fresh agent and cold-checked (`QsDeltaEarlyOut` and its code out, the three goldens restored byte for byte, bench-identical to `58585f8`, S244's screen the one engine difference), lands next; then S022 completes on both verdicts, S244's second tier and completion with its census re-taken on the removal tree, S114 verdict 1 rebased onto that tree, the S170 budgets re-derived on S114's tree, S114's pin and its SPRT. Fillers S247 (the 13.8 ms stop-half figure) and S248 (the parent's stale capture-mate rows) are created on the way.
+
 ## 2026-09-29, 09:51: S022 verdict 2's SPRT is running
 
 **Launched 09:51: `0c0db1b` (the delta early-out, `QsDeltaEarlyOut` 1) against `58585f8`,
-`{-5, 0}` nElo (`--nonreg`) at 8+0.08 on `noob_3moves.epd`, seed 20260929095144, 12
+`{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`, seed 20260929095144, 12
 of 12 cores, output `.tuning/sprt_s022_v2_20260929_095144`, log `.tuning/coord/S022_v2_sprt.log`, pid
 882345 (own session, no tty).** Banner checked against the pins. Detached
 watcher `.tuning/coord/S022_v2_watch.sh` (pid 888448, four exits, 40 h
