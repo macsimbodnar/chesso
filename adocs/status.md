@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30, 11:52: S115's SPRT is running
+
+**Launched 11:52:18: `eb334e3` (the fail-low pull at `AspirationFailLowPull`
+2) against `3f9ffa5` (the tree without it), `{0, 5}` nElo at 8+0.08, Hash 16,
+on `noob_3moves.epd`, seed 20260930115218, 12 of 12 cores, output under
+`.tuning/sprt_s115_20260930_115218`, pre-registration
+`adocs/data/S115_sprt.sh`, log `.tuning/coord/S115_sprt.log`.** Watcher
+detached (`.tuning/coord/S115_watch.sh`: marker, pid death, 40 h ceiling,
+hourly progress into `.tuning/coord/S115_watch_detached.out`). Worst case
+41861 games, 19.8 h at 2110 games/h; the pull has to gain 5 nElo to stay.
+**Next at the marker:** `.tuning/coord/read_s115.sh`, the reading by the
+pre-registration's three rows, the record commit with the DEC-220 block, the
+ledger, `specs.md`'s "not yet read" replaced by the verdict, the run archived
+(built outside the synced folder, then moved). Then S114's second verdict,
+the gate flip (DEC-243), on the tree this verdict leaves. S247 and S249 are
+the open fillers (DEC-171). Owner question 3 (DEC-245) open; the others
+unchanged.
+
 ## 2026-09-30, 11:48: S115 (the fail-low pull alone) landed as `eb334e3`, pinned against `3f9ffa5`
 
 The rebase onto the tree without S114's static-score term was started by one agent, cut off by a token limit, and finished by a second that reproduced the first's readings; second cold fast check LAND, three text findings fixed. On a root fail-low beta comes down toward alpha by `AspirationFailLowPull` (2) quarters of the window; `AspirationWidenPct` 200 kept (no ratio leads on every sample, DEC-244); pull 0 is the parent node for node (DEC-215), re-proved on the landed tree. `bench` 3429473 -> 3513310 (+2.4 %), fixed-node depths 47 -> 48 as reach (DEC-239); mutation 4 of 4. The S170 budgets re-derived as `001aae4` (C 500000 -> 1000000, D 1200000 -> 3000000, F 100000 -> 500000); `--ceilings` with this grid reads 6 for row C where the test holds 0, a test-only finding, not acted on. S249 amended: one of its two stale comments reads true on this tree. **S114's removal tree, second tier complete (owed since the morning):** Debug self-play of 8 games on `f5eaa99`, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 980 s (`.tuning/gate_extra_2026-09-30_S114rm.log`). Second tier: Debug self-play of 8 games at 4+0.04 on `001aae4`, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 1027 s (`.tuning/gate_extra_2026-09-30_S115.log`). S114 verdict 1 read H0 and its term left first (`f3868fb`); S248 completed (`3f9ffa5`); owner question 3 (DEC-245) open.
