@@ -33,6 +33,13 @@ MISSING when its quoted title wraps across two string literals; the stale
 `S170_cases.tsv` budgets drifting from the DEC-156 rule, both carried from
 the 2026-09-28 handover.
 
+## 2026-09-30: S244 done -- its second tier on the removal tree green, its census re-taken there
+
+Debug self-play of 8 games at 4+0.04 on the removal tree `6893c0f`, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S022rm_S244_debug_selfplay/`); `tools/gate_extra.sh` 5 stages green in 1051 s (`.tuning/gate_extra_2026-09-30_S022rm_S244.log`) (DEC-141). S244 completes on DEC-242's basis (`192732f`; the owner
+may overrule and order the `{-5, 0}` run), its ordinary-play census
+re-taken on the tree it ships in (0 of 11503 answers moved, 65 trees smaller
+by 1 to 28 nodes). S247 and S248 are the open fillers; S114 is next in Open.
+
 ## 2026-09-29, midday: S244 landed (its second tier waits for the idle machine); S245 done
 
 **S244 landed** as `192732f`: in ProbCut's loop a capture that leaves
