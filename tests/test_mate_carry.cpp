@@ -454,8 +454,9 @@ static bool line_ends_in_mate(const std::string& fen,
 // 50 %**. That reading is S095's tree's and does not carry: on S245's grid
 // the same cell reports 10 with 0 short, and E drove 500000 from S245, 2
 // lines with 1 short; since S114's re-sweep it drives 300000, where all 10
-// of its lines are short, inside its ceiling of 11. B's worst cell is 15 of
-// 52 at 1200000 against 11 of its own at S204's 1000000.
+// of its lines were short on that tree, inside its ceiling of 11, and on the
+// tree S114's removal leaves the same cell reports 2 with 0 short. B's worst
+// cell is 15 of 52 at 1200000 against 11 of its own at S204's 1000000.
 //
 // What did not move is again the guarantee beside them: `unreached.empty()`
 // holds on all six cases at their own budgets and strides in both builds, so
