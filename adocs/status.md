@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30, 06:13: S114 verdict 1's SPRT is running
+
+**Launched 06:13:50: `794e4c3` (the static-score term at `NullMoveEvalCap` 8,
+`NullMoveEvalGate` 0) against `d946b6f` (the tree without it, S022's
+completion commit on the removal `6893c0f`), `{0, 5}` nElo at 8+0.08 on
+`noob_3moves.epd`, seed 20260930061350, 12 of 12 cores, output under
+`.tuning/sprt_s114_v1_20260930_061350`, pre-registration
+`adocs/data/S114_sprt.sh`, log `.tuning/coord/S114_sprt.log`.** Watcher
+detached (`.tuning/coord/S114_watch.sh`: marker, pid death, 40 h ceiling,
+hourly progress), the coordinator's Monitor re-armed each half hour. Worst
+case 41861 games, 19.8 h at 2110 games/h; the term has to gain 5 nElo to stay.
+**Next at the marker:** the reading by the pre-registration's three rows (an
+H1 keeps the term and S114's second verdict flips the entry gate on this
+tree; an H0 takes the term's code out and keeps the gate switch, with S248
+re-deriving the parent's capture-mate rows); the record commit with the
+DEC-220 block; the ledger. S247 and S248 are the open fillers beside this
+match (DEC-171). Owner questions unchanged.
+
 ## 2026-09-30, 06:08: S114 verdict 1 (the eval-scaled null-move reduction, alone) landed as `794e4c3`, pinned against `d946b6f`
 
 The null move's reduction grows with the static score's lead over beta:
