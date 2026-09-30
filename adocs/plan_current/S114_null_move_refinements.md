@@ -1003,3 +1003,14 @@ touched mutants 7 of 7 on the same fixture, E21 by both its killers.
 
 Bench: 4192793
 ```
+
+### Verdict 1 landed and pinned (the coordinator, 2026-09-30)
+
+Built on S022 verdict 2's tree, rebased onto its removal, landed as `794e4c3`
+on `d946b6f` from the rebase worktree's working tree, two cold fast checks first (two cases observed red that had not been,
+a comment's clamp, the fixture's precondition on the term, the decisions
+line); `bench` 3429473 -> 4192793. **Second tier on the landing** (DEC-141):
+Debug self-play of 8 games at 4+0.04 on `ad18661`, 0 `Assertion`, 0 `disconnect` (`.tuning/coord/S114_debug_selfplay/`); `tools/gate_extra.sh`
+four stages green in the full run -- citations, debug 446 s, sanitize 582 s, perft 57 s -- and its prose stage red on one stale `plan.md` sentence that still counted S022's two verdicts as owed, corrected in this commit and the stage re-run green (`.tuning/gate_extra_2026-09-30_S114.log`, `.tuning/gate_extra_2026-09-30_S114_prose2.log`). SPRT pair pinned: `REF` `d946b6f` (the commit the landing sits on),
+`CAND` `794e4c3`; open findings re-read at pinning: as the pre-registration
+states them. S022 verdict 2 read as a zero at the cap and its early-out removed first (`6893c0f`); S244 and S022 completed; the S170 budgets re-derived on this tree as `ad18661` (DEC-162).

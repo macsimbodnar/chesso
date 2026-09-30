@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-09-30, 06:08: S114 verdict 1 (the eval-scaled null-move reduction, alone) landed as `794e4c3`, pinned against `d946b6f`
+
+The null move's reduction grows with the static score's lead over beta:
+one ply per whole `NullMoveEvalMargin` (94) the raw static evaluation
+stands above beta, at most `NullMoveEvalCap` (8), clamped at zero, the
+floor testing the whole R; base 3 and divisor 6 kept (DEC-244, the
+depth-11 node sweep inconclusive); the entry gate `static_eval >= beta`
+is in the tree behind `NullMoveEvalGate` at 0, the second verdict
+(DEC-243); cap 0 is the parent node for node (DEC-215). `bench` 3429473 ->
+4192793 (+22.3 %), one bench reply moving; fixed-node depths 47 -> 48,
+stated as reach (DEC-239). Two mined goldens re-derived by their scripts:
+the capture-mate table's depths and S131's multicut row, re-mined in guard
+mode to a new board at depth 13, mate in 5 (DEC-238); M02's case repaired at depth 15 with
+`NULL_DRIVE_DEPTH` derived from the constants. Mutation NT01 to NT06 6 of
+6, the seven touched mutants 7 of 7. Cold fast check: no defect in `src/`;
+two cases not yet observed red were, and three trivial things fixed before
+the landing. Second tier: Debug self-play of 8 games at 4+0.04 on `ad18661`, 0 `Assertion`, 0 `disconnect`; `gate_extra` four stages green in the full run -- citations, debug 446 s, sanitize 582 s, perft 57 s -- and its prose stage red on one stale `plan.md` sentence that still counted S022's two verdicts as owed, corrected in this commit and the stage re-run green (`.tuning/gate_extra_2026-09-30_S114.log`, `.tuning/gate_extra_2026-09-30_S114_prose2.log`). S022 verdict 2 read as a zero at the cap and its early-out removed first (`6893c0f`); S244 and S022 completed; the S170 budgets re-derived on this tree as `ad18661` (DEC-162).
+**Next:** the `{0, 5}` SPRT launches from `adocs/data/S114_sprt.sh` right
+after this commit (worst case 19.8 h at 2110 games/h); then S114's second
+verdict, the gate, on the tree this one leaves. Owner questions unchanged.
+
 ## 2026-09-30: S022 done on both verdicts; the early-out removed as `6893c0f`; S247 and S248 created
 
 Verdict 2 reached the 40000-game cap without a verdict (`nElo 3.03 +/- 3.40`,

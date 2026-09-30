@@ -498,7 +498,7 @@ whole with their evidence; they are 3100-band techniques by the record.
 ## What this costs
 
 The pending order owes **roughly 36 to 46 SPRT verdicts** once multi-verdict
-steps are counted honestly (S022's two, the evaluation groups
+steps are counted honestly (the evaluation groups
 per-term; five more since 2026-09-19 by DEC-222 -- the fixed-point block, the table-tightened estimate, the
 blended return, hindsight reductions and the cutoff count, all five spent), the three the reduction rebuild took having been spent on
 2026-09-18, the two-ply table's one on 2026-09-20 (DEC-224; the two removals
@@ -514,7 +514,10 @@ estimate's one at the reverse-futility margin on 2026-09-25, an H1 in
 H0 read as a zero in 5 h 42 m, and hindsight reductions' one on
 2026-09-26, an H0 read as a zero in 3 h 50 m, and the cutoff count's one on
 2026-09-27, an H0 read as a zero in 15 h 29 m -- plus one SPSA lane per completed block and S127's full run (DEC-222), one to three datagen nights,
-and S152's two five-hour gauntlets at the end.
+and S152's two five-hour gauntlets at the end. S022's two were spent on
+2026-09-29 and 2026-09-30: an H0 in 25 minutes that kept the exchange gate,
+and a no-verdict zero at the 40000-game cap in 19 h 3 m that deleted the
+delta early-out (the ledger's rows 37 and 38).
 
 **Struck 2026-09-11 by S182** (`2026-09-04_plan_review-F03`, DEC-136):
 ~~at the S105 settings a typical verdict is 45 to 75 minutes, so roughly 75 to

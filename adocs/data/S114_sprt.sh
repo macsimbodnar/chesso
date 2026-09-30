@@ -320,7 +320,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # at `NullMoveEvalCap` 8 with `NullMoveEvalGate` 0; REF is its parent, the
 # commit the landing sits on. Both are pinned as explicit shas after the
 # landing commit exists, by editing the defaults below: **CAND = the landing
-# commit's sha, REF = CAND^ (the removal commit)**. Never `HEAD` and `HEAD^`:
+# commit's sha, REF = CAND^**, which is `d946b6f`, S022's completion commit on the
+# removal `6893c0f`, whose engine it carries byte for byte. Never `HEAD` and `HEAD^`:
 # the S170 budgets land as their own commit after the landing, and once they
 # have, `HEAD` is that commit and `HEAD^` the landing -- one engine against
 # itself.
@@ -331,8 +332,8 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates before the first game, so what the run measures
 # is on screen and not assumed.
-REF="${REF:-PIN_ME}"
-CAND="${CAND:-PIN_ME}"
+REF="${REF:-d946b6f}"
+CAND="${CAND:-794e4c3}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then
