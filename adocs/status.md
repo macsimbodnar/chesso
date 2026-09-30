@@ -454,6 +454,12 @@ step. Both 2026-09-27 documents committed with README rows.
    for the owner to confirm; (4) who runs the training, the owner or a
    one-run delegation as at S028; (5) whether its P1 (a binary corpus record)
    and P2 (datagen options) fold into S082/S083 now.
+3. **S115's root fail-high depth reduction (DEC-245, 2026-09-30)**: adopt it
+   at the price of re-specifying three mate guards -- forced mates found one
+   to three iterations later in the guards' own cases (S074's, the mates in
+   two, the exact@10 golden) -- for a gain the record puts at +2 to +5 Elo at
+   Lynx's band? The fail-low pull ships alone meanwhile; the reduction's
+   three variant diffs land under `adocs/data/` with S115.
 
 ## 2026-09-28, later: S241 -- the S240 reports trimmed, history rewritten (DEC-235)
 

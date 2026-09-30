@@ -13546,3 +13546,58 @@ Consequences: S114's first verdict is the term at (3, 6); the guard suite's
               drive depth is derived from the constants by the step anyway,
               so a later refit cannot break its premise; S127's lane over
               the null move starts from the sweep's table.
+
+## DEC-245  2026-09-30  The root fail-high depth reduction is not adopted while the mate guards assert that an iteration searches its depth: S115 ships the fail-low pull alone
+Tags:         search, aspiration, mate-guards, tests, s115, s074, dec-141, dec-215, dec-244
+Context:      S115's second behaviour -- one ply off the root re-search per
+              consecutive root fail-high, the published form, under which
+              the iteration then completes at the reduced depth -- was built
+              beside S114's SPRT and read against the tree's mate guards
+              before any test was written. In the guards' own cases it makes
+              forced mates arrive late: the S074 case's first mate at
+              iteration 12 against 9 on the parent, with the case holding 10
+              iterations; the mates-in-two case 5 of 26 found by iteration
+              2m-1 against 26; the mined exact@10 golden 103 against its
+              floor of 143. The mechanism, read on the trace: a depth-3 root
+              search fails high on a material swing, the depth-2 re-search
+              lands inside the widened window and settles the iteration, and
+              depth 2 cannot see a three-ply mate; over the 300 sweep
+              positions 848 of 3300 iterations settle one to five plies
+              shallower than nominal. Variants measured -- the count reset by
+              the full-window escape (A), the count capped at 1 (B), the
+              first fail-high unreduced (C) -- give 5, 5 and 20 of 26 mates
+              in two, none green. The fail-low pull alone leaves every guard
+              green (9/9, 26 of 26, 148 against the floor of 143).
+Decision:     By the coordinator under the owner's delegation; the owner may
+              overrule. The reduction is not adopted on this engine as its
+              guards stand. Those guards assert that iteration d searches
+              depth d, which is the property the technique trades away by
+              design; relaxing them is a test decision the rules reserve to
+              the owner (never weaken a test), so the question is parked for
+              the owner with the record. The reduction's code leaves the
+              tree entirely -- no switch at 0, since DEC-215 keeps a switch
+              only for a planned second verdict and DEC-141 lets no reduction
+              rule ship without a guard test that passes -- and its record
+              stays in the step file and under `adocs/data/` as the three
+              variant diffs. S115 ships the fail-low pull alone at its seed,
+              one `{0, 5}` SPRT, with the widening ratio kept at 200 as a
+              parameter for S127: the sweep's 150 and 300 led on one sample
+              of three (DEC-244).
+Rejected:     Measuring the reduction anyway and re-specifying the three
+              guards to "a mate within k iterations": not the coordinator's
+              to decide, and the guards exist because pruning that hides a
+              mate is this engine's recurring bug. Keeping the reduction
+              behind a switch at 0 for a later verdict: dead code with no
+              passing guard test. Capping or gating it: variants A to C
+              rescue nothing, and the record says caps measured negative
+              elsewhere.
+Consequences: Owner question 3 in `status.md`: adopt the root fail-high
+              reduction at the price of re-specifying three mate guards,
+              forced mates found one to three iterations later, for a gain
+              the record puts at +2 to +5 Elo in another engine's band? If
+              yes, a new step re-adds it from the recorded diffs with the
+              guards re-specified by the owner's rule. S115's accepts
+              ("measured together only if inert apart, otherwise
+              separately") is met by the sweep: neither part was inert
+              apart, and the reduction's own verdict is the one the owner's
+              answer decides.
