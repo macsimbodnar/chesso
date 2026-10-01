@@ -5,7 +5,15 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-09-30, by hand.
+Updated: 2026-10-01, by hand.
+
+## 2026-10-01: S114 verdict 2's SPRT is without a verdict at the cap -- read as a zero, the entry gate leaves
+
+**`7c7328f` against `465b43b`, `Elo 1.07 +/- 2.61`, `nElo 1.40 +/- 3.40`,
+LLR -1.83, 40000 games in 19 h 7 m, 0 forfeits, 2026-10-01 20:09.** **No verdict at the 40000-game cap, the nElo interval [-2.00, +4.80] reaching above zero**: a zero by the pre-registration's third row (DEC-063). `NullMoveEvalGate` goes to 0, the proved off value, and the switch's code leaves with it on the H0 row's terms (the S238 pattern): the clause in `negamax_at`, its row, the `golden_defaults` row (72 -> 71), the `MANUAL.md` row, the direct case and `tools/mutants/S114_v2_entry_gate.py` (NG01 to NG03), the re-derived goldens back byte for byte; the eight repaired guard cases keep their drives, since each premise holds without the gate. A margin on the gate is S127's to try. The S170 budgets question on the gate tree is moot (DEC-246): the standing budgets are the reverted tree's.
+**Next:** the ledger; the removal by a fresh agent, cold-checked, landed with
+its second tier; then S114 completes on both verdicts. S247 and S249 the open
+fillers. Owner question 3 (DEC-245) open; the others unchanged.
 
 ## 2026-10-01, 10:10: the S170 budgets on the gate tree wait for S114 v2's verdict (DEC-246, the owner's)
 

@@ -1847,3 +1847,15 @@ ceiling of 0, the patch (`.tuning/coord/S114_v2/s170_budgets.patch`) waits on
 the owner, and the standing budgets are green; open finding 3 of the
 pre-registration says so.
 
+## Verdict 2's outcome (2026-10-01, the coordinator)
+
+**No verdict at the cap, 2026-10-01 20:09: `7c7328f` against `465b43b`, `Elo 1.07 +/- 2.61`,
+`nElo 1.40 +/- 3.40`, LLR -1.83, 40000 games in 19 h 7 m, 0 forfeits**
+(`adocs/data/S114_v2_sprt.log`, `adocs/data/S114_v2_sprt_pairs.txt`; marker
+`SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s114v2_20261001_005926`). **No verdict at the 40000-game cap, the nElo interval [-2.00, +4.80] reaching above zero**: a zero by the pre-registration's third row (DEC-063). `NullMoveEvalGate` goes to 0, the proved off value, and the switch's code leaves with it on the H0 row's terms (the S238 pattern): the clause in `negamax_at`, its row, the `golden_defaults` row (72 -> 71), the `MANUAL.md` row, the direct case and `tools/mutants/S114_v2_entry_gate.py` (NG01 to NG03), the re-derived goldens back byte for byte; the eight repaired guard cases keep their drives, since each premise holds without the gate. A margin on the gate is S127's to try. The S170 budgets question on the gate tree is moot (DEC-246): the standing budgets are the reverted tree's. `Incomplete mating PV` 32 for the candidate against 7 for the reference,
+an observation for the pre-registration's open finding 3's class (CHESS). The
+LLR wandered between -1.5 and +0.35 for the whole run and fell to -2.18 in
+the last hour before the cap: the truth sits between the bounds.
+No follow-up run and no second pair (DEC-063, DEC-019). The removal is built by
+a fresh agent and lands next; S114 completes on both verdicts after it.
+
