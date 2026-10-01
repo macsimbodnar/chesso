@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-09-30, by hand.
 
+## 2026-10-01, 10:10: the S170 budgets on the gate tree wait for S114 v2's verdict (DEC-246, the owner's)
+
+The owner deferred the budgets question to the verdict: on H0 or a zero the
+gate leaves and the standing budgets are the rule's answer again; on H1 the
+rule's budgets land with C's ceiling raised to the script's answer, the
+DEC-225 form, decided then. S114 v2's SPRT is running (07:59: 14647 games,
+`nElo 1.09 +/- 5.63`, LLR -0.86). Owner question 3 (DEC-245) open.
+
 ## 2026-10-01, 01:00: S114 verdict 2 (the entry gate) landed as `7c7328f`, pinned against `465b43b`
 
 `NullMoveEvalGate` 0 -> 1: the null move is tried only where the raw static

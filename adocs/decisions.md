@@ -13603,3 +13603,33 @@ Consequences: Owner question 3 in `status.md`: adopt the root fail-high
               separately") is met by the sweep: neither part was inert
               apart, and the reduction's own verdict is the one the owner's
               answer decides.
+
+## DEC-246  2026-10-01  The S170 budgets on S114 verdict 2's tree wait for its verdict
+Tags:         testing, mate, s170, s114, dec-142, dec-156, dec-162, dec-225
+Context:      DEC-156 as amended by DEC-162 re-derives `S170_cases.tsv`'s
+              budgets after anything that moves the tree. On S114 verdict 2's
+              landing `7c7328f` (the null move's entry gate on), the rule's
+              answer moves A 500000 -> 100000, C 1000000 -> 500000 and D
+              3000000 -> 1000000 (`.tuning/coord/S114_v2/s170_budgets.patch`,
+              grid `adocs/data/S114_v2_sweep_s170.txt` in the patch), and C's
+              new cell reports 4 mate lines, all short, over C's ceiling of 0,
+              so `test_mate_carry` goes red in both builds at the rule's
+              answer. The standing budgets (S115's) are green on that tree.
+              The budgets are a test's data and touch neither engine of the
+              running SPRT.
+Decision:     By the owner, 2026-10-01: defer until S114 verdict 2's SPRT
+              reads. On H0 or a zero the gate leaves and the tree is S115's
+              again, where the standing budgets are already the rule's answer,
+              so nothing moves. On H1 the rule's budgets land with C's ceiling
+              raised to the script's answer with this grid recorded (the
+              DEC-225 form), decided then in the H1 record's follow-up.
+Rejected:     Raising C's ceiling now (0 -> 4, or 6 with S115's grid also
+              recorded): a relaxation taken for a tree that may not survive
+              its verdict. Holding C at 1000000 while moving A and D: breaks
+              the budget rule for one row. Leaving the budgets without a
+              record: the re-derivation is owed, and this says when.
+Consequences: Until the verdict the tree carries S115's budgets, which are
+              green but not the rule's answer for `7c7328f`; S114_v2_sprt.sh's
+              open finding 3 names it. Whether S115's recorded grid joins the
+              `--ceilings` command (C 6 at its 4000000 cell) is open and is
+              taken up with the H1 path if it comes.
