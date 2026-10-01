@@ -6,11 +6,11 @@
 
 WHY THIS NEEDS A PATCHED TREE AND WILL NOT RUN WITHOUT ONE.
 
-tests/test_mate_breadth.cpp asserts that the engine finds at least 143 of the
-318 mined mates at the exact distance stockfish labelled them with. A floor is
-worth what its separation is worth, so the number below it has to be a measured
-reading and not an argument: the value the same set produces when the guard the
-floor protects is weakened.
+tests/test_mate_breadth.cpp asserts that the engine finds at least 145 (143
+until S250) of the 318 mined mates at the exact distance stockfish labelled
+them with. A floor is worth what its separation is worth, so the number below
+it has to be a measured reading and not an argument: the value the same set
+produces when the guard the floor protects is weakened.
 
 That value cannot be reached from a shipping binary any more. S142 narrowed
 `RfpMinPly`'s minimum to 2 on S145's evidence, so `setoption name RfpMinPly
@@ -164,7 +164,7 @@ def main():
                         help="commit to measure; the worktree is checked out "
                              "detached at it")
     parser.add_argument("--depth", type=int, default=10)
-    parser.add_argument("--floor", type=int, default=143,
+    parser.add_argument("--floor", type=int, default=145,
                         help="the floor tests/test_mate_breadth.cpp asserts")
     parser.add_argument("--jobs", type=int, default=8)
     parser.add_argument("--keep", action="store_true",

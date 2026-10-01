@@ -4662,13 +4662,15 @@ TEST_SUITE("engine: mate safety")
   // and the answer is almost entirely a function of the mate distance:
   //
   //   mate in 2   26 of 26 exact, delay 0
-  //   mate in 3   12 of 24 exact, delay up to 8
-  //   mate in 4    1 of 16
+  //   mate in 3   12 of 24 exact, delay up to 7
+  //   mate in 4    2 of 16
   //   mate in 5    0 of 16
   //
-  // Re-taken 2026-09-01 by S168 over the enlarged set; the same sweep over
-  // S145's 48 read 16/16, 9/16, 0/8 and 0/8. S145 itself read 8 of 16 mates in
-  // three at delay up to 4, and S165 guarded null move pruning at both edges of
+  // Re-taken 2026-10-01 by S250 at 3f7acd3 (`python3
+  // adocs/data/S154_floor_margin_sweep.py floor`); S168 first took it over the
+  // enlarged set on 2026-09-01. The same sweep over S145's 48 read 16/16,
+  // 9/16, 0/8 and 0/8. S145 itself read 8 of 16 mates in three at delay up to
+  // 4, and S165 guarded null move pruning at both edges of
   // the mate band and moved that number - the only movement seventeen commits
   // produced, which S154 established by rebuilding at each of them.
   //
@@ -4676,7 +4678,7 @@ TEST_SUITE("engine: mate safety")
   // else, because all three of those cases were mates in two. Asserting that
   // every position is found would assert something this engine has never done
   // and no setting of reverse futility makes true - the mates in four and five
-  // are 1 of 16 and 0 of 16 with the guard at its strictest setting too. A test
+  // are 2 of 16 and 0 of 16 with the guard at its strictest setting too. A test
   // demanding it would be red on arrival and would be weakened to clear it,
   // which is what happened to the two surveyed projects that wrote per-position
   // mate tests.
@@ -4697,33 +4699,36 @@ TEST_SUITE("engine: mate safety")
   // assertion that fences the tuner, and it asks for two things where the
   // count alone asks for one: the mate is found, and `first_exact` is 2m - 1.
   // At RfpMinPly 2 and above it is 26 of 26, found and on time. At 1 and 0 it
-  // is 21 of 26 found and only **15 of 26 on time**, so what goes red here is
-  // eleven positions. 0 and 1 are the same engine - the root is exempted by
+  // is 20 of 26 found and only **13 of 26 on time**, so what goes red here is
+  // thirteen positions. 0 and 1 are the same engine - the root is exempted by
   // !is_pv, not by this parameter - so this goes red at exactly the value
   // S085's run spent 906 of 1250 iterations at. The clause got stronger when
   // S168 enlarged the set: over the 48 it was 13 of 16 found and 9 on time,
-  // seven positions rather than eleven, and the ten mates in two S168 added -
+  // seven positions rather than thirteen, and the ten mates in two S168 added -
   // eight rook, two knight - are all found on time at the shipping defaults.
   //
-  // **A floor on the mate in three count.** 12 of 24 at the shipping floor, 10
-  // at RfpMinPly 1, 21 at RfpMinPly 4. The floor is 11, strictly between the
+  // **A floor on the mate in three count.** 12 of 24 at the shipping floor, 7
+  // at RfpMinPly 1, 20 at RfpMinPly 4. The floor is 11, strictly between the
   // shipping value and the removed-guard value, and it tolerates one loss.
   //
   // Split by motif, because the split says which rows carry the separation:
-  // the 16 queen mates in three read 9 shipping, 7 removed, 14 at RfpMinPly 5,
-  // which is S154's reading over the 48 reproduced exactly - 34 added positions
-  // moved none of the old verdicts. The 8 rook mates in three read 3, 3 and 7,
-  // so they lift both ends by a constant and do not widen the gap. The floor
-  // moved from 8 to 11 for that reason and not because the guard got easier to
-  // catch.
+  // at S168 the 16 queen mates in three read 9 shipping, 7 removed, 14 at
+  // RfpMinPly 5, which was S154's reading over the 48 reproduced exactly - 34
+  // added positions moved none of the old verdicts - and the 8 rook mates in
+  // three read 3, 3 and 7, lifting both ends by a constant without widening the
+  // gap. The floor moved from 8 to 11 for that reason and not because the guard
+  // got easier to catch. S250's re-reading (2026-10-01) is queen 10, 4 and 14,
+  // rook 2, 3 and 6: the queen rows now carry more than the whole gap and the
+  // rook rows run one the other way, weakened above shipping.
   //
   // **The floor is re-derived whenever either end of it moves, DEC-116, and
   // this is the second time.** It was 7 while the ends were 9 and 7, where
   // `7 >= 7` could not fail for the reason it exists; S154 re-derived it as 8
   // on 2026-09-01, and S168's positions moved both ends the same day - 12 and
-  // 10 - so it is 11 now. The rule is the point: a set change or a search
-  // change that moves either end obliges the number to be taken again, not
-  // read again.
+  // 10 - so it is 11 now. S250 re-read the ends as 12 and 7 on 2026-10-01;
+  // 11 still separates, so it stayed. The rule is the point: a set change or a
+  // search change that moves either end obliges the number to be taken again,
+  // not read again.
   //
   // **The claim that it fails when the guard fails and not when the tree
   // shifts underneath it is a measurement.** S154 ran the 48 through the binary
@@ -4733,16 +4738,17 @@ TEST_SUITE("engine: mate safety")
   // moved exactly one and moved it upward. The table sweep moved the node total
   // by 5.9 % over the whole set and 17 % over the mates in three, so the tree
   // did shift and the verdicts did not follow it. Against that, one ply of the
-  // guard itself moves nine positions over the enlarged set - 4 to 3 is a churn
-  // of 9 - so the count is sensitive to the thing it fences and inert to
-  // everything else. adocs/data/S154_floor_margin_sweep.log and
-  // adocs/data/S168_floor_sweep.log.
+  // guard itself moves eight positions over the enlarged set - 4 to 3 is a
+  // churn of 8 at S250's reading, 9 at S168's - so the count is sensitive to
+  // the thing it fences and inert to everything else.
+  // adocs/data/S154_floor_margin_sweep.log and adocs/data/S168_floor_sweep.log.
   //
-  // The mate in four and five counts are **recorded and not asserted**: 1 of 16
-  // and 0 of 16, and a floor of one asserts almost nothing. What recovers them
-  // is the depth ceiling and not the ply floor - over the 82 the ceiling reads
-  // 13 of 16 and 11 of 16 at RfpMaxDepth 0 against 1 and 0 from 10 up, and
-  // S085 tuned that ceiling from S033's 6 to 15.
+  // The mate in four and five counts are **recorded and not asserted**: 2 of 16
+  // and 0 of 16, and a floor of one or two asserts almost nothing. What
+  // recovers them is the depth ceiling and not the ply floor - over the 82
+  // S148's ceiling sweep read 13 of 16 and 11 of 16 at RfpMaxDepth 0 against
+  // 1 and 0 from 10 up (2026-09-09, not re-taken since), and S085 tuned that
+  // ceiling from S033's 6 to 15.
   //
   // **S148 re-decided that ceiling on 2026-09-09 and it stays at 15**, so
   // these two counts stay recorded and this comment is where the reason lives.
@@ -4762,17 +4768,18 @@ TEST_SUITE("engine: mate safety")
   //
   // GOLDEN (DEC-142): 11, the fewest exact mates in three the engine
   // may find over the 82 constructed positions at depth 2m - 1 +
-  // MATE_DEPTH_SLACK. Its two ends are above: 12 at the shipping guard, 10 with
-  // the guard weakened by one ply. Re-derive: python3
-  // adocs/data/S154_floor_margin_sweep.py floor, and mode `red` for the
+  // MATE_DEPTH_SLACK. Its two ends are above: 12 at the shipping guard, 7 with
+  // the guard weakened (RfpMinPly 1), read by S250 on 2026-10-01. Re-derive:
+  // python3 adocs/data/S154_floor_margin_sweep.py floor, and mode `red` for the
   // weakened end; adocs/data/S168_floor_sweep.log is the reading over the
   // enlarged set. Moves legitimately on: a search change that costs or buys
   // mate finding, and a change to the position set -- either end moving obliges
-  // the number to be taken again, not read again. Margin: 1 on each side, which
-  // is the narrowest DEC-116 accepts, and is why the split by motif is recorded
-  // above. Property beside it: the two assertions that are defects at any count
-  // -- no mate score for the side being mated, and none closer than the proved
-  // minimum -- which carry no floor at all.
+  // the number to be taken again, not read again. Margin: 1 below the shipping
+  // count, which is the narrowest DEC-116 accepts and is why the split by motif
+  // is recorded above, and 4 above the weakened one. Property beside it: the
+  // two assertions that are defects at any count -- no mate score for the side
+  // being mated, and none closer than the proved minimum -- which carry no
+  // floor at all.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

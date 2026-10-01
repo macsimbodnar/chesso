@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-01, by hand.
 
+## 2026-10-01: S250 done -- the mate-breadth floor separates again
+
+`EXACT_FLOOR` 143 -> 145 by S156's script (146 shipping, 143 weakened); the
+gate built at `RfpMinPly` 1 is red again. `MATE_IN_THREE_FLOOR` still
+separates and stays at 11; its stale prose and both manuals re-read. No open
+filler remains. **Next:** S116 (a node hopelessly below alpha drops to
+quiescence at depth one), a pruning step: fresh agent, its pre-registration,
+landing, second tier, pin and `{0, 5}` SPRT. Owner question 3 (DEC-245) open.
+
 ## 2026-10-01: S249 done on two items; S250 created first in Open (DEC-247)
 
 S132's docstring names its real offsets; `MATE_IN_THREE_FLOOR`'s comment was

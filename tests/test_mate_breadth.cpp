@@ -38,22 +38,24 @@
 // direction: a change that costs mate finding generally, anywhere in the tree,
 // on positions nobody chose.
 //
-// WHERE THE FLOOR COMES FROM. Measured at HEAD on the machine
-// .moltke.local.md describes, depth 10, Hash at its default 16:
+// WHERE THE FLOOR COMES FROM. Measured at 3f7acd3 on the machine
+// .moltke.local.md describes, depth 10, Hash at its default 16 (S250):
 //
 //                          exact   any   wrong sign
-//   RfpMinPly 3 (ships)      145   147            0
-//   RfpMinPly 2              145   147            0
-//   RfpMinPly 1              141   143            0
-//   RfpMinPly 0              141   143            0
+//   RfpMinPly 3 (ships)      146   149            0
+//   RfpMinPly 2              146   150            0
+//   RfpMinPly 1              143   145            0
+//   RfpMinPly 0              143   145            0
 //
-// 143 sits strictly between the shipping value and the value the weakened
+// 145 sits strictly between the shipping value and the value the weakened
 // guard produces, which is the property that matters: it goes red when the
-// guard goes and not when the tree shifts under it. S145 placed the same floor
-// on the same rule at 146 against 139; the tree has moved since - S142, S149
-// and S165 all alter play - and the gap has narrowed from 7 to 4, which is a
-// reason to re-measure the floor when it next goes red rather than to lower it
-// reflexively.
+// guard goes and not when the tree shifts under it. S145 placed 143 on this
+// rule at 146 against 139; S156 re-measured 145 against 141 and kept 143.
+// By S249 the weakened reading had risen to 143, the floor itself, and the
+// gate built at the weakened default went green; S250 raised the floor to 145
+// on the same rule. The gap has narrowed from 7 to 4 to 3, which is a reason
+// to re-measure the floor when it next goes red, or stops going red, rather
+// than to lower it reflexively.
 //
 // Reproduce the table with adocs/data/S156_mined_floor_sweep.py. It needs a
 // patched bound and says why: S142 narrowed RfpMinPly's minimum to 2, so the
@@ -77,21 +79,23 @@
 // test_engine.
 static constexpr int SCORE_DEPTH = 10;
 
-// GOLDEN (DEC-142): 143, the fewest exact mate distances the engine may find
+// GOLDEN (DEC-142): 145, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends are
-// tabled above: 145 with the guard shipping, 141 with it weakened.
-// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py, which builds a
-// throwaway worktree because the red end is no longer reachable by setoption.
+// tabled above: 146 with the guard shipping, 143 with it weakened.
+// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 145, which
+// builds a throwaway worktree because the red end is no longer reachable by
+// setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 2 below the shipping count, 2 above the weakened one. The gap was 7
-// when S145 placed the same floor at 146 and is 4 now, so a red here is a
-// reason to re-measure the table rather than to lower the number.
+// Margin: 1 below the shipping count, 2 above the weakened one. A gap of 3
+// cannot be split evenly; the spare point goes above the weakened end because
+// that is the end that has moved, 139 to 141 to 143, and its rise is what
+// closed the separation at 143.
 // Property beside it: the `wrong_sign == 0` assertion in the same case -- a
 // mate score for the side being mated is a defect at any total, so it is
 // asserted at zero and carries no floor.
-static constexpr int EXACT_FLOOR = 143;
+static constexpr int EXACT_FLOOR = 145;
 
 
 struct row_t
