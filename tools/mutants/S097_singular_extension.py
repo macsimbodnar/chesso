@@ -185,15 +185,17 @@ m("E09_store_gate_dropped", S, "search/extension",
 
 # E10's anchor was re-pointed at S114, which moves the null-move floor inside
 # the block and puts the entry gate's switch in the line the exclusion sits
-# on. The mutation is unchanged: `excluded_move == 0 && ` comes off the
-# null-move condition and nothing else does.
+# on, and again at S114 verdict 2's removal, which takes the gate's clause out
+# and lets the condition reflow onto the mate band's two edges. The mutation
+# is unchanged: `excluded_move == 0 && ` comes off the null-move condition and
+# nothing else does.
 m("E10_nmp_gate_dropped", S, "search/extension",
   'the excluded node passes. A null-move bound answers the verification with '
   'no alternative searched at all, which is the one thing that search exists '
   'to do -- the node fails high on the pass, the table move is called not '
   'singular, and nothing looked at a move',
-  ('      excluded_move == 0 && (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&',
-   '      (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&'),
+  ('      excluded_move == 0 && beta < MATE_MIN && beta > -MATE_MIN &&',
+   '      beta < MATE_MIN && beta > -MATE_MIN &&'),
   origin="S097")
 
 m("E11_rfp_gate_dropped", S, "search/extension",

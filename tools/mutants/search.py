@@ -37,6 +37,13 @@ S = "src/search.cpp"
 # S114's removal**, which takes out the assert whose comment that first line
 # was: the anchor carries the block's first comment line as it now stands, and
 # the mutation is again unchanged.
+#
+# **M02's and M03's anchors were re-pointed at S114 verdict 2's removal**,
+# which takes the entry gate's clause out of the null-move condition and lets
+# it reflow: the mate band's two edges join the exclusion's line and
+# `game_phase(&game->board) > 0) {` starts the next. The mutations are
+# unchanged -- M02 drops `beta > -MATE_MIN && `, M03 turns the phase test into
+# `true`.
 
 
 m("M01_nmp_in_check", S, "search/pruning",
@@ -47,14 +54,16 @@ m("M01_nmp_in_check", S, "search/pruning",
 
 m("M02_nmp_mate_band_neg", S, "search/pruning",
   'S165 guard dropped: null move at beta <= -MATE_MIN',
-  ('      beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {',
-   '      beta < MATE_MIN && game_phase(&game->board) > 0) {'),
+  ('      excluded_move == 0 && beta < MATE_MIN && beta > -MATE_MIN &&\n'
+   '      game_phase(&game->board) > 0) {',
+   '      excluded_move == 0 && beta < MATE_MIN &&\n'
+   '      game_phase(&game->board) > 0) {'),
   origin="2026-09-04_test_review")
 
 m("M03_nmp_zugzwang", S, "search/pruning",
   'null move in pawn endings (game_phase 0)',
-  ('&& game_phase(&game->board) > 0) {\n    // Deeper searches can afford',
-   '&& true) {\n    // Deeper searches can afford'),
+  ('      game_phase(&game->board) > 0) {\n    // Deeper searches can afford',
+   '      true) {\n    // Deeper searches can afford'),
   origin="2026-09-04_test_review")
 
 m("M04_nmp_mate_artifact", S, "search/pruning",

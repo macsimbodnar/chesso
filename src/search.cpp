@@ -1844,22 +1844,14 @@ static int negamax_at(int alpha0,
   //                 one thing that search exists to do. Gated on the exclusion
   //                 directly and never by abusing `prev_move`, which has to
   //                 keep flowing for the countermove and continuation tables
-  //   static score below beta  S114's entry gate, behind `NullMoveEvalGate`,
-  //                 **on at 1 since S114's second verdict** (DEC-243), measured
-  //                 by `adocs/data/S114_v2_sprt.sh` on the tree the first
-  //                 verdict left; at 0 the clause is always true and the tree
-  //                 is that one, node for node. In check `static_eval` is the
-  //                 sentinel `TT_EVAL_NONE`, and `!is_in_check` short-circuits
-  //                 before the gate reads it. A pass claims the node stands
-  //                 above beta even without its move, and the published form
-  //                 asks the node's own static score to be there already -- the
-  //                 wiki's Fruit tried the null move only on a static
-  //                 evaluation greater than beta. The raw static score and not
-  //                 the table-tightened estimate; a corrected input is S127's
-  //                 to try
+  //
+  // **S114 tried an entry gate here** (verdict 2): the null move only where the
+  // node's raw static score stood at or above beta. Its `{0, 5}` nElo SPRT
+  // reached the 40000-game cap without a verdict, `nElo 1.40 +/- 3.40`, read as
+  // a zero, and the clause and its switch left with the reading.
   if (!is_pv && !is_in_check && ply > 0 && prev_move != 0 &&
-      excluded_move == 0 && (NULL_MOVE_EVAL_GATE == 0 || static_eval >= beta) &&
-      beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {
+      excluded_move == 0 && beta < MATE_MIN && beta > -MATE_MIN &&
+      game_phase(&game->board) > 0) {
     // Deeper searches can afford to give up more, since what is left is still
     // enough to answer the question.
     //

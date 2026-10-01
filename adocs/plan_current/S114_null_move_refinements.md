@@ -1859,3 +1859,298 @@ the last hour before the cap: the truth sits between the bounds.
 No follow-up run and no second pair (DEC-063, DEC-019). The removal is built by
 a fresh agent and lands next; S114 completes on both verdicts after it.
 
+## Verdict 2's removal, 2026-10-01
+
+Written by a fresh Opus agent on the linked worktree `s114v2rm` at `f9c35dd`,
+briefed from `.tuning/coord/S114_v2_rm_brief.md`, on the idle machine.
+Nothing was committed or staged by this agent. Logs are this worktree's
+`.tuning/coord/S114_v2rm/`, cited below by file name, for the coordinator to
+carry into the main tree's. Implemented from this file's own description of
+what verdict 2 put in ("Verdict 2, as built: the entry gate"); no other
+engine's code was opened. **The reading, from the coordinator**: `7c7328f`
+against `465b43b`, `{0, 5}` nElo at 8+0.08, **no verdict at the 40000-game
+cap -- `nElo 1.40 +/- 3.40`, LLR -1.83** (`adocs/data/S114_v2_sprt.log`), an
+interval reaching above zero. The pre-registration's third row, written
+before the first game: "**a zero, read the same way (DEC-063)** ... the gate
+goes to its off value with its code on the H0 row's terms, the repaired cases
+staying for the reason given there." This section executes it.
+
+**How.** By hand against `f9c35dd`: the gate's clause and its guard-list entry
+out of `src/search.cpp` `negamax_at`, a two-sentence history note where the
+entry was; the gate's row and comment block out of `src/search_params.hpp`'s
+X-macro and the `RfpTtEstimate` routing sentence back to a no-condition form;
+the direct case, the helper's and two cases' gate assertions and N02's
+tune-only leg out of `tests/test_search.cpp`, the two goldens restored with
+record paragraphs; one row out of `tests/test_search_params.cpp`;
+`tools/mutants/S114_v2_entry_gate.py` deleted, four anchors re-pointed;
+`MANUAL.md` and `DEV_MANUAL.md` by hand. `adocs/data/S170_cases.tsv` is
+untouched.
+
+### Deviations and findings, first
+
+1. **Three anchors beyond E10's were re-pointed: M02, M03 and N02.** With the
+   clause gone `clang-format` reflows the null-move condition -- `beta <
+   MATE_MIN && beta > -MATE_MIN &&` joins the exclusion's line and `game_phase(&game->board) > 0) {`
+   starts the next -- and the old anchors of M02, M03 and N02 (in
+   `tools/mutants/search.py` and `tools/mutants/S191_guards.py`) carried the
+   old line. Each now carries the reflowed text; every mutation is unchanged
+   (M02 drops `beta > -MATE_MIN && `, M03 turns the phase test into `true`,
+   N02 drops `beta < MATE_MIN && `, E10 drops `excluded_move == 0 && `), and
+   each file's note says so. The brief named E10 alone.
+2. **Two hand-written copies of the gate assertion left with the helper's.**
+   The brief names "the helper's gate assertion"; M03's case ("a node with
+   only kings and pawns makes no null move") and M04's ("a null-move
+   fail-high against a mate returns the bound") each asserted the same
+   `(NULL_MOVE_EVAL_GATE == 0 || evaluate(&game.board) >= beta)` by hand, and
+   it reads the switch that leaves, so both went. No other assertion of the
+   eight cases moved: the code diff of `tests/test_search.cpp` against
+   `465b43b` is exactly the repaired drives (`beta` at `evaluate()`, M01's at
+   `TT_EVAL_NONE` with its `REQUIRE(TT_EVAL_NONE >= beta)`, M04's 40000 ->
+   `evaluate()`), the rest comments and the restored goldens.
+3. **M01's `REQUIRE(TT_EVAL_NONE >= beta)` stays.** It was the gate's admit
+   condition written as an assertion, but it reads no switch and it is one of
+   the assertions the row keeps ("every assertion is the one it was"). Its
+   comment now says it is history. Trivially true at `beta = TT_EVAL_NONE`.
+4. **Comments that spoke of the gate in the present tense were put in the
+   past tense** where they stay as history: `ORDINARY_BETA`'s, M01's, M04's,
+   the five short "the entry gate admits the pass" notes beside the repaired
+   drives (now pointing at `ORDINARY_BETA`'s comment), the capture table's
+   S114 v2 paragraph, `tests/test_search_params.cpp`'s history comment (which
+   also said the gate "ships at 0"). No assertion text changed.
+5. **The multicut and capture-table record paragraphs say "restored"** in the
+   form verdict 1's removal took; the multicut's row list now quotes S114 v2's
+   FEN as its own entry and S131's entry reads "and again after S114 verdict
+   2's reading", "the row below".
+6. **`tools/mutation_check.py` ran at its default `--jobs` (12)**, not `-j8`;
+   the machine was otherwise idle and nothing else ran beside it.
+
+### What left
+
+| what | where |
+|---|---|
+| the clause `(NULL_MOVE_EVAL_GATE == 0 \|\| static_eval >= beta)` in the null-move condition and its guard-list entry ("static score below beta"); a two-sentence note in the comment says S114 tried the gate and what its SPRT read, the form verdict 1's term note took | `src/search.cpp` `negamax_at` |
+| `NULL_MOVE_EVAL_GATE` ("NullMoveEvalGate", 1, 0 to 1) and its comment block; the `RfpTtEstimate` routing sentence goes back to "no static-score condition in this engine", naming both S114 verdicts as tried and left | `src/search_params.hpp`, the one X-macro both builds read |
+| the case "the null move's entry gate refuses a static score below beta"; the gate assertion in `require_null_move_preconditions` and its comment paragraph; the hand-written gate assertions in M03's and M04's cases; N02's tune-only leg at gate 0 and its comment | `tests/test_search.cpp` |
+| the `NullMoveEvalGate` row, 72 -> 71, the GOLDEN line's count with it | `tests/test_search_params.cpp` `golden_defaults` |
+| NG01 to NG03, the file deleted; N02's `expected="equivalent"` and its comment | `tools/mutants/S114_v2_entry_gate.py`, `tools/mutants/S191_guards.py` |
+| the `NullMoveEvalGate` option row | `MANUAL.md` |
+
+`grep -rn 'NullMoveEvalGate\|NULL_MOVE_EVAL_GATE' src tests tools` finds four
+lines, all history text: two comments of `tests/test_search.cpp` (the
+multicut and capture-table record paragraphs) and two of
+`tests/test_search_params.cpp`'s count history; nothing in `src/` or
+`tools/` (`grep_final.log`).
+
+### What stayed, and why
+
+The H0 row's own words, which the third row applies: "the eight repaired
+guard cases keep their drives at the node's own static score (and the
+in-check case at `TT_EVAL_NONE`), because each premise holds without the gate
+as well -- a beta at the static score is an ordinary window -- and every
+assertion is the one it was". So H03, T08, E10, N01, M03 and M04 drive at
+`evaluate()` on the wiped table, M01 at `TT_EVAL_NONE`, and N02's release leg
+is unchanged. Also kept: the floor inside the block and the derived
+`NULL_DRIVE_DEPTH`, both verdict 1's; `adocs/data/S114_v2_sprt.sh`,
+`S114_v2_sprt.log`, `S114_v2_sprt_pairs.txt` and `S114_v2_remine_s097.log`
+with their README rows; `DEV_MANUAL.md`'s two verdict 2 ledger paragraphs,
+which are their record.
+
+### The goldens' return (DEC-142, DEC-233)
+
+1. **The multicut row** of "pruning does not hide a forced mate"
+   (`mate_the_multicut_hides`): verdict 2's
+   `4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42`, depth 14, `mate_in == 6`,
+   becomes S131's row as `465b43b` has it,
+   `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42`, depth 14,
+   `mate_in == 6` -- one line; the title and the distance never moved. The
+   GOLDEN block's verdict 2 paragraph becomes "RE-MINED AT S114'S SECOND
+   VERDICT, IN THE SCRIPT'S GUARD MODE, AND RESTORED WHEN THE GATE LEFT".
+   **Observed red under E21** on this tree: E21 applied by hand to a copy of
+   this worktree's `src/` and `tests/`, and the case fails at the row's
+   `REQUIRE( result.mate_found )`, logged "mate the multicut hides, depth 14",
+   after 40 of its 41 assertions passed (`e21_case.log`); green shipped, 57 of
+   57 (`e21_case_shipped.log`).
+2. **The capture-mate table's row 4 label**: `{..., 10, 5, "no S091 mutant,
+   since S114"}` -> `{..., 10, 5, "R02, since S248"}`, `465b43b`'s. Depths 7,
+   7, 10, 10 and the other three labels never moved. Not re-swept: the
+   reverted tree is `465b43b`'s engine to the node (below), the tree S248's
+   label was read on.
+3. **`golden_defaults`**: 72 rows -> 71, the `NullMoveEvalGate` row gone;
+   the history comment says so.
+
+### The proofs (INV-6, DEC-215)
+
+Against a Release build of `465b43b` in the throwaway worktree
+`.ref-builds/465b43b` (deleted after), its binary kept as `ref_465b43b_chesso`,
+sha256 `f5b7e895...` -- the same bytes as verdict 2's kept reference.
+
+| | |
+|---|---|
+| `bench` | **3513310**, the whole 121-line stream -- 112 `info` lines' depth, score, nodes and PV and all eight replies, c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6 -- identical with `time` and `nps` stripped (`bench_ref.txt`, `bench_wt.txt`, the `_stripped` pair) |
+| `bench 12` | **1619863**, its 105-line stream identical the same way |
+| `tools/search_bench.py` | node for node and move for move: depth 9 34236 / 71552 / 25351, depth 12 70283 / 240680 / 80264, best c3d5 e2a6 d7c8q at both (`sb9_*`, `sb12_*`, the `_counts` files) |
+| the tune build at defaults | `bench`, `bench 12` and `search_bench` at 9 and 12 identical to the reference the same way (`bench_tune*`, `sb*_tune*`) |
+| the tune build's options | 76 option lines, 71 of them the search table's; `NullMoveBase` and `NullMoveDivisor` and no `NullMoveEvalGate` (`tune_uci.txt`); the Release build lists 5 |
+
+### Mutation (DEC-141 clause 2)
+
+`tools/mutation_check.py tools/mutants .ref-builds/mut --only M01 M02 M03 M04
+N01 N02 H03 T08 E10 E21 R02`, `CLANG_FORMAT_MAJOR=22` exported, on a fresh
+throwaway fixture: `9b0c930`, a commit object on no branch made from this
+working tree (before this section was written) through a temporary index,
+in `.ref-builds/mut` (deleted after). Header: `baseline green, 41 tests, bench
+3513310 nodes via engine`, **all 160 anchors validated** (163 at verdict 2's
+build less NG01 to NG03; also checked in-process with the tool's own
+`load_mutants` and `validate`, `mutant_anchors.log`). **Mutation score 11 of
+11 (100 %), 11 killed, none declared equivalent**, wall 1223 s
+(`mutation/mutation.log`, `mutation/logs/results.tsv`). A first launch
+without `CLANG_FORMAT_MAJOR` refused at a red baseline
+(`test_clang_format_script`, the machine has no clang-format 23) and is kept
+as `mutation_refused_noenv/`; nothing was mutated in it.
+
+| mutant | killed by, here | at verdict 2's build | on `465b43b` |
+|---|---|---|---|
+| M01 | SIGSEGV in its own case's binary and six others | killed, SIGSEGV | killed (no gate) |
+| M02 | the defender case and the multicut row of "pruning does not hide a forced mate"; `test_mate_carry` | killed, its own case | killed by the defender case |
+| M03 | its own case, on the re-pointed anchor | killed | killed |
+| M04 | `REQUIRE_EQ( score, beta )` | killed | killed |
+| N01 | its own case, and the multicut case's `se_verified` | killed | killed |
+| **N02** | **its own case**, "a node at the positive edge of the mate band makes no null move", at `REQUIRE( !probe.null_move_made )`, on the re-pointed anchor | **declared equivalent** in Release, a tune-only leg red | killed |
+| H03 | its own case; `test_mate_carry` | killed | killed |
+| T08 | its own case and the node-type walk; `test_mate_carry` | killed | killed |
+| E10 | its own case, on the re-pointed anchor | killed | killed |
+| E21 | the restored S131 multicut row and S243's direct case | killed by both, on the re-mined row | killed by both |
+| R02 | the capture table and "a capture is not reduced" | killed | killed |
+
+**N02's status, with its reason**: equivalent in the release build only while
+the gate stood, because the gate refused every beta in the mate band before
+the positive edge was read (the static score never reaches the band). With
+the gate gone the edge is again the only thing between that node and a pass,
+so the release leg kills it alone, as on `465b43b`; the declaration and the
+tune-only leg left with the switch they read. The `465b43b` column is the
+mutant files' `expected` there (all `killed`, N02 undeclared) and this step's
+earlier records -- verdict 1's removal's hand checks of M02, M03, E10 and E21,
+verdict 2's "Every red at gate 1" -- not a fixture run on `465b43b` itself,
+which was not made here.
+
+### Suites and checks
+
+| | |
+|---|---|
+| both fast suites | `ctest -L fast` with `CLANG_FORMAT_MAJOR=22` exported, one build at a time, `-j8` builds: **41 of 41 each**, Release `build` and `-DCHESSO_TUNE=ON` `build-tune`, at the standing S170 budgets (`fast_release.log`, `fast_tune.log`). Run again on the final tree with this section in it: 41 of 41 each again, Release 103.9 s and tune 105.0 s, `test_mate_carry` 34.10 s and 34.91 s against its 120 s ceiling, `bench` 3513310 in both builds (`fast_release_final.log`, `fast_tune_final.log`) |
+| format | `./clang-format.sh --check` clean with `CLANG_FORMAT_MAJOR=22` |
+| prose | `tools/plan_prose_check.py`, one mode per call, on the final tree: `--citations` 0 flagged over 37 files, `--touches` 0 flagged, `--params` exit 0 with no output (`prose--citations.log`, `prose--touches.log`, `prose--params.log`) |
+| Debug | a `Debug` build of `test_search`: the guard suite "search: pruning and reduction guards" **82 of 82**, 50239 assertions (83 at verdict 2 less the direct case), and the whole binary **182 of 182**, 809610 assertions, run from `tests/` as `ctest` runs it (`debug_guards.log`, `debug_test_search_whole.log`) |
+| mutant anchors | 160 in 20 files, every anchor unique, no NG id left (`mutant_anchors.log`) |
+| the UCI surface | `test_uci_surface` green in both builds with no refresh: the Release build's 5 options never listed the gate, and the tune build's lines are generated from the same table, 76 with the gate gone |
+
+### S170's budgets: not re-swept (DEC-246)
+
+The owner's decision, recorded before the verdict: on H0 or a zero the gate
+leaves and the standing budgets are the rule's answer again. The standing
+`adocs/data/S170_cases.tsv` was derived on S115's tree, which is `465b43b`'s
+engine, and the reverted engine is `465b43b`'s node for node (the proofs
+above), so the grid that produced those budgets is this tree's grid.
+`test_mate_carry` is green in both builds at them. The held verdict 2 patch
+(`.tuning/coord/S114_v2/s170_budgets.patch`) was for the gate's tree and is
+moot.
+
+### Not run here
+
+- DEC-141's second tier -- the Debug self-play, a match, and
+  `tools/gate_extra.sh` -- by the brief; the coordinator's.
+- Any SPRT, fit or timing.
+- The full mutation pass over all 160 mutants; only the eleven above.
+- The S170 sweep (DEC-246, above).
+- The Debug fast suite as a whole; only `test_search` was built and run in Debug.
+
+### Proposed `adocs/specs.md` edits, for the coordinator
+
+Quoted against `specs.md` at `f9c35dd`, both in the `search` row.
+
+**1. The S114 v2 sentence**, from "Since S114's second verdict the null move
+is tried only where" through "read as a zero, so the gate leaves with its
+removal, which lands next." inclusive, becomes, in the form verdict 1's
+removal took:
+
+> **An entry gate on the null move was tried and left, S114 verdict 2, landed
+> 2026-10-01 and removed the same day (DEC-243)**: the null move was tried
+> only where the node's raw static evaluation stood at or above beta,
+> `NullMoveEvalGate` at 1, in check `!is_in_check` keeping the gate from
+> reading `TT_EVAL_NONE`; `NullMoveEvalGate` 0 gave the tree before it node for
+> node (DEC-215). Before any game it moved `bench` 3513310 -> 4041913 and the
+> fixed-node depths 48 -> 48 -- reach, not a forecast (DEC-239). Its one
+> `{0, 5}` nElo SPRT against the tree without it (`adocs/data/S114_v2_sprt.sh`)
+> **reached the 40000-game cap without a verdict on 2026-10-01 -- `Elo 1.07
+> +/- 2.61`, `nElo 1.40 +/- 3.40`, LLR -1.83, 0 forfeits**
+> (`adocs/data/S114_v2_sprt.log`), an interval reaching above zero, read as a
+> zero (DEC-063): the switch left with its clause, and the goldens re-derived
+> for the candidate were restored with it -- `bench` 3513310, bench-identical
+> to `465b43b`'s (INV-6). The eight null-move guard cases it repaired keep
+> their drives at the node's own static score, since each premise holds
+> without the gate. A margin on the gate, or a table-corrected input, is
+> S127's to try.
+
+The next sentence, "The floor stays inside the block, where without the term
+it tests what it tested before S114.", stays as it is.
+
+**2. The routing clause** in the reverse-futility estimate's sentence: "This
+engine's null-move block has one static-score condition, its entry gate
+`NullMoveEvalGate`, on since S114's second verdict, which reads the raw static
+evaluation and never the estimate, and razoring does not exist until S116, so
+reverse futility is the whole of the routing." becomes:
+
+> This engine's null-move block has no static-score condition -- S114 tried
+> two, a reduction term (verdict 1) and an entry gate (verdict 2), each
+> reading the raw static evaluation, and both left with their verdicts -- and
+> razoring does not exist until S116, so reverse futility is the whole of the
+> routing.
+
+### Proposed commit text, for the coordinator
+
+Not a verdict-closing commit: `cccf788` carried the DEC-220 block. The
+coordinator appends its trailer after the `Bench:` line.
+
+```
+Remove S114 v2's null-move entry gate on its zero
+
+The null move's entry gate read as a zero. The SPRT of 7c7328f, the
+gate at NullMoveEvalGate 1, against 465b43b, the tree without it, {0, 5}
+nElo at 8+0.08, reached the 40000-game cap without a verdict: nElo 1.40
++/- 3.40, LLR -1.83. adocs/data/S114_v2_sprt.sh wrote that reading and
+its consequence before the first game -- the gate to its off value and
+the switch's code out with it on the H0 row's terms, the S238 pattern --
+so this is the pre-registration executed.
+
+Out: the clause in negamax_at's null-move condition and its guard-list
+entry; NULL_MOVE_EVAL_GATE and its comment; the case "the null move's
+entry gate refuses a static score below beta" and NG01 to NG03 with
+tools/mutants/S114_v2_entry_gate.py; the helper's gate assertion and
+its two hand-written copies; N02's tune-only leg and its equivalence
+declaration; the golden_defaults row, 72 -> 71; the MANUAL row.
+
+Stays, by the row: the eight repaired null-move guard cases keep their
+drives at the node's own static score and the in-check case at
+TT_EVAL_NONE, since each premise holds without the gate. The condition
+reflows without the clause, so E10's, M02's, M03's and N02's anchors are
+re-pointed, every mutation unchanged.
+
+Back to 465b43b's: S131's multicut row of "pruning does not hide a
+forced mate" at depth 14, mate in 6, which E21 applied by hand turns red
+again, and the capture-mate table's row 4 label, "R02, since S248".
+Each site records the move and its return (DEC-142, DEC-233);
+DEV_MANUAL's ledger gains the removal's entry and its three golden rows
+read true again. The S170 budgets are not re-swept (DEC-246): the
+standing ones were derived on 465b43b's engine.
+
+bench is 3513310 with the whole bench stream and all eight bestmove
+replies identical to a Release build of 465b43b, bench 12 likewise, and
+tools/search_bench.py identical at depths 9 and 12 (INV-6, DEC-215);
+the tune build at its defaults prints the same stream and lists no
+NullMoveEvalGate. No second SPRT is owed. Mutation 11 of 11 over the
+touched mutants on a fixture of this tree, N02 killed again by its own
+case now that no gate stands in front of its edge; all 160 anchors valid.
+Both fast suites 41 of 41, format and the three prose checks clean.
+
+Bench: 3513310
+```

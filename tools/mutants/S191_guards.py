@@ -38,21 +38,18 @@ m("N01_nmp_double_null", S, "search/pruning",
    'if (!is_pv && !is_in_check && ply > 0 &&'),
   origin="S191")
 
-# **N02 is declared equivalent in the release build since S114's second
-# verdict** (DEC-243). The null move's entry gate at `NullMoveEvalGate` 1 wants
-# `static_eval >= beta`, and the static score never reaches the mate band
-# (test_evaluation, "the static score never reaches the mate band"), so at a
-# beta at or above MATE_MIN the gate refuses first and the dropped edge was
-# already unreachable. The tune build, where the gate is a variable, is where
-# the edge is live: its case "a node at the positive edge of the mate band
-# makes no null move" carries a tune-only leg at `NullMoveEvalGate` 0, observed
-# red under this mutant by hand (.tuning/coord/S114_v2/n02_tune_leg.log) --
-# S113's B15 form.
+# N02 was declared equivalent in the release build while S114's second
+# verdict's entry gate was on, the gate refusing every beta in the mate band
+# first, with a tune-only leg holding it at the gate's off value. The gate left
+# on that verdict's reading, and the declaration and the leg left with it.
+# Its anchor was re-pointed then, the condition reflowing onto the line the
+# exclusion sits on; the mutation is unchanged, the positive edge dropped.
 m("N02_nmp_mate_band_pos", S, "search/pruning",
   'null move at beta >= MATE_MIN: the positive edge of the band dropped',
-  ('      beta < MATE_MIN && beta > -MATE_MIN && game_phase(&game->board) > 0) {',
-   '      beta > -MATE_MIN && game_phase(&game->board) > 0) {'),
-  expected="equivalent",
+  ('      excluded_move == 0 && beta < MATE_MIN && beta > -MATE_MIN &&\n'
+   '      game_phase(&game->board) > 0) {',
+   '      excluded_move == 0 && beta > -MATE_MIN &&\n'
+   '      game_phase(&game->board) > 0) {'),
   origin="S191")
 
 m("N03_rfp_in_check", S, "search/pruning",
