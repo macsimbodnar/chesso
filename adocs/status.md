@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-01, by hand.
 
+## 2026-10-01: S247 done -- the stop half's depth-1 time re-taken
+
+The eight-queens board runs 6 to 9 ms at depth 1 on the idle machine, median
+6.8 ms over 400 fresh-process runs; the GOLDEN paragraph quotes that with its
+command and names 13.8 ms as the figure the case was written at. Comments
+only. **Next:** S249 (three stale golden comments), then S116. Owner question
+3 (DEC-245) open; the others unchanged.
+
 ## 2026-10-01: S114 done on both verdicts; the entry gate removed as `bd5a6cb`
 
 Verdict 2 reached the 40000-game cap without a verdict (`nElo 1.40 +/- 3.40`,

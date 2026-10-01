@@ -869,18 +869,20 @@ TEST_SUITE("engine: uci layer")
   {
     // Eight queens a side. Depth 1 here is a wide root over deep capture
     // chains in quiescence, so the stop has a window to land in. **Golden**:
-    // 13.8 ms on this machine, re-derived with
-    // `position fen <below>` then `go depth 1`, reading the `time` field of the
-    // info line. The precondition below asserts 3 ms of it, which is where a
-    // four times faster machine would still leave the case separating; under
-    // that it needs a heavier position, not a smaller floor.
+    // 36165 nodes and 6 to 9 ms on this machine, median 6.8 ms, re-taken at
+    // S247 on the idle machine with `position fen <below>` then `go depth 1`
+    // in a fresh `chesso` process, reading the info line's `nodes` and `time`
+    // (`nodes * 1e6 / nps` for microseconds), 400 runs interleaved with the
+    // start position. The case was written at 13.8 ms, which no run here
+    // reproduces. The precondition below asserts 3 ms of it, which is where a
+    // twice faster machine would still leave the case separating; under that
+    // it needs a heavier position, not a smaller floor.
     //
     // **The board moved at S022's second verdict, by that rule, and came back
     // at its reading.** That verdict's node-level early-out in quiescence
     // ended 199 of this board's quiescence nodes at depth 1 before they
-    // generated, which cut the iteration from 36165 nodes and 6 to 7 ms -- the
-    // 13.8 ms above is the case's figure from when it was written -- to 10187
-    // nodes and 1 ms, under the floor. The stop half ran on
+    // generated, which cut the iteration from 36165 nodes and 6 to 7 ms to
+    // 10187 nodes and 1 ms, under the floor. The stop half ran on
     // `r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0 1` while
     // the early-out was in, 146994 nodes and 24 to 31 ms at depth 1, a board
     // on which it never fired. The early-out left with the verdict's reading
