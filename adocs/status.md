@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-01, by hand.
 
+## 2026-10-01: S114 done on both verdicts; the entry gate removed as `bd5a6cb`
+
+Verdict 2 reached the 40000-game cap without a verdict (`nElo 1.40 +/- 3.40`,
+recorded in `cccf788`) and was read as a zero: the gate and its code left as
+`bd5a6cb`, the goldens back byte for byte, the tree bench-identical to
+`465b43b` (3513310); the repaired guard drives stay. Cold fast check LAND, one
+text trivial fixed. Second tier on the removal tree: Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 926 s (`.tuning/gate_extra_2026-10-01_S114v2rm_2.log`; the first launch went red only at `test_clang_format_script` for want of DEC-146's `CLANG_FORMAT_MAJOR` export, relaunched with it). S114's stamp is
+written and the file is in `plan_done/`. DEC-246 is moot.
+**Next:** S247 and S249, the open fillers (S247's timing wants the idle
+machine), then S116 (razoring at depth one). Owner question 3 (DEC-245) open;
+the others unchanged.
+
 ## 2026-10-01: S114 verdict 2's SPRT is without a verdict at the cap -- read as a zero, the entry gate leaves
 
 **`7c7328f` against `465b43b`, `Elo 1.07 +/- 2.61`, `nElo 1.40 +/- 3.40`,
