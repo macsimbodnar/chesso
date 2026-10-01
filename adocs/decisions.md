@@ -13633,3 +13633,28 @@ Consequences: Until the verdict the tree carries S115's budgets, which are
               open finding 3 names it. Whether S115's recorded grid joins the
               `--ceilings` command (C 6 at its 4000000 cell) is open and is
               taken up with the H1 path if it comes.
+
+## DEC-247  2026-10-01  S249's mate-breadth item moves to S250, which re-places the floor that stopped separating, ahead of S116
+Tags:         testing, mate, golden, floor, s249, s250, s156, s116, dec-142, dec-171
+Context:      S249 owed a comment fix: `test_mate_breadth`'s GOLDEN comment
+              quoted 145 where the tree reads 146. Re-deriving it by
+              `adocs/data/S156_mined_floor_sweep.py` on `0cf3ec8` read 146
+              shipping against 143 with the guard weakened (RfpMinPly 1 and
+              0), and `EXACT_FLOOR` is 143, so the gate built at the weakened
+              default goes green and the script prints "THE FLOOR NO LONGER
+              SEPARATES". S249 excludes moving a floor.
+Decision:     By the coordinator, 2026-10-01, the owner free to overrule:
+              S249 completes on its two other items (the S132 docstring
+              corrected; `MATE_IN_THREE_FLOOR`'s comment already true) and
+              its first item moves to a new filler S250, which re-places
+              `EXACT_FLOOR` by S156's rule from the script's reading (upward:
+              a tightening, DEC-142's re-derivation) and corrects the stale
+              figures around `MATE_IN_THREE_FLOOR`. S250 sits first in Open,
+              ahead of S116.
+Why:          A floor that cannot go red is a test that proves nothing, and
+              the next step is a pruning change over the mate guards; a
+              test-only defect is a filler under DEC-171, but its order is the
+              coordinator's to choose and the cheap fix goes first.
+Rejected:     Pausing S249 behind S250: two files in flight for one comment.
+              Writing 146 beside the old table: a comment claiming a
+              separation that is gone.

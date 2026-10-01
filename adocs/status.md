@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-01, by hand.
 
+## 2026-10-01: S249 done on two items; S250 created first in Open (DEC-247)
+
+S132's docstring names its real offsets; `MATE_IN_THREE_FLOOR`'s comment was
+already true. **Found:** `test_mate_breadth`'s floor (143) no longer separates
+the shipping guard (146) from the weakened one (143) -- the gate built at
+`RfpMinPly` 1 goes green. Nothing is red; the test has lost its power to catch
+that weakening. S250 re-places the floor by S156's script, ahead of S116
+(DEC-247, the coordinator's, the owner free to overrule), and is named in
+every pre-registration while open (DEC-171). **Next:** S250, then S116. Owner
+question 3 (DEC-245) open.
+
 ## 2026-10-01: S247 done -- the stop half's depth-1 time re-taken
 
 The eight-queens board runs 6 to 9 ms at depth 1 on the idle machine, median

@@ -860,11 +860,11 @@ carried nothing.)
 
 ## Done recently
 
+- S249  **filler: stale golden comments, two of three** -- S132's docstring names its offsets (0/1/2, against the aspiration rows' 0/37/71); `MATE_IN_THREE_FLOOR`'s comment already true at 12 of 24; `test_mate_breadth`'s item moved to S250, its floor of 143 no longer separating 146 from 143 (DEC-247). 2026-10-01.
 - S247  **filler: the eight-queens stop half's depth-1 time re-taken** -- 36165 nodes and 6 to 9 ms, median 6.8 ms over 400 fresh-process runs on the idle machine, with its command; the 13.8 ms the case was written at named as such, the margin sentence "twice faster"; comments only, the floor and assertion unmoved (DEC-142, DEC-240). 2026-10-01.
 - S114  **the null move's static-score refinements, decided: neither kept** -- verdict 1, the capped static-score term in the reduction: **H0 at 2720 games, `nElo -23.81 +/- 13.06`**, removed as `f3868fb`; verdict 2, the entry gate `static_eval >= beta`: **no verdict at the 40000-game cap, `nElo 1.40 +/- 3.40`**, a zero, removed as `bd5a6cb`, bench-identical to `465b43b`; the eight repaired guard drives stay; S085's base and divisor kept (DEC-244). 2026-10-01.
 - S115  **the aspiration loop's fail-low pull, kept on its H1** -- on a root fail-low beta comes down toward alpha by `AspirationFailLowPull` (2) quarters of the window before alpha is pushed, the widening a parameter at the doubling S021 shipped; the root fail-high reduction was built and refused on three mate guards (DEC-245); **H1 at 23276 games against `3f9ffa5`, `nElo 5.58 +/- 4.46`** (`d544872`, the ledger's fortieth row); `bench` 3429473 -> 3513310
 - S248  **filler: the capture-mate table's stale rows re-derived** -- the parent's mined rows read 7, 9, 11, 10 where its own script derives 7, 7, 10, 10; executed inside S114 verdict 1's removal `f3868fb` on the reverted tree, labels re-read, no mate distance moved (DEC-142, DEC-233). 2026-09-30.
-- S022  **delta pruning against per-move futility, decided: deleted** -- verdict 1 re-measured S015's exchange gate deleted (`{-5, 0}`): **H0 at 900 games, `nElo -85.89 +/- 22.70`**, the gate stays; verdict 2 measured a node-level delta early-out (`{0, 5}`): **no verdict at the 40000-game cap, `nElo 3.03 +/- 3.40`**, a zero, the early-out removed as `6893c0f` on its pre-registration's terms, three goldens back byte for byte, bench-identical to `58585f8`. S112's per-move futility is the form that stays. 2026-09-30.
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -1176,7 +1176,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S249  **filler, DEC-171** -- three golden comments read what their trees report: `test_mate_breadth`'s count, `MATE_IN_THREE_FLOOR`'s comment, S132's sweep docstring's offsets; no floor moves
+1. S250  **filler, DEC-171, ahead of S116 by DEC-247** -- `test_mate_breadth`'s exact-count floor re-placed by its own script so the weakened guard goes red again (146 shipping, 143 weakened, floor 143 today), and the stale figures around `MATE_IN_THREE_FLOOR` re-derived
 2. S116  a node whose static score is hopelessly below alpha drops straight to quiescence, at depth one only
 3. S202  a mate score inherited from the table at a depth too shallow to back it is given a line that reaches it or is not published as a mate -- the class S171's census measured, at a ceiling of 8 lines from 1 search in 3000 games and not a zero, free to alter play under its own SPRT where S171 was not (DEC-150)
 4. S020  compute the in-check state once per node instead of once per call site

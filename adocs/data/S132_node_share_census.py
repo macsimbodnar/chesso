@@ -23,11 +23,14 @@ this script measures:
     TmNodeScalePct = 7000 / (100 - 100 f_med)
     TmNodeBasePct  = 100 + 3000 / TmNodeScalePct
 
-THE PICK. The same 300 positions src/search_params.hpp's aspiration rows were
-chosen over: 100 per offset from adocs/data/S018_raw.tsv, four per
-game_phase() value that has at least four rows, at offsets 0, 1 and 2. It
-imports adocs/data/S021_aspiration_sweep.py rather than copying its picker --
-this directory is append-only and a second copy of a sampling rule is a second
+THE PICK. S021's sampling rule at offsets 0, 1 and 2 (OFFSETS below): 100 per
+offset from adocs/data/S018_raw.tsv, four per game_phase() value that has at
+least four rows, 300 positions. The rule and not the positions: the aspiration
+rows of src/search_params.hpp were chosen at S021's offsets 0, 37 and 71, the
+sample column of adocs/data/S021_aspiration_sweep.tsv, so only the offset-0
+hundred is common to the two picks. It imports
+adocs/data/S021_aspiration_sweep.py rather than copying its picker -- this
+directory is append-only and a second copy of a sampling rule is a second
 sampling rule (the S148 and S198 precedent).
 
 THE INSTRUMENT. build/tools/node_share_census, on the release build with the
