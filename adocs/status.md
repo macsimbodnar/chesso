@@ -5,7 +5,20 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-01, by hand.
+Updated: 2026-10-02, by hand.
+
+## 2026-10-02, 20:35: S116 (razoring at depth one) landed as `65e29ba`, pinned against `f82e5a3`
+
+The verified depth-one form with reverse futility's ply guard (DEC-248, the
+owner's): `bench` 3513310 -> 4081329; `RazorDepth` 0 is the parent node for
+node (DEC-215). Every hard mate test green; the capture-mate table re-derived to
+9, 8, 10, 10 (rows 1 and 2 later) and the aspiration case's first mate 9 -> 10,
+by their scripts. Cold fast check LAND, text fixed. Second tier: self-play
+8 games at 4+0.04, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 1040 s (`.tuning/gate_extra_2026-10-02_S116.log`). Fillers **S251** (`RfpMinPly` 2 unsafe now razoring
+reads it) and **S252** (mutant M06a survives, also on the parent) behind S116.
+The S170 budgets wait for the verdict (DEC-249, DEC-246's rule applied, the
+owner free to overrule). **Next:** S116's `{0, 5}` SPRT (worst case 19.8 h);
+a zero removes the rule (DEC-248). Owner question 3 (DEC-245) open.
 
 ## 2026-10-01: S250 done -- the mate-breadth floor separates again
 

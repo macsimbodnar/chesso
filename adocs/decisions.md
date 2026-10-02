@@ -13688,3 +13688,25 @@ Why:          Every hard mate guard holds with the ply guard, which is the
 Rejected:     The specified form (hard mate guards red); refusing razoring
               unrun; parking it behind DEC-245's question 3; `{-5, 5}`, which
               would ship an addition on "not a regression".
+
+## DEC-249  2026-10-02  The S170 budgets on S116's tree wait for its verdict, as DEC-246 had them wait for S114 verdict 2's
+Tags:         testing, mate, s170, s116, dec-142, dec-156, dec-162, dec-225, dec-246
+Context:      On S116's landing `65e29ba` the budget rule (DEC-156 as amended
+              by DEC-162) moves C 1000000 -> 1500000, D 3000000 -> 2000000, E
+              300000 -> 100000 and F 500000 -> 100000
+              (`.tuning/coord/S116/s170_budgets.patch`, grid
+              `adocs/data/S116_sweep_s170.txt` in the patch), and C's new cell
+              reports 8 mate lines, 5 short, over C's ceiling of 0, so
+              `test_mate_carry` goes red at the rule's answer. The standing
+              budgets are green on that tree. The situation is DEC-246's.
+Decision:     By the coordinator, 2026-10-02, applying the owner's DEC-246 to the
+              same situation, the owner free to overrule: defer until S116's
+              SPRT reads. On H0 or a zero the rule leaves and the tree is
+              `f82e5a3`'s again, where the standing budgets are the rule's
+              answer; on H1 the rule's budgets land with C's ceiling raised to
+              the script's answer with this grid recorded (the DEC-225 form),
+              brought to the owner with the H1 record.
+Why:          A ceiling raised for a tree that may not survive its verdict is
+              a relaxation taken early; the budgets are a test's data and touch
+              neither engine of the run.
+

@@ -746,3 +746,22 @@ through razoring; recorded, the range not moved.
 
 Bench: 4081329
 ```
+
+## Landed and pinned (the coordinator, 2026-10-02)
+
+Landed as `65e29ba` on `f82e5a3` (`bench` 3513310 -> 4081329), after a cold fast
+check that read LAND: its text items fixed before the landing -- the
+`RfpMinPly` comment's "17 of the 26 ... against 26 at 3" made plain, the
+razoring guard list's "ply < 3" renamed to the parameter it reads, `MANUAL.md`'s
+`RfpMinPly` row no longer stating the floor 2 as safe, and the pre-registration
+naming items 20 and 21 as fillers S251 and S252 and the budgets as DEC-249's.
+The fast check also named **capture-mate row 2** (7 -> 8) beside row 1, which
+DEC-248 did not name; it is quoted at the site and in the landing commit.
+`specs.md`'s search row takes the razoring sentence and the routing clause
+says razoring reads the raw static evaluation; whether its margin test joins
+`RfpTtEstimate`'s estimate (S234's "second site") is left a later question,
+not this verdict's. **Second tier** (DEC-141) on `65e29ba`: Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0 `disconnect`;
+`gate_extra` 5 stages green in 1040 s (`.tuning/gate_extra_2026-10-02_S116.log`). The S170 budgets patch
+(`.tuning/coord/S116/s170_budgets.patch`) is held until the verdict
+(DEC-249). Pinned `65e29ba` against `f82e5a3` in `adocs/data/S116_sprt.sh`.
+
