@@ -4771,6 +4771,32 @@ TEST_SUITE("search: draws")
     // reverted tree is `465b43b`'s engine to the node, the tree S248's label
     // was read on.
     //
+    // **Re-derived at S116, the seven sweeps taken once more (DEC-142,
+    // DEC-233, DEC-248).** Razoring drops a hopeless node to quiescence a ply
+    // from the leaves, which is "any change to pruning", and row 1 at depth 7
+    // is the row this case went red on: the shipped build reports that mate
+    // from 9 and no longer at 7. The whole pass was re-taken rather than that
+    // row re-picked -- shipped plus all six S091 mutants, depths 3 to 12, over
+    // `adocs/data/S230_table_fens.txt`, driven by
+    // `adocs/data/S230_mine_r01_row.py depths` on a throwaway copy of the
+    // candidate's `src/`, evidence in the S116 worktree's
+    // `.tuning/coord/S116/capmates/` and its driver
+    // `.tuning/coord/S116/capmates.sh` -- and the same rule applied. Shipped
+    // profiles here: `d9 d10 d11 d12`, `d8 d9 d10 d11 d12`, `d10 d11 d12`,
+    // `d10 d12`, which put the four depths at **9, 8, 10 and 10**. **Two of
+    // the four moved and no mate distance did.** Row 1 goes to 9, where every
+    // S091 mutant reports it too, so no mutant separates it at any depth of
+    // its profile and the rule takes the lowest; row 2 goes to 8, separated by
+    // none as before; row 3 stays at 10, where C02, C05 and R02 lose it (R02
+    // reads only `d12`); row 4 stays at 10, which every mutant reports, so its
+    // label moves to none -- R02 reads it from 8. C02, C05 and R02 keep their
+    // kill in row 3; C06, C07 and R01 are separated by no row at any depth, as
+    // before. The rows as S248 left them, which an H0 or a zero on S116
+    // restores byte for byte: `{row 1, 7, 5, "C02, C05, R02, since S112"}`,
+    // `{row 2, 7, 5, "no S091 mutant, since S095"}`,
+    // `{row 3, 10, 4, "C02, R02, since S248"}`,
+    // `{row 4, 10, 5, "R02, since S248"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -4779,19 +4805,19 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 7, 5,
-         "C02, C05, R02, since S112"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
+         "no S091 mutant, since S116"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
-        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 7, 5,
+        {"2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55", 8, 5,
          "no S091 mutant, since S095"},
         // #+4 in 8868 nodes, pv e5b2 f8d6 d7d6 h5f4 d6d7 g8f8 d7f7 -- the key
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
         {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
-         "C02, R02, since S248"},
+         "C02, C05, R02, since S116"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -4833,7 +4859,7 @@ TEST_SUITE("search: draws")
         // and its reading put the label back with the gate's removal -- the
         // paragraph above has both.
         {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
-         5, "R02, since S248"},
+         5, "no S091 mutant, since S116"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -7163,6 +7189,475 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(probe.move_count > 0);
 
     REQUIRE_EQ(state.static_evals[static_cast<size_t>(RFP_MIN_PLY)], raw_eval);
+  }
+#endif
+
+
+  // RAZORING, S116. The node-level drop to quiescence between reverse futility
+  // and the null move: at a non-PV node out of check, at most `RazorDepth`
+  // plies from the leaves and at least `RfpMinPly` from the root, outside
+  // S097's verification, with alpha outside the mate band, a raw static score
+  // `RazorMargin` or more below alpha sends the node to quiescence on its own
+  // window, and that score ends the node only if it is itself at or below
+  // alpha.
+  //
+  // Every case drives one node through the probe and reads `razor_tried` --
+  // every guard held and quiescence was asked -- or `razor_cutoff`, the
+  // verified return. A guard case first establishes everything else the block
+  // wants, so the guard it is named for is the only condition between the node
+  // and the rule; the shared drive is `fire()`'s, which cuts.
+  struct razor_drive_t : guard_fixture_t
+  {
+    // The reverse-futility drives' position. From a tool and not from the
+    // board (CLAUDE.md): python-chess reports `is_valid() True`,
+    // `is_check() False`, 31 legal moves and **no capture**, so quiescence
+    // here can only stand pat, and with alpha above the static score it fails
+    // low. That is what makes the window alone fire the rule: no material
+    // has to be out of balance.
+    static const std::string& quiet_position()
+    {
+      static const std::string fen =
+          "r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 4 3";
+      return fen;
+    }
+
+    // White to move with a queen less and the queen en prise to the e-pawn.
+    // python-chess: `is_valid() True`, `is_check() False`, 5 legal moves, one
+    // capture, exd5. The static score is the queen down; quiescence takes it
+    // back, so the verification lifts the node above an alpha the static score
+    // stood far below.
+    static const std::string& recovering_position()
+    {
+      static const std::string fen = "4k3/8/8/3q4/4P3/8/8/4K3 w - - 0 1";
+      return fen;
+    }
+
+    // The drive depth: the one depth `RazorDepth` admits at its default.
+    static constexpr int NODE_DEPTH = 1;
+
+    // The node's own static score, read before the drive. The table is wiped
+    // by load() and nothing is planted, so this is the number negamax_at
+    // computes for itself (S103).
+    int raw_eval = 0;
+
+    // What the drive's node returned. The probe cannot see a return value.
+    int last_score = 0;
+
+    // Everything the block tests except the window, which the caller sets.
+    // `!is_pv`, the ply, the depth and the exclusion are properties of the
+    // drive and asserted at the call.
+    void require_razor_preconditions(int alpha)
+    {
+      REQUIRE(!is_check(&game));
+      REQUIRE(alpha < MATE_MIN_LOCAL);
+      REQUIRE(alpha > -MATE_MIN_LOCAL);
+      REQUIRE(raw_eval + RAZOR_MARGIN <= alpha);
+    }
+
+    search_node_probe_t drive(const std::string& fen,
+                              int alpha,
+                              int depth,
+                              int ply,
+                              bool is_pv,
+                              move_t excluded = 0,
+                              int beta_above = 1)
+    {
+      load(fen, ply);
+
+      raw_eval = is_check(&game) ? TT_EVAL_NONE : evaluate(&game.board);
+
+      // What search() does at the root, as the reverse-futility drives write
+      // it: `load_FEN` leaves the history empty either way.
+      state.root_history_size = game.history.size;
+
+      // A ceiling and not a setting, as the reverse-futility drives carry.
+      state.node_limit = 2000000;
+
+      last_score = negamax_probed(alpha, alpha + beta_above, depth,
+                                  static_cast<size_t>(ply), &game, &state, 0,
+                                  is_pv, false, excluded);
+
+      REQUIRE_MESSAGE(!state.aborted,
+                      "the drive hit its node ceiling, so nothing it recorded "
+                      "is evidence about the block");
+
+      return probe;
+    }
+
+    // The window every guard case below drives: alpha exactly the static score
+    // plus the margin, the first alpha the rule admits.
+    int firing_alpha(const std::string& fen)
+    {
+      load(fen, RFP_MIN_PLY);
+      return evaluate(&game.board) + RAZOR_MARGIN;
+    }
+  };
+
+
+  // Mutations: RZ09_razor_margin_strict (the boundary moved off the first
+  // alpha the rule admits), RZ10_razor_margin_dropped (the margin not
+  // added) and RZ11_razor_fail_hard (alpha returned in place of the
+  // verification's score).
+  //
+  //   search: pruning and reduction guards
+  //    razoring drops a hopeless node to quiescence and returns its score
+  //   REQUIRE( record.razor_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      razor_drive_t,
+      "razoring drops a hopeless node to quiescence and returns its score")
+  {
+    const int alpha = firing_alpha(quiet_position());
+
+    // At the boundary: the static score plus the margin meets alpha exactly.
+    {
+      const search_node_probe_t record =
+          drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+      require_razor_preconditions(alpha);
+      REQUIRE(NODE_DEPTH <= RAZOR_DEPTH);
+      REQUIRE_EQ(raw_eval + RAZOR_MARGIN, alpha);
+
+      REQUIRE(record.razor_tried);
+      REQUIRE(record.razor_cutoff);
+
+      // Fail soft: the verification's own score, which here is quiescence's
+      // stand pat -- no capture exists -- and lies below alpha, so it is not
+      // the bound alpha either.
+      REQUIRE(record.razor_score <= alpha);
+      REQUIRE_EQ(last_score, record.razor_score);
+      REQUIRE(last_score < alpha);
+
+      // The node returned from the block, so it searched nothing.
+      REQUIRE_EQ(record.move_count, 0);
+    }
+
+    // One point lower, alpha sits less than the margin above the static score,
+    // so the rule is not asked.
+    {
+      const search_node_probe_t record =
+          drive(quiet_position(), alpha - 1, NODE_DEPTH, RFP_MIN_PLY, false);
+
+      REQUIRE(raw_eval + RAZOR_MARGIN > alpha - 1);
+      REQUIRE(!record.razor_tried);
+      REQUIRE(record.move_count > 0);
+    }
+  }
+
+
+  // Mutation: RZ01_razor_verification_dropped -- the score returned whatever
+  // it is, the unverified drop.
+  //
+  //   search: pruning and reduction guards
+  //    razoring falls through where quiescence lifts the node above alpha
+  //   REQUIRE( !record.razor_cutoff )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(
+      razor_drive_t,
+      "razoring falls through where quiescence lifts the node above alpha")
+  {
+    const int alpha = firing_alpha(recovering_position());
+
+    const search_node_probe_t record =
+        drive(recovering_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+    require_razor_preconditions(alpha);
+
+    // The rule was asked, and the answer came back above alpha: the queen the
+    // static score counts against the side to move is taken back.
+    REQUIRE(record.razor_tried);
+    REQUIRE(record.razor_score > alpha);
+
+    // So the node did not end there. It searched its moves.
+    REQUIRE(!record.razor_cutoff);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // THE MATE INSIDE THE RAZORED DEPTH, built the S033 way (DEC-023): the
+  // razoring side far behind on material and mating with a quiet move at a
+  // node the rule admits. Quiescence cannot see a quiet move, so the
+  // verification is blind to the mate; what keeps it is that a capture lifts
+  // the verification above alpha, the node falls through, and its own move
+  // loop plays the mate. The unverified drop returns the capture's score in
+  // its place, and the mate is gone from the node's value.
+  //
+  // The mate is the node's table move, planted the way an earlier iteration
+  // leaves it: that is how a mate reaches a fail-soft value at a zero window,
+  // where the first move to clear beta ends the node -- without it the capture
+  // is searched first and ends the node on material either way. The entry is
+  // a ply shallower than the node, so it orders and never answers.
+  //
+  // **Which guard's removal reddens it: the verification arm only.** The node
+  // meets every other guard, so dropping any of them changes nothing here;
+  // each has its own case below.
+  //
+  // From tools and not from the board: python-chess reports `is_valid()
+  // True`, `is_check() False`, 19 legal moves, three captures (gxh5, hxg3,
+  // fxg3) and exactly one mate in one, Ra8#, which takes nothing; Stockfish at
+  // depth 20 through python-chess reads `#+1`, pv Ra8#
+  // (`.tuning/coord/S116/mate_case_stockfish.txt`). White is a queen and two
+  // rooks down, and gxh5 takes the queen back.
+  //
+  // Mutation: RZ01_razor_verification_dropped, observed red here by hand
+  // (`.tuning/coord/S116/rz01_mate_case_red.log`).
+  //
+  //   search: pruning and reduction guards
+  //    razoring does not hide a quiet mate the verification lifts
+  //   REQUIRE( last_score > MATE_MIN_LOCAL )
+  TEST_CASE_FIXTURE(
+      razor_drive_t,
+      "razoring does not hide a quiet mate the verification lifts")
+  {
+    const std::string fen = "6k1/5ppp/8/7q/6P1/6rr/5P1P/R4K2 w - - 0 1";
+
+    const int alpha = firing_alpha(fen);
+
+    load(fen, RFP_MIN_PLY);
+    raw_eval = evaluate(&game.board);
+
+    // Ra8, through the engine's own generator so its flags are the ones the
+    // search sees: a1 to a8, and no capture.
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+    move_t mate = 0;
+
+    for (size_t k = 0; k < count; ++k) {
+      if (MOVE_FROM(moves[k]) == a1 && MOVE_TO(moves[k]) == a8) {
+        mate = moves[k];
+      }
+    }
+
+    REQUIRE(mate != 0);
+    REQUIRE(!MOVE_CAPTURE(mate));
+
+    tt_store_entry(&tt, &game.board, NODE_DEPTH - 1, 0, TT_ALPHA_NODE, mate);
+
+    state.root_history_size = game.history.size;
+    state.node_limit = 2000000;
+
+    last_score = negamax_probed(alpha, alpha + 1, NODE_DEPTH,
+                                static_cast<size_t>(RFP_MIN_PLY), &game, &state,
+                                0, false);
+
+    REQUIRE(!state.aborted);
+    require_razor_preconditions(alpha);
+    REQUIRE(NODE_DEPTH <= RAZOR_DEPTH);
+
+    // The rule was asked, and quiescence answered with material and not with
+    // the mate: above alpha, below the mate band.
+    REQUIRE(probe.razor_tried);
+    REQUIRE(probe.razor_score > alpha);
+    REQUIRE(probe.razor_score < MATE_MIN_LOCAL);
+
+    // The mate, first: what the node returned is the thing the rule must not
+    // hide. Then how it got there -- the node searched its moves, the mate
+    // first.
+    REQUIRE(last_score > MATE_MIN_LOCAL);
+    REQUIRE(!probe.razor_cutoff);
+    REQUIRE(probe.move_count > 0);
+    REQUIRE_EQ(probe.moves[0], mate);
+  }
+
+
+  // Mutation: RZ02_razor_in_check_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    razoring never runs in check
+  //   REQUIRE( !record.razor_tried )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(razor_drive_t, "razoring never runs in check")
+  {
+    // 1.e4 c5 2.Nf3 d6 3.Bb5+, the null-move in-check case's board: from a
+    // tool, python-chess reports `is_check() True` and 4 legal replies.
+    const std::string fen =
+        "rnbqkbnr/pp2pppp/3p4/1Bp5/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 1 3";
+
+    // An ordinary alpha. In check the node's static score is the sentinel,
+    // `TT_EVAL_NONE`, far under every alpha, so without the guard the margin
+    // test admits the node -- which the precondition below asserts rather
+    // than assumes, so the case is not vacuous.
+    const int alpha = 0;
+
+    const search_node_probe_t record =
+        drive(fen, alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+    REQUIRE(is_check(&game));
+    REQUIRE_EQ(raw_eval, TT_EVAL_NONE);
+    REQUIRE(TT_EVAL_NONE + RAZOR_MARGIN <= alpha);
+    REQUIRE(alpha < MATE_MIN_LOCAL);
+    REQUIRE(alpha > -MATE_MIN_LOCAL);
+
+    REQUIRE(!record.razor_tried);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // Mutation: RZ03_razor_pv_gate_dropped.
+  //
+  //   search: pruning and reduction guards
+  //    razoring never runs at a PV node
+  //   REQUIRE( !record.razor_tried )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(razor_drive_t, "razoring never runs at a PV node")
+  {
+    const int alpha = firing_alpha(quiet_position());
+
+    // A real PV window, wider than one point, at the firing alpha.
+    const search_node_probe_t record =
+        drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, true, 0, 100);
+
+    require_razor_preconditions(alpha);
+    REQUIRE(!record.razor_tried);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // Mutation: RZ04_razor_mate_band_gate_dropped (the positive edge).
+  //
+  //   search: pruning and reduction guards
+  //    razoring does not run with alpha in the mate band
+  //   REQUIRE( !record.razor_tried )
+  //   values: REQUIRE( false )
+  //
+  // Only the positive edge is constructible: the negative one needs a static
+  // score within the margin of -MATE_MIN, and test_evaluation "the static
+  // score never reaches the mate band" bounds it by thousands. Its mutant,
+  // RZ05, is declared equivalent for that reason.
+  TEST_CASE_FIXTURE(razor_drive_t,
+                    "razoring does not run with alpha in the mate band")
+  {
+    // MATE_MIN itself, the first alpha the guard excludes.
+    const int alpha = MATE_MIN_LOCAL;
+
+    const search_node_probe_t record =
+        drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+    REQUIRE(!is_check(&game));
+    REQUIRE(raw_eval + RAZOR_MARGIN <= alpha);
+    REQUIRE(alpha > -MATE_MIN_LOCAL);
+
+    REQUIRE(!record.razor_tried);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+  // Mutation: RZ06_razor_depth_gate_widened.
+  //
+  //   search: pruning and reduction guards
+  //    razoring does not run above its depth
+  //   REQUIRE( !record.razor_tried )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(razor_drive_t, "razoring does not run above its depth")
+  {
+    const int alpha = firing_alpha(quiet_position());
+
+    // The control: one ply shallower, at the gate, the same window fires.
+    const search_node_probe_t at_gate =
+        drive(quiet_position(), alpha, RAZOR_DEPTH, RFP_MIN_PLY, false);
+
+    REQUIRE(at_gate.razor_tried);
+
+    const search_node_probe_t above =
+        drive(quiet_position(), alpha, RAZOR_DEPTH + 1, RFP_MIN_PLY, false);
+
+    require_razor_preconditions(alpha);
+    REQUIRE(!above.razor_tried);
+    REQUIRE(above.move_count > 0);
+  }
+
+
+  // Mutation: RZ07_razor_ply_gate_dropped. Also killed by test_engine's
+  // "every mate in two is found on time" and by "pruning does not hide a mate
+  // against the material leader", the two cases the floor was added for
+  // (DEC-248).
+  //
+  //   search: pruning and reduction guards
+  //    razoring does not run near the root
+  //   REQUIRE( !record.razor_tried )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(razor_drive_t, "razoring does not run near the root")
+  {
+    const int alpha = firing_alpha(quiet_position());
+
+    // The control at the floor.
+    const search_node_probe_t at_floor =
+        drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+    REQUIRE(at_floor.razor_tried);
+
+    // One ply above it. Reverse futility shares the floor and cannot fire on
+    // this window -- it wants a score above beta -- so the node reaching its
+    // move loop is the floor's decision.
+    REQUIRE(RFP_MIN_PLY > 1);
+
+    const search_node_probe_t above =
+        drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY - 1, false);
+
+    require_razor_preconditions(alpha);
+    REQUIRE(!above.razor_tried);
+    REQUIRE(above.move_count > 0);
+  }
+
+
+  // Mutation: RZ08_razor_excluded_gate_dropped. Inert at the shipped
+  // `SeMinDepth`, where no verification runs at depth 1, and live inside its
+  // declared range; the node is driven with a move excluded directly, as
+  // "an excluded node makes no null move" is.
+  //
+  //   search: pruning and reduction guards
+  //    razoring does not run while a move is excluded
+  //   REQUIRE( !record.razor_tried )
+  //   values: REQUIRE( false )
+  TEST_CASE_FIXTURE(razor_drive_t,
+                    "razoring does not run while a move is excluded")
+  {
+    const int alpha = firing_alpha(quiet_position());
+
+    move_t buffer[MAX_MOVES];
+    REQUIRE(legal_moves(&game, buffer) > 0);
+    const move_t excluded = buffer[0];
+
+    const search_node_probe_t record = drive(
+        quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false, excluded);
+
+    require_razor_preconditions(alpha);
+    REQUIRE(!record.razor_tried);
+    REQUIRE(record.move_count > 0);
+  }
+
+
+#ifdef CHESSO_TUNE
+  // THE OFF VALUE, DEC-215: `RazorDepth` 0 and the block is never reached --
+  // the leaf test above it takes every node below depth 1. What the release
+  // build holds instead is the bench signature: at 0 the tune build prints the
+  // parent's total, stream for stream. The restorer keeps a failed assertion
+  // from leaving the rule off for every later case in the process.
+  //
+  // Mutation: none of its own.
+  TEST_CASE_FIXTURE(razor_drive_t, "razoring does not run at its off value")
+  {
+    struct restore_t
+    {
+      ~restore_t() { search_param_set("RazorDepth", 1); }
+    } restore;
+
+    REQUIRE_EQ(RAZOR_DEPTH, 1);
+
+    const int alpha = firing_alpha(quiet_position());
+    const search_node_probe_t on =
+        drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+    REQUIRE(on.razor_cutoff);
+
+    REQUIRE(search_param_set("RazorDepth", 0));
+    REQUIRE_EQ(RAZOR_DEPTH, 0);
+
+    const search_node_probe_t off =
+        drive(quiet_position(), alpha, NODE_DEPTH, RFP_MIN_PLY, false);
+
+    REQUIRE(!off.razor_tried);
+    REQUIRE(off.move_count > 0);
   }
 #endif
 

@@ -74,6 +74,9 @@
 // S114's second verdict moved `NullMoveEvalGate` from 0 to 1, the count
 // staying 72, and its reading -- no verdict at the cap, a zero -- took the
 // switch out with its clause: 72 to 71.
+// S116 adds two: `RazorMargin`, the razoring margin, three pawns in chesso's
+// own scale, and `RazorDepth`, its depth gate, whose 0 is the parent's tree
+// (DEC-215, DEC-248). The count goes 71 to 73.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -86,7 +89,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 71 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 73 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -118,6 +121,8 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RfpMaxDepth",              15,     0,      63},
   {"RfpMinPly",                 3,     2,      63},
   {"RfpTtEstimate",             1,     0,       1},
+  {"RazorMargin",             282,     0,    2000},
+  {"RazorDepth",                1,     0,       8},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},
   {"LmrBase",                  52,     0,     400},

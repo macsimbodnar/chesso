@@ -4001,11 +4001,12 @@ TEST_SUITE("engine: aspiration windows")
     };
 
     // GOLDEN (DEC-142): `first_mate_depth`, the iteration a mate score first
-    // appears at, one per position. **9 and 9**, as against the reference
-    // binary the comment above names. S188's check extension moved both to 8
-    // -- an extension along a forcing line finds a forced mate an iteration
-    // earlier, which is what the technique is for -- and that step's H0 moved
-    // them back; the script below is what answered both times.
+    // appears at, one per position. **10 and 9 since S116**, 9 and 9 against
+    // the reference binary the comment above names. S188's check extension
+    // moved both to 8 -- an extension along a forcing line finds a forced
+    // mate an iteration earlier, which is what the technique is for -- and
+    // that step's H0 moved them back; the script below is what answered both
+    // times.
     //
     // A bare measurement with no way to re-take it until S188 gave it one --
     // itself a DEC-142 finding, closed there and kept here. Moves legitimately
@@ -4019,9 +4020,18 @@ TEST_SUITE("engine: aspiration windows")
     // below it and the distances from there on. `mate_in` is re-derived by the
     // same command: it is the distance every iteration from the first mate on
     // reports, and the script prints the set.
+    //
+    // **S116 moved the first to 10, re-derived by that command (DEC-142,
+    // DEC-248).** Razoring drops a hopeless node to quiescence a ply from the
+    // leaves, which is "any change to pruning": on its tree the first position
+    // reads `d9:cp1135 d10:mate5`, the second `d9:mate5 d10:mate5` as before
+    // (`.tuning/coord/S116/final/firstmate.txt` in the S116 worktree). The
+    // row before it, which an H0 or a zero on S116 restores byte for byte:
+    // `{"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5,
+    // 9}`.
     // clang-format off
     const std::vector<case_t> cases = {
-      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
+      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 10},
       {"r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2",                             5, 9},
     };
     // clang-format on

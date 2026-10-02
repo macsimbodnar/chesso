@@ -57,6 +57,13 @@
 // to re-measure the floor when it next goes red, or stops going red, rather
 // than to lower it reflexively.
 //
+// **Re-read at S116 on razoring's candidate**, the same script on a commit
+// object carrying that tree: 149 exact at RfpMinPly 3, 145 at 2, 143 at 1 and
+// 0, and the gate built at 1 red at 145. The shipping end rose 146 to 149 and
+// the weakened end held, so the gap is 6 and the floor still separates; it is
+// not moved. Razoring reads RfpMinPly as its own floor (DEC-248), which is why
+// the reading at 2 fell from 146 to 145, the floor itself.
+//
 // Reproduce the table with adocs/data/S156_mined_floor_sweep.py. It needs a
 // patched bound and says why: S142 narrowed RfpMinPly's minimum to 2, so the
 // values that produce the red reading cannot be reached through setoption any

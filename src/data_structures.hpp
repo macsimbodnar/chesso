@@ -616,6 +616,16 @@ struct search_node_probe_t
   // Reverse futility returned its bound instead of searching a move.
   bool rfp_cutoff = false;
 
+  // Razoring, S116. `razor_tried` is "every guard held and quiescence was
+  // called on the node's window" -- whether or not its score then confirmed
+  // the fail-low: a case asserting a guard refused reads this and not a node
+  // count. `razor_cutoff` is the confirmation, the node returning that score;
+  // `razor_score` is what quiescence came back with, valid only where
+  // `razor_tried` is true, so a case can tell the fall-through from the return.
+  bool razor_tried = false;
+  bool razor_cutoff = false;
+  int razor_score = 0;
+
   // One entry per legal move this node searched, in the order the node
   // searched them, so index k is the move whose legal_moves_counter was k + 1
   // -- which is the number the reduction table is indexed by.

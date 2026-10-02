@@ -345,7 +345,13 @@
      and the argued one was free and was the owner's. History, kept because it \
      is the reason the old text was wrong: "at ply 1 the mate cases in         \
      test_search go red" was 3 of 18, and all three are the same mate-in-two   \
-     geometry, which is what S145 exists to have replaced. */                  \
+     geometry, which is what S145 exists to have replaced.                     \
+                                                                               \
+     **Razoring reads this floor too since S116 (DEC-248)**, and the measured  \
+     2 is reverse futility's alone: at 2 razoring admits the ply-2 node that   \
+     holds a mate in two's quiet mating move, and the tune build there finds   \
+     17 of the 26 S145 mates in two at iteration 3, all 26 at 3. The range     \
+     is not moved by S116; at 2 the mate suite goes red through razoring. */   \
   X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)                       \
                                                                                \
   /* WHICH NUMBER REVERSE FUTILITY COMPARES AGAINST, S234. The static score,   \
@@ -375,6 +381,38 @@
      a minimum entry depth say, arrives with its own range and its own seed    \
      form. Implemented from the description, DEC-221. */                       \
   X(RFP_TT_ESTIMATE,   "RfpTtEstimate",   1,      0, 1)                        \
+                                                                               \
+  /* RAZORING, S116. At a non-PV node out of check, at most RAZOR_DEPTH plies  \
+     from the leaves and at least RFP_MIN_PLY from the root (DEC-248), whose   \
+     raw static score stands RAZOR_MARGIN or more below an alpha outside the   \
+     mate band: quiescence on the node's window, and its score returned only   \
+     if it is itself at or below alpha -- the verified form. negamax_at()      \
+     carries the guards and why.                                               \
+                                                                               \
+     RAZOR_MARGIN is **(a) literature**, the wiki's Razoring page --           \
+     https://www.chessprogramming.org/Razoring, its drop-to-quiescence form    \
+     firing when the static score is "by a margin (~three pawns) below" the    \
+     bound -- read as three pawns in **chesso's own material scale**,          \
+     src/eval_tables.hpp, where a pawn is 94: 3 * 94 = 282 (DEC-134: units are \
+     not exempt by name; QsFutilityMargin's 188 is the same reading). A seed,  \
+     and S127 fits it. Range 0 to 2000, twenty pawns, by stated purpose: past  \
+     it the test asks about positions a whole army behind, which is a          \
+     different rule. **No value of the margin is off** -- a node twenty pawns  \
+     down still razors -- so the switch is the depth (DEC-215 clause 2).       \
+                                                                               \
+     RAZOR_DEPTH is the depth gate, 1: the published record's one consistent  \
+     finding is that restricting the rule to depth one gained where the        \
+     unbounded form did not, and the step's goal is that form -- the default   \
+     is the rule as specified, not a fitted value, so no seed form applies.    \
+     **0 is off, proved on the tree** (DEC-215): no node reaches the block     \
+     below depth 1, and the tune build at 0 prints the parent's bench stream.  \
+     Above 1 is the multi-depth variant, which with a flat margin is the       \
+     form the record priced negative; a depth-scaled margin comes with it at   \
+     S127 or not at all. Range 0 to 8 as the step file declares it, the room   \
+     S127 needs to price that form. Implemented from the description,         \
+     DEC-221. */                                                               \
+  X(RAZOR_MARGIN,      "RazorMargin",     282,    0, 2000)                     \
+  X(RAZOR_DEPTH,       "RazorDepth",      1,      0, 8)                        \
                                                                                \
   /* Null move pruning gives the opponent a free move and searches what is     \
      left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \

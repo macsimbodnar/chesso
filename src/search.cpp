@@ -1801,6 +1801,76 @@ static int negamax_at(int alpha0,
     }
   }
 
+  // Razoring, S116: the mirror of reverse futility, on the other tail of the
+  // same number. Where the node's static score stands a margin or more below
+  // alpha a few plies from the leaves, quiescence is asked whether the captures
+  // can lift it back to alpha; where they cannot, the node fails low on that
+  // answer and its move loop is never entered. The verified form: quiescence's
+  // own score is returned **only if it is itself at or below alpha**, and a
+  // node it lifts above alpha falls through and is searched as before. The
+  // published record has a large share of the nodes that look hopeless
+  // recovering in quiescence, which is what an unverified drop would return
+  // the wrong side of alpha for.
+  //
+  //   in check      the node is forced, the sentinel is the static score, and
+  //                 quiescence would answer an evasion node with no real ply
+  //   PV node       these lines get reported and played
+  //   alpha near mate  a static score never approaches the band, so with alpha
+  //                 near +mate the condition holds at every node and whole
+  //                 subtrees under a mate-scored bound would drop to captures
+  //   excluded_move S097. Quiescence would search the excluded move itself if
+  //                 it is a capture, and a fail-low here would answer the
+  //                 verification without its question being asked. Inert at
+  //                 the shipped depths -- the verification runs at
+  //                 `(depth - 1) / 2` from SeMinDepth 10, so at 4 or deeper --
+  //                 and not inert inside the declared ranges, where SeMinDepth
+  //                 4 puts a verification at depth 1
+  //   depth         RazorDepth. 0 is off, and proved off: no node reaches
+  //                 here below depth 1, since the leaf test above takes it
+  //   ply floor     RfpMinPly, reverse futility's own floor, DEC-248: the top
+  //                 of the tree decides the move. Without it 9 of the 26 S145
+  //                 mates in two were first found an iteration late
+  //
+  // **Quiescence's blind spot is this rule's blind spot.** Out of check it
+  // generates captures and quiet queen promotions only, so a quiet mate by the
+  // side to move is invisible to it, and a node far behind on material with
+  // such a mate is razored whatever the verification says. In a mate in two
+  // searched at depth 3 the mating move sits at a depth-1 node at ply 2, which
+  // is the node the ply floor keeps out; the verification arm saves the mates
+  // a capture would otherwise mask, and "pruning does not hide a forced mate"
+  // holds the row that shows it.
+  //
+  // The raw static score and never the table-tightened estimate: the input is
+  // the node's own `evaluate()`, which is what the step measured. The node is
+  // counted once here and again by quiescence at the same ply, the leaf
+  // drop's property as well, so the node counts stay consistent with
+  // themselves. Fail soft, and no second window: the node's own window is the
+  // verification's. Implemented from the step file's description, DEC-221.
+  if (!is_pv && !is_in_check && excluded_move == 0 && depth <= RAZOR_DEPTH &&
+      static_cast<int>(ply) >= RFP_MIN_PLY && alpha < MATE_MIN &&
+      alpha > -MATE_MIN && static_eval + RAZOR_MARGIN <= alpha) {
+    assert(static_eval != TT_EVAL_NONE);
+
+    const int razor_score = quiescence(alpha, beta, ply, 0, game, state);
+
+    if constexpr (PROBING) {
+      if (probe != nullptr) {
+        probe->razor_tried = true;
+        probe->razor_score = razor_score;
+      }
+    }
+
+    if (state->aborted) { return 0; }
+
+    if (razor_score <= alpha) {
+      if constexpr (PROBING) {
+        if (probe != nullptr) { probe->razor_cutoff = true; }
+      }
+
+      return razor_score;
+    }
+  }
+
   // Null move pruning. Give the opponent a free move; if the position is still
   // good enough to fail high after that, it is won by so much that searching it
   // properly is wasted effort, and the whole subtree is skipped.
