@@ -5,7 +5,15 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-02, by hand.
+Updated: 2026-10-03, by hand.
+
+## 2026-10-03 00:36: S116's SPRT is H1 -- H1, razoring stays
+
+**`65e29ba` against `f82e5a3`, `Elo 8.36 +/- 5.62`, `nElo 11.16 +/- 7.50`,
+LLR 2.95, 8234 games in 3 h 55 m, 0 forfeits.** **H1**: razoring gains at least 5 nElo at its seeds and stays (the pre-registration's first row); `RazorMargin` 282 and `RazorDepth` 1 join S127's set, a depth-scaled margin and the multi-depth form S127's to price. The stopping run's estimate is upward-biased and is not the effect size (DEC-063). The S170 budgets now owe the owner's ruling under DEC-249: the rule's answer on this tree is red at C (8 mate lines, 5 short, ceiling 0).
+**Next:** the ledger; **the owner's ruling on the S170 budgets (DEC-249)**;
+then S116's completion; then S251 and S252, the fillers behind it. Owner
+question 3 (DEC-245) open.
 
 ## 2026-10-02, 20:35: S116 (razoring at depth one) landed as `65e29ba`, pinned against `f82e5a3`
 

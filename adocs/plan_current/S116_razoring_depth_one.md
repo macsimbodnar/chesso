@@ -765,3 +765,12 @@ not this verdict's. **Second tier** (DEC-141) on `65e29ba`: Debug self-play 8 ga
 (`.tuning/coord/S116/s170_budgets.patch`) is held until the verdict
 (DEC-249). Pinned `65e29ba` against `f82e5a3` in `adocs/data/S116_sprt.sh`.
 
+## The verdict (2026-10-03, the coordinator)
+
+**H1, 2026-10-03 00:36: `65e29ba` against `f82e5a3`, `Elo 8.36 +/- 5.62`,
+`nElo 11.16 +/- 7.50`, LLR 2.95, 8234 games in 3 h 55 m, 0 forfeits**
+(`adocs/data/S116_sprt.log`, `adocs/data/S116_sprt_pairs.txt`; marker
+`SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/sprt_s116_20261002_203929`). **H1**: razoring gains at least 5 nElo at its seeds and stays (the pre-registration's first row); `RazorMargin` 282 and `RazorDepth` 1 join S127's set, a depth-scaled margin and the multi-depth form S127's to price. The stopping run's estimate is upward-biased and is not the effect size (DEC-063). The S170 budgets now owe the owner's ruling under DEC-249: the rule's answer on this tree is red at C (8 mate lines, 5 short, ceiling 0). `Incomplete mating PV` 2 for the candidate against 10 for the reference,
+an observation for the pre-registration's open finding 3's class (CHESS).
+No follow-up run and no second pair for this verdict (DEC-063, DEC-019).
+
