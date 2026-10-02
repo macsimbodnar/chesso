@@ -602,8 +602,9 @@ found stale (its F03).
 | S114 v1 | the static-score term leaves | 1 h 17 m | 2720 | `{0, 5}` | H0, -18.54 +/- 10.19 |
 | S115 | the fail-low pull stays | 11 h 7 m | 23276 | `{0, 5}` | H1, +4.24 +/- 3.39 |
 | S114 v2 | the null move's entry gate leaves | 19 h 7 m | 40000 | `{0, 5}` | **no verdict** |
+| S116 | razoring at depth one stays | 3 h 55 m | 8234 | `{0, 5}` | H1, +8.36 +/- 5.62 |
 
-**The ledger holds 41: mean 6 h 24 m, median 5 h 26 m, 555009 games in 262.90 hours, 2111.1 an hour across the set.** **Fast class**, an effect outside the bounds interval -- sixteen runs, mean **2 h 02 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-five runs, mean **9 h 12 m**.
+**The ledger holds 42: mean 6 h 21 m, median 5 h 26 m, 563243 games in 266.82 hours, 2111.0 an hour across the set.** **Fast class**, an effect outside the bounds interval -- sixteen runs, mean **2 h 02 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-six runs, mean **9 h 00 m**.
 
 **Why the throughput moves**, read at the runs themselves and kept because the
 reasons do not re-derive from a row. Eight of the first nine sit between 2328 and
