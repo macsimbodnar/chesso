@@ -13658,3 +13658,33 @@ Why:          A floor that cannot go red is a test that proves nothing, and
 Rejected:     Pausing S249 behind S250: two files in flight for one comment.
               Writing 146 beside the old table: a comment claiming a
               separation that is gone.
+
+## DEC-248  2026-10-02  S116's razoring lands with RFP's ply guard, runs `{0, 5}`, and leaves on a zero
+Tags:         search, razoring, mate, sprt, s116, s115, dec-063, dec-142, dec-233, dec-245
+Context:      S116's verified depth-one razoring as the step file specifies it
+              (non-PV, out of check, depth <= `RazorDepth`, alpha outside the
+              mate band, raw static + `RazorMargin` <= alpha, quiescence
+              returned only at or below alpha) finds 9 of the 26 S145 mates in
+              two an iteration late and turns two hard mate tests red ("every
+              mate in two is found on time", "pruning does not hide a mate
+              against the material leader"): the quiet mating move sits at an
+              off-PV depth-1 node at ply 2, and quiescence cannot see a quiet
+              move. Adding reverse futility's own ply guard (`ply >=
+              RfpMinPly`) keeps every hard mate assertion green; two scripted
+              goldens move (capture-mate row 1, the aspiration case's first
+              mate 9 -> 10). The step file's bounds were `{-5, 5}` and its
+              reading at a zero the owner's call.
+Decision:     By the owner, 2026-10-02: (1) razoring lands with `ply >=
+              RfpMinPly` as a further condition; the two scripted goldens are
+              re-derived by their scripts (DEC-142), old and new rows recorded.
+              (2) The SPRT runs the gainer pair `{0, 5}` nElo, as every addition
+              since S105. (3) A no-verdict or an interval reaching above zero
+              is read as a zero and the rule's code leaves (the S238 pattern),
+              written in the pre-registration before the first game; the rule
+              adds nodes (+16 % bench), so no node saving argues for keeping it.
+Why:          Every hard mate guard holds with the ply guard, which is the
+              condition DEC-245 set; the gainer pair and the removal on a zero
+              keep an addition to evidence of gain.
+Rejected:     The specified form (hard mate guards red); refusing razoring
+              unrun; parking it behind DEC-245's question 3; `{-5, 5}`, which
+              would ship an addition on "not a regression".
