@@ -13710,3 +13710,23 @@ Why:          A ceiling raised for a tree that may not survive its verdict is
               a relaxation taken early; the budgets are a test's data and touch
               neither engine of the run.
 
+
+## DEC-250  2026-10-03  S116's H1 lands the S170 budgets the rule gives on its tree, with A's and C's mate-carry ceilings raised off the recorded grids, 5 to 6 and 0 to 5
+Tags:         testing, mate, s170, s116, dec-122, dec-142, dec-156, dec-162, dec-225, dec-241, dec-249, s202
+Context:      DEC-249 held the S170 budgets on S116's tree until its verdict.
+              S116 read H1 (`764fb35`), so razoring stays. On its tree the
+              budget rule (DEC-156 as amended by DEC-162) moves C 1000000 ->
+              1500000, D 3000000 -> 2000000, E 300000 -> 100000 and F 500000
+              -> 100000 (`.tuning/coord/S116/s170_budgets.patch`, grid
+              `adocs/data/S116_sweep_s170.txt`), and C's new cell reports 8
+              mate lines, 5 short, over its ceiling of 0. `S203_case_sweep.sh
+              --ceilings` over every recorded grid plus S116's answers A 6
+              (from 5) and C 5 (from 0), the other four unchanged.
+Decision:     By the owner, 2026-10-03: the rule's budgets land, and A's and
+              C's ceilings move to 6 and 5 as the script answers, S116's grid
+              joining the `--ceilings` command as a recorded sweep (the DEC-225
+              and DEC-241 form). What rose is DEC-122's expected residue, not
+              the guarantee; S202 still owns closing the class.
+Rejected:     Keeping the standing budgets (green, but no longer the rule's
+              answer); a filler to study C's 1500000 cell before any ceiling
+              moves.
