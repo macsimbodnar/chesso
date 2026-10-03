@@ -7,6 +7,15 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-03, by hand.
 
+## 2026-10-03: S116 done on its H1; the budgets landed with two ceilings raised (DEC-250)
+
+Razoring at depth one stays (`nElo 11.16 +/- 7.50`, `764fb35`). The S170
+budgets the rule gives on its tree landed as `0b1920a`, A's and C's mate-carry
+ceilings raised 5 -> 6 and 0 -> 5 off the recorded grids, the owner's ruling.
+S116's stamp is written and the file is in `plan_done/`. **Next:** S251
+(`RfpMinPly`'s range now that razoring reads it) and S252 (mutant M06a), the
+fillers behind it; then S202. Owner question 3 (DEC-245) open.
+
 ## 2026-10-03 00:36: S116's SPRT is H1 -- H1, razoring stays
 
 **`65e29ba` against `f82e5a3`, `Elo 8.36 +/- 5.62`, `nElo 11.16 +/- 7.50`,
