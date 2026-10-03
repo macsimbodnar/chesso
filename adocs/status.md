@@ -7,6 +7,13 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-03, by hand.
 
+## 2026-10-03: S251 done -- `RfpMinPly`'s minimum is 3
+
+Razoring reads `RfpMinPly` (DEC-248), and at 2 the mates in two lose time, so
+the declared minimum moved 2 -> 3; the shipped 3 is unchanged and the Release
+engine node-identical. **Next:** S252 (mutant M06a), then S202. Owner
+question 3 (DEC-245) open.
+
 ## 2026-10-03: S116 done on its H1; the budgets landed with two ceilings raised (DEC-250)
 
 Razoring at depth one stays (`nElo 11.16 +/- 7.50`, `764fb35`). The S170

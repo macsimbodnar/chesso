@@ -13,7 +13,8 @@ it has to be a measured reading and not an argument: the value the same set
 produces when the guard the floor protects is weakened.
 
 That value cannot be reached from a shipping binary any more. S142 narrowed
-`RfpMinPly`'s minimum to 2 on S145's evidence, so `setoption name RfpMinPly
+`RfpMinPly`'s minimum to 2 on S145's evidence (3 since S251, once razoring
+read the same floor), so `setoption name RfpMinPly
 value 1` is out of range, is ignored, and leaves the engine at its default --
 which reads as a perfect null result and is nothing of the kind. The first
 sweep taken for S156 read exactly that and it was wrong.
@@ -53,8 +54,11 @@ PARAMS = os.path.join("src", "search_params.hpp")
 
 # The line as it ships, and the two rewrites of it this script needs. Matched
 # whole so that a change to the default or to the bounds fails loudly here
-# instead of silently measuring the wrong engine.
-SHIPPING = 'X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)'
+# instead of silently measuring the wrong engine. S251 raised the minimum
+# 2 -> 3; a ref from S142 to S251 carries the older line, and either is
+# rewritten.
+SHIPPING = ('X(RFP_MIN_PLY,       "RfpMinPly",       3,      3, 63)',
+            'X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)')
 RELAXED = 'X(RFP_MIN_PLY,       "RfpMinPly",       3,      0, 63)'
 WEAKENED = 'X(RFP_MIN_PLY,       "RfpMinPly",       1,      0, 63)'
 
@@ -142,17 +146,21 @@ def run(command, cwd):
     return result.stdout
 
 
-def patch(tree, before, after):
+def patch(tree, befores, after):
     path = os.path.join(tree, PARAMS)
     with open(path) as handle:
         text = handle.read()
 
-    if before not in text:
+    if isinstance(befores, str):
+        befores = (befores,)
+    before = next((b for b in befores if b in text), None)
+
+    if before is None:
         raise SystemExit(
-            "%s does not contain the line this script rewrites:\n  %s\n"
+            "%s does not contain a line this script rewrites:\n  %s\n"
             "The parameter's default or its bounds have moved. Re-read "
             "src/search_params.hpp and update SHIPPING here before trusting "
-            "any number below." % (path, before))
+            "any number below." % (path, "\n  ".join(befores)))
 
     with open(path, "w") as handle:
         handle.write(text.replace(before, after, 1))

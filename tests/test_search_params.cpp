@@ -119,7 +119,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"QsQueenPromotions",         1,     0,       1},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
-  {"RfpMinPly",                 3,     2,      63},
+  {"RfpMinPly",                 3,     3,      63},
   {"RfpTtEstimate",             1,     0,       1},
   {"RazorMargin",             282,     0,    2000},
   {"RazorDepth",                1,     0,       8},

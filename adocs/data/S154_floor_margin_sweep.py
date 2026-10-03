@@ -26,8 +26,9 @@ Three probes, and they are not interchangeable:
          unrelated steps actually cost the count, which is the quantity the
          audit finding asks for.
   floor  the `RfpMinPly` table re-taken at the current tree, with the declared
-         minimum relaxed in a throwaway worktree so 1 and 0 are reachable.
-         S142 made 2 the minimum on S145's own evidence, so a shipping binary
+         minimum relaxed in a throwaway worktree so 2, 1 and 0 are reachable.
+         S142 made 2 the minimum on S145's own evidence and S251 made it 3
+         once razoring read the same floor, so a shipping binary
          refuses anything below it and reads as a perfect null -- the mistake
          S156 made and recorded.
 
@@ -77,7 +78,10 @@ CMAKE = "CMakeLists.txt"
 
 # Matched whole so that a move in the default or the bounds stops this script
 # instead of letting it measure the wrong engine. S156 uses the same two lines.
-SHIPPING_BOUND = 'X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)'
+# S251 raised the minimum 2 -> 3; a ref from S142 to S251 carries the older
+# line, so either is rewritten and `verify` checks the result.
+SHIPPING_BOUND = 'X(RFP_MIN_PLY,       "RfpMinPly",       3,      3, 63)'
+S142_BOUND = 'X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)'
 RELAXED_BOUND = 'X(RFP_MIN_PLY,       "RfpMinPly",       3,      0, 63)'
 WEAKENED_BOUND = 'X(RFP_MIN_PLY,       "RfpMinPly",       1,      0, 63)'
 
@@ -467,6 +471,7 @@ def sweep_slack(args, rows):
     tree, engine = worktree(
         args.ref,
         [(PARAMS, SHIPPING_BOUND, RELAXED_BOUND, False),
+         (PARAMS, S142_BOUND, RELAXED_BOUND, False),
          (CMAKE, WERROR, NO_WERROR, True)],
         ["--target", "chesso"],
         verify=[(PARAMS, RELAXED_BOUND)],
@@ -539,12 +544,13 @@ def sweep_refs(args, rows):
 def sweep_floor(args, rows):
     head(rows, "RfpMinPly swept at %s, RfpMaxDepth held at its shipping "
                "value.\nThe declared minimum is relaxed to 0 in a throwaway "
-               "worktree: S142 made it 2,\nso a shipping binary refuses 1 and "
-               "0 and answers with its default instead." % args.ref)
+               "worktree: S251 made it 3,\nso a shipping binary refuses 2, 1 "
+               "and 0 and answers with its default instead." % args.ref)
 
     tree, engine = worktree(
         args.ref,
         [(PARAMS, SHIPPING_BOUND, RELAXED_BOUND, False),
+         (PARAMS, S142_BOUND, RELAXED_BOUND, False),
          (CMAKE, WERROR, NO_WERROR, True)],
         ["--target", "chesso"],
         verify=[(PARAMS, RELAXED_BOUND)],
@@ -583,7 +589,8 @@ def sweep_red(args, rows):
 
     tree, engine = worktree(
         args.ref,
-        [(PARAMS, SHIPPING_BOUND, WEAKENED_BOUND, True),
+        [(PARAMS, SHIPPING_BOUND, WEAKENED_BOUND, False),
+         (PARAMS, S142_BOUND, WEAKENED_BOUND, False),
          (CMAKE, WERROR, NO_WERROR, True),
          ("tests/test_engine.cpp", M2_REQUIRE, M2_CHECK, True),
          ("tests/test_engine.cpp", M2_TOTAL_REQUIRE, M2_TOTAL_CHECK, True)],

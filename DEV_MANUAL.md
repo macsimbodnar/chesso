@@ -1532,8 +1532,8 @@ instead: **no mate score for the side being mated and none closer than the
 proved minimum** — both provably false claims, measured 0 and 0 over twelve
 reverse-futility settings; **every mate in two at the first iteration that can
 hold it**, which is the assertion that fences the tuner and goes red the moment
-the ply floor drops below 2; and **a floor of 11 on the mate in three count**,
-placed strictly between the shipping 12 and the 7 the removed guard produces
+the ply floor drops below 3 (below 2 before razoring read it, S251); and **a
+floor of 11 on the mate in three count**, placed strictly between the shipping 12 and the 7 the removed guard produces
 (10 when S168 placed it; S250 re-read 7 on 2026-10-01).
 The mate in four and five counts are printed by the test as a `MESSAGE` rather
 than asserted, because a floor of zero asserts nothing. Observed red under a
@@ -1622,8 +1622,8 @@ what this set can and cannot separate: it sees the difference
 between a floor of 1 and a floor of 2, and it cannot tell 2 from 3.
 
 **Reproducing that table needs a patched tree, and the reason is S142.** It
-narrowed `RfpMinPly`'s minimum to 2, so `setoption name RfpMinPly value 1` is
-out of range, is ignored, and leaves the engine at its default — a sweep that
+narrowed `RfpMinPly`'s minimum to 2, and S251 to 3, so `setoption name
+RfpMinPly value 1` (or 2) is out of range, is ignored, and leaves the engine at its default — a sweep that
 does not notice reads a flat null and is wrong. `adocs/data/S156_mined_floor_sweep.py`
 builds a throwaway git worktree, relaxes the bound there, sweeps, then rebuilds
 the gate with the weakened value as its compiled-in *default* and runs it to
@@ -1784,12 +1784,13 @@ reports the mate — is the reading a fixed-depth call cannot produce. `short` a
 readings, and both are 0 everywhere so far. The output is kept at
 `adocs/data/S145_rfp_sweep.log`.
 
-**The floor sweep now stops at 2**, because S142 made 2 `RfpMinPly`'s declared
-minimum on this sweep's own evidence and the tune build refuses anything below
-it — `info string refused [RfpMinPly] value 1, outside [2, 63]`. The script
+**The floor sweep now stops at 3**, because S142 made 2 `RfpMinPly`'s declared
+minimum on this sweep's own evidence, S251 raised it to 3 once razoring read the
+same floor, and the tune build refuses anything below it — `info string refused
+[RfpMinPly] value 2, outside [3, 63]`. The script
 prints the settings it dropped and why rather than ending in the python-chess
 `EngineError` that a refused option raises; `adocs/data/S145_rfp_sweep.log` is
-the last reading that covered 0 and 1, and getting below 2 again means relaxing
+the last reading that covered 0 and 1, and getting below 3 again means relaxing
 the bound in `src/search_params.hpp` and rebuilding.
 `adocs/data/S156_mined_floor_sweep.py` is that relaxation automated for the
 mined set — a throwaway git worktree, patched and built there, so the tracked

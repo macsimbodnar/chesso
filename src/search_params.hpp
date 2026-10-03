@@ -39,7 +39,7 @@
 //
 //   arithmetic      a divisor cannot be zero
 //   stated purpose  a history score must stay clear of the band above it
-//   measured        RfpMinPly's floor of 2, the value below which the mate
+//   measured        RfpMinPly's floor of 3, the value below which the mate
 //                   suite goes red
 //
 // The third kind is only as good as the test that produced it, so it names the
@@ -323,8 +323,9 @@
      KILLER_POS, the first two under the names they carried then) -- so 0 was  \
      a value no tuner could tell from its neighbour.                           \
                                                                                \
-     **The declared minimum is 2: DEC-095 decided it and S145 earned it.**     \
-     It stood at 0 until S142, and the evidence for raising it used to be      \
+     **The declared minimum was 2 from S142 to S251: DEC-095 decided it and    \
+     S145 earned it, for reverse futility** (S251 raised it to 3, below). It   \
+     stood at 0 until S142, and the evidence for raising it used to be         \
      three hand-picked mates in two, two of which were picked for a different  \
      engine. S145 replaced them with 48 constructed forced mates spanning      \
      distances two to five, each proved by exhaustive enumeration and          \
@@ -348,11 +349,14 @@
      geometry, which is what S145 exists to have replaced.                     \
                                                                                \
      **Razoring reads this floor too since S116 (DEC-248)**, and the measured  \
-     2 is reverse futility's alone: at 2 razoring admits the ply-2 node that   \
-     holds a mate in two's quiet mating move, and the tune build there finds   \
-     17 of the 26 S145 mates in two at iteration 3, all 26 at 3. The range     \
-     is not moved by S116; at 2 the mate suite goes red through razoring. */   \
-  X(RFP_MIN_PLY,       "RfpMinPly",       3,      2, 63)                       \
+     2 above is reverse futility's alone: at 2 razoring admits the ply-2 node  \
+     that holds a mate in two's quiet mating move, and the tune build there    \
+     finds 17 of the 26 S145 mates in two at iteration 3, all 26 at 3. So      \
+     **the declared minimum is 3 since S251**, the shipped value: a range      \
+     change only, the Release build node-identical, and the tune build now     \
+     refuses 2 and keeps its default. Reverse futility alone would still take  \
+     2; one floor serves both rules, so it is the stricter rule's. */          \
+  X(RFP_MIN_PLY,       "RfpMinPly",       3,      3, 63)                       \
                                                                                \
   /* WHICH NUMBER REVERSE FUTILITY COMPARES AGAINST, S234. The static score,   \
      or the node's estimate -- the table's own score where the entry's bound   \

@@ -65,11 +65,11 @@
 // the reading at 2 fell from 146 to 145, the floor itself.
 //
 // Reproduce the table with adocs/data/S156_mined_floor_sweep.py. It needs a
-// patched bound and says why: S142 narrowed RfpMinPly's minimum to 2, so the
-// values that produce the red reading cannot be reached through setoption any
-// more and the sweep builds a throwaway worktree to reach them. That is the
-// point rather than a limitation - the front line is now a constant in
-// src/search_params.hpp, and this test is what stands behind it.
+// patched bound and says why: S142 narrowed RfpMinPly's minimum to 2 (S251 to
+// 3), so the values that produce the red reading cannot be reached through
+// setoption any more and the sweep builds a throwaway worktree to reach them.
+// That is the point rather than a limitation - the front line is now a
+// constant in src/search_params.hpp, and this test is what stands behind it.
 //
 // WRONG SIGN IS NOT A COUNT. A mate score for the side being mated is a defect
 // at any total, so it is asserted at zero and not against a floor.

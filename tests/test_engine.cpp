@@ -4708,14 +4708,18 @@ TEST_SUITE("engine: mate safety")
   // **Every mate in two, at the first iteration that can hold it.** This is the
   // assertion that fences the tuner, and it asks for two things where the
   // count alone asks for one: the mate is found, and `first_exact` is 2m - 1.
-  // At RfpMinPly 2 and above it is 26 of 26, found and on time. At 1 and 0 it
-  // is 20 of 26 found and only **13 of 26 on time**, so what goes red here is
-  // thirteen positions. 0 and 1 are the same engine - the root is exempted by
-  // !is_pv, not by this parameter - so this goes red at exactly the value
-  // S085's run spent 906 of 1250 iterations at. The clause got stronger when
-  // S168 enlarged the set: over the 48 it was 13 of 16 found and 9 on time,
-  // seven positions rather than thirteen, and the ten mates in two S168 added -
-  // eight rook, two knight - are all found on time at the shipping defaults.
+  // At RfpMinPly 3 and above it is 26 of 26, found and on time. At 2 it is 26
+  // found and 17 on time, because razoring reads the same floor (DEC-248), so
+  // S251 raised the declared minimum to 3: S154's `floor` mode, at 711f788.
+  // At 1 and 0 it is 20 of 26 found and only **13 of 26 on time** at S168
+  // (12 at 711f788, S251's reading), so what goes red here is thirteen
+  // positions, fourteen now. 0 and 1 are the same engine - the root is
+  // exempted by !is_pv, not by this parameter - so this goes red at exactly
+  // the value S085's run spent 906 of 1250 iterations at. The clause
+  // got stronger when S168 enlarged the set: over the 48 it was 13 of 16 found
+  // and 9 on time, seven positions rather than thirteen, and the ten mates in
+  // two S168 added - eight rook, two knight - are all found on time at the
+  // shipping defaults.
   //
   // **A floor on the mate in three count.** 12 of 24 at the shipping floor, 7
   // at RfpMinPly 1, 20 at RfpMinPly 4. The floor is 11, strictly between the
