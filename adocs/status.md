@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-03, by hand.
 
+## 2026-10-03: S252 done -- mutant M06a killed on a mate property
+
+A new mate-safety case roots a defender node of S145's set (mated in 2) and
+requires the mate through `go` from iteration 4; with reverse futility's floor
+at 2 it is never found. No filler is open. **Next:** S202 (a table mate too
+shallow to back gets a reaching line or is not published as a mate). Owner
+question 3 (DEC-245) open.
+
 ## 2026-10-03: S251 done -- `RfpMinPly`'s minimum is 3
 
 Razoring reads `RfpMinPly` (DEC-248), and at 2 the mates in two lose time, so

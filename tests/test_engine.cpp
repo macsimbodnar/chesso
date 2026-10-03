@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iterator>
 #include <map>
+#include <memory>  // std::make_unique, the heap-owned search_state_t
 #include <set>
 #include <sstream>
 #include <string>
@@ -5432,6 +5433,164 @@ TEST_SUITE("engine: mate safety")
 
     REQUIRE(exact_by_distance[2] == total_by_distance[2]);
     REQUIRE(exact_by_distance[3] >= MATE_IN_THREE_FLOOR);
+  }
+
+
+  // THE MATE AGAINST THE SIDE TO MOVE, AND REVERSE FUTILITY AT PLY 2. S252.
+  //
+  // Mutation: M06a_rfp_ply_floor_minus1 -- reverse futility's ply floor one
+  // ply lower, at 2, razoring's left at RFP_MIN_PLY. Observed red, the mutant
+  // reporting no mate at any of the eight iterations
+  // (`.tuning/coord/S252/mutation/mutation.log`):
+  //
+  //   engine: mate safety
+  //    reverse futility at ply 2 does not hide a mate from the side to move
+  //   REQUIRE( first_exact == 4 )
+  //   values: REQUIRE( 0 == 4 )
+  //
+  // The only other kill of M06a on this tree is `test_mate_carry`'s vacuity
+  // check -- 2 of 5 guarded cases reporting a line, 3 needed, with D and E,
+  // its two mated-side cases, among the silent -- which rests on budgets
+  // re-swept by a script and says "re-sweep", not "a mate was hidden".
+  //
+  // Every root in the case above is the attacker's, and at ply 2 the attacker
+  // is to move again: a static cutoff there says only that the attacker is
+  // doing well, which a forced mate says too, so those mates are found on time
+  // with the floor at 2 or at 3 alike -- S154's `here` reads 26 of 26 on time
+  // and the same mate-in-three mask through both builds, and S145's mined set
+  // (S156's sweep) 149 exact through both (`.tuning/coord/S252/`). That is why
+  // M06a outlived the cases that killed it at S196. The floor's hazard at ply 2
+  // belongs to the **mated** side: with it at the root, ply 2 is that side to
+  // move again after a quiet attacking move, a material leader whose static
+  // score clears the margin, and a cutoff there refutes the attacker's mating
+  // move.
+  //
+  // Not read off the board (CLAUDE.md). The root is the ply-3 defender node of
+  // `adocs/data/S145_mate_set.tsv`'s row 70 (motif `rook0`, mate in 4 by that
+  // file's exhaustive AND/OR search, key g1g8), so mated in 2; the ply-2 node
+  // is the row's next defender node. Stockfish at depth 20 through
+  // python-chess reports the root `Mate(-2)` for Black, pv h1g1 g8f8 g1h1
+  // f8f1, and the ply-2 node `Mate(-1)`, pv g1h1 f8f1; python-chess reports
+  // both `is_valid() True`, `is_check() False`, one legal move at each, and
+  // g8f8 neither a capture nor a check (`.tuning/coord/S252/oracle.txt`).
+  //
+  // Found, not chosen: the 186 defender nodes of that TSV, rooted at the
+  // mated side, through the shipped build and a build carrying M06a at `go
+  // depth` 3 to 12 from a fresh `ucinewgame` each: 20 positions separate,
+  // 19 of them the mutant losing the mate. This one is reported `mate -2` by
+  // the shipped build at every depth from 4 to 12 and by the mutant at none
+  // (`.tuning/coord/S252/defender_profile.txt`).
+  //
+  // Through [go], for the reason deepen_scores() gives: the same position
+  // through search() at a fixed depth from a cold table finds the mate under
+  // M06a as well, at 4, 5 and 6 -- observed, the tree it searches is not the
+  // one the iterative deepening with its aspiration windows searches.
+  TEST_CASE_FIXTURE(
+      engine_fixture_t,
+      "reverse futility at ply 2 does not hide a mate from the side to move")
+  {
+    // search.cpp's, pinned here as tests/test_search.cpp pins them.
+    static constexpr int MATE_MIN_LOCAL = 48000;
+    static constexpr int MATE_MAX_LOCAL = 49000;
+
+    const std::string root = "rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2";
+    const std::string ply_two =
+        "rbrb1R2/p1p1p2p/P1P1P2P/8/8/6K1/8/6k1 b - - 5 3";
+
+    REQUIRE(load_FEN(root, &game));
+    REQUIRE(position_is_reachable(&game));
+    REQUIRE(!is_check(&game));
+
+    // THE PREMISE, from the engine and on the node itself. Driven at depth 3:
+    // at 2 the attacker's quiet mate sits at a depth-1 node at the floor's ply,
+    // where razoring hands it to quiescence, which cannot see a quiet mate --
+    // the node then came back 866, observed.
+    const int depth = 3;
+
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    REQUIRE(table.entries != nullptr);
+
+    std::atomic_bool never_stop{false};
+    std::unique_ptr<search_state_t> state;
+    search_node_probe_t probe = {};
+
+    const auto drive = [&](size_t ply, int alpha, int beta, bool is_pv) {
+      REQUIRE(load_FEN(ply_two, &game));
+      tt_reset(&table);
+      tt_new_search(&table);
+      // Heap-owned and fresh per drive: the struct is 1.2 MiB (S222).
+      state = std::make_unique<search_state_t>();
+      state->tt = &table;
+      state->stop = &never_stop;
+      state->node_limit = 2000000;
+      probe = {};
+      probe.ply = static_cast<int>(ply);
+      state->probe = &probe;
+      const int score =
+          negamax_probed(alpha, beta, depth, ply, &game, state.get(), 0, is_pv);
+      REQUIRE(!state->aborted);
+      return score;
+    };
+
+    REQUIRE(load_FEN(ply_two, &game));
+    REQUIRE(position_is_reachable(&game));
+    REQUIRE(!is_check(&game));
+
+    // Beta at equality with the static score less the margin, as the guard
+    // cases in tests/test_search.cpp set it, so a cutoff is exactly reachable.
+    const int static_score = evaluate(&game.board);
+    const int beta = static_score - (RFP_MARGIN * depth);
+
+    REQUIRE(static_score > 300);
+    REQUIRE(depth <= RFP_MAX_DEPTH);
+    REQUIRE(beta < MATE_MIN_LOCAL);
+    REQUIRE(beta > -MATE_MIN_LOCAL);
+
+    // 1. At the floor's own ply every condition of the block holds and it
+    //    fires, handing back a bound that is no mate: so between this node at
+    //    ply 2 and that cutoff there is the floor and nothing else -- shown at
+    //    depth 3, the node's depth at iteration 5; at iteration 4 it sits at
+    //    depth 2, where no drive here shows the cutoff. The kill holds either
+    //    way: the mutant misses the mate at every iteration from 4 to 8.
+    const int at_floor =
+        drive(static_cast<size_t>(RFP_MIN_PLY), beta - 1, beta, false);
+
+    REQUIRE(probe.rfp_cutoff);
+    REQUIRE(at_floor > -MATE_MIN_LOCAL);
+
+    // 2. What the node is worth: searched as a PV node at ply 2, which the
+    //    block never prunes whatever the floor, the side to move is mated.
+    const int searched = drive(static_cast<size_t>(RFP_MIN_PLY - 1),
+                               -MATE_MAX_LOCAL, MATE_MAX_LOCAL, true);
+
+    REQUIRE(!probe.rfp_cutoff);
+    REQUIRE(searched <= -MATE_MIN_LOCAL);
+
+    tt_free(&table);
+
+    // THE PROPERTY. The root reports the mate against itself, at the first
+    // iteration that can hold it -- four plies, the mated side's two moves
+    // and the attacker's two -- and still at the last of eight. NOT A GOLDEN
+    // (DEC-142): 4 and -2 are the oracle's Mate(-2), twice the distance as
+    // S145's case sets `minimum`, never a value read off a run.
+    const std::vector<report_t> iterations = deepen_scores(root, 8);
+
+    REQUIRE(iterations.size() == 8);
+
+    int first_exact = 0;
+
+    for (const report_t& iteration : iterations) {
+      if (iteration.is_mate && iteration.value == -2 && first_exact == 0) {
+        first_exact = iteration.depth;
+      }
+    }
+
+    REQUIRE(first_exact == 4);
+    REQUIRE(iterations.back().is_mate);
+    REQUIRE(iterations.back().value == -2);
+
+    uci_shutdown();
   }
 
 
