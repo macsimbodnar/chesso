@@ -2593,15 +2593,28 @@ static int negamax_at(int alpha0,
 
     if (!make_move(game, moves[i])) { continue; }
 
-    // The late move reduction guard below is the only consumer: a move that
-    // gives check is not reduced. It is deliberately *not* consulted by the
-    // fail-high block, which admits every quiet that caused a cutoff to the
-    // killer, history and countermove tables, checks included -- excluding
-    // them made the engine refuse to remember the one class of refutation its
-    // own reductions call forcing. S107.
+    // Whether this move leaves the opponent in check: the child's state, never
+    // this node's `is_in_check`. Two consumers, the gives-check exemption and
+    // the late move reduction guard below, and both read it as the last
+    // conjunct behind cheap tests of their own. It is deliberately *not*
+    // consulted by the fail-high block, which admits every quiet that caused a
+    // cutoff to the killer, history and countermove tables, checks included --
+    // excluding them made the engine refuse to remember the one class of
+    // refutation its own reductions call forcing. S107.
     //
-    // is_check() is an attack scan - do not pay for it on captures.
-    const bool is_check_move = is_capture ? false : is_check(game);
+    // is_check() is an attack scan, so it is paid only where a consumer's own
+    // prefix holds, and at most once, because a pruned quiet that gives check
+    // reaches both. S020 counted the scans this skips at 25 % of the bench's
+    // non-capture moves. Never on a capture: hardcoded false there, and S091's
+    // `capture_gives_check` below asks for captures. The board stays the
+    // child's from make_move to the reduction guard, so the cached answer is
+    // never read against another position.
+    int child_check = -1;
+    const auto is_check_move = [&]() -> bool {
+      if (is_capture) { return false; }
+      if (child_check < 0) { child_check = is_check(game) ? 1 : 0; }
+      return child_check != 0;
+    };
 
     // S091's two rules do want it on a capture, and this is where they ask.
     // A capture that gives check is forcing, and neither an exchange
@@ -2629,7 +2642,7 @@ static int negamax_at(int alpha0,
     // onto late move pruning as well (DEC-180), and S091's capture rule with
     // them -- through `capture_gives_check`, because `is_check_move` is
     // hardcoded false on a capture.
-    if (prune_rule != PRUNE_NONE && !is_check_move && !capture_gives_check) {
+    if (prune_rule != PRUNE_NONE && !is_check_move() && !capture_gives_check) {
       if constexpr (PROBING) {
         if (probe != nullptr && probe->pruned_count < MAX_MOVES) {
           probe->pruned_moves[probe->pruned_count] = moves[i];
@@ -2692,7 +2705,7 @@ static int negamax_at(int alpha0,
     // eligibility without inheriting an exemption that is about the table's
     // guess rather than about safety.
     const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&
-                            !is_in_check && !is_check_move &&
+                            !is_in_check && !is_check_move() &&
                             !capture_gives_check;
 
     if (may_reduce) {

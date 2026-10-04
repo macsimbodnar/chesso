@@ -861,11 +861,11 @@ carried nothing.)
 
 ## Done recently
 
+- S020  **the child's gives-check scan taken lazily behind its two consumers** -- memoised, false on a capture as before; node-identical (INV-6); 24.9 % of the bench's child scans skipped, **+1.63 % (CI +1.49 .. +1.76)** over 24 interleaved hyperfine pairs, A/A floor +/- 0.2 %; KEPT. The generator seam was node-identical and slower in every shape (-1.89 %, -3.52 %), reverted: `src/bitboard.cpp` sits at gcc's inline-unit-growth limit, S253. 2026-10-04.
 - S202  **a table mate too shallow to back, reported better** -- two reporting-only fixes (DEC-251): the walk prefers an exact-at-distance entry, then a certified child, over a bound entry's move, and an uncompletable aborted line gives way to the last complete one; node-identical; short mate lines over the S170 grid 33 -> 19, F guarded, ceilings restated down; census 0 against 0 in 3000 games. 2026-10-04.
 - S252  **filler: mutant M06a killed on a mate property** -- a defender node of S145's set, mated in 2, found through `go` at iteration 4 by the shipped engine and never with reverse futility's floor at 2; the premise shown by probe drives; M06b still killed. At `f433124` M06a had been killed only by `test_mate_carry`'s vacuity check (DEC-141, DEC-171). 2026-10-03.
 - S251  **filler: `RfpMinPly`'s minimum 2 -> 3 now razoring reads it** -- at 2 the tune build found 17 of 26 mates in two on time; the shipped 3 unchanged, Release node-identical (INV-6); the sweep scripts take the new line (DEC-171, DEC-248). 2026-10-03.
 - S116  **razoring at depth one, kept on its H1** -- verified drop to quiescence at a non-PV depth-1 node out of check whose raw static is `RazorMargin` (282) below alpha, behind reverse futility's ply guard (DEC-248); **H1 at 8234 games against `f82e5a3`, `nElo 11.16 +/- 7.50`** (`764fb35`); two scripted mate goldens later by an iteration; the S170 budgets and two ceilings moved by DEC-250 (`0b1920a`). 2026-10-03.
-- S250  **filler: the mate-breadth floor separates again** -- `EXACT_FLOOR` 143 -> 145 by S156's script, 146 shipping against 143 weakened, the weakened gate observed red at 145; `MATE_IN_THREE_FLOOR` still separates (12 against 7), its stale prose and the manuals re-read (DEC-142, DEC-247). 2026-10-01.
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -1177,7 +1177,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S020  compute the in-check state once per node instead of once per call site
+1. S253  make_move's accumulator hooks inline whatever else grows in src/bitboard.cpp, then S020's generator seam re-attempted on top -- S020 found the unit at gcc's inline-unit-growth limit, and S032, S030 and S117 edit it next
 2. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
 3. S117  the middlegame and endgame halves of every evaluation term travel in one integer instead of two
 4. S120  a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once

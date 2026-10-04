@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-04, by hand.
 
+## 2026-10-04: S020 done -- the child's check scan is lazy, +1.63 %
+
+The gives-check scan after `make_move` is now read only where one of its two
+consumers asks, memoised; node-identical (INV-6), 24.9 % of the bench's child
+scans skipped, +1.63 % (CI +1.49 .. +1.76) over 24 interleaved pairs. The
+generator seam was node-identical and slower in every shape, and is reverted:
+`src/bitboard.cpp` is at gcc's inline-unit-growth limit, and growing it costs
+`make_move` its inlined accumulator calls. That is **S253**, new, placed first
+because S032, S030 and S117 edit the same unit. Second tier: self-play 8 games,
+0 `Assertion`; `gate_extra` 5 stages green in 1041 s on 2026-10-04 (S020's
+tree). **Next:** S253. Owner question 3 (DEC-245) open.
+
 ## 2026-10-04: S202 done -- the census reads 0 against 0
 
 3000 games, `dedddf6` against `248b6e2`: `Incomplete mating PV` 0 from each
