@@ -7,6 +7,13 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-04, by hand.
 
+## 2026-10-04: S202 done -- the census reads 0 against 0
+
+3000 games, `dedddf6` against `248b6e2`: `Incomplete mating PV` 0 from each
+side, at or below DEC-150's 8; the double zero checked against the harness
+before it was believed. S202's stamp is written and the file is in
+`plan_done/`. **Next:** S020, compute the in-check state once per node instead of once per call site. Owner question 3 (DEC-245) open.
+
 ## 2026-10-04, 11:44: S202's two reporting fixes landed as `dedddf6`; its census is pinned
 
 (c1) an aborted line the walk cannot complete gives way to the last complete

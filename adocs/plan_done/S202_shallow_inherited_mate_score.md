@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     Opus subagent, coordinator-briefed (DEC-185); phase 1 2026-10-03
-done:
+done:       2026-10-04 -- two reporting-only fixes, decided by INV-6 and not by SPRT (DEC-251, the owner's): (c1) an aborted iteration's line the walk cannot complete against the last finished score gives way to the last finished line of the same first move, ponder re-read; (c2) `complete_mate_pv()` takes an entry exact at the owed distance, then a certified child, before a bound entry's `best_move`. Phase 1 reproduced the class deterministically on `fe5d3b3` and corrected DEC-150's reading from the code (the table's `best_move` was taken from bound entries; the walk refused at its checkmate-at-exact-distance gate), and measured four fixes by throwaway patches; (a) and (b) not taken. Landed as `dedddf6`, node-identical to `fe5d3b3` (`bench` 4081329 with the stream, `bench 12`, `search_bench` 9 and 12). Over the S170 grid short mate lines 33 -> 19 of 873, no budget moved; F's row guarded and `test_mate_carry` red before (1 short line of 8 at ceiling 0) and green after; ceilings restated under DEC-162 off `adocs/data/S202_sweep_s170.txt` alone, 6, 15, 5, 2, 11, 5 -> 0, 5, 4, 0, 0, 0; the vacuity precondition kept a strict majority, 4 of 6. A direct `test_search` case for (c2) and mutants MW01/MW02, both killed. **The census**: 3000 games against `248b6e2`, `Incomplete mating PV` 0 from the candidate and 0 from the reference, at or below DEC-150's 8 (`adocs/data/S202_census.log`), the double zero checked against the harness before it was believed. Cold fast check FIX-FIRST (the census's count pattern, the majority, the commit text), fixed before landing. DEC-141's second tier on `dedddf6`: Debug self-play 8 games, 0 `Assertion`; `gate_extra` 5 stages green in 1000 s. `specs.md`, `DEV_MANUAL.md`'s instrument 3 and `MANUAL.md` took the change in the landing. No other project's code was opened; `README.md` human-owned, no change.
 
 ## What this is
 
@@ -536,4 +536,19 @@ where `(guarded + 1) / 2` would have given 3 of 6) and the commit text -- all
 fixed before the landing. `specs.md`'s DEC-150 paragraph takes the S202
 sentence. **Second tier** (DEC-141) on `dedddf6`: Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0 `disconnect`;
 `gate_extra` 5 stages green in 1000 s (`.tuning/gate_extra_2026-10-04_S202.log`). The census pair is pinned in `adocs/data/S202_census.sh`.
+
+## The census (the coordinator, 2026-10-04)
+
+`adocs/data/S202_census.sh`, `dedddf6` against `248b6e2`, 3000 games at the
+`--fast` regime, 2026-10-04 11:48:05 to 13:15:26, 0 forfeits either side
+(`adocs/data/S202_census.log`). **`Incomplete mating PV`: 0 from the candidate,
+0 from the reference** -- at or below DEC-150's ceiling of 8 lines from 1
+search, so the accepts' census clause holds. A double zero was checked before
+it was believed, as the script asks: `-check-mate-pvs` is passed on every
+`fastchess.sh` path (its own block), the log's engine names are `cand-dedddf6`
+and `ref-248b6e2`, and the same harness logged 12 such lines over S116's 8234
+games, so the zero is a reading and not a blind instrument. It cannot separate
+the two engines -- the reference read 0 too -- and the grid's 33 -> 19 is the
+measurement that does. The match's `Elo -7.18 +/- 9.36` is between
+node-identical engines and is noise.
 
