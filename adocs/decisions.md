@@ -13730,3 +13730,41 @@ Decision:     By the owner, 2026-10-03: the rule's budgets land, and A's and
 Rejected:     Keeping the standing budgets (green, but no longer the rule's
               answer); a filler to study C's 1500000 cell before any ceiling
               moves.
+
+## DEC-251  2026-10-04  S202 implements two reporting-only fixes, one of them in the completion walk its excludes named, and restates the mate-carry ceilings it lowers
+Tags:         search, mate, pv, reporting, s202, s170, s171, dec-122, dec-150, dec-162, inv-6
+Context:      S202's phase 1 on `fe5d3b3` reproduced the short-mate-line class
+              deterministically: on `F_mate6_inherited_no_line` at its own
+              cell it is S170's third cause (an aborted iteration's line printed
+              beside the last completed score), and DEC-150's class shows on
+              `C_mate7_depth11` and 29 more grid lines (33 short of 873). The
+              step file's reading was corrected from the code: the table's
+              `best_move` is not keyed on the owed distance, it is taken from
+              bound entries, and the walk refuses at its final
+              checkmate-at-exact-distance gate. Four fixes were measured by
+              throwaway patches: (a) print a bound where the line is short
+              (new UCI score form, fastchess's handling unmeasured); (b) no
+              table mate cutoff in quiescence on an open window (alters play,
+              closes 1 line, publishes a non-mating full line); (c1) an aborted
+              line the walk cannot complete gives way to the last complete line
+              with the same first move; (c2) the walk takes an entry exact at
+              the owed distance, then a certified child, before a bound entry's
+              move. (c1) and (c2) are INV-6 identical (bench 4081329,
+              search_bench 9 and 12) and together leave 19 of 33 short lines;
+              F's guard turns red before and green after at ceiling 0. S202's
+              excludes named "the completion walk itself".
+Decision:     By the owner, 2026-10-04: S202 implements (c1) and (c2); its
+              excludes are amended to admit (c2), the walk's choice of move,
+              while S147/S170/S171's ground otherwise stands. Neither alters
+              play, so INV-6 decides them, not an SPRT. F's guard flips to
+              `yes`; ceilings that the fix lowers are restated under DEC-162's
+              rule with a grid taken on the S202 tree, a tightening, recorded in
+              the landing. (a) and (b) are not taken; the remaining 19 lines
+              stay DEC-122's residue, and the accepts' census (at or below 8
+              lines from 1 search in 3000 games) still runs.
+Why:          Both close real short lines without moving a node; a mate is
+              then printed beside a line that reaches it in more cases, which
+              is the step's goal.
+Rejected:     (c1) alone (leaves DEC-150's class whole); (a) now (a new score
+              form on the surface before its consumers are measured); (b)
+              (alters play, breaks DEC-122's guarantee once).
