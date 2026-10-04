@@ -525,3 +525,15 @@ No functional change
 Re-run after the fixes: both fast suites 41/41, `clang-format.sh --check`
 green, `bench` 4081329. The fixes are comments, a test constant and a
 script, so no node can move. The INV-6 readings above stand.
+
+## Landed and pinned (the coordinator, 2026-10-04)
+
+Landed as `dedddf6` on `248b6e2` (`No functional change`, `bench` 4081329), after
+a cold fast check that read FIX-FIRST -- the census's candidate count pattern
+(`from candidate` where fastchess.sh names the side `cand-<sha>`, so it would
+always have read 0), the vacuity precondition (kept a strict majority, 4 of 6,
+where `(guarded + 1) / 2` would have given 3 of 6) and the commit text -- all
+fixed before the landing. `specs.md`'s DEC-150 paragraph takes the S202
+sentence. **Second tier** (DEC-141) on `dedddf6`: Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0 `disconnect`;
+`gate_extra` 5 stages green in 1000 s (`.tuning/gate_extra_2026-10-04_S202.log`). The census pair is pinned in `adocs/data/S202_census.sh`.
+

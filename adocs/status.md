@@ -5,7 +5,18 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-03, by hand.
+Updated: 2026-10-04, by hand.
+
+## 2026-10-04, 11:44: S202's two reporting fixes landed as `dedddf6`; its census is pinned
+
+(c1) an aborted line the walk cannot complete gives way to the last complete
+line of the same first move; (c2) the walk takes an exact-at-distance entry,
+then a certified child, before a bound entry's move (DEC-251, the owner's).
+Node-identical to `fe5d3b3`; short mate lines over the S170 grid 33 -> 19 of
+873; F guarded; the mate-carry ceilings restated off the S202 grid alone, 0,
+5, 4, 0, 0, 0 (one grid until later sweeps append theirs). Second tier: self-play
+8 games at 4+0.04, 0 `Assertion`, 0 `disconnect`; `gate_extra` 5 stages green in 1000 s (`.tuning/gate_extra_2026-10-04_S202.log`). **Next:** the 3000-game census against DEC-150's 8
+lines (about 1 h 25 m), then S202's completion. Owner question 3 (DEC-245) open.
 
 ## 2026-10-03: S252 done -- mutant M06a killed on a mate property
 
