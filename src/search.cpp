@@ -2994,7 +2994,7 @@ int negamax_probed(int alpha0,
 
 // The plies a mate at this distance takes. The side to move delivering it
 // moves last, so its mate in N is 2N - 1 plies; one it receives is 2|N|.
-static size_t plies_to_deliver(int mate_in)
+size_t plies_to_deliver(int mate_in)
 {
   return (mate_in > 0) ? static_cast<size_t>(2 * mate_in - 1)
                        : static_cast<size_t>(-2 * mate_in);
@@ -3172,25 +3172,52 @@ void complete_mate_pv(game_t* game,
       move_t next =
           proven_mate_move(state->proven_mate, game->board.hash, remaining);
 
+      // Then the table, in the order of how much each answer certifies.
+      //
+      // First this position's own entry, but only where it is exact at the
+      // distance this line still owes: that entry's move is the one the search
+      // proved this mate through. A bound entry's move is not that. A lower
+      // bound's move is a refutation that was good enough, and an upper
+      // bound's is whatever came first in a node that failed low, so on the
+      // defender's side it can be a reply that is mated sooner than the line
+      // claims, and on the attacker's a road to a longer mate. S202's phase 1
+      // measured exactly that: of 33 short lines over the S170 grid, 30 were
+      // walks that followed bound entries' moves to a checkmate too early or
+      // to the claimed length without a mate, and the all-or-nothing gate
+      // below refused every one. DEC-150 read that class as one no walk could
+      // close; on this tree preferring certified moves closes 13 of the 33 on
+      // its own, and with iterative_deepening_search()'s aborted-line fallback
+      // beside it 14, leaving 19.
+      //
+      // Second, the child that carries an exact score at that distance: the
+      // move a missing or uncertified entry would have named, read one ply
+      // down. S171, for the residual S170's own 3000-game run left -- a walk
+      // stalled eight plies from the mate on one missing slot, with the entry
+      // certifying the continuation sitting one ply below it. The claim it
+      // publishes is the table's own, at one more remove.
+      //
+      // Last, a bound entry's move, as the walk always took it. Where nothing
+      // certified exists it is still the best guess the table has, and the gate
+      // decides whether the line it leads to is published. Reporting only, so
+      // no node moves (INV-6); DEC-251.
       if (next == 0) {
         const tt_entry_t* entry = tt_get_entry(state->tt, &game->board);
-        next = (entry != nullptr) ? entry->best_move : 0;
-      }
 
-      // This position's entry is gone, but its children's need not be: a slot
-      // is lost to a collision one position at a time, and a mating line's
-      // nodes are scattered across the table rather than adjacent in it. So
-      // the move the missing entry would have named is looked for one ply
-      // down, in the children that still carry an exact score at the distance
-      // this line owes.
-      //
-      // S171, for the residual S170's own 3000-game run left: the walk stalled
-      // eight plies from the mate on a single missing slot, with the entry
-      // certifying the continuation sitting one ply below it. The claim it
-      // publishes is the table's own, at one more remove -- which is what the
-      // rest of this walk already does when it reads a best move.
-      if (next == 0) {
-        next = certified_mate_move(game, state, moves, count, played, needed);
+        const bool exact_at_distance =
+            entry != nullptr && entry->best_move != 0 &&
+            entry->type == TT_PV_NODE &&
+            de_normalize_score(entry->score, played) ==
+                mate_score_at(played, needed);
+
+        if (exact_at_distance) {
+          next = entry->best_move;
+        } else {
+          next = certified_mate_move(game, state, moves, count, played, needed);
+
+          // certified_mate_move() probes and never stores, so the slot still
+          // holds the entry read above.
+          if (next == 0 && entry != nullptr) { next = entry->best_move; }
+        }
       }
 
       // Two plies from the mate with nothing left to read: the table's entry

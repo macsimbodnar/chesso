@@ -12756,3 +12756,106 @@ TEST_SUITE("search: root node attribution")
     }
   }
 }
+
+
+TEST_SUITE("search: mate line completion")
+{
+  // MATE_MAX is search.cpp's and not exported; pinned here for the reason the
+  // quiescence transposition suite above gives.
+  static constexpr int MATE_MAX_WALK = 49000;
+
+  // The walk takes a move certified at the distance the line still owes before
+  // a bound entry's move. S202, DEC-251.
+  //
+  // Mate in three from the root, S145's mate set row
+  // `rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w`, key d3h3. Black has two replies:
+  // g7g8, mated in two more (g5g6 g8f8 h3h8), and g7f8, mated at once
+  // (h3h8). Re-derived by `~/.venv/chess/bin/python
+  // adocs/data/S202_walk_fixture.py`: python-chess enumerates that after g7g8
+  // g5g6 the only reply is g8f8 and the only mate h3h8, and that after g7f8
+  // the only mate is h3h8; stockfish picks g5g6 after g7g8.
+  //
+  // The table is planted, not searched, so the case is the walk's alone: the
+  // position after d3h3 carries an *upper bound* naming g7f8 -- the defender's
+  // reply that is mated two plies early, the shape (a mate reached too early)
+  // S202 measured in 16 of 33 short lines -- and the position after g7g8
+  // carries an exact mate at the distance the line owes there, naming g5g6.
+  // A walk that takes a bound
+  // entry's move first plays g7f8, finds nothing certified past it and
+  // refuses (DEC-122), leaving the one-ply line; a walk that prefers the
+  // certified child completes all five plies. Mutant MW01 in
+  // tools/mutants/S202_mate_walk.py is the first walk.
+  TEST_CASE_FIXTURE(
+      search_fixture_t,
+      "the walk takes a certified child over a bound entry's move")
+  {
+    const std::string fen = "rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1";
+
+    auto uci = [](move_t move) { return print_move(move).substr(0, 4); };
+
+    auto find = [&](const std::string& text) -> move_t {
+      move_t moves[MAX_MOVES];
+      const size_t count = legal_moves(&game, moves);
+      for (size_t i = 0; i < count; ++i) {
+        if (uci(moves[i]) == text) { return moves[i]; }
+      }
+      FAIL("no legal move " << text << " in " << generate_FEN(&game.board));
+      return 0;
+    };
+
+    REQUIRE(load_FEN(fen, &game));
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    const move_t key = find("d3h3");
+    REQUIRE(make_move(&game, key));
+
+    // The defender's node, one ply from the root: an upper bound naming the
+    // reply that is mated sooner. The score is a bound and claims no distance
+    // the walk could certify.
+    const move_t early = find("g7f8");
+    const move_t holds = find("g7g8");
+    tt_store_entry(&tt, &game.board, 4, -(MATE_MAX_WALK - 2), TT_ALPHA_NODE,
+                   early);
+
+    // The child the line should go through, two plies from the root: exact,
+    // white mates in three plies from here, which is five from the root -- the
+    // distance the root's `mate 3` owes at this point.
+    REQUIRE(make_move(&game, holds));
+    const move_t follow = find("g5g6");
+    tt_store_entry(&tt, &game.board, 3, MATE_MAX_WALK - 3, TT_PV_NODE, follow);
+    unmake_move(&game);
+
+    // Precondition: the bound entry is what the walk reads first at that node,
+    // and its move is the early one. Without it the case passes by default.
+    const tt_entry_t* bound = tt_get_entry(&tt, &game.board);
+    REQUIRE(bound != nullptr);
+    REQUIRE_EQ(static_cast<int>(bound->type), static_cast<int>(TT_ALPHA_NODE));
+    REQUIRE_EQ(bound->best_move, early);
+
+    unmake_move(&game);
+
+    static std::atomic_bool never_stop = false;
+    search_state_t state = {};
+    state.tt = &tt;
+    state.stop = &never_stop;
+
+    pv_t pv = {};
+    pv.table[0] = key;
+    pv.length = 1;
+
+    const std::string before = generate_FEN(&game.board);
+    complete_mate_pv(&game, &state, &pv, 3);
+
+    // Reporting only: the walk leaves the board where it found it.
+    REQUIRE_EQ(generate_FEN(&game.board), before);
+
+    std::string line;
+    for (size_t i = 0; i < pv.length; ++i) {
+      line += (i ? " " : "") + uci(pv.table[i]);
+    }
+
+    CHECK_MESSAGE(pv.length == 5, ("line: " + line));
+    CHECK_EQ(line, "d3h3 g7g8 g5g6 g8f8 h3h8");
+  }
+}

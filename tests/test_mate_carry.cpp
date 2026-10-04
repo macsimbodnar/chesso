@@ -57,9 +57,11 @@
 // And the precondition -- that a case was seen to report a mate at all, without
 // which "no short line" is true and means nothing -- is now asserted over the
 // **set** rather than per case: a majority of the guarded cases must report
-// one. One case falling silent is a cell moving; three of five falling silent
+// one. One case falling silent is a cell moving; three of six falling silent
 // is the engine no longer finding these mates, which is what the fixture is
-// for.
+// for. (Five cases were guarded until S202 guarded F, DEC-251. The majority is
+// a strict one, more than half: 3 of 5 then, 4 of 6 now. The old form,
+// `(guarded + 1) / 2`, gave 3 of 5 and would have given 3 of 6.)
 //
 // The three causes the cases cover, measured 2026-09-02 and recorded in the
 // step file: a score inherited across searches (A, B, C -- C reports `mate 7`
@@ -70,6 +72,22 @@
 // E is the fourth, added by S171: the walk stalls eight plies from the mate on
 // one missing slot, with the entry that certifies the continuation sitting in
 // the children of the position whose entry is gone.
+//
+// F is the fifth, guarded from S202 (DEC-251). At its own cell it is S170's
+// third cause: the last completed iteration's `mate 6` printed beside an
+// aborted iteration's line, which the table proves a mate 7 and no walk can
+// complete to 11 plies. iterative_deepening_search() now prints the last
+// completed line there, which starts with the same move and reaches the mate,
+// and F's ceiling is 0. On fe5d3b3 this case reports 1 short line in 8 at its
+// cell; mutant MW02 of tools/mutants/S202_mate_walk.py is that tree's aborted
+// path and this case kills it.
+//
+// What S202 also changed under every case here: complete_mate_pv() reads a
+// move certified at the distance still owed -- the entry's own when exact
+// there, else a certified child -- before a bound entry's move. Over the grid
+// that closed the walks that followed bound entries to a checkmate too early
+// or to the claimed length without one (DEC-150's class where the table does
+// certify a line); tests/test_search.cpp holds that rule directly.
 
 // WHAT RETIRES THIS FILE'S FIXTURE, AND WHAT DOES NOT. The class here is
 // transposition-table eviction, and which entries evict which is decided by the
@@ -141,18 +159,12 @@ struct case_t
   // wrong -- an 18-ply mating line from that root exists and the engine
   // publishes it once the walk can reach it -- so the row is guarded. DEC-127.
   //
-  // `F_mate6_inherited_no_line` is `no`: it is the reproduction of the 8 lines
-  // S171's own census left, measured and not yet closed. Its `mate 6` is the
-  // position's true distance -- stockfish gives `#+6` at depth 20 and 30 --
-  // read off the table at depth 3 on 1224 nodes, too shallow to build the
-  // 11 plies it needs, and the line that iteration did build continues in the
-  // table into a chain proving `mate 8`. Both lookups in the walk are keyed on
-  // the distance still owed, so both refuse it, and all-or-nothing leaves the
-  // line short and visible, which is what it is for. No walk can close this
-  // one: the 11-ply line the score names is not in the table to be found, and
-  // building it would mean searching, which this path may not do. The same
-  // three lines reproduce byte for byte on 457e355, so nothing in S171 caused
-  // it.
+  // `F_mate6_inherited_no_line` was `no` until S202: the reproduction of the
+  // 8 lines S171's own census left (DEC-150), kept for the step that owned
+  // the class. Under the keys and budget it has now, its one short line is not
+  // that census's mechanism but S170's third cause -- an aborted iteration's
+  // line beside the last completed `mate 6` -- and S202 closes it in the
+  // reporting layer, so the row is guarded with a ceiling of 0. DEC-251.
   bool guard;
 };
 
@@ -358,13 +370,12 @@ static bool line_ends_in_mate(const std::string& fen,
 // history term was in the tree and came back when it left, DEC-231; S116's
 // razoring moved A 5 -> 6 and C 0 -> 5, DEC-250.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
-// adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt
-// adocs/data/S109_sweep_block.txt adocs/data/S095_sweep_block.txt
-// adocs/data/S116_sweep_s170.txt
-// (the rule and the worst cells are tabled below).
+// adocs/data/S202_sweep_s170.txt
+// (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
-// re-sweep of the budgets, which is a Zobrist redraw (DEC-154); S202 closing
-// lowers the ceilings. Margin: 0 -- each ceiling is the worst cell of the
+// re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
+// complete_mate_pv() or to the reporting layer's aborted path, which is S202's
+// ground (DEC-251). Margin: 0 -- each ceiling is the worst cell of the
 // recorded grid, so a case that gets worse goes red on the first extra short
 // line. Widening it is a decision, not a re-derivation. Property beside it: "a
 // mate score carried across searches keeps a line that reaches it", whose two
@@ -376,38 +387,43 @@ static bool line_ends_in_mate(const std::string& fen,
 // single cell of a sparse grid and was re-pinned by every change that moved the
 // tree.
 //
-// A short line is DEC-122's expected residue -- the walk found no entry it
-// could certify, so the line stays exactly as the search produced it -- and
-// S202 owns closing the class. It is not zero and pretending otherwise is what
-// selected the budgets: at HEAD short lines appear in 11 of the stride-1 cells
-// and merely miss the pinned ones.
+// A short line is DEC-122's expected residue -- the walk found no line it
+// could certify, so the line stays exactly as the search produced it. S202
+// closed the part of the class the table does certify (DEC-251) and the rest
+// is what these ceilings bound.
 //
 // The rule, stated once and applied to every row: the ceiling is the largest
 // short-line count any cell of the recorded grid shows for that case, at the
-// stride its TSV row carries, over every recorded sweep. Re-derive it with
+// stride its TSV row carries, over every recorded sweep in the command.
+// Re-derive it with
 //
-//   adocs/data/S203_case_sweep.sh --ceilings F1 F2 F3 F4 F5
-//
-// as one command line, where F1 and F2 are `adocs/data/S204_sweep_head.txt` and
-// `adocs/data/S204_sweep_killer_iter_clear.txt`, the two grids S204 recorded,
-// F3 is `adocs/data/S109_sweep_block.txt`, the grid S109 recorded, F4 is
-// `adocs/data/S095_sweep_block.txt`, the grid S095 recorded, and F5 is
-// `adocs/data/S116_sweep_s170.txt`, the grid S116's landing recorded. A sixth,
-// `adocs/data/S236_v2_sweep.txt`, was in this command while S236's history term
-// was in the tree and was what made C's ceiling 2; the term left at its second
-// verdict and the grid left the command with it (DEC-231), which is the revert
-// the block below describes,
+//   adocs/data/S203_case_sweep.sh --ceilings adocs/data/S202_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
 //
+// WHICH GRIDS ARE IN THE COMMAND, AND WHY ONE. S202. The command held the five
+// grids S204, S109, S095 and S116 recorded. Every one of them was taken with
+// complete_mate_pv() reading a bound entry's move before a certified one, so
+// each counts short lines the walk this file now drives would have closed, and
+// four of them were taken on engines whose trees are not today's at all. The
+// grid a ceiling is read from has to be today's engine, walk included, so
+// those five leave the command -- they stay tracked as the record of their
+// trees. S116's grid is today's search to the node (`bench` 4081329, no step
+// since moved a node) and so the same 108 cells as S202's, read with the old
+// walk; S202's grid supersedes it rather than adding a sample to it. A
+// tree-moving step that re-sweeps adds its grid to the command, which is how
+// the list grows back to several samples (DEC-162's intent).
+//
 //   case                       ceiling  worst cell, at the case's own stride
-//   A_mate8_shallow                  6  3000000 on the S116 grid, 6 of 18
-//   B_mate6_shallow                 15  1200000 on the S095 grid, 15 of 52
-//   C_mate7_depth11                  5  1500000 on the S116 grid, 5 of 8
-//   D_mate_minus6_depth10            2  1500000 with the S109 block
-//   E_mate_minus9                   11  1500000 on the S095 grid, 11 of 22
-//   F_mate6_inherited_no_line        5  1000000 with the S109 block
+//   A_mate8_shallow                  0  no short line in any cell
+//   B_mate6_shallow                  5  1500000 on the S202 grid, 5 of 32
+//   C_mate7_depth11                  4  4000000 on the S202 grid, 4 of 13
+//   D_mate_minus6_depth10            0  no short line in any cell
+//   E_mate_minus9                    0  no short line in any cell
+//   F_mate6_inherited_no_line        0  no short line in any cell at stride 2
+//
+// Before S202 they were 6, 15, 5, 2, 11 and 5 over the five older grids.
 //
 // C's ceiling was 0 over the four earlier grids, earned rather than chosen,
 // which is the difference this file keeps: a ceiling of 0 says the grid has
@@ -484,14 +500,25 @@ static bool line_ends_in_mate(const std::string& fen,
 // the case's and not the grid's -- `adocs/data/S170_replay.py` reports short
 // lines and does not walk a full-length one to its mate -- so it is asserted
 // where the case asserts it and is not claimed of the 108 cells.
+//
+// **All six came down at S202 and that is the progress the paragraph above
+// the table promised (DEC-251).** The walk reads a move certified at the owed
+// distance before a bound entry's, and an aborted line it cannot complete
+// gives way to the last completed line of the same move. Neither moves a node.
+// The S202 grid (`adocs/data/S202_sweep_s170.txt`, 108 cells, the S116 grid's
+// trees exactly) reports 19 short lines where the same cells reported 33,
+// and every mate count is unchanged, so the budgets do not move. The ceilings
+// go 6, 15, 5, 2, 11, 5 -> 0, 5, 4, 0, 0, 0, read off that grid by the script
+// above and never off a run. This history is kept because a revert of either
+// fix puts back the old walk, and with it the old grids' command.
 static size_t short_line_ceiling(const std::string& name)
 {
-  if (name == "A_mate8_shallow") { return 6; }
-  if (name == "B_mate6_shallow") { return 15; }
-  if (name == "C_mate7_depth11") { return 5; }
-  if (name == "D_mate_minus6_depth10") { return 2; }
-  if (name == "E_mate_minus9") { return 11; }
-  if (name == "F_mate6_inherited_no_line") { return 5; }
+  if (name == "A_mate8_shallow") { return 0; }
+  if (name == "B_mate6_shallow") { return 5; }
+  if (name == "C_mate7_depth11") { return 4; }
+  if (name == "D_mate_minus6_depth10") { return 0; }
+  if (name == "E_mate_minus9") { return 0; }
+  if (name == "F_mate6_inherited_no_line") { return 0; }
 
   FAIL("unknown case " << name);
   return 0;
@@ -618,7 +645,12 @@ TEST_CASE("a mate score carried across searches keeps a line that reaches it")
   // (three or four of six went quiet on every seed tried) or the engine no
   // longer finding these mates, and either one makes the assertions above
   // vacuous. DEC-161, DEC-162.
-  const size_t majority = (guarded + 1) / 2;
+  //
+  // A strict majority, more than half. Until S202 this read
+  // `(guarded + 1) / 2`, which is the same 3 of 5 for an odd set and half --
+  // 3 of 6 -- once F made the set even; guarding a sixth case must not loosen
+  // the precondition, so it is 4 of 6 now. S202, DEC-251.
+  const size_t majority = guarded / 2 + 1;
 
   CHECK_MESSAGE(
       reporting >= majority,

@@ -422,7 +422,7 @@ same run, where the 5 is the MacBook's and stays attributed to it (DEC-049).
 Both engines play in the same match, so the pair is measured together and no
 figure crosses machines.
 
-**The residual, and it is not a wrong score. DEC-150.** S171's 8 lines are one
+**The residual, and it is not a wrong score. DEC-150. S202 corrected that reading from the code (DEC-251): only two of the walk's lookups are keyed on the owed distance, and the table's `best_move` was taken from any entry, bounds included. The walk now reads a move certified at the distance still owed -- the entry's own when exact there, else a certified child -- before a bound entry's move. A cut-off iteration's line it cannot complete against the last finished score gives way to the last finished line when both start with the move played. Both are reporting only and INV-6 identical. Over the S170 grid they take 33 short lines of 873 to 19. The residue is still DEC-122's, short and never wrong, and 8 from 1 search remains the ceiling a census is read against until S202's census replaces it.** S171's 8 lines are one
 search whose `mate 6` is the position's true distance -- `stockfish` gives `#+6`
 at depth 20 and 30 -- read off the table at depth 3 on 1224 nodes, too shallow
 to build the 11 plies it owes; the line that iteration built continues in the

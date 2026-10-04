@@ -478,7 +478,7 @@ rewritten with it (S213, DEC-184).
 |---|---|
 | `score cp N` | centipawns, from the point of view of the side to move. `score mate N` instead when a mate is found, `N` in moves |
 | `time` | milliseconds since this search started, not since this iteration started |
-| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair never claims a mate the line does not reach |
+| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair never claims a mate the line does not reach. Where that completion fails and the last completed depth's line starts with the same move, that line is printed instead, and `bestmove`'s `ponder` is its second move (S202) |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
 | `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate — 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate — **or it is left short, and never wrong**: the line is rebuilt from the transposition table after the search and published only if that walk ends in checkmate at exactly the claimed distance, so an entry the table no longer holds leaves the short line the search produced rather than a line that does not deliver. Measured at 8 such lines from 1 search in 3000 games (DEC-150) |
@@ -604,8 +604,13 @@ against d4 and e4 against e5.
   missing tail and never a line that does not deliver. It happens when the score
   is read back from the table at a depth too shallow to build its own line and
   the table no longer holds one — measured at 8 `info` lines from 1 search in
-  3000 games at 8+0.08 on 2026-09-07. S202 owns it; DEC-122 is the all-or-nothing
-  rule that makes short the only failure, and DEC-150 the measurement.
+  3000 games at 8+0.08 on 2026-09-07. S202 (DEC-251) narrowed it in the
+  reporting alone, no move or node changed: the rebuild now follows moves the
+  table certifies at the owed distance before a bound entry's move, and a cut-off
+  depth's line it cannot complete gives way to the last finished depth's line
+  of the same move. On its test grid that took 33 short lines of 873 to 19; a
+  3000-game count is owed. DEC-122 is the all-or-nothing rule that makes short
+  the only failure, and DEC-150 the first measurement.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

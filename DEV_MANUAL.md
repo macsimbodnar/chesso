@@ -1687,6 +1687,27 @@ chain proving `mate 8`; both lookups in `complete_mate_pv()` are keyed on the
 distance still owed and both refuse. No completion walk can close it, S171's
 `excludes` forbade every other route, and **S202** owns the class. DEC-150.
 
+**S202 corrected that reading from the code and closed part of the class
+(DEC-251).** Only two of the walk's lookups are keyed on distance. The table's
+own `best_move` is not, and the walk took it from any entry, bounds included. On
+`fe5d3b3`, over the S170 grid, 30 of 33 short lines were walks that followed
+bound entries' moves either to a checkmate two to four plies early or to the claimed
+length without a mate, and DEC-122's gate refused each one. Two fixes followed,
+both reporting only and both INV-6 identical:
+
+- `complete_mate_pv()` now takes a move certified at the distance still owed
+  before a bound entry's move: the entry's own move when the entry is exact at
+  that distance, otherwise a certified child.
+- An aborted iteration's line that cannot be completed against the last
+  completed score gives way to the last completed line when both start with
+  the move played. That is S170's third cause, and it is what
+  `F_mate6_inherited_no_line` shows at its own cell.
+
+Over the same grid the two fixes take 33 short lines to 19, with the mate-line
+count unmoved at 873. The census that replaces the standing 8 is
+`adocs/data/S202_census.sh`. Until it runs, 8 stays the figure a count is read
+against.
+
 The census carries across machines where a timing does not: both engines play
 in the same run, so the reference's count is measured beside the candidate's
 and nothing is read from a figure taken elsewhere (DEC-049 untouched). The
@@ -1948,7 +1969,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
 | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
 | `test_search.cpp` "ordering keeps the tree small" | 65024 and 3251 | `python3 adocs/data/S192_node_budget.py`. Re-derived 2026-09-20 on S231's reverted tree from a count of 16256, the first time the script was run rather than the band read by eye: the pair it replaces, 69804 and 3490, was derived from 17451 at S091 and the count had sat below the middle half of it  since S222. S022's first verdict re-derived it on its candidate to 509368 and 25468, from a count of 127342 with S015's exchange gate deleted, and its H0 put this pair back with the gate, a revert and not a re-derivation: the count is 20427 again, inside the pair's middle half |
-| `test_mate_carry.cpp` `short_line_ceiling` | 6, 15, 5, 2, 11, 5 — the cell was 5, 11, 0, 1, 8, 2 and had been stale since S109 moved three of them; **S095 moved two more, E 9 → 11 and B 11 → 15 (DEC-225)**, read off the grid that step recorded and never off the run that went red; S022's first verdict moved C 0 → 6 off its own grid (DEC-241) and its H0 put C back to 0 by dropping that grid, `adocs/data/S022_v1_sweep.txt`, from the command; **S116's H1 moved A 5 → 6 and C 0 → 5 (DEC-250)** off the grid its landing recorded, `adocs/data/S116_sweep_s170.txt` | `adocs/data/S203_case_sweep.sh --ceilings adocs/data/S204_sweep_head.txt adocs/data/S204_sweep_killer_iter_clear.txt adocs/data/S109_sweep_block.txt adocs/data/S095_sweep_block.txt adocs/data/S116_sweep_s170.txt`, the five recorded grids as one command line |
+| `test_mate_carry.cpp` `short_line_ceiling` | 0, 5, 4, 0, 0, 0 — **lowered by S202 (DEC-251)** from 6, 15, 5, 2, 11, 5: the walk's certified-first move and the aborted-line fallback close 14 of the grid's 33 short lines without moving a node, and the command now holds the one grid taken with that walk, `adocs/data/S202_sweep_s170.txt`, the five older grids having been taken with the old walk (the S116 one on this very search tree, the other four on older ones), so it was superseded rather than added to; F's ceiling 0 holds the guard S202 turned on. Before S202 the row read 6, 15, 5, 2, 11, 5 and its history was: the cell was 5, 11, 0, 1, 8, 2 and had been stale since S109 moved three of them; **S095 moved two more, E 9 → 11 and B 11 → 15 (DEC-225)**, read off the grid that step recorded and never off the run that went red; S022's first verdict moved C 0 → 6 off its own grid (DEC-241) and its H0 put C back to 0 by dropping that grid, `adocs/data/S022_v1_sweep.txt`, from the command; **S116's H1 moved A 5 → 6 and C 0 → 5 (DEC-250)** off the grid its landing recorded, `adocs/data/S116_sweep_s170.txt` | `adocs/data/S203_case_sweep.sh --ceilings adocs/data/S202_sweep_s170.txt`; a tree-moving step that re-sweeps appends its grid |
 | `test_engine.cpp` "OwnBook draws a book move for the start key, and the seed replays it" | 13 entries, total weight 34700, `e2e4` heaviest at 12956 for the start key | `~/.venv/chess/bin/python adocs/data/S194_book_start_key.py src/openings.bin` |
 | `test_engine.cpp` "Best Book Move plays the heaviest entry, and the S175 position d2f3" | `bestmove e2e4` as the heaviest start-key entry; one entry, `d2f3`, for the S175 key | the same script |
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 145 — 143 until S250, when the weakened end rose to meet it and the gate built at `RfpMinPly` 1 went green (DEC-247). S116 re-read it on razoring's candidate: 149 shipping, 143 weakened, the gate at `RfpMinPly` 1 red, so it still separates and did not move | `python3 adocs/data/S156_mined_floor_sweep.py --floor 145` |
@@ -4377,7 +4398,7 @@ anything, as `adocs/data/S204_sweep_head.txt` and
 **S204 answered it: re-pinning at every step is not a guard, and the test no
 longer asks you to.** DEC-162 deleted the per-case floor on mate lines, which
 was the number a tree-moving change moved, and replaced it with a fixture-wide
-majority — three of the five guarded cases must report a mate line. A short
+majority — three of the five guarded cases must report a mate line; four of six since S202 guarded F, a strict majority as before (the old `(guarded + 1) / 2` gave 3 of 5 and would have given 3 of 6), DEC-251. A short
 mating PV is no longer forbidden either; it is S202's residue, counted against a
 per-case ceiling that `adocs/data/S203_case_sweep.sh --ceilings` re-derives from
 the two recorded grids. What is asserted at zero and pinned to nothing is the
@@ -4394,7 +4415,7 @@ S114's first verdict did it again on the tree it lands on and four moved again
 where two moved (`adocs/data/S114_rm_sweep_s170.txt`), and S115's landing on
 the tree the fail-low pull makes, where three moved
 (`adocs/data/S115_sweep_s170.txt`), and S116's landing on the tree razoring
-makes, where four moved (`adocs/data/S116_sweep_s170.txt`).
+makes, where four moved (`adocs/data/S116_sweep_s170.txt`). S202 swept the same tree with its two reporting fixes in and nothing moved: every mate count is S116's, cell for cell (`adocs/data/S202_sweep_s170.txt`), and that grid alone is now the `--ceilings` command (DEC-251).
 
 `zobrist` reports the checks the wiki's linear-independence rule asks for at the
 sizes that can be enumerated — no key zero, all 851 distinct, no pair XOR equal

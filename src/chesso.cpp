@@ -1083,6 +1083,11 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   bool last_score_is_mate = false;
   int last_mate_in = 0;
 
+  // The line the last completed iteration printed, already completed against
+  // its own score. Kept for the aborted iteration whose line the walk cannot
+  // complete against that same score, below. S202, DEC-251.
+  pv_t last_complete_pv = {};
+
   // The centre of the next iteration's aspiration window, and whether there is
   // one to use. Set only from an iteration that finished inside its window: an
   // aborted iteration's score is meaningless and a fail-high or fail-low one is
@@ -1377,9 +1382,36 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // printed beside, by the same all-or-nothing rule the search itself used
     // (DEC-122), so a pair that cannot be made consistent stays visibly short
     // rather than being papered over. S170.
+    //
+    // Where that walk refuses, the pair is not left short if it need not be.
+    // The last completed iteration's line reaches the same mate -- it was
+    // completed against this very score -- and when it starts with the move
+    // about to be played it is a line of the same choice that the engine can
+    // stand behind. It replaces the aborted one, ponder move included, so
+    // `bestmove`, `ponder` and the printed line still agree. The move played
+    // and every node are unchanged; only the line printed beside it is.
+    // S202's phase 1 found this on F_mate6_inherited_no_line at its own cell:
+    // the aborted depth-8 line was a 13-ply mate printed beside the depth-7
+    // `mate 6`, which no walk can complete to 11 plies. DEC-251.
     if (state.aborted && has_result && last_score_is_mate) {
       complete_mate_pv(&game, &state, &result.pv, last_mate_in);
+
+      const size_t needed = plies_to_deliver(last_mate_in);
+
+      if (result.pv.length < needed && last_complete_pv.length >= needed &&
+          last_complete_pv.table[0] == result.pv.table[0]) {
+        result.pv = last_complete_pv;
+
+        result.is_ponder_move = result.pv.length > 1;
+        if (result.is_ponder_move) {
+          result.ponder_move = {MOVE_FROM(result.pv.table[1]),
+                                MOVE_TO(result.pv.table[1]),
+                                MOVE_PROMOTED(result.pv.table[1])};
+        }
+      }
     }
+
+    if (!state.aborted && has_result) { last_complete_pv = result.pv; }
 
     if (has_result || !state.aborted) {
       const auto elapsed_ms =

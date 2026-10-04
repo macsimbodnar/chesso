@@ -132,6 +132,13 @@ void complete_mate_pv(game_t* game,
                       pv_t* pv,
                       int mate_in);
 
+// The plies a mate at `mate_in` moves takes: 2N - 1 for one the side to move
+// delivers, 2|N| for one it receives. A line at least this long, from a call
+// to complete_mate_pv() above, reaches its mate; a shorter one was refused.
+// Declared for the reporting layer, which has to tell the two apart for an
+// aborted iteration's line (S202, DEC-251).
+size_t plies_to_deliver(int mate_in);
+
 // The published history update, in one place because three tables will use it:
 // S222's continuation history and S023's capture history share the clamp, the
 // overflow discipline and the bonus/malus split with this one.
