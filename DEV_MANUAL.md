@@ -3511,9 +3511,12 @@ Three consequences of `CAND` the banner and the PGN show:
 - the engine is named `cand-<sha>`, so the PGN says which commit it held --
   as a working-tree candidate is named `cand-<HEAD>` or `cand-<HEAD>+<hex>`
   since S256, where it used to be the bare `candidate`. Anything reading the
-  PGN by engine name has to be told that name, `adocs/data/S105_pairs.py`
-  included: its default is `chesso-a` and a name matching neither side
-  inflates the variance silently;
+  PGN by engine name has to be told that name. `adocs/data/S105_pairs.py`'s
+  `report()` defaults to `chesso-a`, and since S257 it exits 1 on a name that
+  is not a side of every pair, where it used to score every game as Black's
+  and print a wrong variance with exit 0; its command line passes no name, so
+  over a `fastchess.sh` PGN it refuses. `adocs/data/S198_pairs.py` derives
+  the name from the PGN itself;
 - the A/A guard asks whether the two **commits** are the same one, and a dirty
   tree does not rescue a run where they are. `AA=1` is still the opt-in.
 
@@ -3956,6 +3959,16 @@ change, so DEC-143 asks for the next A/A before the next verdict:
 ROUNDS=500 AA=1 ./fastchess.sh             # 1000 games, fixed rounds, never a verdict
 adocs/data/S198_pairs.py <run>/games.pgn   # pair variance against the band above
 ```
+
+The reader takes the candidate's name from the PGN by
+`adocs/data/S024_pair_stats.py`'s `is_candidate`, the rule the S024 and S203
+readers use: the side named `candidate` or starting `cand-`, so a run's
+`cand-<sha>` or `cand-<HEAD>+<hex>` and the band's own `candidate` alike. A PGN
+in which none or both sides match exits 1 with a sentence and prints no
+variance. It passed the literal `candidate` until S257, and on a PGN named
+since S256 that read S219's own games, renamed, at 0.3563 and `z +2.26`,
+outside their own band. `S198_pairs.py --self-test` is `test_s198_pairs` in
+the fast label.
 
 Fixed rounds and not an SPRT, for the reason the flag exists: in an A/A the
 true difference is zero by construction, so an SPRT accepts H1 with probability

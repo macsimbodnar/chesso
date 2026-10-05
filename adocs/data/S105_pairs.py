@@ -57,6 +57,21 @@ def report(path, engine='chesso-a'):
     # A round is one opening played twice. An odd one is a game whose partner
     # is missing and it is dropped rather than counted as half a pair.
     pairs = [v for v in by_round.values() if len(v) == 2]
+
+    # The colours reverse within a pair, so a side's name is White in exactly
+    # one of its two games. A name that is not a side scores every game as
+    # Black's points and the variance comes out wrong with nothing printed;
+    # ten SPRT readings here, S231's among them, were scored that way over
+    # `cand-<sha>` PGNs before this refused it. S257.
+    for round_id, pair in by_round.items():
+        if len(pair) == 2 and sum(w == engine for w, _ in pair) != 1:
+            sys.exit(f'S105_pairs: {engine!r} is White in '
+                     f'{sum(w == engine for w, _ in pair)} of the 2 games of '
+                     f'round {round_id} in {path} (sides '
+                     f'{" and ".join(sorted(w for w, _ in pair))}), so it is '
+                     'not a side of this PGN; pass report() the name the run '
+                     'gave the side it scores')
+
     scores, opening_decided = [], 0
     for pair in pairs:
         scores.append(sum(POINTS[r] if w == engine else 1.0 - POINTS[r]

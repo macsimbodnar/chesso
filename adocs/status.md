@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05: S257 done -- the A/A reader finds the candidate by name; S258 created
+
+`S198_pairs.py` derives the candidate by `is_candidate` (`candidate` or
+`cand-...`, exactly one side). `S105_pairs.report` refuses a name that is no
+side of every complete pair. Red first: S219's band, renamed, read 0.3563,
+z +2.26 OUTSIDE, with exit 0. The new `test_s198_pairs` makes the fast suite
+42 tests. **Found:** ten SPRT pair readings (S095 to S237) were scored from
+Black's side; S231's 0.3105 is 0.3025 under its own name. The verdicts are
+fastchess's and are unaffected. The fast check read NEW-STEP:
+`S105_pairs.py`'s own command line now refuses every fastchess PGN, which is
+loud but leaves the checklist's reading without a command. Both go to filler
+**S258**, which fixes the command first and then re-reads the ten. **Next:**
+S258, then S120.
+
 ## 2026-10-05: work of 2026-10-04/05 verified; filler S257 created
 
 The owner asked for a second look at the medium-effort session's work,

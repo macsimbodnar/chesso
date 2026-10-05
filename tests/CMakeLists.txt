@@ -450,6 +450,19 @@ add_test(NAME test_ledger
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_ledger.py)
 set_tests_properties(test_ledger PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S257, DEC-254: adocs/data/S198_pairs.py, the band check DEC-143's A/A is
+# read with after every harness change. It passed the literal `candidate` to
+# S105_pairs.report, S256 renamed every candidate `cand-...`, and a name that is
+# no side scored every game as Black's and printed a wrong variance with exit 0.
+# The run is rare and the reading lands long after the rename that breaks it,
+# so the reader's own --self-test is registered here rather than left for
+# someone to remember: three candidate names, both refusals, S105_pairs' guard,
+# and the band under its own name and renamed. 13 cases, ~0.2 s, stdlib only,
+# nothing built; it reads S219_aa_calibration.pgn out of the source tree.
+add_test(NAME test_s198_pairs
+         COMMAND python3 ${CMAKE_SOURCE_DIR}/adocs/data/S198_pairs.py --self-test)
+set_tests_properties(test_s198_pairs PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S141: `--touches`, the one mode of tools/plan_prose_check.py that is in the
 # suite. The other two are not, and DEV_MANUAL.md says why: any source commit
 # shifts lines under fifty step files at once, so gating on citation freshness

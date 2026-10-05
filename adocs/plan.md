@@ -862,11 +862,11 @@ carried nothing.)
 
 ## Done recently
 
+- S257  **filler: the A/A band check derives the candidate's name from the PGN** -- `S198_pairs.py` uses `S024_pair_stats.is_candidate`, and `S105_pairs.report` refuses a name that is no side of every pair; red first (S219's band renamed read 0.3563, z +2.26, exit 0); `test_s198_pairs` added to the fast label; found ten SPRT pair readings scored from Black's side, now S258. 2026-10-05.
 - S117  **each evaluation mg/eg pair travels packed in one `score_t`** -- eg high, mg low, `+0x8000` extraction; the hooks and every term loop do one add where they did two; both stage-two divisions kept (S055 H0); node-identical (INV-6), bench_eval checksum identical; **+3.47 %** (CI +3.28 .. +3.66, 24/24 pairs), kept; weights `constexpr` and the tuner emits them so (DEC-255), the four weight parsers fixed before landing. 2026-10-05.
 - S256  **filler: a working-tree candidate is `cand-<HEAD>[+<diff blob>]` and closes with DEC-220's block** -- `fastchess.sh` saves the `add -A` diff and names the run by its blob; `gate.sh` and `ledger.py` require that blob under `adocs/data/`; S055's H0 joins the ledger as a seed row (DEC-254); `S024_pair_stats.py` and `S203_mine_cases.py` match `cand-` and fail loudly otherwise. 2026-10-05.
 - S255  **filler: `S192_anchors.py` clamps at `LAZY_EVAL_MARGIN` read from the source** -- 184, not a hard-coded 150; refuses unless the row is found once; 10 of 10 anchors unchanged (largest stage-two sum 138), liveness shown at 100. 2026-10-05.
 - S254  **filler: five mutants re-anchored on the memoised `is_check_move()`** -- C02, R01, P05, M08, L06 had been refused since S020; 173 of 173 validate, the five read killed (5 of 5); the whole list (about 4.8 h) not run. 2026-10-05.
-- S055  **one division for stage two: H0, reverted** -- mobility and king safety summed per phase and tapered once (tolerance 3 -> 2 would have followed); `{-5, 0}` nElo against `4a7e8ce`, **nElo -8.78 +/- 6.39**, 11372 games, 0 forfeits; a <= 1 cp rounding change measured as a regression is the finding; every moved golden back, the guard stays at 3; S117 keeps two divisions. 2026-10-05.
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -1178,7 +1178,7 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S257  **filler, DEC-171** -- the DEC-143 A/A band check reads a `fastchess.sh` PGN under the candidate name the run actually used, and refuses one where no side matches
+1. S258  **filler, DEC-171** -- `S105_pairs.py`'s command line reads a fastchess PGN again, and the ten SPRT pair readings it scored from Black's side are re-read and their consumers corrected
 2. S120  a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once
 3. S119  the table becomes cache-line clusters with an aged replacement, a prefetch issued when the key is known, and huge pages
 4. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
