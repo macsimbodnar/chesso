@@ -5,7 +5,19 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-04, by hand.
+Updated: 2026-10-05, by hand.
+
+## 2026-10-05: S253 done -- the hooks always inline; S020's seam re-landed on a zero
+
+`make_move`'s accumulator hooks are `CHESSO_ALWAYS_INLINE` in a `Side` template
+form: 0 calls out of line against 8. Plain always_inline measured -0.92 % and
+was not taken; this form -0.24 % (CI -0.35 .. -0.13), a zero kept because it
+removes the inline-unit-growth cliff (DEC-252, the coordinator's under the
+standing mandate; the owner may overturn). S020's generator seam on top
++0.11 % (CI -0.01 .. +0.24), node-identical, kept on a zero; perft 4 % faster
+than the parent. Two commits, each gated green and `bench` 4081329. Second
+tier: Debug self-play 8 games, 0 `Assertion`; `gate_extra` 5 stages green in
+1025 s on 2026-10-05. **Next:** S055. Owner question 3 (DEC-245) open.
 
 ## 2026-10-04: S020 done -- the child's check scan is lazy, +1.63 %
 

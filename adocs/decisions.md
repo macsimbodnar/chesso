@@ -13768,3 +13768,24 @@ Why:          Both close real short lines without moving a node; a mate is
 Rejected:     (c1) alone (leaves DEC-150's class whole); (a) now (a new score
               form on the surface before its consumers are measured); (b)
               (alters play, breaks DEC-122's guarantee once).
+
+## DEC-252  2026-10-05  A hook on the make_move path is always_inline in its smallest per-site form, and a zero-gain seam may land when it removes a cliff
+Tags:         performance, inlining, make_move, nnue-hook, s253, s020, inv-6, dec-049
+Context:      S253 measured `src/bitboard.cpp` at gcc 13.3's inline-unit-growth
+              limit (61 refusals at `5ad8837`, 8 of them `make_move`'s hook
+              calls). Plain always_inline on the two-branch hooks inlined every
+              site and measured -0.92 % on the search, about 5 % slower perft;
+              `noinline` about 18 % slower perft; a `Side` template form, always
+              inline, -0.24 % (CI -0.35 .. -0.13). With it, S020's generator
+              seam reads +0.11 % (CI -0.01 .. +0.24) where it read -1.89 % and
+              -3.52 % without.
+Decision:     By the coordinator, 2026-10-05, under the owner's standing
+              autonomous mandate; the owner may overturn. A hook on the
+              make_move path is marked `CHESSO_ALWAYS_INLINE` and called in the
+              form with the least code per site (the `Side` template). A seam
+              node-identical and measured as a zero lands when it removes a
+              cliff the next steps would be timed against (S032, S030, S117).
+Why:          The inlining budget, not the code, set S020's number; later
+              steps in the same unit should measure their own cost.
+Rejected:     a unit-local or global `inline-unit-growth` raise (S020 measured
+              it slower on perft); splitting the generator out (not needed).

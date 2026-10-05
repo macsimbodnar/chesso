@@ -476,43 +476,43 @@ static size_t generate_moves_body(const bb_tables_t* tables,
 //   pinned      our pieces standing alone between the king and an enemy
 //               slider. Such a piece may only move along that same line.
 //
+// Both are derived from a gen_masks_t: the checkers, the pinned pieces and the
+// king's square. A caller that already holds them for this position hands them
+// in and skips the king's attack scan and the pin loop (S020); otherwise
+// `given` is null and they are computed here exactly as before.
+//
+// One function computes or takes them. S020 measured the split shapes, which
+// gave generate_moves_body a second caller, slower while make_move's
+// accumulator hooks still competed for this unit's inline budget; S253 took
+// the hooks out of that competition and timed this shape only.
+//
 // Until S223 a side with no king was reachable (EMPTY_POS, and illegal FENs)
 // and nothing constrained the move list. load_FEN() refuses such a placement
 // now, so the king square below is an index and not a maybe.
-template <color_t Color, gen_type_t Type>
-static size_t generate_moves_impl(const bb_tables_t* tables,
-                                  const board_t* board,
-                                  move_t moves[])
+template <color_t Color>
+static inline index_t king_square_of(const board_t* board)
 {
-  constexpr color_t color = Color;
-  constexpr color_t opponent = (Color == WHITE) ? BLACK : WHITE;
-
-  const bb_t* my_bitboards =
-      &board->bitboards[(color == WHITE) ? W_PAWN : B_PAWN];
-  const bb_t* opp_bitboards =
-      &board->bitboards[(color == WHITE) ? B_PAWN : W_PAWN];
-
-  const bb_t king_bb = my_bitboards[5];
+  const bb_t king_bb = board->bitboards[(Color == WHITE) ? W_KING : B_KING];
 
   // S223. get_lsb_index() answers 64 on an empty board, and 64 indexes
   // tables->between and every attack table off its end.
   assert(king_bb != BB_0);
 
-  const index_t king_square = get_lsb_index(king_bb);
+  return get_lsb_index(king_bb);
+}
 
-  bb_t check_mask = ~BB_0;
-  bb_t pinned = BB_0;
 
+template <color_t Color>
+static inline bb_t pinned_to_king(const bb_tables_t* tables,
+                                  const board_t* board,
+                                  const index_t king_square)
+{
+  constexpr color_t color = Color;
+
+  const bb_t* opp_bitboards =
+      &board->bitboards[(color == WHITE) ? B_PAWN : W_PAWN];
   const bb_t all_occupancy = board->occupancies[BOTH];
-  const bb_t checkers = attackers_to(tables, board, king_square, opponent);
-  const int checker_count = count_bits(checkers);
-
-  if (checker_count == 1) {
-    const index_t checker_square = get_lsb_index(checkers);
-    check_mask = tables->between[king_square][checker_square] | checkers;
-  } else if (checker_count > 1) {
-    check_mask = BB_0;
-  }
+  bb_t pinned = BB_0;
 
   // Sliders that would hit the king on an empty board are the only ones that
   // can pin anything; a single one of our pieces in the way is pinned.
@@ -533,6 +533,42 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
     }
   }
 
+  return pinned;
+}
+
+
+template <color_t Color, gen_type_t Type>
+static size_t generate_moves_impl(const bb_tables_t* tables,
+                                  const board_t* board,
+                                  move_t moves[],
+                                  const gen_masks_t* given)
+{
+  constexpr color_t opponent = (Color == WHITE) ? BLACK : WHITE;
+
+  index_t king_square = 0;
+  bb_t checkers = BB_0;
+  bb_t pinned = BB_0;
+
+  if (given != nullptr) {
+    king_square = given->king_square;
+    checkers = given->checkers;
+    pinned = given->pinned;
+  } else {
+    king_square = king_square_of<Color>(board);
+    checkers = attackers_to(tables, board, king_square, opponent);
+    pinned = pinned_to_king<Color>(tables, board, king_square);
+  }
+
+  bb_t check_mask = ~BB_0;
+  const int checker_count = count_bits(checkers);
+
+  if (checker_count == 1) {
+    const index_t checker_square = get_lsb_index(checkers);
+    check_mask = tables->between[king_square][checker_square] | checkers;
+  } else if (checker_count > 1) {
+    check_mask = BB_0;
+  }
+
   if (check_mask != ~BB_0 || pinned != BB_0) {
     return generate_moves_body<Color, true, Type>(
         tables, board, moves, check_mask, pinned, king_square);
@@ -546,32 +582,109 @@ static size_t generate_moves_impl(const bb_tables_t* tables,
 template <gen_type_t Type>
 static inline size_t generate_dispatch(const bb_tables_t* tables,
                                        const board_t* board,
+                                       const gen_masks_t* given,
                                        move_t moves[])
 {
   assert(board != nullptr);
 
+  // Masks are valid at one position only. A caller that hands over a set
+  // computed before a make_move it has not unmade gets a wrong move list and
+  // no other symptom, so Debug recomputes and compares.
+  assert(given == nullptr || masks_match(tables, board, given));
+
   return (board->active_color == WHITE)
-             ? generate_moves_impl<WHITE, Type>(tables, board, moves)
-             : generate_moves_impl<BLACK, Type>(tables, board, moves);
+             ? generate_moves_impl<WHITE, Type>(tables, board, moves, given)
+             : generate_moves_impl<BLACK, Type>(tables, board, moves, given);
 }
+
+
+bb_t side_to_move_checkers(const bb_tables_t* tables, const board_t* board)
+{
+  assert(board != nullptr);
+
+  return (board->active_color == WHITE)
+             ? attackers_to(tables, board, king_square_of<WHITE>(board), BLACK)
+             : attackers_to(tables, board, king_square_of<BLACK>(board), WHITE);
+}
+
+
+gen_masks_t gen_masks_with_checkers(const bb_tables_t* tables,
+                                    const board_t* board,
+                                    bb_t checkers)
+{
+  assert(board != nullptr);
+  assert(checkers == side_to_move_checkers(tables, board));
+
+  if (board->active_color == WHITE) {
+    const index_t king_square = king_square_of<WHITE>(board);
+    return gen_masks_t{checkers,
+                       pinned_to_king<WHITE>(tables, board, king_square),
+                       king_square};
+  }
+
+  const index_t king_square = king_square_of<BLACK>(board);
+  return gen_masks_t{
+      checkers, pinned_to_king<BLACK>(tables, board, king_square), king_square};
+}
+
+
+gen_masks_t gen_masks(const bb_tables_t* tables, const board_t* board)
+{
+  return gen_masks_with_checkers(tables, board,
+                                 side_to_move_checkers(tables, board));
+}
+
+
+#ifndef NDEBUG
+bool masks_match(const bb_tables_t* tables,
+                 const board_t* board,
+                 const gen_masks_t* masks)
+{
+  const gen_masks_t fresh = gen_masks(tables, board);
+
+  return fresh.checkers == masks->checkers && fresh.pinned == masks->pinned &&
+         fresh.king_square == masks->king_square;
+}
+#endif
 
 
 size_t generate_moves(const bb_tables_t* tables,
                       const board_t* board,
                       move_t moves[])
-{ return generate_dispatch<GEN_ALL>(tables, board, moves); }
+{ return generate_dispatch<GEN_ALL>(tables, board, nullptr, moves); }
 
 
 size_t generate_captures(const bb_tables_t* tables,
                          const board_t* board,
                          move_t moves[])
-{ return generate_dispatch<GEN_CAPTURES>(tables, board, moves); }
+{ return generate_dispatch<GEN_CAPTURES>(tables, board, nullptr, moves); }
 
 
 size_t generate_quiets(const bb_tables_t* tables,
                        const board_t* board,
                        move_t moves[])
-{ return generate_dispatch<GEN_QUIETS>(tables, board, moves); }
+{ return generate_dispatch<GEN_QUIETS>(tables, board, nullptr, moves); }
+
+
+size_t generate_moves(const bb_tables_t* tables,
+                      const board_t* board,
+                      const gen_masks_t* masks,
+                      move_t moves[])
+{ return generate_dispatch<GEN_ALL>(tables, board, masks, moves); }
+
+
+size_t generate_captures(const bb_tables_t* tables,
+                         const board_t* board,
+                         const gen_masks_t* masks,
+                         move_t moves[])
+{ return generate_dispatch<GEN_CAPTURES>(tables, board, masks, moves); }
+
+
+size_t generate_quiets(const bb_tables_t* tables,
+                       const board_t* board,
+                       const gen_masks_t* masks,
+                       move_t moves[])
+{ return generate_dispatch<GEN_QUIETS>(tables, board, masks, moves); }
 
 
 bool move_belongs_to_side_to_move(const board_t* board, move_t move)

@@ -1103,7 +1103,11 @@ int quiescence(int alpha,
   if (check_limits(state)) { return stand_pat; }
   if (ply + 1 >= MAX_PLY) { return stand_pat; }
 
-  const bool in_check = is_check(game);
+  // The checkers rather than is_check()'s boolean: an in-check or capture
+  // generation below takes them, and only the pins are left to compute. The
+  // stand-pat return and the ply cap need no pins and pay for none. S253.
+  const bb_t checkers = side_to_move_checkers(game_tables(), &game->board);
+  const bool in_check = checkers != BB_0;
 
   // Standing pat means "I could just stop here", which is not on offer while in
   // check: the side to move is forced to reply. So no early return on the
@@ -1173,9 +1177,11 @@ int quiescence(int alpha,
   // every capture and every promotion -- less what the filter below drops. In
   // check every evasion has to be considered, quiet ones included, so the full
   // list is needed.
-  const size_t n = in_check
-                       ? generate_moves(game_tables(), &game->board, moves)
-                       : generate_captures(game_tables(), &game->board, moves);
+  const gen_masks_t masks =
+      gen_masks_with_checkers(game_tables(), &game->board, checkers);
+  const size_t n =
+      in_check ? generate_moves(game_tables(), &game->board, &masks, moves)
+               : generate_captures(game_tables(), &game->board, &masks, moves);
 
   // Compacted to the front of the same array. In check that is every evasion,
   // the move being forced. Out of check it is every capture and every
@@ -1589,7 +1595,10 @@ static int negamax_at(int alpha0,
   if (depth < 1) { return quiescence(alpha, beta, ply, 0, game, state); }
 
   // Below the leaf test: every leaf used to pay for this and throw it away.
-  const bool is_in_check = is_check(game);
+  // The checkers rather than is_check()'s boolean, because the generation
+  // below needs them and the board is back at this position by then. S253.
+  const bb_t checkers = side_to_move_checkers(game_tables(), &game->board);
+  const bool is_in_check = checkers != BB_0;
 
   // Null unless a test attached a probe and this is the node it asked for.
   // Resolved once, and only in the instantiation a test drives. S191.
@@ -2351,14 +2360,21 @@ static int negamax_at(int alpha0,
   const bool tt_move_is_quiet =
       (tt_move != 0) && !MOVE_CAPTURE(tt_move) && !MOVE_PROMOTED(tt_move);
 
-  size_t moves_count = generate_captures(game_tables(), &game->board, moves);
+  // The king's attack scan and the pin loop, once for both stages: the
+  // quiet stage below generates at this same position, because every move the
+  // capture stage searched has been unmade by then. S020, S253.
+  const gen_masks_t masks =
+      gen_masks_with_checkers(game_tables(), &game->board, checkers);
+
+  size_t moves_count =
+      generate_captures(game_tables(), &game->board, &masks, moves);
   bool quiets_generated = false;
 
   // With no captures there is nothing to fail high on, so the second stage is
   // needed immediately and staging saves nothing here.
   if (tt_move_is_quiet || moves_count == 0) {
-    const size_t added =
-        generate_quiets(game_tables(), &game->board, moves + moves_count);
+    const size_t added = generate_quiets(game_tables(), &game->board, &masks,
+                                         moves + moves_count);
 
 #ifdef CHESSO_TUNE
     census_quiets(depth, added);
@@ -2438,8 +2454,8 @@ static int negamax_at(int alpha0,
       // all. This is the branch staging exists to avoid.
       if (quiets_generated) { break; }
 
-      const size_t added =
-          generate_quiets(game_tables(), &game->board, moves + moves_count);
+      const size_t added = generate_quiets(game_tables(), &game->board, &masks,
+                                           moves + moves_count);
 
 #ifdef CHESSO_TUNE
       census_quiets(depth, added);

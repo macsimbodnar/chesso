@@ -104,6 +104,50 @@ size_t generate_quiets(const bb_tables_t* tables,
                        const board_t* board,
                        move_t moves[]);
 
+// What constrains the side to move's move list, computed once per position so
+// a caller generating more than once there -- the search's two staged calls --
+// pays for it once (S020). `checkers` is every enemy piece attacking the king,
+// so `checkers != 0` is exactly is_check(); `pinned` is our pieces pinned to
+// it. Valid at the position it was computed on and nowhere else: Debug
+// recomputes it at every generator call that receives it.
+struct gen_masks_t
+{
+  bb_t checkers;
+  bb_t pinned;
+  index_t king_square;
+};
+
+bb_t side_to_move_checkers(const bb_tables_t* tables, const board_t* board);
+
+// The pin half, for a caller that already holds the checkers -- the search
+// needs them at node entry and the pins only once it generates.
+gen_masks_t gen_masks_with_checkers(const bb_tables_t* tables,
+                                    const board_t* board,
+                                    bb_t checkers);
+
+gen_masks_t gen_masks(const bb_tables_t* tables, const board_t* board);
+
+bool masks_match(const bb_tables_t* tables,
+                 const board_t* board,
+                 const gen_masks_t* masks);
+
+// The three generators above, from masks the caller computed at this position.
+// Same lists, move for move.
+size_t generate_moves(const bb_tables_t* tables,
+                      const board_t* board,
+                      const gen_masks_t* masks,
+                      move_t moves[]);
+
+size_t generate_captures(const bb_tables_t* tables,
+                         const board_t* board,
+                         const gen_masks_t* masks,
+                         move_t moves[]);
+
+size_t generate_quiets(const bb_tables_t* tables,
+                       const board_t* board,
+                       const gen_masks_t* masks,
+                       move_t moves[]);
+
 bool make_move(game_t* game, move_t move);
 void unmake_move(game_t* game);
 
