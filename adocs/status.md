@@ -7,6 +7,14 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05: S255 done -- the anchors script clamps at the engine's margin
+
+`adocs/data/S192_anchors.py` reads `LAZY_EVAL_MARGIN` (184) from
+`src/search_params.hpp` and stops unless the row is found once; all ten
+anchors reproduce unchanged (the largest stage-two sum is 138, so 150 never
+bound). **Next:** S256, then S117. Owner question 3 (DEC-245) open; DEC-252
+the coordinator's, for the owner.
+
 ## 2026-10-05: S254 done -- five mutants re-anchored; HEAD was red three commits
 
 C02, R01, P05, M08 and L06 named `is_check_move` as a variable and were

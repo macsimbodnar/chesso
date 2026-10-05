@@ -1993,10 +1993,13 @@ changes what the floor means rather than re-deriving it.
 Two traps live in this list. `S192_anchors.py` parses the weight header by
 regex, so a refit that emits another layout breaks the parse silently — run it
 with no argument first and require `10 of 10 reproduced` before feeding it a
-fitted header. And the `-505` of the quiescence case has two ends: it moves with
-the weights *and* with how quiescence treats a checked side, so before
-re-deriving it after a search change, confirm the four leaves are still the four
-king moves each standing pat. If they are not, the case has caught something.
+fitted header. It clamps stage two at `LAZY_EVAL_MARGIN`, read from
+`src/search_params.hpp` on every run, fitted header or not, and stops if that row
+is not found exactly once (S255). And the `-505` of the quiescence case has two
+ends: it moves with the weights *and* with how quiescence treats a checked side,
+so before re-deriving it after a search change, confirm the four leaves are
+still the four king moves each standing pat. If they are not, the case has
+caught something.
 
 ### Mutation check, `tools/mutation_check.py`
 
