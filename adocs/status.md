@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05: work of 2026-10-04/05 verified; filler S257 created
+
+The owner asked for a second look at the medium-effort session's work,
+`248b6e2`..`e525bc0`. Nothing is broken at HEAD:
+- HEAD's gate is green in a clean worktree, bench 4081329.
+- Each engine commit (`dedddf6`, `5ad8837`, `1ec6e89`, `ecc7db8`) benches
+  4081329 like `fe5d3b3`, so every "No functional change" holds.
+- The S055 revert is complete, and its log matches the commit.
+- S202's census log is the full 3000 games.
+- The ledger regenerates byte-identical.
+- The second-tier logs exist and are green.
+
+**One defect, now S257**: S256 renamed the candidate `cand-...` and missed
+`adocs/data/S198_pairs.py`, the DEC-143 A/A band check. It still reads
+`candidate`, so the next A/A would print an inflated variance silently. It
+binds before the next A/A is read. S136's goal no longer says S055 landed.
+The slips already in history are the three red coordinator commits (fixed in
+`afb8e46`), `2fd61ae` dropping its documents (re-added in `4a7e8ce`), and
+S055's commit carrying no block (S256 seeded it). **Next:** S257, then S120.
+
 ## 2026-10-05: S117 done -- each mg/eg pair travels packed, +3.47 %
 
 One `score_t` per pair: eg in the high 16 bits, mg in the low 16, extracted
