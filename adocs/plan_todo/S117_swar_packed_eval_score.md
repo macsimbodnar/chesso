@@ -235,3 +235,14 @@ an SPRT.
   reasons.
 - https://github.com/lynx-chess/Lynx/releases -- packed evaluation named in
   v1.5.0/v1.7.0 release notes (the PR trail followed from there).
+
+## S055 read H0 and was reverted (2026-10-05, the coordinator)
+
+The accepts' "after S055 there is one division in the taper" no longer
+holds: S055's single taper measured nElo -8.78 +/- 6.39 at `{-5, 0}` and was
+reverted (`adocs/plan_done/S055_taper_stage_two_once.md`). Stage two still
+tapers mobility and king safety through **two** divisions, and the packing
+must reproduce both truncations -- unpack the two terms and taper each -- to
+stay node-identical. The accepts' rule is unchanged: a moved bound is a bug in
+the packing, and merging the divisions is a play change that has already been
+measured against.

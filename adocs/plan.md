@@ -861,11 +861,11 @@ carried nothing.)
 
 ## Done recently
 
+- S055  **one division for stage two: H0, reverted** -- mobility and king safety summed per phase and tapered once (tolerance 3 -> 2 would have followed); `{-5, 0}` nElo against `4a7e8ce`, **nElo -8.78 +/- 6.39**, 11372 games, 0 forfeits; a <= 1 cp rounding change measured as a regression is the finding; every moved golden back, the guard stays at 3; S117 keeps two divisions. 2026-10-05.
 - S253  **make_move's accumulator hooks always inline, in a branch-free `Side` form** -- `CHESSO_ALWAYS_INLINE`; 0 hook calls out of line against 8; plain always_inline -0.92 % not taken, this form -0.24 % (CI -0.35 .. -0.13), a zero kept because it removes the cliff (DEC-252); S020's generator seam re-landed on top, +0.11 % (CI -0.01 .. +0.24), a zero; node-identical (INV-6). 2026-10-05.
 - S020  **the child's gives-check scan taken lazily behind its two consumers** -- memoised, false on a capture as before; node-identical (INV-6); 24.9 % of the bench's child scans skipped, **+1.63 % (CI +1.49 .. +1.76)** over 24 interleaved hyperfine pairs, A/A floor +/- 0.2 %; KEPT. The generator seam was node-identical and slower in every shape (-1.89 %, -3.52 %), reverted: `src/bitboard.cpp` sits at gcc's inline-unit-growth limit, S253. 2026-10-04.
 - S202  **a table mate too shallow to back, reported better** -- two reporting-only fixes (DEC-251): the walk prefers an exact-at-distance entry, then a certified child, over a bound entry's move, and an uncompletable aborted line gives way to the last complete one; node-identical; short mate lines over the S170 grid 33 -> 19, F guarded, ceilings restated down; census 0 against 0 in 3000 games. 2026-10-04.
 - S252  **filler: mutant M06a killed on a mate property** -- a defender node of S145's set, mated in 2, found through `go` at iteration 4 by the shipped engine and never with reverse futility's floor at 2; the premise shown by probe drives; M06b still killed. At `f433124` M06a had been killed only by `test_mate_carry`'s vacuity check (DEC-141, DEC-171). 2026-10-03.
-- S251  **filler: `RfpMinPly`'s minimum 2 -> 3 now razoring reads it** -- at 2 the tune build found 17 of 26 mates in two on time; the shipped 3 unchanged, Release node-identical (INV-6); the sweep scripts take the new line (DEC-171, DEC-248). 2026-10-03.
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -1177,9 +1177,9 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S055  taper mobility and king safety through one division instead of two, tightening the model guard's bound to 2
-2. S254  filler: the mutants whose `old` string names `is_check_move` match the tree again, stale since S020 (DEC-171)
-3. S255  filler: `S192_anchors.py` clamps at `LAZY_EVAL_MARGIN` read from the source, not 150 (DEC-171)
+1. S254  filler: the mutants whose `old` string names `is_check_move` match the tree again, stale since S020 (DEC-171)
+2. S255  filler: `S192_anchors.py` clamps at `LAZY_EVAL_MARGIN` read from the source, not 150 (DEC-171)
+3. S256  filler: a verdict run from the working tree can carry DEC-220's block, or fastchess.sh refuses one; S055's H0 reaches the ledger (DEC-171)
 4. S117  the middlegame and endgame halves of every evaluation term travel in one integer instead of two
 5. S120  a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once
 6. S119  the table becomes cache-line clusters with an aged replacement, a prefetch issued when the key is known, and huge pages

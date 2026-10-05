@@ -1,0 +1,637 @@
+diff --git a/DEV_MANUAL.md b/DEV_MANUAL.md
+index 391d70f..ab5c194 100644
+--- a/DEV_MANUAL.md
++++ b/DEV_MANUAL.md
+@@ -1965,7 +1965,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
+ | `test_evaluation.cpp` "each piece is worth what the tables say" | 135, 244, 325, 563, 787, 0 | `python3 adocs/data/S192_anchors.py` |
+ | `test_search.cpp` `QUIET_ROOK_EVAL`, `QUIET_ROOK_EVAL_CHEAP` | 563 and 567, over nine cases | the same script, case "rook on d1" |
+ | `test_search.cpp` "a stand pat that is itself a bound is still capped" | 383, the pair's cheap score less `LAZY_EVAL_MARGIN` | the same script and `src/search_params.hpp` |
+-| `test_search.cpp` "a side in check may not stand pat" | 198 | the same script, case "black in check, Re8" |
++| `test_search.cpp` "a side in check may not stand pat" | 197 | the same script, case "black in check, Re8" |
+ | `test_search.cpp` "a quiet evasion is a legal answer to a check" | -505 | the same script, `LEAVES` and `QUIESCE_IN_CHECK` |
+ | `test_search.cpp` "the losing side takes an available repetition" | -569 | the same script, case "black a rook down, Kh7" |
+ | `test_search.cpp` "ordering keeps the tree small" | 65024 and 3251 | `python3 adocs/data/S192_node_budget.py`. Re-derived 2026-09-20 on S231's reverted tree from a count of 16256, the first time the script was run rather than the band read by eye: the pair it replaces, 69804 and 3490, was derived from 17451 at S091 and the count had sat below the middle half of it  since S222. S022's first verdict re-derived it on its candidate to 509368 and 25468, from a count of 127342 with S015's exchange gate deleted, and its H0 put this pair back with the gate, a revert and not a re-derivation: the count is 20427 again, inside the pair's middle half |
+@@ -3044,6 +3044,18 @@ the parent, `f82e5a3`, `bench 12` the parent's `1619863` the same way, and
+ 70283 / 240680 / 80264, every best move the parent's. No value of
+ `RazorMargin` is off, which is why the depth is the switch.
+ 
++**At `S055`, mobility and king safety tapered through one division instead of
++two: `4081329` -> `3562703`, -12.71 %, on `ecc7db8`'s tree.** No rule of the
++search moved: `(a + b) / 24` truncates once where `a / 24 + b / 24` truncated
++twice, which moves the static evaluation by at most a centipawn on most
++positions, and the tree follows it. Seven of the eight `bestmove` replies are
++unchanged, the fifth position's d8d6 -> d8e7; `bench 12` reads `1860699` ->
++`1741481`, kiwipete d5e6 -> e2a6 and the fifth d8d7 -> d8e7; `search_bench`
++17240 / 69834 / 18029 at 9 against the parent's 32932 / 70095 / 25178, 78212 /
++234517 / 113207 at 12 against 67792 / 280873 / 137893, the midgame's move c3d5
++-> g5f6 at 9 and kiwipete's d5e6 -> e2a6 at 12. Nothing about the direction is
++a prediction (DEC-019); the step's SPRT is what prices it.
++
+ A bench total is quoted with its commit, the way every other number on this
+ page is quoted — it moves
+ with every functional change by design, which is the whole point of it. S203 is
+@@ -4808,16 +4820,26 @@ drops rows is what this tool exists to make visible.
+ ### Re-measure the truncation-bound positions after a fit
+ 
+ S076. `tests/test_eval_model.cpp` pins four positions whose float model and
+-integer engine scores disagree by 69/24 = 2.875, the maximum three truncating
++integer engine scores disagree by 46/24 = 1.917, the maximum two truncating
+ divisions can produce, so the tolerance in "the model reproduces evaluate() on
+ every phase" is asserted against a corpus that reaches it. **A residual belongs
+ to the weights, not to the position**, so those four stop qualifying every time
+ the constants are refitted — DEC-057.
+ 
+ ```bash
+-build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8
++build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 1.8
+ ```
+ 
++**S055 took the bound from three rounding divisions to two** by tapering
++mobility and king safety through one division, so the maximum is 46/24 = 1.917
++and the tolerance 2 since; 69/24 = 2.875 and `--min 2.8` below are the
++three-division era's. At S055's tree, 2026-10-05: 10795695 rows, **0 past
++2.0, 18462 past 1.8, 1816 at 1.917**, and the four pinned are the first in
++corpus order at the maximum for phase 1 Black, 11 White, 17 Black and 23
++White. S076's four stay in the corpus at 1.875: the engine before S055 reads
++2.875 on each, so a third rounding division put back fails the tolerance on
++them.
++
+ Prints `difference, phase, side to move, fen` per hit and a summary line. 47 s
+ over 10.8 M rows. At S076's constants: 135399 rows past 2.0, 99 past 2.8, **30
+ at 2.875**, and the four pinned are drawn from those 30 to span the taper with
+@@ -4925,9 +4947,10 @@ the two shas.
+ **So the reading is re-taken after a refit — DEC-057 — and also whenever
+ `LAZY_EVAL_MARGIN` moves, which S039 exists to do.** DEC-169. The suite is safe
+ from the ulp: the tolerance in "the model reproduces evaluate() on every phase"
+-is 3 against a worst of 2.875, and the two bound clauses are `> 2.0` and
+-`> 2.8`, so the tightest of them keeps 0.075 between the assertion and a
+-rounding wobble. `adocs/data/S206_truncation_drift.sh` re-derives all six
++is 2 against a worst of 1.917 since S055 (3 against 2.875 before it), and the
++two bound clauses are `> 1.0` and `> 1.9`, so the tightest of them keeps 0.017
++between the assertion and a rounding wobble, and no row can sit on the
++tolerance itself, 2.0 = 48/24 being past the maximum. `adocs/data/S206_truncation_drift.sh` re-derives all six
+ readings and both counterfactuals from clean worktrees, eight builds and eight
+ scans: **8 of 8 reproduced in 7 m 02 s** on the workstation, 2026-09-10. It is
+ the scans that cost, not the builds, and ccache has nothing to do with it —
+diff --git a/adocs/data/S170_cases.tsv b/adocs/data/S170_cases.tsv
+index 7335f66..8565141 100644
+--- a/adocs/data/S170_cases.tsv
++++ b/adocs/data/S170_cases.tsv
+@@ -146,10 +146,25 @@
+ # cause, which S202 closes, and its ceiling is 0 (DEC-251). The grid is
+ # `adocs/data/S202_sweep_s170.txt`, and since S202 it is the whole of the
+ # `--ceilings` command: 0, 5, 4, 0, 0, 0.
++#
++# S055 re-swept every row on the tree its landing makes -- mobility and king
++# safety tapered through one division instead of two, which moves the static
++# evaluation by up to a centipawn on most positions, 2026-10-05 -- by the same
++# script and the same rule, stated before the grid was read. The rows as they
++# stood before it, S116's: A `nodes 500000`, B `nodes 100000`, C `nodes
++# 1500000`, D `nodes 2000000`, E `nodes 100000`, F `nodes 100000`. Five of
++# the six old cells went silent, A, C, D, E and F reporting no mate line, so
++# only B reported and the majority of DEC-162 failed. Now A 1000000 (6
++# lines), C 1200000 (2), D 1500000 (4), E 300000 (2 lines, **both short**)
++# and F at its stride 2 300000 (3); B unchanged (5), none short. **E's new
++# cell breaks its ceiling of 0**, so this re-sweep needs a decision before it
++# lands: raising a ceiling is relaxing a test. The grid is
++# `adocs/data/S055_sweep_s170.txt`; `--ceilings` over the S202 grid with it
++# added answers 0, 5, 4, 0, 2, 1, and this grid alone 0, 1, 1, 0, 2, 1.
+ name	fen	moves	go	start	stride	guard
+-A_mate8_shallow	r2qk1nr/pp1bbppp/2npp3/2p5/8/4PP1P/PPPPB1PN/RNBQ1RK1 b kq - 0 7	g8f6 b1c3 d8b6 c3e4 e8g8 c2c3 e6e5 h2g4 f6g4 f3g4 f7f5 e4g3 f5g4 e2g4 b6c7 g3f5 e7f6 d2d3 a8e8 e3e4 g8h8 c1e3 c6d8 g1h1 d8e6 d1c2 b7b6 a2a3 a7a6 f5g3 b6b5 g3f5 g7g6 f5h6 e8b8 a1d1 c7d8 b2b4 d8e7 c2a2 b8c8 b4c5 e6c5 e3c5 d7g4 h6g4 c8c5 g4e3 f6g7 a3a4 e7g5 f1f8 g7f8 e3d5 a6a5 d1f1 g5d8 f1f7 f8h6 a2b3 d8g8 f7d7 g8f8 b3b2 b5b4 c3b4 c5c1 h1h2 a5b4 d5b4 h6f4 g2g3	nodes 500000	20	1	yes
++A_mate8_shallow	r2qk1nr/pp1bbppp/2npp3/2p5/8/4PP1P/PPPPB1PN/RNBQ1RK1 b kq - 0 7	g8f6 b1c3 d8b6 c3e4 e8g8 c2c3 e6e5 h2g4 f6g4 f3g4 f7f5 e4g3 f5g4 e2g4 b6c7 g3f5 e7f6 d2d3 a8e8 e3e4 g8h8 c1e3 c6d8 g1h1 d8e6 d1c2 b7b6 a2a3 a7a6 f5g3 b6b5 g3f5 g7g6 f5h6 e8b8 a1d1 c7d8 b2b4 d8e7 c2a2 b8c8 b4c5 e6c5 e3c5 d7g4 h6g4 c8c5 g4e3 f6g7 a3a4 e7g5 f1f8 g7f8 e3d5 a6a5 d1f1 g5d8 f1f7 f8h6 a2b3 d8g8 f7d7 g8f8 b3b2 b5b4 c3b4 c5c1 h1h2 a5b4 d5b4 h6f4 g2g3	nodes 1000000	20	1	yes
+ B_mate6_shallow	rn1qkb1r/p1pppp1p/1p3np1/6B1/3PP3/2P2P2/PP3P1P/RN1QKB1R b KQkq - 0 6	f8g7 b1d2 h7h6 g5h4 e8g8 f1g2 c7c5 d4d5 d7d6 f3f4 b8d7 e1g1 d8c7 f4f5 f6h5 f2f4 h5f4 f1f4 g6g5 h4g5 h6g5 f4g4 f7f6 g4g3 c5c4 d2f3 d7c5 f3d4 b6b5 h2h4 g5h4 g3g7 g8g7 d1g4 g7h7 g4h4 h7g7 h4g4 g7h8 g4h5 h8g7	nodes 100000	20	1	yes
+-C_mate7_depth11	rnb1k1nr/ppp1bpp1/3p2qp/4p3/2B1P2P/2PP1N2/PP3PP1/RNBQ1RK1 b kq - 0 7	b8c6 d3d4 c8h3 f3e1 h3g4 f2f3 g4d7 d4d5 c6d8 e1d3 g8f6 f3f4 e8g8 b1d2 f8e8 f4f5 g6g3 f1f3 g3h4 f3h3 h4g4 d1e1 f6e4 d2e4 d7f5 d3f2 g4g6 h3g3 g6h7 a2a3 f5d7 e1e2 f7f5 e4d2 d8f7 e2h5 e7g5 a3a4 e5e4 f2h3 f5f4 g3g5 f7g5 h3f4 e4e3 c4d3 d7f5 d3b5 g7g6 h5e2 e3d2 b5e8 d2d1q e2d1 a8e8 d1d4 e8e1 g1h2 h7e7 f4g6 f5g6 c1g5 h6g5 a1e1 e7e1 d4a7 e1e5 h2g1 g5g4 a7b7 e5e3 g1h1 e3c1 h1h2	nodes 1500000	40	1	yes
+-D_mate_minus6_depth10	rnbqk2r/pp3ppp/2p1pn2/8/8/2bBB1P1/PPP1QP1P/2KR2NR w kq - 0 9	b2c3 d8a5 c1b2 b8d7 g1f3 d7b6 e3d4 b6a4 b2b3 c8d7 f3d2 e8g8 d4f6 a4c5 b3b2 g7f6 e2g4 g8h8 d2b3 c5b3 c2b3 a8d8 g4h4 f6f5 h4e7 c6c5 g3g4 f5g4 h2h3 f8g8 h3g4 g8g7 d3h7 d8e8 e7f6	nodes 2000000	20	1	yes
+-E_mate_minus9	r2q1rk1/1pp1ppbp/2np1np1/p7/2PP1Pb1/2N1PN2/PP2B1PP/R1BQ1RK1 w - - 0 9	d4d5 c6b4 e3e4 c7c6 a2a3 d8b6 g1h1 b4a6 f4f5 a6c5 f3g5 c5b3 f5g6 h7g6 a1b1 b3c1 b1c1 g7h6 h2h4 g8g7 e2g4 h6g5 c1b1 f8h8 g4h3 h8h4 d1c2 h4f4 b1e1 f4f1 e1f1 b6e3 d5c6 b7c6 c2b1 e3d4 f1e1 g5d2 e1d1 d4e3 e4e5 d6e5 d1f1 e5e4 c3a4 a8h8 b2b4 h8h3 g2h3 e3h3	nodes 100000	40	1	yes
+-F_mate6_inherited_no_line	rnbqk2r/ppp1bppp/1n2p3/3pP3/3P4/3B1N2/PPPB1PPP/RN1QK2R w KQkq - 2 7	e1g1 b8d7 c2c3 c7c5 a2a4 e8f8 b1a3 a7a5 a3b5 f8g8 b2b3 c5c4 d3e2 d7f8 b3c4 d5c4 d2f4 f8g6 d1d2 g6f4 d2f4 b6d5 f4g3 c8d7 f3d2 d7b5 a4b5 h7h5 e2c4 h5h4 g3f3 h4h3 g2h3 a5a4 f1e1 a4a3 d2e4 h8h4 e4d6 e7d6 e5d6 d8d6 c4b3 d5f4 e1e5 d6c7 a1a2 f4h3 g1h1 h3f4 f3g3 h4h3 g3f4 h3c3 f4h4 g7g6 b3e6 f7e6 e5e6 c7f7 h4e4 g8f8 f2f4 c3c4 a2a1 a8c8 a1a3 c4c1 h1g2 g6g5 e6h6 f7f4 h6h8 f8g7 h8h7 g7f6	nodes 100000	64	2	yes
++C_mate7_depth11	rnb1k1nr/ppp1bpp1/3p2qp/4p3/2B1P2P/2PP1N2/PP3PP1/RNBQ1RK1 b kq - 0 7	b8c6 d3d4 c8h3 f3e1 h3g4 f2f3 g4d7 d4d5 c6d8 e1d3 g8f6 f3f4 e8g8 b1d2 f8e8 f4f5 g6g3 f1f3 g3h4 f3h3 h4g4 d1e1 f6e4 d2e4 d7f5 d3f2 g4g6 h3g3 g6h7 a2a3 f5d7 e1e2 f7f5 e4d2 d8f7 e2h5 e7g5 a3a4 e5e4 f2h3 f5f4 g3g5 f7g5 h3f4 e4e3 c4d3 d7f5 d3b5 g7g6 h5e2 e3d2 b5e8 d2d1q e2d1 a8e8 d1d4 e8e1 g1h2 h7e7 f4g6 f5g6 c1g5 h6g5 a1e1 e7e1 d4a7 e1e5 h2g1 g5g4 a7b7 e5e3 g1h1 e3c1 h1h2	nodes 1200000	40	1	yes
++D_mate_minus6_depth10	rnbqk2r/pp3ppp/2p1pn2/8/8/2bBB1P1/PPP1QP1P/2KR2NR w kq - 0 9	b2c3 d8a5 c1b2 b8d7 g1f3 d7b6 e3d4 b6a4 b2b3 c8d7 f3d2 e8g8 d4f6 a4c5 b3b2 g7f6 e2g4 g8h8 d2b3 c5b3 c2b3 a8d8 g4h4 f6f5 h4e7 c6c5 g3g4 f5g4 h2h3 f8g8 h3g4 g8g7 d3h7 d8e8 e7f6	nodes 1500000	20	1	yes
++E_mate_minus9	r2q1rk1/1pp1ppbp/2np1np1/p7/2PP1Pb1/2N1PN2/PP2B1PP/R1BQ1RK1 w - - 0 9	d4d5 c6b4 e3e4 c7c6 a2a3 d8b6 g1h1 b4a6 f4f5 a6c5 f3g5 c5b3 f5g6 h7g6 a1b1 b3c1 b1c1 g7h6 h2h4 g8g7 e2g4 h6g5 c1b1 f8h8 g4h3 h8h4 d1c2 h4f4 b1e1 f4f1 e1f1 b6e3 d5c6 b7c6 c2b1 e3d4 f1e1 g5d2 e1d1 d4e3 e4e5 d6e5 d1f1 e5e4 c3a4 a8h8 b2b4 h8h3 g2h3 e3h3	nodes 300000	40	1	yes
++F_mate6_inherited_no_line	rnbqk2r/ppp1bppp/1n2p3/3pP3/3P4/3B1N2/PPPB1PPP/RN1QK2R w KQkq - 2 7	e1g1 b8d7 c2c3 c7c5 a2a4 e8f8 b1a3 a7a5 a3b5 f8g8 b2b3 c5c4 d3e2 d7f8 b3c4 d5c4 d2f4 f8g6 d1d2 g6f4 d2f4 b6d5 f4g3 c8d7 f3d2 d7b5 a4b5 h7h5 e2c4 h5h4 g3f3 h4h3 g2h3 a5a4 f1e1 a4a3 d2e4 h8h4 e4d6 e7d6 e5d6 d8d6 c4b3 d5f4 e1e5 d6c7 a1a2 f4h3 g1h1 h3f4 f3g3 h4h3 g3f4 h3c3 f4h4 g7g6 b3e6 f7e6 e5e6 c7f7 h4e4 g8f8 f2f4 c3c4 a2a1 a8c8 a1a3 c4c1 h1g2 g6g5 e6h6 f7f4 h6h8 f8g7 h8h7 g7f6	nodes 300000	64	2	yes
+diff --git a/adocs/data/S192_anchors.py b/adocs/data/S192_anchors.py
+index aa8ff24..22aa3e9 100644
+--- a/adocs/data/S192_anchors.py
++++ b/adocs/data/S192_anchors.py
+@@ -158,7 +158,7 @@ CASES = [
+     dict(
+         title="black in check, Re8",
+         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
+-        anchors={"evaluate": 198},   # test_search.cpp "a side in check may not stand pat"
++        anchors={"evaluate": 197},   # test_search.cpp "a side in check may not stand pat"
+         stm="b",
+         phase=8,  # two white rooks and one black queen
+         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
+@@ -366,9 +366,13 @@ def score(case, w):
+             ks_mg += sign * count * w["king_safety_mg"][KS[name]]
+             ks_eg += sign * count * w["king_safety_eg"][KS[name]]
+ 
++    # One taper over the summed pair since S055, as evaluate() does it; the
++    # split is reported the way evaluate_expensive_terms() reports it, mobility
++    # tapered alone and king safety the remainder.
++    stage_two = trunc_div((mob_mg + ks_mg) * phase + (mob_eg + ks_eg) * endgame, MAX)
+     mobility = trunc_div(mob_mg * phase + mob_eg * endgame, MAX)
+-    safety = trunc_div(ks_mg * phase + ks_eg * endgame, MAX)
+-    expensive = stm * max(-150, min(150, mobility + safety))  # LAZY_EVAL_MARGIN
++    safety = stage_two - mobility
++    expensive = stm * max(-150, min(150, stage_two))  # LAZY_EVAL_MARGIN
+ 
+     return dict(
+         evaluate=cheap + expensive,
+diff --git a/src/evaluation.cpp b/src/evaluation.cpp
+index a7364be..dc68aff 100644
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -695,8 +695,9 @@ int evaluate_cheap(const board_t* board)
+   // Summed into the accumulated pair before the interpolation rather than
+   // tapered on its own. One integer division instead of two, on a function that
+   // costs 1.36 ns in total, and one truncation towards zero instead of two --
+-  // which is what keeps test_eval_model's one-centipawn slack against the
+-  // tuner's floating-point model from having to grow.
++  // which is what keeps test_eval_model's tolerance against the tuner's
++  // floating-point model from growing: each truncating division widens its
++  // bound by 23/24.
+   const int positional =
+       (((board->psqt_mg + pawn_mg) * phase) +
+        ((board->psqt_eg + pawn_eg) * (GAME_PHASE_MAX - phase))) /
+@@ -718,13 +719,14 @@ int evaluate_cheap(const board_t* board)
+   // stops being exactly true. See test_eval_model, "the move is worth the same
+   // to either side".
+   //
+-  // What that costs is a second truncating division, one centipawn against the
+-  // tuner's floating-point model -- test_eval_model allows two and this widens
+-  // the worst case by one -- and seven instructions, measured: evaluate_cheap()
+-  // disassembles to 164 at these zero weights and 171 with them forced, the
+-  // extra six being the taper and only one of them the add. At zero the
+-  // compiler deletes all seven, DEC-047, which is why the count is the
+-  // measurement and no timing was run.
++  // What that costs is a second truncating division in this function, up to
++  // 23/24 of a centipawn more against the tuner's floating-point model once
++  // tempo is fitted -- test_eval_model's tolerance assumes the weights are
++  // zero and asserts it, for that reason -- and seven instructions,
++  // measured: evaluate_cheap() disassembles to 164 at these zero weights and
++  // 171 with them forced, the extra six being the taper and only one of them
++  // the add. At zero the compiler deletes all seven, DEC-047, which is why the
++  // count is the measurement and no timing was run.
+   const int tempo =
+       ((tempo_mg * phase) + (tempo_eg * (GAME_PHASE_MAX - phase))) /
+       GAME_PHASE_MAX;
+@@ -913,9 +915,10 @@ static inline void king_shelter_features(const board_t* board,
+ // second extraction would be free to agree with the model and disagree with the
+ // engine.
+ //
+-// The two tapered terms are handed back separately through `mobility_out` and
++// The two terms are handed back separately through `mobility_out` and
+ // `safety_out` for the same reason and under the same `if constexpr`: at
+-// <false> the pointers and the stores are not compiled at all.
++// <false> the pointers, the stores and mobility's separate taper are not
++// compiled at all.
+ template <bool collect>
+ static int evaluate_mobility_and_king_safety(const board_t* board,
+                                              int out[2][KS_FEATURE_COUNT],
+@@ -1015,17 +1018,28 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
+   const int phase = game_phase(board);
+   const int endgame = GAME_PHASE_MAX - phase;
+ 
+-  const int mobility =
+-      (mobility_mg_sum * phase + mobility_eg_sum * endgame) / GAME_PHASE_MAX;
+-  const int safety =
+-      (safety_mg_sum * phase + safety_eg_sum * endgame) / GAME_PHASE_MAX;
+-
++  // Both terms summed per phase and tapered once, the shape evaluate_cheap()
++  // gives the pawn terms and the shape tools/eval_model.hpp has always had. One
++  // truncation towards zero instead of two, so test_eval_model's bound against
++  // the floating-point model loses a division's worth, 23/24. S055, DEC-053.
++  const int stage_two = ((mobility_mg_sum + safety_mg_sum) * phase +
++                         (mobility_eg_sum + safety_eg_sum) * endgame) /
++                        GAME_PHASE_MAX;
++
++  // The split is for tools/eval_spread and the test that holds the pair to the
++  // engine's own sum, so it has to add up to stage_two exactly. Mobility is
++  // tapered on its own as before and king safety is the remainder, which makes
++  // king safety the term that carries the merged division's residue: within
++  // one centipawn of its own separate taper, and never a different total.
+   if constexpr (collect) {
++    const int mobility =
++        (mobility_mg_sum * phase + mobility_eg_sum * endgame) / GAME_PHASE_MAX;
++
+     if (mobility_out != nullptr) { *mobility_out = mobility; }
+-    if (safety_out != nullptr) { *safety_out = safety; }
++    if (safety_out != nullptr) { *safety_out = stage_two - mobility; }
+   }
+ 
+-  return mobility + safety;
++  return stage_two;
+ }
+ 
+ 
+diff --git a/tests/test_eval_model.cpp b/tests/test_eval_model.cpp
+index 75ded65..502b505 100644
+--- a/tests/test_eval_model.cpp
++++ b/tests/test_eval_model.cpp
+@@ -125,38 +125,42 @@ using test_eval_positions::positions;
+ // feature count, in the order they are listed above. Named separately because
+ // "the pinned positions reach the truncation bound" has to be able to fail when
+ // *these* stop disagreeing with the model, which is a different statement from
+-// the whole corpus agreeing within tolerance. S038, re-measured at S065 and at
+-// S076.
++// the whole corpus agreeing within tolerance. S038, re-measured at S065, at
++// S076 and at S055.
+ //
+ // GOLDEN (DEC-142): the four positions themselves, drawn from the rows that
+ // reach the maximum a chain of truncating divisions can produce. A residual
+ // belongs to the weights and not to the position (DEC-057), so a refit is
+ // expected to stop these four qualifying.
+-// Re-derive: build/tools/truncation_scan --data <corpus> --min 2.8, which
+-// prints `difference, phase, side to move, fen` per hit; the four are chosen
+-// from the hits at the maximum to span the taper with both sides to move.
+-// Measured 2026-09-10 on .tuning/selfplay_v2_dedup.tsv at the shipped weights:
+-// 10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at the maximum 2.875, and
+-// all four below are among them.
+-// Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the model
+-// and evaluate() both clamp the tapered mobility-plus-king-safety sum at that
+-// margin, so while the clamp binds the two agree exactly and the residual this
+-// pins is not there to be measured. S085 raising it from 150 to 184 took the
+-// corpus from 99 rows past 2.8 to 105 at unmoved weights, which is half of what
+-// S206 bisected. Margin: each of the four is asserted past
+-// 2.0 and the worst of them past 2.8, against a maximum of 2.875 -- so the
+-// tightest of the two clauses has 0.075 of room, which is the point, and
++// Re-derive: build/tools/truncation_scan --data <corpus> --min 1.8, which
++// prints `difference, phase, side to move, fen` per hit; the four are the
++// first hit in corpus order at the maximum for phase 1 with Black to move,
++// 11 White, 17 Black and 23 White, to span the taper with both sides to move.
++// Measured 2026-10-05 on .tuning/selfplay_v2_dedup.tsv at the shipped weights
++// and S055's single stage-two taper: 10795695 rows, 0 past 2.0, 18462 past
++// 1.8, 1816 at the maximum 46/24 = 1.917, every odd phase from 1 to 23 except
++// 3, 9, 15 and 21 among them, and all four below are among them.
++// Moves legitimately on: a refit, a change to how many divisions evaluate()
++// tapers through (S055 took it from three rounding to two and replaced S076's
++// four, which sit at 45/24 = 1.875 since), and a move of LAZY_EVAL_MARGIN --
++// the model and evaluate() both clamp the tapered mobility-plus-king-safety sum
++// at that margin, so while the clamp binds the two agree exactly and the
++// residual this pins is not there to be measured. S085 raising it from 150 to
++// 184 took the corpus from 99 rows past 2.8 to 105 at unmoved weights, which
++// is half of what S206 bisected. Margin: each of the four is asserted past 1.0
++// and the worst of them past 1.9, against a maximum of 1.917 -- so the
++// tightest of the two clauses has 0.017 of room, which is the point, and
+ // re-choosing four from a fresh scan is the re-derivation.
+ // Property beside it: "the model reproduces evaluate() on every phase", which
+ // holds over the whole corpus rather than over four chosen rows -- but not at
+ // any weights: its tolerance is a function of how many taperings truncate, and
+-// a fitted tempo takes the bound to 4 x 23/24 = 3.833 and the tolerance to 4,
++// a fitted tempo takes the bound to 3 x 23/24 = 2.875 and the tolerance to 3,
+ // which "the pinned positions reach the truncation bound" asserts below.
+ static const std::vector<std::string> truncation_positions = {
+-    "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
+-    "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
+-    "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
+-    "r2qkb1r/pp1b1ppp/3p4/2p1p3/2PnP3/2NP4/PP4PP/R1BQKBNR w kq - 2 10",
++    "7k/8/5p1P/3KpB2/8/8/5PP1/8 b - - 10 47",
++    "6r1/1Bp5/2n1k2p/1p6/1b1Pn3/1P6/5P1P/R1B2K1R w - - 0 23",
++    "5r1k/1b1p3p/pp2p1p1/2p5/2PNP3/P1NPb2P/KP5q/R2Q1B2 b - - 0 24",
++    "r2qkb1r/1ppb1ppp/4pn2/p2p4/7P/3P1N2/PPPBPPP1/RN1QKB1R w KQkq - 0 8",
+ };
+ 
+ 
+@@ -259,28 +263,34 @@ TEST_SUITE("eval model: agrees with the engine")
+       const double model = model_score_white(fen, params.data());
+ 
+       // evaluate() interpolates in integers and truncates towards zero, and it
+-      // does that four separate times, each rounding on its own, so the
++      // does that three separate times, each rounding on its own, so the
+       // arithmetic alone can differ from the model's floating point by more
+-      // than one centipawn. The four divisions by GAME_PHASE_MAX are, in the
++      // than one centipawn. The three divisions by GAME_PHASE_MAX are, in the
+       // order they execute:
+       //
+-      //   src/evaluation.cpp:640  the piece-square pair plus the pawn terms
+-      //   src/evaluation.cpp:668  tempo
+-      //   src/evaluation.cpp:951  mobility
+-      //   src/evaluation.cpp:953  king safety
++      //   src/evaluation.cpp evaluate_cheap()   the piece-square pair plus
++      //                                         the pawn terms
++      //   src/evaluation.cpp evaluate_cheap()   tempo
++      //   src/evaluation.cpp evaluate_mobility_and_king_safety()
++      //                                         mobility plus king safety
+       //
+-      // Three of them can round today. Tempo ships at tempo_mg == tempo_eg == 0
+-      // (src/evaluation.cpp:582-583), so its division truncates 0 / 24 exactly
+-      // and contributes nothing, which puts the bound at 3 x 23/24 = 2.875 and
+-      // this tolerance at 3. "the pinned positions reach the truncation bound"
+-      // below asserts that premise, because fitting tempo makes the fourth
+-      // division round too and the bound 4 x 23/24 = 3.833.
++      // Two of them can round today. Tempo ships at tempo_mg == tempo_eg == 0
++      // (src/evaluation.cpp, above evaluate_cheap()), so its division
++      // truncates 0 / 24 exactly and contributes nothing, which puts the bound
++      // at 2 x 23/24 = 1.917 and this tolerance at 2. "the pinned positions
++      // reach the truncation bound" below asserts that premise, because
++      // fitting tempo makes the third division round too and the bound
++      // 3 x 23/24 = 2.875.
+       //
+-      // The 2.0 this used to allow, with a comment claiming two divisions, was
+-      // false arithmetic that only passed because the corpus above was
+-      // hand-picked: the audit measured 3446 of 200000 real positions past it,
+-      // worst exactly 2.875. Four of those positions are pinned above. S038,
+-      // DEC-053.
++      // A 2.0 was allowed here once before, with a comment claiming two
++      // divisions, and it was false arithmetic that only passed because the
++      // corpus above was hand-picked: mobility and king safety were tapered
++      // separately then, three divisions rounded, and the audit measured 3446
++      // of 200000 real positions past it, worst exactly 2.875. S038 raised
++      // this to 3 (DEC-053); S055 tapers mobility and king safety through one
++      // division, which is what earns the 2 back. S076's four positions at
++      // 2.875 are still in the corpus and sit at 1.875 since, so a third
++      // rounding division put back fails here on them.
+       //
+       // Anything beyond the bound is a difference in what is being computed,
+       // which is what this file is for.
+@@ -299,33 +309,36 @@ TEST_SUITE("eval model: agrees with the engine")
+       // the wrong field, or read it White relative when the engine reads it
+       // side-to-move relative, fails here rather than on half the corpus by
+       // luck.
+-      CHECK(std::abs(model - engine_white) <= 3.0);
++      CHECK(std::abs(model - engine_white) <= 2.0);
+     }
+   }
+ 
+   // Non-vacuous by construction, and the reason the tolerance above is a bound
+-  // rather than a number someone widened until the suite went green. The
+-  // twenty-six feature positions all divide evenly enough to agree within 2.0,
+-  // so at that tolerance the case above was passing for a reason unconnected to
+-  // the arithmetic it cites -- which is exactly how the real corpus came to
+-  // violate it on 1.6 % of positions unnoticed. Each pinned position has to
+-  // still disagree by more than the old 2.0, or the corpus has stopped
++  // rather than a number someone widened until the suite went green.
++  // Hand-picked positions tend to divide evenly -- the twenty-six feature
++  // positions all agreed within 2.0 while three divisions rounded -- so on
++  // those alone the case above can pass for a reason unconnected to the
++  // arithmetic it cites, which is exactly how the real corpus came to violate
++  // an earlier tolerance on 1.6 % of positions unnoticed. Each pinned position
++  // has to still disagree by more than 1.0, or the corpus has stopped
+   // exercising the bound and the tolerance is untested again.
+   //
+-  // 2.0 is the threshold the arithmetic gives and not a round number. Each of
+-  // the three divisions loses less than one unit, at most 23/24, so two of them
+-  // together cannot reach past 46/24 = 1.9167. A residual over 2.0 = 48/24 is
+-  // therefore proof that all three divisions truncated on that position, which
+-  // is what "this position exercises the bound" means; a position below it may
+-  // be exercising only two. Every position pinned above sits at 69/24 = 2.875,
+-  // all three losing their maximum at once.
++  // 1.0 is the threshold the arithmetic gives and not a round number. Each of
++  // the two rounding divisions loses less than one unit, at most 23/24, so one
++  // of them alone cannot reach 1.0 = 24/24. A residual over 1.0 is therefore
++  // proof that both divisions truncated on that position, which is what "this
++  // position exercises the bound" means; a position below it may be exercising
++  // only one. Every position pinned above sits at 46/24 = 1.917, both losing
++  // their maximum at once. S055; S038 to S076 asserted 2.0 and 2.8 here, the
++  // same argument over three divisions.
+   //
+   // The precondition is the tempo weights, because the count of *effective*
+   // truncations depends on them: at tempo_mg == tempo_eg == 0 the tempo
+-  // division truncates 0 / 24 exactly and three of the four divisions can
+-  // round, bounding the disagreement at 3 x 23/24 = 2.875. Fit tempo to
+-  // anything non-zero and the fourth division starts rounding too, the bound
+-  // becomes 4 x 23/24 = 3.833, and the tolerance above has to go to 4. S038.
++  // division truncates 0 / 24 exactly and two of the three divisions can
++  // round, bounding the disagreement at 2 x 23/24 = 1.917. Fit tempo to
++  // anything non-zero and the third division starts rounding too, the bound
++  // becomes 3 x 23/24 = 2.875, and the tolerance above has to go to 3. S038,
++  // S055.
+   TEST_CASE_FIXTURE(model_fixture_t,
+                     "the pinned positions reach the truncation bound")
+   {
+@@ -334,9 +347,9 @@ TEST_SUITE("eval model: agrees with the engine")
+     const bool tempo_unfitted = (tempo_mg == 0) && (tempo_eg == 0);
+ 
+     CHECK_MESSAGE(tempo_unfitted,
+-                  "tempo is fitted, so all four taperings can truncate: the "
+-                  "bound is now 4 x 23/24 = 3.833 and the tolerance in \"the "
+-                  "model reproduces evaluate() on every phase\" has to be 4");
++                  "tempo is fitted, so all three taperings can truncate: the "
++                  "bound is now 3 x 23/24 = 2.875 and the tolerance in \"the "
++                  "model reproduces evaluate() on every phase\" has to be 3");
+ 
+     std::vector<double> params(eval_model::PARAM_COUNT, 0.0);
+     eval_model::starting_params(params.data());
+@@ -357,16 +370,16 @@ TEST_SUITE("eval model: agrees with the engine")
+ 
+       worst = std::max(worst, difference);
+ 
+-      CHECK_MESSAGE(difference > 2.0,
++      CHECK_MESSAGE(difference > 1.0,
+                     (fen + ": difference " + std::to_string(difference) +
+-                     ", no longer past the old 2.0 tolerance"));
++                     ", no longer past what one division can lose"));
+     }
+ 
+-    // And one of them has to sit at the top of the range, not merely past 2.0,
++    // And one of them has to sit at the top of the range, not merely past 1.0,
+     // so the tolerance is pinned against the bound it claims rather than
+     // against whatever the mildest of these four happens to be.
+-    CHECK_MESSAGE(worst > 2.8, ("worst pinned difference " +
+-                                std::to_string(worst) + ", short of 2.875"));
++    CHECK_MESSAGE(worst > 1.9, ("worst pinned difference " +
++                                std::to_string(worst) + ", short of 1.917"));
+   }
+ 
+   // The king safety counts themselves, per colour, engine against model. This
+diff --git a/tests/test_eval_positions.hpp b/tests/test_eval_positions.hpp
+index d067dcc..f394236 100644
+--- a/tests/test_eval_positions.hpp
++++ b/tests/test_eval_positions.hpp
+@@ -129,10 +129,30 @@ inline const std::vector<std::string> positions = {
+     // position under these weights, so the middle two are 11 and 19. DEC-057 is
+     // the decision to re-measure; what it does not permit is lowering the
+     // thresholds below to whatever came out.
++    //
++    // **S055 took the bound itself down and these four stayed.** Mobility and
++    // king safety are tapered through one division since, two divisions round
++    // instead of three, and all four sit at 45/24 = 1.875 against a new
++    // maximum of 46/24 = 1.917. They are kept because they are what a third
++    // rounding division shows up on: the engine before S055 reads 2.875 on
++    // each, so a re-split taper fails the tolerance of 2 on them.
+     "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
+     "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
+     "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
+     "r2qkb1r/pp1b1ppp/3p4/2p1p3/2PnP3/2NP4/PP4PP/R1BQKBNR w kq - 2 10",
++    // The truncation bound after S055, 46/24 = 1.917: two rounding divisions
++    // losing their maximum at once. Measured over all 10795695 rows of
++    // `.tuning/selfplay_v2_dedup.tsv` by `build/tools/truncation_scan --min
++    // 1.8` -- 1816 positions reach it, at phases 1, 5, 7, 11, 13, 17, 19 and
++    // 23 -- and these are the first in corpus order at phase 1 with Black to
++    // move, 11 White, 17 Black and 23 White, so the taper is spanned with both
++    // sides to move. The engine before S055 reads 0.917, 1.917, 1.917 and
++    // 0.917 on them. "the pinned positions reach the truncation bound" is
++    // what says they still do.
++    "7k/8/5p1P/3KpB2/8/8/5PP1/8 b - - 10 47",
++    "6r1/1Bp5/2n1k2p/1p6/1b1Pn3/1P6/5P1P/R1B2K1R w - - 0 23",
++    "5r1k/1b1p3p/pp2p1p1/2p5/2PNP3/P1NPb2P/KP5q/R2Q1B2 b - - 0 24",
++    "r2qkb1r/1ppb1ppp/4pn2/p2p4/7P/3P1N2/PPPBPPP1/RN1QKB1R w KQkq - 0 8",
+     // Passed pawns at a non-zero phase, added at S100 for a gap the count-based
+     // non-vacuity cases cannot see. Every position above that puts a passer in
+     // bucket 2, 4 or 5 is a bare-pawn endgame at phase 0, so `mg_weight` is
+diff --git a/tests/test_search.cpp b/tests/test_search.cpp
+index 58bd8ad..1f46310 100644
+--- a/tests/test_search.cpp
++++ b/tests/test_search.cpp
+@@ -1183,12 +1183,12 @@ TEST_SUITE("search: quiescence")
+   // The one case where standing pat is not on offer: the side to move is in
+   // check and has to reply, so every evasion is searched instead.
+   //
+-  // GOLDEN (DEC-142): 198, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
++  // GOLDEN (DEC-142): 197, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
+   // 1" with Black to move and in check -- the number the case needs a stand pat
+   // to be compared against. Re-derive: python3 adocs/data/S192_anchors.py, case
+   // "black in check, Re8". Moves legitimately on: a refit. Margin: exact -- the
+   // assertions that carry the property are the two inequalities below it, which
+-  // have the whole gap between 198 and a mate score of slack. Property beside
++  // have the whole gap between 197 and a mate score of slack. Property beside
+   // it: "a quiet evasion is a legal answer to a check".
+   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
+   {
+@@ -1212,9 +1212,11 @@ TEST_SUITE("search: quiescence")
+     // does over the summed pair.
+     // S065's fit, DEC-059, then moved it again: 266 to 224, and S076's refit on
+     // the deduplicated corpus to 198 -- the one anchor of the five that went
+-    // down.
++    // down. S055's single taper of mobility plus king safety then took a
++    // centipawn off it, 198 to 197: White-relative, the two separate
++    // truncations summed to 138 and the one over their sum gives 139.
+     const int black_static = evaluate(&game.board);
+-    REQUIRE_EQ(black_static, 198);
++    REQUIRE_EQ(black_static, 197);
+ 
+     const int score = quiesce(fen, -10000000, 10000000);
+ 
+@@ -4797,6 +4799,35 @@ TEST_SUITE("search: draws")
+     // `{row 3, 10, 4, "C02, R02, since S248"}`,
+     // `{row 4, 10, 5, "R02, since S248"}`.
+     //
++    // **Re-derived at S055, the seven sweeps taken once more (DEC-142,
++    // DEC-233).** S055 tapers mobility and king safety through one division
++    // instead of two, which moves the static evaluation by up to a centipawn on
++    // most positions and with it every ordering, pruning and reduction decision
++    // that reads it, and row 3 at depth 10 is the row this case went red on:
++    // the candidate reports that mate at 11 and 12 and no longer at 10. The
++    // whole pass was re-taken rather than that row re-picked -- shipped plus
++    // all six S091 mutants, depths 3 to 12, over
++    // `adocs/data/S230_table_fens.txt`, driven by
++    // `adocs/data/S230_mine_r01_row.py depths` on a throwaway worktree holding
++    // a copy of the candidate's `src/`, evidence in `.tuning/S055/capmates/`
++    // and the driver `.tuning/S055/capmates.sh` -- and the same rule applied.
++    // C02's and R01's `old` strings in `tools/mutants/S091_capture_see.py`
++    // still read `is_check_move` where S020 made it `is_check_move()`, so the
++    // driver applied those two with the call form; the bug each injects is
++    // the same. Shipped profiles here: `d9 d10 d11 d12`, `d8 d9 d10 d11 d12`,
++    // `d11 d12`, `d9 d10 d11 d12`, which put the four depths at **9, 8, 11
++    // and 9**. **Two of the four moved and no mate distance did.** Rows 1 and
++    // 2 read as S116's pass left them, every mutant reporting both at every
++    // depth the shipped build does, so neither is separated and each takes
++    // its lowest depth. Row 3 goes to 11, where C05 and R02 (`d12` each) lose
++    // it; C02 now reports it at 11 and C07 gains a depth 10 reading, a mutant
++    // finding the mate earlier and not a separation. Row 4 goes to 9, where
++    // C02, C05 and C07 (`d10 d11 d12`) and R02 (`d11 d12`) lose it. C06 and
++    // R01 are separated by no row at any depth. The rows as S116 left them,
++    // which reverting S055 restores byte for byte: rows 1 and 2 as below,
++    // `{row 3, 10, 4, "C02, C05, R02, since S116"}`,
++    // `{row 4, 10, 5, "no S091 mutant, since S116"}`.
++    //
+     // A row's label is an incidental second kill measured in a tree that moves
+     // under every ordering change; the direct guards are what the rules rest
+     // on, and all six S091 mutants were run through the **whole fast suite**
+@@ -4816,8 +4847,8 @@ TEST_SUITE("search: draws")
+         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
+         // is_check **True** -- an evasion node, where the block is off at the
+         // root and live in every child. 3 legal moves, 1 capture.
+-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
+-         "C02, C05, R02, since S116"},
++        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
++         "C05, R02, since S055"},
+         // S230's row, and the only one here not from the two S145 sets: ply 37
+         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
+         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
+@@ -4858,8 +4889,8 @@ TEST_SUITE("search: draws")
+         // pass. **S114's second verdict kept the depth and moved the label**,
+         // and its reading put the label back with the gate's removal -- the
+         // paragraph above has both.
+-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
+-         5, "no S091 mutant, since S116"},
++        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 9,
++         5, "C02, C05, C07, R02, since S055"},
+     };
+ 
+     for (const capture_mate_t& row : capture_mates) {
+diff --git a/tools/eval_model.hpp b/tools/eval_model.hpp
+index 4e03fda..ecd05dd 100644
+--- a/tools/eval_model.hpp
++++ b/tools/eval_model.hpp
+@@ -897,9 +897,10 @@ inline bool tempo_feature(const std::string& side_to_move, int* out)
+ 
+ 
+ // White relative, in floating point. evaluate() divides in integers and
+-// truncates towards zero, so the two agree to within one centipawn rather than
+-// exactly; the tuner works in floating point precisely so that the derivative
+-// exists.
++// truncates towards zero, so the two agree to within 23/24 of a centipawn per
++// truncating division rather than exactly -- test_eval_model's "the model
++// reproduces evaluate() on every phase" counts them; the tuner works in
++// floating point precisely so that the derivative exists.
+ //
+ // Every feature vector is a required argument. king_safety briefly had a
+ // default of nullptr and it was a trap: a five-argument call dropped the term
+@@ -970,6 +971,10 @@ inline double evaluate(const uint16_t* pieces,
+   // shares the same budget now, so that is no longer a safe assumption: if a
+   // fit pushes these weights far enough for the clamp to bind often, the margin
+   // is what has to move, and this is where it shows up.
++  //
++  // Summed per phase and tapered once, which is also how evaluate() does it
++  // since S055: one division there and not two, so this sum and the engine's
++  // differ by one truncation and not by two.
+   double stage_two = (mobility_mg_sum + king_safety_mg_sum) * mg_weight +
+                      (mobility_eg_sum + king_safety_eg_sum) * eg_weight;
+ 
+diff --git a/tools/truncation_scan.cpp b/tools/truncation_scan.cpp
+index 60151e3..e12374f 100644
+--- a/tools/truncation_scan.cpp
++++ b/tools/truncation_scan.cpp
+@@ -1,14 +1,16 @@
+ // Finds the positions that make evaluate()'s taper truncate hardest. S076.
+ //
+-//   build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8
++//   build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 1.8
+ //
+ // `tests/test_eval_model.cpp` pins four positions whose float model and integer
+-// engine scores disagree by 69/24 = 2.875, the arithmetic maximum of three
+-// truncating divisions, so that the tolerance in "the model reproduces
+-// evaluate() on every phase" is asserted against a corpus that actually reaches
+-// it. Its own comment states the rule this tool serves: **a residual belongs to
+-// the weights, not to the position**, so the list is re-measured whenever the
+-// constants are refitted rather than carried forward. DEC-057.
++// engine scores disagree by 46/24 = 1.917, the arithmetic maximum of two
++// truncating divisions (69/24 = 2.875 and three of them until S055 tapered
++// mobility and king safety once), so that the tolerance in "the model
++// reproduces evaluate() on every phase" is asserted against a corpus that
++// actually reaches it. Its own comment states the rule this tool serves: **a
++// residual belongs to the weights, not to the position**, so the list is
++// re-measured whenever the constants are refitted rather than carried forward.
++// DEC-057.
+ //
+ // It had been re-measured twice by hand, at S038 and at S065, each time from a
+ // script in a session scratchpad that no longer exists -- the shape
+@@ -37,7 +39,7 @@ namespace
+ struct options_t
+ {
+   std::string data;
+-  double min = 2.8;
++  double min = 1.9;
+   uint64_t limit = 0;   // 0 scans everything
+   uint64_t report = 0;  // 0 prints every hit
+ };
+@@ -120,7 +122,7 @@ void usage()
+           "  --data FILE   a `fen result score phase` corpus, or one FEN per\n"
+           "                line\n"
+           "  --min VALUE   print positions disagreeing by more than this\n"
+-          "                (default 2.8; the maximum is 69/24 = 2.875)\n"
++          "                (default 1.9; the maximum is 46/24 = 1.917)\n"
+           "  --limit N     stop after N rows (default 0, everything)\n"
+           "  --report N    print at most N hits (default 0, all of them)\n");
+ }

@@ -12,7 +12,7 @@ closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-05 -- **H0, reverted.** The working tree (single taper, tolerance 2, re-pinned goldens; kept whole as adocs/data/S055_candidate.diff) against 4a7e8ce, {-5, 0} nElo at 8+0.08: nElo -8.78 +/- 6.39 (Elo -6.72 +/- 4.89), LLR -2.96, 11372 games in 5 h 26 m, 0 forfeits; log adocs/data/S055_sprt.log. Harness checked first: 0 forfeits, both binaries the banner names, Incomplete mating PV 2 against 1. Every golden the step moved is back byte for byte (git checkout of the candidate files); bench 4081329 again. Tolerance stays 3; DEC-253 moot. No SPRT block in the closing commit: a working-tree candidate cannot name a sha, S256.
 
 ## What this is
 
@@ -444,3 +444,33 @@ because the change is pure rounding of at most 1 cp per position.
 mutant `old` strings since S020; `S192_anchors.py`'s clamp at 150). Neither
 can be reached in ordinary play or move a reported score. `status.md` had no
 filler open before this step.
+
+## Verdict (coordinator, 2026-10-05 08:42)
+
+**H0 at 11372 games.** `SPRT ([-5.00, 0.00]) completed - H0 was accepted`,
+LLR -2.96 (-2.94, 2.94); Elo -6.72 +/- 4.89, nElo -8.78 +/- 6.39; W 3298
+L 3518 D 4556, Ptnml [530, 1406, 1956, 1342, 452]; 5 h 26 m 16 s, 0
+forfeits of 11373. The first launch (`.tuning/sprt_s055_failed_sha.log`)
+stopped before any game on fastchess.sh's sha check, because `build/` had
+not been rebuilt after the documents commit; rebuilt, the candidate read
+`4a7e8ce-dirty` and bench 3562703.
+
+Read by the pre-registration's second row: the harness is clean, so the
+change is reverted, every moved golden with it. The stopping run's estimate
+is biased and is not the effect size (DEC-063), but the interval sits below
+zero: **a rounding change of at most 1 cp per position measured as a
+regression of about 5 nElo or more is itself the finding.** It says the
+tree's other constants (razoring's margin, reverse futility, the lazy
+margin, the fitted weights) are at an optimum for the two-truncation
+evaluation, or that a 1 cp systematic shift towards zero-distance matters
+more than the step assumed; this run does not separate them. The guard
+stays at 3 and the model keeps its one-division form, so the disagreement
+bound remains 3 x 23/24.
+
+Consequence for S117: it was told to land after S055 so that it is
+bit-identical against the merged form. It now has to keep the two
+divisions -- unpack mobility and king safety separately and taper each --
+to stay node-identical; folding the merge in would put this H0 back
+silently.
+
+Run archived: `/home/max/Synckeeper/Chesso Archive/chesso_S055_sprt_nonreg_2026-10-05.tar.xz` with its `.sha256`.

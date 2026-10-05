@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05 08:45: S055 done on its H0 -- the single taper reverted
+
+**Working tree against `4a7e8ce`, `{-5, 0}` nElo, nElo -8.78 +/- 6.39,
+LLR -2.96, 11372 games in 5 h 26 m, 0 forfeits: H0.** Reverted with every
+golden it moved; `bench` 4081329, the model guard stays at 3, DEC-253 is
+moot. A rounding change of at most 1 cp measuring as a regression is
+recorded as the finding (step file's Verdict). S117 now has to reproduce two
+divisions, noted in its file. The closing commit carries no DEC-220 block: a
+working-tree candidate has no sha the gate accepts -- filler **S256**.
+Candidate kept as `adocs/data/S055_candidate.diff`, run archived to the
+Synckeeper folder. **Next:** fillers S254, S255, S256, then S117. Owner
+question 3 (DEC-245) open; DEC-252 the coordinator's, for the owner.
+
 ## 2026-10-05 03:30: S055 implemented; its `--nonreg` SPRT runs overnight from the working tree
 
 One division for stage two (king safety carries the residue on the collect
