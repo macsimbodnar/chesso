@@ -5,7 +5,24 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-05, by hand.
+Updated: 2026-10-06, by hand.
+
+## 2026-10-06: S258 done -- ten pair readings re-read; S105_pairs.py reads fastchess PGNs again
+
+`S105_pairs.py <pgn>` takes the candidate's name from the PGN (`candidate` or
+`cand-...`; `chesso-a` only for S105's own two, which read byte-identical);
+`test_s105_pairs` makes the fast suite 43. The ten readings S095 to S237 were
+scored from Black's side; `adocs/data/S258_reread_pairs.txt` re-reads all ten
+under their own names, and all ten equal fastchess's Ptnml (S231 0.3105 ->
+0.3025, S237 0.2968 -> 0.3205; two moved up). Old files untouched. README
+rows and DEV_MANUAL are corrected, and this file's eight quotes carry
+`[S258: ...]`. No pre-registration, cost table, decision or verdict used
+them. S237's note blamed PGN ordering; the cause was the name, and the
+README row says so. The scan finds no eleventh. The coordinator's read
+template is now `.tuning/coord/read_sprt.sh <log>` (machine-local), which
+calls the fixed command. **Next:** S120 (the evaluation cache). Owner question
+3 (DEC-245) is open; DEC-252, DEC-254 and DEC-255 are the coordinator's, for
+the owner.
 
 ## 2026-10-05: S257 done -- the A/A reader finds the candidate by name; S258 created
 
@@ -1312,7 +1329,7 @@ starting it again.
   predecessor restored -- **the accumulator stays** at `LmrRoundBias` 0,
   proved neutral, and **there is no third run**. `Incomplete mating PV` 25
   against 23, an observation. Evidence `adocs/data/S236_v2_sprt.log`,
-  `S236_v2_sprt_pairs.txt` (variance 0.3121). The ninth verdict-closing
+  `S236_v2_sprt_pairs.txt` (variance 0.3121 [S258: 0.2994]). The ninth verdict-closing
   commit under DEC-220, the ledger's second `no verdict`. **Next, in order:**
   the record commit and the ledger; "machine free" to S236's agent for the
   removal (the identity proofs `bench` 4493659 with eight identical replies
@@ -1386,7 +1403,7 @@ starting it again.
   removes the term and keeps the accumulator; there is no third run.
   `Incomplete mating PV` 8 candidate against 0 reference, an observation.
   Evidence `adocs/data/S236_sprt.log`, `S236_sprt_pairs.txt` (variance
-  0.3051). The eighth verdict-closing commit under DEC-220. **Next, in
+  0.3051 [S258: 0.3046]). The eighth verdict-closing commit under DEC-220. **Next, in
   order:** the record commit and the ledger; "machine free" to S236's agent
   for the flip (the `golden_defaults` and `MANUAL.md` rows with it), the
   identity and bench re-taken, the mate rows checked at the new clamp (the
@@ -1481,7 +1498,7 @@ starting it again.
   (DEC-063). Draws 45.0 % against the playing control's 38 to 40 %, 121.9
   plies and 81.8 s a game. `Incomplete mating PV` 0 candidate against 1
   reference. Evidence `adocs/data/S132_confirm_sprt.log`,
-  `S132_confirm_sprt_pairs.txt` (variance 0.2865). The ledger takes it as
+  `S132_confirm_sprt_pairs.txt` (variance 0.2865 [S258: 0.2604]). The ledger takes it as
   `S132 v2`, the seventh verdict-closing commit under DEC-220. The time
   management family's second-control confirmation is now the precedent
   (DEC-229), stated in S127's file before its lane runs. **Next:** the
@@ -1781,7 +1798,7 @@ starting it again.
   dipped to +3.95 at 8453 games and recovered; DEC-063's stall reading was
   never applied. `Incomplete mating PV` 6 candidate against 8 reference, an
   observation. Evidence `adocs/data/S097_v2_sprt.log`, `S097_v2_sprt_pairs.txt`
-  (variance 0.3189). The fifth verdict-closing commit under DEC-220. **Next,
+  (variance 0.3189 [S258: 0.2966]). The fifth verdict-closing commit under DEC-220. **Next,
   in order:** S097's completion with two verdicts (stamp, `plan_done/`, the
   ledger regenerated, the specs placeholder, the pending count 43 to 53 -> 42
   to 52); then the next Open entry, S188 (the in-loop check extension, whose
@@ -1869,7 +1886,7 @@ starting it again.
   [10.2, 32.2] misses the pair on the high side, DEC-223's fast class.
   `Incomplete mating PV` 2 candidate against 11 reference, an observation.
   Evidence `adocs/data/S132_sprt.log`, `S132_sprt_pairs.txt` (variance
-  0.3047). The fourth verdict-closing commit under DEC-220. **The step's one
+  0.3047 [S258: 0.2944]). The fourth verdict-closing commit under DEC-220. **The step's one
   question for the owner is parked below** (a second-control confirmation
   before the constants are called shipped). **Next, in order:** S132's
   completion (stamp, `plan_done/`, the ledger regenerated, the specs
@@ -1993,7 +2010,7 @@ starting it again.
   and the six settings in one revert to `5c76ea9`'s search (`bench` 4579468).
   `Incomplete mating PV` 14 candidate against 9 reference, an observation.
   Evidence `adocs/data/S097_v1_sprt.log`, `S097_v1_sprt_pairs.txt` (variance
-  0.3160). The third verdict-closing commit under DEC-220. **Next, in
+  0.3160 [S258: 0.2959]). The third verdict-closing commit under DEC-220. **Next, in
   order:** the ledger regenerated and the plan's Open entry and pending count
   carried (45 to 55 -> 44 to 54); "machine free" to S132's agent, whose
   Report 1 is in and whose uncommitted increments sit in the tree (per-root-
@@ -2094,7 +2111,7 @@ starting it again.
   (`LmrNoTtMove` 1) for S127 to fit; the claim is at least 5 nElo (DEC-063);
   the node-level cut is not taken up. `Incomplete mating PV` 10 candidate
   against 17 reference, an observation. Evidence `adocs/data/S095_sprt.log`,
-  `S095_sprt_pairs.txt` (variance 0.3068). This is the second verdict-closing
+  `S095_sprt_pairs.txt` (variance 0.3068 [S258: 0.3113]). This is the second verdict-closing
   commit under DEC-220. **Next, in order:** S095's completion (stamp,
   `plan_done/`, ledger regenerated, specs sentence, the pending count 46 to
   56 -> 45 to 55); then "machine free" to S097's agent for its verification
@@ -2179,7 +2196,7 @@ starting it again.
   below zero and its top short of the bound, DEC-194's shape; the census had
   the table exercised, so the zero is about the technique as built here.
   Evidence `adocs/data/S231_sprt.log`, `S231_sprt_pairs.txt` (variance
-  0.3105). **This is the first verdict-closing commit carrying DEC-220's
+  0.3105 [S258: 0.3025]). **This is the first verdict-closing commit carrying DEC-220's
   block**, gate-checked against the log. **Next, in order:** the revert by a
   fresh Opus 5 agent (`.tuning/coord/S231_h0_revert_brief.md`), proved by
   `bench` 4646334 and identical `search_bench` against a `3a649c0` worktree,

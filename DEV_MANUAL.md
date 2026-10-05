@@ -3512,11 +3512,16 @@ Three consequences of `CAND` the banner and the PGN show:
   as a working-tree candidate is named `cand-<HEAD>` or `cand-<HEAD>+<hex>`
   since S256, where it used to be the bare `candidate`. Anything reading the
   PGN by engine name has to be told that name. `adocs/data/S105_pairs.py`'s
-  `report()` defaults to `chesso-a`, and since S257 it exits 1 on a name that
-  is not a side of every pair, where it used to score every game as Black's
-  and print a wrong variance with exit 0; its command line passes no name, so
-  over a `fastchess.sh` PGN it refuses. `adocs/data/S198_pairs.py` derives
-  the name from the PGN itself;
+  `report()` scores each pair from the side it is named, and since S257 it
+  exits 1 when that name is not White in exactly one game of every complete
+  pair (the colours reverse within a pair), where it used to score every
+  game as Black's points and print a wrong variance with exit 0. Its command
+  line, `python3 adocs/data/S105_pairs.py <run>/games.pgn`, takes the name
+  from the PGN since S258: the one side `S024_pair_stats.is_candidate`
+  accepts (`candidate` or `cand-...`), or `chesso-a`, S105's own
+  calibration, only where no side matches and the PGN names it; anything
+  else exits 1 with a sentence. `adocs/data/S198_pairs.py` derives the name
+  by the same rule, without the fallback;
 - the A/A guard asks whether the two **commits** are the same one, and a dirty
   tree does not rescue a run where they are. `AA=1` is still the opt-in.
 
@@ -3896,6 +3901,25 @@ time-management margin costs both about equally. A crash does not divide that
 way — only one side carries the change under test — and `rating.sh` has voided
 on it since DEC-075 while this script only counted it
 (`2026-09-10_adversarial-F31`, S212).
+
+**The pairs reading comes after the marker, and the run does not take it.**
+The reading recorded beside a verdict (`adocs/data/<step>_sprt_pairs.txt`)
+takes the pairs out of the run's PGN with
+
+```bash
+python3 adocs/data/S105_pairs.py <run>/games.pgn   # pentanomial, pair score mean and variance
+```
+
+which scores each pair from the candidate, by the rule the `CAND` section
+above states. Its five `pair score` counts should be the pentanomial fastchess
+printed as the run's last `Ptnml(0-2)`: S258's scan found 24 recorded pair
+blocks equal to it and the ten below different, and its re-read of those ten
+equal to it. Read the two side by side before quoting the variance. Before
+S258 the command
+scored a `fastchess.sh` PGN from Black's side, and ten recorded readings, S095
+to S237, carry those numbers: `adocs/data/S258_reread_pairs.txt` re-reads them
+beside what was recorded (2026-10-06). The verdicts are fastchess's and were
+never read from them.
 
 **Watch the draw rate anyway.** **Below about 45 % draws is a failure mode,
 not a win** — at that point the opening is simply winning for one side and the

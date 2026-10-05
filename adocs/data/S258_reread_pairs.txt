@@ -1,0 +1,357 @@
+S258: ten SPRT pair readings re-read under each run's own candidate
+name. Written by adocs/data/S258_reread.py; see its header.
+
+=== summary: recorded (Black's points) beside corrected (the candidate's)
+run            recorded var corrected var  corrected pentanomial            fastchess Ptnml
+S095                 0.3068        0.3113  [632, 1674, 2388, 1683, 749]     equal
+S097_v1              0.3160        0.2959  [925, 2332, 3507, 2417, 859]     equal
+S097_v2              0.3189        0.2966  [444, 1176, 1829, 1292, 494]     equal
+S132                 0.3047        0.2944  [149, 406, 664, 501, 191]        equal
+S132_confirm         0.2865        0.2604  [97, 343, 588, 449, 127]         equal
+S188                 0.3101        0.3049  [186, 453, 593, 394, 145]        equal
+S231                 0.3105        0.3025  [556, 1464, 2097, 1352, 566]     equal
+S236                 0.3051        0.3046  [752, 1843, 2665, 1863, 706]     equal
+S236_v2              0.3121        0.2994  [1743, 4725, 6895, 4762, 1875]   equal
+S237                 0.2968        0.3205  [431, 963, 1327, 923, 392]       equal
+
+##### S095
+PGN                /home/max/ws/chesso/.tuning/sprt_s095_20260920_185845/games.pgn
+log                adocs/data/S095_sprt.log
+side read          cand-3961c13  (banner: cand-3961c13)
+recorded           [624, 1663, 2420, 1694, 725]  mean 1.0163, variance 0.3068
+Black's points     [624, 1663, 2420, 1694, 725]
+corrected          [632, 1674, 2388, 1683, 749]  mean 1.0171, variance 0.3113
+fastchess Ptnml    [632, 1674, 2388, 1683, 749]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s095_20260920_185845/games.pgn ===
+games            14254
+draws            5437, 38.1 %
+decisive         8817, 61.9 %
+plies per game   mean 116.0, median 103
+seconds per game mean 19.7, median 19
+seconds per ply  0.1697
+complete pairs   7126
+  pair score 0.0    632    8.9 %
+  pair score 0.5   1674   23.5 %
+  pair score 1.0   2388   33.5 %
+  pair score 1.5   1683   23.6 %
+  pair score 2.0    749   10.5 %
+white won both   624 of 7126, 8.8 %  (the pair Pohl's floor is about)
+pair score       mean 1.0171, variance 0.3113, sd 0.5579
+
+
+##### S097_v1
+PGN                /home/max/ws/chesso/.tuning/sprt_s097_v1_20260921_045106/games.pgn
+log                adocs/data/S097_v1_sprt.log
+side read          cand-88ec74f  (banner: cand-88ec74f)
+recorded           [947, 2312, 3303, 2437, 1041]  mean 1.0156, variance 0.3160
+Black's points     [947, 2312, 3303, 2437, 1041]
+corrected          [925, 2332, 3507, 2417, 859]  mean 0.9977, variance 0.2959
+fastchess Ptnml    [925, 2332, 3507, 2417, 859]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s097_v1_20260921_045106/games.pgn ===
+games            20082
+draws            7788, 38.8 %
+decisive         12294, 61.2 %
+plies per game   mean 117.2, median 104
+seconds per game mean 19.8, median 19
+seconds per ply  0.1690
+complete pairs   10040
+  pair score 0.0    925    9.2 %
+  pair score 0.5   2332   23.2 %
+  pair score 1.0   3507   34.9 %
+  pair score 1.5   2417   24.1 %
+  pair score 2.0    859    8.6 %
+white won both   947 of 10040, 9.4 %  (the pair Pohl's floor is about)
+pair score       mean 0.9977, variance 0.2959, sd 0.5440
+
+
+##### S097_v2
+PGN                /home/max/ws/chesso/.tuning/sprt_s097_v2_20260921_204832/games.pgn
+log                adocs/data/S097_v2_sprt.log
+side read          cand-63ad848  (banner: cand-63ad848)
+recorded           [516, 1214, 1714, 1254, 537]  mean 1.0078, variance 0.3189
+Black's points     [516, 1214, 1714, 1254, 537]
+corrected          [444, 1176, 1829, 1292, 494]  mean 1.0206, variance 0.2966
+fastchess Ptnml    [444, 1176, 1829, 1292, 494]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s097_v2_20260921_204832/games.pgn ===
+games            10470
+draws            4020, 38.4 %
+decisive         6450, 61.6 %
+plies per game   mean 117.6, median 105
+seconds per game mean 20.0, median 19
+seconds per ply  0.1698
+complete pairs   5235
+  pair score 0.0    444    8.5 %
+  pair score 0.5   1176   22.5 %
+  pair score 1.0   1829   34.9 %
+  pair score 1.5   1292   24.7 %
+  pair score 2.0    494    9.4 %
+white won both   516 of 5235, 9.9 %  (the pair Pohl's floor is about)
+pair score       mean 1.0206, variance 0.2966, sd 0.5446
+
+
+##### S132
+PGN                /home/max/ws/chesso/.tuning/sprt_s132_20260921_172443/games.pgn
+log                adocs/data/S132_sprt.log
+side read          cand-474c288  (banner: cand-474c288)
+recorded           [167, 446, 648, 461, 189]  mean 1.0154, variance 0.3047
+Black's points     [167, 446, 648, 461, 189]
+corrected          [149, 406, 664, 501, 191]  mean 1.0468, variance 0.2944
+fastchess Ptnml    [149, 406, 664, 501, 191]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s132_20260921_172443/games.pgn ===
+games            3825
+draws            1526, 39.9 %
+decisive         2299, 60.1 %
+plies per game   mean 117.1, median 104
+seconds per game mean 19.9, median 19
+seconds per ply  0.1696
+complete pairs   1911
+  pair score 0.0    149    7.8 %
+  pair score 0.5    406   21.2 %
+  pair score 1.0    664   34.7 %
+  pair score 1.5    501   26.2 %
+  pair score 2.0    191   10.0 %
+white won both   167 of 1911, 8.7 %  (the pair Pohl's floor is about)
+pair score       mean 1.0468, variance 0.2944, sd 0.5426
+
+
+##### S132_confirm
+PGN                /home/max/ws/chesso/.tuning/sprt_s132_confirm_20260922_213717/games.pgn
+log                adocs/data/S132_confirm_sprt.log
+side read          cand-474c288  (banner: cand-474c288)
+recorded           [120, 389, 550, 403, 142]  mean 1.0181, variance 0.2865
+Black's points     [120, 389, 550, 403, 142]
+corrected          [97, 343, 588, 449, 127]  mean 1.0517, variance 0.2604
+fastchess Ptnml    [97, 343, 588, 449, 127]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s132_confirm_20260922_213717/games.pgn ===
+games            3210
+draws            1445, 45.0 %
+decisive         1765, 55.0 %
+plies per game   mean 121.9, median 108
+seconds per game mean 81.8, median 79
+seconds per ply  0.6713
+complete pairs   1604
+  pair score 0.0     97    6.0 %
+  pair score 0.5    343   21.4 %
+  pair score 1.0    588   36.7 %
+  pair score 1.5    449   28.0 %
+  pair score 2.0    127    7.9 %
+white won both   120 of 1604, 7.5 %  (the pair Pohl's floor is about)
+pair score       mean 1.0517, variance 0.2604, sd 0.5103
+
+
+##### S188
+PGN                /home/max/ws/chesso/.tuning/sprt_s188_20260922_110704/games.pgn
+log                adocs/data/S188_sprt.log
+side read          cand-dbb54f5  (banner: cand-dbb54f5)
+recorded           [174, 447, 586, 400, 164]  mean 0.9811, variance 0.3101
+Black's points     [174, 447, 586, 400, 164]
+corrected          [186, 453, 593, 394, 145]  mean 0.9602, variance 0.3049
+fastchess Ptnml    [186, 453, 593, 394, 145]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s188_20260922_110704/games.pgn ===
+games            3545
+draws            1358, 38.3 %
+decisive         2187, 61.7 %
+plies per game   mean 120.2, median 107
+seconds per game mean 20.2, median 19
+seconds per ply  0.1679
+complete pairs   1771
+  pair score 0.0    186   10.5 %
+  pair score 0.5    453   25.6 %
+  pair score 1.0    593   33.5 %
+  pair score 1.5    394   22.2 %
+  pair score 2.0    145    8.2 %
+white won both   174 of 1771, 9.8 %  (the pair Pohl's floor is about)
+pair score       mean 0.9602, variance 0.3049, sd 0.5522
+
+
+##### S231
+PGN                /home/max/ws/chesso/.tuning/sprt_s231_20260920_044538/games.pgn
+log                adocs/data/S231_sprt.log
+side read          cand-55891bb  (banner: cand-55891bb)
+recorded           [580, 1438, 2049, 1378, 590]  mean 0.9967, variance 0.3105
+Black's points     [580, 1438, 2049, 1378, 590]
+corrected          [556, 1464, 2097, 1352, 566]  mean 0.9924, variance 0.3025
+fastchess Ptnml    [556, 1464, 2097, 1352, 566]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s231_20260920_044538/games.pgn ===
+games            12071
+draws            4670, 38.7 %
+decisive         7401, 61.3 %
+plies per game   mean 115.4, median 102
+seconds per game mean 19.6, median 19
+seconds per ply  0.1700
+complete pairs   6035
+  pair score 0.0    556    9.2 %
+  pair score 0.5   1464   24.3 %
+  pair score 1.0   2097   34.7 %
+  pair score 1.5   1352   22.4 %
+  pair score 2.0    566    9.4 %
+white won both   580 of 6035, 9.6 %  (the pair Pohl's floor is about)
+pair score       mean 0.9924, variance 0.3025, sd 0.5500
+
+
+##### S236
+PGN                /home/max/ws/chesso/.tuning/sprt_s236_20260923_080315/games.pgn
+log                adocs/data/S236_sprt.log
+side read          cand-8b1bc79  (banner: cand-8b1bc79)
+recorded           [723, 1825, 2661, 1881, 739]  mean 1.0056, variance 0.3051
+Black's points     [723, 1825, 2661, 1881, 739]
+corrected          [752, 1843, 2665, 1863, 706]  mean 0.9954, variance 0.3046
+fastchess Ptnml    [752, 1843, 2665, 1863, 706]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s236_20260923_080315/games.pgn ===
+games            15660
+draws            6112, 39.0 %
+decisive         9548, 61.0 %
+plies per game   mean 119.6, median 106
+seconds per game mean 20.2, median 20
+seconds per ply  0.1693
+complete pairs   7829
+  pair score 0.0    752    9.6 %
+  pair score 0.5   1843   23.5 %
+  pair score 1.0   2665   34.0 %
+  pair score 1.5   1863   23.8 %
+  pair score 2.0    706    9.0 %
+white won both   723 of 7829, 9.2 %  (the pair Pohl's floor is about)
+pair score       mean 0.9954, variance 0.3046, sd 0.5519
+
+
+##### S236_v2
+PGN                /home/max/ws/chesso/.tuning/sprt_s236_v2_20260923_180311/games.pgn
+log                adocs/data/S236_v2_sprt.log
+side read          cand-85901b3  (banner: cand-85901b3)
+recorded           [1919, 4757, 6643, 4730, 1951]  mean 1.0009, variance 0.3121
+Black's points     [1919, 4757, 6643, 4730, 1951]
+corrected          [1743, 4725, 6895, 4762, 1875]  mean 1.0075, variance 0.2994
+fastchess Ptnml    [1743, 4725, 6895, 4762, 1875]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s236_v2_20260923_180311/games.pgn ===
+games            40000
+draws            15537, 38.8 %
+decisive         24463, 61.2 %
+plies per game   mean 119.7, median 107
+seconds per game mean 20.1, median 19
+seconds per ply  0.1683
+complete pairs   20000
+  pair score 0.0   1743    8.7 %
+  pair score 0.5   4725   23.6 %
+  pair score 1.0   6895   34.5 %
+  pair score 1.5   4762   23.8 %
+  pair score 2.0   1875    9.4 %
+white won both   1919 of 20000, 9.6 %  (the pair Pohl's floor is about)
+pair score       mean 1.0075, variance 0.2994, sd 0.5472
+
+
+##### S237
+PGN                /home/max/ws/chesso/.tuning/sprt_s237_20260925_221105/games.pgn
+log                adocs/data/S237_sprt.log
+side read          cand-4d8c501  (banner: cand-4d8c501)
+recorded           [328, 913, 1421, 973, 401]  mean 1.0255, variance 0.2968
+Black's points     [328, 913, 1421, 973, 401]
+corrected          [431, 963, 1327, 923, 392]  mean 0.9854, variance 0.3205
+fastchess Ptnml    [431, 963, 1327, 923, 392]
+check              ok   side is the banner's candidate
+check              ok   corrected = fastchess Ptnml
+check              ok   recorded = Black's points
+
+--- S105_pairs.py over the PGN, under the side above
+=== /home/max/ws/chesso/.tuning/sprt_s237_20260925_221105/games.pgn ===
+games            8073
+draws            3083, 38.2 %
+decisive         4990, 61.8 %
+plies per game   mean 118.6, median 106
+seconds per game mean 20.0, median 19
+seconds per ply  0.1689
+complete pairs   4036
+  pair score 0.0    431   10.7 %
+  pair score 0.5    963   23.9 %
+  pair score 1.0   1327   32.9 %
+  pair score 1.5    923   22.9 %
+  pair score 2.0    392    9.7 %
+white won both   328 of 4036, 8.1 %  (the pair Pohl's floor is about)
+pair score       mean 0.9854, variance 0.3205, sd 0.5661
+
+
+=== signature scan over adocs/data/*_pairs.txt, S258_reread_pairs.txt excluded
+S022_v1_sprt_pairs.txt         games.pgn                  0.0 71    white-won-both 38    -         Ptnml (quoted) equal
+S022_v2_sprt_pairs.txt         games.pgn                  0.0 1767  white-won-both 1866  -         Ptnml (quoted) equal
+S091_sprt_pairs.txt            games.pgn                  0.0 52    white-won-both 75    -         Ptnml (quoted) equal
+S095_sprt_pairs.txt            games.pgn                  0.0 624   white-won-both 624   SIGNATURE Ptnml (quoted) different
+S097_v1_sprt_pairs.txt         games.pgn                  0.0 947   white-won-both 947   SIGNATURE Ptnml (quoted) different
+S097_v2_sprt_pairs.txt         games.pgn                  0.0 516   white-won-both 516   SIGNATURE Ptnml (quoted) different
+S098_v1_leg2_sprt_pairs.txt    games.pgn                  0.0 667   white-won-both 685   -         Ptnml (quoted) equal
+S098_v1_sprt_pairs.txt         games.pgn                  0.0 578   white-won-both 617   -         Ptnml (quoted) equal
+S098_v2_sprt_pairs.txt         games.pgn                  0.0 60    white-won-both 99    -         Ptnml (quoted) equal
+S098_v3_leg1_sprt_pairs.txt    games.pgn                  0.0 603   white-won-both 692   -         Ptnml (quoted) equal
+S098_v3_sprt_pairs.txt         games.pgn                  0.0 185   white-won-both 225   -         Ptnml (quoted) equal
+S105_calibration_pairs.txt     S105_calibration_before.pgn 0.0 30    white-won-both 67    -         Ptnml (S105_calibration.log) -
+S105_calibration_pairs.txt     S105_calibration_after.pgn 0.0 34    white-won-both 99    -         Ptnml (later block) -
+S109_ltc_pairs.txt             games.pgn                  0.0 80    white-won-both 83    -         Ptnml (S109_ltc.log) equal
+S109_sprt_pairs.txt            games.pgn                  0.0 55    white-won-both 75    -         Ptnml (S109_sprt.log) equal
+S113_sprt_pairs.txt            games.pgn                  0.0 423   white-won-both 413   -         Ptnml (quoted) equal
+S114_sprt_pairs.txt            games.pgn                  0.0 147   white-won-both 115   -         Ptnml (quoted) equal
+S114_v2_sprt_pairs.txt         games.pgn                  0.0 1739  white-won-both 1862  -         Ptnml (quoted) equal
+S115_sprt_pairs.txt            games.pgn                  0.0 960   white-won-both 1098  -         Ptnml (quoted) equal
+S116_sprt_pairs.txt            games.pgn                  0.0 291   white-won-both 371   -         Ptnml (quoted) equal
+S131_sprt_pairs.txt            games.pgn                  0.0 110   white-won-both 187   -         Ptnml (quoted) equal
+S132_confirm_sprt_pairs.txt    games.pgn                  0.0 120   white-won-both 120   SIGNATURE Ptnml (quoted) different
+S132_sprt_pairs.txt            games.pgn                  0.0 167   white-won-both 167   SIGNATURE Ptnml (quoted) different
+S151_ltc_pairs.txt             games.pgn                  0.0 83    white-won-both 98    -         Ptnml (S151_ltc.log) equal
+S188_sprt_pairs.txt            games.pgn                  0.0 174   white-won-both 174   SIGNATURE Ptnml (quoted) different
+S198_calibration_pairs.txt     games.pgn                  0.0 34    white-won-both 88    -         Ptnml (S198_calibration.log) equal
+S198_calibration_pairs.txt     S105_calibration_after.pgn 0.0 34    white-won-both 99    -         Ptnml (later block) -
+S210_f22_sprt_pairs.txt        games.pgn                  0.0 1422  white-won-both 1761  -         Ptnml (S210_f22_sprt.log) equal
+S212_aa_pairs.txt              games.pgn                  0.0 42    white-won-both 57    -         Ptnml (S212_aa.log) equal
+S212_aa_pairs.txt              S219_aa_calibration.pgn    0.0 54    white-won-both 65    -         Ptnml (later block) -
+S219_aa_calibration_pairs.txt  S219_aa_calibration.pgn    0.0 54    white-won-both 65    -         Ptnml (S219_aa_calibration.log) equal
+S219_aa_calibration_pairs.txt  S105_calibration_after.pgn 0.0 34    white-won-both 99    -         Ptnml (later block) -
+S222_sprt_pairs.txt            games.pgn                  0.0 291   white-won-both 341   -         Ptnml (quoted) equal
+S231_sprt_pairs.txt            games.pgn                  0.0 580   white-won-both 580   SIGNATURE Ptnml (quoted) different
+S234_sprt_pairs.txt            games.pgn                  0.0 891   white-won-both 946   -         Ptnml (quoted) equal
+S235_sprt_pairs.txt            games.pgn                  0.0 535   white-won-both 561   -         Ptnml (quoted) equal
+S236_sprt_pairs.txt            games.pgn                  0.0 723   white-won-both 723   SIGNATURE Ptnml (quoted) different
+S236_v2_sprt_pairs.txt         games.pgn                  0.0 1919  white-won-both 1919  SIGNATURE Ptnml (quoted) different
+S237_sprt_pairs.txt            games.pgn                  0.0 328   white-won-both 328   SIGNATURE Ptnml (quoted) different
+37 files, 39 pair blocks; 10 carry the signature, 0 outside the ten; against fastchess's Ptnml: 5 -, 10 different, 24 equal

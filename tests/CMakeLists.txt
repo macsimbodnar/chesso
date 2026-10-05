@@ -463,6 +463,19 @@ add_test(NAME test_s198_pairs
          COMMAND python3 ${CMAKE_SOURCE_DIR}/adocs/data/S198_pairs.py --self-test)
 set_tests_properties(test_s198_pairs PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S258, DEC-171: adocs/data/S105_pairs.py's own command line, the post-SPRT
+# pairs reading. It passed `chesso-a`, S105's calibration name, to every PGN:
+# ten SPRT readings were scored from Black's side with exit 0, and since S257
+# every fastchess.sh PGN was refused. It now takes the side from the PGN by
+# S024_pair_stats.is_candidate and falls back to `chesso-a` only where the PGN
+# names it. Registered for the same reason as the case above: the reading
+# lands after the run, long after a rename that breaks it. 14 cases, ~0.1 s,
+# stdlib only, nothing built; it reads S105's two PGNs and S219's band and log
+# out of the source tree.
+add_test(NAME test_s105_pairs
+         COMMAND python3 ${CMAKE_SOURCE_DIR}/adocs/data/S105_pairs.py --self-test)
+set_tests_properties(test_s105_pairs PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S141: `--touches`, the one mode of tools/plan_prose_check.py that is in the
 # suite. The other two are not, and DEV_MANUAL.md says why: any source commit
 # shifts lines under fifty step files at once, so gating on citation freshness
