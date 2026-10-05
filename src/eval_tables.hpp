@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include "data_structures.hpp"
 
 // Evaluation tables and the incremental accumulator.
@@ -186,9 +187,24 @@ static constexpr int psqt_eg[6][64] = {
 // A black piece is worth what the same white piece would be worth on the
 // vertically mirrored square, and xor 56 is that mirror: it flips the rank bits
 // of the index and leaves the file alone.
-inline void eval_add_piece(board_t* board, piece_t piece, index_t square)
+//
+// The hooks come in two forms, S253. make_move's helpers know the piece's
+// colour at compile time, and the `Side` form takes it from there: one branch
+// fewer and half the code at each inlined copy -- make_move_impl makes eight
+// hook calls and is instantiated for both colours, so sixteen copies -- which
+// is what lets every copy be inlined. Forced (CHESSO_ALWAYS_INLINE) because
+// src/bitboard.cpp sits at gcc 13.3's inline-unit-growth limit: on the plain
+// hint gcc left eight of those copies out of line, more whenever the unit
+// grew, so a generator change was timed on the inliner's budget and not on its
+// own cost (S020).
+template <color_t Side>
+CHESSO_ALWAYS_INLINE inline void eval_add_piece(board_t* board,
+                                                piece_t piece,
+                                                index_t square)
 {
-  if (piece < B_PAWN) {
+  assert((piece < B_PAWN) == (Side == WHITE));
+
+  if constexpr (Side == WHITE) {
     board->material += piece_value[piece];
     board->psqt_mg += psqt_mg[piece][square];
     board->psqt_eg += psqt_eg[piece][square];
@@ -205,9 +221,14 @@ inline void eval_add_piece(board_t* board, piece_t piece, index_t square)
 }
 
 
-inline void eval_remove_piece(board_t* board, piece_t piece, index_t square)
+template <color_t Side>
+CHESSO_ALWAYS_INLINE inline void eval_remove_piece(board_t* board,
+                                                   piece_t piece,
+                                                   index_t square)
 {
-  if (piece < B_PAWN) {
+  assert((piece < B_PAWN) == (Side == WHITE));
+
+  if constexpr (Side == WHITE) {
     board->material -= piece_value[piece];
     board->psqt_mg -= psqt_mg[piece][square];
     board->psqt_eg -= psqt_eg[piece][square];
@@ -220,6 +241,30 @@ inline void eval_remove_piece(board_t* board, piece_t piece, index_t square)
     board->psqt_mg += psqt_mg[type][mirrored];
     board->psqt_eg += psqt_eg[type][mirrored];
     board->phase -= phase_value[type];
+  }
+}
+
+
+CHESSO_ALWAYS_INLINE inline void eval_add_piece(board_t* board,
+                                                piece_t piece,
+                                                index_t square)
+{
+  if (piece < B_PAWN) {
+    eval_add_piece<WHITE>(board, piece, square);
+  } else {
+    eval_add_piece<BLACK>(board, piece, square);
+  }
+}
+
+
+CHESSO_ALWAYS_INLINE inline void eval_remove_piece(board_t* board,
+                                                   piece_t piece,
+                                                   index_t square)
+{
+  if (piece < B_PAWN) {
+    eval_remove_piece<WHITE>(board, piece, square);
+  } else {
+    eval_remove_piece<BLACK>(board, piece, square);
   }
 }
 

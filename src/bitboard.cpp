@@ -694,7 +694,7 @@ static inline void add_piece(board_t* board,
   board->squares[square] = piece;
   board->hash ^= randoms->piece_randoms[piece][square];
 
-  eval_add_piece(board, piece, square);
+  eval_add_piece<Side>(board, piece, square);
 }
 
 
@@ -711,7 +711,7 @@ static inline void remove_piece(board_t* board,
   board->squares[square] = EMPTY;
   board->hash ^= randoms->piece_randoms[piece][square];
 
-  eval_remove_piece(board, piece, square);
+  eval_remove_piece<Side>(board, piece, square);
 }
 
 
@@ -734,8 +734,8 @@ static inline void move_piece(board_t* board,
   board->hash ^= randoms->piece_randoms[piece][from];
   board->hash ^= randoms->piece_randoms[piece][to];
 
-  eval_remove_piece(board, piece, from);
-  eval_add_piece(board, piece, to);
+  eval_remove_piece<Side>(board, piece, from);
+  eval_add_piece<Side>(board, piece, to);
 }
 
 

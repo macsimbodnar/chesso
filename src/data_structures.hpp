@@ -51,6 +51,17 @@
 #define STR(_N_) std::to_string(_N_)
 #endif
 
+// A forced inline, for a hook whose inlining must not depend on how much of
+// its unit's inline budget is left (S253). gcc and clang spell it one way, MSVC
+// another; anything else gets the plain hint, which is correct, only slower.
+#if defined(__GNUC__)
+#define CHESSO_ALWAYS_INLINE [[gnu::always_inline]]
+#elif defined(_MSC_VER)
+#define CHESSO_ALWAYS_INLINE [[msvc::forceinline]]
+#else
+#define CHESSO_ALWAYS_INLINE
+#endif
+
 typedef uint8_t index_t;
 typedef uint8_t castling_t;
 typedef uint64_t bb_t;
