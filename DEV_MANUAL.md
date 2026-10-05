@@ -2069,10 +2069,11 @@ than blaming the label. Both refusals name the label or the paths, end at
 **Release only.** The root `CMakeLists.txt` adds `-Wall -Wextra -Werror`
 everywhere and turns the unused-* warnings off in `Debug` alone, so a mutant
 that deletes the last use of a local does not compile in the build the gate
-runs. That is a fact about the mutant, and a Debug build would hide it. The two
-mutants in that class consume the symbol they orphan — `M08` inserts
-`(void)is_check_move;` and `M12` inserts `(void)depth;` — and any new mutant
-that orphans a symbol needs the same.
+runs. That is a fact about the mutant, and a Debug build would hide it. The mutants
+in that class consume the symbol they orphan — `M12` inserts `(void)depth;`,
+and every `(void)` in `tools/mutants/` is one of these — and any new mutant
+that orphans a symbol needs the same. `M08` carried `(void)is_check_move;`
+until S091 gave that symbol a second reader; it needs none now (S254).
 
 **Verdicts.** The suite is the first oracle and the bench signature is the
 second: OpenBench requires a `bench` node count that is the same every time and

@@ -1,7 +1,7 @@
 id:         S255
 goal:       `adocs/data/S192_anchors.py` clamps stage two at `LAZY_EVAL_MARGIN` as the engine does, read from the source rather than written as 150
 accepts:    the script's clamp equals `src/search_params.hpp`'s `LAZY_EVAL_MARGIN` (184 today) by reading it, and the anchors it re-derives are unchanged on today's tree (stated, with the run)
-touches:    adocs/data/S192_anchors.py
+touches:    adocs/data/S192_anchors.py; src/search_params.hpp (read, never written)
 excludes:   any engine or golden change
 decisions:  DEC-142, DEC-171
 closes:

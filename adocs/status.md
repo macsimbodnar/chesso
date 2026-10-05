@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05: S254 done -- five mutants re-anchored; HEAD was red three commits
+
+C02, R01, P05, M08 and L06 named `is_check_move` as a variable and were
+refused since S020; now 173 of 173 validate and the five read killed. **The
+coordinator's commits `2fd61ae`, `4a7e8ce` and `636bbf4` were red**:
+`test_plan_touches` failed because S255's `touches:` named no file holding
+`LAZY_EVAL_MARGIN`; fixed in this commit, and documents commits now run the
+gate too. DEV_MANUAL's M08 `(void)` sentence corrected. The full mutation
+list (about 4.8 h) is a night run when the machine is otherwise idle.
+**Next:** S255, S256, then S117. Owner question 3 (DEC-245) open; DEC-252
+the coordinator's, for the owner.
+
 ## 2026-10-05 08:45: S055 done on its H0 -- the single taper reverted
 
 **Working tree against `4a7e8ce`, `{-5, 0}` nElo, nElo -8.78 +/- 6.39,

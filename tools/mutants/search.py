@@ -99,7 +99,7 @@ m("M07_lmr_captures", S, "search/reduction",
 m("M08_lmr_checks", S, "search/reduction",
   'LMR reduces checking moves (S107 exemption dropped)',
   ('    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
-   '                            !is_in_check && !is_check_move &&\n'
+   '                            !is_in_check && !is_check_move() &&\n'
    '                            !capture_gives_check;',
    '    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
    '                            !is_in_check && !capture_gives_check;'),
@@ -120,10 +120,10 @@ m("L06_lmr_root", S, "search/reduction",
   'the root is never reduced" asserts with every other condition of '
   '`may_reduce` satisfied',
   ('    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
-   '                            !is_in_check && !is_check_move &&\n'
+   '                            !is_in_check && !is_check_move() &&\n'
    '                            !capture_gives_check;',
    '    const bool may_reduce = depth >= 3 && legal_moves_counter > 3 &&\n'
-   '                            !is_in_check && !is_check_move &&\n'
+   '                            !is_in_check && !is_check_move() &&\n'
    '                            !capture_gives_check;'),
   origin="S098")
 

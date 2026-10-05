@@ -25,8 +25,8 @@ m("C02_capture_gives_check", S, "search/pruning",
   'capture is skipped like any other -- the exemption reaches a capture '
   'through capture_gives_check and not through is_check_move, which is '
   'hardcoded false there',
-  ('    if (prune_rule != PRUNE_NONE && !is_check_move && !capture_gives_check) {',
-   '    if (prune_rule != PRUNE_NONE && !is_check_move) {'),
+  ('    if (prune_rule != PRUNE_NONE && !is_check_move() && !capture_gives_check) {',
+   '    if (prune_rule != PRUNE_NONE && !is_check_move()) {'),
   origin="S091")
 
 m("C05_capture_threshold_sign", S, "search/pruning",
@@ -58,10 +58,10 @@ m("R01_extra_reduction_gives_check", S, "search/reduction",
   'the extra ply stops exempting a capture that gives check, which it reaches '
   'through capture_gives_check for the reason the skip does',
   ('    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
-   '                            !is_in_check && !is_check_move &&\n'
+   '                            !is_in_check && !is_check_move() &&\n'
    '                            !capture_gives_check;',
    '    const bool may_reduce = ply > 0 && depth >= 3 && legal_moves_counter > 3 &&\n'
-   '                            !is_in_check && !is_check_move;'),
+   '                            !is_in_check && !is_check_move();'),
   origin="S091")
 
 m("R02_extra_reduction_sign", S, "search/reduction",
