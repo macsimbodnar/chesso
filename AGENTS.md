@@ -142,14 +142,18 @@ migration that way (DEC-109).
   mismatch is a red gate. From S189's completing commit on. DEC-140.
   **A commit that closes an SPRT verdict -- H1, H0 or no verdict -- carries the
   run's result block before `Bench:`** (DEC-220), in fastchess's own line names:
-  `SPRT | cand <sha> vs ref <sha>, <tc>, Hash=<n>, <book>, {elo0, elo1} nElo`;
+  `SPRT | cand <sha>[+<hex>] vs ref <sha>, <tc>, Hash=<n>, <book>, {elo0, elo1} nElo`
+  (`+<hex>` for a candidate played from a dirty working tree: the blob id of
+  the `candidate.diff` the run saved, committed under `adocs/data/` beside the
+  log, S256, DEC-254);
   `Elo | <x> +/- <y>, nElo <x> +/- <y>`; `LLR | <l> (<a>, <b>) -> H1|H0|none`;
   `Games | N: <n> W: <w> L: <l> D: <d>, Ptnml [<5>]`; `Wall | <h> h <m> m, <g>
   games/h, forfeits <f>`; `Log | adocs/data/<file>`. `tools/gate.sh` refuses a
   block whose shas do not match the named log's result line and `tools/ledger.py`
   regenerates `plan.md`'s ledger table from `git log` -- both land with S233; the
   block is written from 2026-09-19 on, and the verdicts before it are seeded once
-  from the table, never rewritten.
+  from the table, never rewritten; S055's H0, the one working-tree verdict
+  before S256, is the single later seed row (DEC-254).
 - TESTS: the suite is green before a step is marked done, in **both** builds —
   `cmake --build build -j8 && ctest --test-dir build -L fast --output-on-failure && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast --output-on-failure && ./clang-format.sh --check`
   (`-j8`, the core count of the machine `.moltke.local.md` describes). The tune

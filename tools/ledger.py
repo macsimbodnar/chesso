@@ -19,12 +19,13 @@ WHERE THE ROWS COME FROM. Two sources, in this order:
 
   1. `adocs/data/ledger_seed.tsv`, the twenty verdicts taken before DEC-220,
      copied once from the table they are printed back into and never
-     rewritten. Its own header says so.
+     rewritten, and S055's H0, taken after it from a working tree whose log
+     no block can name (S256). Its own header says so.
   2. Every commit in `git log` whose message carries DEC-220's result block,
      oldest first. A commit that closes an SPRT verdict -- H1, H0 or no
      verdict -- carries six lines after its body and before `Bench:`:
 
-         SPRT | cand <sha> vs ref <sha>, <tc>, Hash=<n>, <book>, {e0, e1} nElo
+         SPRT | cand <sha>[+<hex>] vs ref <sha>, <tc>, Hash=<n>, <book>, {e0, e1} nElo
          Elo | <x> +/- <y>, nElo <x> +/- <y>
          LLR | <l> (<a>, <b>) -> H1|H0|none
          Games | N: <n> W: <w> L: <l> D: <d>, Ptnml [<5>]
@@ -36,7 +37,11 @@ WHERE THE ROWS COME FROM. Two sources, in this order:
      it names, so a block that reaches `git log` has already been checked
      against its own evidence. This script checks the shape again anyway and
      dies loudly on the first bad one: a ledger that silently drops a verdict
-     is worse than one that refuses to print.
+     is worse than one that refuses to print. `+<hex>` marks a candidate
+     played from a dirty working tree (S256): HEAD plus the diff whose blob id
+     starts with <hex>, and that diff must be in the commit's tree under
+     adocs/data/ -- checked here too, since the gate checked a tree and this
+     reads a commit.
 
 THE RUN ID AND THE DESCRIPTION are not in the block -- it carries shas, not
 step ids -- so they are read from the commit subject, by this rule:
@@ -91,7 +96,8 @@ COLUMNS = ("run", "what", "wall", "games", "bounds", "verdict", "elo", "nelo",
 # line that nearly matches is the failure this is written to catch.
 BLOCK_RE = {
     "SPRT": re.compile(
-        r"^SPRT \| cand (?P<cand>[0-9a-f]{7,40}) vs ref (?P<ref>[0-9a-f]{7,40}), "
+        r"^SPRT \| cand (?P<cand>[0-9a-f]{7,40}(?:\+(?P<diff>[0-9a-f]{7,40}))?) "
+        r"vs ref (?P<ref>[0-9a-f]{7,40}), "
         r"(?P<tc>[^,]+), Hash=(?P<hash>\d+), (?P<book>[^,]+), "
         r"\{(?P<elo0>-?\d+(?:\.\d+)?), (?P<elo1>-?\d+(?:\.\d+)?)\} nElo$"),
     "Elo": re.compile(
@@ -263,7 +269,27 @@ def parse_block(sha, subject, body):
         "origin": "commit %s" % sha,
         "verdict_key": (sprt.group("cand"), sprt.group("ref"),
                         found["Log"].group("path")),
+        "diff_blob": sprt.group("diff"),
     }
+
+
+def diff_in_commit(sha, diff_blob, repo=REPO):
+    """The path under adocs/data/ in `sha`'s tree whose blob id starts with
+    `diff_blob`, or a LedgerError. A working-tree candidate's diff (S256)."""
+    try:
+        listing = subprocess.check_output(
+            ["git", "-C", repo, "ls-tree", "-r", sha, "--", "adocs/data"],
+            universal_newlines=True)
+    except (subprocess.CalledProcessError, OSError) as error:
+        raise LedgerError("%s: git ls-tree failed: %s" % (sha, error))
+    for line in listing.splitlines():
+        meta, _, path = line.partition("\t")
+        if meta.split()[2].startswith(diff_blob):
+            return path
+    raise LedgerError("%s: the candidate was played from a working tree and "
+                      "no file under adocs/data/ in that commit has the blob "
+                      "id %s, so nothing in the repository rebuilds it"
+                      % (sha, diff_blob))
 
 
 def drop_repeated_verdicts(rows):
@@ -299,7 +325,10 @@ def read_commits():
         if not re.search(r"^SPRT \|", body, re.M):
             continue
         try:
-            rows.append(parse_block(sha, subject, body))
+            row = parse_block(sha, subject, body)
+            if row["diff_blob"]:
+                diff_in_commit(sha, row["diff_blob"])
+            rows.append(row)
         except LedgerError as error:
             die(str(error))
     return drop_repeated_verdicts(rows)

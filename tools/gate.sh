@@ -47,7 +47,9 @@ set -euo pipefail
 # An `SPRT |` line is the trigger: with one in the message all six are owed,
 # each in that shape, and the two shas have to be the `cand-<sha>` and
 # `ref-<sha>` of the named log's own `Results of` line. A message with no
-# `SPRT |` line is not touched by any of this.
+# `SPRT |` line is not touched by any of this. A candidate played from a dirty
+# working tree is `cand <HEAD>+<hex>` (S256), and its diff is owed in the tree
+# under adocs/data/, found by that blob id.
 #
 # THE THIRD RULE, DEC-235 and S241. A commit adds no file over 20 MB. S240's
 # two rating reports reached GitHub at 59 MB each -- fastchess's whole console,
@@ -208,7 +210,7 @@ if ((sprt_lines != 0)); then
   for name in SPRT Elo LLR Games Wall Log; do
     case "$name" in
       SPRT)
-        shape='^SPRT \| cand [0-9a-f]{7,40} vs ref [0-9a-f]{7,40}, [^,]+, Hash=[0-9]+, [^,]+, \{-?[0-9]+(\.[0-9]+)?, -?[0-9]+(\.[0-9]+)?\} nElo$' ;;
+        shape='^SPRT \| cand [0-9a-f]{7,40}(\+[0-9a-f]{7,40})? vs ref [0-9a-f]{7,40}, [^,]+, Hash=[0-9]+, [^,]+, \{-?[0-9]+(\.[0-9]+)?, -?[0-9]+(\.[0-9]+)?\} nElo$' ;;
       Elo)
         shape='^Elo \| [-+]?[0-9]+(\.[0-9]+)? \+/- [0-9]+(\.[0-9]+)?, nElo [-+]?[0-9]+(\.[0-9]+)? \+/- [0-9]+(\.[0-9]+)?$' ;;
       LLR)
@@ -236,8 +238,8 @@ if ((sprt_lines != 0)); then
   # claim; with it a verdict in `git log` is pinned to the log that produced
   # it, which is what DEC-020 made attribution depend on.
   sprt_line="$(printf '%s\n' "$message" | grep -E '^SPRT \|' | head -1)"
-  cand_sha="$(printf '%s\n' "$sprt_line" | sed -E 's/^SPRT \| cand ([0-9a-f]+) vs ref ([0-9a-f]+),.*/\1/')"
-  ref_sha="$(printf '%s\n' "$sprt_line" | sed -E 's/^SPRT \| cand ([0-9a-f]+) vs ref ([0-9a-f]+),.*/\2/')"
+  cand_sha="$(printf '%s\n' "$sprt_line" | sed -E 's/^SPRT \| cand ([0-9a-f+]+) vs ref ([0-9a-f]+),.*/\1/')"
+  ref_sha="$(printf '%s\n' "$sprt_line" | sed -E 's/^SPRT \| cand ([0-9a-f+]+) vs ref ([0-9a-f]+),.*/\2/')"
   log_path="$(printf '%s\n' "$message" | grep -E '^Log \|' | head -1 | sed -E 's/^Log \| //')"
 
   [[ -f "$log_path" ]] \
@@ -245,14 +247,47 @@ if ((sprt_lines != 0)); then
   git ls-files --error-unmatch "$log_path" > /dev/null 2>&1 \
     || fail "the log [$log_path] is not tracked; a verdict's evidence is committed with it"
 
-  if ! grep -qE "^Results of cand-$cand_sha vs ref-$ref_sha( |\$)" "$log_path"; then
+  # The `+` of a working-tree token is a literal here and a quantifier to
+  # grep -E, which would read `1a2b3c4+` as one or more 4s.
+  if ! grep -qE "^Results of cand-${cand_sha//+/\\+} vs ref-$ref_sha( |\$)" "$log_path"; then
     results_line="$(grep -E '^Results of ' "$log_path" | head -1 || true)"
     [[ -n "$results_line" ]] \
       || fail "[$log_path] carries no 'Results of cand-<sha> vs ref-<sha>' line; it is not a fastchess run log"
     fail "the block says cand $cand_sha vs ref $ref_sha, [$log_path] says [$results_line]"
   fi
 
-  echo "SPRT block checked: cand $cand_sha vs ref $ref_sha against $log_path"
+  # A CANDIDATE PLAYED FROM THE WORKING TREE, S256. fastchess.sh names it
+  # `cand-<HEAD>+<hex>`, the hex the start of the blob id of the diff it saved,
+  # because HEAD alone is not what played. The diff is the other half of the
+  # candidate, so it is owed in the tree under test -- the staged tree in
+  # message mode, the commit's otherwise -- under adocs/data/, found by blob
+  # id and not by name. Without it the token names a candidate nothing in the
+  # repository can rebuild, which is the attribution DEC-020 exists to keep.
+  diff_note=""
+  if [[ "$cand_sha" == *+* ]]; then
+    diff_hex="${cand_sha#*+}"
+    if [[ -n "$message_file" ]]; then
+      listing="$(git ls-files -s -- adocs/data)"
+    else
+      listing="$(git ls-tree -r "$ref" -- adocs/data)"
+    fi
+    # `<mode> <blob> <stage>\t<path>` from ls-files, `<mode> blob <blob>\t<path>`
+    # from ls-tree: the blob is the second or the third word before the tab.
+    diff_path=""
+    while IFS=$'\t' read -r meta path; do
+      [[ -n "$meta" ]] || continue
+      read -r _ word2 word3 <<< "$meta"
+      if [[ "$word2" == "$diff_hex"* || "$word3" == "$diff_hex"* ]]; then
+        diff_path="$path"
+        break
+      fi
+    done <<< "$listing"
+    [[ -n "$diff_path" ]] \
+      || fail "the block's candidate $cand_sha was played from a working tree, and no file under adocs/data/ in the tree under test has the blob id $diff_hex; commit the run's candidate.diff beside its log"
+    diff_note=", diff $diff_path"
+  fi
+
+  echo "SPRT block checked: cand $cand_sha vs ref $ref_sha against $log_path$diff_note"
 fi
 
 bench_lines="$(printf '%s\n' "$message" | grep -cE '^Bench: [0-9]+$' || true)"

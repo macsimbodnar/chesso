@@ -32,7 +32,13 @@ import math
 import re
 import sys
 
-CANDIDATE = "candidate"
+def is_candidate(name):
+    """fastchess.sh's candidate, by the one rule both readers here use: the
+    bare `candidate` it named a working-tree run before S256, or the `cand-`
+    prefix of `cand-<sha>` (CAND= runs, and clean trees since S256) and
+    `cand-<HEAD>+<hex>` (dirty trees since S256). An exact match on
+    `candidate` scored every newer candidate's win as a loss, silently."""
+    return name == "candidate" or name.startswith("cand-")
 
 
 def read_rounds(path):
@@ -57,10 +63,16 @@ def read_rounds(path):
 
 
 def candidate_score(white, black, result):
+    # Exactly one side must be the candidate. Neither or both means the rule
+    # above does not fit this PGN, and scoring it anyway is a silent zero.
+    if is_candidate(white) == is_candidate(black):
+        sys.exit("S024_pair_stats: cannot tell the candidate in [%s] vs [%s]; "
+                 "expected exactly one side named `candidate` or `cand-...`"
+                 % (white, black))
     if result == "1-0":
-        return 1.0 if white == CANDIDATE else 0.0
+        return 1.0 if is_candidate(white) else 0.0
     if result == "0-1":
-        return 1.0 if black == CANDIDATE else 0.0
+        return 1.0 if is_candidate(black) else 0.0
     if result == "1/2-1/2":
         return 0.5
     return None

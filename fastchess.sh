@@ -112,6 +112,7 @@ fail()
 # S167.
 trap 'status=$?
       [[ -n "${snapshot:-}" ]] && rm -f "$snapshot"
+      [[ -n "${tree_index:-}" ]] && rm -f "$tree_index"
       if ((marked == 0 && (status != 0 || completed == 0))); then
         echo "SPRT-RUN-FAILED: exited $status" >&2
         ((status != 0)) || status=1
@@ -130,11 +131,12 @@ trap 'status=$?
 #
 # The binary is resolved once instead of being reached through the `command`
 # builtin at each call, because bash 3.2 does not suppress errexit for `command`
-# on the left of `||`. The dirty-tree probe below is `git diff --quiet HEAD ||
+# on the left of `||`. The dirty-tree probe was then `git diff --quiet HEAD ||
 # diff_status=$?`, and git exits 1 there on every working-tree run -- which is
 # every --fast run -- so the script died at that line, before its banner, with
 # the trap above reporting success. A plain external command in the same
-# position is suppressed correctly. S167.
+# position is suppressed correctly. S167. (The probe is a tree comparison
+# since S256; the `||` calls on git below still depend on this.)
 repo="$(cd -- "$(dirname -- "$0")" && pwd)"
 real_git="$(command -v git)"
 git()
@@ -336,15 +338,38 @@ if [[ -n "$CAND" ]]; then
   cand_sha="$(git rev-parse --short "$CAND")"
 fi
 
-# IS THE TREE DIRTY, ASKED ONCE. `git diff --quiet HEAD` and not a bare
-# `git diff --quiet`: the bare form compares the tree against the index, so a
-# fully staged diff read as clean -- while the binary being played was built
-# from that tree. Exit 1 is "dirty" and anything above it is git failing, which
-# must not read as clean: a fail-open here silently disarms the guard below.
+# IS THE TREE DIRTY, ASKED ONCE, AND AS THE BUILD SEES IT. The tree is what
+# `git add -A` would commit -- staged, unstaged and untracked alike, ignored
+# files not -- written through a scratch copy of the index so the real one is
+# not touched, and it is dirty when that tree is not HEAD's. Untracked files
+# count because src/CMakeLists.txt globs `*.cpp`: an untracked source is in the
+# binary. This was `git diff --quiet HEAD` until S256's fast check, which cannot
+# see an untracked file, so a tree changed only by one read as clean and was
+# named `cand-<HEAD>` -- a sha that is not what played. (And not a bare `git diff
+# --quiet` before that, which read a fully staged diff as clean.) Every step
+# fails loudly: an unknown answer must not read as clean, or the A/A guard
+# below is silently disarmed. The index is copied rather than read from HEAD so
+# only changed files are hashed; the blobs `git add` writes are loose objects
+# gc collects. Under CAND the working tree is not read at all.
 diff_status=0
-git diff --quiet HEAD || diff_status=$?
-((diff_status <= 1)) \
-  || fail "git diff --quiet HEAD exited $diff_status, so whether the tree is clean is unknown"
+wt_tree=""
+if [[ -z "$cand_sha" ]]; then
+  tree_index="$(mktemp "${TMPDIR:-/tmp}/chesso-index.XXXXXX")"
+  real_index="$(git rev-parse --absolute-git-dir)/index"
+  if [[ -f "$real_index" ]]; then
+    cp "$real_index" "$tree_index"
+  else
+    GIT_INDEX_FILE="$tree_index" "$real_git" -C "$repo" read-tree HEAD \
+      || fail "could not read HEAD into a scratch index, so whether the tree is clean is unknown"
+  fi
+  GIT_INDEX_FILE="$tree_index" "$real_git" -C "$repo" add -A \
+    || fail "git add -A into a scratch index failed, so whether the tree is clean is unknown"
+  wt_tree="$(GIT_INDEX_FILE="$tree_index" "$real_git" -C "$repo" write-tree)" \
+    || fail "git write-tree from the scratch index failed, so whether the tree is clean is unknown"
+  rm -f "$tree_index"
+  tree_index=""
+  [[ "$wt_tree" == "$(git rev-parse 'HEAD^{tree}')" ]] || diff_status=1
+fi
 
 # CANDIDATE AND REFERENCE AT THE SAME COMMIT, NOTHING UNCOMMITTED, ARE THE SAME
 # ENGINE. An SPRT between identical engines does not return zero: it
@@ -439,6 +464,49 @@ pgnfile="$outdir/games.pgn"
   || fail "$pgnfile already exists; fastchess appends, so this run's census would mix it with an earlier match"
 
 [[ -r "$book" ]] || fail "no book at $book, fetch it with books/fetch_book.sh"
+
+# WHAT THE CANDIDATE IS CALLED, AND WHAT A WORKING-TREE CANDIDATE PLAYED. The
+# name is what fastchess writes into the log's `Results of` line and the PGN,
+# and DEC-220's block is checked against that line. It was the bare word
+# `candidate` for every working-tree run, so a verdict measured from the tree
+# -- S207's, S055's (DEC-253) -- could carry no block: the log named no sha.
+# S256.
+#
+#   CAND=<ref>           cand-<sha>               the commit
+#   clean tree           cand-<HEAD>              the tree is HEAD
+#   dirty tree           cand-<HEAD>+<12 hex>     HEAD plus the diff below
+#
+# The hex is the start of `git hash-object` of the diff saved as
+# `$outdir/candidate.diff`, which is a git blob id: once the diff is committed
+# under adocs/data/ beside the log, `tools/gate.sh` and `tools/ledger.py` find
+# it in the commit's tree by that id, whatever the file is called.
+#
+# THE DIFF IS HEAD AGAINST THE TREE THE DIRTY TEST ABOVE WROTE, so what is
+# named dirty and what is saved are one object: untracked sources included, and
+# a diff that left them out would not rebuild the candidate. `diff-tree`,
+# plumbing, and not `git diff`, so diff.noprefix, diff.renames and their kin in
+# someone's config cannot change the bytes and with them the hash.
+#
+# What this pins is the tree at launch, not the build: the binary's `id name`
+# below proves it was built on HEAD with something uncommitted, and nothing
+# proves which something. Build, then launch, then leave the tree alone until
+# the snapshot is taken, as before.
+diff_file=""
+diff_hex=""
+if [[ -n "$cand_sha" ]]; then
+  cand_name="cand-$cand_sha"
+elif ((diff_status == 0)); then
+  cand_name="cand-$head_sha"
+else
+  diff_file="$outdir/candidate.diff"
+  git diff-tree -r -p --binary --full-index HEAD "$wt_tree" > "$diff_file" \
+    || fail "git diff-tree failed, so the candidate's diff is unknown"
+  [[ -s "$diff_file" ]] \
+    || fail "the tree is dirty but its diff against HEAD came out empty at $diff_file"
+  diff_blob="$(git hash-object --no-filters "$diff_file")"
+  diff_hex="${diff_blob:0:12}"
+  cand_name="cand-$head_sha+$diff_hex"
+fi
 
 # WHAT THE CANDIDATE WAS CONFIGURED AS, AND WHAT THE REFERENCE IS CONFIGURED
 # WITH. `build/` is whatever it was last configured as; the reference used to
@@ -722,14 +790,15 @@ dirty=""
 # With CAND the candidate line carries that commit and NO dirty flag: the flag
 # describes the working tree, the working tree is not being played, and a run
 # that reported `+ uncommitted changes` beside a commit candidate would be
-# saying the opposite of what it measured. The engine name follows the same
-# rule, so the PGN says which commit it held.
-cand_name="candidate"
+# saying the opposite of what it measured. The engine name was set above, by
+# the same rule, so the PGN says which commit -- and which diff -- it held.
 if [[ -n "$cand_sha" ]]; then
-  cand_name="cand-$cand_sha"
   echo "candidate  $cand_sha  $(commit_date "$cand_sha")"
 else
   echo "candidate  $head_sha  $(commit_date HEAD)$dirty"
+fi
+if [[ -n "$diff_file" ]]; then
+  echo "diff       $diff_file  blob $diff_hex"
 fi
 echo "reference  $ref_sha  $(commit_date "$ref_sha")"
 # What the candidate was built as, which the reference is built to match. Two
@@ -748,7 +817,7 @@ echo "out        $outdir"
 echo
 
 # WHAT EACH SIDE SAYS IT IS, ASKED BEFORE THE FIRST GAME. The two names on the
-# argv below -- `candidate` or `cand-<sha>`, and `ref-<sha>` -- are this
+# argv below -- `cand-<sha>[+<hex>]` and `ref-<sha>` -- are this
 # script's own variables, so until S212 every archived PGN's engine names were
 # an assertion about what was meant to be built rather than a property of what
 # played (2026-09-10 adversarial F05). The banner does not close it either: it

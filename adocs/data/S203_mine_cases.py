@@ -26,8 +26,8 @@ the search and not case material -- a mate line that is *too long* or that does
 not end in checkmate is a wrong line, where a short one is the class DEC-122
 leaves visible and S202 owns.
 
-The engine name is fastchess's, so `candidate` against `ref-<sha>` is the
-control S171 read: the same 1500 openings under two key sets.
+The engine name is fastchess's, so `candidate` (`cand-...` since S256)
+against `ref-<sha>` is the control S171 read: the same 1500 openings under two key sets.
 
 Prints a summary, then one block per candidate warning ready to become a TSV
 row -- the `name`, `go`, `start` and `stride` columns are the sweep's job
@@ -110,11 +110,33 @@ def parse(path):
     return warnings, malformed
 
 
+def is_candidate(name):
+    """fastchess.sh's candidate, by the one rule S024_pair_stats.py uses too:
+    the bare `candidate` it named a working-tree run before S256, or the
+    `cand-` prefix of `cand-<sha>` and `cand-<HEAD>+<hex>`."""
+    return name == "candidate" or name.startswith("cand-")
+
+
+def engines_in(path):
+    """Every engine name in the log's `Started game ... (<white> vs <black>)`
+    lines."""
+    names = set()
+    pattern = re.compile(r"^Started game \d+ of \d+ \((\S+) vs (\S+)\)")
+    with open(path, errors="replace") as handle:
+        for line in handle:
+            match = pattern.match(line)
+            if match:
+                names.update(match.groups())
+    return names
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("target", help="a run's output directory, or the log itself")
-    parser.add_argument("--engine", default="candidate",
-                        help="whose warnings to print as case material")
+    parser.add_argument("--engine", default=None,
+                        help="whose warnings to print as case material; by "
+                             "default the candidate, named `candidate` or "
+                             "`cand-...` (see is_candidate)")
     args = parser.parse_args()
 
     path = args.target
@@ -124,6 +146,21 @@ def main():
         sys.exit("no log at %s" % path)
 
     warnings, malformed = parse(path)
+
+    # Which engine is the case material's, checked against the engines the
+    # log says played, so a name that matches nothing is an error and not an
+    # empty case list that reads as "no warnings".
+    played = engines_in(path)
+    if args.engine is None:
+        wanted = [name for name in played if is_candidate(name)]
+        if len(wanted) != 1:
+            sys.exit("no single candidate among the engines %s; expected one "
+                     "named `candidate` or `cand-...`, or pass --engine"
+                     % sorted(played))
+        args.engine = wanted[0]
+    elif args.engine not in played:
+        sys.exit("--engine %s did not play in %s; the engines were %s"
+                 % (args.engine, path, sorted(played)))
 
     print("log %s" % path)
     print("warnings %d, malformed %d" % (len(warnings), malformed))

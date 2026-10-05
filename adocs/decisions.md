@@ -13815,3 +13815,24 @@ Why:          A ceiling raised for a tree that may not survive its verdict is a
               engine of the run.
 Rejected:     the S055 grid alone (0,1,1,0,2,1): DEC-251 appends grids, and a
               grid is not dropped because a later tree moved.
+
+## DEC-254  2026-10-05  A working-tree candidate is named by HEAD and its diff's blob, and closes with DEC-220's block
+Tags:         testing, sprt, harness, ledger, s256, s055, dec-220, dec-253
+Context:      S055's SPRT ran from the working tree because its candidate could
+              not be a green commit before its verdict (DEC-253). The log read
+              `Results of candidate vs ref-4a7e8ce`, `tools/gate.sh` needs
+              `cand-<sha>` there, so the closing commit carried no block and
+              the ledger lost the verdict.
+Decision:     By the coordinator, 2026-10-05, under the owner's standing
+              mandate; the owner may overrule. `fastchess.sh` names a clean
+              working tree `cand-<HEAD>` and a dirty one `cand-<HEAD>+<12 hex>`,
+              the hex the blob id of the `candidate.diff` it saves (the
+              `git add -A` tree against HEAD's, untracked sources included);
+              `tools/gate.sh` and `tools/ledger.py` accept the token when that
+              blob is under `adocs/data/` in the tree. AGENTS.md's COMMITS rule
+              says so. S055's H0, whose log predates the name, is appended to
+              `adocs/data/ledger_seed.tsv` as the one seed row after DEC-220's
+              "seeded once".
+Why:          Refusing a dirty-tree verdict run (S256's option b) would forbid
+              the DEC-253 case instead of attributing it.
+Rejected:     option (b); rewriting S055's log (a log is evidence).

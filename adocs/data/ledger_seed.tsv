@@ -29,6 +29,17 @@
 # "close to the near bound"). Both are recorded as plan.md has them so no
 # published figure moves under this step; `tools/ledger.py --audit-seed-class`
 # prints the comparison. The nine rows after them carry the rule's answer.
+#
+# One row after them was taken after DEC-220, and it is here because its
+# commit could carry no block. S055's SPRT ran from the working tree (DEC-253)
+# when fastchess.sh named every working-tree candidate `candidate`, so its log
+# reads `Results of candidate vs ref-4a7e8ce` and no block can agree with it;
+# the closing commit 636bbf4 carries the result in prose. S256 gave a
+# working-tree candidate a name a block can carry, `cand-<HEAD>+<hex>`, and it
+# does not reach back: a run's log is evidence and is not rewritten. So the
+# row is seeded, with the rule's class, and it prints after the twenty rather
+# than in its place among the commits. Added by S256, 2026-10-05; the rows
+# above it are untouched.
 run	what	wall	games	bounds	verdict	elo	nelo	class	source
 S093 v1	history malus and gravity	2 h 44 m	6412	{0, 5}	H1		13.63 +/- 8.50	fast	adocs/plan_done/S093_history_malus_and_ageing.md
 S093 v2	history persistence across `go`	6 h 35 m	15398	{0, 5}	H0		-2.14 +/- 5.49	slow	adocs/plan_done/S093_history_malus_and_ageing.md
@@ -50,3 +61,4 @@ S098 v1 leg 2	the same term at the census p90 (divisor 1442, clamp 3), the pre-r
 S098 v2	late move reduction adjusted by node type: one ply more at a cut node, when not improving and when the table move is a capture, one less at a PV node, `noob_3moves.epd`	56 m 09 s	1990	{0, 5}	**H1**, +29.05 +/- 11.52	+29.05 +/- 11.52	38.70 +/- 15.26	fast	adocs/plan_done/S098_reduction_refinement.md
 S098 v3	the re-search depth after a reduced fail-high: a ply shallower where the score barely beat alpha, a ply deeper where it cleared the node's own best by a margin, `noob_3moves.epd`	2 h 06 m 45 s	4496	{0, 5}	H0, -9.97 +/- 7.56	-9.97 +/- 7.56	-13.40 +/- 10.16	fast	adocs/plan_done/S098_reduction_refinement.md
 S098 v3 leg 1	the same rule with the shallower path switched off, the deeper path alone, the pre-registered bisection, `noob_3moves.epd`	6 h 49 m 01 s	14510	{0, 5}	**H1**, +5.75 +/- 4.37	+5.75 +/- 4.37	7.44 +/- 5.65	slow	adocs/plan_done/S098_reduction_refinement.md
+S055	mobility and king safety tapered through one division instead of two, measured from the working tree, `noob_3moves.epd`	5 h 26 m 16 s	11372	{-5, 0}	H0, -6.72 +/- 4.89	-6.72 +/- 4.89	-8.78 +/- 6.39	slow	adocs/data/S055_sprt.log

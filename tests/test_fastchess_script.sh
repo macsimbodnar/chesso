@@ -2,7 +2,7 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Twenty-six properties. The second is the one that stops F01 recurring; 3 to 8
+# Twenty-nine properties. The second is the one that stops F01 recurring; 3 to 8
 # are the default reference and the A/A guard -- the trap S160 disarmed and the
 # defects its own first attempt shipped, each one reproduced before it was
 # fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode; 12 to 15
@@ -11,7 +11,7 @@
 # it so a hard-wired override cannot pass; 16 and 17 are the reference build
 # itself, which every case before them skips; 18 to 26 are S212's, one per
 # finding of the 2026-09-10 audit's harness set -- F04, F06, F05, F31 and F32
-# in that order:
+# in that order; 27 to 29 are S256's candidate name:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
@@ -53,6 +53,13 @@
 #      only expected terminations still reaches SPRT-RUN-DONE
 #  26. the busy guard reads the one-minute load average, not `ps`'s lifetime
 #      percentages
+#  27. a working-tree candidate on a dirty tree is named `cand-<HEAD>+<hex>`,
+#      and the diff saved beside the run hashes to the hex and rebuilds the
+#      tree, untracked sources included, without touching the real index (S256)
+#  28. a working-tree candidate on a clean tree is named `cand-<HEAD>`, and no
+#      diff is saved (S256)
+#  29. a tree changed only by an untracked source is dirty, named and saved as
+#      one (S256)
 #
 # No game is played and no engine is compiled. `fastchess` is a stub on PATH,
 # the candidate and the reference are one-line shell scripts, and the whole run
@@ -160,10 +167,19 @@ STUB
   # does, because the cached worktrees below are judged by `git status
   # --porcelain` being empty and each one carries its own `build/`. Case 19 is
   # about a *modified tracked file*, which is the state the real
-  # `.ref-builds/2b54a4f` was found in.
+  # `.ref-builds/2b54a4f` was found in. It holds `.ref-builds` as well, as the
+  # real one does: a dirty working-tree run takes its diff through `git add
+  # -A` (case 27), and unignored worktrees would enter it as embedded
+  # repositories, with git's warning, where the real run never sees them.
   git -C "$tmp" init -q
   : > "$tmp/tracked.txt"
-  printf 'build\n' > "$tmp/.gitignore"
+  printf 'build\n.ref-builds\n' > "$tmp/.gitignore"
+  # Everything the harness itself writes at the top of the sandbox -- the
+  # script copy, stubs, book, out.txt, the stubs' records -- is untracked, and
+  # since S256's fast check an untracked file makes the tree dirty, as it makes
+  # the build differ. Excluded locally, so only what a case creates on purpose
+  # (a `*.cpp`) counts, and `.gitignore` itself stays the real one's shape.
+  printf '/*\n!/.gitignore\n!/tracked.txt\n!/*.cpp\n' > "$tmp/.git/info/exclude"
   git -C "$tmp" add tracked.txt .gitignore
   GIT_COMMITTER_DATE="2020-01-02T03:04:05 +0000" \
     git -C "$tmp" -c user.email=smoke@example.invalid -c user.name=smoke \
@@ -1165,7 +1181,96 @@ if ! grep -q '/proc/loadavg' "$script_under_test"; then
   fail "the busy guard does not read the one-minute load average"
 fi
 
-rm -rf "$reached_dir" "$default_dir" "$clean_dir" "$older_dir" \
+# 27. A working-tree candidate on a dirty tree is named by HEAD and the blob of
+#     the diff it played, and that diff is saved beside the run's outputs.
+#
+# S055's run read `Results of candidate vs ref-4a7e8ce`, and no DEC-220 block
+# can name a candidate whose log carries no sha (S256). The name is now
+# `cand-<HEAD>+<12 hex>`, the hex being the start of `git hash-object` of the
+# saved diff, so a committed copy of that diff is found by its blob id. Three
+# claims, each checked against the artefact rather than the banner: fastchess
+# is handed the name, the file hashes to it, and the file applied to HEAD
+# rebuilds the tree that was played -- an untracked source included, because
+# src/CMakeLists.txt globs `*.cpp` and an untracked file is in the build.
+wt_dir="$(make_sandbox "$script_under_test")"
+echo change >> "$wt_dir/tracked.txt"
+echo "int untracked_source = 1;" > "$wt_dir/untracked_source.cpp"
+wt_status="$(run_sandbox "$wt_dir")"
+wt_head="$(git -C "$wt_dir" rev-parse --short HEAD)"
+wt_name="$(grep -E '^name=cand-' "$wt_dir/fastchess_args" | head -1 || true)"
+wt_hex="${wt_name#name=cand-"$wt_head"+}"
+wt_diff="$wt_dir/out/candidate.diff"
+
+if ((wt_status != 0)); then
+  fail "dirty working tree: the script exited $wt_status"
+  show "$wt_dir"
+elif ! [[ "$wt_name" =~ ^name=cand-$wt_head\+[0-9a-f]{12}$ ]]; then
+  fail "dirty working tree: the engine is not named cand-$wt_head+<12 hex>, got [$wt_name]"
+  show "$wt_dir"
+elif [[ ! -s "$wt_diff" ]]; then
+  fail "dirty working tree: no diff saved at $wt_diff"
+  show "$wt_dir"
+elif [[ "$(git hash-object --no-filters "$wt_diff")" != "$wt_hex"* ]]; then
+  fail "dirty working tree: $wt_diff does not hash to the name's $wt_hex"
+  show "$wt_dir"
+elif ! grep -qF "$wt_diff" "$wt_dir/out.txt"; then
+  fail "dirty working tree: the banner does not say where the diff is"
+  show "$wt_dir"
+elif git -C "$wt_dir" ls-files --error-unmatch untracked_source.cpp > /dev/null 2>&1; then
+  fail "dirty working tree: taking the diff staged a file in the real index"
+  show "$wt_dir"
+else
+  wt_apply="$(mktemp -d "${TMPDIR:-/tmp}/chesso-fastchess-apply.XXXXXX")"
+  git -C "$wt_dir" archive HEAD | tar -x -C "$wt_apply"
+  if ! (cd "$wt_apply" && git apply --binary "$wt_diff") > "$wt_apply.err" 2>&1; then
+    fail "dirty working tree: the saved diff does not apply to HEAD: $(cat "$wt_apply.err")"
+  elif ! cmp -s "$wt_apply/tracked.txt" "$wt_dir/tracked.txt"; then
+    fail "dirty working tree: the saved diff does not rebuild the tracked change"
+  elif ! cmp -s "$wt_apply/untracked_source.cpp" "$wt_dir/untracked_source.cpp"; then
+    fail "dirty working tree: the saved diff leaves out an untracked source file"
+  fi
+  rm -rf "$wt_apply" "$wt_apply.err"
+fi
+
+# 28. A working-tree candidate on a clean tree is HEAD, and is named for it.
+#     No diff is saved: there is none, and an empty file would claim one.
+clean_wt_dir="$(make_sandbox "$script_under_test")"
+clean_wt_status="$(run_sandbox "$clean_wt_dir" HEAD~1)"
+clean_wt_head="$(git -C "$clean_wt_dir" rev-parse --short HEAD)"
+
+if ((clean_wt_status != 0)); then
+  fail "clean working tree: the script exited $clean_wt_status"
+  show "$clean_wt_dir"
+elif ! grep -q -x -- "name=cand-$clean_wt_head" "$clean_wt_dir/fastchess_args"; then
+  fail "clean working tree: the engine is not named cand-$clean_wt_head"
+  show "$clean_wt_dir"
+elif [[ -e "$clean_wt_dir/out/candidate.diff" ]]; then
+  fail "clean working tree: a diff was saved for a tree with nothing uncommitted"
+  show "$clean_wt_dir"
+fi
+
+# 29. A tree changed only by an untracked source is dirty, and is named and
+#     saved as one. src/CMakeLists.txt globs `*.cpp`, so the file is in the
+#     binary; `git diff --quiet HEAD` cannot see it and once named this run
+#     `cand-<HEAD>` -- a sha that is not what played (S256 fast check).
+untracked_dir="$(make_sandbox "$script_under_test")"
+echo "int only_untracked = 1;" > "$untracked_dir/untracked_source.cpp"
+untracked_status="$(run_sandbox "$untracked_dir")"
+untracked_head="$(git -C "$untracked_dir" rev-parse --short HEAD)"
+
+if ((untracked_status != 0)); then
+  fail "untracked-only tree: the script exited $untracked_status"
+  show "$untracked_dir"
+elif ! grep -qE "^name=cand-$untracked_head\+[0-9a-f]{12}\$" "$untracked_dir/fastchess_args"; then
+  fail "untracked-only tree: the engine is not named cand-$untracked_head+<12 hex>"
+  show "$untracked_dir"
+elif ! grep -q 'untracked_source.cpp' "$untracked_dir/out/candidate.diff" 2> /dev/null; then
+  fail "untracked-only tree: the saved diff does not carry the untracked source"
+  show "$untracked_dir"
+fi
+
+rm -rf "$wt_dir" "$clean_wt_dir" "$untracked_dir"
+rm -rf "$reached_dir""$default_dir" "$clean_dir" "$older_dir" \
        "$explicit_dir" "$aa_dir" "$nogit_dir" "$seed_dir" \
        "$override_dir" "$pgn_dir" "$rounds_dir" "$tc_dir" "$hash_dir" \
        "$cand_dir" "$same_dir" "$same_aa_dir" "$build_dir" \
@@ -1178,4 +1283,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: 26 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, and reads the load average"
+echo "$script_under_test: 29 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, and names a working-tree candidate by HEAD and the blob of the diff it saved"

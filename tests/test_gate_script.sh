@@ -6,11 +6,12 @@
 # with one number the commit message claims, and to be right about when the
 # number is owed. The second, from S233, is to hold a verdict-closing commit's
 # result block to DEC-220's shape and to the log it names. That is seventeen
-# cases, and none of them needs a real engine or a real suite: the sandbox is a
-# throwaway git repository whose PATH holds stubs for cmake, ctest and
-# clang-format.sh that exit 0, and a `build/src/chesso` that prints a canned
-# signature line. So this test measures the gate's logic and nothing about the
-# machine it runs on.
+# cases, with S241's three on file size and S256's four on a working-tree
+# candidate after them, and none of them needs a real engine or a real suite:
+# the sandbox is a throwaway git repository whose PATH holds stubs for cmake,
+# ctest and clang-format.sh that exit 0, and a `build/src/chesso` that prints
+# a canned signature line. So this test measures the gate's logic and nothing
+# about the machine it runs on.
 #
 #   1. `Bench: <n>` matching the binary, src/ touched      -> GATE-DONE, exit 0
 #   2. `Bench: <n>` not matching                           -> GATE-FAILED, both
@@ -52,6 +53,18 @@
 #                                                              size, no suite
 #  19. the same at 19 MB                                     -> GATE-DONE
 #  20. the 21 MB file staged, in --message mode              -> GATE-FAILED
+#
+# A candidate played from a dirty working tree, S256. fastchess.sh names it
+# `cand-<HEAD>+<hex>`, the hex the start of the saved diff's blob id:
+#
+#  21. a block with the token, over its log and the committed diff
+#                                                           -> GATE-DONE,
+#                                                              naming the diff
+#  22. the same with the diff gone from the commit          -> GATE-FAILED
+#                                                              naming the hex
+#  23. the diff staged, in --message mode                   -> GATE-DONE
+#  24. a log naming `cand-1a2b3c44<hex>`: the `+` is a literal, not a regex
+#      quantifier                                           -> GATE-FAILED
 #
 # Usage: test_gate_script.sh <gate.sh>
 
@@ -545,6 +558,78 @@ fi
 if ! grep -q 'docs/staged_report.txt' "$tmp/out.txt"; then
   fail "20: the marker does not name the staged file"; show
 fi
+
+# --- A working-tree candidate, cases 21 to 24 (S256) -----------------------
+#
+# fastchess.sh names a candidate played from a dirty tree `cand-<HEAD>+<hex>`,
+# the hex the start of the blob id of the diff it saved. The block carries the
+# same token, and the gate accepts it only when the tree under test holds a
+# file under adocs/data/ with that blob id -- the diff is the half of the
+# candidate HEAD does not say. S055's log could carry no sha at all.
+printf 'diff --git a/src/x.cpp b/src/x.cpp\n--- a/src/x.cpp\n+++ b/src/x.cpp\n' \
+  > "$tmp/repo/adocs/data/S997_candidate.diff"
+wt_blob="$(git -C "$tmp/repo" hash-object --no-filters adocs/data/S997_candidate.diff)"
+wt_hex="${wt_blob:0:12}"
+cat > "$tmp/repo/adocs/data/S997_sprt.log" <<LOG
+--------------------------------------------------
+Results of cand-1a2b3c4+$wt_hex vs ref-5d6e7f8 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 5.75 +/- 4.37, nElo: 7.44 +/- 5.65
+--------------------------------------------------
+LOG
+git -C "$tmp/repo" add adocs/data/S997_sprt.log adocs/data/S997_candidate.diff
+git -C "$tmp/repo" commit -q -m "a working-tree run's log and its diff"
+line_SPRT="SPRT | cand 1a2b3c4+$wt_hex vs ref 5d6e7f8, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo"
+line_Log="Log | adocs/data/S997_sprt.log"
+
+# 21. The whole block, the token in it, over its log and a tracked diff whose
+#     blob id the token names                              -> GATE-DONE
+commit "$(block)" docs/manual.md
+status="$(run_gate)"
+if [[ "$status" -ne 0 || "$(done_markers)" -ne 1 ]]; then
+  fail "21: a working-tree block over its log and its diff exited $status"; show
+fi
+if ! grep -q "SPRT block checked: cand 1a2b3c4+$wt_hex vs ref 5d6e7f8" "$tmp/out.txt" \
+   || ! grep -q 'adocs/data/S997_candidate.diff' "$tmp/out.txt"; then
+  fail "21: the gate does not say it checked the block and which diff it found"; show
+fi
+
+# 22. The same block with the diff gone from the tree: the token names a
+#     candidate nothing in the repository can rebuild      -> GATE-FAILED
+git -C "$tmp/repo" rm -q adocs/data/S997_candidate.diff
+git -C "$tmp/repo" commit -q --amend --no-edit
+status="$(run_gate)"
+if [[ "$status" -eq 0 || "$(failed_markers)" -ne 1 ]]; then
+  fail "22: a token whose diff is not in the tree was not refused"; show
+fi
+if ! grep -q "$wt_hex" "$tmp/out.txt"; then
+  fail "22: the marker does not name the diff's blob id"; show
+fi
+
+# 23. Message mode reads the staged tree: the diff staged, not committed, is
+#     found, and the block passes before the commit exists.
+printf 'diff --git a/src/x.cpp b/src/x.cpp\n--- a/src/x.cpp\n+++ b/src/x.cpp\n' \
+  > "$tmp/repo/adocs/data/S997_candidate.diff"
+git -C "$tmp/repo" add adocs/data/S997_candidate.diff
+block > "$tmp/message.txt"
+status="$(run_gate --message "$tmp/message.txt")"
+if [[ "$status" -ne 0 || "$(done_markers)" -ne 1 ]]; then
+  fail "23: a staged diff was not found in --message mode (exit $status)"; show
+fi
+git -C "$tmp/repo" commit -q -m "the diff back in the tree"
+
+# 24. The `+` is a literal, not a regex quantifier. A log recording
+#     `cand-1a2b3c44<hex>` is another candidate, and an unescaped `+` in the
+#     pattern would read `1a2b3c4+` as "one or more 4s" and pass it.
+sed -i.bak "s/cand-1a2b3c4+$wt_hex/cand-1a2b3c44$wt_hex/" "$tmp/repo/adocs/data/S997_sprt.log"
+rm -f "$tmp/repo/adocs/data/S997_sprt.log.bak"
+git -C "$tmp/repo" add adocs/data/S997_sprt.log
+git -C "$tmp/repo" commit -q -m "$(block)"
+status="$(run_gate)"
+if [[ "$status" -eq 0 || "$(failed_markers)" -ne 1 ]]; then
+  fail "24: a log naming cand-1a2b3c44<hex> passed a block naming cand 1a2b3c4+<hex>"; show
+fi
+line_SPRT="SPRT | cand 1a2b3c4 vs ref 5d6e7f8, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo"
+line_Log="Log | adocs/data/S999_sprt.log"
 
 # 9. Static. bash 3.2 on the MacBook has none of these (S167, S177), and the
 #    comments in the script name no such form, so the whole file is searched.

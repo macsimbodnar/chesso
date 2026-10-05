@@ -51,8 +51,9 @@ id name Chesso <sha>[-dirty] <arch>[ tune]
 - `<sha>` is the short commit the binary was compiled from, stamped at build
   time — a rebuild after a commit picks up the new one with no reconfigure. It
   is `unknown` when the binary was built outside a git checkout.
-- `-dirty` is appended when tracked files were modified at build time, on the
-  same convention the rest of the project uses (`git diff --quiet HEAD`).
+- `-dirty` is appended when tracked files were modified at build time
+  (`git diff --quiet HEAD`). Untracked files do not set it; `fastchess.sh`
+  counts them as a change to the candidate, since the build globs `*.cpp`.
 - `<arch>` is the instruction set the binary targets: `bmi2`, `avx2`,
   `portable` or `native` — the same four `build_release.sh` takes.
 - ` tune` is appended only by the tuning build, which exposes every search

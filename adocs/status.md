@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05: S256 done -- working-tree verdicts close with DEC-220's block
+
+`fastchess.sh` names a working-tree candidate `cand-<HEAD>` or
+`cand-<HEAD>+<12 hex>`, the blob of the `candidate.diff` it saves (untracked
+sources count); the gate and the ledger accept it when that blob is committed
+under `adocs/data/`. S055's H0 is in the ledger as a seed row (43 verdicts).
+**A clean-tree run is no longer named `candidate`**: S024 and S203's readers
+match `cand-`. DEC-254 and the COMMITS wording in AGENTS.md are the
+coordinator's, for the owner. **Next:** S117 (keep two divisions, S055's H0).
+Owner question 3 (DEC-245) open; DEC-252 the coordinator's, for the owner.
+
 ## 2026-10-05: S255 done -- the anchors script clamps at the engine's margin
 
 `adocs/data/S192_anchors.py` reads `LAZY_EVAL_MARGIN` (184) from
