@@ -13789,3 +13789,29 @@ Why:          The inlining budget, not the code, set S020's number; later
               steps in the same unit should measure their own cost.
 Rejected:     a unit-local or global `inline-unit-growth` raise (S020 measured
               it slower on perft); splitting the generator out (not needed).
+
+## DEC-253  2026-10-05  S055's SPRT runs from the working tree, and the S170 budgets and E/F ceilings wait for its verdict
+Tags:         testing, mate, s170, s055, sprt, dec-246, dec-249, dec-250, dec-251
+Context:      S055's single taper (bench 4081329 -> 3562703) silences 5 of the 6
+              S170 cases at their standing budgets, so `test_mate_carry` is red
+              at the standing budgets. The budget rule's answer on the tree
+              (A 1M, C 1.2M, D 1.5M, E 300k, F 300k,
+              `adocs/data/S055_sweep_s170.txt`) reports every case, but E's
+              cell has 2 short mate lines over a ceiling of 0, and F 1 under
+              the appended grid. Unlike DEC-249, no budget set is green on the
+              candidate without a ceiling moving, so it cannot land as a green
+              commit before the verdict.
+Decision:     By the coordinator, 2026-10-05, applying DEC-249 under the owner's
+              standing mandate; the owner may overrule. The SPRT (`--nonreg`,
+              pre-registered in S055's step file) measures the uncommitted
+              working tree against HEAD, as S207's did; nothing lands before it
+              reads. On H0 the change is reverted and the question vanishes. On
+              H1 or no verdict the rule's budgets land with the ceilings the
+              `--ceilings` command answers over the S202 and S055 grids
+              appended (the DEC-251 form, 0,5,4,0,2,1: E 0 -> 2, F 0 -> 1),
+              brought to the owner with the verdict.
+Why:          A ceiling raised for a tree that may not survive its verdict is a
+              relaxation taken early (DEC-249); the budgets touch neither
+              engine of the run.
+Rejected:     the S055 grid alone (0,1,1,0,2,1): DEC-251 appends grids, and a
+              grid is not dropped because a later tree moved.

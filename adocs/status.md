@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05 03:30: S055 implemented; its `--nonreg` SPRT runs overnight from the working tree
+
+One division for stage two (king safety carries the residue on the collect
+path); tuner-model tolerance 3 -> 2, truncation pins re-measured; `bench`
+4081329 -> 3562703. Uncommitted: at the standing S170 budgets
+`test_mate_carry` is red, and the rule's budgets need E's ceiling 0 -> 2 and
+F's 0 -> 1, which wait for the verdict (DEC-253). SPRT `{-5, 0}` nElo,
+worst case about 12 to 19 h. Working tree must not be touched while it runs.
+New fillers S254 (stale mutant strings since S020) and S255
+(`S192_anchors.py` clamp 150 against 184). **Next:** S055's verdict.
+Owner question 3 (DEC-245) open; **DEC-252 and DEC-253 are the coordinator's
+under the standing mandate, for the owner to confirm or overrule.**
+
 ## 2026-10-05: S253 done -- the hooks always inline; S020's seam re-landed on a zero
 
 `make_move`'s accumulator hooks are `CHESSO_ALWAYS_INLINE` in a `Side` template
