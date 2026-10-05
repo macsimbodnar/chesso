@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-05, by hand.
 
+## 2026-10-05: S117 done -- each mg/eg pair travels packed, +3.47 %
+
+One `score_t` per pair: eg in the high 16 bits, mg in the low 16, extracted
+with `+0x8000`. Both stage-two divisions are kept (S055 H0). Node-identical to
+`e525bc0` (bench, bench 12, search_bench 9 and 12, bench_eval checksum).
+**+3.47 %** (CI +3.28 .. +3.66, 24/24 pairs, A/A +0.04 %), kept, no SPRT owed
+(DEC-083). The fast check read FIX-FIRST: `const int` -> `constexpr int` had
+broken the four weight parsers (`S192_anchors.py`, `.tuning/apply_fit.py`,
+`verify_fit.py`, `diff_fit.py`). All four are fixed before landing, 173 of 173
+mutants validate, and anchors reproduce 10 of 10. DEC-255 is the coordinator's,
+for the owner. Second tier: Debug self-play 8 games, 0 `Assertion`;
+`gate_extra` 5 stages green in 1026 s on 2026-10-05. MANUAL.md checked, no
+change. **Next:** S257 (the A/A reader's candidate name), then S120. Owner
+question 3 (DEC-245) is open; DEC-252, DEC-254 and DEC-255 are the
+coordinator's, for the owner.
+
 ## 2026-10-05: S256 done -- working-tree verdicts close with DEC-220's block
 
 `fastchess.sh` names a working-tree candidate `cand-<HEAD>` or

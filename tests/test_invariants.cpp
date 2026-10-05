@@ -63,13 +63,15 @@ TEST_SUITE("invariants: accumulators and squares")
       report += " material expected " + std::to_string(rebuilt.material) +
                 " got " + std::to_string(board->material);
     }
-    if (rebuilt.psqt_mg != board->psqt_mg) {
-      report += " psqt_mg expected " + std::to_string(rebuilt.psqt_mg) +
-                " got " + std::to_string(board->psqt_mg);
+    // Packed since S117; reported a half at a time, so the message names
+    // which half drifted.
+    if (mg_value(rebuilt.psqt) != mg_value(board->psqt)) {
+      report += " psqt mg expected " + std::to_string(mg_value(rebuilt.psqt)) +
+                " got " + std::to_string(mg_value(board->psqt));
     }
-    if (rebuilt.psqt_eg != board->psqt_eg) {
-      report += " psqt_eg expected " + std::to_string(rebuilt.psqt_eg) +
-                " got " + std::to_string(board->psqt_eg);
+    if (eg_value(rebuilt.psqt) != eg_value(board->psqt)) {
+      report += " psqt eg expected " + std::to_string(eg_value(rebuilt.psqt)) +
+                " got " + std::to_string(eg_value(board->psqt));
     }
     if (rebuilt.phase != board->phase) {
       report += " phase expected " + std::to_string(rebuilt.phase) + " got " +
@@ -217,11 +219,11 @@ TEST_SUITE("invariants: accumulators and squares")
     REQUIRE_FALSE(eval_accumulators_match(&game.board));
 
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    game.board.psqt_mg += 1;
+    game.board.psqt += make_score(1, 0);
     REQUIRE_FALSE(eval_accumulators_match(&game.board));
 
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    game.board.psqt_eg += 1;
+    game.board.psqt += make_score(0, 1);
     REQUIRE_FALSE(eval_accumulators_match(&game.board));
 
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));

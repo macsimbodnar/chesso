@@ -722,9 +722,8 @@ bool eval_accumulators_match(const board_t* board)
   board_t rebuilt = *board;
   eval_refresh(&rebuilt);
 
-  return rebuilt.material == board->material &&
-         rebuilt.psqt_mg == board->psqt_mg &&
-         rebuilt.psqt_eg == board->psqt_eg && rebuilt.phase == board->phase;
+  return rebuilt.material == board->material && rebuilt.psqt == board->psqt &&
+         rebuilt.phase == board->phase;
 }
 
 

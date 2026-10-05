@@ -790,6 +790,154 @@ TEST_SUITE("evaluation: score")
 }
 
 
+// S117 packs every mg/eg pair into one score_t. The evaluation is only
+// behaviour-neutral if every half reads back exactly, and the half most likely
+// not to is the high one whenever the low one is negative: the low half borrows
+// one from it, so a bare `score >> 16` reads one too small. That is the
+// sign-extension bug these cases exist for, and it is routine here -- rook
+// middlegame tables are mostly negative.
+TEST_SUITE("evaluation: packed score")
+{
+  TEST_CASE("each half reads back in all four sign quadrants")
+  {
+    // The negative low half is the borrow case; the negative high half is the
+    // one the int16 reading of the low half and the arithmetic shift of the
+    // high half have to get right on their own.
+    const int values[4][2] = {{37, 52}, {-37, 52}, {37, -52}, {-37, -52}};
+
+    for (const auto& pair : values) {
+      const score_t packed = make_score(pair[0], pair[1]);
+      CAPTURE(pair[0]);
+      CAPTURE(pair[1]);
+      CHECK(mg_value(packed) == pair[0]);
+      CHECK(eg_value(packed) == pair[1]);
+    }
+  }
+
+  TEST_CASE("each half reads back at the extremes of its range")
+  {
+    const int extremes[] = {-32768, -32767, -1, 0, 1, 32766, 32767};
+
+    for (const int mg : extremes) {
+      for (const int eg : extremes) {
+        const score_t packed = make_score(mg, eg);
+        CAPTURE(mg);
+        CAPTURE(eg);
+        CHECK(mg_value(packed) == mg);
+        CHECK(eg_value(packed) == eg);
+      }
+    }
+  }
+
+  TEST_CASE("a negative endgame half survives accumulation")
+  {
+    // The accumulators reach a negative endgame half by adding and subtracting
+    // entries, not by packing one directly, so build it that way: every pawn
+    // and king endgame entry is subtracted from an empty sum and the halves
+    // must match the two sums kept apart.
+    score_t packed = 0;
+    int mg = 0;
+    int eg = 0;
+
+    for (const int type : {0, 5}) {
+      for (int square = 0; square < 64; ++square) {
+        packed -= psqt_score[type][square];
+        mg -= psqt_mg[type][square];
+        eg -= psqt_eg[type][square];
+      }
+    }
+
+    REQUIRE(eg < 0);
+    CHECK(mg_value(packed) == mg);
+    CHECK(eg_value(packed) == eg);
+  }
+
+  TEST_CASE(
+      "addition and multiplication by a signed integer act on both halves")
+  {
+    std::mt19937 rng(117);
+    std::uniform_int_distribution<int> half(-2000, 2000);
+    std::uniform_int_distribution<int> scalar(-9, 9);
+
+    for (int i = 0; i < 10000; ++i) {
+      const int m1 = half(rng), e1 = half(rng);
+      const int m2 = half(rng), e2 = half(rng);
+      const int k = scalar(rng);
+
+      const score_t sum = make_score(m1, e1) + make_score(m2, e2);
+      const score_t difference = make_score(m1, e1) - make_score(m2, e2);
+      const score_t product = k * make_score(m1, e1);
+
+      REQUIRE(mg_value(sum) == m1 + m2);
+      REQUIRE(eg_value(sum) == e1 + e2);
+      REQUIRE(mg_value(difference) == m1 - m2);
+      REQUIRE(eg_value(difference) == e1 - e2);
+      REQUIRE(mg_value(product) == k * m1);
+      REQUIRE(eg_value(product) == k * e1);
+    }
+  }
+
+  TEST_CASE("every packed weight the evaluation reads matches its plain pair")
+  {
+    for (int type = 0; type < 6; ++type) {
+      for (int square = 0; square < 64; ++square) {
+        CAPTURE(type);
+        CAPTURE(square);
+        REQUIRE(mg_value(psqt_score[type][square]) == psqt_mg[type][square]);
+        REQUIRE(eg_value(psqt_score[type][square]) == psqt_eg[type][square]);
+      }
+    }
+
+    // The copies the evaluation reads, not fresh packings of the plain arrays:
+    // a pair packed the wrong way round where the copy is defined is what this
+    // guards, and the bench stops guarding it the moment a refit moves the
+    // bench anyway -- for placement and tempo, all zero, it never could.
+    const auto halves_match = [](const std::string& table,
+                                 const score_t* packed, const int* mg,
+                                 const int* eg, int n) {
+      for (int i = 0; i < n; ++i) {
+        CAPTURE(table);
+        CAPTURE(i);
+        CHECK(mg_value(packed[i]) == mg[i]);
+        CHECK(eg_value(packed[i]) == eg[i]);
+      }
+    };
+
+    halves_match("mobility", mobility_score.data(), mobility_mg, mobility_eg,
+                 4);
+    halves_match("passed_pawn", passed_pawn_score.data(), passed_pawn_mg,
+                 passed_pawn_eg, 6);
+    halves_match("pawn_structure", pawn_structure_score.data(),
+                 pawn_structure_mg, pawn_structure_eg, 3);
+    halves_match("piece_placement", piece_placement_score.data(),
+                 piece_placement_mg, piece_placement_eg, 4);
+    halves_match("king_safety", king_safety_score.data(), king_safety_mg,
+                 king_safety_eg, KS_FEATURE_COUNT);
+    halves_match("tempo", &tempo_score, &tempo_mg, &tempo_eg, 1);
+  }
+
+  TEST_CASE("taper truncates exactly as the unpacked formula does")
+  {
+    // The packing must not move a truncation (S117's accepts): taper() of a
+    // packed pair is the pair's own interpolation, truncated towards zero,
+    // for negative sums too, where floor and truncation part company.
+    std::mt19937 rng(55);
+    std::uniform_int_distribution<int> half(-3000, 3000);
+
+    for (int i = 0; i < 10000; ++i) {
+      const int mg = half(rng);
+      const int eg = half(rng);
+
+      for (int phase = 0; phase <= GAME_PHASE_MAX; ++phase) {
+        const int expected =
+            (mg * phase + eg * (GAME_PHASE_MAX - phase)) / GAME_PHASE_MAX;
+        REQUIRE(taper(make_score(mg, eg), phase) == expected);
+      }
+    }
+  }
+}
+
+
 TEST_SUITE("evaluation: game phase")
 {
   TEST_CASE_FIXTURE(eval_fixture_t, "runs from a full board down to bare kings")

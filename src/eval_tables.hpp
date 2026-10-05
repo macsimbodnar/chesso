@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include "data_structures.hpp"
 
@@ -184,6 +186,42 @@ static constexpr int psqt_eg[6][64] = {
 // clang-format on
 
 
+// The two tables above packed into one, S117, which is what the accumulator
+// hooks below read: one load and one add per piece where there were two. The
+// plain tables stay the source of truth -- tools/tuner writes them and
+// tools/eval_model.hpp reads them -- and this one is derived at compile time,
+// so the two cannot disagree.
+static constexpr std::array<std::array<score_t, 64>, 6> psqt_score = [] {
+  std::array<std::array<score_t, 64>, 6> packed{};
+  for (int type = 0; type < 6; ++type) {
+    for (int square = 0; square < 64; ++square) {
+      packed[type][square] =
+          make_score(psqt_mg[type][square], psqt_eg[type][square]);
+    }
+  }
+  return packed;
+}();
+
+// The packed sum is exact only while each half of it fits 16 bits. A position
+// has at most 32 pieces, so 32 times the largest entry bounds either half of
+// the board's sum whatever the position -- crude, and still 26912 at the
+// shipped fit. A refit that breaks it fails here, at compile time, instead of
+// wrapping one half into the other at run time.
+static constexpr bool psqt_fits_packed = [] {
+  int largest = 0;
+  for (int type = 0; type < 6; ++type) {
+    for (int square = 0; square < 64; ++square) {
+      const int mg = psqt_mg[type][square];
+      const int eg = psqt_eg[type][square];
+      largest = std::max({largest, (mg < 0) ? -mg : mg, (eg < 0) ? -eg : eg});
+    }
+  }
+  return 32 * largest <= 32767;
+}();
+static_assert(psqt_fits_packed,
+              "a piece-square sum can overflow a packed score's 16-bit half");
+
+
 // A black piece is worth what the same white piece would be worth on the
 // vertically mirrored square, and xor 56 is that mirror: it flips the rank bits
 // of the index and leaves the file alone.
@@ -206,16 +244,14 @@ CHESSO_ALWAYS_INLINE inline void eval_add_piece(board_t* board,
 
   if constexpr (Side == WHITE) {
     board->material += piece_value[piece];
-    board->psqt_mg += psqt_mg[piece][square];
-    board->psqt_eg += psqt_eg[piece][square];
+    board->psqt += psqt_score[piece][square];
     board->phase += phase_value[piece];
   } else {
     const int type = piece - B_PAWN;
     const index_t mirrored = square ^ 56;
 
     board->material -= piece_value[type];
-    board->psqt_mg -= psqt_mg[type][mirrored];
-    board->psqt_eg -= psqt_eg[type][mirrored];
+    board->psqt -= psqt_score[type][mirrored];
     board->phase += phase_value[type];
   }
 }
@@ -230,16 +266,14 @@ CHESSO_ALWAYS_INLINE inline void eval_remove_piece(board_t* board,
 
   if constexpr (Side == WHITE) {
     board->material -= piece_value[piece];
-    board->psqt_mg -= psqt_mg[piece][square];
-    board->psqt_eg -= psqt_eg[piece][square];
+    board->psqt -= psqt_score[piece][square];
     board->phase -= phase_value[piece];
   } else {
     const int type = piece - B_PAWN;
     const index_t mirrored = square ^ 56;
 
     board->material += piece_value[type];
-    board->psqt_mg += psqt_mg[type][mirrored];
-    board->psqt_eg += psqt_eg[type][mirrored];
+    board->psqt += psqt_score[type][mirrored];
     board->phase -= phase_value[type];
   }
 }
@@ -269,13 +303,12 @@ CHESSO_ALWAYS_INLINE inline void eval_remove_piece(board_t* board,
 }
 
 
-// Rebuilds all four from the bitboards. Needed once when a position is loaded,
+// Rebuilds all three from the bitboards. Needed once when a position is loaded,
 // and by the assertion that checks the incremental path has not drifted.
 inline void eval_refresh(board_t* board)
 {
   board->material = 0;
-  board->psqt_mg = 0;
-  board->psqt_eg = 0;
+  board->psqt = 0;
   board->phase = 0;
 
   for (index_t square = 0; square < 64; ++square) {

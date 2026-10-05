@@ -1,0 +1,25 @@
+S117 timing, 2026-10-05. Governor powersave (recorded, not set). i7-8700K, g++ 13.3, Release.
+Workload: S020/S253's -- 300 stratified positions at go depth 11, one hyperfine invocation per pair, order alternating (.tuning/coord/S117_files/timing.sh).
+base = e525bc0 build, cand = S117 working tree; INV-6 identical (bench 4081329, bench 12 1860699, search_bench d9/d12).
+Load average (1/5/15) before A/A, between, after:
+2.58 3.04 2.58 2/1167 63922
+2.07 2.49 2.44 1/1160 161663
+1.46 1.97 2.24 1/1147 306131
+
+== A/A, base vs byte copy
+pairs 16  base median 7.439s  cand median 7.443s
+ratio cand/base  geomean 0.9996  median 1.0005  95% CI 0.9976 .. 1.0017  paired t -0.38
+speed-up +0.04 %  CI -0.17 .. +0.24 %  per-pair sd 0.39 %  pairs below 1.0: 8/16
+TIMING-DONE
+
+== A/B, base vs cand
+pairs 24  base median 7.426s  cand median 7.169s
+ratio cand/base  geomean 0.9664  median 0.9657  95% CI 0.9647 .. 0.9682  paired t -38.82
+speed-up +3.47 %  CI +3.28 .. +3.66 %  per-pair sd 0.43 %  pairs below 1.0: 24/24
+TIMING-DONE
+
+== bench_eval evaluate() ns per call, alternating base/cand, 7 sweeps best
+base 50.77 51.46 49.14 / cand 44.26 43.78 45.63
+
+== bench_movegen perft best ms, alternating base/cand, default 5 sweeps
+base 1019.5 989.7 1012.8 / cand 909.4 925.0 933.4

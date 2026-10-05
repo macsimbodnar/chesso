@@ -303,9 +303,9 @@ def weights(source):
         values = [int(v) for v in re.findall(r"-?\d+", strip(m.group(1)))]
         assert len(values) == 384, (name, len(values))
         w[name] = values
-    for n, body in re.findall(r"^const int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M):
+    for n, body in re.findall(r"^(?:constexpr|const) int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M):
         w[n] = [int(v) for v in re.findall(r"-?\d+", strip(body))]
-    for n, v in re.findall(r"^const int (\w+) = (-?\d+);", text, re.M):
+    for n, v in re.findall(r"^(?:constexpr|const) int (\w+) = (-?\d+);", text, re.M):
         w[n] = int(v)
     return w
 

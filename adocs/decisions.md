@@ -13836,3 +13836,36 @@ Decision:     By the coordinator, 2026-10-05, under the owner's standing
 Why:          Refusing a dirty-tree verdict run (S256's option b) would forbid
               the DEC-253 case instead of attributing it.
 Rejected:     option (b); rewriting S055's log (a log is evidence).
+
+## DEC-255  2026-10-05  The evaluation weights are `constexpr int` and the tuner emits them that way, so the packed copies derive at compile time
+Tags:         evaluation, tuner, s117, inv-4, inv-6, dec-142
+Context:      S117 packs each mg/eg pair into one `score_t`. The packed copies
+              the evaluation reads are built from the plain weight arrays,
+              which stay the tuner's source of truth. g++ 13.3 and clang 22
+              both refuse to read a `const int` array in a constant
+              expression, so the copies could not be compile-time constants
+              while the weights were `const int`. Changing the keyword broke
+              four tracked scripts that regex `^const int` out of
+              `src/evaluation.cpp` (`adocs/data/S192_anchors.py`,
+              `.tuning/apply_fit.py`, `verify_fit.py`, `diff_fit.py`), and
+              S117's fast check caught them before the commit.
+Decision:     By the coordinator, 2026-10-05, under the owner's standing
+              mandate; the owner may overrule. The twelve weight definitions in
+              `src/evaluation.cpp` are `constexpr int`, `tools/tuner.cpp` emits
+              `constexpr int`, and the `extern const int` declarations in the
+              header are unchanged. The four parsers accept either keyword.
+              `apply_fit.py` keeps the source's keyword, and it refuses a
+              header it cannot place completely before writing either file.
+              The packed copies are external, so a test can compare their
+              halves with the plain arrays.
+Why:          The packed tables are then read-only constants. The evaluation's
+              object code is identical with or without external linkage, so
+              the measured +3.47 % holds.
+Rejected:     Packing at static initialisation (mutable globals, a
+              start-up order to reason about, and the timing would be owed
+              again); packing on the fly in each term loop (the adds S117
+              exists to halve).
+Consequences: A fit header written before S117 says `const int` and fails to
+              compile when pasted as-is. It fails loudly; DEV_MANUAL.md's
+              tuner section says so, and `apply_fit.py` accepts it.
+

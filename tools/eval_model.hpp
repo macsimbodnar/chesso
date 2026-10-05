@@ -901,6 +901,14 @@ inline bool tempo_feature(const std::string& side_to_move, int* out)
 // exactly; the tuner works in floating point precisely so that the derivative
 // exists.
 //
+// The engine carries each mg/eg pair below packed in one integer (score_t,
+// src/data_structures.hpp, S117) and this model keeps them apart. The two are
+// the same sums: a packed sum's halves are exactly the separate sums, and the
+// engine takes them apart before any division, so the truncations this model
+// is compared against did not move -- one for stage one, one for tempo, and
+// two in stage two, which tapers mobility and king safety separately (S055's
+// single taper read H0 and was reverted).
+//
 // Every feature vector is a required argument. king_safety briefly had a
 // default of nullptr and it was a trap: a five-argument call dropped the term
 // silently, which reads as correct only while the weights are zero and starts

@@ -352,6 +352,42 @@ struct bb_tables_t
 };
 
 
+// A middlegame and an endgame value in one integer, S117: the endgame half in
+// the high 16 bits and the middlegame half in the low 16, the published
+// orientation. The point is the adds: a sum of packed scores is the packed
+// score of the two sums, so every accumulation does one add instead of two.
+//
+// Exact, not approximately so, while each half stays in [-32767, 32767]:
+// make_score(e, m) is then the integer e * 65536 + m, inside int32_t with no
+// wrap, so +, - and multiplication by an integer -- negative included -- act on
+// both halves at once and the halves read back exactly. Built in unsigned so
+// that even the one corner that does not fit (e = -32768 with m < 0) wraps
+// rather than overflowing, and still reads back. What does not survive packing
+// is anything that orders or divides -- comparison, min, max, clamp, abs, the
+// taper's division -- and every one of those happens after mg_value() and
+// eg_value() have taken the halves apart.
+using score_t = int32_t;
+
+constexpr score_t make_score(int mg, int eg)
+{
+  return static_cast<score_t>((static_cast<uint32_t>(eg) << 16) +
+                              static_cast<uint32_t>(mg));
+}
+
+// The low half reinterpreted as signed, which the int16_t conversion does
+// (modular since C++20).
+constexpr int mg_value(score_t score)
+{ return static_cast<int16_t>(static_cast<uint16_t>(score)); }
+
+// A negative low half borrowed one from the high half, so `score >> 16` alone
+// is one too small whenever the middlegame value is negative -- the classic
+// sign-extension bug. Adding 2^15 first lifts every in-range low half into
+// [0, 65535], where it no longer borrows, and the shift then floors to the
+// high half exactly. Done in unsigned so the add cannot overflow a signed int.
+constexpr int eg_value(score_t score)
+{ return static_cast<int32_t>(static_cast<uint32_t>(score) + 0x8000u) >> 16; }
+
+
 // Field order is deliberate. The scalars below are read and written on every
 // single move, so they are packed together and follow `hash` immediately
 // rather than being separated from it by padding: with the old layout the
@@ -370,11 +406,12 @@ struct board_t
 
   // Maintained by make_move and unmake_move rather than recomputed. evaluate()
   // was 40% of the search when it rebuilt these by walking the bitboards on
-  // every call, which quiescence does at every node. All four are White
-  // relative; `phase` counts both sides and is clamped by game_phase().
+  // every call, which quiescence does at every node. All three are White
+  // relative; `phase` counts both sides and is clamped by game_phase(). `psqt`
+  // carries both piece-square sums packed (score_t above), one add per piece
+  // where there were two, S117.
   int32_t material;
-  int32_t psqt_mg;
-  int32_t psqt_eg;
+  score_t psqt;
   int32_t phase;
 
   color_t active_color;  // Side to move

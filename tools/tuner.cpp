@@ -344,7 +344,8 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? MOB_MG_BASE : MOB_EG_BASE;
 
-    fprintf(out, "const int mobility_%s[4] = {", (table == 0) ? "mg" : "eg");
+    fprintf(out, "constexpr int mobility_%s[4] = {",
+            (table == 0) ? "mg" : "eg");
 
     for (size_t i = 0; i < MOBILITY_COUNT; ++i) {
       fprintf(out, "%s%d", (i == 0) ? "" : ", ",
@@ -357,7 +358,7 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? KS_MG_BASE : KS_EG_BASE;
 
-    fprintf(out, "\nconst int king_safety_%s[KS_FEATURE_COUNT] = {\n",
+    fprintf(out, "\nconstexpr int king_safety_%s[KS_FEATURE_COUNT] = {\n",
             (table == 0) ? "mg" : "eg");
 
     // One per line with its enumerator, because nine numbers on one line is a
@@ -374,7 +375,7 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? PP_MG_BASE : PP_EG_BASE;
 
-    fprintf(out, "\nconst int passed_pawn_%s[6] = {",
+    fprintf(out, "\nconstexpr int passed_pawn_%s[6] = {",
             (table == 0) ? "mg" : "eg");
 
     for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
@@ -390,7 +391,7 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? PS_MG_BASE : PS_EG_BASE;
 
-    fprintf(out, "\nconst int pawn_structure_%s[3] = {",
+    fprintf(out, "\nconstexpr int pawn_structure_%s[3] = {",
             (table == 0) ? "mg" : "eg");
 
     for (size_t i = 0; i < PAWN_STRUCTURE_COUNT; ++i) {
@@ -404,7 +405,7 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? PL_MG_BASE : PL_EG_BASE;
 
-    fprintf(out, "\nconst int piece_placement_%s[4] = {",
+    fprintf(out, "\nconstexpr int piece_placement_%s[4] = {",
             (table == 0) ? "mg" : "eg");
 
     for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
@@ -418,7 +419,7 @@ void write_tables(const std::string& path,
   // One number per table and no array, so these two lines are the whole term.
   // Emitted here for the reason the eight above are: a parameter the fit moves
   // and the writer forgets is a parameter the run silently discards.
-  fprintf(out, "\nconst int tempo_mg = %d;\nconst int tempo_eg = %d;\n",
+  fprintf(out, "\nconstexpr int tempo_mg = %d;\nconstexpr int tempo_eg = %d;\n",
           static_cast<int>(std::lround(params[TEMPO_MG_BASE])),
           static_cast<int>(std::lround(params[TEMPO_EG_BASE])));
 

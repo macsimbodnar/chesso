@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include "data_structures.hpp"
 #include "search_params.hpp"  // LAZY_EVAL_MARGIN
 
@@ -339,6 +340,32 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 int game_phase(const board_t* board);
 
 #define GAME_PHASE_MAX 24
+
+// The interpolation every tapered term goes through: the packed score's two
+// halves weighted by the phase, then one division truncating towards zero. The
+// halves come apart first because a packed score cannot be divided (S117).
+// Each call is one truncation, so a site that tapers two terms separately
+// truncates twice -- stage two does, deliberately, see
+// evaluate_mobility_and_king_safety().
+inline int taper(score_t score, int phase)
+{
+  return (mg_value(score) * phase +
+          eg_value(score) * (GAME_PHASE_MAX - phase)) /
+         GAME_PHASE_MAX;
+}
+
+// The packed copies the evaluation reads in place of the plain weight arrays
+// above, each derived from its mg/eg pair at compile time (S117). Declared for
+// the test that compares their halves with the plain arrays: a pair packed the
+// wrong way round is invisible to the bench once a refit has moved the bench
+// anyway, and invisible to it now for placement and tempo, whose weights are
+// all zero. The piece-square tables' copy, psqt_score, is in eval_tables.hpp.
+extern const std::array<score_t, 4> mobility_score;
+extern const std::array<score_t, KS_FEATURE_COUNT> king_safety_score;
+extern const std::array<score_t, 6> passed_pawn_score;
+extern const std::array<score_t, 3> pawn_structure_score;
+extern const std::array<score_t, 4> piece_placement_score;
+extern const score_t tempo_score;
 int capture_score(const board_t* board, move_t move);
 
 // The raw signed history a quiet move carries -- the butterfly entry plus

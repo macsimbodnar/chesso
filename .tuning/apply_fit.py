@@ -29,15 +29,28 @@ def parse(path):
         )
         if m is not None:
             tables[name] = m.group(1)
+    # Either keyword: the weights have been constexpr since S117 and the tuner
+    # emits them so, and a header written before that says const.
     arrays = {}
     for name, body in re.findall(
-        r"^const int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M
+        r"^(?:constexpr|const) int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M
     ):
         arrays[name] = [int(v) for v in re.findall(r"-?\d+", body)]
     scalars = dict(
-        (n, int(v)) for n, v in re.findall(r"^const int (\w+) = (-?\d+);", text, re.M)
+        (n, int(v))
+        for n, v in re.findall(
+            r"^(?:constexpr|const) int (\w+) = (-?\d+);", text, re.M
+        )
     )
     return defines, tables, arrays, scalars
+
+
+def declared(path):
+    # Every int definition at the start of a line, whatever its qualifiers or
+    # shape. A name in here that parse() did not return is a definition this
+    # script would silently skip -- what a keyword change did, S117.
+    text = open(path).read()
+    return set(re.findall(r"^(?:\w+ )*int (\w+) ?(?:\[|=)", text, re.M))
 
 
 def replace_one(text, pattern, new, what):
@@ -52,8 +65,27 @@ def main():
     dry = "--dry-run" in sys.argv
     defines, tables, arrays, scalars = parse(emitted)
 
+    unparsed = declared(emitted) - set(tables) - set(arrays) - set(scalars)
+    if unparsed:
+        raise SystemExit(
+            "emitted definitions this script cannot parse: %s"
+            % ", ".join(sorted(unparsed))
+        )
+    if not (defines or tables or arrays or scalars):
+        raise SystemExit("nothing to place in %s" % emitted)
+
     old_defines, old_tables, old_arrays, old_scalars = parse(TABLES)
     _, _, eval_arrays, eval_scalars = parse(EVAL)
+
+    # Checked before either file is written, so a name the source no longer
+    # spells the way this script reads it stops the run with nothing applied.
+    missing = [n for n in arrays if n not in eval_arrays] + [
+        n for n in scalars if n not in eval_scalars
+    ]
+    if missing:
+        raise SystemExit(
+            "emitted %s not found in %s" % (", ".join(missing), EVAL)
+        )
 
     applied = []
 
@@ -83,7 +115,7 @@ def main():
             raise SystemExit("emitted array %s is in neither source file" % name)
         text = replace_one(
             text,
-            r"^(const int %s\[\w+\] = \{)[^}]*(\};)" % name,
+            r"^((?:constexpr|const) int %s\[\w+\] = \{)[^}]*(\};)" % name,
             lambda m, values=values: m.group(1)
             + ", ".join(str(v) for v in values)
             + m.group(2),
@@ -97,8 +129,8 @@ def main():
             raise SystemExit("emitted scalar %s is in neither source file" % name)
         text = replace_one(
             text,
-            r"^const int %s = -?\d+;$" % name,
-            "const int %s = %d;" % (name, value),
+            r"^((?:constexpr|const) int %s = )-?\d+;$" % name,
+            lambda m, value=value: m.group(1) + "%d;" % value,
             name,
         )
         applied.append("%s = %d (was %d)" % (name, value, eval_scalars[name]))

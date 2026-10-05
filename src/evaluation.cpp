@@ -45,6 +45,38 @@ static constexpr int piece_values_abs[] = {
 
 // clang-format on
 
+// Every weight pair below is also kept packed (score_t, data_structures.hpp),
+// S117, and the evaluation reads the packed copy: one load and one add per
+// feature where there were two. The plain mg/eg arrays stay the source of
+// truth because tools/tuner writes them in that form and tools/eval_model.hpp
+// reads them; the packed copy is derived here at compile time, which is why
+// they are constexpr and not merely const -- a const array's elements cannot
+// be read in a constant expression.
+template <size_t N>
+static constexpr std::array<score_t, N> pack_scores(const int (&mg)[N],
+                                                    const int (&eg)[N])
+{
+  std::array<score_t, N> packed{};
+  for (size_t i = 0; i < N; ++i) {
+    packed[i] = make_score(mg[i], eg[i]);
+  }
+  return packed;
+}
+
+
+// The largest magnitude in either half of a weight table, for the headroom
+// checks below.
+template <size_t N>
+static constexpr int largest_weight(const int (&mg)[N], const int (&eg)[N])
+{
+  int largest = 0;
+  for (size_t i = 0; i < N; ++i) {
+    largest = std::max(
+        {largest, (mg[i] < 0) ? -mg[i] : mg[i], (eg[i] < 0) ? -eg[i] : eg[i]});
+  }
+  return largest;
+}
+
 // Fitted with the other 799 constants frozen -- `tuner --only passed_pawns`
 // over 1490839 self-play positions, held-out error 0.107106 to 0.106900.
 //
@@ -77,8 +109,10 @@ static constexpr int piece_values_abs[] = {
 // The term costs 4.5 % of a depth 12 search, measured with the weights forced
 // non-zero because at zero the compiler deletes it, DEC-047. Its SPRT was net
 // of that: +17.34 +/- 13.51 Elo over 1584 games, H1 accepted.
-const int passed_pawn_mg[6] = {0, -6, -4, 19, 59, -17};
-const int passed_pawn_eg[6] = {15, 18, 46, 72, 96, 42};
+constexpr int passed_pawn_mg[6] = {0, -6, -4, 19, 59, -17};
+constexpr int passed_pawn_eg[6] = {15, 18, 46, 72, 96, 42};
+constexpr std::array<score_t, 6> passed_pawn_score =
+    pack_scores(passed_pawn_mg, passed_pawn_eg);
 
 
 // The three pawn structure features, in the order their weights are indexed.
@@ -119,8 +153,10 @@ enum
 // term with the weights forced non-zero because at zero the compiler deletes
 // them, DEC-047. The SPRT was net of that: +13.05 +/- 11.15 Elo over 2290
 // games, H1 accepted.
-const int pawn_structure_mg[PS_FEATURE_COUNT] = {-10, -9, -11};
-const int pawn_structure_eg[PS_FEATURE_COUNT] = {-12, -32, -8};
+constexpr int pawn_structure_mg[PS_FEATURE_COUNT] = {-10, -9, -11};
+constexpr int pawn_structure_eg[PS_FEATURE_COUNT] = {-12, -32, -8};
+constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
+    pack_scores(pawn_structure_mg, pawn_structure_eg);
 
 
 // The four piece placement features, in the order their weights are indexed.
@@ -239,8 +275,33 @@ enum
 // identified; a joint fit's value for the split is wherever the optimiser
 // stopped on a ridge. Refit it frozen-base or not at all, and never read the
 // split as a valuation.
-const int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
-const int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
+constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
+constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
+constexpr std::array<score_t, PL_FEATURE_COUNT> piece_placement_score =
+    pack_scores(piece_placement_mg, piece_placement_eg);
+
+// Stage one sums the board's packed piece-square score and the pawn terms
+// before it takes the halves apart, so that sum is what has to fit 16 bits.
+// Bounded by what load_FEN accepts, not by what a game reaches: at most 16
+// pieces a side, exactly one of them the king, so 32 pieces on the tables and
+// at most 15 pawns, or 15 rooks, a side. Passers add for White and subtract
+// for Black, so all 30 can push one half the same way. Structure and placement
+// enter as White's count minus Black's, two counts of 0 to 15, so 15 bounds
+// each feature. A refit that breaks it fails to compile rather than wrapping
+// one half into the other.
+static constexpr int stage_one_bound = [] {
+  int psqt = 0;
+  for (int type = 0; type < 6; ++type) {
+    psqt = std::max(psqt, largest_weight(psqt_mg[type], psqt_eg[type]));
+  }
+  return 32 * psqt + 2 * 15 * largest_weight(passed_pawn_mg, passed_pawn_eg) +
+         PS_FEATURE_COUNT * 15 *
+             largest_weight(pawn_structure_mg, pawn_structure_eg) +
+         PL_FEATURE_COUNT * 15 *
+             largest_weight(piece_placement_mg, piece_placement_eg);
+}();
+static_assert(stage_one_bound <= 32767,
+              "stage one's packed sum can overflow a 16-bit half");
 
 
 // Toward rank 8, which is toward index 0 because index 0 is a8. White's
@@ -389,8 +450,7 @@ static inline void piece_placement_features(const board_t* board,
 // once -- see king_shelter_features() below.
 template <bool collect>
 static inline void evaluate_pawns(const board_t* board,
-                                  int* mg,
-                                  int* eg,
+                                  score_t* score,
                                   int passed_out[2][6],
                                   int structure_out[2][PS_FEATURE_COUNT],
                                   int placement_out[2][PL_FEATURE_COUNT])
@@ -463,8 +523,7 @@ static inline void evaluate_pawns(const board_t* board,
   const bb_t black_backward =
       black_pawns & ~neighbour_files(black_ahead) & (white_attacks >> 8);
 
-  int mg_sum = 0;
-  int eg_sum = 0;
+  score_t sum = 0;
 
   const int structure[2][PS_FEATURE_COUNT] = {
       {count_bits(white_isolated), count_bits(white_doubled),
@@ -475,8 +534,7 @@ static inline void evaluate_pawns(const board_t* board,
   for (int f = 0; f < PS_FEATURE_COUNT; ++f) {
     const int difference = structure[WHITE][f] - structure[BLACK][f];
 
-    mg_sum += difference * pawn_structure_mg[f];
-    eg_sum += difference * pawn_structure_eg[f];
+    sum += difference * pawn_structure_score[f];
   }
 
   int placement[2][PL_FEATURE_COUNT];
@@ -486,8 +544,7 @@ static inline void evaluate_pawns(const board_t* board,
   for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
     const int difference = placement[WHITE][f] - placement[BLACK][f];
 
-    mg_sum += difference * piece_placement_mg[f];
-    eg_sum += difference * piece_placement_eg[f];
+    sum += difference * piece_placement_score[f];
   }
 
   if constexpr (collect) {
@@ -516,8 +573,7 @@ static inline void evaluate_pawns(const board_t* board,
 
     assert(bucket >= 0 && bucket < 6);
 
-    mg_sum += passed_pawn_mg[bucket];
-    eg_sum += passed_pawn_eg[bucket];
+    sum += passed_pawn_score[bucket];
 
     if constexpr (collect) { passed_out[WHITE][bucket]++; }
   }
@@ -529,8 +585,7 @@ static inline void evaluate_pawns(const board_t* board,
 
     assert(bucket >= 0 && bucket < 6);
 
-    mg_sum -= passed_pawn_mg[bucket];
-    eg_sum -= passed_pawn_eg[bucket];
+    sum -= passed_pawn_score[bucket];
 
     // Black's own row counts Black's passers as positives. The minus above is
     // the score's sign and not the count's, and folding the two together is
@@ -538,23 +593,21 @@ static inline void evaluate_pawns(const board_t* board,
     if constexpr (collect) { passed_out[BLACK][bucket]++; }
   }
 
-  *mg = mg_sum;
-  *eg = eg_sum;
+  *score = sum;
 }
 
 
 // The counts on their own, weights and taper discarded. Only the test calls it,
-// so the mg/eg pair it also computes is thrown away rather than split out: a
+// so the packed score it also computes is thrown away rather than split out: a
 // second entry point into the same loop would be one more thing to keep in
 // step.
 void passed_pawn_counts(const board_t* board, int out[2][6])
 {
-  int mg = 0;
-  int eg = 0;
+  score_t score = 0;
   int structure[2][PS_FEATURE_COUNT];
   int placement[2][PL_FEATURE_COUNT];
 
-  evaluate_pawns<true>(board, &mg, &eg, out, structure, placement);
+  evaluate_pawns<true>(board, &score, out, structure, placement);
 }
 
 
@@ -565,12 +618,11 @@ void passed_pawn_counts(const board_t* board, int out[2][6])
 // below.
 void pawn_structure_counts(const board_t* board, int out[2][3])
 {
-  int mg = 0;
-  int eg = 0;
+  score_t score = 0;
   int passed[2][6];
   int placement[2][PL_FEATURE_COUNT];
 
-  evaluate_pawns<true>(board, &mg, &eg, passed, out, placement);
+  evaluate_pawns<true>(board, &score, passed, out, placement);
 }
 
 
@@ -580,12 +632,11 @@ void pawn_structure_counts(const board_t* board, int out[2][3])
 // second implementation free to drift from the one the search runs.
 void piece_placement_counts(const board_t* board, int out[2][4])
 {
-  int mg = 0;
-  int eg = 0;
+  score_t score = 0;
   int passed[2][6];
   int structure[2][PS_FEATURE_COUNT];
 
-  evaluate_pawns<true>(board, &mg, &eg, passed, structure, out);
+  evaluate_pawns<true>(board, &score, passed, structure, out);
 }
 
 
@@ -639,8 +690,9 @@ void piece_placement_counts(const board_t* board, int out[2][4])
 // said mg 10 and the unfrozen S065 fit said mg 39: a fourfold disagreement on a
 // few centipawns of signal. Re-measuring this needs a WDL-heavy label and
 // bounds that can resolve single digits, not another 3000 games at --fast.
-const int tempo_mg = 0;
-const int tempo_eg = 0;
+constexpr int tempo_mg = 0;
+constexpr int tempo_eg = 0;
+constexpr score_t tempo_score = make_score(tempo_mg, tempo_eg);
 
 
 // Stage one: what is cheap enough to pay at every node, including the nodes
@@ -688,19 +740,16 @@ int evaluate_cheap(const board_t* board)
   // arbitrary piece comes off.
   const int phase = game_phase(board);
 
-  int pawn_mg = 0;
-  int pawn_eg = 0;
-  evaluate_pawns<false>(board, &pawn_mg, &pawn_eg, nullptr, nullptr, nullptr);
+  score_t pawns = 0;
+  evaluate_pawns<false>(board, &pawns, nullptr, nullptr, nullptr);
 
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that
   // costs 1.36 ns in total, and one truncation towards zero instead of two --
   // which is what keeps test_eval_model's one-centipawn slack against the
-  // tuner's floating-point model from having to grow.
-  const int positional =
-      (((board->psqt_mg + pawn_mg) * phase) +
-       ((board->psqt_eg + pawn_eg) * (GAME_PHASE_MAX - phase))) /
-      GAME_PHASE_MAX;
+  // tuner's floating-point model from having to grow. Both are packed, so the
+  // sum is one add and taper() takes the halves apart after it.
+  const int positional = taper(board->psqt + pawns, phase);
 
   const int score = board->material + positional;
 
@@ -725,9 +774,7 @@ int evaluate_cheap(const board_t* board)
   // extra six being the taper and only one of them the add. At zero the
   // compiler deletes all seven, DEC-047, which is why the count is the
   // measurement and no timing was run.
-  const int tempo =
-      ((tempo_mg * phase) + (tempo_eg * (GAME_PHASE_MAX - phase))) /
-      GAME_PHASE_MAX;
+  const int tempo = taper(tempo_score, phase);
 
   return ((board->active_color == WHITE) ? score : -score) + tempo;
 }
@@ -747,8 +794,10 @@ int evaluate_cheap(const board_t* board)
 // two things that mattered -- a knight's mobility is worth nothing on top of
 // its piece-square table, and a rook's middlegame mobility is worth four times
 // what was guessed. DEC-040. No published table was consulted, DEC-016.
-const int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
-const int mobility_eg[4] = {0, 5, 0, -6};
+constexpr int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {0, 5, 0, -6};
+constexpr std::array<score_t, 4> mobility_score =
+    pack_scores(mobility_mg, mobility_eg);
 
 
 // The four types every stage-two term iterates over, in the order the weight
@@ -790,10 +839,24 @@ static bb_t piece_attacks(const bb_tables_t* tables,
 // a count adds several to the incidence total -- so the fit splits one effect
 // across several parameters, exactly the way piece_value and the piece-square
 // tables are degenerate by five dimensions. What is fitted is the sum. DEC-044.
-const int king_safety_mg[KS_FEATURE_COUNT] = {17, 20, 19,  34, -27,
-                                              26, 14, -40, -25};
-const int king_safety_eg[KS_FEATURE_COUNT] = {-6,  -13, -5,  -61, 10,
-                                              -10, -10, -14, 22};
+constexpr int king_safety_mg[KS_FEATURE_COUNT] = {17, 20, 19,  34, -27,
+                                                  26, 14, -40, -25};
+constexpr int king_safety_eg[KS_FEATURE_COUNT] = {-6,  -13, -5,  -61, 10,
+                                                  -10, -10, -14, 22};
+constexpr std::array<score_t, KS_FEATURE_COUNT> king_safety_score =
+    pack_scores(king_safety_mg, king_safety_eg);
+
+// Stage two's two packed sums, bounded the way stage one's is: 32 pieces each
+// reaching at most 27 squares for mobility; for king safety, 16 attackers a
+// side each adding one attacker count and at most nine zone incidences, plus
+// four shelter features a side that count files and pawns around the king and
+// stay under 8.
+static_assert(32 * 27 * largest_weight(mobility_mg, mobility_eg) <= 32767,
+              "mobility's packed sum can overflow a 16-bit half");
+static_assert(2 * (16 * (1 + 9) + 4 * 8) *
+                      largest_weight(king_safety_mg, king_safety_eg) <=
+                  32767,
+              "king safety's packed sum can overflow a 16-bit half");
 
 
 // A king's own zone: its square and the eight around it.
@@ -928,10 +991,8 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
   const bb_t zone[2] = {king_zone(tables, board, WHITE),
                         king_zone(tables, board, BLACK)};
 
-  int mobility_mg_sum = 0;
-  int mobility_eg_sum = 0;
-  int safety_mg_sum = 0;
-  int safety_eg_sum = 0;
+  score_t mobility_sum = 0;
+  score_t safety_sum = 0;
 
   if constexpr (collect) {
     for (int colour = 0; colour < 2; ++colour) {
@@ -965,8 +1026,7 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
         // mobility: no enemy-pawn-attack mask, which is the expensive variant.
         const int count = count_bits(attacks & ~own);
 
-        mobility_mg_sum += mover * count * mobility_mg[type];
-        mobility_eg_sum += mover * count * mobility_eg[type];
+        mobility_sum += mover * count * mobility_score[type];
 
         const bb_t hits = attacks & defended_zone;
 
@@ -974,8 +1034,7 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
         const int attacker = KS_KNIGHT_ATTACKERS + type;
 
-        safety_mg_sum += defender * king_safety_mg[attacker];
-        safety_eg_sum += defender * king_safety_eg[attacker];
+        safety_sum += defender * king_safety_score[attacker];
 
         // Attacker-square incidences, not distinct squares under fire: two
         // pieces bearing on the same square count twice. Distinct squares
@@ -983,10 +1042,8 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
         // the whole thing a linear model has to read off this number.
         const int incidences = count_bits(hits);
 
-        safety_mg_sum +=
-            defender * incidences * king_safety_mg[KS_ZONE_ATTACKS];
-        safety_eg_sum +=
-            defender * incidences * king_safety_eg[KS_ZONE_ATTACKS];
+        safety_sum +=
+            defender * incidences * king_safety_score[KS_ZONE_ATTACKS];
 
         // The count belongs to the king under fire, which is the row of the
         // colour that is not moving these pieces.
@@ -1005,20 +1062,20 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
     king_shelter_features(board, colour, features);
 
     for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
-      safety_mg_sum += sign * features[f] * king_safety_mg[f];
-      safety_eg_sum += sign * features[f] * king_safety_eg[f];
+      safety_sum += sign * features[f] * king_safety_score[f];
 
       if constexpr (collect) { out[colour][f] = features[f]; }
     }
   }
 
   const int phase = game_phase(board);
-  const int endgame = GAME_PHASE_MAX - phase;
 
-  const int mobility =
-      (mobility_mg_sum * phase + mobility_eg_sum * endgame) / GAME_PHASE_MAX;
-  const int safety =
-      (safety_mg_sum * phase + safety_eg_sum * endgame) / GAME_PHASE_MAX;
+  // Tapered one term at a time, two truncating divisions and not one. Merging
+  // them is a play change and was measured as one: S055's single taper read H0
+  // at nElo -8.78 +/- 6.39 and was reverted. The packing keeps both
+  // truncations exactly, which is what makes it behaviour-neutral (S117).
+  const int mobility = taper(mobility_sum, phase);
+  const int safety = taper(safety_sum, phase);
 
   if constexpr (collect) {
     if (mobility_out != nullptr) { *mobility_out = mobility; }

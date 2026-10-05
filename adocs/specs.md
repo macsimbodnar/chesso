@@ -133,7 +133,8 @@ place, and the ledger's other 88 rows were per-step records already held by
   `generate_moves` exactly.** Same multiset, no overlap, no quiet move in the
   capture list.
 - **INV-4 The incremental evaluation accumulators equal a full recomputation.**
-  `material`, `psqt_mg`, `psqt_eg` and `phase` are maintained by `make_move`;
+  `material`, `psqt` (both piece-square sums packed into one `score_t` since
+  S117) and `phase` are maintained by `make_move`;
   they must agree with rebuilding them from the bitboards, at every node.
 - **INV-5 `evaluate()` is side-to-move relative.** Positive means the side to
   move is better. Callers apply no sign, and mirroring a position mirrors the

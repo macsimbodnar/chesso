@@ -5233,6 +5233,16 @@ emitted order:
 | `piece_placement_mg[4]`, `piece_placement_eg[4]` | `src/evaluation.cpp` |
 | `tempo_mg`, `tempo_eg`, two scalars and not an array | `src/evaluation.cpp` |
 
+**Since S117 the `src/evaluation.cpp` definitions are `constexpr int`, not
+`const int`, and the tuner emits them that way.** The evaluation reads packed
+copies (`score_t`, both halves in one integer) derived from these arrays at
+compile time, and a `const` array cannot be read in a constant expression. A fit
+file written before S117 says `const int`: pasted as it is, it fails to compile
+on the packed copies -- change the keyword. The same build checks headroom:
+a fit whose weights could overflow a packed score's 16-bit half fails a
+`static_assert` in `src/eval_tables.hpp` or `src/evaluation.cpp` rather than
+wrapping at run time.
+
 The emitted header names both files too. Everything below the two tables is the
 54 parameters that do not live in `eval_tables.hpp`, and they are what gets left
 behind: a fit that is half applied looks like a fit that did not work, and a

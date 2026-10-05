@@ -49,9 +49,9 @@ def extract(text):
         )
         if m:
             out[name] = [int(v) for v in re.findall(r"-?\d+", strip(m.group(1)))]
-    for name, body in re.findall(r"^const int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M):
+    for name, body in re.findall(r"^(?:constexpr|const) int (\w+)\[\w+\] = \{([^}]*)\};", text, re.M):
         out[name] = [int(v) for v in re.findall(r"-?\d+", strip(body))]
-    for name, value in re.findall(r"^const int (\w+) = (-?\d+);", text, re.M):
+    for name, value in re.findall(r"^(?:constexpr|const) int (\w+) = (-?\d+);", text, re.M):
         out[name] = [int(value)]
     return out
 
