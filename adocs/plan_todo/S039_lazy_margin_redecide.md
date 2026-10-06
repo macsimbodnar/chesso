@@ -200,7 +200,11 @@ daytime work under DEC-155.
 - **S121, S123, S125, S101 (before, by DEC-172)**: each changes the sum being
   clamped, so the spread is taken behind all four.
 - **S120 (ordered ahead)**: retiring the clamp costs a measured 11.7 % of nps;
-  the evaluation cache and S104 are what pay for it.
+  the evaluation cache and S104 are what pay for it. [2026-10-06, coordinator:
+  S120 retired the cache (DEC-257), so nothing but S104 pays. Its statement (c):
+  exact everywhere re-measures at 5.0 % nps for a tree 7.5 % smaller and 2.6 %
+  less wall to depth 11 (`adocs/data/S120_measurements.txt`). Read that, not
+  11.7 %.]
 - **DEC-169 (truncation)**: a margin move owes a fresh scan.
 
 ### 8. References

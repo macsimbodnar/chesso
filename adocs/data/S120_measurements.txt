@@ -1,0 +1,80 @@
+S120 measurements, 2026-10-06. i7-8700K, g++ 13.3, Release, native, governor powersave (recorded, not set).
+Scripts and raw outputs: .tuning/coord/S120_files/ (gitignored); this file is the reading.
+
+== (a) interleaved timing: S020/S117 workload, 300 stratified positions at go depth 11, one hyperfine invocation per pair, order alternating
+base = 1eaa776 build, cand = (a). Workload node total 26512806 on both (INV-6 over the 300 positions).
+Load average (1/5/15) before A/A, between, after:
+1.75 2.17 1.76 4/1156 3933710
+2.60 2.29 1.90 1/1150 4029406
+1.69 2.11 1.97 1/1140 4172838
+-- A/A, base vs byte copy
+pairs 16  base median 7.149s  cand median 7.156s
+ratio cand/base  geomean 1.0025  median 1.0039  95% CI 1.0006 .. 1.0045  paired t 2.75
+speed-up -0.25 %  CI -0.45 .. -0.06 %  per-pair sd 0.37 %  pairs below 1.0: 4/16
+-- A/B, base vs (a)
+pairs 24  base median 7.125s  cand median 7.238s
+ratio cand/base  geomean 1.0157  median 1.0156  95% CI 1.0138 .. 1.0176  paired t 17.46
+speed-up -1.54 %  CI -1.73 .. -1.36 %  per-pair sd 0.44 %  pairs below 1.0: 0/24
+
+== Size sweep and (b) nps: nps_rotate.py, 8 rounds, every binary once per round over the same workload, order rotated; nps = nodes / wall, paired per round against ref
+Load average before: 3.28 3.60 2.79 3/1143 383552
+per binary over 8 rounds (nps = nodes/wall; ratios paired per round against ref):
+ref    nodes [26512806] median wall 7.184s median nps 3.6905 M
+refcopy nodes [26512806] median wall 7.171s median nps 3.6975 M | nps vs ref +0.14 % CI -0.18 .. +0.47 | wall vs ref -0.14 % CI -0.47 .. +0.18
+a      nodes [26512806] median wall 7.283s median nps 3.6406 M | nps vs ref -1.42 % CI -1.79 .. -1.04 | wall vs ref +1.44 % CI +1.05 .. +1.83
+b16    nodes [26525589] median wall 7.240s median nps 3.6639 M | nps vs ref -0.68 % CI -1.17 .. -0.19 | wall vs ref +0.73 % CI +0.24 .. +1.23
+b15    nodes [26525585] median wall 7.229s median nps 3.6691 M | nps vs ref -0.57 % CI -0.97 .. -0.17 | wall vs ref +0.62 % CI +0.22 .. +1.03
+b17    nodes [26525541] median wall 7.331s median nps 3.6181 M | nps vs ref -1.99 % CI -2.46 .. -1.53 | wall vs ref +2.08 % CI +1.60 .. +2.57
+b18    nodes [26525540] median wall 7.440s median nps 3.5654 M | nps vs ref -3.44 % CI -3.77 .. -3.11 | wall vs ref +3.61 % CI +3.26 .. +3.96
+b19    nodes [26525540] median wall 7.576s median nps 3.5014 M | nps vs ref -5.23 % CI -5.66 .. -4.79 | wall vs ref +5.57 % CI +5.09 .. +6.05
+
+== Exact everywhere, re-measured for (c): the shortcut switched off in a throwaway build (clamp kept at 184), with and without the cache
+Load average before, after: 1.66 2.20 2.42 2/1155 598246 / 1.90 2.04 2.30 3/1154 693441
+per binary over 8 rounds (nps = nodes/wall; ratios paired per round against ref):
+ref    nodes [26512806] median wall 7.173s median nps 3.6960 M
+b16    nodes [26525589] median wall 7.223s median nps 3.6725 M | nps vs ref -0.74 % CI -1.01 .. -0.46 | wall vs ref +0.79 % CI +0.51 .. +1.07
+noshort_nocache nodes [24519818] median wall 6.983s median nps 3.5115 M | nps vs ref -5.01 % CI -5.34 .. -4.67 | wall vs ref -2.64 % CI -2.98 .. -2.30
+noshort_cache nodes [24519818] median wall 7.030s median nps 3.4880 M | nps vs ref -5.65 % CI -5.97 .. -5.33 | wall vs ref -1.98 % CI -2.31 .. -1.64
+bench, shortcut off: 4035189 with the cache and without (the cache returns evaluate()'s own number, so the trees agree)
+
+== (b) hit rate, instrumented throwaway build (counters; a fresh evaluate() compared on every hit), 2^16 slots, per-thread table (shipping form)
+-- hr_b16_s103
+s103 searches 300 nodes 16486210
+quiescence stand-pat sites 7011544; answered by the TT eval 173986 (2.48 %); evaluate_lazy calls 6837558
+cache hits 7688 = 0.11 % of calls  [over a bound 430, saved a full 7258]
+misses: bound beta 1247132, bound alpha 2068638, computed 3514100 (stores 3514100, refused 0)
+of the calls that owed the full score (3521358), answered by the cache: 0.21 %
+disagreements with a fresh evaluate(): 0
+ideal table (every key ever seen kept): repeats 93485 = 1.37 % of calls
+-- hr_b16_sb
+sb searches 3 nodes 463265
+quiescence stand-pat sites 227507; answered by the TT eval 8483 (3.73 %); evaluate_lazy calls 219024
+cache hits 567 = 0.26 % of calls  [over a bound 20, saved a full 547]
+misses: bound beta 47222, bound alpha 57994, computed 113241 (stores 113241, refused 0)
+of the calls that owed the full score (113788), answered by the cache: 0.48 %
+disagreements with a fresh evaluate(): 0
+ideal table (every key ever seen kept): repeats 4779 = 2.18 % of calls
+-- hr_b16_replay20
+replay searches 2190 nodes 568693572
+quiescence stand-pat sites 275694658; answered by the TT eval 8018524 (2.91 %); evaluate_lazy calls 267676134
+cache hits 1135775 = 0.42 % of calls  [over a bound 13575, saved a full 1122200]
+misses: bound beta 28510886, bound alpha 75898173, computed 162131300 (stores 162131300, refused 0)
+of the calls that owed the full score (163253500), answered by the cache: 0.69 %
+disagreements with a fresh evaluate(): 0
+ideal table (every key ever seen kept): repeats 3823609 = 1.43 % of calls
+-- the same 20-game replay with one process-wide table kept across a game's moves (S120_GLOBAL), the form section 5 described
+replay searches 2190 nodes 570484747
+quiescence stand-pat sites 275931128; answered by the TT eval 8008163 (2.90 %); evaluate_lazy calls 267922965
+cache hits 1564236 = 0.58 % of calls  [over a bound 28316, saved a full 1535920]
+misses: bound beta 28547088, bound alpha 75852242, computed 161959399 (stores 161959399, refused 0)
+of the calls that owed the full score (163495319), answered by the cache: 0.94 %
+disagreements with a fresh evaluate(): 0
+ideal table (every key ever seen kept): repeats 15994231 = 5.97 % of calls
+(s103 = S103's 300 positions at depth 10 in one process; sb = search_bench's three positions at depth 12; replay20 = the first 20 games of .tuning/sprt_s055_20261005_031458/games.pgn replayed move by move with each move's recorded n= as go nodes, ucinewgame per game)
+
+== Hit rate by size (instrumented, per-thread form), share of evaluate_lazy() calls answered
+2^15  s103 0.11 %  sb 0.21 %  replay20 0.37 %  disagreements 0
+2^16  s103 0.11 %  sb 0.26 %  replay20 0.42 %  disagreements 0
+2^17  s103 0.12 %  sb 0.30 %  replay20 0.47 %  disagreements 0
+2^18  s103 0.12 %  sb 0.32 %  replay20 0.50 %  disagreements 0
+2^19  s103 0.12 %  sb 0.33 %  replay20 0.53 %  disagreements 0

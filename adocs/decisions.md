@@ -13892,3 +13892,31 @@ Rejected:     Re-specifying the guards to "a mate within k iterations" and
 Consequences: No owner question is open. A later proposal to re-add the
               reduction is a new decision that has to meet these guards as
               they stand.
+
+## DEC-257  2026-10-06  S120's evaluation cache is retired on its measured hit rate, without the SPRT its accepts named
+Tags:         evaluation, lazy-eval, cache, sprt, measurement, s120, s039, s122, dec-039, dec-155
+Context:      S120 built a per-thread table of 65536 full scores keyed by the
+              zobrist key: (a) probed after the lazy shortcut,
+              node-identical to `1eaa776`, and (b) probed before it, which
+              changes play (`bench` 4081329 -> 3768566). Its accepts named
+              an SPRT verdict on (b). The measurements
+              (`adocs/data/S120_measurements.txt`): the table answers 0.11 %
+              of `evaluate_lazy()` calls on S103's 300 positions and 0.42 %
+              over 20 replayed games, 0 disagreements; an unbounded table
+              would answer 1.4 to 2.2 % per search. (a) costs 1.54 % (CI 1.36 ..
+              1.73), (b) 0.68 % nps, and no size from 2^15 to 2^19 pays.
+              The pre-registered `{-5, 0}` run was 12.1 to 19.0 h.
+Decision:     By the owner, 2026-10-06, on the coordinator's recommendation:
+              the cache is retired and no code lands. The diffs stay as
+              `adocs/data/S120_a.diff` and `S120_b.diff`. S120 closes on the
+              measurements; its statement (c) -- the lazy shortcut is kept,
+              and exact everywhere costs 5.0 % nps for a tree 7.5 % smaller
+              to depth 11 -- is the input S039 and S122 read.
+Why:          Keeping a change needs a verdict; dropping one does not, and a
+              night of the machine on a table that answers under half a
+              percent of calls buys less than the next step's run.
+Rejected:     Running the SPRT (12 to 19 h for a truth expected inside the
+              interval). Landing (a) alone (a measured slowdown with no gain).
+Consequences: DEC-039's lazy shortcut stands as it is. A later cache, for
+              example one kept across moves (0.58 % measured, 6.0 % ideal),
+              starts from the recorded diffs and owes its own SPRT.

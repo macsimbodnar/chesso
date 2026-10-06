@@ -203,7 +203,8 @@ Those three figures predate S104 and are on the unflagged binary, so the ratio
 between them is what carries and not the absolute Mnps. So S039 sits just
 ahead of the evaluation rebuilds, and it is no longer a micro-tune: it is the
 architectural prerequisite, with S120's evaluation cache buying back what it
-spends.
+spends. [2026-10-06: the cache answered 0.1 to 0.4 % of calls and was retired,
+DEC-257; exact everywhere re-measures at 5.0 % nps for a 7.5 % smaller tree.]
 
 **Mobility and king safety are in their weakest published forms.** Mobility is
 one linear weight per piece over a raw count with no exclusions, fitted to
@@ -446,7 +447,7 @@ depth one (S116), and the node-fraction time scaler (S132).
 so, and cheap under DEC-083 because most of it owes a timing rather than a
 match: the duplicated per-node `is_check` (S020), the merged taper (S055), the
 packed middlegame/endgame score (S117 — +25.41 reported, the largest evaluation
-speed number surveyed), the evaluation cache (S120), the table layout at the
+speed number surveyed), the evaluation cache (S120, retired 2026-10-06, DEC-257), the table layout at the
 S105 pressure setting (S119), and the movegen work that was always correctly
 last (S042, S032, S030). The pawn hash left this block for block 3 (DEC-087).
 
@@ -862,11 +863,11 @@ carried nothing.)
 
 ## Done recently
 
+- S120  **the evaluation cache is retired without an SPRT** -- a per-thread table of 65536 full scores answered 0.11 to 0.42 % of `evaluate_lazy()` calls (0 disagreements); (a) node-identical at -1.54 %, (b) -0.68 % nps, no size 2^15 to 2^19 pays; the owner chose retirement over a 12 to 19 h `{-5, 0}` run (DEC-257); diffs kept in `adocs/data/`; the lazy shortcut is kept, exact everywhere re-measured at 5.0 % nps for a 7.5 % smaller tree; finding 9 is filler S259. 2026-10-06.
 - S258  **filler: `S105_pairs.py` reads a fastchess PGN again, and ten pair readings are re-read** -- `main()` takes the side by `is_candidate`, falling back to `chesso-a` only for S105's own PGNs; `test_s105_pairs` added; the ten readings S095 to S237 had been scored from Black's side, and all ten re-read equal fastchess's Ptnml (S231 0.3105 -> 0.3025, S237 0.2968 -> 0.3205); S237's "PGN order" note named the wrong cause; no pre-registration, cost table or verdict used them. 2026-10-06.
 - S257  **filler: the A/A band check derives the candidate's name from the PGN** -- `S198_pairs.py` uses `S024_pair_stats.is_candidate`, and `S105_pairs.report` refuses a name that is no side of every pair; red first (S219's band renamed read 0.3563, z +2.26, exit 0); `test_s198_pairs` added to the fast label; found ten SPRT pair readings scored from Black's side, now S258. 2026-10-05.
 - S117  **each evaluation mg/eg pair travels packed in one `score_t`** -- eg high, mg low, `+0x8000` extraction; the hooks and every term loop do one add where they did two; both stage-two divisions kept (S055 H0); node-identical (INV-6), bench_eval checksum identical; **+3.47 %** (CI +3.28 .. +3.66, 24/24 pairs), kept; weights `constexpr` and the tuner emits them so (DEC-255), the four weight parsers fixed before landing. 2026-10-05.
 - S255  **filler: `S192_anchors.py` clamps at `LAZY_EVAL_MARGIN` read from the source** -- 184, not a hard-coded 150; refuses unless the row is found once; 10 of 10 anchors unchanged (largest stage-two sum 138), liveness shown at 100. 2026-10-05.
-- S254  **filler: five mutants re-anchored on the memoised `is_check_move()`** -- C02, R01, P05, M08, L06 had been refused since S020; 173 of 173 validate, the five read killed (5 of 5); the whole list (about 4.8 h) not run. 2026-10-05.
 
 ## What the 2026-09-05 reorder changed, DEC-144
 
@@ -1178,8 +1179,8 @@ DEC-143 says, whatever the effect measured elsewhere.
 
 ## Open
 
-1. S120  a small cache of full evaluations by position key, so the score behind the lazy shortcut can be paid for once
-2. S119  the table becomes cache-line clusters with an aged replacement, a prefetch issued when the key is known, and huge pages
+1. S119  the table becomes cache-line clusters with an aged replacement, a prefetch issued when the key is known, and huge pages
+2. S259  filler: the S097 multicut row and the S113 ProbCut row separate their mutants E21 and B04 again (S120 finding 9, DEC-171)
 3. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
 4. S030  move_t drops the moving piece and becomes 16 bits
 5. S134  delete rook-on-the-seventh and passer bucket 5 by folding their weights into the piece-square tables, which is bit-exact, and shrink the parameter vector to 823

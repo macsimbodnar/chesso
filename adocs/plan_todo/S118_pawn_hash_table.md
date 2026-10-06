@@ -199,7 +199,8 @@ S125's measured per-call cost, and that is what the verdict is read against.
 - **S122 (immediately after)**: reads the shelter and storm slots this step
   adds. The order is stated in both files.
 - **S120 (evaluation cache)**: a different table at a different key; the two do
-  not replace each other and the step says how they divide.
+  not replace each other and the step says how they divide. [2026-10-06: S120
+  retired the cache (DEC-257); there is nothing to divide.]
 - **S104 (before, done)**: the architecture flag every speed figure here is
   taken under (DEC-083).
 - **S029 (parked)**: the same three primitives are the NNUE hook; a key

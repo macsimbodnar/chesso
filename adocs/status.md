@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-06, by hand.
 
+## 2026-10-06: S120 done -- the evaluation cache retired without an SPRT; owner questions closed
+
+S120's per-thread table of 65536 full scores answered 0.11 to 0.42 % of
+`evaluate_lazy()` calls (0 disagreements). (a), node-identical, costs
+1.54 %; (b), which changes play, 0.68 % nps; no size from 2^15 to 2^19
+pays. The owner chose retirement over the 12 to 19 h `{-5, 0}` run
+(DEC-257): no code lands, and the diffs are `adocs/data/S120_a.diff` and
+`S120_b.diff`. Statement (c) for S039 and S122: the lazy shortcut is kept,
+and exact everywhere re-measures at 5.0 % nps for a 7.5 % smaller tree and
+2.6 % less wall to depth 11 (specs.md updated). Implementer finding 9 is
+filler S259: the S097 multicut row and the S113 ProbCut row no longer
+separate E21 and B04 on `1eaa776`. Both cases stay green; S259 is an open
+finding for every run until it closes. The owner confirmed DEC-252, DEC-254
+and DEC-255 and answered question 3 no (DEC-256), so no owner question is
+open. gate_extra last ran 2026-10-06 on S120's (a)+(b) tree, now
+reverted; on shipped code it last ran 2026-10-05 (S117), 5 stages green. **Next:** S119,
+then S259.
+
 ## 2026-10-06: S258 done -- ten pair readings re-read; S105_pairs.py reads fastchess PGNs again
 
 `S105_pairs.py <pgn>` takes the candidate's name from the PGN (`candidate` or

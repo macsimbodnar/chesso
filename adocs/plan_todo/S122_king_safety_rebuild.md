@@ -21,7 +21,9 @@ more than a hundred and eighty-four about the king and the mobility combined.
 
 That is why S039 was moved from the end of the plan to just before this step,
 and why S120 is ordered ahead of both: retiring the clamp costs 11.7 % of nps
-measured, and the cache and S104 are what pay for it.
+measured, and the cache and S104 are what pay for it. [2026-10-06,
+coordinator: S120 retired the cache (DEC-257); exact everywhere re-measures at
+5.0 % nps for a 7.5 % smaller tree (`adocs/data/S120_measurements.txt`).]
 
 ## The formulation, and the one that failed
 
@@ -191,7 +193,7 @@ be chosen before a fit can start:
 ### 5. Pitfalls
 
 - **The clamp is the whole problem and it is not this step's to remove.**
-  S039 sizes it and S120 pays for retiring it; this step **states which of the
+  S039 sizes it and S120 was to pay for retiring it (retired, DEC-257); this step **states which of the
   three outcomes it inherited** and does not quietly widen the margin itself.
 - **The corpus is the documented failure mode for this term** -- it is the one
   part of the unlocated write-up worth acting on, and the accepts acts on it:

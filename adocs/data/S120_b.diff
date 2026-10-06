@@ -1,0 +1,169 @@
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1207,6 +1207,21 @@
+ 
+ int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+ {
++  // Asked before anything is computed, so a hit pays for neither stage. The
++  // slot holds evaluate()'s output for this key and never a bound, so a hit is
++  // the score: where the shortcut below would have handed back cheap +/-
++  // LAZY_EVAL_MARGIN this returns the exact number instead, on the same side
++  // of the window -- the full score is within the margin of the cheap one by
++  // the clamp -- so the caller's cutoff is the one it would have taken and the
++  // fail-soft value it propagates is the tighter of the two. The same argument
++  // S094 made for quiescence's read of the transposition entry. S120.
++  int cached = 0;
++
++  if (eval_cache_probe(board->hash, &cached)) {
++    if (exact != nullptr) { *exact = true; }
++    return cached;
++  }
++
+   const int cheap = evaluate_cheap(board);
+ 
+   // Set on both shortcut paths before either returns, so a caller reading it
+@@ -1218,18 +1233,14 @@
+   // fails high on either number and the expensive stage would change nothing it
+   // does. Same argument mirrored at alpha. Anywhere between the two, the
+   // correction can decide the node and has to be computed.
++  //
++  // Neither stores: a bound is true on one side of one window, and the slot
++  // will be read from others.
+   if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
+   if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap + LAZY_EVAL_MARGIN; }
+ 
+   if (exact != nullptr) { *exact = true; }
+ 
+-  // Asked only where the full score is owed, so a hit returns the number the
+-  // line below would have computed -- the slot holds evaluate()'s output for
+-  // this key -- and the two shortcuts above store nothing. S120.
+-  int cached = 0;
+-
+-  if (eval_cache_probe(board->hash, &cached)) { return cached; }
+-
+   // Identical to evaluate() by construction: that function is these two terms
+   // added, so the number kept here is the static evaluation and not an
+   // approximation of it.
+--- a/src/evaluation.hpp
++++ b/src/evaluation.hpp
+@@ -41,6 +41,11 @@
+ // to *keep* the number does: a bound is a true statement only on the side of
+ // the window it was taken at, and anywhere it is read back from, the window
+ // will be a different one. S094.
++//
++// A position whose full score is already in the evaluation cache below gets
++// that score whatever the window, flagged exact, and the shortcut is not
++// asked: it is the number the shortcut's bound stands in for, on the same side
++// of the window. S120.
+ int evaluate_lazy(const board_t* board,
+                   int alpha,
+                   int beta,
+--- a/tests/test_evaluation.cpp
++++ b/tests/test_evaluation.cpp
+@@ -370,6 +370,11 @@
+           evaluate_lazy(&game.board, full - 1000, full + 1000) == full,
+           ("FEN: " + fen));
+ 
++      // That call stored the score, and a stored score answers before the
++      // shortcut is asked (S120); the shortcut is what the rest of this case
++      // reads, so the slot is emptied first.
++      eval_cache_clear();
++
+       // A beta the cheap score already clears by the margin: the shortcut
+       // fires. The two things that have to hold of what comes back are that it
+       // is still above beta, so the caller takes the same cutoff it would have
+@@ -445,6 +450,10 @@
+       REQUIRE_MESSAGE(inside == full, ("FEN: " + fen));
+       exact_runs++;
+ 
++      // Emptied for the reason the case above gives: the shortcut, and not
++      // the score that call stored, is what the flag is asked about next.
++      eval_cache_clear();
++
+       // Both shortcut branches, and the flag has to be false on each. It is
+       // initialised true here on purpose: a function that never wrote it would
+       // pass on a variable that happened to start out right.
+@@ -855,9 +864,12 @@
+   // knights have gone out and come home: the same position under a halfmove
+   // clock of 4, which the key does not cover. So it is the position that finds
+   // the slot, and not the visit.
++  //
++  // And read through all three windows: the slot is asked before the shortcut,
++  // so a window the shortcut would have answered with a bound gets the stored
++  // score instead, flagged exact.
+   TEST_CASE_FIXTURE(eval_fixture_t,
+-                    "evaluate_lazy answers from the slot where the full score "
+-                    "is owed")
++                    "evaluate_lazy answers from the slot whatever the window")
+   {
+     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
+ 
+@@ -879,23 +891,60 @@
+              planted);
+     CHECK(exact);
+ 
+-    // Where the shortcut answers, it answers first and the slot is not asked:
+-    // the bound comes back, flagged as one.
+     const int beta = cheap - LAZY_EVAL_MARGIN;
+-    exact = true;
+-    CHECK_EQ(evaluate_lazy(&game.board, beta - 1000, beta, &exact), beta);
+-    CHECK_FALSE(exact);
++    exact = false;
++    CHECK_EQ(evaluate_lazy(&game.board, beta - 1000, beta, &exact), planted);
++    CHECK(exact);
+ 
+     const int alpha = cheap + LAZY_EVAL_MARGIN;
+-    exact = true;
+-    CHECK_EQ(evaluate_lazy(&game.board, alpha, alpha + 1000, &exact), alpha);
+-    CHECK_FALSE(exact);
++    exact = false;
++    CHECK_EQ(evaluate_lazy(&game.board, alpha, alpha + 1000, &exact), planted);
++    CHECK(exact);
+ 
+     // The planted number is not the start position's score, and nothing after
+     // this case should meet it.
+     eval_cache_clear();
+   }
+ 
++  // The same over the corpus with the slot filled the ordinary way: once the
++  // full score is stored, both shortcut windows get it back, exact, on the
++  // side of the window the bound would have been on -- so the caller decides
++  // as it would have, on the tighter number.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "a stored score answers a window the shortcut would have")
++  {
++    size_t checked = 0;
++
++    for (const std::string& fen : all_test_fens()) {
++      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
++      eval_cache_clear();
++
++      const int full = evaluate(&game.board);
++      const int cheap = evaluate_cheap(&game.board);
++      bool exact = false;
++      REQUIRE_EQ(lazy_wide(&game.board, &exact), full);
++
++      const int beta = cheap - LAZY_EVAL_MARGIN;
++      exact = false;
++      const int at_beta = evaluate_lazy(&game.board, beta - 1000, beta, &exact);
++      REQUIRE_MESSAGE(exact, ("FEN: " + fen + " at beta"));
++      REQUIRE_MESSAGE(at_beta == full, ("FEN: " + fen + " at beta"));
++      REQUIRE(at_beta >= beta);
++
++      const int alpha = cheap + LAZY_EVAL_MARGIN;
++      exact = false;
++      const int at_alpha =
++          evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
++      REQUIRE_MESSAGE(exact, ("FEN: " + fen + " at alpha"));
++      REQUIRE_MESSAGE(at_alpha == full, ("FEN: " + fen + " at alpha"));
++      REQUIRE(at_alpha <= alpha);
++
++      checked++;
++    }
++
++    REQUIRE(checked > 100);
++  }
++
+   // The INV-2 pattern: a line made and unmade, every node on it stored on the
+   // way down and read back on the way up. The line starts with both knights
+   // going out and coming home, so the fourth ply is the root again with the

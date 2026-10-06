@@ -1,0 +1,723 @@
+diff --git a/MANUAL.md b/MANUAL.md
+index 998e173..1a790fa 100644
+--- a/MANUAL.md
++++ b/MANUAL.md
+@@ -299,9 +299,11 @@ position with an empty move history, clears the transposition table, drops the
+ proved mate line, and re-opens the book for a new game** — `reset_for_new_game`
+ in `src/chesso.cpp`. Nothing set by `setoption` is touched: the `Hash` size,
+ `OwnBook`, `Best Book Move` and `Book File` survive it. The killer, history and
+-counter-move tables are per `go` and have nothing to reset. `bench` runs the
+-same reset between its positions, which is what makes its total independent of
+-the order they are searched in.
++counter-move tables are per `go` and have nothing to reset, and so is the
++evaluation cache since S120: it is per search thread and every `go` starts one
++empty, while the reset empties the one `bench` and `test` search on. `bench` runs
++the same reset between its positions, which is what makes its total independent
++of the order they are searched in.
+ 
+ `go` understands `depth`, `movetime`, `nodes`, `wtime`, `btime`, `winc`, `binc`,
+ `movestogo` and `infinite`.
+@@ -558,9 +560,9 @@ Three caveats, all of them about keeping the number comparable:
+   so far; until the keys are generated in-repo, a disagreement between
+   machines is investigated before it is called a behaviour change.
+ 
+-Between positions `bench` does what `ucinewgame` does — clears the table, drops
+-any proven mate line — so each position is searched cold and the total does not
+-depend on the order.
++Between positions `bench` does what `ucinewgame` does — clears the table and the
++evaluation cache with it, drops any proven mate line — so each position is
++searched cold and the total does not depend on the order.
+ 
+ ### Non-standard position shortcuts
+ 
+diff --git a/src/chesso.cpp b/src/chesso.cpp
+index 71bb16c..81f0028 100644
+--- a/src/chesso.cpp
++++ b/src/chesso.cpp
+@@ -1745,6 +1745,12 @@ bool command_setoption(std::queue<std::string>& args)
+       // exactly what was sent.
+       uci_reply("info string refused [" + option_name + "] value " +
+                 option_value + ", outside " + range);
++    } else if (std::string(canonical_name) == "LazyEvalMargin") {
++      // The one parameter evaluate() reads: every cached score carries the
++      // clamp it was computed under, so a new margin makes them stale against
++      // a fresh call. A `go` thread starts with an empty table of its own;
++      // this empties the one `bench` and `test` search on. S120.
++      eval_cache_clear();
+     }
+ 
+     break;
+@@ -1783,7 +1789,7 @@ static void reset_for_new_game()
+   stop_and_join_search();
+ 
+   set_position(DEFAULT_POSITION);
+-  tt_reset(&tt);
++  tt_reset(&tt);  // and this thread's evaluation cache with it, S120
+   proven_mate_line.length = 0;
+   still_in_opening = true;
+ }
+diff --git a/src/data_structures.hpp b/src/data_structures.hpp
+index 85d08b0..5f13532 100644
+--- a/src/data_structures.hpp
++++ b/src/data_structures.hpp
+@@ -596,6 +596,29 @@ struct transposition_table_t
+ };
+ 
+ 
++// One slot of the evaluation cache, S120: the full evaluate() score of one
++// position, found by its zobrist key. The upper 48 bits of the key are kept as
++// a tag and the score sits in the low 16, offset by 32768, so a slot is one
++// load and one compare and an all-zero slot -- an empty one -- decodes to
++// INT16_MIN, which no evaluation returns and which therefore reads as a miss.
++// The tag and the index bits below it between them cover all 64 bits of the
++// key, so a slot answers a different position only on a full key collision,
++// the same one the transposition table already lives with.
++//
++// The score and never a bound: a bound is true on one side of one window and
++// a slot outlives the window (S094's reason). Direct-mapped and replaced on
++// every store, because size matters more than the scheme here (section 4 of
++// the step file). The table itself is in src/evaluation.cpp.
++using eval_cache_slot_t = uint64_t;
++
++// 65536 slots, 512 KiB. A seed, re-decided by measurement: S120's sweep over
++// 2^15 to 2^19 slots against nodes per second, its step file has the figures.
++constexpr size_t EVAL_CACHE_ENTRIES = size_t{1} << 16;
++
++static_assert((EVAL_CACHE_ENTRIES & (EVAL_CACHE_ENTRIES - 1)) == 0,
++              "the evaluation cache is indexed by a mask");
++
++
+ struct search_t
+ {
+   move_t best_move;
+diff --git a/src/evaluation.cpp b/src/evaluation.cpp
+index ce2495f..154e528 100644
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1150,6 +1150,61 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
+ }
+ 
+ 
++// THE EVALUATION CACHE, S120. What it is for: evaluate_expensive() is most of
++// what evaluate() costs and quiescence asks for it at nearly every node, while
++// the transposition table hands a static score back to quiescence on under 1 %
++// of them (S094) -- a quiescence entry sits below every main-search depth and
++// the first main store over its slot evicts it. This table is the guaranteed
++// storage beside that opportunistic one (S108 section 7), and the two are not
++// merged.
++//
++// thread_local, so it is per thread and never shared; evaluation.hpp says what
++// that means for each caller. Zeroed at thread start, and zero is an empty
++// slot. The layout is eval_cache_slot_t's, in data_structures.hpp.
++static thread_local eval_cache_slot_t eval_cache[EVAL_CACHE_ENTRIES];
++
++static constexpr uint64_t EVAL_CACHE_TAG_MASK = ~uint64_t{0xFFFF};
++static constexpr uint64_t EVAL_CACHE_INDEX_MASK = EVAL_CACHE_ENTRIES - 1;
++static constexpr int EVAL_CACHE_OFFSET = 32768;
++
++
++bool eval_cache_probe(uint64_t key, int* score)
++{
++  const eval_cache_slot_t entry = eval_cache[key & EVAL_CACHE_INDEX_MASK];
++  const uint32_t offset_score = static_cast<uint32_t>(entry & 0xFFFF);
++
++  // A slot holding another position, or nothing: an empty slot's score half
++  // is 0, which is the offset form of INT16_MIN and of no evaluation.
++  if (((entry ^ key) & EVAL_CACHE_TAG_MASK) != 0 || offset_score == 0) {
++    return false;
++  }
++
++  *score = static_cast<int>(offset_score) - EVAL_CACHE_OFFSET;
++  return true;
++}
++
++
++void eval_cache_store(uint64_t key, int score)
++{
++  const uint32_t offset_score =
++      static_cast<uint32_t>(score + EVAL_CACHE_OFFSET);
++
++  // Kept only inside (INT16_MIN, INT16_MAX]. Nothing the evaluation returns
++  // comes near either end (tt_entry_t::eval has the measurement), and a score
++  // that did would be recomputed rather than stored wrong: clamping it, as the
++  // transposition table's field does, would hand back a number evaluate() did
++  // not return. One unsigned compare covers both ends.
++  if (offset_score - 1 >= 0xFFFF) { return; }
++
++  eval_cache[key & EVAL_CACHE_INDEX_MASK] =
++      (key & EVAL_CACHE_TAG_MASK) | offset_score;
++}
++
++
++void eval_cache_clear()
++{ std::memset(eval_cache, 0, sizeof(eval_cache)); }
++
++
+ int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+ {
+   const int cheap = evaluate_cheap(board);
+@@ -1168,10 +1223,21 @@ int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+ 
+   if (exact != nullptr) { *exact = true; }
+ 
++  // Asked only where the full score is owed, so a hit returns the number the
++  // line below would have computed -- the slot holds evaluate()'s output for
++  // this key -- and the two shortcuts above store nothing. S120.
++  int cached = 0;
++
++  if (eval_cache_probe(board->hash, &cached)) { return cached; }
++
+   // Identical to evaluate() by construction: that function is these two terms
+   // added, so the number kept here is the static evaluation and not an
+   // approximation of it.
+-  return cheap + evaluate_expensive(board);
++  const int full = cheap + evaluate_expensive(board);
++
++  eval_cache_store(board->hash, full);
++
++  return full;
+ }
+ 
+ 
+diff --git a/src/evaluation.hpp b/src/evaluation.hpp
+index 86ba015..4516ec3 100644
+--- a/src/evaluation.hpp
++++ b/src/evaluation.hpp
+@@ -46,6 +46,26 @@ int evaluate_lazy(const board_t* board,
+                   int beta,
+                   bool* exact = nullptr);
+ 
++// THE EVALUATION CACHE, S120. evaluate_lazy() keeps every full score it pays
++// for, by the position's key, and hands it back the next time that position
++// asks. evaluate() neither reads nor fills it: it stays a pure function, which
++// bench_eval, eval_spread and the tuner's model are measured against.
++//
++// **Per thread.** Each thread has its own table (thread_local), so no two
++// searches share one: datagen's workers each keep their own and stay
++// reproducible, and the engine's search thread, started afresh at every `go`,
++// starts with an empty one. A clear empties the calling thread's table only.
++//
++// tt_reset() calls eval_cache_clear(), so a caller that wipes the table to get
++// a search independent of whatever ran before -- `ucinewgame`, a new base
++// position, `clean-tt`, every test that resets -- wipes this one with it.
++//
++// Exposed for the tests, which drive the table directly to show what a slot
++// holds and when; the search reaches it only through evaluate_lazy().
++bool eval_cache_probe(uint64_t key, int* score);
++void eval_cache_store(uint64_t key, int score);
++void eval_cache_clear();
++
+ // The mobility weights, per piece type in knight, bishop, rook, queen order.
+ // Exposed so that the tuner's model in tools/eval_model.hpp can start from what
+ // the engine ships instead of from a copy of it, which would be free to drift.
+diff --git a/src/transposition_table.cpp b/src/transposition_table.cpp
+index 984a492..a168620 100644
+--- a/src/transposition_table.cpp
++++ b/src/transposition_table.cpp
+@@ -4,6 +4,7 @@
+ #include <cassert>
+ #include <cstdlib>
+ #include <cstring>
++#include "evaluation.hpp"
+ #include "log.hpp"
+ 
+ 
+@@ -73,6 +74,11 @@ void tt_reset(transposition_table_t* tt)
+   }
+ 
+   tt->generation = 1;  // 1 makes it stable
++
++  // This thread's only, the table being thread_local; see the declaration.
++  // Every reset site runs on the thread whose searches it means to make cold,
++  // or, in the engine, before a `go` whose thread starts with an empty one.
++  eval_cache_clear();
+ }
+ 
+ 
+diff --git a/src/transposition_table.hpp b/src/transposition_table.hpp
+index 1b1eee1..23d6dff 100644
+--- a/src/transposition_table.hpp
++++ b/src/transposition_table.hpp
+@@ -17,6 +17,10 @@ void tt_resize(transposition_table_t* tt, size_t megabytes);
+ 
+ void tt_free(transposition_table_t* tt);
+ 
++// Clears the entries, and the calling thread's evaluation cache with them
++// (S120): a caller that resets the table wants a search that does not depend
++// on what ran before, and a warm evaluation cache would still hand back exact
++// scores where a cold one returns the lazy shortcut's bounds.
+ void tt_reset(transposition_table_t* tt);
+ 
+ void tt_new_search(transposition_table_t* tt);
+diff --git a/tests/test_evaluation.cpp b/tests/test_evaluation.cpp
+index a0b0ac3..c56a726 100644
+--- a/tests/test_evaluation.cpp
++++ b/tests/test_evaluation.cpp
+@@ -6,6 +6,7 @@
+ #include <cstdlib>
+ #include <random>
+ #include <string>
++#include <thread>
+ #include <vector>
+ #include "bitboard.hpp"
+ #include "data_structures.hpp"
+@@ -13,6 +14,8 @@
+ #include "evaluation.hpp"
+ #include "search_params.hpp"
+ #include "test_helpers.hpp"
++#include "transposition_table.hpp"
++#include "uci.hpp"
+ 
+ 
+ static game_t game;
+@@ -68,6 +71,10 @@ struct eval_fixture_t
+   {
+     initialize_game_const_data(&game);
+     initialize_game_const_data(&mirrored);
++
++    // Every case starts on an empty evaluation cache, so what evaluate_lazy()
++    // returns in one does not depend on which ran before it. S120.
++    eval_cache_clear();
+   }
+ };
+ 
+@@ -790,6 +797,439 @@ TEST_SUITE("evaluation: score")
+ }
+ 
+ 
++// S120. evaluate_lazy() keeps every full score it pays for, by the position's
++// key, and returns it the next time the position asks. Whatever comes back
++// from the table has to be the number evaluate() returns for that position --
++// never a bound, never another position's score -- and these cases read the
++// table directly to show it, rather than trusting a search to notice. Each
++// starts on an empty table, which eval_fixture_t sees to.
++TEST_SUITE("evaluation: cache")
++{
++  // A window that contains the score, so evaluate_lazy() owes the full one.
++  static int lazy_wide(const board_t* board, bool* exact)
++  {
++    const int full = evaluate(board);
++    return evaluate_lazy(board, full - 1000, full + 1000, exact);
++  }
++
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "a second call reads back what the first one computed")
++  {
++    size_t checked = 0;
++
++    for (const std::string& fen : all_test_fens()) {
++      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
++      eval_cache_clear();
++
++      const int full = evaluate(&game.board);
++      int cached = 0;
++
++      // An empty table answers nothing, so whatever the probe finds after the
++      // first call is what that call stored.
++      REQUIRE_FALSE(eval_cache_probe(game.board.hash, &cached));
++
++      bool exact = false;
++      REQUIRE_EQ(lazy_wide(&game.board, &exact), full);
++      REQUIRE(exact);
++
++      REQUIRE_MESSAGE(eval_cache_probe(game.board.hash, &cached),
++                      ("FEN: " + fen));
++      REQUIRE_MESSAGE(cached == full, ("FEN: " + fen));
++
++      exact = false;
++      REQUIRE_MESSAGE(lazy_wide(&game.board, &exact) == full, ("FEN: " + fen));
++      REQUIRE(exact);
++
++      checked++;
++    }
++
++    REQUIRE(checked > 100);
++  }
++
++  // That evaluate_lazy() reads the slot at all, shown the way S103 showed the
++  // transposition entry's: plant a number evaluate() does not return and see
++  // it come back. Everywhere else in this suite a hit and a recomputation give
++  // the same answer, so only a planted value tells them apart.
++  //
++  // Planted on the start position and read four plies later, after both
++  // knights have gone out and come home: the same position under a halfmove
++  // clock of 4, which the key does not cover. So it is the position that finds
++  // the slot, and not the visit.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "evaluate_lazy answers from the slot where the full score "
++                    "is owed")
++  {
++    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
++
++    const int full = evaluate(&game.board);
++    const int cheap = evaluate_cheap(&game.board);
++    const int planted = full + 7;
++
++    eval_cache_store(game.board.hash, planted);
++
++    REQUIRE(play_move(&game, g1, f3));
++    REQUIRE(play_move(&game, g8, f6));
++    REQUIRE(play_move(&game, f3, g1));
++    REQUIRE(play_move(&game, f6, g8));
++    REQUIRE_EQ(game.board.halfmove_clock, 4);
++    REQUIRE_EQ(evaluate(&game.board), full);
++
++    bool exact = false;
++    CHECK_EQ(evaluate_lazy(&game.board, full - 1000, full + 1000, &exact),
++             planted);
++    CHECK(exact);
++
++    // Where the shortcut answers, it answers first and the slot is not asked:
++    // the bound comes back, flagged as one.
++    const int beta = cheap - LAZY_EVAL_MARGIN;
++    exact = true;
++    CHECK_EQ(evaluate_lazy(&game.board, beta - 1000, beta, &exact), beta);
++    CHECK_FALSE(exact);
++
++    const int alpha = cheap + LAZY_EVAL_MARGIN;
++    exact = true;
++    CHECK_EQ(evaluate_lazy(&game.board, alpha, alpha + 1000, &exact), alpha);
++    CHECK_FALSE(exact);
++
++    // The planted number is not the start position's score, and nothing after
++    // this case should meet it.
++    eval_cache_clear();
++  }
++
++  // The INV-2 pattern: a line made and unmade, every node on it stored on the
++  // way down and read back on the way up. The line starts with both knights
++  // going out and coming home, so the fourth ply is the root again with the
++  // halfmove clock at 4 -- a field the key does not cover and evaluate() does
++  // not read, and the slot has to answer it with the root's score.
++  //
++  // Always-replace means a later node on the line that shares a slot with an
++  // earlier one evicts it, so a miss is expected exactly there and nowhere
++  // else.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "a position reached again reads back its own score")
++  {
++    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
++
++    const index_t shuffle[4][2] = {{g1, f3}, {g8, f6}, {f3, g1}, {f6, g8}};
++    constexpr int LINE = 10;
++
++    uint64_t keys[LINE + 1];
++    int scores[LINE + 1];
++    bool exact = false;
++
++    keys[0] = game.board.hash;
++    scores[0] = evaluate(&game.board);
++    REQUIRE_EQ(lazy_wide(&game.board, &exact), scores[0]);
++
++    for (int ply = 1; ply <= LINE; ++ply) {
++      if (ply <= 4) {
++        REQUIRE(play_move(&game, shuffle[ply - 1][0], shuffle[ply - 1][1]));
++      } else {
++        // Past the shuffle, the first legal move, so the line is the
++        // generator's and not a judgement of the position (DEC-023).
++        move_t moves[MAX_MOVES];
++        REQUIRE(legal_moves(&game, moves) > 0);
++        REQUIRE(make_move(&game, moves[0]));
++      }
++
++      keys[ply] = game.board.hash;
++      scores[ply] = evaluate(&game.board);
++
++      if (ply == 4) {
++        // The precondition the transposition needs: the root's key, under a
++        // halfmove clock that is not the root's.
++        REQUIRE_EQ(keys[4], keys[0]);
++        REQUIRE_EQ(game.board.halfmove_clock, 4);
++
++        int cached = 0;
++        REQUIRE(eval_cache_probe(keys[4], &cached));
++        REQUIRE_EQ(cached, scores[0]);
++      }
++
++      REQUIRE_EQ(lazy_wide(&game.board, &exact), scores[ply]);
++    }
++
++    size_t hits = 0;
++
++    for (int ply = LINE; ply >= 0; --ply) {
++      bool evicted = false;
++
++      for (int later = ply + 1; later <= LINE; ++later) {
++        if (keys[later] != keys[ply] &&
++            (keys[later] & (EVAL_CACHE_ENTRIES - 1)) ==
++                (keys[ply] & (EVAL_CACHE_ENTRIES - 1))) {
++          evicted = true;
++        }
++      }
++
++      REQUIRE_EQ(game.board.hash, keys[ply]);
++
++      int cached = 0;
++      const bool hit = eval_cache_probe(keys[ply], &cached);
++
++      CHECK_EQ(hit, !evicted);
++      if (hit) {
++        CHECK_EQ(cached, scores[ply]);
++        CHECK_EQ(cached, evaluate(&game.board));
++        hits++;
++      }
++
++      if (ply > 0) { unmake_move(&game); }
++    }
++
++    REQUIRE(hits > LINE / 2);
++  }
++
++  TEST_CASE_FIXTURE(eval_fixture_t, "a shortcut stores nothing")
++  {
++    size_t checked = 0;
++
++    for (const std::string& fen : all_test_fens()) {
++      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
++      eval_cache_clear();
++
++      const int cheap = evaluate_cheap(&game.board);
++      int cached = 0;
++
++      // Each shortcut first shown to have been taken -- the flag says bound --
++      // and only then the table shown empty, so a miss here is the shortcut
++      // keeping nothing and not a call that never reached it.
++      const int beta = cheap - LAZY_EVAL_MARGIN;
++      bool exact = true;
++      evaluate_lazy(&game.board, beta - 1000, beta, &exact);
++      REQUIRE_FALSE(exact);
++      REQUIRE_FALSE_MESSAGE(eval_cache_probe(game.board.hash, &cached),
++                            ("FEN: " + fen + " at beta"));
++
++      const int alpha = cheap + LAZY_EVAL_MARGIN;
++      exact = true;
++      evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
++      REQUIRE_FALSE(exact);
++      REQUIRE_FALSE_MESSAGE(eval_cache_probe(game.board.hash, &cached),
++                            ("FEN: " + fen + " at alpha"));
++
++      // And the same key does reach the table once the full score is paid, so
++      // the two misses above are the shortcut's and not a slot this position
++      // can never fill.
++      REQUIRE_EQ(lazy_wide(&game.board, &exact), evaluate(&game.board));
++      REQUIRE(eval_cache_probe(game.board.hash, &cached));
++
++      checked++;
++    }
++
++    REQUIRE(checked > 100);
++  }
++
++  // A slot is found by the low bits of the key and claimed by the high ones,
++  // so two positions can land in one slot and must not read each other's
++  // score. Every single-bit change to a key that has been stored misses:
++  // below the index width that is another slot, at or above it the same slot
++  // under another tag.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "a slot answers only the key that filled it")
++  {
++    REQUIRE(load_FEN(KIWIPETE_POS, &game));
++
++    const uint64_t key = game.board.hash;
++    const int score = evaluate(&game.board);
++    int cached = 0;
++
++    eval_cache_store(key, score);
++    REQUIRE(eval_cache_probe(key, &cached));
++    REQUIRE_EQ(cached, score);
++
++    for (int bit = 0; bit < 64; ++bit) {
++      CHECK_FALSE_MESSAGE(eval_cache_probe(key ^ (uint64_t{1} << bit), &cached),
++                          ("bit " + std::to_string(bit)));
++    }
++
++    // The top bit is above every index width the table can have, so this is
++    // the same slot under another tag, and storing it replaces the first.
++    const uint64_t same_slot = key ^ (uint64_t{1} << 63);
++    REQUIRE_EQ(same_slot & (EVAL_CACHE_ENTRIES - 1),
++               key & (EVAL_CACHE_ENTRIES - 1));
++
++    eval_cache_store(same_slot, -score);
++    REQUIRE(eval_cache_probe(same_slot, &cached));
++    CHECK_EQ(cached, -score);
++    CHECK_FALSE(eval_cache_probe(key, &cached));
++
++    // An empty slot is all zeros, which would read as a score of 0 for any
++    // key whose upper bits are zero if the empty state were not refused.
++    eval_cache_clear();
++    CHECK_FALSE(eval_cache_probe(0, &cached));
++    CHECK_FALSE(eval_cache_probe(0x1234, &cached));
++  }
++
++  // INV-5: the mirror of a position is worth the same to the side to move, and
++  // the same placement with the other side to move is worth the negative of
++  // it, nothing in the evaluation being about whose turn it is while tempo
++  // ships at zero. The first pair cannot show a slot answering the wrong
++  // position, the numbers being equal; the second can, and is what gives the
++  // case teeth -- a key that ignored the side to move would hand the first
++  // position's score to the second.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "a position, its mirror and its other side to move each "
++                    "read back their own score")
++  {
++    size_t mirrored_pairs = 0;
++    size_t turned_pairs = 0;
++
++    for (const std::string& fen : all_test_fens()) {
++      eval_cache_clear();
++
++      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
++      const uint64_t key = game.board.hash;
++      const int full = evaluate(&game.board);
++      bool exact = false;
++      REQUIRE_EQ(lazy_wide(&game.board, &exact), full);
++
++      // The mirror, with the original already in the table.
++      REQUIRE(load_FEN(mirror_fen(fen), &mirrored));
++      REQUIRE_NE(mirrored.board.hash, key);
++      const int mirrored_full = evaluate(&mirrored.board);
++      REQUIRE_EQ(mirrored_full, full);
++      REQUIRE_EQ(lazy_wide(&mirrored.board, &exact), mirrored_full);
++      mirrored_pairs++;
++
++      // The other side to move, where the position is one a game can have.
++      std::vector<std::string> fields = split_string(fen);
++      REQUIRE(fields.size() >= 4);
++      fields[1] = (fields[1] == "w") ? "b" : "w";
++      fields[3] = "-";  // an en passant square belongs to the side it was
++      std::string turned;
++      for (const std::string& field : fields) {
++        turned += (turned.empty() ? "" : " ") + field;
++      }
++
++      if (load_FEN(turned, &mirrored) && position_is_reachable(&mirrored)) {
++        REQUIRE_NE(mirrored.board.hash, key);
++        const int turned_full = evaluate(&mirrored.board);
++        REQUIRE_EQ(lazy_wide(&mirrored.board, &exact), turned_full);
++        if (turned_full != full) { turned_pairs++; }
++      }
++
++      // And the original still reads back its own, both others stored since.
++      REQUIRE(load_FEN(fen, &game));
++      REQUIRE_EQ(lazy_wide(&game.board, &exact), full);
++    }
++
++    REQUIRE(mirrored_pairs > 100);
++
++    // Non-vacuous: pairs whose two scores differ, on which a wrong answer is
++    // visible.
++    REQUIRE(turned_pairs > 100);
++  }
++
++  TEST_CASE_FIXTURE(eval_fixture_t, "a clear empties the table")
++  {
++    std::vector<uint64_t> keys;
++    int cached = 0;
++    bool exact = false;
++
++    for (const std::string& fen : all_test_fens()) {
++      REQUIRE(load_FEN(fen, &game));
++      lazy_wide(&game.board, &exact);
++      keys.push_back(game.board.hash);
++    }
++
++    // Precondition: the table holds something, so the misses below are the
++    // clear's doing. The last key stored is in its slot whatever came before.
++    REQUIRE(eval_cache_probe(keys.back(), &cached));
++
++    eval_cache_clear();
++
++    size_t answered = 0;
++    for (const uint64_t key : keys) {
++      if (eval_cache_probe(key, &cached)) { answered++; }
++    }
++
++    REQUIRE_EQ(answered, 0);
++  }
++
++  // A test that resets the transposition table to search from a clean state
++  // relies on this, and so does `ucinewgame`: tt_reset() empties the calling
++  // thread's evaluation cache as well.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "a transposition table reset empties the table too")
++  {
++    REQUIRE(load_FEN(KIWIPETE_POS, &game));
++    bool exact = false;
++    int cached = 0;
++    lazy_wide(&game.board, &exact);
++    REQUIRE(eval_cache_probe(game.board.hash, &cached));
++
++    transposition_table_t table = {};
++    tt_resize(&table, 1);
++    tt_reset(&table);
++    tt_free(&table);
++
++    REQUIRE_FALSE(eval_cache_probe(game.board.hash, &cached));
++  }
++
++  // thread_local: what one thread stores, another does not see. datagen's
++  // workers rely on it to stay reproducible, each searching on a table only
++  // its own games have written.
++#ifdef CHESSO_TUNE
++  // LazyEvalMargin is the one parameter evaluate() reads -- the clamp every
++  // stored score was computed under -- so setting it empties this thread's
++  // table, the one `bench` and `test` search on. Another parameter does not:
++  // that is the precondition showing the slot would have answered.
++  TEST_CASE_FIXTURE(eval_fixture_t,
++                    "setting LazyEvalMargin empties the table, another "
++                    "parameter does not")
++  {
++    uci_init();
++
++    REQUIRE(load_FEN(KIWIPETE_POS, &game));
++    const uint64_t key = game.board.hash;
++    const int score = evaluate(&game.board);
++    int cached = 0;
++
++    eval_cache_store(key, score);
++    uci_process_line("setoption name RfpMargin value " +
++                     std::to_string(RFP_MARGIN));
++    REQUIRE(eval_cache_probe(key, &cached));
++
++    uci_process_line("setoption name LazyEvalMargin value " +
++                     std::to_string(LAZY_EVAL_MARGIN));
++    CHECK_FALSE(eval_cache_probe(key, &cached));
++
++    uci_shutdown();
++  }
++#endif
++
++  TEST_CASE_FIXTURE(eval_fixture_t, "each thread has a table of its own")
++  {
++    REQUIRE(load_FEN(KIWIPETE_POS, &game));
++    const uint64_t key = game.board.hash;
++    const int score = evaluate(&game.board);
++    int cached = 0;
++
++    eval_cache_store(key, score);
++    REQUIRE(eval_cache_probe(key, &cached));
++
++    bool seen_there = true;
++    bool own_there = false;
++    std::thread other([&]() {
++      int there = 0;
++      seen_there = eval_cache_probe(key, &there);
++      eval_cache_store(key ^ (uint64_t{1} << 63), score);
++      own_there = eval_cache_probe(key ^ (uint64_t{1} << 63), &there);
++    });
++    other.join();
++
++    CHECK_FALSE(seen_there);
++    CHECK(own_there);
++
++    // And what that thread stored did not land here: this slot still holds
++    // this thread's key.
++    REQUIRE(eval_cache_probe(key, &cached));
++    CHECK_EQ(cached, score);
++  }
++}
++
++
+ // S117 packs every mg/eg pair into one score_t. The evaluation is only
+ // behaviour-neutral if every half reads back exactly, and the half most likely
+ // not to is the high one whenever the low one is negative: the low half borrows
