@@ -13869,3 +13869,26 @@ Consequences: A fit header written before S117 says `const int` and fails to
               compile when pasted as-is. It fails loudly; DEV_MANUAL.md's
               tuner section says so, and `apply_fit.py` accepts it.
 
+
+## DEC-256  2026-10-06  The owner confirms DEC-252, DEC-254 and DEC-255 and answers DEC-245's question 3: the root fail-high reduction stays out
+Tags:         owner, search, aspiration, mate-guards, performance, sprt, harness, evaluation, tuner, dec-245, dec-252, dec-254, dec-255
+Context:      DEC-252 (S253's always-inline hooks at -0.24 %), DEC-254 (S256's
+              `cand-<HEAD>+<hex>` working-tree candidate) and DEC-255 (S117's
+              `constexpr int` weights) were taken by the coordinator under the
+              standing mandate, for the owner to confirm or overrule. DEC-245
+              parked owner question 3: adopt the root fail-high depth
+              reduction by re-specifying the three mate guards that assert
+              iteration d searches depth d.
+Decision:     By the owner, 2026-10-06. DEC-252, DEC-254 and DEC-255 stand
+              as written. Question 3 is answered no: the reduction stays out
+              and the mate guards keep asserting that iteration d searches
+              depth d. Its record stays in S115's step file and the three
+              variant diffs under `adocs/data/`.
+Rejected:     Re-specifying the guards to "a mate within k iterations" and
+              measuring the reduction: the guards catch this engine's
+              recurring bug (pruning that hides a mate), and the +2 to +5 Elo
+              is another engine's figure (DEC-019). Leaving the question
+              parked for a stronger search: the owner chose to close it.
+Consequences: No owner question is open. A later proposal to re-add the
+              reduction is a new decision that has to meet these guards as
+              they stand.
