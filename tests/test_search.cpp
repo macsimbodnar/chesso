@@ -8176,6 +8176,73 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // S269. Once late move pruning has set its flag, a quiet is skipped unless
+  // it gives check whatever futility, history pruning and quiet SEE say, so
+  // the three are not asked of it and the probe records late move pruning's
+  // own mark. Until S269 it recorded the first of the three that fired.
+  //
+  // The case above, turned round: the same plant at the bottom of the band,
+  // in the busy position, where the stage has already ended by the time the
+  // ordering reaches the move. The plant is the precondition that would make
+  // the old record appear, since history pruning selects the move at every
+  // move number this node can reach it at; and it sorts the move last of the
+  // node's moves, so it is reached after the flag if the flag is set at all.
+  //
+  // Mutation: LQ01_late_quiet_rules_asked -- the three rules are asked of a
+  // quiet past the count again. That is S269's parent and it searches the
+  // same tree node for node, so the bench signature cannot see it and this
+  // case is the only guard.
+  //
+  //   search: pruning and reduction guards
+  //    a quiet past late move pruning's count carries the late move mark
+  //   REQUIRE_EQ( rule_that_pruned(probe, planted), PRUNE_LATE_MOVE )
+  //   values: REQUIRE_EQ( 2, 4 )
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "a quiet past late move pruning's count carries the late move mark")
+  {
+    load(PRUNE_POS, 1);
+
+    REQUIRE(!is_check(&game));
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    // A pawn step, from the generator. It gives no check, asked of the engine's
+    // own make_move() and is_check(), so the exemption cannot be what decides
+    // it.
+    const move_t planted = quiet_move(&game, a2, a3);
+
+    REQUIRE(planted != 0);
+
+    REQUIRE(make_move(&game, planted));
+    const bool gives_check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE(!gives_check);
+
+    state.quiet_history[game.board.active_color][a2][a3] =
+        static_cast<int16_t>(-QUIET_HISTORY_MAX);
+
+    for (size_t n = 1; n <= legal_count; ++n) {
+      const int lmr_depth =
+          lmr_depth_of(PRUNE_DRIVE_DEPTH, static_cast<int>(n));
+
+      REQUIRE(lmr_depth < HP_MAX_LMRDEPTH);
+      REQUIRE(-QUIET_HISTORY_MAX < -HP_COEFF * lmr_depth);
+    }
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+                   0, false);
+
+    // The flag was set, and the move was skipped rather than searched.
+    REQUIRE(probe.skip_quiets_set);
+    REQUIRE(!probe_searched(probe, planted));
+
+    REQUIRE_EQ(rule_that_pruned(probe, planted), PRUNE_LATE_MOVE);
+  }
+
+
   // Mutation: P08_see_threshold_sign -- the quiet SEE threshold is passed
   // positive, so the rule asks whether the move *gains* the margin and skips
   // every quiet that does not.
@@ -8954,6 +9021,189 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(!see_ge(&game.board, hangs, -(SEE_CAPT_COEFF * lmr_depth)));
 
     REQUIRE_EQ(rule_that_pruned(probe, hangs), PRUNE_NONE);
+  }
+
+
+  // S269 stops asking the exchange evaluation of a quiet past late move
+  // pruning's count, and the two cases below hold that it stops at the quiets:
+  // a capture ordered past the count still meets both of S091's rules.
+  //
+  // The position is from tests/assets/test_jsons/castling.json. python-chess
+  // reports `is_valid() True`, `is_check() False`, 52 legal moves, 10
+  // captures, 4 promotions that take nothing, `gives_check() False` for Bxf7,
+  // and e8 and f8 as Black's attackers of f7. Bxf7 is the capture: score_move
+  // ranks it below every capture-promotion, and the engine's own see_ge(),
+  // asserted in each case, writes it off.
+  static const std::string LATE_CAPTURE_POS =
+      "rnb1qk1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 2 9";
+
+  // Driven at ply 2 with the slot two plies up planted above any static score,
+  // so the node is not improving and late move pruning's count is the
+  // undoubled one. At ply 1 the count doubles, and this node does not search
+  // enough captures to reach it.
+  static constexpr size_t LATE_CAPTURE_PLY = 2;
+  static constexpr int NOT_IMPROVING_PLANT = 20000;
+
+  // An ALL node with no table move that is not improving: the adjustment both
+  // cases read the reduction table with, in plies. A function, because both
+  // terms are settable variables in the tune build (DEC-118).
+  static int late_capture_adjustment()
+  { return LMR_NO_TT_MOVE + LMR_NOT_IMPROVING; }
+
+  // The drive depths. 3 for the skip, where the reduced depth of a late move
+  // is shallow enough that the capture margin writes Bxf7 off. 10 for the
+  // extra ply, the first depth where the margin clears it with room: at 9 it
+  // sits on the margin exactly. Both are checked against the engine's own
+  // tables in the cases, never trusted from here.
+  static constexpr int LATE_CAPTURE_SKIP_DEPTH = 3;
+  static constexpr int LATE_CAPTURE_REDUCE_DEPTH = 10;
+
+  // The move number at which late move pruning sets its flag at such a node:
+  // the first one past the first legal move whose reduced depth is inside the
+  // rule's cap and whose count clears its threshold. src/search.cpp's own test,
+  // read through the probes. Every move number up to the one a move is
+  // searched at is visited, so a move at this number or later is reached with
+  // the flag set.
+  static int lmp_flag_move_number(int depth, bool improving,
+                                  int node_adjustment)
+  {
+    for (int move_number = 2; move_number <= MAX_MOVES; ++move_number) {
+      const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
+
+      if (lmr_depth < LMP_MAX_LMRDEPTH &&
+          100 * move_number >
+              search_lmp_threshold_probe(lmr_depth, improving)) {
+        return move_number;
+      }
+    }
+
+    return MAX_MOVES + 1;
+  }
+
+
+  // Load the position at ply 2, not improving, and return Bxf7, checked to be
+  // a capture the exchange evaluation writes off that gives no check.
+  static move_t load_late_capture(guard_fixture_t & fixture)
+  {
+    fixture.load(LATE_CAPTURE_POS, static_cast<int>(LATE_CAPTURE_PLY));
+    fixture.state.static_evals[LATE_CAPTURE_PLY - 2] = NOT_IMPROVING_PLANT;
+
+    REQUIRE(!is_check(&game));
+
+    const move_t late = capture_move(&game, c4, f7);
+
+    REQUIRE(late != 0);
+    REQUIRE(!see_ge(&game.board, late, 0));
+
+    REQUIRE(make_move(&game, late));
+    const bool gives_check = is_check(&game);
+    unmake_move(&game);
+
+    REQUIRE(!gives_check);
+
+    return late;
+  }
+
+
+  // Mutation: LQ03_late_skip_reaches_capture_rule -- the capture rule is not
+  // asked once late move pruning has set its flag either, so a capture past
+  // the count that loses more than the margin is searched.
+  //
+  //   search: pruning and reduction guards
+  //    a capture past late move pruning's count is still skipped by the
+  //    capture rule
+  //   REQUIRE_EQ( rule_that_pruned(probe, late), PRUNE_SEE_CAPTURE )
+  //   values: REQUIRE_EQ( 0, 5 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a capture past late move pruning's count is still skipped "
+                    "by the capture rule")
+  {
+    const move_t late = load_late_capture(*this);
+    const int depth = LATE_CAPTURE_SKIP_DEPTH;
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, LATE_CAPTURE_PLY, &game,
+                   &state, 0, false);
+
+    REQUIRE(!improving_at(&state, LATE_CAPTURE_PLY, false));
+    REQUIRE(probe.skip_quiets_set);
+
+    // The precondition: Bxf7 was reached with the flag set. A pruned move has
+    // no index, so its move number is bounded from below by the captures
+    // searched ahead of it -- every capture score_move ranks above it is
+    // picked before it, and a move searched counts once. That bound is at or
+    // past the flag's number.
+    const int late_score =
+        score_move(&game, &state, late, 0, LATE_CAPTURE_PLY, 0);
+
+    move_t buffer[MAX_MOVES];
+    const size_t legal_count = legal_moves(&game, buffer);
+    int ahead = 0;
+
+    for (size_t i = 0; i < legal_count; ++i) {
+      if (!MOVE_CAPTURE(buffer[i]) || buffer[i] == late) { continue; }
+
+      if (score_move(&game, &state, buffer[i], 0, LATE_CAPTURE_PLY, 0) >
+              late_score &&
+          probe_searched(probe, buffer[i])) {
+        ahead++;
+      }
+    }
+
+    REQUIRE(ahead + 1 >=
+            lmp_flag_move_number(depth, false, late_capture_adjustment()));
+
+    // And the margin writes it off at that bound. The reduced depth only falls
+    // as the move number rises and the margin with it, so it does at the
+    // move's true number as well.
+    const int lmr_depth =
+        lmr_depth_of(depth, ahead + 1, late_capture_adjustment());
+
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(!see_ge(&game.board, late, -(SEE_CAPT_COEFF * lmr_depth)));
+
+    REQUIRE_EQ(rule_that_pruned(probe, late), PRUNE_SEE_CAPTURE);
+  }
+
+
+  // Mutation: LQ02_late_skip_reaches_extra_ply -- the exchange test behind the
+  // extra ply is skipped for every move past late move pruning's count, so a
+  // capture there that loses material is searched without its extra ply.
+  //
+  //   search: pruning and reduction guards
+  //    a capture past late move pruning's count still takes the extra ply
+  //   REQUIRE_EQ( probe.reduction[k], SEE_LMR_EXTRA )
+  //   values: REQUIRE_EQ( 0, 1 )
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a capture past late move pruning's count still takes the "
+                    "extra ply")
+  {
+    const move_t late = load_late_capture(*this);
+    const int depth = LATE_CAPTURE_REDUCE_DEPTH;
+
+    negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, LATE_CAPTURE_PLY, &game,
+                   &state, 0, false);
+
+    REQUIRE(!improving_at(&state, LATE_CAPTURE_PLY, false));
+    REQUIRE(probe.skip_quiets_set);
+
+    // The precondition: searched, at or past the flag's number, past the
+    // reduction's own first three moves, and clearing the capture margin at
+    // its reduced depth, so the capture rule let it through and the extra ply
+    // is the only reduction a capture can take.
+    const int k = searched_index(probe, late);
+
+    REQUIRE(k >= 3);
+    REQUIRE(k + 1 >=
+            lmp_flag_move_number(depth, false, late_capture_adjustment()));
+
+    const int lmr_depth = lmr_depth_of(depth, k + 1, late_capture_adjustment());
+
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(see_ge(&game.board, late, -(SEE_CAPT_COEFF * lmr_depth)));
+    REQUIRE(SEE_LMR_EXTRA > 0);
+    REQUIRE(probe.child_depth[k] - 1 >= SEE_LMR_EXTRA);
+
+    REQUIRE_EQ(probe.reduction[k], SEE_LMR_EXTRA);
   }
 
 

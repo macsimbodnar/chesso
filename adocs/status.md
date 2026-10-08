@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-08, by hand.
 
+## 2026-10-08: S269 done -- a quiet past late move pruning's count skips the dead rule tests
+
+Once `skip_quiets` is set, a quiet is not asked futility, history pruning,
+quiet SEE or S091's `see_ge(0)`; re-derived on S268's tree, no skipped value
+is read. Node-identical (INV-6), bench 4081329. On the workstation: -2.0 %
+instructions, -2.2 to -2.8 % cycles, **+2.09 % wall** (CI +1.91 .. +2.27,
+24/24; A/A floor 0.25 %). Kept under rule 5's exception (hyperfine, tight
+sigma). LQ02 exposed a gap: no case drove a capture past the count; two
+capture cases now do. R02's anchor in `tools/mutants/S091_capture_see.py`
+moved with the line; 20/20 killed. Fast check: nothing. Second tier: Debug
+self-play 8 games, 0 `Assertion`; `gate_extra` 5 stages green in 870 s on
+2026-10-08 (S269's tree). S268 and S269 together: about +9.4 % speed.
+**Next:** S270 (LTO). No owner question is open.
+
 ## 2026-10-08: S268 done -- a pruned move is no longer made to ask whether it gives check
 
 `move_gives_check()` (`src/bitboard.cpp`) reads the gives-check exemption off

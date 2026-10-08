@@ -64,9 +64,11 @@ m("R01_extra_reduction_gives_check", S, "search/reduction",
    '                            !is_in_check && !is_check_move();'),
   origin="S091")
 
+# The anchor is the call alone since S269, whose late-quiet conjunct took the
+# line it shared with `!MOVE_PROMOTED`; the mutation is the same sign flip.
 m("R02_extra_reduction_sign", S, "search/reduction",
   'the extra ply reads the exchange evaluation the wrong way round, so what '
   'it reduces is the moves that win material',
-  ('        !MOVE_PROMOTED(moves[i]) && !see_ge(&game->board, moves[i], 0);',
-   '        !MOVE_PROMOTED(moves[i]) && see_ge(&game->board, moves[i], 0);'),
+  ('        !see_ge(&game->board, moves[i], 0);',
+   '        see_ge(&game->board, moves[i], 0);'),
   origin="S091")

@@ -169,7 +169,7 @@ Results for the prototype:
 
 ### 2026-10-08_performance-F02 — medium — after late move pruning fires, every remaining quiet still pays for futility, history pruning, quiet SEE and S091's see_ge(0), and none of their answers can change what happens to it
 
-Status: planned — S269 (DEC-263), Open entry 2.
+Status: closed — S269, 2026-10-08: a quiet past late move pruning's count is not asked the three rules nor S091's exchange test, node-identical, +2.09 % (CI +1.91 .. +2.27) on the workstation. Previously: planned — S269 (DEC-263), Open entry 2.
 
 **Evidence.**
 

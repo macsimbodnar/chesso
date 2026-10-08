@@ -2498,9 +2498,19 @@ static int negamax_at(int alpha0,
     // to ask, on the same tree node for node: -11.4 % instructions and -7.1 %
     // cycles on `bench 16`, and 7.2 % less time over 300 positions at depth 11
     // (24 interleaved pairs, CI 7.0 to 7.3 %, an A/A reading 0.1 %).
+    //
+    // Not asked of a quiet once late move pruning has set its flag, S269. Such
+    // a quiet is skipped unless it gives check whatever the three say: a rule
+    // that selects it and late move pruning's own mark below reach the same
+    // exemption and the same skip, and a quiet that gives check is searched
+    // under either. Their answers decide nothing there, and the quiet SEE
+    // rule's exchange evaluation was the largest single caller of see_ge() on
+    // the bench (2026-10-08_performance-F02). Under PROBING such a quiet now
+    // records PRUNE_LATE_MOVE where it recorded the first of the three that
+    // fired.
     prune_rule_t prune_rule = PRUNE_NONE;
 
-    if (may_prune && is_quiet) {
+    if (may_prune && is_quiet && !skip_quiets) {
       const int move_number = legal_moves_counter + 1;
       const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
 
@@ -2589,15 +2599,23 @@ static int negamax_at(int alpha0,
     // which is late move reduction's own: no node under depth 3 pays it, no
     // move inside the first three of a node's order pays it, and a move
     // already skipped above pays it never.
+    //
+    // Nor does a quiet past late move pruning's count, S269. Its one reader on
+    // a quiet is the extra ply below, behind `may_reduce`. Such a quiet is
+    // skipped unless it gives check, and a quiet that gives check fails
+    // `may_reduce`, so the answer would never be read. A capture past the
+    // count still asks: late move pruning ends the quiets and nothing else.
     const bool see_loses_material =
         SEE_LMR_EXTRA > 0 && prune_rule == PRUNE_NONE && ply > 0 &&
         depth >= 3 && legal_moves_counter + 1 > 3 && !is_in_check &&
-        !MOVE_PROMOTED(moves[i]) && !see_ge(&game->board, moves[i], 0);
+        !MOVE_PROMOTED(moves[i]) && !(skip_quiets && is_quiet) &&
+        !see_ge(&game->board, moves[i], 0);
 
     // Late move pruning's own skip, here rather than at the generation stage
     // so that the exemption below can bind. A quiet past the count is searched
     // only if it gives check. After `see_loses_material`, which reads
-    // `prune_rule` as the other rules left it.
+    // `prune_rule` as the other rules left it. Since S269 those rules leave
+    // such a quiet unmarked, so this is the mark it carries.
     if (prune_rule == PRUNE_NONE && skip_quiets && is_quiet) {
       prune_rule = PRUNE_LATE_MOVE;
     }
