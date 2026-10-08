@@ -14113,3 +14113,24 @@ Rejected:     Fixing first through a filler step and then committing --
               uncommitted.
 Consequences: The exception covers these two commits and nothing else; the
               next commit on the MacBook should be S260's.
+
+## DEC-262  2026-10-08  On the MacBook a commit needs a compiling build; the 60 s test limit is not fixed
+Tags:         workflow, commits, gate, macos, dec-140, dec-258, dec-261
+Context:      With S260's fix and coreutils installed (2026-10-08),
+              `test_fastchess_script` runs to its end here instead of refusing
+              at the missing `timeout`, and takes 59.2 to 59.3 s alone against
+              its 60 s ctest limit (from S035). `tools/gate.sh` failed on it once
+              with a timeout; two direct runs of the TESTS rule's gate passed
+              43/43 in both builds. The cost is spread over ~29 sandboxed
+              `fastchess.sh` runs, mostly macOS process start-up.
+Decision:     By the owner, 2026-10-08: "Don't bother to fix anything. If it
+              builds it's fine here. Just commit once it compiles." S260 lands
+              on a compiling build in both trees; no step raises the limit or
+              speeds the test up. The MacBook does agent and document work
+              (DEC-258 (2)); the workstation's gate stays the green one.
+Rejected:     A filler step raising the limit to 180 s; a filler step cutting
+              the test's per-case cost; holding S260 until either landed.
+Consequences: `test_fastchess_script` may time out on the MacBook's gate; that
+              alone does not block a commit made there, and the commit body
+              says so. The coordinator reads the ruling that narrowly: any
+              other failing test still blocks. The owner may widen it.

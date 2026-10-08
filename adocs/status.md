@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-08, by hand.
 
+## 2026-10-08: S260 done -- the MacBook's gate is green again
+
+`ORDINARY_BETA` in `tests/test_search.cpp` is `[[maybe_unused]]` with a
+one-line reason; the five comments that cite it are unchanged. Red first was
+recorded; `--clean-first` rebuilds of both trees print no second
+Apple-clang-only warning. The gate then stopped at `test_fastchess_script`
+(42/43): `fastchess.sh` needs GNU `timeout` (S212) and the MacBook had none.
+The owner installed coreutils 9.12 by hand; the gate is 43/43 in both builds
+and clang-format clean. Bench 4081329, the parent's. The fast check found
+nothing in the code. `tools/gate.sh` then timed out `test_fastchess_script`
+once: it takes 59.2 to 59.3 s here against a 60 s limit. The owner ruled a
+compiling build is the bar on the MacBook and nothing is fixed (DEC-262).
+`.moltke.local.md`'s "which scripts run here" line is updated
+(machine-local). **Next:** S119 on the workstation, with S259, S134,
+S262, S263 and S264 as the agent lane beside it. No owner question is open.
+
 ## 2026-10-08: the plan to 3000 rewritten (DEC-258 to DEC-261)
 
 The owner had the coordinator propose a plan from scratch (2026-10-07), had
@@ -39,9 +55,7 @@ answered twelve questions; the new order is `plan.md`'s Open list.
 
 **Gate red on the MacBook**: Apple clang fails `tests/test_search.cpp` on an
 unused constant. The owner let the two rewrite commits land red (DEC-261);
-S260 is Open entry 1 and fixes it. Documentation checks ran green.
-**Next:** S260, then S119 on the workstation, with S259, S134, S262, S263
-and S264 as the agent lane beside it. No owner question is open.
+S260 fixed it the same day (below).
 
 ## 2026-10-06: S120 done -- the evaluation cache retired without an SPRT; owner questions closed
 

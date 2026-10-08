@@ -6052,7 +6052,9 @@ TEST_SUITE("search: pruning and reduction guards")
   // (DEC-233's second repair), and kept it when the gate left on its reading:
   // a beta at the static score is an ordinary window, so each premise holds
   // without the gate as well, and every assertion is the one it was.
-  static constexpr int ORDINARY_BETA = 100;
+  //
+  // No code reads it; it stays because five later comments cite it (S260).
+  [[maybe_unused]] static constexpr int ORDINARY_BETA = 100;
 
   // A well-formed previous move, which is all the null-move guard reads of it
   // -- `prev_move != 0` -- and all score_move needs to index counter_moves
