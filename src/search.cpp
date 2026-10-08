@@ -1229,13 +1229,12 @@ int quiescence(int alpha,
 
       if (futility_value <= alpha) {
         // A capture that gives check is exempt: it is forcing, and a stand
-        // pat says nothing about a line the opponent has no choice in. There
-        // is no pre-make predicate for it, so the capture is made and asked
-        // -- only here, where the test would otherwise skip it. One that is
-        // not legal is dropped exactly as the search loop would drop it.
-        if (!make_move(game, moves[i])) { continue; }
-        const bool gives_check = is_check(game);
-        unmake_move(game);
+        // pat says nothing about a line the opponent has no choice in. Asked
+        // of this board without making the capture (S268), and only here,
+        // where the test would otherwise skip it. Until S268 the capture was
+        // made and asked, and one make_move() refused was dropped unfolded;
+        // it refuses only on a full history stack, which no node reaches.
+        const bool gives_check = move_gives_check(&game->board, moves[i]);
 
         if (!gives_check) {
           if (futility_value > futility_best) {
@@ -2429,12 +2428,12 @@ static int negamax_at(int alpha0,
     //
     // The shape is the first of the two that decision names: the flag is still
     // set here, by a count read before any move of this iteration is made, and
-    // the skip it causes happens **after `make_move`**, where `is_check_move`
-    // exists. The price is that the quiet stage can no longer be left
-    // ungenerated -- a stage that is never generated cannot be searched for the
-    // checking move inside it -- so what the rule saves is the subtrees and not
-    // the move list, and every quiet it skips costs one make, one unmake and
-    // one attack scan.
+    // the skip it causes is applied to each quiet in turn, where the
+    // gives-check exemption can be asked of it. The price is that the quiet
+    // stage can no longer be left ungenerated -- a stage that is never
+    // generated cannot be searched for the checking move inside it -- so what
+    // the rule saves is the subtrees and not the move list, and every quiet it
+    // skips costs one gives-check test, asked before `make_move` since S268.
     if (!skip_quiets && may_prune) {
       const int move_number = legal_moves_counter + 1;
       const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
@@ -2493,10 +2492,12 @@ static int negamax_at(int alpha0,
     // The three per-move rules. Their inputs are all properties of **this**
     // position -- the node's own static score, the history table and the
     // exchange evaluation -- so the decision is taken before make_move, where
-    // the board is still this one, and applied after it, where `is_check_move`
-    // exists and the gives-check exemption can bind. Lynx measured moving such
-    // rules before make at -0.6 +/-2.6, so the wasted make costs nothing worth
-    // chasing and the subtree saved dominates it either way.
+    // the board is still this one, and applied there too since S268, by
+    // move_gives_check() reading the gives-check exemption off this board.
+    // Measured on the workstation against making and unmaking each such move
+    // to ask, on the same tree node for node: -11.4 % instructions and -7.1 %
+    // cycles on `bench 16`, and 7.2 % less time over 300 positions at depth 11
+    // (24 interleaved pairs, CI 7.0 to 7.3 %, an A/A reading 0.1 %).
     prune_rule_t prune_rule = PRUNE_NONE;
 
     if (may_prune && is_quiet) {
@@ -2593,6 +2594,43 @@ static int negamax_at(int alpha0,
         depth >= 3 && legal_moves_counter + 1 > 3 && !is_in_check &&
         !MOVE_PROMOTED(moves[i]) && !see_ge(&game->board, moves[i], 0);
 
+    // Late move pruning's own skip, here rather than at the generation stage
+    // so that the exemption below can bind. A quiet past the count is searched
+    // only if it gives check. After `see_loses_material`, which reads
+    // `prune_rule` as the other rules left it.
+    if (prune_rule == PRUNE_NONE && skip_quiets && is_quiet) {
+      prune_rule = PRUNE_LATE_MOVE;
+    }
+
+    // The gives-check exemption. A checking move is forcing, and none of the
+    // rules' inputs -- a static score, a history count, an exchange evaluation,
+    // a move number -- says anything about a line the opponent has no choice
+    // in. It binds every rule of the block since the mate case above forced it
+    // onto late move pruning as well (DEC-180), and S091's capture rule with
+    // them (DEC-205).
+    //
+    // Asked of this board, before make_move, since S268: until then every move
+    // a rule had selected was made and unmade only to ask, 57 % of this loop's
+    // makes on the bench (2026-10-08_performance-F01). A move that survives is
+    // known to give check, so the answer seeds the child's memo below and is
+    // never paid for twice. make_move() refuses a move only on a full history
+    // stack, which no search node reaches (POSITION_MAX_PLIES), so a move
+    // skipped here is one it would have made.
+    //
+    // Not in the probed node: PROBING keeps the exemption after make_move,
+    // below, where its record of pruned moves has always been taken. The two
+    // decide alike because move_gives_check() answers what make_move() and
+    // is_check() answer on every legal move (tests/test_movegen.cpp).
+    int child_check = -1;
+
+    if constexpr (!PROBING) {
+      if (prune_rule != PRUNE_NONE) {
+        if (!move_gives_check(&game->board, moves[i])) { continue; }
+
+        child_check = 1;
+      }
+    }
+
     // S132, the first half of the node-fraction time manager: what this root
     // move is about to cost. Read here, immediately before the move is made,
     // because everything above is decided on the parent's board and counts no
@@ -2619,17 +2657,20 @@ static int negamax_at(int alpha0,
     // refutation its own reductions call forcing. S107.
     //
     // is_check() is an attack scan, so it is paid only where a consumer's own
-    // prefix holds, and at most once, because a pruned quiet that gives check
-    // reaches both. S020 counted the scans this skips at 25 % of the bench's
-    // non-capture moves. Never on a capture: hardcoded false there, and S091's
-    // `capture_gives_check` below asks for captures. The board stays the
-    // child's from make_move to the reduction guard, so the cached answer is
-    // never read against another position.
-    int child_check = -1;
-    const auto is_check_move = [&]() -> bool {
-      if (is_capture) { return false; }
+    // prefix holds, and at most once, because a move can reach more than one
+    // consumer. S020 counted the scans this skips at 25 % of the bench's
+    // non-capture moves. The memo is the one the exemption above seeds, and
+    // the board stays the child's from make_move to the reduction guard, so the
+    // cached answer is never read against another position.
+    const auto child_gives_check = [&]() -> bool {
       if (child_check < 0) { child_check = is_check(game) ? 1 : 0; }
       return child_check != 0;
+    };
+
+    // Never on a capture: hardcoded false there, and S091's
+    // `capture_gives_check` below asks for captures.
+    const auto is_check_move = [&]() -> bool {
+      return !is_capture && child_gives_check();
     };
 
     // S091's two rules do want it on a capture, and this is where they ask.
@@ -2642,22 +2683,12 @@ static int negamax_at(int alpha0,
     // the trap S107 left the comment against.
     const bool capture_gives_check =
         is_capture && (prune_rule != PRUNE_NONE || see_loses_material) &&
-        is_check(game);
+        child_gives_check();
 
-    // Late move pruning's own skip, here rather than at the generation stage
-    // so that the exemption above it can bind. A quiet past the count is
-    // searched only if it gives check.
-    if (prune_rule == PRUNE_NONE && skip_quiets && is_quiet) {
-      prune_rule = PRUNE_LATE_MOVE;
-    }
-
-    // The gives-check exemption. A checking quiet is forcing, and none of the
-    // four inputs -- a static score, a history count, an exchange evaluation,
-    // a move number -- says anything about a line the opponent has no choice
-    // in. It binds every rule of the block since the mate case above forced it
-    // onto late move pruning as well (DEC-180), and S091's capture rule with
-    // them -- through `capture_gives_check`, because `is_check_move` is
-    // hardcoded false on a capture.
+    // The probed node's gives-check exemption, after make_move, through
+    // `capture_gives_check` on a capture because `is_check_move` is hardcoded
+    // false there. In the engine's own node every move that reaches this line
+    // with a rule attached was found to give check above, so it never fires.
     if (prune_rule != PRUNE_NONE && !is_check_move() && !capture_gives_check) {
       if constexpr (PROBING) {
         if (probe != nullptr && probe->pruned_count < MAX_MOVES) {

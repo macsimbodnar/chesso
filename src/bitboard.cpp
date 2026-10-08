@@ -1680,6 +1680,79 @@ bool is_check(const game_t* game)
 }
 
 
+// S268. is_check()'s own scan, asked before the move is made: from the enemy
+// king's square, against our pieces and the occupancy as they stand once
+// `move` is on the board. The mover leaves `from` and arrives on `to` as what
+// it becomes, so a promotion attacks as its new piece; the en-passant victim
+// leaves its square, a castling rook goes from its corner to its new square.
+//
+// That one picture answers every kind of check a legal move can give with no
+// case of its own: a direct check by the piece that moved or by the castling
+// rook, and a discovered check by a slider of ours the move uncovered -- the
+// king's own move included, and the en-passant capture whose victim was the
+// piece blocking the line, which a test of `from` alone would miss. So no move
+// kind is sent back to make_move(); the agreement test in
+// tests/test_movegen.cpp holds it to make_move() + is_check() on every move
+// kind. No king term, as is_attacked() has: a legal move never leaves the
+// kings adjacent. A captured piece needs nothing: it attacks nothing of ours
+// that matters, and its square stays occupied by the mover.
+bool move_gives_check(const board_t* board, move_t move)
+{
+  assert(board != nullptr);
+
+  const bb_tables_t* tables = game_tables();
+  const color_t us = board->active_color;
+  const index_t from = MOVE_FROM(move);
+  const index_t to = MOVE_TO(move);
+  const bb_t from_bb = BB_1 << from;
+  const bb_t to_bb = BB_1 << to;
+
+  const bb_t enemy_king = board->bitboards[(us == WHITE) ? B_KING : W_KING];
+  assert(enemy_king != BB_0);
+  const index_t king_square = get_lsb_index(enemy_king);
+
+  const int base = (us == WHITE) ? W_PAWN : B_PAWN;
+  bb_t mine[6];
+  for (int type = 0; type < 6; ++type) {
+    mine[type] = board->bitboards[base + type];
+  }
+
+  bb_t occupancy = (board->occupancies[BOTH] & ~from_bb) | to_bb;
+
+  // TO_KNIGHT..TO_QUEEN are the piece offsets from the pawn, which the
+  // encoding test "promotion_t maps onto the white piece values" holds.
+  const int moved = MOVE_PIECE(move) - base;
+  const promotion_t promoted_to = MOVE_PROMOTED(move);
+  mine[moved] ^= from_bb;
+  mine[(promoted_to != TO_NONE) ? static_cast<int>(promoted_to) : moved] |=
+      to_bb;
+
+  if (MOVE_EN_PASSANT(move)) {
+    const index_t victim =
+        static_cast<index_t>((us == WHITE) ? (to + 8) : (to - 8));
+    occupancy ^= BB_1 << victim;
+  }
+
+  if (MOVE_CASTLING(move)) {
+    const castling_rook_t rook = castling_rook(to);
+
+    if (rook.piece != EMPTY) {
+      const bb_t rook_bb = (BB_1 << rook.from) | (BB_1 << rook.to);
+      mine[W_ROOK - W_PAWN] ^= rook_bb;
+      occupancy ^= rook_bb;
+    }
+  }
+
+  const bb_t diagonal = mine[W_BISHOP - W_PAWN] | mine[W_QUEEN - W_PAWN];
+  const bb_t orthogonal = mine[W_ROOK - W_PAWN] | mine[W_QUEEN - W_PAWN];
+
+  return (tables->pawn_attacks[!us][king_square] & mine[W_PAWN - W_PAWN]) ||
+         (tables->knight_attacks[king_square] & mine[W_KNIGHT - W_PAWN]) ||
+         (get_bishop_attacks(tables, king_square, occupancy) & diagonal) ||
+         (get_rook_attacks(tables, king_square, occupancy) & orthogonal);
+}
+
+
 bool is_capturing_king(const board_t* board, move_t move)
 {
   assert(board != nullptr);

@@ -7,6 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-08, by hand.
 
+## 2026-10-08: S268 done -- a pruned move is no longer made to ask whether it gives check
+
+`move_gives_check()` (`src/bitboard.cpp`) reads the gives-check exemption off
+the parent's board, every move kind included, no fallback. The quiet rules,
+S091's capture rule and quiescence's futile captures skip a selected move
+unmade; the probed node keeps its post-make record. Node-identical (INV-6),
+bench 4081329. On the workstation: -11.4 % instructions, -7.1 % cycles on
+bench 16, **+7.16 % wall** (CI +6.98 .. +7.33, 24/24 pairs; A/A floor 0.2 %;
+governor powersave). Kept. GC01 to GC05 killed with six existing rows.
+`perf` is not installed here, so `tools/perf_counters` (`a2fe99a`) reads
+user-space instructions and cycles through `perf_event_open`; S269 and S270
+reuse it. Fast check: nothing. Second tier: Debug self-play 8 games, 0
+`Assertion`; `gate_extra` 5 stages green in 893 s on 2026-10-08 (S268's
+tree). specs.md's two search-row sentences updated. **Next:** S269. No owner
+question is open.
+
 ## 2026-10-08: performance audit -- four steps and a validation match at the top
 
 `/moltke:audit` at `29348c5` (`adocs/audit/2026-10-08_performance.md`): one

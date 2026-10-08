@@ -49,7 +49,7 @@ instruction counts repeated to the second decimal in every round.
 
 ### 2026-10-08_performance-F01 — high — every pruned move is made and unmade only to ask whether it gives check; this is 57 % of the main search's make_move calls and about 5 to 7 % of all cycles
 
-Status: planned — S268 (DEC-263), Open entry 1.
+Status: closed — S268, 2026-10-08: `move_gives_check()` asks before `make_move` at all three sites, node-identical, +7.16 % (CI +6.98 .. +7.33) on the workstation. Previously: planned — S268 (DEC-263), Open entry 1.
 
 **Evidence.**
 

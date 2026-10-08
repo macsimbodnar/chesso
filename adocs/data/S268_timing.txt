@@ -1,0 +1,79 @@
+# S268 timings, 2026-10-08, the workstation (i7-8700K, g++ 13.3, Release, governor powersave -- recorded, not set, DEC-195).
+# base = e383987 Release (a throwaway worktree, removed after); cand = the S268 tree, byte-identical (cmp) to the binary committed.
+# Counters: build/tools/perf_counters (S268 Part 0), user space, the engine's process tree only. Each pair runs both
+# binaries once, order swapped every pair; ratio cand/base per pair, geomean, 95 % CI from the paired t.
+#   bench16 = `chesso bench 16` (8 positions, 10214429 nodes); pos11 = S020's 300 stratified positions
+#   (adocs/data/S018_raw.tsv, offsets 0/1/2) at go depth 11 through one engine process, 26512806 nodes.
+# hyperfine: S020/S253's shape (one `hyperfine -N -r 1` per pair over both binaries, pos11).
+# Scripts: .tuning/coord/S268/{counters.sh,counter_pairs.py,workload.py,timing.sh,pairs.py,run_all.sh} (S020's, repointed).
+# Machine before the run: loadavg 0.54 0.69 0.79; top by lifetime %CPU firefox (two processes), cosmic-term, claude,
+# cosmic-comp, none busy at the time. bench_movegen -r 40 on cand: resolution 0.3 % perft, 0.0 % generate, 0.8 % captures.
+
+## Part 0 -- perf_counters sanity, one binary run 10 times (not interleaved, not paired)
+aa_bench.txt: n 10
+  instructions median 8.2393e+09  min 8.2393e+09  max 8.2393e+09  range 0.0000 %  sd 0.0000 %  range_abs 97
+  cycles       median 4.20371e+09  min 4.17679e+09  max 4.26261e+09  range 2.0415 %  sd 0.5698 %  range_abs 8.58186e+07
+  wall_ms      median 961.843  min 956.343  max 975.745  range 2.0172 %  sd 0.6997 %  range_abs 19.402
+aa_bench16.txt: n 10
+  instructions median 2.19981e+10  min 2.19981e+10  max 2.19981e+10  range 0.0000 %  sd 0.0000 %  range_abs 153
+  cycles       median 1.15757e+10  min 1.15086e+10  max 1.16312e+10  range 1.0591 %  sd 0.3321 %  range_abs 1.22598e+08
+  wall_ms      median 2613.87  min 2602.04  max 2641.8  range 1.5214 %  sd 0.4648 %  range_abs 39.768
+
+## c_aa_bench16
+loadavg before: 0.54 0.69 0.79 2/1332 23529
+pairs 12
+instructions base median 2.19981e+10  cand median 2.19981e+10  ratio geomean 1.00000  CI 1.00000 .. 1.00000  change +0.000 %  CI -0.000 .. +0.000 %  per-pair sd 0.000 %  t 1.02  cand lower 6/12
+cycles       base median 1.15515e+10  cand median 1.15413e+10  ratio geomean 0.99948  CI 0.99624 .. 1.00273  change -0.052 %  CI -0.376 .. +0.273 %  per-pair sd 0.511 %  t -0.35  cand lower 7/12
+wall_ms      base median 2622.48  cand median 2628.15  ratio geomean 1.00069  CI 0.99453 .. 1.00689  change +0.069 %  CI -0.547 .. +0.689 %  per-pair sd 0.973 %  t 0.25  cand lower 5/12
+base nps median 3927629  min 3879690  max 3967357  nodes ['10214429']
+cand nps median 3919112  min 3893815  max 3965151  nodes ['10214429']
+loadavg after: 0.98 0.79 0.82 1/1372 23934
+
+## c_bench16
+loadavg before: 0.98 0.79 0.82 1/1372 23939
+pairs 16
+instructions base median 2.19981e+10  cand median 1.94935e+10  ratio geomean 0.88615  CI 0.88615 .. 0.88615  change -11.385 %  CI -11.385 .. -11.385 %  per-pair sd 0.000 %  t -103751894.73  cand lower 16/16
+cycles       base median 1.15233e+10  cand median 1.07042e+10  ratio geomean 0.92928  CI 0.92768 .. 0.93088  change -7.072 %  CI -7.232 .. -6.912 %  per-pair sd 0.323 %  t -90.89  cand lower 16/16
+wall_ms      base median 2619.45  cand median 2430.52  ratio geomean 0.92844  CI 0.92599 .. 0.93089  change -7.156 %  CI -7.401 .. -6.911 %  per-pair sd 0.496 %  t -59.90  cand lower 16/16
+base nps median 3932460  min 3895354  max 3970709  nodes ['10214429']
+cand nps median 4240360  min 4199283  max 4272323  nodes ['10214429']
+loadavg after: 1.04 0.86 0.84 1/1368 24304
+
+## c_aa_pos11
+loadavg before: 1.04 0.86 0.84 1/1368 24309
+pairs 8
+instructions base median 5.45111e+10  cand median 5.45111e+10  ratio geomean 1.00000  CI 1.00000 .. 1.00000  change +0.000 %  CI -0.000 .. +0.000 %  per-pair sd 0.000 %  t 1.40  cand lower 2/8
+cycles       base median 2.90776e+10  cand median 2.90873e+10  ratio geomean 0.99992  CI 0.99824 .. 1.00160  change -0.008 %  CI -0.176 .. +0.160 %  per-pair sd 0.201 %  t -0.12  cand lower 4/8
+wall_ms      base median 6737.33  cand median 6732.27  ratio geomean 1.00086  CI 0.99685 .. 1.00488  change +0.086 %  CI -0.315 .. +0.488 %  per-pair sd 0.480 %  t 0.51  cand lower 4/8
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 1.07 0.92 0.87 1/1367 29590
+
+## c_pos11
+loadavg before: 1.07 0.92 0.87 1/1367 29595
+pairs 12
+instructions base median 5.45111e+10  cand median 4.82153e+10  ratio geomean 0.88451  CI 0.88451 .. 0.88451  change -11.549 %  CI -11.549 .. -11.549 %  per-pair sd 0.000 %  t -8762315.41  cand lower 12/12
+cycles       base median 2.89419e+10  cand median 2.69658e+10  ratio geomean 0.93340  CI 0.93067 .. 0.93614  change -6.660 %  CI -6.933 .. -6.386 %  per-pair sd 0.461 %  t -51.79  cand lower 12/12
+wall_ms      base median 6679.25  cand median 6239.11  ratio geomean 0.93393  CI 0.92980 .. 0.93808  change -6.607 %  CI -7.020 .. -6.192 %  per-pair sd 0.698 %  t -33.91  cand lower 12/12
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 1.06 0.98 0.91 1/1327 37465
+
+## h_aa
+loadavg before: 1.06 0.98 0.91 1/1329 37471
+pairs 16  base median 6.695s  cand median 6.702s
+ratio cand/base  geomean 1.0009  median 1.0005  95% CI 0.9987 .. 1.0030  paired t 0.88
+speed-up -0.09 %  CI -0.30 .. +0.13 %  per-pair sd 0.40 %  pairs below 1.0: 7/16
+loadavg after: 1.01 1.00 0.94 1/1327 48001
+
+## h_cand
+loadavg before: 1.01 1.00 0.94 1/1327 48005
+pairs 24  base median 6.705s  cand median 6.252s
+ratio cand/base  geomean 0.9332  median 0.9327  95% CI 0.9317 .. 0.9347  paired t -88.76
+speed-up +7.16 %  CI +6.98 .. +7.33 %  per-pair sd 0.38 %  pairs below 1.0: 24/24
+loadavg after: 0.94 1.00 0.97 1/1334 63782
+
+## perft -- bench_movegen -r 5, six runs each, alternating order; best ms per phase, median of six
+base perft 878.8 (873.9 .. 924.9)  generate_moves 764.6 (760.3 .. 768.4)  generate_captures 307.3 (304.7 .. 308.3)
+cand perft 877.9 (872.8 .. 880.6)  generate_moves 769.8 (764.1 .. 771.9)  generate_captures 303.1 (301.3 .. 305.1)
+node counts verified against the published perft values in every run.

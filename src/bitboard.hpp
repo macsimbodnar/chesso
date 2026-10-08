@@ -221,3 +221,8 @@ bool see_ge(const board_t* board, move_t move, int threshold);
 bool capture_cannot_lose(const board_t* board, move_t move);
 
 bool is_check(const game_t* game);
+
+// Whether `move`, legal in this position, leaves the opponent in check: what
+// make_move() followed by is_check() answers, without making the move. Every
+// move kind, en passant, castling and promotion included. S268.
+bool move_gives_check(const board_t* board, move_t move);

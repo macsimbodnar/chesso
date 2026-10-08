@@ -627,8 +627,10 @@ struct search_t
 // the probe below records it.
 //
 // All four are in the list: late move pruning decides at the generation
-// stage, with its own flag, but skips the move after `make_move` like the
-// other three so that the gives-check exemption can bind (S109, DEC-180).
+// stage, with its own flag, but skips each move in the loop like the other
+// three so that the gives-check exemption can bind (S109, DEC-180) -- after
+// `make_move` in the probed node this records, before it in the engine's own
+// since S268.
 // `PRUNE_SEE` is the quiet rule and `PRUNE_SEE_CAPTURE` the capture one: two
 // rules, two margins and two caps, so a probe that could not tell them apart
 // would leave a case unable to say which one decided (S091).

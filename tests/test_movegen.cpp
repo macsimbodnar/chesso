@@ -408,6 +408,187 @@ TEST_SUITE("movegen: staged generation")
 }
 
 
+TEST_SUITE("movegen: gives check before the move is made")
+{
+  // S268. move_gives_check() answers, from the board before the move, what
+  // make_move() followed by is_check() answers after it. The search skips a
+  // move a pruning rule selected on that answer without ever making it, so a
+  // wrong `false` prunes a checking move -- the hazard CLAUDE.md names -- and
+  // a wrong `true` searches a move the rule meant to skip. The oracle is the
+  // engine's own make_move() and is_check(), on every legal move of a tree
+  // walk.
+  enum check_kind_t
+  {
+    KIND_QUIET,
+    KIND_CAPTURE,
+    KIND_KING,
+    KIND_EN_PASSANT,
+    KIND_CASTLING,
+    KIND_PROMOTION,
+    KIND_COUNT
+  };
+
+  const char* const kind_names[KIND_COUNT] = {
+      "quiet", "capture", "king", "en passant", "castling", "promotion"};
+
+  // How often each kind of move was seen to give check, and how: `direct` is
+  // a checker standing where the move put a piece (the castling rook's square
+  // included), `discovered` a checker anywhere else. Read off the engine's own
+  // checkers after the move, so the corpus is shown to contain each case
+  // rather than assumed to.
+  struct kind_tally_t
+  {
+    size_t checking = 0;
+    size_t not_checking = 0;
+    size_t direct = 0;
+    size_t discovered = 0;
+  };
+
+  struct check_tally_t
+  {
+    kind_tally_t kinds[KIND_COUNT];
+    size_t knight_promotion_checks = 0;
+  };
+
+  static check_kind_t kind_of(move_t move)
+  {
+    if (MOVE_CASTLING(move)) { return KIND_CASTLING; }
+    if (MOVE_EN_PASSANT(move)) { return KIND_EN_PASSANT; }
+    if (MOVE_PROMOTED(move) != TO_NONE) { return KIND_PROMOTION; }
+    if (MOVE_PIECE(move) == W_KING || MOVE_PIECE(move) == B_KING) {
+      return KIND_KING;
+    }
+    return MOVE_CAPTURE(move) ? KIND_CAPTURE : KIND_QUIET;
+  }
+
+  static void check_agreement(game_t * g, int depth, check_tally_t* tally)
+  {
+    move_t moves[MAX_MOVES];
+    const size_t count = generate_moves(game_tables(), &g->board, moves);
+
+    for (size_t i = 0; i < count; ++i) {
+      const move_t move = moves[i];
+      const bool predicted = move_gives_check(&g->board, move);
+
+      REQUIRE(make_move(g, move));
+      const bool actual = is_check(g);
+
+      if (predicted != actual) {
+        unmake_move(g);
+        const std::string said = predicted ? "check" : "no check";
+        const std::string message =
+            "move_gives_check() says " + said +
+            " and make_move() + is_check() disagree: " + print_move(move) +
+            " in " + generate_FEN(&g->board);
+        FAIL(message);
+      }
+
+      kind_tally_t* kind = &tally->kinds[kind_of(move)];
+
+      if (actual) {
+        kind->checking++;
+
+        // The castling rook lands between the king's two squares.
+        bb_t placed = BB_1 << MOVE_TO(move);
+        if (MOVE_CASTLING(move)) {
+          placed |= BB_1 << ((MOVE_FROM(move) + MOVE_TO(move)) / 2);
+        }
+
+        const bb_t checkers = side_to_move_checkers(game_tables(), &g->board);
+        if (checkers & placed) { kind->direct++; }
+        if (checkers & ~placed) { kind->discovered++; }
+        if (MOVE_PROMOTED(move) == TO_KNIGHT) {
+          tally->knight_promotion_checks++;
+        }
+      } else {
+        kind->not_checking++;
+      }
+
+      if (depth > 1) { check_agreement(g, depth - 1, tally); }
+
+      unmake_move(g);
+    }
+  }
+
+  // The rare shapes, each in a position built for it, because a corpus walk
+  // may hold none: an en-passant capture whose victim was the piece blocking
+  // a rook's rank or a bishop's diagonal, and one whose pawn checks directly;
+  // both castlings checking with the rook; a knight underpromotion that checks
+  // where the queen would not; a capturing promotion that uncovers the rook
+  // behind it; a king stepping off its own rook's file. That each move does
+  // what it is here for is python-chess's reading (`gives_check()` and the
+  // checkers after the move, 2026-10-08); the test asserts nothing about any
+  // single move, only the agreement and, below, that every kind occurred.
+  // Each is walked with its colour-mirrored twin.
+  const char* const built_fens[] = {
+      "8/8/8/R2Pp2k/8/8/8/K7 w - e6 0 1",    // d5e6: the victim blocked a rank
+      "8/6k1/8/4pP2/8/2B5/8/K7 w - e6 0 1",  // f5e6: it blocked a diagonal
+      "8/4k3/8/3pP3/8/8/8/K7 w - d6 0 1",    // e5d6: the pawn checks itself
+      "5k2/8/8/8/8/8/8/4K2R w K - 0 1",      // e1g1: the rook checks on f1
+      "3k4/8/8/8/8/8/8/R3K3 w Q - 0 1",      // e1c1: the rook checks on d1
+      "8/4P3/3k4/8/8/8/8/4K3 w - - 0 1",     // e7e8n checks, e7e8q does not
+      "rk6/1P6/8/8/8/8/8/1R2K3 w - - 0 1",   // b7a8n uncovers the b-file
+      "4k3/8/8/8/4K3/8/8/4R3 w - - 0 1",     // the king leaves its rook's file
+  };
+
+  TEST_CASE_FIXTURE(movegen_fixture_t,
+                    "move_gives_check agrees with make_move and is_check")
+  {
+    check_tally_t tally;
+
+    for (const char* fen : built_fens) {
+      for (const std::string& oriented : {std::string(fen), mirror_fen(fen)}) {
+        REQUIRE_MESSAGE(load_FEN(oriented, &game), ("FEN: " + oriented));
+        REQUIRE_MESSAGE(position_is_reachable(&game), ("FEN: " + oriented));
+        check_agreement(&game, 2, &tally);
+      }
+    }
+
+    // The published perft positions are built to hold the tricky moves --
+    // en passant out of a pin, castling through attacked squares, promotions
+    // with check -- so they are walked a ply deeper than the suites' corpus.
+    for (const std::string& file :
+         {std::string("assets/perft_json/perft.json"),
+          std::string("assets/perft_json/talkchess_perft.json")}) {
+      for (const nlohmann::json& position : load_json(file)) {
+        const std::string fen = position["start_fen"].get<std::string>();
+        REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+        check_agreement(&game, 3, &tally);
+      }
+    }
+
+    for (const std::string& fen : all_test_fens()) {
+      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
+      check_agreement(&game, 2, &tally);
+    }
+
+    // The precondition: every kind of move both gave check and did not, and
+    // every way a kind can check was seen. A king move checks by discovery
+    // only, a king never attacking a king. Castling is asked for its rook's
+    // direct check only -- a king that has just castled stands on its own
+    // back rank with the rook beside it, and no line through the square it
+    // left reaches the enemy king in any position this corpus holds.
+    for (int k = 0; k < KIND_COUNT; ++k) {
+      const kind_tally_t& kind = tally.kinds[k];
+      const std::string name = kind_names[k];
+
+      REQUIRE_MESSAGE(kind.checking > 0, (name + ": no move gave check"));
+      REQUIRE_MESSAGE(kind.not_checking > 0, (name + ": every move checked"));
+
+      if (k != KIND_KING) {
+        REQUIRE_MESSAGE(kind.direct > 0, (name + ": no direct check"));
+      }
+
+      if (k != KIND_CASTLING) {
+        REQUIRE_MESSAGE(kind.discovered > 0, (name + ": no discovered check"));
+      }
+    }
+
+    REQUIRE(tally.knight_promotion_checks > 0);
+  }
+}
+
+
 TEST_SUITE("movegen: perft")
 {
   // test_perft carries the deep runs and takes minutes, so it is labelled slow
