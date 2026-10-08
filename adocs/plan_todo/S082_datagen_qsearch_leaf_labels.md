@@ -1,13 +1,28 @@
 id:         S082
 goal:       the corpus labels a resolved position rather than the root -- the quiescence leaf, or the leaf reached by playing out a deep search's whole principal variation -- and samples few positions per game rather than many
-accepts:    `tools/datagen` records the position at the leaf quiescence resolves to, with the game result unchanged as the label, and states in its own output how often the leaf differs from the root; the tactical-move filter clause is retired rather than flagged, since its whole justification was that the root might not be quiet; a corpus is regenerated, refitted, and **one** candidate goes to an SPRT against the weights that ship, verdict recorded whatever it is; the leaf is verified to be quiet by construction -- a test asserts that the recorded position has no capture the quiescence search would still make, and fails if the walk is truncated by the depth bound instead
+accepts:    `tools/datagen` records the position at the leaf quiescence resolves to, with the game result unchanged as the label, and states in its own output how often the leaf differs from the root; the tactical-move filter clause is retired rather than flagged, since its whole justification was that the root might not be quiet; a corpus is regenerated and refitted, and the recipe -- which leaf, how many positions per game -- is **chosen offline by held-out loss on a fixed validation set, with no SPRT of its own**: S083's one SPRT measures the corpus that ships (DEC-259); the fixed validation set is built here once and kept for every later fit and screen -- games split before sampling, no game and no identical position on both sides of the split, its size, seed and digest recorded -- and because it chooses recipes and screens terms it is a validation set, not an untouched test set; the walk states its policy for an aborted search, a bound-only line, a quiet promotion and a terminal leaf, and the stored label keeps a defined perspective when the leaf's side to move differs from the root's; the leaf is verified to be quiet by construction -- a test asserts that the recorded position has no capture the quiescence search would still make, and fails if the walk is truncated by the depth bound instead
 touches:    tools/datagen.cpp, src/search.cpp or src/search.hpp for the leaf walk, tests/, .tuning/
 excludes:   the corpus size and the node budget, which are S083's; dedupe, which is S076's; the label blend, which is S075's; any change to what quiescence itself does
-decisions:  DEC-055, DEC-041
+decisions:  DEC-055, DEC-041, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-258 and DEC-259
+
+The corrected plan comparison found two corpus verdicts where the recipe can
+be chosen offline: this step changes what is labelled, S083 how much is
+generated, and each regenerated, refitted and took an SPRT. Under DEC-259
+the recipe is a held-out-loss decision on a validation set fixed here, and
+one SPRT (S083's) measures the corpus that ships. The direct assertion that
+the recorded leaf has no capture quiescence would still make, and the
+refusal of a depth-truncated walk, are unchanged -- a PV leaf out of check
+and not terminal can still be unresolved. The corpus is played by the search
+S261's lane, S099 and the capture-history family leave behind, which is why
+this step follows them (DEC-258). Labels come from chesso's own games and
+search only (DEC-016); tool oracles serve diagnostics, never labels.
+
 
 ## Why this exists
 

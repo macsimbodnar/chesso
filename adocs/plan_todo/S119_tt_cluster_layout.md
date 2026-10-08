@@ -3,11 +3,27 @@ goal:       the table becomes cache-line clusters with an aged replacement, a pr
 accepts:    an SPRT verdict **at the S105 harness setting, with the pressure ratio stated** -- the ratio being overwrites per entry, which is what transfers across time controls: the rating list's 2'+1" writes on the order of 660 M nodes against 5.6 to 11 M entries, 60 to 120 apiece, and 16 MB at 8+0.08 reproduces that while 128 MB undershoots it eightfold and "would flatter every table-hungry change S119 is about to make" (DEC-088, whose `Consequences:` line is what replaced "at Hash 128" here); `sizeof` the cluster is exactly 32 or 64 bytes and the array is aligned so no cluster straddles a cache line, asserted at compile time; the replacement prefers depth **and** age together rather than depth within a generation alone; the prefetch is issued as soon as the key is known in make_move; huge pages are requested and the failure path is a normal allocation, not an abort; `hashfull` is reported over UCI and is checked to stay low at the rating control; the nps and the nodes-to-depth are both recorded, because this step moves them in opposite directions
 touches:    src/transposition_table.cpp, src/transposition_table.hpp, src/data_structures.hpp, src/bitboard.cpp make_move
 excludes:   the static evaluation field, which exists since S094; bound-sign correctness, which is S106
-decisions:  DEC-083
+decisions:  DEC-083, DEC-258
 closes:
 blocks:
 paused_by:
 done:
+
+## Added 2026-10-08, DEC-258: the capacity change is part of what the verdict prices
+
+`src/transposition_table.cpp` `tt_resize` sizes the table to a power of two
+of 24-byte entries, so `Hash=16` uses 12 MiB and `Hash=128` uses 96 MiB. A
+32-byte cluster fills the whole power-of-two allocation, so at the
+harness's Hash=16 the table gains a third more entries along with the new
+layout and replacement. The pre-registration states this, states the
+pressure ratio at the new capacity, and reads the verdict as layout,
+replacement and capacity together. Non-power-of-two `Hash` requests are
+indexed without rounding down and get a test; the allocation fallback when
+huge pages fail is a normal allocation. A partial-key legality check protects
+consumers of the stored move; it does not authenticate a stored score, depth
+or mate certificate, and the step states the collision trade for every reader
+of a stored mate or PV. Prefetch and huge pages are node-identical and are
+timed separately where practical.
 
 ## The verdict is taken at the harness setting, not at Hash 128
 

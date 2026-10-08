@@ -3,11 +3,30 @@ goal:       a static evaluation correction learned from the difference between t
 accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); a table keyed on the pawn structure, updated with a running average of the difference between the search score and the static score at nodes where that difference is meaningful, and applied as a bounded correction to the static score; the correction is bounded so it can never turn a non-mate score into a mate score or cross a mate bound, asserted by a test; INV-5 still holds -- the corrected score is side-to-move relative and mirroring a position agrees rather than negates; the correction is cleared on ucinewgame; every constant in src/search_params.hpp with a stated range (S073); the fast suite green
 touches:    src/search.cpp, a new table beside the transposition table, src/search_params.hpp, tests/test_search.cpp, tests/test_evaluation.cpp for the mirror property
 excludes:   any change to evaluate() itself; NNUE, which is parked at DEC-054; continuation-indexed and material-indexed correction tables, which are a later step if the pawn-keyed one measures positive
-decisions:  DEC-071
+decisions:  DEC-071, DEC-222, DEC-258
 closes:
 blocks:
 paused_by:
 done:
+
+## Promoted 2026-10-08, DEC-258: a fixed slot, not an idle night
+
+DEC-222 (1), the owner's ruling of 2026-09-19, was that this step "runs as the
+probe ... on the next idle night". The reading rule keeps the machine always
+busy, so in 23 SPRT runs after that ruling no night was idle and the probe
+never ran. On 2026-10-08 the owner gave it a fixed slot: directly after
+S261's search lane and before S082 regenerates the corpus, because the
+correction changes the search that plays the corpus games. Phase (a), the
+pawn key, is behaviour-neutral and may be written in a worktree during
+S119's run and land between runs (DEC-260). The SPRT is phase (b), one
+`{0, 5}` nElo verdict as the accepts says; quiescence stays untouched in v1,
+as section 2 states -- the quiescence consumer is a separate step.
+
+**On H1**, S110 and S111 run next, each its own verdict, and the two consumers
+DEC-222 named -- the correction applied in quiescence, and the correction's
+magnitude as a reduction and margin input -- get their own step files then,
+each one verdict. **On H0 or no verdict**, S110 and S111 return to the reserve
+and no consumer step is created.
 
 ## What it is and is not
 

@@ -1,13 +1,33 @@
 id:         S121
-goal:       mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on
-accepts:    an SPRT verdict, recorded whatever it is; mobility is a table indexed by piece type and by count -- knight 0 to 8, bishop 0 to 13, rook 0 to 14, queen 0 to 27 -- and **every entry is fitted by our own tuner on our own corpus** (DEC-084); the mobility area excludes squares attacked by enemy pawns and the side's own blocked and low-rank pawns, and each exclusion is a separate measured decision rather than one bundle; the tuner's model in tools/eval_model.hpp is updated in the same commit and test_eval_model holds the two against each other; the nps cost is recorded next to the verdict
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tests/test_eval_model.cpp
+goal:       mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
+accepts:    an SPRT verdict, recorded whatever it is; mobility is a table indexed by piece type and by count -- knight 0 to 8, bishop 0 to 13, rook 0 to 14, queen 0 to 27 -- and **every entry is fitted by our own tuner on our own corpus** (DEC-084); the mobility area excludes squares attacked by enemy pawns and the side's own blocked and low-rank pawns, and each exclusion -- and the pin rule this family gains, a pinned piece counting only moves along its pin ray (DEC-258) -- is screened separately before the family's one SPRT (DEC-259); the tuner's model in tools/eval_model.hpp is updated in the same commit and test_eval_model holds the two against each other; the nps cost is recorded next to the verdict
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_eval_model.cpp, tests/test_evaluation.cpp
 excludes:   king safety, which shares the loop but is S122
-decisions:  DEC-071, DEC-084
+decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+**Scope gained 2026-10-08 (DEC-258):** mobility respecting pins -- CPW
+*Mobility*; Stash's changelog, v30, +6.15. The pin map is computed once per
+evaluation beside S263's attack sets; the rest of this file is unchanged.
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## What is there, and why the fit could not save it
 

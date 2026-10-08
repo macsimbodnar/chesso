@@ -1,13 +1,35 @@
 id:         S135
-goal:       unfreeze the piece placement group and refit it, one bundled SPRT over the three remaining features, by the owner's decision of 2026-08-20
-accepts:    S134 has landed first, so the group is three identified features and carries no unidentified column -- a bundled verdict over this bundle is at least attributable, which S027's was not; the fit is `--only piece_placement` on the corpus S082 and S083 produce, so the SPRT measures the term and not a joint refit of the other 820 constants; the SPRT bounds are chosen for the effect size and stated in advance, not `--fast` -- DEC-063 is the measurement that the pair and not the hardware sets the cost, and the published parts are +8.2 and +9.86 (DEC-084, order of magnitude only); the term's own speed cost is inside its verdict, measured with the weights forced non-zero because at zero the compiler deletes it (DEC-047); a verdict of zero is recorded as zero, and **if the bundle fails it is bisected** rather than zeroed by hand, which is the S027 failure this step exists not to repeat (DEC-082's bisect rule); the fast suite green
-touches:    src/evaluation.cpp piece_placement_mg/eg, the tuner's freeze list in whatever script runs the fit
+goal:       unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family by the owner's decisions of 2026-08-20 and 2026-10-08
+accepts:    S134 has landed first, so the group is three identified features and carries no unidentified column -- a bundled verdict over this bundle is at least attributable, which S027's was not; the fit is `--only piece_placement` on the corpus S082 and S083 produce, so the SPRT measures the term and not a joint refit of the other 820 constants; bad-bishop and trapped-piece features join the group (DEC-258), each defined from its description before any fit (CPW *Bad Bishop*, *Trapped Pieces*) and each feature screened before the one SPRT (DEC-259); the SPRT bounds are chosen for the effect size and stated in advance, not `--fast` -- DEC-063 is the measurement that the pair and not the hardware sets the cost, and the published parts are +8.2 and +9.86 (DEC-084, order of magnitude only); the term's own speed cost is inside its verdict, measured with the weights forced non-zero because at zero the compiler deletes it (DEC-047); a verdict of zero is recorded as zero, and **if the bundle fails it is bisected** rather than zeroed by hand, which is the S027 failure this step exists not to repeat (DEC-082's bisect rule); the fast suite green
+touches:    src/evaluation.cpp piece_placement_mg/eg, src/evaluation.hpp, src/eval_tables.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp, the tuner's freeze list in whatever script runs the fit
 excludes:   tempo, which is S136; the seventh-rank feature, deleted at S134; any change to how the three features are computed
-decisions:  DEC-091, DEC-057, DEC-063, DEC-084
+decisions:  DEC-091, DEC-057, DEC-063, DEC-084, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+**Scope gained 2026-10-08 (DEC-258):** a bishop's own pawns on its colour
+(blocked ones counted separately) and trapped-piece patterns, each taken from
+its CPW description. They join the three remaining features, so the "three
+features" wording below reads "the three remaining features and the two
+added". The bisect-on-H0 rule this file already carries is DEC-259's.
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## What S100 established, and what it did not
 

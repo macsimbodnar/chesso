@@ -3,11 +3,16 @@ goal:       delete rook-on-the-seventh and passer bucket 5 by folding their weig
 accepts:    the engine-side identity is measured before anything is deleted -- `passed_pawn_counts()` and `piece_placement_counts()` read out of the engine, not out of `eval_model`, and compared against the signed piece-square occupancy of squares 8..15 over the whole corpus, 0 violations required and the non-zero row count reported so the check is not vacuous; the fold is **bit-exact and shown to be**, by identical scores on the seven pinned anchor positions and by `tools/search_bench.py` returning identical node counts and best moves at two depths (INV-6 discharged on node counts, no SPRT owed -- DEC-090); `PIECE_PLACEMENT_COUNT` 4 to 3 and `PASSED_PAWN_COUNT` 6 to 5, `PARAM_COUNT` 827 to 823, with `test_tuner_groups`' three partition properties green **and observed red** under a base left unshifted; `test_eval_model`'s hand cases, differential sweep and non-vacuity lists re-targeted to the narrowed features rather than deleted; `tools/feature_audit` still runs and its identity report states the rank/identity result for the **remaining** parameterisation, including the method, corpus rows and every exact dependency found -- no unreported exact degeneracy remains after the two folds, or a new finding is filed before a fit; that measurement is the recorded basis for DEC-170's decision against global regularisation, and S126 reopens it if its fit shows another ridge; the fast suite green
 touches:    src/evaluation.cpp (the two terms and their accumulation), src/eval_tables.hpp (the sixteen folded entries), tools/eval_model.hpp (widths and bases), tools/tuner_model.hpp (the phase column), tools/tuner_groups.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, DEV_MANUAL.md, adocs/specs.md
 excludes:   any change to the other three placement features, which is S135; tempo, which is S136; any refit -- this step moves numbers between two places that add up to the same score and fits nothing
-decisions:  DEC-090
+decisions:  DEC-090, DEC-258
 closes:     2026-09-10_adversarial-F34, 2026-09-10_adversarial-F36, 2026-09-12_adversarial-F02
 blocks:     S135
 paused_by:
 done:
+
+## Ordered 2026-10-08, DEC-258
+
+Lands before S262's trace tuner is fitted on, so the trace is built on the
+823-parameter layout and no tuner is updated twice.
 
 ## Why this is worth a step of its own
 

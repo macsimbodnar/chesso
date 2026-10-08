@@ -3,7 +3,11 @@ goal:       the engine's absolute rating is re-measured once, near the 3000 mark
 accepts:    one `rating.sh` run when the pending order is close to exhausted and a
             3000 claim is in reach -- **not** at a block boundary, DEC-108 -- with the
             solved rating and the anchor spread both reported and compared against
-            S088's 2559 +/- 25 and its 121.8 Elo spread; the run's resolution is stated
+            S088's 2559 +/- 25 and its 121.8 Elo spread and S240's 2766 and its 94.1;
+            **the 3000 claim is read as the anchor-mean point estimate at
+            `rating.sh`'s standing control, 10+0.2, with its interval and the second
+            control's reading reported beside it, not as the interval's lower bound
+            (DEC-258)**; the manifest includes S264's anchors above 2850; the run's resolution is stated
             before it is read, because +/- 25 plus the family spread means it detects
             drift above roughly 50 Elo and nothing smaller; the same gauntlet is played
             at a second control near the rating list's own, which is S128's question
@@ -16,11 +20,21 @@ touches:    rating.sh, adocs/data/, adocs/specs.md, adocs/plan.md
 excludes:   changing the reference manifest or the rating procedure, which S087 and
             S088 fixed; any conclusion about an individual patch, which a gauntlet
             cannot attribute
-decisions:  DEC-019, DEC-020, DEC-072, DEC-074, DEC-077, DEC-108
+decisions:  DEC-019, DEC-020, DEC-072, DEC-074, DEC-077, DEC-108, DEC-258
 closes:     2026-08-21_adversarial-F04
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-258
+
+The owner fixed the claim standard before any result exists: the mark is met
+when the gauntlet's anchor-mean point estimate at `rating.sh`'s standing
+control reads 3000 or more. The interval, the anchor spread and the second
+control are reported beside it and qualify the claim; they do not move the
+bar. S264 installs the anchors this run needs and recomputes its cost with
+the larger manifest. S267's drift gate sits before S126, so this run is
+reached only if that gate passed or the owner ruled past it.
 
 ## Why five hours is the right price -- and why not yet
 

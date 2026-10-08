@@ -1,9 +1,9 @@
 id:         S133
 goal:       the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-accepts:    an SPRT verdict, recorded whatever it is; the bucket scheme is stated and deliberately small -- enemy-king-side mirroring (two buckets) or own-king file buckets (up to four), chosen by held-out fit error before any match is played, and the choice recorded with the error figures; INV-4 holds across a king move that crosses a bucket boundary -- the accumulators are rebuilt there, and the existing accumulator-equals-recompute test gains exactly that case; the nps cost of the rebuild is measured and recorded next to the verdict, with the bucket-crossing frequency counted over a real search; tools/eval_model.hpp carries the same buckets, tools/tuner_groups.hpp gains the groups, and the partition properties hold; every entry is fitted on the S082 corpus with the S077 provenance stamp
+accepts:    an SPRT verdict, recorded whatever it is; the bucket scheme is stated and deliberately small -- enemy-king-side mirroring (two buckets) or own-king file buckets (up to four), chosen by held-out fit error before any match is played, and the choice recorded with the error figures; INV-4 holds across a king move that crosses a bucket boundary -- the accumulators are rebuilt there, and the existing accumulator-equals-recompute test gains exactly that case; the nps cost of the rebuild is measured and recorded next to the verdict, with the bucket-crossing frequency counted over a real search; tools/eval_model.hpp carries the same buckets (S262's trace once it has landed, DEC-259), tools/tuner_groups.hpp gains the groups, and the partition properties hold; every entry is fitted on the S082 corpus with the S077 provenance stamp
 touches:    src/eval_tables.hpp, src/evaluation.cpp, src/bitboard.cpp add_piece/remove_piece/move_piece, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
 excludes:   NNUE, parked at DEC-054 -- this is a table indexed by a bucket, not a network; any change to the terms around the tables
-decisions:  DEC-071, DEC-084, DEC-087
+decisions:  DEC-071, DEC-084, DEC-087, DEC-259
 closes:
 blocks:
 paused_by:

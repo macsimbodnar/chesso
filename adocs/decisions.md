@@ -13920,3 +13920,196 @@ Rejected:     Running the SPRT (12 to 19 h for a truth expected inside the
 Consequences: DEC-039's lazy shortcut stands as it is. A later cache, for
               example one kept across moves (0.58 % measured, 6.0 % ideal),
               starts from the recorded diffs and owes its own SPRT.
+
+## DEC-258  2026-10-08  The plan to 3000 is rewritten on the 2026-10-07 proposal, its comparison and an adversarial review: twelve rulings by the owner
+Tags:         planning, goal, rating, search, evaluation, measurement, machine, dec-071, dec-179, dec-222, dec-138, dec-133, dec-108
+Context:      On 2026-10-07 the coordinator wrote, at the owner's request and
+              without reading the current plan, a proposal for 3000 without a
+              network (`adocs/proposed_plan/`: plan, report, P01 to P29), then
+              compared it with the current plan (`c5fd1f2`); Codex corrected
+              the comparison at the owner's request (`a43ef3e`). On 2026-10-08
+              an adversarial review of the corrected comparison, reported to
+              the owner in conversation, found: (a) no argument that either
+              plan closes the gap -- the kept search verdicts measured +188
+              self-play against +345 published (0.54; 0.52 counting S114's and
+              S188's zeros), S240 measured +207 on the list against about +250
+              summed self-play (0.83), and the evaluation block's sourced
+              figures, +113.1 raw of which +91.7 verified
+              (`adocs/data/S183_elo_inputs.md`), carried through both ratios
+              give about +40 to +51 on the list, a fifth of the 234 points;
+              (b) DEC-222 (1)'s probe of S099 "on the next idle night" never ran
+              in 23 SPRT runs, because the reading rule never leaves a night
+              idle; (c) the comparison's two-leg clamp design made the needed
+              change wait on a likely zero; (d) per-term verdicts at `{0, 5}`
+              nElo drop terms near 2 Elo at the 40000-game cap (DEC-259); (e)
+              whether 3000 means the point estimate or the interval's lower
+              bound is a choice of about 60 points nobody had made; (f)
+              DEC-138 deferred evaluation terms because the parked network
+              would supersede them, and DEC-179 put the network after the
+              mark; S217 also counted Ethereal's pawn-push threats as covered
+              by S101 while S101 excluded them; (g) the MacBook cannot carry
+              the plan -- it goes down after 4 to 5 h of full-core play,
+              `rating.sh` does not run there, it has no PEXT, and its gate is
+              red (DEC-261). The owner answered twelve questions, each
+              presented with options and a recommendation.
+Decision:     By the owner, 2026-10-08. (1) **The claim**: the mark is met when
+              S152's anchor-mean point estimate at `rating.sh`'s standing
+              control, 10+0.2, reads 3000 or more; the interval, the anchor
+              spread and the second control are reported beside it. (2) **The
+              machine**: the Linux workstation runs every match, SPSA lane and
+              datagen; the MacBook does agent and document work (DEC-144
+              stands). (3) **The checkpoint**: a fixed drift match against
+              `1680439`, the build S240 rated, at each block boundary, and a
+              gate before S126 at 232 self-play Elo, derived in S267 before any
+              evaluation result exists; a shortfall stops the order for the
+              owner to re-plan; no mid-course gauntlet (DEC-108 stands). (4)
+              **S099 gets a fixed slot**, directly after S261's search lane and
+              before the corpus is regenerated -- this carries out DEC-222 (1)
+              and moves S099 out of the reserve DEC-133 and DEC-176 (c) placed
+              it in; S110 and S111 follow only on its H1, and the two
+              consumers DEC-222 named get steps only then. (5) **S039 is
+              re-formed**: the lazy shortcut and the clamp retire together
+              under one `{-5, 0}` non-regression verdict, before the corpus is
+              regenerated; on H0 S122's design is amended by the owner before
+              S121 starts. (6) **Evaluation terms are screened offline and
+              measured by family**, DEC-259. (7) **DEC-138's evaluation
+              deferrals are reopened** for threat extras (hanging pieces and
+              pawn-push threats, into S101), endgame knowledge (mop-up and
+              specialised endgames, into S124), complexity (S266), and
+              placement extras (pins in S121, bad bishop and trapped pieces in
+              S135, king defenders in S122). (8) **The capture-history family
+              enters the main order** after the correction steps: S023, then
+              S025 and S265, both only if S023 is kept -- amending DEC-087's
+              and DEC-176 (a)'s reserve placement. The proposal's other search
+              items -- threat, pawn and low-ply quiet histories, double and
+              negative extensions, fifty-move damping -- stay reserve
+              candidates without steps, first in line at S267's re-plan. (9)
+              **Tablebases**: S129 as written, an own prober, near the end;
+              Fathom is not taken. (10) **src/ work in a worktree during a
+              match**, DEC-260. (11) **The rewrite's commits land with the
+              MacBook's gate red**, DEC-261. (12) **The old documents go**:
+              `adocs/proposed_plan/` is removed (git keeps it at `a43ef3e`), and
+              `plan.md`'s dated history sections become pointers -- the file
+              as it stood is `git show a43ef3e:adocs/plan.md`. New steps: S260
+              (the Apple clang build), S261 (the search block's SPSA lane,
+              DEC-222 (8)), S262 (trace tuner), S263 (shared attack sets),
+              S264 (anchors above 2850), S265 (captures in late-move
+              reduction), S266 (complexity), S267 (the gate).
+Rejected:     For (1): the interval's lower bound at 3000 -- about 60 more
+              Elo of work for the same claim CCRL itself makes; 3000 at both
+              controls. For (2): the MacBook, or both machines -- a slow
+              verdict outlives the MacBook, and a run's class is unknown until
+              it ends. For (3): a mid-course gauntlet -- amends DEC-108 for
+              information an hour's drift match mostly gives; no checkpoint --
+              the record's own arithmetic says the plan may fall short, and the
+              first number would come after 25 or more verdicts. For (4):
+              keeping the idle-night rule, which in practice means never; the
+              whole correction family at once, which DEC-222 rejected. For (5):
+              two verdicts, shortcut then clamp -- 24 to 38 hours for about
+              nothing, and a failed first leg would strand the clamp; folding
+              the removal into S121 -- it mixes a non-regression question into
+              a gainer's verdict. For (8): keeping the reserve; every search
+              item as a conditional step. For (9): Fathom -- foreign code needs
+              an exception to the COPYING rule; dropping tablebases. For (12):
+              archiving the proposal under `adocs/`; keeping the history
+              sections.
+              Proposal items not taken: P01 (S099's phase (a) builds the pawn
+              key and S110 its own non-pawn keys), P03's merge (DEC-259's
+              offline recipe instead), P08 (S119, amended), P16 (S039,
+              re-formed), P26's fresh corpus (S126 decides its corpus), P28
+              (S127).
+Consequences: `plan.md` is rewritten: goal, standing, order, measurement
+              policy, cost, and the reading rule DEC-260 amends; the
+              generated ledger is kept. Eight step files are new and 23 are
+              amended (each with a dated section). `status.md` gains the
+              handover; `specs.md`'s goal paragraph states the claim and its
+              clamp paragraph names S039's new form. The arithmetic in (a) is
+              an ordering aid, not a forecast (DEC-019); S267's gate is what
+              acts on it.
+
+## DEC-259  2026-10-08  Evaluation terms are screened offline and measured by family, bisected on H0
+Tags:         measurement, sprt, evaluation, tuning, dec-082, dec-063, dec-143, dec-258
+Context:      The pending evaluation steps owed a verdict per term or per
+              group -- S121's curve and three exclusions, S123's three groups,
+              S124's cases, S125's groups, S102's two terms -- about 25 slow
+              verdicts, roughly 220 hours at the ledger's slow-class mean of
+              8 h 52 m. At `{0, 5}` nElo a true effect near the midpoint,
+              2.5 nElo or about 2 Elo here (nElo runs about 1.3 times Elo on
+              `noob_3moves.epd`, S055: -6.72 Elo, -8.78 nElo), expects 41861
+              games and meets the harness's 40000-game cap after about 19 h
+              with no verdict, so a real small term is dropped. 3000 needs the
+              sum of many such terms. DEC-082 already measures pruning rules
+              as one block on budget grounds and bisects a failed block;
+              S135 bundles three placement features under the same rule.
+Decision:     By the owner, 2026-10-08. For evaluation terms: (a) each term,
+              or each part a step used to give its own verdict, is fitted with
+              every other constant frozen and kept only if it lowers held-out
+              loss on S082's fixed validation set by more than a margin the
+              pre-registration states; a term that fails is recorded with its
+              figures and plays no match; (b) the survivors of a family ship
+              under one `{0, 5}` nElo SPRT with DEC-143's worst case and abort
+              rule; (c) on H0 or no verdict the family is bisected along a
+              partition written in the pre-registration, each part its own
+              SPRT. The families are mobility (S121), passed pawns (S123), pawn
+              structure (S125), threats (S101), king safety (S122), placement
+              (S135), endgames (S124), outposts and space (S102); tempo (S136),
+              complexity (S266) and the king-relative tables (S133) are
+              families of one. The corpus recipe (S082) is chosen offline the
+              same way and S083's one SPRT measures the corpus that ships.
+              Search changes keep one verdict per change.
+Rejected:     A family SPRT without the offline screen -- the same verdict
+              count with weaker filtering before the run. One verdict per term
+              -- clean attribution at about twice the machine time, with small
+              real terms lost at the cap.
+Consequences: Attribution inside a family is lost unless a bisection runs,
+              and a small losing part can ride inside a winning family; that is
+              accepted for power per machine-hour. Held-out loss has not always
+              predicted strength here, which is why the screen only removes
+              terms and never ships one. AGENTS.md's MEASUREMENT rule gains one
+              sentence naming this exception beside DEC-082's.
+
+## DEC-260  2026-10-08  src/ work may be written in a separate worktree while a match holds the workstation; it builds and lands between runs
+Tags:         workflow, lanes, machine, dec-144, dec-172, dec-113, dec-258
+Context:      The reading rule (`plan.md` "How to read the list with one
+              machine", DEC-144 as extended by DEC-172) lets a run-free entry
+              start while a match plays but makes src/ work wait: a
+              play-altering change must wait its own verdict, and a neutral one
+              needs an idle machine for its timing. The new order puts long
+              src/ tooling -- S262's trace tuner, S263's attack sets, S099's
+              pawn key, S134's fold -- beside matches of 6 to 19 hours, so
+              under the old rule either the machine idles while they are
+              written or they wait days.
+Decision:     By the owner, 2026-10-08. A subagent may write src/ code in a
+              separate git worktree while a match holds the workstation. No
+              compile, test or timing runs until the match has ended, so no
+              core is taken from it. The change lands between runs, gated and
+              timed then. A play-altering change still waits its turn for its
+              own verdict -- one change at a time -- and the delegation rule's
+              "one task at a time" still binds: the second subagent starts only
+              while the first is blocked on the match.
+Rejected:     Builds and tests at low priority during a match -- contention a
+              pre-registration would have to state every time. Keeping the
+              rule.
+Consequences: `plan.md`'s reading rule says so. A worktree that has fallen
+              behind rebases before it lands, and its gate runs on the rebased
+              tree.
+
+## DEC-261  2026-10-08  The plan rewrite's two commits land with the MacBook's gate red; S260 fixes the build
+Tags:         workflow, commits, gate, macos, dec-140, dec-258
+Context:      Apple clang enables `-Wunused-const-variable` under `-Wall`, and
+              `-Werror` turns the unused `ORDINARY_BETA` in
+              `tests/test_search.cpp` into a build failure; gcc on the
+              workstation does not flag it. COMMITS requires every commit
+              green. The rewrite was made on the MacBook.
+Decision:     By the owner, 2026-10-08: the two commits of the rewrite --
+              `a43ef3e`, which records Codex's correction of the comparison, and
+              the rewrite itself -- land with the gate red. Neither touches
+              src/ or a test. The documentation checks that need no build
+              (`tools/plan_prose_check.py` in its four suite modes and
+              `tests/test_ledger.py`) are run and green. S260 is the first Open
+              entry and makes both builds compile on Apple clang.
+Rejected:     Fixing first through a filler step and then committing --
+              the owner preferred the plan in history now. Leaving the rewrite
+              uncommitted.
+Consequences: The exception covers these two commits and nothing else; the
+              next commit on the MacBook should be S260's.

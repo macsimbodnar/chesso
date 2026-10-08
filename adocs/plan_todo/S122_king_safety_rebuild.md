@@ -1,13 +1,34 @@
 id:         S122
-goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks and weak squares, and it is no longer clamped
-accepts:    an SPRT verdict, recorded whatever it is; the term can return several hundred centipawns and **no clamp truncates it** -- S039 and S120 have settled the lazy shortcut before this runs, and this step states which of the three outcomes it inherited; everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, so the tuner's gradient still exists and tools/eval_model.hpp carries the same finalizer; safe checks per piece type and weak squares in the king zone are counted; shelter and storm come from the pawn hash (S118); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tests/test_eval_model.cpp
-excludes:   mobility, which shares the loop but is S121; the lazy margin, which is S039
-decisions:  DEC-071, DEC-084, DEC-039
+goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
+accepts:    an SPRT verdict, recorded whatever it is; the term can return several hundred centipawns and **no clamp truncates it** -- S039 has retired the shortcut and the clamp before this runs, or its H0 has amended this design by an owner decision (DEC-258); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); shelter and storm come from the pawn hash (S118); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_eval_model.cpp, tests/test_evaluation.cpp
+excludes:   mobility, which shares the loop but is S121; the clamp and the lazy shortcut, which are S039
+decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+**Scope gained 2026-10-08 (DEC-258):** king defenders, the own minor
+pieces covering the king zone (CPW *King Safety*), one more input to the
+accumulator. The finalizer's constants are fitted by the tuner through
+S262's nonlinear group, not by S127's search lane.
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## The clamp is the whole problem
 

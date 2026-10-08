@@ -6,11 +6,18 @@ accepts:    fixed-depth time measured against the two-stage build on all three s
             step's own evidence predicts the timing may well be worse again.)
 touches:    src/search.cpp move picker and staging, src/evaluation.cpp score_move
 excludes:   attempting it before S023 and S024 exist, which is the whole reason it was set aside
-decisions:  DEC-022
+decisions:  DEC-022, DEC-258
 closes:
 blocks:
 paused_by:
 done:
+
+## Promoted 2026-10-08, DEC-258
+
+In the main order directly after S023, and run only if S023 is kept. Its
+timing gate stands: a timing worse than the two-stage build is itself the
+recorded verdict. On S023's H0 or no verdict this step returns to the
+reserve.
 
 ## Reserve, 2026-08-19, DEC-087
 

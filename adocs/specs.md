@@ -99,7 +99,10 @@ against the same list, single-CPU entries read 2026-08-18 -- Stockfish 11 at
 more above 3130, every one a hand-crafted evaluation one version below that
 engine's first network -- and against the Leorik 2.x line on this machine, which
 carries no network file at any tag and reaches 2917. DEC-054 stands: S029 is
-parked and NNUE is not reopened. `./rating.sh` is re-run **when substantial work has been
+parked and NNUE is not reopened. **The claim is read as S152's anchor-mean
+point estimate at `rating.sh`'s standing control, 10+0.2**, with the interval,
+the anchor spread and the second control reported beside it -- not as the
+interval's lower bound (DEC-258, the owner's, 2026-10-08). `./rating.sh` is re-run **when substantial work has been
 done to the engine**, which is the owner's judgement and not a threshold an
 agent derives (DEC-074, superseding DEC-071's "any landed step an SPRT credits
 with 20 Elo or more"). Per-change decisions stay with the SPRT. The gauntlet
@@ -852,7 +855,8 @@ The order stands.
   with the clamp kept: **5.0 % nps**, for a tree 7.5 % smaller and 2.6 % less
   wall time (`adocs/data/S120_measurements.txt`). S120's cache of the score
   behind the shortcut answered 0.1 to 0.4 % of calls and was retired
-  (DEC-257). S039 re-decides the margin, and S122 is the rebuild that needs it.
+  (DEC-257). S039 retires the shortcut and the clamp together under one non-regression
+  verdict (DEC-258), and S122 is the rebuild that needs it.
 
 - **Parallel search is phase two, DEC-175.** Phase one's arena is the CCRL
   Blitz 1CPU list (DEC-089) and `Threads` is honestly `max 1`; no step, reserve

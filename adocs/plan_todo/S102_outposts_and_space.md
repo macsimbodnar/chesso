@@ -1,13 +1,29 @@
 id:         S102
 goal:       outpost and space terms in the evaluation, fitted like every other constant
-accepts:    an SPRT verdict per term, measured separately -- outposts and space are two terms; each fitted with every other constant frozen, held-out error reported before and after; both share the pawn-derived bitboard fills the three S027 pawn terms already build, and the step states which fill each reuses rather than adding a pass; INV-5 holds, asserted by the mirror case in tests/test_evaluation.cpp; the taper is a single division if S055 has landed and the model guard's bound still holds; tools/eval_model.hpp gains each feature and tools/tuner_groups.hpp a group per term with the partition properties intact; the fast suite green
+accepts:    one SPRT verdict for the family -- outposts and space, each screened first (DEC-259), and a family H0 bisected into the two; each fitted with every other constant frozen, held-out error reported before and after; both share the pawn-derived bitboard fills the three S027 pawn terms already build, and the step states which fill each reuses rather than adding a pass; INV-5 holds, asserted by the mirror case in tests/test_evaluation.cpp; the taper keeps the divisions HEAD has (S055 read H0) and the model guard's bound still holds; tools/eval_model.hpp gains each feature and tools/tuner_groups.hpp a group per term with the partition properties intact; the fast suite green
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
 excludes:   threat terms, which are S101; mobility, which exists; any term that needs a pass over the board that is not already being made
-decisions:  DEC-071
+decisions:  DEC-071, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## Why these two and not a longer list
 

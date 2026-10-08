@@ -3,11 +3,17 @@ goal:       every constant in the evaluation is refitted once the search that co
 accepts:    a fit over the corpus S082 and S083 produce, with the held-out figure from the by-game splitter S066 fixed; the emitted table carries the provenance stamp S077 added; an SPRT of the whole refit against the incumbent, recorded whatever it comes back as -- S065 is the precedent and it moved 827 constants in one verdict; **early stopping is on the held-out split and not on training loss**, because the documented overfitting signature is loss still falling while strength falls; any parameter group the fit drives to zero is reported as a corpus finding rather than shipped silently as zero, which is the S100 lesson applied forward
 touches:    tools/tuner.cpp, tools/tuner_model.hpp, tests/test_tuner_gradient.cpp, src/evaluation.cpp weights, src/eval_tables.hpp
 excludes:   adding or changing any term, which is what every step above this did
-decisions:  DEC-084, DEC-041
+decisions:  DEC-084, DEC-041, DEC-258, DEC-259
 closes:     2026-09-10_adversarial-F24
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-258 and DEC-259
+
+The fit runs on S262's trace tuner, with held-out loss read on S082's fixed
+validation set. It starts only after S267's drift gate has passed or the
+owner has ruled past it.
 
 ## Why a refit is a step and not a chore
 

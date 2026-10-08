@@ -230,7 +230,10 @@ migration that way (DEC-109).
 - MEASUREMENT: **a change that alters play is decided by SPRT, not by
   argument.** A change claimed behaviour-neutral proves it instead with
   identical node counts and best moves from `tools/search_bench.py` (INV-6).
-  One change at a time — two at once and neither number means anything. A
+  One change at a time — two at once and neither number means anything.
+  Evaluation terms are the recorded exception: screened offline by held-out
+  loss and measured by family, one SPRT bisected on H0 (DEC-259), as
+  inert-apart pruning rules are measured by block (DEC-082). A
   verdict of zero is recorded as zero, and the feature may still be kept with
   the reason stated. A run's pre-registration states its bounds pair's
   worst-case expected games from the nElo formula and its abort rule beside

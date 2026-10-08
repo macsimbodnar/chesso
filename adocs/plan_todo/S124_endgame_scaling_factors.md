@@ -1,13 +1,38 @@
 id:         S124
-goal:       the endgame half of the score is scaled toward a draw by what is actually on the board
-accepts:    an SPRT verdict, recorded whatever it is; the factor scales **only the endgame half** of the tapered score and not the whole score; the cases are added one at a time with a verdict each -- strong-side pawn count first, opposite-coloured bishops second -- and not as one bundle, because the surveyed record shows several of the further cases measuring zero and being removed again; every constant is fitted (DEC-084); the existing insufficient-material draw detection is not duplicated by this and the step says how the two divide
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp
-excludes:   tablebases, which are S129; the 50-move decay, which is a separate small term
-decisions:  DEC-071, DEC-084
+goal:       the endgame half of the score is scaled toward a draw by what is actually on the board, and won lone-king and specialised endgames are scored so the stronger side converts them
+accepts:    an SPRT verdict, recorded whatever it is; the factor scales **only the endgame half** of the tapered score and not the whole score; each case -- strong-side pawn count, opposite-coloured bishops, and the mop-up and specialised-endgame cases this family gains (DEC-258) -- is screened separately before the family's one SPRT (DEC-259), and a case the corpus barely holds is screened on a tool-labelled position set instead (tablebase WDL or Stockfish through python-chess, never the agent's reading, CHESS rule), because the surveyed record shows several such cases measuring zero and being removed again; mop-up is shown to convert: won lone-king positions, labelled won by a tablebase, are mated by the engine in self-play at a fixed node budget within a move bound stated before the run; every constant is fitted (DEC-084); the existing insufficient-material draw detection is not duplicated by this and the step says how the two divide
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp, tests/test_eval_positions.hpp
+excludes:   tablebases, which are S129; the 50-move decay, which is a separate small term in the reserve; the complexity term, which is S266
+decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+**Scope gained 2026-10-08 (DEC-258):** mop-up -- the defending lone king
+driven toward the edge, or toward a corner of the bishop's colour for king,
+bishop and knight against king, the attacking king brought closer (CPW
+*Mop-up Evaluation*) -- and specialised endgames beyond the two scaling
+cases, each from a description (Grant 2020's scale factor for
+opposite-coloured bishops and unwinnable material; Stash's changelog v26,
+v30, v31, +3 to +9 a case). DEC-138 had deferred these on the premise that a
+network would supersede them; DEC-179 removed it.
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## Why this is high on the evaluation block
 

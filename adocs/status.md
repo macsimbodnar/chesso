@@ -5,7 +5,43 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-06, by hand.
+Updated: 2026-10-08, by hand.
+
+## 2026-10-08: the plan to 3000 rewritten (DEC-258 to DEC-261)
+
+The owner had the coordinator propose a plan from scratch (2026-10-07), had
+it compared with the current one, had Codex correct the comparison, and had
+the correction reviewed adversarially. The review found no argument that
+either plan closes the 234-point gap, an S099 probe that never ran, a clamp
+design that waited on a likely zero, per-term verdicts that drop small real
+terms at the 40000-game cap, and an undecided claim standard. The owner
+answered twelve questions; the new order is `plan.md`'s Open list.
+
+- **Claim**: the anchor-mean point estimate at 10+0.2 reads 3000 or more.
+- **Machine**: the Linux workstation runs everything long; the MacBook is
+  agent work only.
+- **Checkpoint**: drift points against `1680439` at block boundaries; S267's
+  gate at 232 self-play Elo before S126 stops the order for a re-plan.
+- **Scope**: S099 in a fixed slot after S261's lane; the capture-history
+  family (S023, S025, S265) in the main order; DEC-138's evaluation terms
+  reopened (threat extras, mop-up and specialised endgames, complexity,
+  pins, bad bishop, trapped pieces, king defenders).
+- **Measurement**: evaluation terms screened offline on a fixed validation
+  set, one SPRT per family, bisected on H0 (DEC-259); S039 retires the
+  shortcut and the clamp in one `{-5, 0}` verdict.
+- **Lane**: src/ code may be written in a worktree during a match; it builds
+  and lands between runs (DEC-260).
+- **New steps**: S260 to S267. 23 step files amended, each with a dated
+  section. `adocs/proposed_plan/` removed; it is at `a43ef3e`, as is the old
+  `plan.md`.
+- **Arithmetic** (`plan.md`, "What the gap needs"): on the record's ratios
+  the sourced items land near 2900. S267 acts on that, not the table.
+
+**Gate red on the MacBook**: Apple clang fails `tests/test_search.cpp` on an
+unused constant. The owner let the two rewrite commits land red (DEC-261);
+S260 is Open entry 1 and fixes it. Documentation checks ran green.
+**Next:** S260, then S119 on the workstation, with S259, S134, S262, S263
+and S264 as the agent lane beside it. No owner question is open.
 
 ## 2026-10-06: S120 done -- the evaluation cache retired without an SPRT; owner questions closed
 

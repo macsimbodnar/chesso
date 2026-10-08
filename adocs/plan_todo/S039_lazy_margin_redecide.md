@@ -1,24 +1,48 @@
 id:         S039
-goal:       re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
-accepts:    the margin is chosen from an eval_spread run at the weights that ship at this step's own HEAD, over .tuning/selfplay_v2.tsv where it is on disk and over the tracked 5582-row corpus otherwise -- the file is gitignored and a machine move loses it again, so which corpus was read is recorded with the figures; the run is recorded in adocs/data/; the LAZY_EVAL_MARGIN comment in src/evaluation.hpp is re-measured for its mobility sentence as well as its king-safety sentence, cited by the symbol rather than by a line range; an SPRT against the preceding commit returns a verdict if the margin changes
-            (Folded in from the retired S057, S080 and S063 by DEC-086. The
-            figures those steps corrected -- 0.364 % past 150, worst 279 -- are
-            stale twice over: the real spread was four times that, and S065 has
-            since refitted 827 constants. Nothing here is taken on the old
-            numbers. This step is now a prerequisite for S122 rather than a
-            micro-tune: the clamp it sizes is what caps king safety.)
-touches:    src/search_params.hpp, where the value itself has lived since S073
-            and where a re-decision has to land; src/evaluation.hpp
-            LAZY_EVAL_MARGIN and its comment, which is what the number means;
-            adocs/data/S039_eval_spread.log for the run the accepts records;
-            tools/eval_spread.cpp, whose candidate margins must include the value
-            that ships (F25)
-excludes:   the structure of the lazy shortcut itself, which is S034 and is done
-decisions:  DEC-039
+goal:       the lazy shortcut and the clamp on mobility plus king safety retire together, so evaluate() returns the exact sum it computes everywhere, and one non-regression SPRT decides it
+accepts:    (1) the shortcut and the clamp go in one change: the expensive stage is always computed and its sum is never truncated, and no weight moves (weights frozen); (2) every reader of the margin is resolved, the list read at this step's HEAD with `git grep -E 'LAZY_EVAL_MARGIN|LazyEvalMargin|evaluate_lazy'` and recorded -- each removed, re-pointed or retired with its reason, including the tune-build option, the truncation tests and guards (DEC-053, DEC-169: the taper divisions stay, S055 having read H0, and the truncation guard is re-derived at this step's HEAD, never relaxed), `adocs/data/S192_anchors.py`, `tools/eval_spread.cpp`, the mutants in `tools/mutants/eval.py` that target the clamp or the shortcut (re-anchored, or retired with the reason recorded, DEC-141), and the prose checker's phrase table; (3) INV-6 does not apply -- the tree changes -- so `bench` moves and the commit carries the new total; the nps and the nodes to depth 11 over S103's 300 positions are measured against the parent and recorded beside the verdict, as S120 measured the shortcut alone; (4) one `{-5, 0}` nElo non-regression SPRT at 8+0.08 with DEC-143's worst case (25591 games on a bound, 41861 at the midpoint) and the H1, H0 and no-verdict actions written in the pre-registration before the first game; H1 lands it; H0 keeps both, and S122's design is amended by an owner decision before S121 starts, never by S122 claiming unclamped scores under a kept clamp; (5) the surface golden (`tests/test_uci_surface.cpp`) is refreshed only after `adocs/specs.md` and `MANUAL.md` describe the removed tune option (SURFACE rule); (6) the second tier (Debug self-play, `tools/gate_extra.sh`) before completion, because the step changes what the search reads at every node
+            (Re-formed 2026-10-08 by DEC-258, from "re-decide LAZY_EVAL_MARGIN
+            from measured spread". The margin re-decision below is history.)
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/search.cpp, src/search_params.hpp,
+            tests/test_eval_model.cpp, tests/test_evaluation.cpp, tests/test_search.cpp,
+            tests/test_search_params.cpp, tests/test_tuner_gradient.cpp,
+            tests/test_uci_surface.cpp, tools/eval_model.hpp, tools/eval_spread.cpp,
+            tools/datagen.cpp, tools/mutants/eval.py, tools/plan_prose_check.py,
+            adocs/data/S192_anchors.py, MANUAL.md, DEV_MANUAL.md, adocs/specs.md
+excludes:   any weight change or new term -- the fits that use the unclamped sum are S121 onward; another lazy shortcut with a different bound, which would need its own demonstrated bound and scope; the taper divisions, which S055 measured (H0)
+decisions:  DEC-039, DEC-257, DEC-258, DEC-143
 closes:     2026-08-13_adversarial-F05, 2026-09-10_adversarial-F16, 2026-09-10_adversarial-F25
 blocks:
 paused_by:
+author:
 done:
+
+## Re-formed 2026-10-08, DEC-258: both off, one verdict
+
+The owner chose, on 2026-10-08, to retire the shortcut and the clamp
+together under one non-regression verdict, over two separate verdicts and
+over folding the removal into the mobility step. The reasons:
+
+- **The two are one mechanism.** The clamp is what makes the shortcut's
+  bound hold by construction ("Not an unsoundness" below). With the clamp
+  gone the shortcut has no bound, so measuring the shortcut alone answers a
+  question that stops mattering the moment the clamp goes.
+- **Each half alone is near zero.** S120 measured the shortcut switched off
+  with the clamp kept: -5.01 % nps, -7.5 % nodes, -2.64 % wall to depth 11
+  (`adocs/data/S120_measurements.txt`, "Exact everywhere"). The clamp binds
+  rarely at today's weights (F16: p99 153, max 401 over 1.5 M rows, against
+  184). Two near-zero `{-5, 0}` runs cost 24 to 38 hours for about nothing.
+- **The fits need it first.** S121 fits mobility, which sits inside the
+  clamped sum, and S122 needs king safety unclamped. So this step moves from
+  directly before S122 to directly before S121.
+
+F16's concern -- the clamp sized before the terms that change its sum --
+dissolves with the clamp. F25's missing candidate value is resolved with the
+tool in (2). F05 closes with the comment the clamp's removal deletes or
+rewrites.
+
+## Before 2026-10-08: the margin re-decision this step replaced
+
 
 ## What is stale
 

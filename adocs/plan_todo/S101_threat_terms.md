@@ -1,13 +1,38 @@
 id:         S101
-goal:       evaluation terms for a piece attacked by a lesser piece, fitted like every other constant
-accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the terms are fitted with every other constant frozen and the held-out error reported before and after, which is how every constant in this engine was fitted; the term is accumulated or computed in a stage that already has the attack bitboards it needs, never rebuilt from the bitboards a second time, since evaluate() runs at every quiescence node and INV-4 exists to keep that cost out; INV-5 holds -- mirroring a position agrees rather than negates, asserted in tests/test_evaluation.cpp; the lazy evaluation bound still holds by construction if the term lands in the expensive stage, or the step states why it belongs in the cheap one; tools/eval_model.hpp gains the feature and tools/tuner_groups.hpp a group whose partition properties still hold; the fast suite green
+goal:       evaluation terms for a piece attacked by a lesser piece, for an attacked piece nobody defends, and for a safe pawn push that would attack a piece, fitted like every other constant
+accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the terms are fitted with every other constant frozen and the held-out error reported before and after, which is how every constant in this engine was fitted; the term is accumulated or computed in a stage that already has the attack bitboards it needs, never rebuilt from the bitboards a second time, since evaluate() runs at every quiescence node and INV-4 exists to keep that cost out; INV-5 holds -- mirroring a position agrees rather than negates, asserted in tests/test_evaluation.cpp; the step states which stage the terms land in and why (S039 retires the lazy bound; if S039 read H0, the bound must still hold by construction); tools/eval_model.hpp gains the features and tools/tuner_groups.hpp a group whose partition properties still hold; each threat kind is screened before the family's one SPRT (DEC-259); the fast suite green
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
-excludes:   outposts and space, which are S102; king safety, which exists and is fitted
-decisions:  DEC-071
+excludes:   outposts and space, which are S102; king safety, which exists and is fitted; overload threats
+decisions:  DEC-071, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+**Scope gained 2026-10-08 (DEC-258):** hanging pieces -- a piece attacked
+and not defended, by type, and an undefended piece attacked by the enemy
+king -- and pawn-push threats, a safe pawn push that would attack a piece
+(Ethereal's 11.00 and 11.25 release notes; CPW *Hanging Piece*; Stash's
+changelog, v26, +10.13 for its threat-based initiative term). DEC-138 had
+deferred them beyond this step's original goal; S217 had counted Ethereal's
+pawn-push threats as covered here while this file excluded them. The
+sections below that call them out of scope are superseded on that point.
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## The hazard is where it is computed, not what it scores
 

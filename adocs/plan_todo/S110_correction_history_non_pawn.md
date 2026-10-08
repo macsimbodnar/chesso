@@ -3,11 +3,16 @@ goal:       a second correction table keyed on the non-pawn structure, split by 
 accepts:    an SPRT verdict, recorded whatever it is; the key is maintained incrementally in add_piece, remove_piece and move_piece and is never recomputed in evaluate() -- INV-4, and the 25 % of nps S014 removed is what a recomputation puts back; the corrected score can never cross into the mate or decisive band, and a test asserts it; the table is a constant-sized array with its dimensions and its clamp stated in src/search_params.hpp
 touches:    src/search.cpp, src/bitboard.cpp piece primitives, src/data_structures.hpp, src/search_params.hpp
 excludes:   the pawn table, which is S099 and lands first; continuation correction, which is S111
-decisions:  DEC-071, DEC-084
+decisions:  DEC-071, DEC-084, DEC-258
 closes:
 blocks:
 paused_by:
 done:
+
+## Conditional, 2026-10-08, DEC-258
+
+In the main order directly after S099, and run only if S099 reads H1. On
+S099's H0 or no verdict this step returns to the reserve unchanged.
 
 ## Reserve, 2026-08-19, DEC-087
 

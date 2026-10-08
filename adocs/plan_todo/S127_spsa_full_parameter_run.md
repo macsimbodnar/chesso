@@ -3,11 +3,18 @@ goal:       an SPSA run over the whole search parameter set as it stands after t
 accepts:    the run is over the full set in src/search_params.hpp, which by then includes every margin, threshold and blend weight the search block added; the objective is games and the verdict is an **independent** SPRT against the incumbent, not the SPSA's own score; the run is detached with a terminal marker and a watcher that exits on it (AGENTS.md section 12); the shipped values are what the run returned, and any that agree with a published seed are noted as confirmations (DEC-084)
 touches:    tools/, src/search_params.hpp
 excludes:   the driver itself, which is S084; the first run over the pre-block set, which is S085
-decisions:  DEC-084, DEC-041, DEC-139, DEC-222, DEC-202
+decisions:  DEC-084, DEC-041, DEC-139, DEC-222, DEC-202, DEC-258
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-258
+
+S261 is the search block's own lane (DEC-222 (8)); this step is the last lane
+of the cadence, after the evaluation block and S126's refit. Its axes are the
+whole reachable set as it then stands, including those S099, S110, S111,
+S023, S025 and S265 add, which no earlier lane fits.
 
 ## Two runs, not one
 

@@ -7,11 +7,23 @@ accepts:    an SPRT returns a verdict; the ordering bands stay disjoint, dischar
             wire it into the margins first, and let it into score_move second.)
 touches:    src/evaluation.cpp score_move, src/data_structures.hpp search_state_t
 excludes:
-decisions:
+decisions:  DEC-258
 closes:     2026-08-13_plan_review.2-F06
 blocks:
 paused_by:
 done:
+
+## Promoted 2026-10-08, DEC-258: the capture-history family enters the main order
+
+The owner moved capture history out of the reserve as a family of three
+verdicts after the correction-history steps: this step, then S025 (losing
+captures searched after the quiets), then S265 (late captures reduced,
+scaled by this history). The reserve reasoning below is kept as history and
+as the risk this step carries: Weiss measured the ordering use at
+-4.17 +/- 4.83 at short control and +3.66 +/- 3.29 at long, so a zero or a
+loss at 8+0.08 is an expected outcome and is recorded as such. One `{0, 5}`
+nElo SPRT with DEC-143's worst case pre-registered; the ordering-band case the
+accepts names is written before any score changes.
 
 ## Reserve, 2026-08-19, DEC-087
 

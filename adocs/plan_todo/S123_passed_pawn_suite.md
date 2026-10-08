@@ -1,13 +1,29 @@
 id:         S123
 goal:       passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
-accepts:    an SPRT verdict per group, recorded whatever it is; the table is rank crossed with can-advance and safe-advance rather than a single rank curve; the distance to **each** king is scaled by rank, because the same distance is worth more to a pawn on the seventh; candidate passers are scored; **monotonicity is not imposed** -- a fit that returns a non-monotonic middlegame curve is reporting something and is not corrected by hand; a test asserts the passer bitboard is colour-symmetric under board mirroring, written before any fit, because two published passed-pawn bugs shipped invisible to everything except an SPRT
+accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the table is rank crossed with can-advance and safe-advance rather than a single rank curve; the distance to **each** king is scaled by rank, because the same distance is worth more to a pawn on the seventh; candidate passers are scored; **monotonicity is not imposed** -- a fit that returns a non-monotonic middlegame curve is reporting something and is not corrected by hand; a test asserts the passer bitboard is colour-symmetric under board mirroring, written before any fit, because two published passed-pawn bugs shipped invisible to everything except an SPRT
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tests/test_evaluation.cpp
 excludes:   pawn structure terms, which are S125
-decisions:  DEC-071, DEC-084
+decisions:  DEC-071, DEC-084, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## What is there
 

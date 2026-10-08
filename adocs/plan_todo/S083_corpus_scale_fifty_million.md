@@ -1,9 +1,9 @@
 id:         S083
 goal:       the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, not by a volume target
-accepts:    the datagen budget in nights is stated **before** generation starts; the fit is compared on held-out error across at least two corpus sizes at the S082 sampling density, so "more rows still helps" is a measured claim at this parameter count and not a quoted one; the generation command, seed, node budget, wall time and filter counts are recorded in the step file, not in a log that is gitignored; **one** candidate goes to an SPRT against the weights that ship, verdict recorded whatever it is; the node budget the corpus was generated at is stated as a decision with its reason, since it is the variable this step is trading
+accepts:    the datagen budget in nights is stated **before** generation starts; the fit is compared on held-out error across at least two corpus sizes at the S082 sampling density, so "more rows still helps" is a measured claim at this parameter count and not a quoted one; the generation command, seed, node budget, wall time and filter counts are recorded in the step file, not in a log that is gitignored; **one** candidate goes to an SPRT against the weights that ship, verdict recorded whatever it is -- the corpus built on S082's offline-chosen recipe at the size and node budget chosen here, and the only corpus SPRT the two steps owe (DEC-259); held-out loss is read on S082's fixed validation set; the node budget the corpus was generated at is stated as a decision with its reason, since it is the variable this step is trading
 touches:    .tuning/, src/eval_tables.hpp, src/evaluation.cpp, adocs/plan_done/ on completion
 excludes:   what is labelled, which is S082's and should be settled first; dedupe, which is S076's; the blend, which is S075's; any change to the tuner
-decisions:  DEC-041, DEC-055, DEC-087
+decisions:  DEC-041, DEC-055, DEC-087, DEC-259
 closes:
 blocks:
 paused_by:

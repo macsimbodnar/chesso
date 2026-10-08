@@ -1,13 +1,33 @@
 id:         S125
-goal:       backward, phalanx, supported and weak unopposed pawns join the three terms that exist, each fitted
-accepts:    an SPRT verdict per group, recorded whatever it is; the terms are indexed by file or by rank where the surveyed record says the indexing is what pays, and the step states which indexing it chose and why; **an isolated pawn is never also counted backward**, which is a documented double-count worth +4.01 to fix; every constant is fitted (DEC-084); **the pawn hash is not a precondition and the plan order is not reversed** -- these terms are what make S118 worth building, so they are measured recomputed at every `evaluate()` call, and the per-call cost the additions carry is measured here (`bench_eval`, and `build/tools/eval_spread` for where it lands) and recorded as the baseline S118 is later asked to reclaim
+goal:       phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, backward stops counting an isolated pawn twice, and each is fitted
+accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the terms are indexed by file or by rank where the surveyed record says the indexing is what pays, and the step states which indexing it chose and why; **an isolated pawn is never also counted backward**, which is a documented double-count worth +4.01 to fix; every constant is fitted (DEC-084); **the pawn hash is not a precondition and the plan order is not reversed** -- these terms are what make S118 worth building, so they are measured recomputed at every `evaluate()` call, and the per-call cost the additions carry is measured here (`bench_eval`, and `build/tools/eval_spread` for where it lands) and recorded as the baseline S118 is later asked to reclaim
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp
 excludes:   passed pawns, which are S123
-decisions:  DEC-071, DEC-084
+decisions:  DEC-071, DEC-084, DEC-259
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
+
+**Corrected 2026-10-08:** the goal used to list backward pawns as new;
+`src/evaluation.cpp` already computes them beside isolated and doubled pawns.
+What is new for backward is the double-count fix in the accepts.
+
+Each term -- and each part this file used to give a verdict of its own --
+is first fitted with every other constant frozen and kept only if it lowers
+held-out loss on S082's fixed validation set by more than the margin the
+pre-registration states; a term that fails is recorded with its figures and
+does not enter the match. The survivors ship under **one** `{0, 5}` nElo SPRT
+for the family, with DEC-143's worst case and abort rule pre-registered. On
+H0 or no verdict the family is bisected along a partition written in the
+pre-registration, each part its own SPRT. Where this file names
+`tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
+S262's trace and its exact-reconstruction test discharge that clause once
+S262 has landed; the attack sets come from S263. S039 runs before this family
+and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
+owner's amendment of that outcome binds here.
 
 ## What is there
 
@@ -49,15 +69,14 @@ S118", which S118 cannot supply at this point in the order. S139 dropped the
 dependency rather than reorder, because every document that touches the
 question orders the terms first and says why:
 
-- `adocs/plan.md` "pawns with king distance (S123" -- *"the
-  connected and phalanx pawn work (S125, +25.4 class), the pawn hash that makes
-  them affordable (S118)"*. Terms, then the cache.
-- `adocs/plan.md` "block to land after the pawn terms it caches are worth
-  caching" -- S118 moves out of the speed block to land after them. The
-  parenthetical that used to follow that clause, and used to be quoted here,
-  read the published slowdown as a cheap pawn evaluation cached; DEC-203
-  replaced it with what the source says -- a table sized past the last-level
-  cache -- and the ordering argument is unchanged by the correction.
+- `adocs/plan.md` "the pawn cache once the pawn terms are worth caching" --
+  the order since the 2026-10-08 rewrite (DEC-258) keeps the terms first and
+  the cache after them, as the order before it did (`git show
+  a43ef3e:adocs/plan.md`, its block-3 paragraph). The parenthetical that used
+  to be quoted here read the published slowdown as a cheap pawn evaluation
+  cached; DEC-203 replaced it with what the source says -- a table sized past
+  the last-level cache -- and the ordering argument is unchanged by the
+  correction.
 - DEC-087 (h) -- *"S118 moves from the speed block into the evaluation block,
   behind the expensive pawn terms -- caching a cheap pawn evaluation measured a
   10 % slowdown in the published record"* -- and (i) prices the block in Stash
@@ -71,11 +90,8 @@ question orders the terms first and says why:
   by construction and not on anybody's published figure, and
   `adocs/plan_todo/S118_pawn_hash_table.md` "is what makes S125's richer pawn
   terms affordable" for the same boundary read from S118's side.
-- The list itself: `adocs/plan.md` "backward, phalanx, supported and weak
-  unopposed pawns join the three", S125 at 54 and S118 at 55. (Both ranges
-  moved when S140 rewrote the block-3 paragraph on 2026-08-21; this one was
-  also one entry low before that, naming 55 and 56 while the sentence claims 54
-  and 55.)
+- The list itself: `adocs/plan.md` "pawn structure (S125, v31 +25.38)" -- in
+  the Open list S125 sits at 22 and S118 at 23 (2026-10-08).
 
 Reversing the pair would put a cache in front of the cheap computation it
 caches, which buys little by this project's own arithmetic -- not by the
