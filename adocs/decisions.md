@@ -14161,3 +14161,47 @@ Rejected:     Appending the three behind the current order -- every verdict
 Consequences: S119 moves to Open entry 4. The three are timed on the
               workstation, never on the M1 figures (DEC-258 (2)). F04's status
               line reads `open` until the owner rules on the investigation.
+
+## DEC-264  2026-10-08  A new base FEN no longer clears the table; skip a clear of a clean table; the bare-FEN validation match is a recorded step
+Tags:         uci, transposition-table, audit, measurement, dec-263, dec-258, dec-143
+Context:      DEC-263 left `2026-10-08_performance-F04` open for an
+              investigation of its Elo cost. `adocs/data/S271_replay.md`:
+              over 8653 positions of 200 self-play games, a client sending a
+              bare FEN each move costs +21.8 to +26.8 % nodes to the same
+              depth (depth 12 to 14, Hash 16 to 128), one moving its base
+              after each capture or pawn move +11.9 to +14.4 % -- about 28 to
+              60 Elo by conversion at S219's +174.85 Elo per doubling of time,
+              not a verdict. The same engine with the clear removed reads
+              within 0.1 % of base-plus-moves in every cell; the 11 to 21 best
+              moves of 8653 that still differ are the repetition history a bare
+              FEN cannot carry. fastchess and python-chess hold the base fixed
+              for a game, so the harness pays only the clear's time. Four
+              proposals were put: (A) clear only on `ucinewgame`, `clean-tt`
+              and a Hash change; (B) skip a clear of a clean table; (C) take a
+              bare FEN that continues the last position as a continuation and
+              keep the game history; (D) a validation match through a relay
+              that sends bare FENs.
+Decision:     By the owner, 2026-10-08: "go with A and B. For long run SPRT
+              test wait for the workstation and just record as a step to run
+              it as validation for this if required." A and B are S271, which
+              closes F04, at Open entry 4. D is S272 at entry 5: one SPRT
+              through the relay on the workstation, run as validation if it is
+              still needed when the machine is free; S271 does not wait on it.
+              The tests whose premise was the base clear are re-stated under
+              this ruling, which is what makes that a decision and not a
+              relaxed test.
+Rejected:     (C) recognising a continuation -- it recovers only the
+              repetition residue, 0.1 to 0.25 % of best moves, for a client
+              that already discards the game's history, and a false
+              continuation would invent a history for a new game; the residue
+              is accepted. (D) on the MacBook now -- matches run on the
+              workstation (DEC-258 (2)). Clearing on a new base only until the
+              first `ucinewgame` (the audit's suggestion) -- the replacement
+              rule already lets any older entry be overwritten, so a client
+              that never sends `ucinewgame` loses nothing by a kept table, and
+              the extra state buys nothing measured.
+Consequences: MANUAL's "a new base is a new base" changes: a new base still
+              moves the remembered base and re-arms the book, and no longer
+              clears the table. B's reach shrinks once A lands -- two of a
+              book start's three clears were base clears -- so S271 counts it
+              and drops B as a recorded zero if it is nil in ordinary play.

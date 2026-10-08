@@ -279,7 +279,7 @@ HEAD rebuilt with `-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON`:
 
 ### 2026-10-08_performance-F04 — low — a new position base clears the whole table synchronously, so a new game from a book FEN clears it three times and a client that sends bare FENs loses it every move
 
-Status: open
+Status: planned — S271 (DEC-264), Open entry 4; its investigation is `adocs/data/S271_replay.md`.
 
 **Evidence.** Three call sites clear the table:
 

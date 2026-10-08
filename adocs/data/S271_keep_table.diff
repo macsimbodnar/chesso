@@ -1,0 +1,12 @@
+diff --git a/src/chesso.cpp b/src/chesso.cpp
+--- a/src/chesso.cpp
++++ b/src/chesso.cpp
+@@ -523,7 +523,7 @@ static void commit_position_base(const std::string& fen)
+
+   initial_position = fen;
+
+-  tt_reset(&tt);
++  // F04 probe: keep the table on a new base
+   still_in_opening = true;
+ }
+
