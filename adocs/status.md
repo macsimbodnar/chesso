@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-08, by hand.
 
+## 2026-10-08: performance audit -- three speed steps at the top, F04 under investigation
+
+`/moltke:audit` at `29348c5` (`adocs/audit/2026-10-08_performance.md`): one
+high, one medium, two low, no correctness defect. Each of F01 to F03 was
+node-identical in a prototype, measured on the M1 with cycle counters:
+
+- F01 → **S268**: a move a rule discarded is made and unmade only to ask
+  whether it gives check, 57 % of `negamax_at`'s makes; -5.0 to -7.2 % cycles.
+- F02 → **S269**: after late move pruning fires, the rule tests and the
+  exchange test still run on each quiet; -2.7 to -3.9 % cycles.
+- F03 → **S270**: no LTO; -1.2 to -1.7 % cycles.
+- F04, **open**: a new base FEN clears the whole table, so a client sending a
+  fresh FEN each move gets a cold table every move. The owner asked for an
+  investigation of its Elo cost and proposals first (DEC-263).
+
+The owner put S268 to S270 at Open entries 1 to 3, ahead of S119 (DEC-263).
+All three owe a workstation timing, no match. The re-run no longer reproduces
+`2026-09-12_adversarial-F01` (closed) nor `2026-09-10_adversarial-F17`, F19,
+F20 and F21 (S210, done; that report's Part E carries no status lines to
+move). **Next:** S268, then S269 and S270, then S119.
+
 ## 2026-10-08: S260 done -- the MacBook's gate is green again
 
 `ORDINARY_BETA` in `tests/test_search.cpp` is `[[maybe_unused]]` with a

@@ -13,7 +13,7 @@ audit report only: no implementation or test was changed.
 
 ### 2026-09-12_adversarial-F01 — high — `position fen` accepts a move that captures the enemy king
 
-Status: planned — S223 (DEC-197), at Open entry 9 behind S109 beside S210 under DEC-171's reach rule, not at entry 1; the step file is rewritten to the house shape.
+Status: closed — S223; re-run by 2026-10-08_performance, which no longer reproduces it.
 
 `adocs/specs.md`'s prime directive says that Chesso never plays or accepts an
 illegal move and never corrupts its board state.  The public `position fen`

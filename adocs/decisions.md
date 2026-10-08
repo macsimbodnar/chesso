@@ -14134,3 +14134,30 @@ Consequences: `test_fastchess_script` may time out on the MacBook's gate; that
               alone does not block a commit made there, and the commit body
               says so. The coordinator reads the ruling that narrowly: any
               other failing test still blocks. The owner may widen it.
+
+## DEC-263  2026-10-08  The 2026-10-08 performance audit's three speed findings go to the top of the Open list; F04 waits on an investigation
+Tags:         planning, audit, speed, measurement, dec-083, dec-258
+Context:      The 2026-10-08 performance audit (at `29348c5`) found four
+              findings. F01: a move a pruning rule has discarded is made and
+              unmade only to ask whether it gives check -- 57 % of
+              `negamax_at`'s makes at `bench`. F02: after late move pruning
+              fires, a quiet still runs three rule tests and an exchange test
+              that cannot change its fate. F03: no build uses link-time
+              optimization. Each was node-identical in a prototype and
+              measured -5.0 to -7.2 %, -2.7 to -3.9 % and -1.2 to -1.7 % cycles
+              on the M1. F04: a `position` with a new base FEN clears the whole
+              table, so a client that sends a fresh FEN each move searches
+              every move on a cold table.
+Decision:     By the owner, 2026-10-08: "put the findings at the top". F01, F02
+              and F03 become S268, S269 and S270 at Open entries 1 to 3, ahead
+              of S119. F04 stays open: the owner asked for an investigation of
+              its Elo cost, bound to the table clearing, and proposals, before
+              it gets a step or a decision.
+Rejected:     Appending the three behind the current order -- every verdict
+              taken before them is played by a slower engine, and they owe a
+              timing each, not a match (DEC-083). One step for F01 and F02
+              together -- the two are timed one at a time (CLAUDE.md rule 6),
+              and findings map one to one.
+Consequences: S119 moves to Open entry 4. The three are timed on the
+              workstation, never on the M1 figures (DEC-258 (2)). F04's status
+              line reads `open` until the owner rules on the investigation.
