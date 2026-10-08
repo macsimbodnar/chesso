@@ -108,3 +108,12 @@ target_link_libraries(magic_gen PRIVATE chesso_engine)
 add_executable(node_share_census node_share_census.cpp)
 target_include_directories(node_share_census PRIVATE ../src)
 target_link_libraries(node_share_census PRIVATE chesso_engine)
+
+# S268. User-space instructions and cycles of a command, read from the
+# kernel's hardware counters: `perf` is not installed on the workstation and
+# the counters need nothing it provides. Linux only -- perf_event_open has no
+# macOS equivalent, so the MacBook does not build it. Links nothing of the
+# engine; it times whatever binary it is handed.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+     add_executable(perf_counters perf_counters.cpp)
+endif()

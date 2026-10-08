@@ -3232,6 +3232,22 @@ hyperfine --warmup 1 --runs 10 './bench_before -r 2' './bench_after -r 2'
 
 Check the machine is idle first: `ps aux | sort -rnk3 | head`.
 
+**Instruction and cycle counters, Linux only (S268).** `perf` is not installed
+on the workstation and installing it needs the owner, so
+`build/tools/perf_counters` reads the same hardware counters through
+`perf_event_open`: user space only, which `kernel.perf_event_paranoid` 2
+allows, over the command's whole process tree from its exec to its exit. It
+prints one line to stderr, or appends it to `-o FILE`, and exits with the
+command's status. Interleave it like `hyperfine`. The instruction count
+repeats to about a hundred instructions in ten runs of `chesso bench`, so it
+resolves a change wall time cannot; cycles spread 0.3 to 0.6 % (sd) here.
+macOS does not build it.
+
+```bash
+./build/tools/perf_counters -o counters.txt ./build/src/chesso bench 16 > /dev/null
+# perf_counters instructions <n> cycles <n> wall_ms <ms> scaled 0
+```
+
 ### Depth at a fixed node budget, and the one thing a node count cannot see
 
 `bench` and `tools/search_bench.py` both hold the **depth** fixed and report
