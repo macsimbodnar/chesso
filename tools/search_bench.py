@@ -17,6 +17,12 @@ node count rather than the last iteration's. A figure recorded from this tool
 before S037 is a sum of last iterations and is not comparable with one taken
 after it.
 
+Each position is searched cold by construction: `ucinewgame`, then `readyok`
+waited for, before `position` and `go`, so the table's clear runs before the
+clock starts. Until S271 a new base FEN cleared the table inside `position`,
+which kept the positions cold and could put the clear inside the timed span;
+since S271 no `position` clears (DEC-264).
+
 Depth 9 is 3136397 nodes and under half a second for all three positions on the
 DEC-049 machine. Interleave the runs when comparing two builds, and check the
 machine is idle first - see TOOLCHAIN.md.
@@ -38,6 +44,12 @@ def run(engine, depth):
     while "uciok" not in p.stdout.readline(): pass
     total, results = 0.0, []
     for name, fen in POSITIONS:
+        send("ucinewgame")
+        send("isready")
+        while True:
+            line = p.stdout.readline()
+            if not line: raise RuntimeError("engine closed its output before readyok")
+            if line.startswith("readyok"): break
         send("position fen " + fen)
         send(f"go depth {depth}")
         t0, nodes, last = time.perf_counter(), 0, ""

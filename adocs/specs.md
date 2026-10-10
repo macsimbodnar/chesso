@@ -289,10 +289,10 @@ that does not parse, one that is not legal on the board it arrives at, and
 one the history has no room for each end the command with the board, the
 history and every move applied since the last `position` exactly as they were
 -- the whole command is atomic, the FEN refusals included: nothing is written
-before the line has succeeded, so a refused command also leaves the
-transposition table unreset, `initial_position` unmoved and the book flag
-`still_in_opening` as it was (`load_position()` loads, `commit_position_base()`
-commits once at the end). One `info string`
+before the line has succeeded, so a refused command also leaves
+`initial_position` unmoved and the book flag `still_in_opening` as it was
+(`load_position()` loads, `commit_position_base()` commits once at the end).
+One `info string`
 line in three shapes (`MANUAL.md` has them). Before S210 such a token was
 skipped and the rest of the list applied over the hole, silently under
 `NDEBUG`, so `position` could end on a board the GUI never sent
@@ -306,6 +306,25 @@ saturates at 255** rather than wrapping: 256 reversible plies took it to 0 and
 switched off the `>= 100` fifty-move test and `classify_repetition()`'s window
 together (F17); the field stays 8 bits because `history_entry_t` is exactly 16
 bytes (DEC-208), and `load_FEN` still refuses a clock above 255.
+
+**No `position` clears the transposition table since 2026-10-10, S271
+(DEC-264).** A new base -- a FEN other than `initial_position` -- moves
+`initial_position` and re-arms `still_in_opening`, and nothing else; the table
+is cleared by `ucinewgame`, `clean-tt`, `bench`, which calls
+`reset_for_new_game()` before each of its positions, any accepted `setoption
+name Hash`, which reallocates it through `tt_resize()`, and `test`, which
+clears before each entry whose FEN differs from `initial_position` -- the
+condition the base clear had, so its output, a second `test` in one process
+included, is the parent's (`tests/test_engine.cpp` "a repeated test reads the
+same total"). Until S271
+`commit_position_base()` also cleared the table, so a client sending a bare FEN
+each move searched every move cold, +21.8 to +26.8 % nodes to the same depth
+(`adocs/data/S271_replay.md`, 2026-10-08_performance-F04). fastchess and
+python-chess hold the base fixed for a game, and fastchess sends `ucinewgame`
+before each game, so harness play is unchanged: `bench` and
+`tools/search_bench.py` read the parent's counts and best moves at S271.
+`tests/test_engine.cpp` "a later board sent as a bare fen keeps the table"
+holds the rule.
 
 **`go infinite` answers `stop` and nothing else since S210**: the infinite
 branch clears `depth`, `nodes`, `movetime` and the clock, and

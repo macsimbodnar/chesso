@@ -382,10 +382,30 @@ on a board the GUI had not sent and every later `bestmove` was answered for a
 position the engine had not been given.
 
 **Nothing else the command would have changed is changed either.** A refused
-`position` does not clear the transposition table, does not move the base the
-engine remembers, and does not put the opening book back on for the line it
-refused. A new base still does all three — that is what makes a new base a new
-base — but only once the whole command has played.
+`position` does not move the base the engine remembers and does not put the
+opening book back on for the line it refused. The remembered base is the
+`startpos` or FEN, without its moves, that the engine last loaded: the start
+position when it starts and after `ucinewgame`, the last position `bench` or
+`test` searched after either, and otherwise the base of the last `position`
+that played in full. A `position` whose base differs from it is a new base,
+and still does both, but only once the whole command has played.
+
+**No `position` clears the transposition table** (S271, DEC-264). Until S271 a
+new base cleared it too, so a client that sends the current board as a bare FEN
+every move, or moves its base after each capture or pawn move, searched every
+move on a cold table: over 8653 positions of 200 self-play games that cost
++21.8 to +26.8 % nodes to the same depth for a bare FEN each move
+(`adocs/data/S271_replay.md`). The table is cleared by `ucinewgame`,
+`clean-tt`, `bench`, any accepted `setoption name Hash`, which reallocates it,
+and `test`, before each of its positions that is a new base, which keeps its
+output what it was before S271 — and by nothing else. UCI gives new-game
+signalling to `ucinewgame`, and an entry kept from an earlier game holds its
+slot no longer than one kept from earlier in the same game. Any store to the
+slot overwrites an entry an earlier search wrote, with one exception: the
+search counter is 8 bits and comes round every 255 searches, so an entry
+written exactly that many searches back (or a multiple of it) reads as the
+current search's own, and only a store at least as deep replaces it. To search
+a position cold, send `ucinewgame` first.
 
 **The bound is 4871 plies**, which is `HISTORY_MAX_SIZE - MAX_PLY - 1`: the
 move history holds 5000 entries and the search needs `MAX_PLY` of them above

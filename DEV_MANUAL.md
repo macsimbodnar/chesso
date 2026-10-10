@@ -3179,17 +3179,22 @@ with one taken after it. The counts themselves did not move: the same run reads
 609848 / 2058510 / 468039 at depth 9 where it used to read 254082 / 1022573 /
 168767.
 
-**Two searches on the same FEN in one process are not two cold searches.**
-`set_position` (`src/chesso.cpp`) resets the transposition table only when the
-FEN string differs from the one already loaded, so a second `position` carrying
-the FEN the engine is already on keeps whatever the previous search left, and
+**Two searches in one process are not two cold searches.** No `position`
+clears the transposition table since S271 (DEC-264); until then a `position`
+with a FEN differing from the one already loaded did. So a second `position`,
+carrying the same FEN or another, keeps whatever the previous search left, and
 the search that follows runs warm. Measured 2026-09-10 on the midgame position,
 `go depth 8` cold against warm: **77612 nodes then 8460**, and the gap holds at
-every depth from 5 to 10. `tools/search_bench.py` is safe because its three FENs
-differ from each other, and so is `bench`, which sends the whole of `ucinewgame`
-before every position. What is not safe is searching a position twice, or
-re-running one search to double-check a count: send `ucinewgame` between them,
-or start a new process. This is a property and not a bug -- the Chess
+every depth from 5 to 10. `bench` is safe, since it sends the whole of
+`ucinewgame` before every position, and so is `tools/search_bench.py`, which
+since S271 sends `ucinewgame` and waits for `readyok` before each position's
+`position` and `go`. Until S271 the tool relied on its three FENs differing,
+which cleared the table inside `position`, possibly after the tool had
+started its clock; the wait puts the clear before the clock on both sides of
+any comparison. Its counts and best moves read the same as before the change
+at depths 9 and 12, on `16c8883` and on S271 (2026-10-10). What is not safe is
+searching a position twice, or re-running one search to double-check a count:
+send `ucinewgame` between them, or start a new process. This is a property and not a bug -- the Chess
 Programming Wiki's Transposition Table page, section Aging, is why an engine
 carries entries between root positions on purpose -- and it is pinned as one by
 `tests/test_engine.cpp` "a repeated go depth is cold only across ucinewgame".

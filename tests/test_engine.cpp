@@ -1305,41 +1305,99 @@ TEST_SUITE("engine: uci layer")
 
 
   // S210, raised by the Tier-1 fast check over the first half. The command was
-  // atomic for `game` and for nothing else. set_position() writes
-  // `initial_position`, calls tt_reset() and re-arms `still_in_opening`
-  // *before* the moves are applied, and the moves loop's refusal restored none
+  // atomic for `game` and for nothing else. set_position() wrote
+  // `initial_position`, called tt_reset() and re-armed `still_in_opening`
+  // *before* the moves were applied, and the moves loop's refusal restored none
   // of the three: `position <a different base> moves zzzz` wiped a table the
   // GUI had just paid a search for, left `initial_position` naming a board the
   // engine is not standing on, and put the opening book back on for a command
   // that was refused. The board was the only thing that came back.
   //
-  // The table is the half a test can see. uci_tt() is the engine's own table
-  // and tt_get_entry() answers for a board; `initial_position` and
-  // `still_in_opening` are file statics in src/chesso.cpp with no accessor.
-  // All three are fixed the same way -- nothing is written until the whole
-  // command has succeeded -- so the table standing is what pins the rule.
-  TEST_CASE("a refused position command leaves the table alone")
+  // Re-stated by S271 under DEC-264. Until then the table was the half a test
+  // could see, and this case was titled
+  // "a refused position command leaves the table alone".
+  // A new base no longer clears the table, so no `position`, refused or
+  // played, can lose an entry -- "a later board sent as a bare fen keeps the
+  // table" holds that -- and the table check lost its precondition. What a new
+  // base still owns is the remembered base and the book flag, both file
+  // statics in src/chesso.cpp with no accessor, so the book is the observable:
+  // a book hit answers with `bestmove` alone and a search prints `info score`
+  // (the observable S193 put under the OwnBook cases). Every control the two
+  // checks lean on is established here: the armed book answers startpos, a
+  // line it has nothing for switches it off, the same base keeps it off, and
+  // a *played* new base re-arms it. Observed 2026-10-10: the S210 shape --
+  // load_base() committing the base eagerly through set_position() -- turns
+  // both checks red; a refusal that moves only `initial_position` turns the
+  // second alone red; one that re-arms only the book turns the first red; and
+  // a load that writes `initial_position` itself, so that no commit ever
+  // re-arms, fails the played control.
+  TEST_CASE("a refused position command leaves the base and the book alone")
   {
     uci_init();
 
+    // OwnBook is a process global and the next case must not inherit it on,
+    // whichever REQUIRE below stops this one; the shutdown rides along so it
+    // runs after the option is put back.
+    struct own_book_off_t
+    {
+      ~own_book_off_t()
+      {
+        {
+          stdout_capture_t capture;
+          uci_process_line("setoption name OwnBook value false");
+        }
+        uci_shutdown();
+      }
+    } own_book_off;
+
+    auto searched = [](const std::string& position_line) {
+      stdout_capture_t capture;
+
+      if (!position_line.empty()) { uci_process_line(position_line); }
+
+      uci_process_line("go depth 1");
+      uci_wait_for_search();
+
+      return capture.contains("info score ");
+    };
+
+    // Loading the book arms it, whatever an earlier case left.
     {
       stdout_capture_t capture;
-      uci_process_line("position startpos moves e2e4 e7e5");
-      uci_process_line("go depth 6");
-      uci_wait_for_search();
+      uci_process_line("setoption name Book File value " BOOK_FILE_EMBEDDED);
+      uci_process_line("setoption name OwnBook value true");
     }
+
+    // The armed book answers the start position: a hit, no search.
+    REQUIRE_FALSE(searched("position startpos"));
+
+    // A line the book has nothing for, found by asking the engine: the search
+    // runs and the book switches itself off for this base.
+    auto disarm = [&searched]() {
+      REQUIRE(searched("position startpos moves a2a3 h7h6"));
+
+      // On the same base the book stays off, on a board it does hold.
+      REQUIRE(searched("position startpos"));
+    };
+
+    disarm();
+
+    // The played control, without which the second check below cannot fail: a
+    // new base that plays moves the remembered base, so startpos is new again
+    // and re-arms the book.
+    {
+      stdout_capture_t capture;
+      uci_process_line("position kiwipete");
+    }
+    REQUIRE_FALSE(searched("position startpos"));
+
+    disarm();
 
     const std::string before = generate_FEN(&uci_game()->board);
 
-    // The precondition, without which the check below cannot fail: the search
-    // just filled the table, so this board has an entry there to lose.
-    memcpy(&game, uci_game(), sizeof(game_t));
-    REQUIRE(load_FEN(generate_FEN(&game.board), &game));
-    REQUIRE(tt_get_entry(uci_tt(), &game.board) != nullptr);
-
-    // A *different* base, so set_position() takes its `initial_position != fen`
-    // branch, followed by a token that cannot play, so the command is refused
-    // after that branch would have run.
+    // A *different* base, so committing it would move the remembered base and
+    // re-arm the book, followed by a token that cannot play, so the command is
+    // refused after a base was loaded.
     {
       stdout_capture_t capture;
       uci_process_line("position kiwipete moves zzzz");
@@ -1352,10 +1410,15 @@ TEST_SUITE("engine: uci layer")
 
     CHECK_EQ(generate_FEN(&uci_game()->board), before);
 
-    CHECK_MESSAGE(tt_get_entry(uci_tt(), &game.board) != nullptr,
-                  "a refused [position] cleared the transposition table");
+    // The book flag: still off on the board the refusal left.
+    CHECK_MESSAGE(searched(""),
+                  "a refused [position] put the opening book back on");
 
-    uci_shutdown();
+    // The remembered base: still startpos, so startpos is not a new base and
+    // does not re-arm the book either.
+    CHECK_MESSAGE(searched("position startpos"),
+                  "the book answered on startpos after a refused [position]: "
+                  "it moved the remembered base or re-armed the book");
   }
 
 
@@ -3037,6 +3100,53 @@ TEST_SUITE("engine: uci go")
   }
 
 
+  // S271, DEC-264, 2026-10-08_performance-F04. A client that sends the board as
+  // a bare FEN moves the base on every move, and until S271 every new base
+  // cleared the table: adocs/data/S271_replay.md measured +21.8 to +26.8 %
+  // nodes to the same depth for it. New-game signalling is `ucinewgame`'s, so a
+  // later board of the same game, sent bare and with no `ucinewgame` between,
+  // has to find what the search before it stored.
+  TEST_CASE("a later board sent as a bare fen keeps the table")
+  {
+    uci_init();
+
+    // The later board's FEN, read off the engine's own board rather than
+    // written here (CHESS rule). The base stays startpos, so this line itself
+    // clears nothing under either rule.
+    std::string later_fen;
+    {
+      stdout_capture_t capture;
+      uci_process_line("position startpos moves e2e4 e7e5 g1f3 b8c6");
+      later_fen = generate_FEN(&uci_game()->board);
+      uci_process_line("position startpos moves e2e4 e7e5");
+      uci_process_line("go depth 6");
+      uci_wait_for_search();
+    }
+
+    // The precondition, without which the check below cannot fail: the search
+    // stored the later board, so the table has an entry there to lose.
+    memcpy(&game, uci_game(), sizeof(game_t));
+    REQUIRE(load_FEN(later_fen, &game));
+    REQUIRE(tt_get_entry(uci_tt(), &game.board) != nullptr);
+
+    // And the FEN is a new base -- not the startpos the engine remembers -- so
+    // the rule before S271 cleared the table on it.
+    REQUIRE_NE(later_fen, std::string(DEFAULT_POSITION));
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("position fen " + later_fen);
+    }
+
+    REQUIRE_EQ(generate_FEN(&uci_game()->board), later_fen);
+
+    CHECK_MESSAGE(tt_get_entry(uci_tt(), &game.board) != nullptr,
+                  "a new base FEN cleared the transposition table");
+
+    uci_shutdown();
+  }
+
+
   // S195, closing 2026-09-04_test_review-F08. The shape of Stockfish's
   // tests/reprosearch.sh, as adocs/testing_strategy.md section 3.1 describes
   // it: the same node-limited search, repeated across [ucinewgame], has to
@@ -3209,27 +3319,32 @@ TEST_SUITE("engine: uci go")
     memcpy(&game, uci_game(), sizeof(game_t));
     REQUIRE(tt_get_entry(uci_tt(), &game.board) != nullptr);
 
-    // The depth-limited twin of the case above, and it takes both reset paths
-    // to break before it fires: measured 2026-09-10, cutting tt_reset() out of
-    // reset_for_new_game() leaves it green, because set_position() still
-    // resets on the differing FEN, and cutting set_position()'s reset leaves
-    // it green for the mirror reason. With both cut it reads 8460 against a
-    // cold 77612.
+    // The depth-limited twin of the case above. Until S271 it took both reset
+    // paths to break before it fired: measured 2026-09-10, cutting tt_reset()
+    // out of reset_for_new_game() left it green, because set_position() still
+    // reset on the differing FEN, and cutting set_position()'s reset left it
+    // green for the mirror reason; with both cut it read 8460 against a cold
+    // 77612. Since S271 no [position] clears the table (DEC-264), so
+    // reset_for_new_game()'s own tt_reset() is the one path, and cutting it
+    // alone reads 5014 against a cold 15713 (2026-10-10).
     REQUIRE_EQ(run(true).nodes, cold.nodes);
 
     // F08 pinned as a property rather than repaired -- the step's excludes:.
-    // set_position() resets the table only when the FEN string differs from
-    // the one already loaded, so a [position] repeating the FEN keeps whatever
-    // the previous search left and the second search runs warm. The Chess
-    // Programming Wiki's Transposition Table page, section Aging, is why that
-    // is a property and not a bug: "most todays programs do not [clear the
-    // hash table between root positions], profit from entries of previous
-    // searches". The inequality is not an accident of one depth -- measured
-    // here 2026-09-10, cold against warm at depths 5 to 10: 15905/683,
-    // 21794/7400, 51667/11926, 77612/8460, 121530/9084, 208806/8218 -- and it
-    // is what goes red if the hazard is ever silently repaired: removing
-    // set_position()'s [initial_position != fen] gate reads 77612 against a
-    // cold 77612.
+    // A [position] repeating the FEN keeps whatever the previous search left
+    // and the second search runs warm: set_position() reset the table only on
+    // a FEN differing from the one loaded, and since S271 it resets nothing
+    // (DEC-264). The Chess Programming Wiki's Transposition Table page,
+    // section Aging, is why that is a property and not a bug: "most todays
+    // programs do not [clear the hash table between root positions], profit
+    // from entries of previous searches". The inequality is not an accident of
+    // one depth -- measured here 2026-09-10, cold against warm at depths 5 to
+    // 10: 15905/683, 21794/7400, 51667/11926, 77612/8460, 121530/9084,
+    // 208806/8218 -- and it is what goes red if the hazard is ever silently
+    // repaired. While the gate guarded the clear, removing set_position()'s
+    // [initial_position != fen] gate read 77612 against a cold 77612
+    // (2026-09-10); since S271 the repair is a tt_reset() on the [position]
+    // path, and one put ahead of commit_position_base()'s gate reads 15713
+    // against a cold 15713 (2026-10-10).
     const search_report_t warm = run(false);
 
     REQUIRE_MESSAGE(warm.nodes != cold.nodes,
@@ -3305,13 +3420,20 @@ TEST_SUITE("engine: uci go")
 
     // What this proves: bench's numbers are cold numbers, end to end -- the
     // last position of the run reports what it reports when it is the only
-    // thing searched. What it does NOT prove, measured rather than argued
-    // (2026-09-10): commenting out the loop's reset_for_new_game() leaves
-    // [bench 9]'s output byte-identical on every nodes, score and pv field and
-    // on the signature total, because the eight FENs are pairwise distinct and
-    // set_position() already resets on a differing FEN. The loop's reset is a
-    // guard against a bench list that ever repeats a position, and no test can
-    // construct that list from outside.
+    // thing searched. What it does NOT prove, measured rather than argued:
+    // commenting out the loop's reset_for_new_game() leaves [bench 9]'s output
+    // byte-identical on every nodes, score and pv field and on the signature
+    // total. On 2026-09-10 that was because the eight FENs are pairwise
+    // distinct and set_position() reset on a differing FEN. Since S271 no
+    // [position] clears the table (DEC-264), so with the loop's reset cut
+    // nothing clears between positions, and [bench 9] and the bare [bench]
+    // still read byte-identical (2026-10-10): a probe answers only on a full
+    // key match, and no entry one position stored is read by another. The
+    // loop's reset is a guard against a bench list that ever repeats a
+    // position, and no test can construct that list from outside. What does
+    // turn this red is a [ucinewgame] that stops clearing: cutting
+    // reset_for_new_game()'s tt_reset() reads 508 cold against bench's 115233
+    // (2026-10-10), the standalone search warm from bench's own last one.
     //
     // A red here after the bench set is reordered or extended means this case
     // is comparing the wrong position, not that the engine broke.
@@ -3322,6 +3444,61 @@ TEST_SUITE("engine: uci go")
                      " on its last position, a cold search of it reads " +
                      std::to_string(cold.nodes) +
                      " -- is mate2b still the last of bench_positions?"));
+
+    uci_shutdown();
+  }
+
+
+  // S271's fast check. [test] loads each of its positions with set_position()
+  // alone, and until S271 that cleared the table whenever the FEN differed from
+  // the base the engine remembered -- every entry but a first one already
+  // standing on its base. S271 took the clear off set_position(), and a second
+  // [test] in one process then read 6656 nodes against 101223 at depth 6: its
+  // positions ran on the table the first run left. command_test now clears on
+  // exactly the parent's condition.
+  TEST_CASE("a repeated test reads the same total")
+  {
+    uci_init();
+
+    auto total_of = [](const std::string& line) {
+      std::vector<std::string> lines;
+      {
+        stdout_capture_t capture;
+        uci_process_line(line);
+        lines = capture.lines();
+      }
+
+      const std::string prefix = "Total explored nodes: ";
+      uint64_t total = 0;
+      bool seen = false;
+
+      for (const std::string& out : lines) {
+        if (out.rfind(prefix, 0) == 0) {
+          total = std::stoull(out.substr(prefix.size()));
+          seen = true;
+        }
+      }
+
+      REQUIRE_MESSAGE(seen, ("no [Total explored nodes] line from " + line));
+
+      return total;
+    };
+
+    const uint64_t first = total_of("test 5");
+
+    // The precondition, without which the check below cannot fail: the first
+    // run left an entry for its last position, which the second run searches
+    // again, so a second run that clears nothing reads it warm. Not the start
+    // position: the clear restored here wipes it at the second entry.
+    memcpy(&game, uci_game(), sizeof(game_t));
+    REQUIRE(load_FEN(MATE_IN_2_B_POS, &game));
+    REQUIRE(tt_get_entry(uci_tt(), &game.board) != nullptr);
+
+    const uint64_t second = total_of("test 5");
+
+    CHECK_MESSAGE(second == first,
+                  ("a repeated [test] read " + std::to_string(second) +
+                   " against " + std::to_string(first)));
 
     uci_shutdown();
   }

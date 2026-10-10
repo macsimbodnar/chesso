@@ -1,0 +1,49 @@
+# S271 B, dropped as a recorded zero: skip tt_reset()'s memset when nothing has
+# written to the table since the last clear. Applies to 16c8883 and to S271.
+# See adocs/plan_done/S271_table_survives_a_new_base.md, "As built".
+--- a/src/data_structures.hpp
++++ b/src/data_structures.hpp
+@@ -587,6 +587,11 @@
+ {
+   uint8_t generation = 0;
+ 
++  // S271 B: set by tt_store_entry() before it writes an entry, cleared by
++  // tt_resize() and tt_reset(); a clear of a table nothing has written to
++  // since skips its memset.
++  bool written = false;
++
+   // entry_count is always a power of two, so the index is a mask instead of a
+   // division on every probe.
+   size_t entry_count = 0;
+--- a/src/transposition_table.cpp
++++ b/src/transposition_table.cpp
+@@ -42,6 +42,7 @@
+   tt->entry_count = count;
+   tt->index_mask = count - 1;
+   tt->generation = 1;  // 1 makes it stable
++  tt->written = false;  // calloc'd
+ 
+   LOG_I << "TT sized to " << megabytes << "MB (" << count << " entries, "
+         << ((count * sizeof(tt_entry_t)) / (1024 * 1024)) << "MB used)"
+@@ -68,10 +69,11 @@
+ 
+   // Only the entries are cleared. Wiping the struct itself would drop the
+   // pointer to the allocation and leak it.
+-  if (tt->entries != nullptr) {
++  if (tt->entries != nullptr && tt->written) {
+     memset(tt->entries, 0, tt->entry_count * sizeof(tt_entry_t));
+   }
+ 
++  tt->written = false;
+   tt->generation = 1;  // 1 makes it stable
+ }
+ 
+@@ -156,6 +158,8 @@
+ 
+   // Depth-preferred inside one search, always replaceable across searches.
+   if (entry->generation != tt->generation || depth >= entry->depth) {
++    tt->written = true;
++
+     entry->key = hash;
+     entry->score = score;
+     entry->best_move = best_move;

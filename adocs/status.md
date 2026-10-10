@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-10, by hand.
 
+## 2026-10-10: S271 done -- a new base FEN keeps the table
+
+No `position` clears the transposition table (DEC-264, option A). A bare FEN
+each move now replays at +0.080 % nodes against base plus moves (depth 12,
+Hash 16; was +21.8 to +26.8 %). Harness play is node-identical (INV-6).
+`ucinewgame`, `clean-tt`, `bench`, an accepted Hash and `test`, per entry as
+before, still clear it. **Deviation: B, skipping a clear of a clean table, is
+dropped although DEC-264 named it.** After A it skips one clear per engine
+process and none per game, so it buys nothing (rule 8); its recipe is
+`adocs/data/S271_B_written_flag.diff`. `tools/search_bench.py`, INV-6's
+instrument, relied on the base clear for its cold starts and now sends
+`ucinewgame` before each position (counts unchanged). The fast check took two
+rounds: the first sweep missed `test`'s per-entry clear (a second `test` in
+one process read warm) and the refused-position case borrowed its
+precondition; both were fixed red first, and all ten hand mutants were re-run
+on the final text. DEC-264's text still says a kept entry "blocks no slot";
+MANUAL and the code comment now qualify it for the 8-bit generation (255
+searches). F04 closed. No second tier (UCI layer only). **Next:** S272, the
+validating SPRT through a bare-FEN relay. No owner question is open.
+
 ## 2026-10-10: S270 done -- LTO and an inline `game_tables()` are slower here; both reverted
 
 Both of F03's changes were node-identical (INV-6) and neither holds on the

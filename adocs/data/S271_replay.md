@@ -79,3 +79,27 @@ without `ucinewgame` between.
 
 Stockfish's two counts differ, so it carries state across a bare FEN; that
 shows something persists, not that it is the table.
+
+## 2026-10-10: S271 as built, on the workstation
+
+`16c8883` plus S271's A (`commit_position_base()` no longer clears the table;
+B was dropped), built Release with g++ 13.3 on the i7-8700K. Node counts carry
+between machines. Depth 12, Hash 16 MB, the same 200 games and 8653 positions,
+`base` and `bare` sent to the one engine:
+
+| tag | engine | total nodes | against `h_base` |
+|---|---|---|---|
+| `h_base` | S271 | 1088825787 | -- |
+| `h_bare` | S271 | 1089692590 | x1.001 (+0.080 %), median x1.000, ~0 Elo by conversion |
+
+- `h_bare` reads within 0.2 % of `h_base`, which is what S271's accepts ask:
+  +0.080 %. A bare FEN each move now costs what base plus moves costs.
+- `h_base` reads 1088825787, the count `29348c5` read on the M1, to the node:
+  neither S268 to S270 nor S271 moved base plus moves, which is what fastchess
+  sends.
+- Best move differing from `h_base`: 21 of 8653, inside the 11 to 21 `k_bare`
+  read across the four cells above. It is the repetition history a bare FEN
+  cannot carry; DEC-264 accepts that residue.
+
+Run with `~/.venv/chess/bin/python adocs/data/S271_replay.py` for each mode,
+read with `S271_replay_read.py`; the json outputs stay with the run.

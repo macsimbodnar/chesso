@@ -474,12 +474,12 @@ bool check_move_legality(move_t move)
 
 // The load half of set_position(), and all of it that command_position() may
 // run before it knows the whole command succeeds. Puts `fen` on the board or
-// leaves the game exactly as it was, and touches none of the three pieces of
-// state a *new base* owns -- `initial_position`, the transposition table and
-// `still_in_opening`. S210, raised by the fast check over its first half: the
-// moves loop's refusal restored `game` and none of those three, so
-// `position <a different base> moves zzzz` wiped a table the GUI had paid a
-// search for and re-armed the book for a command that never took effect.
+// leaves the game exactly as it was, and touches neither piece of state a *new
+// base* owns -- `initial_position` and `still_in_opening`. S210, raised by the
+// fast check over its first half: the moves loop's refusal restored `game` and
+// none of what a new base then owned, so `position <a different base> moves
+// zzzz` wiped a table the GUI had paid a search for and re-armed the book for a
+// command that never took effect. The table stopped being a new base's in S271.
 static bool load_position(const std::string& fen)
 {
   // S176 (2026-09-03_adversarial-F04). A FEN that does not load leaves the
@@ -512,18 +512,27 @@ static bool load_position(const std::string& fen)
 }
 
 
-// The commit half: a base the engine was not already standing on gets a cold
-// table and a re-armed book, and `initial_position` remembers which base that
-// is so the next command can tell. Idempotent on the same FEN, which is what
-// keeps a repeated `position startpos moves ...` from resetting the table
-// between a GUI's moves.
+// The commit half: a base the engine was not already standing on gets a
+// re-armed book, and `initial_position` remembers which base that is so the
+// next command can tell. Idempotent on the same FEN, which is what keeps a
+// repeated `position startpos moves ...` from re-arming the book between a
+// GUI's moves.
+//
+// It does not clear the table. Until S271 it did, so a client that sends the
+// board as a bare FEN, or moves its base after a capture, searched every move
+// cold: +21.8 to +26.8 % nodes to the same depth for a bare FEN each move,
+// adocs/data/S271_replay.md. New-game signalling is `ucinewgame`'s (UCI.txt),
+// and an entry kept from another game holds its slot no longer than one from
+// earlier in the same game: tt_store_entry() lets any store replace an entry
+// an earlier search wrote, except when the 8-bit generation has come round
+// to it again -- every 255 searches -- and it is kept against a shallower
+// store as this search's own. DEC-264.
 static void commit_position_base(const std::string& fen)
 {
   if (initial_position == fen) { return; }
 
   initial_position = fen;
 
-  tt_reset(&tt);
   still_in_opening = true;
 }
 
@@ -1775,9 +1784,9 @@ bool command_register(std::queue<std::string>& args)
 
 
 // Everything `ucinewgame` clears. `bench` calls it between positions so each
-// one is searched cold: `set_position` alone resets the table only when the
-// FEN differs from the one already loaded, and it never clears the proven mate
-// line, which outlives a search by design (S170). S189.
+// one is searched cold: `set_position` never clears the table since S271
+// (DEC-264), and it never clears the proven mate line, which outlives a search
+// by design (S170). S189.
 static void reset_for_new_game()
 {
   stop_and_join_search();
@@ -1821,8 +1830,9 @@ bool command_position(std::queue<std::string>& args)
   // The fast check over the first half found the same command atomic for
   // `game` and for nothing else, which is why the base is committed at the
   // bottom instead of inside the loop: the three pieces of state a new base
-  // owns -- `initial_position`, the cleared table and `still_in_opening` --
-  // were written before the moves were applied and no refusal took them back.
+  // then owned -- `initial_position`, the cleared table and `still_in_opening`
+  // -- were written before the moves were applied and no refusal took them
+  // back. Two remain since S271, which took the table off a new base.
   // Nothing but the board is touched until the command has succeeded, so there
   // is nothing to restore; `pending_base` is the base the line asked for and
   // only a whole command that played gets to install it.
@@ -1956,10 +1966,9 @@ bool command_position(std::queue<std::string>& args)
   }
 
   // The commit. Every refusal above returned before reaching it, so a command
-  // that did not play in full leaves the table, the book flag and the
-  // remembered base exactly as they were. Ordering against the moves loop costs
-  // nothing: try_move() does not read the table, and a cold table for a new
-  // base is still cold once the line's moves are on the board.
+  // that did not play in full leaves the book flag and the remembered base
+  // exactly as they were. Ordering against the moves loop costs nothing:
+  // try_move() reads neither.
   commit_position_base(pending_base);
 
   LOG_I << print_nice_board(&game.board) << END_I;
@@ -2364,6 +2373,12 @@ bool command_test(std::queue<std::string>& args)
 
   for (auto const& entry : entries) {
     uci_reply("");
+
+    // Each entry gets the table state it had before S271. set_position()
+    // cleared the table then, on a FEN differing from the remembered base, and
+    // S271 took that clear off every `position` (DEC-264); without it a second
+    // `test` in one process ran warm on what the first left.
+    if (initial_position != entry.FEN) { tt_reset(&tt); }
 
     set_position(entry.FEN);
     uci_reply(entry.title + "\n" + generate_FEN(&game.board));
