@@ -1,0 +1,53 @@
+diff --git a/src/bitboard.cpp b/src/bitboard.cpp
+index 7b34cd3..aec93c1 100644
+--- a/src/bitboard.cpp
++++ b/src/bitboard.cpp
+@@ -3362,15 +3362,9 @@ bool magic_is_collision_free(index_t square, bb_t magic, bool rook)
+ 
+ // One instance for the whole process. Read-only once built, identical for
+ // every game, and 2.3 MB - far too large to hand each game_t its own copy.
+-static bb_tables_t shared_tables;
+-static bool shared_tables_ready = false;
+-
+-
+-const bb_tables_t* game_tables()
+-{
+-  assert(shared_tables_ready);
+-  return &shared_tables;
+-}
++// Not static since S270: game_tables() reads them from bitboard.hpp.
++bb_tables_t shared_tables;
++bool shared_tables_ready = false;
+ 
+ 
+ void initialize_game_const_data(game_t* game)
+diff --git a/src/bitboard.hpp b/src/bitboard.hpp
+index 25c61bb..fe1bfc1 100644
+--- a/src/bitboard.hpp
++++ b/src/bitboard.hpp
+@@ -7,10 +7,24 @@
+ 
+ void initialize_game_const_data(game_t* game);
+ 
++// The one instance of the attack tables, defined in bitboard.cpp. Written by
++// initialize_game_const_data() alone; everything else reads game_tables().
++extern bb_tables_t shared_tables;
++extern bool shared_tables_ready;
++
+ // The attack tables, which are read-only once built and the same for every
+ // game. initialize_game_const_data() fills them on the first call and does
+ // nothing on later ones, so calling it per game_t is cheap.
+-const bb_tables_t* game_tables();
++//
++// Inline since S270. Its Release body is one address, and defined in
++// bitboard.cpp it was a real call from every other unit a build without
++// link-time optimization compiles (0.52 % self time in the 2026-10-08
++// performance audit's profile).
++inline const bb_tables_t* game_tables()
++{
++  assert(shared_tables_ready);
++  return &shared_tables;
++}
+ 
+ // FEN
+ // Loads a FEN, or returns false having written part of the board -- a caller

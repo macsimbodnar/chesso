@@ -5,7 +5,25 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-08, by hand.
+Updated: 2026-10-10, by hand.
+
+## 2026-10-10: S270 done -- LTO and an inline `game_tables()` are slower here; both reverted
+
+Both of F03's changes were node-identical (INV-6) and neither holds on the
+workstation, so the build is unchanged and F03 is closed. CMake's LTO under
+g++ 13.3: +0.9 to +1.1 % instructions, **-1.59 % wall** (CI -1.75 .. -1.44,
+0/24 pairs), build +17 %. The M1's clang reading in the audit does not
+transfer. The inline `game_tables()`: -0.4 % instructions, -1.62 % wall; with
+both sides padded off 32-byte branch boundaries it reads zero. **Found:** code
+layout alone can move cycles about 2 % on this Coffee Lake (JCC erratum
+inferred, not read) and an A/A of byte copies cannot see it; S268 and S269
+stand on their instruction counts. The padded parent read -1.1 to -1.3 %
+cycles once, not established: that and a layout-robust reading for sub-2 %
+verdicts are the new **S273**, at Open entry 3. Recipes kept as
+`adocs/data/S270_lto.diff` and `S270_inline.diff`. Fast check: six wording
+and evidence findings, fixed before commit. No second tier: only a comment
+moved in `src/`. The step ran across a terminal OOM crash and an API session
+limit; nothing was lost. **Next:** S271. No owner question is open.
 
 ## 2026-10-08: S269 done -- a quiet past late move pruning's count skips the dead rule tests
 

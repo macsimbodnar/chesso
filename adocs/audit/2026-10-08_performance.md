@@ -233,7 +233,7 @@ site the largest single caller of the exchange evaluator, above quiescence's
 
 ### 2026-10-08_performance-F03 — low — no build uses link-time optimization, so every cross-unit hot call is a real call; LTO measures 1.2 to 1.7 % here
 
-Status: planned — S270 (DEC-263), Open entry 3.
+Status: closed — S270, 2026-10-10: measured on the workstation and reverted, LTO node-identical and 1.59 % slower under g++ 13.3 (CI -1.75 .. -1.44), the inline `game_tables()` a code-layout effect and no gain; recipes in `adocs/data/S270_lto.diff` and `S270_inline.diff`. Previously: planned — S270 (DEC-263), Open entry 3.
 
 **Evidence.**
 

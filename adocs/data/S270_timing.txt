@@ -1,0 +1,222 @@
+# S270 timings, the workstation (i7-8700K Coffee Lake, g++ 13.3, Release, -march=native, governor powersave --
+# recorded, not set, DEC-195). Two sessions: 2026-10-09 00:09 (A/A and LTO) and 2026-10-10 19:50 (A/A, inline,
+# single-partition LTO, the layout diagnostic). The host terminal was OOM-killed at 2026-10-08 23:54, before session 1
+#   (its own memory growth; the LTO builds were redone after it); the break between the sessions was an API session limit.
+# base = b3bcca5 Release, built in the S270 worktree's build/ (clean tree; `chesso bench` 4081329); base copy = a byte
+#   copy (cmp). The other sides are built from the S270 worktree (`-dirty` in `id name`, nothing else differs):
+#   lto    = CMake INTERPROCEDURAL_OPTIMIZATION on chesso_engine and chesso (-flto=auto -fno-fat-lto-objects, 12
+#            partitions), adocs/data/S270_lto.diff;
+#   part1  = the same LTO objects linked once by hand with -flto-partition=one added (a diagnostic, never built by CMake);
+#   inline = game_tables() inline in bitboard.hpp, no LTO, adocs/data/S270_inline.diff;
+#   *_jcc  = base and inline rebuilt with CMAKE_CXX_FLAGS=-Wa,-mbranches-within-32B-boundaries (a diagnostic of code
+#            layout; the assembler pads so no jump crosses or ends on a 32-byte boundary, the JCC erratum's trigger).
+# lto, part1 and inline node-identical to base by inv6.sh: bench 4081329 and bench 12 1860699 streams, search_bench
+#   depth 9 and 12, all identical. The *_jcc sides never ran inv6.sh: for them only the totals were checked, `bench`
+#   4081329 and, in the runs below, bench 16 10214429 and the 300 positions 26512806. Every timed run below prints those
+#   two totals on both sides.
+# Drift between runs, not within them: the same base binary (sha 75117d37) read bench16 cycles median 1.0402e10 in
+#   inl_c_bench16 (19:51) and 1.0232e10 in part1_c_bench16 (about 20:07), -1.6 %; pos11 2.6542e10 -> 2.6201e10,
+#   -1.3 %; base nps median 4404448 -> 4573270, +3.8 %. The A/A bounds the noise between the pairs of one run; it does
+#   not bound this. Paired verdicts are unaffected: both sides of a pair share it.
+# Counters: build/tools/perf_counters (S268), user space, the engine's process only. Each pair runs both binaries once,
+#   order swapped every pair; ratio cand/base per pair, geomean, 95 % CI from the paired t (df = pairs - 1).
+#   bench16 = `chesso bench 16`; pos11 = S020's 300 stratified positions at go depth 11 through one engine process.
+# hyperfine: one `hyperfine -N -r 1` per pair over both binaries, pos11, driver included; speed-up = 1/ratio - 1.
+# Scripts: .tuning/coord/S270/{run_all.sh,run_both.sh,run_jcc.sh,counters.sh,counter_pairs.py,workload.py,timing.sh,
+#   pairs.py,inv6.sh,memwatch.sh} (S269's, copied and repointed).
+# bench_movegen -r 40 resolution (perft / generate / captures): 0.5 / 1.9 / 0.7 % (session 1), 0.1 / 0.1 / 0.1 % and
+#   0.0 / 0.0 / 0.1 % (session 2). Top processes by lifetime CPU: firefox, cosmic-comp, claude, cosmic-term (session 1,
+#   firefox busy for a minute before the start, idle at it); cosmic-comp, claude, cosmic-term (session 2), none busy.
+
+## Summary (change cand vs base; CI 95 %)
+| comparison | bench16 instr | bench16 cycles | pos11 instr | pos11 cycles | hyperfine wall speed-up |
+|---|---|---|---|---|---|
+| A/A session 1 | -0.000 % | -1.29 % (-3.03 .. +0.48), sd 2.80 % | -0.000 % | -0.43 % (-1.64 .. +0.79) | +0.11 % (-0.11 .. +0.32), 16 pairs |
+| lto | +0.909 % | +1.55 % (+0.14 .. +2.97) | +1.126 % | +1.57 % (+1.48 .. +1.66) | -1.59 % (-1.75 .. -1.44), 0/24 faster |
+| A/A session 2 | -0.000 % | -0.22 % (-1.12 .. +0.69) | -0.000 % | -0.22 % (-0.48 .. +0.04) | +0.17 % (-0.04 .. +0.38), 16 pairs |
+| inline | -0.405 % | +2.47 % (+1.95 .. +2.99) | -0.367 % | +1.66 % (+1.43 .. +1.89) | -1.62 % (-1.81 .. -1.42), 0/24 faster |
+| part1 | -0.184 % | -0.75 % (-0.92 .. -0.59) | -0.067 % | -1.07 % (-1.20 .. -0.93) | +1.01 % (+0.85 .. +1.17), 24/24 faster |
+| inline_jcc vs base_jcc | -0.407 % | +0.13 % (-0.33 .. +0.58) | -0.388 % | -0.12 % (-0.34 .. +0.09) | not run |
+| base_jcc vs base | +0.478 % | -1.31 % (-1.60 .. -1.01) | +0.502 % | -1.12 % (-1.30 .. -0.94) | not run |
+
+## Build cost and memory (CHESSO_LTO prototype, 2026-10-09; CCACHE_DISABLE=1, from clean)
+full tree -j12: LTO 53.87 s, peak used 7917 MB (lowest available 7981 MB, at most 14 lto1 processes at once);
+  no LTO 46.11 s, peak used 8090 MB. Full tree -j6 with LTO: 50.29 s, peak used 6477 MB, at most 9 lto1.
+`--target chesso` alone with LTO: 4.59 s, peak used +0.85 GB over idle, largest process 262 MB RSS.
+Machine idle before each: used about 4.1 GB of 15 GB.
+
+## lto_c_aa_bench16
+loadavg before: 1.43 3.21 3.26 1/1702 844896
+pairs 12
+instructions base median 1.91105e+10  cand median 1.91105e+10  ratio geomean 1.00000  CI 1.00000 .. 1.00000  change -0.000 %  CI -0.000 .. +0.000 %  per-pair sd 0.000 %  t -0.82  cand lower 10/12
+cycles       base median 1.08633e+10  cand median 1.07251e+10  ratio geomean 0.98713  CI 0.96974 .. 1.00482  change -1.287 %  CI -3.026 .. +0.482 %  per-pair sd 2.796 %  t -1.61  cand lower 7/12
+wall_ms      base median 2499.09  cand median 2463.42  ratio geomean 0.98416  CI 0.95838 .. 1.01062  change -1.584 %  CI -4.162 .. +1.062 %  per-pair sd 4.176 %  t -1.32  cand lower 7/12
+base nps median 4124826  min 3955668  max 4469329  nodes ['10214429']
+cand nps median 4185175  min 3977968  max 4377669  nodes ['10214429']
+loadavg after: 1.47 2.89 3.15 2/1690 845333
+
+## lto_c_bench16
+loadavg before: 1.47 2.89 3.15 1/1690 845337
+pairs 16
+instructions base median 1.91105e+10  cand median 1.92843e+10  ratio geomean 1.00909  CI 1.00909 .. 1.00909  change +0.909 %  CI +0.909 .. +0.909 %  per-pair sd 0.000 %  t 5927231.94  cand lower 0/16
+cycles       base median 1.06059e+10  cand median 1.07745e+10  ratio geomean 1.01548  CI 1.00144 .. 1.02971  change +1.548 %  CI +0.144 .. +2.971 %  per-pair sd 2.612 %  t 2.35  cand lower 3/16
+wall_ms      base median 2420.94  cand median 2458.74  ratio geomean 1.01386  CI 0.99390 .. 1.03421  change +1.386 %  CI -0.610 .. +3.421 %  per-pair sd 3.732 %  t 1.47  cand lower 6/16
+base nps median 4257558  min 3975372  max 4381548  nodes ['10214429']
+cand nps median 4190802  min 3781249  max 4352525  nodes ['10214429']
+loadavg after: 1.12 2.44 2.97 2/1413 845559
+
+## lto_c_aa_pos11
+loadavg before: 1.12 2.44 2.97 3/1413 845563
+pairs 8
+instructions base median 4.72563e+10  cand median 4.72563e+10  ratio geomean 1.00000  CI 1.00000 .. 1.00000  change -0.000 %  CI -0.000 .. +0.000 %  per-pair sd 0.000 %  t -1.47  cand lower 5/8
+cycles       base median 2.63687e+10  cand median 2.63538e+10  ratio geomean 0.99567  CI 0.98364 .. 1.00785  change -0.433 %  CI -1.636 .. +0.785 %  per-pair sd 1.454 %  t -0.84  cand lower 6/8
+wall_ms      base median 6055.11  cand median 6049.86  ratio geomean 0.99417  CI 0.97772 .. 1.01089  change -0.583 %  CI -2.228 .. +1.089 %  per-pair sd 1.995 %  t -0.83  cand lower 5/8
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 1.14 2.09 2.79 1/1062 850558
+
+## lto_c_pos11
+loadavg before: 1.14 2.09 2.79 1/1062 850562
+pairs 12
+instructions base median 4.72563e+10  cand median 4.77884e+10  ratio geomean 1.01126  CI 1.01126 .. 1.01126  change +1.126 %  CI +1.126 .. +1.126 %  per-pair sd 0.000 %  t 761638.98  cand lower 0/12
+cycles       base median 2.63389e+10  cand median 2.67666e+10  ratio geomean 1.01571  CI 1.01482 .. 1.01660  change +1.571 %  CI +1.482 .. +1.660 %  per-pair sd 0.138 %  t 39.09  cand lower 0/12
+wall_ms      base median 6063.39  cand median 6140.2  ratio geomean 1.01332  CI 1.01158 .. 1.01506  change +1.332 %  CI +1.158 .. +1.506 %  per-pair sd 0.270 %  t 16.94  cand lower 0/12
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 1.01 1.65 2.51 1/1061 857965
+
+## lto_h_aa
+loadavg before: 1.01 1.65 2.51 2/1060 857967
+pairs 16  base median 6.076s  cand median 6.072s
+ratio cand/base  geomean 0.9990  median 0.9994  95% CI 0.9968 .. 1.0011  paired t -1.03
+speed-up +0.11 %  CI -0.11 .. +0.32 %  per-pair sd 0.41 %  pairs below 1.0: 9/16
+loadavg after: 1.02 1.35 2.22 1/1044 867816
+
+## lto_h_cand
+loadavg before: 1.02 1.35 2.22 1/1044 867817
+pairs 24  base median 6.069s  cand median 6.168s
+ratio cand/base  geomean 1.0162  median 1.0156  95% CI 1.0146 .. 1.0178  paired t 21.14
+speed-up -1.59 %  CI -1.75 .. -1.44 %  per-pair sd 0.37 %  pairs below 1.0: 0/24
+loadavg after: 1.07 1.14 1.89 1/1043 882584
+
+## inl_c_aa_bench16
+loadavg before: 1.62 1.33 0.61 1/1228 8497
+pairs 12
+instructions base median 1.91105e+10  cand median 1.91105e+10  ratio geomean 1.00000  CI 1.00000 .. 1.00000  change -0.000 %  CI -0.000 .. +0.000 %  per-pair sd 0.000 %  t -0.69  cand lower 6/12
+cycles       base median 1.0407e+10  cand median 1.0418e+10  ratio geomean 0.99781  CI 0.98883 .. 1.00688  change -0.219 %  CI -1.117 .. +0.688 %  per-pair sd 1.423 %  t -0.53  cand lower 5/12
+wall_ms      base median 2341.28  cand median 2341.46  ratio geomean 0.99521  CI 0.98276 .. 1.00781  change -0.479 %  CI -1.724 .. +0.781 %  per-pair sd 1.981 %  t -0.84  cand lower 7/12
+base nps median 4402890  min 4115714  max 4431447  nodes ['10214429']
+cand nps median 4402763  min 4338392  max 4439054  nodes ['10214429']
+loadavg after: 1.38 1.31 0.64 1/1223 8603
+
+## inl_c_bench16
+loadavg before: 1.38 1.31 0.64 1/1223 8607
+pairs 16
+instructions base median 1.91105e+10  cand median 1.90332e+10  ratio geomean 0.99595  CI 0.99595 .. 0.99595  change -0.405 %  CI -0.405 .. -0.405 %  per-pair sd 0.000 %  t -2774996.34  cand lower 16/16
+cycles       base median 1.04022e+10  cand median 1.06754e+10  ratio geomean 1.02468  CI 1.01952 .. 1.02987  change +2.468 %  CI +1.952 .. +2.987 %  per-pair sd 0.948 %  t 10.29  cand lower 0/16
+wall_ms      base median 2340.95  cand median 2399.36  ratio geomean 1.02444  CI 1.01785 .. 1.03107  change +2.444 %  CI +1.785 .. +3.107 %  per-pair sd 1.211 %  t 7.98  cand lower 0/16
+base nps median 4404448  min 4354824  max 4445126  nodes ['10214429']
+cand nps median 4295869  min 4228505  max 4346931  nodes ['10214429']
+loadavg after: 1.10 1.24 0.67 1/1229 8735
+
+## inl_c_aa_pos11
+loadavg before: 1.10 1.24 0.67 1/1229 8739
+pairs 8
+instructions base median 4.72563e+10  cand median 4.72563e+10  ratio geomean 1.00000  CI 1.00000 .. 1.00000  change -0.000 %  CI -0.000 .. +0.000 %  per-pair sd 0.000 %  t -0.80  cand lower 5/8
+cycles       base median 2.65457e+10  cand median 2.65036e+10  ratio geomean 0.99776  CI 0.99516 .. 1.00037  change -0.224 %  CI -0.484 .. +0.037 %  per-pair sd 0.312 %  t -2.03  cand lower 5/8
+wall_ms      base median 6119  cand median 6102.75  ratio geomean 0.99721  CI 0.99480 .. 0.99964  change -0.279 %  CI -0.520 .. -0.036 %  per-pair sd 0.291 %  t -2.72  cand lower 7/8
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 0.94 1.15 0.71 1/1229 13712
+
+## inl_c_pos11
+loadavg before: 0.94 1.15 0.71 1/1229 13716
+pairs 12
+instructions base median 4.72563e+10  cand median 4.70829e+10  ratio geomean 0.99633  CI 0.99633 .. 0.99633  change -0.367 %  CI -0.367 .. -0.367 %  per-pair sd 0.000 %  t -280501.20  cand lower 12/12
+cycles       base median 2.65415e+10  cand median 2.69987e+10  ratio geomean 1.01657  CI 1.01429 .. 1.01885  change +1.657 %  CI +1.429 .. +1.885 %  per-pair sd 0.353 %  t 16.11  cand lower 0/12
+wall_ms      base median 6116.04  cand median 6223.39  ratio geomean 1.01631  CI 1.01351 .. 1.01913  change +1.631 %  CI +1.351 .. +1.913 %  per-pair sd 0.435 %  t 12.88  cand lower 0/12
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 0.99 1.07 0.75 1/1218 21081
+
+## inl_h_aa
+loadavg before: 0.99 1.07 0.75 1/1217 21083
+pairs 16  base median 6.149s  cand median 6.141s
+ratio cand/base  geomean 0.9983  median 0.9975  95% CI 0.9963 .. 1.0004  paired t -1.75
+speed-up +0.17 %  CI -0.04 .. +0.38 %  per-pair sd 0.39 %  pairs below 1.0: 9/16
+loadavg after: 1.61 1.22 0.87 1/1218 30971
+
+## inl_h_cand
+loadavg before: 1.61 1.22 0.87 1/1218 30972
+pairs 24  base median 6.129s  cand median 6.237s
+ratio cand/base  geomean 1.0164  median 1.0164  95% CI 1.0144 .. 1.0185  paired t 17.03
+speed-up -1.62 %  CI -1.81 .. -1.42 %  per-pair sd 0.47 %  pairs below 1.0: 0/24
+loadavg after: 1.00 1.11 0.93 2/1219 45745
+
+## part1_c_bench16
+loadavg before: 1.00 1.08 0.94 1/1219 45815
+pairs 16
+instructions base median 1.91105e+10  cand median 1.90753e+10  ratio geomean 0.99816  CI 0.99816 .. 0.99816  change -0.184 %  CI -0.184 .. -0.184 %  per-pair sd 0.000 %  t -3592465.76  cand lower 16/16
+cycles       base median 1.02323e+10  cand median 1.01464e+10  ratio geomean 0.99247  CI 0.99080 .. 0.99414  change -0.753 %  CI -0.920 .. -0.586 %  per-pair sd 0.316 %  t -9.58  cand lower 16/16
+wall_ms      base median 2254.46  cand median 2239.01  ratio geomean 0.99212  CI 0.99021 .. 0.99403  change -0.788 %  CI -0.979 .. -0.597 %  per-pair sd 0.361 %  t -8.76  cand lower 16/16
+base nps median 4573270  min 4547752  max 4590267  nodes ['10214429']
+cand nps median 4605185  min 4580890  max 4627651  nodes ['10214429']
+loadavg after: 1.00 1.06 0.95 1/1218 45916
+
+## part1_c_pos11
+loadavg before: 1.00 1.06 0.95 1/1218 45920
+pairs 12
+instructions base median 4.72563e+10  cand median 4.72247e+10  ratio geomean 0.99933  CI 0.99933 .. 0.99933  change -0.067 %  CI -0.067 .. -0.067 %  per-pair sd 0.000 %  t -42601.44  cand lower 12/12
+cycles       base median 2.62012e+10  cand median 2.59265e+10  ratio geomean 0.98933  CI 0.98798 .. 0.99068  change -1.067 %  CI -1.202 .. -0.932 %  per-pair sd 0.214 %  t -17.35  cand lower 12/12
+wall_ms      base median 5975.42  cand median 5921.08  ratio geomean 0.99145  CI 0.98910 .. 0.99380  change -0.855 %  CI -1.090 .. -0.620 %  per-pair sd 0.373 %  t -7.97  cand lower 12/12
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 1.04 1.04 0.96 1/1219 53284
+
+## part1_h_cand
+loadavg before: 1.04 1.04 0.96 1/1218 53286
+pairs 24  base median 6.002s  cand median 5.941s
+ratio cand/base  geomean 0.9900  median 0.9888  95% CI 0.9884 .. 0.9916  paired t -12.82
+speed-up +1.01 %  CI +0.85 .. +1.17 %  per-pair sd 0.38 %  pairs below 1.0: 24/24
+loadavg after: 0.99 1.00 0.98 1/1220 68044
+
+## jcc_inl_c_bench16
+loadavg before: 0.72 0.92 0.96 3/1221 68443
+pairs 12
+instructions base median 1.92018e+10  cand median 1.91236e+10  ratio geomean 0.99593  CI 0.99593 .. 0.99593  change -0.407 %  CI -0.407 .. -0.407 %  per-pair sd 0.000 %  t -12268541.92  cand lower 12/12
+cycles       base median 1.01191e+10  cand median 1.01265e+10  ratio geomean 1.00126  CI 0.99670 .. 1.00584  change +0.126 %  CI -0.330 .. +0.584 %  per-pair sd 0.718 %  t 0.61  cand lower 3/12
+wall_ms      base median 2234.3  cand median 2237.12  ratio geomean 1.00414  CI 0.99709 .. 1.01124  change +0.414 %  CI -0.291 .. +1.124 %  per-pair sd 1.109 %  t 1.29  cand lower 4/12
+base nps median 4615100  min 4569155  max 4655125  nodes ['10214429']
+cand nps median 4608881  min 4528886  max 4655103  nodes ['10214429']
+loadavg after: 0.96 0.97 0.97 1/1218 68550
+
+## jcc_inl_c_pos11
+loadavg before: 0.96 0.97 0.97 1/1218 68554
+pairs 8
+instructions base median 4.74933e+10  cand median 4.73089e+10  ratio geomean 0.99612  CI 0.99612 .. 0.99612  change -0.388 %  CI -0.388 .. -0.388 %  per-pair sd 0.000 %  t -129351.79  cand lower 8/8
+cycles       base median 2.5899e+10  cand median 2.58449e+10  ratio geomean 0.99878  CI 0.99662 .. 1.00094  change -0.122 %  CI -0.338 .. +0.094 %  per-pair sd 0.259 %  t -1.34  cand lower 6/8
+wall_ms      base median 5923.96  cand median 5906.08  ratio geomean 0.99836  CI 0.99400 .. 1.00274  change -0.164 %  CI -0.600 .. +0.274 %  per-pair sd 0.524 %  t -0.89  cand lower 6/8
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 0.99 0.98 0.98 1/1218 73475
+
+## jcc_pad_c_bench16
+loadavg before: 0.99 0.98 0.98 1/1218 73479
+pairs 8
+instructions base median 1.91105e+10  cand median 1.92018e+10  ratio geomean 1.00478  CI 1.00478 .. 1.00478  change +0.478 %  CI +0.478 .. +0.478 %  per-pair sd 0.000 %  t 11072784.28  cand lower 0/8
+cycles       base median 1.02517e+10  cand median 1.0115e+10  ratio geomean 0.98692  CI 0.98399 .. 0.98987  change -1.308 %  CI -1.601 .. -1.013 %  per-pair sd 0.356 %  t -10.45  cand lower 8/8
+wall_ms      base median 2259.66  cand median 2233.7  ratio geomean 0.98706  CI 0.98362 .. 0.99051  change -1.294 %  CI -1.638 .. -0.949 %  per-pair sd 0.418 %  t -8.82  cand lower 8/8
+base nps median 4562830  min 4544684  max 4569817  nodes ['10214429']
+cand nps median 4615650  min 4603592  max 4639790  nodes ['10214429']
+loadavg after: 1.14 1.02 1.00 1/1217 73535
+
+## jcc_pad_c_pos11
+loadavg before: 1.14 1.02 1.00 1/1217 73539
+pairs 6
+instructions base median 4.72563e+10  cand median 4.74933e+10  ratio geomean 1.00502  CI 1.00502 .. 1.00502  change +0.502 %  CI +0.502 .. +0.502 %  per-pair sd 0.000 %  t 268936.51  cand lower 0/6
+cycles       base median 2.62055e+10  cand median 2.59238e+10  ratio geomean 0.98877  CI 0.98696 .. 0.99058  change -1.123 %  CI -1.304 .. -0.942 %  per-pair sd 0.174 %  t -15.87  cand lower 6/6
+wall_ms      base median 5991.49  cand median 5907.06  ratio geomean 0.98542  CI 0.98343 .. 0.98741  change -1.458 %  CI -1.657 .. -1.259 %  per-pair sd 0.192 %  t -18.73  cand lower 6/6
+base workload totals ['300 26512806']
+cand workload totals ['300 26512806']
+loadavg after: 1.19 1.06 1.01 1/1225 77226
+

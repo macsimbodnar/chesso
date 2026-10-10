@@ -388,9 +388,10 @@ int capture_score(const board_t* board, move_t move);
 // cannot disagree.
 //
 // **Defined here rather than in the .cpp, and that is a measurement.** There is
-// no LTO in this build, so a definition in evaluation.cpp is a call per quiet
-// scored: ten interleaved bench pairs read 3815942 nodes per second against
-// 3632322 with it out of line, -4.81 %, the two groups not overlapping. Inline
+// no LTO in this build -- S270 measured g++ 13's 1.6 % slower here, and left it
+// off -- so a definition in evaluation.cpp is a call per quiet scored: ten
+// interleaved bench pairs read 3815942 nodes per second against 3632322 with
+// it out of line, -4.81 %, the two groups not overlapping. Inline
 // here the arithmetic folds into its call site. Behaviour-neutral by
 // construction and proved by the signature: the bench total is the same number
 // either way, and the removal above is what proves it again -- this tree's

@@ -49,6 +49,24 @@ cmake -S . -B build-tune  -DCMAKE_BUILD_TYPE=Release        -DCMAKE_CXX_COMPILER
 Do not point CMake at Homebrew clang. Different compiler, different codegen, and
 every recorded benchmark becomes incomparable.
 
+**The flags a Release unit compiles with**, as the build directory's
+`compile_commands.json` shows them: `-O3 -DNDEBUG` (CMake's own Release flags),
+`-std=gnu++20` (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`, extensions left on),
+the arch flag (`-march=native` in `build/`, `cmake/arch.cmake`, below) and
+`-Wall -Wextra -Werror` (`CMakeLists.txt`, which turns the three unused-*
+warnings off in Debug). `build-tune/` adds `-DCHESSO_TUNE` (`src/CMakeLists.txt`);
+`build_release.sh` adds the profile flags (`cmake/pgo.cmake`, below).
+
+**No link-time optimization, and that is a measurement** (S270). CMake's
+`INTERPROCEDURAL_OPTIMIZATION`, which is `-flto=auto -fno-fat-lto-objects` under
+g++ 13.3, was node-identical and 1.59 % slower on the workstation (24
+interleaved pairs, CI -1.75 .. -1.44 %; +0.9 to +1.1 % instructions), the
+opposite of the M1's clang reading in the 2026-10-08 audit's F03. A full `-j12`
+build without ccache took 53.9 s with it and 46.1 s without. The CMake that
+enabled it is `adocs/data/S270_lto.diff`, and its comment has the one trap it
+carries: `-Werror` does not reach a warning raised at the link-time step unless
+the link line repeats it.
+
 ## The instruction set, and which binary ships
 
 `-DCHESSO_ARCH=`, four values, and the default is the one that must never be

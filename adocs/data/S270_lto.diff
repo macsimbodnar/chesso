@@ -1,0 +1,57 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index c66d5f1..890e18b 100755
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -41,3 +41,52 @@ endif()
+ 
+ add_executable(chesso main.cpp)
+ target_link_libraries(chesso PRIVATE chesso_engine)
++
++# S270. Link-time optimization of the engine targets, so a hot call that crosses
++# a translation unit -- tt_get_entry, score_move, see_ge, make_move from
++# search.cpp -- can be inlined like one that does not. Measured node-identical
++# and 1.59 % SLOWER with g++ 13.3 on the workstation, so not kept; S270 has the
++# numbers. Not in Debug, which is built to be stepped through, and not in the
++# sanitizer build: neither is timed, and LTO would only add to their links.
++#
++# check_ipo_supported builds a test project first, so a toolchain without LTO
++# (a linker with no plugin, an ar that cannot index bitcode) configures with
++# LTO off and says so, rather than failing at the first link.
++#
++# With gcc the library's objects are bytecode only (CMake passes
++# -fno-fat-lto-objects), so every target that links chesso_engine -- the
++# tests and the tools too -- is link-time optimized with it whether or not it
++# asks; each such link makes its own choices, so a test is not the shipped code.
++#
++# The warning flags are repeated on the link line, and that is not decoration:
++# under LTO the optimizer runs again at link time and so does every diagnostic
++# it raises, but add_compile_options() never reaches the link. Observed with
++# g++ 13: a declaration mismatched across two units linked under CMake's own
++# LTO line printed -Wlto-type-mismatch and exited 0, and failed only with
++# -Werror on the link (both halves logged in S270's .tuning/coord/S270/
++# werror_link_repro.log). INTERFACE, so every target that links the library
++# gets them, since every one of them runs that link-time step.
++option(CHESSO_LTO "Link-time optimization of the engine targets, optimised builds only" ON)
++
++if(NOT CHESSO_LTO)
++     message("-- LTO off (CHESSO_LTO=OFF)")
++elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
++     message("-- LTO off (Debug build)")
++elseif(SANITIZER)
++     message("-- LTO off (sanitizer build)")
++else()
++     include(CheckIPOSupported)
++     check_ipo_supported(RESULT chesso_ipo_ok OUTPUT chesso_ipo_output LANGUAGES CXX)
++
++     if(chesso_ipo_ok)
++          set_property(TARGET chesso_engine chesso PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
++
++          if(NOT MSVC)
++               target_link_options(chesso_engine INTERFACE -Wall -Wextra -Werror)
++          endif()
++
++          message("-- LTO on (chesso_engine, chesso)")
++     else()
++          message("-- LTO off (not supported by this toolchain: ${chesso_ipo_output})")
++     endif()
++endif()
