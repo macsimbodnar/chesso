@@ -2,7 +2,7 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Twenty-nine properties. The second is the one that stops F01 recurring; 3 to 8
+# Thirty-one properties. The second is the one that stops F01 recurring; 3 to 8
 # are the default reference and the A/A guard -- the trap S160 disarmed and the
 # defects its own first attempt shipped, each one reproduced before it was
 # fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode; 12 to 15
@@ -11,7 +11,8 @@
 # it so a hard-wired override cannot pass; 16 and 17 are the reference build
 # itself, which every case before them skips; 18 to 26 are S212's, one per
 # finding of the 2026-09-10 audit's harness set -- F04, F06, F05, F31 and F32
-# in that order; 27 to 29 are S256's candidate name:
+# in that order; 27 to 29 are S256's candidate name; 30 and 31 are S272's
+# bare-FEN relay:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
@@ -60,6 +61,18 @@
 #      diff is saved (S256)
 #  29. a tree changed only by an untracked source is dirty, named and saved as
 #      one (S256)
+#  30. BARE_FEN=1 launches both sides through a snapshot of the relay, under
+#      RELAY_PYTHON in isolated mode (-I) from a directory of its own, each
+#      with its own binary; the import probe and the identity probe are
+#      isolated too and the latter goes through the relay; the banner prints
+#      the relay's blob and its notes file, and the PGN event says bare-fen;
+#      the sides are told where to note a line they pass unchanged, a stale
+#      notes file is emptied at the start, and the census counts the notes;
+#      the snapshot's directory is gone after the run. Unset, nothing of it
+#      reaches fastchess or the banner (S272)
+#  31. BARE_FEN=1 with a python that cannot import python-chess, and a
+#      BARE_FEN other than 1, stop the run before fastchess; a relay that
+#      notes a position it passed unchanged voids the run (S272)
 #
 # No game is played and no engine is compiled. `fastchess` is a stub on PATH,
 # the candidate and the reference are one-line shell scripts, and the whole run
@@ -120,6 +133,10 @@ make_sandbox()
   # engines were given, into fastchess_engines. See the stub engines above for
   # why that is asked instead of read off the `cmd=` path.
   #
+  # The binary is run with the `args=` that follow its `cmd=`, at the
+  # engine's `name=`, so a side launched through the relay (case 30) runs as
+  # fastchess would run it: the relay's python, the relay, then the binary.
+  #
   # And it writes a PGN where it was told to put one, but only when the
   # sandbox left a `stub_pgn` file beside it: the census fastchess.sh runs
   # after the match reads that file and nothing else, so case 25's crash
@@ -134,9 +151,18 @@ printf '%s\n' "$@" > "$here/fastchess_args"
 : > "$here/fastchess_engines"
 pgn=""
 prev=""
+cmd=""
+eargs=""
 for arg in "$@"; do
   case "$arg" in
-    cmd=*) "${arg#cmd=}" >> "$here/fastchess_engines" ;;
+    cmd=*) cmd="${arg#cmd=}" eargs="" ;;
+    args=*) eargs="${arg#args=}" ;;
+    name=*)
+      if [ -n "$cmd" ]; then
+        "$cmd" $eargs >> "$here/fastchess_engines"
+        cmd=""
+      fi
+      ;;
     file=*) [ "$prev" = "-pgnout" ] && pgn="${arg#file=}" ;;
   esac
   prev="$arg"
@@ -363,6 +389,7 @@ run_sandbox()
 {
   local tmp="$1" ref="${2-}" aa="${3-}" srand="${4-}" rounds="${5-}"
   local tc="${TC-}" hash="${HASH-}" cand="${CAND-}"
+  local bare_fen="${BARE_FEN-}" relay_python="${RELAY_PYTHON-}"
   (
     cd "$tmp" || exit 127
     export PATH="$tmp/stub:$PATH" OUT="$tmp/out"
@@ -380,6 +407,16 @@ run_sandbox()
       export CAND="$cand"
     else
       unset CAND
+    fi
+    if [[ -n "$bare_fen" ]]; then
+      export BARE_FEN="$bare_fen"
+    else
+      unset BARE_FEN
+    fi
+    if [[ -n "$relay_python" ]]; then
+      export RELAY_PYTHON="$relay_python"
+    else
+      unset RELAY_PYTHON
     fi
     if [[ -n "$ref" ]]; then
       export REF="$ref"
@@ -1269,8 +1306,152 @@ elif ! grep -q 'untracked_source.cpp' "$untracked_dir/out/candidate.diff" 2> /de
   show "$untracked_dir"
 fi
 
+# 30. BARE_FEN=1 plays both sides through a snapshot of the relay.
+#
+# The relay in the sandbox is one comment line, untracked, so its blob is not
+# HEAD's and the banner must say so. RELAY_PYTHON is a stub that answers the
+# import probe with a version only it prints, records the file it was handed
+# and the first line of that file, and then runs the rest of its arguments --
+# the binary -- the way the real relay starts the engine. So fastchess_engines
+# says which binary each side ran through it, and relay_calls says what ran
+# them: the identity probe and the stub fastchess, two each. Each record says
+# whether python was asked for isolated mode, `-I`: without it python puts the
+# script's own directory, and PYTHONPATH, ahead of python-chess, so a
+# `chess.py` beside the snapshot would be what the relay imports. It also
+# records the notes file it was told of, and with a third argument writes one
+# note there, as the relay does for a line it passes unchanged.
+relay_stub()
+{
+  local tmp="$1" probe_status="$2" write_note="${3:-}"
+  mkdir -p "$tmp/tools"
+  printf '# S272 smoke relay\n' > "$tmp/tools/bare_fen_relay.py"
+  cat > "$tmp/stub/relay_python" << STUB
+#!/bin/sh
+here="\$(dirname "\$0")/.."
+isolated=no
+if [ "\$1" = "-I" ]; then
+  isolated=yes
+  shift
+fi
+if [ "\$1" = "-c" ]; then
+  echo "probe isolated=\$isolated" >> "\$here/relay_probe"
+  echo 9.9.9-stub
+  exit $probe_status
+fi
+printf '%s %s %s\n' "\$isolated" "\$1" "\$(head -1 "\$1")" >> "\$here/relay_calls"
+echo "[\${BARE_FEN_RELAY_NOTES:-}]" >> "\$here/relay_env"
+if [ -n "$write_note" ] && [ -n "\${BARE_FEN_RELAY_NOTES:-}" ]; then
+  echo "bare_fen_relay: passed unchanged (stub)" >> "\$BARE_FEN_RELAY_NOTES"
+fi
+shift
+exec "\$@"
+STUB
+  chmod +x "$tmp/stub/relay_python"
+}
+
+relay_dir="$(make_sandbox "$script_under_test")"
+relay_stub "$relay_dir" 0
+# A notes file left by an earlier run in the same OUT: emptied at the start,
+# or this run would be voided for a note it never wrote.
+mkdir -p "$relay_dir/out"
+echo "bare_fen_relay: passed unchanged (a stale note)" > "$relay_dir/out/relay_notes.txt"
+relay_status="$(BARE_FEN=1 RELAY_PYTHON="$relay_dir/stub/relay_python" run_sandbox "$relay_dir" HEAD~1)"
+relay_ref="$(git -C "$relay_dir" rev-parse --short HEAD~1)"
+relay_blob="$(git -C "$relay_dir" hash-object --no-filters "$relay_dir/tools/bare_fen_relay.py")"
+relay_snap="$(head -1 "$relay_dir/relay_calls" 2> /dev/null | cut -d' ' -f2)"
+
+if ((relay_status != 0)); then
+  fail "BARE_FEN=1: the script exited $relay_status"
+  show "$relay_dir"
+elif [[ "$(grep -c -x -- "cmd=$relay_dir/stub/relay_python" "$relay_dir/fastchess_args")" != 2 ]]; then
+  fail "BARE_FEN=1: fastchess was not handed RELAY_PYTHON as both sides' cmd="
+  show "$relay_dir"
+elif ! grep -qE "^args=-I $relay_snap [^ ]*/chesso-candidate\.[A-Za-z0-9]+\$" "$relay_dir/fastchess_args" \
+  || ! grep -q -x -- "args=-I $relay_snap $relay_dir/.ref-builds/$relay_ref/build/src/chesso" "$relay_dir/fastchess_args"; then
+  fail "BARE_FEN=1: the args= are not -I, the relay snapshot and each side's own binary"
+  show "$relay_dir"
+elif ! grep -q -x -- 'working-tree' "$relay_dir/fastchess_engines" \
+  || ! grep -q -x -- "ref-build $relay_ref" "$relay_dir/fastchess_engines"; then
+  fail "BARE_FEN=1: the binaries run through the relay are not the candidate's and the reference's"
+  show "$relay_dir"
+elif [[ "$(grep -c -x -- "yes $relay_snap # S272 smoke relay" "$relay_dir/relay_calls")" != 4 ]] \
+  || [[ "$(wc -l < "$relay_dir/relay_calls")" != 4 ]]; then
+  fail "BARE_FEN=1: expected four isolated (-I) launches of one snapshot of the tree's relay, two probes and two sides"
+  show "$relay_dir"
+elif [[ "$(cat "$relay_dir/relay_probe" 2> /dev/null)" != "probe isolated=yes" ]]; then
+  fail "BARE_FEN=1: the python-chess import probe did not run once, isolated (-I)"
+  show "$relay_dir"
+elif [[ "$(basename "$relay_snap")" != bare_fen_relay.py ]] \
+  || [[ ! "$(basename "$(dirname "$relay_snap")")" =~ ^chesso-relay\.[A-Za-z0-9]+$ ]]; then
+  fail "BARE_FEN=1: the snapshot [$relay_snap] is not bare_fen_relay.py in a chesso-relay.* directory of its own"
+  show "$relay_dir"
+elif [[ "$relay_snap" == "$relay_dir/tools/bare_fen_relay.py" || -e "$(dirname "$relay_snap")" ]]; then
+  fail "BARE_FEN=1: the relay was run from the tree, or its directory [$(dirname "$relay_snap")] outlived the run"
+  show "$relay_dir"
+elif ! grep -qE "^relay      bare FEN each move, both sides: tools/bare_fen_relay.py blob ${relay_blob:0:12} \(NOT HEAD's" "$relay_dir/out.txt" \
+  || ! grep -qE "python-chess 9\.9\.9-stub\$" "$relay_dir/out.txt" \
+  || ! grep -q -x -- "           notes to $relay_dir/out/relay_notes.txt" "$relay_dir/out.txt"; then
+  fail "BARE_FEN=1: the banner does not print the relay's blob, that it is not HEAD's, the python-chess version and the notes file"
+  show "$relay_dir"
+elif ! grep -qE '^chesso fast [0-9_]+ srand=[0-9]+ bare-fen$' "$relay_dir/fastchess_args"; then
+  fail "BARE_FEN=1: the PGN event does not say bare-fen"
+  show "$relay_dir"
+elif [[ "$(grep -c -x -- "\[$relay_dir/out/relay_notes.txt\]" "$relay_dir/relay_env")" != 4 ]]; then
+  fail "BARE_FEN=1: the probes and the sides were not told to note into the run's relay_notes.txt"
+  show "$relay_dir"
+elif ! grep -q -x -- 'relay     0 position line(s) passed unrewritten' "$relay_dir/out.txt"; then
+  fail "BARE_FEN=1: the census does not count the relay's notes"
+  show "$relay_dir"
+fi
+
+# Unset, it is the run every verdict before S272 was taken with.
+if grep -q '^args=' "$reached_dir/fastchess_args" \
+  || grep -q 'bare-fen' "$reached_dir/fastchess_args" \
+  || grep -q '^relay ' "$reached_dir/out.txt"; then
+  fail "BARE_FEN unset: a relay reached fastchess, the event or the banner"
+  show "$reached_dir"
+fi
+
+# 31. A python without python-chess, or a BARE_FEN other than 1, stops the run
+#     before fastchess.
+nochess_dir="$(make_sandbox "$script_under_test")"
+relay_stub "$nochess_dir" 1
+nochess_status="$(BARE_FEN=1 RELAY_PYTHON="$nochess_dir/stub/relay_python" run_sandbox "$nochess_dir" HEAD~1)"
+if ((nochess_status == 0)) || [[ -e "$nochess_dir/fastchess_invoked" ]]; then
+  fail "BARE_FEN=1 with no python-chess: the run went on (exit $nochess_status)"
+  show "$nochess_dir"
+elif ! grep -q "^SPRT-RUN-FAILED: BARE_FEN=1 but .* cannot import python-chess" "$nochess_dir/out.txt"; then
+  fail "BARE_FEN=1 with no python-chess: no marker naming the missing import"
+  show "$nochess_dir"
+fi
+
+badfen_dir="$(make_sandbox "$script_under_test")"
+badfen_status="$(BARE_FEN=yes run_sandbox "$badfen_dir" HEAD~1)"
+if ((badfen_status == 0)) || [[ -e "$badfen_dir/fastchess_invoked" ]]; then
+  fail "BARE_FEN=yes: the run went on (exit $badfen_status)"
+  show "$badfen_dir"
+elif ! grep -q "^SPRT-RUN-FAILED: BARE_FEN must be 1 or unset, got 'yes'" "$badfen_dir/out.txt"; then
+  fail "BARE_FEN=yes: no marker naming the bad value"
+  show "$badfen_dir"
+fi
+
+# The stub notes once per launch, and all four -- two probes, two sides --
+# run with the notes file set, so four notes.
+noted_dir="$(make_sandbox "$script_under_test")"
+relay_stub "$noted_dir" 0 note
+noted_status="$(BARE_FEN=1 RELAY_PYTHON="$noted_dir/stub/relay_python" run_sandbox "$noted_dir" HEAD~1)"
+if ((noted_status == 0)); then
+  fail "BARE_FEN=1 with a noted position: the run was not voided"
+  show "$noted_dir"
+elif ! grep -q '^SPRT-RUN-INVALID: 4 position line(s) reached an engine unrewritten' "$noted_dir/out.txt" \
+  || [[ "$(tail -1 "$noted_dir/out.txt")" != "SPRT-RUN-FAILED: the run is void: the relay passed 4 position line(s) unchanged" ]]; then
+  fail "BARE_FEN=1 with a noted position: no SPRT-RUN-INVALID, or the last line is not the failure marker"
+  show "$noted_dir"
+fi
+
+rm -rf "$relay_dir" "$nochess_dir" "$badfen_dir" "$noted_dir"
 rm -rf "$wt_dir" "$clean_wt_dir" "$untracked_dir"
-rm -rf "$reached_dir""$default_dir" "$clean_dir" "$older_dir" \
+rm -rf "$reached_dir" "$default_dir" "$clean_dir" "$older_dir" \
        "$explicit_dir" "$aa_dir" "$nogit_dir" "$seed_dir" \
        "$override_dir" "$pgn_dir" "$rounds_dir" "$tc_dir" "$hash_dir" \
        "$cand_dir" "$same_dir" "$same_aa_dir" "$build_dir" \
@@ -1283,4 +1464,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: 29 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, and names a working-tree candidate by HEAD and the blob of the diff it saved"
+echo "$script_under_test: 31 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, names a working-tree candidate by HEAD and the blob of the diff it saved, plays both sides through a snapshot of the bare-FEN relay only when BARE_FEN=1, refuses that run without python-chess or with another value, and voids it when the relay passed a position unrewritten"

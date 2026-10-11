@@ -89,7 +89,7 @@ them, so apt will not update them and their versions are the ones below.
 | `ordo` | `/usr/local/bin/ordo` | `ordo 1.2.6` — `rating.sh` needs it and finds it, so its refusal path does not fire here |
 | `cutechess` | `/usr/games/cutechess` | `Cute Chess 1.5.1` on Qt 6.4.2 — **the GUI**, see below |
 | `sgambetto` | `/usr/games/sgambetto` | answers nothing to `--version` |
-| python | `~/.venv/chess/bin/python` | `Python 3.12.3` with `python-chess 1.11.2`; the system pip is `EXTERNALLY-MANAGED` |
+| python | `~/.venv/chess/bin/python` | `Python 3.12.3` with `python-chess 1.11.2`; the system pip is `EXTERNALLY-MANAGED`. The fast suite's `test_bare_fen_relay` and `BARE_FEN=1 ./fastchess.sh` run it (S272) |
 | `nproc`, `timeout`, `sha256sum`, `setarch` | `/usr/bin/` | GNU coreutils and util-linux, native — the MacBook section at the end of this file is about their absence |
 
 Two absences worth naming rather than discovering:

@@ -20,6 +20,8 @@ set -euo pipefail
 #   CAND=<ref> REF=<ref> ./fastchess.sh
 #                                   play two commits against each other. The
 #                                   working tree is not played and not read
+#   BARE_FEN=1 ./fastchess.sh       both sides through tools/bare_fen_relay.py,
+#                                   every position sent as a bare FEN (S272)
 #
 # WHICH BOUNDS, AND WHY THE PAIR IS NOT A DETAIL. The hypothesis pair sets the
 # cost of a verdict as much as the hardware does. S068 measured one constant
@@ -112,6 +114,7 @@ fail()
 # S167.
 trap 'status=$?
       [[ -n "${snapshot:-}" ]] && rm -f "$snapshot"
+      [[ -n "${relay_tmpdir:-}" ]] && rm -rf "$relay_tmpdir"
       [[ -n "${tree_index:-}" ]] && rm -f "$tree_index"
       if ((marked == 0 && (status != 0 || completed == 0))); then
         echo "SPRT-RUN-FAILED: exited $status" >&2
@@ -205,6 +208,53 @@ tc="${TC:-8+0.08}"
 # pressure instead of holding it. `TC=32+0.32 HASH=64` is the pair that keeps
 # DEC-088's invariant, and it is fishtest's own LTC practice. S151.
 hash="${HASH:-16}"
+
+# A BARE FEN EACH MOVE, BOTH SIDES. BARE_FEN=1 launches each engine through
+# tools/bare_fen_relay.py, which replaces every `position ... moves ...` line
+# with `position fen <the board it reaches>` and passes everything else
+# unchanged. That is a client that sends the board: the one regime where S271
+# (DEC-264) changes play, and not this harness's own, which holds the base
+# fixed for a game. Off by default, because every verdict before S272 was taken
+# without it; a run that sets it is a different regime and says so in its
+# pre-registration, as one that sets TC does. S272.
+#
+# The relay is python and needs python-chess, so RELAY_PYTHON names the
+# interpreter, ~/.venv/chess/bin/python by default (TOOLCHAIN.md); a python
+# that cannot import it stops the run here, before anything is built. The relay
+# is snapshotted like the candidate, so an edit to the tree during a run cannot
+# change what plays, and the banner prints its blob. Both sides' `id name` is
+# asked through it, so a relay that cannot start stops the run before a game.
+#
+# PYTHON RUNS IT ISOLATED, `-I`, FROM A DIRECTORY OF ITS OWN. Python puts a
+# script's directory first on sys.path, and PYTHONPATH after it, both ahead of
+# python-chess: a `chess.py` beside a snapshot written straight into /tmp was
+# imported in its place (S272's fast check). `-I` drops both, and user
+# site-packages, and keeps the interpreter's own; the `mktemp -d` directory is
+# the snapshot's alone. The import probe below runs the same way, so what it
+# finds is what the relay will.
+#
+# Its cost is adocs/data/S272_relay_latency.txt. fastchess sends `isready`
+# after `position` and starts the clock at `go`, after `readyok`, so the
+# rewrite is paid off the clock and the clock pays only the two hops `go` and
+# `bestmove` take through the relay -- on both sides alike.
+bare_fen="${BARE_FEN:-}"
+case "$bare_fen" in
+  '' | 1) ;;
+  *) fail "BARE_FEN must be 1 or unset, got '$bare_fen'" ;;
+esac
+relay_python="${RELAY_PYTHON:-$HOME/.venv/chess/bin/python}"
+relay_source="$repo/tools/bare_fen_relay.py"
+relay_tmpdir=""
+relay_snapshot=""
+relay_notes_file=""
+chess_version=""
+if [[ -n "$bare_fen" ]]; then
+  [[ -r "$relay_source" ]] || fail "BARE_FEN=1 but there is no relay at $relay_source"
+  [[ -x "$relay_python" ]] \
+    || fail "BARE_FEN=1 but RELAY_PYTHON '$relay_python' is not an executable; it needs python-chess"
+  chess_version="$("$relay_python" -I -c 'import chess; print(chess.__version__)' 2> /dev/null)" \
+    || fail "BARE_FEN=1 but '$relay_python' cannot import python-chess, which the relay needs"
+fi
 
 # Every core the machine reports, whatever kind it is: efficiency cores on
 # Apple silicon (DEC-048, superseding DEC-042), SMT siblings on the Linux
@@ -725,6 +775,36 @@ reference="$(build_ref "$ref_sha")" \
 [[ -x "$reference" ]] \
   || fail "building the reference $ref_sha left no binary at '$reference'"
 
+# The relay's snapshot, for the candidate's reason. fastchess splits `args=` on
+# spaces, so a path holding one would hand the relay the wrong engine; refused
+# rather than quoted, since how fastchess reads quotes there is not documented.
+# The blob is what played: HEAD's own when the banner says so.
+#
+# The notes file is where the relay writes a `position` line it passed
+# unchanged: fastchess discards an engine's stderr, and the engines inherit
+# this environment. Emptied here, so a note in it is this run's, and named on
+# the banner, so a watcher can poll it while the run plays.
+launcher=()
+if [[ -n "$bare_fen" ]]; then
+  relay_tmpdir="$(mktemp -d "${TMPDIR:-/tmp}/chesso-relay.XXXXXX")"
+  relay_snapshot="$relay_tmpdir/bare_fen_relay.py"
+  cp "$relay_source" "$relay_snapshot"
+  for path in "$relay_snapshot" "$candidate" "$reference"; do
+    [[ "$path" != *[[:space:]]* ]] \
+      || fail "BARE_FEN=1 passes '$path' to the relay through fastchess's args=, which splits on spaces"
+  done
+  launcher=("$relay_python" -I "$relay_snapshot")
+  relay_notes_file="$outdir/relay_notes.txt"
+  : > "$relay_notes_file"
+  export BARE_FEN_RELAY_NOTES="$relay_notes_file"
+  relay_blob="$(git hash-object --no-filters "$relay_snapshot")"
+  if [[ "$relay_blob" == "$(git rev-parse -q --verify HEAD:tools/bare_fen_relay.py 2> /dev/null || true)" ]]; then
+    relay_state="HEAD's"
+  else
+    relay_state="NOT HEAD's tools/bare_fen_relay.py"
+  fi
+fi
+
 # A busy machine invalidates a timed match, and it is worth knowing before
 # spending an hour rather than after.
 #
@@ -808,6 +888,11 @@ echo "config     arch $want_arch  tune $tune_label"
 echo "tc $tc  hash $hash  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
 echo "seed       $seed"
+if [[ -n "$bare_fen" ]]; then
+  echo "relay      bare FEN each move, both sides: tools/bare_fen_relay.py blob ${relay_blob:0:12} ($relay_state)"
+  echo "           on $relay_python -I, python-chess $chess_version"
+  echo "           notes to $relay_notes_file"
+fi
 if [[ -n "$sprt_args" ]]; then
   echo "bounds     $sprt"
 else
@@ -857,7 +942,8 @@ echo
 # point rather than a swallowed error: not every engine exits on `quit`, so
 # `timeout` returns 124 for a probe that in fact answered, and under
 # `set -o pipefail` that status would kill this script with no message. The
-# caller checks the string.
+# caller checks the string. Under BARE_FEN=1 the probe goes through the relay,
+# as the games do; the relay passes `uci` and `id name` unchanged.
 if command -v timeout > /dev/null; then
   timeout_cmd=timeout
 elif command -v gtimeout > /dev/null; then
@@ -868,7 +954,7 @@ fi
 
 engine_id()
 {
-  { printf 'uci\nquit\n' | "$timeout_cmd" -k 1 5 "$1" 2> /dev/null \
+  { printf 'uci\nquit\n' | "$timeout_cmd" -k 1 5 ${launcher[@]+"${launcher[@]}"} "$1" 2> /dev/null \
     | sed -n 's/^id name //p' | head -1 | tr -d '\r'; } || true
 }
 
@@ -920,9 +1006,20 @@ fi
 check_identity "$reference" "ref-$ref_sha" "$ref_sha" 0
 echo
 
+# Each side's command: the binary, or the relay's python with the relay and the
+# binary as its arguments.
+cand_cmd=(cmd="$candidate")
+ref_cmd=(cmd="$reference")
+event="chesso $tag $stamp srand=$seed"
+if [[ -n "$bare_fen" ]]; then
+  cand_cmd=(cmd="$relay_python" args="-I $relay_snapshot $candidate")
+  ref_cmd=(cmd="$relay_python" args="-I $relay_snapshot $reference")
+  event="$event bare-fen"
+fi
+
 fastchess \
-  -engine cmd="$candidate" name="$cand_name" \
-  -engine cmd="$reference" name="ref-$ref_sha" \
+  -engine "${cand_cmd[@]}" name="$cand_name" \
+  -engine "${ref_cmd[@]}" name="ref-$ref_sha" \
   -openings file="$book" format="$book_format" order=random \
   -srand "$seed" \
   -each tc="$tc" option.Hash="$hash" option.Threads=1 \
@@ -933,7 +1030,7 @@ fastchess \
   -repeat \
   -concurrency "$concurrency" \
   -recover \
-  -event "chesso $tag $stamp srand=$seed" \
+  -event "$event" \
   -pgnout file="$pgnfile" nodes=true timeleft=true \
   -log file="$logfile"
 
@@ -1015,6 +1112,26 @@ if ((unexpected > 0)); then
   echo "                  side carries the change, so this run measured the"
   echo "                  failure and not the difference. Nothing is reported."
   fail "the run is void: $unexpected crash/disconnect termination(s) in $pgnfile"
+fi
+
+# UNDER BARE_FEN=1 A POSITION THE RELAY PASSED UNCHANGED reached its engine as
+# base plus moves, so the run was not wholly the regime its banner claims. The
+# relay passes only a line it cannot read -- an invalid FEN, an illegal move --
+# which fastchess does not send, so a note here is a relay defect, and the run
+# is void the way a crash voids it. S272.
+if [[ -n "$bare_fen" ]]; then
+  relay_notes=0
+  if [[ -f "$relay_notes_file" ]]; then
+    relay_notes="$(grep -c '' "$relay_notes_file" || true)"
+  fi
+  echo "relay     $relay_notes position line(s) passed unrewritten"
+  if ((relay_notes > 0)); then
+    echo
+    echo "SPRT-RUN-INVALID: $relay_notes position line(s) reached an engine unrewritten"
+    echo "                  under BARE_FEN=1 ($relay_notes_file), so this run is not"
+    echo "                  the regime its banner claims. Nothing is reported."
+    fail "the run is void: the relay passed $relay_notes position line(s) unchanged"
+  fi
 fi
 
 completed=1

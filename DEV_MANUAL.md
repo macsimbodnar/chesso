@@ -708,6 +708,17 @@ ctest --test-dir build -L fast    # correctness, must stay green, about 80 s
 ctest --test-dir build -L slow    # deep perft, minutes
 ```
 
+**One fast test needs python-chess**: `test_bare_fen_relay`, because the relay
+it tests imports it. The interpreter is the CMake cache variable
+`CHESSO_CHESS_PYTHON`, `~/.venv/chess/bin/python` by default (TOOLCHAIN.md);
+pass `-DCHESSO_CHESS_PYTHON=<python>` at configure on a machine that keeps it
+elsewhere. The system `python3` starts the test and it re-runs itself under
+that interpreter; when neither imports python-chess it prints why and exits
+77, which ctest lists as **skipped** (`SKIP_RETURN_CODE`), not failed: the
+machine lacks a tool, the relay is not broken. A skip in the gate's output is
+therefore something to read, not to ignore. Its session, `tests/assets/bare_fen_relay_session.txt`, is rewritten by
+`adocs/data/S272_relay_session.py` from a recorded fastchess log.
+
 `test_perft`, the slow label's one binary, **exits non-zero on a missing or an
 unparseable asset** and on a mismatch in any of the **nine** columns it reads —
 `nodes`, `captures`, `en_passant`, `castles`, `promotions`, `checks`,
@@ -3419,6 +3430,7 @@ ROUNDS=<n> AA=1 ./fastchess.sh  # fixed rounds, no SPRT: never a verdict
 TC=32+0.32 ./fastchess.sh       # another time control; the default is 8+0.08
 HASH=64 ./fastchess.sh          # another hash per engine; the default is 16 MB
 CAND=<ref> REF=<ref> ./fastchess.sh   # play two commits; the tree is not played
+BARE_FEN=1 ./fastchess.sh       # both sides through the bare-FEN relay (S272)
 ```
 
 The reference is built from a git ref into a worktree under `.ref-builds/`, so
@@ -3476,7 +3488,8 @@ the run with `SPRT-RUN-FAILED: building the candidate <sha> ...` before a game
 is played rather than handing fastchess a path to a binary that was never
 produced.
 
-**Only the candidate is snapshotted, in either mode.** It is copied to a
+**Only the candidate is snapshotted, in either mode** (and the relay, under
+`BARE_FEN=1`, below). It is copied to a
 `mktemp` file before the first game, so a rebuild of `build/` — or of its
 `.ref-builds/<sha>` worktree under `CAND` — cannot swap it under the match.
 The **reference is not**: it is played straight from
@@ -3484,6 +3497,63 @@ The **reference is not**: it is played straight from
 while a match is running does swap the reference. `fastchess.sh` never does so
 itself, which is why a stale cached reference is cleared before a run starts
 and never during one.
+
+**`BARE_FEN=1` plays both sides through `tools/bare_fen_relay.py`** (S272),
+which replaces every `position ... moves ...` line fastchess sends with
+`position fen <the board it reaches>`, the board computed by python-chess, and
+passes every other line both ways unchanged. That is a client that sends the
+board each move: the one regime where S271's kept table (DEC-264) changes play,
+and not this harness's own, which holds the base fixed for a game. Off by
+default; a run that sets it is a different regime and its pre-registration
+says so. What it does to the run:
+
+- fastchess is handed `cmd=<python> args="-I <relay> <binary>"` for each
+  side. `RELAY_PYTHON` names the python, `~/.venv/chess/bin/python` by
+  default; one that cannot import python-chess under `-I` stops the run
+  before anything is built, and a `BARE_FEN` other than `1` is refused.
+- The relay is copied into a `mktemp -d` directory of its own, like the
+  candidate's snapshot, and the banner prints its blob, whether it is
+  `HEAD's`, and the notes file below:
+
+  ```
+  relay      bare FEN each move, both sides: tools/bare_fen_relay.py blob <12 hex> (HEAD's)
+             on /home/max/.venv/chess/bin/python -I, python-chess 1.11.2
+             notes to <out>/relay_notes.txt
+  ```
+
+  The `id name` probe of each side goes through it, so a relay that cannot
+  start stops the run before a game. The PGN's `Event` ends `bare-fen`.
+- A line the relay cannot read (an invalid FEN, an illegal move) it passes
+  unchanged and notes in the file `BARE_FEN_RELAY_NOTES` names, which
+  `fastchess.sh` empties at the start and sets to `<out>/relay_notes.txt`,
+  because fastchess discards an engine's stderr; a watcher can poll it while
+  the run plays. The census prints `relay     <n> position line(s) passed
+  unrewritten`, and any `n` above 0 voids the run with `SPRT-RUN-INVALID`, as
+  a crash does: that position reached its engine as base plus moves.
+- **The console is mostly blocks no one reads.** A bare FEN hides the game's
+  history from both sides, so their PVs run past repetitions and fastchess
+  prints a four-line "PV continues after threefold repetition" block for
+  each: 79 to 97 % of S272's smoke consoles, 4.5 to 17 KB a game. A run's
+  console can pass `tools/gate.sh`'s 20 MB at a few thousand games, so the
+  log a verdict commits is the console through
+  `tools/trim_console.py --summary`, which keeps the `Results of` line the
+  gate checks the block against (DEC-235).
+- **What it costs a move**, `adocs/data/S272_relay_latency.txt`
+  (`adocs/data/S272_relay_latency.py`): fastchess sends `isready` after
+  `position` and starts the clock at `go`, after the `readyok` — an engine
+  held 0.3 s on every `position` line played a 2+0.02 game without a forfeit —
+  so the rewrite is paid off the clock. The clock pays the hop of `go` in and
+  `bestmove` out: a median of 0.05 ms and a 99th percentile of 0.28 ms with
+  nothing else running (load average 0.3), 0.02 ms and 2.4 ms beside twelve
+  busy engines, on both sides alike. The relay runs under `-I`, from a
+  `mktemp -d` directory of its own: without it python puts the script's
+  directory and `PYTHONPATH` ahead of python-chess, and a `chess.py` beside
+  the snapshot was imported in its place.
+- fastchess splits `args=` on spaces, so a path to the relay or a binary
+  holding one is refused rather than handed over wrong.
+
+`adocs/data/S272_aa.sh` and `S272_sprt.sh` are its first use: the A/A
+calibration through it, and S271's landing against its parent.
 
 **A cached `.ref-builds/<sha>` is checked before it is played, and rebuilt
 rather than refused.** It used to be played whenever its binary existed, with

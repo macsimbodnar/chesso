@@ -476,6 +476,32 @@ add_test(NAME test_s105_pairs
          COMMAND python3 ${CMAKE_SOURCE_DIR}/adocs/data/S105_pairs.py --self-test)
 set_tests_properties(test_s105_pairs PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S272: tools/bare_fen_relay.py, which S272's validation match launches both
+# engines through (`BARE_FEN=1 ./fastchess.sh`). A session fastchess sent one
+# engine, recorded, and two games sent a position at every ply are replayed
+# through it to a stub engine: every line arrives in order, each `position` as
+# a bare FEN and the rest byte for byte, the replies come back byte for byte,
+# and every FEN sent is the board chesso's own `fen` reaches from the original
+# line -- castling, en passant, promotion and both counters, two
+# implementations agreeing, so no expected FEN is written down. Plus the lines
+# it cannot read, the kept board, its exit with the engine's status, and a
+# reply while its input is still open, which is how fastchess talks to it.
+#
+# The first test in this directory that needs python-chess, because the relay
+# does: CHESSO_CHESS_PYTHON names the interpreter, the workstation's venv by
+# default (TOOLCHAIN.md). The system python3 starts the file and it re-runs
+# itself under that interpreter; when neither imports python-chess it prints
+# why and exits 77, which ctest lists as skipped rather than failed -- a
+# machine without the venv lacks a tool, its relay is not broken. ~1 s.
+set(CHESSO_CHESS_PYTHON "$ENV{HOME}/.venv/chess/bin/python" CACHE FILEPATH
+    "A python with python-chess, for the tests of tools that need it")
+add_test(NAME test_bare_fen_relay
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_bare_fen_relay.py ${CHESSO_CHESS_PYTHON}
+                 ${CMAKE_SOURCE_DIR}/tools/bare_fen_relay.py $<TARGET_FILE:chesso>
+                 ${CMAKE_CURRENT_SOURCE_DIR}/assets/bare_fen_relay_session.txt)
+set_tests_properties(test_bare_fen_relay PROPERTIES LABELS "fast" TIMEOUT 60
+                     SKIP_RETURN_CODE 77)
+
 # S141: `--touches`, the one mode of tools/plan_prose_check.py that is in the
 # suite. The other two are not, and DEV_MANUAL.md says why: any source commit
 # shifts lines under fifty step files at once, so gating on citation freshness
