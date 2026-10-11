@@ -299,8 +299,9 @@ is typed by hand.
 | S115 | the fail-low pull stays | 11 h 7 m | 23276 | `{0, 5}` | H1, +4.24 +/- 3.39 |
 | S114 v2 | the null move's entry gate leaves | 19 h 7 m | 40000 | `{0, 5}` | **no verdict** |
 | S116 | razoring at depth one stays | 3 h 55 m | 8234 | `{0, 5}` | H1, +8.36 +/- 5.62 |
+| S272 | a bare-FEN client gains from S271's table | 0 h 18 m | 716 | `{0, 5}` | H1, +75.91 +/- 16.87 |
 
-**The ledger holds 43: mean 6 h 19 m, median 5 h 26 m, 574615 games in 272.25 hours, 2110.6 an hour across the set.** **Fast class**, an effect outside the bounds interval -- sixteen runs, mean **2 h 02 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-seven runs, mean **8 h 52 m**.
+**The ledger holds 44: mean 6 h 11 m, median 5 h 26 m, 575331 games in 272.55 hours, 2110.9 an hour across the set.** **Fast class**, an effect outside the bounds interval -- seventeen runs, mean **1 h 56 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-seven runs, mean **8 h 52 m**.
 
 ### Priced by class
 
