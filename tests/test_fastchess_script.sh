@@ -2,7 +2,7 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Thirty-one properties. The second is the one that stops F01 recurring; 3 to 8
+# Thirty-two properties. The second is the one that stops F01 recurring; 3 to 8
 # are the default reference and the A/A guard -- the trap S160 disarmed and the
 # defects its own first attempt shipped, each one reproduced before it was
 # fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode; 12 to 15
@@ -12,7 +12,7 @@
 # itself, which every case before them skips; 18 to 26 are S212's, one per
 # finding of the 2026-09-10 audit's harness set -- F04, F06, F05, F31 and F32
 # in that order; 27 to 29 are S256's candidate name; 30 and 31 are S272's
-# bare-FEN relay:
+# bare-FEN relay; 32 is S273's branch padding:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
@@ -73,6 +73,9 @@
 #  31. BARE_FEN=1 with a python that cannot import python-chess, and a
 #      BARE_FEN other than 1, stop the run before fastchess; a relay that
 #      notes a position it passed unchanged voids the run (S272)
+#  32. the banner prints, per side, whether that build pads branches off
+#      32-byte boundaries, read from that side's own CMakeCache.txt, and a
+#      cache with no record reads unpadded (S273)
 #
 # No game is played and no engine is compiled. `fastchess` is a stub on PATH,
 # the candidate and the reference are one-line shell scripts, and the whole run
@@ -1449,7 +1452,64 @@ elif ! grep -q '^SPRT-RUN-INVALID: 4 position line(s) reached an engine unrewrit
   show "$noted_dir"
 fi
 
+# 32. The banner says, per side, whether that build pads branches.
+#
+# cmake/arch.cmake records CHESSO_BRANCH_PAD as an internal cache entry from
+# S273 on; a commit before that records nothing and never padded, and the
+# padding alone moved single-process timings 1.5 to 3 % on the workstation, so
+# two sides that differ in it differ by the build and not only by the commit.
+# Four sandboxes, so that neither a constant nor one cache read for both sides
+# passes: every sandbox above records nothing and reads unpadded twice; a
+# padded working tree against a reference with no record; a working tree
+# recorded OFF against a reference recorded ON; and a CAND run, whose
+# candidate is read from its own worktree and not from build/.
+unrecorded="off (unrecorded: before S273)"
+if ! grep -qxF "padding    cand $unrecorded  ref $unrecorded" "$reached_dir/out.txt"; then
+  fail "no record on either side: the banner does not print both sides unpadded"
+  show "$reached_dir"
+fi
+
+pad_dir="$(make_sandbox "$script_under_test")"
+echo 'CHESSO_BRANCH_PAD:INTERNAL=ON' >> "$pad_dir/build/CMakeCache.txt"
+pad_status="$(run_sandbox "$pad_dir" HEAD~1)"
+if ((pad_status != 0)); then
+  fail "padded candidate: the script exited $pad_status"
+  show "$pad_dir"
+elif ! grep -qxF "padding    cand on  ref $unrecorded" "$pad_dir/out.txt"; then
+  fail "padded candidate against an unrecorded reference: the banner does not say so"
+  show "$pad_dir"
+fi
+
+pad_ref_dir="$(make_sandbox "$script_under_test")"
+pad_ref_sha="$(git -C "$pad_ref_dir" rev-parse --short HEAD~1)"
+echo 'CHESSO_BRANCH_PAD:INTERNAL=OFF' >> "$pad_ref_dir/build/CMakeCache.txt"
+echo 'CHESSO_BRANCH_PAD:INTERNAL=ON' \
+  >> "$pad_ref_dir/.ref-builds/$pad_ref_sha/build/CMakeCache.txt"
+pad_ref_status="$(run_sandbox "$pad_ref_dir" HEAD~1)"
+if ((pad_ref_status != 0)); then
+  fail "padded reference: the script exited $pad_ref_status"
+  show "$pad_ref_dir"
+elif ! grep -qxF "padding    cand off  ref on" "$pad_ref_dir/out.txt"; then
+  fail "candidate recorded OFF against a padded reference: the banner does not say so"
+  show "$pad_ref_dir"
+fi
+
+pad_cand_dir="$(make_sandbox "$script_under_test")"
+pad_cand_sha="$(git -C "$pad_cand_dir" rev-parse --short HEAD)"
+echo 'CHESSO_BRANCH_PAD:INTERNAL=OFF' >> "$pad_cand_dir/build/CMakeCache.txt"
+echo 'CHESSO_BRANCH_PAD:INTERNAL=ON' \
+  >> "$pad_cand_dir/.ref-builds/$pad_cand_sha/build/CMakeCache.txt"
+pad_cand_status="$(CAND=HEAD run_sandbox "$pad_cand_dir" HEAD~1)"
+if ((pad_cand_status != 0)); then
+  fail "padded CAND: the script exited $pad_cand_status"
+  show "$pad_cand_dir"
+elif ! grep -qxF "padding    cand on  ref $unrecorded" "$pad_cand_dir/out.txt"; then
+  fail "CAND run: the candidate's padding is not read from its own worktree"
+  show "$pad_cand_dir"
+fi
+
 rm -rf "$relay_dir" "$nochess_dir" "$badfen_dir" "$noted_dir"
+rm -rf "$pad_dir" "$pad_ref_dir" "$pad_cand_dir"
 rm -rf "$wt_dir" "$clean_wt_dir" "$untracked_dir"
 rm -rf "$reached_dir" "$default_dir" "$clean_dir" "$older_dir" \
        "$explicit_dir" "$aa_dir" "$nogit_dir" "$seed_dir" \
@@ -1464,4 +1524,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: 31 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, names a working-tree candidate by HEAD and the blob of the diff it saved, plays both sides through a snapshot of the bare-FEN relay only when BARE_FEN=1, refuses that run without python-chess or with another value, and voids it when the relay passed a position unrewritten"
+echo "$script_under_test: 32 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, names a working-tree candidate by HEAD and the blob of the diff it saved, plays both sides through a snapshot of the bare-FEN relay only when BARE_FEN=1, refuses that run without python-chess or with another value, voids it when the relay passed a position unrewritten, and prints whether each side pads its branches"

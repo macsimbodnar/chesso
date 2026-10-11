@@ -7,6 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-11, by hand.
 
+## 2026-10-11: S273 done -- branches padded off 32-byte boundaries; the speed reading made layout-robust
+
+`-Wa,-mbranches-within-32B-boundaries` on C++ units for `CHESSO_ARCH` native
+and bmi2 (`cmake/arch.cmake`, guarded; clang 22 rejects it and builds
+without, observed). Single-process, padded against unpadded in the tree's
+layout and four perturbations: -1.5 to -3.7 % cycles for +0.5 %
+instructions, **+1.50 to +3.11 % wall**, the same sign everywhere;
+node-identical (INV-6). Uop-cache share 23-36 % -> 42-44 %, consistent with
+the JCC erratum (raw event encodings typed by hand, not cross-checked).
+Padded, unrelated layout changes move cycles 0.3 % at most (inside the A/A
+floor) against 1.8 % unpadded. **A reference commit before S273 builds
+unpadded**: `fastchess.sh`'s banner now prints each side's padding. No A/A is
+owed: neither fastchess, book, adjudication nor machine moved, and both sides
+of every match from here build padded. **Two things for the owner:** (1) bmi2,
+the shipped target, takes the flag although its cost on parts without the
+erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) is unmeasured -- a
+one-line revert in `arch.cmake` if unwanted; (2) the step file proposes a
+reading rule for sub-2 % speed verdicts on this machine, to rule on as a
+decision. Fast check: six findings, fixed before commit. **Next:** S119, the
+table as cache-line clusters.
+
 ## 2026-10-11: S272 done -- H1: a bare-FEN client gains from S271's kept table
 
 Both sides through `tools/bare_fen_relay.py`, `a7bb10e` (S271) against

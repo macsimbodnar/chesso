@@ -52,10 +52,48 @@ every recorded benchmark becomes incomparable.
 **The flags a Release unit compiles with**, as the build directory's
 `compile_commands.json` shows them: `-O3 -DNDEBUG` (CMake's own Release flags),
 `-std=gnu++20` (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`, extensions left on),
-the arch flag (`-march=native` in `build/`, `cmake/arch.cmake`, below) and
+the arch flag (`-march=native` in `build/`, `cmake/arch.cmake`, below), the
+branch padding `-Wa,-mbranches-within-32B-boundaries` where the arch is `native`
+or `bmi2` and the assembler takes it (`cmake/arch.cmake`, next paragraph) and
 `-Wall -Wextra -Werror` (`CMakeLists.txt`, which turns the three unused-*
 warnings off in Debug). `build-tune/` adds `-DCHESSO_TUNE` (`src/CMakeLists.txt`);
-`build_release.sh` adds the profile flags (`cmake/pgo.cmake`, below).
+`build_release.sh` adds the profile flags (`cmake/pgo.cmake`, below). The arch
+flag reaches every target, Debug builds included, and so does the padding, on
+the C++ units only (the one assembly file holds data).
+
+**Branches are padded off 32-byte boundaries, and that is a measurement** (S273).
+GNU as pads conditional jumps, macro-fused compare-and-jumps and direct
+unconditional jumps (its `-malign-branch` default, `jcc+fused+jmp`) so none
+crosses or ends on a 32-byte boundary; calls, returns and indirect jumps are not
+padded. A jump crossing or ending on such a boundary is the trigger of the
+Skylake family's jump-conditional-code erratum, which the workstation's i7-8700K
+carries: with the microcode fix it is not kept in the decoded-uop cache. Padded against unpadded in the tree's layout
+and four perturbations of it (`-falign-functions=64`, a dummy function in every
+unit, the link order reversed, and S270's inline `game_tables()` diff applied),
+single-process timings read -1.5 to -3.7 % cycles for +0.5 % instructions, wall
++1.50 to +3.11 %, every layout the same sign. The shipped PGO `bmi2` build read
+the same sign at a similar size, in a run the machine disturbed. It also takes
+most of the layout out of a timing: an unrelated layout change moved cycles by
+up to 1.8 % unpadded and by 0.3 % at most padded, inside an A/A's own noise.
+`bmi2` takes it because its x86-64-v3 parts include the Skylake family; on its
+parts without the erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) it costs
++0.8 to +0.9 % instructions and +3 % `.text` in the PGO build, and what that
+costs in time there has not been measured. `avx2` and `portable` do not take it, their parts having no
+erratum. Configure prints which you have, and a toolchain whose assembler
+rejects the flag builds without it and says so. clang 22 on Linux rejects the
+`-Wa,` form (it spells the flag without it); Apple clang on the M1 was not run,
+and the same guard covers it:
+
+```
+-- Branch padding on (-Wa,-mbranches-within-32B-boundaries)
+-- Branch padding unavailable: Clang 22.1.8 rejected '-Wa,-mbranches-within-32B-boundaries', built without it
+-- Branch padding off for avx2
+```
+
+A `REF=<sha>` older than S273 builds unpadded, and `fastchess.sh`'s banner says
+so on its `padding` line. The difference is about 1.5 to 3 % in single-process
+timings; a full-concurrency match was not measured. The readings are in
+`adocs/data/S273_timing.txt`.
 
 **No link-time optimization, and that is a measurement** (S270). CMake's
 `INTERPROCEDURAL_OPTIMIZATION`, which is `-flto=auto -fno-fat-lto-objects` under
@@ -76,10 +114,10 @@ flag would leave a target named for an instruction set it does not target.
 
 | `CHESSO_ARCH` | flags | for |
 |---|---|---|
-| `bmi2` | `-march=x86-64-v3` | **the target that ships to a rating list.** Intel Haswell (2013) onward, AMD Zen3 (2020) onward |
+| `bmi2` | `-march=x86-64-v3`, branch padding | **the target that ships to a rating list.** Intel Haswell (2013) onward, AMD Zen3 (2020) onward. The padding's cost on its parts without the Skylake family's erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) is not measured |
 | `avx2` | `-march=x86-64-v3 -mno-bmi2` | Zen1 and Zen2, where PEXT and PDEP are microcoded at about 18 cycles against Intel's 3. `__BMI2__` is undefined here and that is the switch S032's magic path keys off |
 | `portable` | `-march=x86-64-v2` | the fallback. SSE4.2 and POPCNT, so Nehalem (2008) and Bulldozer (2011) onward |
-| `native` | `-march=native` | **this machine only, default, never distributed.** `build/` is the directory that gets measured and a local measurement wants the code the machine can run; the same file on anything older than this part raises SIGILL rather than running slowly. `build_release.sh` refuses the name |
+| `native` | `-march=native`, branch padding | **this machine only, default, never distributed.** `build/` is the directory that gets measured and a local measurement wants the code the machine can run; the same file on anything older than this part raises SIGILL rather than running slowly. `build_release.sh` refuses the name |
 
 The step that added this is S104 and the reason it exists is one number: the
 release build carried **no** architecture flag, so `std::popcount` compiled to a
@@ -3440,14 +3478,17 @@ snapshotted before the first game. Both exist because an SPRT once reported
 
 **`REF` defaults to `HEAD`, so the three bare forms measure the uncommitted
 diff.** The banner prints each side's short sha and its commit date before the
-first game, the configuration both sides were built with, and then what each
-binary answered when it was asked who it is:
+first game, the configuration both sides were built with, whether each side's
+build pads branches (read from that build's `CMakeCache.txt`; a commit before
+S273 records nothing and never padded), and then what each binary answered when
+it was asked who it is:
 
 ```
 candidate  eaad88b  2026-08-22  + uncommitted changes
 diff       <repo>/.tuning/sprt_fast_20260822_101500/candidate.diff  blob 3f1c09d2a7b4
 reference  eaad88b  2026-08-22
 config     arch native  tune off
+padding    cand on  ref on
 ...
 id name    cand-eaad88b+3f1c09d2a7b4  Chesso eaad88b-dirty native
 id name    ref-eaad88b  Chesso eaad88b native

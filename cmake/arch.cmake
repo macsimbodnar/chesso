@@ -68,3 +68,57 @@ if(CHESSO_ARCH STREQUAL "native")
 else()
      message("-- Arch ${CHESSO_ARCH} (${chesso_arch_flag_string})")
 endif()
+
+# S273. Branch padding, for the Skylake family's jump-conditional-code erratum.
+#
+# With Intel's microcode fix, a Skylake-derived core (Skylake to Comet Lake and
+# Cascade Lake; the workstation's i7-8700K) does not keep a jump that crosses or
+# ends on a 32-byte boundary in its decoded-uop cache, so where the hot jumps
+# happen to fall decides how much of the search is decoded the slow way. GNU as
+# pads conditional, fused and direct unconditional jumps off those boundaries
+# (its -malign-branch default, jcc+fused+jmp); calls, returns and indirect jumps
+# are not padded. On the workstation, padded against unpadded in the tree's
+# layout and four perturbations of it (one of them S270's inline game_tables()
+# diff), single-process timings: -1.5 to -3.7 % cycles for +0.5 % instructions,
+# wall +1.50 to +3.11 %. The shipped PGO bmi2 build read the same sign at a
+# similar size, in a run the machine disturbed. The uop cache's share of the
+# uops, DSB / (DSB + MITE) without the microcode sequencer's, read 42 to 44 %
+# padded against 23 to 36 % unpadded -- consistent with the erratum, from IDQ
+# raw events whose encodings were typed from Intel's list and that nothing on
+# this machine cross-checks. An unrelated layout change moved cycles by up to
+# 1.8 % unpadded against 0.3 % padded, inside an A/A's own noise, which is what
+# a speed reading under 2 % needs. adocs/plan_done/S273_branch_padding.md has the readings.
+#
+# native and bmi2 take it: native is the measured machine, and bmi2's x86-64-v3
+# parts include the Skylake family. On bmi2's parts without the erratum
+# (Haswell, Broadwell, Ice Lake on, Zen3 on) the padding is code size and NOPs
+# (+0.8 to +0.9 % instructions and +3 % .text in the PGO build), and what that
+# costs there has not been measured. avx2 is for Zen1 and Zen2 and portable for
+# parts older than Haswell, and neither has the erratum.
+#
+# Put to the C++ compiler first like the arch flags, but a toolchain whose
+# assembler lacks it builds without it and says so, rather than failing: the
+# flag changes speed, never what the engine computes. C++ only, the language
+# the check asked; the one assembly file holds data and no branch.
+# CHESSO_BRANCH_PAD records what was applied, for fastchess.sh's banner: two
+# sides that differ in it differ by the build and not only by the commit.
+set(chesso_branch_pad OFF)
+
+if(CHESSO_ARCH STREQUAL "native" OR CHESSO_ARCH STREQUAL "bmi2")
+     set(chesso_branch_pad_flag "-Wa,-mbranches-within-32B-boundaries")
+     check_cxx_compiler_flag("${chesso_branch_pad_flag}" chesso_branch_pad_ok)
+
+     if(chesso_branch_pad_ok)
+          add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${chesso_branch_pad_flag}>)
+          set(chesso_branch_pad ON)
+          message("-- Branch padding on (${chesso_branch_pad_flag})")
+     else()
+          message("-- Branch padding unavailable: ${CMAKE_CXX_COMPILER_ID} "
+               "${CMAKE_CXX_COMPILER_VERSION} rejected '${chesso_branch_pad_flag}', built without it")
+     endif()
+else()
+     message("-- Branch padding off for ${CHESSO_ARCH}")
+endif()
+
+set(CHESSO_BRANCH_PAD ${chesso_branch_pad} CACHE INTERNAL
+     "Whether this build pads branches off 32-byte boundaries (S273), as applied")

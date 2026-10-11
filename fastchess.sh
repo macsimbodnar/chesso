@@ -706,10 +706,14 @@ build_ref()
     echo "Building reference $sha ..." >&2
     git worktree add --detach "$dir" "$sha" > /dev/null || return 1
     # Configured with the candidate's own arch and tune rather than with bare
-    # defaults, so the two sides of the match differ by the commit and not by
-    # the build. An older commit that has no such option takes the -D as an
-    # unused variable and keeps it in its cache, which is what makes the
-    # judgement above stable there too.
+    # defaults, so the two sides of the match do not differ by those. They can
+    # still differ by the build: each commit's own CMake decides the rest, and
+    # a commit before S273 builds without the branch padding a later one
+    # applies (cmake/arch.cmake) -- 1.5 to 3 % in single-process timings on the
+    # workstation. The banner's padding line says which side has it. An older
+    # commit that has no such option takes the -D as an unused variable and
+    # keeps it in its cache, which is what makes the judgement above stable
+    # there too.
     cmake -S "$dir" -B "$dir/build" -G Ninja \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
       -DCHESSO_ARCH="$want_arch" -DCHESSO_TUNE="$want_tune" > /dev/null \
@@ -759,6 +763,11 @@ fi
 # it. Nothing in this script does so -- `build_ref` skips a worktree whose
 # binary is already there -- and the exposure is an outside hand, which is why
 # a stale cached reference is cleared before a run starts and never during one.
+# Where the candidate was built, for the banner's padding line, read before the
+# snapshot replaces the path: build/ for the working tree, the commit's own
+# worktree under CAND.
+cand_build_cache="${candidate%/src/chesso}/CMakeCache.txt"
+
 snapshot="$(mktemp "${TMPDIR:-/tmp}/chesso-candidate.XXXXXX")"
 cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
@@ -864,6 +873,21 @@ commit_date()
   git show -s --date=short --format=%cd "$1"
 }
 
+# Whether a side's build pads branches off 32-byte boundaries, from the
+# CHESSO_BRANCH_PAD entry cmake/arch.cmake records in that build's cache since
+# S273. The padding alone moved single-process timings 1.5 to 3 % on the
+# workstation, and `config` above matches only arch and tune, so two sides can
+# differ in it -- a reference before S273 does -- and this is where that shows.
+# A cache with no entry is a commit whose CMake never padded.
+pad_state()
+{
+  case "$(cache_value "$1" CHESSO_BRANCH_PAD)" in
+    ON) echo "on" ;;
+    "") echo "off (unrecorded: before S273)" ;;
+    *) echo "off" ;;
+  esac
+}
+
 dirty=""
 ((diff_status == 0)) || dirty="  + uncommitted changes"
 
@@ -885,6 +909,7 @@ echo "reference  $ref_sha  $(commit_date "$ref_sha")"
 # shas say which commits were compared and nothing about whether the two
 # binaries were compiled for the same machine; this is the other half.
 echo "config     arch $want_arch  tune $tune_label"
+echo "padding    cand $(pad_state "$cand_build_cache")  ref $(pad_state "${reference%/src/chesso}/CMakeCache.txt")"
 echo "tc $tc  hash $hash  concurrency $concurrency of $all_cores cores"
 echo "book       $(basename "$book")"
 echo "seed       $seed"
