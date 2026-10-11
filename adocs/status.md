@@ -7,26 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-11, by hand.
 
-## 2026-10-11: S272 in progress -- the bare-FEN relay landed; the A/A runs next
+## 2026-10-11: S272 done -- H1: a bare-FEN client gains from S271's kept table
 
-`tools/bare_fen_relay.py` rewrites each `position ... moves ...` into
-`position fen <board>` (python-chess), everything else byte for byte;
-`BARE_FEN=1 ./fastchess.sh` puts both sides behind it, default unchanged
-(argument vectors and banner identical with it unset). Its latency is under
-0.05 ms median on the clock, and fastchess does not clock `position` (it sends
-`isready` after it and starts `t0` at `go`) -- so `S271_replay.md`'s "the clear
-is spent on the engine's clock" is wrong for fastchess, to be corrected with
-the result. A bare FEN hides game history, so fastchess prints a
-PV-past-repetition block per occurrence: the committed logs are trimmed with
-`tools/trim_console.py --summary`. `test_bare_fen_relay` is the first fast test
-needing python-chess; without it the test is skipped, visibly (exit 77). A
-`rm -rf` typo in `test_fastchess_script.sh` that left two `/tmp` directories
-per run is fixed. Fast check: seven findings (log size, module shadowing in
-`/tmp`, an f-string older Pythons reject, fail-not-skip, no interactive round
-trip property, late relay notes, a mislabelled latency reading), all fixed.
-**Next:** the A/A (`adocs/data/S272_aa.sh`, 1000 games, about 30 min), then
-the SPRT (`adocs/data/S272_sprt.sh`, {0, 5}, predicted short, 19 h at the
-cap). No owner question is open.
+Both sides through `tools/bare_fen_relay.py`, `a7bb10e` (S271) against
+`16c8883`, {0, 5} nElo at 8+0.08, Hash 16: **H1 after 716 games, Elo 75.91
++/- 16.87**, nElo 118.29 +/- 25.45, 0 forfeits, 0 relay notes, 19 min. The
+replay's conversion had predicted about +50 Elo; a stopped run's estimate is
+biased upward (DEC-063). DEC-143's A/A through the relay came first: 1000
+games, -5.21 +/- 14.75, 0 forfeits; it read 47.1 % draws and a pair variance
+outside S219's band (z -2.38), recorded and not a stop by its own rule.
+fastchess starts the clock at `go`, after the `readyok` that follows
+`position`, so the old clear was never on its clock: `S271_replay.md` takes a
+dated correction. Logs trimmed into `adocs/data/S272_{sprt,aa}.log`; the
+untrimmed runs are `chesso_S272_bare_fen_runs_2026-10-11.tar.xz` in the
+owner's archive. The relay and scripts landed in `da75be0`, after a fast
+check whose seven findings the step file lists. `test_bare_fen_relay` is the
+first fast test needing python-chess and skips visibly without it. The ledger
+is regenerated in the next commit. **Next:** S273, branch padding and a
+layout-robust timing. No owner question is open.
 
 ## 2026-10-10: S271 done -- a new base FEN keeps the table
 

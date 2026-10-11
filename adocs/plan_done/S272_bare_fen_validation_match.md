@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-11. **H1: a bare-FEN client gains from S271's kept table.** Both engines were driven through `tools/bare_fen_relay.py`, which sends every position as the python-chess board it reaches. S271 (`a7bb10e`) beat its parent (`16c8883`) at `{0, 5}` nElo, 8+0.08, Hash 16, `noob_3moves.epd`: H1 after 716 games, LLR 2.95, `Elo 75.91 +/- 16.87`, `nElo 118.29 +/- 25.45`, 0 forfeits, 0 relay notes, 18 m 59 s at 2263 games an hour. The replay's prediction stands beside it and not as it: about +50 Elo, +61 nElo at 33.9 % draws. The DEC-143 A/A came first: 1000 games through the relay, `a7bb10e` against itself. It read `Elo -5.21 +/- 14.75` with 0 forfeits and 0 notes, so every start condition held; it also recorded 47.1 % draws and a pair variance of 0.2343, outside S219's band (z -2.38). The relay's test, `test_bare_fen_relay` (8 properties), is in the fast suite and skips with exit 77 where python-chess is missing. `BARE_FEN=1 ./fastchess.sh` runs both sides isolated (`-I`) from a private snapshot directory and voids a run on any position the relay passes unrewritten. fastchess was found to start its clock at `go`, after the `readyok` that follows `position`, which is recorded as a dated correction in `S271_replay.md`. Logs: `adocs/data/S272_sprt.log` and `S272_aa.log`, trimmed; the untrimmed runs are in the owner's archive. Fast check: seven findings (log size, module shadowing, an f-string older Pythons reject, fail-not-skip, no interactive round trip, late relay notes, a mislabelled latency reading), fixed before the tooling landed as `da75be0`. No second tier: no `src/` change. By an Opus subagent, with the coordinator's runs and fast check (DEC-185).
 
 ## Why
 
@@ -36,8 +36,10 @@ and the `done:` stamp waits for their readings.
 - **`touches:` is amended.** It listed `adocs/data/S271_replay.md` alone; the
   relay, its test and session, `fastchess.sh` and its test,
   `tests/CMakeLists.txt`, five data files, `DEV_MANUAL.md` and `TOOLCHAIN.md`
-  are added. `S271_replay.md` is not edited yet: it takes the result beside
-  the prediction, and the correction below, in the finishing pass.
+  are added. `S271_replay.md` took the correction below and the result
+  beside the prediction in the finishing pass, as a dated section; the two
+  trimmed run logs, `adocs/data/S272_sprt.log` and `S272_aa.log`, were added
+  then too.
 - **One fast test uses python-chess.** `test_bare_fen_relay` is the first
   test that does, because the relay imports it. The interpreter is the CMake
   cache variable `CHESSO_CHESS_PYTHON`, `~/.venv/chess/bin/python` by default.
@@ -51,11 +53,12 @@ and the `done:` stamp waits for their readings.
   the engine's clock". Under fastchess it is not: fastchess sends `isready`
   after every `position`, waits for `readyok`, and starts the clock at `go`
   (recorded session below). Measured: an engine held 0.3 s on every
-  `position` line by a wrapper played 44 and 79 moves of two 2+0.02 games with
+  `position` line by a wrapper played 43 and 79 moves of two 2+0.02 games with
   no forfeit, about 24 s of delay on a 2 s clock
   (`.tuning/coord/S272/rec/dly.*`). So this match prices the cold table and
-  not the clear, and the relay's rewrite is off the clock. Other clients may
-  clock differently; the sentence still holds for them.
+  not the clear, and the relay's rewrite is off the clock. Clients that clock
+  differently were not checked, and the replay's sentence is left as written
+  for them.
 - **The relay notes into a file, and the harness voids a run on a note.**
   fastchess discards an engine's stderr (measured: a probe engine's stderr line
   reached neither its console nor its `-log` file), so a `position` line the
@@ -443,3 +446,150 @@ final tree after the fast check. `./clang-format.sh --check` is clean under
 cited the test by line, which `--citations` (and so
 `test_plan_citation_freshness`) refuses (DEC-135); it now names the message. No second tier:
 nothing in `src/` moves.
+
+### The A/A, read (2026-10-11, the coordinator's run)
+
+`adocs/data/S272_aa.sh` from the main checkout at `da75be0`, out directory
+`.tuning/s272_aa_20261011_022022`, seed 20261011022022. The banner read
+`tools/bare_fen_relay.py blob 8e9aeeb69b59 (HEAD's)`. Log
+`adocs/data/S272_aa.log`, the console through `tools/trim_console.py
+--summary` (163325 bytes); the readers' output is in it.
+
+- `S272-AA-DONE` after `SPRT-RUN-DONE`: 1000 games in 26 m 54 s, **2230
+  games an hour** against the 2110 budgeted. 0 forfeits on either side, 0
+  relay notes, no crash or disconnect, and all three readers exited 0.
+- `Elo -5.21 +/- 14.75`, `nElo -7.61 +/- 21.53`, W 257 L 272 D 471, Ptnml
+  [31, 124, 199, 121, 25].
+- **Draws 47.1 %**, against 35.3 % in S219's A/A on the same book and 33.9 %
+  in S212's. Plies per game: mean 106.9, median 103 (S219: 114.0, 101). White
+  won both games of a pair 50 times in 500 (S219: 65).
+- **Pair variance 0.2343 +/- 0.0148** against S219's band of 0.2905 +/-
+  0.0184: ratio 0.806, z -2.38, **outside the band**. Recorded, and not a stop
+  under the reading rule, which names the variance as recorded only.
+- 27621 "PV continues after threefold repetition" blocks (cand 13363, ref
+  14258), counted by the trim and dropped from the committed log.
+
+The reading rule, condition by condition:
+
+1. Done, 1000 games, no invalid: held.
+2. The relay read `(HEAD's)`: held.
+3. 0 position lines passed unrewritten: held.
+4. Forfeits 0.00 % per side: held.
+5. The interval, -19.96 to +9.54, contains 0: held.
+
+**The SPRT started.**
+
+### The SPRT: H1 (2026-10-11, the coordinator's run)
+
+`adocs/data/S272_sprt.sh` from the main checkout at `da75be0`, out directory
+`.tuning/sprt_s272_20261011_024745`, seed 20261011024746, started 02:47:45.
+The banner read `blob 8e9aeeb69b59 (HEAD's)`. Log `adocs/data/S272_sprt.log`,
+trimmed the same way (118850 bytes).
+
+- **H1 accepted at 716 games**, `LLR 2.95 (-2.94, 2.94)`.
+- `Results of cand-a7bb10e vs ref-16c8883 (8+0.08, 1t, 16MB,
+  noob_3moves.epd)`: **`Elo 75.91 +/- 16.87`, `nElo 118.29 +/- 25.45`**, W 248
+  L 94 D 374, Ptnml [7, 42, 135, 138, 36].
+- fastchess's `Total Time` was 18 m 59 s: 2263.0 games an hour over the 716
+  counted.
+- The PGN holds 719 games, the three past the verdict finishing in flight:
+  368 adjudicated and 351 ended normally. Draws were 374 of 719, 52.0 %.
+  Forfeits 0 of 719, relay notes 0, no crash or disconnect.
+- 15829 PV-past-repetition blocks (cand 9750, ref 6079), dropped by the trim
+  and counted at the end of the log.
+
+**The prediction, beside the result and not as it (accepts 4).** It was about
++50 Elo, from the replay's x1.218 nodes at depth 12 and Hash 16 at S219's
++174.85 Elo per doubling, which is about +61 nElo at S212's 33.9 % draws. The
+measured point estimate, 75.91, is above it, and the interval, 59.04 to
+92.78, does not contain +50. At this run's 52.0 % draws the same +50 Elo
+converts to about +72 nElo, against 118.29 +/- 25.45 measured. The estimate
+of a run stopped by its own LLR is biased upward (DEC-063) and is not the
+effect size, so the gap is recorded, not explained here. The pre-registration
+expected about 1200 games and 35 minutes at +61 nElo; the run took 716 games
+and 19 minutes.
+
+**Read by the pre-registration**, H1: for a client that sends the board each
+move, S271's kept table is worth Elo against its parent's cold one, which is
+the replay's direction, measured in games. S271 stands, as it would have on
+any outcome.
+
+**Archive** (the coordinator's, DEC-235):
+`/home/max/Synckeeper/Chesso Archive/chesso_S272_bare_fen_runs_2026-10-11.tar.xz`,
+with a `.sha256` sidecar, verified. It holds both consoles untrimmed, both out
+directories, the PGNs and fastchess's logs.
+
+### Proposed `done:` stamp
+
+2026-10-11. **H1: a bare-FEN client gains from S271's kept table.**
+
+Both engines were driven through `tools/bare_fen_relay.py`, which sends every
+position as the python-chess board it reaches. S271 (`a7bb10e`) beat its
+parent (`16c8883`) at `{0, 5}` nElo, 8+0.08, Hash 16, `noob_3moves.epd`: H1
+after 716 games, LLR 2.95, `Elo 75.91 +/- 16.87`, `nElo 118.29 +/- 25.45`,
+0 forfeits, 0 relay notes, 18 m 59 s at 2263 games an hour. The replay's
+prediction stands beside it and not as it: about +50 Elo, +61 nElo at 33.9 %
+draws.
+
+The DEC-143 A/A came first: 1000 games through the relay, `a7bb10e` against
+itself. It read `Elo -5.21 +/- 14.75` with 0 forfeits and 0 notes, so every
+start condition held. It also recorded 47.1 % draws and a pair variance of
+0.2343, outside S219's band (z -2.38).
+
+The relay's test, `test_bare_fen_relay` (8 properties), is in the fast suite
+and skips with exit 77 where python-chess is missing. `BARE_FEN=1
+./fastchess.sh` runs both sides isolated (`-I`) from a private snapshot
+directory and voids a run on any position the relay passes unrewritten.
+fastchess was found to start its clock at `go`, after the `readyok` that
+follows `position`, which is recorded as a dated correction in
+`S271_replay.md`.
+
+Logs: `adocs/data/S272_sprt.log` and `S272_aa.log`, trimmed. The untrimmed
+runs are in the owner's archive. No second tier: no `src/` change. By an Opus
+subagent, with the coordinator's runs and fast check (DEC-185).
+
+### Proposed commit
+
+The block checked with `tools/gate.sh --message` over a dry staged tree in
+the worktree (below, "Gate").
+
+```
+Record S272's H1: a bare-FEN client gains from S271's table
+
+S271 (DEC-264) stopped a new base FEN from clearing the transposition
+table and landed on node counts, since fastchess holds the base fixed
+and harness play did not change. S272 measures the one regime where it
+changes play: both engines driven through tools/bare_fen_relay.py,
+which sends every position as the board it reaches, so the parent
+searched each move on a cold table and S271 on a kept one.
+
+DEC-143's fixed-rounds A/A came first, 1000 games through the relay
+with a7bb10e against itself: Elo -5.21 +/- 14.75, 0 forfeits, 0
+positions passed unrewritten, so every start condition held. Its 47.1 %
+draws and pair variance of 0.2343, outside S219's band at z -2.38, are
+recorded and were not a stop by the pre-registered rule.
+
+H1 after 716 games. The replay's conversion had predicted about +50 Elo
+(+61 nElo at 33.9 % draws), stated beside the result and not as it; a
+stopped run's estimate is biased upward (DEC-063). S271 stands.
+
+Both logs are the consoles through tools/trim_console.py --summary
+(DEC-235): a bare FEN hides game history, so the untrimmed consoles
+are mostly PV-past-repetition blocks. The untrimmed runs are in the
+owner's archive, chesso_S272_bare_fen_runs_2026-10-11.tar.xz.
+S271_replay.md takes a dated correction: fastchess starts the clock at
+go, after the readyok that follows position, so a position's cost,
+the table clear included, is off its clock.
+
+SPRT | cand a7bb10e vs ref 16c8883, 8+0.08 bare-FEN, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 75.91 +/- 16.87, nElo 118.29 +/- 25.45
+LLR | 2.95 (-2.94, 2.94) -> H1
+Games | N: 716 W: 248 L: 94 D: 374, Ptnml [7, 42, 135, 138, 36]
+Wall | 0 h 18 m, 2263.0 games/h, forfeits 0
+Log | adocs/data/S272_sprt.log
+```
+
+No `Bench:` line: no `src/` file changes. `Wall` follows the earlier blocks:
+the hours and minutes of fastchess's `Total Time`, truncated (18:59), and
+games an hour as the SPRT's game count over it.
+

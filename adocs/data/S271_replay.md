@@ -103,3 +103,28 @@ between machines. Depth 12, Hash 16 MB, the same 200 games and 8653 positions,
 
 Run with `~/.venv/chess/bin/python adocs/data/S271_replay.py` for each mode,
 read with `S271_replay_read.py`; the json outputs stay with the run.
+
+## 2026-10-11: S272 -- the clear and fastchess's clock, and the match
+
+**A correction, for fastchess.** The reading above says the clear "runs
+inside `position`, before `go`, so it is spent on the engine's clock". Under
+fastchess it is not. fastchess sends `isready` after every `position`, waits
+for `readyok`, and only then sends `go` and starts the clock: the session it
+sent one engine, recorded through a `tee` wrapper on 2026-10-11 (alpha 1.8.1),
+reads `position ...`, `isready`, `go ...` before every move. Probed: an engine
+held 0.3 s on every `position` line by a wrapper played 43 and 79 moves of two
+2+0.02 games with no time forfeit, about 24 s of delay against a 2 s clock
+(S272's step file, "Deviations"). So whatever a `position` costs -- the clear
+included -- is paid before fastchess's clock starts. Clients that clock
+differently were not checked; the sentence above is left as written, for
+them.
+
+**The match this replay predicted.** S272 played S271 (`a7bb10e`) against its
+parent (`16c8883`) with both engines sent a bare FEN each move
+(`tools/bare_fen_relay.py`), 8+0.08, Hash 16, `noob_3moves.epd`, `{0, 5}`
+nElo: **H1 after 716 games, `Elo 75.91 +/- 16.87`, `nElo 118.29 +/- 25.45`**,
+LLR 2.95, 0 forfeits (`adocs/data/S272_sprt.log`). The prediction from the
+table above, stated before the run and beside the result here, never as it:
+about +50 Elo (x1.218 nodes at depth 12, Hash 16, at S219's +174.85 Elo per
+doubling), about +61 nElo at the 33.9 % draws of S212's A/A. A stopping
+run's estimate is biased upward (DEC-063) and is not the effect size.

@@ -1,0 +1,2464 @@
+A/A CALIBRATION: both sides are the commit a7bb10e, so this run
+                 measures the harness and not the engine. AA is set.
+
+Building reference a7bb10e ...
+Preparing worktree (detached HEAD a7bb10e)
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Sanitizer OFF
+-- Tune build OFF
+-- PGO off
+-- Test timeout 60s (build type Release)
+candidate  a7bb10e  2026-10-10
+reference  a7bb10e  2026-10-10
+config     arch native  tune off
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20261011022022
+relay      bare FEN each move, both sides: tools/bare_fen_relay.py blob 8e9aeeb69b59 (HEAD's)
+           on /home/max/.venv/chess/bin/python -I, python-chess 1.11.2
+           notes to /home/max/ws/chesso/.tuning/s272_aa_20261011_022022/relay_notes.txt
+bounds     none -- fixed 500 rounds, a calibration or drift reading, NOT a verdict
+out        /home/max/ws/chesso/.tuning/s272_aa_20261011_022022
+
+id name    cand-a7bb10e  Chesso a7bb10e native
+id name    ref-a7bb10e  Chesso a7bb10e native
+
+Indexing opening suite...
+Started game 1 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Started game 2 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Started game 7 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Started game 4 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Started game 9 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Started game 6 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Started game 10 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Started game 3 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Started game 11 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Started game 5 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Started game 8 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Started game 12 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 11 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 13 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 5 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 14 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 1 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 15 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 10 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 16 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 3 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 17 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 12 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 18 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 6 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 19 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 4 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 20 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 8 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 21 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 9 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 22 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 7 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 23 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 2 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 24 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 14 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 25 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 15 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 26 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 17 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 27 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 13 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 28 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 20 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 29 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 19 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -65.92 +/- 110.93, nElo: -107.51 +/- 170.24
+LOS: 10.79 %, DrawRatio: 50.00 %, PairsRatio: 0.33
+Games: 16, Wins: 2, Losses: 5, Draws: 9, Points: 6.5 (40.62 %)
+Ptnml(0-2): [1, 2, 4, 1, 0], WL/DD Ratio: 0.33
+--------------------------------------------------
+Started game 30 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 22 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 31 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 16 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 32 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 24 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 33 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 18 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 34 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 21 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 35 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 26 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 36 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 23 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 37 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 25 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 38 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 30 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 39 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 29 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 40 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 32 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 41 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 27 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 42 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 28 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 43 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 33 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 44 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 31 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 45 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 34 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 46 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 39 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 47 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 36 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 48 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 35 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 49 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 37 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 50 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 41 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 51 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 42 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 52 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 38 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 53 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 45 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 54 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 43 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 55 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 40 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -8.27 +/- 75.42, nElo: -11.71 +/- 105.07
+LOS: 41.35 %, DrawRatio: 28.57 %, PairsRatio: 0.88
+Games: 42, Wins: 11, Losses: 12, Draws: 19, Points: 20.5 (48.81 %)
+Ptnml(0-2): [1, 7, 6, 6, 1], WL/DD Ratio: 1.00
+--------------------------------------------------
+Started game 56 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 44 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 57 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 46 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 58 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 49 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 59 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 50 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 60 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 52 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 61 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 56 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 62 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 55 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 63 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 51 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 64 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 47 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 65 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 48 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 66 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 53 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 67 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 54 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 68 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 59 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 69 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 57 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 70 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 58 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 71 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 61 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 72 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 60 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -46.60 +/- 63.90, nElo: -65.66 +/- 87.91
+LOS: 7.16 %, DrawRatio: 23.33 %, PairsRatio: 0.53
+Games: 60, Wins: 13, Losses: 21, Draws: 26, Points: 26.0 (43.33 %)
+Ptnml(0-2): [2, 13, 7, 7, 1], WL/DD Ratio: 1.33
+--------------------------------------------------
+Started game 73 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 62 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 74 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 67 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 75 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 64 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 76 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 63 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 77 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 65 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 78 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 69 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 79 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 70 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 80 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 71 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 81 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 66 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 82 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 72 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 83 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 68 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 84 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 73 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 85 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 75 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 86 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 76 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 87 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 74 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 88 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 78 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 89 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 83 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 90 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 79 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 91 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 84 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 92 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 82 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 93 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 81 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 94 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 77 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 95 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 80 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -29.02 +/- 56.98, nElo: -38.37 +/- 74.30
+LOS: 15.57 %, DrawRatio: 26.19 %, PairsRatio: 0.63
+Games: 84, Wins: 22, Losses: 29, Draws: 33, Points: 38.5 (45.83 %)
+Ptnml(0-2): [3, 16, 11, 9, 3], WL/DD Ratio: 1.75
+--------------------------------------------------
+Started game 96 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 85 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 97 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 86 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 98 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 96 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 99 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 93 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 100 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 94 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 101 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 92 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 102 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 90 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 103 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 87 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 104 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 88 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 105 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 89 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 106 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 91 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 107 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 97 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 108 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 95 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 109 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 98 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 110 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 105 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 111 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 100 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 112 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 108 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 113 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 106 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 114 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 101 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 115 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 99 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -30.74 +/- 52.26, nElo: -40.17 +/- 67.43
+LOS: 12.15 %, DrawRatio: 27.45 %, PairsRatio: 0.61
+Games: 102, Wins: 26, Losses: 35, Draws: 41, Points: 46.5 (45.59 %)
+Ptnml(0-2): [4, 19, 14, 10, 4], WL/DD Ratio: 1.33
+--------------------------------------------------
+Started game 116 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 102 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 117 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 104 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 118 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 103 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 119 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 107 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 120 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 112 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 121 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 115 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 122 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 114 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 123 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 109 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 124 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 113 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 125 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 117 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 126 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 111 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 127 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 110 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 128 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 116 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 129 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 119 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 130 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 118 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 131 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 120 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -20.29 +/- 46.60, nElo: -27.29 +/- 62.16
+LOS: 19.48 %, DrawRatio: 33.33 %, PairsRatio: 0.67
+Games: 120, Wins: 31, Losses: 38, Draws: 51, Points: 56.5 (47.08 %)
+Ptnml(0-2): [4, 20, 20, 11, 5], WL/DD Ratio: 1.00
+--------------------------------------------------
+Started game 132 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 121 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 133 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 122 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 134 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 124 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 135 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 123 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 136 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 131 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 137 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 126 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 138 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 128 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 139 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 130 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 140 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 127 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 141 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 125 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 142 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 135 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 143 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 133 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 144 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 129 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 145 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 132 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 146 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 134 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 147 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 136 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 148 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 143 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 149 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 138 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 150 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 140 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 151 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 137 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 152 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 141 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 153 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 144 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 154 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 139 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -31.90 +/- 43.66, nElo: -42.21 +/- 57.14
+LOS: 7.38 %, DrawRatio: 33.80 %, PairsRatio: 0.62
+Games: 142, Wins: 35, Losses: 48, Draws: 59, Points: 64.5 (45.42 %)
+Ptnml(0-2): [7, 22, 24, 13, 5], WL/DD Ratio: 1.00
+--------------------------------------------------
+Started game 155 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 142 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 156 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 146 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 157 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 149 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 158 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 150 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 159 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 147 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 160 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 151 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 161 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 145 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by fifty moves rule}
+Started game 162 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 148 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 163 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 154 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 164 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 156 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 165 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 153 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 166 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 155 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 167 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 152 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 168 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 157 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 169 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 159 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 170 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 158 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 171 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 163 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 172 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 160 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -41.45 +/- 39.86, nElo: -56.78 +/- 53.83
+LOS: 1.94 %, DrawRatio: 33.75 %, PairsRatio: 0.51
+Games: 160, Wins: 35, Losses: 54, Draws: 71, Points: 70.5 (44.06 %)
+Ptnml(0-2): [7, 28, 27, 13, 5], WL/DD Ratio: 0.80
+--------------------------------------------------
+Started game 173 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 164 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 174 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 161 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 175 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 162 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 176 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 165 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 177 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 168 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 178 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 166 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 179 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 167 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 180 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 170 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 181 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 169 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 182 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 173 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 183 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 171 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 184 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 172 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 185 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 175 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 186 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 174 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 187 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 179 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 188 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 177 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 189 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 180 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -31.67 +/- 39.79, nElo: -41.27 +/- 51.33
+LOS: 5.75 %, DrawRatio: 34.09 %, PairsRatio: 0.57
+Games: 176, Wins: 43, Losses: 59, Draws: 74, Points: 80.0 (45.45 %)
+Ptnml(0-2): [8, 29, 30, 13, 8], WL/DD Ratio: 0.88
+--------------------------------------------------
+Started game 190 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 178 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 191 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 183 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 192 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 181 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 193 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 176 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 194 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 185 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 195 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 187 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 196 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 188 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 197 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 182 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 198 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 184 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 199 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 194 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 200 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 191 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 201 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 186 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by fifty moves rule}
+Started game 202 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 190 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 203 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 195 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 204 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 196 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 205 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 193 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 206 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 192 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 207 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 189 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 208 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 197 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 209 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 199 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 210 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 198 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 211 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 203 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 212 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 201 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 213 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 200 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -31.35 +/- 36.91, nElo: -41.28 +/- 48.15
+LOS: 4.65 %, DrawRatio: 33.00 %, PairsRatio: 0.60
+Games: 200, Wins: 48, Losses: 66, Draws: 86, Points: 91.0 (45.50 %)
+Ptnml(0-2): [9, 33, 33, 17, 8], WL/DD Ratio: 0.83
+--------------------------------------------------
+Started game 214 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 202 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 215 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 207 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 216 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 205 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 217 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 206 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 218 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 204 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 219 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 208 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 220 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 211 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 221 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 212 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 222 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 210 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 223 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 213 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 224 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 214 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 225 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 209 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 226 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 215 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 227 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 216 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 228 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 220 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 229 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 217 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 230 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 221 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 231 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 219 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -30.36 +/- 34.55, nElo: -40.87 +/- 46.12
+LOS: 4.12 %, DrawRatio: 33.94 %, PairsRatio: 0.60
+Games: 218, Wins: 52, Losses: 71, Draws: 95, Points: 99.5 (45.64 %)
+Ptnml(0-2): [9, 36, 37, 19, 8], WL/DD Ratio: 0.85
+--------------------------------------------------
+Started game 232 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 227 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 233 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 225 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 234 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 223 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 235 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 228 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 236 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 218 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 237 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 226 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 238 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 224 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 239 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 230 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 240 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 222 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 241 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 233 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 242 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 235 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 243 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 231 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 244 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 232 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 245 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 234 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 246 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 236 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 247 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 237 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 248 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 240 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 249 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 241 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 250 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 229 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 251 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 238 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 252 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 242 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 253 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 239 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -28.78 +/- 31.73, nElo: -40.00 +/- 43.77
+LOS: 3.66 %, DrawRatio: 36.36 %, PairsRatio: 0.60
+Games: 242, Wins: 55, Losses: 75, Draws: 112, Points: 111.0 (45.87 %)
+Ptnml(0-2): [9, 39, 44, 21, 8], WL/DD Ratio: 0.69
+--------------------------------------------------
+Started game 254 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 245 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 255 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 244 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 256 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 246 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 257 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 243 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 258 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 248 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 259 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 253 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 260 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 251 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 261 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 250 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 262 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 254 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 263 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 255 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 264 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 252 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 265 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 249 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 266 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 256 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 267 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 247 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by fifty moves rule}
+Started game 268 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 258 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 269 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 260 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 270 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 262 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 271 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 257 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 272 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 263 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 273 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 265 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 274 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 261 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 275 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 259 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -22.58 +/- 30.61, nElo: -31.20 +/- 42.07
+LOS: 7.30 %, DrawRatio: 35.11 %, PairsRatio: 0.67
+Games: 262, Wins: 63, Losses: 80, Draws: 119, Points: 122.5 (46.76 %)
+Ptnml(0-2): [9, 42, 46, 25, 9], WL/DD Ratio: 0.77
+--------------------------------------------------
+Started game 276 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 267 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 277 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 268 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 278 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 266 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 279 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 264 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 280 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 272 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 281 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 271 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 282 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 269 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 283 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 270 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 284 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 273 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 285 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 275 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 286 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 279 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 287 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 274 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 288 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 281 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 289 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 277 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 290 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 278 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 291 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 276 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 292 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 286 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 293 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 283 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 294 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 280 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -21.12 +/- 29.25, nElo: -29.52 +/- 40.70
+LOS: 7.75 %, DrawRatio: 35.00 %, PairsRatio: 0.69
+Games: 280, Wins: 67, Losses: 84, Draws: 129, Points: 131.5 (46.96 %)
+Ptnml(0-2): [9, 45, 49, 28, 9], WL/DD Ratio: 0.75
+--------------------------------------------------
+Started game 295 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 284 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 296 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 282 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 297 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 287 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 298 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 295 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 299 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 290 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 300 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 285 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 301 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 293 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 302 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 288 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 303 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 289 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 304 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 294 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 305 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 291 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 306 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 292 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 307 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 296 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 308 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 297 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 309 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 298 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 310 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 299 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 311 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 301 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 312 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 304 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 313 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 305 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 314 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 300 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -17.39 +/- 27.70, nElo: -24.77 +/- 39.32
+LOS: 10.84 %, DrawRatio: 36.67 %, PairsRatio: 0.73
+Games: 300, Wins: 73, Losses: 88, Draws: 139, Points: 142.5 (47.50 %)
+Ptnml(0-2): [9, 46, 55, 31, 9], WL/DD Ratio: 0.77
+--------------------------------------------------
+Started game 315 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 303 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 316 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 306 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 317 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 302 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 318 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 309 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 319 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 308 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 320 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 307 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 321 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 313 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 322 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 312 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 323 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 310 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 324 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 315 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 325 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 311 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 326 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 316 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 327 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 319 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 328 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 318 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 329 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 314 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 330 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 317 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 331 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 321 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 332 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 320 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -17.39 +/- 26.90, nElo: -24.69 +/- 38.07
+LOS: 10.18 %, DrawRatio: 35.62 %, PairsRatio: 0.72
+Games: 320, Wins: 78, Losses: 94, Draws: 148, Points: 152.0 (47.50 %)
+Ptnml(0-2): [9, 51, 57, 33, 10], WL/DD Ratio: 0.78
+--------------------------------------------------
+Started game 333 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 322 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 334 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 324 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 335 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 326 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 336 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 323 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 337 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 328 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 338 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 325 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 339 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 327 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 340 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 337 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 341 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 329 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 342 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 331 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 343 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 330 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 344 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 333 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 345 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 332 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 346 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 334 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 347 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 338 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 348 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 339 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 349 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 335 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 350 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 341 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 351 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 336 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 352 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 340 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -18.41 +/- 25.78, nElo: -26.48 +/- 36.93
+LOS: 8.00 %, DrawRatio: 37.65 %, PairsRatio: 0.71
+Games: 340, Wins: 80, Losses: 98, Draws: 162, Points: 161.0 (47.35 %)
+Ptnml(0-2): [10, 52, 64, 34, 10], WL/DD Ratio: 0.68
+--------------------------------------------------
+Started game 353 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 344 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 354 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 342 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 355 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 350 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 356 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 347 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 357 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 343 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 358 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 349 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 359 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 351 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 360 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 346 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 361 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 345 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 362 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 354 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 363 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 348 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 364 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 352 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 365 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 353 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 366 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 358 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 367 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 355 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 368 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 361 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 369 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 357 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 370 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 356 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 371 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 360 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 372 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 362 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 373 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 359 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.52 +/- 25.11, nElo: -16.46 +/- 35.79
+LOS: 18.37 %, DrawRatio: 36.46 %, PairsRatio: 0.80
+Games: 362, Wins: 90, Losses: 102, Draws: 170, Points: 175.0 (48.34 %)
+Ptnml(0-2): [10, 54, 66, 40, 11], WL/DD Ratio: 0.74
+--------------------------------------------------
+Started game 374 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 364 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 375 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 363 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 376 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 367 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 377 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 365 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 378 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 366 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 379 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 372 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 380 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 368 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 381 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 370 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 382 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 375 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 383 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 369 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 384 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 373 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 385 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 377 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 386 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 376 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 387 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 371 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 388 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 374 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 389 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 379 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 390 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 381 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 391 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 378 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 392 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 380 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -13.72 +/- 24.51, nElo: -19.61 +/- 34.93
+LOS: 13.56 %, DrawRatio: 36.32 %, PairsRatio: 0.78
+Games: 380, Wins: 93, Losses: 108, Draws: 179, Points: 182.5 (48.03 %)
+Ptnml(0-2): [11, 57, 69, 42, 11], WL/DD Ratio: 0.72
+--------------------------------------------------
+Started game 393 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 382 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 394 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 384 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 395 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 385 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 396 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 383 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 397 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 388 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 398 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 390 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 399 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 391 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 400 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 387 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 401 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 392 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 402 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 386 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 403 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 395 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 404 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 389 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 405 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 394 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 406 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 393 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 407 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 396 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 408 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 397 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 409 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 398 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 410 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 401 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 411 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 402 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 412 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 399 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 413 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 405 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 414 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 403 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 415 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 400 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -19.03 +/- 24.04, nElo: -26.98 +/- 33.96
+LOS: 5.97 %, DrawRatio: 35.32 %, PairsRatio: 0.73
+Games: 402, Wins: 95, Losses: 117, Draws: 190, Points: 190.0 (47.26 %)
+Ptnml(0-2): [13, 62, 71, 44, 11], WL/DD Ratio: 0.69
+--------------------------------------------------
+Started game 416 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 407 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 417 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 404 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 418 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 406 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 419 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 408 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 420 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 410 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 421 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 409 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 422 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 419 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 423 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 413 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 424 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 412 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 425 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 417 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 426 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 415 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 427 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 416 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 428 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 411 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 429 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 414 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 430 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 418 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 431 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 422 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 432 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 420 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -14.90 +/- 23.71, nElo: -20.94 +/- 33.23
+LOS: 10.84 %, DrawRatio: 35.24 %, PairsRatio: 0.79
+Games: 420, Wins: 101, Losses: 119, Draws: 200, Points: 201.0 (47.86 %)
+Ptnml(0-2): [14, 62, 74, 48, 12], WL/DD Ratio: 0.64
+--------------------------------------------------
+Started game 433 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 421 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 434 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 423 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 435 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 425 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 436 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 427 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 437 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 428 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 438 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 424 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 439 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 429 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 440 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 426 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 441 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 430 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 442 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 432 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 443 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 435 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 444 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 431 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 445 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 436 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 446 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 433 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 447 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 439 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 448 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 438 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 449 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 434 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 450 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 440 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.90 +/- 23.23, nElo: -16.71 +/- 32.54
+LOS: 15.70 %, DrawRatio: 35.16 %, PairsRatio: 0.82
+Games: 438, Wins: 106, Losses: 121, Draws: 211, Points: 211.5 (48.29 %)
+Ptnml(0-2): [14, 64, 77, 51, 13], WL/DD Ratio: 0.60
+--------------------------------------------------
+Started game 451 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 441 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 452 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 442 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 453 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 437 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 454 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 447 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 455 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 445 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 456 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 444 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 457 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 443 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 458 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 446 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 459 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 448 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 460 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 449 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 461 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 457 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 462 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 453 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 463 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 458 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 464 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 451 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 465 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 454 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 466 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 452 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 467 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 450 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 468 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 456 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 469 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 455 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 470 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 459 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 471 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Warning; Incomplete mating PV - from cand-a7bb10e
+Info; info score mate 11 time 2 depth 5 nodes 11977 nps 4209841 pv f7f6 h8h7 f6e7 h7g8 e7f7 
+Position; fen r1bqk1nr/ppppppbp/n5p1/8/8/3P1NP1/PPP1PP1P/RNBQKB1R w KQkq - 0 4
+Moves; e2e4 e7e5 f1g2 g8f6 f3e5 e8g8 e1g1 d7d6 e5f3 f8e8 f1e1 c8g4 b1c3 c7c5 a2a3 d8b6 h2h3 g4e6 d3d4 c5d4 f3d4 e6d7 a3a4 f6g4 h3g4 g7d4 c1e3 d4e3 e1e3 a6b4 g4g5 a8c8 d1d2 c8c4 a1d1 d7c6 e3f3 b6c7 f3f6 e8d8 e4e5 d6d5 g2f1 c4c5 d2d4 c7b6 c3b5 b4c2 d4f4 a7a6 b5d6 b6b4 f6g6 h7g6 f4f7 g8h8
+Warning; Incomplete mating PV - from cand-a7bb10e
+Info; info score mate 14 time 6 depth 6 nodes 25277 nps 3873869 pv f7f6 h8h7 f6e7 h7g8 e7f7 g8h8 
+Position; fen r1bqk1nr/ppppppbp/n5p1/8/8/3P1NP1/PPP1PP1P/RNBQKB1R w KQkq - 0 4
+Moves; e2e4 e7e5 f1g2 g8f6 f3e5 e8g8 e1g1 d7d6 e5f3 f8e8 f1e1 c8g4 b1c3 c7c5 a2a3 d8b6 h2h3 g4e6 d3d4 c5d4 f3d4 e6d7 a3a4 f6g4 h3g4 g7d4 c1e3 d4e3 e1e3 a6b4 g4g5 a8c8 d1d2 c8c4 a1d1 d7c6 e3f3 b6c7 f3f6 e8d8 e4e5 d6d5 g2f1 c4c5 d2d4 c7b6 c3b5 b4c2 d4f4 a7a6 b5d6 b6b4 f6g6 h7g6 f4f7 g8h8
+Finished game 461 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 472 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 463 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 473 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 460 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.33 +/- 22.41, nElo: -16.09 +/- 31.75
+LOS: 16.03 %, DrawRatio: 36.96 %, PairsRatio: 0.84
+Games: 460, Wins: 113, Losses: 128, Draws: 219, Points: 222.5 (48.37 %)
+Ptnml(0-2): [15, 64, 85, 53, 13], WL/DD Ratio: 0.67
+--------------------------------------------------
+Started game 474 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 466 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 475 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 462 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 476 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 467 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 477 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 464 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 478 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 465 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 479 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 468 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 480 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 472 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 481 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 473 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 482 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 469 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 483 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 471 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 484 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 475 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 485 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 470 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 486 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 474 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 487 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 477 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 488 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 481 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 489 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 480 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 490 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 478 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 491 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 476 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 492 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 479 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -14.48 +/- 21.97, nElo: -20.54 +/- 31.08
+LOS: 9.76 %, DrawRatio: 37.50 %, PairsRatio: 0.81
+Games: 480, Wins: 116, Losses: 136, Draws: 228, Points: 230.0 (47.92 %)
+Ptnml(0-2): [17, 66, 90, 54, 13], WL/DD Ratio: 0.67
+--------------------------------------------------
+Started game 493 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 482 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 494 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 485 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 495 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 486 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 496 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 484 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 497 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 483 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 498 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 487 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 499 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 495 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 500 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 491 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 501 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 489 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 502 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 488 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 503 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 492 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 504 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 490 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 505 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 493 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 506 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 497 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 507 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 494 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 508 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 496 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 509 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 498 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 510 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 500 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 511 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 499 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.12 +/- 21.80, nElo: -15.57 +/- 30.45
+LOS: 15.82 %, DrawRatio: 37.20 %, PairsRatio: 0.85
+Games: 500, Wins: 125, Losses: 141, Draws: 234, Points: 242.0 (48.40 %)
+Ptnml(0-2): [18, 67, 93, 57, 15], WL/DD Ratio: 0.69
+--------------------------------------------------
+Started game 512 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 502 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 513 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 506 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 514 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 501 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 515 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 505 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 516 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 507 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 517 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 504 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 518 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 509 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 519 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 503 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 520 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 512 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 521 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 508 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 522 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 510 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 523 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 511 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 524 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 515 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 525 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 514 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 526 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 513 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 527 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 516 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 528 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 518 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 529 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 521 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 530 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 517 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 531 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 522 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 532 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 519 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 533 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 524 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 534 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 520 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.32 +/- 21.40, nElo: -15.79 +/- 29.80
+LOS: 14.95 %, DrawRatio: 37.16 %, PairsRatio: 0.84
+Games: 522, Wins: 130, Losses: 147, Draws: 245, Points: 252.5 (48.37 %)
+Ptnml(0-2): [19, 70, 97, 59, 16], WL/DD Ratio: 0.67
+--------------------------------------------------
+Started game 535 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 523 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 536 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 528 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 537 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 527 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 538 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 526 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 539 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 530 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 540 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 529 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 541 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 525 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 542 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 531 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 543 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 532 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 544 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 536 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 545 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 534 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 546 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 535 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 547 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 533 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 548 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 539 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 549 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 541 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 550 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 537 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 551 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 542 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 552 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 543 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 553 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 538 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 554 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 540 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.54 +/- 20.88, nElo: -16.20 +/- 29.25
+LOS: 13.88 %, DrawRatio: 38.01 %, PairsRatio: 0.85
+Games: 542, Wins: 134, Losses: 152, Draws: 256, Points: 262.0 (48.34 %)
+Ptnml(0-2): [20, 71, 103, 61, 16], WL/DD Ratio: 0.66
+--------------------------------------------------
+Started game 555 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 544 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 556 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 547 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 557 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 546 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 558 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 545 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 559 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 551 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 560 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 552 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 561 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 555 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 562 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 550 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 563 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 548 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 564 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 556 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 565 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 549 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 566 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 553 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 567 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 554 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 568 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 557 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 569 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 558 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 570 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 559 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 571 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 560 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -11.17 +/- 20.35, nElo: -15.83 +/- 28.78
+LOS: 14.05 %, DrawRatio: 38.57 %, PairsRatio: 0.85
+Games: 560, Wins: 140, Losses: 158, Draws: 262, Points: 271.0 (48.39 %)
+Ptnml(0-2): [20, 73, 108, 63, 16], WL/DD Ratio: 0.71
+--------------------------------------------------
+Started game 572 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 564 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 573 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 561 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 574 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 563 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 575 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 562 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 576 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 565 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 577 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 566 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 578 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 569 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 579 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 568 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 580 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 570 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 581 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 567 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 582 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 571 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 583 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 572 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 584 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 573 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 585 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 575 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 586 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 574 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 587 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 576 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 588 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 577 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 589 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 580 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 590 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 579 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -10.82 +/- 20.00, nElo: -15.36 +/- 28.32
+LOS: 14.40 %, DrawRatio: 38.75 %, PairsRatio: 0.84
+Games: 578, Wins: 146, Losses: 164, Draws: 268, Points: 280.0 (48.44 %)
+Ptnml(0-2): [20, 76, 112, 64, 17], WL/DD Ratio: 0.75
+--------------------------------------------------
+Started game 591 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 581 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 592 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 584 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 593 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 578 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 594 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 585 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 595 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 582 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 596 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 590 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 597 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 586 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 598 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 587 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 599 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 588 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 600 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 583 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 601 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 589 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 602 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 591 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 603 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 592 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 604 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 593 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 605 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 596 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 606 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 598 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 607 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 597 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 608 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 595 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 609 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 594 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 610 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 600 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 611 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 601 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 612 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 602 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 613 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 605 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 614 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 599 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -8.66 +/- 19.44, nElo: -12.38 +/- 27.75
+LOS: 19.09 %, DrawRatio: 38.87 %, PairsRatio: 0.88
+Games: 602, Wins: 153, Losses: 168, Draws: 281, Points: 293.5 (48.75 %)
+Ptnml(0-2): [20, 78, 117, 69, 17], WL/DD Ratio: 0.75
+--------------------------------------------------
+Started game 615 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 604 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 616 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 606 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 617 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 603 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 618 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 608 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 619 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 615 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 620 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 607 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 621 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 609 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 622 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 613 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 623 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 610 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 624 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 611 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 625 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 612 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 626 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 618 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 627 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 614 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 628 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 617 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 629 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 616 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 630 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 620 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 631 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 619 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -9.53 +/- 19.06, nElo: -13.69 +/- 27.35
+LOS: 16.32 %, DrawRatio: 39.68 %, PairsRatio: 0.87
+Games: 620, Wins: 156, Losses: 173, Draws: 291, Points: 301.5 (48.63 %)
+Ptnml(0-2): [21, 79, 123, 70, 17], WL/DD Ratio: 0.73
+--------------------------------------------------
+Started game 632 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 623 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 633 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 622 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 634 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 624 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 635 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 626 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 636 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 625 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 637 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 621 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 638 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 627 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 639 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 628 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 640 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 631 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 641 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 629 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 642 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 633 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 643 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 630 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 644 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 632 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 645 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 635 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 646 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 638 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 647 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 634 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 648 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 641 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 649 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 640 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 650 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 639 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -9.84 +/- 18.67, nElo: -14.25 +/- 27.00
+LOS: 15.05 %, DrawRatio: 40.25 %, PairsRatio: 0.86
+Games: 636, Wins: 157, Losses: 175, Draws: 304, Points: 309.0 (48.58 %)
+Ptnml(0-2): [21, 81, 128, 71, 17], WL/DD Ratio: 0.68
+--------------------------------------------------
+Started game 651 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 637 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 652 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 636 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 653 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 644 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 654 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 643 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 655 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 645 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 656 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 642 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 657 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 648 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 658 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 646 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 659 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 647 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 660 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 650 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 661 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 649 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 662 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 652 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 663 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 653 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 664 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 658 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 665 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 651 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 666 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 654 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 667 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 656 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 668 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 659 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 669 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 657 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 670 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 660 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -6.87 +/- 18.32, nElo: -9.96 +/- 26.55
+LOS: 23.10 %, DrawRatio: 40.43 %, PairsRatio: 0.90
+Games: 658, Wins: 166, Losses: 179, Draws: 313, Points: 322.5 (49.01 %)
+Ptnml(0-2): [21, 82, 133, 75, 18], WL/DD Ratio: 0.71
+--------------------------------------------------
+Started game 671 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 663 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 672 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 661 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 673 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 655 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 674 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 666 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 675 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 664 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 676 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 662 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 677 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 665 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 678 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 668 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 679 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 671 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 680 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 667 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 681 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 669 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 682 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 670 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 683 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 673 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 684 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 674 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 685 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 678 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 686 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 675 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 687 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 672 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 688 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 679 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 689 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 680 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -4.63 +/- 18.06, nElo: -6.72 +/- 26.19
+LOS: 30.77 %, DrawRatio: 39.64 %, PairsRatio: 0.94
+Games: 676, Wins: 173, Losses: 182, Draws: 321, Points: 333.5 (49.33 %)
+Ptnml(0-2): [21, 84, 134, 81, 18], WL/DD Ratio: 0.72
+--------------------------------------------------
+Started game 690 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 677 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 691 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 681 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 692 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 682 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 693 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 676 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 694 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 686 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 695 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 687 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 696 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 684 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 697 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 685 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 698 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 688 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 699 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 689 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 700 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 683 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 701 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 690 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 702 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 693 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 703 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 692 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 704 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 695 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 705 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 694 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 706 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 697 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 707 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 699 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 708 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 691 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 709 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 700 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -6.99 +/- 17.83, nElo: -10.13 +/- 25.81
+LOS: 22.09 %, DrawRatio: 39.08 %, PairsRatio: 0.91
+Games: 696, Wins: 176, Losses: 190, Draws: 330, Points: 341.0 (48.99 %)
+Ptnml(0-2): [22, 89, 136, 83, 18], WL/DD Ratio: 0.72
+--------------------------------------------------
+Started game 710 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 696 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 711 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 701 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 712 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 702 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 713 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 698 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 714 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 703 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 715 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 704 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 716 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 705 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 717 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 708 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 718 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 710 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 719 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 709 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 720 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 707 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 721 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 706 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 722 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 713 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 723 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 712 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 724 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 721 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 725 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 711 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 726 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 715 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 727 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 714 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 728 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 723 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 729 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 717 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 730 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 716 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 731 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 718 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 732 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 720 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 733 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 722 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 734 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 724 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 735 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 725 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 736 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 730 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 737 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 719 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -9.12 +/- 17.57, nElo: -13.15 +/- 25.31
+LOS: 15.42 %, DrawRatio: 39.23 %, PairsRatio: 0.88
+Games: 724, Wins: 180, Losses: 199, Draws: 345, Points: 352.5 (48.69 %)
+Ptnml(0-2): [24, 93, 142, 84, 19], WL/DD Ratio: 0.69
+--------------------------------------------------
+Started game 738 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 726 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 739 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 729 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 740 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 728 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 741 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 727 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 742 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 732 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 743 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 731 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 744 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 738 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 745 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 736 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 746 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 733 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 747 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 734 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 748 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 737 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 749 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 735 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 750 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 743 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 751 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 740 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 752 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 742 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 753 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 741 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 754 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 739 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -9.37 +/- 17.32, nElo: -13.54 +/- 25.00
+LOS: 14.42 %, DrawRatio: 39.62 %, PairsRatio: 0.87
+Games: 742, Wins: 185, Losses: 205, Draws: 352, Points: 361.0 (48.65 %)
+Ptnml(0-2): [24, 96, 147, 84, 20], WL/DD Ratio: 0.71
+--------------------------------------------------
+Started game 755 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 744 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 756 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 748 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 757 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 747 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 758 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 745 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 759 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 750 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 760 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 746 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 761 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 749 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 762 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 751 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 763 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 755 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 764 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 754 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 765 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 752 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 766 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 757 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 767 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 753 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 768 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 758 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 769 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 756 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 770 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 759 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 771 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 760 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -9.60 +/- 17.21, nElo: -13.80 +/- 24.70
+LOS: 13.68 %, DrawRatio: 39.21 %, PairsRatio: 0.86
+Games: 760, Wins: 190, Losses: 211, Draws: 359, Points: 369.5 (48.62 %)
+Ptnml(0-2): [25, 99, 149, 86, 21], WL/DD Ratio: 0.71
+--------------------------------------------------
+Started game 772 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 761 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 773 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 763 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 774 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 762 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 775 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 765 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 776 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 769 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 777 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 764 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 778 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 770 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 779 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 767 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 780 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 766 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 781 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 768 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 782 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 771 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 783 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 772 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 784 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 781 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 785 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 775 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 786 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 773 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 787 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 776 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 788 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 777 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 789 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 779 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 790 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 778 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 791 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 774 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 792 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 783 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 793 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 782 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 794 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 780 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -8.89 +/- 16.93, nElo: -12.80 +/- 24.35
+LOS: 15.15 %, DrawRatio: 39.39 %, PairsRatio: 0.87
+Games: 782, Wins: 197, Losses: 217, Draws: 368, Points: 381.0 (48.72 %)
+Ptnml(0-2): [25, 102, 154, 88, 22], WL/DD Ratio: 0.73
+--------------------------------------------------
+Started game 795 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 788 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 796 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 785 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 797 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 784 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 798 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 786 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 799 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 792 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 800 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 787 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 801 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 791 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 802 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 789 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 803 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 790 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 804 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 793 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 805 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 794 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 806 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 799 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 807 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 797 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 808 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 795 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 809 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 798 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 810 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 796 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 811 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 800 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -9.12 +/- 16.66, nElo: -13.20 +/- 24.08
+LOS: 14.13 %, DrawRatio: 39.50 %, PairsRatio: 0.86
+Games: 800, Wins: 201, Losses: 222, Draws: 377, Points: 389.5 (48.69 %)
+Ptnml(0-2): [25, 105, 158, 90, 22], WL/DD Ratio: 0.74
+--------------------------------------------------
+Started game 812 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 802 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 813 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 803 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 814 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 804 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 815 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 806 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 816 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 801 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 817 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 805 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 818 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 807 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 819 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 809 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 820 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 810 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 821 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 812 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 822 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 817 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 823 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 808 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 824 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 816 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 825 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 811 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 826 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 819 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 827 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 818 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 828 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 814 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 829 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 813 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 830 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 820 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -7.65 +/- 16.36, nElo: -11.14 +/- 23.81
+LOS: 17.95 %, DrawRatio: 40.10 %, PairsRatio: 0.88
+Games: 818, Wins: 207, Losses: 225, Draws: 386, Points: 400.0 (48.90 %)
+Ptnml(0-2): [25, 105, 164, 93, 22], WL/DD Ratio: 0.74
+--------------------------------------------------
+Started game 831 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 815 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 832 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 823 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 833 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 824 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 834 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 821 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 835 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 822 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 836 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 831 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 837 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 826 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 838 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 825 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 839 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 828 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 840 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 827 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 841 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 829 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 842 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 830 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 843 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 832 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 844 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 834 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 845 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 836 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 846 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 837 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 847 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 838 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 848 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 839 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 849 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 833 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 850 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 840 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -7.46 +/- 16.17, nElo: -10.87 +/- 23.52
+LOS: 18.26 %, DrawRatio: 39.86 %, PairsRatio: 0.89
+Games: 838, Wins: 212, Losses: 230, Draws: 396, Points: 410.0 (48.93 %)
+Ptnml(0-2): [26, 107, 167, 97, 22], WL/DD Ratio: 0.74
+--------------------------------------------------
+Started game 851 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 841 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 852 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 843 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 853 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 835 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 854 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 844 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 855 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 842 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 856 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 847 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 857 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 848 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 858 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 849 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 859 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 845 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 860 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 854 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 861 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 846 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 862 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 853 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 863 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 852 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 864 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 850 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 865 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 851 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 866 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 855 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 867 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 856 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 868 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 857 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 869 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 858 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 870 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 860 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 871 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 863 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 872 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 859 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -7.68 +/- 15.98, nElo: -11.17 +/- 23.22
+LOS: 17.29 %, DrawRatio: 39.53 %, PairsRatio: 0.90
+Games: 860, Wins: 219, Losses: 238, Draws: 403, Points: 420.5 (48.90 %)
+Ptnml(0-2): [27, 110, 170, 101, 22], WL/DD Ratio: 0.77
+--------------------------------------------------
+Started game 873 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 861 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 874 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 864 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 875 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 862 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 876 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 865 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 877 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 866 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 878 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 868 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 879 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 869 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 880 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 867 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 881 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 872 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 882 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 873 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 883 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 877 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 884 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 870 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 885 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 874 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 886 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 871 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 887 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 876 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 888 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 878 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 889 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 875 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 890 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 880 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 891 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 881 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 892 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 883 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 893 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 886 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 894 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 882 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 895 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 891 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 896 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 887 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 897 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 884 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 898 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 879 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -8.26 +/- 15.69, nElo: -12.06 +/- 22.90
+LOS: 15.10 %, DrawRatio: 40.05 %, PairsRatio: 0.89
+Games: 884, Wins: 225, Losses: 246, Draws: 413, Points: 431.5 (48.81 %)
+Ptnml(0-2): [28, 112, 177, 103, 22], WL/DD Ratio: 0.79
+--------------------------------------------------
+Started game 899 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 885 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 900 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 888 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 901 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 895 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 902 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 892 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 903 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 896 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 904 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 889 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 905 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 893 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 906 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 894 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 907 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 890 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 908 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 897 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 909 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 900 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 910 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 899 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -7.74 +/- 15.54, nElo: -11.33 +/- 22.72
+LOS: 16.43 %, DrawRatio: 39.87 %, PairsRatio: 0.90
+Games: 898, Wins: 228, Losses: 248, Draws: 422, Points: 439.0 (48.89 %)
+Ptnml(0-2): [28, 114, 179, 106, 22], WL/DD Ratio: 0.77
+--------------------------------------------------
+Started game 911 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 898 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 912 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 907 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 913 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 905 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 914 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 903 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 915 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 902 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 916 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 904 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 917 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 906 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 918 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 909 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 919 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 901 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 920 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 908 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 921 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 910 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 922 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 912 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 923 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 911 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 924 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 914 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 925 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 916 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 926 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 913 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 927 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 921 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 928 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 915 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 929 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 920 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 930 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 919 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -7.19 +/- 15.37, nElo: -10.53 +/- 22.48
+LOS: 17.93 %, DrawRatio: 39.87 %, PairsRatio: 0.92
+Games: 918, Wins: 234, Losses: 253, Draws: 431, Points: 449.5 (48.97 %)
+Ptnml(0-2): [29, 115, 183, 110, 22], WL/DD Ratio: 0.78
+--------------------------------------------------
+Started game 931 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 918 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 932 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 917 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 933 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 924 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 934 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 922 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 935 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 928 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 936 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 923 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 937 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 926 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 938 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 927 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 939 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 925 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 940 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 929 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 941 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 931 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 942 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 930 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 943 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 933 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 944 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 934 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 945 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 932 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 946 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 940 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 947 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 935 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 948 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 936 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 949 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 938 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 950 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 937 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 951 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 939 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -5.91 +/- 15.17, nElo: -8.67 +/- 22.21
+LOS: 22.21 %, DrawRatio: 40.00 %, PairsRatio: 0.93
+Games: 940, Wins: 242, Losses: 258, Draws: 440, Points: 462.0 (49.15 %)
+Ptnml(0-2): [29, 117, 188, 113, 23], WL/DD Ratio: 0.79
+--------------------------------------------------
+Started game 952 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 941 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 953 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 945 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 954 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 949 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 955 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 946 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 956 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 943 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 957 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 942 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 958 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 948 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 959 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 944 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 960 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 947 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by adjudication}
+Started game 961 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 950 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 962 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 953 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 963 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 951 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 964 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 952 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 965 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 957 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 966 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 958 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 967 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 954 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 968 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 964 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 969 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 956 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 970 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 961 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 971 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 955 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 972 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 959 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by insufficient mating material}
+Started game 973 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 960 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -6.15 +/- 14.90, nElo: -9.08 +/- 21.98
+LOS: 20.89 %, DrawRatio: 40.62 %, PairsRatio: 0.93
+Games: 960, Wins: 244, Losses: 261, Draws: 455, Points: 471.5 (49.11 %)
+Ptnml(0-2): [29, 119, 195, 114, 23], WL/DD Ratio: 0.76
+--------------------------------------------------
+Started game 974 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 962 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 975 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 963 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 976 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 965 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 977 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 969 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Started game 978 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 966 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 979 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 968 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 980 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 971 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 981 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 967 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 982 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 970 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 983 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 974 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 984 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 972 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 985 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 973 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 986 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 975 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 987 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 976 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 988 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 977 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 989 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 980 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 990 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 979 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -6.40 +/- 14.81, nElo: -9.41 +/- 21.77
+LOS: 19.84 %, DrawRatio: 40.08 %, PairsRatio: 0.93
+Games: 978, Wins: 248, Losses: 266, Draws: 464, Points: 480.0 (49.08 %)
+Ptnml(0-2): [30, 122, 196, 118, 23], WL/DD Ratio: 0.75
+--------------------------------------------------
+Started game 991 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 987 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 992 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 981 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 993 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 982 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 994 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 985 (cand-a7bb10e vs ref-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 995 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 978 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 996 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 983 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 997 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 986 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 998 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 984 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Started game 999 of 1000 (cand-a7bb10e vs ref-a7bb10e)
+Finished game 992 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Started game 1000 of 1000 (ref-a7bb10e vs cand-a7bb10e)
+Finished game 989 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Finished game 995 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Finished game 991 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Finished game 990 (ref-a7bb10e vs cand-a7bb10e): 1-0 {White wins by adjudication}
+Finished game 988 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Finished game 996 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+Finished game 999 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Finished game 994 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Finished game 993 (cand-a7bb10e vs ref-a7bb10e): 1-0 {White wins by adjudication}
+Finished game 997 (cand-a7bb10e vs ref-a7bb10e): 0-1 {Black wins by adjudication}
+Finished game 998 (ref-a7bb10e vs cand-a7bb10e): 1/2-1/2 {Draw by 3-fold repetition}
+Finished game 1000 (ref-a7bb10e vs cand-a7bb10e): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-a7bb10e vs ref-a7bb10e (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: -5.21 +/- 14.75, nElo: -7.61 +/- 21.53
+LOS: 24.42 %, DrawRatio: 39.80 %, PairsRatio: 0.94
+Games: 1000, Wins: 257, Losses: 272, Draws: 471, Points: 492.5 (49.25 %)
+Ptnml(0-2): [31, 124, 199, 121, 25], WL/DD Ratio: 0.76
+--------------------------------------------------
+Finished match
+Total Time: 00:26:54 (hours:minutes:seconds)
+
+
+=== 1000 games in /home/max/ws/chesso/.tuning/s272_aa_20261011_022022/games.pgn ===
+    574 [Termination "adjudication"]
+    426 [Termination "normal"]
+draws     471 of 1000, 47.1 %
+decisive  529 of 1000, 52.9 %
+forfeits  0 of 1000, 0.00 %
+relay     0 position line(s) passed unrewritten
+SPRT-RUN-DONE full /home/max/ws/chesso/.tuning/s272_aa_20261011_022022
+=== S272 A/A reading, /home/max/ws/chesso/.tuning/s272_aa_20261011_022022 ===
+--- relay notes (rule 3): 0 position line(s) passed unrewritten
+--- forfeit_report.py
+  cand-a7bb10e      1000 games, 0 forfeits, 0.00 %
+  ref-a7bb10e       1000 games, 0 forfeits, 0.00 %
+forfeit_report.py exit 0
+--- S105_pairs.py
+=== /home/max/ws/chesso/.tuning/s272_aa_20261011_022022/games.pgn ===
+games            1000
+draws            471, 47.1 %
+decisive         529, 52.9 %
+plies per game   mean 106.9, median 103
+seconds per game mean 18.7, median 19
+seconds per ply  0.1751
+complete pairs   500
+  pair score 0.0     31    6.2 %
+  pair score 0.5    124   24.8 %
+  pair score 1.0    199   39.8 %
+  pair score 1.5    121   24.2 %
+  pair score 2.0     25    5.0 %
+white won both   50 of 500, 10.0 %  (the pair Pohl's floor is about)
+pair score       mean 0.9850, variance 0.2343, sd 0.4840
+
+S105_pairs.py exit 0
+--- S198_pairs.py
+=== /home/max/ws/chesso/.tuning/s272_aa_20261011_022022/games.pgn ===
+games            1000
+draws            471, 47.1 %
+decisive         529, 52.9 %
+plies per game   mean 106.9, median 103
+seconds per game mean 18.7, median 19
+seconds per ply  0.1751
+complete pairs   500
+  pair score 0.0     31    6.2 %
+  pair score 0.5    124   24.8 %
+  pair score 1.0    199   39.8 %
+  pair score 1.5    121   24.2 %
+  pair score 2.0     25    5.0 %
+white won both   50 of 500, 10.0 %  (the pair Pohl's floor is about)
+pair score       mean 0.9850, variance 0.2343, sd 0.4840
+
+=== /home/max/ws/chesso/adocs/data/S219_aa_calibration.pgn ===
+games            1000
+draws            353, 35.3 %
+decisive         647, 64.7 %
+plies per game   mean 114.0, median 101
+seconds per game mean 19.8, median 19
+seconds per ply  0.1733
+complete pairs   500
+  pair score 0.0     54   10.8 %
+  pair score 0.5     91   18.2 %
+  pair score 1.0    198   39.6 %
+  pair score 1.5    118   23.6 %
+  pair score 2.0     39    7.8 %
+white won both   65 of 500, 13.0 %  (the pair Pohl's floor is about)
+pair score       mean 0.9970, variance 0.2905, sd 0.5390
+
+pair variance    0.2343 +/- 0.0148  vs  0.2905 +/- 0.0184  (this run vs S219 A/A, the current book, DEC-190)
+ratio            0.806
+z                -2.38  (OUTSIDE the band, |z| < 1.96)
+S198_pairs.py exit 0
+S272-AA-DONE /home/max/ws/chesso/.tuning/s272_aa_20261011_022022
+
+=== fastchess console lines omitted from this report ===
+"PV continues after <rule>" blocks -- the warning and its Info, Position and Moves lines -- per rule and engine:
+  threefold repetition  ref-a7bb10e   14258
+  threefold repetition  cand-a7bb10e  13363
+  total: 27621 blocks, 110484 lines
