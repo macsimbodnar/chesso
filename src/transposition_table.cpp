@@ -2,9 +2,109 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include "log.hpp"
+
+#if defined(__linux__)
+#include <sys/mman.h>
+#endif
+
+
+namespace
+{
+
+// The transparent huge page on x86-64 Linux, and on arm64 Linux with 4 KiB
+// base pages. Only an alignment: madvise() accepts any range, and the kernel
+// can back with a huge page exactly the 2 MiB-aligned blocks inside it, so a
+// table that starts on this boundary loses none of its blocks to the edges.
+constexpr size_t TT_HUGE_PAGE = size_t(2) * 1024 * 1024;
+
+// The line a probe reads. The fallback aligns to it too, so neither path
+// changes where an entry sits relative to a line from one run to the next.
+constexpr size_t TT_LINE = 64;
+
+
+// Zeroed memory for `bytes` of table, recorded on `tt` so tt_release() can
+// return it. S119.
+//
+// On Linux, an anonymous mapping, aligned to the huge page and advised
+// MADV_HUGEPAGE. The kernel zeroes it page by page on first touch -- what
+// calloc() does for a block this size anyway -- so a large Hash that no
+// search fills commits no memory, as before. This machine runs transparent
+// huge pages in `madvise` mode (/sys/kernel/mm/transparent_hugepage/enabled),
+// where nothing is huge unless it is asked for. The advice is only that: a
+// kernel without THP refuses it or ignores it, and the table then sits on
+// ordinary pages and works exactly as it did. That is the whole failure path.
+// It never aborts, and a refused mapping falls through to calloc() below.
+//
+// Elsewhere (macOS has no such advice), calloc() with a line of slack, aligned
+// by hand.
+void* tt_allocate(transposition_table_t* tt, size_t bytes)
+{
+#if defined(__linux__) && defined(MADV_HUGEPAGE)
+  const size_t length = bytes + TT_HUGE_PAGE;
+
+  void* mapped = mmap(nullptr, length, PROT_READ | PROT_WRITE,
+                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+
+  if (mapped != MAP_FAILED) {
+    const uintptr_t at =
+        (reinterpret_cast<uintptr_t>(mapped) + TT_HUGE_PAGE - 1) &
+        ~static_cast<uintptr_t>(TT_HUGE_PAGE - 1);
+
+    if (madvise(reinterpret_cast<void*>(at), bytes, MADV_HUGEPAGE) != 0) {
+      LOG_W << "TT huge pages refused, using ordinary pages" << END_W;
+    }
+
+    tt->allocation = mapped;
+    tt->allocation_bytes = length;
+    tt->allocation_mapped = true;
+
+    return reinterpret_cast<void*>(at);
+  }
+
+  LOG_W << "TT mapping of " << length << " bytes failed, trying calloc"
+        << END_W;
+#endif
+
+  void* block = calloc(1, bytes + TT_LINE);
+
+  if (block == nullptr) { return nullptr; }
+
+  tt->allocation = block;
+  tt->allocation_bytes = bytes + TT_LINE;
+  tt->allocation_mapped = false;
+
+  const uintptr_t at = (reinterpret_cast<uintptr_t>(block) + TT_LINE - 1) &
+                       ~static_cast<uintptr_t>(TT_LINE - 1);
+
+  return reinterpret_cast<void*>(at);
+}
+
+
+void tt_release(transposition_table_t* tt)
+{
+#if defined(__linux__) && defined(MADV_HUGEPAGE)
+  if (tt->allocation_mapped) {
+    munmap(tt->allocation, tt->allocation_bytes);
+  } else {
+    free(tt->allocation);
+  }
+#else
+  free(tt->allocation);
+#endif
+
+  tt->allocation = nullptr;
+  tt->allocation_bytes = 0;
+  tt->allocation_mapped = false;
+  tt->entries = nullptr;
+  tt->entry_count = 0;
+  tt->index_mask = 0;
+}
+
+}  // namespace
 
 
 void tt_resize(transposition_table_t* tt, size_t megabytes)
@@ -13,10 +113,7 @@ void tt_resize(transposition_table_t* tt, size_t megabytes)
 
   megabytes = std::clamp<size_t>(megabytes, TT_MIN_MB, TT_MAX_MB);
 
-  free(tt->entries);
-  tt->entries = nullptr;
-  tt->entry_count = 0;
-  tt->index_mask = 0;
+  tt_release(tt);
 
   // Rounded down to a power of two so probing can mask instead of divide.
   size_t count = std::bit_floor((megabytes * 1024 * 1024) / sizeof(tt_entry_t));
@@ -24,7 +121,8 @@ void tt_resize(transposition_table_t* tt, size_t megabytes)
   // A machine that cannot spare the requested size still has to play, so keep
   // halving rather than giving up on the table entirely.
   while (count > 0) {
-    tt->entries = static_cast<tt_entry_t*>(calloc(count, sizeof(tt_entry_t)));
+    tt->entries =
+        static_cast<tt_entry_t*>(tt_allocate(tt, count * sizeof(tt_entry_t)));
 
     if (tt->entries != nullptr) { break; }
 
@@ -53,10 +151,7 @@ void tt_free(transposition_table_t* tt)
 {
   assert(tt != nullptr);
 
-  free(tt->entries);
-  tt->entries = nullptr;
-  tt->entry_count = 0;
-  tt->index_mask = 0;
+  tt_release(tt);
 }
 
 

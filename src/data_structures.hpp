@@ -593,6 +593,14 @@ struct transposition_table_t
   size_t index_mask = 0;
 
   tt_entry_t* entries = nullptr;
+
+  // What was allocated, which `entries` points into: tt_allocate() aligns the
+  // table inside a larger block, so the block is what tt_free() hands back.
+  // `allocation_mapped` says which call made it -- an anonymous mapping on
+  // Linux, calloc() elsewhere or when the mapping is refused. S119.
+  void* allocation = nullptr;
+  size_t allocation_bytes = 0;
+  bool allocation_mapped = false;
 };
 
 
