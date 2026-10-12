@@ -309,6 +309,12 @@ migration that way (DEC-109).
   and the watcher did not fire. A step does not complete while a watcher it
   armed is still alive, and a result taken from a watcher is acknowledged
   before the turn ends. DEC-061, DEC-109.
+- QUESTIONS: **every question put to the owner says why it is needed and
+  what each answer implies.** Why: what forced the question, and what the
+  agent cannot settle from the code, the data or the recorded decisions.
+  Implies: for each option, what changes, what it costs, what it risks and
+  what it leaves unmeasured, plus the agent's recommendation and its reason.
+  A question without both is not ready to ask. DEC-265.
 - POWER: **no timed match starts on battery.** `pmset -g ac` must report an
   adapter first. S024's first run drained the machine from 78 % to 1 %,
   hibernated mid-match, and produced 8 time forfeits and two halves that do not

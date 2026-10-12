@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-11, by hand.
 
+## 2026-10-11: the owner ruled on S273's two questions, and on how questions are asked
+
+- **DEC-265**: every question to the owner says why it is needed and what each
+  answer implies (AGENTS.md `QUESTIONS`).
+- **DEC-266**: a speed verdict under 2 % on the workstation is read against
+  the session's A/A floor, with both sides padded, and is credited only if
+  instructions move the same way or two layout perturbations agree; CLAUDE.md
+  rule 5 cites it. S119's Parts A and B are the first steps read under it.
+- **DEC-267**: the shipped bmi2 binary stays unpadded, native keeps the
+  padding, and the Skylake-family speed-up is documented as available --
+  **S274**, Open entry 2, runs between S119's hand-back and its SPRT.
+
+S119 is in progress (agent timing Parts A and B). No owner question is open.
+
 ## 2026-10-11: S273 done -- branches padded off 32-byte boundaries; the speed reading made layout-robust
 
 `-Wa,-mbranches-within-32B-boundaries` on C++ units for `CHESSO_ARCH` native
@@ -25,8 +39,9 @@ the shipped target, takes the flag although its cost on parts without the
 erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) is unmeasured -- a
 one-line revert in `arch.cmake` if unwanted; (2) the step file proposes a
 reading rule for sub-2 % speed verdicts on this machine, to rule on as a
-decision. Fast check: six findings, fixed before commit. **Next:** S119, the
-table as cache-line clusters.
+decision. Both ruled the same day (DEC-266, DEC-267). Fast check: six
+findings, fixed before commit. **Next:** S119, the table as cache-line
+clusters.
 
 ## 2026-10-11: S272 done -- H1: a bare-FEN client gains from S271's kept table
 

@@ -124,7 +124,11 @@ average by 0.04 and moves `bench_movegen` by much more, which is what the
 MacBook's `opendirectoryd` did often enough to matter.
 
 **5. Under 3 % is noise** unless `hyperfine` says otherwise with a tight sigma
-over interleaved runs.
+over interleaved runs. **On the workstation, under 2 % a tight sigma is not
+enough** (DEC-266): code layout alone moved cycles 2 % there with hyperfine's
+CI tight (S270). Both sides padded, the session's A/A sets the floor, and a
+change counts only if it clears that floor and instructions move the same way,
+or two layout perturbations agree; anything else is zero.
 
 **6. One change at a time.** Two at once and neither number means anything.
 

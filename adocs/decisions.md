@@ -14205,3 +14205,87 @@ Consequences: MANUAL's "a new base is a new base" changes: a new base still
               clears the table. B's reach shrinks once A lands -- two of a
               book start's three clears were base clears -- so S271 counts it
               and drops B as a recorded zero if it is nil in ordinary play.
+
+## DEC-265  2026-10-11  Every question to the owner states why it is needed and what each answer implies
+Tags:         workflow, agents, questions
+Context:      On 2026-10-11 the coordinator put two decisions to the owner, the
+              branch padding in the shipped `bmi2` binary and a timing rule for
+              sub-2 % speed claims (S273). Each was put as a bare choice, and the
+              owner had to ask back what each meant before answering.
+Decision:     By the owner, 2026-10-11: "Add as a rule to the repo to, when you
+              ask a question to write always why this is needed and what this
+              will imply". A question put to the owner states why it is needed
+              (what forced it, and what the agent cannot settle itself) and,
+              for each option, what changes, what it costs, what it risks and
+              what stays unmeasured, with the agent's recommendation and why.
+              Recorded as AGENTS.md's `QUESTIONS` project rule.
+Rejected:     Leaving it to each agent's judgement -- the two questions above
+              are what that produced.
+Consequences: A question missing either part is not ready to ask. It binds
+              every agent and the coordinator. The owner's global wish for few
+              questions is unchanged: the rule shapes a question, not how often
+              one is asked.
+
+## DEC-266  2026-10-11  On the workstation a speed verdict under 2 % is read against the session's A/A floor and checked for layout
+Tags:         measurement, speed, timing, layout, dec-083, s270, s273
+Context:      S270 found that moving code a few bytes changes cycles and wall by
+              up to 2 % on the workstation's Coffee Lake, with hyperfine's CI
+              tight and an A/A of byte copies blind to it: an inline
+              `game_tables()` read -1.62 % wall for -0.4 % instructions. S273's
+              branch padding cut the layout term to about 0.3 %, inside the
+              A/A's own noise (0.56 % cycles on `bench 16`), but not to zero.
+              CLAUDE.md's rule 5 ("under 3 % is noise unless hyperfine says
+              otherwise with a tight sigma") is fooled by exactly this case.
+Decision:     By the owner, 2026-10-11, adopting S273's proposal ("2. A"). A
+              behaviour-neutral speed verdict under 2 % on the workstation is
+              read so: (1) both sides built padded (the default from S273 on;
+              `fastchess.sh`'s banner shows each side); (2) S270's method -- an
+              A/A of byte copies in the same session, interleaved pairs in
+              alternating order, `bench 16` and S020's 300 positions on
+              `tools/perf_counters`, hyperfine wall, paired CIs; (3) the floor
+              is that A/A's largest CI bound per workload and instrument, and a
+              change counts only when its cycles CI on both workloads and its
+              wall CI lie wholly beyond the floor the same way; (4) it is
+              credited if instructions move the same way, and otherwise only if
+              the comparison rebuilt under two perturbations of both sides
+              (`-falign-functions=64` and the dummy function,
+              `adocs/data/S273_timing.txt`) agrees in sign and clears the floor
+              in each; (5) anything else is recorded as zero.
+Rejected:     Keeping rule 5 alone -- S270 is a tight-sigma hyperfine reading
+              that was layout, so rule 5 would have kept or reverted on luck.
+              Requiring the perturbations always -- an hour more per step where
+              instructions already back the change, for no evidence that they
+              mislead there (S268 and S269 stand on their instruction counts).
+Consequences: Gains under about 0.5 % become unmeasurable on this machine and
+              read zero; such a change may still be kept with its reason (rule
+              8). A change that buys cycles with more instructions (a prefetch)
+              owes the perturbation rebuilds, 30 to 60 minutes. Workstation
+              only: the MacBook has its own noise and is not covered. Changes
+              that alter play are still decided by SPRT. CLAUDE.md's rule 5
+              cites this entry.
+
+## DEC-267  2026-10-11  The shipped bmi2 binary stays unpadded; the Skylake-family speed-up is documented as available
+Tags:         build, release, arch, speed, s273, dec-266
+Context:      S273 applied `-Wa,-mbranches-within-32B-boundaries` to
+              `CHESSO_ARCH` native and bmi2. Measured here, on a Skylake-family
+              part with the JCC erratum: +1.50 to +3.11 % wall. bmi2
+              (x86-64-v3) also runs on Haswell, Broadwell, Ice Lake on and Zen3
+              on, which have no erratum; there the padding is +0.5 to +0.9 %
+              instructions and +3 % code for nothing, and nothing here can
+              measure its cost. Every match, timing and rating run builds
+              native, so no verdict depends on bmi2.
+Decision:     By the owner, 2026-10-11 ("1. B but note in the documentation
+              that we have the possibility to speed up for Skylake-family"):
+              bmi2 is built unpadded, native keeps the padding, and
+              `DEV_MANUAL.md` and `cmake/arch.cmake` state that a
+              Skylake-family build gains 1.5 to 3 % from the flag, with how to
+              get it. S274 makes the change.
+Rejected:     Keeping bmi2 padded -- ships a change whose cost on most of
+              bmi2's target parts is unmeasured. Two shipped binaries, padded
+              and unpadded -- release complexity and a user's choice, for a
+              gain on one CPU family.
+Consequences: Skylake-family users of the shipped binary forgo 1.5 to 3 %
+              until a measurement on a part without the erratum says the
+              padding costs nothing there, or a Skylake-family build is
+              shipped. native, and so every measurement here, is unchanged.
+
