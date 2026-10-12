@@ -87,11 +87,11 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // Preconditions for everything below. An empty or one-entry list, or a
   // zero-length parameter vector, would let the partition case pass over
   // nothing at all.
-  REQUIRE(eval_model::PARAM_COUNT > 0);
+  REQUIRE(tuner_layout::PARAM_COUNT > 0);
   REQUIRE(groups.size() >= 2);
   REQUIRE(std::count(groups.begin(), groups.end(), std::string("all")) == 1);
 
-  // PARAM_COUNT is eval_model.hpp's own sum of the block widths; the base
+  // PARAM_COUNT is tuner_layout.hpp's own sum of the block widths; the base
   // constants are a separate chain of running offsets. The two are written
   // independently and can disagree -- and they disagree exactly when a block is
   // appended after tempo, which is the one case the partition cannot see:
@@ -109,15 +109,15 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // this line is the only thing standing between an appended block and a fit
   // that silently hands its weights back unchanged.
   REQUIRE_MESSAGE(
-      eval_model::TEMPO_EG_BASE + eval_model::TEMPO_COUNT ==
-          eval_model::PARAM_COUNT,
+      tuner_layout::TEMPO_EG_BASE + tuner_layout::TEMPO_COUNT ==
+          tuner_layout::PARAM_COUNT,
       "a parameter block was appended after `tempo` and given no group of its "
       "own, so `tempo` -- the last group, whose range runs to PARAM_COUNT -- "
       "silently covers it: TEMPO_EG_BASE "
-          << eval_model::TEMPO_EG_BASE << " + TEMPO_COUNT "
-          << eval_model::TEMPO_COUNT << " = "
-          << (eval_model::TEMPO_EG_BASE + eval_model::TEMPO_COUNT)
-          << " against PARAM_COUNT " << eval_model::PARAM_COUNT
+          << tuner_layout::TEMPO_EG_BASE << " + TEMPO_COUNT "
+          << tuner_layout::TEMPO_COUNT << " = "
+          << (tuner_layout::TEMPO_EG_BASE + tuner_layout::TEMPO_COUNT)
+          << " against PARAM_COUNT " << tuner_layout::PARAM_COUNT
           << ". The partition cases below cannot see this and will all pass.");
 
   std::vector<uint8_t> mask;
@@ -126,9 +126,9 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // every other group: free_mask() assigns PARAM_COUNT entries whatever group
   // it was asked for.
   REQUIRE(tuner_groups::free_mask("all", &mask));
-  CHECK(mask.size() == eval_model::PARAM_COUNT);
+  CHECK(mask.size() == tuner_layout::PARAM_COUNT);
   CHECK(static_cast<size_t>(std::count(mask.begin(), mask.end(), uint8_t{1})) ==
-        eval_model::PARAM_COUNT);
+        tuner_layout::PARAM_COUNT);
 
   // Every name the list offers has to be a name free_mask accepts. Without
   // this, a group named in GROUP_LIST and missing from free_mask would leave
@@ -151,21 +151,21 @@ TEST_CASE("the --only groups partition the parameter vector")
 
   // Precondition: disjointness over fewer than two groups is vacuous.
   REQUIRE(groups.size() >= 2);
-  REQUIRE(eval_model::PARAM_COUNT > 0);
+  REQUIRE(tuner_layout::PARAM_COUNT > 0);
 
   // How many groups claim each parameter, and which was the first to claim it.
-  std::vector<size_t> claims(eval_model::PARAM_COUNT, 0);
-  std::vector<std::string> owner(eval_model::PARAM_COUNT);
+  std::vector<size_t> claims(tuner_layout::PARAM_COUNT, 0);
+  std::vector<std::string> owner(tuner_layout::PARAM_COUNT);
 
   size_t overlaps = 0;
-  size_t first_overlap = eval_model::PARAM_COUNT;
+  size_t first_overlap = tuner_layout::PARAM_COUNT;
   std::string overlap_pair;
 
   for (const std::string& name : groups) {
     std::vector<uint8_t> mask;
 
     REQUIRE(tuner_groups::free_mask(name, &mask));
-    REQUIRE(mask.size() == eval_model::PARAM_COUNT);
+    REQUIRE(mask.size() == tuner_layout::PARAM_COUNT);
 
     size_t freed = 0;
 
@@ -198,7 +198,7 @@ TEST_CASE("the --only groups partition the parameter vector")
   // and the group before it is left running past its own weights: the
   // predecessor and the new group both claim the new block.
   CHECK_MESSAGE(overlaps == 0,
-                overlaps << " of " << eval_model::PARAM_COUNT
+                overlaps << " of " << tuner_layout::PARAM_COUNT
                          << " parameters are freed by more than one --only "
                             "group; the first is index "
                          << first_overlap << ", claimed by " << overlap_pair
@@ -206,7 +206,7 @@ TEST_CASE("the --only groups partition the parameter vector")
                             "before it looks exactly like this");
 
   size_t uncovered = 0;
-  size_t first_uncovered = eval_model::PARAM_COUNT;
+  size_t first_uncovered = tuner_layout::PARAM_COUNT;
 
   for (size_t i = 0; i < claims.size(); ++i) {
     if (claims[i] > 0) { continue; }
@@ -220,7 +220,7 @@ TEST_CASE("the --only groups partition the parameter vector")
   // makes the groups a partition: no parameter can be fitted by two --only runs
   // and none is unreachable from every one of them.
   CHECK_MESSAGE(uncovered == 0,
-                uncovered << " of " << eval_model::PARAM_COUNT
+                uncovered << " of " << tuner_layout::PARAM_COUNT
                           << " parameters are in no --only group; the first is "
                              "index "
                           << first_uncovered
@@ -244,11 +244,11 @@ TEST_CASE("--freeze clears exactly the named groups")
   const std::vector<std::string> groups = partition_groups();
 
   REQUIRE(groups.size() >= 2);
-  REQUIRE(eval_model::PARAM_COUNT > 0);
+  REQUIRE(tuner_layout::PARAM_COUNT > 0);
 
   std::vector<uint8_t> all;
   REQUIRE(tuner_groups::free_mask("all", &all));
-  REQUIRE(all.size() == eval_model::PARAM_COUNT);
+  REQUIRE(all.size() == tuner_layout::PARAM_COUNT);
 
   // One group at a time, against that group's own --only range. Freezing a
   // group out of `all` and freeing it with --only have to be complements, which
@@ -272,7 +272,7 @@ TEST_CASE("--freeze clears exactly the named groups")
     size_t wrongly_frozen = 0;
     size_t wrongly_free = 0;
 
-    for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+    for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
       if (only[i] && mask[i]) { wrongly_free++; }
       if (!only[i] && !mask[i]) { wrongly_frozen++; }
     }
@@ -307,7 +307,7 @@ TEST_CASE("--freeze takes a list, and refuses what it cannot honour")
   REQUIRE(tempo_count > 0);
   REQUIRE(placement_count > 0);
 
-  for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
     // As a variable because doctest decomposes the expression it is handed and
     // refuses a `&&` inside one.
     const bool in_both = (tempo[i] != 0) && (placement[i] != 0);
@@ -322,11 +322,11 @@ TEST_CASE("--freeze takes a list, and refuses what it cannot honour")
   const size_t free_count =
       static_cast<size_t>(std::count(mask.begin(), mask.end(), uint8_t{1}));
   const size_t expected_free =
-      eval_model::PARAM_COUNT - tempo_count - placement_count;
+      tuner_layout::PARAM_COUNT - tempo_count - placement_count;
 
   CHECK(free_count == expected_free);
 
-  for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
     CAPTURE(i);
 
     if (tempo[i] || placement[i]) {
@@ -380,25 +380,25 @@ TEST_CASE(
   const std::vector<tuner_groups::gauge_t> gauges = tuner_groups::gauges();
   REQUIRE(gauges.size() == 7);
 
-  const size_t psqt_first = eval_model::MG_BASE;
-  const size_t psqt_last = eval_model::MOB_MG_BASE;
+  const size_t psqt_first = tuner_layout::MG_BASE;
+  const size_t psqt_last = tuner_layout::MOB_MG_BASE;
 
-  std::vector<int> claims(eval_model::PARAM_COUNT, 0);
+  std::vector<int> claims(tuner_layout::PARAM_COUNT, 0);
 
   for (size_t g = 0; g < gauges.size(); ++g) {
     const tuner_groups::gauge_t& gauge = gauges[g];
     CAPTURE(gauge.name);
 
     // Five material/table directions, then the two king tables.
-    if (g < eval_model::MATERIAL_COUNT) {
+    if (g < tuner_layout::MATERIAL_COUNT) {
       CHECK(gauge.absorb == g);
       CHECK(gauge.level.size() == ((g == 0) ? 96u : 128u));
     } else {
-      CHECK(gauge.absorb == eval_model::PARAM_COUNT);
+      CHECK(gauge.absorb == tuner_layout::PARAM_COUNT);
       CHECK(gauge.level.size() == 64u);
     }
 
-    if (gauge.absorb < eval_model::PARAM_COUNT) { claims[gauge.absorb]++; }
+    if (gauge.absorb < tuner_layout::PARAM_COUNT) { claims[gauge.absorb]++; }
 
     for (const size_t column : gauge.level) {
       CAPTURE(column);
@@ -407,7 +407,7 @@ TEST_CASE(
 
       const size_t square = (column - psqt_first) % (6 * 64);
       const size_t type = square / 64;
-      CHECK(type == ((g < eval_model::MATERIAL_COUNT) ? g : 5u));
+      CHECK(type == ((g < tuner_layout::MATERIAL_COUNT) ? g : 5u));
 
       // Written out, not asked of pawn_can_stand(): a pawn stands on squares
       // 8..55 of its table.
@@ -465,9 +465,9 @@ TEST_CASE("a gauge is held only where the mask frees all of it")
 
   // A start, and a vector that has walked off it on every column, so a hold
   // has a level to put back on every gauge it holds.
-  std::vector<double> start(eval_model::PARAM_COUNT);
-  std::vector<double> walked(eval_model::PARAM_COUNT);
-  for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+  std::vector<double> start(tuner_layout::PARAM_COUNT);
+  std::vector<double> walked(tuner_layout::PARAM_COUNT);
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
     start[i] = static_cast<double>(i % 17) - 8.0;
     walked[i] = start[i] + 0.25 * static_cast<double>(i % 7) + 1.0;
   }
@@ -501,7 +501,7 @@ TEST_CASE("a gauge is held only where the mask frees all of it")
     // The hold the tuner runs after a step: only what the mask frees, and the
     // whole of it.
     std::vector<double> params = walked;
-    for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+    for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
       if (!mask[i]) { params[i] = start[i]; }
     }
 
@@ -509,7 +509,7 @@ TEST_CASE("a gauge is held only where the mask frees all of it")
     tuner_groups::hold_gauges(held, start.data(), params.data());
 
     size_t frozen_written = 0;
-    for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+    for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
       if (!mask[i] && params[i] != before_hold[i]) { frozen_written++; }
     }
     CHECK(frozen_written == 0);

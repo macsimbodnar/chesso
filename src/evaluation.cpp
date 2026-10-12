@@ -6,6 +6,7 @@
 #include "bb_tables.hpp"
 #include "bitboard.hpp"
 #include "eval_tables.hpp"
+#include "eval_trace.hpp"
 #include "transposition_table.hpp"
 #include "utils.hpp"
 
@@ -48,7 +49,7 @@ static constexpr int piece_values_abs[] = {
 // Every weight pair below is also kept packed (score_t, data_structures.hpp),
 // S117, and the evaluation reads the packed copy: one load and one add per
 // feature where there were two. The plain mg/eg arrays stay the source of
-// truth because tools/tuner writes them in that form and tools/eval_model.hpp
+// truth because tools/tuner writes them in that form and tools/tuner_layout.hpp
 // reads them; the packed copy is derived here at compile time, which is why
 // they are constexpr and not merely const -- a const array's elements cannot
 // be read in a constant expression.
@@ -545,6 +546,7 @@ static inline void evaluate_pawns(const board_t* board,
     const int difference = structure[WHITE][f] - structure[BLACK][f];
 
     sum += difference * pawn_structure_score[f];
+    EVAL_TRACE(TERM_PAWN_STRUCTURE, f, difference);
   }
 
   int placement[2][PL_FEATURE_COUNT];
@@ -555,6 +557,7 @@ static inline void evaluate_pawns(const board_t* board,
     const int difference = placement[WHITE][f] - placement[BLACK][f];
 
     sum += difference * piece_placement_score[f];
+    EVAL_TRACE(TERM_PIECE_PLACEMENT, f, difference);
   }
 
   if constexpr (collect) {
@@ -585,6 +588,7 @@ static inline void evaluate_pawns(const board_t* board,
     assert(bucket >= 0 && bucket < 5);
 
     sum += passed_pawn_score[bucket];
+    EVAL_TRACE(TERM_PASSED_PAWN, bucket, 1);
 
     if constexpr (collect) { passed_out[WHITE][bucket]++; }
   }
@@ -597,6 +601,7 @@ static inline void evaluate_pawns(const board_t* board,
     assert(bucket >= 0 && bucket < 5);
 
     sum -= passed_pawn_score[bucket];
+    EVAL_TRACE(TERM_PASSED_PAWN, bucket, -1);
 
     // Black's own row counts Black's passers as positives. The minus above is
     // the score's sign and not the count's, and folding the two together is
@@ -706,6 +711,44 @@ constexpr int tempo_eg = 0;
 constexpr score_t tempo_score = make_score(tempo_mg, tempo_eg);
 
 
+#ifdef CHESSO_TRACE
+thread_local eval_trace::record_t* eval_trace::sink = nullptr;
+
+// What make_move accumulated into board->material and board->psqt, written out
+// as coefficients: one per piece against its value and its square, signed and
+// mirrored for Black exactly as eval_add_piece() does it. The accumulators are
+// sums over the pieces, so the trace build walks the pieces instead of reading
+// the sums -- the recomputation the search was rid of at S014, and the reason
+// this exists only where CHESSO_TRACE is defined. The king's value is 0 and is
+// not a parameter: one king a side, so it would cancel whatever it was.
+static void trace_accumulators(const board_t* board)
+{
+  if (eval_trace::sink == nullptr) { return; }
+
+  for (int piece = W_PAWN; piece <= B_KING; ++piece) {
+    const bool white = (piece < B_PAWN);
+    const int type = white ? piece : piece - B_PAWN;
+    const int sign = white ? 1 : -1;
+    bb_t pieces = board->bitboards[piece];
+
+    while (pieces) {
+      const index_t square = get_lsb_index(pieces);
+      pieces &= pieces - 1;
+
+      const int table_square = white ? square : (square ^ 56);
+
+      if (type != W_KING) { EVAL_TRACE(TERM_MATERIAL, type, sign); }
+      EVAL_TRACE(TERM_PSQT, type * 64 + table_square, sign);
+    }
+  }
+}
+
+#define EVAL_TRACE_ACCUMULATORS(board) trace_accumulators(board)
+#else
+#define EVAL_TRACE_ACCUMULATORS(board) ((void)0)
+#endif
+
+
 // Stage one: what is cheap enough to pay at every node, including the nodes
 // evaluate_lazy() takes the shortcut on.
 //
@@ -750,6 +793,8 @@ int evaluate_cheap(const board_t* board)
   // from its middlegame value to its endgame one instead of jumping when some
   // arbitrary piece comes off.
   const int phase = game_phase(board);
+  EVAL_TRACE_PHASE(phase);
+  EVAL_TRACE_ACCUMULATORS(board);
 
   score_t pawns = 0;
   evaluate_pawns<false>(board, &pawns, nullptr, nullptr, nullptr);
@@ -786,6 +831,10 @@ int evaluate_cheap(const board_t* board)
   // compiler deletes all seven, DEC-047, which is why the count is the
   // measurement and no timing was run.
   const int tempo = taper(tempo_score, phase);
+
+  // White relative like every other coefficient in the trace: the bonus goes
+  // to the side to move, which from White's side is +1 or -1 of it.
+  EVAL_TRACE(TERM_TEMPO, 0, (board->active_color == WHITE) ? 1 : -1);
 
   return ((board->active_color == WHITE) ? score : -score) + tempo;
 }
@@ -1038,6 +1087,7 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
         const int count = count_bits(attacks & ~own);
 
         mobility_sum += mover * count * mobility_score[type];
+        EVAL_TRACE(TERM_MOBILITY, type, mover * count);
 
         const bb_t hits = attacks & defended_zone;
 
@@ -1046,6 +1096,7 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
         const int attacker = KS_KNIGHT_ATTACKERS + type;
 
         safety_sum += defender * king_safety_score[attacker];
+        EVAL_TRACE(TERM_KING_SAFETY, attacker, defender);
 
         // Attacker-square incidences, not distinct squares under fire: two
         // pieces bearing on the same square count twice. Distinct squares
@@ -1055,6 +1106,7 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
         safety_sum +=
             defender * incidences * king_safety_score[KS_ZONE_ATTACKS];
+        EVAL_TRACE(TERM_KING_SAFETY, KS_ZONE_ATTACKS, defender * incidences);
 
         // The count belongs to the king under fire, which is the row of the
         // colour that is not moving these pieces.
@@ -1074,6 +1126,7 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
     for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
       safety_sum += sign * features[f] * king_safety_score[f];
+      EVAL_TRACE(TERM_KING_SAFETY, f, sign * features[f]);
 
       if constexpr (collect) { out[colour][f] = features[f]; }
     }

@@ -6,9 +6,9 @@
 // Positive means the side to move is better, whatever colour that is. Callers
 // use the number as it comes; there is no sign to apply.
 //
-// The full score, every term, no shortcut. The tuner's model in
-// tools/eval_model.hpp is checked against this one and not against the lazy
-// form below.
+// The full score, every term, no shortcut. The tuner fits this one and not the
+// lazy form below: since S262 through its own trace (src/eval_trace.hpp), and
+// before that through the mirror in tools/eval_model.hpp.
 int evaluate(const board_t* board);
 
 // The terms that come straight off the accumulators make_move maintains:
@@ -47,15 +47,15 @@ int evaluate_lazy(const board_t* board,
                   bool* exact = nullptr);
 
 // The mobility weights, per piece type in knight, bishop, rook, queen order.
-// Exposed so that the tuner's model in tools/eval_model.hpp can start from what
-// the engine ships instead of from a copy of it, which would be free to drift.
+// Exposed so that the tuner (tools/tuner_layout.hpp's starting_params()) starts
+// from what the engine ships instead of from a copy of it, which could drift.
 extern const int mobility_mg[4];
 extern const int mobility_eg[4];
 
 // The passed pawn weights, indexed by how far the pawn has advanced: 0 on its
 // own second rank, 4 on its own sixth. Exposed for the same reason as the
-// mobility weights: the tuner's model in tools/eval_model.hpp starts from what
-// the engine ships instead of from a copy of it that would be free to drift.
+// mobility weights: the tuner (tools/tuner_layout.hpp) starts from what the
+// engine ships instead of from a copy of it that would be free to drift.
 //
 // Fitted and shipping non-zero since S027 -- see the weights themselves and
 // the fit that produced them in evaluation.cpp. They are a residual on top of
@@ -100,8 +100,8 @@ void passed_pawn_counts(const board_t* board, int out[2][5]);
 
 // The pawn structure weights, indexed by feature: 0 isolated, 1 doubled, 2
 // backward. Exposed for the same reason as the passed pawn weights above: the
-// tuner's model in tools/eval_model.hpp starts from what the engine ships
-// instead of from a copy of it that would be free to drift.
+// tuner (tools/tuner_layout.hpp) starts from what the engine ships instead of
+// from a copy of it that would be free to drift.
 //
 // Fitted and shipping non-zero since S027 -- see evaluation.cpp. A residual on
 // top of the pawn piece-square table like the passed pawn buckets above, which
@@ -146,8 +146,8 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
 // open file, 2 rook on a half-open file. Exposed for the same reason as the
-// weights above: the tuner's model in tools/eval_model.hpp starts from what the
-// engine ships instead of from a copy of it that would be free to drift.
+// weights above: the tuner (tools/tuner_layout.hpp) starts from what the engine
+// ships instead of from a copy of it that would be free to drift.
 //
 // **Zero in evaluation.cpp, and not because the tuner has not reached them.**
 // S027 fitted piece placement (mg {2, 32, 8, -26} / eg {55, -8, 12, 11}),
@@ -212,8 +212,8 @@ void piece_placement_counts(const board_t* board, int out[2][3]);
 
 // The tempo weights: a bonus for having the move, middlegame and endgame,
 // tapered like every other term. Exposed for the same reason as the weights
-// above: the tuner's model in tools/eval_model.hpp starts from what the engine
-// ships instead of from a copy of it that would be free to drift.
+// above: the tuner (tools/tuner_layout.hpp) starts from what the engine ships
+// instead of from a copy of it that would be free to drift.
 //
 // **Zero, and not because the tuner has not reached them.** It has: `--only
 // tempo` fitted mg 10, eg 0 at S027 and the SPRT that followed reached neither
@@ -257,8 +257,8 @@ enum king_safety_feature_t
 };
 
 // The king safety weights, one per feature above. Exposed for the same reason
-// as the mobility weights: the tuner's model in tools/eval_model.hpp starts
-// from what the engine ships instead of from a copy of it that can drift.
+// as the mobility weights: the tuner (tools/tuner_layout.hpp) starts from what
+// the engine ships instead of from a copy of it that can drift.
 //
 // Fitted and shipping non-zero since S027 -- see evaluation.cpp for the fit,
 // for why the model is linear, and for why a sign here is not a chess

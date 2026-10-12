@@ -1,0 +1,768 @@
+# S262: the trace-based tuner against the parent's, and Adam against AdaGrad.
+# Machine: i7-8700K, 12 threads, g++ 13.3, 2026-10-12, one run at a time.
+# "old" is tools/tuner built at f57b92f before any S262 edit; "new" is the S262
+# tree's (tools/tuner_trace.hpp). Every run: --threads 12, every other flag at its
+# default (--epochs 20000 --report 100 --patience 20 --validation 0.1 --seed 1
+# --lambda 0, --only all, no --freeze) unless the command line says otherwise.
+# The pre-registration is in adocs/plan_*/S262_trace_based_tuner.md.
+#
+# Corpora, never in the tree:
+#   full     .tuning/selfplay_v2_dedup.tsv, sha256 0a6b59b6..., 10795695 rows
+#   planted  the parent's feature_audit --plant over head -n 1000000 of full
+#            (labels sigmoid(0.7624 * score) at the shipped constants with
+#            S100's term weights planted, S134's two folded columns dropped),
+#            sha256 45305e6442ad4d24509860c213f222807df54c96b11e098a2e829fd8517ed734,
+#            the slice S275 used
+
+## planted, new
+# tuner_new --data planted
+engine f57b92f-dirty, corpus sha256 45305e6442ad4d24509860c213f222807df54c96b11e098a2e829fd8517ed734, 1000000 rows, 70091198 bytes
+trace: 1000000 rows, 24552195 entries (24.55 a row), 0.8 s; 0 differ from evaluate(), the clamp binds on 3315
+1000000 positions, 10945 games, 899943 train, 100057 validation (10.0057%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7557
+start: train 0.000520  validation 0.000523
+epoch    100  train 0.000000  validation 0.000000  *
+epoch    200  train 0.000000  validation 0.000000  *
+epoch    300  train 0.000000  validation 0.000000  *
+epoch    400  train 0.000000  validation 0.000000  *
+epoch    500  train 0.000000  validation 0.000000  *
+epoch    600  train 0.000000  validation 0.000000  *
+epoch    700  train 0.000000  validation 0.000000  *
+epoch    800  train 0.000000  validation 0.000000  *
+epoch    900  train 0.000000  validation 0.000000  *
+epoch   1000  train 0.000000  validation 0.000000  *
+epoch   1100  train 0.000000  validation 0.000000
+epoch   1200  train 0.000000  validation 0.000000  *
+epoch   1300  train 0.000000  validation 0.000000
+epoch   1400  train 0.000000  validation 0.000000  *
+epoch   1500  train 0.000000  validation 0.000000
+epoch   1600  train 0.000000  validation 0.000000  *
+epoch   1700  train 0.000000  validation 0.000000
+epoch   1800  train 0.000000  validation 0.000000  *
+epoch   1900  train 0.000000  validation 0.000000
+epoch   2000  train 0.000000  validation 0.000000  *
+epoch   2100  train 0.000000  validation 0.000000
+epoch   2200  train 0.000000  validation 0.000000  *
+epoch   2300  train 0.000000  validation 0.000000  *
+epoch   2400  train 0.000001  validation 0.000001
+epoch   2500  train 0.000000  validation 0.000000  *
+epoch   2600  train 0.000000  validation 0.000000  *
+epoch   2700  train 0.000000  validation 0.000000
+epoch   2800  train 0.000000  validation 0.000000
+epoch   2900  train 0.000000  validation 0.000000  *
+epoch   3000  train 0.000000  validation 0.000000  *
+epoch   3100  train 0.000002  validation 0.000002
+epoch   3200  train 0.000000  validation 0.000000  *
+epoch   3300  train 0.000000  validation 0.000000  *
+epoch   3400  train 0.000000  validation 0.000000  *
+epoch   3500  train 0.000000  validation 0.000000  *
+epoch   3600  train 0.000000  validation 0.000000
+epoch   3700  train 0.000000  validation 0.000000  *
+epoch   3800  train 0.000000  validation 0.000000  *
+epoch   3900  train 0.000001  validation 0.000001
+epoch   4000  train 0.000000  validation 0.000000
+epoch   4100  train 0.000000  validation 0.000000  *
+epoch   4200  train 0.000000  validation 0.000000
+epoch   4300  train 0.000000  validation 0.000000
+epoch   4400  train 0.000000  validation 0.000000  *
+epoch   4500  train 0.000000  validation 0.000000  *
+epoch   4600  train 0.000000  validation 0.000000
+epoch   4700  train 0.000000  validation 0.000000  *
+epoch   4800  train 0.000000  validation 0.000000
+epoch   4900  train 0.000000  validation 0.000000
+epoch   5000  train 0.000000  validation 0.000000  *
+epoch   5100  train 0.000000  validation 0.000000
+epoch   5200  train 0.000000  validation 0.000000
+epoch   5300  train 0.000000  validation 0.000000
+epoch   5400  train 0.000000  validation 0.000000
+epoch   5500  train 0.000000  validation 0.000000
+epoch   5600  train 0.000000  validation 0.000000
+epoch   5700  train 0.000002  validation 0.000002
+epoch   5800  train 0.000000  validation 0.000000
+epoch   5900  train 0.000000  validation 0.000000
+epoch   6000  train 0.000000  validation 0.000000
+epoch   6100  train 0.000001  validation 0.000001
+epoch   6200  train 0.000000  validation 0.000000
+epoch   6300  train 0.000000  validation 0.000000
+epoch   6400  train 0.000000  validation 0.000000
+epoch   6500  train 0.000000  validation 0.000000
+epoch   6600  train 0.000000  validation 0.000000
+epoch   6700  train 0.000000  validation 0.000000  *
+epoch   6800  train 0.000000  validation 0.000000
+epoch   6900  train 0.000000  validation 0.000000  *
+epoch   7000  train 0.000001  validation 0.000001
+epoch   7100  train 0.000000  validation 0.000000
+epoch   7200  train 0.000000  validation 0.000000
+epoch   7300  train 0.000000  validation 0.000000
+epoch   7400  train 0.000000  validation 0.000000  *
+epoch   7500  train 0.000000  validation 0.000000
+epoch   7600  train 0.000000  validation 0.000000
+epoch   7700  train 0.000000  validation 0.000000  *
+epoch   7800  train 0.000000  validation 0.000000
+epoch   7900  train 0.000000  validation 0.000000
+epoch   8000  train 0.000000  validation 0.000000  *
+epoch   8100  train 0.000000  validation 0.000000
+epoch   8200  train 0.000000  validation 0.000000
+epoch   8300  train 0.000000  validation 0.000000  *
+epoch   8400  train 0.000000  validation 0.000000
+epoch   8500  train 0.000000  validation 0.000000
+epoch   8600  train 0.000000  validation 0.000000
+epoch   8700  train 0.000000  validation 0.000000
+epoch   8800  train 0.000000  validation 0.000000
+epoch   8900  train 0.000000  validation 0.000000
+epoch   9000  train 0.000000  validation 0.000000
+epoch   9100  train 0.000000  validation 0.000000
+epoch   9200  train 0.000000  validation 0.000000
+epoch   9300  train 0.000001  validation 0.000001
+epoch   9400  train 0.000000  validation 0.000000
+epoch   9500  train 0.000002  validation 0.000002
+epoch   9600  train 0.000000  validation 0.000000
+epoch   9700  train 0.000000  validation 0.000000
+epoch   9800  train 0.000000  validation 0.000000
+epoch   9900  train 0.000000  validation 0.000000
+epoch  10000  train 0.000000  validation 0.000000
+epoch  10100  train 0.000000  validation 0.000000
+epoch  10200  train 0.000000  validation 0.000000
+epoch  10300  train 0.000001  validation 0.000001
+no improvement in 20 reports, stopping
+best: train 0.000000  validation 0.000000  (start 0.000520 / 0.000523)
+constants written to .tuning/coord/S262/runs/planted_new.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:34.54
+	Maximum resident set size (kbytes): 177500
+# emitted term weights and stamp lines (planted_new.hpp):
+// K          0.7557
+// error      0.000000 train, 0.000000 validation
+// model      evaluate()'s trace, 1000000 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adam
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    95
+#define KNIGHT  330
+#define BISHOP  311
+#define ROOK    492
+#define QUEEN   726
+constexpr int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {0, 5, 0, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {7, 14, 21, 33, 48};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {11, 19, 30, 45, 71};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -9, -11};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-12, -32, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {28, 17, 9};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {41, 8, 5};  // pair, open, half open
+constexpr int tempo_mg = 23;
+constexpr int tempo_eg = 12;
+
+## planted, old
+# parent tuner --data planted
+engine f57b92f, corpus sha256 45305e6442ad4d24509860c213f222807df54c96b11e098a2e829fd8517ed734, 1000000 rows, 70091198 bytes
+1000000 positions, 10945 games, 899943 train, 100057 validation (10.0057%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7557
+start: train 0.000520  validation 0.000523
+epoch    100  train 0.000000  validation 0.000000  *
+epoch    200  train 0.000000  validation 0.000000  *
+epoch    300  train 0.000000  validation 0.000000  *
+epoch    400  train 0.000000  validation 0.000000  *
+epoch    500  train 0.000000  validation 0.000000  *
+epoch    600  train 0.000000  validation 0.000000  *
+epoch    700  train 0.000000  validation 0.000000  *
+epoch    800  train 0.000000  validation 0.000000  *
+epoch    900  train 0.000000  validation 0.000000  *
+epoch   1000  train 0.000000  validation 0.000000  *
+epoch   1100  train 0.000000  validation 0.000000  *
+epoch   1200  train 0.000000  validation 0.000000  *
+epoch   1300  train 0.000000  validation 0.000000  *
+epoch   1400  train 0.000000  validation 0.000000  *
+epoch   1500  train 0.000000  validation 0.000000
+epoch   1600  train 0.000000  validation 0.000000
+epoch   1700  train 0.000000  validation 0.000000  *
+epoch   1800  train 0.000000  validation 0.000000  *
+epoch   1900  train 0.000000  validation 0.000000
+epoch   2000  train 0.000000  validation 0.000000  *
+epoch   2100  train 0.000000  validation 0.000000  *
+epoch   2200  train 0.000000  validation 0.000000
+epoch   2300  train 0.000000  validation 0.000000  *
+epoch   2400  train 0.000000  validation 0.000000  *
+epoch   2500  train 0.000000  validation 0.000000
+epoch   2600  train 0.000000  validation 0.000000  *
+epoch   2700  train 0.000000  validation 0.000000  *
+epoch   2800  train 0.000000  validation 0.000000
+epoch   2900  train 0.000000  validation 0.000000
+epoch   3000  train 0.000000  validation 0.000000
+epoch   3100  train 0.000000  validation 0.000000
+epoch   3200  train 0.000000  validation 0.000000
+epoch   3300  train 0.000000  validation 0.000000  *
+epoch   3400  train 0.000000  validation 0.000000
+epoch   3500  train 0.000000  validation 0.000000  *
+epoch   3600  train 0.000000  validation 0.000000
+epoch   3700  train 0.000000  validation 0.000000
+epoch   3800  train 0.000001  validation 0.000001
+epoch   3900  train 0.000000  validation 0.000000  *
+epoch   4000  train 0.000000  validation 0.000000
+epoch   4100  train 0.000000  validation 0.000000  *
+epoch   4200  train 0.000000  validation 0.000000
+epoch   4300  train 0.000000  validation 0.000000
+epoch   4400  train 0.000000  validation 0.000000
+epoch   4500  train 0.000000  validation 0.000000
+epoch   4600  train 0.000000  validation 0.000000
+epoch   4700  train 0.000000  validation 0.000000
+epoch   4800  train 0.000000  validation 0.000000
+epoch   4900  train 0.000000  validation 0.000000
+epoch   5000  train 0.000000  validation 0.000000
+epoch   5100  train 0.000000  validation 0.000000  *
+epoch   5200  train 0.000000  validation 0.000000
+epoch   5300  train 0.000000  validation 0.000000  *
+epoch   5400  train 0.000000  validation 0.000000
+epoch   5500  train 0.000000  validation 0.000000
+epoch   5600  train 0.000000  validation 0.000000
+epoch   5700  train 0.000000  validation 0.000000
+epoch   5800  train 0.000000  validation 0.000000
+epoch   5900  train 0.000000  validation 0.000000
+epoch   6000  train 0.000000  validation 0.000000
+epoch   6100  train 0.000000  validation 0.000000
+epoch   6200  train 0.000000  validation 0.000000  *
+epoch   6300  train 0.000000  validation 0.000000
+epoch   6400  train 0.000000  validation 0.000000
+epoch   6500  train 0.000000  validation 0.000000
+epoch   6600  train 0.000000  validation 0.000000
+epoch   6700  train 0.000002  validation 0.000002
+epoch   6800  train 0.000000  validation 0.000000
+epoch   6900  train 0.000000  validation 0.000000
+epoch   7000  train 0.000000  validation 0.000000
+epoch   7100  train 0.000000  validation 0.000000
+epoch   7200  train 0.000000  validation 0.000000
+epoch   7300  train 0.000000  validation 0.000000
+epoch   7400  train 0.000000  validation 0.000000
+epoch   7500  train 0.000000  validation 0.000000
+epoch   7600  train 0.000002  validation 0.000002
+epoch   7700  train 0.000000  validation 0.000000
+epoch   7800  train 0.000000  validation 0.000000
+epoch   7900  train 0.000000  validation 0.000000
+epoch   8000  train 0.000000  validation 0.000000
+epoch   8100  train 0.000000  validation 0.000000
+epoch   8200  train 0.000000  validation 0.000000
+no improvement in 20 reports, stopping
+best: train 0.000000  validation 0.000000  (start 0.000520 / 0.000523)
+constants written to .tuning/coord/S262/runs/planted_old.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 3:22.55
+	Maximum resident set size (kbytes): 138932
+# emitted term weights and stamp lines (planted_old.hpp):
+// K          0.7557
+// error      0.000000 train, 0.000000 validation
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    95
+#define KNIGHT  330
+#define BISHOP  311
+#define ROOK    492
+#define QUEEN   726
+constexpr int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {0, 5, 0, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {7, 14, 21, 33, 48};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {11, 19, 30, 45, 71};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -9, -11};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-12, -32, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {28, 17, 9};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {41, 8, 5};  // pair, open, half open
+constexpr int tempo_mg = 23;
+constexpr int tempo_eg = 12;
+
+## planted, new, --k 0.7624 (post hoc, not pre-registered)
+# tuner_new --data planted --k 0.7624
+engine f57b92f-dirty, corpus sha256 45305e6442ad4d24509860c213f222807df54c96b11e098a2e829fd8517ed734, 1000000 rows, 70091198 bytes
+trace: 1000000 rows, 24552195 entries (24.55 a row), 0.9 s; 0 differ from evaluate(), the clamp binds on 3315
+1000000 positions, 10945 games, 899943 train, 100057 validation (10.0057%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+start: train 0.000522  validation 0.000525
+epoch    100  train 0.000000  validation 0.000000  *
+epoch    200  train 0.000000  validation 0.000000  *
+epoch    300  train 0.000000  validation 0.000000  *
+epoch    400  train 0.000000  validation 0.000000  *
+epoch    500  train 0.000000  validation 0.000000  *
+epoch    600  train 0.000000  validation 0.000000  *
+epoch    700  train 0.000000  validation 0.000000  *
+epoch    800  train 0.000000  validation 0.000000  *
+epoch    900  train 0.000000  validation 0.000000
+epoch   1000  train 0.000000  validation 0.000000  *
+epoch   1100  train 0.000000  validation 0.000000
+epoch   1200  train 0.000000  validation 0.000000  *
+epoch   1300  train 0.000000  validation 0.000000
+epoch   1400  train 0.000000  validation 0.000000
+epoch   1500  train 0.000000  validation 0.000000  *
+epoch   1600  train 0.000000  validation 0.000000
+epoch   1700  train 0.000000  validation 0.000000  *
+epoch   1800  train 0.000002  validation 0.000002
+epoch   1900  train 0.000000  validation 0.000000
+epoch   2000  train 0.000000  validation 0.000000  *
+epoch   2100  train 0.000000  validation 0.000000
+epoch   2200  train 0.000000  validation 0.000000
+epoch   2300  train 0.000000  validation 0.000000  *
+epoch   2400  train 0.000000  validation 0.000000
+epoch   2500  train 0.000000  validation 0.000000
+epoch   2600  train 0.000000  validation 0.000000  *
+epoch   2700  train 0.000000  validation 0.000000
+epoch   2800  train 0.000000  validation 0.000000
+epoch   2900  train 0.000001  validation 0.000001
+epoch   3000  train 0.000000  validation 0.000000
+epoch   3100  train 0.000000  validation 0.000000
+epoch   3200  train 0.000000  validation 0.000000
+epoch   3300  train 0.000000  validation 0.000000
+epoch   3400  train 0.000000  validation 0.000000
+epoch   3500  train 0.000000  validation 0.000000
+epoch   3600  train 0.000000  validation 0.000000
+epoch   3700  train 0.000000  validation 0.000000
+epoch   3800  train 0.000002  validation 0.000002
+epoch   3900  train 0.000000  validation 0.000000
+epoch   4000  train 0.000000  validation 0.000000
+epoch   4100  train 0.000000  validation 0.000000
+epoch   4200  train 0.000000  validation 0.000000
+epoch   4300  train 0.000001  validation 0.000001
+epoch   4400  train 0.000000  validation 0.000000
+epoch   4500  train 0.000000  validation 0.000000
+epoch   4600  train 0.000000  validation 0.000000
+no improvement in 20 reports, stopping
+best: train 0.000000  validation 0.000000  (start 0.000522 / 0.000525)
+constants written to .tuning/coord/S262/runs/planted_new_k.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:33.28
+	Maximum resident set size (kbytes): 177700
+# emitted term weights and stamp lines (planted_new_k.hpp):
+// K          0.7624
+// error      0.000000 train, 0.000000 validation
+// model      evaluate()'s trace, 1000000 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adam
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    94
+#define KNIGHT  327
+#define BISHOP  308
+#define ROOK    487
+#define QUEEN   716
+constexpr int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {0, 5, 0, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {7, 14, 21, 33, 48};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {11, 19, 30, 45, 70};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -9, -11};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-12, -32, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {28, 17, 9};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {41, 8, 5};  // pair, open, half open
+constexpr int tempo_mg = 23;
+constexpr int tempo_eg = 12;
+
+## (6) full, old (Adam)
+# parent tuner --data full
+engine f57b92f, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7795
+start: train 0.118918  validation 0.119455
+epoch    100  train 0.117745  validation 0.118449  *
+epoch    200  train 0.117740  validation 0.118453
+epoch    300  train 0.117740  validation 0.118453
+epoch    400  train 0.117740  validation 0.118453
+epoch    500  train 0.117740  validation 0.118453
+epoch    600  train 0.117740  validation 0.118453
+epoch    700  train 0.117740  validation 0.118454
+epoch    800  train 0.117740  validation 0.118454
+epoch    900  train 0.117740  validation 0.118454
+epoch   1000  train 0.117740  validation 0.118454
+epoch   1100  train 0.117740  validation 0.118454
+epoch   1200  train 0.117740  validation 0.118454
+epoch   1300  train 0.117740  validation 0.118454
+epoch   1400  train 0.117740  validation 0.118454
+epoch   1500  train 0.117740  validation 0.118454
+epoch   1600  train 0.117740  validation 0.118454
+epoch   1700  train 0.117740  validation 0.118454
+epoch   1800  train 0.117740  validation 0.118454
+epoch   1900  train 0.117740  validation 0.118454
+epoch   2000  train 0.117740  validation 0.118454
+epoch   2100  train 0.117740  validation 0.118453
+no improvement in 20 reports, stopping
+best: train 0.117745  validation 0.118449  (start 0.118918 / 0.119455)
+constants written to .tuning/coord/S262/runs/full_old.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 12:16.23
+	Maximum resident set size (kbytes): 1379072
+# emitted term weights and stamp lines (full_old.hpp):
+// K          0.7795
+// error      0.117745 train, 0.118449 validation
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    105
+#define KNIGHT  336
+#define BISHOP  295
+#define ROOK    489
+#define QUEEN   718
+constexpr int mobility_mg[4] = {-1, 5, 5, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {-1, 5, 0, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {-2, -8, -4, 19, 55};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {13, 17, 44, 73, 98};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -13, -12};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-11, -41, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {35, 63, 23};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {67, -10, 39};  // pair, open, half open
+constexpr int tempo_mg = 37;
+constexpr int tempo_eg = 24;
+
+## (6) full, new, Adam
+# tuner_new --data full
+engine f57b92f-dirty, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.4 s; 0 differ from evaluate(), the clamp binds on 36503
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7795
+start: train 0.118918  validation 0.119455
+epoch    100  train 0.117744  validation 0.118446  *
+epoch    200  train 0.117740  validation 0.118451
+epoch    300  train 0.117740  validation 0.118451
+epoch    400  train 0.117740  validation 0.118451
+epoch    500  train 0.117740  validation 0.118451
+epoch    600  train 0.117740  validation 0.118451
+epoch    700  train 0.117740  validation 0.118451
+epoch    800  train 0.117739  validation 0.118451
+epoch    900  train 0.117739  validation 0.118452
+epoch   1000  train 0.117739  validation 0.118452
+epoch   1100  train 0.117739  validation 0.118452
+epoch   1200  train 0.117739  validation 0.118452
+epoch   1300  train 0.117739  validation 0.118452
+epoch   1400  train 0.117740  validation 0.118450
+epoch   1500  train 0.117739  validation 0.118451
+epoch   1600  train 0.117740  validation 0.118453
+epoch   1700  train 0.117739  validation 0.118452
+epoch   1800  train 0.117739  validation 0.118452
+epoch   1900  train 0.117739  validation 0.118452
+epoch   2000  train 0.117739  validation 0.118451
+epoch   2100  train 0.117740  validation 0.118456
+no improvement in 20 reports, stopping
+best: train 0.117744  validation 0.118446  (start 0.118918 / 0.119455)
+constants written to .tuning/coord/S262/runs/full_new_adam.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 9:03.46
+	Maximum resident set size (kbytes): 1963624
+# emitted term weights and stamp lines (full_new_adam.hpp):
+// K          0.7795
+// error      0.117744 train, 0.118446 validation
+// model      evaluate()'s trace, 10795695 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adam
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    105
+#define KNIGHT  335
+#define BISHOP  295
+#define ROOK    489
+#define QUEEN   718
+constexpr int mobility_mg[4] = {-1, 5, 5, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {-1, 5, -1, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {-2, -8, -4, 19, 55};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {13, 17, 44, 73, 98};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -13, -12};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-11, -41, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {35, 63, 23};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {68, -9, 39};  // pair, open, half open
+constexpr int tempo_mg = 36;
+constexpr int tempo_eg = 24;
+
+## optimiser: full, new, AdaGrad --lr 1
+# tuner_new --data full --optimiser adagrad --lr 1
+engine f57b92f-dirty, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.2 s; 0 differ from evaluate(), the clamp binds on 36503
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7795
+start: train 0.118918  validation 0.119455
+epoch    100  train 0.118109  validation 0.118712  *
+epoch    200  train 0.117948  validation 0.118577  *
+epoch    300  train 0.117874  validation 0.118519  *
+epoch    400  train 0.117833  validation 0.118490  *
+epoch    500  train 0.117809  validation 0.118474  *
+epoch    600  train 0.117793  validation 0.118464  *
+epoch    700  train 0.117782  validation 0.118458  *
+epoch    800  train 0.117774  validation 0.118455  *
+epoch    900  train 0.117768  validation 0.118452  *
+epoch   1000  train 0.117764  validation 0.118451  *
+epoch   1100  train 0.117760  validation 0.118450  *
+epoch   1200  train 0.117757  validation 0.118449  *
+epoch   1300  train 0.117755  validation 0.118449  *
+epoch   1400  train 0.117753  validation 0.118449  *
+epoch   1500  train 0.117752  validation 0.118448  *
+epoch   1600  train 0.117750  validation 0.118448  *
+epoch   1700  train 0.117749  validation 0.118448
+epoch   1800  train 0.117748  validation 0.118448
+epoch   1900  train 0.117747  validation 0.118449
+epoch   2000  train 0.117747  validation 0.118449
+epoch   2100  train 0.117746  validation 0.118449
+epoch   2200  train 0.117745  validation 0.118449
+epoch   2300  train 0.117745  validation 0.118449
+epoch   2400  train 0.117744  validation 0.118449
+epoch   2500  train 0.117744  validation 0.118449
+epoch   2600  train 0.117744  validation 0.118449
+epoch   2700  train 0.117743  validation 0.118449
+epoch   2800  train 0.117743  validation 0.118449
+epoch   2900  train 0.117743  validation 0.118450
+epoch   3000  train 0.117742  validation 0.118450
+epoch   3100  train 0.117742  validation 0.118450
+epoch   3200  train 0.117742  validation 0.118450
+epoch   3300  train 0.117742  validation 0.118450
+epoch   3400  train 0.117742  validation 0.118450
+epoch   3500  train 0.117742  validation 0.118450
+epoch   3600  train 0.117741  validation 0.118450
+no improvement in 20 reports, stopping
+best: train 0.117750  validation 0.118448  (start 0.118918 / 0.119455)
+constants written to .tuning/coord/S262/runs/full_new_adagrad_1.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 14:12.19
+	Maximum resident set size (kbytes): 1963836
+# emitted term weights and stamp lines (full_new_adagrad_1.hpp):
+// K          0.7795
+// error      0.117750 train, 0.118448 validation
+// model      evaluate()'s trace, 10795695 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adagrad
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    105
+#define KNIGHT  334
+#define BISHOP  297
+#define ROOK    490
+#define QUEEN   717
+constexpr int mobility_mg[4] = {-1, 5, 5, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {-1, 4, 0, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {-1, -8, -4, 19, 55};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {13, 17, 44, 73, 99};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -13, -12};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-11, -41, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {39, 57, 22};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {58, -7, 38};  // pair, open, half open
+constexpr int tempo_mg = 36;
+constexpr int tempo_eg = 25;
+
+## optimiser: full, new, AdaGrad --lr 3
+# tuner_new --data full --optimiser adagrad --lr 3
+engine f57b92f-dirty, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.3 s; 0 differ from evaluate(), the clamp binds on 36503
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7795
+start: train 0.118918  validation 0.119455
+epoch    100  train 0.117787  validation 0.118459  *
+epoch    200  train 0.117754  validation 0.118446  *
+epoch    300  train 0.117746  validation 0.118446  *
+epoch    400  train 0.117742  validation 0.118447
+epoch    500  train 0.117741  validation 0.118448
+epoch    600  train 0.117740  validation 0.118449
+epoch    700  train 0.117740  validation 0.118450
+epoch    800  train 0.117740  validation 0.118451
+epoch    900  train 0.117740  validation 0.118451
+epoch   1000  train 0.117740  validation 0.118451
+epoch   1100  train 0.117740  validation 0.118451
+epoch   1200  train 0.117740  validation 0.118452
+epoch   1300  train 0.117740  validation 0.118452
+epoch   1400  train 0.117740  validation 0.118452
+epoch   1500  train 0.117740  validation 0.118452
+epoch   1600  train 0.117740  validation 0.118452
+epoch   1700  train 0.117740  validation 0.118452
+epoch   1800  train 0.117739  validation 0.118452
+epoch   1900  train 0.117739  validation 0.118452
+epoch   2000  train 0.117739  validation 0.118452
+epoch   2100  train 0.117739  validation 0.118452
+epoch   2200  train 0.117739  validation 0.118452
+epoch   2300  train 0.117739  validation 0.118452
+no improvement in 20 reports, stopping
+best: train 0.117746  validation 0.118446  (start 0.118918 / 0.119455)
+constants written to .tuning/coord/S262/runs/full_new_adagrad_3.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 9:26.15
+	Maximum resident set size (kbytes): 1963788
+# emitted term weights and stamp lines (full_new_adagrad_3.hpp):
+// K          0.7795
+// error      0.117746 train, 0.118446 validation
+// model      evaluate()'s trace, 10795695 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adagrad
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    105
+#define KNIGHT  334
+#define BISHOP  296
+#define ROOK    490
+#define QUEEN   718
+constexpr int mobility_mg[4] = {0, 5, 5, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {-1, 4, -1, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {-1, -8, -4, 19, 55};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {13, 17, 44, 73, 98};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -13, -12};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-11, -41, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {33, 61, 23};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {65, -8, 38};  // pair, open, half open
+constexpr int tempo_mg = 36;
+constexpr int tempo_eg = 25;
+
+## optimiser: full, new, AdaGrad --lr 10
+# tuner_new --data full --optimiser adagrad --lr 10
+engine f57b92f-dirty, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.2 s; 0 differ from evaluate(), the clamp binds on 36503
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7795
+start: train 0.118918  validation 0.119455
+epoch    100  train 0.117744  validation 0.118445  *
+epoch    200  train 0.117740  validation 0.118449
+epoch    300  train 0.117740  validation 0.118450
+epoch    400  train 0.117740  validation 0.118451
+epoch    500  train 0.117740  validation 0.118451
+epoch    600  train 0.117740  validation 0.118451
+epoch    700  train 0.117739  validation 0.118451
+epoch    800  train 0.117739  validation 0.118452
+epoch    900  train 0.117739  validation 0.118452
+epoch   1000  train 0.117739  validation 0.118452
+epoch   1100  train 0.117739  validation 0.118452
+epoch   1200  train 0.117739  validation 0.118452
+epoch   1300  train 0.117739  validation 0.118452
+epoch   1400  train 0.117739  validation 0.118452
+epoch   1500  train 0.117739  validation 0.118452
+epoch   1600  train 0.117739  validation 0.118452
+epoch   1700  train 0.117739  validation 0.118452
+epoch   1800  train 0.117739  validation 0.118452
+epoch   1900  train 0.117739  validation 0.118452
+epoch   2000  train 0.117739  validation 0.118452
+epoch   2100  train 0.117739  validation 0.118452
+no improvement in 20 reports, stopping
+best: train 0.117744  validation 0.118445  (start 0.118918 / 0.119455)
+constants written to .tuning/coord/S262/runs/full_new_adagrad_10.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 8:58.63
+	Maximum resident set size (kbytes): 1963728
+# emitted term weights and stamp lines (full_new_adagrad_10.hpp):
+// K          0.7795
+// error      0.117744 train, 0.118445 validation
+// model      evaluate()'s trace, 10795695 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adagrad
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    105
+#define KNIGHT  333
+#define BISHOP  298
+#define ROOK    491
+#define QUEEN   719
+constexpr int mobility_mg[4] = {0, 5, 5, 3};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {-1, 4, -1, -6};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {-1, -8, -3, 19, 56};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {13, 17, 44, 73, 98};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -13, -12};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-11, -41, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {26, 62, 23};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {74, -8, 39};  // pair, open, half open
+constexpr int tempo_mg = 37;
+constexpr int tempo_eg = 24;
+
+## optimiser: full, new, AdaGrad --lr 30
+# tuner_new --data full --optimiser adagrad --lr 30
+engine f57b92f-dirty, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.2 s; 0 differ from evaluate(), the clamp binds on 36503
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7795
+start: train 0.118918  validation 0.119455
+epoch    100  train 0.117776  validation 0.118464  *
+epoch    200  train 0.117756  validation 0.118447  *
+epoch    300  train 0.117753  validation 0.118445  *
+epoch    400  train 0.117752  validation 0.118443  *
+epoch    500  train 0.117750  validation 0.118442  *
+epoch    600  train 0.117749  validation 0.118441  *
+epoch    700  train 0.117749  validation 0.118440  *
+epoch    800  train 0.117748  validation 0.118440  *
+epoch    900  train 0.117747  validation 0.118439  *
+epoch   1000  train 0.117747  validation 0.118439  *
+epoch   1100  train 0.117747  validation 0.118439  *
+epoch   1200  train 0.117746  validation 0.118438  *
+epoch   1300  train 0.117746  validation 0.118438  *
+epoch   1400  train 0.117746  validation 0.118438  *
+epoch   1500  train 0.117745  validation 0.118438  *
+epoch   1600  train 0.117745  validation 0.118438  *
+epoch   1700  train 0.117745  validation 0.118437  *
+epoch   1800  train 0.117745  validation 0.118437  *
+epoch   1900  train 0.117744  validation 0.118437  *
+epoch   2000  train 0.117744  validation 0.118437  *
+epoch   2100  train 0.117744  validation 0.118437  *
+epoch   2200  train 0.117744  validation 0.118437  *
+epoch   2300  train 0.117744  validation 0.118437  *
+epoch   2400  train 0.117744  validation 0.118437  *
+epoch   2500  train 0.117743  validation 0.118437  *
+epoch   2600  train 0.117743  validation 0.118437  *
+epoch   2700  train 0.117743  validation 0.118437  *
+epoch   2800  train 0.117743  validation 0.118437  *
+epoch   2900  train 0.117743  validation 0.118437
+epoch   3000  train 0.117743  validation 0.118436  *
+epoch   3100  train 0.117743  validation 0.118436  *
+epoch   3200  train 0.117743  validation 0.118436  *
+epoch   3300  train 0.117743  validation 0.118436  *
+epoch   3400  train 0.117742  validation 0.118436  *
+epoch   3500  train 0.117742  validation 0.118436
+epoch   3600  train 0.117742  validation 0.118436
+epoch   3700  train 0.117742  validation 0.118436  *
+epoch   3800  train 0.117742  validation 0.118436  *
+epoch   3900  train 0.117742  validation 0.118436
+epoch   4000  train 0.117742  validation 0.118436
+epoch   4100  train 0.117742  validation 0.118436
+epoch   4200  train 0.117742  validation 0.118436  *
+epoch   4300  train 0.117742  validation 0.118436  *
+epoch   4400  train 0.117742  validation 0.118436
+epoch   4500  train 0.117742  validation 0.118436
+epoch   4600  train 0.117742  validation 0.118436
+epoch   4700  train 0.117742  validation 0.118436
+epoch   4800  train 0.117742  validation 0.118436  *
+epoch   4900  train 0.117742  validation 0.118436  *
+epoch   5000  train 0.117742  validation 0.118436
+epoch   5100  train 0.117742  validation 0.118436
+epoch   5200  train 0.117742  validation 0.118436
+epoch   5300  train 0.117742  validation 0.118436
+epoch   5400  train 0.117742  validation 0.118436  *
+epoch   5500  train 0.117742  validation 0.118436  *
+epoch   5600  train 0.117742  validation 0.118436
+epoch   5700  train 0.117741  validation 0.118436  *
+epoch   5800  train 0.117741  validation 0.118436
+epoch   5900  train 0.117741  validation 0.118436
+epoch   6000  train 0.117741  validation 0.118436
+epoch   6100  train 0.117741  validation 0.118436
+epoch   6200  train 0.117741  validation 0.118436
+epoch   6300  train 0.117742  validation 0.118436
+epoch   6400  train 0.117742  validation 0.118436
+epoch   6500  train 0.117742  validation 0.118436
+epoch   6600  train 0.117742  validation 0.118436
+epoch   6700  train 0.117742  validation 0.118436
+epoch   6800  train 0.117741  validation 0.118436
+epoch   6900  train 0.117741  validation 0.118436
+epoch   7000  train 0.117741  validation 0.118436
+epoch   7100  train 0.117741  validation 0.118437
+epoch   7200  train 0.117741  validation 0.118437
+epoch   7300  train 0.117741  validation 0.118437
+epoch   7400  train 0.117741  validation 0.118437
+epoch   7500  train 0.117741  validation 0.118437
+epoch   7600  train 0.117741  validation 0.118437
+epoch   7700  train 0.117741  validation 0.118437
+no improvement in 20 reports, stopping
+best: train 0.117741  validation 0.118436  (start 0.118918 / 0.119455)
+constants written to .tuning/coord/S262/runs/full_new_adagrad_30.hpp
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 34:00.62
+	Maximum resident set size (kbytes): 1963612
+# emitted term weights and stamp lines (full_new_adagrad_30.hpp):
+// K          0.7795
+// error      0.117741 train, 0.118436 validation
+// model      evaluate()'s trace, 10795695 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adagrad
+// gauges     7 of 7 held at the levels this started from
+#define PAWN    105
+#define KNIGHT  342
+#define BISHOP  299
+#define ROOK    487
+#define QUEEN   580
+constexpr int mobility_mg[4] = {0, 5, 5, 0};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {-5, 3, 1, 17};  // knight bishop rook queen
+constexpr int passed_pawn_mg[5] = {-2, -7, -3, 19, 56};  // second rank .. sixth
+constexpr int passed_pawn_eg[5] = {12, 17, 44, 73, 98};  // second rank .. sixth
+constexpr int pawn_structure_mg[3] = {-10, -13, -12};  // isolated doubled backward
+constexpr int pawn_structure_eg[3] = {-11, -41, -8};  // isolated doubled backward
+constexpr int piece_placement_mg[3] = {29, 69, 26};  // pair, open, half open
+constexpr int piece_placement_eg[3] = {85, -17, 35};  // pair, open, half open
+constexpr int tempo_mg = 37;
+constexpr int tempo_eg = 24;
+
+## extraction, idle machine (after the runs above), new tuner --epochs 0
+threads 1 rep 1: trace: 1000000 rows, 24552195 entries (24.55 a row), 3.0 s; 0 differ from evaluate(), the clamp binds on 3315
+threads 1 rep 2: trace: 1000000 rows, 24552195 entries (24.55 a row), 3.0 s; 0 differ from evaluate(), the clamp binds on 3315
+threads 1 rep 3: trace: 1000000 rows, 24552195 entries (24.55 a row), 3.0 s; 0 differ from evaluate(), the clamp binds on 3315
+threads 12 rep 1: trace: 1000000 rows, 24552195 entries (24.55 a row), 0.8 s; 0 differ from evaluate(), the clamp binds on 3315
+threads 12 rep 2: trace: 1000000 rows, 24552195 entries (24.55 a row), 0.8 s; 0 differ from evaluate(), the clamp binds on 3315
+threads 12 rep 3: trace: 1000000 rows, 24552195 entries (24.55 a row), 0.8 s; 0 differ from evaluate(), the clamp binds on 3315
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.1 s; 0 differ from evaluate(), the clamp binds on 36503
+   Elapsed (wall clock) time (h:mm:ss or m:ss): 0:24.60
+   Maximum resident set size (kbytes): 1963444
+trace: 10795695 rows, 266907900 entries (24.72 a row), 32.3 s; 0 differ from evaluate(), the clamp binds on 36503
+   Elapsed (wall clock) time (h:mm:ss or m:ss): 1:26.96
+   Maximum resident set size (kbytes): 1962396
+# the last two trace lines: the full corpus at 12 threads, then at one

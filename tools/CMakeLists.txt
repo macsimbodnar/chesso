@@ -13,11 +13,13 @@ target_include_directories(datagen PRIVATE ../src)
 target_link_libraries(datagen PRIVATE chesso_engine Threads::Threads)
 
 # The evaluation tuner for S028. Reads eval_tables.hpp for its starting point
-# and never links the search: the model it fits is evaluate(), in floating
-# point, which is what makes a pass over a million positions cheap.
+# and never runs the search. Since S262 it links the engine's trace build
+# (src/eval_trace.hpp): every row is put through evaluate() once at load, and
+# the model it fits is the sum of what evaluate() recorded, which is what makes
+# a pass over ten million positions cheap.
 add_executable(tuner tuner.cpp)
 target_include_directories(tuner PRIVATE ../src)
-target_link_libraries(tuner PRIVATE chesso_engine Threads::Threads)
+target_link_libraries(tuner PRIVATE chesso_engine_trace Threads::Threads)
 
 # S077. The commit an emitted table names is stamped at **build** time, not at
 # configure time: a sha captured by `cmake -S . -B build` goes stale on the next

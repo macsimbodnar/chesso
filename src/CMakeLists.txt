@@ -41,3 +41,22 @@ endif()
 
 add_executable(chesso main.cpp)
 target_link_libraries(chesso PRIVATE chesso_engine)
+
+# S262. The trace build: the same sources with CHESSO_TRACE defined, so that
+# evaluate() records the coefficient of every weight it applies
+# (src/eval_trace.hpp). A library of its own rather than a build option,
+# because what links it is tools/tuner and the tests of its model, which every
+# build directory builds and the gate runs; no engine binary links it, so the
+# switch is compiled out of `chesso` in every configuration, release and tune
+# included, and chesso_engine above compiles exactly as before. PUBLIC so a
+# target linking it sees the trace API, and CHESSO_TUNE follows the engine's
+# for the ODR reason written over that block.
+add_library(chesso_engine_trace STATIC ${SRCS} openings_embedded.S)
+target_include_directories(chesso_engine_trace PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_compile_definitions(chesso_engine_trace PUBLIC CHESSO_TRACE)
+add_dependencies(chesso_engine_trace chesso_build_info)
+target_include_directories(chesso_engine_trace PRIVATE ${CHESSO_BUILD_INFO_DIR})
+
+if(CHESSO_TUNE)
+     target_compile_definitions(chesso_engine_trace PUBLIC CHESSO_TUNE)
+endif()

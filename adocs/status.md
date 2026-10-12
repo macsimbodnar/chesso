@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-12, by hand.
 
+## 2026-10-12: S262 done -- the tuner fits evaluate()'s own trace
+
+A trace build (`CHESSO_TRACE`, compiled only into the `chesso_engine_trace`
+library, never into `chesso`) has `evaluate()` record every coefficient it
+applies; the tuner loads every row through it and refuses a corpus where the
+trace disagrees with `evaluate()` -- 0 of 10795695 rows do. The engine is
+untouched: `evaluation.cpp`'s object is byte-identical, bench 3872032.
+Pre-registered held-out comparison passed (0.118446 new against 0.118449
+old, tolerance 1e-5), so the fit's mirror path retired; Adam stays default.
+Recorded beside the result: the pre-registered exact planted recovery missed
+by 1 on one weight (K's scale; S100's +/-1 rule holds, the parent emits the
+same number), and the clamp is now differentiated exactly, reversing the old
+gradient (0.338 % of rows bind; S039 and S122 retire the clamp). Nonlinear
+groups have per-side records, tested on a synthetic group; S122 will want
+its own step size. `feature_audit` and `truncation_scan` still read the
+mirror: **S276** (filler, agent lane) moves them and deletes it. Fast check:
+no code defect, seven record and comment items fixed before commit.
+**Next:** S263 (shared attack sets, agent lane) while S119's SPRT waits on
+the owner's harness-`Hash` ruling.
+
 ## 2026-10-12: S275 done -- the tuner holds the evaluation's null directions still
 
 Of S134's 39 null directions, the seven a fit can walk along are now held:

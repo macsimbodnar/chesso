@@ -9,7 +9,8 @@
 // of exactly [0, PARAM_COUNT).
 //
 // A header rather than a second translation unit because free_mask() has no
-// state and needs nothing but the layout constants in eval_model.hpp. The
+// state and needs nothing but the layout constants, in tools/tuner_layout.hpp
+// since S262 (tools/eval_model.hpp until then). The
 // using-declarations below are what let the function body stay byte-identical
 // to the one that lived in tuner.cpp; they are visible as tuner_groups::MG_BASE
 // and so on, which is a small price for a move that changed no line of the
@@ -21,21 +22,21 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "eval_model.hpp"
+#include "tuner_layout.hpp"
 
 namespace tuner_groups
 {
 
-using eval_model::EG_BASE;
-using eval_model::KS_MG_BASE;
-using eval_model::MATERIAL_COUNT;
-using eval_model::MG_BASE;
-using eval_model::MOB_MG_BASE;
-using eval_model::PARAM_COUNT;
-using eval_model::PL_MG_BASE;
-using eval_model::PP_MG_BASE;
-using eval_model::PS_MG_BASE;
-using eval_model::TEMPO_MG_BASE;
+using tuner_layout::EG_BASE;
+using tuner_layout::KS_MG_BASE;
+using tuner_layout::MATERIAL_COUNT;
+using tuner_layout::MG_BASE;
+using tuner_layout::MOB_MG_BASE;
+using tuner_layout::PARAM_COUNT;
+using tuner_layout::PL_MG_BASE;
+using tuner_layout::PP_MG_BASE;
+using tuner_layout::PS_MG_BASE;
+using tuner_layout::TEMPO_MG_BASE;
 
 
 inline constexpr const char* GROUP_LIST =
@@ -51,8 +52,8 @@ inline constexpr const char* GROUP_LIST =
 // measures two changes at once and its number says nothing about either. One
 // change at a time; DEC-020 is what that rule cost to learn.
 //
-// Each group is one contiguous range because eval_model.hpp lays the vector out
-// that way.
+// Each group is one contiguous range because tools/tuner_layout.hpp lays the
+// vector out that way.
 inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
 {
   size_t first = 0;

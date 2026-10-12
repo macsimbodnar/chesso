@@ -1,0 +1,37 @@
+# S262: mutants against the trace tests, each applied alone, the test target
+# rebuilt, run, and the file restored (mtime refreshed so the next build
+# recompiles it). 2026-10-12, build/ (Release), on the final tree. Every one
+# red.
+#
+#   M1  pawn structure put on its own taper (SITE_TEMPO) in term_layout()
+#   M2  piece placement's trace coefficient negated in evaluate_pawns()
+#   M3  tempo's trace coefficient recorded as +1 whoever is to move
+#   M4  gradient() ignores the clamp (the mirror's treatment)
+#   M5  a nonlinear group's Black side added instead of subtracted in gradient()
+#   M6  derive_seed() seeds every input at zero
+#   M7  descend() without the gauge hold
+#   M8  Black's pieces traced on unmirrored table squares
+#   M9  load() appends each even row's neighbour's trace (rows out of order)
+#   M10 the king-zone incidences' trace call removed
+#   M11 sum_record()'s refusals no longer clear the thread-local summing buffer
+#       (added with the fast check's refusal case)
+#
+# M2 and M3 are red only in "every coefficient is the count its index names"
+# (and M3 in the both-ways coverage): piece placement and tempo ship at zero, so
+# the identity cannot see a wrong coefficient there -- the case that exists for
+# exactly that. M1 is red only in the identity: the site is the one thing the
+# trace does not record.
+#
+# test, verdict | doctest summary | failing cases
+M1_structure_own_taper test_eval_trace RED | ['[doctest] test cases:       7 |       6 passed |   1 failed | 0 skipped'] | ['the trace reconstructs evaluate() exactly, clamp included']
+M2_placement_sign test_eval_trace RED | ['[doctest] test cases:       7 |       6 passed |    1 failed | 0 skipped'] | ['every coefficient is the count its index names']
+M3_tempo_unsigned test_eval_trace RED | ['[doctest] test cases:       7 |       5 passed |    2 failed | 0 skipped'] | ['every coefficient is the count its index names', 'the positions move every term both ways']
+M4_clamp_ignored test_tuner_gradient RED | ['[doctest] test cases:    13 |    12 passed | 1 failed | 0 skipped'] | ["the clamp's derivative is exact where it binds"]
+M5_group_black_sign test_tuner_gradient RED | ['[doctest] test cases:    13 |    11 passed |  2 failed | 0 skipped'] | ['a nonlinear group stuck at zero is recovered from its derived seed', "a nonlinear group's gradient is the derivative of the error"]
+M6_seed_zero test_tuner_gradient RED | ['[doctest] test cases:    13 |    12 passed |  1 failed | 0 skipped'] | ['a nonlinear group stuck at zero is recovered from its derived seed']
+M7_no_hold test_tuner_gradient RED | ['[doctest] test cases:    13 |    12 passed |  1 failed | 0 skipped'] | ['the fit holds every gauge still and no score sees the hold']
+M8_black_unmirrored test_eval_trace RED | ['[doctest] test cases:       7 |       4 passed |     3 failed | 0 skipped'] | ['every coefficient is the count its index names', 'the smooth score is within the truncation bound of the exact one', 'the trace reconstructs evaluate() exactly, clamp included']
+M8_black_unmirrored test_tuner_gradient RED | ['[doctest] test cases:    13 |     3 passed | 10 failed | 0 skipped'] | ['a planted vector comes back through the trace path', 'adagrad leaves frozen and unreached parameters bit-identical', "every stored row is its FEN's trace, at any thread count", 'gradient() is the derivative of the error it descends', "load() tapers on the engine's phase, not the stored column", "moving along a gauge moves no fixture row's score", "the clamp's derivative is exact where it binds", 'the fit holds every gauge still and no score sees the hold', "the fixture corpus loads through the tuner's trace", 'the fixture sits clear of the clamp at the shipped constants']
+M9_rows_out_of_order test_tuner_gradient RED | ['[doctest] test cases:    13 |     4 passed |  9 failed | 0 skipped'] | ['adagrad leaves frozen and unreached parameters bit-identical', "every stored row is its FEN's trace, at any thread count", 'gradient() is the derivative of the error it descends', "load() tapers on the engine's phase, not the stored column", "moving along a gauge moves no fixture row's score", "the clamp's derivative is exact where it binds", 'the fit holds every gauge still and no score sees the hold', "the fixture corpus loads through the tuner's trace", 'the fixture sits clear of the clamp at the shipped constants']
+M10_ks_zone_dropped test_eval_trace RED | ['[doctest] test cases:       7 |       4 passed |    3 failed | 0 skipped'] | ['every coefficient is the count its index names', 'the positions move every term both ways', 'the trace reconstructs evaluate() exactly, clamp included']
+M11_refusal_leaves_buffer test_eval_trace RED | 1 of 7 cases failed | ['a record the dataset cannot hold is refused and leaves nothing'] (3 of its 5 refusals: index outside its term, per-side without a group, int16; overflow and no phase refuse before anything is summed)

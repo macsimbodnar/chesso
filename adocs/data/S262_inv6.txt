@@ -1,0 +1,41 @@
+# S262: INV-6 for the trace calls in src/evaluation.cpp, and their cost in the
+# release build. Parent: f57b92f, built in the same worktree before any S262 edit
+# (build/ Release native, build-tune/ CHESSO_TUNE); S262: the same directories
+# after. 2026-10-12, i7-8700K, g++ 13.3.
+#
+# 1. Objects. src/evaluation.cpp's object, the only engine unit the step edits
+#    (src/evaluation.hpp's change is a comment):
+#      build/       cmp evaluation.cpp.o parent S262 -> byte-identical
+#      build-tune/  cmp evaluation.cpp.o parent S262 -> byte-identical
+# 2. The chesso binaries. objdump -d --no-show-raw-insn -j .text, RIP-relative
+#    displacements and their address comments normalised away: no line differs,
+#    56277 instructions at the same addresses in build/, 57650 in build-tune/. The
+#    raw diffs are 344 lines in build/, every one a displacement into .rodata,
+#    which moved because `id name` reads "f57b92f-dirty" against "f57b92f".
+#    Per function, addresses and displacements stripped, md5 of the listing:
+#      game_phase(board_t const*)                                    6 insns  parent ffe8d38f  S262 ffe8d38f
+#      evaluate_lazy(board_t const*, int, int, bool*)               52 insns  parent f27a69de  S262 f27a69de
+#      evaluate_cheap(board_t const*)                              196 insns  parent ef0141c0  S262 ef0141c0
+#      void evaluate_pawns<true>(board_t const*, int*, int (*) [5  305 insns  parent 8a4af6d0  S262 8a4af6d0
+#      evaluate_expensive_terms(board_t const*, int*, int*)         35 insns  parent 2b79caa1  S262 2b79caa1
+#      int evaluate_mobility_and_king_safety<true>(board_t const*  457 insns  parent ef454cf6  S262 ef454cf6
+#      evaluate(board_t const*)                                     14 insns  parent 7d1cf486  S262 7d1cf486
+#      evaluate_expensive(board_t const*)                          426 insns  parent 55d1e208  S262 55d1e208
+#    evaluate_pawns<false> and evaluate_mobility_and_king_safety<false> are
+#    inlined into evaluate_cheap() and evaluate_expensive(), as before.
+#    Identical object code subsumes a timing: nothing was timed (DEC-266 would
+#    read a zero at best).
+# 3. bench, bench 12, tools/search_bench.py at depths 9 and 12, build/ binary.
+#    Every info line identical with time, nps and hashfull stripped; only the
+#    final nps figure differs.
+#      bench     parent: 3872032 nodes 5186595 nps   S262: 3872032 nodes 3594830 nps   (121 lines)
+#      bench 12  parent: 1730486 nodes 5700338 nps   S262: 1730486 nodes 3656321 nps   (105 lines)
+#      build-tune bench S262: 3872032 nodes 3077647 nps
+#      search_bench depth 9 (position, nodes, best move), parent | S262:
+#        midgame 32829 c3d5 | midgame 32829 c3d5
+#        kiwipete 69892 e2a6 | kiwipete 69892 e2a6
+#        tactical 25174 d7c8q | tactical 25174 d7c8q
+#      search_bench depth 12 (position, nodes, best move), parent | S262:
+#        midgame 68090 c3d5 | midgame 68090 c3d5
+#        kiwipete 246712 d5e6 | kiwipete 246712 d5e6
+#        tactical 114555 d7c8q | tactical 114555 d7c8q

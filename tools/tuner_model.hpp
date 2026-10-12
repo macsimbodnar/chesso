@@ -1,23 +1,18 @@
 #pragma once
-// The tuner's dataset and the three functions that read it: load(), the forward
-// model over one row, and the full-batch gradient. S100.
+// The mirror's dataset and the two functions that read it: load(), and the
+// forward model over one row. S100.
 //
-// Moved out of tools/tuner.cpp so that tests/test_tuner_gradient.cpp and
-// tools/feature_audit.cpp can reach them. The same reason S041 moved GROUP_LIST
-// into tools/tuner_groups.hpp: a function nothing outside one translation unit
-// can call is a function nothing outside it can check, and the gradient is the
-// one piece of the fit no test had ever touched -- the comments in gradient()
-// record three separate occasions when a term's block was forgotten and the fit
-// silently returned the weights exactly as it was handed them.
+// Until S262 this was the tuner's model, and it held the fit's error, its
+// gradient and its step too. S262 moved the tuner onto the engine's own trace
+// (tools/tuner_trace.hpp) and its step into tools/tuner_optimiser.hpp, and
+// retired the mirror's error_range() and gradient() with the old path once
+// S262's held-out comparison held. What is left is what tools/feature_audit
+// reads: the mirror's features (tools/eval_model.hpp) packed per row, which its
+// identities, its columns and its `--plant` labels are built from. Its loader's
+// cases moved with it to tests/test_eval_model.cpp.
 //
-// Nothing here changed when it moved. The fit is the same fit: `tuner` over the
-// same corpus at the same seed, thread count and epoch budget prints identical
-// epoch reports before and after, which is the check DEV_MANUAL.md already
-// documents for --freeze at its default.
-//
-// S275 moved the fourth piece here, the step: Adam's update and the gauge hold
-// after it, so a test can run the fit's own descent and see whether it walks
-// along a null direction.
+// load() refuses a row without one king a side, as load_FEN() does (S275): the
+// king gauges feature_audit checks are null only there.
 #include <cinttypes>
 #include <cmath>
 #include <cstdio>
@@ -25,7 +20,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <thread>
 #include <vector>
 #include "eval_model.hpp"
 #include "tuner_groups.hpp"
@@ -36,30 +30,10 @@ namespace tuner_model
 {
 
 using eval_model::BLACK_BIT;
-using eval_model::EG_BASE;
 using eval_model::KING_SAFETY_COUNT;
-using eval_model::KS_EG_BASE;
-using eval_model::KS_MG_BASE;
-using eval_model::MATERIAL_COUNT;
-using eval_model::MG_BASE;
-using eval_model::MOB_EG_BASE;
-using eval_model::MOB_MG_BASE;
-using eval_model::MOBILITY_COUNT;
-using eval_model::PARAM_COUNT;
 using eval_model::PASSED_PAWN_COUNT;
 using eval_model::PAWN_STRUCTURE_COUNT;
 using eval_model::PIECE_PLACEMENT_COUNT;
-using eval_model::PL_EG_BASE;
-using eval_model::PL_MG_BASE;
-using eval_model::PP_EG_BASE;
-using eval_model::PP_MG_BASE;
-using eval_model::PS_EG_BASE;
-using eval_model::PS_MG_BASE;
-using eval_model::TEMPO_EG_BASE;
-using eval_model::TEMPO_MG_BASE;
-
-using tuner_target::LN10_OVER_400;
-using tuner_target::sigmoid;
 
 
 struct dataset_t
@@ -318,258 +292,5 @@ inline double evaluate_position(const dataset_t& data,
                               passed, structure, placement, data.tempo[index]);
 }
 
-
-// Mean squared error over [first, last), against `target`. Which target that is
-// is the caller's choice and it is load bearing: the blended one is what the
-// fit descends, the game result alone is what compares two lambdas. DEC-064.
-inline double error_range(const dataset_t& data,
-                          const double* params,
-                          double k,
-                          const std::vector<uint32_t>& index,
-                          size_t first,
-                          size_t last,
-                          unsigned threads,
-                          const std::vector<double>& target)
-{
-  if (last <= first) { return 0.0; }
-
-  const size_t count = last - first;
-  std::vector<double> partial(threads, 0.0);
-  std::vector<std::thread> workers;
-
-  for (unsigned t = 0; t < threads; ++t) {
-    workers.emplace_back([&, t]() {
-      double sum = 0.0;
-
-      for (size_t i = first + t; i < last; i += threads) {
-        const size_t position = index[i];
-        const double s = evaluate_position(data, position, params);
-        const double diff = target[position] - sigmoid(s, k);
-        sum += diff * diff;
-      }
-
-      partial[t] = sum;
-    });
-  }
-
-  for (std::thread& worker : workers) {
-    worker.join();
-  }
-
-  double total = 0.0;
-  for (const double value : partial) {
-    total += value;
-  }
-
-  return total / static_cast<double>(count);
-}
-
-
-// One full-batch gradient over the training range, against the training target.
-inline void gradient(const dataset_t& data,
-                     const double* params,
-                     double k,
-                     const std::vector<uint32_t>& index,
-                     size_t first,
-                     size_t last,
-                     unsigned threads,
-                     const std::vector<double>& target,
-                     std::vector<double>* out)
-{
-  const size_t count = last - first;
-  std::vector<std::vector<double>> partial(
-      threads, std::vector<double>(PARAM_COUNT, 0.0));
-  std::vector<std::thread> workers;
-
-  for (unsigned t = 0; t < threads; ++t) {
-    workers.emplace_back([&, t]() {
-      std::vector<double>& grad = partial[t];
-
-      for (size_t i = first + t; i < last; i += threads) {
-        const size_t position = index[i];
-        const double phase = data.phase[position];
-        const double mg_weight = phase / GAME_PHASE_MAX;
-        const double eg_weight = (GAME_PHASE_MAX - phase) / GAME_PHASE_MAX;
-
-        const double s = evaluate_position(data, position, params);
-        const double sig = sigmoid(s, k);
-
-        // d/ds of (target - sigma)^2, chained through the sigmoid. The target
-        // is a constant of the row whatever lambda built it from, so the blend
-        // changes this line's number and not its shape. S075.
-        const double outer = -2.0 * (target[position] - sig) * sig *
-                             (1.0 - sig) * k * LN10_OVER_400;
-
-        for (uint32_t j = data.offsets[position];
-             j < data.offsets[position + 1]; ++j) {
-          const uint16_t code = data.pieces[j];
-          const double sign = (code & BLACK_BIT) ? -1.0 : 1.0;
-          const size_t square = code & ~BLACK_BIT;
-          const size_t type = square / 64;
-
-          if (type < MATERIAL_COUNT) { grad[type] += outer * sign; }
-
-          grad[MG_BASE + square] += outer * sign * mg_weight;
-          grad[EG_BASE + square] += outer * sign * eg_weight;
-        }
-
-        // Mobility. The count is a property of the position, so the derivative
-        // with respect to a weight is just that count, tapered. Forgetting this
-        // block is a silent failure and it happened: the forward model was
-        // extended first and a 20-epoch smoke run returned the eight weights
-        // exactly as they started, because nothing was pushing them.
-        //
-        // The clamp in the model is ignored here. It binds essentially never --
-        // the term's maximum over 149084 real positions was 143 against a bound
-        // of 150 -- and treating the boundary as flat would stop the fit moving
-        // a weight it should move.
-        for (size_t m = 0; m < MOBILITY_COUNT; ++m) {
-          const double count = data.mobility[position * 4 + m];
-
-          grad[MOB_MG_BASE + m] += outer * count * mg_weight;
-          grad[MOB_EG_BASE + m] += outer * count * eg_weight;
-        }
-
-        // King safety, the same shape and the same trap: the model was extended
-        // first and without this block the eighteen weights come back exactly
-        // as they were handed in. The clamp is ignored here for the reason
-        // above, and it now bounds both terms together.
-        for (size_t s = 0; s < KING_SAFETY_COUNT; ++s) {
-          const double count =
-              data.king_safety[position * KING_SAFETY_COUNT + s];
-
-          grad[KS_MG_BASE + s] += outer * count * mg_weight;
-          grad[KS_EG_BASE + s] += outer * count * eg_weight;
-        }
-
-        // Passed pawns, the same shape and the same trap a third time. No
-        // clamp to ignore here: the term is part of evaluate_cheap(), on the
-        // near side of the lazy margin, so the model does not clamp it either.
-        for (size_t p = 0; p < PASSED_PAWN_COUNT; ++p) {
-          const double count =
-              data.passed_pawn[position * PASSED_PAWN_COUNT + p];
-
-          grad[PP_MG_BASE + p] += outer * count * mg_weight;
-          grad[PP_EG_BASE + p] += outer * count * eg_weight;
-        }
-
-        // Pawn structure, the same shape and the same trap a fourth time, and
-        // no clamp to ignore for the same reason: the term is part of
-        // evaluate_cheap(), on the near side of the lazy margin.
-        for (size_t p = 0; p < PAWN_STRUCTURE_COUNT; ++p) {
-          const double count =
-              data.pawn_structure[position * PAWN_STRUCTURE_COUNT + p];
-
-          grad[PS_MG_BASE + p] += outer * count * mg_weight;
-          grad[PS_EG_BASE + p] += outer * count * eg_weight;
-        }
-
-        // Piece placement, the same shape and the same trap a fifth time, and
-        // no clamp to ignore for the same reason: the term is part of
-        // evaluate_cheap(), on the near side of the lazy margin.
-        for (size_t p = 0; p < PIECE_PLACEMENT_COUNT; ++p) {
-          const double count =
-              data.piece_placement[position * PIECE_PLACEMENT_COUNT + p];
-
-          grad[PL_MG_BASE + p] += outer * count * mg_weight;
-          grad[PL_EG_BASE + p] += outer * count * eg_weight;
-        }
-
-        // Tempo, the same shape and the same trap a sixth time, and no clamp
-        // to ignore for the same reason: the term is part of evaluate_cheap(),
-        // on the near side of the lazy margin. No loop, because there is one
-        // weight per table and the feature is the position's own +1 or -1.
-        const double tempo = data.tempo[position];
-
-        grad[TEMPO_MG_BASE] += outer * tempo * mg_weight;
-        grad[TEMPO_EG_BASE] += outer * tempo * eg_weight;
-      }
-    });
-  }
-
-  for (std::thread& worker : workers) {
-    worker.join();
-  }
-
-  out->assign(PARAM_COUNT, 0.0);
-
-  for (const std::vector<double>& part : partial) {
-    for (size_t i = 0; i < PARAM_COUNT; ++i) {
-      (*out)[i] += part[i];
-    }
-  }
-
-  for (size_t i = 0; i < PARAM_COUNT; ++i) {
-    (*out)[i] /= static_cast<double>(count);
-  }
-}
-
-
-// Adam. Plain gradient descent needs a step size per parameter here: a pawn
-// square that appears in every position and a king square that appears in a
-// handful do not want the same one. Moved from tools/tuner.cpp at S275, its
-// arithmetic unchanged.
-struct adam_t
-{
-  std::vector<double> moment = std::vector<double>(PARAM_COUNT, 0.0);
-  std::vector<double> velocity = std::vector<double>(PARAM_COUNT, 0.0);
-  int epoch = 0;
-};
-
-
-// One Adam step over the parameters `mask` leaves free, and nothing else: the
-// plain update, with no gauge held. The tuner calls descend() below; this is
-// the half a test calls to see the walk the hold exists to stop.
-inline void adam_update(const std::vector<double>& grad,
-                        const std::vector<uint8_t>& mask,
-                        double lr,
-                        adam_t* adam,
-                        double* params)
-{
-  const double beta1 = 0.9;
-  const double beta2 = 0.999;
-  const double epsilon = 1e-8;
-
-  adam->epoch++;
-
-  const double correction1 = 1.0 - std::pow(beta1, adam->epoch);
-  const double correction2 = 1.0 - std::pow(beta2, adam->epoch);
-
-  for (size_t i = 0; i < PARAM_COUNT; ++i) {
-    // A frozen parameter is left out of the update entirely rather than having
-    // its gradient zeroed, because a zero gradient does not mean a zero step:
-    // Adam divides a decaying moment by a decaying velocity and keeps moving on
-    // what it accumulated before. Skipping the whole iteration leaves moment
-    // and velocity at zero too, so the parameter comes out bit-identical to
-    // what it went in as and the emitted file is one change.
-    if (!mask[i]) { continue; }
-
-    adam->moment[i] = beta1 * adam->moment[i] + (1.0 - beta1) * grad[i];
-    adam->velocity[i] =
-        beta2 * adam->velocity[i] + (1.0 - beta2) * grad[i] * grad[i];
-
-    const double m = adam->moment[i] / correction1;
-    const double v = adam->velocity[i] / correction2;
-
-    params[i] -= lr * m / (std::sqrt(v) + epsilon);
-  }
-}
-
-
-// The step the tuner takes: Adam, then every gauge the mask frees put back at
-// the level `start` had. The hold moves only along null directions, so the
-// evaluation of every row -- and with it every gradient and every reported
-// error after this step -- is what Adam alone would have produced, to the last
-// bits of rounding. S275.
-inline void descend(const std::vector<double>& grad,
-                    const std::vector<uint8_t>& mask,
-                    const double* start,
-                    double lr,
-                    adam_t* adam,
-                    double* params)
-{
-  adam_update(grad, mask, lr, adam, params);
-  tuner_groups::hold_gauges(tuner_groups::held_gauges(mask), start, params);
-}
 
 }  // namespace tuner_model

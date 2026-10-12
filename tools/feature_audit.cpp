@@ -295,9 +295,10 @@ double r_squared(const std::vector<double>& y,
 //
 // S134. One row of the design the tuner descends: GAME_PHASE_MAX times the
 // derivative of eval_model::evaluate() with respect to every parameter, the
-// stage-two clamp ignored exactly as tuner_model::gradient() ignores it. The
-// scale is what keeps every entry an integer -- the taper weights are phase /
-// 24 and (24 - phase) / 24 -- so the Gram matrix below is summed exactly.
+// stage-two clamp ignored exactly as tuner_model::gradient() ignored it until
+// S262. The scale is what keeps every entry an integer -- the taper weights are
+// phase / 24 and (24 - phase) / 24 -- so the Gram matrix below is summed
+// exactly.
 struct design_row_t
 {
   std::vector<uint32_t> index;  // ascending, no repeats

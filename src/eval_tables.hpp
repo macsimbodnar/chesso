@@ -197,7 +197,7 @@ static constexpr int psqt_eg[6][64] = {
 // The two tables above packed into one, S117, which is what the accumulator
 // hooks below read: one load and one add per piece where there were two. The
 // plain tables stay the source of truth -- tools/tuner writes them and
-// tools/eval_model.hpp reads them -- and this one is derived at compile time,
+// tools/tuner_layout.hpp reads them -- and this one is derived at compile time,
 // so the two cannot disagree.
 static constexpr std::array<std::array<score_t, 64>, 6> psqt_score = [] {
   std::array<std::array<score_t, 64>, 6> packed{};

@@ -22,17 +22,21 @@
 // the game result -- not against the training objective -- is what compares one
 // lambda with another. DEC-064.
 //
-// It does not run the search. The model below reproduces evaluate() in floating
-// point, which is what makes the fit a linear problem and lets a full pass over
-// a million positions cost milliseconds instead of a million searches:
+// It does not run the search. Since S262 it does not re-implement the
+// evaluation either: it links the engine's trace build, runs evaluate() once on
+// every row, and keeps the coefficient of every weight evaluate() applied
+// (tools/tuner_trace.hpp, src/eval_trace.hpp). The score it fits is a sum over
+// those records, which is what keeps a full pass over ten million positions
+// under a second instead of ten million searches:
 //
-//   score_white = sum(sign * piece_value[type])
-//               + (sum(sign * psqt_mg[type][sq]) * phase
-//                  + sum(sign * psqt_eg[type][sq]) * (24 - phase)) / 24
+//   score_white = sum(coef * piece_value) + sum over each taper of
+//                 (sum(coef * w_mg) * phase + sum(coef * w_eg) * (24 - phase))
+//                 / 24, mobility plus king safety clamped to the lazy margin
 //
-// with `sq` mirrored by xor 56 for a black piece and `sign` negative for one,
-// exactly as eval_add_piece() does it. The engine divides in integers and
-// truncates, so an engine score and a tuner score can differ by a centipawn.
+// Every row is also scored the engine's way -- integer weights, truncating
+// tapers -- and the run refuses a corpus where that differs from evaluate() on
+// a single row. The fit itself descends the untruncated form, which differs
+// from the engine by under a centipawn per taper that rounds.
 //
 // The parameterisation is degenerate on purpose: adding c to every square of
 // psqt_mg[t] and psqt_eg[t] is the same evaluation as adding c to
@@ -67,37 +71,37 @@
 #include <vector>
 #include "chesso_build_info.hpp"
 #include "corpus_hash.hpp"
-#include "eval_model.hpp"
 #include "tuner_groups.hpp"
-#include "tuner_model.hpp"
+#include "tuner_layout.hpp"
+#include "tuner_optimiser.hpp"
 #include "tuner_split.hpp"
 #include "tuner_target.hpp"
+#include "tuner_trace.hpp"
 
 namespace
 {
 
-using eval_model::BLACK_BIT;
-using eval_model::EG_BASE;
-using eval_model::KING_SAFETY_COUNT;
-using eval_model::KS_EG_BASE;
-using eval_model::KS_MG_BASE;
-using eval_model::MATERIAL_COUNT;
-using eval_model::MG_BASE;
-using eval_model::MOB_EG_BASE;
-using eval_model::MOB_MG_BASE;
-using eval_model::MOBILITY_COUNT;
-using eval_model::PARAM_COUNT;
-using eval_model::PASSED_PAWN_COUNT;
-using eval_model::PAWN_STRUCTURE_COUNT;
-using eval_model::PIECE_PLACEMENT_COUNT;
-using eval_model::PL_EG_BASE;
-using eval_model::PL_MG_BASE;
-using eval_model::PP_EG_BASE;
-using eval_model::PP_MG_BASE;
-using eval_model::PS_EG_BASE;
-using eval_model::PS_MG_BASE;
-using eval_model::TEMPO_EG_BASE;
-using eval_model::TEMPO_MG_BASE;
+using tuner_layout::EG_BASE;
+using tuner_layout::KING_SAFETY_COUNT;
+using tuner_layout::KS_EG_BASE;
+using tuner_layout::KS_MG_BASE;
+using tuner_layout::MATERIAL_COUNT;
+using tuner_layout::MG_BASE;
+using tuner_layout::MOB_EG_BASE;
+using tuner_layout::MOB_MG_BASE;
+using tuner_layout::MOBILITY_COUNT;
+using tuner_layout::PARAM_COUNT;
+using tuner_layout::PASSED_PAWN_COUNT;
+using tuner_layout::PAWN_STRUCTURE_COUNT;
+using tuner_layout::PIECE_PLACEMENT_COUNT;
+using tuner_layout::PL_EG_BASE;
+using tuner_layout::PL_MG_BASE;
+using tuner_layout::PP_EG_BASE;
+using tuner_layout::PP_MG_BASE;
+using tuner_layout::PS_EG_BASE;
+using tuner_layout::PS_MG_BASE;
+using tuner_layout::TEMPO_EG_BASE;
+using tuner_layout::TEMPO_MG_BASE;
 
 // Both moved to tools/tuner_groups.hpp at S041 so that
 // tests/test_tuner_groups.cpp can reach them. Imported under their old names so
@@ -110,23 +114,19 @@ using tuner_groups::GROUP_LIST;
 // scored through and the sigmoid the blended label is built from are one
 // function. Imported under their old names so the call sites below are
 // unchanged.
-using tuner_target::LN10_OVER_400;
 using tuner_target::sigmoid;
 
 
-// The dataset, load(), the forward model over one row, error_range() and the
-// full-batch gradient moved to tools/tuner_model.hpp at S100 so that a test and
-// tools/feature_audit.cpp can reach them -- the gradient in particular was the
-// one piece of the fit nothing outside this file could call, and its own
-// comments record three times a term block was forgotten there. Imported under
-// their old names so the call sites below are unchanged.
-using tuner_model::adam_t;
-using tuner_model::dataset_t;
-using tuner_model::descend;
-using tuner_model::error_range;
-using tuner_model::evaluate_position;
-using tuner_model::gradient;
-using tuner_model::load;
+// The dataset, its load, the score over one row, error_range() and the
+// full-batch gradient: tools/tuner_trace.hpp since S262, read off the engine's
+// own trace (tools/tuner_model.hpp from S100, over the hand-written mirror in
+// tools/eval_model.hpp). The step, the optimiser and the gauge hold: in
+// tools/tuner_optimiser.hpp. Imported under their old names so the call sites
+// below are unchanged.
+using tuner_optimiser::descend;
+using tuner_trace::dataset_t;
+using tuner_trace::error_range;
+using tuner_trace::gradient;
 
 
 // Every hardware thread the machine has. DEC-050 sets the policy at all of
@@ -159,7 +159,9 @@ struct options_t
   std::string freeze;  // empty means nothing is held, the behaviour before S065
   double k = 0.0;      // 0 means fit it
   double lambda = 0.0;  // 0 is the game outcome alone, the fit before S075
-  double lr = 1.0;
+  tuner_optimiser::kind_t optimiser = tuner_optimiser::ADAM;
+  double lr = 0.0;  // the optimiser's default unless --lr names one
+  bool lr_given = false;
   int epochs = 20000;
   int report = 100;
   int patience = 20;
@@ -220,7 +222,8 @@ void write_tables(const std::string& path,
                   double validation_error,
                   double wdl_validation_error,
                   double start_wdl_validation_error,
-                  size_t gauges_held)
+                  size_t gauges_held,
+                  const tuner_trace::load_report_t& trace)
 {
   FILE* out = fopen(path.c_str(), "w");
 
@@ -270,6 +273,12 @@ void write_tables(const std::string& path,
       "// error      %.6f train, %.6f validation\n"
       "// seed       %" PRIu64
       ", lr %.3f, validation split %.2f\n"
+      // S262: the model is the engine's trace, and the identity it rests on
+      // was checked on every row this read; a run with a mismatch refuses
+      // before it gets here, so the count is the evidence and not a warning.
+      "// model      evaluate()'s trace, %" PRIu64 " rows; %" PRIu64
+      " differ from evaluate() at the shipped weights\n"
+      "// optimiser  %s\n"
       // S214, 2026-09-10_adversarial-F35: --report and --patience pick which
       // vector comes out of a run -- the best of the epochs that reported, and
       // the run stops after --patience reports without a new best -- so a fit
@@ -304,7 +313,8 @@ void write_tables(const std::string& path,
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
       corpus.rows, corpus.bytes, opts.k, train_error, validation_error,
-      opts.seed, opts.lr, opts.validation, opts.epochs, opts.report,
+      opts.seed, opts.lr, opts.validation, trace.rows, trace.mismatches,
+      tuner_optimiser::kind_name(opts.optimiser), opts.epochs, opts.report,
       opts.patience, opts.threads, games, validation_rows,
       100.0 * static_cast<double>(validation_rows) /
           static_cast<double>(positions),
@@ -465,14 +475,16 @@ void usage()
       "                   outcome alone and is the fit before S075. Two\n"
       "                   lambdas are compared on held-out error against\n"
       "                   the game result, never on the training error\n"
-      "  --lr VALUE       Adam step size (default 1.0)\n"
+      "  --optimiser NAME adam (default) or adagrad\n"
+      "  --lr VALUE       step size (default: 1.0 for adam, %.1f for\n"
+      "                   adagrad)\n"
       "  --epochs N       maximum full-batch steps (default 20000)\n"
       "  --report N       report and checkpoint every N epochs (100)\n"
       "  --patience N     stop after this many reports without a new best\n"
       "  --validation F   held-out fraction, whole games (default 0.1)\n"
       "  --threads N      worker threads (default: every hardware thread)\n"
       "  --seed N         seed the game-level split shuffles (default 1)\n",
-      GROUP_LIST);
+      GROUP_LIST, tuner_optimiser::ADAGRAD_DEFAULT_LR);
 }
 
 }  // namespace
@@ -509,8 +521,15 @@ int main(int argc, char** argv)
       opts.k = atof(value.c_str());
     } else if (arg == "--lambda") {
       opts.lambda = atof(value.c_str());
+    } else if (arg == "--optimiser") {
+      if (!tuner_optimiser::parse_kind(value, &opts.optimiser)) {
+        fprintf(stderr, "unknown --optimiser '%s': adam or adagrad\n",
+                value.c_str());
+        return 1;
+      }
     } else if (arg == "--lr") {
       opts.lr = atof(value.c_str());
+      opts.lr_given = true;
     } else if (arg == "--epochs") {
       opts.epochs = atoi(value.c_str());
     } else if (arg == "--report") {
@@ -531,6 +550,18 @@ int main(int argc, char** argv)
 
   if (opts.data.empty() || opts.threads == 0) {
     usage();
+    return 1;
+  }
+
+  // Each optimiser's own default step, unless --lr named one. A step that is
+  // not positive is refused: `atof` answers 0.0 for a value it cannot read,
+  // and a run that never moves, or moves uphill, would still emit a table.
+  if (!opts.lr_given) {
+    opts.lr = (opts.optimiser == tuner_optimiser::ADAM)
+                  ? 1.0
+                  : tuner_optimiser::ADAGRAD_DEFAULT_LR;
+  } else if (!(opts.lr > 0.0)) {
+    fprintf(stderr, "--lr must be a positive number\n");
     return 1;
   }
 
@@ -594,10 +625,35 @@ int main(int argc, char** argv)
           CHESSO_BUILD_COMMIT, corpus.sha256.c_str(), corpus.rows,
           corpus.bytes);
 
+  // Every row through evaluate() on the trace build, on every thread, and
+  // every row's trace scored back the engine's way and compared with what
+  // evaluate() returned. S262.
   dataset_t data;
+  tuner_trace::load_report_t trace;
+  std::string load_error;
 
-  if (!load(opts.data, &data)) {
-    fprintf(stderr, "could not read %s\n", opts.data.c_str());
+  if (!tuner_trace::load(opts.data, &data, &trace, &load_error, opts.threads)) {
+    fprintf(stderr, "could not load %s: %s\n", opts.data.c_str(),
+            load_error.c_str());
+    return 1;
+  }
+
+  fprintf(stderr,
+          "trace: %" PRIu64 " rows, %" PRIu64
+          " entries (%.2f a row), %.1f s; %" PRIu64
+          " differ from evaluate(), the clamp binds on %" PRIu64 "\n",
+          trace.rows, trace.entries,
+          static_cast<double>(trace.entries) / static_cast<double>(trace.rows),
+          trace.seconds, trace.mismatches, trace.clamped);
+
+  // The identity is the model's whole claim to be evaluate(), so a corpus that
+  // breaks it on one row is not fitted at all: whatever disagrees there would
+  // be fitted as if it were the engine.
+  if (trace.mismatches > 0) {
+    fprintf(stderr,
+            "the trace disagrees with evaluate() on %" PRIu64
+            " rows, the first: %s\nnothing fitted\n",
+            trace.mismatches, trace.first_mismatch.c_str());
     return 1;
   }
 
@@ -651,7 +707,7 @@ int main(int argc, char** argv)
   // Starting point is what the engine ships with, so a fit that finds nothing
   // reports the error of the hand-written constants rather than of noise.
   std::vector<double> params(PARAM_COUNT, 0.0);
-  eval_model::starting_params(params.data());
+  tuner_layout::starting_params(params.data());
 
   // The game result, as a target vector. K is fitted against this and never
   // against the blend, and every comparison between two lambdas is made on it.
@@ -710,10 +766,10 @@ int main(int argc, char** argv)
   fprintf(stderr, "start: train %.6f  validation %.6f%s\n", start_train,
           start_validation, wdl_column(start_wdl).c_str());
 
-  // Adam, and the levels the gauges hold every step: the ones this run started
-  // from. Both moved to tools/tuner_model.hpp at S275 so a test runs the same
-  // descent.
-  adam_t adam;
+  // The optimiser, and the levels the gauges hold every step: the ones this
+  // run started from. Both moved to tools/tuner_model.hpp at S275 so a test
+  // runs the same descent, and to tools/tuner_optimiser.hpp at S262.
+  tuner_optimiser::state_t optimiser(PARAM_COUNT, opts.optimiser);
   std::vector<double> grad;
   const std::vector<double> start = params;
 
@@ -733,7 +789,7 @@ int main(int argc, char** argv)
     gradient(data, params.data(), opts.k, index, 0, train_count, opts.threads,
              train_target, &grad);
 
-    descend(grad, mask, start.data(), opts.lr, &adam, params.data());
+    descend(grad, mask, start.data(), opts.lr, &optimiser, params.data());
 
     if (epoch % opts.report != 0) { continue; }
 
@@ -783,7 +839,7 @@ int main(int argc, char** argv)
 
   write_tables(opts.out, best.data(), opts, corpus, data.size(), starts.size(),
                validation_count, final_train, best_validation, best_wdl,
-               start_wdl, held.size());
+               start_wdl, held.size(), trace);
 
   return 0;
 }

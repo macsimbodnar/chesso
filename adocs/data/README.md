@@ -901,3 +901,14 @@ pre-registration will be written from. 2026-08-21 adversarial F09.
 | `S275_walk_real.txt` | its output over the first 1000000 rows of `.tuning/selfplay_v2_dedup.tsv`, real labels, K 0.7415, 2000 epochs, 2026-10-12: the plain update walks **+16.4 and +15.1 a square** along the two king tables, +11.8 along the queen's (against 11.8 more off `QUEEN`) and 1.4 to 2.6 along the other four; the held run stays within 2e-14 of every level; training errors identical to six digits at all 20 reports, scores within **0.000473 cp** on every row; the 32 pawn columns unmoved in both |
 | `S275_fits.txt` | `tuner` at `0d9faba` and on the S275 tree over the same two 1 M-row slices, 2026-10-12. Real labels: every printed line identical. Planted labels, to convergence: the pre-S275 fit's levels moved +0.24 to +0.98 a square on the five tables and -0.14 / +0.14 on the king pair, the S275 fit's held to the rounding of the emitted integers; the two emitted vectors differ only by a uniform shift per direction plus rounding and in none of the 50 term weights. The two trajectories part in the seventh decimal where the loss prints 0.000000, from epoch 1200 on, and the unchanged tuner at `--threads 6` against 12 parts the same way from epoch 1500, to the same emitted vector |
 | `S275_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` on the S275 tree, 2026-10-12: every line before the new ones identical to `S134_feature_audit.txt` (the one-king-a-side refusal refused no row), then each of the seven gauges **null on every row** and `32 zero columns and 7 held gauges span 39 of at most 39 null dimensions` |
+
+### S262, the trace-based tuner
+
+| file | what it is |
+|---|---|
+| `S262_fits.txt` | every `tuner` run S262 pre-registered, 2026-10-12, logs and emitted term weights: the parent's tuner (`f57b92f`) against the S262 tree's on the full dedup corpus at the defaults -- (6), held-out **0.118449 old against 0.118446 new**, both best at epoch 100, every common report within 4e-6 -- AdaGrad at `--lr` 1, 3, 10 and 30 against Adam on the same corpus, and both tuners over S275's planted 1 M-row slice (17 of 18 planted term weights at the defaults for both, the miss K's scale), plus one post-hoc planted run at `--k 0.7624` |
+| `S262_inv6.txt` | INV-6 for the trace calls: `evaluation.cpp`'s object byte-identical to the parent's in `build/` and `build-tune/`, the `chesso` binaries' `.text` identical but for displacements into `.rodata`, every evaluation function's listing identical, `bench` 3872032, `bench 12` 1730486 and `search_bench.py` at depths 9 and 12 node- and move-identical |
+| `S262_mutants.txt` | eleven mutants of the trace path, each red, and in which cases |
+
+`S275_walk.cpp`, above, builds against `f57b92f` and earlier only: it calls the
+mirror's `gradient()` and Adam from `tools/tuner_model.hpp`, which S262 retired.

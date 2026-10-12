@@ -26,6 +26,13 @@ binary anything is measured on — see "The tune build" below). `build_release.s
 adds `build-release-<arch>` per distributable target and `.pgo/` for the profile;
 both are gitignored and neither is what a local measurement runs.
 
+Every build directory also builds `chesso_engine_trace`, the engine's sources a
+second time with `CHESSO_TRACE` defined, so `evaluate()` records the
+coefficient of every weight it applies (S262, `src/eval_trace.hpp`). `tuner`,
+`test_eval_trace` and `test_tuner_gradient` link it; `chesso` never does, in any
+configuration, and `build_release.sh` and `fastchess.sh` build `--target chesso`
+alone. "What the tuner fits", under the tuner below, has the rest.
+
 Nothing may reconfigure `build` behind your back. VS Code's CMake Tools used to:
 it defaults to `${workspaceFolder}/build`, configures on open, and wrote Debug
 and `CMAKE_C_COMPILER=gcc-14` into it against the g++ 13.3 DEC-049 pins.
@@ -1315,27 +1322,33 @@ source file included, and the real index is left as it was; on a clean tree the
 name is `cand-<HEAD>` and no diff is saved.
 
 `test_tuner_gradient` is the fit's own guard and covers two things nothing in
-`tests/` could reach before S100: that the columns `load()` packs are the columns
-`evaluate_position()` reads, and that `gradient()` is the derivative of the error
-it descends. All of `dataset_t`, `load()`, `evaluate_position()`, `error_range()`
-and `gradient()` lived in an anonymous namespace inside `tools/tuner.cpp`, so no
-test could name them; S100 moved them to `tools/tuner_model.hpp` for exactly this
-and the fit is unchanged — `tuner` over the same corpus at the same seed, thread
-count and epoch budget prints identical epoch reports and emits all 827 constants
-bit for bit. Its corpus is a fixture it writes into the temp directory from the
-same curated FEN list `test_eval_model` runs over, so it needs no dataset.
+`tests/` could reach before S100: that the rows `load()` stores are the rows the
+model reads, and that `gradient()` is the derivative of the error it descends.
+S100 wrote it over the tuner's mirror model, `tools/tuner_model.hpp`; since S262
+the tuner fits the engine's own trace (`tools/tuner_trace.hpp`, "What the tuner
+fits" below) and the file follows it, linking the trace build. Its corpus is a
+fixture it writes into the temp directory from the same curated FEN list
+`test_eval_model` runs over, so it needs no dataset. The mirror's own loader,
+which `feature_audit` still reads, kept its five cases in `test_eval_model`.
+`test_eval_trace` is the trace's contract with the engine: the identity, and
+what every coefficient means.
 
 The gradient check is Jon Dart's prescription: central differences against
 `gradient()` for every parameter, 823 since S134, tolerance 1e-6 relative. `h = 0.01` is
 measured and a comment in the file carries the sweep — the error follows the
 O(h²) truncation law down to a cancellation floor near 0.005, and h = 0.5 fails
-at 5.7e-4 on a mobility weight because mobility counts reach the tens. Two things
-it deliberately establishes rather than assumes: that the lazy clamp binds on no
-fixture row at the shipped constants, since `gradient()` ignores that clamp by
-design, and that **every one of the term parameters -- 50 since S134, 54
-before -- has a gradient to check** at all. The second is what found a real gap — three passed pawn middlegame
-weights had none, because every position reaching their buckets was a phase-0
-endgame, and a feature-count test cannot see that.
+at 5.7e-4 on a mobility weight because mobility counts reach the tens. Worst
+4.9e-8 on the mirror at S100 and 4.87e-8 on the trace at S262, the latter on the
+bishop's middlegame mobility weight. Two things it deliberately establishes rather than assumes:
+that no fixture row sits within a centipawn of the lazy clamp at the shipped
+constants, since a finite difference straddling the clamp's kink agrees with
+neither side's derivative, and that **every one of the term parameters -- 50
+since S134, 54 before -- has a gradient to check** at all. The second is what
+found a real gap — three passed pawn middlegame weights had none, because every
+position reaching their buckets was a phase-0 endgame, and a feature-count test
+cannot see that. Where the clamp does bind, a case of its own checks the trace
+path's treatment: the gradient still matches finite differences on all 823,
+and the binding rows give the mobility and king safety weights exactly nothing.
 
 `tools/plan_prose_check.py` carries five plan-hygiene checks. Four of the
 five -- `--touches`, `--params`, `--citations` and `--gate` -- are in the fast
@@ -2105,6 +2118,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 145 — 143 until S250, when the weakened end rose to meet it and the gate built at `RfpMinPly` 1 went green (DEC-247). S116 re-read it on razoring's candidate: 149 shipping, 143 weakened, the gate at `RfpMinPly` 1 red, so it still separates and did not move | `python3 adocs/data/S156_mined_floor_sweep.py --floor 145` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11. S116 re-read it on razoring's candidate: 12 of 24 shipping, 7 weakened, so it still separates | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
+| `test_eval_trace.cpp` "the smooth score is within the truncation bound of the exact one", `worst > 2.8` | the same four positions, carried in `test_eval_positions.hpp` | the same command; S262 |
 | `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 10, 10 and the mutants beside them — `no S091 mutant, since S116`, `no S091 mutant, since S095`, `C02, C05, R02, since S116`, `no S091 mutant, since S116`. **Re-derived at S116 (DEC-142, DEC-233, DEC-248)**, the seven sweeps on the razoring candidate (the S116 worktree's `.tuning/coord/S116/capmates/`): row 1 had gone red at 7, its shipped profile now `d9 d10 d11 d12` with no S091 mutant separating it; row 2 to 8, separated by none; row 3 at 10 now lost by C02, C05 and R02; row 4 at 10 (`d10 d12`) reported by every mutant, so its label moves to none. The rows before, which an H0 or a zero restores byte for byte: 7, 7, 10, 10 and `C02, C05, R02, since S112`, `no S091 mutant, since S095`, `C02, R02, since S248`, `R02, since S248`. **S114's second verdict re-derived them (DEC-142, DEC-233)**, the seven sweeps on the entry gate's candidate (`.tuning/coord/S114_v2/capmates/`): every shipped profile was S248's and the four depths stayed, and row 4's label moved from `R02, since S248` to `no S091 mutant, since S114`, R02 reading that mate at 10 as well there; its reading, a zero, took the gate out and put the label back byte for byte, the reverted tree being `465b43b`'s engine to the node. **Re-derived at S248 (DEC-142, DEC-233)**, the seven sweeps on the tree S114's removal leaves, whose engine is `d946b6f`'s node for node on the bench positions: S113's rows, back with the removal, had not gone red -- each still read its mate at its own depth -- but were not the rule's answer, and the pass re-taken whole moved two depths with no mate distance moving -- row 2 to 7, where no S091 mutant separates it, row 3 to 10, where C02 and R02 lose it -- and row 4's label to R02, the one mutant that loses it at 10 (`.tuning/coord/S114_rm/capmates/`, every sweep byte for byte the one S114's rebase took on its parent, `.tuning/coord/S114b_logs/capmates/parent_*`). **S114 re-derived them on its first verdict's candidate (DEC-233)**, the null move's static-score term at cap 8 with the gate at 0, to 7, 7, 10, 9 with row 3 at `C05, R02, since S114` and row 4 at `C02, C05, C07, since S114` (`.tuning/coord/S114b_logs/capmates/`; the first build, on S022 verdict 2's tree `6e8bc63`, read the same depths with row 3 at R02 and row 4 at C02 alone, `.tuning/coord/S114_remine/capmates/`), and its H0 put S113's rows back byte for byte, a revert and not a re-mine, which S248 then replaced: 7, 9, 11, 10 and `C02, C05, R02, since S112`, `no S091 mutant, since S095`, `R02`, `no S091 mutant, since S113`. **Re-derived at S112 and again at S113 (DEC-233)**, the seven sweeps each time: S112's per-move futility in quiescence put the depths at 7, 9, 11, 9, and S113's ProbCut, rebased onto it, moved row 4 alone, to 10, where no S091 mutant separates it -- C05 and C07 had lost it at 9 -- with no mate distance moving; this row read 9, 9, 10, 10 between S112's landing and S113, stale. S022's first verdict re-derived them on its candidate (DEC-233) to 9, 7, 10, 12 and its H0 restored these rows byte for byte, a revert and not a re-mine. The rows before S112 were these: 9, 9, 10, 10 and the mutants beside them — `no S091 mutant, since S095` twice, then `R02` and `R02`. S238 re-derived them on its candidate (DEC-233) to 7, 7, 11, 9 and its H0 restored these rows byte for byte, a revert and not a re-mine: the same sweep at `1680439` had returned them. **Re-derived at S095**, which adds a ply of reduction at every node whose table entry carries no move and so moves the same rule again: the seven sweeps were re-taken and three of the four depths moved with no mate distance moving. Row 2 loses the depth 8 reading it had and now separates nothing; row 3 comes back from 11 to 10 with R02 alone; row 4 stays at 10 with R02. R01 is separated by no row at any depth, the fifth consecutive pass reading that way. The history of the earlier passes is in the GOLDEN block at the table itself | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
 | `test_search.cpp` `mate_the_extra_ply_hides` and its depth | the position and **8** (11 when mined at S095; re-derived to 8 at S234 when the table-tightened estimate moved the tree, `.tuning/coord/S234_observe_red.log`), the lowest depth the shipped build reports its mate at and the tree with S095's guard opened does not. Mined at S095 over this project's own positions: 297 labelled mates, 141 whose oracle line carries a quiet move of the class late move reduction touches, 28 separating the two builds, and the rule in the script's header returns this one. The row's own comment records what the tie-break cost — its shipped profile is every depth from 3 to 12 and the unguarded build loses exactly one of them | `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py candidates`, then `adocs/data/S230_mine_r01_row.py depths --fens .tuning/coord/S095_candidates.fen --lo 3 --hi 12` once on the shipped tree and once with `const bool no_tt_move = tt_move == 0;` made `= true`, then `S095_mine_mate_row.py pick` |
 | `test_search.cpp` `mate_the_multicut_hides` and its depth | the position and **14**, the lowest depth the shipped build reports its mate at and the tree with the multicut's mate-range guard dropped does not. **Since S243 the property this row stands in for has its own case**, "the multicut never ends a node on a mate from its verification", which drives a verification that comes back at mate in one and asserts that the node does not return it and the rule does not fire, so `E21_multicut_mate_band_gate_dropped`'s kill no longer rests on this row. That changes how this row going stale shows: it can stop separating at a rebase while the fast suite and `tools/mutation_check.py` both stay green, and the only sign is E21's kill list in the mutation run shrinking from two cases to one -- this row's `REQUIRE( result.mate_found )` gone, the direct case's lines left. The row is re-derived by its script when that sign appears. **S114's second verdict re-mined it**, the null move's entry gate at `NullMoveEvalGate` 1 on the tree S115 leaves, where S131's row stayed green under E21 (`.tuning/coord/S114_v2/e21_multicut_row.log`): in guard mode two of the 269 candidates separate and both modes take `4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42` at depth **14**, **mate in 6**, shipped `d13 d14` against the guard-dropped build's `d13`, 1242164 nodes and about 0.22 s, red under E21 and green shipped (`adocs/data/S114_v2_remine_s097.log`), and its reading, a zero, put S131's row back byte for byte with the gate's code, the reverted tree being `465b43b`'s engine to the node; on it E21 applied by hand turns the row red again (`.tuning/coord/S114_v2rm/e21_case.log`). S114's first verdict re-mined it on that sign, in guard mode on its candidate -- the null move's static-score term at cap 8 with the gate at 0, on the tree S022 verdict 2's removal leaves, where under E21 the case stayed green, both builds reading its mate in 6 at 13 and 14 (`.tuning/coord/S114b_logs/e21_case.log`) -- to `R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50` at depth 13, mate in 5 (`adocs/data/S114_rb_remine_s097.log`; the first build's pick on `6e8bc63`, S188's row, is `adocs/data/S114_remine_s097.log`), and its H0 put S131's row back byte for byte with the term's code, depth 14 and mate in 6 with it; on the tree it came back to, E21 applied by hand turns it red again (`.tuning/coord/S114_rm/hand_checks.log`). S022's second verdict re-mined it on that sign, in guard mode on its candidate -- the node-level delta early-out on `58585f8`, where `--only E21` listed S243's case alone -- to S097's own row, `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46` at depth 14, mate in 5 (`adocs/data/S022_v2_remine_s097.log`), and its reading put S131's row back byte for byte with the early-out's code. S022's first verdict re-mined it on its candidate in guard mode, to `2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31` at depth 14, mate in 6 (`adocs/data/S022_remine_s097.log`), and its H0 put S131's row back byte for byte; S243's case kills E21 on either tree. **Re-mined at S131, in the script's guard mode (DEC-238)**: with quiet queen promotions in quiescence, on S113's tree `3c7cf84`, S113's row -- `1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35`, mate in 4 -- stayed green and stopped separating, the shipped build and E21's both reporting its mate at 12, 13 and 14, and `E21_multicut_mate_band_gate_dropped` survived the fast suite. The script's default mode found one separator and refused it, the shipped multicut never changing the tree there because the guard is what stops it; DEC-238 takes a guard row's firing witness on the mutant's build, and `--mode guard` takes `7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42`, **mate in 6**, shipped `d11 d12 d13 d14` against the guard-dropped build's `d11 d12 d13`, the mutant's multicut changing the tree at 14 alone; the cell costs 1688502 nodes and about 0.26 s. S113's row comes back on an H0 for S131, `QsQueenPromotions` 0 being `3c7cf84`'s engine. **Re-mined at S113**: on ProbCut's tree, rebased onto S112's, the row S097 mined -- `4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46`, mate in 5, the row the test carried again after S188's H0 and S236 v2's zero -- reported no mate at 14; three of the 269 candidates separate E21 there, and the rule takes `1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35`, mate in 4, shipped `d13 d14` against the guard-dropped build's `d13`, 16599756 nodes and about 2.4 s against S097's row's 1434773 and 0.2 s on the same tree; S097's row comes back on an H0, `ProbCut` 0 being `308b388`'s engine. What follows is the S188 re-mine, whose row left with S188's H0, and this row read it until S113. **Re-mined at S188 and this is the second row the clause has carried**: S188's check extension made the search reach further and the row S097 mined stopped separating -- its shipped profile stayed `d12 d14` while the guard-dropped build's went from `d12` to `d12 d14` -- which the mutation pass caught as `E21_multicut_mate_band_gate_dropped` surviving a green suite, the only way a row going quiet can be caught. The row now is `1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54`, shipped profile **`d11 d12 d13 d14`** against the guard-dropped build's **`d11 d12 d13`** -- the whole swept range against one depth short of it -- and the cell costs 4227541 nodes and about 0.56 s, where the row it replaces cost 4206525 and 0.65 s. Two of the 269 candidates separate the two builds on this tree; the other was skipped by the script's own rule because the firing witness shows the multicut never reaching it, and its depth-14 cell costs 43758845 nodes | the commands in `adocs/data/S097_mine_mate_row.py`'s own header, in that order and with every input named. The S188 re-mine skipped stage 1 -- `adocs/data/S097_candidates.tsv` is committed and the pool is not what moved -- and ran `sweep` shipped, `sweep` against a library built out of tree with E21 applied, `separators`, `fires` on the tune library and `pick`, 73 minutes a sweep; the evidence is `adocs/data/S188_remine.log`. S113's re-mine did the same on its rebased tree, about 12 minutes a sweep, evidence `adocs/data/S113_remine_s097.log`. S114's ran stages 2 to 6 with `--mode guard` and in the default mode, the two sweeps in parallel beside S022's second SPRT in about 34 minutes, evidence `adocs/data/S114_rb_remine_s097.log`. S131's ran stages 5 and 6 with `--mode guard` (DEC-238) -- the witness on a tune library built with E21 applied, and `pick --mode guard` reading only a witness written in that mode -- about 12 minutes a sweep, evidence `adocs/data/S131_remine_s097.log`, where the default mode's refusal on the same tree is kept |
@@ -5075,7 +5089,9 @@ integer engine scores disagree by 69/24 = 2.875, the maximum three truncating
 divisions can produce, so the tolerance in "the model reproduces evaluate() on
 every phase" is asserted against a corpus that reaches it. **A residual belongs
 to the weights, not to the position**, so those four stop qualifying every time
-the constants are refitted — DEC-057.
+the constants are refitted — DEC-057. Since S262 `test_eval_trace` reads the
+same four for the trace's smooth score, which is the mirror's function, so one
+re-derivation serves both.
 
 ```bash
 build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8
@@ -5096,7 +5112,8 @@ resident**, so 3000 epochs cost 1090.87 s. The per-epoch figure is the
 game-level split's; a fully shuffled row index costs 0.76 s instead, 2.14x, for
 the identical fit. The resident figure is pre-S075 and is **1.33 GB** since, for
 the two target vectors and the `score` column `--lambda` needs; the rest of the
-line was not re-measured.
+line was not re-measured. Those are the mirror's figures; since S262 the tuner
+reads the trace, and "What the tuner fits" below has its own.
 
 S065's full fit over the same corpus took **2082 s** on the same 12 threads for
 the load, the K fit and 5000 epochs together — 0.42 s an epoch inclusive, against
@@ -5223,7 +5240,8 @@ Four reports off one load, each switchable off with `--no-columns`,
 `adocs/data/S275_feature_audit.txt` adds the gauge lines.
 
 - **columns** re-extracts every stored feature column from the FEN text and
-  compares it against what `load()` kept: **10795695 rows, 0 disagreements**. It
+  compares it against what the mirror's `load()` (`tools/tuner_model.hpp`, the
+  dataset this tool reads; the tuner's own is the trace since S262) kept: **10795695 rows, 0 disagreements**. It
   calls the same extractors `load()` calls, so it is not a check of what a
   feature *means* — `tests/test_eval_model.cpp` holds those against the engine's
   own counts and against hand-computed placements. What it catches is a
@@ -5237,7 +5255,8 @@ Four reports off one load, each switchable off with `--no-columns`,
 - **identities** is the rank of the design the tuner descends and every exact
   linear dependency in it, over every row. Each row is 24 times the derivative
   of `eval_model::evaluate()` with respect to every parameter, the stage-two
-  clamp ignored as `gradient()` ignores it, so every entry is an integer;
+  clamp ignored (the mirror's gradient ignored it too; the trace's does not, see
+  "What the tuner fits"), so every entry is an integer;
   `X'X` is summed exactly in 64-bit integers; the rank is taken by Gauss-Jordan
   modulo 2^61-1, which can only understate the rank over the rationals; and a
   dependency `v` is checked exactly as `v'X'Xv == 0`, the sum over every row of
@@ -5359,7 +5378,7 @@ fit was not reproducible from its own stamp without them. `--epochs` is the
 other way a run ends.
 
 `--threads` is in the line for a weaker reason and it is not "so a timing can be
-read": `error_range()` and `gradient()` in `tools/tuner_model.hpp` stride their
+read": `error_range()` and `gradient()` in `tools/tuner_trace.hpp` stride their
 range by the thread count and sum the per-thread partials in thread order, so
 the summation order is a function of `--threads` and floating-point addition is
 not associative. Measured on a 2000-row corpus at 200 epochs, 1, 4 and 8 threads
@@ -5408,11 +5427,13 @@ them; mobility adds 8 at S034, and king safety 18, passed pawns 12, pawn
 structure 6, piece placement 8 and tempo 2 at S027. S134 deleted passer bucket 5
 and rook on the seventh, two parameters each, after folding their weights into
 the tables (DEC-090): 827 until then. The count is
-`eval_model::PARAM_COUNT` and the run prints it on its first line, with the
-number the `--only` group left free beside it. It never calls the search:
-`tools/eval_model.hpp` is `evaluate()` written as a linear function of its own
-constants, which is what makes a full pass cheap, and `test_eval_model` is what
-stops that model drifting from the engine. It reports held-out error every
+`tuner_layout::PARAM_COUNT` and the run prints it on its first line, with the
+number the `--only` group left free beside it. It never calls the search, and
+since S262 it carries no copy of the evaluation either: it fits `evaluate()`'s
+own trace, checked against `evaluate()` on every row it loads ("What the tuner
+fits", below). Until S262 it fitted `tools/eval_model.hpp`, `evaluate()` written
+out by hand as a linear function of its constants and held to the engine by
+`test_eval_model` within the truncation bound. It reports held-out error every
 `--report` epochs and keeps the best one, prints a warning if the fit never
 beats the constants it started from, and writes a header to paste in.
 
@@ -5518,7 +5539,7 @@ ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
 `king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, `tempo`, and
 the emitted header records which was used. The eight named groups partition all
 823 parameters: 5, 768, 8, 18, 10, 6, 6, 2 in that order, which the run's first
-line reports as the free count. The ranges follow `eval_model.hpp`'s base chain,
+line reports as the free count. The ranges follow `tools/tuner_layout.hpp`'s base chain,
 so S134's narrowing moved them without an edit to `tools/tuner_groups.hpp`;
 `test_tuner_groups` is what says so, and with a base left at its 827-layout
 value it reads red -- on `tempo` freeing nothing and on the chain precondition,
@@ -5607,12 +5628,18 @@ by square. The 32 pawn columns do not move at all: no row touches them, so their
 gradient is exactly zero, and Adam's step from a gradient that has always been
 zero is 0 / (0 + ε). Measured 0 in every run here, and left unpinned.
 
-So every step is `descend()` in `tools/tuner_model.hpp`: Adam, then each held
+So every step is `descend()` in `tools/tuner_optimiser.hpp`: the optimiser, then each held
 gauge put back where the run started. What is held is the level, the sum over
 the squares its direction moves: for a piece, its `psqt_mg` and `psqt_eg`
 squares together, with the define taking the shift; for a king table, that
-table's own sum. That is a move along the null direction, so no score
-changes. Over the same slice
+table's own sum. That is a move along the null direction, so no score the fit
+sees changes. The engine's integer score is not quite as blind: a piece's shift
+moves from inside the positional taper's truncation to outside it, and
+truncation towards zero is not translation invariant where the tapered sum
+crosses zero, so along a material gauge `evaluate()` itself moves by at most
+one centipawn on the rows where that sum changes sign (S262; DEC-059's queen
+re-anchor saw the same one centipawn). An emitted table rounds either way.
+Over the same slice
 the two descents' training errors agree to six digits at every report and their
 scores to within 0.0005 cp on every row at epoch 2000, and `tuner` before and
 after S275 printed every line identical from `fitted K` to `best`
@@ -5636,8 +5663,9 @@ that for every `--only` group and every single `--freeze`. `test_tuner_gradient`
 runs the descent with and without the hold over its fixture, from its own list
 of the seven, and fails if the held run moves along any of them — which it did
 with the king pair or the queen's direction dropped from `gauges()`. The king gauges are null only with one king
-a side, so `load()` refuses a row without exactly that, as `load_FEN()` does;
-none of the 10795695 dedup rows is refused.
+a side, so `load()` refuses a row without exactly that -- since S262 by reading
+every row through `load_FEN()`, which refuses one; none of the 10795695 dedup
+rows is refused.
 
 **Where the loss is near zero, a fit is only as reproducible as its floating
 point.** Over the same slice with planted labels — `feature_audit --plant`, the
@@ -5647,6 +5675,157 @@ different best epoch, a different emitted vector. The unchanged tuner at
 `--threads 6` against `--threads 12` parts the same way, so the hold's last-bit
 difference sits inside the tuner's own envelope and changes nothing that is
 fitted. On real labels nothing parted at six digits.
+
+### What the tuner fits: evaluate()'s own trace
+
+S262. The tuner does not carry a copy of the evaluation any more. It links
+`chesso_engine_trace`, the engine built with `CHESSO_TRACE`
+(`src/eval_trace.hpp`), runs `evaluate()` once on every row it loads, and keeps
+what `evaluate()` recorded: the coefficient of every weight it applied, summed
+per weight, zeros dropped. The model it fits is the sum of those records
+(`tools/tuner_trace.hpp`). Grant's evaluation wrapping (*Evaluation & Tuning in
+Chess Engines*, 2020), implemented from the paper's description (DEC-221).
+
+**The switch is compiled out of every engine binary.** `CHESSO_TRACE` is a
+compile definition on one CMake target, `chesso_engine_trace`, built from the
+same sources as `chesso_engine` in every build directory; `chesso` never links
+it, in release, tune, debug or a `build_release.sh` build, and without the define
+each trace call in `src/evaluation.cpp` expands to `((void)0)`. Measured,
+not argued: `evaluation.cpp`'s release object is byte-identical with the calls
+and without them, in `build` and in `build-tune`, and `bench`, `bench 12` and
+`tools/search_bench.py` at depths 9 and 12 print the parent's node counts and
+best moves (S262). The material and table coefficients are the exception that
+costs something in the trace build: `make_move` accumulates those sums, so the
+trace build walks the pieces in `evaluate_cheap()` to write them out -- the
+recomputation the search was rid of at S014, present only where the define is.
+
+**Every row is checked against the engine as it loads.** The trace, scored with
+the engine's own integer arithmetic at the weights it was built with -- material
+untapered, four tapers each truncating towards zero, mobility plus king safety
+clamped to `LAZY_EVAL_MARGIN` -- must equal what `evaluate()` returned, and a
+corpus on which one row disagrees is refused with that row named. The first line
+after the corpus stamp says how it went:
+
+```
+trace: 10795695 rows, 266907900 entries (24.72 a row), 9.1 s; 0 differ from evaluate(), the clamp binds on 36503
+```
+
+That is the dedup corpus, every row, 12 threads. The identity is what
+`tools/eval_model.hpp` could only bound -- `test_eval_model` held it within 3
+centipawns against a truncation bound of 2.875 -- and it is checked on every
+fit, not on a sample. The header a
+fit writes repeats it:
+
+```
+// model      evaluate()'s trace, 10795695 rows; 0 differ from evaluate() at the shipped weights
+// optimiser  adam
+```
+
+**What the fit descends is the smooth form of that score**: every taper exact
+in floating point instead of truncated, and the clamp kept. A truncated score
+is a step function with no gradient to follow; the smooth one differs from the
+engine's by under a centipawn per taper that rounds -- at most 3 x 23/24 = 2.875
+while tempo ships at zero, which `test_eval_trace` asserts and finds reached.
+The clamp stays in and is differentiated exactly: on a row where it binds, the
+mobility and king safety weights cannot move the score, so that row gives them
+no gradient. **That reverses the treatment before S262**, whose gradient
+ignored the clamp on purpose -- "treating the boundary as flat would stop the
+fit moving a weight it should move" -- while its forward model clamped, so it
+was not the derivative of the error it reported. The exact one is the true
+gradient of the objective the fit minimises, which is what S262's
+finite-difference check holds it to. It changes 0.338 % of the dedup corpus's
+rows at the shipped weights (the clamp binds on 36503 of 10795695), and S262's
+held-out comparison, below, was taken under it. S039 retires the clamp and
+S122's king safety is not clamped, so the question is short-lived. At exactly
+the margin the inside derivative is taken.
+
+**Size and time**, measured on the workstation, nothing else running:
+extraction is **0.8 s per million rows at 12 threads and 3.0 s at one** (the
+first 1 M rows, three runs each), 9.1 s and 32.3 s for the whole dedup corpus.
+A row is 24.72 entries on average, and the dataset **119 MB per million rows**
+in memory: 4 bytes an entry, 8 for the two offsets, 12 for phase, side to move,
+result, score and ply. Nothing is written to disk -- every run traces its
+corpus afresh, which is what makes every run check the identity. Resident peak
+over the whole corpus is 1.96 GB (1.38 GB for the mirror), most of the
+difference the dataset's vectors growing while they load. An epoch is cheaper
+than the mirror's: the S262 comparison's default fits ran 2100 epochs in 9 m 03
+s against 12 m 16 s, loads and reports included.
+
+**Adding a linear term** is three edits and no model code: the weights in
+`src/evaluation.cpp`, an `EVAL_TRACE(TERM_..., index, coefficient)` beside each
+place the weight is multiplied in, and the term's line in `term_layout()` in
+`tools/tuner_trace.hpp` with its site -- which taper its sum goes through. Its
+parameters need a block in `tools/tuner_layout.hpp`, a `--only` group in
+`tools/tuner_groups.hpp` and a few lines in `write_tables()`, as before. What
+cannot be forgotten any more is the gradient: one loop over the record
+differentiates every linear term the trace records. What can still go wrong is
+the site and the meaning, and the tests below are for those.
+
+**A nonlinear group** -- a per-side transform of a weighted sum, the shape a
+king-safety curve takes -- needs each side's coefficients, not their
+difference. The record carries them (`EVAL_TRACE_SIDE`), the dataset keeps them
+per row, and a `group_t` in the model names the transform; `smooth()` and
+`gradient()` take the chain rule through it. The one transform provided is
+`max(0, x)^2 / divisor`. No term in `evaluate()` records per side today, so
+`group_of_term()` maps none and `load()` refuses such a record until a group is
+declared for it. Two properties of that transform were measured on a synthetic
+group over the engine's own per-colour king-attack counts
+(`test_tuner_gradient`):
+
+- **It cannot start at zero.** Its slope at x = 0 is exactly 0, so a group
+  seeded at zero weights gets a gradient of exactly 0 and never moves.
+  `derive_seed()` seeds it from the data instead (DEC-134 form b): each side's
+  mean pre-transform sum over the training rows is put at the transform's unit,
+  the x at which it reads one centipawn, each input taking an equal share.
+- **Its step is its own.** From that seed, at the linear terms' `--lr 1` and at
+  0.3 the fit stalled near 9e-8, short of the planted group -- with two endgame
+  weights negative on a smaller set of the same positions, their sides on the
+  transform's flat part where nothing pulls them back; at 0.2 and 0.1 it
+  recovered the planted group exactly. S122 inherits both.
+
+**`--optimiser adam|adagrad`.** Adam (Kingma and Ba, 2014) at the paper's
+beta1, beta2 and epsilon, step `--lr` 1 by default as since S028; AdaGrad
+(Duchi, Hazan and Singer, 2011), diagonal, step 30 by default. **Adam is the
+default**, on a comparison S262 pre-registered over the dedup corpus at every
+other default: AdaGrad's step swept over 1, 3, 10 and 30 read held-out 0.118448,
+0.118446, 0.118445 and **0.118436**, against Adam's **0.118446**, and the rule
+was that AdaGrad takes over only if it beats Adam by more than 1.0e-5 -- it
+beat it by exactly that at the printed precision. It also took 34 minutes, best
+at epoch 5700, to Adam's 9, best at epoch 100. 30 was the top of the range
+swept; a larger step was not tried, and S082's corpus is the place to try it.
+
+**The tests.** `test_eval_trace` holds the trace to the engine over the curated
+positions both ways round and the 2696 positions of the JSON suites, 478 of
+which bind the clamp: the identity on every one; every coefficient
+against a count the trace did not take (the engine's per-colour accessors, the
+bitboards, the mirror's ray-walked mobility) -- the check that sees a wrong
+coefficient on a weight that ships at zero, where the identity cannot; tracing
+changing nothing `evaluate()` returns; the smooth score inside the truncation
+bound; and the refusals no legal board reaches (a record past its 1024
+entries, an index past its term, a per-side entry without a group, a
+coefficient past int16), through synthetic records handed to `sum_record()`,
+each leaving nothing behind for the next row. `test_tuner_gradient` holds the
+fit: what `load()` stores at any thread
+count, the gradient against finite differences on all 823 parameters (worst
+4.87e-8, S100 measured 4.9e-8 on the mirror), the clamp's derivative on rows
+where it binds, the S275 gauges under both optimisers, S100's planted vectors
+coming back per group, and the synthetic group's derivative, its zero seed and
+its recovery. Eleven mutants, each red: S262's step file lists them.
+
+**It replaced the mirror on a pre-registered comparison** (S262): the parent's
+`tuner` and this one over the dedup corpus, every flag at its default, so the
+same split by game at seed 1, the same K (0.7795) and the same start (held-out
+0.119455). Held-out at the best epoch, 100 for both: **0.118449 for the mirror,
+0.118446 for the trace**, against a pre-registered tolerance of the mirror plus
+1.0e-5; all 21 reports within 4e-6 of each other; the emitted vectors 183 of 823
+numbers apart, by 2 at most; 12 m 16 s against 9 m 03 s.
+`adocs/data/S262_fits.txt` has both logs.
+
+**The mirror stays for two tools.** `tools/eval_model.hpp` and the dataset in
+`tools/tuner_model.hpp` are what `feature_audit` reads -- its identities, its
+columns and its `--plant` labels -- and `truncation_scan` measures the mirror's
+residual, so both keep `test_eval_model` and its pinned positions. Neither is
+the tuner's model now.
 
 ### `--lambda`: fit toward the search score as well as the outcome
 

@@ -2,6 +2,10 @@
 #include <doctest.h>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -9,6 +13,8 @@
 #include "eval_model.hpp"
 #include "evaluation.hpp"
 #include "test_eval_positions.hpp"
+#include "test_temp_file.hpp"
+#include "tuner_model.hpp"
 
 // The tuner does not call evaluate(). It fits a linear model of evaluate()'s
 // own constants, because a derivative is what a fit needs and because a pass
@@ -1240,4 +1246,359 @@ TEST_SUITE("eval model: agrees with the engine")
     CHECK(seen_low_phase);
     CHECK(seen_high_phase);
   }
+}
+
+
+// ------------------------------------------------- the mirror's dataset
+//
+// tools/tuner_model.hpp's dataset_t and load(): the mirror's features packed
+// per row, which the tuner read until S262 and tools/feature_audit still reads
+// -- its identities, its columns and its `--plant` labels are built from these
+// rows. These five cases were tests/test_tuner_gradient.cpp's (S100, S134,
+// S275) and moved here with the tuner: that file now holds the tuner's trace
+// path, and the same checks over it, while these keep the mirror's loader
+// held for the tool that still depends on it.
+
+namespace mirror_dataset
+{
+
+using test_eval_positions::positions;
+
+// One unique name per binary, not per call: the cases below write and then
+// read the same path. S193.
+std::string fixture_path()
+{
+  static const std::string path =
+      unique_fixture_path("chesso_test_eval_model.tsv");
+  return path;
+}
+
+
+// `fen result score phase`, datagen's format, over the curated corpus.
+//
+// The three labels cycle rather than being constant, and the scores span both
+// signs. A constant result column would make (target - sigma) the same factor
+// on every row, which is a residual a wrong per-row feature could still fit; a
+// zero score column would make --lambda untestable for the same reason S075's
+// parser refuses one.
+//
+// `phase_shift` writes a phase column that is wrong on purpose, the true phase
+// plus the shift wrapped into 0..GAME_PHASE_MAX, so it still passes load()'s
+// range check -- the corpus a change to phase_value would leave behind.
+bool write_fixture(const std::string& path, int phase_shift = 0)
+{
+  std::ofstream out(path);
+
+  if (!out) { return false; }
+
+  static const double results[3] = {1.0, 0.5, 0.0};
+  int score = -280;
+
+  for (size_t i = 0; i < positions.size(); ++i) {
+    const std::string& fen = positions[i];
+    const std::string placement = fen.substr(0, fen.find(' '));
+
+    std::vector<uint16_t> pieces;
+    if (!eval_model::parse_placement(placement, &pieces)) { return false; }
+
+    const int phase =
+        (eval_model::phase_of(pieces.data(), pieces.size()) + phase_shift) %
+        (GAME_PHASE_MAX + 1);
+
+    out << fen << '\t' << results[i % 3] << '\t' << score << '\t' << phase
+        << '\n';
+
+    score += 41;
+    if (score > 300) { score -= 600; }
+  }
+
+  return out.good();
+}
+
+
+}  // namespace mirror_dataset
+
+using eval_model::KING_SAFETY_COUNT;
+using eval_model::MOBILITY_COUNT;
+using eval_model::PASSED_PAWN_COUNT;
+using eval_model::PAWN_STRUCTURE_COUNT;
+using eval_model::PIECE_PLACEMENT_COUNT;
+using mirror_dataset::fixture_path;
+using mirror_dataset::write_fixture;
+
+
+TEST_CASE("the mirror dataset: the fixture corpus loads through its parser")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_fixture(path));
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+  CHECK(data.size() == positions.size());
+
+  std::filesystem::remove(path);
+}
+
+
+// 2026-09-10_adversarial-F36: load() trusted the corpus's phase column, range
+// checked only, and phase_of() sits in the same header. Verified equal on every
+// corpus so far, and latent: a change to phase_value leaves every existing
+// corpus tapering on the old phase while the range check still passes. S134
+// makes load() recompute the phase from the placement, so the column is read
+// for its range and nothing else.
+TEST_CASE(
+    "the mirror dataset: load() tapers on the placement's phase, not the "
+    "stored column")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_fixture(path, 7));
+
+  // Precondition, read back from the file rather than recomputed: every phase
+  // column the fixture wrote disagrees with its placement's phase, or the check
+  // below holds for a load() that trusts the column too.
+  {
+    std::ifstream in(path);
+    std::string line;
+    size_t rows = 0;
+    size_t column_wrong = 0;
+
+    while (std::getline(in, line)) {
+      std::istringstream fields(line);
+      std::string fen, result, score, phase_text;
+      REQUIRE(std::getline(fields, fen, '\t'));
+      REQUIRE(std::getline(fields, result, '\t'));
+      REQUIRE(std::getline(fields, score, '\t'));
+      REQUIRE(std::getline(fields, phase_text, '\t'));
+
+      std::vector<uint16_t> pieces;
+      REQUIRE(
+          eval_model::parse_placement(fen.substr(0, fen.find(' ')), &pieces));
+
+      if (std::stoi(phase_text) !=
+          eval_model::phase_of(pieces.data(), pieces.size())) {
+        column_wrong++;
+      }
+      rows++;
+    }
+
+    REQUIRE(rows == positions.size());
+    REQUIRE(column_wrong == rows);
+  }
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+  REQUIRE(data.size() == positions.size());
+
+  for (size_t row = 0; row < data.size(); ++row) {
+    const std::string& fen = positions[row];
+    CAPTURE(fen);
+
+    std::vector<uint16_t> pieces;
+    REQUIRE(eval_model::parse_placement(fen.substr(0, fen.find(' ')), &pieces));
+
+    CHECK(static_cast<int>(data.phase[row]) ==
+          eval_model::phase_of(pieces.data(), pieces.size()));
+  }
+
+  std::filesystem::remove(path);
+}
+
+
+// S275. The two king gauges tools/tuner_groups.hpp holds are null only on a row
+// with one king a side: + c on every king square cancels between the White king
+// and the Black one and nowhere else. load_FEN() refuses any other position,
+// and load() refused none of them, so a hold on a corpus carrying one would
+// move that row's score -- a pin that changes the fit. Each row below is
+// appended alone to the legal fixture, and the fixture is refused.
+TEST_CASE("the mirror dataset: load() refuses a row without one king a side")
+{
+  const std::string path = fixture_path();
+
+  const auto load_with = [&](const std::string& placement) {
+    REQUIRE(write_fixture(path));
+    {
+      std::ofstream out(path, std::ios::app);
+      out << placement << " w - - 0 40\t0.5\t0\t0\n";
+    }
+
+    tuner_model::dataset_t data;
+    return tuner_model::load(path, &data);
+  };
+
+  // Precondition: a legal row in the same format loads, so a refusal below is
+  // the king count and not the row's shape.
+  CHECK(load_with("4k3/8/8/8/8/8/8/4K3"));
+
+  static const char* const unbalanced[] = {
+      "4k3/8/8/8/8/8/8/8",      // no White king
+      "8/8/8/8/8/8/8/4K3",      // no Black king
+      "4k3/8/8/8/8/8/8/3KK3",   // two White kings
+      "3kk3/8/8/8/8/8/8/4K3",   // two Black kings
+      "3kk3/8/8/8/8/8/8/3KK3",  // two a side: balanced, still not chess
+      "8/8/8/8/8/8/8/8",        // none at all
+  };
+
+  for (const std::string placement : unbalanced) {
+    CAPTURE(placement);
+    CHECK_FALSE(load_with(placement));
+  }
+
+  std::filesystem::remove(path);
+}
+
+
+// The dataset path, end to end: every column load() stored, against the same
+// feature recomputed from the FEN text outside it. A misaligned base, a wrong
+// stride, or two columns written in the other order all show up here and in
+// nothing else -- test_eval_model.cpp checks the extractors against the engine
+// and never sees what the loader did with their answers.
+TEST_CASE(
+    "the mirror dataset: every stored column holds the feature its index "
+    "names")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_fixture(path));
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+  REQUIRE(data.size() == positions.size());
+
+  for (size_t row = 0; row < data.size(); ++row) {
+    const std::string& fen = positions[row];
+    CAPTURE(fen);
+
+    const std::string placement = fen.substr(0, fen.find(' '));
+
+    std::vector<uint16_t> pieces;
+    REQUIRE(eval_model::parse_placement(placement, &pieces));
+
+    // The piece list and its offsets, which is what every psqt and material
+    // parameter is read through.
+    REQUIRE(data.offsets[row + 1] - data.offsets[row] == pieces.size());
+    for (size_t i = 0; i < pieces.size(); ++i) {
+      CHECK(data.pieces[data.offsets[row] + i] == pieces[i]);
+    }
+
+    CHECK(static_cast<int>(data.phase[row]) ==
+          eval_model::phase_of(pieces.data(), pieces.size()));
+
+    int mobility[MOBILITY_COUNT] = {};
+    REQUIRE(eval_model::mobility_features(placement, mobility));
+    for (size_t i = 0; i < MOBILITY_COUNT; ++i) {
+      CAPTURE(i);
+      CHECK(data.mobility[row * MOBILITY_COUNT + i] == mobility[i]);
+    }
+
+    int safety[KING_SAFETY_COUNT] = {};
+    REQUIRE(eval_model::king_safety_features(placement, safety));
+    for (size_t i = 0; i < KING_SAFETY_COUNT; ++i) {
+      CAPTURE(i);
+      CHECK(data.king_safety[row * KING_SAFETY_COUNT + i] == safety[i]);
+    }
+
+    int passed[PASSED_PAWN_COUNT] = {};
+    REQUIRE(eval_model::passed_pawn_features(placement, passed));
+    for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
+      CAPTURE(i);
+      CHECK(data.passed_pawn[row * PASSED_PAWN_COUNT + i] == passed[i]);
+    }
+
+    int structure[PAWN_STRUCTURE_COUNT] = {};
+    REQUIRE(eval_model::pawn_structure_features(placement, structure));
+    for (size_t i = 0; i < PAWN_STRUCTURE_COUNT; ++i) {
+      CAPTURE(i);
+      CHECK(data.pawn_structure[row * PAWN_STRUCTURE_COUNT + i] ==
+            structure[i]);
+    }
+
+    int placement_counts[PIECE_PLACEMENT_COUNT] = {};
+    REQUIRE(eval_model::piece_placement_features(placement, placement_counts));
+    for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
+      CAPTURE(i);
+      CHECK(data.piece_placement[row * PIECE_PLACEMENT_COUNT + i] ==
+            placement_counts[i]);
+    }
+
+    int tempo = 0;
+    REQUIRE(eval_model::tempo_feature(side_to_move_of(fen), &tempo));
+    CHECK(static_cast<int>(data.tempo[row]) == tempo);
+  }
+
+  std::filesystem::remove(path);
+}
+
+
+// Non-vacuity, and it is load bearing twice over: a finite difference on a
+// parameter whose feature is zero in every row compares 0.0 with 0.0 and passes
+// for free, and so does a column comparison between two zeros. Every one of the
+// 54 parameters outside the piece-square tables is claimed here, in both
+// directions where the feature has one.
+TEST_CASE("the mirror dataset: the fixture moves every term column both ways")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_fixture(path));
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+
+  struct column_t
+  {
+    const char* name;
+    const int16_t* base;
+    size_t stride;
+    size_t index;
+  };
+
+  std::vector<column_t> columns;
+  for (size_t i = 0; i < MOBILITY_COUNT; ++i) {
+    columns.push_back({"mobility", data.mobility.data(), MOBILITY_COUNT, i});
+  }
+  for (size_t i = 0; i < KING_SAFETY_COUNT; ++i) {
+    columns.push_back(
+        {"king safety", data.king_safety.data(), KING_SAFETY_COUNT, i});
+  }
+  for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
+    columns.push_back(
+        {"passed pawn", data.passed_pawn.data(), PASSED_PAWN_COUNT, i});
+  }
+  for (size_t i = 0; i < PAWN_STRUCTURE_COUNT; ++i) {
+    columns.push_back({"pawn structure", data.pawn_structure.data(),
+                       PAWN_STRUCTURE_COUNT, i});
+  }
+  for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
+    columns.push_back({"piece placement", data.piece_placement.data(),
+                       PIECE_PLACEMENT_COUNT, i});
+  }
+
+  for (const column_t& column : columns) {
+    CAPTURE(column.name);
+    CAPTURE(column.index);
+
+    size_t positive = 0;
+    size_t negative = 0;
+
+    for (size_t row = 0; row < data.size(); ++row) {
+      const int value = column.base[row * column.stride + column.index];
+
+      if (value > 0) { positive++; }
+      if (value < 0) { negative++; }
+    }
+
+    CHECK(positive > 0);
+    CHECK(negative > 0);
+  }
+
+  // Tempo is stored in its own vector and is +1 or -1 on every row, so it has
+  // no zero case to guard -- what it needs is both signs present, which is the
+  // corpus having positions with each side to move.
+  size_t white_to_move = 0;
+  size_t black_to_move = 0;
+  for (size_t row = 0; row < data.size(); ++row) {
+    if (data.tempo[row] > 0) { white_to_move++; }
+    if (data.tempo[row] < 0) { black_to_move++; }
+  }
+  CHECK(white_to_move > 0);
+  CHECK(black_to_move > 0);
+
+  std::filesystem::remove(path);
 }

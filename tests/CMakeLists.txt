@@ -17,7 +17,11 @@ message("-- Test timeout ${CHESSO_TEST_TIMEOUT}s (build type ${CMAKE_BUILD_TYPE}
 # Every doctest binary needs the same include paths and the same engine
 # library, and every one of them is expected to finish in seconds. Perft is the
 # exception and is registered separately with the "slow" label.
-function(add_doctest_target name)
+#
+# The library is chesso_engine for every test but those of the tuner's model,
+# which link its trace build (S262, src/eval_trace.hpp) through
+# add_trace_doctest_target below; one test binary cannot link both.
+function(add_doctest_target_linking name library)
      add_executable(${name} ${name}.cpp)
 
      target_include_directories(${name} SYSTEM PRIVATE doctest/doctest)
@@ -25,7 +29,7 @@ function(add_doctest_target name)
      target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
      target_include_directories(${name} PRIVATE ../src)
 
-     target_link_libraries(${name} PRIVATE chesso_engine)
+     target_link_libraries(${name} PRIVATE ${library})
 
      add_test(NAME ${name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
 
@@ -45,6 +49,14 @@ function(add_doctest_target name)
           PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_TEST_TIMEOUT})
 endfunction()
 
+function(add_doctest_target name)
+     add_doctest_target_linking(${name} chesso_engine)
+endfunction()
+
+function(add_trace_doctest_target name)
+     add_doctest_target_linking(${name} chesso_engine_trace)
+endfunction()
+
 add_doctest_target(test_chesso)
 add_doctest_target(test_openings)
 add_doctest_target(test_movegen)
@@ -54,7 +66,10 @@ add_doctest_target(test_engine)
 
 # The tuner's model of evaluate() lives in tools/, so these are the two tests
 # that include from there. S028: a model that drifts from the engine tunes the
-# wrong function and nothing downstream notices.
+# wrong function and nothing downstream notices. Since S262 the tuner fits the
+# engine's trace (test_eval_trace below) and this file holds the mirror
+# tools/feature_audit and tools/truncation_scan still read, its dataset loader
+# included.
 add_doctest_target(test_eval_model)
 target_include_directories(test_eval_model PRIVATE ../tools)
 
@@ -80,8 +95,20 @@ target_include_directories(test_tuner_split PRIVATE ../tools)
 # tools/tuner.cpp's anonymous namespace into tools/tuner_model.hpp. Its corpus
 # is a fixture it writes into the temp directory from the same curated FEN list
 # test_eval_model runs over, so it is a fast test like the rest.
-add_doctest_target(test_tuner_gradient)
+#
+# Since S262 its model is the engine's trace (tools/tuner_trace.hpp), so it
+# links the trace build, as does test_eval_trace below.
+add_trace_doctest_target(test_tuner_gradient)
 target_include_directories(test_tuner_gradient PRIVATE ../tools)
+
+# S262: the trace build's contract. The trace, scored the engine's way, is
+# evaluate() exactly on every position here -- the curated list both ways
+# round and the 2696 positions of the JSON suites, the clamp binding on 478 of
+# them -- and every coefficient is the count its index names, against
+# counts the trace did not take. No dataset, so it is a fast test like the
+# rest.
+add_trace_doctest_target(test_eval_trace)
+target_include_directories(test_eval_trace PRIVATE ../tools)
 
 # S075: the label the tuner fits against is now a blend of the game result and
 # datagen's score column, and `--lambda 0` has to be the pre-S075 fit bit for
