@@ -1530,14 +1530,16 @@ static int negamax_at(int alpha0,
   move_t tt_move = (tt_entry != nullptr) ? tt_entry->best_move : 0;
 
   // At the root, and only where the table has nothing, the previous completed
-  // iteration's best move orders the node instead. Any unreduced ply-1 node of
-  // this iteration can evict the root's slot, and an aspiration re-search then
-  // orders the root by captures, killers and history and can publish a move
-  // that never beat the previous best -- which the caller keeps if the hard
-  // timer aborts right there. Ordering is all this changes: the hint is a move
-  // the previous iteration already returned from this position, so it is legal
-  // here, and a node that had an entry is untouched.
-  // 2026-09-04_adversarial-F03, S210.
+  // iteration's best move orders the node instead. A node of this iteration
+  // whose key lands in the root's cluster can evict the root's entry when that
+  // entry is the way worth least there (tt_store_entry(); until S119 the slot
+  // was one entry and any unreduced ply-1 node landing on it did), and an
+  // aspiration re-search then orders the root by captures, killers and history
+  // and can publish a move that never beat the previous best -- which the
+  // caller keeps if the hard timer aborts right there. Ordering is all this
+  // changes: the hint is a move the previous iteration already returned from
+  // this position, so it is legal here, and a node that had an entry is
+  // untouched. 2026-09-04_adversarial-F03, S210.
   if (ply == 0 && tt_move == 0) { tt_move = state->root_move_hint; }
 
   // The static evaluation this position was already scored with, where an
@@ -1547,17 +1549,19 @@ static int negamax_at(int alpha0,
   const int tt_eval = (tt_entry != nullptr) ? tt_entry->eval : TT_EVAL_NONE;
 
   // THE THREE FIELDS THE SINGULAR EXTENSION READS, copied out here for exactly
-  // the reason `tt_move` and `tt_eval` are, S097: `tt_entry` is the slot's own
+  // the reason `tt_move` and `tt_eval` are, S097: `tt_entry` is the entry's own
   // address and the block that reads them sits **below the null-move search**,
-  // which recurses. A node in that subtree can store into this slot -- another
-  // position whose key lands on the same index -- and the gate would then
-  // derive its window from that position's score while extending the move this
-  // entry named. Nothing would crash and no node count would be wrong.
+  // which recurses. A node in that subtree can store into this entry --
+  // another position whose key lands in the same cluster -- and the gate would
+  // then derive its window from that position's score while extending the
+  // move this entry named. Nothing would crash and no node count would be
+  // wrong.
   //
-  // It is masked at today's seeds and that is not a reason to leave it: the
-  // null subtree stores below `depth - SeTtDepthMargin` at the shipped 4, and
-  // at 8 -- inside the declared range S127 sweeps -- or at a smaller null
-  // reduction it is not masked at all.
+  // Until S119 it was masked at the shipped seeds: the slot was one entry, the
+  // null subtree stores below `depth - SeTtDepthMargin`, and a shallower store
+  // was refused within the search. Since S119 another position's store takes
+  // whichever way of the cluster is worth least, shallower or not, so nothing
+  // masks it.
   //
   // The score is de-normalised here rather than at the gate because this is
   // where the entry is still known to be the one the probe found; this is the
@@ -3389,8 +3393,9 @@ void complete_mate_pv(game_t* game,
       if (next == 0) { break; }
 
       // A move out of the table is checked against the generator rather than
-      // trusted: tt_get_entry() compares the full key, but a 64-bit key still
-      // collides and a stored move is not re-validated anywhere else. The same
+      // trusted: tt_get_entry() compares 32 key bits and the cluster index
+      // since S119, about 50 bits at Hash 16 (it states the rate), and a
+      // stored move is not re-validated anywhere else. The same
       // holds for a move out of the stored line, which is reached by a key
       // comparison of its own. The scan above already produces a generated
       // move and pays the check twice, which costs nothing on the one ply it

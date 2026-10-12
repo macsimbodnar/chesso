@@ -48,7 +48,7 @@ struct search_fixture_t
 
     // 4MB is plenty for the shallow searches here and keeps the binary cheap
     // to start up.
-    if (tt.entries == nullptr) { tt_resize(&tt, 4); }
+    if (tt.clusters == nullptr) { tt_resize(&tt, 4); }
     tt_reset(&tt);
   }
 };
@@ -3038,7 +3038,7 @@ TEST_SUITE("search: quiescence transposition entries")
                     "an evaluation never survives a key change")
   {
     tt_entry_t entry = {};
-    entry.key = 0xfeedfacecafebeefULL;
+    entry.key = tt_key_of(0xfeedfacecafebeefULL);  // the 32 bits kept, S119
     entry.eval = 300;
     entry.generation = 1;
 
@@ -3075,13 +3075,15 @@ TEST_SUITE("search: quiescence transposition entries")
     size_t quiescence_entries = 0;
     size_t main_entries = 0;
 
-    for (size_t i = 0; i < tt.entry_count; ++i) {
-      if (tt.entries[i].generation == 0) { continue; }
+    for (size_t c = 0; c < tt.cluster_count; ++c) {
+      for (const tt_entry_t& entry : tt.clusters[c].entries) {
+        if (entry.generation == 0) { continue; }
 
-      if (tt.entries[i].depth == TT_DEPTH_QS) {
-        quiescence_entries++;
-      } else {
-        main_entries++;
+        if (entry.depth == TT_DEPTH_QS) {
+          quiescence_entries++;
+        } else {
+          main_entries++;
+        }
       }
     }
 
@@ -3101,9 +3103,11 @@ TEST_SUITE("search: quiescence transposition entries")
     // quiescence's own sentinel, or it is depth 1 or more. Depth 0 is the gap
     // and it is unreachable by construction: negamax hands `depth < 1` to
     // quiescence before it can store. S193, 2026-09-04_test_review-F05.
-    for (size_t i = 0; i < tt.entry_count; ++i) {
-      if (tt.entries[i].generation == 0) { continue; }
-      REQUIRE((tt.entries[i].depth == TT_DEPTH_QS || tt.entries[i].depth >= 1));
+    for (size_t c = 0; c < tt.cluster_count; ++c) {
+      for (const tt_entry_t& entry : tt.clusters[c].entries) {
+        if (entry.generation == 0) { continue; }
+        REQUIRE((entry.depth == TT_DEPTH_QS || entry.depth >= 1));
+      }
     }
   }
 }
@@ -3742,18 +3746,18 @@ TEST_SUITE("search: transposition bounds and mate distance")
     for (const auto& [fen, depth] : positions) {
       search_fen_with(fen, depth, &tt, /*reset=*/false);
 
-      for (size_t i = 0; i < tt.entry_count; ++i) {
-        const tt_entry_t& entry = tt.entries[i];
+      for (size_t c = 0; c < tt.cluster_count; ++c) {
+        for (const tt_entry_t& entry : tt.clusters[c].entries) {
+          if (entry.generation == 0) { continue; }
 
-        if (entry.generation == 0) { continue; }
+          written++;
 
-        written++;
+          if (std::abs(entry.score) > MATE_MIN_LOCAL) { in_band++; }
 
-        if (std::abs(entry.score) > MATE_MIN_LOCAL) { in_band++; }
-
-        REQUIRE_MESSAGE(
-            std::abs(entry.score) <= MATE_MAX_LOCAL,
-            ("FEN: " + fen + " stored " + std::to_string(entry.score)));
+          REQUIRE_MESSAGE(
+              std::abs(entry.score) <= MATE_MAX_LOCAL,
+              ("FEN: " + fen + " stored " + std::to_string(entry.score)));
+        }
       }
     }
 
@@ -3844,7 +3848,7 @@ TEST_SUITE("search: transposition table")
       }
     }
 
-    REQUIRE(inert.entries == nullptr);
+    REQUIRE(inert.clusters == nullptr);
   }
 
   // And the reason it is worth having at all. Without this, a search that
@@ -5478,7 +5482,8 @@ TEST_SUITE("transposition table: storage")
     const tt_entry_t* entry = tt_get_entry(&table, &board);
 
     REQUIRE(entry != nullptr);
-    REQUIRE_EQ(entry->key, board.hash);
+    REQUIRE_EQ(entry->key, tt_key_of(board.hash));  // the 32 bits kept, S119
+    REQUIRE_EQ(entry->generation, table.generation);
     REQUIRE_EQ(entry->depth, 7);
     REQUIRE_EQ(entry->score, -1234);
     REQUIRE_EQ(entry->type, TT_BETA_NODE);
@@ -5499,34 +5504,38 @@ TEST_SUITE("transposition table: storage")
   // widening it could change how many entries a given Hash buys and with them
   // the replacement behaviour, which alters play on its own. It does not, and
   // this is the measurement rather than the argument.
+  //
+  // Re-stated by S119 for the cluster, which is the layout now: until then the
+  // entry was 24 bytes and the count was floored to a power of two, which is
+  // what absorbed the field (131072 entries out of 4 MB either way).
   TEST_CASE("the static evaluation field costs no table entries")
   {
-    // 20 bytes of content in 24 before the field, 22 in 24 after: it lands in
-    // padding the key's alignment was already reserving.
-    REQUIRE_EQ(sizeof(tt_entry_t), 24u);
+    // 17 bytes of content without the field -- 4 key, 4 score, 4 move, 2
+    // depth, 2 generation, 1 type -- and 19 with it, each rounded to 20 by
+    // the 4-byte alignment. Either way three to a 64-byte line: four would
+    // need 16 bytes an entry, which 17 already exceeds.
+    REQUIRE_EQ(sizeof(tt_entry_t), 20u);
+    REQUIRE_EQ(sizeof(tt_cluster_t), 64u);
+    REQUIRE_EQ(TT_CLUSTER_ENTRIES, 64u / sizeof(tt_entry_t));
+    REQUIRE(sizeof(tt_entry_t) - sizeof(int16_t) > 64u / 4);
 
-    // And the count is floored to a power of two, which absorbs the entry size
-    // entirely over the range this struct can plausibly occupy. Asserted at
-    // both ends of the range so the claim is about the flooring and not about
-    // one lucky size: 24 and 32 bytes an entry buy the same 131072 entries out
-    // of 4 MB, because 4 MB / 32 is already a power of two and 4 MB / 24 sits
-    // between it and the next one up.
+    // And the count is the request's whole: 4 MB is 65536 lines of three.
     transposition_table_t table = {};
     tt_resize(&table, 4);
 
-    REQUIRE_EQ(table.entry_count, 131072u);
-    REQUIRE_EQ(std::bit_floor((4u * 1024 * 1024) / 32u), table.entry_count);
-    REQUIRE_EQ(std::bit_floor((4u * 1024 * 1024) / sizeof(tt_entry_t)),
-               table.entry_count);
+    REQUIRE_EQ(table.cluster_count, 65536u);
+    REQUIRE_EQ(table.entry_count, 196608u);
 
     tt_free(&table);
   }
 
 
-  // Two positions sharing a slot must not be confused for one another. The
+  // Two positions sharing a cluster must not be confused for one another. The
   // whole point of storing the key is that a collision reads as a miss, and a
   // probe that skipped the comparison would return a score belonging to an
-  // unrelated position.
+  // unrelated position. Since S119 the key is the hash's low 32 bits, so the
+  // two here share the cluster and differ in those bits; the case where they
+  // agree in all 32 is the partial key's own, below.
   TEST_CASE("a colliding key is a miss, not somebody else's entry")
   {
     transposition_table_t table = {};
@@ -5536,11 +5545,11 @@ TEST_SUITE("transposition table: storage")
     const board_t stored = board_keyed(0x1000ULL);
     tt_store_entry(&table, &stored, 5, 42, TT_PV_NODE, 0x1111);
 
-    // Same slot by construction: the index is the key masked to the table size.
-    const board_t colliding = board_keyed(0x1000ULL + (table.index_mask + 1));
+    const board_t colliding = board_keyed(0x1000ULL + table.cluster_count);
 
-    REQUIRE_EQ(stored.hash & table.index_mask,
-               colliding.hash & table.index_mask);
+    REQUIRE_EQ(tt_cluster_index(&table, stored.hash),
+               tt_cluster_index(&table, colliding.hash));
+    REQUIRE_NE(tt_key_of(stored.hash), tt_key_of(colliding.hash));
     REQUIRE(tt_get_entry(&table, &colliding) == nullptr);
     REQUIRE(tt_get_entry(&table, &stored) != nullptr);
 
@@ -5597,16 +5606,24 @@ TEST_SUITE("transposition table: storage")
 
   // Generation zero marks a slot that was never written, so the counter must
   // skip it when it wraps - otherwise every entry in the table suddenly looks
-  // like it belongs to the current search.
+  // like it belongs to the current search. 16 bits since S119, so the loop
+  // runs past one wrap and counts it.
   TEST_CASE("the generation counter never wraps to zero")
   {
     transposition_table_t table = {};
     tt_resize(&table, 1);
 
-    for (int i = 0; i < 600; ++i) {
+    bool wrapped = false;
+
+    for (int i = 0; i < 65535 + 600; ++i) {
+      const uint16_t before = table.generation;
       tt_new_search(&table);
       REQUIRE_MESSAGE(table.generation != 0, ("after " + std::to_string(i)));
+
+      if (table.generation < before) { wrapped = true; }
     }
+
+    REQUIRE(wrapped);
 
     tt_free(&table);
   }
@@ -5639,7 +5656,430 @@ TEST_SUITE("transposition table: storage")
 
     REQUIRE(tt_get_entry(&table, &board) == nullptr);
     REQUIRE_EQ(table.entry_count, entries_before);
-    REQUIRE(table.entries != nullptr);
+    REQUIRE(table.clusters != nullptr);
+
+    tt_free(&table);
+  }
+
+
+  // S119: the table as clusters of three, replacement by depth and age, the
+  // index by multiply, `hashfull`. The helpers place positions by their hash
+  // alone, which is all the table reads off a board.
+
+  // The first hash the table maps to cluster `c`. The index is a
+  // nondecreasing function of the hash, so a bisection finds it.
+  static uint64_t first_hash_of(const transposition_table_t& table, size_t c)
+  {
+    uint64_t lo = 0;
+    uint64_t hi = UINT64_MAX;
+
+    while (lo < hi) {
+      const uint64_t mid = lo + (hi - lo) / 2;
+
+      if (tt_cluster_index(&table, mid) >= c) {
+        hi = mid;
+      } else {
+        lo = mid + 1;
+      }
+    }
+
+    return lo;
+  }
+
+  // `count` hashes in cluster `c` with distinct low 32 bits: as many
+  // positions, as far as the table can tell. A cluster spans 2^64 /
+  // cluster_count hashes, 2^50 at 1 MB, so the offset keeps them clear of its
+  // edges; each case still requires the cluster it was given.
+  static std::vector<uint64_t> hashes_in(const transposition_table_t& table,
+                                         size_t c, size_t count)
+  {
+    const uint64_t base = first_hash_of(table, c) + (1ULL << 33);
+    std::vector<uint64_t> hashes;
+
+    for (size_t i = 0; i < count; ++i) {
+      hashes.push_back(base + 0x101 * (i + 1));
+      REQUIRE_EQ(tt_cluster_index(&table, hashes.back()), c);
+    }
+
+    return hashes;
+  }
+
+  static void put(transposition_table_t * table, uint64_t hash, int depth)
+  {
+    const board_t board = board_keyed(hash);
+    tt_store_entry(table, &board, depth, depth * 10, TT_PV_NODE, 0x1111);
+  }
+
+  static const tt_entry_t* find(const transposition_table_t* table,
+                                uint64_t hash)
+  {
+    const board_t board = board_keyed(hash);
+    return tt_get_entry(table, &board);
+  }
+
+
+  TEST_CASE("a cluster holds three positions and a fourth replaces one")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const std::vector<uint64_t> h = hashes_in(table, 7, 4);
+
+    put(&table, h[0], 3);
+    put(&table, h[1], 4);
+    put(&table, h[2], 5);
+
+    REQUIRE(find(&table, h[0]) != nullptr);
+    REQUIRE(find(&table, h[1]) != nullptr);
+    REQUIRE(find(&table, h[2]) != nullptr);
+
+    // Same position again: its own entry is updated, not a second one made.
+    put(&table, h[2], 6);
+    REQUIRE_EQ(find(&table, h[2])->depth, 6);
+
+    // The fourth takes the way worth least, the shallowest of this search.
+    put(&table, h[3], 1);
+
+    CHECK(find(&table, h[0]) == nullptr);
+    CHECK(find(&table, h[1]) != nullptr);
+    CHECK(find(&table, h[2]) != nullptr);
+    CHECK(find(&table, h[3]) != nullptr);
+
+    tt_free(&table);
+  }
+
+
+  // Depth and age together, each case built so the other half of the rule
+  // alone would pick a different way. The weight is two plies a search
+  // (TT_AGE_PLIES); the arithmetic for each way is beside it. Killed here:
+  // TC01 (age ignored) by the first half, TC02 (depth ignored) by the second.
+  TEST_CASE("replacement weighs depth and age together")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+
+    {
+      // Age decides: depth alone would replace B, the shallowest.
+      tt_new_search(&table);
+      const std::vector<uint64_t> h = hashes_in(table, 11, 4);
+
+      put(&table, h[0], 5);  // A: 5 - 2 * 3 = -1
+      tt_new_search(&table);
+      tt_new_search(&table);
+      tt_new_search(&table);
+      put(&table, h[1], 3);  // B: 3
+      put(&table, h[2], 8);  // C: 8
+
+      REQUIRE(find(&table, h[0]) != nullptr);
+      REQUIRE_EQ(tt_age(table.generation, find(&table, h[0])->generation), 3u);
+
+      put(&table, h[3], 1);
+
+      CHECK_MESSAGE(find(&table, h[0]) == nullptr, "age was not weighed");
+      CHECK(find(&table, h[1]) != nullptr);
+      CHECK(find(&table, h[2]) != nullptr);
+      CHECK(find(&table, h[3]) != nullptr);
+    }
+
+    {
+      // Depth decides: age alone would replace A, the oldest.
+      tt_new_search(&table);
+      const std::vector<uint64_t> h = hashes_in(table, 12, 4);
+
+      put(&table, h[0], 12);  // A: 12 - 2 * 1 = 10
+      tt_new_search(&table);
+      put(&table, h[1], 2);  // B: 2
+      put(&table, h[2], 9);  // C: 9
+
+      REQUIRE_EQ(tt_age(table.generation, find(&table, h[0])->generation), 1u);
+
+      put(&table, h[3], 1);
+
+      CHECK(find(&table, h[0]) != nullptr);
+      CHECK_MESSAGE(find(&table, h[1]) == nullptr, "depth was not weighed");
+      CHECK(find(&table, h[2]) != nullptr);
+      CHECK(find(&table, h[3]) != nullptr);
+    }
+
+    tt_free(&table);
+  }
+
+
+  // The counter runs 1 to 65535 and comes round. An entry written at 65535
+  // is one search old at 1, not current and not 65534 searches in the future.
+  // S271 found the 8-bit counter's wrap making an old entry read as current;
+  // here the reading is a distance on the cycle. TC03 reads it as a plain
+  // difference floored at 0, which is the wrap read as current.
+  TEST_CASE("age is a distance on the counter's cycle")
+  {
+    CHECK_EQ(tt_age(7, 7), 0u);
+    CHECK_EQ(tt_age(9, 7), 2u);
+    CHECK_EQ(tt_age(1, 65535), 1u);
+    CHECK_EQ(tt_age(3, 65534), 4u);
+    CHECK_EQ(tt_age(65535, 1), 65534u);
+
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+
+    table.generation = 65534;
+    tt_new_search(&table);
+    REQUIRE_EQ(table.generation, 65535);
+
+    const std::vector<uint64_t> h = hashes_in(table, 13, 4);
+
+    put(&table, h[0], 6);  // A: 6 - 2 * 1 = 4 once the counter has come round
+
+    tt_new_search(&table);
+    REQUIRE_EQ(table.generation, 1);
+
+    put(&table, h[1], 5);  // B: 5
+    put(&table, h[2], 7);  // C: 7
+
+    put(&table, h[3], 1);
+
+    CHECK_MESSAGE(find(&table, h[0]) == nullptr,
+                  "an entry from before the wrap was weighed as current");
+    CHECK(find(&table, h[1]) != nullptr);
+    CHECK(find(&table, h[2]) != nullptr);
+
+    tt_free(&table);
+  }
+
+
+  // S271's finding, structurally: a direct-mapped slot whose entry read as
+  // current refused every shallower store for the rest of the search. Now a
+  // position the cluster does not hold always gets a way, however deep and
+  // current the three it finds. TC04 puts the refusal back.
+  TEST_CASE("a full cluster never refuses a new position")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const std::vector<uint64_t> h = hashes_in(table, 21, 4);
+
+    put(&table, h[0], 20);
+    put(&table, h[1], 30);
+    put(&table, h[2], 40);
+
+    // Precondition: three current entries, each deeper than the store below.
+    for (size_t i = 0; i < 3; ++i) {
+      REQUIRE(find(&table, h[i]) != nullptr);
+      REQUIRE_EQ(find(&table, h[i])->generation, table.generation);
+      REQUIRE(find(&table, h[i])->depth > 1);
+    }
+
+    put(&table, h[3], 1);
+    CHECK(find(&table, h[3]) != nullptr);
+
+    tt_free(&table);
+  }
+
+
+  // The residual aliasing tt_age() states: entries untouched for exactly one
+  // full cycle of the counter read as current (age 0) for that one search.
+  // They must still give way to another position, however deep. The three
+  // are written deep, the counter is taken round once, and the store comes
+  // in below every one of them -- the precondition the refusal needs, so
+  // TC04 (a current, deeper way refuses a new position) turns this red on
+  // its own.
+  TEST_CASE("an entry aliased to current never refuses a new position")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const std::vector<uint64_t> h = hashes_in(table, 22, 4);
+
+    put(&table, h[0], 30);
+    put(&table, h[1], 40);
+    put(&table, h[2], 50);
+
+    const uint16_t written = table.generation;
+
+    for (unsigned i = 0; i < TT_GENERATION_CYCLE; ++i) {
+      tt_new_search(&table);
+    }
+
+    // Precondition: the counter has come round to the very value the three
+    // were written at, so each reads as this search's own and deeper than
+    // the store below.
+    REQUIRE_EQ(table.generation, written);
+
+    for (size_t i = 0; i < 3; ++i) {
+      const tt_entry_t* entry = find(&table, h[i]);
+      REQUIRE(entry != nullptr);
+      REQUIRE_EQ(tt_age(table.generation, entry->generation), 0u);
+      REQUIRE(entry->depth > TT_DEPTH_QS);
+    }
+
+    put(&table, h[3], TT_DEPTH_QS);
+    CHECK(find(&table, h[3]) != nullptr);
+
+    tt_free(&table);
+  }
+
+
+  // THE PARTIAL KEY'S COLLISION PATH, documented rather than prevented (S119,
+  // DEC-258): two hashes in one cluster that agree in their low 32 bits are
+  // one position to the table, so a probe for the second returns the first's
+  // entry. tt_get_entry() states the rate and what guards each reader; "a
+  // colliding table entry cannot extend a mate line" in the mate line suite is
+  // the guard on the reader that publishes a line.
+  TEST_CASE("a partial-key collision reads the other position's entry")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    const uint64_t stored = hashes_in(table, 30, 1)[0];
+    const uint64_t other = stored + (1ULL << 32);
+
+    REQUIRE_EQ(tt_cluster_index(&table, stored),
+               tt_cluster_index(&table, other));
+    REQUIRE_EQ(tt_key_of(stored), tt_key_of(other));
+    REQUIRE(find(&table, other) == nullptr);
+
+    put(&table, stored, 9);
+
+    const tt_entry_t* read = find(&table, other);
+    REQUIRE(read != nullptr);
+    CHECK_EQ(read->depth, 9);
+    CHECK_EQ(read->score, 90);
+
+    // And a never-written entry, key 0, does not match a hash whose low 32
+    // bits are 0. TC05 drops the written test from the probe.
+    const uint64_t zero_low = first_hash_of(table, 40) + (1ULL << 40);
+    REQUIRE_EQ(tt_key_of(zero_low), 0u);
+    REQUIRE_EQ(tt_cluster_index(&table, zero_low), 40u);
+    CHECK(find(&table, zero_low) == nullptr);
+
+    tt_free(&table);
+  }
+
+
+  // Hash 3 is 49152 clusters, not a power of two. Until S119 the count was
+  // floored to one; now the index multiplies, the last cluster is reachable,
+  // and the third of the table above the old floor is used in proportion.
+  TEST_CASE("a Hash that is not a power of two is indexed whole")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 3);
+    tt_new_search(&table);
+
+    REQUIRE_EQ(table.cluster_count, 49152u);
+    REQUIRE_FALSE(std::has_single_bit(table.cluster_count));
+
+    const size_t floor = std::bit_floor(table.cluster_count);
+
+    CHECK_EQ(tt_cluster_index(&table, 0), 0u);
+    CHECK_EQ(tt_cluster_index(&table, UINT64_MAX), table.cluster_count - 1);
+
+    // An entry in the last cluster round-trips.
+    put(&table, UINT64_MAX, 4);
+    REQUIRE(find(&table, UINT64_MAX) != nullptr);
+    CHECK_EQ(find(&table, UINT64_MAX)->depth, 4);
+
+    // A fixed splitmix64 stream: about a third of it lands above the old
+    // floor, 16384 / 49152.
+    uint64_t state = 0x5119;
+    size_t above = 0;
+    const size_t samples = 120000;
+
+    for (size_t i = 0; i < samples; ++i) {
+      state += 0x9e3779b97f4a7c15ULL;
+      uint64_t z = state;
+      z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+      z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+      z ^= z >> 31;
+
+      const size_t index = tt_cluster_index(&table, z);
+      REQUIRE(index < table.cluster_count);
+
+      if (index >= floor) { above++; }
+    }
+
+    CHECK(above > samples * 30 / 100);
+    CHECK(above < samples * 37 / 100);
+
+    tt_free(&table);
+  }
+
+
+  // The index's fallback for a compiler without a 128-bit type, held to the
+  // 128-bit product wherever that type exists.
+  TEST_CASE("the multiply's two forms agree")
+  {
+#if defined(__SIZEOF_INT128__)
+    uint64_t state = 0x119;
+
+    const auto next = [&state]() {
+      state += 0x9e3779b97f4a7c15ULL;
+      uint64_t z = state;
+      z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
+      z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
+      return z ^ (z >> 31);
+    };
+
+    const auto wide = [](uint64_t a, uint64_t b) {
+      return static_cast<uint64_t>((static_cast<unsigned __int128>(a) * b) >>
+                                   64);
+    };
+
+    const uint64_t edges[] = {0ULL, 1ULL, 0xffffffffULL, UINT64_MAX};
+
+    for (const uint64_t a : edges) {
+      for (const uint64_t b : edges) {
+        REQUIRE_EQ(tt_mul_hi64_halves(a, b), wide(a, b));
+      }
+    }
+
+    for (int i = 0; i < 20000; ++i) {
+      const uint64_t a = next();
+      const uint64_t b = (i % 2 == 0) ? next() : (next() >> 20);
+      REQUIRE_EQ(tt_mul_hi64_halves(a, b), wide(a, b));
+    }
+#else
+    MESSAGE("no 128-bit type: the fallback is the index and nothing checks it");
+#endif
+  }
+
+
+  // `hashfull` is permille of the first 1002 entries the current search
+  // wrote. TC06 counts every written entry, which reads 1000 after the first
+  // few searches and says nothing.
+  TEST_CASE("hashfull counts the current search's entries")
+  {
+    transposition_table_t table = {};
+    tt_resize(&table, 1);
+    tt_new_search(&table);
+
+    CHECK_EQ(tt_hashfull(&table), 0);
+
+    // One way in each sampled cluster: 334 of 1002.
+    for (size_t c = 0; c < 334; ++c) {
+      put(&table, hashes_in(table, c, 1)[0], 1);
+    }
+
+    CHECK_EQ(tt_hashfull(&table), 333);
+
+    // Outside the sample: no change.
+    put(&table, hashes_in(table, 5000, 1)[0], 1);
+    CHECK_EQ(tt_hashfull(&table), 333);
+
+    // Every way: the whole of it.
+    for (size_t c = 0; c < 334; ++c) {
+      for (const uint64_t hash : hashes_in(table, c, 3)) {
+        put(&table, hash, 1);
+      }
+    }
+
+    CHECK_EQ(tt_hashfull(&table), 1000);
+
+    // A new search has written nothing yet.
+    tt_new_search(&table);
+    CHECK_EQ(tt_hashfull(&table), 0);
 
     tt_free(&table);
   }
@@ -5875,11 +6315,13 @@ TEST_SUITE("search: windowed root")
   // first move it searches is the previous iteration's best". Nothing ordered
   // the root that way except the table. score_move() puts one move first, the
   // tt_move, and the root read it from tt_get_entry(); there is no root move
-  // list carrying the previous iteration's result. tt_store_entry() replaces an
-  // entry of the current generation whenever depth >= entry->depth and the
-  // generation is per `go` rather than per iteration, so any unreduced ply-1
-  // node of the next iteration whose key indexes the root's slot evicts it, and
-  // the aspiration re-search that follows probes a miss and orders the root by
+  // list carrying the previous iteration's result. tt_store_entry() lets a
+  // store of another position replace the way worth least in its cluster, and
+  // the generation is per `go` rather than per iteration, so a node of the
+  // next iteration whose key lands in the root's cluster evicts the root's
+  // entry whenever that entry is the least worth there (until S119 the slot
+  // was one entry and any unreduced ply-1 node landing on it did), and the
+  // aspiration re-search that follows probes a miss and orders the root by
   // captures, killers and history instead. Under the aspiration window the
   // first move to beat `score - delta` is then published before the previous
   // best has been searched at this depth, and an abort right there played it.
@@ -13109,5 +13551,103 @@ TEST_SUITE("search: mate line completion")
 
     CHECK_MESSAGE(pv.length == 5, ("line: " + line));
     CHECK_EQ(line, "d3h3 g7g8 g5g6 g8f8 h3h8");
+  }
+
+
+  // S119's partial key: a probe can return another position's entry, and the
+  // walk must not publish a line on one. The same fixture as above, with the
+  // entry two plies from the root written under **another hash** that agrees
+  // with that position's in its low 32 bits and its cluster -- exactly what a
+  // collision is -- carrying an exact mate at the distance the line owes there
+  // and a move from another position: d3h3, the root's key move, which the
+  // generator does not produce two plies on (the queen has left d3).
+  //
+  // The control first, so the refusal is not a walk that never reached the
+  // entry: the same entry naming g5g6 completes all five plies. Then the
+  // forged move: the walk takes g7g8 on the entry's certificate, refuses
+  // d3h3 at the generator, and leaves the one-ply line (DEC-122's all or
+  // nothing). The score itself is not authenticated by anything; what a
+  // collision cannot do is extend a line that does not deliver.
+  TEST_CASE_FIXTURE(search_fixture_t,
+                    "a colliding table entry cannot extend a mate line")
+  {
+    const std::string fen = "rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1";
+
+    auto uci = [](move_t move) { return print_move(move).substr(0, 4); };
+
+    auto find = [&](const std::string& text) -> move_t {
+      move_t moves[MAX_MOVES];
+      const size_t count = legal_moves(&game, moves);
+      for (size_t i = 0; i < count; ++i) {
+        if (uci(moves[i]) == text) { return moves[i]; }
+      }
+      FAIL("no legal move " << text << " in " << generate_FEN(&game.board));
+      return 0;
+    };
+
+    const auto walk = [&](const std::string& planted) -> std::string {
+      REQUIRE(load_FEN(fen, &game));
+      tt_reset(&tt);
+      tt_new_search(&tt);
+
+      const move_t key = find("d3h3");
+      REQUIRE(make_move(&game, key));
+      REQUIRE(make_move(&game, find("g7g8")));
+
+      // The move to plant: g5g6 is legal here; d3h3 is the root's move.
+      move_t move = 0;
+      if (planted == "g5g6") {
+        move = find("g5g6");
+      } else {
+        move = key;
+
+        move_t moves[MAX_MOVES];
+        const size_t count = legal_moves(&game, moves);
+        for (size_t i = 0; i < count; ++i) {
+          REQUIRE_MESSAGE(moves[i] != move, "the forged move is legal here");
+        }
+      }
+
+      // Another position, as far as the table can tell: same low 32 bits,
+      // same cluster, a different hash.
+      board_t other = game.board;
+      other.hash = game.board.hash + (1ULL << 32);
+      REQUIRE_EQ(tt_cluster_index(&tt, other.hash),
+                 tt_cluster_index(&tt, game.board.hash));
+      REQUIRE_EQ(tt_key_of(other.hash), tt_key_of(game.board.hash));
+
+      tt_store_entry(&tt, &other, 3, MATE_MAX_WALK - 3, TT_PV_NODE, move);
+
+      // The probe of the real position returns it.
+      const tt_entry_t* read = tt_get_entry(&tt, &game.board);
+      REQUIRE(read != nullptr);
+      REQUIRE_EQ(read->best_move, move);
+
+      unmake_move(&game);
+      unmake_move(&game);
+
+      static std::atomic_bool never_stop = false;
+      search_state_t state = {};
+      state.tt = &tt;
+      state.stop = &never_stop;
+
+      pv_t pv = {};
+      pv.table[0] = key;
+      pv.length = 1;
+
+      const std::string before = generate_FEN(&game.board);
+      complete_mate_pv(&game, &state, &pv, 3);
+      REQUIRE_EQ(generate_FEN(&game.board), before);
+
+      std::string line;
+      for (size_t i = 0; i < pv.length; ++i) {
+        line += (i ? " " : "") + uci(pv.table[i]);
+      }
+
+      return line;
+    };
+
+    REQUIRE_EQ(walk("g5g6"), "d3h3 g7g8 g5g6 g8f8 h3h8");
+    CHECK_EQ(walk("d3h3"), "d3h3");
   }
 }

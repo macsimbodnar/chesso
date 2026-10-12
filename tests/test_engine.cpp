@@ -330,7 +330,7 @@ TEST_SUITE("engine: transposition table")
   {
     transposition_table_t table = {};
     tt_resize(&table, 1);
-    REQUIRE(table.entries != nullptr);
+    REQUIRE(table.clusters != nullptr);
 
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
 
@@ -376,7 +376,7 @@ TEST_SUITE("engine: transposition table")
     REQUIRE(tt_get_entry(&table, &game.board) == nullptr);
 
     // Reset must not drop the allocation.
-    REQUIRE(table.entries != nullptr);
+    REQUIRE(table.clusters != nullptr);
     REQUIRE(table.entry_count > 0);
 
     tt_free(&table);
@@ -453,21 +453,34 @@ TEST_SUITE("engine: transposition table")
     tt_free(&table);
   }
 
+  // The counter is 16 bits since S119 and comes round every 65535 searches,
+  // so the loop runs past two wraps -- counted, because a loop that never
+  // wrapped would pass without the skip existing.
   TEST_CASE_FIXTURE(engine_fixture_t,
                     "generation never lands on the reserved 0")
   {
     transposition_table_t table = {};
     tt_resize(&table, 1);
 
-    for (int i = 0; i < 600; ++i) {
+    int wraps = 0;
+
+    for (int i = 0; i < 2 * 65535 + 10; ++i) {
+      const uint16_t before = table.generation;
       tt_new_search(&table);
       REQUIRE_NE(table.generation, 0);
+
+      if (table.generation < before) { wraps++; }
     }
+
+    REQUIRE_EQ(wraps, 2);
 
     tt_free(&table);
   }
 
-  TEST_CASE_FIXTURE(engine_fixture_t, "resize clamps and keeps a power of two")
+  // Was "resize clamps and keeps a power of two" until S119, which stopped
+  // rounding the count down: every megabyte is 16384 whole clusters, and the
+  // index is a multiply rather than a mask, so no power of two is needed.
+  TEST_CASE_FIXTURE(engine_fixture_t, "resize clamps and uses every megabyte")
   {
     transposition_table_t table = {};
 
@@ -475,15 +488,16 @@ TEST_SUITE("engine: transposition table")
          {size_t(0), size_t(1), size_t(3), size_t(16), size_t(100000)}) {
       tt_resize(&table, requested);
 
-      REQUIRE(table.entries != nullptr);
-      REQUIRE(table.entry_count > 0);
-      REQUIRE_EQ(table.index_mask, table.entry_count - 1);
+      const size_t clamped =
+          std::clamp<size_t>(requested, TT_MIN_MB, TT_MAX_MB);
 
-      // Power of two, so masking is a valid substitute for a modulo.
-      REQUIRE_EQ(table.entry_count & table.index_mask, 0);
+      REQUIRE(table.clusters != nullptr);
+      REQUIRE_EQ(table.cluster_count * sizeof(tt_cluster_t),
+                 clamped * 1024 * 1024);
+      REQUIRE_EQ(table.entry_count, table.cluster_count * TT_CLUSTER_ENTRIES);
 
-      const size_t bytes = table.entry_count * sizeof(tt_entry_t);
-      REQUIRE(bytes <= size_t(TT_MAX_MB) * 1024 * 1024);
+      // Every cluster starts on a line, so none straddles two.
+      REQUIRE_EQ(reinterpret_cast<uintptr_t>(table.clusters) % 64, 0u);
     }
 
     tt_free(&table);
@@ -2757,7 +2771,7 @@ TEST_SUITE("engine: uci layer")
       // Whatever the value, the table stays usable. And it has to actually
       // grow: without this the option could be dropped on the floor and every
       // other assertion here would still hold.
-      REQUIRE_MESSAGE(uci_tt()->entries != nullptr, value);
+      REQUIRE_MESSAGE(uci_tt()->clusters != nullptr, value);
       REQUIRE_MESSAGE(uci_tt()->entry_count > previous, value);
 
       previous = uci_tt()->entry_count;
@@ -5686,7 +5700,7 @@ TEST_SUITE("engine: mate safety")
 
     transposition_table_t table = {};
     tt_resize(&table, 1);
-    REQUIRE(table.entries != nullptr);
+    REQUIRE(table.clusters != nullptr);
 
     std::atomic_bool never_stop{false};
     std::unique_ptr<search_state_t> state;

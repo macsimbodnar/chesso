@@ -522,11 +522,12 @@ static bool load_position(const std::string& fen)
 // board as a bare FEN, or moves its base after a capture, searched every move
 // cold: +21.8 to +26.8 % nodes to the same depth for a bare FEN each move,
 // adocs/data/S271_replay.md. New-game signalling is `ucinewgame`'s (UCI.txt),
-// and an entry kept from another game holds its slot no longer than one from
-// earlier in the same game: tt_store_entry() lets any store replace an entry
-// an earlier search wrote, except when the 8-bit generation has come round
-// to it again -- every 255 searches -- and it is kept against a shallower
-// store as this search's own. DEC-264.
+// and an entry kept from another game holds its place no longer than one from
+// earlier in the same game: tt_store_entry() weighs every entry by depth less
+// two plies per search of age, and a store of a position its cluster does not
+// hold always lands. Until S119 the slot was one entry, and one the 8-bit
+// generation had come round to -- every 255 searches -- refused shallower
+// stores as this search's own. DEC-264.
 static void commit_position_base(const std::string& fen)
 {
   if (initial_position == fen) { return; }
@@ -1240,17 +1241,19 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // **That second clause is now enforced rather than asserted in prose.**
     // Nothing orders the root except the table: score_move() puts the tt_move
     // first and the root reads it from tt_get_entry(), with no root move list
-    // behind it. tt_store_entry() replaces an entry of the current generation
-    // whenever depth >= entry->depth and the generation is per `go` rather than
-    // per iteration, so any unreduced ply-1 node of this iteration whose key
-    // indexes the root's slot evicts the root's entry -- and an aspiration
-    // re-search then probes a miss, orders by captures, killers and history,
-    // and can publish the first move to beat `previous score - delta` before
-    // the previous best has been searched at this depth. An abort at that
-    // moment played it. state.root_move_hint carries the last completed
-    // iteration's best move into the root and is used exactly where the table
-    // has nothing, so the sentence above is true whether the entry survived or
-    // not. 2026-09-04_adversarial-F03, S210.
+    // behind it. tt_store_entry() gives way to a store of another position in
+    // the root's cluster when the root's entry is the one worth least there,
+    // and the generation is per `go` rather than per iteration, so a node of
+    // this iteration whose key indexes the root's cluster can evict the
+    // root's entry (one entry a slot until S119, when any unreduced ply-1 node
+    // landing on it did) -- and an aspiration re-search then probes a miss,
+    // orders by captures, killers and history, and can publish the first move
+    // to beat `previous score - delta` before the previous best has been
+    // searched at this depth. An abort at that moment played it.
+    // state.root_move_hint carries the last completed iteration's best move
+    // into the root and is used exactly where the table has nothing, so the
+    // sentence above is true whether the entry survived or not.
+    // 2026-09-04_adversarial-F03, S210.
     const bool has_result = search_result.pv.length > 0;
 
     if (has_result) {
@@ -1435,10 +1438,13 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
           (result.total_node_explored * 1000000ULL) /
           ((elapsed_us > 0) ? static_cast<uint64_t>(elapsed_us) : 1ULL);
 
+      // `hashfull` is the table's, read after the iteration: permille of it
+      // this `go` has written (tt_hashfull()). Reporting only. S119.
       uci_reply("info score " + last_score + " time " +
                 STR(elapsed_ms.count()) + " depth " + STR(last_complete_depth) +
                 " nodes " + STR(result.total_node_explored) + " nps " +
-                STR(nps) + " pv " + pv_to_string(&result.pv));
+                STR(nps) + " hashfull " + STR(tt_hashfull(state.tt)) + " pv " +
+                pv_to_string(&result.pv));
     }
 
     if (state.aborted) { break; }

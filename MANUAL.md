@@ -71,7 +71,7 @@ the one it labelled that side with.
 | `OwnBook` | check | `false` | — | play from the engine's own opening book when the position is in it. Only `true` and `false` are recognised; any other value leaves the setting unchanged. Was `Use Book` until S172 |
 | `Book File` | string | `<embedded>` | — | which book. `<embedded>` and an empty value both mean the book compiled into the binary — see "The book it ships with" below; anything else is a path to a Polyglot `.bin`, loaded when the option is set. A file that does not open, is not a whole number of 16-byte entries, or whose keys are not sorted is **refused**, and the engine then plays with no book at all rather than falling back to the built-in one — the refusal and its reason are printed as `info string book [<path>] not loaded: <why>. Playing without a book`. The value runs to the end of the line, so a path with spaces in it needs no quoting |
 | `Best Book Move` | check | `false` | — | `false` draws among the position's book moves in proportion to their Polyglot weight; `true` always plays the heaviest entry. Before S172 the draw was uniform and the weight was never read |
-| `Hash` | spin | 16 | 1 to 4096 | transposition table size in MB, clamped into range. Not honoured exactly — see known bugs. A value that is not an integer in full is **refused** on the UCI channel in every build, and the table keeps the size it had — `0x40`, `64abc` and `12.5` are refused rather than read as 0, 64 and 12, which is what they bought until S209 |
+| `Hash` | spin | 16 | 1 to 4096 | transposition table size in MB, clamped into range. Every megabyte is used, as 16384 cache-line clusters of three entries each (S119; until then the entry count was rounded down to a power of two). Not guaranteed when memory is refused — see known bugs. A value that is not an integer in full is **refused** on the UCI channel in every build, and the table keeps the size it had — `0x40`, `64abc` and `12.5` are refused rather than read as 0, 64 and 12, which is what they bought until S209 |
 | `Threads` | spin | 1 | 1 to 1 | present so GUIs that insist on setting it do not fail. **The search is single-threaded**; any value other than `1` is ignored with a warning in the log |
 
 **An option name is not case sensitive, and neither is a check option's value.**
@@ -400,12 +400,17 @@ move on a cold table: over 8653 positions of 200 self-play games that cost
 and `test`, before each of its positions that is a new base, which keeps its
 output what it was before S271 — and by nothing else. UCI gives new-game
 signalling to `ucinewgame`, and an entry kept from an earlier game holds its
-slot no longer than one kept from earlier in the same game. Any store to the
-slot overwrites an entry an earlier search wrote, with one exception: the
-search counter is 8 bits and comes round every 255 searches, so an entry
-written exactly that many searches back (or a multiple of it) reads as the
-current search's own, and only a store at least as deep replaces it. To search
-a position cold, send `ucinewgame` first.
+place no longer than one kept from earlier in the same game. Since S119 the
+table is clusters of three entries, and a store of a position its cluster does
+not hold always lands: it replaces the entry worth least, its depth less two
+plies for every search since it was written. The search counter is 16 bits and
+comes round every 65535 searches, so an entry untouched for exactly that many
+(or a multiple) is weighed as current for that one search. It still gives way
+to a store of another position whenever it is the least worth; a store of the
+same position that is shallower than it is refused for that search, the rule
+a same-position store follows within any one search. Until S119 the counter
+was 8 bits, the slot was one entry, and such an entry refused every shallower
+store, of any position, for the search. To search a position cold, send `ucinewgame` first.
 
 **The bound is 4871 plies**, which is `HISTORY_MAX_SIZE - MAX_PLY - 1`: the
 move history holds 5000 entries and the search needs `MAX_PLY` of them above
@@ -479,17 +484,18 @@ One `info` line per finished iteration, then one `bestmove`. An iteration that
 was cut short reports too, if it already has a line to play.
 
 ```
-info score cp 80 time 10 depth 6 nodes 77104 nps 7165799 pv c3d5 e7d8 c2c3 f8e8 h2h3 g4f3
+info score cp 121 time 2 depth 6 nodes 6258 nps 3037864 hashfull 2 pv c3d5 e7d7 d5f6 g7f6 g5d2 c6d4
 bestmove c3d5
 ```
 
 **The fields above are the whole set, in that order, and the example is the
 specification of it rather than an illustration.** `score` is always first and
 `pv` always last, since `pv` runs to the end of the line; a search's `info` line
-carries no other field — no `hashfull`, no `multipv`, no `currmove`, no
-`seldepth`, no `tbhits`. `info string` is a different line and not a field of
-this one: it carries the refusals and the book message documented elsewhere in
-this manual, never a score or a pv. Adding a field here, dropping one or
+carries no other field — no `multipv`, no `currmove`, no `seldepth`, no
+`tbhits`; `hashfull` joined the set in S119, between `nps` and `pv`. `info
+string` is a different line and not a field of this one: it carries the
+refusals and the book message documented elsewhere in this manual, never a
+score or a pv. Adding a field here, dropping one or
 reordering them is a surface change: `test_uci_surface` reads the field names
 off a fixed-depth search and off the example line above and requires both to
 match the golden it carries, so the change fails there until this section is
@@ -502,6 +508,7 @@ rewritten with it (S213, DEC-184).
 | `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair never claims a mate the line does not reach. Where that completion fails and the last completed depth's line starts with the same move, that line is printed instead, and `bestmove`'s `ponder` is its second move (S202) |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
+| `hashfull` | permille of the transposition table this search has written, read after the iteration off its first 1002 entries (334 clusters of three), which a uniform hash fills at the rate of the rest. Entries an earlier search wrote are not counted, so it starts near 0 on every `go` and does not reach 1000 just because the table has been in use. Since S119 |
 | `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate — 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate — **or it is left short, and never wrong**: the line is rebuilt from the transposition table after the search and published only if that walk ends in checkmate at exactly the claimed distance, so an entry the table no longer holds leaves the short line the search produced rather than a line that does not deliver. Measured at 8 such lines from 1 search in 3000 games (DEC-150) |
 
 `bestmove 0000` means no legal move at all. A search cut off before it finished
@@ -686,10 +693,10 @@ against d4 and e4 against e5.
   phase-by-phase disagreement above has **not** been re-measured against these
   constants. The shape of the warning is what to keep: the typical move is
   close, the tail is wide, and a pawn endgame score deserves suspicion.
-- **`Hash` is not honoured exactly.** The value is clamped to 1–4096 MB, then the
-  *entry count* is rounded down to a power of two so probing can mask instead of
-  divide, so the table is usually smaller than asked for. If the allocation
-  fails the engine halves the count and retries, and if every size fails it runs
+- **`Hash` is not honoured when memory is refused.** The value is clamped to
+  1–4096 MB and used whole since S119 (it used to be rounded down to a power
+  of two of entries, so Hash 16 bought 12 MiB). If the allocation fails the
+  engine halves the cluster count and retries, and if every size fails it runs
   **without a transposition table** rather than refusing to play. Nothing is
   reported back over UCI in any of these cases; the log records them. A value
   that is not an integer in full is the one case that *is* reported, since

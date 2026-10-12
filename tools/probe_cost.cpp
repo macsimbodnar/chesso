@@ -42,10 +42,16 @@ int main()
   printf("sizeof(eval_cache_entry_t) = %zu bytes\n",
          sizeof(eval_cache_entry_t));
 
-  // The table the engine actually allocates at the default Hash=16.
+  // A stand-in for the table, not its layout: a direct-mapped array of
+  // today's tt_entry_t at the power-of-two count below 16 MiB -- 524288
+  // 20-byte entries in 10 MiB since S119. S034 ran it on 24-byte entries, 12
+  // MiB. The engine allocates 64-byte clusters instead (16 MiB, 786432
+  // entries at Hash=16). What this prices is one read of a random line far
+  // out of cache, which a table of either shape costs; S119 changed this
+  // comment and the label below, not what is measured.
   const size_t tt_count =
       std::bit_floor((16u * 1024 * 1024) / sizeof(tt_entry_t));
-  printf("tt at Hash=16             = %zu entries, %zu MB\n\n", tt_count,
+  printf("tt stand-in, direct-mapped = %zu entries, %zu MB\n\n", tt_count,
          (tt_count * sizeof(tt_entry_t)) / (1024 * 1024));
 
   // A small direct-mapped eval cache, sized to stay in L2.

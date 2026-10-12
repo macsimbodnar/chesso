@@ -118,8 +118,8 @@ move_t legal_move_named(const game_t* game, const std::string& text)
 
 // The stored move, re-validated against this position's generator. A stored
 // move is a move_t from another position on a key that matched, and S147's
-// extend_mate_pv() re-validates for the same reason: a 64-bit key still
-// collides.
+// extend_mate_pv() re-validates for the same reason: a key still collides,
+// and since S119 the table compares 32 key bits and the cluster index.
 move_t legal_move_matching(const game_t* game, move_t stored)
 {
   if (stored == 0) { return 0; }

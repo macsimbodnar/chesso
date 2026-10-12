@@ -544,12 +544,18 @@ enum node_type_t
 // score: a balanced position evaluates to it several times a search.
 #define TT_EVAL_NONE INT16_MIN
 
+// One position's record. 20 bytes, three to a cluster (tt_cluster_t). S119.
 struct tt_entry_t
 {
-  uint64_t key;
+  // The low 32 bits of the position's hash. The cluster is chosen by the high
+  // bits (tt_cluster_index()), so a probe checks the 32 here plus the index:
+  // 50 bits at Hash 16, where there are 2^18 clusters. A partial key on
+  // purpose -- the full 64 would not leave three entries a line -- and the
+  // trade is stated once, at tt_get_entry().
+  uint32_t key;
+
   int32_t score;
   move_t best_move;
-  int16_t depth;
 
   // The static evaluation of this position, or TT_EVAL_NONE where no node that
   // wrote the entry ever had one to record. Not the same number as `score`,
@@ -562,15 +568,6 @@ struct tt_entry_t
   // position and not of the visit that recorded it. Across a key change it is
   // erased -- see tt_eval_to_store(). S108.
   //
-  // Free in space. The struct is 8-byte aligned for the key, and the fields
-  // around this one come to 20 bytes of content in 24 -- 8 for the key, 4 for
-  // the score, 4 for the move, 2 for the depth, 1 each for the type and the
-  // generation -- so this lands in padding that was already being paid for and
-  // the content is 22 bytes in 24 with it. sizeof(tt_entry_t) is 24 before and
-  // after, and the entry count for a given Hash is untouched. tt_resize()
-  // floors that count to a power of two as well, so anything from 17 to 32
-  // bytes an entry would have produced the same count regardless.
-  //
   // 16 bits is not a constraint anything real approaches. evaluate() is
   // material plus tapered tables: S213's case measured a maximum |evaluate()|
   // of 22945 over 66430 accepted generated placements (fifteen queens against
@@ -578,23 +575,53 @@ struct tt_entry_t
   // and the case asserts the score stays below MATE_MIN's 48000.
   int16_t eval;
 
-  uint8_t type;        // node_type_t
-  uint8_t generation;  // search that wrote it; 0 means never written
+  int16_t depth;
+
+  // The search that wrote it; 0 means never written. 16 bits, so the counter
+  // comes round every 65535 searches (tt_new_search() skips 0) and age is read
+  // as a distance on that cycle, tt_age(). Until S119 it was 8 bits and came
+  // round every 255, which a long game on one base reaches (S271).
+  uint16_t generation;
+
+  uint8_t type;  // node_type_t
 };
+
+static_assert(sizeof(tt_entry_t) == 20,
+              "three entries and their padding fill one 64-byte cluster");
+
+
+// How many entries share a line.
+inline constexpr size_t TT_CLUSTER_ENTRIES = 3;
+
+// One cache line of the table: the three entries a hash may live in, and 4
+// bytes of padding. Aligned to the line, and the allocation is aligned to it
+// too (tt_allocate()), so a probe reads exactly one line and none straddles
+// two -- the 24-byte entries before S119 divided neither 32 nor 64, and two in
+// eight crossed a line.
+struct alignas(64) tt_cluster_t
+{
+  tt_entry_t entries[TT_CLUSTER_ENTRIES];
+};
+
+static_assert(sizeof(tt_cluster_t) == 64, "a cluster is exactly one line");
+static_assert(alignof(tt_cluster_t) == 64,
+              "a cluster starts on a line, so none straddles two");
 
 
 struct transposition_table_t
 {
-  uint8_t generation = 0;
+  uint16_t generation = 0;
 
-  // entry_count is always a power of two, so the index is a mask instead of a
-  // division on every probe.
+  // Any count: tt_cluster_index() maps a hash onto [0, cluster_count) with a
+  // multiply, so every megabyte asked for is used and nothing is rounded down
+  // to a power of two, as it was until S119. entry_count is
+  // cluster_count * TT_CLUSTER_ENTRIES.
+  size_t cluster_count = 0;
   size_t entry_count = 0;
-  size_t index_mask = 0;
 
-  tt_entry_t* entries = nullptr;
+  tt_cluster_t* clusters = nullptr;
 
-  // What was allocated, which `entries` points into: tt_allocate() aligns the
+  // What was allocated, which `clusters` points into: tt_allocate() aligns the
   // table inside a larger block, so the block is what tt_free() hands back.
   // `allocation_mapped` says which call made it -- an anonymous mapping on
   // Linux, calloc() elsewhere or when the mapping is refused. S119.

@@ -3779,7 +3779,7 @@ is about.
 | | `fastchess.sh` | why |
 |---|---|---|
 | time control | `8+0.08` | what the engines this plan reads figures from test at, and about 29 s a game against 52 s at the old `10+0.2` — DEC-083 |
-| hash | `16` MB | matches table **pressure**, not table size: at the rating list's 2'+1" a game writes ~660 M nodes against 5.6–11 M entries, 60–120 overwrites per entry, and 16 MB at 8+0.08 reproduces that ratio where 128 MB undershoots it about eightfold — DEC-088 |
+| hash | `16` MB | chosen to match table **pressure**, not table size. DEC-088 estimated that at the rating list's 2'+1" a game writes ~660 M nodes against 5.6–11 M entries, 60–120 overwrites per entry, and that 16 MB at 8+0.08 reproduces that ratio where 128 MB undershoots it about eightfold. **Measured, it does not reproduce it:** the harness's own PGNs (the `n=` fastchess writes per move, counted in S119) give about 2e7 nodes a side a game, so 35 to 40 overwrites per entry on the 524288 entries 16 MB bought before S119 and 23 to 26 on the 786432 it buys since. Whether to move the harness `Hash` is put to the owner (S119); the setting stays 16 until that ruling |
 | book | `noob_3moves.epd` | balanced, 150932 positions. S219 measured four CC0 candidates by `nElo^2 x games/hour` of a fixed doubling-of-time handicap and picked the largest, which was this one — DEC-189, superseding DEC-083's unbalanced pick |
 | threads | `1` | the target is the CCRL Blitz **1CPU** scale — DEC-089 |
 | concurrency | every core the machine reports: `sysctl -n hw.physicalcpu`, else `nproc` | DEC-048, DEC-050 |

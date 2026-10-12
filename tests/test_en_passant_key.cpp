@@ -53,7 +53,7 @@ struct ep_fixture_t
   {
     initialize_game_const_data(&game);
 
-    if (tt.entries == nullptr) { tt_resize(&tt, 4); }
+    if (tt.clusters == nullptr) { tt_resize(&tt, 4); }
     tt_reset(&tt);
   }
 };

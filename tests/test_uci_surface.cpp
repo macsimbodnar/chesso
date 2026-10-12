@@ -72,7 +72,7 @@ static const std::vector<std::string> expected_option_names = {
 // rewritten first (SURFACE); the case below reads the field names back out of
 // its example line and requires the three to agree.
 static const std::vector<std::string> expected_info_fields = {
-  "score", "cp", "time", "depth", "nodes", "nps", "pv",
+  "score", "cp", "time", "depth", "nodes", "nps", "hashfull", "pv",
 };
 // clang-format on
 

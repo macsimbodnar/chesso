@@ -5,7 +5,26 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-11, by hand.
+Updated: 2026-10-12, by hand.
+
+## 2026-10-12: S119 in progress -- prefetch and huge pages landed; the cluster table waits on its SPRT
+
+Part A, a prefetch of the child's slot after each move (`161b9f9`), and Part
+B, the table on transparent huge pages (`cc87dfb`), are node-identical and
+kept under DEC-266: +2.30 % wall (A, Hash 16) and +4.61 % (B, Hash 128),
+each beyond the session's A/A floor with both layout perturbations agreeing.
+Part C, 64-byte clusters of three 20-byte entries with depth-and-age
+replacement and a 16-bit generation, alters play (bench 3872032) and lands
+as the SPRT's candidate; an H0 or no verdict reverts it, A and B stay.
+Second tier green on both trees (Debug self-play 0 `Assertion`; gate_extra 5
+stages). Fast check: the engine code clean; a vacuous test half, the
+`hashfull` clause, DEV_MANUAL's pressure row, stale prose and the abort
+rule's wording fixed. **Owner question open:** the harness `Hash`. Measured
+pressure is 35 to 40 overwrites per entry before S119 and 23 to 26 after,
+against DEC-088's 60 to 120; 8 MB would restore it. The SPRT
+(`adocs/data/S119_sprt.sh`, {0, 5}, worst case 19.8 h) starts after the
+ruling. `hashfull` at the list's 2'+1" / Hash 128 reads a median of 43 %, at
+`rating.sh`'s 10+0.2 a median of 6 %.
 
 ## 2026-10-11: the owner ruled on S273's two questions, and on how questions are asked
 
