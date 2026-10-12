@@ -40,9 +40,33 @@ rulings (DEC-268: Hash 16 as pre-registered; the `hashfull` clause means
 `rating.sh`'s control). CAND `298788b`, REF `cc87dfb`, {0,5}, 8+0.08, worst
 case 19.8 h. Log `.tuning/s119_sprt.log`; output `.tuning/sprt_s119_*`.
 Its record commit carries the DEC-220 block, then the ledger regeneration.
-S263's agent drafts its As built beside it, writing only (DEC-260: no
-compile, test or timing while a match holds the machine); its gate, trace
-re-run, prose checks and timing run after the verdict.
+No CPU work beside it (DEC-260); every agent lane below is writing only.
+Disclosed for its record: S263's agent ran about 30 s of `nice -n 19` work
+in the first three minutes (a no-op build, one `bench`, a 17 s build, a
+tuner killed within 10 s) before the stop; 0 forfeits in the first 310
+games.
+
+**Waiting on the machine, written (DEC-260 lanes), land after the verdict:**
+- **S263** (worktree `../chesso-s263`): As built drafted; owed the trace
+  re-run, the full gate, the prose checks and the 19 min timing, commands in
+  `.tuning/coord/S263/pending.md` (worktree; backup in
+  `.tuning/coord/S263_files/`). On landing, amend S101, S102, S121-S125 and
+  S135: "the attack sets come from S263" -- none was built; each builds its
+  own.
+- **S276** (worktree `../chesso-s276`): code, tests and As built written
+  blind; phase 2 builds, runs the suites, re-takes `feature_audit` and
+  `truncation_scan`, fills 10 `S276-PENDING` tokens. Lands with
+  `.tuning/coord/S276_files/pending_citations.diff` (S122, S136 cite a deleted
+  case; DEC-159). The mirror's count walks are kept as
+  `tests/test_walked_counts.hpp`. Stale `eval_model` comments in `src/` are a
+  separate `No functional change` commit after S263 and S276 land.
+- **S264** (worktree `../chesso-s264`): phase 1 running -- the CCRL list read,
+  anchors chosen, sources fetched, nothing built or run; phase 2 builds and
+  smoke-tests between verdicts.
+
+**Landing order after S119's verdict:** record the verdict; S263 (timing on
+the quiet machine), S276, S264's smoke matches; S259 then needs the tree
+S119's verdict leaves.
 
 **Then, per Open:** S259 (held until S119's verdict), S276 (agent lane),
 S264, S261, S099...
