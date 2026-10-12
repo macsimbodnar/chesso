@@ -1,8 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 #include "tuner_groups.hpp"
 
@@ -362,4 +364,174 @@ TEST_CASE("--freeze takes a list, and refuses what it cannot honour")
   // reads as a fit that found nothing rather than as a run that never moved.
   std::vector<uint8_t> everything = all;
   CHECK_FALSE(tuner_groups::freeze_mask("all", &everything));
+}
+
+
+// S275. The seven gauges are the seven exact null directions feature_audit
+// reports beside the 32 zero columns, and their shape is what makes holding
+// them safe: each lives in the material and piece-square blocks, no two share a
+// column -- a shared one would let one hold undo another -- and none touches a
+// pawn column on rank 1 or 8, which no row reaches and the fit must leave
+// exactly as it found it.
+TEST_CASE(
+    "the seven gauges are apart, in the tables, and clear of the dead pawn "
+    "squares")
+{
+  const std::vector<tuner_groups::gauge_t> gauges = tuner_groups::gauges();
+  REQUIRE(gauges.size() == 7);
+
+  const size_t psqt_first = eval_model::MG_BASE;
+  const size_t psqt_last = eval_model::MOB_MG_BASE;
+
+  std::vector<int> claims(eval_model::PARAM_COUNT, 0);
+
+  for (size_t g = 0; g < gauges.size(); ++g) {
+    const tuner_groups::gauge_t& gauge = gauges[g];
+    CAPTURE(gauge.name);
+
+    // Five material/table directions, then the two king tables.
+    if (g < eval_model::MATERIAL_COUNT) {
+      CHECK(gauge.absorb == g);
+      CHECK(gauge.level.size() == ((g == 0) ? 96u : 128u));
+    } else {
+      CHECK(gauge.absorb == eval_model::PARAM_COUNT);
+      CHECK(gauge.level.size() == 64u);
+    }
+
+    if (gauge.absorb < eval_model::PARAM_COUNT) { claims[gauge.absorb]++; }
+
+    for (const size_t column : gauge.level) {
+      CAPTURE(column);
+      CHECK(column >= psqt_first);
+      CHECK(column < psqt_last);
+
+      const size_t square = (column - psqt_first) % (6 * 64);
+      const size_t type = square / 64;
+      CHECK(type == ((g < eval_model::MATERIAL_COUNT) ? g : 5u));
+
+      // Written out, not asked of pawn_can_stand(): a pawn stands on squares
+      // 8..55 of its table.
+      if (type == 0) {
+        CHECK(square % 64 >= 8);
+        CHECK(square % 64 < 56);
+      }
+
+      claims[column]++;
+    }
+  }
+
+  size_t shared = 0;
+  size_t claimed = 0;
+  for (const int count : claims) {
+    if (count > 1) { shared++; }
+    if (count > 0) { claimed++; }
+  }
+
+  CHECK(shared == 0);
+
+  // 5 values, 96 + 4 x 128 table squares, 2 x 64 king squares; with the 32
+  // dead pawn squares that is the whole of the two blocks.
+  CHECK(claimed == 5 + 96 + 4 * 128 + 2 * 64);
+  CHECK(claimed + 32 == psqt_last);
+}
+
+
+// S275. --only and --freeze promise that a held parameter comes out
+// bit-identical, and the gauges must not break that promise. A gauge is held
+// when every column it moves is free and left alone otherwise -- the freeze
+// already fixes it, since the free columns cannot move along it without moving
+// a frozen one. For every --only group and every single --freeze: the held set
+// is exactly the gauges the mask frees whole, a hold restores each one's level,
+// and it writes no frozen parameter.
+TEST_CASE("a gauge is held only where the mask frees all of it")
+{
+  const std::vector<tuner_groups::gauge_t> gauges = tuner_groups::gauges();
+  REQUIRE(gauges.size() == 7);
+
+  std::vector<std::pair<std::string, std::vector<uint8_t>>> masks;
+
+  for (const std::string& name : parse_group_list(tuner_groups::GROUP_LIST)) {
+    std::vector<uint8_t> only;
+    REQUIRE(tuner_groups::free_mask(name, &only));
+    masks.push_back({"--only " + name, only});
+
+    if (name == "all") { continue; }
+
+    std::vector<uint8_t> frozen;
+    REQUIRE(tuner_groups::free_mask("all", &frozen));
+    REQUIRE(tuner_groups::freeze_mask(name, &frozen));
+    masks.push_back({"--freeze " + name, frozen});
+  }
+
+  // A start, and a vector that has walked off it on every column, so a hold
+  // has a level to put back on every gauge it holds.
+  std::vector<double> start(eval_model::PARAM_COUNT);
+  std::vector<double> walked(eval_model::PARAM_COUNT);
+  for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+    start[i] = static_cast<double>(i % 17) - 8.0;
+    walked[i] = start[i] + 0.25 * static_cast<double>(i % 7) + 1.0;
+  }
+
+  size_t held_somewhere = 0;
+  size_t skipped_somewhere = 0;
+
+  for (const auto& [label, mask] : masks) {
+    CAPTURE(label);
+
+    const std::vector<tuner_groups::gauge_t> held =
+        tuner_groups::held_gauges(mask);
+
+    // Written out rather than derived: the material/table five need both the
+    // material and the psqt group free, the king pair needs psqt, and no other
+    // group touches any of them.
+    size_t expected = label.rfind("--only", 0) == 0 ? 0 : 7;
+    if (label == "--only all") { expected = 7; }
+    if (label == "--only psqt" || label == "--freeze material") {
+      expected = 2;
+    }
+    if (label == "--freeze psqt") { expected = 0; }
+
+    REQUIRE(held.size() == expected);
+    for (size_t g = 0; g < held.size(); ++g) {
+      CHECK(held[g].name == gauges[gauges.size() - held.size() + g].name);
+    }
+    held_somewhere += held.size();
+    skipped_somewhere += gauges.size() - held.size();
+
+    // The hold the tuner runs after a step: only what the mask frees, and the
+    // whole of it.
+    std::vector<double> params = walked;
+    for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+      if (!mask[i]) { params[i] = start[i]; }
+    }
+
+    const std::vector<double> before_hold = params;
+    tuner_groups::hold_gauges(held, start.data(), params.data());
+
+    size_t frozen_written = 0;
+    for (size_t i = 0; i < eval_model::PARAM_COUNT; ++i) {
+      if (!mask[i] && params[i] != before_hold[i]) { frozen_written++; }
+    }
+    CHECK(frozen_written == 0);
+
+    for (const tuner_groups::gauge_t& gauge : held) {
+      CAPTURE(gauge.name);
+
+      double before = 0.0;
+      double after = 0.0;
+      for (const size_t column : gauge.level) {
+        before += before_hold[column] - start[column];
+        after += params[column] - start[column];
+      }
+
+      // Precondition: the walk moved this level, so the hold had work to do.
+      CHECK(std::fabs(before) > 1.0);
+      CHECK(std::fabs(after) < 1e-9);
+    }
+  }
+
+  // Both branches were taken: some mask held a gauge and some left one to the
+  // freeze, or one of the checks above ran over nothing.
+  CHECK(held_somewhere > 0);
+  CHECK(skipped_somewhere > 0);
 }

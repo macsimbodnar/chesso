@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -10,6 +11,7 @@
 #include <vector>
 #include "test_eval_positions.hpp"
 #include "test_temp_file.hpp"
+#include "tuner_groups.hpp"
 #include "tuner_model.hpp"
 
 // The two things nothing in tests/ had ever checked about the fit: that the
@@ -216,6 +218,49 @@ TEST_CASE("load() tapers on the placement's phase, not the stored column")
 
     CHECK(static_cast<int>(data.phase[row]) ==
           eval_model::phase_of(pieces.data(), pieces.size()));
+  }
+
+  std::filesystem::remove(path);
+}
+
+
+// S275. The two king gauges tools/tuner_groups.hpp holds are null only on a row
+// with one king a side: + c on every king square cancels between the White king
+// and the Black one and nowhere else. load_FEN() refuses any other position,
+// and load() refused none of them, so a hold on a corpus carrying one would
+// move that row's score -- a pin that changes the fit. Each row below is
+// appended alone to the legal fixture, and the fixture is refused.
+TEST_CASE("load() refuses a row without one king a side")
+{
+  const std::string path = fixture_path();
+
+  const auto load_with = [&](const std::string& placement) {
+    REQUIRE(write_fixture(path));
+    {
+      std::ofstream out(path, std::ios::app);
+      out << placement << " w - - 0 40\t0.5\t0\t0\n";
+    }
+
+    tuner_model::dataset_t data;
+    return tuner_model::load(path, &data);
+  };
+
+  // Precondition: a legal row in the same format loads, so a refusal below is
+  // the king count and not the row's shape.
+  CHECK(load_with("4k3/8/8/8/8/8/8/4K3"));
+
+  static const char* const unbalanced[] = {
+      "4k3/8/8/8/8/8/8/8",      // no White king
+      "8/8/8/8/8/8/8/4K3",      // no Black king
+      "4k3/8/8/8/8/8/8/3KK3",   // two White kings
+      "3kk3/8/8/8/8/8/8/4K3",   // two Black kings
+      "3kk3/8/8/8/8/8/8/3KK3",  // two a side: balanced, still not chess
+      "8/8/8/8/8/8/8/8",        // none at all
+  };
+
+  for (const std::string placement : unbalanced) {
+    CAPTURE(placement);
+    CHECK_FALSE(load_with(placement));
   }
 
   std::filesystem::remove(path);
@@ -695,6 +740,245 @@ TEST_CASE("the clamp is where gradient() and the error part company")
   // piece placement and tempo parameters -- the six symptoms S100 is
   // diagnosing -- are outside the margin by construction, and stay exact.
   CHECK(worst_outside < 1e-6);
+
+  std::filesystem::remove(path);
+}
+
+
+namespace
+{
+
+// The fixture with four rows appended whose kings stand apart, mirrored, at a
+// phase above zero. The curated list's kings mostly sit on squares that cancel
+// -- Ke1 against ke8 reads one column, +1 and -1 -- and the few middlegame
+// columns it leaves read the same gradient with opposite signs, which Adam
+// steps in exact opposition: on that list alone the plain update does not walk
+// along psqt_mg[king] at all, so the case below could not show the hold doing
+// anything there. Measured, not assumed, when the case was written.
+bool write_gauge_fixture(const std::string& path)
+{
+  if (!write_fixture(path)) { return false; }
+
+  std::ofstream out(path, std::ios::app);
+
+  out << "2kr1b1r/ppp2ppp/2n5/3q4/3P4/2N2N2/PP3PPP/R2Q1RK1 w - - 0 "
+         "12\t1\t40\t0\n"
+      << "r4rk1/pp3ppp/2n5/8/8/2N5/PP2KPPP/R6R w - - 0 20\t0.5\t-15\t0\n"
+      << "8/pp3p2/3k4/8/8/5K2/PP3P2/2R5 b - - 0 35\t1\t120\t0\n"
+      << "r4r2/pp3ppk/8/8/8/8/PP3PPP/1K1R3R w - - 0 25\t0\t-60\t0\n";
+
+  return out.good();
+}
+
+}  // namespace
+
+
+// S275. Each gauge tools/tuner_groups.hpp holds is a direction the model cannot
+// see: its level down by c and the piece's value up by c, or a king table moved
+// whole, leaves every row's score where it was. That is what lets the fit hold
+// them without changing a single loss it reports, and it is checked here on the
+// model itself rather than argued from the taper.
+TEST_CASE("moving along a gauge moves no fixture row's score")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_gauge_fixture(path));
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+  REQUIRE(data.size() == positions.size() + 4);
+
+  std::vector<double> params(PARAM_COUNT, 0.0);
+  eval_model::starting_params(params.data());
+
+  const auto worst_move = [&](const std::vector<double>& moved) {
+    double worst = 0.0;
+    for (size_t row = 0; row < data.size(); ++row) {
+      worst = std::max(
+          worst,
+          std::fabs(tuner_model::evaluate_position(data, row, moved.data()) -
+                    tuner_model::evaluate_position(data, row, params.data())));
+    }
+    return worst;
+  };
+
+  const std::vector<tuner_groups::gauge_t> gauges = tuner_groups::gauges();
+  REQUIRE(gauges.size() == 7);
+
+  const double c = 37.0;
+
+  for (const tuner_groups::gauge_t& gauge : gauges) {
+    CAPTURE(gauge.name);
+
+    std::vector<double> along = params;
+    for (const size_t column : gauge.level) {
+      along[column] -= c;
+    }
+    if (gauge.absorb < PARAM_COUNT) { along[gauge.absorb] += c; }
+
+    // Non-vacuity: one of the level's columns moved alone does move a row, so
+    // the fixture reads this gauge and the zero below is not a direction
+    // nothing touches.
+    double one_column = 0.0;
+    for (const size_t column : gauge.level) {
+      std::vector<double> single = params;
+      single[column] -= c;
+      one_column = std::max(one_column, worst_move(single));
+    }
+
+    CHECK(one_column > 1.0);
+    CHECK(worst_move(along) < 1e-9);
+  }
+
+  std::filesystem::remove(path);
+}
+
+
+// S275. The fit's own descent, run twice from the shipped constants: once as
+// the tuner runs it, descend(), and once as Adam alone. The plain update walks
+// along every one of the seven gauges -- the precondition, established here
+// rather than assumed, without which a hold that did nothing would pass -- and
+// the tuner's step leaves all seven at the level it started from, while no
+// row's score differs between the two runs: the hold changes nothing a loss can
+// see. The 32 pawn columns no row reaches are measured rather than held: a
+// gradient of exactly zero is a step of exactly zero, so they come out
+// bit-identical from both runs.
+TEST_CASE("the fit holds every gauge still and no score sees the hold")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_gauge_fixture(path));
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+
+  std::vector<double> start(PARAM_COUNT, 0.0);
+  eval_model::starting_params(start.data());
+
+  std::vector<uint32_t> index(data.size());
+  for (size_t i = 0; i < index.size(); ++i) {
+    index[i] = static_cast<uint32_t>(i);
+  }
+
+  std::vector<double> target(data.size());
+  for (size_t i = 0; i < data.size(); ++i) {
+    target[i] = data.result[i];
+  }
+
+  std::vector<uint8_t> mask;
+  REQUIRE(tuner_groups::free_mask("all", &mask));
+
+  // The tuner's default step size; K at the scale the sigmoid was written
+  // around, as in the gradient case above.
+  const double k = 1.0;
+  const double lr = 1.0;
+  const int epochs = 300;
+
+  std::vector<double> held = start;
+  std::vector<double> plain = start;
+  tuner_model::adam_t held_adam;
+  tuner_model::adam_t plain_adam;
+  std::vector<double> grad;
+
+  for (int epoch = 0; epoch < epochs; ++epoch) {
+    tuner_model::gradient(data, held.data(), k, index, 0, data.size(), 1,
+                          target, &grad);
+    tuner_model::descend(grad, mask, start.data(), lr, &held_adam, held.data());
+
+    tuner_model::gradient(data, plain.data(), k, index, 0, data.size(), 1,
+                          target, &grad);
+    tuner_model::adam_update(grad, mask, lr, &plain_adam, plain.data());
+  }
+
+  // The seven written out here from the layout rather than read from
+  // tuner_groups::gauges(), so a direction dropped from that list is still
+  // checked: this is the test's own statement of what the fit has to hold. A
+  // pawn stands on squares 8..55 of its table, the model's index mirrored for
+  // Black.
+  struct direction_t
+  {
+    std::string name;
+    std::vector<size_t> level;
+  };
+
+  static const char* const names[6] = {"pawn", "knight", "bishop",
+                                       "rook", "queen",  "king"};
+  std::vector<direction_t> directions;
+
+  for (size_t type = 0; type < MATERIAL_COUNT; ++type) {
+    direction_t d{std::string("material/table ") + names[type], {}};
+    for (const size_t base : {MG_BASE, eval_model::EG_BASE}) {
+      for (size_t square = 0; square < 64; ++square) {
+        if (type == 0 && (square < 8 || square >= 56)) { continue; }
+        d.level.push_back(base + type * 64 + square);
+      }
+    }
+    directions.push_back(d);
+  }
+
+  for (const size_t base : {MG_BASE, eval_model::EG_BASE}) {
+    direction_t d{(base == MG_BASE) ? "psqt_mg[king]" : "psqt_eg[king]", {}};
+    for (size_t square = 0; square < 64; ++square) {
+      d.level.push_back(base + 5 * 64 + square);
+    }
+    directions.push_back(d);
+  }
+
+  const auto level_shift = [&](const direction_t& direction,
+                               const std::vector<double>& params) {
+    double sum = 0.0;
+    for (const size_t column : direction.level) {
+      sum += params[column] - start[column];
+    }
+    return sum / static_cast<double>(direction.level.size());
+  };
+
+  // The walk's floor is a precondition, not a golden: at 0d9faba's shipped
+  // constants the smallest of the seven plain-update shifts is 0.22 a square,
+  // psqt_eg[king], the largest 3.7, the knight's. Re-read with `-s` on this
+  // case if the constants or the fixture move; 0.1 is far above the hold's
+  // 1e-9 and far below the walk.
+  for (const direction_t& direction : directions) {
+    CAPTURE(direction.name);
+    CAPTURE(level_shift(direction, plain));
+    CAPTURE(level_shift(direction, held));
+
+    CHECK(std::fabs(level_shift(direction, plain)) > 0.1);
+    CHECK(std::fabs(level_shift(direction, held)) < 1e-9);
+  }
+
+  // No score sees the hold, and the fit did move: the agreement is between two
+  // runs that changed the evaluation, not two copies of the start.
+  double apart = 0.0;
+  double travelled = 0.0;
+
+  for (size_t row = 0; row < data.size(); ++row) {
+    const double h = tuner_model::evaluate_position(data, row, held.data());
+    const double p = tuner_model::evaluate_position(data, row, plain.data());
+    const double s = tuner_model::evaluate_position(data, row, start.data());
+
+    apart = std::max(apart, std::fabs(h - p));
+    travelled = std::max(travelled, std::fabs(p - s));
+  }
+
+  CAPTURE(apart);
+  CAPTURE(travelled);
+  CHECK(travelled > 50.0);
+  CHECK(apart < 1e-6);
+
+  // The 32 columns no pawn can stand on, both tables, both runs.
+  size_t unreachable = 0;
+
+  for (const size_t base : {MG_BASE, eval_model::EG_BASE}) {
+    for (size_t square = 0; square < 64; ++square) {
+      if (square >= 8 && square < 56) { continue; }
+
+      CAPTURE(square);
+      CHECK(held[base + square] == start[base + square]);
+      CHECK(plain[base + square] == start[base + square]);
+      unreachable++;
+    }
+  }
+
+  CHECK(unreachable == 32);
 
   std::filesystem::remove(path);
 }

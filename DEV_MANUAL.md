@@ -5124,6 +5124,12 @@ transformation and both fits' guard outcomes.
 **A fitted material value only means anything together with its own tables.**
 `QUEEN` reads 716 here against the 1067 that shipped before the fit and the 1148
 the fit itself produced, and none of the three is comparable with the others.
+Since S275 a fit with material and psqt both free holds, per piece, the sum of
+its `psqt_mg` and `psqt_eg` squares together where it started, and the define
+carries any change in what the piece is worth, so a define fitted that way does
+compare with the one it started from. Under `--only psqt` or `--freeze material`
+only the two king sums are held: the defines are frozen and the tables carry
+the change, as before.
 
 **The SPRT decided it: +21.10 +/- 10.47 Elo, H1 accepted at LLR 2.95 over 3396
 games in 02:30:12**, candidate against `a2f0065` at 10+0.2 on 12 cores. The
@@ -5213,7 +5219,8 @@ Four reports off one load, each switchable off with `--no-columns`,
 `--no-identities`, `--no-occurrence`, `--no-collinearity`. **1 m 8 s** over
 10.8 M rows on 12 threads at S134, most of it the load.
 `adocs/data/S100_feature_audit.txt` is the run S100 read;
-`adocs/data/S134_feature_audit.txt` is the run over the folded layout.
+`adocs/data/S134_feature_audit.txt` is the run over the folded layout;
+`adocs/data/S275_feature_audit.txt` adds the gauge lines.
 
 - **columns** re-extracts every stored feature column from the FEN text and
   compares it against what `load()` kept: **10795695 rows, 0 disagreements**. It
@@ -5248,7 +5255,15 @@ Four reports off one load, each switchable off with `--no-columns`,
   rook on the seventh and passer bucket 5 in each half, at the same rank 784
   (`adocs/data/S134_identity_before.txt`): the fold removed four dependent
   columns and nothing the tables could not express. A new term defined on a
-  single rank is checked here before it is fitted.
+  single rank is checked here before it is fitted. **Since S275 the report
+  ends on what the fit does about the 39**: each of the seven gauges
+  `tools/tuner_groups.hpp` holds (under the tuner, below) is checked null on
+  every row, and the gauges with the zero columns are shown to span the whole
+  null space — `32 zero columns and 7 held gauges span 39 of at most 39 null
+  dimensions` over the dedup corpus. A direction the tuner does not hold reads
+  `a null direction the tuner does not hold, pin it or measure it before a
+  fit`: with the queen's gauge dropped from the list, the first 1 M rows read
+  38 of 39.
 - **occurrence** reports the share of rows where each column is non-zero, whole
   corpus and by phase band. Split by band because a column can be well covered
   overall and empty in the band whose weight it is: phase 0 has `mg_weight`
@@ -5289,7 +5304,7 @@ Plant one group, free exactly that group. `all` is for the joint fit.
 What S100's four runs found: the joint fit reached **train error 0.000000** and
 returned 18 of the 22 identified term parameters exactly, with every deviation
 inside a documented null direction — the two seventh-rank ones above, plus the
-material-against-table one `tools/tuner.cpp:36-40` names, which showed up as the
+material-against-table one `tools/tuner.cpp:37-45` names, which showed up as the
 pawn table uniformly 5 low against `PAWN` 5 high. `--only passed_pawns` recovers
 all twelve exactly, bucket 5 included, because holding the table resolves the
 degeneracy.
@@ -5575,6 +5590,63 @@ took held-out error 0.107413 to 0.107109, and fitting all 799 jointly reached
 0.106964 instead — 799 because that was the whole vector when king safety was
 fitted, before the four terms and 28 parameters that followed it. The refit of
 the other 781 is worth 0.000145 and is a separate change.
+
+**The fit holds seven null directions still** (S275). The design has 39 —
+`feature_audit`'s identity report, above: 32 pawn columns on ranks 1 and 8,
+five material-against-table directions (`piece_value[t]` + c, and every square
+of `psqt_mg[t]` and `psqt_eg[t]` a piece of that type can stand on − c), and
+one per king table, every square + c. No evaluation sees a move along any of
+them, and Adam's per-coordinate scaling walks along the last seven anyway.
+Measured over the first 1000000 rows of the dedup corpus, real labels, Adam
+alone at epoch 2000, where the training error has flattened to six digits
+(`adocs/data/S275_walk_real.txt`): both king tables **+16.4 and +15.1 on every
+square**, the queen's 128 squares +11.8 each against 11.8 more off `QUEEN`, the
+other four tables 1.4 to 2.6 a square — 64 to 129 shipped numbers moved per
+direction for nothing, and two fits from one start no longer comparable square
+by square. The 32 pawn columns do not move at all: no row touches them, so their
+gradient is exactly zero, and Adam's step from a gradient that has always been
+zero is 0 / (0 + ε). Measured 0 in every run here, and left unpinned.
+
+So every step is `descend()` in `tools/tuner_model.hpp`: Adam, then each held
+gauge put back where the run started. What is held is the level, the sum over
+the squares its direction moves: for a piece, its `psqt_mg` and `psqt_eg`
+squares together, with the define taking the shift; for a king table, that
+table's own sum. That is a move along the null direction, so no score
+changes. Over the same slice
+the two descents' training errors agree to six digits at every report and their
+scores to within 0.0005 cp on every row at epoch 2000, and `tuner` before and
+after S275 printed every line identical from `fitted K` to `best`
+(`adocs/data/S275_fits.txt`). The run names what it holds after the line with
+the free count, and the header records it:
+
+```
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+// gauges     7 of 7 held at the levels this started from
+```
+
+A gauge is held only when every column it moves is free. `--only psqt` and
+`--freeze material` hold the king pair alone; `--only material`, `--freeze psqt`
+and every term group hold none, because there the free parameters cannot move
+along a direction without moving a frozen one, and a hold would write a
+parameter the freeze promised to leave bit-identical. Under `--only psqt` or
+`--freeze material` the tables therefore carry any change in a piece's worth,
+so two fits' tables compare square by square only when both ran with material
+and psqt free. `test_tuner_groups` holds
+that for every `--only` group and every single `--freeze`. `test_tuner_gradient`
+runs the descent with and without the hold over its fixture, from its own list
+of the seven, and fails if the held run moves along any of them — which it did
+with the king pair or the queen's direction dropped from `gauges()`. The king gauges are null only with one king
+a side, so `load()` refuses a row without exactly that, as `load_FEN()` does;
+none of the 10795695 dedup rows is refused.
+
+**Where the loss is near zero, a fit is only as reproducible as its floating
+point.** Over the same slice with planted labels — `feature_audit --plant`, the
+training error printing 0.000000 from epoch 100 on — the runs before and after
+S275 part in the seventh decimal: a `0.000001` at a different report, a
+different best epoch, a different emitted vector. The unchanged tuner at
+`--threads 6` against `--threads 12` parts the same way, so the hold's last-bit
+difference sits inside the tuner's own envelope and changes nothing that is
+fitted. On real labels nothing parted at six digits.
 
 ### `--lambda`: fit toward the search score as well as the outcome
 

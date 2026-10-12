@@ -36,9 +36,17 @@
 //
 // The parameterisation is degenerate on purpose: adding c to every square of
 // psqt_mg[t] and psqt_eg[t] is the same evaluation as adding c to
-// piece_value[t]. Nothing distinguishes those solutions and nothing needs to --
-// what is fitted, and what an SPRT later measures, is the evaluation, not the
-// split between the tables.
+// piece_value[t], and adding c to every square of a king table is no change at
+// all, one king a side. What is fitted, and what an SPRT later measures, is the
+// evaluation, not the split. Since S275 the fit holds the split anyway --
+// because Adam walked along those seven directions for nothing, +16 a square
+// on each king table over one 1 M-row slice, and left two fits' tables
+// incomparable. What is held is a sum at its starting value: for a piece, the
+// sum of its psqt_mg and psqt_eg squares together, with its value taking the
+// shift; for a king table, that table's own sum. A direction is held only when
+// --only and --freeze leave all of it free, so under --only psqt or --freeze
+// material only the two king sums are held and the tables carry what the
+// piece values cannot. tools/tuner_groups.hpp has the seven and the hold.
 //
 // The agent runs this itself, without asking, and schedules a long fit for the
 // night when there is better work to do meanwhile. DEC-041, which supersedes
@@ -112,7 +120,9 @@ using tuner_target::sigmoid;
 // one piece of the fit nothing outside this file could call, and its own
 // comments record three times a term block was forgotten there. Imported under
 // their old names so the call sites below are unchanged.
+using tuner_model::adam_t;
 using tuner_model::dataset_t;
+using tuner_model::descend;
 using tuner_model::error_range;
 using tuner_model::evaluate_position;
 using tuner_model::gradient;
@@ -209,7 +219,8 @@ void write_tables(const std::string& path,
                   double train_error,
                   double validation_error,
                   double wdl_validation_error,
-                  double start_wdl_validation_error)
+                  double start_wdl_validation_error,
+                  size_t gauges_held)
 {
   FILE* out = fopen(path.c_str(), "w");
 
@@ -276,6 +287,10 @@ void write_tables(const std::string& path,
       "// split      by game, S066: %zu games, %zu rows held out, %.4f%%\n"
       "// only       %s\n"
       "// freeze     %s\n"
+      // S275: which of the seven null directions kept the level the run started
+      // from. The split between a piece's value and its tables is the gauge's,
+      // not the data's, so a table emitted without it is not comparable.
+      "// gauges     %zu of %zu held at the levels this started from\n"
       "// lambda     %.4f  target = lambda * sigma(K * score) + (1 - lambda) * "
       "result\n"
       "%s"
@@ -294,8 +309,8 @@ void write_tables(const std::string& path,
       100.0 * static_cast<double>(validation_rows) /
           static_cast<double>(positions),
       opts.only.c_str(),
-      opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), opts.lambda,
-      wdl_line.c_str());
+      opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), gauges_held,
+      tuner_groups::gauges().size(), opts.lambda, wdl_line.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -619,6 +634,20 @@ int main(int argc, char** argv)
             starts.size());
   }
 
+  // The null directions this run holds still, by name. One with a column that
+  // --only or --freeze holds is left to the freeze, so the count is the mask's
+  // to decide. S275.
+  const std::vector<tuner_groups::gauge_t> held =
+      tuner_groups::held_gauges(mask);
+  std::string held_names;
+
+  for (const tuner_groups::gauge_t& gauge : held) {
+    held_names += (held_names.empty() ? ": " : ", ") + gauge.name;
+  }
+
+  fprintf(stderr, "gauges held: %zu of %zu%s\n", held.size(),
+          tuner_groups::gauges().size(), held_names.c_str());
+
   // Starting point is what the engine ships with, so a fit that finds nothing
   // reports the error of the hand-written constants rather than of noise.
   std::vector<double> params(PARAM_COUNT, 0.0);
@@ -681,16 +710,12 @@ int main(int argc, char** argv)
   fprintf(stderr, "start: train %.6f  validation %.6f%s\n", start_train,
           start_validation, wdl_column(start_wdl).c_str());
 
-  // Adam. Plain gradient descent needs a step size per parameter here: a pawn
-  // square that appears in every position and a king square that appears in a
-  // handful do not want the same one.
-  std::vector<double> moment(PARAM_COUNT, 0.0);
-  std::vector<double> velocity(PARAM_COUNT, 0.0);
+  // Adam, and the levels the gauges hold every step: the ones this run started
+  // from. Both moved to tools/tuner_model.hpp at S275 so a test runs the same
+  // descent.
+  adam_t adam;
   std::vector<double> grad;
-
-  const double beta1 = 0.9;
-  const double beta2 = 0.999;
-  const double epsilon = 1e-8;
+  const std::vector<double> start = params;
 
   // The checkpoint kept, and the early stop, are both decided on the held-out
   // error against the **game result** rather than against the training target.
@@ -708,27 +733,7 @@ int main(int argc, char** argv)
     gradient(data, params.data(), opts.k, index, 0, train_count, opts.threads,
              train_target, &grad);
 
-    const double correction1 = 1.0 - std::pow(beta1, epoch);
-    const double correction2 = 1.0 - std::pow(beta2, epoch);
-
-    for (size_t i = 0; i < PARAM_COUNT; ++i) {
-      // A frozen parameter is left out of the update entirely rather than
-      // having its gradient zeroed, because a zero gradient does not mean a
-      // zero step: Adam divides a decaying moment by a decaying velocity and
-      // keeps moving on what it accumulated before. Skipping the whole
-      // iteration leaves moment and velocity at zero too, so the parameter
-      // comes out bit-identical to what it went in as and the emitted file is
-      // one change.
-      if (!mask[i]) { continue; }
-
-      moment[i] = beta1 * moment[i] + (1.0 - beta1) * grad[i];
-      velocity[i] = beta2 * velocity[i] + (1.0 - beta2) * grad[i] * grad[i];
-
-      const double m = moment[i] / correction1;
-      const double v = velocity[i] / correction2;
-
-      params[i] -= opts.lr * m / (std::sqrt(v) + epsilon);
-    }
+    descend(grad, mask, start.data(), opts.lr, &adam, params.data());
 
     if (epoch % opts.report != 0) { continue; }
 
@@ -778,7 +783,7 @@ int main(int argc, char** argv)
 
   write_tables(opts.out, best.data(), opts, corpus, data.size(), starts.size(),
                validation_count, final_train, best_validation, best_wdl,
-               start_wdl);
+               start_wdl, held.size());
 
   return 0;
 }

@@ -7,6 +7,23 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-12, by hand.
 
+## 2026-10-12: S275 done -- the tuner holds the evaluation's null directions still
+
+Of S134's 39 null directions, the seven a fit can walk along are now held:
+after each Adam step `descend()` puts each piece's `psqt_mg` + `psqt_eg` sum
+back where the run started (its value takes the shift) and each king table's
+own sum, wherever the mask frees the whole direction. Unpinned, 2000 epochs
+on 1 M real rows had moved the king tables +16.4 and +15.1 a square and the
+queen's +11.8 for nothing. The 32 zero pawn columns never move (zero
+gradient), measured, not pinned. The real-label fit prints every line
+identical before and after; `load()` now refuses a row without one king a
+side (0 corpus rows). Tooling only, no `src/` change, bench 3872032. Fast
+check: one wording fix (what "level" is held, and that only the king pair is
+held under `--only psqt` / `--freeze material`), fixed before commit.
+**Next:** S119's SPRT, still waiting on the owner's harness-`Hash` ruling;
+meanwhile S262, the trace-based tuner, starts on the agent lane (it builds on
+S275's `descend()`). S259 stays held until S119's verdict.
+
 ## 2026-10-12: S134 done -- two degenerate evaluation columns folded into the tables, bit-exact
 
 Passer bucket 5 and rook on the seventh were exactly the signed occupancy of

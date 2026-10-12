@@ -14,6 +14,10 @@
 // same corpus at the same seed, thread count and epoch budget prints identical
 // epoch reports before and after, which is the check DEV_MANUAL.md already
 // documents for --freeze at its default.
+//
+// S275 moved the fourth piece here, the step: Adam's update and the gauge hold
+// after it, so a test can run the fit's own descent and see whether it walks
+// along a null direction.
 #include <cinttypes>
 #include <cmath>
 #include <cstdio>
@@ -24,6 +28,7 @@
 #include <thread>
 #include <vector>
 #include "eval_model.hpp"
+#include "tuner_groups.hpp"
 #include "tuner_split.hpp"
 #include "tuner_target.hpp"
 
@@ -152,6 +157,21 @@ inline bool load(const std::string& path, dataset_t* data)
 
     if (!eval_model::parse_placement(placement, &pieces)) {
       fprintf(stderr, "bad placement: %s\n", placement.c_str());
+      return false;
+    }
+
+    // One king a side, as load_FEN() requires of every position the engine
+    // evaluates. The king gauges the fit holds are null only on such a row, so
+    // a hold on any other would move its score. S275.
+    int kings[2] = {0, 0};
+    for (const uint16_t code : pieces) {
+      if ((code & ~BLACK_BIT) / 64 == tuner_groups::KING_TYPE) {
+        kings[(code & BLACK_BIT) ? 1 : 0]++;
+      }
+    }
+
+    if (kings[0] != 1 || kings[1] != 1) {
+      fprintf(stderr, "not one king a side: %s\n", line.c_str());
       return false;
     }
 
@@ -482,6 +502,74 @@ inline void gradient(const dataset_t& data,
   for (size_t i = 0; i < PARAM_COUNT; ++i) {
     (*out)[i] /= static_cast<double>(count);
   }
+}
+
+
+// Adam. Plain gradient descent needs a step size per parameter here: a pawn
+// square that appears in every position and a king square that appears in a
+// handful do not want the same one. Moved from tools/tuner.cpp at S275, its
+// arithmetic unchanged.
+struct adam_t
+{
+  std::vector<double> moment = std::vector<double>(PARAM_COUNT, 0.0);
+  std::vector<double> velocity = std::vector<double>(PARAM_COUNT, 0.0);
+  int epoch = 0;
+};
+
+
+// One Adam step over the parameters `mask` leaves free, and nothing else: the
+// plain update, with no gauge held. The tuner calls descend() below; this is
+// the half a test calls to see the walk the hold exists to stop.
+inline void adam_update(const std::vector<double>& grad,
+                        const std::vector<uint8_t>& mask,
+                        double lr,
+                        adam_t* adam,
+                        double* params)
+{
+  const double beta1 = 0.9;
+  const double beta2 = 0.999;
+  const double epsilon = 1e-8;
+
+  adam->epoch++;
+
+  const double correction1 = 1.0 - std::pow(beta1, adam->epoch);
+  const double correction2 = 1.0 - std::pow(beta2, adam->epoch);
+
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    // A frozen parameter is left out of the update entirely rather than having
+    // its gradient zeroed, because a zero gradient does not mean a zero step:
+    // Adam divides a decaying moment by a decaying velocity and keeps moving on
+    // what it accumulated before. Skipping the whole iteration leaves moment
+    // and velocity at zero too, so the parameter comes out bit-identical to
+    // what it went in as and the emitted file is one change.
+    if (!mask[i]) { continue; }
+
+    adam->moment[i] = beta1 * adam->moment[i] + (1.0 - beta1) * grad[i];
+    adam->velocity[i] =
+        beta2 * adam->velocity[i] + (1.0 - beta2) * grad[i] * grad[i];
+
+    const double m = adam->moment[i] / correction1;
+    const double v = adam->velocity[i] / correction2;
+
+    params[i] -= lr * m / (std::sqrt(v) + epsilon);
+  }
+}
+
+
+// The step the tuner takes: Adam, then every gauge the mask frees put back at
+// the level `start` had. The hold moves only along null directions, so the
+// evaluation of every row -- and with it every gradient and every reported
+// error after this step -- is what Adam alone would have produced, to the last
+// bits of rounding. S275.
+inline void descend(const std::vector<double>& grad,
+                    const std::vector<uint8_t>& mask,
+                    const double* start,
+                    double lr,
+                    adam_t* adam,
+                    double* params)
+{
+  adam_update(grad, mask, lr, adam, params);
+  tuner_groups::hold_gauges(tuner_groups::held_gauges(mask), start, params);
 }
 
 }  // namespace tuner_model

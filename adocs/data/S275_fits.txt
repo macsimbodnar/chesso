@@ -1,0 +1,133 @@
+# S275: the tuner before (0d9faba) and after (s275 working tree), same slices, same flags.
+# Machine: i7-8700K, g++ 13.3, 2026-10-12. Every run: tuner --data SLICE --out OUT --threads 12
+# (defaults: --epochs 20000 --report 100 --patience 20 --lr 1 --validation 0.1 --seed 1 --lambda 0).
+#
+# Slices, in the scratch directory, never in the tree:
+#   real     head -n 1000000 .tuning/selfplay_v2_dedup.tsv
+#            sha256 379aa7a6465fa550a3b3e60c0ee00859bf27846727a820996dfbedfc4c48344d
+#   planted  feature_audit (0d9faba) --data real --plant planted --no-columns --no-identities
+#            --no-occurrence --no-collinearity: labels sigmoid(0.7624 * model score) at the
+#            shipped constants with S100's term weights planted
+#            sha256 45305e6442ad4d24509860c213f222807df54c96b11e098a2e829fd8517ed734
+# The 1 M-row slice has the full corpus's null structure exactly: rank 784 of 823, the same 39.
+
+## 1. Real labels. Before (0d9faba):
+engine 0d9faba, corpus sha256 379aa7a6465fa550a3b3e60c0ee00859bf27846727a820996dfbedfc4c48344d, 1000000 rows, 65154992 bytes
+1000000 positions, 10945 games, 899943 train, 100057 validation (10.0057%), 823 parameters, group all, freeze (nothing), 823 free
+fitted K = 0.7415
+start: train 0.119429  validation 0.122103
+epoch    100  train 0.116996  validation 0.122701
+epoch    200  train 0.116942  validation 0.122827
+epoch    300  train 0.116928  validation 0.122863
+epoch    400  train 0.116920  validation 0.122878
+epoch    500  train 0.116915  validation 0.122885
+epoch    600  train 0.116911  validation 0.122890
+epoch    700  train 0.116909  validation 0.122894
+epoch    800  train 0.116906  validation 0.122896
+epoch    900  train 0.116905  validation 0.122899
+epoch   1000  train 0.116903  validation 0.122901
+epoch   1100  train 0.116902  validation 0.122903
+epoch   1200  train 0.116901  validation 0.122905
+epoch   1300  train 0.116901  validation 0.122903
+epoch   1400  train 0.116900  validation 0.122908
+epoch   1500  train 0.116899  validation 0.122910
+epoch   1600  train 0.116899  validation 0.122906
+epoch   1700  train 0.116898  validation 0.122913
+epoch   1800  train 0.116898  validation 0.122915
+epoch   1900  train 0.116898  validation 0.122913
+epoch   2000  train 0.116897  validation 0.122918
+no improvement in 20 reports, stopping
+best: train 0.119429  validation 0.122103  (start 0.119429 / 0.122103)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+
+## After (s275):
+engine 0d9faba-dirty, corpus sha256 379aa7a6465fa550a3b3e60c0ee00859bf27846727a820996dfbedfc4c48344d, 1000000 rows, 65154992 bytes
+1000000 positions, 10945 games, 899943 train, 100057 validation (10.0057%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+fitted K = 0.7415
+start: train 0.119429  validation 0.122103
+epoch    100  train 0.116996  validation 0.122701
+epoch    200  train 0.116942  validation 0.122827
+epoch    300  train 0.116928  validation 0.122863
+epoch    400  train 0.116920  validation 0.122878
+epoch    500  train 0.116915  validation 0.122885
+epoch    600  train 0.116911  validation 0.122890
+epoch    700  train 0.116909  validation 0.122894
+epoch    800  train 0.116906  validation 0.122896
+epoch    900  train 0.116905  validation 0.122899
+epoch   1000  train 0.116903  validation 0.122901
+epoch   1100  train 0.116902  validation 0.122903
+epoch   1200  train 0.116901  validation 0.122905
+epoch   1300  train 0.116901  validation 0.122903
+epoch   1400  train 0.116900  validation 0.122908
+epoch   1500  train 0.116899  validation 0.122910
+epoch   1600  train 0.116899  validation 0.122906
+epoch   1700  train 0.116898  validation 0.122913
+epoch   1800  train 0.116898  validation 0.122915
+epoch   1900  train 0.116898  validation 0.122913
+epoch   2000  train 0.116897  validation 0.122918
+no improvement in 20 reports, stopping
+best: train 0.119429  validation 0.122103  (start 0.119429 / 0.122103)
+WARNING: held-out error did not improve on the hand-written constants. Do not ship this.
+
+## diff of the two logs without the engine, gauges and constants-written lines:
+(empty: every line identical, K, start, 20 reports, best, warning)
+Both emit the start vector: held-out error never beats the shipped constants on this slice.
+The walk on these labels, read at the last epoch instead, is S275_walk_real.txt.
+
+## 2. Planted labels, to convergence.
+fit_head_planted       fitted K = 0.7557, 95 reports, best epoch 7500, best: train 0.000000  validation 0.000000  (start 0.000520 / 0.000523)
+fit_s275_planted       fitted K = 0.7557, 82 reports, best epoch 6200, best: train 0.000000  validation 0.000000  (start 0.000520 / 0.000523)
+fit_head_planted_t6    fitted K = 0.7557, 100 reports, best epoch 8000, best: train 0.000000  validation 0.000000  (start 0.000520 / 0.000523)
+fit_head_planted_t6 is the unchanged tuner at --threads 6, the control.
+
+Reports that differ from fit_head_planted, over the epochs both runs reached:
+  fit_s275_planted: 24 of 82 common reports differ, first at epoch 1200; 18 differ only in the '*', the rest in a train figure 0.000000->0.000001 x1, 0.000000->0.000002 x2, 0.000001->0.000000 x3
+  fit_head_planted_t6: 24 of 95 common reports differ, first at epoch 1500; 20 differ only in the '*', the rest in a train figure 0.000000->0.000002 x1, 0.000001->0.000000 x3
+
+## python3 adocs/data/S275_drift.py <before> <after>: the pre-S275 fit against what shipped
+direction                   columns material  level shift  shape rms  worst off
+material/table pawn              96       +1       +0.240      0.688      1.760
+material/table knight           128       +2       +0.484      0.649      2.484
+material/table bishop           128       +2       +0.984      0.530      1.984
+material/table rook             128       +4       +0.766      0.996      1.766
+material/table queen            128      +10       +0.477      2.619      4.477
+psqt_mg[king] sum                64        -       -0.141      1.379      7.141
+psqt_eg[king] sum                64        -       +0.141      0.808      3.141
+pawn ranks 1 and 8               32        -            -          -          -   largest |change| 0
+
+## the S275 fit against what shipped: each level held, up to the rounding of the emitted integers
+direction                   columns material  level shift  shape rms  worst off
+material/table pawn              96       +1       -0.042      0.735      2.042
+material/table knight           128       +3       +0.016      0.559      2.016
+material/table bishop           128       +3       -0.070      0.547      2.930
+material/table rook             128       +5       +0.023      0.964      2.023
+material/table queen            128      +10       -0.008      2.688      3.992
+psqt_mg[king] sum                64        -       -0.031      1.369      7.031
+psqt_eg[king] sum                64        -       +0.078      0.777      3.078
+pawn ranks 1 and 8               32        -            -          -          -   largest |change| 0
+
+## the pre-S275 fit against the S275 fit: they differ only along the seven directions
+## (worst off < 1: a uniform shift plus integer rounding) and in no term weight
+direction                   columns material  level shift  shape rms  worst off
+material/table pawn              96       +0       +0.281      0.450      0.719
+material/table knight           128       -1       +0.469      0.499      0.531
+material/table bishop           128       -1       +1.055      0.227      0.945
+material/table rook             128       -1       +0.742      0.437      0.742
+material/table queen            128       +0       +0.484      0.500      0.516
+psqt_mg[king] sum                64        -       -0.109      0.312      0.891
+psqt_eg[king] sum                64        -       +0.062      0.242      0.938
+pawn ranks 1 and 8               32        -            -          -          -   largest |change| 0
+term weights after tables        50   0 differ
+
+## the control: the unchanged tuner at 6 threads against 12 -- the same emitted vector
+direction                   columns material  level shift  shape rms  worst off
+material/table pawn              96       +0       +0.000      0.000      0.000
+material/table knight           128       +0       +0.000      0.000      0.000
+material/table bishop           128       +0       +0.000      0.000      0.000
+material/table rook             128       +0       +0.000      0.000      0.000
+material/table queen            128       +0       +0.000      0.000      0.000
+psqt_mg[king] sum                64        -       +0.000      0.000      0.000
+psqt_eg[king] sum                64        -       +0.000      0.000      0.000
+pawn ranks 1 and 8               32        -            -          -          -   largest |change| 0
+term weights after tables        50   0 differ

@@ -1,0 +1,38 @@
+# S275 adocs/data/S275_walk.cpp over the first 1000000 rows of .tuning/selfplay_v2_dedup.tsv
+# (head -n 1000000, sha256 379aa7a6465fa550a3b3e60c0ee00859bf27846727a820996dfbedfc4c48344d), real labels.
+# Command: build/S275_walk slice_1m.tsv 0.7415 2000 100 12   (K is what tuner fitted on the slice)
+# 'plain' is Adam alone, the tuner before S275 step for step; 'held' is descend(), the tuner since.
+# Vectors read at epoch 2000, where the training error has flattened to six digits;
+# tuner itself emits the start on this slice (held-out error never improves), so the walk is only visible here.
+# Machine: i7-8700K, g++ 13.3, 12 threads, 2026-10-12, s275 working tree (parent 0d9faba).
+1000000 rows, 899943 train, K 0.7415, 2000 epochs, 12 threads
+epoch   100  train plain 0.116996  held 0.116996  |difference| 0
+epoch   200  train plain 0.116942  held 0.116942  |difference| 0
+epoch   300  train plain 0.116928  held 0.116928  |difference| 0
+epoch   400  train plain 0.116920  held 0.116920  |difference| 5.55e-17
+epoch   500  train plain 0.116915  held 0.116915  |difference| 0
+epoch   600  train plain 0.116911  held 0.116911  |difference| 1.39e-17
+epoch   700  train plain 0.116910  held 0.116910  |difference| 3.77e-11
+epoch   800  train plain 0.116906  held 0.116906  |difference| 1.18e-14
+epoch   900  train plain 0.116905  held 0.116905  |difference| 4.83e-15
+epoch  1000  train plain 0.116904  held 0.116904  |difference| 4.85e-11
+epoch  1100  train plain 0.116902  held 0.116902  |difference| 2.58e-13
+epoch  1200  train plain 0.116901  held 0.116901  |difference| 2.41e-15
+epoch  1300  train plain 0.116900  held 0.116900  |difference| 4.12e-11
+epoch  1400  train plain 0.116900  held 0.116900  |difference| 1e-14
+epoch  1500  train plain 0.116899  held 0.116899  |difference| 7.26e-15
+epoch  1600  train plain 0.116899  held 0.116899  |difference| 1.14e-11
+epoch  1700  train plain 0.116898  held 0.116898  |difference| 5.08e-13
+epoch  1800  train plain 0.116898  held 0.116898  |difference| 2.36e-13
+epoch  1900  train plain 0.116898  held 0.116898  |difference| 4.31e-10
+epoch  2000  train plain 0.116897  held 0.116897  |difference| 4.7e-12
+material/table pawn      level shift plain   +2.6251 held -2.7e-15   material shift plain   +9.284 held  +11.910
+material/table knight    level shift plain   -1.6688 held +1.8e-15   material shift plain  +28.782 held  +27.113
+material/table bishop    level shift plain   -1.3897 held +8.3e-17   material shift plain   -4.527 held   -5.917
+material/table rook      level shift plain   -2.3473 held -2.3e-15   material shift plain  +16.008 held  +13.661
+material/table queen     level shift plain  +11.8009 held -2.0e-14   material shift plain  -57.656 held  -45.855
+psqt_mg[king] sum        level shift plain  +16.3815 held -4.9e-15
+psqt_eg[king] sum        level shift plain  +15.0818 held -2.4e-15
+pawn ranks 1 and 8, 32 columns: largest |change| either run 0
+scores over all 1000000 rows: plain against held, largest |difference| 0.000473 cp; plain against the start, largest |change| 497.3 cp
+S275-WALK-DONE

@@ -14,6 +14,9 @@
 // to the one that lived in tuner.cpp; they are visible as tuner_groups::MG_BASE
 // and so on, which is a small price for a move that changed no line of the
 // body.
+//
+// Since S275 it also holds the seven gauges, the null directions a fit keeps
+// still, because whether one is held depends on the same mask.
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -23,6 +26,7 @@
 namespace tuner_groups
 {
 
+using eval_model::EG_BASE;
 using eval_model::KS_MG_BASE;
 using eval_model::MATERIAL_COUNT;
 using eval_model::MG_BASE;
@@ -159,6 +163,140 @@ inline bool freeze_mask(const std::string& groups, std::vector<uint8_t>* mask)
   }
 
   return true;
+}
+
+
+// The evaluation's exact null directions, and where a fit holds them. S275.
+//
+// tools/feature_audit's identity report puts the design at rank 784 of 823
+// (S134). Thirty-two of the 39 null directions are single pawn columns on ranks
+// 1 and 8, which no row can touch -- load() refuses a pawn there -- and Adam
+// leaves those exactly where they started: a gradient of exactly zero keeps the
+// moment and the velocity at zero, and the step is 0 / (0 + epsilon). The other
+// seven are spread over many columns, and there Adam's per-coordinate scaling
+// does not keep a step orthogonal to them, so a fit walks along them for
+// nothing: no evaluation moves, but up to 129 shipped numbers do, and two fits'
+// tables stop being comparable. These are the seven:
+//
+//   material/table, one per piece but the king: piece_value[t] + c and every
+//     square of psqt_mg[t] and psqt_eg[t] a piece of type t can stand on - c.
+//     The taper's two weights sum to one, so no piece's score moves.
+//   psqt_mg[king] and psqt_eg[king]: every square + c. One king a side, so the
+//     White king's + c and the Black king's - c cancel before the taper; load()
+//     refuses a row without one king a side, as load_FEN() does.
+//
+// The gauge picks one point on each of those lines: the level -- the sum over
+// the squares its direction moves, psqt_mg[t] and psqt_eg[t] together for a
+// piece, one king table's own sum for the king -- stays at the value the fit
+// started from, and a piece's value carries the shift. With material and psqt
+// both free, a fit's tables then compare square by square with the ones it
+// started from, and a change in what a piece is worth shows up in its define,
+// where a reader looks for it. Under --only psqt or --freeze material only the
+// two king sums are held: the values are frozen, so the tables carry any change
+// in a piece's worth, as they always did.
+inline constexpr size_t KING_TYPE = 5;
+
+struct gauge_t
+{
+  std::string name;
+  std::vector<size_t> level;  // the columns whose sum is held
+  size_t absorb =
+      PARAM_COUNT;  // the column the shift goes to; PARAM_COUNT: none
+};
+
+
+// The model's square, mirrored for Black, so one test covers both colours: 0..7
+// is a pawn's own eighth rank and 56..63 its own first.
+inline bool pawn_can_stand(size_t square)
+{ return square >= 8 && square < 56; }
+
+
+// The seven, in the order feature_audit reports them. The pawn's level leaves
+// out the 32 columns no pawn can reach, so a hold never moves them either.
+inline std::vector<gauge_t> gauges()
+{
+  static const char* const names[KING_TYPE + 1] = {"pawn", "knight", "bishop",
+                                                   "rook", "queen",  "king"};
+  const size_t bases[2] = {MG_BASE, EG_BASE};
+
+  std::vector<gauge_t> out;
+
+  for (size_t type = 0; type < MATERIAL_COUNT; ++type) {
+    gauge_t gauge;
+    gauge.name = std::string("material/table ") + names[type];
+    gauge.absorb = type;
+
+    for (const size_t base : bases) {
+      for (size_t square = 0; square < 64; ++square) {
+        if (type == 0 && !pawn_can_stand(square)) { continue; }
+        gauge.level.push_back(base + type * 64 + square);
+      }
+    }
+
+    out.push_back(gauge);
+  }
+
+  for (const size_t base : bases) {
+    gauge_t gauge;
+    gauge.name = (base == MG_BASE) ? "psqt_mg[king] sum" : "psqt_eg[king] sum";
+
+    for (size_t square = 0; square < 64; ++square) {
+      gauge.level.push_back(base + KING_TYPE * 64 + square);
+    }
+
+    out.push_back(gauge);
+  }
+
+  return out;
+}
+
+
+// The gauges a run holds: those whose every column the mask leaves free. A
+// direction with a frozen column needs no hold -- the free parameters cannot
+// move along it without moving that column -- and holding it anyway would write
+// a parameter --only or --freeze promised to leave bit-identical.
+inline std::vector<gauge_t> held_gauges(const std::vector<uint8_t>& mask)
+{
+  std::vector<gauge_t> out;
+
+  for (const gauge_t& gauge : gauges()) {
+    bool free = (gauge.absorb == PARAM_COUNT) || mask[gauge.absorb] != 0;
+
+    for (const size_t column : gauge.level) {
+      free = free && mask[column] != 0;
+    }
+
+    if (free) { out.push_back(gauge); }
+  }
+
+  return out;
+}
+
+
+// Puts each held gauge's level back where `start` had it and moves the
+// difference into the piece's value: c off every column of the level and onto
+// the absorbing one, a move along the null direction and so invisible to every
+// evaluation. Called after each step, so no vector a fit reports or emits is
+// ever off the gauge.
+inline void hold_gauges(const std::vector<gauge_t>& held,
+                        const double* start,
+                        double* params)
+{
+  for (const gauge_t& gauge : held) {
+    double drift = 0.0;
+
+    for (const size_t column : gauge.level) {
+      drift += params[column] - start[column];
+    }
+
+    drift /= static_cast<double>(gauge.level.size());
+
+    for (const size_t column : gauge.level) {
+      params[column] -= drift;
+    }
+
+    if (gauge.absorb < PARAM_COUNT) { params[gauge.absorb] += drift; }
+  }
 }
 
 }  // namespace tuner_groups

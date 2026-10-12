@@ -44,6 +44,10 @@
 //                defined on a single rank -- S123's, S133's buckets -- is
 //                checked here before it is fitted. The engine-side check S134
 //                ran before the fold is adocs/data/S134_engine_identity.diff.
+//                Since S275 it ends on what the fit does about them: each
+//                gauge tools/tuner_groups.hpp holds checked null on every row,
+//                and the gauges with the zero columns shown to span the whole
+//                null space.
 //
 //   occurrence   how often each column is non-zero, whole corpus and by phase
 //                band. The coverage form of the corpus hypothesis: a column
@@ -81,6 +85,7 @@
 #include <utility>
 #include <vector>
 #include "eval_model.hpp"
+#include "tuner_groups.hpp"
 #include "tuner_model.hpp"
 #include "tuner_target.hpp"
 
@@ -954,6 +959,49 @@ void report_identities(const tuner_model::dataset_t& data, size_t sample)
         "direction is unaccounted for\n",
         full_rank, upper);
   }
+
+  // What the fit does about them, S275. Each gauge tools/tuner_groups.hpp holds
+  // has to be null on every row -- a hold that moved one row's evaluation would
+  // be a pin that changes the fit -- and the gauges with the zero columns,
+  // which Adam never moves, have to span the whole null space, or the fit is
+  // free to walk along a direction nobody holds. A new term defined on a single
+  // rank fails the second line before it is fitted.
+  std::vector<std::vector<std::pair<size_t, int64_t>>> pinned;
+  size_t gauges_null = 0;
+
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    if (gram[i * PARAM_COUNT + i] == 0) { pinned.push_back({{i, 1}}); }
+  }
+
+  for (const tuner_groups::gauge_t& gauge : tuner_groups::gauges()) {
+    std::vector<std::pair<size_t, int64_t>> v;
+    if (gauge.absorb < PARAM_COUNT) { v.push_back({gauge.absorb, 1}); }
+    for (const size_t column : gauge.level) {
+      v.push_back({column, -1});
+    }
+
+    const bool holds = quadratic_form(gram, v) == 0;
+    printf("identities: the tuner holds %s: %s\n", gauge.name.c_str(),
+           holds ? "null on every row" : "FAILS, the hold moves a row");
+
+    if (holds) {
+      pinned.push_back(v);
+      gauges_null++;
+    }
+  }
+
+  const size_t spanned = rank_of_vectors(pinned);
+  const size_t nullity_bound = PARAM_COUNT - full_rank;
+
+  printf(
+      "identities: %zu zero columns and %zu held gauges span %zu of at most "
+      "%zu null dimensions: %s\n",
+      zero_count, gauges_null, spanned, nullity_bound,
+      (spanned == nullity_bound)
+          ? "every null direction is one Adam never moves or one the tuner "
+            "holds"
+          : "a null direction the tuner does not hold, pin it or measure it "
+            "before a fit");
 }
 
 
