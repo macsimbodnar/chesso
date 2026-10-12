@@ -64,6 +64,14 @@ games.
   anchors chosen, sources fetched, nothing built or run; phase 2 builds and
   smoke-tests between verdicts.
 
+- **S261** (worktree `../chesso-s261`): pre-registration written -- 32 axes
+  (DEC-269 adds `LmrBase` and `LmrDivisor`), one lane of 1250 iterations x 48
+  games at 2+0.02, about 8 h 45 m, a night; the split into two lanes is
+  stated and decided by `S261_split_sim.py` before launch. Then the
+  independent {0,5} SPRT, the drift point (creates
+  `adocs/data/S267_drift.tsv`) and the 32+0.32 reading whatever the verdict
+  (DEC-269). Phase-2 commands in its step file.
+
 **Landing order after S119's verdict:** record the verdict; S263 (timing on
 the quiet machine), S276, S264's smoke matches; S259 then needs the tree
 S119's verdict leaves.

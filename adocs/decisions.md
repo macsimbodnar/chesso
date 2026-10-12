@@ -14314,3 +14314,34 @@ Consequences: S119's verdict is taken at about a third of the list's
               stated beside it. The harness `Hash` is open to a later ruling
               before the next table-sensitive step, with its A/A (DEC-143).
               Whether 256 MB at 2'+1" matters is unmeasured.
+
+## DEC-269  2026-10-13  S261's lane fits the LMR base table with its terms, and takes the 32+0.32 reading whatever the verdict
+Tags:         spsa, search, lmr, measurement, s261, dec-202, dec-222
+Context:      S261's pre-registration lists 30 axes added or reseeded after
+              S085. Its accepts' letter excludes `LmrBase` and `LmrDivisor`,
+              which S085 fitted and nothing has reseeded since, but S098 routed
+              them to be refit beside its LMR terms ("the record that they go
+              stale") and S231 declined to fit a ratio it had fixed by hand.
+              Separately, DEC-202 binds the 32+0.32 reading only to verdicts
+              that move pruning parameters, and an H0 moves nothing, while
+              DEC-222 (8) records the risk that a real longer-control gain
+              reads zero at 8+0.08. The implementer put both to the owner.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12 (keep questions to a minimum, pick the best path;
+              strength and correctness outrank machine time). (1) `LmrBase`
+              (52) and `LmrDivisor` (182) join the lane at S085's c_end of 24
+              and 32: 32 axes, one lane unless the split simulation says
+              otherwise, the one verdict covering the reduction table with
+              the terms fitted around it. (2) The DEC-202 reading at 32+0.32,
+              Hash 64, 1000 pairs, is taken after the verification SPRT
+              whatever its verdict; it ships nothing by itself, and a positive
+              reading after an H0 opens a decision.
+Rejected:     30 axes as written -- the five LMR terms fitted around an August
+              base the record already calls stale, for no saving in machine
+              time. `MaxQsearchDepth` and `AspirationDelta` in the lane too --
+              S112 and S115 hand them to S127. Skipping the 32+0.32 reading on
+              H0 -- 3 h 45 m saved, the one place the longer-control risk can
+              be seen left unmeasured.
+Consequences: S261's accepts (1) is read with this amendment; its JSON and
+              axis table carry 32 rows. Cross-talk rises slightly (two axes in
+              thirty-two). The lane's verdict can move the reduction table.
