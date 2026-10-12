@@ -7,6 +7,46 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-12, by hand.
 
+## 2026-10-12: SHUTDOWN HANDOVER -- how to resume
+
+The owner turned the workstation off. Nothing was lost; resume from here.
+
+**State.** achesso is clean at `bee84d8` (S262), plus this commit. No match,
+fit or timing is running.
+
+**In progress: S263** (shared attack sets), paused at a safe point. Its
+worktree is `/home/max/ws/chesso-s263` (branch `s263` at `bee84d8`,
+uncommitted, compiles), and its brief is `.tuning/coord/S263_brief.md`. The
+step file `adocs/plan_current/S263_shared_attack_sets.md` exists **in the
+worktree only**; its "Progress (paused 2026-10-12)" section lists what is
+done and the exact next actions. A backup of the diff, logs and step file is
+in `.tuning/coord/S263_files/`.
+- **Finding:** stage two already computes each attack set once. Only the pawn
+  stage's sets could be shared: one `neighbour_files()` a side fewer,
+  `evaluate_cheap()` 196 -> 187 instructions.
+- INV-6 holds in full, and `evaluate()` is byte-identical on all 10795695
+  rows.
+- **Still owed:** the timing, re-taken whole (the first was disturbed by
+  owner load); the trace re-run; the full gate after a format fix; the prose
+  checks; the As built.
+- **Plan note:** S121, S101, S122 and S102 say "the attack sets come from
+  S263". They will build their own; amend that text when S263 lands.
+- **Resume:** a fresh Opus agent gets the S263 brief plus "you are resuming:
+  read the step file's Progress section in the worktree first". The
+  coordinator then fast-checks and lands it per the usual pattern.
+
+**Blocked: S119's SPRT** waits on the owner's harness-`Hash` question (16 MB
+or 8 MB; see the S119 section below). If 8 MB: amend DEC-088 with a new DEC,
+change `fastchess.sh`'s `${HASH:-16}`, `adocs/data/S119_sprt.sh` and
+DEV_MANUAL's hash row, then run DEC-143's 1000-game A/A before the SPRT. If
+16: launch `nohup adocs/data/S119_sprt.sh > .tuning/s119_sprt.log 2>&1 &`
+(CAND `298788b`, REF `cc87dfb`, {0,5}, 8+0.08, worst case 19.8 h) with a
+four-exit watcher; its record commit carries the DEC-220 block, then the
+ledger regeneration.
+
+**Then, per Open:** S259 (held until S119's verdict), S276 (agent lane),
+S264, S261, S099...
+
 ## 2026-10-12: S262 done -- the tuner fits evaluate()'s own trace
 
 A trace build (`CHESSO_TRACE`, compiled only into the `chesso_engine_trace`
