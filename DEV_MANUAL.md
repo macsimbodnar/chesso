@@ -54,7 +54,7 @@ every recorded benchmark becomes incomparable.
 `-std=gnu++20` (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`, extensions left on),
 the arch flag (`-march=native` in `build/`, `cmake/arch.cmake`, below), the
 branch padding `-Wa,-mbranches-within-32B-boundaries` where the arch is `native`
-or `bmi2` and the assembler takes it (`cmake/arch.cmake`, next paragraph) and
+and the assembler takes it (`cmake/arch.cmake`, next paragraph) and
 `-Wall -Wextra -Werror` (`CMakeLists.txt`, which turns the three unused-*
 warnings off in Debug). `build-tune/` adds `-DCHESSO_TUNE` (`src/CMakeLists.txt`);
 `build_release.sh` adds the profile flags (`cmake/pgo.cmake`, below). The arch
@@ -71,28 +71,48 @@ carries: with the microcode fix it is not kept in the decoded-uop cache. Padded 
 and four perturbations of it (`-falign-functions=64`, a dummy function in every
 unit, the link order reversed, and S270's inline `game_tables()` diff applied),
 single-process timings read -1.5 to -3.7 % cycles for +0.5 % instructions, wall
-+1.50 to +3.11 %, every layout the same sign. The shipped PGO `bmi2` build read
++1.50 to +3.11 %, every layout the same sign. A padded PGO `bmi2` build read
 the same sign at a similar size, in a run the machine disturbed. It also takes
 most of the layout out of a timing: an unrelated layout change moved cycles by
 up to 1.8 % unpadded and by 0.3 % at most padded, inside an A/A's own noise.
-`bmi2` takes it because its x86-64-v3 parts include the Skylake family; on its
-parts without the erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) it costs
-+0.8 to +0.9 % instructions and +3 % `.text` in the PGO build, and what that
-costs in time there has not been measured. `avx2` and `portable` do not take it, their parts having no
-erratum. Configure prints which you have, and a toolchain whose assembler
-rejects the flag builds without it and says so. clang 22 on Linux rejects the
-`-Wa,` form (it spells the flag without it); Apple clang on the M1 was not run,
-and the same guard covers it:
+**Only `native` takes it; the shipped `bmi2` binary is unpadded** (S274,
+DEC-267). `bmi2`'s x86-64-v3 parts include the Skylake family, but also
+Haswell, Broadwell, Ice Lake on and Zen3 on, which have no erratum; there the
+padding costs +0.8 to +0.9 % instructions and +3 % `.text` in the PGO build, and
+what that costs in time has not been measured. `avx2` and `portable` do not
+take it either, their parts having no erratum. Configure prints which you have,
+and a toolchain whose assembler rejects the flag builds without it and says so.
+clang 22 on Linux rejects the `-Wa,` form (it spells the flag without it); Apple
+clang on the M1 was not run, and the same guard covers it:
 
 ```
 -- Branch padding on (-Wa,-mbranches-within-32B-boundaries)
 -- Branch padding unavailable: Clang 22.1.8 rejected '-Wa,-mbranches-within-32B-boundaries', built without it
--- Branch padding off for avx2
+-- Branch padding off for bmi2
 ```
 
+**A Skylake-family build gains 1.5 to 3 %, and it is one edit away.** A
+Skylake-family part (Intel 6th to 10th generation desktop) gains 1.5 to 3 %
+wall from the flag, measured single-process on this machine (S273). On such a
+machine the default `build/` (`native`) has it already. For a distributable
+binary there is no CMake option: in `cmake/arch.cmake`, add
+`OR CHESSO_ARCH STREQUAL "bmi2"` to the `if()` that sets
+`chesso_branch_pad_flag` (the identical `if()` above it prints the `Arch` line
+and is not the one), then run `./build_release.sh bmi2`. Configure then prints
+`Branch padding on`, `CHESSO_BRANCH_PAD` records `ON`, every C++ unit carries
+the flag, and the binary's `id name` carries `-dirty` from the edit
+(`cmake/build_info.cmake`). Passing the flag through `CXXFLAGS` instead reaches
+every C++ unit too, but `CHESSO_BRANCH_PAD` still records `OFF`, so the cache
+no longer says what was applied. What the flag costs on parts without the
+erratum is unmeasured, which is why it does not ship.
+
 A `REF=<sha>` older than S273 builds unpadded, and `fastchess.sh`'s banner says
-so on its `padding` line. The difference is about 1.5 to 3 % in single-process
-timings; a full-concurrency match was not measured. The readings are in
+so on its `padding` line. With `build/` configured `bmi2`, a side built from a
+commit from S273's up to but not including S274's own is padded and one from
+S274's commit on is not: the reference, and under `CAND` the candidate too,
+since `build_ref` builds both sides with `build/`'s arch. The banner says that
+too. The difference is about 1.5 to 3 % in single-process timings; a
+full-concurrency match was not measured. The readings are in
 `adocs/data/S273_timing.txt`.
 
 **No link-time optimization, and that is a measurement** (S270). CMake's
@@ -114,7 +134,7 @@ flag would leave a target named for an instruction set it does not target.
 
 | `CHESSO_ARCH` | flags | for |
 |---|---|---|
-| `bmi2` | `-march=x86-64-v3`, branch padding | **the target that ships to a rating list.** Intel Haswell (2013) onward, AMD Zen3 (2020) onward. The padding's cost on its parts without the Skylake family's erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) is not measured |
+| `bmi2` | `-march=x86-64-v3` | **the target that ships to a rating list.** Intel Haswell (2013) onward, AMD Zen3 (2020) onward. Unpadded (DEC-267): branch padding gains a Skylake-family part 1.5 to 3 % (S273), but its cost on the parts without that family's erratum (Haswell, Broadwell, Ice Lake on, Zen3 on) is not measured. A padded build is one edit of `cmake/arch.cmake` away (Build, above) |
 | `avx2` | `-march=x86-64-v3 -mno-bmi2` | Zen1 and Zen2, where PEXT and PDEP are microcoded at about 18 cycles against Intel's 3. `__BMI2__` is undefined here and that is the switch S032's magic path keys off |
 | `portable` | `-march=x86-64-v2` | the fallback. SSE4.2 and POPCNT, so Nehalem (2008) and Bulldozer (2011) onward |
 | `native` | `-march=native`, branch padding | **this machine only, default, never distributed.** `build/` is the directory that gets measured and a local measurement wants the code the machine can run; the same file on anything older than this part raises SIGILL rather than running slowly. `build_release.sh` refuses the name |
@@ -167,17 +187,21 @@ outcome — a binary that quietly is not profile-guided is worse than one that d
 not build. Blanket-silencing it was the first version of `cmake/pgo.cmake` and it
 is what let the two-directory bug hide. Exactly one translation unit is exempt, by
 name: every caller of `src/search_params.cpp` sits inside `#ifdef CHESSO_TUNE`
-(`src/chesso.cpp:934` and `:1043`), so a release link references none of its
-symbols, the linker drops the object out of the static library, its gcov
-constructor never runs and no `.gcda` can be written for it by any workload. Eight
-of the nine files in `src/` get a profile and the error stays live for all eight.
+(in `command_uci` and `command_setoption`, `src/chesso.cpp`), so a release link
+references none of its symbols, the linker drops the object out of the static
+library, its gcov constructor never runs and no `.gcda` can be written for it by
+any workload. Eight of the nine files in `src/` get a profile and the error
+stays live for all eight.
 
 **The workload is the part that decides whether PGO is worth anything.** It is a
 fixed-depth search — depth 10, `PGO_DEPTH` overrides — over **400 positions, 16
 from each of the 25 values of the engine's own `game_phase()`**, drawn from
 `adocs/data/S018_raw.tsv`, which is 13522 positions chesso actually reached in
-210 of its own games. 117329931 nodes, about 63 s instrumented. Two things it is
-deliberately not:
+210 of its own games. The script prints the workload's size as it runs: the
+sum over the positions of the last `info ... nodes` each search reports, and
+the instrumented pass's wall time. It moves with every change to the search;
+on 2026-10-12 at `298788b` (S274) it read 21219197 nodes in 20 s. Two things
+it is deliberately not:
 
 - **not perft.** perft measures generate, make and unmake. It never evaluates,
   never orders a move and never probes the table, so a profile taken from it

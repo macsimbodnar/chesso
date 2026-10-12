@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-12, by hand.
 
+## 2026-10-12: S274 done -- the shipped bmi2 binary is unpadded; native keeps the padding
+
+DEC-267 applied: `cmake/arch.cmake` pads native only and records
+`CHESSO_BRANCH_PAD` OFF for bmi2, avx2 and portable; native's compile
+commands are unchanged, so no match, timing or rating run moves. DEV_MANUAL
+and the arch.cmake comment document the Skylake-family gain and the one edit
+that builds a padded bmi2. Fast check: CMake logic clean; three stale
+DEV_MANUAL facts fixed. Left for a later step touching it: `cmake/pgo.cmake`
+lines 39-40 cite stale `src/chesso.cpp` line numbers. **Next:** S119's SPRT,
+waiting on the owner's harness-`Hash` ruling.
+
 ## 2026-10-12: S119 in progress -- prefetch and huge pages landed; the cluster table waits on its SPRT
 
 Part A, a prefetch of the child's slot after each move (`161b9f9`), and Part

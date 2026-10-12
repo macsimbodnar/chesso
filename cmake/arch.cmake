@@ -80,7 +80,7 @@ endif()
 # are not padded. On the workstation, padded against unpadded in the tree's
 # layout and four perturbations of it (one of them S270's inline game_tables()
 # diff), single-process timings: -1.5 to -3.7 % cycles for +0.5 % instructions,
-# wall +1.50 to +3.11 %. The shipped PGO bmi2 build read the same sign at a
+# wall +1.50 to +3.11 %. A padded PGO bmi2 build read the same sign at a
 # similar size, in a run the machine disturbed. The uop cache's share of the
 # uops, DSB / (DSB + MITE) without the microcode sequencer's, read 42 to 44 %
 # padded against 23 to 36 % unpadded -- consistent with the erratum, from IDQ
@@ -89,12 +89,23 @@ endif()
 # 1.8 % unpadded against 0.3 % padded, inside an A/A's own noise, which is what
 # a speed reading under 2 % needs. adocs/plan_done/S273_branch_padding.md has the readings.
 #
-# native and bmi2 take it: native is the measured machine, and bmi2's x86-64-v3
-# parts include the Skylake family. On bmi2's parts without the erratum
-# (Haswell, Broadwell, Ice Lake on, Zen3 on) the padding is code size and NOPs
-# (+0.8 to +0.9 % instructions and +3 % .text in the PGO build), and what that
-# costs there has not been measured. avx2 is for Zen1 and Zen2 and portable for
-# parts older than Haswell, and neither has the erratum.
+# native takes it: it is the measured machine. bmi2 does not (S274, DEC-267).
+# Its x86-64-v3 parts include the Skylake family, but also Haswell, Broadwell,
+# Ice Lake on and Zen3 on, which have no erratum; there the padding is code
+# size and NOPs (+0.8 to +0.9 % instructions and +3 % .text in the PGO build),
+# and what that costs in time has not been measured, so the shipped binary
+# stays unpadded. avx2 is for Zen1 and Zen2 and portable for parts older than
+# Haswell, and neither has the erratum.
+#
+# A Skylake-family part (Intel 6th to 10th generation desktop) gains 1.5 to 3 %
+# wall from the flag, single-process on the workstation (S273). No option
+# selects it, deliberately: to build such a bmi2 binary, add
+# `OR CHESSO_ARCH STREQUAL "bmi2"` to the if() that sets chesso_branch_pad_flag
+# below (not to the identical if() above, which prints the Arch line) and run
+# `./build_release.sh bmi2`; CHESSO_BRANCH_PAD then records ON. Not through
+# CXXFLAGS: the flag would reach every C++ unit and CHESSO_BRANCH_PAD would
+# still record OFF. On a Skylake-family machine the default native build has
+# it.
 #
 # Put to the C++ compiler first like the arch flags, but a toolchain whose
 # assembler lacks it builds without it and says so, rather than failing: the
@@ -104,7 +115,7 @@ endif()
 # sides that differ in it differ by the build and not only by the commit.
 set(chesso_branch_pad OFF)
 
-if(CHESSO_ARCH STREQUAL "native" OR CHESSO_ARCH STREQUAL "bmi2")
+if(CHESSO_ARCH STREQUAL "native")
      set(chesso_branch_pad_flag "-Wa,-mbranches-within-32B-boundaries")
      check_cxx_compiler_flag("${chesso_branch_pad_flag}" chesso_branch_pad_ok)
 
