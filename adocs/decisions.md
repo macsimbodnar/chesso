@@ -14289,3 +14289,28 @@ Consequences: Skylake-family users of the shipped binary forgo 1.5 to 3 %
               padding costs nothing there, or a Skylake-family build is
               shipped. native, and so every measurement here, is unchanged.
 
+
+## DEC-268  2026-10-12  S119's SPRT runs at the harness's Hash 16; its hashfull clause means rating.sh's control
+Tags:         measurement, tooling, tt, s119, dec-088
+Context:      S119 measured the harness's table pressure from its own PGNs:
+              35 to 40 overwrites per entry before S119 and 23 to 26 after it
+              (S119's clusters add half again as many entries), against the
+              60 to 120 DEC-088 chose 16 MB to reproduce. Its accepts clause
+              "`hashfull` stays low at the rating control" holds at
+              `rating.sh`'s 10+0.2 / Hash 128 (median about 6 %) and fails at
+              the list's 2'+1" / Hash 128 (median about 43 %). Both questions
+              were put under DEC-265.
+Decision:     By the owner, 2026-10-12. (1) S119's SPRT runs at Hash 16 as
+              pre-registered; the harness `Hash` does not move now. (2) The
+              clause means `rating.sh`'s control, where it is met; the 2'+1"
+              figure is recorded as a fact about the list's regime.
+Rejected:     Lowering the harness to 8 MB now -- an A/A first, verdicts
+              before and after stop being comparable, and the 46 to 53 per
+              entry it would give is derived, not measured. Reading the clause
+              at the list's 2'+1" -- S119 could not close as written, for a
+              regime `rating.sh` does not play.
+Consequences: S119's verdict is taken at about a third of the list's
+              pressure, which flatters table-hungry changes; that stays
+              stated beside it. The harness `Hash` is open to a later ruling
+              before the next table-sensitive step, with its A/A (DEC-143).
+              Whether 256 MB at 2'+1" matters is unmeasured.

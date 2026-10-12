@@ -368,6 +368,9 @@ The 2'+1" game wrote 4.8e8 and 5.2e8 nodes a side, DEC-088's "order of 660 M".
 
 ### Two questions for the owner (QUESTIONS, DEC-265), not settled here
 
+**Ruled 2026-10-12, DEC-268:** keep Hash 16 for this SPRT, harness unchanged
+for now; the clause means `rating.sh`'s control, where it is met.
+
 1. **Should the harness `Hash` move?**
    - *Why it is asked:* DEC-088 chose 16 MB to reproduce the list's 60 to 120
      overwrites per entry. The harness's own PGNs measure 35 to 40 before

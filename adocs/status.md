@@ -35,14 +35,12 @@ in `.tuning/coord/S263_files/`.
   read the step file's Progress section in the worktree first". The
   coordinator then fast-checks and lands it per the usual pattern.
 
-**Blocked: S119's SPRT** waits on the owner's harness-`Hash` question (16 MB
-or 8 MB; see the S119 section below). If 8 MB: amend DEC-088 with a new DEC,
-change `fastchess.sh`'s `${HASH:-16}`, `adocs/data/S119_sprt.sh` and
-DEV_MANUAL's hash row, then run DEC-143's 1000-game A/A before the SPRT. If
-16: launch `nohup adocs/data/S119_sprt.sh > .tuning/s119_sprt.log 2>&1 &`
-(CAND `298788b`, REF `cc87dfb`, {0,5}, 8+0.08, worst case 19.8 h) with a
-four-exit watcher; its record commit carries the DEC-220 block, then the
-ledger regeneration.
+**Running: S119's SPRT**, launched 2026-10-12 ~23:20 after the owner's
+rulings (DEC-268: Hash 16 as pre-registered; the `hashfull` clause means
+`rating.sh`'s control). CAND `298788b`, REF `cc87dfb`, {0,5}, 8+0.08, worst
+case 19.8 h. Log `.tuning/s119_sprt.log`; output `.tuning/sprt_s119_*`.
+Its record commit carries the DEC-220 block, then the ledger regeneration.
+S263 resumes beside it at `nice -n 19`; its timing waits for the machine.
 
 **Then, per Open:** S259 (held until S119's verdict), S276 (agent lane),
 S264, S261, S099...
