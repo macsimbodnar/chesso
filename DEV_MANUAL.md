@@ -1326,14 +1326,14 @@ bit for bit. Its corpus is a fixture it writes into the temp directory from the
 same curated FEN list `test_eval_model` runs over, so it needs no dataset.
 
 The gradient check is Jon Dart's prescription: central differences against
-`gradient()` for all 827 parameters, tolerance 1e-6 relative. `h = 0.01` is
+`gradient()` for every parameter, 823 since S134, tolerance 1e-6 relative. `h = 0.01` is
 measured and a comment in the file carries the sweep — the error follows the
 O(h²) truncation law down to a cancellation floor near 0.005, and h = 0.5 fails
 at 5.7e-4 on a mobility weight because mobility counts reach the tens. Two things
 it deliberately establishes rather than assumes: that the lazy clamp binds on no
 fixture row at the shipped constants, since `gradient()` ignores that clamp by
-design, and that **every one of the 54 term parameters has a gradient to check**
-at all. The second is what found a real gap — three passed pawn middlegame
+design, and that **every one of the term parameters -- 50 since S134, 54
+before -- has a gradient to check** at all. The second is what found a real gap — three passed pawn middlegame
 weights had none, because every position reaching their buckets was a phase-0
 endgame, and a feature-count test cannot see that.
 
@@ -2125,7 +2125,10 @@ regex, so a refit that emits another layout breaks the parse silently — run it
 with no argument first and require `10 of 10 reproduced` before feeding it a
 fitted header. It clamps stage two at `LAZY_EVAL_MARGIN`, read from
 `src/search_params.hpp` on every run, fitted header or not, and stops if that row
-is not found exactly once (S255). And the `-505` of the quiescence case has two
+is not found exactly once (S255). Its hand-derived feature tuples carry the
+layout as well, so a term deleted from the engine is deleted there too: S134
+narrowed every `placement` tuple from four entries to three, all the dropped
+ones zero. And the `-505` of the quiescence case has two
 ends: it moves with the weights *and* with how quiescence treats a checked side,
 so before re-deriving it after a search change, confirm the four leaves are
 still the four king moves each standing pat. If they are not, the case has
@@ -5207,9 +5210,10 @@ build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000
 ```
 
 Four reports off one load, each switchable off with `--no-columns`,
-`--no-identities`, `--no-occurrence`, `--no-collinearity`. About 4 minutes over
-10.8 M rows on 12 threads, most of it the load. `adocs/data/S100_feature_audit.txt`
-is the run S100 read.
+`--no-identities`, `--no-occurrence`, `--no-collinearity`. **1 m 8 s** over
+10.8 M rows on 12 threads at S134, most of it the load.
+`adocs/data/S100_feature_audit.txt` is the run S100 read;
+`adocs/data/S134_feature_audit.txt` is the run over the folded layout.
 
 - **columns** re-extracts every stored feature column from the FEN text and
   compares it against what `load()` kept: **10795695 rows, 0 disagreements**. It
@@ -5217,14 +5221,34 @@ is the run S100 read.
   feature *means* — `tests/test_eval_model.cpp` holds those against the engine's
   own counts and against hand-computed placements. What it catches is a
   misaligned base, a wrong stride, or a column pair stored in the other order.
-- **identities** checks two dependencies that are exact by construction. Index 0
-  is a8 and a black piece mirrors by `^56`, so a rook or a pawn on its own
-  seventh rank always lands on squares 8..15: the rook-on-the-seventh column *is*
-  the signed sum of eight rook piece-square columns, and passer bucket 5 *is* the
-  signed sum of eight pawn ones — a pawn on its seventh is a passer by
-  definition, because "ahead" is the enemy back rank and
-  `tools/eval_model.hpp:596` refuses a pawn standing there. **0 violations** in
-  1264773 and 550880 non-zero rows.
+  Since S134 it also counts rows whose stored `phase` column disagrees with the
+  placement's phase: `load()` recomputes the phase with
+  `eval_model::phase_of()` and reads the column for its range only
+  (`2026-09-10_adversarial-F36`), so a corpus written under an older
+  `phase_value` fits on the right taper and this line says how many rows it
+  corrected — **0** over the dedup corpus.
+- **identities** is the rank of the design the tuner descends and every exact
+  linear dependency in it, over every row. Each row is 24 times the derivative
+  of `eval_model::evaluate()` with respect to every parameter, the stage-two
+  clamp ignored as `gradient()` ignores it, so every entry is an integer;
+  `X'X` is summed exactly in 64-bit integers; the rank is taken by Gauss-Jordan
+  modulo 2^61-1, which can only understate the rank over the rationals; and a
+  dependency `v` is checked exactly as `v'X'Xv == 0`, the sum over every row of
+  `(x.v)^2`. It prints the columns no row touches, the dependencies the
+  parameterisation has by construction, and then every dependency left over
+  with its coefficients. The rank is then pinned from both sides: the modular
+  rank bounds it below, and the null vectors that hold exactly, checked
+  linearly independent (their rank modulo the prime equals their count), bound
+  it above; it prints both bounds and the rank when they meet. **At S134, 823
+  parameters: rank exactly 784, nullity 39** —
+  the 32 pawn columns on ranks 1 and 8, the five material-against-table
+  directions, and one per king table (one king a side, so each king table's
+  columns sum to zero on every row) — and **0 further dependencies**. Run on
+  the 827-parameter layout before S134 the same report found exactly four more,
+  rook on the seventh and passer bucket 5 in each half, at the same rank 784
+  (`adocs/data/S134_identity_before.txt`): the fold removed four dependent
+  columns and nothing the tables could not express. A new term defined on a
+  single rank is checked here before it is fitted.
 - **occurrence** reports the share of rows where each column is non-zero, whole
   corpus and by phase band. Split by band because a column can be well covered
   overall and empty in the band whose weight it is: phase 0 has `mg_weight`
@@ -5234,10 +5258,10 @@ is the run S100 read.
 - **collinearity** regresses each term column on the piece-square columns that
   could absorb it and prints R². The rook file features get **rook + pawn**
   columns, 128 in all, because an open file is a statement about the pawns as
-  much as about the rook. Measured: rook seventh and passer bucket 5 at
+  much as about the rook. Measured at S100: rook seventh and passer bucket 5 at
   **1.000000**, everything else between 0.168 and 0.621 — so the two exact
-  identities are the only redundancy, and the regression validating itself
-  against algebra already proven is the point of running it on them.
+  identities were the only redundancy among the term columns. Both are gone
+  since S134; the eight left read the same 0.168 to 0.621.
 
 `--plant` is the other half, and it is a writer rather than a report:
 
@@ -5270,11 +5294,18 @@ pawn table uniformly 5 low against `PAWN` 5 high. `--only passed_pawns` recovers
 all twelve exactly, bucket 5 included, because holding the table resolves the
 degeneracy.
 
-**Two parameters cannot be fitted jointly and read as values.** Only the sums
-`psqt[rook][8..15] + placement[seventh]` and `psqt[pawn][8..15] + pp[5]` are
-identified. Across three real fits on two corpora, passer buckets 0 to 4 moved by
-at most 4 and bucket 5 moved by 39 and changed sign twice — the ridge, not the
-pawns. A refit of either is frozen-base, and the ledger row names the sum.
+**Two parameters could not be fitted jointly and read as values, and S134
+deleted both.** Only the sums `psqt[rook][8..15] + placement[seventh]` and
+`psqt[pawn][8..15] + pp[5]` were identified. Across three real fits on two
+corpora, passer buckets 0 to 4 moved by at most 4 and bucket 5 moved by 39 and
+changed sign twice — the ridge, not the pawns. S134 added bucket 5's mg -17 and
+eg +42 to the sixteen pawn entries on squares 8..15 and rook on the seventh's 0
+to the rook ones, and deleted both features (DEC-090): `evaluate()` is identical
+on all 10795695 corpus rows, and `PARAM_COUNT` went 827 to 823. Measured from the
+engine first, before anything was deleted: `passed_pawn_counts()` bucket 5 and
+`piece_placement_counts()` rook seventh equal the signed occupancy of squares
+8..15 on every row, 550880 and 1264773 rows non-zero, 0 violations
+(`adocs/data/S134_engine_identity.txt`, produced by the patch beside it).
 
 ### What an emitted table says it came from
 
@@ -5356,10 +5387,12 @@ Tables emitted before S077 carry no stamp — `.tuning/tuned_v2*.hpp` and
 everything under `adocs/data/S075_fits/` and `S076_fits/`. They are evidence,
 byte for byte what the tool wrote, and are not regenerated.
 
-`tuner` fits 827 numbers so that a sigmoid of the evaluation predicts the game
+`tuner` fits 823 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
 them; mobility adds 8 at S034, and king safety 18, passed pawns 12, pawn
-structure 6, piece placement 8 and tempo 2 at S027. The count is
+structure 6, piece placement 8 and tempo 2 at S027. S134 deleted passer bucket 5
+and rook on the seventh, two parameters each, after folding their weights into
+the tables (DEC-090): 827 until then. The count is
 `eval_model::PARAM_COUNT` and the run prints it on its first line, with the
 number the `--only` group left free beside it. It never calls the search:
 `tools/eval_model.hpp` is `evaluate()` written as a linear function of its own
@@ -5405,7 +5438,7 @@ Indivisibility binds at the other end too, so **the last block is never held
 out**. A corpus of one game holds nothing out and says so:
 
 ```
-2 positions, 1 games, 2 train, 0 validation (0.0000%), 827 parameters, group all, 827 free
+2 positions, 1 games, 2 train, 0 validation (0.0000%), 823 parameters, group all, freeze (nothing), 823 free
 WARNING: 1 game(s) in this corpus, so nothing could be held out. Every validation figure below is over an empty set.
 ```
 
@@ -5439,9 +5472,9 @@ emitted order:
 | `psqt_mg[6][64]`, `psqt_eg[6][64]` | `src/eval_tables.hpp` |
 | `mobility_mg[4]`, `mobility_eg[4]` | `src/evaluation.cpp` |
 | `king_safety_mg[KS_FEATURE_COUNT]`, `king_safety_eg[KS_FEATURE_COUNT]` | `src/evaluation.cpp` |
-| `passed_pawn_mg[6]`, `passed_pawn_eg[6]` | `src/evaluation.cpp` |
+| `passed_pawn_mg[5]`, `passed_pawn_eg[5]` | `src/evaluation.cpp` |
 | `pawn_structure_mg[3]`, `pawn_structure_eg[3]` | `src/evaluation.cpp` |
-| `piece_placement_mg[4]`, `piece_placement_eg[4]` | `src/evaluation.cpp` |
+| `piece_placement_mg[3]`, `piece_placement_eg[3]` | `src/evaluation.cpp` |
 | `tempo_mg`, `tempo_eg`, two scalars and not an array | `src/evaluation.cpp` |
 
 **Since S117 the `src/evaluation.cpp` definitions are `constexpr int`, not
@@ -5455,7 +5488,7 @@ a fit whose weights could overflow a packed score's 16-bit half fails a
 wrapping at run time.
 
 The emitted header names both files too. Everything below the two tables is the
-54 parameters that do not live in `eval_tables.hpp`, and they are what gets left
+50 parameters that do not live in `eval_tables.hpp`, and they are what gets left
 behind: a fit that is half applied looks like a fit that did not work, and a
 weight still holding the value the engine shipped is indistinguishable from a
 term the fit had nothing to say about.
@@ -5469,8 +5502,12 @@ build/tools/tuner --data .tuning/selfplay_v2.tsv \
 ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
 `king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, `tempo`, and
 the emitted header records which was used. The eight named groups partition all
-827 parameters: 5, 768, 8, 18, 12, 6, 8, 2 in that order, which the run's first
-line reports as the free count.
+823 parameters: 5, 768, 8, 18, 10, 6, 6, 2 in that order, which the run's first
+line reports as the free count. The ranges follow `eval_model.hpp`'s base chain,
+so S134's narrowing moved them without an edit to `tools/tuner_groups.hpp`;
+`test_tuner_groups` is what says so, and with a base left at its 827-layout
+value it reads red -- on `tempo` freeing nothing and on the chain precondition,
+not on disjointness or union, which a base left too high cannot break here.
 
 ```bash
 build/tools/tuner --data .tuning/selfplay_v2.tsv \
@@ -5484,8 +5521,9 @@ fits everything `--only` left free beside them; the default is empty, which
 holds nothing. `all` is refused, as is any name `--only` does not know, and a
 name it does not know refuses the whole list rather than applying the half it
 recognised. The run's first line and the emitted header both carry it — `freeze
-tempo,piece_placement, 817 free` and `// freeze     tempo,piece_placement` —
-and `(nothing)` when no `--freeze` was passed. A `--only` and `--freeze` pair
+tempo,piece_placement, 815 free` (817 before S134) and
+`// freeze     tempo,piece_placement` — and `(nothing)` when no `--freeze` was
+passed. A `--only` and `--freeze` pair
 that between them leave no parameter free is refused rather than run.
 
 **At its default it changes nothing.** The pre-S065 binary and the post-S065 one
@@ -5495,16 +5533,17 @@ differences anywhere are the new `freeze` field on the first line and the new
 `// freeze` header comment.
 
 `--only` exists for attribution and `--freeze` for the case attribution cannot
-express: **hold two groups at zero while the other 817 parameters move.** S065
+express: **hold two groups at zero while the other 815 parameters move** (817 at
+S065). S065
 needed exactly that — `tempo` frozen so the model-versus-engine truncation bound
 stays at three effective divisions, and `piece_placement` frozen because S027
 measured it at −5.48 +/- 11.46 and zeroed it so the compiler would delete it.
 `--only` can say "fit tempo" and never "fit everything but tempo". DEC-057.
 
-**Freeze during the fit, not afterwards.** Fitting all 827 and then zeroing two
-groups is a different and worse result: with a parameter held, the remaining 817
-absorb what it would have taken, so post-hoc zeroing leaves the other 825 fitted
-against a value that is no longer there.
+**Freeze during the fit, not afterwards.** Fitting all 823 and then zeroing two
+groups is a different and worse result: with the two groups held, the remaining
+815 absorb what they would have taken, so post-hoc zeroing leaves those 815
+fitted against values that are no longer there.
 
 **Adding a group means re-ending the one before it.** Each group is a contiguous
 range and the last one runs to `PARAM_COUNT`, so a new group appended after it

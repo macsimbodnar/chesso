@@ -53,12 +53,20 @@ static constexpr int phase_value[6] = {0, 1, 1, 2, 4, 0};
 //
 // Nothing here is copied. The data is chesso's own self-play and no other
 // engine's evaluation, search or published table went into it. DEC-016.
+//
+// The pawn tables' seventh rank, squares 8..15, carries what passer bucket 5
+// used to: S134 added that bucket's mg -17 and eg +42 to all sixteen entries
+// and deleted the bucket, because a pawn on its own seventh is a passer by
+// definition and the bucket was exactly the sum of those eight columns. Rook on
+// the seventh was the same sum over the rook table's squares 8..15 and its
+// weight, 0, folded into them the same way. The evaluation is identical, to the
+// centipawn on every position: DEC-090.
 
 // clang-format off
 static constexpr int psqt_mg[6][64] = {
   {  // pawn
        0,    0,    0,    0,    0,    0,    0,    0,
-     216,  118,   96,  206,  172,   43,   12,  112,
+     199,  101,   79,  189,  155,   26,   -5,   95,
      -33,  -25,   -7,   20,   11,    6,  -25,   15,
      -40,   10,    1,    3,   12,    2,   23,  -31,
      -40,  -31,   -3,    0,    1,  -11,  -13,  -34,
@@ -121,7 +129,7 @@ static constexpr int psqt_mg[6][64] = {
 static constexpr int psqt_eg[6][64] = {
   {  // pawn
        0,    0,    0,    0,    0,    0,    0,    0,
-     187,  228,  199,  156,  137,  204,  248,  203,
+     229,  270,  241,  198,  179,  246,  290,  245,
       97,   95,   79,   38,   41,   57,   94,   74,
       70,   46,   42,   26,   38,   45,   41,   57,
       59,   52,   29,   33,   39,   39,   51,   51,

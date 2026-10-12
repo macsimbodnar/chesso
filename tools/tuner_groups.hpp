@@ -118,10 +118,11 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
 // and an empty list is a no-op, which is what keeps the default behaviour of a
 // run that passes no --freeze byte-identical.
 //
-// Why freeze during the fit rather than zero two groups afterwards: with a
-// parameter held, the remaining 817 absorb what it would have taken. Fitting
-// all 827 and then zeroing two leaves the other 825 fitted against values that
-// are no longer there. DEC-057.
+// Why freeze during the fit rather than zero two groups afterwards: with the
+// two groups held, the remaining 815 absorb what they would have taken (817 at
+// S065, before S134 narrowed the vector to 823). Fitting all 823 and then
+// zeroing the two leaves those 815 fitted against values that are no longer
+// there. DEC-057.
 inline bool freeze_mask(const std::string& groups, std::vector<uint8_t>* mask)
 {
   if (mask->size() != PARAM_COUNT) { return false; }

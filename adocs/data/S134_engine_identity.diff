@@ -1,0 +1,118 @@
+diff --git a/tools/feature_audit.cpp b/tools/feature_audit.cpp
+index 9a9a106..f76f680 100644
+--- a/tools/feature_audit.cpp
++++ b/tools/feature_audit.cpp
+@@ -68,6 +68,7 @@
+ #include <sstream>
+ #include <string>
+ #include <vector>
++#include "bitboard.hpp"
+ #include "eval_model.hpp"
+ #include "tuner_model.hpp"
+ #include "tuner_target.hpp"
+@@ -446,6 +447,105 @@ int main(int argc, char** argv)
+         "identities: passer bucket 5 == signed pawn occupancy of squares "
+         "8..15: %zu rows non-zero, %zu violations\n",
+         pawn_rows, pawn_bad);
++
++    // S134: the same two identities read out of the engine rather than out of
++    // eval_model. Every row is loaded into a board and the engine's own
++    // passed_pawn_counts() and piece_placement_counts() are compared against
++    // the signed occupancy of squares 8..15 in the piece list the fit reads,
++    // signed and per colour.
++    static game_t game;
++    initialize_game_const_data(&game);
++
++    std::ifstream file(opts.data);
++    std::string line;
++    size_t row = 0;
++    size_t refused = 0;
++    size_t e_pawn_rows = 0, e_pawn_bad = 0, e_rook_rows = 0, e_rook_bad = 0;
++    size_t c_pawn_rows = 0, c_pawn_bad = 0, c_rook_rows = 0, c_rook_bad = 0;
++
++    while (std::getline(file, line)) {
++      if (line.empty()) { continue; }
++
++      const std::string fen = line.substr(0, line.find('\t'));
++
++      if (!load_FEN(fen, &game)) {
++        refused++;
++        row++;
++        continue;
++      }
++
++      int passed[2][6];
++      int placement_counts[2][4];
++      passed_pawn_counts(&game.board, passed);
++      piece_placement_counts(&game.board, placement_counts);
++
++      int rook_seventh = 0;
++      int pawn_seventh = 0;
++
++      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
++        const uint16_t code = data.pieces[j];
++        const int sign = (code & eval_model::BLACK_BIT) ? -1 : 1;
++        const size_t square = code & ~eval_model::BLACK_BIT;
++        const size_t file_square = square % 64;
++
++        if (file_square < SEVENTH_FIRST || file_square > SEVENTH_LAST) {
++          continue;
++        }
++
++        if (square / 64 == ROOK_TYPE) { rook_seventh += sign; }
++        if (square / 64 == PAWN_TYPE) { pawn_seventh += sign; }
++      }
++
++      const int engine_pawn = passed[WHITE][5] - passed[BLACK][5];
++      const int engine_rook =
++          placement_counts[WHITE][PL_ROOK_SEVENTH] -
++          placement_counts[BLACK][PL_ROOK_SEVENTH];
++
++      if (engine_pawn != 0 || pawn_seventh != 0) { e_pawn_rows++; }
++      if (engine_rook != 0 || rook_seventh != 0) { e_rook_rows++; }
++      if (engine_pawn != pawn_seventh) { e_pawn_bad++; }
++      if (engine_rook != rook_seventh) { e_rook_bad++; }
++
++      // Per colour, against the board's own bitboards: White's seventh is
++      // squares 8..15 and Black's own seventh is 48..55.
++      const bb_t white_seventh = 0xFF00ULL;
++      const bb_t black_seventh = 0xFF000000000000ULL;
++      const int wp = count_bits(game.board.bitboards[W_PAWN] & white_seventh);
++      const int bp = count_bits(game.board.bitboards[B_PAWN] & black_seventh);
++      const int wr = count_bits(game.board.bitboards[W_ROOK] & white_seventh);
++      const int br = count_bits(game.board.bitboards[B_ROOK] & black_seventh);
++
++      if (wp != 0 || bp != 0) { c_pawn_rows++; }
++      if (wr != 0 || br != 0) { c_rook_rows++; }
++      if (passed[WHITE][5] != wp || passed[BLACK][5] != bp) { c_pawn_bad++; }
++      if (placement_counts[WHITE][PL_ROOK_SEVENTH] != wr ||
++          placement_counts[BLACK][PL_ROOK_SEVENTH] != br) {
++        c_rook_bad++;
++      }
++
++      row++;
++    }
++
++    printf("engine identities: %zu rows read, %zu refused by load_FEN\n", row,
++           refused);
++    printf(
++        "engine identities: passed_pawn_counts() bucket 5, White minus Black, "
++        "== signed pawn occupancy of squares 8..15: %zu rows non-zero, %zu "
++        "violations\n",
++        e_pawn_rows, e_pawn_bad);
++    printf(
++        "engine identities: piece_placement_counts() rook seventh, White minus "
++        "Black, == signed rook occupancy of squares 8..15: %zu rows non-zero, "
++        "%zu violations\n",
++        e_rook_rows, e_rook_bad);
++    printf(
++        "engine identities: per colour, bucket 5 == own pawns on own seventh: "
++        "%zu rows with one, %zu violations\n",
++        c_pawn_rows, c_pawn_bad);
++    printf(
++        "engine identities: per colour, rook seventh == own rooks on own "
++        "seventh: %zu rows with one, %zu violations\n",
++        c_rook_rows, c_rook_bad);
+   }
+ 
+   // ----------------------------------------------------------- occurrence

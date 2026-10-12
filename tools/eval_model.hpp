@@ -49,17 +49,24 @@ constexpr size_t MOBILITY_COUNT = 4;
 // reads.
 constexpr size_t KING_SAFETY_COUNT = KS_FEATURE_COUNT;
 
-// Passed pawns, added at S035: six weights for the middlegame and six for the
+// Passed pawns, added at S035: five weights for the middlegame and five for the
 // endgame, indexed by how far the pawn has advanced rather than by anything
-// about the pawn itself. Bucket 0 is a pawn on its own second rank and bucket 5
-// one on the seventh, a square from promoting; a pawn cannot stand on its own
-// first or eighth rank, so six buckets are all there are.
+// about the pawn itself. Bucket 0 is a pawn on its own second rank and bucket 4
+// one on its own sixth. A pawn cannot stand on its own first or eighth rank,
+// and one on its own seventh is in no bucket: it is a passer by definition, so
+// a bucket for it was exactly the signed sum of eight psqt[pawn] columns, and
+// S134 folded that bucket into them and deleted it (DEC-090). Six until then.
 //
-// Six weights rather than one scaled by the rank because the value of a passed
-// pawn is not linear in how far it has come, and because the model is only
-// allowed to be linear in its own parameters -- a rank multiplier would be a
-// feature, not a parameter.
-constexpr size_t PASSED_PAWN_COUNT = 6;
+// Buckets rather than one weight scaled by the rank because the value of a
+// passed pawn is not linear in how far it has come, and because the model is
+// only allowed to be linear in its own parameters -- a rank multiplier would be
+// a feature, not a parameter.
+//
+// Taken from the width of the engine's own weight array, as the two counts
+// below are, so the model cannot fit a different number of buckets than the
+// engine reads.
+constexpr size_t PASSED_PAWN_COUNT =
+    sizeof(passed_pawn_mg) / sizeof(passed_pawn_mg[0]);
 
 // Pawn structure, added at S027: three counts per side -- isolated, doubled,
 // backward, in that order -- weighted for the middlegame and for the endgame.
@@ -84,27 +91,27 @@ enum pawn_structure_feature_t
   PS_BACKWARD
 };
 
-// Piece placement, added at S027: four counts per side -- bishop pair, rook on
-// an open file, rook on a half-open file, rook on the seventh, in that order --
-// weighted for the middlegame and for the endgame. The counts are a property of
-// the position, so they enter as features and the model stays linear, exactly
-// like the four terms above.
+// Piece placement, added at S027: three counts per side -- bishop pair, rook on
+// an open file, rook on a half-open file, in that order -- weighted for the
+// middlegame and for the endgame. The counts are a property of the position, so
+// they enter as features and the model stays linear, exactly like the four
+// terms above. Four until S134 deleted rook on the seventh, the signed sum of
+// eight psqt[rook] columns (DEC-090).
 //
 // Taken from the width of the engine's own weight array rather than written as
-// 4, for the reason the pawn structure count is: a feature added there cannot
+// 3, for the reason the pawn structure count is: a feature added there cannot
 // then leave the model fitting a shorter vector than the engine reads.
 constexpr size_t PIECE_PLACEMENT_COUNT =
     sizeof(piece_placement_mg) / sizeof(piece_placement_mg[0]);
 
-// What the four counts are, in the order the weights are indexed. Named here
+// What the three counts are, in the order the weights are indexed. Named here
 // because the engine names them only in the prose over those arrays, and an
 // index nobody can read is an index a caller gets wrong.
 enum piece_placement_feature_t
 {
   PL_BISHOP_PAIR,
   PL_ROOK_OPEN,
-  PL_ROOK_HALF_OPEN,
-  PL_ROOK_SEVENTH
+  PL_ROOK_HALF_OPEN
 };
 
 // Tempo, added at S027: one weight for the middlegame and one for the endgame,
@@ -539,7 +546,8 @@ inline bool king_safety_features(const std::string& placement,
 // either neighbouring file; "ahead" is toward the enemy, so for White a lower
 // index and for Black a higher one, and an enemy pawn level with the pawn or
 // behind it does not block. Own pawns never block, so both halves of a doubled
-// pair can be passed at once.
+// pair can be passed at once. A pawn on its own seventh rank is counted in no
+// bucket: the piece-square table prices it alone since S134.
 //
 // Walked by hand from the placement for the same reason mobility_features() is:
 // this file has to be able to disagree with the engine, and code shared with it
@@ -592,7 +600,7 @@ inline bool passed_pawn_features(const std::string& placement,
     const int file = from % 8;
 
     // A pawn on a back rank is not a position the engine can reach, and it
-    // would index outside the six buckets. Refusing the placement is louder
+    // would index outside the buckets. Refusing the placement is louder
     // than clamping it and the caller already reports a refusal.
     if (rank == 0 || rank == 7) { return false; }
 
@@ -615,6 +623,11 @@ inline bool passed_pawn_features(const std::string& placement,
     }
 
     if (blocked) { continue; }
+
+    // Its own seventh: row 1 for White, row 6 for Black. A passer by
+    // definition, folded into the table at S134, so it counts nowhere here --
+    // and left in, it would index a sixth bucket that no longer exists.
+    if (rank == (white ? 1 : 6)) { continue; }
 
     const int bucket = white ? (6 - rank) : (rank - 1);
 
@@ -759,8 +772,7 @@ inline bool pawn_structure_features(const std::string& placement,
 
 
 // Piece placement counts, White minus Black, in bishop pair, rook on an open
-// file, rook on a half-open file, rook on the seventh order. Each is about a
-// side's own pieces.
+// file, rook on a half-open file order. Each is about a side's own pieces.
 //
 // The definitions are src/evaluation.hpp's, stated there because this file is
 // written from that comment and the two have to mean the same thing:
@@ -773,24 +785,17 @@ inline bool pawn_structure_features(const std::string& placement,
 //                   not a pawn and does not close a file.
 //   rook_half_open  own rooks standing on a file carrying no own pawn and at
 //                   least one enemy pawn.
-//   rook_seventh    own rooks standing on the rank the enemy's pawns start on,
-//                   rank 7 for White and rank 2 for Black. The enemy king is
-//                   not asked about; a conditional version is a different
-//                   feature and would need its own fit.
 //
-// The first two rook features exclude each other and the third excludes
-// neither, so a rook on an open file on the seventh counts once in each of two.
-// A file with an own pawn on it is neither open nor half-open, whatever the
-// enemy has there.
+// The two rook features exclude each other. A file with an own pawn on it is
+// neither open nor half-open, whatever the enemy has there. Rook on the
+// seventh was a fourth until S134 folded it into the rook table (DEC-090).
 //
 // Walked by hand from the placement for the same reason mobility_features() is:
 // this file has to be able to disagree with the engine, and code shared with it
 // cannot.
 //
 // Squares are true board squares, index 0 = a8 to index 63 = h1, not the
-// mirrored ones parse_placement() stores. In that indexing the rank a side's
-// pawns start on is row 6 for White and row 1 for Black, so the rank each side
-// is paid for standing a rook on is the other one's.
+// mirrored ones parse_placement() stores.
 inline bool piece_placement_features(const std::string& placement,
                                      int out[PIECE_PLACEMENT_COUNT])
 {
@@ -859,8 +864,6 @@ inline bool piece_placement_features(const std::string& placement,
 
     if (!own && !enemy) { out[PL_ROOK_OPEN] += sign; }
     if (!own && enemy) { out[PL_ROOK_HALF_OPEN] += sign; }
-
-    if (sq / 8 == (white_at[sq] ? 1 : 6)) { out[PL_ROOK_SEVENTH] += sign; }
   }
 
   // The one feature that is not a count. Two bishops are a pair and so are

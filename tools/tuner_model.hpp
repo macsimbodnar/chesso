@@ -83,9 +83,10 @@ struct dataset_t
   // 27 MB.
   std::vector<int16_t> king_safety;
 
-  // Passed pawn counts, White minus Black, six per position, extracted once for
-  // the same reason. Eight pawns per side bounds every bucket, so int16 is
-  // again far more room than they need: 1.49 M rows cost 18 MB.
+  // Passed pawn counts, White minus Black, five per position since S134,
+  // extracted once for the same reason. Eight pawns per side bounds every
+  // bucket, so int16 is again far more room than they need: 1.49 M rows cost
+  // 15 MB.
   std::vector<int16_t> passed_pawn;
 
   // Pawn structure counts, White minus Black, three per position, extracted
@@ -93,10 +94,10 @@ struct dataset_t
   // so int16 is again far more room than they need: 1.49 M rows cost 9 MB.
   std::vector<int16_t> pawn_structure;
 
-  // Piece placement counts, White minus Black, four per position, extracted
-  // once for the same reason. The bishop pair is 1, 0 or -1 and the three rook
-  // counts are bounded by the rooks on the board, so int16 is again far more
-  // room than they need: 1.49 M rows cost 12 MB.
+  // Piece placement counts, White minus Black, three per position since S134,
+  // extracted once for the same reason. The bishop pair is 1, 0 or -1 and the
+  // two rook counts are bounded by the rooks on the board, so int16 is again
+  // far more room than they need: 1.49 M rows cost 9 MB.
   std::vector<int16_t> piece_placement;
 
   // The tempo feature, one per position: +1 with White to move and -1 with
@@ -155,12 +156,22 @@ inline bool load(const std::string& path, dataset_t* data)
     }
 
     const double result = atof(result_text.c_str());
-    const int phase = atoi(phase_text.c_str());
+    const int stored_phase = atoi(phase_text.c_str());
 
-    if (result < 0.0 || result > 1.0 || phase < 0 || phase > GAME_PHASE_MAX) {
+    if (result < 0.0 || result > 1.0 || stored_phase < 0 ||
+        stored_phase > GAME_PHASE_MAX) {
       fprintf(stderr, "bad row: %s\n", line.c_str());
       return false;
     }
+
+    // The phase the model tapers on is recomputed from the placement, the way
+    // evaluate() gets it from the board, and the stored column is read for
+    // its range and nothing else. Trusting it was latent
+    // (2026-09-10_adversarial-F36): equal on every corpus so far, and wrong on
+    // all of them the day phase_value changes, with the range check still
+    // passing. S134; tools/feature_audit's columns report counts the rows
+    // where the two disagree.
+    const int phase = eval_model::phase_of(pieces.data(), pieces.size());
 
     // Strictly, and refused rather than defaulted: `atoi` answers 0 for a field
     // it cannot read, and 0 is a legal score meaning "the search called this

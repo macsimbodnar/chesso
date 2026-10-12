@@ -2167,11 +2167,13 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
    *
    * **A pawn on rank 1 or rank 8 indexes the passed-pawn table out of bounds.**
    * src/evaluation.cpp evaluate_pawns() computes the bucket as `6 - rank` for
-   * White and `rank - 1` for Black over a six-entry table, and what keeps it in
-   * range is exactly that a pawn cannot stand on either back rank. Under the
-   * sanitizer build both colours' sites print `index 6 out of bounds for type
-   * 'int [6]'`; in Release the collecting instantiation writes one int past the
-   * caller's int[2][6] and the engine answers a score and a move.
+   * White and `rank - 1` for Black over a five-entry table (six until S134,
+   * which masks each side's own seventh out before the bucket is taken), and
+   * what keeps it in range is exactly that a pawn cannot stand on either back
+   * rank. Under the sanitizer build, at S208 while the table was six wide, both
+   * colours' sites printed `index 6 out of bounds for type 'int [6]'`; in
+   * Release the collecting instantiation wrote one int past the caller's
+   * int[2][6] and the engine answered a score and a move.
    *
    * Refusing at the load boundary is free: it is the contract every downstream
    * consumer already assumes (S161's words), and a run-time bound inside

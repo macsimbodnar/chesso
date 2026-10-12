@@ -1,0 +1,50 @@
+# S134 feature_audit over the folded parameterisation, 823 parameters.
+# Tree: s134 working tree (parent 1472c96).
+# Command: build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000
+# Machine: i7-8700K, g++ 13.3, 12 threads, 2026-10-12. Wall 1 m 9 s.
+corpus /home/max/ws/chesso/.tuning/selfplay_v2_dedup.tsv, 10795695 rows
+columns: 10795695 rows re-extracted, 0 disagreements
+columns: stored phase column against the placement's phase: 0 disagreements
+identities: the design the tuner descends, 823 parameters over 10795695 rows
+identities: method: each row is 24 x d(eval_model::evaluate)/d(param), the stage-two clamp ignored as gradient() ignores it; X'X summed exactly in 64-bit integers over every row; rank by Gauss-Jordan modulo 2^61-1, which cannot exceed the rank over the rationals; each dependency checked exactly as v'X'Xv == 0, the sum over every row of (x.v)^2
+identities: design check: x.params/24 against evaluate_position() on 202966 rows where the clamp does not bind, worst |difference| 1.36e-12
+identities: 32 columns zero on every row: psqt_mg[pawn][a8] psqt_mg[pawn][b8] psqt_mg[pawn][c8] psqt_mg[pawn][d8] psqt_mg[pawn][e8] psqt_mg[pawn][f8] psqt_mg[pawn][g8] psqt_mg[pawn][h8] psqt_mg[pawn][a1] psqt_mg[pawn][b1] psqt_mg[pawn][c1] psqt_mg[pawn][d1] psqt_mg[pawn][e1] psqt_mg[pawn][f1] psqt_mg[pawn][g1] psqt_mg[pawn][h1] psqt_eg[pawn][a8] psqt_eg[pawn][b8] psqt_eg[pawn][c8] psqt_eg[pawn][d8] psqt_eg[pawn][e8] psqt_eg[pawn][f8] psqt_eg[pawn][g8] psqt_eg[pawn][h8] psqt_eg[pawn][a1] psqt_eg[pawn][b1] psqt_eg[pawn][c1] psqt_eg[pawn][d1] psqt_eg[pawn][e1] psqt_eg[pawn][f1] psqt_eg[pawn][g1] psqt_eg[pawn][h1]
+identities: by construction, material[pawn] = the sum of every psqt_mg[pawn] and psqt_eg[pawn] column: holds on every row
+identities: by construction, material[knight] = the sum of every psqt_mg[knight] and psqt_eg[knight] column: holds on every row
+identities: by construction, material[bishop] = the sum of every psqt_mg[bishop] and psqt_eg[bishop] column: holds on every row
+identities: by construction, material[rook] = the sum of every psqt_mg[rook] and psqt_eg[rook] column: holds on every row
+identities: by construction, material[queen] = the sum of every psqt_mg[queen] and psqt_eg[queen] column: holds on every row
+identities: by construction, sum of psqt_mg[king] = 0: holds on every row
+identities: by construction, sum of psqt_eg[king] = 0: holds on every row
+identities: rank modulo 2^61-1: 784 of 823, nullity 39; 32 zero columns and 7 dependencies by construction account for 39 of it
+identities: the 784 columns left once each of those drops one: rank 784, 0 further exact dependencies
+identities: no exact dependency beyond the ones listed above
+identities: upper bound: 39 null vectors hold exactly on every row (32 zero columns, 7 by construction, 0 found); their supports are pairwise disjoint and 39 of them are linearly independent, so the rank over the rationals is at most 823 - 39 = 784
+identities: lower bound: the rank modulo 2^61-1 is 784, and reducing an integer matrix modulo a prime cannot raise its rank, so the rank over the rationals is at least 784
+identities: rank over the rationals exactly 784 of 823, nullity 39, every null direction listed above
+
+occurrence: percent of rows with a non-zero differential
+column                  all        0      1-4      5-8     9-12    13-16    17-20    21-24
+rows (millions)       10.80     0.05     1.87     2.21     1.33     0.96     1.29     3.08
+passer bucket 0       11.90    12.20    11.72    18.52    18.47    15.71    11.61     3.32
+passer bucket 1       11.69    16.35    15.66    20.20    16.77    12.83     8.57     1.83
+passer bucket 2       17.05    31.47    28.12    29.36    21.03    15.30    10.71     2.71
+passer bucket 3       14.47    27.76    25.20    22.42    15.94    12.61    10.45     3.64
+passer bucket 4        9.47    13.52    19.44    14.85     9.31     7.00     5.72     1.88
+bishop pair           15.81     0.00     2.73     6.99    18.41    24.66    27.01    21.77
+rook open             31.38     0.00    35.43    47.72    46.40    38.76    31.40     8.86
+rook half-open        31.26     0.00    14.29    30.13    41.79    39.74    46.46    29.33
+
+tempo: 5437085 rows White to move, mean result 0.556559
+tempo: 5358610 rows Black to move, mean result 0.548682
+tempo: gap 0.007878, White relative
+
+collinearity: R^2 of a term column on the piece-square columns it overlaps, 203693 rows (every 53th)
+bishop pair        R^2 0.486761  on bishop psqt, 64 columns
+rook open          R^2 0.265313  on rook+pawn psqt, 128 columns
+rook half-open     R^2 0.168362  on rook+pawn psqt, 128 columns
+passer bucket 0    R^2 0.215745  on pawn psqt, 64 columns
+passer bucket 1    R^2 0.201678  on pawn psqt, 64 columns
+passer bucket 2    R^2 0.290187  on pawn psqt, 64 columns
+passer bucket 3    R^2 0.270118  on pawn psqt, 64 columns
+passer bucket 4    R^2 0.620476  on pawn psqt, 64 columns

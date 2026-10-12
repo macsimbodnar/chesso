@@ -54,7 +54,8 @@ KS = {  # king_safety_feature_t's order
 #  material   (name, signed count)
 #  passed     bucket -> signed count
 #  structure  isolated, doubled, backward, White minus Black
-#  placement  pair, rook open, rook half open, rook seventh, White minus Black
+#  placement  pair, rook open, rook half open, White minus Black (rook seventh was
+#             a fourth until S134 folded it into the rook table, DEC-090)
 #  mobility   (type, attacked squares not occupied by own pieces, sign)
 #  attackers  (type, zone-attack incidences, sign of the *defender*)
 #  shelter    per colour: the shield and file counts of that king
@@ -69,7 +70,7 @@ CASES = [
         psqt=[(PAWN, sq("e2"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={0: 1},  # no black pawns at all, so e2 passes: 6 - (52 >> 3) = 0
         structure=(1, 0, 0),  # isolated: no white pawn on d or f
-        placement=(0, 0, 0, 0),
+        placement=(0, 0, 0),
         mobility=[],
         attackers=[],
         # White's own pawn closes the e file, so d and f are open for him; for
@@ -87,7 +88,7 @@ CASES = [
         psqt=[(KNIGHT, sq("b1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, 0, 0, 0),
+        placement=(0, 0, 0),
         mobility=[(KNIGHT - 1, 3, 1)],  # a3, c3, d2
         attackers=[],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},  # no pawns
@@ -102,7 +103,7 @@ CASES = [
         psqt=[(BISHOP, sq("c1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, 0, 0, 0),  # one bishop is not a pair
+        placement=(0, 0, 0),  # one bishop is not a pair
         mobility=[(BISHOP - 1, 7, 1)],  # d2 e3 f4 g5 h6, b2 a3
         attackers=[],  # the long ray stops at h6, clear of Black's king zone
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
@@ -118,7 +119,7 @@ CASES = [
         psqt=[(ROOK, sq("d1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, 1, 0, 0),  # no pawn of either colour on the d file
+        placement=(0, 1, 0),  # no pawn of either colour on the d file
         mobility=[(ROOK - 1, 10, 1)],  # a1 b1 c1, d2..d8; e1 is own-occupied
         attackers=[(ROOK - 1, 2, -1)],  # d7 and d8 are in Black's king zone
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
@@ -133,7 +134,7 @@ CASES = [
         psqt=[(QUEEN, sq("d1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, 0, 0, 0),  # the open-file feature counts rooks only
+        placement=(0, 0, 0),  # the open-file feature counts rooks only
         mobility=[(QUEEN - 1, 17, 1)],  # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4
         attackers=[(QUEEN - 1, 2, -1)],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
@@ -148,7 +149,7 @@ CASES = [
         psqt=[(KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, 0, 0, 0),
+        placement=(0, 0, 0),
         mobility=[],
         attackers=[],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
@@ -174,7 +175,7 @@ CASES = [
         ],
         passed={0: -3},  # White has no pawns, so all three of Black's pass
         structure=(0, 0, 0),  # f g h are mutual neighbours; nothing is backward
-        placement=(0, 2, 0, 0),  # both white rooks on the open e file
+        placement=(0, 2, 0),  # both white rooks on the open e file
         mobility=[(ROOK - 1, 12, 1), (ROOK - 1, 11, 1), (QUEEN - 1, 21, -1)],
         attackers=[(ROOK - 1, 2, -1)],  # Re8 bears on f8 and g8
         shelter={"w": {"HALF_OPEN_FILE": 3},  # f g h each hold a black pawn only
@@ -192,7 +193,7 @@ CASES = [
         psqt=[(ROOK, sq("a2"), 1), (KING, sq("a1"), 1), (KING, sq("h2"), -1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, 1, 0, 0),  # the a file holds no pawn of either colour
+        placement=(0, 1, 0),  # the a file holds no pawn of either colour
         # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied
         mobility=[(ROOK - 1, 13, 1)],
         attackers=[],  # the a file and the second rank miss h7's zone entirely
@@ -224,7 +225,7 @@ LEAVES = [
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("d1"), 1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, -1, 0, 0),  # Black's rook, on the open e file
+        placement=(0, -1, 0),  # Black's rook, on the open e file
         # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied
         mobility=[(ROOK - 1, 11, -1)],
         attackers=[(ROOK - 1, 2, 1)],  # d1's zone holds e1 and e2
@@ -240,7 +241,7 @@ LEAVES = [
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("d2"), 1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, -1, 0, 0),
+        placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],
         attackers=[(ROOK - 1, 3, 1)],  # d2's zone holds e1, e2 and e3
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
@@ -255,7 +256,7 @@ LEAVES = [
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("f1"), 1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, -1, 0, 0),
+        placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],
         attackers=[(ROOK - 1, 2, 1)],  # f1's zone holds e1 and e2
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
@@ -270,7 +271,7 @@ LEAVES = [
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("f2"), 1)],
         passed={},
         structure=(0, 0, 0),
-        placement=(0, -1, 0, 0),
+        placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],
         attackers=[(ROOK - 1, 3, 1)],  # f2's zone holds e1, e2 and e3
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},

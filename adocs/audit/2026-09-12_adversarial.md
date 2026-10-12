@@ -67,7 +67,7 @@ explicit decision reconciling it with the prime directive.
 
 ### 2026-09-12_adversarial-F02 — low — prior F34 has no plan step or recorded decision
 
-Status: accepted in part — the decision existed: DEC-170 (2026-09-11) ruled F34 against regularisation, by short id; the verbatim-id gap is closed by S134's `closes:` and its measured accepts (DEC-197).
+Status: closed — S134, 2026-10-12: the two exact degeneracies were folded into the piece-square tables and deleted (bit-exact, `evaluate()` identical on all 10795695 corpus rows, `PARAM_COUNT` 827 to 823), and `tools/feature_audit`'s identity report now measures the remaining parameterisation: rank 784 of 823, nullity 39 all accounted for (32 pawn columns on ranks 1 and 8, five material-against-table directions, one per king table), no further exact dependency (`adocs/data/S134_feature_audit.txt`) -- the measurement DEC-170's ruling against regularisation rests on. Previously: accepted in part — the decision existed: DEC-170 (2026-09-11) ruled F34 against regularisation, by short id; the verbatim-id gap is closed by S134's `closes:` and its measured accepts (DEC-197).
 
 `2026-09-10_adversarial-F34` found that the tuner has no regularisation and no
 decision saying that deletion of the documented degenerate columns is the

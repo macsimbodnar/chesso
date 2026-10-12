@@ -882,3 +882,12 @@ claims about 1.1 logistic Elo more than the run demonstrated. That is the half
 worth restating wherever it is quoted as current, and `specs.md`'s copy of it
 now is. `DEV_MANUAL.md`'s "Which bounds" section states the scale where the next
 pre-registration will be written from. 2026-08-21 adversarial F09.
+
+### S134, the fold of the two degenerate evaluation columns
+
+| file | what it is |
+|---|---|
+| `S134_engine_identity.diff` | the patch to `tools/feature_audit.cpp` at `1472c96` that read `passed_pawn_counts()` bucket 5 and `piece_placement_counts()` rook seventh **out of the engine**, row by row through `load_FEN`, and compared them against the signed occupancy of squares 8..15, signed and per colour. Run before anything was deleted; the counts it reads no longer exist after S134, so the check lives here and not in the tree. `git apply` it onto `1472c96` to run it again |
+| `S134_engine_identity.txt` | its output over all 10795695 rows of `.tuning/selfplay_v2_dedup.tsv`, 2026-10-12: 0 refused, **0 violations** signed (550880 and 1264773 rows non-zero) and per colour (569739 and 1380393 rows with a pawn or a rook on its own seventh) |
+| `S134_identity_before.txt` | S134's identity report run on the 827-parameter layout, the non-vacuity run: rank **exactly 784** of 827 (modular lower bound and 43 exact, independent null vectors meet), the 39 known null directions verified, and exactly **4** further exact dependencies found and printed -- rook on the seventh and passer bucket 5, middlegame and endgame, each equal to the sum of its eight seventh-rank piece-square columns |
+| `S134_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` on the folded tree, 2026-10-12: columns 0 disagreements and 0 phase-column disagreements; identities rank **exactly 784** of 823 (both bounds meet), nullity 39 = 32 pawn columns on ranks 1 and 8 + 5 material-against-table directions + 1 per king table, pairwise disjoint supports, **0 further dependencies**; occurrence and collinearity for the eight term columns left, unchanged from S100's |

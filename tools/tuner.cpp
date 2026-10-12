@@ -6,8 +6,9 @@
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
 // and psqt_eg[6][64], the mobility weights since S034, the king safety weights
 // since S027, the passed pawn weights since S035 and the pawn structure, piece
-// placement and tempo weights since S027, 827 numbers -- so that a sigmoid of
-// the evaluation predicts the outcome of the game the position came from.
+// placement and tempo weights since S027, 823 numbers since S134 -- so that a
+// sigmoid of the evaluation predicts the outcome of the game the position came
+// from.
 // This is Texel tuning; the objective is the mean squared error of that
 // prediction.
 //
@@ -375,8 +376,11 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? PP_MG_BASE : PP_EG_BASE;
 
-    fprintf(out, "\nconstexpr int passed_pawn_%s[6] = {",
-            (table == 0) ? "mg" : "eg");
+    // The width is the model's, which is the engine's own array's: a literal
+    // here would emit a header that still compiles when the two part, padding
+    // the tail with zeros or refusing nothing.
+    fprintf(out, "\nconstexpr int passed_pawn_%s[%zu] = {",
+            (table == 0) ? "mg" : "eg", PASSED_PAWN_COUNT);
 
     for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
       fprintf(out, "%s%d", (i == 0) ? "" : ", ",
@@ -385,7 +389,7 @@ void write_tables(const std::string& path,
 
     // The index is how far the pawn has come, not which rank it stands on, so
     // the trailing comment names the buckets from the pawn's own point of view.
-    fprintf(out, "};  // second rank .. seventh\n");
+    fprintf(out, "};  // second rank .. sixth\n");
   }
 
   for (int table = 0; table < 2; ++table) {
@@ -405,15 +409,15 @@ void write_tables(const std::string& path,
   for (int table = 0; table < 2; ++table) {
     const size_t base = (table == 0) ? PL_MG_BASE : PL_EG_BASE;
 
-    fprintf(out, "\nconstexpr int piece_placement_%s[4] = {",
-            (table == 0) ? "mg" : "eg");
+    fprintf(out, "\nconstexpr int piece_placement_%s[%zu] = {",
+            (table == 0) ? "mg" : "eg", PIECE_PLACEMENT_COUNT);
 
     for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
       fprintf(out, "%s%d", (i == 0) ? "" : ", ",
               static_cast<int>(std::lround(params[base + i])));
     }
 
-    fprintf(out, "};  // pair, open, half open, seventh\n");
+    fprintf(out, "};  // pair, open, half open\n");
   }
 
   // One number per table and no array, so these two lines are the whole term.

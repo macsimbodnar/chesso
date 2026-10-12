@@ -53,24 +53,26 @@ extern const int mobility_mg[4];
 extern const int mobility_eg[4];
 
 // The passed pawn weights, indexed by how far the pawn has advanced: 0 on its
-// own second rank, 5 on the seventh and one square from promotion. Exposed for
-// the same reason as the mobility weights: the tuner's model in
-// tools/eval_model.hpp starts from what the engine ships instead of from a copy
-// of it that would be free to drift.
+// own second rank, 4 on its own sixth. Exposed for the same reason as the
+// mobility weights: the tuner's model in tools/eval_model.hpp starts from what
+// the engine ships instead of from a copy of it that would be free to drift.
 //
 // Fitted and shipping non-zero since S027 -- see the weights themselves and
 // the fit that produced them in evaluation.cpp. They are a residual on top of
 // the pawn piece-square table and not a valuation of a passed pawn, which is
-// why a bucket is allowed to be negative. The last bucket is not "nearly
-// nothing": S100 read it at +22, -1 and -17 across three fits, a 39-point
-// spread that changes sign twice, so it is a direction the fits do not agree
-// on -- S134 folds it into the tables for that reason.
+// why a bucket is allowed to be negative.
 //
-// Six buckets rather than one weight scaled by the rank because the value is
-// not linear in the rank and the tuner fits only a linear function of its
+// **A pawn on its own seventh is in no bucket.** It is a passer by definition,
+// so a sixth bucket for it was exactly the signed sum of eight psqt[PAWN]
+// columns; S100 read that bucket at +22, -1 and -17 across three fits, and S134
+// folded its weight into psqt[PAWN][8..15] and deleted it (DEC-090). The table
+// prices that pawn and this term does not see it.
+//
+// Buckets rather than one weight scaled by the rank because the value is not
+// linear in the rank and the tuner fits only a linear function of its
 // parameters -- see evaluation.cpp.
-extern const int passed_pawn_mg[6];
-extern const int passed_pawn_eg[6];
+extern const int passed_pawn_mg[5];
+extern const int passed_pawn_eg[5];
 
 // The raw counts the term is built from, per colour, WHITE first. Each row is
 // that side's own passed pawns in the buckets the weights above are indexed by;
@@ -94,7 +96,7 @@ extern const int passed_pawn_eg[6];
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
 // implementation to drift.
-void passed_pawn_counts(const board_t* board, int out[2][6]);
+void passed_pawn_counts(const board_t* board, int out[2][5]);
 
 // The pawn structure weights, indexed by feature: 0 isolated, 1 doubled, 2
 // backward. Exposed for the same reason as the passed pawn weights above: the
@@ -143,10 +145,9 @@ extern const int pawn_structure_eg[3];
 void pawn_structure_counts(const board_t* board, int out[2][3]);
 
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
-// open file, 2 rook on a half-open file, 3 rook on the seventh. Exposed for the
-// same reason as the weights above: the tuner's model in tools/eval_model.hpp
-// starts from what the engine ships instead of from a copy of it that would be
-// free to drift.
+// open file, 2 rook on a half-open file. Exposed for the same reason as the
+// weights above: the tuner's model in tools/eval_model.hpp starts from what the
+// engine ships instead of from a copy of it that would be free to drift.
 //
 // **Zero in evaluation.cpp, and not because the tuner has not reached them.**
 // S027 fitted piece placement (mg {2, 32, 8, -26} / eg {55, -8, 12, 11}),
@@ -157,7 +158,7 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 // passed pawn, pawn structure and king safety weights above and below ship
 // fitted since S027; tempo is zero for its own reason, stated at its block.
 //
-// The four definitions, stated exactly, because the tuner's model is written
+// The three definitions, stated exactly, because the tuner's model is written
 // from this comment and the two have to mean the same thing. Each is about one
 // side's own pieces; the term is the White count minus the Black one, feature
 // by feature.
@@ -173,34 +174,28 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 //                   pawns and do not close a file.
 //   rook_half_open  own rooks standing on a file carrying no own pawn and at
 //                   least one enemy pawn.
-//   rook_seventh    own rooks standing on the rank the enemy's pawns start on
-//                   -- rank 7 for White, rank 2 for Black.
 //
-// Counts and not booleans for the three rook features: two rooks on open files
+// Counts and not booleans for the two rook features: two rooks on open files
 // count two. Only rooks are asked about, so a queen on an open file is not
 // counted anywhere here.
 //
-// rook_open and rook_half_open exclude each other, rook_seventh excludes
-// neither: a rook on an open file on the seventh rank counts once in each of
-// the two, and the fit splits the shared effect between them the way DEC-044
-// describes for king safety's collinear counts.
+// rook_open and rook_half_open exclude each other.
 //
-// Two places a reader could reasonably differ, so the choice is stated rather
-// than left to be inferred:
+// **Rook on the seventh is not here.** Until S134 it was a fourth feature, own
+// rooks on the rank the enemy's pawns start on, and that is exactly the signed
+// sum of eight psqt[ROOK] columns -- the rank is squares 8..15 for both colours
+// once Black is mirrored -- so it could carry no weight the table cannot. Its
+// zero weight was folded into psqt[ROOK][8..15] and the feature deleted
+// (DEC-090). A conditional version, one that asks about the enemy king or the
+// pawns still on that rank, is a different feature and would need its own
+// identity check (tools/feature_audit) as well as its own fit.
 //
-//   **rook_seventh asks nothing about the enemy king.** The literature usually
-//   pays for a rook on the seventh only when the enemy king is on its back rank
-//   or pawns are still there to be eaten. This is the rank and nothing else.
-//   The condition is what the weight is fitted against, so a conditional
-//   version is a different feature and would need its own fit, not a different
-//   reading of this one.
-//
-//   **A file with an own pawn on it is neither open nor half-open**, whatever
-//   the enemy has there. The two features are disjoint by construction and
-//   their sum is not "rooks on files this side's pawns do not block" -- a rook
-//   behind its own pawn scores zero in both, deliberately.
-extern const int piece_placement_mg[4];
-extern const int piece_placement_eg[4];
+// **A file with an own pawn on it is neither open nor half-open**, whatever
+// the enemy has there. The two features are disjoint by construction and their
+// sum is not "rooks on files this side's pawns do not block" -- a rook behind
+// its own pawn scores zero in both, deliberately.
+extern const int piece_placement_mg[3];
+extern const int piece_placement_eg[3];
 
 // The raw counts the term is built from, per colour, WHITE first, in the
 // feature order above. Exists for tests/test_eval_model and per colour rather
@@ -213,7 +208,7 @@ extern const int piece_placement_eg[4];
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
 // implementation to drift.
-void piece_placement_counts(const board_t* board, int out[2][4]);
+void piece_placement_counts(const board_t* board, int out[2][3]);
 
 // The tempo weights: a bonus for having the move, middlegame and endgame,
 // tapered like every other term. Exposed for the same reason as the weights
@@ -362,9 +357,9 @@ inline int taper(score_t score, int phase)
 // all zero. The piece-square tables' copy, psqt_score, is in eval_tables.hpp.
 extern const std::array<score_t, 4> mobility_score;
 extern const std::array<score_t, KS_FEATURE_COUNT> king_safety_score;
-extern const std::array<score_t, 6> passed_pawn_score;
+extern const std::array<score_t, 5> passed_pawn_score;
 extern const std::array<score_t, 3> pawn_structure_score;
-extern const std::array<score_t, 4> piece_placement_score;
+extern const std::array<score_t, 3> piece_placement_score;
 extern const score_t tempo_score;
 int capture_score(const board_t* board, move_t move);
 

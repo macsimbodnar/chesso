@@ -1,0 +1,25 @@
+# S134 identity report at the parent layout, 827 parameters: the non-vacuity run.
+# Tree: git archive of 1472c96 with this step's tools/feature_audit.cpp, PLACEMENT_NAMES and PASSER_NAMES widened back to 4 and 6.
+# Command: build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --no-columns --no-occurrence --no-collinearity
+# Machine: i7-8700K, g++ 13.3, 12 threads, 2026-10-12. Wall 41 s.
+corpus /home/max/ws/chesso/.tuning/selfplay_v2_dedup.tsv, 10795695 rows
+identities: the design the tuner descends, 827 parameters over 10795695 rows
+identities: method: each row is 24 x d(eval_model::evaluate)/d(param), the stage-two clamp ignored as gradient() ignores it; X'X summed exactly in 64-bit integers over every row; rank by Gauss-Jordan modulo 2^61-1, which cannot exceed the rank over the rationals; each dependency checked exactly as v'X'Xv == 0, the sum over every row of (x.v)^2
+identities: design check: x.params/24 against evaluate_position() on 202966 rows where the clamp does not bind, worst |difference| 1.36e-12
+identities: 32 columns zero on every row: psqt_mg[pawn][a8] psqt_mg[pawn][b8] psqt_mg[pawn][c8] psqt_mg[pawn][d8] psqt_mg[pawn][e8] psqt_mg[pawn][f8] psqt_mg[pawn][g8] psqt_mg[pawn][h8] psqt_mg[pawn][a1] psqt_mg[pawn][b1] psqt_mg[pawn][c1] psqt_mg[pawn][d1] psqt_mg[pawn][e1] psqt_mg[pawn][f1] psqt_mg[pawn][g1] psqt_mg[pawn][h1] psqt_eg[pawn][a8] psqt_eg[pawn][b8] psqt_eg[pawn][c8] psqt_eg[pawn][d8] psqt_eg[pawn][e8] psqt_eg[pawn][f8] psqt_eg[pawn][g8] psqt_eg[pawn][h8] psqt_eg[pawn][a1] psqt_eg[pawn][b1] psqt_eg[pawn][c1] psqt_eg[pawn][d1] psqt_eg[pawn][e1] psqt_eg[pawn][f1] psqt_eg[pawn][g1] psqt_eg[pawn][h1]
+identities: by construction, material[pawn] = the sum of every psqt_mg[pawn] and psqt_eg[pawn] column: holds on every row
+identities: by construction, material[knight] = the sum of every psqt_mg[knight] and psqt_eg[knight] column: holds on every row
+identities: by construction, material[bishop] = the sum of every psqt_mg[bishop] and psqt_eg[bishop] column: holds on every row
+identities: by construction, material[rook] = the sum of every psqt_mg[rook] and psqt_eg[rook] column: holds on every row
+identities: by construction, material[queen] = the sum of every psqt_mg[queen] and psqt_eg[queen] column: holds on every row
+identities: by construction, sum of psqt_mg[king] = 0: holds on every row
+identities: by construction, sum of psqt_eg[king] = 0: holds on every row
+identities: rank modulo 2^61-1: 784 of 827, nullity 43; 32 zero columns and 7 dependencies by construction account for 39 of it
+identities: the 788 columns left once each of those drops one: rank 784, 4 further exact dependencies
+identities: dependency 1: 0 = -psqt_mg[pawn][a7] -psqt_mg[pawn][b7] -psqt_mg[pawn][c7] -psqt_mg[pawn][d7] -psqt_mg[pawn][e7] -psqt_mg[pawn][f7] -psqt_mg[pawn][g7] -psqt_mg[pawn][h7] +passed_pawn_mg[5]: holds on every row
+identities: dependency 2: 0 = -psqt_eg[pawn][a7] -psqt_eg[pawn][b7] -psqt_eg[pawn][c7] -psqt_eg[pawn][d7] -psqt_eg[pawn][e7] -psqt_eg[pawn][f7] -psqt_eg[pawn][g7] -psqt_eg[pawn][h7] +passed_pawn_eg[5]: holds on every row
+identities: dependency 3: 0 = -psqt_mg[rook][a7] -psqt_mg[rook][b7] -psqt_mg[rook][c7] -psqt_mg[rook][d7] -psqt_mg[rook][e7] -psqt_mg[rook][f7] -psqt_mg[rook][g7] -psqt_mg[rook][h7] +piece_placement_mg[rook seventh]: holds on every row
+identities: dependency 4: 0 = -psqt_eg[rook][a7] -psqt_eg[rook][b7] -psqt_eg[rook][c7] -psqt_eg[rook][d7] -psqt_eg[rook][e7] -psqt_eg[rook][f7] -psqt_eg[rook][g7] -psqt_eg[rook][h7] +piece_placement_eg[rook seventh]: holds on every row
+identities: upper bound: 43 null vectors hold exactly on every row (32 zero columns, 7 by construction, 4 found); their supports are not disjoint and 43 of them are linearly independent, so the rank over the rationals is at most 827 - 43 = 784
+identities: lower bound: the rank modulo 2^61-1 is 784, and reducing an integer matrix modulo a prime cannot raise its rank, so the rank over the rationals is at least 784
+identities: rank over the rationals exactly 784 of 827, nullity 43, every null direction listed above

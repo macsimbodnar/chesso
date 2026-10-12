@@ -7,6 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-12, by hand.
 
+## 2026-10-12: S134 done -- two degenerate evaluation columns folded into the tables, bit-exact
+
+Passer bucket 5 and rook on the seventh were exactly the signed occupancy of
+squares 8..15 (0 violations over 10795695 corpus rows, read from the
+engine). Their weights moved into `psqt[PAWN|ROOK][8..15]` and both terms are
+gone: `evaluate()` identical on every corpus row, bench 3872032 and node
+counts identical (INV-6), `PARAM_COUNT` 827 -> 823. `feature_audit` now
+proves the rank exactly (784 of 823); of the 39 null directions, the two
+king-table ones were on no record and are **S275** (filler, before S262's
+fit). Closes 2026-09-10 F34, F36 and 2026-09-12 F02. Run while S119's SPRT
+waits on the owner's harness-`Hash` ruling; S259 is held until S119's
+verdict, since its mined rows depend on the search tree. Fast check: four
+findings, fixed before commit.
+
 ## 2026-10-12: S274 done -- the shipped bmi2 binary is unpadded; native keeps the padding
 
 DEC-267 applied: `cmake/arch.cmake` pads native only and records

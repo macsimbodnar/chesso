@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include "test_eval_positions.hpp"
@@ -95,7 +96,11 @@ std::string side_to_move_of(const std::string& fen)
 // on every row, which is a residual a wrong per-row feature could still fit; a
 // zero score column would make --lambda untestable for the same reason S075's
 // parser refuses one.
-bool write_fixture(const std::string& path)
+//
+// `phase_shift` writes a phase column that is wrong on purpose, the true phase
+// plus the shift wrapped into 0..GAME_PHASE_MAX, so it still passes load()'s
+// range check -- the corpus a change to phase_value would leave behind.
+bool write_fixture(const std::string& path, int phase_shift = 0)
 {
   std::ofstream out(path);
 
@@ -111,7 +116,9 @@ bool write_fixture(const std::string& path)
     std::vector<uint16_t> pieces;
     if (!eval_model::parse_placement(placement, &pieces)) { return false; }
 
-    const int phase = eval_model::phase_of(pieces.data(), pieces.size());
+    const int phase =
+        (eval_model::phase_of(pieces.data(), pieces.size()) + phase_shift) %
+        (GAME_PHASE_MAX + 1);
 
     out << fen << '\t' << results[i % 3] << '\t' << score << '\t' << phase
         << '\n';
@@ -148,6 +155,68 @@ TEST_CASE("the fixture corpus loads through the tuner's own parser")
   tuner_model::dataset_t data;
   REQUIRE(tuner_model::load(path, &data));
   CHECK(data.size() == positions.size());
+
+  std::filesystem::remove(path);
+}
+
+
+// 2026-09-10_adversarial-F36: load() trusted the corpus's phase column, range
+// checked only, and phase_of() sits in the same header. Verified equal on every
+// corpus so far, and latent: a change to phase_value leaves every existing
+// corpus tapering on the old phase while the range check still passes. S134
+// makes load() recompute the phase from the placement, so the column is read
+// for its range and nothing else.
+TEST_CASE("load() tapers on the placement's phase, not the stored column")
+{
+  const std::string path = fixture_path();
+  REQUIRE(write_fixture(path, 7));
+
+  // Precondition, read back from the file rather than recomputed: every phase
+  // column the fixture wrote disagrees with its placement's phase, or the check
+  // below holds for a load() that trusts the column too.
+  {
+    std::ifstream in(path);
+    std::string line;
+    size_t rows = 0;
+    size_t column_wrong = 0;
+
+    while (std::getline(in, line)) {
+      std::istringstream fields(line);
+      std::string fen, result, score, phase_text;
+      REQUIRE(std::getline(fields, fen, '\t'));
+      REQUIRE(std::getline(fields, result, '\t'));
+      REQUIRE(std::getline(fields, score, '\t'));
+      REQUIRE(std::getline(fields, phase_text, '\t'));
+
+      std::vector<uint16_t> pieces;
+      REQUIRE(
+          eval_model::parse_placement(fen.substr(0, fen.find(' ')), &pieces));
+
+      if (std::stoi(phase_text) !=
+          eval_model::phase_of(pieces.data(), pieces.size())) {
+        column_wrong++;
+      }
+      rows++;
+    }
+
+    REQUIRE(rows == positions.size());
+    REQUIRE(column_wrong == rows);
+  }
+
+  tuner_model::dataset_t data;
+  REQUIRE(tuner_model::load(path, &data));
+  REQUIRE(data.size() == positions.size());
+
+  for (size_t row = 0; row < data.size(); ++row) {
+    const std::string& fen = positions[row];
+    CAPTURE(fen);
+
+    std::vector<uint16_t> pieces;
+    REQUIRE(eval_model::parse_placement(fen.substr(0, fen.find(' ')), &pieces));
+
+    CHECK(static_cast<int>(data.phase[row]) ==
+          eval_model::phase_of(pieces.data(), pieces.size()));
+  }
 
   std::filesystem::remove(path);
 }
@@ -368,7 +437,7 @@ TEST_CASE("the lazy clamp binds on no fixture row at the shipped constants")
 
 
 // Jon Dart's check. gradient() against the central difference of the error it
-// descends, for all 827 parameters at once.
+// descends, for every parameter at once -- 823 since S134, 827 before.
 //
 // Central rather than forward because the truncation error is O(h^2) instead of
 // O(h), which is what makes a 1e-6 relative tolerance meaningful rather than a
@@ -378,7 +447,7 @@ TEST_CASE("the lazy clamp binds on no fixture row at the shipped constants")
 // in h.
 //
 // h = 0.01 is measured and not guessed. Swept over this fixture, worst relative
-// error across all 827 parameters:
+// error across all 827 parameters of the layout before S134:
 //
 //   h        0.5       0.1       0.05      0.01      0.005     0.001
 //   worst    1.2e-04   4.9e-06   1.2e-06   4.9e-08   1.5e-08   2.3e-07

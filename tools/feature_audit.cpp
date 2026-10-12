@@ -3,10 +3,10 @@
 //   build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv
 //
 // S100 is a diagnosis: bishop pair, rook on an open file, rook on a half-open
-// file, rook on the seventh and tempo all ship at zero, and passed_pawn_mg[5]
-// fits below the bucket beneath it. Five terms at exactly zero is a pattern
-// rather than five results, and four causes can produce it -- a feature
-// extracted wrongly, a corpus that cannot discriminate the feature, a
+// file, rook on the seventh and tempo all shipped at zero, and
+// passed_pawn_mg[5] fitted below the bucket beneath it. Five terms at exactly
+// zero is a pattern rather than five results, and four causes can produce it --
+// a feature extracted wrongly, a corpus that cannot discriminate the feature, a
 // measurement procedure that could not resolve the effect, or a real zero. This
 // tool answers the corpus half of that. It decides nothing on its own; what it
 // produces is evidence for the ledger in the step file.
@@ -20,20 +20,30 @@
 //                against the engine's counts and against placements worked out
 //                by hand. What it catches is everything between a correct
 //                extractor and a fitted weight: a misaligned base, a wrong
-//                stride, a column pair stored in the other order.
+//                stride, a column pair stored in the other order. Since S134 it
+//                also counts the rows whose stored phase column disagrees with
+//                the phase of the placement, which load() now uses instead.
 //
-//   identities   two claims that are exact by construction, checked on every
-//                row rather than argued. Index 0 is a8 and a black piece is
-//                mirrored by xor 56, so a rook on its own seventh rank always
-//                lands on one of squares 8..15: the rook-on-the-seventh column
-//                is *identically* the signed sum of eight rook piece-square
-//                columns. And a pawn on its own seventh rank is a passer by
-//                definition, because "ahead" is the enemy back rank and the
-//                extractor refuses a pawn standing there, so passer bucket 5 is
-//                identically the signed sum of eight pawn piece-square columns.
-//                Two exact linear dependencies among the parameters, which is a
-//                thing a joint fit cannot resolve and an --only fit resolves
-//                only against the frozen table.
+//   identities   the rank of the design the tuner descends and every exact
+//                linear dependency in it, over every row. S100 found two by
+//                argument and checked them here: rook on the seventh and passer
+//                bucket 5 were each identically the signed sum of eight
+//                piece-square columns, because a rook or a pawn on its own
+//                seventh always lands on squares 8..15 once Black is mirrored
+//                by xor 56, and that pawn is a passer by definition. S134
+//                folded both into the tables (DEC-090) and replaced the two
+//                checks with the general one: the Gram matrix of the design,
+//                summed exactly, its rank modulo a prime, the dependencies the
+//                parameterisation has by construction verified on every row,
+//                and anything left over found and printed instead of argued
+//                about. The modular rank bounds the true rank below and the
+//                exactly verified, linearly independent null vectors bound it
+//                above, so the report states the rank only when the two meet. A
+//                joint fit cannot resolve a dependency and an --only fit
+//                resolves one only against the frozen table, so a new term
+//                defined on a single rank -- S123's, S133's buckets -- is
+//                checked here before it is fitted. The engine-side check S134
+//                ran before the fold is adocs/data/S134_engine_identity.diff.
 //
 //   occurrence   how often each column is non-zero, whole corpus and by phase
 //                band. The coverage form of the corpus hypothesis: a column
@@ -48,8 +58,8 @@
 //                the one counting cannot answer. Above 0.99 the column carries
 //                almost nothing the tables do not already carry, and a fit
 //                returning zero for it is what a *correct* pipeline does. The
-//                two exact identities above should come back at exactly 1.0,
-//                which is this report checking itself.
+//                two exact identities S100 found came back at exactly 1.0,
+//                which was this report checking itself; both columns are gone.
 //
 //   --plant      writes a copy of the corpus with the result column replaced by
 //                sigmoid(K * model_score) at planted, non-zero term weights.
@@ -67,6 +77,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 #include "eval_model.hpp"
 #include "tuner_model.hpp"
@@ -75,8 +87,14 @@
 namespace
 {
 
+using eval_model::EG_BASE;
 using eval_model::KING_SAFETY_COUNT;
+using eval_model::KS_EG_BASE;
+using eval_model::KS_MG_BASE;
+using eval_model::MATERIAL_COUNT;
 using eval_model::MG_BASE;
+using eval_model::MOB_EG_BASE;
+using eval_model::MOB_MG_BASE;
 using eval_model::MOBILITY_COUNT;
 using eval_model::PARAM_COUNT;
 using eval_model::PASSED_PAWN_COUNT;
@@ -87,9 +105,10 @@ using eval_model::PL_EG_BASE;
 using eval_model::PL_MG_BASE;
 using eval_model::PL_ROOK_HALF_OPEN;
 using eval_model::PL_ROOK_OPEN;
-using eval_model::PL_ROOK_SEVENTH;
 using eval_model::PP_EG_BASE;
 using eval_model::PP_MG_BASE;
+using eval_model::PS_EG_BASE;
+using eval_model::PS_MG_BASE;
 using eval_model::TEMPO_EG_BASE;
 using eval_model::TEMPO_MG_BASE;
 
@@ -98,11 +117,13 @@ constexpr size_t PAWN_TYPE = 0;
 constexpr size_t BISHOP_TYPE = 2;
 constexpr size_t ROOK_TYPE = 3;
 
-// A rook or a pawn on its own seventh rank, in the mirrored indexing every
-// piece code already uses. Row 0 is the enemy back rank and row 1 is the
-// seventh, for both colours, because a black piece is mirrored by xor 56.
-constexpr size_t SEVENTH_FIRST = 8;
-constexpr size_t SEVENTH_LAST = 15;
+// The piece placement features and the passer buckets, in the order their
+// weights are indexed, for the reports below.
+const char* const PLACEMENT_NAMES[PIECE_PLACEMENT_COUNT] = {
+    "bishop pair", "rook open", "rook half-open"};
+const char* const PASSER_NAMES[PASSED_PAWN_COUNT] = {
+    "passer bucket 0", "passer bucket 1", "passer bucket 2", "passer bucket 3",
+    "passer bucket 4"};
 
 
 struct options_t
@@ -265,6 +286,677 @@ double r_squared(const std::vector<double>& y,
 }
 
 
+// ------------------------------------------------ the design and its rank
+//
+// S134. One row of the design the tuner descends: GAME_PHASE_MAX times the
+// derivative of eval_model::evaluate() with respect to every parameter, the
+// stage-two clamp ignored exactly as tuner_model::gradient() ignores it. The
+// scale is what keeps every entry an integer -- the taper weights are phase /
+// 24 and (24 - phase) / 24 -- so the Gram matrix below is summed exactly.
+struct design_row_t
+{
+  std::vector<uint32_t> index;  // ascending, no repeats
+  std::vector<int64_t> value;   // all non-zero
+};
+
+
+class design_builder_t
+{
+public:
+  design_builder_t() : dense_(PARAM_COUNT, 0), marked_(PARAM_COUNT, 0) {}
+
+  void build(const tuner_model::dataset_t& data, size_t row, design_row_t* out)
+  {
+    const int64_t mg = data.phase[row];
+    const int64_t eg = GAME_PHASE_MAX - mg;
+
+    // A White pawn and a Black pawn mirrored onto the same square land on the
+    // same column with opposite signs, which is why this accumulates rather
+    // than appends.
+    for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+      const uint16_t code = data.pieces[j];
+      const int64_t sign = (code & eval_model::BLACK_BIT) ? -1 : 1;
+      const size_t square = code & ~eval_model::BLACK_BIT;
+
+      if (square / 64 < MATERIAL_COUNT) {
+        add(square / 64, sign * GAME_PHASE_MAX);
+      }
+
+      add(MG_BASE + square, sign * mg);
+      add(EG_BASE + square, sign * eg);
+    }
+
+    add_block(data.mobility.data(), MOBILITY_COUNT, row, MOB_MG_BASE,
+              MOB_EG_BASE, mg, eg);
+    add_block(data.king_safety.data(), KING_SAFETY_COUNT, row, KS_MG_BASE,
+              KS_EG_BASE, mg, eg);
+    add_block(data.passed_pawn.data(), PASSED_PAWN_COUNT, row, PP_MG_BASE,
+              PP_EG_BASE, mg, eg);
+    add_block(data.pawn_structure.data(), PAWN_STRUCTURE_COUNT, row, PS_MG_BASE,
+              PS_EG_BASE, mg, eg);
+    add_block(data.piece_placement.data(), PIECE_PLACEMENT_COUNT, row,
+              PL_MG_BASE, PL_EG_BASE, mg, eg);
+    add(TEMPO_MG_BASE, data.tempo[row] * mg);
+    add(TEMPO_EG_BASE, data.tempo[row] * eg);
+
+    std::sort(touched_.begin(), touched_.end());
+    out->index.clear();
+    out->value.clear();
+
+    for (const uint32_t i : touched_) {
+      if (dense_[i] != 0) {
+        out->index.push_back(i);
+        out->value.push_back(dense_[i]);
+      }
+
+      dense_[i] = 0;
+      marked_[i] = 0;
+    }
+
+    touched_.clear();
+  }
+
+private:
+  void add(size_t index, int64_t value)
+  {
+    if (value == 0) { return; }
+
+    if (!marked_[index]) {
+      marked_[index] = 1;
+      touched_.push_back(static_cast<uint32_t>(index));
+    }
+
+    dense_[index] += value;
+  }
+
+  void add_block(const int16_t* column,
+                 size_t width,
+                 size_t row,
+                 size_t mg_base,
+                 size_t eg_base,
+                 int64_t mg,
+                 int64_t eg)
+  {
+    for (size_t i = 0; i < width; ++i) {
+      const int64_t count = column[row * width + i];
+
+      add(mg_base + i, count * mg);
+      add(eg_base + i, count * eg);
+    }
+  }
+
+  std::vector<int64_t> dense_;
+  std::vector<uint8_t> marked_;
+  std::vector<uint32_t> touched_;
+};
+
+
+// What each parameter is, for a dependency a reader has to be able to read.
+// A piece-square column is named by the square White's piece stands on, which
+// is the square a Black piece is mirrored onto.
+std::string column_name(size_t i)
+{
+  static const char* const types[6] = {"pawn", "knight", "bishop",
+                                       "rook", "queen",  "king"};
+  static const char* const mobility[4] = {"knight", "bishop", "rook", "queen"};
+  static const char* const safety[KING_SAFETY_COUNT] = {
+      "knight attackers", "bishop attackers", "rook attackers",
+      "queen attackers",  "zone attacks",     "shield near",
+      "shield far",       "open file",        "half open file"};
+  static const char* const structure[PAWN_STRUCTURE_COUNT] = {
+      "isolated", "doubled", "backward"};
+
+  const auto square = [](size_t s) {
+    return std::string(1, static_cast<char>('a' + s % 8)) +
+           std::string(1, static_cast<char>('8' - s / 8));
+  };
+  const auto block = [](const char* name, bool mg, const std::string& what) {
+    return std::string(name) + (mg ? "_mg[" : "_eg[") + what + "]";
+  };
+
+  if (i < MATERIAL_COUNT) { return std::string("material[") + types[i] + "]"; }
+  if (i < MOB_MG_BASE) {
+    const bool mg = i < EG_BASE;
+    const size_t s = i - (mg ? MG_BASE : EG_BASE);
+    return block("psqt", mg,
+                 std::string(types[s / 64]) + "][" + square(s % 64));
+  }
+  if (i < KS_MG_BASE) {
+    const bool mg = i < MOB_EG_BASE;
+    return block("mobility", mg,
+                 mobility[i - (mg ? MOB_MG_BASE : MOB_EG_BASE)]);
+  }
+  if (i < PP_MG_BASE) {
+    const bool mg = i < KS_EG_BASE;
+    return block("king_safety", mg, safety[i - (mg ? KS_MG_BASE : KS_EG_BASE)]);
+  }
+  if (i < PS_MG_BASE) {
+    const bool mg = i < PP_EG_BASE;
+    return block("passed_pawn", mg,
+                 std::to_string(i - (mg ? PP_MG_BASE : PP_EG_BASE)));
+  }
+  if (i < PL_MG_BASE) {
+    const bool mg = i < PS_EG_BASE;
+    return block("pawn_structure", mg,
+                 structure[i - (mg ? PS_MG_BASE : PS_EG_BASE)]);
+  }
+  if (i < TEMPO_MG_BASE) {
+    const bool mg = i < PL_EG_BASE;
+    return block("piece_placement", mg,
+                 PLACEMENT_NAMES[i - (mg ? PL_MG_BASE : PL_EG_BASE)]);
+  }
+  return (i == TEMPO_MG_BASE) ? "tempo_mg" : "tempo_eg";
+}
+
+
+// Arithmetic modulo the Mersenne prime 2^61 - 1. The rank of an integer matrix
+// reduced modulo a prime is never more than its rank over the rationals -- a
+// minor that is non-zero modulo p is a non-zero integer -- so a full rank here
+// is a full rank there, which is the direction the report needs.
+constexpr uint64_t PRIME = (uint64_t{1} << 61) - 1;
+
+uint64_t mul_mod(uint64_t a, uint64_t b)
+{
+  const __uint128_t product = static_cast<__uint128_t>(a) * b;
+  uint64_t x = static_cast<uint64_t>(product & PRIME) +
+               static_cast<uint64_t>(product >> 61);
+  x = (x & PRIME) + (x >> 61);
+  return (x >= PRIME) ? x - PRIME : x;
+}
+
+uint64_t to_mod(int64_t value)
+{
+  const int64_t r = value % static_cast<int64_t>(PRIME);
+  return static_cast<uint64_t>((r < 0) ? r + static_cast<int64_t>(PRIME) : r);
+}
+
+uint64_t inverse_mod(uint64_t a)
+{
+  uint64_t result = 1;
+  uint64_t base = a;
+
+  for (uint64_t e = PRIME - 2; e > 0; e >>= 1) {
+    if (e & 1) { result = mul_mod(result, base); }
+    base = mul_mod(base, base);
+  }
+
+  return result;
+}
+
+
+// Gauss-Jordan over the columns `keep` of the symmetric matrix `gram`. Returns
+// the rank and, for each column no pivot was found in, the null vector it
+// spans: that column at 1 and each pivot column at minus its entry, read back
+// as the signed integer nearest zero.
+size_t rank_mod_p(const std::vector<int64_t>& gram,
+                  const std::vector<size_t>& keep,
+                  std::vector<std::vector<std::pair<size_t, int64_t>>>* null)
+{
+  const size_t m = keep.size();
+  std::vector<uint64_t> a(m * m);
+
+  for (size_t r = 0; r < m; ++r) {
+    for (size_t c = 0; c < m; ++c) {
+      a[r * m + c] = to_mod(gram[keep[r] * PARAM_COUNT + keep[c]]);
+    }
+  }
+
+  std::vector<size_t> pivot_column;
+  size_t rank = 0;
+
+  for (size_t c = 0; c < m && rank < m; ++c) {
+    size_t pivot = rank;
+    while (pivot < m && a[pivot * m + c] == 0) {
+      pivot++;
+    }
+    if (pivot == m) { continue; }
+
+    if (pivot != rank) {
+      for (size_t k = 0; k < m; ++k) {
+        std::swap(a[pivot * m + k], a[rank * m + k]);
+      }
+    }
+
+    const uint64_t scale = inverse_mod(a[rank * m + c]);
+    for (size_t k = c; k < m; ++k) {
+      a[rank * m + k] = mul_mod(a[rank * m + k], scale);
+    }
+
+    for (size_t r = 0; r < m; ++r) {
+      if (r == rank || a[r * m + c] == 0) { continue; }
+
+      const uint64_t factor = a[r * m + c];
+      for (size_t k = c; k < m; ++k) {
+        const uint64_t sub = mul_mod(factor, a[rank * m + k]);
+        const uint64_t cur = a[r * m + k];
+        a[r * m + k] = (cur >= sub) ? cur - sub : cur + PRIME - sub;
+      }
+    }
+
+    pivot_column.push_back(c);
+    rank++;
+  }
+
+  if (null != nullptr) {
+    null->clear();
+    std::vector<uint8_t> is_pivot(m, 0);
+    for (const size_t c : pivot_column) {
+      is_pivot[c] = 1;
+    }
+
+    for (size_t f = 0; f < m; ++f) {
+      if (is_pivot[f]) { continue; }
+
+      std::vector<std::pair<size_t, int64_t>> vector = {{keep[f], 1}};
+
+      for (size_t r = 0; r < rank; ++r) {
+        const uint64_t entry = a[r * m + f];
+        if (entry == 0) { continue; }
+
+        const uint64_t negated = PRIME - entry;
+        const int64_t value = (negated > PRIME / 2)
+                                  ? -static_cast<int64_t>(PRIME - negated)
+                                  : static_cast<int64_t>(negated);
+        vector.push_back({keep[pivot_column[r]], value});
+      }
+
+      std::sort(vector.begin(), vector.end());
+      null->push_back(vector);
+    }
+  }
+
+  return rank;
+}
+
+
+// v' G v, which is the sum over every row of (x . v)^2 -- so it is zero exactly
+// when the dependency v holds on every row of the corpus, and no row has to be
+// read again to say so. In 128 bits: the Gram entries reach the 10^14s.
+__int128 quadratic_form(const std::vector<int64_t>& gram,
+                        const std::vector<std::pair<size_t, int64_t>>& v)
+{
+  __int128 sum = 0;
+
+  for (const auto& [i, a] : v) {
+    for (const auto& [j, b] : v) {
+      sum += static_cast<__int128>(a) * b * gram[i * PARAM_COUNT + j];
+    }
+  }
+
+  return sum;
+}
+
+
+// The rank modulo the prime of a set of sparse vectors over the parameters,
+// stacked as rows. Equal to their count means they are linearly independent
+// modulo the prime, and so over the rationals: a dependency over the
+// rationals, scaled to coprime integers, is still one modulo any prime.
+size_t rank_of_vectors(
+    const std::vector<std::vector<std::pair<size_t, int64_t>>>& vectors)
+{
+  const size_t k = vectors.size();
+  std::vector<uint64_t> a(k * PARAM_COUNT, 0);
+
+  for (size_t r = 0; r < k; ++r) {
+    for (const auto& [i, c] : vectors[r]) {
+      a[r * PARAM_COUNT + i] = to_mod(c);
+    }
+  }
+
+  size_t rank = 0;
+
+  for (size_t c = 0; c < PARAM_COUNT && rank < k; ++c) {
+    size_t pivot = rank;
+    while (pivot < k && a[pivot * PARAM_COUNT + c] == 0) {
+      pivot++;
+    }
+    if (pivot == k) { continue; }
+
+    for (size_t j = 0; j < PARAM_COUNT; ++j) {
+      std::swap(a[pivot * PARAM_COUNT + j], a[rank * PARAM_COUNT + j]);
+    }
+
+    const uint64_t scale = inverse_mod(a[rank * PARAM_COUNT + c]);
+    for (size_t j = c; j < PARAM_COUNT; ++j) {
+      a[rank * PARAM_COUNT + j] = mul_mod(a[rank * PARAM_COUNT + j], scale);
+    }
+
+    for (size_t r = rank + 1; r < k; ++r) {
+      const uint64_t factor = a[r * PARAM_COUNT + c];
+      if (factor == 0) { continue; }
+
+      for (size_t j = c; j < PARAM_COUNT; ++j) {
+        const uint64_t sub = mul_mod(factor, a[rank * PARAM_COUNT + j]);
+        const uint64_t cur = a[r * PARAM_COUNT + j];
+        a[r * PARAM_COUNT + j] = (cur >= sub) ? cur - sub : cur + PRIME - sub;
+      }
+    }
+
+    rank++;
+  }
+
+  return rank;
+}
+
+
+std::string describe(const std::vector<std::pair<size_t, int64_t>>& v)
+{
+  std::string out;
+
+  for (const auto& [i, c] : v) {
+    out += (c < 0) ? " -" : " +";
+    if (c != 1 && c != -1) { out += std::to_string((c < 0) ? -c : c) + " "; }
+    out += column_name(i);
+  }
+
+  return out;
+}
+
+
+// The identity report. What S100 proved for two columns, asked of all of them:
+// the rank of the design over the whole corpus, the dependencies the
+// parameterisation has by construction checked exactly, and whatever is left
+// after those found and printed rather than argued about.
+void report_identities(const tuner_model::dataset_t& data, size_t sample)
+{
+  const unsigned threads = std::max(1u, std::thread::hardware_concurrency());
+
+  // X'X, upper triangle per thread, summed exactly.
+  std::vector<std::vector<int64_t>> partial(threads);
+  std::vector<double> worst(threads, 0.0);
+  std::vector<size_t> compared(threads, 0);
+  std::vector<std::thread> workers;
+
+  std::vector<double> params(PARAM_COUNT, 0.0);
+  eval_model::starting_params(params.data());
+
+  const size_t stride = (data.size() > sample) ? data.size() / sample : 1;
+
+  for (unsigned t = 0; t < threads; ++t) {
+    workers.emplace_back([&, t]() {
+      std::vector<int64_t>& gram = partial[t];
+      gram.assign(PARAM_COUNT * PARAM_COUNT, 0);
+      design_builder_t builder;
+      design_row_t x;
+
+      for (size_t row = t; row < data.size(); row += threads) {
+        builder.build(data, row, &x);
+
+        const size_t n = x.index.size();
+        for (size_t a = 0; a < n; ++a) {
+          int64_t* line = &gram[x.index[a] * PARAM_COUNT];
+          const int64_t va = x.value[a];
+
+          for (size_t b = a; b < n; ++b) {
+            line[x.index[b]] += va * x.value[b];
+          }
+        }
+
+        // The design is the model's own: on a row where the clamp does not
+        // bind, x . params / 24 is eval_model::evaluate() itself.
+        if (row % stride != 0) { continue; }
+
+        double total = 0.0;
+        double stage_two = 0.0;
+        for (size_t a = 0; a < n; ++a) {
+          const double term = static_cast<double>(x.value[a]) *
+                              params[x.index[a]] / GAME_PHASE_MAX;
+          total += term;
+          if (x.index[a] >= MOB_MG_BASE && x.index[a] < PP_MG_BASE) {
+            stage_two += term;
+          }
+        }
+
+        if (std::fabs(stage_two) >= LAZY_EVAL_MARGIN) { continue; }
+
+        const double model =
+            tuner_model::evaluate_position(data, row, params.data());
+        worst[t] = std::max(worst[t], std::fabs(model - total));
+        compared[t]++;
+      }
+    });
+  }
+
+  for (std::thread& worker : workers) {
+    worker.join();
+  }
+
+  std::vector<int64_t> gram(PARAM_COUNT * PARAM_COUNT, 0);
+  for (const std::vector<int64_t>& part : partial) {
+    for (size_t i = 0; i < gram.size(); ++i) {
+      gram[i] += part[i];
+    }
+  }
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    for (size_t j = 0; j < i; ++j) {
+      gram[i * PARAM_COUNT + j] = gram[j * PARAM_COUNT + i];
+    }
+  }
+
+  double design_worst = 0.0;
+  size_t design_rows = 0;
+  for (unsigned t = 0; t < threads; ++t) {
+    design_worst = std::max(design_worst, worst[t]);
+    design_rows += compared[t];
+  }
+
+  printf(
+      "identities: the design the tuner descends, %zu parameters over %zu "
+      "rows\n",
+      PARAM_COUNT, data.size());
+  printf(
+      "identities: method: each row is %d x d(eval_model::evaluate)/d(param), "
+      "the stage-two clamp ignored as gradient() ignores it; X'X summed "
+      "exactly in 64-bit integers over every row; rank by Gauss-Jordan "
+      "modulo 2^61-1, which cannot exceed the rank over the rationals; each "
+      "dependency checked exactly as v'X'Xv == 0, the sum over every row of "
+      "(x.v)^2\n",
+      GAME_PHASE_MAX);
+  printf(
+      "identities: design check: x.params/%d against evaluate_position() on "
+      "%zu rows where the clamp does not bind, worst |difference| %.3g\n",
+      GAME_PHASE_MAX, design_rows, design_worst);
+
+  // Columns no row ever touches. A pawn cannot stand on either back rank, so
+  // thirty-two of these are there by construction; any other is a gap in the
+  // corpus, and either way the fit has nothing to identify it by.
+  std::vector<uint8_t> dropped(PARAM_COUNT, 0);
+  std::string zero_names;
+  size_t zero_count = 0;
+
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    if (gram[i * PARAM_COUNT + i] != 0) { continue; }
+
+    dropped[i] = 1;
+    zero_count++;
+    zero_names += " " + column_name(i);
+  }
+
+  printf("identities: %zu columns zero on every row:%s\n", zero_count,
+         zero_names.c_str());
+
+  // The dependencies the parameterisation has by construction. Material and a
+  // piece-square table: adding c to every square of both tables of a type and
+  // subtracting it from that type's value is the same evaluation. The king: one
+  // a side, so each of its tables sums to zero across the board.
+  struct known_t
+  {
+    std::string what;
+    std::vector<std::pair<size_t, int64_t>> vector;
+    size_t drop;  // the column the reduced design leaves out for it
+  };
+
+  std::vector<known_t> known;
+
+  for (size_t type = 0; type < 6; ++type) {
+    known_t k;
+
+    if (type < MATERIAL_COUNT) {
+      const std::string name = column_name(MG_BASE + type * 64);
+      const std::string piece = name.substr(8, name.find(']') - 8);
+      k.what = "material[" + piece + "] = the sum of every psqt_mg[" + piece +
+               "] and psqt_eg[" + piece + "] column";
+      k.vector.push_back({type, -1});
+      k.drop = type;
+    } else {
+      k.what = "sum of psqt_mg[king] = 0";
+      k.drop = PARAM_COUNT;
+    }
+
+    for (size_t s = 0; s < 64; ++s) {
+      const size_t mg = MG_BASE + type * 64 + s;
+      if (!dropped[mg]) {
+        k.vector.push_back({mg, 1});
+        if (k.drop == PARAM_COUNT) { k.drop = mg; }
+      }
+    }
+
+    if (type < MATERIAL_COUNT) {
+      for (size_t s = 0; s < 64; ++s) {
+        const size_t eg = EG_BASE + type * 64 + s;
+        if (!dropped[eg]) { k.vector.push_back({eg, 1}); }
+      }
+    }
+
+    known.push_back(k);
+
+    if (type == 5) {
+      known_t e;
+      e.what = "sum of psqt_eg[king] = 0";
+      e.drop = PARAM_COUNT;
+      for (size_t s = 0; s < 64; ++s) {
+        const size_t eg = EG_BASE + type * 64 + s;
+        if (!dropped[eg]) {
+          e.vector.push_back({eg, 1});
+          if (e.drop == PARAM_COUNT) { e.drop = eg; }
+        }
+      }
+      known.push_back(e);
+    }
+  }
+
+  size_t known_held = 0;
+
+  for (const known_t& k : known) {
+    const bool holds = quadratic_form(gram, k.vector) == 0;
+
+    printf("identities: by construction, %s: %s\n", k.what.c_str(),
+           holds ? "holds on every row" : "FAILS");
+
+    if (holds && k.drop < PARAM_COUNT) {
+      dropped[k.drop] = 1;
+      known_held++;
+    }
+  }
+
+  std::vector<size_t> all(PARAM_COUNT);
+  std::vector<size_t> keep;
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    all[i] = i;
+    if (!dropped[i]) { keep.push_back(i); }
+  }
+
+  const size_t full_rank = rank_mod_p(gram, all, nullptr);
+
+  printf(
+      "identities: rank modulo 2^61-1: %zu of %zu, nullity %zu; %zu zero "
+      "columns and %zu dependencies by construction account for %zu of it\n",
+      full_rank, PARAM_COUNT, PARAM_COUNT - full_rank, zero_count, known_held,
+      zero_count + known_held);
+
+  std::vector<std::vector<std::pair<size_t, int64_t>>> null;
+  const size_t reduced_rank = rank_mod_p(gram, keep, &null);
+
+  printf(
+      "identities: the %zu columns left once each of those drops one: rank "
+      "%zu, %zu further exact dependencies\n",
+      keep.size(), reduced_rank, null.size());
+
+  for (size_t d = 0; d < null.size(); ++d) {
+    bool small = true;
+    for (const auto& entry : null[d]) {
+      if (entry.second > 1000000 || entry.second < -1000000) { small = false; }
+    }
+
+    const char* verdict = !small ? "coefficients not small integers, unverified"
+                          : quadratic_form(gram, null[d]) == 0
+                              ? "holds on every row"
+                              : "FAILS over the rationals";
+
+    printf("identities: dependency %zu: 0 =%s: %s\n", d + 1,
+           describe(null[d]).c_str(), verdict);
+  }
+
+  if (null.empty()) {
+    printf("identities: no exact dependency beyond the ones listed above\n");
+  }
+
+  // The rank over the rationals, from both sides. Below: the rank modulo the
+  // prime, which a reduction can only lower. Above: every null vector that
+  // holds exactly on every row, provided they are linearly independent -- each
+  // one of them takes a dimension off the rank.
+  std::vector<std::vector<std::pair<size_t, int64_t>>> exact;
+  size_t found_held = 0;
+
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    if (gram[i * PARAM_COUNT + i] == 0) { exact.push_back({{i, 1}}); }
+  }
+  for (const known_t& k : known) {
+    if (quadratic_form(gram, k.vector) == 0) { exact.push_back(k.vector); }
+  }
+  for (const auto& v : null) {
+    bool small = true;
+    for (const auto& entry : v) {
+      if (entry.second > 1000000 || entry.second < -1000000) { small = false; }
+    }
+
+    if (small && quadratic_form(gram, v) == 0) {
+      exact.push_back(v);
+      found_held++;
+    }
+  }
+
+  std::vector<uint8_t> claimed(PARAM_COUNT, 0);
+  bool disjoint = true;
+
+  for (const auto& v : exact) {
+    for (const auto& entry : v) {
+      if (claimed[entry.first]) { disjoint = false; }
+      claimed[entry.first] = 1;
+    }
+  }
+
+  const size_t independent = rank_of_vectors(exact);
+  const size_t upper = PARAM_COUNT - independent;
+
+  printf(
+      "identities: upper bound: %zu null vectors hold exactly on every row "
+      "(%zu zero columns, %zu by construction, %zu found); their supports are "
+      "%s and %zu of them are linearly independent, so the rank over the "
+      "rationals is at most %zu - %zu = %zu\n",
+      exact.size(), zero_count, exact.size() - zero_count - found_held,
+      found_held, disjoint ? "pairwise disjoint" : "not disjoint", independent,
+      PARAM_COUNT, independent, upper);
+  printf(
+      "identities: lower bound: the rank modulo 2^61-1 is %zu, and reducing an "
+      "integer matrix modulo a prime cannot raise its rank, so the rank over "
+      "the rationals is at least %zu\n",
+      full_rank, full_rank);
+
+  if (full_rank == upper) {
+    printf(
+        "identities: rank over the rationals exactly %zu of %zu, nullity %zu, "
+        "every null direction listed above\n",
+        full_rank, PARAM_COUNT, PARAM_COUNT - full_rank);
+  } else {
+    printf(
+        "identities: rank over the rationals between %zu and %zu: a null "
+        "direction is unaccounted for\n",
+        full_rank, upper);
+  }
+}
+
+
 void usage()
 {
   printf(
@@ -333,13 +1025,25 @@ int main(int argc, char** argv)
     std::string line;
     size_t row = 0;
     size_t disagreements = 0;
+    size_t phase_disagreements = 0;
 
     while (std::getline(file, line)) {
       if (line.empty()) { continue; }
 
       std::istringstream fields(line);
-      std::string fen;
+      std::string fen, result_text, score_text, phase_text;
       if (!std::getline(fields, fen, '\t')) { continue; }
+      std::getline(fields, result_text, '\t');
+      std::getline(fields, score_text, '\t');
+      std::getline(fields, phase_text, '\t');
+
+      // load() tapers on the placement's phase since S134 and reads the stored
+      // column for its range only (2026-09-10_adversarial-F36), so the two
+      // disagreeing is not a defect in the fit; it is what a corpus written
+      // under another phase_value looks like, and worth knowing about.
+      if (atoi(phase_text.c_str()) != data.phase[row]) {
+        phase_disagreements++;
+      }
 
       std::istringstream fen_fields(fen);
       std::string placement, side_to_move;
@@ -394,6 +1098,10 @@ int main(int argc, char** argv)
 
     printf("columns: %zu rows re-extracted, %zu disagreements\n", row,
            disagreements);
+    printf(
+        "columns: stored phase column against the placement's phase: %zu "
+        "disagreements\n",
+        phase_disagreements);
 
     if (row != data.size()) {
       printf("columns: FAIL row count %zu against %zu loaded\n", row,
@@ -402,51 +1110,7 @@ int main(int argc, char** argv)
   }
 
   // ------------------------------------------------------------ identities
-  if (opts.identities) {
-    size_t rook_rows = 0;
-    size_t rook_bad = 0;
-    size_t pawn_rows = 0;
-    size_t pawn_bad = 0;
-
-    for (size_t row = 0; row < data.size(); ++row) {
-      int rook_seventh = 0;
-      int pawn_seventh = 0;
-
-      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
-        const uint16_t code = data.pieces[j];
-        const int sign = (code & eval_model::BLACK_BIT) ? -1 : 1;
-        const size_t square = code & ~eval_model::BLACK_BIT;
-        const size_t type = square / 64;
-        const size_t file_square = square % 64;
-
-        if (file_square < SEVENTH_FIRST || file_square > SEVENTH_LAST) {
-          continue;
-        }
-
-        if (type == ROOK_TYPE) { rook_seventh += sign; }
-        if (type == PAWN_TYPE) { pawn_seventh += sign; }
-      }
-
-      const int stored_rook =
-          data.piece_placement[row * PIECE_PLACEMENT_COUNT + PL_ROOK_SEVENTH];
-      const int stored_pawn = data.passed_pawn[row * PASSED_PAWN_COUNT + 5];
-
-      if (stored_rook != 0 || rook_seventh != 0) { rook_rows++; }
-      if (stored_pawn != 0 || pawn_seventh != 0) { pawn_rows++; }
-
-      if (stored_rook != rook_seventh) { rook_bad++; }
-      if (stored_pawn != pawn_seventh) { pawn_bad++; }
-    }
-
-    printf(
-        "identities: rook seventh == signed rook occupancy of squares 8..15: "
-        "%zu rows non-zero, %zu violations\n",
-        rook_rows, rook_bad);
-    printf(
-        "identities: passer bucket 5 == signed pawn occupancy of squares "
-        "8..15: %zu rows non-zero, %zu violations\n",
-        pawn_rows, pawn_bad);
-  }
+  if (opts.identities) { report_identities(data, opts.sample); }
 
   // ----------------------------------------------------------- occurrence
   if (opts.occurrence) {
@@ -474,18 +1138,13 @@ int main(int argc, char** argv)
     };
 
     std::vector<column_t> columns;
-    static const char* const passer_names[6] = {
-        "passer bucket 0", "passer bucket 1", "passer bucket 2",
-        "passer bucket 3", "passer bucket 4", "passer bucket 5"};
-    static const char* const placement_names[4] = {
-        "bishop pair", "rook open", "rook half-open", "rook seventh"};
 
     for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
       columns.push_back(
-          {passer_names[i], data.passed_pawn.data(), PASSED_PAWN_COUNT, i});
+          {PASSER_NAMES[i], data.passed_pawn.data(), PASSED_PAWN_COUNT, i});
     }
     for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
-      columns.push_back({placement_names[i], data.piece_placement.data(),
+      columns.push_back({PLACEMENT_NAMES[i], data.piece_placement.data(),
                          PIECE_PLACEMENT_COUNT, i});
     }
 
@@ -626,18 +1285,10 @@ int main(int argc, char** argv)
          data.piece_placement.data(),
          PIECE_PLACEMENT_COUNT,
          PL_ROOK_HALF_OPEN},
-        {"rook seventh",
-         {ROOK_TYPE},
-         data.piece_placement.data(),
-         PIECE_PLACEMENT_COUNT,
-         PL_ROOK_SEVENTH},
     };
 
-    static const char* const passer_names[6] = {
-        "passer bucket 0", "passer bucket 1", "passer bucket 2",
-        "passer bucket 3", "passer bucket 4", "passer bucket 5"};
     for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
-      targets.push_back({passer_names[i],
+      targets.push_back({PASSER_NAMES[i],
                          {PAWN_TYPE},
                          data.passed_pawn.data(),
                          PASSED_PAWN_COUNT,
@@ -695,10 +1346,16 @@ int main(int argc, char** argv)
     std::vector<double> params(PARAM_COUNT, 0.0);
     eval_model::starting_params(params.data());
 
-    static const double planted_passed_mg[6] = {7, 14, 21, 33, 48, 66};
-    static const double planted_passed_eg[6] = {11, 19, 30, 45, 70, 95};
-    static const double planted_placement_mg[4] = {28, 17, 9, 13};
-    static const double planted_placement_eg[4] = {41, 8, 5, 22};
+    // S134 dropped the planted bucket 5 (66, 95) and rook seventh (13, 22)
+    // with the columns they planted; the rest are the numbers S100 planted.
+    static const double planted_passed_mg[PASSED_PAWN_COUNT] = {7, 14, 21, 33,
+                                                                48};
+    static const double planted_passed_eg[PASSED_PAWN_COUNT] = {11, 19, 30, 45,
+                                                                70};
+    static const double planted_placement_mg[PIECE_PLACEMENT_COUNT] = {28, 17,
+                                                                       9};
+    static const double planted_placement_eg[PIECE_PLACEMENT_COUNT] = {41, 8,
+                                                                       5};
     static const double planted_tempo_mg = 23;
     static const double planted_tempo_eg = 12;
 
@@ -741,20 +1398,20 @@ int main(int argc, char** argv)
     // Only what was actually planted is printed. A log naming a weight the run
     // held at zero is a log that cannot be read back as the recovery target.
     if (plant_passed) {
-      printf("plant: passed_pawn_mg {%g, %g, %g, %g, %g, %g}\n",
+      printf("plant: passed_pawn_mg {%g, %g, %g, %g, %g}\n",
              planted_passed_mg[0], planted_passed_mg[1], planted_passed_mg[2],
-             planted_passed_mg[3], planted_passed_mg[4], planted_passed_mg[5]);
-      printf("plant: passed_pawn_eg {%g, %g, %g, %g, %g, %g}\n",
+             planted_passed_mg[3], planted_passed_mg[4]);
+      printf("plant: passed_pawn_eg {%g, %g, %g, %g, %g}\n",
              planted_passed_eg[0], planted_passed_eg[1], planted_passed_eg[2],
-             planted_passed_eg[3], planted_passed_eg[4], planted_passed_eg[5]);
+             planted_passed_eg[3], planted_passed_eg[4]);
     }
     if (plant_placement) {
-      printf("plant: piece_placement_mg {%g, %g, %g, %g}\n",
+      printf("plant: piece_placement_mg {%g, %g, %g}\n",
              planted_placement_mg[0], planted_placement_mg[1],
-             planted_placement_mg[2], planted_placement_mg[3]);
-      printf("plant: piece_placement_eg {%g, %g, %g, %g}\n",
+             planted_placement_mg[2]);
+      printf("plant: piece_placement_eg {%g, %g, %g}\n",
              planted_placement_eg[0], planted_placement_eg[1],
-             planted_placement_eg[2], planted_placement_eg[3]);
+             planted_placement_eg[2]);
     }
     if (plant_tempo) {
       printf("plant: tempo_mg %g, tempo_eg %g\n", planted_tempo_mg,

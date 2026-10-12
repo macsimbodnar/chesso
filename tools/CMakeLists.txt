@@ -62,10 +62,10 @@ target_include_directories(truncation_scan PRIVATE ../src)
 target_link_libraries(truncation_scan PRIVATE chesso_engine)
 
 # S100. What the tuning corpus contains per evaluation feature: the stored
-# columns against the features recomputed from the FEN text, the two exact
-# piece-square dependencies the rook-seventh and seventh-rank-passer columns
-# have by construction, occurrence by phase band, and the R^2 of each term
-# column on the tables it overlaps. Tracked rather than a scratchpad script
+# columns against the features recomputed from the FEN text, the rank of the
+# tuner's design and every exact dependency in it (S134, which folded the two
+# S100 found into the tables), occurrence by phase band, and the R^2 of each
+# term column on the tables it overlaps. Tracked rather than a scratchpad script
 # because S082 and S083 replace the corpus and every one of these has to be
 # re-run on the new one -- the S072 lesson.
 add_executable(feature_audit feature_audit.cpp)

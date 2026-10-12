@@ -900,6 +900,8 @@ R2 = 1.000000 (`src/evaluation.cpp:228-238` and `:59-73`). S134 deletes the
 degenerate columns, which is a valid alternative answer; the absence is
 currently an omission rather than a choice on the record.
 
+Status: closed — S134, 2026-10-12: DEC-170 ruled against regularisation; S134 folded both degenerate columns into the tables and deleted them, bit-exact, and `tools/feature_audit`'s identity report finds no further exact dependency in the 823 left beyond the 39 null directions it accounts for (`adocs/data/S134_feature_audit.txt`). Previously: open (this report's header: open on all of them).
+
 **F35 low a fit is not reproducible from its own provenance stamp.**
 `tools/tuner.cpp:249-282` emits the commit, corpus digest, K, seed, lr and
 split, but not `--epochs`, `--report`, `--patience` or `--threads` -- and
@@ -910,6 +912,8 @@ range-checked only) instead of recomputing it with `eval_model::phase_of()`,
 which sits in the same header. Verified equal today over 456 304 rows, 0
 disagreements. Latent: S134 and S117 both move `phase_value`, after which every
 existing corpus tapers on the wrong phase and the range check still passes.
+
+Status: closed — S134, 2026-10-12: `tools/tuner_model.hpp` `load()` recomputes the phase from the placement with `eval_model::phase_of()` and reads the column for its range only; `test_tuner_gradient` "load() tapers on the placement's phase, not the stored column" observed red first (34 of 34 rows), and `tools/feature_audit`'s columns report counts column-against-placement disagreements, 0 over 10795695 rows. Previously: open (this report's header: open on all of them).
 
 **F37 low `eval_tuning_strategy.md` diverges from the code in two unrecorded
 places**: it specifies mini-batch Adam at batch 16k-64k and the code is

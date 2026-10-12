@@ -107,12 +107,11 @@ static const char* const
         "isolated", "doubled", "backward"};
 
 
-// The same for the four piece placement counts, in the order the weights are
+// The same for the three piece placement counts, in the order the weights are
 // indexed.
 static const char* const
     piece_placement_feature_names[eval_model::PIECE_PLACEMENT_COUNT] = {
-        "bishop pair", "rook on an open file", "rook on a half open file",
-        "rook on the seventh"};
+        "bishop pair", "rook on an open file", "rook on a half open file"};
 
 
 // The curated corpus moved to tests/test_eval_positions.hpp at S100 so that
@@ -173,11 +172,49 @@ struct passed_pawn_case_t
 };
 
 
-// The engine indexes its buckets with a literal 6 and the model with a named
-// constant. Nothing forces the two to be the same number, and if they ever stop
-// being one the loops below would read off the end of a row rather than fail.
-static_assert(eval_model::PASSED_PAWN_COUNT == 6,
-              "the engine's passed_pawn_counts() rows are six wide");
+// The engine's passed_pawn_counts() takes its rows with a literal 5 and the
+// model counts its buckets off the engine's weight array. Nothing forces the
+// two to be the same number, and if they ever stop being one the loops below
+// would read off the end of a row rather than fail. Six until S134 folded the
+// seventh-rank bucket into the pawn table (DEC-090).
+static_assert(eval_model::PASSED_PAWN_COUNT == 5,
+              "the engine's passed_pawn_counts() rows are five wide");
+
+
+// The engine's passed pawn rows, read through a guard row of our own. A bucket
+// taken past the last one -- a pawn on its own seventh left in the passer set,
+// which S134 masks out -- is written one row further than its colour's own:
+// White's lands in Black's bucket 0, where the per-colour checks see it, and
+// Black's lands past both rows. The third row is filled with a value no count
+// can take, so a write past Black's row fails this check instead of landing on
+// the caller's stack, where it is undefined behaviour and, observed, a stack
+// smash in whichever case happens to call next.
+static void engine_passed_counts(const board_t* board,
+                                 int out[2][eval_model::PASSED_PAWN_COUNT])
+{
+  constexpr int GUARD = -12345;
+  int rows[3][eval_model::PASSED_PAWN_COUNT];
+
+  for (auto& row : rows) {
+    for (int& value : row) {
+      value = GUARD;
+    }
+  }
+
+  passed_pawn_counts(board, rows);
+
+  for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT; ++bucket) {
+    CAPTURE(bucket);
+    CHECK_MESSAGE(rows[2][bucket] == GUARD,
+                  "passed_pawn_counts() wrote past Black's row");
+  }
+
+  for (int colour = 0; colour < 2; ++colour) {
+    for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT; ++bucket) {
+      out[colour][bucket] = rows[colour][bucket];
+    }
+  }
+}
 
 
 // One hand-built placement and the pawn structure counts it must produce, per
@@ -231,12 +268,13 @@ struct piece_placement_case_t
 };
 
 
-// The engine indexes its counts with a literal 4, the model with a constant
+// The engine indexes its counts with a literal 3, the model with a constant
 // taken from the width of the engine's own weight array. Nothing forces those
 // to be the same number, and if they ever stop being one the loops below would
-// read off the end of a row rather than fail.
-static_assert(eval_model::PIECE_PLACEMENT_COUNT == 4,
-              "the engine's piece_placement_counts() rows are four wide");
+// read off the end of a row rather than fail. Four until S134 deleted rook on
+// the seventh (DEC-090).
+static_assert(eval_model::PIECE_PLACEMENT_COUNT == 3,
+              "the engine's piece_placement_counts() rows are three wide");
 
 
 TEST_SUITE("eval model: agrees with the engine")
@@ -460,8 +498,8 @@ TEST_SUITE("eval model: agrees with the engine")
       CAPTURE(fen);
       REQUIRE(load_FEN(fen, &game));
 
-      int engine[2][6];
-      passed_pawn_counts(&game.board, engine);
+      int engine[2][eval_model::PASSED_PAWN_COUNT];
+      engine_passed_counts(&game.board, engine);
 
       int model[eval_model::PASSED_PAWN_COUNT] = {};
       REQUIRE(eval_model::passed_pawn_features(fen.substr(0, fen.find(' ')),
@@ -486,15 +524,15 @@ TEST_SUITE("eval model: agrees with the engine")
   TEST_CASE_FIXTURE(model_fixture_t,
                     "the positions exercise every passed pawn bucket")
   {
-    int seen[2][6] = {};
-    int white_ahead[6] = {};
-    int black_ahead[6] = {};
+    int seen[2][eval_model::PASSED_PAWN_COUNT] = {};
+    int white_ahead[eval_model::PASSED_PAWN_COUNT] = {};
+    int black_ahead[eval_model::PASSED_PAWN_COUNT] = {};
 
     for (const std::string& fen : positions) {
       REQUIRE(load_FEN(fen, &game));
 
-      int engine[2][6];
-      passed_pawn_counts(&game.board, engine);
+      int engine[2][eval_model::PASSED_PAWN_COUNT];
+      engine_passed_counts(&game.board, engine);
 
       for (size_t bucket = 0; bucket < eval_model::PASSED_PAWN_COUNT;
            ++bucket) {
@@ -534,45 +572,54 @@ TEST_SUITE("eval model: agrees with the engine")
     static const passed_pawn_case_t cases[] = {
         {"4k3/8/8/8/8/8/P7/4K3",
          "white pawn on its own second rank",
-         {1, 0, 0, 0, 0, 0}},
-        {"4k3/P7/8/8/8/8/8/4K3",
-         "white pawn one square from promotion",
-         {0, 0, 0, 0, 0, 1}},
+         {1, 0, 0, 0, 0}},
         {"4k3/8/3P4/2P5/1P6/P7/8/4K3",
-         "white pawns filling the four buckets "
-         "between the ends",
-         {0, 1, 1, 1, 1, 0}},
+         "white pawns on the third to the sixth fill buckets 1 to 4",
+         {0, 1, 1, 1, 1}},
         {"4k3/p7/8/8/8/8/8/4K3",
          "black pawn on its own second rank",
-         {-1, 0, 0, 0, 0, 0}},
-        {"4k3/8/8/8/8/8/p7/4K3",
-         "black pawn one square from promotion",
-         {0, 0, 0, 0, 0, -1}},
+         {-1, 0, 0, 0, 0}},
         {"4k3/8/p7/1p6/2p5/3p4/8/4K3",
-         "black pawns filling the four buckets "
-         "between the ends",
-         {0, -1, -1, -1, -1, 0}},
+         "black pawns on the third to the sixth fill buckets 1 to 4",
+         {0, -1, -1, -1, -1}},
+        // A pawn one square from promotion is a passer by definition and, since
+        // S134, in no bucket: its old bucket was exactly eight piece-square
+        // columns and was folded into the pawn table (DEC-090). These two were
+        // "one square from promotion", expecting bucket 5. What makes an
+        // all-zero answer a claim is where a bucket 5 would land if the engine
+        // stopped leaving the pawn out: White's in Black's bucket 0, which the
+        // per-colour rows below catch, and Black's past both rows, which the
+        // guard row in engine_passed_counts() catches.
+        {"4k3/P7/8/8/8/8/8/4K3",
+         "a white pawn on its own seventh is in no bucket",
+         {0, 0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/p7/4K3",
+         "a black pawn on its own seventh is in no bucket",
+         {0, 0, 0, 0, 0}},
         // Both colours at once: the two bucket-0 pawns cancel in the difference
         // and the c5 pawn is what is left, so a model that lost the sign would
         // report -1 here rather than nothing at all.
         {"4k3/7p/8/2P5/8/8/P7/4K3",
          "one passed pawn each in the same bucket",
-         {0, 0, 0, 1, 0, 0}},
+         {0, 0, 0, 1, 0}},
         {"4k3/8/8/P3p3/4P3/8/8/4K3",
          "e4 and e5 block each other head on",
-         {0, 0, 0, 1, 0, 0}},
-        {"4k3/8/5p2/8/4P3/8/p7/4K3",
+         {0, 0, 0, 1, 0}},
+        // The black passer that keeps this answer non-zero stood on a2 and
+        // counted in bucket 5 until S134; it moved to a3, bucket 4. What the
+        // case is about -- f6 stopping e4 and e4 stopping f6 -- did not move.
+        {"4k3/8/5p2/8/4P3/p7/8/4K3",
          "f6 stops e4 from a neighbouring file",
-         {0, 0, 0, 0, 0, -1}},
+         {0, 0, 0, 0, -1}},
         // The two directions that must not block, in one placement: d5 is level
         // with e5 and f3 is behind it. Reverse "ahead" and every one of these
         // three answers changes.
         {"4k3/8/8/3pP3/8/5p2/8/4K3",
          "level and behind do not block",
-         {0, 0, -1, 1, -1, 0}},
+         {0, 0, -1, 1, -1}},
         {"4k3/8/8/3pP3/4P3/8/8/4K3",
          "doubled pawns, only the front one passed",
-         {0, 0, 0, 1, 0, 0}},
+         {0, 0, 0, 1, 0}},
     };
 
     int positive[eval_model::PASSED_PAWN_COUNT] = {};
@@ -598,8 +645,8 @@ TEST_SUITE("eval model: agrees with the engine")
       // passant. None of the four is read by the term.
       REQUIRE(load_FEN(placement + " w - - 0 1", &game));
 
-      int engine[2][6];
-      passed_pawn_counts(&game.board, engine);
+      int engine[2][eval_model::PASSED_PAWN_COUNT];
+      engine_passed_counts(&game.board, engine);
 
       // Which rows the difference pins. A placement with no black pawn on it
       // cannot hide a Black count inside a zero difference, and the mirror.
@@ -860,7 +907,7 @@ TEST_SUITE("eval model: agrees with the engine")
       CAPTURE(fen);
       REQUIRE(load_FEN(fen, &game));
 
-      int engine[2][4];
+      int engine[2][eval_model::PIECE_PLACEMENT_COUNT];
       piece_placement_counts(&game.board, engine);
 
       int model[eval_model::PIECE_PLACEMENT_COUNT] = {};
@@ -883,8 +930,8 @@ TEST_SUITE("eval model: agrees with the engine")
 
   // Non-vacuous by construction, and the reason the case above means anything.
   // A count that is zero in every position of the corpus is a count the two
-  // implementations agree about for free, and the seventh rank is a different
-  // rank for each colour, so an error that only hits one of them needs both
+  // implementations agree about for free, and the half-open file is a different
+  // file set for each colour, so an error that only hits one of them needs both
   // rows claimed to be caught.
   TEST_CASE_FIXTURE(model_fixture_t,
                     "the positions exercise every piece placement count")
@@ -896,7 +943,7 @@ TEST_SUITE("eval model: agrees with the engine")
     for (const std::string& fen : positions) {
       REQUIRE(load_FEN(fen, &game));
 
-      int engine[2][4];
+      int engine[2][eval_model::PIECE_PLACEMENT_COUNT];
       piece_placement_counts(&game.board, engine);
 
       for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;
@@ -929,87 +976,85 @@ TEST_SUITE("eval model: agrees with the engine")
   // read another way has a case here: that a pair is not a count of bishops and
   // does not ask about square colour, that a file with an own pawn on it is
   // neither open nor half-open however many enemy pawns stand there, that a
-  // piece does not close a file, and that the seventh rank is the rank alone.
+  // piece does not close a file, and that the seventh rank, a feature until
+  // S134, is nothing to this term any more.
   TEST_CASE_FIXTURE(model_fixture_t,
                     "the model and the engine count piece placement by hand")
   {
     static const piece_placement_case_t cases[] = {
         {"4k3/8/8/8/8/8/8/2B1KB2",
          "two bishops are a pair",
-         {1, 0, 0, 0},
-         {0, 0, 0, 0}},
+         {1, 0, 0},
+         {0, 0, 0}},
         {"2b1kb2/8/8/8/8/8/8/4K3",
          "the same two for Black",
-         {0, 0, 0, 0},
-         {1, 0, 0, 0}},
+         {0, 0, 0},
+         {1, 0, 0}},
         {"4k3/8/8/8/8/8/8/2B1KB1B",
          "three bishops are still one pair, not three",
-         {1, 0, 0, 0},
-         {0, 0, 0, 0}},
+         {1, 0, 0},
+         {0, 0, 0}},
         {"4k3/8/8/8/8/8/8/2B1K1B1",
          "two bishops on the same colour square are still a pair",
-         {1, 0, 0, 0},
-         {0, 0, 0, 0}},
+         {1, 0, 0},
+         {0, 0, 0}},
         {"2b1kb2/8/8/8/8/8/8/2B1K3",
          "one bishop is not a pair and two are",
-         {0, 0, 0, 0},
-         {1, 0, 0, 0}},
+         {0, 0, 0},
+         {1, 0, 0}},
         {"4k3/8/8/8/8/8/8/R3K3",
          "a file with no pawn of either colour on it is open",
-         {0, 1, 0, 0},
-         {0, 0, 0, 0}},
-        {"r3k3/8/8/8/8/8/8/4K3",
-         "the same for Black",
-         {0, 0, 0, 0},
-         {0, 1, 0, 0}},
+         {0, 1, 0},
+         {0, 0, 0}},
+        {"r3k3/8/8/8/8/8/8/4K3", "the same for Black", {0, 0, 0}, {0, 1, 0}},
         {"4k3/8/8/8/8/8/P7/R3K3",
          "an own pawn makes the file neither open nor half open",
-         {0, 0, 0, 0},
-         {0, 0, 0, 0}},
+         {0, 0, 0},
+         {0, 0, 0}},
         {"4k3/p7/8/8/8/8/P7/R3K3",
          "an own pawn still closes it with an enemy pawn there too",
-         {0, 0, 0, 0},
-         {0, 0, 0, 0}},
+         {0, 0, 0},
+         {0, 0, 0}},
         {"4k3/p7/8/8/8/8/8/R3K3",
          "an enemy pawn alone makes the file half open",
-         {0, 0, 1, 0},
-         {0, 0, 0, 0}},
-        {"r3k3/8/8/8/8/8/P7/4K3",
-         "the same for Black",
-         {0, 0, 0, 0},
-         {0, 0, 1, 0}},
+         {0, 0, 1},
+         {0, 0, 0}},
+        {"r3k3/8/8/8/8/8/P7/4K3", "the same for Black", {0, 0, 0}, {0, 0, 1}},
         {"4k3/8/8/8/n7/8/8/R3K3",
          "a piece is not a pawn and does not close a file",
-         {0, 1, 0, 0},
-         {0, 0, 0, 0}},
+         {0, 1, 0},
+         {0, 0, 0}},
         {"4k3/8/8/8/8/8/8/R3K2R",
          "two rooks on open files count two, not one",
-         {0, 2, 0, 0},
-         {0, 0, 0, 0}},
+         {0, 2, 0},
+         {0, 0, 0}},
+        // Rook on the seventh was a fourth feature until S134 folded it into
+        // the rook table (DEC-090). These four placements pinned it; they now
+        // pin that a rook on either side's seventh, or on its own second,
+        // counts for its file and for nothing else.
         {"8/R7/8/8/4k3/8/8/4K3",
-         "the seventh is the rank alone, with the enemy king off "
-         "its back rank",
-         {0, 1, 0, 1},
-         {0, 0, 0, 0}},
+         "a White rook on the seventh counts for its file alone",
+         {0, 1, 0},
+         {0, 0, 0}},
         {"4k3/8/8/8/8/8/r7/4K3",
-         "Black's seventh is rank 2",
-         {0, 0, 0, 0},
-         {0, 1, 0, 1}},
+         "a Black rook on its own seventh, rank 2, counts for its file "
+         "alone",
+         {0, 0, 0},
+         {0, 1, 0}},
         {"4k3/8/8/8/8/8/R7/4K3",
-         "a White rook on rank 2 is on its own second, not the "
-         "seventh",
-         {0, 1, 0, 0},
-         {0, 0, 0, 0}},
+         "a White rook on rank 2 counts for its file alone",
+         {0, 1, 0},
+         {0, 0, 0}},
         {"4k3/1R6/8/1p6/8/8/8/4K3",
-         "a rook on the seventh on a half open file counts in both",
-         {0, 0, 1, 1},
-         {0, 0, 0, 0}},
+         "a rook on the seventh on a half open file counts once",
+         {0, 0, 1},
+         {0, 0, 0}},
         // Both colours at once, so a model that lost the sign reports the wrong
         // difference rather than nothing at all.
         {"4k3/8/8/8/8/8/r7/2B1KB2",
-         "White has the pair, Black the rook on the seventh",
-         {1, 0, 0, 0},
-         {0, 1, 0, 1}},
+         "White has the pair, Black a rook on an open file",
+         {1, 0, 0},
+         {0, 1, 0}},
     };
 
     int positive[eval_model::PIECE_PLACEMENT_COUNT] = {};
@@ -1034,7 +1079,7 @@ TEST_SUITE("eval model: agrees with the engine")
       // passant. None of the four is read by the term.
       REQUIRE(load_FEN(placement + " w - - 0 1", &game));
 
-      int engine[2][4];
+      int engine[2][eval_model::PIECE_PLACEMENT_COUNT];
       piece_placement_counts(&game.board, engine);
 
       for (size_t feature = 0; feature < eval_model::PIECE_PLACEMENT_COUNT;

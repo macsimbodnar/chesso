@@ -82,36 +82,40 @@ static constexpr int largest_weight(const int (&mg)[N], const int (&eg)[N])
 //
 // **These are a residual, not a valuation.** A frozen fit prices only what the
 // term adds on top of what is already there, and psqt_mg's pawn table already
-// pays 79 to 214 for a pawn on the seventh rank. That is why the buckets are
-// not monotonic and why the last one, a pawn one square from promotion, fits to
-// almost nothing: the piece-square table has already paid for it. Reading
-// bucket 5 as "a passed pawn on the seventh is worth 2 centipawns" is the same
+// pays for a pawn far up the board. That is why the buckets are not monotonic.
+// Reading a bucket as "a passed pawn there is worth this much" is the same
 // mistake as reading a pawn's fitted value of 83 as what a pawn is worth.
 //
-// **S100 proved that for bucket 5 and it is stronger than a residual.** A pawn
-// on its own seventh rank is a passer by *definition* -- "ahead" is the enemy
-// back rank and the extraction refuses a pawn standing there -- and in the
-// mirrored indexing it always occupies one of squares 8..15. So this bucket
-// *is* the signed sum of eight psqt[PAWN] columns: R^2 exactly 1.000000, 0
-// violations in 550880 non-zero corpus rows. It is an exact linear dependency,
-// not a correlation, so in a joint fit the split is an unidentified direction
-// and only the sum psqt[pawn][8..15] + passed_pawn[5] means anything. The
-// evidence that this is what happened: across three real fits buckets 0 to 4
-// move by at most 4 while bucket 5 reads +22, -1 and -17 -- a 39-point spread
-// that changes sign twice. A synthetic-label run makes it explicit: planted
-// {7,14,21,33,48,66}, the joint fit returns {7,14,21,33,48,24} at train error
-// exactly 0, and
-// `--only passed_pawns` returns all six exactly. Refit frozen-base, report the
-// sum.
+// **There were six buckets until S134, and S100 proved the sixth was not a
+// quantity at all.** A pawn on its own seventh rank is a passer by
+// *definition* -- "ahead" is the enemy back rank and the extraction refuses a
+// pawn standing there -- and in the mirrored indexing it always occupies one of
+// squares 8..15. So that bucket *was* the signed sum of eight psqt[PAWN]
+// columns: R^2 exactly 1.000000, 0 violations in 550880 non-zero corpus rows,
+// and the same read out of the engine's own passed_pawn_counts()
+// (adocs/data/S134_engine_identity.txt). In a joint fit the split was an
+// unidentified direction: across three real fits buckets 0 to 4 moved by at
+// most 4 while bucket 5 read +22, -1 and -17 -- a 39-point spread that changed
+// sign twice. A synthetic-label run made it explicit: planted
+// {7,14,21,33,48,66}, the joint fit returned {7,14,21,33,48,24} at train error
+// exactly 0, and `--only passed_pawns` returned all six exactly.
 // Knight mobility fitted to nothing against this same effect at S034, DEC-040,
 // and DEC-044 records it for king safety's attacker counts.
+//
+// **S134 folded it.** Its weights, mg -17 and eg +42, were added to each of
+// psqt_mg[PAWN][8..15] and psqt_eg[PAWN][8..15] in eval_tables.hpp and the
+// bucket deleted, DEC-090. Bit-exact rather than approximately so:
+// evaluate_cheap() adds the pawn terms to the piece-square pair before its one
+// taper, so the weight moved between two summands of a single division. A
+// pawn on its own seventh scores through the table alone now, and
+// evaluate_pawns() says so where it collects the passers.
 //
 // The term costs 4.5 % of a depth 12 search, measured with the weights forced
 // non-zero because at zero the compiler deletes it, DEC-047. Its SPRT was net
 // of that: +17.34 +/- 13.51 Elo over 1584 games, H1 accepted.
-constexpr int passed_pawn_mg[6] = {0, -6, -4, 19, 59, -17};
-constexpr int passed_pawn_eg[6] = {15, 18, 46, 72, 96, 42};
-constexpr std::array<score_t, 6> passed_pawn_score =
+constexpr int passed_pawn_mg[5] = {0, -6, -4, 19, 59};
+constexpr int passed_pawn_eg[5] = {15, 18, 46, 72, 96};
+constexpr std::array<score_t, 5> passed_pawn_score =
     pack_scores(passed_pawn_mg, passed_pawn_eg);
 
 
@@ -159,18 +163,21 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
     pack_scores(pawn_structure_mg, pawn_structure_eg);
 
 
-// The four piece placement features, in the order their weights are indexed.
+// The three piece placement features, in the order their weights are indexed.
 // Shared between the weights, the counts and the accessor so that none of the
 // three can disagree with the others about which index means what. PL and not
 // PP because tools/eval_model.hpp already spells passed pawn PP_, and two
 // prefixes one letter apart on the same seven arrays is a mistake waiting to be
 // made. The passed pawn buckets are indexed by rank and have no enum.
+//
+// Four until S134, which deleted rook on the seventh: it was the signed sum of
+// eight psqt[ROOK][8..15] columns, below, and its zero weight folded into
+// those squares as +0 (DEC-090).
 enum
 {
   PL_BISHOP_PAIR,
   PL_ROOK_OPEN,
   PL_ROOK_HALF_OPEN,
-  PL_ROOK_SEVENTH,
   PL_FEATURE_COUNT
 };
 
@@ -180,10 +187,11 @@ enum
 // behaviour-neutral, so the SPRT that follows measures the fitted term instead
 // of a guess. No published table was consulted, DEC-016.
 //
-// The exact definition of each of the four is in evaluation.hpp, written out
+// The exact definition of each of the three is in evaluation.hpp, written out
 // there because tools/eval_model.hpp is built from it and the two have to mean
 // the same thing. What is here is why the arithmetic below computes them the
-// way it does.
+// way it does. The costs and the verdict below were measured on four features,
+// rook on the seventh among them, before S134 deleted it.
 //
 // **Nothing measured at these weights says anything about what they cost** --
 // clang sees the zeros and deletes the popcounts and the arithmetic that feed
@@ -264,19 +272,19 @@ enum
 // held them there with `--freeze piece_placement` (DEC-057), so they have not
 // been fitted to zero, they have been held at it.
 //
-// **Three of the four are the real candidates and one is not a quantity.**
+// **Three of the four were the real candidates and one was not a quantity.**
 // R^2 of each column on the tables that could absorb it: bishop pair 0.487,
 // rook open 0.265 and rook half-open 0.168, all far under redundancy -- so
-// those three carry signal the tables do not. `PL_ROOK_SEVENTH` is different in
-// kind: index 0 is a8 and a black piece mirrors by xor 56, so a rook on its own
-// seventh always lands on squares 8..15 and this column *is* the signed sum of
-// eight psqt_mg[ROOK] columns. R^2 exactly 1.000000, 0 violations in 1264773
-// non-zero rows. Only the sum psqt[rook][8..15] + placement[seventh] is
-// identified; a joint fit's value for the split is wherever the optimiser
-// stopped on a ridge. Refit it frozen-base or not at all, and never read the
-// split as a valuation.
-constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
-constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0};
+// those three carry signal the tables do not. Rook on the seventh was different
+// in kind: index 0 is a8 and a black piece mirrors by xor 56, so a rook on its
+// own seventh always lands on squares 8..15 and that column *was* the signed
+// sum of eight psqt_mg[ROOK] columns -- R^2 exactly 1.000000, 0 violations in
+// 1264773 non-zero rows, and the same out of the engine's own
+// piece_placement_counts(). Only the sum psqt[rook][8..15] + placement[seventh]
+// was identified, so S134 deleted the feature and folded its weight, zero, into
+// those eight squares (DEC-090). The three left are the real candidates.
+constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0};
+constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0};
 constexpr std::array<score_t, PL_FEATURE_COUNT> piece_placement_score =
     pack_scores(piece_placement_mg, piece_placement_eg);
 
@@ -348,7 +356,7 @@ static inline bb_t widen_by_one_file(bb_t squares)
 { return squares | neighbour_files(squares); }
 
 
-// The four piece placement counts per side, WHITE first, exactly as
+// The three piece placement counts per side, WHITE first, exactly as
 // evaluation.hpp defines them.
 //
 // `white_pawn_files` and `black_pawn_files` are whole-file sets -- every square
@@ -358,10 +366,7 @@ static inline bb_t widen_by_one_file(bb_t squares)
 // own: what is left to compute is two popcounts and a mask-and per side.
 //
 // Both file sets cover the whole file, so intersecting a rook with one asks
-// only about the rook's file and the rook's rank drops out of it. The seventh
-// is the one feature that asks the opposite question, and asks nothing else:
-// index 0 is a8, so White's seventh rank is squares 8..15 and Black's second is
-// 48..55.
+// only about the rook's file and the rook's rank drops out of it.
 static inline void piece_placement_features(const board_t* board,
                                             bb_t white_pawn_files,
                                             bb_t black_pawn_files,
@@ -379,14 +384,12 @@ static inline void piece_placement_features(const board_t* board,
   features[WHITE][PL_ROOK_OPEN] = count_bits(white_rooks & open_files);
   features[WHITE][PL_ROOK_HALF_OPEN] =
       count_bits(white_rooks & ~white_pawn_files & black_pawn_files);
-  features[WHITE][PL_ROOK_SEVENTH] = count_bits(white_rooks & rank_masks[a7]);
 
   features[BLACK][PL_BISHOP_PAIR] =
       (count_bits(board->bitboards[B_BISHOP]) >= 2) ? 1 : 0;
   features[BLACK][PL_ROOK_OPEN] = count_bits(black_rooks & open_files);
   features[BLACK][PL_ROOK_HALF_OPEN] =
       count_bits(black_rooks & ~black_pawn_files & white_pawn_files);
-  features[BLACK][PL_ROOK_SEVENTH] = count_bits(black_rooks & rank_masks[a2]);
 }
 
 
@@ -410,11 +413,11 @@ static inline void piece_placement_features(const board_t* board,
 // exactly. Their signs are not decided here: the weights are fitted, so a
 // penalty arrives as a negative weight rather than as a minus in this file.
 //
-// Piece placement is here for one of its four counts and gets the other three
+// Piece placement is here for its two rook file counts and gets the bishop pair
 // for free. The rook file features need to know which files carry which side's
-// pawns, and the fills below already answer that; bishop pair and rook on the
-// seventh read no pawn at all. A third pass over the pawns to rebuild what is
-// already in registers is exactly what the fusion above exists to avoid.
+// pawns, and the fills below already answer that; the bishop pair reads no pawn
+// at all. A third pass over the pawns to rebuild what is already in registers
+// is exactly what the fusion above exists to avoid.
 //
 // The first form of this looped over every pawn and asked
 // passed_w_pawns_masks[square] whether that one was passed. It cost 8.50 ns per
@@ -426,16 +429,18 @@ static inline void piece_placement_features(const board_t* board,
 // all_test_fens() and all 1490839 of the tuning corpus -- and agreed on the
 // mg/eg pair in every one.
 //
-// Six buckets by how far the pawn has advanced, not one weight multiplied by
-// the rank. The value is not linear in the rank -- a pawn one square from
-// queening is worth several times one on the third -- and the tuner fits a
-// linear function of its parameters, so a non-linear shape has to sit in the
-// features or it cannot be fitted here at all. Same constraint that made king
-// safety linear, DEC-044.
+// Buckets by how far the pawn has advanced, not one weight multiplied by the
+// rank. The value is not linear in the rank -- a pawn one square from queening
+// is worth several times one on the third -- and the tuner fits a linear
+// function of its parameters, so a non-linear shape has to sit in the features
+// or it cannot be fitted here at all. Same constraint that made king safety
+// linear, DEC-044. Five buckets, own second rank to own sixth: a sixth, a pawn
+// on its own seventh, was a passer by definition and therefore exactly eight
+// piece-square columns, and S134 folded it into them (DEC-090).
 //
 // The bucket arithmetic is the part of this term that is easy to get backwards.
 // Index 0 is a8 and index 63 is h1, so White advances by *decreasing* the
-// index: square >> 3 is 6 on White's second rank and 1 on the seventh. Reversed
+// index: square >> 3 is 6 on White's second rank and 2 on the sixth. Reversed
 // it pays for retreating pawns, and while the weights are zero no test can say
 // so, because every score it produces is the same score. What can say so is
 // passed_pawn_counts() below, which is why `collect` is here. Pawn structure
@@ -451,7 +456,7 @@ static inline void piece_placement_features(const board_t* board,
 template <bool collect>
 static inline void evaluate_pawns(const board_t* board,
                                   score_t* score,
-                                  int passed_out[2][6],
+                                  int passed_out[2][5],
                                   int structure_out[2][PS_FEATURE_COUNT],
                                   int placement_out[2][PL_FEATURE_COUNT])
 {
@@ -492,8 +497,13 @@ static inline void evaluate_pawns(const board_t* board,
   const bb_t white_stops = widen_by_one_file(white_front);
   const bb_t black_stops = widen_by_one_file(black_front);
 
-  bb_t white_passed = white_pawns & ~black_stops;
-  bb_t black_passed = black_pawns & ~white_stops;
+  // A pawn on its own seventh rank is left out, here and explicitly rather than
+  // by a weight: it is a passer by definition, so its bucket was exactly eight
+  // piece-square columns, and S134 moved that bucket's weight into
+  // psqt[PAWN][8..15] (DEC-090). The table prices it. Left in, it would compute
+  // bucket 5 and read past the end of the five-entry tables below.
+  bb_t white_passed = white_pawns & ~black_stops & ~rank_masks[a7];
+  bb_t black_passed = black_pawns & ~white_stops & ~rank_masks[a2];
 
   // A pawn is isolated when neither neighbouring file holds an own pawn at any
   // rank, so the file fill is the whole file set and the rank drops out.
@@ -557,21 +567,22 @@ static inline void evaluate_pawns(const board_t* board,
         placement_out[colour][f] = placement[colour][f];
       }
 
-      for (int bucket = 0; bucket < 6; ++bucket) {
+      for (int bucket = 0; bucket < 5; ++bucket) {
         passed_out[colour][bucket] = 0;
       }
     }
   }
 
   while (white_passed) {
-    // Rank 2 is squares 48..55 and rank 7 is 8..15, so this runs 0 to 5 up the
+    // Rank 2 is squares 48..55 and rank 6 is 16..23, so this runs 0 to 4 up the
     // board. What keeps it in range is that a pawn cannot stand on rank 1 or
-    // rank 8; the debug build checks that instead of trusting it, because the
-    // penalty for being wrong is a read off the end of a six-entry table.
+    // rank 8 and that rank 7 was masked out above; the debug build checks that
+    // instead of trusting it, because the penalty for being wrong is a read off
+    // the end of a five-entry table.
     const int bucket = 6 - (get_lsb_index(white_passed) >> 3);
     white_passed &= white_passed - 1;
 
-    assert(bucket >= 0 && bucket < 6);
+    assert(bucket >= 0 && bucket < 5);
 
     sum += passed_pawn_score[bucket];
 
@@ -583,7 +594,7 @@ static inline void evaluate_pawns(const board_t* board,
     const int bucket = (get_lsb_index(black_passed) >> 3) - 1;
     black_passed &= black_passed - 1;
 
-    assert(bucket >= 0 && bucket < 6);
+    assert(bucket >= 0 && bucket < 5);
 
     sum -= passed_pawn_score[bucket];
 
@@ -601,7 +612,7 @@ static inline void evaluate_pawns(const board_t* board,
 // so the packed score it also computes is thrown away rather than split out: a
 // second entry point into the same loop would be one more thing to keep in
 // step.
-void passed_pawn_counts(const board_t* board, int out[2][6])
+void passed_pawn_counts(const board_t* board, int out[2][5])
 {
   score_t score = 0;
   int structure[2][PS_FEATURE_COUNT];
@@ -619,21 +630,21 @@ void passed_pawn_counts(const board_t* board, int out[2][6])
 void pawn_structure_counts(const board_t* board, int out[2][3])
 {
   score_t score = 0;
-  int passed[2][6];
+  int passed[2][5];
   int placement[2][PL_FEATURE_COUNT];
 
   evaluate_pawns<true>(board, &score, passed, out, placement);
 }
 
 
-// The third, on the same terms. Piece placement reads three of the four counts
-// off pieces rather than pawns, and still comes through here: the file sets its
+// The third, on the same terms. Piece placement reads the bishop pair off
+// pieces rather than pawns, and still comes through here: the file sets its
 // rook features need are the pawn fills, and a separate entry point would be a
 // second implementation free to drift from the one the search runs.
-void piece_placement_counts(const board_t* board, int out[2][4])
+void piece_placement_counts(const board_t* board, int out[2][3])
 {
   score_t score = 0;
-  int passed[2][6];
+  int passed[2][5];
   int structure[2][PS_FEATURE_COUNT];
 
   evaluate_pawns<true>(board, &score, passed, structure, out);

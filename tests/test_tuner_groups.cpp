@@ -229,7 +229,8 @@ TEST_CASE("the --only groups partition the parameter vector")
 
 // --freeze, added at S065. The inverse of --only: free everything except the
 // named groups. What it exists for is a fit that has to hold two groups at zero
-// while the other 817 parameters move, which --only cannot express -- it says
+// while the other 815 parameters move (817 at S065, before S134 narrowed the
+// vector), which --only cannot express -- it says
 // "fit only tempo", never "fit everything but tempo".
 //
 // The properties are the ones a wrong implementation would break silently. A

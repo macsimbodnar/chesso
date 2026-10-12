@@ -905,12 +905,16 @@ TEST_SUITE("evaluation: packed score")
 
     halves_match("mobility", mobility_score.data(), mobility_mg, mobility_eg,
                  4);
+    // The two widths below come from the packed arrays rather than literals:
+    // S134 narrowed both, and a literal left behind reads past the end of the
+    // array without a compiler word about it.
     halves_match("passed_pawn", passed_pawn_score.data(), passed_pawn_mg,
-                 passed_pawn_eg, 6);
+                 passed_pawn_eg, static_cast<int>(passed_pawn_score.size()));
     halves_match("pawn_structure", pawn_structure_score.data(),
                  pawn_structure_mg, pawn_structure_eg, 3);
     halves_match("piece_placement", piece_placement_score.data(),
-                 piece_placement_mg, piece_placement_eg, 4);
+                 piece_placement_mg, piece_placement_eg,
+                 static_cast<int>(piece_placement_score.size()));
     halves_match("king_safety", king_safety_score.data(), king_safety_mg,
                  king_safety_eg, KS_FEATURE_COUNT);
     halves_match("tempo", &tempo_score, &tempo_mg, &tempo_eg, 1);

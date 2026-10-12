@@ -1,0 +1,13 @@
+# S134 engine-side identity, measured before anything was deleted.
+# Tree: 1472c96 plus adocs/data/S134_engine_identity.diff (tools/feature_audit.cpp only).
+# Command: build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --no-occurrence --no-collinearity
+# Machine: i7-8700K, g++ 13.3, 2026-10-12. Wall 1 m 12 s.
+corpus /home/max/ws/chesso/.tuning/selfplay_v2_dedup.tsv, 10795695 rows
+columns: 10795695 rows re-extracted, 0 disagreements
+identities: rook seventh == signed rook occupancy of squares 8..15: 1264773 rows non-zero, 0 violations
+identities: passer bucket 5 == signed pawn occupancy of squares 8..15: 550880 rows non-zero, 0 violations
+engine identities: 10795695 rows read, 0 refused by load_FEN
+engine identities: passed_pawn_counts() bucket 5, White minus Black, == signed pawn occupancy of squares 8..15: 550880 rows non-zero, 0 violations
+engine identities: piece_placement_counts() rook seventh, White minus Black, == signed rook occupancy of squares 8..15: 1264773 rows non-zero, 0 violations
+engine identities: per colour, bucket 5 == own pawns on own seventh: 569739 rows with one, 0 violations
+engine identities: per colour, rook seventh == own rooks on own seventh: 1380393 rows with one, 0 violations
