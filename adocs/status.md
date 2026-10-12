@@ -72,6 +72,13 @@ games.
   `adocs/data/S267_drift.tsv`) and the 32+0.32 reading whatever the verdict
   (DEC-269). Phase-2 commands in its step file.
 
+- **S099** (worktree `../chesso-s099`): written blind as two diffs -- (a) the
+  pawn key, neutral, lands on its own with INV-6 and the second tier; (b) the
+  correction table, the SPRT candidate after S261. DEC-270 settles its open
+  choices (census before the SPRT, datagen wired, 32+0.32 estimate only on
+  H0). Four UCI-path goldens re-derived in phase 2. Diffs and builders in
+  the worktree's `.tuning/coord/S099/`.
+
 **Landing order after S119's verdict:** record the verdict; S263 (timing on
 the quiet machine), S276, S264's smoke matches; S259 then needs the tree
 S119's verdict leaves.

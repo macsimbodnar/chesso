@@ -14345,3 +14345,36 @@ Rejected:     30 axes as written -- the five LMR terms fitted around an August
 Consequences: S261's accepts (1) is read with this amendment; its JSON and
               axis table carry 32 rows. Cross-talk rises slightly (two axes in
               thirty-two). The lane's verdict can move the reduction table.
+
+## DEC-270  2026-10-13  S099's open choices: census before the SPRT, datagen wired, a longer-control estimate only on H0
+Tags:         search, correction-history, measurement, s099, dec-202, dec-258
+Context:      S099's implementer, writing blind beside S119's SPRT (DEC-260),
+              left five choices open: the table's size (section 4 prefers a
+              census of distinct pawn keys at depth 12; the fallback is 32768
+              slots a side), whether datagen plays with the correction, a
+              32+0.32 reading DEC-202 does not require, what happens on H0
+              (section 6 bisects gating-first; DEC-063 forbids a follow-up
+              run), and that section 4 asks for "each constant in the X-macro"
+              while also saying scale, grain and clamp carry no freedom.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. (1) The census runs between runs before the SPRT,
+              and the size it gives is the size the SPRT plays; 32768 stands
+              only if the census says so. (2) Datagen keeps the correction in
+              (b): DEC-258 (4) placed S099 before S082 because the correction
+              changes the games the corpus is made of. (3) No 32+0.32 reading
+              on H1 -- it ships on the verdict. On H0 or no verdict, one
+              DEC-202-shaped 1000-pair estimate at 32+0.32, Hash 64, is taken,
+              as DEC-269 (2) does for S261: it ships nothing and a positive
+              estimate opens a decision for the owner. (4) No bisection is
+              booked; on H0 the owner rules. (5) Two UCI parameters
+              (`CorrHistMax`, `CorrHistWeightCap`) and three definitions
+              (scale, grain, slot count) satisfy the accepts' "every constant
+              in `src/search_params.hpp` with a stated range": the definitions
+              are units and a size, not fitted values.
+Rejected:     Keeping 32768 without a census -- section 4's own preference,
+              for 10 to 20 minutes of machine. Leaving datagen to S082 -- S082
+              would generate a corpus with an engine fastchess no longer
+              measures. A 32+0.32 reading on H1 -- no decision rides on it.
+              Booking the bisection now -- DEC-063.
+Consequences: S099's phase 2 adds the census and its tune-only counter before
+              the SPRT is pinned. S110 and S111 stay conditional on S099's H1.
