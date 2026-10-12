@@ -24,6 +24,31 @@ void tt_new_search(transposition_table_t* tt);
 const tt_entry_t* tt_get_entry(const transposition_table_t* tt,
                                const board_t* board);
 
+// Asks the memory system for the slot `hash` indexes, without waiting for it.
+// The search calls this the moment a child's key is final -- right after
+// make_move() or make_null_move() returns -- so the line is on its way while
+// the child runs its draw and repetition tests, and the probe at the top of the
+// child finds it in cache more often. A hint and nothing else: it reads and
+// writes no entry, so no node count can move (INV-6). Both ends of the slot,
+// because an entry that does not divide the cache line can straddle two.
+// make_move() itself stays ignorant of the table, so perft and the generator
+// pay nothing for it and the NNUE hook's alphabet is untouched. S119.
+inline void tt_prefetch(const transposition_table_t* tt, uint64_t hash)
+{
+#if defined(__GNUC__) || defined(__clang__)
+  if (tt->entries == nullptr) { return; }
+
+  const char* slot =
+      reinterpret_cast<const char*>(&tt->entries[hash & tt->index_mask]);
+
+  __builtin_prefetch(slot);
+  __builtin_prefetch(slot + sizeof(tt_entry_t) - 1);
+#else
+  (void)tt;
+  (void)hash;
+#endif
+}
+
 // What the eval field becomes on a store, given what the slot already holds.
 // Split out of tt_store_entry() because the rule it carries is one line and one
 // hazard: an incoming TT_EVAL_NONE keeps the number that is there, and it may

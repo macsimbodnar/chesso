@@ -1302,6 +1302,8 @@ int quiescence(int alpha,
 
     if (!make_move(game, moves[i])) { continue; }
 
+    tt_prefetch(state->tt, game->board.hash);
+
     legal_moves++;
 
     // Nothing left on the board can force mate, so there is nothing below this
@@ -1962,6 +1964,8 @@ static int negamax_at(int alpha0,
 
       make_null_move(game);
 
+      tt_prefetch(state->tt, game->board.hash);
+
       const int null_score =
           -negamax_at<false>(-beta, -beta + 1, depth - 1 - reduction, ply + 1,
                              game, state, 0, child.is_pv, child.cut_node, 0);
@@ -2063,6 +2067,8 @@ static int negamax_at(int alpha0,
         pick_next_move(pc_moves, pc_scores, pc_count, j);
 
         if (!make_move(game, pc_moves[j])) { continue; }
+
+        tt_prefetch(state->tt, game->board.hash);
 
         // A capture that leaves nothing able to force mate has ended the game
         // drawn, so the draw is its value and neither search below is asked
@@ -2664,6 +2670,9 @@ static int negamax_at(int alpha0,
     const uint64_t nodes_before_move = (ply == 0) ? state->explored_nodes : 0;
 
     if (!make_move(game, moves[i])) { continue; }
+
+    // The child's key is final here; S119, see tt_prefetch().
+    tt_prefetch(state->tt, game->board.hash);
 
     // Whether this move leaves the opponent in check: the child's state, never
     // this node's `is_in_check`. Two consumers, the gives-check exemption and
