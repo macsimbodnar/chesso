@@ -35,12 +35,14 @@ in `.tuning/coord/S263_files/`.
   read the step file's Progress section in the worktree first". The
   coordinator then fast-checks and lands it per the usual pattern.
 
-**Running: S119's SPRT**, launched 2026-10-12 ~23:20 after the owner's
+**Running: S119's SPRT**, launched 2026-10-12 23:13 after the owner's
 rulings (DEC-268: Hash 16 as pre-registered; the `hashfull` clause means
 `rating.sh`'s control). CAND `298788b`, REF `cc87dfb`, {0,5}, 8+0.08, worst
 case 19.8 h. Log `.tuning/s119_sprt.log`; output `.tuning/sprt_s119_*`.
 Its record commit carries the DEC-220 block, then the ledger regeneration.
-S263 resumes beside it at `nice -n 19`; its timing waits for the machine.
+S263's agent drafts its As built beside it, writing only (DEC-260: no
+compile, test or timing while a match holds the machine); its gate, trace
+re-run, prose checks and timing run after the verdict.
 
 **Then, per Open:** S259 (held until S119's verdict), S276 (agent lane),
 S264, S261, S099...
