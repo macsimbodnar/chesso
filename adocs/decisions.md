@@ -14463,3 +14463,23 @@ Rejected:     One SPRT over both halves -- one night saved, and a zero that
 Consequences: S023's accepts are met across its two verdicts; its third
               clause (the bound constant) lands with verdict 2. Up to a second
               night of machine.
+
+## DEC-274  2026-10-13  S039's non-regression SPRT lands its change on no verdict, recorded as a zero
+Tags:         evaluation, measurement, s039, s121, s122, dec-258, dec-063
+Context:      DEC-258 made S039 one non-regression verdict: the lazy shortcut
+              and the clamp on mobility plus king safety retire together, so
+              the fits after it (S121, S122) see the exact sum. The step and
+              DEC-258 rule H1 (land) and H0 (both stay; the owner amends S122
+              before S121), but not the third outcome, and accepts (4) needs
+              all three written before the first game.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. No verdict at the cap lands the change as H1 does,
+              recorded as a zero with the interval stated: nothing was shown
+              to cost the bound, and the step exists because the fits need the
+              unclamped sum. DEC-063 rules out a follow-up run.
+Rejected:     Reading no verdict as H0 -- it costs S122 the unclamped king
+              safety that is its purpose, on a result that did not show a
+              regression. A follow-up run -- DEC-063.
+Consequences: `adocs/data/S039_sprt.sh` states the three outcomes with this
+              one. A cost inside the bounds interval can land unmeasured;
+              S121's and S122's own verdicts are measured on top of it.
