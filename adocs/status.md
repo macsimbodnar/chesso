@@ -7,21 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-13, by hand.
 
-## 2026-10-13: S261's lane runs; S099, S023, S039 and S082 wait for the machine
+## 2026-10-13: S261's phase 2 (DEC-277); S099, S023, S039 and S082 wait for the machine
 
-**Running: S261's SPSA lane** (pre-registration `932ee7a`), launched
-2026-10-13 12:40: 31 axes (DEC-269 adds LmrBase and LmrDivisor; SePlyFactor
-unreachable), one lane (split sim 0.984), 1250 iterations x 48 games at
-2+0.02, about 8 h 45 m, ceiling 18 h. Log `.tuning/spsa_s261.log`, pid in
-`.tuning/spsa_s261.pid`. One resume allowed after a transient failure
-(pre-registered). Then: the mate suites on the tuned vector, the independent
-{0,5} SPRT (`adocs/data/S261_sprt.sh`), the drift point and the 32+0.32
-reading whatever the verdict (DEC-269). No open DEC-171 finding.
-Mid-run reads (`.tuning/coord/S261_files/midrun_reads.md`, for As built):
-`c_scale` 1.150 at 313 and 1.072 at 626 (S222's figures), `y` centred,
-0 forfeits in 30113 games at the half, median depth 11 (p10 10). At the
-half `LmrCutNode` (0, R2 off value), `LmrDeeperMinReduction` (1) and
-`SeMarginPerDepth` (1) sit at a range end; decided only at the end.
+**S261: lane done, phase 2 running.** The lane ended SPSA-DONE 2026-10-13
+21:33: 1250 iterations, 60000 games, 0 forfeits, 0 crash terminations;
+archived as `chesso_S261_spsa_lane_2026-10-13.tar.xz`. Final read
+(`.tuning/coord/S261/bounds_final.txt`): 25 of 31 axes move; R2 holds
+`LmrCutNode` and `SeeLmrExtra` (both ended at 0). The vector turned mate
+guards red cell-wise (carry's majority 2 of 6, the mate-in-three floor
+10 < 11, B04, the S230 table rows 3-4) and R4's halving did not converge
+(non-monotone holds, `.tuning/coord/S261/r4/`, `r4b/`). **DEC-277**: holds
+restart from R2 plus `LmrDeeperMinReduction` at 2; the mate guards are judged
+as families against the incumbent on their scripts' grids, then re-derived
+by script; fixtures re-derived, never weakened. S261's agent runs that in
+`../chesso-s261c`, then the second tier and the landing prep; then the
+vector commit and the {0,5} SPRT (`adocs/data/S261_sprt.sh`), the drift
+point and the 32+0.32 reading. No `src/` commit lands before the vector.
+Staged for the next gap: the `eval_model` comment fix (`../chesso-s276c`,
+`.tuning/coord/S276c/`), comments only.
 
 **Order from here:** S261 (lane, mate suites, SPRT, readings) -> S099
 rebased onto S261's landing, every number re-taken, SPRT (DEC-271) -> S023
