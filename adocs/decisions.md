@@ -14641,3 +14641,28 @@ Consequences: S261's held set is `LmrCutNode`, `SeeLmrExtra`,
               the guard weakened, S156 at `fd9e44c`) is a DEC-142 finding that
               S261's re-derivation of that floor closes; it is named in the
               SPRT's pre-registration either way.
+
+## DEC-279  2026-10-14  S279's exact node budget is discharged by INV-6, not by an SPRT
+Tags:         search, sprt, inv-6, stop-path, s279, dec-171
+Context:      S279 moves quiescence's `check_limits` above its table probe, so a
+              table cutoff that spends a `go nodes` budget or lands on the stop
+              flag's 2048-node poll is checked. `bench` and `search_bench` at
+              depths 9 and 13 are node-identical with the same best moves. What
+              moves: a search its budget stops (30 of 1028 probe budgets end on
+              exactly N instead of N + 1 to N + 3, no `bestmove` moves), and a
+              hard stop read up to 6144 nodes earlier in 4.45 % of first polls
+              (about 1.2 ms at `bench`'s rate). The SPRT harness never sends
+              `go nodes`; datagen and the S170 replay do.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. No SPRT: INV-6 and the counted reach discharge it, as
+              S163 and S210's F20 and F21 were. The commit carries
+              `Bench: 3872032`, not `No functional change`, because budgeted
+              and stopped searches do change.
+Rejected:     A `--nonreg {-5, 0}` SPRT in S210 F22's form -- F22 moved 1.69 %
+              of root answers at fixed depth; this moves none, and its timed
+              effect is a flag latency below the timer's own jitter, which no
+              reachable match resolution separates from zero. It would cost a
+              night the S261 vector needs.
+Consequences: S261's carry family and node-budget goldens are re-measured on
+              the fixed tree. A later stop-path change with zero fixed-depth
+              reach and no `bestmove` moved at node budgets follows this form.

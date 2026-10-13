@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <memory>  // std::make_unique, the heap-owned search_state_t
 #include <sstream>
 #include <string>
 #include <vector>
@@ -368,6 +369,167 @@ TEST_SUITE("search: budgets")
 
     REQUIRE(state.aborted);
     REQUIRE(result.explored_nodes < 100000);
+  }
+
+  // S279's position: White's e4 pawn and two loose black pawns to take, so
+  // quiescence at the root generates those two captures and no other move.
+  static const char* const QS_CUTOFF_FEN =
+      "4k3/8/8/3p1p2/4P3/8/8/4K3 w - - 0 1";
+  static const index_t QS_CUTOFF_VICTIMS[] = {d5, f5};
+
+  // What each child's entry claims, from the side to move there. Any number
+  // the child's own search does not produce, which both cases check.
+  static constexpr int QS_CUTOFF_STORED = -150;
+
+  // An empty table but for an exact quiescence entry on each child of the
+  // root, which makes each child a table cutoff. Leaves the root on the board.
+  static void prepare_qs_cutoff_table()
+  {
+    tt_reset(&tt);
+    tt_new_search(&tt);
+
+    for (const index_t victim : QS_CUTOFF_VICTIMS) {
+      REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
+      REQUIRE(play_move(&game, e4, victim));
+      tt_store_entry(&tt, &game.board, TT_DEPTH_QS, QS_CUTOFF_STORED,
+                     TT_PV_NODE, 0);
+    }
+
+    REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
+  }
+
+  // Heap-owned and fresh per search: the struct is 1.2 MiB (S222), and a case
+  // holding several on its own frame comes close to the 8 MiB stack.
+  static std::unique_ptr<search_state_t> budget_state(uint64_t node_limit)
+  {
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    auto state = std::make_unique<search_state_t>();
+    state->tt = &tt;
+    state->stop = &never_stop;
+    state->node_limit = node_limit;
+    return state;
+  }
+
+  // S279. Quiescence counted its node and then probed the table, and a hit
+  // returned before check_limits() ran, so the node that spent the budget
+  // could be a table cutoff that nothing stopped on: the search went on to
+  // the next node, or the next several. Found by S261 as `go nodes N`
+  // reporting N + 1 on 30 of 1028 budgets, up to N + 3.
+  //
+  // The smallest tree that shows it, with the table prepared by hand so the
+  // precondition is established here rather than assumed: a root with two
+  // captures and no entry of its own, and an exact entry on each child. A
+  // budget of two is spent on the first child, which is a table cutoff, and
+  // the second child is the node past the budget. Red before the fix: budget
+  // 2 explored 3, and the search never aborted.
+  //
+  // Mutation: tools/mutants/S279_qs_node_budget.py NB01, the check moved back
+  // below the probe, which is the tree before S279.
+  //
+  //   search: budgets
+  //    a table cutoff that spends the node budget stops the search
+  //   REQUIRE( bounded->explored_nodes <= 2 )
+  //   values: REQUIRE( 3 <= 2 )
+  TEST_CASE_FIXTURE(
+      search_fixture_t,
+      "a table cutoff that spends the node budget stops the search")
+  {
+    REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
+    REQUIRE(position_is_reachable(&game));
+
+    // Precondition: each child, at the ply the root reaches it from, is a
+    // table cutoff -- one node, and the stored number rather than its own.
+    for (const index_t victim : QS_CUTOFF_VICTIMS) {
+      const std::string title = "child " + std::to_string(victim);
+
+      tt_reset(&tt);
+      REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
+      REQUIRE(play_move(&game, e4, victim));
+      const auto cold = budget_state(NODE_BUDGET_UNLIMITED);
+      REQUIRE_MESSAGE(quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 1, 1,
+                                 &game, cold.get()) != QS_CUTOFF_STORED,
+                      title);
+
+      prepare_qs_cutoff_table();
+      REQUIRE(play_move(&game, e4, victim));
+      const auto warm = budget_state(NODE_BUDGET_UNLIMITED);
+      REQUIRE_MESSAGE(quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 1, 1,
+                                 &game, warm.get()) == QS_CUTOFF_STORED,
+                      title);
+      REQUIRE_MESSAGE(warm->explored_nodes == 1, title);
+    }
+
+    // Precondition: unbounded, the root reaches both children and reads both
+    // from the table, so a budget of two is spent before the search is over.
+    prepare_qs_cutoff_table();
+    const auto whole = budget_state(NODE_BUDGET_UNLIMITED);
+    REQUIRE_EQ(quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 0, 0, &game,
+                          whole.get()),
+               -QS_CUTOFF_STORED);
+    REQUIRE_FALSE(whole->aborted);
+    REQUIRE_EQ(whole->explored_nodes, 3);
+
+    prepare_qs_cutoff_table();
+    const auto bounded = budget_state(2);
+    quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 0, 0, &game, bounded.get());
+
+    REQUIRE_MESSAGE(
+        bounded->explored_nodes <= 2,
+        ("budget 2 explored " + std::to_string(bounded->explored_nodes)));
+    REQUIRE(bounded->aborted);
+  }
+
+  // The same contract through search(), at every budget a tree can spend.
+  // With a check after every count, a search its budget stops ends on exactly
+  // that node, whichever kind of node it is.
+  //
+  // First the tree of the case above at depth 1, where the precondition is
+  // asserted: the root scores the stored number, which only a quiescence table
+  // cutoff can hand it -- each child's depth-0 node asks the table for depth
+  // 0, which a TT_DEPTH_QS entry does not answer, and hands the position to
+  // quiescence -- and the sweep is exhaustive over the tree's node numbers,
+  // so one budget lands on that cutoff. Then startpos at depth 2, a tree no
+  // hand prepared, swept as a supplement that claims no cutoff inside it: red
+  // before S279 at 21 of its 302 budgets, the first at 100 explored 101.
+  //
+  // Mutation: tools/mutants/S279_qs_node_budget.py NB01, as above.
+  TEST_CASE_FIXTURE(search_fixture_t, "every node budget stops on its own node")
+  {
+    // Precondition: from an empty table the root scores something else.
+    tt_reset(&tt);
+    tt_new_search(&tt);
+    REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
+    const auto cold = budget_state(NODE_BUDGET_UNLIMITED);
+    REQUIRE(search(1, &game, cold.get()).score != -QS_CUTOFF_STORED);
+
+    // Precondition: on the prepared table it scores the stored number.
+    prepare_qs_cutoff_table();
+    const auto whole = budget_state(NODE_BUDGET_UNLIMITED);
+    const search_t prepared = search(1, &game, whole.get());
+    REQUIRE_EQ(prepared.score, -QS_CUTOFF_STORED);
+    REQUIRE_FALSE(whole->aborted);
+
+    for (uint64_t budget = 1; budget <= prepared.explored_nodes; ++budget) {
+      prepare_qs_cutoff_table();
+      const auto state = budget_state(budget);
+      const search_t result = search(1, &game, state.get());
+
+      REQUIRE_MESSAGE(result.explored_nodes == budget,
+                      ("prepared tree, budget " + std::to_string(budget) +
+                       " explored " + std::to_string(result.explored_nodes)));
+    }
+
+    const search_t natural = search_fen(DEFAULT_POSITION, 2);
+
+    for (uint64_t budget = 1; budget <= natural.explored_nodes; ++budget) {
+      const search_t result = search_fen(DEFAULT_POSITION, 2, budget);
+
+      REQUIRE_MESSAGE(result.explored_nodes == budget,
+                      ("startpos, budget " + std::to_string(budget) +
+                       " explored " + std::to_string(result.explored_nodes)));
+    }
   }
 }
 

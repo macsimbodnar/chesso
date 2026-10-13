@@ -343,6 +343,16 @@ reads it at ply 0 on a table miss only (2026-09-04_adversarial-F03,
 DEC-208). All of these alter play only under inputs no harness here sends and
 were discharged node-identical at fixed depth; `bench` 7111579 unchanged.
 
+**`go nodes N` stops on its Nth node, never past it, since 2026-10-14,
+S279**: every node checks the limits as soon as it is counted, quiescence's
+table cutoff included, so the stop flag is also polled at every count divisible
+by 2048. Before it a quiescence table cutoff went unchecked: a budget ran over
+by up to three nodes on 30 of 1028 probe budgets, and with the flag set before
+the search 6724 of 150932 book positions read it 2048 to 6144 nodes late.
+`bench` 3872032 and `search_bench` node-identical; no SPRT, DEC-279.
+`tests/test_search.cpp` "a table cutoff that spends the node budget stops the
+search" holds the rule.
+
 **An `info` line that claims a mate shows the mate since 2026-09-02, S147**: a
 `score mate N` carries a `pv` of `2N - 1` plies where the side to move delivers
 it and `2|N|` where it receives it, and the position that line ends on is

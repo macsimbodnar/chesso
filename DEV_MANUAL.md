@@ -3414,7 +3414,10 @@ is the rule doing what it is for.
 
 The budget is enforced exactly (`check_limits` in `src/search.cpp` compares the
 count, it does not sample a clock), so the depth reached is a property of the
-tree and not of the machine's load. Depth at a fixed budget is not Elo and
+tree and not of the machine's load. Exactly since S279: until then a
+quiescence table cutoff that spent the budget went unchecked, and a search
+could end past it, measured up to three past it, on 30 of 1028 probe
+budgets. Depth at a fixed budget is not Elo and
 nothing reads it as Elo (DEC-019): what decides a step is its SPRT.
 
 ### What share of the root's nodes the best move took

@@ -6,7 +6,7 @@ excludes:   evaluation weights, which the tuner fits; S127, the final lane over 
 decisions:  DEC-222, DEC-200, DEC-202, DEC-143, DEC-258
 closes:
 blocks:
-paused_by:  S279
+paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
 done:
 

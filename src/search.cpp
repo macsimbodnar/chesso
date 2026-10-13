@@ -992,6 +992,16 @@ int quiescence(int alpha,
   f22_census.qnodes++;
 #endif
 
+  // Checked as soon as the node is counted, as negamax_at() does, and above
+  // the table probe. Below it, a hit returned unchecked, so the node that
+  // spent the node budget went on to the next node, and one that landed on
+  // the stop flag's poll skipped the poll. Every node above tests `aborted`
+  // before it acts on this score. Two readers still see the 0: the razor's
+  // `probe->razor_score`, written before its abort test, and search() at
+  // depth 0, which returns quiescence's score unchecked. Neither is reached
+  // in play. S279.
+  if (check_limits(state)) { return 0; }
+
   // The bound the node started with. What gets stored below is exact only if
   // the node beat it; otherwise all the search established is a ceiling.
   const int alpha0 = alpha;
@@ -1096,11 +1106,10 @@ int quiescence(int alpha,
     }
   }
 
-  // Nothing below this line is stored when the search is being abandoned or
-  // truncated. An aborted node has no score, and a node that gave up on the
-  // ply cap returns a static number in place of a search - both would be read
-  // back later as though a search had produced them.
-  if (check_limits(state)) { return stand_pat; }
+  // Nothing below this line is stored when the search is truncated. A node
+  // that gave up on the ply cap returns a static number in place of a search,
+  // and it would be read back later as though a search had produced it. An
+  // aborted node has no score either, and it returned at the top.
   if (ply + 1 >= MAX_PLY) { return stand_pat; }
 
   // The checkers rather than is_check()'s boolean: an in-check or capture

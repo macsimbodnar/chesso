@@ -5,31 +5,40 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-13, by hand.
+Updated: 2026-10-14, by hand.
 
-## 2026-10-13: S261's phase 2 (DEC-277); S099, S023, S039 and S082 wait for the machine
+## 2026-10-14: S279 done (`go nodes` exact); S261's phase 2 resumes on it
 
-**S261: lane done, phase 2 running.** The lane ended SPSA-DONE 2026-10-13
-21:33: 1250 iterations, 60000 games, 0 forfeits, 0 crash terminations;
-archived as `chesso_S261_spsa_lane_2026-10-13.tar.xz`. Final read
-(`.tuning/coord/S261/bounds_final.txt`): 25 of 31 axes move; R2 holds
-`LmrCutNode` and `SeeLmrExtra` (both ended at 0). The vector turned mate
-guards red cell-wise (carry's majority 2 of 6, the mate-in-three floor
-10 < 11, B04, the S230 table rows 3-4) and R4's halving did not converge
-(non-monotone holds, `.tuning/coord/S261/r4/`, `r4b/`). **DEC-277**: holds
-restart from R2 plus `LmrDeeperMinReduction` at 2; the mate guards are judged
-as families against the incumbent on their scripts' grids, then re-derived
-by script; fixtures re-derived, never weakened. S261's agent runs that in
-`../chesso-s261c`, then the second tier and the landing prep; then the
-vector commit and the {0,5} SPRT (`adocs/data/S261_sprt.sh`), the drift
-point and the 32+0.32 reading. No `src/` commit lands before the vector.
-Staged for the next gap: the `eval_model` comment fix (`../chesso-s276c`,
-`.tuning/coord/S276c/`), comments only.
+**S279 landed**: quiescence checks the limits above its table probe. A table
+cutoff that spent a `go nodes` budget, or landed on the stop flag's 2048-node
+poll, went unchecked: S261's probe read 30 of 1028 budgets over (up to +3),
+and 4.45 % of first polls were read late. Both are 0 now. bench 3872032 and
+`search_bench` node-identical; **no SPRT, DEC-279**. `gate_extra` 5 stages
+green, 1001 s, 2026-10-14 on S279's landing tree. Also landed: `e7b1d04`,
+the stale `eval_model` comments in `src/evaluation.{cpp,hpp}` (comments only).
+New filler **S280** (DEC-171): the mutation recipe's `submodule update` is
+refused over the `file` transport on git 2.43; it needs a per-command
+`-c protocol.file.allow=always`.
 
-**Order from here:** S261 (lane, mate suites, SPRT, readings) -> S099
+**S261: lane done, phase 2 resumes** (`paused_by` cleared). The lane ended
+SPSA-DONE 2026-10-13 21:33: 1250 iterations, 60000 games, 0 forfeits, 0
+crash terminations; archived as `chesso_S261_spsa_lane_2026-10-13.tar.xz`.
+Holds (DEC-277, DEC-278): `LmrCutNode`, `SeeLmrExtra`, `LmrDeeperMinReduction`
+at 2, `LmrDivisor`; mined rows read over the incumbent's range, then
+re-mined in guard mode. S261's agent rebases `../chesso-s261c` onto S279,
+re-measures the carry family (node budgets), re-derives the fixtures and
+goldens by script, runs the second tier and the seven mined-row mutants;
+then the vector commit and the {0,5} SPRT (`adocs/data/S261_sprt.sh`), the
+drift point and the 32+0.32 reading. No other `src/` commit lands before the
+vector.
+
+**Order from here:** S261 (vector, SPRT, readings) -> S280 (filler) -> S099
 rebased onto S261's landing, every number re-taken, SPRT (DEC-271) -> S023
-verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275). Owed at the next machine gap: the `No functional change`
-commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
+verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
+
+**Owner reply pending:** DEC-277 relaxes the mate-safety rule DEC-276
+pre-registered (grid against the incumbent, not cell-wise); the coordinator
+offered to revert to DEC-276 if the owner prefers.
 
 **Waiting, written (DEC-260 lanes):**
 - **S099** (worktree `../chesso-s099b`, uncommitted, base `5ac17bd`): complete
@@ -63,6 +72,8 @@ commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
   view primary, set at 100000 nodes) and a five-seed control margin. Fast
   check: 4 findings, fixed blind. Phase 2: ~1 h 30 m build and checks, the
   pool ~9 h (a night), compare ~1 h 15 m.
+
+**Done 2026-10-14:** S279 (above); `e7b1d04` comments.
 
 **Done today, 2026-10-13, each gated green:**
 - **S119** H1 at Hash 16 (DEC-268): Elo 5.24 +/- 4.06, 16128 games; the
