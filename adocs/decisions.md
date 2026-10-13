@@ -14433,3 +14433,33 @@ Rejected:     Keeping 0 and making S099 remove the two short lines before its
               forbids.
 Consequences: `tests/test_mate_carry.cpp`'s `DEC-PENDING` token becomes
               DEC-272. On H0 or no verdict the ceiling never lands.
+
+## DEC-273  2026-10-13  S023 is two verdicts: the capture-history margins first, the ordering key second
+Tags:         search, history, measurement, s023, s025, s265, dec-258
+Context:      DEC-258 promoted S023 as one SPRT, but its own order note says
+              capture history's measured value is in the capture margins
+              first and the ordering key second, and its Reserve section says
+              the two halves "are not priced by one number"; the ordering half
+              carries the record's negative short-control reading. One run
+              could cancel a real margin gain into a zero and could not say
+              which half failed. The implementer built the table and its two
+              margin readers (the capture SEE margin, S112's quiescence
+              futility margin), leaving `score_move` untouched, and put the
+              split to the owner.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12 (one change at a time; strength over machine time).
+              Verdict 1: the table and its two margin readers, `{0, 5}` nElo.
+              Verdict 2, only on verdict 1's H1: the bounded ordering term in
+              `score_move`, with the accepts' bound constant, its own `{0, 5}`
+              SPRT against verdict 1's landing. On verdict 1's H0 or no
+              verdict, verdict 2 does not run and the family returns to the
+              reserve. S265 (late captures reduced by capture history) is
+              conditional on verdict 1's H1; S025 (retry losing captures after
+              the quiets) on verdict 2's H1.
+Rejected:     One SPRT over both halves -- one night saved, and a zero that
+              cannot be attributed. Running verdict 2 after a verdict-1 H0 --
+              the ordering use alone has only the negative short-control
+              record behind it.
+Consequences: S023's accepts are met across its two verdicts; its third
+              clause (the bound constant) lands with verdict 2. Up to a second
+              night of machine.

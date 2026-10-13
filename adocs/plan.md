@@ -368,9 +368,9 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 2. S099  a static evaluation correction learned from the difference between the static score and what the search returned, keyed on the pawn structure -- a fixed slot (DEC-258)
 3. S110  **conditional on S099's H1** -- a second correction table keyed on the non-pawn structure, split by colour
 4. S111  **conditional on S099's H1** -- correction tables indexed by the move played two and four plies ago
-5. S023  history indexed by piece, target and victim, to order captures MVV-LVA rates equal
-6. S025  **conditional on S023 kept** -- retry searching losing captures after the quiets, now that capture history exists
-7. S265  **conditional on S023 kept** -- late captures and promotions reduced on their own schedule, scaled by capture history
+5. S023  capture history: verdict 1 the table and its capture-margin readers, verdict 2 (on 1's H1) the ordering key, to order captures MVV-LVA rates equal (DEC-273)
+6. S025  **conditional on S023's verdict 2 (ordering) H1, DEC-273** -- retry searching losing captures after the quiets, now that capture history exists
+7. S265  **conditional on S023's verdict 1 (margins) H1, DEC-273** -- late captures and promotions reduced on their own schedule, scaled by capture history
 8. S039  the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
 9. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
 10. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
