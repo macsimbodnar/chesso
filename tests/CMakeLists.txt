@@ -113,6 +113,16 @@ target_include_directories(test_tuner_gradient PRIVATE ../tools)
 add_trace_doctest_target(test_eval_trace)
 target_include_directories(test_eval_trace PRIVATE ../tools)
 
+# S278: no object reaches eval_trace::sink through a TLS wrapper, the path that
+# made the sanitizer build stop on a false "store to null pointer". The doctest
+# case for it in test_eval_trace bites only under the sanitizer and only where
+# GCC's register choice exposes it; this reads the symbols, so it holds in every
+# build. Reads every object under the build directory: seconds, nothing built.
+add_test(NAME test_trace_sink_tls
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_trace_sink_tls.sh
+                      ${CMAKE_BINARY_DIR})
+set_tests_properties(test_trace_sink_tls PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S075: the label the tuner fits against is now a blend of the game result and
 # datagen's score column, and `--lambda 0` has to be the pre-S075 fit bit for
 # bit. Needs no dataset -- it is arithmetic and one parser -- so it is a fast

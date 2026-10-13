@@ -35,17 +35,6 @@ As built). S122 must extend `exact_score()` to its group.
 set; smoke run clean, no rating read (DEC-108). Binaries in
 `/home/max/ws/engines/`.
 
-**Open DEC-171 finding: S278** (filler) -- `gate_extra`'s sanitize stage is
-red on `test_tuner_gradient` and `test_eval_trace` (UBSan on the trace's
-thread_local sink), on `5ac17bd` as on S099 (a); red since S262, unseen
-because tooling steps ran no second tier. Name it in every pre-registration
-while open.
-
-**S277 done**: the ProbCut miner takes `--mode`; reproduces S259 exactly.
-**S278 in progress** (worktree `../chesso-s278`): the sanitizer trace
-failure. **S099**: DEC-271 -- the pawn key (measured +1.4 to 2.1 % cycles)
-is made branchless and lands with the correction under one SPRT after S261.
-
 **Written beside the match (DEC-260), landing now, in Open order:**
 - **S261** (worktree `../chesso-s261`): 32 axes (DEC-269), one lane of 1250
   iterations x 48 games at 2+0.02, about 8 h 45 m, a night; split decided by

@@ -102,7 +102,17 @@ struct record_t
 // Where a trace build writes, or nullptr for nowhere. Thread local so a
 // reader can extract on several threads at once; set around one evaluate()
 // call and cleared after it, so the accessors the tests call record nothing.
-extern thread_local record_t* sink;
+//
+// constinit, here and on the definition in evaluation.cpp, for the other
+// translation units that write it (tools/tuner_trace.hpp, the tests). Without
+// it they cannot know the sink needs no dynamic initialisation, so GCC reaches
+// it through a TLS wrapper that first tests a weak init function for null,
+// and SANITIZER=ON null-checks the address the wrapper returns. S278 found GCC
+// 13.3 reading that check off the flags of `add sink@gottpoff(%rip), %reg`,
+// which ld's initial-exec to local-exec rewrite turns into a `lea` that sets
+// no flags: the jump read the weak function's zero, and UBSan stopped on a
+// "store to null pointer" whose address was not null.
+extern constinit thread_local record_t* sink;
 
 inline void add(term_t term, side_t side, int index, int coef)
 {

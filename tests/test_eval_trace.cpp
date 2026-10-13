@@ -145,6 +145,25 @@ const std::vector<std::string> truncation_positions = {
 }  // namespace
 
 
+// S278's minimized case: one position, the sink written by trace_board() from
+// this translation unit and not from evaluation.cpp, which defines it. Until
+// the sink was declared constinit (src/eval_trace.hpp says why) the sanitizer
+// build stopped here with UBSan's "store to null pointer of type 'struct
+// record_t *'" at an address that was not null. Only that build can fail it:
+// no other build checks the address. Whether a write site shows it depends on
+// the registers GCC picks there; trace_of() showed it on GCC 13.3, so the case
+// goes through trace_of().
+TEST_CASE_FIXTURE(trace_fixture_t,
+                  "one position traced from outside evaluation.cpp")
+{
+  row_trace_t trace;
+  const dataset_t data = trace_of(DEFAULT_POSITION, &trace);
+
+  CHECK(data.offsets[1] > data.offsets[0]);
+  CHECK(eval_trace::sink == nullptr);
+}
+
+
 // Every parameter is some feature's middlegame or endgame half, exactly once,
 // and nothing else is. A parameter no feature reaches is one the fit can never
 // move -- the silent failure the old per-term gradient blocks had -- and one

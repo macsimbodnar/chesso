@@ -1130,6 +1130,23 @@ is what found it. The fix was to drop the header for a token matcher of the same
 acceptance, not to suppress the warning: a pragma leaves the header included and
 the next test to reach for it in the same trap. (2026-09-13.)
 
+**A red `sanitize` stage can be a false UBSan report.** `test_eval_trace` and
+`test_tuner_gradient` stopped at "store to null pointer of type 'struct
+record_t *'" on `eval_trace::sink = &record;` from S262 to S278, at an address
+that was not null. A plain `extern thread_local` read from another translation
+unit goes through GCC's TLS wrapper, the sanitizer null-checks the address it
+returns, and gcc 13.3 read that check off the flags of `add
+sink@gottpoff(%rip), %reg`. ld rewrites that add into a flagless `lea` when it
+links an executable (`-Wl,--no-relax` does not stop it), so the jump read the
+zero of the wrapper's weak init-function test. The plain builds have no check
+and stored correctly throughout. The fix is `constinit` on the declaration and
+the definition, which removes the wrapper: a constant-initialised `extern
+thread_local` written from outside its own file is declared `constinit`
+(`constinit` on a dynamically initialised one does not compile).
+`test_trace_sink_tls` holds it in every build: it fails when any object
+refers to the sink's TLS init function, `_ZTHN10eval_trace4sinkE`.
+(2026-10-13.)
+
 **`STAGES` as a command prefix is supported, because the script unsets it.**
 It is read once into the stage list and then `unset`, so no stage inherits it.
 That matters because stage 4's `fast` label holds `test_gate_extra_script`,

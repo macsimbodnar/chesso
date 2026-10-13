@@ -730,7 +730,7 @@ constexpr score_t tempo_score = make_score(tempo_mg, tempo_eg);
 
 
 #ifdef CHESSO_TRACE
-thread_local eval_trace::record_t* eval_trace::sink = nullptr;
+constinit thread_local eval_trace::record_t* eval_trace::sink = nullptr;
 
 // What make_move accumulated into board->material and board->psqt, written out
 // as coefficients: one per piece against its value and its square, signed and
