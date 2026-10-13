@@ -570,7 +570,7 @@ inline bool parse_line(const std::string& text, line_t* out, std::string* error)
     return false;
   }
 
-  // Refused rather than defaulted, as tools/tuner_model.hpp's load() does and
+  // Refused rather than defaulted, as the mirror's load() did until S276 and
   // for its reason: 0 is a legal score, and --lambda would fit to it. S075.
   int score = 0;
   if (!tuner_target::parse_score(score_text, &score)) {

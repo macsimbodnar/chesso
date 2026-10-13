@@ -1,7 +1,7 @@
 id:         S123
 goal:       passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
 accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the table is rank crossed with can-advance and safe-advance rather than a single rank curve; the distance to **each** king is scaled by rank, because the same distance is worth more to a pawn on the seventh; candidate passers are scored; **monotonicity is not imposed** -- a fit that returns a non-monotonic middlegame curve is reporting something and is not corrected by hand; a test asserts the passer bitboard is colour-symmetric under board mirroring, written before any fit, because two published passed-pawn bugs shipped invisible to everything except an SPRT
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tests/test_evaluation.cpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tests/test_evaluation.cpp
 excludes:   pawn structure terms, which are S125
 decisions:  DEC-071, DEC-084, DEC-259
 closes:

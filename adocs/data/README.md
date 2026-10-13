@@ -897,10 +897,10 @@ pre-registration will be written from. 2026-08-21 adversarial F09.
 | file | what it is |
 |---|---|
 | `S275_drift.py` | reads two weight sets in the tuner's emitted format (the shipped `src/eval_tables.hpp` is one) and prints, per exact null direction, the material shift, the level shift -- mean change over the squares the direction moves, the coordinate the tuner holds since S275 -- the table's shape change, and the largest square's distance from the level shift; the 32 pawn columns on ranks 1 and 8; and, between two emitted headers, how many of the 50 term weights differ |
-| `S275_walk.cpp` | Adam alone (the tuner before S275, step for step) and `descend()` (the tuner since) from the shipped constants over one corpus, read at the last epoch rather than the best reported one; prints both training errors every report, each direction's level and material shift, and the largest score difference between the two runs over every row. Build line in its header |
+| `S275_walk.cpp` | Adam alone (the tuner before S275, step for step) and `descend()` (the tuner since) from the shipped constants over one corpus, read at the last epoch rather than the best reported one; prints both training errors every report, each direction's level and material shift, and the largest score difference between the two runs over every row. Build line in its header. **Builds at `f57b92f` and at no other commit** (S276): it includes `tools/eval_model.hpp` and `tools/tuner_model.hpp` and calls `tuner_model::adam_t`, `descend()`, `gradient()` and `error_range()`, which arrived in `tools/tuner_model.hpp` with `f57b92f` itself (its parent `0d9faba` has neither `adam_t` nor `descend()` there), left it at S262's `bee84d8`, and lost both headers at S276. To run it: `git worktree add` at `f57b92f`, build there, and use that tree's build line |
 | `S275_walk_real.txt` | its output over the first 1000000 rows of `.tuning/selfplay_v2_dedup.tsv`, real labels, K 0.7415, 2000 epochs, 2026-10-12: the plain update walks **+16.4 and +15.1 a square** along the two king tables, +11.8 along the queen's (against 11.8 more off `QUEEN`) and 1.4 to 2.6 along the other four; the held run stays within 2e-14 of every level; training errors identical to six digits at all 20 reports, scores within **0.000473 cp** on every row; the 32 pawn columns unmoved in both |
 | `S275_fits.txt` | `tuner` at `0d9faba` and on the S275 tree over the same two 1 M-row slices, 2026-10-12. Real labels: every printed line identical. Planted labels, to convergence: the pre-S275 fit's levels moved +0.24 to +0.98 a square on the five tables and -0.14 / +0.14 on the king pair, the S275 fit's held to the rounding of the emitted integers; the two emitted vectors differ only by a uniform shift per direction plus rounding and in none of the 50 term weights. The two trajectories part in the seventh decimal where the loss prints 0.000000, from epoch 1200 on, and the unchanged tuner at `--threads 6` against 12 parts the same way from epoch 1500, to the same emitted vector |
-| `S275_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` on the S275 tree, 2026-10-12: every line before the new ones identical to `S134_feature_audit.txt` (the one-king-a-side refusal refused no row), then each of the seven gauges **null on every row** and `32 zero columns and 7 held gauges span 39 of at most 39 null dimensions` |
+| `S275_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` on the S275 tree, 2026-10-12: every line before the new ones identical to `S134_feature_audit.txt` (the one-king-a-side refusal refused no row), then each of the seven gauges **null on every row** and `32 zero columns and 7 held gauges span 39 of at most 39 null dimensions`. Taken with the mirror's `feature_audit`, which reads `tools/eval_model.hpp`; that tool is reproducible at any commit before S276, and from S276 `feature_audit` reads the trace (`S276_feature_audit.txt`) |
 
 ### S262, the trace-based tuner
 
@@ -910,8 +910,10 @@ pre-registration will be written from. 2026-08-21 adversarial F09.
 | `S262_inv6.txt` | INV-6 for the trace calls: `evaluation.cpp`'s object byte-identical to the parent's in `build/` and `build-tune/`, the `chesso` binaries' `.text` identical but for displacements into `.rodata`, every evaluation function's listing identical, `bench` 3872032, `bench 12` 1730486 and `search_bench.py` at depths 9 and 12 node- and move-identical |
 | `S262_mutants.txt` | eleven mutants of the trace path, each red, and in which cases |
 
-`S275_walk.cpp`, above, builds against `f57b92f` and earlier only: it calls the
-mirror's `gradient()` and Adam from `tools/tuner_model.hpp`, which S262 retired.
+`S275_walk.cpp`, above, builds against `f57b92f` and no other commit: it calls the
+mirror's `gradient()` and Adam from `tools/tuner_model.hpp`, which S262 retired,
+and `f57b92f` is where Adam's `adam_t` and `descend()` arrived in that file
+(corrected at S276 from "and earlier only"; its parent `0d9faba` has neither).
 
 ### S259, the multicut and ProbCut mate rows re-mined
 
@@ -920,3 +922,34 @@ mirror's `gradient()` and Adam from `tools/tuner_model.hpp`, which S262 retired.
 | `S259_remine.log` | both rows of "pruning does not hide a forced mate" re-derived on `338705e`, the tree S119's H1 left, 2026-10-13: the libraries and their hashes, every stage of `S097_mine_mate_row.py` (guard and default mode) and `S113_mine_mate_row.py` (its header's six), the witness files, the separators' and old rows' cells, the oracle, and the new rows red under E21 and B04 and green shipped. Multicut row `4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42` (S114 verdict 2's, back), ProbCut row `4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73` |
 | `S259_mutation_targeted.tsv` | `tools/mutation_check.py --only E21 B04`, twice: on `338705e`, each killed by its direct case alone, and on fixture `0e79ba6` (the re-mined rows), each killed at its row and by its direct case; the fixture is named above each block |
 | `S259_b04_fires_guard.py` | S113's `fires` in guard mode (DEC-238), which S113's script has no mode for: imports S113's module and calls S097's `cmd_fires` with `mode="guard"` on a tune library built with B04. A record beside the default-mode witness, not an input of the pick; its run is in `S259_remine.log` |
+
+### S276, the audit tools read the trace and the mirror is deleted
+
+| file | what it is |
+|---|---|
+| `S276_feature_audit.txt` | `build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000` on the S276 tree, 2026-10-13, the first run on the trace: `trace: 10795695 rows ... 0 differ from evaluate()`, columns **0 disagree**, phase 0; rank **exactly 784** of 823, the 39 null directions and `32 zero columns and 7 held gauges span 39 of at most 39`; every line after the design check byte-identical to `S275_feature_audit.txt`, the design check itself 1.36e-12 over the same 202966 rows. Its header records the `--plant` check: the planted 1 M-row slice byte-identical to the mirror tool's, sha256 `45305e64...` |
+| `S276_truncation_scan.txt` | `build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8` on the S276 tree, 2026-10-13, the first run on the trace: **137108 past 2.0, 105 past 2.8, 33 at 2.875**, the four pins among the 33, the 105 hit lines byte-identical to the mirror's tool built at `cead820`; its header has the past-2.0 column taken apart -- 60996 rows sit on 48/24, the mirror puts 6477 of them past 2.0 and the trace 5250 |
+
+**What builds where, once the mirror is gone.** S276 deleted
+`tools/eval_model.hpp` and `tools/tuner_model.hpp`; S276's parent is the last
+commit carrying either, and the files here that name them are
+evidence, never edited, so each is pinned here instead:
+
+- `S275_walk.cpp` builds at `f57b92f` alone (its row above says why).
+- `S206_truncation_drift.sh` (indexed nowhere else here) builds
+  `truncation_scan` at every sha it names, so its six readings at named shas
+  are unaffected. Its two `HEAD` readings -- `HEAD` and `HEAD, margin back at
+  150` -- measured the mirror's smooth score at every `HEAD` before S276 and
+  measure the trace's from S276 on. The `HEAD` row expects 138331 / 105 / 33
+  and fails on its first column alone: the mirror at `cead820` read 138335 /
+  105 / 33, the trace reads 137108 / 105 / 33 -- the past-2.0 column counts
+  rows sitting on 48/24 by which side an ulp puts them (`S276_truncation_scan.txt`).
+  The margin counterfactual was not re-run.
+- `S144_paths.py`, S144's one-shot citation conversion, relocates two of its
+  rows onto `tools/eval_model.hpp` by reading that file at `HEAD`; those two
+  resolve only before S276.
+- `S134_engine_identity.diff` patches the mirror-era `tools/feature_audit.cpp`
+  and is already pinned to `1472c96` in its row.
+- `S100_feature_audit.txt`, `S134_feature_audit.txt`,
+  `S134_identity_before.txt` and `S275_feature_audit.txt` were taken with the
+  mirror's `feature_audit`, each at its own tree; their rows name the trees.

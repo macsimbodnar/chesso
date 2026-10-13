@@ -1,7 +1,7 @@
 id:         S102
 goal:       outpost and space terms in the evaluation, fitted like every other constant
 accepts:    one SPRT verdict for the family -- outposts and space, each screened first (DEC-259), and a family H0 bisected into the two; each fitted with every other constant frozen, held-out error reported before and after; both share the pawn-derived bitboard fills the three S027 pawn terms already build, and the step states which fill each reuses rather than adding a pass; INV-5 holds, asserted by the mirror case in tests/test_evaluation.cpp; the taper keeps the divisions HEAD has (S055 read H0) and the model guard's bound still holds; tools/eval_model.hpp gains each feature and tools/tuner_groups.hpp a group per term with the partition properties intact; the fast suite green
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
 excludes:   threat terms, which are S101; mobility, which exists; any term that needs a pass over the board that is not already being made
 decisions:  DEC-071, DEC-259
 closes:

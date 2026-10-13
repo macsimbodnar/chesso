@@ -55,24 +55,29 @@ target_include_directories(eval_spread PRIVATE ../src)
 target_link_libraries(eval_spread PRIVATE chesso_engine)
 
 # S076. The positions that make evaluate()'s taper truncate hardest, which
-# tests/test_eval_model.cpp pins and which belong to the weights rather than to
+# tests/test_eval_trace.cpp pins and which belong to the weights rather than to
 # the positions -- so the list is re-measured on every refit (DEC-057). Twice
 # done by hand from a scratchpad script that no longer exists; tracked from
-# here.
+# here. Since S276 it links the trace build, like the tuner: both scores it
+# compares, the smooth one and the engine's integer one, are read from
+# evaluate()'s own trace, where until then the smooth one was the mirror's.
 add_executable(truncation_scan truncation_scan.cpp)
 target_include_directories(truncation_scan PRIVATE ../src)
-target_link_libraries(truncation_scan PRIVATE chesso_engine)
+target_link_libraries(truncation_scan PRIVATE chesso_engine_trace
+                      Threads::Threads)
 
-# S100. What the tuning corpus contains per evaluation feature: the stored
-# columns against the features recomputed from the FEN text, the rank of the
-# tuner's design and every exact dependency in it (S134, which folded the two
-# S100 found into the tables), occurrence by phase band, and the R^2 of each
-# term column on the tables it overlaps. Tracked rather than a scratchpad script
-# because S082 and S083 replace the corpus and every one of these has to be
-# re-run on the new one -- the S072 lesson.
+# S100. What the tuning corpus contains per evaluation feature: every stored
+# row against its FEN traced again, the rank of the tuner's design and every
+# exact dependency in it (S134, which folded the two S100 found into the
+# tables), occurrence by phase band, and the R^2 of each term column on the
+# tables it overlaps. Tracked rather than a scratchpad script because S082 and
+# S083 replace the corpus and every one of these has to be re-run on the new
+# one -- the S072 lesson. Since S276 it links the trace build and loads the
+# corpus the way the tuner does, through evaluate()'s own trace; until then it
+# read the hand-written mirror, tools/eval_model.hpp, deleted then.
 add_executable(feature_audit feature_audit.cpp)
 target_include_directories(feature_audit PRIVATE ../src)
-target_link_libraries(feature_audit PRIVATE chesso_engine Threads::Threads)
+target_link_libraries(feature_audit PRIVATE chesso_engine_trace Threads::Threads)
 
 # S171. What the table holds along a line the engine reported, after a game has
 # been replayed into it. Links the engine because the entry that answered is

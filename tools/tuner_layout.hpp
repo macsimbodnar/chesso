@@ -3,8 +3,9 @@
 // values the engine ships at each. S262 moved it out of tools/eval_model.hpp,
 // where it was written at S028 beside the hand-written mirror of evaluate()
 // the tuner fitted until then. The tuner now reads the evaluation's own trace
-// (tools/tuner_trace.hpp), and the mirror stays only for tools/feature_audit
-// and tools/truncation_scan, so the layout lives here, where both paths and
+// (tools/tuner_trace.hpp), and so since S276 do tools/feature_audit and
+// tools/truncation_scan, which kept the mirror until S276 deleted it; the
+// layout lives here, where the trace's term table, those tools and
 // tools/tuner_groups.hpp read it. Nothing in it changed in the move: the
 // indices, the order and the 823 are the ones every fit since S134 emitted.
 #include <cstddef>

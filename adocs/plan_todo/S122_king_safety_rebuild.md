@@ -1,7 +1,7 @@
 id:         S122
 goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
 accepts:    an SPRT verdict, recorded whatever it is; the term can return several hundred centipawns and **no clamp truncates it** -- S039 has retired the shortcut and the clamp before this runs, or its H0 has amended this design by an owner decision (DEC-258); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); shelter and storm come from the pawn hash (S118); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_eval_model.cpp, tests/test_evaluation.cpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp
 excludes:   mobility, which shares the loop but is S121; the clamp and the lazy shortcut, which are S039
 decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259
 closes:
@@ -179,9 +179,17 @@ clamped with mobility to `LAZY_EVAL_MARGIN` inside `src/evaluation.cpp`
 
 ### 3. Implementation sketch
 
-- `tools/eval_model.hpp` carries the **same finaliser**, or the model tunes a
-  different function. `tests/test_eval_model.cpp` "the model reproduces
-  evaluate() on every phase" is what holds the two together.
+- The trace records the finaliser's inputs per side and the tuner's group
+  carries the **same finaliser**, or the tuner fits a different function
+  (S276 deleted the hand-written mirror this line named). **Nothing holds the
+  two together yet**: exact_score() in `tools/tuner_trace.hpp` does not read
+  groups -- its comment says so, there being no engine arithmetic to be exact
+  to before this step -- so `tests/test_eval_trace.cpp` "the trace
+  reconstructs evaluate() exactly, clamp included" and load()'s per-row
+  identity pass whatever a group computes. This step extends exact_score() to
+  its group, the engine's integer finaliser over the two per-side sums, so
+  that the identity on every corpus row and that case cover it; the case's
+  precondition gains a fixture row on which the group is non-zero.
 - Shelter and storm come out of the pawn hash S118 adds, which is why S118 is
   ordered directly before this step.
 - Safe checks are counted per piece type and weak squares over the king zone;

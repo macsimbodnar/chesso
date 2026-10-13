@@ -2,22 +2,29 @@
 //
 //   build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8
 //
-// `tests/test_eval_model.cpp` pins four positions whose float model and integer
-// engine scores disagree by 69/24 = 2.875, the arithmetic maximum of three
-// truncating divisions, so that the tolerance in "the model reproduces
-// evaluate() on every phase" is asserted against a corpus that actually reaches
-// it. Its own comment states the rule this tool serves: **a residual belongs to
-// the weights, not to the position**, so the list is re-measured whenever the
-// constants are refitted rather than carried forward. DEC-057.
+// `tests/test_eval_trace.cpp` pins four positions whose smooth score -- the one
+// the tuner descends, every taper exact in floating point -- and evaluate()'s
+// integer score part by 69/24 = 2.875, the arithmetic maximum of three
+// truncating divisions, so that the bound in "the smooth score is within the
+// truncation bound of the exact one" is asserted against positions that
+// actually reach it. Its comment states the rule this tool serves: **a
+// residual belongs to the weights, not to the position**, so the list is
+// re-measured whenever the constants are refitted rather than carried forward.
+// DEC-057.
 //
 // It had been re-measured twice by hand, at S038 and at S065, each time from a
 // script in a session scratchpad that no longer exists -- the shape
 // `2026-08-16_plan_review-F04` found. S076 refits again, so the third
 // re-measurement is a tracked tool.
 //
-// The model here is `model_score_white()` from that test file, without doctest:
-// the same `eval_model` calls in the same order, against
-// `eval_model::starting_params`, which is what the engine ships.
+// Both scores are read from the engine's trace (tools/tuner_trace.hpp) since
+// S276: score() is the smooth one and exact_score() the engine's own integer
+// arithmetic over the same record, which is evaluate() -- checked here on
+// every row, and a row on which it is not is refused, since its residual would
+// not be evaluate()'s. Until S276 the smooth side was tools/eval_model.hpp, the
+// hand-written mirror the tuner fitted before S262, computing the same function
+// with its own sum and its own feature walks, and the exact side was
+// evaluate() itself; the four pins sat in tests/test_eval_model.cpp.
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
@@ -28,8 +35,9 @@
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
-#include "eval_model.hpp"
 #include "evaluation.hpp"
+#include "tuner_layout.hpp"
+#include "tuner_trace.hpp"
 
 namespace
 {
@@ -59,57 +67,6 @@ std::string side_to_move_of(const std::string& fen)
 
   fields >> placement >> side;
   return side;
-}
-
-
-// tests/test_eval_model.cpp:46-76, with the REQUIREs turned into a false
-// return. Any disagreement between the two is a bug in this file, not a
-// measurement.
-bool model_score_white(const std::string& fen,
-                       const double* params,
-                       double* score,
-                       int* phase_out)
-{
-  std::vector<uint16_t> pieces;
-  const std::string placement = fen.substr(0, fen.find(' '));
-
-  if (!eval_model::parse_placement(placement, &pieces)) { return false; }
-
-  const int phase = eval_model::phase_of(pieces.data(), pieces.size());
-
-  int mobility[4] = {0, 0, 0, 0};
-  if (!eval_model::mobility_features(placement, mobility)) { return false; }
-
-  int king_safety[eval_model::KING_SAFETY_COUNT] = {};
-  if (!eval_model::king_safety_features(placement, king_safety)) {
-    return false;
-  }
-
-  int passed_pawn[eval_model::PASSED_PAWN_COUNT] = {};
-  if (!eval_model::passed_pawn_features(placement, passed_pawn)) {
-    return false;
-  }
-
-  int pawn_structure[eval_model::PAWN_STRUCTURE_COUNT] = {};
-  if (!eval_model::pawn_structure_features(placement, pawn_structure)) {
-    return false;
-  }
-
-  int piece_placement[eval_model::PIECE_PLACEMENT_COUNT] = {};
-  if (!eval_model::piece_placement_features(placement, piece_placement)) {
-    return false;
-  }
-
-  int tempo = 0;
-  if (!eval_model::tempo_feature(side_to_move_of(fen), &tempo)) {
-    return false;
-  }
-
-  *phase_out = phase;
-  *score = eval_model::evaluate(pieces.data(), pieces.size(), phase, mobility,
-                                params, king_safety, passed_pawn,
-                                pawn_structure, piece_placement, tempo);
-  return true;
 }
 
 
@@ -176,8 +133,11 @@ int main(int argc, char** argv)
   game_t game;
   initialize_game_const_data(&game);
 
-  std::vector<double> params(eval_model::PARAM_COUNT, 0.0);
-  eval_model::starting_params(params.data());
+  // The smooth score at the weights the engine ships, and the same weights as
+  // the integers the engine was built with, for the exact one.
+  std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  const std::vector<int64_t> weights = tuner_trace::engine_weights();
 
   std::string line;
   uint64_t scanned = 0;
@@ -192,25 +152,35 @@ int main(int argc, char** argv)
 
     const std::string fen = row_fen(line);
 
-    double model = 0.0;
-    int phase = 0;
-
-    if (!model_score_white(fen, params.data(), &model, &phase)) {
-      fprintf(stderr, "unusable FEN: %s\n", fen.c_str());
-      return 1;
-    }
-
     if (!load_FEN(fen, &game)) {
       fprintf(stderr, "unloadable FEN: %s\n", fen.c_str());
       return 1;
     }
 
-    const int engine_relative = evaluate(&game.board);
-    const int engine_white =
-        (game.board.active_color == WHITE) ? engine_relative : -engine_relative;
+    tuner_trace::row_trace_t trace;
+    std::string why;
 
-    const double difference =
-        std::abs(model - static_cast<double>(engine_white));
+    if (!tuner_trace::trace_board(&game.board, &trace, &why)) {
+      fprintf(stderr, "untraceable FEN (%s): %s\n", why.c_str(), fen.c_str());
+      return 1;
+    }
+
+    // One row of its own: score() and exact_score() read a dataset.
+    tuner_trace::dataset_t row;
+    tuner_trace::append_row(trace, 0.5f, 0, 0, &row);
+
+    const int64_t exact = tuner_trace::exact_score(row, 0, weights.data());
+
+    if (exact != trace.engine_white) {
+      fprintf(stderr,
+              "the trace disagrees with evaluate(): %" PRId64
+              " against %d: %s\n",
+              exact, trace.engine_white, fen.c_str());
+      return 1;
+    }
+
+    const double smooth = tuner_trace::score(row, 0, params.data());
+    const double difference = std::abs(smooth - static_cast<double>(exact));
 
     scanned++;
     worst = std::max(worst, difference);
@@ -222,7 +192,7 @@ int main(int argc, char** argv)
 
       if (opts.report == 0 || printed < opts.report) {
         printed++;
-        printf("%.6f\tphase %2d\t%s\t%s\n", difference, phase,
+        printf("%.6f\tphase %2d\t%s\t%s\n", difference, trace.phase,
                side_to_move_of(fen).c_str(), fen.c_str());
       }
     }

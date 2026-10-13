@@ -23,8 +23,9 @@
 // that a planted vector comes back. S100 wrote the first two over the tuner's
 // mirror model (tools/tuner_model.hpp), S275 the gauges; S262 moved the tuner
 // onto the engine's trace (tools/tuner_trace.hpp) and every case here with it.
-// The mirror's own loader, which tools/feature_audit still reads, kept its
-// cases in tests/test_eval_model.cpp.
+// The mirror's own loader kept its cases in tests/test_eval_model.cpp for
+// tools/feature_audit until S276 moved that tool to the trace and deleted the
+// mirror and those cases with it.
 //
 // Why the gradient is checked at all. gradient()'s old per-term blocks
 // recorded the same failure three times -- "the forward model was extended

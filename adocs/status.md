@@ -26,13 +26,12 @@ back to S114 v2's row, ProbCut a new row, mate in 6); closes S120 finding 9.
 No open DEC-171 finding remains for a run's pre-registration. S277 (filler)
 gives the ProbCut miner a `--mode`.
 
+**S276 done**: the audit tools read the trace, the mirror is deleted; both
+reproduce S275's readings. Still owed, a `No functional change` commit:
+stale `eval_model` comments in `src/evaluation.{cpp,hpp}` (listed in S276's
+As built). S122 must extend `exact_score()` to its group.
+
 **Written beside the match (DEC-260), landing now, in Open order:**
-- **S276** (worktree `../chesso-s276`): written blind; phase 2 builds, runs
-  the suites, re-takes `feature_audit` and `truncation_scan`, fills 10
-  `S276-PENDING` tokens, applies `.tuning/coord/S276_files/pending_citations.diff`
-  (S122, S136; DEC-159). The mirror's count walks stay as
-  `tests/test_walked_counts.hpp`. Stale `eval_model` comments in `src/` are a
-  separate `No functional change` commit after S263 and S276.
 - **S264** (worktree `../chesso-s264`): Weiss 1.1 (2987, fourth family) and
   Stash v30.0 (3153) chosen from the list read 2026-10-12; sources cloned to
   `/home/max/ws/engines/`, nothing built; phase 2 builds, probes, and one

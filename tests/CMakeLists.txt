@@ -64,12 +64,14 @@ add_doctest_target(test_evaluation)
 add_doctest_target(test_search)
 add_doctest_target(test_engine)
 
-# The tuner's model of evaluate() lives in tools/, so these are the two tests
-# that include from there. S028: a model that drifts from the engine tunes the
-# wrong function and nothing downstream notices. Since S262 the tuner fits the
-# engine's trace (test_eval_trace below) and this file holds the mirror
-# tools/feature_audit and tools/truncation_scan still read, its dataset loader
-# included.
+# S028 wrote this as the check on the tuner's hand-written model of evaluate(),
+# tools/eval_model.hpp: a model that drifts from the engine tunes the wrong
+# function and nothing downstream notices. Since S262 the tuner fits the
+# engine's trace (test_eval_trace below), and S276 deleted the mirror when
+# tools/feature_audit and tools/truncation_scan moved to the trace too. What
+# this file holds now is the engine's counts, per colour, against the hand walk
+# in tests/test_walked_counts.hpp and against hand-worked placements. It
+# includes from tools/ for the layout's widths, tools/tuner_layout.hpp.
 add_doctest_target(test_eval_model)
 target_include_directories(test_eval_model PRIVATE ../tools)
 
@@ -105,8 +107,9 @@ target_include_directories(test_tuner_gradient PRIVATE ../tools)
 # evaluate() exactly on every position here -- the curated list both ways
 # round and the 2696 positions of the JSON suites, the clamp binding on 478 of
 # them -- and every coefficient is the count its index names, against
-# counts the trace did not take. No dataset, so it is a fast test like the
-# rest.
+# counts the trace did not take. Since S276 it also holds the four positions
+# pinned for the truncation bound, moved from test_eval_model with the mirror.
+# No dataset, so it is a fast test like the rest.
 add_trace_doctest_target(test_eval_trace)
 target_include_directories(test_eval_trace PRIVATE ../tools)
 

@@ -29,7 +29,8 @@ both are gitignored and neither is what a local measurement runs.
 Every build directory also builds `chesso_engine_trace`, the engine's sources a
 second time with `CHESSO_TRACE` defined, so `evaluate()` records the
 coefficient of every weight it applies (S262, `src/eval_trace.hpp`). `tuner`,
-`test_eval_trace` and `test_tuner_gradient` link it; `chesso` never does, in any
+`feature_audit` and `truncation_scan` (S276), `test_eval_trace` and
+`test_tuner_gradient` link it; `chesso` never does, in any
 configuration, and `build_release.sh` and `fastchess.sh` build `--target chesso`
 alone. "What the tuner fits", under the tuner below, has the rest.
 
@@ -1328,10 +1329,17 @@ S100 wrote it over the tuner's mirror model, `tools/tuner_model.hpp`; since S262
 the tuner fits the engine's own trace (`tools/tuner_trace.hpp`, "What the tuner
 fits" below) and the file follows it, linking the trace build. Its corpus is a
 fixture it writes into the temp directory from the same curated FEN list
-`test_eval_model` runs over, so it needs no dataset. The mirror's own loader,
-which `feature_audit` still reads, kept its five cases in `test_eval_model`.
-`test_eval_trace` is the trace's contract with the engine: the identity, and
-what every coefficient means.
+`test_eval_model` runs over, so it needs no dataset. The mirror's own loader
+kept its five cases in `test_eval_model` until S276 deleted the mirror, and
+them with it. `test_eval_trace` is the trace's contract with the engine: the
+identity, what every coefficient means, and since S276 the four positions
+pinned for the truncation bound. `test_eval_model` holds what S276 left of
+it: the engine's king safety, passed pawn, pawn structure and piece placement
+counts, per colour, against the hand walk in `tests/test_walked_counts.hpp` --
+the mirror's own extractors, kept as the one implementation of each count that
+shares no code with the engine -- and the last three against placements worked
+out by hand. The walk's mobility is checked in `test_eval_trace`, against the
+trace's coefficients.
 
 The gradient check is Jon Dart's prescription: central differences against
 `gradient()` for every parameter, 823 since S134, tolerance 1e-6 relative. `h = 0.01` is
@@ -2117,7 +2125,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_engine.cpp` "Best Book Move plays the heaviest entry, and the S175 position d2f3" | `bestmove e2e4` as the heaviest start-key entry; one entry, `d2f3`, for the S175 key | the same script |
 | `test_mate_breadth.cpp` `EXACT_FLOOR` | 145 — 143 until S250, when the weakened end rose to meet it and the gate built at `RfpMinPly` 1 went green (DEC-247). S116 re-read it on razoring's candidate: 149 shipping, 143 weakened, the gate at `RfpMinPly` 1 red, so it still separates and did not move | `python3 adocs/data/S156_mined_floor_sweep.py --floor 145` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11. S116 re-read it on razoring's candidate: 12 of 24 shipping, 7 weakened, so it still separates | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
-| `test_eval_model.cpp` `truncation_positions` | the four positions | `build/tools/truncation_scan --data <corpus> --min 2.8` |
+| `test_eval_trace.cpp` `truncation_positions`, "the pinned positions reach the truncation bound" | the four positions, each past 2.0 and the worst past 2.8 -- in `test_eval_model.cpp` against the mirror's score until S276 moved them | `build/tools/truncation_scan --data <corpus> --min 2.8`, reading the trace since S276 |
 | `test_eval_trace.cpp` "the smooth score is within the truncation bound of the exact one", `worst > 2.8` | the same four positions, carried in `test_eval_positions.hpp` | the same command; S262 |
 | `test_search.cpp` `capture_mates` depths and mutant labels | 9, 8, 10, 10 and the mutants beside them — `no S091 mutant, since S116`, `no S091 mutant, since S095`, `C02, C05, R02, since S116`, `no S091 mutant, since S116`. **Re-derived at S116 (DEC-142, DEC-233, DEC-248)**, the seven sweeps on the razoring candidate (the S116 worktree's `.tuning/coord/S116/capmates/`): row 1 had gone red at 7, its shipped profile now `d9 d10 d11 d12` with no S091 mutant separating it; row 2 to 8, separated by none; row 3 at 10 now lost by C02, C05 and R02; row 4 at 10 (`d10 d12`) reported by every mutant, so its label moves to none. The rows before, which an H0 or a zero restores byte for byte: 7, 7, 10, 10 and `C02, C05, R02, since S112`, `no S091 mutant, since S095`, `C02, R02, since S248`, `R02, since S248`. **S114's second verdict re-derived them (DEC-142, DEC-233)**, the seven sweeps on the entry gate's candidate (`.tuning/coord/S114_v2/capmates/`): every shipped profile was S248's and the four depths stayed, and row 4's label moved from `R02, since S248` to `no S091 mutant, since S114`, R02 reading that mate at 10 as well there; its reading, a zero, took the gate out and put the label back byte for byte, the reverted tree being `465b43b`'s engine to the node. **Re-derived at S248 (DEC-142, DEC-233)**, the seven sweeps on the tree S114's removal leaves, whose engine is `d946b6f`'s node for node on the bench positions: S113's rows, back with the removal, had not gone red -- each still read its mate at its own depth -- but were not the rule's answer, and the pass re-taken whole moved two depths with no mate distance moving -- row 2 to 7, where no S091 mutant separates it, row 3 to 10, where C02 and R02 lose it -- and row 4's label to R02, the one mutant that loses it at 10 (`.tuning/coord/S114_rm/capmates/`, every sweep byte for byte the one S114's rebase took on its parent, `.tuning/coord/S114b_logs/capmates/parent_*`). **S114 re-derived them on its first verdict's candidate (DEC-233)**, the null move's static-score term at cap 8 with the gate at 0, to 7, 7, 10, 9 with row 3 at `C05, R02, since S114` and row 4 at `C02, C05, C07, since S114` (`.tuning/coord/S114b_logs/capmates/`; the first build, on S022 verdict 2's tree `6e8bc63`, read the same depths with row 3 at R02 and row 4 at C02 alone, `.tuning/coord/S114_remine/capmates/`), and its H0 put S113's rows back byte for byte, a revert and not a re-mine, which S248 then replaced: 7, 9, 11, 10 and `C02, C05, R02, since S112`, `no S091 mutant, since S095`, `R02`, `no S091 mutant, since S113`. **Re-derived at S112 and again at S113 (DEC-233)**, the seven sweeps each time: S112's per-move futility in quiescence put the depths at 7, 9, 11, 9, and S113's ProbCut, rebased onto it, moved row 4 alone, to 10, where no S091 mutant separates it -- C05 and C07 had lost it at 9 -- with no mate distance moving; this row read 9, 9, 10, 10 between S112's landing and S113, stale. S022's first verdict re-derived them on its candidate (DEC-233) to 9, 7, 10, 12 and its H0 restored these rows byte for byte, a revert and not a re-mine. The rows before S112 were these: 9, 9, 10, 10 and the mutants beside them — `no S091 mutant, since S095` twice, then `R02` and `R02`. S238 re-derived them on its candidate (DEC-233) to 7, 7, 11, 9 and its H0 restored these rows byte for byte, a revert and not a re-mine: the same sweep at `1680439` had returned them. **Re-derived at S095**, which adds a ply of reduction at every node whose table entry carries no move and so moves the same rule again: the seven sweeps were re-taken and three of the four depths moved with no mate distance moving. Row 2 loses the depth 8 reading it had and now separates nothing; row 3 comes back from 11 to 10 with R02 alone; row 4 stays at 10 with R02. R01 is separated by no row at any depth, the fifth consecutive pass reading that way. The history of the earlier passes is in the GOLDEN block at the table itself | `~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens adocs/data/S230_table_fens.txt --out .tuning/coord/S230_table_shipped.txt --lo 3 --hi 12`, once on the shipped build and once per mutant of `tools/mutants/S091_capture_see.py` applied to the tree |
 | `test_search.cpp` `mate_the_extra_ply_hides` and its depth | the position and **8** (11 when mined at S095; re-derived to 8 at S234 when the table-tightened estimate moved the tree, `.tuning/coord/S234_observe_red.log`), the lowest depth the shipped build reports its mate at and the tree with S095's guard opened does not. Mined at S095 over this project's own positions: 297 labelled mates, 141 whose oracle line carries a quiet move of the class late move reduction touches, 28 separating the two builds, and the rule in the script's header returns this one. The row's own comment records what the tie-break cost — its shipped profile is every depth from 3 to 12 and the unguarded build loses exactly one of them | `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py candidates`, then `adocs/data/S230_mine_r01_row.py depths --fens .tuning/coord/S095_candidates.fen --lo 3 --hi 12` once on the shipped tree and once with `const bool no_tt_move = tt_move == 0;` made `= true`, then `S095_mine_mate_row.py pick` |
@@ -5084,25 +5092,35 @@ drops rows is what this tool exists to make visible.
 
 ### Re-measure the truncation-bound positions after a fit
 
-S076. `tests/test_eval_model.cpp` pins four positions whose float model and
-integer engine scores disagree by 69/24 = 2.875, the maximum three truncating
-divisions can produce, so the tolerance in "the model reproduces evaluate() on
-every phase" is asserted against a corpus that reaches it. **A residual belongs
-to the weights, not to the position**, so those four stop qualifying every time
-the constants are refitted — DEC-057. Since S262 `test_eval_trace` reads the
-same four for the trace's smooth score, which is the mirror's function, so one
-re-derivation serves both.
+S076. `tests/test_eval_trace.cpp` pins four positions whose smooth score --
+the one the tuner descends, every taper exact in floating point -- and
+`evaluate()`'s integer score part by 69/24 = 2.875, the maximum three
+truncating divisions can produce, so the bound in "the smooth score is within
+the truncation bound of the exact one" is asserted against positions that
+reach it. **A residual belongs to the weights, not to the position**, so those
+four stop qualifying every time the constants are refitted — DEC-057. Until
+S276 they sat in `tests/test_eval_model.cpp`, against the mirror's float
+model, which computed the same function as the smooth score.
 
 ```bash
 build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8
 ```
 
-Prints `difference, phase, side to move, fen` per hit and a summary line. 47 s
-over 10.8 M rows. At S076's constants: 135399 rows past 2.0, 99 past 2.8, **30
-at 2.875**, and the four pinned are drawn from those 30 to span the taper with
-both sides to move. It reproduces `test_eval_model`'s own numbers to six digits
-on whatever it is handed, because its model is that file's `model_score_white()`
-with the assertions removed.
+Prints `difference, phase, side to move, fen` per hit and a summary line.
+**Since S276 both scores come from the engine's trace** (`tools/tuner_trace.hpp`):
+`score()`, the smooth one, against `exact_score()`, the engine's integer
+arithmetic over the same record, which is `evaluate()` -- checked on every row,
+and a row where it is not stops the scan. It reproduces the test's numbers to
+six digits on whatever it is handed, because the test reads the same two
+functions. Over the dedup corpus at S276: **10795695 rows, 137108 past 2.0,
+105 past 2.8, 33 at 2.875**, the four pinned among the 33, in 27.9 s on an idle
+machine (one run, not a timing); the 105 hit lines are byte-identical to the
+mirror's tool built at `cead820` (`adocs/data/S276_truncation_scan.txt`).
+Before S276 the smooth
+side was the mirror's `model_score_white()` and the scan took 47 s; at S076's
+constants it read 135399 rows past 2.0, 99 past 2.8, **30 at 2.875**, and the
+four pinned were drawn from those 30 to span the taper with both sides to
+move.
 
 `tuner` cost on the same machine, measured on a 56304-row corpus at 12 threads:
 0.29 s to load, 2.22 ms per epoch, 10.9 MB resident. All three scale with rows,
@@ -5173,7 +5191,8 @@ by relaxing.** `adocs/data/S192_anchors.py` — `.tuning/anchors.py` until S192
 moved it into the tracked data directory — recomputes the ten pinned absolute
 anchors from the specification: 10 of 10 at the new weights, and the suite
 asserts them as exact equalities. `build/tools/truncation_scan` re-measures the
-four positions `tests/test_eval_model.cpp` pins for the truncation bound, which
+four positions `tests/test_eval_trace.cpp` pins for the truncation bound
+(`tests/test_eval_model.cpp` until S276), which
 belong to the weights and not to the positions (DEC-057): S065's four fell to
 between 0.08 and 1.83 under S076's constants, and the rows that reach the 2.875
 maximum are where the replacements come from. Expect both on the next fit.
@@ -5189,8 +5208,10 @@ pinned, and every non-zero entry of the model's starting vector is identical at
 the two shas.
 
 - **`21b4a21` — S085's SPSA vector — is the whole of 99 → 105 and 30 → 33**,
-  because it raised `LAZY_EVAL_MARGIN` from 150 to 184. `eval_model::evaluate`
-  clamps the tapered mobility-plus-king-safety sum at that margin and
+  because it raised `LAZY_EVAL_MARGIN` from 150 to 184. The mirror's
+  `eval_model::evaluate`, the scan's smooth side until S276 (the trace's
+  smooth score since, which clamps the same way), clamped the tapered
+  mobility-plus-king-safety sum at that margin and
   `evaluate()` clamps the same sum at the same margin, so **wherever the clamp
   binds, both sides return the margin exactly and the taper's truncation
   residual is not there to be measured**. Raising the margin unclamps positions
@@ -5210,17 +5231,34 @@ the two shas.
 
 **So the reading is re-taken after a refit — DEC-057 — and also whenever
 `LAZY_EVAL_MARGIN` moves, which S039 exists to do.** DEC-169. The suite is safe
-from the ulp: the tolerance in "the model reproduces evaluate() on every phase"
-is 3 against a worst of 2.875, and the two bound clauses are `> 2.0` and
-`> 2.8`, so the tightest of them keeps 0.075 between the assertion and a
-rounding wobble. `adocs/data/S206_truncation_drift.sh` re-derives all six
+from the ulp: the bound `test_eval_trace` holds every position to is 2.875 with
+1e-9 of slack against an ulp near 1e-13, and the pinned case's two clauses are
+`> 2.0` and `> 2.8`, so the tightest of them keeps 0.075 between the assertion
+and a rounding wobble. **The 2.0 column is the scan's, not the suite's, and
+it is ulp noise wherever it is read**: the trace's smooth score sums the same
+terms as the mirror's model in another order, so rows sitting on 48/24 fall on
+either side of it. Measured at S276 against the mirror's tool built at
+`cead820`, same corpus and day: 60996 rows print a difference of exactly
+2.000000; the mirror counts 6477 of them past 2.0 and the trace 5250, which is
+the whole of 138335 against 137108, while 131858 rows lie truly past it in
+both and every other printed difference agrees to six decimals. The mirror's
+own reading had already moved from S206's 138331 to 138335 by `cead820`, the
+2.8 and 2.875 columns holding (not bisected). Read the 2.0 column as "131858
+plus some of the rows on 48/24", and compare runs on the 2.8 and 2.875 columns.
+`adocs/data/S206_truncation_drift.sh` re-derives all six
 readings and both counterfactuals from clean worktrees, eight builds and eight
 scans: **8 of 8 reproduced in 7 m 02 s** on the workstation, 2026-09-10. It is
 the scans that cost, not the builds, and ccache has nothing to do with it —
 the script's own `cmake` line wires no `CMAKE_CXX_COMPILER_LAUNCHER`, unlike
 the four build directories above, and nine translation units build from cold
 in **4.57 s** at `-j12` behind a 0.97 s configure against **45.7 s** for one
-pass over 10.8 M rows.
+pass over 10.8 M rows. Its six readings at named shas build the scan at those
+shas and are untouched by S276; its two `HEAD` readings measured the mirror at
+every `HEAD` before S276 and the trace from S276 on, and
+`adocs/data/README.md` records that pin beside the script. **Its `HEAD` row
+expects 138331 past 2.0 and fails on that column alone**: 138335 at `cead820`
+already, 137108 on the trace; the 105 and 33 it expects still hold. Its margin
+counterfactual was not re-run at S276.
 
 ### Audit what a corpus contains, per feature
 
@@ -5233,30 +5271,59 @@ build/tools/feature_audit --data .tuning/selfplay_v2_dedup.tsv --sample 200000
 ```
 
 Four reports off one load, each switchable off with `--no-columns`,
-`--no-identities`, `--no-occurrence`, `--no-collinearity`. **1 m 8 s** over
-10.8 M rows on 12 threads at S134, most of it the load.
+`--no-identities`, `--no-occurrence`, `--no-collinearity`. **Since S276 the
+load is the tuner's**: every row through `evaluate()` on the trace build
+(`tools/tuner_trace.hpp`), on every hardware thread, and a corpus on which one
+row's trace disagrees with `evaluate()` is refused with that row named, as the
+tuner refuses it; the second line says how it went, `trace: <rows> rows,
+<entries> entries; <n> differ from evaluate(), the clamp binds on <c>`. Until
+S276 it was the mirror's, `tools/eval_model.hpp`'s extractors packed per row
+by `tools/tuner_model.hpp`, both deleted then. **1 m 8 s** over 10.8 M rows on
+12 threads at S134, most of it the load; on the trace, **50 s** at S276 (one run
+on an idle machine, not a timing) and 1.96 GB resident, the tuner's figure.
 `adocs/data/S100_feature_audit.txt` is the run S100 read;
 `adocs/data/S134_feature_audit.txt` is the run over the folded layout;
-`adocs/data/S275_feature_audit.txt` adds the gauge lines.
+`adocs/data/S275_feature_audit.txt` adds the gauge lines;
+`adocs/data/S276_feature_audit.txt` is the first run on the trace. The three
+before it were taken with the mirror's tool, at their own trees.
 
-- **columns** re-extracts every stored feature column from the FEN text and
-  compares it against what the mirror's `load()` (`tools/tuner_model.hpp`, the
-  dataset this tool reads; the tuner's own is the trace since S262) kept: **10795695 rows, 0 disagreements**. It
-  calls the same extractors `load()` calls, so it is not a check of what a
-  feature *means* — `tests/test_eval_model.cpp` holds those against the engine's
-  own counts and against hand-computed placements. What it catches is a
-  misaligned base, a wrong stride, or a column pair stored in the other order.
-  Since S134 it also counts rows whose stored `phase` column disagrees with the
-  placement's phase: `load()` recomputes the phase with
-  `eval_model::phase_of()` and reads the column for its range only
-  (`2026-09-10_adversarial-F36`), so a corpus written under an older
-  `phase_value` fits on the right taper and this line says how many rows it
-  corrected — **0** over the dedup corpus.
+- **columns** traces every row again from its FEN, one game and one row at a
+  time in file order, and compares the result with the row `load()` stored --
+  entries, per-side entries, phase and side to move: **10795695 rows, 0
+  disagree** at S276 (the mirror's version re-extracted its columns and read 0
+  disagreements at S275). It runs the same trace `load()` runs, so it is
+  not a check of what a coefficient *means* — `tests/test_eval_trace.cpp` holds
+  those against the engine's per-colour counts and a hand walk, and
+  `tests/test_eval_model.cpp` holds the counts against the walk and against
+  hand-computed placements. What it catches is a row stored in the wrong slot,
+  an offset off by one, or blocks of `load()`'s threads put back in the wrong
+  order. It also counts rows whose stored `phase` column disagrees with the
+  engine's phase: `load()` tapers on the phase the trace recorded and reads the
+  column for its range only (`2026-09-10_adversarial-F36`), so a corpus written
+  under an older `phase_value` fits on the right taper and this line says how
+  many rows that was — **0** over the dedup corpus, at S275 and at S276.
 - **identities** is the rank of the design the tuner descends and every exact
-  linear dependency in it, over every row. Each row is 24 times the derivative
-  of `eval_model::evaluate()` with respect to every parameter, the stage-two
-  clamp ignored (the mirror's gradient ignored it too; the trace's does not, see
-  "What the tuner fits"), so every entry is an integer;
+  linear dependency in it, over every row. Each row is the trace's coefficients
+  times their taper weights times 24 -- 24 for a piece value, the phase and 24
+  minus it for a tapered pair's two halves -- which is 24 times the derivative
+  of the score with respect to every parameter with the stage-two clamp left
+  out, as the mirror's version left it out (the tuner's gradient does not, see
+  "What the tuner fits"), so every entry is an integer. A design check compares
+  `x.params / 24` with the trace's smooth score on the sampled rows where the
+  clamp does not bind; S275's mirror read 1.36e-12 against its own model over
+  202966 rows, and the trace reads 1.36e-12 over the same 202966. **The two
+  figures are not the same check**: the mirror's design and its model were
+  built from the mirror's features by two separate sums, while since S276 the
+  design row and `score()` read the same trace entries, so the check now
+  covers the design builder's assembly -- each entry's taper weight and site --
+  and not an independent model of the evaluation. What the entries mean is
+  `test_eval_trace`'s and `test_eval_model`'s to check. **At S276
+  every line after the design check, through the end of the collinearity
+  report, is byte-identical to S275's mirror run**: the same rank, null
+  directions and gauges, occurrence, tempo gap and R² figures
+  (`adocs/data/S276_feature_audit.txt`). A trace carrying
+  per-side entries, which a linear design has no column for, is not ranked at
+  all: the report says so instead;
   `X'X` is summed exactly in 64-bit integers; the rank is taken by Gauss-Jordan
   modulo 2^61-1, which can only understate the rank over the rationals; and a
   dependency `v` is checked exactly as `v'X'Xv == 0`, the sum over every row of
@@ -5309,8 +5376,10 @@ build/tools/tuner --data planted.tsv --out recovered.hpp \
 ```
 
 It copies the corpus with the result column replaced by
-`sigmoid(K * model_score)` at planted non-zero weights, so the labels come from a
-parameter vector that is known. A fit that cannot get it back has a defect; a fit
+`sigmoid(K * score)` at planted non-zero weights, so the labels come from a
+parameter vector that is known. The score is the trace's smooth one since S276,
+the score the tuner descends; until then it was the mirror's, the same function
+summed by hand. A fit that cannot get it back has a defect; a fit
 that can has its pipeline vouched for end to end. Every planted number is printed
 into the run's own log and comes from nowhere outside this repository.
 
@@ -5798,10 +5867,12 @@ swept; a larger step was not tried, and S082's corpus is the place to try it.
 positions both ways round and the 2696 positions of the JSON suites, 478 of
 which bind the clamp: the identity on every one; every coefficient
 against a count the trace did not take (the engine's per-colour accessors, the
-bitboards, the mirror's ray-walked mobility) -- the check that sees a wrong
+bitboards, and for mobility the ray walk in `tests/test_walked_counts.hpp`, the
+mirror's until S276) -- the check that sees a wrong
 coefficient on a weight that ships at zero, where the identity cannot; tracing
 changing nothing `evaluate()` returns; the smooth score inside the truncation
-bound; and the refusals no legal board reaches (a record past its 1024
+bound, and since S276 the four positions pinned to reach it; and the refusals
+no legal board reaches (a record past its 1024
 entries, an index past its term, a per-side entry without a group, a
 coefficient past int16), through synthetic records handed to `sum_record()`,
 each leaving nothing behind for the next row. `test_tuner_gradient` holds the
@@ -5821,11 +5892,23 @@ same split by game at seed 1, the same K (0.7795) and the same start (held-out
 numbers apart, by 2 at most; 12 m 16 s against 9 m 03 s.
 `adocs/data/S262_fits.txt` has both logs.
 
-**The mirror stays for two tools.** `tools/eval_model.hpp` and the dataset in
-`tools/tuner_model.hpp` are what `feature_audit` reads -- its identities, its
-columns and its `--plant` labels -- and `truncation_scan` measures the mirror's
-residual, so both keep `test_eval_model` and its pinned positions. Neither is
-the tuner's model now.
+**S276 retired the mirror.** It stayed after S262 for two tools, and both read
+the trace now: `feature_audit` loads the corpus the tuner's way and builds its
+identities, columns and `--plant` labels from the trace's coefficients and
+smooth score, and `truncation_scan` reads the smooth score against the exact
+one from the same record. `tools/eval_model.hpp`, the mirror's dataset and
+loader in `tools/tuner_model.hpp`, and the `test_eval_model` cases that held
+them are deleted; the four truncation positions moved to `test_eval_trace`, and
+the mirror's count walks moved to `tests/test_walked_counts.hpp`, where
+`test_eval_model` and `test_eval_trace` hold the engine's counts to them. No
+second description of `evaluate()` is left to keep in step: a new term reaches
+both tools through its trace call and its layout. What `feature_audit` still
+names by hand is labels: `column_name()` and its name tables, and the three
+piece placement indices its collinearity report reads -- their count asserted
+against the engine's arrays, their order held by a comment, since the
+engine's enum sits inside `src/evaluation.cpp` where no tool can include it.
+A mislabel there changes no rank and no identity. A walk of a new term's count
+in the test header is what lets a test catch the engine miscounting it.
 
 ### `--lambda`: fit toward the search score as well as the outcome
 

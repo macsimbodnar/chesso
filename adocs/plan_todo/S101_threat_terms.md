@@ -1,7 +1,7 @@
 id:         S101
 goal:       evaluation terms for a piece attacked by a lesser piece, for an attacked piece nobody defends, and for a safe pawn push that would attack a piece, fitted like every other constant
 accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the terms are fitted with every other constant frozen and the held-out error reported before and after, which is how every constant in this engine was fitted; the term is accumulated or computed in a stage that already has the attack bitboards it needs, never rebuilt from the bitboards a second time, since evaluate() runs at every quiescence node and INV-4 exists to keep that cost out; INV-5 holds -- mirroring a position agrees rather than negates, asserted in tests/test_evaluation.cpp; the step states which stage the terms land in and why (S039 retires the lazy bound; if S039 read H0, the bound must still hold by construction); tools/eval_model.hpp gains the features and tools/tuner_groups.hpp a group whose partition properties still hold; each threat kind is screened before the family's one SPRT (DEC-259); the fast suite green
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
 excludes:   outposts and space, which are S102; king safety, which exists and is fitted; overload threats
 decisions:  DEC-071, DEC-258, DEC-259
 closes:

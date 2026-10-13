@@ -1,7 +1,7 @@
 id:         S136
 goal:       unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
-accepts:    the truncation guard is **re-derived, never relaxed** -- and the count it is derived from is **read at this step's own HEAD, not taken from this line**: with N the number of taper divisions in `evaluate()` that can round while tempo ships at zero, unfreezing tempo makes it N+1, so the bound goes N x 23/24 to (N+1) x 23/24, `test_eval_model`'s tolerance goes N to N+1 **from that arithmetic**, and the non-vacuity threshold goes from "past (N-1) x 23/24" to "past N x 23/24", since that residual is what proves a pinned position exercised every division that can round; **S055 read H0 and was reverted (2026-10-05), so N is 3 at the time of writing and DEC-092's own numbers are the expected ones** -- bound 3 x 23/24 = 2.875 to 4 x 23/24 = 3.833, tolerance 3 to 4, non-vacuity threshold past 2.875 -- and they are still re-read at this step's HEAD, never copied from this line and never relaxed to match a stale figure (corrected 2026-10-08, DEC-258; the single-division numbers this clause carried assumed an S055 that did not land); the four pinned FENs are re-measured under the new weights with `build/tools/truncation_scan`, DEC-057 having pre-authorised exactly this re-targeting; the fit is `--only tempo` so the SPRT measures the term; the label is **WDL-heavy** -- `--lambda 0`, stated rather than defaulted, because a score-blend label cannot teach a term the current evaluator scores at zero; the SPRT bounds resolve single digits and are stated in advance, S027's run having reached neither bound over 3000 games at `--fast` (DEC-063); a verdict of zero is recorded as zero and a second unresolved run is recorded as unresolved again, not converted; the fast suite green
-touches:    src/evaluation.cpp tempo_mg/tempo_eg, tests/test_eval_model.cpp (the tolerance, the four pinned FENs and the non-vacuity threshold), the tuner's freeze list, adocs/specs.md
+accepts:    the truncation guard is **re-derived, never relaxed** -- and the count it is derived from is **read at this step's own HEAD, not taken from this line**: with N the number of taper divisions in `evaluate()` that can round while tempo ships at zero, unfreezing tempo makes it N+1, so the bound goes N x 23/24 to (N+1) x 23/24, the bound `test_eval_trace` holds the smooth score to goes N to N+1 divisions **from that arithmetic** -- since S276 that case derives the bound from the tempo weights itself, so the step checks the derivation rather than editing a number, and moves the pinned case's tempo precondition, which fires once tempo is fitted (S276 deleted `test_eval_model`'s integer tolerance, which this clause named, with the mirror) -- and the non-vacuity threshold goes from "past (N-1) x 23/24" to "past N x 23/24", since that residual is what proves a pinned position exercised every division that can round; **S055 read H0 and was reverted (2026-10-05), so N is 3 at the time of writing and DEC-092's own numbers are the expected ones** -- bound 3 x 23/24 = 2.875 to 4 x 23/24 = 3.833, non-vacuity threshold past 2.875 -- and they are still re-read at this step's HEAD, never copied from this line and never relaxed to match a stale figure (corrected 2026-10-08, DEC-258; the single-division numbers this clause carried assumed an S055 that did not land); the four pinned FENs are re-measured under the new weights with `build/tools/truncation_scan`, DEC-057 having pre-authorised exactly this re-targeting; the fit is `--only tempo` so the SPRT measures the term; the label is **WDL-heavy** -- `--lambda 0`, stated rather than defaulted, because a score-blend label cannot teach a term the current evaluator scores at zero; the SPRT bounds resolve single digits and are stated in advance, S027's run having reached neither bound over 3000 games at `--fast` (DEC-063); a verdict of zero is recorded as zero and a second unresolved run is recorded as unresolved again, not converted; the fast suite green
+touches:    src/evaluation.cpp tempo_mg/tempo_eg, tests/test_eval_trace.cpp (the tempo precondition, the four pinned FENs and the non-vacuity threshold; tests/test_eval_model.cpp until S276), the tuner's freeze list, adocs/specs.md
 excludes:   piece placement, which is S135; any change to how the tempo feature is computed -- it is the constant 1 for the side to move and there is nothing to change
 decisions:  DEC-092, DEC-057, DEC-053, DEC-063, DEC-258
 closes:
@@ -88,12 +88,14 @@ and S055 removes a taper division. The trace:
   precondition message's arithmetic becomes 3 x 23/24 = 2.875 with its
   tolerance of 4 becoming 3"*. Its Technical details give the analog thresholds
   it sets: per-pin `> 1.0`, worst `> 1.9`.
-- What the guard holds today, for the before side: `tests/test_eval_model.cpp`
-  "the model reproduces evaluate() on every phase" names the four divisions and
-  says three of them round today, `:277` is `CHECK(std::abs(model -
-  engine_white) <= 3.0)`, `:311-314` is the tempo precondition message, `:335`
-  is `CHECK_MESSAGE(difference > 2.0, ...)` and `:343` is `CHECK_MESSAGE(worst
-  > 2.8, ...)`.
+- What the guard holds today, for the before side (in
+  `tests/test_eval_model.cpp` against the mirror until S276, which moved it):
+  `tests/test_eval_trace.cpp` "the smooth score is within the truncation bound
+  of the exact one" takes its bound from the tempo weights -- 3 x 23/24 while
+  both are zero, 4 x 23/24 once either is not -- and `tests/test_eval_trace.cpp`
+  "the pinned positions reach the truncation bound" holds the tempo
+  precondition message, `CHECK_MESSAGE(difference > 2.0, ...)` per pin and
+  `CHECK_MESSAGE(worst > 2.8, ...)`.
 
 So at this step's HEAD three divisions exist and **two** can round, not three.
 Unfreezing tempo makes it three: bound 2 x 23/24 = 1.917 to 3 x 23/24 = 2.875,
@@ -196,9 +198,11 @@ accepts' and nothing in this enrichment moves it.
 - `build/tools/truncation_scan` re-drawn under the new weights; the four pins
   come out of its output, because a residual belongs to the weights and not to
   the position (DEC-057, DEC-053).
-- `tests/test_eval_model.cpp` "the model reproduces evaluate() on every phase"
-  is the test whose tolerance, pins and non-vacuity threshold move, and the
-  arithmetic for each is written in the commit message.
+- `tests/test_eval_trace.cpp` "the pinned positions reach the truncation
+  bound" is the test whose pins, tempo precondition and non-vacuity threshold
+  move, beside the bound "the smooth score is within the truncation bound of
+  the exact one" derives from the tempo weights itself, and the arithmetic for
+  each is written in the commit message.
 
 ### 4. Constants and seeds
 

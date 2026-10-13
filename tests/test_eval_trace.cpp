@@ -7,10 +7,10 @@
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
-#include "eval_model.hpp"
 #include "evaluation.hpp"
 #include "test_eval_positions.hpp"
 #include "test_helpers.hpp"
+#include "test_walked_counts.hpp"
 #include "tuner_trace.hpp"
 
 // The trace build's contract, S262. The tuner fits a sum over what evaluate()
@@ -24,7 +24,8 @@
 //   the meaning   every recorded coefficient is the count its index names,
 //                 against counts taken outside the trace -- the engine's own
 //                 per-colour accessors, the board's bitboards, and for
-//                 mobility, which has no accessor, the mirror's ray walk.
+//                 mobility, which has no accessor, the ray walk in
+//                 tests/test_walked_counts.hpp (the mirror's until S276).
 //
 // The second is not implied by the first. A coefficient recorded against the
 // wrong index is invisible to the identity wherever the two weights involved
@@ -94,6 +95,52 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 
   return 0;
 }
+
+
+// The four rows of test_eval_positions pinned for the truncation bound rather
+// than for a feature count, in the order they are listed there. Named
+// separately because "the pinned positions reach the truncation bound" has to
+// be able to fail when *these* stop reaching it, which is a different statement
+// from every position keeping inside it. S038, re-measured at S065 and at
+// S076; in tests/test_eval_model.cpp against the mirror's score until S276
+// moved them here, against the smooth score the mirror's sum became.
+//
+// GOLDEN (DEC-142): the four positions themselves, drawn from the rows that
+// reach the maximum a chain of truncating divisions can produce. A residual
+// belongs to the weights and not to the position (DEC-057), so a refit is
+// expected to stop these four qualifying.
+// Re-derive: build/tools/truncation_scan --data <corpus> --min 2.8, which
+// prints `difference, phase, side to move, fen` per hit; the four are chosen
+// from the hits at the maximum to span the taper with both sides to move.
+// Measured 2026-09-10 on .tuning/selfplay_v2_dedup.tsv at the shipped weights,
+// with the mirror's scan: 10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at
+// the maximum 2.875, and all four below are among them. Re-derived at S276
+// (2026-10-13) with the trace's scan on the same corpus: 10795695 rows, 105
+// past 2.8, 33 at 2.875, the 105 hit lines byte-identical to the mirror's, and
+// all four below still among the 33 at phases 5, 11, 19 and 23 -- the four
+// stand. The 2.0 column read 137108, which is ulp noise on the 60996 rows
+// sitting at exactly 48/24 and asserts nothing here
+// (adocs/data/S276_truncation_scan.txt).
+// Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
+// score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
+// that margin, so while the clamp binds the two agree exactly and the residual
+// this pins is not there to be measured. S085 raising it from 150 to 184 took
+// the corpus from 99 rows past 2.8 to 105 at unmoved weights, which is half of
+// what S206 bisected. Margin: each of the four is asserted past 2.0 and the
+// worst of them past 2.8, against a maximum of 2.875 -- so the tightest of the
+// two clauses has 0.075 of room, which is the point, and re-choosing four from
+// a fresh scan is the re-derivation.
+// Property beside it: "the smooth score is within the truncation bound of the
+// exact one", which holds over every position here rather than over four
+// chosen rows -- but not at any weights: its bound is a function of how many
+// taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
+// 4 x 23/24 = 3.833, which this case's precondition reports.
+const std::vector<std::string> truncation_positions = {
+    "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
+    "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
+    "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
+    "r2qkb1r/pp1b1ppp/3p4/2p1p3/2PnP3/2NP4/PP4PP/R1BQKBNR w kq - 2 10",
+};
 
 }  // namespace
 
@@ -267,11 +314,11 @@ TEST_CASE_FIXTURE(trace_fixture_t,
             safety[WHITE][f] - safety[BLACK][f]);
     }
 
-    // Mobility has no engine accessor per piece type; the mirror's own ray
-    // walk is an implementation the trace shares nothing with.
+    // Mobility has no engine accessor per piece type; the hand walk, the
+    // mirror's until S276, is an implementation the trace shares nothing with.
     int mobility[4] = {};
-    REQUIRE(
-        eval_model::mobility_features(fen.substr(0, fen.find(' ')), mobility));
+    REQUIRE(walked_counts::mobility_features(fen.substr(0, fen.find(' ')),
+                                             mobility));
     for (size_t t = 0; t < 4; ++t) {
       CAPTURE(t);
       CHECK(coefficient(data, eval_trace::TERM_MOBILITY, t) == mobility[t]);
@@ -323,8 +370,8 @@ TEST_CASE_FIXTURE(trace_fixture_t, "the positions move every term both ways")
 // centipawn, so the two can part by at most 23/24 per division that rounds:
 // three while tempo ships at zero, whose division then truncates 0 / 24
 // exactly. Clamping is 1-Lipschitz and only narrows the gap. The bound is the
-// mirror's (tests/test_eval_model.cpp, DEC-053), which is the point: the
-// trace's smooth score is the function the mirror computed.
+// one tests/test_eval_model.cpp held the mirror to until S276 (DEC-053), which
+// is the point: the trace's smooth score is the function the mirror computed.
 TEST_CASE_FIXTURE(trace_fixture_t,
                   "the smooth score is within the truncation bound of the "
                   "exact one")
@@ -354,16 +401,80 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   }
 
   // The bound is reached, not merely respected: test_eval_positions carries
-  // four rows pinned at 69/24 for the mirror (DEC-057, DEC-169), and the same
-  // rows reach it here.
+  // four rows pinned at 69/24 (DEC-057, DEC-169), and they reach it here.
   //
-  // GOLDEN (DEC-142): those four rows, the same golden test_eval_model pins and
-  // with the same re-derivation -- build/tools/truncation_scan --data <corpus>
-  // --min 2.8, after a refit or a move of LAZY_EVAL_MARGIN. The mirror's
-  // residual and this one are the same quantity: the smooth score here is the
-  // function the mirror computes. Margin: 2.8 against the maximum 2.875.
+  // GOLDEN (DEC-142): those four rows, the same golden `truncation_positions`
+  // and "the pinned positions reach the truncation bound" below pin, with the
+  // same re-derivation -- build/tools/truncation_scan --data <corpus> --min
+  // 2.8, after a refit or a move of LAZY_EVAL_MARGIN; the scan has read this
+  // smooth score from the trace since S276, the mirror's before, and the two
+  // are the same function. Margin: 2.8 against the maximum 2.875.
   CAPTURE(worst);
   CHECK(worst > 2.8);
+}
+
+
+// Non-vacuous by construction, and the reason the bound above is a bound
+// rather than a number someone widened until the suite went green. Each pinned
+// position has to disagree by more than 2.0, or the fixture has stopped
+// exercising the bound and the tolerance is untested again.
+//
+// 2.0 is the threshold the arithmetic gives and not a round number. Each of
+// the three divisions loses less than one unit, at most 23/24, so two of them
+// together cannot reach past 46/24 = 1.9167. A residual over 2.0 = 48/24 is
+// therefore proof that all three divisions truncated on that position, which
+// is what "this position exercises the bound" means; a position below it may
+// be exercising only two. Every position pinned sits at 69/24 = 2.875, all
+// three losing their maximum at once.
+//
+// The precondition is the tempo weights, because the count of *effective*
+// truncations depends on them: at tempo_mg == tempo_eg == 0 the tempo
+// division truncates 0 / 24 exactly and three of the four divisions can round,
+// bounding the gap at 3 x 23/24 = 2.875. Fit tempo to anything non-zero and
+// the fourth division starts rounding too, the bound becomes 4 x 23/24 =
+// 3.833, and the four pinned here have to be re-derived against it. S038; in
+// tests/test_eval_model.cpp against the mirror's score until S276.
+TEST_CASE_FIXTURE(trace_fixture_t,
+                  "the pinned positions reach the truncation bound")
+{
+  // As a variable because doctest decomposes the expression it is handed and
+  // refuses a `&&` inside one.
+  const bool tempo_unfitted = (tempo_mg == 0) && (tempo_eg == 0);
+
+  CHECK_MESSAGE(tempo_unfitted,
+                "tempo is fitted, so all four taperings can truncate: the "
+                "bound is now 4 x 23/24 = 3.833 and the four pinned positions "
+                "have to be re-derived against it");
+
+  std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  const std::vector<int64_t> weights = tuner_trace::engine_weights();
+
+  double worst = 0.0;
+
+  for (const std::string& fen : truncation_positions) {
+    CAPTURE(fen);
+
+    row_trace_t trace;
+    const dataset_t data = trace_of(fen, &trace);
+
+    const double smooth = tuner_trace::score(data, 0, params.data());
+    const double exact =
+        static_cast<double>(tuner_trace::exact_score(data, 0, weights.data()));
+    const double difference = std::fabs(smooth - exact);
+
+    worst = std::max(worst, difference);
+
+    CHECK_MESSAGE(difference > 2.0,
+                  (fen + ": difference " + std::to_string(difference) +
+                   ", no longer past 2.0"));
+  }
+
+  // And one of them has to sit at the top of the range, not merely past 2.0,
+  // so the bound is pinned against the arithmetic it claims rather than
+  // against whatever the mildest of these four happens to be.
+  CHECK_MESSAGE(worst > 2.8, ("worst pinned difference " +
+                              std::to_string(worst) + ", short of 2.875"));
 }
 
 

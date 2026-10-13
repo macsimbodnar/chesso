@@ -1,5 +1,6 @@
 #pragma once
-// The curated FEN corpus the evaluation-model tests run over. S100.
+// The curated FEN corpus the evaluation's count, trace and tuner tests run
+// over. S100.
 //
 // Moved out of tests/test_eval_model.cpp so that tests/test_tuner_gradient.cpp
 // can run over the same list. It is not an arbitrary set of positions: nearly
@@ -52,7 +53,7 @@ inline const std::vector<std::string> positions = {
     // King safety, added at S027 because the positions above leave most of the
     // term at zero: no knight and no rook ever bore on a king zone across all
     // thirteen, and seven of the nine counts only ever pointed one way. A count
-    // that is zero everywhere is a count the engine and the model agree about
+    // that is zero everywhere is a count the engine and the walk agree about
     // for free. "the positions exercise every count" is what says so out loud;
     // each line below is here to move one of the entries it checks.
     //
@@ -107,12 +108,14 @@ inline const std::vector<std::string> positions = {
     // The truncation bound itself, added at S038 and re-measured at S065 and
     // again at S076. Everything above is hand-picked to reach a feature, and
     // hand-picked positions are exactly the ones whose taperings happen to
-    // divide evenly: over the real corpus 135399 of 10795695 positions disagree
-    // with the model by more than the 2.0 this file used to allow, and none of
-    // the twenty-six above does. These four are here so the bound is exercised
-    // by the test rather than only by a corpus under `.tuning/` that is
-    // gitignored and does not exist on every machine. "the pinned positions
-    // reach the truncation bound" below is what says they still do.
+    // divide evenly: over the real corpus 135399 of 10795695 positions
+    // disagreed with the mirror's model by more than the 2.0 that
+    // test_eval_model.cpp used to allow, and none of the twenty-six above does.
+    // These four are here so the bound is exercised by the test rather than
+    // only by a corpus under `.tuning/` that is gitignored and does not exist
+    // on every machine. "the pinned positions reach the truncation bound" in
+    // test_eval_trace.cpp is what says they still do, against the trace's
+    // smooth score since S276 and the mirror's before.
     //
     // **A residual belongs to the weights, not to the position**, which is why
     // this list is re-measured whenever the constants are refitted rather than

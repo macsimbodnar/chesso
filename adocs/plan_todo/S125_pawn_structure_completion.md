@@ -1,7 +1,7 @@
 id:         S125
 goal:       phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, backward stops counting an isolated pawn twice, and each is fitted
 accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the terms are indexed by file or by rank where the surveyed record says the indexing is what pays, and the step states which indexing it chose and why; **an isolated pawn is never also counted backward**, which is a documented double-count worth +4.01 to fix; every constant is fitted (DEC-084); **the pawn hash is not a precondition and the plan order is not reversed** -- these terms are what make S118 worth building, so they are measured recomputed at every `evaluate()` call, and the per-call cost the additions carry is measured here (`bench_eval`, and `build/tools/eval_spread` for where it lands) and recorded as the baseline S118 is later asked to reclaim
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/eval_model.hpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp
 excludes:   passed pawns, which are S123
 decisions:  DEC-071, DEC-084, DEC-259
 closes:
