@@ -963,3 +963,10 @@ evidence, never edited, so each is pinned here instead:
 - `S100_feature_audit.txt`, `S134_feature_audit.txt`,
   `S134_identity_before.txt` and `S275_feature_audit.txt` were taken with the
   mirror's `feature_audit`, each at its own tree; their rows name the trees.
+
+### S277, the ProbCut mate-row miner takes a `--mode`
+
+| file | what it is |
+|---|---|
+| `S277_mine_mate_row.py` | `S113_mine_mate_row.py`'s successor for the ProbCut row of "pruning does not hide a forced mate": imports S113's module and passes `--mode`, `rule` or `guard` (DEC-238), through to S097's `fires` and `pick`, `rule` the default and S113's behaviour. In guard mode it also refuses the shipped tune library by the file `--lib` resolves to (S097 compares the spelling, and an absolute path passes there), and a `pick` with no witness or a witness with no data rows. Its header's six commands, guard mode for 5 and 6, are what the row's GOLDEN block names from S277 on |
+| `S277_repro.log` | that script run on `338705e`'s libraries, rebuilt from a `git archive` export, 2026-10-13, every stage in both modes: guard mode reproduces `S259_b04_fires_guard.py`'s four moved-depth lists and `mate:nodes` cells and takes S259's row; the default mode matches S259's `S113_mine_mate_row.py` witness cell for cell and its pick with ms dropped, and prints S113's pick byte for byte. Then the seven refusals alone on the final script, with the two guard-mode stages as controls, and the two gaps the fast check found shown open on S097 alone |

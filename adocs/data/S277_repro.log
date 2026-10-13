@@ -1,0 +1,151 @@
+# S277: adocs/data/S277_mine_mate_row.py, S113's ProbCut miner with S097's --mode (DEC-238) passed through, run on 338705e -- the tree S259 mined -- 2026-10-13, in guard mode and in the default mode, every stage of its header, and each output compared with S259's (adocs/data/S259_remine.log; S259's sweep and separator files in its worktree, .tuning/coord/S259/remine).
+# Libraries: 338705e exported with git archive (no worktree added), B04_probcut_defender_gate_dropped applied by tools/mutation_check.py's own loader as S259's were, release and tune built at Release. Their bytes differ from S259's copies (other paths); node counts decide. The driver compiles against this worktree's src/ headers, byte-identical to 338705e's (the line below).
+# Cells are compared as mate:nodes, the wall time dropped as S097's answer() drops it; the pick's ms come from the shipped sweep and are dropped where a pick is compared with S259's.
+# The first run of repro.sh read DIFFER on the guard witness: its extractor took the blank line that follows S259_remine.log's b04_fires_guard.txt section, a fifth, empty row. The extractor was fixed to drop blank lines and the whole script re-run, all SAME; it was run once more after an edit to the miner's docstring alone, and that run, every stage re-run, is the one below. Its miner (sha256 7e4f97cb0317f2c5) is the committed one less two guard-mode refusals S277's fast check asked for -- the shipped tune library by its resolved path, a guard-mode witness with no data rows; the last two sections are the refusal list alone on the miner as committed (sha256 there), with the two guard-mode stages through the new checks as controls and no sweep re-run, and the precondition each new refusal closes, shown on S097 alone.
+
+## libraries (.tuning/coord/S277/build_libs.sh)
+# 2026-10-13 10:39:45 exports of 338705e, load 0.82 0.69 0.94
+# shipped: src vs 338705e 
+# shipped build built 10:39:49
+# shipped build-tune built 10:39:49
+# b04: src vs 338705e 1 file changed, 1 insertion(+), 1 deletion(-)
+# b04 build built 10:39:52
+# b04 build-tune built 10:39:53
+adb6115b1b8a2d3b  b04_release.a
+26afb342fbef1f1b  b04_tune.a
+1386cf30cc05aebc  shipped_release.a
+e1cf1e77268b353b  shipped_tune.a
+S277-LIBS-DONE 2026-10-13 10:39:53
+
+## stages and comparisons (.tuning/coord/S277/repro.sh)
+# 2026-10-13 10:49:06 worktree b50a1fc, load 1.92 4.09 3.33
+# src/ headers vs 338705e: 0 differ; src/ files differing: src/evaluation.cpp 
+# miners vs 338705e: 0 differ
+# sha256 S277 7e4f97cb0317f2c5
+adb6115b1b8a2d3b  b04_release.a
+26afb342fbef1f1b  b04_tune.a
+1386cf30cc05aebc  shipped_release.a
+e1cf1e77268b353b  shipped_tune.a
+STAGE fens exit 0
+STAGE shipped exit 0
+STAGE open exit 0
+STAGE separators exit 0
+STAGE fires_guard exit 0
+STAGE pick_guard exit 0
+STAGE fires_rule exit 0
+STAGE pick_rule exit 0
+STAGE pick_guard_s259 exit 0
+STAGE pick_rule_s113 exit 0
+STAGE fires_rule_s113 exit 0
+STAGE refuse_nolib exit 2
+STAGE refuse_shiplib exit 2
+STAGE refuse_guard_rulewit exit 2
+STAGE refuse_guard_nowit exit 2
+STAGE refuse_rule_guardwit exit 2
+## against S259
+SAME   candidates vs S259's candidates.fen (269 lines)
+SAME   shipped sweep vs S259's b04_shipped.txt, mate:nodes (269 lines)
+SAME   B04 sweep vs S259's b04_open.txt, mate:nodes (269 lines)
+SAME   separators vs S259's b04_separators.fen (4 lines)
+SAME   guard witness vs S259_remine.log's b04_fires_guard.txt: moved-depth lists and mate:nodes cells (4 lines)
+SAME   guard witness's first line names the mode
+SAME   default witness vs S259_remine.log's b04_fires.txt: moved-depth lists and mate:nodes cells (4 lines)
+SAME   default witness vs S113's fires on the same lib, mate:nodes (4 lines)
+SAME   default witness's header lines vs S113's
+SAME   default pick stdout vs S113's pick on the same files (8 lines)
+SAME   default pick stdout vs S259_remine.log's b04_pick, ms dropped (6 lines)
+guard pick: take: 4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  depth 11, mate in 6, shipped [d11 d12], guard dropped [d12], 768752 nodes, 92 ms
+SAME   pick_guard takes S259's row
+SAME   pick_guard: depth 11, mate in 6, shipped [d11 d12], B04 [d12], 768752 nodes
+SAME   pick_rule takes S259's row
+SAME   pick_rule: depth 11, mate in 6, shipped [d11 d12], B04 [d12], 768752 nodes
+SAME   pick_guard_s259 takes S259's row
+SAME   pick_guard_s259: depth 11, mate in 6, shipped [d11 d12], B04 [d12], 768752 nodes
+REFUSED refuse_nolib: guard mode takes the witness on the mutant's build: name its tune library with --lib
+REFUSED refuse_shiplib: guard mode takes the witness on the mutant's build, and build-tune/src/libchesso_engine.a is the shipped tune library
+REFUSED refuse_guard_rulewit: pick --mode guard was handed a witness written in rule mode: /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.txt
+REFUSED refuse_guard_nowit: pick --mode guard reads a guard-mode witness: name it with --fires
+REFUSED refuse_rule_guardwit: pick --mode rule was handed a witness written in guard mode: /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.txt
+S277-REPRO-DONE 2026-10-13 10:51:41
+
+## guard mode: stage 5, fires --mode guard
+$ /home/max/.venv/chess/bin/python adocs/data/S277_mine_mate_row.py fires --mode guard --fens /home/max/ws/chesso-s277/.tuning/coord/S277/repro/separators.fen --lib /home/max/ws/chesso-s277/.tuning/coord/S277/repro/libs/b04_tune.a --out /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.txt --fens-out /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.fen
+guard mode (DEC-238): the mutant's multicut changes the tree on 4 of 4 positions in 6 s -> /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.txt, /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.fen
+exit 0
+### fires_guard.txt
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 9..12, tune library /home/max/ws/chesso-s277/.tuning/coord/S277/repro/libs/b04_tune.a.
+# fen	depths_the_rule_changes	off	on
+r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28	d9 d10 d11 d12	-:187235:27 -:348628:63 -:1034812:145 m3:9317109:1298	-:182512:25 -:347913:63 -:1052061:145 -:3781037:557
+8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52	d10 d11 d12	-:25284:4 -:243322:35 m6:2953252:319 m5:3368000:460	-:25284:4 -:243323:34 m6:2727081:291 m6:3261539:439
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31	d9 d10 d11 d12	-:39921:8 -:47613:9 m6:3393846:389 m6:6043858:762	-:39959:6 -:69221:11 m6:1322641:140 -:1449291:180
+4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73	d9 d10 d11 d12	-:20958:3 -:49791:8 m6:768752:87 m6:1182602:159	-:20827:3 -:49338:8 -:78319:12 m6:998232:134
+
+## guard mode: stage 6, pick --mode guard
+$ /home/max/.venv/chess/bin/python adocs/data/S277_mine_mate_row.py pick --mode guard --shipped /home/max/ws/chesso-s277/.tuning/coord/S277/repro/shipped.txt --open /home/max/ws/chesso-s277/.tuning/coord/S277/repro/open.txt --fires /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.txt
+  distance moved, not taken by the rule: d12 #5 -> #6	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+  d11	#6	run 2	768752 nodes	92 ms	shipped [d11 d12]	open [d12]	mutant fires [d9 d10 d11 d12]	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  d12	#6	run 2	6913112 nodes	842 ms	shipped [d11 d12]	open [d11]	mutant fires [d9 d10 d11 d12]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  d12	#3	run 1	8727513 nodes	1231 ms	shipped [d12]	open [none]	mutant fires [d9 d10 d11 d12]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+
+take: 4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  depth 11, mate in 6, shipped [d11 d12], guard dropped [d12], 768752 nodes, 92 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d9 d10 d11 d12]
+exit 0
+
+## guard mode: stage 6 over S259's own sweep files
+$ /home/max/.venv/chess/bin/python adocs/data/S277_mine_mate_row.py pick --mode guard --shipped /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_shipped.txt --open /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_open.txt --fires /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.txt
+  distance moved, not taken by the rule: d12 #5 -> #6	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+  d11	#6	run 2	768752 nodes	87 ms	shipped [d11 d12]	open [d12]	mutant fires [d9 d10 d11 d12]	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  d12	#6	run 2	6913112 nodes	904 ms	shipped [d11 d12]	open [d11]	mutant fires [d9 d10 d11 d12]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  d12	#3	run 1	8727513 nodes	1344 ms	shipped [d12]	open [none]	mutant fires [d9 d10 d11 d12]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+
+take: 4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  depth 11, mate in 6, shipped [d11 d12], guard dropped [d12], 768752 nodes, 87 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d9 d10 d11 d12]
+exit 0
+
+## default mode: stage 5, fires
+$ /home/max/.venv/chess/bin/python adocs/data/S277_mine_mate_row.py fires --fens /home/max/ws/chesso-s277/.tuning/coord/S277/repro/separators.fen --lib /home/max/ws/chesso-s277/.tuning/coord/S277/repro/libs/shipped_tune.a --out /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.txt --fens-out /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.fen
+the multicut changes the tree on 4 of 4 positions in 8 s -> /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.txt, /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.fen
+exit 0
+### fires_rule.txt
+# S097 firing witness, SeMultiCut 0 against 1, depths 9..12, tune library /home/max/ws/chesso-s277/.tuning/coord/S277/repro/libs/shipped_tune.a.
+# fen	depths_the_rule_changes	off	on
+r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28	d9 d10 d11 d12	-:187235:29 -:348628:66 -:1034812:143 m3:9317109:1272	-:182512:25 -:347913:65 -:1052061:150 m3:8727513:1234
+8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52	d10	-:25284:4 -:243322:37 m6:2953252:316 m5:3368000:457	-:25284:4 -:243323:37 m6:2953252:330 m5:3368000:493
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31	d9 d10 d11 d12	-:39921:6 -:47613:9 m6:3393846:372 m6:6043858:767	-:39959:7 -:69221:13 m6:3216546:389 m6:6913112:892
+4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73	d9 d10 d12	-:20958:3 -:49791:9 m6:768752:97 m6:1182602:174	-:20827:3 -:49338:8 m6:768752:89 m6:1286741:174
+
+## default mode: stage 6, pick
+$ /home/max/.venv/chess/bin/python adocs/data/S277_mine_mate_row.py pick --shipped /home/max/ws/chesso-s277/.tuning/coord/S277/repro/shipped.txt --open /home/max/ws/chesso-s277/.tuning/coord/S277/repro/open.txt --fires /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.txt
+  distance moved, not taken by the rule: d12 #5 -> #6	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+  d11	#6	run 2	768752 nodes	92 ms	shipped [d11 d12]	open [d12]	fires [d9 d10 d12]	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  d12	#6	run 2	6913112 nodes	842 ms	shipped [d11 d12]	open [d11]	fires [d9 d10 d11 d12]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  d12	#3	run 1	8727513 nodes	1231 ms	shipped [d12]	open [none]	fires [d9 d10 d11 d12]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+
+take: 4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  depth 11, mate in 6, shipped [d11 d12], guard dropped [d12], 768752 nodes, 92 ms
+exit 0
+
+## the refusal list alone, on the miner as committed (.tuning/coord/S277/refusals.sh)
+# 2026-10-13 11:03:13 worktree b50a1fc, sha256 S277 0e1706d81d073cea
+# empty_guard_witness.txt: fires_guard.txt's two comment lines, no data row
+REFUSED refuse_nolib: guard mode takes the witness on the mutant's build: name its tune library with --lib
+REFUSED refuse_shiplib: guard mode takes the witness on the mutant's build, and build-tune/src/libchesso_engine.a is the shipped tune library (/home/max/ws/chesso-s277/build-tune/src/libchesso_engine.a)
+REFUSED refuse_shiplib_abs: guard mode takes the witness on the mutant's build, and /home/max/ws/chesso-s277/build-tune/src/libchesso_engine.a is the shipped tune library (/home/max/ws/chesso-s277/build-tune/src/libchesso_engine.a)
+REFUSED refuse_guard_rulewit: pick --mode guard was handed a witness written in rule mode: /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_rule.txt
+REFUSED refuse_rule_guardwit: pick --mode rule was handed a witness written in guard mode: /home/max/ws/chesso-s277/.tuning/coord/S277/repro/fires_guard.txt
+REFUSED refuse_guard_nowit: pick --mode guard reads a guard-mode witness: name it with --fires
+REFUSED refuse_guard_emptywit: pick --mode guard was handed a witness with no data rows: /home/max/ws/chesso-s277/.tuning/coord/S277/repro/empty_guard_witness.txt
+SAME   control: guard witness, moved-depth lists and mate:nodes, as repro.sh's (4 rows)
+SAME   control: guard pick takes S259's row
+S277-REFUSALS-DONE 2026-10-13 11:03:27
+
+## the precondition each new refusal closes: S097 alone (.tuning/coord/S277/precondition.log)
+precondition: S097 alone compares '/home/max/ws/chesso-s277/build-tune/src/libchesso_engine.a' == 'build-tune/src/libchesso_engine.a' -> False (S097 would not refuse the absolute path)
+$ S097_mine_mate_row.py pick --mode guard --lo 9 --fires empty_guard_witness.txt (S097 alone, the same sweeps)
+take: 4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  depth 11, mate in 6, shipped [d11 d12], guard dropped [d12], 768752 nodes, 92 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at []
+exit 0

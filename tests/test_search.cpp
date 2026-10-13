@@ -4449,10 +4449,18 @@ TEST_SUITE("search: draws")
     // hazard, and the once-per-thousand miss the origin paper itself reports.
     //
     // GOLDEN (DEC-142): the position, the depth 11 and the distance 6 below.
-    // Re-derive with the six commands in `adocs/data/S113_mine_mate_row.py`'s
+    // Re-derive with the six commands in `adocs/data/S277_mine_mate_row.py`'s
     // own header: the candidate list, the shipped sweep, the same sweep
     // against a library built with `B04_probcut_defender_gate_dropped` applied,
-    // the separator set, the firing witness over it, and the pick.
+    // the separator set, the firing witness over it, and the pick. **Since
+    // S277 the witness and the pick run in guard mode**, `--mode guard`
+    // (DEC-238): this row witnesses a guard, so the witness is taken on a tune
+    // library built with B04 applied. The script is S113's miner,
+    // `adocs/data/S113_mine_mate_row.py`, with S097's `--mode` passed through;
+    // S113's script has no mode and derived every row below in what is now
+    // the default one. On `338705e` S277's guard-mode stages reproduce S259's
+    // guard witness cell for cell and take this row
+    // (`adocs/data/S277_repro.log`).
     // Moves legitimately on: any change to ProbCut, to pruning or to ordering.
     // Margin: exact -- the row asserts the distance too.
     //
