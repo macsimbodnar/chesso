@@ -14411,3 +14411,25 @@ Consequences: S099's pre-registration names REF as the commit before the key
               cache, which will read the same key, inherits it from S099's
               landing. The plan's "phase (a) may land between runs" no longer
               applies to S099.
+
+## DEC-272  2026-10-13  S099's tree raises test_mate_carry's case F short-line ceiling from 0 to 2, as the script answers
+Tags:         testing, mate, s170, s099, dec-122, dec-142, dec-250, s202
+Context:      On S099's tree (the pawn key and the correction table, DEC-271)
+              `adocs/data/S203_case_sweep.sh --ceilings` over every recorded
+              grid plus `adocs/data/S099_sweep_s170.txt` answers 0, 5, 4, 0,
+              0, 2: F's cell (100000 nodes, stride 2) reports 8 mate lines, 2
+              short, over its ceiling of 0; `unreached` is empty on all six
+              cases, so every mate is still found. Raising a ceiling relaxes a
+              test; DEC-250 took the same shape for S116.
+Decision:     By the owner, 2026-10-13: F's ceiling moves to 2 as the script
+              answers, landing with S099 only if its SPRT reads H1, S099's
+              grid joining the `--ceilings` command as a recorded sweep (the
+              DEC-225, DEC-241 and DEC-250 form). What rose is DEC-122's
+              expected residue, not the guarantee; S202 still owns the class.
+Rejected:     Keeping 0 and making S099 remove the two short lines before its
+              SPRT -- a study of a reporting residue S202 owns, delaying a
+              strength verdict. Keeping 0 and deciding at the verdict -- the
+              candidate would carry a red test, which every-commit-green
+              forbids.
+Consequences: `tests/test_mate_carry.cpp`'s `DEC-PENDING` token becomes
+              DEC-272. On H0 or no verdict the ceiling never lands.

@@ -43,10 +43,15 @@ set; smoke run clean, no rating read (DEC-108). Binaries in
   after a transient failure (pre-registered). Then the mate suites on the
   tuned vector, the independent {0,5} SPRT (`adocs/data/S261_sprt.sh`), the
   drift point and the 32+0.32 reading (DEC-269).
-- **S099** (worktree `../chesso-s099`): (a) the pawn key, neutral, lands on
-  its own (INV-6, second tier); (b) the correction table, the SPRT candidate
-  after S261. DEC-270: census before the SPRT, datagen wired, 32+0.32
-  estimate only on H0. Four UCI-path goldens re-derived in phase 2.
+- **S099** (worktree `../chesso-s099b`, uncommitted, base `5ac17bd`): complete
+  up to the SPRT. (a) the pawn key, made branchless (DEC-271), and (b) the
+  correction table at 2048 slots a side (DEC-270's census), bench 3539313,
+  14/14 CH and 5/5 PK mutants killed, second tier green but S278's (now
+  fixed). Lands as one candidate after S261 lands: rebase onto S261's
+  landing, re-take every number, pin `adocs/data/S099_sprt.sh` (REF = S261's
+  landing). DEC-272 (owner): test_mate_carry F's ceiling 0 -> 2 lands with it
+  on H1; the worktree's test already cites DEC-272, the step file's
+  `DEC-PENDING`/`DEC-<n>` placeholders still to fill.
 
 ## 2026-10-12: S262 done -- the tuner fits evaluate()'s own trace
 
