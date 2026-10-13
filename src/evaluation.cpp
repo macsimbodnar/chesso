@@ -350,13 +350,6 @@ static inline bb_t neighbour_files(bb_t squares)
 }
 
 
-// The same squares plus the two neighbouring files. Split from the above
-// because the pawn structure terms ask about the neighbours with the pawn's own
-// file left out, and passed pawns asks about both together.
-static inline bb_t widen_by_one_file(bb_t squares)
-{ return squares | neighbour_files(squares); }
-
-
 // The three piece placement counts per side, WHITE first, exactly as
 // evaluation.hpp defines them.
 //
@@ -489,14 +482,41 @@ static inline void evaluate_pawns(const board_t* board,
   const bb_t white_front = white_ahead >> 8;
   const bb_t black_front = black_ahead << 8;
 
-  // Widening the span rather than the pawns, which is the order the passed pawn
-  // term used before pawn structure needed the bare span. The two are equal
-  // because a horizontal shift and a vertical fill commute and the file masks
-  // are invariant under the vertical one -- and because equality was checked by
-  // brute force over 200000 random pawn placements rather than argued, the a
-  // and h file wrap being exactly what the masks are there to stop.
-  const bb_t white_stops = widen_by_one_file(white_front);
-  const bb_t black_stops = widen_by_one_file(black_front);
+  // The pawn attack sets, each built once and read by every pawn term that
+  // needs it (S263). Until then backward took neighbour_files() of the forward
+  // fill and of the shifted pawns, and passed pawns of the front span, so the
+  // files beside the front span were built twice: four calls a side with
+  // isolated's, three now.
+  //
+  //   beside       the squares level with each pawn on the two files next to it
+  //   attacks      the squares the pawns attack: beside, one rank forward
+  //   attack span  every square the pawns can ever attack while they advance:
+  //                the files next to the front span
+  //
+  // Two identities make that exact, and both hold for any bitboard, the a and h
+  // file edges included: a shift by a whole rank commutes with
+  // neighbour_files(), because its file masks are the same on every rank, so
+  // beside shifted forward is neighbour_files() of the shifted pawns; and
+  // neighbour_files() of a union is the union of the two, since shifts and
+  // masks distribute over it. test_evaluation "the shared pawn sets count what
+  // the definitions say" holds the counts to a square-by-square reading.
+  const bb_t white_beside = neighbour_files(white_pawns);
+  const bb_t black_beside = neighbour_files(black_pawns);
+  const bb_t white_attacks = white_beside >> 8;
+  const bb_t black_attacks = black_beside << 8;
+  const bb_t white_attack_span = neighbour_files(white_front);
+  const bb_t black_attack_span = neighbour_files(black_front);
+
+  // Every square an enemy pawn stands in the way of: the front span and the
+  // attack span beside it. The comment over this function widens the pawns and
+  // then fills; this fills and then widens, so that the attack span is a set of
+  // its own for backward to read. The two orders are equal because a horizontal
+  // shift and a vertical fill commute and the file masks are invariant under
+  // the vertical one -- and that equality was checked by brute force over
+  // 200000 random pawn placements rather than argued, the a and h file wrap
+  // being exactly what the masks are there to stop.
+  const bb_t white_stops = white_front | white_attack_span;
+  const bb_t black_stops = black_front | black_attack_span;
 
   // A pawn on its own seventh rank is left out, here and explicitly rather than
   // by a weight: it is a passer by definition, so its bucket was exactly eight
@@ -519,20 +539,18 @@ static inline void evaluate_pawns(const board_t* board,
   const bb_t white_doubled = white_pawns & (white_behind << 8);
   const bb_t black_doubled = black_pawns & (black_behind >> 8);
 
-  // One step forward and one file each way: the squares a side's pawns attack.
-  const bb_t white_attacks = neighbour_files(white_pawns >> 8);
-  const bb_t black_attacks = neighbour_files(black_pawns << 8);
-
   // Backward, both halves. The neighbour test uses the *forward* fill: a square
   // is in neighbour_files(white_ahead) exactly when an own pawn on an adjacent
   // file stands at or behind it, since the fill of that pawn covers every
-  // square from it forward. The stop-square test shifts the enemy attack set
-  // back by one rank instead of the pawns forward by one, so the pawn's own bit
-  // is what is tested and no second shift is needed to get back.
+  // square from it forward. The forward fill is the pawns and their front span,
+  // so that set is beside and the attack span together, both built above. The
+  // stop-square test shifts the enemy attack set back by one rank instead of
+  // the pawns forward by one, so the pawn's own bit is what is tested and no
+  // second shift is needed to get back.
   const bb_t white_backward =
-      white_pawns & ~neighbour_files(white_ahead) & (black_attacks << 8);
+      white_pawns & ~(white_beside | white_attack_span) & (black_attacks << 8);
   const bb_t black_backward =
-      black_pawns & ~neighbour_files(black_ahead) & (white_attacks >> 8);
+      black_pawns & ~(black_beside | black_attack_span) & (white_attacks >> 8);
 
   score_t sum = 0;
 
@@ -1022,6 +1040,12 @@ static inline void king_shelter_features(const board_t* board,
 // They are still tapered and summed as two separate terms below, so the fusion
 // is exact rather than nearly exact: the score is identical to the unfused form
 // for any weights, not only for the zeros king safety currently ships.
+//
+// The piece's own attack set is the only one either term reads, and it is
+// looked up once here and read by both. No per-side union -- attacks by piece
+// type, all attacks, squares attacked twice -- is built, because no term reads
+// one yet: each would be paid at every node for nothing (S263). The first term
+// that reads one builds it in this loop and its measurement pays for it.
 //
 // The sign is the part to read carefully. Mobility belongs to the piece that
 // has it, an attack on a king zone belongs to the king being attacked, and

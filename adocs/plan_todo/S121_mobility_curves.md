@@ -13,7 +13,8 @@ done:
 
 **Scope gained 2026-10-08 (DEC-258):** mobility respecting pins -- CPW
 *Mobility*; Stash's changelog, v30, +6.15. The pin map is computed once per
-evaluation beside S263's attack sets; the rest of this file is unchanged.
+evaluation beside the attack sets this step builds (S263 built none);
+the rest of this file is unchanged.
 
 Each term -- and each part this file used to give a verdict of its own --
 is first fitted with every other constant frozen and kept only if it lowers
@@ -25,7 +26,8 @@ H0 or no verdict the family is bisected along a partition written in the
 pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
-S262 has landed; the attack sets come from S263. S039 runs before this family
+S262 has landed. S263 built no per-side attack set, since no term read one;
+a term here that needs one builds it once per evaluation. S039 runs before this family
 and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
 owner's amendment of that outcome binds here.
 

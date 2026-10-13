@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdint>
 #include <cstdlib>
 #include <random>
 #include <string>
@@ -786,6 +787,238 @@ TEST_SUITE("evaluation: score")
                        << " accepted, max |evaluate()| " << pathological_max
                        << " on " << worst_fen << "; MATE_MIN "
                        << MATE_MIN_LOCAL);
+  }
+}
+
+
+// evaluation.hpp's passed pawn and pawn structure definitions, applied one pawn
+// at a time with file and row arithmetic and no bitboard set algebra at all.
+// Rows run 0 (rank 8) to 7 (rank 1), the board's own index order, so White
+// advances to a lower row and Black to a higher one.
+struct pawn_counts_t
+{
+  int passed[2][5];
+  int structure[2][3];  // isolated, doubled, backward
+};
+
+static pawn_counts_t pawn_counts_by_definition(const board_t* board)
+{
+  pawn_counts_t counts{};
+
+  const auto pawn_at = [board](int colour, int row, int file) {
+    if (row < 0 || row > 7 || file < 0 || file > 7) { return false; }
+
+    const bb_t pawns = board->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
+    return ((pawns >> (row * 8 + file)) & 1) != 0;
+  };
+
+  for (int colour = 0; colour < 2; ++colour) {
+    const int enemy = 1 - colour;
+    const int forward = (colour == WHITE) ? -1 : 1;
+
+    for (int row = 0; row < 8; ++row) {
+      for (int file = 0; file < 8; ++file) {
+        if (!pawn_at(colour, row, file)) { continue; }
+
+        bool enemy_ahead = false;
+        bool own_ahead = false;
+
+        for (int r = row + forward; r >= 0 && r < 8; r += forward) {
+          for (int f = file - 1; f <= file + 1; ++f) {
+            if (pawn_at(enemy, r, f)) { enemy_ahead = true; }
+          }
+
+          if (pawn_at(colour, r, file)) { own_ahead = true; }
+        }
+
+        // Ranks advanced from the side's own second rank; 5 is its own seventh,
+        // which no bucket counts (S134).
+        const int advanced = (colour == WHITE) ? 6 - row : row - 1;
+
+        if (!enemy_ahead && advanced < 5) { counts.passed[colour][advanced]++; }
+
+        bool neighbour = false;
+        bool neighbour_at_or_behind = false;
+
+        for (int r = 0; r < 8; ++r) {
+          for (const int f : {file - 1, file + 1}) {
+            if (!pawn_at(colour, r, f)) { continue; }
+
+            neighbour = true;
+            if ((r - row) * forward <= 0) { neighbour_at_or_behind = true; }
+          }
+        }
+
+        // An enemy pawn attacks the stop square from one row beyond it, on a
+        // neighbouring file.
+        const int beyond_stop = row + 2 * forward;
+        const bool stop_attacked = pawn_at(enemy, beyond_stop, file - 1) ||
+                                   pawn_at(enemy, beyond_stop, file + 1);
+
+        if (!neighbour) { counts.structure[colour][0]++; }
+        if (own_ahead) { counts.structure[colour][1]++; }
+        if (!neighbour_at_or_behind && stop_attacked) {
+          counts.structure[colour][2]++;
+        }
+      }
+    }
+  }
+
+  return counts;
+}
+
+
+TEST_SUITE("evaluation: shared pawn sets")
+{
+  // S263 builds the pawn attack sets once and shares them: backward's
+  // stop-square test reads the enemy pawns' attacks, its neighbour test the
+  // squares beside its own pawns and their attack span together, and passed
+  // pawns the enemy's attack span beside the enemy's front span. A set built
+  // one rank off, or a span that keeps the pawn's own rank, moves a count on
+  // some positions and not on others, so every count is held to the definitions
+  // read square by square. Per colour, for the reason over
+  // passed_pawn_counts(): a miscount that hits both sides equally cancels in a
+  // difference.
+  //
+  // Two populations: the test positions and their mirrors, which are what play
+  // looks like, and seeded random pawn placements, which put pawns on the a and
+  // h files and against each other far more often -- the edges are where a
+  // neighbour_files() identity would fail if it failed anywhere.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the shared pawn sets count what the definitions say")
+  {
+    std::vector<std::string> fens;
+
+    for (const std::string& fen : all_test_fens()) {
+      fens.push_back(fen);
+      fens.push_back(mirror_fen(fen));
+    }
+
+    const size_t test_positions = fens.size();
+
+    std::mt19937 rng(20261012U);
+    std::uniform_int_distribution<int> pawns_a_side(0, 8);
+
+    for (size_t trial = 0; trial < 20000; ++trial) {
+      std::array<char, 64> squares{};
+      squares.fill('\0');
+
+      // Kings first, anywhere; then pawns on rows 1 to 6, ranks 7 to 2, the
+      // only rows load_FEN() lets a pawn stand on.
+      std::vector<index_t> order(64);
+      for (index_t square = 0; square < 64; ++square) {
+        order[square] = square;
+      }
+      std::shuffle(order.begin(), order.end(), rng);
+
+      size_t next = 0;
+      squares[order[next++]] = 'K';
+      squares[order[next++]] = 'k';
+
+      for (const char pawn : {'P', 'p'}) {
+        int placed = 0;
+        const int wanted = pawns_a_side(rng);
+
+        while (placed < wanted && next < 64) {
+          const index_t square = order[next++];
+
+          if ((square / 8) == 0 || (square / 8) == 7) { continue; }
+
+          squares[square] = pawn;
+          placed++;
+        }
+      }
+
+      // Each placement twice, once with each side to move: load_FEN() refuses
+      // a position whose side not to move is in check, so a placement refused
+      // with one side to move is still checked with the other.
+      for (const char side : {'w', 'b'}) {
+        fens.push_back(placement_to_fen(squares, side));
+      }
+    }
+
+    // Positions and placements are counted apart. The pawn counts do not read
+    // the side to move, so a placement that loads with both checks nothing new
+    // the second time: the positions guard counts it twice, the placements
+    // guard once.
+    pawn_counts_t seen{};
+    size_t positions_checked = 0;
+    size_t random_positions_checked = 0;
+    size_t placements_checked = 0;
+    size_t last_placement = SIZE_MAX;
+
+    for (size_t i = 0; i < fens.size(); ++i) {
+      // The test positions must all load; a placement load_FEN() refuses (the
+      // side not to move in check from a pawn) is skipped.
+      if (i < test_positions) {
+        REQUIRE_MESSAGE(load_FEN(fens[i], &game), ("FEN: " + fens[i]));
+      } else if (!load_FEN(fens[i], &game)) {
+        continue;
+      }
+
+      const pawn_counts_t expected = pawn_counts_by_definition(&game.board);
+
+      int passed[2][5];
+      int structure[2][3];
+      passed_pawn_counts(&game.board, passed);
+      pawn_structure_counts(&game.board, structure);
+
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int bucket = 0; bucket < 5; ++bucket) {
+          REQUIRE_MESSAGE(
+              passed[colour][bucket] == expected.passed[colour][bucket],
+              ("FEN: " + fens[i] + " colour " + std::to_string(colour) +
+               " passer bucket " + std::to_string(bucket)));
+          seen.passed[colour][bucket] += expected.passed[colour][bucket];
+        }
+
+        for (int f = 0; f < 3; ++f) {
+          REQUIRE_MESSAGE(
+              structure[colour][f] == expected.structure[colour][f],
+              ("FEN: " + fens[i] + " colour " + std::to_string(colour) +
+               " structure feature " + std::to_string(f)));
+          seen.structure[colour][f] += expected.structure[colour][f];
+        }
+      }
+
+      positions_checked++;
+
+      if (i >= test_positions) {
+        random_positions_checked++;
+
+        const size_t placement = (i - test_positions) / 2;
+        if (placement != last_placement) {
+          placements_checked++;
+          last_placement = placement;
+        }
+      }
+    }
+
+    // Non-vacuity: every count, for each colour, is non-zero somewhere, so no
+    // set can be wrong in a way that only shows on a feature nobody had. The
+    // first two guards count positions, a random placement once per side to
+    // move it loaded with; the third counts distinct random placements, each
+    // once. Of the 20000 placements 17587 load with libstdc++ (2026-10-13,
+    // read with a print added to this test and removed); the floor sits below
+    // it because the sequence a seed gives is the standard library's and not
+    // the standard's, while the share that loads is the generator's.
+    REQUIRE(positions_checked > 20000);
+    REQUIRE(random_positions_checked > 10000);
+    REQUIRE(placements_checked > 17000);
+
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int bucket = 0; bucket < 5; ++bucket) {
+        CAPTURE(colour);
+        CAPTURE(bucket);
+        REQUIRE(seen.passed[colour][bucket] > 0);
+      }
+
+      for (int f = 0; f < 3; ++f) {
+        CAPTURE(colour);
+        CAPTURE(f);
+        REQUIRE(seen.structure[colour][f] > 0);
+      }
+    }
   }
 }
 

@@ -30,7 +30,8 @@ H0 or no verdict the family is bisected along a partition written in the
 pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
-S262 has landed; the attack sets come from S263. S039 runs before this family
+S262 has landed. S263 built no per-side attack set, since no term read one;
+a term here that needs one builds it once per evaluation. S039 runs before this family
 and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
 owner's amendment of that outcome binds here.
 

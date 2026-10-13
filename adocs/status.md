@@ -16,15 +16,14 @@ Hash 16 (DEC-268): **H1 after 16128 games, Elo 5.24 +/- 4.06, nElo 6.92 +/-
 `chesso_S119_sprt_2026-10-13.tar.xz`. About 30 s of niced agent work ran in
 the first three minutes, before DEC-260's stop; disclosed in the stamp.
 
+**S263 done**: the pawn stage's attack sets built once,
+node- and score-identical, timing zero under DEC-266, kept for score identity
+and fewer instructions; S101, S102, S121-S125 and S135 amended (they build
+their own sets). Fast check: five record items, fixed before commit.
+
 **Written beside the match (DEC-260), landing now, in Open order:**
-- **S259** (filler): re-mine the multicut and ProbCut mate rows on the tree
-  S119 left. Not yet briefed.
-- **S263** (worktree `../chesso-s263`, base `bee84d8`): As built drafted;
-  owed the 19 min timing (first, on the quiet machine), the trace re-run,
-  the full gate, the prose checks; commands in the worktree's
-  `.tuning/coord/S263/pending.md`. Rebase onto achesso before landing. On
-  landing, amend S101, S102, S121-S125 and S135: "the attack sets come from
-  S263" -- none was built; each builds its own.
+- **S259** (filler, worktree `../chesso-s259`): running -- re-mine the
+  multicut and ProbCut mate rows on the tree S119 left.
 - **S276** (worktree `../chesso-s276`): written blind; phase 2 builds, runs
   the suites, re-takes `feature_audit` and `truncation_scan`, fills 10
   `S276-PENDING` tokens, applies `.tuning/coord/S276_files/pending_citations.diff`
