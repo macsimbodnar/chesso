@@ -78,15 +78,12 @@ extern const int passed_pawn_eg[5];
 // that side's own passed pawns in the buckets the weights above are indexed by;
 // the White-minus-Black difference the term scores is one subtraction away.
 //
-// It exists for tests/test_eval_model. The weights ship non-zero, so comparing
-// the engine's score against the tuner's model is a real comparison of this
-// term today -- it was not while they were zero, where 0 against 0 passed
-// whatever the two believed about the buckets -- but it is a comparison of the
-// weighted White-minus-Black difference and nothing finer. The model has a
-// test of its own against hand-computed positions, which says it matches the
-// written specification; nothing said the engine reads that specification the
-// same way, and a tuner fitted against a model the engine disagrees with fits
-// the wrong function.
+// It exists so the engine's counts are checked on their own, not through a
+// score: tests/test_eval_model holds them to the walk in
+// tests/test_walked_counts.hpp, written from the specification above and
+// sharing no code with the engine, and to hand-worked placements. The tuner
+// fits evaluate()'s own trace since S262, so it fits whatever this counts,
+// and no score says whether that is the specification as written.
 //
 // Per colour and not as the difference, for the same reason
 // king_safety_features() is: a miscount that hits both sides equally cancels in
@@ -136,8 +133,8 @@ extern const int pawn_structure_eg[3];
 // The raw counts the term is built from, per colour, WHITE first, in the
 // feature order above. Exists for tests/test_eval_model and per colour rather
 // than as the difference, for the reason written out over passed_pawn_counts():
-// a miscount that hits both sides equally cancels in a difference, so the score
-// comparison cannot see it whatever the weights are.
+// a miscount that hits both sides equally cancels in a difference, so a check
+// of the difference cannot see it whatever the weights are.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
@@ -201,9 +198,9 @@ extern const int piece_placement_eg[3];
 // feature order above. Exists for tests/test_eval_model and per colour rather
 // than as the difference, for the reasons written out over
 // passed_pawn_counts(). Both of them apply here at full strength: these weights
-// are still zero, so the score comparison is 0 against 0 and sees nothing at
-// all, and a miscount that hits both sides equally would stay invisible in a
-// difference after they are fitted.
+// are still zero, so no score sees these counts at all, and a miscount that
+// hits both sides equally would stay invisible in a difference after they are
+// fitted.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
@@ -271,14 +268,12 @@ extern const int king_safety_eg[KS_FEATURE_COUNT];
 // row is about its own king: the attackers are the other side's pieces bearing
 // on it, the shelter is its own pawns in front of it.
 //
-// It exists for tests/test_eval_model. The weights ship non-zero, so the score
-// comparison does now exercise this term -- while they were zero it compared 0
-// against 0 and would have passed just as happily if the two disagreed about
-// every one of the nine counts. What it still cannot see is the shape of the
-// disagreement: the score is one weighted White-minus-Black sum over nine
-// collinear counts, so a miscount in one feature offset by another, or one that
-// hits both sides equally, cancels before it reaches the number. The counts are
-// exposed so that each is checked on its own.
+// It exists so that each of the nine counts is checked on its own:
+// tests/test_eval_model holds them to the walk in tests/test_walked_counts.hpp,
+// which shares no code with the engine. A score cannot: it is one weighted
+// White-minus-Black sum over nine collinear counts, so a miscount in one
+// feature offset by another, or one that hits both sides equally, cancels
+// before it reaches the number.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate() calls, so there is one extraction and no second implementation to

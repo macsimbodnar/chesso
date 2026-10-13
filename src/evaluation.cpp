@@ -151,8 +151,8 @@ enum
 // DEC-044 and the passed pawn comment above record the other two.
 //
 // The exact definition of each of the three is in evaluation.hpp, written out
-// there because tools/eval_model.hpp is built from it and the two have to mean
-// the same thing.
+// there because the walk in tests/test_walked_counts.hpp is built from it and
+// the two have to mean the same thing.
 //
 // Marginal cost 4.1 % of a depth 14 search, measured on top of the passed pawn
 // term with the weights forced non-zero because at zero the compiler deletes
@@ -167,7 +167,7 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
 // The three piece placement features, in the order their weights are indexed.
 // Shared between the weights, the counts and the accessor so that none of the
 // three can disagree with the others about which index means what. PL and not
-// PP because tools/eval_model.hpp already spells passed pawn PP_, and two
+// PP because tools/tuner_layout.hpp already spells passed pawn PP_, and two
 // prefixes one letter apart on the same seven arrays is a mistake waiting to be
 // made. The passed pawn buckets are indexed by rank and have no enum.
 //
@@ -189,10 +189,11 @@ enum
 // of a guess. No published table was consulted, DEC-016.
 //
 // The exact definition of each of the three is in evaluation.hpp, written out
-// there because tools/eval_model.hpp is built from it and the two have to mean
-// the same thing. What is here is why the arithmetic below computes them the
-// way it does. The costs and the verdict below were measured on four features,
-// rook on the seventh among them, before S134 deleted it.
+// there because the walk in tests/test_walked_counts.hpp is built from it and
+// the two have to mean the same thing. What is here is why the arithmetic
+// below computes them the way it does. The costs and the verdict below were
+// measured on four features, rook on the seventh among them, before S134
+// deleted it.
 //
 // **Nothing measured at these weights says anything about what they cost** --
 // clang sees the zeros and deletes the popcounts and the arithmetic that feed
@@ -680,10 +681,9 @@ void piece_placement_counts(const board_t* board, int out[2][3])
 // of a guess. No published value was consulted, DEC-016 -- and there is a
 // well-known one for this term, which is exactly why the rule exists.
 //
-// The exact definition is in evaluation.hpp, written out there because
-// tools/eval_model.hpp is built from it and the two have to mean the same
-// thing. The short version: it is added after evaluate_cheap() has resolved the
-// sign, so it belongs to the side on move rather than to White.
+// The exact definition is in evaluation.hpp, with what checks it. The short
+// version: it is added after evaluate_cheap() has resolved the sign, so it
+// belongs to the side on move rather than to White.
 //
 // One parameter each and no feature vector, because the feature is the constant
 // 1 for whoever is to move. In the tuner's White-relative model that is +1 with
@@ -820,9 +820,9 @@ int evaluate_cheap(const board_t* board)
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that
   // costs 1.36 ns in total, and one truncation towards zero instead of two --
-  // which is what keeps test_eval_model's one-centipawn slack against the
-  // tuner's floating-point model from having to grow. Both are packed, so the
-  // sum is one add and taper() takes the halves apart after it.
+  // which keeps one more 23/24 out of the bound test_eval_trace holds the
+  // tuner's smooth score to. Both are packed, so the sum is one add and taper()
+  // takes the halves apart after it.
   const int positional = taper(board->psqt + pawns, phase);
 
   const int score = board->material + positional;
@@ -841,13 +841,13 @@ int evaluate_cheap(const board_t* board)
   // stops being exactly true. See test_eval_model, "the move is worth the same
   // to either side".
   //
-  // What that costs is a second truncating division, one centipawn against the
-  // tuner's floating-point model -- test_eval_model allows two and this widens
-  // the worst case by one -- and seven instructions, measured: evaluate_cheap()
-  // disassembles to 164 at these zero weights and 171 with them forced, the
-  // extra six being the taper and only one of them the add. At zero the
-  // compiler deletes all seven, DEC-047, which is why the count is the
-  // measurement and no timing was run.
+  // What that costs is a second truncating division, under one centipawn more
+  // against the tuner's smooth score -- test_eval_trace's bound is 3 x 23/24
+  // with tempo at zero and 4 x 23/24 fitted -- and seven instructions,
+  // measured: evaluate_cheap() disassembles to 164 at these zero weights and
+  // 171 with them forced, the extra six being the taper and only one of them
+  // the add. At zero the compiler deletes all seven, DEC-047, which is why the
+  // count is the measurement and no timing was run.
   const int tempo = taper(tempo_score, phase);
 
   // White relative like every other coefficient in the trace: the bonus goes
