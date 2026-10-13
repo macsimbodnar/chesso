@@ -57,9 +57,45 @@
 # hung engine scored as a time loss, which the forfeit check catches rather than
 # quietly averaging in.
 #
+# THE SIXTH AND SEVENTH RUNGS ARE WEISS 1.1 AND STASH v30.0, added at S264.
+# S240's top anchor, Leorik 2.4 at 2830, still outscored chesso, and S152 reads
+# a figure near 3000: solved from anchors that all sit below 2850, that is an
+# extrapolation. Weiss 1.1 (2987 on the list read 2026-10-12) is a fourth
+# family and puts a rung at the mark; Stash v30.0 (3153) tops the set and is
+# Stash 21.0's own line nine versions on, so the two Stash rungs read the scale
+# inside one author's engines. adocs/data/S264_anchors.md has the choice.
+#
+# Weiss 1.1 is built with its own `make pext` (gcc 13), without PGO, and its md5
+# reproduces: two builds from tag v1.1 gave the same hash. That `make pext`
+# compiles with -march=native, so the md5 is a rebuild check on this CPU and
+# this compiler only, not elsewhere. Its NoobBook option queries an online
+# book over a socket when true; it defaults to false and rating.sh never sets
+# it, and an strace of a timed search shows no socket and no file but libc's.
+#
+# WEISS 1.1 CRASHES ON A `go` SENT BEFORE ANY `isready`. Its hash table is
+# allocated by `isready`, not at start, so a search before one dereferences a
+# null table: 20/20 segfaults (exit 139) from a shell pipe without `isready`,
+# 0/20 with it. fastchess does not reach it: its UciEngine::ucinewgame() sends
+# `isready` and waits for readyok, and S264's smoke run played Weiss 200 games
+# under the installed fastchess 1.8.1 with no crash; identify() sends no `go`.
+# Recorded because the symptom would be a crash, which voids a run at zero.
+#
+# Stash v30.0 is built as v21.0 was, utils/unix_build.sh at ARCH=x86-64-bmi2,
+# so its md5 is an identity record, not a rebuild check: a second build gave a
+# different hash and the same bench node count. Its uci_name and ccrl_name
+# differ the same way. The startup deadlock above is closed in this version:
+# EngineMode starts at THINKING and main() waits for the engine thread to park
+# before it reads a command. Measured with the commands in the pipe at exec and
+# the engine pinned to one core, which leaves the new thread no core to start
+# on before the `go` is read: v21.0 hung 10/10, v30.0 answered 20/20.
+#
+# Both expose Threads, default 1. rating.sh sends none, so both play on one.
+#
 # uci_name	binary	ccrl_name	source	tag	md5
 Blunder 7.1.0	/home/max/ws/engines/blunder-7.1.0.bin	Blunder 7.1.0	/home/max/ws/engines/blunder-7.1.0	v7.1.0	294d3252a337c7b3814d169227de7082
 Leorik 2.1	/home/max/ws/engines/Leorik-2.1.bin	Leorik 2.1	https://github.com/lithander/Leorik/releases/tag/2.1	2.1	8300612936009ae7298aa1e59e6c3c7a
 Blunder 8.5.5	/home/max/ws/engines/blunder-8.5.5.bin	Blunder 8.5.5	/home/max/ws/engines/blunder-8.5.5	v8.5.5	e354234b0929cf9d8f2b42b149509065
 Stash v21.0	/home/max/ws/engines/stash-21.0.bin	Stash 21.0	/home/max/ws/engines/stash-21.0	v21.0	5117fbc26f9eb0b91480b8328985f435
 Leorik 2.4	/home/max/ws/engines/Leorik-2.4.bin	Leorik 2.4	https://github.com/lithander/Leorik/releases/tag/2.4	2.4	8e53f8903322383a831e1e0a8a8630bc
+Weiss 1.1	/home/max/ws/engines/weiss-1.1.bin	Weiss 1.1	/home/max/ws/engines/weiss-1.1	v1.1	a7868b74724741e357ae6c3ea23f3ecf
+Stash v30.0	/home/max/ws/engines/stash-30.0.bin	Stash 30.0	/home/max/ws/engines/stash-30.0	v30.0	36cc28332b5bad10c05589d474c165cb

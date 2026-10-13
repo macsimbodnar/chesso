@@ -600,6 +600,16 @@ The two `rating_2026-08-18_*` files are one character apart in the middle of a
 long name and report different numbers from the same engine — 2570 over four
 engines, 2559 over five. `_S088_` is the current one.
 
+### S264, two rating anchors above 2850
+
+| file | what it is |
+|---|---|
+| `S264_anchors.md` | the record: the CCRL Blitz list as read 2026-10-12 (computed 2026-10-10, its URL now a 302), why Weiss 1.1 (2987) and Stash v30.0 (3153) were chosen and every other candidate refused, each one's source, tag, licence, build and md5, the identity, option, `strace` and shell-pipe probes (Stash v30.0 closes v21.0's startup deadlock; Weiss 1.1 crashes on a `go` before any `isready`, which fastchess does not send), and the smoke run's checks. No rating is read from the smoke run (DEC-108) |
+| `S264_ccrl_blitz_band_2026-10-12.tsv` | every 1CPU entry on that list from 2840 to 3210, 466 rows: rating, interval, games, the list's own name. Extracted from the page with grep, sed and awk, the command in the record |
+| `S264_smoke_report.txt` | the smoke run's `rating.sh --bracket` report, 2026-10-13, 600 games at 10+0.2 against Leorik 2.4, Weiss 1.1 and Stash v30.0, 200 a pairing, **cut before `=== bracketing`** (`sed '/^=== bracketing/,$d'`) and **stripped of fastchess's 30 running standings tables** by shape, unread (a dashed rule followed by `Rank Name` through the next rule, `S264_strip_standings.awk`), so no rating from the run is in the tree (DEC-108); console already trimmed by `tools/trim_console.py`; every game line, the trim counts, terminations and forfeits kept; 0 crashes, 0 illegal moves, 0 unexpected terminations |
+| `S264_smoke_forfeits.txt` | that run's forfeit census: 0 for every engine |
+| `S264_strip_standings.awk` | the filter that made `S264_smoke_report.txt` from the run's `report.txt` after the bracketing cut: drops each fastchess standings table by its shape, never by its values; `sed '/^=== bracketing/,$d' report.txt \| awk -f S264_strip_standings.awk` reproduces the committed file byte for byte |
+
 ### S100, the corpus feature audit
 
 | file | what it is |

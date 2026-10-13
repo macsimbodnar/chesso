@@ -31,11 +31,11 @@ reproduce S275's readings. Still owed, a `No functional change` commit:
 stale `eval_model` comments in `src/evaluation.{cpp,hpp}` (listed in S276's
 As built). S122 must extend `exact_score()` to its group.
 
+**S264 done**: Weiss 1.1 (2987) and Stash v30.0 (3153) join the reference
+set; smoke run clean, no rating read (DEC-108). Binaries in
+`/home/max/ws/engines/`.
+
 **Written beside the match (DEC-260), landing now, in Open order:**
-- **S264** (worktree `../chesso-s264`): Weiss 1.1 (2987, fourth family) and
-  Stash v30.0 (3153) chosen from the list read 2026-10-12; sources cloned to
-  `/home/max/ws/engines/`, nothing built; phase 2 builds, probes, and one
-  600-game smoke run (`rating.sh` needs three engines).
 - **S261** (worktree `../chesso-s261`): 32 axes (DEC-269), one lane of 1250
   iterations x 48 games at 2+0.02, about 8 h 45 m, a night; split decided by
   `S261_split_sim.py` before launch. Then the independent {0,5} SPRT, the

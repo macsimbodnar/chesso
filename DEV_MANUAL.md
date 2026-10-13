@@ -4397,8 +4397,8 @@ files came from a shared path.
 ## Rate the engine against the public lists
 
 ```bash
-./rating.sh --bracket           # 340 games, checks the reference set brackets chesso
-./rating.sh                     # 3340 games, solves an absolute rating with ordo
+./rating.sh --bracket           # 476 games, checks the reference set brackets chesso
+./rating.sh                     # 4676 games, solves an absolute rating with ordo
 TC=2+1 ./rating.sh              # pick the time control
 CONCURRENCY=6 ROUNDS=50 ./rating.sh
 ```
@@ -4423,15 +4423,17 @@ and no marker on the machine this project is developed on
 **Run it when substantial work has been done to the engine, and not on a
 threshold.** DEC-074 is the owner's decision and it replaced DEC-071's "any
 landed step an SPRT credits with 20 Elo or more". Per-change decisions belong to
-the SPRT; a rated run costs about 5 hours since DEC-073 dropped it to
-concurrency 6, and "substantial" is the owner's judgement rather than something
-an agent totals up and books for itself.
+the SPRT; a rated run costs about 3 h 30 m at 10+0.2 over the seven anchors
+S264 left -- S240's valid run 2 played 3340 games in 2 h 28 m 31 s at
+concurrency 12, fastchess's own total, 1349 games an hour, so `668 x pairings
+/ 1349` hours; S264's smoke run read 1299 -- and "substantial" is the owner's
+judgement rather than something an agent totals up and books for itself.
 
 **The two numbers are never quoted against each other.** `ordo`'s intervals are
 trinomial; every SPRT verdict here runs `model=normalized` and reports nElo.
 
 **`ROUNDS` is rounds per pairing, and each round is two games.** The totals
-above are for the five engines in `references.tsv` today -- `rounds x pairings x
+above are for the seven engines in `references.tsv` today -- `rounds x pairings x
 2` -- so they move when the manifest does, and the run prints the derived total
 before it plays. The rated default is 334 rounds = **668 games per pairing**,
 which is measured and not chosen: S087 got +/-34 at 334 games per pairing and
@@ -4465,6 +4467,17 @@ the first install of this set put the Rustic workspace development build
 (`id name engine 3.99.36`) at `/usr/games/rustic`, which has no published rating
 and would have been anchored at the tag build's.
 
+**The set is seven rungs from four families, 2389 to 3153 on the list read
+2026-10-12**: Blunder 7.1.0, Leorik 2.1, Blunder 8.5.5, Stash v21.0, Leorik
+2.4 (S087, S088), then Weiss 1.1 at 2987 and Stash v30.0 at 3153 (S264). The
+two S264 rungs exist because S240's top anchor, Leorik 2.4 at 2830, still
+outscored chesso, and S152's reading near 3000 would otherwise be solved past
+the top of the set. Weiss puts a rung at the mark; Stash v30.0 is v21.0's own
+line, so the two Stash rungs read the scale inside one author's engines
+(DEC-077). The choice, the candidates refused and why are in
+`adocs/data/S264_anchors.md`; the binaries live in `/home/max/ws/engines/`
+(DEC-069), each row's header note in `references.tsv` says how it was built.
+
 Anchors are read from the CCRL Blitz list at run time, never hardcoded:
 
 ```bash
@@ -4472,12 +4485,29 @@ tools/ccrl_rating.py "Leorik 1.0" "Blunder 5.0.0" "Rustic Alpha 3.0.0"
 ```
 
 It exits non-zero when a name is not on the list, so a missing anchor stops a
-rated run instead of silently dropping a reference.
+rated run instead of silently dropping a reference. Its URL,
+`https://computerchess.org.uk/ccrl/404/rating_list_all.html`, answers a 302
+to `https://computerchess.org.uk/404/rating_list_all.html` since at least
+2026-10-12; `urllib` follows it, so the tool still reads the list. A name is
+matched with " 64-bit" stripped, so a version the list carries both as 64-bit
+and as 32-bit -- `Zahak 7.1`, at 2972 and 2900 -- resolves to whichever row
+comes first; no anchor in the set has a twin.
 
-`option.Threads` is deliberately not sent. None of the reference engines exposes
-it — all are single-threaded by construction — and chesso's is `min 1 max 1`.
-`option.Hash=64` is inside every engine's maximum; the binding one is Blunder at
-256 MB.
+`option.Threads` is deliberately not sent, and chesso's is `min 1 max 1`. The
+five S087 and S088 engines do not expose it; Weiss 1.1 and Stash v30.0 do,
+with a default of 1, so not sending it keeps every engine on one thread.
+`option.Hash=128` is inside every engine's maximum, and the binding one is
+Leorik's 2047 MB (2.1 and 2.4 alike); the Blunders allow 32000, Stash v21.0
+131072, Weiss 1.1 65536 and Stash v30.0 33554432. All read from each binary's
+own `uci` answer on 2026-10-13, S264. The 256 MB once named here as the
+binding maximum belonged to the first set's Blunder 5.0.0.
+
+**Weiss 1.1 crashes on a `go` sent before any `isready`**: its hash table is
+allocated by `isready`, so a search before one dereferences a null table (20/20
+segfaults from a shell pipe, S264). fastchess sends `isready` with every
+`ucinewgame` and waits for `readyok`, and `rating.sh`'s identity probe sends no
+`go`, so a run does not reach it: S264's smoke run played Weiss 200 games
+without a crash. Probe Weiss by hand with `isready` first.
 
 **A crash voids the run at zero; a time forfeit is weighed against a rate.**
 DEC-075 split what used to be one check.
@@ -6041,7 +6071,9 @@ and it reversed the conclusion of the work that followed.
 Not `~/.local/bin`, which on the DEC-049 machine holds no engine at all. What is
 in `/usr/games` here: `stockfish`, `sgambetto`, `sgambetto-native`, a fixed
 `chesso` (an old build — it exposes only `Use Book`, with no `Hash` or `Threads`
-option), and the `rating.sh` reference engines listed in `references.tsv`.
+option), and the first `rating.sh` set's `blunder`, `Leorik-1.0` and `rustic`,
+which DEC-069's set replaced. The current `rating.sh` references are not here:
+they live in `/home/max/ws/engines/`, listed in `references.tsv`.
 
 The engines below are the *calibration and cross-check* opponents and are a
 different set from the rated ones. For the gauntlet that produces an absolute

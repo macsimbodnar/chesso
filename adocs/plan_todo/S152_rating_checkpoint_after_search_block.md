@@ -36,6 +36,49 @@ bar. S264 installs the anchors this run needs and recomputes its cost with
 the larger manifest. S267's drift gate sits before S126, so this run is
 reached only if that gate passed or the owner ruled past it.
 
+## Cost with S264's manifest (written by S264, 2026-10-13)
+
+S264 adds Weiss 1.1 (2987) and Stash v30.0 (3153), so the gauntlet has seven
+pairings. `rating.sh` plays 334 rounds, 668 games, per pairing:
+
+    games = 668 x P                  P = pairings = 7  ->  4676 games
+    hours = 668 x P / G              G = games an hour at the control played
+
+**G at 10+0.2 is measured: 1349 games an hour.** S240's valid run 2 played
+3340 games in 2 h 28 m 31 s (fastchess's own total time) on this machine at
+concurrency 12, hash 128. Run 1 took 2 h 30 m 45 s but was void and shared
+the machine for its first hour, so it is not the reference. That is **29 m 42 s
+a pairing**, and the standing control's gauntlet is **4676 games, about 3 h
+28 m** -- against 2 h 29 m for S240's five anchors. One added pairing is about
+30 minutes at 10+0.2.
+
+**G at the second control is not measured, and is estimated by scaling.**
+Throughput falls about in proportion to the control: the harness's own
+self-play read 2110 games an hour at 8+0.08 and 534 to 545 at 32+0.32, a
+factor 3.87 to 3.95 for a control four times as long. So at a control `k`
+times the length of 10+0.2 -- `k = (base + 60 x inc) / 22` when the two do
+not scale together, the nominal clock a side gets over 60 moves -- the
+second gauntlet costs about `3.47 x k` hours and the pair `3.47 x (1 + k)`:
+
+| second control | k | second gauntlet | both |
+|---|---|---|---|
+| 20+0.4 | 2 | 6.9 h | 10.4 h |
+| 30+0.6 | 3 | 10.4 h | 13.9 h |
+| 40+0.4 | 2.91 | 10.1 h | 13.5 h |
+| 60+0.6 | 4.36 | 15.1 h | 18.6 h |
+| 120+1, the list's nominal | 8.18 | 28.4 h | 31.8 h |
+
+The 10+0.2 gauntlet is under DEC-155's four hours and starts when it is
+ready; every second control above is a night run, and the last is two. The
+second control's games-an-hour is re-read from the first 1000 games of its
+own run before its finish time is promised. The anchors near chesso's
+strength may lengthen games a little (fewer early adjudications). S264's
+smoke run, 600 games against Leorik 2.4 and the two new anchors at 10+0.2,
+read **1299 games an hour**: 1663 s from its start stamp to `report.txt`'s
+last write (fastchess's own total, 27 m 42 s, agrees), 3.7 % under 1349 and
+inside a run more than seven times shorter. At 1299 the standing control's
+gauntlet is 3 h 36 m; budget 3 h 30 m to 3 h 40 m.
+
 ## Why five hours is the right price -- and why not yet
 
 The plan's own budget is "roughly 75 to 110 machine-hours" and S088's run cost
