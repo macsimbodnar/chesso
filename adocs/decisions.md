@@ -14378,3 +14378,36 @@ Rejected:     Keeping 32768 without a census -- section 4's own preference,
               Booking the bisection now -- DEC-063.
 Consequences: S099's phase 2 adds the census and its tune-only counter before
               the SPRT is pinned. S110 and S111 stay conditional on S099's H1.
+
+## DEC-271  2026-10-13  S099's pawn key lands with the correction, so one SPRT prices both
+Tags:         search, correction-history, measurement, s099, dec-083, dec-266, dec-260
+Context:      S099's step file split the work: (a) the pawn-structure key,
+              node-identical, landing on its own between runs (DEC-260), and
+              (b) the correction table, the SPRT's candidate measured against
+              (a). (a)'s timing under DEC-266 (2026-10-13, against `f6647dc`)
+              measured a cost: cycles +1.96 % on bench 16 and +1.44 % on the
+              300 positions, hyperfine wall -1.42 % speed, each beyond its A/A
+              floor, instructions +0.69 % and +0.66 % the same way; about -2
+              to -3 Elo at DEC-083's 1.43 per percent, a conversion and not a
+              verdict. Cycles rising twice as much as instructions points at a
+              branch on the moving piece. Landed alone, (a) buys nothing, and
+              (b)'s SPRT against (a) would never price it.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. (a) does not land on its own. It is first made
+              branchless (pawn rows in a key table the other pieces read as
+              zero), node-identical again, and then (a) and (b) land together
+              as S099's candidate, whose SPRT reference is the tree before the
+              key -- after S261's lane lands, the commit that lands it. The
+              one verdict prices the key and the correction together, as the
+              shipped change.
+Rejected:     Landing (a) now as written -- a measured 1.4 to 2.1 % cost with
+              no verdict ever on it. (b)'s SPRT against `f6647dc` -- S261's
+              vector lands in between, so that reference would mix two
+              changes. A second SPRT for (a) alone -- it alters no play, so an
+              SPRT of it measures only its speed, which the timing already
+              did.
+Consequences: S099's pre-registration names REF as the commit before the key
+              and states that the verdict covers both parts. S118's pawn
+              cache, which will read the same key, inherits it from S099's
+              landing. The plan's "phase (a) may land between runs" no longer
+              applies to S099.
