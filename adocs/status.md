@@ -7,51 +7,51 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-13, by hand.
 
-## 2026-10-13: S119 H1 -- the cluster table stays; the lanes land next
+## 2026-10-13: S261's lane runs; S099 and S023 wait for the machine
 
-**S119 done.** C (`298788b`) against A+B (`cc87dfb`), `{0, 5}` nElo, 8+0.08,
-Hash 16 (DEC-268): **H1 after 16128 games, Elo 5.24 +/- 4.06, nElo 6.92 +/-
-5.36**, 0 forfeits, 7 h 43 m at 2090 games/h. A, B and C all stay. Log
-`adocs/data/S119_sprt.log`; run archived as
-`chesso_S119_sprt_2026-10-13.tar.xz`. About 30 s of niced agent work ran in
-the first three minutes, before DEC-260's stop; disclosed in the stamp.
+**Running: S261's SPSA lane** (pre-registration `932ee7a`), launched
+2026-10-13 12:40: 31 axes (DEC-269 adds LmrBase and LmrDivisor; SePlyFactor
+unreachable), one lane (split sim 0.984), 1250 iterations x 48 games at
+2+0.02, about 8 h 45 m, ceiling 18 h. Log `.tuning/spsa_s261.log`, pid in
+`.tuning/spsa_s261.pid`. One resume allowed after a transient failure
+(pre-registered). Then: the mate suites on the tuned vector, the independent
+{0,5} SPRT (`adocs/data/S261_sprt.sh`), the drift point and the 32+0.32
+reading whatever the verdict (DEC-269). No open DEC-171 finding.
 
-**S263 done**: the pawn stage's attack sets built once,
-node- and score-identical, timing zero under DEC-266, kept for score identity
-and fewer instructions; S101, S102, S121-S125 and S135 amended (they build
-their own sets). Fast check: five record items, fixed before commit.
+**Order from here:** S261 (lane, mate suites, SPRT, readings) -> S099
+rebased onto S261's landing, every number re-taken, SPRT (DEC-271) -> S023
+verdict 1 (DEC-273). Owed at the next machine gap: the `No functional change`
+commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
 
-**S259 done**: both mined mate rows separate E21 and B04 again (multicut
-back to S114 v2's row, ProbCut a new row, mate in 6); closes S120 finding 9.
-No open DEC-171 finding remains for a run's pre-registration. S277 (filler)
-gives the ProbCut miner a `--mode`.
-
-**S276 done**: the audit tools read the trace, the mirror is deleted; both
-reproduce S275's readings. Still owed, a `No functional change` commit:
-stale `eval_model` comments in `src/evaluation.{cpp,hpp}` (listed in S276's
-As built). S122 must extend `exact_score()` to its group.
-
-**S264 done**: Weiss 1.1 (2987) and Stash v30.0 (3153) join the reference
-set; smoke run clean, no rating read (DEC-108). Binaries in
-`/home/max/ws/engines/`.
-
-**Written beside the match (DEC-260), landing now, in Open order:**
-- **S261 running** (pre-registration committed): the search block's SPSA lane,
-  31 axes (DEC-269 adds LmrBase and LmrDivisor; SePlyFactor unreachable),
-  one lane (split sim 0.984), 1250 iterations x 48 games at 2+0.02, about
-  8 h 45 m, ceiling 18 h. Log `.tuning/spsa_s261.log`. One resume allowed
-  after a transient failure (pre-registered). Then the mate suites on the
-  tuned vector, the independent {0,5} SPRT (`adocs/data/S261_sprt.sh`), the
-  drift point and the 32+0.32 reading (DEC-269).
+**Waiting, written (DEC-260 lanes):**
 - **S099** (worktree `../chesso-s099b`, uncommitted, base `5ac17bd`): complete
-  up to the SPRT. (a) the pawn key, made branchless (DEC-271), and (b) the
-  correction table at 2048 slots a side (DEC-270's census), bench 3539313,
-  14/14 CH and 5/5 PK mutants killed, second tier green but S278's (now
-  fixed). Lands as one candidate after S261 lands: rebase onto S261's
-  landing, re-take every number, pin `adocs/data/S099_sprt.sh` (REF = S261's
-  landing). DEC-272 (owner): test_mate_carry F's ceiling 0 -> 2 lands with it
-  on H1; the worktree's test already cites DEC-272, the step file's
+  up to the SPRT. (a) the pawn key, made branchless after its timing measured
+  +1.4 to 2.1 % cycles (DEC-271; counters after: -0.95 % cycles against the
+  old key on bench 16), and (b) the correction table at 2048 slots a side
+  (DEC-270's census); bench 3539313, 14/14 CH and 5/5 PK mutants killed,
+  second tier green but S278's (now fixed). Lands as one candidate: REF =
+  S261's landing. DEC-272 (owner): test_mate_carry F's ceiling 0 -> 2 lands
+  with it on H1; the worktree's test cites DEC-272, the step file's
   `DEC-PENDING`/`DEC-<n>` placeholders still to fill.
+- **S023** (worktree `../chesso-s023`): phase 1 written blind -- verdict 1,
+  the capture-history table and its capture SEE and quiescence futility
+  margin readers, 4 new parameters, CX mutants; verdict 2 (ordering) only on
+  its H1 (DEC-273). Shares `tests/test_search_params.cpp`'s count line with
+  S099 (75 and 77; 79 together).
+
+**Done today, 2026-10-13, each gated green:**
+- **S119** H1 at Hash 16 (DEC-268): Elo 5.24 +/- 4.06, 16128 games; the
+  cluster table, prefetch and huge pages all stay.
+- **S263**: the pawn stage's attack sets built once; timing zero (DEC-266),
+  kept for score identity; S101, S102, S121-S125, S135 build their own sets.
+- **S259**: both mined mate rows separate E21 and B04 again.
+- **S276**: the audit tools read the trace; the mirror is deleted. S122 must
+  extend `exact_score()` to its group.
+- **S264**: Weiss 1.1 (2987) and Stash v30.0 (3153) join the reference set;
+  binaries in `/home/max/ws/engines/`.
+- **S277**: the ProbCut miner takes `--mode`.
+- **S278**: the sanitizer trace failure was a false UBSan report (GCC 13.3's
+  TLS wrapper, ld's relaxation); `constinit`; `gate_extra` green again.
 
 ## 2026-10-12: S262 done -- the tuner fits evaluate()'s own trace
 
