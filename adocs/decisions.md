@@ -14666,3 +14666,40 @@ Rejected:     A `--nonreg {-5, 0}` SPRT in S210 F22's form -- F22 moved 1.69 %
 Consequences: S261's carry family and node-budget goldens are re-measured on
               the fixed tree. A later stop-path change with zero fixed-depth
               reach and no `bestmove` moved at node budgets follows this form.
+
+## DEC-280  2026-10-14  S261's vector makes LQ02 unreachable in release: its case moves to the tune build, B15's form
+Tags:         search, tests, mutation, lmp, s261, s269, dec-142
+Context:      S269's case "a capture past late move pruning's count still takes
+              the extra ply" kills LQ02 (the extra ply's exchange test skipped
+              for every move past the count). At S261's vector the late move
+              pruning flag is set only below `LmpMaxLmrDepth` 3, so a capture
+              after it sits at reduced depth 2 or less, where the capture rule's
+              margin is at most 100 and, by S261's agent's reading, the smallest
+              loss the exchange evaluation can show is 200: every losing late
+              capture is pruned before the extra ply is asked. Measured on the
+              fixture's position at drive depths 3 to 16: pruned at 3 to 8, the
+              flag never set from 9.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. As S113's B15: LQ02 is declared `equivalent` in the
+              release build and killed in the tune build, where the case sets
+              late move pruning's parameters back through `search_param_set`
+              and asserts its precondition there; the release build gains a
+              case that asserts the inequality the equivalence rests on, read
+              from the shipped constants and the exchange evaluation's own
+              values, so a vector that makes the extra ply reachable again turns
+              it red. The declaration carries evidence, not only the argument:
+              the release LQ02 mutant's `bench` and `search_bench` node-identical
+              to the unmutated tree, and the tune-build case observed red under
+              LQ02. LQ03 is re-mined in release with a position that clears
+              `LmpBase` 935's count; if none can, the same form and the same
+              evidence apply.
+Rejected:     Holding `LmpMaxLmrDepth` at 8 (and `LmpBase`) -- it gives up two
+              fitted values so that a guard keeps a position, when what the
+              guard is for, S269's rule not reaching the captures, stays checked
+              in the build where it is reachable; and the families would be
+              re-taken on a vector the lane did not fit. Deleting or relaxing
+              the case -- never.
+Consequences: `tools/mutants/S269_late_quiets.py` records LQ02 `expected=
+              "equivalent"` with the reason, B15's form. A later lane that moves
+              `LmpMaxLmrDepth` or the capture margin re-reads the release
+              inequality case first.
