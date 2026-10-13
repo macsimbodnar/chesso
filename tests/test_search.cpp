@@ -4357,6 +4357,31 @@ TEST_SUITE("search: draws")
     // applied by hand turns the row red again at `REQUIRE( result.mate_found )`
     // (`.tuning/coord/S114_v2rm/e21_case.log`).
     //
+    // **RE-MINED AT S259, IN THE SCRIPT'S GUARD MODE, AND S114 VERDICT 2'S
+    // ROW CAME BACK.** No verdict moved it this time: the tree did, between
+    // S114's reading and S120, and S120's finding 9 read the row silent on
+    // `1eaa776`. On `338705e`, the tree S119's H1 left, S131's row stayed
+    // green and did not separate -- the shipped and the guard-dropped builds
+    // both report its mate in 6 at 11, 13 and 14 -- and a targeted
+    // `tools/mutation_check.py --only E21` on a fixture of that tree scored
+    // E21 killed by S243's direct case alone, the sign `DEV_MANUAL.md`'s row
+    // for this golden names. Stages 2 to 6 re-run with `--mode guard`
+    // (DEC-238) and in the default mode for the record, stage 1 not re-run --
+    // the 269 candidates, byte-identical to S114 verdict 2's list -- and
+    // **two of the 269 separate**; both modes take
+    // `4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42` at depth 14, mate in 6
+    // -- shipped `d12 d13 d14`, guard dropped `d12 d13`, the longer shipped
+    // run, the mutant's multicut changing the tree at 13 and 14 -- a cell of
+    // 2191754 nodes and about 0.31 s; the other,
+    // `5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42`, separates at 13 on a
+    // run of two (`adocs/data/S259_remine.log`, every stage and both picks).
+    // Not read off the board (CLAUDE.md): python-chess and stockfish at depth
+    // 20 in a fresh process read it as S114 verdict 2's paragraph above
+    // records -- `#+6` for Black, the side to move, the same pv, the root in
+    // check with 4 legal moves -- re-taken in the same log. **Observed red,
+    // then green**: with E21 applied the case fails here at `REQUIRE(
+    // result.mate_found )` and passes with the guard in place (the same log).
+    //
     // The rows this case has carried, and the tree each belongs to:
     //
     //     pre-S236, again after S236 v2, and on `308b388`, S097's row:
@@ -4372,8 +4397,10 @@ TEST_SUITE("search: draws")
     //     S131, quiet queen promotions on `3c7cf84`, guard mode (DEC-238),
     //     on `58585f8`, again after S022 verdict 2's reading, and again
     //     after S114 verdict 1's, through S115, and again after S114
-    //     verdict 2's reading:
-    //         the row below, depth 14, mate_in 6, 1688502 nodes, about 0.26 s
+    //     verdict 2's reading, until S120's finding 9 read it silent on
+    //     `1eaa776`:
+    //         "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42"
+    //         depth 14, mate_in 6, 1688502 nodes, about 0.26 s
     //     S022 verdict 2, the delta early-out on `58585f8`, guard mode:
     //         S097's row, depth 14, mate_in 5, 6580581 nodes, about 0.8 s
     //     S114 verdict 1, the static-score term on the tree S022 verdict 2's
@@ -4384,9 +4411,12 @@ TEST_SUITE("search: draws")
     //     mode:
     //         "4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42"
     //         depth 14, mate_in 6, 1242164 nodes, about 0.22 s
+    //     S259, `338705e`, the tree S119's H1 left, guard mode, the same
+    //     position again:
+    //         the row below, depth 14, mate_in 6, 2191754 nodes, about 0.31 s
     //
     const std::string mate_the_multicut_hides =
-        "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42";
+        "4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -4418,7 +4448,7 @@ TEST_SUITE("search: draws")
     // shallow search is exactly the instrument that misses the mate -- S165's
     // hazard, and the once-per-thousand miss the origin paper itself reports.
     //
-    // GOLDEN (DEC-142): the position, the depth 11 and the distance 5 below.
+    // GOLDEN (DEC-142): the position, the depth 11 and the distance 6 below.
     // Re-derive with the six commands in `adocs/data/S113_mine_mate_row.py`'s
     // own header: the candidate list, the shipped sweep, the same sweep
     // against a library built with `B04_probcut_defender_gate_dropped` applied,
@@ -4479,15 +4509,48 @@ TEST_SUITE("search: draws")
     // `S113_mate_row_red.log` and `S113_mate_row_red_offset4.log` beside it).
     // On S131's tree, where the multicut row above is DEC-238's, B04 fails
     // first at this row: `.tuning/coord/S131_rbg_mutation.log`.
+    //
+    // **RE-MINED AT S259, AND THE POSITION MOVED.** Everything above this
+    // paragraph describes S113's row,
+    // `5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44` at depth 11, mate in
+    // 5; its successor is S259's re-mine. No verdict moved it: the tree did,
+    // and S120's finding 9 read the row silent on `1eaa776` -- B04 reading
+    // it exactly as shipped. On `338705e`, the tree S119's H1 left, both
+    // builds report its mate at 9, 11 and 12 and neither at 10, and a
+    // targeted `tools/mutation_check.py --only B04` on a fixture of that tree
+    // scored B04 killed by "probcut does not run with beta in the mate band"
+    // alone. Re-derived by its own script (DEC-142), stages 2 to 6 of its
+    // header, stage 1 its `fens` over the committed 269: **four of the 269
+    // separate**, one moves only the distance (a red case the rule does not
+    // take), and the rule takes `4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73`
+    // at depth 11, mate in 6 -- shipped `d11 d12`, B04 `d12`, a shipped run
+    // of two tied with one other and taken on the cheaper cell, 768752 nodes
+    // and about 0.09 s against 6913112 and 0.9 s. The script's witness is
+    // its default mode, as its header has it, and moves the tree at 9, 10
+    // and 12 and not at 11, the row's own depth, where the shipped ProbCut
+    // leaves the tree as it is and B04's loses the mate; the
+    // same witness in guard mode (DEC-238), taken for the record on a tune
+    // library built with B04 applied by `adocs/data/S259_b04_fires_guard.py`
+    // (S113's script has no mode), moves it at every depth from 9 to 12
+    // (`adocs/data/S259_remine.log`, both witnesses and the pick).
+    // Not read off the board (CLAUDE.md): python-chess reports `is_valid()`
+    // True, `is_check()` False, 30 legal moves of which 3 are captures and
+    // none a promotion, and stockfish at depth 20 in a fresh process through
+    // python-chess reports **`#+6` for White, the side to move, pv h7 Re3+
+    // Kg4 Re4+ Kh5 Rh4+ Kxh4 Nf3+ Kg3 Nd2 h8=Q#**, a line python-chess reads
+    // as ending in checkmate, the label `adocs/data/S097_candidates.tsv`
+    // already held. **Observed red, then green**: with B04 applied the case
+    // fails here at `REQUIRE( result.mate_found )` and passes with the guard
+    // in place (the same log).
     const std::string mate_probcut_hides =
-        "5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44";
+        "4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73";
 
     {
       const std::string title = "mate probcut hides, depth 11";
       const search_t result = search_fen(mate_probcut_hides, 11);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 5, title);
+      REQUIRE_MESSAGE(result.mate_in == 6, title);
     }
 
     // S091's own cases, for the two rules that act on a **capture**. The one

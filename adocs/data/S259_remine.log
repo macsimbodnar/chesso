@@ -1,0 +1,174 @@
+# S259: the multicut row (adocs/data/S097_mine_mate_row.py, guard E21) and the ProbCut row (adocs/data/S113_mine_mate_row.py, guard B04) of "pruning does not hide a forced mate" re-derived on 338705e, achesso's head, the tree S119's H1 left -- 2026-10-13, because a targeted tools/mutation_check.py --only E21 B04 on that tree killed each mutant by its direct case alone (adocs/data/S259_mutation_targeted.tsv, block 1): neither mined row separated.
+# Cells are each mate:nodes:ms as the miners print them; E21's are depth 11..14 (SeMinDepth 10 + 1), B04's depth 9..12 (ProbCutMinDepth 8 + 1); ms is not a timing claim, the four sweeps ran in parallel.
+# Libraries: shipped release and tune are the worktree's build/ and build-tune/ at 338705e with src/ clean; E21 and B04 release and tune were built in detached worktrees at 338705e with the mutant applied by tools/mutation_check.py's own loader (one file, two changed lines each), copied to remine/libs before any stage. Stage 1: S097's candidates stage not re-run -- the 269 are adocs/data/S097_candidates.tsv; S113's stage 1, its fens, ran and wrote that file's FEN column out as the list every stage of both miners read.
+
+## libraries (.tuning/coord/S259/build_mutant_libs.sh)
+# 2026-10-13 07:40:04 worktree 338705e, load 5.25 3.69 2.92
+# e21: src vs worktree 1 file differs; 2 changed lines
+# e21 build built 07:40:11
+# e21 build-tune built 07:40:15
+# b04: src vs worktree 1 file differs; 2 changed lines
+# b04 build built 07:40:23
+# b04 build-tune built 07:40:27
+70c30c72331f0997  b04_release.a
+c96b87382eeee9d4  b04_tune.a
+9599b6923b73e1d3  e21_release.a
+e8c1e6783a4084c9  e21_tune.a
+49f0f5faaacab588  shipped_release.a
+8b573accddcc7e09  shipped_tune.a
+S259-LIBS-DONE 2026-10-13 07:40:28
+
+## driver (.tuning/coord/S259/remine.sh)
+# 2026-10-13 07:41:01 worktree 338705e, src/ clean, load 3.07 3.38 2.86
+# miner sha256 S097 775e40e2e5465866 S113 caf01754a66a59ea
+70c30c72331f0997  b04_release.a
+c96b87382eeee9d4  b04_tune.a
+9599b6923b73e1d3  e21_release.a
+e8c1e6783a4084c9  e21_tune.a
+49f0f5faaacab588  shipped_release.a
+8b573accddcc7e09  shipped_tune.a
+269 candidates -> /home/max/ws/chesso-s259/.tuning/coord/S259/remine/candidates.fen
+# candidates identical to S114 v2's list
+STAGE b04_open exit 0 07:42:39
+STAGE b04_shipped exit 0 07:43:20
+STAGE e21_open exit 0 07:50:48
+STAGE e21_shipped exit 0 07:50:50
+STAGE e21_separators exit 0 07:50:50
+STAGE e21_fires_guard exit 0 07:50:54
+STAGE e21_fires_rule exit 0 07:50:58
+STAGE e21_pick_guard exit 0 07:50:58
+STAGE e21_pick_rule exit 0 07:50:58
+STAGE b04_separators exit 0 07:50:58
+STAGE b04_fires exit 0 07:51:06
+STAGE b04_pick exit 0 07:51:06
+S259-REMINE-DONE 2026-10-13 07:51:06
+
+## e21_separators
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py separators --shipped /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_shipped.txt --open /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_open.txt --out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_separators.fen
+2 of 269 candidates separate the two sweeps -> /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_separators.fen
+
+## e21_fires_guard
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --mode guard --fens /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_separators.fen --lib /home/max/ws/chesso-s259/.tuning/coord/S259/remine/libs/e21_tune.a --out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_guard.txt --fens-out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_guard.fen
+guard mode (DEC-238): the mutant's multicut changes the tree on 2 of 2 positions in 3 s -> /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_guard.txt, /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_guard.fen
+
+## e21_fires_rule
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py fires --fens /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_separators.fen --lib /home/max/ws/chesso-s259/.tuning/coord/S259/remine/libs/shipped_tune.a --out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_rule.txt --fens-out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_rule.fen
+the multicut changes the tree on 2 of 2 positions in 3 s -> /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_rule.txt, /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_rule.fen
+
+## e21_pick_guard
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --mode guard --shipped /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_shipped.txt --open /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_open.txt --fires /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_guard.txt
+  d14	#6	run 3	2191754 nodes	308 ms	shipped [d12 d13 d14]	open [d12 d13]	mutant fires [d13 d14]	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  d13	#6	run 2	2663064 nodes	356 ms	shipped [d13 d14]	open [d14]	mutant fires [d13 d14]	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+
+take: 4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  depth 14, mate in 6, shipped [d12 d13 d14], guard dropped [d12 d13], 2191754 nodes, 308 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d13 d14]
+
+## e21_pick_rule
+$ /home/max/.venv/chess/bin/python adocs/data/S097_mine_mate_row.py pick --shipped /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_shipped.txt --open /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_open.txt --fires /home/max/ws/chesso-s259/.tuning/coord/S259/remine/e21_fires_rule.txt
+  d14	#6	run 3	2191754 nodes	308 ms	shipped [d12 d13 d14]	open [d12 d13]	fires [d13 d14]	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  d13	#6	run 2	2663064 nodes	356 ms	shipped [d13 d14]	open [d14]	fires [d13 d14]	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+
+take: 4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  depth 14, mate in 6, shipped [d12 d13 d14], guard dropped [d12 d13], 2191754 nodes, 308 ms
+
+## b04_separators
+$ /home/max/.venv/chess/bin/python adocs/data/S113_mine_mate_row.py separators --shipped /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_shipped.txt --open /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_open.txt --out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_separators.fen
+4 of 269 candidates separate the two sweeps -> /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_separators.fen
+
+## b04_fires
+$ /home/max/.venv/chess/bin/python adocs/data/S113_mine_mate_row.py fires --fens /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_separators.fen --lib /home/max/ws/chesso-s259/.tuning/coord/S259/remine/libs/shipped_tune.a --out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_fires.txt --fens-out /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_fires.fen
+the multicut changes the tree on 4 of 4 positions in 7 s -> /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_fires.txt, /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_fires.fen
+
+## b04_pick
+$ /home/max/.venv/chess/bin/python adocs/data/S113_mine_mate_row.py pick --shipped /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_shipped.txt --open /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_open.txt --fires /home/max/ws/chesso-s259/.tuning/coord/S259/remine/b04_fires.txt
+  distance moved, not taken by the rule: d12 #5 -> #6	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+  d11	#6	run 2	768752 nodes	87 ms	shipped [d11 d12]	open [d12]	fires [d9 d10 d12]	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  d12	#6	run 2	6913112 nodes	904 ms	shipped [d11 d12]	open [d11]	fires [d9 d10 d11 d12]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+  d12	#3	run 1	8727513 nodes	1344 ms	shipped [d12]	open [none]	fires [d9 d10 d11 d12]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+
+take: 4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+  depth 11, mate in 6, shipped [d11 d12], guard dropped [d12], 768752 nodes, 87 ms
+
+## b04_fires_guard: adocs/data/S259_b04_fires_guard.py, S113's fires in guard mode (DEC-238), for the record and not a stage of S113's script or an input of its pick
+$ /home/max/.venv/chess/bin/python adocs/data/S259_b04_fires_guard.py --fens .tuning/coord/S259/remine/b04_separators.fen --lib .tuning/coord/S259/remine/libs/b04_tune.a --out .tuning/coord/S259/remine/b04_fires_guard.txt --fens-out .tuning/coord/S259/remine/b04_fires_guard.fen
+guard mode (DEC-238): the mutant's multicut changes the tree on 4 of 4 positions in 6 s -> .tuning/coord/S259/remine/b04_fires_guard.txt, .tuning/coord/S259/remine/b04_fires_guard.fen
+exit 0
+# re-run against the first run's output (.tuning/coord/S259/rerun_b04_guard.sh), cells compared as mate:nodes:
+re-run matches the first run: every moved-depth list and every mate:nodes cell identical (4 positions)
+
+## witness files
+### e21_fires_guard.txt
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 11..14, tune library /home/max/ws/chesso-s259/.tuning/coord/S259/remine/libs/e21_tune.a.
+# fen	depths_the_rule_changes	off	on
+4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42	d13 d14	-:142926:24 m6:349165:55 m6:1125421:146 m6:1382849:207	-:142926:23 m6:349165:54 m6:1184702:154 -:2113693:295
+5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42	d13 d14	-:109784:17 -:428929:73 -:1323374:228 m6:4077661:564	-:109784:17 -:428929:71 -:1334852:209 m6:3966867:538
+### e21_fires_rule.txt
+# S097 firing witness, SeMultiCut 0 against 1, depths 11..14, tune library /home/max/ws/chesso-s259/.tuning/coord/S259/remine/libs/shipped_tune.a.
+# fen	depths_the_rule_changes	off	on
+4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42	d13 d14	-:142926:24 m6:349165:54 m6:1125421:144 m6:1382849:207	-:142926:25 m6:349165:59 m6:1184702:152 m6:2191754:301
+5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42	d13 d14	-:109784:17 -:428929:74 -:1323374:212 m6:4077661:556	-:109784:16 -:428929:71 m6:2663064:341 m6:4828599:645
+### b04_fires.txt
+# S097 firing witness, SeMultiCut 0 against 1, depths 9..12, tune library /home/max/ws/chesso-s259/.tuning/coord/S259/remine/libs/shipped_tune.a.
+# fen	depths_the_rule_changes	off	on
+r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28	d9 d10 d11 d12	-:187235:27 -:348628:60 -:1034812:135 m3:9317109:1203	-:182512:25 -:347913:60 -:1052061:139 m3:8727513:1151
+8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52	d10	-:25284:4 -:243322:34 m6:2953252:298 m5:3368000:419	-:25284:4 -:243323:33 m6:2953252:295 m5:3368000:439
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31	d9 d10 d11 d12	-:39921:6 -:47613:8 m6:3393846:354 m6:6043858:715	-:39959:6 -:69221:11 m6:3216546:325 m6:6913112:825
+4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73	d9 d10 d12	-:20958:3 -:49791:8 m6:768752:80 m6:1182602:144	-:20827:2 -:49338:7 m6:768752:80 m6:1286741:153
+### b04_fires_guard.txt
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 9..12, tune library .tuning/coord/S259/remine/libs/b04_tune.a.
+# fen	depths_the_rule_changes	off	on
+r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28	d9 d10 d11 d12	-:187235:27 -:348628:62 -:1034812:139 m3:9317109:1241	-:182512:25 -:347913:60 -:1052061:143 -:3781037:536
+8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52	d10 d11 d12	-:25284:4 -:243322:34 m6:2953252:311 m5:3368000:440	-:25284:4 -:243323:33 m6:2727081:278 m6:3261539:424
+2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31	d9 d10 d11 d12	-:39921:6 -:47613:9 m6:3393846:371 m6:6043858:746	-:39959:6 -:69221:11 m6:1322641:134 -:1449291:175
+4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73	d9 d10 d11 d12	-:20958:3 -:49791:8 m6:768752:86 m6:1182602:148	-:20827:3 -:49338:8 -:78319:11 m6:998232:127
+
+## the separating candidates' cells, shipped and mutant
+### E21, depth 11..14
+-:142926:24 m6:349165:55 m6:1184702:160 m6:2191754:308 	e21_shipped
+-:142926:23 m6:349165:55 m6:1184702:159 -:2113693:307 	e21_open	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+-:109784:17 -:428929:73 m6:2663064:356 m6:4828599:666 	e21_shipped
+-:109784:18 -:428929:75 -:1334852:217 m6:3966867:557 	e21_open	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+### B04, depth 9..12
+-:182512:35 -:347913:74 -:1052061:154 m3:8727513:1344 	b04_shipped
+-:182512:27 -:347913:65 -:1052061:160 -:3781037:607 	b04_open	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+-:25284:4 -:243323:42 m6:2953252:345 m5:3368000:489 	b04_shipped
+-:25284:5 -:243323:45 m6:2727081:366 m6:3261539:528 	b04_open	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+-:39959:7 -:69221:12 m6:3216546:359 m6:6913112:904 	b04_shipped
+-:39959:7 -:69221:12 m6:1322641:160 -:1449291:203 	b04_open	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+-:20827:3 -:49338:8 m6:768752:87 m6:1286741:171 	b04_shipped
+-:20827:3 -:49338:8 -:78319:12 m6:998232:149 	b04_open	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+
+## the rows the test carried until now, on this tree
+### S131's multicut row, depth 11..14: no separation
+m6:290874:33 -:385790:51 m6:747662:97 m6:1568599:210 	e21_shipped
+m6:290874:33 -:385790:51 m6:741269:98 m6:1568625:217 	e21_open	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+### S113's ProbCut row, depth 9..12: no separation
+m5:81380:11 -:84803:14 m5:607733:78 m5:589599:81 	b04_shipped
+m5:79975:10 -:84803:13 m5:536779:67 m5:508199:77 	b04_open	5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44
+
+## oracle (.tuning/coord/S259/oracle.py: python-chess, and stockfish at depth 20 in a fresh process through python-chess, S230.line_facts)
+fen        4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+python-chess is_valid() True, is_check() True, 4 legal moves, 0 captures, 0 promotions, side to move Black
+stockfish depth 20 (fresh process): #+6 in 20307 nodes, pv Kg4 Qe6+ Kxg3 Qg8+ Ng4 Qxg4+ Kxg4 h5 Kg3 c4 Qf1#; pv ends in checkmate: True
+label      S097_candidates.tsv mate_in 6, pv Kg4 Qe6+ Kxg3 Qg8+ Ng4 Qxg4+ Kxg4 h5 Kg3 c4 Qf1#
+
+fen        4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+python-chess is_valid() True, is_check() False, 30 legal moves, 3 captures, 0 promotions, side to move White
+stockfish depth 20 (fresh process): #+6 in 9217 nodes, pv h7 Re3+ Kg4 Re4+ Kh5 Rh4+ Kxh4 Nf3+ Kg3 Nd2 h8=Q#; pv ends in checkmate: True
+label      S097_candidates.tsv mate_in 6, pv h7 Re3+ Kg4 Re4+ Kh5 Rh4+ Kxh4 Nf3+ Kg3 Nd2 h8=Q#
+
+## the new rows: green shipped, red under each mutant (.tuning/coord/S259/observe.sh)
+# 2026-10-13 07:53:39 worktree 338705e + working tree [2 paths], src/ clean
+shipped exit 0 -- [doctest] test cases:  1 |  1 passed | 0 failed | 204 skipped [doctest] assertions: 57 | 57 passed | 0 failed | 
+# e21:  2 files changed, 69 insertions(+), 7 deletions(-)
+e21 exit 1 -- [doctest] test cases:  1 |  0 passed | 1 failed | 204 skipped [doctest] assertions: 41 | 40 passed | 1 failed | 
+/home/max/ws/chesso-s259/.ref-builds/obs_e21/tests/test_search.cpp:4438: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 14
+# b04:  2 files changed, 69 insertions(+), 7 deletions(-)
+b04 exit 1 -- [doctest] test cases:  1 |  0 passed | 1 failed | 204 skipped [doctest] assertions: 44 | 43 passed | 1 failed | 
+/home/max/ws/chesso-s259/.ref-builds/obs_b04/tests/test_search.cpp:4551: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate probcut hides, depth 11
+S259-OBSERVE-DONE 2026-10-13 07:55:05

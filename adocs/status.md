@@ -21,9 +21,12 @@ node- and score-identical, timing zero under DEC-266, kept for score identity
 and fewer instructions; S101, S102, S121-S125 and S135 amended (they build
 their own sets). Fast check: five record items, fixed before commit.
 
+**S259 done**: both mined mate rows separate E21 and B04 again (multicut
+back to S114 v2's row, ProbCut a new row, mate in 6); closes S120 finding 9.
+No open DEC-171 finding remains for a run's pre-registration. S277 (filler)
+gives the ProbCut miner a `--mode`.
+
 **Written beside the match (DEC-260), landing now, in Open order:**
-- **S259** (filler, worktree `../chesso-s259`): running -- re-mine the
-  multicut and ProbCut mate rows on the tree S119 left.
 - **S276** (worktree `../chesso-s276`): written blind; phase 2 builds, runs
   the suites, re-takes `feature_audit` and `truncation_scan`, fills 10
   `S276-PENDING` tokens, applies `.tuning/coord/S276_files/pending_citations.diff`

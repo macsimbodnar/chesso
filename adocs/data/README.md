@@ -912,3 +912,11 @@ pre-registration will be written from. 2026-08-21 adversarial F09.
 
 `S275_walk.cpp`, above, builds against `f57b92f` and earlier only: it calls the
 mirror's `gradient()` and Adam from `tools/tuner_model.hpp`, which S262 retired.
+
+### S259, the multicut and ProbCut mate rows re-mined
+
+| file | what it is |
+|---|---|
+| `S259_remine.log` | both rows of "pruning does not hide a forced mate" re-derived on `338705e`, the tree S119's H1 left, 2026-10-13: the libraries and their hashes, every stage of `S097_mine_mate_row.py` (guard and default mode) and `S113_mine_mate_row.py` (its header's six), the witness files, the separators' and old rows' cells, the oracle, and the new rows red under E21 and B04 and green shipped. Multicut row `4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42` (S114 verdict 2's, back), ProbCut row `4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73` |
+| `S259_mutation_targeted.tsv` | `tools/mutation_check.py --only E21 B04`, twice: on `338705e`, each killed by its direct case alone, and on fixture `0e79ba6` (the re-mined rows), each killed at its row and by its direct case; the fixture is named above each block |
+| `S259_b04_fires_guard.py` | S113's `fires` in guard mode (DEC-238), which S113's script has no mode for: imports S113's module and calls S097's `cmd_fires` with `mode="guard"` on a tune library built with B04. A record beside the default-mode witness, not an input of the pick; its run is in `S259_remine.log` |
