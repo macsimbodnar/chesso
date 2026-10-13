@@ -36,11 +36,13 @@ set; smoke run clean, no rating read (DEC-108). Binaries in
 `/home/max/ws/engines/`.
 
 **Written beside the match (DEC-260), landing now, in Open order:**
-- **S261** (worktree `../chesso-s261`): 32 axes (DEC-269), one lane of 1250
-  iterations x 48 games at 2+0.02, about 8 h 45 m, a night; split decided by
-  `S261_split_sim.py` before launch. Then the independent {0,5} SPRT, the
-  drift point (creates `adocs/data/S267_drift.tsv`) and the 32+0.32 reading
-  whatever the verdict (DEC-269).
+- **S261 running** (pre-registration committed): the search block's SPSA lane,
+  31 axes (DEC-269 adds LmrBase and LmrDivisor; SePlyFactor unreachable),
+  one lane (split sim 0.984), 1250 iterations x 48 games at 2+0.02, about
+  8 h 45 m, ceiling 18 h. Log `.tuning/spsa_s261.log`. One resume allowed
+  after a transient failure (pre-registered). Then the mate suites on the
+  tuned vector, the independent {0,5} SPRT (`adocs/data/S261_sprt.sh`), the
+  drift point and the 32+0.32 reading (DEC-269).
 - **S099** (worktree `../chesso-s099`): (a) the pawn key, neutral, lands on
   its own (INV-6, second tier); (b) the correction table, the SPRT candidate
   after S261. DEC-270: census before the SPRT, datagen wired, 32+0.32

@@ -1,0 +1,607 @@
+id:         S261
+goal:       the search block's own SPSA lane: the search parameters added since S085 and never tuned together are fitted jointly on today's tree, then verified by an independent SPRT
+accepts:    (1) the axes are listed before launch: every parameter in `src/search_params.hpp` `CHESSO_SEARCH_PARAMS` that was added or reseeded after S085's run, that a node-count probe reaches (S214's reachability rule; `TmHardPercent` stays out, DEC-200), and that no later lane fitted (S222's and S231's lanes are named and their axes excluded or included with the reason); each axis keeps the range `tests/test_search_params.cpp` pins; (2) the run is sized by `DEV_MANUAL.md` "Sizing a real run" with the iteration count and the expected hours stated before launch, in chesso's lane size (eight to nine hours, DEC-222 (8)), so a night under DEC-155; if the listed axes cannot be fitted together in that size, the split into two lanes is stated before the first one starts, never after; (3) detached with a terminal marker and a watcher with the four exits the WATCHERS rule names; (4) an axis that returns at the end of its range is reported and decided, not shipped silently -- S085's `RfpMinPly` at 0 turned three mate cases red; the mate suites (`test_mate_breadth`, `test_mate_pv`, `test_mate_carry`) are green on the tuned vector before any match; (5) the tuned vector is verified by an **independent** `{0, 5}` nElo SPRT at 8+0.08 against the untuned tree, with DEC-143's worst case and abort rule pre-registered; H0 or no verdict ships nothing; (6) at the block boundary this closes: one S199-form drift point and one DEC-202 fixed 1000-pair reading at 32+0.32, Hash=64, both read as estimates beside the verdict, never as verdicts
+touches:    src/search_params.hpp, tools/spsa_driver.py only if sizing needs it, tools/ for the run's JSON, MANUAL.md for any default that moves, adocs/specs.md, adocs/data/ for the lane's log and readings
+excludes:   evaluation weights, which the tuner fits; S127, the final lane over the whole set after the evaluation block; the time manager's hard limit (DEC-200); the axes S099 and S023 will add, which S127 fits
+decisions:  DEC-222, DEC-200, DEC-202, DEC-143, DEC-258
+closes:
+blocks:
+paused_by:
+author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
+done:
+
+## Why now
+
+DEC-222 (8) made SPSA a cadence -- one lane per completed block over the
+axes that block added, S127 the last. The search block is complete and its
+lane was never scheduled: it is the omission both the 2026-10-07 proposal and
+its comparison found. S085 tuned twelve of twenty-two parameters for +21.02;
+since then S091, S095, S097, S098, S109, S113, S114, S115, S116, S132, S222,
+S234 and others added axes that sit at census-derived or midpoint seeds, and
+several were parked explicitly "for S127 to fit". Every evaluation fit after
+this point is fitted against the search these values produce, and the corpus
+S082 generates is played by it, so the lane runs before both (DEC-258).
+
+## Description it is implemented from
+
+CPW *SPSA*; Spall's papers on simultaneous perturbation; the project's own
+driver, `tools/spsa_driver.py` (S084), and its sizing section in
+`DEV_MANUAL.md`. The seeds are the shipped values, which are the project's
+own (DEC-134 form b or c, each already recorded at its landing step).
+
+## From the record
+
+S084, S085 (+21.02), S151 (S085's vector at 32+0.32: +11.99 +/- 11.57, an
+estimate), S222 and S231 (narrow lanes with their own axes), DEC-200, DEC-202.
+
+## Pre-registration
+
+Written 2026-10-13 in phase 1, while S119's SPRT held every core (DEC-260):
+reading and file edits only, nothing built, run or probed. Everything below is
+fixed before the lane's first game; phase 2 executes it and may only record
+what happened.
+
+**The base.** The lane runs on the tree S119's verdict leaves (the cluster
+table kept on H1, reverted on H0), after S263 and S276 land. Nothing below
+depends on which: none of the three touches `src/search_params.hpp` (`git diff
+--stat cc87dfb 298788b` lists no such file; S263 and S276 are node-identical
+or test-side), the seeds and ranges are read from that file at `4f8b949`, and
+the SPRT's pair is pinned only after the lane. The tree the lane fits is
+whatever the runner's banner prints as `head`; item (5) holds the SPRT's
+reference to it.
+
+### (1) The axes
+
+**Method.** `git log -p -- src/search_params.hpp` from S085's landing
+(`21b4a21`, 2026-08-21) to `4f8b949`, every `X(...)` row added or whose
+default moved, against the 73 rows the list holds today. **52** were added or
+reseeded after S085's run; the other 21 are S085's twelve (eleven shipped,
+`RfpMinPly` held at 3) and the nine `Tm*` rows S089 added before it. Of the 52,
+**30 are in the lane and 22 are out**, each by name below. **DEC-269 amends
+accepts (1)**: two of S085's twelve, `LmrBase` and `LmrDivisor`, join as rows
+31 and 32, so **the lane is 32 axes**. Ranges are the
+declared ones, unnarrowed: `tools/spsa_driver.py check` refuses a config whose
+bounds differ from the binary's, and `tests/test_search_params.cpp` "the
+declared ranges are the ranges the engine ships" pins each one. Neither S222's
+lane (2026-09-14/15, eleven history axes) nor S231's (2026-09-19/20, six
+continuation axes, reverted on H0) fitted any of the 32; S085 fitted rows 31
+and 32.
+
+**The probe for every axis (S214's rule), reach pending.** One command probes
+all thirty-two, each at its own two declared bounds, down the four-rung ladder,
+and fails by name when both bounds search the same number of nodes:
+
+```bash
+python3 tools/spsa_driver.py check tools/spsa_s261.json --engine build-tune/src/chesso
+```
+
+Rungs: `d9` = `go depth 9` on `PROBE_FEN` (the midgame position); `d13` = `go
+depth 13` on it; `d13t` = `go depth 13` on `PROBE_FEN_TACTICAL`; `clock` = `go
+wtime 1000 btime 1000 winc 200 binc 200`, five agreeing samples at each bound.
+The table's "expected" rung is reasoning from the code, not a measurement;
+every axis is **reach pending** until phase 2's check prints it.
+
+| # | axis | landed | seed, DEC-134 form | range | c_end | expected rung |
+|---|---|---|---|---|---|---|
+| 1 | `QsFutilityMargin` | S112, 2026-09-27 | 188, (a) wiki delta margin in chesso's pawn | 0..2000 | 24 | d9 |
+| 2 | `RazorMargin` | S116, 2026-10-02 | 282, (a) wiki, three pawns | 0..2000 | 24 | d9 |
+| 3 | `LmrCutNode` | S098 v2, 2026-09-16 | 1, (c) | 0..2 | 0.5 | d9 |
+| 4 | `LmrNotImproving` | S098 v2 | 1, (c) | 0..2 | 0.5 | d9 |
+| 5 | `LmrTtCapture` | S098 v2 | 1, (c) | 0..2 | 0.5 | d9 |
+| 6 | `LmrPv` | S098 v2 | 1, (c) | 0..2 | 0.5 | d9 |
+| 7 | `LmrNoTtMove` | S095, 2026-09-20 | 1, (c) | 0..2 | 0.5 | d9 |
+| 8 | `LmrDeeperMargin` | S098 v3, 2026-09-17 | 47, (c) | 0..94 | 8 | d9 |
+| 9 | `LmrDeeperMinReduction` | S098 v3 | 2, (b) | 1..126 | 1 | d9 |
+| 10 | `LmpBase` | S109, 2026-09-13 | 733, (b) census | 0..27000 | 100 | d9 |
+| 11 | `LmpDepthCoeff` | S109 | 0, (b) census, at its floor | 0..27000 | 25 | d9 |
+| 12 | `LmpMaxLmrDepth` | S109 | 8, (c) | 0..16 | 2 | d9 |
+| 13 | `FutBase` | S109 | 147, (a) Heinz via wiki | 0..48000 | 24 | d9 |
+| 14 | `FutSlope` | S109 | 170, (a) | 0..2000 | 16 | d9 |
+| 15 | `FutMaxLmrDepth` | S109 | 8, (c) | 0..16 | 2 | d9 |
+| 16 | `HistPruneMaxLmrDepth` | S109 | 8, (c) | 0..16 | 2 | d9 |
+| 17 | `SeeQuietCoeff` | S109 | 50, (b) own see scale | 0..10000 | 12 | d9 |
+| 18 | `SeeQuietMaxLmrDepth` | S109 | 8, (c) | 0..16 | 2 | d9 |
+| 19 | `SeeCaptureCoeff` | S091, 2026-09-14 | 50, (b) | 0..10000 | 16 | d9 |
+| 20 | `SeeCaptureMaxLmrDepth` | S091 | 8, (c) | 0..16 | 2 | d9 |
+| 21 | `SeeLmrExtra` | S091 | 1, (a) as a form | 0..3 | 0.5 | d9 |
+| 22 | `SeMinDepth` | S097, 2026-09-21 | 10, (c) | 4..16 | 1 | d9 (4 fires, 16 cannot) |
+| 23 | `SeTtDepthMargin` | S097 | 4, (c) | 0..8 | 1 | d13: SE needs remaining depth >= 10, which `go depth 9` never has |
+| 24 | `SePlyFactor` | S097 | 5, (c) | 2..8 | 1 | **none expected**: binds only at `ply >= factor * depth` with depth >= 10, a 20-ply line at factor 2. **Removed 2026-10-13**: identical on all four rungs ("As built") |
+| 25 | `SeMarginPerDepth` | S097 | 9, (c) | 1..18 | 2 | d13, as 23 |
+| 26 | `ProbCutMargin` | S113, 2026-09-28 | 49, (b) own fit at (a) t = 1.0 | 0..2000 | 16 | d9 |
+| 27 | `ProbCutDepthOffset` | S113 | 5, (a) the paper's pair | 2..8 | 1 | d9 (8 leaves no child depth at depth 8) |
+| 28 | `ProbCutMinDepth` | S113 | 8, (a) the paper's height | 3..10 | 1 | d9 (10 cannot fire) |
+| 29 | `AspirationWidenPct` | S115, 2026-09-30 | 200, (b) S115's sweep | 100..400 | 25 | d9 if any root search fails, else d13 or clock |
+| 30 | `AspirationFailLowPull` | S115 | 2, (c) | 0..4 | 0.5 | needs a root fail-low: d9, d13 or clock |
+| 31 | `LmrBase` | S073, 2026-08-16; DEC-269 | 52, S085's SPSA fit (75 -> 52) | 0..400 | 24 (S085's) | d9 (separated there in S214's 2026-09-12 run) |
+| 32 | `LmrDivisor` | S073; DEC-269 | 182, S085's SPSA fit (225 -> 182) | 1..2000 | 32 (S085's) | d9 (as 31) |
+
+Rows 1 to 30 are first settings no lane has fitted, and the landing files park
+each one "for S127": S091 (`SEE_CAPT_*`, `SEE_LMR_EXTRA`), S095, S097 ("every
+SE constant refit"), S098 ("S127 refits the six survivors"), S109 ("SPSA'd at
+S127"), S112 (its margin a seed that must be fitted), S113 ("margin,
+threshold and offset join the SPSA set"), S115 ("SPSA may re-fit the pull
+weight and multiplier"), S116. DEC-222 (8) makes this lane the first of those
+fits; S127 refits them all again after the evaluation block. Rows 31 and 32
+are the reduction table those terms sit on: S098 routes them to be refit
+beside its terms ("the record that they go stale"), so DEC-269 fits the table
+with the terms instead of around an August base.
+
+**Out, 22, each with its reason:**
+
+| axes | reason |
+|---|---|
+| `QsFutility`, `QsQueenPromotions`, `RfpTtEstimate`, `SeExtend`, `SeMultiCut`, `ProbCut` | verdict switches with no setting between 0 and 1 (DEC-215); five of the six comments say "not something S127 sweeps" and `SeMultiCut`'s says there is no third setting of it |
+| `QuietHistoryMax`, `HistoryBonusQuad`, `HistoryBonusLin`, `HistoryBonusConst`, `HistoryMalusQuad`, `HistoryMalusLin`, `HistoryMalusConst`, `ContHistBonus`, `ContHistMalus`, `ContHistWeight`, `HistPruneCoeff` | **S222's lane fitted all eleven** (60000 games, 2026-09-14/15, H1 +11.13 Elo); S231's lane refitted the three `ContHist*` and left with its H0 (`326f274` restored S222's values). The accepts excludes an axis a later lane fitted. `HistPruneMaxLmrDepth` beside it was never fitted and is in |
+| `TmNodeBasePct`, `TmNodeScalePct`, `TmNodeMinDepth` | S132's time-management triple. DEC-094 keeps the `Tm*` family out of a lane tuned at a control its verification does not share; S132's own file says a fit of these three "wants the playing control or a second-control verification"; and `TmNodeScalePct`'s floor 0 is a switch discontinuity that its comment says a lane should avoid by declaring its floor at 1, which `check` refuses (config bounds must equal the binary's). S127's file is where they go |
+| `RazorDepth` | the default is the rule as specified, not a fitted value; 0 is off and above 1 is the multi-depth variant, and S116 says "a depth-scaled margin comes with it at S127 or not at all". A +/-1 perturbation would alternate the off value and the refused variant |
+| `LmrRoundBias` | ships at its off value 0 because S236 built 1, 8, 64, 128, 256 and 512 and each lost a row of the fast suite's "pruning does not hide a forced mate"; no endpoint but 0 could pass item (4), and S236 frees it only by re-mining that row or at S127 |
+
+`TmHardPercent` stays out (DEC-200). The axes S099 and S023 will add do not
+exist yet and are S127's. **Ten of S085's twelve stay out by the accepts'
+letter** -- none was added or reseeded after its run -- and `LmrBase` and
+`LmrDivisor` are in by DEC-269. DEC-269 rejected `MaxQsearchDepth` and
+`AspirationDelta` too: S112 and S115 hand them to S127. Two notes on the ten,
+neither acted on here: `RfpMinPly`'s range moved twice (S142, S251) but its
+default never did, and its floor 3 is a measured mate cliff; `LazyEvalMargin`
+retires with S039.
+
+**When the check refuses an axis** (decided now, applied in phase 2 before
+launch; the coordinator decides as DEC-200 did):
+
+- *"searched the same number of nodes under every probe"*: first
+  `grep -n <SYMBOL> src/*.cpp` -- a symbol nothing reads is a wiring bug and
+  the BUGS rule binds before anything else; a symbol that is read is a
+  property of the parameter at these probes, DEC-200's shape. The row leaves
+  `tools/spsa_s261.json`, the step file records the check's own lines, and
+  `check` is re-run on the edited config. Never re-probed with a hand-picked
+  position or a held-off second option (DEC-200's Rejected). `SePlyFactor` is
+  the one expected here.
+- *"not repeatable"*: re-run on an idle machine (DEC-200). Still not
+  repeatable idle, the only evidence of reach is a clock count that moves by
+  itself, and the axis leaves as above.
+
+### (2) The sizing
+
+**Regime, S085's verbatim**, as S222's and S231's lanes ran it: 1250
+iterations x 24 pairs = 30000 pairs = **60000 games**, `2+0.02`, `Hash=16`,
+`Threads=1`, concurrency 12, `books/UHO_4060_v3.epd` (242201 openings, never
+wraps), `fastchess.sh`'s adjudication with `twosided=true`, alpha 0.602,
+gamma 0.101, `a_ratio` 0.1 (A = 125), `r_end` 0.004, seed 261.
+
+**Hours.** The lane plays 2+0.02, not 8+0.08, so `.moltke.local.md`'s 2110
+games an hour is not the figure (DEV_MANUAL: never scale a games-per-hour
+figure between controls). The figure is this exact shape on this machine:
+**S222 8 h 37 m 31 s (24.84 s an iteration), S231 8 h 40 m 45 s (25.00 s)**.
+The axis count does not enter -- two evaluations an iteration whatever the
+dimension. **Estimate 8 h 45 m, ceiling 18 h (64800 s)**: DEC-222 (8)'s lane
+size, a night under DEC-155.
+
+**One lane, not two -- and the split test that could overturn it, run before
+launch.** Wall time does not grow with the axis count; resolution can. Each
+axis's gradient estimate carries the match's noise, the same at any width,
+plus cross-talk from every other axis's gradient. On arithmetic alone, at
+S085's resolving depth of 3 Elo an axis, every optimum still four `c_end` out
+and S231's 31 % draws, 31 other axes add about 16 % to an axis's gradient
+variance at the end-of-run `c` and about 70 % at the first iteration's (2.05
+`c_end`), against about 6 % and 23 % at S085's twelve; the cross-talk shrinks
+as the axes close on their optima. A cost, not a wall: the default is one
+lane. `adocs/data/S261_split_sim.py` measures it on the driver's own
+simulator at the lane's exact config, five seeds, all 32 axes weighted against
+the same config with every odd-indexed axis at weight zero, over the 16 axes
+weighted in both. **Its rule, fixed now: `SPLIT` if the 32-axis per-axis
+recovery is below 0.8 of the 16-axis one; otherwise one lane; a 16-axis
+recovery that is not positive cannot tell them apart and reads one lane.**
+The 0.8 is a judgement made before the number.
+
+**The split, stated now and used only on `SPLIT`:**
+
+- **Lane 1, the move loop**, 21 axes (rows 3 to 21, 31 and 32): the
+  reduction table and its five LMR terms, the re-search pair, late move,
+  futility, history and SEE pruning, the extra SEE reduction. `LmrBase` and
+  `LmrDivisor` join this lane because DEC-269's reason is that they are fitted
+  with the terms. Its own night, the same regime, seed 2611.
+- **Lane 2, node level, quiescence and root**, 11 axes (rows 1, 2, 22 to 30):
+  the two margins, singular extension, ProbCut, aspiration. Seed 2612, the
+  next night, on a tree whose defaults carry lane 1's rounded vector after
+  item (4)'s rule -- committed before lane 2 launches, as S222's phase three
+  committed its vector before its SPRT.
+- **One SPRT over both** (DEC-210's one vector, one verdict): CAND is lane 2's
+  landing, REF the tree before lane 1's. Two nights instead of one.
+
+**`c_end`, the rule** (DEV_MANUAL "Sizing a real run": about four times the
+smallest change that could matter, so `+/-c` costs about 1 Elo). Margins in
+centipawns take S085's 24, a quarter of chesso's 94-point pawn, cut where a
+coefficient multiplies a depth (`FutSlope` 16) or the range is narrow
+(`LmrDeeperMargin` 8); integer plies and depths take 1; depth caps over 0..16
+take 2 (S085's `AspirationMinDepth`); `LmpBase` 100 is one move and
+`LmpDepthCoeff` 25 a quarter move a reduced ply; the SEE coefficients 12 and
+16 follow where their bars cross a 100-point pawn class; `AspirationWidenPct`
+25; `LmrBase` and `LmrDivisor` keep S085's 24 and 32 (DEC-269). Where 4x would put the first iteration's `2 * c0 = 4.11 * c_end` past the
+range, `c_end` is cut to fit (`Config.warnings()`). The seven axes on 0..2,
+0..3 and 0..4 take 0.5, the driver's floor: one ply already spans most of
+their range, so **they are perturbed by a whole ply both ways every
+iteration**, the coarsest perturbation in the lane, and the five on 0..2 warn
+at iteration 0 (2.05 against 2). No cap below 4x for a mate cliff: no included
+axis has a documented one, and item (4) is where mates are checked.
+
+**A depth-gate caveat, recorded and not corrected.** `SeMinDepth` 10 and
+`ProbCutMinDepth` 8 sit near the top of a 2+0.02 tree (S085 measured median
+depth 11, p10 8, on a slower engine), so those axes are exercised less than
+at 8+0.08. A slower lane control buys one ply of median depth for 2.2x the
+wall (S085's table) and leaves DEC-222 (8)'s size. The 25 % read records the
+median search depth if the lane's PGN move comments carry it.
+
+### (3) The launch
+
+Files: **`tools/spsa_s261.json`** (the frozen input; `_not_here` and per-axis
+`why` carry the reasons) and **`adocs/data/S261_spsa.sh`** (the runner, S231's
+shape: banner with head, dirty count, load and governor; rebuilds
+`build-tune`; `check` into its own log with the marker filtered; then the
+driver, and its own `SPSA-FAILED` on every path the driver cannot cover).
+
+Phase 2, in this order, on the idle workstation on mains, `bash` (in fish,
+`bash -c '...'`), from `/home/max/ws/chesso` after S261's pre-registration is
+committed there:
+
+```bash
+cat /proc/loadavg; ps aux | sort -rnk3 | head      # idle: 1-min load well under 1
+cmake --build build-tune -j12
+python3 tools/spsa_driver.py check tools/spsa_s261.json --engine build-tune/src/chesso \
+  | tee .tuning/coord/S261/check.txt              # item (1)'s refusal rule if it fails
+python3 adocs/data/S261_split_sim.py | tee .tuning/coord/S261/split_sim.txt
+                                                   # last line S261-SPLIT-SIM: ONE LANE | SPLIT
+nohup adocs/data/S261_spsa.sh > .tuning/spsa_s261.log 2>&1 &
+echo $! > .tuning/spsa_s261.pid
+```
+
+**Terminal markers**: `SPSA-DONE` (the driver's last line, after the rounded
+JSON vector) or `SPSA-FAILED` (the driver's, or the runner's with a reason).
+The first marker in the log is the run's.
+
+**The watcher**, armed through `Monitor` with `persistent: true`; four exits --
+marker (0, and the line says which), the runner's death without a marker (3),
+the 64800 s ceiling (124), a manual stop that is a belt:
+
+```bash
+bash -c '
+  end=$(($(date +%s)+64800))
+  until grep -qE "SPSA-(DONE|FAILED)" "$1"; do
+    if ! kill -0 "$2" 2>/dev/null; then
+      grep -qE "SPSA-(DONE|FAILED)" "$1" && break
+      exit 3
+    fi
+    [ "$(date +%s)" -ge "$end" ] && exit 124
+    sleep 60
+  done
+  grep -m1 -E "SPSA-(DONE|FAILED)" "$1"' _ \
+  /home/max/ws/chesso/.tuning/spsa_s261.log "$(cat /home/max/ws/chesso/.tuning/spsa_s261.pid)"
+```
+
+**Abort rule**: a time-forfeit rate over 1.0 % on either side
+(`python3 tools/forfeit_report.py <OUT>/games.pgn --max-pct 1.0`),
+`SPSA-FAILED` other than the transient kind the resume clause allows once,
+loss of mains, a second load. Nothing else; a trajectory that looks sick is
+read, never adjusted.
+
+**The resume clause** (added on the fast check, before launch). One resume is
+allowed, and only when all four hold: (a) the run log's failure is the
+driver's `ERROR: fastchess exited <n>` or `ERROR: fastchess did not finish
+inside <s> s` -- a transient harness failure -- and not a config or run error
+of any other wording (`games came back` is a missing game, not transient);
+(b) no crash, disconnect or illegal move in the run's games, by
+`fastchess.sh`'s own test: `grep -h '^\[Termination' <OUT>/games.pgn | grep
+-cvE '"(normal|adjudication|time forfeit)"'` prints 0; (c) the forfeit rate
+is under the abort rule's 1.0 % a side; (d) `<OUT>/checkpoint.json` exists.
+Then, from `/home/max/ws/chesso`:
+
+```bash
+RESUME=1 OUT=<the failed run's directory> \
+  nohup adocs/data/S261_spsa.sh > .tuning/spsa_s261_resume.log 2>&1 &
+echo $! > .tuning/spsa_s261_resume.pid
+```
+
+The runner plays the run's own `engine.snapshot`, re-runs `check` against that
+binary, writes `<OUT>/resumed`, and calls the driver with `--resume`, which
+refuses a checkpoint whose digest is not this config's and drops a
+trajectory row the checkpoint does not know about. Its markers are the same
+`SPSA-(DONE|FAILED)`, first one in the new log. The watcher is re-armed on
+`.tuning/spsa_s261_resume.log` and `.tuning/spsa_s261_resume.pid`, ceiling
+64800 s again. The failed iteration's games may stand twice in `games.pgn`;
+the trajectory is the record. **A second failure of any kind aborts the lane**
+and the runner refuses a directory that already holds `resumed`.
+
+**A fresh run never reuses a directory**: the runner refuses an `$OUT` that
+exists (an inherited `OUT` naming an old run would reuse its
+`engine.snapshot` and append to its trajectory), unless `RESUME=1` under the
+clause above.
+
+**Mid-run reads** at about 25 % (iteration 312, about 2 h 10 m in) and 50 %
+(625, about 4 h 20 m): `c_scale` decaying towards 1, `y` centred with real
+spread, `python3 adocs/data/S261_bounds.py <OUT>` for each axis's share at a
+bound, the forfeit count. Recorded whatever they say; only the abort rule acts.
+
+**Open findings named (DEC-171)**, re-read at `1edb3b1`: S278, the sanitizer
+build's trace tests failing under UBSan on `eval_trace::sink`'s store --
+tooling, trace-only, bench-identical, and landed by the coordinator **before**
+the lane launches, so the lane's head carries it. S259 is closed. Anything
+opened since is named in the launch note.
+
+### (4) The end of a range, and the mate suites
+
+**Reading**: `python3 adocs/data/S261_bounds.py <OUT>` at the end -- per axis
+the incumbent, the final rounded value, the share of iterations at each
+bound, `moved` and `END` flags. Every line goes into "As built" whatever it
+says.
+
+**The rule for an axis whose final value is a bound** (S085's `RfpMinPly` at 0
+is why it exists):
+
+- **R1, the incumbent was the bound** (`LmpDepthCoeff` seeded at its floor and
+  still there): not a move; recorded.
+- **R2, the bound is the axis's declared off value** -- 0 for the five LMR
+  terms, the five depth caps (rows 12, 15, 16, 18, 20), `SeeLmrExtra` and
+  `AspirationFailLowPull`; 126 for `LmrDeeperMinReduction`; 27000 for
+  `LmpBase`; 48000 for `FutBase`: **the lane does not switch a rule off.** The
+  axis is held at its incumbent in the candidate, and the reading is recorded
+  as evidence for a removal priced by its own SPRT. A rule turned off inside a
+  32-axis vector would ship dead code under a verdict that cannot
+  attribute it, against a verdict that kept the rule.
+- **R3, any other bound** (a margin at 0, `SeMinDepth` at 4 or 16, a range top
+  that is not off): the fitted value is in the candidate **only if** the mate
+  suites and the full fast suite are green on the vector; it is named in the
+  SPRT script's vector table as "at its range end", and the range itself is
+  S127's question, never changed inside this step.
+- **R4, a mate suite red on the candidate**, whatever caused it: find the axis
+  by halving -- reset half the moved axes to their incumbents, rebuild,
+  re-run the three suites, about a minute a round -- hold the culprit(s) at
+  the incumbent, record the failing cases, re-check. A mate test is never
+  edited or relaxed (TESTS).
+- **R5, a stuck lane**: if the rounded vector after R1 to R4 equals the
+  incumbent, nothing lands and no SPRT is owed (S085's rule); the step records
+  that the axes were not findable at this budget, which is not a statement
+  that they are right.
+
+**The mate suites on the tuned vector, before any match.** Write the vector
+into `src/search_params.hpp`'s defaults (a script in
+`adocs/data/S231_apply_fit.py`'s shape, from the driver's JSON block, never
+retyped) and `tests/test_search_params.cpp`'s pins, then:
+
+```bash
+cmake --build build -j12 && \
+  ctest --test-dir build -R '^test_mate_(breadth|pv|carry)$' --output-on-failure
+```
+
+then the TESTS gate in both builds (`export CLANG_FORMAT_MAJOR=22` here,
+DEC-146), which carries `test_search`'s "pruning does not hide a forced mate"
+and `test_engine`'s "engine: mate safety":
+
+```bash
+cmake --build build -j12 && ctest --test-dir build -L fast --output-on-failure && \
+  cmake --build build-tune -j12 && ctest --test-dir build-tune -L fast --output-on-failure && \
+  ./clang-format.sh --check
+```
+
+and DEC-141's second tier, since the search's behaviour moves: the Debug
+self-play of DEV_MANUAL "The Debug self-play habit" (four rounds at 4+0.04,
+`grep -c Assertion` 0), `tools/mutation_check.py` over the search mutants, and
+`tools/gate_extra.sh`.
+
+### (5) The verification SPRT
+
+**`adocs/data/S261_sprt.sh`**, in `adocs/data/S119_sprt.sh`'s shape, `CAND`
+and `REF` left `PIN_ME` and refused until pinned. **Independent**: the lane
+tuned at 2+0.02 on `UHO_4060_v3.epd` against itself; this plays 8+0.08 on
+`noob_3moves.epd` against the untuned tree, sharing no opening, control or
+game. `{0, 5}` nElo, alpha = beta = 0.05, `model=normalized`, Hash 16,
+concurrency 12.
+
+- **Pair**: CAND the commit landing the vector (after item (4)), REF its
+  parent; `git diff <lane head> <REF> -- src/` must be empty, or stop and ask.
+  S278 lands before the launch, so the lane head carries it. **One exception,
+  fixed now**: a src/ change landed between the launch and the vector in a
+  commit of its own that proved INV-6 -- `bench`'s total and all eight replies,
+  and `tools/search_bench.py`'s node counts and best moves at depths 9 and 12,
+  identical to its parent's, with a `No functional change` trailer -- does not
+  count, because the engine fitted and the engine REF builds search
+  identically. A later trace-only landing cannot stall the verification.
+- **Cost (DEC-143)**: 41861 expected games at the midpoint, 25591 on a bound,
+  at 2110 games an hour **19.8 h and 12.1 h**; cap 40000 games, 19.0 h. A
+  night. Watcher ceiling 136800 s, twice the 19.0 h cap.
+- **Abort**: forfeits over 1.0 % a side; a crash or disconnect voids it
+  (`SPRT-RUN-INVALID`); mains or a second load.
+- **H1**: the vector ships, "at least 5 nElo". **H0**: nothing ships -- CAND
+  is reverted, the zero is recorded. **No verdict** at the cap: a zero, read
+  and reverted as H0. No second pair.
+- The closing commit carries DEC-220's block; the log is trimmed into
+  `adocs/data/S261_sprt.log`.
+
+### (6) The block-boundary readings
+
+Both after the verdict has landed or been reverted, both estimates read beside
+the verdict and never verdicts (DEC-202 (3), DEC-108). Both under four hours,
+so daytime runs (DEC-155), about 4 h 40 m back to back.
+
+**The drift point, S199's form, in S267's series against `1680439`** (S267
+accepts (5): the readings before the gate "use the same reference, regime and
+series"). HEAD after the verdict's commit, the tree clean, the binary rebuilt
+for the identity check:
+
+```bash
+cmake --build build -j12
+nohup env REF=1680439 ROUNDS=1000 \
+  OUT=/home/max/ws/chesso/.tuning/s261_drift_$(date +%Y%m%d_%H%M%S) \
+  ./fastchess.sh > .tuning/s261_drift.log 2>&1 &
+echo $! > .tuning/s261_drift.pid
+python3 adocs/data/S199_drift.py <OUT> .tuning/s261_drift.log \
+  --tsv adocs/data/S267_drift.tsv --verdicts <ids> --conversions <ids>
+```
+
+2000 games at 2110 an hour, **57 minutes**; watcher ceiling 7200 s, markers
+`SPRT-RUN-(DONE|FAILED)`. **`adocs/data/S267_drift.tsv` does not exist** --
+S267 names the series and nothing has created it -- so this point creates it
+with `S199_drift.tsv`'s column header and a comment naming the reference
+(`S199_drift.py` refuses to append to a missing file). Resolution at 1000
+pairs: about +/- 15.2 nElo, +/- 11.6 Elo.
+
+**The DEC-202 reading at 32+0.32, Hash 64**, on the SPRT's own pair, so the
+two runs play the same two engines at two controls (S151's and S109's form):
+
+```bash
+nohup env CAND=<the SPRT's CAND> REF=<the SPRT's REF> TC=32+0.32 HASH=64 ROUNDS=1000 \
+  OUT=/home/max/ws/chesso/.tuning/s261_ltc_$(date +%Y%m%d_%H%M%S) \
+  ./fastchess.sh > .tuning/s261_ltc.log 2>&1 &
+echo $! > .tuning/s261_ltc.pid
+```
+
+2000 games at the 534 an hour measured here at this control (S151 read 545),
+**3 h 45 m**; watcher ceiling 27360 s (S109's). **Taken after the SPRT
+whatever its verdict, DEC-269 (2)**: DEC-202 alone binds only a verdict that
+moves a parameter, but DEC-222 (8) and S127's amendment record the risk that a
+real longer-control gain reads zero at 8+0.08, and this run is the only place
+it shows. It ships nothing on any outcome; a reading after an H0 whose
+interval sits above zero opens a decision and never brings the vector back by
+itself. On a stuck lane (R5) there is no SPRT, no pair and no run.
+
+Each of the three runs in items (5) and (6) gets item (3)'s watcher with its
+own log, pid file, `SPRT-RUN-(DONE|FAILED)` markers and ceiling: 136800 s,
+7200 s and 27360 s.
+
+## As built
+
+Phase 1 only, 2026-10-13. Nothing built, run, probed or simulated.
+
+**Written**: `tools/spsa_s261.json`, `adocs/data/S261_spsa.sh`,
+`adocs/data/S261_sprt.sh`, `adocs/data/S261_split_sim.py`,
+`adocs/data/S261_bounds.py`, this pre-registration. No `src/` change.
+
+**Deviations from the brief**: two scripts it did not ask for --
+`S261_split_sim.py` turns item (2)'s one-lane claim into a measurement before
+launch, and `S261_bounds.py` is item (4)'s reading; both untested, phase 2's
+first run of each is its test. The drift series item (6) appends to does not
+exist yet and is created by this step.
+
+**Pending, phase 2** (the coordinator runs every one):
+
+- ~~the reachability check and item (1)'s refusal rule; the split test~~ --
+  done 2026-10-13, below;
+- the launch, the watcher, the two mid-run reads;
+- item (4): `S261_bounds.py`, the end-of-range decisions, an apply script in
+  `S231_apply_fit.py`'s shape, the mate suites, the gate, DEC-141's tier;
+- the vector's landing commit: defaults, pins, `MANUAL.md`'s option table and
+  any prose number `tools/plan_prose_check.py --params` then flags in
+  `specs.md`, `MANUAL.md` or `DEV_MANUAL.md`, DEC-142's goldens re-derived by
+  their scripts where a count leaves its band, `Bench:`; the vector table
+  appended to `S261_sprt.sh`, the pair pinned; DEV_MANUAL's lane list gains
+  S261's paragraph beside S222's and S231's;
+- the SPRT, its DEC-220 block; then the drift point and the 32+0.32 reading.
+
+**The two questions this phase raised are decided, DEC-269** (2026-10-13, by
+the coordinator under the owner's standing instruction): `LmrBase` and
+`LmrDivisor` join the lane, 32 axes, amending accepts (1); the 32+0.32 reading
+is taken after the SPRT whatever its verdict. Items (1), (2), (6), the JSON,
+the runner, the SPRT header and the split test carry both.
+
+### Phase 2, steps 1 to 3: reach and split, 2026-10-13
+
+**The tree.** achesso at `1edb3b1`: S119 read H1 and the cluster table stays;
+S263, S259, S276, S264 and S277 have landed. The pre-registration was applied
+onto it in the worktree `chesso-s261b`. `git diff 4f8b949 1edb3b1 --
+src/search_params.hpp tests/test_search_params.cpp` is empty, so every seed and
+range in item (1) still holds. Built `build-tune` fresh there
+(`-DCHESSO_TUNE=ON`, Release, ccache, `-j12`), with S278 and S099 building
+beside it -- load 7 to 10 on 12 threads. Nothing below is a timing, and
+nothing used the clock rung, so the load does not enter.
+
+**Reach.** `python3 tools/spsa_driver.py check tools/spsa_s261.json --engine
+build-tune/src/chesso` over the 32: **31 reach, 1 refused**, 2.7 s
+(`.tuning/coord/S261/check.txt` in the worktree). 29 separate at depth 9 on
+the midgame position, `SeTtDepthMargin` (0 -> 83007, 8 -> 105644) and
+`SeMarginPerDepth` (1 -> 192203, 18 -> 97207) at depth 13 as item (1)
+expected, **none on the clock rung**. Every expected rung in the table held.
+
+**`SePlyFactor` refused**, the one item (1) expected: 2 and 8 searched 32829
+nodes at depth 9, 106091 at depth 13, 148755 on the tactical position at depth
+13, and 195966 on the 1 s clock -- the "same number of nodes under every
+probe" verdict, not "not repeatable". `grep -n SE_PLY_FACTOR src/*.cpp` finds
+it read in `src/search.cpp` `negamax_at`'s singular-extension guard, `ply <
+SE_PLY_FACTOR * depth`, so it is the parameter and not the wiring (DEC-200's
+shape, no BUGS step). **The row left `tools/spsa_s261.json`**; `_what` says
+why. The re-run on the edited config: 31 of 31 in 1.9 s, every probe line
+identical to the first run's, `SPSA-DONE` (`check2.txt`). **The lane is 31
+axes.**
+
+**Split.** `python3 adocs/data/S261_split_sim.py` on the 31-axis config, 4.3 s
+(`.tuning/coord/S261/split_sim.txt`): over the 16 even-indexed axes weighted
+in both, all 31 weighted recovered **+0.692** of each axis's 3 Elo (seeds
++0.660, +0.704, +0.693, +0.670, +0.732) against **+0.703** with the 15
+odd-indexed axes at weight zero (+0.687, +0.652, +0.709, +0.695, +0.772).
+**Ratio 0.984 against the 0.8 line: `S261-SPLIT-SIM: ONE LANE`.** The
+cross-talk item (2) priced by arithmetic costs about 1.6 % of per-axis
+recovery on the simulator, inside the seed-to-seed spread of either mode. The
+config is not rewritten, and the split item (2) stated is not used.
+
+**The untested scripts, on their first runs.** `S261_split_sim.py` ran clean
+and needed no change: 1250-row trajectories, 31 weights with 16 non-zero in
+`half` mode, the draw rate 0.3072. `S261_bounds.py`, run over the simulator's
+`all_seed1` trajectory, read 1250 iterations and printed every axis with its
+flags, also unchanged. `bash -n` passes on both runners, and `S261_sprt.sh`
+refuses its `PIN_ME` pair with `SPRT-RUN-FAILED` and exit 1, as written.
+
+**Open findings re-read at `1edb3b1`** (DEC-171), for the lane and the SPRT:
+**S278** is open unless it lands first -- the sanitizer build's trace tests
+fail under UBSan on `eval_trace::sink`'s store; tooling, never compiled into
+`chesso`. S259 is closed. S099 is in progress and lands after this lane
+(DEC-271). Both script headers now say so.
+
+**Launch-ready, not launched.** The coordinator launches once S278's and
+S099's agents have left the machine, which must then be idle and on mains.
+From `/home/max/ws/chesso`, after this branch has landed there (bash):
+
+```bash
+cat /proc/loadavg; ps aux | sort -rnk3 | head
+nohup adocs/data/S261_spsa.sh > .tuning/spsa_s261.log 2>&1 &
+echo $! > .tuning/spsa_s261.pid
+```
+
+The runner rebuilds the main tree's `build-tune`, prints its sha256 and runs
+the same `check` again (DEC-200: on the day), then plays. The watcher is item
+(3)'s loop, unchanged, with `persistent: true`:
+
+```bash
+bash -c '
+  end=$(($(date +%s)+64800))
+  until grep -qE "SPSA-(DONE|FAILED)" "$1"; do
+    if ! kill -0 "$2" 2>/dev/null; then
+      grep -qE "SPSA-(DONE|FAILED)" "$1" && break
+      exit 3
+    fi
+    [ "$(date +%s)" -ge "$end" ] && exit 124
+    sleep 60
+  done
+  grep -m1 -E "SPSA-(DONE|FAILED)" "$1"' _ \
+  /home/max/ws/chesso/.tuning/spsa_s261.log "$(cat /home/max/ws/chesso/.tuning/spsa_s261.pid)"
+```
+
+**Expected 8 h 45 m** (S222 8 h 37 m 31 s and S231 8 h 40 m 45 s for this
+shape), **ceiling 64800 s, 18 h**. Mid-run reads at about 2 h 10 m and 4 h
+20 m.
+
+**The coordinator's fast check, 2026-10-13, before launch** -- four fixes, writing
+only, nothing in it invalidating the lane:
+
+1. S278 (trace-only, bench-identical) lands before the launch, and item (5)
+   and `S261_sprt.sh` now pre-register that a src/ landing proved INV-6 in its
+   own commit does not count against the REF rule.
+2. The resume clause in item (3): one resume after a transient `SPSA-FAILED`
+   (`fastchess exited` or `did not finish`, no crash, disconnect or illegal
+   move, forfeits under 1.0 %), with its command, marker and re-armed
+   watcher; a second failure aborts.
+3. `S261_spsa.sh` refuses an existing `$OUT` unless `RESUME=1`. On resume it
+   plays and checks the run's own `engine.snapshot`, writes `$OUT/resumed`,
+   refuses a directory that already holds it, and passes `--resume`.
+4. Stale text: item (3)'s open findings name S278, not S259; the JSON's
+   `_what` says thirty-one.
+
+`bash -n` passes on both runners. The refusal paths were not executed: this
+fix was writing only, so they are untested until the launch.
