@@ -14483,3 +14483,30 @@ Rejected:     Reading no verdict as H0 -- it costs S122 the unclamped king
 Consequences: `adocs/data/S039_sprt.sh` states the three outcomes with this
               one. A cost inside the bounds interval can land unmeasured;
               S121's and S122's own verdicts are measured on top of it.
+
+## DEC-275  2026-10-13  S082's fixed validation set: the quiescence view is primary, its games at 100000 nodes
+Tags:         tuning, corpus, measurement, s082, s083, dec-259
+Context:      S082 builds the fixed validation set DEC-259 keeps for every
+              later fit and screen, and its phase 1 (written blind) left two
+              choices the step does not settle: which view of the set is the
+              primary loss -- each position resolved by quiescence, or the
+              root as sampled -- and at what node budget the set's games are
+              played, since the set outlives S083, which may move the budget.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. The quiescence view is primary: `evaluate()` is asked
+              about the positions quiescence hands it, so that is what a
+              screen should score, and it is the Texel objective. The root
+              view is fitted beside it in every cell and reported, never
+              decisive. The set's games are played at 100000 nodes (S065's
+              budget), fixed whatever S083 chooses.
+Rejected:     The root view as primary -- it keeps the scale of the held-out
+              figures since S066 but judges terms on tactical positions
+              `evaluate()` is not the last word on, and favours the root
+              recipe by construction. S083's budget for the set -- one more
+              night after S083, and S082's comparison taken on a set that is
+              then replaced.
+Consequences: S082's comparison favours leaf recipes by construction; a root
+              recipe that still wins is a strong finding, and the root view's
+              numbers are printed beside it. Held-out figures from S082 on are
+              not on the scale of S066-era figures. A later corpus at a lower
+              budget is measured on stronger games than its own.
