@@ -14668,6 +14668,11 @@ Consequences: S261's carry family and node-budget goldens are re-measured on
               reach and no `bestmove` moved at node budgets follows this form.
 
 ## DEC-280  2026-10-14  S261's vector makes LQ02 unreachable in release: its case moves to the tune build, B15's form
+
+**VOID, 2026-10-14 -- superseded by DEC-281.** Its premise is false: the
+smallest loss the exchange evaluation shows is 100, not 200, so LQ02 is
+reachable in release at the vector. The context below is kept as written.
+
 Tags:         search, tests, mutation, lmp, s261, s269, dec-142
 Context:      S269's case "a capture past late move pruning's count still takes
               the extra ply" kills LQ02 (the extra ply's exchange test skipped
@@ -14703,3 +14708,35 @@ Consequences: `tools/mutants/S269_late_quiets.py` records LQ02 `expected=
               "equivalent"` with the reason, B15's form. A later lane that moves
               `LmpMaxLmrDepth` or the capture margin re-reads the release
               inequality case first.
+
+## DEC-281  2026-10-14  LQ02 and LQ03 stay in the release build and are re-mined at S261's vector
+Tags:         search, tests, mutation, lmp, s261, s269, dec-142, dec-280
+Context:      DEC-280 rested on the smallest loss `see_ge` can show being 200.
+              It is 100: SEE's values are {100, 300, 300, 500, 900} and a
+              swap-off of +100, -300, +100 nets -100 (S261's agent, the
+              engine's own `see_ge` on `4k3/8/3p4/4p3/8/5NB1/8/4K3 w - - 0 1`:
+              Nxe5 and Bxe5 pass `see_ge(-100)` and fail `see_ge(-50)`,
+              `.tuning/coord/S261/see_probe.cpp`). At reduced depth 2 the
+              capture margin, 50 x 2 = 100, clears such a capture, so its extra
+              ply's exchange test is reached and LQ02 changes the search. What
+              does hold: after the flag a capture's reduced depth is at most
+              `LmpMaxLmrDepth` - 1, since the flag and the capture rule share
+              `lmr_depth_of` and its table is non-decreasing in the move
+              number. The release LQ02 mutant reads `bench` and `search_bench`
+              node-identical, which says only that no bench position reaches
+              the case.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. DEC-280 is void. LQ02 and LQ03 stay in the release
+              build. Each is re-mined at the vector with its precondition
+              asserted in the case (DEC-142, by script): for LQ02, a capture
+              losing exactly 100 past the flag at reduced depth 2; for LQ03, a
+              capture losing more than the margin past the flag, with `LmpBase`
+              935's count cleared. One position may serve both. No tune-build
+              form and no inequality case are added.
+Rejected:     DEC-280's tune-build move -- on a false premise. Holding
+              `LmpMaxLmrDepth` or `LmpBase` -- the guards are reachable at the
+              fitted values, so the fit costs no guard.
+Consequences: If either case cannot be re-mined at the vector, S261 stops for
+              a ruling; it is not relaxed. A declaration of equivalence needs
+              an argument from code that the agent's own probe confirms, and
+              a node-identical bench is not one.
