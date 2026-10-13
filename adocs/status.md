@@ -20,7 +20,7 @@ reading whatever the verdict (DEC-269). No open DEC-171 finding.
 
 **Order from here:** S261 (lane, mate suites, SPRT, readings) -> S099
 rebased onto S261's landing, every number re-taken, SPRT (DEC-271) -> S023
-verdict 1 (DEC-273). Owed at the next machine gap: the `No functional change`
+verdict 1 (DEC-273) -> S039 (DEC-274). Owed at the next machine gap: the `No functional change`
 commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
 
 **Waiting, written (DEC-260 lanes):**
@@ -38,6 +38,13 @@ commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
   margin readers, 4 new parameters, CX mutants; verdict 2 (ordering) only on
   its H1 (DEC-273). Shares `tests/test_search_params.cpp`'s count line with
   S099 (75 and 77; 79 together).
+- **S039** (worktree `../chesso-s039`): phase 1 written blind -- the lazy
+  shortcut and the clamp removed in one change, weights frozen; 398 reader
+  lines in 91 files resolved (`adocs/data/S039_readers.txt`); trace, tuner
+  and `feature_audit` follow; `LazyEvalMargin` retires (73 -> 72 rows).
+  Non-regression `{-5, 0}`; no verdict lands as a zero (DEC-274). At its
+  rebase, S023's two quiescence-futility cases on the removed API convert.
+  `adocs/specs.md` line 658 conflicts by hand with S099 and S023.
 
 **Done today, 2026-10-13, each gated green:**
 - **S119** H1 at Hash 16 (DEC-268): Elo 5.24 +/- 4.06, 16128 games; the
