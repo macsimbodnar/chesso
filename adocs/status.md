@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-13, by hand.
 
-## 2026-10-13: S261's lane runs; S099 and S023 wait for the machine
+## 2026-10-13: S261's lane runs; S099, S023, S039 and S082 wait for the machine
 
 **Running: S261's SPSA lane** (pre-registration `932ee7a`), launched
 2026-10-13 12:40: 31 axes (DEC-269 adds LmrBase and LmrDivisor; SePlyFactor
@@ -17,10 +17,15 @@ unreachable), one lane (split sim 0.984), 1250 iterations x 48 games at
 (pre-registered). Then: the mate suites on the tuned vector, the independent
 {0,5} SPRT (`adocs/data/S261_sprt.sh`), the drift point and the 32+0.32
 reading whatever the verdict (DEC-269). No open DEC-171 finding.
+Mid-run reads (`.tuning/coord/S261_files/midrun_reads.md`, for As built):
+`c_scale` 1.150 at 313 and 1.072 at 626 (S222's figures), `y` centred,
+0 forfeits in 30113 games at the half, median depth 11 (p10 10). At the
+half `LmrCutNode` (0, R2 off value), `LmrDeeperMinReduction` (1) and
+`SeMarginPerDepth` (1) sit at a range end; decided only at the end.
 
 **Order from here:** S261 (lane, mate suites, SPRT, readings) -> S099
 rebased onto S261's landing, every number re-taken, SPRT (DEC-271) -> S023
-verdict 1 (DEC-273) -> S039 (DEC-274). Owed at the next machine gap: the `No functional change`
+verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275). Owed at the next machine gap: the `No functional change`
 commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
 
 **Waiting, written (DEC-260 lanes):**
@@ -45,6 +50,16 @@ commit for S276's stale `eval_model` comments in `src/evaluation.{cpp,hpp}`.
   Non-regression `{-5, 0}`; no verdict lands as a zero (DEC-274). At its
   rebase, S023's two quiescence-futility cases on the removed API convert.
   `adocs/specs.md` line 658 conflicts by hand with S099 and S023.
+
+- **S082** (worktree `../chesso-s082`, base `e1c59f8`): phase 1 written
+  blind -- `src/leaf_walk.{hpp,cpp}` (quiescence and PV leaves, linked by
+  datagen only; INV-6 expected), datagen `--leaf root|qs|pv`, a ply column
+  closing a game-split leak in `tuner_split::row_ply`, the tuner's
+  `--holdout`, `tools/corpus_split.py`, LW01-LW08 mutants; recipe
+  pre-registration `adocs/data/S082_recipe.{sh,_read.py}` with DEC-275 (qs
+  view primary, set at 100000 nodes) and a five-seed control margin. Fast
+  check: 4 findings, fixed blind. Phase 2: ~1 h 30 m build and checks, the
+  pool ~9 h (a night), compare ~1 h 15 m.
 
 **Done today, 2026-10-13, each gated green:**
 - **S119** H1 at Hash 16 (DEC-268): Elo 5.24 +/- 4.06, 16128 games; the
