@@ -5,86 +5,45 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-12, by hand.
+Updated: 2026-10-13, by hand.
 
-## 2026-10-12: SHUTDOWN HANDOVER -- how to resume
+## 2026-10-13: S119 H1 -- the cluster table stays; the lanes land next
 
-The owner turned the workstation off. Nothing was lost; resume from here.
+**S119 done.** C (`298788b`) against A+B (`cc87dfb`), `{0, 5}` nElo, 8+0.08,
+Hash 16 (DEC-268): **H1 after 16128 games, Elo 5.24 +/- 4.06, nElo 6.92 +/-
+5.36**, 0 forfeits, 7 h 43 m at 2090 games/h. A, B and C all stay. Log
+`adocs/data/S119_sprt.log`; run archived as
+`chesso_S119_sprt_2026-10-13.tar.xz`. About 30 s of niced agent work ran in
+the first three minutes, before DEC-260's stop; disclosed in the stamp.
 
-**State.** achesso is clean at `bee84d8` (S262), plus this commit. No match,
-fit or timing is running.
-
-**In progress: S263** (shared attack sets), paused at a safe point. Its
-worktree is `/home/max/ws/chesso-s263` (branch `s263` at `bee84d8`,
-uncommitted, compiles), and its brief is `.tuning/coord/S263_brief.md`. The
-step file `adocs/plan_current/S263_shared_attack_sets.md` exists **in the
-worktree only**; its "Progress (paused 2026-10-12)" section lists what is
-done and the exact next actions. A backup of the diff, logs and step file is
-in `.tuning/coord/S263_files/`.
-- **Finding:** stage two already computes each attack set once. Only the pawn
-  stage's sets could be shared: one `neighbour_files()` a side fewer,
-  `evaluate_cheap()` 196 -> 187 instructions.
-- INV-6 holds in full, and `evaluate()` is byte-identical on all 10795695
-  rows.
-- **Still owed:** the timing, re-taken whole (the first was disturbed by
-  owner load); the trace re-run; the full gate after a format fix; the prose
-  checks; the As built.
-- **Plan note:** S121, S101, S122 and S102 say "the attack sets come from
-  S263". They will build their own; amend that text when S263 lands.
-- **Resume:** a fresh Opus agent gets the S263 brief plus "you are resuming:
-  read the step file's Progress section in the worktree first". The
-  coordinator then fast-checks and lands it per the usual pattern.
-
-**Running: S119's SPRT**, launched 2026-10-12 23:13 after the owner's
-rulings (DEC-268: Hash 16 as pre-registered; the `hashfull` clause means
-`rating.sh`'s control). CAND `298788b`, REF `cc87dfb`, {0,5}, 8+0.08, worst
-case 19.8 h. Log `.tuning/s119_sprt.log`; output `.tuning/sprt_s119_*`.
-Its record commit carries the DEC-220 block, then the ledger regeneration.
-No CPU work beside it (DEC-260); every agent lane below is writing only.
-Disclosed for its record: S263's agent ran about 30 s of `nice -n 19` work
-in the first three minutes (a no-op build, one `bench`, a 17 s build, a
-tuner killed within 10 s) before the stop; 0 forfeits in the first 310
-games.
-
-**Waiting on the machine, written (DEC-260 lanes), land after the verdict:**
-- **S263** (worktree `../chesso-s263`): As built drafted; owed the trace
-  re-run, the full gate, the prose checks and the 19 min timing, commands in
-  `.tuning/coord/S263/pending.md` (worktree; backup in
-  `.tuning/coord/S263_files/`). On landing, amend S101, S102, S121-S125 and
-  S135: "the attack sets come from S263" -- none was built; each builds its
-  own.
-- **S276** (worktree `../chesso-s276`): code, tests and As built written
-  blind; phase 2 builds, runs the suites, re-takes `feature_audit` and
-  `truncation_scan`, fills 10 `S276-PENDING` tokens. Lands with
-  `.tuning/coord/S276_files/pending_citations.diff` (S122, S136 cite a deleted
-  case; DEC-159). The mirror's count walks are kept as
+**Written beside the match (DEC-260), landing now, in Open order:**
+- **S259** (filler): re-mine the multicut and ProbCut mate rows on the tree
+  S119 left. Not yet briefed.
+- **S263** (worktree `../chesso-s263`, base `bee84d8`): As built drafted;
+  owed the 19 min timing (first, on the quiet machine), the trace re-run,
+  the full gate, the prose checks; commands in the worktree's
+  `.tuning/coord/S263/pending.md`. Rebase onto achesso before landing. On
+  landing, amend S101, S102, S121-S125 and S135: "the attack sets come from
+  S263" -- none was built; each builds its own.
+- **S276** (worktree `../chesso-s276`): written blind; phase 2 builds, runs
+  the suites, re-takes `feature_audit` and `truncation_scan`, fills 10
+  `S276-PENDING` tokens, applies `.tuning/coord/S276_files/pending_citations.diff`
+  (S122, S136; DEC-159). The mirror's count walks stay as
   `tests/test_walked_counts.hpp`. Stale `eval_model` comments in `src/` are a
-  separate `No functional change` commit after S263 and S276 land.
-- **S264** (worktree `../chesso-s264`): phase 1 running -- the CCRL list read,
-  anchors chosen, sources fetched, nothing built or run; phase 2 builds and
-  smoke-tests between verdicts.
-
-- **S261** (worktree `../chesso-s261`): pre-registration written -- 32 axes
-  (DEC-269 adds `LmrBase` and `LmrDivisor`), one lane of 1250 iterations x 48
-  games at 2+0.02, about 8 h 45 m, a night; the split into two lanes is
-  stated and decided by `S261_split_sim.py` before launch. Then the
-  independent {0,5} SPRT, the drift point (creates
-  `adocs/data/S267_drift.tsv`) and the 32+0.32 reading whatever the verdict
-  (DEC-269). Phase-2 commands in its step file.
-
-- **S099** (worktree `../chesso-s099`): written blind as two diffs -- (a) the
-  pawn key, neutral, lands on its own with INV-6 and the second tier; (b) the
-  correction table, the SPRT candidate after S261. DEC-270 settles its open
-  choices (census before the SPRT, datagen wired, 32+0.32 estimate only on
-  H0). Four UCI-path goldens re-derived in phase 2. Diffs and builders in
-  the worktree's `.tuning/coord/S099/`.
-
-**Landing order after S119's verdict:** record the verdict; S263 (timing on
-the quiet machine), S276, S264's smoke matches; S259 then needs the tree
-S119's verdict leaves.
-
-**Then, per Open:** S259 (held until S119's verdict), S276 (agent lane),
-S264, S261, S099...
+  separate `No functional change` commit after S263 and S276.
+- **S264** (worktree `../chesso-s264`): Weiss 1.1 (2987, fourth family) and
+  Stash v30.0 (3153) chosen from the list read 2026-10-12; sources cloned to
+  `/home/max/ws/engines/`, nothing built; phase 2 builds, probes, and one
+  600-game smoke run (`rating.sh` needs three engines).
+- **S261** (worktree `../chesso-s261`): 32 axes (DEC-269), one lane of 1250
+  iterations x 48 games at 2+0.02, about 8 h 45 m, a night; split decided by
+  `S261_split_sim.py` before launch. Then the independent {0,5} SPRT, the
+  drift point (creates `adocs/data/S267_drift.tsv`) and the 32+0.32 reading
+  whatever the verdict (DEC-269).
+- **S099** (worktree `../chesso-s099`): (a) the pawn key, neutral, lands on
+  its own (INV-6, second tier); (b) the correction table, the SPRT candidate
+  after S261. DEC-270: census before the SPRT, datagen wired, 32+0.32
+  estimate only on H0. Four UCI-path goldens re-derived in phase 2.
 
 ## 2026-10-12: S262 done -- the tuner fits evaluate()'s own trace
 

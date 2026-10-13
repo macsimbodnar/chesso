@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-13. **H1: the cluster table gains at the harness setting.** Part C (`298788b`: 64-byte clusters of three 20-byte entries, depth-and-age replacement, a 16-bit generation, every megabyte used, `hashfull` on info lines) against its parent (`cc87dfb`, Parts A and B, node-identical and kept under DEC-266) at `{0, 5}` nElo, 8+0.08, Hash 16, `noob_3moves.epd`, concurrency 12: H1 after 16128 games, LLR 2.95, `Elo 5.24 +/- 4.06`, `nElo 6.92 +/- 5.36`, 0 forfeits either side in 16131 games, 7 h 43 m at 2090 games/h under governor `powersave`. Priced together, layout, replacement and capacity (+50 % entries) (DEC-258), at 23 to 26 overwrites per entry where the parent ran 35 to 40, about a third of the list's 60 to 120 (DEC-088; the owner kept Hash 16, DEC-268); the stopping run's Elo is upward-biased (DEC-063) and is not the effect size. `hashfull` stays low at `rating.sh`'s 10+0.2 (median about 6 %), the control the clause means (DEC-268); at the list's 2'+1" it reads about 43 %, recorded as a fact about that regime. About 30 s of `nice -n 19` agent work ran in the first three minutes, before DEC-260's stop. Second tier green on A, B and C before the run; tests and mutant per As built. Log `adocs/data/S119_sprt.log` (trimmed); the run is in the owner's archive, `chesso_S119_sprt_2026-10-13.tar.xz`.
 
 ## Added 2026-10-08, DEC-258: the capacity change is part of what the verdict prices
 
@@ -550,3 +550,10 @@ C's commit per the pre-registration):
     Games | N: <n> W: <w> L: <l> D: <d>, Ptnml [<5>]
     Wall | <h> h <m> m, <g> games/h, forfeits <f>
     Log | adocs/data/S119_sprt.log
+
+### Verdict (coordinator, 2026-10-13)
+
+H1 at 23:13 to 06:56, 16128 games: Elo 5.24 +/- 4.06, nElo 6.92 +/- 5.36,
+LLR 2.95, Ptnml [632, 1902, 2825, 2001, 704], 0 forfeits either side. The
+pre-registration predicted a direction only (positive); the step file's
+"5 to 15 Elo" stays unsourced and is not compared. C stays, with A and B.
