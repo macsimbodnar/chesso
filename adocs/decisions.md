@@ -14549,3 +14549,67 @@ Rejected:     Releasing an R2 hold because of the co-fit -- it switches a rule
 Consequences: The run sheet `.tuning/coord/S261_files/phase2_runsheet.md`
               follows these four. Nothing play-altering lands in `src/` before
               S261's vector and its SPRT, which is already the Open order.
+
+## DEC-277  2026-10-13  S261's mate guards are judged by grid against the incumbent, because R4's halving does not converge on this vector
+Tags:         search, spsa, mate-safety, s261, dec-276, dec-142, dec-238, testing
+Context:      S261's vector (25 of 31 axes moved, `LmrBase` 52 -> 113) turned
+              cell-wise mate guards red: test_mate_carry's majority
+              precondition (2 of 6 report), the mate-in-three floor (10 < 11),
+              the mined B04 row and the S230 table's rows 3 and 4 (mates found
+              at 11-14 where the row says 10-11). R4 halving (DEC-276) did not
+              converge: holds interact non-monotonically (carry green with
+              `FutBase` held alone, red with `FutBase`, `FutSlope` and
+              `FutMaxLmrDepth` held together; B04 returns only with ten or
+              more axes held), so a "culprit" found that way is chosen by
+              which cell a hold lands in, not by a cause. Logs:
+              `.tuning/coord/S261/r4/` and `r4b/`.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12; supersedes DEC-276 (A2) and R4's cell-wise reading
+              for this step only.
+              (1) Holds restart from R2: `LmrCutNode` and `SeeLmrExtra`, plus
+              `LmrDeeperMinReduction` at 2 -- at 1 its guard says nothing (the
+              lane's JSON calls 2 the smallest guard that says anything), so
+              1 switches that guard off, R2's case; and DEC-276 (A4) already
+              withholds an R3 value whose fast suite is red (test_search's
+              re-search guard case needs it at 2 or more). The `FutBase` and
+              `LmrDivisor` holds found cell-wise are dropped.
+              (2) Each budget- or depth-tied mate guard is judged as a family,
+              candidate against the incumbent (HEAD's defaults), on its own
+              script's grid: carry by `S203_case_sweep.sh` (mate lines
+              reported and short lines, each summed over the grid); the
+              mate-in-three and breadth counts by `S154_floor_margin_sweep.py`
+              and `S156_mined_floor_sweep.py`, with S154's `hash` probe on both
+              trees as the noise floor; the mined rows and the S230 table by
+              the depth at which each row's mate is first found, in their
+              mining scripts' sweep mode. A family passes when the candidate's
+              mates-found total is not below the incumbent's by more than that
+              family's noise floor (zero where the script measures none),
+              carry's short-line total is not above the incumbent's, and every
+              mined or table row's mate is found somewhere in its script's
+              sweep range. A failing family is halved on its grid total, an
+              aggregate, never on a cell.
+              (3) When every family passes, each golden is re-derived by its
+              own script at the final vector (DEC-142): S203's budgets and
+              `--ceilings`, S154's floor, S156's floor, S188's first-mate
+              depth, the mined rows in guard mode (DEC-238) with each row's
+              mutant killed through it -- a row no script can re-mine to kill
+              its mutant holds its culprit, as DEC-276 (A2) said.
+              (4) Rule-guard fixtures whose preconditions assumed the old
+              defaults are re-derived, never weakened, and each still kills its
+              mutant. The ProbCut fixtures' isolation from singular extensions
+              (`PROBCUT_MIN_DEPTH < SE_MIN_DEPTH`, now 6 and 6) is re-derived by
+              an isolation that holds by construction, with a REQUIRE that the
+              singular block did not run at the node; if none exists without
+              weakening a case, `SeMinDepth` is held.
+Rejected:     Continuing cell-wise halving -- it selects holds by noise and
+              ships a vector shaped by test cells rather than by the fit.
+              Re-deriving every red golden without a comparison -- it would let
+              a vector that finds fewer mates through. Asking the owner
+              tonight -- it idles the machine overnight against the standing
+              instruction; the owner can reverse this in the morning, before
+              the vector's SPRT reads.
+Consequences: Phase 2 takes the incumbent's grids as well as the candidate's
+              and the SPRT starts later. The As built records both trees'
+              grids. A mate guard red at a cell but passing as a family is
+              re-derived, and the comparison that cleared it is named at the
+              golden's site.
