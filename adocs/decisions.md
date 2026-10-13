@@ -14510,3 +14510,42 @@ Consequences: S082's comparison favours leaf recipes by construction; a root
               numbers are printed beside it. Held-out figures from S082 on are
               not on the scale of S066-era figures. A later corpus at a lower
               budget is measured on stronger games than its own.
+
+## DEC-276  2026-10-13  S261's end-of-lane readings: four points the pre-registration left open, settled before the lane ends
+Tags:         search, spsa, mate-safety, s261, dec-142, dec-238, dec-141
+Context:      Writing S261's phase-2 run sheet while the lane still ran
+              (iteration ~800 of 1250) found four points item (4) does not
+              settle. They are settled here, before the final vector is known,
+              so none is chosen after seeing it.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12.
+              (A1) R2 holds as written: an axis ending at its declared off
+              value is held at its incumbent even where a co-fitted axis
+              moved with it (`LmrCutNode` at 0 beside `LmrBase` 52 -> 86 at
+              the half). The SPRT judges the held vector; the As built states
+              which axes were held beside which moved.
+              (A2) A red mined mate row in `test_search` "pruning does not
+              hide a forced mate" (E21, B04, R01/R02) is first halved as R4 to
+              name the culprit axis. Then, if the three mate suites and
+              `test_engine`'s mate guards are green, the row is re-mined by its
+              own script in guard mode (DEC-238), as S131, S236 and S259 did:
+              DEC-142 says these rows move legitimately on a pruning change.
+              If the script mines no row that still kills the row's mutant,
+              the culprit is held at its incumbent (R4). A red mate suite or
+              `test_engine` mate guard is R4, never re-mined.
+              (A3) The mutation pass before the SPRT is the seven mutants
+              whose kills rest on a mined row (E21, B04, R01, R02, C02, C05,
+              C07). A vector adds no rule, so DEC-141's
+              mutant-per-new-rule clause asks for no full pass.
+              (A4) `LmrDeeperMinReduction` 1 and `SeMarginPerDepth` 1 are not
+              off values: R3 applies them if the mate suites and the fast
+              suite are green, named "at its range end" in the SPRT script.
+Rejected:     Releasing an R2 hold because of the co-fit -- it switches a rule
+              off inside a 31-axis vector, the case R2 exists to refuse.
+              Holding the culprit on any red mined row -- these rows are mined
+              at the margin to separate one mutant and have been re-mined on
+              every pruning change since S131. A full 126-mutant pass (about
+              8.5 h) -- no new rule.
+Consequences: The run sheet `.tuning/coord/S261_files/phase2_runsheet.md`
+              follows these four. Nothing play-altering lands in `src/` before
+              S261's vector and its SPRT, which is already the Open order.
