@@ -14613,3 +14613,31 @@ Consequences: Phase 2 takes the incumbent's grids as well as the candidate's
               grids. A mate guard red at a cell but passing as a family is
               re-derived, and the comparison that cleared it is named at the
               golden's site.
+
+## DEC-278  2026-10-13  DEC-277's mined-row family asks whether the mate is found, over the incumbent's sweep range
+Tags:         search, spsa, mate-safety, s261, dec-277, dec-238
+Context:      DEC-277 (2) passes the mined rows and the S230 table when "every
+              row's mate is found somewhere in its script's sweep range". For
+              E21 and B04 that range is derived from `SeMinDepth` and
+              `ProbCutMinDepth`, which S261's vector itself moves (10 and 8 to
+              6), so the candidate's range (7..10) and the incumbent's (11..14,
+              9..12) differ. The candidate finds E21 at 11, 12 and 14 and B04 at
+              11 and 13 -- inside the incumbent's ranges, outside its own.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. The family's question is whether the candidate still
+              finds the mate, so it is read over the incumbent's range: E21 and
+              B04 pass. Each is then re-mined in guard mode (DEC-238) into the
+              candidate's own range with its mutant killed through the new
+              row, per DEC-277 (3); a row that cannot be re-mined to kill its
+              mutant holds its culprit. The F2 halving's smallest restoring set,
+              `LmrDivisor` alone (against the pair `QsFutilityMargin` +
+              `LmpBase`), is held.
+Rejected:     The candidate's range -- it fails the family because the vector
+              moved the rules' depth gates, not because a mate is hidden, and
+              its halving would hold the gates the lane fitted.
+Consequences: S261's held set is `LmrCutNode`, `SeeLmrExtra`,
+              `LmrDeeperMinReduction` (2) and `LmrDivisor`. The breadth floor
+              found not to separate on the incumbent (150 shipping, 145 with
+              the guard weakened, S156 at `fd9e44c`) is a DEC-142 finding that
+              S261's re-derivation of that floor closes; it is named in the
+              SPRT's pre-registration either way.
