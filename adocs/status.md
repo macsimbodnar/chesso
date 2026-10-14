@@ -83,11 +83,18 @@ S099's outcome during the run -> S039 (DEC-274) -> S082 (DEC-275).
   rows are re-mined only if the mutation pass shows one red or no longer
   separating (S099's practice). Non-regression `{-5, 0}` (DEC-274). Phase 2
   about 2.5 h (3.5 h with every re-mine).
-- **S082** (`../chesso-s082`, base `e1c59f8`): phase 1 blind -- leaf walks,
-  datagen `--leaf`, the tuner's `--holdout`, LW01-LW08, recipe
-  pre-registration with DEC-275. Phase 2: ~1 h 30 m checks, the pool ~9 h (a
-  night), compare ~1 h 15 m. Against S039: datagen header and DEV_MANUAL,
-  take S082's side.
+- **S082**, rebased blind onto `001c82e` (`../chesso-s082c`, diff
+  `.tuning/coord/S082/s082_on_001c82e.diff`): the leaf walks, datagen
+  `--leaf`, the tuner's `--holdout`, LW01-LW09. S279's `check_limits` in
+  quiescence leaves the walk stopping only on its own 1M cap (now exact);
+  S099's correction never reaches the walk (null table, `negamax_at` only).
+  New: a test that a call past the cap is refused as aborted, and mutant
+  LW09 -- kept (coordinator), since S279 rewired that path untested. The
+  recipe script gained its DEC-171 line (none open). Meets S023 and S039 in
+  README and, for S039, datagen's DEC-055 header and DEV_MANUAL's
+  `--allow-tactical` row (S082's side). Phase 2: about 1 h 25 m, then the
+  ~9 h pool (a night), then `compare` about 1 h 30 m; the mutation fixture
+  needs S082 committed first (a scratch commit on a throwaway branch).
 
 **Done 2026-10-14:** S261 and S280 (above); S279 (quiescence checks its limits above
 the table probe, no SPRT by DEC-279, `gate_extra` green 1001 s); `e7b1d04`
