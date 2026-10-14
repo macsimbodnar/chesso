@@ -14811,3 +14811,38 @@ Rejected:     Stopping phase 2 at the first drop -- it delays the SPRT slot
 Consequences: S099's phase 2 reports each floor's shipping, weakened and
               gate readings beside the moved value, and its commit names this
               id at each site.
+
+## DEC-284  2026-10-14  S099's tree raises case A's mate-carry ceiling 0 to 2 and case E's 0 to 4, as the script answers, on S099's H1 only
+Tags:         testing, mate, s170, s099, s281, dec-122, dec-142, dec-225, dec-250, dec-272, dec-283
+Context:      S099's phase 2 on `6fc7f23` (the census moved the table to 4096
+              slots a side, DEC-270 (1)) re-swept the S170 grid into
+              `adocs/data/S099_sweep_s170.txt`. `adocs/data/S203_case_sweep.sh
+              --ceilings` over S202's, S261's and that grid answers 2, 5, 4,
+              0, 4, 1 against the 0, 5, 4, 0, 0, 1 S261 left: A's 2 is its
+              1000000-node cell at stride 1 (3 lines, 2 short), E's 4 its own
+              300000 cell (4 of 4 short). F stays 1, inside DEC-272's 2. At
+              2048 slots F read 3 of 3 short instead, so which case goes short
+              moves with the tree, not with one rule. The guarantee beside the
+              ceilings held: `unreached` empty, the majority kept, 116 of 118
+              assertions green. DEC-272 and DEC-283 cover F and the floors;
+              this is outside both, and the phase-2 brief stopped on it.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. A's ceiling moves to 2 and E's to 4 as the script
+              answers, in S099's candidate commit, so they stand only on
+              S099's H1; on H0 or no verdict the revert takes them out. The S170
+              budgets land as the rule gives them on this tree (A 500000, C
+              300000, the rest unmoved), DEC-250's form. E's own cell being all
+              short leaves E guarding only that a mate line is published at
+              its budget, so S281 (conditional on S099's H1, after the
+              correction family) studies the short lines S099's tree adds,
+              S202's class, and lowers the ceilings by script if it closes any.
+              The coordinator flags this to the owner, who may void it before
+              S099's verdict lands.
+Rejected:     Back to 2048 slots -- breaks DEC-270's rule, and F read 3 short
+              there, past DEC-272's 2. Holding S099 until the short lines are
+              studied -- a reporting residue (DEC-122) would hold a strength
+              step's SPRT; S281 does the study without the hold. Keeping 0 --
+              ships goldens their own script contradicts (DEC-142).
+Consequences: `tests/test_mate_carry.cpp`'s A and E rows read 2 and 4 with this
+              id; `adocs/data/S170_cases.tsv` takes the rule's budgets. S281
+              enters the Open list conditional on S099's H1.

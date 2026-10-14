@@ -29,6 +29,10 @@ commit also fixes DEV_MANUAL's `--floor 145` -> 159 and
   against the incumbent, not cell-wise); the coordinator offered to revert.
 - DEC-282's two rulings: S279 inside S261's REF exception, and F's carry
   ceiling 0 -> 1. Both stand on S261's H1, which it now has.
+- **DEC-284**: S099's tree raises carry ceilings A 0 -> 2 and E 0 -> 4 as the
+  script answers (E's own cell 4 of 4 short), on S099's H1 only; S281 studies
+  those short lines after the correction family. The owner may void it before
+  S099's verdict lands.
 
 **S280 done** (filler, DEC-171): the mutation fixture recipe's submodule line
 carries `git -c protocol.file.allow=always` -- this clone's doctest URL is a
@@ -36,9 +40,10 @@ local path (S254), refused over the `file` transport since the
 CVE-2022-39253 fix; observed failing, then the tests built and NB01 killed;
 a `--force` teardown added. Fast check: 3 prose findings fixed.
 
-**Order from here:** S099 phase 2 on S280's landing (about 2.5 h: fresh S170
-sweep, S203 ceilings -- F above DEC-272's 2 stops for a ruling; DEC-283
-governs its mate floors), then its SPRT (REF `bacead1`, S261's closing
+**Order from here:** S099 phase 2 on S280's landing -- items 1 to 6 done (the
+table is 4096 slots a side by the census; bench 7052777; the ceilings stop
+ruled by DEC-284), items 7 to 13 resume (floors under DEC-283, mutants,
+Debug self-play, `gate_extra`), then its SPRT (REF `bacead1`, S261's closing
 commit) -> S023 verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
 
 **Waiting, written (DEC-260 lanes):**

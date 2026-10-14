@@ -195,7 +195,7 @@ returns to the reserve, and the list moves on.
 
 ## Reserve and parked
 
-**Conditional in the Open list:** S110 and S111 on S099's H1; S025 and S265 on
+**Conditional in the Open list:** S110, S111 and S281 (DEC-284) on S099's H1; S025 and S265 on
 S023 being kept. The two correction consumers -- the correction in quiescence
 and its magnitude as a reduction and margin input -- get step files only on
 S099's H1 (DEC-222 (1)).
@@ -368,29 +368,30 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 1. S099  a static evaluation correction learned from the difference between the static score and what the search returned, keyed on the pawn structure -- a fixed slot (DEC-258)
 2. S110  **conditional on S099's H1** -- a second correction table keyed on the non-pawn structure, split by colour
 3. S111  **conditional on S099's H1** -- correction tables indexed by the move played two and four plies ago
-4. S023  capture history: verdict 1 the table and its capture-margin readers, verdict 2 (on 1's H1) the ordering key, to order captures MVV-LVA rates equal (DEC-273)
-5. S025  **conditional on S023's verdict 2 (ordering) H1, DEC-273** -- retry searching losing captures after the quiets, now that capture history exists
-6. S265  **conditional on S023's verdict 1 (margins) H1, DEC-273** -- late captures and promotions reduced on their own schedule, scaled by capture history
-7. S039  the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
-8. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
-9. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
-10. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
-11. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
-12. S121  mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
-13. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
-14. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
-15. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
-16. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-17. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
-18. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-19. S102  outpost and space terms in the evaluation, one family
-20. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-21. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-22. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-23. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-24. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-25. S030  move_t drops the moving piece and becomes 16 bits
-26. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-27. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-28. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-29. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+4. S281  **conditional on S099's H1, DEC-284** -- the short mate lines S099's tree adds to cases A and E are classified by S202's method, and any a reporting-only fix closes are closed, the ceilings re-derived by script
+5. S023  capture history: verdict 1 the table and its capture-margin readers, verdict 2 (on 1's H1) the ordering key, to order captures MVV-LVA rates equal (DEC-273)
+6. S025  **conditional on S023's verdict 2 (ordering) H1, DEC-273** -- retry searching losing captures after the quiets, now that capture history exists
+7. S265  **conditional on S023's verdict 1 (margins) H1, DEC-273** -- late captures and promotions reduced on their own schedule, scaled by capture history
+8. S039  the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
+9. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
+10. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
+11. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
+12. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
+13. S121  mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
+14. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
+15. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
+16. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
+17. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+18. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
+19. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+20. S102  outpost and space terms in the evaluation, one family
+21. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+22. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+23. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+24. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+25. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+26. S030  move_t drops the moving piece and becomes 16 bits
+27. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+28. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+29. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+30. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
