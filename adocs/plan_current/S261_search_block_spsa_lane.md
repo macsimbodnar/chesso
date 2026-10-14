@@ -1000,3 +1000,24 @@ row, line 668; each proposal keeps the seed beside the fitted value.
 - `plan.md` and `status.md`;
 - the commit;
 - pinning CAND and REF, and the SPRT.
+
+### Item (5): the verification SPRT, H1, 2026-10-14 (the coordinator)
+
+`adocs/data/S261_sprt.sh`, pinned in `22e8df7`: CAND `1b84f4b` (the vector)
+against REF `574480e` (its parent; S279 inside the REF exception by DEC-282).
+8+0.08, Hash 16, `noob_3moves.epd`, concurrency 12, launched 03:48, ended
+04:17.
+
+**H1**: LLR 2.96 (-2.94, 2.94) over **986 games** (W 374, L 206, D 406,
+pentanomial [26, 68, 179, 152, 68]), `Elo 59.78 +/- 16.52`, `nElo 80.09 +/-
+21.69`, 28 m 09 s, **0 forfeits** of 987 games in the PGN, no crash or
+disconnect (the guard's grep over the console). Pre-registered reading: the
+vector gains **at least 5 nElo** over the untuned tree at the harness setting;
+the stopping run's Elo is upward-biased (DEC-063) and is not the effect size.
+For scale only, not a comparison: S085's lane read +21.02 and S222's +11.13.
+The vector ships as CAND carries it. Log `adocs/data/S261_sprt.log`; the run
+(console, PGN, fastchess log) is in the owner's archive as
+`chesso_S261_sprt_2026-10-14.tar.xz`.
+
+Pending: item (6), the drift point (creates `adocs/data/S267_drift.tsv`) and
+the 32+0.32 Hash 64 reading on this pair, both estimates beside the verdict.

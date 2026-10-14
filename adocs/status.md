@@ -7,20 +7,36 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S261's SPRT running; S279 done (`go nodes` exact)
+## 2026-10-14: S261 H1 (the search vector ships); item (6) readings next
 
-**S261's SPRT is running** (`adocs/data/S261_sprt.sh`, launched 2026-10-14
-~03:45): CAND `1b84f4b`, the lane's vector (21 of 31 defaults move; holds
-`LmrCutNode`, `SeeLmrExtra`, `LmrDeeperMinReduction` 2, `LmrDivisor` 182),
-against REF `574480e`, its parent. {0, 5} nElo, 8+0.08, Hash 16, noob_3moves,
-concurrency 12; 41861 expected games at the midpoint, cap 40000 (19.0 h).
-Output `.tuning/sprt_s261_<stamp>/`. bench 3872032 -> 5636835. Every golden
-the vector moved was re-derived by its script; LQ02/LQ03 re-mined in release
-(DEC-281, DEC-280 void); F's carry ceiling 0 -> 1 and S279 inside the REF
-exception (DEC-282), both flagged to the owner. On H1: DEC-220 block, ledger,
-the S267 drift point against `1680439` and the 32+0.32 Hash 64 reading. On
-H0 or no verdict: `1b84f4b` reverted. The machine is held; written-ahead
-work only (DEC-260).
+**S261's SPRT read H1** (`adocs/data/S261_sprt.sh`, 03:48 to 04:17): CAND
+`1b84f4b`, the lane's vector (21 of 31 defaults move; holds `LmrCutNode`,
+`SeeLmrExtra`, `LmrDeeperMinReduction` 2, `LmrDivisor` 182), against REF
+`574480e`. LLR 2.96 over 986 games, `Elo 59.78 +/- 16.52`, `nElo 80.09 +/-
+21.69`, 0 forfeits: at least 5 nElo, the stopping Elo upward-biased (DEC-063).
+bench 3872032 -> 5636835. Archived as `chesso_S261_sprt_2026-10-14.tar.xz`.
+Every golden the vector moved was re-derived by its script; LQ02/LQ03
+re-mined in release (DEC-281, DEC-280 void); F's carry ceiling 0 -> 1 and
+S279 inside the REF exception (DEC-282), both flagged to the owner. **Next,
+item (6)**: the drift point against `1680439` (57 min, creates
+`adocs/data/S267_drift.tsv`) and the 32+0.32 Hash 64 reading on the SPRT's
+pair (3 h 45 m), estimates beside the verdict; then S261 completes.
+
+**Written ahead during the run:**
+- **S099 rebased onto `22e8df7`** blind (`../chesso-s099c`, diff
+  `.tuning/coord/S099/s099_on_22e8df7.diff`): every golden S099 owns is
+  PENDING its script on the new tree (carry ceilings, S170 budgets,
+  `EXACT_FLOOR`, `MATE_IN_THREE_FLOOR`, first-mate depths, the 2048-slot
+  census); phase 2 about 2.5 h of machine, then its SPRT (REF = S261's
+  closing commit, S261 having read H1). **DEC-283**:
+  its mate floors may follow their scripts down by at most two, gate still
+  red, on S099's H1 only.
+- S261's landing left two stale lines, fixed before S261 completes: `DEV_MANUAL.md`
+  still names `--floor 145` in the S156 recipe and goldens table, and
+  `test_mate_breadth.cpp`'s margin comment says "2 above the weakened one"
+  (159 against 156 is 3).
+- Next: S261's item (6) readings, then S280 (filler, both phases at
+  once), then S099 phase 2.
 
 **S279 landed**: quiescence checks the limits above its table probe. A table
 cutoff that spent a `go nodes` budget, or landed on the stop flag's 2048-node
