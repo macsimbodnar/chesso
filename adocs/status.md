@@ -29,10 +29,11 @@ commit also fixes DEV_MANUAL's `--floor 145` -> 159 and
   against the incumbent, not cell-wise); the coordinator offered to revert.
 - DEC-282's two rulings: S279 inside S261's REF exception, and F's carry
   ceiling 0 -> 1. Both stand on S261's H1, which it now has.
-- **DEC-284**: S099's tree raises carry ceilings A 0 -> 2 and E 0 -> 4 as the
-  script answers (E's own cell 4 of 4 short), on S099's H1 only; S281 studies
-  those short lines after the correction family. The owner may void it before
-  S099's verdict lands.
+- **DEC-284** (amended): S099's tree raises carry ceilings as the script
+  answers, on S099's H1 only -- A 0 -> 2 and E 0 -> 1 (4 before the fast
+  check's gate fix), F 1 -> 2 under DEC-272; S281 studies those short lines
+  after the correction family. The owner may void it before S099's verdict
+  lands.
 
 **S280 done** (filler, DEC-171): the mutation fixture recipe's submodule line
 carries `git -c protocol.file.allow=always` -- this clone's doctest URL is a

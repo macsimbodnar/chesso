@@ -14813,6 +14813,17 @@ Consequences: S099's phase 2 reports each floor's shipping, weakened and
               id at each site.
 
 ## DEC-284  2026-10-14  S099's tree raises case A's mate-carry ceiling 0 to 2 and case E's 0 to 4, as the script answers, on S099's H1 only
+
+**AMENDED, 2026-10-14 -- the readings moved after S099's fast check.** The
+fast check found the update gate refusing fail-low nodes whose top-scoring
+move was a capture, stricter than the published gate the step describes;
+fixed before the SPRT. On the fixed tree `--ceilings` answers 2, 5, 4, 0, 1,
+2: A 2 under this decision, **E 1** (not 4: its own cell is no longer all
+short), and F 2 under DEC-272, the owner's ruling for that case. Each
+ceiling is bounded by the larger of S261's value and its ruling; all six sit
+inside. The budgets are the rule's on the fixed grid. S281 stands: A, E and
+F still sit above S261's ceilings.
+
 Tags:         testing, mate, s170, s099, s281, dec-122, dec-142, dec-225, dec-250, dec-272, dec-283
 Context:      S099's phase 2 on `6fc7f23` (the census moved the table to 4096
               slots a side, DEC-270 (1)) re-swept the S170 grid into
