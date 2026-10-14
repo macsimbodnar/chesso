@@ -67,14 +67,6 @@ TEST_SUITE("engine: zobrist and unmake")
                       ("incremental hash drifted after " +
                        print_move(moves[i]) + " from " + root_fen));
 
-      // The pawn key, S099, against its own oracle. Compared bare and reported
-      // only on failure: the line above already builds a message per node,
-      // which is most of this case's time, and a second would double it.
-      if (g->board.pawn_hash != compute_full_pawn_hash(g)) {
-        FAIL(("incremental pawn key drifted after " + print_move(moves[i]) +
-              " from " + root_fen));
-      }
-
       walk(g, depth - 1, root_fen);
 
       unmake_move(g);
@@ -102,76 +94,9 @@ TEST_SUITE("engine: zobrist and unmake")
 
       REQUIRE_MESSAGE(game.board.hash == compute_full_hash(&game),
                       ("load_FEN produced a wrong hash for " + fen));
-      // S099. Mutation: PK03_not_loaded.
-      REQUIRE_MESSAGE(game.board.pawn_hash == compute_full_pawn_hash(&game),
-                      ("load_FEN produced a wrong pawn key for " + fen));
 
       walk(&game, depth, fen);
     }
-  }
-
-  // The key is the pawns and nothing else: the side to move and the castling
-  // rights are in the main key and not in this one, because the correction
-  // table indexes the side to move itself (S099). Loads of one placement that
-  // differ in one of those fields share a pawn key and not a main key -- the
-  // second half is the precondition that the field was read at all. The FEN
-  // text is the whole input; whether a load is a sensible position is
-  // load_FEN()'s answer. The en-passant square is held by the corpus walk in
-  // tests/test_invariants.cpp, where every move that is not a pawn event --
-  // each one clearing a square a double push set -- must leave the key alone.
-  TEST_CASE_FIXTURE(engine_fixture_t,
-                    "the pawn key ignores the side to move and castling")
-  {
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    const hash_t pawn_key = game.board.pawn_hash;
-    const hash_t key = game.board.hash;
-
-    REQUIRE(load_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1",
-                     &game));
-    CHECK_EQ(game.board.pawn_hash, pawn_key);
-    CHECK_NE(game.board.hash, key);
-
-    REQUIRE(load_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1",
-                     &game));
-    CHECK_EQ(game.board.pawn_hash, pawn_key);
-    CHECK_NE(game.board.hash, key);
-
-    // A board with no pawns keys to 0, which is compute_full_pawn_hash()'s own
-    // definition and the slot every pawnless position shares.
-    REQUIRE(load_FEN(MATE_IN_2_W_POS, &game));
-    REQUIRE_EQ(game.board.bitboards[W_PAWN] | game.board.bitboards[B_PAWN],
-               bb_t{0});
-    CHECK_EQ(game.board.pawn_hash, hash_t{0});
-  }
-
-  // The incremental key after a line of moves equals the key of that position
-  // loaded from its FEN: the pawn half of "equal positions hash equally" below.
-  // Two pawn captures are in the line, so the key is taken through removals as
-  // well as moves. The line is the second sequence of "node-limited searches
-  // repeat across ucinewgame" further down this file, whose legality was
-  // judged by python-chess and by the engine there (DEC-023) and is not
-  // judged again here.
-  TEST_CASE_FIXTURE(engine_fixture_t,
-                    "a line of moves and its fen share a pawn key")
-  {
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-
-    // d2d4 d7d5 c2c4 d5c4 e2e3 e7e5 f1c4 e5d4
-    const std::vector<std::pair<index_t, index_t>> line = {
-        {d2, d4}, {d7, d5}, {c2, c4}, {d5, c4},
-        {e2, e3}, {e7, e5}, {f1, c4}, {e5, d4}};
-
-    for (const auto& [from, to] : line) {
-      REQUIRE_MESSAGE(play_move(&game, from, to),
-                      "a move of the line is not legal on the engine's board");
-    }
-
-    const hash_t reached = game.board.pawn_hash;
-    const std::string fen = generate_FEN(&game.board);
-
-    REQUIRE(load_FEN(fen, &game));
-    REQUIRE_EQ(game.board.pawn_hash, reached);
-    REQUIRE_EQ(compute_full_pawn_hash(&game), reached);
   }
 
   TEST_CASE_FIXTURE(engine_fixture_t, "equal positions hash equally")
@@ -3444,52 +3369,6 @@ TEST_SUITE("engine: uci go")
   }
 
 
-  // S099's accepts: the pawn correction is cleared on `ucinewgame`. A game's
-  // table learns across every `go` of that game -- which is why it is the UCI
-  // layer's and not the search's -- and starts the next one empty. uci_init()
-  // empties it too, so each engine a test binary starts is a cold one whatever
-  // an earlier case taught it. The line is the one "a later board sent as a
-  // bare fen keeps the table" plays.
-  //
-  // Mutation: CH13_newgame_keeps_correction.
-  TEST_CASE("ucinewgame clears the pawn correction table")
-  {
-    uci_init();
-
-    auto empty = [] {
-      for (const auto& side : uci_pawn_correction()->entries) {
-        for (const int32_t entry : side) {
-          if (entry != 0) { return false; }
-        }
-      }
-
-      return true;
-    };
-
-    REQUIRE(empty());
-
-    {
-      stdout_capture_t capture;
-      uci_process_line("position startpos moves e2e4 e7e5");
-      uci_process_line("go depth 8");
-      uci_wait_for_search();
-    }
-
-    // The precondition, without which the check below cannot fail: the search
-    // taught the table something, so there is something to clear.
-    REQUIRE_FALSE(empty());
-
-    {
-      stdout_capture_t capture;
-      uci_process_line("ucinewgame");
-    }
-
-    CHECK(empty());
-
-    uci_shutdown();
-  }
-
-
   TEST_CASE("bench searches its last position cold")
   {
     uci_init();
@@ -4354,12 +4233,6 @@ TEST_SUITE("engine: aspiration windows")
     // file). The row before it, which an H0 on S261 restores byte for byte:
     // `{"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5,
     // 10}`.
-    //
-    // **Re-taken at S099 and unchanged.** With the pawn correction at 4096
-    // slots a side, on `6fc7f23`, the same command reads the first position
-    // `d8:cp1097 d9:mate5 d10:mate5` and the second `d8:cp1297 d9:mate5
-    // d10:mate5`: both mates first appear at 9 and stay at 5, with a
-    // centipawn iteration under each.
     // clang-format off
     const std::vector<case_t> cases = {
       {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
@@ -5133,13 +5006,6 @@ TEST_SUITE("engine: mate safety")
   // above the weakened one. The family reading that cleared the vector is
   // DEC-277's F2 (the S261 step file): 12 against the incumbent's 12 at
   // `870d210`, S154's `hash` probe spreading 0 on both trees.
-  //
-  // **Re-taken at S099 and unchanged.** With the pawn correction at 4096 slots
-  // a side, on `6fc7f23`, the `floor` mode reads 12 at the shipping guard and
-  // **7** with it weakened (RfpMinPly 1), and `red` builds the gate at
-  // RfpMinPly 1 and sees it fail at 7 >= 11: the floor still sits 1 below the
-  // shipping count, now 4 above the weakened one, so DEC-283 has nothing to
-  // move.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

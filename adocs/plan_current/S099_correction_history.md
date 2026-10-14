@@ -1397,7 +1397,7 @@ on a revert the same files collide and resolve to the pre-S261 side.
 | `tests/test_mate_breadth.cpp` `EXACT_FLOOR` | 159 | `adocs/data/S156_mined_floor_sweep.py --floor 159` |
 | `tests/test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 | `adocs/data/S154_floor_margin_sweep.py floor`, `red` |
 | `tests/test_engine.cpp` `first_mate_depth` | 9 and 9 | `adocs/data/S188_repair_goldens.py first-mate` |
-| `src/data_structures.hpp` `CORRHIST_PAWN_ENTRIES` | 2048 (a seed, not a test golden) | `adocs/data/S099_pawn_key_census.py` |
+| `CORRHIST_PAWN_ENTRIES`, in the data structures header at `8758622` and reverted with it | 2048 (a seed, not a test golden) | `adocs/data/S099_pawn_key_census.py` |
 
 Not S099's to re-derive: the direct-search goldens S261 moved in
 `tests/test_search.cpp` -- the S230 rows, E21 and B04, LQ02 and LQ03,

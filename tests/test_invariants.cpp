@@ -46,11 +46,6 @@ TEST_SUITE("invariants: accumulators and squares")
   static uint64_t promotions = 0;
   static uint64_t capture_promotions = 0;
 
-  // S099's two classes, counted for the non-vacuity floors below: moves that
-  // change the pawn structure and moves that do not.
-  static uint64_t pawn_events = 0;
-  static uint64_t pawnless_moves = 0;
-
   // Built only when a comparison has already failed. Per-node string building
   // is what makes a walk of this size expensive -- test_engine spends 3.2 s on
   // 426 k makes doing it for every REQUIRE_MESSAGE -- so the walk below calls
@@ -115,16 +110,6 @@ TEST_SUITE("invariants: accumulators and squares")
       board_t before;
       memcpy(&before, &g->board, sizeof(board_t));
 
-      // What the move does to the pawns, from its own flags and the board it
-      // is played on -- read before the make, while the target square still
-      // holds the victim. A pawn that moves (a promotion's mover is the pawn),
-      // and a pawn taken, en passant included.
-      const piece_t mover = MOVE_PIECE(moves[i]);
-      const piece_t victim = g->board.squares[MOVE_TO(moves[i])];
-      const bool pawn_event =
-          mover == W_PAWN || mover == B_PAWN || MOVE_EN_PASSANT(moves[i]) ||
-          (MOVE_CAPTURE(moves[i]) && (victim == W_PAWN || victim == B_PAWN));
-
       if (!make_move(g, moves[i])) { continue; }
 
       ++makes;
@@ -138,39 +123,6 @@ TEST_SUITE("invariants: accumulators and squares")
       if (!eval_accumulators_match(&g->board) ||
           !squares_match_bitboards(&g->board)) {
         FAIL(mismatch(&g->board, moves[i], "after make "));
-      }
-
-      // S099's pawn key, two ways. Equal to its oracle, which is the
-      // incremental-equals-scratch property. And moved on exactly the moves
-      // that change the pawn structure, which the oracle comparison cannot
-      // see: an alphabet and an oracle that agree on the wrong thing -- both
-      // 0, or both folding in a knight -- pass the first and fail the second.
-      // A pawn event cannot leave the key where it was: one pawn appearing or
-      // vanishing moves it by one key, a pawn walking by the XOR of two and a
-      // pawn taking a pawn by three, and the fast suite asserts that no key is
-      // 0 and no pair XOR equals a key (specs.md, the Zobrist paragraph).
-      // Restoration on unmake is the memcmp below, which covers the field.
-      // Mutation: PK01_move_piece_dropped, PK02_unmake_mover_dropped,
-      // PK04_unmake_en_passant_dropped.
-      if (g->board.pawn_hash != compute_full_pawn_hash(g)) {
-        FAIL(("pawn key differs from its oracle after " + print_move(moves[i]) +
-              " in " + generate_FEN(&before)));
-      }
-
-      if (pawn_event) {
-        ++pawn_events;
-
-        if (g->board.pawn_hash == before.pawn_hash) {
-          FAIL(("pawn key did not move on the pawn event " +
-                print_move(moves[i]) + " in " + generate_FEN(&before)));
-        }
-      } else {
-        ++pawnless_moves;
-
-        if (g->board.pawn_hash != before.pawn_hash) {
-          FAIL(("pawn key moved on " + print_move(moves[i]) +
-                ", which touches no pawn, in " + generate_FEN(&before)));
-        }
       }
 
       walk(g, depth - 1);
@@ -226,16 +178,7 @@ TEST_SUITE("invariants: accumulators and squares")
     MESSAGE("census: " << makes << " makes, " << castlings << " castlings, "
                        << en_passants << " en passants, " << promotions
                        << " promotions, " << capture_promotions
-                       << " capture promotions, " << pawn_events
-                       << " pawn events, " << pawnless_moves
-                       << " moves touching no pawn");
-
-    // S099. Both of the pawn key's classes ran, so neither of its two checks
-    // above passed on an empty set. A floor of one is the property itself and
-    // not a golden: the en passant, promotion and capture-promotion floors
-    // below already carry the counted classes a pawn event is made of.
-    REQUIRE(pawn_events > 0);
-    REQUIRE(pawnless_moves > 0);
+                       << " capture promotions");
 
     // GOLDEN (DEC-142): the five census floors below, at about half the census
     // of 2026-09-09 -- 2,132,167 makes, 15,023 castlings, 181 en passants,
@@ -292,17 +235,5 @@ TEST_SUITE("invariants: accumulators and squares")
     REQUIRE(load_FEN(DEFAULT_POSITION, &game));
     game.board.squares[e2] = EMPTY;  // and the other direction
     REQUIRE_FALSE(squares_match_bitboards(&game.board));
-
-    // S099's pawn key: the walk's comparison has to be able to say no. A key
-    // one bit off, and a key that kept a pawn the bitboards no longer have.
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    REQUIRE_EQ(game.board.pawn_hash, compute_full_pawn_hash(&game));
-    game.board.pawn_hash ^= 1;
-    REQUIRE_NE(game.board.pawn_hash, compute_full_pawn_hash(&game));
-
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    REQUIRE(GET_BIT(game.board.bitboards[W_PAWN], e2) != BB_0);
-    game.board.bitboards[W_PAWN] &= ~(BB_1 << e2);
-    REQUIRE_NE(game.board.pawn_hash, compute_full_pawn_hash(&game));
   }
 }

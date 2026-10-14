@@ -9,23 +9,15 @@
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
-#include "correction_history.hpp"
 #include "data_structures.hpp"
 #include "eval_tables.hpp"
 #include "evaluation.hpp"
-#include "search.hpp"
 #include "search_params.hpp"
 #include "test_helpers.hpp"
 
 
 static game_t game;
 static game_t mirrored;
-
-// S099's mirror case: a correction table and the search state that carries it
-// into search_corrected_eval_probe(). Static because the state is 1.2 MiB; the
-// table keeps it company.
-static pawn_correction_t mirror_correction;
-static search_state_t mirror_state;
 
 
 // A board as 64 characters in board-index order -- 0 is a8 and 63 is h1, which
@@ -125,72 +117,6 @@ TEST_SUITE("evaluation: score")
     }
 
     REQUIRE(checked > 100);
-  }
-
-  // INV-5 through S099's pawn correction: the corrected score of a mirrored
-  // position agrees with the original's and does not negate. A search scores
-  // a position and its mirror from the side to move's point of view, so it
-  // hands the table the same difference for both; each goes into its own side
-  // to move's slot for its own pawn key, and each comes back as the same
-  // number added to the same raw score. A correction applied or learned from
-  // White's point of view -- negated for Black anywhere on the way -- makes
-  // the two disagree by twice the correction.
-  //
-  // The differences are mechanical, a sign and a size that vary by position,
-  // so both signs are exercised; the floor below is what says the correction
-  // was not 0 throughout, which would make agreement vacuous.
-  //
-  // Mutation: CH11_read_negated_for_black.
-  TEST_CASE_FIXTURE(eval_fixture_t,
-                    "a mirrored position reads the same corrected score")
-  {
-    mirror_state.pawn_correction = &mirror_correction;
-
-    size_t checked = 0;
-    size_t moved = 0;
-
-    for (const std::string& fen : all_test_fens()) {
-      const std::string flipped = mirror_fen(fen);
-
-      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-      REQUIRE_MESSAGE(load_FEN(flipped, &mirrored),
-                      ("mirrored FEN: " + flipped + " from " + fen));
-
-      // Different sides to move, so the two never share a slot.
-      REQUIRE(game.board.active_color != mirrored.board.active_color);
-
-      const int raw = evaluate(&game.board);
-      const int mirrored_raw = evaluate(&mirrored.board);
-
-      // The case above, restated as this one's precondition.
-      REQUIRE_MESSAGE(raw == mirrored_raw, ("FEN: " + fen));
-
-      const int sign = (checked % 2 == 0) ? 1 : -1;
-      const int diff = sign * (30 + static_cast<int>(checked % 40));
-
-      correction_reset(&mirror_correction);
-
-      for (int i = 0; i < 4; ++i) {
-        correction_update(&mirror_correction, game.board.active_color,
-                          game.board.pawn_hash, diff, 6);
-        correction_update(&mirror_correction, mirrored.board.active_color,
-                          mirrored.board.pawn_hash, diff, 6);
-      }
-
-      const int corrected =
-          search_corrected_eval_probe(&mirror_state, &game.board, raw);
-      const int mirrored_corrected = search_corrected_eval_probe(
-          &mirror_state, &mirrored.board, mirrored_raw);
-
-      REQUIRE_MESSAGE(corrected == mirrored_corrected,
-                      ("FEN: " + fen + "\nmirror: " + flipped));
-
-      if (corrected != raw) { moved++; }
-      checked++;
-    }
-
-    REQUIRE(checked > 100);
-    REQUIRE(moved == checked);
   }
 
   // Both cases below asserted exactly 0 until S027 added the tempo term, and

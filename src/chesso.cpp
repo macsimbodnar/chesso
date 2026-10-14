@@ -20,7 +20,6 @@
 #include <vector>
 #include "bitboard.hpp"
 #include "chesso_build_info.hpp"
-#include "correction_history.hpp"
 #include "evaluation.hpp"
 #include "log.hpp"
 #include "openings.hpp"
@@ -62,14 +61,6 @@ static transposition_table_t tt = {};
 // score read back from the table arrived with no line behind it. Reporting
 // state only -- nothing reads it to decide, order or prune a move. S170.
 static proven_mate_line_t proven_mate_line = {};
-
-// S099's pawn correction table, beside the transposition table for the same
-// reason the mate line is: it learns across every `go` of a game and
-// search_state_t does not outlive one. Cleared where a game begins --
-// reset_for_new_game(), so `ucinewgame` and every `bench` position -- by
-// uci_init(), and by `test` wherever it clears the transposition table. Static:
-// no option sizes it, and at the census's size it is 32 KiB.
-static pawn_correction_t pawn_correction = {};
 
 static std::thread search_thread;
 static std::mutex output_mutex;
@@ -138,10 +129,6 @@ const game_t* uci_game()
 
 const transposition_table_t* uci_tt()
 { return &tt; }
-
-
-const pawn_correction_t* uci_pawn_correction()
-{ return &pawn_correction; }
 
 
 int uci_last_aspiration_failures()
@@ -1063,7 +1050,6 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   search_state_t& state = *state_owner;
   state.tt = &tt;
   state.proven_mate = &proven_mate_line;
-  state.pawn_correction = &pawn_correction;
   assert(state.tt != nullptr);
 
   tt_new_search(state.tt);
@@ -1806,20 +1792,13 @@ bool command_register(std::queue<std::string>& args)
 // Everything `ucinewgame` clears. `bench` calls it between positions so each
 // one is searched cold: `set_position` never clears the table since S271
 // (DEC-264), and it never clears the proven mate line, which outlives a search
-// by design (S170). S189. The pawn correction table is a game's too, S099:
-// what one game taught it about a structure is not carried into the next.
+// by design (S170). S189.
 static void reset_for_new_game()
 {
   stop_and_join_search();
 
-#ifdef CHESSO_TUNE
-  // S099's census: the game that ends here is one line of its file.
-  search_pawn_key_census_flush();
-#endif
-
   set_position(DEFAULT_POSITION);
   tt_reset(&tt);
-  correction_reset(&pawn_correction);
   proven_mate_line.length = 0;
   still_in_opening = true;
 }
@@ -2405,12 +2384,7 @@ bool command_test(std::queue<std::string>& args)
     // cleared the table then, on a FEN differing from the remembered base, and
     // S271 took that clear off every `position` (DEC-264); without it a second
     // `test` in one process ran warm on what the first left.
-    // The correction table with it, S099, so a second `test` reads the first
-    // one's total on that table too.
-    if (initial_position != entry.FEN) {
-      tt_reset(&tt);
-      correction_reset(&pawn_correction);
-    }
+    if (initial_position != entry.FEN) { tt_reset(&tt); }
 
     set_position(entry.FEN);
     uci_reply(entry.title + "\n" + generate_FEN(&game.board));
@@ -2593,11 +2567,6 @@ void uci_init()
   seed_book_draw_from_environment();
 
   tt_resize(&tt, TT_DEFAULT_MB);
-
-  // The table tt_resize() just handed back is empty, and so is this one: a
-  // process that runs uci_init() more than once -- every test binary linking
-  // this file -- starts each engine on a cold correction as well. S099.
-  correction_reset(&pawn_correction);
 
   running = true;
 }
