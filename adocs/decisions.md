@@ -14918,3 +14918,28 @@ Rejected:     Closing on the H0 -- leaves the longer-control gain DEC-222 (8)
 Consequences: S283 enters the Open list after S023 verdict 1. The harness
               stays 8+0.08 for every other verdict; this is one exception, by
               the owner, for one pair.
+
+## DEC-287  2026-10-14  S023's tree raises case C's mate-carry ceiling 4 to 5 and case E's 0 to 1, as the script answers, on S023 verdict 1's H1 only
+Tags:         testing, mate, s170, s023, dec-284, dec-122, dec-142, dec-250
+Context:      S023 verdict 1's phase 2 on `7e36271` re-swept the S170 grid into
+              `adocs/data/S023_sweep_s170.txt`. `adocs/data/S203_case_sweep.sh
+              --ceilings` over S202's, S261's and that grid answers 0, 5, 5, 0,
+              1, 1 against the 0, 5, 4, 0, 0, 1 S261 left: C's 5 is its
+              1000000-node cell at stride 1 (5 lines, 5 short), E's 1 its
+              2000000 cell (32 lines, 1 short). Over the whole grid S023's tree
+              publishes 1402 mate lines with 10 short, against S261's 1485 and
+              16. Every mate floor held or rose (`EXACT_FLOOR`'s shipping count
+              160 -> 161, `MATE_IN_THREE_FLOOR` 12 shipping, 6 weakened);
+              DEC-285's window guard is green. S023 has no relaxation
+              allowance, so phase 2 stopped.
+Decision:     **By the owner, 2026-10-14**, asked directly. C's ceiling moves
+              to 5 and E's to 1 as the script answers, with the S170 budgets
+              the rule gives on that grid (A 500000, C 500000, D 1500000, E
+              100000), in S023's candidate commit, so they stand only on its
+              H1; on H0 or no verdict the revert takes them out. DEC-284's form.
+Rejected:     Refusing and studying the short lines first (an S281-shaped
+              step) -- holds a strength step's SPRT on a reporting residue
+              (DEC-122). Accepting them unconditionally -- they would not
+              match a reverted tree.
+Consequences: `tests/test_mate_carry.cpp`'s C and E rows cite this id;
+              `adocs/data/S170_cases.tsv` takes the rule's budgets.

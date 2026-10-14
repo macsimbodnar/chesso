@@ -32,6 +32,9 @@ and DEC-284 lapsed. **The DEC-202 estimate**, same pair at 32+0.32, Hash 64,
   rows' profiles). The guard now asks for each row's mate within two plies
   of its depth; landed rows stay exact, no other relaxation, and the
   restated guard must still kill its CX mutants.
+- **DEC-287:** S023's tree raises carry ceilings C 4 -> 5 and E 0 -> 1 as
+  the script answers (10 short lines in 1402 against S261's 16 in 1485),
+  with the rule's budgets, on S023 verdict 1's H1 only.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
