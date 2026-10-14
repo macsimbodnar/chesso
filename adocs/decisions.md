@@ -14740,3 +14740,46 @@ Consequences: If either case cannot be re-mined at the vector, S261 stops for
               a ruling; it is not relaxed. A declaration of equivalence needs
               an argument from code that the agent's own probe confirms, and
               a node-identical bench is not one.
+
+## DEC-282  2026-10-14  S261's landing: S279 is inside the REF exception, and case F's carry ceiling rises to 1 on H1 only
+Tags:         search, spsa, sprt, s261, s279, testing, mate, s170, dec-142, dec-272
+Context:      Two points S261's landing put to the coordinator. (1) The SPRT
+              script's pair rule (written before the lane) lets a `src/` change
+              between the lane's head `932ee7a` and REF through only if it
+              proved INV-6 in its own commit with a `No functional change`
+              trailer; any other is to stop and go to the owner. Between
+              them sit `e7b1d04` (comments, `No functional change`) and S279's
+              `870d210`, which proved INV-6 -- `bench` 3872032 and its eight
+              replies identical, `search_bench` node-identical with the same
+              best moves at depths 9 and 13 in its step and at 12 read by the
+              coordinator on 2026-10-14 (68090 / 246712 / 114555, c3d5 / d5e6
+              / d7c8q, `e7b1d04` against `26d34c3`) -- but carries
+              `Bench: 3872032`, by DEC-279's choice to say that budgeted and
+              stopped searches move. (2) `adocs/data/S203_case_sweep.sh
+              --ceilings` with S261's grid added answers F = 1 (300000 nodes
+              at stride 2, 1 short of 7); the site holds 0, a golden its script
+              contradicts.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. (1) S279 is inside the exception: the exception asks
+              that the fitted engine and REF search identically at fixed depth,
+              which S279 proved at every depth the rule names; its trailer is
+              a wording DEC-279 chose. What the lane's own 2+0.02 games could
+              have seen of it is the stop flag read up to 1.2 ms earlier in
+              about 4 % of hard stops. REF is the vector commit's parent. The
+              SPRT measures that pair as it stands, so its verdict is the
+              vector's on today's tree either way. (2) F's ceiling moves to 1
+              as the script answers, in the vector commit, so it stands only
+              on S261's H1; on H0 or no verdict the revert takes it out. The
+              DEC-272, DEC-250, DEC-241 and DEC-225 form.
+Rejected:     (1) Stopping for the owner as the script's letter says -- the
+              rule's purpose, an identical fixed-depth engine, is proved, and
+              the alternative cure, a new 11-hour lane on `870d210`, would
+              price a difference of the same size. The coordinator flags this
+              ruling to the owner, who may still void it before the verdict
+              lands. (2) Keeping 0 -- stricter, but it ships a golden its own
+              script contradicts (DEC-142); DEC-272 took the owner's answer to
+              the same shape.
+Consequences: `adocs/data/S261_sprt.sh` cites DEC-282 for the waiver and puts
+              the reading taken at pinning below its frozen pre-registration.
+              `tests/test_mate_carry.cpp`'s F row reads 1 with this id. S099's
+              DEC-272 raise is re-derived on its own grid at its rebase.
