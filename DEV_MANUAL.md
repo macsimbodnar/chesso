@@ -738,8 +738,21 @@ run's checkpoint: 21 defaults moved, four held at their incumbents --
 families against the incumbent rather than cell by cell (DEC-277): carry 1485
 mate lines and 16 short against 1303 and 24, mate in three 12 against 12,
 breadth 160 against 150, every mined row's mate found. `bench` 3872032 ->
-5636835. What decides it is `adocs/data/S261_sprt.sh`, the gainer `{0, 5}` at
-8+0.08 against the untuned tree.
+5636835. `adocs/data/S261_sprt.sh`, the gainer `{0, 5}` at 8+0.08 against the
+untuned tree, decided it on 2026-10-14: **H1**, `1b84f4b` against its parent
+`574480e`, LLR 2.96 over 986 games, `Elo 59.78 +/- 16.52`, `nElo 80.09 +/-
+21.69`, 0 forfeits (`adocs/data/S261_sprt.log`). What may be written is that
+the vector gains **at least 5 nElo** over the untuned tree at the harness
+setting; the stopping run's Elo is upward-biased (DEC-063) and is not the
+effect size.
+
+**Item (6), the block-boundary readings**, estimates and never verdicts. The
+drift point, `e9d91e3` against `1680439` at 8+0.08, Hash 16, 2000 games:
+`Elo +147.40 +/- 12.91`, `nElo +195.67 +/- 15.23`, 0 forfeits, the reference
+unpadded because it predates S273 -- the first row of
+`adocs/data/S267_drift.tsv` (`adocs/data/S261_drift.log`). 32+0.32, Hash 64,
+1000 pairs on the SPRT's pair: `Elo +33.46 +/- 10.89`, `nElo +47.10 +/-
+15.23`, 0 forfeits, 3 h 42 m (`adocs/data/S261_ltc.log`).
 
 Note which book each of the four plays. S085 tuned on `UHO_4060_v3.epd` and
 verified on `UHO_Lichess_4852_v1.epd`; S222's, S231's and S261's lanes tune on
@@ -1819,7 +1832,7 @@ the gate with the weakened value as its compiled-in *default* and runs it to
 observe the red. The tracked tree is never edited.
 
 ```bash
-python3 adocs/data/S156_mined_floor_sweep.py --floor 145  # sweep and observe red
+python3 adocs/data/S156_mined_floor_sweep.py --floor 159  # sweep and observe red
 python3 adocs/data/S156_mined_floor_sweep.py --depth 8  # the cheaper reading
 ```
 
@@ -2161,7 +2174,7 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_mate_carry.cpp` `short_line_ceiling` | 0, 5, 4, 0, 0, **1** — **S261 added its grid to the command** (`adocs/data/S261_sweep_s170.txt`, the lane's vector) and re-derived the budgets in `adocs/data/S170_cases.tsv` (A 1000000, C 2000000, E 300000); over both grids the script answers 0, 5, 4, 0, 0, **1**, and F's ceiling is 1 by DEC-282, standing only on S261's H1. **Lowered by S202 (DEC-251)** from 6, 15, 5, 2, 11, 5: the walk's certified-first move and the aborted-line fallback close 14 of the grid's 33 short lines without moving a node, and the command now holds the one grid taken with that walk, `adocs/data/S202_sweep_s170.txt`, the five older grids having been taken with the old walk (the S116 one on this very search tree, the other four on older ones), so it was superseded rather than added to; F's ceiling 0 holds the guard S202 turned on. Before S202 the row read 6, 15, 5, 2, 11, 5 and its history was: the cell was 5, 11, 0, 1, 8, 2 and had been stale since S109 moved three of them; **S095 moved two more, E 9 → 11 and B 11 → 15 (DEC-225)**, read off the grid that step recorded and never off the run that went red; S022's first verdict moved C 0 → 6 off its own grid (DEC-241) and its H0 put C back to 0 by dropping that grid, `adocs/data/S022_v1_sweep.txt`, from the command; **S116's H1 moved A 5 → 6 and C 0 → 5 (DEC-250)** off the grid its landing recorded, `adocs/data/S116_sweep_s170.txt` | `adocs/data/S203_case_sweep.sh --ceilings adocs/data/S202_sweep_s170.txt`; a tree-moving step that re-sweeps appends its grid |
 | `test_engine.cpp` "OwnBook draws a book move for the start key, and the seed replays it" | 13 entries, total weight 34700, `e2e4` heaviest at 12956 for the start key | `~/.venv/chess/bin/python adocs/data/S194_book_start_key.py src/openings.bin` |
 | `test_engine.cpp` "Best Book Move plays the heaviest entry, and the S175 position d2f3" | `bestmove e2e4` as the heaviest start-key entry; one entry, `d2f3`, for the S175 key | the same script |
-| `test_mate_breadth.cpp` `EXACT_FLOOR` | **159 since S261** — the lane's vector reads 160 shipping and 156 weakened, the gate at `RfpMinPly` 1 red; the same sweep at `870d210` read 150 and 145, so 145 had stopped separating on achesso's head, closed by this re-derivation (DEC-278). 145 until S261, 143 until S250, when the weakened end rose to meet it and the gate built at `RfpMinPly` 1 went green (DEC-247). S116 re-read it on razoring's candidate: 149 shipping, 143 weakened, the gate at `RfpMinPly` 1 red, so it still separates and did not move | `python3 adocs/data/S156_mined_floor_sweep.py --floor 145` |
+| `test_mate_breadth.cpp` `EXACT_FLOOR` | **159 since S261** — the lane's vector reads 160 shipping and 156 weakened, the gate at `RfpMinPly` 1 red; the same sweep at `870d210` read 150 and 145, so 145 had stopped separating on achesso's head, closed by this re-derivation (DEC-278). 145 until S261, 143 until S250, when the weakened end rose to meet it and the gate built at `RfpMinPly` 1 went green (DEC-247). S116 re-read it on razoring's candidate: 149 shipping, 143 weakened, the gate at `RfpMinPly` 1 red, so it still separates and did not move | `python3 adocs/data/S156_mined_floor_sweep.py --floor 159` |
 | `test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11. S261 re-read it on the lane's vector: 12 of 24 shipping, 6 weakened, the gate at `RfpMinPly` 1 red, so it still separates and did not move. S116 re-read it on razoring's candidate: 12 of 24 shipping, 7 weakened, so it still separates | `python3 adocs/data/S154_floor_margin_sweep.py floor` and `red` |
 | `test_eval_trace.cpp` `truncation_positions`, "the pinned positions reach the truncation bound" | the four positions, each past 2.0 and the worst past 2.8 -- in `test_eval_model.cpp` against the mirror's score until S276 moved them | `build/tools/truncation_scan --data <corpus> --min 2.8`, reading the trace since S276 |
 | `test_eval_trace.cpp` "the smooth score is within the truncation bound of the exact one", `worst > 2.8` | the same four positions, carried in `test_eval_positions.hpp` | the same command; S262 |

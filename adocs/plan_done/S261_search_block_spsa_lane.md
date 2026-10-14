@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-14 09:14 -- the search block's lane fitted 31 axes in one lane (1250 x 24 pairs at 2+0.02 on `UHO_4060_v3.epd`, 60000 games, 0 forfeits, 8 h 54 m); 21 defaults moved, `LmrCutNode`, `SeeLmrExtra`, `LmrDeeperMinReduction` 2 and `LmrDivisor` 182 held (DEC-277, DEC-278), the mate guards judged as families against the incumbent; every golden the vector moved re-derived by its script (S170 budgets, F's carry ceiling 0 -> 1 by DEC-282, breadth floor 145 -> 159, first-mate 9, S230 rows, E21/B04 and LQ02/LQ03 re-mined, DEC-281), no fixture relaxed; `bench` 3872032 -> 5636835 (`1b84f4b`). SPRT H1, `{0, 5}` nElo at 8+0.08 on `noob_3moves.epd`: `1b84f4b` against `574480e`, LLR 2.96 over 986 games, nElo 80.09 +/- 21.69, 0 forfeits -- at least 5 nElo, S279 inside the REF exception by DEC-282. Item (6), estimates and never verdicts: drift point `e9d91e3` against `1680439` nElo +195.67 +/- 15.23 (2000 games, first row of `adocs/data/S267_drift.tsv`); 32+0.32 Hash 64 on the SPRT's pair nElo +47.10 +/- 15.23 (2000 games, 0 forfeits). Fast suite 46/46 both builds, format clean; Debug self-play 8 games, 0 `Assertion`; `gate_extra.sh` five stages green (983 s); mutants E21, B04, R01, R02, C02, C05, C07, LQ01-LQ03, MW01, MW02 killed. Fast check: on the vector diff before landing, 5 findings fixed (specs.md's search row, the REF exception and F's ceiling put to DEC-282, the disproved LQ02 claim marked void by DEC-281, stale prose in MANUAL.md and `search.cpp`); the completing edits are DEV_MANUAL's `--floor 159` and item (6), and `test_mate_breadth`'s margin comment. MANUAL.md, DEV_MANUAL.md and specs.md checked and updated. Implemented by Opus subagents briefed by the coordinator.
 
 ## Why now
 
@@ -1021,3 +1021,73 @@ The vector ships as CAND carries it. Log `adocs/data/S261_sprt.log`; the run
 
 Pending: item (6), the drift point (creates `adocs/data/S267_drift.tsv`) and
 the 32+0.32 Hash 64 reading on this pair, both estimates beside the verdict.
+
+### Completion, 2026-10-14
+
+**(1) The axes.** 31 axes were listed before launch: the 30 added or reseeded
+after S085 that no later lane fitted, plus `LmrBase` and `LmrDivisor`
+(DEC-269). `SePlyFactor` was refused by `check` as reaching no probe, and
+`TmHardPercent` stayed out (DEC-200).
+
+**(2) The size.** 1250 x 24 pairs at 2+0.02 on `UHO_4060_v3.epd`, in one
+lane: the split test read 0.984 against its 0.8 line. It ran 2026-10-13 12:39
+to 21:33 -- 8 h 54 m against the 8 h 45 m estimate -- 60000 games, 0
+forfeits, 0 crash terminations.
+
+**(3) The launch.** Detached, with `SPSA-DONE` and the four-exit watcher.
+
+**(4) The end of the range.** R2 holds `LmrCutNode` and `SeeLmrExtra`;
+`LmrDeeperMinReduction` is held at 2 (DEC-277 (1)). R3 applies
+`FutMaxLmrDepth` 16 and `SeMarginPerDepth` 1; R1 is `LmpDepthCoeff` 0.
+`LmrDivisor` is held as F2's smallest restoring set (DEC-278). The mate
+guards were judged as families against the incumbent at `870d210` (DEC-277):
+
+| family | candidate | incumbent |
+|---|---|---|
+| carry | 1485 mate lines, 16 short | 1303, 24 |
+| mate in three | 12 | 12 |
+| breadth | 160 | 150 |
+| mined rows | every row found | -- |
+
+**Goldens re-derived by their scripts:**
+- S170 budgets A, C and E;
+- F's carry ceiling 0 -> 1 (DEC-282);
+- breadth floor 145 -> 159, closing the finding that it no longer separated
+  on achesso's head;
+- `first_mate_depth` 10 -> 9;
+- S230 rows 3 and 4 -> 11 and 12;
+- E21 and B04 re-mined in guard mode into depth 10 (DEC-278);
+- LQ02 and LQ03 re-mined in release by `adocs/data/S261_mine_late_capture.py`
+  (DEC-281; DEC-280 void).
+
+**Fixtures:** `NODE_TYPE_DEPTH` 7, `CAP_DRIVE_DEPTH` 13, and the ProbCut drives
+isolated from the singular block by construction (DEC-277 (4)). None was
+relaxed.
+
+**The vector:** 21 defaults moved, 4 held, 6 unmoved; `bench` 3872032 ->
+5636835.
+
+**(5) The SPRT.** H1 on the independent `{0, 5}` nElo run at 8+0.08:
+`1b84f4b` against `574480e`, LLR 2.96 over 986 games, Elo 59.78 +/- 16.52,
+nElo 80.09 +/- 21.69, 0 forfeits. That is at least 5 nElo; the stopping
+estimate is upward-biased (DEC-063). S279 sits inside the REF exception by
+DEC-282.
+
+**(6) The block-boundary readings**, estimates beside the verdict and never
+verdicts:
+- the drift point, `e9d91e3` against `1680439` at 8+0.08, Hash 16, 2000
+  games: `Elo +147.40 +/- 12.91`, `nElo +195.67 +/- 15.23`, 0 forfeits, the
+  reference unpadded (it predates S273); the first row of
+  `adocs/data/S267_drift.tsv`, log `adocs/data/S261_drift.log`;
+- 32+0.32, Hash 64, 1000 pairs on the SPRT's pair: `Elo +33.46 +/- 10.89`,
+  `nElo +47.10 +/- 15.23` over 2000 games, 0 forfeits, 3 h 42 m
+  (`adocs/data/S261_ltc.log`).
+
+**Tests and docs:**
+- Fast suite 46/46 in both builds; format clean; `plan_prose_check` clean in
+  every mode.
+- Debug self-play 8 games: 0 `Assertion`, 0 `disconnect`.
+- `gate_extra.sh`: 5 stages in 983 s.
+- Mutants killed: E21, B04, R01, R02, C02, C05, C07, LQ01, LQ02, LQ03, and
+  then LQ03, MW01 and MW02 again after the last edits.
+- MANUAL.md, DEV_MANUAL.md and specs.md were checked and updated.

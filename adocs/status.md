@@ -7,116 +7,69 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S261 H1 (the search vector ships); item (6) readings next
+## 2026-10-14: S261 done -- the search vector ships; S280 next, then S099
 
-**S261's SPRT read H1** (`adocs/data/S261_sprt.sh`, 03:48 to 04:17): CAND
-`1b84f4b`, the lane's vector (21 of 31 defaults move; holds `LmrCutNode`,
-`SeeLmrExtra`, `LmrDeeperMinReduction` 2, `LmrDivisor` 182), against REF
-`574480e`. LLR 2.96 over 986 games, `Elo 59.78 +/- 16.52`, `nElo 80.09 +/-
-21.69`, 0 forfeits: at least 5 nElo, the stopping Elo upward-biased (DEC-063).
-bench 3872032 -> 5636835. Archived as `chesso_S261_sprt_2026-10-14.tar.xz`.
-Every golden the vector moved was re-derived by its script; LQ02/LQ03
-re-mined in release (DEC-281, DEC-280 void); F's carry ceiling 0 -> 1 and
-S279 inside the REF exception (DEC-282), both flagged to the owner. **Next,
-item (6)**: the drift point against `1680439` (57 min, creates
-`adocs/data/S267_drift.tsv`) and the 32+0.32 Hash 64 reading on the SPRT's
-pair (3 h 45 m), estimates beside the verdict; then S261 completes.
+**S261 done.** Its SPRT read H1 (`adocs/data/S261_sprt.sh`): CAND `1b84f4b`,
+the lane's vector (21 of 31 defaults move; held `LmrCutNode`, `SeeLmrExtra`,
+`LmrDeeperMinReduction` 2, `LmrDivisor` 182), against REF `574480e`. LLR 2.96
+over 986 games, `nElo 80.09 +/- 21.69`, 0 forfeits: at least 5 nElo
+(DEC-063). bench 3872032 -> 5636835. Item (6), estimates and never verdicts:
+- **drift point** `e9d91e3` against `1680439` at 8+0.08, 2000 games: `Elo
+  +147.40 +/- 12.91`, `nElo +195.67 +/- 15.23`, 0 forfeits -- S267's first
+  row (`adocs/data/S267_drift.tsv`), verdicts since: S113, S131, S115, S116,
+  S272, S119, S261;
+- **32+0.32 Hash 64** on the SPRT's pair, 2000 games, 3 h 42 m: `Elo +33.46
+  +/- 10.89`, `nElo +47.10 +/- 15.23`, 0 forfeits (`adocs/data/S261_ltc.log`).
+Archived: `chesso_S261_{sprt,drift,ltc}_2026-10-14.tar.xz`. The completing
+commit also fixes DEV_MANUAL's `--floor 145` -> 159 and
+`test_mate_breadth.cpp`'s margin comment (3 above the weakened end, not 2).
 
-**Written ahead during the run:**
-- **S099 rebased onto `22e8df7`** blind (`../chesso-s099c`, diff
-  `.tuning/coord/S099/s099_on_22e8df7.diff`): every golden S099 owns is
-  PENDING its script on the new tree (carry ceilings, S170 budgets,
-  `EXACT_FLOOR`, `MATE_IN_THREE_FLOOR`, first-mate depths, the 2048-slot
-  census); phase 2 about 2.5 h of machine, then its SPRT (REF = S261's
-  closing commit, S261 having read H1). **DEC-283**:
-  its mate floors may follow their scripts down by at most two, gate still
-  red, on S099's H1 only.
-- S261's landing left two stale lines, fixed before S261 completes: `DEV_MANUAL.md`
-  still names `--floor 145` in the S156 recipe and goldens table, and
-  `test_mate_breadth.cpp`'s margin comment says "2 above the weakened one"
-  (159 against 156 is 3).
-- Next: S261's item (6) readings, then S280 (filler, both phases at
-  once), then S099 phase 2.
+**Owner replies pending:**
+- DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
+  against the incumbent, not cell-wise); the coordinator offered to revert.
+- DEC-282's two rulings: S279 inside S261's REF exception, and F's carry
+  ceiling 0 -> 1. Both stand on S261's H1, which it now has.
 
-**S279 landed**: quiescence checks the limits above its table probe. A table
-cutoff that spent a `go nodes` budget, or landed on the stop flag's 2048-node
-poll, went unchecked: S261's probe read 30 of 1028 budgets over (up to +3),
-and 4.45 % of first polls were read late. Both are 0 now. bench 3872032 and
-`search_bench` node-identical; **no SPRT, DEC-279**. `gate_extra` 5 stages
-green, 1001 s, 2026-10-14 on S279's landing tree. Also landed: `e7b1d04`,
-the stale `eval_model` comments in `src/evaluation.{cpp,hpp}` (comments only).
-New filler **S280** (DEC-171): the mutation recipe's `submodule update` is
-refused over the `file` transport on git 2.43; it needs a per-command
-`-c protocol.file.allow=always`.
-
-**S261: lane done, phase 2 resumes** (`paused_by` cleared). The lane ended
-SPSA-DONE 2026-10-13 21:33: 1250 iterations, 60000 games, 0 forfeits, 0
-crash terminations; archived as `chesso_S261_spsa_lane_2026-10-13.tar.xz`.
-Holds (DEC-277, DEC-278): `LmrCutNode`, `SeeLmrExtra`, `LmrDeeperMinReduction`
-at 2, `LmrDivisor`; mined rows read over the incumbent's range, then
-re-mined in guard mode. S261's agent rebases `../chesso-s261c` onto S279,
-re-measures the carry family (node budgets), re-derives the fixtures and
-goldens by script, runs the second tier and the seven mined-row mutants;
-then the vector commit and the {0,5} SPRT (`adocs/data/S261_sprt.sh`), the
-drift point and the 32+0.32 reading. No other `src/` commit lands before the
-vector.
-
-**Order from here:** S261 (vector, SPRT, readings) -> S280 (filler) -> S099
-rebased onto S261's landing, every number re-taken, SPRT (DEC-271) -> S023
-verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
-
-**Owner reply pending:** DEC-277 relaxes the mate-safety rule DEC-276
-pre-registered (grid against the incumbent, not cell-wise); the coordinator
-offered to revert to DEC-276 if the owner prefers.
+**Order from here:** S280 (filler, DEC-171; phase 2 about 20 min) -> S099
+phase 2 on S261's closing commit (about 2.5 h: fresh S170 sweep, S203
+ceilings -- F above DEC-272's 2 stops for a ruling; DEC-283 governs its mate
+floors), then its SPRT (REF = S261's closing commit) -> S023 verdict 1
+(DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
 
 **Waiting, written (DEC-260 lanes):**
-- **S099** (worktree `../chesso-s099b`, uncommitted, base `5ac17bd`): complete
-  up to the SPRT. (a) the pawn key, made branchless after its timing measured
-  +1.4 to 2.1 % cycles (DEC-271; counters after: -0.95 % cycles against the
-  old key on bench 16), and (b) the correction table at 2048 slots a side
-  (DEC-270's census); bench 3539313, 14/14 CH and 5/5 PK mutants killed,
-  second tier green but S278's (now fixed). Lands as one candidate: REF =
-  S261's landing. DEC-272 (owner): test_mate_carry F's ceiling 0 -> 2 lands
-  with it on H1; the worktree's test cites DEC-272, the step file's
-  `DEC-PENDING`/`DEC-<n>` placeholders still to fill.
-- **S023** (worktree `../chesso-s023`): phase 1 written blind -- verdict 1,
-  the capture-history table and its capture SEE and quiescence futility
-  margin readers, 4 new parameters, CX mutants; verdict 2 (ordering) only on
-  its H1 (DEC-273). Shares `tests/test_search_params.cpp`'s count line with
-  S099 (75 and 77; 79 together).
-- **S039** (worktree `../chesso-s039`): phase 1 written blind -- the lazy
-  shortcut and the clamp removed in one change, weights frozen; 398 reader
-  lines in 91 files resolved (`adocs/data/S039_readers.txt`); trace, tuner
-  and `feature_audit` follow; `LazyEvalMargin` retires (73 -> 72 rows).
-  Non-regression `{-5, 0}`; no verdict lands as a zero (DEC-274). At its
-  rebase, S023's two quiescence-futility cases on the removed API convert.
-  `adocs/specs.md` line 658 conflicts by hand with S099 and S023.
+- **S280** (`../chesso-s280` at `e9d91e3`): `git -c
+  protocol.file.allow=always` on the recipe's `submodule update` in
+  `DEV_MANUAL.md` and `tools/mutation_check.py`'s docstring; step file in
+  `plan_current`. Phase 2: observe the failure, apply, build, `--only NB01`.
+- **S099** (`../chesso-s099c` on `22e8df7`, diff
+  `.tuning/coord/S099/s099_on_22e8df7.diff`): rebased blind; every golden it
+  owns is PENDING its script (carry ceilings, S170 budgets, `EXACT_FLOOR`,
+  `MATE_IN_THREE_FLOOR`, first-mate depths, the 2048-slot census). (a) the
+  pawn key, branchless (DEC-271); (b) the correction table at 2048 slots a
+  side (DEC-270). Lands as one candidate. DEC-272 (owner): F's ceiling up to
+  2 on its H1.
+- **S023** (`../chesso-s023`, at `c3b7b5e`): phase 1 blind -- verdict 1, the
+  capture-history table and its capture SEE and quiescence futility margin
+  readers, 4 new parameters, CX mutants; verdict 2 (ordering) only on its H1
+  (DEC-273). Shares `tests/test_search_params.cpp`'s count line with S099.
+- **S039** (`../chesso-s039`): phase 1 blind -- the lazy shortcut and the
+  clamp removed in one change; `LazyEvalMargin` retires. Non-regression
+  `{-5, 0}` (DEC-274). At its rebase S023's two quiescence-futility cases on
+  the removed API convert; `adocs/specs.md`'s search row conflicts by hand
+  with S099 and S023.
+- **S082** (`../chesso-s082`, base `e1c59f8`): phase 1 blind -- leaf walks,
+  datagen `--leaf`, the tuner's `--holdout`, LW01-LW08, recipe
+  pre-registration with DEC-275. Phase 2: ~1 h 30 m checks, the pool ~9 h (a
+  night), compare ~1 h 15 m. Against S039: datagen header and DEV_MANUAL,
+  take S082's side.
 
-- **S082** (worktree `../chesso-s082`, base `e1c59f8`): phase 1 written
-  blind -- `src/leaf_walk.{hpp,cpp}` (quiescence and PV leaves, linked by
-  datagen only; INV-6 expected), datagen `--leaf root|qs|pv`, a ply column
-  closing a game-split leak in `tuner_split::row_ply`, the tuner's
-  `--holdout`, `tools/corpus_split.py`, LW01-LW08 mutants; recipe
-  pre-registration `adocs/data/S082_recipe.{sh,_read.py}` with DEC-275 (qs
-  view primary, set at 100000 nodes) and a five-seed control margin. Fast
-  check: 4 findings, fixed blind. Phase 2: ~1 h 30 m build and checks, the
-  pool ~9 h (a night), compare ~1 h 15 m.
+**Done 2026-10-14:** S261 (above); S279 (quiescence checks its limits above
+the table probe, no SPRT by DEC-279, `gate_extra` green 1001 s); `e7b1d04`
+comments; DEC-280 (void) to DEC-283.
 
-**Done 2026-10-14:** S279 (above); `e7b1d04` comments.
-
-**Done today, 2026-10-13, each gated green:**
-- **S119** H1 at Hash 16 (DEC-268): Elo 5.24 +/- 4.06, 16128 games; the
-  cluster table, prefetch and huge pages all stay.
-- **S263**: the pawn stage's attack sets built once; timing zero (DEC-266),
-  kept for score identity; S101, S102, S121-S125, S135 build their own sets.
-- **S259**: both mined mate rows separate E21 and B04 again.
-- **S276**: the audit tools read the trace; the mirror is deleted. S122 must
-  extend `exact_score()` to its group.
-- **S264**: Weiss 1.1 (2987) and Stash v30.0 (3153) join the reference set;
-  binaries in `/home/max/ws/engines/`.
-- **S277**: the ProbCut miner takes `--mode`.
-- **S278**: the sanitizer trace failure was a false UBSan report (GCC 13.3's
-  TLS wrapper, ld's relaxation); `constinit`; `gate_extra` green again.
+**Done 2026-10-13, each gated green:** S119 H1 at Hash 16 (DEC-268); S263;
+S259; S276; S264 (Weiss 1.1 and Stash v30.0 join the reference set); S277;
+S278 (`gate_extra` green again).
 
 ## 2026-10-12: S262 done -- the tuner fits evaluate()'s own trace
 

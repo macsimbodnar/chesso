@@ -95,10 +95,15 @@ static constexpr int SCORE_DEPTH = 10;
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 1 below the shipping count, 2 above the weakened one. A gap of 3
-// cannot be split evenly; the spare point goes above the weakened end because
-// that is the end that has moved, 139 to 141 to 143, and its rise is what
-// closed the separation at 143.
+// Margin: 1 below the shipping count, 3 above the weakened one. The S156
+// script's rule admits any floor strictly above what the weakened guard finds
+// and at or below what ships -- 157 to 160 against S261's 156 and 160 -- and
+// flags one outside that band as no longer separating. 159 is the floor this
+// gate has always kept, 1 below the shipping count: a single mate the shipping
+// build loses to an unrelated tree change does not turn it red, and the
+// weakened guard still does with 3 to spare. (Before S261 the gap was 3, 146
+// against 143, and the spare point went above the weakened end because that
+// was the end that had moved, 139 to 141 to 143.)
 // Property beside it: the `wrong_sign == 0` assertion in the same case -- a
 // mate score for the side being mated is a defect at any total, so it is
 // asserted at zero and carries no floor.
