@@ -4192,6 +4192,10 @@ TEST_SUITE("engine: aspiration windows")
       int first_mate_depth;
     };
 
+    // **Re-read at S023 and unchanged**: on its candidate, capture history in
+    // the two capture margins, the script reads both first mates at 9, mate
+    // 5, with a centipawn iteration under each.
+    //
     // GOLDEN (DEC-142): `first_mate_depth`, the iteration a mate score first
     // appears at, one per position. **9 and 9 since S261** (10 and 9 at
     // S116), 9 and 9 against the reference binary the comment above names.
@@ -4983,6 +4987,10 @@ TEST_SUITE("engine: mate safety")
   //
   // adocs/data/S145_rfp_sweep.log holds S145's sweep and
   // adocs/data/S154_floor_margin_sweep.log holds it re-taken, 2026-09-01.
+  //
+  // **Re-read at S023 and unchanged**: on its candidate, capture history in
+  // the two capture margins, the `floor` mode reads 12 at the shipping guard
+  // and 6 weakened, and `red` sees the gate at RfpMinPly 1 red, as at S261.
   //
   // GOLDEN (DEC-142): 11, the fewest exact mates in three the engine
   // may find over the 82 constructed positions at depth 2m - 1 +

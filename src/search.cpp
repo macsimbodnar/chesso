@@ -140,6 +140,101 @@ void history_on_quiet_cutoff(search_state_t* state,
 }
 
 
+// S023. The capture table's graded update at one remaining depth, in the unit
+// continuation_grade() above uses for its own table: `share` thousandths of
+// CAPT_HIST_BOUND at CAPT_HIST_REF_DEPTH, quadratic in the depth and clamped
+// to the bound. Its own function rather than that one with the bound passed
+// in, because the two tables' bounds and reference depths are separate
+// definitions in src/data_structures.hpp and either may move alone. 64-bit for
+// continuation_grade()'s reason; once per fail-high, never per node.
+static int capture_grade(int share, int depth)
+{
+  assert(share >= 0);
+  assert(depth >= 0);
+
+  const int64_t numerator =
+      static_cast<int64_t>(CAPT_HIST_BOUND) * share * depth * depth;
+  const int64_t denominator =
+      1000LL * CAPT_HIST_REF_DEPTH * CAPT_HIST_REF_DEPTH;
+
+  return static_cast<int>(
+      std::min<int64_t>(numerator / denominator, CAPT_HIST_BOUND));
+}
+
+
+void history_on_capture_cutoff(search_state_t* state,
+                               const board_t* board,
+                               move_t cutoff_move,
+                               const move_t* captures_tried,
+                               size_t captures_tried_count,
+                               int depth)
+{
+  const int capt_malus = capture_grade(CAPT_HIST_MALUS, depth);
+
+  // The maluses first, for history_on_quiet_cutoff's reason: where a tried
+  // capture shares a cell with the one that cut off -- two promotions taking
+  // the same piece from the same square -- the credit lands last.
+  for (size_t i = 0; i < captures_tried_count; ++i) {
+    assert(captures_tried[i] != cutoff_move);
+    assert(MOVE_CAPTURE(captures_tried[i]));
+
+    history_gravity_update(
+        capture_history_entry(state, board, captures_tried[i]), -capt_malus,
+        CAPT_HIST_BOUND);
+  }
+
+  // A quiet that cut off charges the captures before it and is credited
+  // nowhere here: its own credit is history_on_quiet_cutoff's.
+  if (MOVE_CAPTURE(cutoff_move)) {
+    const int capt_bonus = capture_grade(CAPT_HIST_BONUS, depth);
+
+    history_gravity_update(capture_history_entry(state, board, cutoff_move),
+                           capt_bonus, CAPT_HIST_BOUND);
+  }
+}
+
+
+// S023. What a capture's record is worth to a margin that reads it: the entry
+// as a share of its band times the reader's weight, so the term spans
+// [-weight, +weight], reaches an end only at an edge of the band, and is
+// exactly 0 for an empty cell or a zero weight. `int` is enough: the product
+// is at most 2000 * 32767, thirty times inside int32.
+static int capture_record_term(int entry, int weight)
+{ return (weight * entry) / CAPT_HIST_BOUND; }
+
+
+// S091's capture SEE margin with the capture's record in it, moved by up to
+// CAPT_HIST_SEE_WEIGHT either way. Floored at 0, so the rule still skips only
+// a capture the exchange evaluation says loses material, whatever its record
+// -- the class S091 defined and its mate cases were mined against.
+static int capture_see_margin(int lmr_depth, int entry)
+{
+  const int term = capture_record_term(entry, CAPT_HIST_SEE_WEIGHT);
+
+  return std::max(0, SEE_CAPT_COEFF * lmr_depth + term);
+}
+
+
+// S112's quiescence futility margin with the capture's record in it, moved by
+// up to CAPT_HIST_QS_WEIGHT either way. Floored at 0, which is what keeps a
+// skip below the alpha the node was entered with (QS_FUTILITY_MARGIN's own
+// floor, src/search_params.hpp).
+static int capture_futility_margin(int entry)
+{
+  const int term = capture_record_term(entry, CAPT_HIST_QS_WEIGHT);
+
+  return std::max(0, QS_FUTILITY_MARGIN + term);
+}
+
+
+int search_capture_see_margin_probe(int lmr_depth, int entry)
+{ return capture_see_margin(lmr_depth, entry); }
+
+
+int search_capture_futility_margin_probe(int entry)
+{ return capture_futility_margin(entry); }
+
+
 // THE ACCUMULATOR'S UNIT, S236. Every input to a late move reduction -- the
 // table below and the five node terms -- is carried in **ticks of a ply** and
 // the sum is rounded to whole plies once, at `lmr_adjusted_reduction`'s return.
@@ -1151,8 +1246,12 @@ int quiescence(int alpha,
 
   // Per-move futility, S112: a capture whose best case -- the stand pat, a
   // margin, and what it takes -- still cannot reach alpha is skipped in the
-  // filter loop below. The base is computed once, from the stand pat after
-  // S130's substitution, which is the tightest number this node holds.
+  // filter loop below. The stand pat is the one after S130's substitution,
+  // which is the tightest number this node holds. **The margin is the
+  // capture's own since S023**: QS_FUTILITY_MARGIN moved either way by the
+  // capture's cell of capture_history and floored at 0
+  // (capture_futility_margin above), so it is taken per move in the loop
+  // rather than once here.
   //
   // Never in check: every evasion is searched there and `legal_moves == 0`
   // below declares mate, so a skipped evasion would fake one.
@@ -1165,10 +1264,10 @@ int quiescence(int alpha,
   // refuses one), so the best case tops out far below MATE_MIN, and an alpha
   // inside the mate band skips every capture as the honest fail-low it is.
   const bool qs_futility = QS_FUTILITY != 0 && !in_check;
-  const int futility_base = stand_pat + QS_FUTILITY_MARGIN;
 
   // **S022 tried a node-level delta early-out here** (verdict 2): out of
-  // check, a node whose ceiling -- `futility_base`, a queen's price in the
+  // check, a node whose ceiling -- the stand pat plus `QsFutilityMargin`,
+  // which this line then held as `futility_base`, a queen's price in the
   // victim table and, with a pawn of the side to move on its seventh, a queen
   // less a pawn -- could not reach alpha ended before generating anything,
   // the checking captures S112 searches dropped with the rest. Its `{0, 5}`
@@ -1234,7 +1333,9 @@ int quiescence(int alpha,
           MOVE_EN_PASSANT(moves[i])
               ? ((game->board.active_color == WHITE) ? B_PAWN : W_PAWN)
               : game->board.squares[MOVE_TO(moves[i])];
-      const int futility_value = futility_base + qs_futility_value[victim];
+      const int record = capture_history_entry(state, &game->board, moves[i]);
+      const int margin = capture_futility_margin(record);
+      const int futility_value = stand_pat + margin + qs_futility_value[victim];
 
       if (futility_value <= alpha) {
         // A capture that gives check is exempt: it is forcing, and a stand
@@ -2360,6 +2461,14 @@ static int negamax_at(int alpha0,
   move_t quiets_tried[MAX_MOVES];
   size_t quiets_tried_count = 0;
 
+  // S023. The captures this node actually searched, for the capture table's
+  // malus, on the same terms as the quiets above. They are kept at the tail of
+  // that same array, growing down, and not in an array of their own: a node
+  // searches each legal move once, so the two spans together never exceed
+  // MAX_MOVES and cannot meet, where a second array would add a kilobyte to
+  // every frame of a recursion that a macOS thread gives 512 KiB in all.
+  size_t captures_tried_count = 0;
+
   // Staged generation. Most nodes fail high on one of the first few captures
   // and never look at a quiet move, so the quiets are not generated until the
   // captures have been exhausted without a cutoff.
@@ -2597,13 +2706,36 @@ static int negamax_at(int alpha0,
     // they do not, which is where the quiet rules leave them: a promotion that
     // takes nothing is pruned by no rule in this loop, deliberately, because a
     // promotion mate is the shape the hazard likes best.
+    //
+    // **The margin carries the capture's own record since S023**: S091's
+    // `SEE_CAPT_COEFF * lmr_depth`, moved either way by the capture's cell of
+    // capture_history and floored at 0 (capture_see_margin above), so a
+    // capture that has been cutting off may lose more before it is skipped
+    // and one that has been failing less -- and none that holds its material
+    // is skipped whatever its record. The cell is read inside the cap only,
+    // where the rule can fire.
     if (may_prune && is_capture) {
       const int move_number = legal_moves_counter + 1;
       const int lmr_depth = lmr_depth_of(depth, move_number, node_adjustment);
 
-      if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH &&
-          !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {
-        prune_rule = PRUNE_SEE_CAPTURE;
+      if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH) {
+        const int record = capture_history_entry(state, &game->board, moves[i]);
+        const int see_margin = capture_see_margin(lmr_depth, record);
+
+        if (!see_ge(&game->board, moves[i], -see_margin)) {
+          prune_rule = PRUNE_SEE_CAPTURE;
+        }
+
+        if constexpr (PROBING) {
+          if (probe != nullptr && probe->capture_rule_count < MAX_MOVES) {
+            const int n = probe->capture_rule_count++;
+            probe->capture_rule_moves[n] = moves[i];
+            probe->capture_rule_move_number[n] = move_number;
+            probe->capture_rule_lmr_depth[n] = lmr_depth;
+            probe->capture_rule_record[n] = record;
+            probe->capture_rule_margin[n] = see_margin;
+          }
+        }
       }
     }
 
@@ -2931,6 +3063,16 @@ static int negamax_at(int alpha0,
       // Fail-high
       type = TT_BETA_NODE;
 
+      // S023. The capture table, whatever class the cutoff move is: every
+      // capture searched before it is charged, and the move itself credited
+      // when it is a capture. unmake_move ran above, so the board is this
+      // node's own again and every victim is back where capture_history_entry
+      // reads it.
+      const move_t* captures_tried =
+          quiets_tried + (MAX_MOVES - captures_tried_count);
+      history_on_capture_cutoff(state, &game->board, moves[i], captures_tried,
+                                captures_tried_count, depth);
+
       // Store killing move, history, and counter move
       if (!is_capture) {
         // The shift is deliberately unguarded, and that is a measured choice
@@ -2987,9 +3129,18 @@ static int negamax_at(int alpha0,
     // The gate is `!is_capture` and nothing else, exactly the gate the bonus
     // uses above. An asymmetry between what can earn the bonus and what can
     // earn the malus is a bias with no symptom.
+    //
+    // The capture span is its complement, S023, for the same reason: what can
+    // earn the capture table's credit -- MOVE_CAPTURE -- is what can earn its
+    // malus. Stored at the array's tail, growing down; the assert is on the
+    // two spans together because they share the storage.
+    assert(quiets_tried_count + captures_tried_count < MAX_MOVES);
+
     if (!is_capture) {
-      assert(quiets_tried_count < MAX_MOVES);
       quiets_tried[quiets_tried_count++] = moves[i];
+    } else {
+      captures_tried_count++;
+      quiets_tried[MAX_MOVES - captures_tried_count] = moves[i];
     }
   }
 

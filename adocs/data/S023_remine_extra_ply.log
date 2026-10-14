@@ -1,0 +1,357 @@
+# S023: S095's mate row ("mate the extra ply hides") re-mined on S023's
+# candidate, 2026-10-14.
+#
+# WHY. The row the test carried -- 4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1,
+# depth 8, distance 2 -- no longer separated S095's guard at its own depth: the
+# build with `const bool no_tt_move = tt_move == 0;` made `= true` reports the
+# mate at 8 as well. Its cells for depths 3..12 (S230's driver, search_fen()'s
+# shape, cold 4 MB table):
+#
+#   parent 7e36271 (bacead1's src/), shipped   2 2 2 2 - 2 2 - 2 -
+#   parent 7e36271, guard opened               2 2 2 2 - 2 - 2 2 2
+#   candidate (S023), shipped                  2 2 2 2 - 2 2 - 2 2
+#   candidate (S023), guard opened             2 2 2 2 - 2 - 2 2 -
+#
+# so it had already stopped separating on the parent, S261's engine, and S023
+# found it. A golden whose derivation moved is re-derived by its own script
+# (DEC-142), as S234 did; DEC-288 is the ruling S023's re-mines run under.
+#
+# WHAT RAN. adocs/data/S095_mine_mate_row.py's own procedure as S234 ran it:
+# the candidate set is not re-derived -- the corpus and the oracle did not
+# move, and adocs/data/S095_candidates.tsv (.tuning/coord/S095_candidates.fen)
+# still holds the 141 positions -- both builds swept 3..12 with
+# S230_mine_r01_row.py depths against libchesso_engine.a of a clean worktree
+# of the whole-tree fixture 3ede587 (7e36271 plus S023), shipped and with the
+# guard opened, then S095_mine_mate_row.py pick. Driver:
+# .tuning/coord/S023/p2/xp2.sh in the main checkout.
+#
+# THE PICK, the script's own output, follows; then both sweeps.
+
+depth 8	run 6	shipped [d7 d8 d9 d10 d11 d12]	unguarded [d7 d9 d10 d11 d12]	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+depth 8	run 5	shipped [d8 d9 d10 d11 d12]	unguarded [d9 d10 d11 d12]	6k1/p2R1p2/6p1/1p1Q4/8/n3P1P1/5qKP/8 w - - 0 37
+depth 8	run 5	shipped [d8 d9 d10 d11 d12]	unguarded [d9 d10 d11 d12]	5qr1/7k/4R2b/p3QppP/1nP5/1PB2NP1/6K1/8 w - - 1 36
+depth 9	run 4	shipped [d9 d10 d11 d12]	unguarded [d10 d11 d12]	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+depth 9	run 4	shipped [d3 d4 d5 d6 d8 d9 d11 d12]	unguarded [d3 d4 d5 d6 d8 d10 d11]	4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+depth 9	run 4	shipped [d9 d10 d11 d12]	unguarded [d10 d11 d12]	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+depth 10	run 4	shipped [d3 d4 d5 d6 d10]	unguarded [d3 d4 d5 d6 d8]	1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+depth 8	run 3	shipped [d6 d8 d10 d11 d12]	unguarded [d6 d10 d11 d12]	8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1
+depth 6	run 2	shipped [d6 d9 d10]	unguarded [d10 d12]	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+depth 10	run 2	shipped [d7 d9 d10 d12]	unguarded [d7 d9 d11 d12]	1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+depth 12	run 2	shipped [d11 d12]	unguarded [d10 d11]	k6r/p4ppp/Bpp4q/3Q4/P7/B1P2P2/7P/5R1K w - - 0 26
+depth 12	run 2	shipped [d11 d12]	unguarded [d11]	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+depth 6	run 1	shipped [d6]	unguarded [none]	rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1
+depth 9	run 1	shipped [d9]	unguarded [none]	7K/4k3/8/8/8/p1p1p2p/P1P1P2P/RBRB3r b - - 0 1
+depth 10	run 1	shipped [d10 d12]	unguarded [d12]	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+depth 10	run 1	shipped [d10 d12]	unguarded [none]	6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+depth 10	run 1	shipped [d10]	unguarded [d12]	3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62
+depth 10	run 1	shipped [d10]	unguarded [none]	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+depth 11	run 1	shipped [d11]	unguarded [none]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+depth 12	run 1	shipped [d12]	unguarded [none]	rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1
+depth 12	run 1	shipped [d12]	unguarded [none]	r5k1/pp1Q3p/6p1/2n2p2/2pP4/B3R3/6PP/3R2K1 w - - 1 33
+depth 12	run 1	shipped [d12]	unguarded [d10 d11]	6k1/1R6/6p1/1p6/3n4/1PB4R/1P5K/3r4 w - - 1 43
+depth 12	run 1	shipped [d12]	unguarded [none]	1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+depth 12	run 1	shipped [d12]	unguarded [none]	1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31
+depth 12	run 1	shipped [d12]	unguarded [d11]	1R6/8/2p3p1/P5P1/1p2b2P/4kpK1/6B1/8 b - - 0 53
+
+take: k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+  depth 8, shipped profile [d7 d8 d9 d10 d11 d12], unguarded [d7 d9 d10 d11 d12], longest consecutive run 6
+
+# shipped sweep, depths 3..12
+2 2 2 2 2 2 2 2 2 2 	2b3k1/1p5p/6pb/3Pp3/P3P2P/6N1/1P3q2/7K b - - 0 41
+2 2 2 2 2 2 2 2 2 2 	3r1r1k/1p4pn/pN1p3p/P2Pp2q/1pB1Pb2/3Q1P2/1PP2P2/RN1R1bK1 b - - 7 28
+2 2 2 2 2 2 2 2 2 2 	6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43
+2 2 2 2 2 2 2 2 2 2 	7k/pp6/4P1p1/7p/7P/6bK/P1B3P1/4q3 b - - 0 39
+2 2 2 2 2 2 2 2 2 2 	8/R2B4/7p/p1r3kP/P2r1p2/6pK/6P1/8 b - - 1 54
+- - - - - - - - - 3 	1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+- - 3 3 3 3 3 3 3 3 	4r2k/1p4rp/p1p3q1/P3b3/4p3/1QPnB2P/1P2n1B1/R5RK b - - 1 31
+- - - - - - - - - - 	5K2/5P1B/3k4/8/1p6/5P2/8/q7 b - - 1 59
+3 3 3 3 3 3 3 3 3 3 	5r2/1p4Nk/pqp2P2/3p4/1Pn3Q1/2P1p3/P3P3/2K2R2 w - - 3 40
+- - - - 3 3 3 3 3 3 	8/6kp/p3P1p1/3pP3/7K/3n1qN1/7P/8 b - - 1 43
+3 3 3 3 3 3 3 3 3 3 	8/8/3p2R1/1p4p1/4PkPP/4n3/2r5/6K1 b - - 0 73
+- - - - - - - - 3 - 	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+3 3 3 3 3 3 3 3 3 3 	r5rk/1pB4p/p3BRpP/2P5/3p4/8/P5PK/5R2 w - - 1 31
+- - - - 4 4 - 4 4 4 	1R6/p5kp/6p1/3p1q2/N3p3/P3n1P1/1P5P/R5K1 b - - 2 31
+- - - - - - - - - - 	2r1r1k1/6q1/1pbBp1R1/p2pP3/P1pP3Q/7P/5P2/1R4K1 w - - 1 48
+- - - - 4 4 4 4 4 4 	2r2k2/1p3p1b/p2P1Q1p/6p1/3B1p2/P1N2R1P/6PK/2q5 w - - 3 37
+- - 5 - - - 4 4 4 4 	4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+- - - - 4 4 4 4 4 4 	6k1/1p3rP1/2p2PQ1/4p3/3P4/4PRK1/q7/8 w - - 1 42
+- - - - - - - 4 4 4 	6k1/5p1p/2R5/p7/5p2/P5qP/1PP3P1/4r1QK b - - 6 33
+- - - - - 4 4 4 4 4 	6k1/p2R1p2/6p1/1p1Q4/8/n3P1P1/5qKP/8 w - - 0 37
+- - 4 4 4 4 4 4 4 4 	8/4Ppk1/1pQ5/2pp4/p2P1K2/r1P2P1P/8/8 w - - 1 50
+- - - 4 - - 4 4 - - 	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+- - - - 4 4 4 4 4 4 	8/Q7/5pkp/1p3P1p/1P6/P3p1P1/3r1q2/R6K b - - 0 44
+- - - - - - 4 4 4 4 	8/p3Q2p/p3pn1k/4N3/8/1P5P/q5PK/8 w - - 2 35
+- - - 5 4 4 4 4 4 4 	R1q2Q2/1p4pk/1p2p1p1/1n1pP2p/3P3P/2P1B1P1/5PK1/4r3 w - - 6 38
+- - - - - - - - - 4 	r5k1/pp1Q3p/6p1/2n2p2/2pP4/B3R3/6PP/3R2K1 w - - 1 33
+- - - - - - 5 4 4 4 	r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34
+- - - - - 4 4 4 4 4 	rn4k1/p4q2/2p1B3/1pbp1p2/7R/2N3P1/PPP1Q2P/7K w - - 0 25
+- - - - - - - 5 5 5 	1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52
+- - - - - - - 6 5 5 	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+- - - - - - - 5 - - 	3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62
+- - - - - - - - - - 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+- - - - - - - - - 5 	6k1/3R4/P6p/5pp1/3p2P1/3K1P2/8/4b3 w - - 3 48
+- - - - - - - - 6 5 	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+- - - - - - - 5 - 5 	6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+- - - - - - - - - 5 	7k/5R2/6K1/3R3p/6r1/8/8/8 w - - 3 86
+- - - - - - - - - - 	7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54
+- - - - - - - - - - 	8/2P3pk/4Bp1p/p1K5/1p6/5P2/7P/8 w - - 0 50
+- - - - - - - 6 - 5 	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+- - - - - - 5 5 5 5 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+- - - - 5 - - - 5 5 	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+- - - - - - - - - - 	r4b1k/5Qp1/p3P2p/3p1N2/3p1B2/7P/q4PP1/5RK1 w - - 3 27
+- - - - - - - - - - 	1k6/8/2K5/6R1/1P6/8/8/5b2 w - - 1 72
+- - - - - - - - - 6 	1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31
+- - - - - - - - - 6 	2r2k2/5P2/8/5K1R/6P1/2qp3P/8/8 b - - 3 59
+- - - - - - - 6 - - 	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+- - - - - - - - 6 - 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+- - - - - - - - 8 8 	3r2k1/4r1b1/ppQ5/8/1P2pR2/2PP4/P4P2/2R1KN1q b - - 2 38
+- - - - - - - - 6 - 	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+- - - - - - - - - 6 	4r3/4kpQ1/3Rq3/3P3p/Pr6/1nN5/5P1P/6K1 w - - 0 37
+- - - - - - - - - - 	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+- - - - - - - - - - 	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+- - - - - 6 6 6 6 6 	5qr1/7k/4R2b/p3QppP/1nP5/1PB2NP1/6K1/8 w - - 1 36
+- - - - - - - - - - 	5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58
+- - - - - - - - - 7 	5r2/7k/Q2p1qp1/2pPp3/2P1b1Bp/1r2P2P/7K/3NR3 b - - 3 47
+- - - - - - - - - 6 	6k1/1R6/6p1/1p6/3n4/1PB4R/1P5K/3r4 w - - 1 43
+- - - - - - - - - - 	6k1/p7/5b1p/8/1P2b3/P1Pp1NPK/1B3P1P/4r3 b - - 3 30
+- - - - - - - - - 6 	8/2N1Pkp1/1p1P3p/2p2p2/5p2/1P3P2/6PP/b4K2 w - - 3 41
+- - - - - - - - - - 	8/5k2/p6p/1p2r1P1/1P6/P1P1Bp1b/5P1P/6K1 b - - 0 36
+- - - - - - - - 6 6 	8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44
+- - - - - - - - 6 6 	k6r/p4ppp/Bpp4q/3Q4/P7/B1P2P2/7P/5R1K w - - 0 26
+- - - - - - - - - - 	r5rk/1pp4p/5b1q/3P1pN1/8/PQ2P2b/1PBN4/R5K1 b - - 0 31
+2 2 2 2 - - - 2 - - 	1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/Q7 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2k1brbr/3p1p1p/3P1P1P/8/8/8/5QK1/8 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2k5/8/8/8/3q4/2p1p1p1/2P1P1P1/2RBRBK1 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2rbrbk1/2p1p1p1/2P1P1P1/8/2Q5/8/8/2K5 w - - 0 1
+2 2 2 - - - - - - - 	3k4/8/K7/5q2/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4K3/8/8/4k3/5q2/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4brbr/3p1p1p/3P1P1P/8/8/8/2Q1K3/6k1 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4brbr/p2p1p1p/P2P1P1P/2R5/8/8/4K3/7k w - - 0 1
+2 2 2 2 - 2 2 - 2 2 	4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4k3/8/3q4/8/8/1p1p1p2/1P1P1P2/2BRBR1K b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	7q/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/3k4/8/7q/8/1p1p1p2/1P1P1P2/1KBRBR2 b - - 0 1
+2 2 2 - - - - - - - 	8/4k3/1r6/8/8/p1p1p2p/P1P1P2P/RBRB2K1 b - - 0 1
+2 2 2 - 2 2 2 - - - 	8/7r/1k6/8/8/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/2n5/8/8/p1np1p1p/P2P1P1P/K1k1BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/3n4/8/8/pn1p1p1p/P2P1P1P/1k1KBRBR b - - 0 1
+2 2 2 - 2 - - - - - 	8/8/8/3r4/6k1/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/8/7q/8/2p1p1p1/2P1PkP1/K1RBRB2 b - - 0 1
+2 2 2 - - 2 - - 2 2 	rbrb1K2/p1p1p3/P1P1P2k/Q7/8/8/8/8 w - - 0 1
+2 2 2 - - - - - - - 	rbrb1k2/p1p1p1Rp/P1P1P2P/8/8/2K5/8/8 w - - 0 1
+2 2 2 - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/2K5/8/k7/2R5/8 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	rbrb4/p1p1p3/P1P1P3/k7/2K5/7Q/8/8 w - - 0 1
+- - - - - - 3 3 3 3 	1krbrb1Q/2p1p1p1/2P1P1P1/2K5/8/8/8/8 w - - 0 1
+- - - - 3 - 3 3 - 3 	1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+- - 3 3 - - - - - - 	3kbrbr/p2p1p1p/P2P1P1P/8/8/8/8/2KR4 w - - 0 1
+- - - - - - - - - - 	4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/3P1P1P/8/1K6/2Q5/8/1k6 w - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/3P1P1P/8/8/2Q5/4k1K1/8 w - - 0 1
+- - - 3 3 3 3 3 3 3 	7K/8/3qk3/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	8/2k5/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR b - - 0 1
+- - - - - - - - - - 	8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+- - 3 3 - - - - - - 	8/5k2/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR b - - 0 1
+- - - - - - - 3 3 3 	8/8/2k3q1/8/8/2p1p1p1/2P1P1P1/1KRBRB2 b - - 0 1
+- - - - - - - - - - 	8/8/3q4/8/8/p1p1p3/P1P1P3/RBRBk2K b - - 0 1
+- - - 3 - 3 - 3 3 3 	8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1
+- - 3 3 - - - - - - 	8/8/8/2r3k1/8/p1p1p2p/P1P1P2P/RBRB3K b - - 0 1
+- - - - - - - 3 3 3 	8/8/8/5k2/8/2p1p1pq/2P1P1P1/1KRBRB2 b - - 0 1
+- - - - - - 4 3 3 3 	Q1brbrk1/1p1p1p2/1P1P1P2/8/8/5K2/8/8 w - - 0 1
+- - 3 3 - - - - - - 	k3brbr/p2p1p1p/P2P1P1P/8/4K3/8/8/R7 w - - 0 1
+- - - - - - - - - 3 	rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/8/8/8/5k1K/1Q6 w - - 0 1
+- - - - - - - - - - 	rbrbk3/p1p1p2p/P1P1P2P/6K1/8/7R/8/8 w - - 0 1
+- - - 3 - - - - - - 	rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1
+- - - - - - - - - - 	1K6/2r5/8/3k4/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	1k2brbr/p2pKpRp/P2P1P1P/8/8/8/8/8 w - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/3P1P1P/3K4/2Q5/8/1k6/8 w - - 0 1
+- - - - - - - - - - 	4brbr/p2p1p1p/P2P1P1P/8/1K6/2R5/k7/8 w - - 0 1
+- - - - - - 4 - - - 	7K/4k3/8/8/8/p1p1p2p/P1P1P2P/RBRB3r b - - 0 1
+- - - - - - - - - - 	7K/8/3k4/8/q7/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+- - - - - - - - - - 	k1K5/8/8/4q3/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	k3brbr/3p1p1p/3P1P1P/8/K7/8/8/5Q2 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/7R/1k1K4 w - - 0 1
+- - - - - 4 - - - - 	rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/k3K3/2Q5/8/8/8 w - - 0 1
+- - - - - - - - - - 	2K5/7q/8/7k/8/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/1k1P1P1P/8/K1Q5/8/8/8 w - - 0 1
+- - - - - - - - - - 	7K/6r1/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	8/1q6/8/4k3/8/3p1p1p/3P1P1P/K3BRBR b - - 0 1
+- - - - - - - - - - 	8/8/K7/5r2/k7/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/1k1K4/2R5 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/6Q1/8/1K5k/8/8 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/8/1k6/8/2QK4/8 w - - 0 1
+- - - - - - - - - - 	8/1k6/3K4/pp6/1P1Q4/r2p4/8/8 w - - 0 79
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+- - 3 3 - 3 3 3 3 3 	k7/6Q1/2K5/pp6/1P6/2rp4/8/8 w - - 4 81
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+- - - - - - - - - - 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/3r1P1P/5QK1 b - - 7 41
+- - - - - - - 5 5 5 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/5r1P/3Q2K1 b - - 1 42
+- - - - - - - - - - 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+- - - - - - - - - - 	r5k1/5p2/8/2P5/4pp2/3n1PPp/1Q5P/7K b - - 0 49
+- - - - - - - - - 6 	1R6/8/2p3p1/P5P1/1p2b2P/4kpK1/6B1/8 b - - 0 53
+- - - - - - 5 5 5 5 	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+- - - - - - - - - 4 	7k/5B2/5b1p/1N6/PPp5/2P3PP/4q3/6K1 b - - 0 40
+- - - - - - - - - - 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+- - - - - - 5 5 5 5 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+- - - 5 4 4 4 4 4 4 	6k1/5pp1/7p/1PP1p3/1Q1BPnP1/3r1q1P/3R4/6K1 b - - 2 43
+
+# guard-opened sweep, depths 3..12
+2 2 2 2 2 2 2 2 2 2 	2b3k1/1p5p/6pb/3Pp3/P3P2P/6N1/1P3q2/7K b - - 0 41
+2 2 2 2 2 2 2 2 2 2 	3r1r1k/1p4pn/pN1p3p/P2Pp2q/1pB1Pb2/3Q1P2/1PP2P2/RN1R1bK1 b - - 7 28
+2 2 2 2 2 2 2 2 2 2 	6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43
+2 2 2 2 2 2 2 2 2 2 	7k/pp6/4P1p1/7p/7P/6bK/P1B3P1/4q3 b - - 0 39
+2 2 2 2 2 2 2 2 2 2 	8/R2B4/7p/p1r3kP/P2r1p2/6pK/6P1/8 b - - 1 54
+- - - - - - - - - - 	1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+- - 3 3 3 3 3 3 3 3 	4r2k/1p4rp/p1p3q1/P3b3/4p3/1QPnB2P/1P2n1B1/R5RK b - - 1 31
+- - - - - - - - - - 	5K2/5P1B/3k4/8/1p6/5P2/8/q7 b - - 1 59
+3 3 3 3 3 3 3 3 3 3 	5r2/1p4Nk/pqp2P2/3p4/1Pn3Q1/2P1p3/P3P3/2K2R2 w - - 3 40
+- - - - 3 3 3 3 3 3 	8/6kp/p3P1p1/3pP3/7K/3n1qN1/7P/8 b - - 1 43
+3 3 3 3 3 3 3 3 3 3 	8/8/3p2R1/1p4p1/4PkPP/4n3/2r5/6K1 b - - 0 73
+- - - - - - - - - - 	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+3 3 3 3 3 3 3 3 3 3 	r5rk/1pB4p/p3BRpP/2P5/3p4/8/P5PK/5R2 w - - 1 31
+- - - - 4 4 4 4 4 4 	1R6/p5kp/6p1/3p1q2/N3p3/P3n1P1/1P5P/R5K1 b - - 2 31
+- - - - - - - - - 4 	2r1r1k1/6q1/1pbBp1R1/p2pP3/P1pP3Q/7P/5P2/1R4K1 w - - 1 48
+- - - - 4 4 4 4 4 4 	2r2k2/1p3p1b/p2P1Q1p/6p1/3B1p2/P1N2R1P/6PK/2q5 w - - 3 37
+- - 5 - - 4 4 4 4 4 	4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+- - - - 4 4 4 4 4 4 	6k1/1p3rP1/2p2PQ1/4p3/3P4/4PRK1/q7/8 w - - 1 42
+- - - - - - - 4 4 4 	6k1/5p1p/2R5/p7/5p2/P5qP/1PP3P1/4r1QK b - - 6 33
+- - - - - - 4 4 4 4 	6k1/p2R1p2/6p1/1p1Q4/8/n3P1P1/5qKP/8 w - - 0 37
+- - 4 4 4 4 4 4 4 4 	8/4Ppk1/1pQ5/2pp4/p2P1K2/r1P2P1P/8/8 w - - 1 50
+- - - - - - - 4 - 4 	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+- - - - 4 4 4 4 4 4 	8/Q7/5pkp/1p3P1p/1P6/P3p1P1/3r1q2/R6K b - - 0 44
+- - - - - - 4 5 4 4 	8/p3Q2p/p3pn1k/4N3/8/1P5P/q5PK/8 w - - 2 35
+- - - 5 4 4 4 4 4 4 	R1q2Q2/1p4pk/1p2p1p1/1n1pP2p/3P3P/2P1B1P1/5PK1/4r3 w - - 6 38
+- - - - - - - - - - 	r5k1/pp1Q3p/6p1/2n2p2/2pP4/B3R3/6PP/3R2K1 w - - 1 33
+- - - - - - 4 4 4 4 	r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34
+- - - - - 4 4 4 4 4 	rn4k1/p4q2/2p1B3/1pbp1p2/7R/2N3P1/PPP1Q2P/7K w - - 0 25
+- - - - - - - 5 5 5 	1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52
+- - - - - - - 6 5 5 	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+- - - - - - - - - 5 	3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62
+- - - - - - - - - - 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+- - - - - - - - - 6 	6k1/3R4/P6p/5pp1/3p2P1/3K1P2/8/4b3 w - - 3 48
+- - - - - - - - 6 - 	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+- - - - - - - - - - 	6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+- - - - - - - - - 5 	7k/5R2/6K1/3R3p/6r1/8/8/8 w - - 3 86
+- - - - - - - - - - 	7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54
+- - - - - - - - - - 	8/2P3pk/4Bp1p/p1K5/1p6/5P2/7P/8 w - - 0 50
+- - - - - - - - - 6 	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+- - - - - - 5 5 5 5 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+- - - - 5 - - 5 5 5 	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+- - - - - - - - - - 	r4b1k/5Qp1/p3P2p/3p1N2/3p1B2/7P/q4PP1/5RK1 w - - 3 27
+- - - - - - - - - - 	1k6/8/2K5/6R1/1P6/8/8/5b2 w - - 1 72
+- - - - - - - - - - 	1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31
+- - - - - - - - 8 6 	2r2k2/5P2/8/5K1R/6P1/2qp3P/8/8 b - - 3 59
+- - - - - - - - - - 	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+- - - - - - - - 6 - 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+- - - - - - - - 8 8 	3r2k1/4r1b1/ppQ5/8/1P2pR2/2PP4/P4P2/2R1KN1q b - - 2 38
+- - - - - - - - 6 - 	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+- - - - - - - - 6 6 	4r3/4kpQ1/3Rq3/3P3p/Pr6/1nN5/5P1P/6K1 w - - 0 37
+- - - - - - - - 6 - 	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+- - - - - - - - - - 	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+- - - - - - 6 6 6 6 	5qr1/7k/4R2b/p3QppP/1nP5/1PB2NP1/6K1/8 w - - 1 36
+- - - - - - - - - 6 	5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58
+- - - - - - - - - 7 	5r2/7k/Q2p1qp1/2pPp3/2P1b1Bp/1r2P2P/7K/3NR3 b - - 3 47
+- - - - - - - 6 6 - 	6k1/1R6/6p1/1p6/3n4/1PB4R/1P5K/3r4 w - - 1 43
+- - - - - - - - - - 	6k1/p7/5b1p/8/1P2b3/P1Pp1NPK/1B3P1P/4r3 b - - 3 30
+- - - - - - - - - 6 	8/2N1Pkp1/1p1P3p/2p2p2/5p2/1P3P2/6PP/b4K2 w - - 3 41
+- - - - - - - - - 6 	8/5k2/p6p/1p2r1P1/1P6/P1P1Bp1b/5P1P/6K1 b - - 0 36
+- - - - - - - - 6 6 	8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44
+- - - - - - - 6 6 - 	k6r/p4ppp/Bpp4q/3Q4/P7/B1P2P2/7P/5R1K w - - 0 26
+- - - - - - - - - - 	r5rk/1pp4p/5b1q/3P1pN1/8/PQ2P2b/1PBN4/R5K1 b - - 0 31
+2 2 2 2 - 2 - - - - 	1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/Q7 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2k1brbr/3p1p1p/3P1P1P/8/8/8/5QK1/8 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2k5/8/8/8/3q4/2p1p1p1/2P1P1P1/2RBRBK1 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	2rbrbk1/2p1p1p1/2P1P1P1/8/2Q5/8/8/2K5 w - - 0 1
+2 2 2 - - - - - - - 	3k4/8/K7/5q2/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4K3/8/8/4k3/5q2/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4brbr/3p1p1p/3P1P1P/8/8/8/2Q1K3/6k1 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4brbr/p2p1p1p/P2P1P1P/2R5/8/8/4K3/7k w - - 0 1
+2 2 2 2 - 2 - 2 2 - 	4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	4k3/8/3q4/8/8/1p1p1p2/1P1P1P2/2BRBR1K b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	7q/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/3k4/8/7q/8/1p1p1p2/1P1P1P2/1KBRBR2 b - - 0 1
+2 2 2 - - - - - - - 	8/4k3/1r6/8/8/p1p1p2p/P1P1P2P/RBRB2K1 b - - 0 1
+2 2 2 - 2 2 2 - - - 	8/7r/1k6/8/8/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/2n5/8/8/p1np1p1p/P2P1P1P/K1k1BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/3n4/8/8/pn1p1p1p/P2P1P1P/1k1KBRBR b - - 0 1
+2 2 2 - 2 - - - - - 	8/8/8/3r4/6k1/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1
+2 2 2 2 2 2 2 2 2 2 	8/8/8/7q/8/2p1p1p1/2P1PkP1/K1RBRB2 b - - 0 1
+2 2 2 - - 2 - - 2 2 	rbrb1K2/p1p1p3/P1P1P2k/Q7/8/8/8/8 w - - 0 1
+2 2 2 - - - - - - - 	rbrb1k2/p1p1p1Rp/P1P1P2P/8/8/2K5/8/8 w - - 0 1
+2 2 2 - - - - 2 - - 	rbrb4/p1p1p2p/P1P1P2P/2K5/8/k7/2R5/8 w - - 0 1
+2 2 2 2 2 2 2 2 2 2 	rbrb4/p1p1p3/P1P1P3/k7/2K5/7Q/8/8 w - - 0 1
+- - - - - - 3 3 3 3 	1krbrb1Q/2p1p1p1/2P1P1P1/2K5/8/8/8/8 w - - 0 1
+- - - - 3 - 3 - 3 3 	1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+- - 3 3 - - - - - - 	3kbrbr/p2p1p1p/P2P1P1P/8/8/8/8/2KR4 w - - 0 1
+- - - - - - - - - - 	4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/3P1P1P/8/1K6/2Q5/8/1k6 w - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/3P1P1P/8/8/2Q5/4k1K1/8 w - - 0 1
+- - - 3 3 3 3 3 3 3 	7K/8/3qk3/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	8/2k5/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR b - - 0 1
+- - - - - - - - - - 	8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+- - 3 3 - - - - - - 	8/5k2/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR b - - 0 1
+- - - - - - - 3 3 3 	8/8/2k3q1/8/8/2p1p1p1/2P1P1P1/1KRBRB2 b - - 0 1
+- - - - - - 4 - - - 	8/8/3q4/8/8/p1p1p3/P1P1P3/RBRBk2K b - - 0 1
+- - - 3 - - - 3 3 3 	8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1
+- - 3 3 - - - - - - 	8/8/8/2r3k1/8/p1p1p2p/P1P1P2P/RBRB3K b - - 0 1
+- - - - - - 3 3 3 3 	8/8/8/5k2/8/2p1p1pq/2P1P1P1/1KRBRB2 b - - 0 1
+- - - - 3 - 3 3 3 3 	Q1brbrk1/1p1p1p2/1P1P1P2/8/8/5K2/8/8 w - - 0 1
+- - 3 3 - - - - - - 	k3brbr/p2p1p1p/P2P1P1P/8/4K3/8/8/R7 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/8/8/8/5k1K/1Q6 w - - 0 1
+- - - - - - - - - - 	rbrbk3/p1p1p2p/P1P1P2P/6K1/8/7R/8/8 w - - 0 1
+- - - - - - - - - - 	rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1
+- - - - - - - - - - 	1K6/2r5/8/3k4/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+- - - - - - - 4 - - 	1k2brbr/p2pKpRp/P2P1P1P/8/8/8/8/8 w - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/3P1P1P/3K4/2Q5/8/1k6/8 w - - 0 1
+- - - - - - - - - - 	4brbr/p2p1p1p/P2P1P1P/8/1K6/2R5/k7/8 w - - 0 1
+- - - - - - - - - - 	7K/4k3/8/8/8/p1p1p2p/P1P1P2P/RBRB3r b - - 0 1
+- - - - - - - - - - 	7K/8/3k4/8/q7/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+- - - - - - - - - - 	k1K5/8/8/4q3/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	k3brbr/3p1p1p/3P1P1P/8/K7/8/8/5Q2 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/7R/1k1K4 w - - 0 1
+- - - - - 4 - - - - 	rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/k3K3/2Q5/8/8/8 w - - 0 1
+- - - - - - - - - - 	2K5/7q/8/7k/8/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+- - - - - - - - - - 	4brbr/3p1p1p/1k1P1P1P/8/K1Q5/8/8/8 w - - 0 1
+- - - - - - - - - - 	7K/6r1/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+- - - - - - - - - - 	8/1q6/8/4k3/8/3p1p1p/3P1P1P/K3BRBR b - - 0 1
+- - - - - - - - - - 	8/8/K7/5r2/k7/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/1k1K4/2R5 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/6Q1/8/1K5k/8/8 w - - 0 1
+- - - - - - - - - - 	rbrb4/p1p1p3/P1P1P3/8/1k6/8/2QK4/8 w - - 0 1
+- - - - - - - - - - 	8/1k6/3K4/pp6/1P1Q4/r2p4/8/8 w - - 0 79
+- - - - 4 - 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+- - 3 3 - 3 3 3 3 3 	k7/6Q1/2K5/pp6/1P6/2rp4/8/8 w - - 4 81
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+- - - - - - - - - - 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/3r1P1P/5QK1 b - - 7 41
+- - - - - - - 5 5 5 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/5r1P/3Q2K1 b - - 1 42
+- - - - - - - - - - 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+- - - - - - - - - - 	r5k1/5p2/8/2P5/4pp2/3n1PPp/1Q5P/7K b - - 0 49
+- - - - - - - - 6 - 	1R6/8/2p3p1/P5P1/1p2b2P/4kpK1/6B1/8 b - - 0 53
+- - - - - - - 5 5 5 	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+- - - - - - - - - 4 	7k/5B2/5b1p/1N6/PPp5/2P3PP/4q3/6K1 b - - 0 40
+- - - - - - - - - 4 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+- - - - - - - 5 5 5 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+- - - 5 4 4 4 4 4 4 	6k1/5pp1/7p/1PP1p3/1Q1BPnP1/3r1q1P/3R4/6K1 b - - 2 43
+
+# OBSERVED RED, THEN GREEN (S033 protocol), on a clean worktree of the whole-tree
+# fixture 187fa29 with this row in tests/test_search.cpp: ./test_search
+# --test-case="pruning does not hide a forced mate" with the guard in place:
+#   [doctest] test cases:  1 |  1 passed | 0 failed | 216 skipped
+#   [doctest] assertions: 67 | 67 passed | 0 failed |
+#   [doctest] Status: SUCCESS!
+# and with `const bool no_tt_move = tt_move == 0;` made `= true`:
+#   tests/test_search.cpp:4873: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+#     values: REQUIRE( false )
+#     logged: mate the extra ply hides, depth 8
+#   [doctest] test cases:  1 |  0 passed | 1 failed | 216 skipped
+#   [doctest] assertions: 38 | 37 passed | 1 failed |
+#   [doctest] Status: FAILURE!

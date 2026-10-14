@@ -180,6 +180,29 @@ void history_on_quiet_cutoff(search_state_t* state,
                              int depth,
                              move_t prev_move);
 
+// One fail-high, for the capture table (S023): the malus to every capture
+// tried at that node before the cutoff move, and the bonus to the cutoff move
+// when it is itself a capture, both graded by `depth` on CaptHistBonus and
+// CaptHistMalus and bounded by CAPT_HIST_BOUND. `captures_tried` never
+// contains `cutoff_move`, for history_on_quiet_cutoff's structural reason, and
+// holds captures only. `board` is the position every one of those moves is
+// played from, which is where capture_history_entry reads each victim.
+// Declared here so a test can hold the update directly.
+void history_on_capture_cutoff(search_state_t* state,
+                               const board_t* board,
+                               move_t cutoff_move,
+                               const move_t* captures_tried,
+                               size_t captures_tried_count,
+                               int depth);
+
+// The two margins capture history moves, S023, as the search computes them
+// from a cell's value: S091's capture SEE margin at a reduced depth and S112's
+// quiescence futility margin, each with the record's term added and floored at
+// 0. So a case can hold the arithmetic, the sign and the floor directly; the
+// cases that drive a node hold that the search reads them.
+int search_capture_see_margin_probe(int lmr_depth, int entry);
+int search_capture_futility_margin_probe(int entry);
+
 // The reduction the built table holds for a (depth, move number) pair, **in
 // whole plies under this tree's own rounding rule**. It exists for two tests.
 // S073's: LMR_BASE and LMR_DIVISOR are read once, when the table is built, so a

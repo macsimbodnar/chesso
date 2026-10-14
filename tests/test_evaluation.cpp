@@ -1593,6 +1593,82 @@ TEST_SUITE("evaluation: score_move ordering")
          "]."));
   }
 
+
+  // S023's accepts, and written before any score changes, as the step file's
+  // Promoted section asks: the ordering bands stay disjoint, discharged by a
+  // case ctest runs and not by reading a diff (2026-08-13_plan_review.2-F06).
+  // The cheapest capture there is -- the king taking a pawn -- is scored
+  // against a killer at the same ply, and the capture has to win. CLAUDE.md's
+  // hazard: the bands clear each other by 100, a term added to a capture's
+  // score can invert this, and the symptom is lost rating and not a wrong node
+  // count.
+  //
+  // The king's capture is scored at the worst record capture history can
+  // hold, at none, and at the best. S023's first verdict reads the table in
+  // two pruning margins and not here, so today the record moves nothing and
+  // the case holds the clearance the bands already have; the second verdict
+  // lets a bounded term into score_move, and it arrives under this case
+  // rather than beside it.
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "a king capturing a pawn outranks a killer at the same ply")
+  {
+    // The rook gives the side to move quiet moves, and the black pawn on e2 is
+    // the king's to take: the same board the case above reads its 100 from.
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/4p3/R3K3 w - - 0 1", &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+
+    move_t king_takes_pawn = 0;
+    move_t killer = 0;
+
+    for (size_t i = 0; i < count; ++i) {
+      if (MOVE_CAPTURE(moves[i])) {
+        if (MOVE_PIECE(moves[i]) == W_KING) { king_takes_pawn = moves[i]; }
+      } else if (MOVE_PROMOTED(moves[i]) == TO_NONE && killer == 0) {
+        killer = moves[i];
+      }
+    }
+
+    // The capture this case is about, and nothing that would make it a
+    // different band: the dearest attacker taking the cheapest victim, with no
+    // promotion bonus on top.
+    REQUIRE(king_takes_pawn != 0);
+    REQUIRE(killer != 0);
+    REQUIRE_EQ(game.board.squares[MOVE_TO(king_takes_pawn)], B_PAWN);
+    REQUIRE_EQ(MOVE_PROMOTED(king_takes_pawn), TO_NONE);
+
+    const size_t ply = 3;
+
+    search_state_t state = {};
+    state.killer_moves[0][ply] = killer;
+
+    // The killer is scored as a killer at this ply: the same quiet one ply
+    // away, where no slot holds it, scores below it. Without this the case
+    // could be comparing the capture against a plain quiet.
+    REQUIRE(score_move(&game, &state, killer, 0, ply, 0) >
+            score_move(&game, &state, killer, 0, ply + 1, 0));
+
+    int16_t& record =
+        capture_history_entry(&state, &game.board, king_takes_pawn);
+
+    for (const int planted : {-CAPT_HIST_BOUND, 0, CAPT_HIST_BOUND}) {
+      record = static_cast<int16_t>(planted);
+
+      const int s_capture =
+          score_move(&game, &state, king_takes_pawn, 0, ply, 0);
+      const int s_killer = score_move(&game, &state, killer, 0, ply, 0);
+
+      CHECK_MESSAGE(
+          s_capture > s_killer,
+          ("With a capture record of " + std::to_string(planted) +
+           " the king taking a pawn scores " + std::to_string(s_capture) +
+           " against the killer's " + std::to_string(s_killer) +
+           " at the same ply: the capture band no longer clears "
+           "the killer band."));
+    }
+  }
+
   TEST_CASE_FIXTURE(eval_fixture_t, "a promotion outranks a plain quiet move")
   {
     REQUIRE(load_FEN("6k1/4P3/8/8/8/8/8/4K3 w - - 0 1", &game));

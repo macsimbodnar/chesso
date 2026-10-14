@@ -84,6 +84,11 @@
 // (1)) and `LmrDivisor` (DEC-278) -- and six came back where they started:
 // `LmrNotImproving`, `LmrTtCapture`, `LmrPv`, `LmrNoTtMove`, `SeeCaptureCoeff`
 // and `LmpDepthCoeff`. The count stays 73 and no range moves.
+// S023 verdict 1 adds four: `CaptHistBonus` and `CaptHistMalus`, the capture
+// table's graded update, and `CaptHistQsWeight` and `CaptHistSeeWeight`, how
+// far a capture's record may move the quiescence futility margin and the
+// capture SEE margin. Both weights at 0 is the parent's tree; so is both
+// update shares at 0. The count goes 73 to 77.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -96,7 +101,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 73 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 77 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -120,9 +125,12 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"ContHistBonus",            17,     0,    1000},
   {"ContHistMalus",            18,     0,    1000},
   {"ContHistWeight",           26,     0,    2000},
+  {"CaptHistBonus",           106,     0,    1000},
+  {"CaptHistMalus",            25,     0,    1000},
   {"MaxQsearchDepth",          19,     1,      64},
   {"QsFutility",                1,     0,       1},
   {"QsFutilityMargin",        226,     0,    2000},
+  {"CaptHistQsWeight",         94,     0,    2000},
   {"QsQueenPromotions",         1,     0,       1},
   {"RfpMargin",                63,     0,    2000},
   {"RfpMaxDepth",              15,     0,      63},
@@ -154,6 +162,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"SeeQuietMaxLmrDepth",      10,     0,      16},
   {"SeeCaptureCoeff",          50,     0,   10000},
   {"SeeCaptureMaxLmrDepth",     9,     0,      16},
+  {"CaptHistSeeWeight",       100,     0,     900},
   {"SeeLmrExtra",               1,     0,       3},
   {"SeExtend",                  1,     0,       1},
   {"SeMinDepth",                6,     4,      16},
@@ -221,6 +230,53 @@ TEST_SUITE("search parameters")
                     ("Default below min on [" + std::string(param.name) + "]"));
       CHECK_MESSAGE(param.default_value <= param.max_value,
                     ("Default above max on [" + std::string(param.name) + "]"));
+    }
+  }
+
+
+  // S023. The capture table's four ranges are declared by purpose against
+  // numbers the tree carries elsewhere, so the purpose is held here rather
+  // than restated: the quiescence weight's top is QsFutilityMargin's own top,
+  // the two update shares top out at one whole band (1000 thousandths), every
+  // floor is the off value 0, and both weights' tops keep `weight * entry`
+  // inside int32 at the table's bound -- which is what lets
+  // capture_record_term in src/search.cpp multiply in `int`.
+  TEST_CASE("the capture table's ranges are the ones their purpose declares")
+  {
+    const int bonus = index_of("CaptHistBonus");
+    const int malus = index_of("CaptHistMalus");
+    const int qs_weight = index_of("CaptHistQsWeight");
+    const int see_weight = index_of("CaptHistSeeWeight");
+    const int qs_margin = index_of("QsFutilityMargin");
+
+    REQUIRE(bonus >= 0);
+    REQUIRE(malus >= 0);
+    REQUIRE(qs_weight >= 0);
+    REQUIRE(see_weight >= 0);
+    REQUIRE(qs_margin >= 0);
+
+    for (const int index : {bonus, malus, qs_weight, see_weight}) {
+      const search_param_t& param =
+          search_param_info(static_cast<size_t>(index));
+
+      CHECK_MESSAGE(param.min_value == 0,
+                    ("[" + std::string(param.name) + "] has no off value"));
+    }
+
+    CHECK_EQ(search_param_info(static_cast<size_t>(bonus)).max_value, 1000);
+    CHECK_EQ(search_param_info(static_cast<size_t>(malus)).max_value, 1000);
+    CHECK_EQ(search_param_info(static_cast<size_t>(qs_weight)).max_value,
+             search_param_info(static_cast<size_t>(qs_margin)).max_value);
+
+    for (const int index : {qs_weight, see_weight}) {
+      const search_param_t& param =
+          search_param_info(static_cast<size_t>(index));
+      const int64_t worst =
+          static_cast<int64_t>(param.max_value) * CAPT_HIST_BOUND;
+
+      CHECK_MESSAGE(worst < static_cast<int64_t>(INT32_MAX),
+                    ("[" + std::string(param.name) +
+                     "] at its top overflows the record term"));
     }
   }
 
@@ -742,6 +798,51 @@ TEST_SUITE("search parameters")
 
     REQUIRE(search_param_set(max_param.name, max_param.default_value));
     REQUIRE(search_param_set(percent_param.name, percent_param.default_value));
+  }
+
+
+  // S023. Both capture margins are floored at 0, and the floor is the one
+  // thing about them a weight inside its declared range can reach that the
+  // defaults never show for the quiescence margin: its seed weight is under
+  // QsFutilityMargin, so the worst record leaves it positive there. At each
+  // weight's declared top the worst record would drive the unfloored margin
+  // far below 0, so this is where the floor is observed rather than argued --
+  // for the build that can set the weight, which is the one the floor is for.
+  TEST_CASE(
+      "the capture margins stay at zero or above at every weight the "
+      "ranges admit")
+  {
+    const int qs_weight = index_of("CaptHistQsWeight");
+    const int see_weight = index_of("CaptHistSeeWeight");
+
+    REQUIRE(qs_weight >= 0);
+    REQUIRE(see_weight >= 0);
+
+    const search_param_t& qs_param =
+        search_param_info(static_cast<size_t>(qs_weight));
+    const search_param_t& see_param =
+        search_param_info(static_cast<size_t>(see_weight));
+
+    // The precondition: at each top the term outweighs what it is added to,
+    // so without the floor the margin would be negative here.
+    REQUIRE(qs_param.max_value > QS_FUTILITY_MARGIN);
+    REQUIRE(see_param.max_value > 0);
+
+    REQUIRE(search_param_set(qs_param.name, qs_param.max_value));
+    REQUIRE(search_param_set(see_param.name, see_param.max_value));
+
+    CHECK_EQ(search_capture_futility_margin_probe(-CAPT_HIST_BOUND), 0);
+    CHECK_EQ(search_capture_see_margin_probe(0, -CAPT_HIST_BOUND), 0);
+
+    // And the best record at the same tops is the whole weight on top of the
+    // margin it moves, so the term is live and not a weight the probe ignores.
+    CHECK_EQ(search_capture_futility_margin_probe(CAPT_HIST_BOUND),
+             QS_FUTILITY_MARGIN + qs_param.max_value);
+    CHECK_EQ(search_capture_see_margin_probe(0, CAPT_HIST_BOUND),
+             see_param.max_value);
+
+    REQUIRE(search_param_set(qs_param.name, qs_param.default_value));
+    REQUIRE(search_param_set(see_param.name, see_param.default_value));
   }
 
 

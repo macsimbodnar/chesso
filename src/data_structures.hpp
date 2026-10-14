@@ -816,6 +816,21 @@ struct search_node_probe_t
   int pruned_count = 0;
   move_t pruned_moves[MAX_MOVES];
   int pruned_rule[MAX_MOVES];
+
+  // One entry per capture S091's capture rule weighed at this node -- past
+  // the first legal move, inside its cap -- in the order it weighed them,
+  // whether it then skipped the capture or not: the move, its move number,
+  // the reduced depth, the capture's cell of capture_history as the node read
+  // it and the margin the rule tested with. Since S023 that margin carries a
+  // record the search writes as it goes, so a case that states which captures
+  // the margin clears reads the number the node used rather than recomputing
+  // one from an empty table. S023's fast check.
+  int capture_rule_count = 0;
+  move_t capture_rule_moves[MAX_MOVES];
+  int capture_rule_move_number[MAX_MOVES];
+  int capture_rule_lmr_depth[MAX_MOVES];
+  int capture_rule_record[MAX_MOVES];
+  int capture_rule_margin[MAX_MOVES];
 };
 
 
@@ -846,6 +861,33 @@ static_assert(CONT_HIST_BOUND == INT16_MAX,
               "cont_hist entries are int16_t and gravity holds them inside "
               "this bound, so a bound above the type's own would be a promise "
               "the storage cannot keep");
+
+// S023. The capture table's gravity bound and the depth its graded update is
+// quoted at, both definitions for the reasons the two constants above are.
+//
+// CAPT_HIST_BOUND is the entry type's own ceiling, fixed by S222's argument: a
+// bound and the weights that read the table are one degree of freedom, so the
+// bound is pinned at the widest value the storage admits and the readers'
+// weights carry the whole product. Every reader takes an entry as a share of
+// this bound -- `weight * entry / CAPT_HIST_BOUND` -- so a weight is the most
+// its term can ever be, in the reader's own unit, at either edge.
+//
+// CAPT_HIST_REF_DEPTH is the same median depth CONT_HIST_REF_DEPTH names,
+// spelled separately so that the capture table's unit is its own definition
+// and a change to the continuation table's cannot move it.
+inline constexpr int CAPT_HIST_BOUND = 32767;
+inline constexpr int CAPT_HIST_REF_DEPTH = 11;
+
+static_assert(CAPT_HIST_BOUND == INT16_MAX,
+              "capture_history entries are int16_t and gravity holds them "
+              "inside this bound, so a bound above the type's own would be a "
+              "promise the storage cannot keep");
+
+// The victim types the capture table is indexed by: pawn to queen, and a sixth
+// column for the king. No legal capture takes a king, so that column is never
+// written; it is there so that an index derived from a board cannot leave the
+// table whatever the board holds.
+inline constexpr int CAPT_HIST_VICTIMS = 6;
 
 
 struct search_state_t
@@ -954,6 +996,26 @@ struct search_state_t
   // (W_PAWN, a8) cell rather than an out-of-range index, so a dropped guard
   // costs a silent wrong-cell write and not a crash. S222, and S024 before it.
   int16_t cont_hist[12][64][12][64];
+
+  // Capture history, S023: [moving piece][target square][victim type], the
+  // CPW History Heuristic page's capture history -- a table indexed by the
+  // moved piece, the target square and the captured piece type, credited on a
+  // cutoff and charged otherwise. Written at every fail-high in negamax_at:
+  // the capture that cut off is credited and every capture the node searched
+  // before the cutoff move is charged, whatever class the cutoff move is.
+  // Read by two margins and by nothing else -- S091's capture SEE pruning in
+  // the move loop and S112's per-move futility in quiescence -- each through
+  // its own weight in src/search_params.hpp. Not read by score_move.
+  //
+  // Reached only through capture_history_entry() below, so the write and the
+  // two reads cannot disagree about which cell a capture owns. Bounded by
+  // CAPT_HIST_BOUND under history_gravity_update, int16_t for that reason.
+  // 12 * 64 * 6 int16_t is 9 KiB.
+  //
+  // Per-thread: a member of the search state each searching thread builds,
+  // zeroed with it at every `go` the way quiet_history and cont_hist are, and
+  // shared with nothing (specs.md, the parallel-search item, DEC-175).
+  int16_t capture_history[12][64][CAPT_HIST_VICTIMS];
 
   // Where a proved mate line is left for the searches that come after this
   // one. Null unless a caller supplies one, which keeps every direct caller of
@@ -1067,4 +1129,41 @@ inline int16_t continuation_entry(const search_state_t* state,
 {
   return state->cont_hist[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)]
                          [MOVE_PIECE(move)][MOVE_TO(move)];
+}
+
+
+// The victim column of a capture, read off the board the capture is played
+// from: pawn 0 to queen 4, the piece_t of either colour modulo six. En passant
+// lands on an empty square, and the pawn it takes is a pawn. Only for a move
+// that captures -- on any other move the target square is EMPTY, which would
+// read as a pawn. S023.
+inline int capture_victim_type(const board_t* board, move_t move)
+{
+  if (MOVE_EN_PASSANT(move)) { return W_PAWN; }
+
+  return board->squares[MOVE_TO(move)] % 6;
+}
+
+
+// THE ONE INDEX INTO capture_history, for continuation_entry's reason: the
+// write in history_on_capture_cutoff and the two margin reads go through one
+// of these two overloads, so no site can disagree with another about which
+// cell a capture owns. `board` is the position the capture is played from --
+// pre-make, where the victim still stands on the target square. Keyed on
+// MOVE_PIECE, so a capturing promotion is the pawn's capture, which is the
+// piece that moves. S023.
+inline int16_t& capture_history_entry(search_state_t* state,
+                                      const board_t* board,
+                                      move_t move)
+{
+  return state->capture_history[MOVE_PIECE(move)][MOVE_TO(move)]
+                               [capture_victim_type(board, move)];
+}
+
+inline int16_t capture_history_entry(const search_state_t* state,
+                                     const board_t* board,
+                                     move_t move)
+{
+  return state->capture_history[MOVE_PIECE(move)][MOVE_TO(move)]
+                               [capture_victim_type(board, move)];
 }
