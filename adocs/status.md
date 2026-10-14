@@ -7,7 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S279 done (`go nodes` exact); S261's phase 2 resumes on it
+## 2026-10-14: S261's SPRT running; S279 done (`go nodes` exact)
+
+**S261's SPRT is running** (`adocs/data/S261_sprt.sh`, launched 2026-10-14
+~03:45): CAND `1b84f4b`, the lane's vector (21 of 31 defaults move; holds
+`LmrCutNode`, `SeeLmrExtra`, `LmrDeeperMinReduction` 2, `LmrDivisor` 182),
+against REF `574480e`, its parent. {0, 5} nElo, 8+0.08, Hash 16, noob_3moves,
+concurrency 12; 41861 expected games at the midpoint, cap 40000 (19.0 h).
+Output `.tuning/sprt_s261_<stamp>/`. bench 3872032 -> 5636835. Every golden
+the vector moved was re-derived by its script; LQ02/LQ03 re-mined in release
+(DEC-281, DEC-280 void); F's carry ceiling 0 -> 1 and S279 inside the REF
+exception (DEC-282), both flagged to the owner. On H1: DEC-220 block, ledger,
+the S267 drift point against `1680439` and the 32+0.32 Hash 64 reading. On
+H0 or no verdict: `1b84f4b` reverted. The machine is held; written-ahead
+work only (DEC-260).
 
 **S279 landed**: quiescence checks the limits above its table probe. A table
 cutoff that spent a `go nodes` budget, or landed on the stop flag's 2048-node
