@@ -1,0 +1,5 @@
+# S267's drift series: HEAD against 1680439, the build S240 rated, one fixed
+# 1000-pair match at the harness regime per block boundary (S267 accepts (5)).
+# Appended by adocs/data/S199_drift.py --tsv; NOT A VERDICT (DEC-143, DEC-108).
+date	head	ref	regime	games	elo	elo_95	nelo	nelo_95	ptnml	pair_var	verdicts_since	conversions_since
+2026-10-14	e9d91e3	1680439	8+0.08/16/noob_3moves.epd	2000	147.40	12.91	195.67	15.23	[16,94,247,359,284]	0.2528	S113,S131,S115,S116,S272,S119,S261	none
