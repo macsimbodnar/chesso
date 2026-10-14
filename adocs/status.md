@@ -35,14 +35,26 @@ S025 conditional per DEC-273. **H0 or no verdict:** revert with the band
 case kept minus its loop; S025 and S265 to the reserve; a filler step
 re-mines the extra-ply row on the reverted tree.
 
-**Meanwhile, blind (DEC-260):** S283's pre-registration is written in
-`../chesso-s283` (diff `.tuning/coord/S283/s283_phase1.diff`) and waits on
-**S284** (DEC-289): `fastchess.sh` cannot take `{0, 10}` at alpha 0.05 or a
-round cap that keeps the SPRT, so a harness step adds `SPRT_BOUNDS` and
-`SPRT_ROUNDS`, landing after S023's run ends (bash reads a running script).
-No A/A owed: no played setting moves. Then S039 rebased onto `4e6ca63`
-(`../chesso-s039d`). The prose checks on `4e6ca63`'s successors run after
-the match (DEC-260).
+**Written blind, waiting for the machine (DEC-260):**
+- **S284** (`../chesso-s284`, diff `.tuning/coord/S284/s284_phase1.diff`):
+  `fastchess.sh` reads `SPRT_BOUNDS` and `SPRT_ROUNDS` (DEC-289), refused
+  beside a mode or `ROUNDS`, the cap on the banner, run tag `env`; cases
+  33-40, 40 the default command line unchanged. Phase 2 about 15 min, after
+  S023's run ends (bash reads a running script). No A/A owed.
+- **S283** (`../chesso-s283`, diff `.tuning/coord/S283/s283_phase1.diff`):
+  `{0, 10}` at 0.05, 32+0.32, Hash 64, cap 5250 rounds (10500 games,
+  19.7 h); refuses unless `fastchess.sh` reads both names.
+- **S039** (`../chesso-s039d` at `4e6ca63`, diff
+  `.tuning/coord/S039/s039_on_4e6ca63.diff`): rebased onto S023's
+  candidate, every src/ hunk clean, two S023 cases converted (stand pat
+  from `empty_table_stand_pat()`), count 76, 19 goldens PENDING; each hunk's
+  form on S023's H0 recorded. 8 paths still UU in its index (resolved in
+  the tree; `git add` before committing). Phase 2 about 2.5 h (3.5 h with
+  every re-mine).
+- **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`,
+  written on S099's candidate): to be rebased onto S039's outcome.
+
+The prose checks on `bb20f35` and later run after the match (DEC-260).
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -51,19 +63,11 @@ the match (DEC-260).
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here:** S023 verdict 1's SPRT -> S284 (harness, DEC-289) ->
-S283, S099's pair at 32+0.32 (DEC-286) -> S039 (DEC-274) -> S082 (DEC-275), each rebased onto the
-tree before it while the previous run holds the machine. S282 (filler,
-DEC-171) is named in each pre-registration while open.
-
-**Waiting, written (DEC-260 lanes):**
-- **S039** (`../chesso-s039c`, diff `.tuning/coord/S039/s039_on_8ef820f.diff`,
-  written on S099's candidate): the lazy shortcut and the clamp retire
-  together; non-regression `{-5, 0}` (DEC-274). To be rebased onto
-  `adb5d78`.
-- **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`):
-  leaf walks, datagen `--leaf`, the tuner's `--holdout`, LW01-LW09. Phase 2
-  about 1 h 25 m, a ~9 h pool (a night), `compare` about 1 h 30 m.
+**Order from here (DEC-290):** S023 verdict 1's SPRT -> close it (H1
+kept, or H0 reverted) -> S284's phase 2 -> S039's phase 2 and candidate
+-> S283's run (DEC-286) -> S039's SPRT -> S023 verdict 2 (on 1's H1),
+S265, S025, written blind against S039's outcome meanwhile -> S082. S282
+(filler, DEC-171) is named in each pre-registration while open.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 

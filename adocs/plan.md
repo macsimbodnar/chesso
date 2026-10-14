@@ -372,9 +372,9 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 2. S282  **filler, DEC-171** -- `S192_node_budget.py`'s middle half reads its own derivation count as outside; state it in the band's terms and correct the rule's wording
 3. S284  **harness, DEC-289, before S283** -- `fastchess.sh` takes an SPRT's bounds and a round cap that keeps the SPRT from the environment; lands after S023 verdict 1's run ends
 4. S283  **after S023 verdict 1's SPRT and S284, DEC-286** -- S099's pair, `8758622` against `bacead1`, decided by an SPRT at 32+0.32, Hash 64, {0, 10} nElo; H1 relands S099
-5. S025  **conditional on S023's verdict 2 (ordering) H1, DEC-273** -- retry searching losing captures after the quiets, now that capture history exists
-6. S265  **conditional on S023's verdict 1 (margins) H1, DEC-273** -- late captures and promotions reduced on their own schedule, scaled by capture history
-7. S039  the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
+5. S039  **next engine landing after S023 verdict 1, DEC-290** -- the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
+6. S025  **conditional on S023's verdict 2 (ordering) H1, DEC-273** -- retry searching losing captures after the quiets, now that capture history exists
+7. S265  **conditional on S023's verdict 1 (margins) H1, DEC-273** -- late captures and promotions reduced on their own schedule, scaled by capture history
 8. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
 9. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 10. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family

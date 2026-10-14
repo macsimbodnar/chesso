@@ -15019,3 +15019,31 @@ Rejected:     Editing the mode block uncommitted for the run, the documented
 Consequences: S284 enters the Open list before S283. S283's phase 1 waits in
               `../chesso-s283` until S284 lands; its two coordinator sentences
               name S284's commit and S023's state on the day it is pinned.
+
+## DEC-290  2026-10-15  S039 is the next engine landing after S023 verdict 1 closes, ahead of S023's verdict 2, S265 and S025
+Tags:         plan-order, lanes, s039, s023, s283, s265, s025, dec-260, dec-273, dec-286
+Context:      S039 (the lazy shortcut and the clamp retire, `{-5, 0}`) has
+              been rebased blind three times: onto S099's candidate, and now
+              onto S023 verdict 1's candidate `adb5d78` (diff
+              `.tuning/coord/S039/s039_on_4e6ca63.diff`, with each hunk's form
+              on S023's H0 recorded). The Open list puts S283, S025 and S265
+              ahead of it, and on S023's H1 verdict 2 too; each engine landing
+              before S039 costs another blind rebase, re-mined rows and a
+              repeated phase 2. S283 measures a fixed pair (`8758622` against
+              `bacead1`) that no landing touches.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. After S023 verdict 1 closes (H1 kept, or H0
+              reverted), S039 is the next change to land in the engine: its
+              phase 2 runs on that tree after S284's, before S283's run starts,
+              and its candidate is committed then; S283's run follows as
+              DEC-286 booked it, after S023 verdict 1's SPRT; S039's SPRT
+              follows S283's. S023 verdict 2 (on verdict 1's H1), S265 and
+              S025 are written against S039's outcome, blind during those runs.
+              The Open list moves S039 from after S265 to after S283.
+Rejected:     Keeping the order -- S039 rebased again after each of up to four
+              landings, its phase 2 repeated each time, for no measurement
+              gained. Running S039's SPRT before S283's -- moves the owner's
+              booked run further from S023's verdict for no gain; S283's pair
+              does not see the tree.
+Consequences: S039's SPRT REF is S023 verdict 1's outcome. If S283 reads H1,
+              S099 relands onto S039's outcome by its own step.
