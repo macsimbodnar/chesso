@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-14 21:50 -- H0, the commit reverted whole. One verdict for the key and the correction together (DEC-271): SPRT H0 at {0, 5} nElo, 8+0.08, Hash 16, CAND `8758622` vs REF `bacead1`: Elo -3.47 +/- 5.03, nElo -4.71 +/- 6.84, LLR -2.96, 9916 games, 0 forfeits (`adocs/data/S099_sprt.log`, record `74bb9ad`); `8758622` reverted whole as `5a04ffa` (src/, tests/, tools/, the manuals, specs and `S170_cases.tsv` byte-identical to `6fc7f23`'s, bench 5636835 again, gate green), S110 and S111 to the reserve, S281 void, DEC-272, DEC-283 and DEC-284 lapsed. The DEC-202 estimate at 32+0.32, Hash 64, 1000 pairs, same pair: Elo +8.34 +/- 10.20, nElo +12.46 +/- 15.23, 0 forfeits (`adocs/data/S099_ltc.log`) -- positive, so by DEC-270 (3) and (4) a decision for the owner, the revert standing until they rule. As the candidate stood: the key branchless and node-identical on its own against `bacead1` (INV-6: bench 5636835, bench 12 1937969, search_bench 9 and 12); the table 4096 slots a side by DEC-270's census (p95 2844); bench 5636835 -> 6042933; fast suite 46/46 in both builds, format clean; Debug self-play four rounds, 8 games, 0 Assertion; `gate_extra` five stages green (1019 s); mutants CH01-15 and PK01-05 killed; goldens re-derived by their scripts (ceilings A 2, E 1 by DEC-284, F 2 by DEC-272, `EXACT_FLOOR` 163), all returned by the revert. Fast check: the update gate refused a fail-low whose top move was a capture, stricter than the published gate -- fixed red first with CH15 before the candidate commit. MANUAL.md, DEV_MANUAL.md and specs.md checked: the revert restores each. Implemented from the step file's description and the publications it cites (DEC-221) by Opus subagents briefed by the coordinator.
 
 ## Promoted 2026-10-08, DEC-258: a fixed slot, not an idle night
 
@@ -1758,3 +1758,22 @@ setting; the interval [-11.55, +2.13] nElo does not reach the bound. So:
    pair, as DEC-269 (2) did for S261. It ships nothing; a positive estimate
    opens a decision for the owner (DEC-270 (3)). No bisection is booked
    (DEC-270 (4)). S099 completes when it is read.
+
+### The 32+0.32 estimate (2026-10-14, coordinator)
+
+    CAND 8758622 vs REF bacead1, 32+0.32, Hash 64, noob_3moves.epd, 1000 pairs
+    Elo +8.34 +/- 10.20, nElo +12.46 +/- 15.23, LOS 94.56 %
+    Games 2000: W 500 L 452 D 1048, Ptnml [54, 215, 408, 275, 48]
+    3 h 42 m, 17:58 to 21:41; 0 forfeits either side, no crash, no
+    disconnect, no incomplete mating PV; adocs/data/S099_ltc.log
+
+An estimate, never a verdict (DEC-202). Its point estimate is positive and
+its interval, [-2.77, +27.69] nElo, reaches below zero. Beside the SPRT's
+-4.71 +/- 6.84 at 8+0.08 and Hash 16 the two readings differ by 17.2 nElo,
+about two standard errors combined (the SPRT's stopping estimate is itself
+biased, DEC-063): the shape DEC-222 (8) and DEC-269 (2) named as the risk
+this reading exists to show, a longer-control gain the harness reads as
+zero. It ships nothing. By DEC-270 (3) and (4) a positive estimate after an
+H0 opens a decision for the owner, and no bisection or follow-up run is
+booked by the coordinator: the revert stands until the owner rules. The
+untrimmed run is archived as `chesso_S099_ltc_2026-10-14.tar.xz`.

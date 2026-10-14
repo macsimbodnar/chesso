@@ -7,23 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S099 read H0; `8758622` is reverted whole
+## 2026-10-14: S099 done -- H0, reverted; its 32+0.32 estimate is positive
 
-**S099's SPRT read H0** (`adocs/data/S099_sprt.sh`): CAND `8758622`, the
-pawn key and the pawn-keyed correction in one commit, against REF `bacead1`,
+**S099 done.** SPRT H0 (`adocs/data/S099_sprt.sh`): CAND `8758622`, the pawn
+key and the pawn-keyed correction in one commit, against REF `bacead1`,
 `{0, 5}` at 8+0.08, Hash 16: `Elo -3.47 +/- 5.03`, `nElo -4.71 +/- 6.84`,
-LLR -2.96 over 9916 games, 4 h 36 m, 0 forfeits either side
-(`adocs/data/S099_sprt.log`; archived `chesso_S099_sprt_2026-10-14.tar.xz`).
-By the pre-registration's H0 row:
-- `8758622` is reverted whole -- code, tests, mutants, MANUAL, DEV_MANUAL,
-  specs and every golden (ceilings back to 0, 5, 4, 0, 0, 1, `EXACT_FLOOR`
-  159); the step file and the run's data stay;
-- S110 and S111 return to the reserve (step files kept in `plan_todo/`, off
-  the Open list); S281 is void (`plan_done/`); DEC-272, DEC-283 and DEC-284
-  lapse with the H1 they were conditional on;
-- one 32+0.32 Hash 64 estimate of the same pair, 1000 pairs, about 3 h
-  40 m; it ships nothing, a positive estimate opens a decision for the owner
-  (DEC-270 (3)). S099 completes when it is read.
+LLR -2.96 over 9916 games, 4 h 36 m, 0 forfeits (record `74bb9ad`). Reverted
+whole as `5a04ffa` -- code, tests, mutants, manuals, specs and every golden
+byte-identical to `6fc7f23`'s, bench 5636835, gate green; the step file and
+the run's data stay. S110 and S111 to the reserve (step files in
+`plan_todo/`, off the Open list); S281 void (`plan_done/`); DEC-272, DEC-283
+and DEC-284 lapsed. **The DEC-202 estimate**, same pair at 32+0.32, Hash 64,
+2000 games, 3 h 42 m: `Elo +8.34 +/- 10.20`, `nElo +12.46 +/- 15.23`,
+0 forfeits (`adocs/data/S099_ltc.log`). Archived:
+`chesso_S099_{sprt,ltc}_2026-10-14.tar.xz`.
+
+**Owner ruling owed (DEC-270 (3), (4)): S099's positive 32+0.32 estimate.**
+Why: a positive estimate after an H0 opens a decision the record gives to
+the owner; the coordinator books no follow-up. The two readings differ by
+17.2 nElo, about two standard errors -- the longer-control gain DEC-222 (8)
+named as the harness's blind spot, or noise. The revert stands meanwhile.
+- **(a) Close it** (the coordinator's default if no ruling comes): costs
+  nothing; leaves a possible longer-control gain unmeasured until a re-plan
+  proposes correction history again.
+- **(b) An SPRT at 32+0.32, Hash 64, `{0, 10}` nElo, on the same pair,
+  after S023's**: about 10500 games worst case scaled from DEC-143's 41861
+  at `{0, 5}`, about 19 h at 540 games an hour. H1 relands it (goldens
+  re-derived on the then-tree, S110 and S111 conditional again) and would
+  be the first change shipped on a longer control against an H0 at the
+  harness's, which wants its own decision; H0 closes it.
+- **(c) A second 1000-pair estimate** (3 h 45 m): pooled 4000 games,
+  about +/- 10.8 nElo; still decides nothing alone.
+- Recommendation: (b). Strength at real time controls is the goal, and this
+  is the case the 32+0.32 reading exists to catch; 19 h is one night and a
+  day, after S023.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -32,19 +49,18 @@ By the pre-registration's H0 row:
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here:** S099's revert -> its 32+0.32 estimate, while S023 is
-rebased blind onto the revert -> S023 verdict 1 (DEC-273) phase 2 and SPRT
-(REF = the revert's tree) -> S039 (DEC-274) -> S082 (DEC-275). S039 and S082
-were written against S099's candidate and are rebased again in turn.
+**Order from here:** S023 verdict 1 (DEC-273) phase 2 on `5a04ffa`'s
+tree, then its SPRT (REF = S099's completing commit, src/ = `5a04ffa`'s) ->
+S039 (DEC-274) -> S082 (DEC-275), each rebased again onto the tree before
+it while the previous run holds the machine.
 
 **Waiting, written (DEC-260 lanes):**
-- **S023** verdict 1 (`../chesso-s023c`, diff
-  `.tuning/coord/S023/s023_on_c3ed1ef.diff`, on S099's candidate): the
-  capture-history table and its capture SEE and quiescence futility readers,
-  4 parameters (count 79 there, 77 on the revert). No relaxation allowance;
-  LQ02/LQ03 re-mined by `S261_mine_late_capture.py` if red (only "no cell
-  found" stops). On the revert `src/` re-applies and seven docs/test files
-  are rewritten. Phase 2 about 2.5 h (up to 4 h), then its SPRT.
+- **S023** verdict 1, rebased blind onto the revert (`../chesso-s023d`, diff
+  `.tuning/coord/S023/s023_on_5a04ffa.diff`): the capture-history table and
+  its capture SEE and quiescence futility readers, 4 parameters (count 77).
+  No interaction left with S099. No relaxation allowance; LQ02/LQ03 (and
+  E21/B04) re-mined by their scripts if red (only "no cell found" stops).
+  Phase 2 about 2.5 h (up to 4 h), then its SPRT, 12.1 h on a bound.
 - **S039** (`../chesso-s039c`, diff `.tuning/coord/S039/s039_on_8ef820f.diff`):
   the lazy shortcut and the clamp retire together; non-regression `{-5, 0}`
   (DEC-274). Its S023 meeting points are listed hunk by hunk. Mined mate rows
@@ -55,7 +71,7 @@ were written against S099's candidate and are rebased again in turn.
   its abort test kept: S279 rewired that path untested). Phase 2 about 1 h
   25 m, a ~9 h pool (a night), `compare` about 1 h 30 m.
 
-**Done 2026-10-14:** S261 H1 (bench 3872032 -> 5636835; drift point nElo
+**Done 2026-10-14:** S099 H0, reverted (above); S261 H1 (bench 3872032 -> 5636835; drift point nElo
 +195.67 +/- 15.23 against `1680439`; 32+0.32 Hash 64 nElo +47.10 +/- 15.23);
 S280 (the mutation recipe's file transport); S279; `e7b1d04` comments;
 DEC-280 (void) to DEC-284.
