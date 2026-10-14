@@ -1845,7 +1845,7 @@ static int negamax_at(int alpha0,
   //                 it is a capture, and a fail-low here would answer the
   //                 verification without its question being asked. Inert at
   //                 the shipped depths -- the verification runs at
-  //                 `(depth - 1) / 2` from SeMinDepth 10, so at 4 or deeper --
+  //                 `(depth - 1) / 2` from SeMinDepth 6, so at 2 or deeper --
   //                 and not inert inside the declared ranges, where SeMinDepth
   //                 4 puts a verification at depth 1
   //   depth         RazorDepth. 0 is off, and proved off: no node reaches

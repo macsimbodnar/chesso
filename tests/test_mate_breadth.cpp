@@ -86,10 +86,10 @@
 // test_engine.
 static constexpr int SCORE_DEPTH = 10;
 
-// GOLDEN (DEC-142): 145, the fewest exact mate distances the engine may find
-// over the 318 mined positions of the tracked TSV at depth 10. Its two ends are
-// tabled above: 146 with the guard shipping, 143 with it weakened.
-// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 145, which
+// GOLDEN (DEC-142): 159, the fewest exact mate distances the engine may find
+// over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
+// 160 with the guard shipping, 156 with it weakened (S261, below).
+// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 159, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
@@ -102,7 +102,18 @@ static constexpr int SCORE_DEPTH = 10;
 // Property beside it: the `wrong_sign == 0` assertion in the same case -- a
 // mate score for the side being mated is a defect at any total, so it is
 // asserted at zero and carries no floor.
-static constexpr int EXACT_FLOOR = 145;
+//
+// **159 since S261, re-derived by the script (DEC-142, DEC-277).** On the
+// lane's vector S156's sweep reads **160** exact at RfpMinPly 3, 163 at 2 and
+// **156** at 1 and 0; the floor goes 1 below the shipping count, 3 above the
+// weakened one, and `--floor 159` builds the gate at RfpMinPly 1 and sees it
+// red at 156. The family reading that cleared the vector is DEC-277's F3 (the
+// S261 step file): 160 against the incumbent's 150. **It also closes a finding
+// on achesso's head:** the same sweep at `fd9e44c` and `870d210` read 150
+// shipping and 145 weakened, so the floor of 145 no longer separated and the
+// gate built at RfpMinPly 1 stayed green there -- found by S261 and closed by
+// this re-derivation (DEC-278).
+static constexpr int EXACT_FLOOR = 159;
 
 
 struct row_t

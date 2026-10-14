@@ -4193,12 +4193,12 @@ TEST_SUITE("engine: aspiration windows")
     };
 
     // GOLDEN (DEC-142): `first_mate_depth`, the iteration a mate score first
-    // appears at, one per position. **10 and 9 since S116**, 9 and 9 against
-    // the reference binary the comment above names. S188's check extension
-    // moved both to 8 -- an extension along a forcing line finds a forced
-    // mate an iteration earlier, which is what the technique is for -- and
-    // that step's H0 moved them back; the script below is what answered both
-    // times.
+    // appears at, one per position. **9 and 9 since S261** (10 and 9 at
+    // S116), 9 and 9 against the reference binary the comment above names.
+    // S188's check extension moved both to 8 -- an extension along a forcing
+    // line finds a forced mate an iteration earlier, which is what the
+    // technique is for -- and that step's H0 moved them back; the script below
+    // is what answered both times.
     //
     // A bare measurement with no way to re-take it until S188 gave it one --
     // itself a DEC-142 finding, closed there and kept here. Moves legitimately
@@ -4221,9 +4221,21 @@ TEST_SUITE("engine: aspiration windows")
     // row before it, which an H0 or a zero on S116 restores byte for byte:
     // `{"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5,
     // 9}`.
+    //
+    // **S261 moved the first back to 9, re-derived by that command (DEC-142,
+    // DEC-277).** The lane's vector moves pruning, reduction and the singular
+    // extension's depth gate together: on its tree the first position reads
+    // `d8:cp1097 d9:mate5 d10:mate5` and the second `d8:cp1297 d9:mate5
+    // d10:mate5`, so both mates first appear at 9 -- above `AspirationMinDepth`
+    // 2, with a centipawn iteration under each, which is the case still testing
+    // a mate that arrives through a narrowed window mid-search. The family
+    // reading that cleared the vector's mate guards is DEC-277's (the S261 step
+    // file). The row before it, which an H0 on S261 restores byte for byte:
+    // `{"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5,
+    // 10}`.
     // clang-format off
     const std::vector<case_t> cases = {
-      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 10},
+      {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
       {"r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2",                             5, 9},
     };
     // clang-format on
@@ -4986,6 +4998,14 @@ TEST_SUITE("engine: mate safety")
   // two assertions that are defects at any count -- no mate score for the side
   // being mated, and none closer than the proved minimum -- which carry no
   // floor at all.
+  //
+  // **Re-taken at S261 and unchanged (DEC-277).** On the lane's vector the
+  // `floor` mode reads 12 at the shipping guard and **6** with it weakened
+  // (RfpMinPly 1), and `red` builds the gate at RfpMinPly 1 and sees it fail
+  // at 6 >= 11: the floor still sits 1 below the shipping count and now 5
+  // above the weakened one. The family reading that cleared the vector is
+  // DEC-277's F2 (the S261 step file): 12 against the incumbent's 12 at
+  // `870d210`, S154's `hash` probe spreading 0 on both trees.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

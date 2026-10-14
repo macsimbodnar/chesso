@@ -48,6 +48,27 @@
 // kinds existed and named the wrong band for history.
 // clang-format off
 #define CHESSO_SEARCH_PARAMS(X)                                                \
+  /* S261'S LANE, 2026-10-13: the search block's own SPSA fit (DEC-222 (8)),   \
+     1250 iterations over 60000 games at 2+0.02 on books/UHO_4060_v3.epd,      \
+     adocs/data/S261_spsa_trajectory.tsv. Twenty-one defaults below are its    \
+     rounded vector and nothing else: QsFutilityMargin 188 -> 226, RazorMargin \
+     282 -> 242, LmrDeeperMargin 47 -> 42, LmpBase 733 -> 935, LmpMaxLmrDepth  \
+     8 -> 3, FutBase 147 -> 136, FutSlope 170 -> 182, FutMaxLmrDepth 8 -> 16,  \
+     HistPruneMaxLmrDepth 8 -> 11, SeeQuietCoeff 50 -> 18, SeeQuietMaxLmrDepth \
+     8 -> 10, SeeCaptureMaxLmrDepth 8 -> 9, SeMinDepth 10 -> 6,                \
+     SeTtDepthMargin 4 -> 2, SeMarginPerDepth 9 -> 1, ProbCutMargin 49 -> 87,  \
+     ProbCutDepthOffset 5 -> 3, ProbCutMinDepth 8 -> 6, AspirationWidenPct 200 \
+     -> 155, AspirationFailLowPull 2 -> 3 and LmrBase 52 -> 113.               \
+                                                                               \
+     Four of the lane's thirty-one axes are held at their incumbents:          \
+     LmrCutNode and SeeLmrExtra, which ended at their off values (R2),         \
+     LmrDeeperMinReduction, whose fitted 1 switches its guard off (DEC-277     \
+     (1)), and LmrDivisor, the smallest hold that kept the mate-in-three       \
+     family whole against the incumbent (DEC-277, DEC-278). The seed each      \
+     parameter's own comment below records is what the lane started from; the  \
+     value in its row is the lane's. The vector is a hypothesis until          \
+     adocs/data/S261_sprt.sh decides it (DEC-019). */                          \
+                                                                               \
   /* The gravity bound on a quiet history entry. Every score the table can     \
      hold lies in [-QuietHistoryMax, +QuietHistoryMax] by construction --      \
      `entry + b - entry*|b|/MAX` with `|b| <= MAX` maps that interval onto     \
@@ -237,7 +258,7 @@
      share one job -- absorbing the positional part of what a capture is worth. \
      Implemented from the step file's description, DEC-221. */                  \
   X(QS_FUTILITY,        "QsFutility",       1, 0, 1)                            \
-  X(QS_FUTILITY_MARGIN, "QsFutilityMargin", 188, 0, 2000)                       \
+  X(QS_FUTILITY_MARGIN, "QsFutilityMargin", 226, 0, 2000)                       \
                                                                                \
   /* QUIET QUEEN PROMOTIONS IN QUIESCENCE, S131. Out of check, quiescence      \
      searches every capture and, at 1, every promotion to a queen that takes   \
@@ -415,7 +436,7 @@
      S127 or not at all. Range 0 to 8 as the step file declares it, the room   \
      S127 needs to price that form. Implemented from the description,         \
      DEC-221. */                                                               \
-  X(RAZOR_MARGIN,      "RazorMargin",     282,    0, 2000)                     \
+  X(RAZOR_MARGIN,      "RazorMargin",     242,    0, 2000)                     \
   X(RAZOR_DEPTH,       "RazorDepth",      1,      0, 8)                        \
                                                                                \
   /* Null move pruning gives the opponent a free move and searches what is     \
@@ -440,13 +461,14 @@
      Hundredths because a UCI spin option is an integer and the fit is not.   \
      75 and 225 were the 0.75 and 2.25 the table was built from, and both of   \
      those divisions were exact in binary. **SPSA-tuned since S085**: 52 and   \
-     182, so 0.52 and 1.82, and neither is exact in binary any more. Nothing   \
+     182, so 0.52 and 1.82, and neither is exact in binary any more; S261's    \
+     lane moved LmrBase to 113, 1.13, and held LmrDivisor at 182. Nothing      \
      depends on the exactness -- `build_lmr_table` in src/search.cpp divides   \
      by 100.0 into a double and the product with LMR_SCALE is floored into the \
      table -- but the old comment claimed a property these values do not have, \
      so it is withdrawn rather than left standing. Same floor reason as        \
      above. */                                                                 \
-  X(LMR_BASE,          "LmrBase",         52,     0, 400)                      \
+  X(LMR_BASE,          "LmrBase",         113,    0, 400)                      \
   X(LMR_DIVISOR,       "LmrDivisor",      182,    1, 2000)                     \
                                                                                \
   /* THE ACCUMULATOR'S ROUNDING RULE, S236. The reduction is summed in ticks   \
@@ -638,7 +660,7 @@
      LmrDeeperMinReduction's floor of 1 is arithmetic -- the site already       \
      requires a reduction of at least 1 -- and its ceiling is the off value     \
      above. S127 refits both with LmrBase and LmrDivisor after the block. */    \
-  X(LMR_DEEPER_MARGIN,        "LmrDeeperMargin",        47, 0, 94)             \
+  X(LMR_DEEPER_MARGIN,        "LmrDeeperMargin",        42, 0, 94)             \
   X(LMR_DEEPER_MIN_REDUCTION, "LmrDeeperMinReduction",   2, 1, 126)            \
                                                                                \
   /* The shallow-depth pruning block, S109. Four rules over quiet moves, all    \
@@ -708,9 +730,9 @@
                                                                                \
      Off: 0, or LMP_BASE at 27000 -- MAX_MOVES in hundredths, a threshold no    \
      move list reaches. */                                                      \
-  X(LMP_BASE,          "LmpBase",         733,    0, 27000)                    \
+  X(LMP_BASE,          "LmpBase",         935,    0, 27000)                    \
   X(LMP_DEPTH_COEFF,   "LmpDepthCoeff",   0,      0, 27000)                    \
-  X(LMP_MAX_LMRDEPTH,  "LmpMaxLmrDepth",  8,      0, 16)                       \
+  X(LMP_MAX_LMRDEPTH,  "LmpMaxLmrDepth",  3,      0, 16)                       \
                                                                                \
   /* FUTILITY. A quiet whose node's static score plus a margin still does not   \
      reach alpha is skipped, with the remaining quiets, at a shallow reduced    \
@@ -731,9 +753,9 @@
      0 to 16: 0 is off and 16 is above the median depth 11 that RfpMaxDepth's   \
      comment records, where the gate stops binding at all. Off: 0, or FUT_BASE  \
      at 48000, past every non-mate alpha the guard admits. */                   \
-  X(FUT_BASE,          "FutBase",         147,    0, 48000)                    \
-  X(FUT_SLOPE,         "FutSlope",        170,    0, 2000)                     \
-  X(FUT_MAX_LMRDEPTH,  "FutMaxLmrDepth",  8,      0, 16)                       \
+  X(FUT_BASE,          "FutBase",         136,    0, 48000)                    \
+  X(FUT_SLOPE,         "FutSlope",        182,    0, 2000)                     \
+  X(FUT_MAX_LMRDEPTH,  "FutMaxLmrDepth",  16,     0, 16)                       \
                                                                                \
   /* HISTORY PRUNING. A quiet whose butterfly history sits below a margin that  \
      scales with the reduced depth is skipped: `history < -HP_COEFF *           \
@@ -765,7 +787,7 @@
      entry sits below it at any lmr_depth of 1 or more -- and a range top is    \
      not an off value. */                                                       \
   X(HP_COEFF,          "HistPruneCoeff",  612,    0, 16384)                    \
-  X(HP_MAX_LMRDEPTH,   "HistPruneMaxLmrDepth", 8, 0, 16)                       \
+  X(HP_MAX_LMRDEPTH,   "HistPruneMaxLmrDepth", 11, 0, 16)                      \
                                                                                \
   /* QUIET SEE PRUNING. A quiet whose exchange evaluation loses more than a     \
      margin scaled by the reduced depth squared is skipped:                     \
@@ -788,8 +810,8 @@
      more -- and a range top is not an off value. The power is a parameter of   \
      the form and not of this list: linear and squared both appear in the       \
      surveyed descriptions and S127 is where the form is re-tried. */           \
-  X(SEE_QUIET_COEFF,   "SeeQuietCoeff",   50,     0, 10000)                    \
-  X(SEE_QUIET_MAX_LMRDEPTH, "SeeQuietMaxLmrDepth", 8, 0, 16)                   \
+  X(SEE_QUIET_COEFF,   "SeeQuietCoeff",   18,     0, 10000)                    \
+  X(SEE_QUIET_MAX_LMRDEPTH, "SeeQuietMaxLmrDepth", 10, 0, 16)                  \
                                                                                \
   /* CAPTURE SEE PRUNING, S091, and the capture half of the same technique.     \
      A capture whose exchange evaluation loses more than a margin scaled by the \
@@ -831,7 +853,7 @@
      see_value, so every exchange clears the bar at any lmr_depth of 1 or more  \
      -- and a range top is not an off value. */                                 \
   X(SEE_CAPT_COEFF,    "SeeCaptureCoeff", 50,     0, 10000)                    \
-  X(SEE_CAPT_MAX_LMRDEPTH, "SeeCaptureMaxLmrDepth", 8, 0, 16)                  \
+  X(SEE_CAPT_MAX_LMRDEPTH, "SeeCaptureMaxLmrDepth", 9, 0, 16)                  \
                                                                                \
   /* THE EXTRA REDUCTION, S091. A move the exchange evaluation says loses       \
      material -- capture or quiet, the bar is 0 and not a margin -- is searched \
@@ -947,10 +969,10 @@
      returns the verification's score or it does not, and there is no third     \
      setting of it. */                                                          \
   X(SE_EXTEND,           "SeExtend",           1, 0,  1)                       \
-  X(SE_MIN_DEPTH,        "SeMinDepth",        10, 4, 16)                       \
-  X(SE_TT_DEPTH_MARGIN,  "SeTtDepthMargin",    4, 0,  8)                       \
+  X(SE_MIN_DEPTH,        "SeMinDepth",         6, 4, 16)                       \
+  X(SE_TT_DEPTH_MARGIN,  "SeTtDepthMargin",    2, 0,  8)                       \
   X(SE_PLY_FACTOR,       "SePlyFactor",        5, 2,  8)                       \
-  X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   9, 1, 18)                       \
+  X(SE_MARGIN_PER_DEPTH, "SeMarginPerDepth",   1, 1, 18)                       \
   X(SE_MULTICUT,         "SeMultiCut",         1, 0,  1)                       \
                                                                                \
   /* PROBCUT, S113 (Buro 1995; Jiang and Buro, ACG 10, 2003). At a non-PV node \
@@ -1006,9 +1028,9 @@
      depths 9 and 12. Range 0 to 1 by stated purpose; a verdict switch, not    \
      something S127 sweeps. */                                                 \
   X(PROBCUT,              "ProbCut",             1,    0,    1)                \
-  X(PROBCUT_MARGIN,       "ProbCutMargin",      49,    0, 2000)                \
-  X(PROBCUT_DEPTH_OFFSET, "ProbCutDepthOffset",  5,    2,    8)                \
-  X(PROBCUT_MIN_DEPTH,    "ProbCutMinDepth",     8,    3,   10)                \
+  X(PROBCUT_MARGIN,       "ProbCutMargin",      87,    0, 2000)                \
+  X(PROBCUT_DEPTH_OFFSET, "ProbCutDepthOffset",  3,    2,    8)                \
+  X(PROBCUT_MIN_DEPTH,    "ProbCutMinDepth",     6,    3,   10)                \
                                                                                \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
@@ -1102,8 +1124,8 @@
      the fast suite's mate guards read their mates one to three iterations     \
      late (DEC-245; its code and the three variants tried are                  \
      adocs/data/S115_reduction_*.diff). */                                     \
-  X(ASPIRATION_WIDEN_PCT,     "AspirationWidenPct",    200, 100, 400)          \
-  X(ASPIRATION_FAIL_LOW_PULL, "AspirationFailLowPull",   2,   0,   4)          \
+  X(ASPIRATION_WIDEN_PCT,     "AspirationWidenPct",    155, 100, 400)          \
+  X(ASPIRATION_FAIL_LOW_PULL, "AspirationFailLowPull",   3,   0,   4)          \
                                                                                \
   /* Time management. The clock is turned into an allocation for this move,    \
      and the allocation into two limits: a soft one that decides whether to    \

@@ -48,9 +48,64 @@
 # coordinator when CAND is pinned, from the driver's JSON and marking every
 # held axis; nothing above this paragraph is edited then.
 #
-#   (PIN_ME: thirty-one rows -- the reachability check removed `SePlyFactor`
-#   on 2026-10-13. `LmrBase` and `LmrDivisor` are among them by DEC-269, so
-#   this verdict can move the reduction table itself.)
+#   Written by `adocs/data/S261_apply_fit.py` from the run's own checkpoint
+#   (`.tuning/spsa_s261_20261013_123913`, k 1250, digest c285cbc739dbeae8),
+#   with `--hold LmrCutNode,SeeLmrExtra,LmrDeeperMinReduction,LmrDivisor`.
+#   Thirty-one axes (the reachability check removed `SePlyFactor`); 21 move:
+#
+#     QsFutilityMargin        188 ->  226
+#     RazorMargin             282 ->  242
+#     LmrCutNode                1 ->    1   HELD, R2: fitted 0, its off value
+#     LmrNotImproving           1 ->    1   unmoved
+#     LmrTtCapture              1 ->    1   unmoved
+#     LmrPv                     1 ->    1   unmoved
+#     LmrNoTtMove               1 ->    1   unmoved
+#     LmrDeeperMargin          47 ->   42
+#     LmrDeeperMinReduction     2 ->    2   HELD: fitted 1, where its guard
+#                                           says nothing (DEC-277 (1))
+#     LmpBase                 733 ->  935
+#     LmpDepthCoeff             0 ->    0   R1: seeded at its floor, ended there
+#     LmpMaxLmrDepth            8 ->    3
+#     FutBase                 147 ->  136
+#     FutSlope                170 ->  182
+#     FutMaxLmrDepth            8 ->   16   AT ITS RANGE END (R3)
+#     HistPruneMaxLmrDepth      8 ->   11
+#     SeeQuietCoeff            50 ->   18
+#     SeeQuietMaxLmrDepth       8 ->   10
+#     SeeCaptureCoeff          50 ->   50   unmoved
+#     SeeCaptureMaxLmrDepth     8 ->    9
+#     SeeLmrExtra               1 ->    1   HELD, R2: fitted 0, its off value
+#     SeMinDepth               10 ->    6
+#     SeTtDepthMargin           4 ->    2
+#     SeMarginPerDepth          9 ->    1   AT ITS RANGE END (R3, DEC-276 (A4))
+#     ProbCutMargin            49 ->   87
+#     ProbCutDepthOffset        5 ->    3
+#     ProbCutMinDepth           8 ->    6
+#     AspirationWidenPct      200 ->  155
+#     AspirationFailLowPull     2 ->    3
+#     LmrBase                  52 ->  113
+#     LmrDivisor              182 ->  182   HELD: fitted 204; the smallest hold
+#                                           that kept the mate-in-three family
+#                                           whole (DEC-277, DEC-278 482cbbe)
+#
+#   The mate guards were judged as families against the incumbent (DEC-277,
+#   DEC-278), and each moved golden was re-derived by its own script and names
+#   the family that cleared it (the step file's As built).
+#
+# THE PAIR, READ AT PINNING, below the frozen pre-registration and edited only
+# then. `git diff 932ee7a <REF> -- src/` -- the lane's head against the vector
+# commit's parent -- is two commits: `e7b1d04`, comments in `src/evaluation.*`
+# with `No functional change`, and `870d210`, S279, `quiescence` checking its
+# limits before its table probe. S279 proved INV-6 at every depth the
+# exception names: `bench` 3872032 and its eight replies identical, and
+# `tools/search_bench.py` node-identical with the same best moves at depths 9
+# and 13 in its own step and at 12 as the coordinator read it (68090 / 246712
+# / 114555, c3d5 / d5e6 / d7c8q). Its trailer is `Bench: 3872032` and not
+# `No functional change`, by DEC-279's choice to say that budgeted and stopped
+# searches move. **DEC-282 rules it inside the exception**: the fitted engine
+# and REF search identically at fixed depth. REF is the vector commit's
+# parent, a docs descendant of `870d210` (`574480e` when this was read), and
+# the coordinator pins it at launch.
 #
 # BOUNDS. elo0=0 elo1=5 nElo, alpha=beta=0.05, `model=normalized` --
 # `fastchess.sh`'s default, the gainer pair the step's accepts names. No
@@ -81,11 +136,15 @@
 # run plays (MACHINE). Nothing else stops it -- not the length.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171),
-# re-read at `1edb3b1`: **S278** unless it lands first -- the sanitizer build's
-# trace tests fail under UBSan on `eval_trace::sink`'s store, red since S262;
-# tooling, compiled only into the trace library and never into `chesso`, so
-# nothing reachable in play. S259 (the multicut and ProbCut mate rows) is
-# closed. S099 is in progress and lands after this verdict (DEC-271). The
+# re-read at `26d34c3`: **S280**, the mutation fixture recipe's `submodule
+# update` refused over the file transport on git 2.38 and later -- tooling,
+# nothing reachable in play. Closed before it: S278 (the trace sink, landed
+# before the lane), S279 (`go nodes` one over, `870d210`), S259. **Closed by
+# the landing commit**: the breadth floor that no longer separated on
+# achesso's head -- S156 read 150 shipping and 145 weakened at `fd9e44c` and
+# `870d210`, so `test_mate_breadth`'s 145 stayed green with the guard weakened
+# (DEC-142) -- re-derived to 159 on this vector, 160 shipping and 156 weakened
+# (DEC-278). S099 is in progress and lands after this verdict (DEC-271). The
 # coordinator re-reads the Open list on the day it pins the pair and names
 # anything else.
 #

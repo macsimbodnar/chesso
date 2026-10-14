@@ -4318,7 +4318,7 @@ TEST_SUITE("search: draws")
     // instrument that misses a mate, so a mate distance out of one is a
     // distance nothing proved.
     //
-    // GOLDEN (DEC-142): the depth 14 below, and the position with it.
+    // GOLDEN (DEC-142): the depth 10 below, and the position with it.
     // Re-derive with the six commands in `adocs/data/S097_mine_mate_row.py`'s
     // own header, which are the ones that were run and are written out there
     // with every input named -- candidates, the shipped sweep, the same sweep
@@ -4575,10 +4575,25 @@ TEST_SUITE("search: draws")
     //         depth 14, mate_in 6, 1242164 nodes, about 0.22 s
     //     S259, `338705e`, the tree S119's H1 left, guard mode, the same
     //     position again:
-    //         the row below, depth 14, mate_in 6, 2191754 nodes, about 0.31 s
+    //         "4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42"
+    //         depth 14, mate_in 6, 2191754 nodes, about 0.31 s
+    //     S261, the lane's vector on `870d210`, guard mode (DEC-278,
+    //     482cbbe), into the sweep's own range on that tree -- `SeMinDepth` 6,
+    //     so 7 to 10 -- where S259's row is found at 11, 12 and 14 and nowhere
+    //     inside it; two of the 269 candidates separate, and the rule takes
+    //         the row below, depth 10, mate_in 5, 1023029 nodes, about 0.14 s
+    //     shipped `d8 d9 d10` against the guard-dropped build's `d8 d9`, the
+    //     mutant's multicut firing at 8, 9 and 10; stockfish at depth 20 in a
+    //     fresh process through python-chess reads **`#+5`** for Black, the
+    //     side to move, pv g6f4 b2d4 e5d4 b4b2 f4h3 g1h2 f3g3 h2h1 g3g1, a line
+    //     python-chess reads as ending in checkmate; python-chess reports
+    //     `is_valid()` True, `is_check()` False, 35 legal moves, 4 captures.
+    //     The six commands are `adocs/data/S097_mine_mate_row.py`'s own, run
+    //     by the S261 worktree's `.tuning/coord/S261/remine.sh`, evidence in
+    //     its `.tuning/coord/S261/remine/`.
     //
     const std::string mate_the_multicut_hides =
-        "4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42";
+        "6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -4594,11 +4609,11 @@ TEST_SUITE("search: draws")
     // file: a mined row is a property of the tree it was mined on.
 
     {
-      const std::string title = "mate the multicut hides, depth 14";
-      const search_t result = search_fen(mate_the_multicut_hides, 14);
+      const std::string title = "mate the multicut hides, depth 10";
+      const search_t result = search_fen(mate_the_multicut_hides, 10);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 6, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
     }
 
     // S113's own row, and the accepts' clause for ProbCut: a forced mate
@@ -4610,7 +4625,7 @@ TEST_SUITE("search: draws")
     // shallow search is exactly the instrument that misses the mate -- S165's
     // hazard, and the once-per-thousand miss the origin paper itself reports.
     //
-    // GOLDEN (DEC-142): the position, the depth 11 and the distance 6 below.
+    // GOLDEN (DEC-142): the position, the depth 10 and the distance 5 below.
     // Re-derive with the six commands in `adocs/data/S277_mine_mate_row.py`'s
     // own header: the candidate list, the shipped sweep, the same sweep
     // against a library built with `B04_probcut_defender_gate_dropped` applied,
@@ -4712,15 +4727,33 @@ TEST_SUITE("search: draws")
     // already held. **Observed red, then green**: with B04 applied the case
     // fails here at `REQUIRE( result.mate_found )` and passes with the guard
     // in place (the same log).
+    //
+    // **Re-mined at S261 in guard mode, DEC-278 (482cbbe).** The lane's vector
+    // moves `ProbCutMinDepth` 8 -> 6, so the script's own range on that tree is
+    // 7 to 10, and the row above -- `4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3
+    // 73`, depth 11, mate in 6 -- is found at 11 and 13 and nowhere inside it.
+    // `adocs/data/S277_mine_mate_row.py`'s six commands, run by the S261
+    // worktree's `.tuning/coord/S261/remine.sh` (evidence in its
+    // `.tuning/coord/S261/remine/`): six of the 269 candidates separate the
+    // shipped build from B04's, four by the rule, and the pick takes the row
+    // below at **depth 10, mate in 5**, shipped `d9 d10` against B04's `d9`,
+    // the mutant's ProbCut firing at 7 to 10, 110157 nodes, about 14 ms.
+    // python-chess reports `is_valid()` True and `is_check()` **True** --
+    // Black to move in check, 3 legal moves, 1 capture -- and stockfish at
+    // depth 20 in a fresh process through python-chess reads **`#+5`** for
+    // Black, pv g7f7 g1f2 g5g2 f2e3 b1e1 e3f4 f3f2 f4f5 f2f1q, a line
+    // python-chess reads as ending in checkmate. The root in check is the
+    // drive's and not the block's: ProbCut is asked below it, where the
+    // witness shows it firing.
     const std::string mate_probcut_hides =
-        "4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73";
+        "8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61";
 
     {
-      const std::string title = "mate probcut hides, depth 11";
-      const search_t result = search_fen(mate_probcut_hides, 11);
+      const std::string title = "mate probcut hides, depth 10";
+      const search_t result = search_fen(mate_probcut_hides, 10);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 6, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
     }
 
     // S091's own cases, for the two rules that act on a **capture**. The one
@@ -5034,6 +5067,30 @@ TEST_SUITE("search: draws")
     // `{row 3, 10, 4, "C02, R02, since S248"}`,
     // `{row 4, 10, 5, "R02, since S248"}`.
     //
+    // **Re-derived at S261, the seven sweeps taken once more (DEC-277,
+    // DEC-281).** The lane's vector moves the reduction table, the capture
+    // rule's cap and both late-move-pruning settings, which is "any change to
+    // pruning or reduction", and rows 3 and 4 at depth 10 are the rows this
+    // case went red on. The whole pass was re-taken rather than those rows
+    // re-picked -- shipped plus all six S091 mutants, depths 3 to 12, over
+    // `adocs/data/S230_table_fens.txt`, driven by
+    // `adocs/data/S230_mine_r01_row.py depths` on a clean worktree of the
+    // candidate's tree, evidence in the S261 worktree's
+    // `.tuning/coord/S261/capmates/` and its driver
+    // `.tuning/coord/S261/capmates.sh` -- and the same rule applied. Shipped
+    // profiles here: `d9 d10 d11 d12`, `d8 d9 d10 d11 d12`, `d11 d12`, `d12`,
+    // which put the four depths at **9, 8, 11 and 12**. **Two of the four
+    // moved and no mate distance did.** Rows 1 and 2 read as before, every
+    // mutant reporting them at the same depths; row 3 goes to 11, where C02,
+    // C05 and R02 lose it -- the same three mutants it carried at 10; row 4
+    // goes to 12, the one depth its shipped profile holds, which every mutant
+    // reports too, so it stays a row no S091 mutant separates. The family
+    // reading that cleared the move is DEC-277's F4 (the S261 step file):
+    // every row's mate is found inside 3..12 on the candidate. The rows as
+    // S116 left them, which an H0 on S261 restores byte for byte:
+    // `{row 3, 10, 4, "C02, C05, R02, since S116"}`,
+    // `{row 4, 10, 5, "no S091 mutant, since S116"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -5053,7 +5110,7 @@ TEST_SUITE("search: draws")
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
          "C02, C05, R02, since S116"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
@@ -5095,7 +5152,7 @@ TEST_SUITE("search: draws")
         // pass. **S114's second verdict kept the depth and moved the label**,
         // and its reading put the label back with the gate's removal -- the
         // paragraph above has both.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 10,
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 12,
          5, "no S091 mutant, since S116"},
     };
 
@@ -9434,7 +9491,14 @@ TEST_SUITE("search: pruning and reduction guards")
   // `lmr_depth < SeeCaptureMaxLmrDepth`. The two assertions below are
   // unchanged and still read that off the engine's own table rather than off
   // this number.
-  static constexpr int CAP_DRIVE_DEPTH = 12;
+  //
+  // **13 since S261, where it was 12.** The lane's vector raised the cap
+  // itself, `SeeCaptureMaxLmrDepth` 8 -> 9, and moved the reduction table
+  // under it (`LmrBase` 52 -> 113), so at 12 `f3f6` was skipped again and
+  // `searched_index` read -1. Measured the same way: driven at 12 it is
+  // skipped and at 13 it is searched, at index 6 with a reduced depth of 9 --
+  // the new cap itself, the shape the case has always read.
+  static constexpr int CAP_DRIVE_DEPTH = 13;
 
   // The drive depth for the margin case below, and it is its own number for
   // the same reason. That case needs the rule's own bar at the reduced depth
@@ -9703,14 +9767,36 @@ TEST_SUITE("search: pruning and reduction guards")
   // pruning's count, and the two cases below hold that it stops at the quiets:
   // a capture ordered past the count still meets both of S091's rules.
   //
-  // The position is from tests/assets/test_jsons/castling.json. python-chess
-  // reports `is_valid() True`, `is_check() False`, 52 legal moves, 10
-  // captures, 4 promotions that take nothing, `gives_check() False` for Bxf7,
-  // and e8 and f8 as Black's attackers of f7. Bxf7 is the capture: score_move
-  // ranks it below every capture-promotion, and the engine's own see_ge(),
-  // asserted in each case, writes it off.
+  // GOLDEN (DEC-142): the position, both drive depths and both captures below,
+  // **re-mined at S261** because the lane's vector moved the count twice --
+  // `LmpBase` 733 -> 935 puts the flag at move 10, one past the eight captures
+  // castling.json's `rnb1qk1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 2 9`
+  // searched ahead of its Bxf7, and `LmpMaxLmrDepth` 8 -> 3 sets the flag only
+  // below reduced depth 3, so no depth gave that position the extra-ply shape.
+  // Re-derive, in this order, with every input named (DEC-281):
+  //
+  // clang-format off
+  //   python3 adocs/data/S261_mine_late_capture.py fens --out <pool.fen>
+  //   python3 adocs/data/S261_mine_late_capture.py walk --fens <pool.fen> --walks 10 --seed 261 --out <walked.fen>
+  //   python3 adocs/data/S261_mine_late_capture.py sweep --fens <walked.fen> --lo 3 --hi 9 --out <cells.tsv>
+  //   python3 adocs/data/S261_mine_late_capture.py pick --cells <cells.tsv>
+  // clang-format on
+  //
+  // The pool is every FEN the repository carries as data; it gave no cell for
+  // either case, so the script walks it at random through the engine's own
+  // generator and keeps positions with ten or more captures. 258 LQ02 cells
+  // and 9589 LQ03 cells came back over 20405 walked positions, and the pick
+  // rule -- one position for both, then the lowest depth -- took this one.
+  // Moves legitimately on: a change to late move pruning's count or cap, to
+  // the capture rule's margin or cap, to the reduction table, or to the
+  // capture order. Margin: exact.
+  //
+  // python-chess reports `is_valid() True`, `is_check() False`, 39 legal
+  // moves, 12 captures, no promotion, and `gives_check() False` for both Rxe4
+  // and Rxa4; c3 is White's one attacker of e4, b3 and c3 of a4. What each
+  // capture is worth is the engine's own see_ge(), asserted in each case.
   static const std::string LATE_CAPTURE_POS =
-      "rnb1qk1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 2 9";
+      "4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35";
 
   // Driven at ply 2 with the slot two plies up planted above any static score,
   // so the node is not improving and late move pruning's count is the
@@ -9725,13 +9811,15 @@ TEST_SUITE("search: pruning and reduction guards")
   static int late_capture_adjustment()
   { return LMR_NO_TT_MOVE + LMR_NOT_IMPROVING; }
 
-  // The drive depths. 3 for the skip, where the reduced depth of a late move
-  // is shallow enough that the capture margin writes Bxf7 off. 10 for the
-  // extra ply, the first depth where the margin clears it with room: at 9 it
-  // sits on the margin exactly. Both are checked against the engine's own
-  // tables in the cases, never trusted from here.
+  // The drive depths, the lowest the mining script found for each case. 3 for
+  // the skip, where nine captures are searched ahead of Rxa4 and the capture
+  // margin writes it off. 7 for the extra ply, where Rxe4 is searched past the
+  // count at reduced depth 2 -- the deepest the flag leaves a move, one under
+  // `LmpMaxLmrDepth` -- and the margin there, `SeeCaptureCoeff` * 2 = 100,
+  // clears a capture that loses exactly 100. Both are checked against the
+  // engine's own tables in the cases, never trusted from here.
   static constexpr int LATE_CAPTURE_SKIP_DEPTH = 3;
-  static constexpr int LATE_CAPTURE_REDUCE_DEPTH = 10;
+  static constexpr int LATE_CAPTURE_REDUCE_DEPTH = 7;
 
   // The move number at which late move pruning sets its flag at such a node:
   // the first one past the first legal move whose reduced depth is inside the
@@ -9756,16 +9844,18 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // Load the position at ply 2, not improving, and return Bxf7, checked to be
-  // a capture the exchange evaluation writes off that gives no check.
-  static move_t load_late_capture(guard_fixture_t & fixture)
+  // Load the position at ply 2, not improving, and return the capture from
+  // `from` to `to`, checked to be one the exchange evaluation writes off that
+  // gives no check.
+  static move_t load_late_capture(guard_fixture_t & fixture, index_t from,
+                                  index_t to)
   {
     fixture.load(LATE_CAPTURE_POS, static_cast<int>(LATE_CAPTURE_PLY));
     fixture.state.static_evals[LATE_CAPTURE_PLY - 2] = NOT_IMPROVING_PLANT;
 
     REQUIRE(!is_check(&game));
 
-    const move_t late = capture_move(&game, c4, f7);
+    const move_t late = capture_move(&game, from, to);
 
     REQUIRE(late != 0);
     REQUIRE(!see_ge(&game.board, late, 0));
@@ -9793,7 +9883,8 @@ TEST_SUITE("search: pruning and reduction guards")
                     "a capture past late move pruning's count is still skipped "
                     "by the capture rule")
   {
-    const move_t late = load_late_capture(*this);
+    // Rxa4, which loses 400 by the engine's exchange evaluation.
+    const move_t late = load_late_capture(*this, b4, a4);
     const int depth = LATE_CAPTURE_SKIP_DEPTH;
 
     negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, LATE_CAPTURE_PLY, &game,
@@ -9802,7 +9893,7 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(!improving_at(&state, LATE_CAPTURE_PLY, false));
     REQUIRE(probe.skip_quiets_set);
 
-    // The precondition: Bxf7 was reached with the flag set. A pruned move has
+    // The precondition: Rxa4 was reached with the flag set. A pruned move has
     // no index, so its move number is bounded from below by the captures
     // searched ahead of it -- every capture score_move ranks above it is
     // picked before it, and a move searched counts once. That bound is at or
@@ -9852,7 +9943,14 @@ TEST_SUITE("search: pruning and reduction guards")
                     "a capture past late move pruning's count still takes the "
                     "extra ply")
   {
-    const move_t late = load_late_capture(*this);
+    // Rxe4, which loses exactly 100 by the engine's exchange evaluation: the
+    // one size of loss the capture margin can clear past the count, where the
+    // reduced depth is at most `LmpMaxLmrDepth` - 1 and the margin at most
+    // `SeeCaptureCoeff` times that (DEC-281).
+    const move_t late = load_late_capture(*this, b4, e4);
+
+    REQUIRE(see_ge(&game.board, late, -100));
+    REQUIRE(!see_ge(&game.board, late, -99));
     const int depth = LATE_CAPTURE_REDUCE_DEPTH;
 
     negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, LATE_CAPTURE_PLY, &game,
@@ -9874,7 +9972,10 @@ TEST_SUITE("search: pruning and reduction guards")
     const int lmr_depth = lmr_depth_of(depth, k + 1, late_capture_adjustment());
 
     REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE_EQ(lmr_depth, 2);
+    REQUIRE(lmr_depth < LMP_MAX_LMRDEPTH);
     REQUIRE(see_ge(&game.board, late, -(SEE_CAPT_COEFF * lmr_depth)));
+    REQUIRE_EQ(rule_that_pruned(probe, late), PRUNE_NONE);
     REQUIRE(SEE_LMR_EXTRA > 0);
     REQUIRE(probe.child_depth[k] - 1 >= SEE_LMR_EXTRA);
 
@@ -10262,11 +10363,19 @@ TEST_SUITE("search: pruning and reduction guards")
   static const std::string QUIET_NODE_POS =
       "3r2k1/5pb1/7p/p4B1P/2r3P1/8/1P1n1B2/1R2R1K1 w - - 3 36";
 
-  // Deep enough that the clamp to `child_depth - 1` is 4 and a one-ply term
-  // has room on either side of the table's own 1 to 3 here, shallow enough
-  // that the drive is milliseconds with the whole shallow-depth block switched
-  // off by the window below.
-  static constexpr int NODE_TYPE_DEPTH = 6;
+  // Deep enough that the clamp to `child_depth - 1` is 5 and a one-ply term
+  // has room above the table's own reduction at the index each case reads,
+  // shallow enough that the drive is milliseconds with the whole shallow-depth
+  // block switched off by the window below.
+  //
+  // **7 since S261, where it was 6.** The lane's vector moved `LmrBase` 52 ->
+  // 113, a ply more of table reduction at these indices, and at 6 the table
+  // plus the one-ply term reached the clamp of 4: each case's own precondition
+  // `reduction[k] < NODE_TYPE_DEPTH - 2` read 4 < 4 for the cut-node,
+  // not-improving, capturing-table-move and no-move cases. 7 is the next depth
+  // and every one of the five cases holds its precondition there; the depth is
+  // the one thing moved, and no assertion is.
+  static constexpr int NODE_TYPE_DEPTH = 7;
 
   // A well-formed **quiet** move that QUIET_NODE_POS does not contain: there
   // is no white knight on the board there, so no generated move can equal this
@@ -10432,7 +10541,7 @@ TEST_SUITE("search: pruning and reduction guards")
     // the clamp asserted below.
     REQUIRE(improving_at(&state, 1, false));
 
-    // Inside the clamp at both settings -- `child_depth - 1` is 4 here -- so a
+    // Inside the clamp at both settings -- `child_depth - 1` is 5 here -- so a
     // difference of one ply is a difference and not a ceiling.
     REQUIRE(cut.reduction[k] < NODE_TYPE_DEPTH - 2);
 
@@ -10850,7 +10959,7 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE_MESSAGE(k >= 3,
                     "no late quiet here is reduced by the table at all");
 
-    // Inside the clamp at both settings -- `child_depth - 1` is 4 here -- so a
+    // Inside the clamp at both settings -- `child_depth - 1` is 5 here -- so a
     // difference of one ply is a difference and not a ceiling.
     REQUIRE(nothing.reduction[k] < NODE_TYPE_DEPTH - 2);
 
@@ -13012,8 +13121,16 @@ TEST_SUITE("search: pruning and reduction guards")
 
   // The node's window. An ordinary beta, and a drive at ply 1 with no
   // previous move: reverse futility wants `ply >= RfpMinPly` and the null move
-  // wants `prev_move != 0`, so neither can end the node above the block, and
-  // the singular block wants a depth this drive never reaches.
+  // wants `prev_move != 0`, so neither can end the node above the block. The
+  // singular block is kept out by construction, not by depth: it needs a table
+  // move at the node, and every drive starts from a cleared table and plants
+  // none -- the one case that plants an entry plants it without a move -- so
+  // it cannot run at the node whatever `SeMinDepth` is, and each drive
+  // asserts that it did not. Its children are searched at most a ply
+  // shallower, below `SeMinDepth`, so it runs nowhere in the drive. Until S261
+  // this was `node_depth() < SE_MIN_DEPTH`, which the lane's `SeMinDepth` 6
+  // beside `ProbCutMinDepth` 6 made unsatisfiable at any depth the block
+  // admits (DEC-277 (4)).
   static constexpr int PC_BETA = 0;
 
   // A ceiling on every drive, as S097's drives have one: a drive that reaches
@@ -13039,8 +13156,17 @@ TEST_SUITE("search: pruning and reduction guards")
     static void require_drive_conditions()
     {
       REQUIRE(RFP_MIN_PLY > 1);
-      REQUIRE(node_depth() < SE_MIN_DEPTH);
+      REQUIRE(node_depth() - 1 < SE_MIN_DEPTH);
       REQUIRE(child_depth() >= 1);
+    }
+
+    // The node's half of the isolation, read off the drive rather than argued:
+    // the singular block did not run at the node.
+    void require_no_singular_block() const
+    {
+      REQUIRE_MESSAGE(!probe.se_verified,
+                      "the singular block ran at the node, so the drive is "
+                      "not evidence about ProbCut alone");
     }
 
     search_node_probe_t run(const std::string& fen,
@@ -13062,6 +13188,7 @@ TEST_SUITE("search: pruning and reduction guards")
       REQUIRE_MESSAGE(!state.aborted,
                       "the drive hit its node ceiling, so nothing it recorded "
                       "is evidence about the block");
+      require_no_singular_block();
 
       return probe;
     }
@@ -13213,6 +13340,7 @@ TEST_SUITE("search: pruning and reduction guards")
                    false, false, excluded);
 
     REQUIRE(!state.aborted);
+    require_no_singular_block();
     REQUIRE(!probe.probcut_entered);
     REQUIRE(probe.move_count > 0);
   }
@@ -13338,6 +13466,7 @@ TEST_SUITE("search: pruning and reduction guards")
                                   &state, 0, false, false, 0);
 
       REQUIRE(!state.aborted);
+      require_no_singular_block();
 
       return probe;
     };

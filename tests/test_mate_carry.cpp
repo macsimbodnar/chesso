@@ -370,7 +370,7 @@ static bool line_ends_in_mate(const std::string& fen,
 // history term was in the tree and came back when it left, DEC-231; S116's
 // razoring moved A 5 -> 6 and C 0 -> 5, DEC-250.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
-// adocs/data/S202_sweep_s170.txt
+// adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 // (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
@@ -397,7 +397,8 @@ static bool line_ends_in_mate(const std::string& fen,
 // stride its TSV row carries, over every recorded sweep in the command.
 // Re-derive it with
 //
-//   adocs/data/S203_case_sweep.sh --ceilings adocs/data/S202_sweep_s170.txt
+//   adocs/data/S203_case_sweep.sh --ceilings
+//       adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -413,7 +414,10 @@ static bool line_ends_in_mate(const std::string& fen,
 // since moved a node) and so the same 108 cells as S202's, read with the old
 // walk; S202's grid supersedes it rather than adding a sample to it. A
 // tree-moving step that re-sweeps adds its grid to the command, which is how
-// the list grows back to several samples (DEC-162's intent).
+// the list grows back to several samples (DEC-162's intent). **S261's is the
+// first so added** (`adocs/data/S261_sweep_s170.txt`, the lane's vector on
+// `870d210`, 108 cells, 1485 mate lines and 16 short): it moves no ceiling but
+// F's, below (DEC-282).
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  0  no short line in any cell
@@ -421,7 +425,9 @@ static bool line_ends_in_mate(const std::string& fen,
 //   C_mate7_depth11                  4  4000000 on the S202 grid, 4 of 13
 //   D_mate_minus6_depth10            0  no short line in any cell
 //   E_mate_minus9                    0  no short line in any cell
-//   F_mate6_inherited_no_line        0  no short line in any cell at stride 2
+//   F_mate6_inherited_no_line        1  300000 on the S261 grid at stride 2,
+//                                         1 of 7 (none on the S202 grid);
+//                                         DEC-282, on S261's H1 only
 //
 // Before S202 they were 6, 15, 5, 2, 11 and 5 over the five older grids.
 //
@@ -435,6 +441,16 @@ static bool line_ends_in_mate(const std::string& fen,
 //
 // A step that lowers a ceiling is recording progress on S202. A step that
 // raises one is relaxing a test and needs a decision.
+//
+// **One rose at S261 and that is DEC-282's decision.** The lane's vector moves
+// twenty-one search parameters, and its grid (`adocs/data/S261_sweep_s170.txt`)
+// shows F's 300000 cell at stride 2 reporting 7 mate lines, 1 short, where
+// S202's grid showed none at that stride, so the script over both grids
+// answers F 0 -> 1 and nothing else moves. It lands in the vector's commit and
+// stands only on S261's H1 -- an H0 or a no verdict reverts it with the vector
+// -- the DEC-272, DEC-250, DEC-241 and DEC-225 form. F's own cell, 100000 at
+// stride 2, reports 2 mate lines and none short. What rose is DEC-122's
+// expected residue, not the guarantee: `unreached` is empty on all six cases.
 //
 // **Three of them rose at S109 and that is the decision the block owes.** The
 // shallow-depth pruning block takes 74 % of the tree, and a line the search
@@ -518,7 +534,7 @@ static size_t short_line_ceiling(const std::string& name)
   if (name == "C_mate7_depth11") { return 4; }
   if (name == "D_mate_minus6_depth10") { return 0; }
   if (name == "E_mate_minus9") { return 0; }
-  if (name == "F_mate6_inherited_no_line") { return 0; }
+  if (name == "F_mate6_inherited_no_line") { return 1; }
 
   FAIL("unknown case " << name);
   return 0;
