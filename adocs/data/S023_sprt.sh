@@ -120,7 +120,8 @@
 # `7e36271`, this run's REF. Closed since this was first written on
 # `c3b7b5e`: S279 (`go nodes` one over, `870d210`) and S280 (the mutation
 # recipe's file transport, `6fc7f23`). The coordinator re-reads the list on
-# the day it pins the pair and names anything else here.
+# the day it pins the pair and names anything else here. Re-read by the
+# coordinator at `adb5d78`, CAND's landing (2026-10-15): unchanged.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -195,7 +196,7 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # Until both are pinned this script refuses (DEC-020). The banner prints both
 # shas with their commit dates, and each side's padding, before the first game.
 REF="${REF:-7e36271}"
-CAND="${CAND:-PIN_ME_CAND}"
+CAND="${CAND:-adb5d78}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == PIN_ME* ]]; then

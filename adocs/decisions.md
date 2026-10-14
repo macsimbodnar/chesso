@@ -14946,6 +14946,13 @@ Consequences: `tests/test_mate_carry.cpp`'s C and E rows cite this id;
 
 ## DEC-288  2026-10-14  A mined mate row with no separator in its tree's own range is re-mined in guard mode one band deeper, by script
 Tags:         testing, mate-safety, mined-rows, s023, e21, dec-278, dec-238, dec-142
+Amended:      2026-10-15 by S023 -- the script is named wrong below:
+              `S277_mine_mate_row.py` is the ProbCut miner, whose firing check
+              toggles ProbCut, not the multicut E21 guards. The row was mined
+              as S261's and S259's were, S277 for the candidate list and
+              `S097_mine_mate_row.py` for every stage after; S277's guard-mode
+              check and pick, run on the same files, take the same row
+              (`adocs/data/S023_remine_e21.log`).
 Context:      On S023 verdict 1's tree the E21 row of `tests/test_search.cpp`
               (`mate_the_multicut_hides`, depth 10) stays green but no longer
               separates: the shipped build and `E21_multicut_mate_band_gate_dropped`

@@ -5,40 +5,39 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-14, by hand.
+Updated: 2026-10-15, by hand.
 
-## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
+## 2026-10-15: S023 verdict 1 landed as a candidate; its SPRT runs
 
-**S099 done.** SPRT H0 (`adocs/data/S099_sprt.sh`): CAND `8758622`, the pawn
-key and the pawn-keyed correction in one commit, against REF `bacead1`,
-`{0, 5}` at 8+0.08, Hash 16: `Elo -3.47 +/- 5.03`, `nElo -4.71 +/- 6.84`,
-LLR -2.96 over 9916 games, 4 h 36 m, 0 forfeits (record `74bb9ad`). Reverted
-whole as `5a04ffa` -- code, tests, mutants, manuals, specs and every golden
-byte-identical to `6fc7f23`'s, bench 5636835, gate green; the step file and
-the run's data stay. S110 and S111 to the reserve (step files in
-`plan_todo/`, off the Open list); S281 void (`plan_done/`); DEC-272, DEC-283
-and DEC-284 lapsed. **The DEC-202 estimate**, same pair at 32+0.32, Hash 64,
-2000 games, 3 h 42 m: `Elo +8.34 +/- 10.20`, `nElo +12.46 +/- 15.23`,
-0 forfeits (`adocs/data/S099_ltc.log`). Archived:
-`chesso_S099_{sprt,ltc}_2026-10-14.tar.xz`.
+**S023 verdict 1, candidate `adb5d78`** (`Bench: 7045606`, from 5636835):
+the capture-history table [piece][target][victim type] and its two readers,
+S091's capture SEE margin and S112's quiescence futility margin; 4
+parameters, count 77; score_move reads nothing (verdict 2's). The tune build
+at both weights 0 prints the parent's stream (DEC-215). Gate 46/46 both
+builds; mutants CX01-CX12, S091's six, S269's three, S112's F01-F06, E21
+and B04 all killed, CX05 equivalent; Debug self-play 0 Assertion;
+`gate_extra` all five stages. Goldens by script: ceilings C 4 -> 5, E 0 -> 1
+and the S170 budgets (DEC-287), `EXACT_FLOOR` 159 -> 160 (a rise), the E21
+row re-mined one band deeper (DEC-288, amended: the miner is S097's, S277's
+pick agrees) and the extra-ply row re-mined (stale already on the parent).
+The worst-record guard's two-ply window (DEC-285) kills no CX mutant by
+itself: none was assigned to it and none survives. Fast check: 3 findings,
+fixed -- the H0 band case is kept without its record loop
+(`adocs/data/S023_h0_band_case.diff`, observed green on `7e36271`); S091's
+capture-rule cases now read the margin the node used, off a write-only
+probe; manuals and comments state the new margins.
 
-**Owner rulings, 2026-10-14 (asked directly):**
-- **DEC-286:** S099's pair gets an SPRT at 32+0.32, Hash 64, `{0, 10}` nElo,
-  after S023 verdict 1's SPRT -- step **S283**, about 19 h worst case. H1
-  relands S099 (goldens re-derived, S110 and S111 conditional again); H0 or
-  no verdict closes it.
-- **DEC-285:** S023's phase 2 stopped on its own worst-record mate guard
-  (row 3's mate in 4 at depth 13, not 11; the best record also moves the
-  rows' profiles). The guard now asks for each row's mate within two plies
-  of its depth; landed rows stay exact, no other relaxation, and the
-  restated guard must still kill its CX mutants.
-- **DEC-287:** S023's tree raises carry ceilings C 4 -> 5 and E 0 -> 1 as
-  the script answers (10 short lines in 1402 against S261's 16 in 1485),
-  with the rule's budgets, on S023 verdict 1's H1 only.
-- **DEC-288** (coordinator): the E21 mined row stopped separating on S023's
-  tree and its own range (7..10) holds no separator; it is re-mined in guard
-  mode at 11..14 by script (6 separators there). The extra-ply row, stale
-  already on the parent, is re-mined in the same candidate.
+**Running:** `adocs/data/S023_sprt.sh`, CAND `adb5d78` vs REF `7e36271`,
+`{0, 5}` at 8+0.08, Hash 16; 41861 games at the midpoint (19.8 h), 25591 on
+a bound (12.1 h), cap 40000. Open finding named: S282 (filler).
+**H1:** kept; verdict 2 (the ordering key) pre-registered next, S265 and
+S025 conditional per DEC-273. **H0 or no verdict:** revert with the band
+case kept minus its loop; S025 and S265 to the reserve; a filler step
+re-mines the extra-ply row on the reverted tree.
+
+**Meanwhile, blind (DEC-260):** S283's pre-registration
+(`adocs/data/S283_sprt.sh`, S099's pair at 32+0.32, `{0, 10}`), then S039
+rebased onto `adb5d78`.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -47,29 +46,30 @@ and DEC-284 lapsed. **The DEC-202 estimate**, same pair at 32+0.32, Hash 64,
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here:** S023 verdict 1 phase 2 (running, under DEC-285) ->
-its SPRT (REF `7e36271`) -> S283, S099's pair at 32+0.32 (DEC-286) -> S039
-(DEC-274) -> S082 (DEC-275), each rebased onto the tree before it while the
-previous run holds the machine. S282 (filler, DEC-171: the node band's
-middle half excludes its own count) is named in each pre-registration while
-open.
+**Order from here:** S023 verdict 1's SPRT -> S283, S099's pair at
+32+0.32 (DEC-286) -> S039 (DEC-274) -> S082 (DEC-275), each rebased onto the
+tree before it while the previous run holds the machine. S282 (filler,
+DEC-171) is named in each pre-registration while open.
 
 **Waiting, written (DEC-260 lanes):**
-- **S023** verdict 1, rebased blind onto the revert (`../chesso-s023d`, diff
-  `.tuning/coord/S023/s023_on_5a04ffa.diff`): the capture-history table and
-  its capture SEE and quiescence futility readers, 4 parameters (count 77).
-  No interaction left with S099. No relaxation allowance; LQ02/LQ03 (and
-  E21/B04) re-mined by their scripts if red (only "no cell found" stops).
-  Phase 2 about 2.5 h (up to 4 h), then its SPRT, 12.1 h on a bound.
-- **S039** (`../chesso-s039c`, diff `.tuning/coord/S039/s039_on_8ef820f.diff`):
-  the lazy shortcut and the clamp retire together; non-regression `{-5, 0}`
-  (DEC-274). Its S023 meeting points are listed hunk by hunk. Mined mate rows
-  re-mined only if the mutation pass shows one red or not separating. Phase 2
-  about 2.5 h (3.5 h with every re-mine).
+- **S039** (`../chesso-s039c`, diff `.tuning/coord/S039/s039_on_8ef820f.diff`,
+  written on S099's candidate): the lazy shortcut and the clamp retire
+  together; non-regression `{-5, 0}` (DEC-274). To be rebased onto
+  `adb5d78`.
 - **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`):
-  leaf walks, datagen `--leaf`, the tuner's `--holdout`, LW01-LW09 (LW09 and
-  its abort test kept: S279 rewired that path untested). Phase 2 about 1 h
-  25 m, a ~9 h pool (a night), `compare` about 1 h 30 m.
+  leaf walks, datagen `--leaf`, the tuner's `--holdout`, LW01-LW09. Phase 2
+  about 1 h 25 m, a ~9 h pool (a night), `compare` about 1 h 30 m.
+
+## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
+
+**S099 done.** SPRT H0 (`adocs/data/S099_sprt.sh`): CAND `8758622`, the pawn
+key and the pawn-keyed correction in one commit, against REF `bacead1`,
+`{0, 5}` at 8+0.08, Hash 16: `Elo -3.47 +/- 5.03`, `nElo -4.71 +/- 6.84`,
+LLR -2.96 over 9916 games, 4 h 36 m, 0 forfeits (record `74bb9ad`). Reverted
+whole as `5a04ffa`; S110 and S111 to the reserve; S281 void. The DEC-202
+estimate at 32+0.32, Hash 64, 2000 games: `nElo +12.46 +/- 15.23`
+(`adocs/data/S099_ltc.log`). Owner rulings DEC-285, DEC-286, DEC-287;
+coordinator DEC-288.
 
 **Done 2026-10-14:** S099 H0, reverted (above); S261 H1 (bench 3872032 -> 5636835; drift point nElo
 +195.67 +/- 15.23 against `1680439`; 32+0.32 Hash 64 nElo +47.10 +/- 15.23);
