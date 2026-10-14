@@ -14857,3 +14857,64 @@ Rejected:     Back to 2048 slots -- breaks DEC-270's rule, and F read 3 short
 Consequences: `tests/test_mate_carry.cpp`'s A and E rows read 2 and 4 with this
               id; `adocs/data/S170_cases.tsv` takes the rule's budgets. S281
               enters the Open list conditional on S099's H1.
+
+## DEC-285  2026-10-14  S023's worst-record mate guard asks for each row's mate within two plies of the row's depth
+Tags:         testing, mate-safety, capture-history, s023, dec-278, dec-142
+Context:      S023 verdict 1's phase 2 on `7e36271` stopped on its own new
+              guard: with the worst record (-32767) planted in every
+              capture-history cell, each `capture_mates` row of
+              `tests/test_search.cpp` was required to find its mate at the
+              row's depth. Row 3 (mate in 4, depth 11) found no mate through
+              depth 12 and found it at 13 through 16; rows 1, 2 and 4 passed.
+              The best record, which only widens both margins and so prunes
+              less, finds row 3 at 9 and 12 but not at 10 or 11, and row 4 at
+              9 and 11 but not at its depth 12. Neither term alone reproduces
+              the worst record's profile. The rows' fixed-depth profiles move
+              under any large perturbation, either direction (profiles in
+              `.tuning/coord/S023/p2/diag/`, recorded in the step file).
+Decision:     **By the owner, 2026-10-14**, asked as a question because the
+              owner's rule forbids weakening a test to make it pass and phase
+              1 had called this red "a finding, never a re-pin". S023's own
+              worst-record guard passes a row when a mate at the row's own
+              distance is found at some depth from the row's depth to two
+              plies past it, DEC-278's form. Nothing else relaxes: the landed
+              rows (empty table) keep their exact depths, every landed golden
+              is re-derived by its script, S023 keeps no relaxation allowance,
+              and the restated guard must still kill every CX mutant it was
+              written to kill -- a mutant that survives only because of the
+              window, or a row red at two plies past its depth, stops phase 2.
+Rejected:     One-sided records (a record only widens a margin) -- removes the
+              condemning half of the feature, leaves the guard vacuous, and
+              the best-record readings say a perturbing guard stays fragile.
+              Retiring S023 verdict 1 -- leaves capture history unmeasured,
+              with S025 and S265 behind it.
+Consequences: A two-ply delay under an extreme, never-played table is
+              accepted, and the bound was chosen after seeing the data; both
+              are on record here. The guard's site cites this id.
+
+## DEC-286  2026-10-14  S099's pair is re-measured by an SPRT at 32+0.32, Hash 64, {0, 10} nElo, after S023's
+Tags:         sprt, harness, longer-control, correction-history, s099, s283, dec-270, dec-202, dec-222
+Context:      S099 (`8758622`, the pawn key and the pawn-keyed correction)
+              read H0 at the harness setting, `{0, 5}` at 8+0.08, Hash 16:
+              nElo -4.71 +/- 6.84 over 9916 games, and was reverted as
+              `5a04ffa`. The DEC-202 estimate DEC-270 (3) booked on H0, the
+              same pair at 32+0.32, Hash 64, 1000 pairs, read nElo +12.46 +/-
+              15.23: positive, so the owner's decision (DEC-270 (4)).
+Decision:     **By the owner, 2026-10-14.** One SPRT on the same pair,
+              `8758622` against `bacead1`, at 32+0.32, Hash 64,
+              `noob_3moves.epd`, `{0, 10}` nElo, after S023 verdict 1's SPRT
+              (step S283). Worst case about 10500 games, scaled from DEC-143's
+              41861 at `{0, 5}`, about 19 h at 540 games an hour; the
+              pre-registration states DEC-143's own figure. **H1**: S099
+              relands, rebased onto the then-tree with every golden re-derived
+              by its script, and S110 and S111 return to the Open list
+              conditional as before -- the first change shipped on a longer
+              control against an H0 at the harness's, this decision being its
+              record. **H0, or no verdict at the cap**: closed; correction
+              history stays absent until a re-plan proposes it anew.
+Rejected:     Closing on the H0 -- leaves the longer-control gain DEC-222 (8)
+              named unmeasured. A second 1000-pair estimate -- decides nothing
+              alone. `{0, 5}` at 32+0.32 -- about 77 h worst case.
+Consequences: S283 enters the Open list after S023 verdict 1. The harness
+              stays 8+0.08 for every other verdict; this is one exception, by
+              the owner, for one pair.

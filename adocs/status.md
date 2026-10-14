@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S099 done -- H0, reverted; its 32+0.32 estimate is positive
+## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 
 **S099 done.** SPRT H0 (`adocs/data/S099_sprt.sh`): CAND `8758622`, the pawn
 key and the pawn-keyed correction in one commit, against REF `bacead1`,
@@ -22,25 +22,16 @@ and DEC-284 lapsed. **The DEC-202 estimate**, same pair at 32+0.32, Hash 64,
 0 forfeits (`adocs/data/S099_ltc.log`). Archived:
 `chesso_S099_{sprt,ltc}_2026-10-14.tar.xz`.
 
-**Owner ruling owed (DEC-270 (3), (4)): S099's positive 32+0.32 estimate.**
-Why: a positive estimate after an H0 opens a decision the record gives to
-the owner; the coordinator books no follow-up. The two readings differ by
-17.2 nElo, about two standard errors -- the longer-control gain DEC-222 (8)
-named as the harness's blind spot, or noise. The revert stands meanwhile.
-- **(a) Close it** (the coordinator's default if no ruling comes): costs
-  nothing; leaves a possible longer-control gain unmeasured until a re-plan
-  proposes correction history again.
-- **(b) An SPRT at 32+0.32, Hash 64, `{0, 10}` nElo, on the same pair,
-  after S023's**: about 10500 games worst case scaled from DEC-143's 41861
-  at `{0, 5}`, about 19 h at 540 games an hour. H1 relands it (goldens
-  re-derived on the then-tree, S110 and S111 conditional again) and would
-  be the first change shipped on a longer control against an H0 at the
-  harness's, which wants its own decision; H0 closes it.
-- **(c) A second 1000-pair estimate** (3 h 45 m): pooled 4000 games,
-  about +/- 10.8 nElo; still decides nothing alone.
-- Recommendation: (b). Strength at real time controls is the goal, and this
-  is the case the 32+0.32 reading exists to catch; 19 h is one night and a
-  day, after S023.
+**Owner rulings, 2026-10-14 (asked directly):**
+- **DEC-286:** S099's pair gets an SPRT at 32+0.32, Hash 64, `{0, 10}` nElo,
+  after S023 verdict 1's SPRT -- step **S283**, about 19 h worst case. H1
+  relands S099 (goldens re-derived, S110 and S111 conditional again); H0 or
+  no verdict closes it.
+- **DEC-285:** S023's phase 2 stopped on its own worst-record mate guard
+  (row 3's mate in 4 at depth 13, not 11; the best record also moves the
+  rows' profiles). The guard now asks for each row's mate within two plies
+  of its depth; landed rows stay exact, no other relaxation, and the
+  restated guard must still kill its CX mutants.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -49,10 +40,12 @@ named as the harness's blind spot, or noise. The revert stands meanwhile.
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here:** S023 verdict 1 (DEC-273) phase 2 on `5a04ffa`'s
-tree, then its SPRT (REF = S099's completing commit, src/ = `5a04ffa`'s) ->
-S039 (DEC-274) -> S082 (DEC-275), each rebased again onto the tree before
-it while the previous run holds the machine.
+**Order from here:** S023 verdict 1 phase 2 (running, under DEC-285) ->
+its SPRT (REF `7e36271`) -> S283, S099's pair at 32+0.32 (DEC-286) -> S039
+(DEC-274) -> S082 (DEC-275), each rebased onto the tree before it while the
+previous run holds the machine. S282 (filler, DEC-171: the node band's
+middle half excludes its own count) is named in each pre-registration while
+open.
 
 **Waiting, written (DEC-260 lanes):**
 - **S023** verdict 1, rebased blind onto the revert (`../chesso-s023d`, diff
