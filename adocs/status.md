@@ -53,14 +53,25 @@ against REF `bacead1`, `src/` of the candidate's parent identical to REF):
 12.1 h on a bound, 19.0 h at the cap. H1 keeps it and S110, S111, S281 open;
 H0 or no verdict reverts `8758622` whole.
 
+**For S099's closing commit (H1):** `adocs/specs.md`'s "absent, search" row
+still lists "correction history" as absent; drop it there (on H0 the revert
+leaves it right).
+
 **Order from here:** S099's verdict -> S023 verdict 1 (DEC-273), rebased onto
 S099's outcome during the run -> S039 (DEC-274) -> S082 (DEC-275).
 
 **Waiting, written (DEC-260 lanes):**
-- **S023** (`../chesso-s023`, at `c3b7b5e`): phase 1 blind -- verdict 1, the
-  capture-history table and its capture SEE and quiescence futility margin
-  readers, 4 new parameters, CX mutants; verdict 2 (ordering) only on its H1
-  (DEC-273). Shares `tests/test_search_params.cpp`'s count line with S099.
+- **S023** verdict 1, rebased blind onto `c3ed1ef` (`../chesso-s023c`, diff
+  `.tuning/coord/S023/s023_on_c3ed1ef.diff`): the capture-history table and its
+  capture SEE and quiescence futility readers, 4 parameters (count 79); no
+  seed moves with S261 or S099; no S023 rule reads the corrected evaluation.
+  Every golden it may move is PENDING its script; S023 has **no relaxation
+  allowance** (a ceiling rise or floor drop stops for a ruling). LQ02 sits at
+  zero margin since S261's re-mine and may go red: the coordinator ruled it
+  is re-mined by `S261_mine_late_capture.py` if so (DEC-142's path, mutants
+  must still die); only "no cell found" stops. On S099's H0, `src/` re-applies
+  cleanly onto the revert and seven docs/test files are rewritten. Phase 2
+  about 2.5 h (up to 4 h with re-mines), then its SPRT (REF = S099's outcome).
 - **S039** (`../chesso-s039`): phase 1 blind -- the lazy shortcut and the
   clamp removed in one change; `LazyEvalMargin` retires. Non-regression
   `{-5, 0}` (DEC-274). At its rebase S023's two quiescence-futility cases on
