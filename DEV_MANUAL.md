@@ -2219,13 +2219,16 @@ label and the bench, records what went red, and reverts. The mutants live in
 
 ```bash
 git worktree add --detach .ref-builds/mut HEAD
-git -C .ref-builds/mut submodule update --init tests/doctest
+git -c protocol.file.allow=always \
+    -C .ref-builds/mut submodule update --init tests/doctest
 cmake -S .ref-builds/mut -B .ref-builds/mut/build \
       -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
 export CLANG_FORMAT_MAJOR=22                       # this machine, DEC-146
 python3 tools/mutation_check.py tools/mutants .ref-builds/mut            # all
 python3 tools/mutation_check.py tools/mutants .ref-builds/mut --only M26 # one
+
+git worktree remove --force .ref-builds/mut                     # teardown
 ```
 
 **The submodule line is not optional and `fastchess.sh`'s recipe omits it**,
@@ -2234,10 +2237,22 @@ tests, and `tests/doctest` is a submodule -- the only one left, since S229
 carried nlohmann/json as a committed single header instead: a fresh worktree
 without it fails at `fatal error: doctest.h: No such file or directory` and the
 tool refuses the run with "the unmutated worktree does not build". The
-`CLANG_FORMAT_MAJOR` export is the same override the gate needs here: without
-it `test_clang_format_script` is red on the unmutated tree and the run refuses
-before the first mutant, which is the guard working — a suite already red
-cannot say whether it saw the mutant.
+line's `-c protocol.file.allow=always` is there because this clone's
+`.git/config` points `submodule.tests/doctest.url` at the main tree's own
+`tests/doctest`, a local path -- S254 pointed it there, because the
+`.gitmodules` URL, `git@github.com:`, had no ssh key here to answer it -- and
+git refuses a submodule clone over that `file` transport by default since the
+CVE-2022-39253 fix (2.30.6, and every maintenance release that merged it,
+2.38.1 among them), so without it the line fails at "transport 'file' not
+allowed". Given on the command and not in any config file, it lifts the
+refusal for this one command and nothing else; on a clone that keeps the
+`.gitmodules` URL it changes nothing, and the line needs an ssh key instead
+(S280). The teardown takes `--force` because a plain `git worktree remove`
+refuses a worktree containing a submodule. The `CLANG_FORMAT_MAJOR` export is
+the same override the gate needs here: without it `test_clang_format_script`
+is red on the unmutated tree and the run refuses before the first mutant,
+which is the guard working — a suite already red cannot say whether it saw the
+mutant.
 
 **The fixture has to be the tree its header names, and the baseline has to
 have run something.** Two refusals, S239, both from what S097 verdict 2 walked

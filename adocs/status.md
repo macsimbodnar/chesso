@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S261 done -- the search vector ships; S280 next, then S099
+## 2026-10-14: S261 and S280 done -- the search vector ships; S099 phase 2 next
 
 **S261 done.** Its SPRT read H1 (`adocs/data/S261_sprt.sh`): CAND `1b84f4b`,
 the lane's vector (21 of 31 defaults move; held `LmrCutNode`, `SeeLmrExtra`,
@@ -30,17 +30,18 @@ commit also fixes DEV_MANUAL's `--floor 145` -> 159 and
 - DEC-282's two rulings: S279 inside S261's REF exception, and F's carry
   ceiling 0 -> 1. Both stand on S261's H1, which it now has.
 
-**Order from here:** S280 (filler, DEC-171; phase 2 about 20 min) -> S099
-phase 2 on S261's closing commit (about 2.5 h: fresh S170 sweep, S203
-ceilings -- F above DEC-272's 2 stops for a ruling; DEC-283 governs its mate
-floors), then its SPRT (REF = S261's closing commit) -> S023 verdict 1
-(DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
+**S280 done** (filler, DEC-171): the mutation fixture recipe's submodule line
+carries `git -c protocol.file.allow=always` -- this clone's doctest URL is a
+local path (S254), refused over the `file` transport since the
+CVE-2022-39253 fix; observed failing, then the tests built and NB01 killed;
+a `--force` teardown added. Fast check: 3 prose findings fixed.
+
+**Order from here:** S099 phase 2 on S280's landing (about 2.5 h: fresh S170
+sweep, S203 ceilings -- F above DEC-272's 2 stops for a ruling; DEC-283
+governs its mate floors), then its SPRT (REF `bacead1`, S261's closing
+commit) -> S023 verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
 
 **Waiting, written (DEC-260 lanes):**
-- **S280** (`../chesso-s280` at `e9d91e3`): `git -c
-  protocol.file.allow=always` on the recipe's `submodule update` in
-  `DEV_MANUAL.md` and `tools/mutation_check.py`'s docstring; step file in
-  `plan_current`. Phase 2: observe the failure, apply, build, `--only NB01`.
 - **S099** (`../chesso-s099c` on `22e8df7`, diff
   `.tuning/coord/S099/s099_on_22e8df7.diff`): rebased blind; every golden it
   owns is PENDING its script (carry ceilings, S170 budgets, `EXACT_FLOOR`,
@@ -63,7 +64,7 @@ floors), then its SPRT (REF = S261's closing commit) -> S023 verdict 1
   night), compare ~1 h 15 m. Against S039: datagen header and DEV_MANUAL,
   take S082's side.
 
-**Done 2026-10-14:** S261 (above); S279 (quiescence checks its limits above
+**Done 2026-10-14:** S261 and S280 (above); S279 (quiescence checks its limits above
 the table probe, no SPRT by DEC-279, `gate_extra` green 1001 s); `e7b1d04`
 comments; DEC-280 (void) to DEC-283.
 
