@@ -7,98 +7,58 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S099's candidate landed; its SPRT runs (S261 and S280 done)
+## 2026-10-14: S099 read H0; `8758622` is reverted whole
 
-**S261 done.** Its SPRT read H1 (`adocs/data/S261_sprt.sh`): CAND `1b84f4b`,
-the lane's vector (21 of 31 defaults move; held `LmrCutNode`, `SeeLmrExtra`,
-`LmrDeeperMinReduction` 2, `LmrDivisor` 182), against REF `574480e`. LLR 2.96
-over 986 games, `nElo 80.09 +/- 21.69`, 0 forfeits: at least 5 nElo
-(DEC-063). bench 3872032 -> 5636835. Item (6), estimates and never verdicts:
-- **drift point** `e9d91e3` against `1680439` at 8+0.08, 2000 games: `Elo
-  +147.40 +/- 12.91`, `nElo +195.67 +/- 15.23`, 0 forfeits -- S267's first
-  row (`adocs/data/S267_drift.tsv`), verdicts since: S113, S131, S115, S116,
-  S272, S119, S261;
-- **32+0.32 Hash 64** on the SPRT's pair, 2000 games, 3 h 42 m: `Elo +33.46
-  +/- 10.89`, `nElo +47.10 +/- 15.23`, 0 forfeits (`adocs/data/S261_ltc.log`).
-Archived: `chesso_S261_{sprt,drift,ltc}_2026-10-14.tar.xz`. The completing
-commit also fixes DEV_MANUAL's `--floor 145` -> 159 and
-`test_mate_breadth.cpp`'s margin comment (3 above the weakened end, not 2).
+**S099's SPRT read H0** (`adocs/data/S099_sprt.sh`): CAND `8758622`, the
+pawn key and the pawn-keyed correction in one commit, against REF `bacead1`,
+`{0, 5}` at 8+0.08, Hash 16: `Elo -3.47 +/- 5.03`, `nElo -4.71 +/- 6.84`,
+LLR -2.96 over 9916 games, 4 h 36 m, 0 forfeits either side
+(`adocs/data/S099_sprt.log`; archived `chesso_S099_sprt_2026-10-14.tar.xz`).
+By the pre-registration's H0 row:
+- `8758622` is reverted whole -- code, tests, mutants, MANUAL, DEV_MANUAL,
+  specs and every golden (ceilings back to 0, 5, 4, 0, 0, 1, `EXACT_FLOOR`
+  159); the step file and the run's data stay;
+- S110 and S111 return to the reserve (step files kept in `plan_todo/`, off
+  the Open list); S281 is void (`plan_done/`); DEC-272, DEC-283 and DEC-284
+  lapse with the H1 they were conditional on;
+- one 32+0.32 Hash 64 estimate of the same pair, 1000 pairs, about 3 h
+  40 m; it ships nothing, a positive estimate opens a decision for the owner
+  (DEC-270 (3)). S099 completes when it is read.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
   against the incumbent, not cell-wise); the coordinator offered to revert.
 - DEC-282's two rulings: S279 inside S261's REF exception, and F's carry
-  ceiling 0 -> 1. Both stand on S261's H1, which it now has.
-- **DEC-284** (amended): S099's tree raises carry ceilings as the script
-  answers, on S099's H1 only -- A 0 -> 2 and E 0 -> 1 (4 before the fast
-  check's gate fix), F 1 -> 2 under DEC-272; S281 studies those short lines
-  after the correction family. The owner may void it before S099's verdict
-  lands.
+  ceiling 0 -> 1. Both stand on S261's H1.
+- DEC-284 is moot (S099's H0).
 
-**S280 done** (filler, DEC-171): the mutation fixture recipe's submodule line
-carries `git -c protocol.file.allow=always` -- this clone's doctest URL is a
-local path (S254), refused over the `file` transport since the
-CVE-2022-39253 fix; observed failing, then the tests built and NB01 killed;
-a `--force` teardown added. Fast check: 3 prose findings fixed.
-
-**S099's candidate landed** (`8758622`, `Bench: 6042933`): the branchless pawn
-key and the pawn-keyed correction table, 4096 slots a side by the census. Its
-fast check found the update gate refusing fail-low nodes whose top move was a
-capture, stricter than the published gate; fixed red-first with mutant CH15,
-everything it moved re-taken. Ceilings A 2, E 1 (DEC-284 amended), F 2
-(DEC-272); budgets by the rule; `EXACT_FLOOR` 159 -> 163 (a rise); 15/15 CH
-and 5/5 PK mutants, Debug self-play clean, `gate_extra` green 1019 s. **Its
-SPRT runs** (`adocs/data/S099_sprt.sh`, `{0, 5}` at 8+0.08, CAND `8758622`
-against REF `bacead1`, `src/` of the candidate's parent identical to REF):
-12.1 h on a bound, 19.0 h at the cap. H1 keeps it and S110, S111, S281 open;
-H0 or no verdict reverts `8758622` whole.
-
-**For S099's closing commit (H1):** `adocs/specs.md`'s "absent, search" row
-still lists "correction history" as absent; drop it there (on H0 the revert
-leaves it right).
-
-**Order from here:** S099's verdict -> S023 verdict 1 (DEC-273), rebased onto
-S099's outcome during the run -> S039 (DEC-274) -> S082 (DEC-275).
+**Order from here:** S099's revert -> its 32+0.32 estimate, while S023 is
+rebased blind onto the revert -> S023 verdict 1 (DEC-273) phase 2 and SPRT
+(REF = the revert's tree) -> S039 (DEC-274) -> S082 (DEC-275). S039 and S082
+were written against S099's candidate and are rebased again in turn.
 
 **Waiting, written (DEC-260 lanes):**
-- **S023** verdict 1, rebased blind onto `c3ed1ef` (`../chesso-s023c`, diff
-  `.tuning/coord/S023/s023_on_c3ed1ef.diff`): the capture-history table and its
-  capture SEE and quiescence futility readers, 4 parameters (count 79); no
-  seed moves with S261 or S099; no S023 rule reads the corrected evaluation.
-  Every golden it may move is PENDING its script; S023 has **no relaxation
-  allowance** (a ceiling rise or floor drop stops for a ruling). LQ02 sits at
-  zero margin since S261's re-mine and may go red: the coordinator ruled it
-  is re-mined by `S261_mine_late_capture.py` if so (DEC-142's path, mutants
-  must still die); only "no cell found" stops. On S099's H0, `src/` re-applies
-  cleanly onto the revert and seven docs/test files are rewritten. Phase 2
-  about 2.5 h (up to 4 h with re-mines), then its SPRT (REF = S099's outcome).
-- **S039**, rebased blind onto `8ef820f` (`../chesso-s039c`, diff
-  `.tuning/coord/S039/s039_on_8ef820f.diff`): the lazy shortcut and the clamp
-  retire together; count 74 here (78 with S023). S099's correction still
-  reads and writes the raw full score and every store stays raw. Two readers
-  phase 1 missed are fixed, and an untaken reading it claimed is now PENDING.
-  Its meeting points with S023 are listed hunk by hunk (S023's two
-  quiescence-futility cases convert to `empty_table_stand_pat`). Goldens
-  PENDING; no relaxation allowance. The coordinator ruled the six mined mate
-  rows are re-mined only if the mutation pass shows one red or no longer
-  separating (S099's practice). Non-regression `{-5, 0}` (DEC-274). Phase 2
+- **S023** verdict 1 (`../chesso-s023c`, diff
+  `.tuning/coord/S023/s023_on_c3ed1ef.diff`, on S099's candidate): the
+  capture-history table and its capture SEE and quiescence futility readers,
+  4 parameters (count 79 there, 77 on the revert). No relaxation allowance;
+  LQ02/LQ03 re-mined by `S261_mine_late_capture.py` if red (only "no cell
+  found" stops). On the revert `src/` re-applies and seven docs/test files
+  are rewritten. Phase 2 about 2.5 h (up to 4 h), then its SPRT.
+- **S039** (`../chesso-s039c`, diff `.tuning/coord/S039/s039_on_8ef820f.diff`):
+  the lazy shortcut and the clamp retire together; non-regression `{-5, 0}`
+  (DEC-274). Its S023 meeting points are listed hunk by hunk. Mined mate rows
+  re-mined only if the mutation pass shows one red or not separating. Phase 2
   about 2.5 h (3.5 h with every re-mine).
-- **S082**, rebased blind onto `001c82e` (`../chesso-s082c`, diff
-  `.tuning/coord/S082/s082_on_001c82e.diff`): the leaf walks, datagen
-  `--leaf`, the tuner's `--holdout`, LW01-LW09. S279's `check_limits` in
-  quiescence leaves the walk stopping only on its own 1M cap (now exact);
-  S099's correction never reaches the walk (null table, `negamax_at` only).
-  New: a test that a call past the cap is refused as aborted, and mutant
-  LW09 -- kept (coordinator), since S279 rewired that path untested. The
-  recipe script gained its DEC-171 line (none open). Meets S023 and S039 in
-  README and, for S039, datagen's DEC-055 header and DEV_MANUAL's
-  `--allow-tactical` row (S082's side). Phase 2: about 1 h 25 m, then the
-  ~9 h pool (a night), then `compare` about 1 h 30 m; the mutation fixture
-  needs S082 committed first (a scratch commit on a throwaway branch).
+- **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`):
+  leaf walks, datagen `--leaf`, the tuner's `--holdout`, LW01-LW09 (LW09 and
+  its abort test kept: S279 rewired that path untested). Phase 2 about 1 h
+  25 m, a ~9 h pool (a night), `compare` about 1 h 30 m.
 
-**Done 2026-10-14:** S261 and S280 (above); S279 (quiescence checks its limits above
-the table probe, no SPRT by DEC-279, `gate_extra` green 1001 s); `e7b1d04`
-comments; DEC-280 (void) to DEC-283.
+**Done 2026-10-14:** S261 H1 (bench 3872032 -> 5636835; drift point nElo
++195.67 +/- 15.23 against `1680439`; 32+0.32 Hash 64 nElo +47.10 +/- 15.23);
+S280 (the mutation recipe's file transport); S279; `e7b1d04` comments;
+DEC-280 (void) to DEC-284.
 
 **Done 2026-10-13, each gated green:** S119 H1 at Hash 16 (DEC-268); S263;
 S259; S276; S264 (Weiss 1.1 and Stash v30.0 join the reference set); S277;

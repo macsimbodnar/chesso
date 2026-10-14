@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:
-done:
+done:       2026-10-14 -- VOID, not run. Conditional on S099's H1 (DEC-284); S099 read H0 (`adocs/data/S099_sprt.log`, nElo -4.71 +/- 6.84, LLR -2.96) and `8758622` is reverted whole, so the short mate lines it was to classify leave with the correction table and the carry ceilings return to S261's 0, 5, 4, 0, 0, 1 by the revert. Nothing was implemented; DEC-284 is moot. Moved by the coordinator.
 
 ## Why this exists
 

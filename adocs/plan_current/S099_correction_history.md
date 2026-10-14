@@ -1722,3 +1722,39 @@ re-taken. The readings below are the fixed tree's unless marked.
     bacead1, one verdict for the key and the correction together.
 
     Bench: 6042933
+
+## Verdict (2026-10-14, coordinator): H0
+
+    SPRT | cand 8758622 vs ref bacead1, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+    Elo | -3.47 +/- 5.03, nElo -4.71 +/- 6.84
+    LLR | -2.96 (-2.94, 2.94) -> H0
+    Games | N: 9916 W: 2695 L: 2794 D: 4427, Ptnml [377, 1247, 1791, 1184, 359]
+    Wall | 4 h 36 m, 2151.1 games/h, forfeits 0
+    Log | adocs/data/S099_sprt.log
+
+Started 13:10, ended 17:47. 0 forfeits on either side by
+`tools/forfeit_report.py` over all 9918 games of the PGN, no crash, no
+disconnect, no illegal move: the abort rule did not fire. Incomplete mating
+PV 2 for the candidate against 7 for the reference. The untrimmed console,
+PGN and fastchess log are in the owner's archive,
+`chesso_S099_sprt_2026-10-14.tar.xz` with its `.sha256`.
+
+Read by the pre-registration's H0 row (`adocs/data/S099_sprt.sh`): the key
+and the correction together are not shown to gain 5 nElo at the harness
+setting; the interval [-11.55, +2.13] nElo does not reach the bound. So:
+
+1. **`8758622` is reverted whole**, the key with the correction (DEC-271:
+   the key alone costs speed and buys nothing in play). Its code, tests,
+   mutants and the documents describing them go back to `bacead1`'s, every
+   golden with them: carry ceilings 0, 5, 4, 0, 0, 1, the S170 budgets and
+   `EXACT_FLOOR` 159. What stays is the record: this file, the run's data
+   under `adocs/data/S099_*` and their `README.md` rows.
+2. **S110 and S111 return to the reserve**; no consumer step is created.
+3. **S281 is void**: its subject, the short mate lines the correction adds,
+   leaves with the revert. DEC-272 and DEC-283 applied on H1 only and lapse;
+   DEC-284's ceilings leave with the revert, so the owner's open ruling on it
+   is moot.
+4. **One DEC-202-shaped estimate at 32+0.32, Hash 64, 1000 pairs**, the same
+   pair, as DEC-269 (2) did for S261. It ships nothing; a positive estimate
+   opens a decision for the owner (DEC-270 (3)). No bisection is booked
+   (DEC-270 (4)). S099 completes when it is read.
