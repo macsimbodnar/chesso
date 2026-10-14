@@ -291,3 +291,34 @@ int search_lmp_threshold_probe(int lmr_depth, bool improving);
 // a case can build its window from the engine's own number instead of
 // restating the table. S112.
 int search_qs_futility_value_probe(piece_t victim);
+
+
+// The static evaluation negamax_at's consumers read, S099: `raw_eval` plus the
+// pawn correction `state` carries for this board's side to move and pawn key,
+// held strictly inside the mate band's edge -- or `raw_eval` itself where the
+// state carries no table. The node's own function, exported so a case can
+// assert the bound on inputs no search produces, a raw score at the band's
+// edge among them.
+int search_corrected_eval_probe(const search_state_t* state,
+                                const board_t* board,
+                                int raw_eval);
+
+// Whether a node may teach the pawn correction table, S099, as a pure function
+// of what the node has at its store: in check or not, its raw static
+// evaluation, its best move, the bound type it stores and the search's own
+// score. Exported so each clause of the gate can be held directly, the
+// precondition first, rather than inferred from a table a whole search left
+// behind.
+bool search_correction_may_learn_probe(bool in_check,
+                                       int raw_eval,
+                                       move_t best_move,
+                                       node_type_t type,
+                                       int score);
+
+#ifdef CHESSO_TUNE
+// S099's pawn key census (DEC-270), tune build only: appends the distinct pawn
+// keys, per side to move, the correction was read for since the last call to
+// the file CHESSO_PAWN_KEY_CENSUS names, then starts empty. Does nothing when
+// the variable is unset. The UCI layer calls it at every new-game reset.
+void search_pawn_key_census_flush();
+#endif

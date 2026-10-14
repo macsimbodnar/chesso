@@ -1,0 +1,40 @@
+# S099, 2026-10-14: python3 adocs/data/S156_mined_floor_sweep.py --ref <fixture> --floor <n> --jobs 12
+# Fixtures are commit objects on no branch: 6fc7f23 plus S099 (the branchless
+# pawn key, the correction at 4096 slots a side, the gate taking a fail-low's
+# capture). First at --floor 162 (febfcf2), the floor a reading before the
+# gate's fix had placed: it separates and the weakened gate is red, but the
+# shipping end is now 164, so the floor moves to 1 below it. Then at --floor
+# 163 (5eee8eb, the same tree with the floor at 163): red. At 159, S261's
+# floor, the weakened build's 160 passes, so 159 no longer separates.
+
+## --floor 162 on febfcf2
+318 positions, depth 10, ref febfcf2c515db40017c4803155c082a4769fc1e8
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     164          167            0   16.2s
+          2     165          168            0   16.2s
+          1     160          162            0   15.7s
+          0     160          162            0   15.8s
+
+  floor 162, asserted by tests/test_mate_breadth.cpp
+    shipping value 164, weakened-guard value 160, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_guaftxvd/tests/test_mate_breadth.cpp:265: MESSAGE: mined set at depth 10: 160 exact, 162 right sign, 0 wrong sign
+    logged: the mined set reads 160 exact at depth 10, under the 162 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+
+## --floor 163 on 5eee8eb
+318 positions, depth 10, ref 5eee8ebff65986ae61af97e0ab8e133cfdf65316
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     164          167            0   16.2s
+          2     165          168            0   16.2s
+          1     160          162            0   15.7s
+          0     160          162            0   15.6s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 164, weakened-guard value 160, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_cj7s0ohj/tests/test_mate_breadth.cpp:266: MESSAGE: mined set at depth 10: 160 exact, 162 right sign, 0 wrong sign
+    logged: the mined set reads 160 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down

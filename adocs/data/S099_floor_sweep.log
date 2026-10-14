@@ -1,0 +1,41 @@
+# S099, 2026-10-14, on febfcf2 -- a commit object on no branch: 6fc7f23 plus
+# S099 (the branchless pawn key and the correction at 4096 slots a side, the
+# gate taking a fail-low's capture, the carry goldens of DEC-284 and DEC-272 in).
+#   python3 adocs/data/S154_floor_margin_sweep.py floor --ref febfcf2 --jobs 12
+#   python3 adocs/data/S154_floor_margin_sweep.py red --ref febfcf2 --jobs 12
+# MATE_IN_THREE_FLOOR stays 11: the ends read 12 shipping (RfpMinPly 3) and
+# 7 weakened (RfpMinPly 1), and the gate built at 1 is red.
+
+RfpMinPly swept at febfcf2c515db40017c4803155c082a4769fc1e8, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #########..###.######..#  churn -  11458992 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 16/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #####.#.#...##.######..#  churn 3  11141272 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 4  9902763 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 12/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  11817022 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  2/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 5  8993641 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  2/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 0  8993641 nodes
+
+  floor, 15.5s
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_aaarvw2z/tests/test_engine.cpp:5779: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_aaarvw2z/tests/test_engine.cpp:5780: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 7 >= 11 )
+    [doctest] assertions: 3512 | 3484 passed | 28 failed |
+
+  red, 23.6s

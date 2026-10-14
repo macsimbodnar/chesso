@@ -1,0 +1,23 @@
+# S099, 2026-10-14: DEC-270's census on the candidate's tune build, 6fc7f23 plus
+# S099 with the fail-low capture fix to the gate. Each run:
+#   python3 adocs/data/S099_pawn_key_census.py <tune chesso> 12
+# First at 2048 slots a side (the constant set to size_t{1} << 11 for the
+# build), then at 4096, the size the tree carries; both give 4096. A rule's
+# answer, not a measurement of anything timed: node counts, so the machine's
+# load moves none of it.
+
+## at 2048 slots a side
+S099 pawn key census: 300 positions, go depth 12, 61276280 nodes, engine /home/max/ws/chesso/.tuning/coord/S099/p2/bin/fix_tune_2048
+per position               p50     p90     p95     p99     max
+white to move              404    1674    2514    5029    8368
+black to move              376    1732    2781    4701    8360
+larger side                409    1756    2781    5029    8368
+size: the next power of two above the larger side's p95 (2781) is 4096 slots a side
+
+## at 4096 slots a side
+S099 pawn key census: 300 positions, go depth 12, 62106246 nodes, engine /home/max/ws/chesso/.tuning/coord/S099/p2/bin/fix_tune_4096
+per position               p50     p90     p95     p99     max
+white to move              404    1626    2756    5698    9009
+black to move              376    1756    2844    5236    8937
+larger side                409    1756    2844    5698    9009
+size: the next power of two above the larger side's p95 (2844) is 4096 slots a side

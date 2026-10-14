@@ -1,0 +1,16 @@
+# S099, 2026-10-14: the first-mate depths test_engine's "a narrowed window still
+# finds a mate that appears mid-search" holds, re-read on the candidate's
+# Release build (6fc7f23 plus S099 with the fail-low capture fix):
+#   adocs/data/S188_repair_goldens.py first-mate --engine <chesso>
+# Both 9, mate 5, unchanged from S261's.
+
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp896  d2:cp896  d3:cp911  d4:cp899  d5:cp953  d6:cp955  d7:cp976  d8:cp1097  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1174  d2:cp1174  d3:cp1217  d4:cp1213  d5:cp1256  d6:cp1256  d7:cp1280  d8:cp1297  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]

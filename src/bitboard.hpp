@@ -160,6 +160,13 @@ void unmake_move(game_t* game);
 bool eval_accumulators_match(const board_t* board);
 bool squares_match_bitboards(const board_t* board);
 
+// The pawn key rebuilt from the two pawn bitboards: what board_t::pawn_hash
+// must equal at every node (INV-2). In the header, unlike compute_full_hash(),
+// because it is an oracle like the two above: asserted inside make_move_impl
+// and unmake_move_impl in Debug, called by the tests in every build, and by
+// load_FEN() once per load. Not for a hot path. S099.
+hash_t compute_full_pawn_hash(const game_t* game);
+
 // Pass the turn without moving, for null move pruning. Must be undone with
 // unmake_null_move(), not unmake_move(): the history entry it pushes carries no
 // move to reverse.
