@@ -301,8 +301,9 @@ is typed by hand.
 | S116 | razoring at depth one stays | 3 h 55 m | 8234 | `{0, 5}` | H1, +8.36 +/- 5.62 |
 | S272 | a bare-FEN client gains from S271's table | 0 h 18 m | 716 | `{0, 5}` | H1, +75.91 +/- 16.87 |
 | S119 | the cluster table gains at the harness setting | 7 h 43 m | 16128 | `{0, 5}` | H1, +5.24 +/- 4.06 |
+| S261 | the search block's fitted vector ships | 0 h 28 m | 986 | `{0, 5}` | H1, +59.78 +/- 16.52 |
 
-**The ledger holds 45: mean 6 h 13 m, median 5 h 26 m, 591459 games in 280.27 hours, 2110.3 an hour across the set.** **Fast class**, an effect outside the bounds interval -- seventeen runs, mean **1 h 56 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-eight runs, mean **8 h 49 m**.
+**The ledger holds 46: mean 6 h 06 m, median 5 h 26 m, 592445 games in 280.74 hours, 2110.3 an hour across the set.** **Fast class**, an effect outside the bounds interval -- eighteen runs, mean **1 h 51 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-eight runs, mean **8 h 49 m**.
 
 ### Priced by class
 
