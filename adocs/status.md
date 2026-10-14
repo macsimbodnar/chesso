@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-14, by hand.
 
-## 2026-10-14: S261 and S280 done -- the search vector ships; S099 phase 2 next
+## 2026-10-14: S099's candidate landed; its SPRT runs (S261 and S280 done)
 
 **S261 done.** Its SPRT read H1 (`adocs/data/S261_sprt.sh`): CAND `1b84f4b`,
 the lane's vector (21 of 31 defaults move; held `LmrCutNode`, `SeeLmrExtra`,
@@ -41,20 +41,22 @@ local path (S254), refused over the `file` transport since the
 CVE-2022-39253 fix; observed failing, then the tests built and NB01 killed;
 a `--force` teardown added. Fast check: 3 prose findings fixed.
 
-**Order from here:** S099 phase 2 on S280's landing -- items 1 to 6 done (the
-table is 4096 slots a side by the census; bench 7052777; the ceilings stop
-ruled by DEC-284), items 7 to 13 resume (floors under DEC-283, mutants,
-Debug self-play, `gate_extra`), then its SPRT (REF `bacead1`, S261's closing
-commit) -> S023 verdict 1 (DEC-273) -> S039 (DEC-274) -> S082 (DEC-275).
+**S099's candidate landed** (`8758622`, `Bench: 6042933`): the branchless pawn
+key and the pawn-keyed correction table, 4096 slots a side by the census. Its
+fast check found the update gate refusing fail-low nodes whose top move was a
+capture, stricter than the published gate; fixed red-first with mutant CH15,
+everything it moved re-taken. Ceilings A 2, E 1 (DEC-284 amended), F 2
+(DEC-272); budgets by the rule; `EXACT_FLOOR` 159 -> 163 (a rise); 15/15 CH
+and 5/5 PK mutants, Debug self-play clean, `gate_extra` green 1019 s. **Its
+SPRT runs** (`adocs/data/S099_sprt.sh`, `{0, 5}` at 8+0.08, CAND `8758622`
+against REF `bacead1`, `src/` of the candidate's parent identical to REF):
+12.1 h on a bound, 19.0 h at the cap. H1 keeps it and S110, S111, S281 open;
+H0 or no verdict reverts `8758622` whole.
+
+**Order from here:** S099's verdict -> S023 verdict 1 (DEC-273), rebased onto
+S099's outcome during the run -> S039 (DEC-274) -> S082 (DEC-275).
 
 **Waiting, written (DEC-260 lanes):**
-- **S099** (`../chesso-s099c` on `22e8df7`, diff
-  `.tuning/coord/S099/s099_on_22e8df7.diff`): rebased blind; every golden it
-  owns is PENDING its script (carry ceilings, S170 budgets, `EXACT_FLOOR`,
-  `MATE_IN_THREE_FLOOR`, first-mate depths, the 2048-slot census). (a) the
-  pawn key, branchless (DEC-271); (b) the correction table at 2048 slots a
-  side (DEC-270). Lands as one candidate. DEC-272 (owner): F's ceiling up to
-  2 on its H1.
 - **S023** (`../chesso-s023`, at `c3b7b5e`): phase 1 blind -- verdict 1, the
   capture-history table and its capture SEE and quiescence futility margin
   readers, 4 new parameters, CX mutants; verdict 2 (ordering) only on its H1
