@@ -304,8 +304,9 @@ is typed by hand.
 | S272 | a bare-FEN client gains from S271's table | 0 h 18 m | 716 | `{0, 5}` | H1, +75.91 +/- 16.87 |
 | S119 | the cluster table gains at the harness setting | 7 h 43 m | 16128 | `{0, 5}` | H1, +5.24 +/- 4.06 |
 | S261 | the search block's fitted vector ships | 0 h 28 m | 986 | `{0, 5}` | H1, +59.78 +/- 16.52 |
+| S099 | the pawn key and the correction are reverted | 4 h 36 m | 9916 | `{0, 5}` | H0, -3.47 +/- 5.03 |
 
-**The ledger holds 46: mean 6 h 06 m, median 5 h 26 m, 592445 games in 280.74 hours, 2110.3 an hour across the set.** **Fast class**, an effect outside the bounds interval -- eighteen runs, mean **1 h 51 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-eight runs, mean **8 h 49 m**.
+**The ledger holds 47: mean 6 h 04 m, median 5 h 25 m, 602361 games in 285.34 hours, 2111.1 an hour across the set.** **Fast class**, an effect outside the bounds interval -- eighteen runs, mean **1 h 51 m**. **Slow class**, inside it, on a bound or a true zero -- twenty-nine runs, mean **8 h 40 m**.
 
 ### Priced by class
 
