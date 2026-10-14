@@ -35,6 +35,10 @@ and DEC-284 lapsed. **The DEC-202 estimate**, same pair at 32+0.32, Hash 64,
 - **DEC-287:** S023's tree raises carry ceilings C 4 -> 5 and E 0 -> 1 as
   the script answers (10 short lines in 1402 against S261's 16 in 1485),
   with the rule's budgets, on S023 verdict 1's H1 only.
+- **DEC-288** (coordinator): the E21 mined row stopped separating on S023's
+  tree and its own range (7..10) holds no separator; it is re-mined in guard
+  mode at 11..14 by script (6 separators there). The extra-ply row, stale
+  already on the parent, is re-mined in the same candidate.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families

@@ -14943,3 +14943,36 @@ Rejected:     Refusing and studying the short lines first (an S281-shaped
               match a reverted tree.
 Consequences: `tests/test_mate_carry.cpp`'s C and E rows cite this id;
               `adocs/data/S170_cases.tsv` takes the rule's budgets.
+
+## DEC-288  2026-10-14  A mined mate row with no separator in its tree's own range is re-mined in guard mode one band deeper, by script
+Tags:         testing, mate-safety, mined-rows, s023, e21, dec-278, dec-238, dec-142
+Context:      On S023 verdict 1's tree the E21 row of `tests/test_search.cpp`
+              (`mate_the_multicut_hides`, depth 10) stays green but no longer
+              separates: the shipped build and `E21_multicut_mate_band_gate_dropped`
+              both find the mate in 5 at depths 9 to 12. S261's procedure over
+              269 candidates in the row's own range, 7..10, finds no separator;
+              the same candidates at 11..14, the range S259 mined in, give 6.
+              DEC-278 read S261's rows over the incumbent's range and re-mined
+              them into the candidate's own; the coordinator's re-mine ruling
+              for S023 made "no cell found" a stop. E21 itself is still killed
+              by S243's direct case.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12: a test-design ruling, not a relaxation -- a row that
+              no longer separates guards nothing, and its replacement must
+              separate. The E21 row is re-mined in guard mode (DEC-238) at
+              depths 11..14 by `adocs/data/S277_mine_mate_row.py`, its pick
+              taken as the script gives it, observed green on the shipped build
+              and red with E21 applied, its GOLDEN block naming the script, the
+              range and this id. The same holds for any later mined row whose
+              own range has no separator: one band deeper, by script, never by
+              hand. No separator in the deeper band either stops for a ruling.
+Rejected:     Keeping the row green and stale as a finding -- it has gone stale
+              silently twice and would guard nothing. Holding S023 for a ruling
+              on the range rule itself -- the separators exist and the deeper
+              band is the one the row was mined in before.
+Consequences: S023's candidate carries the re-mined row; on its H0 the revert
+              restores S261's row, which separates on that tree. The extra-ply
+              row S023's phase 2 found stale on the parent (S261's engine) and
+              re-mined by S095's procedure rides in the same candidate; on
+              S023's H0 it goes back stale with the revert, and a filler step
+              re-mines it on the reverted tree.
