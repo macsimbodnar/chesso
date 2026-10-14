@@ -35,9 +35,14 @@ S025 conditional per DEC-273. **H0 or no verdict:** revert with the band
 case kept minus its loop; S025 and S265 to the reserve; a filler step
 re-mines the extra-ply row on the reverted tree.
 
-**Meanwhile, blind (DEC-260):** S283's pre-registration
-(`adocs/data/S283_sprt.sh`, S099's pair at 32+0.32, `{0, 10}`), then S039
-rebased onto `adb5d78`.
+**Meanwhile, blind (DEC-260):** S283's pre-registration is written in
+`../chesso-s283` (diff `.tuning/coord/S283/s283_phase1.diff`) and waits on
+**S284** (DEC-289): `fastchess.sh` cannot take `{0, 10}` at alpha 0.05 or a
+round cap that keeps the SPRT, so a harness step adds `SPRT_BOUNDS` and
+`SPRT_ROUNDS`, landing after S023's run ends (bash reads a running script).
+No A/A owed: no played setting moves. Then S039 rebased onto `4e6ca63`
+(`../chesso-s039d`). The prose checks on `4e6ca63`'s successors run after
+the match (DEC-260).
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -46,8 +51,8 @@ rebased onto `adb5d78`.
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here:** S023 verdict 1's SPRT -> S283, S099's pair at
-32+0.32 (DEC-286) -> S039 (DEC-274) -> S082 (DEC-275), each rebased onto the
+**Order from here:** S023 verdict 1's SPRT -> S284 (harness, DEC-289) ->
+S283, S099's pair at 32+0.32 (DEC-286) -> S039 (DEC-274) -> S082 (DEC-275), each rebased onto the
 tree before it while the previous run holds the machine. S282 (filler,
 DEC-171) is named in each pre-registration while open.
 

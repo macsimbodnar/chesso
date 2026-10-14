@@ -14983,3 +14983,39 @@ Consequences: S023's candidate carries the re-mined row; on its H0 the revert
               re-mined by S095's procedure rides in the same candidate; on
               S023's H0 it goes back stale with the revert, and a filler step
               re-mines it on the reverted tree.
+
+## DEC-289  2026-10-15  fastchess.sh takes an SPRT's bounds and its round cap from the environment, before S283 runs
+Tags:         harness, sprt, fastchess, s283, s284, dec-286, dec-143
+Context:      S283's pre-registration (DEC-286: `{0, 10}` nElo at alpha =
+              beta = 0.05, 32+0.32, Hash 64, a cap near DEC-143's midpoint
+              figure, 10500 games, about 19.7 h) cannot reach `fastchess.sh`
+              at `4e6ca63`. The mode argument fixes the bounds: none is
+              `{0, 5}`, `--nonreg` `{-5, 0}`, `--fast` `{0, 10}` at alpha =
+              beta = 0.10 capped at 1500 rounds. `ROUNDS` replaces the cap but
+              empties the SPRT, by design (S198). The only SPRT cap left is the
+              mode's 20000 rounds, about 75 h at this control. An unread
+              variable is silently ignored, so a run could play `{0, 5}` for
+              75 h under S283's name.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. A harness step, S284, before S283 launches:
+              `fastchess.sh` reads `SPRT_BOUNDS` (elo0, elo1, alpha, beta,
+              validated) and `SPRT_ROUNDS` (a round cap that keeps the SPRT),
+              refuses `SPRT_ROUNDS` beside `ROUNDS` and either beside a mode
+              argument that would contradict it, and prints the bounds and the
+              cap on the banner. Each new path gets a case in
+              `tests/test_fastchess_script.sh`, and a case shows the default
+              path's fastchess command line unchanged. It moves no played
+              setting -- fastchess's version, the book, the adjudication, the
+              machine -- so DEC-143's A/A is not owed, and the stamp says so.
+              It lands only after S023 verdict 1's run has ended, because bash
+              reads a running script as it goes. `S283_sprt.sh` refuses unless
+              `fastchess.sh` reads both names.
+Rejected:     Editing the mode block uncommitted for the run, the documented
+              route -- what played would not be in git, and the file sits dirty
+              in main for about 20 h. `--fast` -- alpha 0.10, not what DEC-286
+              booked, and a cap far under the midpoint figure. Bounds only with
+              the 20000-round cap -- a 75 h tail, against DEC-286's "about
+              19 h" and its no-verdict outcome.
+Consequences: S284 enters the Open list before S283. S283's phase 1 waits in
+              `../chesso-s283` until S284 lands; its two coordinator sentences
+              name S284's commit and S023's state on the day it is pinned.
