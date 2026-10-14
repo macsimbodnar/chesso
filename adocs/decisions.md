@@ -14783,3 +14783,31 @@ Consequences: `adocs/data/S261_sprt.sh` cites DEC-282 for the waiver and puts
               the reading taken at pinning below its frozen pre-registration.
               `tests/test_mate_carry.cpp`'s F row reads 1 with this id. S099's
               DEC-272 raise is re-derived on its own grid at its rebase.
+
+## DEC-283  2026-10-14  S099's mate floors may follow their scripts down by at most two, on S099's H1 only
+Tags:         testing, mate, s099, s261, dec-142, dec-116, dec-272
+Context:      S099's correction cost one exact mate at each end of the breadth
+              set on `5ac17bd` (149 shipping, 144 weakened, against 150 and
+              145). S261's vector put `test_mate_breadth`'s `EXACT_FLOOR` at
+              159, one below its shipping 160 and three above its weakened
+              156, so the same loss on the rebased tree leaves the floor with
+              no margin. Lowering a floor relaxes a test; DEC-272 covers only
+              case F's carry ceiling. Asked by S099's rebase (phase 1 blind,
+              2026-10-14) before phase 2, so phase 2 does not stall on it.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12. On S099's rebased tree, `EXACT_FLOOR` and
+              `MATE_IN_THREE_FLOOR` take what their own scripts answer
+              (`S156_mined_floor_sweep.py`, `S154`'s), if each moves down by
+              at most two and the build that weakens its guard (`RfpMinPly` 1
+              for breadth, the S154 gate for mate in three) is still red. The
+              moved floor lands with S099 only on its H1, DEC-272's form. A
+              larger drop, a weakened build gone green, or any other golden
+              loosening stops phase 2 for a ruling.
+Rejected:     Stopping phase 2 at the first drop -- it delays the SPRT slot
+              for a shape the owner already accepted in DEC-272 and the
+              coordinator in DEC-282. Keeping 159 at zero margin -- it breaks
+              DEC-116's rule that a floor sits strictly between the count that
+              ships and the count a weakened guard gives.
+Consequences: S099's phase 2 reports each floor's shipping, weakened and
+              gate readings beside the moved value, and its commit names this
+              id at each site.
