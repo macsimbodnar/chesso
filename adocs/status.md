@@ -72,11 +72,17 @@ S099's outcome during the run -> S039 (DEC-274) -> S082 (DEC-275).
   must still die); only "no cell found" stops. On S099's H0, `src/` re-applies
   cleanly onto the revert and seven docs/test files are rewritten. Phase 2
   about 2.5 h (up to 4 h with re-mines), then its SPRT (REF = S099's outcome).
-- **S039** (`../chesso-s039`): phase 1 blind -- the lazy shortcut and the
-  clamp removed in one change; `LazyEvalMargin` retires. Non-regression
-  `{-5, 0}` (DEC-274). At its rebase S023's two quiescence-futility cases on
-  the removed API convert; `adocs/specs.md`'s search row conflicts by hand
-  with S099 and S023.
+- **S039**, rebased blind onto `8ef820f` (`../chesso-s039c`, diff
+  `.tuning/coord/S039/s039_on_8ef820f.diff`): the lazy shortcut and the clamp
+  retire together; count 74 here (78 with S023). S099's correction still
+  reads and writes the raw full score and every store stays raw. Two readers
+  phase 1 missed are fixed, and an untaken reading it claimed is now PENDING.
+  Its meeting points with S023 are listed hunk by hunk (S023's two
+  quiescence-futility cases convert to `empty_table_stand_pat`). Goldens
+  PENDING; no relaxation allowance. The coordinator ruled the six mined mate
+  rows are re-mined only if the mutation pass shows one red or no longer
+  separating (S099's practice). Non-regression `{-5, 0}` (DEC-274). Phase 2
+  about 2.5 h (3.5 h with every re-mine).
 - **S082** (`../chesso-s082`, base `e1c59f8`): phase 1 blind -- leaf walks,
   datagen `--leaf`, the tuner's `--holdout`, LW01-LW08, recipe
   pre-registration with DEC-275. Phase 2: ~1 h 30 m checks, the pool ~9 h (a
