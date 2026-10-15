@@ -1593,8 +1593,7 @@ TEST_SUITE("evaluation: score_move ordering")
          "]."));
   }
 
-
-  // S023's accepts, and written before any score changes, as the step file's
+  // S023's accepts, written before any score changed, as the step file's
   // Promoted section asks: the ordering bands stay disjoint, discharged by a
   // case ctest runs and not by reading a diff (2026-08-13_plan_review.2-F06).
   // The cheapest capture there is -- the king taking a pawn -- is scored
@@ -1603,12 +1602,9 @@ TEST_SUITE("evaluation: score_move ordering")
   // score can invert this, and the symptom is lost rating and not a wrong node
   // count.
   //
-  // The king's capture is scored at the worst record capture history can
-  // hold, at none, and at the best. S023's first verdict reads the table in
-  // two pruning margins and not here, so today the record moves nothing and
-  // the case holds the clearance the bands already have; the second verdict
-  // lets a bounded term into score_move, and it arrives under this case
-  // rather than beside it.
+  // Kept when S023's first verdict was reverted, with its capture-history
+  // record loop taken out: the table it planted left with the verdict, and
+  // the bands the case guards did not.
   TEST_CASE_FIXTURE(eval_fixture_t,
                     "a king capturing a pawn outranks a killer at the same ply")
   {
@@ -1649,24 +1645,15 @@ TEST_SUITE("evaluation: score_move ordering")
     REQUIRE(score_move(&game, &state, killer, 0, ply, 0) >
             score_move(&game, &state, killer, 0, ply + 1, 0));
 
-    int16_t& record =
-        capture_history_entry(&state, &game.board, king_takes_pawn);
+    const int s_capture = score_move(&game, &state, king_takes_pawn, 0, ply, 0);
+    const int s_killer = score_move(&game, &state, killer, 0, ply, 0);
 
-    for (const int planted : {-CAPT_HIST_BOUND, 0, CAPT_HIST_BOUND}) {
-      record = static_cast<int16_t>(planted);
-
-      const int s_capture =
-          score_move(&game, &state, king_takes_pawn, 0, ply, 0);
-      const int s_killer = score_move(&game, &state, killer, 0, ply, 0);
-
-      CHECK_MESSAGE(
-          s_capture > s_killer,
-          ("With a capture record of " + std::to_string(planted) +
-           " the king taking a pawn scores " + std::to_string(s_capture) +
-           " against the killer's " + std::to_string(s_killer) +
-           " at the same ply: the capture band no longer clears "
-           "the killer band."));
-    }
+    CHECK_MESSAGE(
+        s_capture > s_killer,
+        ("The king taking a pawn scores " + std::to_string(s_capture) +
+         " against the killer's " + std::to_string(s_killer) +
+         " at the same ply: the capture band no longer clears the "
+         "killer band."));
   }
 
   TEST_CASE_FIXTURE(eval_fixture_t, "a promotion outranks a plain quiet move")

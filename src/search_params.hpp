@@ -216,41 +216,6 @@
   X(CONT_HIST_MALUS,   "ContHistMalus",   18, 0, 1000)                         \
   X(CONT_HIST_WEIGHT,  "ContHistWeight",  26, 0, 2000)                         \
                                                                                \
-  /* CAPTURE HISTORY, S023 verdict 1. The table is `capture_history` in        \
-     src/data_structures.hpp, [moving piece][target][victim type], written at  \
-     every fail-high in negamax_at: the capture that cut off is credited with   \
-     CaptHistBonus and every capture searched before the cutoff move is         \
-     charged CaptHistMalus. Implemented from the description the step file      \
-     carries -- the CPW History Heuristic page's "a history table indexed by    \
-     moved piece, target square and captured piece type, with bonus on cutoff  \
-     and malus otherwise" -- and from nothing else (DEC-221).                   \
-                                                                               \
-     The unit is S222's: **thousandths of the table's own band at              \
-     CAPT_HIST_REF_DEPTH**, graded quadratically in the remaining depth, and   \
-     the bound is a definition, CAPT_HIST_BOUND, for the gauge argument the     \
-     ContHistBonus comment above carries. The two consumers read the table      \
-     through weights of their own below, CaptHistQsWeight and                   \
-     CaptHistSeeWeight, and nothing orders a capture by it: the step file's     \
-     order note puts the margins first and the ordering key second, as two      \
-     verdicts.                                                                  \
-                                                                               \
-     Ranges by stated purpose, S222's: 0 writes nothing, and with both at 0     \
-     the table stays zero, both margins read the term as 0 and the tree is      \
-     the parent's node for node; 1000 is one update closing the whole band at   \
-     the reference depth, past which the clamp makes every larger value the     \
-     same engine.                                                               \
-                                                                               \
-     Seeds, DEC-134 **(b), a derivation over chesso's own history scale**,     \
-     the derivation S222 seeded the continuation shares by and re-taken on     \
-     plain history's fitted grading: at depth 11 its bonus is 6*121 + 19*11 + \
-     2 = 937 and its malus 17*11 + 36 = 223, against its bound of 8831 --       \
-     106 and 25 thousandths of its band. So the capture table starts at the     \
-     rate the quiet table it sits beside learns at, the malus a quarter of the \
-     bonus as the fit left the quiet pair. No engine's constant is behind       \
-     either. Re-derive whenever plain history's coefficients or bound move. */  \
-  X(CAPT_HIST_BONUS,   "CaptHistBonus",  106, 0, 1000)                         \
-  X(CAPT_HIST_MALUS,   "CaptHistMalus",   25, 0, 1000)                         \
-                                                                               \
   /* How deep quiescence may keep going on its own. Without a bound a string   \
      of checks recurses forever, since an evasion is not a capture and does    \
      not shorten the line. At 0 quiescence returns its stand-pat score and     \
@@ -259,13 +224,10 @@
                                                                                \
   /* PER-MOVE FUTILITY IN QUIESCENCE, S112. Out of check, a capture whose best  \
      case cannot reach alpha is skipped before the exchange evaluation is       \
-     consulted: `stand_pat + QS_FUTILITY_MARGIN + victim <= alpha` as S112      \
-     shipped it -- since S023 the margin is the capture's own,                  \
-     QS_FUTILITY_MARGIN moved by its record and floored at 0 (CaptHistQsWeight  \
-     below) -- the victim priced by `qs_futility_value` in src/search.cpp, and  \
-     the skipped value is folded into the node's fail-soft best rather than     \
-     dropped. Never while in check, never on a promotion, never on a capture    \
-     that gives check.                                                          \
+     consulted: `stand_pat + QS_FUTILITY_MARGIN + victim <= alpha`, the victim  \
+     priced by `qs_futility_value` in src/search.cpp, and the skipped value is  \
+     folded into the node's fail-soft best rather than dropped. Never while in  \
+     check, never on a promotion, never on a capture that gives check.          \
                                                                                \
      QS_FUTILITY IS A SWITCH AND NOT A SETTING, DEC-215 clause 2. No value of   \
      the margin is off: at 0 the rule still skips every capture whose victim    \
@@ -297,31 +259,6 @@
      Implemented from the step file's description, DEC-221. */                  \
   X(QS_FUTILITY,        "QsFutility",       1, 0, 1)                            \
   X(QS_FUTILITY_MARGIN, "QsFutilityMargin", 226, 0, 2000)                       \
-                                                                               \
-  /* THE CAPTURE'S OWN RECORD IN THAT MARGIN, S023 verdict 1. The margin a     \
-     capture is tested with is `max(0, QS_FUTILITY_MARGIN + CaptHistQsWeight * \
-     entry / CAPT_HIST_BOUND)`, the entry being the capture's cell of          \
-     `capture_history` (src/data_structures.hpp): a capture the main search    \
-     has seen cut off is given up to this much more room before it is called   \
-     futile, and one it has seen fail up to this much less. The weight is the   \
-     term's largest size in the evaluation's units, reached at either edge of  \
-     the band; at 0 the term is identically 0 and the test is S112's.          \
-                                                                               \
-     **The floor at 0 keeps S112's load-bearing claim** -- with a non-negative  \
-     margin and victim a skip fires only below the alpha the node was entered  \
-     with, so the fold never lifts the node above it. At the seed the weight    \
-     is under the margin and the floor never binds; it binds only where the     \
-     tune build sets the weight above QsFutilityMargin, and it is there for     \
-     that build.                                                                \
-                                                                               \
-     Range by stated purpose: 0 is off, and the top is QsFutilityMargin's own   \
-     top, twenty pawns, for that parameter's reason -- past it the term         \
-     dwarfs every victim the table prices and no longer tells one capture      \
-     from another. Seed, DEC-134 **(b) chesso's own material scale**: one      \
-     pawn of src/eval_tables.hpp, 94, so the best record a capture can hold    \
-     buys it one pawn and the worst costs it one. Fitted by S127 with the      \
-     margin it moves. */                                                        \
-  X(CAPT_HIST_QS_WEIGHT, "CaptHistQsWeight", 94, 0, 2000)                       \
                                                                                \
   /* QUIET QUEEN PROMOTIONS IN QUIESCENCE, S131. Out of check, quiescence      \
      searches every capture and, at 1, every promotion to a queen that takes   \
@@ -876,16 +813,14 @@
   X(SEE_QUIET_COEFF,   "SeeQuietCoeff",   18,     0, 10000)                    \
   X(SEE_QUIET_MAX_LMRDEPTH, "SeeQuietMaxLmrDepth", 10, 0, 16)                  \
                                                                                \
-  /* CAPTURE SEE PRUNING, S091, and the capture half of the same technique. A   \
-     capture whose exchange evaluation loses more than a margin scaled by the   \
+  /* CAPTURE SEE PRUNING, S091, and the capture half of the same technique.     \
+     A capture whose exchange evaluation loses more than a margin scaled by the \
      reduced depth is skipped outright, where quiescence only declines it:      \
-     `!see_ge(board, move, -(SEE_CAPT_COEFF * lmr_depth))` as S091 shipped it;  \
-     since S023 the margin also carries the capture's own record, `max(0,       \
-     SEE_CAPT_COEFF * lmr_depth + term)` with CaptHistSeeWeight below. It reads \
-     the same guards as the four rules above -- `may_prune` in negamax_at() --  \
-     because the hazard is the same one, with the gives-check exemption asked   \
-     of the engine's own is_check() for the captures this rule wants to skip    \
-     and for no others.                                                         \
+     `!see_ge(board, move, -(SEE_CAPT_COEFF * lmr_depth))`. It reads the same   \
+     guards as the four rules above -- `may_prune` in negamax_at() -- because   \
+     the hazard is the same one, with the gives-check exemption asked of the    \
+     engine's own is_check() for the captures this rule wants to skip and for   \
+     no others.                                                                 \
                                                                                \
      **The margin is linear in the reduced depth and the quiet one is           \
      quadratic**, which is the shape the wiki publishes for the two sides --    \
@@ -912,42 +847,13 @@
      adocs/data/S091_rule_sweep.txt is what the two rules do to this tree.      \
                                                                                \
      **Off is the cap at 0, and nothing else**, for the reason the two rules    \
-     above state: the bar is `-(SEE_CAPT_COEFF * lmr_depth)` before the         \
-     record's term, so at lmr_depth 0 the coefficient moves nothing -- the bar  \
-     is the record's term alone there since S023, floored at 0 -- and the rule  \
-     still skips every capture that loses more than that. 10000 is the range    \
-     top -- larger than any see_value, so every exchange clears the bar at any  \
-     lmr_depth of 1 or more -- and a range top is not an off value. */          \
+     above state: the bar is `-(SEE_CAPT_COEFF * lmr_depth)`, so at lmr_depth 0 \
+     it is 0 whatever the coefficient holds and the rule still skips every      \
+     capture that loses material. 10000 is the range top -- larger than any     \
+     see_value, so every exchange clears the bar at any lmr_depth of 1 or more  \
+     -- and a range top is not an off value. */                                 \
   X(SEE_CAPT_COEFF,    "SeeCaptureCoeff", 50,     0, 10000)                    \
   X(SEE_CAPT_MAX_LMRDEPTH, "SeeCaptureMaxLmrDepth", 9, 0, 16)                  \
-                                                                               \
-  /* THE CAPTURE'S OWN RECORD IN THE CAPTURE SEE MARGIN, S023 verdict 1. The   \
-     margin above becomes `max(0, SEE_CAPT_COEFF * lmr_depth +                 \
-     CaptHistSeeWeight * entry / CAPT_HIST_BOUND)`, the entry being the        \
-     capture's cell of `capture_history`: a capture with a record of cutting   \
-     off may lose up to this much more before it is skipped, and one with a   \
-     record of failing up to this much less. In `see_value`'s scale, where a    \
-     pawn is 100. At 0 the term is identically 0 and the rule is S091's.        \
-                                                                               \
-     **The floor at 0 keeps the rule's class**: whatever a capture's record,    \
-     the rule skips only a capture the exchange evaluation says loses          \
-     material, which is the class S091 defined and the mate cases were mined   \
-     against. Without it the worst record would make the bar positive at a     \
-     shallow reduced depth and skip an even trade. The floor binds wherever    \
-     `SeeCaptureCoeff * lmr_depth` is below the weight and the record is bad   \
-     enough -- at lmr_depth 0 always, for any bad record -- so it is live at   \
-     the defaults, and a case in tests/test_search.cpp holds it.               \
-                                                                               \
-     Range by stated purpose: 0 is off; 900 is a queen in `see_value`, the     \
-     largest single loss the exchange evaluation prices, past which the best   \
-     record excuses every capture whatever it loses, which is the rule turned  \
-     off for that record and not a setting of it. Seed, DEC-134 **(b)          \
-     chesso's own exchange scale**: one pawn of `see_value` in                 \
-     src/bitboard.cpp, 100 -- the unit SeeCaptureCoeff's own derivation        \
-     reads -- so a record at either edge moves the bar by one pawn, two        \
-     reduced plies of SeeCaptureCoeff's seed. Fitted by S127 with the          \
-     coefficient it moves. */                                                   \
-  X(CAPT_HIST_SEE_WEIGHT, "CaptHistSeeWeight", 100, 0, 900)                     \
                                                                                \
   /* THE EXTRA REDUCTION, S091. A move the exchange evaluation says loses       \
      material -- capture or quiet, the bar is 0 and not a margin -- is searched \

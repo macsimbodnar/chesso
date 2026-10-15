@@ -29,24 +29,19 @@ m("C02_capture_gives_check", S, "search/pruning",
    '    if (prune_rule != PRUNE_NONE && !is_check_move()) {'),
   origin="S091")
 
-# C05 and C06 anchor the shape S023 gave the site: the margin is computed into
-# `see_margin` by capture_see_margin(), which carries the capture's record, and
-# the cap became an `if` of its own around it so the record is read only inside
-# the cap. Both mutations are the ones they were -- the margin passed with the
-# wrong sign, the cap dropped -- and both are to be re-observed against their
-# own cases on the re-pointed anchors (S023's phase two).
 m("C05_capture_threshold_sign", S, "search/pruning",
   'the capture margin is passed positive, so the rule asks whether the '
   'capture gains the margin and skips every capture that does not',
-  ('        if (!see_ge(&game->board, moves[i], -see_margin)) {',
-   '        if (!see_ge(&game->board, moves[i], see_margin)) {'),
+  ('          !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {',
+   '          !see_ge(&game->board, moves[i], (SEE_CAPT_COEFF * lmr_depth))) {'),
   origin="S091")
 
 m("C06_capture_no_cap", S, "search/pruning",
   'the capture rule loses its depth cap, so it skips at every reduced depth '
   'instead of the shallow ones its margin is sized for',
-  ('      if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH) {',
-   '      if (true) {'),
+  ('      if (lmr_depth < SEE_CAPT_MAX_LMRDEPTH &&\n'
+   '          !see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {',
+   '      if (!see_ge(&game->board, moves[i], -(SEE_CAPT_COEFF * lmr_depth))) {'),
   origin="S091")
 
 m("C07_capture_first_move", S, "search/pruning",

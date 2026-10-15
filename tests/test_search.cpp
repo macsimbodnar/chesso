@@ -1,6 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
-#include <algorithm>  // std::max, S023's margin cases
 #include <bit>
 // S236: the reduction table's own formula, restated in the case that pins the
 // accumulator's unit so the engine cannot supply its own expectation.
@@ -74,38 +73,6 @@ static search_t search_fen(const std::string& fen,
   state.tt = &tt;
   state.stop = &never_stop;
   state.node_limit = node_limit;
-
-  return search(depth, &game, &state);
-}
-
-
-// search_fen() with every cell of the capture table planted at `record` before
-// the search starts, so a case can ask what a mate costs when every capture
-// carries the worst or the best record the table can hold. The search writes
-// the table as it goes; what is planted is where every cell starts. S023.
-static search_t search_fen_with_capture_record(const std::string& fen,
-                                               int depth,
-                                               int record)
-{
-  REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-
-  static std::atomic_bool never_stop = false;
-  never_stop = false;
-
-  tt_reset(&tt);
-  tt_new_search(&tt);
-
-  search_state_t state = {};
-  state.tt = &tt;
-  state.stop = &never_stop;
-
-  for (auto& by_target : state.capture_history) {
-    for (auto& by_victim : by_target) {
-      for (int16_t& cell : by_victim) {
-        cell = static_cast<int16_t>(record);
-      }
-    }
-  }
 
   return search(depth, &game, &state);
 }
@@ -1234,13 +1201,6 @@ TEST_SUITE("search: move ordering state")
   // pending 827-constant paste. Tighten it when a fit lands, not before.
   // 2026-08-14_test_review-F06.
   //
-  // **Read at S023 and kept**: on its candidate, capture history in the two
-  // capture margins, the script reads 13446, inside the band and 0.83 of the
-  // 16256 the pair was derived from. The script's own middle-half verdict
-  // reads every freshly derived count as outside, which is S282's open
-  // defect, and re-deriving by the two ratios would lower the floor to 2689;
-  // the pair stays until S282 restates the trigger.
-  //
   // GOLDEN (DEC-142): the pair 65024 and 3251, a band around the depth-5
   // node count of KIWIPETE_POS from a cold table, held inside
   // [count / 5, 4 x count]. Both ratios are the band this case has always
@@ -1302,400 +1262,6 @@ TEST_SUITE("search: move ordering state")
                      std::to_string(result.explored_nodes) +
                      " nodes; the 65024 budget was derived from 16256 and no "
                      "longer bounds anything - re-measure it"));
-  }
-}
-
-
-// S023 verdict 1: the capture table, its one index, its update and the two
-// margins it moves. The cases that drive a pruning node with the table planted
-// are in "search: pruning and reduction guards" and "search: quiescence
-// futility", beside the rules they move; these hold the table itself.
-// Mutants: tools/mutants/S023_capture_history.py.
-TEST_SUITE("search: capture history")
-{
-  // How many cells of the capture table hold something, and how many hold a
-  // credit and a charge. A wrong-cell write is the failure being guarded, so
-  // the whole table is read rather than the cell the case expects.
-  struct capture_census_t
-  {
-    size_t used = 0;
-    size_t credited = 0;
-    size_t charged = 0;
-  };
-
-  static capture_census_t capture_census(const search_state_t& state)
-  {
-    capture_census_t census;
-
-    for (int piece = W_PAWN; piece <= B_KING; ++piece) {
-      for (int to = 0; to < 64; ++to) {
-        for (int victim = 0; victim < CAPT_HIST_VICTIMS; ++victim) {
-          const int entry = state.capture_history[piece][to][victim];
-
-          if (entry != 0) { census.used++; }
-          if (entry > 0) { census.credited++; }
-          if (entry < 0) { census.charged++; }
-        }
-      }
-    }
-
-    return census;
-  }
-
-  // The capture from `from` to `to` on the loaded board, through the engine's
-  // own generator so the flags are the generator's.
-  static move_t generated_capture(index_t from, index_t to)
-  {
-    move_t moves[MAX_MOVES];
-    const size_t count = legal_moves(&game, moves);
-
-    for (size_t i = 0; i < count; ++i) {
-      if (MOVE_FROM(moves[i]) == from && MOVE_TO(moves[i]) == to &&
-          MOVE_CAPTURE(moves[i])) {
-        return moves[i];
-      }
-    }
-
-    return 0;
-  }
-
-
-  // Mutation: CX10_capture_index_victim_from_mover -- the victim column is read
-  // off the source square, so every capture is filed under its own mover's
-  // type and two captures of different pieces on one square share a cell.
-  //
-  // The one index, held against the raw table: the cell a capture owns is
-  // [moving piece][target square][victim type], whoever moves, and an en
-  // passant capture's victim is the pawn beside its empty target square. The
-  // positions are built for the shape and every move in them comes from the
-  // engine's own generator; nothing here is a chess judgement.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "the capture table is indexed by mover, target and victim")
-  {
-    search_state_t state = {};
-
-    // A pawn takes a pawn: e4xd5.
-    REQUIRE(load_FEN("4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1", &game));
-    const move_t pawn_takes_pawn = generated_capture(e4, d5);
-    REQUIRE(pawn_takes_pawn != 0);
-
-    capture_history_entry(&state, &game.board, pawn_takes_pawn) = 7;
-    CHECK_EQ(state.capture_history[W_PAWN][d5][W_PAWN], 7);
-
-    // A knight takes a rook: the column is the victim's type, read through
-    // white's enumerator whichever colour the victim is.
-    REQUIRE(load_FEN("4k3/8/8/3r4/8/4N3/8/4K3 w - - 0 1", &game));
-    const move_t knight_takes_rook = generated_capture(e3, d5);
-    REQUIRE(knight_takes_rook != 0);
-
-    capture_history_entry(&state, &game.board, knight_takes_rook) = 11;
-    CHECK_EQ(state.capture_history[W_KNIGHT][d5][W_ROOK], 11);
-
-    // Black takes: the mover is black's own piece and the victim white's type.
-    REQUIRE(load_FEN("4k3/8/8/3p4/4P3/8/8/4K3 b - - 0 1", &game));
-    const move_t black_takes = generated_capture(d5, e4);
-    REQUIRE(black_takes != 0);
-
-    capture_history_entry(&state, &game.board, black_takes) = 13;
-    CHECK_EQ(state.capture_history[B_PAWN][e4][W_PAWN], 13);
-
-    // En passant: e5xd6, landing on an empty square with the pawn it takes on
-    // d5. The flag is the generator's, and the board holds nothing on d6.
-    REQUIRE(load_FEN("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1", &game));
-    const move_t en_passant = generated_capture(e5, d6);
-    REQUIRE(en_passant != 0);
-    REQUIRE(MOVE_EN_PASSANT(en_passant));
-    REQUIRE_EQ(game.board.squares[d6], EMPTY);
-
-    capture_history_entry(&state, &game.board, en_passant) = 17;
-    CHECK_EQ(state.capture_history[W_PAWN][d6][W_PAWN], 17);
-
-    // Four writes, four cells, and nothing else touched: a cell the census
-    // finds that the four lines above do not name is a write to the wrong
-    // place.
-    CHECK_EQ(capture_census(state).used, 4);
-
-    // And the const overload reads the cell the mutable one wrote.
-    const search_state_t& read_only = state;
-    CHECK_EQ(capture_history_entry(&read_only, &game.board, en_passant), 17);
-  }
-
-
-  // Mutation: CX07_capture_malus_sign -- the malus is credited instead of
-  // charged, so every capture the node tried and rejected is promoted in the
-  // table its margins read.
-  // Mutation: CX08_capture_bonus_dropped -- the capture that cut off is never
-  // credited, so the table only ever learns what fails.
-  //
-  // Driven through the update directly, at the reference depth, where the unit
-  // is its own definition: one update from an empty cell is CaptHistBonus, or
-  // CaptHistMalus, thousandths of the band. Presence and that one number, and
-  // no formula restated.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a capture that cuts off is credited and the captures "
-                    "tried before it are charged")
-  {
-    REQUIRE(CAPT_HIST_BONUS > 0);
-    REQUIRE(CAPT_HIST_MALUS > 0);
-
-    REQUIRE(load_FEN(KIWIPETE_POS, &game));
-
-    move_t moves[MAX_MOVES];
-    const size_t count = legal_moves(&game, moves);
-
-    std::vector<move_t> captures;
-
-    for (size_t i = 0; i < count; ++i) {
-      if (MOVE_CAPTURE(moves[i])) { captures.push_back(moves[i]); }
-    }
-
-    REQUIRE(captures.size() >= 3);
-
-    search_state_t state = {};
-
-    // Three captures that own three different cells, so the census below can
-    // count them apart.
-    const move_t cutoff = captures[0];
-    const move_t tried[2] = {captures[1], captures[2]};
-
-    REQUIRE(&capture_history_entry(&state, &game.board, cutoff) !=
-            &capture_history_entry(&state, &game.board, tried[0]));
-    REQUIRE(&capture_history_entry(&state, &game.board, cutoff) !=
-            &capture_history_entry(&state, &game.board, tried[1]));
-    REQUIRE(&capture_history_entry(&state, &game.board, tried[0]) !=
-            &capture_history_entry(&state, &game.board, tried[1]));
-
-    history_on_capture_cutoff(&state, &game.board, cutoff, tried, 2,
-                              CAPT_HIST_REF_DEPTH);
-
-    const int credit = (CAPT_HIST_BOUND * CAPT_HIST_BONUS) / 1000;
-    const int charge = (CAPT_HIST_BOUND * CAPT_HIST_MALUS) / 1000;
-
-    REQUIRE(credit > 0);
-    REQUIRE(charge > 0);
-
-    CHECK_EQ(capture_history_entry(&state, &game.board, cutoff), credit);
-    CHECK_EQ(capture_history_entry(&state, &game.board, tried[0]), -charge);
-    CHECK_EQ(capture_history_entry(&state, &game.board, tried[1]), -charge);
-
-    const capture_census_t census = capture_census(state);
-
-    CHECK_EQ(census.used, 3);
-    CHECK_EQ(census.credited, 1);
-    CHECK_EQ(census.charged, 2);
-  }
-
-
-  // A quiet that cuts off charges the captures before it and credits nothing
-  // in this table: the quiet's own credit is quiet history's. Driven directly
-  // here and through a real node in the case below, because the call site is
-  // where this goes wrong in the obvious way -- an update made only when the
-  // cutoff move is itself a capture.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a quiet that cuts off charges the captures tried before "
-                    "it and credits nothing")
-  {
-    REQUIRE(CAPT_HIST_MALUS > 0);
-    REQUIRE(load_FEN(KIWIPETE_POS, &game));
-
-    move_t moves[MAX_MOVES];
-    const size_t count = legal_moves(&game, moves);
-
-    std::vector<move_t> captures;
-    move_t quiet = 0;
-
-    for (size_t i = 0; i < count; ++i) {
-      if (MOVE_CAPTURE(moves[i])) {
-        captures.push_back(moves[i]);
-      } else if (MOVE_PROMOTED(moves[i]) == TO_NONE && quiet == 0) {
-        quiet = moves[i];
-      }
-    }
-
-    REQUIRE(captures.size() >= 2);
-    REQUIRE(quiet != 0);
-
-    search_state_t state = {};
-    const move_t tried[2] = {captures[0], captures[1]};
-
-    REQUIRE(&capture_history_entry(&state, &game.board, tried[0]) !=
-            &capture_history_entry(&state, &game.board, tried[1]));
-
-    history_on_capture_cutoff(&state, &game.board, quiet, tried, 2,
-                              CAPT_HIST_REF_DEPTH);
-
-    const capture_census_t census = capture_census(state);
-
-    CHECK_EQ(census.used, 2);
-    CHECK_EQ(census.credited, 0);
-    CHECK_EQ(census.charged, 2);
-  }
-
-
-  // Mutation: CX11_capture_update_on_capture_cutoffs_only -- the call site
-  // updates the table only when the move that cut off is a capture, so the
-  // captures a node searched before a quiet refuted it are never charged.
-  // Mutation: CX12_captures_never_tried -- the capture span is never appended
-  // to, so nothing is ever charged at all.
-  //
-  // Smothered mate: Nf7 is the only mate in one here and it is not a capture,
-  // from a tool and not from the board -- python-chess and stockfish, quoted
-  // in "a quiet move that gives check enters the ordering tables" above,
-  // which drives the same position. Only a mate clears this beta, so the move
-  // that fails high is the quiet mate whatever the ordering tried first, and
-  // the knight's capture of the rook is searched before it because every
-  // capture is ordered above every quiet without a killer. A beta inside the
-  // mate band also switches every pruning rule off, so the capture is
-  // searched rather than skipped.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a node that cuts off on a quiet charges the captures it "
-                    "searched first")
-  {
-    REQUIRE(CAPT_HIST_MALUS > 0);
-
-    const std::string fen = "6rk/6pp/7N/8/8/8/8/6K1 w - - 0 1";
-
-    constexpr int BETA = 48500;
-    constexpr int DEPTH = 1;
-    constexpr size_t PLY = 1;
-
-    REQUIRE(load_FEN(fen, &game));
-    REQUIRE(position_is_reachable(&game));
-
-    static std::atomic_bool never_stop = false;
-    never_stop = false;
-
-    tt_reset(&tt);
-    tt_new_search(&tt);
-
-    search_state_t state = {};
-    state.tt = &tt;
-    state.stop = &never_stop;
-
-    search_node_probe_t probe = {};
-    probe.ply = static_cast<int>(PLY);
-    state.probe = &probe;
-
-    const int score =
-        negamax_probed(BETA - 1, BETA, DEPTH, PLY, &game, &state, 0, false);
-
-    // Precondition: the node failed high, on a quiet.
-    REQUIRE(score >= BETA);
-
-    const move_t cutoff = state.killer_moves[0][PLY];
-
-    REQUIRE(cutoff != 0);
-    REQUIRE_FALSE(MOVE_CAPTURE(cutoff));
-
-    // Every capture the node searched before the cutoff move is charged.
-    size_t searched_before = 0;
-
-    for (int k = 0; k < probe.move_count; ++k) {
-      if (probe.moves[k] == cutoff) { break; }
-      if (!MOVE_CAPTURE(probe.moves[k])) { continue; }
-
-      searched_before++;
-
-      CHECK(capture_history_entry(&state, &game.board, probe.moves[k]) < 0);
-    }
-
-    // Precondition for the line above: a capture was searched before the
-    // quiet, or the loop asserted nothing.
-    REQUIRE(searched_before > 0);
-  }
-
-
-  // The table is filled by real play, both ways: a depth-8 search from the
-  // kiwipete position credits some capture and charges some other. A table
-  // still empty, or holding one sign only, after that search is a table the
-  // search writes in one direction or not at all.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a search fills the capture table both ways")
-  {
-    REQUIRE(CAPT_HIST_BONUS > 0);
-    REQUIRE(CAPT_HIST_MALUS > 0);
-    REQUIRE(load_FEN(KIWIPETE_POS, &game));
-
-    static std::atomic_bool never_stop = false;
-    never_stop = false;
-
-    tt_reset(&tt);
-    tt_new_search(&tt);
-
-    search_state_t state = {};
-    state.tt = &tt;
-    state.stop = &never_stop;
-
-    const search_t result = search(8, &game, &state);
-    REQUIRE(result.best_move != 0);
-
-    const capture_census_t census = capture_census(state);
-
-    CHECK(census.credited > 0);
-    CHECK(census.charged > 0);
-  }
-
-
-  // Mutation: CX01_see_margin_record_sign -- the record's term is subtracted
-  // from the capture SEE margin, so a capture that has been cutting off is
-  // skipped sooner and one that has been failing later.
-  // Mutation: CX02_see_margin_no_floor -- the capture SEE margin is not
-  // floored, so the worst record makes the bar positive and an even trade is
-  // skipped.
-  // Mutation: CX04_futility_margin_record_sign -- the same sign slip in the
-  // quiescence futility margin.
-  //
-  // The two margins as the search computes them from a cell, at every reduced
-  // depth inside the capture rule's cap and at five records from the worst to
-  // the best. An empty cell is the margin before S023 exactly, which is what
-  // makes a table that never learns anything the parent's tree; the best and
-  // worst records move it by the whole weight, up and down, and nothing takes
-  // it below zero.
-  TEST_CASE("the capture margins move with the record and never go below zero")
-  {
-    REQUIRE(CAPT_HIST_SEE_WEIGHT > 0);
-    REQUIRE(CAPT_HIST_QS_WEIGHT > 0);
-
-    const int records[5] = {-CAPT_HIST_BOUND, -CAPT_HIST_BOUND / 2, 0,
-                            CAPT_HIST_BOUND / 2, CAPT_HIST_BOUND};
-
-    for (int lmr_depth = 0; lmr_depth < SEE_CAPT_MAX_LMRDEPTH; ++lmr_depth) {
-      const int s091 = SEE_CAPT_COEFF * lmr_depth;
-
-      CHECK_EQ(search_capture_see_margin_probe(lmr_depth, 0), s091);
-      CHECK_EQ(search_capture_see_margin_probe(lmr_depth, CAPT_HIST_BOUND),
-               s091 + CAPT_HIST_SEE_WEIGHT);
-      CHECK_EQ(search_capture_see_margin_probe(lmr_depth, -CAPT_HIST_BOUND),
-               std::max(0, s091 - CAPT_HIST_SEE_WEIGHT));
-
-      for (int r = 0; r < 5; ++r) {
-        CHECK(search_capture_see_margin_probe(lmr_depth, records[r]) >= 0);
-
-        if (r > 0) {
-          CHECK(search_capture_see_margin_probe(lmr_depth, records[r]) >=
-                search_capture_see_margin_probe(lmr_depth, records[r - 1]));
-        }
-      }
-    }
-
-    // The floor is live at the defaults: at reduced depth 0 the worst record
-    // would put the unfloored margin at minus the whole weight.
-    CHECK_EQ(search_capture_see_margin_probe(0, -CAPT_HIST_BOUND), 0);
-
-    CHECK_EQ(search_capture_futility_margin_probe(0), QS_FUTILITY_MARGIN);
-    CHECK_EQ(search_capture_futility_margin_probe(CAPT_HIST_BOUND),
-             QS_FUTILITY_MARGIN + CAPT_HIST_QS_WEIGHT);
-    CHECK_EQ(search_capture_futility_margin_probe(-CAPT_HIST_BOUND),
-             std::max(0, QS_FUTILITY_MARGIN - CAPT_HIST_QS_WEIGHT));
-
-    for (int r = 0; r < 5; ++r) {
-      CHECK(search_capture_futility_margin_probe(records[r]) >= 0);
-
-      if (r > 0) {
-        CHECK(search_capture_futility_margin_probe(records[r]) >=
-              search_capture_futility_margin_probe(records[r - 1]));
-      }
-    }
   }
 }
 
@@ -2412,120 +1978,6 @@ TEST_SUITE("search: quiescence futility")
     REQUIRE(entry != nullptr);
     CHECK_EQ(entry->score, score);
     CHECK_EQ(entry->type, TT_ALPHA_NODE);
-  }
-
-
-  // S023. qs_run() with every cell of the capture table planted at `record`
-  // first. Quiescence reads the table and never writes it, so the planted
-  // value is the value every capture here is tested with.
-  static qs_run_t qs_run_with_record(const std::string& fen, int alpha,
-                                     int beta, int record)
-  {
-    REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-
-    static std::atomic_bool never_stop = false;
-    never_stop = false;
-
-    tt_reset(&tt);
-    tt_new_search(&tt);
-
-    search_state_t state = {};
-    state.tt = &tt;
-    state.stop = &never_stop;
-
-    for (auto& by_target : state.capture_history) {
-      for (auto& by_victim : by_target) {
-        for (int16_t& cell : by_victim) {
-          cell = static_cast<int16_t>(record);
-        }
-      }
-    }
-
-    const int score = quiescence(alpha, beta, 0, 0, &game, &state);
-    return {score, state.explored_nodes};
-  }
-
-
-  // Mutation: CX04_futility_margin_record_sign -- the record's term is
-  // subtracted, so the worst record widens the margin instead of narrowing it.
-  // Mutation: CX06_futility_margin_record_unread -- the test is made with the
-  // margin of an empty cell whatever the capture's record.
-  //
-  // S023, the narrowing half. The window is "a capture that can reach alpha is
-  // searched"'s own: one below the best case an empty cell gives, so with no
-  // record the capture is searched. With the worst record the margin is the
-  // capture's own and smaller, the best case falls to or below alpha, and the
-  // capture is skipped -- with that smaller best case, and not the empty
-  // cell's, folded in as the node's value.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a capture's worst record makes a capture that could "
-                    "reach alpha futile")
-  {
-    REQUIRE_EQ(QS_FUTILITY, 1);
-    require_pawn_takes_pawn_premise();
-
-    const int margin = QS_FUTILITY_MARGIN;
-    const int victim = search_qs_futility_value_probe(B_PAWN);
-    const int worst = search_capture_futility_margin_probe(-CAPT_HIST_BOUND);
-
-    // The record narrows the margin at all: the precondition the skip below
-    // rests on, and false at a weight of 0.
-    REQUIRE(worst < margin);
-
-    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
-    const int cheap = evaluate_cheap(&game.board);
-
-    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim - 1;
-    const int beta = alpha + 1000;
-    const int stand_pat = lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta);
-    REQUIRE(stand_pat + margin + victim > alpha);
-
-    const int futility_value = stand_pat + worst + victim;
-    REQUIRE(futility_value <= alpha);
-
-    // With an empty table the capture is searched, which is the window's own
-    // claim taken again here so the record is the only thing that moves.
-    REQUIRE(qs_run_with_record(PAWN_TAKES_PAWN, alpha, beta, 0).nodes >= 2);
-
-    const qs_run_t run =
-        qs_run_with_record(PAWN_TAKES_PAWN, alpha, beta, -CAPT_HIST_BOUND);
-
-    CHECK_EQ(run.nodes, 1);
-    CHECK_EQ(run.score, futility_value);
-  }
-
-
-  // S023, the widening half, and the mirror of the case above: one above the
-  // best case an empty cell gives, so with no record the capture is skipped
-  // ("a capture that cannot reach alpha is skipped and its best case is the
-  // node's value"). With the best record the margin is wider by the whole
-  // weight and the capture is searched.
-  TEST_CASE_FIXTURE(search_fixture_t,
-                    "a capture's best record searches a capture that could "
-                    "not reach alpha")
-  {
-    REQUIRE_EQ(QS_FUTILITY, 1);
-    require_pawn_takes_pawn_premise();
-
-    const int margin = QS_FUTILITY_MARGIN;
-    const int victim = search_qs_futility_value_probe(B_PAWN);
-    const int best = search_capture_futility_margin_probe(CAPT_HIST_BOUND);
-
-    REQUIRE(best > margin + 1);
-
-    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
-    const int cheap = evaluate_cheap(&game.board);
-
-    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
-    const int beta = alpha + 1000;
-    const int stand_pat = lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta);
-    REQUIRE(stand_pat + margin + victim < alpha);
-    REQUIRE(stand_pat + best + victim > alpha);
-
-    REQUIRE_EQ(qs_run_with_record(PAWN_TAKES_PAWN, alpha, beta, 0).nodes, 1);
-
-    CHECK(qs_run_with_record(PAWN_TAKES_PAWN, alpha, beta, CAPT_HIST_BOUND)
-              .nodes >= 2);
   }
 }
 
@@ -4775,7 +4227,7 @@ TEST_SUITE("search: draws")
     // move reduction reduced the mating move at the root, and both were caught
     // by a case like this one and by no benchmark.
     //
-    // GOLDEN (DEC-142): the position, the depth 8 and the distance 4 below.
+    // GOLDEN (DEC-142): the position, the depth 8 and the distance 2 below.
     // Re-derive: `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py
     // candidates` then `adocs/data/S230_mine_r01_row.py depths` on the shipped
     // tree and again with the guard opened, then `S095_mine_mate_row.py pick`.
@@ -4794,24 +4246,6 @@ TEST_SUITE("search: draws")
     // the same reason S236's old row was: an H0 on S234 flips `RfpTtEstimate`
     // to 0, which restores the parent's tree to the node, and 11 comes back as
     // a revert rather than a second re-mine.
-    //
-    // **RE-MINED AT S023, BECAUSE THE ROW HAD STOPPED SEPARATING (DEC-288).**
-    // On S023's candidate, and already on its parent `7e36271` (S261's
-    // engine), the row before it, depth 8 and distance 2,
-    //     4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
-    // reports its mate at 8 with the guard opened as well, so it held nothing
-    // at its own depth: shipped `d3-d6 d8 d9 d11 d12` against the opened
-    // build's `d3-d6 d8 d10 d11` on the candidate, `d3-d6 d8 d9 d11` against
-    // `d3-d6 d8 d10 d11 d12` on the parent. Re-derived by the script, S234's
-    // procedure: the 141 candidates of `adocs/data/S095_candidates.tsv` (the
-    // pool and the oracle did not move) swept 3 to 12 on both builds, then
-    // `pick`. 25 separate; the rule takes the longest shipped run, six
-    // depths, and the lowest depth lost in it: the row below at **8**,
-    // shipped `d7-d12` against the opened build's `d7 d9-d12`, distance 4 at
-    // every one (`adocs/data/S023_remine_extra_ply.log`). Not read off the
-    // board: the candidates file's oracle line is `Kc6 Rc3+ Qxc3 d2 Qg7 d1=R
-    // Qb7#`, mate in 4, Kc6 and Qg7 being the mating side's quiet moves this
-    // term reduces.
     //
     // **RE-MINED AT S236 AND RESTORED WHEN THAT STEP'S TERM LEFT, AND BOTH
     // FACTS ARE HISTORY THIS BLOCK KEEPS.** S236 gave a late quiet's reduction
@@ -4852,7 +4286,7 @@ TEST_SUITE("search: draws")
     // 5, 5, 6, 5 over its four depths, and a row whose distance moves cannot
     // carry `mate_in`.
     //
-    // The row before S023, not read off the board (CLAUDE.md): row 19 of
+    // Not read off the board (CLAUDE.md): row 19 of
     // `adocs/data/S145_mate_set.tsv`, motif `rook0_flip`, proved mate in 2 by
     // that file's exhaustive AND/OR search with `g5c5` -- a **quiet** rook
     // move, the class this term reduces -- as its key, and stockfish through
@@ -4863,17 +4297,16 @@ TEST_SUITE("search: draws")
     // REQUIRE( false )`, a fatal REQUIRE, and passes with the guard in place.
     // The mutation was applied by hand, observed and reverted -- the S033
     // protocol -- and the log is `.tuning/coord/S095_observe_red.log`, re-taken
-    // at the new depth in `.tuning/coord/S234_observe_red.log` and for S023's
-    // row at the end of `adocs/data/S023_remine_extra_ply.log`.
+    // at the new depth in `.tuning/coord/S234_observe_red.log`.
     const std::string mate_the_extra_ply_hides =
-        "k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80";
+        "4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1";
 
     {
       const std::string title = "mate the extra ply hides, depth 8";
       const search_t result = search_fen(mate_the_extra_ply_hides, 8);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 4, title);
+      REQUIRE_MESSAGE(result.mate_in == 2, title);
     }
 
     // S097 verdict 2's own row, and the accepts' clause for the multicut: a
@@ -4885,8 +4318,7 @@ TEST_SUITE("search: draws")
     // instrument that misses a mate, so a mate distance out of one is a
     // distance nothing proved.
     //
-    // GOLDEN (DEC-142): the depth 12 below, and the position with it, mined
-    // in guard mode over depths 11 to 14 by DEC-288 (S023, below).
+    // GOLDEN (DEC-142): the depth 10 below, and the position with it.
     // Re-derive with the six commands in `adocs/data/S097_mine_mate_row.py`'s
     // own header, which are the ones that were run and are written out there
     // with every input named -- candidates, the shipped sweep, the same sweep
@@ -5159,29 +4591,9 @@ TEST_SUITE("search: draws")
     //     The six commands are `adocs/data/S097_mine_mate_row.py`'s own, run
     //     by the S261 worktree's `.tuning/coord/S261/remine.sh`, evidence in
     //     its `.tuning/coord/S261/remine/`.
-    //     S023 verdict 1, capture history in the two capture margins on
-    //     `7e36271`, guard mode, **one band deeper by DEC-288**: S261's row
-    //     stopped separating -- shipped and guard-dropped both read its mate
-    //     at 9 to 12 -- and none of the 269 separates in the tree's own range,
-    //     7 to 10; at 11 to 14 six do, the mutant's multicut fires on all six,
-    //     and the rule takes
-    //     1r5k/2p1n1pp/3Q1r2/p2n1p2/2BPp3/2B1P2q/1P3P1P/2R1R1K1 b - - 3 23
-    //         depth 12, mate_in 4, 2903700 nodes, about 0.75 s
-    //     shipped `d11 d12 d13 d14` against the guard-dropped build's `d11
-    //     d13 d14`, the mutant's multicut firing at 12, 13 and 14; stockfish
-    //     at depth 20 in a fresh process through python-chess reads **`#+4`**
-    //     for Black, the side to move, pv c7d6 c4e2 f6g6 e2g4 g6g4 g1h1 h3g2,
-    //     a line python-chess reads as ending in checkmate; python-chess
-    //     reports `is_valid()` True, `is_check()` False, 47 legal moves, 7
-    //     captures. `S277_mine_mate_row.py fens` supplied the candidates, as
-    //     at S261, and `S097_mine_mate_row.py` ran the sweeps (`--lo 11 --hi
-    //     14`), separators, `fires --mode guard` on E21's own tune library and
-    //     `pick --mode guard`; S277's `fires` and `pick` in guard mode on the
-    //     same files take the same row. Evidence
-    //     `adocs/data/S023_remine_e21.log`.
     //
     const std::string mate_the_multicut_hides =
-        "1r5k/2p1n1pp/3Q1r2/p2n1p2/2BPp3/2B1P2q/1P3P1P/2R1R1K1 b - - 3 23";
+        "6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -5197,11 +4609,11 @@ TEST_SUITE("search: draws")
     // file: a mined row is a property of the tree it was mined on.
 
     {
-      const std::string title = "mate the multicut hides, depth 12";
-      const search_t result = search_fen(mate_the_multicut_hides, 12);
+      const std::string title = "mate the multicut hides, depth 10";
+      const search_t result = search_fen(mate_the_multicut_hides, 10);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 4, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
     }
 
     // S113's own row, and the accepts' clause for ProbCut: a forced mate
@@ -5212,11 +4624,6 @@ TEST_SUITE("search: draws")
     // against the side to move, every shallow score clears the bar, and the
     // shallow search is exactly the instrument that misses the mate -- S165's
     // hazard, and the once-per-thousand miss the origin paper itself reports.
-    //
-    // **Re-read at S023 and unchanged**: on its candidate, capture history in
-    // the two capture margins, S230's driver reads this row's mate in 5 at 9
-    // to 12 on the shipped library and at 9, 11 and 12 with B04 applied, so
-    // it still separates at its own depth 10 (`.tuning/coord/S023/p2/eb/`).
     //
     // GOLDEN (DEC-142): the position, the depth 10 and the distance 5 below.
     // Re-derive with the six commands in `adocs/data/S277_mine_mate_row.py`'s
@@ -5429,12 +4836,6 @@ TEST_SUITE("search: draws")
     // the honest measure of how thin this kill is in the tree S222 left; the
     // one taken is the one whose shipped profile is four consecutive depths
     // rather than one.
-    //
-    // **Re-derived at S023 and unchanged.** The seven sweeps on its candidate,
-    // capture history in the two capture margins, read S261's shipped profiles
-    // again -- `d9-d12`, `d8-d12`, `d11 d12`, `d12` -- with row 3 lost at 11 by
-    // C02, C05 and R02 and rows 1, 2 and 4 by no S091 mutant, so every depth
-    // and label stands.
     //
     // GOLDEN (DEC-142): every `depth` below is a measured number and so is
     // every mutant in a label -- S222 re-derived both by hand and S230 turned
@@ -5763,47 +5164,6 @@ TEST_SUITE("search: draws")
 
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == row.mate_in, title);
-    }
-
-    // S023: the same rows with the worst record capture history can hold
-    // planted in every cell before the search. Each row's line runs through a
-    // capture, and the worst record is what narrows the capture SEE margin and
-    // the quiescence futility margin furthest -- so this is the table's whole
-    // reach over the class the hazard names, taken at its edge: if a
-    // capture's record can hide one of these mates, the worst record in every
-    // cell is where it does. The floor keeps every capture that holds its
-    // material out of the capture rule's reach whatever the record
-    // (src/search.cpp capture_see_margin), which is what this expects to hold.
-    // The goldens are the rows' own and move with them; this adds none.
-    //
-    // **A window and not the row's own depth, DEC-285.** A row passes when a
-    // mate at its own distance is found at some depth from the row's depth to
-    // two plies past it, each depth searched from a cold table as the loop
-    // above searches one. The exact depth was S023's first form and went red:
-    // these rows' fixed-depth mate profiles move under any large change to the
-    // table, the best record's as well as the worst's, so the exact depth
-    // read the tree's shape. Never inside the window is the hazard.
-    constexpr int WORST_RECORD_WINDOW = 2;
-
-    for (const capture_mate_t& row : capture_mates) {
-      std::string profile;
-      bool found = false;
-
-      for (int depth = row.depth;
-           depth <= row.depth + WORST_RECORD_WINDOW && !found; ++depth) {
-        const search_t result =
-            search_fen_with_capture_record(row.fen, depth, -CAPT_HIST_BOUND);
-
-        found = result.mate_found && result.mate_in == row.mate_in;
-        profile += " d" + std::to_string(depth) + ":" +
-                   (result.mate_found ? std::to_string(result.mate_in) : "-");
-      }
-
-      REQUIRE_MESSAGE(found, ("capture mate, worst record, " + row.fen +
-                              ", depths " + std::to_string(row.depth) + " to " +
-                              std::to_string(row.depth + WORST_RECORD_WINDOW) +
-                              ", mate in " + std::to_string(row.mate_in) +
-                              " wanted:" + profile));
     }
   }
 
@@ -9336,23 +8696,6 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
-  // Where S091's capture rule weighed `move` at the probed node -- the index
-  // into the probe's `capture_rule_*` arrays -- or -1 where it never did: the
-  // first legal move, a move past the rule's cap, or a quiet. Since S023 the
-  // rule's margin carries the capture's record, which the search writes as it
-  // goes, so a case states what the margin clears with the margin the node
-  // used, `capture_rule_margin`, and not with `SeeCaptureCoeff * lmr_depth`
-  // from an empty table. S023's fast check.
-  static int capture_rule_index(const search_node_probe_t& probe, move_t move)
-  {
-    for (int i = 0; i < probe.capture_rule_count; ++i) {
-      if (probe.capture_rule_moves[i] == move) { return i; }
-    }
-
-    return -1;
-  }
-
-
   // The quiet move from `from` to `to` at this position, through the engine's
   // own generator. A move is never built by hand here: the flags decide which
   // rules apply to it.
@@ -10165,9 +9508,6 @@ TEST_SUITE("search: pruning and reduction guards")
   // is `SeeCaptureCoeff * lmr_depth` = 50 per ply, so the case needs a reduced
   // depth of 3. With S095's ply that is drive depth 5, where it was 3 -- the
   // same reduced depth the case has always read, one ply of reduction later.
-  // Since S023 the bar also carries g2h3's record, which the drive writes as
-  // it goes, so the case reads the margin the node used off the probe rather
-  // than trusting this arithmetic.
   static constexpr int SEE_MARGIN_DRIVE_DEPTH = 5;
 
 
@@ -10223,19 +9563,16 @@ TEST_SUITE("search: pruning and reduction guards")
     // What makes the row above a statement about this rule's threshold rather
     // than about an inert rule: the safe capture was a candidate -- past the
     // first legal move, inside the cap -- and the margin is what cleared it. A
-    // threshold of the wrong sign is a bar this capture does not clear. The
-    // margin is the one the node tested with, its record included (S023).
+    // threshold of the wrong sign is a bar this capture does not clear.
     const int k = searched_index(probe, safe);
 
     REQUIRE(k >= 1);
 
-    const int r = capture_rule_index(probe, safe);
+    const int lmr_depth = lmr_depth_of(SEE_MARGIN_DRIVE_DEPTH, k + 1);
 
-    REQUIRE(r >= 0);
-    REQUIRE_EQ(probe.capture_rule_move_number[r], k + 1);
-    REQUIRE(probe.capture_rule_lmr_depth[r] < SEE_CAPT_MAX_LMRDEPTH);
-    REQUIRE(see_ge(&game.board, safe, -probe.capture_rule_margin[r]));
-    REQUIRE(!see_ge(&game.board, safe, probe.capture_rule_margin[r]));
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(see_ge(&game.board, safe, -(SEE_CAPT_COEFF * lmr_depth)));
+    REQUIRE(!see_ge(&game.board, safe, SEE_CAPT_COEFF * lmr_depth));
 
     // The PV exemption, which the capture rule inherits from `pruning_node`
     // along with the other four: the same node and the same window with nothing
@@ -10293,21 +9630,19 @@ TEST_SUITE("search: pruning and reduction guards")
 
     // The precondition, in three parts. The rule was live at this node -- it
     // skipped another capture; this move was not the first legal one, which is
-    // exempt for a different reason; and the margin the rule weighed it with
-    // -- its record included, as the node read it (S023) -- does not clear it,
-    // so the exemption is the only thing between it and a skip.
+    // exempt for a different reason; and at the move number it was searched at
+    // the margin does not clear it, so the exemption is the only thing between
+    // it and a skip.
     REQUIRE(skipped_by(probe, PRUNE_SEE_CAPTURE) > 0);
 
     const int k = searched_index(probe, checking);
 
     REQUIRE(k >= 1);
 
-    const int r = capture_rule_index(probe, checking);
+    const int lmr_depth = lmr_depth_of(PRUNE_DRIVE_DEPTH, k + 1);
 
-    REQUIRE(r >= 0);
-    REQUIRE_EQ(probe.capture_rule_move_number[r], k + 1);
-    REQUIRE(probe.capture_rule_lmr_depth[r] < SEE_CAPT_MAX_LMRDEPTH);
-    REQUIRE(!see_ge(&game.board, checking, -probe.capture_rule_margin[r]));
+    REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
+    REQUIRE(!see_ge(&game.board, checking, -(SEE_CAPT_COEFF * lmr_depth)));
 
     REQUIRE_EQ(rule_that_pruned(probe, checking), PRUNE_NONE);
   }
@@ -10347,16 +9682,12 @@ TEST_SUITE("search: pruning and reduction guards")
 
     REQUIRE(only != 0);
 
-    // The precondition: at this move number no margin the rule could use
-    // clears it -- not even the widest, the best record capture history can
-    // hold (S023) -- so the first-move guard is the only thing between it and
-    // a skip.
+    // The precondition: at this move number the margin does not clear it, so
+    // the first-move guard is the only thing between it and a skip.
     const int lmr_depth = lmr_depth_of(PRUNE_DRIVE_DEPTH, 1);
 
     REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
-    REQUIRE(
-        !see_ge(&game.board, only,
-                -search_capture_see_margin_probe(lmr_depth, CAPT_HIST_BOUND)));
+    REQUIRE(!see_ge(&game.board, only, -(SEE_CAPT_COEFF * lmr_depth)));
 
     const int score = negamax_probed(WIDE_ALPHA, WIDE_BETA, PRUNE_DRIVE_DEPTH,
                                      1, &game, &state, 0, false);
@@ -10422,15 +9753,11 @@ TEST_SUITE("search: pruning and reduction guards")
     const int lmr_depth = lmr_depth_of(CAP_DRIVE_DEPTH, k + 1);
 
     REQUIRE(lmr_depth >= SEE_CAPT_MAX_LMRDEPTH);
-    REQUIRE_EQ(capture_rule_index(probe, hangs), -1);
 
     // And the margin is not what saved it: at this reduced depth the bar still
-    // sits above the capture's exchange value, whatever record the capture
-    // held -- the widest margin capture history allows (S023) -- so the cap
-    // is the only thing between the two.
-    REQUIRE(
-        !see_ge(&game.board, hangs,
-                -search_capture_see_margin_probe(lmr_depth, CAPT_HIST_BOUND)));
+    // sits above the capture's exchange value, so the cap is the only thing
+    // between the two.
+    REQUIRE(!see_ge(&game.board, hangs, -(SEE_CAPT_COEFF * lmr_depth)));
 
     REQUIRE_EQ(rule_that_pruned(probe, hangs), PRUNE_NONE);
   }
@@ -10439,18 +9766,6 @@ TEST_SUITE("search: pruning and reduction guards")
   // S269 stops asking the exchange evaluation of a quiet past late move
   // pruning's count, and the two cases below hold that it stops at the quiets:
   // a capture ordered past the count still meets both of S091's rules.
-  //
-  // **Read at S023 and unchanged.** Since S023 the capture rule's margin
-  // carries the capture's own record, `max(0, SeeCaptureCoeff * lmr_depth +
-  // term)`, and the drive writes the table as it goes. Rxe4 below loses
-  // exactly 100 and is let through at reduced depth 2 by a margin of exactly
-  // 100, so a record charged to a term of -1 -- an entry at or below -328 --
-  // would skip it; on S023's candidate both cases are green and LQ02 and
-  // LQ03 are killed in its mutation pass, so the drive does not charge
-  // Rxe4's cell that far and nothing was re-mined. LQ03's Rxa4 loses 400,
-  // out of the term's reach. The preconditions below read S091's margin and
-  // not the record; a change to the record's weight or update re-reads this
-  // pair first.
   //
   // GOLDEN (DEC-142): the position, both drive depths and both captures below,
   // **re-mined at S261** because the lane's vector moved the count twice --
@@ -10610,16 +9925,7 @@ TEST_SUITE("search: pruning and reduction guards")
         lmr_depth_of(depth, ahead + 1, late_capture_adjustment());
 
     REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
-
-    // Read off the node itself since S023, whose record moves the margin: the
-    // rule weighed Rxa4 at its true move number, at or past the flag's, and
-    // the margin it tested with -- the capture's record as the node read it
-    // included -- does not clear it.
-    const int r = capture_rule_index(probe, late);
-
-    REQUIRE(r >= 0);
-    REQUIRE(probe.capture_rule_move_number[r] >= ahead + 1);
-    REQUIRE(!see_ge(&game.board, late, -probe.capture_rule_margin[r]));
+    REQUIRE(!see_ge(&game.board, late, -(SEE_CAPT_COEFF * lmr_depth)));
 
     REQUIRE_EQ(rule_that_pruned(probe, late), PRUNE_SEE_CAPTURE);
   }
@@ -10668,16 +9974,7 @@ TEST_SUITE("search: pruning and reduction guards")
     REQUIRE(lmr_depth < SEE_CAPT_MAX_LMRDEPTH);
     REQUIRE_EQ(lmr_depth, 2);
     REQUIRE(lmr_depth < LMP_MAX_LMRDEPTH);
-
-    // The margin the node weighed Rxe4 with, its record included (S023): it
-    // clears a loss of exactly 100, so the record the drive left in Rxe4's
-    // cell by then had not narrowed it.
-    const int r = capture_rule_index(probe, late);
-
-    REQUIRE(r >= 0);
-    REQUIRE_EQ(probe.capture_rule_move_number[r], k + 1);
-    REQUIRE_EQ(probe.capture_rule_lmr_depth[r], lmr_depth);
-    REQUIRE(see_ge(&game.board, late, -probe.capture_rule_margin[r]));
+    REQUIRE(see_ge(&game.board, late, -(SEE_CAPT_COEFF * lmr_depth)));
     REQUIRE_EQ(rule_that_pruned(probe, late), PRUNE_NONE);
     REQUIRE(SEE_LMR_EXTRA > 0);
     REQUIRE(probe.child_depth[k] - 1 >= SEE_LMR_EXTRA);
@@ -10937,176 +10234,6 @@ TEST_SUITE("search: pruning and reduction guards")
                     "the key was ordered inside the first three moves at every "
                     "depth, so no drive here establishes the precondition that "
                     "would otherwise reduce it");
-  }
-
-
-  // --------------------------------------------------------------------
-  // S023 verdict 1: the capture's own record in the capture SEE margin.
-  //
-  // capture_see_margin() is held arithmetically in "search: capture history";
-  // these two cases hold that the node reads it, at the cell of the capture it
-  // is deciding, in the right direction, and that the floor binds at a node.
-  // Each plants one value in every cell of the table before the drive, so the
-  // case says nothing about which cell -- the one index is held against the
-  // raw table in that suite. The positions are the three this block already
-  // drives, and every exchange value and reduced depth below is the engine's
-  // own. Mutants: tools/mutants/S023_capture_history.py.
-
-  // The depths every drive below is taken at. Shallow enough that each drive
-  // is cheap, and spread so that both the reduced depths where the floor binds
-  // and the ones where a record moves a pawn of margin are reached somewhere.
-  static constexpr int CAPT_RECORD_MIN_DEPTH = 2;
-  static constexpr int CAPT_RECORD_MAX_DEPTH = 6;
-
-  static void plant_capture_record(search_state_t & target, int record)
-  {
-    for (auto& by_target : target.capture_history) {
-      for (auto& by_victim : by_target) {
-        for (int16_t& cell : by_victim) {
-          cell = static_cast<int16_t>(record);
-        }
-      }
-    }
-  }
-
-
-  // Mutation: CX03_see_margin_record_unread -- the capture rule tests every
-  // capture with an empty cell's margin, so the table is written at every
-  // cutoff and moves nothing.
-  //
-  // Two directions, each over the same drives. A capture the rule skips with
-  // an empty table and searches once every record is the best is a capture
-  // the record spared; one it searches with an empty table and skips once
-  // every record is the worst is one the record condemned. Both have to occur
-  // somewhere, or the record is not what moved the rule.
-  TEST_CASE_FIXTURE(guard_fixture_t,
-                    "a capture's record moves the capture SEE margin at a "
-                    "pruning node")
-  {
-    REQUIRE(CAPT_HIST_SEE_WEIGHT > 0);
-
-    const std::string positions[3] = {PRUNE_POS, CAPTURE_POS, LATE_CAPTURE_POS};
-
-    size_t spared = 0;
-    size_t condemned = 0;
-
-    for (const std::string& fen : positions) {
-      for (int depth = CAPT_RECORD_MIN_DEPTH; depth <= CAPT_RECORD_MAX_DEPTH;
-           ++depth) {
-        load(fen, 1);
-        REQUIRE(!is_check(&game));
-
-        negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, 1, &game, &state, 0,
-                       false);
-
-        std::vector<move_t> skipped_empty;
-        std::vector<move_t> searched_empty;
-
-        for (int i = 0; i < probe.pruned_count; ++i) {
-          if (probe.pruned_rule[i] == PRUNE_SEE_CAPTURE) {
-            skipped_empty.push_back(probe.pruned_moves[i]);
-          }
-        }
-
-        for (int k = 1; k < probe.move_count; ++k) {
-          if (MOVE_CAPTURE(probe.moves[k])) {
-            searched_empty.push_back(probe.moves[k]);
-          }
-        }
-
-        load(fen, 1);
-        plant_capture_record(state, CAPT_HIST_BOUND);
-        negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, 1, &game, &state, 0,
-                       false);
-
-        for (const move_t move : skipped_empty) {
-          if (probe_searched(probe, move)) { spared++; }
-        }
-
-        load(fen, 1);
-        plant_capture_record(state, -CAPT_HIST_BOUND);
-        negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, 1, &game, &state, 0,
-                       false);
-
-        for (const move_t move : searched_empty) {
-          if (rule_that_pruned(probe, move) == PRUNE_SEE_CAPTURE) {
-            condemned++;
-          }
-        }
-      }
-    }
-
-    CHECK_MESSAGE(spared > 0,
-                  "no capture the rule skipped with an empty table was "
-                  "searched with the best record in every cell");
-    CHECK_MESSAGE(condemned > 0,
-                  "no capture the rule searched with an empty table was "
-                  "skipped with the worst record in every cell");
-  }
-
-
-  // Mutation: CX02_see_margin_no_floor -- the capture SEE margin is not
-  // floored, so the worst record makes the bar positive and an even trade is
-  // skipped.
-  //
-  // The floor at a node. With the worst record in every cell, every capture
-  // the rule skips still loses material by the engine's own exchange
-  // evaluation. And the case establishes the precondition that makes that
-  // bite: somewhere in these drives a capture that holds its material was
-  // weighed by the rule at a reduced depth where the record the node read --
-  // the planted worst, or whatever the drive had written over it by then --
-  // puts the unfloored margin below zero, and its exchange value sits under
-  // the bar that margin would set. Those captures are the ones the floor alone
-  // keeps. The record and the reduced depth are the node's own, off the probe
-  // (S023's fast check), not a planted value assumed to have survived.
-  TEST_CASE_FIXTURE(guard_fixture_t,
-                    "no capture that holds its material is skipped whatever "
-                    "its record")
-  {
-    REQUIRE(CAPT_HIST_SEE_WEIGHT > 0);
-
-    const std::string positions[3] = {PRUNE_POS, CAPTURE_POS, LATE_CAPTURE_POS};
-
-    size_t kept_by_the_floor = 0;
-
-    for (const std::string& fen : positions) {
-      for (int depth = CAPT_RECORD_MIN_DEPTH; depth <= CAPT_RECORD_MAX_DEPTH;
-           ++depth) {
-        load(fen, 1);
-        REQUIRE(!is_check(&game));
-
-        plant_capture_record(state, -CAPT_HIST_BOUND);
-        negamax_probed(WIDE_ALPHA, WIDE_BETA, depth, 1, &game, &state, 0,
-                       false);
-
-        for (int i = 0; i < probe.pruned_count; ++i) {
-          if (probe.pruned_rule[i] != PRUNE_SEE_CAPTURE) { continue; }
-
-          CHECK_MESSAGE(!see_ge(&game.board, probe.pruned_moves[i], 0),
-                        ("a capture that holds its material was skipped, " +
-                         fen + ", depth " + std::to_string(depth)));
-        }
-
-        for (int r = 0; r < probe.capture_rule_count; ++r) {
-          const move_t move = probe.capture_rule_moves[r];
-          const int unfloored =
-              SEE_CAPT_COEFF * probe.capture_rule_lmr_depth[r] +
-              (CAPT_HIST_SEE_WEIGHT * probe.capture_rule_record[r]) /
-                  CAPT_HIST_BOUND;
-
-          if (unfloored < 0 && see_ge(&game.board, move, 0) &&
-              !see_ge(&game.board, move, -unfloored)) {
-            REQUIRE_EQ(probe.capture_rule_margin[r], 0);
-            kept_by_the_floor++;
-          }
-        }
-      }
-    }
-
-    REQUIRE_MESSAGE(kept_by_the_floor > 0,
-                    "no drive here put a capture that holds its material "
-                    "under the bar the worst record's unfloored margin sets, "
-                    "so the floor decided nothing");
   }
 
 
