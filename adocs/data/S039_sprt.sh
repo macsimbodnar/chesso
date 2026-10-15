@@ -69,21 +69,24 @@
 # S121 and S122 fit the unclamped sum, and a play-altering change is decided by
 # SPRT and not by argument (AGENTS.md MEASUREMENT).
 #
-# BOUNDS. `--nonreg`, fastchess.sh's own mode: elo0=-5 elo1=0 nElo,
-# alpha=beta=0.05, `model=normalized` -- the `{-5, 0}` pair accepts (4) and
+# BOUNDS. `--nonreg`, fastchess.sh's own mode (fastchess.sh:347-351 at
+# `aaeaab9`): `elo0=-5 elo1=0 alpha=0.05 beta=0.05`, with `model=normalized`
+# appended at :442, so nElo (:44-57) -- the `{-5, 0}` pair accepts (4) and
 # DEC-258 (5) name. It asks whether the change costs 5 nElo or more, not
-# whether it gains. Neither `SPRT_BOUNDS` nor `SPRT_ROUNDS` is set here: S284
-# (DEC-289, `769ce7a`) added both to fastchess.sh and left `--nonreg` as it
-# was, `{-5, 0}` at alpha = beta = 0.05 with its 20000-round cap. Either one
-# beside a mode argument is refused there, so one left in the calling shell's
-# environment fails this run before a game rather than changing it.
+# whether it gains. Neither `SPRT_BOUNDS` nor `SPRT_ROUNDS` is passed: S284
+# (DEC-289, `769ce7a`) added both to fastchess.sh (read at :386-387) and left
+# `--nonreg` as it was, its bounds and its 20000-round cap (:350, used at
+# :1130) the mode's own. fastchess.sh refuses either one beside a mode argument
+# (:390-391), and this script refuses either one set in its own environment
+# before it gets that far (THE BOOKED SETTINGS, below the header).
 #
 # WHAT THE PAIR COSTS (DEC-143). **25591 expected games** with the truth on a
 # bound and **41861** at the interval's midpoint (`adocs/testing_strategy.md`
 # section 1.1, 639770 / 25 and D / (e1 - e0)^2 with D = 1046535, the figures
 # the step file states), at **2110 games an hour** (`.moltke.local.md`):
 # **12.1 h** and **19.8 h**. The cap is fastchess.sh's 20000 rounds, 40000
-# games, 19.0 h, so a truth near the midpoint is likelier to reach the cap
+# games (fastchess.sh:350 at `aaeaab9`, two games a round under `-repeat`),
+# 19.0 h, so a truth near the midpoint is likelier to reach the cap
 # than a bound. Four hours or more, so a night (DEC-155).
 #
 # REGIME. 8+0.08, Hash 16 (DEC-088), one thread a side,
@@ -98,7 +101,40 @@
 # with `tools/forfeit_report.py`. A crash or a disconnect on either side voids
 # it outright (`SPRT-RUN-INVALID`, S212). Stop it and report nothing, too, if
 # the machine loses mains power (POWER) or another load starts on it while the
-# run plays (MACHINE). Nothing else stops it -- not the length.
+# run plays (MACHINE), or if the banner below is not what it prints. Nothing
+# else stops it -- not the length.
+#
+# THE BANNER, READ BEFORE THE FIRST GAME FINISHES. fastchess.sh prints it at
+# :971-1002 and the identity lines at :1071 (`aaeaab9`). Each line below,
+# after this comment's `#   `, is what it must print byte for byte -- the
+# spaces too -- except the seed and the stamp, which are the run's own:
+#
+#   candidate  ca321b6  2026-10-15
+#   reference  be48e02  2026-10-15
+#   config     arch native  tune off
+#   padding    cand on  ref on
+#   tc 8+0.08  hash 16  concurrency 12 of 12 cores
+#   book       noob_3moves.epd
+#   seed       <the run's stamp, digits only>
+#   bounds     elo0=-5 elo1=0 alpha=0.05 beta=0.05
+#   out        /home/max/ws/chesso/.tuning/sprt_s039_<stamp>
+#
+#   id name    cand-ca321b6  Chesso ca321b6 native
+#   id name    ref-be48e02  Chesso be48e02 native
+#
+# with **no `cap` line** -- :997 prints one only under `SPRT_ROUNDS`, which
+# this run refuses -- and no `diff`, `relay` or `A/A CALIBRATION` line
+# anywhere above them; and fastchess's first `Started game 1 of N` line reads
+# **`Started game 1 of 40000`**, the mode's 20000 rounds under `-repeat`: the
+# banner says what was asked for, that line what fastchess was handed.
+# Sources: the two dates are each sha's committer date, `git show -s
+# --date=short --format=%cd` (:942-945), read 2026-10-15; `config` comes from
+# main's `build/CMakeCache.txt` (:655-663), and `padding` and the `native`
+# token from each side's own build; S023 verdict 1's run at this regime
+# (`adocs/data/S023_sprt.log`) printed the same shapes -- config, padding, the
+# tc line, book and bounds with no cap line, both id names -- byte for byte
+# but for its own shas, dates, seed and `elo0=0 elo1=5`, and `Started game 1
+# of 40000`.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171), read
 # off `adocs/status.md` at `c88a961`, off `adocs/plan.md`'s Open list at
@@ -179,7 +215,73 @@
 
 set -uo pipefail
 
-cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
+fail()
+{
+  echo "SPRT-RUN-FAILED: $*" >&2
+  exit 1
+}
+
+# THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT. Every
+# variable fastchess.sh reads from the environment at `aaeaab9`, by line, and
+# what this script does with it:
+#
+#   pinned: refused if set to anything but the booked value, and passed
+#   explicitly on the exec line
+#     REF :169 (resolved :452), CAND :178 (resolved :459), TC :206 (used
+#     :1126), HASH :219 (used :1126), CONCURRENCY :287 (default every core,
+#     :286; used :1132)
+#   booked unset: refused if set at all, even empty, and unset on the exec
+#   line
+#     SPRT_BOUNDS :386 and SPRT_ROUNDS :387 (the mode supplies the bounds and
+#     the cap; fastchess.sh refuses either beside `--nonreg` at :390-391),
+#     ROUNDS :392, :443 (removes the SPRT), BARE_FEN :249 (the relay regime,
+#     S272), SRAND :560 (the opening sequence), AA :527 (permits an A/A)
+#   unset on the exec line, not refused: RELAY_PYTHON :254, read only under
+#     BARE_FEN
+#   overridden on the exec line: OUT :576, which names a directory and changes
+#     no game
+#   not touched: HOME :254 (RELAY_PYTHON's default), TMPDIR :478, :842, :869
+#     (where the scratch index, the candidate's snapshot and the relay's copy
+#     go), and PATH, which picks the fastchess, git, cmake and compiler
+#     binaries -- the fastchess version is DEC-143's A/A question on the day
+#
+# A leaked `REF=HEAD` used to pass: this read `${REF:-be48e02}`, and the src
+# guard below compares REF with CAND's parent, which a wrong REF can satisfy
+# (S283's fast check, which found it in that script and in this one).
+ref="be48e02"
+cand="ca321b6"
+tc="8+0.08"
+hash="16"
+concurrency="12"
+
+for pair in "REF=$ref" "CAND=$cand" "TC=$tc" "HASH=$hash" \
+            "CONCURRENCY=$concurrency"; do
+  name="${pair%%=*}"
+  want="${pair#*=}"
+  if [[ -n "${!name+set}" && "${!name}" != "$want" ]]; then
+    fail "$name is '${!name}' in the environment, and this run is booked at" \
+         "$name=$want; unset it"
+  fi
+done
+for name in SPRT_BOUNDS SPRT_ROUNDS ROUNDS BARE_FEN SRAND AA; do
+  if [[ -n "${!name+set}" ]]; then
+    fail "$name is set in the environment ('${!name}'), and this run is" \
+         "booked without it; unset it"
+  fi
+done
+
+# The marker is spelled split here so that this check does not find itself: a
+# pre-registration with a hole in it is not one. Read before the cd, by the
+# path bash ran, so a relative invocation cannot make grep miss the file.
+self="${BASH_SOURCE[0]}"
+grep -q "P2_""PENDING" "$self"
+case $? in
+  0) fail "$self still carries P2_""PENDING -- fill the measurements first" ;;
+  1) ;;
+  *) fail "could not read $self to check for P2_""PENDING" ;;
+esac
+
+cd /home/max/ws/chesso || fail "cd"
 
 # THE PAIR -- a COMMITTED candidate, not a working-tree one, as S119's and
 # S099's were:
@@ -197,47 +299,24 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # `git diff REF CAND^ -- src/` is empty: what makes REF the right reference is
 # that its engine is the one the candidate was built on. DEC-220's block then
 # names two plain shas `tools/gate.sh` checks against the log, and no
-# `candidate.diff` blob is needed (DEC-254). Pinned by editing the defaults
-# below:
-#
-#   git -C /home/max/ws/chesso rev-parse --short HEAD     # S039's landing, CAND
-#   git -C /home/max/ws/chesso log --oneline -3           # the commit below, REF
-#
-# Until both are pinned and the measurements above are filled, this script
-# refuses (DEC-020). The banner prints both shas with their commit dates
-# before the first game.
-REF="${REF:-be48e02}"
-CAND="${CAND:-ca321b6}"
-
-for pair in "REF=$REF" "CAND=$CAND"; do
-  if [[ "${pair#*=}" == "PIN_ME" ]]; then
-    echo "SPRT-RUN-FAILED: ${pair%%=*} is unpinned -- pin it in" \
-         "adocs/data/S039_sprt.sh before running (REF is the last commit on" \
-         "achesso before the candidate, on S023 verdict 1's revert; CAND is" \
-         "S039 committed on REF or a docs-only descendant)" >&2
-    exit 1
-  fi
-done
-
-if ! git diff --quiet "$REF" "$CAND^" -- src/; then
-  echo "SPRT-RUN-FAILED: CAND's parent differs from REF in src/ -- REF is" \
-       "the engine the candidate was built on, or the pair measures two" \
-       "changes" >&2
-  exit 1
+# `candidate.diff` blob is needed (DEC-254). Both are pinned in THE BOOKED
+# SETTINGS above (`aaeaab9` pinned CAND, `ca321b6`, S039's landing); the
+# banner prints both shas with their commit dates before the first game.
+if ! git diff --quiet "$ref" "$cand^" -- src/; then
+  fail "CAND's parent differs from REF in src/ -- REF is the engine the" \
+       "candidate was built on, or the pair measures two changes"
 fi
 
-# The marker is spelled split here so that this check does not find itself: a
-# pre-registration with a hole in it is not one.
-if grep -q "P2_""PENDING" "${BASH_SOURCE[0]}"; then
-  echo "SPRT-RUN-FAILED: adocs/data/S039_sprt.sh still carries P2_""PENDING --" \
-       "fill the measurements first" >&2
-  exit 1
-fi
+[[ -x ./fastchess.sh ]] || fail "no executable ./fastchess.sh"
 
-[[ -x ./fastchess.sh ]] || { echo "SPRT-RUN-FAILED: no executable ./fastchess.sh" >&2; exit 1; }
 shopt -s execfail
-exec env REF="$REF" \
-     CAND="$CAND" \
+exec env -u SPRT_BOUNDS -u SPRT_ROUNDS -u ROUNDS -u BARE_FEN -u SRAND -u AA \
+     -u RELAY_PYTHON \
+     REF="$ref" \
+     CAND="$cand" \
+     TC="$tc" \
+     HASH="$hash" \
+     CONCURRENCY="$concurrency" \
      OUT="/home/max/ws/chesso/.tuning/sprt_s039_$(date +%Y%m%d_%H%M%S)" \
      ./fastchess.sh --nonreg
 echo "SPRT-RUN-FAILED: exec env ./fastchess.sh --nonreg" >&2; exit 127
