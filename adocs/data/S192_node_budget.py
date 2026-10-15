@@ -17,10 +17,15 @@ UCI [go depth 5] of the same FEN and only the binary can do the first one.
     python3 adocs/data/S192_node_budget.py [path/to/test_search]
 
 Prints the count, the two bounds the ratios give, and where the count sits in
-the band the source currently carries. It asserts nothing and changes nothing:
-what to do about a count that has left the middle half of the band is the
-step's decision, not this script's.
+the band the source currently carries: against the count c that band was
+derived from, recovered from the band itself, and against the band's middle
+half, [c / sqrt 5, c x sqrt 4] -- half of the factor from c to either end
+(S282). A pair not [c // 5, 4c] of one count was not derived by the script and
+reads OUTSIDE: re-derive the pair by the two ratios. It asserts nothing and
+changes nothing: what to do about a count that has left the middle half of the
+band is the step's decision, not this script's.
 """
+import math
 import os
 import re
 import subprocess
@@ -86,7 +91,9 @@ def read_shipping():
 
 
 def main():
-    binary = sys.argv[1] if len(sys.argv) > 1 else BINARY
+    # Absolute, because read_count runs the case from the binary's own
+    # directory, where a relative path no longer names it (S282).
+    binary = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else BINARY
     if not os.path.exists(binary):
         sys.exit("no test binary at " + binary + " -- build it first")
 
@@ -106,14 +113,50 @@ def main():
         % (count / shipping_floor, count / shipping_budget)
     )
 
-    # The middle half of the band the source carries. Outside it the count has
-    # drifted far enough that the band is no longer centred on the search, which
-    # is when DEC-142 says the golden is re-derived rather than left.
-    low = shipping_floor + (shipping_budget - shipping_floor) // 4
-    high = shipping_budget - (shipping_budget - shipping_floor) // 4
-    where = "inside" if low <= count <= high else "OUTSIDE"
+    # The count the shipping band was derived from, read off the band itself:
+    # a band this script derived is [c // 5, 4c], so the budget gives c exactly
+    # and the floor has to agree. A pair that fails that was not derived from
+    # one count by these ratios, and has no c to read a middle half around.
+    # It reads OUTSIDE rather than giving no verdict: a hand-widened budget is
+    # exactly such a pair, and a silent pass is how it would stay (S282).
+    derived = shipping_budget // BUDGET_RATIO
+    if (
+        derived * BUDGET_RATIO != shipping_budget
+        or derived // FLOOR_DIVISOR != shipping_floor
+    ):
+        print(
+            "derived from  none: %d / %d is not [c // %d, %dc] of one count c"
+            % (shipping_budget, shipping_floor, FLOOR_DIVISOR, BUDGET_RATIO)
+        )
+        print(
+            "middle half   none: the count is OUTSIDE it, the pair not derived "
+            "by the script: re-derive the pair by the two ratios"
+        )
+        return
+
     print(
-        "middle half   [%d, %d]: the count is %s it" % (low, high, where)
+        "derived from  c = %d  (the shipping budget over %d; the floor agrees)"
+        % (derived, BUDGET_RATIO)
+    )
+    print("the count is  %.2f of c" % (count / derived))
+
+    # The middle half of the band, around c rather than between its ends: the
+    # count may move half of the way, in factors, from c toward either end --
+    # down by sqrt 5 toward the floor, up by sqrt 4 toward the budget. The
+    # band's own quartiles were the reading until S282, and they start at
+    # 1.15c, so every freshly derived band read its own count as outside.
+    # Outside this one the count has drifted far enough that the band is no
+    # longer centred on the search, which is when DEC-142 says the golden is
+    # re-derived rather than left. Integer square roots, so the bounds are
+    # exact: low is the least n with 5 n^2 >= c^2, high the greatest with
+    # n^2 <= 4 c^2.
+    low = math.isqrt((derived * derived - 1) // FLOOR_DIVISOR) + 1
+    high = math.isqrt(BUDGET_RATIO * derived * derived)
+    where = "inside" if low <= count <= high else "OUTSIDE"
+    print("middle half   [%d, %d]: the count is %s it" % (low, high, where))
+    print(
+        "              [c / sqrt %d, c x sqrt %d], half of the factor from c to "
+        "either end" % (FLOOR_DIVISOR, BUDGET_RATIO)
     )
 
 

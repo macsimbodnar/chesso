@@ -7,7 +7,12 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S023 done (H0, reverted); S284 done
+## 2026-10-15: S023 done (H0, reverted); S284 and S282 done
+
+**S282 done** (filler): the node band's middle half is [c / sqrt 5, 2c]
+around its derivation count, [7270, 32512] for 65024 / 3251; a pair not
+derived by the script reads OUTSIDE. No golden moves; 13446 inside. Fast
+check: 3 findings, fixed.
 
 **S284 done** (DEC-289): `fastchess.sh` reads `SPRT_BOUNDS` and
 `SPRT_ROUNDS`; cases 33-40; no A/A owed. Fast check: 3 findings, 2 fixed,
@@ -35,18 +40,14 @@ commit moves it to `plan_done/` and is gated.
   19.7 h); refuses unless `fastchess.sh` reads both names, which it does
   since S284. Its line citations into `fastchess.sh` are re-pointed at its pin
   (S284's fast check).
-- **S039** (`../chesso-s039d` at `4e6ca63`, diff
-  `.tuning/coord/S039/s039_on_4e6ca63.diff`): rebased onto S023's
-  candidate, every src/ hunk clean, two S023 cases converted (stand pat
-  from `empty_table_stand_pat()`), count 76, 19 goldens PENDING; each hunk's
-  form on S023's H0 recorded. 8 paths still UU in its index (resolved in
-  the tree; `git add` before committing). Phase 2 about 2.5 h (3.5 h with
-  every re-mine).
-- **S282** (`../chesso-s282`, diff `.tuning/coord/S282/s282_phase1.diff`):
-  the middle half is `[c / sqrt 5, 2c]` around the derivation count c,
-  [7270, 32512] for 65024 / 3251; no golden moves. Phase 2 needs one extra
-  build at `326f274` (count 16256) to show a band reading its own count
-  inside.
+- **S039** (`../chesso-s039e` at `769ce7a`, diff
+  `.tuning/coord/S039/s039_on_769ce7a.diff`): rebased onto the reverted
+  tree; every src/ hunk clean, count 73 -> 72, 19 goldens PENDING; it also
+  corrects two stale statements on main (DEV_MANUAL's `golden_defaults` row
+  reads 71 against 73). Phase 2 about 2.2 h (3.2 h with every re-mine), after
+  S285 lands.
+- **S285** (running, `../chesso-s285`): the extra-ply row re-mined on the
+  reverted tree.
 - **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`,
   written on S099's candidate): to be rebased onto S039's outcome.
 
@@ -59,7 +60,7 @@ The prose checks on `bb20f35` and later run after the match (DEC-260).
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290):** S282's and S285's phase 2 (filler) -> S039
+**Order from here (DEC-290):** S285 (filler, running) -> S039
 rebased onto the reverted tree, its phase 2 and candidate -> S283's run
 (DEC-286) -> S039's SPRT -> S082.
 

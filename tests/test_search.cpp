@@ -1207,7 +1207,8 @@ TEST_SUITE("search: move ordering state")
   // carried and neither is a new constant (DEC-105 (b)).
   // Re-derive: python3 adocs/data/S192_node_budget.py, which runs this case
   // through build/tests/test_search --success, reads the count off the MESSAGE
-  // below and prints both bounds by those ratios.
+  // below and prints both bounds by those ratios, then the count against the
+  // shipping pair's own count and middle half.
   // History, because the band has now moved twice and the readings are what a
   // future red is judged against: 109575 when the band was placed 2026-08-14,
   // 179851 re-taken 2026-09-10 by S192 with the pair left at 440000 and 20000,
@@ -1215,13 +1216,27 @@ TEST_SUITE("search: move ordering state")
   // -- below the floor, the capture skip and the extra reduction having taken
   // the tree down by an order of magnitude in one step -- and **16256 on
   // 2026-09-20**, S231's H0 revert, the first re-derivation taken by running
-  // the script rather than reading the band by eye: the count had sat below
-  // the middle half of the S091 pair since S222 while two step files recorded
-  // the trigger as not fired. Both numbers are re-derived from that count by
-  // the two ratios above, which is what DEC-142 asks when either end moves.
+  // the script rather than reading the band by eye. It fired on the script's
+  // old middle half, the band's own quartiles, which start above the count a
+  // band is derived from: every count read against the S091 pair -- 17451 at
+  // S091 itself, 17332 and 17321 at S222, 16256 and 16246 at S231 -- sat below
+  // its quartiles, [20068, 53226], and inside its middle half, [7805, 34902],
+  // where the two step files that recorded the trigger as not fired had it.
+  // The re-derivation was done correctly, 65024 and 3251 from 16256 by the two
+  // ratios above, which is what DEC-142 asks when either end moves; but by the
+  // middle half, the trigger that governs since S282, it would not have fired.
+  // **13446 on S261's engine**, `7e36271`, read by the script at S282: 0.83 of
+  // the 16256 the pair was derived from and inside its middle half, so the
+  // pair stays. S023 verdict 1's candidate read the same 13446 and kept the
+  // pair against the band's own quartiles, [18694, 49581], which read it as
+  // outside; it read H0 and was reverted.
   // Moves legitimately on: any ordering or search change -- re-derive when the
-  // count leaves the middle half of the band, and never widen the budget to
-  // clear a red without taking the count again.
+  // count leaves the middle half of the band, [c / sqrt 5, c x sqrt 4] around
+  // the count c the pair was derived from, half of the factor from c to either
+  // end, [7270, 32512] for this pair; a pair not [c // 5, 4c] of one count was
+  // not derived by the script and reads OUTSIDE, so re-derive it by the two
+  // ratios; and never widen the budget to clear a red without taking the count
+  // again.
   // Margin: at the re-derived pair the budget is 4x the count and the floor a
   // fifth of it, so the tree has to grow by 4 or shrink by 5 before either end
   // fires.
