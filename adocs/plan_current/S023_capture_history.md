@@ -1218,3 +1218,47 @@ before that commit; at the fast check it built on `7e36271` and read
     comments state the margins as S023 leaves them.
 
     Bench: 7045606
+
+## Verdict 1 (2026-10-15, coordinator): H0
+
+    SPRT | cand adb5d78 vs ref 7e36271, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+    Elo | -3.80 +/- 5.18, nElo -5.17 +/- 7.05
+    LLR | -2.96 (-2.94, 2.94) -> H0
+    Games | N: 9330 W: 2532 L: 2634 D: 4164, Ptnml [348, 1195, 1664, 1127, 331]
+    Wall | 4 h 21 m, 2144.0 games/h, forfeits 0
+    Log | adocs/data/S023_sprt.log
+
+Started 01:10, ended 05:31. 0 forfeits on either side by
+`tools/forfeit_report.py` over all 9333 games of the PGN, no crash, no
+disconnect, no illegal move: the abort rule did not fire. Incomplete mating
+PV 9 for the candidate against 0 for the reference (S099's run read 2
+against 7); the candidate leaves with the revert, so this is recorded and
+not pursued. The untrimmed console, PGN and fastchess log are in the
+owner's archive, `chesso_S023_sprt_2026-10-15.tar.xz` with its `.sha256`.
+
+Read by the pre-registration's H0 row (`adocs/data/S023_sprt.sh`): the table
+and its two margin readers are not shown to gain 5 nElo at the harness
+setting; the interval [-12.22, +1.88] nElo does not reach the bound. So:
+
+1. **`adb5d78` is reverted**: the table, its update, both readers, the four
+   parameters, the probe record, the tests and mutants that hold them, and
+   the documents describing them, every golden with them -- DEC-287's
+   ceilings and budgets, `EXACT_FLOOR` 160, both re-mined mate rows. **Kept**
+   as a written edit in the revert commit: the band case "a king capturing a
+   pawn outranks a killer at the same ply" without its record loop
+   (`adocs/data/S023_h0_band_case.diff`), observed green on the reverted
+   tree before that commit; and `DEV_MANUAL.md`'s ceilings command keeps
+   S261's grid, which S023's phase 2 found missing (the row already said
+   S261 had added it). What stays is the record: this file, the run's data
+   under `adocs/data/S023_*` and their `README.md` rows.
+2. **S025 and S265 return to the reserve** with their step files (DEC-258
+   (8)). **Verdict 2 is not run**: the ordering key alone is the use the step
+   file's record prices negative at short control. No 32+0.32 estimate is
+   booked: the pre-registration names none.
+3. **S261's E21 row comes back** and separates on that tree (DEC-288). **The
+   extra-ply row comes back stale** -- it had stopped separating on the
+   parent already -- so filler step **S285** re-mines it on the reverted tree
+   by S095's procedure (DEC-142, DEC-288, DEC-171), named in every
+   pre-registration while open.
+4. S039 lands next (DEC-290), rebased onto the reverted tree from its record
+   of each hunk's H0 form.

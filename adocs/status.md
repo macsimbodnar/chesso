@@ -7,33 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S023 verdict 1 landed as a candidate; its SPRT runs
+## 2026-10-15: S023 verdict 1 read H0 -- revert pending
 
-**S023 verdict 1, candidate `adb5d78`** (`Bench: 7045606`, from 5636835):
-the capture-history table [piece][target][victim type] and its two readers,
-S091's capture SEE margin and S112's quiescence futility margin; 4
-parameters, count 77; score_move reads nothing (verdict 2's). The tune build
-at both weights 0 prints the parent's stream (DEC-215). Gate 46/46 both
-builds; mutants CX01-CX12, S091's six, S269's three, S112's F01-F06, E21
-and B04 all killed, CX05 equivalent; Debug self-play 0 Assertion;
-`gate_extra` all five stages. Goldens by script: ceilings C 4 -> 5, E 0 -> 1
-and the S170 budgets (DEC-287), `EXACT_FLOOR` 159 -> 160 (a rise), the E21
-row re-mined one band deeper (DEC-288, amended: the miner is S097's, S277's
-pick agrees) and the extra-ply row re-mined (stale already on the parent).
-The worst-record guard's two-ply window (DEC-285) kills no CX mutant by
-itself: none was assigned to it and none survives. Fast check: 3 findings,
-fixed -- the H0 band case is kept without its record loop
-(`adocs/data/S023_h0_band_case.diff`, observed green on `7e36271`); S091's
-capture-rule cases now read the margin the node used, off a write-only
-probe; manuals and comments state the new margins.
-
-**Running:** `adocs/data/S023_sprt.sh`, CAND `adb5d78` vs REF `7e36271`,
-`{0, 5}` at 8+0.08, Hash 16; 41861 games at the midpoint (19.8 h), 25591 on
-a bound (12.1 h), cap 40000. Open finding named: S282 (filler).
-**H1:** kept; verdict 2 (the ordering key) pre-registered next, S265 and
-S025 conditional per DEC-273. **H0 or no verdict:** revert with the band
-case kept minus its loop; S025 and S265 to the reserve; a filler step
-re-mines the extra-ply row on the reverted tree.
+**S023 verdict 1, H0** (`adocs/data/S023_sprt.sh`): CAND `adb5d78`, the
+capture-history table and its two capture-margin readers, against REF
+`7e36271`, `{0, 5}` at 8+0.08, Hash 16: `Elo -3.80 +/- 5.18`, `nElo -5.17
++/- 7.05`, LLR -2.96 over 9330 games, 4 h 21 m, 0 forfeits. Incomplete
+mating PV 9 for the candidate, 0 for the reference. Archived:
+`chesso_S023_sprt_2026-10-15.tar.xz`. By the H0 row: `adb5d78` reverted, the
+band case kept without its record loop (`S023_h0_band_case.diff`) and
+DEV_MANUAL's ceilings command keeping S261's grid; S025 and S265 to the
+reserve; verdict 2 not run; **S285** (filler) re-mines the stale extra-ply
+row on the reverted tree. Bench back to 5636835.
 
 **Written blind, waiting for the machine (DEC-260):**
 - **S284** (`../chesso-s284`, diff `.tuning/coord/S284/s284_phase1.diff`):
@@ -51,6 +36,11 @@ re-mines the extra-ply row on the reverted tree.
   form on S023's H0 recorded. 8 paths still UU in its index (resolved in
   the tree; `git add` before committing). Phase 2 about 2.5 h (3.5 h with
   every re-mine).
+- **S282** (`../chesso-s282`, diff `.tuning/coord/S282/s282_phase1.diff`):
+  the middle half is `[c / sqrt 5, 2c]` around the derivation count c,
+  [7270, 32512] for 65024 / 3251; no golden moves. Phase 2 needs one extra
+  build at `326f274` (count 16256) to show a band reading its own count
+  inside.
 - **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`,
   written on S099's candidate): to be rebased onto S039's outcome.
 
@@ -63,11 +53,9 @@ The prose checks on `bb20f35` and later run after the match (DEC-260).
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290):** S023 verdict 1's SPRT -> close it (H1
-kept, or H0 reverted) -> S284's phase 2 -> S039's phase 2 and candidate
--> S283's run (DEC-286) -> S039's SPRT -> S023 verdict 2 (on 1's H1),
-S265, S025, written blind against S039's outcome meanwhile -> S082. S282
-(filler, DEC-171) is named in each pre-registration while open.
+**Order from here (DEC-290):** S023's revert and completion -> S284's
+phase 2 -> S282's and S285's (filler) -> S039 rebased onto the reverted tree,
+its phase 2 and candidate -> S283's run (DEC-286) -> S039's SPRT -> S082.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 
