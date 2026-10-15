@@ -15047,3 +15047,70 @@ Rejected:     Keeping the order -- S039 rebased again after each of up to four
               does not see the tree.
 Consequences: S039's SPRT REF is S023 verdict 1's outcome. If S283 reads H1,
               S099 relands onto S039's outcome by its own step.
+
+## DEC-291  2026-10-15  S039's tree raises case A's mate-carry ceiling 0 to 2 and case C's 4 to 6, as the script answers, in S039's commit only
+Tags:         testing, mate, s170, s039, dec-287, dec-142, dec-250
+Context:      S039's phase 2 on `be48e02` re-swept the S170 grid
+              (`adocs/data/S039_sweep_s170.txt`); `adocs/data/S203_case_sweep.sh
+              --ceilings` over S202's, S261's and that grid answers 2, 5, 6, 0,
+              0, 1 against the shipped 0, 5, 4, 0, 0, 1: A's 2 is its own
+              1000000-node cell (7 mate lines, 2 short), C's 6 its 4000000
+              cell. Both mate floors rose on that tree (`EXACT_FLOOR` 159 ->
+              161, `MATE_IN_THREE_FLOOR` 11 -> 12). S039 has no relaxation
+              allowance, so phase 2 stopped.
+Decision:     **By the owner, 2026-10-15**, asked directly. A's ceiling moves to
+              2 and C's to 6 as the script answers, with the S170 budgets the
+              rule gives on that grid (A 1000000 -> 500000, D 2000000 ->
+              500000), in S039's candidate commit only, so they stand only while
+              S039's change stands and leave with any revert. DEC-287's form.
+Rejected:     Refusing and studying the short lines first -- holds S039 and
+              S283's slot after it on a reporting residue (DEC-122). Retiring
+              S039 -- leaves S121 and S122 blocked.
+Consequences: `tests/test_mate_carry.cpp`'s A and C rows cite this id;
+              `adocs/data/S170_cases.tsv` takes the rule's budgets.
+
+## DEC-292  2026-10-15  The tuner's gauge-hold case asks the plain update to walk at least 0.01, not 0.1, on S039's tree
+Tags:         testing, tuner, gauge, s039, s275, s262, dec-142
+Context:      `tests/test_tuner_gradient.cpp`'s "the fit holds every gauge
+              still" establishes its precondition -- that the plain update
+              walks along `psqt_eg[king]`, so the hold matters -- with a floor
+              of 0.1, stated as "far above the hold's 1e-9 and below the walk",
+              to be re-read when the constants or the fixture move. S039 takes
+              the clamp out of the trace's gradient, which changes the fixture's
+              descent: the walk reads 0.094 under Adam and 0.039 under AdaGrad
+              (0.41 and 0.89 on REF); the hold reads about 2.5e-15. The
+              precondition went red; phase 2 stopped, a test number being the
+              owner's.
+Decision:     **By the owner, 2026-10-15**, asked directly. The floor is 0.01,
+              the new readings written beside it, in S039's candidate commit
+              only, so it leaves with any revert. The separation between hold
+              and walk, about seven orders of magnitude, is the case's
+              substance.
+Rejected:     Fixture rows that load the king endgame gauge -- an agent pass of
+              unknown length, moving other tuner readings. A longer descent or a
+              larger AdaGrad step -- S262 measured AdaGrad at 30 as chaotic on
+              this fixture.
+Consequences: The floor's comment cites this id and the readings.
+
+## DEC-293  2026-10-15  A mined row's in-range pick whose engine distance disagrees with the oracle or moves across depths is not taken; the band one deeper is mined
+Tags:         testing, mate-safety, mined-rows, s039, e21, dec-288, dec-142
+Context:      S039's phase 2 re-mined the E21 row (`mate_the_multicut_hides`).
+              In the row's own range, 7..10, one candidate separates; the
+              script's pick reads mate in 6 at depth 10 where Stockfish at
+              depth 20 reads mate in 5, and the engine's distance moves with
+              depth (6, 5, 6, 5, 5 at 10 to 14). In 11..14 twelve separate; the
+              pick, `r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36` at
+              depth 11, reads mate in 5 at every depth 11 to 14 and Stockfish
+              at depth 30 agrees (its depth-20 reading, 6, was the candidate
+              file's label). S095's miner rejects a row whose distance moves.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-12: a test-design ruling that strengthens the row. A
+              candidate whose engine distance at the row's depth differs from
+              the oracle's, or moves across the depths the row is read at, is
+              not taken as a pick; when the range holds no other separator the
+              band one deeper is mined (DEC-288). The E21 row takes the 11..14
+              pick above. Amends DEC-288's "own range first".
+Rejected:     The in-range pick -- an exact-distance golden on a non-shortest
+              mate goes red the day the engine finds the shorter line, for no
+              defect.
+Consequences: S039's E21 GOLDEN block cites this id and both bands' readings.
