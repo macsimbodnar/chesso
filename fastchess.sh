@@ -15,6 +15,14 @@ set -euo pipefail
 #                                   seed read off its banner
 #   ROUNDS=<n> AA=1 ./fastchess.sh  fixed rounds and no SPRT: a calibration or
 #                                   a drift reading, never a verdict
+#   SPRT_BOUNDS="elo0=<x> elo1=<y> alpha=<a> beta=<b>" ./fastchess.sh
+#                                   the SPRT's pair and error rates, in place
+#                                   of the bare form's elo0=0 elo1=5 at 0.05
+#   SPRT_ROUNDS=<n> ./fastchess.sh  cap the SPRT at n rounds, 2n games, in
+#                                   place of the bare form's 20000, and keep
+#                                   it. Neither one goes with ROUNDS or with a
+#                                   mode argument; both are read below the
+#                                   mode block, which says why (S284)
 #   TC=32+0.32 ./fastchess.sh       play at another control; default 8+0.08
 #   HASH=64 ./fastchess.sh          another hash per engine; default 16 MB
 #   CAND=<ref> REF=<ref> ./fastchess.sh
@@ -54,8 +62,9 @@ set -euo pipefail
 #
 # Neither default brackets an effect from one side only: a bound pair that
 # cannot contain the truth random-walks to the round limit. When the expected
-# effect is genuinely two-sided, pass the bounds by editing this block for the
-# run and record which pair ran, as S021 and S076 did.
+# effect is genuinely two-sided, pass the pair in SPRT_BOUNDS and record which
+# pair ran. S021 and S076, before S284, called fastchess themselves from their
+# own committed scripts under adocs/data/, each with its own -sprt line.
 #
 # AND ONE READING THAT IS NOT A BOUND PAIR: THE LONGER CONTROL, ONCE PER BLOCK.
 # A verdict that moves a pruning or reduction parameter -- a margin, depth
@@ -351,6 +360,68 @@ case "${1:-}" in
     fail "unknown argument '$1'; expected --fast, --nonreg or nothing"
     ;;
 esac
+
+# A PAIR AND A CAP FROM THE ENVIRONMENT, FOR A RUN WHOSE PRE-REGISTRATION BOOKED
+# WHAT NO MODE CARRIES. SPRT_BOUNDS="elo0=<x> elo1=<y> alpha=<a> beta=<b>"
+# replaces the pair the bare form runs, and SPRT_ROUNDS=<n> replaces its
+# 20000-round cap and keeps the SPRT -- which ROUNDS below does not, by design.
+# The route before them was to edit the case above for the run, so what played
+# was not in git and the file sat dirty in main for the whole run; and a name
+# this script does not read is silently ignored, so a pre-registration's pair
+# could be passed and {0, 5} played under its name. S283's {0, 10} at alpha =
+# beta = 0.05, capped at 5250 rounds, is the run that needed both (DEC-289).
+#
+# Refused beside a mode argument, which names a pair and a cap of its own, so
+# a run carrying both would say two things; and beside ROUNDS, which removes
+# the SPRT either one sets up and prints no bounds (S198). Every field is
+# checked here and not left to fastchess, so a typo costs a message rather
+# than a build: four numbers in that order, one space apart -- the unquoted
+# `$sprt_args` below splits the string into fastchess's argv -- elo0 below
+# elo1, and alpha and beta each strictly between 0 and 0.5. The banner prints
+# the pair on its bounds line and the cap on a cap line, and the tag is `env`,
+# so the PGN's event, the default output directory and the done marker do not
+# name the bare form. Unset, or set empty, neither one changes a line fastchess
+# is handed or the banner prints. S284.
+sprt_env=""
+[[ -z "${SPRT_BOUNDS:-}" ]] || sprt_env="SPRT_BOUNDS"
+[[ -z "${SPRT_ROUNDS:-}" ]] || sprt_env="${sprt_env:+$sprt_env and }SPRT_ROUNDS"
+sprt_cap=""
+if [[ -n "$sprt_env" ]]; then
+  [[ -z "${1:-}" ]] \
+    || fail "$sprt_env beside $1 is refused: $1 fixes its own bounds and round cap, and $sprt_env would replace them; run with no mode argument"
+  [[ -z "${ROUNDS:-}" ]] \
+    || fail "$sprt_env beside ROUNDS is refused: ROUNDS removes the SPRT, and a fixed-rounds run prints no bounds (S198); set one or the other"
+
+  if [[ -n "${SPRT_BOUNDS:-}" ]]; then
+    sprt_number='-?[0-9]+(\.[0-9]+)?'
+    sprt_form="^elo0=($sprt_number) elo1=($sprt_number) alpha=($sprt_number) beta=($sprt_number)\$"
+    [[ "$SPRT_BOUNDS" =~ $sprt_form ]] \
+      || fail "SPRT_BOUNDS must be exactly 'elo0=<x> elo1=<y> alpha=<a> beta=<b>', four numbers one space apart, got '$SPRT_BOUNDS'"
+    # Odd groups are the four numbers; each even one is a fraction inside one.
+    sprt_elo0="${BASH_REMATCH[1]}"
+    sprt_elo1="${BASH_REMATCH[3]}"
+    sprt_alpha="${BASH_REMATCH[5]}"
+    sprt_beta="${BASH_REMATCH[7]}"
+    awk -v lo="$sprt_elo0" -v hi="$sprt_elo1" 'BEGIN { exit !(lo + 0 < hi + 0) }' \
+      || fail "SPRT_BOUNDS needs elo0 below elo1, got elo0=$sprt_elo0 elo1=$sprt_elo1"
+    awk -v a="$sprt_alpha" -v b="$sprt_beta" \
+      'BEGIN { exit !(a + 0 > 0 && a + 0 < 0.5 && b + 0 > 0 && b + 0 < 0.5) }' \
+      || fail "SPRT_BOUNDS needs alpha and beta each above 0 and below 0.5, got alpha=$sprt_alpha beta=$sprt_beta"
+    sprt="$SPRT_BOUNDS"
+  fi
+
+  # No leading zero, so `0` is refused with the rest and the games the banner
+  # computes are not read as octal.
+  if [[ -n "${SPRT_ROUNDS:-}" ]]; then
+    case "$SPRT_ROUNDS" in
+      0* | *[!0-9]*) fail "SPRT_ROUNDS must be an unsigned integer above 0 with no leading zero, got '$SPRT_ROUNDS'" ;;
+    esac
+    sprt_cap="$SPRT_ROUNDS"
+    rounds="$sprt_cap"
+  fi
+
+  tag="env"
+fi
 
 # FIXED ROUNDS, AND WHY THAT IS NEVER A VERDICT. ROUNDS=<n> replaces the mode's
 # round limit and removes the SPRT entirely, so the run stops where it was told
@@ -920,6 +991,11 @@ if [[ -n "$bare_fen" ]]; then
 fi
 if [[ -n "$sprt_args" ]]; then
   echo "bounds     $sprt"
+  # Rounds and games both, because a pre-registration books games and fastchess
+  # is handed rounds: each round is two games under -repeat.
+  if [[ -n "$sprt_cap" ]]; then
+    echo "cap        $sprt_cap rounds, $((2 * sprt_cap)) games, from SPRT_ROUNDS; no bound by then is no verdict"
+  fi
 else
   echo "bounds     none -- fixed $rounds rounds, a calibration or drift reading, NOT a verdict"
 fi

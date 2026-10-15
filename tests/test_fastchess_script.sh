@@ -2,7 +2,7 @@
 #
 # Smoke test for fastchess.sh. S035, closing 2026-08-13_adversarial-F01.
 #
-# Thirty-two properties. The second is the one that stops F01 recurring; 3 to 8
+# Forty properties. The second is the one that stops F01 recurring; 3 to 8
 # are the default reference and the A/A guard -- the trap S160 disarmed and the
 # defects its own first attempt shipped, each one reproduced before it was
 # fixed; 9 to 11 are S198's seed, PGN fields and fixed-rounds mode; 12 to 15
@@ -12,7 +12,8 @@
 # itself, which every case before them skips; 18 to 26 are S212's, one per
 # finding of the 2026-09-10 audit's harness set -- F04, F06, F05, F31 and F32
 # in that order; 27 to 29 are S256's candidate name; 30 and 31 are S272's
-# bare-FEN relay; 32 is S273's branch padding:
+# bare-FEN relay; 32 is S273's branch padding; 33 to 40 are S284's pair and
+# cap from the environment:
 #
 #   1. the script reaches the `fastchess` invocation
 #   2. a script that aborts before that point exits non-zero
@@ -76,6 +77,26 @@
 #  32. the banner prints, per side, whether that build pads branches off
 #      32-byte boundaries, read from that side's own CMakeCache.txt, and a
 #      cache with no record reads unpadded (S273)
+#  33. SPRT_BOUNDS with no mode argument is the pair fastchess is handed and
+#      the banner prints, the bare form's cap stays, no cap line is printed,
+#      and the run is tagged `env` (S284)
+#  34. SPRT_ROUNDS with no mode argument is the round count fastchess is
+#      handed, the SPRT stays with the bare form's pair, and the banner prints
+#      the cap in rounds and games (S284)
+#  35. both together, in S283's shape -- CAND, REF, TC and HASH beside them --
+#      reach fastchess and the banner as one run (S284)
+#  36. either one beside --fast or --nonreg is refused before fastchess and
+#      before the output directory, with a marker naming it (S284)
+#  37. either one beside ROUNDS is refused the same way (S284)
+#  38. an SPRT_BOUNDS that is not four numbers in order, whose elo0 is not
+#      below its elo1, or whose alpha or beta is not strictly between 0 and
+#      0.5 is refused the same way (S284)
+#  39. an SPRT_ROUNDS that is not an unsigned integer above 0 is refused the
+#      same way (S284)
+#  40. with neither set, every mode hands fastchess the argv the script
+#      handed it before S284, token for token, and prints the mode's bounds
+#      line and no cap line -- the one case of 33 to 40 that holds at
+#      4e6ca63 as well (S284)
 #
 # No game is played and no engine is compiled. `fastchess` is a stub on PATH,
 # the candidate and the reference are one-line shell scripts, and the whole run
@@ -387,12 +408,20 @@ STUB
 # have to be counted at every call site. They are captured before the subshell
 # and then set or unset inside it under the same rule as the five above: the
 # default is the thing under test, so the harness never supplies it by
-# accident. Cases 12 to 15.
+# accident. Cases 12 to 15. SPRT_BOUNDS and SPRT_ROUNDS travel the same way
+# (cases 33 to 40).
+#
+# SMOKE_MODE is the harness's own and fastchess.sh never reads it: the mode
+# argument the script is run with. Unset it is --fast, which every case before
+# S284 runs; set empty it is no argument at all, which SPRT_BOUNDS and
+# SPRT_ROUNDS need because either one beside a mode is refused (case 36).
 run_sandbox()
 {
   local tmp="$1" ref="${2-}" aa="${3-}" srand="${4-}" rounds="${5-}"
   local tc="${TC-}" hash="${HASH-}" cand="${CAND-}"
   local bare_fen="${BARE_FEN-}" relay_python="${RELAY_PYTHON-}"
+  local sprt_bounds="${SPRT_BOUNDS-}" sprt_rounds="${SPRT_ROUNDS-}"
+  local mode="${SMOKE_MODE---fast}"
   (
     cd "$tmp" || exit 127
     export PATH="$tmp/stub:$PATH" OUT="$tmp/out"
@@ -441,7 +470,17 @@ run_sandbox()
     else
       unset ROUNDS
     fi
-    ./fastchess.sh --fast
+    if [[ -n "$sprt_bounds" ]]; then
+      export SPRT_BOUNDS="$sprt_bounds"
+    else
+      unset SPRT_BOUNDS
+    fi
+    if [[ -n "$sprt_rounds" ]]; then
+      export SPRT_ROUNDS="$sprt_rounds"
+    else
+      unset SPRT_ROUNDS
+    fi
+    ./fastchess.sh ${mode:+"$mode"}
   ) > "$tmp/out.txt" 2>&1
   echo $?
 }
@@ -1508,6 +1547,287 @@ elif ! grep -qxF "padding    cand on  ref $unrecorded" "$pad_cand_dir/out.txt"; 
   show "$pad_cand_dir"
 fi
 
+# 33. SPRT_BOUNDS is the pair the run plays, and the banner prints it.
+#
+# At 4e6ca63 the mode argument fixed the pair -- the bare form {0, 5} at 0.05,
+# --fast {0, 10} at 0.10 -- and nothing read SPRT_BOUNDS, so passing a
+# pre-registration's pair played {0, 5} under its name (DEC-289). The pair
+# here is no mode's, with elo0 negative and alpha apart from beta, so neither
+# a hard-wired mode pair nor two swapped fields pass. Argv and banner both, for
+# case 9's reason. The bare form's cap stays: only SPRT_ROUNDS moves it. Red
+# at 4e6ca63, whose argv carries elo0=0 elo1=5.
+env_bounds="elo0=-3 elo1=7 alpha=0.04 beta=0.06"
+env_bounds_dir="$(make_sandbox "$script_under_test")"
+env_bounds_status="$(SMOKE_MODE= SPRT_BOUNDS="$env_bounds" run_sandbox "$env_bounds_dir" HEAD~1)"
+env_bounds_sprt="$(grep -A5 -x -- '-sprt' "$env_bounds_dir/fastchess_args")"
+env_bounds_rounds="$(grep -A1 -x -- '-rounds' "$env_bounds_dir/fastchess_args" | tail -1)"
+
+if ((env_bounds_status != 0)); then
+  fail "SPRT_BOUNDS: the script exited $env_bounds_status"
+  show "$env_bounds_dir"
+elif [[ "$env_bounds_sprt" != "$(printf '%s\n' -sprt elo0=-3 elo1=7 alpha=0.04 beta=0.06 model=normalized)" ]]; then
+  fail "SPRT_BOUNDS: fastchess was not handed -sprt $env_bounds model=normalized"
+  show "$env_bounds_dir"
+elif [[ "$env_bounds_rounds" != 20000 ]]; then
+  fail "SPRT_BOUNDS alone: the bare form's 20000 rounds did not stay (got '$env_bounds_rounds')"
+  show "$env_bounds_dir"
+elif ! grep -qxF "bounds     $env_bounds" "$env_bounds_dir/out.txt"; then
+  fail "SPRT_BOUNDS: the banner's bounds line is not the pair the run plays"
+  show "$env_bounds_dir"
+elif grep -q '^cap ' "$env_bounds_dir/out.txt"; then
+  fail "SPRT_BOUNDS alone: the banner prints a cap line with SPRT_ROUNDS unset"
+  show "$env_bounds_dir"
+elif ! grep -qE '^chesso env [0-9]{8}_[0-9]{6} srand=[0-9]+$' "$env_bounds_dir/fastchess_args"; then
+  fail "SPRT_BOUNDS: the PGN event does not tag the run env"
+  show "$env_bounds_dir"
+elif [[ "$(tail -1 "$env_bounds_dir/out.txt")" != "SPRT-RUN-DONE env $env_bounds_dir/out" ]]; then
+  fail "SPRT_BOUNDS: the done marker does not tag the run env"
+  show "$env_bounds_dir"
+fi
+
+# 34. SPRT_ROUNDS caps the SPRT and keeps it, and the banner prints the cap.
+#
+# ROUNDS is the other way to move the cap, and it empties the SPRT by design
+# (case 11, S198), so before S284 the only cap that kept one was the mode's --
+# 20000 rounds, about 75 h at S283's control (DEC-289). 777 rounds and 1554
+# games are numbers no mode carries, so neither half of the cap line can come
+# from a constant. Red at 4e6ca63, whose argv carries -rounds 20000.
+env_cap_dir="$(make_sandbox "$script_under_test")"
+env_cap_status="$(SMOKE_MODE= SPRT_ROUNDS=777 run_sandbox "$env_cap_dir" HEAD~1)"
+env_cap_sprt="$(grep -A5 -x -- '-sprt' "$env_cap_dir/fastchess_args")"
+env_cap_rounds="$(grep -A1 -x -- '-rounds' "$env_cap_dir/fastchess_args" | tail -1)"
+
+if ((env_cap_status != 0)); then
+  fail "SPRT_ROUNDS=777: the script exited $env_cap_status"
+  show "$env_cap_dir"
+elif [[ "$env_cap_rounds" != 777 ]]; then
+  fail "SPRT_ROUNDS=777 did not reach fastchess as -rounds 777 (got '$env_cap_rounds')"
+  show "$env_cap_dir"
+elif [[ "$env_cap_sprt" != "$(printf '%s\n' -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 model=normalized)" ]]; then
+  fail "SPRT_ROUNDS alone: fastchess was not handed the bare form's SPRT beside the cap"
+  show "$env_cap_dir"
+elif ! grep -qxF "bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05" "$env_cap_dir/out.txt"; then
+  fail "SPRT_ROUNDS alone: the banner's bounds line is not the bare form's pair"
+  show "$env_cap_dir"
+elif ! grep -q '^cap        777 rounds, 1554 games' "$env_cap_dir/out.txt"; then
+  fail "SPRT_ROUNDS=777: the banner does not print the cap as 777 rounds, 1554 games"
+  show "$env_cap_dir"
+elif ! grep -qE '^chesso env [0-9]{8}_[0-9]{6} srand=[0-9]+$' "$env_cap_dir/fastchess_args"; then
+  fail "SPRT_ROUNDS: the PGN event does not tag the run env"
+  show "$env_cap_dir"
+fi
+
+# 35. Both, in the shape S283's script launches them: a commit candidate, a
+#     reference, the longer control and its hash beside the pair and the cap.
+#
+# The pair is --fast's {0, 10} with alpha and beta at 0.05 and not --fast's
+# 0.10, so a run that fell back to the mode would show it. Red at 4e6ca63,
+# whose argv carries elo0=0 elo1=5 and -rounds 20000.
+s283_dir="$(make_sandbox "$script_under_test")"
+s283_status="$(CAND=HEAD TC=32+0.32 HASH=64 SMOKE_MODE= \
+  SPRT_BOUNDS="elo0=0 elo1=10 alpha=0.05 beta=0.05" SPRT_ROUNDS=5250 \
+  run_sandbox "$s283_dir" HEAD~1)"
+s283_head="$(git -C "$s283_dir" rev-parse --short HEAD)"
+s283_sprt="$(grep -A5 -x -- '-sprt' "$s283_dir/fastchess_args")"
+s283_rounds="$(grep -A1 -x -- '-rounds' "$s283_dir/fastchess_args" | tail -1)"
+
+if ((s283_status != 0)); then
+  fail "S283's shape: the script exited $s283_status"
+  show "$s283_dir"
+elif [[ "$s283_sprt" != "$(printf '%s\n' -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05 model=normalized)" ]]; then
+  fail "S283's shape: fastchess was not handed -sprt elo0=0 elo1=10 alpha=0.05 beta=0.05"
+  show "$s283_dir"
+elif [[ "$s283_rounds" != 5250 ]]; then
+  fail "S283's shape: fastchess was not handed -rounds 5250 (got '$s283_rounds')"
+  show "$s283_dir"
+elif ! grep -q -x -- 'tc=32+0.32' "$s283_dir/fastchess_args" \
+  || ! grep -q -x -- 'option.Hash=64' "$s283_dir/fastchess_args" \
+  || ! grep -q -x -- "name=cand-$s283_head" "$s283_dir/fastchess_args"; then
+  fail "S283's shape: the control, the hash or the commit candidate did not reach fastchess"
+  show "$s283_dir"
+elif ! grep -qxF "bounds     elo0=0 elo1=10 alpha=0.05 beta=0.05" "$s283_dir/out.txt" \
+  || ! grep -q '^cap        5250 rounds, 10500 games' "$s283_dir/out.txt"; then
+  fail "S283's shape: the banner does not print the pair and the cap of 5250 rounds, 10500 games"
+  show "$s283_dir"
+fi
+
+# 36 to 39. What is refused, before fastchess and before the output directory.
+#
+# One sandbox for every row: a refusal plays nothing and writes nothing, and
+# the two things a row that is wrongly played leaves behind are cleared before
+# the next. REF=HEAD~1 on the sandbox's clean tree, so a row the script fails
+# to refuse is played rather than stopped by the A/A guard -- which is what
+# makes every row red at 4e6ca63, where nothing reads either name and each one
+# plays. The marker is pinned to its opening words, as case 4 pins the guard's,
+# because every fail() prints SPRT-RUN-FAILED.
+#
+# Arguments: a label, the mode (empty for none), ROUNDS, SPRT_BOUNDS,
+# SPRT_ROUNDS, and the words the marker opens with.
+refusal_dir="$(make_sandbox "$script_under_test")"
+env_pair="elo0=0 elo1=10 alpha=0.05 beta=0.05"
+
+expect_refusal()
+{
+  local label="$1" mode="$2" rounds="$3" bounds="$4" cap="$5" says="$6"
+  local status
+
+  rm -rf "$refusal_dir/out" "$refusal_dir/fastchess_invoked"
+  status="$(SMOKE_MODE="$mode" SPRT_BOUNDS="$bounds" SPRT_ROUNDS="$cap" \
+    run_sandbox "$refusal_dir" HEAD~1 "" "" "$rounds")"
+
+  if [[ -e "$refusal_dir/fastchess_invoked" ]]; then
+    fail "$label: the run was played instead of refused"
+    show "$refusal_dir"
+  elif ((status == 0)); then
+    fail "$label: the script exited 0 instead of refusing"
+    show "$refusal_dir"
+  elif ! grep -qF "SPRT-RUN-FAILED: $says" "$refusal_dir/out.txt"; then
+    fail "$label: refused, but the marker does not open with '$says'"
+    show "$refusal_dir"
+  elif [[ -e "$refusal_dir/out" ]]; then
+    fail "$label: the refused run made its output directory anyway"
+    show "$refusal_dir"
+  fi
+}
+
+# 36. Beside a mode argument. --fast and --nonreg each carry a pair and a cap
+#     of their own, so a run naming a mode and the environment says two things.
+expect_refusal "SPRT_BOUNDS --fast" --fast "" "$env_pair" "" \
+  "SPRT_BOUNDS beside --fast is refused"
+expect_refusal "SPRT_BOUNDS --nonreg" --nonreg "" "$env_pair" "" \
+  "SPRT_BOUNDS beside --nonreg is refused"
+expect_refusal "SPRT_ROUNDS --fast" --fast "" "" 5250 \
+  "SPRT_ROUNDS beside --fast is refused"
+expect_refusal "SPRT_ROUNDS --nonreg" --nonreg "" "" 5250 \
+  "SPRT_ROUNDS beside --nonreg is refused"
+
+# 37. Beside ROUNDS, which removes the SPRT either one sets up, and whose
+#     banner prints no bounds by design (case 11, S198).
+expect_refusal "SPRT_ROUNDS with ROUNDS" "" 500 "" 5250 \
+  "SPRT_ROUNDS beside ROUNDS is refused"
+expect_refusal "SPRT_BOUNDS with ROUNDS" "" 500 "$env_pair" "" \
+  "SPRT_BOUNDS beside ROUNDS is refused"
+
+# 38. A malformed SPRT_BOUNDS. The string is split unquoted into fastchess's
+#     argv, so its shape is checked whole: two fields, the right fields in the
+#     wrong order, a word for a number, a fifth token that would hand fastchess
+#     a second model, and a doubled space. Then every side of each range at
+#     its edge: elo0 equal to elo1 and above it, and alpha and beta each at 0
+#     and at 0.5, so dropping any one of the four comparisons fails a row.
+#     The equal pair is taken twice, the second time at -5, below the alpha
+#     beside it, so elo1 read from the wrong capture group cannot pass.
+for bad_bounds in "elo0=0 elo1=10" \
+  "elo1=10 elo0=0 alpha=0.05 beta=0.05" \
+  "elo0=0 elo1=ten alpha=0.05 beta=0.05" \
+  "elo0=0 elo1=10 alpha=0.05 beta=0.05 model=logistic" \
+  "elo0=0  elo1=10 alpha=0.05 beta=0.05"; do
+  expect_refusal "SPRT_BOUNDS='$bad_bounds'" "" "" "$bad_bounds" "" \
+    "SPRT_BOUNDS must be exactly"
+done
+for bad_bounds in "elo0=5 elo1=5 alpha=0.05 beta=0.05" \
+  "elo0=-5 elo1=-5 alpha=0.05 beta=0.05" \
+  "elo0=10 elo1=0 alpha=0.05 beta=0.05"; do
+  expect_refusal "SPRT_BOUNDS='$bad_bounds'" "" "" "$bad_bounds" "" \
+    "SPRT_BOUNDS needs elo0 below elo1"
+done
+for bad_bounds in "elo0=0 elo1=10 alpha=0 beta=0.05" \
+  "elo0=0 elo1=10 alpha=0.5 beta=0.05" \
+  "elo0=0 elo1=10 alpha=0.05 beta=0" \
+  "elo0=0 elo1=10 alpha=0.05 beta=0.5"; do
+  expect_refusal "SPRT_BOUNDS='$bad_bounds'" "" "" "$bad_bounds" "" \
+    "SPRT_BOUNDS needs alpha and beta each above 0 and below 0.5"
+done
+
+# 39. A malformed SPRT_ROUNDS: zero, a leading zero, a unit, a sign.
+for bad_cap in 0 05250 5k -5; do
+  expect_refusal "SPRT_ROUNDS='$bad_cap'" "" "" "" "$bad_cap" \
+    "SPRT_ROUNDS must be an unsigned integer above 0"
+done
+
+# 40. With neither set, every mode hands fastchess what it did before S284.
+#
+# GOLDEN: the three argument vectors below are the ones 4e6ca63's fastchess.sh
+# hands fastchess -- bb20f35's is the same blob -- written out from that file's
+# mode block and fastchess invocation, and re-derived by running this file
+# against it: `git show 4e6ca63:fastchess.sh > <file>`, then
+# `tests/test_fastchess_script.sh <file>`, where this case holds and 33 to 39
+# fail. They move only when a change means to move a mode (DEC-142).
+#
+# Token for token, because "unchanged" means a token added, dropped or moved
+# anywhere fails it. Three tokens are not the script's to fix and are not
+# compared as written: the candidate's snapshot is a fresh mktemp name and the
+# event carries the run's stamp, so each is replaced by a placeholder, and the
+# concurrency is the machine's, so it is read the way the script reads it. The
+# seed is fixed through SRAND. The banner half is the line S284 touches: the
+# mode's bounds and no cap line.
+golden_dir="$(make_sandbox "$script_under_test")"
+golden_head="$(git -C "$golden_dir" rev-parse --short HEAD)"
+golden_ref="$(git -C "$golden_dir" rev-parse --short HEAD~1)"
+golden_top="$(git -C "$golden_dir" rev-parse --show-toplevel)"
+# The book's directory is the script's own, which it reads as `cd` and `pwd`
+# over its location, and OUT is exported verbatim; the reference's is git's.
+golden_repo="$(cd "$golden_dir" && pwd)"
+golden_cores="${CONCURRENCY:-$(sysctl -n hw.physicalcpu 2> /dev/null || nproc)}"
+
+for golden_mode in "" --fast --nonreg; do
+  case "$golden_mode" in
+    --fast)
+      golden_tag=fast golden_rounds=1500
+      golden_pair=(elo0=0 elo1=10 alpha=0.10 beta=0.10)
+      ;;
+    --nonreg)
+      golden_tag=nonreg golden_rounds=20000
+      golden_pair=(elo0=-5 elo1=0 alpha=0.05 beta=0.05)
+      ;;
+    *)
+      golden_tag=full golden_rounds=20000
+      golden_pair=(elo0=0 elo1=5 alpha=0.05 beta=0.05)
+      ;;
+  esac
+  golden_label="neither set, mode [${golden_mode:-none}]"
+
+  rm -rf "$golden_dir/out" "$golden_dir/fastchess_args"
+  golden_status="$(SMOKE_MODE="$golden_mode" run_sandbox "$golden_dir" HEAD~1 "" 424242)"
+  printf '%s\n' \
+    -engine "cmd=<snapshot>" "name=cand-$golden_head" \
+    -engine "cmd=$golden_top/.ref-builds/$golden_ref/build/src/chesso" "name=ref-$golden_ref" \
+    -openings "file=$golden_repo/books/noob_3moves.epd" format=epd order=random \
+    -srand 424242 \
+    -each tc=8+0.08 option.Hash=16 option.Threads=1 \
+    -sprt "${golden_pair[@]}" model=normalized \
+    -draw movenumber=40 movecount=8 score=10 \
+    -resign movecount=3 score=400 twosided=true \
+    -check-mate-pvs \
+    -rounds "$golden_rounds" \
+    -repeat \
+    -concurrency "$golden_cores" \
+    -recover \
+    -event "chesso $golden_tag <stamp> srand=424242" \
+    -pgnout "file=$golden_dir/out/games.pgn" nodes=true timeleft=true \
+    -log "file=$golden_dir/out/fastchess.log" > "$golden_dir/golden_args"
+  sed -e 's|^cmd=.*/chesso-candidate\.[A-Za-z0-9]*$|cmd=<snapshot>|' \
+    -e 's|^chesso \([a-z]*\) [0-9]\{8\}_[0-9]\{6\} srand=|chesso \1 <stamp> srand=|' \
+    "$golden_dir/fastchess_args" > "$golden_dir/played_args"
+
+  if ((golden_status != 0)); then
+    fail "$golden_label: the script exited $golden_status"
+    show "$golden_dir"
+  elif ! diff -u "$golden_dir/golden_args" "$golden_dir/played_args" > "$golden_dir/args.diff"; then
+    fail "$golden_label: fastchess was not handed the argv it was handed before S284: $(cat "$golden_dir/args.diff")"
+    show "$golden_dir"
+  elif ! grep -qxF "bounds     ${golden_pair[*]}" "$golden_dir/out.txt"; then
+    fail "$golden_label: the banner's bounds line is not the mode's pair"
+    show "$golden_dir"
+  elif grep -q '^cap ' "$golden_dir/out.txt"; then
+    fail "$golden_label: the banner prints a cap line"
+    show "$golden_dir"
+  elif [[ "$(tail -1 "$golden_dir/out.txt")" != "SPRT-RUN-DONE $golden_tag $golden_dir/out" ]]; then
+    fail "$golden_label: the done marker does not carry the mode's tag $golden_tag"
+    show "$golden_dir"
+  fi
+done
+
+rm -rf "$env_bounds_dir" "$env_cap_dir" "$s283_dir" "$refusal_dir" "$golden_dir"
 rm -rf "$relay_dir" "$nochess_dir" "$badfen_dir" "$noted_dir"
 rm -rf "$pad_dir" "$pad_ref_dir" "$pad_cand_dir"
 rm -rf "$wt_dir" "$clean_wt_dir" "$untracked_dir"
@@ -1524,4 +1844,4 @@ if ((failures > 0)); then
   exit 1
 fi
 
-echo "$script_under_test: 32 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, names a working-tree candidate by HEAD and the blob of the diff it saved, plays both sides through a snapshot of the bare-FEN relay only when BARE_FEN=1, refuses that run without python-chess or with another value, voids it when the relay passed a position unrewritten, and prints whether each side pads its branches"
+echo "$script_under_test: 40 properties hold -- reaches fastchess, aborts non-zero, defaults REF to HEAD, dates each side from its own commit, refuses a clean-tree A/A however the ref is spelled, honours AA=1, marks an abort with no git, prints and passes the seed, records nodes and time left, runs fixed rounds without an SPRT, passes TC and HASH through to the engines with their defaults intact, plays CAND's own build undecorated, refuses CAND at REF on a dirty tree, builds an uncached commit on either side, stops on a failed build before a game is played, adjudicates resignation two-sided, rebuilds a cached reference that is dirty, moved or configured differently while playing a valid one unbuilt, prints and propagates the candidate's configuration, refuses a side whose id name is another commit, voids a run on a crash and still marks it, reads the load average, names a working-tree candidate by HEAD and the blob of the diff it saved, plays both sides through a snapshot of the bare-FEN relay only when BARE_FEN=1, refuses that run without python-chess or with another value, voids it when the relay passed a position unrewritten, prints whether each side pads its branches, plays SPRT_BOUNDS and SPRT_ROUNDS as the pair and the cap of a run with no mode argument and prints both, refuses either beside a mode, beside ROUNDS or malformed, and with neither set hands fastchess the argv it was handed before S284 in every mode"

@@ -3595,6 +3595,8 @@ OUT=<dir> ./fastchess.sh        # where the pgn and log land
 AA=1 ./fastchess.sh             # A/A: identical builds, calibrates the harness
 SRAND=<n> ./fastchess.sh        # replay another run's openings, seed off its banner
 ROUNDS=<n> AA=1 ./fastchess.sh  # fixed rounds, no SPRT: never a verdict
+SPRT_BOUNDS="elo0=<x> elo1=<y> alpha=<a> beta=<b>" ./fastchess.sh   # the SPRT's pair, no mode
+SPRT_ROUNDS=<n> ./fastchess.sh  # cap the SPRT at n rounds, 2n games, and keep it
 TC=32+0.32 ./fastchess.sh       # another time control; the default is 8+0.08
 HASH=64 ./fastchess.sh          # another hash per engine; the default is 16 MB
 CAND=<ref> REF=<ref> ./fastchess.sh   # play two commits; the tree is not played
@@ -3981,6 +3983,17 @@ games/h. DEC-063.
 | `--nonreg` | `elo0=-5 elo1=0`, α=β=0.05 | a change not expected to gain that must not cost — a simplification, a rewrite, a constant moved for another reason |
 | `--fast` | `elo0=0 elo1=10`, α=β=0.10 | a first look |
 
+**A pair or a cap no flag carries comes from the environment, with no flag.**
+`SPRT_BOUNDS="elo0=<x> elo1=<y> alpha=<a> beta=<b>"` replaces the bare form's
+pair and `SPRT_ROUNDS=<n>` its 20000-round cap while keeping the SPRT, which
+`ROUNDS` does not; `fastchess.sh` reads both just below its mode block, checks
+every field (four numbers in that order, `elo0` below `elo1`, alpha and beta
+strictly between 0 and 0.5, the cap an integer above 0 with no leading zero)
+and refuses either one beside `--fast`, `--nonreg` or `ROUNDS` before anything
+is built. The banner's `bounds` line is then the pair the run plays, a `cap`
+line gives the cap in rounds and games, and the run is tagged `env` in its PGN
+event, its default directory and its `SPRT-RUN-DONE` line. S284, DEC-289.
+
 **Those numbers are normalized Elo, not logistic Elo.** `fastchess.sh` passes
 `model=normalized`, which is fastchess's default and which its own `--help`
 glosses as "normalized — Uses nElo (default)". So `--nonreg` excludes a
@@ -4011,9 +4024,11 @@ has taken. 2026-08-21 adversarial F09, S157.
 
 Neither default brackets an effect from one side only, and a bound pair that
 cannot contain the truth random-walks to the round limit. When the expected
-effect is genuinely two-sided, edit the block for the run and record which pair
-ran — `adocs/data/S021_sprt.sh` and `S076_sprt.sh` are the two worked examples,
-both with the reading of all three outcomes written down *before* launch.
+effect is genuinely two-sided, pass the pair in `SPRT_BOUNDS` and record which
+pair ran — `adocs/data/S021_sprt.sh` and `S076_sprt.sh` are the two worked
+examples, both with the reading of all three outcomes written down *before*
+launch. Both predate S284 and call `fastchess` themselves, each with its own
+committed argument list, `-sprt elo0=-5 elo1=5` included.
 
 **An SPRT stops early exactly when the observed effect has run favourable**, so
 its point estimate is biased upward and is never reported as the effect size.

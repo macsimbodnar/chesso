@@ -7,7 +7,13 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S023 done -- verdict 1 read H0, reverted
+## 2026-10-15: S023 done (H0, reverted); S284 done
+
+**S284 done** (DEC-289): `fastchess.sh` reads `SPRT_BOUNDS` and
+`SPRT_ROUNDS`; cases 33-40; no A/A owed. Fast check: 3 findings, 2 fixed,
+S283's line citations re-pointed at its pin.
+
+**S023:**
 
 **S023 verdict 1, H0** (`adocs/data/S023_sprt.sh`): CAND `adb5d78`, the
 capture-history table and its two capture-margin readers, against REF
@@ -24,14 +30,11 @@ file cited the reverted symbols from `plan_current/`); the completing
 commit moves it to `plan_done/` and is gated.
 
 **Written blind, waiting for the machine (DEC-260):**
-- **S284** (`../chesso-s284`, diff `.tuning/coord/S284/s284_phase1.diff`):
-  `fastchess.sh` reads `SPRT_BOUNDS` and `SPRT_ROUNDS` (DEC-289), refused
-  beside a mode or `ROUNDS`, the cap on the banner, run tag `env`; cases
-  33-40, 40 the default command line unchanged. Phase 2 about 15 min, after
-  S023's run ends (bash reads a running script). No A/A owed.
 - **S283** (`../chesso-s283`, diff `.tuning/coord/S283/s283_phase1.diff`):
   `{0, 10}` at 0.05, 32+0.32, Hash 64, cap 5250 rounds (10500 games,
-  19.7 h); refuses unless `fastchess.sh` reads both names.
+  19.7 h); refuses unless `fastchess.sh` reads both names, which it does
+  since S284. Its line citations into `fastchess.sh` are re-pointed at its pin
+  (S284's fast check).
 - **S039** (`../chesso-s039d` at `4e6ca63`, diff
   `.tuning/coord/S039/s039_on_4e6ca63.diff`): rebased onto S023's
   candidate, every src/ hunk clean, two S023 cases converted (stand pat
@@ -56,9 +59,9 @@ The prose checks on `bb20f35` and later run after the match (DEC-260).
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290):** S023's revert and completion -> S284's
-phase 2 -> S282's and S285's (filler) -> S039 rebased onto the reverted tree,
-its phase 2 and candidate -> S283's run (DEC-286) -> S039's SPRT -> S082.
+**Order from here (DEC-290):** S282's and S285's phase 2 (filler) -> S039
+rebased onto the reverted tree, its phase 2 and candidate -> S283's run
+(DEC-286) -> S039's SPRT -> S082.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 
