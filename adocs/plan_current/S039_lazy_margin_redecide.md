@@ -1703,3 +1703,30 @@ After the fixes: the TESTS gate 46 of 46 in both builds, format clean;
     16-bit headroom comment states the unclamped maximum, 23891.
 
     Bench: 6100949
+
+## Verdict (2026-10-15, coordinator): H0
+
+    SPRT | cand ca321b6 vs ref be48e02, 8+0.08, Hash=16, noob_3moves.epd, {-5, 0} nElo
+    Elo | -12.23 +/- 7.08, nElo -16.46 +/- 9.52
+    LLR | -2.95 (-2.94, 2.94) -> H0
+    Games | N: 5116 W: 1371 L: 1551 D: 2194, Ptnml [232, 638, 939, 576, 173]
+    Wall | 2 h 23 m, 2147.8 games/h, forfeits 0
+    Log | adocs/data/S039_sprt.log
+
+Started 19:11, ended 21:35. The banner read as the pre-registration booked
+it. 0 forfeits on either side by `tools/forfeit_report.py` over all 5119
+games of the PGN, no crash, no disconnect, no illegal move: the abort rule did
+not fire. Incomplete mating PV 2 for each side. The untrimmed console, PGN
+and fastchess log are in the owner's archive,
+`chesso_S039_sprt_2026-10-15.tar.xz` with its `.sha256`.
+
+Read by the pre-registration's H0 row: retiring the shortcut and the clamp
+together costs 5 nElo or more at the harness setting; the interval
+[-25.98, -6.94] nElo lies below the lower bound. So **both are kept**:
+`ca321b6` is reverted, with every golden phase 2 re-derived on S039's tree,
+DEC-291's and DEC-292's values and DEC-293's row leaving with it, and the
+three stale-statement fixes kept as written edits in the revert commit
+(this file's "On S039's H0 or no verdict: what the revert keeps"). **S122's
+design is amended by an owner decision before S121 starts** (DEC-258); the
+coordinator asks it when S121 is next. S286 relands S099 onto the reverted
+tree, whose src/ is `be48e02`'s, so S286's src/ is `8758622`'s exactly.
