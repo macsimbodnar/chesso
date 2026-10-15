@@ -7,7 +7,12 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S023 done (H0, reverted); S284 and S282 done
+## 2026-10-15: S023 done (H0, reverted); S284, S282, S285 done
+
+**S285 done** (filler): the extra-ply row re-mined on the reverted tree,
+the script's pick `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at depth 8, mate
+in 4; red with the guard opened; J01 and J02 killed at the row. No DEC-171
+finding is open now.
 
 **S282 done** (filler): the node band's middle half is [c / sqrt 5, 2c]
 around its derivation count, [7270, 32512] for 65024 / 3251; a pair not
@@ -46,8 +51,6 @@ commit moves it to `plan_done/` and is gated.
   corrects two stale statements on main (DEV_MANUAL's `golden_defaults` row
   reads 71 against 73). Phase 2 about 2.2 h (3.2 h with every re-mine), after
   S285 lands.
-- **S285** (running, `../chesso-s285`): the extra-ply row re-mined on the
-  reverted tree.
 - **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`,
   written on S099's candidate): to be rebased onto S039's outcome.
 
@@ -60,7 +63,7 @@ The prose checks on `bb20f35` and later run after the match (DEC-260).
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290):** S285 (filler, running) -> S039
+**Order from here (DEC-290):** S039
 rebased onto the reverted tree, its phase 2 and candidate -> S283's run
 (DEC-286) -> S039's SPRT -> S082.
 

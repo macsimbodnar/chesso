@@ -4242,17 +4242,42 @@ TEST_SUITE("search: draws")
     // move reduction reduced the mating move at the root, and both were caught
     // by a case like this one and by no benchmark.
     //
-    // GOLDEN (DEC-142): the position, the depth 8 and the distance 2 below.
+    // GOLDEN (DEC-142): the position, the depth 8 and the distance 4 below.
     // Re-derive: `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py
-    // candidates` then `adocs/data/S230_mine_r01_row.py depths` on the shipped
-    // tree and again with the guard opened, then `S095_mine_mate_row.py pick`.
+    // candidates` then `adocs/data/S230_mine_r01_row.py depths` over depths 3
+    // to 12 on the shipped tree and again with the guard opened, then
+    // `S095_mine_mate_row.py pick`. No separator in 3..12 re-mines one band
+    // deeper by the same scripts, never by hand (DEC-288).
     // Moves legitimately on: any change to ordering, pruning or reduction.
     // Margin: exact -- the row asserts the distance too.
     //
+    // **RE-MINED AT S285, BECAUSE THE ROW HAD STOPPED SEPARATING (DEC-142,
+    // DEC-288).** The row before it, depth 8 and distance 2,
+    //     4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+    // reports its mate at 8 with the guard opened as well on `fd33954`, S261's
+    // engine as S023's revert left it. Its cells at depths 3 to 12:
+    //     shipped        2 2 2 2 - 2 2 - 2 -
+    //     guard opened   2 2 2 2 - 2 - 2 2 2
+    // so it held nothing at its own depth. S023 found it so on its parent and
+    // re-mined it on its candidate; that row left with the revert, and the one
+    // below is the script's pick on the reverted tree. S095's procedure as
+    // S234 and S023 ran it: the 141 candidates of
+    // `adocs/data/S095_candidates.tsv` (the pool and the oracle did not move)
+    // swept 3 to 12 on both builds of a clean fixture, then `pick`. 22
+    // separate; the rule takes the longest shipped run, six depths, and the
+    // lowest depth lost in it: the row below at **8**, shipped `d7-d12`
+    // against the guard-opened build's `d7 d9-d12`, distance 4 at every one
+    // (`adocs/data/S285_remine_extra_ply.log`). It is the position S023's
+    // re-mine took on its candidate, reached here by the script alone. Not
+    // read off the board: stockfish through python-chess at depth 20 answers
+    // `#+4`, `Kc6 Rc3+ Qxc3 d2 Qg7 d1=R Qb7#`, and the candidates file lists
+    // Kc6 and Qg7 as the mating side's quiets on that line, the class this
+    // term reduces.
+    //
     // **RE-MINED AT S234, AND ONLY THE DEPTH MOVED: 11 -> 8.** That step
     // decides reverse futility on the table-tightened estimate, which prunes
-    // more where an entry carries a certified lower bound. On its tree this
-    // position keeps its mate in 2 at every swept depth **but 11** -- d3 to
+    // more where an entry carries a certified lower bound. On its tree the row
+    // before S285 kept its mate in 2 at every swept depth **but 11** -- d3 to
     // d10 and d12 all report 2 -- so the old depth stopped being true of the
     // shipped build while the position did not. The script's own pick rule,
     // re-run whole on that tree, returned **this same position** at depth 8,
@@ -4264,35 +4289,36 @@ TEST_SUITE("search: draws")
     //
     // **RE-MINED AT S236 AND RESTORED WHEN THAT STEP'S TERM LEFT, AND BOTH
     // FACTS ARE HISTORY THIS BLOCK KEEPS.** S236 gave a late quiet's reduction
-    // a fraction of a ply of the move's own history. On that tree this row
-    // stopped being true of the shipped build -- it reported the mate as a 3 at
-    // depth 11 and no mate at all at 12 -- so it was re-derived by the script
-    // above, and the row the pick rule returned was
+    // a fraction of a ply of the move's own history. On that tree the row
+    // before S285 stopped being true of the shipped build -- it reported the
+    // mate as a 3 at depth 11 and no mate at all at 12 -- so it was re-derived
+    // by the script above, and the row the pick rule returned was
     // `8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1` at depth 9, distance 2,
     // whose shipped profile was every depth from 3 to 12 with the unguarded
     // build losing 9 alone (`adocs/data/S236_remine.log`). That step's two
     // verdicts then read a walk and a zero, the term left the tree (DEC-231),
-    // and **the row below came back with it** -- a revert of one line, which is
-    // why the replacement was recorded here rather than the old row deleted.
-    // The lesson is S188's and this is its third instance: a mined row is a
-    // property of the tree it was mined on.
+    // and **the row before S285 came back with it** -- a revert of one line,
+    // which is why the replacement was recorded here rather than the old row
+    // deleted. The lesson is S188's and this is its third instance: a mined
+    // row is a property of the tree it was mined on.
     //
     // **Mined, not chosen** (CHESS): 297 labelled mates from this project's own
     // positions, 141 of them keeping a quiet, non-checking, non-promotion move
     // of the mating side on the oracle's line -- the only class late move
     // reduction can touch -- swept over depths 3 to 12 on the shipped tree and
     // again with the site's `const bool no_tt_move = tt_move == 0;` made
-    // `= true`, so the ply lands whether or not the entry has a move. 28 of the
-    // 141 separate the two builds somewhere and this is the one the rule
-    // pre-registered in the script's header returns: the lowest depth the
-    // shipped build reports the mate at and the unguarded build does not,
-    // tie-broken by the longest run of consecutive shipped depths.
+    // `= true`, so the ply lands whether or not the entry has a move. At S095
+    // 28 of the 141 separated the two builds somewhere and the row before S285
+    // was the one the rule pre-registered in the script's header returned: the
+    // lowest depth the shipped build reports the mate at and the unguarded
+    // build does not, tie-broken by the longest run of consecutive shipped
+    // depths. S285 ran the same rule over the same 141 on its own tree.
     //
     // What that rule bought and what it cost, stated rather than hidden: on the
-    // tree S095 mined it on, this row's shipped profile was **every depth from
+    // tree S095 mined it on, that row's shipped profile was **every depth from
     // 3 to 12** and the unguarded build lost exactly one of them, 11, finding
-    // the mate again at 12; on S234's tree the shipped profile is d3 to d10 and
-    // d12, and the unguarded build loses 8. Rows
+    // the mate again at 12; on S234's tree the shipped profile was d3 to d10
+    // and d12, and the unguarded build lost 8. Rows
     // with a wider separation are in the same recorded sweep -- one loses the
     // two lowest depths of its profile, three lose their profile outright --
     // and each has a shipped run of one or two depths, which is what the
@@ -4301,7 +4327,7 @@ TEST_SUITE("search: draws")
     // 5, 5, 6, 5 over its four depths, and a row whose distance moves cannot
     // carry `mate_in`.
     //
-    // Not read off the board (CLAUDE.md): row 19 of
+    // The row before S285, not read off the board (CLAUDE.md): row 19 of
     // `adocs/data/S145_mate_set.tsv`, motif `rook0_flip`, proved mate in 2 by
     // that file's exhaustive AND/OR search with `g5c5` -- a **quiet** rook
     // move, the class this term reduces -- as its key, and stockfish through
@@ -4312,16 +4338,17 @@ TEST_SUITE("search: draws")
     // REQUIRE( false )`, a fatal REQUIRE, and passes with the guard in place.
     // The mutation was applied by hand, observed and reverted -- the S033
     // protocol -- and the log is `.tuning/coord/S095_observe_red.log`, re-taken
-    // at the new depth in `.tuning/coord/S234_observe_red.log`.
+    // at the new depth in `.tuning/coord/S234_observe_red.log` and for S285's
+    // row at the end of `adocs/data/S285_remine_extra_ply.log`.
     const std::string mate_the_extra_ply_hides =
-        "4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1";
+        "k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80";
 
     {
       const std::string title = "mate the extra ply hides, depth 8";
       const search_t result = search_fen(mate_the_extra_ply_hides, 8);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 2, title);
+      REQUIRE_MESSAGE(result.mate_in == 4, title);
     }
 
     // S097 verdict 2's own row, and the accepts' clause for the multicut: a
