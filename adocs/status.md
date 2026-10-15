@@ -7,23 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S039's candidate committed; S283's run (S099's pair at 32+0.32) runs
+## 2026-10-15: S283 read H1 -- S099 relands; S039's SPRT runs
+
+**S283 done, H1** (`adocs/data/S283_sprt.sh`, DEC-286): S099's pair
+`8758622` against `bacead1` at 32+0.32, Hash 64, `{0, 10}` nElo: `Elo +8.51
++/- 6.70`, `nElo +12.56 +/- 9.89`, LLR 2.96 over 4738 games, 8 h 48 m, 0
+forfeits. Archived: `chesso_S283_sprt_2026-10-15.tar.xz`. So **S286**
+relands S099 onto S039's outcome, golden by script, no SPRT; S110 and S111
+are back in the Open list, conditional on S286; DEC-294 orders S286 after
+S039's verdict and before S082's phase 2, so the corpus comes from the
+engine that ships.
+
+**Running: S039's SPRT** (`adocs/data/S039_sprt.sh`, from 19:11): CAND
+`ca321b6` (the lazy shortcut and the clamp retire, `Bench: 6100949`) against
+REF `be48e02`, `{-5, 0}` at 8+0.08, Hash 16; 25591 games on a bound (12.1 h),
+41861 at the midpoint, cap 40000. The banner read as booked. DEC-274's
+outcomes: H1 kept; H0 reverted with the three stale-statement fixes kept.
+
+**Next, blind during the run:** S286's phase 1 on S039's candidate.
 
 **S039 candidate `ca321b6`** (`Bench: 6100949`, from 5636835, gated green):
-the lazy shortcut and the clamp on mobility plus king safety retire
-together, weights frozen; count 73 -> 72; nodes -4.42 %, nps -2.79 % to
-depth 11. Floors rise (`EXACT_FLOOR` 161, `MATE_IN_THREE_FLOOR` 12); the
-extra-ply, B04 and E21 rows re-mined (E21 one band deeper, DEC-293); owner
-rulings DEC-291 (ceilings A 2, C 6, budgets A and D 500000) and DEC-292
-(the tuner gauge-walk floor 0.01), both leaving with any revert. Mutants
-25/25, Debug self-play 0 Assertion, `gate_extra` green. Fast check: 3
-findings, fixed. Pre-registration `adocs/data/S039_sprt.sh` pinned:
-`{-5, 0}` against `be48e02`, after S283's run.
-
-**Running: S283** (`adocs/data/S283_sprt.sh`, DEC-286): `8758622` against
-`bacead1`, 32+0.32, Hash 64, `{0, 10}` at 0.05, cap 5250 rounds (10500
-games, about 19.7 h); worst case 10465 games. H1: S099 relands onto S039's
-outcome, S110 and S111 conditional again. H0 or no verdict: closed.
+count 73 -> 72; nodes -4.42 %, nps -2.79 % to depth 11; floors 161 and 12;
+the extra-ply, B04 and E21 rows re-mined (E21 by DEC-293); DEC-291 (ceilings
+A 2, C 6) and DEC-292 (tuner floor 0.01), both leaving with any revert.
 
 **S285 done** (filler): the extra-ply row re-mined on the reverted tree,
 the script's pick `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at depth 8, mate
@@ -61,9 +67,9 @@ commit moves it to `plan_done/` and is gated.
   doc hunks differ. Three paths UU in its index (resolved in the tree). Phase
   2 adds a 2-minute check that `--leaf root,qs,pv` leaves the games as
   `--leaf root` plays them. About 1 h 25 m, a ~9 h pool (a night), `compare`
-  about 1 h 30 m, after S039's verdict.
-- Docs commits during S283's run (`ced5d77` on) get their prose checks and
-  gate after the match (DEC-260).
+  about 1 h 30 m, after S286 lands (DEC-294): one more rebase.
+- Docs commits during S039's run get their prose checks and gate after the
+  match (DEC-260); those through `b15fb00` are gated green.
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -72,8 +78,9 @@ commit moves it to `plan_done/` and is gated.
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290):** S283's run (about 20 h) -> S039's SPRT
-(12-20 h) -> S082, rebased onto S039's outcome.
+**Order from here (DEC-290, DEC-294):** S039's SPRT (running) -> S286, S099
+relanded onto S039's outcome -> S082 rebased onto S286, its phase 2 and the
+night's pool -> S110, S111 (conditional on S286) -> S083.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 
