@@ -54,8 +54,16 @@ file cited the reverted symbols from `plan_current/`); the completing
 commit moves it to `plan_done/` and is gated.
 
 **Written blind, waiting for the machine (DEC-260):**
-- **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`,
-  written on S099's candidate): to be rebased onto S039's outcome.
+- **S082** (`../chesso-s082d` at `ced5d77`, diff
+  `.tuning/coord/S082/s082_on_ced5d77.diff`): rebased onto S039's candidate,
+  every code and test hunk as written; the leaf is still a function of the
+  FEN, S279's answer holds, no S039-deleted symbol read; on S039's H0 only two
+  doc hunks differ. Three paths UU in its index (resolved in the tree). Phase
+  2 adds a 2-minute check that `--leaf root,qs,pv` leaves the games as
+  `--leaf root` plays them. About 1 h 25 m, a ~9 h pool (a night), `compare`
+  about 1 h 30 m, after S039's verdict.
+- Docs commits during S283's run (`ced5d77` on) get their prose checks and
+  gate after the match (DEC-260).
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
