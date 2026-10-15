@@ -108,6 +108,8 @@
 # before this step's phase 2, which read the node-budget golden by S282's
 # rule and re-mined S285's row on S039's tree. The coordinator re-reads the
 # list on the day it pins the pair and names here whatever is open then.
+# Re-read by the coordinator at the pin, 2026-10-15 (CAND `ca321b6`): none.
+# The run follows S283's (DEC-290).
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063),
 # the H1 and H0 actions in the words of the step file's accepts (4), the
@@ -205,7 +207,7 @@ cd /home/max/ws/chesso || { echo "SPRT-RUN-FAILED: cd" >&2; exit 1; }
 # refuses (DEC-020). The banner prints both shas with their commit dates
 # before the first game.
 REF="${REF:-be48e02}"
-CAND="${CAND:-PIN_ME}"
+CAND="${CAND:-ca321b6}"
 
 for pair in "REF=$REF" "CAND=$CAND"; do
   if [[ "${pair#*=}" == "PIN_ME" ]]; then

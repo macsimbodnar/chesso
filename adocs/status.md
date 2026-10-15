@@ -7,7 +7,23 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S023 done (H0, reverted); S284, S282, S285 done
+## 2026-10-15: S039's candidate committed; S283's run (S099's pair at 32+0.32) runs
+
+**S039 candidate `ca321b6`** (`Bench: 6100949`, from 5636835, gated green):
+the lazy shortcut and the clamp on mobility plus king safety retire
+together, weights frozen; count 73 -> 72; nodes -4.42 %, nps -2.79 % to
+depth 11. Floors rise (`EXACT_FLOOR` 161, `MATE_IN_THREE_FLOOR` 12); the
+extra-ply, B04 and E21 rows re-mined (E21 one band deeper, DEC-293); owner
+rulings DEC-291 (ceilings A 2, C 6, budgets A and D 500000) and DEC-292
+(the tuner gauge-walk floor 0.01), both leaving with any revert. Mutants
+25/25, Debug self-play 0 Assertion, `gate_extra` green. Fast check: 3
+findings, fixed. Pre-registration `adocs/data/S039_sprt.sh` pinned:
+`{-5, 0}` against `be48e02`, after S283's run.
+
+**Running: S283** (`adocs/data/S283_sprt.sh`, DEC-286): `8758622` against
+`bacead1`, 32+0.32, Hash 64, `{0, 10}` at 0.05, cap 5250 rounds (10500
+games, about 19.7 h); worst case 10465 games. H1: S099 relands onto S039's
+outcome, S110 and S111 conditional again. H0 or no verdict: closed.
 
 **S285 done** (filler): the extra-ply row re-mined on the reverted tree,
 the script's pick `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at depth 8, mate
@@ -22,8 +38,6 @@ check: 3 findings, fixed.
 **S284 done** (DEC-289): `fastchess.sh` reads `SPRT_BOUNDS` and
 `SPRT_ROUNDS`; cases 33-40; no A/A owed. Fast check: 3 findings, 2 fixed,
 S283's line citations re-pointed at its pin.
-
-**S023:**
 
 **S023 verdict 1, H0** (`adocs/data/S023_sprt.sh`): CAND `adb5d78`, the
 capture-history table and its two capture-margin readers, against REF
@@ -40,21 +54,8 @@ file cited the reverted symbols from `plan_current/`); the completing
 commit moves it to `plan_done/` and is gated.
 
 **Written blind, waiting for the machine (DEC-260):**
-- **S283** (`../chesso-s283`, diff `.tuning/coord/S283/s283_phase1.diff`):
-  `{0, 10}` at 0.05, 32+0.32, Hash 64, cap 5250 rounds (10500 games,
-  19.7 h); refuses unless `fastchess.sh` reads both names, which it does
-  since S284. Its line citations into `fastchess.sh` are re-pointed at its pin
-  (S284's fast check).
-- **S039** (`../chesso-s039e` at `769ce7a`, diff
-  `.tuning/coord/S039/s039_on_769ce7a.diff`): rebased onto the reverted
-  tree; every src/ hunk clean, count 73 -> 72, 19 goldens PENDING; it also
-  corrects two stale statements on main (DEV_MANUAL's `golden_defaults` row
-  reads 71 against 73). Phase 2 about 2.2 h (3.2 h with every re-mine), after
-  S285 lands.
 - **S082** (`../chesso-s082c`, diff `.tuning/coord/S082/s082_on_001c82e.diff`,
   written on S099's candidate): to be rebased onto S039's outcome.
-
-The prose checks on `bb20f35` and later run after the match (DEC-260).
 
 **Owner replies pending:**
 - DEC-277 relaxes the mate-safety rule DEC-276 pre-registered (families
@@ -63,9 +64,8 @@ The prose checks on `bb20f35` and later run after the match (DEC-260).
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290):** S039
-rebased onto the reverted tree, its phase 2 and candidate -> S283's run
-(DEC-286) -> S039's SPRT -> S082.
+**Order from here (DEC-290):** S283's run (about 20 h) -> S039's SPRT
+(12-20 h) -> S082, rebased onto S039's outcome.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 

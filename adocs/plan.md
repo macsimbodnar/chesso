@@ -370,8 +370,8 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S283  **after S039's phase 2, DEC-286, DEC-290** -- S099's pair, `8758622` against `bacead1`, decided by an SPRT at 32+0.32, Hash 64, {0, 10} nElo; H1 relands S099
-2. S039  **next engine landing after S023 verdict 1, DEC-290** -- the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
+1. S283  **running from 2026-10-15, DEC-286, DEC-289** -- S099's pair, `8758622` against `bacead1`, decided by an SPRT at 32+0.32, Hash 64, {0, 10} nElo; H1 relands S099
+2. S039  **candidate `ca321b6` committed; its SPRT after S283's, DEC-290** -- the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
 3. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
 4. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 5. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
