@@ -1,29 +1,50 @@
 #pragma once
 #include <array>
 #include "data_structures.hpp"
-#include "search_params.hpp"  // CONT_HIST_WEIGHT
+#include "search_params.hpp"  // LAZY_EVAL_MARGIN
 
 // Positive means the side to move is better, whatever colour that is. Callers
 // use the number as it comes; there is no sign to apply.
 //
-// The full score, every term, and since S039 the only form there is: every
-// caller gets the exact sum of both stages. Until then quiescence called a lazy
-// form, evaluate_lazy(), which skipped the expensive stage where the cheap one
-// already cleared the window by LAZY_EVAL_MARGIN and returned that bound in
-// place of the score (S034), and evaluate_expensive() clamped mobility plus
-// king safety to the same margin so the bound held by construction -- which
-// also capped what the two terms could say in the real score. The shortcut and
-// the clamp retired together under one non-regression SPRT (DEC-258). The tuner
-// fits this function: since S262 through its own trace (src/eval_trace.hpp),
-// and before that through the mirror.
+// The full score, every term, no shortcut. The tuner fits this one and not the
+// lazy form below: since S262 through its own trace (src/eval_trace.hpp), and
+// before that through the mirror in tools/eval_model.hpp.
 int evaluate(const board_t* board);
 
 // The terms that come straight off the accumulators make_move maintains:
 // material and the tapered piece-square tables, and nothing that has to look at
 // where the other pieces are standing. 1.36 ns, against 15.93 for the full
-// score. Exposed for the tests that pin it and for tools/eval_spread, which
-// reports how far the expensive stage moves the score away from it.
+// score. Exposed because the margin below is a claim about the difference
+// between the two, and a claim needs a test.
 int evaluate_cheap(const board_t* board);
+
+// The same score as evaluate(), except that the expensive terms are skipped
+// when the cheap ones already put the position far enough outside the window
+// that no correction they could apply would bring it back. S034.
+//
+// What is returned in that case is the guaranteed bound and not the cheap
+// score: cheap - LAZY_EVAL_MARGIN at beta, cheap + LAZY_EVAL_MARGIN at alpha.
+// Both are still on the caller's side of the window, so the cutoff is the same
+// one it would have taken, and both are true statements about the real score.
+//
+// It returned the cheap score until S027 and that was wrong. quiesce() is fail
+// soft: it returns stand_pat to the parent, which reads it as a lower bound and
+// may store it. cheap is not a lower bound on anything -- the guarantee is only
+// that the true score is within a margin of it, so cheap can be up to
+// LAZY_EVAL_MARGIN better than the truth. Over the 2696 test positions the old
+// form claimed a bound it did not have on 2613 of them.
+//
+// `exact`, when a caller passes one, says which of the two it got: true for the
+// score, false for a bound the shortcut returned in its place. A caller that
+// only compares the number against its own window does not care -- both answers
+// decide the same way, which is the whole argument above. A caller that wants
+// to *keep* the number does: a bound is a true statement only on the side of
+// the window it was taken at, and anywhere it is read back from, the window
+// will be a different one. S094.
+int evaluate_lazy(const board_t* board,
+                  int alpha,
+                  int beta,
+                  bool* exact = nullptr);
 
 // The mobility weights, per piece type in knight, bishop, rook, queen order.
 // Exposed so that the tuner (tools/tuner_layout.hpp's starting_params()) starts
@@ -259,17 +280,15 @@ extern const int king_safety_eg[KS_FEATURE_COUNT];
 // drift.
 void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT]);
 
-// The two expensive terms, in the orientation evaluate() applies them in: their
-// sum is exactly what evaluate() adds to evaluate_cheap(), which
-// test_evaluation "the expensive stage is applied whole" asserts on every test
-// position.
+// The two expensive terms before the clamp, in the orientation the correction
+// is applied in: clamping their sum to the margin below reproduces exactly what
+// evaluate() adds to evaluate_cheap().
 //
-// Written so the number the clamp truncated could be seen from outside -- the
-// clamp lived inside evaluate_expensive() until S039 retired it -- and kept for
-// tools/eval_spread, which reads a position corpus through it. Split into two
-// terms because mobility and king safety are fitted and rebuilt by different
-// steps, and a large correction from one, the other or both at once are three
-// different answers.
+// It exists because the clamp lives inside evaluate_expensive() and nothing
+// outside that file can see the number it truncated, so the margin cannot be
+// re-decided from data without this. tools/eval_spread reads a position corpus
+// through it. Split into two terms because a large correction coming from
+// mobility, from king safety or from both at once are three different answers.
 //
 // Off the hot path by construction rather than by measurement: it goes through
 // the same collecting instantiation king_safety_features() uses, so the
@@ -277,6 +296,33 @@ void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT]);
 // a second caller is what cost 21 % once -- see king_shelter_features() in
 // evaluation.cpp.
 void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
+
+// The largest correction the expensive terms are allowed to apply. The shortcut
+// is only sound while that holds, so it is asserted over a position list rather
+// than assumed -- see test_evaluation "the lazy shortcut cannot change a
+// decision".
+//
+// 184 since S085's SPSA run raised it from 150. Both are above the largest
+// correction observed over 149084 positions of S028 self-play, where the
+// tapered mobility term ran p50 19, p95 60, p99 81, p99.9 107 and a maximum of
+// 143 centipawns -- so the clamp still never binds on that corpus and the
+// shortcut's soundness argument is unchanged by the move. S039 re-decides this
+// number from measured spread and should expect the moved incumbent.
+//
+// It bounds the sum of every expensive term, not each one, so king safety
+// shares the same budget -- and it has shipped at fitted, non-zero weights
+// since S027, so the mobility figures above are no longer the whole correction.
+// The whole correction was measured at that point: tools/eval_spread over the
+// same 1490839 positions put the combined number at p50 27, p95 90, p99 128,
+// p99.9 178 and a maximum of 330, clamping 0.365 % of them against 0.104 % with
+// king safety at zero. That was taken at the margin of 150 that shipped then,
+// so the clamped share at 184 is lower and has not been re-measured. S039
+// re-decides the margin from measured data, and tools/eval_spread is what
+// measures it.
+//
+// The value itself moved to src/search_params.hpp at S073, where it is one of
+// the parameters the tune build exposes over UCI. What it means stays here,
+// because it is a claim about the evaluation rather than about the search.
 
 // How far into the game the position is: 24 with a full set of pieces, 0 once
 // only kings and pawns remain. Tapered terms interpolate on it. Pawns and kings

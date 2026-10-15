@@ -554,10 +554,9 @@ def holds_phrase(phrase, path):
     The title map first, so a citation into a test file says which test. The
     raw-text fallback is what a phrase into a comment needs -- `code_of`
     blanks comments, and the file-scope citations (the "Not in the set, on
-    purpose" comment above CHESSO_SEARCH_PARAMS, and LAZY_EVAL_MARGIN's comment
-    in src/evaluation.hpp until S039 deleted it) have no enclosing definition
-    to name. Both sides are whitespace-flattened, because the prose is
-    hard-wrapped and so is the code.
+    purpose" comment above CHESSO_SEARCH_PARAMS, LAZY_EVAL_MARGIN's comment in
+    src/evaluation.hpp) have no enclosing definition to name. Both sides are
+    whitespace-flattened, because the prose is hard-wrapped and so is the code.
     """
     # Flattened before the title map too, whose keys titles_of() flattens: a
     # phrase quoted across a line break of the prose carries the break. For a
@@ -692,8 +691,8 @@ def _strip_c(text):
     """C and C++ comments blanked, newlines and string literals kept.
 
     Newlines survive so a reported line number is the real one; string literals
-    survive because `X(RFP_MARGIN, "RfpMargin", ...)` is where a UCI option
-    name is declared, not a place it is mentioned.
+    survive because `X(LAZY_EVAL_MARGIN, "LazyEvalMargin", ...)` is where a UCI
+    option name is declared, not a place it is mentioned.
     """
     out, i, n = [], 0, len(text)
     while i < n:

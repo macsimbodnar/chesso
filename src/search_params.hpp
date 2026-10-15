@@ -300,10 +300,10 @@
      reverse futility is depth-unbounded in practice, and `RFP_MIN_PLY` below  \
      is the guard that is left. Not `beta < MATE_MIN`, which S145 measured     \
      inert: the static score cannot approach the mate band, so the condition   \
-     never binds. **What bounds the static score is its own arithmetic** --    \
-     finite sums of two- and three-digit constants over at most sixteen men a  \
-     side -- and not the clamp on evaluate_expensive() this comment named      \
-     until S213, which bounded only that stage and which S039 retired.         \
+     never binds. **What bounds the static score is the material and table     \
+     sums** -- finite sums of two- and three-digit constants over at most      \
+     sixteen men a side -- and not evaluate_expensive()'s clamp, which this    \
+     comment named until S213 and which bounds only the expensive stage.       \
      test_evaluation "the static score never reaches the mate band" asserts    \
      it, and negamax_at() says the same there in its own words.                \
                                                                                \
@@ -1031,6 +1031,11 @@
   X(PROBCUT_MARGIN,       "ProbCutMargin",      87,    0, 2000)                \
   X(PROBCUT_DEPTH_OFFSET, "ProbCutDepthOffset",  3,    2,    8)                \
   X(PROBCUT_MIN_DEPTH,    "ProbCutMinDepth",     6,    3,   10)                \
+                                                                               \
+  /* The largest correction the lazy evaluation's expensive terms are allowed  \
+     to apply. src/evaluation.hpp carries what the number means and what it    \
+     was measured from; S039 re-decides it there. */                           \
+  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)                     \
                                                                                \
   /* Aspiration windows. The root of an iteration is searched in a band around \
      the previous iteration's score instead of from -inf to +inf, and the band \

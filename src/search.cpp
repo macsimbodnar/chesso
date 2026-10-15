@@ -1026,38 +1026,40 @@ int quiescence(int alpha,
     }
   }
 
-  // The static score, exact at every window since S039. From S034 until then
-  // this was evaluate_lazy(), which skipped mobility and king safety where the
-  // cheap stage alone already cleared the window by LAZY_EVAL_MARGIN and
-  // handed back that bound in place of the score; the shortcut and the clamp
-  // that made its bound hold retired together (DEC-258).
+  // Lazy: quiescence is where the evaluation is called most, and most of those
+  // nodes are nowhere near the window. S034.
   //
   // Except where the entry above already carries the number. evaluate() is a
   // function of the position alone and the key that matched covers every field
   // it reads, so recomputing it would produce what is already here -- and the
   // probe has been paid for whether or not it answered the node, which makes
-  // the field free to read.
+  // the field free to read. What is stored is the score and never a bound, so
+  // this is strictly the better of the two numbers: the shortcut would have
+  // handed back cheap +/- LAZY_EVAL_MARGIN at the same node.
   //
   // INV-4 is untouched by this. The number was derived from the accumulators
   // make_move maintains, and nothing here stops maintaining them; what is
   // avoided is the second and third call that would rebuild the same score
   // from them. S094.
-  const int static_eval =
-      (tt_entry != nullptr && tt_entry->eval != TT_EVAL_NONE)
-          ? tt_entry->eval
-          : evaluate(&game->board);
+  bool static_eval_is_exact =
+      tt_entry != nullptr && tt_entry->eval != TT_EVAL_NONE;
 
-  // Every store below carries it, so a later reader finds the static score
-  // wherever this node had one -- at every node since S039, where until then a
-  // node the shortcut answered with a bound had nothing to keep: a bound holds
-  // on one side of one window and the entry is read from others. S094.
+  const int static_eval =
+      static_eval_is_exact
+          ? tt_entry->eval
+          : evaluate_lazy(&game->board, alpha, beta, &static_eval_is_exact);
+
+  // Only a number the shortcut did not replace with a bound is worth keeping:
+  // a bound holds on one side of one window and this entry will be read from
+  // others. Every store below carries it, so a later reader finds the static
+  // score wherever this node had one. S094.
   //
   // Fixed from the static number and never from the stand pat below it. The
   // substitution is window-relative -- it happens only where a bound held
   // against this node's window -- and the entry outlives the window, which is
   // the same reason a bound is never stored here. S130 changes nothing about
   // what is written.
-  const int stored_eval = static_eval;
+  const int stored_eval = static_eval_is_exact ? static_eval : TT_EVAL_NONE;
 
   // The entry did not answer the node outright, but its score is still a bound
   // on this position, and a bound a search established beats a static guess.
@@ -1122,9 +1124,9 @@ int quiescence(int alpha,
   if (!in_check) {
     if (stand_pat >= beta) {
       // The most common thing quiescence ever concludes, and it is worth
-      // keeping: the option to stand pat makes the static score a lower bound
-      // on the node, whatever the ply cap does below. There is no move to
-      // record with it.
+      // keeping: evaluate_lazy() returns a genuine lower bound on this branch,
+      // and the option to stand pat makes it a lower bound on the node too,
+      // whatever the ply cap does below. There is no move to record with it.
       //
       // A lower bound is what this store claims, so a substitution cannot make
       // it false. A raised stand pat is below beta by construction and never
@@ -1633,21 +1635,21 @@ static int negamax_at(int alpha0,
   // prices material that is about to move. The sentinel goes in the slot and
   // improving_at() falls back four plies rather than two.
   //
-  // The score and never a bound: this number is compared against another ply's
-  // and stored in an entry that outlives every window. Until S039 that ruled
-  // out evaluate_lazy(), which returned a bound that held against one window;
-  // since then evaluate() is the only form there is.
+  // evaluate() and never evaluate_lazy(): the lazy shortcut returns a bound
+  // that holds against one window, and this number is compared against another
+  // ply's and stored in an entry that outlives every window.
   //
   // The entry already has the number where the probe above found one. It is
   // the same number: evaluate() is a function of the position alone, the key
   // that matched covers every field it reads, and what is stored is always the
-  // score. So this is a call skipped, not a value approximated. Instrumented
-  // and counted rather than argued, at the reverse futility site this read was
-  // hoisted out of: 3368027 of the 14589403 calls that site made over 300
-  // positions at depth 10, 23.1 %, and 0 of them disagreed with a fresh call.
-  // The rate is a property of how warm the table is -- the same count over the
-  // three search_bench positions at depth 12 reads 173440 of 1617617, 10.7 %,
-  // and zero disagreements there too.
+  // score and never the bound the lazy shortcut hands back in its place. So
+  // this is a call skipped, not a value approximated. Instrumented and counted
+  // rather than argued, at the reverse futility site this read was hoisted
+  // out of: 3368027 of the 14589403 calls that site made over 300 positions at
+  // depth 10, 23.1 %, and 0 of them disagreed with a fresh call. The rate is a
+  // property of how warm the table is -- the same count over the three
+  // search_bench positions at depth 12 reads 173440 of 1617617, 10.7 %, and
+  // zero disagreements there too.
   //
   // INV-4 is untouched. The stored number was derived from the accumulators
   // make_move maintains and nothing here stops maintaining them; what is
@@ -1743,17 +1745,16 @@ static int negamax_at(int alpha0,
   // thing that bound cannot respect: a static evaluation is never a mate score,
   // and in this engine it cannot approach one.
   //
-  // **What bounds it is the evaluation's own arithmetic, not a clamp.** Until
-  // S039 a clamp inside evaluate_expensive() bounded one stage -- mobility and
-  // king safety -- to +/-LAZY_EVAL_MARGIN, and until S213 this comment named it
-  // as the whole reason, which it never was: evaluate_cheap() carries material,
-  // the two tapered piece-square sums and the pawn terms, and the clamp said
-  // nothing about any of them. Every term is bounded by its own arithmetic
-  // instead, and since S039 that is all that bounds the expensive stage too.
-  // Each is a sum of table entries, piece values and weights times counts over
-  // at most sixteen men a side -- the load boundary refuses a seventeenth --
-  // and every one of those constants is a two- or three-digit number, so the
-  // total is thousands of centipawns where MATE_MIN is 48000.
+  // **What bounds it is the material and table sums, not the lazy clamp.** The
+  // clamp inside evaluate_expensive() bounds one stage -- mobility and king
+  // safety -- to +/-LAZY_EVAL_MARGIN, and until S213 this comment named it as
+  // the whole reason, which it never was: evaluate_cheap() carries material,
+  // the two tapered piece-square sums and the pawn terms, and the clamp says
+  // nothing about any of them. They are bounded by their own arithmetic
+  // instead. Each is a sum of table entries and piece values over at most
+  // sixteen men a side -- the load boundary refuses a seventeenth -- and every
+  // one of those constants is a two- or three-digit number, so the total is
+  // thousands of centipawns where MATE_MIN is 48000.
   //
   // Asserted rather than argued, because an argument from the size of some
   // constants is exactly the kind that a refit walks through: test_evaluation

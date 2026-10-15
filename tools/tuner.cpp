@@ -31,10 +31,7 @@
 //
 //   score_white = sum(coef * piece_value) + sum over each taper of
 //                 (sum(coef * w_mg) * phase + sum(coef * w_eg) * (24 - phase))
-//                 / 24
-//
-// -- with mobility plus king safety clamped to the lazy margin until S039,
-// which retired the clamp.
+//                 / 24, mobility plus king safety clamped to the lazy margin
 //
 // Every row is also scored the engine's way -- integer weights, truncating
 // tapers -- and the run refuses a corpus where that differs from evaluate() on
@@ -643,10 +640,11 @@ int main(int argc, char** argv)
 
   fprintf(stderr,
           "trace: %" PRIu64 " rows, %" PRIu64
-          " entries (%.2f a row), %.1f s; %" PRIu64 " differ from evaluate()\n",
+          " entries (%.2f a row), %.1f s; %" PRIu64
+          " differ from evaluate(), the clamp binds on %" PRIu64 "\n",
           trace.rows, trace.entries,
           static_cast<double>(trace.entries) / static_cast<double>(trace.rows),
-          trace.seconds, trace.mismatches);
+          trace.seconds, trace.mismatches, trace.clamped);
 
   // The identity is the model's whole claim to be evaluate(), so a corpus that
   // breaks it on one row is not fitted at all: whatever disagrees there would

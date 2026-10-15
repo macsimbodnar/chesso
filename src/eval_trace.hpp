@@ -17,12 +17,12 @@
 //
 // What is recorded is the coefficient, not the product: for a weight pair
 // (mg, eg) applied as `count * score`, the trace holds `count` against the
-// pair's (term, index). Which taper the pair's sum then goes through is not
-// recorded -- it is fixed by where the term sits in evaluation.cpp, and
-// tools/tuner_trace.hpp states it per term, as it stated the clamp over stage
-// two until S039 retired it. The identity that a trace reconstructs evaluate()
-// exactly, integer tapers included, is what holds the two together; the tuner
-// checks it on every row it loads.
+// pair's (term, index). Which taper the pair's sum then goes through, and the
+// clamp over stage two, are not recorded -- they are fixed by where the term
+// sits in evaluation.cpp, and tools/tuner_trace.hpp states them per term. The
+// identity that a trace reconstructs evaluate() exactly, integer tapers and
+// clamp included, is what holds the two together; the tuner checks it on every
+// row it loads.
 //
 // Linear terms record White's coefficient minus Black's, the one number their
 // score depends on. A term whose weights pass through a per-side transform --

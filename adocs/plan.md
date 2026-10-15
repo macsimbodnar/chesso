@@ -362,23 +362,23 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S039  **the lazy shortcut and the clamp are kept: H0 at {-5, 0}** -- retiring both together (`ca321b6`, weights frozen) against `be48e02`: LLR -2.95 over 5116 games, nElo -16.46 +/- 9.52; reverted, bench 6100949 -> 5636835, three stale-statement fixes kept; S122's design awaits the owner before S121; S287 (filler) corrects eight statements still saying S039 retires the clamp. 2026-10-15.
 - S283  **S099's pair gains at the longer control: H1 at {0, 10} nElo, 32+0.32** -- `8758622` against `bacead1`, Hash 64, LLR 2.96 over 4738 games, nElo +12.56 +/- 9.89, 0 forfeits, run through S284's environment bounds and cap; by DEC-286 S099 relands as S286 and S110 and S111 return conditional. 2026-10-15.
 - S285  **the extra-ply mate row separates again on the reverted tree** -- re-mined by S095's procedure (22 separators of 141 at depths 3..12), the script's pick `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at depth 8, mate in 4; red with the guard opened, J01 and J02 killed at the row. Filler, DEC-171, DEC-288. 2026-10-15.
 - S282  **the node band's middle half is read around its own count** -- `S192_node_budget.py` draws it as [c / sqrt 5, 2c] around the derivation count recovered from the pair, [7270, 32512] for 65024 / 3251; a pair not derived by the script reads OUTSIDE; the old quartiles read every fresh band's own count as outside. No golden moves; the current count 13446 is inside. Filler, DEC-171. 2026-10-15.
 - S284  **`fastchess.sh` reads an SPRT's bounds and a round cap from the environment** -- `SPRT_BOUNDS` and `SPRT_ROUNDS`, refused beside a mode or `ROUNDS` and when malformed, printed on the banner, tagged `env`; cases 33-40 (33-39 red against `4e6ca63`'s script, 40 every mode's argv unchanged), so no DEC-143 A/A (DEC-289). S283 can now play `{0, 10}` at 0.05 with its 5250-round cap. 2026-10-15.
-- S023  **capture history in the two capture margins reverted on verdict 1's H0** -- a [piece][target][victim type] table moving S091's capture SEE margin and S112's quiescence futility margin, `adb5d78` against `7e36271` at {0, 5} nElo: LLR -2.96 over 9330 games, nElo -5.17 +/- 7.05; reverted as `0cdd39a`, bench 7045606 -> 5636835, the band case kept without its record loop; S025 and S265 to the reserve, verdict 2 not run, S285 re-mines the stale extra-ply row. 2026-10-15.
 
 ## Open
 
-1. S039  **SPRT running from 2026-10-15, `ca321b6` against `be48e02`, DEC-290** -- the lazy shortcut and the clamp on mobility plus king safety retire together, one non-regression SPRT (DEC-258)
-2. S286  **after S039's verdict, before S082's phase 2, DEC-286, DEC-294** -- S099's pawn key and pawn-keyed correction reland onto S039's outcome, every golden re-derived by its script; ships on S283's H1, no SPRT
+1. S286  **next, on S039's reverted tree, before S082's phase 2, DEC-286, DEC-294, DEC-295** -- S099's pawn key and pawn-keyed correction reland onto S039's reverted tree, every golden re-derived by its script; ships on S283's H1, no SPRT
+2. S287  **filler, DEC-171** -- eight statements still say S039 retires or re-decides the lazy shortcut and the clamp; restate them for S039's H0
 3. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
 4. S110  **conditional on S286 landing, DEC-258, DEC-294** -- a second correction table keyed on the non-pawn structure, split by colour; its own verdict
 5. S111  **conditional on S286 landing, DEC-258, DEC-294** -- correction tables indexed by the move played two and four plies ago; its own verdict
 6. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 7. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
 8. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
-9. S121  mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
+9. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 10. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
 11. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
 12. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call

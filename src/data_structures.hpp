@@ -568,15 +568,11 @@ struct tt_entry_t
   // position and not of the visit that recorded it. Across a key change it is
   // erased -- see tt_eval_to_store(). S108.
   //
-  // 16 bits is not a constraint anything real approaches. S213's case
-  // measured a maximum |evaluate()| of 22945 over 66430 accepted generated
-  // placements (fifteen queens against a lone king among them), against the
-  // 32767 this holds -- 1.43x headroom -- with mobility plus king safety
-  // still clamped to 184. S039 removed that clamp, and since then the same
-  // case asserts the score fits these 16 bits as well as staying below
-  // MATE_MIN's 48000, and prints the maximum it reads: **23891** over the
-  // same 66430 placements at S039, 1.37x headroom, and 15353 over the 2696
-  // corpus positions (adocs/data/S039_measurements.txt).
+  // 16 bits is not a constraint anything real approaches. evaluate() is
+  // material plus tapered tables: S213's case measured a maximum |evaluate()|
+  // of 22945 over 66430 accepted generated placements (fifteen queens against
+  // a lone king among them), against the 32767 this holds -- 1.4x headroom,
+  // and the case asserts the score stays below MATE_MIN's 48000.
   int16_t eval;
 
   int16_t depth;

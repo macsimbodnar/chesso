@@ -17,11 +17,11 @@
 //
 // That fourth clause was justified here by the claim that evaluate() is only
 // ever asked about a position quiescence has already resolved. It is not:
-// quiescence() in src/search.cpp evaluates at the top of every node, before a
-// single capture is generated -- evaluate_lazy() when DEC-055 was written,
-// evaluate() since S039 -- and that stand-pat score is what the node returns
-// on. The static evaluation is asked at exactly the positions this clause
-// excludes, which is why it is a flag and no longer a rule. DEC-055.
+// src/search.cpp:125 calls evaluate_lazy() at the top of every quiescence node,
+// before a single capture is generated, and that stand-pat score is the bound
+// the node returns on. The static evaluation is asked at exactly the positions
+// this clause excludes, which is why it is a flag and no longer a rule.
+// DEC-055.
 //
 // Every run prints what each clause cost, so the next corpus is sized from a
 // measurement rather than from this comment.

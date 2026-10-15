@@ -18,7 +18,7 @@ closes:     2026-08-13_adversarial-F05, 2026-09-10_adversarial-F16, 2026-09-10_a
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-15 22:05 -- H0 at {-5, 0} nElo, 8+0.08, Hash 16, CAND ca321b6 vs REF be48e02: Elo -12.23 +/- 7.08, nElo -16.46 +/- 9.52, LLR -2.95, 5116 games, 0 forfeits (adocs/data/S039_sprt.log, record ca578de). The lazy shortcut and the clamp are kept: ca321b6 reverted by the commit that moves this file, src/ and tools/ be48e02's again (bench 5636835), tests/ too but for the kept GOLDEN line, every golden re-derived on S039's tree with it, DEC-291's and DEC-292's values and DEC-293's row included. Three stale-statement fixes kept as written edits: DEV_MANUAL's golden_defaults 73, test_mate_carry's GOLDEN 0, 5, 4, 0, 0, 1, specs.md's floors 159 and 11 with their re-read ends (adocs/data/S039_floors.log). Eight statements the revert left saying S039 retires the clamp go to filler S287. S122's design awaits an owner decision before S121 starts (accepts (4)). Phase 2's readings stay as evidence: bench 6100949 on the candidate, nodes -4.42 % and nps -2.79 % to depth 11, mutation pass 25 of 25, gate_extra all five stages, Debug self-play 0 Assertion. Implemented by Opus subagents in phases; run, read and stamped by the coordinator.
 
 ## Re-formed 2026-10-08, DEC-258: both off, one verdict
 

@@ -27,18 +27,16 @@ static transposition_table_t tt;
 // GOLDEN (DEC-142): evaluate() and evaluate_cheap() of the quiet rook position
 // "4k3/8/8/8/8/8/8/3RK3 w - - 0 1", White to move, at the shipped weights. Nine
 // cases in this file assert one or both, so they are named once here and a
-// refit edits these two lines rather than eleven. Until S039 a third line moved
-// with them, the written-out 383 of S164's bound-valued stand pat, this pair's
-// cheap score less LAZY_EVAL_MARGIN; the shortcut that returned it is gone.
+// refit edits these two lines rather than eleven. A third line moves with them:
+// the written-out 383 of "a stand pat that is itself a bound is still capped",
+// which is this pair's cheap score less LAZY_EVAL_MARGIN (S192).
 // Re-derive: python3 adocs/data/S192_anchors.py, case "rook on d1", which
 // computes both from src/evaluation.cpp's specification rather than from the
 // engine -- an anchor copied from the thing it anchors asserts nothing (S028).
 // Moves legitimately on: a refit. Margin: exact.
-// Property beside it: "the expensive stage is applied whole" in
+// Property beside it: "the lazy shortcut cannot change a decision" in
 // tests/test_evaluation.cpp, which holds over the whole corpus and does not
 // move with a fit.
-// Re-read at S039 by the script, stage two added whole: both unchanged, a lone
-// rook's stage two being far inside the retired 184.
 static constexpr int QUIET_ROOK_EVAL = 563;
 static constexpr int QUIET_ROOK_EVAL_CHEAP = 567;
 
@@ -1247,10 +1245,6 @@ TEST_SUITE("search: move ordering state")
   // gives a different number and is not this golden.
   // Property beside it: "a search fills the ordering tables" and the rest of
   // this suite, which assert what ordering does rather than what it costs.
-  // **13702 at S039**, read by the script on a tree whose quiescence pays
-  // stage two everywhere and keeps every evaluation: 0.84 of the 16256 the
-  // pair was derived from and inside its middle half, [7270, 32512], so the
-  // pair stays.
   TEST_CASE_FIXTURE(search_fixture_t, "ordering keeps the tree small")
   {
     REQUIRE(load_FEN(KIWIPETE_POS, &game));
@@ -1310,13 +1304,13 @@ TEST_SUITE("search: quiescence")
   // Standing pat means "I do not have to do anything here". A side that is
   // already above beta stops at once and reports a score above beta.
   //
-  // The score it reports is the exact static one at every window since S039.
-  // From S034 until then quiescence called evaluate_lazy(), which answered a
-  // window the cheap terms already cleared by LAZY_EVAL_MARGIN with that bound
-  // in place of the score: 567 - 184 = 383 at the narrow beta below and 567 +
-  // 184 = 751 at the high alpha further down. Those two windows are the ones
-  // that tell the two forms apart, which is why they are here; the wide window
-  // never could.
+  // Since S034 that score is not always the exact one. When the cheap terms
+  // alone are a margin clear of beta, quiescence never computes the expensive
+  // ones and what it returns is a bound instead of a score. It has to be a
+  // bound on the right side of both beta and the truth: this is fail-soft, so
+  // the number is stored as a lower bound and read back as one. The exact score
+  // is what comes back when the window contains it, and that is asserted below
+  // too.
   TEST_CASE_FIXTURE(search_fixture_t, "a quiet position stands pat")
   {
     // White is a rook up with nothing to capture.
@@ -1332,23 +1326,35 @@ TEST_SUITE("search: quiescence")
     REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
     REQUIRE_EQ(cheap_score, QUIET_ROOK_EVAL_CHEAP);
 
-    // The precondition: the expensive stage moves this position, so a stand
-    // pat that skipped it cannot come back equal to the static score by
-    // accident.
-    REQUIRE_NE(static_score, cheap_score);
+    // The precondition for the shortcut. Without it the assertions below would
+    // pass on a build where the shortcut never fires at all.
+    REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
 
-    // Beta far enough below that the cutoff is immediate, and the number the
-    // parent keeps as a lower bound is the score itself.
-    CHECK_EQ(quiesce(fen, 0, 100), static_score);
+    // Beta far enough below: the cutoff is immediate and the expensive terms
+    // are never computed, so what comes back is a lower bound rather than the
+    // score.
+    const int cut = quiesce(fen, 0, 100);
+
+    // The cutoff it reports is a real one: the number returned and the exact
+    // score are both above beta, so nothing was cut that should not have been.
+    REQUIRE(cut >= 100);
+    REQUIRE(static_score >= 100);
+
+    // And the number is one the parent can keep. This is fail-soft, so it is
+    // propagated and stored as a lower bound on the true score and must not be
+    // above it. Which number the shortcut picks to satisfy that is the
+    // implementation's business and is deliberately not pinned here.
+    //
+    // Strictly below, and that is what shows the shortcut fired at all: the
+    // expensive terms are worth +6 between them here, mobility +16 and king
+    // safety -10 since S027 fitted it, so a quiescence that had computed them
+    // would have answered 530 on the nose. The witness is thinner than it was
+    // when mobility had the stage to itself and the gap was the whole +16.
+    REQUIRE(cut < static_score);
 
     // A window that contains it: still the static score, there are no
     // captures to change it.
-    CHECK_EQ(quiesce(fen, -10000, 10000), static_score);
-
-    // Alpha far enough above: nothing to capture, so the node fails low on the
-    // stand pat, and fail-soft hands back the score rather than alpha or a
-    // bound.
-    CHECK_EQ(quiesce(fen, 1000, 2000), static_score);
+    REQUIRE_EQ(quiesce(fen, -10000, 10000), static_score);
   }
 
   // The one case where standing pat is not on offer: the side to move is in
@@ -1361,7 +1367,6 @@ TEST_SUITE("search: quiescence")
   // assertions that carry the property are the two inequalities below it, which
   // have the whole gap between 198 and a mate score of slack. Property beside
   // it: "a quiet evasion is a legal answer to a check".
-  // Re-read at S039 by the script: 198, unchanged.
   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
   {
     // Black is ahead on material, so standing pat would report a comfortable
@@ -1414,8 +1419,6 @@ TEST_SUITE("search: quiescence")
   // Margin: exact. Property beside it: the loop inside this case, which asserts
   // that no legal reply here is a capture, and "a side in check may not stand
   // pat".
-  // Re-read at S039 by the script: -505, unchanged -- the four leaves stand pat
-  // on evaluate() there, as the full window gave them before.
   TEST_CASE_FIXTURE(search_fixture_t,
                     "a quiet evasion is a legal answer to a check")
   {
@@ -1604,13 +1607,11 @@ TEST_SUITE("search: quiescence")
 // is folded into the node's fail-soft value instead of being dropped.
 //
 // Every window below is built from the engine's own numbers and never from a
-// judgement of the position (DEC-023): the stand pat, the margin parameter, and
-// the victim table's own probe. With an empty table the stand pat is evaluate()
-// at any window since S039, and each case reads it from the engine rather than
-// assuming it. Until S039 the windows were built to take the lazy shortcut's
-// alpha-side bound instead, `evaluate_cheap() + LAZY_EVAL_MARGIN`; every
-// threshold kept its place relative to the stand pat, so each case tests what
-// it tested.
+// judgement of the position (DEC-023): evaluate_cheap(), LAZY_EVAL_MARGIN, the
+// margin parameter, and the victim table's own probe. Each alpha is placed at
+// least LAZY_EVAL_MARGIN above the cheap score, so evaluate_lazy() takes its
+// alpha-side shortcut and the stand pat is `cheap + LAZY_EVAL_MARGIN` exactly
+// -- which each case re-reads from evaluate_lazy() itself rather than assumes.
 //
 // The exemption cases are green on a tree without the rule, because nothing
 // is pruned there; what makes each one bite is its mutant under
@@ -1651,12 +1652,19 @@ TEST_SUITE("search: quiescence futility")
     return {score, state.explored_nodes};
   }
 
-  // The stand pat quiescence computes with an empty table: the static score,
-  // whatever the window.
-  static int empty_table_stand_pat(const std::string& fen)
+  // The stand pat quiescence computes for this window with an empty table,
+  // read from the engine's own lazy evaluation.
+  static int lazy_stand_pat(const std::string& fen, int alpha, int beta)
   {
     REQUIRE(load_FEN(fen, &game));
-    return evaluate(&game.board);
+    bool exact = true;
+    const int value = evaluate_lazy(&game.board, alpha, beta, &exact);
+
+    // The shortcut every window here is built to take. Were it not taken the
+    // stand pat would be the full score and every threshold below would move.
+    REQUIRE_FALSE(exact);
+    REQUIRE_EQ(value, evaluate_cheap(&game.board) + LAZY_EVAL_MARGIN);
+    return value;
   }
 
   // The legal captures of this position. Not everything quiescence's filter
@@ -1738,11 +1746,13 @@ TEST_SUITE("search: quiescence futility")
     const int victim = search_qs_futility_value_probe(B_PAWN);
     REQUIRE(victim > 0);
 
-    const int stand_pat = empty_table_stand_pat(PAWN_TAKES_PAWN);
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    const int cheap = evaluate_cheap(&game.board);
 
     // One above the capture's best case.
-    const int alpha = stand_pat + margin + victim + 1;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
     const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta);
     const int futility_value = stand_pat + margin + victim;
     REQUIRE(futility_value < alpha);
 
@@ -1767,12 +1777,14 @@ TEST_SUITE("search: quiescence futility")
     const int margin = QS_FUTILITY_MARGIN;
     const int victim = search_qs_futility_value_probe(B_PAWN);
 
-    const int stand_pat = empty_table_stand_pat(PAWN_TAKES_PAWN);
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    const int cheap = evaluate_cheap(&game.board);
 
     // One below the capture's best case: the test is `<= alpha`, so this is
     // the nearest window at which the move must still be searched.
-    const int alpha = stand_pat + margin + victim - 1;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim - 1;
     const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta);
     REQUIRE(stand_pat + margin + victim > alpha);
 
     CHECK(qs_run(PAWN_TAKES_PAWN, alpha, beta).nodes >= 2);
@@ -1812,12 +1824,14 @@ TEST_SUITE("search: quiescence futility")
     const int margin = QS_FUTILITY_MARGIN;
     const int victim = search_qs_futility_value_probe(B_ROOK);
 
-    const int stand_pat = empty_table_stand_pat(fen);
+    REQUIRE(load_FEN(fen, &game));
+    const int cheap = evaluate_cheap(&game.board);
 
     // Above every capture's victim-only best case, so without the exemption
     // every one of them would be skipped.
-    const int alpha = stand_pat + margin + victim + 1;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
     const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
     REQUIRE(stand_pat + margin + victim < alpha);
 
     const qs_run_t run = qs_run(fen, alpha, beta);
@@ -1852,10 +1866,11 @@ TEST_SUITE("search: quiescence futility")
 
     const int margin = QS_FUTILITY_MARGIN;
     const int victim = search_qs_futility_value_probe(B_QUEEN);
-    const int stand_pat = empty_table_stand_pat(fen);
+    const int cheap = evaluate_cheap(&game.board);
 
-    const int alpha = stand_pat + margin + victim + 1;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
     const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
     REQUIRE(stand_pat + margin + victim < alpha);
 
     const qs_run_t run = qs_run(fen, alpha, beta);
@@ -1886,10 +1901,12 @@ TEST_SUITE("search: quiescence futility")
     const int margin = QS_FUTILITY_MARGIN;
     const int victim = search_qs_futility_value_probe(B_PAWN);
 
-    const int stand_pat = empty_table_stand_pat(fen);
+    REQUIRE(load_FEN(fen, &game));
+    const int cheap = evaluate_cheap(&game.board);
 
-    const int alpha = stand_pat + margin + victim + 1;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
     const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
     REQUIRE(stand_pat + margin + victim < alpha);
 
     CHECK(qs_run(fen, alpha, beta).nodes >= 2);
@@ -1915,10 +1932,12 @@ TEST_SUITE("search: quiescence futility")
     const int victim = search_qs_futility_value_probe(B_PAWN);
     REQUIRE_EQ(search_qs_futility_value_probe(EMPTY), 0);
 
-    const int stand_pat = empty_table_stand_pat(fen);
+    REQUIRE(load_FEN(fen, &game));
+    const int cheap = evaluate_cheap(&game.board);
 
-    const int alpha = stand_pat + margin + victim / 2;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim / 2;
     const int beta = alpha + 1000;
+    const int stand_pat = lazy_stand_pat(fen, alpha, beta);
     const int futility_base = stand_pat + margin;
     REQUIRE(futility_base <= alpha);
     REQUIRE(futility_base + victim > alpha);
@@ -1940,11 +1959,15 @@ TEST_SUITE("search: quiescence futility")
     const int margin = QS_FUTILITY_MARGIN;
     const int victim = search_qs_futility_value_probe(B_PAWN);
 
-    // A lower bound one above the stand pat, so it raises the stand pat and
-    // does not answer the node (it is below beta).
-    const int planted = empty_table_stand_pat(PAWN_TAKES_PAWN) + 1;
+    REQUIRE(load_FEN(PAWN_TAKES_PAWN, &game));
+    const int cheap = evaluate_cheap(&game.board);
+
+    // A lower bound one above the stand pat the window gives, so it raises
+    // the stand pat and does not answer the node (it is below beta).
+    const int planted = cheap + LAZY_EVAL_MARGIN + 1;
     const int alpha = planted + margin + victim + 1;
     const int beta = alpha + 1000;
+    REQUIRE_EQ(lazy_stand_pat(PAWN_TAKES_PAWN, alpha, beta), planted - 1);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;
@@ -2305,10 +2328,9 @@ TEST_SUITE("search: quiescence promotions")
   // that takes nothing arrives with no victim at all, so priced as a capture
   // its best case is the futility base alone, and an alpha above that base
   // would skip it. The window is built the way S112's own cases build theirs,
-  // from the engine's numbers: the stand pat with an empty table, which is
-  // evaluate() at any window since S039, and an alpha one above that plus the
-  // margin. Until S039 it was built on the lazy shortcut's alpha-side bound,
-  // `evaluate_cheap() + LAZY_EVAL_MARGIN`, with the same relation to alpha.
+  // from the engine's numbers: an alpha far enough above the cheap score that
+  // evaluate_lazy() takes its alpha-side shortcut, so the stand pat is `cheap
+  // + LAZY_EVAL_MARGIN` exactly, and one above that plus the margin.
   //
   // S112's "a capturing promotion below the threshold is searched" holds the
   // same exemption for a promotion that takes something, and a narrower
@@ -2326,10 +2348,15 @@ TEST_SUITE("search: quiescence promotions")
     REQUIRE(queen != 0);
 
     REQUIRE(load_FEN(QUIET_QUEENING, &game));
-    const int stand_pat = evaluate(&game.board);
+    const int cheap = evaluate_cheap(&game.board);
 
-    const int alpha = stand_pat + QS_FUTILITY_MARGIN + 1;
+    const int alpha = cheap + LAZY_EVAL_MARGIN + QS_FUTILITY_MARGIN + 1;
     const int beta = alpha + 1000;
+
+    bool exact = true;
+    const int stand_pat = evaluate_lazy(&game.board, alpha, beta, &exact);
+    REQUIRE_FALSE(exact);
+    REQUIRE_EQ(stand_pat, cheap + LAZY_EVAL_MARGIN);
 
     // Priced as a capture of the empty square it lands on, its best case is
     // at or below alpha: absent the exemption the test would skip it.
@@ -2490,15 +2517,10 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
-  // The entry carries the static evaluation the node was scored with, and only
-  // ever the score: a bound is true on one side of one window, and the entry
-  // outlives the window. S094.
-  //
-  // Since S039 the score is what quiescence has at every window, so the entry
-  // carries it at every window. Until then a window the cheap terms cleared by
-  // LAZY_EVAL_MARGIN got the lazy shortcut's bound in place of the score, and
-  // the entry carried nothing there; the narrow and the high window below are
-  // the two that used to come back empty.
+  // The entry carries the static evaluation the node was scored with, and
+  // carries it only where that number is the score rather than the bound the
+  // lazy shortcut returns in its place. A bound is true on one side of one
+  // window; the entry outlives the window. S094.
   TEST_CASE_FIXTURE(
       search_fixture_t,
       "a quiescence entry carries the static score, never a bound")
@@ -2532,29 +2554,23 @@ TEST_SUITE("search: quiescence transposition entries")
       return tt_get_entry(&tt, &game.board);
     };
 
-    // The precondition: the expensive stage moves this position, so an entry
-    // holding the cheap score instead could not pass for the static one.
-    REQUIRE_NE(static_score, cheap_score);
-
-    // A window wide enough that no form of the evaluation could answer with
-    // anything but the score: it is what the entry holds.
+    // A window wide enough that the shortcut cannot fire: the score is the
+    // score, and it is what the entry holds.
     const tt_entry_t* wide = run(-10000, 10000);
     REQUIRE(wide != nullptr);
     REQUIRE_EQ(wide->eval, static_score);
 
-    // Beta far below: the node fails high on its stand pat, stores a lower
-    // bound, and the evaluation it stores beside it is still the score.
+    // The precondition for the other half, and without it the assertion below
+    // would pass on a build where the shortcut never fires at all.
+    REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
+
+    // Beta far enough below that the expensive terms are never computed. What
+    // quiescence returned is a lower bound and not this position's score, so
+    // there is nothing here worth recording.
     const tt_entry_t* narrow = run(0, 100);
     REQUIRE(narrow != nullptr);
     REQUIRE_EQ(narrow->type, TT_BETA_NODE);
-    REQUIRE_EQ(narrow->eval, static_score);
-
-    // Alpha far above: the node fails low with nothing to capture, stores an
-    // upper bound, and the same.
-    const tt_entry_t* high = run(1000, 2000);
-    REQUIRE(high != nullptr);
-    REQUIRE_EQ(high->type, TT_ALPHA_NODE);
-    REQUIRE_EQ(high->eval, static_score);
+    REQUIRE_EQ(narrow->eval, TT_EVAL_NONE);
   }
 
 
@@ -2884,19 +2900,19 @@ TEST_SUITE("search: quiescence transposition entries")
   }
 
 
-  // S164 pinned the one input class the cases above never reach: a stand pat
-  // that was itself a bound. evaluate_lazy() returned one wherever the probe
-  // carried no eval and the cheap score was already a margin clear of the
-  // window, and no test reached that class, so an edit that reordered the lazy
-  // call and the substitution, or flipped one comparison on the bound path,
-  // would have stayed green -- the S106 failure class,
-  // 2026-08-22_adversarial-F07. S039 retired the shortcut and the class with
-  // it: the stand pat is the static score at every window. The case keeps
-  // S164's window, the one the shortcut used to answer, and asserts what holds
-  // there now -- the stand pat is the score, the cap still applies to it, and
-  // the entry carries the score the node computed.
+  // Every case above searches a window wide enough that the lazy shortcut
+  // cannot fire, so `static_eval` is the exact 563 in all of them and the
+  // substitution is only ever measured against a static score. It is not
+  // always one: where the probe carries no eval and the cheap score is already
+  // a margin clear of the window, evaluate_lazy() returns `cheap +/-
+  // LAZY_EVAL_MARGIN`, a bound. The audit verified the soundness argument for
+  // substituting against that bound case by case and found nothing wrong with
+  // it -- what it found was that no test reaches the input class, so a future
+  // edit that reorders the lazy call and the substitution, or flips one
+  // comparison on the bound path, stays green. The S106 failure class.
+  // 2026-08-22_adversarial-F07, S164.
   TEST_CASE_FIXTURE(search_fixture_t,
-                    "a stand pat at a narrow window is the score, still capped")
+                    "a stand pat that is itself a bound is still capped")
   {
     // Nothing to capture and not in check, so the value the node returns is
     // the stand pat and nothing else. Same anchor as the cases above.
@@ -2904,15 +2920,16 @@ TEST_SUITE("search: quiescence transposition entries")
 
     static std::atomic_bool never_stop = false;
 
-    // Narrow, and on the beta side: S164's window, chosen because the cheap
-    // 567 less the 184 margin, 383, was already clear of a beta of 100 and the
-    // shortcut fired there with a lower bound.
+    // Narrow, and on the beta side: cheap is 567, so 567 - 184 = 383 is
+    // already clear of a beta of 100 and the shortcut fires with a lower
+    // bound. That is the whole point of the window -- every case above uses
+    // (-10000, 10000), where neither test in evaluate_lazy() can pass.
     constexpr int ALPHA = 0;
     constexpr int BETA = 100;
 
     // Above alpha, so tt_entry_answers() does not answer the node outright and
-    // the number has to arrive through the stand pat; below the static score,
-    // so the cap fires.
+    // the number has to arrive through the stand pat; below the lazy bound, so
+    // the cap fires.
     constexpr int PLANTED = 200;
 
     auto run = [&]() -> int {
@@ -2927,21 +2944,44 @@ TEST_SUITE("search: quiescence transposition entries")
     };
 
     REQUIRE(load_FEN(fen, &game));
-    const int static_score = evaluate(&game.board);
-    REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
+
+    // The preconditions, and without them the assertions below are vacuous:
+    // this window really does reach the shortcut, the number it hands back is
+    // a bound and not the static score, and the planted score sits between
+    // alpha and that bound.
+    bool exact = true;
+    const int lazy = evaluate_lazy(&game.board, ALPHA, BETA, &exact);
+    REQUIRE_FALSE(exact);
+    REQUIRE_EQ(evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP);
+    REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
+
+    // GOLDEN (DEC-142): 383, the same number written out, so the line above
+    // cannot pass by both sides moving together -- an assertion spelled only in
+    // the symbols it is about asserts nothing (S028).
+    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 567 - 184;
+    // the first from python3 adocs/data/S192_anchors.py, case "rook on d1", the
+    // second from src/search_params.hpp.
+    // Moves legitimately on: a refit, and **also** an SPSA run or any step that
+    // moves LAZY_EVAL_MARGIN -- S039 is the step that re-decides it.
+    // Margin: exact. Property beside it: the REQUIRE_FALSE(exact) above, which
+    // says the shortcut fired at all and carries no number.
+    REQUIRE_EQ(lazy, 383);
+    REQUIRE_NE(lazy, evaluate(&game.board));
     REQUIRE(PLANTED > ALPHA);
-    REQUIRE(PLANTED < static_score);
+    REQUIRE(PLANTED < lazy);
     REQUIRE(PLANTED >= BETA);
 
-    // Precondition: with nothing planted the node stands pat on the static
-    // score itself -- not on a bound, at this window -- so anything other than
-    // it below came from the entry.
+    // Precondition: with nothing planted the node stands pat on the bound
+    // itself, so anything other than 383 below came from the entry.
     tt_reset(&tt);
     tt_new_search(&tt);
-    REQUIRE_EQ(run(), static_score);
+    REQUIRE_EQ(run(), lazy);
 
-    // An upper bound of 200 says the value is at most 200, below the static
-    // score, so it caps the stand pat exactly as it does at a wide window.
+    // An upper bound of 200 says the value is at most 200, which is less than
+    // the 383 the shortcut established as a lower bound on the static score --
+    // the two claims are about different things and both hold, the entry's
+    // being the tighter one. So the cap applies to a stand pat that is itself
+    // a bound, exactly as it applies to a static score.
     tt_reset(&tt);
     tt_new_search(&tt);
     REQUIRE(load_FEN(fen, &game));
@@ -2954,13 +2994,15 @@ TEST_SUITE("search: quiescence transposition entries")
     REQUIRE(entry != nullptr);
 
     // 200 is still at or above beta, so the node fails high and stores a lower
-    // bound, sound for DEC-102's reason: the cap only lowered the number below
-    // the static score. The eval field carries the static score the node
-    // computed -- it stayed empty at this window until S039, when the
-    // shortcut's bound was all the node had and S094 lets only the score in.
+    // bound. It is sound on this path for the same reason as on the static
+    // one, and the reason is worth stating because `static_eval` is not exact
+    // here: the shortcut certified `value >= 383`, the cap only lowered the
+    // number to 200, and `value >= 200` follows. The eval field stays empty --
+    // no exact static score was ever computed at this node, and S094's
+    // semantics say only an exact one may be stored.
     CHECK_EQ(entry->score, PLANTED);
     CHECK_EQ(entry->type, TT_BETA_NODE);
-    CHECK_EQ(entry->eval, static_score);
+    CHECK_EQ(entry->eval, TT_EVAL_NONE);
   }
 
 
@@ -3936,23 +3978,27 @@ TEST_SUITE("search: transposition table")
   // ply > 0 and depth >= 3, so a root search of depth 3 or less has none
   // anywhere in its tree, and null move pruning needs more depth still.
   //
-  // The lazy evaluation shortcut broke it too until S039 retired it, and
-  // unlike the reductions there was no depth below which it did not: whether
-  // the expensive terms were computed at a leaf depended on the window, so a
-  // leaf could be scored exactly on one run and by a bound on the next. It
-  // caught the shortcut returning the cheap score, which is not a bound at
-  // all: the same position answered 110 or 59 depending on what was cached
-  // (S027). A leaf is scored exactly at every window since S039.
+  // The lazy evaluation shortcut breaks it too, and unlike the reductions there
+  // is no depth below which it does not. Whether the expensive terms are
+  // computed at a leaf depends on the window, the table changes the windows the
+  // search arrives with, so a leaf can be scored exactly on one run and by a
+  // bound on the next. It caught the shortcut returning the cheap score, which
+  // is not a bound at all: the same position answered 110 or 59 depending on
+  // what was cached. That is fixed - the shortcut returns the guaranteed bound
+  // now - and this case is green again, but green here means only that the
+  // corpus and the depths below do not expose the difference. It is not the
+  // purity the case claims, and a position where a bound and the exact score
+  // land on opposite sides of a cutoff would fail here without anything being
+  // wrong with the table. Read a failure as "one of these two things changed"
+  // and not as "the table is broken". S027.
   //
-  // Two paths break the stated purity and are in the tree. S130: quiescence()
-  // in src/search.cpp raises or lowers `stand_pat` from a table entry's bound
-  // -- `stand_pat_type` carries which -- so a warm table changes the stand pat.
-  // S094 and S130: tt_entry_answers() accepts a main-search entry at
-  // TT_DEPTH_QS, so quiescence can answer from a node the main search stored.
-  // Depth 2 to 3 over this corpus exposes neither, so green here means only
-  // that the corpus and the depths below do not expose them; a failure reads
-  // as "one of the table, S130's substitution or S094's probe changed" and not
-  // as "the table is broken".
+  // Two more paths break the stated purity and are already in the tree.
+  // S130: quiescence() in src/search.cpp raises or lowers `stand_pat` from a
+  // table entry's bound -- `stand_pat_type` carries which -- so a warm table
+  // changes the stand pat. S094 and S130: tt_entry_answers() accepts a
+  // main-search entry at TT_DEPTH_QS, so quiescence can answer from a node the
+  // main search stored. Depth 2 to 3 over this corpus exposes neither; a
+  // failure here reads as "one of three things changed".
   //
   // The table's own logic is pinned directly by "transposition table: storage"
   // below, which does not care what the search does.
@@ -4196,7 +4242,7 @@ TEST_SUITE("search: draws")
     // move reduction reduced the mating move at the root, and both were caught
     // by a case like this one and by no benchmark.
     //
-    // GOLDEN (DEC-142): the position, the depth 9 and the distance 2 below.
+    // GOLDEN (DEC-142): the position, the depth 8 and the distance 4 below.
     // Re-derive: `~/.venv/chess/bin/python adocs/data/S095_mine_mate_row.py
     // candidates` then `adocs/data/S230_mine_r01_row.py depths` over depths 3
     // to 12 on the shipped tree and again with the guard opened, then
@@ -4204,20 +4250,6 @@ TEST_SUITE("search: draws")
     // deeper by the same scripts, never by hand (DEC-288).
     // Moves legitimately on: any change to ordering, pruning or reduction.
     // Margin: exact -- the row asserts the distance too.
-    //
-    // **RE-MINED AT S039, BECAUSE S285'S ROW STOPPED SEPARATING (DEC-142,
-    // DEC-288).** On the tree without the lazy shortcut and the clamp, S285's
-    // row, `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at 8, mate in 4, reads
-    // `d7-d12` on both builds -- the guard-opened one finds it at 8 too -- so
-    // it held nothing at its own depth. The same procedure over the same 141
-    // candidates, swept 3 to 12 on S039's build and on the same build with the
-    // guard opened, then `pick`: the rule takes the longest shipped run, nine
-    // depths, and the lowest depth lost in it -- the row below at **9**,
-    // shipped `d3-d11` against the guard-opened build's `d3-d8 d10 d11`,
-    // distance 2 at every one (`adocs/data/S039_remine.log`). It is the row
-    // before S285 again, at a depth of its own: the script's pick, not a
-    // choice. Stockfish through python-chess at depth 20 answers `#+2`, `Rc5
-    // Ka1 Rc1#`. Observed green shipped and red with the guard opened, below.
     //
     // **RE-MINED AT S285, BECAUSE THE ROW HAD STOPPED SEPARATING (DEC-142,
     // DEC-288).** The row before it, depth 8 and distance 2,
@@ -4227,13 +4259,13 @@ TEST_SUITE("search: draws")
     //     shipped        2 2 2 2 - 2 2 - 2 -
     //     guard opened   2 2 2 2 - 2 - 2 2 2
     // so it held nothing at its own depth. S023 found it so on its parent and
-    // re-mined it on its candidate; that row left with the revert, and S285's
-    // was the script's pick on the reverted tree. S095's procedure as
+    // re-mined it on its candidate; that row left with the revert, and the one
+    // below is the script's pick on the reverted tree. S095's procedure as
     // S234 and S023 ran it: the 141 candidates of
     // `adocs/data/S095_candidates.tsv` (the pool and the oracle did not move)
     // swept 3 to 12 on both builds of a clean fixture, then `pick`. 22
     // separate; the rule takes the longest shipped run, six depths, and the
-    // lowest depth lost in it: `k7/6Q1/...` at **8**, shipped `d7-d12`
+    // lowest depth lost in it: the row below at **8**, shipped `d7-d12`
     // against the guard-opened build's `d7 d9-d12`, distance 4 at every one
     // (`adocs/data/S285_remine_extra_ply.log`). It is the position S023's
     // re-mine took on its candidate, reached here by the script alone. Not
@@ -4309,14 +4341,14 @@ TEST_SUITE("search: draws")
     // at the new depth in `.tuning/coord/S234_observe_red.log` and for S285's
     // row at the end of `adocs/data/S285_remine_extra_ply.log`.
     const std::string mate_the_extra_ply_hides =
-        "4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1";
+        "k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80";
 
     {
-      const std::string title = "mate the extra ply hides, depth 9";
-      const search_t result = search_fen(mate_the_extra_ply_hides, 9);
+      const std::string title = "mate the extra ply hides, depth 8";
+      const search_t result = search_fen(mate_the_extra_ply_hides, 8);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 2, title);
+      REQUIRE_MESSAGE(result.mate_in == 4, title);
     }
 
     // S097 verdict 2's own row, and the accepts' clause for the multicut: a
@@ -4328,8 +4360,7 @@ TEST_SUITE("search: draws")
     // instrument that misses a mate, so a mate distance out of one is a
     // distance nothing proved.
     //
-    // GOLDEN (DEC-142): the depth 11 below, the position and the distance 5
-    // with it, mined one band deeper by DEC-293 (S039, below).
+    // GOLDEN (DEC-142): the depth 10 below, and the position with it.
     // Re-derive with the six commands in `adocs/data/S097_mine_mate_row.py`'s
     // own header, which are the ones that were run and are written out there
     // with every input named -- candidates, the shipped sweep, the same sweep
@@ -4602,29 +4633,9 @@ TEST_SUITE("search: draws")
     //     The six commands are `adocs/data/S097_mine_mate_row.py`'s own, run
     //     by the S261 worktree's `.tuning/coord/S261/remine.sh`, evidence in
     //     its `.tuning/coord/S261/remine/`.
-    //     S039, the tree without the lazy shortcut and the clamp, guard mode
-    //     (DEC-293). S261's row stopped holding its distance -- the shipped
-    //     build reads `#6` at 10, then 5, 6, 5, 5 at 11 to 14, against
-    //     stockfish's `#+5` -- and the six commands, re-run over the 269 in
-    //     the sweep's own range, 7 to 10, find **one** separator, that same
-    //     position at depth 10 with the engine's `#6`, the guard-dropped
-    //     build finding no mate there. DEC-293 does not take a pick whose
-    //     engine distance disagrees with the oracle or moves across depths,
-    //     so the band one deeper, 11 to 14, was mined by the same six
-    //     commands: twelve of the 269 separate, and the rule takes
-    //         the row below, depth 11, mate_in 5, 638382 nodes, about 0.08 s
-    //     shipped `d11 d12 d13 d14` against the guard-dropped build's `d12
-    //     d13 d14`, mate in 5 at every depth, the mutant's multicut firing
-    //     at 11, 13 and 14. python-chess reports `is_valid()` True,
-    //     `is_check()` False, 30 legal moves; stockfish in a fresh process
-    //     through python-chess reads **`#+5`** for White, the side to move,
-    //     at depth 30 (pv Rag1 Qg6 fxg6 fxg6 Rxg6 Rf8 Qxf6+ Rxf6 Rg8#) and
-    //     with a mate-in-5 limit, where its depth-20 reading, `#+6`, is the
-    //     candidates file's label. Observed green shipped and red with E21
-    //     applied (`adocs/data/S039_remine.log`).
     //
     const std::string mate_the_multicut_hides =
-        "r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36";
+        "6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42";
 
     // **S188 re-mined S097's row and its H0 put that row back.** While the
     // check extension was in the tree S097's row stopped separating -- the
@@ -4640,8 +4651,8 @@ TEST_SUITE("search: draws")
     // file: a mined row is a property of the tree it was mined on.
 
     {
-      const std::string title = "mate the multicut hides, depth 11";
-      const search_t result = search_fen(mate_the_multicut_hides, 11);
+      const std::string title = "mate the multicut hides, depth 10";
+      const search_t result = search_fen(mate_the_multicut_hides, 10);
 
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == 5, title);
@@ -4656,7 +4667,7 @@ TEST_SUITE("search: draws")
     // shallow search is exactly the instrument that misses the mate -- S165's
     // hazard, and the once-per-thousand miss the origin paper itself reports.
     //
-    // GOLDEN (DEC-142): the position, the depth 9 and the distance 5 below.
+    // GOLDEN (DEC-142): the position, the depth 10 and the distance 5 below.
     // Re-derive with the six commands in `adocs/data/S277_mine_mate_row.py`'s
     // own header: the candidate list, the shipped sweep, the same sweep
     // against a library built with `B04_probcut_defender_gate_dropped` applied,
@@ -4766,9 +4777,8 @@ TEST_SUITE("search: draws")
     // `adocs/data/S277_mine_mate_row.py`'s six commands, run by the S261
     // worktree's `.tuning/coord/S261/remine.sh` (evidence in its
     // `.tuning/coord/S261/remine/`): six of the 269 candidates separate the
-    // shipped build from B04's, four by the rule, and the pick takes
-    // `8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61` at **depth 10, mate
-    // in 5**, shipped `d9 d10` against B04's `d9`,
+    // shipped build from B04's, four by the rule, and the pick takes the row
+    // below at **depth 10, mate in 5**, shipped `d9 d10` against B04's `d9`,
     // the mutant's ProbCut firing at 7 to 10, 110157 nodes, about 14 ms.
     // python-chess reports `is_valid()` True and `is_check()` **True** --
     // Black to move in check, 3 legal moves, 1 capture -- and stockfish at
@@ -4777,29 +4787,12 @@ TEST_SUITE("search: draws")
     // python-chess reads as ending in checkmate. The root in check is the
     // drive's and not the block's: ProbCut is asked below it, where the
     // witness shows it firing.
-    //
-    // **Re-mined at S039 in guard mode, DEC-288, because S261's row stopped
-    // separating.** On the tree without the lazy shortcut and the clamp
-    // S261's row reads its mate in 5 at 9 to 12 on both builds, B04's
-    // included. The same six commands over the same 269, the range still 7
-    // to 10: four candidates separate, and the pick takes the row below at
-    // **depth 9, mate in 5**, shipped `d9` against B04's none, the mutant's
-    // ProbCut firing at 7 to 10, 50852 nodes, about 6 ms
-    // (`adocs/data/S039_remine.log`). python-chess reports `is_valid()` True,
-    // `is_check()` False, 24 legal moves, and stockfish at depth 20 in a fresh
-    // process through python-chess reads **`#+5`** for Black, the side to
-    // move, `gxf3 Rb7+ Kg6 Rg7+ Kxg7 h3 Ng2+ Kf1 Rd1#`. Observed green shipped
-    // and red with B04 applied, in this case: B04's build also loses the
-    // multicut row's mate above, which comes first, so the red was taken
-    // with that row's block commented out in a scratch copy, never
-    // committed -- `REQUIRE( result.mate_found )` fails at "mate probcut
-    // hides, depth 9" (the same log).
     const std::string mate_probcut_hides =
-        "1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41";
+        "8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61";
 
     {
-      const std::string title = "mate probcut hides, depth 9";
-      const search_t result = search_fen(mate_probcut_hides, 9);
+      const std::string title = "mate probcut hides, depth 10";
+      const search_t result = search_fen(mate_probcut_hides, 10);
 
       REQUIRE_MESSAGE(result.mate_found, title);
       REQUIRE_MESSAGE(result.mate_in == 5, title);
@@ -5140,24 +5133,6 @@ TEST_SUITE("search: draws")
     // `{row 3, 10, 4, "C02, C05, R02, since S116"}`,
     // `{row 4, 10, 5, "no S091 mutant, since S116"}`.
     //
-    // **Re-derived at S039, the seven sweeps taken once more (DEC-142).**
-    // Quiescence standing pat on the exact score at every window moves every
-    // leaf the shortcut answered, which is a tree change everywhere. The same
-    // pass -- shipped plus all six S091 mutants, depths 3 to 12, over
-    // `adocs/data/S230_table_fens.txt`, each mutant applied to a worktree of
-    // the candidate by tools/mutation_check.py's own applier -- and the same
-    // rule (`adocs/data/S039_remine.log`). Shipped profiles: `d9 d10 d11
-    // d12`, `d8 d9 d10 d11 d12`, `d11`, `d11 d12`. **One depth moved, three
-    // labels did, and no mate distance.** Row 1 stays at 9, where C07 now
-    // loses it (`d10 d11 d12`); row 2 stays at 8, no mutant separating it
-    // anywhere; row 3 stays at 11, where R02 alone loses it now, C02 and C05
-    // reporting the mate there; row 4 goes from 12 to **11**, the lowest
-    // depth of its profile at which a mutant loses it -- C07 and R02 both do.
-    // The rows as S261 left them:
-    // `{row 1, 9, 5, "no S091 mutant, since S116"}`,
-    // `{row 3, 11, 4, "C02, C05, R02, since S116"}`,
-    // `{row 4, 12, 5, "no S091 mutant, since S116"}`.
-    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -5167,7 +5142,7 @@ TEST_SUITE("search: draws")
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
         {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "C07, since S039"},
+         "no S091 mutant, since S116"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
@@ -5178,7 +5153,7 @@ TEST_SUITE("search: draws")
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
         {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
-         "R02, since S039"},
+         "C02, C05, R02, since S116"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -5219,8 +5194,8 @@ TEST_SUITE("search: draws")
         // pass. **S114's second verdict kept the depth and moved the label**,
         // and its reading put the label back with the gate's removal -- the
         // paragraph above has both.
-        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 11,
-         5, "C07, R02, since S039"},
+        {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 12,
+         5, "no S091 mutant, since S116"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -5415,7 +5390,6 @@ TEST_SUITE("search: draws")
     // below zero, so a refit that moves it changes nothing else here.
     // Property beside it: the repetition assertion below, which compares
     // against 0 and not against this value.
-    // Re-read at S039 by the script: -569, unchanged.
     REQUIRE_EQ(evaluate(&game.board), -569);
 
     static std::atomic_bool never_stop = false;
@@ -5688,8 +5662,6 @@ TEST_SUITE("search: draws")
                  repetition_kind_t::DRAW);
     }
 
-    // Re-derived at S039 by the script named below: it prints "separating
-    // depth: 4", so the three searches keep it.
     // THE DRIVE DEPTH, AND IT IS A MEASURED CONSTANT (GOLDEN, DEC-142). The
     // three searches need a depth at which the cycle's return to the **root's
     // own** entry is inside the tree and its return to the **ply-1** position
@@ -7510,10 +7482,9 @@ TEST_SUITE("search: pruning and reduction guards")
 
     // -MATE_MIN itself, the first beta the guard excludes. Only the negative
     // edge is constructible: the positive one needs a static score near 48000,
-    // which the evaluation's own arithmetic keeps far from -- test_evaluation
-    // "the static score never reaches the mate band" asserts it -- and which is
-    // why src/search_params.hpp records that half of the guard as one S145
-    // measured inert.
+    // and evaluate_expensive() clamps the whole king-safety correction to
+    // LAZY_EVAL_MARGIN, which is why src/search_params.hpp records that half of
+    // the guard as one S145 measured inert.
     const int beta = -MATE_MIN_LOCAL;
 
     REQUIRE(evaluate(&game.board) - (RFP_MARGIN * depth) >= beta);
@@ -9838,12 +9809,6 @@ TEST_SUITE("search: pruning and reduction guards")
   // pruning's count, and the two cases below hold that it stops at the quiets:
   // a capture ordered past the count still meets both of S091's rules.
   //
-  // **Read at S039 and kept.** Its movers, listed below, are late move
-  // pruning's count and cap, the capture rule's margin and cap, the reduction
-  // table and the capture order; S039 moves none of them. Both cases assert
-  // their preconditions against the engine's own tables and read green on its
-  // tree; LQ02 and LQ03 are its mutation pass's witnesses that they still
-  // separate.
   // GOLDEN (DEC-142): the position, both drive depths and both captures below,
   // **re-mined at S261** because the lane's vector moved the count twice --
   // `LmpBase` 733 -> 935 puts the flag at move 10, one past the eight captures

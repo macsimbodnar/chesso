@@ -213,13 +213,6 @@ A legal value prints nothing, and there is still **no readback** — `uci`
 re-prints each parameter's compiled default, not its live value — so the absence
 of a refusal is the only confirmation the value was taken.
 
-**`LazyEvalMargin` is not an option since S039.** It set the margin of the lazy
-evaluation shortcut and of the clamp on mobility plus king safety, 184 when they
-went, and both are gone: every evaluation is the full score. A tuner
-configuration that still names it gets the third shape above, `info string
-refused [LazyEvalMargin], unknown option`, from the tune build, and nothing from
-the release build, where it never was an option.
-
 | name | default | range | effect |
 |---|---|---|---|
 | `QuietHistoryMax` | 8831 | 1 to 32767 | the gravity bound on a quiet history entry. Every score the table holds lies in `[-QuietHistoryMax, +QuietHistoryMax]`, which is the whole quiet ordering band, both edges. Both bounds are arithmetic: the update divides by this value, and the entry is an `int16_t`. Replaced `OrderHistoryMax` at S093, whose 600000 was a saturation ceiling on an unbounded accumulator. Fitted by this project's own SPSA lane at S222 from the 8192 it shipped as |
@@ -277,6 +270,7 @@ the release build, where it never was an option.
 | `ProbCutMargin` | 87 | 0 to 2000 | how far above beta the shallow search must come back, in the evaluation's own units (a pawn is 94). Seeded by the ProbCut paper's own method run over this engine's own positions: the spread of a depth-8 score around its depth-4 prediction, 48.98, taken at one standard deviation (`adocs/data/S113_probcut_fit.tsv`), 49, and fitted by S261's lane to 87. At 0 the bar is beta itself. No value switches the rule off -- at the top the preliminary quiescence still runs; `ProbCut` 0 does |
 | `ProbCutDepthOffset` | 3 | 2 to 8 | the capture's child is searched at `depth - ProbCutDepthOffset`, so counting the capture the ProbCut search is `ProbCutDepthOffset - 1` plies shallower than the node. Seeded at 5 so that at the minimum depth 8 the pair is the ProbCut paper's (4, 8), the pair the margin was fitted on; S261's lane fitted 3 beside `ProbCutMinDepth` 6 |
 | `ProbCutMinDepth` | 6 | 3 to 10 | the shallowest remaining depth ProbCut is tried at, seeded at the paper's check height of 8 and fitted by S261's lane to 6. The block also needs `depth - ProbCutDepthOffset` to be at least 1 |
+| `LazyEvalMargin` | 184 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
 | `AspirationMinDepth` | 2 | 2 to 64 | the first iteration searched in a window around the previous score. Below it the root window is the full one. Cannot be 1: depth 1 has no previous score |
 | `AspirationDelta` | 21 | 1 to 2000 | the window's half-width in centipawns at the first attempt of an iteration |
 | `AspirationMaxDelta` | 437 | 1 to 48000 | where widening stops and the iteration is repeated with the full window instead |

@@ -7,29 +7,25 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S283 read H1 -- S099 relands; S039's SPRT runs
+## 2026-10-15: S039 read H0 and is reverted; S283 read H1, S099 relands
 
-**S283 done, H1** (`adocs/data/S283_sprt.sh`, DEC-286): S099's pair
-`8758622` against `bacead1` at 32+0.32, Hash 64, `{0, 10}` nElo: `Elo +8.51
-+/- 6.70`, `nElo +12.56 +/- 9.89`, LLR 2.96 over 4738 games, 8 h 48 m, 0
-forfeits. Archived: `chesso_S283_sprt_2026-10-15.tar.xz`. So **S286**
-relands S099 onto S039's outcome, golden by script, no SPRT; S110 and S111
-are back in the Open list, conditional on S286; DEC-294 orders S286 after
-S039's verdict and before S082's phase 2, so the corpus comes from the
-engine that ships.
+**S039 done, H0** (`adocs/data/S039_sprt.sh`): retiring the lazy shortcut
+and the clamp together (`ca321b6`) against `be48e02`, `{-5, 0}` at 8+0.08:
+`Elo -12.23 +/- 7.08`, `nElo -16.46 +/- 9.52`, LLR -2.95 over 5116 games,
+2 h 23 m, 0 forfeits (record `ca578de`). Both are kept: reverted, bench back
+to 5636835, three stale-statement fixes kept. **S122's design waits on an
+owner decision before S121 starts** (asked when S121 is next). **S287**
+(filler) restates eight statements that still say S039 retires the clamp.
 
-**Running: S039's SPRT** (`adocs/data/S039_sprt.sh`, from 19:11): CAND
-`ca321b6` (the lazy shortcut and the clamp retire, `Bench: 6100949`) against
-REF `be48e02`, `{-5, 0}` at 8+0.08, Hash 16; 25591 games on a bound (12.1 h),
-41861 at the midpoint, cap 40000. The banner read as booked. DEC-274's
-outcomes: H1 kept; H0 reverted with the three stale-statement fixes kept.
+**S283 done, H1** (DEC-286): S099's pair at 32+0.32, Hash 64, `{0, 10}`:
+`nElo +12.56 +/- 9.89`, LLR 2.96 over 4738 games (record `ee5295b`). So
+**S286** relands S099 -- now onto S039's reverted tree, whose src/ is
+`be48e02`'s, so S286's src/ is `8758622`'s exactly (bench 6042933 expected);
+the owner pre-approved its carry ceilings within a guard (DEC-295). S110 and
+S111 are back, conditional on S286 (DEC-294).
 
-**Next, blind during the run:** S286's phase 1 on S039's candidate.
-
-**S039 candidate `ca321b6`** (`Bench: 6100949`, from 5636835, gated green):
-count 73 -> 72; nodes -4.42 %, nps -2.79 % to depth 11; floors 161 and 12;
-the extra-ply, B04 and E21 rows re-mined (E21 by DEC-293); DEC-291 (ceilings
-A 2, C 6) and DEC-292 (tuner floor 0.01), both leaving with any revert.
+**Next:** S286's phase 2 (about 2.5 h) on the reverted tree, then S082
+rebased onto S286, its phase 2 and the night's pool; S287 beside them.
 
 **S285 done** (filler): the extra-ply row re-mined on the reverted tree,
 the script's pick `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at depth 8, mate
@@ -78,9 +74,9 @@ commit moves it to `plan_done/` and is gated.
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-290, DEC-294):** S039's SPRT (running) -> S286, S099
-relanded onto S039's outcome -> S082 rebased onto S286, its phase 2 and the
-night's pool -> S110, S111 (conditional on S286) -> S083.
+**Order from here (DEC-294):** S286's phase 2 -> S082 rebased onto S286,
+its phase 2 and the night's pool -> S110, S111 (conditional on S286) -> S083.
+S287 (filler) whenever an agent is free.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 

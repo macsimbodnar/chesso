@@ -124,10 +124,9 @@ int16_t tt_eval_to_store(const tt_entry_t* entry, uint64_t hash, int eval);
 // which is what it already does for a slot that was never written. S094.
 //
 // `eval` is the position's static evaluation, defaulted for the callers that
-// never computed one. It has to be the score itself and never a bound -- until
-// S039 the lazy shortcut returned one in its place -- because a bound is only
-// true on the side of the window it was taken at, and an entry outlives that
-// window. S094.
+// never computed one. It has to be the score itself and not the bound the lazy
+// shortcut returns in its place: a bound is only true on the side of the
+// window it was taken at, and an entry outlives that window. S094.
 //
 // Passing TT_EVAL_NONE does not erase an evaluation this same position already
 // has on the slot; tt_eval_to_store() is that rule. S108.

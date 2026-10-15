@@ -962,11 +962,7 @@ evidence, never edited, so each is pinned here instead:
   and fails on its first column alone: the mirror at `cead820` read 138335 /
   105 / 33, the trace reads 137108 / 105 / 33 -- the past-2.0 column counts
   rows sitting on 48/24 by which side an ulp puts them (`S276_truncation_scan.txt`).
-  The margin counterfactual was not re-run. **From S039 on both `HEAD`
-  readings are pinned to S039's parent**: S039 removed the clamp, so at a later
-  `HEAD` the first reads the unclamped scan, against which its expected numbers
-  mean nothing, and the second stops at its own vacuity check (exit 2) because
-  the `LazyEvalMargin` row it edits is gone.
+  The margin counterfactual was not re-run.
 - `S144_paths.py`, S144's one-shot citation conversion, relocates two of its
   rows onto `tools/eval_model.hpp` by reading that file at `HEAD`; those two
   resolve only before S276.

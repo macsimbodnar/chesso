@@ -84,8 +84,6 @@
 // (1)) and `LmrDivisor` (DEC-278) -- and six came back where they started:
 // `LmrNotImproving`, `LmrTtCapture`, `LmrPv`, `LmrNoTtMove`, `SeeCaptureCoeff`
 // and `LmpDepthCoeff`. The count stays 73 and no range moves.
-// S039 takes one out: `LazyEvalMargin`, the lazy shortcut's margin and the
-// clamp's, which left with both (DEC-258). The count goes 73 to 72.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -98,7 +96,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 72 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 73 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -167,6 +165,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"ProbCutMargin",            87,     0,    2000},
   {"ProbCutDepthOffset",        3,     2,       8},
   {"ProbCutMinDepth",           6,     3,      10},
+  {"LazyEvalMargin",          184,     0,    2000},
   {"AspirationMinDepth",        2,     2,      64},
   {"AspirationDelta",          21,     1,    2000},
   {"AspirationMaxDelta",      437,     1,   48000},

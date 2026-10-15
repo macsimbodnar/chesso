@@ -1,21 +1,19 @@
-// How far does the expensive stage move the score? S034, S027.
+// How large is the correction the lazy shortcut assumes away? S034, S027.
 //
-//   build/tools/eval_spread --data .tuning/selfplay_v2.tsv --limit 200000
+//   build-prof/tools/eval_spread --data .tuning/selfplay_v1.tsv --limit 200000
 //
-// The distribution of what evaluate() adds to evaluate_cheap() -- mobility,
-// king safety and the two together -- read through evaluate_expensive_terms().
-// Until S039 that was the number the lazy shortcut assumed away and the clamp
-// truncated, both at LAZY_EVAL_MARGIN, and this tool existed to re-decide the
-// margin: it printed how many positions each candidate would clamp. The
-// shortcut and the clamp retired together (DEC-258), the candidate table with
-// them, and what is left is the spread itself, which the steps that refit or
-// rebuild the two terms read before and after (S121, S122).
+// evaluate_lazy() skips the expensive stage when the cheap score is already
+// LAZY_EVAL_MARGIN clear of the window, and evaluate_expensive() clamps itself
+// to that margin so the assumption is true by construction rather than by
+// sampling. Both numbers rest on the distribution of the correction, and the
+// clamp means nothing outside evaluation.cpp can see it -- which is what
+// evaluate_expensive_terms() is for and what this reads.
 //
 // It reads what tools/datagen writes, `fen result score phase`, and uses only
 // the first field: the label and the stored score say nothing about how far the
 // expensive terms move a position. Mobility and king safety are reported apart
-// as well as together, because a large correction from one term, from the
-// other or from both at once are different findings.
+// as well as together, because a margin that binds on their sum and a margin
+// that binds on one term are different problems with different fixes.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -30,6 +28,12 @@
 
 namespace
 {
+
+// Candidates for the margin, the current 150 first. Reported as an exceedance
+// count rather than as a verdict: what a truncation costs in Elo is an SPRT
+// question, and this program only says how often the truncation happens.
+const std::vector<int> MARGINS = {150, 200, 250, 300, 400};
+
 
 struct options_t
 {
@@ -61,7 +65,7 @@ struct series_t
 
 // Nearest rank over the sorted values, so every figure printed is a correction
 // that some position in the corpus actually produced. No interpolation: a
-// centipawn that no position reached is not evidence about the stage.
+// centipawn that no position reached is not evidence about the margin.
 int percentile(const std::vector<int>& sorted, double fraction)
 {
   if (sorted.empty()) { return 0; }
@@ -72,6 +76,13 @@ int percentile(const std::vector<int>& sorted, double fraction)
   if (index >= sorted.size()) { index = sorted.size() - 1; }
 
   return sorted[index];
+}
+
+
+size_t count_above(const std::vector<int>& sorted, int margin)
+{
+  const auto first = std::upper_bound(sorted.begin(), sorted.end(), margin);
+  return static_cast<size_t>(sorted.end() - first);
 }
 
 
@@ -136,10 +147,10 @@ int main(int argc, char** argv)
 
   size_t rejected = 0;
 
-  // The correction is what evaluate() applies on top of evaluate_cheap(), and
-  // it is observable from outside. Checking the reported pair against it is
-  // what says evaluate_expensive_terms() reports the same arithmetic the search
-  // runs and not a second implementation that agrees with a model instead.
+  // The clamped correction is what evaluate() applies, and it is observable
+  // from outside. Checking it against the clamp of the unclamped pair is what
+  // says evaluate_expensive_terms() reports the same arithmetic the search runs
+  // and not a second implementation that agrees with the model instead.
   size_t disagreements = 0;
 
   std::string line;
@@ -163,8 +174,10 @@ int main(int argc, char** argv)
     evaluate_expensive_terms(&game.board, &mobility, &safety);
 
     const int applied = evaluate(&game.board) - evaluate_cheap(&game.board);
+    const int expected =
+        std::clamp(mobility + safety, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
 
-    if (applied != mobility + safety) { disagreements++; }
+    if (applied != expected) { disagreements++; }
 
     series[0].add(std::abs(mobility), fen);
     series[1].add(std::abs(safety), fen);
@@ -182,7 +195,7 @@ int main(int argc, char** argv)
     std::sort(column.values.begin(), column.values.end());
   }
 
-  printf("expensive-stage correction, absolute centipawns\n");
+  printf("unclamped expensive-stage correction, absolute centipawns\n");
   printf("  data       %s\n", opts.data.c_str());
   printf("  positions  %zu\n", positions);
 
@@ -203,6 +216,24 @@ int main(int argc, char** argv)
            percentile(series[2].values, fractions[row]));
   }
 
+  printf("\nabove a candidate margin\n");
+  printf("%-12s %12s %12s %12s\n", "", series[0].name, series[1].name,
+         series[2].name);
+
+  for (const int margin : MARGINS) {
+    printf("  %-10d", margin);
+
+    for (const series_t& column : series) {
+      const size_t above = count_above(column.values, margin);
+      const double percent =
+          (100.0 * static_cast<double>(above)) / static_cast<double>(positions);
+
+      printf(" %6zu %5.3f%%", above, percent);
+    }
+
+    printf("\n");
+  }
+
   printf("\nworst position per term\n");
 
   for (const series_t& column : series) {
@@ -214,7 +245,8 @@ int main(int argc, char** argv)
   // zero, because then the tool is not reading the function the engine runs.
   if (disagreements != 0) {
     printf(
-        "\nWARNING: %zu positions where the reported pair did not sum to\n"
+        "\nWARNING: %zu positions where clamping the reported pair did not "
+        "reproduce\n"
         "         what evaluate() applied. The numbers above are not the "
         "engine's.\n",
         disagreements);
@@ -222,7 +254,7 @@ int main(int argc, char** argv)
   }
 
   printf(
-      "\nreported pair summed to evaluate() - evaluate_cheap() on every "
+      "\nclamped pair reproduced evaluate() - evaluate_cheap() on every "
       "position\n");
 
   return 0;
