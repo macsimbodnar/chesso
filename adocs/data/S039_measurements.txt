@@ -1,0 +1,163 @@
+# S039 phase-2 readings, 2026-10-15, i7-8700K, g++ 13.3, Release, native, governor as found (recorded, not set).
+# REF: be48e02 (docs only on 0cdd39a; src/ is 7e36271's), built in a scratch worktree. CAND: the s039e working tree on be48e02.
+
+== bench (`chesso bench`)
+REF  5636835 nodes 4520614 nps
+CAND 6100949 nodes 4184980 nps
+the eight replies, REF | CAND:
+  bestmove c3d5	bestmove c3d5
+  bestmove e2a6	bestmove e2a6
+  bestmove d7c8q	bestmove d7c8q
+  bestmove g7h8q	bestmove g7h8q
+  bestmove a7a6	bestmove a7a6
+  bestmove a1b2	bestmove a1b2
+  bestmove e5e6	bestmove e5e6
+  bestmove e5e6	bestmove e5e6
+
+== tools/search_bench.py depth 9
+REF
+  midgame      0.011s        43496 nodes      3970 knps  best c3d5
+  kiwipete     0.037s       160453 nodes      4326 knps  best e2a6
+  tactical     0.007s        30816 nodes      4355 knps  best d7c8q
+  total        0.055s
+CAND
+  midgame      0.014s        54275 nodes      3828 knps  best c3d5
+  kiwipete     0.026s       101803 nodes      3933 knps  best e2a6
+  tactical     0.008s        36189 nodes      4330 knps  best d7c8q
+  total        0.048s
+== tools/search_bench.py depth 12
+REF
+  midgame      0.047s       180917 nodes      3881 knps  best c3d5
+  kiwipete     0.130s       509438 nodes      3917 knps  best d5e6
+  tactical     0.039s       147594 nodes      3787 knps  best d7c8q
+  total        0.216s
+CAND
+  midgame      0.051s       190495 nodes      3737 knps  best c3d5
+  kiwipete     0.133s       505143 nodes      3786 knps  best e2a6
+  tactical     0.043s       177449 nodes      4104 knps  best d7c8q
+  total        0.228s
+
+== accepts (3): nodes, nps and wall to depth 11 over S103's 300 positions, S120's nps_rotate.py, 8 rounds, REF, a byte copy of REF and CAND, order rotated
+load average before / after: 3.25 2.63 2.12 2/1253 3216666 / 1.29 1.87 1.91 1/1257 3224800
+round 1 ref:8.879s/38381506 refcopy:8.821s/38381506 cand:8.665s/36684997
+round 2 ref:8.822s/38381506 refcopy:8.772s/38381506 cand:8.612s/36684997
+round 3 ref:8.831s/38381506 refcopy:8.798s/38381506 cand:8.737s/36684997
+round 4 ref:8.803s/38381506 refcopy:8.792s/38381506 cand:8.659s/36684997
+round 5 ref:8.711s/38381506 refcopy:8.766s/38381506 cand:8.606s/36684997
+round 6 ref:8.710s/38381506 refcopy:8.730s/38381506 cand:8.565s/36684997
+round 7 ref:8.677s/38381506 refcopy:8.729s/38381506 cand:8.552s/36684997
+round 8 ref:8.689s/38381506 refcopy:8.707s/38381506 cand:8.550s/36684997
+
+per binary over 8 rounds (nps = nodes/wall; ratios paired per round against ref):
+ref    nodes [38381506] median wall 8.757s median nps 4.3833 M
+refcopy nodes [38381506] median wall 8.769s median nps 4.3769 M | nps vs ref +0.01 % CI -0.41 .. +0.43 | wall vs ref -0.01 % CI -0.42 .. +0.41
+cand   nodes [36684997] median wall 8.609s median nps 4.2613 M | nps vs ref -2.79 % CI -3.20 .. -2.38 | wall vs ref -1.68 % CI -2.09 .. -1.26
+NPS-DONE
+NPS-END rc=0
+
+== INV-6 does not apply (the tree moves by construction); DEC-215 has no off value to prove: S039 removes a parameter and adds none.
+
+== the trace identity: build/tools/tuner --data .tuning/selfplay_v2_dedup.tsv --epochs 0
+engine be48e02-dirty, corpus sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f, 10795695 rows, 706083378 bytes
+trace: 10795695 rows, 266907900 entries (24.72 a row), 23.5 s; 0 differ from evaluate()
+10795695 positions, 119978 games, 9716070 train, 1079625 validation (10.0005%), 823 parameters, group all, freeze (nothing), 823 free
+gauges held: 7 of 7: material/table pawn, material/table knight, material/table bishop, material/table rook, material/table queen, psqt_mg[king] sum, psqt_eg[king] sum
+
+== adocs/data/S192_anchors.py
+weights from src/eval_tables.hpp + src/evaluation.cpp
+stage two added whole, unclamped since S039
+pawn on e2             evaluate 135 vs 135 OK             positional    73 tempo    0 mobility    0 safety   -32
+knight on b1           evaluate 244 vs 244 OK             positional   -83 tempo    0 mobility    0 safety     0
+bishop on c1           evaluate 325 vs 325 OK             positional   -18 tempo    0 mobility   35 safety     0
+rook on d1             evaluate 563 vs 563 OK, cheap 567 vs 567 OK positional    80 tempo    0 mobility    6 safety   -10
+queen on d1            evaluate 787 vs 787 OK             positional   110 tempo    0 mobility  -76 safety    37
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0
+black in check, Re8    evaluate 198 vs 198 OK             positional  -312 tempo    0 mobility  124 safety    14
+black a rook down, Kh7 evaluate -569 vs -569 OK           positional    74 tempo    0 mobility    8 safety     0
+
+  after Ke1-d1           evaluate   555  -> root  -555
+  after Ke1-d2           evaluate   505  -> root  -505
+  after Ke1-f1           evaluate   570  -> root  -570
+  after Ke1-f2           evaluate   522  -> root  -522
+white in check, Re8    quiesce -505 vs -505 OK
+
+10 of 10 reproduced
+
+== adocs/data/S192_node_budget.py
+binary        /home/max/ws/chesso-s039e/build/tests/test_search
+count         13702 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        54808  (4x the count)
+floor         2740  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  4.21x the shipping floor and 0.21 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.84 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+
+== adocs/data/S188_repair_goldens.py first-mate --engine ./build/src/chesso
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp907  d2:cp907  d3:cp911  d4:cp899  d5:cp953  d6:cp955  d7:cp976  d8:cp1097  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1174  d2:cp1174  d3:cp1217  d4:cp1213  d5:cp1256  d6:cp1256  d7:cp1280  d8:cp1297  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+
+== adocs/data/S188_repair_goldens.py s207
+depth	root_recurrence	in_tree(d+1)	pre_root
+2	-841	-813	-841
+3	-813	-909	-813
+4	-909	0	0
+5	0	0	0
+6	0	0	0
+7	0	0	0
+8	0	0	0
+
+# lib: build/src/libchesso_engine.a
+# separating depth: 4  (the case drives 4, 5 and 4)
+
+== DEC-141 Debug self-play: DEV_MANUAL.md's command, build-debug of the candidate, 4 rounds at 4+0.04
+Results of debug-a vs debug-b (4+0.04, 1t, 16MB, noob_3moves.epd):
+Elo: -88.74 +/- 93.40, nElo: -245.67 +/- 240.76
+LOS: 2.28 %, DrawRatio: 50.00 %, PairsRatio: 0.00
+Games: 8, Wins: 2, Losses: 4, Draws: 2, Points: 3.0 (37.50 %)
+Ptnml(0-2): [0, 2, 2, 0, 0], WL/DD Ratio: inf
+--------------------------------------------------
+Finished match
+Total Time: 00:00:16 (hours:minutes:seconds)
+
+SELFPLAY-END rc=0
+Assertion in log/out: 0 / 0; disconnect: 0; bestmove lines in the trace log: 1076; terminations:  8 [Termination "normal"]
+
+== tools/gate_extra.sh, all five stages, JOBS 12, before the owner's rulings on the two open reds
+prose        ok               0  /tmp/chesso_gate_extra_20261015_072134/01_prose.log
+citations    ok               0  /tmp/chesso_gate_extra_20261015_072134/02_citations.log
+debug        ok             330  /tmp/chesso_gate_extra_20261015_072134/03_debug.log
+sanitize     exit 8         608  /tmp/chesso_gate_extra_20261015_072134/04_sanitize.log
+perft        ok              51  /tmp/chesso_gate_extra_20261015_072134/05_perft.log
+sanitize's only failures are the two open reds (test_tuner_gradient, test_mate_carry); 0 sanitizer reports in its log.
+its bench (INV-6 across builds, not reached past the red ctest), taken by hand: build-sanitize/src/chesso bench -> 6100949 nodes 926080 nps, the Release total.
+
+== the TESTS gate, both builds and the format check, after the re-derivations: 44 of 46 in each build, format clean;
+   red: test_tuner_gradient and test_mate_carry, the two open rulings.
+
+== after the owner's rulings, DEC-291 to DEC-293 (main 2833636), on the candidate's tree
+the TESTS gate: 46 of 46 in both builds, format clean (before the last document edits; re-run below)
+mutation pass, fixture f4c3076: 25 of 25 killed, 2786 s (adocs/data/S039_mutation_pass.tsv)
+tools/gate_extra.sh:
+prose        ok               0  gate_extra_final/01_prose.log
+citations    ok               1  gate_extra_final/02_citations.log
+debug        ok             326  gate_extra_final/03_debug.log
+sanitize     ok             494  gate_extra_final/04_sanitize.log
+perft        ok              50  gate_extra_final/05_perft.log
+INV-6 across builds: both 6100949 nodes
+the TESTS gate re-run on the final tree: 46 of 46 in both builds, format clean, 200 s; the five prose modes clean
+
+== the 16-bit ceiling (tests/test_evaluation.cpp "the static score never reaches the mate band"), the case's own MESSAGE, unclamped:
+corpus: 2696 positions, max |evaluate()| 15353; placements: 66430 accepted, max |evaluate()| 23891 on 2Q4K/2Q5/2Q5/3QQQQ1/Q6Q/3k4/Q5Q1/1QQ1Q1Q1 b - - 0 1; MATE_MIN 48000
+32767 / 23891 = 1.37x headroom, where S213's clamped reading, 22945, was 1.43x.

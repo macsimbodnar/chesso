@@ -18,9 +18,9 @@
 // evaluate() while two things hold, which this file checks on the positions
 // it can carry -- tools/tuner checks the first on every corpus row it loads:
 //
-//   the identity  the trace, scored with the engine's integer tapers and
-//                 clamp at the weights the engine was built with, is
-//                 evaluate() exactly;
+//   the identity  the trace, scored with the engine's integer tapers at the
+//                 weights the engine was built with, is evaluate() exactly
+//                 (the clamp over stage two with them, until S039);
 //   the meaning   every recorded coefficient is the count its index names,
 //                 against counts taken outside the trace -- the engine's own
 //                 per-colour accessors, the board's bitboards, and for
@@ -49,8 +49,9 @@ struct trace_fixture_t
 
 // Every position the cases below run over: the curated list, each mirrored so
 // both sides are to move on every feature, and every position of the JSON
-// suites -- which is where the clamp binds: their promotion and tactics cases
-// put more pieces on a king than a game does.
+// suites -- which is where the expensive stage runs largest, past the margin
+// the clamp held until S039: their promotion and tactics cases put more pieces
+// on a king than a game does.
 std::vector<std::string> all_positions()
 {
   std::vector<std::string> out;
@@ -121,12 +122,20 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // stand. The 2.0 column read 137108, which is ulp noise on the 60996 rows
 // sitting at exactly 48/24 and asserts nothing here
 // (adocs/data/S276_truncation_scan.txt).
-// Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
-// score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
-// that margin, so while the clamp binds the two agree exactly and the residual
-// this pins is not there to be measured. S085 raising it from 150 to 184 took
-// the corpus from 99 rows past 2.8 to 105 at unmoved weights, which is half of
-// what S206 bisected. Margin: each of the four is asserted past 2.0 and the
+// Moves legitimately on: a refit. Until S039 also a move of LAZY_EVAL_MARGIN --
+// the smooth score and evaluate() both clamped the tapered
+// mobility-plus-king-safety sum at that margin, so where the clamp bound the
+// two agreed exactly and the residual this pins was not there to be measured.
+// S085 raising it from 150 to 184 took the corpus from 99 rows past 2.8 to 105
+// at unmoved weights, which is half of what S206 bisected; S039 removing it is
+// the same mover taken to its end, and owes the four a re-derivation by the
+// same scan (DEC-169). **Re-derived at S039 (2026-10-15)**, the same scan on
+// the same corpus with the clamp gone: 10795695 rows, 139021 past 2.0, 106
+// past 2.8, 34 at 2.875 -- S276's 105 hit lines unchanged and one added, a
+// phase-17 row the clamp had bound -- and all four below still among the 34
+// at phases 5, 11, 19 and 23, so the four stand
+// (adocs/data/S039_truncation_scan.txt).
+// Margin: each of the four is asserted past 2.0 and the
 // worst of them past 2.8, against a maximum of 2.875 -- so the tightest of the
 // two clauses has 0.075 of room, which is the point, and re-choosing four from
 // a fresh scan is the re-derivation.
@@ -203,15 +212,21 @@ TEST_CASE("the trace's features cover the parameter vector exactly once")
 }
 
 
-TEST_CASE_FIXTURE(trace_fixture_t,
-                  "the trace reconstructs evaluate() exactly, clamp included")
+// The title ended "clamp included" until S039, when the clamp over stage two
+// left evaluate() and exact_score() together.
+TEST_CASE_FIXTURE(trace_fixture_t, "the trace reconstructs evaluate() exactly")
 {
   const std::vector<int64_t> weights = tuner_trace::engine_weights();
-  const int64_t margin = LAZY_EVAL_MARGIN;
+
+  // NOT A GOLDEN (DEC-142): the margin src/search_params.hpp shipped until
+  // S039, a fixed historical number rather than a reading, so nothing
+  // re-derives it. The identity holding past it is what says the trace and
+  // the engine both left the clamp, rather than both keeping it.
+  constexpr int64_t RETIRED_LAZY_MARGIN = 184;
 
   size_t checked = 0;
-  size_t clamped_high = 0;
-  size_t clamped_low = 0;
+  size_t past_high = 0;
+  size_t past_low = 0;
 
   for (const std::string& fen : all_positions()) {
     CAPTURE(fen);
@@ -228,22 +243,22 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     const tuner_trace::exact_parts_t parts =
         tuner_trace::exact_parts(data, 0, weights.data());
     const int64_t two = parts.mobility + parts.safety;
-    if (two > margin) { clamped_high++; }
-    if (two < -margin) { clamped_low++; }
+    if (two > RETIRED_LAZY_MARGIN) { past_high++; }
+    if (two < -RETIRED_LAZY_MARGIN) { past_low++; }
 
     checked++;
   }
 
-  // The precondition that makes the clamp part of the claim: it binds here,
-  // from both sides. At f57b92f's weights and margin on 478 of the 2764
-  // positions; a precondition and not a golden, since any count above zero
-  // each way makes the point.
+  // The precondition that makes the unclamped stage part of the claim: it
+  // lies past the old margin here, from both sides -- at f57b92f's weights on
+  // 478 of the 2764 positions, then clamped. A precondition and not a golden,
+  // since any count above zero each way makes the point.
   CAPTURE(checked);
-  CAPTURE(clamped_high);
-  CAPTURE(clamped_low);
+  CAPTURE(past_high);
+  CAPTURE(past_low);
   CHECK(checked > 2000);
-  CHECK(clamped_high > 0);
-  CHECK(clamped_low > 0);
+  CHECK(past_high > 0);
+  CHECK(past_low > 0);
 }
 
 
@@ -388,9 +403,11 @@ TEST_CASE_FIXTURE(trace_fixture_t, "the positions move every term both ways")
 // drops the four truncating divisions, each of which loses under one
 // centipawn, so the two can part by at most 23/24 per division that rounds:
 // three while tempo ships at zero, whose division then truncates 0 / 24
-// exactly. Clamping is 1-Lipschitz and only narrows the gap. The bound is the
-// one tests/test_eval_model.cpp held the mirror to until S276 (DEC-053), which
-// is the point: the trace's smooth score is the function the mirror computed.
+// exactly. The bound is the one tests/test_eval_model.cpp held the mirror to
+// until S276 (DEC-053), which is the point: the trace's smooth score is the
+// function the mirror computed. Until S039 both sides also clamped stage two,
+// which could only narrow the gap; the bound is the truncations' alone either
+// way, and since S039 it holds on the rows the clamp used to hide as well.
 TEST_CASE_FIXTURE(trace_fixture_t,
                   "the smooth score is within the truncation bound of the "
                   "exact one")
@@ -425,9 +442,11 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   // GOLDEN (DEC-142): those four rows, the same golden `truncation_positions`
   // and "the pinned positions reach the truncation bound" below pin, with the
   // same re-derivation -- build/tools/truncation_scan --data <corpus> --min
-  // 2.8, after a refit or a move of LAZY_EVAL_MARGIN; the scan has read this
-  // smooth score from the trace since S276, the mirror's before, and the two
-  // are the same function. Margin: 2.8 against the maximum 2.875.
+  // 2.8, after a refit (and until S039, when the clamp left, after a move of
+  // LAZY_EVAL_MARGIN); the scan has read this smooth score from the trace
+  // since S276, the mirror's before, and the two are the same function.
+  // Margin: 2.8 against the maximum 2.875.
+  // Re-derived at S039 with `truncation_positions` above: the four stand.
   CAPTURE(worst);
   CHECK(worst > 2.8);
 }

@@ -767,8 +767,9 @@ static void trace_accumulators(const board_t* board)
 #endif
 
 
-// Stage one: what is cheap enough to pay at every node, including the nodes
-// evaluate_lazy() takes the shortcut on.
+// Stage one: material, the tables and the pawn terms. Until S039 it was also
+// the whole of what the lazy shortcut paid at the nodes it skipped stage two
+// on; every evaluation pays both stages since.
 //
 // Most of it was already computed by make_move: the material balance, the two
 // piece-square sums and the phase are maintained as pieces move rather than
@@ -781,30 +782,28 @@ static void trace_accumulators(const board_t* board)
 // pawns stand has no O(1) delta make_move could apply, so it cannot be
 // accumulated at all and what is left to choose is the stage.
 //
-// They are here rather than behind the shortcut with mobility and king safety
-// because evaluate_expensive() clamps stage two to +/-LAZY_EVAL_MARGIN. That
-// clamp is what makes the shortcut sound, and tools/eval_spread already puts
-// the stage-two correction at p99 128 and max 330 over 1490839 corpus
-// positions, clamped on 0.365 % of them. A pawn one square from promotion
-// swings further than the clamp would let through, so stage two would truncate
-// the passed pawn term on exactly the positions it exists for. Pawn structure
-// and piece placement are in the same call and therefore the same stage; they
-// have no clamp argument of their own, they share the fills. Piece placement
-// would be in stage one whatever the clamp did: it reads no occupancy and needs
-// no attack set, so nothing about it belongs behind the shortcut. What it costs
-// there is 3.1 to 4.0 % of a depth 14 search, measured at forced weights and
-// written out over piece_placement_mg.
+// They went here rather than behind the shortcut with mobility and king safety
+// because evaluate_expensive() clamped stage two to +/-LAZY_EVAL_MARGIN until
+// S039, and a pawn one square from promotion swings further than that clamp
+// let through, so stage two would have truncated the passed pawn term on
+// exactly the positions it exists for. Pawn structure and piece placement are
+// in the same call and therefore the same stage; they share the fills. With
+// the clamp gone nothing forces the stage any more, and they stay: moving them
+// would change which sum each one is tapered with, which is a change to every
+// score and its own measurement. What piece placement costs here is 3.1 to
+// 4.0 % of a depth 14 search, measured at forced weights and written out over
+// piece_placement_mg.
 //
 // The accumulators are White relative, so the sum is negated once at the end
 // for Black. Doing it here rather than at every call site is what keeps a later
 // term from picking up the wrong sign.
 //
-// Tempo is here and not in evaluate() because evaluate() is not what the search
-// calls: quiescence goes through evaluate_lazy(), which is built on this
-// function and takes its shortcut on the cheap score alone. A bonus added in
-// evaluate() would be invisible to every node the search actually evaluates.
-// The lazy margin is unaffected -- it bounds the difference between the two
-// stages, and this term is in the same stage on both sides of that difference.
+// Tempo went here and not into evaluate() for a reason S039 retired: quiescence
+// called evaluate_lazy(), which could answer from this stage alone, so a bonus
+// added in evaluate() would have been invisible there. It stays, because where
+// it sits relative to the side-to-move sign is the whole definition of the
+// term -- see its block below -- and the trace's site table in
+// tools/tuner_trace.hpp names this stage.
 int evaluate_cheap(const board_t* board)
 {
   // Interpolate the two tables on how much material is left, so a term slides
@@ -1174,32 +1173,24 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 }
 
 
-// Everything the lazy shortcut skips, and the one place its margin is enforced.
-// One clamp over the sum rather than one per term: two terms each bounded by
-// LAZY_EVAL_MARGIN can correct by twice it between them, and the shortcut is
-// unsound the moment that happens.
+// Stage two: mobility and king safety, turned to the side to move and added
+// whole.
 //
-// Clamped at all so that the margin is a guarantee rather than a hope. Without
-// it the bound is an observation about the positions someone sampled, and a
-// position outside the sample silently breaks the shortcut -- which is not
-// hypothetical: the corpus contains 1Bk5/B1B5/1B1B4/B1B4B/8/B1B5/5K2/8, nine
-// white bishops from promotions, where mobility alone reached 155 against the
-// margin of 150 that shipped then, and the test caught it. S085 raised the
-// margin to 184, so that position no longer binds and the incident is history
-// rather than a live demonstration -- the argument it supports is unchanged,
-// because whether the clamp is a guarantee or a hope does not depend on which
-// sampled position last exceeded it.
-//
-// It costs nothing in real play. Over 149084 positions of S028 self-play
-// mobility ran p99 81 and a maximum of 143, so the clamp does not bind there at
-// all; it binds only in the promotion pile-ups where the number was never
-// meaningful anyway.
+// Unclamped since S039. From S034 the sum was clamped to +/-LAZY_EVAL_MARGIN,
+// 184 at the end: that made the lazy shortcut's bound a guarantee rather than
+// an observation about sampled positions, and it bounded the real score with
+// it, so neither term could say more than the margin -- the cost S122's king
+// safety could not pay. It bound on 0.338 % of the dedup corpus's rows at the
+// last shipped weights. The shortcut and the clamp retired together under one
+// non-regression SPRT (DEC-258); what bounds the static score now is each
+// term's own arithmetic, and test_evaluation "the static score never reaches
+// the mate band" asserts it.
 static int evaluate_expensive(const board_t* board)
 {
-  const int score = evaluate_mobility_and_king_safety<false>(board, nullptr);
-  const int bounded = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
+  const int stage_two =
+      evaluate_mobility_and_king_safety<false>(board, nullptr);
 
-  return (board->active_color == WHITE) ? bounded : -bounded;
+  return (board->active_color == WHITE) ? stage_two : -stage_two;
 }
 
 
@@ -1214,10 +1205,10 @@ void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT])
 { evaluate_mobility_and_king_safety<true>(board, out); }
 
 
-// What evaluate_expensive() computed before the clamp took it away. The counts
-// it also collects are thrown away here, for the reason above: the collecting
-// instantiation is the one the search does not compile, so a tool riding on it
-// cannot slow the search down whatever clang decides to inline.
+// What evaluate_expensive() adds, term by term. The counts it also collects are
+// thrown away here, for the reason above: the collecting instantiation is the
+// one the search does not compile, so a tool riding on it cannot slow the
+// search down whatever clang decides to inline.
 void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
 {
   int counts[2][KS_FEATURE_COUNT];
@@ -1229,37 +1220,11 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
 
   // The same sign evaluate_expensive() applies, so the sum is the correction as
   // the caller would have received it and not a White-relative number that has
-  // to be turned round again. The clamp is symmetric, so applying the sign
-  // before it rather than after changes nothing.
+  // to be turned round again.
   const int sign = (board->active_color == WHITE) ? 1 : -1;
 
   *mobility = sign * mobility_white;
   *safety = sign * safety_white;
-}
-
-
-int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
-{
-  const int cheap = evaluate_cheap(board);
-
-  // Set on both shortcut paths before either returns, so a caller reading it
-  // after a bound sees false rather than whatever it initialised.
-  if (exact != nullptr) { *exact = false; }
-
-  // Both tests are one-sided on purpose. If the cheap score is already a
-  // margin clear of beta then the full score is above beta too, so the caller
-  // fails high on either number and the expensive stage would change nothing it
-  // does. Same argument mirrored at alpha. Anywhere between the two, the
-  // correction can decide the node and has to be computed.
-  if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
-  if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap + LAZY_EVAL_MARGIN; }
-
-  if (exact != nullptr) { *exact = true; }
-
-  // Identical to evaluate() by construction: that function is these two terms
-  // added, so the number kept here is the static evaluation and not an
-  // approximation of it.
-  return cheap + evaluate_expensive(board);
 }
 
 

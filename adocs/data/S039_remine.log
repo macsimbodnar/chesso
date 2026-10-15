@@ -1,0 +1,240 @@
+# S039: the mined mate rows of tests/test_search.cpp "pruning does not hide a
+# forced mate", re-read and re-mined on the tree without the lazy shortcut and
+# the stage-two clamp, 2026-10-15 (DEC-142, DEC-288).
+#
+# TREE. The s039e working tree on be48e02 (S023 reverted; src/ is 7e36271's
+# plus S039). Shipped = its Release build/libchesso_engine.a. Each weakened
+# build is a scratch worktree of the fixture e65a02a (a commit object on no
+# branch, the working tree through a temporary index) with one mutant applied
+# by tools/mutation_check.py's own loader and applier, built Release (and
+# Release with CHESSO_TUNE=ON for the guard-mode witnesses):
+#   GUARD_OPENED  S095's re-derivation edit, `const bool no_tt_move = tt_move
+#                 == 0;` made `= true` (not a mutant of the list)
+#   E21, B04      E21_multicut_mate_band_gate_dropped, B04_probcut_defender_gate_dropped
+#   C02 C05 C06 C07 R01 R02   tools/mutants/S091_capture_see.py's six
+#
+# 1. THE PRECONDITION, each row as it stood, swept by its own driver.
+#    extra-ply (S285's row), S230_mine_r01_row.py depths, d3..d12:
+      shipped       - - - - 4 4 4 4 4 4 
+      guard opened  - - - - 4 4 4 4 4 4 
+#    -> both report mate in 4 at 8: the row holds nothing at its own depth.
+#    E21 (S261's row), S097_mine_mate_row.py sweep, d7..d14 (depth, nodes, ms per cell):
+      shipped  -:33769:16 -:30481:9 -:159410:45 m6:941597:272 m5:2649460:708 m6:3089187:1087 m5:7391468:1871 m5:10828445:3399 
+      E21      -:33769:9 -:30481:9 -:159410:46 -:396280:135 m5:2649460:634 m5:3487553:1083 m5:7410396:1959 m5:10536212:3018 
+#    -> at 10 the shipped build reads #6 where the row asserts 5; E21's build no mate.
+#    B04 (S261's row), S277_mine_mate_row.py sweep, d7..d12:
+      shipped  -:15133:4 -:34708:15 m5:52552:23 m5:161660:52 m5:288921:97 m5:473054:120 
+      B04      -:15133:5 -:30087:7 m5:59338:13 m5:120212:29 m5:159004:37 m5:400583:121 
+#    -> both report mate in 5 at 9 to 12: the row holds nothing at its own depth.
+#
+# 2. capture_mates, the seven sweeps (S230_mine_r01_row.py depths over
+#    adocs/data/S230_table_fens.txt, d3..d12), and the rule at the table's GOLDEN block:
+## shipped
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 - 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+## C02
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+## C05
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 - 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+## C06
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 - 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+## C07
+- - - - - - - 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+## R01
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+## R02
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - - - 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+#    -> row 1 d9 (C07 loses it), row 2 d8 (no mutant), row 3 d11 (R02), row 4 d11 (C07, R02).
+#
+# 3. THE RE-MINES, each script's own stages over its own candidates.
+#    extra-ply: the 141 FENs of adocs/data/S095_candidates.tsv (column 1),
+#    S230_mine_r01_row.py depths 3..12 on both builds, S095_mine_mate_row.py pick:
+depth 9	run 9	shipped [d3 d4 d5 d6 d7 d8 d9 d10 d11]	unguarded [d3 d4 d5 d6 d7 d8 d10 d11]	4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+depth 7	run 6	shipped [d5 d7 d8 d9 d10 d11 d12]	unguarded [d5 d9 d10 d11 d12]	4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+depth 8	run 5	shipped [d6 d8 d9 d10 d11 d12]	unguarded [d6 d10 d11 d12]	8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1
+depth 9	run 4	shipped [d9 d10 d11 d12]	unguarded [d10 d11 d12]	8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44
+depth 10	run 3	shipped [d10 d11 d12]	unguarded [d11 d12]	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+depth 10	run 3	shipped [d10 d11 d12]	unguarded [d12]	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+depth 11	run 3	shipped [d3 d4 d5 d11]	unguarded [d3 d4 d5]	rbrb4/p1p1p2p/P1P1P2P/2K5/8/k7/2R5/8 w - - 0 1
+depth 8	run 2	shipped [d8 d9 d12]	unguarded [d11]	k6r/p4ppp/Bpp4q/3Q4/P7/B1P2P2/7P/5R1K w - - 0 26
+depth 11	run 2	shipped [d11 d12]	unguarded [none]	6k1/1R6/6p1/1p6/3n4/1PB4R/1P5K/3r4 w - - 1 43
+depth 11	run 2	shipped [d10 d11]	unguarded [d10]	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+depth 11	run 2	shipped [d11 d12]	unguarded [d12]	2r2k2/5P2/8/5K1R/6P1/2qp3P/8/8 b - - 3 59
+depth 11	run 2	shipped [d11 d12]	unguarded [d12]	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+depth 6	run 1	shipped [d6]	unguarded [none]	rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1
+depth 6	run 1	shipped [d6 d9 d12]	unguarded [d7 d8 d10 d11]	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+depth 10	run 1	shipped [d10 d12]	unguarded [d12]	rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1
+depth 10	run 1	shipped [d10 d12]	unguarded [none]	6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+depth 10	run 1	shipped [d10]	unguarded [none]	1k2brbr/p2pKpRp/P2P1P1P/8/8/8/8/8 w - - 0 1
+depth 11	run 1	shipped [d11]	unguarded [d10 d12]	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+depth 11	run 1	shipped [d7 d9 d11]	unguarded [d7 d9 d12]	1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+depth 12	run 1	shipped [d12]	unguarded [none]	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+depth 12	run 1	shipped [d12]	unguarded [none]	6k1/3R4/P6p/5pp1/3p2P1/3K1P2/8/4b3 w - - 3 48
+depth 12	run 1	shipped [d12]	unguarded [d11]	5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58
+depth 12	run 1	shipped [d12]	unguarded [d11]	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+depth 12	run 1	shipped [d12]	unguarded [none]	1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+
+take: 4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+  depth 9, shipped profile [d3 d4 d5 d6 d7 d8 d9 d10 d11], unguarded [d3 d4 d5 d6 d7 d8 d10 d11], longest consecutive run 9
+
+#    E21: S277's fens stage (the 269 of adocs/data/S097_candidates.tsv), S097's sweep 7..10 on
+#    both builds, separators, fires --mode guard on E21's tune library, pick --mode guard:
+1 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S039/p2/remine/e21_sep.fen
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 7..10, tune library /home/max/ws/chesso-s039e/.ref-builds/m_E21/build-tune/src/libchesso_engine.a.
+# fen	depths_the_rule_changes	off	on
+6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42	d9 d10	-:33769:5 -:30481:5 -:161206:24 m6:847471:131	-:33769:5 -:30481:5 -:159410:24 -:396280:62
+  d10	#6	run 1	941597 nodes	152 ms	shipped [d10]	open [none]	mutant fires [d9 d10]	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+
+take: 6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+  depth 10, mate in 6, shipped [d10], guard dropped [none], 941597 nodes, 152 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d9 d10]
+
+#    The in-range pick reads #6 against the oracle's #+5 and its engine distance moves with depth,
+#    so DEC-293 does not take it; E21 one band deeper, 11..14, the same six stages -- the row in the tree:
+12 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S039/p2/remine/e21b_sep.fen
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 11..14, tune library .ref-builds/m_E21/build-tune/src/libchesso_engine.a.
+# fen	depths_the_rule_changes	off	on
+3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62	d11 d12 d13 d14	-:142273:28 -:333752:61 -:626430:99 -:1303840:214	-:117040:21 -:301485:53 -:688169:102 -:756872:123
+6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39	d11 d12 d13 d14	m6:1792590:212 m6:2403569:348 m5:6648710:777 m5:8483249:1228	m6:1848596:224 -:1140997:168 -:3631102:450 m5:8238708:1222
+R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50	d11 d12 d13 d14	m5:1003722:128 -:543272:81 m5:4327830:537 m5:9243354:1306	m5:1010970:132 -:573684:96 m5:3975944:495 -:3655533:498
+r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36	d11 d13 d14	m5:638392:75 m5:1142999:161 m5:2280923:268 m5:4258471:603	-:178864:22 m5:1142999:161 m5:2506042:296 m5:4284008:615
+1k6/8/2K5/6R1/1P6/8/8/5b2 w - - 1 72	d11 d12 d13 d14	-:51693:6 -:70606:9 -:112543:14 m7:602361:78	-:51375:6 -:70775:9 -:151010:19 -:193483:26
+1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31	d11 d12 d13 d14	-:215778:43 -:301277:51 m6:11397414:1494 m6:23552939:3601	-:212081:42 -:1479963:222 -:2455312:340 -:4007129:607
+2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48	d11 d12 d13 d14	-:466557:68 -:129885:23 -:172218:29 -:1852854:257	-:424071:59 -:223232:38 -:932990:132 -:592627:97
+4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42	d11 d12 d13 d14	-:329854:49 -:491301:77 -:592578:103 m6:1919048:295	-:320079:48 -:627023:97 -:1242802:185 m6:1725017:258
+5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58	d11 d12 d13 d14	-:292425:48 m6:972854:144 -:548869:104 m6:2678646:424	-:333427:56 -:552970:95 m6:1580591:224 m6:5409185:781
+1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1	d11 d12 d13 d14	-:36986:5 -:36785:6 m2:97771:14 -:134255:21	-:26519:3 -:45705:7 -:60025:9 -:83278:13
+1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22	d11 d12 d13 d14	m5:1767762:243 m5:2534618:392 m5:5598605:767 m5:14120995:2113	m5:1828636:254 m5:2505816:390 -:1835145:302 m5:8578393:1299
+6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42	d11 d12 d13 d14	-:830529:109 m5:2914975:452 m5:6982460:900 m5:8483858:1230	m5:2649460:351 m5:3487553:517 m5:7410396:938 m5:10536212:1544
+  distance moved, not taken by the rule: d12 #6 -> #5	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+  d11	#5	run 4	638382 nodes	83 ms	shipped [d11 d12 d13 d14]	open [d12 d13 d14]	mutant fires [d11 d13 d14]	r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36
+  d13	#5	run 4	42433292 nodes	6088 ms	shipped [d11 d12 d13 d14]	open [d11 d12 d14]	mutant fires [d11 d12 d13 d14]	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+  d12	#6	run 3	497540 nodes	77 ms	shipped [d12 d13 d14]	open [d14]	mutant fires [d11 d12 d13 d14]	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  d12	#6	run 3	1093949 nodes	177 ms	shipped [d12 d13 d14]	open [d13 d14]	mutant fires [d11 d12 d13 d14]	5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58
+  d13	#5	run 2	6031545 nodes	775 ms	shipped [d11 d13 d14]	open [d11 d14]	mutant fires [d11 d12 d13 d14]	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+  d14	#5	run 2	10881313 nodes	1698 ms	shipped [d11 d13 d14]	open [d11 d13]	mutant fires [d11 d12 d13 d14]	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  d14	#2	run 1	233023 nodes	38 ms	shipped [d14]	open [none]	mutant fires [d11 d12 d13 d14]	1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+  d14	#8	run 1	646865 nodes	88 ms	shipped [d14]	open [none]	mutant fires [d11 d12 d13 d14]	1k6/8/2K5/6R1/1P6/8/8/5b2 w - - 1 72
+  d12	#5	run 1	876110 nodes	140 ms	shipped [d12]	open [none]	mutant fires [d11 d12 d13 d14]	3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62
+  d14	#6	run 1	2467512 nodes	352 ms	shipped [d14]	open [none]	mutant fires [d11 d12 d13 d14]	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+  d14	#6	run 1	24901681 nodes	3871 ms	shipped [d14]	open [none]	mutant fires [d11 d12 d13 d14]	1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31
+
+take: r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36
+  depth 11, mate in 5, shipped [d11 d12 d13 d14], guard dropped [d12 d13 d14], 638382 nodes, 83 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d11 d13 d14]
+
+#    B04: S277's six stages, 7..10, guard mode on B04's tune library:
+4 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S039/p2/remine/b04_sep.fen
+# S097 firing witness, guard mode (DEC-238): SeMultiCut 0 against 1 on the mutant's build, depths 7..10, tune library /home/max/ws/chesso-s039e/.ref-builds/m_B04/build-tune/src/libchesso_engine.a.
+# fen	depths_the_rule_changes	off	on
+1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41	d7 d8 d9 d10	-:6593:1 -:11150:1 m5:50852:6 -:18995:3	-:6594:1 -:11155:1 -:10853:1 -:18856:3
+1rr3k1/5p1Q/p7/q2ppbPp/3P4/P3RP2/2P4P/2K3NR b - - 0 25	d7 d8 d9 d10	-:37564:5 m5:286906:42 -:91726:12 m5:830217:122	-:37590:5 m6:119002:18 -:89113:12 m5:757458:112
+r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35	d9 d10	-:23905:3 -:30147:5 -:89354:12 m5:257140:40	-:23905:3 -:30147:5 -:102769:13 -:180861:29
+6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42	d7 d8 d9 d10	-:29025:4 -:30676:5 -:147564:23 -:284047:46	-:33769:5 -:30481:5 -:155938:24 m5:680535:107
+  distance moved, not taken by the rule: d8 #5 -> #6	1rr3k1/5p1Q/p7/q2ppbPp/3P4/P3RP2/2P4P/2K3NR b - - 0 25
+  distance moved, not taken by the rule: d10 #6 -> #5	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+  d9	#5	run 1	50852 nodes	6 ms	shipped [d9]	open [none]	mutant fires [d7 d8 d9 d10]	1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41
+  d10	#5	run 1	256901 nodes	44 ms	shipped [d10]	open [none]	mutant fires [d9 d10]	r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35
+
+take: 1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41
+  depth 9, mate in 5, shipped [d9], guard dropped [none], 50852 nodes, 6 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d7 d8 d9 d10]
+
+# 4. THE ORACLE, stockfish through python-chess, a fresh process per position (TOOLCHAIN.md):
+4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+  valid True check False legal 17
+  score #+2 depth 20 nodes 2045
+  pv 1. Rc5 Ka1 2. Rc1#
+6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+  valid True check False legal 35
+  score #+5 depth 20 nodes 63064
+  pv 42...Nf4 43. Bd4 exd4 44. Qb2 Nxh3+ 45. Kh2 Qg3+ 46. Kh1 Qg1#
+1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41
+  valid True check False legal 24
+  score #+5 depth 20 nodes 6830
+  pv 41...gxf3 42. Rb7+ Kg6 43. Rg7+ Kxg7 44. h3 Ng2+ 45. Kf1 Rd1#
+r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36
+  valid True check False legal 30
+  score #+6 depth 20 nodes 10094
+  pv 36. Rxg7 Kxg7 37. Rg1+ Kf8 38. Qxf6 Re8 39. Qxd6+ Re7 40. Qh6+ Ke8 41. Rg8#
+
+r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36, the same oracle deeper (fresh process each):
+  Limit(depth=30): #+5, pv Rag1 Qg6 fxg6 fxg6 Rxg6 Rf8 Qxf6+ Rxf6 Rg8#
+  Limit(mate=5): #+5, the same line -- the depth-20 #+6 (and the candidates file's label 6) was a longer mate, not the shortest
+
+# 5. OBSERVED RED under each weakened build: the candidate's tests/test_search.cpp copied into
+#    the mutant's scratch worktree, test_search built, the case run. Green shipped: the gate.
+## GUARD_OPENED
+/home/max/ws/chesso-s039e/.ref-builds/m_GUARD_OPENED/tests/test_search.cpp:4318: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the extra ply hides, depth 9
+[doctest] test cases:  1 |  0 passed | 1 failed | 206 skipped
+## E21
+/home/max/ws/chesso-s039e/.ref-builds/m_E21/tests/test_search.cpp:4636: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 10
+[doctest] test cases:  1 |  0 passed | 1 failed | 206 skipped
+## B04
+/home/max/ws/chesso-s039e/.ref-builds/m_B04/tests/test_search.cpp:4637: FATAL ERROR: REQUIRE( result.mate_in == 6 ) is NOT correct!
+  values: REQUIRE( 5 == 6 )
+  logged: mate the multicut hides, depth 10
+[doctest] test cases:  1 |  0 passed | 1 failed | 206 skipped
+#    (That pass ran with the in-range E21 pick in the tree; B04's build stopped first at it.)
+#
+# 6. AFTER THE RULINGS (DEC-291 to DEC-293): fixture 175290c, the E21 row DEC-293's, observed again in
+#    the case itself. E21's build, and B04's, both fail first at the new E21 row:
+## E21
+/home/max/ws/chesso-s039e/.ref-builds/o_E21/tests/test_search.cpp:4646: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 11
+[doctest] test cases:  1 |  0 passed | 1 failed | 206 skipped
+## B04
+/home/max/ws/chesso-s039e/.ref-builds/o_B04/tests/test_search.cpp:4646: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 11
+[doctest] test cases:  1 |  0 passed | 1 failed | 206 skipped
+#    B04's own row, with the E21 row's block commented out in a scratch copy of the case (never
+#    committed; the edit is below), so the case reaches it under B04:
+/home/max/ws/chesso-s039e/.ref-builds/o_B04/tests/test_search.cpp:4801: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate probcut hides, depth 9
+[doctest] test cases:  1 |  0 passed | 1 failed | 206 skipped
+-      beta > -MATE_MIN && probcut_beta < MATE_MIN) {
++      probcut_beta < MATE_MIN) {
+-    {
+-      const std::string title = "mate the multicut hides, depth 11";
+-      const search_t result = search_fen(mate_the_multicut_hides, 11);
+-
+-      REQUIRE_MESSAGE(result.mate_found, title);
+-      REQUIRE_MESSAGE(result.mate_in == 5, title);
+-    }
++    // SCRATCH, never committed:     {
++    // SCRATCH, never committed:       const std::string title = "mate the multicut hides, depth 11";
++    // SCRATCH, never committed:       const search_t result = search_fen(mate_the_multicut_hides, 11);
++
++    // SCRATCH, never committed:       REQUIRE_MESSAGE(result.mate_found, title);
++    // SCRATCH, never committed:       REQUIRE_MESSAGE(result.mate_in == 5, title);
++    // SCRATCH, never committed:     }
++    (void)mate_the_multicut_hides;
+#
+# The full sweeps: .tuning/coord/S039/p2/{rows,remine}/ in the main checkout (gitignored).

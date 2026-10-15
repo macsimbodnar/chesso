@@ -1,0 +1,117 @@
+# S039's mate floors, 2026-10-15, both ends of each re-read by its own script on the tree without the lazy shortcut and the stage-two clamp.
+# Fixture e65a02a (the floors as shipped, 11 and 159) for the sweeps; fixture b551f08 (12 and 161) for the red gates after the re-derivation.
+# Each script builds a throwaway worktree in /tmp at the fixture and removes it.
+#
+# MATE_IN_THREE_FLOOR (tests/test_engine.cpp): shipping 13 of 24 (12 at S250 and S261), weakened 7 (RfpMinPly 1); 11 -> 12, 1 below shipping.
+# EXACT_FLOOR (tests/test_mate_breadth.cpp): shipping 162 (160 at S261), weakened 152 (156); 159 -> 161, 1 below shipping.
+
+## python3 adocs/data/S154_floor_margin_sweep.py floor --ref e65a02a --jobs 6
+RfpMinPly swept at e65a02a1869bf99b69cf7ad9b800f9cffb5e28ac, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d7  m4  1/16 d3  m5  1/16 d5  short 0  sign 0
+                         m3 #########..###.######..#  churn -  12717897 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 16/24 d6  m4  2/16 d7  m5  2/16 d8  short 0  sign 0
+                         m3 #####.#.#...##.######..#  churn 3  13292754 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 13/24 d5  m4  2/16 d3  m5  1/16 d6  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 3  10673755 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 12/24 d6  m4  2/16 d3  m5  1/16 d5  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 1  11537029 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  1/16 d3  m5  2/16 d8  short 0  sign 0
+                         m3 .#..#...........###.#..#  churn 5  9581729 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  1/16 d3  m5  2/16 d8  short 0  sign 0
+                         m3 .#..#...........###.#..#  churn 0  9581729 nodes
+
+  floor, 21.5s
+S154-FLOOR-END rc=0
+
+## python3 adocs/data/S154_floor_margin_sweep.py red --ref b551f08 --jobs 6
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_vn5ym02i/tests/test_engine.cpp:5659: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_vn5ym02i/tests/test_engine.cpp:5660: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 7 >= 12 )
+    [doctest] assertions: 3512 | 3484 passed | 28 failed |
+
+  red, 24.5s
+
+## python3 adocs/data/S156_mined_floor_sweep.py --ref b551f08 --floor 161 --jobs 6
+318 positions, depth 10, ref b551f087f28b130716308acd5db1b99d9d090535
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     162          166            0   18.7s
+          2     160          163            0   18.4s
+          1     152          157            0   17.8s
+          0     152          157            0   17.9s
+
+  floor 161, asserted by tests/test_mate_breadth.cpp
+    shipping value 162, weakened-guard value 152, gap 10
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_qarv8ua4/tests/test_mate_breadth.cpp:262: MESSAGE: mined set at depth 10: 152 exact, 157 right sign, 0 wrong sign
+    logged: the mined set reads 152 exact at depth 10, under the 161 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+
+# THE REVERTED TREE, for the SPRT's H0 row: both floors' ends re-read on be48e02 (S039's parent, src/ 7e36271's) by the
+# same scripts, so the revert's specs.md correction states readings and not the stale prose be48e02 carries.
+#   MATE_IN_THREE_FLOOR 11: shipping 12, weakened 6 (S154 floor). S154's red mode overlays the working tree's
+#   tests/test_engine.cpp -- S039's floor of 12 -- on the ref, so its red reads 6 >= 12; 6 is under 11 as well.
+#   EXACT_FLOOR 159: shipping 160, weakened 156, the gate at RfpMinPly 1 red (S156 --floor 159).
+
+## python3 adocs/data/S154_floor_margin_sweep.py floor --ref be48e02 --jobs 8
+RfpMinPly swept at be48e02, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  3/16 d8  m5  1/16 d6  short 0  sign 0
+                         m3 #########..###.######..#  churn -  13841074 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 16/24 d6  m4  1/16 d3  m5  1/16 d7  short 0  sign 0
+                         m3 #####.#.#...##.######..#  churn 3  11088044 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 4  10234258 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 12/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  10304741 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  6/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ....#...........###.#..#  churn 6  6574131 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  6/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ....#...........###.#..#  churn 0  6574131 nodes
+
+  floor, 14.7s
+
+## python3 adocs/data/S154_floor_margin_sweep.py red --ref be48e02 --jobs 8
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_6r8tar7q/tests/test_engine.cpp:5659: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_6r8tar7q/tests/test_engine.cpp:5660: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 6 >= 12 )
+    [doctest] assertions: 3492 | 3464 passed | 28 failed |
+
+  red, 22.0s
+
+## python3 adocs/data/S156_mined_floor_sweep.py --ref be48e02 --floor 159 --jobs 8
+318 positions, depth 10, ref be48e02
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     160          162            0   15.1s
+          2     163          168            0   15.5s
+          1     156          161            0   14.9s
+          0     156          161            0   14.9s
+
+  floor 159, asserted by tests/test_mate_breadth.cpp
+    shipping value 160, weakened-guard value 156, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_96wfqxmi/tests/test_mate_breadth.cpp:255: MESSAGE: mined set at depth 10: 156 exact, 161 right sign, 0 wrong sign
+    logged: the mined set reads 156 exact at depth 10, under the 159 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down

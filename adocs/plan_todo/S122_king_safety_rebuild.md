@@ -185,11 +185,12 @@ clamped with mobility to `LAZY_EVAL_MARGIN` inside `src/evaluation.cpp`
   two together yet**: exact_score() in `tools/tuner_trace.hpp` does not read
   groups -- its comment says so, there being no engine arithmetic to be exact
   to before this step -- so `tests/test_eval_trace.cpp` "the trace
-  reconstructs evaluate() exactly, clamp included" and load()'s per-row
-  identity pass whatever a group computes. This step extends exact_score() to
-  its group, the engine's integer finaliser over the two per-side sums, so
-  that the identity on every corpus row and that case cover it; the case's
-  precondition gains a fixture row on which the group is non-zero.
+  reconstructs evaluate() exactly" (its title ended "clamp included" until
+  S039) and load()'s per-row identity pass whatever a group computes. This
+  step extends exact_score() to its group, the engine's integer finaliser over
+  the two per-side sums, so that the identity on every corpus row and that
+  case cover it; the case's precondition gains a fixture row on which the
+  group is non-zero.
 - Shelter and storm come out of the pawn hash S118 adds, which is why S118 is
   ordered directly before this step.
 - Safe checks are counted per piece type and weak squares over the king zone;

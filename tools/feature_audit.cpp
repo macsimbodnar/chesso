@@ -376,10 +376,11 @@ double r_squared(const std::vector<double>& y,
 // ------------------------------------------------ the design and its rank
 //
 // S134. One row of the design: GAME_PHASE_MAX times the derivative of the
-// score with respect to every parameter, the stage-two clamp left out, so the
-// identities reported are the linear score's. The scale is what keeps every
-// entry an integer -- the taper weights are phase / 24 and (24 - phase) / 24
-// -- so the Gram matrix below is summed exactly.
+// score with respect to every parameter, so the identities reported are the
+// linear score's -- which since S039 is the score itself; until then the
+// stage-two clamp was left out here. The scale is what keeps every entry an
+// integer -- the taper weights are phase / 24 and (24 - phase) / 24 -- so the
+// Gram matrix below is summed exactly.
 //
 // Since S276 the row is the trace's: each coefficient evaluate() recorded,
 // times 24 for a piece value, which is untapered, and times the phase and 24
@@ -774,23 +775,17 @@ void report_identities(const dataset_t& data, size_t sample)
           }
         }
 
-        // The design is the score's own: on a row where the clamp does not
-        // bind, x . params / 24 is the trace's smooth score itself, which
-        // sums the same entries by site rather than by parameter.
+        // The design is the score's own: x . params / 24 is the trace's smooth
+        // score itself, which sums the same entries by site rather than by
+        // parameter -- on every sampled row since S039, which retired the
+        // stage-two clamp the rows past it were skipped for.
         if (row % stride != 0) { continue; }
 
         double total = 0.0;
-        double stage_two = 0.0;
         for (size_t a = 0; a < n; ++a) {
-          const double term = static_cast<double>(x.value[a]) *
-                              params[x.index[a]] / GAME_PHASE_MAX;
-          total += term;
-          if (x.index[a] >= MOB_MG_BASE && x.index[a] < PP_MG_BASE) {
-            stage_two += term;
-          }
+          total += static_cast<double>(x.value[a]) * params[x.index[a]] /
+                   GAME_PHASE_MAX;
         }
-
-        if (std::fabs(stage_two) >= LAZY_EVAL_MARGIN) { continue; }
 
         const double smooth = tuner_trace::score(data, row, params.data());
         worst[t] = std::max(worst[t], std::fabs(smooth - total));
@@ -830,14 +825,14 @@ void report_identities(const dataset_t& data, size_t sample)
       "identities: method: each row is evaluate()'s trace, each coefficient "
       "times its taper weight times %d (%d for a piece value, the phase and "
       "%d minus it for a tapered pair's halves), which is %d x d(score)/"
-      "d(param) with the stage-two clamp left out; X'X summed exactly in "
+      "d(param); X'X summed exactly in "
       "64-bit integers over every row; rank by Gauss-Jordan modulo 2^61-1, "
       "which cannot exceed the rank over the rationals; each dependency "
       "checked exactly as v'X'Xv == 0, the sum over every row of (x.v)^2\n",
       GAME_PHASE_MAX, GAME_PHASE_MAX, GAME_PHASE_MAX, GAME_PHASE_MAX);
   printf(
       "identities: design check: x.params/%d against the trace's smooth "
-      "score on %zu rows where the clamp does not bind, worst |difference| "
+      "score on %zu sampled rows, worst |difference| "
       "%.3g\n",
       GAME_PHASE_MAX, design_rows, design_worst);
 
@@ -1149,8 +1144,8 @@ int main(int argc, char** argv)
 
   printf("corpus %s, %zu rows\n", opts.data.c_str(), data.size());
   printf("trace: %" PRIu64 " rows, %" PRIu64 " entries; %" PRIu64
-         " differ from evaluate(), the clamp binds on %" PRIu64 "\n",
-         trace.rows, trace.entries, trace.mismatches, trace.clamped);
+         " differ from evaluate()\n",
+         trace.rows, trace.entries, trace.mismatches);
 
   // What every report below reads is the trace, so a corpus on which the trace
   // is not evaluate() is not audited at all -- the tuner refuses the same one.
@@ -1531,7 +1526,8 @@ int main(int argc, char** argv)
     // The FEN, the score and the phase are copied through verbatim so that only
     // the label differs: a synthetic corpus whose features moved would be
     // testing two things at once. The label's score is the one the tuner
-    // descends: the trace's, every taper exact, the clamp kept.
+    // descends: the trace's, every taper exact (and until S039 the stage-two
+    // clamp kept).
     std::ifstream in(opts.data);
     std::ofstream out(opts.plant);
 

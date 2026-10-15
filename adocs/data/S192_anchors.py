@@ -311,21 +311,11 @@ def weights(source):
     return w
 
 
-def lazy_eval_margin():
-    # The engine clamps stage two at this parameter's shipped default; reading it
-    # here keeps the script from clamping at a number the engine no longer uses
-    # (150 was written here while the engine clamped at 184, S255). The weights
-    # header a refit emits does not carry it, so it always comes from the source.
-    text = open(os.path.join(REPO, "src", "search_params.hpp")).read()
-    found = re.findall(
-        r'^\s*X\(\s*LAZY_EVAL_MARGIN\s*,\s*"LazyEvalMargin"\s*,\s*(-?\d+)\s*,', text, re.M
-    )
-    if len(found) != 1:
-        sys.exit(
-            "src/search_params.hpp: expected one X(LAZY_EVAL_MARGIN, ...) row, found %d"
-            % len(found)
-        )
-    return int(found[0])
+# Until S039 the engine clamped stage two at LAZY_EVAL_MARGIN, and this script
+# read the margin from src/search_params.hpp and clamped at it (S255, after 150
+# had been written here while the engine clamped at 184). S039 retired the
+# clamp and the parameter together, so stage two is added whole below and there
+# is nothing left to read.
 
 
 def trunc_div(numerator, denominator):
@@ -334,7 +324,7 @@ def trunc_div(numerator, denominator):
     return q if numerator >= 0 else -q
 
 
-def score(case, w, margin):
+def score(case, w):
     MAX = 24
     phase = case["phase"]
     endgame = MAX - phase
@@ -386,8 +376,9 @@ def score(case, w, margin):
 
     mobility = trunc_div(mob_mg * phase + mob_eg * endgame, MAX)
     safety = trunc_div(ks_mg * phase + ks_eg * endgame, MAX)
-    # evaluate_expensive(): std::clamp of the White-relative sum, then the side's sign
-    expensive = stm * max(-margin, min(margin, mobility + safety))
+    # evaluate_expensive(): the White-relative sum, whole since S039, then the
+    # side's sign
+    expensive = stm * (mobility + safety)
 
     return dict(
         evaluate=cheap + expensive,
@@ -403,12 +394,11 @@ def score(case, w, margin):
 def main():
     source = sys.argv[1] if len(sys.argv) > 1 else None
     w = weights(source)
-    margin = lazy_eval_margin()
     print("weights from %s" % (source or "src/eval_tables.hpp + src/evaluation.cpp"))
-    print("stage two clamped at +/-%d, LAZY_EVAL_MARGIN in src/search_params.hpp" % margin)
+    print("stage two added whole, unclamped since S039")
     bad = 0
     for case in CASES:
-        parts = score(case, w, margin)
+        parts = score(case, w)
         checks = []
         for name, shipped in case["anchors"].items():
             got = parts[name]
@@ -433,7 +423,7 @@ def main():
     print()
     best = None
     for leaf in LEAVES:
-        leaf_score = score(leaf, w, margin)["evaluate"]
+        leaf_score = score(leaf, w)["evaluate"]
         print(
             "  %-22s evaluate %5d  -> root %5d"
             % (leaf["title"], leaf_score, -leaf_score)

@@ -4233,6 +4233,10 @@ TEST_SUITE("engine: aspiration windows")
     // file). The row before it, which an H0 on S261 restores byte for byte:
     // `{"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5,
     // 10}`.
+    //
+    // **Re-read at S039 and unchanged**, the same command on the tree without
+    // the lazy shortcut and the clamp: both first mates at 9, mate 5, with
+    // `d8:cp1097` and `d8:cp1297` under them.
     // clang-format off
     const std::vector<case_t> cases = {
       {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
@@ -4925,9 +4929,10 @@ TEST_SUITE("engine: mate safety")
   // two S168 added - eight rook, two knight - are all found on time at the
   // shipping defaults.
   //
-  // **A floor on the mate in three count.** 12 of 24 at the shipping floor, 7
-  // at RfpMinPly 1, 20 at RfpMinPly 4. The floor is 11, strictly between the
-  // shipping value and the removed-guard value, and it tolerates one loss.
+  // **A floor on the mate in three count.** 13 of 24 at the shipping floor, 7
+  // at RfpMinPly 1, 16 at RfpMinPly 4, on S039's tree (the two ends read 12
+  // and 7 before it). The floor is 12, strictly between the shipping value and
+  // the removed-guard value, and it tolerates one loss.
   //
   // Split by motif, because the split says which rows carry the separation:
   // at S168 the 16 queen mates in three read 9 shipping, 7 removed, 14 at
@@ -4943,10 +4948,11 @@ TEST_SUITE("engine: mate safety")
   // this is the second time.** It was 7 while the ends were 9 and 7, where
   // `7 >= 7` could not fail for the reason it exists; S154 re-derived it as 8
   // on 2026-09-01, and S168's positions moved both ends the same day - 12 and
-  // 10 - so it is 11 now. S250 re-read the ends as 12 and 7 on 2026-10-01;
-  // 11 still separates, so it stayed. The rule is the point: a set change or a
-  // search change that moves either end obliges the number to be taken again,
-  // not read again.
+  // 10 - so it was 11. S250 re-read the ends as 12 and 7 on 2026-10-01;
+  // 11 still separated, so it stayed. S039 read 13 and 7 on 2026-10-15 and
+  // took it to 12, 1 below the shipping count. The rule is the point: a set
+  // change or a search change that moves either end obliges the number to be
+  // taken again, not read again.
   //
   // **The claim that it fails when the guard fails and not when the tree
   // shifts underneath it is a measurement.** S154 ran the 48 through the binary
@@ -4984,17 +4990,17 @@ TEST_SUITE("engine: mate safety")
   // adocs/data/S145_rfp_sweep.log holds S145's sweep and
   // adocs/data/S154_floor_margin_sweep.log holds it re-taken, 2026-09-01.
   //
-  // GOLDEN (DEC-142): 11, the fewest exact mates in three the engine
+  // GOLDEN (DEC-142): 12, the fewest exact mates in three the engine
   // may find over the 82 constructed positions at depth 2m - 1 +
-  // MATE_DEPTH_SLACK. Its two ends are above: 12 at the shipping guard, 7 with
-  // the guard weakened (RfpMinPly 1), read by S250 on 2026-10-01. Re-derive:
+  // MATE_DEPTH_SLACK. Its two ends are above: 13 at the shipping guard, 7 with
+  // the guard weakened (RfpMinPly 1), read by S039 on 2026-10-15. Re-derive:
   // python3 adocs/data/S154_floor_margin_sweep.py floor, and mode `red` for the
   // weakened end; adocs/data/S168_floor_sweep.log is the reading over the
   // enlarged set. Moves legitimately on: a search change that costs or buys
   // mate finding, and a change to the position set -- either end moving obliges
   // the number to be taken again, not read again. Margin: 1 below the shipping
   // count, which is the narrowest DEC-116 accepts and is why the split by motif
-  // is recorded above, and 4 above the weakened one. Property beside it: the
+  // is recorded above, and 5 above the weakened one. Property beside it: the
   // two assertions that are defects at any count -- no mate score for the side
   // being mated, and none closer than the proved minimum -- which carry no
   // floor at all.
@@ -5006,7 +5012,15 @@ TEST_SUITE("engine: mate safety")
   // above the weakened one. The family reading that cleared the vector is
   // DEC-277's F2 (the S261 step file): 12 against the incumbent's 12 at
   // `870d210`, S154's `hash` probe spreading 0 on both trees.
-  static constexpr int MATE_IN_THREE_FLOOR = 11;
+  //
+  // **Re-derived at S039, 11 -> 12, a rise.** On the tree without the lazy
+  // shortcut and the clamp the `floor` mode reads **13** at the shipping guard
+  // and 7 with it weakened (RfpMinPly 1), and `red` builds the gate at
+  // RfpMinPly 1 and sees it fail at 7. Both ends moved, so the number is taken
+  // again by the margin above: 12, 1 below the shipping count and 5 above the
+  // weakened one (`adocs/data/S039_floors.log`).
+  // The ends read 12 and 7, by S250, until S039.
+  static constexpr int MATE_IN_THREE_FLOOR = 12;
 
   TEST_CASE_FIXTURE(engine_fixture_t,
                     "a proved mate is never mis-scored, and every mate in two "

@@ -962,7 +962,11 @@ evidence, never edited, so each is pinned here instead:
   and fails on its first column alone: the mirror at `cead820` read 138335 /
   105 / 33, the trace reads 137108 / 105 / 33 -- the past-2.0 column counts
   rows sitting on 48/24 by which side an ulp puts them (`S276_truncation_scan.txt`).
-  The margin counterfactual was not re-run.
+  The margin counterfactual was not re-run. **From S039 on both `HEAD`
+  readings are pinned to S039's parent**: S039 removed the clamp, so at a later
+  `HEAD` the first reads the unclamped scan, against which its expected numbers
+  mean nothing, and the second stops at its own vacuity check (exit 2) because
+  the `LazyEvalMargin` row it edits is gone.
 - `S144_paths.py`, S144's one-shot citation conversion, relocates two of its
   rows onto `tools/eval_model.hpp` by reading that file at `HEAD`; those two
   resolve only before S276.
@@ -1015,3 +1019,16 @@ evidence, never edited, so each is pinned here instead:
 | file | what it is |
 |---|---|
 | `S285_remine_extra_ply.log` | S095's mate row ("mate the extra ply hides") re-mined on `fd33954`, the tree S023's revert left, 2026-10-15 (DEC-142, DEC-288): the old row's cells on that tree, shipped and with S095's guard opened (the precondition: both report its mate at its depth 8), both builds' sweeps of the 141 candidates at depths 3..12, `S095_mine_mate_row.py pick`'s output (22 separate; it takes `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at 8, mate in 4, the position S023 had taken on its candidate), stockfish's depth-20 line for it, the row observed green shipped and red with the guard opened, and `tools/mutation_check.py --only J01 J02 J03` on the fixture, the row being J01's and J02's first failing assertion |
+
+### S039, the lazy shortcut and the clamp retire together
+
+| file | what it is |
+|---|---|
+| `S039_sprt.sh` | the pre-registration of S039's one verdict, in `S119_sprt.sh`'s shape: the `{-5, 0}` nElo non-regression at 8+0.08 (`--nonreg`) of the tree without the lazy shortcut and the clamp against its parent, DEC-143's 25591 / 41861 games (12.1 h / 19.8 h at 2110 an hour) against the 40000-game cap, the abort rule, the three outcomes -- H1 and H0 as the step file states them, no verdict as DEC-274 rules (lands as on H1, recorded as a zero); `REF` pinned at `be48e02` and `CAND` refused while `PIN_ME`, and the run while its measurements are `P2_PENDING` |
+| `S039_readers.txt` | accepts (2)'s list: every line `git grep -nE 'LAZY_EVAL_MARGIN|LazyEvalMargin|evaluate_lazy'` printed at `c88a961` (398 in 91 files), each resolution in the step file, and the re-readings at each rebase base -- `8ef820f`, `4e6ca63` and `769ce7a` -- by file and text |
+| `S039_measurements.txt` | phase 2's readings on `be48e02` plus S039 against `be48e02`: `bench` 5636835 -> 6100949 with the eight replies, `tools/search_bench.py` at 9 and 12, accepts (3)'s nodes, nps and wall to depth 11 over S103's 300 by S120's `nps_rotate.py` (8 rounds, with an A/A copy), the trace identity over the dedup corpus, the anchors, the node budget, first-mate, `s207` and the Debug self-play |
+| `S039_truncation_scan.txt` | DEC-169's reading with the clamp gone: `build/tools/truncation_scan --data .tuning/selfplay_v2_dedup.tsv --min 2.8`, 10795695 rows, 139021 past 2.0, 106 past 2.8, 34 at 2.875 -- S276's 105 hit lines and one more -- the four pins still among the 34 |
+| `S039_floors.log` | both mate floors re-read by their scripts: S154's `floor` and `red` (`MATE_IN_THREE_FLOOR` 13 shipping, 7 weakened, 11 -> 12) and S156's sweep and red gate (`EXACT_FLOOR` 162 shipping, 152 weakened, 159 -> 161) |
+| `S039_remine.log` | the mined mate rows: each row's precondition on both builds, the `capture_mates` seven sweeps, the extra-ply, E21 and B04 re-mines by their own scripts (E21's in-range pick and the one band deeper DEC-293 takes), the oracle on each row and the red observed under each weakened build |
+| `S039_sweep_s170.txt` | `adocs/data/S203_case_sweep.sh`'s 108-cell grid over `S170_cases.tsv` on S039's tree, one process per case: `--ceilings` with S202's and S261's grids answers 2, 5, 6, 0, 0, 1 against the shipped 0, 5, 4, 0, 0, 1, and the budget rule A 500000 and D 500000 -- both applied by DEC-291, the owner's, in S039's commit only |
+| `S039_mutation_pass.tsv` | `tools/mutation_check.py`'s `results.tsv` for S039's pass, 2026-10-15, on the clean fixture `f4c3076` (the candidate's tree with DEC-291 to DEC-293 in), the fixture's own `tools/mutants/`: M29, M41, F01-F06, V06, V09, V10, C02, C05, C06, C07, R01, R02, LQ01-LQ03, E21, B04, J01-J03 -- 25 of 25 killed, each row with the binaries that failed |

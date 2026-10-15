@@ -294,8 +294,13 @@ TEST_SUITE("evaluation: score")
   // refit; an evaluation term added or changed, which is a new field in every
   // case of the script and in its score(), written from src/evaluation.cpp's
   // prose and never by calling the engine.
-  // Margin: exact. Property beside it: "the lazy shortcut cannot change a
-  // decision", which holds over the whole corpus and does not move with a fit.
+  // Margin: exact. Property beside it: "the expensive stage is applied whole",
+  // which holds over the whole corpus and does not move with a fit; until S039
+  // it was "the lazy shortcut cannot change a decision", which left with the
+  // shortcut.
+  // Re-read at S039 by the script above, stage two added whole: all six
+  // unchanged, `10 of 10 reproduced` -- no case's stage two reaches the retired
+  // 184.
   TEST_CASE_FIXTURE(eval_fixture_t, "each piece is worth what the tables say")
   {
     struct case_t
@@ -322,220 +327,48 @@ TEST_SUITE("evaluation: score")
     }
   }
 
-  // The lazy shortcut is sound only while the expensive terms cannot move the
-  // score by more than LAZY_EVAL_MARGIN. That is a claim about every position,
-  // not about the ten someone thought of, so it is asserted over the whole
-  // corpus. S034.
+  // evaluate() is evaluate_cheap() plus the whole of the expensive stage, and
+  // evaluate_expensive_terms() reports that stage term by term: their sum is
+  // exactly what evaluate() adds, on every position, however large it is.
   //
-  // The margin is a bound on the sum of those terms and not on each of them,
-  // which is why evaluate_expensive() clamps once over the total. Two terms
-  // each bounded by the margin can correct by twice it between them, and the
-  // shortcut is unsound the moment that happens.
+  // Until S039 it was not the whole. evaluate_expensive() clamped mobility plus
+  // king safety to +/-LAZY_EVAL_MARGIN, which made the lazy shortcut's bound
+  // hold by construction (S034) and also capped what the two terms could say
+  // in the real score; this case read `std::clamp(raw, -margin, margin)`
+  // against what evaluate() applied, and three more held the shortcut itself --
+  // "the lazy shortcut cannot change a decision", "the shortcut says when it
+  // took one" and "a shortcut return is never better than the truth". The
+  // shortcut and the clamp retired together under one non-regression SPRT
+  // (DEC-258), and those three left with the function they tested; what the
+  // search reads in its place is asserted where it reads it, in
+  // tests/test_search.cpp "a quiet position stands pat" and "a quiescence entry
+  // carries the static score, never a bound", at the windows the shortcut used
+  // to answer.
   //
-  // 150 was chosen from mobility's distribution alone -- 149084 self-play
-  // positions, p99 81, maximum 143 -- before king safety existed. King safety
-  // shares that budget now and its weights are fitted, so the number is no
-  // longer the one it was chosen against: tools/eval_spread over all 1490839
-  // positions reports the combined correction at p99 128, p99.9 178 and a
-  // maximum of 330, clamped on 0.365 % of them against mobility's own 0.104 %.
+  // It is also what tools/eval_spread reports from, and a number nobody can
+  // check is how a distribution gets read from the wrong function.
   //
-  // That is truncation, not unsoundness. The clamp is what makes the bound true
-  // by construction, so the shortcut stays sound at any margin and what a small
-  // one costs is evaluation accuracy on those positions. Moving it is its own
-  // change with its own SPRT -- a larger margin truncates less and fires the
-  // shortcut less often, which is two effects in opposite directions. S027.
-  TEST_CASE_FIXTURE(eval_fixture_t,
-                    "the lazy shortcut cannot change a decision")
+  // Mutation: M41_eval_clamp_restored -- mobility plus king safety clamped
+  // again at the 184 S039 retired, so evaluate() truncates the expensive stage
+  // past it. Observed in S039's mutation pass:
+  //
+  //   evaluation: score
+  //    the expensive stage is applied whole
+  //   REQUIRE( raw == applied )
+  //   values: REQUIRE( -585 == -184 )
+  TEST_CASE_FIXTURE(eval_fixture_t, "the expensive stage is applied whole")
   {
+    // NOT A GOLDEN (DEC-142): the margin src/search_params.hpp shipped until
+    // S039, a fixed historical number rather than a reading, so nothing
+    // re-derives it. A position past it on either side is one the clamp would
+    // have truncated, and the identity below holding there is what says the
+    // clamp is gone rather than merely never reached.
+    constexpr int RETIRED_LAZY_MARGIN = 184;
+
     size_t checked = 0;
+    size_t past_high = 0;
+    size_t past_low = 0;
     int worst = 0;
-
-    for (const std::string& fen : all_test_fens()) {
-      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-
-      const int full = evaluate(&game.board);
-      const int cheap = evaluate_cheap(&game.board);
-      const int correction = std::abs(full - cheap);
-
-      if (correction > worst) { worst = correction; }
-
-      // A window that contains the score: no shortcut, the exact number.
-      REQUIRE_MESSAGE(
-          evaluate_lazy(&game.board, full - 1000, full + 1000) == full,
-          ("FEN: " + fen));
-
-      // A beta the cheap score already clears by the margin: the shortcut
-      // fires. The two things that have to hold of what comes back are that it
-      // is still above beta, so the caller takes the same cutoff it would have
-      // taken from the exact score, and that it is not above the exact score,
-      // because fail-soft propagates it upward as a lower bound on it. Those
-      // are the soundness claim; which number the shortcut picks to satisfy
-      // them is not. `full >= beta` follows and is not asserted separately.
-      const int beta = cheap - LAZY_EVAL_MARGIN;
-      const int at_beta = evaluate_lazy(&game.board, beta - 1000, beta);
-
-      REQUIRE_MESSAGE(at_beta >= beta,
-                      ("FEN: " + fen + " returned " + std::to_string(at_beta) +
-                       " at beta " + std::to_string(beta)));
-      REQUIRE_MESSAGE(at_beta <= full,
-                      ("FEN: " + fen + " returned " + std::to_string(at_beta) +
-                       " against a true " + std::to_string(full)));
-
-      // The same mirrored at alpha, where the number is an upper bound instead.
-      const int alpha = cheap + LAZY_EVAL_MARGIN;
-      const int at_alpha = evaluate_lazy(&game.board, alpha, alpha + 1000);
-
-      REQUIRE_MESSAGE(at_alpha <= alpha,
-                      ("FEN: " + fen + " returned " + std::to_string(at_alpha) +
-                       " at alpha " + std::to_string(alpha)));
-      REQUIRE_MESSAGE(at_alpha >= full,
-                      ("FEN: " + fen + " returned " + std::to_string(at_alpha) +
-                       " against a true " + std::to_string(full)));
-
-      checked++;
-    }
-
-    REQUIRE(checked > 100);
-
-    // Non-vacuous by construction: if the expensive terms never moved the score
-    // at all, every assertion above would hold for a reason that has nothing to
-    // do with the margin being right.
-    REQUIRE(worst > 0);
-
-    // The widest gap between the exact score and the cheap one over the set,
-    // reported and not asserted. `correction <= LAZY_EVAL_MARGIN` used to stand
-    // here as a REQUIRE and could not fail: evaluate_expensive() clamps stage
-    // two to +/-LAZY_EVAL_MARGIN, so the bound is the clamp restated rather
-    // than a property of the terms. The soundness claim is the four
-    // evaluate_lazy() assertions above, which do read the shortcut's answers.
-    // S193, 2026-09-04_test_review-F05.
-    MESSAGE("widest correction over " << checked << " positions: " << worst
-                                      << " (clamp " << LAZY_EVAL_MARGIN << ")");
-  }
-
-  // A caller that keeps the number instead of only comparing it has to know
-  // which of the two it got, because a bound is true on one side of one window
-  // and a stored number is read back from other windows. The transposition
-  // entry's static evaluation is that caller. S094.
-  TEST_CASE_FIXTURE(eval_fixture_t, "the shortcut says when it took one")
-  {
-    size_t checked = 0;
-    size_t exact_runs = 0;
-    size_t bound_runs = 0;
-
-    for (const std::string& fen : all_test_fens()) {
-      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-
-      const int full = evaluate(&game.board);
-      const int cheap = evaluate_cheap(&game.board);
-
-      // A window that contains the score. The flag says exact and the number
-      // is the one evaluate() returns, which is what makes it worth storing.
-      bool exact = false;
-      const int inside =
-          evaluate_lazy(&game.board, full - 1000, full + 1000, &exact);
-
-      REQUIRE_MESSAGE(exact, ("FEN: " + fen));
-      REQUIRE_MESSAGE(inside == full, ("FEN: " + fen));
-      exact_runs++;
-
-      // Both shortcut branches, and the flag has to be false on each. It is
-      // initialised true here on purpose: a function that never wrote it would
-      // pass on a variable that happened to start out right.
-      const int beta = cheap - LAZY_EVAL_MARGIN;
-      exact = true;
-      evaluate_lazy(&game.board, beta - 1000, beta, &exact);
-      REQUIRE_MESSAGE(!exact, ("FEN: " + fen + " at beta"));
-
-      const int alpha = cheap + LAZY_EVAL_MARGIN;
-      exact = true;
-      evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
-      REQUIRE_MESSAGE(!exact, ("FEN: " + fen + " at alpha"));
-      bound_runs++;
-
-      checked++;
-    }
-
-    REQUIRE(checked > 100);
-
-    // Non-vacuous by construction: both answers have to occur, or the case
-    // would pass on a flag stuck at either value.
-    REQUIRE(exact_runs > 0);
-    REQUIRE(bound_runs > 0);
-  }
-
-  // The case above is about the decision the caller takes. This one is about
-  // the number it carries away, and a shortcut can be right about the first and
-  // wrong about the second.
-  //
-  // The search is fail-soft: quiescence() does `if (stand_pat >= beta) { return
-  // stand_pat; }`, so whatever the shortcut returned reaches the parent and the
-  // transposition table as a lower bound on the true score, and a later search
-  // reads it back as one. What is actually known at that branch is only
-  // `full >= cheap - LAZY_EVAL_MARGIN`; the true score can be anywhere up to
-  // `cheap + LAZY_EVAL_MARGIN`. Returning `cheap` therefore claims a bound up
-  // to LAZY_EVAL_MARGIN centipawns better than anything the shortcut has
-  // established -- 184 since S085, 150 before it, and stated symbolically here
-  // so the prose cannot go stale behind the constant again, and
-  // nothing downstream can tell the difference. Mirrored at alpha, where the
-  // number is an upper bound and the error runs the other way. S027.
-  TEST_CASE_FIXTURE(eval_fixture_t,
-                    "a shortcut return is never better than the truth")
-  {
-    size_t checked = 0;
-    size_t optimistic_at_beta = 0;
-    size_t optimistic_at_alpha = 0;
-
-    for (const std::string& fen : all_test_fens()) {
-      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-
-      const int full = evaluate(&game.board);
-      const int cheap = evaluate_cheap(&game.board);
-
-      const int beta = cheap - LAZY_EVAL_MARGIN;
-      const int lower = evaluate_lazy(&game.board, beta - 1000, beta);
-
-      REQUIRE_MESSAGE(lower <= full,
-                      ("FEN: " + fen + " claimed " + std::to_string(lower) +
-                       " as a lower bound on " + std::to_string(full)));
-
-      const int alpha = cheap + LAZY_EVAL_MARGIN;
-      const int upper = evaluate_lazy(&game.board, alpha, alpha + 1000);
-
-      REQUIRE_MESSAGE(upper >= full,
-                      ("FEN: " + fen + " claimed " + std::to_string(upper) +
-                       " as an upper bound on " + std::to_string(full)));
-
-      // The positions where returning the cheap score was wrong rather than
-      // merely unproven: the expensive terms move the score against the side of
-      // the window being answered, so `cheap` sits above the truth at beta and
-      // below it at alpha.
-      if (full < cheap) { optimistic_at_beta++; }
-      if (full > cheap) { optimistic_at_alpha++; }
-
-      checked++;
-    }
-
-    REQUIRE(checked > 100);
-
-    // Non-vacuous by construction, and on both sides separately. Every
-    // assertion above holds trivially on a corpus where the expensive terms
-    // never take the score the wrong way, and it was exactly such a corpus this
-    // case was written to rule out -- the counts below are what make it fail on
-    // the behaviour it exists to catch rather than merely pass on the fix.
-    REQUIRE(optimistic_at_beta > 0);
-    REQUIRE(optimistic_at_alpha > 0);
-  }
-
-  // evaluate_expensive_terms() is what tools/eval_spread measures the margin
-  // from, and a number nobody can check is how a margin gets re-decided from
-  // the wrong distribution. Clamping the pair it reports has to reproduce
-  // exactly what evaluate() applied on top of evaluate_cheap(), which is the
-  // one part of it the shipping path also computes. S034.
-  TEST_CASE_FIXTURE(eval_fixture_t, "the unclamped terms are the engine's own")
-  {
-    size_t checked = 0;
-    size_t clamped = 0;
 
     for (const std::string& fen : all_test_fens()) {
       REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
@@ -547,23 +380,33 @@ TEST_SUITE("evaluation: score")
       const int applied = evaluate(&game.board) - evaluate_cheap(&game.board);
       const int raw = mobility + safety;
 
-      if (std::abs(raw) > LAZY_EVAL_MARGIN) { clamped++; }
+      if (raw > RETIRED_LAZY_MARGIN) { past_high++; }
+      if (raw < -RETIRED_LAZY_MARGIN) { past_low++; }
+      worst = std::max(worst, std::abs(raw));
 
-      REQUIRE_MESSAGE(
-          std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN) == applied,
-          ("FEN: " + fen + " raw " + std::to_string(raw) + " applied " +
-           std::to_string(applied)));
+      REQUIRE_MESSAGE(raw == applied,
+                      ("FEN: " + fen + " raw " + std::to_string(raw) +
+                       " applied " + std::to_string(applied)));
 
       checked++;
     }
 
     REQUIRE(checked > 100);
 
-    // Non-vacuous by construction. Every equality above would also hold for a
-    // function that returned the clamped number, which is the one thing this
-    // accessor must not do, unless some position in the corpus is outside the
-    // margin. One is: the nine-bishop promotion pile-up S034 found.
-    REQUIRE(clamped > 0);
+    // Non-vacuous by construction, on both sides separately. Every equality
+    // above would also hold for an evaluate() that still clamped, unless some
+    // position in the corpus lies past the old margin, and a bound restored on
+    // one side only would pass a set that reached only the other. The
+    // promotion and tactics suites put both kinds in the set.
+    CAPTURE(past_high);
+    CAPTURE(past_low);
+    REQUIRE(past_high > 0);
+    REQUIRE(past_low > 0);
+
+    // The widest stage-two correction over the set, reported and not
+    // asserted: what bounds it is the terms' own arithmetic, which "the static
+    // score never reaches the mate band" below holds the whole score to.
+    MESSAGE("widest expensive-stage correction: " << worst);
   }
 
   // The piece-square tables have to actually prefer the squares they are meant
@@ -651,12 +494,21 @@ TEST_SUITE("evaluation: score")
   // node, and a static score that reached the mate band would make it claim a
   // mate nothing proved. The comment at the site used to say the score
   // "provably cannot approach one, because evaluate_expensive() clamps the
-  // whole king-safety correction to +/-LAZY_EVAL_MARGIN". That clamp bounds one
-  // of the two stages. What bounds the other is the arithmetic of
+  // whole king-safety correction to +/-LAZY_EVAL_MARGIN". That clamp bounded
+  // one of the two stages. What bounds the other is the arithmetic of
   // evaluate_cheap(): material, the two tapered piece-square sums and the pawn
   // terms, every constant in them a two- or three-digit number and every sum
   // taken over at most sixteen men a side. The conclusion held; the reason
   // given did not establish it, and nothing asserted either. S213.
+  //
+  // Since S039 there is no clamp at all, and the expensive stage is bounded the
+  // same way the cheap one is: weights times counts of attacked squares and
+  // attackers over at most sixteen men a side. So this case is now the only
+  // thing holding the whole score down, and it holds a second ceiling too: the
+  // transposition table keeps the static score in 16 bits (tt_entry_t::eval,
+  // INT16_MIN its empty sentinel), and S213's 1.4 times headroom under that was
+  // measured with stage two clamped to 184. Unclamped, at S039, the placements
+  // read a maximum of 23891, 1.37 times under 32767, and the corpus 15353.
   //
   // Two populations, because they fail differently. The corpus is what ordinary
   // play looks like and would catch a term that runs away on a normal board.
@@ -675,6 +527,7 @@ TEST_SUITE("evaluation: score")
       const int score = std::abs(evaluate(&game.board));
 
       REQUIRE_MESSAGE(score < MATE_MIN_LOCAL, ("FEN: " + fen));
+      REQUIRE_MESSAGE(score <= INT16_MAX, ("FEN: " + fen));
 
       corpus_max = std::max(corpus_max, score);
       corpus_checked++;
@@ -759,6 +612,7 @@ TEST_SUITE("evaluation: score")
         const int score = std::abs(evaluate(&game.board));
 
         REQUIRE_MESSAGE(score < MATE_MIN_LOCAL, ("FEN: " + fen));
+        REQUIRE_MESSAGE(score <= INT16_MAX, ("FEN: " + fen));
 
         if (score > pathological_max) {
           pathological_max = score;

@@ -21,8 +21,9 @@
 //
 // **The contract is an identity, and it is checked on every row loaded.**
 // exact_score() recomputes a row's score from its trace with the engine's own
-// integer arithmetic -- the four truncating tapers, the clamp over stage two --
-// and at the weights the engine was built with it equals evaluate() exactly.
+// integer arithmetic -- the four truncating tapers, and until S039 the clamp
+// over stage two -- and at the weights the engine was built with it equals
+// evaluate() exactly.
 // load() checks that on every row it reads and the tuner refuses a corpus on
 // which it fails: a trace that disagrees with the engine is a model of a
 // different function, which is the failure tools/eval_model.hpp could only
@@ -30,12 +31,12 @@
 //
 // **What the fit descends is the smooth relaxation of that score**, score()
 // below: the same sum with every taper exact in floating point instead of
-// truncated, and the clamp kept. Truncation is dropped because a step function
-// has no derivative to descend; it moves a row by less than one centipawn per
-// taper that rounds, four at most (3 x 23/24 = 2.875 while tempo is zero, 4 x
-// 23/24 = 3.833 once it is not). The clamp is kept, and differentiated exactly
-// -- gradient() below has why, and that it reverses the treatment the tuner
-// had before S262.
+// truncated. Truncation is dropped because a step function has no derivative
+// to descend; it moves a row by less than one centipawn per taper that rounds,
+// four at most (3 x 23/24 = 2.875 while tempo is zero, 4 x 23/24 = 3.833 once
+// it is not). From S262 until S039 the clamp over stage two was kept here too
+// and differentiated exactly; it left with the engine's, so the smooth score
+// has no kink at all -- gradient() below has the history.
 //
 // Nonlinear groups -- a per-side transform of a weighted sum, the shape a
 // king-safety curve takes -- are carried by the same records: each side's
@@ -88,7 +89,8 @@ using tuner_target::sigmoid;
 //   POSITIONAL  board->psqt plus the three pawn terms, one taper
 //   TEMPO       its own taper, added after the side-to-move sign
 //   MOBILITY    its own taper, in evaluate_expensive()
-//   KING_SAFETY its own taper, and the two summed and clamped to the margin
+//   KING_SAFETY its own taper, and the two summed whole -- clamped to
+//               LAZY_EVAL_MARGIN until S039
 enum site_t : uint8_t
 {
   SITE_MATERIAL,
@@ -98,9 +100,6 @@ enum site_t : uint8_t
   SITE_KING_SAFETY,
   SITE_COUNT
 };
-
-constexpr bool clamped_site(site_t site)
-{ return site == SITE_MOBILITY || site == SITE_KING_SAFETY; }
 
 constexpr uint32_t NO_PARAM = std::numeric_limits<uint32_t>::max();
 
@@ -198,11 +197,11 @@ inline const feature_table_t& feature_table()
 //   x[side] = sum_i coef[side][i] * w[i]              (mg and eg halves apart)
 //   group   = sign * (T(x[WHITE]) - T(x[BLACK])), each half, then tapered
 //
-// with its own taper and outside the clamp. The one transform provided is the
-// one S122's king-safety curve is written for, T(x) = max(0, x)^2 / divisor:
-// convex, zero below zero, and with a derivative of exactly zero at x = 0 --
-// which is why a group of these cannot start from zero weights. derive_seed()
-// is the answer to that (DEC-134 form b).
+// with its own taper. The one transform provided is the one S122's
+// king-safety curve is written for, T(x) = max(0, x)^2 / divisor: convex, zero
+// below zero, and with a derivative of exactly zero at x = 0 -- which is why a
+// group of these cannot start from zero weights. derive_seed() is the answer
+// to that (DEC-134 form b).
 enum transform_t : uint8_t
 {
   TRANSFORM_SQUARED_POSITIVE
@@ -444,8 +443,8 @@ inline int64_t exact_taper(int64_t mg, int64_t eg, int phase)
 { return (mg * phase + eg * (GAME_PHASE_MAX - phase)) / GAME_PHASE_MAX; }
 
 
-// The four tapered sums and the material a row's exact score is built from,
-// before the clamp, so a caller can ask whether it binds.
+// The four tapered sums and the material a row's exact score is the sum of,
+// apart, so a caller can read one stage on its own.
 struct exact_parts_t
 {
   int64_t material = 0;
@@ -492,19 +491,18 @@ inline exact_parts_t exact_parts(const dataset_t& data,
 
 // A row's score, White relative, recomputed from its trace with the engine's
 // integer arithmetic at integer weights `w`: material untapered, then four
-// truncating tapers, the last two summed and clamped to LAZY_EVAL_MARGIN. At
-// the weights the engine was built with this is evaluate() exactly, which is
-// what load() checks on every row. Tempo's coefficient carries the side to
-// move's sign, and both the taper's truncation and the clamp are odd, so the
+// truncating tapers, summed -- the last two clamped to LAZY_EVAL_MARGIN until
+// S039. At the weights the engine was built with this is evaluate() exactly,
+// which is what load() checks on every row. Tempo's coefficient carries the
+// side to move's sign, and the taper's truncation is odd, so the
 // White-relative form is the engine's side-to-move one negated, digit for
 // digit. Groups have no engine arithmetic to be exact to and are not read.
 inline int64_t exact_score(const dataset_t& data, size_t row, const int64_t* w)
 {
   const exact_parts_t parts = exact_parts(data, row, w);
-  const int64_t margin = LAZY_EVAL_MARGIN;
 
-  return parts.material + parts.positional + parts.tempo +
-         std::clamp(parts.mobility + parts.safety, -margin, margin);
+  return parts.material + parts.positional + parts.tempo + parts.mobility +
+         parts.safety;
 }
 
 
@@ -529,7 +527,6 @@ struct load_report_t
 {
   uint64_t rows = 0;
   uint64_t mismatches = 0;  // exact_score() against evaluate()
-  uint64_t clamped = 0;     // rows where the engine's clamp binds
   uint64_t entries = 0;
   std::string first_mismatch;
   double seconds = 0.0;
@@ -623,7 +620,6 @@ inline bool load(const std::string& path,
   }
 
   const std::vector<int64_t> weights = engine_weights();
-  const int64_t margin = LAZY_EVAL_MARGIN;
 
   constexpr size_t BLOCK = 1 << 16;
   std::vector<std::string> lines;
@@ -717,12 +713,6 @@ inline bool load(const std::string& path,
         if (report->mismatches == 0) { report->first_mismatch = lines[i]; }
         report->mismatches++;
       }
-
-      // The rows the identity reaches the clamp on, counted so a reader can
-      // see the clamp was exercised and not merely never reached.
-      const exact_parts_t parts = exact_parts(*data, row, weights.data());
-      const int64_t two = parts.mobility + parts.safety;
-      if (two > margin || two < -margin) { report->clamped++; }
     }
   }
 
@@ -775,13 +765,12 @@ inline group_sums_t group_sums(const group_t& group,
 
 struct smooth_t
 {
-  double score = 0.0;        // White relative
-  bool clamp_binds = false;  // stage two lies beyond the margin
+  double score = 0.0;  // White relative
 };
 
 
 // The score the fit descends, White relative: exact_score() with every taper
-// exact instead of truncated, the clamp kept, and the groups added on top.
+// exact instead of truncated, and the groups added on top.
 inline smooth_t smooth(const model_t& model,
                        const dataset_t& data,
                        size_t row,
@@ -812,18 +801,12 @@ inline smooth_t smooth(const model_t& model,
 
   smooth_t out;
 
-  // One clamp over the two expensive terms together, where evaluate() puts it.
-  const double margin = LAZY_EVAL_MARGIN;
-  double stage_two = (mg[SITE_MOBILITY] + mg[SITE_KING_SAFETY]) * mg_weight +
-                     (eg[SITE_MOBILITY] + eg[SITE_KING_SAFETY]) * eg_weight;
-
-  if (stage_two > margin) {
-    stage_two = margin;
-    out.clamp_binds = true;
-  } else if (stage_two < -margin) {
-    stage_two = -margin;
-    out.clamp_binds = true;
-  }
+  // The two expensive terms summed apart and added last: the order the clamp
+  // over them needed until S039, kept so that every row the clamp never bound
+  // scores to the bit what it scored before.
+  const double stage_two =
+      (mg[SITE_MOBILITY] + mg[SITE_KING_SAFETY]) * mg_weight +
+      (eg[SITE_MOBILITY] + eg[SITE_KING_SAFETY]) * eg_weight;
 
   out.score = material + (mg[SITE_POSITIONAL] + mg[SITE_TEMPO]) * mg_weight +
               (eg[SITE_POSITIONAL] + eg[SITE_TEMPO]) * eg_weight + stage_two;
@@ -922,21 +905,18 @@ inline double error_range(const dataset_t& data,
 // per-term blocks had three times. The groups: the chain rule through each
 // side's transform.
 //
-// **The clamp is differentiated exactly, and that reverses the parent's
-// treatment.** Until S262 the tuner's gradient (tools/tuner_model.hpp) ignored
-// it on purpose -- "treating the boundary as flat would stop the fit moving a
-// weight it should move" -- while its forward model clamped, so the gradient
-// was not the derivative of the error it reported. Here a row on which the
-// tapered mobility-plus-king-safety sum lies beyond LAZY_EVAL_MARGIN gives
-// those weights nothing, because they do not move its score there: the true
-// gradient of the objective the fit minimises, which S262's accepts (3) checks
-// against finite differences. The clamp binds on 0.338 % of the dedup corpus's
-// rows at the shipped weights (36503 of 10795695), and S262's held-out
-// comparison (6)
-// -- 0.118446 against the old path's 0.118449 -- was taken under this
-// treatment. Its life is short in any case: S039 retires the clamp, and S122's
-// king safety is not clamped. At exactly the margin the inside derivative is
-// taken.
+// **No clamp to differentiate since S039**, and every mobility and king safety
+// weight moves every row its trace reaches. Until S262 the tuner's gradient
+// (tools/tuner_model.hpp) ignored the clamp on purpose -- "treating the
+// boundary as flat would stop the fit moving a weight it should move" --
+// while its forward model clamped, so the gradient was not the derivative of
+// the error it reported. From S262 until S039 a row on which the tapered
+// mobility-plus-king-safety sum lay beyond LAZY_EVAL_MARGIN gave those weights
+// nothing, the true gradient of a clamped objective; the clamp bound on
+// 0.338 % of the dedup corpus's rows at the shipped weights (36503 of
+// 10795695), and S262's held-out comparison (6) -- 0.118446 against the old
+// path's 0.118449 -- was taken under that treatment. The engine's clamp and
+// this one retired together, so the objective is smooth again.
 inline void gradient(const model_t& model,
                      const dataset_t& data,
                      const double* params,
@@ -982,8 +962,6 @@ inline void gradient(const model_t& model,
             grad[f.mg] += c;
             continue;
           }
-
-          if (s.clamp_binds && clamped_site(f.site)) { continue; }
 
           grad[f.mg] += c * mg_weight;
           grad[f.eg] += c * eg_weight;

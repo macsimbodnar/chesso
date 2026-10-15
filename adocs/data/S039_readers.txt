@@ -1,0 +1,439 @@
+# S039 accepts (2): every reader of the margin at this step's HEAD.
+# git grep -nE 'LAZY_EVAL_MARGIN|LazyEvalMargin|evaluate_lazy' c88a961   (2026-10-13)
+# 398 lines in 91 files, each cut at 200 characters; resolutions in the S039 step file, As built.
+DEV_MANUAL.md:1469:finding: its whole goal is to re-decide `LAZY_EVAL_MARGIN`, its `touches:` named
+DEV_MANUAL.md:1508:  shipped. Tight on purpose — "`LazyEvalMargin` at 0, 150 and 2000" is a sweep,
+DEV_MANUAL.md:2135:| `test_search.cpp` "a stand pat that is itself a bound is still capped" | 383, the pair's cheap score less `LAZY_EVAL_MARGIN` | the same script and `src/search_params.hpp` |
+DEV_MANUAL.md:2165:fitted header. It clamps stage two at `LAZY_EVAL_MARGIN`, read from
+DEV_MANUAL.md:3502:`evaluate_expensive()` clamps to `LAZY_EVAL_MARGIN` before it returns, which is
+DEV_MANUAL.md:3516:p95 60, p99 81, max 143 — what `LAZY_EVAL_MARGIN` was set from. Mobility with
+DEV_MANUAL.md:5079:resolved. It is not — `src/search.cpp:125` calls `evaluate_lazy()` at the top
+DEV_MANUAL.md:5258:  because it raised `LAZY_EVAL_MARGIN` from 150 to 184. The mirror's
+DEV_MANUAL.md:5280:`LAZY_EVAL_MARGIN` moves, which S039 exists to do.** DEC-169. The suite is safe
+DEV_MANUAL.md:5821:clamped to `LAZY_EVAL_MARGIN` -- must equal what `evaluate()` returned, and a
+MANUAL.md:273:| `LazyEvalMargin` | 184 | 0 to 2000 | the largest correction the lazy evaluation's expensive terms are allowed to apply |
+adocs/audit/2026-08-13_adversarial.md:282:### 2026-08-13_adversarial-F05  low  `LAZY_EVAL_MARGIN`'s stated precondition is false, and the re-decision it promised has not happened
+adocs/audit/2026-08-13_adversarial.md:325:margin costs search time in `evaluate_lazy` and that trade is an SPRT question,
+adocs/audit/2026-08-13_plan_review.2.md:583:- **F05 (`LAZY_EVAL_MARGIN` precondition false)** — still reproduces.
+adocs/audit/2026-08-13_plan_review.md:410:- **F05 (LAZY_EVAL_MARGIN precondition false)** — still reproduces.
+adocs/audit/2026-08-16_plan_review.md:143:disk. S039's decision is where to put `LAZY_EVAL_MARGIN`; a margin chosen from a
+adocs/audit/2026-08-16_plan_review.md:706:- **F05 (`LAZY_EVAL_MARGIN` precondition false)** — still reproduces and is
+adocs/audit/2026-08-20_plan_review.md:446:`LazyEvalMargin` setoption in the tune build (`command_setoption`, `src/chesso.cpp:986`)
+adocs/audit/2026-08-20_plan_review.md:458:`src/evaluation.hpp` holds `LAZY_EVAL_MARGIN` in comments only. Observed red on S039
+adocs/audit/2026-08-20_plan_review.md:467:S039, whose entire goal is to change `LAZY_EVAL_MARGIN`, never names the file
+adocs/audit/2026-08-20_plan_review.md:472:goal:       re-decide LAZY_EVAL_MARGIN from measured spread at the weights that ship today
+adocs/audit/2026-08-20_plan_review.md:473:accepts:    ... the LAZY_EVAL_MARGIN comment in src/evaluation.hpp is re-measured ...
+adocs/audit/2026-08-20_plan_review.md:474:touches:    src/evaluation.hpp LAZY_EVAL_MARGIN and its comment
+adocs/audit/2026-08-20_plan_review.md:477:$ grep -n "LAZY_EVAL_MARGIN" src/search_params.hpp src/evaluation.hpp
+adocs/audit/2026-08-20_plan_review.md:478:src/search_params.hpp:91:  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  150,    0, 2000)
+adocs/audit/2026-08-20_plan_review.md:479:src/evaluation.hpp:3:#include "search_params.hpp"  // LAZY_EVAL_MARGIN
+adocs/audit/2026-08-20_plan_review.md:497:  LazyEvalMargin is a setoption (src/search_params.hpp:91): clear the cache on
+adocs/audit/2026-08-22_adversarial.md:345:and the lazy shortcut fires, `evaluate_lazy()` returns `cheap ±
+adocs/audit/2026-08-22_adversarial.md:346:LAZY_EVAL_MARGIN` — a window-side bound (`src/evaluation.hpp:20-46`,
+adocs/audit/2026-09-04_plan_review.md:302:$ grep -n "ASPIRATION_\|MAX_QSEARCH_DEPTH\|LAZY_EVAL_MARGIN" src/search_params.hpp | grep "X("
+adocs/audit/2026-09-04_plan_review.md:304:200:  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)
+adocs/audit/2026-09-04_test_review.md:269:- `tests/test_evaluation.cpp:300-302` `correction <= LAZY_EVAL_MARGIN` is true
+adocs/audit/2026-09-10_adversarial.md:735:mobility-plus-king-safety to `+/-LAZY_EVAL_MARGIN` **before** the side-to-move
+adocs/audit/2026-09-10_adversarial.md:965:`evaluate_lazy` returns exactly those. The audit brief asked whether the margin
+adocs/data/2026-09-04_test_review/kills.txt:155:   [test_evaluation] the unclamped terms are the engine's own  |  REQUIRE( std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN) == applied ) is NOT corr
+adocs/data/2026-09-04_test_review/mutants.py:115:  ("if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }",
+adocs/data/2026-09-04_test_review/mutants.py:116:   "if (cheap >= beta) { return cheap - LAZY_EVAL_MARGIN; }"))
+adocs/data/S055_candidate.diff:8: | `test_search.cpp` "a stand pat that is itself a bound is still capped" | 383, the pair's cheap score less `LAZY_EVAL_MARGIN` | the same script and `src/search_param
+adocs/data/S055_candidate.diff:64: `LAZY_EVAL_MARGIN` moves, which S039 exists to do.** DEC-169. The suite is safe
+adocs/data/S055_candidate.diff:134:-    expensive = stm * max(-150, min(150, mobility + safety))  # LAZY_EVAL_MARGIN
+adocs/data/S055_candidate.diff:136:+    expensive = stm * max(-150, min(150, stage_two))  # LAZY_EVAL_MARGIN
+adocs/data/S055_candidate.diff:250:-// Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the model
+adocs/data/S055_candidate.diff:268:+// four, which sit at 45/24 = 1.875 since), and a move of LAZY_EVAL_MARGIN --
+adocs/data/S085_spsa_run.json:88:        "name": "LazyEvalMargin",
+adocs/data/S085_spsa_trajectory.tsv:1:k	pairs	c_scale	r_k	y	wins	losses	draws	ptnml	MaxQsearchDepth	RfpMargin	RfpMaxDepth	RfpMinPly	NullMoveBase	NullMoveDivisor	LmrBase	LmrDivisor	LazyEvalMargin	Aspir
+adocs/data/S108_sprt.sh:40:#     of those, differing from evaluate_lazy()          29492   0.021 %
+adocs/data/S120_a.diff:41:+    } else if (std::string(canonical_name) == "LazyEvalMargin") {
+adocs/data/S120_a.diff:156: int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+adocs/data/S120_a.diff:159:@@ -1168,10 +1223,21 @@ int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+adocs/data/S120_a.diff:186:@@ -46,6 +46,26 @@ int evaluate_lazy(const board_t* board,
+adocs/data/S120_a.diff:190:+// THE EVALUATION CACHE, S120. evaluate_lazy() keeps every full score it pays
+adocs/data/S120_a.diff:205:+// holds and when; the search reaches it only through evaluate_lazy().
+adocs/data/S120_a.diff:278:+    // Every case starts on an empty evaluation cache, so what evaluate_lazy()
+adocs/data/S120_a.diff:288:+// S120. evaluate_lazy() keeps every full score it pays for, by the position's
+adocs/data/S120_a.diff:296:+  // A window that contains the score, so evaluate_lazy() owes the full one.
+adocs/data/S120_a.diff:300:+    return evaluate_lazy(board, full - 1000, full + 1000, exact);
+adocs/data/S120_a.diff:337:+  // That evaluate_lazy() reads the slot at all, shown the way S103 showed the
+adocs/data/S120_a.diff:347:+                    "evaluate_lazy answers from the slot where the full score "
+adocs/data/S120_a.diff:366:+    CHECK_EQ(evaluate_lazy(&game.board, full - 1000, full + 1000, &exact),
+adocs/data/S120_a.diff:372:+    const int beta = cheap - LAZY_EVAL_MARGIN;
+adocs/data/S120_a.diff:374:+    CHECK_EQ(evaluate_lazy(&game.board, beta - 1000, beta, &exact), beta);
+adocs/data/S120_a.diff:377:+    const int alpha = cheap + LAZY_EVAL_MARGIN;
+adocs/data/S120_a.diff:379:+    CHECK_EQ(evaluate_lazy(&game.board, alpha, alpha + 1000, &exact), alpha);
+adocs/data/S120_a.diff:485:+      const int beta = cheap - LAZY_EVAL_MARGIN;
+adocs/data/S120_a.diff:487:+      evaluate_lazy(&game.board, beta - 1000, beta, &exact);
+adocs/data/S120_a.diff:492:+      const int alpha = cheap + LAZY_EVAL_MARGIN;
+adocs/data/S120_a.diff:494:+      evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
+adocs/data/S120_a.diff:662:+  // LazyEvalMargin is the one parameter evaluate() reads -- the clamp every
+adocs/data/S120_a.diff:667:+                    "setting LazyEvalMargin empties the table, another "
+adocs/data/S120_a.diff:682:+    uci_process_line("setoption name LazyEvalMargin value " +
+adocs/data/S120_a.diff:683:+                     std::to_string(LAZY_EVAL_MARGIN));
+adocs/data/S120_b.diff:5: int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+adocs/data/S120_b.diff:10:+  // LAZY_EVAL_MARGIN this returns the exact number instead, on the same side
+adocs/data/S120_b.diff:32:   if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
+adocs/data/S120_b.diff:33:   if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap + LAZY_EVAL_MARGIN; }
+adocs/data/S120_b.diff:58: int evaluate_lazy(const board_t* board,
+adocs/data/S120_b.diff:64:           evaluate_lazy(&game.board, full - 1000, full + 1000) == full,
+adocs/data/S120_b.diff:95:-                    "evaluate_lazy answers from the slot where the full score "
+adocs/data/S120_b.diff:97:+                    "evaluate_lazy answers from the slot whatever the window")
+adocs/data/S120_b.diff:107:     const int beta = cheap - LAZY_EVAL_MARGIN;
+adocs/data/S120_b.diff:109:-    CHECK_EQ(evaluate_lazy(&game.board, beta - 1000, beta, &exact), beta);
+adocs/data/S120_b.diff:112:+    CHECK_EQ(evaluate_lazy(&game.board, beta - 1000, beta, &exact), planted);
+adocs/data/S120_b.diff:115:     const int alpha = cheap + LAZY_EVAL_MARGIN;
+adocs/data/S120_b.diff:117:-    CHECK_EQ(evaluate_lazy(&game.board, alpha, alpha + 1000, &exact), alpha);
+adocs/data/S120_b.diff:120:+    CHECK_EQ(evaluate_lazy(&game.board, alpha, alpha + 1000, &exact), planted);
+adocs/data/S120_b.diff:146:+      const int beta = cheap - LAZY_EVAL_MARGIN;
+adocs/data/S120_b.diff:148:+      const int at_beta = evaluate_lazy(&game.board, beta - 1000, beta, &exact);
+adocs/data/S120_b.diff:153:+      const int alpha = cheap + LAZY_EVAL_MARGIN;
+adocs/data/S120_b.diff:156:+          evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
+adocs/data/S120_measurements.txt:43:quiescence stand-pat sites 7011544; answered by the TT eval 173986 (2.48 %); evaluate_lazy calls 6837558
+adocs/data/S120_measurements.txt:51:quiescence stand-pat sites 227507; answered by the TT eval 8483 (3.73 %); evaluate_lazy calls 219024
+adocs/data/S120_measurements.txt:59:quiescence stand-pat sites 275694658; answered by the TT eval 8018524 (2.91 %); evaluate_lazy calls 267676134
+adocs/data/S120_measurements.txt:67:quiescence stand-pat sites 275931128; answered by the TT eval 8008163 (2.90 %); evaluate_lazy calls 267922965
+adocs/data/S120_measurements.txt:75:== Hit rate by size (instrumented, per-thread form), share of evaluate_lazy() calls answered
+adocs/data/S144_pathings.tsv:37:adocs/plan_todo/S020_single_check_computation.md	133	:268-277	HAND	9a063d3	src/search.cpp:421-436	if (stand_pat >= beta) { / // The most common thing quiescence ever co
+adocs/data/S144_pathings.tsv:68:adocs/plan_todo/S055_taper_stage_two_once.md	178	:481-484	BLOCK	9a063d3	tests/test_evaluation.cpp:484-487	REQUIRE_MESSAGE( / std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_EVA
+adocs/data/S144_pathings.tsv:69:adocs/plan_todo/S055_taper_stage_two_once.md	105	:984	BLOCK	9a063d3	src/evaluation.cpp:1045	const int bounded = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);	
+adocs/data/S144_pathings.tsv:70:adocs/plan_todo/S055_taper_stage_two_once.md	183	:976-977	BLOCK	9a063d3	tools/eval_model.hpp:976-977	if (stage_two > LAZY_EVAL_MARGIN) { stage_two = LAZY_EVAL_MARGIN; }
+adocs/data/S144_pathings.tsv:73:adocs/plan_todo/S055_taper_stage_two_once.md	216	:1038	BLOCK	9a063d3	src/evaluation.cpp:1099	if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }	
+adocs/data/S144_pathings.tsv:177:adocs/plan_todo/S099_correction_history.md	232	:247	HAND	c0954ec	src/search.cpp:349	: evaluate_lazy(&game->board, alpha, beta, &stand_pat_is_exact);	: evaluate_lazy(&g
+adocs/data/S144_pathings.tsv:318:adocs/plan_todo/S117_swar_packed_eval_score.md	117	:481-484	BLOCK	9a063d3	tests/test_evaluation.cpp:484-487	REQUIRE_MESSAGE( / std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_
+adocs/data/S144_pathings.tsv:319:adocs/plan_todo/S117_swar_packed_eval_score.md	139	:481-484	BLOCK	9a063d3	tests/test_evaluation.cpp:484-487	REQUIRE_MESSAGE( / std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_
+adocs/data/S144_pathings.tsv:320:adocs/plan_todo/S117_swar_packed_eval_score.md	148	:984	BLOCK	9a063d3	src/evaluation.cpp:1045	const int bounded = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN
+adocs/data/S144_pathings.tsv:322:adocs/plan_todo/S120_eval_cache.md	112	:1099-1100	HAND	0000000	src/evaluation.cpp:1099-1100		if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
+adocs/data/S144_pathings.tsv:323:adocs/plan_todo/S120_eval_cache.md	131	:1038-1039	BLOCK	9a063d3	src/evaluation.cpp:1099-1100	if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
+adocs/data/S144_pathings.tsv:326:adocs/plan_todo/S120_eval_cache.md	112	:1038	BLOCK	9a063d3	src/evaluation.cpp:1099	if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }	if (cheap
+adocs/data/S144_paths.py:328:        "src/search.cpp:349", "quiescence's `evaluate_lazy` call, which S130 "
+adocs/data/S151_ltc.sh:48:#   LAZY_EVAL_MARGIN     "LazyEvalMargin"      150 -> 184
+adocs/data/S169_citations_before.txt:108:  DRIFT  adocs/plan_todo/S120_eval_cache.md:87  src/search_params.hpp:164  -- held 'X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)' at ff3a9e0
+adocs/data/S169_citations_before.txt:109:  DRIFT  adocs/plan_todo/S120_eval_cache.md:102  src/search.cpp:257  -- held ': evaluate_lazy(&game->board, alpha, beta, &stand_' at ff3a9e0
+adocs/data/S169_citations_before.txt:112:  DRIFT  adocs/plan_todo/S120_eval_cache.md:191  src/search_params.hpp:164  -- held 'X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)' at ff3a9e0
+adocs/data/S169_recitations.tsv:11:adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md	29	38ad4fe	src/search.cpp	125-125	349-349	HAND	DRIFT	no	}	: evaluate_lazy(&game->board, alpha, beta, &static_eval
+adocs/data/S169_recitations.tsv:70:adocs/plan_todo/S120_eval_cache.md	87	ff3a9e0	src/search_params.hpp	164-164	200-200	BLOCK	DRIFT	yes	X(LAZY_EVAL_MARGIN, "LazyEvalMargin", 184, 0, 2000) \	X(LAZY_EVAL
+adocs/data/S169_recitations.tsv:71:adocs/plan_todo/S120_eval_cache.md	102	ff3a9e0	src/search.cpp	257-257	349-349	HAND	DRIFT	no	: evaluate_lazy(&game->board, alpha, beta, &stand_pat_is_exact);	: evalua
+adocs/data/S169_recitations.tsv:73:adocs/plan_todo/S120_eval_cache.md	150	ff3a9e0	src/search.cpp	243-245	335-337	BLOCK	DRIFT	yes	// the field free to read. What is stored is the score and never a boun
+adocs/data/S169_recitations.tsv:74:adocs/plan_todo/S120_eval_cache.md	191	ff3a9e0	src/search_params.hpp	164-164	200-200	BLOCK	DRIFT	yes	X(LAZY_EVAL_MARGIN, "LazyEvalMargin", 184, 0, 2000) \	X(LAZY_EVA
+adocs/data/S169_recitations.tsv:76:adocs/plan_todo/S120_eval_cache.md	230	ff3a9e0	src/search.cpp	251-257	343-349	HAND	DRIFT	no	bool stand_pat_is_exact = tt_entry != nullptr && tt_entry->eval != TT_EVA
+adocs/data/S169_recite.py:63:        "the evaluate_lazy() call in quiescence, which is what the sentence "
+adocs/data/S169_recite.py:111:        "the evaluate_lazy() call in quiescence, which is what the sentence "
+adocs/data/S187_symbols.tsv:61:adocs/plan_todo/S022_delta_pruning_quiescence.md	242	src/evaluation.hpp:24-27	7862f41	PHRASE	phrase	one it would have taken, and both are true statements		one it would h
+adocs/data/S187_symbols.tsv:73:adocs/plan_todo/S055_taper_stage_two_once.md	105	src/evaluation.cpp:1045	7862f41	AUTO	func	evaluate_expensive		evaluate_expensive		const int bounded = std::clamp(score, 
+adocs/data/S187_symbols.tsv:97:adocs/plan_todo/S055_taper_stage_two_once.md	178	tests/test_evaluation.cpp:484-487	7862f41	TITLE	title	the unclamped terms are the engine's own		the unclamped terms are 
+adocs/data/S187_symbols.tsv:98:adocs/plan_todo/S055_taper_stage_two_once.md	182	src/evaluation.cpp:1045	7862f41	WALK	func	evaluate_expensive		evaluate_expensive		const int bounded = std::clamp(score, 
+adocs/data/S187_symbols.tsv:99:adocs/plan_todo/S055_taper_stage_two_once.md	183	tools/eval_model.hpp:976-977	7862f41	WALK	func	evaluate		evaluate		if (stage_two > LAZY_EVAL_MARGIN) { stage_two = LAZY_
+adocs/data/S187_symbols.tsv:102:adocs/plan_todo/S055_taper_stage_two_once.md	216	src/evaluation.cpp:1099	7862f41	AUTO	func	evaluate_lazy		evaluate_lazy		if (cheap - LAZY_EVAL_MARGIN >= beta) { return 
+adocs/data/S187_symbols.tsv:103:adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md	29	src/search.cpp:349	192a5a3	WALK	func	quiescence		quiescence		: evaluate_lazy(&game->board, alpha, beta, &static_e
+adocs/data/S187_symbols.tsv:244:adocs/plan_todo/S099_correction_history.md	232	src/search.cpp:349	7862f41	WALK	func	quiescence		quiescence		: evaluate_lazy(&game->board, alpha, beta, &static_eval_is_e
+adocs/data/S187_symbols.tsv:293:adocs/plan_todo/S112_quiescence_move_futility.md	151	src/evaluation.hpp:24-27	7862f41	PHRASE	phrase	one it would have taken, and both are true statements		one it would 
+adocs/data/S187_symbols.tsv:444:adocs/plan_todo/S117_swar_packed_eval_score.md	117	tests/test_evaluation.cpp:484-487	7862f41	TITLE	title	the unclamped terms are the engine's own		the unclamped terms a
+adocs/data/S187_symbols.tsv:445:adocs/plan_todo/S117_swar_packed_eval_score.md	139	tests/test_evaluation.cpp:484-487	7862f41	TITLE	title	the unclamped terms are the engine's own		the unclamped terms a
+adocs/data/S187_symbols.tsv:446:adocs/plan_todo/S117_swar_packed_eval_score.md	148	src/evaluation.cpp:1045	7862f41	WALK	func	evaluate_expensive		evaluate_expensive		const int bounded = std::clamp(scor
+adocs/data/S187_symbols.tsv:448:adocs/plan_todo/S117_swar_packed_eval_score.md	168	test_evaluation.cpp:483-486	7862f41	TITLE	title	the unclamped terms are the engine's own		the unclamped terms are the
+adocs/data/S187_symbols.tsv:455:adocs/plan_todo/S120_eval_cache.md	88	src/evaluation.cpp:1045	7504c3d	WALK	func	evaluate_expensive		evaluate_expensive		const int bounded = std::clamp(score, -LAZY_EVAL
+adocs/data/S187_symbols.tsv:456:adocs/plan_todo/S120_eval_cache.md	89	src/search_params.hpp:208	7504c3d	WALK	xmacro	LAZY_EVAL_MARGIN		LAZY_EVAL_MARGIN		X(LAZY_EVAL_MARGIN, "LazyEvalMargin", 184, 0, 20
+adocs/data/S187_symbols.tsv:457:adocs/plan_todo/S120_eval_cache.md	103	src/search.cpp:349	7504c3d	WALK	func	quiescence		quiescence		: evaluate_lazy(&game->board, alpha, beta, &static_eval_is_exact);
+adocs/data/S187_symbols.tsv:460:adocs/plan_todo/S120_eval_cache.md	114	src/evaluation.cpp:1107	7504c3d	WALK	func	evaluate_lazy		evaluate_lazy		return cheap + evaluate_expensive(board);
+adocs/data/S187_symbols.tsv:461:adocs/plan_todo/S120_eval_cache.md	114	src/evaluation.cpp:1099-1100	7504c3d	WALK	func	evaluate_lazy		evaluate_lazy		if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap
+adocs/data/S187_symbols.tsv:462:adocs/plan_todo/S120_eval_cache.md	133	src/evaluation.cpp:1099-1100	7504c3d	WALK	func	evaluate_lazy		evaluate_lazy		if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap
+adocs/data/S187_symbols.tsv:463:adocs/plan_todo/S120_eval_cache.md	134	src/evaluation.cpp:1107	7504c3d	WALK	func	evaluate_lazy		evaluate_lazy		return cheap + evaluate_expensive(board);
+adocs/data/S187_symbols.tsv:467:adocs/plan_todo/S120_eval_cache.md	153	src/evaluation.cpp:1099	7504c3d	WALK	func	evaluate_lazy		evaluate_lazy		if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LA
+adocs/data/S187_symbols.tsv:469:adocs/plan_todo/S120_eval_cache.md	192	src/search_params.hpp:208	7504c3d	WALK	xmacro	LAZY_EVAL_MARGIN		LAZY_EVAL_MARGIN		X(LAZY_EVAL_MARGIN, "LazyEvalMargin", 184, 0, 2
+adocs/data/S192_anchors.py:321:        r'^\s*X\(\s*LAZY_EVAL_MARGIN\s*,\s*"LazyEvalMargin"\s*,\s*(-?\d+)\s*,', text, re.M
+adocs/data/S192_anchors.py:325:            "src/search_params.hpp: expected one X(LAZY_EVAL_MARGIN, ...) row, found %d"
+adocs/data/S192_anchors.py:408:    print("stage two clamped at +/-%d, LAZY_EVAL_MARGIN in src/search_params.hpp" % margin)
+adocs/data/S206_truncation_drift.sh:27:#   21b4a21  S085's SPSA vector raised LAZY_EVAL_MARGIN from 150 to 184.
+adocs/data/S206_truncation_drift.sh:80:    grep -q 'X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,' "$WT/src/search_params.hpp" ||
+adocs/data/S206_truncation_drift.sh:82:    sed -i 's/X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,/X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  150,/' \
+adocs/data/S262_inv6.txt:17:#      evaluate_lazy(board_t const*, int, int, bool*)               52 insns  parent f27a69de  S262 f27a69de
+adocs/decisions.md:1629:## DEC-045  2026-08-12  evaluate_lazy returns the guaranteed bound, not the cheap score
+adocs/decisions.md:1633:              cheap score is already LAZY_EVAL_MARGIN clear of the window, and
+adocs/decisions.md:1656:Decision:     The shortcut returns cheap - LAZY_EVAL_MARGIN at beta and
+adocs/decisions.md:1657:              cheap + LAZY_EVAL_MARGIN at alpha. Both are still on the caller's
+adocs/decisions.md:2302:              calls `evaluate_lazy()` at the top of every quiescence node,
+adocs/decisions.md:2843:              correction to `+/-LAZY_EVAL_MARGIN`, 150 cp. The term is fitted and
+adocs/decisions.md:4625:              `evaluate_lazy()` on **163 of 310197 nodes, 0.05 %**.
+adocs/decisions.md:9480:## DEC-169  2026-09-10  The truncation-bound reading is re-taken when LAZY_EVAL_MARGIN moves, not only after a refit
+adocs/decisions.md:9491:              30 -> 33**: it raised `LAZY_EVAL_MARGIN` from 150 to 184, and both
+adocs/decisions.md:9507:              change to `LAZY_EVAL_MARGIN`**, which is what S039 exists to do,
+adocs/decisions.md:9532:Consequences: S039 re-decides `LAZY_EVAL_MARGIN` and owes a fresh
+adocs/decisions.md:13904:              of `evaluate_lazy()` calls on S103's 300 positions and 0.42 %
+adocs/plan.md:340:`src/search.cpp` `negamax`, `src/evaluation.hpp` `LAZY_EVAL_MARGIN`,
+adocs/plan_current/S261_search_block_spsa_lane.md:146:default never did, and its floor 3 is a measured mate cliff; `LazyEvalMargin`
+adocs/plan_done/S022_delta_pruning_quiescence.md:1166:  `evaluate_cheap()`, `LAZY_EVAL_MARGIN`, `QsFutilityMargin` and
+adocs/plan_done/S027_handcrafted_eval_terms.md:48:- **A term behind the shortcut must fit inside `LAZY_EVAL_MARGIN`**, currently
+adocs/plan_done/S027_handcrafted_eval_terms.md:106:| `ad3b17d` | the `evaluate_lazy` bound fix found under it | **0**, -6.52 +/- 11.69 over 2024 games, H0 accepted, kept |
+adocs/plan_done/S027_handcrafted_eval_terms.md:134:position of it, and a defect in `evaluate_lazy` that predates the term.
+adocs/plan_done/S027_handcrafted_eval_terms.md:248:and the search never calls it: quiescence goes through `evaluate_lazy()`, which
+adocs/plan_done/S027_handcrafted_eval_terms.md:298:`evaluate_lazy()` returned a lower bound it did not have. **0**, -6.52 +/- 11.69,
+adocs/plan_done/S033_reverse_futility_pruning.md:158:whole king-safety and mobility correction to `+/-LAZY_EVAL_MARGIN`, 150 cp. The
+adocs/plan_done/S055_taper_stage_two_once.md:108:+/-`LAZY_EVAL_MARGIN` (`src/evaluation.cpp` `evaluate_expensive`) and the model
+adocs/plan_done/S055_taper_stage_two_once.md:114:S039 re-decides `LAZY_EVAL_MARGIN` and sits ahead of this step in plan order.
+adocs/plan_done/S055_taper_stage_two_once.md:230:- - **S039**: `evaluate_lazy()`'s shortcut (`src/evaluation.cpp`
+adocs/plan_done/S055_taper_stage_two_once.md:231:  `evaluate_lazy`) tapers nothing — it compares the already-tapered cheap score
+adocs/plan_done/S055_taper_stage_two_once.md:288:   at 150.** `LAZY_EVAL_MARGIN` has been 184 since S085. The clamp does not
+adocs/plan_done/S065_corpus_regen_loosened_filter.md:58:  const int stand_pat = evaluate_lazy(&game->board, alpha, beta);
+adocs/plan_done/S065_corpus_regen_loosened_filter.md:480:| `LAZY_EVAL_MARGIN` clamp | mobility + safety = -83, inside +/-150 | not binding |
+adocs/plan_done/S073_search_params_tune_build.md:63:| `LAZY_EVAL_MARGIN` | 150 | `src/evaluation.hpp:282` |
+adocs/plan_done/S084_spsa_driver.md:22:`LAZY_EVAL_MARGIN`, two steps and two verdicts for two numbers. S073's parameter
+adocs/plan_done/S084_spsa_driver.md:133:[0,400] :85; `LmrDivisor` 225 [1,2000] :86; `LazyEvalMargin` 150 [0,2000] :91;
+adocs/plan_done/S085_spsa_first_run.md:138:case is `LazyEvalMargin`, consumed inside `evaluation.cpp` (:984, :1038-1039)
+adocs/plan_done/S085_spsa_first_run.md:152:- **`LazyEvalMargin` stays in**: mis-set costs Elo now, and S039 re-decides it
+adocs/plan_done/S085_spsa_first_run.md:162:`AspirationDelta`, `LazyEvalMargin`, `AspirationMaxDelta`) c_end 4-8; depth/ply
+adocs/plan_done/S085_spsa_first_run.md:283:  the 827 live in the tuner's domain. `LazyEvalMargin` is the boundary and
+adocs/plan_done/S085_spsa_first_run.md:356:| `LazyEvalMargin` | 150 | 0 | 2000 | 24 |
+adocs/plan_done/S085_spsa_first_run.md:561:| `LazyEvalMargin` | 150 | 170 | +0.83 | 0.0 |
+adocs/plan_done/S085_spsa_first_run.md:685:| `LazyEvalMargin` | 150 | 184 | **184** | 178.6 |
+adocs/plan_done/S094_quiescence_tt_probe.md:62:the stored value differed from a fresh `evaluate_lazy()` on **163 of 310197
+adocs/plan_done/S103_reverse_futility_reads_stored_eval.md:45:`REQUIRE_EQ( 417, -32768 )` where 417 was `cheap - LAZY_EVAL_MARGIN`. The same
+adocs/plan_done/S106_search_bound_correctness_sweep.md:10:done:      2026-08-20. Nothing found, and that is the recorded outcome. Every store and probe in both searches walked against the source: nega
+adocs/plan_done/S106_search_bound_correctness_sweep.md:97:   bound claim leans on `evaluate_lazy()`'s fail-high branch being a true
+adocs/plan_done/S106_search_bound_correctness_sweep.md:270:| 2 | quiescence stand-pat cutoff, `:283-285` | correct, and the lower-bound claim checked to its source. `evaluate_lazy()` returns `cheap - 
+adocs/plan_done/S108_static_eval_at_every_node.md:47:from the start position, tune build, `LazyEvalMargin` at three settings:
+adocs/plan_done/S108_static_eval_at_every_node.md:177:entries now carry one at ~every non-check node, and where `evaluate_lazy()`
+adocs/plan_done/S108_static_eval_at_every_node.md:233:  are stable; in the tune build a mid-session LazyEvalMargin setoption makes
+adocs/plan_done/S108_static_eval_at_every_node.md:386:| ... of those, differing from `evaluate_lazy()` | 29492 | 0.021 % |
+adocs/plan_done/S112_quiescence_move_futility.md:153:  instead, the alpha-side bound is `cheap + LAZY_EVAL_MARGIN >= truth`
+adocs/plan_done/S116_razoring_depth_one.md:153:  score here (the LAZY_EVAL_MARGIN clamp, S033's row), so with alpha near +mate
+adocs/plan_done/S120_eval_cache.md:6:            tt_reset at ucinewgame, and on the LazyEvalMargin setoption in the
+adocs/plan_done/S120_eval_cache.md:11:excludes:   choosing LAZY_EVAL_MARGIN, which is S039; the king safety rebuild, which is S122
+adocs/plan_done/S120_eval_cache.md:17:done:       2026-10-06, retired without an SPRT by the owner's choice (DEC-257): no code lands. Hit rate 0.11 to 0.42 % of evaluate_lazy() calls with 0 disagreeme
+adocs/plan_done/S120_eval_cache.md:25:`evaluate_expensive()` clamping mobility plus king safety to `LAZY_EVAL_MARGIN`,
+adocs/plan_done/S120_eval_cache.md:91:the expensive half is mobility plus king safety clamped to +/-LAZY_EVAL_MARGIN
+adocs/plan_done/S120_eval_cache.md:93:constant at `src/search_params.hpp` `LAZY_EVAL_MARGIN`), and paying it
+adocs/plan_done/S120_eval_cache.md:105:Placement: **inside the evaluation module, at evaluate_lazy(), not inside
+adocs/plan_done/S120_eval_cache.md:107:already calls evaluate_lazy (`src/search.cpp` `quiescence`), so the mass of
+adocs/plan_done/S120_eval_cache.md:119:`src/evaluation.cpp` `evaluate_lazy` returns on its exact path, never the
+adocs/plan_done/S120_eval_cache.md:138:entry type in data_structures.hpp (`touches:`). evaluate_lazy() probes
+adocs/plan_done/S120_eval_cache.md:139:**after** the shortcut tests in `src/evaluation.cpp` `evaluate_lazy`: a hit
+adocs/plan_done/S120_eval_cache.md:155:evaluate_lazy(): a hit now returns the exact score where the shortcut would
+adocs/plan_done/S120_eval_cache.md:159:window by the `src/evaluation.cpp` `evaluate_lazy` arithmetic) but the
+adocs/plan_done/S120_eval_cache.md:199:  LazyEvalMargin is a setoption (`src/search_params.hpp` `LAZY_EVAL_MARGIN`):
+adocs/plan_done/S120_eval_cache.md:240:  inside evaluate_lazy, compute third. S108 section 7 reserved exactly this:
+adocs/plan_done/S120_eval_cache.md:305:   answers 0.11 % of `evaluate_lazy()` calls over S103's protocol and 0.42 %
+adocs/plan_done/S120_eval_cache.md:329:   LazyEvalMargin clear is explicit in `command_setoption` (tune build).
+adocs/plan_done/S120_eval_cache.md:360:`evaluate_lazy()` tests the two shortcuts, then probes; a hit returns the
+adocs/plan_done/S120_eval_cache.md:393:| evaluate_lazy answers from the slot (planted value, read after a knight shuffle back to the root) | M2 probe keyed with the halfmove clock |
+adocs/plan_done/S120_eval_cache.md:401:| (tune only) setting LazyEvalMargin empties the table, another parameter does not | M10 setoption clear removed |
+adocs/plan_done/S120_eval_cache.md:411:The probe moves to the top of `evaluate_lazy()`: a hit returns the stored
+adocs/plan_done/S120_eval_cache.md:497:h is 0.11 to 0.42 % of `evaluate_lazy()` calls (0 disagreements), 1.4 to
+adocs/plan_done/S120_eval_cache.md:549:`evaluate_lazy()` calls, both forms are slower than the parent, and the
+adocs/plan_done/S130_quiescence_tt_score_stand_pat.md:120:  else `evaluate_lazy()`; `stored_eval` fixed at :253 from the pre-substitution
+adocs/plan_done/S138_citation_refresh.md:119:S109, `NULL_MOVE_BASE` 2 (now 3) in S114, `LAZY_EVAL_MARGIN` 150 (now 184) in
+adocs/plan_done/S141_touches_names_landing_file.md:3:accepts:    S039's `touches:` names `src/search_params.hpp`, which is where `LAZY_EVAL_MARGIN` has lived since S073 and without which the step cann
+adocs/plan_done/S141_touches_names_landing_file.md:23:            1. S039. touches: was `src/evaluation.hpp LAZY_EVAL_MARGIN and its comment` and now
+adocs/plan_done/S141_touches_names_landing_file.md:37:               tt_reset at ucinewgame (src/chesso.cpp:1128) and on the LazyEvalMargin setoption in
+adocs/plan_done/S141_touches_names_landing_file.md:67:               the S039 case and not a refinement: src/evaluation.hpp does contain LAZY_EVAL_MARGIN,
+adocs/plan_done/S141_touches_names_landing_file.md:87:               from the corpus, which is not fastidiousness -- its docstring names LAZY_EVAL_MARGIN
+adocs/plan_done/S141_touches_names_landing_file.md:104:                TOUCHES adocs/plan_todo/S039_lazy_margin_redecide.md  LAZY_EVAL_MARGIN  -- in code
+adocs/plan_done/S141_touches_names_landing_file.md:122:            X(LAZY_EVAL_MARGIN, ...) row. Both were live-wrong -- :128 holds S154 prose inside the
+adocs/plan_done/S141_touches_names_landing_file.md:140:`LAZY_EVAL_MARGIN` from measured spread, and the constant moved to
+adocs/plan_done/S142_bounds_match_stated_purpose.md:144:   `+/-LAZY_EVAL_MARGIN`, so the static score cannot approach the mate band --
+adocs/plan_done/S145_mate_safety_test_set.md:149:is clamped to `+/-LAZY_EVAL_MARGIN`, so the static score cannot approach a mate
+adocs/plan_done/S148_rfp_ceiling_against_deep_mates.md:412:  to `+/-LAZY_EVAL_MARGIN`, so `static_eval - margin >= beta` cannot hold with
+adocs/plan_done/S150_doc_value_check.md:11:done:       2026-08-30. **`tools/plan_prose_check.py --params` is the check, and it is in the fast suite as `test_plan_params`, 0.23 s** -- the second of the
+adocs/plan_done/S151_pruning_verdicts_at_longer_control.md:52:   `LMR_BASE` 75 to 52, `LMR_DIVISOR` 225 to 182, `LAZY_EVAL_MARGIN` 150 to
+adocs/plan_done/S164_quiescence_lazy_bound_case.md:19:fires, `evaluate_lazy()` returns a window-side bound (`cheap ±
+adocs/plan_done/S164_quiescence_lazy_bound_case.md:20:LAZY_EVAL_MARGIN`). The audit verified the soundness argument for
+adocs/plan_done/S184_pending_documents_at_head_values.md:248:| S120 "The point is not speed", "150 centipawns for the two of them together" | 150 | 184 (`LAZY_EVAL_MARGIN`) | 184 in `NEAR` form; the s
+adocs/plan_done/S184_pending_documents_at_head_values.md:341:  measured one false positive of a looser rule ("`LazyEvalMargin` at 0, 150
+adocs/plan_done/S187_symbol_citations.md:154:`LAZY_EVAL_MARGIN` comment in `src/evaluation.hpp`, `output_mutex`, `gen` and
+adocs/plan_done/S191_pruning_guard_tests.md:375:  the expensive terms are clamped to `LAZY_EVAL_MARGIN`. Do not write a case
+adocs/plan_done/S192_golden_hygiene.md:251:  `LAZY_EVAL_MARGIN` clamp. A new term is a new field in every case and in
+adocs/plan_done/S193_fast_suite_repairs.md:140:            prints 5. R16: `correction <= LAZY_EVAL_MARGIN` is the `std::clamp`
+adocs/plan_done/S193_fast_suite_repairs.md:143:            2696 positions is 184, which is LAZY_EVAL_MARGIN exactly**, so the
+adocs/plan_done/S193_fast_suite_repairs.md:238:| R16 | `tests/test_evaluation.cpp` "the lazy shortcut cannot change a decision" | `REQUIRE(correction <= LAZY_EVAL_MARGIN)` is true by the `std::clamp` 
+adocs/plan_done/S193_fast_suite_repairs.md:345:- `src/search.cpp` `negamax` (the fifty-move block and the `depth < 1` handoff); `src/chesso.cpp` `command_ucinewgame`, `command_position`, `command_go`,
+adocs/plan_done/S206_truncation_scan_drift.md:11:done:       both readings reproduce at their own shas -- `77d7450` prints 135399 / 99 / 30 and HEAD 138331 / 105 / 33 over the same `.tuning/selfplay_v
+adocs/plan_done/S206_truncation_scan_drift.md:74:| `21b4a21` | **S085's SPSA vector: `LAZY_EVAL_MARGIN` 150 -> 184** | 138331 | 105 | 33 |
+adocs/plan_done/S206_truncation_scan_drift.md:84:the tapered mobility-plus-king-safety sum at `LAZY_EVAL_MARGIN` because
+adocs/plan_done/S206_truncation_scan_drift.md:130:a refit **and** after any move of `LAZY_EVAL_MARGIN`, which is what S039 exists
+adocs/plan_done/S213_stale_comments_and_dead_api.md:104:`LAZY_EVAL_MARGIN` block in `src/evaluation.hpp` said the mobility maximum of
+adocs/plan_done/S213_stale_comments_and_dead_api.md:118:clamps to `+/-LAZY_EVAL_MARGIN`. That clamp bounds one stage. Both now say what
+adocs/plan_done/S254_stale_mutant_strings.md:11:done:       2026-10-05 -- every mutant in tools/mutants/ validates on 636bbf4 (173 of 173, no anchor refused; 5 refused before). The five stale anchors 
+adocs/plan_done/S254_stale_mutant_strings.md:57:  `build/` -- S255's goal names `LAZY_EVAL_MARGIN`, its touches named only
+adocs/plan_done/S255_anchor_clamp_margin.md:2:goal:       `adocs/data/S192_anchors.py` clamps stage two at `LAZY_EVAL_MARGIN` as the engine does, read from the source rather than written as 150
+adocs/plan_done/S255_anchor_clamp_margin.md:3:accepts:    the script's clamp equals `src/search_params.hpp`'s `LAZY_EVAL_MARGIN` (184 today) by reading it, and the anchors it re-derives are unchanged 
+adocs/plan_done/S255_anchor_clamp_margin.md:11:done:       2026-10-05. The script reads `LAZY_EVAL_MARGIN` (184) from `src/search_params.hpp` and clamps with it; on HEAD `afb8e46` its output is byte f
+adocs/plan_done/S255_anchor_clamp_margin.md:25:`X(LAZY_EVAL_MARGIN, "LazyEvalMargin", <default>, ...)` row, exiting with a
+adocs/plan_done/S255_anchor_clamp_margin.md:35:outputs is the one added line `stage two clamped at +/-184, LAZY_EVAL_MARGIN in
+adocs/plan_done/S262_trace_based_tuner.md:279:  evaluation function -- `evaluate`, `evaluate_cheap`, `evaluate_lazy`,
+adocs/plan_done/S262_trace_based_tuner.md:299:  evaluate_expensive()` on every call; the lazy shortcut is `evaluate_lazy()`'s,
+adocs/plan_done/S263_shared_attack_sets.md:101:- `evaluate()`, `evaluate_lazy()`, `evaluate_expensive_terms()` and
+adocs/plan_todo/S039_lazy_margin_redecide.md:3:accepts:    (1) the shortcut and the clamp go in one change: the expensive stage is always computed and its sum is never truncated, and no weight moves (
+adocs/plan_todo/S039_lazy_margin_redecide.md:4:            (Re-formed 2026-10-08 by DEC-258, from "re-decide LAZY_EVAL_MARGIN
+adocs/plan_todo/S039_lazy_margin_redecide.md:87:Raising the margin costs search time in `evaluate_lazy` — fewer positions take
+adocs/plan_todo/S039_lazy_margin_redecide.md:103:`LAZY_EVAL_MARGIN` owes a fresh `truncation_scan` reading, recorded beside the
+adocs/plan_todo/S039_lazy_margin_redecide.md:154:`LAZY_EVAL_MARGIN` and has since S073; `src/evaluation.hpp`'s comment is what
+adocs/plan_todo/S039_lazy_margin_redecide.md:168:- The comment above `LAZY_EVAL_MARGIN` is rewritten from the new run's
+adocs/plan_todo/S039_lazy_margin_redecide.md:203:  in `src/evaluation.hpp` `evaluate_lazy`. That is the trade and it is an SPRT
+adocs/plan_todo/S082_datagen_qsearch_leaf_labels.md:44:> `src/search.cpp` `quiescence` calls evaluate_lazy() at the top of every quiescence node,
+adocs/plan_todo/S099_correction_history.md:372:  quiescence's `evaluate_lazy()` bound (`src/search.cpp` `quiescence`) is
+adocs/plan_todo/S122_king_safety_rebuild.md:37:`LAZY_EVAL_MARGIN`, 184 as shipped since S085's SPSA run raised it from 150, for
+adocs/plan_todo/S122_king_safety_rebuild.md:160:clamped with mobility to `LAZY_EVAL_MARGIN` inside `src/evaluation.cpp`
+adocs/specs.md:658:| search | alpha-beta, transposition table, quiescence, PVS, aspiration windows, null move pruning, late move reduction, reverse futility pruning, staged generation, killers, histor
+adocs/specs.md:665:| absent, machinery | ~~quiescence never probes or stores the transposition table~~ **it does both since 2026-08-18, S094**: an entry it writes is stored at `TT_DEPTH_QS = -1`, belo
+adocs/specs.md:869:  `+/-LAZY_EVAL_MARGIN`, 184 centipawns for the two together since S085, and `evaluate()`
+adocs/specs.md:873:  from the start position on the tune build: `LazyEvalMargin` at 0, 150 and 2000
+adocs/status.md:339:`evaluate_lazy()` calls (0 disagreements). (a), node-identical, costs
+adocs/status.md:434:`adocs/data/S192_anchors.py` reads `LAZY_EVAL_MARGIN` (184) from
+adocs/status.md:446:`LAZY_EVAL_MARGIN`; fixed in this commit, and documents commits now run the
+adocs/status.md:3728:  passing (the `LAZY_EVAL_MARGIN` block, a `pawn_structure` illustration).
+adocs/status.md:5263:  raised `LAZY_EVAL_MARGIN` from 150 to 184, and `eval_model::evaluate` and
+adocs/status.md:5282:  are re-derived after a refit *and* after any move of `LAZY_EVAL_MARGIN`, which
+adocs/status.md:5338:  `QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN`, and moves with a refit **and**
+adocs/status.md:5662:  widest correction over 2696 positions is 184, which is `LAZY_EVAL_MARGIN`
+adocs/worklog.md:818:at 1.36 ns, and `evaluate_lazy(board, alpha, beta)`, which returns the cheap
+adocs/worklog.md:1164:itself to `LAZY_EVAL_MARGIN` and `evaluate_lazy()` relied on that bound. A second
+adocs/worklog.md:1168:happens exactly once, on that sum. `LAZY_EVAL_MARGIN` stays 150 until the fitted
+adocs/worklog.md:1211:> **The clamp** — now one clamp to `LAZY_EVAL_MARGIN` on `(mobility_mg + ks_mg) * mg_weight + (mobility_eg + ks_eg) * eg_weight`, not per term. Comment rewritten: the 143-vs-15
+adocs/worklog.md:1366:**A tool is being built for the margin decision.** `LAZY_EVAL_MARGIN` is 150 and
+adocs/worklog.md:1468:The cause is not king safety. `evaluate_lazy()` returned the cheap score when
+adocs/worklog.md:1471:one. The guarantee is only that the true score is within `LAZY_EVAL_MARGIN` of
+adocs/worklog.md:1481:**Fixed alone, and measured alone.** `cheap - LAZY_EVAL_MARGIN` at beta,
+adocs/worklog.md:1482:`cheap + LAZY_EVAL_MARGIN` at alpha -- still on the caller's side of the window,
+adocs/worklog.md:1781:passed pawn contribution enters the model **outside** the `LAZY_EVAL_MARGIN`
+adocs/worklog.md:1865:> - `otool -tv` on `evaluation.cpp.o` against a throwaway build of `6950be1`: `evaluate_cheap` **19 instructions before and after, instruction-for-instruction identical**. So are
+adocs/worklog.md:2159:Plus the `evaluate_lazy()` bound fix found under king safety: **0**,
+adocs/worklog.md:2218:`LAZY_EVAL_MARGIN` comment describing weights that stopped shipping at S027;
+adocs/worklog.md:3013:resolved. `src/search.cpp:125` calls `evaluate_lazy()` at the top of every
+src/evaluation.cpp:771:// evaluate_lazy() takes the shortcut on.
+src/evaluation.cpp:785:// because evaluate_expensive() clamps stage two to +/-LAZY_EVAL_MARGIN. That
+src/evaluation.cpp:803:// calls: quiescence goes through evaluate_lazy(), which is built on this
+src/evaluation.cpp:1179:// LAZY_EVAL_MARGIN can correct by twice it between them, and the shortcut is
+src/evaluation.cpp:1200:  const int bounded = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
+src/evaluation.cpp:1241:int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+src/evaluation.cpp:1254:  if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }
+src/evaluation.cpp:1255:  if (cheap + LAZY_EVAL_MARGIN <= alpha) { return cheap + LAZY_EVAL_MARGIN; }
+src/evaluation.hpp:4:#include "search_params.hpp"  // LAZY_EVAL_MARGIN
+src/evaluation.hpp:26:// score: cheap - LAZY_EVAL_MARGIN at beta, cheap + LAZY_EVAL_MARGIN at alpha.
+src/evaluation.hpp:34:// LAZY_EVAL_MARGIN better than the truth. Over the 2696 test positions the old
+src/evaluation.hpp:44:int evaluate_lazy(const board_t* board,
+src/search.cpp:1028:  // handed back cheap +/- LAZY_EVAL_MARGIN at the same node.
+src/search.cpp:1040:          : evaluate_lazy(&game->board, alpha, beta, &static_eval_is_exact);
+src/search.cpp:1118:      // keeping: evaluate_lazy() returns a genuine lower bound on this branch,
+src/search.cpp:1629:  // evaluate() and never evaluate_lazy(): the lazy shortcut returns a bound
+src/search.cpp:1741:  // safety -- to +/-LAZY_EVAL_MARGIN, and until S213 this comment named it as
+src/search_params.hpp:1016:  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)                     \
+tests/test_eval_trace.cpp:124:// Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
+tests/test_eval_trace.cpp:210:  const int64_t margin = LAZY_EVAL_MARGIN;
+tests/test_eval_trace.cpp:428:  // 2.8, after a refit or a move of LAZY_EVAL_MARGIN; the scan has read this
+tests/test_evaluation.cpp:326:  // score by more than LAZY_EVAL_MARGIN. That is a claim about every position,
+tests/test_evaluation.cpp:364:          evaluate_lazy(&game.board, full - 1000, full + 1000) == full,
+tests/test_evaluation.cpp:374:      const int beta = cheap - LAZY_EVAL_MARGIN;
+tests/test_evaluation.cpp:375:      const int at_beta = evaluate_lazy(&game.board, beta - 1000, beta);
+tests/test_evaluation.cpp:385:      const int alpha = cheap + LAZY_EVAL_MARGIN;
+tests/test_evaluation.cpp:386:      const int at_alpha = evaluate_lazy(&game.board, alpha, alpha + 1000);
+tests/test_evaluation.cpp:406:    // reported and not asserted. `correction <= LAZY_EVAL_MARGIN` used to stand
+tests/test_evaluation.cpp:408:    // two to +/-LAZY_EVAL_MARGIN, so the bound is the clamp restated rather
+tests/test_evaluation.cpp:410:    // evaluate_lazy() assertions above, which do read the shortcut's answers.
+tests/test_evaluation.cpp:413:                                      << " (clamp " << LAZY_EVAL_MARGIN << ")");
+tests/test_evaluation.cpp:436:          evaluate_lazy(&game.board, full - 1000, full + 1000, &exact);
+tests/test_evaluation.cpp:445:      const int beta = cheap - LAZY_EVAL_MARGIN;
+tests/test_evaluation.cpp:447:      evaluate_lazy(&game.board, beta - 1000, beta, &exact);
+tests/test_evaluation.cpp:450:      const int alpha = cheap + LAZY_EVAL_MARGIN;
+tests/test_evaluation.cpp:452:      evaluate_lazy(&game.board, alpha, alpha + 1000, &exact);
+tests/test_evaluation.cpp:475:  // `full >= cheap - LAZY_EVAL_MARGIN`; the true score can be anywhere up to
+tests/test_evaluation.cpp:476:  // `cheap + LAZY_EVAL_MARGIN`. Returning `cheap` therefore claims a bound up
+tests/test_evaluation.cpp:477:  // to LAZY_EVAL_MARGIN centipawns better than anything the shortcut has
+tests/test_evaluation.cpp:495:      const int beta = cheap - LAZY_EVAL_MARGIN;
+tests/test_evaluation.cpp:496:      const int lower = evaluate_lazy(&game.board, beta - 1000, beta);
+tests/test_evaluation.cpp:502:      const int alpha = cheap + LAZY_EVAL_MARGIN;
+tests/test_evaluation.cpp:503:      const int upper = evaluate_lazy(&game.board, alpha, alpha + 1000);
+tests/test_evaluation.cpp:550:      if (std::abs(raw) > LAZY_EVAL_MARGIN) { clamped++; }
+tests/test_evaluation.cpp:553:          std::clamp(raw, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN) == applied,
+tests/test_evaluation.cpp:654:  // whole king-safety correction to +/-LAZY_EVAL_MARGIN". That clamp bounds one
+tests/test_search.cpp:31:// which is this pair's cheap score less LAZY_EVAL_MARGIN (S192).
+tests/test_search.cpp:1154:    REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
+tests/test_search.cpp:1433:// judgement of the position (DEC-023): evaluate_cheap(), LAZY_EVAL_MARGIN, the
+tests/test_search.cpp:1435:// least LAZY_EVAL_MARGIN above the cheap score, so evaluate_lazy() takes its
+tests/test_search.cpp:1436:// alpha-side shortcut and the stand pat is `cheap + LAZY_EVAL_MARGIN` exactly
+tests/test_search.cpp:1437:// -- which each case re-reads from evaluate_lazy() itself rather than assumes.
+tests/test_search.cpp:1484:    const int value = evaluate_lazy(&game.board, alpha, beta, &exact);
+tests/test_search.cpp:1489:    REQUIRE_EQ(value, evaluate_cheap(&game.board) + LAZY_EVAL_MARGIN);
+tests/test_search.cpp:1576:    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+tests/test_search.cpp:1608:    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim - 1;
+tests/test_search.cpp:1655:    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+tests/test_search.cpp:1694:    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+tests/test_search.cpp:1730:    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim + 1;
+tests/test_search.cpp:1761:    const int alpha = cheap + LAZY_EVAL_MARGIN + margin + victim / 2;
+tests/test_search.cpp:1790:    const int planted = cheap + LAZY_EVAL_MARGIN + 1;
+tests/test_search.cpp:2155:  // evaluate_lazy() takes its alpha-side shortcut, so the stand pat is `cheap
+tests/test_search.cpp:2156:  // + LAZY_EVAL_MARGIN` exactly, and one above that plus the margin.
+tests/test_search.cpp:2176:    const int alpha = cheap + LAZY_EVAL_MARGIN + QS_FUTILITY_MARGIN + 1;
+tests/test_search.cpp:2180:    const int stand_pat = evaluate_lazy(&game.board, alpha, beta, &exact);
+tests/test_search.cpp:2182:    REQUIRE_EQ(stand_pat, cheap + LAZY_EVAL_MARGIN);
+tests/test_search.cpp:2388:    REQUIRE(cheap_score - LAZY_EVAL_MARGIN >= 100);
+tests/test_search.cpp:2730:  // a margin clear of the window, evaluate_lazy() returns `cheap +/-
+tests/test_search.cpp:2731:  // LAZY_EVAL_MARGIN`, a bound. The audit verified the soundness argument for
+tests/test_search.cpp:2749:    // (-10000, 10000), where neither test in evaluate_lazy() can pass.
+tests/test_search.cpp:2776:    const int lazy = evaluate_lazy(&game.board, ALPHA, BETA, &exact);
+tests/test_search.cpp:2779:    REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
+tests/test_search.cpp:2784:    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 567 - 184;
+tests/test_search.cpp:2788:    // moves LAZY_EVAL_MARGIN -- S039 is the step that re-decides it.
+tests/test_search.cpp:7225:    // LAZY_EVAL_MARGIN, which is why src/search_params.hpp records that half of
+tests/test_search_params.cpp:161:  {"LazyEvalMargin",          184,     0,    2000},
+tests/test_tuner_gradient.cpp:478:    CHECK(std::fabs(two) < LAZY_EVAL_MARGIN - 1.0);
+tests/test_tuner_gradient.cpp:599:    CHECK(std::fabs(two - LAZY_EVAL_MARGIN) > 1.0);
+tests/test_tuner_gradient.cpp:600:    if (two > LAZY_EVAL_MARGIN) {
+tools/datagen.cpp:20:// src/search.cpp:125 calls evaluate_lazy() at the top of every quiescence node,
+tools/eval_spread.cpp:5:// evaluate_lazy() skips the expensive stage when the cheap score is already
+tools/eval_spread.cpp:6:// LAZY_EVAL_MARGIN clear of the window, and evaluate_expensive() clamps itself
+tools/eval_spread.cpp:178:        std::clamp(mobility + safety, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
+tools/feature_audit.cpp:793:        if (std::fabs(stage_two) >= LAZY_EVAL_MARGIN) { continue; }
+tools/mutants/eval.py:31:  ('if (cheap - LAZY_EVAL_MARGIN >= beta) { return cheap - LAZY_EVAL_MARGIN; }',
+tools/mutants/eval.py:32:   'if (cheap >= beta) { return cheap - LAZY_EVAL_MARGIN; }'),
+tools/plan_prose_check.py:52:          shipped. Deliberately tight: "`LazyEvalMargin` at 0, 150 and 2000" is
+tools/plan_prose_check.py:100:The form is `src/search.cpp` `negamax`, `src/evaluation.hpp` `LAZY_EVAL_MARGIN`,
+tools/plan_prose_check.py:167:measured case: its whole goal is to re-decide `LAZY_EVAL_MARGIN`, its `touches:`
+tools/plan_prose_check.py:186:  * an ALL_CAPS name with an underscore in it, `LAZY_EVAL_MARGIN`. The
+tools/plan_prose_check.py:557:    purpose" comment above CHESSO_SEARCH_PARAMS, LAZY_EVAL_MARGIN's comment in
+tools/plan_prose_check.py:681:# the symbols the check is about -- `LAZY_EVAL_MARGIN` and `search_param_info()`
+tools/plan_prose_check.py:694:    survive because `X(LAZY_EVAL_MARGIN, "LazyEvalMargin", ...)` is where a UCI
+tools/spsa_s085.json:30:    { "name": "LazyEvalMargin",     "start": 150, "min": 0, "max": 2000,  "c_end": 24 },
+tools/tuner_trace.hpp:495:// truncating tapers, the last two summed and clamped to LAZY_EVAL_MARGIN. At
+tools/tuner_trace.hpp:504:  const int64_t margin = LAZY_EVAL_MARGIN;
+tools/tuner_trace.hpp:626:  const int64_t margin = LAZY_EVAL_MARGIN;
+tools/tuner_trace.hpp:816:  const double margin = LAZY_EVAL_MARGIN;
+tools/tuner_trace.hpp:930:// tapered mobility-plus-king-safety sum lies beyond LAZY_EVAL_MARGIN gives
+#
+# Re-read at the rebase base: git grep -nE 'LAZY_EVAL_MARGIN|LazyEvalMargin|evaluate_lazy' 8ef820f   (2026-10-14)
+# 400 lines in 91 files. Against the list above, by file and text (line numbers moved): no new reader in
+# src/, tests/ or tools/ -- S261 and S099 added none; two moved with their step files, two are new prose.
+# Moved:  adocs/plan_todo/S099_correction_history.md:372 -> adocs/plan_current/S099_correction_history.md:373
+#         adocs/plan_current/S261_search_block_spsa_lane.md:146 -> adocs/plan_done/S261_search_block_spsa_lane.md:146
+# New:    adocs/plan_current/S099_correction_history.md:777:  stand pat reads the raw evaluation, from the entry or `evaluate_lazy()`.
+#         adocs/status.md:76:  clamp removed in one change; `LazyEvalMargin` retires. Non-regression
+# Outside the names, found by grepping the clamp's own words (lazy, clamp) over src/, tests/ and tools/ on
+# both bases, and present at c88a961 already: tools/CMakeLists.txt:49-52, eval_spread's build comment, and
+# tests/test_evaluation.cpp:371-372, a GOLDEN block naming a retired case as its property. Both re-pointed.
+#
+# Re-read at the second rebase base: git grep -nE 'LAZY_EVAL_MARGIN|LazyEvalMargin|evaluate_lazy' 4e6ca63   (2026-10-15)
+# 402 lines in 92 files. Against the 8ef820f reading, by file and text (line numbers moved):
+# New in tests/, S023 verdict 1's two quiescence cases: tests/test_search.cpp:2478 and :2519, their alphas
+#         `cheap + LAZY_EVAL_MARGIN + margin + victim -/+ 1`, beside two calls of the file's lazy_stand_pat()
+#         at :2480 and :2521 that the names do not match. Converted as S112's are: the stand pat from
+#         empty_table_stand_pat(), alpha `stand_pat + margin + victim -/+ 1` (step file, "Rebased onto 4e6ca63").
+# New prose: adocs/plan_current/S023_capture_history.md:426  is the entry's `eval` or `evaluate_lazy()` (1291-1294),
+#         S023's record of its parent's quiescence; history once S023 completes, which it does before S039 lands.
+# Moved:  adocs/plan_current/S099_correction_history.md:373 and :777 -> adocs/plan_done/S099_correction_history.md,
+#         the same two lines: S099 completed on its H0 (7e36271). History, not edited.
+# Left:   adocs/status.md:76, the coordinator's line describing this step, rewritten since.
+# Outside the names (lazy, clamp over src/, tests/ and tools/): every clamp S099 brought -- the correction's
+# entry, read and mate-band clamps in src/correction_history.hpp, src/search.cpp, src/search_params.hpp, its
+# tests and tools/mutants/S099_correction_history.py -- left with the revert 5a04ffa; none was the stage-two
+# clamp or read it. S023 brings two, src/search.cpp:145 and src/search_params.hpp:240, both about capture
+# history's own bonus clamp at CAPT_HIST_REF_DEPTH: not the stage-two clamp, not readers.
+#
+# Re-read at the third rebase base, S023 verdict 1 reverted on its H0:
+# git grep -nE 'LAZY_EVAL_MARGIN|LazyEvalMargin|evaluate_lazy' 769ce7a   (2026-10-15)
+# 400 lines in 92 files. Against the 4e6ca63 reading, by file and text:
+# Left:   tests/test_search.cpp, S023's two quiescence alphas, with the cases (revert 0cdd39a); their conversion
+#         is dropped from this step's diff.
+# Moved:  adocs/plan_current/S023_capture_history.md:426 -> adocs/plan_done/S023_capture_history.md:426, the same line.
+# Outside the names: src/ and tools/ are 7e36271's byte for byte; tests/ differs from it only by S023's band case
+# (tests/test_evaluation.cpp) and S284's tests/test_fastchess_script.sh, neither saying lazy or clamp. S023's two
+# capture-history clamp words left with the revert. Nothing new.

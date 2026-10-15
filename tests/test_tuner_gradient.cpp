@@ -212,8 +212,8 @@ difference_check_t check_differences(const tuner_trace::model_t& model,
 }
 
 
-// The tapered mobility-plus-king-safety sum the clamp is applied to, in the
-// smooth model: the stage-two half of tuner_trace::smooth().
+// The tapered mobility-plus-king-safety sum, in the smooth model: the stage-two
+// half of tuner_trace::smooth(), which the clamp was applied to until S039.
 double stage_two(const dataset_t& data, size_t row, const double* p)
 {
   const std::vector<tuner_trace::feature_t>& features =
@@ -228,7 +228,10 @@ double stage_two(const dataset_t& data, size_t row, const double* p)
     const tuner_trace::entry_t e = data.entries[j];
     const tuner_trace::feature_t& f = features[e.feature];
 
-    if (!tuner_trace::clamped_site(f.site)) { continue; }
+    if (f.site != tuner_trace::SITE_MOBILITY &&
+        f.site != tuner_trace::SITE_KING_SAFETY) {
+      continue;
+    }
 
     sum += e.coef * (p[f.mg] * mg_weight + p[f.eg] * eg_weight);
   }
@@ -454,32 +457,14 @@ TEST_CASE("every stored row is its FEN's trace, at any thread count")
 }
 
 
-// The finite-difference case below perturbs each weight by h, and a row whose
-// stage-two sum sits within that perturbation of the margin straddles the
-// clamp's kink, where the two one-sided derivatives differ and no central
-// difference agrees with either. So it has a precondition, established here:
-// at the shipped constants no fixture row binds the clamp or comes within a
-// centipawn of it -- far more than h times any coefficient moves the sum.
-TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
-{
-  const std::string path = fixture_path();
-  REQUIRE(write_fixture(path));
-
-  dataset_t data;
-  REQUIRE(load_fixture(path, &data));
-
-  std::vector<double> params(PARAM_COUNT, 0.0);
-  tuner_layout::starting_params(params.data());
-
-  for (size_t row = 0; row < data.size(); ++row) {
-    CAPTURE(positions[row]);
-    const double two = stage_two(data, row, params.data());
-    CAPTURE(two);
-    CHECK(std::fabs(two) < LAZY_EVAL_MARGIN - 1.0);
-  }
-
-  std::filesystem::remove(path);
-}
+// "the fixture sits clear of the clamp at the shipped constants" stood here
+// until S039: the finite-difference case below perturbs each weight by h, and
+// a row whose stage-two sum sat within that perturbation of the margin
+// straddled the clamp's kink, where no central difference agrees with either
+// one-sided derivative, so the case established that no fixture row came
+// within a centipawn of it. S039 retired the clamp from the engine and from
+// the smooth score together, the objective has no kink left for a row to sit
+// near, and the precondition went with the thing it guarded against.
 
 
 // Jon Dart's check. gradient() against the central difference of the error it
@@ -560,16 +545,19 @@ TEST_CASE("gradient() is the derivative of the error it descends")
 }
 
 
-// The clamp, where the trace path and the mirror's differ on purpose. The
-// mirror's gradient ignored the clamp and pushed the mobility and king safety
-// weights on rows where they could not move the score; S100 pinned that as
-// "the clamp is where gradient() and the error part company". The trace path
-// differentiates the clamp: a row on which it binds gives those weights
-// nothing. Push the king safety weights until it binds on some rows, and the
-// gradient still matches finite differences on every parameter, including
-// the clamped block -- and on the binding rows alone it is exactly zero there
-// while it is not zero elsewhere.
-TEST_CASE("the clamp's derivative is exact where it binds")
+// Where the stage-two sum is large, its weights still have a gradient, and it
+// is the derivative of the error. From S262 until S039 this was the clamp's
+// case, "the clamp's derivative is exact where it binds": the trace path
+// differentiated the clamp, so a row on which it bound gave the mobility and
+// king safety weights nothing, and the case asserted exactly zero there. Before
+// S262 the mirror's gradient ignored the clamp while its forward model applied
+// it, which S100 pinned as "the clamp is where gradient() and the error part
+// company". S039 retired the clamp from the engine and from the smooth score
+// together, so the case asserts the reverse on the same rows: push the king
+// safety weights until stage two passes the old margin on some rows, and the
+// gradient matches finite differences on every parameter -- the block a clamp
+// would silence included -- and on those rows alone that block is not silent.
+TEST_CASE("the stage-two weights move the rows past the old margin")
 {
   const std::string path = fixture_path();
   REQUIRE(write_fixture(path));
@@ -580,33 +568,33 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   std::vector<double> params(PARAM_COUNT, 0.0);
   tuner_layout::starting_params(params.data());
 
-  // Measured at S262: +40 on each of the eighteen king safety weights binds
-  // the clamp on one row of the 34, at 263.7 against 184, and leaves the
-  // nearest other at 150 -- every row at least a centipawn from the kink, which
-  // the precondition below re-establishes. A
-  // much larger push saturates the sigmoid everywhere, which makes the finite
+  // NOT A GOLDEN (DEC-142): the margin src/search_params.hpp shipped until
+  // S039, a fixed historical number rather than a reading, so nothing
+  // re-derives it. A row past it is one the clamp would have taken the
+  // gradient away from.
+  constexpr double RETIRED_LAZY_MARGIN = 184.0;
+
+  // Measured at S262: +40 on each of the eighteen king safety weights takes
+  // one row of the 34 to 263.7 and leaves the nearest other at 150. A much
+  // larger push saturates the sigmoid everywhere, which makes the finite
   // difference itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
     params[KS_MG_BASE + t] += 40.0;
     params[KS_EG_BASE + t] += 40.0;
   }
 
-  std::vector<uint32_t> binding;
+  std::vector<uint32_t> large;
   for (size_t row = 0; row < data.size(); ++row) {
-    const double two = std::fabs(stage_two(data, row, params.data()));
-    CAPTURE(positions[row]);
-    CAPTURE(two);
-    CHECK(std::fabs(two - LAZY_EVAL_MARGIN) > 1.0);
-    if (two > LAZY_EVAL_MARGIN) {
-      binding.push_back(static_cast<uint32_t>(row));
+    if (std::fabs(stage_two(data, row, params.data())) > RETIRED_LAZY_MARGIN) {
+      large.push_back(static_cast<uint32_t>(row));
     }
   }
 
-  // The precondition, established and not assumed: the clamp binds on some
-  // rows and not on all of them.
-  CAPTURE(binding.size());
-  REQUIRE(!binding.empty());
-  REQUIRE(binding.size() < data.size());
+  // The precondition, established and not assumed: some rows lie past the
+  // old margin and not all of them do.
+  CAPTURE(large.size());
+  REQUIRE(!large.empty());
+  REQUIRE(large.size() < data.size());
 
   const std::vector<uint32_t> index = every_row(data);
   const std::vector<double> target = results_of(data);
@@ -618,39 +606,32 @@ TEST_CASE("the clamp's derivative is exact where it binds")
 
   // h = 0.005, half the case above's: the push makes some scores large, so
   // the sigmoid's curvature -- the O(h^2) term -- is larger here, and at 0.01
-  // the worst read 6.8e-7, too near the tolerance to survive a refit. S100's
-  // sweep puts 0.005 still above the cancellation floor.
+  // the worst read 6.8e-7 on S262's clamped objective, too near the tolerance
+  // to survive a refit. S100's sweep puts 0.005 still above the cancellation
+  // floor.
   const difference_check_t check =
       check_differences(tuner_trace::engine_model(), data, params, k, index,
                         target, analytic, 0.005);
 
   CAPTURE(check.worst);
   CAPTURE(check.worst_param);
-  MESSAGE("clamp case: worst relative error " << check.worst << " at parameter "
-                                              << check.worst_param);
+  MESSAGE("large stage two: worst relative error "
+          << check.worst << " at parameter " << check.worst_param);
   CHECK(check.worst < 1e-6);
 
-  // On the binding rows alone, the clamped block's gradient is exactly zero
-  // and something else's is not -- the rows are in the sum, and only the
-  // clamped weights are silent there.
-  std::vector<double> on_binding;
-  tuner_trace::gradient(data, params.data(), k, binding, 0, binding.size(), 1,
-                        target, &on_binding);
+  // On the large rows alone, the mobility and king safety block has a
+  // gradient -- the rows are in the sum, and the weights move their scores.
+  std::vector<double> on_large;
+  tuner_trace::gradient(data, params.data(), k, large, 0, large.size(), 1,
+                        target, &on_large);
 
-  double clamped_block = 0.0;
-  double elsewhere = 0.0;
-  for (size_t p = 0; p < PARAM_COUNT; ++p) {
-    if (p >= MOB_MG_BASE && p < KS_EG_BASE + KING_SAFETY_COUNT) {
-      clamped_block = std::max(clamped_block, std::fabs(on_binding[p]));
-    } else {
-      elsewhere = std::max(elsewhere, std::fabs(on_binding[p]));
-    }
+  double stage_two_block = 0.0;
+  for (size_t p = MOB_MG_BASE; p < KS_EG_BASE + KING_SAFETY_COUNT; ++p) {
+    stage_two_block = std::max(stage_two_block, std::fabs(on_large[p]));
   }
 
-  CAPTURE(clamped_block);
-  CAPTURE(elsewhere);
-  CHECK(clamped_block == 0.0);
-  CHECK(elsewhere > 1e-9);
+  CAPTURE(stage_two_block);
+  CHECK(stage_two_block > 1e-9);
 
   std::filesystem::remove(path);
 }
@@ -879,14 +860,22 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // under Adam and 0.20 under AdaGrad, both the rook's, the largest 3.8 and
     // 4.4, both the knight's (S275 read 0.22 and 3.7 on the mirror's path,
     // which ignored the clamp). Re-read with `-s` on this case if the
-    // constants or the fixture move; 0.1 is far above the hold's 1e-9 and
-    // below the walk.
+    // constants or the fixture move; the floor sits far above the hold's
+    // 1e-9 and below the walk.
+    //
+    // **0.01 since S039, DEC-292 (the owner's).** S039 took the stage-two
+    // clamp out of the trace's gradient, which moves this fixture's
+    // descent: `psqt_eg[king]` walks 0.094 under Adam and 0.039 under
+    // AdaGrad (0.41 and 0.89 before it), under the 0.1 the floor was until
+    // then, while the hold reads about 2.5e-15. The other six walks read
+    // 0.46 to 3.9. 0.01 keeps the floor about seven orders of magnitude
+    // above the hold and under every walk. In S039's commit only.
     for (const direction_t& direction : directions) {
       CAPTURE(direction.name);
       CAPTURE(level_shift(direction, plain));
       CAPTURE(level_shift(direction, held));
 
-      CHECK(std::fabs(level_shift(direction, plain)) > 0.1);
+      CHECK(std::fabs(level_shift(direction, plain)) > 0.01);
       CHECK(std::fabs(level_shift(direction, held)) < 1e-9);
     }
 

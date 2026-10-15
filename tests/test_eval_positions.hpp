@@ -132,6 +132,9 @@ inline const std::vector<std::string> positions = {
     // position under these weights, so the middle two are 11 and 19. DEC-057 is
     // the decision to re-measure; what it does not permit is lowering the
     // thresholds below to whatever came out.
+    // The clamp's removal is DEC-169's other mover: S039 re-measured these four
+    // by the same scan, and all four are still at 69/24 among 34 rows there
+    // (adocs/data/S039_truncation_scan.txt).
     "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
     "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
     "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
