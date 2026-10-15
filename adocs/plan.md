@@ -307,8 +307,9 @@ is typed by hand.
 | S099 | the pawn key and the correction are reverted | 4 h 36 m | 9916 | `{0, 5}` | H0, -3.47 +/- 5.03 |
 | S023 | 1's H0: capture history in the margins reverts | 4 h 21 m | 9330 | `{0, 5}` | H0, -3.80 +/- 5.18 |
 | S283 | S099's pair gains at 32+0.32, S099 relands | 8 h 48 m | 4738 | `{0, 10}` | H1, +8.51 +/- 6.70 |
+| S039 | the lazy shortcut and the clamp are kept | 2 h 23 m | 5116 | `{-5, 0}` | H0, -12.23 +/- 7.08 |
 
-**The ledger holds 49: mean 6 h 05 m, median 5 h 25 m, 616429 games in 298.49 hours, 2065.2 an hour across the set.** **Fast class**, an effect outside the bounds interval -- eighteen runs, mean **1 h 51 m**. **Slow class**, inside it, on a bound or a true zero -- 31 runs, mean **8 h 32 m**.
+**The ledger holds 50: mean 6 h 01 m, median 5 h 11 m, 621545 games in 300.87 hours, 2065.8 an hour across the set.** **Fast class**, an effect outside the bounds interval -- nineteen runs, mean **1 h 53 m**. **Slow class**, inside it, on a bound or a true zero -- 31 runs, mean **8 h 32 m**.
 
 ### Priced by class
 
