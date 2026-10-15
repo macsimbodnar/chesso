@@ -1,0 +1,92 @@
+# S286, 2026-10-15: the table-less goldens of tests/test_search.cpp, read on
+# S286's tree (8560a36 plus S099's pawn key and correction relanded) against
+# the parent's (.ref-builds/be48e02, whose src/ is 8560a36's). They build their
+# own search state with no pawn correction table and drive no UCI path.
+#
+# 1. The node band: python3 adocs/data/S192_node_budget.py build/tests/test_search
+
+binary        /home/max/ws/chesso-s286b/build/tests/test_search
+count         13446 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        53784  (4x the count)
+floor         2689  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  4.14x the shipping floor and 0.21 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.83 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+
+# 2. Each mined row's own script on S286's library (cand) and the parent's
+#    (parent), the commands in .tuning/coord/S286/p2/rows.sh:
+#    extra-ply row and capture table: adocs/data/S230_mine_r01_row.py depths
+#      --lo 3 --hi 12 -- one field per depth, the mate distance or '-'; no
+#      node count is printed, so these compare distance for distance
+#    multicut (E21) row: adocs/data/S097_mine_mate_row.py sweep --lo 7 --hi 14
+#    ProbCut (B04) row: adocs/data/S277_mine_mate_row.py sweep --lo 7 --hi 12
+#      -- one field per depth, distance:nodes:milliseconds; the two compare
+#      distance and nodes, and differ in the milliseconds alone
+
+== extra_ply, cand
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+== extra_ply, parent
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+
+== capmates, cand
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== capmates, parent
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+
+== e21, cand
+-:28920:4 m6:254281:39 m5:614169:77 m5:1023029:143 m5:1950316:229 m5:2804579:421 m5:7462650:895 m5:9236809:1378 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+== e21, parent
+-:28920:4 m6:254281:35 m5:614169:74 m5:1023029:141 m5:1950316:227 m5:2804579:417 m5:7462650:894 m5:9236809:1366 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+
+== b04, cand
+-:15215:3 -:37408:5 m5:83765:12 m5:110157:19 m5:247267:32 m5:489095:78 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+== b04, parent
+-:15215:2 -:37408:4 m5:83765:11 m5:110157:17 m5:247267:36 m5:489095:82 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+
+# rows.log: extra_ply identical
+# rows.log: capmates identical
+# rows.log: e21 DIFFERS
+# rows.log: b04 DIFFERS
+# (e21 and b04 'DIFFERS' is the milliseconds field only; every distance and
+# node count is equal)
+
+# 3. The mutation pass (adocs/data/S286_mutation_pass.tsv) on the rows: the
+#    first failing assertion of 'pruning does not hide a forced mate' under
+#    each row's guard, from each mutant's ctest log. The rows sit in one test
+#    case with fatal REQUIREs, so a mutant stops at the first row it breaks.
+#    Lines are fixture 4063e59's: 4361 extra-ply, 4668 multicut, 4808
+#    ProbCut, 5218 the capture table.
+J01_no_tt_move_inverted: test_search.cpp:4361: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the extra ply hides, depth 8
+J02_no_tt_move_dropped: test_search.cpp:4361: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the extra ply hides, depth 8
+J03_site_entry_absent_only: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+E21_multicut_mate_band_gate_dropped: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+B04_probcut_defender_gate_dropped: test_search.cpp:4808: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate probcut hides, depth 10
+C02_capture_gives_check: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+C05_capture_threshold_sign: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+C07_capture_first_move: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+R01_extra_reduction_gives_check: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+R02_extra_reduction_sign: test_search.cpp:5218: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: capture mate, 3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33, depth 11, red under C02, C05, R02, since S116
+G04_estimate_stored_as_eval: test_search.cpp:4668: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+    logged: mate the multicut hides, depth 10
+LQ02_late_skip_reaches_extra_ply: test_search.cpp:10035: FATAL ERROR: REQUIRE_EQ( probe.reduction[k], SEE_LMR_EXTRA ) is NOT correct!
+LQ03_late_skip_reaches_capture_rule: test_search.cpp:9983: FATAL ERROR: REQUIRE_EQ( rule_that_pruned(probe, late), PRUNE_SEE_CAPTURE ) is NOT correct!

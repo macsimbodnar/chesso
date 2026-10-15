@@ -170,6 +170,10 @@ const game_t* uci_game();
 const transposition_table_t* uci_tt();
 void uci_wait_for_search();
 
+// And the pawn correction table the UCI layer's searches learn into, S099, so
+// a case can see what `ucinewgame` and uci_init() leave in it.
+const pawn_correction_t* uci_pawn_correction();
+
 // Aspiration window failures in the last iterative_deepening_search(). Test
 // instrumentation, and the precondition a mate case driven through that
 // function needs: without it the case cannot tell a narrow window that held

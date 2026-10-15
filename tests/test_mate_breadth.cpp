@@ -86,10 +86,10 @@
 // test_engine.
 static constexpr int SCORE_DEPTH = 10;
 
-// GOLDEN (DEC-142): 159, the fewest exact mate distances the engine may find
+// GOLDEN (DEC-142): 163, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 160 with the guard shipping, 156 with it weakened (S261, below).
-// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 159, which
+// 164 with the guard shipping, 160 with it weakened (S286, below).
+// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 163, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
@@ -97,13 +97,14 @@ static constexpr int SCORE_DEPTH = 10;
 // run.
 // Margin: 1 below the shipping count, 3 above the weakened one. The S156
 // script's rule admits any floor strictly above what the weakened guard finds
-// and at or below what ships -- 157 to 160 against S261's 156 and 160 -- and
-// flags one outside that band as no longer separating. 159 is the floor this
-// gate has always kept, 1 below the shipping count: a single mate the shipping
+// and at or below what ships -- 161 to 164 against S286's 160 and 164 -- and
+// flags one outside that band as no longer separating. The floor this gate has
+// always kept sits 1 below the shipping count: a single mate the shipping
 // build loses to an unrelated tree change does not turn it red, and the
-// weakened guard still does with 3 to spare. (Before S261 the gap was 3, 146
-// against 143, and the spare point went above the weakened end because that
-// was the end that had moved, 139 to 141 to 143.)
+// weakened guard still does with 3 to spare. (At S261 the gap was 4 as well,
+// 160 against 156; at S250 it was 3, 146 against 143, and the spare point
+// went above the weakened end because that was the end that had moved, 139 to
+// 141 to 143.)
 // Property beside it: the `wrong_sign == 0` assertion in the same case -- a
 // mate score for the side being mated is a defect at any total, so it is
 // asserted at zero and carries no floor.
@@ -118,7 +119,20 @@ static constexpr int SCORE_DEPTH = 10;
 // shipping and 145 weakened, so the floor of 145 no longer separated and the
 // gate built at RfpMinPly 1 stayed green there -- found by S261 and closed by
 // this re-derivation (DEC-278).
-static constexpr int EXACT_FLOOR = 159;
+//
+// **163 since S286, re-derived by the script (DEC-142).** S099's pawn
+// correction, relanded, raises both ends: on S286's tree S156's sweep reads
+// **164** exact at RfpMinPly 3, 165 at 2 and **160** at 1 and 0, so the floor
+// of 159 no longer separates -- the gate built at RfpMinPly 1 reads 160, green
+// at 159, the failure the script exists to catch. The floor rises 159 -> 163,
+// 1 below the shipping count and 3 above the weakened one, and the gate built
+// at RfpMinPly 1 with 163 compiled in is red at 160
+// (`adocs/data/S286_mined_floor.log`). A rise tightens the test, so no
+// decision is owed (DEC-295's guard asks that the floor hold or rise); it
+// goes back to 159 with a revert of S286. S099 read the same ends on its own
+// landing, whose code is this tree's line for line, and its H0 took the 163
+// back out.
+static constexpr int EXACT_FLOOR = 163;
 
 
 struct row_t

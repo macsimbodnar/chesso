@@ -5,7 +5,22 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-15, by hand.
+Updated: 2026-10-16, by hand.
+
+## 2026-10-16: S286 done -- S099 relanded
+
+**S286 done**: S099's pawn key and pawn-keyed correction relanded onto S039's
+reverted tree, `8758622`'s code line for line, shipping on S283's H1 at
+32+0.32 without an SPRT (DEC-286). bench 5636835 -> 6042933. Carry ceilings
+0, 5, 4, 0, 0, 1 -> 2, 5, 4, 0, 1, 2 and budgets C 1200000, D 500000,
+F 300000, within the owner's pre-approved guard (DEC-295); `EXACT_FLOOR`
+159 -> 163; mined rows unmoved (the correction is not attached in their
+table-less searches). 34 mutants killed, Debug self-play 0 Assertion,
+`gate_extra` green. Fast check: 5 findings, fixed. S110 and S111 are now
+eligible, each its own verdict.
+
+**Next:** S082 rebased onto S286 (blind ready on `ced5d77`, one more pass),
+its phase 2 and the night's pool; S287 (filler) beside it.
 
 ## 2026-10-15: S039 read H0 and is reverted; S283 read H1, S099 relands
 
@@ -74,9 +89,8 @@ commit moves it to `plan_done/` and is gated.
   ceiling 0 -> 1. Both stand on S261's H1.
 - DEC-284 is moot (S099's H0).
 
-**Order from here (DEC-294):** S286's phase 2 -> S082 rebased onto S286,
-its phase 2 and the night's pool -> S110, S111 (conditional on S286) -> S083.
-S287 (filler) whenever an agent is free.
+**Order from here (DEC-294):** S082 rebased onto S286, its phase 2 and the
+night's pool -> S110, S111 -> S083. S287 (filler) whenever an agent is free.
 
 ## 2026-10-14: S099 done -- H0, reverted; the owner books an SPRT at 32+0.32
 

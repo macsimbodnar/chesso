@@ -4,6 +4,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include "eval_tables.hpp"  // PAWN, the unit CorrHistMax's range is declared in
 #include "search.hpp"
 #include "search_params.hpp"
 #include "test_helpers.hpp"
@@ -84,6 +85,10 @@
 // (1)) and `LmrDivisor` (DEC-278) -- and six came back where they started:
 // `LmrNotImproving`, `LmrTtCapture`, `LmrPv`, `LmrNoTtMove`, `SeeCaptureCoeff`
 // and `LmpDepthCoeff`. The count stays 73 and no range moves.
+// S099 adds two: `CorrHistMax`, the largest pawn correction applied, whose 0
+// is the parent's tree, and `CorrHistWeightCap`, the cap on the correction's
+// update weight. The count goes 73 to 75; S099's H0 took them out and S286
+// relanded them on S283's H1.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -96,7 +101,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 73 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 75 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -130,6 +135,8 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RfpTtEstimate",             1,     0,       1},
   {"RazorMargin",             242,     0,    2000},
   {"RazorDepth",                1,     0,       8},
+  {"CorrHistMax",              47,     0,      94},
+  {"CorrHistWeightCap",       144,     1,     256},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},
   {"LmrBase",                 113,     0,     400},
@@ -302,6 +309,44 @@ TEST_SUITE("search parameters")
            " this list holds. A bound is a claim about what the "
            "parameter may be set to and moves in its own commit."));
     }
+  }
+
+
+  // S099's two ranges are declared by purpose against three numbers the tree
+  // ships elsewhere, so the purpose is held here rather than restated: a
+  // refit of the pawn or a change to the update's scale has to move the range
+  // with it, in the same commit, or this goes red.
+  //
+  //   CorrHistMax        0 to one pawn in chesso's own scale, PAWN in
+  //                      src/eval_tables.hpp
+  //   CorrHistWeightCap  1 to CORRHIST_SCALE, past which the update would
+  //                      overshoot the observation it moves toward
+  //
+  // And the representation does not bind either range: at both range tops the
+  // update's worst sum, two products of the clamp and the scale, is far inside
+  // int32 (src/correction_history.hpp).
+  TEST_CASE("the correction's ranges are the ones their purpose declares")
+  {
+    const int max_index = index_of("CorrHistMax");
+    const int cap_index = index_of("CorrHistWeightCap");
+
+    REQUIRE(max_index >= 0);
+    REQUIRE(cap_index >= 0);
+
+    const search_param_t& max_param =
+        search_param_info(static_cast<size_t>(max_index));
+    const search_param_t& cap_param =
+        search_param_info(static_cast<size_t>(cap_index));
+
+    CHECK_EQ(max_param.min_value, 0);
+    CHECK_EQ(max_param.max_value, PAWN);
+    CHECK_EQ(cap_param.min_value, 1);
+    CHECK_EQ(cap_param.max_value, CORRHIST_SCALE);
+
+    const int64_t worst = 2LL * max_param.max_value * CORRHIST_GRAIN *
+                          static_cast<int64_t>(CORRHIST_SCALE);
+
+    CHECK(worst < static_cast<int64_t>(INT32_MAX));
   }
 
 

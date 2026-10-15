@@ -439,6 +439,50 @@
   X(RAZOR_MARGIN,      "RazorMargin",     242,    0, 2000)                     \
   X(RAZOR_DEPTH,       "RazorDepth",      1,      0, 8)                        \
                                                                                \
+  /* PAWN CORRECTION HISTORY, S099. A running correction on the static         \
+     score, learned inside a game from the only stronger estimator there is:   \
+     what the search returned for the same position. The table is              \
+     `pawn_correction_t` in src/data_structures.hpp, a slot per side to move   \
+     and pawn key (board_t::pawn_hash); src/correction_history.hpp holds its   \
+     read and its update. negamax_at() adds the slot to the node's raw static  \
+     evaluation once, at the compute-or-read site, and everything below it     \
+     reads the corrected number -- the improving stack, the futility estimate, \
+     reverse futility, razoring -- while the table's evaluation field and the  \
+     update's difference read the raw one, so nothing compounds through the    \
+     table.                                                                    \
+                                                                               \
+     CORRHIST_MAX is the largest correction applied, in evaluation units. The  \
+     entry is clamped to +/-CORRHIST_MAX * CORRHIST_GRAIN at every update and  \
+     its read to +/-CORRHIST_MAX, so the corrected score moves by at most this \
+     much; the corrected score is then held inside the mate band's edge as     \
+     well, in src/search.cpp. Seed **47, form (c), the midpoint of a range     \
+     declared by purpose** in chesso's own scale (DEC-134): 0 is off, and past \
+     one pawn -- src/eval_tables.hpp, where a pawn is 94 -- a correction       \
+     rewrites the material balance instead of correcting the static score.     \
+     94 / 2 = 47, the only constant on the read path with Elo in it, and the   \
+     one S127 sweeps. **0 is off by construction** -- every entry is clamped   \
+     to 0, the corrected score is the raw one -- and DEC-215 wants that proved \
+     on the tree: the tune build at 0 must print the parent's bench stream.    \
+                                                                               \
+     CORRHIST_WEIGHT_CAP caps the update's weight, `min((depth + 1)^2, cap)`   \
+     out of CORRHIST_SCALE, 256: an entry moves weight / 256 of the way to     \
+     each observation. Seed **144, form (b)**, arithmetic over a constant the  \
+     tree already ships: the weight saturates at chesso's own median remaining \
+     depth, CONT_HIST_REF_DEPTH in src/data_structures.hpp (11, the median     \
+     S085's tuning control reaches), so (11 + 1)^2 = 144. Range 1 to 256 by    \
+     arithmetic: at 256 an entry is the newest observation alone and the       \
+     table has no memory, the average's off value; at 0 nothing would ever be  \
+     learned, which CorrHistMax 0 already says better. The cap and the scale   \
+     set one quantity, the maximum rate cap / scale, and the cap is the half   \
+     S127 moves; the quadratic against a linear-in-depth weight is a sweep     \
+     there too, not a seed.                                                    \
+                                                                               \
+     No engine's weight, cap, grain, clamp or size is behind either number,    \
+     wherever it is republished (DEC-105, DEC-134); the step file keeps those  \
+     records as anti-seeds. Implemented from the description, DEC-221. */      \
+  X(CORRHIST_MAX,        "CorrHistMax",        47, 0,  94)                     \
+  X(CORRHIST_WEIGHT_CAP, "CorrHistWeightCap", 144, 1, 256)                     \
+                                                                               \
   /* Null move pruning gives the opponent a free move and searches what is     \
      left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \
      Deeper searches can afford to give up more, since what is left is still   \

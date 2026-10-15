@@ -41,6 +41,7 @@
 #include <thread>
 #include <vector>
 #include "bitboard.hpp"
+#include "correction_history.hpp"
 #include "evaluation.hpp"
 #include "search.hpp"
 #include "transposition_table.hpp"
@@ -112,6 +113,7 @@ std::atomic<uint64_t> skipped_score{0};
 // fixed cost per move whatever depth that happens to buy.
 search_t run_search(game_t* game,
                     transposition_table_t* tt,
+                    pawn_correction_t* correction,
                     uint64_t nodes,
                     int max_depth)
 {
@@ -122,6 +124,12 @@ search_t run_search(game_t* game,
   search_state_t& state = *state_owner;
   state.stop = &never_stop;
   state.tt = tt;
+
+  // The pawn correction table the UCI layer's searches carry, S099, so the
+  // games written here are played by the engine a match plays and not by the
+  // one before S099. Owned by the worker and cleared per game, as the UCI
+  // layer clears its own on `ucinewgame`.
+  state.pawn_correction = correction;
 
   tt_new_search(tt);
 
@@ -223,6 +231,10 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
   transposition_table_t tt = {};
   tt_resize(&tt, static_cast<size_t>(opts.tt_mb));
 
+  // On the heap for search_state_t's reason in run_search() -- this is a
+  // worker thread -- though at the census's size it is 32 KiB. S099.
+  auto correction = std::make_unique<pawn_correction_t>();
+
   std::mt19937_64 rng(opts.seed + index);
 
   const uint64_t share =
@@ -240,6 +252,7 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
     attempts++;
     samples.clear();
     tt_reset(&tt);
+    correction_reset(correction.get());
 
     if (!load_FEN(DEFAULT_POSITION, &game)) { break; }
 
@@ -258,7 +271,8 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
     // An opening already decided teaches the evaluation about positions no
     // reasonable game reaches, and its label is fixed before a single move of
     // real play.
-    const search_t opening = run_search(&game, &tt, opts.nodes, MAX_DEPTH);
+    const search_t opening =
+        run_search(&game, &tt, correction.get(), opts.nodes, MAX_DEPTH);
 
     if (opening.mate_found || std::abs(opening.score) > opts.opening_limit) {
       continue;
@@ -272,7 +286,8 @@ void play_games(const options_t& opts, unsigned index, FILE* out)
       result = terminal_result(&game);
       if (result >= 0.0) { break; }
 
-      const search_t found = run_search(&game, &tt, opts.nodes, MAX_DEPTH);
+      const search_t found =
+          run_search(&game, &tt, correction.get(), opts.nodes, MAX_DEPTH);
 
       if (found.best_move == 0) { break; }
 

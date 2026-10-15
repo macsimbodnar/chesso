@@ -92,9 +92,10 @@ m("G04_estimate_stored_as_eval", S, "search/pruning",
   'is left alone only because it reads the stack, and a correction table would '
   'learn the difference between a search score and itself (S099). No crash, no '
   'wrong bound, and the field is clamped to int16 on the way in so even a mate '
-  'score arrives looking ordinary',
+  'score arrives looking ordinary. Re-anchored at S099, whose store writes '
+  '`raw_eval`, the static score before the pawn correction',
   ('    tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,\n'
-   '                   static_eval);',
+   '                   raw_eval);',
    '    tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,\n'
    '                   pruning_eval);'),
   origin="S234")

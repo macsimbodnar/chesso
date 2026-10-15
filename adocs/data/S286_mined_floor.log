@@ -1,0 +1,37 @@
+# S286, 2026-10-15: python3 adocs/data/S156_mined_floor_sweep.py --ref <fixture> --floor <n> --jobs 12
+# Fixtures are commit objects on no branch: 8560a36 plus S286 (S099's pawn key
+# and pawn correction relanded, src/ 8758622's). First at --floor 159 (9aece02), the
+# floor the parent ships: it no longer separates, the gate built at RfpMinPly 1
+# reading 160, green. Then at --floor 163 (138630b, the same tree with 163
+# compiled in), 1 below the shipping 164: red at 160.
+
+318 positions, depth 10, ref 9aece023d70adb690195acc6543c45833e99bf82
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     164          167            0   15.8s
+          2     165          168            0   15.9s
+          1     160          162            0   15.4s
+          0     160          162            0   15.4s
+
+  floor 159, asserted by tests/test_mate_breadth.cpp
+    shipping value 164, weakened-guard value 160, gap 4
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: GREEN, WHICH IS THE FAILURE
+    /tmp/S156_sweep_y534vzsp/tests/test_mate_breadth.cpp:255: MESSAGE: mined set at depth 10: 160 exact, 162 right sign, 0 wrong sign
+S156 rc=1
+
+318 positions, depth 10, ref 138630bcb158c8aa8e73d148b51829df27bb8677
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     164          167            0   15.9s
+          2     165          168            0   15.8s
+          1     160          162            0   15.5s
+          0     160          162            0   15.4s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 164, weakened-guard value 160, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_ze81zoxg/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 160 exact, 162 right sign, 0 wrong sign
+    logged: the mined set reads 160 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down

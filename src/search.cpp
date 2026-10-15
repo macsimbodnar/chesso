@@ -7,11 +7,14 @@
 #include <limits>
 #ifdef CHESSO_TUNE
 // The late move pruning census below writes a file at exit, and only the tune
-// build has one. Nothing the release binary compiles needs either header.
+// build has one. Nothing the release binary compiles needs either header, nor
+// the set S099's pawn key census keeps.
 #include <cstdlib>
 #include <fstream>
+#include <unordered_set>
 #endif
 #include "bitboard.hpp"
+#include "correction_history.hpp"
 #include "evaluation.hpp"
 #include "log.hpp"
 #include "search_params.hpp"
@@ -789,7 +792,56 @@ f22_census_t::~f22_census_t()
       << "qmoves\t" << f22_census.qmoves << '\n'
       << "dead\t" << f22_census.dead << '\n';
 }
+
+
+// S099's census of the pawn correction table's reach (DEC-270): how many
+// distinct pawn keys, per side to move, the search reads a correction for in
+// one game's worth of search. The table is sized from it, at the next power of
+// two above the 95th percentile of a position's count over S021's 300
+// positions at depth 12 (the step file's section 4).
+//
+// Off unless CHESSO_PAWN_KEY_CENSUS names a file, read once: a set insert at
+// every node is not a cost a tuning run should pay for nothing. When on, every
+// key the correction is read for is recorded, and the flush below -- called by
+// the UCI layer's new-game reset -- appends one line per game, `<white>
+// <black>`, and starts the next game empty. Tune build only; the binary an
+// SPRT measures compiles none of it. adocs/data/S099_pawn_key_census.py
+// drives it.
+struct pawn_key_census_t
+{
+  const char* path = std::getenv("CHESSO_PAWN_KEY_CENSUS");
+  std::unordered_set<hash_t> keys[2];
+};
+
+pawn_key_census_t pawn_key_census;
+
+inline void census_pawn_key(color_t side, hash_t key)
+{
+  if (pawn_key_census.path != nullptr) {
+    pawn_key_census.keys[side].insert(key);
+  }
+}
 }  // namespace
+
+
+void search_pawn_key_census_flush()
+{
+  if (pawn_key_census.path == nullptr) { return; }
+  if (pawn_key_census.keys[WHITE].empty() &&
+      pawn_key_census.keys[BLACK].empty()) {
+    return;
+  }
+
+  std::ofstream out(pawn_key_census.path, std::ios::app);
+
+  if (out) {
+    out << pawn_key_census.keys[WHITE].size() << ' '
+        << pawn_key_census.keys[BLACK].size() << '\n';
+  }
+
+  pawn_key_census.keys[WHITE].clear();
+  pawn_key_census.keys[BLACK].clear();
+}
 #endif
 
 
@@ -945,6 +997,101 @@ bool improving_at(const search_state_t* state, size_t ply, bool in_check)
   // checks. True, per the reference definition.
   return true;
 }
+
+
+// THE CORRECTED STATIC EVALUATION, S099. The raw evaluate() of this node plus
+// what the pawn correction table has learned for its side to move and pawn
+// key, applied exactly once, at negamax_at's compute-or-read site, and to the
+// static evaluation only: never to a table cutoff's score, never to a score a
+// search returned, never to the evaluation field of a store. The entry holds
+// the raw number, so a correction read back through the table is not
+// corrected a second time.
+//
+// Bounded twice. The correction is at most CorrHistMax (correction_value()),
+// and the sum is then held strictly inside the mate band's edge, so no
+// correction can carry a static score into the band or across it, whatever
+// the raw score is: a static score never reaches the band on its own
+// (tests/test_evaluation.cpp "the static score never reaches the mate band"),
+// and a margin that subtracts from or adds to a static score is guarded on
+// the window and not on the score, so a corrected number in the band would
+// prune against a distance as if it were a value. This engine has no
+// tablebase, so the mate band is the whole of the decisive range.
+//
+// No table, no correction: every caller that builds its own search state and
+// attaches none sees the raw number, which is the tree before S099.
+static inline int corrected_static_eval(const search_state_t* state,
+                                        const board_t* board,
+                                        int raw_eval)
+{
+#ifdef CHESSO_TUNE
+  census_pawn_key(board->active_color, board->pawn_hash);
+#endif
+
+  if (state->pawn_correction == nullptr) { return raw_eval; }
+
+  const int correction = correction_value(
+      state->pawn_correction, board->active_color, board->pawn_hash);
+
+  return std::clamp(raw_eval + correction, -(MATE_MIN - 1), MATE_MIN - 1);
+}
+
+
+int search_corrected_eval_probe(const search_state_t* state,
+                                const board_t* board,
+                                int raw_eval)
+{ return corrected_static_eval(state, board, raw_eval); }
+
+
+// WHETHER A NODE MAY TEACH THE CORRECTION TABLE, S099: the published gating,
+// from the step file's description, each clause a way the difference between
+// the search's score and the raw static evaluation stops meaning "how wrong
+// the static evaluation was here".
+//
+//   in check        the node has no static evaluation (TT_EVAL_NONE), and the
+//                   side to move is forced
+//   capture best    the score is a material swing the static evaluation could
+//                   not have seen and is not meant to; a quiet best move, or
+//                   none, leaves the difference positional. **Not at a
+//                   fail-low**: negamax_at always names a best move (it
+//                   asserts one before its store), and at a fail-low that is
+//                   only the move whose upper bound came out highest, not a
+//                   move the node chose -- this engine's form of the
+//                   published "no best move", so its being a capture refuses
+//                   nothing. A promotion that takes nothing is quiet here, as
+//                   it is to the history tables (`is_capture` in negamax_at)
+//   mate score      a distance and not a value: learned, it would move the
+//                   static score of every position sharing the structure by
+//                   the size of a mate. Tested on the search's own score and
+//                   never on the ply-normalised number the store writes,
+//                   which normalize_score() has shifted by the ply
+//   bound direction a fail-high's score is a floor on the value and teaches
+//                   only where it already stands at or above the static
+//                   evaluation; a fail-low's is a ceiling and teaches only at
+//                   or below it; an exact score always. Otherwise the sign of
+//                   the error is unknown.
+static inline bool correction_may_learn(bool in_check,
+                                        int raw_eval,
+                                        move_t best_move,
+                                        node_type_t type,
+                                        int score)
+{
+  if (in_check || raw_eval == TT_EVAL_NONE) { return false; }
+  if (type != TT_ALPHA_NODE && MOVE_CAPTURE(best_move) != 0) { return false; }
+  if (score >= MATE_MIN || score <= -MATE_MIN) { return false; }
+
+  if (type == TT_BETA_NODE) { return score >= raw_eval; }
+  if (type == TT_ALPHA_NODE) { return score <= raw_eval; }
+
+  return type == TT_PV_NODE;
+}
+
+
+bool search_correction_may_learn_probe(bool in_check,
+                                       int raw_eval,
+                                       move_t best_move,
+                                       node_type_t type,
+                                       int score)
+{ return correction_may_learn(in_check, raw_eval, best_move, type, score); }
 
 
 // What quiescence's per-move futility test (S112) prices a victim at, by
@@ -1655,10 +1802,27 @@ static int negamax_at(int alpha0,
   // make_move maintains and nothing here stops maintaining them; what is
   // avoided is rebuilding the same score from them a second time. S094, S103,
   // S108.
-  const int static_eval =
+  //
+  // **Raw, and what the table stores.** Since S099 this is not the number the
+  // consumers below read: `static_eval` is, the same score with the pawn
+  // correction added. This one goes into every store this node makes and into
+  // the correction's own update, and nowhere else, so the entry always holds
+  // what evaluate() said and a read-back is corrected once, here, and never
+  // twice.
+  const int raw_eval =
       is_in_check
           ? TT_EVAL_NONE
           : ((tt_eval != TT_EVAL_NONE) ? tt_eval : evaluate(&game->board));
+
+  // The static evaluation every consumer below reads: the raw score plus what
+  // the pawn correction table has learned for this side to move and pawn
+  // structure, S099 -- added here, once, and bounded inside the mate band's
+  // edge (corrected_static_eval()). The improving stack, the futility
+  // estimate, reverse futility and razoring all see this number; the store and
+  // the update see `raw_eval`. With no table attached it is `raw_eval`.
+  const int static_eval =
+      is_in_check ? TT_EVAL_NONE
+                  : corrected_static_eval(state, &game->board, raw_eval);
 
   // On every path that recurses, and before the first of them. A slot left
   // unwritten holds whatever the last node at this ply put there, which is a
@@ -1688,11 +1852,13 @@ static int negamax_at(int alpha0,
   // certifies both directions, but the licence the step file states covers the
   // two bound types, and widening it is a change with its own verdict.
   //
-  // **The stack and the stored evaluation keep the raw static score.**
-  // `improving` compares statics across plies and must never compare a search
-  // score against one, and the entry this node stores must hold what
-  // `evaluate()` said or the correction compounds through the table, which is
-  // the rule S099 inherits.
+  // **The stack and the stored evaluation keep a static score, never this
+  // estimate.** `improving` compares statics across plies and must never
+  // compare a search score against one, and the entry this node stores must
+  // hold what `evaluate()` said or a correction compounds through the table.
+  // Since S099 the two are different static scores: the stack holds the
+  // corrected one, `static_eval`, which is also what this estimate starts
+  // from, and the entry holds `raw_eval`.
   //
   // **Two consumers since S234, and one switch over the second of them.** The
   // futility margin in the move loop has read this value since S109 and is not
@@ -1863,8 +2029,10 @@ static int negamax_at(int alpha0,
   // a capture would otherwise mask, and "pruning does not hide a forced mate"
   // holds the row that shows it.
   //
-  // The raw static score and never the table-tightened estimate: the input is
-  // the node's own `evaluate()`, which is what the step measured. The node is
+  // The node's static score and never the table-tightened estimate: the input
+  // is the node's own `evaluate()`, which is what the step measured -- with
+  // the pawn correction added since S099, whose step file names razoring
+  // among the consumers of the corrected number. The node is
   // counted once here and again by quiescence at the same ply, the leaf
   // drop's property as well, so the node counts stay consistent with
   // themselves. Fail soft, and no second window: the node's own window is the
@@ -2133,7 +2301,7 @@ static int negamax_at(int alpha0,
           // the score, not the bar.
           tt_store_entry(state->tt, &game->board, probcut_depth,
                          normalize_score(value, ply), TT_BETA_NODE, pc_moves[j],
-                         static_eval);
+                         raw_eval);
 
           if constexpr (PROBING) {
             if (probe != nullptr) {
@@ -3050,7 +3218,22 @@ static int negamax_at(int alpha0,
   if (excluded_move == 0) {
     const int to_store = normalize_score(best_so_far, ply);
     tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
-                   static_eval);
+                   raw_eval);
+
+    // The pawn correction learns here, S099, beside the one store and under
+    // the same exclusion: a node searched without one of its moves is not
+    // the position's value. Every move has been unmade, so the board, its
+    // side to move and its pawn key are this node's. The difference is the
+    // search's own score against the raw evaluation -- `best_so_far` and not
+    // `to_store`, which carries the ply in the mate band -- and the gate is
+    // correction_may_learn()'s. A node that returned earlier, from the table,
+    // reverse futility, razoring, the null move or ProbCut, teaches nothing.
+    if (state->pawn_correction != nullptr &&
+        correction_may_learn(is_in_check, raw_eval, best_move, type,
+                             best_so_far)) {
+      correction_update(state->pawn_correction, game->board.active_color,
+                        game->board.pawn_hash, best_so_far - raw_eval, depth);
+    }
   }
 
   return best_so_far;

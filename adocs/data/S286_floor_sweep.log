@@ -1,0 +1,40 @@
+# S286, 2026-10-15, on 9aece02 -- a commit object on no branch: 8560a36 plus
+# S286 (S099's pawn key and pawn correction relanded, src/ 8758622's; the
+# goldens at the parent's). python3 adocs/data/S154_floor_margin_sweep.py
+# floor --ref <fixture> --jobs 12, then red --ref <fixture> --jobs 12.
+
+RfpMinPly swept at 9aece023d70adb690195acc6543c45833e99bf82, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #########..###.######..#  churn -  11458992 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 16/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #####.#.#...##.######..#  churn 3  11141272 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 4  9902763 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 12/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  11817022 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  2/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 5  8993641 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  2/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 0  8993641 nodes
+
+  floor, 15.8s
+S154 floor rc=0
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_t7t7bsk3/tests/test_engine.cpp:5779: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_t7t7bsk3/tests/test_engine.cpp:5780: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 7 >= 11 )
+    [doctest] assertions: 3512 | 3484 passed | 28 failed |
+
+  red, 21.7s
+S154 red rc=0

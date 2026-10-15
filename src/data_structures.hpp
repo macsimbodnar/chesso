@@ -287,6 +287,15 @@ struct zobrist_randoms_t
   uint64_t castling_randoms[16];
   uint64_t side_randoms[2];
   uint64_t ep_randoms[65];  // en-passant for each square plus invalid
+
+  // The pawn key's view of piece_randoms, S099: the two pawn rows copied, the
+  // other ten zero. Drawn from nothing -- init_zobrist() fills it from
+  // piece_randoms after the 851 draws, so the draw order is untouched. It is
+  // what lets add_piece, remove_piece, move_piece and unmake xor the pawn key
+  // for every piece without asking which piece it is: a branch on the moving
+  // piece there cost 1.4 to 2.1 % of speed, measured (DEC-271).
+  uint64_t pawn_randoms[12][64];
+
   bool initialized = false;
 };
 
@@ -403,6 +412,21 @@ struct board_t
   piece_t squares[64];
 
   hash_t hash;  // Zobrist Key
+
+  // The pawn structure's own key, S099: `hash`'s piece-square keys for the
+  // pawns of both colours and for nothing else -- no other piece, no side to
+  // move, no castling rights, no en-passant square. A correction table keyed
+  // on it indexes the side to move separately, and no king is in it because
+  // the published record measured the pure pawn key better than one with the
+  // kings (the step file's section 1).
+  //
+  // Maintained by add_piece, remove_piece and move_piece in src/bitboard.cpp,
+  // the alphabet every piece change goes through, and undone by xor in
+  // unmake_move_impl; never rebuilt by the evaluation (INV-4's rule).
+  // history_entry_t does not carry it, because that record is exactly 16
+  // bytes and halfmove_clock's comment below says why it stays so.
+  // compute_full_pawn_hash() is the from-scratch oracle.
+  hash_t pawn_hash;
 
   // Maintained by make_move and unmake_move rather than recomputed. evaluate()
   // was 40% of the search when it rebuilt these by walking the bitboards on
@@ -629,6 +653,76 @@ struct transposition_table_t
   size_t allocation_bytes = 0;
   bool allocation_mapped = false;
 };
+
+
+// STATIC EVALUATION CORRECTION HISTORY, S099. A table beside the transposition
+// table: one int32 per (side to move, key slot), holding in fixed point the
+// running average of what the search returned less what evaluate() said, at
+// nodes where that difference is meaningful. src/correction_history.hpp reads,
+// updates and clears it; src/search.cpp decides where. The three numbers below
+// are definitions and not settings, which is why they are here and not in
+// src/search_params.hpp -- that file's header lists the class, and
+// CONT_HIST_BOUND above is the same kind of number.
+//
+// One struct parameterised by its size, instantiated once for the pawn key, so
+// the non-pawn and continuation tables S110 and S111 hold in reserve are a
+// declaration each and not new plumbing. Not built now (the step file's
+// section 7).
+//
+// CORRHIST_PAWN_ENTRIES, slots per side to move. **Seed form (b), DEC-134,
+// the census the step file's section 4 names and DEC-270 ordered**: the
+// distinct pawn keys, per side to move, a `go depth 12` reads a correction
+// for, over S021's 300 positions, each searched cold
+// (adocs/data/S099_pawn_key_census.py on the tune build; the readings are
+// adocs/data/S099_pawn_key_census.txt). On S261's vector, 2026-10-14, the
+// larger side's count per position read p50 409, p90 1756, **p95 2781**, p99
+// 5029, max 8368 at 2048 slots, so the rule -- the next power of two above
+// the 95th percentile -- gives 4096, 32 KiB for both sides; at 4096, since
+// the size moves the tree the census reads: p50 409, p90 1756, **p95 2844**,
+// p99 5698, max 9009, 4096 again. (On `5ac17bd`, before S261's vector, the
+// p95 was 1808 and the size 2048.) Re-derive by re-running the script when
+// the search, the key or the table's gate moves. Not "collisions stay rare",
+// which section 4 also says: at 2844 keys in 4096 slots about 50 % of a p95
+// search's keys share a slot, 10 % at the median (uniform hashing, computed);
+// the rule is what DEC-270 ruled on, and the size is S127's to sweep. The (c)
+// fallback, 2^15, is what stood before the census. A power of two because the
+// slot is the key's low bits. S286 relanded it at 4096 unchanged, the size
+// S283 measured, without re-taking the census (DEC-286, DEC-295).
+inline constexpr size_t CORRHIST_PAWN_ENTRIES = size_t{1} << 12;
+
+// The update's denominator: an entry moves `weight / CORRHIST_SCALE` of the way
+// to each observation, the weight never above it. **Form (b)**, arithmetic over
+// CorrHistWeightCap's seed: the smallest power of two at or above 144, so 256,
+// and the weight cap's declared range ends here. The pair sets one quantity,
+// the maximum rate cap / scale, and the cap is the half S127 moves.
+inline constexpr int CORRHIST_SCALE = 256;
+
+// The entry's fixed point: an entry of CORRHIST_GRAIN is one evaluation unit.
+// **Form (c), the geometric midpoint of a range declared by purpose**, 64 to
+// 1024 in powers of two -- the division is then a shift that rounds toward
+// zero; at 64 the stored error is quantised to a sixty-fourth of a unit, at
+// 1024 the update's worst product grows fourfold to buy resolution the average
+// cannot use: sqrt(64 * 1024) = 256. Once CorrHistMax is fixed it carries no
+// Elo of its own. The entry's clamp is derived from it at use, CorrHistMax *
+// CORRHIST_GRAIN, so the two cannot drift: 47 * 256 = 12032 at the seeds, and
+// the update's worst product, clamp * scale, is 3080192, inside int32 by a
+// factor of about 700 (94 * 256 * 256 = 6160384 at the range top).
+inline constexpr int CORRHIST_GRAIN = 256;
+
+template <size_t Entries>
+struct correction_table_t
+{
+  static_assert(Entries > 0 && (Entries & (Entries - 1)) == 0,
+                "the slot is the key's low bits: a power of two");
+
+  // [side to move][slot]. The side to move is an index and never folded into
+  // the key: the search score and the static evaluation are both relative to
+  // it (INV-5), so White's error and Black's for one structure are two
+  // different numbers and must not share a slot.
+  int32_t entries[2][Entries];
+};
+
+using pawn_correction_t = correction_table_t<CORRHIST_PAWN_ENTRIES>;
 
 
 struct search_t
@@ -962,6 +1056,18 @@ struct search_state_t
   // read back. The UCI layer owns the instance because the store has to
   // outlive a `go`, which this struct does not.
   proven_mate_line_t* proven_mate = nullptr;
+
+  // S099's pawn correction table, owned by whoever owns the game for the same
+  // reason the mate line is: it learns across every `go` of a game and is
+  // cleared where a game begins, which this struct, rebuilt per `go`, cannot
+  // do. The UCI layer's instance sits beside its transposition table and
+  // datagen gives each worker one.
+  //
+  // Null for every caller that builds its own state and does not ask for one,
+  // which is every test that drives search() directly: the static evaluation
+  // is then the raw one, nothing is learned, and the tree is the tree before
+  // S099 node for node. A test that wants the correction attaches a table.
+  pawn_correction_t* pawn_correction = nullptr;
 
   // PER-ROOT-MOVE NODE ATTRIBUTION, S132. How many nodes the subtree under
   // each root move has cost, as two parallel arrays -- the move, and its
