@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-15, by hand.
 
-## 2026-10-15: S023 verdict 1 read H0 -- revert pending
+## 2026-10-15: S023 done -- verdict 1 read H0, reverted
 
 **S023 verdict 1, H0** (`adocs/data/S023_sprt.sh`): CAND `adb5d78`, the
 capture-history table and its two capture-margin readers, against REF
@@ -18,7 +18,10 @@ mating PV 9 for the candidate, 0 for the reference. Archived:
 band case kept without its record loop (`S023_h0_band_case.diff`) and
 DEV_MANUAL's ceilings command keeping S261's grid; S025 and S265 to the
 reserve; verdict 2 not run; **S285** (filler) re-mines the stale extra-ply
-row on the reverted tree. Bench back to 5636835.
+row on the reverted tree. Reverted as `0cdd39a`, bench 7045606 -> 5636835;
+`0cdd39a`'s gate was red on `test_plan_citation_freshness` alone (the step
+file cited the reverted symbols from `plan_current/`); the completing
+commit moves it to `plan_done/` and is gated.
 
 **Written blind, waiting for the machine (DEC-260):**
 - **S284** (`../chesso-s284`, diff `.tuning/coord/S284/s284_phase1.diff`):
