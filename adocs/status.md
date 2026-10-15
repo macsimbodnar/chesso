@@ -19,8 +19,17 @@ table-less searches). 34 mutants killed, Debug self-play 0 Assertion,
 `gate_extra` green. Fast check: 5 findings, fixed. S110 and S111 are now
 eligible, each its own verdict.
 
-**Next:** S082 rebased onto S286 (blind ready on `ced5d77`, one more pass),
-its phase 2 and the night's pool; S287 (filler) beside it.
+**Running: S082's pool** (from 01:36): `adocs/data/S082_recipe.sh generate`
+from main's `build/`, stamped `5b0e170` with datagen's sha256, 150000 games
+at 100000 nodes, `--leaf root,qs,pv`, 12 threads; about 13.4 h (smoke: 11191
+games an hour); `S082-GENERATE-DONE` only after the pool's completeness
+check. Then `compare` (about 1 h 30 m) chooses the recipe offline (DEC-275).
+**`build/` in main must not be rebuilt and no gate runs until the pool is
+written.** S082's code is committed as `5b0e170` (INV-6, bench 6042933;
+datagen exits 1 on a write failure or a short pool, `test_datagen_exit`).
+
+**Meanwhile, blind:** S287 (filler) in its own worktree.
+
 
 ## 2026-10-15: S039 read H0 and is reverted; S283 read H1, S099 relands
 
