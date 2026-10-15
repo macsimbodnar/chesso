@@ -579,9 +579,9 @@ inline bool parse_line(const std::string& text, line_t* out, std::string* error)
   }
 
   // The split reconstructs games from this; a row it cannot place is refused
-  // rather than guessed at. S066.
+  // rather than guessed at. S066; datagen's ply column, S082.
   if (!tuner_split::row_ply(text, &out->ply)) {
-    *error = "no usable FEN move number";
+    *error = "no usable ply: the FEN's move number, or datagen's ply column";
     return false;
   }
 

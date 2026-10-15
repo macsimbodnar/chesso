@@ -166,6 +166,9 @@ struct options_t
   int report = 100;
   int patience = 20;
   double validation = 0.1;
+  // S082: the fixed validation set. Empty is the by-game split of the corpus
+  // that `validation` and `seed` describe.
+  std::string holdout;
   unsigned threads = default_threads();
   uint64_t seed = 1;
 };
@@ -216,8 +219,7 @@ void write_tables(const std::string& path,
                   const options_t& opts,
                   const corpus_id_t& corpus,
                   size_t positions,
-                  size_t games,
-                  size_t validation_rows,
+                  const std::string& split,
                   double train_error,
                   double validation_error,
                   double wdl_validation_error,
@@ -293,7 +295,7 @@ void write_tables(const std::string& path,
       "--report "
       "and\n"
       "//            --patience choose it as much as the data does\n"
-      "// split      by game, S066: %zu games, %zu rows held out, %.4f%%\n"
+      "// split      %s\n"
       "// only       %s\n"
       "// freeze     %s\n"
       // S275: which of the seven null directions kept the level the run started
@@ -315,10 +317,7 @@ void write_tables(const std::string& path,
       corpus.rows, corpus.bytes, opts.k, train_error, validation_error,
       opts.seed, opts.lr, opts.validation, trace.rows, trace.mismatches,
       tuner_optimiser::kind_name(opts.optimiser), opts.epochs, opts.report,
-      opts.patience, opts.threads, games, validation_rows,
-      100.0 * static_cast<double>(validation_rows) /
-          static_cast<double>(positions),
-      opts.only.c_str(),
+      opts.patience, opts.threads, split.c_str(), opts.only.c_str(),
       opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), gauges_held,
       tuner_groups::gauges().size(), opts.lambda, wdl_line.c_str());
 
@@ -482,6 +481,10 @@ void usage()
       "  --report N       report and checkpoint every N epochs (100)\n"
       "  --patience N     stop after this many reports without a new best\n"
       "  --validation F   held-out fraction, whole games (default 0.1)\n"
+      "  --holdout FILE   the fixed validation set: fit on every row of\n"
+      "                   --data and read held-out error on FILE instead of\n"
+      "                   a split, --validation and --seed unused; refused\n"
+      "                   when the two share a position\n"
       "  --threads N      worker threads (default: every hardware thread)\n"
       "  --seed N         seed the game-level split shuffles (default 1)\n",
       GROUP_LIST, tuner_optimiser::ADAGRAD_DEFAULT_LR);
@@ -538,6 +541,8 @@ int main(int argc, char** argv)
       opts.patience = atoi(value.c_str());
     } else if (arg == "--validation") {
       opts.validation = atof(value.c_str());
+    } else if (arg == "--holdout") {
+      opts.holdout = value;
     } else if (arg == "--threads") {
       opts.threads = static_cast<unsigned>(atoi(value.c_str()));
     } else if (arg == "--seed") {
@@ -657,25 +662,109 @@ int main(int argc, char** argv)
     return 1;
   }
 
+  // S082: the fixed validation set. Every later fit and screen reads its
+  // held-out error on these rows rather than on a split of its own corpus, so
+  // two corpora are compared on one set -- which two splits cannot do, a
+  // different corpus being a different held-out set (DEC-055). Loaded and
+  // checked as the corpus is, and refused when one of its positions is also
+  // one the fit trains on.
+  const bool fixed_holdout = !opts.holdout.empty();
+  dataset_t holdout;
+  corpus_id_t holdout_id;
+
+  if (fixed_holdout) {
+    if (!corpus_hash::hash_file(opts.holdout, &holdout_id.sha256,
+                                &holdout_id.bytes, &holdout_id.rows)) {
+      fprintf(stderr, "could not hash %s\n", opts.holdout.c_str());
+      return 1;
+    }
+
+    tuner_trace::load_report_t holdout_trace;
+
+    if (!tuner_trace::load(opts.holdout, &holdout, &holdout_trace, &load_error,
+                           opts.threads)) {
+      fprintf(stderr, "could not load %s: %s\n", opts.holdout.c_str(),
+              load_error.c_str());
+      return 1;
+    }
+
+    if (holdout_trace.mismatches > 0) {
+      fprintf(stderr,
+              "the trace disagrees with evaluate() on %" PRIu64
+              " rows of %s, the first: %s\nnothing fitted\n",
+              holdout_trace.mismatches, opts.holdout.c_str(),
+              holdout_trace.first_mismatch.c_str());
+      return 1;
+    }
+
+    uint64_t shared = 0;
+    std::string shared_error;
+
+    if (!tuner_split::shared_positions(opts.data, opts.holdout, &shared,
+                                       &shared_error)) {
+      fprintf(stderr, "%s\n", shared_error.c_str());
+      return 1;
+    }
+
+    fprintf(stderr,
+            "held out: %s, sha256 %s, %" PRIu64 " rows; %" PRIu64
+            " corpus rows stand on one of its positions\n",
+            opts.holdout.c_str(), holdout_id.sha256.c_str(), holdout_id.rows,
+            shared);
+
+    if (shared > 0) {
+      fprintf(stderr,
+              "a position on both sides measures recall, not generalisation; "
+              "build the corpus with tools/corpus_split.py sample, which "
+              "drops them\nnothing fitted\n");
+      return 1;
+    }
+  }
+
   // Positions from one game are consecutive and share a label, so a row-level
   // split holds out rows whose game is in the training set: 99.47 % of games
   // landed on both sides of the cut and the held-out error was measuring
   // memorisation. Whole games are held out instead, and tools/tuner_split.hpp
-  // is where the boundary between them comes from. S066.
+  // is where the boundary between them comes from. S066. Under --holdout
+  // nothing of the corpus is held out and every row trains; the blocks are
+  // still counted, for the header.
   std::vector<uint32_t> starts;
   tuner_split::game_starts(data.ply, &starts);
 
   std::vector<uint32_t> index;
-  const size_t train_count = tuner_split::split(
-      starts, data.size(), opts.validation, opts.seed, &index);
-  const size_t validation_count = data.size() - train_count;
+  size_t train_count = 0;
+
+  if (fixed_holdout) {
+    index.resize(data.size());
+    for (size_t i = 0; i < data.size(); ++i) {
+      index[i] = static_cast<uint32_t>(i);
+    }
+    train_count = data.size();
+  } else {
+    train_count = tuner_split::split(starts, data.size(), opts.validation,
+                                     opts.seed, &index);
+  }
+
+  // Where every held-out figure below is read: the fixed set's own rows, or
+  // the tail of the corpus's shuffled index.
+  std::vector<uint32_t> holdout_index(holdout.size());
+  for (size_t i = 0; i < holdout.size(); ++i) {
+    holdout_index[i] = static_cast<uint32_t>(i);
+  }
+
+  const dataset_t& held_data = fixed_holdout ? holdout : data;
+  const std::vector<uint32_t>& held_index =
+      fixed_holdout ? holdout_index : index;
+  const size_t held_first = fixed_holdout ? 0 : train_count;
+  const size_t held_last = fixed_holdout ? holdout.size() : data.size();
+  const size_t validation_count = held_last - held_first;
 
   fprintf(stderr,
           "%zu positions, %zu games, %zu train, %zu validation (%.4f%%), "
           "%zu parameters, group %s, freeze %s, %zu free\n",
           data.size(), starts.size(), train_count, validation_count,
           100.0 * static_cast<double>(validation_count) /
-              static_cast<double>(data.size()),
+              static_cast<double>(train_count + validation_count),
           PARAM_COUNT, opts.only.c_str(),
           opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), free_count);
 
@@ -736,20 +825,42 @@ int main(int argc, char** argv)
     }
   }
 
+  // The same two targets over the fixed set's rows, built the same way from
+  // its own columns, with the K the training rows gave. S082.
+  std::vector<double> holdout_wdl_target(holdout.size());
+
+  for (size_t i = 0; i < holdout.size(); ++i) {
+    holdout_wdl_target[i] = holdout.result[i];
+  }
+
+  std::vector<double> holdout_train_target = holdout_wdl_target;
+
+  if (opts.lambda > 0.0) {
+    for (size_t i = 0; i < holdout.size(); ++i) {
+      holdout_train_target[i] = tuner_target::blend(
+          opts.lambda, holdout.score[i], holdout.result[i], opts.k);
+    }
+  }
+
+  const std::vector<double>& held_train_target =
+      fixed_holdout ? holdout_train_target : train_target;
+  const std::vector<double>& held_wdl_target =
+      fixed_holdout ? holdout_wdl_target : wdl_target;
+
   const double start_train =
       error_range(data, params.data(), opts.k, index, 0, train_count,
                   opts.threads, train_target);
   const double start_validation =
-      error_range(data, params.data(), opts.k, index, train_count, data.size(),
-                  opts.threads, train_target);
+      error_range(held_data, params.data(), opts.k, held_index, held_first,
+                  held_last, opts.threads, held_train_target);
 
   // The selection metric at the constants the run started from. At lambda 0 the
   // two targets are the same vector, so this is the same number and the same
   // pass is not made twice.
   const double start_wdl =
       (opts.lambda > 0.0)
-          ? error_range(data, params.data(), opts.k, index, train_count,
-                        data.size(), opts.threads, wdl_target)
+          ? error_range(held_data, params.data(), opts.k, held_index,
+                        held_first, held_last, opts.threads, held_wdl_target)
           : start_validation;
 
   // A `wdl` column only where there is a second number to print. At lambda 0 it
@@ -796,12 +907,12 @@ int main(int argc, char** argv)
     const double train = error_range(data, params.data(), opts.k, index, 0,
                                      train_count, opts.threads, train_target);
     const double validation =
-        error_range(data, params.data(), opts.k, index, train_count,
-                    data.size(), opts.threads, train_target);
+        error_range(held_data, params.data(), opts.k, held_index, held_first,
+                    held_last, opts.threads, held_train_target);
     const double wdl =
         (opts.lambda > 0.0)
-            ? error_range(data, params.data(), opts.k, index, train_count,
-                          data.size(), opts.threads, wdl_target)
+            ? error_range(held_data, params.data(), opts.k, held_index,
+                          held_first, held_last, opts.threads, held_wdl_target)
             : validation;
 
     fprintf(stderr, "epoch %6d  train %.6f  validation %.6f%s%s\n", epoch,
@@ -837,9 +948,32 @@ int main(int argc, char** argv)
             "constants. Do not ship this.\n");
   }
 
-  write_tables(opts.out, best.data(), opts, corpus, data.size(), starts.size(),
-               validation_count, final_train, best_validation, best_wdl,
-               start_wdl, held.size(), trace);
+  // What was held out, for the header: the fixed set by name and digest, or
+  // the corpus's own split as S066 cut it.
+  char split_text[160];
+
+  if (fixed_holdout) {
+    snprintf(split_text, sizeof split_text,
+             "fixed held-out set, S082: %zu rows, every corpus row trains",
+             validation_count);
+  } else {
+    snprintf(split_text, sizeof split_text,
+             "by game, S066: %zu games, %zu rows held out, %.4f%%",
+             starts.size(), validation_count,
+             100.0 * static_cast<double>(validation_count) /
+                 static_cast<double>(data.size()));
+  }
+
+  std::string split = split_text;
+
+  if (fixed_holdout) {
+    split += "\n//            " + opts.holdout + "\n//            sha256 " +
+             holdout_id.sha256;
+  }
+
+  write_tables(opts.out, best.data(), opts, corpus, data.size(), split,
+               final_train, best_validation, best_wdl, start_wdl, held.size(),
+               trace);
 
   return 0;
 }

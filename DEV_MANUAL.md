@@ -5104,7 +5104,28 @@ position do not decide games. DEC-033 is the run this produced and
 ## Generate self-play data and fit the evaluation
 
 S028. Two programs: `datagen` plays chesso against itself and writes labelled
-positions, `tuner` fits the evaluation constants to those labels.
+positions, `tuner` fits the evaluation constants to those labels. Since S082 a
+row names the position its sampled position resolves to, and a fit reads its
+held-out error on a fixed validation set built once:
+
+```bash
+build/tools/datagen --out .tuning/s082/pool.tsv --leaf root,qs,pv \
+    --games 150000 --nodes 100000 --threads 12 --seed 20261013
+
+python3 tools/corpus_split.py split --seed 20261013 --validation-games 12000 \
+    .tuning/s082/pool.tsv.root .tuning/s082/pool.tsv.qs .tuning/s082/pool.tsv.pv
+python3 tools/corpus_split.py sample --in .tuning/s082/pool.tsv.qs.train \
+    --validation .tuning/s082/pool.tsv.qs.validation \
+    --rows 1000000 --per-game 8 --seed 1 --out .tuning/s082/corpus.tsv
+
+build/tools/tuner --data .tuning/s082/corpus.tsv \
+    --holdout .tuning/s082/pool.tsv.qs.validation \
+    --out .tuning/s082/tuned.hpp --threads 12
+```
+
+Those are S082's comparison settings, `adocs/data/S082_recipe.sh`, and not a
+recipe: which leaf and how many rows a game is that script's pre-registered
+reading, and the corpus size and node budget are S083's.
 
 Since S286, which relanded S099's correction, each `datagen` worker carries its
 own pawn correction table, cleared before every game as `ucinewgame` clears the
@@ -5112,18 +5133,18 @@ engine's, so the games are played by the search a match plays. A corpus written
 before S286 was played without one, unless it was written while S099's own
 landing stood (`8758622` to its revert `5a04ffa`).
 
+**The corpus the shipping weights descend from is `.tuning/selfplay_v2.tsv`**,
+S065's, made before S082 by
+
 ```bash
 build/tools/datagen --out .tuning/selfplay_v2.tsv \
     --games 120000 --nodes 100000 --threads 12 --seed 20260814 \
     --allow-tactical 1
-
-build/tools/tuner --data .tuning/selfplay_v2.tsv \
-    --out .tuning/tuned_v2.hpp --threads 12
 ```
 
-**The corpus on this machine is `.tuning/selfplay_v2.tsv`** and those are the
-flags that produced it, which the run's own log states rather than a comment
-here:
+which `datagen` refuses since S082, the flag having been retired with its
+clause; its rows are the ones `--leaf root` writes now, less the three columns
+S082 added. The run's own log, rather than a comment here:
 
 ```
 datagen: 120000 games, 100000 nodes per move, 12 threads, seed 20260814, quiet-limit 1000, allow-tactical 1
@@ -5145,48 +5166,154 @@ machine**: `.tuning/` is gitignored, the work moved machines at DEC-049, and the
 engine that generated it is seven steps behind the one that generated v2, so it
 is not regenerable identically either.
 
-`datagen` writes `fen result score phase`, one line per position, where
-`result` is the game's outcome from White's point of view. Openings are 8
-uniform random plies, discarded if the search found a mate or scored the
+`datagen` writes `fen result score phase game ply distance`, one line per
+position, since S082; `fen result score phase` before it. `result` is the
+game's outcome from White's point of view and `score` the search's score for
+the **sampled** position, White relative, so a row keeps one perspective
+whoever moves at its FEN — the tuner turns its White-relative model into the
+side to move's by the FEN's own side to move. `phase` is `game_phase()` of the
+position the FEN names. `game` numbers the game inside the run, the same number
+in every leaf's file (worker `i` of `T` plays games `i`, `i + T`, `i + 2T`
+...); `ply` is the sampled position's half-move, `2 * (fullmove - 1) + (black
+to move)`; `distance` is how many plies past it the FEN stands. The tuner reads
+the first four and `ply`, and `tools/corpus_split.py` reads `game`. Openings
+are 8 uniform random plies, discarded if the search found a mate or scored the
 position past `--opening-limit`; games are adjudicated once one side holds
 `--resign-score` for `--resign-plies`.
 
-**Four independent clauses decide whether a position is recorded**, and every
-run prints what each one cost:
+**Which position a row names is `--leaf`'s choice**, S082:
+
+| `--leaf` | the row's FEN |
+|---|---|
+| `root` | the position the game reached — every corpus before S082 |
+| `qs`, the default | the leaf quiescence resolves the sampled position to, a function of its FEN alone |
+| `pv` | the last completed iteration's principal variation played out, its end resolved as `qs` resolves a position |
+
+Several kinds, comma separated, write `--out` with each kind appended —
+`pool.tsv.root`, `pool.tsv.qs`, `pool.tsv.pv` — from the same games and the same
+sampled positions: the pool a recipe is chosen from offline, each file a corpus
+the tuner reads as it is.
+
+**The walk is `src/leaf_walk.cpp`**, which `datagen` and the tests link and no
+engine binary does; its header carries every policy. From the sampled position,
+`quiescence()` runs at the widest window on a table of the walk's own, cleared
+for every call; the move it chose is read from the exact entry the call's own
+root stored; the walk plays that move and asks again, one fresh call a ply,
+until quiescence stands pat — no capture or promotion it searches beats the
+static score. That position is the leaf. Nothing about what quiescence does
+changes, and the walk carries no copy of its move set: the line is
+quiescence's own. A leaf the walk refuses is not written, and is counted:
+
+| refused as | when |
+|---|---|
+| terminal | the line reached a position the rules decide as the search sees it from the sampled position — mate, stalemate, insufficient material, the fifty-move rule, or a repetition `classify_repetition()` calls a draw with the sampled position as root: one inside the line, or a third occurrence. `evaluate()` is never the last word there. A single occurrence before the root is not terminal: the search goes on searching that position, so refusing it would drop a real leaf for the game's history. A policy outcome, counted and never a sign of a broken walk |
+| truncated | `MAX_QSEARCH_DEPTH` plies walked, quiescence's own horizon, without a position it stands pat at. A leaf reached by exhausting the bound is not quiet |
+| aborted | one call searched `LEAF_WALK_NODE_CAP` nodes, a million |
+| uncertified | the call's root entry was not exact, or named a move the generator does not produce here, or quiescence stood pat in check or on a number other than `evaluate()`'s; or a PV move the generator does not produce. None is reachable on a cleared table at the widest window, and each is refused rather than assumed |
+
+A promotion to a queen that takes nothing is in quiescence's move set (S131),
+so the walk plays it like a capture; the three underpromotions that take
+nothing are not, and do not make a position unquiet. The PV walked is the last
+**completed** iteration's: the move the game plays may be an aborted
+iteration's (`run_search()`), but an aborted line is never walked, and a search
+that completed no iteration writes no row at all.
+
+**Three independent clauses decide whether a sampled position is written**,
+each read at the position the game stands on, and every run prints what each
+one cost:
 
 | clause | flag | default |
 |---|---|---|
 | the side to move is not in check | none, always applied | — |
 | the search found no mate | none, always applied | — |
 | `abs(score) < --quiet-limit` | `--quiet-limit N` | 1000 |
-| the search's chosen move is neither a capture nor a promotion | `--allow-tactical N` | 0 |
 
-`--allow-tactical` is a 0/1 switch and not a rate: **1** records a position
-whose best move is a capture or a promotion, **0** excludes it, which is what
-`selfplay_v1.tsv` was generated under. The clause was justified here by the
-claim that `evaluate()` is only asked about positions quiescence has already
-resolved. It is not — `src/search.cpp:125` calls `evaluate_lazy()` at the top
-of every quiescence node, before `generate_captures` at `:152` runs, and
-returns on that stand-pat score at `:136-137`. DEC-055 loosened it and left the
-other three alone; the numbers that decided each are in
-`adocs/plan_todo/S065_corpus_regen_loosened_filter.md`.
+Until S082 a fourth dropped a position whose search-chosen move was a capture
+or a promotion — `--allow-tactical` from DEC-055 on, which S065 ran at 1, so
+`selfplay_v2.tsv` already admitted those rows and labelled them as if they were
+quiet. The clause rested on the claim that the root might not be quiet; DEC-055
+had already found quiescence evaluating exactly those positions at the top of
+every node. The row names a quiet position now whatever the root was, so the
+clause and its flag are retired rather than kept switched off, and
+`--allow-tactical` is refused as an unknown option. The decisions behind the
+other three are in `adocs/plan_done/S065_corpus_regen_loosened_filter.md`.
 
-The closing line of every run reads, and each figure is the number of positions
-that would have been recorded but for that one clause — a position failing two
-clauses is in neither count:
+The closing lines of a run, in this shape — S082's smoke and pool runs record
+the first figures:
 
 ```
-filter: 27839 considered, 17593 recorded; skipped in-check 1698,
-        tactical best move 4814, mate 0, score past 1000 1824
+filter: <n> considered, <n> passed; skipped in-check <n>, mate <n>, score past 1000 <n>; no completed iteration <n>
+leaf qs: <rows> rows from <games> games written to <file>, <x> a game; the leaf differs from the root on <n> (<p> %), <d> plies on average
+leaf qs: not written of <n> passed: terminal <n> (<p> %) truncated <n> (<p> %) aborted <n> (<p> %) uncertified <n> (<p> %)
+coverage qs, rows by the written position's phase and the sampled position's |score|
+  phase              <50       <150       <300       <600       rest
+      0 to  4        ...
+walk: <n> nodes, <p> % of the <n> the games' searches spent
 ```
+
+Each `filter` figure is the number of positions that would have been written but
+for that one clause — a position failing two clauses is in neither count — and
+`no completed iteration` is what a budget too small for depth 1 would cost. Per
+leaf, how often the leaf differs from the root is the share S082's accepts asks
+for, and the refusal shares are what the walk declined; the `pv` line adds how
+many of the plies were the line's. The coverage matrix is the print the
+2026-09-27 tuning comparison kept (DEC-237): counts, never a resampling. The
+`walk` line is what the leaves cost, in nodes against the games' own.
+
+**The exit status says whether the files hold what those lines count.**
+`datagen` exits 1, after printing them, when a write or a flush to an output
+file failed -- every worker stops at its next game -- or when fewer games were
+played than `--games` booked, a worker having stopped at its attempt cap; each
+case adds a `datagen: FAILED` line. Until S082's phase 2 both exited 0, the
+counts describing rows the files did not hold (`tests/test_datagen_exit.sh`).
 
 Both programs default to every hardware thread, 12 here — DEC-050. **Rate on
-this machine**, 12 threads, 100000 nodes per move, `--allow-tactical 1`: 600
-games in 143.93 s, 56304 positions — 4.169 games/s, 391.2 positions/s, 93.84
-positions per game, 64.15 bytes per row. Under the old filter, 73.3 positions
-per game. 100000 nodes reaches depth 4 to 6 in a middlegame. The Apple
-three-thread figure it replaces was 200 games in 61 s and about 77 positions
-per game, and DEC-049 says that one does not carry.
+this machine** before S082, 12 threads, 100000 nodes per move,
+`--allow-tactical 1`: 600 games in 143.93 s, 56304 positions — 4.169 games/s,
+391.2 positions/s, 93.84 positions per game, 64.15 bytes per row. Under the old
+filter, 73.3 positions per game. 100000 nodes reaches depth 4 to 6 in a
+middlegame. The Apple three-thread figure it replaces was 200 games in 61 s and
+about 77 positions per game, and DEC-049 says that one does not carry. With
+the walks, S082's smoke run (`adocs/data/S082_recipe.sh smoke`) is the figure
+to budget from.
+
+### The fixed validation set, and a corpus fitted against it
+
+S082, DEC-259. Every fit and screen from S082 on reads its held-out error on one
+set built once, so two corpora — or a fit with a term and one without — are
+compared on the same rows. A split of each corpus could not do that: a
+different corpus is a different held-out set (DEC-055).
+
+`tools/corpus_split.py split` holds out whole games, chosen before anything is
+sampled: the game numbers of every file named are pooled and shuffled under
+`--seed`, the first `--validation-games` are the validation side, and each file
+becomes `FILE.validation` — every row of those games — and `FILE.train`, in the
+order `datagen` wrote them. No game is on both sides by construction, and the
+written files are read back to show it. It prints the seed, the held-out game
+list's sha256 and each output's rows, games and sha256; the step that builds
+the set records them, and refuses to overwrite an existing file.
+
+`tools/corpus_split.py sample` makes one corpus from a `.train` file: games in
+an order shuffled under `--seed`, every row standing on a position some
+`--validation` file holds dropped, then at most `--per-game` rows of each game
+(0 for every row), chosen under the same seed and kept in their order, until
+exactly `--rows` are written. A pool too small is refused, never answered with
+fewer rows. Name every view of the set a fit will be read on: a position on
+both sides measures recall, not generalisation.
+
+`tuner --holdout FILE` fits on every row of `--data` and reads every held-out
+figure — the start, each report, the best, the emitted header's `split` line —
+on `FILE`, loaded and checked against `evaluate()` exactly as the corpus is;
+`--validation` and `--seed` go unused. **It refuses a corpus that stands on any
+position `FILE` holds**, counted by `tuner_split::shared_positions()` over the
+FEN's first four fields — placement, side to move, castling, en passant — so
+the same position at other clocks counts. K is still fitted on the training
+rows. Without `--holdout` the by-game split below is the held-out set, as
+before.
+
+The set is too large for the tree (`tools/gate.sh` refuses a file over 20 MB):
+it lives under `.tuning/`, goes to the owner's archive with a `.sha256` beside
+it (DEC-235), and is named everywhere by its digest.
 
 ### Deduplicate a corpus by position
 
@@ -5642,13 +5769,24 @@ out by hand as a linear function of its constants and held to the engine by
 `--report` epochs and keeps the best one, prints a warning if the fit never
 beats the constants it started from, and writes a header to paste in.
 
-**The validation split is cut between games, not between rows.** `--validation F`
+**The validation split is cut between games, not between rows.** Without
+`--holdout` (above, S082), `--validation F`
 holds out that fraction of the corpus and `--seed N` seeds the shuffle; what is
 shuffled is whole games. Until S066 it was rows, and `datagen` writes a game's
 ~92 rows contiguously and gives every one of them the same label — the game's
 result — so a row-level split put **119360 of 119999 games, 99.47 %**, on both
 sides of the cut over `selfplay_v2.tsv`. A held-out row whose game is in the
 training set measures memorisation.
+
+**Since S082 a `datagen` row carries the ply itself**, the sampled position's,
+as its sixth of seven fields, and a row that has it is placed by it: its FEN may
+name a leaf some plies on, and two rows of one game read from their FENs —
+sampled at ply 20 resolving two plies on, sampled at 21 not moving — would be a
+boundary inside a game, so a game on both sides of the cut. One row per sampled
+position and one sampled position per ply keeps everything below true of the
+column. A column that is not a whole number is refused, never read past for
+the FEN (`test_tuner_split`, "a row carrying datagen's ply column is placed by
+it"). What follows is the four-column reading, every corpus before S082.
 
 The corpus carries no game id, so the boundary is reconstructed from the FEN. The
 ply, `2 * (fullmove - 1) + (black to move)`, only ever advances inside a game

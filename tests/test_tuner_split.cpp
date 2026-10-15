@@ -37,6 +37,11 @@
 //      on -- the one failure mode this change introduced, found by this test
 //   9. the same seed gives the same split and a different seed a different one
 //  10. a row with no usable FEN move number is refused rather than guessed at
+//  11. a row carrying datagen's ply column is placed by it, so a game whose
+//      rows name leaves is still one block (S082) -- read from the FEN alone,
+//      the same rows are cut in two, which is the precondition
+//  12. the rows of a corpus standing on a position of a fixed held-out set are
+//      counted by position, whatever the clocks say (S082)
 //
 // Cases 1 and 2 are the non-vacuity guard. A fixture of one-row games, or one
 // small enough that a row-level split happened to miss every game, would let
@@ -672,4 +677,116 @@ TEST_CASE("a row with no usable FEN move number is refused")
   // belong to load(), and a FEN with no tab after it still has a move number.
   CHECK(tuner_split::row_ply(
       "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 5", &ply));
+}
+
+
+// S082. A row may name the leaf its sampled position resolves to, plies past
+// where the game stood, so its FEN no longer says where the game was: two rows
+// of one game can read as a boundary between them. datagen writes the sampled
+// position's ply as the sixth of seven fields, and that is what places the
+// row.
+TEST_CASE("a row carrying datagen's ply column is placed by it")
+{
+  const std::string placement = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+  // One game, sampled at plies 20 and 21. The first resolves to a leaf two
+  // plies on, so its FEN stands at ply 22; the second is its own leaf.
+  const std::string leaf_row =
+      placement + " w KQkq - 0 12\t0.5\t15\t20\t7\t20\t2";
+  const std::string root_row =
+      placement + " b KQkq - 0 11\t0.5\t-3\t20\t7\t21\t0";
+
+  // The precondition: the same two rows without the column, read from the FEN
+  // alone, do not advance -- a boundary inside one game.
+  std::vector<uint32_t> fen_ply(2, 0);
+  REQUIRE(tuner_split::row_ply(placement + " w KQkq - 0 12\t0.5\t15\t20",
+                               &fen_ply[0]));
+  REQUIRE(tuner_split::row_ply(placement + " b KQkq - 0 11\t0.5\t-3\t20",
+                               &fen_ply[1]));
+  REQUIRE(fen_ply[0] == 22);
+  REQUIRE(fen_ply[1] == 21);
+
+  std::vector<uint32_t> starts;
+  tuner_split::game_starts(fen_ply, &starts);
+  REQUIRE(starts.size() == 2);
+
+  // With the column the game is one block.
+  std::vector<uint32_t> column_ply(2, 0);
+  REQUIRE(tuner_split::row_ply(leaf_row, &column_ply[0]));
+  REQUIRE(tuner_split::row_ply(root_row, &column_ply[1]));
+  CHECK(column_ply[0] == 20);
+  CHECK(column_ply[1] == 21);
+
+  tuner_split::game_starts(column_ply, &starts);
+  CHECK(starts.size() == 1);
+
+  // A column that is not a whole decimal number is refused: the FEN of such a
+  // row may be a leaf, so it is no fallback.
+  uint32_t ply = 0;
+  const std::string head = placement + " w KQkq - 0 12\t0.5\t15\t20\t7\t";
+  CHECK_FALSE(tuner_split::row_ply(head + "x\t2", &ply));
+  CHECK_FALSE(tuner_split::row_ply(head + "\t2", &ply));
+  CHECK_FALSE(tuner_split::row_ply(head + "-1\t2", &ply));
+  CHECK_FALSE(tuner_split::row_ply(head + "1234567890\t2", &ply));
+
+  // Six fields is no datagen row: there is no seventh, and the FEN decides.
+  REQUIRE(tuner_split::row_ply(head + "20", &ply));
+  CHECK(ply == 22);
+}
+
+
+// S082. The fixed held-out set and the corpus fitted against it share no
+// position, and the count that says so compares positions, not FEN text: the
+// same position at other clocks is the same position to evaluate().
+TEST_CASE("corpus rows on a position of the held-out set are counted")
+{
+  const std::string holdout_path =
+      unique_fixture_path("chesso_test_tuner_split_holdout.tsv");
+  const std::string corpus_path =
+      unique_fixture_path("chesso_test_tuner_split_corpus.tsv");
+
+  // `a` twice at other clocks than the held-out set's, `b` the same placement
+  // with the other side to move, which is another position.
+  const std::string a = "4k3/8/8/8/8/8/8/3RK3 w - -";
+  const std::string b = "4k3/8/8/8/8/8/8/3RK3 b - -";
+  const std::string c = "4k3/8/8/8/8/8/3R4/4K3 w - -";
+
+  {
+    std::ofstream out(holdout_path);
+    out << a << " 0 30\t1.0\t500\t5\t3\t58\t0\n";
+    out << c << " 4 41\t1.0\t480\t5\t3\t80\t1\n";
+  }
+
+  {
+    std::ofstream out(corpus_path);
+    out << a << " 12 77\t0.5\t20\t5\t9\t152\t0\n";
+    out << b << " 0 30\t0.5\t20\t5\t9\t153\t0\n";
+    out << "\n";
+    out << a << " 0 31\t0.0\t-10\t5\t11\t58\t2\n";
+  }
+
+  uint64_t shared = 99;
+  std::string error;
+  REQUIRE(tuner_split::shared_positions(corpus_path, holdout_path, &shared,
+                                        &error));
+  CHECK(shared == 2);
+
+  // A file that cannot be read is an error and not a count of zero, and so is
+  // a row that names no position.
+  CHECK_FALSE(tuner_split::shared_positions(corpus_path + ".absent",
+                                            holdout_path, &shared, &error));
+  CHECK_FALSE(error.empty());
+
+  {
+    std::ofstream out(corpus_path);
+    out << "4k3/8/8/8/8/8/8/3RK3 w\t0.5\t20\t5\n";
+  }
+
+  error.clear();
+  CHECK_FALSE(tuner_split::shared_positions(corpus_path, holdout_path, &shared,
+                                            &error));
+  CHECK_FALSE(error.empty());
+
+  std::filesystem::remove(holdout_path);
+  std::filesystem::remove(corpus_path);
 }

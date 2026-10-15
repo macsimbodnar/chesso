@@ -41,8 +41,10 @@ bool tt_entry_answers(const tt_entry_t* entry,
 // crashing. S108.
 bool improving_at(const search_state_t* state, size_t ply, bool in_check);
 
-// The leaf search. Declared here only so the tests can drive it directly;
-// nothing outside search.cpp calls it.
+// The leaf search. Declared here so the tests can drive it directly, and for
+// src/leaf_walk.cpp, which asks it where a corpus position resolves to (S082)
+// and which no engine binary links; nothing the engine plays calls it from
+// outside search.cpp.
 int quiescence(int alpha,
                int beta,
                size_t ply,

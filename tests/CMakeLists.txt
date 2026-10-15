@@ -90,6 +90,33 @@ target_include_directories(test_tuner_groups PRIVATE ../tools)
 add_doctest_target(test_tuner_split)
 target_include_directories(test_tuner_split PRIVATE ../tools)
 
+# S082: the corpus row names the leaf quiescence resolves a position to, walked
+# by src/leaf_walk.cpp, which datagen calls and no engine binary links. Holds
+# the leaf quiet by construction -- every recorded position read back from its
+# FEN alone is one quiescence stands pat at -- and a walk its ply bound stops
+# refused as truncated rather than recorded, over the JSON suites' positions.
+# tools/mutants/S082_leaf_walk.py lists the mutants it kills. No dataset, so it
+# is a fast test like the rest.
+add_doctest_target(test_leaf_walk)
+
+# S082: tools/corpus_split.py, which builds the fixed validation set every later
+# fit and screen reads (DEC-259) and samples the corpora fitted against it. No
+# game on both sides, no position on both sides, nothing lost, seeded, and a
+# pool too small refused. Synthetic pools in a temp dir, stdlib only, under a
+# second.
+add_test(NAME test_corpus_split
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_corpus_split.py)
+set_tests_properties(test_corpus_split PROPERTIES LABELS "fast" TIMEOUT 60)
+
+# S082: datagen exits non-zero when its files fall short of what it counted --
+# a failed write or flush (/dev/full), or fewer games than booked (every
+# opening discarded) -- and 0 on a run that wrote what it counted. Three runs
+# of one game at a few hundred nodes, about a second.
+add_test(NAME test_datagen_exit
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_datagen_exit.sh
+                      $<TARGET_FILE:datagen>)
+set_tests_properties(test_datagen_exit PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S100: the fit's two unchecked halves -- that the columns load() packs are the
 # columns evaluate_position() reads, and that gradient() is the derivative of
 # the error it descends. Nothing in tests/ could name either until S100 moved

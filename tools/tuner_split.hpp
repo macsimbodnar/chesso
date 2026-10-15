@@ -58,13 +58,32 @@
 // below 1.0, which is what pins the change to the grouping and nothing else.
 // `tests/test_tuner_split.cpp` asserts it. At 1.0 the clamp above binds and the
 // old code divided by zero, so there is nothing there worth being equal to.
+//
+// SINCE S082 THE FEN IS NOT ALWAYS WHERE THE GAME STOOD. A row may name the
+// leaf its position resolves to, some plies past the position the game was
+// sampled at, and two rows of one game can then stand at plies that do not
+// advance -- the sampled position at ply 20 resolving two plies on, the next
+// at ply 21 not moving at all. Read from the FEN that is a boundary inside a
+// game, and a game on both sides of the cut. So `datagen` writes the sampled
+// position's ply as a column of its own, and a row that carries it is placed
+// by it: one row per sampled position and one sampled position per ply, so
+// the predicate above keeps every property it had. A row without the column
+// is read from its FEN, as every corpus before S082 is.
+//
+// AND A FIXED HELD-OUT SET, S082. `--holdout` fits on every row of the corpus
+// and reads held-out error on a set built once (tools/corpus_split.py) and
+// kept for every later fit and screen. The two must share no position, so
+// shared_positions() below counts the corpus rows standing on one of the
+// set's, and the tuner refuses a count above zero.
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <fstream>
 #include <random>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace tuner_split
@@ -79,9 +98,36 @@ inline uint32_t ply_index(uint32_t fullmove, bool black_to_move)
 { return 2 * (fullmove - 1) + (black_to_move ? 1 : 0); }
 
 
-// The ply of one `fen result score phase` row. False when the row does not
-// carry a usable FEN move number, which is the one thing this reconstruction
-// needs and the four-column format does not name.
+// The sixth tab-separated field of a row that has at least seven: datagen's
+// `fen result score phase game ply distance` since S082, whose sixth is the
+// sampled position's ply. False for a shorter row, which carries no such
+// column.
+inline bool sampled_ply_field(const std::string& line, std::string* text)
+{
+  size_t start = 0;
+
+  for (int field = 0; field < 5; ++field) {
+    const size_t tab = line.find('\t', start);
+    if (tab == std::string::npos) { return false; }
+    start = tab + 1;
+  }
+
+  const size_t end = line.find('\t', start);
+  if (end == std::string::npos) { return false; }
+
+  *text = line.substr(start, end - start);
+  return true;
+}
+
+
+// The ply of one row. False when the row does not carry a usable one, which
+// is the one thing this reconstruction needs.
+//
+// A row with datagen's ply column (S082) is placed by it, and refused when it
+// is not a whole decimal number: the FEN of such a row may be a leaf, plies
+// past where the game stood, and is no fallback. Any other row is placed by
+// its FEN's move number and side to move, the four-column format's only
+// reading of where it stood.
 //
 // The whole row is re-split here rather than taking the pieces load() already
 // parsed, so that the tuner and the test walk the same parser over the same
@@ -89,6 +135,23 @@ inline uint32_t ply_index(uint32_t fullmove, bool black_to_move)
 // into six feature vectors.
 inline bool row_ply(const std::string& line, uint32_t* ply)
 {
+  std::string column;
+
+  if (sampled_ply_field(line, &column)) {
+    // Nine digits at most: every ply a game reaches, and nothing that wraps.
+    if (column.empty() || column.size() > 9) { return false; }
+
+    uint32_t value = 0;
+
+    for (const char digit : column) {
+      if (digit < '0' || digit > '9') { return false; }
+      value = value * 10 + static_cast<uint32_t>(digit - '0');
+    }
+
+    *ply = value;
+    return true;
+  }
+
   const size_t tab = line.find('\t');
   const std::string fen =
       line.substr(0, (tab == std::string::npos) ? line.size() : tab);
@@ -199,6 +262,83 @@ inline size_t split(const std::vector<uint32_t>& starts,
   }
 
   return train_count;
+}
+
+
+// The position a row stands for: its FEN's first four fields -- placement,
+// side to move, castling rights, en passant square -- which are the fields the
+// engine's own key covers (tools/corpus_dedupe.hpp). The clocks are not a
+// position. False when the row's FEN has fewer than four fields. S082.
+inline bool row_position(const std::string& line, std::string* position)
+{
+  const size_t tab = line.find('\t');
+  std::istringstream fields(
+      line.substr(0, (tab == std::string::npos) ? line.size() : tab));
+  std::string field[4];
+
+  for (size_t i = 0; i < 4; ++i) {
+    if (!(fields >> field[i])) { return false; }
+  }
+
+  *position = field[0] + ' ' + field[1] + ' ' + field[2] + ' ' + field[3];
+  return true;
+}
+
+
+// How many rows of `corpus` stand on a position some row of `holdout` stands
+// on. A held-out row whose position the fit trained on measures recall, not
+// generalisation -- the failure a game on both sides of the cut is, one
+// position at a time. Exact: positions are compared as text, not by a hash,
+// so a count above zero is a real overlap. False, with `error`, on a file that
+// cannot be read or a row with no position. S082.
+inline bool shared_positions(const std::string& corpus,
+                             const std::string& holdout,
+                             uint64_t* shared,
+                             std::string* error)
+{
+  std::unordered_set<std::string> held;
+  std::string line;
+  std::string position;
+
+  std::ifstream held_file(holdout);
+
+  if (!held_file) {
+    *error = "cannot read " + holdout;
+    return false;
+  }
+
+  while (std::getline(held_file, line)) {
+    if (line.empty()) { continue; }
+
+    if (!row_position(line, &position)) {
+      *error = "no position in a row of " + holdout + ": " + line;
+      return false;
+    }
+
+    held.insert(position);
+  }
+
+  std::ifstream corpus_file(corpus);
+
+  if (!corpus_file) {
+    *error = "cannot read " + corpus;
+    return false;
+  }
+
+  *shared = 0;
+
+  while (std::getline(corpus_file, line)) {
+    if (line.empty()) { continue; }
+
+    if (!row_position(line, &position)) {
+      *error = "no position in a row of " + corpus + ": " + line;
+      return false;
+    }
+
+    if (held.count(position) != 0) { (*shared)++; }
+  }
+
+  return true;
 }
 
 }  // namespace tuner_split

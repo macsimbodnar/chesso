@@ -372,7 +372,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 ## Open
 
 1. S287  **filler, DEC-171** -- eight statements still say S039 retires or re-decides the lazy shortcut and the clamp; restate them for S039's H0
-2. S082  the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
+2. S082  **code committed, the pool generating (about 13 h), then `compare`, DEC-294** -- the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
 3. S110  **S286 landed (DEC-294); bounds and control pre-registered before its run** -- a second correction table keyed on the non-pawn structure, split by colour; its own verdict
 4. S111  **S286 landed (DEC-294); bounds and control pre-registered before its run** -- correction tables indexed by the move played two and four plies ago; its own verdict
 5. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
