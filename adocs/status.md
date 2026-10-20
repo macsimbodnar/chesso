@@ -5,7 +5,30 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-16, by hand.
+Updated: 2026-10-20, by hand.
+
+## 2026-10-20: power cut; S082's pool topped up (DEC-296)
+
+**A power cut stopped S082's pool** at 2026-10-16 12:58, 11 h 22 m into
+13.4 h. The three files are intact up to a NUL tail: **122748 complete
+games** in all three (game 122926 and the tail dropped). By the owner's
+choice (DEC-296), not re-run: **a top-up of 27252 games is running** from
+20:49 (`.tuning/s082/topup/run.sh`, same datagen binary, sha256 checked;
+seed 2026102000, whose worker seeds meet none of the pool's), about 2.5 h,
+`S082-TOPUP-DONE` or `-FAILED` in `topup.console`, watcher ceiling 6 h.
+Meanwhile S082's phase 3 (worktree `chesso-s082f`) writes the merge: part 1
+cut from the files, part 2's ids offset, the originals kept byte for byte,
+a merged log that says what it is. Then `compare` (about 1 h 30 m).
+**`build/` in main is still not rebuilt and no gate runs until the top-up
+ends.**
+
+**S287** (filler) survived whole: written, staged in `chesso-s287`,
+diff `.tuning/coord/S287/s287.diff` (hash equal to the index). Its fast
+check had died on the weekly limit; it is re-run read-only. Its gate and
+commit wait for the top-up.
+
+Lost: the 2.4 h of datagen after 12:58's last flush and the night of
+10-16 to 10-20 (the session was down); nothing committed or staged.
 
 ## 2026-10-16: S286 done -- S099 relanded
 

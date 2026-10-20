@@ -15164,3 +15164,38 @@ Rejected:     Stopping with the numbers -- costs a night for a form the owner
               nElo at the longer control and S082 behind it.
 Consequences: The pre-approval is S286's alone; it sets no allowance for any
               other step.
+
+## DEC-296  2026-10-20  S082's pool, cut by a power loss, is completed by a top-up from the same binary rather than re-run or shrunk
+Tags:         data, datagen, s082, pool, pre-registration, power
+Context:      A power cut at 2026-10-16 12:58, 11 h 22 m into S082's 13.4 h
+              `generate` (150000 games, seed 20261013, `5b0e170`, datagen
+              sha256 4b0e2848...), stopped the pool before datagen's own log
+              lines, so `check_pool()` cannot read it. The three files end on a
+              newline followed by a NUL tail (1691, 1360 and 4054 bytes) and
+              nothing else is damaged: no NUL before the tail, every row seven
+              fields, each game's rows contiguous, the three files in the same
+              game order and all ending on game 122926 (95 rows in each). The
+              games before it, 122748, are complete in all three files. The
+              pre-registration needs 150000: its density-8 cell needs 125000
+              training games beside the 12000 of the validation set.
+Decision:     **By the owner, 2026-10-20**, asked with three options: top up.
+              Part 1 is the 122748 games before game 122926, which is dropped
+              with the NUL tail; part 2 is 27252 games from the same datagen
+              binary (sha256 checked equal before launch) at the same settings
+              under seed 2026102000, whose per-worker seeds 2026102000 to
+              2026102011 meet none of part 1's 20261013 to 20261024. Part 2's
+              game ids are offset above part 1's so every id is unique, the
+              original files are kept byte for byte, and the merge, its checks
+              and what part 1's lost log no longer gives are a dated section
+              in S082's step file. Every pre-registered cell, seed and reading
+              rule stands.
+Rejected:     A full re-run -- 13.4 h, a night of the machine, for a pool
+              drawn from the same distribution. Using the 122748 games as they
+              are with the density-8 cell moved to 10, the lowest this pool
+              fills to a million rows -- costs no machine but changes a
+              pre-registered cell after the pool exists.
+Consequences: The pool comes from two datagen runs and two seeds. Datagen's
+              end-of-run statistics -- refusal shares by kind, coverage, walk
+              nodes -- exist for part 2 only; they decide nothing (DEC-275),
+              and what the rows still give for part 1 is recomputed from them.
+              Same-seed reproduction of the pool now needs both commands.
