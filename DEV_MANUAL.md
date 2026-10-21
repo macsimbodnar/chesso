@@ -3558,8 +3558,12 @@ build/tools/eval_spread --data .tuning/selfplay_v2.tsv --limit 200000
 Reads `tools/datagen`'s `fen result score phase` and uses only the FEN. Prints
 the distribution of the **unclamped** expensive-stage correction in absolute
 centipawns — p50, p90, p95, p99, p99.9, max — for mobility, for king safety and
-for the two combined, then how many positions exceed each of 150, 200, 250, 300
-and 400, then the worst position per term.
+for the two combined, then how many positions exceed each candidate margin,
+then the worst position per term. The first candidate is the shipped
+`LAZY_EVAL_MARGIN`, read from `src/search_params.hpp` and not typed, so the
+combined column of its row counts the positions the clamp binds on; 150, 200,
+250, 300 and 400 follow, less any equal to it (`tools/eval_spread_margins.hpp`,
+S288).
 
 Three terms and not one because a margin that binds on the sum and a margin that
 binds on a single term are different problems. `--limit N` stops after N

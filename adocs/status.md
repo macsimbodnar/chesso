@@ -49,15 +49,23 @@ steps' worktrees.** The worktrees themselves (sources, about 9 GB), main's
 `.ref-builds/` (9 GB) and `.tuning/` (17 GB) are untouched: pruning them is
 the owner's call.
 
-**S110 phase 1, reworked** (an Opus subagent, `../chesso-s110`): the
-non-pawn key (node-identical alone, 16384 slots a side by its census) and two
-tables. The fast check found the summed blend applied about twice the
-parent's correction at the seed, so by **DEC-300** the tables blend as a
-weighted average; the agent is reworking it. Phase 2 (about 2.5 h: mutants
-90 min, gate_extra, Debug self-play) restarts from the build; the sweep run on
-the summed design is void. Ceilings and budgets within DEC-295's guard by
-**DEC-299**. SPRT by **DEC-297**: 32+0.32, Hash 64, `{0, 10}`, up to about
-20 h. The owner may overrule DEC-297 before its run starts.
+**S110, phase 2 on the machine** (`../chesso-s110`, diff
+`.tuning/coord/S110/s110_phase1.diff`): weighted-average blend (DEC-300),
+confirmed by a pre-registered gain measurement (12 games at 4 M nodes a ply:
+R_avg 0.787 against R_sum 1.575 of the parent's applied correction; the pair
+cold on 0.6 % of reads). bench 6042933 -> 6570375; off switch identical to
+the parent; census 16384. Goldens by their scripts: floors hold (mined set 167
+exact against 163; mate in three 12 against 11; first-mate unchanged); carry
+ceilings D 0 -> 1 (DEC-299) and **E 1 -> 4, outside the guard: carried
+provisionally by DEC-301, the owner rules before an H1 ships**; budgets C, D,
+E, F moved. Fast suite 49/49 both builds. **Running from 13:00:** fixture B,
+gate2, mutants (46), Debug self-play, gate_extra (`p2/chain.sh`, `CHAIN-DONE`
+or `-FAILED` in `p2/chain.console`, watcher 5 h). Then commit and the SPRT
+(DEC-297: 32+0.32, Hash 64, `{0, 10}`, up to about 20 h).
+
+**S288 done** (filler): eval_spread puts the shipped margin first, read from
+the parameter list; F25 closed; the margin comment S287 restated now says so.
+Fast check before the commit: three findings, fixed.
 
 ## 2026-10-20: power cut; S082's pool topped up (DEC-296)
 

@@ -171,6 +171,15 @@ target_include_directories(test_corpus_hash PRIVATE ../tools)
 add_doctest_target(test_corpus_dedupe)
 target_include_directories(test_corpus_dedupe PRIVATE ../tools)
 
+# S288, 2026-09-10_adversarial-F25: tools/eval_spread's candidate margins left
+# out the 184 that shipped, so the tool judging the margin never reported it.
+# The list is tools/eval_spread_margins.hpp, read from search_params.hpp; this
+# holds the shipped value first in both builds, and in the tune build that it
+# follows the parameter when set. No dataset, so it is a fast test like the
+# rest.
+add_doctest_target(test_eval_spread)
+target_include_directories(test_eval_spread PRIVATE ../tools)
+
 # S161: the FEN load boundary. 2026-08-22_adversarial-F01 -- load_FEN()
 # validated syntax and not semantics, so castling rights with no king or rook on
 # their squares, and en-passant squares with no victim, were accepted; the moves

@@ -835,7 +835,7 @@ the region where the gradient is knowingly not the derivative.
 400}`** (`tools/eval_spread.cpp:32-35`) and do not include the 184 that has
 shipped since S085 -- in the tool whose entire job is S039's re-decision.
 
-Status: planned — S288, 2026-10-21: S039 read H0 (record `ca578de`) and kept the clamp, so the tool's missing 184 is live again; S288 reads the shipped margin from `src/search_params.hpp`. Previously: open (this report's header: open on all of them).
+Status: closed — S288, 2026-10-21: `tools/eval_spread_margins.hpp`'s `candidate_margins()` puts `LAZY_EVAL_MARGIN`, the symbol `src/search_params.hpp` generates, first, and `tests/test_eval_spread.cpp` fails when it is absent (observed red first). Previously: planned — S288, 2026-10-21; open (this report's header: open on all of them).
 
 **F26 low stale zero-weight comments in `src/evaluation.hpp`.** Five blocks say
 *"Zero until the tuner fits them"*; the dependent claims are the defect.

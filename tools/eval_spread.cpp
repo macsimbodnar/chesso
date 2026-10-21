@@ -24,16 +24,11 @@
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
+#include "eval_spread_margins.hpp"
 #include "evaluation.hpp"
 
 namespace
 {
-
-// Candidates for the margin, the current 150 first. Reported as an exceedance
-// count rather than as a verdict: what a truncation costs in Elo is an SPRT
-// question, and this program only says how often the truncation happens.
-const std::vector<int> MARGINS = {150, 200, 250, 300, 400};
-
 
 struct options_t
 {
@@ -220,7 +215,11 @@ int main(int argc, char** argv)
   printf("%-12s %12s %12s %12s\n", "", series[0].name, series[1].name,
          series[2].name);
 
-  for (const int margin : MARGINS) {
+  // Candidates for the margin, the shipped one first. Reported as an
+  // exceedance count rather than as a verdict: what a truncation costs in Elo
+  // is an SPRT question, and this program only says how often the truncation
+  // happens.
+  for (const int margin : eval_spread::candidate_margins()) {
     printf("  %-10d", margin);
 
     for (const series_t& column : series) {

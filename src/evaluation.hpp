@@ -318,10 +318,10 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 // p99.9 178 and a maximum of 330, clamping 0.365 % of them against 0.104 % with
 // king safety at zero. That was taken at the margin of 150 that shipped then,
 // so on that corpus the share clamped at 184 is lower and has not been
-// re-measured. tools/eval_spread measures the spread, but its candidate
-// margins do not include 184; the share clamped at 184 is what the tuner's
-// load report counts ("the clamp binds on"), which at S262 read 36503 of the
-// 10795695 rows of selfplay_v2_dedup.tsv, 0.338 %.
+// re-measured. tools/eval_spread measures the spread and, since S288, the
+// share clamped at the shipped margin first among its candidates; the tuner's
+// load report counts the same share ("the clamp binds on"), which at S262
+// read 36503 of the 10795695 rows of selfplay_v2_dedup.tsv, 0.338 %.
 //
 // The value itself moved to src/search_params.hpp at S073, where it is one of
 // the parameters the tune build exposes over UCI. What it means stays here,
