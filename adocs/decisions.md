@@ -15199,3 +15199,34 @@ Consequences: The pool comes from two datagen runs and two seeds. Datagen's
               nodes -- exist for part 2 only; they decide nothing (DEC-275),
               and what the rows still give for part 1 is recomputed from them.
               Same-seed reproduction of the pool now needs both commands.
+
+## DEC-297  2026-10-21  S110's non-pawn correction is measured once at 32+0.32, Hash 64, {0, 10} nElo, not first at the harness's 8+0.08
+Tags:         sprt, harness, longer-control, correction-history, s110, s111, dec-286, dec-294, pre-registration
+Context:      DEC-294 left S110's and S111's bounds and control to be
+              pre-registered when each is next. The family's one measured
+              member, S099's pawn table, read H0 at the harness's 8+0.08
+              (`{0, 5}`, nElo -4.71 +/- 6.84) and H1 at 32+0.32 (`{0, 10}`,
+              nElo +12.56 +/- 9.89, S283); CPW states the family's gains grow
+              with the time control. DEC-286 kept 8+0.08 for every other
+              verdict, as one exception for one pair. The owner's standing
+              instruction of 2026-10-21: strength and correctness outrank
+              machine time; few questions.
+Decision:     By the coordinator under that instruction. S110 takes one SPRT:
+              its commit against its parent, 32+0.32, Hash 64,
+              `noob_3moves.epd`, `{0, 10}` nElo, alpha = beta = 0.05; worst
+              case about 10500 games, about 19-20 h at 534-545 games an hour,
+              abort at 40 h or a forfeit rate above 1 %. H1 ships; H0 or no
+              verdict reverts it whole and is recorded as zero. S111 is
+              pre-registered the same way unless S110's reading says
+              otherwise, each its own verdict. The owner may overrule before
+              the run starts.
+Rejected:     8+0.08 `{0, 5}` first -- the family's only reading there
+              missed a gain the longer control found, so an H0 there would
+              open the same estimate and LTC run S099 needed (about 4.5 h +
+              3.7 h before the 19 h). `{0, 5}` at 32+0.32 -- about 77 h worst
+              case, as DEC-286 rejected. `{0, 8}` -- about 30 h worst case for
+              a resolution the family's sourced figures do not ask for.
+Consequences: The second verdict at the longer control, by the same shape as
+              S283's, so the two are read on one scale. A small true gain
+              (under about 5 nElo) more likely reads H0 than at `{0, 5}`;
+              that is the price of a bounded run, recorded beside any H0.
