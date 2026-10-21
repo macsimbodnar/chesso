@@ -174,6 +174,9 @@ void uci_wait_for_search();
 // a case can see what `ucinewgame` and uci_init() leave in it.
 const pawn_correction_t* uci_pawn_correction();
 
+// And S110's two non-pawn tables, for the same cases.
+const nonpawn_correction_t* uci_nonpawn_correction();
+
 // Aspiration window failures in the last iterative_deepening_search(). Test
 // instrumentation, and the precondition a mate case driven through that
 // function needs: without it the case cannot tell a narrow window that held

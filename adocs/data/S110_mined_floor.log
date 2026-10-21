@@ -1,0 +1,19 @@
+# S110, 2026-10-21: python3 adocs/data/S156_mined_floor_sweep.py --ref <fixture> --floor 163 --jobs 12
+# on 0c8634b, a commit object on no branch: a8c7e3b plus S110 (DEC-300's tree), the
+# floor the parent ships compiled in. 163 still separates: shipping 167, weakened 156.
+
+318 positions, depth 10, ref 0c8634b1549d4a34733fef2d529f1330c645724e
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     167          169            0   16.5s
+          2     161          166            0   15.6s
+          1     156          159            0   15.0s
+          0     156          159            0   15.0s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 167, weakened-guard value 156, gap 11
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_fosltevc/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 156 exact, 159 right sign, 0 wrong sign
+    logged: the mined set reads 156 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+S156 rc=0

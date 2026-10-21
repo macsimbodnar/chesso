@@ -298,9 +298,10 @@ int search_qs_futility_value_probe(piece_t victim);
 // The static evaluation negamax_at's consumers read, S099: `raw_eval` plus the
 // pawn correction `state` carries for this board's side to move and pawn key,
 // held strictly inside the mate band's edge -- or `raw_eval` itself where the
-// state carries no table. The node's own function, exported so a case can
-// assert the bound on inputs no search produces, a raw score at the band's
-// edge among them.
+// state carries no table. Since S110 the correction is the blend of the pawn
+// read and the two non-pawn reads where the state carries those tables too.
+// The node's own function, exported so a case can assert the bound on inputs
+// no search produces, a raw score at the band's edge among them.
 int search_corrected_eval_probe(const search_state_t* state,
                                 const board_t* board,
                                 int raw_eval);
@@ -323,4 +324,9 @@ bool search_correction_may_learn_probe(bool in_check,
 // the file CHESSO_PAWN_KEY_CENSUS names, then starts empty. Does nothing when
 // the variable is unset. The UCI layer calls it at every new-game reset.
 void search_pawn_key_census_flush();
+
+// S110's census of the two non-pawn keys, the same shape: appends the distinct
+// keys of each colour's table, per side to move, to the file
+// CHESSO_NONPAWN_KEY_CENSUS names, four counts a line, then starts empty.
+void search_nonpawn_key_census_flush();
 #endif

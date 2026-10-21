@@ -1,0 +1,29 @@
+# S110: sum or average, measured. adocs/data/S110_blend_gain.py on the candidate's
+# tune build at CorrHistNonPawnWeight 100 (the tree DEC-300 made, 2^14 slots;
+# binary sha256 5d43673e614129e8), 2026-10-21, twelve games in parallel on the
+# idle machine, normal priority. Node-limited, so the load moved nothing. The rule,
+# pre-registered in the script's header and S110's step file before the run: the
+# design whose R is closer to 1 in |ln R| ships; a tie within 0.05 goes to the sum.
+# '*' is a game stopped at 120 plies; the results are python-chess's and judge nothing.
+
+game  0  120 plies  *        r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  1   54 plies  1/2-1/2  r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  2   27 plies  1/2-1/2  r1bqkbnr/pppp1p1p/2n3p1/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  3  120 plies  *        r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  4   99 plies  1-0      r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  5  120 plies  *        r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  6   43 plies  1/2-1/2  r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 4
+game  7  107 plies  1/2-1/2  r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4
+game  8   73 plies  1/2-1/2  r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+game  9   58 plies  1/2-1/2  r1bqk1nr/pppp1ppp/2n5/2b1p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+game 10   33 plies  1/2-1/2  r1bqkbnr/1ppp1ppp/p1n5/4p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+game 11  120 plies  *        r1bqkbnr/pppp1p1p/2n3p1/4p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+
+S110 blend gain: 12 games, go nodes 4000000, up to 120 plies, engine /home/max/ws/chesso/.tuning/coord/S110/p1/blendgain/chesso_tune
+                 reads  mean|p|   R_sum   R_avg  |ln Rs|  |ln Ra|    m/p  pair 0 (entry)  pawn 0 (entry)
+all          969717176    17.10   1.575   0.787    0.454    0.239  0.398   0.006   0.001   0.036   0.002
+plies 1-40   445616818    14.49   1.544   0.772    0.434    0.259  0.389   0.011   0.002   0.046   0.004
+plies 41-80  315565320    17.77   1.562   0.781    0.446    0.247  0.398   0.001   0.000   0.032   0.000
+plies 81-120 208535038    21.68   1.635   0.817    0.491    0.202  0.411   0.001   0.000   0.023   0.000
+
+rule: |ln R_sum| 0.454, |ln R_avg| 0.239 -- the average is closer to 1: the average ships

@@ -204,6 +204,7 @@ std::atomic<uint64_t> game_nodes{0};
 search_t run_search(game_t* game,
                     transposition_table_t* tt,
                     pawn_correction_t* correction,
+                    nonpawn_correction_t* nonpawn_correction,
                     uint64_t nodes,
                     int max_depth)
 {
@@ -220,6 +221,9 @@ search_t run_search(game_t* game,
   // one before S099. Owned by the worker and cleared per game, as the UCI
   // layer clears its own on `ucinewgame`.
   state.pawn_correction = correction;
+
+  // And S110's two non-pawn tables beside it, owned and cleared the same way.
+  state.nonpawn_correction = nonpawn_correction;
 
   tt_new_search(tt);
 
@@ -381,6 +385,9 @@ void play_games(const options_t& opts,
   // worker thread -- though at the census's size it is 32 KiB. S099.
   auto correction = std::make_unique<pawn_correction_t>();
 
+  // S110's two non-pawn tables, the same way: 256 KiB for the pair.
+  auto nonpawn_correction = std::make_unique<nonpawn_correction_t>();
+
   std::mt19937_64 rng(opts.seed + index);
 
   const uint64_t share =
@@ -407,6 +414,7 @@ void play_games(const options_t& opts,
     }
     tt_reset(&tt);
     correction_reset(correction.get());
+    correction_reset(nonpawn_correction.get());
 
     if (!load_FEN(DEFAULT_POSITION, &game)) { break; }
 
@@ -426,7 +434,8 @@ void play_games(const options_t& opts,
     // reasonable game reaches, and its label is fixed before a single move of
     // real play.
     const search_t opening =
-        run_search(&game, &tt, correction.get(), opts.nodes, MAX_DEPTH);
+        run_search(&game, &tt, correction.get(), nonpawn_correction.get(),
+                   opts.nodes, MAX_DEPTH);
 
     if (opening.mate_found || std::abs(opening.score) > opts.opening_limit) {
       continue;
@@ -441,7 +450,8 @@ void play_games(const options_t& opts,
       if (result >= 0.0) { break; }
 
       const search_t found =
-          run_search(&game, &tt, correction.get(), opts.nodes, MAX_DEPTH);
+          run_search(&game, &tt, correction.get(), nonpawn_correction.get(),
+                     opts.nodes, MAX_DEPTH);
 
       if (found.best_move == 0) { break; }
 

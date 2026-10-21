@@ -15320,3 +15320,32 @@ Consequences: S110's phase 1 is reworked and phase 2 re-run from the build;
               the sweep taken on the summed design is void. S111 joins the
               same average with its own weight. A later gain above 1, if the
               family wants one, is S127's to find.
+
+## DEC-301  2026-10-21  S110's case E short-line ceiling rises 1 -> 4, outside DEC-299's guard: carried provisionally, the owner rules before an H1 ships
+Tags:         testing, mate, s170, s110, dec-299, dec-295, sprt, owner-question
+Context:      S110's sweep (`adocs/data/S110_sweep_s170.txt`, bench 6570375)
+              read with `S203_case_sweep.sh --ceilings` over S202's, S261's,
+              S286's and S110's grids answers ceilings 2, 5, 4, 1, 4, 2
+              against 2, 5, 4, 0, 1, 2: D +1, inside DEC-299's guard, and
+              **E +3, outside it** -- the cell at stride 1, 4000000 nodes
+              reports 15 mate lines with 4 short (S286's: 23 with 1). Budgets
+              by the script: C 1200000 -> 500000, D 500000 -> 1500000, E
+              300000 -> 1000000, F 300000 -> 100000. Both mate floors hold:
+              the mined set 167 exact at depth 10 against `EXACT_FLOOR` 163,
+              mate in three 12 of 24 against 11; first-mate depths 9 and 9
+              (mate in 5) unchanged; S192's count inside its band. DEC-299 said phase 2
+              stops for the owner outside the guard; the owner's standing
+              instruction says do not get blocked.
+Decision:     By the coordinator. S110's commit carries the script's ceilings
+              and budgets, E's 4 included, each moved site citing this id; the
+              rest of phase 2 and the SPRT proceed. **The owner rules on E
+              before an H1 ships**: accept the ceiling, or a study of E's
+              short lines on S110's tree first (an S202-style reproduction).
+              An H0 reverts the commit and the question with it.
+Rejected:     Idling the machine until the owner answers -- phase 2's
+              remaining checks and a 10-20 h SPRT run meanwhile, and the
+              ruling is needed only on H1. Accepting E's 4 as final without
+              the owner -- DEC-299's guard is the owner's form and was
+              breached.
+Consequences: S110's done stamp cannot be written on H1 until the owner's
+              ruling is recorded; the H1 commit names it.

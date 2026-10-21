@@ -90,6 +90,8 @@
 // is the parent's tree, and `CorrHistWeightCap`, the cap on the correction's
 // update weight. The count goes 73 to 75; S099's H0 took them out and S286
 // relanded them on S283's H1.
+// S110 adds one: `CorrHistNonPawnWeight`, the non-pawn tables' weight beside
+// the pawn table's, whose 0 is the parent's tree. The count goes 75 to 76.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -102,7 +104,7 @@
 // meant to be: RfpMinPly's floor is asserted by the mate suite in test_engine
 // and QuietHistoryMax's two edges by the band clearance in test_evaluation.
 //
-// GOLDEN (DEC-142): the 75 defaults and their ranges below. A deliberate-change
+// GOLDEN (DEC-142): the 76 defaults and their ranges below. A deliberate-change
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
@@ -138,6 +140,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RazorDepth",                1,     0,       8},
   {"CorrHistMax",              47,     0,      94},
   {"CorrHistWeightCap",       144,     1,     256},
+  {"CorrHistNonPawnWeight",   100,     0,     200},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},
   {"LmrBase",                 113,     0,     400},
@@ -348,6 +351,27 @@ TEST_SUITE("search parameters")
                           static_cast<int64_t>(CORRHIST_SCALE);
 
     CHECK(worst < static_cast<int64_t>(INT32_MAX));
+
+    // S110. The non-pawn weight is a percentage of the pawn read's 100 in a
+    // weighted average (DEC-300), 0 off and 200 twice the pawn read's weight;
+    // an average needs no bound of its own, CorrHistMax holding it. The
+    // blend's worst numerator, `200 * pawn + weight * (white + black)` at the
+    // range tops, is nowhere near int32.
+    const int weight_index = index_of("CorrHistNonPawnWeight");
+
+    REQUIRE(weight_index >= 0);
+
+    const search_param_t& weight_param =
+        search_param_info(static_cast<size_t>(weight_index));
+
+    CHECK_EQ(weight_param.min_value, 0);
+    CHECK_EQ(weight_param.max_value, 200);
+
+    const int64_t blend_worst =
+        200LL * max_param.max_value +
+        2LL * weight_param.max_value * max_param.max_value;
+
+    CHECK(blend_worst < static_cast<int64_t>(INT32_MAX));
   }
 
 

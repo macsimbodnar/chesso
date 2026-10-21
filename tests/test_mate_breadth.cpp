@@ -88,14 +88,16 @@ static constexpr int SCORE_DEPTH = 10;
 
 // GOLDEN (DEC-142): 163, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 164 with the guard shipping, 160 with it weakened (S286, below).
+// 167 with the guard shipping, 156 with it weakened (S110, below; 164 and 160
+// at S286).
 // Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 163, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 1 below the shipping count, 3 above the weakened one. The S156
+// Margin: 4 below the shipping count and 7 above the weakened one since S110
+// (1 and 3 at S286, below). The S156
 // script's rule admits any floor strictly above what the weakened guard finds
 // and at or below what ships -- 161 to 164 against S286's 160 and 164 -- and
 // flags one outside that band as no longer separating. The floor this gate has
@@ -132,6 +134,15 @@ static constexpr int SCORE_DEPTH = 10;
 // goes back to 159 with a revert of S286. S099 read the same ends on its own
 // landing, whose code is this tree's line for line, and its H0 took the 163
 // back out.
+//
+// **Re-taken at S110 and unchanged.** With the non-pawn correction tables
+// averaged in (DEC-300), S156's sweep at `--floor 163` reads **167** exact at
+// RfpMinPly 3, 161 at 2 and **156** at 1 and 0, and the gate built at
+// RfpMinPly 1 is red at 156 (`adocs/data/S110_mined_floor.log`). 163 still
+// separates, inside the band the script admits (157 to 167), so it holds, as
+// DEC-299's guard asks. It is no longer 1 below the shipping count, the
+// convention the margin above describes; raising it to 166 would tighten the
+// test, which the script does not require, and is not done here.
 static constexpr int EXACT_FLOOR = 163;
 
 

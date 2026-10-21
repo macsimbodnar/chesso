@@ -483,6 +483,41 @@
   X(CORRHIST_MAX,        "CorrHistMax",        47, 0,  94)                     \
   X(CORRHIST_WEIGHT_CAP, "CorrHistWeightCap", 144, 1, 256)                     \
                                                                                \
+  /* NON-PAWN CORRECTION HISTORY, S110. Two more tables of the pawn table's    \
+     kind, `nonpawn_correction_t` in src/data_structures.hpp: one keyed on     \
+     White's non-pawn pieces and one on Black's (board_t::nonpawn_hash), each  \
+     a slot per side to move and key, each with the pawn table's entry,        \
+     update, grain, scale, clamp and the two parameters above, and each        \
+     taught at the same nodes, under the same gate, with the same difference.  \
+     negamax_at() reads all three at the same site, once. Dimensions: two      \
+     constant-sized int32 arrays, [side to move][CORRHIST_NONPAWN_ENTRIES],    \
+     16384 slots a side by S110's census, 128 KiB each. Clamps: each entry     \
+     at +/-CorrHistMax * CORRHIST_GRAIN and each read at +/-CorrHistMax, the   \
+     pawn table's own; the average of the three reads inside CorrHistMax by    \
+     construction; the corrected score inside the mate band's edge.            \
+                                                                               \
+     CORRHIST_NONPAWN_WEIGHT is how the two non-pawn reads join the pawn       \
+     table's (DEC-300): a weighted average, the pawn read at 100 and the       \
+     pair's mean at this weight, `(100 * pawn + weight * (white + black) /     \
+     2) / (100 + weight)`, rounded half away from zero                         \
+     (src/correction_history.hpp `correction_blend`). An average and not a     \
+     sum because the three tables learn the same residual at the same          \
+     nodes, so a sum would apply about twice what the pawn table applied       \
+     alone; what is applied stays inside CorrHistMax, and the total gain is    \
+     S127's to fit. Seed **100, form (c), the range midpoint, stated as        \
+     such** (DEC-134; the step file's constants section): range 0 to 200,      \
+     where 0 is the non-pawn tables switched off -- the tree S286 landed,      \
+     which DEC-215 wants proved: the tune build at 0 must print the parent's   \
+     bench stream -- 100 is equal weight, the pawn structure and the           \
+     non-pawn one half each, and 200 twice the pawn table's, a third to each   \
+     of the three tables. Nothing here claims one key is worth more than the   \
+     other before a fit says so. A ratio between two corrections and not a     \
+     quantity in the material scale, hence a percentage; the pair's mean and   \
+     not each table on its own because the pair is one non-pawn structure      \
+     split by colour. S127 owns the blend across the correction tables as      \
+     one fitted vector. Implemented from the description, DEC-221. */          \
+  X(CORRHIST_NONPAWN_WEIGHT, "CorrHistNonPawnWeight", 100, 0, 200)             \
+                                                                               \
   /* Null move pruning gives the opponent a free move and searches what is     \
      left `depth - 1 - (NULL_MOVE_BASE + depth / NULL_MOVE_DIVISOR)` deep.     \
      Deeper searches can afford to give up more, since what is left is still   \

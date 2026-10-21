@@ -71,6 +71,11 @@ static proven_mate_line_t proven_mate_line = {};
 // no option sizes it, and at the census's size it is 32 KiB.
 static pawn_correction_t pawn_correction = {};
 
+// S110's two non-pawn correction tables, owned, attached and cleared exactly
+// where the pawn table is. Static for the same reason; 256 KiB for the pair at
+// the census's size, CORRHIST_NONPAWN_ENTRIES.
+static nonpawn_correction_t nonpawn_correction = {};
+
 static std::thread search_thread;
 static std::mutex output_mutex;
 
@@ -142,6 +147,10 @@ const transposition_table_t* uci_tt()
 
 const pawn_correction_t* uci_pawn_correction()
 { return &pawn_correction; }
+
+
+const nonpawn_correction_t* uci_nonpawn_correction()
+{ return &nonpawn_correction; }
 
 
 int uci_last_aspiration_failures()
@@ -1064,6 +1073,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   state.tt = &tt;
   state.proven_mate = &proven_mate_line;
   state.pawn_correction = &pawn_correction;
+  state.nonpawn_correction = &nonpawn_correction;
   assert(state.tt != nullptr);
 
   tt_new_search(state.tt);
@@ -1807,20 +1817,24 @@ bool command_register(std::queue<std::string>& args)
 // one is searched cold: `set_position` never clears the table since S271
 // (DEC-264), and it never clears the proven mate line, which outlives a search
 // by design (S170). S189. The pawn correction table is a game's too, S099:
-// what one game taught it about a structure is not carried into the next.
+// what one game taught it about a structure is not carried into the next. So
+// are the two non-pawn tables, S110.
 static void reset_for_new_game()
 {
   stop_and_join_search();
 
 #ifdef CHESSO_TUNE
-  // S099's census: the game that ends here is one line of its file.
+  // S099's census: the game that ends here is one line of its file. S110's
+  // the same.
   search_pawn_key_census_flush();
+  search_nonpawn_key_census_flush();
 #endif
 
   set_position(DEFAULT_POSITION);
   tt_reset(&tt);
   correction_reset(&pawn_correction);
   proven_mate_line.length = 0;
+  correction_reset(&nonpawn_correction);
   still_in_opening = true;
 }
 
@@ -2406,10 +2420,11 @@ bool command_test(std::queue<std::string>& args)
     // S271 took that clear off every `position` (DEC-264); without it a second
     // `test` in one process ran warm on what the first left.
     // The correction table with it, S099, so a second `test` reads the first
-    // one's total on that table too.
+    // one's total on that table too; and S110's two non-pawn tables.
     if (initial_position != entry.FEN) {
       tt_reset(&tt);
       correction_reset(&pawn_correction);
+      correction_reset(&nonpawn_correction);
     }
 
     set_position(entry.FEN);
@@ -2596,8 +2611,10 @@ void uci_init()
 
   // The table tt_resize() just handed back is empty, and so is this one: a
   // process that runs uci_init() more than once -- every test binary linking
-  // this file -- starts each engine on a cold correction as well. S099.
+  // this file -- starts each engine on a cold correction as well. S099. And
+  // on cold non-pawn tables, S110.
   correction_reset(&pawn_correction);
+  correction_reset(&nonpawn_correction);
 
   running = true;
 }

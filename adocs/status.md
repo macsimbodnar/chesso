@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-21, by hand.
 
-## 2026-10-21: a second power loss; S287 done; S082's merge next
+## 2026-10-21: a second power loss; S287, S082, S288 done; S110's SPRT
 
 **The machine went down at 09:12-09:13** with no shutdown, panic, MCE, OOM or
 thermal event logged, idle at the time; back at 10:35 on kernel 7.2.6 (it was
@@ -49,19 +49,20 @@ steps' worktrees.** The worktrees themselves (sources, about 9 GB), main's
 `.ref-builds/` (9 GB) and `.tuning/` (17 GB) are untouched: pruning them is
 the owner's call.
 
-**S110, phase 2 on the machine** (`../chesso-s110`, diff
-`.tuning/coord/S110/s110_phase1.diff`): weighted-average blend (DEC-300),
-confirmed by a pre-registered gain measurement (12 games at 4 M nodes a ply:
-R_avg 0.787 against R_sum 1.575 of the parent's applied correction; the pair
-cold on 0.6 % of reads). bench 6042933 -> 6570375; off switch identical to
-the parent; census 16384. Goldens by their scripts: floors hold (mined set 167
-exact against 163; mate in three 12 against 11; first-mate unchanged); carry
-ceilings D 0 -> 1 (DEC-299) and **E 1 -> 4, outside the guard: carried
-provisionally by DEC-301, the owner rules before an H1 ships**; budgets C, D,
-E, F moved. Fast suite 49/49 both builds. **Running from 13:00:** fixture B,
-gate2, mutants (46), Debug self-play, gate_extra (`p2/chain.sh`, `CHAIN-DONE`
-or `-FAILED` in `p2/chain.console`, watcher 5 h). Then commit and the SPRT
-(DEC-297: 32+0.32, Hash 64, `{0, 10}`, up to about 20 h).
+**S110 committed, its SPRT on the machine** (built in `../chesso-s110`):
+weighted-average blend (DEC-300), confirmed by a pre-registered gain
+measurement (12 games at 4 M nodes a ply: R_avg 0.787 against R_sum 1.575 of
+the parent's applied correction; the pair cold on 0.6 % of reads). bench
+6042933 -> 6570375; off switch identical to the parent; census 16384.
+Goldens by their scripts: floors hold (mined set 167 exact against 163; mate
+in three 12 against 11; first-mate 9 and 9 unmoved); carry ceilings D 0 -> 1
+(DEC-299) and **E 1 -> 4, outside the guard: carried provisionally by
+DEC-301, the owner rules before an H1 ships**; budgets C, D, E, F moved.
+Phase 2's chain 13:00-15:01 green: gate2 49/49 both builds, **mutants 46 of
+46**, Debug self-play 8 games 0 Assertion, gate_extra five stages. The SPRT:
+DEC-297, 32+0.32, Hash 64, `{0, 10}`, cap 5250 rounds, up to about 20 h
+(`adocs/data/S110_sprt.sh`). **S111** (continuation correction) starts blind
+meanwhile, on S110's commit, agent-only.
 
 **S288 done** (filler): eval_spread puts the shipped margin first, read from
 the parameter list; F25 closed; the margin comment S287 restated now says so.
