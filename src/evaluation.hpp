@@ -306,8 +306,9 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 // correction observed over 149084 positions of S028 self-play, where the
 // tapered mobility term ran p50 19, p95 60, p99 81, p99.9 107 and a maximum of
 // 143 centipawns -- so the clamp still never binds on that corpus and the
-// shortcut's soundness argument is unchanged by the move. S039 re-decides this
-// number from measured spread and should expect the moved incumbent.
+// shortcut's soundness argument is unchanged by the move. S039 measured
+// retiring the shortcut and this clamp together and read H0 (record ca578de,
+// revert 74d0adf): both are kept, and this number with them.
 //
 // It bounds the sum of every expensive term, not each one, so king safety
 // shares the same budget -- and it has shipped at fitted, non-zero weights
@@ -316,9 +317,11 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
 // same 1490839 positions put the combined number at p50 27, p95 90, p99 128,
 // p99.9 178 and a maximum of 330, clamping 0.365 % of them against 0.104 % with
 // king safety at zero. That was taken at the margin of 150 that shipped then,
-// so the clamped share at 184 is lower and has not been re-measured. S039
-// re-decides the margin from measured data, and tools/eval_spread is what
-// measures it.
+// so on that corpus the share clamped at 184 is lower and has not been
+// re-measured. tools/eval_spread measures the spread, but its candidate
+// margins do not include 184; the share clamped at 184 is what the tuner's
+// load report counts ("the clamp binds on"), which at S262 read 36503 of the
+// 10795695 rows of selfplay_v2_dedup.tsv, 0.338 %.
 //
 // The value itself moved to src/search_params.hpp at S073, where it is one of
 // the parameters the tune build exposes over UCI. What it means stays here,

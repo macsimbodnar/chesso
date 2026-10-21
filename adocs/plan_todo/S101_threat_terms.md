@@ -1,6 +1,6 @@
 id:         S101
 goal:       evaluation terms for a piece attacked by a lesser piece, for an attacked piece nobody defends, and for a safe pawn push that would attack a piece, fitted like every other constant
-accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the terms are fitted with every other constant frozen and the held-out error reported before and after, which is how every constant in this engine was fitted; the term is accumulated or computed in a stage that already has the attack bitboards it needs, never rebuilt from the bitboards a second time, since evaluate() runs at every quiescence node and INV-4 exists to keep that cost out; INV-5 holds -- mirroring a position agrees rather than negates, asserted in tests/test_evaluation.cpp; the step states which stage the terms land in and why (S039 retires the lazy bound; if S039 read H0, the bound must still hold by construction); tools/eval_model.hpp gains the features and tools/tuner_groups.hpp a group whose partition properties still hold; each threat kind is screened before the family's one SPRT (DEC-259); the fast suite green
+accepts:    an SPRT verdict against a named commit, recorded whatever it is (INV-6); the terms are fitted with every other constant frozen and the held-out error reported before and after, which is how every constant in this engine was fitted; the term is accumulated or computed in a stage that already has the attack bitboards it needs, never rebuilt from the bitboards a second time, since evaluate() runs at every quiescence node and INV-4 exists to keep that cost out; INV-5 holds -- mirroring a position agrees rather than negates, asserted in tests/test_evaluation.cpp; the step states which stage the terms land in and why (S039 read H0 and kept the lazy bound, record `ca578de`, so the bound must still hold by construction); tools/eval_model.hpp gains the features and tools/tuner_groups.hpp a group whose partition properties still hold; each threat kind is screened before the family's one SPRT (DEC-259); the fast suite green
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
 excludes:   outposts and space, which are S102; king safety, which exists and is fitted; overload threats
 decisions:  DEC-071, DEC-258, DEC-259
@@ -31,9 +31,10 @@ pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
 S262 has landed. S263 built no per-side attack set, since no term read one;
-a term here that needs one builds it once per evaluation. S039 runs before this family
-and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
-owner's amendment of that outcome binds here.
+a term here that needs one builds it once per evaluation. S039 read H0 (record `ca578de`,
+revert `74d0adf`): the lazy shortcut and the clamp are kept. S122's design
+waits on the owner's amendment before S121 starts (DEC-258), and that
+amendment binds here.
 
 ## The hazard is where it is computed, not what it scores
 
@@ -142,9 +143,10 @@ states the enumeration rather than choosing a width.
   S014 removed and INV-4 keeps removed. The term reuses the existing loop's
   sets or it does not ship.
 - **The stage decision changes the lazy margin's input.** A term in the
-  expensive stage enters the sum S039 sizes the clamp on; a term in the cheap
-  stage does not. S039 runs before S122 and after this step by DEC-172's
-  order, so the choice here is an input to that run and the step says so.
+  expensive stage enters the sum the clamp bounds at `LAZY_EVAL_MARGIN`, kept
+  by S039's H0 (record `ca578de`); a term in the cheap stage does not. The
+  choice decides whether the clamp can truncate the term, and the step says
+  which stage it takes.
 - **The band is not this engine's.** Stash's +10.13 is at a much higher rating
   than chesso's, and DEC-019's three recorded cases are exactly reported
   figures that did not transfer. Bounds are chosen for a term that may measure
@@ -163,8 +165,10 @@ is a speed question as much as a score question.
 
 - **S121 (before)**: builds the attack sets and the mobility area this term
   reads. Running before S121 would mean building them twice.
-- **S039 (after, before S122)**: sizes the clamp on the sum this term may
-  enter. DEC-172 moved S039 behind this step for exactly that reason.
+- **S039 (done, H0, record `ca578de`)**: the clamp on the sum this term may
+  enter is kept. DEC-172 had moved S039 behind this step to size the clamp on
+  that sum; DEC-258 re-formed it into retiring the shortcut and the clamp,
+  which read H0.
 - **S102 (separate)**: outposts and space, the other two reuse-the-fills terms.
 - **S122 (after)**: king safety counts attacks too; the two must not
   double-count the same attack, and the step says how they divide.

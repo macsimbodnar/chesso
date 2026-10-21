@@ -5,7 +5,31 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-20, by hand.
+Updated: 2026-10-21, by hand.
+
+## 2026-10-21: a second power loss; S287 done; S082's merge next
+
+**The machine went down at 09:12-09:13** with no shutdown, panic, MCE, OOM or
+thermal event logged, idle at the time; back at 10:35 on kernel 7.2.6 (it was
+installed 10-20 and pending; 7.1.5 before). Read as a power loss, like 10-16.
+Nothing was lost: **S082's top-up finished at 23:09 the night before**
+(`S082-TOPUP-DONE`, exit 0, 27252 games), and the merge tool and S287's work
+were on disk. The previous coordinator session had stopped reading its
+notifications after 20:51, so the merge tool's report and S287's fast check
+waited until today.
+
+**S287 done** (filler): S039's stale claims restated for its H0; fast check's
+three findings applied (plan.md part B; the margin comment points at the
+tuner's load report, not eval_spread; F05 closed, F16 to S122, F25 to the new
+filler **S288**). Gate green, bench 6042933.
+
+**Local trap, again:** `test_clang_format_script` fails in both builds unless
+`CLANG_FORMAT_MAJOR=22` is exported for ctest too (DEC-146).
+
+**Next:** S082 phase 3 -- the merge tool (`../chesso-s082f`, diff
+`.tuning/coord/S082/s082_phase3.diff`) is under a fast check; then commit,
+`merge` (about 5 min), `verify`, `compare` (about 1 h 30 m). S110 is written
+blind beside `compare`.
 
 ## 2026-10-20: power cut; S082's pool topped up (DEC-296)
 

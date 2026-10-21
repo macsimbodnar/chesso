@@ -33,8 +33,9 @@
 // comparison above would still hold. This is the row that would go red.
 //
 // A step that deliberately changes a value updates this list in the same
-// commit, which is the point: S068 and S039 each move exactly one number and
-// have to say so here. S085 moved ten at once -- an SPSA run returns a vector,
+// commit, which is the point: S068 moved exactly one number and said so here;
+// S039, planned as the second, read H0 and moved none (record ca578de).
+// S085 moved ten at once -- an SPSA run returns a vector,
 // not a value -- and the rule is the same for a vector as for a number. S222's
 // history lane moved eleven: QuietHistoryMax, plain history's six bonus and
 // malus coefficients, the three continuation axes and HistPruneCoeff. A step

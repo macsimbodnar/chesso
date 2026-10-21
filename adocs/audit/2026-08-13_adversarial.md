@@ -281,7 +281,7 @@ above into the test rather than rely on `.tuning/`.
 
 ### 2026-08-13_adversarial-F05  low  `LAZY_EVAL_MARGIN`'s stated precondition is false, and the re-decision it promised has not happened
 
-Status: planned
+Status: closed — S287, 2026-10-21: the precondition was restated before S287 (king safety at fitted weights since S027 shares the budget), and S287's rewrite after S039's H0 (record `ca578de`) promises no re-decision. Previously: planned
 
 **Evidence.** `src/evaluation.hpp:274-282`:
 

@@ -120,11 +120,12 @@ S023 is kept.
 while part A's matches play (DEC-260): the Apple clang build (S260), the
 mutant rows (S259), the bit-exact fold of the two degenerate columns (S134),
 the trace-based tuner (S262), the attack-set sharing (S263) and anchors above
-2850 (S264). Then on the machine: the lazy shortcut and the clamp retire
-together under one non-regression verdict (S039), so the corpus and every fit
-after it see the exact evaluation; the leaf-resolved corpus whose recipe is
-chosen offline on a fixed validation set (S082); and its size and node budget,
-with the one corpus SPRT (S083).
+2850 (S264). Then on the machine: retiring the lazy shortcut and the clamp
+together was measured by one non-regression verdict (S039), which read H0 and
+kept both (record `ca578de`), so the corpus and the fits still see the clamped
+evaluation; the leaf-resolved corpus whose recipe is chosen offline on a fixed
+validation set (S082); and its size and node budget, with the one corpus SPRT
+(S083).
 
 **C. The evaluation families (S135 to S133).** Each family screened offline
 and measured by one SPRT, bisected on H0 (DEC-259). The zero-weight placement
@@ -363,17 +364,17 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S287  **S039's stale claims restated for its H0: the shortcut and the clamp are kept** -- the eight statements S039's revert left and 22 more its grep found, in DEV_MANUAL, specs, comments and eight pending step files; F05 closed, F16 to S122, F25 to the new filler S288; comments and prose only, bench 6042933. Filler, DEC-171. 2026-10-21.
 - S286  **S099's pawn key and pawn-keyed correction relanded, shipping on S283's H1 at 32+0.32** -- `8758622`'s code line for line onto S039's reverted tree, no SPRT owed (DEC-286); bench 5636835 -> 6042933; carry ceilings 2, 5, 4, 0, 1, 2 within DEC-295's guard, `EXACT_FLOOR` 159 -> 163; 34 mutants killed. S110 and S111 now eligible. 2026-10-16.
 - S039  **the lazy shortcut and the clamp are kept: H0 at {-5, 0}** -- retiring both together (`ca321b6`, weights frozen) against `be48e02`: LLR -2.95 over 5116 games, nElo -16.46 +/- 9.52; reverted, bench 6100949 -> 5636835, three stale-statement fixes kept; S122's design awaits the owner before S121; S287 (filler) corrects eight statements still saying S039 retires the clamp. 2026-10-15.
 - S283  **S099's pair gains at the longer control: H1 at {0, 10} nElo, 32+0.32** -- `8758622` against `bacead1`, Hash 64, LLR 2.96 over 4738 games, nElo +12.56 +/- 9.89, 0 forfeits, run through S284's environment bounds and cap; by DEC-286 S099 relands as S286 and S110 and S111 return conditional. 2026-10-15.
 - S285  **the extra-ply mate row separates again on the reverted tree** -- re-mined by S095's procedure (22 separators of 141 at depths 3..12), the script's pick `k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80` at depth 8, mate in 4; red with the guard opened, J01 and J02 killed at the row. Filler, DEC-171, DEC-288. 2026-10-15.
-- S282  **the node band's middle half is read around its own count** -- `S192_node_budget.py` draws it as [c / sqrt 5, 2c] around the derivation count recovered from the pair, [7270, 32512] for 65024 / 3251; a pair not derived by the script reads OUTSIDE; the old quartiles read every fresh band's own count as outside. No golden moves; the current count 13446 is inside. Filler, DEC-171. 2026-10-15.
 
 ## Open
 
-1. S287  **filler, DEC-171** -- eight statements still say S039 retires or re-decides the lazy shortcut and the clamp; restate them for S039's H0
-2. S082  **code committed, the pool generating (about 13 h), then `compare`, DEC-294** -- the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
-3. S110  **S286 landed (DEC-294); bounds and control pre-registered before its run** -- a second correction table keyed on the non-pawn structure, split by colour; its own verdict
+1. S082  **code committed, the pool written in two parts (122748 games and a 27252-game top-up, DEC-296); merge, then `compare`** -- the corpus labels a resolved position rather than the root, its recipe chosen offline on a fixed validation set (DEC-259)
+2. S110  **S286 landed (DEC-294); bounds and control pre-registered before its run** -- a second correction table keyed on the non-pawn structure, split by colour; its own verdict
+3. S288  **filler, DEC-171** -- tools/eval_spread reports the margin that ships, read from src/search_params.hpp rather than typed (2026-09-10_adversarial-F25, live again on S039's H0)
 4. S111  **S286 landed (DEC-294); bounds and control pre-registered before its run** -- correction tables indexed by the move played two and four plies ago; its own verdict
 5. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 6. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family

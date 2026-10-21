@@ -22,9 +22,10 @@ pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
 S262 has landed. S263 built no per-side attack set, since no term read one;
-a term here that needs one builds it once per evaluation. S039 runs before this family
-and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
-owner's amendment of that outcome binds here.
+a term here that needs one builds it once per evaluation. S039 read H0 (record `ca578de`,
+revert `74d0adf`): the lazy shortcut and the clamp are kept. S122's design
+waits on the owner's amendment before S121 starts (DEC-258), and that
+amendment binds here.
 
 ## Why these two and not a longer list
 
@@ -165,7 +166,8 @@ republished (DEC-105, DEC-134).
   different trade and is excluded. The step names the fill each term reuses.
 - **The stage decision.** Both terms are cheap-stage by construction if they
   ride the pawn fills; if either lands in the expensive stage it enters the sum
-  S039 sizes the clamp on, and the step says which.
+  the clamp bounds, kept by S039's H0 (record `ca578de`), and the step says
+  which.
 - **The outpost definition is a choice, not a detail.** Dropping the
   pawn-defended clause makes the term fire on far more squares and the fitted
   weight is then not comparable with any published one.

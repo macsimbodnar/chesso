@@ -934,9 +934,10 @@ inline double error_range(const dataset_t& data,
 // rows at the shipped weights (36503 of 10795695), and S262's held-out
 // comparison (6)
 // -- 0.118446 against the old path's 0.118449 -- was taken under this
-// treatment. Its life is short in any case: S039 retires the clamp, and S122's
-// king safety is not clamped. At exactly the margin the inside derivative is
-// taken.
+// treatment. S039 read H0 and kept the clamp (record ca578de, revert 74d0adf),
+// so the treatment stays; S122's design, written for an unclamped king safety,
+// waits on an owner decision before S121 starts (DEC-258). At exactly the
+// margin the inside derivative is taken.
 inline void gradient(const model_t& model,
                      const dataset_t& data,
                      const double* params,

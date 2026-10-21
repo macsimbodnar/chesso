@@ -2978,7 +2978,9 @@ TEST_SUITE("search: quiescence transposition entries")
     // the first from python3 adocs/data/S192_anchors.py, case "rook on d1", the
     // second from src/search_params.hpp.
     // Moves legitimately on: a refit, and **also** an SPSA run or any step that
-    // moves LAZY_EVAL_MARGIN -- S039 is the step that re-decides it.
+    // moves LAZY_EVAL_MARGIN. S039, which would have retired it with the
+    // shortcut and the clamp, read H0 (record ca578de, revert 74d0adf), so it
+    // stays.
     // Margin: exact. Property beside it: the REQUIRE_FALSE(exact) above, which
     // says the shortcut fired at all and carries no number.
     REQUIRE_EQ(lazy, 383);

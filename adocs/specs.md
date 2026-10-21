@@ -890,8 +890,11 @@ The order stands.
   with the clamp kept: **5.0 % nps**, for a tree 7.5 % smaller and 2.6 % less
   wall time (`adocs/data/S120_measurements.txt`). S120's cache of the score
   behind the shortcut answered 0.1 to 0.4 % of calls and was retired
-  (DEC-257). S039 retires the shortcut and the clamp together under one non-regression
-  verdict (DEC-258), and S122 is the rebuild that needs it.
+  (DEC-257). S039 measured retiring the shortcut and the clamp together under one
+  non-regression verdict (DEC-258) and read H0 (record `ca578de`, revert
+  `74d0adf`): nElo -16.46 +/- 9.52 at `{-5, 0}`, so both are kept. S122, the
+  rebuild that needed the retirement, waits on an owner decision amending its
+  design before S121 starts (DEC-258).
 
 - **Parallel search is phase two, DEC-175.** Phase one's arena is the CCRL
   Blitz 1CPU list (DEC-089) and `Threads` is honestly `max 1`; no step, reserve

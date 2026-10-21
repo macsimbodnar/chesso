@@ -46,8 +46,10 @@ step's fit: decide and write whether the clamp's boundary is treated as flat
 (the derivative of a clamped term is zero) or ignored as today, state the
 share of rows it touches at the then-current weights, and give the
 finite-difference test one fixture row that is clamped so the choice is under
-test either way. S039 and S122 may have moved or removed the clamp by then,
-which changes the share and not the obligation.
+test either way. S039 read H0 and kept the clamp (record `ca578de`, revert
+`74d0adf`); S122, whose design waits on the owner's amendment before S121
+starts (DEC-258), may have moved or removed it by then, which changes the
+share and not the obligation.
 
 ## Technical details (SOTA research, 2026-09-13)
 
@@ -177,8 +179,10 @@ gives 1.0 as the default; it is form (c) and is recorded as the incumbent.
   negative verdict is followed by.
 - **The clamp's gradient is knowingly not the derivative** in the clamped
   region. F24 measured 0.33 % of rows carrying 0.44 % of the stage-two
-  gradient magnitude; S039 and S122 may have moved or removed the clamp by
-  then, which changes the share and not the obligation.
+  gradient magnitude; S039 read H0 and kept the clamp (record `ca578de`), and
+  S122, whose design waits on the owner's amendment before S121 starts
+  (DEC-258), may have moved or removed it by then, which changes the share and
+  not the obligation.
 - **A published total is not a target.** The 99.6 Elo above is seven retunes of
   a different engine over years; it says the direction pays and nothing about
   the size here (DEC-019).
@@ -201,8 +205,10 @@ different situation and is not a prediction.
   reopens here **only if this fit shows a second ridge**, and
   `tools/feature_audit.cpp`'s report over the remaining columns is what that
   is read against.
-- **S039 and S122 (before)**: both may move or remove the clamp the F24
-  amendment is about.
+- **S039 (done, H0, record `ca578de`)**: kept the clamp the F24 amendment is
+  about.
+- **S122 (before)**: may move or remove that clamp; its design waits on the
+  owner's amendment before S121 starts (DEC-258).
 - **S133 (immediately before)**: the tables this fit has to cover.
 - **S127 (block 4)**: SPSA over the search parameters, after this.
 

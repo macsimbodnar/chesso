@@ -164,9 +164,10 @@ ignored. The owner's answer of 2026-09-09, recorded in S187.
 `touches:` is the field that says where a change is allowed to land, so a step
 whose goal is to change a symbol and whose `touches:` omits the file holding
 that symbol cannot be completed without violating its own scope. S039 is the
-measured case: its whole goal is to re-decide `LAZY_EVAL_MARGIN`, its `touches:`
-named `src/evaluation.hpp`, and the constant moved to `src/search_params.hpp` at
-S073 -- `src/evaluation.hpp` keeps only the comment saying what it means.
+measured case: its whole goal was then to re-decide `LAZY_EVAL_MARGIN`, its
+`touches:` named `src/evaluation.hpp`, and the constant moved to
+`src/search_params.hpp` at S073 -- `src/evaluation.hpp` keeps only the comment
+saying what it means.
 2026-08-20_plan_review-F06 found it by reading, S141 is the repair, and this is
 the check that stops the class recurring.
 

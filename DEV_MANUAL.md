@@ -272,7 +272,7 @@ cmake --build build-release-bmi2 -j12 && ctest --test-dir build-release-bmi2 -L 
 
 `-DCHESSO_TUNE=ON`. Every parameter in `src/search_params.hpp` stops being an
 `inline constexpr int` the compiler folds and becomes a variable settable over
-UCI. S073 built it so the hand-tunes, S068 and S039, and the SPSA driver S084
+UCI. S073 built it so the hand-tunes then planned, S068 and S039, and the SPSA driver S084
 need one build rather than one build per point measured. S068 is done and used it
 for exactly one thing — node counts and suite runs, never a strength number,
 which is the rule immediately below. The sweeps in `adocs/data/S033_rfp_*.sh`
@@ -397,7 +397,7 @@ no SPRT is owed.
 `tools/spsa_driver.py`, S084. Simultaneous perturbation stochastic
 approximation over the tune build's UCI parameters: two objective evaluations
 per iteration whatever the dimensionality, so twenty-two parameters cost what
-one costs. The alternative is what S068 and S039 did — one step, one source
+one costs. The alternative is what S068 did — one step, one source
 edit, one rebuild and one SPRT per number.
 
 The installed fastchess -- `alpha 1.8.1 20260720-daa3ea2` on the workstation, the build every verdict since S105 was measured with, `alpha 1.8.2 20260729-74deac2` on the MacBook (S226, 2026-09-13) -- has no tuning mode of its
@@ -1504,7 +1504,7 @@ at all three baselines. DEC-119.
 diff is checked against, so a step whose goal is to change a symbol and whose
 `touches:` omits the file holding it cannot be completed without violating its
 own scope. S039 is the measured case and `2026-08-20_plan_review-F06` is the
-finding: its whole goal is to re-decide `LAZY_EVAL_MARGIN`, its `touches:` named
+finding: its whole goal was then to re-decide `LAZY_EVAL_MARGIN`, its `touches:` named
 `src/evaluation.hpp`, and the value moved to `src/search_params.hpp` at S073 —
 `src/evaluation.hpp` keeps only the comment saying what the number means. **A
 mention inside a comment is not a landing site**, which is the whole of that
@@ -5493,7 +5493,9 @@ the two shas.
   reads what HEAD reads.
 
 **So the reading is re-taken after a refit — DEC-057 — and also whenever
-`LAZY_EVAL_MARGIN` moves, which S039 exists to do.** DEC-169. The suite is safe
+`LAZY_EVAL_MARGIN` moves.** DEC-169. S039 measured retiring the shortcut and
+the clamp together and read H0, so both stay and the margin with them (record
+`ca578de`, revert `74d0adf`). The suite is safe
 from the ulp: the bound `test_eval_trace` holds every position to is 2.875 with
 1e-9 of slack against an ulp near 1e-13, and the pinned case's two clauses are
 `> 2.0` and `> 2.8`, so the tightest of them keeps 0.075 between the assertion
@@ -6078,9 +6080,10 @@ was not the derivative of the error it reported. The exact one is the true
 gradient of the objective the fit minimises, which is what S262's
 finite-difference check holds it to. It changes 0.338 % of the dedup corpus's
 rows at the shipped weights (the clamp binds on 36503 of 10795695), and S262's
-held-out comparison, below, was taken under it. S039 retires the clamp and
-S122's king safety is not clamped, so the question is short-lived. At exactly
-the margin the inside derivative is taken.
+held-out comparison, below, was taken under it. S039 read H0 and kept the clamp
+(record `ca578de`, revert `74d0adf`), so the treatment stays; S122's design,
+written for an unclamped king safety, waits on an owner decision before S121
+starts (DEC-258). At exactly the margin the inside derivative is taken.
 
 **Size and time**, measured on the workstation, nothing else running:
 extraction is **0.8 s per million rows at 12 threads and 3.0 s at one** (the

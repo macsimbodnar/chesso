@@ -1078,7 +1078,8 @@
                                                                                \
   /* The largest correction the lazy evaluation's expensive terms are allowed  \
      to apply. src/evaluation.hpp carries what the number means and what it    \
-     was measured from; S039 re-decides it there. */                           \
+     was measured from; S039 read H0 and kept it (record ca578de, revert       \
+     74d0adf). */                                                              \
   X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)                     \
                                                                                \
   /* Aspiration windows. The root of an iteration is searched in a band around \

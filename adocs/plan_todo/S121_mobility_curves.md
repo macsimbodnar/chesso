@@ -27,9 +27,10 @@ pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
 S262 has landed. S263 built no per-side attack set, since no term read one;
-a term here that needs one builds it once per evaluation. S039 runs before this family
-and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
-owner's amendment of that outcome binds here.
+a term here that needs one builds it once per evaluation. S039 read H0 (record `ca578de`,
+revert `74d0adf`): the lazy shortcut and the clamp are kept. S122's design
+waits on the owner's amendment before S121 starts (DEC-258), and that
+amendment binds here.
 
 ## What is there, and why the fit could not save it
 
@@ -206,9 +207,11 @@ their Elo only.
   every quiescence node. A per-count table lookup is cheaper than the linear
   multiply it replaces; the mobility *area* is not free, and the nps figure is
   in the verdict.
-- **The lazy clamp caps this term together with king safety.** S039 sits before
-  S122 for that reason and this step's larger mobility values change the sum
-  S039 then measures.
+- **The lazy clamp caps this term together with king safety.** S039 measured
+  retiring it with the shortcut and read H0 (record `ca578de`, revert
+  `74d0adf`), so the clamp stays and this step's larger mobility values enter
+  the clamped sum; S122's design waits on the owner's amendment before this
+  step starts (DEC-258).
 
 ### 6. Measurement
 
@@ -223,8 +226,8 @@ nps beside every verdict.
 
 - **S122 (shares the loop)**: king safety walks the same attack sets. The two
   are separate steps so the verdicts attribute.
-- **S039 (before S122, after this)**: the clamp is sized on the sum this step
-  enlarges.
+- **S039 (done, H0, record `ca578de`)**: the clamp on the sum this step
+  enlarges is kept.
 - **S102 (after)**: outposts reuse the same pawn-attack span fill.
 - **S126 (block end)**: refits the whole table.
 - **S118 (after S125)**: the pawn-attack fills the area needs are the ones the

@@ -26,9 +26,10 @@ pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
 S262 has landed. S263 built no per-side attack set, since no term read one;
-a term here that needs one builds it once per evaluation. S039 runs before this family
-and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
-owner's amendment of that outcome binds here.
+a term here that needs one builds it once per evaluation. S039 read H0 (record `ca578de`,
+revert `74d0adf`): the lazy shortcut and the clamp are kept. S122's design
+waits on the owner's amendment before S121 starts (DEC-258), and that
+amendment binds here.
 
 ## What is there
 
@@ -265,9 +266,9 @@ and the per-call cost recorded whatever the verdicts are.
   per-call cost is the baseline S118's verdict is read against, which is the
   whole reason the order is not reversed.
 - **S122 (after S118)**: reads the shelter and storm slots the cache adds.
-- **S039 (before S122)**: the lazy margin is sized on a sum these terms do not
-  enter -- they are cheap-stage terms -- but the step states which stage each
-  new term lands in, as S101's accepts does.
+- **S039 (done, H0, record `ca578de`)**: the lazy margin, kept, bounds a sum
+  these terms do not enter -- they are cheap-stage terms -- but the step states
+  which stage each new term lands in, as S101's accepts does.
 - **S126 (block end)**: refits everything.
 
 ### 8. References
