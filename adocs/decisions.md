@@ -15394,3 +15394,45 @@ Rejected:     Re-keying on the single earlier move before measuring -- the
 Consequences: S111 rebases onto `eee722c` by its step file's "If S110
               reverts", then runs phase 1b and phase 2, then its SPRT in
               DEC-297's shape.
+
+## DEC-303  2026-10-21  S111's mined-set count falls below EXACT_FLOOR: the floor is not lowered, S111's SPRT plays its working tree, and the owner rules before any commit
+Tags:         testing, mate, s156, s111, dec-302, dec-299, sprt, working-tree, owner-question
+Context:      S111's phase 2 on its rebased tree (bench 7343608, fixture
+              `4529b79`): `S156_mined_floor_sweep.py --floor 163` reads the
+              mined set at depth 10 **162 exact** shipping (167 right sign,
+              0 wrong) against 159 with the guard weakened (`RfpMinPly` 1);
+              the parent read 164 and 160 (`adocs/data/S286_mined_floor.log`).
+              `EXACT_FLOOR` 163 is red in both builds: the first time a mate
+              floor has fallen rather than held or risen under DEC-295's
+              guard. Everything else is inside the guard: mate in three 11 of
+              24 against `MATE_IN_THREE_FLOOR` 11 (6 weakened), the gate built
+              at `RfpMinPly` 1 red in both scripts, first-mate depths 9 and 9
+              (mate in 5), S192's count 13446, and `S203_case_sweep.sh
+              --ceilings` over S202's, S261's, S286's and S111's grids answers
+              the shipped 2, 5, 4, 0, 1, 2, with budgets D 500000 -> 1500000
+              and F 300000 -> 100000. DEC-302 (2) would carry the values
+              provisionally, but a lowered floor is a weakened mate-safety
+              test, which the owner's rules forbid without the owner, and
+              DEC-299 calls it a regression signal; every commit is green.
+Decision:     By the coordinator. `EXACT_FLOOR` stays 163 and S111 is not
+              committed. Its one SPRT (DEC-297's shape: 32+0.32, Hash 64,
+              `{0, 10}`, 5250 rounds) plays the working tree of
+              `../chesso-s111r` against `03fa3ec` in fastchess.sh's dirty-tree
+              mode (S256, DEC-254): `cand-03fa3ec+<hex>`, the diff saved by
+              the run and committed beside the log. The goldens inside the
+              guard, the Debug self-play and gate_extra are taken before it;
+              the mutation pass, which needs a green baseline, waits. **On
+              H1 the owner rules before any commit**: accept `EXACT_FLOOR` 161
+              (one below what ships, the convention, still separating 162
+              from 159), or first classify the two mined positions S111 stops
+              solving exactly at depth 10, by tool. On H0 or no verdict
+              nothing was committed: the verdict is recorded with the diff and
+              S111 completes as zero.
+Rejected:     Committing 161 provisionally, as DEC-301 did for a ceiling --
+              DEC-302 (2) allowed it, but it weakens a floor without the
+              owner. Asking now and idling the machine until the answer -- the
+              ruling is needed only on H1. Running the SPRT on a commit with
+              the test red -- every commit is green.
+Consequences: DEC-302 (2)'s provisional clause does not extend to a mate
+              floor; a fallen floor is the owner's before any commit. S111's
+              mutation pass and commit follow the ruling on H1.

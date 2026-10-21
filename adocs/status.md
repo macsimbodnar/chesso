@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-21, by hand.
 
-## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0, reverted, done
+## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0; S111's SPRT from its tree
 
 **The machine went down at 09:12-09:13** with no shutdown, panic, MCE, OOM or
 thermal event logged, idle at the time; back at 10:35 on kernel 7.2.6 (it was
@@ -58,12 +58,18 @@ S110's completion in one commit, bench 6042933 again); the pawn table stays; DEC
 lapses, so **no owner ruling is needed**. The fast check of `39194e4` (no code
 defect; specs.md and one MANUAL sentence stale) is moot with the revert.
 
-**S111, phase 1 written blind** during the run (DEC-260) in `../chesso-s111`
-on `36ec2eb`: two continuation correction tables keyed on (2 plies ago, 1 ply
-ago) and (4, 1); fast check read-only, its three findings fixed blind.
-DEC-302 (the pair key, DEC-299's guard, the blend gain recorded) is drafted
-in `.tuning/coord/S111/dec302.md`. Next: rebase onto the revert per its step
-file, then phase 1b and phase 2, then its SPRT (DEC-297's shape).
+**S111 rebased onto the revert (`03fa3ec`)** in `../chesso-s111r`: two
+continuation correction tables keyed on (2 plies ago, 1 ply ago) and (4, 1),
+averaged with the pawn read (DEC-300, DEC-302); bench 6042933 -> 7343608; off
+switch exact; CC01-25 and CH09 each red first under its mutant (CC24 and
+CC25 added after the fast check); applied correction 0.808 of the pawn read alone, decides nothing.
+Phase 2: ceilings unmoved (2, 5, 4, 0, 1, 2), budgets D and F moved, mate in
+three 11 against 11, first-mate and S192 unmoved, but **the mined set reads
+162 exact against `EXACT_FLOOR` 163** (159 weakened; the parent 164 and 160).
+**DEC-303**: the floor is not lowered and nothing is committed; the SPRT
+plays the working tree (`cand-03fa3ec+<hex>`), Debug self-play and gate_extra
+first, the mutation pass after the ruling. **Owner question, needed only on
+H1:** accept `EXACT_FLOOR` 161, or classify the two positions first.
 
 **S288 done** (filler): eval_spread puts the shipped margin first, read from
 the parameter list; F25 closed; the margin comment S287 restated now says so.

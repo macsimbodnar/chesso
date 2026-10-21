@@ -373,7 +373,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S111  **in progress in a worktree, phase 1 written blind; rebased onto S110's revert, then built; one SPRT at 32+0.32, `{0, 10}` (DEC-297)** -- correction tables indexed by the move played two and four plies ago; its own verdict
+1. S111  **in progress in `../chesso-s111r`, bench 7343608; the mined-set floor reads 162 against 163, so nothing is committed: its one SPRT at 32+0.32, `{0, 10}` plays the working tree (DEC-303), and on H1 the owner rules on the floor before any commit** -- correction tables indexed by the move played two and four plies ago; its own verdict
 2. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 3. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
 4. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
