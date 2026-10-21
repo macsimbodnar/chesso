@@ -1060,6 +1060,11 @@ evidence, never edited, so each is pinned here instead:
 
 ### S110, the non-pawn correction tables (DEC-297)
 
+S110 read H0 on 2026-10-21 and was reverted whole; these files stay as its
+record. The two scripts' tune-only counters (`CHESSO_NONPAWN_KEY_CENSUS`,
+`CHESSO_BLEND_GAIN`) and the sweep's grid in `test_mate_carry`'s command left
+with the code, so the scripts run only on `39194e4`.
+
 | file | what it is |
 |---|---|
 | `S110_nonpawn_key_census.py` | S099's census (`S099_pawn_key_census.py`) re-run for the two non-pawn keys: drives the tune build's counter (`CHESSO_NONPAWN_KEY_CENSUS`) over S021's 300 positions, one cold `go depth 12` each, and prints the distinct keys of each colour's table per side to move -- four counts a position -- with the slot count the rule gives (the next power of two above the largest's 95th percentile). About 20 s |

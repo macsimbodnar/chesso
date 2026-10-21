@@ -37,11 +37,6 @@ person has argued the mutant equivalent to the engine.
 
 Prefix CH is new: `git log --all -p -- tools/mutants` shows AW, GC, LQ, MW,
 NG, NT, PD, RZ, TC and every single letter taken, and no CH.
-
-**CH09 re-anchored by S110**: the pawn read became `int correction = ...`, no
-longer const, so the non-pawn blend can be added to it, and clang-format
-reflowed it onto the line the anchor now names. The mutation is the same --
-the side to move flipped on the pawn read.
 """
 
 S = "src/search.cpp"
@@ -124,8 +119,8 @@ m("CH09_read_side_flipped", S, "search/correction",
   'the node reads the other side\'s slot for its pawn key, so White\'s learned '
   'error for a structure corrects Black\'s static score and the other way '
   'round',
-  ("  int correction = correction_value(state->pawn_correction, board->active_color,\n",
-   "  int correction = correction_value(state->pawn_correction, !board->active_color,\n"),
+  ("      state->pawn_correction, board->active_color, board->pawn_hash);\n",
+   "      state->pawn_correction, !board->active_color, board->pawn_hash);\n"),
   origin="S099")
 
 m("CH10_update_sign_flipped", S, "search/correction",

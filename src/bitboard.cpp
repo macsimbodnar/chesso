@@ -800,11 +800,6 @@ static inline castling_rook_t castling_rook(index_t king_to)
 // xored for every piece, from zobrist_randoms_t::pawn_randoms, whose rows are
 // zero for everything but a pawn: no branch on which piece moved. The first
 // form tested the piece and cost 1.4 to 2.1 % of speed, measured (DEC-271).
-//
-// The two non-pawn keys (board_t::nonpawn_hash, S110) are the fifth, kept the
-// same way from zobrist_randoms_t::nonpawn_randoms, whose pawn rows are zero.
-// `Side` is the piece's colour, so the key a piece belongs to is a constant
-// index here as the occupancy is: still no branch on which piece it is.
 template <color_t Side>
 static inline void add_piece(board_t* board,
                              const zobrist_randoms_t* randoms,
@@ -818,7 +813,6 @@ static inline void add_piece(board_t* board,
   board->squares[square] = piece;
   board->hash ^= randoms->piece_randoms[piece][square];
   board->pawn_hash ^= randoms->pawn_randoms[piece][square];
-  board->nonpawn_hash[Side] ^= randoms->nonpawn_randoms[piece][square];
 
   eval_add_piece<Side>(board, piece, square);
 }
@@ -837,7 +831,6 @@ static inline void remove_piece(board_t* board,
   board->squares[square] = EMPTY;
   board->hash ^= randoms->piece_randoms[piece][square];
   board->pawn_hash ^= randoms->pawn_randoms[piece][square];
-  board->nonpawn_hash[Side] ^= randoms->nonpawn_randoms[piece][square];
 
   eval_remove_piece<Side>(board, piece, square);
 }
@@ -863,8 +856,6 @@ static inline void move_piece(board_t* board,
   board->hash ^= randoms->piece_randoms[piece][to];
   board->pawn_hash ^=
       randoms->pawn_randoms[piece][from] ^ randoms->pawn_randoms[piece][to];
-  board->nonpawn_hash[Side] ^= randoms->nonpawn_randoms[piece][from] ^
-                               randoms->nonpawn_randoms[piece][to];
 
   eval_remove_piece<Side>(board, piece, from);
   eval_add_piece<Side>(board, piece, to);
@@ -908,10 +899,6 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   assert(squares_match_bitboards(&game->board));
   assert(eval_accumulators_match(&game->board));
   assert(game->board.pawn_hash == compute_full_pawn_hash(game));
-  assert(game->board.nonpawn_hash[WHITE] ==
-         compute_full_nonpawn_hash(game, WHITE));
-  assert(game->board.nonpawn_hash[BLACK] ==
-         compute_full_nonpawn_hash(game, BLACK));
 
   const zobrist_randoms_t* randoms = &game->hash_randoms;
   board_t* board = &game->board;
@@ -1070,8 +1057,6 @@ static bool make_move_impl(game_t* game, move_t encoded_move)
   assert(squares_match_bitboards(board));
   assert(eval_accumulators_match(board));
   assert(board->pawn_hash == compute_full_pawn_hash(game));
-  assert(board->nonpawn_hash[WHITE] == compute_full_nonpawn_hash(game, WHITE));
-  assert(board->nonpawn_hash[BLACK] == compute_full_nonpawn_hash(game, BLACK));
 
   // change side
   board->hash ^= randoms->side_randoms[us];
@@ -1135,12 +1120,6 @@ static void unmake_move_impl(game_t* game)
   // Each xor is its own inverse, so the order is free. The last two read
   // pawn_randoms, zero for every other piece, so neither asks which piece it
   // is (DEC-271); the first two are pawns by construction.
-  //
-  // The two non-pawn keys (S110) the same way, at the four places below where
-  // a piece that is not a pawn reappears, vanishes or walks back: the
-  // castling rook, the promoted piece, the mover and the captured piece. The
-  // last two read nonpawn_randoms, zero for a pawn, and the first two are
-  // never pawns. The en-passant victim is a pawn and touches neither key.
 
   const bb_t from_bb = BB_1 << move.from;
   const bb_t to_bb = BB_1 << move.to;
@@ -1155,9 +1134,6 @@ static void unmake_move_impl(game_t* game)
       board->occupancies[us] ^= rook_bb;
       board->squares[rook.to] = EMPTY;
       board->squares[rook.from] = rook.piece;
-      board->nonpawn_hash[us] ^=
-          randoms->nonpawn_randoms[rook.piece][rook.from] ^
-          randoms->nonpawn_randoms[rook.piece][rook.to];
 
       eval_remove_piece(board, rook.piece, rook.to);
       eval_add_piece(board, rook.piece, rook.from);
@@ -1175,7 +1151,6 @@ static void unmake_move_impl(game_t* game)
     board->bitboards[promoted_to] ^= to_bb;
     board->bitboards[pawn] ^= to_bb;
     board->pawn_hash ^= randoms->piece_randoms[pawn][move.to];
-    board->nonpawn_hash[us] ^= randoms->nonpawn_randoms[promoted_to][move.to];
 
     eval_remove_piece(board, promoted_to, move.to);
     eval_add_piece(board, pawn, move.to);
@@ -1204,8 +1179,6 @@ static void unmake_move_impl(game_t* game)
   // block above, so this walks it home like any other pawn move.
   board->pawn_hash ^= randoms->pawn_randoms[move.piece][move.from] ^
                       randoms->pawn_randoms[move.piece][move.to];
-  board->nonpawn_hash[us] ^= randoms->nonpawn_randoms[move.piece][move.from] ^
-                             randoms->nonpawn_randoms[move.piece][move.to];
 
   eval_remove_piece(board, move.piece, move.to);
   eval_add_piece(board, move.piece, move.from);
@@ -1215,8 +1188,6 @@ static void unmake_move_impl(game_t* game)
     board->occupancies[them] ^= to_bb;
 
     board->pawn_hash ^= randoms->pawn_randoms[entry->captured][move.to];
-    board->nonpawn_hash[them] ^=
-        randoms->nonpawn_randoms[entry->captured][move.to];
 
     eval_add_piece(board, entry->captured, move.to);
   }
@@ -1235,8 +1206,6 @@ static void unmake_move_impl(game_t* game)
   assert(squares_match_bitboards(board));
   assert(eval_accumulators_match(board));
   assert(board->pawn_hash == compute_full_pawn_hash(game));
-  assert(board->nonpawn_hash[WHITE] == compute_full_nonpawn_hash(game, WHITE));
-  assert(board->nonpawn_hash[BLACK] == compute_full_nonpawn_hash(game, BLACK));
   assert(board->occupancies[WHITE] ==
          (board->bitboards[W_PAWN] | board->bitboards[W_KNIGHT] |
           board->bitboards[W_BISHOP] | board->bitboards[W_ROOK] |
@@ -1853,8 +1822,6 @@ void cleanup_board(game_t* game)
   game->board.fullmove_counter = 1;
   game->board.hash = 0ULL;
   game->board.pawn_hash = 0ULL;
-  game->board.nonpawn_hash[WHITE] = 0ULL;
-  game->board.nonpawn_hash[BLACK] = 0ULL;
 
   eval_refresh(&game->board);
 
@@ -1909,32 +1876,6 @@ hash_t compute_full_pawn_hash(const game_t* game)
       const index_t square = get_lsb_index(pawns);
       key ^= game->hash_randoms.piece_randoms[pawn][square];
       pawns &= pawns - 1;
-    }
-  }
-
-  return key;
-}
-
-
-// From one colour's knight, bishop, rook, queen and king bitboards and nothing
-// else, which is the key's whole definition (board_t::nonpawn_hash). S110.
-hash_t compute_full_nonpawn_hash(const game_t* game, color_t side)
-{
-  assert(game != nullptr);
-  assert(side == WHITE || side == BLACK);
-
-  const piece_t first = (side == WHITE) ? W_KNIGHT : B_KNIGHT;
-  const piece_t last = (side == WHITE) ? W_KING : B_KING;
-
-  hash_t key = 0;
-
-  for (int piece = first; piece <= last; ++piece) {
-    bb_t pieces = game->board.bitboards[piece];
-
-    while (pieces != BB_0) {
-      const index_t square = get_lsb_index(pieces);
-      key ^= game->hash_randoms.piece_randoms[piece][square];
-      pieces &= pieces - 1;
     }
   }
 
@@ -2462,8 +2403,6 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
 
   board->hash = compute_full_hash(game);
   board->pawn_hash = compute_full_pawn_hash(game);
-  board->nonpawn_hash[WHITE] = compute_full_nonpawn_hash(game, WHITE);
-  board->nonpawn_hash[BLACK] = compute_full_nonpawn_hash(game, BLACK);
 
   // The accumulators are maintained by make_move from here on; this is the one
   // place they are built from the position itself.
@@ -3310,16 +3249,13 @@ void init_zobrist(zobrist_randoms_t* zobrist)
   }
 
   // Derived, not drawn: the pawn key's table is the pawn rows and zero rows,
-  // filled after the 851 draws so their order stays what it is. S099. The
-  // non-pawn keys' table is its complement, every other row, S110.
+  // filled after the 851 draws so their order stays what it is. S099.
   for (int piece = 0; piece < 12; ++piece) {
     const bool pawn = piece == W_PAWN || piece == B_PAWN;
 
     for (int square = 0; square < 64; ++square) {
       zobrist->pawn_randoms[piece][square] =
           pawn ? zobrist->piece_randoms[piece][square] : 0;
-      zobrist->nonpawn_randoms[piece][square] =
-          pawn ? 0 : zobrist->piece_randoms[piece][square];
     }
   }
 

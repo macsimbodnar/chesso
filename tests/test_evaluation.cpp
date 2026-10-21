@@ -27,11 +27,6 @@ static game_t mirrored;
 static pawn_correction_t mirror_correction;
 static search_state_t mirror_state;
 
-// S110's mirror case adds the two non-pawn tables, 256 KiB at the census's
-// size, and a state that carries all three.
-static nonpawn_correction_t mirror_nonpawn;
-static search_state_t mirror_nonpawn_state;
-
 
 // A board as 64 characters in board-index order -- 0 is a8 and 63 is h1, which
 // is the order a FEN writes its ranks -- turned into a FEN with the four
@@ -196,81 +191,6 @@ TEST_SUITE("evaluation: score")
 
     REQUIRE(checked > 100);
     REQUIRE(moved == checked);
-  }
-
-  // INV-5 through S110's non-pawn tables too: with the pawn table and both
-  // non-pawn tables taught the same difference for a position and its
-  // mirror, the two read the same corrected score. Mirroring swaps the
-  // colours, so the original's White key is the mirror's Black key in shape,
-  // and the blend takes the two non-pawn reads' mean, which does not care
-  // which colour's table holds which. A read negated for Black, or a blend
-  // that weighed one colour's table over the other's, makes the two disagree.
-  //
-  // The non-pawn part is checked live: each position is also read with an
-  // empty pawn table, and that read must move off the raw score.
-  //
-  // Mutation: NC06_read_side_flipped.
-  TEST_CASE_FIXTURE(eval_fixture_t,
-                    "a mirrored position reads the same corrected score with "
-                    "the non-pawn tables")
-  {
-    mirror_nonpawn_state.pawn_correction = &mirror_correction;
-    mirror_nonpawn_state.nonpawn_correction = &mirror_nonpawn;
-
-    size_t checked = 0;
-
-    for (const std::string& fen : all_test_fens()) {
-      const std::string flipped = mirror_fen(fen);
-
-      REQUIRE_MESSAGE(load_FEN(fen, &game), ("FEN: " + fen));
-      REQUIRE_MESSAGE(load_FEN(flipped, &mirrored),
-                      ("mirrored FEN: " + flipped + " from " + fen));
-
-      REQUIRE(game.board.active_color != mirrored.board.active_color);
-
-      const int raw = evaluate(&game.board);
-      const int mirrored_raw = evaluate(&mirrored.board);
-
-      REQUIRE_MESSAGE(raw == mirrored_raw, ("FEN: " + fen));
-
-      const int sign = (checked % 2 == 0) ? 1 : -1;
-      const int diff = sign * (30 + static_cast<int>(checked % 40));
-
-      correction_reset(&mirror_correction);
-      correction_reset(&mirror_nonpawn);
-
-      for (int i = 0; i < 4; ++i) {
-        nonpawn_correction_update(&mirror_nonpawn, game.board.active_color,
-                                  game.board.nonpawn_hash, diff, 6);
-        nonpawn_correction_update(&mirror_nonpawn, mirrored.board.active_color,
-                                  mirrored.board.nonpawn_hash, diff, 6);
-      }
-
-      // The non-pawn part alone, with the pawn table still empty.
-      const int nonpawn_only =
-          search_corrected_eval_probe(&mirror_nonpawn_state, &game.board, raw);
-
-      REQUIRE_MESSAGE(nonpawn_only != raw, ("FEN: " + fen));
-
-      for (int i = 0; i < 4; ++i) {
-        correction_update(&mirror_correction, game.board.active_color,
-                          game.board.pawn_hash, diff, 6);
-        correction_update(&mirror_correction, mirrored.board.active_color,
-                          mirrored.board.pawn_hash, diff, 6);
-      }
-
-      const int corrected =
-          search_corrected_eval_probe(&mirror_nonpawn_state, &game.board, raw);
-      const int mirrored_corrected = search_corrected_eval_probe(
-          &mirror_nonpawn_state, &mirrored.board, mirrored_raw);
-
-      REQUIRE_MESSAGE(corrected == mirrored_corrected,
-                      ("FEN: " + fen + "\nmirror: " + flipped));
-
-      checked++;
-    }
-
-    REQUIRE(checked > 100);
   }
 
   // Both cases below asserted exactly 0 until S027 added the tempo term, and

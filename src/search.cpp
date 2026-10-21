@@ -821,118 +821,6 @@ inline void census_pawn_key(color_t side, hash_t key)
     pawn_key_census.keys[side].insert(key);
   }
 }
-
-
-// S110's census of the non-pawn tables' reach, the pawn census above re-run
-// for the two non-pawn keys (DEC-270 (1)): the distinct keys of each colour's
-// table, per side to move, a game's searches read a correction for. Off
-// unless CHESSO_NONPAWN_KEY_CENSUS names a file; when on, the flush below
-// appends one line per game, `<white key, white to move> <white key, black to
-// move> <black key, white to move> <black key, black to move>`, each a count
-// of what one table side's slots receive. adocs/data/S110_nonpawn_key_census.py
-// drives it. Tune build only.
-struct nonpawn_key_census_t
-{
-  const char* path = std::getenv("CHESSO_NONPAWN_KEY_CENSUS");
-  std::unordered_set<hash_t> keys[2][2];  // [key's colour][side to move]
-};
-
-nonpawn_key_census_t nonpawn_key_census;
-
-inline void census_nonpawn_keys(color_t side, const hash_t keys[2])
-{
-  if (nonpawn_key_census.path != nullptr) {
-    nonpawn_key_census.keys[WHITE][side].insert(keys[WHITE]);
-    nonpawn_key_census.keys[BLACK][side].insert(keys[BLACK]);
-  }
-}
-
-
-// S110's blend-gain counter: what the pawn read and the non-pawn pair's mean
-// are at every corrected-evaluation read, so that a sum and an average can be
-// priced against the pawn read alone on the same tables (the update's target
-// does not depend on the blend). Read-only: it reads the tables a second time
-// beside corrected_static_eval() and changes nothing it returns. Off unless
-// CHESSO_BLEND_GAIN names a file, written once at exit, one line per game
-// third by the root's ply (the search's root history size over 40, the last
-// third holding the rest): `<third> <reads> <sum |2p|> <sum |2p + w + b|>
-// <sum |w + b|> <pair reads 0> <pair entries 0> <pawn read 0> <pawn entry
-// 0>`, p the pawn read and w, b the two non-pawn reads, before the mate
-// band's hold -- twice the values, so the mean's half units stay integers.
-// adocs/data/S110_blend_gain.py drives it. Tune build only.
-struct blend_gain_t
-{
-  const char* path = std::getenv("CHESSO_BLEND_GAIN");
-  int64_t reads[3] = {};
-  int64_t pawn2[3] = {};
-  int64_t sum2[3] = {};
-  int64_t pair2[3] = {};
-  int64_t pair_read_zero[3] = {};
-  int64_t pair_entry_zero[3] = {};
-  int64_t pawn_read_zero[3] = {};
-  int64_t pawn_entry_zero[3] = {};
-
-  ~blend_gain_t();
-};
-
-blend_gain_t blend_gain;
-
-blend_gain_t::~blend_gain_t()
-{
-  if (path == nullptr) { return; }
-
-  std::ofstream out(path);
-
-  if (!out) { return; }
-
-  for (int third = 0; third < 3; ++third) {
-    out << third << ' ' << reads[third] << ' ' << pawn2[third] << ' '
-        << sum2[third] << ' ' << pair2[third] << ' ' << pair_read_zero[third]
-        << ' ' << pair_entry_zero[third] << ' ' << pawn_read_zero[third] << ' '
-        << pawn_entry_zero[third] << '\n';
-  }
-}
-
-inline void record_blend_gain(const search_state_t* state, const board_t* board)
-{
-  if (blend_gain.path == nullptr || state->pawn_correction == nullptr ||
-      state->nonpawn_correction == nullptr) {
-    return;
-  }
-
-  const color_t side = board->active_color;
-  const int pawn =
-      correction_value(state->pawn_correction, side, board->pawn_hash);
-  const nonpawn_reads_t reads = nonpawn_correction_values(
-      state->nonpawn_correction, side, board->nonpawn_hash);
-  const int white = reads.by_colour[WHITE];
-  const int black = reads.by_colour[BLACK];
-
-  const int32_t pawn_entry =
-      state->pawn_correction
-          ->entries[side]
-                   [correction_slot<CORRHIST_PAWN_ENTRIES>(board->pawn_hash)];
-  const int32_t white_entry =
-      state->nonpawn_correction->by_colour[WHITE]
-          .entries[side][correction_slot<CORRHIST_NONPAWN_ENTRIES>(
-              board->nonpawn_hash[WHITE])];
-  const int32_t black_entry =
-      state->nonpawn_correction->by_colour[BLACK]
-          .entries[side][correction_slot<CORRHIST_NONPAWN_ENTRIES>(
-              board->nonpawn_hash[BLACK])];
-
-  const size_t third = std::min<size_t>(state->root_history_size / 40, 2);
-
-  blend_gain.reads[third] += 1;
-  blend_gain.pawn2[third] += std::abs(2 * pawn);
-  blend_gain.sum2[third] += std::abs(2 * pawn + white + black);
-  blend_gain.pair2[third] += std::abs(white + black);
-  blend_gain.pair_read_zero[third] += (white == 0 && black == 0) ? 1 : 0;
-  blend_gain.pair_entry_zero[third] +=
-      (white_entry == 0 && black_entry == 0) ? 1 : 0;
-  blend_gain.pawn_read_zero[third] += (pawn == 0) ? 1 : 0;
-  blend_gain.pawn_entry_zero[third] += (pawn_entry == 0) ? 1 : 0;
-}
 }  // namespace
 
 
@@ -953,37 +841,6 @@ void search_pawn_key_census_flush()
 
   pawn_key_census.keys[WHITE].clear();
   pawn_key_census.keys[BLACK].clear();
-}
-
-
-void search_nonpawn_key_census_flush()
-{
-  if (nonpawn_key_census.path == nullptr) { return; }
-
-  size_t total = 0;
-
-  for (const auto& colour : nonpawn_key_census.keys) {
-    for (const auto& side : colour) {
-      total += side.size();
-    }
-  }
-
-  if (total == 0) { return; }
-
-  std::ofstream out(nonpawn_key_census.path, std::ios::app);
-
-  if (out) {
-    out << nonpawn_key_census.keys[WHITE][WHITE].size() << ' '
-        << nonpawn_key_census.keys[WHITE][BLACK].size() << ' '
-        << nonpawn_key_census.keys[BLACK][WHITE].size() << ' '
-        << nonpawn_key_census.keys[BLACK][BLACK].size() << '\n';
-  }
-
-  for (auto& colour : nonpawn_key_census.keys) {
-    for (auto& side : colour) {
-      side.clear();
-    }
-  }
 }
 #endif
 
@@ -1162,40 +1019,18 @@ bool improving_at(const search_state_t* state, size_t ply, bool in_check)
 //
 // No table, no correction: every caller that builds its own search state and
 // attaches none sees the raw number, which is the tree before S099.
-//
-// **And the two non-pawn tables, S110**, read here too and averaged with the
-// pawn table's read (correction_blend(): the pawn read at 100 and the pair's
-// mean at CorrHistNonPawnWeight, DEC-300, so the result stays inside
-// CorrHistMax) before the mate band's clamp, which bounds the result as it
-// bounded the pawn read alone. Read only where the pawn table is attached,
-// because their weight is relative to its; with none attached, or at a weight
-// of 0, the number is the pawn table's alone and the tree is the one before
-// S110.
 static inline int corrected_static_eval(const search_state_t* state,
                                         const board_t* board,
                                         int raw_eval)
 {
 #ifdef CHESSO_TUNE
   census_pawn_key(board->active_color, board->pawn_hash);
-  census_nonpawn_keys(board->active_color, board->nonpawn_hash);
-  record_blend_gain(state, board);
 #endif
 
-  if (state->pawn_correction == nullptr) {
-    assert(state->nonpawn_correction == nullptr);
-    return raw_eval;
-  }
+  if (state->pawn_correction == nullptr) { return raw_eval; }
 
-  int correction = correction_value(state->pawn_correction, board->active_color,
-                                    board->pawn_hash);
-
-  if (state->nonpawn_correction != nullptr) {
-    correction = correction_blend(
-        correction,
-        nonpawn_correction_values(state->nonpawn_correction,
-                                  board->active_color, board->nonpawn_hash),
-        CORRHIST_NONPAWN_WEIGHT);
-  }
+  const int correction = correction_value(
+      state->pawn_correction, board->active_color, board->pawn_hash);
 
   return std::clamp(raw_eval + correction, -(MATE_MIN - 1), MATE_MIN - 1);
 }
@@ -3398,16 +3233,6 @@ static int negamax_at(int alpha0,
                              best_so_far)) {
       correction_update(state->pawn_correction, game->board.active_color,
                         game->board.pawn_hash, best_so_far - raw_eval, depth);
-    }
-
-    // The two non-pawn tables learn here as well, S110: the same node, the
-    // same gate, the same difference, each table at its own colour's key.
-    if (state->nonpawn_correction != nullptr &&
-        correction_may_learn(is_in_check, raw_eval, best_move, type,
-                             best_so_far)) {
-      nonpawn_correction_update(
-          state->nonpawn_correction, game->board.active_color,
-          game->board.nonpawn_hash, best_so_far - raw_eval, depth);
     }
   }
 

@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-21, by hand.
 
-## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0
+## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0, reverted, done
 
 **The machine went down at 09:12-09:13** with no shutdown, panic, MCE, OOM or
 thermal event logged, idle at the time; back at 10:35 on kernel 7.2.6 (it was
@@ -53,7 +53,8 @@ the owner's call.
 11.28 over 3644 games, LLR -2.98, 0 forfeits, 6 h 44 m
 (`adocs/data/S110_sprt.log`, archived untrimmed as
 `chesso_S110_sprt_2026-10-21.tar.xz`). By its pre-registration `39194e4` is
-reverted whole next and recorded as zero; the pawn table stays; DEC-301
+reverted whole and recorded as zero (record `99a33a4`, then the revert and
+S110's completion in one commit, bench 6042933 again); the pawn table stays; DEC-301
 lapses, so **no owner ruling is needed**. The fast check of `39194e4` (no code
 defect; specs.md and one MANUAL sentence stale) is moot with the revert.
 

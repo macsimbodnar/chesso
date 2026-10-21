@@ -167,12 +167,6 @@ bool squares_match_bitboards(const board_t* board);
 // load_FEN() once per load. Not for a hot path. S099.
 hash_t compute_full_pawn_hash(const game_t* game);
 
-// One colour's non-pawn key rebuilt from its knight, bishop, rook, queen and
-// king bitboards: what board_t::nonpawn_hash[side] must equal at every node
-// (INV-2). An oracle for the pawn key's reasons, called from the same places.
-// S110.
-hash_t compute_full_nonpawn_hash(const game_t* game, color_t side);
-
 // Pass the turn without moving, for null move pruning. Must be undone with
 // unmake_null_move(), not unmake_move(): the history entry it pushes carries no
 // move to reverse.

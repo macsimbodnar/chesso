@@ -51,12 +51,6 @@ TEST_SUITE("invariants: accumulators and squares")
   static uint64_t pawn_events = 0;
   static uint64_t pawnless_moves = 0;
 
-  // S110's two classes for the non-pawn keys, counted per colour and move:
-  // the moves that change that colour's non-pawn pieces and the ones that do
-  // not.
-  static uint64_t nonpawn_events = 0;
-  static uint64_t nonpawn_still = 0;
-
   // Built only when a comparison has already failed. Per-node string building
   // is what makes a walk of this size expensive -- test_engine spends 3.2 s on
   // 426 k makes doing it for every REQUIRE_MESSAGE -- so the walk below calls
@@ -131,19 +125,6 @@ TEST_SUITE("invariants: accumulators and squares")
           mover == W_PAWN || mover == B_PAWN || MOVE_EN_PASSANT(moves[i]) ||
           (MOVE_CAPTURE(moves[i]) && (victim == W_PAWN || victim == B_PAWN));
 
-      // And to each colour's non-pawn pieces, S110: the mover's colour when a
-      // piece that is not a pawn moves (a castling's king and rook among
-      // them) or a pawn promotes into one; the other colour when one of its
-      // pieces that is not a pawn is taken. An en-passant victim is a pawn,
-      // and its target square is empty before the make.
-      const color_t us = (mover < B_PAWN) ? WHITE : BLACK;
-      const bool mover_is_pawn = mover == W_PAWN || mover == B_PAWN;
-      const bool victim_is_piece = MOVE_CAPTURE(moves[i]) && victim != EMPTY &&
-                                   victim != W_PAWN && victim != B_PAWN;
-      bool nonpawn_event[2] = {false, false};
-      nonpawn_event[us] = !mover_is_pawn || MOVE_PROMOTED(moves[i]) != TO_NONE;
-      nonpawn_event[!us] = victim_is_piece;
-
       if (!make_move(g, moves[i])) { continue; }
 
       ++makes;
@@ -189,49 +170,6 @@ TEST_SUITE("invariants: accumulators and squares")
         if (g->board.pawn_hash != before.pawn_hash) {
           FAIL(("pawn key moved on " + print_move(moves[i]) +
                 ", which touches no pawn, in " + generate_FEN(&before)));
-        }
-      }
-
-      // S110's two non-pawn keys, the same two ways, each colour on its own:
-      // equal to the oracle, and moved on exactly the moves that change that
-      // colour's pieces other than pawns. One piece appearing or vanishing
-      // moves a key by one key, a piece walking by the XOR of two and a
-      // capture promotion leaves each key one change; a castling moves the
-      // mover's by the XOR of four, which the Zobrist assertions do not
-      // cover, and this walk is what sees whether it moved. Restoration on
-      // unmake is the memcmp below.
-      // Mutation: NK01_add_piece_dropped, NK02_remove_piece_dropped,
-      // NK03_move_piece_dropped, NK04_move_piece_wrong_colour,
-      // NK05_unmake_mover_dropped, NK06_unmake_castling_rook_dropped,
-      // NK07_unmake_promotion_dropped, NK08_unmake_captured_dropped,
-      // NK10_key_table_folds_a_pawn, NK11_key_table_drops_the_king.
-      for (const color_t side : {WHITE, BLACK}) {
-        const char* name = (side == WHITE) ? "White's" : "Black's";
-
-        if (g->board.nonpawn_hash[side] != compute_full_nonpawn_hash(g, side)) {
-          FAIL((std::string(name) + " non-pawn key differs from its oracle " +
-                "after " + print_move(moves[i]) + " in " +
-                generate_FEN(&before)));
-        }
-
-        const bool moved =
-            g->board.nonpawn_hash[side] != before.nonpawn_hash[side];
-
-        if (nonpawn_event[side]) {
-          ++nonpawn_events;
-
-          if (!moved) {
-            FAIL((std::string(name) + " non-pawn key did not move on " +
-                  print_move(moves[i]) + " in " + generate_FEN(&before)));
-          }
-        } else {
-          ++nonpawn_still;
-
-          if (moved) {
-            FAIL((std::string(name) + " non-pawn key moved on " +
-                  print_move(moves[i]) + ", which changes none of its " +
-                  "pieces, in " + generate_FEN(&before)));
-          }
         }
       }
 
@@ -290,9 +228,7 @@ TEST_SUITE("invariants: accumulators and squares")
                        << " promotions, " << capture_promotions
                        << " capture promotions, " << pawn_events
                        << " pawn events, " << pawnless_moves
-                       << " moves touching no pawn, " << nonpawn_events
-                       << " non-pawn events and " << nonpawn_still
-                       << " non-pawn keys left still");
+                       << " moves touching no pawn");
 
     // S099. Both of the pawn key's classes ran, so neither of its two checks
     // above passed on an empty set. A floor of one is the property itself and
@@ -300,10 +236,6 @@ TEST_SUITE("invariants: accumulators and squares")
     // below already carry the counted classes a pawn event is made of.
     REQUIRE(pawn_events > 0);
     REQUIRE(pawnless_moves > 0);
-
-    // S110, the same floors for the non-pawn keys' two classes.
-    REQUIRE(nonpawn_events > 0);
-    REQUIRE(nonpawn_still > 0);
 
     // GOLDEN (DEC-142): the five census floors below, at about half the census
     // of 2026-09-09 -- 2,132,167 makes, 15,023 castlings, 181 en passants,
@@ -372,22 +304,5 @@ TEST_SUITE("invariants: accumulators and squares")
     REQUIRE(GET_BIT(game.board.bitboards[W_PAWN], e2) != BB_0);
     game.board.bitboards[W_PAWN] &= ~(BB_1 << e2);
     REQUIRE_NE(game.board.pawn_hash, compute_full_pawn_hash(&game));
-
-    // S110's non-pawn keys, the same two plants, one colour each: a key one
-    // bit off, and a key that kept a knight the bitboards no longer have.
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    REQUIRE_EQ(game.board.nonpawn_hash[WHITE],
-               compute_full_nonpawn_hash(&game, WHITE));
-    game.board.nonpawn_hash[WHITE] ^= 1;
-    REQUIRE_NE(game.board.nonpawn_hash[WHITE],
-               compute_full_nonpawn_hash(&game, WHITE));
-
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    REQUIRE(GET_BIT(game.board.bitboards[B_KNIGHT], g8) != BB_0);
-    REQUIRE_EQ(game.board.nonpawn_hash[BLACK],
-               compute_full_nonpawn_hash(&game, BLACK));
-    game.board.bitboards[B_KNIGHT] &= ~(BB_1 << g8);
-    REQUIRE_NE(game.board.nonpawn_hash[BLACK],
-               compute_full_nonpawn_hash(&game, BLACK));
   }
 }

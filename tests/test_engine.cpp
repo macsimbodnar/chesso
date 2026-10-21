@@ -75,16 +75,6 @@ TEST_SUITE("engine: zobrist and unmake")
               " from " + root_fen));
       }
 
-      // The two non-pawn keys, S110, the same way.
-      for (const color_t side : {WHITE, BLACK}) {
-        if (g->board.nonpawn_hash[side] != compute_full_nonpawn_hash(g, side)) {
-          FAIL(("incremental non-pawn key of " +
-                std::string(side == WHITE ? "White" : "Black") +
-                " drifted after " + print_move(moves[i]) + " from " +
-                root_fen));
-        }
-      }
-
       walk(g, depth - 1, root_fen);
 
       unmake_move(g);
@@ -115,15 +105,6 @@ TEST_SUITE("engine: zobrist and unmake")
       // S099. Mutation: PK03_not_loaded.
       REQUIRE_MESSAGE(game.board.pawn_hash == compute_full_pawn_hash(&game),
                       ("load_FEN produced a wrong pawn key for " + fen));
-      // S110. Mutation: NK09_not_loaded.
-      REQUIRE_MESSAGE(
-          game.board.nonpawn_hash[WHITE] ==
-              compute_full_nonpawn_hash(&game, WHITE),
-          ("load_FEN produced a wrong white non-pawn key for " + fen));
-      REQUIRE_MESSAGE(
-          game.board.nonpawn_hash[BLACK] ==
-              compute_full_nonpawn_hash(&game, BLACK),
-          ("load_FEN produced a wrong black non-pawn key for " + fen));
 
       walk(&game, depth, fen);
     }
@@ -191,117 +172,6 @@ TEST_SUITE("engine: zobrist and unmake")
     REQUIRE(load_FEN(fen, &game));
     REQUIRE_EQ(game.board.pawn_hash, reached);
     REQUIRE_EQ(compute_full_pawn_hash(&game), reached);
-  }
-
-  // S110's two non-pawn keys hold exactly one colour's knights, bishops,
-  // rooks, queens and king. Loads of one placement that differ in the side to
-  // move, the castling rights or a pawn share both keys, and the main key is
-  // what says the field was read at all; a load with a piece of one colour on
-  // another square moves that colour's key and leaves the other's. Every FEN
-  // below is the start position with one field changed or one piece taken
-  // off or moved, so its text is the whole input, and whether a load is a
-  // sensible position is load_FEN()'s answer. Which squares the pieces are on
-  // decides nothing here.
-  //
-  // Mutation: NK10_key_table_folds_a_pawn, NK11_key_table_drops_the_king.
-  TEST_CASE_FIXTURE(engine_fixture_t,
-                    "each non-pawn key is one colour's pieces and nothing else")
-  {
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    const hash_t white = game.board.nonpawn_hash[WHITE];
-    const hash_t black = game.board.nonpawn_hash[BLACK];
-    const hash_t key = game.board.hash;
-
-    REQUIRE_NE(white, black);
-
-    // The side to move and the castling rights.
-    REQUIRE(load_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1",
-                     &game));
-    CHECK_EQ(game.board.nonpawn_hash[WHITE], white);
-    CHECK_EQ(game.board.nonpawn_hash[BLACK], black);
-    CHECK_NE(game.board.hash, key);
-
-    REQUIRE(load_FEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1",
-                     &game));
-    CHECK_EQ(game.board.nonpawn_hash[WHITE], white);
-    CHECK_EQ(game.board.nonpawn_hash[BLACK], black);
-    CHECK_NE(game.board.hash, key);
-
-    // A pawn of each colour gone, the a-pawns: the pawns are the pawn key's.
-    REQUIRE(load_FEN("rnbqkbnr/1ppppppp/8/8/8/8/1PPPPPPP/RNBQKBNR w KQkq - 0 1",
-                     &game));
-    CHECK_EQ(game.board.nonpawn_hash[WHITE], white);
-    CHECK_EQ(game.board.nonpawn_hash[BLACK], black);
-    CHECK_NE(game.board.hash, key);
-
-    // A white knight on another square: White's key moves and Black's does
-    // not.
-    REQUIRE(load_FEN(
-        "rnbqkbnr/pppppppp/8/8/4N3/8/PPPPPPPP/RNBQKB1R w KQkq - 0 1", &game));
-    CHECK_NE(game.board.nonpawn_hash[WHITE], white);
-    CHECK_EQ(game.board.nonpawn_hash[BLACK], black);
-
-    // And a black one: the other way round.
-    REQUIRE(load_FEN(
-        "rnbqkb1r/pppppppp/8/4n3/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", &game));
-    CHECK_EQ(game.board.nonpawn_hash[WHITE], white);
-    CHECK_NE(game.board.nonpawn_hash[BLACK], black);
-
-    // The king is in the key, and a king move made on the board moves it:
-    // asked of a move and not of a load, because the load computes the key
-    // with the oracle and the alphabet keeps it with the derived table, which
-    // is where a king row could go missing. Two pawn pushes first, which leave
-    // White's key where it was and free e2; whether the king's step is legal
-    // there is the engine's answer.
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-    const hash_t before_king = game.board.nonpawn_hash[WHITE];
-    REQUIRE(play_move(&game, e2, e4));
-    REQUIRE(play_move(&game, e7, e5));
-    const hash_t after_pawns = game.board.nonpawn_hash[WHITE];
-    CHECK_EQ(after_pawns, before_king);
-    REQUIRE_MESSAGE(play_move(&game, e1, e2),
-                    "the king's step is not legal on the engine's board");
-    CHECK_NE(game.board.nonpawn_hash[WHITE], after_pawns);
-    CHECK_EQ(game.board.nonpawn_hash[WHITE],
-             compute_full_nonpawn_hash(&game, WHITE));
-  }
-
-  // The incremental keys after a line of moves equal the keys of that
-  // position loaded from its FEN: the non-pawn half of "equal positions hash
-  // equally" below, beside S099's pawn case above. The line is that case's,
-  // whose legality was judged by python-chess and by the engine there
-  // (DEC-023); a bishop takes a pawn in it, so White's key is taken through a
-  // move, and the pawn captures leave both keys alone.
-  TEST_CASE_FIXTURE(engine_fixture_t,
-                    "a line of moves and its fen share the non-pawn keys")
-  {
-    REQUIRE(load_FEN(DEFAULT_POSITION, &game));
-
-    const hash_t white = game.board.nonpawn_hash[WHITE];
-    const hash_t black = game.board.nonpawn_hash[BLACK];
-
-    // d2d4 d7d5 c2c4 d5c4 e2e3 e7e5 f1c4 e5d4
-    const std::vector<std::pair<index_t, index_t>> line = {
-        {d2, d4}, {d7, d5}, {c2, c4}, {d5, c4},
-        {e2, e3}, {e7, e5}, {f1, c4}, {e5, d4}};
-
-    for (const auto& [from, to] : line) {
-      REQUIRE_MESSAGE(play_move(&game, from, to),
-                      "a move of the line is not legal on the engine's board");
-    }
-
-    // The precondition: the bishop moved White's key, and no black piece but
-    // a pawn moved, so Black's is where it started.
-    REQUIRE_NE(game.board.nonpawn_hash[WHITE], white);
-    REQUIRE_EQ(game.board.nonpawn_hash[BLACK], black);
-
-    const hash_t reached_white = game.board.nonpawn_hash[WHITE];
-    const hash_t reached_black = game.board.nonpawn_hash[BLACK];
-    const std::string fen = generate_FEN(&game.board);
-
-    REQUIRE(load_FEN(fen, &game));
-    REQUIRE_EQ(game.board.nonpawn_hash[WHITE], reached_white);
-    REQUIRE_EQ(game.board.nonpawn_hash[BLACK], reached_black);
   }
 
   TEST_CASE_FIXTURE(engine_fixture_t, "equal positions hash equally")
@@ -3620,53 +3490,6 @@ TEST_SUITE("engine: uci go")
   }
 
 
-  // S110's two non-pawn tables, the same: the UCI layer's searches teach both
-  // -- which is also what says it attached them -- and `ucinewgame` clears
-  // both. The line and the depth are the case above's.
-  //
-  // Mutation: NC11_newgame_keeps_nonpawn, NC13_uci_does_not_attach_nonpawn.
-  TEST_CASE("ucinewgame clears the non-pawn correction tables")
-  {
-    uci_init();
-
-    auto empty = [](color_t colour) {
-      for (const auto& side :
-           uci_nonpawn_correction()->by_colour[colour].entries) {
-        for (const int32_t entry : side) {
-          if (entry != 0) { return false; }
-        }
-      }
-
-      return true;
-    };
-
-    REQUIRE(empty(WHITE));
-    REQUIRE(empty(BLACK));
-
-    {
-      stdout_capture_t capture;
-      uci_process_line("position startpos moves e2e4 e7e5");
-      uci_process_line("go depth 8");
-      uci_wait_for_search();
-    }
-
-    // The precondition: each table learned something, so each has something
-    // to clear.
-    REQUIRE_FALSE(empty(WHITE));
-    REQUIRE_FALSE(empty(BLACK));
-
-    {
-      stdout_capture_t capture;
-      uci_process_line("ucinewgame");
-    }
-
-    CHECK(empty(WHITE));
-    CHECK(empty(BLACK));
-
-    uci_shutdown();
-  }
-
-
   TEST_CASE("bench searches its last position cold")
   {
     uci_init();
@@ -4538,11 +4361,6 @@ TEST_SUITE("engine: aspiration windows")
     // d9:mate5 d10:mate5`: both mates first appear at 9 and stay at 5, with a
     // centipawn iteration under each (`adocs/data/S286_first_mate.txt`). S099
     // read the same on `6fc7f23` before its H0.
-    //
-    // **Re-taken at S110 and unchanged.** With the non-pawn correction tables
-    // averaged with the pawn table's (DEC-300), the same command reads the
-    // same two lines, `d8:cp1097 d9:mate5 d10:mate5` and `d8:cp1297 d9:mate5
-    // d10:mate5` (`adocs/data/S110_first_mate.txt`).
     // clang-format off
     const std::vector<case_t> cases = {
       {"r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18", 5, 9},
@@ -5324,13 +5142,6 @@ TEST_SUITE("engine: mate safety")
   // 1 below the shipping count, now 4 above the weakened one, so it holds, as
   // DEC-295's guard asks (`adocs/data/S286_floor_sweep.log`). S099 read the
   // same on `6fc7f23` before its H0.
-  //
-  // **Re-taken at S110 and unchanged.** With the non-pawn correction tables
-  // averaged in (DEC-300), the `floor` mode reads 12 at the shipping guard and
-  // **8** with it weakened (RfpMinPly 1), and `red` builds the gate at
-  // RfpMinPly 1 and sees it fail at 8 >= 11: 1 below the shipping count, 3
-  // above the weakened one, so it holds, as DEC-299's guard asks
-  // (`adocs/data/S110_floor_sweep.log`).
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

@@ -296,13 +296,6 @@ struct zobrist_randoms_t
   // piece there cost 1.4 to 2.1 % of speed, measured (DEC-271).
   uint64_t pawn_randoms[12][64];
 
-  // The non-pawn keys' view of piece_randoms, S110, the complement of the one
-  // above: the ten rows of the knights, bishops, rooks, queens and kings
-  // copied, the two pawn rows zero. Derived the same way and for the same
-  // reason -- no draw, and no branch on the piece where the alphabet keeps
-  // board_t::nonpawn_hash.
-  uint64_t nonpawn_randoms[12][64];
-
   bool initialized = false;
 };
 
@@ -434,23 +427,6 @@ struct board_t
   // bytes and halfmove_clock's comment below says why it stays so.
   // compute_full_pawn_hash() is the from-scratch oracle.
   hash_t pawn_hash;
-
-  // The non-pawn structure's keys, S110, one per colour and indexed by it:
-  // `hash`'s piece-square keys for that colour's knights, bishops, rooks,
-  // queens and king, and nothing else -- no pawn, no piece of the other
-  // colour, no side to move, no castling rights, no en-passant square. The
-  // Chess Programming Wiki's Static Evaluation Correction History page
-  // describes the non-pawn key as the location of all pieces belonging to one
-  // colour, excluding pawns, in pairs, one per side of the board; the king is
-  // one of those pieces, so it is in. The pawn key above leaves the kings out
-  // on a measurement of a pawn key, which says nothing about this one.
-  //
-  // Kept exactly as pawn_hash is: by add_piece, remove_piece and move_piece,
-  // whose `Side` names the slot at compile time, and undone by xor in
-  // unmake_move_impl; never rebuilt by the evaluation (INV-4's rule), and not
-  // in history_entry_t for the reason pawn_hash is not.
-  // compute_full_nonpawn_hash() is the from-scratch oracle.
-  hash_t nonpawn_hash[2];
 
   // Maintained by make_move and unmake_move rather than recomputed. evaluate()
   // was 40% of the search when it rebuilt these by walking the bitboards on
@@ -691,7 +667,7 @@ struct transposition_table_t
 // One struct parameterised by its size, instantiated once for the pawn key, so
 // the non-pawn and continuation tables S110 and S111 hold in reserve are a
 // declaration each and not new plumbing. Not built now (the step file's
-// section 7). S110 declares the non-pawn pair below the pawn table.
+// section 7).
 //
 // CORRHIST_PAWN_ENTRIES, slots per side to move. **Seed form (b), DEC-134,
 // the census the step file's section 4 names and DEC-270 ordered**: the
@@ -747,41 +723,6 @@ struct correction_table_t
 };
 
 using pawn_correction_t = correction_table_t<CORRHIST_PAWN_ENTRIES>;
-
-
-// THE NON-PAWN CORRECTION TABLES, S110: the same table twice, one for each
-// colour's non-pawn key (board_t::nonpawn_hash), each indexed by side to move
-// and key slot exactly as the pawn table is, with its entry type, update rule,
-// grain, scale and clamp (src/correction_history.hpp). Each learns the same
-// difference at the same nodes as the pawn table; src/search.cpp averages the
-// two reads with the pawn table's at CorrHistNonPawnWeight (DEC-300), so what
-// is applied stays inside CorrHistMax.
-//
-// CORRHIST_NONPAWN_ENTRIES, slots per side to move in each. **Seed form (b),
-// the census S099 defines re-run for these keys (DEC-270 (1))**: the distinct
-// non-pawn keys, per colour and side to move, a cold `go depth 12` reads a
-// correction for over S021's 300 positions, sized at the next power of two
-// above the 95th percentile of the largest of the four counts
-// (adocs/data/S110_nonpawn_key_census.py on the tune build; the readings are
-// adocs/data/S110_nonpawn_key_census.txt). At 2^15 the largest's p95 read
-// 9057 and at 2^14, since the size moves the tree the census reads, 8951, and
-// 8813 on the tree DEC-300's averaged blend makes: 2^14 every time, 16384
-// slots, 128 KiB a table and 256 KiB for the pair, 2026-10-21. Re-derive by
-// re-running the script when the search, the keys or the gate moves; the size
-// is S127's to sweep. The (c) fallback the step file names, S099's declared
-// exponent range 2^10 to 2^20 and its midpoint 2^15, is what the census was
-// first taken at. A power of two because the slot is the key's low bits.
-inline constexpr size_t CORRHIST_NONPAWN_ENTRIES = size_t{1} << 14;
-
-using nonpawn_table_t = correction_table_t<CORRHIST_NONPAWN_ENTRIES>;
-
-struct nonpawn_correction_t
-{
-  // [the colour whose pieces the key covers]: by_colour[WHITE] is read and
-  // taught with board_t::nonpawn_hash[WHITE], whoever is to move, and the
-  // same for Black. The side to move is each table's own first index.
-  nonpawn_table_t by_colour[2];
-};
 
 
 struct search_t
@@ -1127,14 +1068,6 @@ struct search_state_t
   // is then the raw one, nothing is learned, and the tree is the tree before
   // S099 node for node. A test that wants the correction attaches a table.
   pawn_correction_t* pawn_correction = nullptr;
-
-  // S110's two non-pawn correction tables, owned beside the pawn table by the
-  // same owners and cleared where it is. Read only where a pawn table is
-  // attached too, because the non-pawn share is a share of the pawn table's
-  // (CorrHistNonPawnWeight); every owner attaches both. Null here, as the pawn
-  // table is, for every caller that does not ask, and the tree is then the
-  // tree before S110 node for node.
-  nonpawn_correction_t* nonpawn_correction = nullptr;
 
   // PER-ROOT-MOVE NODE ATTRIBUTION, S132. How many nodes the subtree under
   // each root move has cost, as two parallel arrays -- the move, and its
