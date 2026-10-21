@@ -372,7 +372,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S110  **in progress, committed at bench 6570375; its one SPRT at 32+0.32, `{0, 10}` (DEC-297) on the machine; E's carry ceiling the owner's before an H1 ships (DEC-301)** -- a second correction table keyed on the non-pawn structure, split by colour; its own verdict
+1. S110  **H0 at 32+0.32, `{0, 10}`, nElo -4.88 +/- 11.28 over 3644 games (2026-10-21); reverted whole next, then it completes; DEC-301 lapses** -- a second correction table keyed on the non-pawn structure, split by colour; its own verdict
 2. S111  **S286 landed (DEC-294); bounds and control pre-registered before its run** -- correction tables indexed by the move played two and four plies ago; its own verdict
 3. S083  the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 4. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family

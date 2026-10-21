@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-21, by hand.
 
-## 2026-10-21: a second power loss; S287, S082, S288 done; S110's SPRT
+## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0
 
 **The machine went down at 09:12-09:13** with no shutdown, panic, MCE, OOM or
 thermal event logged, idle at the time; back at 10:35 on kernel 7.2.6 (it was
@@ -49,24 +49,20 @@ steps' worktrees.** The worktrees themselves (sources, about 9 GB), main's
 `.ref-builds/` (9 GB) and `.tuning/` (17 GB) are untouched: pruning them is
 the owner's call.
 
-**S110 committed (`39194e4`), its SPRT on the machine** (built in
-`../chesso-s110`; pair pinned in `adocs/data/S110_sprt.sh`, CAND `39194e4`
-vs REF `bb3d31d`; launched after the pin's commit, output
-`.tuning/sprt_s110_<stamp>`, console `.tuning/s110_sprt.log`, watcher ceiling
-40 h; no A/A for the kernel update, reason in the script):
-weighted-average blend (DEC-300), confirmed by a pre-registered gain
-measurement (12 games at 4 M nodes a ply: R_avg 0.787 against R_sum 1.575 of
-the parent's applied correction; the pair cold on 0.6 % of reads). bench
-6042933 -> 6570375; off switch identical to the parent; census 16384.
-Goldens by their scripts: floors hold (mined set 167 exact against 163; mate
-in three 12 against 11; first-mate 9 and 9 unmoved); carry ceilings D 0 -> 1
-(DEC-299) and **E 1 -> 4, outside the guard: carried provisionally by
-DEC-301, the owner rules before an H1 ships**; budgets C, D, E, F moved.
-Phase 2's chain 13:00-15:01 green: gate2 49/49 both builds, **mutants 46 of
-46**, Debug self-play 8 games 0 Assertion, gate_extra five stages. The SPRT:
-DEC-297, 32+0.32, Hash 64, `{0, 10}`, cap 5250 rounds, up to about 20 h
-(`adocs/data/S110_sprt.sh`). **S111** (continuation correction) starts blind
-meanwhile, on S110's commit, agent-only.
+**S110 read H0** at 21:57 (32+0.32, Hash 64, `{0, 10}`): nElo -4.88 +/-
+11.28 over 3644 games, LLR -2.98, 0 forfeits, 6 h 44 m
+(`adocs/data/S110_sprt.log`, archived untrimmed as
+`chesso_S110_sprt_2026-10-21.tar.xz`). By its pre-registration `39194e4` is
+reverted whole next and recorded as zero; the pawn table stays; DEC-301
+lapses, so **no owner ruling is needed**. The fast check of `39194e4` (no code
+defect; specs.md and one MANUAL sentence stale) is moot with the revert.
+
+**S111, phase 1 written blind** during the run (DEC-260) in `../chesso-s111`
+on `36ec2eb`: two continuation correction tables keyed on (2 plies ago, 1 ply
+ago) and (4, 1); fast check read-only, its three findings fixed blind.
+DEC-302 (the pair key, DEC-299's guard, the blend gain recorded) is drafted
+in `.tuning/coord/S111/dec302.md`. Next: rebase onto the revert per its step
+file, then phase 1b and phase 2, then its SPRT (DEC-297's shape).
 
 **S288 done** (filler): eval_spread puts the shipped margin first, read from
 the parameter list; F25 closed; the margin comment S287 restated now says so.

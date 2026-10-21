@@ -942,3 +942,39 @@ CH01-15, PK01-05, G04; 6028 s); Debug self-play four rounds at 4+0.04,
 8 games, **0 Assertion**, 0 disconnect; `gate_extra.sh` five stages green
 (prose, citations, debug, sanitize, perft; 1011 s). Then `tools/gate.sh
 --message` on main's staged tree and the commit; the SPRT's pin follows it.
+
+## 2026-10-21: the verdict, H0
+
+The run (`adocs/data/S110_sprt.sh` as pinned at `36ec2eb`), 15:13 to 21:58,
+6 h 44 m, 540.5 games an hour, 12 of 12 cores; the banner printed what the
+script's coordinator sentence says it must, `Started game 1 of 10500`:
+
+    SPRT | cand 39194e4 vs ref bb3d31d, 32+0.32, Hash=64, noob_3moves.epd, {0, 10} nElo
+    Elo | -3.34 +/- 7.71, nElo -4.88 +/- 11.28
+    LLR | -2.98 (-2.94, 2.94) -> H0
+    Games | N: 3644 W: 850 L: 885 D: 1909, Ptnml [99, 480, 692, 459, 92]
+    Wall | 6 h 44 m, 540.5 games/h, forfeits 0
+    Log | adocs/data/S110_sprt.log
+
+0 forfeits either side, no crash, disconnect or incomplete mating PV; the
+abort rule never fired. **The pre-registered reading: not shown to gain at
+32+0.32.** The interval, [-16.16, +6.40] nElo, does not reach the upper
+bound; the point estimate is below zero. A true gain under about 5 nElo
+reads H0 at `{0, 10}` more often than at `{0, 5}` -- the price of the bounded
+run DEC-297 booked, recorded here as the pre-registration asks. **The H0 row
+executes**: `39194e4` is reverted whole next and recorded as zero, every
+golden with it; the pawn table stays (S286); DEC-301's provisional ceiling
+lapses with the revert, so the owner's ruling it waited for is not needed;
+no follow-up run (DEC-297). S111 still runs its own verdict, rebased onto
+the revert (DEC-297; its step file's "If S110 reverts").
+
+What the verdict measured is the pair as DEC-300 blended it: the non-pawn
+conditioning together with the pawn read's share halved, R_avg 0.787 of the
+parent's applied correction on the blend-gain games
+(`adocs/data/S110_blend_gain.txt`). One verdict cannot separate the two; the
+family's blend vector, and with it any non-pawn weight, is S127's to fit.
+
+The coordinator's fast check of `39194e4`, read-only during the run: no code
+defect; `adocs/specs.md` had not taken S110's wording and MANUAL's weight-0
+sentence claimed the parent's speed where only its tree holds. Both fixes were
+held for an H1 commit and are moot with the revert.
