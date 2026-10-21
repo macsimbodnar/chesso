@@ -49,10 +49,15 @@ steps' worktrees.** The worktrees themselves (sources, about 9 GB), main's
 `.ref-builds/` (9 GB) and `.tuning/` (17 GB) are untouched: pruning them is
 the owner's call.
 
-**S110 phase 1** (an Opus subagent, `../chesso-s110`): the non-pawn table,
-pre-registered by **DEC-297** (coordinator) at 32+0.32, Hash 64, `{0, 10}`,
-like S283; builds and tests at nice 19 beside `compare`, no timing or match.
-The owner may overrule DEC-297 before its run starts.
+**S110 phase 1, reworked** (an Opus subagent, `../chesso-s110`): the
+non-pawn key (node-identical alone, 16384 slots a side by its census) and two
+tables. The fast check found the summed blend applied about twice the
+parent's correction at the seed, so by **DEC-300** the tables blend as a
+weighted average; the agent is reworking it. Phase 2 (about 2.5 h: mutants
+90 min, gate_extra, Debug self-play) restarts from the build; the sweep run on
+the summed design is void. Ceilings and budgets within DEC-295's guard by
+**DEC-299**. SPRT by **DEC-297**: 32+0.32, Hash 64, `{0, 10}`, up to about
+20 h. The owner may overrule DEC-297 before its run starts.
 
 ## 2026-10-20: power cut; S082's pool topped up (DEC-296)
 

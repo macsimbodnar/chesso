@@ -15263,3 +15263,60 @@ Consequences: S083 reads this beside S082's record. Its fits start from the
               shipped constants on qs rows, which moved in 12 of 13 primary
               fits here. The completing commit is now taken after the fast
               check, not before, so a record finding is fixed in place.
+
+## DEC-299  2026-10-21  S110 applies the mate-carry ceilings and budgets the script answers, within DEC-295's guard; its census size stands
+Tags:         testing, mate, s170, s110, dec-295, dec-270, census, correction-history
+Context:      S110's tree moves the search, so `test_mate_carry` reads its
+              S170 budgets stale (3 of 6 guarded cases reported) and phase 2
+              re-sweeps the grid. DEC-295's guard was the owner's for S286
+              alone. S110's census answered 2^14 slots a side (p95 8951 and
+              9057 at the two sizes it was taken at) against the 2^15
+              fallback the brief named.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-21 (few questions, correctness first). S110's commit
+              applies the carry ceilings and S170 budgets exactly as
+              `adocs/data/S203_case_sweep.sh --ceilings` answers, provided
+              both mate floors (`EXACT_FLOOR`, `MATE_IN_THREE_FLOOR`) hold or
+              rise and no ceiling rises by more than 2 -- DEC-295's guard,
+              word for word; outside it phase 2 stops for the owner. The
+              moved values leave with any revert. The table plays at the size
+              the census gives, 16384 slots a side (DEC-270 (1)).
+Rejected:     Stopping for the owner on any rise -- the owner accepted this
+              form twice (DEC-287, DEC-295) and rejected the stop as costing a
+              night. No guard -- the floors are the mate-safety line and a
+              lowered one is a regression signal, not a golden to refresh.
+              The fallback size -- DEC-270 (1) makes the census the size.
+Consequences: S111 asks the same question when its tree moves; this sets no
+              allowance for it.
+
+## DEC-300  2026-10-21  S110's correction tables blend as a weighted average, not a sum, so its SPRT measures the key and not a doubled gain
+Tags:         search, correction-history, s110, s111, s127, measurement, fast-check
+Context:      S110's phase 1 blended the pawn correction with the two
+              non-pawn tables as `pawn + (white + black) * weight / 200`. The
+              fast check found that all three tables learn the same residual
+              (search score minus raw evaluation) at the same nodes, so at the
+              seed weight 100 a residual the keys share is applied twice: one
+              update writing v into all three slots reads back 2v, with a new
+              total bound of 94 where the parent stopped at 47. The pruning
+              margins, improving and futility all read that number. CPW,
+              re-fetched 2026-10-21, says the tables' values "are combined"
+              and not how. The step file's seed reads "this table's applied
+              share expressed as a percentage of the pawn table's ... 0 is
+              this table switched off ... 100, equal weight".
+Decision:     By the coordinator. The corrected score is the weighted average
+              `(100 * pawn + weight * mean(white, black)) / (100 + weight)`:
+              weight 0 is the parent exactly (DEC-215), 100 is equal weight,
+              and the result stays inside CorrHistMax, so the separate total
+              bound goes. The total gain of the correction family is a fitted
+              quantity and S127 owns it with the blend vector.
+Rejected:     The sum as built -- the one SPRT would price the non-pawn key
+              and a doubled gain together, and an H0 would not say the key is
+              worth nothing (one change at a time). Each table learning what
+              the others leave -- principled, but it rewrites S099's shipped
+              update line inside S110's verdict. Keeping the sum and writing
+              the confound into the pre-registration -- a verdict known in
+              advance to be unattributable.
+Consequences: S110's phase 1 is reworked and phase 2 re-run from the build;
+              the sweep taken on the summed design is void. S111 joins the
+              same average with its own weight. A later gain above 1, if the
+              family wants one, is S127's to find.
