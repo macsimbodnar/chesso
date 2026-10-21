@@ -1,0 +1,48 @@
+S082 compare
+started   2026-10-21T11:00:29+02:00
+engine    f93a3b2
+tuner     sha256 62204108d3409daad4af9152c879ad8cfab8d79771aa44045d569117e3d67e72  /home/max/ws/chesso/build/tools/tuner
+split     sha256 823bde331b257bc5c28f5355bf8a3627fa9ae5762cd0161a312b57eadb670401  /home/max/ws/chesso/tools/corpus_split.py
+reader    sha256 f180e1a283c4d309dc9698cb9aa4ff9cd940365d85b35c0b2eda1a926dd927d5  /home/max/ws/chesso/adocs/data/S082_recipe_read.py
+python    Python 3.12.3
+check: merged root, 12708457 rows of 12708457 counted, 150000 games of 150000, 0 rows without seven fields
+check: merged qs, 12705516 rows of 12705516 counted, 150000 games of 150000, 0 rows without seven fields
+check: merged pv, 12379744 rows of 12379744 counted, 150000 games of 150000, 0 rows without seven fields
+split: seed 20261013, 149998 games, 12000 held out, game list sha256 88f338af72f6019ea2bd85b2e6047dc854ea0b0d0e98a20ddee98b17c27dbd68
+  /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation: 1015607 rows, 12000 games, sha256 58bcbb315fd82bd332372d0b2f1df7d7370693568bd27fa9ed6f17b8e74652d6
+  /home/max/ws/chesso/.tuning/s082/pool.tsv.root.train: 11692850 rows, 137998 games, sha256 95a81f0a1ae4552d50b48976757ed06b3b04da1eec0aa471de1b6bc83c13ff4f
+  /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation: 1015332 rows, 12000 games, sha256 2b508067fb64693bb4b278a2455fb9d101eaa742975a4b53f4ff56e6fa16981e
+  /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.train: 11690184 rows, 137998 games, sha256 8e9645b3d01e928fda4b3ed29666d77aeaefb984029ad23796d193dade53e444
+  /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation: 988086 rows, 11999 games, sha256 24c4f671131c4a6f3f945ef0f5bb0d8cf85969b41d2e846e745539ef2d53ffdd
+  /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.train: 11391658 rows, 137987 games, sha256 a66e5e340f90cb5acdfd402045b5b11c2771d09f161539bf249a73887a114dec
+sample: 1000000 rows from 22182 games (45.08 a game) of 137998, --per-game 46, seed 1; 675 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 70ae52667a5d1af7e435f4a95b6bdd201cf5a179525e597f3876654ab0d54143  /home/max/ws/chesso/.tuning/s082/cand_root_46_s1.tsv
+sample: 1000000 rows from 125033 games (8.00 a game) of 137998, --per-game 8, seed 1; 3358 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 0270c961e934276a94fcdc0eb5354ca6f1f7f691456bbaa0f25b45b5aeb0d6a2  /home/max/ws/chesso/.tuning/s082/cand_root_8_s1.tsv
+sample: 1000000 rows from 11783 games (84.87 a game) of 137998, --per-game 0, seed 1; 369 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 69b366f1167008bcec6a69e9c8f92512ee9b9b964e1294ad8273729530525599  /home/max/ws/chesso/.tuning/s082/cand_qs_0_s1.tsv
+sample: 1000000 rows from 22182 games (45.08 a game) of 137998, --per-game 46, seed 1; 688 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 b92b01d38bff41f4bdd0f9fa3679504b562db13e931ac74e7f2e54ebd44de2da  /home/max/ws/chesso/.tuning/s082/cand_qs_46_s1.tsv
+sample: 1000000 rows from 125033 games (8.00 a game) of 137998, --per-game 8, seed 1; 3408 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 401c04a0ca02738f35b52dcd1c584e2b2d1599dca84de9b5769706f2071c5e08  /home/max/ws/chesso/.tuning/s082/cand_qs_8_s1.tsv
+sample: 1000000 rows from 12095 games (82.68 a game) of 137987, --per-game 0, seed 1; 976 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 e4cb261d5efd71986f75af7fdf02985e34f519e2734eba530753609ef6eb1c60  /home/max/ws/chesso/.tuning/s082/cand_pv_0_s1.tsv
+sample: 1000000 rows from 22240 games (44.96 a game) of 137987, --per-game 46, seed 1; 1804 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 affb15d6ad310eedff7618ec95f603004d1bf7dad7552ddd20139602d9e317b0  /home/max/ws/chesso/.tuning/s082/cand_pv_46_s1.tsv
+sample: 1000000 rows from 125058 games (8.00 a game) of 137987, --per-game 8, seed 1; 9749 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 33187eccb5f7bd3382ac3aebf23e7cf019af8ef2c72dbe24be6870e037a32fdb  /home/max/ws/chesso/.tuning/s082/cand_pv_8_s1.tsv
+sample: 1000000 rows from 11780 games (84.89 a game) of 137998, --per-game 0, seed 1; 361 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 9d5c967b926fa585ac549c8259b282364385dc733f80fec374a8b8b05ce2280d  /home/max/ws/chesso/.tuning/s082/cand_root_0_s1.tsv
+sample: 1000000 rows from 11788 games (84.83 a game) of 137998, --per-game 0, seed 2; 378 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 1abcb580bb96a7f09170f5901010aa30d6dfad9a3cee8f75aa079167b0933159  /home/max/ws/chesso/.tuning/s082/cand_root_0_s2.tsv
+sample: 1000000 rows from 11833 games (84.51 a game) of 137998, --per-game 0, seed 3; 306 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 9dab8bbfdcaa377a4148402dc960fe54ba996efce5086f3d2eba66fb8a0d5048  /home/max/ws/chesso/.tuning/s082/cand_root_0_s3.tsv
+sample: 1000000 rows from 11839 games (84.47 a game) of 137998, --per-game 0, seed 4; 296 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 d40397feeb23d42b7a8bdf4d8b4279adcdd05eb1107a2b90833495133acf3f8f  /home/max/ws/chesso/.tuning/s082/cand_root_0_s4.tsv
+sample: 1000000 rows from 11788 games (84.83 a game) of 137998, --per-game 0, seed 5; 286 rows dropped for a position /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.root.validation, /home/max/ws/chesso/.tuning/s082/pool.tsv.pv.validation holds; sha256 103ae5a703c0107896896cc1498bb67f7608df317a7ddaf62c5bd38d146d61a3  /home/max/ws/chesso/.tuning/s082/cand_root_0_s5.tsv
+fit               L (qs view)  root view       K     rows   games  rows/game
+root 46 s1        0.073047    0.079195  0.6357  1000000   22182      45.08
+root 8 s1         0.072824    0.078905  0.6286  1000000  125033       8.00
+qs all s1         0.072496    0.079968  0.7314  1000000   11783      84.87
+qs 46 s1          0.072154    0.079928  0.7253  1000000   22182      45.08
+qs 8 s1           0.071904    0.079872  0.7184  1000000  125033       8.00
+pv all s1         0.072399    0.079961  0.7305  1000000   12095      82.68
+pv 46 s1          0.072297    0.079933  0.7261  1000000   22240      44.96
+pv 8 s1           0.072269    0.079920  0.7241  1000000  125058       8.00
+root all s1       0.073238    0.079660  0.6411  1000000   11780      84.89
+root all s2       0.073134    0.079660  0.6422  1000000   11788      84.83
+root all s3       0.073170    0.079660  0.6480  1000000   11833      84.51
+root all s4       0.073352    0.079677  0.6251  1000000   11839      84.47
+root all s5       0.073127    0.079663  0.6363  1000000   11788      84.83
+the pool's leaves, from generate.log:
+control L = 0.073204, mean of 5; s = 0.000094; m = 2.49 * sqrt(2) * s = 0.000330
+S082 reading: outcome (a), leaf qs, 46 row(s) a game -- L 0.072154 against the control's 0.073204; 2 cell(s) within m of the best
+finished  2026-10-21T11:33:55+02:00

@@ -5124,8 +5124,14 @@ build/tools/tuner --data .tuning/s082/corpus.tsv \
 ```
 
 Those are S082's comparison settings, `adocs/data/S082_recipe.sh`, and not a
-recipe: which leaf and how many rows a game is that script's pre-registered
-reading, and the corpus size and node budget are S083's.
+recipe. That script's pre-registered reading, 2026-10-21, chose **leaf `qs`,
+46 rows a game** (`adocs/data/S082_compare.log`); the corpus size and node
+budget are S083's. The pool it read was not that one command: a power cut
+stopped it at 122748 games, and a 27252-game top-up from the same binary
+completed it, joined by `S082_recipe.sh merge` (DEC-296). The fixed validation
+set every later fit holds out is the split above,
+`.tuning/s082/pool.tsv.<view>.validation`, its digests in S082's record and a
+copy in the owner's archive (DEC-235).
 
 Since S286, which relanded S099's correction, each `datagen` worker carries its
 own pawn correction table, cleared before every game as `ucinewgame` clears the

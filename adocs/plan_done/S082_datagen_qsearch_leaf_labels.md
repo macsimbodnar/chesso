@@ -8,7 +8,7 @@ closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus subagent
-done:
+done:       2026-10-21 11:38 -- a corpus row names a resolved position: src/leaf_walk.cpp walks quiescence's own choices until it stands pat and datagen writes that leaf (--leaf qs, the default), the played-out PV's end resolved the same way (pv) or the root, the game result the label in White's perspective; datagen prints per leaf how often the leaf differs from the root (qs 26.53 %, pv 100.00 % on the top-up; 26.61 % and 100.00 % recomputed on part 1) and every refusal by kind. The tactical clause and --allow-tactical retired. chesso links none of it: bench 6042933 with the parent's bestmoves, search_bench 9 and 12 identical (5b0e170, INV-6); datagen exits 1 on a failed write or a short pool (test_datagen_exit). Mutants LW01-LW09 killed. The pool, 150000 games at 100000 nodes with --leaf root,qs,pv: cut by a power loss at 122748 games, completed by a 27252-game top-up from the same binary (DEC-296), joined by S082_pool_merge.py (f93a3b2, fast check clean, a sync added), merge and verify DONE. The fixed validation set: tools/corpus_split.py, seed 20261013, 12000 games of 149998, qs view 1015332 rows sha256 2b508067fb64693bb4b278a2455fb9d101eaa742975a4b53f4ff56e6fa16981e, root and pv views beside, at .tuning/s082/ and archived (chesso_S082_validation_and_logs_2026-10-21.tar.xz); tuner --holdout reads it and refuses a shared position. Recipe by S082_recipe.sh's pre-registered rule, no SPRT of its own (DEC-259): outcome (a), leaf qs, 46 rows a game, L 0.072154 against the control's 0.073204, m 0.000330 (adocs/data/S082_compare.log); S083 generates at it. Fast suite 49/49 in both builds at f93a3b2 (CLANG_FORMAT_MAJOR=22), format clean, the five prose modes clean, gate green. DEV_MANUAL.md updated for the reading and the two-part pool; MANUAL.md checked, unchanged; specs.md holds no recipe, unchanged. Second tier not owed for this commit (no make_move, generator or search change; 5b0e170 carried the step's code). Implemented from the step file's description (DEC-221) by Opus subagents briefed by the coordinator; merge, compare and the reading by the coordinator.
 
 ## Amended 2026-10-08, DEC-258 and DEC-259
 
@@ -1585,3 +1585,50 @@ items:
 4. The split sees 149998 games with a root row (at least two of part 2's
    games wrote none, and part 1's count is of games with a row), so 12000 are
    held out and 137998 trained on, against the pre-registration's 138000.
+
+### 2026-10-21: the merge, `compare` and the reading (the coordinator)
+
+**Merge** at `f93a3b2`, finished 10:59: `S082-MERGE-DONE`. Part 1 kept 122748
+games, part 2's ids offset by 1000000; merged root 12708457 rows, qs
+12705516, pv 12379744, each over 150000 games
+(`adocs/data/S082_pool.log`). `verify` DONE.
+
+**`compare`** at `f93a3b2`, 11:00-11:33, 34 min against the 1 h 15 m to
+1 h 30 m estimated: `S082-COMPARE-DONE` (`adocs/data/S082_compare.log`).
+
+**The fixed validation set** (seed 20261013, 12000 games of the 149998 with a
+root row; game-list sha256 `88f338af...`):
+
+| view | rows | games | sha256 |
+|---|---|---|---|
+| root | 1015607 | 12000 | `58bcbb315fd82bd332372d0b2f1df7d7370693568bd27fa9ed6f17b8e74652d6` |
+| qs | 1015332 | 12000 | `2b508067fb64693bb4b278a2455fb9d101eaa742975a4b53f4ff56e6fa16981e` |
+| pv | 988086 | 11999 | `24c4f671131c4a6f3f945ef0f5bb0d8cf85969b41d2e846e745539ef2d53ffdd` |
+
+It sits at `.tuning/s082/pool.tsv.<view>.validation` and is archived with the
+fit logs and the run's consoles as
+`chesso_S082_validation_and_logs_2026-10-21.tar.xz` (37.7 MB, `.sha256`
+checked), DEC-235. Every later fit and screen reads it from there.
+
+**The reading**, by the pre-registered rule, mechanically: the control's L
+0.073204 (five seeds, s 0.000094, m 0.000330); the best cell qs at 8 rows a
+game, L 0.071904; within m of it, qs 8 and qs 46 (0.072154); rule 4 takes
+the most rows a game. **Outcome (a): leaf qs, 46 rows a game**, L 0.072154,
+0.001050 under the control (3.2 m). S083 generates at that leaf and density.
+
+Beside the reading, deciding nothing (DEC-275):
+
+- On the root view the order reverses: every root-leaf fit reads lower
+  (0.078905 to 0.079677) than every qs or pv fit (0.079872 to 0.079968). A
+  model fitted to resolved leaves predicts the unresolved roots worse, as the
+  views measure different positions; the primary view is qs by the
+  pre-registration.
+- K fitted near 0.72-0.73 on qs and pv samples against 0.63-0.65 on root.
+- Fewer rows a game from more games fits better on every leaf (8 beats 46
+  beats all), so S083's per-game cost is the trade the rule names.
+- The refusal-share block is empty on the merged pool, as the merge section
+  says: part 2's datagen lines are quoted, and part 1's closing lines were
+  lost. Part 2's own: qs 0.0235 % refused, all terminal; pv 2.5638 %, all
+  terminal; none truncated, aborted or uncertified.
+- The split holds 137998 games to train on, not the pre-registration's
+  138000: part 1 counts games with a row, and two of part 2's wrote none.

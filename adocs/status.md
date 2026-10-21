@@ -26,10 +26,27 @@ filler **S288**). Gate green, bench 6042933.
 **Local trap, again:** `test_clang_format_script` fails in both builds unless
 `CLANG_FORMAT_MAJOR=22` is exported for ctest too (DEC-146).
 
-**Next:** S082 phase 3 -- the merge tool (`../chesso-s082f`, diff
-`.tuning/coord/S082/s082_phase3.diff`) is under a fast check; then commit,
-`merge` (about 5 min), `verify`, `compare` (about 1 h 30 m). S110 is written
-blind beside `compare`.
+S287's stamp reads 11:25; its commit is 10:52. The stamp's clock is wrong;
+the commit is the record (plan_done is not edited).
+
+**S082 phase 3 done** (`f93a3b2`): the merge stage, fast check clean (a `sync`
+added before DONE). `merge` DONE at 10:58: 150000 games, root 12708457 rows
+(sha256 `c817e619...`), qs 12705516, pv 12379744; part 1's originals kept in
+`.tuning/s082/part1/` with their sha256. `verify` DONE.
+
+**S082 done**: `compare` DONE 11:33 (34 min). Outcome (a), **leaf qs, 46
+rows a game**, L 0.072154 against the control's 0.073204, m 0.000330
+(`adocs/data/S082_compare.log`). The fixed validation set sits at
+`.tuning/s082/pool.tsv.<view>.validation`, archived with the logs as
+`chesso_S082_validation_and_logs_2026-10-21.tar.xz`. S083 generates at it.
+
+**Disk: 11 GB free (98 %).** S083's corpora need room; the old agent
+worktrees and `.ref-builds/` are the candidates to prune, owner's call.
+
+**S110 phase 1** (an Opus subagent, `../chesso-s110`): the non-pawn table,
+pre-registered by **DEC-297** (coordinator) at 32+0.32, Hash 64, `{0, 10}`,
+like S283; builds and tests at nice 19 beside `compare`, no timing or match.
+The owner may overrule DEC-297 before its run starts.
 
 ## 2026-10-20: power cut; S082's pool topped up (DEC-296)
 

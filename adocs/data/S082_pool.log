@@ -1,0 +1,105 @@
+S082 pool, merged from two datagen runs (DEC-296); not one run's log
+merged    2026-10-21T10:57:38+02:00
+merger    sha256 931012870f81fbf882f872072a6d838cee8af92c7b82bab3d702d5565697123c  /home/max/ws/chesso/adocs/data/S082_pool_merge.py
+recipe    sha256 154ba962a04e5ca68d82835ce9142eff85a22e333916737a537112402eb16fb2  /home/max/ws/chesso/adocs/data/S082_recipe.sh
+python    Python 3.12.3
+part 1    /home/max/ws/chesso/.tuning/s082/part1/generate.log, the first run's own log, moved there unchanged; verbatim:
+    S082 pool
+    started   2026-10-16T01:36:14+02:00
+    engine    5b0e170
+    datagen   sha256 4b0e28483f6489bf3fd21997eac4b2a5dc9f6e5351c27b810792c75b02655ffa  /home/max/ws/chesso/build/tools/datagen
+    command   datagen --out /home/max/ws/chesso/.tuning/s082/pool.tsv --leaf root,qs,pv --games 150000 --nodes 100000 --threads 12 --seed 20261013
+    datagen: 150000 games, 100000 nodes per move, 12 threads, seed 20261013, quiet-limit 1000, leaf root,qs,pv
+part 1    stopped by a power cut before datagen's closing lines; its files end on a NUL tail
+part 1    sha256 written before the move to /home/max/ws/chesso/.tuning/s082/part1/originals.sha256, checked on this run:
+    119e2f65217b83d1dce98257d779ebb0fc7a36f8f7c3004c9eef68c997a01210  generate.log
+    21aefe85f77d94a8bdc45390935678f9e63b1a12f3f0ec2c4ffb570c5ee8752b  pool.tsv.root
+    312ace76b28134e542cc2bc451db751efd32db2dffe802a6f13c09bafd4a3643  pool.tsv.qs
+    088bfe486cd485ae1b8910f9f4192533670eb13577d618189b207400dc7e42ff  pool.tsv.pv
+part 2    /home/max/ws/chesso/.tuning/s082/topup/topup.log, the top-up's own log; verbatim:
+    S082 pool top-up
+    started   2026-10-20T20:49:14+02:00
+    engine    df0d3ab (src/ tools/ identical to 5b0e170)
+    datagen   sha256 4b0e28483f6489bf3fd21997eac4b2a5dc9f6e5351c27b810792c75b02655ffa  /home/max/ws/chesso/build/tools/datagen
+    expected  sha256 4b0e28483f6489bf3fd21997eac4b2a5dc9f6e5351c27b810792c75b02655ffa (generate.log)
+    command   datagen --out /home/max/ws/chesso/.tuning/s082/topup/pool.tsv --leaf root,qs,pv --games 27252 --nodes 100000 --threads 12 --seed 2026102000
+    datagen: 27252 games, 100000 nodes per move, 12 threads, seed 2026102000, quiet-limit 1000, leaf root,qs,pv
+    filter: 2751655 considered, 2313716 passed; skipped in-check 170952, mate 0, score past 1000 185972; no completed iteration 0
+    leaf root: 2313716 rows from 27252 games written to /home/max/ws/chesso/.tuning/s082/topup/pool.tsv.root, 84.90 a game; the leaf differs from the root on 0 (0.00 %), 0.000 plies on average
+    coverage root, rows by the written position's phase and the sampled position's |score|
+      phase              <50       <150       <300       <600       rest
+          0 to  4      35927      40340      54781      65932      58865
+          5 to  9      57720      94885     111015     145070      92440
+         10 to 14      68166     102015      90624      69523      24291
+         15 to 19      49210      78186      72088      58909      16223
+         20 to 24     290419     370560     188296      72924       5307
+    leaf qs: 2313173 rows from 27252 games written to /home/max/ws/chesso/.tuning/s082/topup/pool.tsv.qs, 84.88 a game; the leaf differs from the root on 613730 (26.53 %), 0.504 plies on average
+    leaf qs: not written of 2313716 passed: terminal 543 (0.0235 %) truncated 0 (0.0000 %) aborted 0 (0.0000 %) uncertified 0 (0.0000 %)
+    coverage qs, rows by the written position's phase and the sampled position's |score|
+      phase              <50       <150       <300       <600       rest
+          0 to  4      38035      44173      59304      70705      61991
+          5 to  9      60637      99997     115718     148815      92792
+         10 to 14      72122     107059      93043      69130      23405
+         15 to 19      50115      80094      72651      58030      14756
+         20 to 24     280049     354662     176084      65663       4143
+    leaf pv: 2254398 rows from 27252 games written to /home/max/ws/chesso/.tuning/s082/topup/pool.tsv.pv, 82.72 a game; the leaf differs from the root on 2254398 (100.00 %), 13.864 plies on average, 13.376 of them the line's
+    leaf pv: not written of 2313716 passed: terminal 59318 (2.5638 %) truncated 0 (0.0000 %) aborted 0 (0.0000 %) uncertified 0 (0.0000 %)
+    coverage pv, rows by the written position's phase and the sampled position's |score|
+      phase              <50       <150       <300       <600       rest
+          0 to  4      40505      77412      94177     103051      80772
+          5 to  9      70890     139467     148505     170424      90890
+         10 to 14      84471     135268      98519      61282      17248
+         15 to 19      62248      97686      74461      45866       6637
+         20 to 24     189529     234814      99547      29962        767
+    walk: 52448104 nodes, 0.019 % of the 275152657122 the games' searches spent
+    exit      0
+    elapsed   8420 s
+part 2    checked against its own log, 27252 games booked:
+    check: leaf root, 2313716 rows of 2313716 counted, 27252 games of 27252, 0 rows without seven fields
+    check: leaf qs, 2313173 rows of 2313173 counted, 27252 games of 27252, 0 rows without seven fields
+    check: leaf pv, 2254398 rows of 2254398 counted, 27252 games of 27252, 0 rows without seven fields
+runs      one datagen, sha256 4b0e28483f6489bf3fd21997eac4b2a5dc9f6e5351c27b810792c75b02655ffa; part 1 seed 20261013 (workers 20261013 to 20261024), part 2 seed 2026102000 (workers 2026102000 to 2026102011); 100000 nodes a move, 12 threads, quiet-limit 1000, leaf root,qs,pv, in both
+part 1    /home/max/ws/chesso/.tuning/s082/part1/pool.tsv.root: 10394836 rows, 122749 games, a tail of 1691 NUL bytes after its last newline, last game 122926 (95 rows)
+part 1    /home/max/ws/chesso/.tuning/s082/part1/pool.tsv.qs: 10392438 rows, 122749 games, a tail of 1360 NUL bytes after its last newline, last game 122926 (95 rows)
+part 1    /home/max/ws/chesso/.tuning/s082/part1/pool.tsv.pv: 10125441 rows, 122739 games, a tail of 4054 NUL bytes after its last newline, last game 122926 (95 rows)
+part 1    checked: no NUL before a tail, nothing but NUL after the last newline, seven fields a row, each game's rows contiguous, qs's and pv's games all root's and in root's order, no kept game with more rows in a leaf than in root
+part 1    cut: the 122748 games before game 122926 in root's order are kept; game 122926 (root 95 rows, qs 95 rows, pv 95 rows) is dropped with everything after it (root 1 game(s), 95 rows, qs 1 game(s), 95 rows, pv 1 game(s), 95 rows) and the NUL tails
+part 1    kept: root 10394741 rows in 122748 games, bytes 0 to 817031797, qs 10392343 rows in 122748 games, bytes 0 to 810032146, pv 10125346 rows in 122738 games, bytes 0 to 766444212
+part 1    at least 3 of its games wrote no row (ids absent inside one of 12 workers' runs); a game played is visible only by its rows, so its games are counted as games with a row
+part 2    /home/max/ws/chesso/.tuning/s082/topup/pool.tsv.*: 27252 games played, 27250 with a row, 2 without; its rows give every figure its log prints that rows determine -- rows, differs, mean distance, passed, refusals' total, coverage
+figures   per leaf; part 1 recomputed from its kept rows, a game over its games with a row; part 2 datagen's own, a game over its games played; refused = root rows less the leaf's, of the positions that passed (root's rows)
+  leaf part      rows    games  a game     differs  plies  refused
+  root 1     10394741   122748   84.68      0.00 %  0.000  0 (0.0000 %)
+  root 2      2313716    27252   84.90      0.00 %  0.000  0
+  qs   1     10392343   122748   84.66     26.61 %  0.506  2398 (0.0231 %), kind unknown
+  qs   2      2313173    27252   84.88     26.53 %  0.504  543 (0.0235 %): terminal 543, truncated 0, aborted 0, uncertified 0
+  pv   1     10125346   122748   82.49    100.00 % 13.861  269395 (2.5916 %), kind unknown
+  pv   2      2254398    27252   82.72    100.00 % 13.864  59318 (2.5638 %): terminal 59318, truncated 0, aborted 0, uncertified 0
+part 1    coverage root, recomputed from its kept rows: the written position's phase by the sampled position's |score| <50 <150 <300 <600 rest
+    phase  0+     155479    179571    245561    291996    262962
+    phase  5+     260097    410822    498776    645761    416771
+    phase 10+     310297    464872    406345    314508    112210
+    phase 15+     224973    354247    323798    263463     74988
+    phase 20+    1308875   1678408    840008    326852     23101
+part 1    coverage qs, recomputed from its kept rows: the written position's phase by the sampled position's |score| <50 <150 <300 <600 rest
+    phase  0+     165339    197161    265593    312000    276625
+    phase  5+     272930    432790    519348    664591    419620
+    phase 10+     327869    488808    416909    312805    108057
+    phase 15+     230230    361880    326710    258975     67975
+    phase 20+    1261182   1607275    785909    294160     17602
+part 1    coverage pv, recomputed from its kept rows: the written position's phase by the sampled position's |score| <50 <150 <300 <600 rest
+    phase  0+     176056    344266    420988    455582    361707
+    phase  5+     317583    617702    667063    762002    412463
+    phase 10+     384915    611791    441516    278147     79972
+    phase 15+     282975    445006    334738    205089     29271
+    phase 20+     853421   1063049    442896    134138      3010
+part 1    lost with datagen's closing lines, and not in the rows: the filter's considered positions and its skips by clause, refusals by kind, the pv line's share of the distance, the walks' and the games' nodes, the elapsed time, the games played; they decide nothing (DEC-275)
+offset    part 2's game ids plus 1000000, the smallest power of ten above every id in part 1's files (largest 123601): part 2's 0 to 27251 become 1000000 to 1027251; no other byte of a part 2 row changes, and part 1's kept bytes are copied unchanged
+read back the merged files: no NUL, seven fields a row, each game's rows contiguous, every id once, qs's and pv's games all root's and in root's order; rows, games and every recomputed figure equal part 1's kept plus part 2's
+merged root: 12708457 rows from 150000 games written to /home/max/ws/chesso/.tuning/s082/pool.tsv.root, sha256 c817e6196c7592d949e3f9239135bb2875e8503423c4f1e18f2e884b1b5bd1fe; part 1's 122748 games with a row before its cut and part 2's 27252 games played, 149998 games with a root row
+merged qs: 12705516 rows from 150000 games written to /home/max/ws/chesso/.tuning/s082/pool.tsv.qs, sha256 f4535bd0612aefff3bb36fc040523310c595ad58c3ab7fef708700e3fef3ec10; part 1's 122748 games with a row before its cut and part 2's 27252 games played, 149998 games with a qs row
+merged pv: 12379744 rows from 150000 games written to /home/max/ws/chesso/.tuning/s082/pool.tsv.pv, sha256 fc242c318be86225e7715f10daf78d53126d2f57d44ece9a898623b59bee0387; part 1's 122748 games with a row before its cut and part 2's 27252 games played, 149986 games with a pv row
+check: merged root, 12708457 rows of 12708457 counted, 150000 games of 150000, 0 rows without seven fields
+check: merged qs, 12705516 rows of 12705516 counted, 150000 games of 150000, 0 rows without seven fields
+check: merged pv, 12379744 rows of 12379744 counted, 150000 games of 150000, 0 rows without seven fields
+finished  2026-10-21T10:59:36+02:00
