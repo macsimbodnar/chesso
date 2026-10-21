@@ -15333,9 +15333,9 @@ Context:      S110's sweep (`adocs/data/S110_sweep_s170.txt`, bench 6570375)
               300000 -> 1000000, F 300000 -> 100000. Both mate floors hold:
               the mined set 167 exact at depth 10 against `EXACT_FLOOR` 163,
               mate in three 12 of 24 against 11; first-mate depths 9 and 9
-              (mate in 5) unchanged; S192's count inside its band. DEC-299 said phase 2
-              stops for the owner outside the guard; the owner's standing
-              instruction says do not get blocked.
+              (mate in 5) unchanged; S192's count inside its band. DEC-299
+              said phase 2 stops for the owner outside the guard; the owner's
+              standing instruction says do not get blocked.
 Decision:     By the coordinator. S110's commit carries the script's ceilings
               and budgets, E's 4 included, each moved site citing this id; the
               rest of phase 2 and the SPRT proceed. **The owner rules on E

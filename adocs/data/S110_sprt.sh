@@ -30,7 +30,9 @@
 #   REF   CAND's parent: S286's relanded pawn table (`816d70c`) with S082's
 #         leaf walks (`5b0e170`, read by datagen alone) and S287's comments
 #         after it, bench 6042933 at `a8c7e3b`, S110's phase-1 base (src/
-#         as at `3da69c5`).
+#         as at `3da69c5`); pinned at `bb3d31d`, which adds DEC-298 to
+#         DEC-300 and S288 (tools/eval_spread and one comment in
+#         `src/evaluation.hpp`, `No functional change`, bench 6042933).
 #
 # The two differ by S110's change alone, which the guard below checks (CAND^
 # is REF). What the tree does at phase 1 (S110's step file, the DEC-300
@@ -95,8 +97,8 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this
 # run's shas, dates and out directory --
 #
-#   candidate  <CAND>  <its committer date>
-#   reference  <REF>  <its committer date>
+#   candidate  39194e4  2026-10-21 15:08:54 +0200
+#   reference  bb3d31d  2026-10-21 13:30:46 +0200
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 32+0.32  hash 64  concurrency 12 of 12 cores
@@ -111,9 +113,17 @@
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171),
 # from DEC-297: S288 (tools/eval_spread's margins, tooling only, reachable in
-# no game). [COORDINATOR, on the day it pins: CAND's and REF's shas into
-# `ref=` and `cand=` below, their dates into the banner lines above, the
-# Open list re-read, and this bracketed sentence replaced by what was found.]
+# no game). Pinned by the coordinator 2026-10-21 15:10: CAND `39194e4`
+# (S110, gate green, bench 6570375), REF `bb3d31d`, its parent. S288 closed at
+# `bb3d31d`, so it is no longer open; the Open list re-read finds no other
+# DEC-171 filler step open. Harness since the last A/A: fastchess alpha 1.8.1
+# 20260720-daa3ea2 and `noob_3moves.epd` as S283 played them, adjudication
+# unchanged (`fastchess.sh` untouched since `be48e02`), the same workstation;
+# the kernel moved 7.1.5 -> 7.2.6 at the 2026-10-21 power loss, an OS update
+# on the same machine, which DEC-143's list (fastchess, book, adjudication,
+# machine) does not name and no earlier kernel update was given an A/A for,
+# so no A/A is taken; the abort rule's forfeit check covers a scheduling
+# regression.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063),
 # as DEC-297 states the outcomes.
@@ -159,8 +169,8 @@ fail()
 # S283_sprt.sh's same block reads them: pinned, refused if set to anything
 # else, and passed on the exec line; ROUNDS, BARE_FEN, SRAND and AA refused if
 # set at all; RELAY_PYTHON unset; OUT overridden.
-ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
+ref="bb3d31db6e9d09f1de583a69c357cb044464bb7f"
+cand="39194e473484aaa1dc8af16f626d0267ebfcb810"
 tc="32+0.32"
 hash="64"
 concurrency="12"

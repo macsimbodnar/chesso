@@ -49,7 +49,11 @@ steps' worktrees.** The worktrees themselves (sources, about 9 GB), main's
 `.ref-builds/` (9 GB) and `.tuning/` (17 GB) are untouched: pruning them is
 the owner's call.
 
-**S110 committed, its SPRT on the machine** (built in `../chesso-s110`):
+**S110 committed (`39194e4`), its SPRT on the machine** (built in
+`../chesso-s110`; pair pinned in `adocs/data/S110_sprt.sh`, CAND `39194e4`
+vs REF `bb3d31d`; launched after the pin's commit, output
+`.tuning/sprt_s110_<stamp>`, console `.tuning/s110_sprt.log`, watcher ceiling
+40 h; no A/A for the kernel update, reason in the script):
 weighted-average blend (DEC-300), confirmed by a pre-registered gain
 measurement (12 games at 4 M nodes a ply: R_avg 0.787 against R_sum 1.575 of
 the parent's applied correction; the pair cold on 0.6 % of reads). bench
