@@ -15349,3 +15349,48 @@ Rejected:     Idling the machine until the owner answers -- phase 2's
               breached.
 Consequences: S110's done stamp cannot be written on H1 until the owner's
               ruling is recorded; the H1 commit names it.
+
+## DEC-302  2026-10-21  S111's tables are keyed on a pair of moves, its goldens take DEC-299's guard, and its blend gain is read and recorded
+Tags:         search, correction-history, s111, s110, dec-299, dec-300, dec-301, golden, measurement
+Context:      S111's goal reads "correction tables indexed by the move played
+              two and four plies ago", and its step file fixes the two offsets
+              as the step's form. Its phase 1, written blind during S110's
+              SPRT (DEC-260), keys the two-ply table on the pair (the move two
+              plies ago, the move one ply ago) and the four-ply table on (four
+              plies ago, one ply ago): CPW's continuation row is "Move on the
+              previous ply and the ply before it", and this engine's own
+              continuation history (`cont_hist`, S222) is a pair as well. Both
+              offsets are the goal's. DEC-299 gave S110 a goldens guard and
+              "sets no allowance" for S111. S110 then read H0 and was reverted
+              (`eee722c`), so S111 rebases onto the pawn table alone and joins
+              DEC-300's average with two weights at 100: at the seeds the pawn
+              read and each continuation read count a third, and the applied
+              correction shrinks if the continuation reads stay small. S110's
+              verdict measured its key together with such a shrink (R_avg
+              0.787) and cannot separate the two.
+Decision:     By the coordinator under the owner's standing instruction of
+              2026-10-21. (1) The pair form is S111's reading of its goal and
+              ships as written; the single-move form would be a separate
+              step. (2) S111's goldens take DEC-299's guard word for word:
+              the carry ceilings and S170 budgets as
+              `S203_case_sweep.sh --ceilings` answers, provided both mate
+              floors hold or rise and no ceiling rises by more than 2; outside
+              it the commit carries the values provisionally, as DEC-301 did,
+              and the owner rules before an H1 ships. (3) Phase 1b extends
+              S110's blend-gain counter to the continuation reads and reads
+              the applied correction against the pawn read's alone on the
+              same games, with each table's cold share; the
+              figure is recorded beside the verdict and decides nothing --
+              the family's total gain is S127's (DEC-300). An H0 is read as
+              S110's was: the conditioning and the gain the average gives
+              together.
+Rejected:     Re-keying on the single earlier move before measuring -- the
+              continuation tables here and in the description are pairs, and
+              a single-move table is the weaker reading of "continuation".
+              Stopping for the owner on any golden rise -- the owner rejected
+              that cost (DEC-287, DEC-295). Making the gain a gate -- a
+              weighted average shrinks whenever a new read is smaller, and
+              the right total is a fit, not a rule.
+Consequences: S111 rebases onto `eee722c` by its step file's "If S110
+              reverts", then runs phase 1b and phase 2, then its SPRT in
+              DEC-297's shape.
