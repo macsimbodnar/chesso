@@ -10,10 +10,13 @@
 #   adocs/data/S082_recipe.sh verify [PREFIX LOG GAMES]
 #                                        # a pool against its own log; by
 #                                        # default $OUT/pool.tsv, generate.log
+#   adocs/data/S082_recipe.sh merge      # the pool a power cut stopped, and
+#                                        # its top-up, joined (DEC-296)
 #
 # Each prints its own terminal marker as its last action -- S082-SMOKE-,
-# S082-GENERATE-, S082-COMPARE- or S082-VERIFY- then DONE or FAILED -- so any
-# of them can run detached under a watcher with all four exits (WATCHERS).
+# S082-GENERATE-, S082-COMPARE-, S082-VERIFY- or S082-MERGE- then DONE or
+# FAILED -- so any of them can run detached under a watcher with all four
+# exits (WATCHERS).
 #
 # ============================================================================
 # PRE-REGISTRATION -- written 2026-10-13, phase 1, before any of it ran
@@ -168,6 +171,15 @@
 # on S283's H1, the correction in every datagen worker (DEC-294); S023 and
 # S039 reverted on their H0. S281 stays void (plan.md does not list it).
 # ============================================================================
+#
+# 2026-10-20, DEC-296, below the pre-registration and changing none of it: a
+# power cut stopped `generate` 11 h 22 m in, before datagen's closing lines.
+# The pool is the 122748 games complete in all three files before the last one
+# they reach, and 27252 games of a top-up from the same datagen binary at the
+# same settings under seed 2026102000, joined by the `merge` stage. Every
+# cell, seed and reading rule above stands. The step file's section
+# "2026-10-20: the pool cut by a power loss, and its top-up (DEC-296)" has the
+# facts, the checks and what part 1's lost log no longer gives.
 
 set -uo pipefail
 
@@ -179,6 +191,7 @@ THREADS="${THREADS:-12}"
 GAMES=150000
 NODES=100000
 SEED=20261013
+TOPUP_SEED=2026102000  # DEC-296: the top-up that completes the pool
 VALIDATION_GAMES=12000
 ROWS=1000000
 LEAVES="root qs pv"
@@ -191,6 +204,11 @@ datagen="$root/build/tools/datagen"
 tuner="$root/build/tools/tuner"
 split="$root/tools/corpus_split.py"
 reader="$root/adocs/data/S082_recipe_read.py"
+merger="$root/adocs/data/S082_pool_merge.py"
+
+# The first line of a merged pool's log (DEC-296). check_pool() reads such a
+# log by the merge's own lines, never by datagen's.
+MERGED_HEADER="S082 pool, merged from two datagen runs (DEC-296); not one run's log"
 
 # The engine a stage ran: HEAD's sha, or on a tree with src/ or tools/ changed
 # against HEAD, HEAD's sha plus the first 12 hex of the git blob id of that
@@ -241,25 +259,31 @@ binary_line() {
 # booked games and names this file, the file ends on a newline, holds as many
 # rows as the line counts, and every row has datagen's seven fields. One line
 # per finding or per leaf checked, on stdout; non-zero on any finding.
+#
+# A merged pool's log (DEC-296, MERGED_HEADER its first line) is read by the
+# merge's `merged <leaf>:` lines, in the same shape -- rows, the games both
+# parts give, the file -- and each file's sha256 must also be the one the
+# merge wrote. Its datagen lines are part 2's alone and are not read here.
 check_pool() {
-  local prefix="$1" log="$2" games="$3" failed=0 leaf
+  local prefix="$1" log="$2" games="$3" failed=0 leaf kind=leaf
 
   [[ -r "$log" ]] || { echo "check: no log at $log"; return 1; }
+  [[ "$(head -n 1 "$log")" == "$MERGED_HEADER" ]] && kind=merged
 
   for leaf in $LEAVES; do
     local file="$prefix.$leaf" line rows played counted fields
 
-    line=$(grep -E "^leaf $leaf: [0-9]+ rows from [0-9]+ games written to " \
+    line=$(grep -E "^$kind $leaf: [0-9]+ rows from [0-9]+ games written to " \
              "$log" | tail -n 1)
 
     if [[ -z "$line" ]]; then
-      echo "check: $log has no 'leaf $leaf:' line"
+      echo "check: $log has no '$kind $leaf:' line"
       failed=1
       continue
     fi
 
-    rows=$(sed -E 's/^leaf [a-z]+: ([0-9]+) rows from .*/\1/' <<< "$line")
-    played=$(sed -E 's/^leaf [a-z]+: [0-9]+ rows from ([0-9]+) games .*/\1/' \
+    rows=$(sed -E "s/^$kind [a-z]+: ([0-9]+) rows from .*/\1/" <<< "$line")
+    played=$(sed -E "s/^$kind [a-z]+: [0-9]+ rows from ([0-9]+) games .*/\1/" \
                <<< "$line")
 
     if [[ "$played" != "$games" ]]; then
@@ -276,6 +300,12 @@ check_pool() {
       echo "check: $file is missing, empty or not a regular file"
       failed=1
       continue
+    fi
+
+    if [[ "$kind" == merged &&
+          "$line" != *" sha256 $(sha256sum "$file" | cut -d' ' -f1);"* ]]; then
+      echo "check: $file's sha256 is not the one its merge wrote"
+      failed=1
     fi
 
     if [[ "$(tail -c 1 "$file" | wc -l)" -ne 1 ]]; then
@@ -297,7 +327,7 @@ check_pool() {
       failed=1
     fi
 
-    echo "check: leaf $leaf, $counted rows of $rows counted, $played games of" \
+    echo "check: $kind $leaf, $counted rows of $rows counted, $played games of" \
          "$games, $fields rows without seven fields"
   done
 
@@ -471,6 +501,153 @@ compare() {
   echo "finished  $(date -Iseconds)" >> "$log"
 }
 
+# DEC-296. The pool `generate` was writing when a power cut stopped it (part
+# 1) and the top-up that completes it (part 2: $OUT/topup, run by hand under
+# TOPUP_SEED, with its own log) become the pool `compare` reads, at the names
+# it reads: $OUT/pool.tsv.* and $OUT/generate.log. Moving part 1's files and
+# log aside to $OUT/part1/ is the smaller change than teaching compare, verify
+# and the reader another prefix: nothing downstream changes but
+# check_pool()'s merged branch, and compare.log names the paths its
+# pre-registration names. They move once, by mv on one filesystem, with their
+# sha256 written first to $OUT/part1/originals.sha256 and checked on every
+# run; nothing here writes to them. Part 2 passes check_pool() against its own
+# log before anything is written. The merger cuts part 1, checks that part
+# 2's rows give its log's figures, shifts part 2's game ids by one offset,
+# writes the merged files under .merging names and reads them back; the
+# merged log is composed beside them, all four are renamed, and check_pool()
+# reads the result by MERGED_HEADER.
+#
+# Re-runnable: a failed run leaves part 1 in $OUT/part1/ and no merged pool --
+# the files it made are removed and its log kept as $OUT/merge.failed.log --
+# so the next run starts where it did. A merged pool is never overwritten.
+merge() {
+  local part1="$OUT/part1" topup="$OUT/topup" log="$OUT/generate.log"
+  local topup_log="$OUT/topup/topup.log"
+  local originals="generate.log pool.tsv.root pool.tsv.qs pool.tsv.pv"
+  local leaf name booked part2_check checked merged report
+
+  [[ -r "$merger" ]] || { echo "no merger at $merger"; return 1; }
+  [[ -r "$topup_log" ]] || { echo "no top-up log at $topup_log"; return 1; }
+  if ! grep -qE '^exit +0$' "$topup_log"; then
+    echo "$topup_log has no 'exit 0' line: the top-up has not finished, or failed"
+    return 1
+  fi
+
+  # Part 1 aside, once; afterwards only checked.
+  if [[ ! -e "$part1/originals.sha256" ]]; then
+    if [[ -e "$part1" ]]; then
+      echo "$part1 exists without originals.sha256: a move was interrupted; resolve it by hand"
+      return 1
+    fi
+    if [[ "$(head -n 1 "$log" 2>/dev/null)" != "S082 pool" ]]; then
+      echo "$log is not generate's own log: no part 1 to move"
+      return 1
+    fi
+    for name in $originals; do
+      [[ -f "$OUT/$name" ]] || { echo "no $OUT/$name to move"; return 1; }
+    done
+    mkdir "$part1" || return 1
+    if [[ "$(stat -c %d "$OUT")" != "$(stat -c %d "$part1")" ]]; then
+      rmdir "$part1"
+      echo "$part1 is on another filesystem than $OUT: mv would copy"
+      return 1
+    fi
+    # shellcheck disable=SC2086
+    if ! (cd "$OUT" && sha256sum $originals) > "$part1/originals.sha256.tmp"; then
+      rm -f "$part1/originals.sha256.tmp"
+      rmdir "$part1"
+      return 1
+    fi
+    for name in $originals; do
+      mv "$OUT/$name" "$part1/$name" || return 1
+    done
+    mv "$part1/originals.sha256.tmp" "$part1/originals.sha256" || return 1
+    echo "moved     part 1's $originals to $part1/, their sha256 written first to $part1/originals.sha256"
+  fi
+
+  if ! (cd "$part1" && sha256sum --quiet -c originals.sha256); then
+    echo "check: part 1's files in $part1 are not the ones whose sha256 was written before the move"
+    return 1
+  fi
+
+  for leaf in $LEAVES; do
+    if [[ -e "$OUT/pool.tsv.$leaf" ]]; then
+      echo "$OUT/pool.tsv.$leaf exists: a merged pool is never overwritten"
+      return 1
+    fi
+    rm -f "$OUT/pool.tsv.$leaf.merging"
+  done
+  if [[ -e "$log" ]]; then
+    echo "$log exists: a merged pool is never overwritten"
+    return 1
+  fi
+  rm -f "$log.merging"
+
+  # Part 2 against its own log, at the games its own command booked.
+  booked=$(sed -nE 's/^datagen: ([0-9]+) games, .*/\1/p' "$topup_log" | head -n 1)
+  [[ -n "$booked" ]] || { echo "$topup_log has no 'datagen:' line"; return 1; }
+  part2_check=$(check_pool "$topup/pool.tsv" "$topup_log" "$booked")
+  checked=$?
+  echo "$part2_check"
+  if (( checked != 0 )); then
+    echo "part 2 fails its checks against its own log"
+    return 1
+  fi
+
+  {
+    echo "$MERGED_HEADER"
+    echo "merged    $(date -Iseconds)"
+    binary_line merger "$merger"
+    binary_line recipe "$root/adocs/data/S082_recipe.sh"
+    echo "python    $(python3 --version 2>&1)"
+    echo "part 1    $part1/generate.log, the first run's own log, moved there unchanged; verbatim:"
+    sed 's/^/    /' "$part1/generate.log"
+    echo "part 1    stopped by a power cut before datagen's closing lines; its files end on a NUL tail"
+    echo "part 1    sha256 written before the move to $part1/originals.sha256, checked on this run:"
+    sed 's/^/    /' "$part1/originals.sha256"
+    echo "part 2    $topup_log, the top-up's own log; verbatim:"
+    sed 's/^/    /' "$topup_log"
+    echo "part 2    checked against its own log, $booked games booked:"
+    sed 's/^/    /' <<< "$part2_check"
+  } > "$log.merging"
+
+  python3 "$merger" merge --games "$GAMES" --seed "$SEED" \
+      --topup-seed "$TOPUP_SEED" --nodes "$NODES" \
+      "$part1/pool.tsv" "$part1/generate.log" "$topup/pool.tsv" "$topup_log" \
+      "$OUT/pool.tsv" | tee -a "$log.merging"
+  merged=${PIPESTATUS[0]}
+
+  if (( merged != 0 )); then
+    mv "$log.merging" "$OUT/merge.failed.log"
+    echo "the merger refused; its log is $OUT/merge.failed.log"
+    return 1
+  fi
+
+  for leaf in $LEAVES; do
+    mv "$OUT/pool.tsv.$leaf.merging" "$OUT/pool.tsv.$leaf" || return 1
+  done
+  mv "$log.merging" "$log" || return 1
+
+  report=$(check_pool "$OUT/pool.tsv" "$log" "$GAMES")
+  checked=$?
+  { echo "$report"; echo "finished  $(date -Iseconds)"; } >> "$log"
+  echo "$report"
+
+  if (( checked != 0 )); then
+    # This run's own files: they did not exist when it started.
+    for leaf in $LEAVES; do
+      rm -f "$OUT/pool.tsv.$leaf"
+    done
+    mv "$log" "$OUT/merge.failed.log"
+    echo "the merged pool fails its checks: removed, its log kept as $OUT/merge.failed.log"
+    return 1
+  fi
+
+  # The pool needed this stage because a power cut lost its page cache, so
+  # DONE waits until the merged files and the log are on disk.
+  sync
+}
+
 case "$stage" in
   smoke)
     if smoke; then echo "S082-SMOKE-DONE"; else echo "S082-SMOKE-FAILED"; exit 1; fi
@@ -484,8 +661,11 @@ case "$stage" in
   verify)
     if verify "${@:2}"; then echo "S082-VERIFY-DONE"; else echo "S082-VERIFY-FAILED"; exit 1; fi
     ;;
+  merge)
+    if merge; then echo "S082-MERGE-DONE"; else echo "S082-MERGE-FAILED"; exit 1; fi
+    ;;
   *)
-    echo "usage: $0 smoke|generate|compare|verify [PREFIX LOG GAMES]" >&2
+    echo "usage: $0 smoke|generate|compare|verify [PREFIX LOG GAMES]|merge" >&2
     exit 2
     ;;
 esac

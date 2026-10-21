@@ -1300,3 +1300,288 @@ OUT=/home/max/ws/chesso/.tuning/s082 THREADS=12 nohup \
 
 After the pool: `adocs/data/S082_recipe.sh compare` with the same OUT, about
 1 h 15 m to 1 h 30 m, then archiving, as listed above.
+
+
+### 2026-10-20: the pool cut by a power loss, and its top-up (DEC-296)
+
+Written in the worktree `/home/max/ws/chesso-s082f` (branch `s082f` at
+`df0d3ab`) while the top-up held every core: nothing built, and no engine,
+datagen, fit or match run. What ran: the merge on fixtures cut from the smoke
+pool, under the scratchpad, and the read-only part of it -- part 1's cut and
+what its rows give -- on the real pool. Nothing committed; the diff is
+`.tuning/coord/S082/s082_phase3.diff`. **Every pre-registered cell, seed and
+reading rule stands**: `adocs/data/S082_recipe.sh`'s header is unchanged
+inside its two rules, and a dated note below the closing one points here.
+
+#### What happened
+
+- `generate` ran from main's `build/` at `5b0e170`: 150000 games, 100000
+  nodes a move, 12 threads, seed 20261013, datagen sha256 `4b0e2848...`. A
+  power cut stopped it at 2026-10-16 12:58, 11 h 22 m in.
+  `.tuning/s082/generate.log` holds the stage's header and datagen's first
+  line and nothing after: no closing lines, no elapsed time, no check, so
+  `check_pool()` cannot read the pool.
+- `pool.tsv.root`, `.qs` and `.pv` each end on a newline and then a tail of
+  NUL bytes -- 1691, 1360 and 4054 -- and nothing else is damaged: no NUL
+  before the tail, every row seven fields, each game's rows contiguous, qs's
+  and pv's games all root's and in root's order, all three ending on game
+  122926 (95 rows in each). The coordinator measured it; the dry run below
+  reproduces it from the files.
+- **Part 1** (DEC-296) is the 122748 games before game 122926 in file order;
+  game 122926 is dropped with the NUL tails.
+- **Part 2** is the top-up: `datagen --out .tuning/s082/topup/pool.tsv --leaf
+  root,qs,pv --games 27252 --nodes 100000 --threads 12 --seed 2026102000`,
+  the same binary (sha256 checked equal before launch), log
+  `.tuning/s082/topup/topup.log`, console `topup.console` ending
+  `S082-TOPUP-DONE` or `-FAILED`. Its game ids start at 0 and collide with
+  part 1's.
+
+#### The merge
+
+A fifth stage, `adocs/data/S082_recipe.sh merge`, and the program it runs,
+`adocs/data/S082_pool_merge.py` (standard library only).
+
+- **Where the pool sits.** `compare`, `verify` and the reader read
+  `$OUT/pool.tsv.*` and `$OUT/generate.log`. The merge moves part 1's three
+  files and its log once, by `mv` on one filesystem (checked), to
+  `$OUT/part1/`, writing their sha256 first to `$OUT/part1/originals.sha256`,
+  and checks them against it on every run; it never opens them for writing.
+  The merged pool and its log then sit at the names `compare` reads. This is
+  the smaller change: teaching `compare` another prefix touches its split,
+  its thirteen samples and twenty-six fits' paths and still leaves the reader
+  reading `$OUT/generate.log`; the move leaves `compare`, `verify` and the
+  reader as they are, and `compare.log` names the paths the pre-registration
+  names. Part 2 stays where it was written, `$OUT/topup/`, read only.
+- **The merged log says what it is.** Its first line is `MERGED_HEADER`,
+  "S082 pool, merged from two datagen runs (DEC-296); not one run's log";
+  then the merger's and the script's sha256, part 1's log verbatim and
+  indented (its command, seed and binary hash), that it stopped before
+  datagen's closing lines, the originals' sha256, part 2's log verbatim and
+  indented (its command, seed, binary hash, every datagen line, exit and
+  elapsed), part 2's check against its own log, then the merger's lines --
+  both runs' settings, part 1's cut, the figures side by side, part 1's
+  recomputed coverage, what part 1 lost, the offset, the read-back -- and one
+  `merged <leaf>: R rows from 150000 games written to FILE, sha256 X; part
+  1's 122748 games with a row before its cut and part 2's 27252 games
+  played, ...` line per file, then the final check. No line imitates
+  datagen's output for part 1; datagen's own lines appear only quoted,
+  indented, under the part they belong to.
+- **`check_pool()` reads a merged log honestly.** A log whose first line is
+  `MERGED_HEADER` is read by its `merged <leaf>:` lines instead of datagen's
+  `leaf <leaf>:` lines -- the same shape, so the same checks: the games equal
+  the booked 150000, the line names the file, the file ends on a newline,
+  holds the rows the line counts, every row seven fields -- and one more, the
+  file's sha256 equals the one the merge wrote. Any other log is read as
+  before.
+- **Part 1's cut is computed from the files.** One pass per file indexes its
+  games in file order and refuses -- never cuts -- on a NUL byte before the
+  tail, anything but NUL bytes after the last newline, a row without seven
+  fields or with a score, phase, game or distance that is not a number, a
+  game whose rows are not contiguous; then a qs or pv game root does not hold
+  or holds in another order, or a kept game with more rows in a leaf than in
+  root. The cut is the earliest, in root's order, of the last game each file
+  reaches; the games before it are kept, a prefix of each file copied byte
+  for byte. What the kept rows give is the whole file's less a re-read of the
+  dropped range.
+- **Part 2 is checked twice before anything is written.** `check_pool()`
+  against `topup.log` at the games its own `datagen:` line booked, exactly as
+  `generate` would have; then the merger checks the two logs -- one datagen
+  sha256, part 1's seed `SEED` and part 2's `TOPUP_SEED` (2026102000, a new
+  constant beside `SEED`), every other setting equal, per-worker seed ranges
+  apart, part 2 `exit 0` with no `datagen: FAILED` line, part 1's log without
+  closing lines -- and that part 2's rows give every figure its log prints
+  that rows determine: rows, how many differ from the root and the mean
+  distance, the positions that passed (root's rows), each leaf's refusals'
+  total (root's rows less the leaf's), every coverage cell. Part 1's kept
+  games and part 2's booked games must make `GAMES`, 150000.
+- **The offset** is one constant, stated in the log: the smallest power of
+  ten above every game id in part 1's files -- 1000000 on the real pool,
+  whose largest id is 123601. Part 2's rows change in the game field only.
+  `tools/corpus_split.py` assumes nothing of ids but that they are integers
+  and contiguous per game: `split` pools the ids as a set, sorts and shuffles
+  them, `sample` indexes games by position in the file; neither assumes ids
+  are contiguous, bounded or as many as the games played (read whole), and
+  the tuner reads no game field. Because `split` sorts the ids before its
+  seeded shuffle, any offset above part 1's largest id holds out the same
+  games.
+- **Written, read back, renamed, checked.** The merger writes
+  `$OUT/pool.tsv.<leaf>.merging`, reads them back -- the same structural
+  checks, every id once, each file's games part 1's kept then part 2's
+  shifted, rows and every recomputed figure equal to part 1's kept plus part
+  2's -- and removes them on any refusal. The stage renames the three files
+  and the log, and runs `check_pool()` on the result by its merged branch.
+- **Re-runnable, never overwriting.** A failed run leaves part 1 moved and
+  checked, part 2 untouched and no merged file; its log is kept as
+  `$OUT/merge.failed.log`; the next run starts from there. A run that finds a
+  merged pool, or anything at `$OUT/generate.log` once part 1 is moved,
+  refuses. The stage's last stdout line is `S082-MERGE-DONE` or
+  `S082-MERGE-FAILED`.
+
+#### What part 1 lost, and what its rows still give
+
+Lost with datagen's closing lines, and not in the rows -- each of them
+printed, never gated, and deciding nothing (DEC-275):
+
+- the filter's considered positions and its skips by clause (in check, mate,
+  score past the limit) and searches that completed no iteration;
+- the refusals **by kind** -- terminal, truncated, aborted, uncertified -- of
+  which only each leaf's total survives, as root's rows less the leaf's;
+- the pv line's share of the pv distance ("of them the line's");
+- the walks' nodes and the games' search nodes;
+- the elapsed time (the log's start, 01:36:14, and the files' last write,
+  12:58, bound the run's, not the kept games');
+- the games played: a game whose every position failed the filter writes no
+  row and is invisible. The dry run counts 3 such games inside workers'
+  runs, a lower bound, so part 1's games are counted as games with a row.
+
+**Not lost, against the brief's list: the coverage tables.** A cell counts a
+written row by its own phase field and the |score| field, both in the row.
+The merger recomputes them, and on the smoke pool's three files (`check`
+mode, read only) and on the fixture's part 2 they equal datagen's tables cell
+for cell, with the rows, the differ count, the mean distance, the passed
+positions and every leaf's refusals' total. So part 1's coverage is printed,
+recomputed, labelled as such.
+
+The reader's rule-5 print of "the pool's leaves, from generate.log" reads
+`leaf <kind>:` lines and finds none in the merged log, where datagen's lines
+sit indented inside part 2's quoted log: it prints the heading and nothing.
+That is the honest output -- no datagen run made this pool, and printing part
+2's lines there would give 27252 games' figures as the pool's. The reader is
+unchanged; the figures are in the merged log, side by side.
+
+#### Deviations
+
+- **The coverage tables are recomputed**, above, where the brief listed them
+  as lost.
+- **A leaf file reaching past root's last game is refused, not cut**: its
+  game there is "a qs or pv game root does not hold". A power loss persists
+  each file's pages on its own, so it could happen; the real pool's three
+  files end on one game. The fixture was first built that way and refused,
+  which is how this was found; it was rebuilt with root reaching furthest.
+- **Two checks beyond the brief's list**, both cheap: no kept game has more
+  rows in a leaf than in root (a leaf row is a root row resolved, and the
+  refusals' total rests on it), and part 2's rows against its log's figures.
+- **No test in `tests/`**, which the brief excludes. The fixture builder and
+  the driver are kept, uncommitted, at `.tuning/coord/S082/merge_test/`:
+  `bash merge_test.sh WORKTREE SMOKE_DIR SCRATCH`, about two minutes.
+- `DEV_MANUAL.md` checked, no change: it shows the pipeline's commands and
+  names the recipe script as the place for S082's runs, and the merge is one
+  pool's repair. `MANUAL.md` checked, no change. `adocs/data/README.md`:
+  the recipe's entry names the amendment, and the merger has its own row.
+
+#### Tested on fixtures (2026-10-20)
+
+Each fixture is cut from `.tuning/s082/smoke/pool.tsv.*` (600 games): part 1
+is root to the game at root position 402, qs to 400, pv to 401, each stopped
+inside that game, with NUL tails of 1691, 1360 and 4054 bytes and a
+`generate.log` in `generate`'s form booking 1000 games; part 2 is the smoke
+pool whole, with its own datagen log as the top-up's `run.sh` writes one
+(paths and seed rewritten). The stage runs from a scratch copy of the script
+with `GAMES=1000`. Every run also checks part 1's four files' sha256
+against the fixture's, wherever they then sit: unchanged in all 15 runs.
+
+| case | result |
+|---|---|
+| good | DONE: cut at qs's last game, 400 games kept (root 3, qs 1, pv 2 games dropped); offset 1000; merged 85910, 85880, 83839 rows, 1000 games |
+| `verify` on it | DONE, by the merged lines |
+| the merged files | each is part 1's kept bytes (`cmp`) then part 2 whole with ids + 1000 (`awk`, `cmp`), every id once |
+| `corpus_split.py split` on it | reads it: 1000 games, 100 held out |
+| a merged file touched after | `verify` FAILED: sha256 not the merge's, rows not the line's |
+| merge again | FAILED: a merged pool is never overwritten |
+| NUL inside a qs row | FAILED: "a NUL byte before the file's tail" |
+| a root row of six fields | FAILED: "6 fields, datagen's rows have seven" |
+| a qs row moved behind the next game | FAILED: "the rows of game 8 are not contiguous" |
+| two pv games swapped | FAILED: "game 54 is listed in another order than root lists it" |
+| a qs game renumbered 99999 | FAILED: "game 99999 is not in root's file" |
+| `x` inside pv's NUL tail | FAILED: "what follows its last one is not a tail of NUL bytes" |
+| each of those six | part 1 moved and checked, no merged or `.merging` file, `merge.failed.log` kept |
+| part 1's log with an `elapsed` line | FAILED: "has datagen's closing lines" |
+| part 2's binary sha256 another | FAILED: "datagen sha256 4b0e28483f64 in part 1, 000000000000 in part 2" |
+| one coverage cell of part 2's log off by one | FAILED: "qs coverage differs from the rows'" |
+| `GAMES=999` | FAILED: "1000, not 999" |
+| no `exit 0` in part 2's log | FAILED before anything moved |
+| part 2's pv a row short | FAILED by `check_pool()`: "holds 50193 rows, its log line 50194" |
+| the same, pv restored, re-run | DONE |
+
+#### Dry run on the real part 1 (read only, 2026-10-20)
+
+`nice -n 5 ionice -c3 python3 -I adocs/data/S082_pool_merge.py part1
+.tuning/s082/pool.tsv .tuning/s082/generate.log`, beside the top-up: 68.6 s of
+CPU, 2 m 43 s wall, 100 MB resident, exit 0. The four files' sizes and
+modification times are what they were (437, 766455808, 810041344 and
+817041408 bytes; 01:36:14 and 12:58:47 on 2026-10-16).
+
+- **Files**: root 10394836 rows in 122749 games, qs 10392438 in 122749, pv
+  10125441 in 122739; NUL tails 1691, 1360 and 4054 bytes; each ends on game
+  122926, 95 rows. Every structural check clean.
+- **Cut**: the 122748 games before game 122926 are kept -- DEC-296's count,
+  now computed -- and game 122926 is dropped with the tails, one game and 95
+  rows from each file. Kept: root 10394741 rows (bytes 0 to 817031797), qs
+  10392343 (to 810032146), pv 10125346 in 122738 games (to 766444212).
+- **Games without a row**: at least 3.
+- **Offset**: 1000000, above the largest id, 123601.
+
+| leaf | rows | a game | differs from the root | plies on average | refused, kind unknown |
+|---|---|---|---|---|---|
+| root | 10394741 | 84.68 | 0.00 % | 0.000 | 0 |
+| qs | 10392343 | 84.66 | 26.61 % | 0.506 | 2398 (0.0231 % of 10394741 passed) |
+| pv | 10125346 | 82.49 | 100.00 % | 13.861 | 269395 (2.5916 %) |
+
+Against the 600-game smoke on the same binary (85.77, 85.74 and 83.66 rows a
+game; qs 26.18 % and 0.498 plies, 0.029 % refused; pv 13.860 plies, 2.458 %
+refused) and printed beside part 2's own figures by the merge. Recomputed
+coverage, phase band by |score| band (<50, <150, <300, <600, rest):
+
+| phase | root | qs | pv |
+|---|---|---|---|
+| 0-4 | 155479 179571 245561 291996 262962 | 165339 197161 265593 312000 276625 | 176056 344266 420988 455582 361707 |
+| 5-9 | 260097 410822 498776 645761 416771 | 272930 432790 519348 664591 419620 | 317583 617702 667063 762002 412463 |
+| 10-14 | 310297 464872 406345 314508 112210 | 327869 488808 416909 312805 108057 | 384915 611791 441516 278147 79972 |
+| 15-19 | 224973 354247 323798 263463 74988 | 230230 361880 326710 258975 67975 | 282975 445006 334738 205089 29271 |
+| 20-24 | 1308875 1678408 840008 326852 23101 | 1261182 1607275 785909 294160 17602 | 853421 1063049 442896 134138 3010 |
+
+These are a reading of what part 1 holds and decide nothing (DEC-275).
+
+#### For the coordinator, after `S082-TOPUP-DONE`
+
+With this diff in main's tree (committed or applied; the stage executes no
+engine, so the tree's stamp does not name the pool):
+
+```
+cd /home/max/ws/chesso &&
+OUT=/home/max/ws/chesso/.tuning/s082 nohup adocs/data/S082_recipe.sh merge \
+    > /home/max/ws/chesso/.tuning/s082/merge.console 2>&1 &
+```
+
+- **Markers**: `S082-MERGE-DONE` or `S082-MERGE-FAILED`, the last line of
+  `merge.console`, the reasons above a FAILED; poll the whole file with the
+  pid and a 30 min ceiling (WATCHERS).
+- **Time**: about five minutes on an idle machine -- part 1 parsed once and
+  its tails re-read, part 2 parsed, about 2.9 GB written, read back and parsed,
+  the originals hashed twice and the merged files once.
+- **Disk**: about 2.9 GB more, against 19 GB free on 2026-10-20 before the
+  top-up's own 0.5 GB; `compare`'s split and samples need about 4 GB after.
+- **Then** `adocs/data/S082_recipe.sh verify` (DONE by the merged lines), and
+  `compare` as planned. Part 1's originals stay in `$OUT/part1/` with their
+  sha256 sidecar, part 2 in `$OUT/topup/`; both are archived with the pool
+  (DEC-235).
+
+#### 2026-10-21: the merge's fast check
+
+A read-only fast check over the phase 3 diff found nothing that could lose,
+truncate or corrupt either part, and no edit to the pre-registered block. It
+re-ran the test kit (28 of 28) and the merger's read-only `check` on the real
+part 2 (every figure equal to `topup.log`, coverage included). Four minor
+items:
+
+1. `merge()` printed DONE without a `sync`; one is added before the stage
+   returns, since this stage exists because of a lost page cache.
+2. Only the `datagen:` settings line is compared between the two logs, so a
+   flag datagen does not echo would go unchecked. On the real logs the two
+   `command` lines are identical apart from `--out`, `--games` and `--seed`;
+   not changed.
+3. `compare`'s reading prints an empty refusal-share block on the merged pool,
+   as this section says above: expected, not a failure.
+4. The split sees 149998 games with a root row (at least two of part 2's
+   games wrote none, and part 1's count is of games with a row), so 12000 are
+   held out and 137998 trained on, against the pre-registration's 138000.
