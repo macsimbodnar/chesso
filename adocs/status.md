@@ -30,18 +30,24 @@ S287's stamp reads 11:25; its commit is 10:52. The stamp's clock is wrong;
 the commit is the record (plan_done is not edited).
 
 **S082 phase 3 done** (`f93a3b2`): the merge stage, fast check clean (a `sync`
-added before DONE). `merge` DONE at 10:58: 150000 games, root 12708457 rows
+added before DONE). `merge` DONE at 10:59: 150000 games, root 12708457 rows
 (sha256 `c817e619...`), qs 12705516, pv 12379744; part 1's originals kept in
 `.tuning/s082/part1/` with their sha256. `verify` DONE.
 
-**S082 done**: `compare` DONE 11:33 (34 min). Outcome (a), **leaf qs, 46
+**S082 done**: `compare` DONE 11:33 (33 min). Outcome (a), **leaf qs, 46
 rows a game**, L 0.072154 against the control's 0.073204, m 0.000330
 (`adocs/data/S082_compare.log`). The fixed validation set sits at
 `.tuning/s082/pool.tsv.<view>.validation`, archived with the logs as
-`chesso_S082_validation_and_logs_2026-10-21.tar.xz`. S083 generates at it.
+`chesso_S082_validation_and_logs_2026-10-21.tar.xz`. S083 generates at it. The fast
+check, after the commit: the reading holds, but 11 of 26 fits never left
+their starting constants (10 root-view, the control's seed 1), so the
+record's root-view remark is withdrawn and two times corrected by DEC-298.
 
-**Disk: 11 GB free (98 %).** S083's corpora need room; the old agent
-worktrees and `.ref-builds/` are the candidates to prune, owner's call.
+**Disk: 11 GB free (98 %) after `compare`; 24 GB after the coordinator
+removed the 56 `build*` dirs (CMake output only, rebuildable) in finished
+steps' worktrees.** The worktrees themselves (sources, about 9 GB), main's
+`.ref-builds/` (9 GB) and `.tuning/` (17 GB) are untouched: pruning them is
+the owner's call.
 
 **S110 phase 1** (an Opus subagent, `../chesso-s110`): the non-pawn table,
 pre-registered by **DEC-297** (coordinator) at 32+0.32, Hash 64, `{0, 10}`,

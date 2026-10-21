@@ -15230,3 +15230,36 @@ Consequences: The second verdict at the longer control, by the same shape as
               S283's, so the two are read on one scale. A small true gain
               (under about 5 nElo) more likely reads H0 than at `{0, 5}`;
               that is the price of a bounded run, recorded beside any H0.
+
+## DEC-298  2026-10-21  S082's reading stands; its record's root-view remark is withdrawn and two times corrected
+Tags:         s082, s083, data, fit, record, fast-check
+Context:      The fast check over S082's completing commit (`3e4186d`), run
+              after the step file had moved to `plan_done/`, found: (1) 11 of
+              the 26 fits ended at their starting constants with the tuner's
+              "held-out error did not improve" warning -- 10 of the 13
+              root-view fits (all five controls, pv 0/46/8, qs 0/46) and one
+              primary fit, the control's seed 1 (L 0.073238); (2) the record's
+              remark that a model fitted to resolved leaves predicts the roots
+              worse is therefore mostly K's effect on the same starting
+              constants (K about 0.64 on root samples, 0.72-0.73 on qs and
+              pv), not a comparison of fitted models; (3) `compare` ran 33 min
+              (11:00:29 to 11:33:55), not 34, and `merge` finished 10:59, not
+              10:58 as status.md said. `plan_done/` is not edited.
+Decision:     By the coordinator. The reading stands: rule 1 reads a fit's
+              `best:` line and a fit that does not improve is not a refusal
+              under outcome (c); and recomputed without the control's seed 1
+              (control 0.073196, m 0.000373) the cells within m are qs 8,
+              qs 46 and pv 8, and rule 4 still takes qs 46. The root-view
+              remark in S082's record is withdrawn; what the logs show is that
+              fitting on qs rows raised root-view error from its start (qs 46:
+              0.079928 to 0.080227 by epoch 2000), and that no control
+              sample improved the shipped constants on the root view (all five
+              root-view control fits ended at their start). The times read as
+              corrected here.
+Rejected:     Editing the plan_done record -- it is history. Re-running
+              `compare` -- the outcome does not depend on the one
+              non-improving primary fit.
+Consequences: S083 reads this beside S082's record. Its fits start from the
+              shipped constants on qs rows, which moved in 12 of 13 primary
+              fits here. The completing commit is now taken after the fast
+              check, not before, so a record finding is fixed in place.
