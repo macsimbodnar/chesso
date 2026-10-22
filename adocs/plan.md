@@ -312,8 +312,9 @@ is typed by hand.
 | S039 | the lazy shortcut and the clamp are kept | 2 h 23 m | 5116 | `{-5, 0}` | H0, -12.23 +/- 7.08 |
 | S110 | the non-pawn correction tables are reverted | 6 h 44 m | 3644 | `{0, 10}` | H0, -3.34 +/- 7.71 |
 | S111 | the continuation correction tables | 10 h 11 m | 5484 | `{0, 10}` | H0, -1.01 +/- 6.15 |
+| S289 | Revert 's null-move table guard on its H0 (DEC-309) | 4 h 3 m | 8716 | `{-5, 0}` | H0, -7.42 +/- 5.07 |
 
-**The ledger holds 52: mean 6 h 06 m, median 5 h 26 m, 630673 games in 317.79 hours, 1984.6 an hour across the set.** **Fast class**, an effect outside the bounds interval -- nineteen runs, mean **1 h 53 m**. **Slow class**, inside it, on a bound or a true zero -- 33 runs, mean **8 h 32 m**.
+**The ledger holds 53: mean 6 h 04 m, median 5 h 25 m, 639389 games in 321.84 hours, 1986.7 an hour across the set.** **Fast class**, an effect outside the bounds interval -- nineteen runs, mean **1 h 53 m**. **Slow class**, inside it, on a bound or a true zero -- 34 runs, mean **8 h 24 m**.
 
 ### Priced by class
 
