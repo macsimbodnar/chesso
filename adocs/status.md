@@ -35,6 +35,30 @@ expected, cap 19.9 h) runs tonight; S083 re-lands on the guard first, in
 `../chesso-s083r` (DEC-307 when it lands). New filler **S290** (the S170
 budget picker is outside the tree), behind S083.
 
+**S289's SPRT started 2026-10-22 15:50** (`.tuning/s289_sprt.log`, out
+`.tuning/sprt_s289_20261022_155029`), banner as pre-registered (`cand-cd50178`
+vs `ref-4a3a0e5`, 8+0.08, Hash 16, `{-5, 0}`, 41900 games). Watcher: four
+exits, 40 h ceiling. No gate or build until it ends.
+
+**S083 re-landed on the guard** (DEC-307; `../chesso-s083r`, staged,
+`.tuning/coord/S083/s083_reland.diff`, not committed): queen re-anchored
+(`QUEEN` 983), bench 6042928 -> 3945487; goldens inside DEC-299's guard
+applied by their scripts (ceiling F 2 -> 3). Red in both builds, 46/50:
+`EXACT_FLOOR` 159/154 against 163, the ply-2 clause (first mate at 6, not 4),
+the multicut mined row (no separating re-mine at 7..10), and
+`test_tuner_gradient`'s gauge-walk floor (0.0587 against 0.1). Each is settled
+by a ruling, not an engine change -- except the multicut row, a mate the
+shipped engine reports at depth 10 and the paste loses there (found at 9, 11,
+12), unattributed. **DEC-308**: the walk floor joins the owner's H1 rulings;
+the multicut row gets a blocking diagnosis, **S291**, after S289's SPRT and
+before S083's run (a defect reachable at the shipped weights is fixed as its
+own change; a known price joins the H1 rulings). The fast check's other
+items (two stale lines, the truncation rows' mirrors and the reconstruction
+loop, a guard against unstaged edits in `S083_sprt.sh`, `eval_tables.hpp`'s
+header) are being fixed blind in `../chesso-s083r`, built after the run.
+DEC-308, S291's step file, plan.md and this file waited in main for the run
+to end (no gate during an SPRT) and were committed after it.
+
 **S083 at the paste with the guard** (`adocs/data/S289_paste.txt`): the ply-2
 case reports `mate -2` from iteration 6, still red at its clause (4);
 `EXACT_FLOOR` 158 against 163 (155 weakened); `MATE_IN_THREE_FLOOR` 12/11.

@@ -15628,3 +15628,41 @@ Consequences: S083's re-landing runs in `../chesso-s083r` on S289's commit;
               mode. If S289's SPRT reads H0 and its guard is reverted, the
               re-landing's readings are taken again on the reverted tree before
               S083's run.
+
+## DEC-308  2026-10-22  S083's re-landing leaves two reds DEC-307 did not name: the gauge-walk floor joins the H1 rulings, the multicut row first gets a blocking diagnosis, S291
+Tags:         evaluation, search, mate, multicut, tuner, s083, s291, s289, dec-307, dec-305, dec-158, dec-142, sprt, blocker
+Context:      S083's re-landing on S289's guard (`../chesso-s083r`, bench
+              3945487) is 46/50 in both builds. Beside the three reds DEC-307
+              names, two more: `tests/test_search.cpp`'s mined row "mate the
+              multicut hides, depth 10" -- the shipped engine reports its mate
+              in 5 at depth 10, the paste at 9, 11 and 12 and not at 10, and a
+              re-mine by S097's commands over 7..10 found no row separating
+              E21 on the paste's tree (0 of 269; `adocs/data/S083r_rows.txt`,
+              `S083r_remine_multicut.log`) -- and `tests/test_tuner_gradient.cpp`'s
+              gauge-walk floor (0.0587 against 0.1; `S083r_tuner_preconditions.txt`),
+              which only a lowered threshold would turn green. The fast check
+              read both as outside DEC-307 and S083's pre-registration as
+              naming only three rulings.
+Decision:     By the coordinator under the owner's standing instruction.
+              (1) The gauge-walk floor joins the owner's rulings on H1: it is
+              a tuner test's threshold over the constants, and settling it
+              changes no engine. (2) The multicut row is a mate the shipped
+              engine reports and the paste loses at that depth, and nothing
+              has attributed it to a rule, so it gets DEC-305's treatment at
+              S289's scale: a blocking step **S291** names by tool the node and
+              the rule that lose it at depth 10 and checks reach at the shipped
+              weights, after S289's SPRT frees the machine and before S083's
+              run. A rule defect reachable at the shipped weights is fixed as
+              its own measured change and S083 re-reads on it; a known price
+              (DEC-158's form, the multicut's or reverse futility's) joins the
+              H1 rulings with its attribution. (3) `adocs/data/S083_sprt.sh`
+              names all five rulings, refuses unstaged or untracked edits, and
+              no commit precedes the rulings.
+Rejected:     Starting S083's run with the multicut row unattributed -- the
+              reason DEC-305 gave: if a rule is at fault its fix changes the
+              tree the verdict measured. Re-mining until a row separates --
+              the re-mine's own range found none, and a wider one picked after
+              the miss is a tolerance moved after the reading. Lowering the
+              walk floor -- the owner's rule.
+Consequences: S083 stays paused, now by S291 behind S289's run; its fast-check
+              fixes are written blind meanwhile and built after the run.
