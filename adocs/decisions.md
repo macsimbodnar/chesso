@@ -15493,3 +15493,39 @@ Rejected:     One night -- the curve would have two points and no room to
 Consequences: S083's step file and scripts (`adocs/data/S083_corpus.sh`,
               `S083_corpus.py`, `S083_sprt.sh`) are committed before any
               generation starts; its phase 2 runs in MODE s082.
+
+## DEC-305  2026-10-22  S083's paste hides a mate the parent finds: S083 pauses for a blocking diagnosis, S289, and no SPRT plays a tree whose mate-safety property is red
+Tags:         evaluation, search, mate, s083, s289, dec-304, dec-303, dec-299, sprt, blocker
+Context:      S083's landing pasted curve 0's candidate (every game of S082's
+              training side at 46 qs rows a game, held-out L 0.071838 against
+              the shipped 0.072864) onto `5a22a9c`, bench 6042933 -> 3945685,
+              and stopped under DEC-304 (11). The mined set reads 157 exact
+              against `EXACT_FLOOR` 163 (154 weakened; the parent 164 and
+              160). `tests/test_engine.cpp` "reverse futility at ply 2 does
+              not hide a mate from the side to move", a property and not a
+              golden, is red in both builds: the parent reports `mate -2` from
+              depth 4 to 8, the paste cp 1168 to 913 and no mate;
+              `NullMoveBase` 16 or `RfpMinPly` 63 bring the mate back.
+              `MATE_IN_THREE_FLOOR` holds at 12 and no longer separates (11
+              weakened). The landing's implementer recommended DEC-303's form:
+              the SPRT on the working tree, the owner ruling on H1.
+Decision:     By the coordinator under the owner's standing instruction.
+              S083 is paused by a new blocking step, **S289**: find by tool
+              the node and the rule that hide the mate in two and attribute
+              the seven lost mined mates, and fix the rule at fault as its own
+              change, measured on the shipped engine, before S083 re-lands its
+              candidate on top. No SPRT plays the paste meanwhile. The owner
+              rules on `EXACT_FLOOR` only if a floor still falls once S289 is
+              done.
+Rejected:     DEC-303's working-tree SPRT -- DEC-303 covered a golden count;
+              here a mate-safety property the parent passes fails, an H1 would
+              still need the cause fixed, and the fix would change the tree the
+              verdict measured, so the 20 h would be spent twice. Closing S083
+              as zero on its curve -- leaves the held-out gain unmeasured and
+              the hazard unexplained, and every later evaluation refit (S135
+              onward) meets the same search. Lowering the floor -- the owner's
+              rule and DEC-299.
+Consequences: S083's record of the landing lands now; its paste stays in
+              `../chesso-s083l` (`.tuning/coord/S083/s083_landing.diff`, red,
+              not a commit). S135 still lands after S083's commit. The queen's
+              re-anchor and the `CorrHistMax` range wait for the re-landing.

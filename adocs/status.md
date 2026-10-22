@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-22, by hand.
 
-## 2026-10-22: S111 H0, recorded as zero; S083 pre-registered (DEC-304)
+## 2026-10-22: S111 H0, recorded as zero; S083 curve 0 stop, its paste hides a mate: S289 (DEC-305)
 
 **S111 read H0** at 10:22 (32+0.32, Hash 64, `{0, 10}`), played from the
 worktree's uncommitted tree (DEC-303) after the owner's shutdown: nElo -1.52
@@ -33,14 +33,29 @@ changed. Smoke: 11368 games an hour, 0 refusals. **Curve 0 read stop**
 (54 min): the top doubling 3113472 -> 6226944 rows gained 0.000067 against m
 0.000082, so **no generation**; the candidate is S082's whole training side at
 46 rows a game (`.tuning/s083/curve/s0/fit_6226944_s1.hpp`, L 0.071838
-against the shipped 0.072864). Next: the landing (apply, goldens by their
-scripts, about 3 h), then the SPRT, at most 19.9 h.
+against the shipped 0.072864).
+
+**S083's landing stopped** (DEC-304 (11)) in `../chesso-s083l`: the paste
+(bench 6042933 -> 3945685; PAWN 94 -> 84, KNIGHT 327 -> 371, BISHOP 308 ->
+352, ROOK 487 -> 519, QUEEN 716 -> 710) reads the mined set 157 exact
+against `EXACT_FLOOR` 163, and **hides a mate in two the parent finds**
+(`test_engine`'s ply-2 property case red in both builds: cp 1168 to 913
+where the parent reports `mate -2`; `NullMoveBase` 16 or `RfpMinPly` 63
+restore it). Also red: `POSITIONAL_ROOM` (queen residual 273; DEC-059's
+re-anchor computed, not pasted), the `CorrHistMax` range case (its top is
+`PAWN`), two unscripted preconditions in `test_tuner_gradient` (a DEC-142
+finding). **DEC-305**: no SPRT on the paste; S083 paused by the new blocking
+step **S289** (diagnose by tool, fix the rule at fault as its own measured
+change), then S083 re-lands on top. The owner rules on `EXACT_FLOOR` only if
+a floor still falls after S289. The landing's record is committed; the paste
+is `.tuning/coord/S083/s083_landing.diff` (red, not a commit).
 
 **S135 phase 1 written blind** in `../chesso-s135` (staged,
 `.tuning/coord/S135/s135_phase1.diff`): bad bishop and trapped pieces, two
 columns each, at zero weight (823 -> 831 parameters), the screen, the cost
-run and the SPRT pre-registration; lands after S083's paste. Fast check
-pending.
+run and the SPRT pre-registration; lands after S083's commit. Fast check:
+one blocker (the stage-one bound's headroom) and five more, all fixed blind.
+Its drafted DEC-305 and DEC-306 become DEC-306 and DEC-307 when they land.
 
 **Disk: 17 GB free (97 %).** Curve 0's samples hold 2.3 GB under
 `.tuning/s083/curve/s0/cand_*.tsv`, re-drawable by seed; kept.

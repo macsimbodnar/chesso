@@ -1,0 +1,29 @@
+# S083's landing, 2026-10-22: adocs/data/S188_repair_goldens.py first-mate --engine <the candidate's
+# frozen Release build> (.tuning/coord/S083/land/bin/cand, bench 3945685), then
+# adocs/data/S192_node_budget.py build/tests/test_search on the same tree. Both unmoved for the
+# goldens they pin: first-mate 9 and 9, mate 5; the count 7783 inside the middle half [7270, 32512].
+
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp904  d2:cp904  d3:cp1095  d4:cp1065  d5:cp1097  d6:cp1118  d7:cp1161  d8:cp1215  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1236  d2:cp1236  d3:cp1262  d4:cp1262  d5:cp1291  d6:cp1291  d7:cp1325  d8:cp1317  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+first-mate rc=0
+
+binary        /home/max/ws/chesso-s083l/build/tests/test_search
+count         7783 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        31132  (4x the count)
+floor         1556  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  2.39x the shipping floor and 0.12 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.48 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+S192 rc=0

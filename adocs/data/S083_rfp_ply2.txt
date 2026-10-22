@@ -1,0 +1,97 @@
+# S083's landing, 2026-10-22: tests/test_engine.cpp "reverse futility at ply 2 does not hide a mate
+# from the side to move" -- NOT A GOLDEN (DEC-142): the root's oracle Mate(-2) at iteration 4 and
+# at the last of eight -- red on the paste (first_exact 0 against 4), both builds. What the root
+# reports, read as the case's deepen_scores() reads it: uci, position fen, go depth 8 at the
+# defaults, every info line's score (.tuning/coord/S083/land/probe/uci_probe.py). ref is the
+# parent's Release build (bench 6042933), cand the paste's (bench 3945685), cand_tune the paste's
+# tune build with one option changed per line -- a diagnosis for the record, deciding nothing.
+# Chess facts here are the case's own oracle (its comment: Mate(-2)); nothing is judged by hand.
+# FEN: rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2
+
+== ref
+info score cp 854 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 855 depth 2 nodes 40 hashfull 0 pv h1g1 g3g4
+info score cp 874 depth 3 nodes 92 hashfull 0 pv h1g1 g8h8 g1h1
+info score mate -2 depth 4 nodes 366 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 5 nodes 749 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 6 nodes 1405 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 7 nodes 2263 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 8 nodes 3617 hashfull 0 pv h1g1 g8f8 g1h1
+bestmove h1g1 ponder g8f8
+
+== cand
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 996 depth 6 nodes 932 hashfull 0 pv h1g1 g3f4 g1h2
+info score cp 978 depth 7 nodes 1726 hashfull 0 pv h1g1 g8g7 g1f1
+info score cp 913 depth 8 nodes 2269 hashfull 0 pv h1g1 g8g7 g1f1
+bestmove h1g1 ponder g8g7
+
+== cand_tune RfpMaxDepth=0
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 0 depth 5 nodes 400 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 969 depth 6 nodes 2167 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 976 depth 7 nodes 3526 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 936 depth 8 nodes 4693 hashfull 1 pv h1g1 g8h8 g1f1
+bestmove h1g1 ponder g8h8
+
+== cand_tune RfpMargin=2000
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 0 depth 5 nodes 400 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 969 depth 6 nodes 2167 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 976 depth 7 nodes 3526 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 936 depth 8 nodes 4693 hashfull 1 pv h1g1 g8h8 g1f1
+bestmove h1g1 ponder g8h8
+
+== cand_tune RfpMinPly=63
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 287 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 0 depth 5 nodes 412 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 969 depth 6 nodes 1616 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 0 depth 7 nodes 3210 hashfull 0 pv h1g1 g3f3 g1h1
+info score mate -2 depth 8 nodes 4906 hashfull 1 pv h1g1 g8f8 g1h1
+bestmove h1g1 ponder g8f8
+
+== cand_tune RazorDepth=0
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 287 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1027 depth 5 nodes 485 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 996 depth 6 nodes 935 hashfull 0 pv h1g1 g3f4 g1h2
+info score cp 978 depth 7 nodes 1727 hashfull 0 pv h1g1 g8g7 g1f1
+info score cp 913 depth 8 nodes 2273 hashfull 0 pv h1g1 g8g7 g1f1
+bestmove h1g1 ponder g8g7
+
+== cand_tune ProbCut=0
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+info score cp 996 depth 6 nodes 932 hashfull 0 pv h1g1 g3f4 g1h2
+info score cp 978 depth 7 nodes 1726 hashfull 0 pv h1g1 g8g7 g1f1
+info score cp 913 depth 8 nodes 2277 hashfull 0 pv h1g1 g8g7 g1f1
+bestmove h1g1 ponder g8g7
+
+== cand_tune NullMoveBase=16
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+info score mate -2 depth 6 nodes 1024 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 7 nodes 2141 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 8 nodes 4149 hashfull 0 pv h1g1 g8f8 g1h1
+bestmove h1g1 ponder g8f8

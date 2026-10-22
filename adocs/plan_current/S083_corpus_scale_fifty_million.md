@@ -6,7 +6,7 @@ excludes:   what is labelled, which is S082's and should be settled first; dedup
 decisions:  DEC-041, DEC-055, DEC-087, DEC-259
 closes:
 blocks:
-paused_by:
+paused_by:  S289
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
 done:
 
@@ -725,4 +725,240 @@ the candidate is `fit_6226944_s1.hpp`, every game of S082's training side at
 m; by DEC-304 (4) it decides nothing and is recorded. Two of DEC-304's
 nights are unspent. Next: `apply` on that fit in a clean worktree, then the
 landing's goldens by their scripts, then the commit and the SPRT.
+
+
+## 2026-10-22: the landing -- stopped at the floors and a hidden mate (DEC-304 (11))
+
+Run by one Opus 5.5 subagent in the worktree `/home/max/ws/chesso-s083l`
+(branch `s083l` at `5a22a9c`), machine idle (load 0.54 on 12 cores at the
+start); scripts and outputs under `.tuning/coord/S083/land/` (L below).
+**The landing stopped where DEC-304 (11) says it stops: `EXACT_FLOOR` falls,
+157 against 163.** A second stop beside it is not a golden at all: the
+paste hides a mate in two the parent sees at depth 4. Nothing was changed for
+either. `src/` holds the raw paste and nothing else; no test, comment or doc
+outside this file and `adocs/data/` was edited; nothing is committed. Every
+reading below is a measurement taken to report the stop, by the script each
+golden names.
+
+### The paste (command 6)
+
+`MODE=s082 adocs/data/S083_corpus.sh apply .tuning/s083/curve/s0/fit_6226944_s1.hpp
+/home/max/ws/chesso-s083l`, from the main checkout, 11:56 to 12:02, `S083-APPLY-DONE`;
+outputs `.tuning/s083/apply/`, copied to L/`apply_raw/`; key lines in
+`adocs/data/S083_apply.txt`. The fit's sha256 `f7ccdb7f50564cb8...`.
+`apply_fit.py` 5 defines, 2 tables, 10 arrays, 2 scalars; `verify_fit.py`
+**823 of 823 identical**; `diff_fit.py`: PAWN 94 -> 84, KNIGHT 327 -> 371,
+BISHOP 308 -> 352, ROOK 487 -> 519, QUEEN 716 -> 710; every psqt table moved
+(48 to 64 squares of 64 a piece, largest single move +241, `psqt_eg[king]`
+g8); 54 constants outside `eval_tables.hpp` -- mobility, king safety, passed
+pawns, pawn structure -- with `piece_placement` and `tempo` frozen at 0.
+`src/eval_tables.hpp` 194 lines and `src/evaluation.cpp` 20, format pass
+clean. Both builds without a warning. **Bench 6042933 -> 3945685.** The fast
+suite **42 of 50 in both builds**, the same eight red in each:
+`test_evaluation`, `test_search`, `test_engine`, `test_tuner_gradient`,
+`test_eval_trace`, `test_search_params`, `test_mate_breadth`,
+`test_mate_carry`. Format check clean.
+
+What the paste does to the tree, for the record (L/`bench.sh`, frozen copies
+in L/`bin/`; the parent is the main checkout's Release build, which benched
+6042933): `bench 12` 2339074 -> 2104084; the tune build at its defaults reads
+the Release candidate's stream, 0 lines apart. `tools/search_bench.py`, two
+interleaved runs each, nodes and best moves identical within a build:
+
+| depth | parent (nodes, best) | paste (nodes, best) |
+|---|---|---|
+| 9 | 62042 / 125888 / 34107, `c3d5` / `e2a6` / `d7c8q` | 42570 / 152468 / 27750, `c3d5` / `e2a6` / `d7c8q` |
+| 12 | 214973 / 595000 / 217107, `c3d5` / `d5e6` / `d7c8q` | 250176 / 412312 / 157359, `c3d5` / `e2a6` / `d7c8q` |
+
+### The goldens, each by its script, on fixture A (DEC-142)
+
+Fixture A, `44ce663da3669da3a7c20eac6ee54c483c7fe196`: a commit object on no
+branch, `5a22a9c` plus the raw paste, the parent's goldens (L/`fixture.sh`,
+S111's form). The floors, first-mate and S192 by L/`floors.sh 163`, the S170
+grid by L/`sweep.sh`, each S111's script with the paths moved; 444 s for the
+chain (`CHAIN-A-DONE`).
+
+| golden | before | the paste reads | script, and the reading's file | DEC-299's guard |
+|---|---|---|---|---|
+| `tests/test_mate_breadth.cpp` `EXACT_FLOOR` | 163 (S286: 164 shipping, 160 weakened) | **157** exact shipping, 161 at `RfpMinPly` 2, **154** weakened (`RfpMinPly` 1); 161, 165 and 158 right sign, 0 wrong; the gate at 1 red | `S156_mined_floor_sweep.py --ref <fixA> --floor 163`, `adocs/data/S083_mined_floor.log` | **outside: the floor falls.** The tree reads 6 under 163; a floor that separates would sit in 155..157, the convention 156 |
+| `tests/test_engine.cpp` `MATE_IN_THREE_FLOOR` | 11 (S286: 12 shipping, 7 weakened) | **12** of 24 shipping, **11** weakened; `red` red on the mate-in-two exactness CHECK alone, the m3 REQUIRE passing at 11 >= 11 | `S154_floor_margin_sweep.py floor` and `red`, `adocs/data/S083_floor_sweep.log` | holds its value, **no longer separates**: DEC-116's floor sits strictly between the two ends and no integer does between 11 and 12 |
+| `tests/test_mate_carry.cpp` `short_line_ceiling` | 2, 5, 4, 0, 1, 2 | **2, 5, 4, 0, 2, 2** (E +1); the grid alone 0, 1, 0, 0, 2, 2; 108 cells, 1373 mate lines, 18 short | `S203_case_sweep.sh --ceilings` over S202's, S261's, S286's and this grid, `adocs/data/S083_sweep_s170.txt` | inside (+1); **not applied** |
+| `adocs/data/S170_cases.tsv` budgets | A 1000000, B 100000, C 1200000, D 500000, E 300000, F 300000 | A 500000, B 300000, C 1000000, D 1000000, E 500000, F 100000; none short at its pick | `.tuning/coord/S099/p2/pick_budgets.sh`, L/`picks.txt` | inside; **not applied** |
+| `tests/test_engine.cpp` `first_mate_depth`, `mate_in` | 9, 9; 5 | **9, 9; 5** (`d9:mate5` on both) | `S188_repair_goldens.py first-mate`, `adocs/data/S083_first_mate.txt` | unmoved |
+| `tests/test_search.cpp` "ordering keeps the tree small" | 65024, 3251 from 16256 (13446 read) | **7783**, inside the middle half [7270, 32512] | `S192_node_budget.py`, the same file | the pair stays |
+| `tests/test_evaluation.cpp` six piece anchors | 135, 244, 325, 563, 787, 0 | 99, 276, 355, 585, 983, 0 | `S192_anchors.py <fit>` (10 of 10 reproduced first, at the shipped weights), `adocs/data/S083_anchors.txt` | -- ; not applied |
+| `QUIET_ROOK_EVAL`, `_CHEAP`; 383; 198; -505; -569 | 563, 567; 383; 198; -505; -569 | 585, 580; 396 (580 less 184); 209; -534 (the four leaves still the four king moves standing pat); -599 | the same | -- ; not applied |
+| `tests/test_eval_trace.cpp` `truncation_positions` | the four | read 1.875, 1.708, 2.000, 1.500: all four stop qualifying; the scan over the candidate's corpus finds 68 rows past 2.8, 15 at 2.875, 61 distinct FENs | `build/tools/truncation_scan --data .tuning/s083/curve/s0/cand_6226944_s1.tsv --min 2.8`, `adocs/data/S083_truncation_scan.txt` | -- ; not re-picked |
+| `tests/test_search.cpp` mined rows | multicut 10, ProbCut 10, extra ply 8, `capture_mates` 9, 8, 11, 12 | **the multicut row is red at 10** (`d9 d11 d12`); the other six still report their mates at their depths. The fast suite never ran them: the multicut's fatal REQUIRE comes first | `S230_mine_r01_row.py depths --lo 3 --hi 12` over the seven FENs, `adocs/data/S083_rows.txt`; separation by mutants not re-read | -- ; the re-mine (`S277_mine_mate_row.py`) not run |
+| bench | 6042933 | **3945685** | `chesso bench` | -- |
+
+### The stops, with figures
+
+1. **`EXACT_FLOOR` falls** -- 157 shipping against 163, 154 weakened. By
+   DEC-304 (11) and DEC-303's consequence the floor is not lowered and the
+   owner rules before any commit. The paste loses 7 of the parent's 164 exact
+   mined mates at depth 10, and the separation from the weakened build
+   narrows from 4 to 3. Which seven, by tool, is not taken.
+2. **A mate hidden that the parent finds: `tests/test_engine.cpp` "reverse
+   futility at ply 2 does not hide a mate from the side to move"**, a
+   property, `NOT A GOLDEN (DEC-142)` at its site, red in both builds at
+   `REQUIRE( first_exact == 4 )`, 0. The case's premise passes (the block
+   fires at the floor's ply; the PV drive is mated). At the root, through UCI as
+   its `deepen_scores()` reads it (`adocs/data/S083_rfp_ply2.txt`), the
+   parent reports `mate -2` from depth 4 to 8; **the paste reports cp 1168,
+   1125, 1009, 1009, 1027, 996, 978, 913 at depths 1 to 8 and no mate.** For
+   the record, one tune option at a time, deciding nothing: `RfpMinPly` 63
+   brings `mate -2` back at depth 8 and `NullMoveBase` 16 at depth 6;
+   `RfpMaxDepth` 0, `RfpMargin` 2000, `RazorDepth` 0 and `ProbCut` 0 do not.
+   Not re-derivable: there is no number to move, and this file does not
+   change the case.
+3. **`MATE_IN_THREE_FLOOR` stops separating** (above): green at 12 >= 11, and
+   the weakened guard reads 11, so it can no longer fail for the reason it
+   exists -- DEC-116's 2026-09-01 shape. No placement satisfies DEC-116.
+4. **The guard is otherwise satisfied**: the ceilings rise by at most 1 (E),
+   first-mate and the S192 pair hold.
+
+### Reds that are not goldens, and the brief's instruction one of them meets
+
+- **`POSITIONAL_ROOM` fires** (`tests/test_evaluation.cpp` "removing a
+  piece moves the score"): the white queen on d1 evaluates 983 against her
+  fitted `QUEEN` 710, residual **273** against 150 (rook 66, pawn 15). The
+  answer is DEC-059's, proposed below and **not pasted**: `.tuning/reanchor.py
+  <fit> <out> queen -273`, `QUEEN` 710 -> 983 and -273 on all 128 queen
+  squares, written to L/`reanchor/fit_6226944_s1_q273.hpp`. `S192_anchors.py`
+  on it: nine of the ten cases identical to the raw fit's, the queen on d1
+  984 against 983, residual 1. `piece_value` is read by the evaluation's
+  material sum alone (`src/eval_tables.hpp`'s add and remove), not by
+  ordering, SEE or any pruning margin, so the shift moves `evaluate()` only
+  where a tapered numerator crosses zero. Its bench was not taken.
+- **`tests/test_search_params.cpp` "the correction's ranges are the ones
+  their purpose declares"**: `CHECK_EQ( max_param.max_value, PAWN )`, 94
+  against 84. The case pins `CorrHistMax`'s top to `PAWN` and its comment says
+  "a refit of the pawn ... has to move the range with it, in the same commit,
+  or this goes red". The brief says the ranges are kept (S127 owns them). The
+  two cannot both hold; not touched, a question below.
+- **`tests/test_tuner_gradient.cpp`, two preconditions measured on the
+  shipped constants**, neither a named golden nor scripted: "the clamp's
+  derivative is exact where it binds" (`REQUIRE( !binding.empty() )`: the +40
+  push measured at S262 binds the clamp on 0 of the 34 rows at the paste's
+  constants) and "the fit holds every gauge still and no score sees the hold"
+  (`psqt_eg[king]`'s plain-update shift 0.0587 against the 0.1 floor, the
+  rook's next at 0.118; its comment says to re-read it with `-s` when the
+  constants move). A DEC-142 finding: measured numbers with no script. In
+  passing, that case's `CAPTURE( kind_name(kind) )` prints a pointer, not the
+  optimiser's name.
+- The `src/search_params.hpp` comments and `MANUAL.md` rows that state a pawn
+  as 94: not restated, the landing having stopped; the sites are those
+  comments' 94s and `MANUAL.md`'s `QsFutilityMargin`, `CorrHistMax`,
+  `LmrDeeperMargin`, `SeeQuietCoeff`, `SeMarginPerDepth` and `ProbCutMargin`
+  rows.
+
+### `adocs/data/S083_sprt.sh`'s guards
+
+Checked on fixture A as a stand-in for the landing commit: `fixA^` is
+`5a22a9c`; both `src/eval_tables.hpp` and `src/evaluation.cpp` differ;
+`fastchess.sh` reads `SPRT_BOUNDS` and `SPRT_ROUNDS`. So a landing commit made
+on `5a22a9c` from this paste passes all three and the script prints its
+header's banner -- `candidate <CAND>`, `reference 5a22a9c...`, `tc 8+0.08
+hash 16 concurrency 12 of 12 cores`, `bounds elo0=0 elo1=5 alpha=0.05
+beta=0.05`, `cap 20950 rounds, 41900 games`, fastchess's `Started game 1 of
+41900` -- once the coordinator's sentence is filled. It plays commits only:
+DEC-303's working-tree form would need S111_sprt.sh's mode written into it.
+
+### The corpus's generation, copied from `adocs/data/S082_pool.log`
+
+No chunk was generated (stop at stage 0), so the corpus is S082's pool and
+its record is S082's, verbatim where quoted:
+
+- **Part 1**: `datagen --out /home/max/ws/chesso/.tuning/s082/pool.tsv
+  --leaf root,qs,pv --games 150000 --nodes 100000 --threads 12 --seed
+  20261013` (workers 20261013 to 20261024), engine `5b0e170`, datagen sha256
+  `4b0e2848...`, started 2026-10-16 01:36:14; stopped by a power cut 11 h 22 m
+  in (the files' last write 12:58:47, 11 h 22 m 33 s), before datagen's
+  closing lines. **Its filter counts are lost with those lines (DEC-296)**:
+  the filter's considered positions and skips by clause, refusals by kind,
+  the walks' and games' nodes, the elapsed time and the games played. What
+  its rows still give: 122748 games kept before game 122926, qs 10392343 rows,
+  84.66 a game, 2398 refused (0.0231 %, kind unknown).
+- **Part 2**: `datagen --out /home/max/ws/chesso/.tuning/s082/topup/pool.tsv
+  --leaf root,qs,pv --games 27252 --nodes 100000 --threads 12 --seed
+  2026102000` (workers 2026102000 to 2026102011), the same binary, started
+  2026-10-20 20:49:14, `exit 0`, **`elapsed 8420 s`**. Its filter: `2751655
+  considered, 2313716 passed; skipped in-check 170952, mate 0, score past
+  1000 185972; no completed iteration 0`; `leaf qs: 2313173 rows from 27252
+  games ... 84.88 a game`; qs not written of 2313716 passed: terminal 543
+  (0.0235 %), truncated 0, aborted 0, uncertified 0.
+- Merged 2026-10-21 by `S082_pool_merge.py` (part 2's ids +1000000): qs
+  12705516 rows from 150000 games, sha256 `f4535bd0...`; the training side
+  137998 games and 11690184 qs rows (S082's compare); the candidate's sample,
+  every game at 46 a game, 6226944 rows from 137978 games (curve 0 above).
+
+### Proposed, for the coordinator
+
+- **DEC text, the re-anchor** (only if the landing goes on): "S083's queen is
+  re-anchored through the degeneracy, DEC-059's form. The fit's queen on d1
+  against bare kings evaluates 983 against her fitted `QUEEN` 710, a residual
+  of 273 against `POSITIONAL_ROOM` 150. `.tuning/reanchor.py` subtracts 273
+  from all 128 queen squares and adds it to `QUEEN` (710 -> 983) in the emitted
+  header before the paste, so `verify_fit.py` still compares one file:
+  `S192_anchors.py` reads nine of ten cases identical and the queen on d1 984,
+  residual 1. `POSITIONAL_ROOM` stays 150 and the test is not edited.
+  Rejected: widening the room (DEC-059's reason); pasting the raw fit (the
+  guard red)." It moves play by a centipawn where a tapered numerator crosses
+  zero, so it precedes any SPRT.
+- **A question for the owner (DEC-265 form).** *Why*: DEC-304 (11) stops the
+  landing on a fallen floor; the hidden mate in two is new ground, DEC-303
+  having covered a floor and not a property; the machine is idle meanwhile.
+  *Options*: (a) DEC-303's form -- the re-anchor decided, the SPRT on the
+  working tree (`S083_sprt.sh` given S111_sprt.sh's working-tree mode),
+  the owner ruling on H1 on `EXACT_FLOOR` (156 would separate 157 from 154)
+  and on the hidden mate; the goldens inside the guard written only on H1;
+  about 20 h of machine; the risk an H1 ships a mate the parent finds. (b)
+  rule now that a mate hidden from the parent's reach blocks the candidate:
+  S083 closes on its curve with no SPRT, recorded as zero; no machine; a gain
+  of up to 0.001026 held-out error goes unmeasured, and the scale the search's
+  margins were fitted on (S261's lane, `S083_sprt.sh`'s "the scale") stays
+  the likely cause, S127's to re-fit. (c) first find which seven mined mates
+  and which node hides the mate in two, by tool; hours of agent work, little
+  machine. Recommend (a): the verdict decides whether either ruling matters,
+  and an H0 ends it without one.
+- **The `CorrHistMax` range**: follow the case (the range to 0..84 with
+  `PAWN`, `golden_defaults`' row and `MANUAL.md`'s row in the landing commit;
+  a tune-build bound, no play change) or amend the case to "one pawn at the
+  seed's weights" (a test edit, the owner's). Recommend the first: it is the
+  rule the tree records, and S127 fits inside whatever range ships.
+- **`specs.md` and `DEV_MANUAL.md`, on S083's H1 only**: the evaluation row's
+  corpus sentence (S076's deduplicated root rows) becomes "fitted on S082's
+  pool's training side -- 137998 games of chesso's own self-play at 100000
+  nodes a move, leaf qs, 46 rows a game, undeduplicated, 6226944 rows -- held
+  out on S082's fixed validation set, L 0.071838 against 0.072864 (S083,
+  DEC-304)", with the verdict; DEV_MANUAL's "The corpus the shipping weights
+  descend from is `.tuning/selfplay_v2.tsv`" becomes S082's pool, its two
+  commands and seeds as above, and the sample's `corpus_split.py sample`
+  line.
+
+### Not done, the landing having stopped
+
+No golden edited, the re-anchor not pasted, no ceiling, budget or comment
+moved, no row re-mined or re-picked, no mutation pass, Debug self-play or
+`gate_extra.sh`. `DEV_MANUAL.md` and `MANUAL.md` checked: nothing in either
+is made untrue by an uncommitted paste; the edits a completed landing owes
+are listed above. `touches:` already covers what changed here
+(`src/eval_tables.hpp`, `src/evaluation.cpp`, `adocs/data/`); a completed
+landing adds `src/search_params.hpp`'s comments. The staged diff is
+`.tuning/coord/S083/s083_landing.diff` -- **red, not a commit**.
+
+## 2026-10-22: paused by S289 (the coordinator, DEC-305)
+
+The landing's proposal (a), DEC-303's working-tree SPRT, is not taken: DEC-303
+covered a golden count, and here a mate-safety property the parent passes
+fails; an H1 would still need the cause fixed, and the fix would change the
+tree the verdict measured. S083 pauses for **S289**, which finds by tool the
+node and the rule that hide the mate in two and attributes the seven lost
+mined mates, and fixes the rule at fault as its own measured change. S083
+then re-lands curve 0's candidate on top of it: the paste again, the queen's
+re-anchor (DEC-059's form, proposed above), the `CorrHistMax` range as
+`tests/test_search_params.cpp` records it, and every golden by its script.
+The owner rules on `EXACT_FLOOR` only if a floor still falls then. The paste
+stays in `../chesso-s083l` (`.tuning/coord/S083/s083_landing.diff`).
 
