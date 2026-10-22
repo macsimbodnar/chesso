@@ -28,9 +28,22 @@ check's six findings fixed), applied onto main and committed with
 **DEC-304**, its pre-registration: two nights at most, 100000 nodes, S082's
 pool as stage 0, one SPRT at 8+0.08 `{0, 5}`. S111's H0 keeps the pool the
 shipping engine's corpus, and `build/tools/datagen` hashes to the pool's
-binary (`4b0e2848...`): **MODE s082**. Next: the phase 2 kit, then smoke
-(about 3 min) and curve 0 (about 36 min); generation only if curve 0 says
-`continue`, at night (DEC-155).
+binary (`4b0e2848...`): **MODE s082**. The phase 2 kit passed, no script
+changed. Smoke: 11368 games an hour, 0 refusals. **Curve 0 read stop**
+(54 min): the top doubling 3113472 -> 6226944 rows gained 0.000067 against m
+0.000082, so **no generation**; the candidate is S082's whole training side at
+46 rows a game (`.tuning/s083/curve/s0/fit_6226944_s1.hpp`, L 0.071838
+against the shipped 0.072864). Next: the landing (apply, goldens by their
+scripts, about 3 h), then the SPRT, at most 19.9 h.
+
+**S135 phase 1 written blind** in `../chesso-s135` (staged,
+`.tuning/coord/S135/s135_phase1.diff`): bad bishop and trapped pieces, two
+columns each, at zero weight (823 -> 831 parameters), the screen, the cost
+run and the SPRT pre-registration; lands after S083's paste. Fast check
+pending.
+
+**Disk: 17 GB free (97 %).** Curve 0's samples hold 2.3 GB under
+`.tuning/s083/curve/s0/cand_*.tsv`, re-drawable by seed; kept.
 
 ## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0; S111's SPRT from its tree
 

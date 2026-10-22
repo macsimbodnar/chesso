@@ -578,3 +578,151 @@ pre-registration with that outcome; this file, the scripts and the two
 `.tuning/` tools are committed with it before any stage runs, then the phase
 2 kit and commands 2 and 3.
 
+## 2026-10-22: the phase 2 kit
+
+Run by one Opus 5.5 subagent at `41e4140`, machine idle (load 0.25 on 12
+cores), from `/home/max/ws/chesso`; scratch under `.tuning/coord/S083/kit/`
+(K below), `.tuning/s082/` read only. **Every item passed; no defect found, no
+script changed, no expectation in this file wrong.** No stage was run: no
+smoke, curve, generate, apply, fit, datagen or match.
+
+- **`verify_fit.py` and `apply_fit.py`**: run by the coordinator before this
+  kit and passed as listed above (823 of 823 identical, exit 0, with `--root`
+  and `--root=`; `--rot` and a second positional exit 1; the dry run 5
+  defines, 2 tables, 10 arrays, 2 scalars, the worktree untouched).
+- **`chunk-check`**, on `.tuning/s082/smoke/pool.tsv.qs` against K/smoke.log
+  (`datagen.log` with `exit      0` and `elapsed   193 s` appended), 600 games:
+  plain, exit 0, `51444 rows, 600 games with a row of 600 played, sha256
+  2127da4f...`; with `--abort-share 1 --rate-floor 8333`, exit 0 and the
+  rule's reading, `abort rule: 0 truncated, aborted or uncertified of 51459
+  passed, terminal 15 (not gated)` and `rate: 11191 games an hour, floor
+  8333`; with `--rate-floor 20000`, exit 2, `ABORT RULE: ... 11191 games an
+  hour, under the 20000`; against the log without the two lines, exit 1,
+  `exit lines [], not one 'exit 0'`. A relative FILE passes too (the log names
+  the absolute path).
+- **`merge --out K/merge_two.tsv FILE:0 FILE:1`**: exit 0, 102888 rows
+  (51444 doubled), 1200 games, ids 2000000 to 2000599 and 2100000 to 2100599,
+  every other field byte-identical to the source twice over. The code moves
+  chunk k by 2000000 + 100000 k; S082's pool's largest id is 1027251 (the
+  validation side; 1027250 on the training side, read with `awk`), so every
+  chunk id sits above the pool's, DEC-304's "ids above the pool's", and twenty
+  12000-game chunks never meet. Also: `--base` on a scratch base copies it
+  byte for byte as the prefix (154332 rows, 1800 games); a wrong
+  `--base-sha256`, an existing `--out` and an index named twice each exit 1.
+- **`capacity --in K/merge_two.tsv`**, the three views, per-game 46, 8 and 0:
+  exit 0, 49146, 8706 and 93668 rows from 1090 of 1200 games, 9220 rows dropped
+  for a validation position (S082's smoke was played at part 1's seed,
+  20261013, and loses 9 % of its rows to the fixed set against 0.03 % on the
+  training side). Exact: `corpus_split.py sample --rows C --seed 1` writes C
+  rows from 1090 games at each density, and `--rows C+1` refuses at each.
+  The same pass on S082's training side, read only, 16 s and 0.28 GB: **C =
+  6226944** at 46 (137994 of 137998 games, 3688 rows dropped), 1103627 at 8,
+  11686496 at every row -- so `curve 0`'s rungs are 6226944, 3113472 and
+  1556736, the seeds at 1556736, as the arithmetic above has them.
+- **`read`**, on K/read_s082, whose `ladder.txt` names S082's 1 M-row qs-view
+  fit logs as rungs (rung 4000000 = `fit_qs_46_s1_qs.log`, 2000000 =
+  `fit_qs_8_s1_qs.log`, 1000000 with seeds 1 to 5 = `fit_root_0_s1..5_qs.log`,
+  density 8 and 0 = `fit_qs_8`, `fit_qs_0`; the row labels are the ladder's,
+  the logs say 1000000): `--mode s082 --stage 0 --last-stage 2`, exit 1, s =
+  0.000094, m = 0.000218, `outcome (c), unreadable: rung 2000000 fits better
+  than the top by more than m`, `READ-OUTCOME unreadable`, and the 8-a-game
+  fit printed as a FINDING. The same logs with s3 removed, `--mode none
+  --stage 0`: exit 0, `rung 1000000 s3 missing or unreadable`, `would be
+  unreadable, reported only: missing ...fit_1000000_s3.log; rung 2000000 fits
+  better ...`, `READ-OUTCOME continue`. The other outcomes, on reordered rungs:
+  d +0.000250 > m at stage 0 of 2, `READ-OUTCOME continue`, exit 0; the same at
+  stage 2 of 2, `stop -- still descending ... the budget's last stage`; d
+  +0.000115 inside m, `stop`, the candidate `fit_4000000_s1.hpp`; a missing
+  seed under s082, exit 1 (`refused: missing ...`, no READ-OUTCOME line).
+  `generate 1`'s gate expression run over each `reading.txt`, written as
+  `read_stage` writes it: opens on the s082 continue only, refuses the s082
+  unreadable and the MODE=none continue.
+- **`adocs/data/S083_corpus.sh verify`** (`OUT` under K): `fixed set: the
+  three views' sha256 are S082's`, `S082's training side: sha256 as recorded`,
+  `S083-VERIFY-DONE`, exit 0, 2 s. The five sha256 in the script are the ones
+  `adocs/data/S082_pool.log` and `S082_compare.log` record.
+
+**Read, not run: `smoke`, `curve 0` and `generate 1` under MODE=s082 find
+every path they need.** `build/tools/datagen` hashes to `4b0e2848...`
+(relinked 10:36 today, commits after the pool's `5b0e170`, the same bytes:
+datagen carries no commit), `build/tools/tuner` and
+`build/tools/corpus_dedupe` exist, the S082 files the script names exist, and
+`engine_stamp` sees no untracked file under src/ or tools/ but `__pycache__`.
+The frozen copies link only system libraries (`ldd`), so they run from
+`$OUT`. Single-leaf datagen writes `--out` itself, which `chunk-check`
+compares the log's path against. `smoke` records its pass under
+`$OUT/smoke/<12 hex>/pass`, the directory and the `datagen` line `generate`
+looks for; `generate 1` reads `$OUT/curve/s0/reading.txt`, where `curve 0`'s
+`read_stage` writes it; the fit tags `<rows>_s<seed>` and `dens8`, `dens0`
+are the names `read` opens; `corpus_dedupe` takes the seven-field rows (a
+probe on K's sample read 49146 rows). Notes, none changed: (1) the tuner
+embeds its commit (`engine f93a3b2-dirty` in S082's fit logs), so it hashes
+`b7430c30...` today against S082's compare's `62204108...` -- src/ since
+`f93a3b2` differs by a comment, and each stage freezes one tuner for every
+fit, so a stage's curve is internally consistent; (2) `generate` freezes
+`bin/datagen.stageN` and writes `chunks/datagen.sha256` before its smoke-pass
+and reading gates, so a refused first attempt pins the run to that binary --
+harmless under s082, where `require_mode` pins it to S082's anyway, and by
+design ("an existing copy is reused"); (3) `filters` over a three-leaf log
+reads the first coverage block, root's; the chunks are qs alone.
+
+## 2026-10-22: smoke and curve 0, run by the coordinator -- stop at stage 0
+
+**Smoke** (`MODE=s082 adocs/data/S083_corpus.sh smoke`, 10:52 to 10:55,
+console `.tuning/s083/smoke.console`): the frozen datagen copy
+`.tuning/s083/smoke/4b0e28483f64/datagen`, sha256 `4b0e2848...` (S082's pool's
+binary), `--leaf qs --games 600 --nodes 100000 --threads 12 --seed
+2026102100`: 600 games, 51234 qs rows (85.39 a game), filter 60798
+considered, 51238 passed, skipped in-check 3847, mate 0, score past 1000
+3998; qs not written: terminal 4, truncated 0, aborted 0, uncertified 0;
+elapsed 190 s, **11368 games an hour** (a chunk 63 min, a night of ten
+10.6 h); the abort rule 0 of 51238 against 1 %, the rate against the 8333
+floor; pass record written for that sha.
+
+**Curve 0** (`MODE=s082 adocs/data/S083_corpus.sh curve 0`, 10:55 to 11:49,
+54 min, console `.tuning/s083/curve0.console`, outputs
+`.tuning/s083/curve/s0/`): the fixed set's three views and S082's training
+side checked against their sha256 first; capacity at 46 a game 6226944 rows,
+at 8 a game 1103627, at every row 11686496 (137994 of 137998 games with a
+row; 3688 rows dropped for a validation position). The reading, whole:
+
+```
+S083 reading, stage 0, mode s082, /home/max/ws/chesso/.tuning/s083/curve/s0
+fit                         rows    games  L (qs view)      start       K  best at  improved
+rung 6226944 s1          6226944   137978     0.071838   0.072864  0.7237     2400  yes
+rung 3113472 s1          3113472    69010     0.071905   0.072862  0.7259     1100  yes
+rung 1556736 s1          1556736    34514     0.071992   0.072860  0.7286     3500  yes
+rung 1556736 s2          1556736    34507     0.072019   0.072863  0.7247      500  yes
+rung 1556736 s3          1556736    34488     0.072072   0.072859  0.7313     2800  yes
+rung 1556736 s4          1556736    34483     0.072000   0.072865  0.7226     1000  yes
+rung 1556736 s5          1556736    34485     0.072057   0.072865  0.7225     2200  yes
+every game, 8/game       1103627   137341     0.071897   0.072869  0.7197     1100  yes
+every game, all/game    11686496   137994     0.071783   0.072860  0.7291     2700  yes
+spread at 1556736 rows over 5 seeds: mean 0.072028, s = 0.000035; m = 1.645 * sqrt(2) * s = 0.000082
+per doubling, seed 1, nested samples:
+     3113472 ->    6226944: L 0.071905 -> 0.071838, gain +0.000067, inside m
+     1556736 ->    3113472: L 0.071992 -> 0.071905, gain +0.000087, past m
+second reading, every game: all a game, L 0.071783, -0.000055 against 46's 0.071838 -- within m of 46 or worse; decides nothing
+second reading, every game: 8 a game, L 0.071897, +0.000059 against 46's 0.071838 -- within m of 46 or worse; decides nothing
+top doubling: d = L(3113472) - L(6226944) = +0.000067 against m 0.000082
+outcome: stop -- the last doubling gained +0.000067, inside m 0.000082. The candidate is the top: every game of this stage's pool at 46 rows a game, 6226944 rows, 137978 games
+candidate /home/max/ws/chesso/.tuning/s083/curve/s0/fit_6226944_s1.hpp
+READ-OUTCOME stop
+```
+
+The duplicate share at the top rung, printed and deciding nothing (DEC-304
+(5)):
+
+```
+6226944 rows read, 5621365 distinct positions written, 605579 dropped (9.7251%)
+repeats: 5137983 keys once, 384500 twice, 80415 three times, 18419 4-7, 48 8-15, 0 16 or more; most repeated 11
+```
+
+**By the pre-registered rule the outcome is stop at stage 0**: the top
+doubling gained +0.000067 against m 0.000082, so no chunk is generated and
+the candidate is `fit_6226944_s1.hpp`, every game of S082's training side at
+46 rows a game. The every-row density read 0.000055 lower than 46's, inside
+m; by DEC-304 (4) it decides nothing and is recorded. Two of DEC-304's
+nights are unspent. Next: `apply` on that fit in a clean worktree, then the
+landing's goldens by their scripts, then the commit and the SPRT.
+
