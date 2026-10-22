@@ -375,7 +375,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S289  **blocks S083 (DEC-305)** -- find by tool why S083's pasted constants hide a mate the parent finds and lose seven exact mined mates, and fix the search rule at fault as its own measured change
+1. S289  **blocks S083 (DEC-305); the null-move table guard is committed (DEC-306), its `{-5, 0}` SPRT at 8+0.08 pending** -- find by tool why S083's pasted constants hide a mate the parent finds and lose seven exact mined mates, and fix the search rule at fault as its own measured change
 2. S083  **paused by S289 (DEC-305): curve 0 read stop, the candidate is S082's pool at 46 rows a game; its paste hides a mate in two the parent finds and reads `EXACT_FLOOR` 157 against 163, so it re-lands after S289** -- the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships
 3. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
 4. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can

@@ -1,0 +1,91 @@
+# S289: the two new cases observed red and green (TESTS: a defect gets a minimized failing test before its fix,
+# the failure observed). TWO READINGS, and which is which:
+#   A. THE FINAL FORM, the one to read: fixture F3 c72ce84d193f04019b0aaeadf56f5572a01bca46 (4a3a0e5 plus the guard and the cases as
+#      they ship; a commit object on no branch), through tools/mutation_check.py -- its unmutated baseline (fast 50 of
+#      50 green) and NM01, which makes table_proves_mated false and so leaves the null-move condition reading as
+#      4a3a0e5's: the engine before S289, with the final cases. NM04 (the exact disjunct dropped) is read beside it
+#      for the mated-exact leg. Excerpts of each run's ctest log, the tool's own (adocs/data/S289_mutation.tsv).
+#   B. THE FIRST DRAFT, kept for the record: the red first observed, on 4a3a0e5 with the cases as first written
+#      (four legs; the test_search case's assertion then at :7409) and src/search.cpp untouched, before the guard
+#      existed. Superseded by A; nothing below B is read for the final cases.
+# C. Green on the final tree (../chesso-s289, bench 6042928) in both builds, and at S083's paste weights with the
+#    guard (../chesso-s289p, bench 3945685), re-run after the last edit.
+
+== A1. F3 under NM01 (the engine before S289), test_search "a node the table proves mated makes no null move"
+  rows reporting "passed against a mated upper bound": 104
+  rows reporting "passed against a mated exact score": 104
+  rows reporting "a lower bound stopped the pass": 0
+  rows reporting "an upper bound outside the band stopped the pass": 0
+  rows reporting "an exact score outside the band stopped the pass": 0
+  rows reporting "no entry, and no pass either": 0
+TEST CASE:  a node the table proves mated makes no null move
+
+tests/test_search.cpp:7437: FATAL ERROR: REQUIRE( violations.empty() ) is NOT correct!
+
+== A2. F3 under NM01, test_engine "a root mated in two reports the mate even where its node could pass"
+tests/test_engine.cpp:6070: FATAL ERROR: REQUIRE( hidden.empty() ) is NOT correct!
+  values: REQUIRE( false )
+  logged: roots mated in 2 that never report it:
+4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1, cp -676
+rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1, cp 0
+rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1, cp 0
+8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3, cp 0
+4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4, cp -672
+4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3, cp 0
+
+== A3. F3 under NM04 (the exact disjunct dropped), the same test_search case
+  rows reporting "passed against a mated upper bound": 0
+  rows reporting "passed against a mated exact score": 104
+  rows reporting "a lower bound stopped the pass": 0
+  rows reporting "an upper bound outside the band stopped the pass": 0
+  rows reporting "an exact score outside the band stopped the pass": 0
+  rows reporting "no entry, and no pass either": 0
+
+== A4. F3 unmutated, the tool's baseline: 100% tests passed, 0 tests failed out of 50
+
+== C. Green after the last edit
+-- ../chesso-s289 build test_search "a node the table proves mated makes no null move": Status: SUCCESS!
+-- ../chesso-s289 build test_engine "a root mated in two reports the mate even where its node could pass": Status: SUCCESS!
+-- ../chesso-s289 build test_engine "reverse futility at ply 2 does not hide a mate from the side to move": Status: SUCCESS!
+-- ../chesso-s289 build-tune test_search "a node the table proves mated makes no null move": Status: SUCCESS!
+-- ../chesso-s289 build-tune test_engine "a root mated in two reports the mate even where its node could pass": Status: SUCCESS!
+-- ../chesso-s289 build-tune test_engine "reverse futility at ply 2 does not hide a mate from the side to move": Status: SUCCESS!
+-- ../chesso-s289p build test_search "a node the table proves mated makes no null move": Status: SUCCESS!
+-- ../chesso-s289p build test_engine "a root mated in two reports the mate even where its node could pass": Status: SUCCESS!
+-- ../chesso-s289p build-tune test_search "a node the table proves mated makes no null move": Status: SUCCESS!
+-- ../chesso-s289p build-tune test_engine "a root mated in two reports the mate even where its node could pass": Status: SUCCESS!
+-- ../chesso-s289p build test_engine "reverse futility at ply 2 does not hide a mate from the side to move" (red, as section 5 of the step file says):
+tests/test_engine.cpp:5937: FATAL ERROR: REQUIRE( first_exact == 4 ) is NOT correct!
+  values: REQUIRE( 6 == 4 )
+[doctest] Status: FAILURE!
+
+== B. THE FIRST DRAFT (superseded by A; kept for the record of the red observed before the guard existed)
+== RED, shipped constants, test_search -tc="a node the table proves mated makes no null move"
+rows reported "passed against a mated upper bound": 104
+premise-leg violations (no entry, lower bound, out-of-band): 0
+  logged: 1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: passed against a mated upper bound
+2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: passed against a mated upper bound
+2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1: passed against a mated upper bound
+...
+/home/max/ws/chesso-s289/tests/test_search.cpp:7409: FATAL ERROR: REQUIRE( violations.empty() ) is NOT correct!
+  values: REQUIRE( false )
+[doctest] test cases:    1 |    0 passed | 1 failed | 216 skipped
+[doctest] assertions: 3957 | 3956 passed | 1 failed |
+[doctest] Status: FAILURE!
+
+== RED, shipped constants, test_engine -tc="a root mated in two reports the mate even where its node could pass"
+/home/max/ws/chesso-s289/tests/test_engine.cpp:5984:
+TEST SUITE: engine: mate safety
+TEST CASE:  a root mated in two reports the mate even where its node could pass
+/home/max/ws/chesso-s289/tests/test_engine.cpp:6065: FATAL ERROR: REQUIRE( hidden.empty() ) is NOT correct!
+  values: REQUIRE( false )
+  logged: roots mated in 2 that never report it:
+4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1, cp -676
+rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1, cp 0
+rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1, cp 0
+8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3, cp 0
+4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4, cp -672
+4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3, cp 0
+[doctest] test cases:    1 |    0 passed | 1 failed | 86 skipped
+[doctest] assertions: 1248 | 1247 passed | 1 failed |
+[doctest] Status: FAILURE!

@@ -1,0 +1,31 @@
+# S289: is the class the fix changes reached in ordinary play? S210's census shape (adocs/data/S210_f22_census.py
+# `positions`): every 10th position of adocs/data/S219_aa_calibration.pgn, the DEC-143 A/A at 8+0.08 on
+# noob_3moves.epd, 11503 of 115021, each searched at `go depth 10` from `ucinewgame` at the default Hash 16,
+# twelve processes (adocs/data/S289_census.py, S210's driver dealt round-robin). parent = 4a3a0e5's Release build
+# (bench 6042933), fix = S289's (bench 6042928). The engine's answers only.
+
+positions 11503
+  root best move moved   4 (0.035 %)
+  root score moved       11 (0.096 %)
+  node count moved       145 (1.26 %)
+  nodes                  981078149 -> 981184760, x1.000109
+
+the rows whose best move or score moved: fen, best before, after, score before, after
+3r2k1/2qbb1p1/2n1p3/2p1P3/p1PpR3/Pp1P1N2/1P3PPQ/K6R b - - 4 29	e7f6	d8f8	cp -463	cp -486
+r7/5pk1/6pp/4Q3/P6P/4P3/3q1PP1/1R4K1 b - - 5 51	g7h7	g7g8	cp -248	cp -269
+3k4/5pp1/3Pq2p/Q3P2P/2p2P2/6P1/8/6K1 b - - 2 70	d8d7	d8e8	cp -332	cp -332
+2r2rk1/p4p1p/6p1/1ppPb1q1/8/4P3/PP1B2B1/2RQ1R1K w - - 0 29	h1g1	f1f3	cp 8	cp 20
+rr4k1/1b2qp2/2p1nnp1/1pPP3p/p3p3/P1B1P2P/1Q1NBPP1/1R1R2K1 b - - 0 33	f6d5	f6d5	cp -95	cp -91
+7k/1p1q2p1/2p4p/3p1P2/3br3/5R2/2Q3PP/3R3K w - - 3 43	c2b1	c2b1	cp -96	cp -106
+2k1r3/2p3p1/1p2Np2/p2P4/q1b2B1r/b1P4P/P1PQ1P2/K2R3R w - - 3 23	d1b1	d1b1	cp -1231	cp -1190
+r4r1k/4Q1pp/2b2p2/pq1p4/2p5/2P3P1/1P3P1P/R3RBK1 w - - 3 28	f1g2	f1g2	cp -61	cp -62
+8/6p1/r7/6kP/p1R3P1/P6K/8/8 w - - 1 53	c4c5	c4c5	cp 216	cp 202
+4r1k1/1p3pbp/pq4p1/3r4/1R6/P3P3/2QN1PPP/4R1K1 b - - 0 26	b6c6	b6c6	cp 92	cp 103
+3r2k1/1p2q2p/p5p1/3r1p2/3b4/PR2PP2/2Q2NPP/4R1K1 b - - 3 31	b7b5	b7b5	cp 157	cp 154
+4b1k1/5p1p/p5pQ/3p1q2/3B4/1P5P/P4PP1/6K1 b - - 1 27	f7f6	f7f6	cp -1316	cp -1392
+
+Reading: the guard is the only difference between the two builds, so every moved node count is a search it changed:
+it reaches ordinary play -- a node proved mated by a shallower search and then reached at a depth that allows a
+pass is not confined to constructed sets -- in 145 of 11503 searches, and moves 4 root answers, against S210 F22's 194.
+DEC-242's discharge does not apply on its own terms (the bench moves by 5 nodes and root answers move), so the
+change is decided by SPRT (adocs/data/S289_sprt.sh).

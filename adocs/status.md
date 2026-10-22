@@ -7,6 +7,40 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-22, by hand.
 
+## 2026-10-22: S289 found the rule and the reach; its fix is committed, its SPRT pending (DEC-306)
+
+**S289's diagnosis** (one Opus 5.5 subagent, `../chesso-s289`; trace in
+`adocs/data/S289_trace.txt`): at S083's paste the ply-2 case's mating quiet
+is ordered 13th of 13 at ply 1 and reduced; the reduced search finds the
+defender's node mated and stores the upper bound; late move reduction
+re-searches it deeper and the defender's null move fails high (1406) against
+that bound. **Reached at the shipped weights, a BUGS-rule defect (DEC-171
+(c))**: six of the 31 S165 roots proved mated in two reported `cp 0` or about
+-670 through 12 iterations (`adocs/data/S289_reach.txt`). The paste's seven
+lost mined mates are reverse futility's and the multicut's known price
+(`RfpMinPly` 63 restores all 15 lost), no further defect.
+
+**The fix** (DEC-306): no null move where the table entry is an upper bound or
+exact in the mated band, from David-Tabibi and Netanyahu 2002 (DEC-221).
+Bench 6042933 -> 6042928; search_bench d9/d12 identical; floors 164/160 and
+12/7 unmoved; S170 budgets A, C, D moved by the rule, ceilings unmoved; two
+guard cases observed red at the shipped weights, four mutants killed (20 of
+20 in the pass); fast suite 50/50 both builds; gate_extra 5/5 green (997 s);
+**Debug self-play 8 games, 0 `Assertion`, 0 disconnect**. Fast check: no
+blocker, nine wording/coverage items, all fixed (the exact-score leg and NM04
+added; the defender sweep re-run: 82/104 against the parent's 77, m2 31/31
+against 25, m3 1/15 against 2). The `{-5, 0}` SPRT (`adocs/data/S289_sprt.sh`,
+12.1 h expected, cap 19.9 h) runs tonight; S083 re-lands on the guard first.
+
+**S083 at the paste with the guard** (`adocs/data/S289_paste.txt`): the ply-2
+case reports `mate -2` from iteration 6, still red at its clause (4);
+`EXACT_FLOOR` 158 against 163 (155 weakened); `MATE_IN_THREE_FLOOR` 12/11.
+
+Scratch worktrees `../chesso-s289p`, `../chesso-s289t`, `../chesso-s289pt`
+kept for the owner to prune; fixtures F1 `efa6831`, F2 `9d7639e`, F3
+`c72ce84`, P `64b7fd8` are commit objects on no branch. **Disk: 15 GB free
+(97 %).**
+
 ## 2026-10-22: S111 H0, recorded as zero; S083 curve 0 stop, its paste hides a mate: S289 (DEC-305)
 
 **S111 read H0** at 10:22 (32+0.32, Hash 64, `{0, 10}`), played from the

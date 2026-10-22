@@ -1,0 +1,379 @@
+# S289: the trace that names the node and the rule. adocs/data/S289_trace.py instruments a scratch
+# tree's src/search.cpp (never shipped): every negamax node whose key is one of the given FENs prints
+# its entry ('>': node N<i> of the line, iteration, ply, remaining depth, window, PV flag, cut flag) and
+# its exit ('<': value, the rule that returned -- loop, tt, null, rfp, razor, probcut, multicut, qs-leaf,
+# mated, repetition -- the corrected static score 'se' and 'x': for tt, entry depth*10+type, TT_PV_NODE 1,
+# TT_ALPHA_NODE 2, TT_BETA_NODE 3; for null, the null child's depth; for loop, the stored type); each
+# child a traced node searched ('move', its order number, child depth, reduction, score). Driven through
+# UCI 'go depth N' as tests/test_engine.cpp's deepen_scores() drives it. Only lines for the root (N0 at
+# ply 0), the mated side's ply-1 parent (N1) exits, the mating move and the ply-2 node are kept here.
+# The tune build at its defaults benches the Release build's totals (6042933 shipped, 3945685 paste);
+# S289_GUARD set switches the fix on in the scratch build (6042928, the fix's Release total).
+# Chess facts are the case's own oracle and python-chess's legal-move lists; nothing read off the board.
+
+== 1. S083's paste (5a22a9c + the paste's eval hunks), tests/test_engine.cpp's ply-2 case,
+==    rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2, the line h1g1 g8f8 g1h1 f8f1 (N0..N4)
+info score cp 1168 time 0 depth 1 nodes 3 nps 12096 hashfull 0 pv h1g1
+info score cp 1125 time 0 depth 2 nodes 71 nps 86585 hashfull 0 pv h1g1 g3f4
+info score cp 1009 time 0 depth 3 nodes 141 nps 151939 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 time 1 depth 4 nodes 286 nps 281773 hashfull 0 pv h1g1 g8h8 g1h1 h8h7
+info score cp 1027 time 1 depth 5 nodes 488 nps 432624 hashfull 0 pv h1g1 g8h8 g1f1 h8h7
+info score cp 996 time 1 depth 6 nodes 932 nps 732704 hashfull 0 pv h1g1 g3f4 g1h2 g8h8
+info score cp 978 time 1 depth 7 nodes 1726 nps 1111397 hashfull 0 pv h1g1 g8g7 g1f1 g7h7
+info score cp 913 time 1 depth 8 nodes 2269 nps 1286281 hashfull 0 pv h1g1 g8g7 g1f1 g7h7
+bestmove h1g1 ponder g8g7
+ITER 1 [-2000000000,2000000000]
+  < N1 it1 ply1 d0 [-2000000000,2000000000] -> -1168 by qs-leaf se 99999 x 99999
+< N0 it1 ply0 d1 [-2000000000,2000000000] -> 1168 by loop se 1149 x 1
+ITER 2 [1147,1189]
+    > N2 it2 ply2 d0 [1184,1185] pv0 cut1 ex 0000 prev g8f8
+    < N2 it2 ply2 d0 [1184,1185] -> 1160 by qs-leaf se 99999 x 99999
+    > N2 it2 ply2 d0 [1147,1185] pv1 cut0 ex 0000 prev g8f8
+    < N2 it2 ply2 d0 [1147,1185] -> 1160 by qs-leaf se 99999 x 99999
+    move g8f8 #3 cd 0 red 0 -> -1160  (a -1185 b -1147)
+  < N1 it2 ply1 d1 [-1189,-1147] -> -1125 by loop se -1168 x 3
+< N0 it2 ply0 d2 [1147,1189] -> 1125 by loop se 1149 x 2
+ITER 2 [1104,1158]
+    > N2 it2 ply2 d0 [1124,1125] pv0 cut1 ex 0000 prev g8f8
+    < N2 it2 ply2 d0 [1124,1125] -> 1160 by qs-leaf se 99999 x 99999
+    move g8f8 #10 cd 0 red 0 -> -1160  (a -1125 b -1104)
+  < N1 it2 ply1 d1 [-1158,-1104] -> -1125 by loop se -1168 x 1
+< N0 it2 ply0 d2 [1104,1158] -> 1125 by loop se 1149 x 1
+ITER 3 [1104,1146]
+    > N2 it3 ply2 d1 [1124,1125] pv0 cut1 ex 0000 prev g8f8
+    < N2 it3 ply2 d1 [1124,1125] -> 1141 by loop se 1159 x 3
+    move g8f8 #10 cd 1 red 0 -> -1141  (a -1125 b -1104)
+  < N1 it3 ply1 d2 [-1146,-1104] -> -1009 by loop se -1167 x 3
+< N0 it3 ply0 d3 [1104,1146] -> 1009 by loop se 1148 x 2
+ITER 3 [988,1115]
+    > N2 it3 ply2 d1 [1008,1009] pv0 cut1 ex 0000 prev g8f8
+    < N2 it3 ply2 d1 [1008,1009] -> 1141 by tt se 99999 x 13
+    move g8f8 #13 cd 1 red 0 -> -1141  (a -1009 b -988)
+  < N1 it3 ply1 d2 [-1115,-988] -> -1009 by loop se -1166 x 1
+< N0 it3 ply0 d3 [988,1115] -> 1009 by loop se 1145 x 1
+ITER 4 [988,1030]
+    > N2 it4 ply2 d1 [1008,1009] pv0 cut1 ex 0000 prev g8f8
+    < N2 it4 ply2 d1 [1008,1009] -> 1141 by tt se 99999 x 13
+    move g8f8 #13 cd 2 red 1 -> -1141  (a -1009 b -988)
+  < N1 it4 ply1 d3 [-1030,-988] -> -1009 by loop se -1164 x 1
+< N0 it4 ply0 d4 [988,1030] -> 1009 by loop se 1141 x 1
+ITER 5 [988,1030]
+    > N2 it5 ply2 d1 [1026,1027] pv0 cut1 ex 0000 prev g8f8
+    < N2 it5 ply2 d1 [1026,1027] -> 1141 by tt se 99999 x 13
+    move g8f8 #13 cd 3 red 2 -> -1141  (a -1027 b -988)
+  < N1 it5 ply1 d4 [-1030,-988] -> -1027 by loop se -1161 x 1
+< N0 it5 ply0 d5 [988,1030] -> 1027 by loop se 1136 x 1
+ITER 6 [1006,1048]
+  < N1 it6 ply1 d5 [-1048,-1006] -> -999 by loop se -1154 x 3
+< N0 it6 ply0 d6 [1006,1048] -> 999 by loop se 1129 x 2
+ITER 6 [978,1017]
+    > N2 it6 ply2 d2 [995,996] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [995,996] -> -48996 by loop se 1134 x 2
+    > N2 it6 ply2 d5 [995,996] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [995,996] -> 1406 by null se 1134 x 1
+    move g8f8 #13 cd 4 red 2 -> -1406  (a -996 b -978)
+  < N1 it6 ply1 d5 [-1017,-978] -> -996 by loop se -1150 x 1
+< N0 it6 ply0 d6 [978,1017] -> 996 by loop se 1122 x 1
+ITER 7 [975,1017]
+  < N1 it7 ply1 d2 [-1003,-1002] -> -999 by loop se -1139 x 3
+    > N2 it7 ply2 d3 [977,978] pv0 cut1 ex 0000 prev g8f8
+    < N2 it7 ply2 d3 [977,978] -> -48996 by loop se 1125 x 2
+    > N2 it7 ply2 d6 [977,978] pv0 cut1 ex 0000 prev g8f8
+    < N2 it7 ply2 d6 [977,978] -> 1406 by null se 1125 x 1
+    move g8f8 #10 cd 5 red 2 -> -1406  (a -978 b -975)
+  < N1 it7 ply1 d6 [-1017,-975] -> -978 by loop se -1139 x 1
+< N0 it7 ply0 d7 [975,1017] -> 978 by loop se 1119 x 1
+ITER 8 [957,999]
+    > N2 it8 ply2 d1 [985,986] pv0 cut1 ex 0000 prev g8f8
+    < N2 it8 ply2 d1 [985,986] -> -48996 by tt se 99999 x 32
+    > N2 it8 ply2 d2 [985,986] pv0 cut1 ex 0000 prev g8f8
+    < N2 it8 ply2 d2 [985,986] -> -48996 by tt se 99999 x 32
+    move g8f8 #10 cd 2 red 1 -> 48996  (a -986 b -985)
+  < N1 it8 ply1 d3 [-986,-985] -> 48996 by loop se -1129 x 3
+  < N1 it8 ply1 d7 [-999,-957] -> -957 by loop se -1129 x 3
+< N0 it8 ply0 d8 [957,999] -> 957 by loop se 1111 x 2
+ITER 8 [936,968]
+    > N2 it8 ply2 d2 [964,965] pv0 cut1 ex 0000 prev g8f8
+    < N2 it8 ply2 d2 [964,965] -> -48996 by tt se 99999 x 32
+    move g8f8 #2 cd 2 red 0 -> 48996  (a -965 b -964)
+  < N1 it8 ply1 d3 [-965,-964] -> 48996 by loop se -1127 x 3
+  < N1 it8 ply1 d7 [-968,-936] -> -925 by loop se -1127 x 3
+< N0 it8 ply0 d8 [936,968] -> 925 by loop se 1107 x 2
+ITER 8 [893,944]
+    > N2 it8 ply2 d2 [932,933] pv0 cut1 ex 0000 prev g8f8
+    < N2 it8 ply2 d2 [932,933] -> -48996 by tt se 99999 x 32
+    move g8f8 #2 cd 2 red 0 -> 48996  (a -933 b -932)
+  < N1 it8 ply1 d3 [-933,-932] -> 48996 by loop se -1126 x 3
+    > N2 it8 ply2 d6 [912,913] pv0 cut1 ex 0000 prev g8f8
+    < N2 it8 ply2 d6 [912,913] -> 1406 by null se 1116 x 1
+    move g8f8 #3 cd 6 red 0 -> -1406  (a -913 b -893)
+  < N1 it8 ply1 d7 [-944,-893] -> -913 by loop se -1126 x 1
+< N0 it8 ply0 d8 [893,944] -> 913 by loop se 1105 x 1
+
+== 2. the same root, shipped constants (4a3a0e5): g8f8 is ordered third at ply 1 from iteration 2,
+==    unreduced at 4, the mate found there and the line a PV from then on (PV nodes make no null move)
+info score cp 854 time 0 depth 1 nodes 3 nps 9646 hashfull 0 pv h1g1
+info score cp 855 time 0 depth 2 nodes 40 nps 51679 hashfull 0 pv h1g1 g3g4
+info score cp 874 time 0 depth 3 nodes 92 nps 109134 hashfull 0 pv h1g1 g8h8 g1h1
+info score mate -2 time 1 depth 4 nodes 366 nps 363455 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+info score mate -2 time 1 depth 5 nodes 749 nps 652439 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+info score mate -2 time 1 depth 6 nodes 1405 nps 1036900 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+info score mate -2 time 1 depth 7 nodes 2263 nps 1428661 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+info score mate -2 time 1 depth 8 nodes 3617 nps 1980832 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+bestmove h1g1 ponder g8f8
+ITER 1 [-2000000000,2000000000]
+  < N1 it1 ply1 d0 [-2000000000,2000000000] -> -854 by qs-leaf se 99999 x 99999
+< N0 it1 ply0 d1 [-2000000000,2000000000] -> 854 by loop se 1029 x 1
+ITER 2 [833,875]
+    > N2 it2 ply2 d0 [874,875] pv0 cut1 ex 0000 prev g8f8
+    < N2 it2 ply2 d0 [874,875] -> 867 by qs-leaf se 99999 x 99999
+    > N2 it2 ply2 d0 [833,875] pv1 cut0 ex 0000 prev g8f8
+    < N2 it2 ply2 d0 [833,875] -> 867 by qs-leaf se 99999 x 99999
+    move g8f8 #3 cd 0 red 0 -> -867  (a -875 b -833)
+  < N1 it2 ply1 d1 [-875,-833] -> -855 by loop se -854 x 1
+< N0 it2 ply0 d2 [833,875] -> 855 by loop se 1029 x 1
+ITER 3 [834,876]
+    > N2 it3 ply2 d1 [875,876] pv0 cut1 ex 0000 prev g8f8
+    < N2 it3 ply2 d1 [875,876] -> 1043 by loop se 866 x 3
+    move g8f8 #3 cd 1 red 0 -> -1043  (a -876 b -834)
+  < N1 it3 ply1 d2 [-876,-834] -> -874 by loop se -854 x 1
+< N0 it3 ply0 d3 [834,876] -> 874 by loop se 1027 x 1
+ITER 4 [853,895]
+    > N2 it4 ply2 d2 [873,874] pv0 cut1 ex 0000 prev g8f8
+    < N2 it4 ply2 d2 [873,874] -> -48996 by loop se 865 x 2
+    move g8f8 #3 cd 2 red 0 -> 48996  (a -874 b -853)
+  < N1 it4 ply1 d3 [-895,-853] -> 48996 by loop se -854 x 3
+< N0 it4 ply0 d4 [853,895] -> -48996 by loop se 1027 x 2
+ITER 4 [-2000000000,2000000000]
+    > N2 it4 ply2 d2 [-2000000000,2000000000] pv1 cut0 ex 0000 prev g8f8
+    < N2 it4 ply2 d2 [-2000000000,2000000000] -> -48996 by loop se 865 x 1
+    move g8f8 #1 cd 2 red 0 -> 48996  (a -2000000000 b 2000000000)
+  < N1 it4 ply1 d3 [-2000000000,2000000000] -> 48996 by loop se -854 x 1
+< N0 it4 ply0 d4 [-2000000000,2000000000] -> -48996 by loop se 1027 x 1
+ITER 5 [-2000000000,2000000000]
+    > N2 it5 ply2 d3 [-2000000000,2000000000] pv1 cut0 ex 0000 prev g8f8
+    < N2 it5 ply2 d3 [-2000000000,2000000000] -> -48996 by loop se 865 x 1
+    move g8f8 #1 cd 3 red 0 -> 48996  (a -2000000000 b 2000000000)
+  < N1 it5 ply1 d4 [-2000000000,2000000000] -> 48996 by loop se -854 x 1
+< N0 it5 ply0 d5 [-2000000000,2000000000] -> -48996 by loop se 1027 x 1
+ITER 6 [-2000000000,2000000000]
+    > N2 it6 ply2 d4 [-2000000000,2000000000] pv1 cut0 ex 0000 prev g8f8
+    < N2 it6 ply2 d4 [-2000000000,2000000000] -> -48996 by loop se 865 x 1
+    move g8f8 #1 cd 4 red 0 -> 48996  (a -2000000000 b 2000000000)
+  < N1 it6 ply1 d5 [-2000000000,2000000000] -> 48996 by loop se -854 x 1
+
+== 3. the paste with RfpMinPly 63: the mate at 8 only because the root's score collapsed to ~0 on a
+==    repetition line, so beta at ply 2 is 21 and the same null search no longer clears it
+info score cp 1168 time 0 depth 1 nodes 3 nps 12711 hashfull 0 pv h1g1
+info score cp 1125 time 0 depth 2 nodes 71 nps 100000 hashfull 0 pv h1g1 g3f4
+info score cp 1009 time 0 depth 3 nodes 141 nps 179389 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 time 0 depth 4 nodes 287 nps 340047 hashfull 0 pv h1g1 g8h8 g1h1 h8h7
+info score cp 0 time 0 depth 5 nodes 412 nps 418699 hashfull 0 pv h1g1 g8h8 g1h1 h8g8
+info score cp 969 time 1 depth 6 nodes 1616 nps 1135628 hashfull 0 pv h1g1 g8h8 g1f1 g3f4
+info score cp 0 time 1 depth 7 nodes 3210 nps 1771523 hashfull 0 pv h1g1 g3f3 g1h1 f3g3
+info score mate -2 time 2 depth 8 nodes 4906 nps 2179475 hashfull 1 pv h1g1 g8f8 g1h1 f8f1
+bestmove h1g1 ponder g8f8
+ITER 6 [-21,21]
+    > N2 it6 ply2 d2 [20,21] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [20,21] -> -48996 by loop se 1134 x 2
+    > N2 it6 ply2 d5 [20,21] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [20,21] -> 1221 by null se 1134 x 1
+  < N1 it6 ply1 d5 [-21,21] -> -412 by loop se -1151 x 2
+< N0 it6 ply0 d6 [-21,21] -> 412 by loop se 1124 x 3
+ITER 6 [-21,433]
+    > N2 it6 ply2 d2 [432,433] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [432,433] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [432,433] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [432,433] -> 1221 by null se 1135 x 1
+  < N1 it6 ply1 d5 [-433,21] -> -433 by loop se -1152 x 2
+< N0 it6 ply0 d6 [-21,433] -> 433 by loop se 1123 x 3
+ITER 6 [-21,465]
+    > N2 it6 ply2 d2 [464,465] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [464,465] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [464,465] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [464,465] -> 1221 by null se 1135 x 1
+  < N1 it6 ply1 d5 [-465,21] -> -475 by loop se -1152 x 2
+< N0 it6 ply0 d6 [-21,465] -> 475 by loop se 1124 x 3
+ITER 6 [-21,524]
+    > N2 it6 ply2 d2 [523,524] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [523,524] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [523,524] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [523,524] -> 1221 by null se 1135 x 1
+  < N1 it6 ply1 d5 [-524,21] -> -569 by loop se -1152 x 2
+< N0 it6 ply0 d6 [-21,524] -> 569 by loop se 1124 x 3
+ITER 6 [-21,644]
+    > N2 it6 ply2 d2 [643,644] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [643,644] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [643,644] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [643,644] -> 1221 by null se 1136 x 1
+  < N1 it6 ply1 d5 [-644,21] -> -647 by loop se -1152 x 2
+< N0 it6 ply0 d6 [-21,644] -> 647 by loop se 1124 x 3
+ITER 6 [-21,763]
+    > N2 it6 ply2 d2 [762,763] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [762,763] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [762,763] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [762,763] -> 1221 by null se 1137 x 1
+  < N1 it6 ply1 d5 [-763,21] -> -765 by loop se -1152 x 2
+< N0 it6 ply0 d6 [-21,763] -> 765 by loop se 1125 x 3
+ITER 6 [-21,944]
+    > N2 it6 ply2 d2 [943,944] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [943,944] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [943,944] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [943,944] -> 1221 by null se 1141 x 1
+  < N1 it6 ply1 d5 [-944,21] -> -947 by loop se -1152 x 2
+< N0 it6 ply0 d6 [-21,944] -> 947 by loop se 1126 x 3
+ITER 6 [-21,1224]
+    > N2 it6 ply2 d2 [968,969] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d2 [968,969] -> -48996 by tt se 99999 x 22
+    > N2 it6 ply2 d5 [968,969] pv0 cut1 ex 0000 prev g8f8
+    < N2 it6 ply2 d5 [968,969] -> 1221 by null se 1138 x 1
+  < N1 it6 ply1 d5 [-1224,21] -> -969 by loop se -1155 x 1
+< N0 it6 ply0 d6 [-21,1224] -> 969 by loop se 1130 x 1
+ITER 7 [948,990]
+  < N1 it7 ply1 d2 [-976,-975] -> -987 by loop se -1146 x 2
+  < N1 it7 ply1 d6 [-990,-948] -> 0 by loop se -1146 x 3
+< N0 it7 ply0 d7 [948,990] -> 0 by loop se 1122 x 2
+
+== 4. shipped constants, a row of adocs/data/S165_defender_set.tsv proved mated in 2,
+==    rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1, the line g7g8 g5g6 g8f8 h3h8: the same mechanism
+-- without the guard (4a3a0e5)
+info score cp 537 time 0 depth 1 nodes 5 nps 9671 hashfull 0 pv g7f8
+info score cp 424 time 5 depth 2 nodes 80 nps 15114 hashfull 0 pv g7g8 h3f5
+info score cp 0 time 5 depth 3 nodes 164 nps 29656 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 5 depth 4 nodes 201 nps 35809 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 5 depth 5 nodes 265 nps 46328 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 5 depth 6 nodes 391 nps 66757 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 6 depth 7 nodes 571 nps 94708 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 6 depth 8 nodes 814 nps 131015 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 6 depth 9 nodes 1023 nps 159993 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 6 depth 10 nodes 1156 nps 177137 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 6 depth 11 nodes 1350 nps 201823 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 9 depth 12 nodes 1653 nps 167562 hashfull 0 pv g7g8 h3h6
+bestmove g7g8 ponder h3h6
+ITER 1 [-2000000000,2000000000]
+  < N1 it1 ply1 d0 [-538,-537] -> -502 by qs-leaf se 99999 x 99999
+< N0 it1 ply0 d1 [-2000000000,2000000000] -> 537 by loop se 501 x 1
+ITER 2 [516,558]
+  < N1 it2 ply1 d1 [-517,-516] -> -445 by loop se -502 x 3
+< N0 it2 ply0 d2 [516,558] -> 445 by loop se 501 x 2
+ITER 2 [424,527]
+  < N1 it2 ply1 d1 [-527,-424] -> -424 by loop se -502 x 3
+< N0 it2 ply0 d2 [424,527] -> 424 by loop se 500 x 2
+ITER 2 [392,450]
+    > N2 it2 ply2 d0 [423,424] pv0 cut1 ex 0000 prev g5g6
+    < N2 it2 ply2 d0 [423,424] -> 472 by qs-leaf se 99999 x 99999
+    move g5g6 #17 cd 0 red 0 -> -472  (a -424 b -392)
+  < N1 it2 ply1 d1 [-450,-392] -> -424 by loop se -501 x 1
+< N0 it2 ply0 d2 [392,450] -> 424 by loop se 499 x 1
+ITER 3 [403,445]
+  < N1 it3 ply1 d2 [-445,-403] -> 0 by loop se -500 x 3
+< N0 it3 ply0 d3 [403,445] -> 0 by loop se 497 x 2
+ITER 3 [-21,414]
+    > N2 it3 ply2 d1 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it3 ply2 d1 [-1,0] -> 255 by loop se 466 x 3
+    move g5g6 #17 cd 1 red 0 -> -255  (a 0 b 21)
+  < N1 it3 ply1 d2 [-414,21] -> 0 by loop se -499 x 1
+< N0 it3 ply0 d3 [-21,414] -> 0 by loop se 495 x 1
+ITER 4 [-21,21]
+    > N2 it4 ply2 d1 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it4 ply2 d1 [-1,0] -> 255 by tt se 99999 x 13
+    move g5g6 #17 cd 2 red 1 -> -255  (a 0 b 21)
+  < N1 it4 ply1 d3 [-21,21] -> 0 by loop se -497 x 1
+< N0 it4 ply0 d4 [-21,21] -> 0 by loop se 492 x 1
+ITER 5 [-21,21]
+    > N2 it5 ply2 d1 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it5 ply2 d1 [-1,0] -> 255 by tt se 99999 x 13
+    move g5g6 #17 cd 3 red 2 -> -255  (a 0 b 21)
+  < N1 it5 ply1 d4 [-21,21] -> 0 by loop se -495 x 1
+< N0 it5 ply0 d5 [-21,21] -> 0 by loop se 488 x 1
+ITER 6 [-21,21]
+    > N2 it6 ply2 d2 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it6 ply2 d2 [-1,0] -> 255 by loop se 455 x 3
+    move g5g6 #17 cd 4 red 2 -> -255  (a 0 b 21)
+  < N1 it6 ply1 d5 [-21,21] -> 0 by loop se -491 x 1
+< N0 it6 ply0 d6 [-21,21] -> 0 by loop se 484 x 1
+ITER 7 [-21,21]
+  < N1 it7 ply1 d2 [-7,-6] -> -1424 by loop se -486 x 2
+    > N2 it7 ply2 d3 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it7 ply2 d3 [-1,0] -> -48996 by loop se 450 x 2
+    > N2 it7 ply2 d6 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it7 ply2 d6 [-1,0] -> 280 by null se 450 x 1
+    move g5g6 #17 cd 5 red 2 -> -280  (a 0 b 21)
+  < N1 it7 ply1 d6 [-21,21] -> 0 by loop se -486 x 1
+< N0 it7 ply0 d7 [-21,21] -> 0 by loop se 479 x 1
+ITER 8 [-21,21]
+  < N1 it8 ply1 d3 [-8,-7] -> -201 by loop se -480 x 2
+    > N2 it8 ply2 d3 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it8 ply2 d3 [-1,0] -> -48996 by tt se 99999 x 32
+    > N2 it8 ply2 d7 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it8 ply2 d7 [-1,0] -> 209 by null se 444 x 2
+    move g5g6 #17 cd 6 red 3 -> -209  (a 0 b 21)
+  < N1 it8 ply1 d7 [-21,21] -> 0 by loop se -480 x 1
+< N0 it8 ply0 d8 [-21,21] -> 0 by loop se 473 x 1
+ITER 9 [-21,21]
+  < N1 it9 ply1 d3 [-9,-8] -> -201 by loop se -474 x 2
+    > N2 it9 ply2 d4 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it9 ply2 d4 [-1,0] -> -48996 by loop se 438 x 2
+    > N2 it9 ply2 d8 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it9 ply2 d8 [-1,0] -> 209 by null se 438 x 3
+    move g5g6 #17 cd 7 red 3 -> -209  (a 0 b 21)
+  < N1 it9 ply1 d8 [-21,21] -> 0 by loop se -474 x 1
+< N0 it9 ply0 d9 [-21,21] -> 0 by loop se 467 x 1
+ITER 10 [-21,21]
+  < N1 it10 ply1 d4 [-10,-9] -> -13 by loop se -468 x 2
+    > N2 it10 ply2 d5 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it10 ply2 d5 [-1,0] -> 209 by null se 435 x 1
+    move g5g6 #17 cd 8 red 3 -> -209  (a 0 b 21)
+  < N1 it10 ply1 d9 [-21,21] -> 0 by loop se -468 x 1
+< N0 it10 ply0 d10 [-21,21] -> 0 by loop se 462 x 1
+ITER 11 [-21,21]
+  < N1 it11 ply1 d4 [-11,-10] -> -13 by loop se -463 x 2
+    > N2 it11 ply2 d6 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it11 ply2 d6 [-1,0] -> 209 by null se 432 x 1
+    move g5g6 #17 cd 9 red 3 -> -209  (a 0 b 21)
+  < N1 it11 ply1 d10 [-21,21] -> 0 by loop se -463 x 1
+< N0 it11 ply0 d11 [-21,21] -> 0 by loop se 459 x 1
+ITER 12 [-21,21]
+    > N2 it12 ply2 d1 [11,12] pv0 cut1 ex 0000 prev g5g6
+    < N2 it12 ply2 d1 [11,12] -> -48996 by tt se 99999 x 42
+    > N2 it12 ply2 d5 [11,12] pv0 cut1 ex 0000 prev g5g6
+    < N2 it12 ply2 d5 [11,12] -> 209 by null se 431 x 1
+    move g5g6 #16 cd 4 red 3 -> -209  (a -12 b -11)
+  < N1 it12 ply1 d5 [-12,-11] -> -13 by loop se -463 x 2
+    > N2 it12 ply2 d7 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it12 ply2 d7 [-1,0] -> 209 by null se 431 x 2
+    move g5g6 #17 cd 10 red 3 -> -209  (a 0 b 21)
+  < N1 it12 ply1 d11 [-21,21] -> 0 by loop se -463 x 1
+< N0 it12 ply0 d12 [-21,21] -> 0 by loop se 457 x 1
+-- with the guard (S289)
+info score cp 537 time 0 depth 1 nodes 5 nps 21459 hashfull 0 pv g7f8
+info score cp 424 time 1 depth 2 nodes 80 nps 72267 hashfull 0 pv g7g8 h3f5
+info score cp 0 time 1 depth 3 nodes 164 nps 115411 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 4 depth 4 nodes 201 nps 46090 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 4 depth 5 nodes 265 nps 59297 hashfull 0 pv g7g8 h3h6
+info score cp 0 time 4 depth 6 nodes 391 nps 84852 hashfull 0 pv g7g8 h3h6
+info score mate -2 time 5 depth 7 nodes 1921 nps 366673 hashfull 1 pv g7g8 g5g6 g8f8 h3h8
+info score mate -2 time 5 depth 8 nodes 4215 nps 716471 hashfull 3 pv g7g8 g5g6 g8f8 h3h8
+info score mate -2 time 7 depth 9 nodes 8058 nps 1135729 hashfull 3 pv g7g8 g5g6 g8f8 h3h8
+info score mate -2 time 9 depth 10 nodes 14221 nps 1577832 hashfull 3 pv g7g8 g5g6 g8f8 h3h8
+info score mate -2 time 16 depth 11 nodes 22242 nps 1348081 hashfull 5 pv g7g8 g5g6 g8f8 h3h8
+info score mate -2 time 19 depth 12 nodes 33058 nps 1728432 hashfull 5 pv g7g8 g5g6 g8f8 h3h8
+bestmove g7g8 ponder g5g6
+ITER 6 [-21,21]
+    > N2 it6 ply2 d2 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it6 ply2 d2 [-1,0] -> 255 by loop se 455 x 3
+  < N1 it6 ply1 d5 [-21,21] -> 0 by loop se -491 x 1
+< N0 it6 ply0 d6 [-21,21] -> 0 by loop se 484 x 1
+ITER 7 [-21,21]
+  < N1 it7 ply1 d2 [-7,-6] -> -1424 by loop se -486 x 2
+    > N2 it7 ply2 d3 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it7 ply2 d3 [-1,0] -> -48996 by loop se 450 x 2
+    > N2 it7 ply2 d6 [-1,0] pv0 cut1 ex 0000 prev g5g6
+    < N2 it7 ply2 d6 [-1,0] -> -48996 by loop se 450 x 2
+  < N1 it7 ply1 d6 [-21,21] -> 48996 by loop se -486 x 3
+< N0 it7 ply0 d7 [-21,21] -> -48996 by loop se 479 x 2
+ITER 7 [-2000000000,2000000000]
+    > N2 it7 ply2 d5 [-2000000000,2000000000] pv1 cut0 ex 0000 prev g5g6
+    < N2 it7 ply2 d5 [-2000000000,2000000000] -> -48996 by loop se 450 x 1
+  < N1 it7 ply1 d6 [-2000000000,2000000000] -> 48996 by loop se -486 x 1
+< N0 it7 ply0 d7 [-2000000000,2000000000] -> -48996 by loop se 479 x 1

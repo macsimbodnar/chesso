@@ -7296,6 +7296,148 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // Mutations, tools/mutants/S289_null_move_table_guard.py:
+  //   NM01_nmp_table_mated_guard_dropped -- the guard removed, the engine
+  //     before S289: the guarded leg is red on every row
+  //   NM02_nmp_table_guard_any_bound -- a lower bound in the band also stops
+  //     the pass: the lower-bound leg is red
+  //   NM03_nmp_table_guard_any_upper_bound -- any upper bound stops the pass,
+  //     the band dropped: the out-of-band leg is red
+  //   NM04_nmp_table_guard_exact_dropped -- an exact score in the band no
+  //     longer stops the pass: the mated-exact leg is red
+  //
+  //   search: pruning and reduction guards
+  //    a node the table proves mated makes no null move
+  //   REQUIRE( violations.empty() )
+  //   values: REQUIRE( false )
+  //
+  // S165's guard reads the mate off the window: a beta inside the mated band.
+  // This one reads it off the table, where the window says nothing -- the
+  // case S289 traced: a reduced search finds the node mated by every move it
+  // searched and leaves that as an upper bound, late move reduction
+  // re-searches the move at full depth with an ordinary window, and the pass
+  // made there fails high (tests/test_engine.cpp, "a root mated in two
+  // reports the mate even where its node could pass", has the mechanism and
+  // the reach).
+  //
+  // Six legs a row, so the guard and not some other condition is what stops
+  // the pass: with no entry the pass is made (the premise), and it is made
+  // again with the same mated score held as a lower bound, which says nothing
+  // about this node's moves, and with an upper bound or an exact score outside
+  // the band, which are estimates a deeper search may overturn. Only the mated
+  // upper bound and the mated exact score stop it.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a node the table proves mated makes no null move")
+  {
+    const std::vector<defender_row_t> rows = read_defender_set();
+
+    // Golden, DEC-142, the sibling case's: re-derive with
+    //   grep -vc '^#' adocs/data/S165_defender_set.tsv
+    // which counts the header row as well.
+    REQUIRE_MESSAGE(rows.size() == 104,
+                    ("adocs/data/S165_defender_set.tsv is not the tracked set "
+                     "any more: " +
+                     std::to_string(rows.size()) + " rows, expected 104"));
+
+    // A shallower search's entry: below the drive's depth, so the table does
+    // not answer the node and the null-move block is reached.
+    static constexpr int ENTRY_DEPTH = 1;
+    REQUIRE(ENTRY_DEPTH < NULL_DRIVE_DEPTH);
+
+    enum class seed_t
+    {
+      NONE,
+      MATED_UPPER,
+      MATED_EXACT,
+      MATED_LOWER,
+      PLAIN_UPPER,
+      PLAIN_EXACT
+    };
+
+    std::string violations;
+    size_t scored = 0;
+
+    for (const defender_row_t& row : rows) {
+      // The mate against the side to move in k, as this node sees it, and
+      // as the table holds it: normalize_score() counts a mated score from
+      // the root, so the node's ply comes back out of it on the way in.
+      const int mated_here = -(MATE_MAX_LOCAL - row.ply - 2 * row.mated_in);
+      const int mated_stored = mated_here - row.ply;
+
+      REQUIRE_MESSAGE(mated_here <= -MATE_MIN_LOCAL,
+                      (row.fen + ": the proof is not inside the mated band"));
+
+      const auto drive = [&](seed_t seed) -> bool {
+        load(row.fen, row.ply);
+
+        // The node's own static score, an ordinary window, as the sibling
+        // drives set it since S114's second verdict.
+        const int beta = evaluate(&game.board);
+        require_null_move_preconditions(NULL_DRIVE_DEPTH, beta, PREV_MOVE);
+        REQUIRE(row.ply > 0);
+
+        if (seed == seed_t::MATED_UPPER) {
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, mated_stored,
+                         TT_ALPHA_NODE, 0);
+        } else if (seed == seed_t::MATED_EXACT) {
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, mated_stored,
+                         TT_PV_NODE, 0);
+        } else if (seed == seed_t::MATED_LOWER) {
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, mated_stored,
+                         TT_BETA_NODE, 0);
+        } else if (seed == seed_t::PLAIN_UPPER) {
+          REQUIRE(beta - 1 > -MATE_MIN_LOCAL);
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, beta - 1, TT_ALPHA_NODE,
+                         0);
+        } else if (seed == seed_t::PLAIN_EXACT) {
+          REQUIRE(beta - 1 > -MATE_MIN_LOCAL);
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, beta - 1, TT_PV_NODE,
+                         0);
+        }
+
+        negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH,
+                       static_cast<size_t>(row.ply), &game, &state, PREV_MOVE,
+                       false);
+
+        // A pass that fails high returns before the move loop; one that was
+        // never made has to have come from the block deciding, not from an
+        // early exit above it.
+        if (!probe.null_move_made) { require_the_node_reached_its_move_loop(); }
+
+        return probe.null_move_made;
+      };
+
+      if (!drive(seed_t::NONE)) {
+        violations += row.fen + ": no entry, and no pass either\n";
+      }
+      if (drive(seed_t::MATED_UPPER)) {
+        violations += row.fen + ": passed against a mated upper bound\n";
+      }
+      if (drive(seed_t::MATED_EXACT)) {
+        violations += row.fen + ": passed against a mated exact score\n";
+      }
+      if (!drive(seed_t::MATED_LOWER)) {
+        violations += row.fen + ": a lower bound stopped the pass\n";
+      }
+      if (!drive(seed_t::PLAIN_UPPER)) {
+        violations += row.fen +
+                      ": an upper bound outside the band stopped "
+                      "the pass\n";
+      }
+      if (!drive(seed_t::PLAIN_EXACT)) {
+        violations += row.fen +
+                      ": an exact score outside the band stopped "
+                      "the pass\n";
+      }
+
+      scored++;
+    }
+
+    REQUIRE_EQ(scored, rows.size());
+    REQUIRE_MESSAGE(violations.empty(), violations);
+  }
+
+
   // Mutation: M04_nmp_mate_artifact -- the fail-high returns `null_score`
   // instead of the bound.
   //

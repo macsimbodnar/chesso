@@ -15529,3 +15529,56 @@ Consequences: S083's record of the landing lands now; its paste stays in
               `../chesso-s083l` (`.tuning/coord/S083/s083_landing.diff`, red,
               not a commit). S135 still lands after S083's commit. The queen's
               re-anchor and the `CorrHistMax` range wait for the re-landing.
+
+## DEC-306  2026-10-22  S289's null-move table guard ships as a correctness fix: no pass at a node the table proves mated, decided by a {-5, 0} SPRT
+Tags:         search, null-move, mate, zugzwang, s289, s083, s165, dec-305, dec-171, dec-087, dec-158, sprt, non-regression, bugs
+Context:      S289 traced the mate S083's paste hid (`adocs/data/S289_trace.txt`,
+              `tests/test_engine.cpp`'s ply-2 case, `go depth 8`): at ply 1, a
+              PV node, the mating quiet is ordered 13th of 13 and reduced; the
+              reduced search proves the defender's node mated and stores the
+              upper bound (-48996); late move reduction re-searches the move
+              deeper, where the defender -- the mated side -- makes a null move
+              whose reduced search fails high (1406) against that proof and
+              refutes the mating move. A pass outvoting a proof just made at
+              the same node, not a margin crossed; the paper's zugzwang
+              detection is the comparison the guard makes. The same mechanism reaches the shipped weights:
+              six of the 31 roots `adocs/data/S165_defender_set.tsv` proves
+              mated in two report `cp 0` or about -670 through 12 iterations
+              (`adocs/data/S289_reach.txt`), a defect that moves a reported
+              score, so the BUGS rule binds (DEC-171 (c)). Of the paste's seven
+              lost mined mates (15 lost, 8 gained), `RfpMinPly` 63 restores all
+              15: reverse futility's and the multicut's known mate price
+              (DEC-158) moved by the scale, no further defect
+              (`adocs/data/S289_mined.txt`).
+Decision:     By the coordinator under the owner's standing instruction, on
+              S289's proposal. In `negamax_at`'s null-move block,
+              `table_proves_mated` -- the node's entry an upper bound
+              (`TT_ALPHA_NODE`) or exact (`TT_PV_NODE`) at or below
+              `-MATE_MIN` -- turns the pass off, beside the depth floor; no
+              constant, no option. Implemented from David-Tabibi and
+              Netanyahu's description of zugzwang detection in verified
+              null-move pruning (ICGA J. 25(3), 2002), DEC-221. Bench 6042933
+              -> 6042928. Decided by `adocs/data/S289_sprt.sh`: the fix's
+              commit against its parent, 8+0.08, Hash 16, `{-5, 0}` nElo, cap
+              20950 rounds, abort at 40 h. H1 or no verdict: the guard stays.
+              H0: the run is inspected first; if it stands the guard is
+              reverted whole and the owner rules between the BUGS rule and the
+              measured cost (DEC-158's form), S083 staying paused.
+Rejected:     The full verified null-move search -- DEC-087 (e) priced it as
+              tree cost, the owner's to reopen. Mate-band entries answering at
+              any depth -- changes what the table means. A lower bound in the
+              guard -- it proves nothing about the moves. Accepting the
+              exposure under DEC-087 (e) -- that priced the zugzwang where
+              nothing is proved, not a pass outvoting a proof. `{0, 5}` -- a
+              true zero ends at H0 95 times in 100 and would revert a
+              correctness fix for want of Elo. Changing late move reduction --
+              the late quiet's reduction hides nothing, and is a play change
+              of its own.
+Consequences: S289's commit is the SPRT's CAND; S289 completes on the
+              verdict. S083 re-lands on the guard's tree. At the paste's
+              weights with the guard the ply-2 case reports `mate -2` from
+              iteration 6, still red at its first-iteration clause (4), and
+              `EXACT_FLOOR` reads 158 against 163 (155 weakened): both are
+              S083's, taken at its re-landing (`adocs/data/S289_paste.txt`).
+              S135's two drafted decisions take the next free ids when they
+              land.

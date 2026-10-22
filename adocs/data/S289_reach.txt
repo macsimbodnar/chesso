@@ -1,0 +1,98 @@
+# S289: does the mechanism the trace found (adocs/data/S289_trace.txt) hide a mate at the SHIPPED constants?
+# adocs/data/S289_rows.py over three sets, `ucinewgame` and Hash 16 per row, each row at its own depth:
+#   S145's 82 constructed roots (adocs/data/S145_mate_set.tsv), attacker to move, at 2m - 1 + 8;
+#   S145's 186 defender nodes (that file's defender_nodes column), each distance proved here by S145's own
+#     exhaustive AND/OR enumeration (_and_mate, iterative in k), the mated side to move, at 2k + 8;
+#   S165's 104 defender nodes (adocs/data/S165_defender_set.tsv, distances proved by S165), at 2k + 8.
+# Builds: ship = 4a3a0e5's tune build at its defaults (its bench is the Release build's, 6042933);
+#   nonull = the same at NullMoveBase 16 (no null move anywhere: the floor depth - 1 - R >= 1 never holds);
+#   fix = S289's Release build (bench 6042928) -- its readings over the S165 and 186 sets are byte for byte
+#   the scratch build's with S289_GUARD set (adocs/data/S289_trace.py), checked;
+#   paste and paste+fix = the same two at S083's candidate weights (the paste's eval hunks on 4a3a0e5).
+# 'exact' = the last iteration reports exactly the proved mate. The engine's output only; the distances are
+# the enumeration's and stockfish corroborated S165's (adocs/data/S289_oracle.txt for its mated-in-2 rows).
+
+== S145 roots, attacker to move (82)
+  build       exact  m2 m3 m4 m5
+  ship           40  26/26 12/24 2/16 0/16
+  nonull         43  26/26 13/24 3/16 1/16
+  fix            40  26/26 12/24 2/16 0/16
+  paste          41  26/26 12/24 2/16 1/16
+  paste+fix      41  26/26 12/24 2/16 1/16
+
+== S145 defender nodes, mated side to move (186)
+  build       exact  m1 m2 m3 m4
+  ship          131  86/86 42/54 3/30 0/16
+  nonull        149  86/86 54/54 7/30 2/16
+  fix           143  86/86 54/54 3/30 0/16
+  paste         134  86/86 44/54 3/30 1/16
+  paste+fix     143  86/86 54/54 3/30 0/16
+
+== S165 defender nodes, mated side to move (104)
+  build       exact  m1 m2 m3 m4
+  ship           77  50/50 25/31 2/15 0/8
+  nonull         89  50/50 31/31 6/15 2/8
+  fix            83  50/50 31/31 2/15 0/8
+  paste          79  50/50 26/31 2/15 1/8
+  paste+fix      83  50/50 31/31 2/15 0/8
+
+== The S165 rows mated in 2 the shipped engine never reports, every iteration (score per depth; m = mate)
+  4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1
+    ship  1:416 2:353 3:0 4:0 5:0 6:0 7:0 8:-211 9:-475 10:-497 11:-371 12:-676
+    fix   1:416 2:353 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1
+    ship  1:537 2:424 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    fix   1:537 2:424 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1
+    ship  1:555 2:442 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    fix   1:555 2:442 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3
+    ship  1:336 2:318 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    fix   1:336 2:318 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4
+    ship  1:687 2:443 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:-371 12:-672
+    fix   1:687 2:443 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3
+    ship  1:448 2:423 3:415 4:411 5:392 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    fix   1:448 2:423 3:415 4:411 5:392 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+
+== The S145 defender nodes whose reading the fix moves (186-node set), with the no-null build beside it
+  row  34 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  3kbrbr/p2p1p1p/P2P1P1P/3R4/8/8/8/2K5 b - - 1 1
+  row  38 mated in 2: ship m-2@8        fix m-2@7        nonull m-2@7        earlier  4brbr/3p1p1p/3P1P1P/8/1K6/8/3Q4/1k6 b - - 1 1
+  row  40 mated in 2: ship cp -676      fix m-2@7        nonull m-2@7        fixed  4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1
+  row  50 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  6k1/8/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR w - - 1 2
+  row  66 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1
+  row  68 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1
+  row  75 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  K7/2r5/2k5/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 3 3
+  row  78 mated in 2: ship m-2@9        fix m-2@7        nonull m-2@7        earlier  2k1brbr/p2pKp1p/P2P1P1P/7R/8/8/8/8 b - - 3 2
+  row  87 mated in 2: ship cp 0         fix m-2@6        nonull m-2@6        fixed  4brbr/p2p1p1p/P2P1P1P/8/8/1RK5/8/k7 b - - 3 2
+  row  93 mated in 2: ship m-2@8        fix m-2@9        nonull m-2@8        delayed  6K1/2q5/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3
+  row  95 mated in 3: ship cp -862      fix cp -862      nonull m-3@13       not by the fix  7K/4k3/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 1 2
+  row 101 mated in 3: ship cp 0         fix cp 0         nonull m-3@12       not by the fix  8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2
+  row 102 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3
+  row 107 mated in 3: ship cp 0         fix cp 0         nonull m-3@13       not by the fix  k3brbr/3p1p1p/3P1P1P/1K6/8/8/8/5Q2 b - - 1 1
+  row 117 mated in 2: ship m-2@11       fix m-2@7        nonull m-2@7        earlier  rbrb4/p1p1p3/P1P1P3/1k1K4/8/Q7/8/8 b - - 3 2
+  row 120 mated in 2: ship m-2@9        fix m-2@7        nonull m-2@7        earlier  rbrb4/p1p1p3/PkP1P3/3K4/8/8/4Q3/8 b - - 3 2
+  row 124 mated in 2: ship cp -672      fix m-2@7        nonull m-2@7        fixed  4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4
+  row 126 mated in 4: ship cp -709      fix cp -709      nonull m-4@13       not by the fix  4brbr/3p1p1p/1k1P1P1P/3Q4/K7/8/8/8 b - - 1 1
+  row 131 mated in 3: ship cp -474      fix cp -548      nonull m-3@10       not by the fix  4brbr/3p1p1p/3P1P1P/3Q4/1k6/8/3K4/8 b - - 3 2
+  row 132 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3
+  row 136 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  4brbr/p2p1p1p/P2P1P1P/8/8/5KR1/8/7k b - - 5 3
+  row 146 mated in 4: ship cp -804      fix cp -804      nonull m-4@16       not by the fix  8/1q6/8/3k4/8/3p1p1p/3P1P1P/K3BRBR w - - 1 2
+  row 172 mated in 2: ship cp 0         fix m-2@7        nonull m-2@7        fixed  rbrb4/p1p1p2p/P1P1P2P/8/8/8/1R3K2/7k b - - 5 3
+
+== What the fix does not reach: the six deeper rows 'not by the fix' above. Row 101, traced on the fixed scratch
+   build (S289_GUARD set) at go depth 14 along the no-null build's line h4g3 f5e4 g3h3 f1f2 h3h2 e4h4 (N0..N6):
+   the attacker's mating move f1f2 at ply 3 is the node's 24th, reduced by 4, and the mated side's ply-4 node
+   is first reached at depth 6 with nothing found about it in the table, so the guard has nothing to read and
+   the pass's reduced search fails high -- the exposure DEC-087 (e) accepted when it dropped the verification
+   search (no tool here says what the position is). Excerpt, iteration 12:
+           move e4h1 #23 cd 10 red 0 -> 0  (a 0 b 21)
+           > N4 it12 ply4 d6 [-1,0] pv0 cut1 ex 0000 prev f1f2
+           < N4 it12 ply4 d6 [-1,0] -> 120 by null se 277 x 1
+           move f1f2 #24 cd 10 red 4 -> -120  (a 0 b 21)
+           move f1e1 #25 cd 10 red 4 -> -68  (a 0 b 21)
+           move f1g1 #26 cd 10 red 4 -> -134  (a 0 b 21)
+           < N4 it12 ply4 d6 [-1,0] -> 120 by null se 277 x 1
+           < N4 it13 ply4 d7 [-1,0] -> 129 by null se 277 x 2
+           < N4 it14 ply4 d7 [-1,0] -> 129 by null se 276 x 2

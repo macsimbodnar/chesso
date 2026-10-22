@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstdlib>  // setenv, unsetenv: POSIX, and there is no Windows build
 #include <cstring>
+#include <fstream>  // the defender set, read out of the source tree (S289)
 #include <iterator>
 #include <map>
 #include <memory>  // std::make_unique, the heap-owned search_state_t
@@ -5938,6 +5939,136 @@ TEST_SUITE("engine: mate safety")
     REQUIRE(iterations.back().value == -2);
 
     uci_shutdown();
+  }
+
+
+  // THE MATED SIDE AT THE ROOT, AND A PASS THAT OUTVOTES A PROOF. S289.
+  //
+  // Mutation: NM01_nmp_table_mated_guard_dropped, the null move's table guard
+  // removed -- which is the engine before S289. Observed red there, six of
+  // these 31 roots reporting no mate at the last iteration (four `cp 0`, one
+  // `cp -676`, one `cp -672`), every one of them reported `mate -2` from
+  // iteration 7 with the guard in (adocs/data/S289_reach.txt).
+  //
+  // The mechanism, from the engine's own trace and not from the board
+  // (adocs/data/S289_trace.txt): the attacker's mating move is ordered late at
+  // the defender's parent and reduced; the reduced search reaches the
+  // defender's node shallow and finds it mated by every move it searched,
+  // which the table keeps as an upper bound inside the mated band; the move's
+  // score clears alpha, so late move reduction re-searches it at full depth,
+  // and at full depth the same node is deep enough for a null move. The pass's
+  // reduced search fails high, and the node returns a bound above beta just
+  // after the table bounded it below -- the comparison David-Tabibi and
+  // Netanyahu's verified null-move pruning reads as a zugzwang. The mating
+  // move is refuted and the root reports the best of the rest, `cp 0` in four
+  // of the six.
+  //
+  // Every root is a row of adocs/data/S165_defender_set.tsv with `mated_in`
+  // 2: proved by S145's exhaustive AND/OR enumeration, iterative in the
+  // distance so mated in one is refuted too, and corroborated by stockfish at
+  // S165's node budget through python-chess -- 31 of 31 `Mate(-2)`, each
+  // `is_valid()` and none in check (adocs/data/S289_oracle.txt). Not read off
+  // the board (CLAUDE.md).
+  //
+  // Asserted at the last iteration and never at the first. The fixed tree
+  // first reports the six at iteration 7 where four plies would hold them, and
+  // that delay is the reduction's: a late quiet is reduced by design, and the
+  // re-search the reduced search's finding triggers is what the guard lets
+  // survive. The window is S145's, 2m + MATE_DEPTH_SLACK with 2m = 4 plies
+  // from a defender's root; what goes red is a mate the root never reports.
+  //
+  // Mates in two only. At three and four the engine reports 2 of 15 and 0 of 8
+  // of the file's rows with or without the guard: the depth bounds' measured
+  // price (S148, DEC-158) and the pass where no shallower search has found the
+  // node mated yet, the exposure DEC-087 (e) accepted. A case demanding them
+  // would be red on arrival.
+  TEST_CASE_FIXTURE(
+      engine_fixture_t,
+      "a root mated in two reports the mate even where its node could pass")
+  {
+#ifndef CHESSO_SOURCE_DIR
+#error "CHESSO_SOURCE_DIR must be defined so the test can read the defender set"
+#endif
+
+    const std::string path =
+        std::string(CHESSO_SOURCE_DIR) + "/adocs/data/S165_defender_set.tsv";
+
+    std::ifstream file(path);
+    REQUIRE_MESSAGE(file.good(), ("Cannot open " + path));
+
+    // Same reader as tests/test_search.cpp's read_defender_set(): skip
+    // blanks, comments and the header row, split on tabs.
+    std::vector<std::string> roots;
+    std::string line;
+
+    while (std::getline(file, line)) {
+      if (line.empty() || line[0] == '#') { continue; }
+
+      std::vector<std::string> field;
+      std::istringstream stream(line);
+      std::string cell;
+
+      while (std::getline(stream, cell, '\t')) {
+        field.push_back(cell);
+      }
+
+      if (field.size() < 6 || field[0] == "fen") { continue; }
+      if (std::stoi(field[1]) == 2) { roots.push_back(field[0]); }
+    }
+
+    // Golden, DEC-142. Re-derive with
+    //   awk -F'\t' '!/^#/ && $2 == 2' adocs/data/S165_defender_set.tsv | wc -l
+    REQUIRE_MESSAGE(roots.size() == 31,
+                    ("adocs/data/S165_defender_set.tsv is not the tracked set "
+                     "any more: " +
+                     std::to_string(roots.size()) + " rows mated in 2"));
+
+    const int iterations_wanted = 4 + MATE_DEPTH_SLACK;
+    std::string hidden;
+
+    for (const std::string& root : roots) {
+      // What these checks establish is the root's and no more: a position a
+      // legal game reaches, not in check, with more than kings and pawns on
+      // the board. The pass is never made at the root itself (`ply > 0`), and
+      // nothing here proves a defender node below it is one the pass is
+      // allowed at. That this case can go red is shown by its observed red on
+      // the engine before S289 and under NM01 (adocs/data/S289_red.log,
+      // adocs/data/S289_mutation.tsv), not by a premise read here.
+      REQUIRE_MESSAGE(load_FEN(root, &game), root);
+      REQUIRE_MESSAGE(position_is_reachable(&game), root);
+      REQUIRE_MESSAGE(!is_check(&game), root);
+      REQUIRE_MESSAGE(game_phase(&game.board) > 0, root);
+
+      const std::vector<report_t> iterations =
+          deepen_scores(root, iterations_wanted);
+
+      REQUIRE_MESSAGE(
+          iterations.size() == static_cast<size_t>(iterations_wanted), root);
+
+      for (const report_t& iteration : iterations) {
+        if (!iteration.is_mate) { continue; }
+
+        const std::string at =
+            root + ", iteration " + std::to_string(iteration.depth);
+
+        // Never a mate for the side that is being mated, and never closer
+        // than the proved two: the enumeration refuted mated in one.
+        REQUIRE_MESSAGE(iteration.value < 0, at);
+        REQUIRE_MESSAGE(iteration.value <= -2, at);
+      }
+
+      const report_t& last = iterations.back();
+
+      if (!(last.is_mate && last.value == -2)) {
+        hidden += root + (last.is_mate ? ", mate " : ", cp ") +
+                  std::to_string(last.value) + "\n";
+      }
+
+      uci_shutdown();
+    }
+
+    REQUIRE_MESSAGE(hidden.empty(),
+                    ("roots mated in 2 that never report it:\n" + hidden));
   }
 
 

@@ -1,0 +1,68 @@
+# S289: S083's candidate weights with the guard -- ../chesso-s289p, 4a3a0e5 plus the paste's src/eval_tables.hpp and
+# src/evaluation.cpp hunks (byte for byte the staged ones in ../chesso-s083l) plus S289's change; bench 3945685, the
+# paste's own (the guard moves no bench node at these weights). Fixture P 64b7fd813cc570be84ccbc9a3afcdb8b209a7a35, a commit object on no
+# branch, for the two floor scripts. Measurement only: S083's constants are not this step's (excludes).
+
+== 1. tests/test_engine.cpp "reverse futility at ply 2 does not hide a mate from the side to move", through UCI as
+==    deepen_scores() reads it (go depth 8, defaults). The paste alone read cp 1168 to 913 and no mate (S083_rfp_ply2.txt).
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1 h8h7
+info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1 h8h7 f1g1
+info score mate -2 depth 6 nodes 1024 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+info score mate -2 depth 7 nodes 2141 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+info score mate -2 depth 8 nodes 4149 hashfull 0 pv h1g1 g8f8 g1h1 f8f1
+bestmove h1g1 ponder g8f8
+   the case: REQUIRE( first_exact == 4 ) red at 6 == 4 (adocs/data/S289_red.log); the mate holds 6 to 8.
+
+==    What is left is late move reduction at ply 1 (S289_trace.txt section 1, iterations 4 and 5): one tune option at
+==    a time on the paste-with-guard tune build, the first iteration reporting mate -2 -- deciding nothing:
+   defaults             first mate -2 at 6
+   LmrBase=0            first mate -2 at 4
+   LmrDivisor=2000      first mate -2 at 4
+   LmrPv=2              first mate -2 at 4
+   LmrPv=0              first mate -2 at 7
+   LmrNotImproving=0    first mate -2 at 6
+   LmrNoTtMove=0        first mate -2 at 6
+   LmrCutNode=0         first mate -2 at 6
+
+== 2. EXACT_FLOOR: python3 adocs/data/S156_mined_floor_sweep.py --ref P --floor 163 (the paste alone: 157 and 154)
+318 positions, depth 10, ref 64b7fd813cc570be84ccbc9a3afcdb8b209a7a35
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     158          162            0   15.7s
+          2     160          164            0   16.2s
+          1     155          159            0   15.4s
+          0     155          159            0   15.3s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 158, weakened-guard value 155, gap 3
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_zq2i9pf8/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 155 exact, 159 right sign, 0 wrong sign
+    logged: the mined set reads 155 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+
+== 3. MATE_IN_THREE_FLOOR: python3 adocs/data/S154_floor_margin_sweep.py floor and red --ref P (the paste alone: 12 and 11)
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                         m3 #######.##.###.######..#  churn -  10421930 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  1/16 d7  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 0  12241732 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d5  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  10735664 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 13/24 d6  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 1  9598659 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 2  8662970 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 0  8662970 nodes
+
+  floor, 15.7s
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+
+Reading: the guard gives the paste the ply-2 case's mate from iteration 6 (never before) and regains one mined mate
+(158 against the floor 163, 155 weakened); the mate-in-three floor is the paste's (12 and 11, no longer separating).
+Neither floor is this step's to move (excludes; DEC-305 leaves EXACT_FLOOR to the owner if it still falls).

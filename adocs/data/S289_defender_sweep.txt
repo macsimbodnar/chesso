@@ -1,0 +1,16 @@
+# S289: instrument 4's own sweep (DEV_MANUAL "Mate safety", the defender-side set) on the parent and the fix:
+#   ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py sweep <parent tune> <fix tune>
+# parent = the main checkout's build-tune at 4a3a0e5 (bench 6042933), fix = ../chesso-s289's build-tune with the
+# guard (bench 6042928), each copied aside and run 2026-10-22. One python-chess process per engine for the whole
+# set, Hash 16, RfpMinPly and RfpMaxDepth held -- the script's own reading, which is not adocs/data/S289_rows.py's
+# (a fresh `ucinewgame` per row): that one reads the fix at 83, m3 2/15 (adocs/data/S289_reach.txt), this one 82,
+# m3 1/15. The fix gains six mates in two here and loses one mate in three, the either-way movement the guard's
+# comment states.
+
+104 defender nodes, depth 2k+8, RfpMinPly held at 3, RfpMaxDepth held at 15
+  per proved distance: m1 50  m2 31  m3 15  m4 8
+
+  parent (4a3a0e5) exact  77/104  m1 50/50 d0  m2 25/31 d4  m3 2/15 d8  m4 0/8 d-  short 0  sign 0
+  fix (S289)     exact  82/104  m1 50/50 d0  m2 31/31 d4  m3 1/15 d7  m4 0/8 d-  short 0  sign 0
+
+S165-SWEEP-DONE
