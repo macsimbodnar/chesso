@@ -29,8 +29,11 @@ guard cases observed red at the shipped weights, four mutants killed (20 of
 **Debug self-play 8 games, 0 `Assertion`, 0 disconnect**. Fast check: no
 blocker, nine wording/coverage items, all fixed (the exact-score leg and NM04
 added; the defender sweep re-run: 82/104 against the parent's 77, m2 31/31
-against 25, m3 1/15 against 2). The `{-5, 0}` SPRT (`adocs/data/S289_sprt.sh`,
-12.1 h expected, cap 19.9 h) runs tonight; S083 re-lands on the guard first.
+against 25, m3 1/15 against 2). Committed as `cd50178`, gate green. The `{-5, 0}` SPRT
+(`adocs/data/S289_sprt.sh`, pinned `cd50178` against `4a3a0e5`, 12.1 h
+expected, cap 19.9 h) runs tonight; S083 re-lands on the guard first, in
+`../chesso-s083r` (DEC-307 when it lands). New filler **S290** (the S170
+budget picker is outside the tree), behind S083.
 
 **S083 at the paste with the guard** (`adocs/data/S289_paste.txt`): the ply-2
 case reports `mate -2` from iteration 6, still red at its clause (4);

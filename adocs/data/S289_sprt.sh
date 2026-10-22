@@ -96,8 +96,8 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this
 # run's shas, dates and out directory --
 #
-#   candidate  <CAND>  <its committer date>
-#   reference  <REF>  <its committer date>
+#   candidate  cd50178  2026-10-22 15:05:13 +0200
+#   reference  4a3a0e5  2026-10-22 12:24:18 +0200
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -111,10 +111,19 @@
 # `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
-# [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and
-# `cand=` below, their dates into the banner lines above, plan.md's Open list
-# re-read, the A/A rule checked, and this bracketed sentence replaced by what
-# was found.]
+# Pinned by the coordinator 2026-10-22 15:10: CAND `cd50178` (S289's fix,
+# bench 6042928, gate green) and REF its parent `4a3a0e5` (bench 6042933).
+# The Open list at main's pin commit re-read: one DEC-171 filler is open,
+# **S290** (the S170 budget picker `.tuning/coord/S099/p2/pick_budgets.sh`
+# lives outside the tree; S289's fast check), tooling only, reachable in no
+# game, so it cannot move this run. The harness is S111's run's of
+# 2026-10-22 -- fastchess alpha 1.8.1 20260720-daa3ea2, `noob_3moves.epd`,
+# `fastchess.sh` untouched since `be48e02` (last change `769ce7a`, S284), the
+# same workstation and kernel 7.2.6 -- so no A/A is owed (DEC-143). Before
+# the run: fast suite 50/50 in both builds, Debug self-play 8 games, 0
+# Assertion and 0 disconnect, gate_extra 5/5 green. The run starts after
+# S083's re-landing has released the machine (DEC-155's night rule: the
+# re-landing is the better work meanwhile).
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -166,8 +175,8 @@ fail()
 # S283_sprt.sh's same block reads them: pinned, refused if set to anything
 # else, and passed on the exec line; ROUNDS, BARE_FEN, SRAND and AA refused if
 # set at all; RELAY_PYTHON unset; OUT overridden.
-ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
+ref="4a3a0e5015daaae31a1936bfe444eb93affc10c7"
+cand="cd501780111c7d769702a8c85a79358501a31e5c"
 tc="8+0.08"
 hash="16"
 concurrency="12"
