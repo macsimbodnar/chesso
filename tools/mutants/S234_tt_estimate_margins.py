@@ -95,7 +95,7 @@ m("G04_estimate_stored_as_eval", S, "search/pruning",
   'score arrives looking ordinary. Re-anchored at S099, whose store writes '
   '`raw_eval`, the static score before the pawn correction',
   ('    tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,\n'
-   '                   raw_eval);',
+   '                   raw_eval, !move_skipped);',
    '    tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,\n'
-   '                   pruning_eval);'),
+   '                   pruning_eval, !move_skipped);'),
   origin="S234")

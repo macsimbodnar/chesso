@@ -1,0 +1,21 @@
+# S292: S289's census shape (S210's: adocs/data/S210_f22_census.py `positions`, every 10th position of
+# adocs/data/S219_aa_calibration.pgn, the DEC-143 A/A at 8+0.08 on noob_3moves.epd, 11503 of 115021, each searched
+# at `go depth 10` from `ucinewgame` at the default Hash 16, twelve processes, adocs/data/S289_census.py), so the
+# narrowed guard reads against S289's guard on the same instrument. parent = 4a3a0e5's Release build
+# (.ref-builds/4a3a0e5, bench 6042933, the reverted tree's engine), candidate = S292's frozen Release build (bench
+# 6042933). 2026-10-22. The engine's answers only.
+
+positions 11503
+  root best move moved   0
+  root score moved       0
+  node count moved       1 (0.009 %)
+  nodes                  981078149 -> 981078145, x1.000000
+
+S289's guard on the same 11503 (adocs/data/S289_census.txt): 145 searches changed, 4 root best moves and 11 root
+scores, nodes x1.000109.
+
+Reading: at depth 10 from a cold table the narrowed guard reaches one search in 11503 and moves no root answer,
+against S289's 145 and 4. Not DEC-242's discharge on its own terms: S292's census of S289's own games (kind P alone,
+mode 2, which the shipped build reproduces row for row at depth 14) moves root scores (1 of 3000 at depth 14, 2 and 32 of 12408 replayed moves at depth 14 and at the run's node budgets) and
+root best moves (10 of 12408 at the node budgets), adocs/data/S292_cost.txt, and the change removes passes where
+DEC-242 asks that it only add exact cuts. So the change is decided by its SPRT (adocs/data/S292_sprt.sh).

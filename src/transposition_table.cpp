@@ -314,7 +314,8 @@ void tt_store_entry(transposition_table_t* tt,
                     int score,
                     node_type_t type,
                     move_t best_move,
-                    int eval)
+                    int eval,
+                    bool no_move_skipped)
 {
   assert(tt != nullptr);
   assert(board != nullptr);
@@ -379,5 +380,6 @@ void tt_store_entry(transposition_table_t* tt,
   entry->eval = decided_eval;
 
   entry->type = static_cast<uint8_t>(type);
+  entry->no_move_skipped = no_move_skipped ? 1 : 0;
   entry->generation = tt->generation;
 }

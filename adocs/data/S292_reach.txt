@@ -1,0 +1,72 @@
+# S292: the reach of the narrowed null-move guard, S289_reach.txt's method (adocs/data/S289_rows.py, a fresh
+# `ucinewgame` and Hash 16 per row, twelve processes, each row at its own depth) over the two tracked sets:
+#   S145's 82 constructed roots (adocs/data/S145_mate_set.tsv), attacker to move, at 2m - 1 + 8;
+#   S165's 104 defender nodes (adocs/data/S165_defender_set.tsv, distances proved by S165), mated side to move,
+#     at 2k + 8 -- 12 for the 31 mated in two, the 4 + MATE_DEPTH_SLACK iterations tests/test_engine.cpp's "a
+#     root mated in two reports the mate even where its node could pass" drives.
+# Builds: ship = 4a3a0e5's Release build (.ref-builds/4a3a0e5, bench 6042933, the reverted tree's engine);
+#   s292 = S292's frozen Release build (bench 6042933). 2026-10-22.
+# 'exact' = the last iteration reports exactly the proved mate; 'first' = the first iteration that does (0 for
+# none). The engine's output only; the distances are the sets' own, and stockfish corroborated S165's mated-in-2
+# rows (adocs/data/S289_oracle.txt). S145's 186-node set is not re-read here: its distances were proved for
+# S289 in scratch and no tracked file holds them.
+
+== S145 roots, attacker to move (82)
+  ship  exact  40   m2 26/26  m3 12/24  m4 2/16  m5 0/16
+  s292  exact  40   m2 26/26  m3 12/24  m4 2/16  m5 0/16
+
+== S165 defender nodes, mated side to move (104)
+  ship  exact  77   m1 50/50  m2 25/31  m3 2/15  m4 0/8
+  s292  exact  83   m1 50/50  m2 31/31  m3 2/15  m4 0/8
+
+== S165 rows whose last reading or first exact iteration moved: row, expected, ship (last, first), s292 (last, first)
+   26  -2   ship mate -2 first 8 b1a1   s292 mate -2 first 7 b1a1
+   28  -2   ship cp -676 first 0 e2e1   s292 mate -2 first 7 e2e1
+   44  -2   ship cp 0 first 0 g7g8   s292 mate -2 first 7 g7g8
+   46  -2   ship cp 0 first 0 f2f1   s292 mate -2 first 7 f2f1
+   52  -2   ship mate -2 first 8 g8h8   s292 mate -2 first 9 g8f8
+   58  -2   ship cp 0 first 0 g3h3   s292 mate -2 first 7 g3h3
+   66  -3   ship cp -869 first 0 b4b5   s292 cp -751 first 0 b4b5
+   67  -2   ship mate -2 first 11 b5b6   s292 mate -2 first 7 b5b6
+   70  -2   ship mate -2 first 9 b6a5   s292 mate -2 first 7 b6a5
+   74  -2   ship cp -672 first 0 e8d8   s292 mate -2 first 7 e8d8
+   81  -3   ship cp -474 first 0 b4a3   s292 cp -548 first 0 b4a3
+   82  -2   ship cp 0 first 0 a4a5   s292 mate -2 first 7 a4a3
+  101  -3   ship cp -417 first 0 b5b6   s292 cp -415 first 0 b5b6
+
+== S145 roots whose reading moved (none of them exact in either build): row, expected, ship (last, first), s292 (last, first)
+   50   4   ship cp 588 first 0 c7c2   s292 cp 0 first 0 c7c2
+   58   4   ship cp 470 first 0 c5c2   s292 cp 609 first 0 c5c2
+   62   4   ship cp 668 first 0 g1g7   s292 cp 801 first 0 g1g7
+   78   5   ship cp 0 first 0 b4f4   s292 cp -40 first 0 b4f4
+   79   5   ship cp -206 first 0 c1g1   s292 cp -232 first 0 c1f1
+   81   5   ship cp 753 first 0 c2b2   s292 cp 784 first 0 c2b2
+
+== Every iteration of the six S165 rows mated in two the reverted tree never reports, then s292 (m = mate)
+  4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1
+    ship  1:416 2:353 3:0 4:0 5:0 6:0 7:0 8:-211 9:-475 10:-497 11:-371 12:-676
+    s292  1:416 2:353 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1
+    ship  1:537 2:424 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    s292  1:537 2:424 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1
+    ship  1:555 2:442 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    s292  1:555 2:442 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3
+    ship  1:336 2:318 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    s292  1:336 2:318 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4
+    ship  1:687 2:443 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:-371 12:-672
+    s292  1:687 2:443 3:0 4:0 5:0 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+  4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3
+    ship  1:448 2:423 3:415 4:411 5:392 6:0 7:0 8:0 9:0 10:0 11:0 12:0
+    s292  1:448 2:423 3:415 4:411 5:392 6:0 7:m-2 8:m-2 9:m-2 10:m-2 11:m-2 12:m-2
+
+Reading: the six rows mated in two the reverted tree reports as `cp 0` (four), `cp -676` and `cp -672` through
+all twelve iterations report `mate -2` from iteration 7 with S292's guard, as with S289's (S289_reach.txt); rows
+26, 67 and 70 report it earlier (7 against 8, 11 and 9) and row 52 an iteration later (9 against 8). Mates in three and
+four read 2 of 15 and 0 of 8 here with or without the guard, the deeper rows' scores moving either way (66, 81,
+101). S165's 104 read 83 against 77, S289's fix's 83. S145's roots read 40 exact in both builds, six inexact
+rows' scores moving either way and one best move (79). Instrument 4's own sweep (one process for the whole set,
+adocs/data/S165_nmp_defender_sweep.py) reads the same set otherwise: m3 1/15 with the guard against 2/15 without
+(adocs/data/S292_goldens.txt), the either-way movement the guard's comment states.

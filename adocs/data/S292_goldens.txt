@@ -1,0 +1,148 @@
+# S292: every golden the narrowed guard could move, each re-derived by its own script (DEC-142) under DEC-299's guard
+# (a mate floor that falls stops; no ceiling may rise by more than 2), on fixture b1c8923d1bc395fa770c83689542b8f9a450f088
+# (10f1e42 plus the narrowed guard, the entry's no_move_skipped byte, the three cases and the mutants; a commit object
+# on no branch) and the frozen Release and tune builds (bench 6042933 both). The chain is S289's
+# (.tuning/coord/S292/goldens.sh), 771 s. Guard met: nothing falls, nothing rises; the S170 budget for C moves by the
+# rule and is applied in S292's change only.
+#
+# bench: 6042933 -> 6042933, all eight bestmove replies identical to 4a3a0e5's (.ref-builds/4a3a0e5).
+# tools/search_bench.py, nodes and best move, parent (.ref-builds/4a3a0e5) and candidate:
+#   depth 9   62042 c3d5 / 125888 e2a6 / 34107 d7c8q     the same
+#   depth 12  214973 c3d5 / 595000 d5e6 / 217107 d7c8q  the same
+
+== tests/test_engine.cpp MATE_IN_THREE_FLOOR -- python3 adocs/data/S154_floor_margin_sweep.py floor and red --ref <fixture>
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 20/24 d5  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##########.###.######..#  churn -  12279282 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 1  11632194 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  10149078 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 12/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  11208521 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  2/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 5  8748218 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  2/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 0  8748218 nodes
+
+  floor, 15.3s
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S154_sweep_25zji8ih/tests/test_engine.cpp:5782: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_25zji8ih/tests/test_engine.cpp:5783: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 7 >= 11 )
+    [doctest] assertions: 3512 | 3484 passed | 28 failed |
+  red, 22.5s
+
+== tests/test_mate_breadth.cpp EXACT_FLOOR -- python3 adocs/data/S156_mined_floor_sweep.py --ref <fixture> --floor 163
+318 positions, depth 10, ref b1c8923d1bc395fa770c83689542b8f9a450f088
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     164          167            0   15.9s
+          2     165          168            0   15.9s
+          1     160          162            0   15.4s
+          0     160          162            0   15.4s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 164, weakened-guard value 160, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_scrzkil4/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 160 exact, 162 right sign, 0 wrong sign
+    logged: the mined set reads 160 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+
+== tests/test_engine.cpp first_mate_depth, mate_in -- adocs/data/S188_repair_goldens.py first-mate --engine <candidate>
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp896  d2:cp896  d3:cp911  d4:cp899  d5:cp953  d6:cp955  d7:cp976  d8:cp1097  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1174  d2:cp1174  d3:cp1217  d4:cp1213  d5:cp1256  d6:cp1256  d7:cp1280  d8:cp1297  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+
+== tests/test_search.cpp "ordering keeps the tree small" -- python3 adocs/data/S192_node_budget.py build/tests/test_search
+binary        /home/max/ws/chesso-s292/build/tests/test_search
+count         13446 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        53784  (4x the count)
+floor         2689  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  4.14x the shipping floor and 0.21 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.83 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+
+== tests/test_mate_carry.cpp short_line_ceiling -- adocs/data/S203_case_sweep.sh --ceilings S202 S261 S286 S292 grids
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                   5
+C_mate7_depth11                   4
+D_mate_minus6_depth10             0
+E_mate_minus9                     1
+F_mate6_inherited_no_line         2
+-- the S292 grid alone
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                   1
+C_mate7_depth11                   0
+D_mate_minus6_depth10             0
+E_mate_minus9                     0
+F_mate6_inherited_no_line         2
+
+== adocs/data/S170_cases.tsv budgets -- the rule (.tuning/coord/S099/p2/pick_budgets.sh) over adocs/data/S292_sweep_s170.txt
+A_mate8_shallow            stride 1  nodes 1000000  -> nodes 1000000  (6 lines, 2 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (29 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 1200000  -> nodes 500000   (2 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 500000   -> nodes 500000   (1 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 300000   (4 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 300000   (3 lines, 0 short)
+-- the same rule over the parent's grid (4a3a0e5's engine, taken the same way; S286's grid cell for cell) reproduces the budgets that ship
+A_mate8_shallow            stride 1  nodes 1000000  -> nodes 1000000  (6 lines, 2 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (29 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 1200000  -> nodes 1200000  (23 lines, 1 short)
+D_mate_minus6_depth10      stride 1  nodes 500000   -> nodes 500000   (1 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 300000   (4 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 300000   (3 lines, 0 short)
+
+== tests/test_search.cpp table-less mined rows, each by its own script, candidate library against the parent's
+   (S286's p2/rows.sh with the paths moved): extra_ply and capmates byte-identical; e21 and b04 identical in
+   every mate distance and node count, differing in the milliseconds column alone.
+-- extra_ply, candidate
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+-- extra_ply, parent
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+-- capmates, candidate
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+-- capmates, parent
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+-- e21, candidate
+-:28920:5 m6:254281:40 m5:614169:84 m5:1023029:160 m5:1950316:241 m5:2804579:433 m5:7462650:916 m5:9236809:1405 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+-- e21, parent
+-:28920:5 m6:254281:38 m5:614169:82 m5:1023029:154 m5:1950316:236 m5:2804579:429 m5:7462650:911 m5:9236809:1394 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+-- b04, candidate
+-:15215:2 -:37408:5 m5:83765:12 m5:110157:18 m5:247267:34 m5:489095:76 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+-- b04, parent
+-:15215:2 -:37408:4 m5:83765:11 m5:110157:16 m5:247267:30 m5:489095:73 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+
+== DEV_MANUAL's defender-set sweep (instrument 4) -- ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py sweep <parent tune> <candidate tune>
+   parent = the main checkout's build-tune at 10f1e42 (bench 6042933), candidate = ../chesso-s292's build-tune, each copied aside.
+   One process for the whole set, Hash 16 -- S289's fix read the same 82, m2 31/31, m3 1/15 (adocs/data/S289_defender_sweep.txt).
+104 defender nodes, depth 2k+8, RfpMinPly held at 3, RfpMaxDepth held at 15
+  per proved distance: m1 50  m2 31  m3 15  m4 8
+
+  /home/max/ws/chesso/.tuning/coord/S292/bin/parent_tune exact  77/104  m1 50/50 d0  m2 25/31 d4  m3 2/15 d8  m4 0/8 d-  short 0  sign 0
+  /home/max/ws/chesso/.tuning/coord/S292/bin/cand_tune exact  82/104  m1 50/50 d0  m2 31/31 d4  m3 1/15 d7  m4 0/8 d-  short 0  sign 0
+
+S165-SWEEP-DONE

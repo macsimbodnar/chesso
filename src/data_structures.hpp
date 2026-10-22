@@ -608,6 +608,17 @@ struct tt_entry_t
   uint16_t generation;
 
   uint8_t type;  // node_type_t
+
+  // 1 where negamax's own store wrote this score and no shallow-depth rule
+  // skipped a move at that node; 0 where one did, and on every other store --
+  // quiescence, ProbCut, a test's seed -- which takes the default. For an
+  // upper bound or an exact score the node's loop ran to its end, so 1 there
+  // means every legal move was searched; a lower bound's loop may have stopped
+  // at its cutoff, and nothing reads the byte there. The byte the struct's
+  // padding already held, so the entry is still 20 bytes. Read by one rule,
+  // the null move's table guard (S292): a mated bound is a proof only where the
+  // search behind it looked at every move.
+  uint8_t no_move_skipped;
 };
 
 static_assert(sizeof(tt_entry_t) == 20,

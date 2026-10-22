@@ -376,7 +376,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S292  **BUGS, DEC-309: first** -- close the defect S289's guard closed, six roots proved mated in two misreported because a null move fails high against the table's mated bound, with a narrower form that does not cost what S289's run measured, or show by measurement that there is none
+1. S292  **BUGS, DEC-309: first; the narrowed guard is committed (DEC-310), its `{-5, 0}` SPRT at 8+0.08 pending** -- close the defect S289's guard closed, six roots proved mated in two misreported because a null move fails high against the table's mated bound, with a narrower form that does not cost what S289's run measured, or show by measurement that there is none
 2. S289  **paused by S292 (DEC-309): its guard read H0 at `{-5, 0}` (nElo -10.68 +/- 7.29) and was reverted whole; blocks S083 (DEC-305)** -- find by tool why S083's pasted constants hide a mate the parent finds and lose seven exact mined mates, and fix the search rule at fault as its own measured change
 3. S291  **blocks S083 (DEC-308), behind S292 (DEC-309)** -- find by tool why S083's re-landed constants lose the multicut mined row's mate at depth 10, and fix the rule at fault as its own measured change if one is
 4. S083  **paused by S291 (DEC-308) and by S289 (DEC-305); its re-landing was made on S289's guard, now reverted, so it is re-read on the tree S292 leaves (DEC-307, DEC-309): curve 0 read stop, the candidate is S082's pool at 46 rows a game** -- the corpus size and the generation node budget are decided by held-out error under a stated datagen budget, and one SPRT measures the corpus that ships

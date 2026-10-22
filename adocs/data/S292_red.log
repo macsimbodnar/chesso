@@ -1,0 +1,89 @@
+# S292: the guard's three cases observed red on the reverted tree before the guard existed, then green.
+#
+# A. Stage A, 2026-10-22: 10f1e42 (the reverted tree, bench 6042933) plus the entry's `no_move_skipped` byte
+#    (named `searched_all` until the last edit, the rename alone), negamax's store writing it, and the three cases -- no guard in the null-move
+#    block, so the engine searches as the reverted tree does (bench 6042933, unchanged). Release build.
+#    - test_search "a node a whole search found mated makes no null move": RED, 104 rows passed against a
+#      mated upper bound and 104 against a mated exact score (the two guarded legs), 0 rows on the five premise
+#      legs (no entry, the pruned search's mated bound, the lower bound, the two out-of-band bounds).
+#    - test_search "a node that skips a move says so in its entry": green -- the store was already in place;
+#      its red is under NF03, NF05 and NF06 (adocs/data/S292_mutation.tsv).
+#    - test_engine "a root mated in two reports the mate even where its node could pass": RED, the six roots
+#      S289 found (four `cp 0`, `cp -676`, `cp -672`).
+#    The run's own output, in three labelled blocks. The capture kept the first case's first 21 violations
+#    and cut its doctest summary; a second run of the same binary counted 104 + 104 violation lines and 0 on
+#    the premise legs. The same case under NF01 (the guard dropped on the final tree, mutation fixture b1c8923)
+#    ends `[doctest] Status: FAILURE!`, 1 of test_search's 218 cases failed (the run's ctest log, kept at
+#    .tuning/coord/S292/NF01_ctest.log; the kill in adocs/data/S292_mutation.tsv).
+#
+    == stage A: 10f1e42 + the searched_all field, its store and the three cases, no guard (bench 6042933)
+    -- block 1: test_search "a node a whole search found mated makes no null move" -- RED (summary cut)
+    [doctest] doctest version is "2.4.11"
+    [doctest] run with "--help" for options
+    ===============================================================================
+    /home/max/ws/chesso-s292/tests/test_search.cpp:7341:
+    TEST SUITE: search: pruning and reduction guards
+    TEST CASE:  a node a whole search found mated makes no null move
+    
+    /home/max/ws/chesso-s292/tests/test_search.cpp:7459: FATAL ERROR: REQUIRE( violations.empty() ) is NOT correct!
+      values: REQUIRE( false )
+      logged: 1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: passed against a mated upper bound
+    1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: passed against a mated exact score
+    2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: passed against a mated upper bound
+    2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: passed against a mated exact score
+    2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1: passed against a mated upper bound
+    2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1: passed against a mated exact score
+    2k1brbr/Q2p1p1p/3P1P1P/8/8/8/6K1/8 b - - 1 1: passed against a mated upper bound
+    2k1brbr/Q2p1p1p/3P1P1P/8/8/8/6K1/8 b - - 1 1: passed against a mated exact score
+    2k4q/8/8/8/8/2p1p1p1/2P1P1P1/2RBRBK1 w - - 1 2: passed against a mated upper bound
+    2k4q/8/8/8/8/2p1p1p1/2P1P1P1/2RBRBK1 w - - 1 2: passed against a mated exact score
+    2rbrbk1/2p1p1p1/2P1P1P1/8/7Q/8/8/2K5 b - - 1 1: passed against a mated upper bound
+    2rbrbk1/2p1p1p1/2P1P1P1/8/7Q/8/8/2K5 b - - 1 1: passed against a mated exact score
+    8/2k5/K7/5q2/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: passed against a mated upper bound
+    8/2k5/K7/5q2/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: passed against a mated exact score
+    4K3/8/4k3/8/5q2/p1p1p3/P1P1P3/RBRB4 w - - 1 2: passed against a mated upper bound
+    4K3/8/4k3/8/5q2/p1p1p3/P1P1P3/RBRB4 w - - 1 2: passed against a mated exact score
+    4brbr/3p1p1p/3P1P1P/8/8/5K2/2Q5/6k1 b - - 1 1: passed against a mated upper bound
+    4brbr/3p1p1p/3P1P1P/8/8/5K2/2Q5/6k1 b - - 1 1: passed against a mated exact score
+    4k3/8/6q1/8/8/1p1p1p2/1P1P1P2/2BRBR1K w - - 1 2: passed against a mated upper bound
+    4k3/8/6q1/8/8/1p1p1p2/1P1P1P2/2BRBR1K w - - 1 2: passed against a mated exact score
+    q7/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR w - - 1 2: passed against a mated upper bound
+    -- block 2: test_search "a node that skips a move says so in its entry" -- green, its summary
+    ===============================================================================
+    [doctest] test cases:   1 |   1 passed | 0 failed | 217 skipped
+    [doctest] assertions: 120 | 120 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    -- block 3: test_engine "a root mated in two reports the mate even where its node could pass" -- RED
+    /home/max/ws/chesso-s292/tests/test_engine.cpp:6076: FATAL ERROR: REQUIRE( hidden.empty() ) is NOT correct!
+      values: REQUIRE( false )
+      logged: roots mated in 2 that never report it:
+    4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1, cp -676
+    rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1, cp 0
+    rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1, cp 0
+    8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3, cp 0
+    4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4, cp -672
+    4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3, cp 0
+    
+    
+    ===============================================================================
+    [doctest] test cases:    1 |    0 passed | 1 failed | 86 skipped
+    [doctest] assertions: 1248 | 1247 passed | 1 failed |
+    [doctest] Status: FAILURE!
+
+# B. Stage B, after the last edit: the guard in (`whole_search_found_mated`), both builds, both benching 6042933.
+#    All three cases green.
+#
+    == build (bench 6042933)
+    [doctest] test cases:    2 |    2 passed | 0 failed | 216 skipped
+    [doctest] assertions: 7197 | 7197 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    [doctest] test cases:    1 |    1 passed | 0 failed | 86 skipped
+    [doctest] assertions: 1332 | 1332 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    == build-tune (bench 6042933)
+    [doctest] test cases:    2 |    2 passed | 0 failed | 223 skipped
+    [doctest] assertions: 7197 | 7197 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    [doctest] test cases:    1 |    1 passed | 0 failed | 87 skipped
+    [doctest] assertions: 1332 | 1332 passed | 0 failed |
+    [doctest] Status: SUCCESS!

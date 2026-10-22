@@ -15717,3 +15717,46 @@ Consequences: S292 is the first open step and S289 waits on it. S083 stays
               (DEC-307's consequence). S290's diff was made on the guard's
               budgets: its reproduction target becomes the budgets the reverted
               tree carries.
+
+## DEC-310  2026-10-22  S292's narrowed null-move guard ships as a correctness fix: the table's mated bound stops the pass only where the node that wrote it searched every legal move, decided by a {-5, 0} SPRT
+Tags:         search, null-move, mate, zugzwang, transposition-table, s292, s289, s083, s170, dec-309, dec-306, dec-087, dec-171, dec-221, sprt, non-regression, bugs
+Context:      S289's guard read H0 (DEC-309). S292 replayed positions from that
+              run's own games in a census build (`adocs/data/S292_cost.txt`:
+              3000 positions at depth 14, 200 games' 12408 moves at depth 14
+              and at the run's node counts). 98 to 99 % of the guard's firings
+              were on mated bounds stored by nodes where a shallow-depth rule
+              had skipped moves (about 3 searched, 20 skipped). The node's own
+              search refuted those bounds four times in five, and every root
+              move the guard changed came from them (6, 670 and 747 best
+              moves). No tree-size cost resolved for either kind. The six
+              hidden mates in two are all on bounds from nodes that searched
+              every move: that kind alone reports `mate -2` at 31 of 31 roots,
+              and moves 0, 0 and 10 best moves.
+Decision:     By the coordinator under the owner's standing instruction, on
+              S292's proposal. The guard reads a mated upper bound or exact
+              score only where the entry's new byte `no_move_skipped` says the
+              node that wrote it searched every legal move. The byte uses the
+              entry's padding, so the entry stays 20 bytes. Only negamax's own
+              store sets it; quiescence, ProbCut and every other store leave it
+              false. Implemented from David-Tabibi and Netanyahu's description
+              (ICGA J. 25(3), 2002): the null move's premise is "the value of
+              the best (legal) move", which a node that skipped moves did not
+              compute. DEC-221. Bench 6042933, unchanged; `search_bench` d9/d12
+              identical. S289's census moves 1 search by 4 nodes, so play
+              changes and the run is owed. Gains the six mates in two; costs
+              instrument 4's one-table sweep one mate in three (2 of 15 -> 1 of
+              15; with a fresh table per row, 2 of 15 both ways). Decided by
+              `adocs/data/S292_sprt.sh`: the fix's commit against its parent,
+              8+0.08, Hash 16, `{-5, 0}`, cap 20950 rounds, abort at 40 h. H1 or
+              no verdict: the guard stays, S292 and then S289 complete. H0: the
+              run is inspected; if it stands the guard is reverted whole and the
+              owner rules with both runs' figures (DEC-309 (3)).
+Rejected:     S289's guard again (DEC-309). Storing `alpha` at a node that
+              skipped moves: it changes what every reader of the table sees,
+              unmeasured. A depth condition: no source, and the two kinds share
+              depths. The full verified null-move search: DEC-087 (e), the
+              owner's.
+Consequences: S083 re-lands on this tree (DEC-307's consequence). S170's C case
+              runs at the rule's budget of 500000 with 2 mate lines, against 19
+              at 1200000. That thinner coverage is the rule's choice, not a hand
+              edit.

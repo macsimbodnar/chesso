@@ -1,0 +1,132 @@
+# S292, step 1: where S289's null-move table guard fires, what the bound it reads was stored by, and what each
+# kind of firing costs -- read from the engine's own counters in a scratch build, never shipped
+# (adocs/data/S292_census_patch.py on 10f1e42, whose engine is 4a3a0e5's; one binary, the guard picked by
+# $S292_GUARD: 0 none = the reverted tree, bench 6042933; 1 S289's guard on every bound = cd50178, bench 6042928;
+# 2 only on a bound stored by a node that skipped no move, kind P, bench 6042933; 3 only on one that did, kind S,
+# bench 6042928). Driver adocs/data/S292_census.py; 2026-10-22. The engine's answers only.
+#
+# THE SAMPLE, from S289's run's own games (.tuning/sprt_s289_20261022_155029/games.pgn, 8716 games, archived as
+# chesso_S289_sprt_2026-10-22.tar.xz), read by python-chess (`[FEN]` header and mainline; build/tools/
+# pgn_to_positions replays from the default position only and cannot start from a book FEN). The population is
+# every position the candidate (cand-cd50178, the guard's side) was to move in: 541980 searches the guard's engine
+# made. random.Random(292) draws 3000 of them without replacement (2451 distinct games) and then 200 game
+# indices; the engine replays each sampled position from its book FEN and the game's moves, and `fen` agrees with
+# python-chess on 3000 of 3000 (board, side, castling, en passant). Three readings:
+#   pos_d14  the 3000 positions, `ucinewgame` before each, `go depth 14` (the run's median reported depth is 14)
+#   rep_d14  the 200 games replayed whole, the candidate's 12408 moves only, one process a game and no
+#            `ucinewgame` between its moves -- the table carries from move to move as it did in the match -- at
+#            `go depth 14`
+#   rep_n    the same replays, each move searched to the node count the candidate spent on it in the run (`n=`)
+# Default Hash 16, twelve processes. Each row: best move, last score, depth, nodes, and the census counters.
+#
+# THE KINDS. Where the guard's condition holds (a null-move-eligible node, past the depth floor, whose entry is
+# an upper bound or exact score at or below -MATE_MIN), the bound's own store is looked up by full hash:
+#   P  stored by a node at which no shallow-depth rule skipped a move: a search of every legal move
+#   S  stored by a node at which at least one move was skipped (futility, history, quiet SEE, capture SEE, late
+#      move pruning; a skipped move that gives check is searched and does not count)
+#   U  no matching store record (none in any reading on the reverted tree; one in rep_n with S289's guard in,
+#      whose table differs from move to move)
+# "own search" below is what the node returned when the guard stopped its pass: failed high (>= beta), not
+# mated (below beta, above the band), or mated again, by a search that skipped a move or by one of every move.
+
+== how often the condition holds, and on what (mode 0, the reverted tree, so every pass is made)
+
+                               pos_d14         rep_d14         rep_n
+  searches                     3000            12408           12408
+  nodes (all)                  1649821319      5254644046      3938476144
+  negamax nodes                834481448       2676359423      2587007309
+  null-move-eligible nodes     18141017        61845512        79151742
+  condition holds, kind P      4               24              19
+  condition holds, kind S      466             1313            1162
+  condition holds, kind U      0               0               0
+    per eligible node          2.6e-5          2.2e-5          1.5e-5
+    searches with one          230 (7.7 %)     722 (5.8 %)     610 (4.9 %)
+  S bound: the rules that skipped (a bound can carry several)
+    futility                   213             608             458
+    history                    229             566             545
+    quiet SEE                  204             606             599
+    capture SEE                156             554             385
+    late move pruning          13              67              63
+  S bound: moves searched / skipped at its node, mean   3.15 / 20.24    3.60 / 21.56    3.69 / 18.43
+  P bound: moves searched at its node, mean             9.00            9.71            4.63
+  depth of the node, kind S    5: 227, 6: 131, 7: 57, 8: 30, 9: 19, 10: 2 (pos_d14); 5-12, 593 at 5 (rep_d14)
+  node depth less entry depth  P 1.75, S 2.77 (pos_d14); P 1.83, S 2.78 (rep_d14)
+  the pass at those nodes      P 4 made, 0 failed high; S 466 made, 20 failed high (pos_d14)
+                               P 24 made, 1 failed high; S 1313 made, 32 failed high (rep_d14)
+                               P 19 made, 0 failed high; S 1161 made, 44 failed high (rep_n)
+  mated-band stores            upper bound from a whole search 70996, from one that skipped 9558, exact 32
+                               (pos_d14; rep_d14 199123, 30477, 152): the guard's condition meets one bound
+                               of an S store in about 20, and almost never a P store's -- those sit where beta
+                               is in the band or the node is in check, where no pass is tried anyway
+
+== with S289's guard (mode 1): where it fired, and what the node's own search then said
+
+                               pos_d14         rep_d14         rep_n
+  fired on P                   4               31              20
+    own search failed high     0               1               0
+    not mated                  2               16              5
+    mated, a move skipped      0               2               0
+    mated over every move      2               12              15
+  fired on S                   452             1270            1111
+    own search failed high     73              157             143
+    not mated                  280             831             752
+    mated, a move skipped      99              274             212
+    mated over every move      0               8               4
+  fired on U                   0               0               1
+    own search not mated       -               -               1
+  share of firings on S        99.1 %          97.6 %          98.1 %
+  S bounds refuted outright    353 of 452      988 of 1270     895 of 1111
+  (own search >= beta or not mated)  78 %      78 %            81 %
+
+So the bound the guard reads is, 98 to 99 times in 100, the best of about three moves at a node that skipped
+about twenty, and at the guard's own depth the node's search refutes the mate behind it four times in five and
+proves it over every move about once in two hundred. The paper's comparison needs "the value from the best move";
+those bounds are not it.
+
+== the node cost of each kind, and how often the root's answer moves (each mode against mode 0)
+
+  pos_d14 (3000 searches)      nodes x          95 % by game     rows moved   best move moved   score moved
+    mode 1, S289's guard       x1.000860        [0.9991, 1.0032] 227          6                 30
+    mode 2, P only             x1.000003        [1.0000, 1.0000] 3            0                 1
+    mode 3, S only             x1.000857        [0.9991, 1.0032] 226          6                 29
+  rep_d14 (12408 searches, 200 games)
+    mode 1                     x1.018985        [0.9978, 1.0577] 2556         670               1896
+    mode 2                     x0.999944        [0.9998, 1.0000] 13           0                 2
+    mode 3                     x1.010637        [0.9978, 1.0328] 2556         670               1896
+  rep_n (the game's own node budget; nodes are the budget, so depth reached is the cost)
+    mode 1                     x0.997157, mean depth 14.9453 against 14.9329   2341   747     1936
+    mode 2                     x0.999927, mean depth 14.9331                   53     10      32
+    mode 3                     x0.997154, mean depth 14.9453                   2340   747     1936
+
+  Within a game the rows move together: the first firing changes the table, and every later search of that game
+  can differ (rep_d14: 0 of the rows before a game's first such node moved; 2556 of the 7839 from it on did).
+  The interval is therefore taken over whole games, 2000 resamples, seed 1.
+
+== reading
+
+1. The guard's firings are S289's in name only: 98 to 99 % of them read a bound from a node that skipped moves,
+   and those bounds are not proofs -- the node's own search at the guard's depth refutes the mate behind 78 to
+   81 % of them and re-proves it over every move at 0 to 0.6 %.
+2. Neither kind has a tree-size cost this census can resolve. At fixed depth S's node ratio is x1.0009 over
+   independent positions and x1.011 over replays, each interval spanning 1, the replay figure carried by one game
+   (7076, 22.5 M nodes -> 87.5 M at ply 50); the moved rows' geometric mean is below 1 in every reading (x0.991
+   to x0.999). At the game's own node budget the guard reaches deeper on average, not shallower. The firing
+   nodes' own subtrees are no dearer either: 51463 nodes over 452 S firings with the guard against 54423 over
+   466 passes without it (pos_d14). Whatever S289's H0 priced, it was not search effort.
+3. What S does move is the game: every root best move S289's guard moved in these readings, 6 of 3000
+   independent searches and 670 and 747 of 12408 replayed ones, is S's (mode 3 moves the same rows as mode 1; P
+   alone moves 0, 0 and 10). Whether those moves are worse is not a node count's to say; S289's run said the
+   whole guard cost (nElo -10.68 +/- 7.29), and S carries all but 1 to 2 % of what the guard changed.
+4. P carries the defect. Kind P alone (mode 2) reports `mate -2` at all 31 of the defender roots S165's set
+   proves mated in two (adocs/data/S289_rows.py, depth 12, `ucinewgame` per row): mode 0 25 of 31, mode 1 31,
+   mode 2 31, mode 3 25; over the whole 104-row set mode 0 77 (m1 50/50, m2 25/31, m3 2/15, m4 0/8) and mode 2
+   83 (m2 31/31, m3 2/15, m4 0/8) -- S289's fix's own reading (adocs/data/S289_reach.txt). The bench reads the
+   same: mode 2 benches 6042933, the reverted tree's, and mode 3 6042928, S289's.
+5. So the narrower form is kind P: the guard only where the bound was written by a node that searched every
+   legal move. It ships as src/search.cpp's `whole_search_found_mated` with the entry's `no_move_skipped`, and
+   its frozen Release build reproduces mode 2 exactly: best move, score, depth and nodes identical on 3000 of
+   3000 pos_d14 rows and 12408 of 12408 rep_d14 rows.
+
+The per-row tables are scratch (.tuning/coord/S292/census/, 11 MB; the sample rebuilds in two minutes and each
+table in two to seven): what is kept is this reading. Every figure above is printed by
+`S292_census.py compare` over those tables (.tuning/coord/S292/compare_all.txt) or summed from its counters.

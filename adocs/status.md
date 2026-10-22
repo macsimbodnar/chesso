@@ -7,6 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-22, by hand.
 
+## 2026-10-22: S292 narrowed the guard; committed, its SPRT pending (DEC-310)
+
+**S292** (one Opus 5.5 subagent, `../chesso-s292`) replayed positions from
+S289's run in a census build (`adocs/data/S292_cost.txt`): 98 to 99 % of S289's
+guard firings were on mated bounds stored by nodes that skipped moves through a
+shallow-depth rule. The node's own search refuted those four times in five, and
+every root move the guard changed came from them. No tree-size cost resolved.
+The six hidden mates in two are all on bounds of nodes that searched every move.
+**The narrowed guard** (DEC-310): a mated bound stops the pass only where the
+entry's new byte `no_move_skipped` (the entry's padding, still 20 bytes) says
+the node that wrote it searched every legal move, from David-Tabibi and
+Netanyahu 2002. 31 of 31 roots mated in two report `mate -2` from iteration 7.
+Bench 6042933, unchanged; search_bench d9/d12 identical; S289's census moves 1
+search by 4 nodes. S170 C's budget 1200000 -> 500000 by the rule; floors
+164/160 and 12/7 unmoved; instrument 4 m3 2/15 -> 1/15. Red first, 9 mutants
+killed, gate_extra 5/5, Debug self-play clean, fast suite 50/50 in both builds.
+Fast check: no blocker, two stale test comments and five notes, all fixed. The
+`{-5, 0}` SPRT (`adocs/data/S292_sprt.sh`, about 12 h with a true zero) decides
+it. S291, S083, S290 and S135 wait behind it.
+
 ## 2026-10-22: S289's guard read H0 and is reverted; S292 tries a narrower form first (DEC-309)
 
 **S289's SPRT read H0** at 19:53 (`adocs/data/S289_sprt.log`, archived
@@ -83,8 +103,8 @@ case reports `mate -2` from iteration 6, still red at its clause (4);
 
 Scratch worktrees `../chesso-s289p`, `../chesso-s289t`, `../chesso-s289pt`
 kept for the owner to prune; fixtures F1 `efa6831`, F2 `9d7639e`, F3
-`c72ce84`, P `64b7fd8` are commit objects on no branch. **Disk: 13 GB free
-(97 %).**
+`c72ce84`, P `64b7fd8` are commit objects on no branch. **Disk: 11 GB free
+(98 %).**
 
 ## 2026-10-22: S111 H0, recorded as zero; S083 curve 0 stop, its paste hides a mate: S289 (DEC-305)
 

@@ -1734,6 +1734,13 @@ static int negamax_at(int alpha0,
   const int tt_entry_score =
       (tt_entry != nullptr) ? de_normalize_score(tt_entry->score, ply) : 0;
 
+  // Whether the entry was written by a node at which no shallow-depth rule
+  // skipped a move, copied out with the three above and for their reason: the
+  // null move's table guard reads it below the recursion. False where there is
+  // no entry. S292.
+  const bool tt_entry_no_move_skipped =
+      (tt_entry != nullptr) && (tt_entry->no_move_skipped != 0);
+
   // No cutoff while a move is excluded, S097. The entry was written by a
   // search of this position that was allowed to play the very move this node
   // is being asked to do without, so letting it answer would answer the
@@ -2105,6 +2112,8 @@ static int negamax_at(int alpha0,
   //                 one thing that search exists to do. Gated on the exclusion
   //                 directly and never by abusing `prev_move`, which has to
   //                 keep flowing for the countermove and continuation tables
+  //   a whole search found it mated  S292. Beside the depth floor below,
+  //                 where its reason is written
   //
   // **S114 tried an entry gate here** (verdict 2): the null move only where the
   // node's raw static score stood at or above beta. Its `{0, 5}` nElo SPRT
@@ -2123,6 +2132,64 @@ static int negamax_at(int alpha0,
     // term and its two parameters left with the verdict.
     const int null_reduction = NULL_MOVE_BASE + (depth / NULL_MOVE_DIVISOR);
 
+    // A WHOLE SEARCH'S PROOF OUTRANKS THE PASS, S292 (S289's guard, narrowed).
+    // No null move at a node whose entry is an upper bound (or an exact score)
+    // inside the mated band **written by a node that searched every legal move
+    // it has** -- the entry's `no_move_skipped`, which for these two bound
+    // types means just that: a shallower search of this node's moves found the
+    // side to move mated by each of them.
+    //
+    // The pass's premise is the best move: "the value of the best (legal) move
+    // has to be better than that obtained from the null move" (David-Tabibi and
+    // Netanyahu, "Verified Null-Move Pruning", ICGA Journal 25(3), 2002,
+    // section 2), and their detection of where it fails is a comparison with
+    // that value: "If the null-move search indicates a cutoff, but the search
+    // shows that the best value is smaller than beta, this implies that the
+    // position is a zugzwang, as the value from the null move is greater than
+    // or equal to the value from the best move" (section 3). The table already
+    // holds the search of the moves, so the comparison is decided before the
+    // pass is made, and the pass is not made. Only in the mated band, where a
+    // search's answer is the strongest it can give; anywhere else a shallower
+    // upper bound is an estimate and trusting it is a different rule.
+    //
+    // **And only where that search was of every move.** A node at which a
+    // shallow-depth rule skipped a move stores the best of the moves it
+    // searched, which is not the value of the best move, and S289's guard read
+    // those bounds too: it read H0 (DEC-309), and S292 measured where its
+    // firings came from over 3000 positions of that run's own games at depth
+    // 14 -- 452 of 456 on such bounds, the node's own deeper search refuting
+    // the mate at 353 of them and proving it over every move at none, and
+    // every root best move the guard moved moved by them. The six mates in
+    // two below are all on bounds of whole searches
+    // (adocs/data/S292_cost.txt).
+    //
+    // What holds whatever the bound is worth: at this node the guard only
+    // removes a pass, so a bound that was wrong costs the subtree the pass
+    // would have saved and cuts nothing. Elsewhere in the tree it is not
+    // neutral -- the entries this node then stores, and the ordering they
+    // feed, can move a score or the iteration a mate first appears in.
+    //
+    // Found, not argued. A late quiet mating move at the defender's parent is
+    // reduced, the reduced search finds the defender's node mated by every
+    // move and stores the bound, its score clears alpha, and late move
+    // reduction re-searches it at full depth -- deep enough for a pass, whose
+    // reduced search fails high at the node just found mated, and the mating
+    // move is refuted (adocs/data/S289_trace.txt). Six of the 31 defender
+    // roots adocs/data/S165_defender_set.tsv proves mated in two reported `cp
+    // 0` or near -670 through 12 iterations without a guard
+    // (adocs/data/S289_reach.txt). A lower bound stays out, since it says
+    // nothing about the moves; an exact score in the band is the same finding
+    // as the upper bound and is in.
+    //
+    // The copies and not the entry: the block above can recurse, and the
+    // pointer is tested before a copy is read, as the singular gate does. No
+    // constant, so no seed (DEC-134); implemented from the paper's
+    // description, DEC-221.
+    const bool whole_search_found_mated =
+        tt_entry != nullptr && tt_entry_no_move_skipped &&
+        (tt_entry_type == TT_ALPHA_NODE || tt_entry_type == TT_PV_NODE) &&
+        tt_entry_score <= -MATE_MIN;
+
     // The reduced search has to keep at least one real ply. Let it fall to zero
     // and it becomes pure quiescence, which only looks at captures and
     // therefore cannot see a mate that is two plies away - it answers with the
@@ -2131,7 +2198,7 @@ static int negamax_at(int alpha0,
     // the null search had none. Tested here and not beside the guards above
     // since S114, whose term it had to see as well; every guard is a pure
     // condition, so where the floor sits changes no node.
-    if (depth - 1 - null_reduction >= 1) {
+    if (depth - 1 - null_reduction >= 1 && !whole_search_found_mated) {
       const int reduction = null_reduction;
       const child_label_t child = null_move_child(is_pv, cut_node);
 
@@ -2580,6 +2647,12 @@ static int negamax_at(int alpha0,
   // publishes an unsearched move as the search result or as the TT move.
   move_t best_move = 0;
 
+  // Set where a shallow-depth rule skips a legal move, so the score this node
+  // stores is the best of the moves it searched and not of every move it has.
+  // The entry carries its negation (`no_move_skipped`), and the null move's
+  // table guard reads a mated bound as a proof only where that is true. S292.
+  bool move_skipped = false;
+
   for (size_t i = 0;; ++i) {
     // Everything the four shallow-depth rules require of the node and of the
     // window, read once per candidate. `alpha` is read live rather than from
@@ -2830,7 +2903,10 @@ static int negamax_at(int alpha0,
 
     if constexpr (!PROBING) {
       if (prune_rule != PRUNE_NONE) {
-        if (!move_gives_check(&game->board, moves[i])) { continue; }
+        if (!move_gives_check(&game->board, moves[i])) {
+          move_skipped = true;
+          continue;
+        }
 
         child_check = 1;
       }
@@ -2906,6 +2982,7 @@ static int negamax_at(int alpha0,
         }
       }
 
+      move_skipped = true;
       unmake_move(game);
       continue;
     }
@@ -3218,7 +3295,7 @@ static int negamax_at(int alpha0,
   if (excluded_move == 0) {
     const int to_store = normalize_score(best_so_far, ply);
     tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
-                   raw_eval);
+                   raw_eval, !move_skipped);
 
     // The pawn correction learns here, S099, beside the one store and under
     // the same exclusion: a node searched without one of its moves is not

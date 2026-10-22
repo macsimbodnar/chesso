@@ -75,6 +75,10 @@ m("GC05_premake_skip_without_asking", S, "search/pruning",
   'without asking whether it gives check: the gives-check exemption is gone '
   'from all five rules in the search the engine plays, while the probed node '
   'still honours it',
-  ('        if (!move_gives_check(&game->board, moves[i])) { continue; }\n',
+  ('        if (!move_gives_check(&game->board, moves[i])) {\n'
+   '          move_skipped = true;\n'
+   '          continue;\n'
+   '        }\n',
+   '        move_skipped = true;\n'
    '        continue;\n'),
   origin="S268")

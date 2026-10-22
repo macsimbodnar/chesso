@@ -7296,6 +7296,170 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // Mutations, tools/mutants/S292_null_move_full_search_guard.py:
+  //   NF01_nmp_full_search_guard_dropped -- the guard removed, the engine
+  //     before S292: both guarded legs are red on every row
+  //   NF02_nmp_guard_trusts_a_pruned_bound -- the guard reads a mated bound
+  //     whatever the search behind it skipped, which is S289's guard as it
+  //     read H0 (DEC-309): the pruned-bound leg is red
+  //   NF07_nmp_guard_any_bound -- a lower bound in the band also stops the
+  //     pass: the lower-bound leg is red
+  //   NF08_nmp_guard_band_dropped -- any upper bound or exact score from a
+  //     whole search stops the pass, the band dropped: the out-of-band legs
+  //     are red
+  //   NF09_nmp_guard_exact_dropped -- an exact score in the band no longer
+  //     stops the pass: the mated-exact leg is red
+  //
+  //   search: pruning and reduction guards
+  //    a node a whole search found mated makes no null move
+  //   REQUIRE( violations.empty() )
+  //   values: REQUIRE( false )
+  //
+  // S165's guard reads the mate off the window: a beta inside the mated band.
+  // This one reads it off the table, where the window says nothing -- the
+  // case S289 traced: a reduced search finds the node mated by every move it
+  // has and leaves that as an upper bound, late move reduction re-searches the
+  // move at full depth with an ordinary window, and the pass made there fails
+  // high (tests/test_engine.cpp, "a root mated in two reports the mate even
+  // where its node could pass", has the mechanism and the reach).
+  //
+  // **Only from a search of every move, S292.** A mated upper bound stored by
+  // a node at which a shallow-depth rule skipped a move is the best of the
+  // moves it searched, not of the moves it has, and S289's guard read those
+  // too: 452 of the 456 bounds it fired on over 3000 positions of its own
+  // run's games at depth 14, and every root best move it moved there was moved
+  // by them (adocs/data/S292_cost.txt). The entry now says which it is
+  // (`no_move_skipped`), and the seeds here set it by hand.
+  //
+  // Seven legs a row, so the guard and not some other condition is what stops
+  // the pass: with no entry the pass is made (the premise), and it is made
+  // again with the same mated score from a search that skipped a move, held as
+  // a lower bound, which says nothing about this node's moves, and as an upper
+  // bound or an exact score outside the band, which are estimates a deeper
+  // search may overturn. Only the mated upper bound and the mated exact score
+  // of a whole search stop it.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a node a whole search found mated makes no null move")
+  {
+    const std::vector<defender_row_t> rows = read_defender_set();
+
+    // Golden, DEC-142, the sibling case's: re-derive with
+    //   grep -vc '^#' adocs/data/S165_defender_set.tsv
+    // which counts the header row as well.
+    REQUIRE_MESSAGE(rows.size() == 104,
+                    ("adocs/data/S165_defender_set.tsv is not the tracked set "
+                     "any more: " +
+                     std::to_string(rows.size()) + " rows, expected 104"));
+
+    // A shallower search's entry: below the drive's depth, so the table does
+    // not answer the node and the null-move block is reached.
+    static constexpr int ENTRY_DEPTH = 1;
+    REQUIRE(ENTRY_DEPTH < NULL_DRIVE_DEPTH);
+
+    enum class seed_t
+    {
+      NONE,
+      MATED_UPPER,
+      MATED_EXACT,
+      MATED_UPPER_PRUNED,
+      MATED_LOWER,
+      PLAIN_UPPER,
+      PLAIN_EXACT
+    };
+
+    std::string violations;
+    size_t scored = 0;
+
+    for (const defender_row_t& row : rows) {
+      // The mate against the side to move in k, as this node sees it, and
+      // as the table holds it: normalize_score() counts a mated score from
+      // the root, so the node's ply comes back out of it on the way in.
+      const int mated_here = -(MATE_MAX_LOCAL - row.ply - 2 * row.mated_in);
+      const int mated_stored = mated_here - row.ply;
+
+      REQUIRE_MESSAGE(mated_here <= -MATE_MIN_LOCAL,
+                      (row.fen + ": the proof is not inside the mated band"));
+
+      const auto drive = [&](seed_t seed) -> bool {
+        load(row.fen, row.ply);
+
+        // The node's own static score, an ordinary window, as the sibling
+        // drives set it since S114's second verdict.
+        const int beta = evaluate(&game.board);
+        require_null_move_preconditions(NULL_DRIVE_DEPTH, beta, PREV_MOVE);
+        REQUIRE(row.ply > 0);
+
+        // `true` is a node that searched every legal move, `false` one at
+        // which a shallow-depth rule skipped a move.
+        const auto seed_entry = [&](int score, node_type_t type, bool all) {
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, score, type, 0,
+                         TT_EVAL_NONE, all);
+        };
+
+        if (seed == seed_t::MATED_UPPER) {
+          seed_entry(mated_stored, TT_ALPHA_NODE, true);
+        } else if (seed == seed_t::MATED_EXACT) {
+          seed_entry(mated_stored, TT_PV_NODE, true);
+        } else if (seed == seed_t::MATED_UPPER_PRUNED) {
+          seed_entry(mated_stored, TT_ALPHA_NODE, false);
+        } else if (seed == seed_t::MATED_LOWER) {
+          seed_entry(mated_stored, TT_BETA_NODE, true);
+        } else if (seed == seed_t::PLAIN_UPPER) {
+          REQUIRE(beta - 1 > -MATE_MIN_LOCAL);
+          seed_entry(beta - 1, TT_ALPHA_NODE, true);
+        } else if (seed == seed_t::PLAIN_EXACT) {
+          REQUIRE(beta - 1 > -MATE_MIN_LOCAL);
+          seed_entry(beta - 1, TT_PV_NODE, true);
+        }
+
+        negamax_probed(beta - 1, beta, NULL_DRIVE_DEPTH,
+                       static_cast<size_t>(row.ply), &game, &state, PREV_MOVE,
+                       false);
+
+        // A pass that fails high returns before the move loop; one that was
+        // never made has to have come from the block deciding, not from an
+        // early exit above it.
+        if (!probe.null_move_made) { require_the_node_reached_its_move_loop(); }
+
+        return probe.null_move_made;
+      };
+
+      if (!drive(seed_t::NONE)) {
+        violations += row.fen + ": no entry, and no pass either\n";
+      }
+      if (drive(seed_t::MATED_UPPER)) {
+        violations += row.fen + ": passed against a mated upper bound\n";
+      }
+      if (drive(seed_t::MATED_EXACT)) {
+        violations += row.fen + ": passed against a mated exact score\n";
+      }
+      if (!drive(seed_t::MATED_UPPER_PRUNED)) {
+        violations += row.fen +
+                      ": a mated bound from a search that skipped a move "
+                      "stopped the pass\n";
+      }
+      if (!drive(seed_t::MATED_LOWER)) {
+        violations += row.fen + ": a lower bound stopped the pass\n";
+      }
+      if (!drive(seed_t::PLAIN_UPPER)) {
+        violations += row.fen +
+                      ": an upper bound outside the band stopped "
+                      "the pass\n";
+      }
+      if (!drive(seed_t::PLAIN_EXACT)) {
+        violations += row.fen +
+                      ": an exact score outside the band stopped "
+                      "the pass\n";
+      }
+
+      scored++;
+    }
+
+    REQUIRE_EQ(scored, rows.size());
+    REQUIRE_MESSAGE(violations.empty(), violations);
+  }
+
+
   // Mutation: M04_nmp_mate_artifact -- the fail-high returns `null_score`
   // instead of the bound.
   //
@@ -9185,6 +9349,80 @@ TEST_SUITE("search: pruning and reduction guards")
     }
 
     REQUIRE_EQ(futile, 0);
+  }
+
+
+  // Mutations, tools/mutants/S292_null_move_full_search_guard.py:
+  //   NF03_tt_store_marks_every_node -- negamax's store says every move was
+  //     searched whatever was skipped, which hands S289's guard its pruned
+  //     bounds back: the two pruned drives are red
+  //   NF05_engine_skip_not_marked -- the skip the engine's own node takes
+  //     before make_move no longer marks the entry: the unprobed pruned drive
+  //     is red
+  //   NF06_probe_skip_not_marked -- the probed node's skip, after make_move,
+  //     no longer marks it: the probed pruned drive is red
+  //
+  //   search: pruning and reduction guards
+  //    a node that skips a move says so in its entry
+  //   REQUIRE_EQ( entry->no_move_skipped, 0 )
+  //   values: REQUIRE_EQ( 1, 0 )
+  //
+  // The guard above reads `no_move_skipped` off seeds; this is the write those
+  // seeds stand for. The node is the block's own futility drive -- a window no
+  // quiet's margin reaches, so moves are skipped -- and the same node as a PV
+  // node, where no rule fires. Both instantiations, because the skip is taken
+  // at two sites: before make_move in the engine's own node since S268, and
+  // after it in the probed one. The unprobed drive cannot see its own skips,
+  // so it rests on the probed one's, made with the same inputs on the same
+  // wiped table, and on the two instantiations deciding alike, which
+  // move_gives_check()'s cases hold.
+  TEST_CASE_FIXTURE(guard_fixture_t,
+                    "a node that skips a move says so in its entry")
+  {
+    const auto entry_after = [&]() -> const tt_entry_t* {
+      const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+
+      // The node's own store, at the node's own depth, and nothing else's.
+      REQUIRE(entry != nullptr);
+      REQUIRE_EQ(static_cast<int>(entry->depth), PRUNE_DRIVE_DEPTH);
+      return entry;
+    };
+
+    move_t buffer[MAX_MOVES];
+
+    // Moves skipped, probed: the precondition is the probe's own count.
+    load(PRUNE_POS, 1);
+    REQUIRE(!is_check(&game));
+    const size_t legal_count = legal_moves(&game, buffer);
+
+    negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game,
+                   &state, 0, false);
+
+    REQUIRE(probe.pruned_count > 0);
+    REQUIRE_EQ(static_cast<int>(entry_after()->no_move_skipped), 0);
+
+    // The same node in the engine's own instantiation.
+    load(PRUNE_POS, 1);
+    negamax(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+            0, false);
+
+    REQUIRE_EQ(static_cast<int>(entry_after()->no_move_skipped), 0);
+
+    // Every move searched: a PV node, where no rule fires, and the probe says
+    // so move by move.
+    load(PRUNE_POS, 1);
+    negamax_probed(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game,
+                   &state, 0, true);
+
+    REQUIRE_EQ(probe.pruned_count, 0);
+    REQUIRE_EQ(static_cast<size_t>(probe.move_count), legal_count);
+    REQUIRE_EQ(static_cast<int>(entry_after()->no_move_skipped), 1);
+
+    load(PRUNE_POS, 1);
+    negamax(FUTILE_ALPHA, FUTILE_ALPHA + 1, PRUNE_DRIVE_DEPTH, 1, &game, &state,
+            0, true);
+
+    REQUIRE_EQ(static_cast<int>(entry_after()->no_move_skipped), 1);
   }
 
 

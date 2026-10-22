@@ -130,10 +130,16 @@ int16_t tt_eval_to_store(const tt_entry_t* entry, uint64_t hash, int eval);
 //
 // Passing TT_EVAL_NONE does not erase an evaluation this same position already
 // has on the slot; tt_eval_to_store() is that rule. S108.
+//
+// `no_move_skipped` is passed only by negamax's own store, true where no
+// shallow-depth rule skipped a move at the node; every other caller searched
+// no move list or part of one and takes the default, false. It describes the
+// score, so it is written with the score on every store. S292.
 void tt_store_entry(transposition_table_t* tt,
                     const board_t* board,
                     int depth,
                     int score,
                     node_type_t type,
                     move_t best_move,
-                    int eval = TT_EVAL_NONE);
+                    int eval = TT_EVAL_NONE,
+                    bool no_move_skipped = false);

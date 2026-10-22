@@ -101,9 +101,9 @@ m("CH07_store_writes_corrected", S, "search/correction",
   'position corrects it again: the compounding the raw-in-table layering '
   'exists to prevent',
   ("best_move,\n"
-   "                   raw_eval);\n",
+   "                   raw_eval, !move_skipped);\n",
    "best_move,\n"
-   "                   static_eval);\n"),
+   "                   static_eval, !move_skipped);\n"),
   origin="S099")
 
 m("CH08_probcut_store_writes_corrected", S, "search/correction",

@@ -64,6 +64,12 @@ add_doctest_target(test_evaluation)
 add_doctest_target(test_search)
 add_doctest_target(test_engine)
 
+# S289, and S292 after S289's guard was reverted: the mate-safety suite's
+# defender-root case reads adocs/data/S165_defender_set.tsv out of the source
+# tree, so it needs the same definition test_search does.
+target_compile_definitions(test_engine
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # S028 wrote this as the check on the tuner's hand-written model of evaluate(),
 # tools/eval_model.hpp: a model that drifts from the engine tunes the wrong
 # function and nothing downstream notices. Since S262 the tuner fits the
