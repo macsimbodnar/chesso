@@ -125,9 +125,20 @@
 # `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
-# [COORDINATOR: the pin -- CAND and REF with their benches and gate, the Open
-# list re-read at the pin commit, the harness against the last A/A, the Debug
-# self-play and gate_extra figures, and when the run starts.]
+# Pinned by the coordinator 2026-10-22 23:23: CAND `e27d3e5` (S292's fix,
+# bench 6042933, gate green) and REF its parent `10f1e42` (bench 6042933,
+# S289's guard reverted by `e47eb4a`, src/ equal to `4a3a0e5`'s). The Open list
+# at main's pin commit re-read: one DEC-171 filler is open, **S290** (the S170
+# budget picker lives outside the tree), tooling only, reachable in no game, so
+# it cannot move this run; S291 diagnoses S083's re-landed constants, which
+# neither build carries. The harness is S289's run's of 2026-10-22 --
+# fastchess alpha 1.8.1 20260720-daa3ea2, `noob_3moves.epd`, `fastchess.sh`
+# last changed `769ce7a` (S284), the same workstation and kernel 7.2.6 -- so
+# no A/A is owed (DEC-143). Before the run: fast suite 50/50 in both builds,
+# Debug self-play 8 games, 0 Assertion and 0 disconnect, gate_extra 5/5 green.
+# The run starts at once: about 12 h is the night's run (DEC-155), and nothing
+# better needs the machine, since S291 and S083 wait behind S292 by the BUGS
+# rule.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -178,8 +189,8 @@ fail()
 # S289_sprt.sh's same block reads them: pinned, refused if set to anything
 # else, and passed on the exec line; ROUNDS, BARE_FEN, SRAND and AA refused if
 # set at all; RELAY_PYTHON unset; OUT overridden.
-ref="[COORDINATOR: REF, the full sha of CAND's parent]"
-cand="[COORDINATOR: CAND, the full sha of S292's commit]"
+ref="10f1e42a0f2b3197d38bce7ae6eef61a19748aab"
+cand="e27d3e5e1415b0d7ed5d59561ac2ee9747637fbd"
 tc="8+0.08"
 hash="16"
 concurrency="12"
