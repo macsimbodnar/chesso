@@ -15666,3 +15666,54 @@ Rejected:     Starting S083's run with the multicut row unattributed -- the
               walk floor -- the owner's rule.
 Consequences: S083 stays paused, now by S291 behind S289's run; its fast-check
               fixes are written blind meanwhile and built after the run.
+
+## DEC-309  2026-10-22  S289's null-move table guard reads H0 at {-5, 0} and is reverted whole; the defect it closed is open again, and a narrower form, S292, is tried before the owner rules
+Tags:         search, null-move, mate, zugzwang, s289, s292, s083, s291, s290, dec-306, dec-171, dec-158, dec-087, dec-063, sprt, h0, bugs, revert
+Context:      S289's SPRT (`adocs/data/S289_sprt.log`): `cd50178` against its
+              parent `4a3a0e5`, 8+0.08, Hash 16, `{-5, 0}` nElo. H0 at 8716
+              games, Elo -7.42 +/- 5.07, nElo -10.68 +/- 7.29, 4 h 03 m. The
+              coordinator inspected the run before reading it as a cost, as
+              the row asked: the banner matches the pin, both binaries
+              reproduce their bench (6042928, 6042933), 0 forfeits, no crash
+              or disconnect, the journal clean, and the four quarters read
+              -13.7, -0.8, -9.6 and -5.6 Elo (each +/- 10). The run stands.
+              The prediction was zero, from a census that moved 145 of 11503
+              searches. The guard's own comment names a way it can miss: at a
+              non-PV node with alpha outside the band the shallow-depth rules
+              skip moves without touching `best_so_far`, so a mated-band upper
+              bound can be stored with moves unsearched, and the guard then
+              removes passes on bounds that prove nothing. Not measured yet.
+Decision:     By the coordinator under the owner's standing instruction,
+              executing DEC-306's and `adocs/data/S289_sprt.sh`'s pre-registered
+              H0 row. (1) The guard is reverted whole: `src/search.cpp`, its two
+              cases, its mutant, `tests/CMakeLists.txt`'s source-dir line and
+              the S170 budgets it moved go back to `4a3a0e5` byte for byte
+              (bench 6042933). S289's readings and scripts stay as the record;
+              `DEV_MANUAL.md` and `specs.md` describe the reverted tree.
+              (2) The defect returns to the record as open: six of the 31 roots
+              `adocs/data/S165_defender_set.tsv` proves mated in two report
+              `cp 0` or about -670 at the shipped weights
+              (`adocs/data/S289_reach.txt`). It moves a reported score, so the
+              BUGS rule binds (DEC-171 (c)). (3) Before the owner rules between
+              that rule and the measured cost, the row's third option is tried:
+              **S292** measures, over positions from the run's own games, how
+              often the guard fired, how many of its bounds had moves
+              unsearched, and what those firings cost. If a narrower condition
+              from the literature (DEC-221) closes the six without that cost, it
+              ships as its own change with its own `{-5, 0}` SPRT. S289 is
+              paused by S292. If S292 finds no such form, or its run reads H0,
+              the owner rules (DEC-265), with S292's figures beside this run's.
+              (4) By the BUGS rule, S292 runs before S291, S290, S083 and S135.
+Rejected:     Keeping the guard while S292 runs: the row said revert, and it
+              was written before a game was played (DEC-063). Asking the owner
+              now: S292's figures make the ruling better informed, and a cheap
+              narrower form would make it unnecessary; the owner may rule
+              earlier. A second run of the same guard: this run stands, and a
+              re-run chosen after the miss moves the tolerance after the
+              reading. The full verified null-move search: DEC-087 (e) priced
+              it, and only the owner reopens it.
+Consequences: S292 is the first open step and S289 waits on it. S083 stays
+              paused; its re-landing is re-read on whatever tree S292 leaves
+              (DEC-307's consequence). S290's diff was made on the guard's
+              budgets: its reproduction target becomes the budgets the reverted
+              tree carries.

@@ -373,10 +373,10 @@ static bool line_ends_in_mate(const std::string& fen,
 // line kept S116's six from S202 on, stale: S023 corrected it and its revert
 // put the stale six back; S039 corrected it again, and its revert keeps the
 // correction. S286's relanded correction moved A 0 -> 2, E 0 -> 1 and F 1 -> 2,
-// DEC-295. S289's null-move table guard moved none.)
+// DEC-295.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
-// adocs/data/S286_sweep_s170.txt adocs/data/S289_sweep_s170.txt
+// adocs/data/S286_sweep_s170.txt
 // (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
@@ -405,7 +405,7 @@ static bool line_ends_in_mate(const std::string& fen,
 //
 //   adocs/data/S203_case_sweep.sh --ceilings
 //       adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
-//       adocs/data/S286_sweep_s170.txt adocs/data/S289_sweep_s170.txt
+//       adocs/data/S286_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -427,10 +427,7 @@ static bool line_ends_in_mate(const std::string& fen,
 // F's, below (DEC-282). **S286's is the next**
 // (`adocs/data/S286_sweep_s170.txt`, S099's pawn correction relanded on
 // `8560a36`, 108 cells, 1461 mate lines and 18 short): it moves A, E and F,
-// below (DEC-295). **S289's is the third** (`adocs/data/S289_sweep_s170.txt`,
-// no null move at a node the table proves mated, on `4a3a0e5`, 108 cells, 1424
-// mate lines and 15 short): it moves no ceiling, and the budgets it re-derived
-// are in the TSV's own header.
+// below (DEC-295).
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;

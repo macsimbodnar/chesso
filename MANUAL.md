@@ -646,6 +646,17 @@ against d4 and e4 against e5.
   of the same move. On its test grid that took 33 short lines of 873 to 19; a
   3000-game count is owed. DEC-122 is the all-or-nothing rule that makes short
   the only failure, and DEC-150 the first measurement.
+- **A side proved mated in two can be reported as not mated.** Six of the 31
+  positions in `adocs/data/S165_defender_set.tsv` whose side to move is proved
+  mated in two report `cp 0` (four of them) or about -670 (`cp -676`,
+  `cp -672`) instead of `mate -2`, through all twelve iterations of a search to
+  depth 12 from a fresh `ucinewgame` at Hash 16 (`adocs/data/S289_reach.txt`,
+  2026-10-22). A reduced search finds the mated side's node two plies on mated
+  and the table stores that; the deeper re-search then makes a null move at
+  that node, and the null move fails high against what the table proved. S289's
+  guard, no null move at a node the table proves mated, reported all six as
+  `mate -2` from iteration 7, but it read H0 at 8+0.08 (nElo -10.68 +/- 7.29)
+  and was reverted. Open as S292 (DEC-309).
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

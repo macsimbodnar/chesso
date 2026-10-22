@@ -7,7 +7,25 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-22, by hand.
 
-## 2026-10-22: S289 found the rule and the reach; its fix is committed, its SPRT pending (DEC-306)
+## 2026-10-22: S289's guard read H0 and is reverted; S292 tries a narrower form first (DEC-309)
+
+**S289's SPRT read H0** at 19:53 (`adocs/data/S289_sprt.log`, archived
+untrimmed as `chesso_S289_sprt_2026-10-22.tar.xz`): `cd50178` against
+`4a3a0e5`, 8+0.08, Hash 16, `{-5, 0}`, 8716 games, Elo -7.42 +/- 5.07, nElo
+-10.68 +/- 7.29, LLR -2.95, 4 h 03 m, 0 forfeits. Inspected before it was read
+as a cost: the banner matches the pin, both binaries reproduce their bench, no
+crash or disconnect, the quarters -13.7, -0.8, -9.6 and -5.6 (each +/- 10). It
+stands. **By the pre-registered row the guard is reverted whole** (code, cases,
+mutant, S170 budgets back to `4a3a0e5`; bench 6042933; readings kept), and the
+defect is open again: six of S165's 31 roots mated in two report `cp 0` or
+about -670 (`adocs/data/S289_reach.txt`). **DEC-309**: before the owner rules
+between the BUGS rule and the cost, **S292** measures where the guard's cost
+came from in the run's own games (the guard's comment names bounds stored with
+moves unsearched) and tries a narrower form with its own `{-5, 0}` run. S292 is
+first; S289 is paused by it; S291, S083 (re-read on S292's tree), S290 (its
+budgets moved back) and S135 wait.
+
+## 2026-10-22: S289 found the rule and the reach; its fix is committed, its SPRT followed (DEC-306)
 
 **S289's diagnosis** (one Opus 5.5 subagent, `../chesso-s289`; trace in
 `adocs/data/S289_trace.txt`): at S083's paste the ply-2 case's mating quiet
@@ -65,7 +83,7 @@ case reports `mate -2` from iteration 6, still red at its clause (4);
 
 Scratch worktrees `../chesso-s289p`, `../chesso-s289t`, `../chesso-s289pt`
 kept for the owner to prune; fixtures F1 `efa6831`, F2 `9d7639e`, F3
-`c72ce84`, P `64b7fd8` are commit objects on no branch. **Disk: 15 GB free
+`c72ce84`, P `64b7fd8` are commit objects on no branch. **Disk: 13 GB free
 (97 %).**
 
 ## 2026-10-22: S111 H0, recorded as zero; S083 curve 0 stop, its paste hides a mate: S289 (DEC-305)

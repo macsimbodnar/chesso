@@ -1,12 +1,12 @@
 id:         S289
 goal:       find by tool why S083's pasted constants hide a mate the parent finds and lose seven exact mined mates, and fix the search rule at fault as its own measured change
 accepts:    the node and the rule that hide `tests/test_engine.cpp` "reverse futility at ply 2 does not hide a mate from the side to move"'s mate at S083's candidate constants are named from the engine's own output (a trace, a counter or a one-option-at-a-time bisection in the tune build), never from reading the board (CHESS); the mined mates S156's sweep reads exact on the parent and not on the paste are listed by key and each attributed the same way; if a rule is at fault, its fix ships as its own change with a guard test observed red first at the paste's constants and green at both the paste's and the shipped constants, a mutant that test kills (DEC-141), Debug self-play and gate_extra, every golden it moves re-derived by its script, and its verdict decided by SPRT against its parent if it moves play, bounds pre-registered; if no rule is at fault, a proposed decision stating what the paste trades, for the owner (DEC-304 (11)); the fast suite green in both builds
-touches:    src/search.cpp negamax_at (the null-move block: `table_proves_mated` beside the depth floor, and the guard list's pointer to it); tests/test_search.cpp ("a node the table proves mated makes no null move"); tests/test_engine.cpp ("a root mated in two reports the mate even where its node could pass", `<fstream>`); tests/CMakeLists.txt (`CHESSO_SOURCE_DIR` for test_engine); tests/test_mate_carry.cpp (the ceilings' command gains S289's grid, comments only); adocs/data/S170_cases.tsv (A, C and D budgets by the rule, and its header); tools/mutants/S289_null_move_table_guard.py; adocs/data/S289_* and README rows; this file
+touches:    src/search.cpp negamax_at (the null-move block's table guard and the guard list's pointer to it, cd50178; reverted whole on the H0); tests/test_search.cpp and tests/test_engine.cpp (the guard's two cases, and `<fstream>`; reverted); tests/CMakeLists.txt (`CHESSO_SOURCE_DIR` for test_engine; reverted); tests/test_mate_carry.cpp (the ceilings' command gained S289's grid, comments only; reverted); adocs/data/S170_cases.tsv (A, C and D budgets by the rule, and its header; reverted); tools/mutants/S289_null_move_table_guard.py (added, deleted by the revert); DEV_MANUAL.md (the defender sweep's figures, the guard's paragraph and the goldens rows; rewritten for the reverted tree); MANUAL.md (a Known bugs entry for the reopened defect); adocs/specs.md's search row (the coordinator's: the guard's sentence, owed back with the revert); adocs/data/S289_* and README rows, and the README's note on the revert; this file
 excludes:   S083's constants (no refit, no re-anchor, no golden S083's landing owes); the values of the search's margins beyond what the fix needs (S127 owns them); any lowering of a mate floor
 decisions:  DEC-305, DEC-304, DEC-303, DEC-299, DEC-142, DEC-141, DEC-171
 closes:
 blocks:     S083
-paused_by:
+paused_by:  S292
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
 done:
 
@@ -219,7 +219,7 @@ descriptions; no engine's code was read.
 **Tests, observed red** (`adocs/data/S289_red.log`; its section A is the final
 form, section B the first draft's red on `4a3a0e5` before the guard existed):
 
-- tests/test_search.cpp "a node the table proves mated makes no null move", six
+- tests/test_search.cpp at `cd50178`, "a node the table proves mated makes no null move", six
   legs over the 104 S165 rows: no entry, a mated upper bound, a mated exact
   score, the mated score as a lower bound, an upper bound and an exact score
   outside the band. Only the second and third may stop the pass. On fixture F3
@@ -227,7 +227,7 @@ form, section B the first draft's red on `4a3a0e5` before the guard existed):
   104 rows red on each of the two mated legs, the four premise legs clean.
   Under NM04: 104 rows red on the mated-exact leg alone. Green with the guard,
   both builds.
-- tests/test_engine.cpp "a root mated in two reports the mate even where its
+- tests/test_engine.cpp at `cd50178`, "a root mated in two reports the mate even where its
   node could pass": under NM01 the six roots of section 3 never report (four
   `cp 0`, `cp -676`, `cp -672`). Green with the guard, both builds, 0.23 s. Its
   checks establish the root only (legal, reachable, not in check, more than
@@ -389,3 +389,87 @@ stderr, then `grep -c Assertion` and `grep -c disconnect`; prints
   the census driver committed (`adocs/data/S289_census.py`); the SPRT script
   checks REF's src/ against `4a3a0e5`'s and says CAND is the fix commit
   itself; section 2's row 131 corrected (none of the 15 losses comes back).
+
+## 2026-10-22: the SPRT read H0; the guard is reverted
+
+**The verdict.** `adocs/data/S289_sprt.sh`'s pair, `cd50178` (the guard)
+against its parent `4a3a0e5`, from 15:50 for 4 h 03 m:
+
+```
+SPRT | cand cd50178 vs ref 4a3a0e5, 8+0.08, Hash=16, noob_3moves.epd, {-5, 0} nElo
+Elo | -7.42 +/- 5.07, nElo -10.68 +/- 7.29
+LLR | -2.95 (-2.94, 2.94) -> H0
+Games | N: 8716 W: 2337 L: 2523 D: 3856, Ptnml [278, 1123, 1704, 1013, 240]
+Wall | 4 h 03 m, 2151.5 games/h, forfeits 0
+Log | adocs/data/S289_sprt.log
+```
+
+**The inspection, before the H0 is read as a cost** (the H0 row's order; the
+coordinator's): the banner matches the pin -- both shas, 8+0.08, Hash 16, 12
+of 12 cores, `noob_3moves.epd`, `{-5, 0}` at alpha = beta = 0.05; both
+binaries reproduce their bench, 6042928 the candidate and 6042933 the
+reference; no crash or disconnect, 0 forfeits; the four quarters read -13.7,
+-0.8, -9.6 and -5.6 Elo, each +/- 10; the journal is clean. The run stands,
+against a prediction of zero and a census that moved 4 root answers in 11503
+(`adocs/data/S289_census.txt`).
+
+**Reverted, by the pre-registered H0 row** -- code, cases, mutants and the
+budgets the guard moved, back to `4a3a0e5` byte for byte. Each path below was
+touched since `4a3a0e5` by `cd50178` alone (`git log 4a3a0e5..8062278` per
+path, and `git diff 4a3a0e5 8062278` over them identical to `cd50178`'s own
+diff), so `git checkout 4a3a0e5 --` restores it whole:
+
+- `src/search.cpp` -- the guard in the null-move block and the guard list's
+  pointer to it;
+- `tests/test_search.cpp` and `tests/test_engine.cpp` -- the guard's two cases
+  (section 4) and `<fstream>`;
+- `tests/CMakeLists.txt` -- `CHESSO_SOURCE_DIR` for test_engine;
+- `tests/test_mate_carry.cpp` -- S289's grid out of the ceilings' command;
+- `adocs/data/S170_cases.tsv` -- A 1000000, C 1200000 and D 500000 again, and
+  its header;
+- `tools/mutants/S289_null_move_table_guard.py` -- deleted, NM01-NM04 with it.
+
+`git diff 4a3a0e5 -- src/ tests/ tools/ adocs/data/S170_cases.tsv` is empty,
+so the engine is `4a3a0e5`'s (INV-6 by identity). Not byte for byte, by the
+brief: `DEV_MANUAL.md` is made true for the reverted tree. Its defender sweep
+paragraph states `4a3a0e5`'s figures from `adocs/data/S289_defender_sweep.txt`
+(77 of 104, m2 25/31, m3 2/15), where the text before S289 gave S165's figures
+at `aa8c077` as the shipping build's; S165's stay, as S165's; one sentence says
+the guard read H0 and was reverted (DEC-309) and the six misreported mates in
+two are open. The guard's paragraph under instrument 5 is gone and the goldens
+rows are `4a3a0e5`'s wording again, which the restored goldens make true.
+`adocs/data/README.md` takes a note under S289's heading. **MANUAL.md**
+takes one "Known bugs" entry for the reopened defect, on the coordinator's
+word; no option, default or output moves.
+
+**Stays, as the record**: `adocs/data/S289_*`, readings and scripts, with
+their README rows; the pre-registration and the log; this file's sections 1 to
+8, unedited but for two dated pointers: section 4's two lines that cite the
+removed cases by path and title now name `cd50178` after the path, which the
+coordinator approved, because `tools/plan_prose_check.py --citations` read
+both as MISSING while this file is pending.
+
+**The defect is open again.** The shipped engine reports `cp 0` or about -670
+through 12 iterations for six of S165's 31 proved mates in two
+(`adocs/data/S289_reach.txt`, section 3) -- a reported-score defect the BUGS
+rule binds (DEC-171 (c)), against a verdict that says this fix costs. DEC-309
+records it; S083 stays paused.
+
+**Next: S292**, a narrower form of the guard with its own run, tried before
+the owner rules between the defect and the cost (DEC-309). It pauses this step.
+
+**Verification on the reverted tree** (`../chesso-s289h`, `8062278` plus this
+change, both builds made there):
+
+- `chesso bench` **6042933** in both builds, `4a3a0e5`'s.
+- `tools/search_bench.py` at 9 (62042, 125888, 34107 nodes) and 12 (214973,
+  595000, 217107) node- and move-identical to `4a3a0e5`'s Release binary
+  (`.ref-builds/4a3a0e5`, bench 6042933).
+- The fast suite before the pointers: **49 of 50 in both builds**, the one
+  red `test_plan_citation_freshness` on those two section 4 lines and nothing
+  else. After the pointers and the MANUAL entry, **50 of 50** in the Release
+  build. `./clang-format.sh --check` clean (`CLANG_FORMAT_MAJOR=22`, DEC-146).
+- `plan_prose_check.py` `--citations`, `--touches`, `--params` and `--gate`
+  clean.
+- Not run: Debug self-play and `tools/gate_extra.sh` -- the brief books no
+  match, and the tree's `src/` and `tests/` are `4a3a0e5`'s byte for byte.

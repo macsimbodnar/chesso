@@ -1127,6 +1127,12 @@ holds a mated upper bound or exact score). The run's scratch -- the traced build
 fixtures, the per-row tables -- stays under the implementer's scratchpad and
 `.tuning/coord/S289/`; what lands here is the reading.
 
+S289's guard read H0 on 2026-10-22 and was reverted whole (DEC-309); these
+files stay as its record. Its two cases, its four mutants (NM01-NM04) and its
+grid in `test_mate_carry`'s ceilings command left with the code, and the S170
+budgets went back to `4a3a0e5`'s. A reading below that names the fix was taken
+with the guard in, which the tree no longer has.
+
 | file | what it is |
 |---|---|
 | `S289_trace.py` | the scratch trace, never shipped: rewrites a throwaway worktree's `src/search.cpp` (of the tree before S289) so every node whose key is one of the FENs in `$S289_TRACE` prints its entry, its exit with the rule that returned, and its children's scores; `$S289_GUARD` adds S289's guard so one binary reads both sides. Applied to `4a3a0e5`'s `src/search.cpp` it reproduces the traced tree's source byte for byte |
@@ -1144,3 +1150,4 @@ fixtures, the per-row tables -- stays under the implementer's scratchpad and
 | `S289_paste.txt` | S083's candidate weights with the guard (`4a3a0e5` plus the paste's eval hunks plus S289, bench 3945685): the ply-2 case reports `mate -2` from iteration 6 to 8 and stays red at its first-iteration clause, 6 against 4, with the late move reduction options that bring 4 back listed; `EXACT_FLOOR` 158 shipping and 155 weakened, `MATE_IN_THREE_FLOOR` 12 and 11, each by its script on fixture P |
 | `S289_mutation.tsv` | `tools/mutation_check.py`'s `results.tsv` for S289's three passes: on fixture F2 the sixteen null-move, multicut, ProbCut and reduction mutants whose cases the guard could mask, and NM01's stillborn first form; on F3 NM01-NM04 on the final cases -- 20 of 20 killed |
 | `S289_sprt.sh` | the pre-registration of S289's one SPRT, in `S083_sprt.sh`'s shape: the guard's commit against its parent at 8+0.08, Hash 16, on `noob_3moves.epd`, `{-5, 0}` nElo at alpha = beta = 0.05, 20950 rounds, 12.1 h with a true zero and 19.9 h at the cap, the abort rule and the three outcomes, H0 sending the defect back to the owner; refuses to start until the coordinator pins the pair in it |
+| `S289_sprt.log` | S289's one SPRT, 2026-10-22 15:50 to 19:53, 4 h 03 m: `cd50178` (the null-move table guard) against its parent `4a3a0e5`, `{-5, 0}` nElo at 8+0.08, Hash 16, on `noob_3moves.epd`, 12 of 12 cores, capped at 20950 rounds; **H0, `Elo -7.42 +/- 5.07`, `nElo -10.68 +/- 7.29`**, LLR -2.95, 8716 games, 0 forfeits, no crash or disconnect, `Incomplete mating PV` 4 lines; the run inspected and standing (banner as pinned, both binaries at their bench, quarters -13.7, -0.8, -9.6, -5.6 Elo each +/- 10), so by the pre-registration's H0 row the guard is reverted whole (DEC-309). `.tuning/s289_sprt.log` through `tools/trim_console.py --summary` (no block to drop); the untrimmed run is archived as `chesso_S289_sprt_2026-10-22.tar.xz` (DEC-235) |
