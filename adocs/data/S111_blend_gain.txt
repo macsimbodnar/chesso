@@ -1,0 +1,28 @@
+# S111: the continuation tables' applied correction against the pawn read alone, DEC-302 (3).
+# adocs/data/S111_blend_gain.py on the rebased candidate's tune build at its defaults
+# (CorrHistCont2Weight and CorrHistCont4Weight 100, on 03fa3ec; binary sha256 11b99d11f4120dd7),
+# 2026-10-21, twelve games in parallel on the idle machine, normal priority; node-limited,
+# so the load moved nothing. The counter is read-only: the tune build benches 7343608 with
+# it on, the Release candidate's total. A record beside S111's verdict; it decides nothing.
+# '*' is a game stopped at 120 plies; the results are python-chess's and judge nothing.
+
+game  0  120 plies  *        r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  1  120 plies  *        r1bqkb1r/pppp1ppp/2n2n2/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  2  120 plies  *        r1bqkbnr/pppp1p1p/2n3p1/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  3  120 plies  *        r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  4  120 plies  *        r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  5  120 plies  *        r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4
+game  6   83 plies  1/2-1/2  r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 0 4
+game  7   46 plies  1/2-1/2  r1bqkbnr/pppp1ppp/2n5/8/3pP3/5N2/PPP2PPP/RNBQKB1R w KQkq - 0 4
+game  8  113 plies  1/2-1/2  r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+game  9  120 plies  *        r1bqk1nr/pppp1ppp/2n5/2b1p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+game 10  120 plies  *        r1bqkbnr/1ppp1ppp/p1n5/4p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+game 11  120 plies  *        r1bqkbnr/pppp1p1p/2n3p1/4p3/4P3/5N1P/PPPP1PP1/RNBQKB1R w KQkq - 0 4
+
+S111 blend gain: 12 games, go nodes 4000000, up to 120 plies, engine /home/max/ws/chesso-s111r/build-tune/src/chesso
+A record beside S111's verdict; it decides nothing (DEC-302 (3)).
+                 reads  mean|p|      R moved/p  two/p four/p  pawn 0 (entry)  two 0 (entry) four 0 (entry)
+all         1335434217    19.04  0.808   0.516  0.943  0.914   0.031   0.001  0.085   0.040  0.075   0.029
+plies 1-40   453015536    14.55  0.754   0.643  0.909  0.874   0.046   0.004  0.152   0.084  0.130   0.061
+plies 41-80  462328511    17.23  0.796   0.590  0.984  0.935   0.030   0.000  0.064   0.021  0.058   0.015
+plies 81-120 420090170    25.87  0.851   0.385  0.932  0.923   0.016   0.000  0.036   0.011  0.034   0.009

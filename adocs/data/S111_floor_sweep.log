@@ -1,0 +1,42 @@
+# S111, 2026-10-21, on 4529b79 -- fixture A, a commit object on no branch: 03fa3ec (S110's
+# revert, with DEC-302) plus S111's staged change (the continuation tables averaged
+# with the pawn table's read, bench 7343608; the goldens at the parent's).
+# python3 adocs/data/S154_floor_margin_sweep.py floor --ref 4529b79 --jobs 12, then
+# the same with `red` (.tuning/coord/S111/p2/floors.sh). MATE_IN_THREE_FLOOR 11 holds:
+# 11 of 24 shipping, 6 weakened, the gate at RfpMinPly 1 red at 6 >= 11.
+
+RfpMinPly swept at 4529b7925e0debd310fca76fa0e15bac308704f1, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #########..###.######..#  churn -  12778024 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 16/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 #####.#.#...##.######..#  churn 3  10404403 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 11/24 d6  m4  2/16 d3  m5  1/16 d5  short 0  sign 0
+                         m3 ##.##...#....#.####.#...  churn 5  10329284 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 11/24 d6  m4  3/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ##.##...#....#.####.#...  churn 0  10816053 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  6/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ...##...........###.#...  churn 5  7299258 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  6/24 d6  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ...##...........###.#...  churn 0  7299258 nodes
+
+  floor, 16.8s
+S154 floor rc=0
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_p13srbdm/tests/test_engine.cpp:5829: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_p13srbdm/tests/test_engine.cpp:5830: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 6 >= 11 )
+    [doctest] assertions: 3484 | 3456 passed | 28 failed |
+
+  red, 22.8s
+S154 red rc=0

@@ -1,0 +1,22 @@
+# S111, 2026-10-21: python3 adocs/data/S156_mined_floor_sweep.py --ref 4529b79 --floor 163 --jobs 12
+# on 4529b79, fixture A (03fa3ec plus S111's staged change), the floor the parent ships
+# compiled in. **163 no longer separates**: shipping 162, weakened 159, so the tree
+# reads 162 against EXACT_FLOOR 163 -- outside DEC-302's guard. EXACT_FLOOR stays 163;
+# the owner rules (DEC-303), and S111 is not committed before that ruling.
+
+318 positions, depth 10, ref 4529b7925e0debd310fca76fa0e15bac308704f1
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     162          167            0   15.8s
+          2     161          165            0   15.7s
+          1     159          164            0   15.3s
+          0     159          164            0   15.2s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 162, weakened-guard value 159, gap 3
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_ex11dgnh/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 159 exact, 164 right sign, 0 wrong sign
+    logged: the mined set reads 159 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+S156 rc=0
