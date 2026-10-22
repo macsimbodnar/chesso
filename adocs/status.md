@@ -5,7 +5,28 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-21, by hand.
+Updated: 2026-10-22, by hand.
+
+## 2026-10-22: S111 H0, recorded as zero; S083 next
+
+**S111 read H0** at 10:22 (32+0.32, Hash 64, `{0, 10}`), played from the
+worktree's uncommitted tree (DEC-303) after the owner's shutdown: nElo -1.52
++/- 9.20 over 5484 games, LLR -2.96, 0 forfeits, 10 h 11 m
+(`adocs/data/S111_sprt.log`, archived untrimmed as
+`chesso_S111_sprt_2026-10-22.tar.xz`). By its pre-registration S111 is **not
+committed** and is recorded as zero (record `7b6f951`): the played diff is
+`adocs/data/S111_candidate.diff` (blob `f6cb46046bc0`), beside the phase 1b
+and phase 2 readings; main's code never moved (bench 6042933). `EXACT_FLOOR`
+stays 163, so **the owner question DEC-303 held open is withdrawn**. Both
+extensions of the correction family (S110, S111) read zero at 32+0.32; the
+pawn table ships. `Incomplete mating PV` 4 lines from 2 searches candidate, 1
+reference, an observation. Worktrees `../chesso-s111` and `../chesso-s111r`
+kept for the owner to prune.
+
+**Next: S083**, prepared blind during the run in `../chesso-s083` (staged;
+`.tuning/coord/S083/s083_phase1.diff`), fast check's six findings fixed;
+DEC-304 drafted (`.tuning/coord/S083/dec304.md`). On S111's H0 the S082 pool
+is the shipping engine's corpus and is reused (DEC-304 (9)): MODE s082.
 
 ## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0; S111's SPRT from its tree
 
