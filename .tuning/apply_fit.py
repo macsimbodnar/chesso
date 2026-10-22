@@ -7,12 +7,49 @@ source by name, and the source is rewritten. Anything the tuner emitted and this
 script could not place is a hard error, which is the failure DEV_MANUAL warns
 about ("a fit that is half applied looks like a fit that did not work").
 
-Usage: apply_fit.py <emitted.hpp> [--dry-run]
+Usage: apply_fit.py <emitted.hpp> [--dry-run] [--root TREE | --root=TREE]
+
+--root names the tree whose sources are rewritten, the main checkout by
+default. S083 lands its fit in a worktree of its own, as every landing since
+S110 does, so the default alone would write the wrong tree.
 """
 import re
 import sys
 
-ROOT = "/home/max/ws/chesso/"
+
+def arguments(flags):
+    """(emitted, root, flags seen): the one positional, `--root TREE` or
+    `--root=TREE`, and the bare flags this script knows. Anything else is
+    refused, so a misspelt option cannot fall back to the main checkout."""
+    emitted = None
+    root = "/home/max/ws/chesso/"
+    seen = set()
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--root":
+            if i + 1 >= len(args) or not args[i + 1]:
+                raise SystemExit("--root needs a directory")
+            root = args[i + 1]
+            i += 1
+        elif arg.startswith("--root="):
+            root = arg[len("--root="):]
+            if not root:
+                raise SystemExit("--root needs a directory")
+        elif arg in flags:
+            seen.add(arg)
+        elif arg.startswith("-") or emitted is not None:
+            raise SystemExit("unrecognised argument %s" % arg)
+        else:
+            emitted = arg
+        i += 1
+    if emitted is None:
+        raise SystemExit("usage: %s <emitted.hpp> [--root TREE]" % sys.argv[0])
+    return emitted, root.rstrip("/") + "/", seen
+
+
+EMITTED, ROOT, FLAGS = arguments({"--dry-run"})
 TABLES = ROOT + "src/eval_tables.hpp"
 EVAL = ROOT + "src/evaluation.cpp"
 
@@ -61,8 +98,8 @@ def replace_one(text, pattern, new, what):
 
 
 def main():
-    emitted = sys.argv[1]
-    dry = "--dry-run" in sys.argv
+    emitted = EMITTED
+    dry = "--dry-run" in FLAGS
     defines, tables, arrays, scalars = parse(emitted)
 
     unparsed = declared(emitted) - set(tables) - set(arrays) - set(scalars)

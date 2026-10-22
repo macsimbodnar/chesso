@@ -1,17 +1,57 @@
 #!/usr/bin/env python3
-"""Check that every one of the 827 fitted numbers reached the engine's sources.
+"""Check that every one of the 823 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
 fit looks like a fit that did not work, and a weight still holding the value the
 engine shipped is indistinguishable from a term the fit had nothing to say about.
 
-Usage: verify_fit.py <emitted.hpp>
+Usage: verify_fit.py <emitted.hpp> [--root TREE | --root=TREE]
+
+823 since S134 folded the sixth passer bucket and rook on the seventh into the
+tables (DEC-090): passed_pawn is five wide a phase and piece_placement three.
+This list said six and four, and 827, until S083 -- the first fit pasted since
+S076 -- found it; it would have refused a correct paste. --root names the tree
+read, the main checkout by default.
 """
 import re
 import sys
 
-ROOT = "/home/max/ws/chesso/"
+
+def arguments(flags):
+    """(emitted, root, flags seen): the one positional, `--root TREE` or
+    `--root=TREE`, and the bare flags this script knows. Anything else is
+    refused, so a misspelt option cannot fall back to the main checkout."""
+    emitted = None
+    root = "/home/max/ws/chesso/"
+    seen = set()
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--root":
+            if i + 1 >= len(args) or not args[i + 1]:
+                raise SystemExit("--root needs a directory")
+            root = args[i + 1]
+            i += 1
+        elif arg.startswith("--root="):
+            root = arg[len("--root="):]
+            if not root:
+                raise SystemExit("--root needs a directory")
+        elif arg in flags:
+            seen.add(arg)
+        elif arg.startswith("-") or emitted is not None:
+            raise SystemExit("unrecognised argument %s" % arg)
+        else:
+            emitted = arg
+        i += 1
+    if emitted is None:
+        raise SystemExit("usage: %s <emitted.hpp> [--root TREE]" % sys.argv[0])
+    return emitted, root.rstrip("/") + "/", seen
+
+
+EMITTED, ROOT, _ = arguments(set())
+TOTAL = 823
 
 WIDTHS = [
     ("PAWN", 1),
@@ -25,12 +65,12 @@ WIDTHS = [
     ("mobility_eg", 4),
     ("king_safety_mg", 9),
     ("king_safety_eg", 9),
-    ("passed_pawn_mg", 6),
-    ("passed_pawn_eg", 6),
+    ("passed_pawn_mg", 5),
+    ("passed_pawn_eg", 5),
     ("pawn_structure_mg", 3),
     ("pawn_structure_eg", 3),
-    ("piece_placement_mg", 4),
-    ("piece_placement_eg", 4),
+    ("piece_placement_mg", 3),
+    ("piece_placement_eg", 3),
     ("tempo_mg", 1),
     ("tempo_eg", 1),
 ]
@@ -56,7 +96,7 @@ def extract(text):
     return out
 
 
-emitted = extract(open(sys.argv[1]).read())
+emitted = extract(open(EMITTED).read())
 shipped = extract(
     open(ROOT + "src/eval_tables.hpp").read() + open(ROOT + "src/evaluation.cpp").read()
 )
@@ -86,4 +126,4 @@ for name, width in WIDTHS:
 print("%d parameters compared, %d identical to the emitted header" % (total, same))
 for line in bad:
     print("  MISMATCH " + line)
-sys.exit(1 if (bad or total != 827) else 0)
+sys.exit(1 if (bad or total != TOTAL) else 0)

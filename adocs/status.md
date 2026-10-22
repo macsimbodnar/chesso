@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-22, by hand.
 
-## 2026-10-22: S111 H0, recorded as zero; S083 next
+## 2026-10-22: S111 H0, recorded as zero; S083 pre-registered (DEC-304)
 
 **S111 read H0** at 10:22 (32+0.32, Hash 64, `{0, 10}`), played from the
 worktree's uncommitted tree (DEC-303) after the owner's shutdown: nElo -1.52
@@ -23,10 +23,14 @@ pawn table ships. `Incomplete mating PV` 4 lines from 2 searches candidate, 1
 reference, an observation. Worktrees `../chesso-s111` and `../chesso-s111r`
 kept for the owner to prune.
 
-**Next: S083**, prepared blind during the run in `../chesso-s083` (staged;
-`.tuning/coord/S083/s083_phase1.diff`), fast check's six findings fixed;
-DEC-304 drafted (`.tuning/coord/S083/dec304.md`). On S111's H0 the S082 pool
-is the shipping engine's corpus and is reused (DEC-304 (9)): MODE s082.
+**S083 in progress**, prepared blind during the run (`../chesso-s083`; fast
+check's six findings fixed), applied onto main and committed with
+**DEC-304**, its pre-registration: two nights at most, 100000 nodes, S082's
+pool as stage 0, one SPRT at 8+0.08 `{0, 5}`. S111's H0 keeps the pool the
+shipping engine's corpus, and `build/tools/datagen` hashes to the pool's
+binary (`4b0e2848...`): **MODE s082**. Next: the phase 2 kit, then smoke
+(about 3 min) and curve 0 (about 36 min); generation only if curve 0 says
+`continue`, at night (DEC-155).
 
 ## 2026-10-21: a second power loss; S287, S082, S288 done; S110 H0; S111's SPRT from its tree
 
