@@ -15582,3 +15582,49 @@ Consequences: S289's commit is the SPRT's CAND; S289 completes on the
               S083's, taken at its re-landing (`adocs/data/S289_paste.txt`).
               S135's two drafted decisions take the next free ids when they
               land.
+
+## DEC-307  2026-10-22  S083 re-lands on S289's guard: the queen re-anchored, CorrHistMax's range moved with the pawn, and its SPRT played on the working tree with the owner ruling on the reds only on H1
+Tags:         evaluation, corpus, s083, s289, dec-305, dec-306, dec-304, dec-303, dec-299, dec-059, sprt, working-tree, owner-question
+Context:      DEC-305 paused S083 for S289 and refused an SPRT on a tree whose
+              mate-safety property was red, because the cause's fix would
+              change the tree the verdict measured. S289 found the rule (a
+              null move at a node the table had just proved mated) and fixed
+              it (DEC-306). On the guard's tree the paste
+              (`adocs/data/S289_paste.txt`) reports the ply-2 case's `mate -2`
+              from iteration 6, still red at its first-iteration clause (4),
+              the remaining delay being late move reduction of the late-ordered
+              mating quiet at a PV node, which hides nothing; `EXACT_FLOOR`
+              reads 158 against 163 (155 weakened); `MATE_IN_THREE_FLOOR` 12
+              with 11 weakened, not separating. The first landing also left
+              `POSITIONAL_ROOM` firing (the queen's residual 273) and
+              `tests/test_search_params.cpp` pinning `CorrHistMax`'s top to
+              `PAWN` (94 against the paste's 84).
+Decision:     By the coordinator under the owner's standing instruction.
+              (1) The queen is re-anchored through the degeneracy, DEC-059's
+              form: `.tuning/reanchor.py <fit> <out> queen -273` on the emitted
+              header before the paste, `QUEEN` 710 -> 983 and -273 on all 128
+              queen squares; `POSITIONAL_ROOM` stays 150 and its test is not
+              edited. (2) `CorrHistMax`'s range moves with `PAWN` in the same
+              change, as the case records; a tune-build bound, no play change.
+              (3) Every golden inside DEC-299's guard is re-derived by its
+              script and applied; the two mate floors and the ply-2 case's
+              clause are not touched. (4) S083's one SPRT (DEC-304 (10):
+              `{0, 5}`, 8+0.08, Hash 16, 20950 rounds, abort at 40 h) plays
+              the re-landing's working tree in fastchess.sh's dirty-tree mode,
+              DEC-303's form, after S289's own SPRT. **On H1 the owner rules
+              before any commit** on `EXACT_FLOOR`, `MATE_IN_THREE_FLOOR`'s
+              separation and the ply-2 clause; on H0 or no verdict nothing is
+              committed and S083 completes as zero.
+Rejected:     Holding to DEC-305's refusal -- its reason was a fix still to
+              come; what stays red is a mate found two iterations later and
+              floor counts, which a ruling settles without changing the engine,
+              so the verdict measures the tree that would ship. Asking the
+              owner now -- the rulings matter only on H1, and an H0 ends them.
+              Changing late move reduction for the case -- no evidence of a
+              defect, and a play change of its own. Widening `POSITIONAL_ROOM`
+              -- DEC-059's reason.
+Consequences: S083's re-landing runs in `../chesso-s083r` on S289's commit;
+              `adocs/data/S083_sprt.sh` gains S111_sprt.sh's working-tree
+              mode. If S289's SPRT reads H0 and its guard is reverted, the
+              re-landing's readings are taken again on the reverted tree before
+              S083's run.
