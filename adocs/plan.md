@@ -314,8 +314,9 @@ is typed by hand.
 | S111 | the continuation correction tables | 10 h 11 m | 5484 | `{0, 10}` | H0, -1.01 +/- 6.15 |
 | S289 | Revert 's null-move table guard on its H0 (DEC-309) | 4 h 3 m | 8716 | `{-5, 0}` | H0, -7.42 +/- 5.07 |
 | S292 | the narrowed null-move guard | 11 h 7 m | 23802 | `{-5, 0}` | H1, +0.35 +/- 3.08 |
+| S293 | reverse futility's whole-search mated guard | 5 h 7 m | 10954 | `{-5, 0}` | H1, +2.85 +/- 4.60 |
 
-**The ledger holds 54: mean 6 h 09 m, median 5 h 26 m, 663191 games in 332.95 hours, 1991.8 an hour across the set.** **Fast class**, an effect outside the bounds interval -- nineteen runs, mean **1 h 53 m**. **Slow class**, inside it, on a bound or a true zero -- 35 runs, mean **8 h 29 m**.
+**The ledger holds 55: mean 6 h 08 m, median 5 h 25 m, 674145 games in 338.07 hours, 1994.1 an hour across the set.** **Fast class**, an effect outside the bounds interval -- nineteen runs, mean **1 h 53 m**. **Slow class**, inside it, on a bound or a true zero -- 36 runs, mean **8 h 23 m**.
 
 ### Priced by class
 
