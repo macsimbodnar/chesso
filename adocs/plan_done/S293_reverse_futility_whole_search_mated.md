@@ -8,7 +8,7 @@ closes:
 blocks:     S083
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
-done:
+done:       2026-10-23 20:40 -- H1 at {-5, 0} nElo, 8+0.08, Hash 16, CAND ad0cfc7 vs REF 6ebeadc: Elo +2.85 +/- 4.60, nElo +4.04 +/- 6.51, LLR 2.96, 10954 games, 5 h 07 m, 0 forfeits (adocs/data/S293_sprt.log, archived as chesso_S293_sprt_2026-10-23.tar.xz); the banner as pinned (9dd53b1), both binaries at bench 6042933, quarters +4.8, +2.4, +2.0, +2.4, so reverse futility's whole-search mated guard stays (DEC-312): mined row 171's depth-10 mate stays lost as DEC-158's price, `EXACT_FLOOR` holds at its shipping count 163, and S083 re-lands on this tree. Implemented by one Opus 5.5 subagent (ad0cfc7: row 171 traced first, red first on 104 rows, RW01-RW05 killed, gate_extra 5/5, both builds green), fast-checked (specs and the DEC owed, written by the coordinator; the row-171 ruling flagged for the owner, recorded as DEC-312); Debug self-play 8 games, 0 Assertion, 0 disconnect; run, read and stamped by the coordinator.
 
 ## Why this step exists (the coordinator, 2026-10-23, DEC-311)
 
@@ -244,3 +244,43 @@ constant read.
   parent builds and the mutation build, now detached at `8f02693`), the
   scratchpad 70 MB -- about 2.1 GB; the S154 and S156 scripts' temporary
   worktrees under `/tmp` were removed by them. 6.1 GB free after.
+
+## 2026-10-23: the SPRT read H1; the guard stays (the coordinator)
+
+**The verdict.** `adocs/data/S293_sprt.sh`'s pair, `ad0cfc7` (the guard)
+against its parent `6ebeadc`, from 2026-10-23 15:22 for 5 h 07 m:
+
+```
+SPRT | cand ad0cfc7 vs ref 6ebeadc, 8+0.08, Hash=16, noob_3moves.epd, {-5, 0} nElo
+Elo | 2.85 +/- 4.60, nElo 4.04 +/- 6.51
+LLR | 2.96 (-2.94, 2.94) -> H1
+Games | N: 10954 W: 3104 L: 3014 D: 4836, Ptnml [347, 1287, 2140, 1335, 368]
+Wall | 5 h 7 m, 2139.1 games/h, forfeits 0
+Log | adocs/data/S293_sprt.log
+```
+
+**The inspection.** The banner matches the pin (`9dd53b1`): both shas, 8+0.08,
+Hash 16, 12 of 12 cores, `noob_3moves.epd`, `{-5, 0}` at alpha = beta = 0.05,
+seed 20261023152229, the cap 41900 games. Both binaries the run played
+reproduce bench 6042933. No crash or disconnect, 0 forfeits in 10957 PGN
+games. The console's warnings are one PV-past-threefold block (the
+candidate's) and **one `Incomplete mating PV`, from the reference
+`6ebeadc`**: game 4305, `mate -9` with a ten-move line, S202's residue that
+`test_mate_carry` counts against its ceilings (DEC-162), none from the
+candidate. The four quarters in game order read +4.8, +2.4, +2.0 and +2.4
+Elo, each about +/- 9.7. The kernel journal is empty at warning level over
+the run. The run stands.
+
+**By the pre-registered H1 row**: H1's 0 is preferred to H0's -5 at
+alpha = beta = 0.05, so the guard is accepted as not costing 5 nElo at
+8+0.08 and **stays**. The stopping run's Elo is biased and is not the effect
+size (DEC-063). It ended at a bound in 10954 games, short of the 25591 the
+pre-registration expected at a true zero. Reverse futility no longer fails
+high against a whole search's mated bound (DEC-311 (2)); mined row 171's
+depth-10 mate stays lost as DEC-158's price (DEC-312). S083's `paused_by`
+clears, and S083 re-lands on this tree.
+
+**Archive.** The untrimmed console and the run directory (`games.pgn`,
+`fastchess.log`) are `chesso_S293_sprt_2026-10-23.tar.xz` in the owner's
+archive, sha256 `1e05d558...50eade8`, built under `.tuning/`, verified and
+moved in.

@@ -7,7 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-23, by hand.
 
-## 2026-10-23: S293's guard committed; its `{-5, 0}` SPRT decides it (DEC-312)
+## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
+
+**S293's SPRT read H1** at 20:29 (`adocs/data/S293_sprt.log`, archived
+untrimmed as `chesso_S293_sprt_2026-10-23.tar.xz`): `ad0cfc7` against
+`6ebeadc`, 8+0.08, Hash 16, `{-5, 0}`, 10954 games, Elo +2.85 +/- 4.60, nElo
++4.04 +/- 6.51, LLR 2.96, 5 h 07 m, 0 forfeits. Inspected: banner as pinned,
+both binaries at bench 6042933, no crash or disconnect, one `Incomplete
+mating PV` from the reference (S202's residue), quarters +4.8, +2.4, +2.0,
++2.4, journal clean. S293 is in plan_done; S083's `paused_by` is clear.
+
+**Next**: S083. Its cd50178-tree record (Part A, the `S083r_*` readings,
+fast-checked, `.tuning/coord/S083/s083r_record.diff`) commits after the
+ledger. Then Part B re-lands the paste on this tree in `../chesso-s083s`
+(`.tuning/coord/S083/brief_reland2.md`): every search golden by its
+script, `S083_sprt.sh` naming the five H1 rulings, then its `{0, 5}`
+working-tree run. S290, S135.
+
+## 2026-10-23: S293's guard committed (DEC-312)
 
 **S293** (one Opus 5.5 subagent, `../chesso-s293`, scratch `../chesso-s293t`)
 traced mined row 171's loss first (`adocs/data/S293_row171.txt`). The guarded
@@ -24,11 +41,6 @@ floor holding at 163 with **no spare point**; S170 C 500000 -> 1500000 by
 the rule, ceilings unmoved (DEC-299's guard). Fast check: specs and the DEC
 owed, both written; the row-171 ruling flagged for the owner to ratify
 (DEC-312 records it).
-
-**Next**: the Debug self-play, then S293's SPRT (`adocs/data/S293_sprt.sh`,
-12-20 h, likely toward its cap). On H1 or no verdict, S293 completes and
-S083 re-lands on its tree (`.tuning/coord/S083/brief_reland2.md`). On H0 it
-reverts whole and the owner rules. S290, S135.
 
 ## 2026-10-23: S291 completes, no rule at fault; S293 (BUGS) is first (DEC-311)
 
