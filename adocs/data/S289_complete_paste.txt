@@ -1,0 +1,206 @@
+# S289's completion, 2026-10-23: section 5's readings (S289_paste.txt, the paste with cd50178's guard) retaken with
+# the guard that shipped, S292's (`e27d3e5`, DEC-310), on `908ed57` (bench 6042933). Two sets of constants, since the
+# re-landing's are not section 5's (S289_complete_red.log's head):
+#   Q   `908ed57` plus the src/ hunks of .tuning/coord/S083/s083_reland.diff (the queen re-anchored, CorrHistMax's top
+#       84): fixture 38a15f4a6953f48adc60c058201bd354fbb69f4c, bench 3945487. The brief's constants.
+#   P2  `908ed57` plus ../chesso-s289p's src/eval_tables.hpp and src/evaluation.cpp, section 5's constants byte for
+#       byte: fixture 23189c2699e0bf4a2d3bdf7e2ebe9b8fb8de2b73, bench 3945685.
+# Both fixtures are commit objects on no branch (a temporary index; no ref moved), scratch in ../chesso-s289q.
+# Measurement only: S083's constants are not this step's (excludes). The engine's own output; no chess question asked.
+# `S083r_*` below: readings S083's re-landing took on cd50178's tree (S289's reverted guard) at Q's constants,
+# carried only inside .tuning/coord/S083/s083_reland.diff (gitignored, not landed) and pinned by the blob id on the
+# diff's `index` line; S083 re-reads on S292's tree, likely under the same names with new values.
+
+== 1. bench (chesso bench, the total)
+   908ed57, the shipped tree             6042933
+   Q, guard in                           3945487   Release and tune; with the guard's condition defeated, 3945487
+   P2, guard in                          3945685   Release
+   beside, cd50178's guard               3945685 at P (S289_paste.txt), 3945487 at Q's constants
+                                         (S083r_bench.txt blob ded1928, cd50178's tree)
+   Neither guard moves a bench node at either set of constants.
+
+== 2. tests/test_engine.cpp "reverse futility at ply 2 does not hide a mate from the side to move", through UCI as
+==    deepen_scores() reads it: .tuning/coord/S083/land/probe/uci_probe.py ENGINE FEN 8 (go depth 8, defaults; it
+==    keeps three moves of the PV), time and nps dropped. FEN rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2.
+-- Q, guard in (Release)
+   info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+   info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+   info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+   info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+   info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+   info score mate -2 depth 6 nodes 1024 hashfull 0 pv h1g1 g8f8 g1h1
+   info score mate -2 depth 7 nodes 2141 hashfull 0 pv h1g1 g8f8 g1h1
+   info score mate -2 depth 8 nodes 4149 hashfull 0 pv h1g1 g8f8 g1h1
+   bestmove h1g1 ponder g8f8
+-- P2, guard in (Release): the same nine lines, node for node
+   info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+   info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+   info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+   info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+   info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+   info score mate -2 depth 6 nodes 1024 hashfull 0 pv h1g1 g8f8 g1h1
+   info score mate -2 depth 7 nodes 2141 hashfull 0 pv h1g1 g8f8 g1h1
+   info score mate -2 depth 8 nodes 4149 hashfull 0 pv h1g1 g8f8 g1h1
+   bestmove h1g1 ponder g8f8
+-- Q, the guard's condition defeated (S289_complete_red.log A): no mate, the paste alone's reading
+   info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+   info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+   info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+   info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+   info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+   info score cp 996 depth 6 nodes 932 hashfull 0 pv h1g1 g3f4 g1h2
+   info score cp 978 depth 7 nodes 1726 hashfull 0 pv h1g1 g8g7 g1f1
+   info score cp 913 depth 8 nodes 2269 hashfull 0 pv h1g1 g8g7 g1f1
+   bestmove h1g1 ponder g8g7
+   beside, cd50178's guard: `mate -2` at 6, 7 and 8 with the guard-in node counts above, at P (S289_paste.txt) and
+   at Q's constants (S083r_rfp_ply2.txt blob cb2c2f6, cd50178's tree). So S292's guard shows the mate at every
+   iteration cd50178's showed it, and first at 6: the case stays red at REQUIRE( first_exact == 4 ), 6 == 4. The
+   stop rule does not fire.
+
+-- one tune option at a time, Q's tune build with the guard: the first iteration reporting mate -2, and every
+-- iteration's score. Section 5's toggles, the same answers; deciding nothing alone.
+   defaults             first mate -2 at 6   1:cp1168 2:cp1125 3:cp1009 4:cp1009 5:cp1027 6:mate-2 7:mate-2 8:mate-2
+   LmrBase=0            first mate -2 at 4   1:cp1168 2:cp1125 3:cp1009 4:mate-2 5:mate-2 6:mate-2 7:mate-2 8:mate-2
+   LmrDivisor=2000      first mate -2 at 4   1:cp1168 2:cp1125 3:cp1009 4:mate-2 5:mate-2 6:mate-2 7:mate-2 8:mate-2
+   LmrPv=2              first mate -2 at 4   1:cp1168 2:cp1125 3:cp1009 4:mate-2 5:mate-2 6:mate-2 7:mate-2 8:mate-2
+   LmrPv=0              first mate -2 at 7   1:cp1168 2:cp1125 3:cp1009 4:cp1009 5:cp1027 6:cp996 7:mate-2 8:mate-2
+   LmrNotImproving=0    first mate -2 at 6   1:cp1168 2:cp1125 3:cp1009 4:cp1009 5:cp1027 6:mate-2 7:mate-2 8:mate-2
+   LmrNoTtMove=0        first mate -2 at 6   1:cp1168 2:cp1125 3:cp1009 4:cp1009 5:cp1027 6:mate-2 7:mate-2 8:mate-2
+   LmrCutNode=0         first mate -2 at 6   1:cp1168 2:cp1125 3:cp1009 4:cp1009 5:cp1027 6:mate-2 7:mate-2 8:mate-2
+   NullMoveBase=16      first mate -2 at 6   1:cp1168 2:cp1125 3:cp1009 4:cp1009 5:cp1027 6:mate-2 7:mate-2 8:mate-2
+   Iterations 4 and 5 report cp 1009 and cp 1027 at the defaults. Three reduction options bring the first mate to 4,
+   and no null move at all (NullMoveBase 16, which removes the pass at these depths, section 1) leaves it at 6: the
+   pass delays nothing now, and what is left is section 1's late move reduction at ply 1, as section 5 read it.
+
+== 3. EXACT_FLOOR: python3 adocs/data/S156_mined_floor_sweep.py --ref <fixture> --floor 163 --jobs 12
+-- Q
+   RfpMinPly   exact   right sign   wrong sign   wall
+           3     158          162            0   15.3s
+           2     159          162            0   15.4s
+           1     153          157            0   14.9s
+           0     153          157            0   14.9s
+
+     shipping value 158, weakened-guard value 153, gap 5
+     THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+   the gate built with RfpMinPly defaulting to 1: RED, as it must be
+-- P2
+   RfpMinPly   exact   right sign   wrong sign   wall
+           3     157          161            0   15.4s
+           2     160          164            0   15.7s
+           1     154          158            0   14.9s
+           0     154          158            0   15.0s
+
+     shipping value 157, weakened-guard value 154, gap 3
+     THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+   the gate built with RfpMinPly defaulting to 1: RED, as it must be
+   Shipping / weakened, by tree:
+     the paste alone, P                      157 / 154   S083_mined_floor.log
+     P with cd50178's guard                  158 / 155   S289_paste.txt
+     P2, P with S292's guard                 157 / 154   above
+     Q's constants with cd50178's guard      159 / 154   S083r_mined_floor.log blob cddaba2, cd50178's tree
+     Q with S292's guard                     158 / 153   above
+     908ed57, the shipped constants          164 / 160   S292_goldens.txt
+   163 falls in every paste row. DEC-305 leaves EXACT_FLOOR to the owner, carried by S083's ruling (DEC-307 (4)).
+
+== 4. MATE_IN_THREE_FLOOR: python3 adocs/data/S154_floor_margin_sweep.py floor --ref <fixture> --jobs 12, then red
+-- Q
+ 82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+   RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                          m3 #######.##.###.######..#  churn -  10767857 nodes
+   RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  1/16 d7  short 0  sign 0
+                          m3 #######.##.###.######..#  churn 0  11612755 nodes
+   RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d5  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                          m3 ##.##...#....#.####.#..#  churn 7  9958829 nodes
+   RfpMinPly=2            m2 26/26 on-time 17 d1  m3 13/24 d6  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                          m3 #####...#....#.####.#..#  churn 1  10100838 nodes
+   RfpMinPly=1            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                          m3 .#.##...#....#.####.#..#  churn 2  8224164 nodes
+   RfpMinPly=0            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                          m3 .#.##...#....#.####.#..#  churn 0  8224164 nodes
+   floor, 14.3s
+   the gate built with RfpMinPly defaulting to 1: RED, as it must be
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     /tmp/S154_sweep_0e2e9w09/tests/test_engine.cpp:5782: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+     [doctest] assertions: 3568 | 3541 passed | 27 failed |
+   red, 22.2s
+-- P2
+ 82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+   RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                          m3 #######.##.###.######..#  churn -  10667998 nodes
+   RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  1/16 d7  short 0  sign 0
+                          m3 #######.##.###.######..#  churn 0  12577535 nodes
+   RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d5  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                          m3 ##.##...#....#.####.#..#  churn 7  10735667 nodes
+   RfpMinPly=2            m2 26/26 on-time 17 d1  m3 13/24 d6  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                          m3 #####...#....#.####.#..#  churn 1  9593677 nodes
+   RfpMinPly=1            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                          m3 .#.##...#....#.####.#..#  churn 2  8641845 nodes
+   RfpMinPly=0            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                          m3 .#.##...#....#.####.#..#  churn 0  8641845 nodes
+   floor, 14.7s
+   the gate built with RfpMinPly defaulting to 1: RED, as it must be
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     values: CHECK( false )
+     /tmp/S154_sweep_p6lmv2uf/tests/test_engine.cpp:5782: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+     [doctest] assertions: 3568 | 3541 passed | 27 failed |
+   red, 22.2s
+   12 shipping (RfpMinPly 3) and 11 weakened (RfpMinPly 1) at both: the paste's own figures, as with cd50178
+   (S289_paste.txt; S083r_floor_sweep.log blob 80f0704, cd50178's tree). The floor 11 holds and does not separate;
+   the gate built at RfpMinPly 1 is red on mate-in-two exactness. The owner's on S083's H1 (DEC-307 (4)).
+
+== 5. The mined rows S289_mined.txt lists, at depth 10: adocs/data/S289_rows.py ENGINE SET 10 OUT over S145's 318
+==    (the TSV's fen and distance columns), `ucinewgame` per row, Hash 16. `*` marks exact, the label's distance;
+==    "first" is the first depth reporting it. Section 2's column is that file's trace attribution for the 15 rows
+==    the paste lost; the multicut's four are left to S291 (DEC-308), read here and not diagnosed.
+  row  label  section 2 (lost rows)   908ed57      P2 guard     Q no guard   Q guard      Q guard first
+   51  m3     rfp                     m3*          cp 698       cp 675       cp 675       -
+   91  m4     multicut (S291)         m4*          cp 3328      cp 3328      cp 3328      -
+  110  m4     null move               m4*          cp 1393      cp 1393      cp 1393      -
+  130  m5     rfp                     m5*          cp 705       cp 705       cp 705       -
+  146  m5     rfp                     m5*          cp 2946      cp 2946      cp 2946      -
+  166  m5     rfp                     m5*          cp 1480      cp 1515      cp 1515      -
+  168  m5     table bound             m5*          cp 932       cp 932       cp 932       -
+  171  m5     multicut (S291)         m5*          cp 2164      cp 2164      cp 2164      -
+  180  m5     table bound             m5*          cp 1898      cp 1963      cp 1963      -
+  185  m6     unattributed            m6*          cp 1713      cp 2606      cp 2606      -
+  186  m6     unattributed            m6*          cp 742       cp 742       cp 742       -
+  216  m6     rfp                     m6*          cp 2521      cp 2521      cp 2521      -
+  221  m6     multicut (S291)         m6*          cp 1953      cp 1954      cp 1954      -
+  225  m6     rfp                     m6*          cp 2090      cp 2090      cp 2090      -
+  246  m7     multicut (S291)         m7*          cp 1198      cp 1198      cp 1198      -
+   89  m4     gained                  cp 1620      m4*          m4*          m4*          10
+  104  m4     gained                  cp 993       m4*          m4*          m4*          9
+  107  m4     gained                  m5           m4*          m4*          m4*          10
+  179  m5     gained                  cp 1368      m5*          m5*          m5*          10
+  192  m6     gained                  cp 2045      m6*          m6*          m6*          9
+  210  m6     gained                  cp 1256      m6*          m6*          m6*          10
+  226  m6     gained                  cp 864       m6*          m6*          m6*          9
+  231  m7     gained                  cp 2000      m7*          m7*          m7*          10
+  131  m5     cd50178 found it (m5)   cp 2289      cp 2110      cp 2110      cp 2110      -
+  169  m5     Q only                  cp 1887      m7           m5*          m5*          10
+  exact of 318 ('*')                       164          157          158          158
+   - The 15 rows the paste lost stay lost with S292's guard, at both constants; row 110, the one section 2's trace
+     pins on the null move, among them, as with cd50178's guard (S289_mined.txt section 3). At P2 every one of the
+     15 and of the 8 gained reads S289_mined.txt's paste column, score for score.
+   - The 8 gained stay gained. Row 131, which cd50178's guard found (m5) and the parent misses, is not found:
+     cp 2110 at P2 and Q, the paste alone's. Row 169 is exact at Q only, with and without the guard (m7 at P2): the
+     re-anchor's, not the guard's.
+   - At Q the guard moves no row's exactness and no last score: the per-iteration lines differ at row 248 alone
+     (iteration 9, cp 768 -> 772). Net against 908ed57's 164: -7 at P2 (15 lost, 8 gained), -6 at Q (15, 9).
+
+Reading: with the guard that shipped, the paste shows the ply-2 case's mate from iteration 6 to 8, as cd50178's did;
+it stays red at its first-iteration clause on late move reduction, which hides nothing. The mined floor reads 157 at
+section 5's constants and 158 at the re-landing's against 163, one below what cd50178's guard read at each (at P
+the row is 131). The two guards differ on every mated-band upper or exact entry whose `no_move_skipped` byte is 0
+(a negamax node that skipped a move, or a quiescence store), so that row came from such a firing, the kind S292
+narrowed away (DEC-310) -- inferred, not traced. MATE_IN_THREE_FLOOR is the paste's own, 12 and 11.
+None of S292's three cases is red at these constants with the guard in.

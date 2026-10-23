@@ -7,7 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-23, by hand.
 
-## 2026-10-23: S292's narrowed guard read H1 and stays; S289 completes next
+## 2026-10-23: S289 completes on S292's guard; S291 next
+
+**S289 completed** (one Opus 5.5 subagent, `../chesso-s289c`, readings at the
+paste's constants in scratch `../chesso-s289q`, fixture `38a15f4`).
+S292's three guard cases were red at S083's re-landed constants with the
+guard's condition defeated (104 + 104 violations; 5 roots `cp 0`), and
+green with it in both builds (`adocs/data/S289_complete_red.log`). Section
+5 retaken (`adocs/data/S289_complete_paste.txt`):
+- the ply-2 mate appears from iteration 6, node for node as with `cd50178`;
+- `first_exact` stays 6 against 4 (late move reduction);
+- `EXACT_FLOOR` 158/153 against 163;
+- `MATE_IN_THREE_FLOOR` 12/11;
+- the 15 lost and 8 gained mined rows are unmoved.
+These, and section 7's question, are the owner's on S083's H1 (DEC-307 (4)).
+Fast check: three wording and citation items, fixed. S083's `paused_by` is
+now S291 alone.
+
+**Next**: S291 (the multicut row at depth 10, still red on this tree at the
+re-landed constants). Then S083 re-lands on this tree, re-deriving
+`test_mate_carry`'s ceilings and S170's budgets there; its values were
+derived on `cd50178`'s tree. Then S290 and S135.
+
+## 2026-10-23: S292's narrowed guard read H1 and stays
 
 **S292's SPRT read H1** at 10:35 (`adocs/data/S292_sprt.log`, archived
 untrimmed as `chesso_S292_sprt_2026-10-23.tar.xz`): `e27d3e5` against
@@ -17,12 +39,6 @@ both binaries at bench 6042933, no crash or disconnect, quarters -1.9, 0.0,
 +0.7, +2.6 (each +/- 6.6), journal clean. **The guard stays** (DEC-310): all
 31 roots mated in two report `mate -2`. S292 is in plan_done; S289's
 `paused_by` is cleared.
-
-**Next, in order**: S289 completes on S292's tree. A fresh agent checks its
-accepts there, the paste's constants included, since its guard test must be
-green at both. Then S291 (the multicut row, read on the new tree), S083's
-re-landing on the new tree and its `{0, 5}` SPRT, S290 rebased onto C
-500000, then S135.
 
 **Archive hazard, found today**: tar written straight into the Synckeeper
 folder was split into conflict copies while it was still writing, though tar

@@ -1,0 +1,187 @@
+# S289's completion, 2026-10-23: S292's guard (`e27d3e5`, DEC-310) at S083's paste constants -- red first, then green.
+#
+# Scratch tree ../chesso-s289q: `908ed57` (bench 6042933) plus only the src/eval_tables.hpp, src/evaluation.cpp and
+# src/search_params.hpp hunks of .tuning/coord/S083/s083_reland.diff, the paste's constants as S083's re-landing
+# carries them. Fixture Q 38a15f4a6953f48adc60c058201bd354fbb69f4c: `908ed57` plus those three files, a commit object
+# on no branch, made through a temporary index; no ref moved. Release and tune builds, both benching 3945487 with the
+# guard in and with its condition defeated. S083's re-landing read 3945487 too, on cd50178's tree (S289's reverted
+# guard): S083r_bench.txt, blob ded1928, carried only inside .tuning/coord/S083/s083_reland.diff (gitignored).
+#
+# Against ../chesso-s289p, the tree S289's section 5 read (S289_paste.txt): NOT byte-identical.
+#   src/evaluation.cpp     identical.
+#   src/eval_tables.hpp    129 numbers differ, QUEEN 710 -> 983 and -273 on each of the 128 queen squares (the
+#                          re-anchor, DEC-307 (1)), plus the provenance comment above the tables.
+#   src/search_params.hpp  comments only, and CorrHistMax's declared maximum 94 -> 84 (a tune-build bound, DEC-307
+#                          (2); the default stays 47).
+# So S289_complete_paste.txt reads section 5's constants as well (fixture P2).
+#
+# A. Red first, Release build. The guard's condition defeated the way S292_red.log's stage A had it: the entry's
+#    `no_move_skipped` byte and negamax's store of it in, the null-move block not reading it -- in place, NF01's form
+#    (tools/mutants/S292_null_move_full_search_guard.py), since deleting the term leaves a variable unused (-Werror):
+#      -        tt_entry_score <= -MATE_MIN;
+#      +        tt_entry_score <= -MATE_MIN && false;
+#    Temporary, scratch only; `git checkout src/search.cpp` restored it before B.
+#    - test_search "a node a whole search found mated makes no null move": RED, 104 rows passed against a mated upper
+#      bound and 104 against a mated exact score (208 violation lines), 0 on the five premise legs -- the shipped
+#      constants' count (S292_red.log A).
+#    - test_search "a node that skips a move says so in its entry": green, as at the shipped constants -- it tests the
+#      store, which is in; its red is NF03, NF05 and NF06's (S292_mutation.tsv).
+#    - test_engine "a root mated in two reports the mate even where its node could pass": RED, five roots never report
+#      it, all `cp 0`. Not the shipped constants' six: 8/4q3/6K1/8/6k1/p1p1p3/P1P1P3/RBRB4 w - - 1 2 is new here, and
+#      4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4 and 4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3 report theirs.
+#    - test_engine "reverse futility at ply 2 does not hide a mate from the side to move": RED, `0 == 4` -- no mate
+#      at any of the eight iterations, the paste alone's reading (S083_rfp_ply2.txt).
+#
+    == A. Q with the guard's condition defeated (bench 3945487), Release
+    -- 1: test_search "a node a whole search found mated makes no null move" -- RED (first five violations of 208)
+    tests/test_search.cpp:7341:
+    TEST SUITE: search: pruning and reduction guards
+    TEST CASE:  a node a whole search found mated makes no null move
+    
+    tests/test_search.cpp:7459: FATAL ERROR: REQUIRE( violations.empty() ) is NOT correct!
+      values: REQUIRE( false )
+      logged: 1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: passed against a mated upper bound
+    1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: passed against a mated exact score
+    2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: passed against a mated upper bound
+    2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: passed against a mated exact score
+    2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1: passed against a mated upper bound
+    ...
+    [doctest] test cases:    1 |    0 passed | 1 failed | 217 skipped
+    [doctest] assertions: 6869 | 6868 passed | 1 failed |
+    [doctest] Status: FAILURE!
+    -- 2: test_search "a node that skips a move says so in its entry" -- green
+    [doctest] test cases:   1 |   1 passed | 0 failed | 217 skipped
+    [doctest] assertions: 120 | 120 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    -- 3: test_engine "a root mated in two reports the mate even where its node could pass" -- RED
+    tests/test_engine.cpp:5994:
+    TEST SUITE: engine: mate safety
+    TEST CASE:  a root mated in two reports the mate even where its node could pass
+    tests/test_engine.cpp:6080: FATAL ERROR: REQUIRE( hidden.empty() ) is NOT correct!
+      values: REQUIRE( false )
+      logged: roots mated in 2 that never report it:
+    4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1, cp 0
+    8/4q3/6K1/8/6k1/p1p1p3/P1P1P3/RBRB4 w - - 1 2, cp 0
+    rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1, cp 0
+    rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1, cp 0
+    8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3, cp 0
+    [doctest] test cases:    1 |    0 passed | 1 failed | 86 skipped
+    [doctest] assertions: 1264 | 1263 passed | 1 failed |
+    [doctest] Status: FAILURE!
+    -- 4: test_engine "reverse futility at ply 2 does not hide a mate from the side to move" -- RED
+    tests/test_engine.cpp:5836:
+    TEST SUITE: engine: mate safety
+    TEST CASE:  reverse futility at ply 2 does not hide a mate from the side to move
+    tests/test_engine.cpp:5937: FATAL ERROR: REQUIRE( first_exact == 4 ) is NOT correct!
+      values: REQUIRE( 0 == 4 )
+    [doctest] test cases:  1 |  0 passed | 1 failed | 86 skipped
+    [doctest] assertions: 37 | 36 passed | 1 failed |
+    [doctest] Status: FAILURE!
+
+# B. Green: the guard restored, S292's condition as `e27d3e5` ships it, on Q; both builds. S292's three cases green
+#    in both; the ply-2 case red in both at its first-iteration clause, `6 == 4`: `mate -2` from iteration 6 to 8
+#    (S289_complete_paste.txt section 2), section 5's reading with cd50178's guard exactly. Not a case S292 or this
+#    step may edit (TESTS); section 7's question, the owner's on S083's H1 (DEC-307).
+#
+    == build test_search "a node a whole search found mated makes no null move"
+    [doctest] test cases:    1 |    1 passed | 0 failed | 217 skipped
+    [doctest] assertions: 7077 | 7077 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    rc=0
+    == build test_search "a node that skips a move says so in its entry"
+    [doctest] test cases:   1 |   1 passed | 0 failed | 217 skipped
+    [doctest] assertions: 120 | 120 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    rc=0
+    == build test_engine "a root mated in two reports the mate even where its node could pass"
+    [doctest] test cases:    1 |    1 passed | 0 failed | 86 skipped
+    [doctest] assertions: 1354 | 1354 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    rc=0
+    == build test_engine "reverse futility at ply 2 does not hide a mate from the side to move"
+    tests/test_engine.cpp:5836:
+    TEST SUITE: engine: mate safety
+    TEST CASE:  reverse futility at ply 2 does not hide a mate from the side to move
+    tests/test_engine.cpp:5937: FATAL ERROR: REQUIRE( first_exact == 4 ) is NOT correct!
+      values: REQUIRE( 6 == 4 )
+    [doctest] test cases:  1 |  0 passed | 1 failed | 86 skipped
+    [doctest] assertions: 37 | 36 passed | 1 failed |
+    [doctest] Status: FAILURE!
+    rc=1
+    == build-tune test_search "a node a whole search found mated makes no null move"
+    [doctest] test cases:    1 |    1 passed | 0 failed | 224 skipped
+    [doctest] assertions: 7077 | 7077 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    rc=0
+    == build-tune test_search "a node that skips a move says so in its entry"
+    [doctest] test cases:   1 |   1 passed | 0 failed | 224 skipped
+    [doctest] assertions: 120 | 120 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    rc=0
+    == build-tune test_engine "a root mated in two reports the mate even where its node could pass"
+    [doctest] test cases:    1 |    1 passed | 0 failed | 87 skipped
+    [doctest] assertions: 1354 | 1354 passed | 0 failed |
+    [doctest] Status: SUCCESS!
+    rc=0
+    == build-tune test_engine "reverse futility at ply 2 does not hide a mate from the side to move"
+    tests/test_engine.cpp:5836:
+    TEST SUITE: engine: mate safety
+    TEST CASE:  reverse futility at ply 2 does not hide a mate from the side to move
+    tests/test_engine.cpp:5937: FATAL ERROR: REQUIRE( first_exact == 4 ) is NOT correct!
+      values: REQUIRE( 6 == 4 )
+    [doctest] test cases:  1 |  0 passed | 1 failed | 87 skipped
+    [doctest] assertions: 37 | 36 passed | 1 failed |
+    [doctest] Status: FAILURE!
+    rc=1
+
+# C. Both fast suites at Q, guard in: 41 of 50 in each build, the same nine reds with the same assertions and values
+#    in both (ctest -L fast -j12, CLANG_FORMAT_MAJOR=22). Only the re-landing's src/ hunks are applied, so every
+#    golden its tests/ and MANUAL.md hunks re-derive is red here by construction; the rest are the reds DEC-307 and
+#    DEC-308 name. None is one of S292's three cases.
+#    Goldens the re-landing's own hunks re-derive (s083_reland.diff, tests/ and MANUAL.md):
+#      test_evaluation     test_evaluation.cpp:395 REQUIRE( evaluate(&game.board) == test.score ) 99 == 135, pawn on e2
+#      test_search         static-score goldens: QUIET_ROOK_EVAL 585 == 563 (lines 1342, 2554, 2617, 2691, 2772, 2829,
+#                          3061, 3127), black_static 209 == 198 (1410), quiesce -534 == -505 (1466),
+#                          QUIET_ROOK_EVAL_CHEAP 580 == 567 (2971), evaluate -599 == -569 (5435)
+#      test_eval_trace     test_eval_trace.cpp:432 worst 2.75 > 2.8; :487 difference > 2.0 at 1.875, 1.70833, 2 and
+#                          1.5 (the four pinned rows); :495 worst pinned difference 2 > 2.8
+#      test_search_params  test_search_params.cpp:305 [CorrHistMax] max_value 84 == 94
+#      test_plan_params    MANUAL.md:238 CorrHistMax documented 0 to 94, code 0 to 84
+#      test_tuner_gradient test_tuner_gradient.cpp:608 REQUIRE( !binding.empty() ), binding.size() 0 -- the clamp's
+#                          push, re-derived to +100 by the re-landing
+#      test_mate_carry     test_mate_carry.cpp:680 F_mate6_inherited_no_line short_lines 3 <= 2; :704 reporting 3 >= 4,
+#                          silent C_mate7_depth11, D_mate_minus6_depth10, E_mate_minus9 -- the re-landing re-derived its
+#                          ceilings and budgets on cd50178's tree; S292's tree moved C's budget (S292_goldens.txt), so
+#                          S083 re-derives them here (DEC-307's consequence), not this step
+#    The reds DEC-307 and DEC-308 name, for the owner's rulings on S083's H1 or S291:
+#      test_engine         test_engine.cpp:5937 the ply-2 case, REQUIRE( first_exact == 4 ) 6 == 4 (B above)
+#      test_mate_breadth   test_mate_breadth.cpp:277 REQUIRE( found_exact >= EXACT_FLOOR ) 158 >= 163
+#      test_search         test_search.cpp:4687 REQUIRE( result.mate_found ), "mate the multicut hides, depth 10" (S291)
+#      test_tuner_gradient test_tuner_gradient.cpp:889 the gauge walk 0.0586689 > 0.1 (DEC-308 (1))
+#
+    == build: the summary
+    82% tests passed, 9 tests failed out of 50
+    The following tests FAILED:
+          4 - test_evaluation (Failed)
+          5 - test_search (Failed)
+          6 - test_engine (Failed)
+         13 - test_tuner_gradient (Failed)
+         14 - test_eval_trace (Failed)
+         25 - test_search_params (Failed)
+         27 - test_mate_breadth (Failed)
+         29 - test_mate_carry (Failed)
+         47 - test_plan_params (Failed)
+    Errors while running CTest
+    == build-tune: the summary
+    82% tests passed, 9 tests failed out of 50
+    The following tests FAILED:
+          4 - test_evaluation (Failed)
+          5 - test_search (Failed)
+          6 - test_engine (Failed)
+         13 - test_tuner_gradient (Failed)
+         14 - test_eval_trace (Failed)
+         25 - test_search_params (Failed)
+         27 - test_mate_breadth (Failed)
+         29 - test_mate_carry (Failed)
+         47 - test_plan_params (Failed)
+    Errors while running CTest

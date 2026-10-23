@@ -1,14 +1,14 @@
 id:         S289
 goal:       find by tool why S083's pasted constants hide a mate the parent finds and lose seven exact mined mates, and fix the search rule at fault as its own measured change
 accepts:    the node and the rule that hide `tests/test_engine.cpp` "reverse futility at ply 2 does not hide a mate from the side to move"'s mate at S083's candidate constants are named from the engine's own output (a trace, a counter or a one-option-at-a-time bisection in the tune build), never from reading the board (CHESS); the mined mates S156's sweep reads exact on the parent and not on the paste are listed by key and each attributed the same way; if a rule is at fault, its fix ships as its own change with a guard test observed red first at the paste's constants and green at both the paste's and the shipped constants, a mutant that test kills (DEC-141), Debug self-play and gate_extra, every golden it moves re-derived by its script, and its verdict decided by SPRT against its parent if it moves play, bounds pre-registered; if no rule is at fault, a proposed decision stating what the paste trades, for the owner (DEC-304 (11)); the fast suite green in both builds
-touches:    src/search.cpp negamax_at (the null-move block's table guard and the guard list's pointer to it, cd50178; reverted whole on the H0); tests/test_search.cpp and tests/test_engine.cpp (the guard's two cases, and `<fstream>`; reverted); tests/CMakeLists.txt (`CHESSO_SOURCE_DIR` for test_engine; reverted); tests/test_mate_carry.cpp (the ceilings' command gained S289's grid, comments only; reverted); adocs/data/S170_cases.tsv (A, C and D budgets by the rule, and its header; reverted); tools/mutants/S289_null_move_table_guard.py (added, deleted by the revert); DEV_MANUAL.md (the defender sweep's figures, the guard's paragraph and the goldens rows; rewritten for the reverted tree); MANUAL.md (a Known bugs entry for the reopened defect); adocs/specs.md's search row (the coordinator's: the guard's sentence, owed back with the revert); adocs/data/S289_* and README rows, and the README's note on the revert; this file
+touches:    src/search.cpp negamax_at (the null-move block's table guard and the guard list's pointer to it, cd50178; reverted whole on the H0); tests/test_search.cpp and tests/test_engine.cpp (the guard's two cases, and `<fstream>`; reverted); tests/CMakeLists.txt (`CHESSO_SOURCE_DIR` for test_engine; reverted); tests/test_mate_carry.cpp (the ceilings' command gained S289's grid, comments only; reverted); adocs/data/S170_cases.tsv (A, C and D budgets by the rule, and its header; reverted); tools/mutants/S289_null_move_table_guard.py (added, deleted by the revert); DEV_MANUAL.md (the defender sweep's figures, the guard's paragraph and the goldens rows; rewritten for the reverted tree); MANUAL.md (a Known bugs entry for the reopened defect); adocs/specs.md's search row (the coordinator's: the guard's sentence, owed back with the revert); adocs/data/S289_* and README rows, and the README's note on the revert; this file. The completion, on S292's guard (`e27d3e5`, DEC-310): adocs/data/S289_complete_red.log and adocs/data/S289_complete_paste.txt, their README rows, and this file -- nothing in src/, tests/, DEV_MANUAL.md or MANUAL.md
 excludes:   S083's constants (no refit, no re-anchor, no golden S083's landing owes); the values of the search's margins beyond what the fix needs (S127 owns them); any lowering of a mate floor
 decisions:  DEC-305, DEC-304, DEC-303, DEC-299, DEC-142, DEC-141, DEC-171
 closes:
 blocks:     S083
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
-done:
+done:       2026-10-23 -- completes on S292's guard (e27d3e5, DEC-310, H1 at {-5, 0}, e18f302), its own (cd50178) having read H0 and been reverted (DEC-309): the rule named from the engine's output (S289_trace.txt), the mined mates listed and attributed (S289_mined.txt); S292's guard cases red first at the paste's constants with the condition defeated and green with it in both builds (S289_complete_red.log), green at the shipped constants (S292_red.log); mutants, gate_extra, Debug self-play, goldens and SPRT S292's; section 5 retaken (S289_complete_paste.txt): the ply-2 mate from iteration 6 as with cd50178, EXACT_FLOOR 158 (the re-landing's constants) / 157 (section 5's) against 163, MATE_IN_THREE_FLOOR 12/11 -- section 7's question and EXACT_FLOOR are the owner's on S083's H1 (DEC-307 (4)); fast suite 50/50 both builds on 908ed57. Implemented by one Opus 5.5 subagent per step (diagnosis and fix, the revert, the completion), each fast-checked (the completion's three items fixed); stamped by the coordinator.
 
 ## Why this step exists (the coordinator, 2026-10-22, DEC-305)
 
@@ -473,3 +473,121 @@ change, both builds made there):
   clean.
 - Not run: Debug self-play and `tools/gate_extra.sh` -- the brief books no
   match, and the tree's `src/` and `tests/` are `4a3a0e5`'s byte for byte.
+
+## 2026-10-23: S289 completes on S292's guard (the implementer)
+
+One Opus 5.5 subagent on `908ed57` (S292's `e27d3e5` and its record, bench
+6042933). `../chesso-s289c` (branch `s289c`) takes this section and two
+readings; `../chesso-s289q` is scratch: `908ed57` plus only the `src/` hunks of
+`.tuning/coord/S083/s083_reland.diff` (fixture Q `38a15f4`, bench 3945487), and
+for the comparison section 5's own constants (fixture P2 `23189c2`, bench
+3945685). Both fixtures are commit objects on no branch; nothing committed.
+The engine's output and the case oracles only; nothing read off a board.
+
+**The constants are not section 5's.** Against `../chesso-s289p`:
+`src/evaluation.cpp` identical; `src/eval_tables.hpp` differs by the queen's
+re-anchor (`QUEEN` 710 -> 983, -273 on her 128 squares, DEC-307 (1)) and a
+comment; `src/search_params.hpp` by comments and `CorrHistMax`'s top, 94 -> 84
+(DEC-307 (2)). So section 5 is retaken at both Q and P2.
+
+### The accepts, clause by clause
+
+1. *The node and the rule that hide the ply-2 case's mate at the candidate
+   constants, from the engine's own output.* **Met, S289's own**: section 1,
+   `adocs/data/S289_trace.txt` -- the null move at the mated side's ply-2 node
+   in late move reduction's re-search (iterations 6 to 8), and the reduction of
+   the late-ordered mating quiet at ply 1 (4 and 5). Retaken
+   (`adocs/data/S289_complete_paste.txt` section 2): `mate -2` from iteration 6
+   to 8 at Q and at P2, node for node `cd50178`'s; with no pass at all
+   (`NullMoveBase` 16) still first at 6, and `LmrBase` 0, `LmrDivisor` 2000 or
+   `LmrPv` 2 bring 4. What is left is section 1's reduction, as section 5 read.
+2. *The mined mates exact on the parent and not on the paste, listed by key and
+   each attributed the same way.* **Met, S289's own**: section 2,
+   `adocs/data/S289_mined.txt` -- 15 lost and 8 gained by row, game id and FEN;
+   all 15 by the one-option-at-a-time bisection, 13 also by the trace (reverse
+   futility 6, the multicut 4, the null move 1, a carried bound 2; 185 and 186
+   the trace leaves open). Retaken with S292's guard (`S289_complete_paste.txt`
+   section 5): the same 15 lost at Q and P2, row 110 (the null move's) among
+   them; the 8 gained stay gained; at P2 each of them reads that file's paste
+   score. The multicut's four are S291's (DEC-308): read, not diagnosed.
+3. *If a rule is at fault, its fix ships as its own change.* A rule was
+   (sections 1 and 3; DEC-171 (c) at the shipped constants). S289's own fix,
+   `cd50178`, read H0 and was reverted (DEC-309). **Met by S292's**:
+   `e27d3e5`, the guard narrowed to a whole search's bound (DEC-310).
+   - *Red first at the paste's constants*: **this section**,
+     `adocs/data/S289_complete_red.log` A (Release, at Q, the guard's condition
+     defeated in NF01's form, the entry's byte and store in, as `S292_red.log`
+     A had it): `tests/test_search.cpp`'s `a node a whole search found mated
+     makes no null move` red, 104 rows on each mated leg, the five premise legs
+     clean; `tests/test_engine.cpp`'s `a root mated in two reports the mate
+     even where its node could pass` red, five roots at `cp 0` (four of the
+     shipped six and one more); `a node that skips a move says so in its entry`
+     green, as at the shipped constants, its red being NF03, NF05 and NF06's.
+   - *Green at the paste's and the shipped constants*: at Q, **this section**,
+     all three in both builds (`S289_complete_red.log` B); at the shipped,
+     **S292's** (`adocs/data/S292_red.log` B, both builds) and this section's
+     gate below.
+   - *A mutant that test kills*: **S292's**, NF01-NF09, 28 of 28 with the
+     re-pointed three and S289's sixteen (`adocs/data/S292_mutation.tsv`).
+   - *Debug self-play and gate_extra*: **S292's** (its stamp; five stages green,
+     994 s).
+   - *Every golden it moves, by its script*: **S292's**
+     (`adocs/data/S292_goldens.txt`: C's S170 budget by the rule).
+   - *SPRT against its parent, bounds pre-registered*: **S292's**,
+     `adocs/data/S292_sprt.sh`, `{-5, 0}`, H1 (`adocs/data/S292_sprt.log`).
+4. *If no rule is at fault, a proposed decision on what the paste trades.* Not
+   reached. What the paste still trades with the guard in is DEC-305's and
+   DEC-307 (4)'s, carried by S083's ruling (below).
+5. *The fast suite green in both builds.* On the shipped tree, **this
+   section**: `../chesso-s289c`, 50 of 50 in both builds (below). At Q, 41 of
+   50 in both, by construction (`S289_complete_red.log` C): the re-landing's
+   `tests/` and `MANUAL.md` hunks are not applied there. Five red tests are only
+   goldens those hunks re-derive (`test_mate_carry`'s on `cd50178`'s tree, for
+   S083 to re-derive on this one); `test_search` and `test_tuner_gradient`
+   carry such goldens beside a named red; the named reds are four -- the ply-2
+   clause, `EXACT_FLOOR`, the multicut row (S291) and the gauge walk (DEC-308
+   (1)). None is a guard case.
+
+### Section 5 beside `cd50178`'s
+
+| reading | P, `cd50178` | Q's, `cd50178` | P2, S292's | Q, S292's |
+|---|---|---|---|---|
+| bench | 3945685 | 3945487 | 3945685 | 3945487 |
+| ply-2 case, `mate -2` at | 6 to 8 | 6 to 8 | 6 to 8 | 6 to 8 |
+| `EXACT_FLOOR`, ship / weak | 158 / 155 | 159 / 154 | 157 / 154 | 158 / 153 |
+| `MATE_IN_THREE_FLOOR` | 12 / 11 | 12 / 11 | 12 / 11 | 12 / 11 |
+
+Sources: `S289_paste.txt`, `S083r_*` in `.tuning/coord/S083/s083_reland.diff`
+(not landed; taken on `cd50178`'s tree, each pinned by its blob id in
+`S289_complete_paste.txt`), and `S289_complete_paste.txt`. S292's guard
+regains no mined mate: at Q it moves no row's exactness or last score, and at
+P2 it reads the paste alone's 157. Row 131, `cd50178`'s one gain, is not
+found; the two guards differ on every mated-band upper or exact entry whose
+`no_move_skipped` byte is 0 (a negamax node that skipped a move, or a
+quiescence store), so it came from such a firing -- inferred, not traced. Row
+169 is exact at Q alone, with and without the guard: the re-anchor's.
+
+**The stop rule does not fire**: no S292 case is red at Q with the guard in,
+and the ply-2 mate shows at every iteration `cd50178`'s showed it.
+
+### Left to the owner
+
+- Section 7's question, the ply-2 case's first-iteration clause: S292's guard
+  leaves it where `cd50178`'s did, red at 6 against 4 on late move reduction.
+- `EXACT_FLOOR` (DEC-305): 158 / 153 at the re-landing's constants, 157 / 154
+  at section 5's, against 163; and `MATE_IN_THREE_FLOOR`'s separation, 12 / 11.
+
+Both are carried by S083's H1 ruling (DEC-307 (4)); this step moves neither.
+
+### DOCS, gates, deviations
+
+- `DEV_MANUAL.md` and `MANUAL.md` checked: S292 wrote both for its guard, and
+  neither names S289 as open or quotes a reading this section changes. No
+  change. `README.md` not touched.
+- `../chesso-s289c`: the fast suite 50 of 50 in both builds, format clean
+  (`CLANG_FORMAT_MAJOR=22`), both benching 6042933; `plan_prose_check.py`
+  `--citations --touches --params --gate` clean.
+- Deviations: section 5 read at two constant sets, not one, since Q is not
+  P; `S289_mined.txt`'s rows are 15 lost and 8 gained (the net seven), all
+  read, with 131 and 169; the guard's condition was defeated in place, not
+  deleted, because `-Werror` refuses an unused variable.

@@ -6,7 +6,7 @@ excludes:   what is labelled, which is S082's and should be settled first; dedup
 decisions:  DEC-041, DEC-055, DEC-087, DEC-259
 closes:
 blocks:
-paused_by:  S289
+paused_by:  S291
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
 done:
 
