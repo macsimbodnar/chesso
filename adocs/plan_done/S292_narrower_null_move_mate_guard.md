@@ -8,7 +8,7 @@ closes:
 blocks:     S289
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
-done:
+done:       2026-10-23 10:45 -- H1 at {-5, 0} nElo, 8+0.08, Hash 16, CAND e27d3e5 vs REF 10f1e42: Elo +0.35 +/- 3.08, nElo +0.50 +/- 4.41, LLR 2.96, 23802 games, 11 h 07 m, 0 forfeits (adocs/data/S292_sprt.log, archived as chesso_S292_sprt_2026-10-23.tar.xz); the banner as pinned (a393ba5), both binaries at bench 6042933, quarters -1.9, 0.0, +0.7, +2.6, so the narrowed null-move guard stays (DEC-310): the six roots proved mated in two report `mate -2` (31 of 31), S289 completes on it, S083 re-lands on this tree. Implemented by one Opus 5.5 subagent (e27d3e5: red first, NF01-NF09 killed, gate_extra 5/5, Debug self-play clean, both builds green), fast-checked (two stale comments and five notes, fixed); run, read and stamped by the coordinator.
 
 ## Why this step exists (the coordinator, 2026-10-22, DEC-309)
 
@@ -289,3 +289,40 @@ else.
   sanitizer builds), `../chesso-s292x` 323 MB, `.tuning/coord/S292/` 29 MB --
   about 2.1 GB; the S154 and S156 scripts' own temporary worktrees under `/tmp`
   were removed by them. 11 GB free after.
+
+## 2026-10-23: the SPRT read H1; the guard stays (the coordinator)
+
+**The verdict.** `adocs/data/S292_sprt.sh`'s pair, `e27d3e5` (the narrowed
+guard) against its parent `10f1e42`, from 2026-10-22 23:27 for 11 h 07 m:
+
+```
+SPRT | cand e27d3e5 vs ref 10f1e42, 8+0.08, Hash=16, noob_3moves.epd, {-5, 0} nElo
+Elo | 0.35 +/- 3.08, nElo 0.50 +/- 4.41
+LLR | 2.96 (-2.94, 2.94) -> H1
+Games | N: 23802 W: 6597 L: 6573 D: 10632, Ptnml [756, 2803, 4726, 2893, 723]
+Wall | 11 h 7 m, 2140.9 games/h, forfeits 0
+Log | adocs/data/S292_sprt.log
+```
+
+**The inspection.** The banner matches the pin (`a393ba5`): both shas, 8+0.08,
+Hash 16, 12 of 12 cores, `noob_3moves.epd`, `{-5, 0}` at alpha = beta = 0.05,
+seed 20261022232728. Both binaries the run played reproduce bench 6042933.
+No crash or disconnect, 0 forfeits in 23804 PGN games, no incomplete mating
+PV; the console's only warnings are fastchess's 8 PV-past-threefold blocks
+(5 the reference's, 3 the candidate's). The four quarters in game order read
+-1.9, 0.0, +0.7 and +2.6 Elo, each +/- 6.6. The kernel journal is empty at
+warning level over the run. The run stands.
+
+**By the pre-registered H1 row**: H1's 0 is preferred to H0's -5 at
+alpha = beta = 0.05, so the guard is accepted as not costing 5 nElo at
+8+0.08 and **stays**. The stopping run's Elo is biased and is not the effect
+size (DEC-063). The defect S289 found is closed on the tree: all 31 roots
+`adocs/data/S165_defender_set.tsv` proves mated in two report `mate -2` from
+iteration 7 (`adocs/data/S292_reach.txt`). S289 completes on it (its
+`paused_by` clears), and S083 re-lands on this tree (DEC-307, DEC-309).
+
+**Archive.** The untrimmed console and the run directory (`games.pgn`,
+`fastchess.log`) are `chesso_S292_sprt_2026-10-23.tar.xz` in the owner's
+archive, sha256 `4354aaec...45d4aa`, built under `.tuning/` and moved in:
+written there in place, Synckeeper split it into conflict copies while tar
+was still writing (`.moltke.local.md` has the note).

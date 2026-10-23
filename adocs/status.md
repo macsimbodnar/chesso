@@ -5,9 +5,31 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-22, by hand.
+Updated: 2026-10-23, by hand.
 
-## 2026-10-22: S292 narrowed the guard; committed, its SPRT pending (DEC-310)
+## 2026-10-23: S292's narrowed guard read H1 and stays; S289 completes next
+
+**S292's SPRT read H1** at 10:35 (`adocs/data/S292_sprt.log`, archived
+untrimmed as `chesso_S292_sprt_2026-10-23.tar.xz`): `e27d3e5` against
+`10f1e42`, 8+0.08, Hash 16, `{-5, 0}`, 23802 games, Elo +0.35 +/- 3.08, nElo
++0.50 +/- 4.41, LLR 2.96, 11 h 07 m, 0 forfeits. Inspected: banner as pinned,
+both binaries at bench 6042933, no crash or disconnect, quarters -1.9, 0.0,
++0.7, +2.6 (each +/- 6.6), journal clean. **The guard stays** (DEC-310): all
+31 roots mated in two report `mate -2`. S292 is in plan_done; S289's
+`paused_by` is cleared.
+
+**Next, in order**: S289 completes on S292's tree. A fresh agent checks its
+accepts there, the paste's constants included, since its guard test must be
+green at both. Then S291 (the multicut row, read on the new tree), S083's
+re-landing on the new tree and its `{0, 5}` SPRT, S290 rebased onto C
+500000, then S135.
+
+**Archive hazard, found today**: tar written straight into the Synckeeper
+folder was split into conflict copies while it was still writing, though tar
+exited 0. The archive was rebuilt under `.tuning/`, verified and moved in
+(`.moltke.local.md`).
+
+## 2026-10-22: S292 narrowed the guard; committed, its SPRT followed (DEC-310)
 
 **S292** (one Opus 5.5 subagent, `../chesso-s292`) replayed positions from
 S289's run in a census build (`adocs/data/S292_cost.txt`): 98 to 99 % of S289's
@@ -26,6 +48,11 @@ killed, gate_extra 5/5, Debug self-play clean, fast suite 50/50 in both builds.
 Fast check: no blocker, two stale test comments and five notes, all fixed. The
 `{-5, 0}` SPRT (`adocs/data/S292_sprt.sh`, about 12 h with a true zero) decides
 it. S291, S083, S290 and S135 wait behind it.
+
+**S292's SPRT started 2026-10-22 23:27** (`.tuning/s292_sprt.log`, out
+`.tuning/sprt_s292_20261022_232728`), banner as pre-registered (`cand-e27d3e5`
+vs `ref-10f1e42`, 8+0.08, Hash 16, `{-5, 0}`, 41900 games). Watcher: four
+exits, 40 h ceiling. No gate or build until it ends.
 
 ## 2026-10-22: S289's guard read H0 and is reverted; S292 tries a narrower form first (DEC-309)
 

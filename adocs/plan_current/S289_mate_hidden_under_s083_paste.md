@@ -6,7 +6,7 @@ excludes:   S083's constants (no refit, no re-anchor, no golden S083's landing o
 decisions:  DEC-305, DEC-304, DEC-303, DEC-299, DEC-142, DEC-141, DEC-171
 closes:
 blocks:     S083
-paused_by:  S292
+paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
 done:
 
