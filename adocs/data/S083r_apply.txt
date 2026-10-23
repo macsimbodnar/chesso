@@ -1,0 +1,170 @@
+# S083's re-landing, 2026-10-22: the re-anchor, then adocs/data/S083_corpus.sh apply, MODE=s082, from
+# /home/max/ws/chesso, on the re-anchored header into /home/max/ws/chesso-s083r at b860a8a (S289's guard, bench
+# 6042928); console .tuning/coord/S083/reland/apply.console, outputs .tuning/s083/apply/ (copied to
+# .tuning/coord/S083/reland/apply_raw/). The key lines, verbatim. apply refused nothing: it checks that the header
+# is a tuner's (the re-anchored one keeps the '// Fitted by tools/tuner' line under reanchor.py's note), not its
+# sha256. The reds are the apply run's, before any golden was re-derived; each is read by its own script.
+
+== the re-anchor, DEC-059's form (DEC-307 (1)), from /home/max/ws/chesso
+$ sha256sum .tuning/s083/curve/s0/fit_6226944_s1.hpp
+f7ccdb7f50564cb8cefc56c020f11210fb8da530127726092552c44827ecf83d  .tuning/s083/curve/s0/fit_6226944_s1.hpp
+$ python3 .tuning/reanchor.py .tuning/s083/curve/s0/fit_6226944_s1.hpp .tuning/coord/S083/reland/reanchor/fit_6226944_s1_q273.hpp queen -273
+#define QUEEN   710 -> 983
+psqt_mg[queen] 64 squares, mean +661.9 -> +388.9
+psqt_eg[queen] 64 squares, mean +170.5 -> -102.5
+numbers changed: 129
+cmp against the first landing's .tuning/coord/S083/land/reanchor/fit_6226944_s1_q273.hpp: identical
+
+== fit.sha256
+4cf275698287b6394ef064b04fd8ca3e74d4fc3e0096b6e07c82bd9e1e9d7f93  /home/max/ws/chesso/.tuning/coord/S083/reland/reanchor/fit_6226944_s1_q273.hpp
+
+== apply_fit.py
+PAWN = 84 (was 94)
+KNIGHT = 371 (was 327)
+BISHOP = 352 (was 308)
+ROOK = 519 (was 487)
+QUEEN = 983 (was 716)
+psqt_mg
+psqt_eg
+mobility_mg = [1, 6, 8, 2] (was [-1, 5, 8, 3])
+mobility_eg = [0, 5, 2, 4] (was [0, 5, 0, -6])
+king_safety_mg = [18, 13, 5, 30, -27, 16, 7, -47, -25] (was [17, 20, 19, 34, -27, 26, 14, -40, -25])
+king_safety_eg = [-5, -9, 7, -52, 10, -8, -1, -4, 19] (was [-6, -13, -5, -61, 10, -10, -10, -14, 22])
+passed_pawn_mg = [9, -5, -2, 21, 38] (was [0, -6, -4, 19, 59])
+passed_pawn_eg = [18, 24, 51, 75, 119] (was [15, 18, 46, 72, 96])
+pawn_structure_mg = [-9, -2, -11] (was [-10, -9, -11])
+pawn_structure_eg = [-15, -18, -2] (was [-12, -32, -8])
+piece_placement_mg = [0, 0, 0] (was [0, 0, 0])
+piece_placement_eg = [0, 0, 0] (was [0, 0, 0])
+tempo_mg = 0 (was 0)
+tempo_eg = 0 (was 0)
+
+5 defines, 2 tables, 10 arrays, 2 scalars
+
+== verify_fit.py
+823 parameters compared, 823 identical to the emitted header
+
+== diff_fit.py
+=== material defines ===
+PAWN        94 ->     84  (-10)
+KNIGHT     327 ->    371  (+44)
+BISHOP     308 ->    352  (+44)
+ROOK       487 ->    519  (+32)
+QUEEN      716 ->    983  (+267)
+
+=== psqt: summary per table and piece ===
+psqt_mg pawn    mean   +17.6  max |d|  106 at c7 (79 -> 185)  moved 48/64
+psqt_mg knight  mean   +30.0  max |d|  187 at d7 (-125 -> 62)  moved 63/64
+psqt_mg bishop  mean   +36.5  max |d|  192 at f6 (-179 -> 13)  moved 64/64
+psqt_mg rook    mean   +29.4  max |d|   71 at e6 (-23 -> 48)  moved 63/64
+psqt_mg queen   mean  -332.6  max |d|  384 at e8 (785 -> 401)  moved 64/64
+psqt_mg king    mean    -0.0  max |d|  195 at h7 (391 -> 196)  moved 64/64
+psqt_eg pawn    mean   -17.7  max |d|   43 at e6 (41 -> -2)  moved 48/64
+psqt_eg knight  mean   -30.0  max |d|   96 at d7 (86 -> -10)  moved 63/64
+psqt_eg bishop  mean   -36.5  max |d|   99 at f6 (111 -> 12)  moved 64/64
+psqt_eg rook    mean   -29.3  max |d|   62 at e6 (135 -> 73)  moved 62/64
+psqt_eg queen   mean  -213.4  max |d|  292 at d7 (265 -> -27)  moved 64/64
+psqt_eg king    mean    +0.0  max |d|  241 at g8 (-131 -> 110)  moved 64/64
+
+=== psqt: 15 largest single-square moves ===
+psqt_mg  queen   e8    785 ->   401  (-384)
+psqt_mg  queen   g1    749 ->   373  (-376)
+psqt_mg  queen   f8    793 ->   417  (-376)
+psqt_mg  queen   g7    740 ->   381  (-359)
+psqt_mg  queen   c6    722 ->   366  (-356)
+psqt_mg  queen   a6    719 ->   363  (-356)
+psqt_mg  queen   a8    693 ->   341  (-352)
+psqt_mg  queen   f7    753 ->   402  (-351)
+psqt_mg  queen   e7    695 ->   344  (-351)
+psqt_mg  queen   f1    699 ->   354  (-345)
+psqt_mg  queen   c7    697 ->   353  (-344)
+psqt_mg  queen   b7    677 ->   334  (-343)
+psqt_mg  queen   h4    724 ->   382  (-342)
+psqt_mg  queen   g6    749 ->   407  (-342)
+psqt_mg  queen   e6    757 ->   415  (-342)
+
+=== the 54 outside eval_tables.hpp ===
+king_safety_eg       -6->-5 -13->-9 -5->7 -61->-52 10->10 -10->-8 -10->-1 -14->-4 22->19
+king_safety_mg       17->18 20->13 19->5 34->30 -27->-27 26->16 14->7 -40->-47 -25->-25
+mobility_eg          0->0 5->5 0->2 -6->4
+mobility_mg          -1->1 5->6 8->8 3->2
+passed_pawn_eg       15->18 18->24 46->51 72->75 96->119
+passed_pawn_mg       0->9 -6->-5 -4->-2 19->21 59->38
+pawn_structure_eg    -12->-15 -32->-18 -8->-2
+pawn_structure_mg    -10->-9 -9->-2 -11->-11
+piece_placement_eg   0->0 0->0 0->0
+piece_placement_mg   0->0 0->0 0->0
+tempo_eg             0->0
+tempo_mg             0->0
+
+== diff --stat
+ src/eval_tables.hpp | 194 ++++++++++++++++++++++++++--------------------------
+ src/evaluation.cpp  |  20 +++---
+ 2 files changed, 107 insertions(+), 107 deletions(-)
+
+== bench
+3945487 nodes 4664219 nps
+
+== fast suite, Release
+84% tests passed, 8 tests failed out of 50
+	  4 - test_evaluation (Failed)
+	  5 - test_search (Failed)
+	  6 - test_engine (Failed)
+	 13 - test_tuner_gradient (Failed)
+	 14 - test_eval_trace (Failed)
+	 25 - test_search_params (Failed)
+	 27 - test_mate_breadth (Failed)
+	 29 - test_mate_carry (Failed)
+
+== fast suite, tune
+84% tests passed, 8 tests failed out of 50
+	  4 - test_evaluation (Failed)
+	  5 - test_search (Failed)
+	  6 - test_engine (Failed)
+	 13 - test_tuner_gradient (Failed)
+	 14 - test_eval_trace (Failed)
+	 25 - test_search_params (Failed)
+	 27 - test_mate_breadth (Failed)
+	 29 - test_mate_carry (Failed)
+
+== the reds' first failing assertions (Release)
+tests/test_evaluation.cpp:395: FATAL ERROR: REQUIRE( evaluate(&game.board) == test.score ) is NOT correct!
+  values: REQUIRE( 99 == 135 )
+tests/test_search.cpp:1342: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+  values: REQUIRE_EQ( 585, 563 )
+tests/test_search.cpp:1410: FATAL ERROR: REQUIRE_EQ( black_static, 198 ) is NOT correct!
+  values: REQUIRE_EQ( 209, 198 )
+tests/test_search.cpp:1466: FATAL ERROR: REQUIRE_EQ( quiesce(fen, -10000000, 10000000), -505 ) is NOT correct!
+  values: REQUIRE_EQ( -534, -505 )
+tests/test_search.cpp:2554: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:2617: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:2691: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:2772: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:2829: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:2971: FATAL ERROR: REQUIRE_EQ( evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP ) is NOT correct!
+  values: REQUIRE_EQ( 580, 567 )
+tests/test_search.cpp:3061: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:3127: FATAL ERROR: REQUIRE_EQ( static_score, QUIET_ROOK_EVAL ) is NOT correct!
+tests/test_search.cpp:4687: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+tests/test_search.cpp:5435: FATAL ERROR: REQUIRE_EQ( evaluate(&game.board), -569 ) is NOT correct!
+  values: REQUIRE_EQ( -599, -569 )
+tests/test_engine.cpp:5937: FATAL ERROR: REQUIRE( first_exact == 4 ) is NOT correct!
+  values: REQUIRE( 6 == 4 )
+tests/test_tuner_gradient.cpp:608: FATAL ERROR: REQUIRE( !binding.empty() ) is NOT correct!
+tests/test_tuner_gradient.cpp:889: ERROR: CHECK( std::fabs(level_shift(direction, plain)) > 0.1 ) is NOT correct!
+  values: CHECK( 0.0586689 >  0.1 )
+tests/test_eval_trace.cpp:432: ERROR: CHECK( worst > 2.8 ) is NOT correct!
+  values: CHECK( 2.75 >  2.8 )
+tests/test_eval_trace.cpp:487: ERROR: CHECK( difference > 2.0 ) is NOT correct!
+  values: CHECK( 1.875 >  2 )
+  values: CHECK( 1.70833 >  2 )
+  values: CHECK( 2 >  2 )
+  values: CHECK( 1.5 >  2 )
+tests/test_eval_trace.cpp:495: ERROR: CHECK( worst > 2.8 ) is NOT correct!
+  values: CHECK( 2 >  2.8 )
+tests/test_search_params.cpp:343: ERROR: CHECK_EQ( max_param.max_value, 84 ) is NOT correct!
+  values: CHECK_EQ( 94, 84 )
+tests/test_mate_breadth.cpp:277: FATAL ERROR: REQUIRE( found_exact >= EXACT_FLOOR ) is NOT correct!
+  values: REQUIRE( 159 >= 163 )
+tests/test_mate_carry.cpp:680: ERROR: CHECK( short_lines <= short_line_ceiling(game.name) ) is NOT correct!

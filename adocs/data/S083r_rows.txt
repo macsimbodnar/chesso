@@ -1,0 +1,15 @@
+# S083's re-landing, 2026-10-22: ~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens <these seven>
+# --lo 3 --hi 12, from the s083r worktree (its build/src/libchesso_engine.a: the re-anchored paste on b860a8a, bench
+# 3945487). The test's search_fen() driver, line for line; one column per depth 3..12, the mate distance or '-'.
+# Rows: test_search.cpp's capture_mates (depths 9, 8, 11, 12), then mate_the_multicut_hides (10),
+# mate_probcut_hides (10) and mate_the_extra_ply_hides (8). Six report their mates at their depths; the multicut
+# row does not at 10 (d9 d11 d12), as on the first landing, and its re-mine found no row (S083r_remine_multicut.log).
+# Which mutant each of the six still separates is not re-read: mutation_check.py refuses a red baseline.
+
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - 5 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 5 - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+- - - - - - 5 - 5 5 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+- - - - - - 5 5 5 5 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80

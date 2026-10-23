@@ -1,0 +1,102 @@
+# S083's re-landing, 2026-10-22: adocs/data/S083_tuner_preconditions.cpp, built as its header says, 'both', over
+# tests/test_tuner_gradient.cpp's own fixtures (test_eval_positions, 34 rows; the gauge fixture, 38).
+# First at b860a8a's constants (the main checkout's build, S076's fit): the rule answers S262's +40 and the walk
+# S262's 0.32 / 0.20 -- the check that the program re-derives the inputs the cases carry. Then at S083's weights
+# (the worktree's build): the clamp's push is +100 by the rule (applied); the walk reads psqt_eg[king] 0.0587
+# under AdaGrad, under the case's 0.1 floor -- not re-derivable without lowering the floor, so not touched and
+# reported (the brief's item 5). The fixture is the shipped one: S083's truncation rows live in
+# tests/test_eval_trace.cpp alone. Two layouts that put them into test_eval_positions were built and run first
+# (gate logs .tuning/coord/S083/reland/gate1_*, gate2_*): swapped in, the gradient check went red at parameter
+# 800 (passed_pawn_mg[1] lost its only middlegame row) and the nonlinear group's recovery missed its planted
+# numbers; appended, the recovery still missed (fitted eg weights 4.7 to 13.7 off at the step 0.2) and the walk
+# read the rook's 0.0856 under Adam.
+
+== b860a8a's constants
+clamp: 34 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 96.0 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      113.7       70.33   1.37e-08         -1         -1  binds on none or all; 
+  +20      0        0.0      163.7       20.33   2.19e-08         -1         -1  binds on none or all; 
+  +30      1      213.7      104.0       29.67   4.83e-08          0   0.000927  ok
+  +40      1      263.7      150.0       34.00   1.72e-07          0   0.000927  ok  <- CHOSEN
+  +50      3      313.7      167.1       16.00   1.75e-07          0   0.000786  ok
+  +60      4      363.7      164.0       20.00   4.87e-08          0    0.00059  ok
+  +70      4      413.7      184.0        0.00     0.0315          0    0.00059  a row within 1 cp of the kink; fd past 2e-7; 
+  +80      7      463.7      140.8       15.08   4.08e-08          0   0.000337  ok
+  +90      7      513.7      160.8       23.21   5.01e-08          0   0.000337  ok
+ +100      7      563.7      180.8        3.21   6.31e-08          0   0.000337  ok
+ +110     11      613.7      166.8        7.75   2.93e-08          0   0.000279  ok
+ +120     12      663.7      172.0        2.83   2.02e-08          0   0.000256  ok
+ +130     13      713.7      170.1        8.00   2.93e-08          0   0.000301  ok
+ +140     14      763.7      162.0        6.08   7.38e-08          0   0.000294  ok
+ +150     14      813.7      172.0       12.00   8.24e-09          0   0.000294  ok
+ +160     14      863.7      182.0        2.00   2.93e-08          0   0.000294  ok
+ +170     18      913.7      175.0        5.50   2.93e-08          0   0.000174  ok
+ +180     20      963.7      166.0        1.00   5.72e-09          0   0.000163  a row within 1 cp of the kink; 
+ +190     20     1013.7      176.0        8.00   2.93e-08          0   0.000163  ok
+ +200     21     1063.7      161.1        2.00   8.24e-09          0   0.000155  ok
+clamp: the rule picks +40, every row 34.00 from the kink
+walk: 38 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   +1.5965  held  +4.29e-15  
+    material/table knight  plain   -3.8419  held  +1.55e-15  
+    material/table bishop  plain   -2.6972  held  -3.89e-16  
+    material/table rook    plain   -0.3179  held  +2.39e-15  
+    material/table queen   plain   -2.5549  held  +1.93e-14  
+    psqt_mg[king]          plain   +2.4400  held  +1.89e-15  
+    psqt_eg[king]          plain   +0.4092  held   -1.5e-15  
+    smallest plain walk 0.3179 (material/table rook); runs apart 5.68e-13; plain travelled 1575.1
+  adagrad at lr 10
+    material/table pawn    plain   +3.5375  held  -5.03e-15  
+    material/table knight  plain   -4.3614  held  +5.55e-17  
+    material/table bishop  plain   -2.6008  held  -3.61e-16  
+    material/table rook    plain   -0.1957  held  -8.33e-16  
+    material/table queen   plain   -2.4464  held  +1.64e-14  
+    psqt_mg[king]          plain   +2.9304  held  -6.66e-16  
+    psqt_eg[king]          plain   +0.8878  held  +1.86e-15  
+    smallest plain walk 0.1957 (material/table rook); runs apart 4.55e-13; plain travelled 1609.9
+walk: every plain shift clears 0.1
+
+== S083's weights, the queen re-anchored
+clamp: 34 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 99.3 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       81.0      103.00   1.49e-08         -1         -1  binds on none or all; 
+  +20      0        0.0       81.0      103.00   1.41e-08         -1         -1  binds on none or all; 
+  +30      0        0.0       98.0       86.00   1.61e-08         -1         -1  binds on none or all; 
+  +40      0        0.0      134.5       49.50   3.37e-08         -1         -1  binds on none or all; 
+  +50      2      184.5      153.3        0.50   1.42e-07          0   0.000999  a row within 1 cp of the kink; 
+  +60      4      234.5      158.0       16.67   5.77e-08          0   0.000556  ok
+  +70      5      284.5      178.0        0.96   5.77e-08          0   0.000463  a row within 1 cp of the kink; 
+  +80      7      334.5      168.3       14.00   1.09e-07          0   0.000331  ok
+  +90      8      384.5      141.0        4.33   8.91e-08          0   0.000263  ok
+ +100      8      434.5      161.0       23.00   1.09e-07          0   0.000263  ok  <- CHOSEN
+ +110      8      484.5      181.0        3.00    1.3e-07          0   0.000263  ok
+ +120     12      534.5      164.0        5.96   5.77e-08          0    0.00022  ok
+ +130     12      584.5      184.0        0.00      0.801          0    0.00022  a row within 1 cp of the kink; fd past 2e-7; 
+ +140     14      634.5      163.7       13.96   5.77e-08          0   0.000225  ok
+ +150     14      684.5      173.7       10.33   1.09e-07          0   0.000225  ok
+ +160     14      734.5      183.7        0.33   1.09e-07          0   0.000225  a row within 1 cp of the kink; 
+ +170     18      784.5      166.0        5.00   5.77e-08          0   0.000173  ok
+ +180     18      834.5      176.0        8.00   5.77e-08          0   0.000173  ok
+ +190     21      884.5      156.3        1.00   1.09e-07          0   0.000162  a row within 1 cp of the kink; 
+ +200     21      934.5      166.3       11.00   1.09e-07          0   0.000162  ok
+clamp: the rule picks +100, every row 23.00 from the kink
+walk: 38 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   +3.0882  held  -1.78e-15  
+    material/table knight  plain   -4.0181  held  -1.94e-15  
+    material/table bishop  plain   -3.6957  held  +2.04e-15  
+    material/table rook    plain   -0.1178  held  -2.78e-15  
+    material/table queen   plain   -3.5648  held  -1.13e-14  
+    psqt_mg[king]          plain   +2.4954  held  +6.66e-16  
+    psqt_eg[king]          plain   -0.4624  held  +1.28e-15  
+    smallest plain walk 0.1178 (material/table rook); runs apart 6.82e-13; plain travelled 1587.0
+  adagrad at lr 10
+    material/table pawn    plain   +4.5680  held  +2.37e-15  
+    material/table knight  plain   -4.5618  held   +2.5e-15  
+    material/table bishop  plain   -3.5488  held  +4.16e-16  
+    material/table rook    plain   -0.1726  held  +7.77e-16  
+    material/table queen   plain   -3.4175  held  -5.55e-15  
+    psqt_mg[king]          plain   +3.0069  held  -7.77e-16  
+    psqt_eg[king]          plain   -0.0587  held  -2.64e-15  <- under the case's 0.1
+    smallest plain walk 0.0587 (psqt_eg[king]); runs apart 6.82e-13; plain travelled 1623.3
+walk: a plain shift is under 0.1

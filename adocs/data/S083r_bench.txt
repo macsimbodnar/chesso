@@ -1,0 +1,51 @@
+# S083's re-landing, 2026-10-22: .tuning/coord/S083/reland/bench.sh -- frozen copies of the worktree's Release and
+# tune builds (S083's weights, the queen re-anchored, on b860a8a) and of the main checkout's Release build at
+# b860a8a (refused unless it benches 6042928). bench and bench 12 on both; the tune build at its defaults against
+# the Release candidate's stream (0 lines apart); tools/search_bench.py at 9 and 12, two interleaved runs each,
+# nodes and best moves identical within a build. Node counts only; no timing is read.
+
+== totals
+bench_ref            6042928 nodes
+bench_cand           3945487 nodes
+bench12_ref          2339074 nodes
+bench12_cand         2103576 nodes
+bench_tune_default   3945487 nodes
+== the tune build at its defaults against the Release candidate, lines differing (must be 0):
+0
+== search_bench, two interleaved runs each
+-- sb9_ref
+  midgame      0.015s        62042 nodes      4048 knps  best c3d5
+  kiwipete     0.030s       125888 nodes      4176 knps  best e2a6
+  tactical     0.008s        34107 nodes      4351 knps  best d7c8q
+  total        0.053s
+  midgame      0.015s        62042 nodes      4106 knps  best c3d5
+  kiwipete     0.030s       125888 nodes      4234 knps  best e2a6
+  tactical     0.008s        34107 nodes      4323 knps  best d7c8q
+  total        0.053s
+-- sb9_cand
+  midgame      0.010s        42570 nodes      4101 knps  best c3d5
+  kiwipete     0.036s       152468 nodes      4241 knps  best e2a6
+  tactical     0.006s        27750 nodes      4451 knps  best d7c8q
+  total        0.053s
+  midgame      0.010s        42570 nodes      4135 knps  best c3d5
+  kiwipete     0.036s       152468 nodes      4262 knps  best e2a6
+  tactical     0.006s        27750 nodes      4416 knps  best d7c8q
+  total        0.052s
+-- sb12_ref
+  midgame      0.056s       214973 nodes      3837 knps  best c3d5
+  kiwipete     0.148s       595000 nodes      4016 knps  best d5e6
+  tactical     0.055s       217107 nodes      3937 knps  best d7c8q
+  total        0.259s
+  midgame      0.058s       214973 nodes      3679 knps  best c3d5
+  kiwipete     0.149s       595000 nodes      3988 knps  best d5e6
+  tactical     0.056s       217107 nodes      3911 knps  best d7c8q
+  total        0.263s
+-- sb12_cand
+  midgame      0.063s       250176 nodes      3981 knps  best c3d5
+  kiwipete     0.103s       412312 nodes      4016 knps  best e2a6
+  tactical     0.039s       157359 nodes      4062 knps  best d7c8q
+  total        0.204s
+  midgame      0.064s       250176 nodes      3934 knps  best c3d5
+  kiwipete     0.103s       412312 nodes      3994 knps  best e2a6
+  tactical     0.039s       157359 nodes      4046 knps  best d7c8q
+  total        0.206s

@@ -1,0 +1,34 @@
+# S083's re-landing, 2026-10-22: the S170 ceilings and budgets read off adocs/data/S083r_sweep_s170.txt (the 108-cell
+# grid on a frozen copy of the worktree's Release build, bench 3945487, 1433 mate lines, 22 short), each by its script.
+# Applied (DEC-299's guard, DEC-307 (3)): the ceilings become 2, 5, 4, 0, 1, 3 -- F 2 -> 3, a rise of 1 -- in
+# tests/test_mate_carry.cpp, and the budgets in adocs/data/S170_cases.tsv by pick_budgets.sh's own rewrite.
+
+== adocs/data/S203_case_sweep.sh --ceilings adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt adocs/data/S286_sweep_s170.txt adocs/data/S289_sweep_s170.txt adocs/data/S083r_sweep_s170.txt
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                   5
+C_mate7_depth11                   4
+D_mate_minus6_depth10             0
+E_mate_minus9                     1
+F_mate6_inherited_no_line         3
+
+== adocs/data/S203_case_sweep.sh --ceilings adocs/data/S083r_sweep_s170.txt (the grid alone)
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   0
+B_mate6_shallow                   3
+C_mate7_depth11                   2
+D_mate_minus6_depth10             0
+E_mate_minus9                     0
+F_mate6_inherited_no_line         3
+
+== .tuning/coord/S099/p2/pick_budgets.sh adocs/data/S170_cases.tsv adocs/data/S083r_sweep_s170.txt (stderr; the rewritten TSV on stdout became the file)
+A_mate8_shallow            stride 1  nodes 500000   -> nodes 300000   (1 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 300000   (19 lines, 3 short)
+C_mate7_depth11            stride 1  nodes 1000000  -> nodes 1200000  (21 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 1200000  -> nodes 1500000  (2 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 500000   (21 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 100000   (3 lines, 0 short)

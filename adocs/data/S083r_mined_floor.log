@@ -1,0 +1,22 @@
+# S083's re-landing, 2026-10-22: python3 adocs/data/S156_mined_floor_sweep.py --ref 80d333a --floor 163 --jobs 12,
+# fixture A (80d333a7f72edd879284de26e131fe752805bef4: b860a8a plus the re-anchored paste, the parent's goldens; a
+# commit object on no branch, .tuning/coord/S083/reland/fixture.sh). EXACT_FLOOR 163 falls: 159 shipping, 154
+# weakened. Not lowered (DEC-303's consequence, DEC-307 (3)); the owner rules on an H1. The paste alone read 157 and
+# 154 (S083_mined_floor.log), the paste with S289's guard and no re-anchor 158 and 155 (S289_paste.txt).
+
+318 positions, depth 10, ref 80d333a7f72edd879284de26e131fe752805bef4
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     159          162            0   15.4s
+          2     159          162            0   15.5s
+          1     154          158            0   14.9s
+          0     154          158            0   14.9s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 159, weakened-guard value 154, gap 5
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_gxj03wd4/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 154 exact, 158 right sign, 0 wrong sign
+    logged: the mined set reads 154 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+S156 rc=0

@@ -1,0 +1,41 @@
+# S083's re-landing, 2026-10-22: python3 adocs/data/S154_floor_margin_sweep.py floor --ref 80d333a --jobs 12, then
+# red --ref 80d333a --jobs 12, fixture A (as S083r_mined_floor.log). MATE_IN_THREE_FLOOR 11: 12 of 24 shipping
+# (RfpMinPly 3), 11 weakened (RfpMinPly 1); the gate built at RfpMinPly 1 is red on mate-in-two exactness
+# (test_engine.cpp CHECK exact_by_distance[2] == total_by_distance[2]) and not on the m3 floor: the floor holds
+# its value and does not separate, DEC-116's shape. Not moved; the owner rules on an H1 (DEC-307 (4)).
+
+== floor
+RfpMinPly swept at 80d333a7f72edd879284de26e131fe752805bef4, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                         m3 #######.##.###.######..#  churn -  10413323 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  1/16 d7  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 0  11599843 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d5  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  9958819 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 13/24 d6  m4  2/16 d6  m5  1/16 d7  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 1  10117953 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 2  8245290 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3 11/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 0  8245290 nodes
+
+  floor, 16.5s
+S154 floor rc=0
+
+== red
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_0uqc79bk/tests/test_engine.cpp:5782: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    [doctest] assertions: 3570 | 3543 passed | 27 failed |
+
+  red, 24.5s
+S154 red rc=0

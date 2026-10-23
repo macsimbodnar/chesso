@@ -1,0 +1,17 @@
+# S083's re-landing, 2026-10-22: tests/test_engine.cpp "reverse futility at ply 2 does not hide a mate from the side
+# to move" -- NOT A GOLDEN (DEC-142) -- read as the case's deepen_scores() reads it: uci, position fen, go depth 8 at
+# the defaults, every info line's score (.tuning/coord/S083/land/probe/uci_probe.py, copied unchanged), time and nps
+# dropped. The engine: the re-landing's Release build (b860a8a, S289's guard, the re-anchored paste, bench 3945487).
+# mate -2 from iteration 6, the same as S289's reading of the paste with the guard (adocs/data/S289_paste.txt): the
+# re-anchor moved nothing here. The case stays red at REQUIRE( first_exact == 4 ), 6; untouched, the owner's on an H1.
+# FEN: rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2
+
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+info score mate -2 depth 6 nodes 1024 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 7 nodes 2141 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 8 nodes 4149 hashfull 0 pv h1g1 g8f8 g1h1
+bestmove h1g1 ponder g8f8

@@ -1118,6 +1118,35 @@ S083's step file, which is where its accepts want the generation's figures.
 | `S083_rows.txt` | `S230_mine_r01_row.py depths --lo 3 --hi 12` on the paste over the seven mined mate rows of "pruning does not hide a forced mate": the multicut row loses its mate at 10 (`d9 d11 d12`), the other six still report theirs at their depths; mutant separation not re-read |
 | `S083_rfp_ply2.txt` | `tests/test_engine.cpp` "reverse futility at ply 2 does not hide a mate from the side to move", a property red on the paste, read through UCI as the case reads it: the parent reports `mate -2` from depth 4 to 8, the paste cp 1168 to 913 and no mate through depth 8; one tune option at a time for the record (`RfpMinPly` 63 and `NullMoveBase` 16 bring the mate back, `RfpMaxDepth` 0, `RfpMargin` 2000, `RazorDepth` 0 and `ProbCut` 0 do not) |
 
+#### S083's re-landing on S289's guard (DEC-307), on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes
+
+The same goldens read again on `b860a8a` (S289's null-move table guard) with
+curve 0's candidate pasted after the queen's re-anchor, DEC-059's form; the
+first landing's files above keep their names, these are `S083r_`. The worktree
+is `/home/max/ws/chesso-s083r`, never committed, its diff
+`.tuning/coord/S083/s083_reland.diff`. S289's guard read H0 and was reverted
+(DEC-309), so these are the only reading of that tree at these constants and
+its diff is not what S083's SPRT plays: S083 re-lands on the tree S293's
+verdict leaves (S292's guard, DEC-310, with S293's unless its H0 reverts it,
+DEC-312), and its readings there take new names, `S083s_*`. S289's completion
+cites four of these by blob id.
+
+| file | what it is |
+|---|---|
+| `S083r_apply.txt` | the re-anchor (`.tuning/reanchor.py <fit> <out> queen -273`: `QUEEN` 710 -> 983, -273 on all 128 queen squares, sha256 `4cf27569...`, byte for byte the first landing's) and `S083_corpus.sh apply` of that header into the worktree at `b860a8a`: `verify_fit.py` 823 of 823, `diff_fit.py` (PAWN 94 -> 84, KNIGHT 327 -> 371, BISHOP 308 -> 352, ROOK 487 -> 519, QUEEN 716 -> 983), bench 6042928 -> 3945487, the fast suite 42 of 50 in both builds before any golden moved, every failing assertion; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_anchors.txt` | `S192_anchors.py` with no argument (10 of 10), on curve 0's header and on the re-anchored one that was pasted: 99, 276, 355, 585, 984, 0; 585 and 580; 209; -534 (the four leaves still four king moves standing pat); -599 -- applied, and 396 = 580 - `LAZY_EVAL_MARGIN` 184; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_mined_floor.log` | `S156_mined_floor_sweep.py --floor 163` on fixture A (`80d333a`, `b860a8a` plus the re-anchored paste): 159 shipping and 154 weakened, under `EXACT_FLOOR` 163 -- not lowered, the owner's on an H1 (DEC-307 (4)); on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_floor_sweep.log` | `S154_floor_margin_sweep.py` `floor` and `red` on that fixture: 12 of 24 mates in three shipping, 11 weakened, the gate at `RfpMinPly` 1 red on mate-in-two exactness alone -- `MATE_IN_THREE_FLOOR` 11 holds and does not separate; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_first_mate.txt` | `S188_repair_goldens.py first-mate` (9 and 9, mate 5, unmoved) and `S192_node_budget.py` (7783, inside [7270, 32512], the pair stays); on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_sweep_s170.txt` | `S203_case_sweep.sh`'s 108-cell grid over `S170_cases.tsv` on the re-landing's Release build (bench 3945487): 1433 mate lines, 22 short; added to `test_mate_carry`'s `--ceilings` command; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_ceilings.txt` | `--ceilings` over S202's, S261's, S286's, S289's and that grid (2, 5, 4, 0, 1, 3: F 2 -> 3, inside DEC-299's +2) and over the grid alone, and `pick_budgets.sh`'s picks (A 300000, B 300000, C 1200000, D 1500000, E 500000, F 100000) -- both applied; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_truncation_scan.txt` | `truncation_scan --min 2.8` over the candidate's corpus on the re-landing (64 past 2.8, 15 at 2.875, 14 distinct), `S083_truncation_pick.py`'s four (phases 5, 11, 17, 23; the re-landing's rule, in `.tuning/coord/S083/s083_reland.diff`, not landed with this record) and the rule over S276's scan, and S076's four at S083's weights (1.875, 1.708, 2.000, 1.500); on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_rows.txt` | `S230_mine_r01_row.py depths --lo 3 --hi 12` over the seven mined mate rows: six report their mates at their depths, the multicut row not at 10 (`d9 d11 d12`); on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_remine_multicut.log` | the multicut row's re-mine by `S097_mine_mate_row.py`, stages 2 to 6 in guard mode over 7..10, E21 applied by hand for the libraries and reverted: 0 of the 269 candidates separate, so nothing is picked and the row stays red; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_tuner_preconditions.txt` | `S083_tuner_preconditions.cpp` (the re-landing's re-derivation of `test_tuner_gradient`'s two measured preconditions by S262's procedure, in `.tuning/coord/S083/s083_reland.diff`, not landed with this record) at `b860a8a`'s constants (+40; walk 0.32 and 0.20) and at S083's weights (+100, applied; the walk's psqt_eg[king] 0.0587 under AdaGrad, under the case's 0.1 -- left red, reported); on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_rfp_ply2.txt` | the ply-2 property case through UCI as it reads it, on the re-landing's build: `mate -2` from iteration 6 to 8, S289's reading of the paste with the guard unchanged by the re-anchor; red at its first-iteration clause (4), untouched; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+| `S083r_bench.txt` | `bench.sh`'s totals and `search_bench.py` at 9 and 12 on the re-landing against `b860a8a`: bench 6042928 -> 3945487, `bench 12` 2339074 -> 2103576, the tune build 0 lines apart; on `cd50178`'s tree (S289's guard, reverted by DEC-309), never built after its fast check's fixes |
+
 ### S289, the pass that outvoted a proof (DEC-305)
 
 S083's paste hid a mate in two the parent finds; S289 traced it to the null

@@ -1,0 +1,54 @@
+# S083's re-landing, 2026-10-22: tests/test_search.cpp's mate_the_multicut_hides row (6k1/5pp1/6np/1PP1p3/1Q2P1P1/
+# 3r1q1P/1B1R4/6K1 b - - 0 42, depth 10, mate in 5) no longer reports its mate at 10 on the re-anchored paste
+# (S083r_rows.txt). Its site names it a GOLDEN re-derived by adocs/data/S097_mine_mate_row.py's six commands, so
+# it was re-mined: .tuning/coord/S083/reland/remine.sh, stages 2 to 6 in guard mode (DEC-238), stage 1 not re-run
+# (the 269 candidates and their oracle did not move: .tuning/coord/S097_candidates.fen), the range the script
+# derives from SeMinDepth, 7..10. E21_multicut_mate_band_gate_dropped applied to src/search.cpp by hand for the two
+# out-of-tree library builds and reverted before either sweep ran (the diff below).
+# RESULT: 0 of the 269 separate the shipped build from E21's in 7..10, so pick has nothing to take and the row is
+# left red at its depth, as the brief says. The row itself reads the same in both builds (no mate at 7, 8 or 10;
+# mate 5 at 9): what moved it is the paste's tree, not the guard E21 drops. E21 is still killed by S243's direct
+# case, "the multicut never ends a node on a mate from its verification" (the row's site).
+
+== the console
+E21 libraries built and src/search.cpp reverted, 8 s
+sweeps done, 33 s
+separators: 0
+no candidate separates the guard in this range, guard mode (DEC-238)
+REMINE-FAILED: pick
+
+== E21, as applied
+diff --git a/src/search.cpp b/src/search.cpp
+index a43dc42..aac5230 100644
+--- a/src/search.cpp
++++ b/src/search.cpp
+@@ -2473,7 +2473,7 @@ static int negamax_at(int alpha0,
+           if (probe != nullptr) { probe->se_extended = true; }
+         }
+       } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&
+-                 vscore < MATE_MIN && vscore > -MATE_MIN && beta > -MATE_MIN) {
++                 beta > -MATE_MIN) {
+         // MULTICUT, and it is the step's second verdict: at `SeMultiCut` 0 the
+         // release build compiles this branch away entirely and the engine is
+         // the one the extension landed as.
+
+== the libraries
+d7cb86fb70dd7a08036e12c706895aa43df696a0a7ad83b98dc0907c1ef9d6e6  build/src/libchesso_engine.a
+a67be4d245f3b03d0aa6467911a63ad3c060a03b886eed6387414e710fde995b  build-e21/src/libchesso_engine.a
+2edfd462b574045c727008f57d18a054f91630fd575a478c3b950651df1ac92d  build-e21-tune/src/libchesso_engine.a
+
+== separators
+0 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/coord/S083/reland/remine/separators.fen
+
+== pick --mode guard
+no candidate separates the guard in this range, guard mode (DEC-238)
+
+== the row's own cells, d7..d10 (mate:nodes:ms)
+shipped  -:74308:10 -:58992:9 m5:585791:64 -:456117:62 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+E21      -:74308:10 -:58992:9 m5:591339:65 -:454589:61 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+
+== mates reported per depth over the 269, shipped
+depth 7 128
+depth 8 147
+depth 9 168
+depth 10 181

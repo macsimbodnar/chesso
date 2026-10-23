@@ -17,9 +17,9 @@ both binaries at bench 6042933, no crash or disconnect, one `Incomplete
 mating PV` from the reference (S202's residue), quarters +4.8, +2.4, +2.0,
 +2.4, journal clean. S293 is in plan_done; S083's `paused_by` is clear.
 
-**Next**: S083. Its cd50178-tree record (Part A, the `S083r_*` readings,
-fast-checked, `.tuning/coord/S083/s083r_record.diff`) commits after the
-ledger. Then Part B re-lands the paste on this tree in `../chesso-s083s`
+**Next**: S083. Its cd50178-tree record (Part A: the 13 `S083r_*`
+readings byte for byte, their README rows and the step-file section,
+marked) is committed after the ledger. Part B re-lands the paste on this tree in `../chesso-s083s`
 (`.tuning/coord/S083/brief_reland2.md`): every search golden by its
 script, `S083_sprt.sh` naming the five H1 rulings, then its `{0, 5}`
 working-tree run. S290, S135.
