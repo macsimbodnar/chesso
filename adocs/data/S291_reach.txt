@@ -1,0 +1,189 @@
+# S291, step 2: does the mechanism S291_trace.txt names -- reverse futility at the mated side's node, at a beta a sibling
+# raised outside the mate band, with nothing in the table proving the node mated (and the null move failing high there
+# behind it) -- hide mates at the SHIPPED constants? 2026-10-23, on 49ad271 (S292's guard in, bench 6042933).
+#
+#   ~/.venv/chess/bin/python adocs/data/S289_rows.py ENGINE SET.tsv 10 OUT [Name=value ...]
+#
+# S289's per-row driver: twelve UCI processes, `ucinewgame` and Hash 16 before each row, each row at its own `go depth`,
+# exact = the last iteration reports exactly the proved distance. The set files are built from the committed TSVs, one
+# line a row, fen<TAB>signed distance<TAB>depth, S289_reach.txt's depth rules:
+#   roots82  adocs/data/S145_mate_set.tsv's 82 roots (distance m, attacker to move), depth 2m - 1 + 8;
+#   def104   adocs/data/S165_defender_set.tsv's 104 rows (mated_in k, mated side to move, -k), depth 2k + 8;
+#   def186   adocs/data/S145_mate_set.tsv's defender_nodes column, 186 nodes, the mated side to move, each distance proved
+#            by S145's own AND/OR enumeration (adocs/data/S291_defender186.py, S289's method: 86, 54, 30 and 16 mated in
+#            1, 2, 3 and 4, S289_reach.txt's counts), -k, depth 2k + 8;
+#   mined318 adocs/data/S145_mined_set.tsv's 318 rows (stockfish's label), depth 10 (S156's reading).
+# ENGINE: ../chesso-s291/build-tune/src/chesso (49ad271's tune build at its defaults; its readings reproduce S289's and
+# S292's at the shipped constants -- mined 164, def104 83, def186 143, roots 40) at
+#   ship                            the defaults;
+#   RfpMinPly 63                    reverse futility off at every ply the search reaches here;
+#   RfpMinPly 63, NullMoveBase 16   and no null move either (depth - 1 - R >= 1 never holds);
+# and, for section 3, ../chesso-s291t/build-tune-ship/src/chesso: 49ad271's constants with adocs/data/S289_trace.py and
+# adocs/data/S291_trace.py applied (bench 6042933 with every variable unset), at $S291_CENSUS=1 and $S291_RFP_GUARD=1.
+# The engine's output only; the distances are the sets' own oracles' (S145's enumeration, S165's, stockfish's labels).
+#
+# READING. Yes, the mechanism reaches the shipped weights, and it is the trade DEC-158 priced, not a new rule defect.
+# Reverse futility off finds 15 more of S145's 82 roots (S154's mates in three 12/24 -> 20/24), 10 more of S165's 104
+# defender nodes (all mates in three, 2/15 -> 12/15), 14 more of S145's 186 (m3 3/30 -> 16/30, m4 0/16 -> 1/16) and 36
+# more of the 318 mined rows (one lost), losing no root or defender row; with the null move off as well, 32, 14, 29
+# and 40. None is a mate in one or two: those classes read complete when shipped. These are DEC-158's figures in kind: S148's sweep read 39 of 82 and
+# mates in three 12 of 24 at the ceiling 15 against 52 and 18 at 4, and the owner kept 15 on a {-5, 0} H0 for the
+# ceiling 4 (S148_sprt.log), recording the deep mates as its measured price. At the row's node the table holds only a
+# lower bound, so no proof is outvoted -- the distinction DEC-306 and DEC-310 drew for the null move.
+# Section 3 asks the sharper question of the same rule, DEC-306's shape: reverse futility does return at nodes whose
+# entry is a mated upper bound from a shallower search of every legal move (90 such returns over the four sets).
+# Removing exactly those gains no exact mate in any set; it makes one proved-mated-in-3 defender node report m-4 at
+# iteration 14 where the shipped engine reports cp 0 (both report the exact m-3 from iteration 15), moves six roots'
+# centipawn scores and loses mined row 171 (m5 -> cp 2104): at the shipped weights that shape hides no exact mate
+# here. Ordinary play, adocs/data/S291_census.txt: none of them in 11503 A/A positions at depth 10.
+
+== 1. Exact at the last iteration, per proved distance
+
+-- S145's 82 constructed roots, attacker to move, go depth 2m - 1 + 8 (S154's mates in three are its m3 class)
+  ship                            40   m2 26/26  m3 12/24  m4 2/16  m5 0/16
+  RfpMinPly 63                    55   m2 26/26  m3 20/24  m4 6/16  m5 3/16
+  RfpMinPly 63, NullMoveBase 16   72   m2 26/26  m3 23/24  m4 13/16  m5 10/16
+  scratch RFP guard               40   m2 26/26  m3 12/24  m4 2/16  m5 0/16
+
+-- S165's 104 defender nodes, mated side to move, go depth 2k + 8
+  ship                            83   m1 50/50  m2 31/31  m3 2/15  m4 0/8
+  RfpMinPly 63                    93   m1 50/50  m2 31/31  m3 12/15  m4 0/8
+  RfpMinPly 63, NullMoveBase 16   97   m1 50/50  m2 31/31  m3 13/15  m4 3/8
+  scratch RFP guard               83   m1 50/50  m2 31/31  m3 2/15  m4 0/8
+
+-- S145's 186 defender nodes, mated side to move, distances proved by S291_defender186.py, go depth 2k + 8
+  ship                           143   m1 86/86  m2 54/54  m3 3/30  m4 0/16
+  RfpMinPly 63                   157   m1 86/86  m2 54/54  m3 16/30  m4 1/16
+  RfpMinPly 63, NullMoveBase 16  172   m1 86/86  m2 54/54  m3 25/30  m4 7/16
+  scratch RFP guard              143   m1 86/86  m2 54/54  m3 3/30  m4 0/16
+
+-- S156's mined set (adocs/data/S145_mined_set.tsv), 318 rows, attacker to move, go depth 10
+  ship                           164   m1 10/10  m2 33/33  m3 35/37  m4 37/49  m5 37/52  m6 11/50  m7 1/29  m8 0/24  m9 0/17  m10 0/17
+  RfpMinPly 63                   199   m1 10/10  m2 33/33  m3 37/37  m4 46/49  m5 45/52  m6 23/50  m7 5/29  m8 0/24  m9 0/17  m10 0/17
+  RfpMinPly 63, NullMoveBase 16  204   m1 10/10  m2 33/33  m3 37/37  m4 47/49  m5 46/52  m6 24/50  m7 7/29  m8 0/24  m9 0/17  m10 0/17
+  scratch RFP guard              163   m1 10/10  m2 33/33  m3 35/37  m4 37/49  m5 36/52  m6 11/50  m7 1/29  m8 0/24  m9 0/17  m10 0/17
+
+== 2. Rows exact without reverse futility (RfpMinPly 63) and not shipped -- what the rule hides at the shipped weights
+
+-- roots82: +15 -0 without reverse futility; +32 -0 without it and the null move
+   28  proved +3  ship cp 515     RfpMinPly 63 m+3 from depth 5   1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+   31  proved +3  ship cp 810     RfpMinPly 63 m+3 from depth 6   4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+   32  proved +3  ship cp 0       RfpMinPly 63 m+3 from depth 10   4brbr/3p1p1p/3P1P1P/8/1K6/2Q5/8/1k6 w - - 0 1
+   33  proved +3  ship cp 864     RfpMinPly 63 m+3 from depth 6   4brbr/3p1p1p/3P1P1P/8/8/2Q5/4k1K1/8 w - - 0 1
+   35  proved +3  ship cp 0       RfpMinPly 63 m+3 from depth 7   8/2k5/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR b - - 0 1
+   37  proved +3  ship cp 0       RfpMinPly 63 m+3 from depth 5   8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+   38  proved +3  ship cp 0       RfpMinPly 63 m+3 from depth 7   8/5k2/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR b - - 0 1
+   45  proved +3  ship cp 0       RfpMinPly 63 m+3 from depth 7   k3brbr/p2p1p1p/P2P1P1P/8/4K3/8/8/R7 w - - 0 1
+   50  proved +4  ship cp 0       RfpMinPly 63 m+4 from depth 15   1K6/2r5/8/3k4/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+   54  proved +4  ship cp 0       RfpMinPly 63 m+4 from depth 12   4brbr/p2p1p1p/P2P1P1P/8/1K6/2R5/k7/8 w - - 0 1
+   58  proved +4  ship cp 609     RfpMinPly 63 m+4 from depth 14   8/7K/8/2r4k/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+   64  proved +4  ship cp 448     RfpMinPly 63 m+4 from depth 9   rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1
+   73  proved +5  ship cp 777     RfpMinPly 63 m+5 from depth 14   8/5q2/8/6K1/8/p1p1p2k/P1P1P3/RBRB4 b - - 0 1
+   76  proved +5  ship cp 0       RfpMinPly 63 m+5 from depth 15   K3k3/1r6/8/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+   78  proved +5  ship cp -40     RfpMinPly 63 m+5 from depth 15   rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1
+
+-- def104: +10 -0 without reverse futility; +14 -0 without it and the null move
+   51  proved -3  ship cp -433    RfpMinPly 63 m-3 from depth 9   7K/2q5/8/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2
+   54  proved -3  ship cp -862    RfpMinPly 63 m-3 from depth 10   7K/4k3/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 1 2
+   57  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 7   8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2
+   63  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 8   k3brbr/3p1p1p/3P1P1P/1K6/8/8/8/5Q2 b - - 1 1
+   66  proved -3  ship cp -751    RfpMinPly 63 m-3 from depth 9   rbrb4/p1p1p3/P1P1P3/3K4/1k6/6Q1/8/8 b - - 1 1
+   69  proved -3  ship cp -437    RfpMinPly 63 m-3 from depth 9   rbrb4/p1p1p3/P1P1P3/k2K4/2Q5/8/8/8 b - - 1 1
+   81  proved -3  ship cp -548    RfpMinPly 63 m-3 from depth 8   4brbr/3p1p1p/3P1P1P/3Q4/1k6/8/3K4/8 b - - 3 2
+   89  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 9   6q1/8/7K/8/8/p1p1p1k1/P1P1P3/RBRB4 w - - 3 3
+   93  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 10   3q4/5K2/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3
+  101  proved -3  ship cp -415    RfpMinPly 63 m-3 from depth 6   rbrb4/p1p1p3/P1P1P3/1k6/3K4/8/2Q5/8 b - - 3 2
+
+-- def186: +14 -0 without reverse futility; +29 -0 without it and the null move
+   74  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 7   1K6/2r5/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR w - - 1 2
+   89  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 10   7K/5k2/8/8/8/p1p1p2p/P1P1P2P/RBRB3r w - - 1 2
+   92  proved -3  ship cp -433    RfpMinPly 63 m-3 from depth 9   7K/2q5/8/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2
+   95  proved -3  ship cp -862    RfpMinPly 63 m-3 from depth 10   7K/4k3/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 1 2
+  101  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 7   8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2
+  107  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 8   k3brbr/3p1p1p/3P1P1P/1K6/8/8/8/5Q2 b - - 1 1
+  116  proved -3  ship cp -751    RfpMinPly 63 m-3 from depth 9   rbrb4/p1p1p3/P1P1P3/3K4/1k6/6Q1/8/8 b - - 1 1
+  119  proved -3  ship cp -437    RfpMinPly 63 m-3 from depth 9   rbrb4/p1p1p3/P1P1P3/k2K4/2Q5/8/8/8 b - - 1 1
+  131  proved -3  ship cp -548    RfpMinPly 63 m-3 from depth 8   4brbr/3p1p1p/3P1P1P/3Q4/1k6/8/3K4/8 b - - 3 2
+  139  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 13   4brbr/p2p1p1p/P2P1P1P/6R1/5K2/7k/8/8 b - - 3 2
+  151  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 9   6q1/8/7K/8/8/p1p1p1k1/P1P1P3/RBRB4 w - - 3 3
+  155  proved -3  ship cp 0       RfpMinPly 63 m-3 from depth 10   3q4/5K2/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3
+  174  proved -4  ship cp 0       RfpMinPly 63 m-4 from depth 15   rbrb4/p1p1p2p/P1P1P2P/8/8/2R5/1k1K4/8 b - - 1 1
+  183  proved -3  ship cp -415    RfpMinPly 63 m-3 from depth 6   rbrb4/p1p1p3/P1P1P3/1k6/3K4/8/2Q5/8 b - - 3 2
+
+-- mined318: +36 -1 without reverse futility; +40 -0 without it and the null move
+   44  proved +3  ship cp 1227    RfpMinPly 63 m+3 from depth 9   1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+   76  proved +3  ship cp 1816    RfpMinPly 63 m+3 from depth 8   r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+   86  proved +4  ship cp 913     RfpMinPly 63 m+4 from depth 8   2r1r1k1/6q1/1pbBp1R1/p2pP3/P1pP3Q/7P/5P2/1R4K1 w - - 1 48
+   90  proved +4  ship cp 2633    RfpMinPly 63 m+4 from depth 7   3r1rk1/1p4p1/p2p1pP1/3Rp2Q/8/6P1/PPq2PB1/1K5R w - - 0 25
+  102  proved +4  ship cp 1271    RfpMinPly 63 m+4 from depth 7   6k1/p1N4p/4b1qp/2p1P3/2P5/1rb4P/Q4PPR/2K5 b - - 3 44
+  104  proved +4  ship cp 993     RfpMinPly 63 m+4 from depth 8   6r1/Pp3p1p/2k1p3/1P5r/3B4/3P1p1P/2P2P2/5R1K b - - 0 28
+  105  proved +4  ship cp 2613    RfpMinPly 63 m+4 from depth 7   7r/1p3p2/4k2p/3n3P/4p1p1/rPbR4/5PPN/1K5R b - - 0 28
+  109  proved +4  ship cp 1457    RfpMinPly 63 m+4 from depth 8   8/5Rpk/pp3b2/1P1P1Q2/7n/P4q2/8/6K1 b - - 6 41
+  119  proved +4  ship cp 912     RfpMinPly 63 m+4 from depth 7   r2qr2k/4n3/b1p1pN1B/8/1p1Pp2P/2P3P1/1P4P1/R2QR1K1 w - - 3 30
+  123  proved +4  ship cp 2142    RfpMinPly 63 m+4 from depth 10   r5k1/pp1Q3p/6p1/2n2p2/2pP4/B3R3/6PP/3R2K1 w - - 1 33
+  125  proved +4  ship cp 1919    RfpMinPly 63 m+4 from depth 8   r7/pp4k1/5rp1/1nPp1Q1R/8/1P6/2P2P2/2K3R1 w - - 0 33
+  131  proved +5  ship cp 2289    RfpMinPly 63 m+5 from depth 9   1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52
+  136  proved +5  ship cp 1374    RfpMinPly 63 m+5 from depth 8   2b2k2/1p6/2p1pq2/2PnNp2/R6Q/P7/P4P1P/6RK w - - 3 35
+  155  proved +5  ship m7         RfpMinPly 63 m+5 from depth 10   6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39
+  163  proved +5  ship cp 1356    RfpMinPly 63 m+5 from depth 7   7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54
+  167  proved +5  ship cp 1257    RfpMinPly 63 m+5 from depth 9   8/2P3pk/4Bp1p/p1K5/1p6/5P2/7P/8 w - - 0 50
+  173  proved +5  ship cp 2155    RfpMinPly 63 m+5 from depth 7   R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+  177  proved +5  ship cp 1517    RfpMinPly 63 m+5 from depth 10   r4b1k/5Qp1/p3P2p/3p1N2/3p1B2/7P/q4PP1/5RK1 w - - 3 27
+  179  proved +5  ship cp 1368    RfpMinPly 63 m+5 from depth 9   r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36
+  181  proved +6  ship cp 1857    RfpMinPly 63 m+6 from depth 10   1Q6/8/P3R3/8/k7/6K1/r7/3q4 w - - 2 74
+  190  proved +6  ship cp 2183    RfpMinPly 63 m+6 from depth 10   2kr4/Qp1rR3/p5p1/P7/4P2p/3PB2P/1P4PK/3q4 w - - 7 42
+  193  proved +6  ship cp 887     RfpMinPly 63 m+6 from depth 10   2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+  197  proved +6  ship cp 1706    RfpMinPly 63 m+6 from depth 10   4Q3/7k/1p3pp1/p1p5/P1P4P/1q3B2/6PK/8 w - - 0 46
+  198  proved +6  ship cp 1212    RfpMinPly 63 m+6 from depth 10   4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+  202  proved +6  ship cp 1412    RfpMinPly 63 m+6 from depth 10   5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+  207  proved +6  ship cp 1156    RfpMinPly 63 m+6 from depth 10   5r2/p3Q2p/3p1npk/1ppP4/5P2/6P1/1P3P1P/1q3BK1 w - - 0 32
+  210  proved +6  ship cp 1256    RfpMinPly 63 m+6 from depth 10   6k1/1p6/3P1Qp1/p3P1K1/6P1/1q5P/8/8 w - - 1 52
+  214  proved +6  ship cp 1502    RfpMinPly 63 m+6 from depth 9   7k/2r5/pp2p2B/3bN2Q/2P2p2/7P/q1P2PP1/4R1K1 w - - 1 35
+  215  proved +6  ship cp 1197    RfpMinPly 63 m+6 from depth 9   7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+  218  proved +6  ship cp 2202    RfpMinPly 63 m+6 from depth 10   8/2r2qkp/4QNp1/3P4/8/7P/1p4PK/4r3 b - - 1 45
+  226  proved +6  ship cp 864     RfpMinPly 63 m+6 from depth 9   k6r/p4ppp/Bpp4q/3Q4/P7/B1P2P2/7P/5R1K w - - 0 26
+  227  proved +6  ship cp 1256    RfpMinPly 63 m+6 from depth 10   r2q4/2pkbQ1p/p2pp3/3bP3/7n/1P3P2/1B4r1/RN3R1K b - - 0 22
+  239  proved +7  ship cp 1051    RfpMinPly 63 m+7 from depth 10   4R3/6pk/5p1p/1B3P2/2pNbK1Q/r7/8/6q1 b - - 12 53
+  244  proved +7  ship cp 1456    RfpMinPly 63 m+7 from depth 10   4rr1k/p1R3Rp/1p2pn1P/3pN1p1/3B2B1/P2b4/1n3PP1/6K1 w - - 0 32
+  247  proved +7  ship cp 730     RfpMinPly 63 m+7 from depth 10   8/1k6/3K4/8/8/5b1R/8/8 w - - 100 114
+  250  proved +7  ship cp 1591    RfpMinPly 63 m+7 from depth 10   8/6k1/5pp1/2qP4/4PQ2/6PP/3r2NK/r2B4 b - - 3 53
+  185  proved +6  LOST without it: cp 2043   1kN2r1R/3B4/pp1Q4/2pPp1q1/2n5/P4n2/1P2K3/4R3 b - - 0 39
+
+== 3. A sharper shape, asked of the same rule: reverse futility returning at a node whose table entry is a mated
+==    upper bound or exact score (<= -MATE_MIN) -- S289's shape for the null move, DEC-306's exactly where the entry's
+==    node skipped no move. S291_CENSUS=1 on build-tune-ship; the readings with the census on are the shipped
+==    readings row for row (checked on all four sets).
+  roots82     46 firings,  45 on an entry from a node that searched every legal move; census readings identical to ship: True
+  def104       5 firings,   2 on an entry from a node that searched every legal move; census readings identical to ship: True
+  def186      16 firings,  13 on an entry from a node that searched every legal move; census readings identical to ship: True
+  mined318   118 firings,  30 on an entry from a node that searched every legal move; census readings identical to ship: True
+  90 of the second kind over the four sets (77 over the three read first).
+
+  Their cost, read by removing them: $S291_RFP_GUARD (reverse futility not tried where S292's null-move condition holds --
+  a mated upper bound or exact score from a node that skipped no move). Every row it moves (last score or first-mate depth):
+  roots82   6 rows moved, exact +0 -0
+     row  40 proved +3: ship cp 1172 -> guard cp 1164   8/8/3q4/8/8/p1p1p3/P1P1P3/RBRBk2K b - - 0 1
+     row  57 proved +4: ship cp 1345 -> guard cp 1452   7K/8/3k4/8/q7/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+     row  62 proved +4: ship cp 801 -> guard cp 850   rbrb4/p1p1p2p/P1P1P2P/8/7K/8/7k/6R1 w - - 0 1
+     row  64 proved +4: ship cp 448 -> guard cp 462   rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1
+     row  76 proved +5: ship cp 0 -> guard cp 529   K3k3/1r6/8/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+     row  78 proved +5: ship cp -40 -> guard cp -116   rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1
+  def104    0 rows moved, exact +0 -0
+  def186    1 rows moved, exact +0 -0
+     row  89 proved -3: ship cp 0 -> guard m-4   7K/5k2/8/8/8/p1p1p2p/P1P1P2P/RBRB3r w - - 1 2
+  mined318  1 rows moved, exact +0 -1
+     row 171 proved +5: ship m5 -> guard cp 2104   8/5p1k/3R2p1/pP6/r1q5/4K3/8/8 b - - 1 57
+
+  Every row whose best move the guard moves (S289_rows.py's bestmove column, ship against guard):
+    roots82  row  76 proved +5: ship cp 0 b7c7 -> guard cp 529 b7b2   K3k3/1r6/8/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+    mined318 row 120 proved +4: ship mate 4 e8e3 -> guard mate 4 g5e3   r3r2k/6pp/R2p4/1P1P1pb1/2P5/4Qp2/5PqP/2R1K3 b - - 3 30
+    def104, def186: none.
+
+  Row 89 of def186 through UCI as the engine is played (adocs/data/S291_uci_row.py, Hash 16, ucinewgame), deeper:
+    ship (../chesso-s291/build/src/chesso), go depth 18:
+      1:838 2:838 3:856 4:850 5:824 6:739 7:0 8:0 9:0 10:0 11:0 12:0 13:0 14:0 15:m-3 16:m-3 17:m-3 18:m-3 bestmove h8h7
+    scratch guard ($S291_RFP_GUARD=1 on build-tune-ship), go depth 18:
+      1:838 2:838 3:856 4:850 5:824 6:739 7:0 8:0 9:0 10:0 11:0 12:0 13:0 14:m-4 15:m-3 16:m-3 17:m-3 18:m-3 bestmove h8h7
+    census on, go depth 14: 6 returns of the shape, all at ply 4, remaining depth 8 to 11, beta 0 or 1, on an upper bound
+    of -48992 stored at depth 7. The guard moves one iteration's report from cp 0 to an inexact m-4; the exact m-3 and the
+    best move are the same iteration and the same move either way.

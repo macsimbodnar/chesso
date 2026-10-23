@@ -7,7 +7,32 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-23, by hand.
 
-## 2026-10-23: S289 completes on S292's guard; S291 next
+## 2026-10-23: S291 completes, no rule at fault; S293 (BUGS) is first (DEC-311)
+
+**S291** (one Opus 5.5 subagent, `../chesso-s291`, scratch `../chesso-s291t`)
+traced the multicut row S083's re-landing loses at depth 10. Reverse
+futility cuts at ply 3 over a lower bound (beta -1166, static -404, margin
+441); `RfpMaxDepth` 4 restores the mate. That is DEC-158's price, so the
+row joins S083's H1 rulings (DEC-308 (2)), and the agent recommends retiring
+it with S083's landing. **Found beside it**: reverse futility failing high at
+nodes whose entry is a mated bound from a whole search, DEC-306's shape. It
+returns 90 times over S289's four mate sets and 0 in 11503 ordinary-play
+positions. A scratch guard against it moves eight reported scores and two
+best moves, gains no exact mate and loses mined row 171 (m5 -> cp 2104). S291
+proposed a scoped filler. **The coordinator ruled it BUGS-binding under
+DEC-171 (c)** (DEC-311): (c) has no ordinary-play limit. Two fast checks
+(wording; two readings owed and taken; the classification).
+
+**Next**: **S293**, in plan_current and pausing S083. It first traces row
+171's loss under the guard. A guard that hides a mate the shipped tree
+reports stops the step for the coordinator. Otherwise it ships as its own
+change with a `{-5, 0}` SPRT, likely near a true zero and toward its cap.
+Then S083 re-lands on S293's tree
+(`.tuning/coord/S083/brief_reland2.md`, drafted: the cd50178-tree record
+first, then every search golden by its script), and its `{0, 5}` run follows.
+S290, S135.
+
+## 2026-10-23: S289 completes on S292's guard
 
 **S289 completed** (one Opus 5.5 subagent, `../chesso-s289c`, readings at the
 paste's constants in scratch `../chesso-s289q`, fixture `38a15f4`).
@@ -24,10 +49,8 @@ These, and section 7's question, are the owner's on S083's H1 (DEC-307 (4)).
 Fast check: three wording and citation items, fixed. S083's `paused_by` is
 now S291 alone.
 
-**Next**: S291 (the multicut row at depth 10, still red on this tree at the
-re-landed constants). Then S083 re-lands on this tree, re-deriving
-`test_mate_carry`'s ceilings and S170's budgets there; its values were
-derived on `cd50178`'s tree. Then S290 and S135.
+S083 re-derives `test_mate_carry`'s ceilings and S170's budgets on the new
+tree, since the old values were derived on `cd50178`'s tree.
 
 ## 2026-10-23: S292's narrowed guard read H1 and stays
 

@@ -1,0 +1,46 @@
+# S291, step 1: the multicut mined row ("mate the multicut hides, depth 10", 6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1
+# b - - 0 42, mate in 5) at S083's re-landed constants, one tune option at a time, through the test's own search_fen()
+# (adocs/data/S291_row.py: a cold 4 MB table reset before each depth, one search() per depth, no node limit).
+# Library: ../chesso-s289q's tune build, read only -- fixture Q 38a15f4 (908ed57 plus the three src/ hunks of
+# .tuning/coord/S083/s083_reland.diff; bench 3945487). 49ad271's src/ is 908ed57's, so 49ad271 plus the same hunks
+# (../chesso-s291t before its trace patch) is byte-identical to 38a15f4's src/ (blob ids checked file by file).
+# Each cell is depth:mate-or-dash:score. The row's mate is m5. 2026-10-23.
+#
+#   ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s289q --lib build-tune/src/libchesso_engine.a \
+#       --tune --lo 7 --hi 12 [--set Name=Value]
+#
+# READING. At depth 10 four settings bring the mate back: RfpMinPly 63 and RfpMaxDepth 0 (reverse futility off), LmrBase 0
+# and SeeLmrExtra 0 (reductions that reorder and resize the tree). The multicut (SeMultiCut 0), the singular extension
+# (SeExtend 0), the null move (NullMoveBase 16), ProbCut 0, razoring, the shallow-depth rules and the correction table
+# do not; SeMultiCut 0 also loses depth 11. RfpMaxDepth 4, DEC-158's challenger ceiling, brings it back and keeps 9, 11
+# and 12. Narrower reverse futility settings (RfpMaxDepth 6 or 7, RfpMinPly 4, a margin of 108 or 109) do not: the trace
+# (S291_trace.txt) shows why for 6 and 7 -- the cut is at remaining depth 7, and where reverse futility does not fire
+# there the null move fails high at the same node. Deciding nothing alone; the trace names the node.
+none                     7:-:1143 8:-:1131 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+SeMultiCut=0             7:-:1143 8:-:1131 9:m5:48991 10:-:1166 11:-:1244 12:m5:48991 
+SeExtend=0               7:-:1143 8:-:1131 9:m5:48991 10:-:1173 11:m5:48991 12:m5:48991 
+SeMinDepth=16            7:-:1143 8:-:1131 9:m5:48991 10:-:1173 11:m5:48991 12:m5:48991 
+RfpMinPly=63             7:-:1143 8:m6:48989 9:m5:48991 10:m5:48991 11:m5:48991 12:m5:48991 
+RfpMaxDepth=0            7:-:1168 8:-:1131 9:-:1166 10:m5:48991 11:m5:48991 12:m5:48991 
+RfpTtEstimate=0          7:-:1143 8:-:1173 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+NullMoveBase=16          7:-:1168 8:-:1131 9:m5:48991 10:-:1166 11:m6:48989 12:m5:48991 
+LmrBase=0                7:-:952 8:m6:48989 9:m5:48991 10:m5:48991 11:m5:48991 12:m5:48991 
+LmrPv=0                  7:-:1143 8:-:883 9:-:1173 10:-:1166 11:-:1230 12:m6:48989 
+LmrCutNode=0             7:-:1143 8:-:1164 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+ProbCut=0                7:-:1143 8:-:1115 9:m5:48991 10:-:1143 11:m5:48991 12:m5:48991 
+RazorDepth=0             7:-:1031 8:m6:48989 9:m5:48991 10:-:1174 11:m5:48991 12:m5:48991 
+HistPruneMaxLmrDepth=0   7:-:1143 8:-:1110 9:-:1160 10:-:1166 11:m5:48991 12:m5:48991 
+LmpMaxLmrDepth=0         7:-:1143 8:-:1131 9:-:1164 10:-:1166 11:m5:48991 12:m5:48991 
+FutMaxLmrDepth=0         7:-:980 8:m6:48989 9:m5:48991 10:-:1232 11:m5:48991 12:m5:48991 
+SeeQuietMaxLmrDepth=0    7:-:1143 8:m6:48989 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+SeeCaptureMaxLmrDepth=0  7:-:1143 8:-:1115 9:-:1161 10:-:1166 11:m5:48991 12:m5:48991 
+SeeLmrExtra=0            7:-:1143 8:-:1131 9:-:970 10:m5:48991 11:m5:48991 12:m5:48991 
+QsFutility=0             7:-:980 8:m6:48989 9:m5:48991 10:-:1166 11:-:1231 12:m5:48991 
+LmrDeeperMinReduction=126 7:-:916 8:-:883 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+CorrHistMax=0            7:-:1143 8:-:1131 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+RfpMaxDepth=4            7:-:1143 8:-:1131 9:m5:48991 10:m5:48991 11:m5:48991 12:m5:48991 
+RfpMaxDepth=6            7:-:1143 8:-:1131 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+RfpMaxDepth=7            7:-:1143 8:-:1131 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+RfpMinPly=4              7:-:1168 8:-:1131 9:m5:48991 10:-:1232 11:m5:48991 12:m5:48991 
+RfpMargin=108            7:-:1168 8:m6:48989 9:m5:48991 10:-:1166 11:m5:48991 12:m5:48991 
+RfpMargin=109            7:-:1143 8:-:910 9:m5:48991 10:-:1232 11:-:1244 12:m5:48991 

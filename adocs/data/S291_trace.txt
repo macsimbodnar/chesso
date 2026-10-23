@@ -1,0 +1,664 @@
+# S291, step 1: the node and the rule that lose the multicut mined row's mate at depth 10 at S083's re-landed constants.
+# The row: tests/test_search.cpp "mate the multicut hides, depth 10", 6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42,
+# mate in 5 for Black, the side to move. 2026-10-23. The engine's output and python-chess's move application only;
+# nothing here is read off a board (CLAUDE.md).
+#
+# THE TREES. Q = fixture 38a15f4's src/ (908ed57 plus the three src/ hunks of .tuning/coord/S083/s083_reland.diff,
+# bench 3945487); 49ad271's src/ is 908ed57's, and ../chesso-s291t (detached 49ad271 plus those hunks) is
+# byte-identical to 38a15f4's src/ before its trace patch (blob ids fbf3d7d, 57f1609, 4520441). The shipped tree is
+# 49ad271's (S292's guard in, bench 6042933). Section A's first two readings are the untouched Release libraries
+# (../chesso-s289q read only, ../chesso-s291); everything after them is ../chesso-s291t with adocs/data/S289_trace.py
+# and then adocs/data/S291_trace.py applied to src/search.cpp (blob 84c79c8, never shipped): build-tune at Q, bench
+# 3945487, and build-tune-ship at 49ad271's constants, bench 6042933 -- each with every trace variable unset the
+# tree's own total, and section A shows each reads the row node for node as its untraced build.
+#
+# READING THE TRACE. `> N0 itD plyP dR [a,b] pvX cutY` is a visit of the traced node at ply P with remaining depth R
+# and window [a,b], scores from its side to move; `move m #k cd C red R -> s` is a child, C the child depth before
+# reduction R, s its final score (after any re-search); `< ... -> v by RULE se S x X` is the exit, RULE the return
+# that ended the node (loop, tt, null, rfp, multicut, ...), S the static score. `rfp:` is S291_trace.py's line at a
+# reverse futility return: margin, beta, static score, the estimate it decided on, the table entry as copied out
+# before any recursion (type 1 exact, 2 upper bound, 3 lower bound; depth; score). The FENs come from python-chess
+# applying the moves (adocs/data/S291_fens.py). Node lines are filtered by adocs/data/S291_trace_filter.py to the
+# traced node at its own ply (the same key reached elsewhere by transposition is left out).
+#
+# THE NODE AND THE RULE (sections B, C). At depth 10 the root searches f3e3 sixth, at 1166, and the mating move g6f4
+# 21st, against alpha 1166. Along g6f4 b2d4 e5d4 -- the line the engine reports at 9, 11 and 12 -- the ply-2 node
+# (Black, a PV node, window [1166, 48993]) searches d3d4 first at 1148, below alpha, so e5d4 is searched next with
+# the zero window, and at ply 3 -- WHITE TO MOVE, THE SIDE BEING MATED, remaining depth 7, a non-PV cut node, window
+# [-1167, -1166] -- REVERSE FUTILITY returns: static score -404, margin 441 (RfpMargin 63 x 7), -404 - 441 = -845 >=
+# beta -1166. The node's table entry at that moment is a LOWER bound, -48991 at depth 7 (its own earlier visit in the
+# mate band, window [-48993, -48992]): nothing proves White mated. e5d4 scores 845 at ply 2, below alpha; the ply-2
+# node returns 1158, g6f4 scores 1158 at the root against 1166, and the root reports f3e3 at cp 1166. Section C, one
+# node at a time: with reverse futility removed at that node alone the NULL MOVE fails high there at -1078 (S292's
+# guard does not apply -- the entry is a lower bound, which DEC-310 rejected as proving nothing) and the root still
+# reads cp 1166; with both removed at that node alone the root reports m5 at depth 10 (719941 nodes), and 7, 8, 9, 11
+# and 12 read as before.
+#
+# WHY 9, 11 AND 12 REPORT IT (section D). Depth 9: g6f4 is the root's sixth move against alpha 38; the ply-2 node's
+# alpha is 287 when e5d4 is probed, so the ply-3 node sees beta -287 at depth 6: -404 - 378 = -782 < -287, no cut,
+# the node is searched and the mate found. Depth 11: a mate in 6 (48989) is already the root's alpha when g6f4 (9th)
+# is searched, and the ply-3 node is reached only with mate-band windows, where reverse futility and the null move
+# are guarded off. Depth 12: the ply-2 PV node's first move reaches 48989 before e5d4, so its full-depth visits of
+# the ply-3 node all carry mate-band windows; the three reverse futility cuts there at remaining depths 1 to 3 (beta
+# about -1240) are in shallow visits -- one under the ply-2 node's reduced zero-window visit, two under its singular
+# verification's searches with f3g3 excluded -- and none decides the root (section D's last reading interleaves the
+# two nodes).
+#
+# THE SHIPPED CONSTANTS (section E). Depth 10: g6f4 is sixth against alpha 45, the ply-2 node's alpha is 640 when e5d4
+# is probed, the ply-3 node's static score -374: -374 - 441 = -815 < -640, no cut, the mate found. The row turns on
+# whether the bar a sibling has raised clears the mated side's static score plus the margin.
+#
+# E21 (section F). E21_multicut_mate_band_gate_dropped at Q loses depth 10 exactly as Q does: the same root order, the
+# same reverse futility cut at the same node (-845 against beta -1166), 454589 nodes against 456117 (S083r's E21
+# cell). At the shipped constants E21 also ends on that cut: the ply-2 node's first move d3d4 reads 931 under E21
+# (640 without it), so the ply-3 node sees beta -931: -815 >= -931, cut, cp 1032. What E21 changes is a sibling's
+# score upstream; the loss itself is the same reverse futility cut.
+#
+# THROUGH UCI (section G), the engine as played: neither tree reports this mate before iteration 13 at Hash 16 from
+# ucinewgame; both report m5 at 13 and 14 with bestmove g6f4. The depth-10 profile is a cold single search's.
+
+== A. The row's profile through search_fen() (adocs/data/S291_row.py), depths 7 to 12
+
+$ ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s289q --lib build/src/libchesso_engine.a
+d7  -    score   1143 nodes     74308 pv f3e3 g1f1 d3d2 b4d2 e3d2 c5c6 d2b2 
+d8  -    score   1131 nodes     58992 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2e5 d2d3 f1f2 
+d9  m5   score  48991 nodes    585791 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2214888 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291 --lib build/src/libchesso_engine.a
+d7  -    score    945 nodes     28920 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a3 d2d3 
+d8  m6   score  48989 nodes    254281 pv g6f4 b2d4 e5d4 b4d4 d3d4 d2f2 d4d1 f2f1 d1f1 g1h2 f1h1 
+d9  m5   score  48991 nodes    614169 pv g6f4 b2d4 e5d4 d2a2 f3g3 g1f1 d3f3 a2f2 g3f2 
+d10 m5   score  48991 nodes   1023029 pv g6f4 b2d4 e5d4 g1h2 f3g3 h2h1 g3e1 h1h2 d3h3 
+d11 m5   score  48991 nodes   1950316 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2804579 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --tune
+d7  -    score   1143 nodes     74308 pv f3e3 g1f1 d3d2 b4d2 e3d2 c5c6 d2b2 
+d8  -    score   1131 nodes     58992 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2e5 d2d3 f1f2 
+d9  m5   score  48991 nodes    585791 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2214888 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ LIB=build-tune-ship/src/libchesso_engine.a ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --lib build-tune-ship/src/libchesso_engine.a --tune
+d7  -    score    945 nodes     28920 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a3 d2d3 
+d8  m6   score  48989 nodes    254281 pv g6f4 b2d4 e5d4 b4d4 d3d4 d2f2 d4d1 f2f1 d1f1 g1h2 f1h1 
+d9  m5   score  48991 nodes    614169 pv g6f4 b2d4 e5d4 d2a2 f3g3 g1f1 d3f3 a2f2 g3f2 
+d10 m5   score  48991 nodes   1023029 pv g6f4 b2d4 e5d4 g1h2 f3g3 h2h1 g3e1 h1h2 d3h3 
+d11 m5   score  48991 nodes   1950316 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2804579 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+== B. Q at depth 10, along the mating line the engine reports at 9, 11 and 12: root, ply 1, ply 2, ply 3
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 10 --
+# line: (root) -- ply 0, 6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+> N0 it10 ply0 d10 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move d3d2 #1 cd 9 red 0 -> 20  (a -2000000000 b 2000000000)
+  move f3e4 #2 cd 9 red 0 -> -287  (a 20 b 2000000000)
+  move f3g4 #3 cd 9 red 0 -> 0  (a 20 b 2000000000)
+  move f3h3 #4 cd 9 red 0 -> 16  (a 20 b 2000000000)
+  move f3f2 #5 cd 9 red 0 -> -766  (a 20 b 2000000000)
+  move f3e3 #6 cd 9 red 0 -> 1166  (a 20 b 2000000000)
+  move f3e2 #7 cd 9 red 0 -> -76  (a 1166 b 2000000000)
+  move g8h7 #8 cd 9 red 0 -> 903  (a 1166 b 2000000000)
+  move d3d5 #9 cd 9 red 0 -> 1166  (a 1166 b 2000000000)
+  move d3d8 #10 cd 9 red 0 -> 1166  (a 1166 b 2000000000)
+  move d3d7 #11 cd 9 red 0 -> 1166  (a 1166 b 2000000000)
+  move d3d6 #12 cd 9 red 0 -> 1166  (a 1166 b 2000000000)
+  move f3f6 #13 cd 9 red 0 -> 701  (a 1166 b 2000000000)
+  move f3d1 #14 cd 9 red 0 -> 596  (a 1166 b 2000000000)
+  move d3d4 #15 cd 9 red 0 -> 1166  (a 1166 b 2000000000)
+  move d3e3 #16 cd 9 red 0 -> 573  (a 1166 b 2000000000)
+  move d3a3 #17 cd 9 red 0 -> 1116  (a 1166 b 2000000000)
+  move d3b3 #18 cd 9 red 0 -> 1144  (a 1166 b 2000000000)
+  move d3c3 #19 cd 9 red 0 -> 1116  (a 1166 b 2000000000)
+  move f3f5 #20 cd 9 red 0 -> 715  (a 1166 b 2000000000)
+  move g6f4 #21 cd 9 red 0 -> 1158  (a 1166 b 2000000000)
+  move g6e7 #22 cd 9 red 0 -> 910  (a 1166 b 2000000000)
+  move g6h4 #23 cd 9 red 0 -> 925  (a 1166 b 2000000000)
+  move g6h8 #24 cd 9 red 0 -> 835  (a 1166 b 2000000000)
+  move h6h5 #25 cd 9 red 0 -> 908  (a 1166 b 2000000000)
+  move f7f5 #26 cd 9 red 0 -> 915  (a 1166 b 2000000000)
+  move g8f8 #27 cd 9 red 0 -> 891  (a 1166 b 2000000000)
+  move g8h8 #28 cd 9 red 0 -> 898  (a 1166 b 2000000000)
+  move g6f8 #29 cd 9 red 0 -> 888  (a 1166 b 2000000000)
+  move f3f1 #30 cd 9 red 0 -> 100  (a 1166 b 2000000000)
+  move f3h1 #31 cd 9 red 0 -> -200  (a 1166 b 2000000000)
+  move f3g2 #32 cd 9 red 0 -> 129  (a 1166 b 2000000000)
+  move f7f6 #33 cd 9 red 0 -> 917  (a 1166 b 2000000000)
+  move f3f4 #34 cd 9 red 0 -> 1144  (a 1166 b 2000000000)
+  move f3g3 #35 cd 9 red 0 -> 1144  (a 1166 b 2000000000)
+< N0 it10 ply0 d10 [-2000000000,2000000000] -> 1166 by loop se -10 x 1
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4
+# line: g6f4 -- ply 1, 6k1/5pp1/7p/1PP1p3/1Q2PnP1/3r1q1P/1B1R4/6K1 w - - 1 43
+  > N0 it10 ply1 d9 [-1167,-1166] pv0 cut1 ex 0000 prev g6f4
+    move d2d3 #1 cd 8 red 0 -> -48993  (a -1167 b -1166)
+    move b2e5 #2 cd 8 red 0 -> -48993  (a -1167 b -1166)
+    move c5c6 #3 cd 8 red 0 -> -48991  (a -1167 b -1166)
+    move g1h2 #4 cd 8 red 4 -> -1211  (a -1167 b -1166)
+    move b5b6 #5 cd 8 red 5 -> -1255  (a -1167 b -1166)
+    move b4c4 #6 cd 8 red 5 -> -48993  (a -1167 b -1166)
+    move d2h2 #7 cd 8 red 5 -> -48995  (a -1167 b -1166)
+    move d2f2 #8 cd 8 red 5 -> -1329  (a -1167 b -1166)
+    move d2c2 #9 cd 8 red 5 -> -1185  (a -1167 b -1166)
+    move h3h4 #10 cd 8 red 5 -> -1170  (a -1167 b -1166)
+    move b4a4 #11 cd 8 red 6 -> -48995  (a -1167 b -1166)
+    move b2a1 #12 cd 8 red 6 -> -48991  (a -1167 b -1166)
+    move g4g5 #13 cd 8 red 7 -> -1191  (a -1167 b -1166)
+    move b4a5 #14 cd 8 red 6 -> -1312  (a -1167 b -1166)
+    move b2c1 #15 cd 8 red 6 -> -48991  (a -1167 b -1166)
+  < N0 it10 ply1 d9 [-1167,-1166] -> -1170 by loop se -24 x 2
+  > N0 it10 ply1 d9 [-2000000000,-1166] pv1 cut0 ex 0000 prev g6f4
+    move h3h4 #1 cd 8 red 0 -> -48993  (a -2000000000 b -1166)
+    move d2d3 #2 cd 8 red 0 -> -48993  (a -48993 b -1166)
+    move b2e5 #3 cd 8 red 0 -> -48993  (a -48993 b -1166)
+    move d2g2 #4 cd 8 red 2 -> -48997  (a -48993 b -1166)
+    move g1h2 #5 cd 8 red 2 -> -48993  (a -48993 b -1166)
+    move c5c6 #6 cd 8 red 2 -> -48993  (a -48993 b -1166)
+    move b5b6 #7 cd 8 red 2 -> -48993  (a -48993 b -1166)
+    move b4c4 #8 cd 8 red 2 -> -48993  (a -48993 b -1166)
+    move d2h2 #9 cd 8 red 2 -> -48995  (a -48993 b -1166)
+    move d2e2 #10 cd 8 red 3 -> -48995  (a -48993 b -1166)
+    move d2f2 #11 cd 8 red 3 -> -48993  (a -48993 b -1166)
+    move d2d1 #12 cd 8 red 4 -> -48993  (a -48993 b -1166)
+    move d2c2 #13 cd 8 red 3 -> -48993  (a -48993 b -1166)
+    move b2a3 #14 cd 8 red 4 -> -48993  (a -48993 b -1166)
+    move b4b3 #15 cd 8 red 4 -> -48995  (a -48993 b -1166)
+    move b2c3 #16 cd 8 red 4 -> -48995  (a -48993 b -1166)
+    move b2a1 #17 cd 8 red 3 -> -48993  (a -48993 b -1166)
+    move b4a4 #18 cd 8 red 3 -> -48995  (a -48993 b -1166)
+    move b4d4 #19 cd 8 red 4 -> -48993  (a -48993 b -1166)
+    move b2d4 #20 cd 8 red 4 -> -1158  (a -48993 b -1166)
+  < N0 it10 ply1 d9 [-2000000000,-1166] -> -1158 by loop se -24 x 3
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4
+# line: g6f4 b2d4 -- ply 2, 6k1/5pp1/7p/1PP1p3/1Q1BPnP1/3r1q1P/3R4/6K1 b - - 2 43
+    > N0 it10 ply2 d4 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #1 cd 3 red 0 -> 2108  (a 48992 b 48993)
+      move d3d2 #2 cd 3 red 0 -> 1901  (a 48992 b 48993)
+      move d3d4 #3 cd 3 red 0 -> 48991  (a 48992 b 48993)
+      move f4h3 #4 cd 3 red 0 -> 48991  (a 48992 b 48993)
+      move f3e4 #5 cd 3 red 0 -> 2209  (a 48992 b 48993)
+      move f3g4 #6 cd 3 red 0 -> 156  (a 48992 b 48993)
+      move f3h3 #7 cd 3 red 0 -> 1047  (a 48992 b 48993)
+      move f3g3 #8 cd 3 red 0 -> 48991  (a 48992 b 48993)
+      move f3g2 #9 cd 3 red 0 -> 408  (a 48992 b 48993)
+      move f3f2 #10 cd 3 red 0 -> -236  (a 48992 b 48993)
+      move f3h1 #11 cd 3 red 0 -> 1  (a 48992 b 48993)
+      move f3d1 #12 cd 3 red 0 -> 1018  (a 48992 b 48993)
+      move d3a3 #13 cd 3 red 2 -> 408  (a 48992 b 48993)
+      move d3b3 #14 cd 3 red 2 -> 1219  (a 48992 b 48993)
+      move d3c3 #15 cd 3 red 2 -> 143  (a 48992 b 48993)
+      move f3f1 #16 cd 3 red 0 -> -8  (a 48992 b 48993)
+      move f3e3 #17 cd 3 red 0 -> -298  (a 48992 b 48993)
+      move f3e2 #18 cd 3 red 2 -> 21  (a 48992 b 48993)
+      move d3e3 #19 cd 3 red 2 -> 667  (a 48992 b 48993)
+      move f4g6 #20 cd 3 red 2 -> 230  (a 48992 b 48993)
+      move f4e6 #21 cd 3 red 2 -> 245  (a 48992 b 48993)
+      move h6h5 #22 cd 3 red 2 -> 48991  (a 48992 b 48993)
+      move f4h5 #23 cd 3 red 2 -> 483  (a 48992 b 48993)
+      move f7f5 #24 cd 3 red 2 -> 48991  (a 48992 b 48993)
+      move g8f8 #25 cd 3 red 2 -> 322  (a 48992 b 48993)
+      move f4e2 #26 cd 3 red 0 -> 48991  (a 48992 b 48993)
+      move f4g2 #27 cd 3 red 2 -> 196  (a 48992 b 48993)
+      move g8h7 #28 cd 3 red 2 -> 332  (a 48992 b 48993)
+      move f4d5 #29 cd 3 red 2 -> 406  (a 48992 b 48993)
+      move g7g6 #30 cd 3 red 2 -> 339  (a 48992 b 48993)
+      move g8h8 #31 cd 3 red 2 -> 321  (a 48992 b 48993)
+      move g7g5 #32 cd 3 red 2 -> 325  (a 48992 b 48993)
+      move f7f6 #33 cd 3 red 2 -> 342  (a 48992 b 48993)
+    < N0 it10 ply2 d4 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it10 ply2 d8 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move d3d4 #1 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move e5d4 #2 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move d3d2 #3 cd 7 red 0 -> 48987  (a 48992 b 48993)
+      move f4h3 #4 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move f3e4 #5 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move f3g4 #6 cd 7 red 0 -> 560  (a 48992 b 48993)
+      move f3h3 #7 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move f3g3 #8 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move f3g2 #9 cd 7 red 0 -> 1010  (a 48992 b 48993)
+      move f3f2 #10 cd 7 red 0 -> 642  (a 48992 b 48993)
+      move f3h1 #11 cd 7 red 0 -> 928  (a 48992 b 48993)
+      move f3d1 #12 cd 7 red 0 -> 1077  (a 48992 b 48993)
+      move f3f1 #13 cd 7 red 0 -> 848  (a 48992 b 48993)
+      move d3a3 #14 cd 7 red 6 -> 408  (a 48992 b 48993)
+      move d3b3 #15 cd 7 red 6 -> 1219  (a 48992 b 48993)
+      move d3c3 #16 cd 7 red 6 -> 143  (a 48992 b 48993)
+      move f3e3 #17 cd 7 red 0 -> 346  (a 48992 b 48993)
+      move f3e2 #18 cd 7 red 6 -> 21  (a 48992 b 48993)
+      move d3e3 #19 cd 7 red 6 -> 667  (a 48992 b 48993)
+      move f4h5 #20 cd 7 red 6 -> 483  (a 48992 b 48993)
+      move f4g6 #21 cd 7 red 6 -> 230  (a 48992 b 48993)
+      move h6h5 #22 cd 7 red 6 -> 48991  (a 48992 b 48993)
+      move f4e6 #23 cd 7 red 6 -> 245  (a 48992 b 48993)
+      move f7f5 #24 cd 7 red 6 -> 48991  (a 48992 b 48993)
+      move g8f8 #25 cd 7 red 6 -> 322  (a 48992 b 48993)
+      move f4e2 #26 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move f4g2 #27 cd 7 red 6 -> 196  (a 48992 b 48993)
+      move g8h7 #28 cd 7 red 6 -> 332  (a 48992 b 48993)
+      move f4d5 #29 cd 7 red 6 -> 406  (a 48992 b 48993)
+      move g7g6 #30 cd 7 red 6 -> 339  (a 48992 b 48993)
+      move g8h8 #31 cd 7 red 6 -> 321  (a 48992 b 48993)
+      move g7g5 #32 cd 7 red 6 -> 325  (a 48992 b 48993)
+      move f7f6 #33 cd 7 red 6 -> 342  (a 48992 b 48993)
+    < N0 it10 ply2 d8 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it10 ply2 d8 [1166,48993] pv1 cut0 ex 0000 prev b2d4
+      move d3d4 #1 cd 7 red 0 -> 1148  (a 1166 b 48993)
+      move e5d4 #2 cd 7 red 0 -> 845  (a 1166 b 48993)
+      move d3d2 #3 cd 7 red 0 -> 1032  (a 1166 b 48993)
+      move f4h3 #4 cd 7 red 0 -> 1149  (a 1166 b 48993)
+      move f3e4 #5 cd 7 red 0 -> 506  (a 1166 b 48993)
+      move f3g4 #6 cd 7 red 0 -> 560  (a 1166 b 48993)
+      move f3h3 #7 cd 7 red 0 -> 531  (a 1166 b 48993)
+      move f3g3 #8 cd 7 red 0 -> 1158  (a 1166 b 48993)
+      move f3g2 #9 cd 7 red 0 -> 1010  (a 1166 b 48993)
+      move f3h1 #10 cd 7 red 0 -> 928  (a 1166 b 48993)
+      move f3d1 #11 cd 7 red 0 -> 1077  (a 1166 b 48993)
+      move f3f1 #12 cd 7 red 0 -> 848  (a 1166 b 48993)
+      move d3a3 #13 cd 7 red 5 -> 121  (a 1166 b 48993)
+      move f3f2 #14 cd 7 red 0 -> 642  (a 1166 b 48993)
+      move d3b3 #15 cd 7 red 5 -> 112  (a 1166 b 48993)
+      move d3c3 #16 cd 7 red 6 -> 143  (a 1166 b 48993)
+      move f3e3 #17 cd 7 red 0 -> 346  (a 1166 b 48993)
+      move f3e2 #18 cd 7 red 6 -> 21  (a 1166 b 48993)
+      move d3e3 #19 cd 7 red 6 -> 667  (a 1166 b 48993)
+      move f4h5 #20 cd 7 red 6 -> 483  (a 1166 b 48993)
+      move f4e6 #21 cd 7 red 5 -> 88  (a 1166 b 48993)
+      move f4g6 #22 cd 7 red 5 -> 73  (a 1166 b 48993)
+      move f7f5 #23 cd 7 red 6 -> 35  (a 1166 b 48993)
+      move h6h5 #24 cd 7 red 5 -> 99  (a 1166 b 48993)
+      move g8f8 #25 cd 7 red 5 -> 77  (a 1166 b 48993)
+      move f4e2 #26 cd 7 red 0 -> 1143  (a 1166 b 48993)
+      move f4g2 #27 cd 7 red 6 -> 196  (a 1166 b 48993)
+      move g8h7 #28 cd 7 red 5 -> 83  (a 1166 b 48993)
+      move f4d5 #29 cd 7 red 6 -> 406  (a 1166 b 48993)
+      move g7g6 #30 cd 7 red 6 -> 339  (a 1166 b 48993)
+      move g8h8 #31 cd 7 red 6 -> 321  (a 1166 b 48993)
+      move g7g5 #32 cd 7 red 6 -> 325  (a 1166 b 48993)
+      move f7f6 #33 cd 7 red 6 -> 342  (a 1166 b 48993)
+    < N0 it10 ply2 d8 [1166,48993] -> 1158 by loop se -19 x 2
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 e5d4
+# line: g6f4 b2d4 e5d4 -- ply 3, 6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44
+      > N0 it10 ply3 d3 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+        move d2d3 #1 cd 2 red 0 -> -48995  (a -48993 b -48992)
+        move b4d4 #2 cd 2 red 0 -> -2108  (a -48993 b -48992)
+      < N0 it10 ply3 d3 [-48993,-48992] -> -2108 by loop se -404 x 3
+      > N0 it10 ply3 d7 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+        move b4d4 #1 cd 6 red 0 -> -48991  (a -48993 b -48992)
+      < N0 it10 ply3 d7 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it10 ply3 d7 [-1167,-1166] pv0 cut1 ex 0000 prev e5d4
+        rfp: margin 441 beta -1166 static -404 estimate -404 entry yes type 3 depth 7 score -48991
+      < N0 it10 ply3 d7 [-1167,-1166] -> -845 by rfp se -404 x -404
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+== C. Q, the one-node counterfactuals at the ply-3 node (N3 = 6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44), depths 7 to 12
+
+$ S291_NO_RFP='6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44' ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --tune
+d7  -    score   1143 nodes     74308 pv f3e3 g1f1 d3d2 b4d2 e3d2 c5c6 d2b2 
+d8  -    score   1131 nodes     58992 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2e5 d2d3 f1f2 
+d9  m5   score  48991 nodes    585791 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+d10 -    score   1166 nodes    456187 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2231233 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ S291_NO_NULL='6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44' ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --tune
+d7  -    score   1143 nodes     74308 pv f3e3 g1f1 d3d2 b4d2 e3d2 c5c6 d2b2 
+d8  -    score   1131 nodes     58992 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2e5 d2d3 f1f2 
+d9  m5   score  48991 nodes    585790 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+d10 -    score   1166 nodes    456117 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2214888 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ S291_NO_RFP='6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44' S291_NO_NULL='6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44' ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --tune
+d7  -    score   1143 nodes     74308 pv f3e3 g1f1 d3d2 b4d2 e3d2 c5c6 d2b2 
+d8  -    score   1131 nodes     58992 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2e5 d2d3 f1f2 
+d9  m5   score  48991 nodes    585790 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+d10 m5   score  48991 nodes    719941 pv g6f4 b2d4 e5d4 d2f2 f4h3 g1h2 f3f2 h2h1 f2g1 
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2231233 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ S291_NO_RFP='6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44' adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 e5d4
+# line: g6f4 b2d4 e5d4 -- ply 3, 6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44
+      > N0 it10 ply3 d3 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+        move d2d3 #1 cd 2 red 0 -> -48995  (a -48993 b -48992)
+        move b4d4 #2 cd 2 red 0 -> -2108  (a -48993 b -48992)
+      < N0 it10 ply3 d3 [-48993,-48992] -> -2108 by loop se -404 x 3
+      > N0 it10 ply3 d7 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+        move b4d4 #1 cd 6 red 0 -> -48991  (a -48993 b -48992)
+      < N0 it10 ply3 d7 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it10 ply3 d7 [-1167,-1166] pv0 cut1 ex 0000 prev e5d4
+      < N0 it10 ply3 d7 [-1167,-1166] -> -1078 by null se -404 x 2
+d10 -    score   1166 nodes    456187 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+== D. Q at depths 9, 11 and 12: why those report it (root lines for the mating move only)
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 9 -- | grep -E '^[<>]|g6f4|^d'
+> N0 it9 ply0 d9 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move g6f4 #6 cd 8 red 0 -> 48991  (a 38 b 2000000000)
+< N0 it9 ply0 d9 [-2000000000,2000000000] -> 48991 by loop se -10 x 1
+d9  m5   score  48991 nodes    585791 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 9 -- g6f4 b2d4 | grep -E '^    [<>]|e5d4|^d'
+    > N0 it9 ply2 d3 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #1 cd 2 red 0 -> 2108  (a 48992 b 48993)
+    < N0 it9 ply2 d3 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it9 ply2 d7 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #2 cd 6 red 0 -> 48991  (a 48992 b 48993)
+    < N0 it9 ply2 d7 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it9 ply2 d7 [38,48993] pv1 cut0 ex 0000 prev b2d4
+      move e5d4 #2 cd 6 red 0 -> 48991  (a 287 b 48993)
+    < N0 it9 ply2 d7 [38,48993] -> 48991 by loop se -19 x 1
+d9  m5   score  48991 nodes    585791 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 9 -- g6f4 b2d4 e5d4
+# line: g6f4 b2d4 e5d4 -- ply 3, 6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44
+      > N0 it9 ply3 d2 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+        move d2d3 #1 cd 1 red 0 -> -48995  (a -48993 b -48992)
+        move b4d4 #2 cd 1 red 0 -> -2108  (a -48993 b -48992)
+      < N0 it9 ply3 d2 [-48993,-48992] -> -2108 by loop se -404 x 3
+      > N0 it9 ply3 d6 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+        move b4d4 #1 cd 5 red 0 -> -48991  (a -48993 b -48992)
+      < N0 it9 ply3 d6 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it9 ply3 d6 [-288,-287] pv0 cut1 ex 0000 prev e5d4
+        move b4d4 #1 cd 5 red 0 -> -554  (a -288 b -287)
+        move d2d3 #2 cd 5 red 0 -> -48995  (a -288 b -287)
+        move c5c6 #3 cd 5 red 0 -> -295  (a -288 b -287)
+        move g1h2 #4 cd 5 red 4 -> -359  (a -288 b -287)
+        move d2h2 #5 cd 5 red 4 -> -373  (a -288 b -287)
+        move d2f2 #6 cd 5 red 4 -> -327  (a -288 b -287)
+        move b4c4 #7 cd 5 red 4 -> -313  (a -288 b -287)
+        move b5b6 #8 cd 5 red 4 -> -291  (a -288 b -287)
+        move d2c2 #9 cd 5 red 4 -> -339  (a -288 b -287)
+      < N0 it9 ply3 d6 [-288,-287] -> -291 by loop se -404 x 2
+      > N0 it9 ply3 d6 [-48993,-287] pv1 cut0 ex 0000 prev e5d4
+        move b5b6 #1 cd 5 red 0 -> -48991  (a -48993 b -287)
+        move d2d3 #2 cd 5 red 0 -> -48995  (a -48991 b -287)
+        move b4d4 #3 cd 5 red 0 -> -48991  (a -48991 b -287)
+        move c5c6 #4 cd 5 red 2 -> -48991  (a -48991 b -287)
+        move g1h2 #5 cd 5 red 2 -> -48991  (a -48991 b -287)
+        move d2h2 #6 cd 5 red 2 -> -48991  (a -48991 b -287)
+        move d2f2 #7 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move d2g2 #8 cd 5 red 4 -> -48995  (a -48991 b -287)
+        move b4c4 #9 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move d2c2 #10 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move d2e2 #11 cd 5 red 4 -> -48993  (a -48991 b -287)
+        move d2a2 #12 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move d2d1 #13 cd 5 red 4 -> -48991  (a -48991 b -287)
+        move e4e5 #14 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move b4a5 #15 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move d2b2 #16 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move b4b1 #17 cd 5 red 3 -> -48993  (a -48991 b -287)
+        move h3h4 #18 cd 5 red 3 -> -48991  (a -48991 b -287)
+        move g4g5 #19 cd 5 red 4 -> -48991  (a -48991 b -287)
+        move b4b3 #20 cd 5 red 4 -> -48993  (a -48991 b -287)
+        move b4c3 #21 cd 5 red 4 -> -48991  (a -48991 b -287)
+        move b4b2 #22 cd 5 red 4 -> -48991  (a -48991 b -287)
+        move b4a4 #23 cd 5 red 4 -> -48993  (a -48991 b -287)
+        move b4a3 #24 cd 5 red 4 -> -48993  (a -48991 b -287)
+      < N0 it9 ply3 d6 [-48993,-287] -> -48991 by loop se -404 x 1
+d9  m5   score  48991 nodes    585791 pv g6f4 b2d4 e5d4 b5b6 f3g3 g1h1 g3e1 h1h2 d3h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 11 -- | grep -E '^[<>]|g6f4|^d'
+> N0 it11 ply0 d11 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move g6f4 #9 cd 10 red 0 -> 48991  (a 48989 b 2000000000)
+< N0 it11 ply0 d11 [-2000000000,2000000000] -> 48991 by loop se -10 x 1
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 11 -- g6f4 b2d4 e5d4 | grep -E '^      [<>]|rfp:|^d'
+      > N0 it11 ply3 d0 [-48990,-48989] pv0 cut1 ex 0000 prev e5d4
+      < N0 it11 ply3 d0 [-48990,-48989] -> -738 by tt se 99999 x 13
+      > N0 it11 ply3 d9 [-48990,-48989] pv0 cut1 ex 0000 prev e5d4
+      < N0 it11 ply3 d9 [-48990,-48989] -> -48991 by loop se -404 x 2
+      > N0 it11 ply3 d4 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+      < N0 it11 ply3 d4 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it11 ply3 d8 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+      < N0 it11 ply3 d8 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it11 ply3 d8 [-48993,-48989] pv1 cut0 ex 0000 prev e5d4
+      < N0 it11 ply3 d8 [-48993,-48989] -> -48991 by loop se -404 x 1
+d11 m5   score  48991 nodes   3365626 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 12 -- | grep -E '^[<>]|g6f4|^d'
+> N0 it12 ply0 d12 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move g6f4 #20 cd 11 red 0 -> 48991  (a 1236 b 2000000000)
+< N0 it12 ply0 d12 [-2000000000,2000000000] -> 48991 by loop se -10 x 1
+d12 m5   score  48991 nodes   2214888 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 12 -- g6f4 b2d4 | grep -E '^    [<>]|e5d4|^d'
+    > N0 it12 ply2 d3 [1236,1237] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #1 cd 2 red 0 -> 530  (a 1236 b 1237)
+    < N0 it12 ply2 d3 [1236,1237] -> 1223 by loop se -19 x 2
+    > N0 it12 ply2 d10 [1236,1237] pv0 cut1 ex 0000 prev b2d4
+    < N0 it12 ply2 d10 [1236,1237] -> 1251 by loop se -19 x 3
+    > N0 it12 ply2 d6 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+    > N0 it12 ply2 d2 [1244,1245] pv0 cut0 ex f3g3 prev b2d4
+      move e5d4 #1 cd 1 red 0 -> 467  (a 1244 b 1245)
+    < N0 it12 ply2 d2 [1244,1245] -> 1077 by loop se -19 x 2
+      move e5d4 #2 cd 5 red 0 -> 48991  (a 48992 b 48993)
+    < N0 it12 ply2 d6 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it12 ply2 d10 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+    > N0 it12 ply2 d4 [1240,1241] pv0 cut0 ex f3g3 prev b2d4
+      move e5d4 #1 cd 3 red 0 -> 593  (a 1240 b 1241)
+    < N0 it12 ply2 d4 [1240,1241] -> 1203 by loop se -19 x 2
+      move e5d4 #2 cd 9 red 0 -> 48991  (a 48992 b 48993)
+    < N0 it12 ply2 d10 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it12 ply2 d10 [1236,48993] pv1 cut0 ex 0000 prev b2d4
+      move e5d4 #2 cd 9 red 0 -> 48991  (a 48989 b 48993)
+    < N0 it12 ply2 d10 [1236,48993] -> 48991 by loop se -19 x 1
+d12 m5   score  48991 nodes   2214888 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ adocs/data/S291_trace_line.sh ../chesso-s291t 12 -- g6f4 b2d4 e5d4 | grep -E '^      [<>]|rfp:|^d'
+      > N0 it12 ply3 d2 [-1237,-1236] pv0 cut0 ex 0000 prev e5d4
+        rfp: margin 126 beta -1236 static -404 estimate -404 entry no type -1 depth -1 score 0
+      < N0 it12 ply3 d2 [-1237,-1236] -> -530 by rfp se -404 x -404
+      > N0 it12 ply3 d1 [-1245,-1244] pv0 cut1 ex 0000 prev e5d4
+        rfp: margin 63 beta -1244 static -404 estimate -404 entry no type -1 depth -1 score 0
+      < N0 it12 ply3 d1 [-1245,-1244] -> -467 by rfp se -404 x -404
+      > N0 it12 ply3 d5 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+      < N0 it12 ply3 d5 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it12 ply3 d3 [-1241,-1240] pv0 cut1 ex 0000 prev e5d4
+        rfp: margin 189 beta -1240 static -404 estimate -404 entry yes type 3 depth 5 score -48991
+      < N0 it12 ply3 d3 [-1241,-1240] -> -593 by rfp se -404 x -404
+      > N0 it12 ply3 d9 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+      < N0 it12 ply3 d9 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it12 ply3 d9 [-48990,-48989] pv0 cut1 ex 0000 prev e5d4
+      < N0 it12 ply3 d9 [-48990,-48989] -> -48991 by loop se -404 x 2
+      > N0 it12 ply3 d9 [-48993,-48989] pv1 cut0 ex 0000 prev e5d4
+      < N0 it12 ply3 d9 [-48993,-48989] -> -48991 by loop se -404 x 1
+d12 m5   score  48991 nodes   2214888 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ S289_TRACE='<ply-2 FEN>|<ply-3 FEN>' ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --tune --lo 12 --hi 12 2>&1 | python3 adocs/data/S291_trace_filter.py 0 2 --all | grep -E 'ply2|ply3' | grep -E '^\s*[<>]'
+#   N0 = 6k1/5pp1/7p/1PP1p3/1Q1BPnP1/3r1q1P/3R4/6K1 b - - 2 43, N1 = 6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44
+    > N0 it12 ply2 d3 [1236,1237] pv0 cut1 ex 0000 prev b2d4
+      > N1 it12 ply3 d2 [-1237,-1236] pv0 cut0 ex 0000 prev e5d4
+      < N1 it12 ply3 d2 [-1237,-1236] -> -530 by rfp se -404 x -404
+    < N0 it12 ply2 d3 [1236,1237] -> 1223 by loop se -19 x 2
+    > N0 it12 ply2 d10 [1236,1237] pv0 cut1 ex 0000 prev b2d4
+    < N0 it12 ply2 d10 [1236,1237] -> 1251 by loop se -19 x 3
+    > N0 it12 ply2 d6 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+    > N0 it12 ply2 d2 [1244,1245] pv0 cut0 ex f3g3 prev b2d4
+      > N1 it12 ply3 d1 [-1245,-1244] pv0 cut1 ex 0000 prev e5d4
+      < N1 it12 ply3 d1 [-1245,-1244] -> -467 by rfp se -404 x -404
+    < N0 it12 ply2 d2 [1244,1245] -> 1077 by loop se -19 x 2
+      > N1 it12 ply3 d5 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+      < N1 it12 ply3 d5 [-48993,-48992] -> -48991 by loop se -404 x 3
+    < N0 it12 ply2 d6 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it12 ply2 d10 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+    > N0 it12 ply2 d4 [1240,1241] pv0 cut0 ex f3g3 prev b2d4
+      > N1 it12 ply3 d3 [-1241,-1240] pv0 cut1 ex 0000 prev e5d4
+      < N1 it12 ply3 d3 [-1241,-1240] -> -593 by rfp se -404 x -404
+    < N0 it12 ply2 d4 [1240,1241] -> 1203 by loop se -19 x 2
+      > N1 it12 ply3 d9 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+      < N1 it12 ply3 d9 [-48993,-48992] -> -48991 by loop se -404 x 3
+    < N0 it12 ply2 d10 [48992,48993] -> 48991 by loop se -19 x 2
+    > N0 it12 ply2 d10 [1236,48993] pv1 cut0 ex 0000 prev b2d4
+      > N1 it12 ply3 d9 [-48990,-48989] pv0 cut1 ex 0000 prev e5d4
+      < N1 it12 ply3 d9 [-48990,-48989] -> -48991 by loop se -404 x 2
+      > N1 it12 ply3 d9 [-48993,-48989] pv1 cut0 ex 0000 prev e5d4
+      < N1 it12 ply3 d9 [-48993,-48989] -> -48991 by loop se -404 x 1
+    < N0 it12 ply2 d10 [1236,48993] -> 48991 by loop se -19 x 1
+
+== E. The shipped constants at depth 10 (the same patch on 49ad271, build-tune-ship, bench 6042933)
+
+$ LIB=build-tune-ship/src/libchesso_engine.a adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- | grep -E '^[<>]|g6f4|^d'
+> N0 it10 ply0 d10 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move g6f4 #6 cd 9 red 0 -> 48991  (a 45 b 2000000000)
+< N0 it10 ply0 d10 [-2000000000,2000000000] -> 48991 by loop se -15 x 1
+d10 m5   score  48991 nodes   1023029 pv g6f4 b2d4 e5d4 g1h2 f3g3 h2h1 g3e1 h1h2 d3h3 
+
+$ LIB=build-tune-ship/src/libchesso_engine.a adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 | grep -E '^    [<>]|e5d4|d3d4 #1|^d'
+    > N0 it10 ply2 d3 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #1 cd 2 red 0 -> 2064  (a 48992 b 48993)
+    < N0 it10 ply2 d3 [48992,48993] -> 48991 by loop se 0 x 2
+    > N0 it10 ply2 d8 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #2 cd 7 red 0 -> 48991  (a 48992 b 48993)
+    < N0 it10 ply2 d8 [48992,48993] -> 48991 by loop se 0 x 2
+    > N0 it10 ply2 d8 [45,48993] pv1 cut0 ex 0000 prev b2d4
+      move e5d4 #2 cd 7 red 0 -> 48991  (a 640 b 48993)
+    < N0 it10 ply2 d8 [45,48993] -> 48991 by loop se 0 x 1
+d10 m5   score  48991 nodes   1023029 pv g6f4 b2d4 e5d4 g1h2 f3g3 h2h1 g3e1 h1h2 d3h3 
+
+$ LIB=build-tune-ship/src/libchesso_engine.a adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 e5d4
+# line: g6f4 b2d4 e5d4 -- ply 3, 6k1/5pp1/7p/1PP5/1Q1pPnP1/3r1q1P/3R4/6K1 w - - 0 44
+      > N0 it10 ply3 d2 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+        move d2d3 #1 cd 1 red 0 -> -48995  (a -48993 b -48992)
+        move b4d4 #2 cd 1 red 0 -> -2064  (a -48993 b -48992)
+      < N0 it10 ply3 d2 [-48993,-48992] -> -2064 by loop se -374 x 3
+      > N0 it10 ply3 d7 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+        move b4d4 #1 cd 6 red 0 -> -48991  (a -48993 b -48992)
+      < N0 it10 ply3 d7 [-48993,-48992] -> -48991 by loop se -374 x 3
+      > N0 it10 ply3 d7 [-641,-640] pv0 cut1 ex 0000 prev e5d4
+        move b4d4 #1 cd 6 red 0 -> -1089  (a -641 b -640)
+        move d2d3 #2 cd 6 red 0 -> -48995  (a -641 b -640)
+        move b4b1 #3 cd 6 red 0 -> -833  (a -641 b -640)
+        move e4e5 #4 cd 6 red 5 -> -48989  (a -641 b -640)
+        move g1h2 #5 cd 6 red 5 -> -645  (a -641 b -640)
+        move b5b6 #6 cd 6 red 5 -> -48991  (a -641 b -640)
+        move d2h2 #7 cd 6 red 5 -> -686  (a -641 b -640)
+        move d2f2 #8 cd 6 red 5 -> -751  (a -641 b -640)
+        move b4c4 #9 cd 6 red 5 -> -890  (a -641 b -640)
+      < N0 it10 ply3 d7 [-641,-640] -> -645 by loop se -374 x 2
+      > N0 it10 ply3 d7 [-48993,-640] pv1 cut0 ex 0000 prev e5d4
+        move g1h2 #1 cd 6 red 0 -> -48991  (a -48993 b -640)
+        move d2d3 #2 cd 6 red 0 -> -48995  (a -48991 b -640)
+        move b4d4 #3 cd 6 red 0 -> -48991  (a -48991 b -640)
+        move b4b1 #4 cd 6 red 2 -> -48991  (a -48991 b -640)
+        move e4e5 #5 cd 6 red 2 -> -48991  (a -48991 b -640)
+        move b5b6 #6 cd 6 red 3 -> -48991  (a -48991 b -640)
+        move d2h2 #7 cd 6 red 3 -> -48991  (a -48991 b -640)
+        move d2g2 #8 cd 6 red 4 -> -48995  (a -48991 b -640)
+        move d2d1 #9 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move d2f2 #10 cd 6 red 3 -> -48991  (a -48991 b -640)
+        move b4c4 #11 cd 6 red 3 -> -48991  (a -48991 b -640)
+        move h3h4 #12 cd 6 red 3 -> -48991  (a -48991 b -640)
+        move b4c3 #13 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move d2b2 #14 cd 6 red 3 -> -48991  (a -48991 b -640)
+        move c5c6 #15 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move b4b2 #16 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move d2a2 #17 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move d2c2 #18 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move d2e2 #19 cd 6 red 5 -> -48993  (a -48991 b -640)
+        move b4a4 #20 cd 6 red 4 -> -48993  (a -48991 b -640)
+        move b4a5 #21 cd 6 red 4 -> -48991  (a -48991 b -640)
+        move b4a3 #22 cd 6 red 5 -> -48993  (a -48991 b -640)
+        move b4b3 #23 cd 6 red 5 -> -48993  (a -48991 b -640)
+        move g4g5 #24 cd 6 red 5 -> -48991  (a -48991 b -640)
+      < N0 it10 ply3 d7 [-48993,-640] -> -48991 by loop se -374 x 1
+d10 m5   score  48991 nodes   1023029 pv g6f4 b2d4 e5d4 g1h2 f3g3 h2h1 g3e1 h1h2 d3h3 
+
+== G. Through UCI, go depth 14, Hash 16, ucinewgame (the engine as played: iterative deepening, table carried)
+
+$ ~/.venv/chess/bin/python adocs/data/S291_uci_row.py ../chesso-s289q/build/src/chesso 14
+1:68 2:68 3:181 4:181 5:438 6:906 7:1143 8:1164 9:1266 10:1300 11:1329 12:1383 13:m5 14:m5 bestmove g6f4 ponder b2d4
+
+$ ~/.venv/chess/bin/python adocs/data/S291_uci_row.py ../chesso-s291/build/src/chesso 14
+1:71 2:71 3:181 4:181 5:392 6:795 7:945 8:993 9:1058 10:1132 11:1132 12:1178 13:m5 14:m5 bestmove g6f4 ponder b2d4
+
+== F. E21_multicut_mate_band_gate_dropped (tools/mutants/S097_singular_extension.py) applied by hand to the patched scratch, read, reverted
+   (the multicut's condition loses `vscore < MATE_MIN && vscore > -MATE_MIN`, keeps `beta > -MATE_MIN`, as S083r_remine_multicut.log applied it)
+
+$ [E21 at Q] ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --tune
+d7  -    score   1143 nodes     74308 pv f3e3 g1f1 d3d2 b4d2 e3d2 c5c6 d2b2 
+d8  -    score   1131 nodes     58992 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2e5 d2d3 f1f2 
+d9  m5   score  48991 nodes    591339 pv g6f4 b2d4 e5d4 b4c4 d3d2 c4f7 g8f7 b5b6 f4h3 
+d10 -    score   1166 nodes    454589 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+d11 m5   score  48991 nodes   3420235 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2203569 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ [E21 at Q] adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- | grep -E '^[<>]|g6f4|f3e3|^d'
+> N0 it10 ply0 d10 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move f3e3 #6 cd 9 red 0 -> 1166  (a 20 b 2000000000)
+  move g6f4 #21 cd 9 red 0 -> 1158  (a 1166 b 2000000000)
+< N0 it10 ply0 d10 [-2000000000,2000000000] -> 1166 by loop se -10 x 1
+d10 -    score   1166 nodes    454589 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+$ [E21 at Q] adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 e5d4 | grep -E '^      [<>]|rfp:|^d'
+      > N0 it10 ply3 d3 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+      < N0 it10 ply3 d3 [-48993,-48992] -> -2108 by loop se -404 x 3
+      > N0 it10 ply3 d7 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+      < N0 it10 ply3 d7 [-48993,-48992] -> -48991 by loop se -404 x 3
+      > N0 it10 ply3 d7 [-1167,-1166] pv0 cut1 ex 0000 prev e5d4
+        rfp: margin 441 beta -1166 static -404 estimate -404 entry yes type 3 depth 7 score -48991
+      < N0 it10 ply3 d7 [-1167,-1166] -> -845 by rfp se -404 x -404
+d10 -    score   1166 nodes    454589 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 d2c1 f1g2 g6f4 g2f3 
+
+$ [E21 shipped] ~/.venv/chess/bin/python adocs/data/S291_row.py --repo ../chesso-s291t --lib build-tune-ship/src/libchesso_engine.a --tune
+d7  -    score    945 nodes     28920 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a3 d2d3 
+d8  m6   score  48989 nodes    248675 pv g6f4 b2d4 e5d4 b4d4 d3d4 d2f2 d4d1 f2f1 d1f1 g1h2 f1h1 
+d9  m5   score  48991 nodes    578368 pv g6f4 b2d4 e5d4 d2a2 f4h3 g1h2 f3g3 h2h1 g3g1 
+d10 -    score   1032 nodes    381008 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 g6f4 b5b6 d2e2 f1g1 
+d11 m5   score  48991 nodes   1973311 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+d12 m5   score  48991 nodes   2633868 pv g6f4 b2d4 e5d4 b4d4 d3d4 g1h2 d4d2 h2g1 f4h3 
+
+$ [E21 shipped] LIB=build-tune-ship/src/libchesso_engine.a adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- | grep -E '^[<>]|g6f4|^d'
+> N0 it10 ply0 d10 [-2000000000,2000000000] pv1 cut0 ex 0000 prev 0000
+  move g6f4 #6 cd 9 red 0 -> 931  (a 45 b 2000000000)
+< N0 it10 ply0 d10 [-2000000000,2000000000] -> 1032 by loop se -15 x 1
+d10 -    score   1032 nodes    381008 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 g6f4 b5b6 d2e2 f1g1 
+
+$ [E21 shipped] LIB=build-tune-ship/src/libchesso_engine.a adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 | grep -E '^    [<>]|e5d4|d3d4 #1|^d'
+    > N0 it10 ply2 d4 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move e5d4 #1 cd 3 red 0 -> 1584  (a 48992 b 48993)
+    < N0 it10 ply2 d4 [48992,48993] -> 48991 by loop se 0 x 2
+    > N0 it10 ply2 d8 [48992,48993] pv0 cut1 ex 0000 prev b2d4
+      move d3d4 #1 cd 7 red 0 -> 48991  (a 48992 b 48993)
+      move e5d4 #2 cd 7 red 0 -> 48991  (a 48992 b 48993)
+    < N0 it10 ply2 d8 [48992,48993] -> 48991 by loop se 0 x 2
+    > N0 it10 ply2 d8 [45,48993] pv1 cut0 ex 0000 prev b2d4
+      move d3d4 #1 cd 7 red 0 -> 931  (a 45 b 48993)
+      move e5d4 #2 cd 7 red 0 -> 815  (a 931 b 48993)
+    < N0 it10 ply2 d8 [45,48993] -> 931 by loop se 0 x 1
+d10 -    score   1032 nodes    381008 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 g6f4 b5b6 d2e2 f1g1 
+
+$ [E21 shipped] LIB=build-tune-ship/src/libchesso_engine.a adocs/data/S291_trace_line.sh ../chesso-s291t 10 -- g6f4 b2d4 e5d4 | grep -E '^      [<>]|rfp:|^d'
+      > N0 it10 ply3 d3 [-48993,-48992] pv0 cut0 ex 0000 prev e5d4
+      < N0 it10 ply3 d3 [-48993,-48992] -> -1584 by loop se -374 x 3
+      > N0 it10 ply3 d7 [-48993,-48992] pv0 cut1 ex 0000 prev e5d4
+      < N0 it10 ply3 d7 [-48993,-48992] -> -48991 by loop se -374 x 3
+      > N0 it10 ply3 d7 [-932,-931] pv0 cut1 ex 0000 prev e5d4
+        rfp: margin 441 beta -931 static -374 estimate -374 entry yes type 3 depth 7 score -48991
+      < N0 it10 ply3 d7 [-932,-931] -> -815 by rfp se -374 x -374
+d10 -    score   1032 nodes    381008 pv f3e3 g1f1 d3d2 b4d2 e3d2 b2a1 g6f4 b5b6 d2e2 f1g1 
+
+== E21 as applied (diff of the patched scratch's src/search.cpp, reverted after both readings)
+diff --git ascratch/search_trace_final.cpp b/src/search.cpp
+index 84c79c8..8ceddc8 100644
+--- ascratch/search_trace_final.cpp
++++ b/src/search.cpp
+@@ -2696,7 +2696,7 @@ static int negamax_at_impl(int alpha0,
+           if (probe != nullptr) { probe->se_extended = true; }
+         }
+       } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&
+-                 vscore < MATE_MIN && vscore > -MATE_MIN && beta > -MATE_MIN) {
++                 beta > -MATE_MIN) {
+         // MULTICUT, and it is the step's second verdict: at `SeMultiCut` 0 the
+         // release build compiles this branch away entirely and the engine is
+         // the one the extension landed as.

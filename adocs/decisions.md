@@ -15760,3 +15760,59 @@ Consequences: S083 re-lands on this tree (DEC-307's consequence). S170's C case
               runs at the rule's budget of 500000 with 2 mate lines, against 19
               at 1200000. That thinner coverage is the rule's choice, not a hand
               edit.
+
+## DEC-311  2026-10-23  S291: the multicut row's loss is reverse futility's price and joins the H1 rulings; reverse futility against a whole search's mated bound is a BUGS-rule defect under DEC-171 (c), S293, ahead of S083
+Tags:         search, reverse-futility, mate, multicut, transposition-table, s291, s293, s083, s292, dec-308, dec-306, dec-310, dec-158, dec-171, bugs, blocker
+Context:      S291 traced the mined row "mate the multicut hides, depth 10" at
+              S083's re-landed constants on S292's tree
+              (`adocs/data/S291_trace.txt`). At ply 3, a non-PV cut node on
+              the mated side, reverse futility returns -845 against beta
+              -1166 (static -404, margin 441). The table holds only a lower
+              bound there, so no proof is outvoted, and the null move behind
+              it stands on the same lower bound, which DEC-310 leaves alone.
+              `RfpMaxDepth` 4 restores the mate, so the loss is inside the
+              ceiling DEC-158 priced. Separately, S291 found reverse futility
+              failing high, with beta outside the mate band, at nodes whose
+              entry is a mated upper bound or exact score from a node that
+              skipped no move: DEC-306's shape, which DEC-158 did not price.
+              There are 90 such returns over S289's four mate sets, and 0 over
+              11503 ordinary-play positions at depth 10 (`S291_census.txt`,
+              S292's census set). A scratch guard against them gains and loses
+              no exact mate in S145's 186 defender nodes and loses mined row
+              171 (m5 -> cp 2104). Over the mate sets it moves eight reported
+              scores (six of S145's roots, one of its 186 defender nodes and
+              mined row 171) and two best moves: S145 root 76, a proved mate
+              in 5 for the side to move, reports cp 0 with b7c7 shipped and
+              cp 529 with b7b2 guarded; mined row 120 reports mate 4 either
+              way, e8e3 against g5e3. It moves nothing in the census
+              (`S291_reach.txt` section 3, S291 section 5).
+              S291 proposed a scoped filler; its second fast check asked which
+              of DEC-171's clauses excludes the moved scores.
+Decision:     By the coordinator under the owner's standing instruction. (1)
+              The row's loss is a known price, so by DEC-308 (2) it joins
+              S083's H1 rulings with S291's attribution. No rule changes and
+              the row is not re-mined. The brief's sentence "a yes on reach is
+              a BUGS-rule defect" yields to DEC-308 (2) for the row's own
+              mechanism. (2) Reverse futility against a whole search's mated
+              bound is **BUGS-binding under DEC-171 (c)**. (c) binds a defect
+              "able to move a reported score, best move or line" with no
+              ordinary-play limit. DEC-171's exclusions are illegal positions,
+              implausible inputs, custom commands and dead code, and a legal
+              position's search is none of them. The owner's words behind it
+              name a bug that "can impact engine evaluation". The readings show
+              the shape moving reported root scores and best moves. **S293**
+              fixes it as its own measured change before S083's run, and S083
+              is paused by it.
+Rejected:     The scoped filler S291 proposed: it reads an ordinary-play limit
+              into (c) that (c) does not carry. Folding the guard into
+              DEC-310's: one change at a time, and its own measurement is
+              owed. Shipping S291's scratch guard as it stands: it loses mined
+              row 171's mate, unexplained.
+Consequences: S291 completes. S083's `paused_by` moves from S291 to S293. S293
+              traces mined row 171's loss under the guard before anything ships.
+              A guard that hides a mate the shipped tree reports is not the fix,
+              and that finding returns to the coordinator. Its SPRT is `{-5, 0}`
+              against its parent. With 0 ordinary-play firings at depth 10 it
+              will likely run near a true zero toward its cap, and the
+              pre-registration says so. S083 re-lands on S293's tree, and its
+              `S083_sprt.sh` names the five H1 rulings (DEC-308 (3)).

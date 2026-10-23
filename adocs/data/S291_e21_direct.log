@@ -1,0 +1,61 @@
+# S291: is E21_multicut_mate_band_gate_dropped still killed at Q by S243's direct case, now that the mined row no
+# longer separates it there? ../chesso-s291t at Q exactly (49ad271 plus the three s083_reland.diff src/ hunks, git diff
+# against 38a15f4 -- src/ empty), no trace patch; a Release build (build-rel); E21 applied by hand as
+# tools/mutants/S097_singular_extension.py writes it, the case run, E21 reverted, the case run again. 2026-10-23.
+
+== A. E21 applied
+diff --git a/src/search.cpp b/src/search.cpp
+index 32f4f7c..21cd822 100644
+--- a/src/search.cpp
++++ b/src/search.cpp
+@@ -2488,7 +2488,7 @@ static int negamax_at(int alpha0,
+           if (probe != nullptr) { probe->se_extended = true; }
+         }
+       } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&
+-                 vscore < MATE_MIN && vscore > -MATE_MIN && beta > -MATE_MIN) {
++                 beta > -MATE_MIN) {
+         // MULTICUT, and it is the step's second verdict: at `SeMultiCut` 0 the
+         // release build compiles this branch away entirely and the engine is
+         // the one the extension landed as.
+$ ./test_search --test-case="the multicut never ends a node on a mate from its verification"
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+tests/test_search.cpp:12736:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  the multicut never ends a node on a mate from its verification
+
+tests/test_search.cpp:12766: ERROR: CHECK( last_score < MATE_MIN_LOCAL ) is NOT correct!
+  values: CHECK( 48998 <  48000 )
+
+tests/test_search.cpp:12770: FATAL ERROR: REQUIRE( !record.se_multicut ) is NOT correct!
+  values: REQUIRE( false )
+
+===============================================================================
+[doctest] test cases:  1 |  0 passed | 1 failed | 217 skipped
+[doctest] assertions: 92 | 90 passed | 2 failed |
+[doctest] Status: FAILURE!
+$ ./test_search --test-case="pruning does not hide a forced mate"
+tests/test_search.cpp:4687: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 10
+
+===============================================================================
+[doctest] test cases:  1 |  0 passed | 1 failed | 217 skipped
+[doctest] assertions: 41 | 40 passed | 1 failed |
+[doctest] Status: FAILURE!
+
+== B. E21 reverted (git diff 38a15f4 -- src/ empty)
+$ ./test_search --test-case="the multicut never ends a node on a mate from its verification"
+[doctest] test cases:  1 |  1 passed | 0 failed | 217 skipped
+[doctest] assertions: 93 | 93 passed | 0 failed |
+[doctest] Status: SUCCESS!
+$ ./test_search --test-case="pruning does not hide a forced mate"
+tests/test_search.cpp:4687: FATAL ERROR: REQUIRE( result.mate_found ) is NOT correct!
+  values: REQUIRE( false )
+  logged: mate the multicut hides, depth 10
+
+===============================================================================
+[doctest] test cases:  1 |  0 passed | 1 failed | 217 skipped
+[doctest] assertions: 41 | 40 passed | 1 failed |
+[doctest] Status: FAILURE!

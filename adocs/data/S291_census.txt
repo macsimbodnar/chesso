@@ -1,0 +1,54 @@
+# S291: an ordinary-play census of DEC-306's shape asked of reverse futility -- a reverse futility return (so beta outside
+# the mate band) at a node whose table entry is a mated upper bound or exact score (<= -MATE_MIN) stored by a node that
+# skipped no move -- and of the scratch guard that removes it. S289's and S292's census shape (S210's positions: every
+# 10th position of adocs/data/S219_aa_calibration.pgn, 11503 of 115021, each searched at `go depth 10` from `ucinewgame`
+# at the default Hash 16, twelve processes), adocs/data/S291_census.py. 2026-10-23. The engine's answers only.
+#
+#   ~/.venv/chess/bin/python adocs/data/S210_f22_census.py positions adocs/data/S219_aa_calibration.pgn census.fens
+#   S291_CENSUS=1 python3 adocs/data/S291_census.py ../chesso-s291t/build-tune-ship/src/chesso census.fens 10 off.tsv
+#   S291_CENSUS=1 S291_RFP_GUARD=1 python3 adocs/data/S291_census.py ../chesso-s291t/build-tune-ship/src/chesso \
+#       census.fens 10 on.tsv
+#   python3 adocs/data/S291_census.py ../chesso-s291/build/src/chesso census.fens 10 release.tsv
+#   python3 adocs/data/S291_census.py --compare off.tsv on.tsv
+#
+# Engines: build-tune-ship is 49ad271's constants with adocs/data/S289_trace.py and S291_trace.py applied (bench 6042933
+# with every variable unset; a scratch build, never shipped -- the guard is a scratch reading and nothing proposes its
+# code); release = 49ad271's own Release build (bench 6042933). The tables are scratch; this is the reading.
+#
+# READING. At depth 10 in ordinary play the shape never occurs: 0 returns in 981078145 nodes, so the guard moves no node,
+# no score and no best move. Reverse futility does return 42 times (8 positions) against a mated upper bound stored by a
+# node that SKIPPED a move -- not a proof (DEC-310) and not the shape. The census build is the Release build root for
+# root and node for node. So in ordinary play at depth 10 the guard moves nothing. The mate sets are another matter:
+# S291_reach.txt section 3 counts 90 returns of the shape over the four sets, and removing them gains no exact mate but
+# moves what that section lists -- six of S145's roots' cp scores, one of S145's 186 defender nodes (cp 0 -> an inexact
+# m-4 one iteration before both builds' exact m-3), mined row 171 (m5 -> cp 2104), and two root best moves (S145 root
+# 76, cp 0 b7c7 -> cp 529 b7b2; mined row 120, mate 4 either way, e8e3 -> g5e3).
+
+== the scratch guard off (census on) against on
+positions 11503
+  nodes                 981078145 -> 981078145, x1.000000
+  firings (all)         42, 0.043 per million nodes
+  firings (whole)       0, 0.000 per million nodes, in 0 positions
+  root best move moved  0
+  root score moved      0
+  node count moved      0 (0.000 %)
+  a reported mate appears or disappears  0
+
+== the Release build against the census build, guard off
+positions 11503
+  nodes                 981078145 -> 981078145, x1.000000
+  root best move moved  0
+  root score moved      0
+  node count moved      0 (0.000 %)
+  a reported mate appears or disappears  0
+
+== the 42 returns on a skipped-move bound (not the shape), per position: off.tsv's last two columns (all returns, whole-search)
+$ awk -F'\t' '$6>0{printf "  %5d  %d returns  %s %s  %s\n",$1,$6,$3,$4,$2}' off.tsv
+    734  1 returns  a3d6 mate -4  1r5k/2p1n1pp/5r2/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 w - - 2 23
+   1116  11 returns  d2f2 mate 6  6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/3r1P1P/5QK1 b - - 7 41
+   1312  3 returns  h3c3 cp -604  1k6/R7/1K3P1p/1p2N3/pb1P2P1/7r/8/8 b - - 6 59
+   3052  1 returns  h5h3 cp 87  r4rk1/1p1qnp2/p1pbp1p1/3p2PQ/P2P1N2/2P1P3/1P3PK1/R1B2R2 w - - 0 20
+   6290  2 returns  a1b1 cp -758  8/5ppk/3b1n2/1P1P4/2q3P1/5p2/5P2/Q3R1K1 w - - 3 32
+   7883  9 returns  d1b1 cp -1231  2k1r3/2p3p1/1p2Np2/p2P4/q1b2B1r/b1P4P/P1PQ1P2/K2R3R w - - 3 23
+   8922  1 returns  f7f6 cp -1316  4b1k1/5p1p/p5pQ/3p1q2/3B4/1P5P/P4PP1/6K1 b - - 1 27
+   9843  14 returns  c3c2 cp -615  2k5/7R/PKp5/6p1/1P6/2r5/8/8 b - - 0 43
