@@ -1,0 +1,93 @@
+# S293, step 1: mined row 171 (adocs/data/S145_mined_set.tsv line 178, `8/5p1k/3R2p1/pP6/r1q5/4K3/8/8 b - - 1 57`,
+# labelled mate in 5) under S291's scratch reverse futility guard -- cp 2104 at depth 10 where the shipped tree reports
+# m5 (adocs/data/S291_reach.txt section 3). The node and the rule, from the engine's own output. 2026-10-23.
+#
+# Scratch build: ../chesso-s293t, detached 6ebeadc (src/ identical to 49ad271's) with adocs/data/S289_trace.py,
+# S291_trace.py and S293_trace.py applied to src/search.cpp (never shipped); build-tune, bench 6042933 with every
+# variable unset. Protocol: S289_rows.py's and test_mate_breadth's -- UCI, Hash 16, `ucinewgame`, `go depth 10`.
+# Line FENs from adocs/data/S291_fens.py (python-chess applying the moves). Nothing read off a board.
+#
+#   S291_CENSUS=1 ~/.venv/chess/bin/python adocs/data/S291_uci_row.py ../chesso-s293t/build-tune/src/chesso 10 "$ROW"
+#   [S291_RFP_GUARD=1 | S293_GUARD_KEYS=FEN] [S291_NO_RFP=FEN] S293_STORE_TRACE=1 S289_TRACE='FEN|...' <same driver>
+#   python3 adocs/data/S289_rows.py ENGINE row171.tsv 10 OUT [Name=value]      (one tune option at a time)
+#
+# READING. The guard does not hide the mate: it exposes the tree to a mate that reverse futility, where nothing is
+# proved, then hides -- DEC-158's price, the kind S291 attributed for the multicut row, not a further proof outvoted.
+#  - The shape occurs at ONE node in the shipped search (one census line): iteration 9, ply 7, White to move
+#    (the mated side), line a4a3 d6d3 a3d3 e3f2 c4f4 f2e1 d3d2, `8/5p1k/6p1/pP6/5q2/8/3r4/4K3 w - - 4 61`, depth 3,
+#    window [-2117,-2116].
+#    Its entry: an upper bound -48991 at depth 2 from a whole search, which the same node had stored earlier in the
+#    same iteration at depth 2, window [-2036,-2035] (b5b6 -> -48991, by the loop). Shipped, reverse futility returns
+#    -2112 there (static -1923, margin 189): the shape. Guarded, the node searches b5b6 -> -48991 and stores the
+#    upper bound -48991 at depth 3, whole: it re-proves its own mate. Its parents then read 48991 for d3d2 and c4f4
+#    (the ply-4 node's c4f4 is a mate in the guarded tree, 2112 in the shipped one) -- the guard's own node is right.
+#  - That one node is the whole cause: the guard applied at its key alone ($S293_GUARD_KEYS) reproduces cp 2104 at
+#    depth 10 and m5 from 11.
+#  - Depth 10 then runs a different tree. Shipped, the final full-window pass searches c4f4 third at alpha 1972 and,
+#    along c4f4 e3d3, extends e3d3 at ply 1 (its verification at depth 4 found e3e2 mated); at ply 2 (depth 9) f4d6
+#    returns 48989 first, so the mating a4a2 is searched with a mate-band window and its ply-3 node (beta -48989) is
+#    outside reverse futility's band guard: found, -48991, m5. Guarded, c4f4 is first at the full window, e3d3 is not
+#    extended, the ply-2 node (depth 8) gets 2104 from f4d6, and a4a2's zero-window probe reaches the ply-3 node
+#    `8/5p1k/3R2p1/pP6/5q2/3K4/r7/8 w - - 4 59` (line c4f4 e3d3 a4a2; White to move, non-PV cut node, depth 7,
+#    window [-2105,-2104]) where **reverse futility returns -1809** (static -1368, estimate -1368, margin 441 = 63 x 7)
+#    with **no table entry at all**: nothing proves the node mated. a4a2 scores 1809 at ply 2, the node 2104, the root
+#    cp 2104. The same cut at the same node fires in both builds during depth 10's aspiration passes (shipped: depth 7,
+#    beta -2060, -1821).
+#  - One node at a time: the guard on and reverse futility removed at that ply-3 node alone ($S291_NO_RFP) gives m5
+#    at depth 10 (and 11, 12); the same removal on the shipped tree gives m5 too. So the rule that loses the mate is
+#    reverse futility at the mated side's node with beta a sibling raised outside the mate band and no entry --
+#    DEC-158's priced kind (the ceiling 15, remaining depth 7) and DEC-311 (1)'s for the multicut row.
+#  - No narrower form keeps the row and closes the defect: the loss follows from stopping the one return of the shape
+#    at the ply-7 node (its key alone reproduces it), so any guard that stops that return loses the row at depth 10, and
+#    one that does not leaves that return of the defect in the tree.
+#
+# == 1. Every iteration (S289_rows.py's protocol), go depth 16
+ship   1:1703 2:1703 3:1725 4:1724 5:1891 6:1874 7:1926 8:1968 9:2016 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5 bestmove c4f4
+guard  1:1703 2:1703 3:1725 4:1724 5:1891 6:1874 7:1926 8:1968 9:2016 10:2104 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5 bestmove c4f4
+# depth-10 PVs: ship  mate 5   1512735 nodes  pv c4f4 e3d3 a4a2 d3c3 f4e3 d6d3 e3c5 c3b3 c5c2
+#               guard cp 2104   88869 nodes  pv c4f4 e3d3 f4d6 d3e2 d6e5 e2d2 a4a2 d2d3 a2a3 d3c2 e5b5 c2c1
+#
+# == 2. The census ($S291_CENSUS=1, shipped tree, go depth 10): one return of the shape in the whole search
+S291 RFP-AGAINST-MATED ply 7 depth 3 beta -2116 estimate -1923 margin 189 entry type 2 depth 2 score -48991 whole 1
+S293 AT it9 path a4a3 d6d3 a3d3 e3f2 c4f4 f2e1 d3d2 fen 8/5p1k/6p1/pP6/5q2/8/3r4/4K3 w - - 4 61
+#
+# == 3. The ply-7 node, iteration 9 ($S289_TRACE on the line's FENs; type 2 = upper bound, 3 = lower)
+# both:  > N7 it9 ply7 d2 [-2036,-2035] ...   < N7 it9 ply7 d2 [-2036,-2035] -> -48991 by loop
+# ship:  > N7 it9 ply7 d3 [-2117,-2116] pv0 cut0
+#          rfp: margin 189 beta -2116 static -1923 estimate -1923 entry yes type 2 depth 2 score -48991
+#        < N7 it9 ply7 d3 [-2117,-2116] -> -2112 by rfp
+#        ply 4: move c4f4 #1 -> 2112, move c4b5 #2 -> 48987, store type 3 depth 6 score 48987 move c4b5
+# guard: > N7 it9 ply7 d3 [-2117,-2116] pv0 cut0
+#          move b5b6 #1 cd 2 red 0 -> -48991 ; store type 2 depth 3 score -48991 whole 1 move b5b6
+#        < N7 it9 ply7 d3 [-2117,-2116] -> -48991 by loop
+#        ply 4: move c4f4 #1 -> 48991, store type 3 depth 6 score 48991 move c4f4
+#
+# == 4. Depth 10's final full-window pass along c4f4 e3d3 (the shipped PV's first two plies)
+# ship:  ply 1 d9 [-inf,-1972]: verification ex e3d3 d4 -> e3e2 -48991; move e3d3 #1 cd 9 -> -48991
+#        ply 2 d9 [1972,inf]:   f4d6 #1 cd 9 -> 48989, a4a3 #2 -> 48989, a4a2 #3 cd 8 -> 48991, ...
+#        ply 3 (after a4a2) d8 [-48990,-48989] -> -48991 by loop; d8 [-inf,-48989] -> -48991 by loop
+# guard: ply 1 d9 [-inf,inf]:   move e3d3 #1 cd 8 -> -2104 (no verification, no extension)
+#        ply 2 d8 [-inf,inf]:   f4d6 #1 cd 8 -> 2104, a4a2 #2 cd 7 -> 1809, ...
+#        ply 3 (after a4a2) d7 [-2105,-2104] pv0 cut1
+#          rfp: margin 441 beta -2104 static -1368 estimate -1368 entry no type -1 depth -1 score 0
+#        < N3 it10 ply3 d7 [-2105,-2104] -> -1809 by rfp
+#
+# == 5. Counterfactuals, go depth 12 (iterations 1-8 identical everywhere)
+guard at the ply-7 key only ($S293_GUARD_KEYS)          9:2016 10:2104 11:m5 12:m5
+guard, no reverse futility at the ply-3 node            9:2043 10:m5 11:m5 12:m5
+ship, no reverse futility at the ply-3 node             9:2043 10:m5 11:m5 12:m5
+#
+# == 6. One tune option at a time, depth 10 (S289_rows.py; exact = m5 at the last iteration; first-mate depth)
+none             ship  mate 5 (10)    guard  cp 2104
+RfpMaxDepth=4    ship  mate 5 (10)    guard  mate 5 (10)     DEC-158's challenger ceiling
+RfpMinPly=63     ship  mate 5 (9)     guard  mate 5 (9)
+RfpMaxDepth=0    ship  mate 5 (10)    guard  mate 5 (10)
+NullMoveBase=16  ship  mate 5 (9)     guard  mate 5 (9)
+SeExtend=0       ship  mate 5 (10)    guard  mate 5 (10)
+SeMultiCut=0     ship  mate 5 (9)     guard  mate 5 (9)
+LmrBase=0        ship  mate 5 (9)     guard  mate 5 (9)      bestmove a4a3
+ProbCut=0        ship  mate 5 (10)    guard  mate 5 (10)
+RfpTtEstimate=0  ship  mate 5 (10)    guard  mate 5 (10)
+RazorDepth=0     ship  mate 5 (9)     guard  mate 5 (9)      bestmove c4e4
+# Every option tried brings the row back under the guard: the loss is one cold search's tree shape at one depth,
+# which is why the one-node removals of section 5, not the options, name the node.

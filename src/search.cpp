@@ -1909,6 +1909,8 @@ static int negamax_at(int alpha0,
   //   beta near mate  a fail-high against a mate bound would claim a mate this
   //                 never proved. A static score is never a mate score
   //   ply < 3       see RFP_MIN_PLY: the top of the tree decides the move
+  //   a whole search found it mated  S293. Beside the condition below,
+  //                 where its reason is written
   //
   // Not guarded on game_phase: no pass is made here, so zugzwang does not enter
   // it. It is guarded on depth instead, which null move pruning is not.
@@ -1952,9 +1954,50 @@ static int negamax_at(int alpha0,
   // futility already refused. The verification is cheap and there is one of it
   // per eligible node; a second pruning rule folded inside it is a change
   // nothing could attribute.
+  //
+  // A WHOLE SEARCH'S PROOF OUTRANKS THE MARGIN, S293 (S292's null-move guard,
+  // asked of the null move's static form). No reverse futility at a node whose
+  // entry is an upper bound (or an exact score) inside the mated band written
+  // by a node that searched every legal move it has -- the entry's
+  // `no_move_skipped`, read as the null-move block below reads it: a shallower
+  // search of this node's moves found the side to move mated by each of them.
+  //
+  // The rule is the null move's observation without the null move: "Reverse
+  // Futility Pruning relies on the null move observation", "a special case of
+  // null move pruning without explicitly making one" (the Chess Programming
+  // Wiki, "Reverse Futility Pruning", which also names it Static Null Move
+  // Pruning). That observation's premise is the best move: "the value of the
+  // best (legal) move has to be better than that obtained from the null move"
+  // (David-Tabibi and Netanyahu, "Verified Null-Move Pruning", ICGA Journal
+  // 25(3), 2002, section 2), and where the search of the moves shows the best
+  // value below beta, a pass that fails high is what they read as a zugzwang
+  // (section 3). The table already holds that search, and the margin's claim
+  // -- the opponent cannot win the difference back -- is its opposite, so the
+  // margin is not tried. Only from a whole search, for S292's reason: a node
+  // that skipped a move stored the best of the moves it searched, which is not
+  // the value of the best move.
+  //
+  // Found, not argued. S291 counted 90 returns of this shape over S289's four
+  // mate sets, beta outside the band each time, and none in 11503
+  // ordinary-play positions at depth 10 (adocs/data/S291_reach.txt,
+  // S291_census.txt). Without them eight reported scores and two best moves
+  // move, no exact mate is gained, and one is lost: mined row 171's mate in 5
+  // at depth 10, which S293 traced to reverse futility at another node of the
+  // changed tree, one with no entry at all -- DEC-158's price, not this guard
+  // (adocs/data/S293_row171.txt).
+  //
+  // At this node it only removes a cut, so a bound that was wrong costs the
+  // subtree the cut would have saved and cuts nothing. The copies and not the
+  // entry, as the null-move block reads them. No constant, so no seed
+  // (DEC-134); implemented from the two descriptions above, DEC-221.
+  const bool whole_search_mated_entry =
+      tt_entry != nullptr && tt_entry_no_move_skipped &&
+      (tt_entry_type == TT_ALPHA_NODE || tt_entry_type == TT_PV_NODE) &&
+      tt_entry_score <= -MATE_MIN;
+
   if (!is_pv && !is_in_check && excluded_move == 0 &&
       static_cast<int>(ply) >= RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&
-      beta < MATE_MIN && beta > -MATE_MIN) {
+      beta < MATE_MIN && beta > -MATE_MIN && !whole_search_mated_entry) {
     const int margin = RFP_MARGIN * depth;
 
     // WHICH NUMBER THE MARGIN IS SUBTRACTED FROM, S234. `pruning_eval` is the

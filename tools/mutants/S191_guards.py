@@ -66,12 +66,12 @@ m("N04_rfp_pv", S, "search/pruning",
 
 m("N05_rfp_depth_bound", S, "search/pruning",
   'reverse futility is depth-unbounded: RFP_MAX_DEPTH dropped',
-  ('RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&\n      beta < MATE_MIN && beta > -MATE_MIN) {',
-   'RFP_MIN_PLY &&\n      beta < MATE_MIN && beta > -MATE_MIN) {'),
+  ('RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&\n      beta < MATE_MIN && beta > -MATE_MIN && !whole_search_mated_entry) {',
+   'RFP_MIN_PLY &&\n      beta < MATE_MIN && beta > -MATE_MIN && !whole_search_mated_entry) {'),
   origin="S191")
 
 m("N06_rfp_mate_band_neg", S, "search/pruning",
   'reverse futility fails high against a mate bound: negative edge dropped',
-  ('RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&\n      beta < MATE_MIN && beta > -MATE_MIN) {',
-   'RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&\n      beta < MATE_MIN) {'),
+  ('RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&\n      beta < MATE_MIN && beta > -MATE_MIN && !whole_search_mated_entry) {',
+   'RFP_MIN_PLY && depth <= RFP_MAX_DEPTH &&\n      beta < MATE_MIN && !whole_search_mated_entry) {'),
   origin="S191")

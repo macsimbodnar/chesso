@@ -7705,6 +7705,176 @@ TEST_SUITE("search: pruning and reduction guards")
   }
 
 
+  // Mutations, tools/mutants/S293_reverse_futility_whole_search_guard.py:
+  //   RW01_rfp_whole_search_guard_dropped -- the guard removed, the engine
+  //     before S293: both guarded legs are red on every row
+  //   RW02_rfp_guard_trusts_a_pruned_bound -- the guard reads a mated bound
+  //     whatever the search behind it skipped: the pruned-bound leg is red
+  //   RW03_rfp_guard_any_bound -- a lower bound in the band also stops the
+  //     rule: the lower-bound leg is red
+  //   RW04_rfp_guard_band_dropped -- any upper bound or exact score from a
+  //     whole search stops the rule, the band dropped: the out-of-band legs
+  //     are red
+  //   RW05_rfp_guard_exact_dropped -- an exact score in the band no longer
+  //     stops the rule: the mated-exact leg is red
+  //
+  //   search: pruning and reduction guards
+  //    reverse futility does not fire at a node a whole search found mated
+  //   REQUIRE( violations.empty() )
+  //   values: REQUIRE( false )
+  //
+  // S292's null-move guard, asked of the null move's static form. Where the
+  // node's entry is an upper bound or an exact score inside the mated band
+  // from a node that searched every legal move, a shallower search of every
+  // one of its moves found the side to move mated, and reverse futility's
+  // "the opponent cannot win the margin back" is that search's opposite. S291
+  // found it firing there, beta outside the band: 90 returns over S289's four
+  // mate sets, moving eight reported scores and two best moves, and none in
+  // 11503 ordinary-play positions at depth 10 (adocs/data/S291_reach.txt,
+  // S291_census.txt).
+  //
+  // Seven legs a row, so the guard and not some other condition is what stops
+  // the rule. Beta sits at the node's static score less the margin, so the
+  // comparison holds by equality: with no entry the rule fires (the premise),
+  // and it fires again with the same mated score from a search that skipped a
+  // move, held as a lower bound, and as an upper bound or an exact score
+  // outside the band. Those two sit at the static score, where S234's estimate
+  // leaves the number the margin is subtracted from unmoved: it takes an upper
+  // bound only below the static score and never takes an exact score. Only
+  // the mated upper bound and the mated exact score of a whole search stop
+  // the rule.
+  //
+  // The rows are S165's defender nodes, every one proved mated; driven at
+  // their own ply where it clears RFP_MIN_PLY, and at RFP_MIN_PLY where it does
+  // not, since the ply only places the mated score in the table.
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "reverse futility does not fire at a node a whole search found mated")
+  {
+    const std::vector<defender_row_t> rows = read_defender_set();
+
+    // Golden, DEC-142, the sibling cases': re-derive with
+    //   grep -vc '^#' adocs/data/S165_defender_set.tsv
+    // which counts the header row as well.
+    REQUIRE_MESSAGE(rows.size() == 104,
+                    ("adocs/data/S165_defender_set.tsv is not the tracked set "
+                     "any more: " +
+                     std::to_string(rows.size()) + " rows, expected 104"));
+
+    // A shallower search's entry: below the drive's depth, so the table does
+    // not answer the node and reverse futility's block is reached.
+    static constexpr int DRIVE_DEPTH = 3;
+    static constexpr int ENTRY_DEPTH = 2;
+    REQUIRE(ENTRY_DEPTH < DRIVE_DEPTH);
+    REQUIRE(DRIVE_DEPTH <= RFP_MAX_DEPTH);
+
+    enum class seed_t
+    {
+      NONE,
+      MATED_UPPER,
+      MATED_EXACT,
+      MATED_UPPER_PRUNED,
+      MATED_LOWER,
+      PLAIN_UPPER,
+      PLAIN_EXACT
+    };
+
+    std::string violations;
+    size_t scored = 0;
+
+    for (const defender_row_t& row : rows) {
+      const int ply = (row.ply >= static_cast<int>(RFP_MIN_PLY))
+                          ? row.ply
+                          : static_cast<int>(RFP_MIN_PLY);
+
+      // As the null-move case places it: the mate against the side to move
+      // in k, seen from this node, and stored counted from the root.
+      const int mated_here = -(MATE_MAX_LOCAL - ply - 2 * row.mated_in);
+      const int mated_stored = mated_here - ply;
+
+      REQUIRE_MESSAGE(mated_here <= -MATE_MIN_LOCAL,
+                      (row.fen + ": the proof is not inside the mated band"));
+
+      const auto drive = [&](seed_t seed) -> bool {
+        load(row.fen, ply);
+
+        REQUIRE(!is_check(&game));
+
+        // The table was just wiped and the seeds carry no evaluation, so the
+        // node's static score is this call, and the margin clears beta by
+        // equality.
+        const int static_score = evaluate(&game.board);
+        const int beta = static_score - (RFP_MARGIN * DRIVE_DEPTH);
+        REQUIRE(beta < MATE_MIN_LOCAL);
+        REQUIRE(beta > -MATE_MIN_LOCAL);
+
+        // `true` is a node that searched every legal move, `false` one at
+        // which a shallow-depth rule skipped a move.
+        const auto seed_entry = [&](int score, node_type_t type, bool all) {
+          tt_store_entry(&tt, &game.board, ENTRY_DEPTH, score, type, 0,
+                         TT_EVAL_NONE, all);
+        };
+
+        if (seed == seed_t::MATED_UPPER) {
+          seed_entry(mated_stored, TT_ALPHA_NODE, true);
+        } else if (seed == seed_t::MATED_EXACT) {
+          seed_entry(mated_stored, TT_PV_NODE, true);
+        } else if (seed == seed_t::MATED_UPPER_PRUNED) {
+          seed_entry(mated_stored, TT_ALPHA_NODE, false);
+        } else if (seed == seed_t::MATED_LOWER) {
+          seed_entry(mated_stored, TT_BETA_NODE, true);
+        } else if (seed == seed_t::PLAIN_UPPER) {
+          REQUIRE(static_score > -MATE_MIN_LOCAL);
+          seed_entry(static_score, TT_ALPHA_NODE, true);
+        } else if (seed == seed_t::PLAIN_EXACT) {
+          REQUIRE(static_score > -MATE_MIN_LOCAL);
+          seed_entry(static_score, TT_PV_NODE, true);
+        }
+
+        negamax_probed(beta - 1, beta, DRIVE_DEPTH, static_cast<size_t>(ply),
+                       &game, &state, 0, false);
+
+        // A rule that did not fire has to have been decided, not skipped by
+        // an early exit above it: the node then searched its moves.
+        if (!probe.rfp_cutoff) { require_the_node_reached_its_move_loop(); }
+
+        return probe.rfp_cutoff;
+      };
+
+      if (!drive(seed_t::NONE)) {
+        violations += row.fen + ": no entry, and no cut either\n";
+      }
+      if (drive(seed_t::MATED_UPPER)) {
+        violations += row.fen + ": cut against a mated upper bound\n";
+      }
+      if (drive(seed_t::MATED_EXACT)) {
+        violations += row.fen + ": cut against a mated exact score\n";
+      }
+      if (!drive(seed_t::MATED_UPPER_PRUNED)) {
+        violations += row.fen +
+                      ": a mated bound from a search that skipped a move "
+                      "stopped the cut\n";
+      }
+      if (!drive(seed_t::MATED_LOWER)) {
+        violations += row.fen + ": a lower bound stopped the cut\n";
+      }
+      if (!drive(seed_t::PLAIN_UPPER)) {
+        violations +=
+            row.fen + ": an upper bound outside the band stopped the cut\n";
+      }
+      if (!drive(seed_t::PLAIN_EXACT)) {
+        violations +=
+            row.fen + ": an exact score outside the band stopped the cut\n";
+      }
+
+      scored++;
+    }
+
+    REQUIRE_EQ(scored, rows.size());
+    REQUIRE_MESSAGE(violations.empty(), violations);
+  }
+
+
   // WHICH NUMBER REVERSE FUTILITY IS DECIDED ON, S234. The node's estimate --
   // `pruning_eval` in negamax_at, the table's own score where the entry's bound
   // certifies which way that score has moved from the static one -- instead of

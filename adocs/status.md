@@ -7,6 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-23, by hand.
 
+## 2026-10-23: S293's guard committed; its `{-5, 0}` SPRT decides it (DEC-312)
+
+**S293** (one Opus 5.5 subagent, `../chesso-s293`, scratch `../chesso-s293t`)
+traced mined row 171's loss first (`adocs/data/S293_row171.txt`). The guarded
+ply-7 node re-proves its own mate (-48991). The changed table reorders the
+root. Reverse futility then cuts the mating a4a2 at a ply-3 node with **no
+table entry** (-1809 against -2104, margin 441), which is DEC-158's price.
+**The coordinator ruled the guard ships** (DEC-312): the guard is not the
+hider and no narrower form exists. Form: S292's condition as one more
+conjunct of reverse futility's condition, no constant. Case red first on
+`6ebeadc` (104 rows), mutants RW01-RW05 killed (41/41), gate_extra 5/5, bench
+6042933 and search_bench identical. The four sets read as S291's scratch
+guard; census unmoved. Goldens: `EXACT_FLOOR` shipping end 164 -> 163, the
+floor holding at 163 with **no spare point**; S170 C 500000 -> 1500000 by
+the rule, ceilings unmoved (DEC-299's guard). Fast check: specs and the DEC
+owed, both written; the row-171 ruling flagged for the owner to ratify
+(DEC-312 records it).
+
+**Next**: the Debug self-play, then S293's SPRT (`adocs/data/S293_sprt.sh`,
+12-20 h, likely toward its cap). On H1 or no verdict, S293 completes and
+S083 re-lands on its tree (`.tuning/coord/S083/brief_reland2.md`). On H0 it
+reverts whole and the owner rules. S290, S135.
+
 ## 2026-10-23: S291 completes, no rule at fault; S293 (BUGS) is first (DEC-311)
 
 **S291** (one Opus 5.5 subagent, `../chesso-s291`, scratch `../chesso-s291t`)

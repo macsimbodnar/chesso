@@ -1,0 +1,180 @@
+# S293: every golden reverse futility's table guard could move, each re-derived by its own script (DEC-142) under
+# DEC-299's guard (a mate floor that falls stops; no ceiling may rise by more than 2), on fixture
+# 052c173e887f4cba70273d25bbb8c4011be64715 (6ebeadc plus S293's working tree: the guard, its case and mutants; a commit
+# object on no branch) and the frozen Release and tune builds (bench 6042933 both). The chain is S292's
+# (.tuning/coord/S292/goldens.sh) with this step's paths, 696 s; the parent is 6ebeadc's own Release and tune builds,
+# built in ../chesso-s293t. Guard met: no floor falls (EXACT_FLOOR holds at 163 with its shipping end at 163), no
+# ceiling rises; the S170 budget for C moves by the rule and is applied in S293's change only. The mutation pass ran on
+# fixture 2, 8f02693 (the same src/, with the budget applied and these records), adocs/data/S293_mutation.tsv.
+#
+# bench: 6042933 -> 6042933, all eight bestmove replies identical (c3d5 d5e6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6).
+# tools/search_bench.py, nodes and best move, parent (6ebeadc's Release build) and candidate:
+#   depth 9   62042 c3d5 / 125888 e2a6 / 34107 d7c8q     the same
+#   depth 12  214973 c3d5 / 595000 d5e6 / 217107 d7c8q  the same
+
+== tests/test_engine.cpp MATE_IN_THREE_FLOOR -- python3 adocs/data/S154_floor_margin_sweep.py floor and red --ref <fixture>
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 20/24 d5  m4  1/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##########.###.######..#  churn -  12294510 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  2/16 d7  m5  1/16 d7  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 1  12403400 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d6  m4  2/16 d3  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  11200083 nodes
+  RfpMinPly=2            m2 26/26 on-time 15 d1  m3 12/24 d6  m4  3/16 d8  m5  1/16 d5  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  12243471 nodes
+  RfpMinPly=1            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  3/16 d8  m5  1/16 d4  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 5  9454021 nodes
+  RfpMinPly=0            m2 20/26 on-time 12 d7  m3  7/24 d6  m4  3/16 d8  m5  1/16 d4  short 0  sign 0
+                         m3 ...##...........###.#..#  churn 0  9454021 nodes
+
+  floor, 16.1s
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S154_sweep_ogzhmtd4/tests/test_engine.cpp:5782: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_ogzhmtd4/tests/test_engine.cpp:5783: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 7 >= 11 )
+    [doctest] assertions: 3516 | 3488 passed | 28 failed |
+  red, 22.6s
+
+== tests/test_mate_breadth.cpp EXACT_FLOOR -- python3 adocs/data/S156_mined_floor_sweep.py --ref <fixture> --floor 163
+318 positions, depth 10, ref 052c173e887f4cba70273d25bbb8c4011be64715
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     163          166            0   16.0s
+          2     166          169            0   16.1s
+          1     160          162            0   15.6s
+          0     160          162            0   15.6s
+
+  floor 163, asserted by tests/test_mate_breadth.cpp
+    shipping value 163, weakened-guard value 160, gap 3
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_epxhwp0_/tests/test_mate_breadth.cpp:269: MESSAGE: mined set at depth 10: 160 exact, 162 right sign, 0 wrong sign
+    logged: the mined set reads 160 exact at depth 10, under the 163 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+
+  READING: the shipping end moves 164 -> 163 (mined row 171, adocs/data/S293_row171.txt) and the weakened end holds
+  at 160. 163 is inside the script's band (161 to 163) and the gate at RfpMinPly 1 is red, so the floor separates and
+  holds; it now sits at the shipping count, the spare point gone, since 162 would be a falling floor (DEC-299).
+
+== tests/test_engine.cpp first_mate_depth, mate_in -- adocs/data/S188_repair_goldens.py first-mate --engine <candidate>
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp896  d2:cp896  d3:cp911  d4:cp899  d5:cp953  d6:cp955  d7:cp976  d8:cp1097  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1174  d2:cp1174  d3:cp1217  d4:cp1213  d5:cp1256  d6:cp1256  d7:cp1280  d8:cp1297  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+
+== tests/test_search.cpp "ordering keeps the tree small" -- python3 adocs/data/S192_node_budget.py build/tests/test_search
+binary        /home/max/ws/chesso-s293/build/tests/test_search
+count         13446 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        53784  (4x the count)
+floor         2689  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  4.14x the shipping floor and 0.21 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.83 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+
+== tests/test_mate_carry.cpp short_line_ceiling -- adocs/data/S203_case_sweep.sh --ceilings S202 S261 S286 S292 S293 grids
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                   5
+C_mate7_depth11                   4
+D_mate_minus6_depth10             0
+E_mate_minus9                     1
+F_mate6_inherited_no_line         2
+-- the S293 grid alone
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                   3
+C_mate7_depth11                   2
+D_mate_minus6_depth10             0
+E_mate_minus9                     0
+F_mate6_inherited_no_line         2
+
+== adocs/data/S170_cases.tsv budgets -- the rule (.tuning/coord/S099/p2/pick_budgets.sh) over adocs/data/S293_sweep_s170.txt
+A_mate8_shallow            stride 1  nodes 1000000  -> nodes 1000000  (6 lines, 2 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (29 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 500000   -> nodes 1500000  (42 lines, 1 short)
+D_mate_minus6_depth10      stride 1  nodes 500000   -> nodes 500000   (1 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 300000   (4 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 300000   (3 lines, 0 short)
+-- the parent's grid (6ebeadc's Release build, taken the same way) is adocs/data/S292_sweep_s170.txt cell for cell, so the
+   same rule over it reproduces the budgets that ship (S292_goldens.txt). The cells that differ, parent then candidate:
+   < B_mate6_shallow                1    300000     34      0
+   < B_mate6_shallow                1    500000     41      0
+   < B_mate6_shallow                1   1000000     65      0
+   > B_mate6_shallow                1    300000     26      0
+   > B_mate6_shallow                1    500000     39      0
+   > B_mate6_shallow                1   1000000     66      0
+   < B_mate6_shallow                1   4000000     94      0
+   > B_mate6_shallow                1   4000000     77      3
+   < B_mate6_shallow                2   1000000     16      0
+   > B_mate6_shallow                2   1000000     21      0
+   < B_mate6_shallow                2   2000000     28      7
+   > B_mate6_shallow                2   2000000     31      7
+   < C_mate7_depth11                1    500000      2      0
+   > C_mate7_depth11                1    500000      0      0
+   < C_mate7_depth11                1   1200000     19      0
+   < C_mate7_depth11                1   1500000     20      0
+   < C_mate7_depth11                1   2000000     26      0
+   < C_mate7_depth11                1   3000000     18      0
+   < C_mate7_depth11                1   4000000     27      0
+   > C_mate7_depth11                1   1200000      0      0
+   > C_mate7_depth11                1   1500000     42      1
+   > C_mate7_depth11                1   2000000      0      0
+   > C_mate7_depth11                1   3000000     18      2
+   > C_mate7_depth11                1   4000000     15      1
+   < C_mate7_depth11                2   1500000      4      0
+   > C_mate7_depth11                2   1500000      0      0
+   < C_mate7_depth11                2   4000000      0      0
+   > C_mate7_depth11                2   4000000      3      1
+   < D_mate_minus6_depth10          1   1200000      0      0
+   > D_mate_minus6_depth10          1   1200000      2      0
+   < D_mate_minus6_depth10          1   3000000      0      0
+   > D_mate_minus6_depth10          1   3000000      3      0
+   < E_mate_minus9                  1   2000000     15      0
+   > E_mate_minus9                  1   2000000     21      0
+
+== tests/test_search.cpp table-less mined rows, each by its own script, candidate library against the parent's
+   (S292's rows block with the paths moved): extra_ply and capmates byte-identical; e21 and b04 identical in every
+   mate distance and node count, differing in the milliseconds column alone.
+-- extra_ply, cand
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+-- extra_ply, parent
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+-- capmates, cand
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+-- capmates, parent
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+-- e21, cand
+-:28920:5 m6:254281:39 m5:614169:82 m5:1023029:156 m5:1950316:256 m5:2804579:430 m5:7462650:893 m5:9236809:1389 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+-- e21, parent
+-:28920:5 m6:254281:39 m5:614169:83 m5:1023029:156 m5:1950316:257 m5:2804579:430 m5:7462650:890 m5:9236809:1384 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+-- b04, cand
+-:15215:2 -:37408:4 m5:83765:11 m5:110157:17 m5:247267:32 m5:489095:77 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+-- b04, parent
+-:15215:2 -:37408:4 m5:83765:11 m5:110157:17 m5:247267:31 m5:489095:76 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+
+== DEV_MANUAL's defender-set sweep (instrument 4) -- ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py sweep <parent tune> <candidate tune>
+   parent = 6ebeadc's tune build, candidate = ../chesso-s293's build-tune, each copied aside. One process for the whole set, Hash 16.
+104 defender nodes, depth 2k+8, RfpMinPly held at 3, RfpMaxDepth held at 15
+  per proved distance: m1 50  m2 31  m3 15  m4 8
+  parent_tune exact  82/104  m1 50/50 d0  m2 31/31 d4  m3 1/15 d7  m4 0/8 d-  short 0  sign 0
+  cand_tune exact  82/104  m1 50/50 d0  m2 31/31 d4  m3 1/15 d7  m4 0/8 d-  short 0  sign 0
+S165-SWEEP-DONE

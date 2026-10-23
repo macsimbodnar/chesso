@@ -1,0 +1,230 @@
+# S293, red first (DEC-141, TESTS): tests/test_search.cpp's "reverse futility does not fire at a node a whole search
+# found mated" on 6ebeadc's src/ (the entry's no_move_skipped byte present since S292, reverse futility's guard absent),
+# Release build, 2026-10-23. Both guarded legs red on all 104 rows of adocs/data/S165_defender_set.tsv; the five premise
+# legs (no entry, a pruned search's bound, a lower bound, an upper bound and an exact score outside the band) clean.
+#
+#   ./build/tests/test_search -tc='reverse futility does not fire at a node a whole search found mated'
+#
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+/home/max/ws/chesso-s293/tests/test_search.cpp:7750:
+TEST SUITE: search: pruning and reduction guards
+TEST CASE:  reverse futility does not fire at a node a whole search found mated
+
+/home/max/ws/chesso-s293/tests/test_search.cpp:7874: FATAL ERROR: REQUIRE( violations.empty() ) is NOT correct!
+  values: REQUIRE( false )
+  logged: 1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: cut against a mated upper bound
+1krbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 1 1: cut against a mated exact score
+2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: cut against a mated upper bound
+2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/6Q1 b - - 1 1: cut against a mated exact score
+2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1: cut against a mated upper bound
+2brbr2/1p1p1p2/1P1P1P2/8/5Q2/5K1k/8/8 b - - 1 1: cut against a mated exact score
+2k1brbr/Q2p1p1p/3P1P1P/8/8/8/6K1/8 b - - 1 1: cut against a mated upper bound
+2k1brbr/Q2p1p1p/3P1P1P/8/8/8/6K1/8 b - - 1 1: cut against a mated exact score
+2k4q/8/8/8/8/2p1p1p1/2P1P1P1/2RBRBK1 w - - 1 2: cut against a mated upper bound
+2k4q/8/8/8/8/2p1p1p1/2P1P1P1/2RBRBK1 w - - 1 2: cut against a mated exact score
+2rbrbk1/2p1p1p1/2P1P1P1/8/7Q/8/8/2K5 b - - 1 1: cut against a mated upper bound
+2rbrbk1/2p1p1p1/2P1P1P1/8/7Q/8/8/2K5 b - - 1 1: cut against a mated exact score
+8/2k5/K7/5q2/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated upper bound
+8/2k5/K7/5q2/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated exact score
+4K3/8/4k3/8/5q2/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated upper bound
+4K3/8/4k3/8/5q2/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/8/8/5K2/2Q5/6k1 b - - 1 1: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/8/8/5K2/2Q5/6k1 b - - 1 1: cut against a mated exact score
+4k3/8/6q1/8/8/1p1p1p2/1P1P1P2/2BRBR1K w - - 1 2: cut against a mated upper bound
+4k3/8/6q1/8/8/1p1p1p2/1P1P1P2/2BRBR1K w - - 1 2: cut against a mated exact score
+q7/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR w - - 1 2: cut against a mated upper bound
+q7/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR w - - 1 2: cut against a mated exact score
+8/3k4/8/q7/8/1p1p1p2/1P1P1P2/1KBRBR2 w - - 1 2: cut against a mated upper bound
+8/3k4/8/q7/8/1p1p1p2/1P1P1P2/1KBRBR2 w - - 1 2: cut against a mated exact score
+8/8/5k2/8/6q1/p1p1p3/P1P1P3/RBRB1K2 w - - 1 2: cut against a mated upper bound
+8/8/5k2/8/6q1/p1p1p3/P1P1P3/RBRB1K2 w - - 1 2: cut against a mated exact score
+8/8/8/1q6/8/2p1p1p1/2P1PkP1/K1RBRB2 w - - 1 2: cut against a mated upper bound
+8/8/8/1q6/8/2p1p1p1/2P1PkP1/K1RBRB2 w - - 1 2: cut against a mated exact score
+rbrb4/p1p1pK2/P1P1P2k/Q7/8/8/8/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1pK2/P1P1P2k/Q7/8/8/8/8 b - - 1 1: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/k7/2K5/1Q6/8/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/k7/2K5/1Q6/8/8 b - - 1 1: cut against a mated exact score
+1k6/8/4q3/8/8/1p1p1p2/1P1P1P2/2BRBRK1 w - - 1 2: cut against a mated upper bound
+1k6/8/4q3/8/8/1p1p1p2/1P1P1P2/2BRBRK1 w - - 1 2: cut against a mated exact score
+1k6/8/8/8/6q1/1p1p1p2/1P1P1P1K/2BRBR2 w - - 3 3: cut against a mated upper bound
+1k6/8/8/8/6q1/1p1p1p2/1P1P1P1K/2BRBR2 w - - 3 3: cut against a mated exact score
+1krbrb2/2p1p1p1/2P1P1P1/2K5/7Q/8/8/8 b - - 1 1: cut against a mated upper bound
+1krbrb2/2p1p1p1/2P1P1P1/2K5/7Q/8/8/8 b - - 1 1: cut against a mated exact score
+k1rbrb2/2p1p1p1/2P1P1P1/2K5/1Q6/8/8/8 b - - 3 2: cut against a mated upper bound
+k1rbrb2/2p1p1p1/2P1P1P1/2K5/1Q6/8/8/8 b - - 3 2: cut against a mated exact score
+1krbrb2/2p1p1p1/K1P1P1P1/7Q/8/8/8/8 b - - 1 1: cut against a mated upper bound
+1krbrb2/2p1p1p1/K1P1P1P1/7Q/8/8/8/8 b - - 1 1: cut against a mated exact score
+k1rbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 3 2: cut against a mated upper bound
+k1rbrb2/2p1p1p1/K1P1P1P1/2Q5/8/8/8/8 b - - 3 2: cut against a mated exact score
+2brbrk1/1p1p1p2/1P1P1P2/Q7/8/1K6/8/8 b - - 1 1: cut against a mated upper bound
+2brbrk1/1p1p1p2/1P1P1P2/Q7/8/1K6/8/8 b - - 1 1: cut against a mated exact score
+2brbr1k/1p1p1p2/1P1P1P2/6Q1/8/1K6/8/8 b - - 3 2: cut against a mated upper bound
+2brbr1k/1p1p1p2/1P1P1P2/6Q1/8/1K6/8/8 b - - 3 2: cut against a mated exact score
+4K3/1q4k1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated upper bound
+4K3/1q4k1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated exact score
+3K4/1q6/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated upper bound
+3K4/1q6/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/8/1K6/8/3Q4/1k6 b - - 1 1: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/8/1K6/8/3Q4/1k6 b - - 1 1: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/8/8/2K5/3Q4/k7 b - - 3 2: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/8/8/2K5/3Q4/k7 b - - 3 2: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/8/3Q4/8/4k1K1/8 b - - 1 1: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/8/3Q4/5K2/8/4k3 b - - 3 2: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/8/3Q4/5K2/8/4k3 b - - 3 2: cut against a mated exact score
+7K/5k2/3q4/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated upper bound
+7K/5k2/3q4/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated exact score
+5k2/7K/3q4/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated upper bound
+5k2/7K/3q4/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated exact score
+8/4q3/6K1/8/6k1/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated upper bound
+8/4q3/6K1/8/6k1/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated exact score
+8/4q3/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3: cut against a mated upper bound
+8/4q3/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3: cut against a mated exact score
+6q1/8/2k5/8/8/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2: cut against a mated upper bound
+6q1/8/2k5/8/8/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2: cut against a mated exact score
+1q6/8/2k5/8/8/2p1p1p1/2P1P1P1/K1RBRB2 w - - 3 3: cut against a mated upper bound
+1q6/8/2k5/8/8/2p1p1p1/2P1P1P1/K1RBRB2 w - - 3 3: cut against a mated exact score
+8/8/6q1/8/8/p1p1p3/P1P1P3/RBRBk2K w - - 1 2: cut against a mated upper bound
+8/8/6q1/8/8/p1p1p3/P1P1P3/RBRBk2K w - - 1 2: cut against a mated exact score
+8/8/6q1/8/8/p1p1p3/P1P1Pk1K/RBRB4 w - - 3 3: cut against a mated upper bound
+8/8/6q1/8/8/p1p1p3/P1P1Pk1K/RBRB4 w - - 3 3: cut against a mated exact score
+8/8/7k/8/q7/1p1p1p2/1P1P1P2/2BRBRK1 w - - 1 2: cut against a mated upper bound
+8/8/7k/8/q7/1p1p1p2/1P1P1P2/2BRBRK1 w - - 1 2: cut against a mated exact score
+8/8/7k/8/6q1/1p1p1p2/1P1P1P1K/2BRBR2 w - - 3 3: cut against a mated upper bound
+8/8/7k/8/6q1/1p1p1p2/1P1P1P1K/2BRBR2 w - - 3 3: cut against a mated exact score
+8/8/8/5k2/7q/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2: cut against a mated upper bound
+8/8/8/5k2/7q/2p1p1p1/2P1P1P1/1KRBRB2 w - - 1 2: cut against a mated exact score
+8/8/8/5k2/1q6/2p1p1p1/K1P1P1P1/2RBRB2 w - - 3 3: cut against a mated upper bound
+8/8/8/5k2/1q6/2p1p1p1/K1P1P1P1/2RBRB2 w - - 3 3: cut against a mated exact score
+2brbrk1/1p1p1p2/1P1P1P2/Q7/8/5K2/8/8 b - - 1 1: cut against a mated upper bound
+2brbrk1/1p1p1p2/1P1P1P2/Q7/8/5K2/8/8 b - - 1 1: cut against a mated exact score
+2brbr1k/1p1p1p2/1P1P1P2/6Q1/8/5K2/8/8 b - - 3 2: cut against a mated upper bound
+2brbr1k/1p1p1p2/1P1P1P2/6Q1/8/5K2/8/8 b - - 3 2: cut against a mated exact score
+rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p1k1/P1P1P3/6K1/8/7Q/8/8 b - - 1 1: cut against a mated exact score
+rbrb2k1/p1p1p3/P1P1P1K1/8/8/7Q/8/8 b - - 3 2: cut against a mated upper bound
+rbrb2k1/p1p1p3/P1P1P1K1/8/8/7Q/8/8 b - - 3 2: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/8/4Q3/8/5k1K/8 b - - 1 1: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/8/4Q3/6K1/8/5k2 b - - 3 2: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/8/4Q3/6K1/8/5k2 b - - 3 2: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/8/2QK4/8/1k6/8 b - - 1 1: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/8/2QK4/8/1k6/8 b - - 1 1: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/1Q6/3K4/k7/8/8 b - - 3 2: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/1Q6/3K4/k7/8/8 b - - 3 2: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/1Q6/8/2K5/k7/8 b - - 5 3: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/1Q6/8/2K5/k7/8 b - - 5 3: cut against a mated exact score
+7K/2q5/8/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated upper bound
+7K/2q5/8/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated exact score
+6K1/2q5/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated upper bound
+6K1/2q5/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated exact score
+7K/2q5/6k1/8/8/3p1p1p/3P1P1P/4BRBR w - - 5 4: cut against a mated upper bound
+7K/2q5/6k1/8/8/3p1p1p/3P1P1P/4BRBR w - - 5 4: cut against a mated exact score
+7K/4k3/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated upper bound
+7K/4k3/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated exact score
+6K1/8/5k2/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 3 3: cut against a mated upper bound
+6K1/8/5k2/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 3 3: cut against a mated exact score
+7K/5k2/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 5 4: cut against a mated upper bound
+7K/5k2/8/8/q7/p1p1p3/P1P1P3/RBRB4 w - - 5 4: cut against a mated exact score
+8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2: cut against a mated upper bound
+8/8/8/5q2/7K/p1p1p3/P1P1P3/RBRB1k2 w - - 1 2: cut against a mated exact score
+8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3: cut against a mated upper bound
+8/8/8/8/4q3/p1p1p1K1/P1P1P3/RBRB1k2 w - - 3 3: cut against a mated exact score
+8/8/8/8/4q3/p1p1p2K/P1P1Pk2/RBRB4 w - - 5 4: cut against a mated upper bound
+8/8/8/8/4q3/p1p1p2K/P1P1Pk2/RBRB4 w - - 5 4: cut against a mated exact score
+k1K5/6q1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated upper bound
+k1K5/6q1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated exact score
+3K4/1k4q1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated upper bound
+3K4/1k4q1/8/8/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated exact score
+4K3/6q1/2k5/8/8/3p1p1p/3P1P1P/4BRBR w - - 5 4: cut against a mated upper bound
+4K3/6q1/2k5/8/8/3p1p1p/3P1P1P/4BRBR w - - 5 4: cut against a mated exact score
+k3brbr/3p1p1p/3P1P1P/1K6/8/8/8/5Q2 b - - 1 1: cut against a mated upper bound
+k3brbr/3p1p1p/3P1P1P/1K6/8/8/8/5Q2 b - - 1 1: cut against a mated exact score
+1k2brbr/3p1p1p/1K1P1P1P/8/8/8/8/5Q2 b - - 3 2: cut against a mated upper bound
+1k2brbr/3p1p1p/1K1P1P1P/8/8/8/8/5Q2 b - - 3 2: cut against a mated exact score
+2k1brbr/3p1p1p/1K1P1P1P/8/8/5Q2/8/8 b - - 5 3: cut against a mated upper bound
+2k1brbr/3p1p1p/1K1P1P1P/8/8/5Q2/8/8 b - - 5 3: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/3K4/1k6/6Q1/8/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/3K4/1k6/6Q1/8/8 b - - 1 1: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/1k1K4/8/Q7/8/8 b - - 3 2: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/1k1K4/8/Q7/8/8 b - - 3 2: cut against a mated exact score
+rbrb4/p1p1p3/PkP1P3/8/2K5/Q7/8/8 b - - 5 3: cut against a mated upper bound
+rbrb4/p1p1p3/PkP1P3/8/2K5/Q7/8/8 b - - 5 3: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/k2K4/2Q5/8/8/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/k2K4/2Q5/8/8/8 b - - 1 1: cut against a mated exact score
+rbrb4/p1p1p3/PkP1P3/3K4/8/8/4Q3/8 b - - 3 2: cut against a mated upper bound
+rbrb4/p1p1p3/PkP1P3/3K4/8/8/4Q3/8 b - - 3 2: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/k1K5/8/8/4Q3/8 b - - 5 3: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/k1K5/8/8/4Q3/8 b - - 5 3: cut against a mated exact score
+2K5/q7/8/7k/8/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated upper bound
+2K5/q7/8/7k/8/p1p1p3/P1P1P3/RBRB4 w - - 1 2: cut against a mated exact score
+3K4/1q6/8/7k/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3: cut against a mated upper bound
+3K4/1q6/8/7k/8/p1p1p3/P1P1P3/RBRB4 w - - 3 3: cut against a mated exact score
+4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4: cut against a mated upper bound
+4K3/1q6/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 5 4: cut against a mated exact score
+5K2/3q4/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 7 5: cut against a mated upper bound
+5K2/3q4/6k1/8/8/p1p1p3/P1P1P3/RBRB4 w - - 7 5: cut against a mated exact score
+4brbr/3p1p1p/1k1P1P1P/3Q4/K7/8/8/8 b - - 1 1: cut against a mated upper bound
+4brbr/3p1p1p/1k1P1P1P/3Q4/K7/8/8/8 b - - 1 1: cut against a mated exact score
+4brbr/k2p1p1p/3P1P1P/1K1Q4/8/8/8/8 b - - 3 2: cut against a mated upper bound
+4brbr/k2p1p1p/3P1P1P/1K1Q4/8/8/8/8 b - - 3 2: cut against a mated exact score
+1k2brbr/3p1p1p/1K1P1P1P/3Q4/8/8/8/8 b - - 5 3: cut against a mated upper bound
+1k2brbr/3p1p1p/1K1P1P1P/3Q4/8/8/8/8 b - - 5 3: cut against a mated exact score
+2k1brbr/K2p1p1p/3P1P1P/3Q4/8/8/8/8 b - - 7 4: cut against a mated upper bound
+2k1brbr/K2p1p1p/3P1P1P/3Q4/8/8/8/8 b - - 7 4: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/3Q4/k7/8/8/4K3 b - - 1 1: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/3Q4/k7/8/8/4K3 b - - 1 1: cut against a mated exact score
+4brbr/3p1p1p/3P1P1P/3Q4/1k6/8/3K4/8 b - - 3 2: cut against a mated upper bound
+4brbr/3p1p1p/3P1P1P/3Q4/1k6/8/3K4/8 b - - 3 2: cut against a mated exact score
+4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3: cut against a mated upper bound
+4brbr/1Q1p1p1p/3P1P1P/8/k7/8/3K4/8 b - - 5 3: cut against a mated exact score
+4brbr/1Q1p1p1p/3P1P1P/k7/8/2K5/8/8 b - - 7 4: cut against a mated upper bound
+4brbr/1Q1p1p1p/3P1P1P/k7/8/2K5/8/8 b - - 7 4: cut against a mated exact score
+8/1q6/8/3k4/8/3p1p1p/3P1P1P/K3BRBR w - - 1 2: cut against a mated upper bound
+8/1q6/8/3k4/8/3p1p1p/3P1P1P/K3BRBR w - - 1 2: cut against a mated exact score
+8/1q6/8/8/2k5/3p1p1p/K2P1P1P/4BRBR w - - 3 3: cut against a mated upper bound
+8/1q6/8/8/2k5/3p1p1p/K2P1P1P/4BRBR w - - 3 3: cut against a mated exact score
+8/8/8/8/2k5/K2p1p1p/3P1P1P/1q2BRBR w - - 5 4: cut against a mated upper bound
+8/8/8/8/2k5/K2p1p1p/3P1P1P/1q2BRBR w - - 5 4: cut against a mated exact score
+1q6/8/8/8/K1k5/3p1p1p/3P1P1P/4BRBR w - - 7 5: cut against a mated upper bound
+1q6/8/8/8/K1k5/3p1p1p/3P1P1P/4BRBR w - - 7 5: cut against a mated exact score
+8/5q2/8/6K1/8/p1p1p1k1/P1P1P3/RBRB4 w - - 1 2: cut against a mated upper bound
+8/5q2/8/6K1/8/p1p1p1k1/P1P1P3/RBRB4 w - - 1 2: cut against a mated exact score
+6q1/8/7K/8/8/p1p1p1k1/P1P1P3/RBRB4 w - - 3 3: cut against a mated upper bound
+6q1/8/7K/8/8/p1p1p1k1/P1P1P3/RBRB4 w - - 3 3: cut against a mated exact score
+6q1/8/8/7K/5k2/p1p1p3/P1P1P3/RBRB4 w - - 5 4: cut against a mated upper bound
+6q1/8/8/7K/5k2/p1p1p3/P1P1P3/RBRB4 w - - 5 4: cut against a mated exact score
+6q1/8/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 7 5: cut against a mated upper bound
+6q1/8/7K/5k2/8/p1p1p3/P1P1P3/RBRB4 w - - 7 5: cut against a mated exact score
+3q4/8/4K3/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated upper bound
+3q4/8/4K3/8/4k3/3p1p1p/3P1P1P/4BRBR w - - 1 2: cut against a mated exact score
+3q4/5K2/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated upper bound
+3q4/5K2/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 3 3: cut against a mated exact score
+4q3/6K1/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 5 4: cut against a mated upper bound
+4q3/6K1/8/5k2/8/3p1p1p/3P1P1P/4BRBR w - - 5 4: cut against a mated exact score
+4q3/7K/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 7 5: cut against a mated upper bound
+4q3/7K/5k2/8/8/3p1p1p/3P1P1P/4BRBR w - - 7 5: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/6Q1/2K5/7k/8/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/6Q1/2K5/7k/8/8 b - - 1 1: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/3K2Q1/8/8/7k/8 b - - 3 2: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/3K2Q1/8/8/7k/8 b - - 3 2: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/6Q1/4K3/7k/8/8 b - - 5 3: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/6Q1/4K3/7k/8/8 b - - 5 3: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/6Q1/8/5K2/7k/8 b - - 7 4: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/6Q1/8/5K2/7k/8 b - - 7 4: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/8/1k6/4K3/2Q5/8 b - - 1 1: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/8/1k6/4K3/2Q5/8 b - - 1 1: cut against a mated exact score
+rbrb4/p1p1p3/P1P1P3/1k6/3K4/8/2Q5/8 b - - 3 2: cut against a mated upper bound
+rbrb4/p1p1p3/P1P1P3/1k6/3K4/8/2Q5/8 b - - 3 2: cut against a mated exact score
+rbrb4/p1p1p3/PkP1P3/8/2K5/8/2Q5/8 b - - 5 3: cut against a mated upper bound
+rbrb4/p1p1p3/PkP1P3/8/2K5/8/2Q5/8 b - - 5 3: cut against a mated exact score
+rbrb4/p1p1p3/P1k1P3/5Q2/2K5/8/8/8 b - - 1 4: cut against a mated upper bound
+rbrb4/p1p1p3/P1k1P3/5Q2/2K5/8/8/8 b - - 1 4: cut against a mated exact score
+
+
+===============================================================================
+[doctest] test cases:    1 |    0 passed | 1 failed | 218 skipped
+[doctest] assertions: 3958 | 3957 passed | 1 failed |
+[doctest] Status: FAILURE!

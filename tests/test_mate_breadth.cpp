@@ -88,20 +88,21 @@ static constexpr int SCORE_DEPTH = 10;
 
 // GOLDEN (DEC-142): 163, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 164 with the guard shipping, 160 with it weakened (S286, below).
+// 163 with the guard shipping, 160 with it weakened (S293, below; 164 and
+// 160 at S286).
 // Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 163, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 1 below the shipping count, 3 above the weakened one. The S156
-// script's rule admits any floor strictly above what the weakened guard finds
-// and at or below what ships -- 161 to 164 against S286's 160 and 164 -- and
-// flags one outside that band as no longer separating. The floor this gate has
-// always kept sits 1 below the shipping count: a single mate the shipping
-// build loses to an unrelated tree change does not turn it red, and the
-// weakened guard still does with 3 to spare. (At S261 the gap was 4 as well,
+// Margin: 0 below the shipping count since S293, 3 above the weakened one. The
+// S156 script's rule admits any floor strictly above what the weakened guard
+// finds and at or below what ships -- 161 to 164 against S286's 160 and 164 --
+// and flags one outside that band as no longer separating. The floor this gate
+// kept until S293 sat 1 below the shipping count: a single mate the shipping
+// build loses to an unrelated tree change did not turn it red, and the
+// weakened guard still did with 3 to spare. (At S261 the gap was 4 as well,
 // 160 against 156; at S250 it was 3, 146 against 143, and the spare point
 // went above the weakened end because that was the end that had moved, 139 to
 // 141 to 143.)
@@ -132,6 +133,17 @@ static constexpr int SCORE_DEPTH = 10;
 // goes back to 159 with a revert of S286. S099 read the same ends on its own
 // landing, whose code is this tree's line for line, and its H0 took the 163
 // back out.
+//
+// **163 held at S293, re-read by the script (DEC-142, DEC-299).** Reverse
+// futility's table guard moves the shipping end 164 -> 163 and leaves the
+// weakened one at 160: the one row it loses, mined row 171 at depth 10, is
+// DEC-158's price at another node (`adocs/data/S293_row171.txt`). 163 is
+// inside the script's band, 161 to 163, and the gate built at RfpMinPly 1 is
+// red at 160 (`adocs/data/S293_goldens.txt`), so it still separates. It now
+// sits at the shipping count, not 1 below it: 162 would be a falling floor,
+// which DEC-299's guard refuses, so the spare point below the shipping end
+// is gone until a change raises that end again. A revert of S293 gives the
+// spare point back with the 164.
 static constexpr int EXACT_FLOOR = 163;
 
 

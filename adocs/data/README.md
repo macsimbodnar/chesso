@@ -1206,3 +1206,26 @@ read, which is DEC-158's measured price. The scratch builds are
 | `S291_defender186.py` | S145's 186 defender nodes as an `S289_rows.py` set file, each mated distance proved by S145's AND/OR enumeration (S289's method): 86, 54, 30 and 16 mated in 1 to 4 |
 | `S291_census.py` | the ordinary-play census driver, S289's shape with each engine's stderr to its own file, counting per position the `$S291_CENSUS` lines of the scratch trace build (whose guard is never shipped); `--compare` reads two tables |
 | `S291_census.txt` | the census: 11503 S219 A/A positions at depth 10, 981078145 nodes, 0 reverse futility returns of DEC-306's shape, the scratch guard moving no node, score, best move or mate; 42 returns on a skipped-move bound (8 positions), not the shape; the census build equal to the Release build root for root |
+
+### S293, reverse futility against a whole search's mated bound (DEC-311)
+
+S291 found reverse futility failing high, beta outside the mate band, at nodes
+whose entry is a mated upper bound or exact score from a node that searched
+every legal move -- DEC-306's shape, asked of the null move's static form --
+and its scratch guard against it lost mined row 171's mate in 5 at depth 10.
+S293 traced that loss first: the guard re-proves its own node mated, and the
+mate is lost at another node of the changed tree, where reverse futility cuts
+with no table entry at all (DEC-158's price). The guard then ships with S292's
+condition. The scratch builds are `../chesso-s293t`'s; what lands here is the
+reading and the tools.
+
+| file | what it is |
+|---|---|
+| `S293_trace.py` | the scratch trace's third patch, never shipped, applied after `S289_trace.py` and `S291_trace.py`: each `$S291_CENSUS` line gains an `S293 AT` line with the iteration, the moves from the root and the node's FEN; `$S293_GUARD_KEYS` applies S291's scratch guard at the listed FENs only (the one-node counterfactual); `$S293_STORE_TRACE` prints every store at a traced key with its type, depth, score and whether the node skipped a move; all unset, the tree's own bench (6042933) |
+| `S293_row171.txt` | step 1: mined row 171 under the scratch guard, from the engine's own output. The shape occurs once in the shipped search (iteration 9, ply 7, depth 3, an upper bound of -48991 from a whole search at depth 2); guarded, that node searches and re-proves -48991, and the guard at its key alone reproduces cp 2104. At depth 10 the changed tree searches c4f4 first at the full window, the ply-2 node takes 2104 from f4d6, and the mating a4a2's ply-3 node (depth 7, window [-2105, -2104], no table entry) is cut by reverse futility at -1809 (static -1368, margin 441); with reverse futility removed at that node alone the row reads m5 at depth 10 again, on both trees. DEC-158's price, not the guard; every tune option tried brings the row back, `RfpMaxDepth` 4 among them |
+| `S293_red.log` | `reverse futility does not fire at a node a whole search found mated` on 6ebeadc's `src/` (the entry's byte present, the guard absent): both guarded legs red on all 104 rows, the five premise legs clean |
+| `S293_reach.txt` | S291's four mate sets and its census re-read with the shipped form: the output files equal S291's scratch guard's byte for byte over all four sets (40, 83, 143 and 163 exact against the parent's 40, 83, 143 and 164; every moved row listed), and the census of 11503 S219 A/A positions at depth 10 moves no node, best move or score, Release against Release |
+| `S293_goldens.txt` | every golden the guard could move, each by its own script on fixture `052c173` (a commit object on no branch), inside DEC-299's guard: bench 6042933 unmoved with every reply, `search_bench` at 9 and 12 identical, `MATE_IN_THREE_FLOOR` 12 and 7, `EXACT_FLOOR` 163 and 160 (164 and 160 before; the floor holds at 163, now at the shipping count), first-mate 9 and 9, S192's 13446, the table-less mined rows identical but for milliseconds, the ceilings 2, 5, 4, 0, 1, 2 unmoved over five grids, C's S170 budget 500000 -> 1500000 by the rule (the parent's grid is S292's cell for cell), and instrument 4's defender sweep 82 of 104 both |
+| `S293_sweep_s170.txt` | `S203_case_sweep.sh`'s full 108-cell grid over `S170_cases.tsv` on the guard's Release build: 1420 mate lines, 26 short; C reports none at 500000, 1000000 and 1200000 at stride 1, so the rule moves its budget to 1500000 (42 lines, 1 short); joins S202's, S261's, S286's and S292's in `--ceilings`' command, which still answers 2, 5, 4, 0, 1, 2 |
+| `S293_mutation.tsv` | `tools/mutation_check.py`'s `results.tsv` for S293's pass on fixture `8f02693` (the same `src/` as `052c173`, with C's budget applied): RW01-RW05, S191's N03-N06 (N05 and N06 re-pointed), M05, M06a, M06b, E11, G01-G04, S292's NF01-NF09 and S289's sixteen -- 41 of 41 killed |
+| `S293_sprt.sh` | the pre-registration of S293's one SPRT, in `S292_sprt.sh`'s shape: the guard's commit against its parent at 8+0.08, Hash 16, on `noob_3moves.epd`, `{-5, 0}` nElo at alpha = beta = 0.05, 20950 rounds, 12.1 h with a true zero and 19.9 h at the cap, the abort rule and the three outcomes, H0 reverting the guard whole and sending the defect to the owner; expected near a true zero and possibly at its cap (no firing in ordinary play at depth 10); refuses to start until the coordinator pins the pair in it |

@@ -15816,3 +15816,61 @@ Consequences: S291 completes. S083's `paused_by` moves from S291 to S293. S293
               will likely run near a true zero toward its cap, and the
               pre-registration says so. S083 re-lands on S293's tree, and its
               `S083_sprt.sh` names the five H1 rulings (DEC-308 (3)).
+
+## DEC-312  2026-10-23  S293: reverse futility is not tried at a node a whole search found mated; mined row 171's loss is DEC-158's price on the changed tree, not the guard's, and a {-5, 0} SPRT decides it
+Tags:         search, reverse-futility, mate, transposition-table, s293, s291, s292, s083, dec-311, dec-310, dec-158, dec-299, dec-305, dec-221, bugs
+Context:      DEC-311 (2) made reverse futility's fail-high against a whole
+              search's mated bound BUGS-binding, and its consequences said "a
+              guard that hides a mate the shipped tree reports is not the
+              fix". S291's scratch guard lost mined row 171 (m5 -> cp 2104 at
+              depth 10). S293 traced it (`adocs/data/S293_row171.txt`): the
+              shape occurs once in that search, iteration 9, ply 7, an upper
+              bound of -48991 at depth 2 from a node that searched every move,
+              where the shipped tree's reverse futility returns -2112. Guarded,
+              that node searches and re-proves -48991 itself, and guarding that
+              one key alone reproduces cp 2104. The changed table orders c4f4
+              first at depth 10, and the mating a4a2's ply-3 node, a non-PV cut
+              node at depth 7 with **no table entry**, is cut by reverse
+              futility at -1809 (static -1368, margin 441). Without reverse
+              futility at that node alone, both trees report m5 at depth 10, as
+              do `RfpMaxDepth` 4 and every other option tried. No narrower
+              condition helps: the loss follows from the guarded node
+              searching at all. The shipped form (S292's condition, no
+              constant) reads S291's four sets and census as the scratch guard
+              did: eight scores and two best moves move, no exact mate gained,
+              row 171 lost, nothing moved in 11503 ordinary-play positions.
+              `EXACT_FLOOR`'s shipping end falls 164 -> 163 with the floor
+              holding at 163, and S170's case C budget moves 500000 -> 1500000
+              by `pick_budgets.sh`, ceilings unmoved: inside DEC-299's guard.
+Decision:     By the coordinator under the owner's standing instruction (few
+              questions, correctness first). (1) The guard ships as S293's
+              change: no reverse futility where the node's entry is an upper
+              bound or exact score at or below `-MATE_MIN` with
+              `no_move_skipped` set. It is implemented from the Chess
+              Programming Wiki's description of reverse futility as static
+              null-move pruning and David-Tabibi and Netanyahu's premise of the
+              null move (ICGA J. 25(3), 2002), DEC-221. (2) DEC-311's "hides a
+              mate" clause is read against the trace. The guard's own node
+              re-proves its mate. The mate is lost at a node the guard never
+              reads, by reverse futility where nothing is proved, the depth-10
+              loss DEC-158 priced. So the guard is not the hider, and the row
+              is recorded as DEC-158's price on the changed tree. (3) A
+              `{-5, 0}` SPRT against its parent at 8+0.08, Hash 16
+              (`adocs/data/S293_sprt.sh`) decides it. On H1 or no verdict the
+              guard stays. On H0 it reverts whole and the owner rules. S083
+              re-lands on the tree that results.
+Rejected:     Stopping for the owner on row 171: the trace answers the
+              question DEC-311 asked, and the cost is a night for a ruling the
+              figures already make. Leaving the defect open: DEC-171 (c) binds,
+              and the shipped tree's reverse futility contradicts a proof in
+              the table. A narrower form: none exists, since guarding the one
+              node alone loses the row. Lowering `EXACT_FLOOR` to restore its
+              spare point: a falling floor, which DEC-299 forbids. Raising
+              `RfpMaxDepth` to keep the row: DEC-158's ceiling is excluded from
+              S293, and the row is one priced loss among those DEC-158
+              measured.
+Consequences: `EXACT_FLOOR` sits at its shipping count with no spare point, so
+              any later change that loses one more mined exact mate turns it
+              red and must answer for it. S083's rulings are re-read on S293's
+              tree (its `EXACT_FLOOR` figure moves with the shipping end). The
+              S170 C budget leaves with any revert.

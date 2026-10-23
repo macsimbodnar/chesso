@@ -1,0 +1,61 @@
+# S293: S291's four mate sets and its ordinary-play census re-read with the SHIPPED form of the guard -- reverse futility
+# not tried where the entry is a mated upper bound or exact score from a node that skipped no move
+# (`whole_search_mated_entry` in negamax_at). 2026-10-23. The engine's output only.
+#
+# Sets: adocs/data/S291_reach.txt's -- roots82 (adocs/data/S145_mate_set.tsv, attacker to move, go depth 2m - 1 + 8),
+# def104 (adocs/data/S165_defender_set.tsv, -k, 2k + 8), def186 (adocs/data/S291_defender186.py's output, -k, 2k + 8),
+# mined318 (adocs/data/S145_mined_set.tsv, go depth 10). Driver adocs/data/S289_rows.py: twelve UCI processes,
+# `ucinewgame` and Hash 16 before each row; exact = the last iteration reports exactly the proved distance.
+#
+#   ship   ../chesso-s293t's scratch tune build: 6ebeadc plus S289_trace.py, S291_trace.py and S293_trace.py, every
+#          variable unset (bench 6042933, the parent's own)
+#   guard  the same binary at $S291_RFP_GUARD=1 -- S291's scratch reading of the guard
+#   cand   ../chesso-s293's tune build at its defaults: the shipped form (bench 6042933)
+#
+#   ~/.venv/chess/bin/python adocs/data/S289_rows.py ENGINE SET.tsv 10 OUT
+#
+# READING. The shipped form is S291's scratch guard exactly: its output files equal the scratch guard's byte for
+# byte over all four sets (every row, every iteration's score, every best move). Against the parent it gains no
+# exact mate in any set and loses one, mined row 171 at depth 10 (adocs/data/S293_row171.txt: DEC-158's price at
+# another node); it moves eight reported scores and two best moves, the rows S291_reach.txt section 3 lists. In
+# ordinary play, S291's census shape (11503 S219 A/A positions at depth 10, the two Release builds), it moves
+# nothing: the same 981078145 nodes, no best move, no score, no node count.
+#
+# == 1. Exact at the last iteration, per proved distance
+roots82   ship  40  m2 26/26  m3 12/24  m4 2/16  m5 0/16
+roots82   cand  40  m2 26/26  m3 12/24  m4 2/16  m5 0/16
+def104    ship  83  m1 50/50  m2 31/31  m3 2/15  m4 0/8
+def104    cand  83  m1 50/50  m2 31/31  m3 2/15  m4 0/8
+def186    ship 143  m1 86/86  m2 54/54  m3 3/30  m4 0/16
+def186    cand 143  m1 86/86  m2 54/54  m3 3/30  m4 0/16
+mined318  ship 164  m1 10/10  m2 33/33  m3 35/37  m4 37/49  m5 37/52  m6 11/50  m7 1/29  m8 0/24  m9 0/17  m10 0/17
+mined318  cand 163  m1 10/10  m2 33/33  m3 35/37  m4 37/49  m5 36/52  m6 11/50  m7 1/29  m8 0/24  m9 0/17  m10 0/17
+# guard == cand, cmp over the four output files: identical, identical, identical, identical
+#
+# == 2. Every row the shipped form moves (index, proved distance, last score kind and value, first exact depth,
+#    bestmove), ship then cand
+roots82   40  +3  cp 1172 0 d6d2   ->  cp 1164 0 d6d2
+roots82   57  +4  cp 1345 0 a4d4   ->  cp 1452 0 a4d4
+roots82   62  +4  cp 801 0 g1g7    ->  cp 850 0 g1g7
+roots82   64  +4  cp 448 0 g3c3    ->  cp 462 0 g3c3
+roots82   76  +5  cp 0 0 b7c7      ->  cp 529 0 b7b2
+roots82   78  +5  cp -40 0 b4f4    ->  cp -116 0 b4f4
+def186    89  -3  cp 0 0 h8h7      ->  mate -4 0 h8h7
+mined318 120  +4  mate 4 8 e8e3    ->  mate 4 8 g5e3
+mined318 171  +5  mate 5 10 c4f4   ->  cp 2104 0 c4f4
+# def104: none.
+#
+# == 3. The census, S291_census.py over S210_f22_census.py's positions, parent (6ebeadc's Release build) against cand
+#    (S293's Release build), go depth 10, Hash 16, `ucinewgame` each
+#   ~/.venv/chess/bin/python adocs/data/S210_f22_census.py positions adocs/data/S219_aa_calibration.pgn census.fens
+#   python3 adocs/data/S291_census.py PARENT census.fens 10 parent.tsv
+#   python3 adocs/data/S291_census.py CAND census.fens 10 cand.tsv
+#   python3 adocs/data/S291_census.py --compare parent.tsv cand.tsv
+positions 11503
+  nodes                 981078145 -> 981078145, x1.000000
+  root best move moved  0
+  root score moved      0
+  node count moved      0 (0.000 %)
+  a reported mate appears or disappears  0
+# (the firing columns read 0 on both: neither Release build prints the scratch census line; S291_census.txt counted
+# 0 returns of the shape over the same positions on the trace build)
