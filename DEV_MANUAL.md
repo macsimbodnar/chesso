@@ -2247,6 +2247,25 @@ for the same reason the others are marked: it is a depth budget the mate reading
 is taken under, priced by `S154_floor_margin_sweep.py slack`, and widening it
 changes what the floor means rather than re-deriving it.
 
+The `go` budgets `test_mate_carry.cpp` replays its six cases at are goldens of
+the same kind, but they live in `adocs/data/S170_cases.tsv` rather than in
+`tests/`, so the grep above does not list them; the TSV's header records every
+re-sweep. Re-derive them on the tree that moved them, in two steps -- the sweep
+with no argument prints the 108-cell grid to stdout (a built engine at
+`build/src/chesso`, from the repository root), and the picker reads it:
+
+```bash
+adocs/data/S203_case_sweep.sh > GRID
+adocs/data/S170_pick_budgets.sh adocs/data/S170_cases.tsv GRID > NEW.tsv
+```
+
+The second applies DEC-156's rule as DEC-162 left it -- the cheapest budget at
+the row's own stride whose cell reports a mate line -- to that grid, rewriting
+the `go` column and nothing else, with the picks on stderr and exit 1 naming
+any row that has no such cell. From S099 until S290 that script was
+`.tuning/coord/S099/p2/pick_budgets.sh`, outside the tree; S290 committed it,
+and `adocs/data/S290_picker_check.txt` re-runs it on S083's grid.
+
 Two traps live in this list. `S192_anchors.py` parses the weight header by
 regex, so a refit that emits another layout breaks the parse silently — run it
 with no argument first and require `10 of 10 reproduced` before feeding it a
@@ -4876,7 +4895,8 @@ only the ceiling one is a budget question. The budgets themselves did not move
 and a redraw still retires them. They are re-derived as a set: the script with
 no argument prints the grid, each row takes the cheapest cell at its own
 stride that reports a mate line -- DEC-162 left the choice on the mate count
-alone -- and `--at` confirms the six cells. S245 did that on 2026-09-29 and
+alone, and `adocs/data/S170_pick_budgets.sh` applies it to a recorded grid since
+S290 -- and `--at` confirms the six cells. S245 did that on 2026-09-29 and
 four moved (`adocs/data/S245_sweep.txt`, the old rows quoted in the TSV), and
 S114's first verdict did it again on the tree it lands on and four moved again
 (`adocs/data/S114_sweep_s170.txt`), and its removal on the tree it leaves,

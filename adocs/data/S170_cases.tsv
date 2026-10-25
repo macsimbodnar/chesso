@@ -48,6 +48,19 @@
 # budgets, and with --ceilings the short-line ceilings in
 # tests/test_mate_carry.cpp. DEC-154, DEC-156, DEC-162, DEC-142.
 #
+# That script records the grid; the rule is applied to a recorded grid by
+# `adocs/data/S170_pick_budgets.sh`, which rewrites this file's `go` column
+# and nothing else, printing its picks on stderr:
+#
+#   adocs/data/S170_pick_budgets.sh adocs/data/S170_cases.tsv \
+#       adocs/data/<step>_sweep_s170.txt > NEW.tsv
+#
+# Tracked since S290. From S099 until then it was
+# `.tuning/coord/S099/p2/pick_budgets.sh`, outside the tree, and it is the
+# script the S286, S292, S293 and S083 notes below applied to their grids;
+# `adocs/data/S290_picker_check.txt` re-runs it on S083's grid against
+# S293's rows and gets S083's back.
+#
 # The grid is a knife edge, which is the thing to expect rather than be
 # surprised by: C reported 13 mate lines at 1500000 nodes and 0 at both 1000000
 # and 2000000 when S203 swept it.

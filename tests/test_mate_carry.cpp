@@ -109,6 +109,14 @@
 // because a budget chosen per case because it happened to be green would be
 // fitting the fixture to the test. S245 re-swept every row in that form.
 //
+// That script records the grid. The rule is applied to a recorded grid by
+// `adocs/data/S170_pick_budgets.sh`, which rewrites the TSV's `go` column and
+// nothing else -- tracked since S290, outside the tree under `.tuning/` from
+// S099 until then:
+//
+//   adocs/data/S170_pick_budgets.sh adocs/data/S170_cases.tsv
+//       adocs/data/<step>_sweep_s170.txt > NEW.tsv
+//
 // The budgets are a knife edge and the file says so rather than implying it:
 // C reported 13 mate lines at 1500000 nodes and 0 at both 1000000 and 2000000
 // when S203 swept it, and on S245's grid (adocs/data/S245_sweep.txt) it

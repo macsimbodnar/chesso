@@ -38,8 +38,15 @@ since and a conversion factor of 0.5 to 1.0, about 2865-2890 before S083 and
 2930-2975 with it, +/- 60 at least. Only a `rating.sh` with stronger anchors
 (S264's Weiss 1.1, Stash v30.0) decides it: S152, when the machine has a gap.
 
-**Next**: S290 (the budget picker tracked, rebased on S083's budgets), then
-S135. Open fillers to name in every pre-registration: S290, S294.
+**S290 done** (2026-10-25): the S170 budget picker is tracked as
+`adocs/data/S170_pick_budgets.sh` and reproduces S083's budgets exactly.
+
+**Next**: S135. Its phase 1 (bad bishop and trapped pieces at weight zero,
+the screen, cost and SPRT scripts) was written blind on `41e4140`
+(`.tuning/coord/S135/`); a fresh agent rebases it on S083's tree, builds,
+tests and proves it neutral, then the coordinator runs the cost run, the
+screen and the candidate fit, and the one `{0, 5}` SPRT. Open filler to name
+in every pre-registration: S294.
 
 ## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
 

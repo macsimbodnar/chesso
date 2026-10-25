@@ -1,0 +1,179 @@
+# S290: adocs/data/S170_pick_budgets.sh, the S170 budget picker as tracked,
+# re-run on S083's grid. Written 2026-10-25 in the S290 worktree
+# (../chesso-s290b, on e3621b8) by the commands below, each printed before
+# what it printed; $T is a scratch directory. The engine is not run: the
+# picker reads a recorded grid. This replaces the blind reading of 2026-10-22
+# (on b860a8a, S289's grid), whose budgets S289's revert, S292, S293 and S083
+# have moved since.
+#
+# The accepts (amended 2026-10-25): with the arguments S083 used -- the
+# parent's TSV (e972bd4's, S293's rows) and S083's grid
+# (adocs/data/S083s_sweep_s170.txt), as .tuning/coord/S083/reland2/chain.sh
+# ran the original -- the tracked picker reproduces 01222f3's budgets,
+# A 1000000, B 100000, C 1000000, D 4000000, E 500000, F 100000, exactly.
+#
+# 1 is that check: the picker exits 0 and the budgets' diff is empty.
+# 2 is the same comparison over every line that is not a comment: empty.
+# 3 is the whole file. Its diff is not empty and cannot be: S083's commit also
+#   wrote a 20-line note into the header by hand, and the picker passes
+#   comments through and writes none. Those 20 are the only lines that differ.
+# 4 is S083's own run of the original on the same inputs: the tracked copy's
+#   stdout and stderr equal what that run recorded.
+# 5 is the byte-for-byte form: 01222f3's own TSV through the picker on the same
+#   grid comes back unchanged, comments included.
+# 6 is the same on the TSV as S290 leaves it (01222f3's plus S290's header
+#   lines).
+# 7 is the .tuning/ original (gitignored, never in a clone) against the
+#   tracked copy on both inputs: the same stdout and stderr.
+# 8 is the awk program against the original's: byte for byte.
+# 9 is the two failure exits the picker's header states.
+
+$ git rev-parse --short HEAD
+e3621b8
+[exit 0]
+
+$ sha256sum adocs/data/S083s_sweep_s170.txt /home/max/ws/chesso/.tuning/coord/S083/reland2/S083s_sweep_s170.txt adocs/data/S170_pick_budgets.sh /home/max/ws/chesso/.tuning/coord/S099/p2/pick_budgets.sh
+39bc2a822f164888dffa995a7f4bd4ee54a8f14ebb0911f03ba587805a6db68b  adocs/data/S083s_sweep_s170.txt
+39bc2a822f164888dffa995a7f4bd4ee54a8f14ebb0911f03ba587805a6db68b  /home/max/ws/chesso/.tuning/coord/S083/reland2/S083s_sweep_s170.txt
+e9c4535310b1498ada924d1d2d67b9e3180cfd42654002be66e638c8befefeb2  adocs/data/S170_pick_budgets.sh
+6c18cf5733cab362c0392b7aeac1c58426aef8b2e9434a8be365153f686b4809  /home/max/ws/chesso/.tuning/coord/S099/p2/pick_budgets.sh
+[exit 0]
+
+$ git show e972bd4:adocs/data/S170_cases.tsv > $T/parent.tsv; git show 01222f3:adocs/data/S170_cases.tsv > $T/01222f3.tsv; cut -f1,4,6 $T/parent.tsv | grep -v '^#'
+name	go	stride
+A_mate8_shallow	nodes 1000000	1
+B_mate6_shallow	nodes 100000	1
+C_mate7_depth11	nodes 1500000	1
+D_mate_minus6_depth10	nodes 500000	1
+E_mate_minus9	nodes 300000	1
+F_mate6_inherited_no_line	nodes 300000	2
+[exit 0]
+
+$ cmp $T/parent.tsv /home/max/ws/chesso/.tuning/coord/S083/reland2/goldens/S170_cases.head.tsv && echo identical
+identical
+[exit 0]
+
+$ sed -n '58,59p' /home/max/ws/chesso/.tuning/coord/S083/reland2/chain.sh
+git show HEAD:adocs/data/S170_cases.tsv > $G/S170_cases.head.tsv
+/home/max/ws/chesso/.tuning/coord/S099/p2/pick_budgets.sh $G/S170_cases.head.tsv $P/S083s_sweep_s170.txt > $G/S170_cases.picked.tsv 2> $G/picks.txt; echo "picks exit $?"
+[exit 0]
+
+== 1. the accepts: the parent's TSV through the tracked picker on S083's grid, S083's arguments
+$ adocs/data/S170_pick_budgets.sh $T/parent.tsv adocs/data/S083s_sweep_s170.txt > $T/picked.tsv
+A_mate8_shallow            stride 1  nodes 1000000  -> nodes 1000000  (4 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (2 lines, 2 short)
+C_mate7_depth11            stride 1  nodes 1500000  -> nodes 1000000  (1 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 500000   -> nodes 4000000  (4 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 500000   (21 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 100000   (3 lines, 0 short)
+[exit 0]
+
+$ cut -f1,4,6 $T/picked.tsv | grep -v '^#'
+name	go	stride
+A_mate8_shallow	nodes 1000000	1
+B_mate6_shallow	nodes 100000	1
+C_mate7_depth11	nodes 1000000	1
+D_mate_minus6_depth10	nodes 4000000	1
+E_mate_minus9	nodes 500000	1
+F_mate6_inherited_no_line	nodes 100000	2
+[exit 0]
+
+== the budgets against 01222f3's: empty
+$ diff <(cut -f1,4 $T/picked.tsv | grep -v '^#') <(cut -f1,4 $T/01222f3.tsv | grep -v '^#')
+[exit 0]
+
+== 2. every line that is not a comment: empty
+$ diff <(grep -v '^#' $T/picked.tsv) <(grep -v '^#' $T/01222f3.tsv)
+[exit 0]
+
+== 3. the whole file: only the 20 comment lines S083's note added by hand
+$ diff $T/picked.tsv $T/01222f3.tsv
+210a211,230
+> #
+> # S083 swept every row on the tree its refit makes -- curve 0's candidate
+> # constants, the queen re-anchored (DEC-059's form), on e972bd4 with S292's
+> # and S293's guards in, bench 6042933 -> 3945487 -- by the same script and the
+> # same rule, applied to the grid by script. The rows as they stood before it,
+> # S293's: C `nodes 1500000`, D `nodes 500000`, E `nodes 300000`, F `nodes
+> # 300000`, A and B as below. Now C 1000000 (1 line, a single cell: 1500000
+> # reports none and 1200000 16), D 4000000 (4 lines; the grid's top, and the
+> # only one of D's 18 cells with a mate line), E 500000 (21) and F at its
+> # stride 2 100000 (3), none short; A 1000000 (4 lines) and B 100000 (2 lines,
+> # both short) unchanged. The grid is `adocs/data/S083s_sweep_s170.txt` (108
+> # cells, 1485 mate lines, 23 short); `--ceilings` over S202's, S261's, S286's,
+> # S292's, S293's and it answers 2, 6, 4, 0, 1, 3, B rising 5 -> 6 and F 2 ->
+> # 3, and it alone 0, 6, 1, 0, 0, 3. `EXACT_FLOOR` fell (159 shipping, 154
+> # weakened, against 163, not lowered) and `MATE_IN_THREE_FLOOR` held at 12
+> # with 11 weakened; DEC-307 (3) applies the budgets and ceilings inside
+> # DEC-299's +2 anyway, on the working tree S083's SPRT plays, so they stand
+> # only with S083's refit. S083's first re-landing, on cd50178's reverted tree,
+> # swept `S083r_sweep_s170.txt`; that grid is a record of that tree and not in
+> # the command.
+[exit 1]
+
+$ diff $T/picked.tsv $T/01222f3.tsv | grep -c '^> #'
+20
+[exit 0]
+
+$ diff $T/picked.tsv $T/01222f3.tsv | grep -c '^> [^#]'
+0
+[exit 1]
+
+$ diff $T/picked.tsv $T/01222f3.tsv | grep -c '^<'
+0
+[exit 1]
+
+== 4. the same stdout and stderr S083's run recorded with the original: empty
+$ adocs/data/S170_pick_budgets.sh $T/parent.tsv adocs/data/S083s_sweep_s170.txt 2> $T/picks.txt > /dev/null; cmp $T/picked.tsv /home/max/ws/chesso/.tuning/coord/S083/reland2/goldens/S170_cases.picked.tsv && diff $T/picks.txt /home/max/ws/chesso/.tuning/coord/S083/reland2/goldens/picks.txt && echo identical
+identical
+[exit 0]
+
+== 5. 01222f3's TSV through the picker on S083's grid: byte for byte
+$ adocs/data/S170_pick_budgets.sh $T/01222f3.tsv adocs/data/S083s_sweep_s170.txt > $T/fixed.tsv
+A_mate8_shallow            stride 1  nodes 1000000  -> nodes 1000000  (4 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (2 lines, 2 short)
+C_mate7_depth11            stride 1  nodes 1000000  -> nodes 1000000  (1 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 4000000  -> nodes 4000000  (4 lines, 0 short)
+E_mate_minus9              stride 1  nodes 500000   -> nodes 500000   (21 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 100000   -> nodes 100000   (3 lines, 0 short)
+[exit 0]
+
+$ cmp $T/fixed.tsv $T/01222f3.tsv && echo identical
+identical
+[exit 0]
+
+== 6. the TSV as S290 leaves it, the same
+$ adocs/data/S170_pick_budgets.sh adocs/data/S170_cases.tsv adocs/data/S083s_sweep_s170.txt 2>/dev/null > $T/fixed290.tsv
+[exit 0]
+
+$ cmp $T/fixed290.tsv adocs/data/S170_cases.tsv && echo identical
+identical
+[exit 0]
+
+== 7. the .tuning/ original against the tracked copy, stdout and stderr, both inputs: empty
+$ /home/max/ws/chesso/.tuning/coord/S099/p2/pick_budgets.sh $T/parent.tsv adocs/data/S083s_sweep_s170.txt > $T/o.out 2> $T/o.err; adocs/data/S170_pick_budgets.sh $T/parent.tsv adocs/data/S083s_sweep_s170.txt > $T/t.out 2> $T/t.err; diff $T/o.out $T/t.out && diff $T/o.err $T/t.err && echo identical
+identical
+[exit 0]
+
+$ /home/max/ws/chesso/.tuning/coord/S099/p2/pick_budgets.sh $T/01222f3.tsv adocs/data/S083s_sweep_s170.txt > $T/o.out 2> $T/o.err; adocs/data/S170_pick_budgets.sh $T/01222f3.tsv adocs/data/S083s_sweep_s170.txt > $T/t.out 2> $T/t.err; diff $T/o.out $T/t.out && diff $T/o.err $T/t.err && echo identical
+identical
+[exit 0]
+
+== 8. the awk program, the original's byte for byte: empty
+$ diff <(sed -n '/^awk -F/,$p' /home/max/ws/chesso/.tuning/coord/S099/p2/pick_budgets.sh) <(sed -n '/^awk -F/,$p' adocs/data/S170_pick_budgets.sh) && echo identical
+identical
+[exit 0]
+
+== 9. the failure exits the header states
+$ adocs/data/S170_pick_budgets.sh $T/parent.tsv
+usage: adocs/data/S170_pick_budgets.sh CASES.tsv GRID.txt > NEW.tsv
+[exit 2]
+
+$ adocs/data/S170_pick_budgets.sh $T/parent.tsv /dev/null > /dev/null
+no cell with a mate line for A_mate8_shallow at stride 1
+no cell with a mate line for B_mate6_shallow at stride 1
+no cell with a mate line for C_mate7_depth11 at stride 1
+no cell with a mate line for D_mate_minus6_depth10 at stride 1
+no cell with a mate line for E_mate_minus9 at stride 1
+no cell with a mate line for F_mate6_inherited_no_line at stride 2
+[exit 1]
