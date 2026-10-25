@@ -46,15 +46,24 @@ enum pawn_structure_feature_t
   PS_BACKWARD
 };
 
-// What the three counts are, in the order the weights are indexed. Named here
+// What the seven counts are, in the order the weights are indexed. Named here
 // because the engine names them only in the prose over those arrays, and an
-// index nobody can read is an index a caller gets wrong.
+// index nobody can read is an index a caller gets wrong. The last four are
+// S135's.
 enum piece_placement_feature_t
 {
   PL_BISHOP_PAIR,
   PL_ROOK_OPEN,
-  PL_ROOK_HALF_OPEN
+  PL_ROOK_HALF_OPEN,
+  PL_BAD_BISHOP,
+  PL_BAD_BISHOP_RAMMED,
+  PL_TRAPPED_MINOR,
+  PL_TRAPPED_ROOK
 };
+
+static_assert(static_cast<size_t>(PL_TRAPPED_ROOK) + 1 == PIECE_PLACEMENT_COUNT,
+              "the engine's piece placement arrays changed width: name the "
+              "features here again");
 
 
 inline int piece_from_char(char c, bool* black)
@@ -602,7 +611,8 @@ inline bool pawn_structure_features(const std::string& placement,
 
 
 // Piece placement counts, White minus Black, in bishop pair, rook on an open
-// file, rook on a half-open file order. Each is about a side's own pieces.
+// file, rook on a half-open file, bad bishop, bad bishop rammed, trapped minor,
+// trapped rook order. Each is about a side's own pieces.
 //
 // The definitions are src/evaluation.hpp's, stated there because this file is
 // written from that comment and the two have to mean the same thing:
@@ -619,6 +629,12 @@ inline bool pawn_structure_features(const std::string& placement,
 // The two rook features exclude each other. A file with an own pawn on it is
 // neither open nor half-open, whatever the enemy has there. Rook on the
 // seventh was a fourth until S134 folded it into the rook table (DEC-090).
+//
+// S135's four, walked here square by square from evaluation.hpp's statement
+// of them, which has them in full: own pawns on each own bishop's colour,
+// summed over the bishops; the same over the rammed own pawns, those with an
+// enemy pawn directly ahead; own knights and bishops on one of the listed
+// trap patterns, each once; own rooks in the corner beside their own king.
 //
 // Walked by hand from the placement for the same reason mobility_features() is:
 // this file has to be able to disagree with the engine, and code shared with it
@@ -697,6 +713,118 @@ inline bool piece_placement_features(const std::string& placement,
   // three, which is why this is a comparison and not an accumulation.
   out[PL_BISHOP_PAIR] =
       ((bishops[0] >= 2) ? 1 : 0) - ((bishops[1] >= 2) ? 1 : 0);
+
+  // S135. A square's colour by its row and file, both counted from a8; only
+  // whether two squares share one is asked.
+  const auto colour_of = [](int sq) { return (sq / 8 + sq % 8) % 2; };
+
+  // A square named the way evaluation.hpp names White's patterns, "h7", for
+  // the side `side` -- for Black the rank is mirrored, rank r to 9 - r.
+  const auto named = [](const char* name, int side) {
+    const int file = name[0] - 'a';
+    const int rank = (side == 0) ? (name[1] - '0') : (9 - (name[1] - '0'));
+
+    return (8 - rank) * 8 + file;
+  };
+
+  const auto is = [&](int sq, int type, int side) {
+    return kind_at[sq] == type && white_at[sq] == (side == 0);
+  };
+
+  for (int side = 0; side < 2; ++side) {
+    const int sign = (side == 0) ? 1 : -1;
+
+    // Bad bishop and its rammed share: every own bishop against every own pawn
+    // of its colour, the rammed ones being those whose square ahead -- one rank
+    // up the board for White, one down for Black -- holds an enemy pawn.
+    for (int b = 0; b < 64; ++b) {
+      if (!is(b, 2, side)) { continue; }
+
+      for (int p = 0; p < 64; ++p) {
+        if (!is(p, 0, side) || colour_of(p) != colour_of(b)) { continue; }
+
+        out[PL_BAD_BISHOP] += sign;
+
+        const int ahead = (side == 0) ? p - 8 : p + 8;
+
+        if (ahead >= 0 && ahead < 64 && is(ahead, 0, 1 - side)) {
+          out[PL_BAD_BISHOP_RAMMED] += sign;
+        }
+      }
+    }
+
+    // Trapped minors: White's patterns as evaluation.hpp lists them, a piece
+    // type, its square, and the alternatives of enemy pawn squares any one of
+    // which traps it. An alternative with no first square is no alternative.
+    struct trap_t
+    {
+      int type;  // 1 knight, 2 bishop
+      const char* where;
+      const char* need[2][2];
+    };
+
+    static const trap_t traps[] = {
+        {2, "h7", {{"f7", "g6"}, {nullptr, nullptr}}},
+        {2, "a7", {{"c7", "b6"}, {nullptr, nullptr}}},
+        {2, "h6", {{"g5", "f6"}, {nullptr, nullptr}}},
+        {2, "a6", {{"b5", "c6"}, {nullptr, nullptr}}},
+        {1, "h8", {{"h7", nullptr}, {"f7", nullptr}}},
+        {1, "a8", {{"a7", nullptr}, {"c7", nullptr}}},
+        {1, "h7", {{"g7", "h6"}, {"g7", "f6"}}},
+        {1, "a7", {{"b7", "a6"}, {"b7", "c6"}}},
+    };
+
+    // A piece once, however many of its patterns it meets.
+    bool trapped[64] = {};
+
+    for (const trap_t& trap : traps) {
+      const int where = named(trap.where, side);
+
+      if (!is(where, trap.type, side)) { continue; }
+
+      for (const auto& alternative : trap.need) {
+        if (alternative[0] == nullptr) { continue; }
+
+        bool met = true;
+
+        for (const char* pawn : alternative) {
+          if (pawn != nullptr && !is(named(pawn, side), 0, 1 - side)) {
+            met = false;
+          }
+        }
+
+        if (met) { trapped[where] = true; }
+      }
+    }
+
+    for (int sq = 0; sq < 64; ++sq) {
+      if (trapped[sq]) { out[PL_TRAPPED_MINOR] += sign; }
+    }
+
+    // Trapped rooks: the king on f1 or g1 shuts in h1, g1, h2 and g2; on c1 or
+    // b1, a1, b1, a2 and b2. White's squares; Black's mirrored.
+    struct corner_t
+    {
+      const char* kings[2];
+      const char* rooks[4];
+    };
+
+    static const corner_t corners[] = {
+        {{"f1", "g1"}, {"h1", "g1", "h2", "g2"}},
+        {{"c1", "b1"}, {"a1", "b1", "a2", "b2"}},
+    };
+
+    for (const corner_t& corner : corners) {
+      if (!is(named(corner.kings[0], side), 5, side) &&
+          !is(named(corner.kings[1], side), 5, side)) {
+        continue;
+      }
+
+      for (const char* rook : corner.rooks) {
+        if (is(named(rook, side), 3, side)) { out[PL_TRAPPED_ROOK] += sign; }
+      }
+    }
+  }
 
   return true;
 }

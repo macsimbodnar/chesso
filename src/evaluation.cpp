@@ -173,12 +173,19 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
 //
 // Four until S134, which deleted rook on the seventh: it was the signed sum of
 // eight psqt[ROOK][8..15] columns, below, and its zero weight folded into
-// those squares as +0 (DEC-090).
+// those squares as +0 (DEC-090). Seven since S135, which appended the two
+// bad bishop counts and the two trapped piece counts DEC-258 gave the group.
+// Appended rather than interleaved, so the first three keep the indices every
+// fit and every record since S027 has used for them.
 enum
 {
   PL_BISHOP_PAIR,
   PL_ROOK_OPEN,
   PL_ROOK_HALF_OPEN,
+  PL_BAD_BISHOP,
+  PL_BAD_BISHOP_RAMMED,
+  PL_TRAPPED_MINOR,
+  PL_TRAPPED_ROOK,
   PL_FEATURE_COUNT
 };
 
@@ -285,31 +292,128 @@ enum
 // piece_placement_counts(). Only the sum psqt[rook][8..15] + placement[seventh]
 // was identified, so S134 deleted the feature and folded its weight, zero, into
 // those eight squares (DEC-090). The three left are the real candidates.
-constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0};
-constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0};
+//
+// **S135 added four columns, at zero for the reason the first paragraph
+// gives**: the two bad bishop counts and the two trapped piece counts,
+// defined in evaluation.hpp from CPW's *Bad Bishop* and *Trapped Pieces* and
+// computed in piece_placement_features() below. No number was taken from
+// either page -- the trapped piece page prints penalties, and a published
+// penalty is not even a seed here (DEC-105, DEC-134) -- so all seven start
+// the fit at zero. Not one of the seven is a sum of piece-square columns:
+// each new one is a product or a conjunction of two pieces' squares, which a
+// table indexed by one piece's square cannot express; tools/feature_audit's
+// identity report is what checks that and not this sentence. The seven are
+// screened one term at a time before any of them plays a match (DEC-259) --
+// tools/tuner_groups.hpp `PLACEMENT_TERMS` names the terms.
+constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0};
 constexpr std::array<score_t, PL_FEATURE_COUNT> piece_placement_score =
     pack_scores(piece_placement_mg, piece_placement_eg);
 
-// Stage one sums the board's packed piece-square score and the pawn terms
-// before it takes the halves apart, so that sum is what has to fit 16 bits.
-// Bounded by what load_FEN accepts, not by what a game reaches: at most 16
-// pieces a side, exactly one of them the king, so 32 pieces on the tables and
-// at most 15 pawns, or 15 rooks, a side. Passers add for White and subtract
-// for Black, so all 30 can push one half the same way. Structure and placement
-// enter as White's count minus Black's, two counts of 0 to 15, so 15 bounds
-// each feature. A refit that breaks it fails to compile rather than wrapping
-// one half into the other.
-static constexpr int stage_one_bound = [] {
-  int psqt = 0;
-  for (int type = 0; type < 6; ++type) {
-    psqt = std::max(psqt, largest_weight(psqt_mg[type], psqt_eg[type]));
+// How far one side's count of each placement feature reaches on a board
+// load_FEN accepts, in the order the weights are indexed, for the bound below.
+// The bishop pair is 0 or 1 a side. At most 15 rooks a side. The two bad
+// bishop counts are a sum of bishops on a colour times own pawns on it, and a
+// side's bishops and pawns number at most 15 between them, so they reach 7 x 8
+// = 56. A trapped minor stands on one of six squares (a6, a7, a8, h6, h7, h8
+// for White) and a trapped rook on one of four beside its king's corner, one
+// piece a square. Each enters as White's count minus Black's, two counts from
+// 0 to the reach, so the reach bounds the difference too.
+static constexpr int piece_placement_reach[PL_FEATURE_COUNT] = {1,  15, 15, 56,
+                                                                56, 6,  4};
+
+
+// The largest magnitude in one weight array, one half.
+template <size_t N>
+static constexpr int largest_entry(const int (&weights)[N])
+{
+  int largest = 0;
+  for (size_t i = 0; i < N; ++i) {
+    largest = std::max(largest, (weights[i] < 0) ? -weights[i] : weights[i]);
   }
-  return 32 * psqt + 2 * 15 * largest_weight(passed_pawn_mg, passed_pawn_eg) +
-         PS_FEATURE_COUNT * 15 *
-             largest_weight(pawn_structure_mg, pawn_structure_eg) +
-         PL_FEATURE_COUNT * 15 *
-             largest_weight(piece_placement_mg, piece_placement_eg);
-}();
+  return largest;
+}
+
+
+// How far the piece-square sum can reach in one half. White's pieces add their
+// entries and Black's subtract theirs (eval_add_piece()), and load_FEN accepts
+// at most one king and fifteen other pieces a colour. So White's king and
+// Black's together lie within the king table's highest entry, or 0, less its
+// lowest, or 0; and the fifteen others a side within fifteen times the same
+// spread over the other five tables. The 0s are what keep the bound true for a
+// side with fewer pieces -- every subset make_move passes through on its way
+// from one position to the next included -- and the unreachable pawn squares
+// on ranks 1 and 8 are read as well, which only widens it.
+static constexpr int table_reach(const int (&table)[6][64])
+{
+  int king_high = 0;
+  int king_low = 0;
+  int piece_high = 0;
+  int piece_low = 0;
+
+  for (int square = 0; square < 64; ++square) {
+    king_high = std::max(king_high, table[5][square]);
+    king_low = std::min(king_low, table[5][square]);
+
+    for (int type = 0; type < 5; ++type) {
+      piece_high = std::max(piece_high, table[type][square]);
+      piece_low = std::min(piece_low, table[type][square]);
+    }
+  }
+
+  return (king_high - king_low) + 15 * (piece_high - piece_low);
+}
+
+
+// One half of stage one's packed sum, bounded. Passers add for White and
+// subtract for Black, at most 15 a side, so all 30 can push the half the same
+// way. Structure and placement enter as White's count minus Black's: two
+// counts of 0 to 15 for each structure feature, and each placement feature's
+// reach above.
+static constexpr int stage_one_half(const int (&table)[6][64],
+                                    const int (&passed)[5],
+                                    const int (&structure)[PS_FEATURE_COUNT],
+                                    const int (&placement)[PL_FEATURE_COUNT])
+{
+  int bound = table_reach(table) + 2 * 15 * largest_entry(passed) +
+              PS_FEATURE_COUNT * 15 * largest_entry(structure);
+
+  for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
+    const int weight = (placement[f] < 0) ? -placement[f] : placement[f];
+    bound += piece_placement_reach[f] * weight;
+  }
+
+  return bound;
+}
+
+
+// Stage one sums the board's packed piece-square score and the pawn terms
+// before it takes the halves apart, so that sum is what has to fit 16 bits,
+// each half on its own. Bounded by what load_FEN accepts, not by what a game
+// reaches. A refit that breaks it fails to compile rather than wrapping one
+// half into the other.
+//
+// S135 tightened it, and only this check reads it. Until S135 the tables
+// were bounded by 32 times the largest entry of either half -- every piece
+// on the king table's top square, 26912 at S134's weights -- which left about
+// 1535 of the 32767 for every placement weight times its reach. Read one half
+// at a time and by the spread a king and fifteen pieces a side can actually
+// sum to, S134's tables bound at 17085 in the middlegame and 6394 in the
+// endgame, and S083's, which ship, at 10930 and 7785: with the pawn terms
+// 12565 and 12165, 20202 and 20602 of room, so a fit of the seven placement
+// weights has it. The bound is still a worst case over boards no game
+// reaches -- fifteen queens against fifteen bishops -- and still a proof.
+// adocs/data/S135_screen.py's `headroom` repeats this arithmetic for a fitted
+// header, so a fit that would fail the assert is refused before it is pasted.
+static constexpr int stage_one_bound =
+    std::max(stage_one_half(psqt_mg,
+                            passed_pawn_mg,
+                            pawn_structure_mg,
+                            piece_placement_mg),
+             stage_one_half(psqt_eg,
+                            passed_pawn_eg,
+                            pawn_structure_eg,
+                            piece_placement_eg));
 static_assert(stage_one_bound <= 32767,
               "stage one's packed sum can overflow a 16-bit half");
 
@@ -351,7 +455,126 @@ static inline bb_t neighbour_files(bb_t squares)
 }
 
 
-// The three piece placement counts per side, WHITE first, exactly as
+// One of the board's two square colours: the squares whose row and file sum
+// to an even number, a8 and h1 among them. Which colour it is does not matter
+// to the bad bishop counts, which ask only whether a bishop and a pawn share
+// one; the complement is the other colour.
+static constexpr bb_t one_colour = [] {
+  bb_t squares = 0;
+  for (int square = 0; square < 64; ++square) {
+    if ((((square >> 3) + (square & 7)) & 1) == 0) {
+      squares |= BB_1 << square;
+    }
+  }
+  return squares;
+}();
+
+
+// Every own pawn on each bishop's colour, summed over the bishops: the bishops
+// on one colour times the pawns on it, and the same for the other colour. Six
+// popcounts and no loop, so three bishops off a promotion cost what one does.
+// `pawns` is all of a side's pawns for PL_BAD_BISHOP and the rammed ones alone
+// for PL_BAD_BISHOP_RAMMED.
+static inline int pawns_on_bishop_colour(bb_t bishops, bb_t pawns)
+{
+  return count_bits(bishops & one_colour) * count_bits(pawns & one_colour) +
+         count_bits(bishops & ~one_colour) * count_bits(pawns & ~one_colour);
+}
+
+
+// A square of White's trapped piece patterns, or for Black the same square
+// with its rank mirrored, rank r to 9 - r -- which is xor 56 in this indexing,
+// as eval_add_piece() mirrors Black's table squares. evaluation.hpp names each
+// pattern by White's squares; this is the one place Black's are derived.
+template <color_t colour>
+static constexpr bb_t pattern_square(int square)
+{ return BB_1 << ((colour == WHITE) ? square : (square ^ 56)); }
+
+
+// Own knights and bishops on one of the trapped minor patterns, each piece once
+// however many patterns it meets. CPW *Trapped Pieces* gives the patterns as
+// White's on the h side; the a side is their mirror across the d and e files,
+// so the feature does not prefer one wing.
+//
+// The trap squares are built from the enemy pawns and then intersected with
+// the pieces, rather than asked per piece, so a knight on h7 that meets both
+// of its patterns is one bit and counts once. The early return is for the
+// common case: no own minor on any of the six squares a pattern can name, and
+// then no pawn is looked at.
+template <color_t colour>
+static inline int trapped_minor_count(const board_t* board)
+{
+  const bb_t knights =
+      board->bitboards[(colour == WHITE) ? W_KNIGHT : B_KNIGHT];
+  const bb_t bishops =
+      board->bitboards[(colour == WHITE) ? W_BISHOP : B_BISHOP];
+
+  constexpr bb_t knight_squares =
+      pattern_square<colour>(a8) | pattern_square<colour>(h8) |
+      pattern_square<colour>(a7) | pattern_square<colour>(h7);
+  constexpr bb_t bishop_squares =
+      pattern_square<colour>(a7) | pattern_square<colour>(h7) |
+      pattern_square<colour>(a6) | pattern_square<colour>(h6);
+
+  if (((knights & knight_squares) | (bishops & bishop_squares)) == 0) {
+    return 0;
+  }
+
+  // The enemy's pawns, which are what every pattern names.
+  const bb_t pawns = board->bitboards[(colour == WHITE) ? B_PAWN : W_PAWN];
+
+  const auto all = [pawns](bb_t need) { return (pawns & need) == need; };
+  const auto any = [pawns](bb_t need) { return (pawns & need) != 0; };
+  const auto at = [](int square) { return pattern_square<colour>(square); };
+
+  bb_t knight_traps = 0;
+
+  // A knight on h8 with an enemy pawn on h7 or on f7, and its mirror on a8.
+  if (any(at(h7) | at(f7))) { knight_traps |= at(h8); }
+  if (any(at(a7) | at(c7))) { knight_traps |= at(a8); }
+
+  // A knight on h7 with enemy pawns on g7 and h6, or on g7 and f6.
+  if (all(at(g7)) && any(at(h6) | at(f6))) { knight_traps |= at(h7); }
+  if (all(at(b7)) && any(at(a6) | at(c6))) { knight_traps |= at(a7); }
+
+  bb_t bishop_traps = 0;
+
+  // A bishop on h7 with enemy pawns on f7 and g6; on h6 with them on g5 and
+  // f6. Both pawns, in each.
+  if (all(at(f7) | at(g6))) { bishop_traps |= at(h7); }
+  if (all(at(c7) | at(b6))) { bishop_traps |= at(a7); }
+  if (all(at(g5) | at(f6))) { bishop_traps |= at(h6); }
+  if (all(at(b5) | at(c6))) { bishop_traps |= at(a6); }
+
+  return count_bits(knights & knight_traps) +
+         count_bits(bishops & bishop_traps);
+}
+
+
+// Own rooks hemmed in by their own king: on h1, g1, h2 or g2 while the king
+// stands on f1 or g1, or on the mirror squares a1, b1, a2, b2 while it stands
+// on c1 or b1 -- White's squares, Black's mirrored. One king, so at most one
+// corner is live at a time.
+template <color_t colour>
+static inline int trapped_rook_count(const board_t* board)
+{
+  const bb_t king = board->bitboards[(colour == WHITE) ? W_KING : B_KING];
+  const bb_t rooks = board->bitboards[(colour == WHITE) ? W_ROOK : B_ROOK];
+
+  const auto at = [](int square) { return pattern_square<colour>(square); };
+
+  const bb_t king_corner = ((king & (at(f1) | at(g1))) != 0)
+                               ? (at(h1) | at(g1) | at(h2) | at(g2))
+                               : 0;
+  const bb_t queen_corner = ((king & (at(c1) | at(b1))) != 0)
+                                ? (at(a1) | at(b1) | at(a2) | at(b2))
+                                : 0;
+
+  return count_bits(rooks & (king_corner | queen_corner));
+}
+
+
+// The seven piece placement counts per side, WHITE first, exactly as
 // evaluation.hpp defines them.
 //
 // `white_pawn_files` and `black_pawn_files` are whole-file sets -- every square
@@ -362,6 +585,18 @@ static inline bb_t neighbour_files(bb_t squares)
 //
 // Both file sets cover the whole file, so intersecting a rook with one asks
 // only about the rook's file and the rook's rank drops out of it.
+//
+// **The four S135 added read pieces, pawns and the king square and nothing
+// else** -- no occupancy and no attack set -- so they sit here, in stage one
+// with the three before them, for the reason the comment over
+// evaluate_cheap() gives for those: they need nothing the expensive stage
+// builds, so nothing about them belongs behind the lazy shortcut and its
+// clamp. They are computed from the bitboards at every evaluation, as the
+// pawn terms are, and that is not the recomputation INV-4 forbids: INV-4 holds
+// the accumulators make_move maintains -- material, the tables, the phase --
+// and none of these is a sum over pieces that make_move could keep. Each is a
+// product or a conjunction across two piece sets, one of them usually the
+// other side's pawns, so a move by either side changes it with no O(1) delta.
 static inline void piece_placement_features(const board_t* board,
                                             bb_t white_pawn_files,
                                             bb_t black_pawn_files,
@@ -369,22 +604,44 @@ static inline void piece_placement_features(const board_t* board,
 {
   const bb_t white_rooks = board->bitboards[W_ROOK];
   const bb_t black_rooks = board->bitboards[B_ROOK];
+  const bb_t white_pawns = board->bitboards[W_PAWN];
+  const bb_t black_pawns = board->bitboards[B_PAWN];
 
   // Files with no pawn of either colour. Pieces do not close a file, only
   // pawns do, which is why nothing but the two pawn sets is read here.
   const bb_t open_files = ~(white_pawn_files | black_pawn_files);
+
+  // Rammed: the square directly ahead holds an enemy pawn. Ahead is toward
+  // index 0 for White, so a Black pawn there sits eight below the White one's
+  // index and the shift by eight brings it onto it; mirrored for Black. Only a
+  // pawn rams -- a piece in front can move away, and the bad bishop page's
+  // point is that this restriction is semi-permanent.
+  const bb_t white_rammed = white_pawns & (black_pawns << 8);
+  const bb_t black_rammed = black_pawns & (white_pawns >> 8);
 
   features[WHITE][PL_BISHOP_PAIR] =
       (count_bits(board->bitboards[W_BISHOP]) >= 2) ? 1 : 0;
   features[WHITE][PL_ROOK_OPEN] = count_bits(white_rooks & open_files);
   features[WHITE][PL_ROOK_HALF_OPEN] =
       count_bits(white_rooks & ~white_pawn_files & black_pawn_files);
+  features[WHITE][PL_BAD_BISHOP] =
+      pawns_on_bishop_colour(board->bitboards[W_BISHOP], white_pawns);
+  features[WHITE][PL_BAD_BISHOP_RAMMED] =
+      pawns_on_bishop_colour(board->bitboards[W_BISHOP], white_rammed);
+  features[WHITE][PL_TRAPPED_MINOR] = trapped_minor_count<WHITE>(board);
+  features[WHITE][PL_TRAPPED_ROOK] = trapped_rook_count<WHITE>(board);
 
   features[BLACK][PL_BISHOP_PAIR] =
       (count_bits(board->bitboards[B_BISHOP]) >= 2) ? 1 : 0;
   features[BLACK][PL_ROOK_OPEN] = count_bits(black_rooks & open_files);
   features[BLACK][PL_ROOK_HALF_OPEN] =
       count_bits(black_rooks & ~black_pawn_files & white_pawn_files);
+  features[BLACK][PL_BAD_BISHOP] =
+      pawns_on_bishop_colour(board->bitboards[B_BISHOP], black_pawns);
+  features[BLACK][PL_BAD_BISHOP_RAMMED] =
+      pawns_on_bishop_colour(board->bitboards[B_BISHOP], black_rammed);
+  features[BLACK][PL_TRAPPED_MINOR] = trapped_minor_count<BLACK>(board);
+  features[BLACK][PL_TRAPPED_ROOK] = trapped_rook_count<BLACK>(board);
 }
 
 
@@ -665,7 +922,7 @@ void pawn_structure_counts(const board_t* board, int out[2][3])
 // pieces rather than pawns, and still comes through here: the file sets its
 // rook features need are the pawn fills, and a separate entry point would be a
 // second implementation free to drift from the one the search runs.
-void piece_placement_counts(const board_t* board, int out[2][3])
+void piece_placement_counts(const board_t* board, int out[2][PL_FEATURE_COUNT])
 {
   score_t score = 0;
   int passed[2][5];
@@ -793,7 +1050,9 @@ static void trace_accumulators(const board_t* board)
 // would be in stage one whatever the clamp did: it reads no occupancy and needs
 // no attack set, so nothing about it belongs behind the shortcut. What it costs
 // there is 3.1 to 4.0 % of a depth 14 search, measured at forced weights and
-// written out over piece_placement_mg.
+// written out over piece_placement_mg -- for the features it had before S135;
+// the four S135 added read no occupancy either and are priced by S135's own
+// forced-weight measurement.
 //
 // The accumulators are White relative, so the sum is negated once at the end
 // for Black. Doing it here rather than at every call site is what keeps a later

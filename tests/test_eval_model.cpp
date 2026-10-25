@@ -75,11 +75,13 @@ static const char* const
         "isolated", "doubled", "backward"};
 
 
-// The same for the three piece placement counts, in the order the weights are
-// indexed.
+// The same for the seven piece placement counts, in the order the weights are
+// indexed; the last four are S135's.
 static const char* const
     piece_placement_feature_names[walked_counts::PIECE_PLACEMENT_COUNT] = {
-        "bishop pair", "rook on an open file", "rook on a half open file"};
+        "bishop pair", "rook on an open file", "rook on a half open file",
+        "bad bishop",  "bad bishop rammed",    "trapped minor",
+        "trapped rook"};
 
 
 // The curated corpus moved to tests/test_eval_positions.hpp at S100 so that
@@ -203,13 +205,13 @@ struct piece_placement_case_t
 };
 
 
-// The engine indexes its counts with a literal 3, the walk with a constant
+// The engine indexes its counts with a literal 7, the walk with a constant
 // taken from the width of the engine's own weight array. Nothing forces those
 // to be the same number, and if they ever stop being one the loops below would
 // read off the end of a row rather than fail. Four until S134 deleted rook on
-// the seventh (DEC-090).
-static_assert(walked_counts::PIECE_PLACEMENT_COUNT == 3,
-              "the engine's piece_placement_counts() rows are three wide");
+// the seventh (DEC-090), three until S135 added four.
+static_assert(walked_counts::PIECE_PLACEMENT_COUNT == 7,
+              "the engine's piece_placement_counts() rows are seven wide");
 
 
 TEST_SUITE("eval counts: the engine against the walk and by hand")
@@ -789,6 +791,15 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
   // neither open nor half-open however many enemy pawns stand there, that a
   // piece does not close a file, and that the seventh rank, a feature until
   // S134, is nothing to this term any more.
+  //
+  // The rows written three wide are the cases from before S135, and C++ fills
+  // the four columns S135 added with zeros: none of those placements has a
+  // bishop beside an own pawn, a minor on a trap square or a rook beside its
+  // king's corner. The S135 cases below carry all seven. Their answers were
+  // checked by a second piece of code written from evaluation.hpp's
+  // definitions, by (file, rank) and not by bitboard (S135's step file), and
+  // each case says the arithmetic: a square's colour is the parity of its file
+  // plus its rank, a1 odd, so c1 and b2 and d2 share one and c2 does not.
   TEST_CASE_FIXTURE(counts_fixture_t,
                     "the walk and the engine count piece placement by hand")
   {
@@ -866,6 +877,110 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
          "White has the pair, Black a rook on an open file",
          {1, 0, 0},
          {0, 1, 0}},
+        // S135: bad bishop. Own pawns on the bishop's colour, per bishop.
+        {"4k3/8/8/8/8/8/1PPP4/2B1K3",
+         "the bishop on c1 counts b2 and d2, its colour, and not c2: 1 x 2",
+         {0, 0, 0, 2, 0, 0, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"2b1k3/1ppp4/8/8/8/8/8/4K3",
+         "the same for Black: c8 counts b7 and d7 and not c7",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 0, 0, 2, 0, 0, 0}},
+        {"4k3/8/8/8/8/4B3/1P6/2B1K3",
+         "two bishops on one colour each count its pawn: 2 x 1",
+         {1, 0, 0, 2, 0, 0, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        // Rammed: the square ahead holds an enemy pawn, and only a pawn rams.
+        {"4k3/8/8/8/1p6/1P6/8/3BK3",
+         "b3 is on d1's colour and rammed by b4: counted in both",
+         {0, 0, 0, 1, 1, 0, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"3bk3/8/1p6/1P6/8/8/8/4K3",
+         "the same for Black: b6 on d8's colour, rammed by b5",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 0, 0, 1, 1, 0, 0}},
+        {"4k3/8/8/8/1n6/1P6/8/3BK3",
+         "a knight in front of b3 does not ram it",
+         {0, 0, 0, 1, 0, 0, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        // Trapped minor, each pattern evaluation.hpp lists.
+        {"4k2N/7p/8/8/8/8/8/4K3",
+         "a knight on h8 with an enemy pawn on h7",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k2N/5p2/8/8/8/8/8/4K3",
+         "a knight on h8 with an enemy pawn on f7 instead",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/6pN/7p/8/8/8/8/4K3",
+         "a knight on h7 with enemy pawns on g7 and h6",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/6pN/8/8/8/8/8/4K3",
+         "a knight on h7 with g7 alone is not trapped",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/6pN/5p1p/8/8/8/8/4K3",
+         "a knight meeting both its h7 patterns counts once",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/5p1B/6p1/8/8/8/8/4K3",
+         "a bishop on h7 with enemy pawns on f7 and g6",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/B1p5/1p6/8/8/8/8/4K3",
+         "its mirror on the a side: a7 with c7 and b6",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/8/5p1B/6p1/8/8/8/4K3",
+         "a bishop on h6 with enemy pawns on g5 and f6",
+         {0, 0, 0, 0, 0, 1, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/6pB/7p/8/8/8/8/4K3",
+         "a bishop is not held to a knight's h7 pattern",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/7P/4K2n",
+         "Black's knight on h1 with a White pawn on h2, the h8 one mirrored",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 0, 0, 0, 0, 1, 0}},
+        {"4k3/8/8/8/8/6P1/5P1b/4K3",
+         "Black's bishop on h2 with White pawns on f2 and g3",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 0, 0, 0, 0, 1, 0}},
+        // Trapped rook: the corner beside the king; R3K2R above is the king
+        // that has not moved, which shuts nothing in.
+        {"4k3/8/8/8/8/8/8/5K1R",
+         "a rook on h1 behind its king on f1, on an open file as well",
+         {0, 1, 0, 0, 0, 0, 1},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/6R1/6K1",
+         "a rook on g2 beside its king on g1",
+         {0, 1, 0, 0, 0, 0, 1},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/8/R1K5",
+         "the queen side: a rook on a1 behind its king on c1",
+         {0, 1, 0, 0, 0, 0, 1},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"4k3/8/8/8/8/8/7R/5K1R",
+         "two rooks shut in count two",
+         {0, 2, 0, 0, 0, 0, 2},
+         {0, 0, 0, 0, 0, 0, 0}},
+        {"5k1r/8/8/8/8/8/8/4K3",
+         "Black's rook on h8 behind its king on f8",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 1, 0, 0, 0, 0, 1}},
+        {"1k6/r7/8/8/8/8/8/4K3",
+         "Black's rook on a7 beside its king on b8",
+         {0, 0, 0, 0, 0, 0, 0},
+         {0, 1, 0, 0, 0, 0, 1}},
+        // All four at once and both colours, so a lost sign shows: White's
+        // knight h8 and rook h1 trapped, g2 on e2's colour; Black's c8 counts
+        // b7, d5 and h7, and d5 is rammed by d4.
+        {"r1b1k2N/pp5p/8/3p4/3P4/8/4BPPP/6KR",
+         "both colours, every S135 count",
+         {0, 0, 0, 1, 0, 1, 1},
+         {0, 0, 0, 3, 1, 0, 0}},
     };
 
     int positive[walked_counts::PIECE_PLACEMENT_COUNT] = {};

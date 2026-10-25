@@ -165,6 +165,23 @@ inline const std::vector<std::string> positions = {
     "r5k1/6pp/8/8/8/8/1p4PP/R5K1 b - - 0 1",
     "4k2r/8/1P6/8/3P4/8/6pp/4K2R w - - 0 1",
     "4k2r/6PP/8/4p3/8/1p6/8/4K2R b - - 0 1",
+    // S135's four piece placement counts, added because the thirty-four above
+    // never trap a minor or hem a rook in, and give Black the larger rammed
+    // count nowhere. Three positions and each one's colour-mirror, so every
+    // count reads both ways round, at phases 7, 6 and 5 so each count's
+    // middlegame and endgame weights are told apart and both get a gradient:
+    // a knight on h8 beside an enemy h7 pawn with a rook on h1 behind its own
+    // king on g1, against more rammed pawns on Black's bishop's colour; a rook
+    // on g1 beside its king on f1 alone; a bishop on a7 between enemy pawns on
+    // b6 and c7 alone. Each count, and that each position is valid, was
+    // checked by code written from evaluation.hpp's definitions and by
+    // python-chess (S135's step file), not read off the board.
+    "r1b1k2N/pp5p/8/3p4/3P4/8/4BPPP/6KR w - - 0 1",
+    "6kr/4bppp/8/3p4/3P4/8/PP5P/R1B1K2n b - - 0 1",
+    "5rk1/5ppp/2n5/8/8/8/5PPP/2B2KR1 w - - 0 1",
+    "2b2kr1/5ppp/8/8/8/2N5/5PPP/5RK1 b - - 0 1",
+    "3r2k1/B1p2ppp/1p2b3/8/8/5N2/5PPP/6K1 w - - 0 1",
+    "6k1/5ppp/5n2/8/8/1P2B3/b1P2PPP/3R2K1 b - - 0 1",
 };
 
 }  // namespace test_eval_positions

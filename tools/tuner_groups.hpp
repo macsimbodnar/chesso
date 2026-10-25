@@ -33,6 +33,8 @@ using tuner_layout::MATERIAL_COUNT;
 using tuner_layout::MG_BASE;
 using tuner_layout::MOB_MG_BASE;
 using tuner_layout::PARAM_COUNT;
+using tuner_layout::PIECE_PLACEMENT_COUNT;
+using tuner_layout::PL_EG_BASE;
 using tuner_layout::PL_MG_BASE;
 using tuner_layout::PP_MG_BASE;
 using tuner_layout::PS_MG_BASE;
@@ -42,6 +44,54 @@ using tuner_layout::TEMPO_MG_BASE;
 inline constexpr const char* GROUP_LIST =
     "all, material, psqt, mobility, king_safety, passed_pawns, "
     "pawn_structure, piece_placement, tempo";
+
+
+// The piece placement group's terms, S135, each a name `--only` and `--freeze`
+// take beside the groups above. DEC-259's screen fits every term of a family
+// alone with every other constant frozen, and then the terms that passed
+// together: `--only piece_placement.bad_bishop` for one term, and `--only
+// piece_placement --freeze piece_placement.trapped` for the group without
+// one. A term is one or more adjacent columns of the group, middlegame and
+// endgame both, so the two bad bishop counts are screened as one term and the
+// two trapped piece counts as another.
+//
+// Not in GROUP_LIST, on purpose: those partition the vector and
+// tests/test_tuner_groups.cpp holds them to it, and a term is a part of one of
+// them, so it overlaps the group it belongs to by construction. The same file
+// holds the terms to their own partition of the group instead.
+//
+// The columns are numbered by hand. The engine's own enum is inside
+// src/evaluation.cpp, where no tool can include it; its order is stated in
+// prose over piece_placement_mg in src/evaluation.hpp, and the assert below
+// ties the widths to the engine's arrays through tools/tuner_layout.hpp.
+struct placement_term_t
+{
+  const char* name;
+  size_t first;  // the term's first column within the group
+  size_t width;  // how many adjacent columns it holds
+};
+
+inline constexpr placement_term_t PLACEMENT_TERMS[] = {
+    {"piece_placement.bishop_pair", 0, 1},
+    {"piece_placement.rook_open", 1, 1},
+    {"piece_placement.rook_half_open", 2, 1},
+    {"piece_placement.bad_bishop", 3, 2},
+    {"piece_placement.trapped", 5, 2},
+};
+
+inline constexpr size_t PLACEMENT_TERM_COUNT =
+    sizeof(PLACEMENT_TERMS) / sizeof(PLACEMENT_TERMS[0]);
+
+static_assert(PLACEMENT_TERMS[PLACEMENT_TERM_COUNT - 1].first +
+                      PLACEMENT_TERMS[PLACEMENT_TERM_COUNT - 1].width ==
+                  PIECE_PLACEMENT_COUNT,
+              "the engine's piece placement arrays changed width: name the "
+              "terms here again");
+
+inline constexpr const char* PLACEMENT_TERM_LIST =
+    "piece_placement.bishop_pair, piece_placement.rook_open, "
+    "piece_placement.rook_half_open, piece_placement.bad_bishop, "
+    "piece_placement.trapped";
 
 
 // Marks the parameters a --only group leaves free; the rest keep the value the
@@ -56,6 +106,22 @@ inline constexpr const char* GROUP_LIST =
 // vector out that way.
 inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
 {
+  // A piece placement term, S135: its columns in both halves of the group,
+  // which are two ranges and not one, so it is handled before the single-range
+  // groups below.
+  for (const placement_term_t& term : PLACEMENT_TERMS) {
+    if (group != term.name) { continue; }
+
+    mask->assign(PARAM_COUNT, 0);
+
+    for (size_t i = 0; i < term.width; ++i) {
+      (*mask)[PL_MG_BASE + term.first + i] = 1;
+      (*mask)[PL_EG_BASE + term.first + i] = 1;
+    }
+
+    return true;
+  }
+
   size_t first = 0;
   size_t last = 0;
 
@@ -125,9 +191,10 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
 //
 // Why freeze during the fit rather than zero two groups afterwards: with the
 // two groups held, the remaining 815 absorb what they would have taken (817 at
-// S065, before S134 narrowed the vector to 823). Fitting all 823 and then
-// zeroing the two leaves those 815 fitted against values that are no longer
-// there. DEC-057.
+// S065, before S134 narrowed the vector to 823; still 815 since S135 widened
+// it to 831, the four columns it added being piece placement's). Fitting all
+// of them and then zeroing the two leaves those 815 fitted against values
+// that are no longer there. DEC-057.
 inline bool freeze_mask(const std::string& groups, std::vector<uint8_t>* mask)
 {
   if (mask->size() != PARAM_COUNT) { return false; }

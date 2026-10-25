@@ -483,7 +483,7 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 
 
 // Jon Dart's check. gradient() against the central difference of the error it
-// descends, for every parameter at once -- all 823.
+// descends, for every parameter at once -- all 823 until S135, 831 since.
 //
 // h = 0.01 is S100's measurement over this fixture, worst relative error
 // across all 827 parameters of the layout before S134:
@@ -493,7 +493,9 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 //
 // the O(h^2) truncation law down to about 0.005, where the subtraction's
 // cancellation takes over. On the trace path at S262, all 823: 4.87e-08, at
-// parameter 774, the bishop's middlegame mobility weight. `-s` prints it.
+// parameter 774, the bishop's middlegame mobility weight; 5.87e-08 there at
+// S083's constants, and 3.99e-07, the same weight, all 831, since S135's six
+// fixture rows (adocs/data/S135_preconditions.txt). `-s` prints it.
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -591,7 +593,10 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // is farthest from it; at S076's weights it answers S262's +40.
   // At S083's weights: +100, eight rows bound, the farthest at 434.5, the
   // nearest other at 161.0, every row 23 from the kink, finite differences
-  // 1.09e-7. Re-run it whenever the constants or the fixture move; the
+  // 1.09e-7. On S135's fixture, six rows more (40) and 831 parameters, it
+  // answers +100 again with the same eight rows, 434.5, 161.0 and 23, finite
+  // differences 6.0e-8 (adocs/data/S135_preconditions.txt). Re-run it
+  // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
   // push saturates the sigmoid everywhere, which makes the finite difference
   // itself unreliable.
@@ -891,12 +896,16 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // the smallest of the seven plain-update shifts is 0.1178 a square under
     // Adam, the rook's, and 0.0587 under AdaGrad, psqt_eg[king]'s; the largest
     // 4.0181, the knight's, and 4.5680, the pawn's. Every held shift is at
-    // most 1.13e-14 (`adocs/data/S083s_gauge_walk.txt`). The 0.1 of before
+    // most 1.13e-14 (`adocs/data/S083s_gauge_walk.txt`). On S135's fixture,
+    // six rows more (44 with the four gauge rows), the smallest is 0.3663
+    // under Adam and 0.0437 under AdaGrad, both the rook's, the largest 4.4905,
+    // the bishop's, and 5.0396, the pawn's, every hold at most 1.38e-14
+    // (`adocs/data/S135_preconditions.txt`). The 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
     // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits
-    // seven orders of magnitude above the hold's 1e-9 and a factor of about
-    // six under the smallest walk, so the two runs stay told apart. Re-read
+    // seven orders of magnitude above the hold's 1e-9 and a factor of four or
+    // more under the smallest walk, so the two runs stay told apart. Re-read
     // with adocs/data/S083_tuner_preconditions.cpp `walk`, which runs this
     // case's descent and prints every direction's two shifts against this
     // floor, if the constants or the fixture move. A revert of S083 puts 0.1
@@ -983,13 +992,24 @@ TEST_CASE("a planted vector comes back through the trace path")
         {PP_EG_BASE + 2, 30},
         {PP_EG_BASE + 3, 45},
         {PP_EG_BASE + 4, 70}}},
+      // S135's four columns planted beside S100's three, feature_audit's
+      // numbers for them: the group the fit frees is seven wide now, and a
+      // column freed and not planted is one whose recovery nothing checks.
       {"piece_placement",
        {{PL_MG_BASE + 0, 28},
         {PL_MG_BASE + 1, 17},
         {PL_MG_BASE + 2, 9},
+        {PL_MG_BASE + 3, -3},
+        {PL_MG_BASE + 4, -6},
+        {PL_MG_BASE + 5, -31},
+        {PL_MG_BASE + 6, -14},
         {PL_EG_BASE + 0, 41},
         {PL_EG_BASE + 1, 8},
-        {PL_EG_BASE + 2, 5}}},
+        {PL_EG_BASE + 2, 5},
+        {PL_EG_BASE + 3, -7},
+        {PL_EG_BASE + 4, -4},
+        {PL_EG_BASE + 5, -26},
+        {PL_EG_BASE + 6, -9}}},
       {"tempo", {{TEMPO_MG_BASE, 23}, {TEMPO_EG_BASE, 12}}},
   };
 

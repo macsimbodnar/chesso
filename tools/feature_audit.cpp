@@ -124,17 +124,22 @@ using tuner_layout::TEMPO_EG_BASE;
 using tuner_layout::TEMPO_MG_BASE;
 using tuner_trace::dataset_t;
 
-// The three piece placement features in the order their weights are indexed,
+// The seven piece placement features in the order their weights are indexed,
 // which src/evaluation.hpp states in prose over the arrays. Numbered by hand:
 // the engine's own enum sits inside src/evaluation.cpp, where no tool can
 // include it, so the assert below ties the count to the engine's arrays
 // (through tools/tuner_layout.hpp) and nothing ties the order but this
-// comment. A reordered engine enum mislabels the collinearity report's three
-// rows; it changes no rank and no identity.
+// comment. A reordered engine enum mislabels the collinearity report's
+// placement rows; it changes no rank and no identity. The last four are
+// S135's.
 constexpr size_t PL_BISHOP_PAIR = 0;
 constexpr size_t PL_ROOK_OPEN = 1;
 constexpr size_t PL_ROOK_HALF_OPEN = 2;
-static_assert(PL_ROOK_HALF_OPEN + 1 == PIECE_PLACEMENT_COUNT,
+constexpr size_t PL_BAD_BISHOP = 3;
+constexpr size_t PL_BAD_BISHOP_RAMMED = 4;
+constexpr size_t PL_TRAPPED_MINOR = 5;
+constexpr size_t PL_TRAPPED_ROOK = 6;
+static_assert(PL_TRAPPED_ROOK + 1 == PIECE_PLACEMENT_COUNT,
               "the engine's piece placement arrays changed width: name the "
               "features here again");
 
@@ -142,13 +147,16 @@ static_assert(PL_ROOK_HALF_OPEN + 1 == PIECE_PLACEMENT_COUNT,
 // TERM_PSQT entry, Black's squares mirrored the way eval_add_piece() mirrors
 // them.
 constexpr size_t PAWN_TYPE = 0;
+constexpr size_t KNIGHT_TYPE = 1;
 constexpr size_t BISHOP_TYPE = 2;
 constexpr size_t ROOK_TYPE = 3;
+constexpr size_t KING_TYPE = 5;
 
 // The piece placement features and the passer buckets, in the order their
 // weights are indexed, for the reports below.
 const char* const PLACEMENT_NAMES[PIECE_PLACEMENT_COUNT] = {
-    "bishop pair", "rook open", "rook half-open"};
+    "bishop pair",   "rook open",     "rook half-open", "bad bishop",
+    "bishop rammed", "trapped minor", "trapped rook"};
 const char* const PASSER_NAMES[PASSED_PAWN_COUNT] = {
     "passer bucket 0", "passer bucket 1", "passer bucket 2", "passer bucket 3",
     "passer bucket 4"};
@@ -1394,6 +1402,21 @@ int main(int argc, char** argv)
         {"rook half-open",
          {ROOK_TYPE, PAWN_TYPE},
          feature_of(eval_trace::TERM_PIECE_PLACEMENT, PL_ROOK_HALF_OPEN)},
+        // S135's four, each against the tables of every piece type it names:
+        // a bishop and its pawns; a trapped knight or bishop and the enemy
+        // pawns that trap it; a rook and its king.
+        {"bad bishop",
+         {BISHOP_TYPE, PAWN_TYPE},
+         feature_of(eval_trace::TERM_PIECE_PLACEMENT, PL_BAD_BISHOP)},
+        {"bishop rammed",
+         {BISHOP_TYPE, PAWN_TYPE},
+         feature_of(eval_trace::TERM_PIECE_PLACEMENT, PL_BAD_BISHOP_RAMMED)},
+        {"trapped minor",
+         {KNIGHT_TYPE, BISHOP_TYPE, PAWN_TYPE},
+         feature_of(eval_trace::TERM_PIECE_PLACEMENT, PL_TRAPPED_MINOR)},
+        {"trapped rook",
+         {ROOK_TYPE, KING_TYPE},
+         feature_of(eval_trace::TERM_PIECE_PLACEMENT, PL_TRAPPED_ROOK)},
     };
 
     for (size_t i = 0; i < PASSED_PAWN_COUNT; ++i) {
@@ -1434,8 +1457,10 @@ int main(int argc, char** argv)
 
         if (!right_hand.empty()) { right_hand += "+"; }
         right_hand += (type == PAWN_TYPE)     ? "pawn"
+                      : (type == KNIGHT_TYPE) ? "knight"
                       : (type == BISHOP_TYPE) ? "bishop"
-                                              : "rook";
+                      : (type == ROOK_TYPE)   ? "rook"
+                                              : "king";
       }
 
       printf("%-18s R^2 %.6f  on %s psqt, %zu columns\n", target.name,
@@ -1459,10 +1484,12 @@ int main(int argc, char** argv)
                                                                 48};
     static const double planted_passed_eg[PASSED_PAWN_COUNT] = {11, 19, 30, 45,
                                                                 70};
-    static const double planted_placement_mg[PIECE_PLACEMENT_COUNT] = {28, 17,
-                                                                       9};
-    static const double planted_placement_eg[PIECE_PLACEMENT_COUNT] = {41, 8,
-                                                                       5};
+    // S135's four columns planted beside S100's three, so a recovery run on
+    // the widened group has a number to get back for every column it frees.
+    static const double planted_placement_mg[PIECE_PLACEMENT_COUNT] = {
+        28, 17, 9, -3, -6, -31, -14};
+    static const double planted_placement_eg[PIECE_PLACEMENT_COUNT] = {
+        41, 8, 5, -7, -4, -26, -9};
     static const double planted_tempo_mg = 23;
     static const double planted_tempo_eg = 12;
 
@@ -1515,12 +1542,16 @@ int main(int argc, char** argv)
              planted_passed_eg[3], planted_passed_eg[4]);
     }
     if (plant_placement) {
-      printf("plant: piece_placement_mg {%g, %g, %g}\n",
-             planted_placement_mg[0], planted_placement_mg[1],
-             planted_placement_mg[2]);
-      printf("plant: piece_placement_eg {%g, %g, %g}\n",
-             planted_placement_eg[0], planted_placement_eg[1],
-             planted_placement_eg[2]);
+      for (const bool mg : {true, false}) {
+        const double* planted =
+            mg ? planted_placement_mg : planted_placement_eg;
+
+        printf("plant: piece_placement_%s {", mg ? "mg" : "eg");
+        for (size_t i = 0; i < PIECE_PLACEMENT_COUNT; ++i) {
+          printf("%s%g", (i == 0) ? "" : ", ", planted[i]);
+        }
+        printf("}\n");
+      }
     }
     if (plant_tempo) {
       printf("plant: tempo_mg %g, tempo_eg %g\n", planted_tempo_mg,

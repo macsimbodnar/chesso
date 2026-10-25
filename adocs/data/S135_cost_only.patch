@@ -1,0 +1,37 @@
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -835,6 +835,34 @@
+     EVAL_TRACE(TERM_PIECE_PLACEMENT, f, difference);
+   }
+ 
++  // S135's cost-only build, never committed (adocs/data/S135_cost.sh applies
++  // this patch to a throwaway tree). The placement counts weighed at forced
++  // non-zero weights and the sum thrown away behind an asm barrier, so the
++  // compiler has to compute them and the score -- and with it every node the
++  // search visits -- is the shipping build's (DEC-047). S135_COST_MASK picks
++  // the columns: bit f forces column f, 0x7f all seven, 0x07 the three before
++  // S135, 0x78 S135's four. A column left at zero is deleted as it ships.
++  {
++#ifndef S135_COST_MASK
++#define S135_COST_MASK 0x7f
++#endif
++    static constexpr int forced[PL_FEATURE_COUNT] = {
++        ((S135_COST_MASK >> 0) & 1) ? 3 : 0,
++        ((S135_COST_MASK >> 1) & 1) ? 5 : 0,
++        ((S135_COST_MASK >> 2) & 1) ? 7 : 0,
++        ((S135_COST_MASK >> 3) & 1) ? 9 : 0,
++        ((S135_COST_MASK >> 4) & 1) ? 11 : 0,
++        ((S135_COST_MASK >> 5) & 1) ? 13 : 0,
++        ((S135_COST_MASK >> 6) & 1) ? 15 : 0};
++    int forced_sum = 0;
++
++    for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
++      forced_sum += (placement[WHITE][f] - placement[BLACK][f]) * forced[f];
++    }
++
++    asm volatile("" : : "r"(forced_sum));
++  }
++
+   if constexpr (collect) {
+     for (int colour = 0; colour < 2; ++colour) {
+       for (int f = 0; f < PS_FEATURE_COUNT; ++f) {

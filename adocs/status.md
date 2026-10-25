@@ -41,12 +41,19 @@ since and a conversion factor of 0.5 to 1.0, about 2865-2890 before S083 and
 **S290 done** (2026-10-25): the S170 budget picker is tracked as
 `adocs/data/S170_pick_budgets.sh` and reproduces S083's budgets exactly.
 
-**Next**: S135. Its phase 1 (bad bishop and trapped pieces at weight zero,
-the screen, cost and SPRT scripts) was written blind on `41e4140`
-(`.tuning/coord/S135/`); a fresh agent rebases it on S083's tree, builds,
-tests and proves it neutral, then the coordinator runs the cost run, the
-screen and the candidate fit, and the one `{0, 5}` SPRT. Open filler to name
-in every pre-registration: S294.
+**S135 in progress** (`plan_current/`): phase 1, written blind on
+`41e4140`, was rebased on S083's tree by a fresh agent, built and proved
+neutral (bench 3945487 and `search_bench.py` identical), fast-checked (the
+screen margin's argument restated: s prices training resampling only,
+DEC-315) and landed at weight zero: bad bishop and its rammed share,
+trapped minor and trapped rook, four columns appended to `piece_placement`
+(DEC-314), 823 -> 831 parameters.
+
+**Next** (the coordinator's, step file "The coordinator's commands"):
+`S135_cost.sh run` (about 1 h), the screen's `locate`, `audit`, `screen`
+(about 5 h 40 m), `candidate`, the apply and goldens by an agent, then the
+`{0, 5}` SPRT at 8+0.08 (up to about 20 h, a night). Open filler to name in
+every pre-registration: S294.
 
 ## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
 

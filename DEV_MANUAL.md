@@ -1397,20 +1397,21 @@ out by hand. The walk's mobility is checked in `test_eval_trace`, against the
 trace's coefficients.
 
 The gradient check is Jon Dart's prescription: central differences against
-`gradient()` for every parameter, 823 since S134, tolerance 1e-6 relative. `h = 0.01` is
+`gradient()` for every parameter, 823 since S134 and 831 since S135, tolerance 1e-6 relative. `h = 0.01` is
 measured and a comment in the file carries the sweep — the error follows the
 O(h²) truncation law down to a cancellation floor near 0.005, and h = 0.5 fails
 at 5.7e-4 on a mobility weight because mobility counts reach the tens. Worst
 4.9e-8 on the mirror at S100 and 4.87e-8 on the trace at S262, the latter on the
-bishop's middlegame mobility weight. Two things it deliberately establishes rather than assumes:
+bishop's middlegame mobility weight, which is still the worst at S083's constants
+(5.87e-8) and with S135's six fixture rows (3.99e-7, inside the 1e-6 by 2.5). Two things it deliberately establishes rather than assumes:
 that no fixture row sits within a centipawn of the lazy clamp at the shipped
 constants, since a finite difference straddling the clamp's kink agrees with
-neither side's derivative, and that **every one of the term parameters -- 50
-since S134, 54 before -- has a gradient to check** at all. The second is what
+neither side's derivative, and that **every one of the term parameters -- 58
+since S135, 50 from S134, 54 before -- has a gradient to check** at all. The second is what
 found a real gap — three passed pawn middlegame weights had none, because every
 position reaching their buckets was a phase-0 endgame, and a feature-count test
 cannot see that. Where the clamp does bind, a case of its own checks the trace
-path's treatment: the gradient still matches finite differences on all 823,
+path's treatment: the gradient still matches finite differences on all 831,
 and the binding rows give the mobility and king safety weights exactly nothing.
 
 `tools/plan_prose_check.py` carries five plan-hygiene checks. Four of the
@@ -5865,12 +5866,14 @@ Tables emitted before S077 carry no stamp — `.tuning/tuned_v2*.hpp` and
 everything under `adocs/data/S075_fits/` and `S076_fits/`. They are evidence,
 byte for byte what the tool wrote, and are not regenerated.
 
-`tuner` fits 823 numbers so that a sigmoid of the evaluation predicts the game
+`tuner` fits 831 numbers so that a sigmoid of the evaluation predicts the game
 result — Texel tuning. `piece_value[0..4]`, `psqt_mg` and `psqt_eg` are 773 of
 them; mobility adds 8 at S034, and king safety 18, passed pawns 12, pawn
 structure 6, piece placement 8 and tempo 2 at S027. S134 deleted passer bucket 5
 and rook on the seventh, two parameters each, after folding their weights into
-the tables (DEC-090): 827 until then. The count is
+the tables (DEC-090): 827 until then, 823 after. S135 added four piece
+placement columns, the two bad bishop and two trapped piece counts, eight
+parameters: 831. The count is
 `tuner_layout::PARAM_COUNT` and the run prints it on its first line, with the
 number the `--only` group left free beside it. It never calls the search, and
 since S262 it carries no copy of the evaluation either: it fits `evaluate()`'s
@@ -5929,7 +5932,7 @@ Indivisibility binds at the other end too, so **the last block is never held
 out**. A corpus of one game holds nothing out and says so:
 
 ```
-2 positions, 1 games, 2 train, 0 validation (0.0000%), 823 parameters, group all, freeze (nothing), 823 free
+2 positions, 1 games, 2 train, 0 validation (0.0000%), 831 parameters, group all, freeze (nothing), 831 free
 WARNING: 1 game(s) in this corpus, so nothing could be held out. Every validation figure below is over an empty set.
 ```
 
@@ -5965,7 +5968,7 @@ emitted order:
 | `king_safety_mg[KS_FEATURE_COUNT]`, `king_safety_eg[KS_FEATURE_COUNT]` | `src/evaluation.cpp` |
 | `passed_pawn_mg[5]`, `passed_pawn_eg[5]` | `src/evaluation.cpp` |
 | `pawn_structure_mg[3]`, `pawn_structure_eg[3]` | `src/evaluation.cpp` |
-| `piece_placement_mg[3]`, `piece_placement_eg[3]` | `src/evaluation.cpp` |
+| `piece_placement_mg[7]`, `piece_placement_eg[7]` | `src/evaluation.cpp` |
 | `tempo_mg`, `tempo_eg`, two scalars and not an array | `src/evaluation.cpp` |
 
 **Since S117 the `src/evaluation.cpp` definitions are `constexpr int`, not
@@ -5979,7 +5982,7 @@ a fit whose weights could overflow a packed score's 16-bit half fails a
 wrapping at run time.
 
 The emitted header names both files too. Everything below the two tables is the
-50 parameters that do not live in `eval_tables.hpp`, and they are what gets left
+58 parameters that do not live in `eval_tables.hpp`, and they are what gets left
 behind: a fit that is half applied looks like a fit that did not work, and a
 weight still holding the value the engine shipped is indistinguishable from a
 term the fit had nothing to say about.
@@ -5993,8 +5996,19 @@ build/tools/tuner --data .tuning/selfplay_v2.tsv \
 ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
 `king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, `tempo`, and
 the emitted header records which was used. The eight named groups partition all
-823 parameters: 5, 768, 8, 18, 10, 6, 6, 2 in that order, which the run's first
-line reports as the free count. The ranges follow `tools/tuner_layout.hpp`'s base chain,
+831 parameters: 5, 768, 8, 18, 10, 6, 14, 2 in that order, which the run's first
+line reports as the free count.
+
+**Since S135 `--only` and `--freeze` also take a piece placement term**:
+`piece_placement.bishop_pair`, `.rook_open`, `.rook_half_open`, `.bad_bishop`
+(the bad bishop count and its rammed share, two columns) and `.trapped` (the
+trapped minor and trapped rook counts, two columns), each freeing its columns'
+middlegame and endgame weights. They exist for DEC-259's screen -- each term
+fitted alone, `--only piece_placement.bad_bishop`, then the survivors together,
+`--only piece_placement --freeze piece_placement.trapped` -- and are listed in
+`tools/tuner_groups.hpp` `PLACEMENT_TERMS`, outside the partition the groups
+form, since each overlaps its group; `test_tuner_groups` holds the terms to a
+partition of the group instead. The ranges follow `tools/tuner_layout.hpp`'s base chain,
 so S134's narrowing moved them without an edit to `tools/tuner_groups.hpp`;
 `test_tuner_groups` is what says so, and with a base left at its 827-layout
 value it reads red -- on `tempo` freeing nothing and on the chain precondition,

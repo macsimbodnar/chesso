@@ -228,8 +228,8 @@ struct group_t
 };
 
 // What is being fitted: how long the vector is, and the groups on top of the
-// linear terms. The engine's own is tools/tuner_layout.hpp's 823 and no group;
-// a test grows it to fit a synthetic group.
+// linear terms. The engine's own is tools/tuner_layout.hpp's PARAM_COUNT, 831
+// since S135, and no group; a test grows it to fit a synthetic group.
 struct model_t
 {
   size_t param_count = tuner_layout::PARAM_COUNT;

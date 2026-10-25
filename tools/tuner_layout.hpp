@@ -7,7 +7,8 @@
 // tools/truncation_scan, which kept the mirror until S276 deleted it; the
 // layout lives here, where the trace's term table, those tools and
 // tools/tuner_groups.hpp read it. Nothing in it changed in the move: the
-// indices, the order and the 823 are the ones every fit since S134 emitted.
+// indices, the order and the 823 are the ones every fit from S134 to S135
+// emitted. S135 widened the piece placement block from three to seven, 831.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -73,12 +74,13 @@ constexpr size_t PASSED_PAWN_COUNT =
 constexpr size_t PAWN_STRUCTURE_COUNT =
     sizeof(pawn_structure_mg) / sizeof(pawn_structure_mg[0]);
 
-// Piece placement, added at S027: three counts per side -- bishop pair, rook on
-// an open file, rook on a half-open file, in that order -- weighted for the
-// middlegame and for the endgame. The counts are a property of the position, so
-// they enter as features and the model stays linear, exactly like the four
-// terms above. Four until S134 deleted rook on the seventh, the signed sum of
-// eight psqt[rook] columns (DEC-090).
+// Piece placement, added at S027: seven counts per side since S135 -- bishop
+// pair, rook on an open file, rook on a half-open file, then S135's bad bishop,
+// bad bishop rammed, trapped minor and trapped rook, in that order -- weighted
+// for the middlegame and for the endgame. The counts are a property of the
+// position, so they enter as features and the model stays linear, exactly like
+// the four terms above. Four until S134 deleted rook on the seventh, the signed
+// sum of eight psqt[rook] columns (DEC-090); three from S134 to S135.
 //
 // Taken from the width of the engine's own weight array rather than written as
 // 3, for the reason the pawn structure count is: a feature added there cannot

@@ -379,7 +379,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S135  unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
+1. S135  **in progress: the bad-bishop and trapped-piece columns landed at weight zero (DEC-314); the cost run, the screen (DEC-315), the candidate fit and its one `{0, 5}` SPRT next** -- unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
 2. S294  **filler, DEC-171: behind S135; found by S083's mutation pass, the same at `e972bd4`** -- the mutant list's two off-list verdicts closed: MW02 killed by a guard that still reaches its line, H04 built
 3. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
 4. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin

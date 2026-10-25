@@ -535,3 +535,124 @@ TEST_CASE("a gauge is held only where the mask frees all of it")
   CHECK(held_somewhere > 0);
   CHECK(skipped_somewhere > 0);
 }
+
+
+// S135. The piece placement group's terms, the names DEC-259's screen fits one
+// at a time: `--only piece_placement.bad_bishop` and the rest, and then the
+// terms that passed together, `--only piece_placement` with the ones that did
+// not in `--freeze`. They are not in GROUP_LIST and cannot be -- each overlaps
+// the group it belongs to -- so the partition cases above never see them.
+// What they have to be is the same three properties one level down: every
+// term frees something, no two terms free the same parameter, and together
+// they free exactly what `piece_placement` frees -- its middlegame and endgame
+// weights for the same columns, which are two ranges and not one.
+TEST_CASE("the piece placement terms partition the piece placement group")
+{
+  const std::vector<std::string> terms =
+      parse_group_list(tuner_groups::PLACEMENT_TERM_LIST);
+
+  // The list --help prints and the table free_mask reads are the same set, in
+  // the same order, or a term could be reachable from one and not the other.
+  REQUIRE(terms.size() == tuner_groups::PLACEMENT_TERM_COUNT);
+  for (size_t t = 0; t < terms.size(); ++t) {
+    CHECK(terms[t] == tuner_groups::PLACEMENT_TERMS[t].name);
+  }
+
+  std::vector<uint8_t> group;
+  REQUIRE(tuner_groups::free_mask("piece_placement", &group));
+
+  const size_t group_count =
+      static_cast<size_t>(std::count(group.begin(), group.end(), uint8_t{1}));
+  REQUIRE(group_count == 2 * tuner_layout::PIECE_PLACEMENT_COUNT);
+
+  std::vector<size_t> claims(tuner_layout::PARAM_COUNT, 0);
+
+  for (size_t t = 0; t < terms.size(); ++t) {
+    CAPTURE(terms[t]);
+
+    std::vector<uint8_t> mask;
+    REQUIRE_MESSAGE(tuner_groups::free_mask(terms[t], &mask),
+                    "PLACEMENT_TERM_LIST offers a term free_mask refuses");
+    REQUIRE(mask.size() == tuner_layout::PARAM_COUNT);
+
+    const tuner_groups::placement_term_t& term =
+        tuner_groups::PLACEMENT_TERMS[t];
+
+    // Exactly the term's columns, in both halves, and nothing else.
+    for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+      CAPTURE(i);
+
+      bool expected = false;
+      for (size_t c = term.first; c < term.first + term.width; ++c) {
+        expected = expected || i == tuner_layout::PL_MG_BASE + c ||
+                   i == tuner_layout::PL_EG_BASE + c;
+      }
+
+      CHECK((mask[i] != 0) == expected);
+      if (mask[i] != 0) { claims[i]++; }
+    }
+
+    CHECK(static_cast<size_t>(std::count(mask.begin(), mask.end(),
+                                         uint8_t{1})) == 2 * term.width);
+  }
+
+  // Disjoint, and their union the group.
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+    CAPTURE(i);
+    CHECK(claims[i] == (group[i] != 0 ? 1u : 0u));
+  }
+}
+
+
+// The candidate fit's shape: the group free but for the terms that failed the
+// screen. `--freeze` with a term inside `--only piece_placement` has to clear
+// exactly that term's columns, and a list of terms all of theirs; a term
+// beside a group in one list is allowed, and an unknown term refuses the list.
+TEST_CASE("--freeze takes terms, and clears exactly their columns")
+{
+  std::vector<uint8_t> group;
+  REQUIRE(tuner_groups::free_mask("piece_placement", &group));
+
+  std::vector<uint8_t> trapped;
+  std::vector<uint8_t> pair;
+  REQUIRE(tuner_groups::free_mask("piece_placement.trapped", &trapped));
+  REQUIRE(tuner_groups::free_mask("piece_placement.bishop_pair", &pair));
+
+  // Preconditions: two non-empty, disjoint terms inside the group.
+  REQUIRE(std::count(trapped.begin(), trapped.end(), uint8_t{1}) == 4);
+  REQUIRE(std::count(pair.begin(), pair.end(), uint8_t{1}) == 2);
+
+  std::vector<uint8_t> one = group;
+  REQUIRE(tuner_groups::freeze_mask("piece_placement.trapped", &one));
+
+  std::vector<uint8_t> two = group;
+  REQUIRE(tuner_groups::freeze_mask(
+      "piece_placement.trapped, piece_placement.bishop_pair", &two));
+
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+    CAPTURE(i);
+    CHECK(one[i] == ((group[i] != 0 && trapped[i] == 0) ? 1 : 0));
+    CHECK(two[i] ==
+          ((group[i] != 0 && trapped[i] == 0 && pair[i] == 0) ? 1 : 0));
+  }
+
+  // The screen's own shape, a term alone: everything but it is held.
+  std::vector<uint8_t> alone;
+  REQUIRE(tuner_groups::free_mask("piece_placement.bad_bishop", &alone));
+  CHECK(std::count(alone.begin(), alone.end(), uint8_t{1}) == 4);
+
+  // A term beside a group in one list freezes both, and a misspelt term
+  // refuses the whole list rather than applying the good half.
+  std::vector<uint8_t> all;
+  REQUIRE(tuner_groups::free_mask("all", &all));
+
+  std::vector<uint8_t> mixed = all;
+  REQUIRE(tuner_groups::freeze_mask("tempo, piece_placement.trapped", &mixed));
+  CHECK(
+      static_cast<size_t>(std::count(mixed.begin(), mixed.end(), uint8_t{1})) ==
+      tuner_layout::PARAM_COUNT - 2 - 4);
+
+  std::vector<uint8_t> misspelt = all;
+  CHECK_FALSE(tuner_groups::freeze_mask("piece_placement.traped", &misspelt));
+  CHECK_FALSE(tuner_groups::free_mask("piece_placement.", &misspelt));
+}

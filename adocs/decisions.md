@@ -15922,3 +15922,67 @@ Consequences: S083 lands as one commit carrying its record, its candidate's
               block. Every later evaluation refit (S135 first) re-reads these
               floors under DEC-299's guard from the new ends: 159 / 154 and 12
               / 11. On a revert of S083 the five rulings revert with it.
+
+## DEC-314  2026-10-25  S135's two placement features are four columns appended to piece_placement, defined from their wiki descriptions
+Tags:         evaluation, piece-placement, bad-bishop, trapped-pieces, s135, dec-258, dec-221, dec-105, dec-134, tuner
+Context:      DEC-258 (7) gave S135 a bad bishop ("a bishop's own pawns on
+              its colour, blocked ones counted separately") and trapped
+              pieces, each from its Chess Programming Wiki description
+              (DEC-221). The trapped-pieces page lists several patterns and
+              prices them differently; the brief asked for one column each.
+Decision:     By the coordinator under the owner's standing instruction (few
+              questions, correctness first). Bad bishop is two columns: the
+              own pawns on each bishop's colour summed over the bishops, and
+              the share of those that are rammed (an enemy pawn directly
+              ahead), "blocked" read as rammed for the page's
+              semi-permanence. Trapped pieces are two columns: own minors on
+              the page's listed patterns, each piece once, and own rooks in
+              the own king's corner as listed; both mirrored to the a side
+              and to Black. They are appended to `piece_placement` (indices 3
+              to 6), screened as two terms (DEC-315), every weight starting
+              the fit at zero. No number from either page seeds anything
+              (DEC-105, DEC-134).
+Rejected:     One column each -- DEC-258's "counted separately" and the page's
+              own different severities; one weight would price a trapped
+              minor as a hemmed rook. A column per pattern -- eight sparse
+              columns the corpus cannot fit. A new group -- a new trace term,
+              a new taper and the family split across two `--only`s.
+Consequences: 823 -> 831 tuner parameters, 815 shipped; rank 792 of 831 on
+              S083's corpus, the four new columns identified. Collapsing
+              either feature to one column later is a mechanical edit.
+
+## DEC-315  2026-10-25  S135's screen keeps a term past m = max(1.645 s, 2e-6) against its run's own start, and bisects by lineage on H0
+Tags:         evaluation, tuning, screening, sprt, s135, dec-259, dec-304, dec-082, dec-091
+Context:      DEC-259 screens each evaluation term offline by held-out loss
+              and measures the survivors by one SPRT, bisected on H0. S135
+              has five terms (S027's three, DEC-258's two) and needed a margin
+              and a partition written before any fit.
+Decision:     By the coordinator under the owner's standing instruction. Each
+              term is fitted alone (`--only piece_placement.<term>`, DEC-304's
+              settings) on S083's corpus and on five quarter samples; its gain
+              is the run's start minus its best on S082's fixed validation
+              set, and it is kept iff the full-corpus gain exceeds
+              m = max(1.645 s, 2e-6), s the quarter gains' standard deviation.
+              The candidate is the survivors fitted together. On H0 or no
+              verdict: A = S027's three, B = DEC-258's two; A -> bishop pair |
+              rook files -> each; B -> bad bishop | trapped; empty halves
+              dropped, A before B, each part its own SPRT, a part's H1 landing
+              before the next is fitted.
+              What s measures is training-corpus resampling only: all six fits
+              of a term are scored on the same fixed set, and the gain is
+              taken at the best report on it, so that set's own sampling noise
+              and the early-stopping pick on it are not priced (S135's fast
+              check). Accepted, not machinery added: the screen only removes
+              terms, each term frees 2 or 4 parameters against S082's fixed
+              set of 1015332 rows from 12000 games, and the one SPRT decides
+              what ships.
+Rejected:     DEC-304's m = 1.645 sqrt(2) s -- its sqrt(2) prices a second
+              fitted end, and here the start is the shipped constants on fixed
+              rows. Pricing the fixed set's noise by a bootstrap of per-row
+              loss differences -- a tool for a filter whose errors the SPRT
+              already catches. A partition by cost (DEC-091's recommended
+              split) -- the owner chose the bundle, and the lineage split
+              keeps S100's three apart from the two never measured.
+Consequences: No survivor means no SPRT and five zeros recorded.
+              `adocs/data/S135_screen.sh` is the pre-registration and
+              `S135_screen.py` its reader.

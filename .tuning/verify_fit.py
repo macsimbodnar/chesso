@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every one of the 823 fitted numbers reached the engine's sources.
+"""Check that every one of the 831 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
@@ -11,8 +11,11 @@ Usage: verify_fit.py <emitted.hpp> [--root TREE | --root=TREE]
 823 since S134 folded the sixth passer bucket and rook on the seventh into the
 tables (DEC-090): passed_pawn is five wide a phase and piece_placement three.
 This list said six and four, and 827, until S083 -- the first fit pasted since
-S076 -- found it; it would have refused a correct paste. --root names the tree
-read, the main checkout by default.
+S076 -- found it; it would have refused a correct paste. 831 since S135, whose
+four placement columns make piece_placement seven wide: a fit emitted by a
+tuner built before S135 is three wide there and is refused here, which is
+right, because it cannot place the four. --root names the tree read, the main
+checkout by default.
 """
 import re
 import sys
@@ -51,7 +54,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 823
+TOTAL = 831
 
 WIDTHS = [
     ("PAWN", 1),
@@ -69,8 +72,8 @@ WIDTHS = [
     ("passed_pawn_eg", 5),
     ("pawn_structure_mg", 3),
     ("pawn_structure_eg", 3),
-    ("piece_placement_mg", 3),
-    ("piece_placement_eg", 3),
+    ("piece_placement_mg", 7),
+    ("piece_placement_eg", 7),
     ("tempo_mg", 1),
     ("tempo_eg", 1),
 ]

@@ -142,9 +142,10 @@ extern const int pawn_structure_eg[3];
 void pawn_structure_counts(const board_t* board, int out[2][3]);
 
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
-// open file, 2 rook on a half-open file. Exposed for the same reason as the
-// weights above: the tuner (tools/tuner_layout.hpp) starts from what the engine
-// ships instead of from a copy of it that would be free to drift.
+// open file, 2 rook on a half-open file, 3 bad bishop, 4 bad bishop rammed, 5
+// trapped minor, 6 trapped rook. Exposed for the same reason as the weights
+// above: the tuner (tools/tuner_layout.hpp) starts from what the engine ships
+// instead of from a copy of it that would be free to drift.
 //
 // **Zero in evaluation.cpp, and not because the tuner has not reached them.**
 // S027 fitted piece placement (mg {2, 32, 8, -26} / eg {55, -8, 12, 11}),
@@ -191,8 +192,48 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 // the enemy has there. The two features are disjoint by construction and their
 // sum is not "rooks on files this side's pawns do not block" -- a rook behind
 // its own pawn scores zero in both, deliberately.
-extern const int piece_placement_mg[3];
-extern const int piece_placement_eg[3];
+//
+// **The four S135 added (DEC-258)**, from CPW *Bad Bishop* ("a bishop whose
+// mobility is restricted by own pawns", a situation "semi-permanent (more so
+// if the position is blocked)") and CPW *Trapped Pieces* ("the extreme
+// examples of poor mobility", given as a list of examples):
+//
+//   bad_bishop         for each own bishop, the own pawns standing on squares
+//                      of that bishop's colour, summed over the side's bishops.
+//                      A count: two bishops on one colour each count that
+//                      colour's pawns, and a side with no bishop scores 0
+//                      whatever its pawns. Where the pawns stand otherwise --
+//                      in front of the bishop or behind it, inside a chain or
+//                      not -- is not asked.
+//   bad_bishop_rammed  the same sum over the rammed own pawns alone: a pawn is
+//                      rammed when the square directly ahead of it holds an
+//                      enemy pawn. Only a pawn rams; a piece in front does not.
+//                      Every pawn counted here is also counted in bad_bishop,
+//                      so the two overlap by construction and the fit prices
+//                      the rammed share on top of the plain one.
+//   trapped_minor      own knights and bishops standing on one of the patterns
+//                      below, each piece counted once however many it meets.
+//                      White's, with Black's pawns; the second of each pair is
+//                      the first mirrored across the d and e files:
+//                        bishop on h7, pawns on f7 and g6 / a7, c7 and b6
+//                        bishop on h6, pawns on g5 and f6 / a6, b5 and c6
+//                        knight on h8, a pawn on h7 or f7 / a8, a7 or c7
+//                        knight on h7, pawns on g7 and either h6 or f6 /
+//                          a7, b7 and either a6 or c6
+//                      Black's are White's with every rank mirrored, rank r to
+//                      9 - r, and White's pawns: a bishop on h2 with pawns on
+//                      f2 and g3, and so on. Nothing else about the piece is
+//                      asked -- whether it is attacked, or has a move.
+//   trapped_rook       own rooks on h1, g1, h2 or g2 while the own king stands
+//                      on f1 or g1, and own rooks on a1, b1, a2 or b2 while it
+//                      stands on c1 or b1; for Black the ranks are mirrored, h8
+//                      to b7 with the king on f8, g8, c8 or b8. A count: two
+//                      rooks in the corner count two.
+//
+// None of the four is exclusive of the features above or of each other. Rank
+// and file are a8 = index 0 throughout, as the rest of this file.
+extern const int piece_placement_mg[7];
+extern const int piece_placement_eg[7];
 
 // The raw counts the term is built from, per colour, WHITE first, in the
 // feature order above. Exists for tests/test_eval_model and per colour rather
@@ -205,7 +246,7 @@ extern const int piece_placement_eg[3];
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
 // implementation to drift.
-void piece_placement_counts(const board_t* board, int out[2][3]);
+void piece_placement_counts(const board_t* board, int out[2][7]);
 
 // The tempo weights: a bonus for having the move, middlegame and endgame,
 // tapered like every other term. Exposed for the same reason as the weights
@@ -357,7 +398,7 @@ extern const std::array<score_t, 4> mobility_score;
 extern const std::array<score_t, KS_FEATURE_COUNT> king_safety_score;
 extern const std::array<score_t, 5> passed_pawn_score;
 extern const std::array<score_t, 3> pawn_structure_score;
-extern const std::array<score_t, 3> piece_placement_score;
+extern const std::array<score_t, 7> piece_placement_score;
 extern const score_t tempo_score;
 int capture_score(const board_t* board, move_t move);
 

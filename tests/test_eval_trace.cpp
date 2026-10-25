@@ -349,9 +349,9 @@ TEST_CASE_FIXTURE(trace_fixture_t,
             structure[WHITE][f] - structure[BLACK][f]);
     }
 
-    int placement[2][3];
+    int placement[2][walked_counts::PIECE_PLACEMENT_COUNT];
     piece_placement_counts(&board, placement);
-    for (size_t f = 0; f < 3; ++f) {
+    for (size_t f = 0; f < walked_counts::PIECE_PLACEMENT_COUNT; ++f) {
       CAPTURE(f);
       CHECK(coefficient(data, eval_trace::TERM_PIECE_PLACEMENT, f) ==
             placement[WHITE][f] - placement[BLACK][f]);

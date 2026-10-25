@@ -6,9 +6,9 @@
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
 // and psqt_eg[6][64], the mobility weights since S034, the king safety weights
 // since S027, the passed pawn weights since S035 and the pawn structure, piece
-// placement and tempo weights since S027, 823 numbers since S134 -- so that a
-// sigmoid of the evaluation predicts the outcome of the game the position came
-// from.
+// placement and tempo weights since S027, 823 numbers from S134 and 831 since
+// S135 widened piece placement -- so that a sigmoid of the evaluation predicts
+// the outcome of the game the position came from.
 // This is Texel tuning; the objective is the mean squared error of that
 // prediction.
 //
@@ -441,7 +441,9 @@ void write_tables(const std::string& path,
               static_cast<int>(std::lround(params[base + i])));
     }
 
-    fprintf(out, "};  // pair, open, half open\n");
+    fprintf(out,
+            "};  // pair, open, half open, bad bishop, rammed, trapped minor, "
+            "trapped rook\n");
   }
 
   // One number per table and no array, so these two lines are the whole term.
@@ -464,9 +466,10 @@ void usage()
       "  --out FILE       where the fitted constants are written\n"
       "  --only GROUP     fit only this group and hold the rest at what\n"
       "                   the engine ships: %s\n"
-      "  --freeze LIST    hold these groups instead, comma separated, and\n"
-      "                   fit everything else; not `all`. Applied after\n"
-      "                   --only, so the two intersect\n"
+      "                   or one piece placement term (S135): %s\n"
+      "  --freeze LIST    hold these groups or terms instead, comma\n"
+      "                   separated, and fit everything else; not `all`.\n"
+      "                   Applied after --only, so the two intersect\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"
@@ -487,7 +490,8 @@ void usage()
       "                   when the two share a position\n"
       "  --threads N      worker threads (default: every hardware thread)\n"
       "  --seed N         seed the game-level split shuffles (default 1)\n",
-      GROUP_LIST, tuner_optimiser::ADAGRAD_DEFAULT_LR);
+      GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST,
+      tuner_optimiser::ADAGRAD_DEFAULT_LR);
 }
 
 }  // namespace
@@ -581,8 +585,9 @@ int main(int argc, char** argv)
   std::vector<uint8_t> mask;
 
   if (!free_mask(opts.only, &mask)) {
-    fprintf(stderr, "unknown --only group '%s'; groups are: %s\n",
-            opts.only.c_str(), GROUP_LIST);
+    fprintf(stderr,
+            "unknown --only group '%s'; groups are: %s; terms are: %s\n",
+            opts.only.c_str(), GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST);
     return 1;
   }
 
@@ -592,8 +597,8 @@ int main(int argc, char** argv)
   if (!freeze_mask(opts.freeze, &mask)) {
     fprintf(stderr,
             "unusable --freeze list '%s'; it takes a comma-separated subset of "
-            "%s, and not `all`\n",
-            opts.freeze.c_str(), GROUP_LIST);
+            "%s, or of %s, and not `all`\n",
+            opts.freeze.c_str(), GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST);
     return 1;
   }
 

@@ -1,0 +1,119 @@
+# S135's weight-dependent preconditions, re-read on S083's tables, 2026-10-25
+#
+# Taken at S135's rebase (phase 1b): worktree chesso-s135b, branch s135b at
+# b7be983 (S083's constants landed at 01222f3, DEC-313; S290 after it), with
+# phase 1's diff applied and staged. Both builds Release, -j12, g++ 13.3.
+# The parent is b7be983 itself, built in a scratch worktree. Node counts and
+# readings only; no fit, no match, no timing. Every figure below was printed
+# by the command named beside it.
+
+== the stage-one bound, per half (src/evaluation.cpp stage_one_half)
+# adocs/data/S135_screen.py headroom src/evaluation.cpp --tree .  and the same
+# two numbers as static_asserts appended to a scratch copy of evaluation.cpp,
+# compiled -fsyntax-only: both agree.
+half  kings (high, low, spread)  pieces (high, low, spread)  tables   passers 30x    structure 45x  bound  room
+mg    661, -219, 880             431 queen, -239 bishop, 670  10930   38 -> 1140     11 -> 495      12565  20202
+eg    165, -180, 345             262 pawn, -234 queen, 496    7785    119 -> 3570    18 -> 810      12165  20602
+# Phase 1's figures at 41e4140: mg 19350 (room 13417), eg 10714 (room 22053).
+# The step file's sanity bands (pair 47 x 1, open 24 x 15, half open 12 x 15)
+# take 587 of the mg room: a single bad bishop column could then reach 350 a
+# weight, both at 175 each, before the assert fires.
+# Refusal boundary: a header with piece_placement_mg[3] = 400 reads mg 34965,
+# `headroom` refuses (exit 1), and the same header pasted by apply_fit.py into
+# a scratch tree fails the build at the static_assert, "stage one's packed sum
+# can overflow a 16-bit half".
+
+== the trace's exact reconstruction on every row of the corpus S135 fits
+# build/tools/tuner --data .tuning/s083/curve/s0/cand_6226944_s1.tsv
+#   --holdout .tuning/s082/pool.tsv.qs.validation --epochs 0 --threads 12
+engine b7be983-dirty, corpus sha256 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53, 6226944 rows, 493831292 bytes
+trace: 6226944 rows, 164780480 entries (26.46 a row), 5.1 s; 0 differ from evaluate(), the clamp binds on 28761
+held out: /home/max/ws/chesso/.tuning/s082/pool.tsv.qs.validation, sha256 2b508067fb64693bb4b278a2455fb9d101eaa742975a4b53f4ff56e6fa16981e, 1015332 rows; 0 corpus rows stand on one of its positions
+6226944 positions, 137978 games, 6226944 train, 1015332 validation (14.0195%), 831 parameters, group all, freeze (nothing), 831 free
+fitted K = 0.7224
+start: train 0.069321  validation 0.071831
+# 19.2 s wall for the load, the trace and K. The baseline every screen fit
+# starts from: K 0.7224, held-out 0.071831 at the shipped constants.
+
+== the identity report on that corpus (S135_screen.sh audit, OUT in a scratch directory)
+identities: rank modulo 2^61-1: 792 of 831, nullity 39; 32 zero columns and 7 dependencies by construction account for 39 of it
+identities: no exact dependency beyond the ones listed above
+identities: rank over the rationals exactly 792 of 831, nullity 39, every null direction listed above
+identities: 32 zero columns and 7 held gauges span 39 of at most 39 null dimensions: every null direction is one Adam never moves or one the tuner holds
+bad bishop         R^2 0.667765  on bishop+pawn psqt, 128 columns
+bishop rammed      R^2 0.162040  on bishop+pawn psqt, 128 columns
+trapped minor      R^2 0.371154  on knight+bishop+pawn psqt, 192 columns
+trapped rook       R^2 0.351820  on rook+king psqt, 128 columns
+identity: S134's 39 null directions and no more; the four columns are identified
+# 36 s wall (locate 2.3 s before it).
+
+== the parameter widths
+# .tuning/verify_fit.py: TOTAL 831, piece_placement_mg/eg 7. .tuning/apply_fit.py
+# and .tuning/diff_fit.py read no width. On the zero-epoch header above, pasted
+# into a scratch tree whose HEAD is the landing's evaluation sources:
+831 parameters compared, 831 identical to the emitted header
+# On S083's own 823-wide fit_6226944_s1.hpp, against the same tree: exit 1,
+  MISMATCH piece_placement_mg: width 3 emitted, 7 shipped, 7 expected
+  MISMATCH piece_placement_eg: width 3 emitted, 7 shipped, 7 expected
+# (and psqt_eg/psqt_mg and QUEEN differ, DEC-307's queen re-anchor).
+# The tuner's free counts, --epochs 0 on the corpus's first 2000 rows:
+831 parameters, group piece_placement.bad_bishop, freeze (nothing), 4 free
+831 parameters, group piece_placement, freeze piece_placement.trapped, 10 free
+831 parameters, group piece_placement, freeze (nothing), 14 free
+831 parameters, group all, freeze tempo,piece_placement, 815 free
+
+== tests/test_tuner_gradient.cpp, the weight-dependent cases (build/tests, -s)
+# "the fixture sits clear of the clamp at the shipped constants": 40 rows (34
+# and phase 1's six), the largest |stage two| 99.3333 against the 183.0 the
+# case allows (LAZY_EVAL_MARGIN 184 less a centipawn).
+# "the clamp's derivative is exact where it binds", re-derived by
+# adocs/data/S083_tuner_preconditions.cpp clamp (built as its header says):
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +90      8      384.5      141.0        4.33   1.36e-07          0    0.00064  ok
+ +100      8      434.5      161.0       23.00      6e-08          0    0.00064  ok  <- CHOSEN
+ +110      8      484.5      181.0        3.00      6e-08          0    0.00064  ok
+clamp: the rule picks +100, every row 23.00 from the kink
+# -- the push the case carries; S083's reading on 34 rows was the same eight
+# rows, 434.5, 161.0 and 23, finite differences 1.09e-7. The case reads
+# "clamp case: worst relative error 6.00105e-08 at parameter 766" (the parent
+# b7be983: 1.09044e-07, the same parameter).
+# "the fit holds every gauge still and no score sees the hold", by the same
+# program's walk, 44 rows (the 40 and the four gauge rows), 300 epochs:
+  adam at lr 1       smallest plain walk 0.3663 (material/table rook), largest 4.4905 (bishop); runs apart 5.68e-13; plain travelled 1593.7
+  adagrad at lr 10   smallest plain walk 0.0437 (material/table rook), largest 5.0396 (pawn); runs apart 1.02e-12; plain travelled 1626.5
+walk: every plain shift clears the case's floor 0.01
+# every held shift at most 1.38e-14. S083's on 38 rows: 0.1178 and 0.0587.
+# "gradient() is the derivative of the error it descends": 831 of 831, every
+# term parameter's gradient non-zero, "worst relative error 3.99095e-07 at
+# parameter 774" (mobility_mg, the bishop's). The parent b7be983 reads
+# 5.87209e-08 at the same parameter on its 34 rows: the six rows raised it
+# 6.8 times, and it sits 2.5 times inside the case's 1e-6. Green; recorded.
+# "a planted vector comes back through the trace path": all fourteen placement
+# weights back within 1.54e-05 (the worst PL_EG_BASE + 4, the rammed share's
+# endgame weight; then 1.31e-05 at + 5) against the case's 0.5, which the
+# step file's phase 1 had marked at risk.
+# "a nonlinear group stuck at zero is recovered from its derived seed": green,
+# the case S083 found moved by appended rows.
+
+== adocs/data/S192_anchors.py (no argument: the shipped weights)
+10 of 10 reproduced
+# The twelve anchor positions through the engine's piece_placement_counts
+# (a scratch program linked against build/src/libchesso_engine.a): every
+# side's count in columns 3 to 6 is 0 on all twelve, so the script's
+# three-wide tuples stay exact at any weight of the four; columns 0 to 2
+# equal its tuples.
+
+== INV-6, the zero-weight landing against its parent b7be983
+# bench / bench 12, timing fields stripped, all four binaries (Release and tune,
+# candidate and parent): totals 3945487 and 2103576, every line identical.
+# tools/search_bench.py, nodes and best move, all four identical:
+depth 9    midgame 42570 c3d5    kiwipete 152468 e2a6    tactical 27750 d7c8q
+depth 12   midgame 250176 c3d5   kiwipete 412312 e2a6    tactical 157359 d7c8q
+# The cost-only build at S135_COST_MASK 0x7f (the patch on this tree, padded,
+# 0 warnings): bench 3945487, bench, bench 12 and search_bench 9 and 12
+# identical to the zero build's; masks 0x07 and 0x78 compile -Wall -Wextra
+# -Werror.
+
+== the cost run's workloads at S083's weights, for its time estimate
+chesso bench 16:                       11370791 nodes  (S273's tree: 10214429)
+S135_cost.py workload chesso 11:  300 positions, 38413692 nodes  (S273's: about 26.5 M)
