@@ -315,8 +315,9 @@ is typed by hand.
 | S289 | Revert 's null-move table guard on its H0 (DEC-309) | 4 h 3 m | 8716 | `{-5, 0}` | H0, -7.42 +/- 5.07 |
 | S292 | the narrowed null-move guard | 11 h 7 m | 23802 | `{-5, 0}` | H1, +0.35 +/- 3.08 |
 | S293 | reverse futility's whole-search mated guard | 5 h 7 m | 10954 | `{-5, 0}` | H1, +2.85 +/- 4.60 |
+| S083 | the evaluation refit at 46 rows a game | 0 h 16 m | 568 | `{0, 5}` | H1, +116.07 +/- 23.26 |
 
-**The ledger holds 55: mean 6 h 08 m, median 5 h 25 m, 674145 games in 338.07 hours, 1994.1 an hour across the set.** **Fast class**, an effect outside the bounds interval -- nineteen runs, mean **1 h 53 m**. **Slow class**, inside it, on a bound or a true zero -- 36 runs, mean **8 h 23 m**.
+**The ledger holds 56: mean 6 h 02 m, median 5 h 16 m, 674713 games in 338.34 hours, 1994.2 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty runs, mean **1 h 48 m**. **Slow class**, inside it, on a bound or a true zero -- 36 runs, mean **8 h 23 m**.
 
 ### Priced by class
 
