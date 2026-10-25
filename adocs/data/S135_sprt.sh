@@ -117,8 +117,8 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this
 # run's shas, dates and out directory --
 #
-#   candidate  <CAND>  <its committer date>
-#   reference  <REF>  <its committer date>
+#   candidate  18c2d9a  2026-10-26 00:47
+#   reference  62aa1b9  2026-10-25 21:52
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -132,12 +132,28 @@
 # `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
-# [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and
-# `cand=` below, their dates into the banner lines above, the screen's
-# survivors and its reading.txt's sha256, the corpus `locate` recorded (its
-# sha256 CORPUS_SHA's), the candidate fit's sha256, S135_cost.sh's reading if it has run,
-# plan.md's Open list re-read, the A/A rule checked, and this bracketed
-# sentence replaced by what was found.]
+# Pinned by the coordinator 2026-10-26 00:55: CAND `18c2d9a` (committed
+# 2026-10-26 00:47, S135's joint fit pasted with the per-column form, bench
+# 5184358) and REF `62aa1b9` (committed 2026-10-25 21:52, the zero-weight
+# landing plus the cost fix, bench 3945487), CAND's parent. The screen kept
+# bishop_pair, rook_open, rook_half_open and trapped, dropped bad_bishop
+# (`.tuning/s135/screen/reading.txt`, sha256 3c2dd58b...); the corpus
+# `locate` recorded is S083's curve 0, 6226944 rows, sha256 2e0e3de9...
+# (CORPUS_SHA's); the candidate fit `.tuning/s135/candidate/fit.hpp`, sha256
+# 19dde95f..., held-out 0.071831 -> 0.071725. S135_cost.sh's second run (the
+# per-column patch, every guard passed): all seven +3.92 %, S135's four
+# +3.30 %, S027's three +0.92 %, the zero landing free; what CAND pays, five
+# columns with bad bishop in no expression, lies between old3's and all's
+# and is not measured as such (`adocs/data/S135_cost_reading.txt`). The Open
+# list at `18c2d9a` re-read: one DEC-171 filler is open, **S294** (the
+# mutant list's MW02 survivor and stillborn H04), test tooling only,
+# reachable in no game, so it cannot move this run. The harness is S083's
+# run's of 2026-10-23 -- fastchess alpha 1.8.1 20260720-daa3ea2,
+# `noob_3moves.epd`, `fastchess.sh` last changed `769ce7a` (S284), the same
+# workstation and kernel 7.2.6 -- so no A/A is owed (DEC-143). Before the
+# run: the commit gate green at CAND (both fast suites 50 of 50, format and
+# the prose checks clean), and a dry copy of this script printed
+# DRY-RUN-WOULD-EXEC. The run starts at once, the night's run (DEC-155).
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -202,8 +218,8 @@ fail()
 # S283_sprt.sh's same block reads them: pinned, refused if set to anything
 # else, and passed on the exec line; ROUNDS, BARE_FEN, SRAND and AA refused if
 # set at all; RELAY_PYTHON unset; OUT overridden.
-ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
+ref="62aa1b9deeb777d6095ee0d7105ea7fb02ce3354"
+cand="18c2d9a37ed28769f6200f75dd04825ff270a9f1"
 tc="8+0.08"
 hash="16"
 concurrency="12"
