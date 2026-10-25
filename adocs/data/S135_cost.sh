@@ -6,11 +6,19 @@
 # forced weights and thrown away behind an asm barrier, so the search is node
 # for node the shipping one's and the wall time is the cost and nothing else.
 #
-#   nohup adocs/data/S135_cost.sh run > .tuning/s135_cost.console 2>&1 &
+#   CAND_SHA=<landing> PARENT_SHA=<its parent> adocs/data/S135_cost.sh check
+#   CAND_SHA=<landing> PARENT_SHA=<its parent> \
+#     nohup adocs/data/S135_cost.sh run > .tuning/s135_cost.console 2>&1 &
 #
-# Run from the main checkout once S135's zero-weight landing is HEAD. Prints
-# S135-COST-DONE or S135-COST-FAILED as its last line, so it runs detached
-# under a four-exit watcher. OUT defaults to .tuning/s135/cost.
+# Run from the main checkout. The pair is explicit since 2026-10-25 (a fix
+# commit on top of the landing moves HEAD): CAND_SHA is S135's zero-weight
+# landing, HEAD when unset; PARENT_SHA the tree before it, CAND^ when unset
+# (HEAD^ when neither is set). `run` checks the pair before anything else --
+# CAND carries the four columns, PARENT does not, PARENT is CAND^ -- and
+# `check` does that alone, building and timing nothing. Prints S135-COST-DONE or
+# S135-COST-FAILED (S135-COST-CHECK-DONE or -FAILED) as its last line, so a
+# run goes detached under a four-exit watcher. OUT defaults to
+# .tuning/s135/cost.
 #
 # ============================================================================
 # PRE-REGISTRATION -- written 2026-10-22 in S135's phase 1, blind, before any
@@ -27,13 +35,13 @@
 #
 # THE BUILDS, all Release, native, padded (CHESSO_BRANCH_PAD, S273's default
 # on this machine; DEC-266 (1)), `--target chesso`, each from a throwaway
-# worktree of HEAD under $OUT:
-#   zero    HEAD as it is: the seven at zero, deleted
+# worktree of CAND (or PARENT) under $OUT:
+#   zero    CAND as it is: the seven at zero, deleted
 #   copy    zero's binary copied byte for byte: the A/A
-#   parent  HEAD^, the tree before S135: zero against it is the check that
+#   parent  PARENT, the tree before S135: zero against it is the check that
 #           the landing is free, the compiler deleting the four new columns as
 #           it deletes the three -- instructions equal within the A/A's spread
-#   all     HEAD + the patch, S135_COST_MASK=0x7f: the seven forced
+#   all     CAND + the patch, S135_COST_MASK=0x7f: the seven forced
 #   old3    the same at 0x07: S027's three forced, bisection part A
 #   new4    the same at 0x78: S135's four forced, bisection part B
 #
@@ -152,31 +160,66 @@ pairs() {
   say "$name: $PAIRS pairs"
 }
 
+# 0 when COMMIT's src/evaluation.cpp names PL_TRAPPED_ROOK, 1 when it does
+# not, 2 when the file cannot be read there. The text is captured before it is
+# searched: under pipefail `git show ... | grep -q` reads 141 whenever grep
+# exits on its first match before git show has written the file, git show
+# dying of SIGPIPE, so the landing was refused as not carrying the columns it
+# carries, and a parent that carried them would have passed (2026-10-25).
+carries_columns() {
+  local text
+  text=$(git -C "$root" show "$1:src/evaluation.cpp" 2> /dev/null) || return 2
+  [[ "$text" == *PL_TRAPPED_ROOK* ]]
+}
+
+# The pair, resolved to full shas into $cand and $parent, and checked: CAND
+# carries S135's columns, PARENT does not, PARENT is CAND^. Otherwise the
+# parent build measures something other than the landing.
+cand=""
+parent=""
+check_pair() {
+  local status
+  cand=$(git -C "$root" rev-parse --verify --quiet "${CAND_SHA:-HEAD}^{commit}") ||
+    { say "refused: CAND_SHA '${CAND_SHA:-HEAD}' names no commit"; return 1; }
+  parent=$(git -C "$root" rev-parse --verify --quiet "${PARENT_SHA:-$cand^}^{commit}") ||
+    { say "refused: PARENT_SHA '${PARENT_SHA:-CAND^}' names no commit"; return 1; }
+  say "pair      cand $cand, parent $parent"
+  carries_columns "$cand"
+  status=$?
+  case $status in
+    0) ;;
+    1) say "refused: CAND ${cand:0:12} does not carry S135's columns (no PL_TRAPPED_ROOK)"; return 1 ;;
+    *) say "refused: CAND ${cand:0:12} has no src/evaluation.cpp to read"; return 1 ;;
+  esac
+  carries_columns "$parent"
+  status=$?
+  case $status in
+    1) ;;
+    0) say "refused: PARENT ${parent:0:12} carries PL_TRAPPED_ROOK already, so it is not the tree before S135"; return 1 ;;
+    *) say "refused: PARENT ${parent:0:12} has no src/evaluation.cpp to read"; return 1 ;;
+  esac
+  if [[ "$(git -C "$root" rev-parse --verify --quiet "$cand^")" != "$parent" ]]; then
+    say "refused: PARENT ${parent:0:12} is not CAND^, so the pair would measure more than S135's landing"
+    return 1
+  fi
+  say "pair      CAND carries the four columns, PARENT does not, PARENT is CAND^"
+}
+
 run() {
   mkdir -p "$OUT" || return 1
   [[ -x "$pc" ]] || { say "no $pc; build the tools first"; return 1; }
   command -v hyperfine > /dev/null || { say "no hyperfine"; return 1; }
-  local head parent
-  head=$(git -C "$root" rev-parse HEAD)
-  parent=$(git -C "$root" rev-parse HEAD^)
-  # The pair is S135's landing and the tree before it, or the parent build
-  # measures something else: HEAD carries the four columns and HEAD^ does not.
-  git -C "$root" show "$head:src/evaluation.cpp" | grep -q 'PL_TRAPPED_ROOK' ||
-    { say "refused: HEAD does not carry S135's columns (no PL_TRAPPED_ROOK)"; return 1; }
-  if git -C "$root" show "$parent:src/evaluation.cpp" | grep -q 'PL_TRAPPED_ROOK'; then
-    say "refused: HEAD^ carries PL_TRAPPED_ROOK already, so it is not the tree before S135"
-    return 1
-  fi
+  check_pair || return 1
   {
     echo "S135 cost"
     echo "started   $(date -Iseconds)"
-    echo "head      $head"
+    echo "cand      $cand"
     echo "parent    $parent"
     echo "loadavg   $(cat /proc/loadavg)"
     echo "governor  $(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null)"
   } | tee "$OUT/cost.log"
 
-  build_one zero "$head" | tee -a "$OUT/cost.log"
+  build_one zero "$cand" | tee -a "$OUT/cost.log"
   (( PIPESTATUS[0] == 0 )) || return 1
   [[ -x "$OUT/bin/copy" ]] || cp "$OUT/bin/zero" "$OUT/bin/copy" || return 1
   cmp -s "$OUT/bin/zero" "$OUT/bin/copy" || { say "the A/A copy differs"; return 1; }
@@ -185,7 +228,7 @@ run() {
   local name mask
   for spec in all:0x7f old3:0x07 new4:0x78; do
     name=${spec%%:*}; mask=${spec#*:}
-    build_one "$name" "$head" "$mask" | tee -a "$OUT/cost.log"
+    build_one "$name" "$cand" "$mask" | tee -a "$OUT/cost.log"
     (( PIPESTATUS[0] == 0 )) || return 1
   done
 
@@ -220,9 +263,11 @@ run() {
 }
 
 case "$stage" in
+  check)
+    if check_pair; then echo "S135-COST-CHECK-DONE"; else echo "S135-COST-CHECK-FAILED"; exit 1; fi ;;
   run)
     if run; then echo "S135-COST-DONE"; else echo "S135-COST-FAILED"; exit 1; fi ;;
   *)
-    echo "usage: $0 run" >&2
+    echo "usage: $0 check | run" >&2
     exit 2 ;;
 esac

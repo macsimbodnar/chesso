@@ -883,3 +883,52 @@ renumbered in place in "Proposed decisions" above. DEC-314's text stands; DEC-31
 - **`MANUAL.md`**: checked, no change; the UCI surface and play are unchanged.
 - **`DEV_MANUAL.md`**: changed in this diff -- phase 1's widths, partition and
   terms paragraph, and the gradient-worst sentence at the rebase.
+
+## 2026-10-25: the cost run refused on the landing -- pipefail and SIGPIPE
+
+**What failed.** `adocs/data/S135_cost.sh run`, started by the coordinator on
+the landing `76c4ad8`, refused at once: "refused: HEAD does not carry S135's
+columns (no PL_TRAPPED_ROOK)", which it does. **Why**: the script runs under
+`set -uo pipefail`, and `git show HEAD:src/evaluation.cpp | grep -q
+PL_TRAPPED_ROOK` reads 141 -- `grep -q` exits at its first match (line 188 of
+76291 bytes), `git show` dies of SIGPIPE writing the rest, and pipefail
+returns that. Reproduced 3 of 3 on `76c4ad8`; on `b7be983`, no match, grep
+reads everything and the pipe reads 1. The parent check had the same form, so
+a parent carrying the columns would have read 141 and passed, and
+`S135_screen.sh` `check_tuner`'s `--help | grep -q` was the same race (1893
+bytes of usage; it passed 200 of 200 here, racy by construction). Phase 1b's
+dry run could not show it: on `b7be983`'s HEAD only the no-match path runs,
+which is the one that works; the pass path needed the landing to exist.
+
+**Fixed, nothing else changed.** `S135_cost.sh` `carries_columns` captures
+the file before searching it, a bash pattern match and no pipe;
+`S135_screen.sh` `check_tuner` captures the usage the same way. **Every pipe
+of S135's scripts audited** (`S135_cost.sh`, `S135_screen.sh`,
+`S135_sprt.sh`, `S135_cost.py`, `S135_screen.py`): no other early-exit
+consumer has its status read -- the cost script's `diff -r ... | head -20`
+prints inside the INV-6 refusal, which returns 1 whatever it reads; every
+other pipe ends in `tee`, `cut`, `tail`, `awk`, `grep -v` or `grep .`, which
+read their whole input; the sprt script's `grep -q`s read files; the Python
+helpers use `subprocess.run` with captured output and one line-reading
+`Popen`.
+
+**The cost run's pair made explicit**, since a fix commit on top of the
+landing moves HEAD: `CAND_SHA` (default HEAD) and `PARENT_SHA` (default
+CAND^, so HEAD^ when neither is set), the checks applied to whichever is
+given -- CAND carries the four columns, PARENT does not, PARENT is CAND^ --
+and a stage `check` that runs those alone, building and timing nothing. Read
+in worktree `chesso-s135c` at `76c4ad8`: the landing pair passes (20 of 20),
+the defaults pass; `CAND_SHA=b7be983` refuses (CAND does not carry the
+columns), `PARENT_SHA=76c4ad8` refuses (PARENT carries them -- the old
+code's false pass), `PARENT_SHA=e3621b8` refuses (not CAND^), an unknown sha
+refuses. `check_tuner`, extracted and run alone: the S135 tuner passes 200
+of 200, S083's frozen pre-S135 copy refuses 200 of 200. The command is now
+`CAND_SHA=76c4ad8 PARENT_SHA=b7be983 nohup adocs/data/S135_cost.sh run >
+.tuning/s135_cost.console 2>&1 &`, the times as the rebase section states.
+
+**The screen's and the SPRT's HEAD.** `S135_sprt.sh`'s pair is two pinned
+shas with CAND^ = REF checked: no HEAD. `S135_screen.sh` compares the tuner's
+emitted constants with HEAD's evaluation sources by value (`start-check`),
+which is the reference it means -- the constants that ship. A commit on top
+that leaves `src/` alone, as this fix does, leaves that check as it was, and
+one that moves them, a landed bisection part, is what it must see: no change.

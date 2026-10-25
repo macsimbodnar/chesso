@@ -291,9 +291,14 @@ check_copy() {
 }
 
 # The tuner must be S135's: a tuner built before it knows no term and is three
-# columns short. Its usage names the terms.
+# columns short. Its usage names the terms. The usage is captured before it is
+# searched: under pipefail `--help | grep -q` reads 141 whenever grep exits on
+# its match before the tuner has written the rest, so the answer would depend
+# on the race (S135_cost.sh carries_columns, 2026-10-25).
 check_tuner() {
-  "$1" --help 2>&1 | grep -q 'piece_placement\.bad_bishop' || {
+  local usage
+  usage=$("$1" --help 2>&1)
+  [[ "$usage" == *piece_placement.bad_bishop* ]] || {
     say "refused: $1 does not know the piece placement terms; build the tuner from a tree with S135 landed"
     return 1
   }
