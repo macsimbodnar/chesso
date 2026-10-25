@@ -77,6 +77,33 @@
 # builds, 1.2 GB. The machine must be otherwise idle (MACHINE): a match, a fit
 # or datagen running beside it makes the floor meaningless.
 # ============================================================================
+#
+# AMENDED 2026-10-25, after run 1 (the step file's section "2026-10-25: the
+# cost run's forced builds did not separate"). The method and the reading
+# above are unchanged; the patch and three guards are new. Run 1's 0x78
+# build was its 0x7f build's code to the byte: the patch's single barrier
+# over the whole dot product let g++ 13.3 vectorise columns 0 to 3 into one
+# vpmulld against a constant vector, a zero lane still multiplied, so new4
+# computed the seven and old3 computed PL_BAD_BISHOP beside its three. The
+# patch now hands each forced column to a barrier of its own and never reads
+# a clear one. The guards:
+#   stamp   a binary under $OUT/bin is reused only when $OUT/bin/NAME.stamp
+#           names the commit, the mask and the patch's sha256 it would be
+#           built from now, and a tree under $OUT is built only when its HEAD
+#           is that commit and its files are the commit's, or the commit's
+#           with this patch, exactly; run 1's binaries carry no stamp and its
+#           patched trees the old patch, so a re-run takes a fresh OUT and
+#           cannot time the old builds
+#   code    before any timing, S135_cost.py code: zero, all, old3 and new4
+#           four distinct .text sections, and the forced builds' popcnt
+#           counts in evaluate_cheap() beyond zero's adding up, old3 + new4 =
+#           all, which a part computing a column outside its mask breaks
+#   read    S135_cost.py read refuses before any verdict unless, on both
+#           workloads, each forced build's instructions lie above zero's and
+#           all's above old3's and new4's by more than the A/A's instruction
+#           spread; it prints, ungated, the parts' sum against all's. Coarse:
+#           run 1's old3 overlap passes it, and only `code` refuses that
+# ============================================================================
 
 set -uo pipefail
 
@@ -91,18 +118,67 @@ python_chess="$HOME/.venv/chess/bin/python"
 
 say() { echo "$*"; }
 
+# The tree git would hold for COMMIT with the cost patch applied, written from
+# a scratch index in TREE's repository and printed as its id; the working tree
+# and its own index are not touched.
+patched_tree_id() {
+  local tree="$1" commit="$2" scratch id status
+  scratch=$(mktemp -d) || return 1
+  GIT_INDEX_FILE="$scratch/index" git -C "$tree" read-tree "$commit" &&
+    GIT_INDEX_FILE="$scratch/index" git -C "$tree" apply --cached "$patch" 2> /dev/null &&
+    id=$(GIT_INDEX_FILE="$scratch/index" git -C "$tree" write-tree)
+  status=$?
+  rm -rf "$scratch"
+  (( status == 0 )) && echo "$id"
+}
+
 # A worktree of COMMIT at $OUT/tree-NAME, the patch applied when asked, built
-# Release into its own build directory; the binary copied to $OUT/bin/NAME.
+# Release into its own build directory; the binary copied to $OUT/bin/NAME,
+# and beside it NAME.stamp: what it was built from. A binary already there is
+# reused only when its stamp is the one this build would write. A tree already
+# there is built only when its HEAD is COMMIT and its tracked files are COMMIT's
+# exactly, or for a patched build COMMIT's with this patch applied exactly --
+# compared as whole trees, `git diff --quiet` against the tree id
+# patched_tree_id prints -- so a binary is stamped only with what was built.
+# Anything else is refused, never cleaned: the old tree may be a run's record.
 build_one() {
   local name="$1" commit="$2" mask="${3:-}" tree="$OUT/tree-$1" flags=""
-  if [[ ! -x "$OUT/bin/$name" ]]; then
-    [[ -d "$tree" ]] || git -C "$root" worktree add -q --detach "$tree" "$commit" || return 1
+  local stamp="$commit unpatched" had head want applied=""
+  [[ -n "$mask" ]] && stamp="$commit $mask $(sha256sum "$patch" | cut -c1-64)"
+  if [[ -e "$OUT/bin/$name" ]]; then
+    had=$(cat "$OUT/bin/$name.stamp" 2> /dev/null) || had="no stamp"
+    if [[ "$had" != "$stamp" ]]; then
+      say "refused: $OUT/bin/$name was built from '$had', not '$stamp'; take a fresh OUT, or remove that binary and $tree"
+      return 1
+    fi
+  else
+    if [[ -d "$tree" ]]; then
+      head=$(git -C "$tree" rev-parse --verify --quiet HEAD) || head="no commit"
+      if [[ "$head" != "$commit" ]]; then
+        say "refused: $tree is at $head, not $commit; take a fresh OUT, or remove that tree"
+        return 1
+      fi
+      if ! git -C "$tree" diff --quiet HEAD; then
+        want=""
+        [[ -n "$mask" ]] && want=$(patched_tree_id "$tree" "$commit")
+        if [[ -z "$want" ]] || ! git -C "$tree" diff --quiet "$want"; then
+          if [[ -n "$mask" ]]; then
+            say "refused: $tree carries changes other than exactly the cost patch; take a fresh OUT, or remove that tree"
+          else
+            say "refused: $tree carries changes, and an unpatched build needs none; take a fresh OUT, or remove that tree"
+          fi
+          return 1
+        fi
+        applied=yes
+      fi
+    else
+      git -C "$root" worktree add -q --detach "$tree" "$commit" || return 1
+    fi
     if [[ -n "$mask" ]]; then
-      git -C "$tree" apply --check "$patch" 2> /dev/null &&
-        git -C "$tree" apply "$patch" || {
-          git -C "$tree" apply --reverse --check "$patch" 2> /dev/null ||
-            { say "the cost patch does not apply to $commit"; return 1; }
-        }
+      if [[ -z "$applied" ]]; then
+        git -C "$tree" apply --check "$patch" 2> /dev/null && git -C "$tree" apply "$patch" ||
+          { say "the cost patch does not apply to $commit"; return 1; }
+      fi
       flags="-DS135_COST_MASK=$mask"
     fi
     cmake -S "$tree" -B "$tree/build" -DCMAKE_BUILD_TYPE=Release \
@@ -113,6 +189,7 @@ build_one() {
     grep -q '^CHESSO_BRANCH_PAD:INTERNAL=ON$' "$tree/build/CMakeCache.txt" ||
       { say "$name is not padded (CHESSO_BRANCH_PAD), and DEC-266 (1) wants both sides padded"; return 1; }
     mkdir -p "$OUT/bin" && cp "$tree/build/src/chesso" "$OUT/bin/$name" || return 1
+    echo "$stamp" > "$OUT/bin/$name.stamp" || return 1
   fi
   say "$name $(sha256sum "$OUT/bin/$name" | cut -c1-16) $commit ${mask:-unpatched}"
 }
@@ -209,6 +286,8 @@ run() {
   mkdir -p "$OUT" || return 1
   [[ -x "$pc" ]] || { say "no $pc; build the tools first"; return 1; }
   command -v hyperfine > /dev/null || { say "no hyperfine"; return 1; }
+  command -v objdump > /dev/null && command -v objcopy > /dev/null ||
+    { say "no objdump or objcopy, which the masks' code check reads with"; return 1; }
   check_pair || return 1
   {
     echo "S135 cost"
@@ -246,6 +325,10 @@ run() {
   done
   say "INV-6: bench $(tail -n 1 "$OUT/inv6/zero/bench.txt"), every binary identical" |
     tee -a "$OUT/cost.log"
+
+  # Each mask built the code it names, before an hour of timing is spent on it.
+  python3 "$helper" code "$OUT/bin" | tee -a "$OUT/cost.log"
+  (( PIPESTATUS[0] == 0 )) || { say "the forced builds do not compute what their masks name; no timing is taken"; return 1; }
 
   echo "loadavg before pairs: $(cat /proc/loadavg)" >> "$OUT/cost.log"
   pairs aa copy | tee -a "$OUT/cost.log"

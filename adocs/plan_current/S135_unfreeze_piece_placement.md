@@ -932,3 +932,198 @@ emitted constants with HEAD's evaluation sources by value (`start-check`),
 which is the reference it means -- the constants that ship. A commit on top
 that leaves `src/` alone, as this fix does, leaves that check as it was, and
 one that moves them, a landed bisection part, is what it must see: no change.
+
+## 2026-10-25: the cost run's forced builds did not separate
+
+**What run 1 read.** `CAND_SHA=76c4ad8 PARENT_SHA=b7be983
+adocs/data/S135_cost.sh run`, 20:21:09 to 21:16:27 (55 min), main checkout at
+`d652c0a`, `S135-COST-DONE`; INV-6 bench 3945487 in all five binaries. Its
+reading, verbatim, kept as run 1's record:
+
+```
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       -0.072 %  CI -0.333 .. +0.189 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.083 %  CI -0.110 .. +0.275 %
+  pos11   wall         -0.137 %  CI -0.321 .. +0.046 %  (cand time over base, + is slower)
+all: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +5.016 %  CI +5.016 .. +5.016 %
+  bench16 cycles       +4.381 %  CI +4.133 .. +4.629 %
+  pos11   instructions +5.255 %  CI +5.255 .. +5.255 %
+  pos11   cycles       +4.752 %  CI +4.537 .. +4.967 %
+  pos11   wall         +4.402 %  CI +4.165 .. +4.639 %  (cand time over base, + is slower)
+new4: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +5.016 %  CI +5.016 .. +5.016 %
+  bench16 cycles       +4.444 %  CI +4.253 .. +4.635 %
+  pos11   instructions +5.255 %  CI +5.255 .. +5.255 %
+  pos11   cycles       +4.541 %  CI +4.476 .. +4.606 %
+  pos11   wall         +4.587 %  CI +4.231 .. +4.944 %  (cand time over base, + is slower)
+old3: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +2.215 %  CI +2.215 .. +2.215 %
+  bench16 cycles       +1.716 %  CI +1.518 .. +1.913 %
+  pos11   instructions +2.409 %  CI +2.409 .. +2.409 %
+  pos11   cycles       +2.026 %  CI +1.872 .. +2.180 %
+  pos11   wall         +1.948 %  CI +1.771 .. +2.124 %  (cand time over base, + is slower)
+parent: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       +0.151 %  CI -0.025 .. +0.328 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.086 %  CI -0.036 .. +0.207 %
+  pos11   wall         +0.170 %  CI +0.039 .. +0.300 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.333 %, pos11 cycles 0.275 %, wall 0.321 %
+all: COST +4.51 % (cycles and wall beyond the floor, instructions the same way)
+new4: COST +4.52 % (cycles and wall beyond the floor, instructions the same way)
+old3: COST +1.90 % (cycles and wall beyond the floor, instructions the same way)
+parent: zero (inside the A/A's floor)
+```
+
+`all` forces a strict superset of `new4`'s columns, yet the two raw
+`bench 16` counts agree to 21 instructions in 24.9 billion (pair 6:
+24864445994 and 24864446015, old3 24201217688, zero 23676751906 to
+23676752001 in those three pairs).
+
+**The diagnosis, from run 1's binaries** (read only; `objdump -d
+--no-show-raw-insn -C`, `objcopy --only-section=.text`, g++ 13.3, `-O3
+-march=native`, padded). The patch's single barrier took
+sum(difference * forced[f]) over all seven columns, a clear bit a forced
+weight of 0. g++ SLP-vectorised the first four products: columns 0 to 3 of
+each side built into an xmm register (`vmovd`, `vpinsrd`, `vpunpcklqdq`),
+`vpsubd`, then one `vpmulld` against a 16-byte constant in `.rodata` at
+0x467a0. It does not drop a lane whose constant is zero, so every one of
+columns 0 to 3 is computed whatever the mask; columns 4 to 6 stayed scalar,
+their weights folded into `lea`/`shl`, and there a zero weight deletes the
+column.
+
+- **new4 (0x78) computed all seven.** Its `.text` is all's to the byte
+  (sha256 c454a020da23ef95 both); `cmp -l` finds 23 differing bytes in the
+  whole file, the 20-byte build id and 3 bytes of the constant at 0x467a0:
+  all {3, 5, 7, 9}, new4 {0, 0, 0, 9}. `evaluate_cheap()` 0x7b5 bytes in
+  both, `vpmulld 0x2831(%rip)` at 0x43f66, the bishop pair's `setg` at
+  0x43c0a and 0x43df8 feeding lane 0.
+- **old3 (0x07) computed the three and PL_BAD_BISHOP.** Constant {3, 5, 7,
+  0}, `vpmulld 0x2b44(%rip)` at 0x43c53; the bad bishop's colour masks
+  0x55aa55aa55aa55aa and 0xaa55aa55aa55aa55 (0x43b32, 0x43b8d) and their
+  products feed lane 3 (`vpinsrd` at 0x43c1c and 0x43c45); no
+  trapped-minor (0x8181...) or trapped-rook (0xc3c3..., 0x303) mask, so
+  columns 4 to 6 were deleted.
+- **all (0x7f) computed the seven**, which is what it claims.
+- **The count that shows it:** `popcnt` in `evaluate_cheap()`, zero 6,
+  parent 6, old3 20, new4 30, all 30. Per column, both sides: bishop pair
+  2, rook open 2, rook half open 2, bad bishop 8, bad bishop rammed 4 (it
+  shares the bishop-colour counts with the bad bishop), trapped minor 4,
+  trapped rook 2 -- so 0x07 owes +6 beyond zero's, 0x78 +18, 0x7f +24.
+  Run 1's old3 read +14 (+6 and the bad bishop's 8), new4 +24, all's.
+
+**Which rows stand.** `parent`: unpatched on both sides, it measured what it
+claims -- the zero-weight landing is free on g++ 13.3 -- and stands. `all`:
+the seven, as claimed; it stands as a reading of the seven under the first
+patch, and the re-run's `all` is the one read beside the parts, since a
+whole and its parts are compared from one patch. `new4`: a second 16-pair
+measurement of all's code (+4.52 against +4.51, which corroborates `all`), not
+S135's four; void as a part. `old3`: S027's three plus PL_BAD_BISHOP, not
+the three; void as a part.
+
+**The fix** (`adocs/data/S135_cost_only.patch`, the throwaway trees only).
+Each forced column is a block of its own under `if constexpr` on its mask
+bit: the column's difference times its forced weight (3 to 15 as before)
+into an `asm volatile` barrier of its own. A clear column is in no
+expression, so no vector can carry it; `static_assert`s hold the mask to 1
+to 0x7f and the group to seven columns. Applies to `76c4ad8` (offset one
+line from the old hunk); the old patch does not apply over it, so a tree
+carrying the old one refuses.
+
+**Proof, per mask** (worktree of `76c4ad8`, the script's configure flags
+copied, Release, padded, `-j4`, 0 warnings under `-Werror`):
+
+| mask | `evaluate_cheap()` lines | popcnt | xmm | setg | colour masks | 0x8181 | 0xc3c3/0x303 | weights |
+|---|---|---|---|---|---|---|---|---|
+| zero | 188 | 6 | 0 | 0 | 0 | 0 | 0 | -- |
+| 0x07 | 223 | 12 | 0 | 2 | 0 | 0 | 0 | x3, x5, x7 by `lea` at 0x43b94, 0x43b9b, 0x43ba0 |
+| 0x78 | 415 | 24 | 0 | 0 | 4 | 4 | 4 | x9 0x43eac, x11 0x43ebc, x13 0x43ec4, x15 `shl` 0x43ed2 |
+| 0x7f | 467 | 30 | 0 | 2 | 4 | 4 | 4 | the seven |
+
+0x07 is the bishop pair (`popcnt 0x10(%r9)`, `popcnt 0x40(%r9)`, two
+`setg`), rook open and half open (`andn` and `popcnt` on the rook boards at
+0x18 and 0x48) and nothing else; 0x78 has no `setg` and loads the rooks only
+for the trapped-rook corner mask; beyond zero's, +6 + +18 = +24, all's.
+Built through the script's own `build_one` (its `-j12` set to 4 in a scratch
+copy) the three `.text` sections are byte-identical to these: 81f1c99e6f80383b
+(0x7f), e808bad6eda027f5 (0x07), 61b7a9ce33740320 (0x78). **INV-6**: each of
+the three prints run 1's zero streams exactly -- `bench` 3945487, `bench 12`,
+`tools/search_bench.py` at depth 9 (42570, 152468, 27750 nodes) and depth 12
+(250176, 412312, 157359), best moves c3d5, e2a6, d7c8q at both.
+
+**The guards.**
+
+- **stamp** (`adocs/data/S135_cost.sh` `build_one`): a binary under
+  `$OUT/bin` is reused only when `NAME.stamp` names the commit, mask and
+  patch sha256 it would be built from now. Shown on a scratch OUT: run 1's
+  binary (no stamp) refused; a stamp naming run 1's patch (3e37da92...)
+  refused; the current patch's stamp (0dc56de2...) reused. **And a tree
+  already under OUT** (the fast check's finding: a new `CAND_SHA` in an old
+  OUT, binaries deleted and trees kept, built the old commit and stamped it
+  as the new) is built only when its HEAD is the commit asked for and its
+  tracked files are the commit's exactly, or for a patched build the
+  commit's with this patch applied exactly: `git diff --quiet` against the
+  tree id `patched_tree_id` writes from a scratch index (`read-tree`,
+  `apply --cached`, `write-tree`; the tree's own index untouched).
+  Anything else is refused, never cleaned. Shown on scratch trees: at
+  `b7be983` when `76c4ad8` is asked, refused; at `76c4ad8` carrying run 1's
+  patch, refused; this patch plus a stray line in `src/search.cpp`,
+  refused; an unpatched build over a dirty tree, refused; this patch
+  already applied, built, and a clean tree, patched and built -- both
+  `.text` byte-identical to the manual builds (61b7a9ce33740320,
+  e808bad6eda027f5). Run 1's `.tuning/s135/cost/bin` carries no stamp and
+  its patched trees the old patch, so a re-run there refuses and cannot
+  time the old builds: it takes a fresh OUT.
+- **code** (`adocs/data/S135_cost.py` `code`, after INV-6 and before any
+  timing): zero, all, old3, new4 four distinct `.text` sections; each forced
+  build more `popcnt` in `evaluate_cheap()` than zero's; old3's and new4's
+  extra summing to all's exactly. The masks are disjoint and no popcount is
+  shared between a column of 0x07 and one of 0x78, so a part computing a
+  column outside its mask counts it twice. On run 1's binaries: "refused:
+  all and new4 have the same .text" and "refused: old3's +14 and new4's +24
+  popcnt against zero's sum to +38, not all's +24", exit 1. On the fixed
+  three with run 1's zero: "four distinct .text sections; popcnt beyond
+  zero's old3 +6 + new4 +18 = all +24", exit 0.
+- **read** (`adocs/data/S135_cost.py` `separates`, before any verdict): on
+  both workloads each forced build's instructions CI above the A/A's
+  instruction floor (its largest CI bound, read in parts per billion), and
+  all's lower bound above old3's and new4's upper bounds by more than that
+  floor -- each part costs something and all more than either. **It does
+  not check that the parts add up to all**: run 1's old3, the bad bishop
+  computed beside its three, passes it, and only `code` refuses an overlap.
+  The parts' sum against all's is printed, not gated: shared loads and
+  register pressure move a correct build's sum off all's by an amount
+  nothing here has bounded, so no gate on it can be shown never to refuse
+  a correct build. On run 1's pairs (read only): "refused:
+  bench16 all's instructions exceed new4's by -1.1 ppb ... not more than the
+  A/A floor 1.9 ppb" and the same on pos11, -13.5 against 20.6 ppb; exit 1,
+  no verdict printed, so the run ends `S135-COST-FAILED`. On a scratch copy
+  of run 1's pairs with old3's and new4's candidate counts rewritten to +1.0 %
+  and +4.0 %, each pair keeping its own jitter: "each part above zero and
+  all above each part, beyond the floor", the verdicts follow, exit 0. With old3 rewritten to
+  zero's counts instead: "refused: bench16 old3's instructions CI starts at
+  -1.4 ppb, not above the A/A floor 1.9 ppb" and on pos11, exit 1.
+
+**Not settled, for the bisection.** The shipping sum, difference times
+`piece_placement_score[f]` over the seven, is the same loop shape: a
+bisection part's binary that ships some columns at zero beside non-zero
+ones may still compute the zero ones in a vector lane, as old3 did. The
+SPRT measures whatever the binary does, so no verdict is wrong; but that
+part's cost would not be the cost run's part, and a part binary's `popcnt`
+count (the `code` reading) says which.
+
+**The re-run**, the coordinator's, method unchanged, on an idle machine:
+
+```
+CAND_SHA=76c4ad8 PARENT_SHA=b7be983 OUT=/home/max/ws/chesso/.tuning/s135/cost2 \
+  nohup adocs/data/S135_cost.sh run > .tuning/s135_cost2.console 2>&1 &
+```
+
+About 1 h 05 m by the script's own estimate, ceiling 2 h 30 m; run 1 took
+55 min. Disk another 1.2 GB under `cost2`, beside run 1's 1.2 GB under
+`.tuning/s135/cost`, whose five worktrees stay until the coordinator removes
+them. The run now prints the `code` lines into `cost.log` before the pairs
+and the `masks` lines before the verdicts.

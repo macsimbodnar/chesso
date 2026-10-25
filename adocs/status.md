@@ -49,11 +49,26 @@ DEC-315) and landed at weight zero: bad bishop and its rammed share,
 trapped minor and trapped rook, four columns appended to `piece_placement`
 (DEC-314), 823 -> 831 parameters.
 
-**Next** (the coordinator's, step file "The coordinator's commands"):
-`S135_cost.sh run` (about 1 h), the screen's `locate`, `audit`, `screen`
-(about 5 h 40 m), `candidate`, the apply and goldens by an agent, then the
-`{0, 5}` SPRT at 8+0.08 (up to about 20 h, a night). Open filler to name in
-every pre-registration: S294.
+**Cost run 1** (`d652c0a`, 1 h 04 m, `S135-COST-DONE`; reading kept at
+`.tuning/coord/S135/cost_reading_run1.txt`): `parent` zero (instructions
+-0.000 %), so g++ deletes the four new columns at zero and the landing is
+free. But `all` (0x7f) and `new4` (0x78) execute the same instructions to
+about 20 in 24.9 billion (+5.016 % / +5.255 %), though `all` forces a strict
+superset: the per-part rows (`new4` +4.52 %, `old3` +1.90 %) are suspect.
+A fresh agent diagnoses it from the built binaries, fixes
+`S135_cost_only.patch` and adds a separation guard
+(`.tuning/coord/S135/brief_cost.md`); the coordinator re-runs the cost
+(about 1 h, idle machine) after the screen. The cost decides nothing; the
+screen does not depend on it.
+
+**Running**: the screen (`locate` and `audit` passed: rank 792 of 831, the
+four columns identified), started 2026-10-25 21:18, PID 779040, console
+`.tuning/s135_screen.console`, about 1 to 2.5 h, ceiling 5 h.
+
+**Next**: `candidate` on `SCREEN-OUTCOME candidate` (no SPRT on `none`),
+the apply and goldens by an agent, the cost re-run, then the `{0, 5}` SPRT
+at 8+0.08 (up to about 20 h, a night). Open filler to name in every
+pre-registration: S294.
 
 ## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
 
