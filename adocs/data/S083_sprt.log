@@ -1,0 +1,1426 @@
+Building reference e972bd4 ...
+Preparing worktree (detached HEAD e972bd4)
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Branch padding on (-Wa,-mbranches-within-32B-boundaries)
+-- Sanitizer OFF
+-- Tune build OFF
+-- PGO off
+-- Test timeout 60s (build type Release)
+candidate  e972bd4  2026-10-23  + uncommitted changes
+diff       /home/max/ws/chesso/.tuning/sprt_s083_20261023_213108/candidate.diff  blob c875e362fbb2
+reference  e972bd4  2026-10-23
+config     arch native  tune off
+padding    cand on  ref on
+tc 8+0.08  hash 16  concurrency 12 of 12 cores
+book       noob_3moves.epd
+seed       20261023213108
+bounds     elo0=0 elo1=5 alpha=0.05 beta=0.05
+cap        20950 rounds, 41900 games, from SPRT_ROUNDS; no bound by then is no verdict
+out        /home/max/ws/chesso/.tuning/sprt_s083_20261023_213108
+
+id name    cand-e972bd4+c875e362fbb2  Chesso e972bd4-dirty native
+id name    ref-e972bd4  Chesso e972bd4 native
+
+Indexing opening suite...
+Started game 1 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Started game 2 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Started game 4 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Started game 9 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Started game 6 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Started game 8 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Started game 11 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Started game 12 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Started game 7 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Started game 10 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Started game 3 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Started game 5 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 6 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 13 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 3 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 14 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 12 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 15 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 10 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 16 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 5 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 17 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 2 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 18 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 4 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 19 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 9 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 20 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 8 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 21 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 13 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 22 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 1 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 23 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 11 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 24 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 7 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 25 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 16 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 26 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 15 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 27 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 17 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 28 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 14 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 29 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 20 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 30 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 22 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 31 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 23 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 32 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 24 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 33 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 18 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 34 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 21 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 35 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 28 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 36 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 25 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 37 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 19 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 73.46 +/- 66.68, nElo: 159.92 +/- 139.00
+LOS: 98.79 %, DrawRatio: 41.67 %, PairsRatio: 6.00
+Games: 24, Wins: 10, Losses: 5, Draws: 9, Points: 14.5 (60.42 %)
+Ptnml(0-2): [0, 1, 5, 6, 0], WL/DD Ratio: 4.00
+LLR: 0.11 (3.7%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 38 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 26 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 39 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 30 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 40 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 33 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 41 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 31 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 42 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 32 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 43 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 27 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 44 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 34 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 45 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 35 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 46 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 40 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 47 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 29 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 48 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 37 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 49 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 39 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 131.39 +/- 68.66, nElo: 242.82 +/- 113.49
+LOS: 100.00 %, DrawRatio: 27.78 %, PairsRatio: 12.00
+Games: 36, Wins: 18, Losses: 5, Draws: 13, Points: 24.5 (68.06 %)
+Ptnml(0-2): [0, 1, 5, 10, 2], WL/DD Ratio: 4.00
+LLR: 0.22 (7.4%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 50 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 38 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 51 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 45 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 52 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 36 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 53 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 44 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 54 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 41 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 55 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 42 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 56 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 49 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 57 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 47 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 58 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 46 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 59 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 50 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 60 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 43 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by fifty moves rule}
+Started game 61 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 48 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 62 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 51 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 63 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 54 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 64 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 57 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 65 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 52 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 66 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 60 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 67 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 58 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 68 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 56 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 69 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 55 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 70 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 62 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 71 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 59 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 118.17 +/- 54.08, nElo: 213.06 +/- 89.41
+LOS: 100.00 %, DrawRatio: 20.69 %, PairsRatio: 6.67
+Games: 58, Wins: 27, Losses: 8, Draws: 23, Points: 38.5 (66.38 %)
+Ptnml(0-2): [0, 3, 6, 18, 2], WL/DD Ratio: 5.00
+LLR: 0.33 (11.3%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 72 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 64 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 73 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 61 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 74 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 53 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 75 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 67 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 76 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 63 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 77 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 66 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 78 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 68 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 79 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 65 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 80 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 70 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 81 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 72 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 82 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 71 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 83 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 75 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 84 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 78 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 85 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 79 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 86 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 69 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by fifty moves rule}
+Started game 87 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 76 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 88 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 81 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 89 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 74 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 90 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 73 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 91 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 83 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 92 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 85 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 93 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 82 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 94 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 84 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 95 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 77 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 96 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 80 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 120.41 +/- 46.27, nElo: 210.89 +/- 74.30
+LOS: 100.00 %, DrawRatio: 23.81 %, PairsRatio: 7.00
+Games: 84, Wins: 41, Losses: 13, Draws: 30, Points: 56.0 (66.67 %)
+Ptnml(0-2): [0, 4, 10, 24, 4], WL/DD Ratio: 9.00
+LLR: 0.49 (16.5%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 97 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 90 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 98 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 87 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 99 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 88 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 100 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 89 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 101 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 86 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 102 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 91 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 103 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 95 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 104 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 94 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 105 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 98 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 106 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 97 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 107 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 96 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 108 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 93 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 109 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 92 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 110 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 102 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 111 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 99 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 112 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 100 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 81.37 +/- 48.28, nElo: 119.90 +/- 68.10
+LOS: 99.97 %, DrawRatio: 20.00 %, PairsRatio: 3.00
+Games: 100, Wins: 43, Losses: 20, Draws: 37, Points: 61.5 (61.50 %)
+Ptnml(0-2): [1, 9, 10, 26, 4], WL/DD Ratio: 9.00
+LLR: 0.42 (14.2%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 113 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 103 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 114 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 106 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 115 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 107 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 116 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 101 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 117 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 109 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 118 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 110 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 119 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 112 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 120 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 108 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 121 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 104 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 122 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 105 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 123 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 111 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 124 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 115 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 125 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 120 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 126 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 116 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 127 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 114 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 128 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 113 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 129 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 117 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 130 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 119 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 96.64 +/- 46.38, nElo: 138.46 +/- 62.69
+LOS: 100.00 %, DrawRatio: 23.73 %, PairsRatio: 3.50
+Games: 118, Wins: 53, Losses: 21, Draws: 44, Points: 75.0 (63.56 %)
+Ptnml(0-2): [1, 9, 14, 27, 8], WL/DD Ratio: 2.50
+LLR: 0.56 (19.0%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 131 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 123 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 132 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 122 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 133 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 121 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 134 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 118 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 135 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 129 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 136 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 126 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 137 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 127 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 138 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 131 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 139 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 125 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 140 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 130 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 141 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 133 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 142 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 132 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 143 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 128 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 144 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 124 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 145 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 134 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 146 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 137 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 147 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 138 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 148 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 140 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 149 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 136 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 150 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 141 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by stalemate}
+Started game 151 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 135 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 152 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 142 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 153 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 139 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 108.61 +/- 43.49, nElo: 153.21 +/- 57.14
+LOS: 100.00 %, DrawRatio: 23.94 %, PairsRatio: 3.91
+Games: 142, Wins: 67, Losses: 24, Draws: 51, Points: 92.5 (65.14 %)
+Ptnml(0-2): [1, 10, 17, 31, 12], WL/DD Ratio: 2.40
+LLR: 0.73 (24.9%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 154 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 143 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 155 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 145 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 156 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 147 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 157 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 146 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 158 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 144 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 159 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 151 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 160 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 148 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 161 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 150 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 162 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 152 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 163 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 149 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 164 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 153 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 165 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 155 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 166 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 156 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 167 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 157 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 168 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 160 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 169 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 167 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 170 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 162 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 171 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 163 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 172 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 158 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 173 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 164 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 174 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 154 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 175 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 161 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 176 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 159 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 111.74 +/- 39.57, nElo: 161.63 +/- 53.17
+LOS: 100.00 %, DrawRatio: 26.83 %, PairsRatio: 4.45
+Games: 164, Wins: 79, Losses: 28, Draws: 57, Points: 107.5 (65.55 %)
+Ptnml(0-2): [1, 10, 22, 35, 14], WL/DD Ratio: 2.67
+LLR: 0.87 (29.5%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 177 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 168 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 178 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 169 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 179 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 171 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 180 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 165 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 181 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 172 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 182 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 166 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 183 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 175 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 184 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 170 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 185 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 174 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 186 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 176 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 187 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 173 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 188 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 178 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 189 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 180 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 190 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 181 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 191 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 183 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 192 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 177 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 193 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 179 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 111.80 +/- 36.97, nElo: 165.10 +/- 50.76
+LOS: 100.00 %, DrawRatio: 28.89 %, PairsRatio: 4.82
+Games: 180, Wins: 87, Losses: 31, Draws: 62, Points: 118.0 (65.56 %)
+Ptnml(0-2): [1, 10, 26, 38, 15], WL/DD Ratio: 2.71
+LLR: 0.96 (32.6%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 194 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 182 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 195 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 185 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 196 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 191 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 197 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 190 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 198 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 186 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 199 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 184 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 200 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 188 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 201 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 189 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 202 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 187 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 203 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 193 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 204 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 192 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 205 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 194 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 206 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 195 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 207 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 204 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 208 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 199 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 209 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 197 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 210 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 196 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 211 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 198 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 212 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 201 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 213 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 202 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 214 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 200 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 115.92 +/- 34.86, nElo: 172.18 +/- 47.91
+LOS: 100.00 %, DrawRatio: 30.69 %, PairsRatio: 5.36
+Games: 202, Wins: 101, Losses: 36, Draws: 65, Points: 133.5 (66.09 %)
+Ptnml(0-2): [1, 10, 31, 41, 18], WL/DD Ratio: 3.43
+LLR: 1.11 (37.5%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 215 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 206 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 216 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 203 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 217 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 205 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 218 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 211 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 219 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 210 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 220 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 207 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 221 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 214 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 222 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 209 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 223 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 215 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 224 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 212 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 225 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 213 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 226 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 208 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 227 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 219 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 228 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 218 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 229 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 223 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 230 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 216 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 231 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 225 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 232 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 221 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 233 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 220 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 115.65 +/- 34.10, nElo: 168.96 +/- 46.12
+LOS: 100.00 %, DrawRatio: 29.36 %, PairsRatio: 4.92
+Games: 218, Wins: 109, Losses: 39, Draws: 70, Points: 144.0 (66.06 %)
+Ptnml(0-2): [1, 12, 32, 44, 20], WL/DD Ratio: 3.57
+LLR: 1.19 (40.5%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 234 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 217 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by fifty moves rule}
+Started game 235 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 229 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 236 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 222 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 237 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 224 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 238 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 226 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 239 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 227 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 240 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 228 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 241 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 231 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 242 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 233 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 243 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 235 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 244 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 234 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 245 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 232 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 246 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 230 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 247 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 240 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 248 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 236 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 249 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 241 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 250 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 239 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 126.47 +/- 33.21, nElo: 184.08 +/- 44.14
+LOS: 100.00 %, DrawRatio: 27.73 %, PairsRatio: 5.62
+Games: 238, Wins: 122, Losses: 39, Draws: 77, Points: 160.5 (67.44 %)
+Ptnml(0-2): [1, 12, 33, 49, 24], WL/DD Ratio: 3.12
+LLR: 1.37 (46.4%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 251 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 242 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 252 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 238 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 253 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 244 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 254 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 245 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 255 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 243 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 256 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 248 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 257 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 246 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 258 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 237 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 259 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 250 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 260 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 249 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 261 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 247 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 262 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 253 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 263 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 251 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 264 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 254 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 265 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 256 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 266 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 255 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 267 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 258 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 268 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 252 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 269 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 260 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 270 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 257 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 271 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 259 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 123.93 +/- 33.45, nElo: 170.79 +/- 42.23
+LOS: 100.00 %, DrawRatio: 27.69 %, PairsRatio: 5.27
+Games: 260, Wins: 134, Losses: 45, Draws: 81, Points: 174.5 (67.12 %)
+Ptnml(0-2): [3, 12, 36, 51, 28], WL/DD Ratio: 3.00
+LLR: 1.42 (48.1%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 272 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 261 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 273 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 263 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 274 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 264 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 275 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 265 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 276 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 269 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 277 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 266 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 278 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 270 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 279 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 262 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 280 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 271 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 281 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 268 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 282 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 267 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 283 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 272 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 284 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 274 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 285 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 275 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 286 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 279 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 287 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 278 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 288 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 282 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 289 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 277 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 290 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 280 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 124.68 +/- 31.98, nElo: 174.52 +/- 40.99
+LOS: 100.00 %, DrawRatio: 28.26 %, PairsRatio: 5.60
+Games: 276, Wins: 142, Losses: 47, Draws: 87, Points: 185.5 (67.21 %)
+Ptnml(0-2): [3, 12, 39, 55, 29], WL/DD Ratio: 2.90
+LLR: 1.51 (51.5%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 291 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 283 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 292 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 276 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 293 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 284 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 294 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 286 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 295 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 285 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 296 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 281 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 297 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 290 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 298 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 288 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 299 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 289 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 300 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 273 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 301 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 287 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 302 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 294 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 303 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 295 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 304 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 292 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 305 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 297 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 306 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 293 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 307 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 298 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 308 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 300 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 309 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 302 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 310 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 299 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 120.85 +/- 31.50, nElo: 165.02 +/- 39.58
+LOS: 100.00 %, DrawRatio: 27.03 %, PairsRatio: 4.68
+Games: 296, Wins: 151, Losses: 52, Draws: 93, Points: 197.5 (66.72 %)
+Ptnml(0-2): [3, 16, 40, 57, 32], WL/DD Ratio: 3.00
+LLR: 1.60 (54.2%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 311 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 291 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 312 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 301 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 313 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 303 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 314 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 296 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 315 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 307 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 316 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 304 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 317 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 309 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 318 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 308 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 319 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 311 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 320 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 305 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 321 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 310 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 322 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 314 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 323 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 321 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 324 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 312 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 325 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 315 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 326 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 313 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 327 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 316 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 328 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 306 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 329 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 319 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 330 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 317 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 331 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 322 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 332 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 320 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 112.33 +/- 30.44, nElo: 150.97 +/- 38.07
+LOS: 100.00 %, DrawRatio: 26.88 %, PairsRatio: 4.09
+Games: 320, Wins: 159, Losses: 59, Draws: 102, Points: 210.0 (65.62 %)
+Ptnml(0-2): [4, 19, 43, 61, 33], WL/DD Ratio: 2.91
+LLR: 1.63 (55.3%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 333 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 318 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 334 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 325 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 335 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 326 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 336 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 323 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 337 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 324 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 338 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 329 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 339 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 328 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 340 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 330 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 341 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 337 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 342 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 331 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 343 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 332 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 344 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 327 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 345 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 336 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 346 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 335 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 347 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 333 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 348 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 343 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 349 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 342 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 350 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 344 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 351 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 341 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 352 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 346 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 353 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 340 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 354 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 345 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 355 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 334 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 356 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 347 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 357 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 339 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 115.14 +/- 29.15, nElo: 156.37 +/- 36.71
+LOS: 100.00 %, DrawRatio: 27.91 %, PairsRatio: 4.39
+Games: 344, Wins: 171, Losses: 61, Draws: 112, Points: 227.0 (65.99 %)
+Ptnml(0-2): [4, 19, 48, 65, 36], WL/DD Ratio: 2.43
+LLR: 1.79 (60.7%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 358 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 338 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 359 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 348 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 360 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 351 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 361 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 353 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 362 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 350 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 363 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 354 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 364 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 352 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 365 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 349 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 366 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 355 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 367 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 356 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 368 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 359 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 369 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 361 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 370 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 358 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 371 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 366 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 372 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 363 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 373 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 364 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 374 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 365 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 375 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 367 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 376 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 360 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 117.54 +/- 28.56, nElo: 159.25 +/- 35.79
+LOS: 100.00 %, DrawRatio: 27.62 %, PairsRatio: 4.46
+Games: 362, Wins: 182, Losses: 64, Draws: 116, Points: 240.0 (66.30 %)
+Ptnml(0-2): [4, 20, 50, 68, 39], WL/DD Ratio: 2.57
+LLR: 1.91 (64.8%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 377 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 369 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 378 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 357 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 379 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 370 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 380 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 373 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 381 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 372 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 382 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 368 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 383 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 362 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 384 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 374 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 385 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 378 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 386 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 379 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 387 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 380 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 118.67 +/- 27.93, nElo: 161.98 +/- 35.21
+LOS: 100.00 %, DrawRatio: 27.81 %, PairsRatio: 4.62
+Games: 374, Wins: 188, Losses: 65, Draws: 121, Points: 248.5 (66.44 %)
+Ptnml(0-2): [4, 20, 52, 71, 40], WL/DD Ratio: 2.47
+LLR: 1.99 (67.6%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 388 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 371 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by fifty moves rule}
+Started game 389 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 382 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 390 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 376 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 391 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 383 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 392 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 375 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 393 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 381 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 394 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 377 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 395 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 385 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 396 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 389 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 397 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 384 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 398 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 392 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 399 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 393 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 400 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 386 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 401 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 388 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 402 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 387 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 403 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 391 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 404 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 390 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 405 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 399 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 406 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 395 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 407 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 397 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 408 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 398 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 409 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 402 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 410 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 404 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 411 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 401 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 412 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 396 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 413 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 403 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 414 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 394 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 415 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 408 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 416 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 406 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 417 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 413 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 418 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 400 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 115.92 +/- 26.95, nElo: 157.20 +/- 33.88
+LOS: 100.00 %, DrawRatio: 27.23 %, PairsRatio: 4.25
+Games: 404, Wins: 200, Losses: 70, Draws: 134, Points: 267.0 (66.09 %)
+Ptnml(0-2): [4, 24, 55, 76, 43], WL/DD Ratio: 2.24
+LLR: 2.13 (72.2%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 419 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 407 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 420 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 410 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 421 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 411 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 422 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 414 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 423 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 419 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 424 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 417 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 425 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 418 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 426 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 409 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 427 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 405 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by fifty moves rule}
+Started game 428 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 416 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 429 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 415 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 430 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 422 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 431 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 425 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 432 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 412 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 433 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 423 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 434 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 427 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 435 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 424 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 436 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 421 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 437 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 420 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 114.61 +/- 26.15, nElo: 156.06 +/- 33.07
+LOS: 100.00 %, DrawRatio: 26.89 %, PairsRatio: 4.17
+Games: 424, Wins: 208, Losses: 73, Draws: 143, Points: 279.5 (65.92 %)
+Ptnml(0-2): [4, 26, 57, 81, 44], WL/DD Ratio: 2.17
+LLR: 2.22 (75.4%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 438 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 426 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 439 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 429 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 440 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 430 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 441 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 428 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 442 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 433 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 443 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 431 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 444 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 432 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 445 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 437 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 446 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 436 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 447 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 435 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 448 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 434 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 449 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 438 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 450 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 441 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 451 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 440 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 452 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 442 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 453 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 439 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 111.35 +/- 26.03, nElo: 148.62 +/- 32.39
+LOS: 100.00 %, DrawRatio: 27.15 %, PairsRatio: 4.03
+Games: 442, Wins: 217, Losses: 80, Draws: 145, Points: 289.5 (65.50 %)
+Ptnml(0-2): [6, 26, 60, 83, 46], WL/DD Ratio: 2.33
+LLR: 2.22 (75.4%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 454 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 444 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 455 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 445 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 456 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 443 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 457 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 448 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 458 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 449 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 459 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 452 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 460 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 450 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 461 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 451 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 462 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 453 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 463 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 447 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 464 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 446 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 465 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 455 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 466 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 460 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 467 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 457 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 468 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 456 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 469 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 462 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 470 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 458 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 471 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 459 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 111.39 +/- 25.65, nElo: 148.21 +/- 31.82
+LOS: 100.00 %, DrawRatio: 26.64 %, PairsRatio: 3.94
+Games: 458, Wins: 225, Losses: 83, Draws: 150, Points: 300.0 (65.50 %)
+Ptnml(0-2): [6, 28, 61, 86, 48], WL/DD Ratio: 2.39
+LLR: 2.31 (78.3%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 472 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 454 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 473 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 463 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 474 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 466 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 475 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 464 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 476 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 465 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 477 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 461 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 478 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 469 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 479 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 476 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 480 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 472 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 481 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 470 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 482 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 478 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 483 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 473 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 484 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 471 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 485 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 474 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 486 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 468 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by insufficient mating material}
+Started game 487 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 475 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 488 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 477 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 489 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 479 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 490 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 481 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 491 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 480 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 117.69 +/- 25.38, nElo: 156.11 +/- 31.15
+LOS: 100.00 %, DrawRatio: 25.94 %, PairsRatio: 4.21
+Games: 478, Wins: 240, Losses: 84, Draws: 154, Points: 317.0 (66.32 %)
+Ptnml(0-2): [6, 28, 62, 90, 53], WL/DD Ratio: 2.44
+LLR: 2.50 (84.7%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 492 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 467 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 493 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 483 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 494 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 489 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 495 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 487 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 496 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 488 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 497 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 484 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 498 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 494 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 499 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 486 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 500 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 491 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 501 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 482 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 502 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 490 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 503 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 485 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+Started game 504 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 492 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 505 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 495 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 506 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 493 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 507 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 500 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 508 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 498 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 509 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 496 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 510 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 503 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 511 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 497 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 512 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 504 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 513 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 506 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 514 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 508 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 515 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 507 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 516 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 505 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 517 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 510 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 518 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 501 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 519 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 509 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 520 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 499 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by insufficient mating material}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 114.80 +/- 24.24, nElo: 154.08 +/- 30.21
+LOS: 100.00 %, DrawRatio: 27.95 %, PairsRatio: 4.23
+Games: 508, Wins: 254, Losses: 92, Draws: 162, Points: 335.0 (65.94 %)
+Ptnml(0-2): [6, 29, 71, 93, 55], WL/DD Ratio: 2.55
+LLR: 2.63 (89.3%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 521 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 511 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 522 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 512 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 523 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 502 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 524 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 514 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 525 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 518 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 526 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 517 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 527 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 513 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 528 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 516 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 529 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 519 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 530 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 524 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 531 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 520 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 117.65 +/- 24.08, nElo: 157.97 +/- 29.92
+LOS: 100.00 %, DrawRatio: 27.41 %, PairsRatio: 4.37
+Games: 518, Wins: 261, Losses: 92, Draws: 165, Points: 343.5 (66.31 %)
+Ptnml(0-2): [6, 29, 71, 96, 57], WL/DD Ratio: 2.55
+LLR: 2.72 (92.5%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 532 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 515 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+Started game 533 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 521 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 534 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 522 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 535 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 523 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 536 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 526 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 537 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 531 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 538 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 534 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 539 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 532 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+Started game 540 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 527 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 541 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 529 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 542 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 525 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 543 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 528 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by fifty moves rule}
+Started game 544 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 530 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 545 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 536 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 546 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 535 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 547 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 539 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 548 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 537 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 549 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 541 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 550 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 538 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 551 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 540 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 114.39 +/- 23.79, nElo: 151.91 +/- 29.36
+LOS: 100.00 %, DrawRatio: 27.51 %, PairsRatio: 4.13
+Games: 538, Wins: 270, Losses: 99, Draws: 169, Points: 354.5 (65.89 %)
+Ptnml(0-2): [7, 31, 74, 98, 59], WL/DD Ratio: 2.70
+LLR: 2.76 (93.6%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 552 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 545 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 553 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 533 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by fifty moves rule}
+Started game 554 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 542 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 555 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 548 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 556 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 547 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 557 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 554 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 558 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 546 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 559 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 544 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 560 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 550 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 561 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 543 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 562 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 549 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 563 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 553 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 564 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 551 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 565 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 555 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by 3-fold repetition}
+Started game 566 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 556 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 567 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 562 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 568 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 561 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 0-1 {Black wins by adjudication}
+Started game 569 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 560 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 570 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 563 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 571 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 559 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1/2-1/2 {Draw by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 114.14 +/- 23.42, nElo: 151.13 +/- 28.83
+LOS: 100.00 %, DrawRatio: 27.60 %, PairsRatio: 4.05
+Games: 558, Wins: 281, Losses: 104, Draws: 173, Points: 367.5 (65.86 %)
+Ptnml(0-2): [7, 33, 77, 100, 62], WL/DD Ratio: 2.85
+LLR: 2.86 (97.1%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+Started game 572 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 566 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 573 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 552 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 574 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 567 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 575 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 557 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 576 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 558 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1/2-1/2 {Draw by adjudication}
+Started game 577 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 568 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 578 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 571 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 579 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 573 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 580 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 569 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4): 1-0 {White wins by adjudication}
+Started game 581 of 41900 (cand-e972bd4+c875e362fbb2 vs ref-e972bd4)
+Finished game 574 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 0-1 {Black wins by adjudication}
+Started game 582 of 41900 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2)
+Finished game 564 (ref-e972bd4 vs cand-e972bd4+c875e362fbb2): 1-0 {White wins by adjudication}
+--------------------------------------------------
+Results of cand-e972bd4+c875e362fbb2 vs ref-e972bd4 (8+0.08, 1t, 16MB, noob_3moves.epd):
+Elo: 116.07 +/- 23.26, nElo: 153.75 +/- 28.57
+LOS: 100.00 %, DrawRatio: 27.46 %, PairsRatio: 4.15
+Games: 568, Wins: 288, Losses: 105, Draws: 175, Points: 375.5 (66.11 %)
+Ptnml(0-2): [7, 33, 78, 102, 64], WL/DD Ratio: 2.90
+LLR: 2.94 (100.0%) (-2.94, 2.94) [0.00, 5.00]
+--------------------------------------------------
+SPRT ([0.00, 5.00]) completed - H1 was accepted
+Finished match
+Total Time: 00:16:18 (hours:minutes:seconds)
+
+
+=== 571 games in /home/max/ws/chesso/.tuning/sprt_s083_20261023_213108/games.pgn ===
+    457 [Termination "adjudication"]
+    114 [Termination "normal"]
+draws     175 of 571, 30.6 %
+decisive  396 of 571, 69.4 %
+forfeits  0 of 571, 0.00 %
+SPRT-RUN-DONE env /home/max/ws/chesso/.tuning/sprt_s083_20261023_213108
+
+=== fastchess console lines omitted from this report ===
+"PV continues after <rule>" blocks -- the warning and its Info, Position and Moves lines -- per rule and engine:
+  fifty-move rule  ref-e972bd4  1
+  total: 1 blocks, 4 lines

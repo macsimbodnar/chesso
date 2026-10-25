@@ -580,15 +580,24 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   std::vector<double> params(PARAM_COUNT, 0.0);
   tuner_layout::starting_params(params.data());
 
-  // Measured at S262: +40 on each of the eighteen king safety weights binds
-  // the clamp on one row of the 34, at 263.7 against 184, and leaves the
-  // nearest other at 150 -- every row at least a centipawn from the kink, which
-  // the precondition below re-establishes. A
-  // much larger push saturates the sigmoid everywhere, which makes the finite
-  // difference itself unreliable.
+  // The push is an input, measured and not a golden: S262's +40 on each of the
+  // eighteen king safety weights bound the clamp on one row of the 34, at
+  // 263.7 against 184, the nearest other at 150, but at S083's refit it binds
+  // on none. Re-derived by adocs/data/S083_tuner_preconditions.cpp `clamp`
+  // (built as its header says), which sweeps +10 to +200 and picks by a rule
+  // stated there -- the clamp binding on some rows and not all, every row more
+  // than a centipawn from the kink, the finite difference at most 2e-7 and the
+  // bound rows' clamped block silent -- the push whose nearest row to the kink
+  // is farthest from it; at S076's weights it answers S262's +40.
+  // At S083's weights: +100, eight rows bound, the farthest at 434.5, the
+  // nearest other at 161.0, every row 23 from the kink, finite differences
+  // 1.09e-7. Re-run it whenever the constants or the fixture move; the
+  // precondition below re-establishes the binding either way. A much larger
+  // push saturates the sigmoid everywhere, which makes the finite difference
+  // itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
-    params[KS_MG_BASE + t] += 40.0;
-    params[KS_EG_BASE + t] += 40.0;
+    params[KS_MG_BASE + t] += 100.0;
+    params[KS_EG_BASE + t] += 100.0;
   }
 
   std::vector<uint32_t> binding;
@@ -874,19 +883,30 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
       tuner_optimiser::update(grad, mask, lr, &plain_state, plain.data());
     }
 
-    // The walk's floor is a precondition, not a golden: at f57b92f's shipped
-    // constants the smallest of the seven plain-update shifts is 0.32 a square
-    // under Adam and 0.20 under AdaGrad, both the rook's, the largest 3.8 and
-    // 4.4, both the knight's (S275 read 0.22 and 3.7 on the mirror's path,
-    // which ignored the clamp). Re-read with `-s` on this case if the
-    // constants or the fixture move; 0.1 is far above the hold's 1e-9 and
-    // below the walk.
+    // The walk's floor is a precondition, not a golden: it says the plain run
+    // moved every gauge, so that the hold below is a hold and not two runs
+    // that never left the start.
+    //
+    // **0.01 since S083, by the owner (DEC-313 (5)).** At S083's constants
+    // the smallest of the seven plain-update shifts is 0.1178 a square under
+    // Adam, the rook's, and 0.0587 under AdaGrad, psqt_eg[king]'s; the largest
+    // 4.0181, the knight's, and 4.5680, the pawn's. Every held shift is at
+    // most 1.13e-14 (`adocs/data/S083s_gauge_walk.txt`). The 0.1 of before
+    // was set at f57b92f's constants, where the smallest walk was 0.32 and
+    // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
+    // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits
+    // seven orders of magnitude above the hold's 1e-9 and a factor of about
+    // six under the smallest walk, so the two runs stay told apart. Re-read
+    // with adocs/data/S083_tuner_preconditions.cpp `walk`, which runs this
+    // case's descent and prints every direction's two shifts against this
+    // floor, if the constants or the fixture move. A revert of S083 puts 0.1
+    // back.
     for (const direction_t& direction : directions) {
       CAPTURE(direction.name);
       CAPTURE(level_shift(direction, plain));
       CAPTURE(level_shift(direction, held));
 
-      CHECK(std::fabs(level_shift(direction, plain)) > 0.1);
+      CHECK(std::fabs(level_shift(direction, plain)) > 0.01);
       CHECK(std::fabs(level_shift(direction, held)) < 1e-9);
     }
 

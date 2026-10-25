@@ -247,16 +247,18 @@
      tells one capture from another, which is a different rule and not a       \
      setting of this one.                                                       \
                                                                                \
-     Seed, DEC-134: **(a) literature**, the wiki's Delta Pruning page --        \
-     https://www.chessprogramming.org/Delta_Pruning, the captured piece's value \
-     plus "some safety margin (typically around 200 centipawns)" -- read as two \
-     pawns in **chesso's own material scale**, src/eval_tables.hpp, where a    \
-     pawn is 94: 2 * 94 = 188. The margin is compared against evaluate(), whose \
-     unit that is; FutBase's comment records the earlier pass that read a      \
-     margin in see_value's units by mistake. The victim table is seeded in its  \
-     own comment. Both are a seed and S127 fits them together, since the two    \
-     share one job -- absorbing the positional part of what a capture is worth. \
-     Implemented from the step file's description, DEC-221. */                  \
+     Seed, DEC-134: **(a) literature**, the wiki's Delta Pruning page --       \
+     https://www.chessprogramming.org/Delta_Pruning, the captured piece's      \
+     value plus "some safety margin (typically around 200 centipawns)" --      \
+     read as two pawns in **chesso's own material scale**,                     \
+     src/eval_tables.hpp, where a pawn was 94 at the seed's weights (84        \
+     since S083's refit): 2 * 94 = 188. The margin is compared against         \
+     evaluate(), whose unit that is; FutBase's comment records the earlier     \
+     pass that read a margin in see_value's units by mistake. The victim       \
+     table is seeded in its own comment. Both are a seed and S127 fits them    \
+     together, since the two share one job -- absorbing the positional part    \
+     of what a capture is worth. Implemented from the step file's              \
+     description, DEC-221. */                                                  \
   X(QS_FUTILITY,        "QsFutility",       1, 0, 1)                            \
   X(QS_FUTILITY_MARGIN, "QsFutilityMargin", 226, 0, 2000)                       \
                                                                                \
@@ -414,16 +416,17 @@
      if it is itself at or below alpha -- the verified form. negamax_at()      \
      carries the guards and why.                                               \
                                                                                \
-     RAZOR_MARGIN is **(a) literature**, the wiki's Razoring page --           \
-     https://www.chessprogramming.org/Razoring, its drop-to-quiescence form    \
-     firing when the static score is "by a margin (~three pawns) below" the    \
-     bound -- read as three pawns in **chesso's own material scale**,          \
-     src/eval_tables.hpp, where a pawn is 94: 3 * 94 = 282 (DEC-134: units are \
-     not exempt by name; QsFutilityMargin's 188 is the same reading). A seed,  \
-     and S127 fits it. Range 0 to 2000, twenty pawns, by stated purpose: past  \
-     it the test asks about positions a whole army behind, which is a          \
-     different rule. **No value of the margin is off** -- a node twenty pawns  \
-     down still razors -- so the switch is the depth (DEC-215 clause 2).       \
+     RAZOR_MARGIN is **(a) literature**, the wiki's Razoring page --             \
+     https://www.chessprogramming.org/Razoring, its drop-to-quiescence form      \
+     firing when the static score is "by a margin (~three pawns) below" the      \
+     bound -- read as three pawns in **chesso's own material scale**,            \
+     src/eval_tables.hpp, where a pawn was 94 at the seed's weights (84 since    \
+     S083's refit): 3 * 94 = 282 (DEC-134: units are not exempt by name;         \
+     QsFutilityMargin's 188 is the same reading). A seed, and S127 fits it.      \
+     Range 0 to 2000, twenty pawns, by stated purpose: past it the test asks     \
+     about positions a whole army behind, which is a different rule. **No        \
+     value of the margin is off** -- a node twenty pawns down still razors --    \
+     so the switch is the depth (DEC-215 clause 2).                              \
                                                                                \
      RAZOR_DEPTH is the depth gate, 1: the published record's one consistent  \
      finding is that restricting the rule to depth one gained where the        \
@@ -451,18 +454,22 @@
      update's difference read the raw one, so nothing compounds through the    \
      table.                                                                    \
                                                                                \
-     CORRHIST_MAX is the largest correction applied, in evaluation units. The  \
-     entry is clamped to +/-CORRHIST_MAX * CORRHIST_GRAIN at every update and  \
-     its read to +/-CORRHIST_MAX, so the corrected score moves by at most this \
-     much; the corrected score is then held inside the mate band's edge as     \
-     well, in src/search.cpp. Seed **47, form (c), the midpoint of a range     \
-     declared by purpose** in chesso's own scale (DEC-134): 0 is off, and past \
-     one pawn -- src/eval_tables.hpp, where a pawn is 94 -- a correction       \
-     rewrites the material balance instead of correcting the static score.     \
-     94 / 2 = 47, the only constant on the read path with Elo in it, and the   \
-     one S127 sweeps. **0 is off by construction** -- every entry is clamped   \
-     to 0, the corrected score is the raw one -- and DEC-215 wants that proved \
-     on the tree: the tune build at 0 must print the parent's bench stream.    \
+     CORRHIST_MAX is the largest correction applied, in evaluation units. The    \
+     entry is clamped to +/-CORRHIST_MAX * CORRHIST_GRAIN at every update and    \
+     its read to +/-CORRHIST_MAX, so the corrected score moves by at most this   \
+     much; the corrected score is then held inside the mate band's edge as       \
+     well, in src/search.cpp. Seed **47, form (c), the midpoint of a range       \
+     declared by purpose** in chesso's own scale (DEC-134): 0 is off, and past   \
+     one pawn -- `PAWN` in src/eval_tables.hpp -- a correction rewrites the      \
+     material balance instead of correcting the static score. At the seed's      \
+     weights a pawn was 94 and 94 / 2 = 47, the only constant on the read path   \
+     with Elo in it, and the one S127 sweeps. The range's top is `PAWN` itself   \
+     (tests/test_search_params.cpp holds it there), so S083's refit, which put   \
+     a pawn at 84, moved the top from 94 to 84 in the same change and left the   \
+     seed where it was, inside it, for S127 to fit (DEC-307). **0 is off by      \
+     construction** -- every entry is clamped to 0, the corrected score is the   \
+     raw one -- and DEC-215 wants that proved on the tree: the tune build at 0   \
+     must print the parent's bench stream.                                       \
                                                                                \
      CORRHIST_WEIGHT_CAP caps the update's weight, `min((depth + 1)^2, cap)`   \
      out of CORRHIST_SCALE, 256: an entry moves weight / 256 of the way to     \
@@ -480,7 +487,7 @@
      No engine's weight, cap, grain, clamp or size is behind either number,    \
      wherever it is republished (DEC-105, DEC-134); the step file keeps those  \
      records as anti-seeds. Implemented from the description, DEC-221. */      \
-  X(CORRHIST_MAX,        "CorrHistMax",        47, 0,  94)                     \
+  X(CORRHIST_MAX,        "CorrHistMax",        47, 0,  84)                     \
   X(CORRHIST_WEIGHT_CAP, "CorrHistWeightCap", 144, 1, 256)                     \
                                                                                \
   /* Null move pruning gives the opponent a free move and searches what is     \
@@ -661,17 +668,18 @@
      `child_depth` everywhere else. The full-window re-search is untouched and  \
      still runs at `child_depth`.                                               \
                                                                                \
-     UNITS. The margin is compared against search scores, so it is in chesso's  \
-     material scale -- `piece_value` in src/eval_tables.hpp, where PAWN is 94.  \
-     Plies have no unit.                                                        \
+     UNITS. The margin is compared against search scores, so it is in chesso's   \
+     material scale -- `piece_value` in src/eval_tables.hpp, where PAWN was 94   \
+     at the seed's weights (84 since S083's refit). Plies have no unit.          \
                                                                                \
-     **LMR_DEEPER_MARGIN is DEC-105 (c), the midpoint of a range stated by      \
-     purpose**: 0 to PAWN, whose top is the point past which the re-search      \
-     depth would be decided on more material than a pawn of window, and whose   \
-     midpoint is the integer 47. The published record says only that the        \
-     direction is worth trying and seeds nothing (DEC-019, DEC-084 as amended   \
-     by DEC-105): the bare form measured -7.07 and the guarded form +3.11 in    \
-     the 3138-3224 band, which is above this engine's.                          \
+     **LMR_DEEPER_MARGIN is DEC-105 (c), the midpoint of a range stated by       \
+     purpose**: 0 to PAWN at the seed's weights, 94, whose top is the point      \
+     past which the re-search depth would be decided on more material than a     \
+     pawn of window, and whose midpoint is the integer 47. S083's refit put a    \
+     pawn at 84 and the range was kept: S127 owns it. The published record       \
+     says only that the direction is worth trying and seeds nothing (DEC-019,    \
+     DEC-084 as amended by DEC-105): the bare form measured -7.07 and the        \
+     guarded form +3.11 in the 3138-3224 band, which is above this engine's.     \
                                                                                \
      LMR_DEEPER_MIN_REDUCTION is that guard and it is DEC-105 **(b)**, a        \
      derivation over this engine's own site: the re-search exists only where    \
@@ -782,16 +790,17 @@
      reach alpha is skipped, with the remaining quiets, at a shallow reduced    \
      depth: `static + FUT_BASE + FUT_SLOPE * lmr_depth <= alpha`.               \
                                                                                \
-     FUT_BASE and FUT_SLOPE are **(a) literature**, Heinz's margins as the      \
-     wiki states them -- https://www.chessprogramming.org/Futility_Pruning,     \
-     fetched 2026-09-05: the depth-1 margin "should not exceed the value of a   \
-     minor piece" and the depth-2 margin is "more like the value of a rook".    \
-     Read in **chesso's own material scale**, src/eval_tables.hpp, where a      \
-     minor is `(KNIGHT + BISHOP) / 2` = 317 (the integer below 317.5) and a     \
-     rook is 487: FUT_SLOPE = 487 - 317 = 170 and FUT_BASE = 317 - 170 = 147.   \
-     The scale matters and an earlier pass got it wrong -- a margin compared    \
-     against `evaluate()` is in `piece_value`'s units, where a pawn is 94, and  \
-     not in `see_value`'s, where it is 100.                                     \
+     FUT_BASE and FUT_SLOPE are **(a) literature**, Heinz's margins as the       \
+     wiki states them -- https://www.chessprogramming.org/Futility_Pruning,      \
+     fetched 2026-09-05: the depth-1 margin "should not exceed the value of a    \
+     minor piece" and the depth-2 margin is "more like the value of a rook".     \
+     Read in **chesso's own material scale**, src/eval_tables.hpp, where at      \
+     the seed's weights a minor was `(KNIGHT + BISHOP) / 2` = 317 (the integer   \
+     below 317.5) and a rook 487: FUT_SLOPE = 487 - 317 = 170 and FUT_BASE =     \
+     317 - 170 = 147. The scale matters and an earlier pass got it wrong -- a    \
+     margin compared against `evaluate()` is in `piece_value`'s units, where a   \
+     pawn was 94 at the seed's weights, and not in `see_value`'s, where it is    \
+     100.                                                                        \
                                                                                \
      FUT_MAX_LMRDEPTH is **(c) the midpoint** of a range declared by purpose,   \
      0 to 16: 0 is off and 16 is above the median depth 11 that RfpMaxDepth's   \
@@ -837,13 +846,14 @@
      margin scaled by the reduced depth squared is skipped:                     \
      `!see_ge(board, move, -(SEE_QUIET_COEFF * lmr_depth * lmr_depth))`.        \
                                                                                \
-     SEE_QUIET_COEFF is **(b) chesso's own exchange scale**: the bar at         \
-     lmr_depth 1 must stay under one pawn of `see_value` in src/bitboard.cpp,   \
-     which is 100 there and not the 94 `piece_value` uses, so the interval the  \
-     purpose declares is 0 to 100 and 50 is its midpoint. Every see_value       \
-     difference is a multiple of 100, so the whole interval prunes the same     \
-     set at lmr_depth 1 -- quiets that lose a pawn or more -- and the choice    \
-     inside it only shows up at the depths the square scales.                   \
+     SEE_QUIET_COEFF is **(b) chesso's own exchange scale**: the bar at          \
+     lmr_depth 1 must stay under one pawn of `see_value` in src/bitboard.cpp,    \
+     which is 100 there and not `piece_value`'s pawn (94 at the seed's           \
+     weights), so the interval the purpose declares is 0 to 100 and 50 is its    \
+     midpoint. Every see_value difference is a multiple of 100, so the whole     \
+     interval prunes the same set at lmr_depth 1 -- quiets that lose a pawn or   \
+     more -- and the choice inside it only shows up at the depths the square     \
+     scales.                                                                     \
                                                                                \
      SEE_QUIET_MAX_LMRDEPTH is **(c) the midpoint** of 0 to 16 as above.        \
      **Off is the cap at 0, and nothing else.** The bar is                      \
@@ -872,14 +882,14 @@
      depth margin for captures, and a quadratic depth margin for quiets".       \
      Form only: the wiki publishes no number and none is taken from one.        \
                                                                                \
-     SEE_CAPT_COEFF is **(b) chesso's own exchange scale**, derived exactly as  \
-     SeeQuietCoeff above: the bar at lmr_depth 1 stays under one pawn of        \
-     `see_value` in src/bitboard.cpp, which is 100 there and not the 94         \
-     `piece_value` uses, so the interval the purpose declares is 0 to 100 and   \
-     50 is its midpoint. Every see_value difference is a multiple of 100, so    \
-     the whole interval skips the same set at lmr_depth 1 -- captures that lose \
-     a pawn or more -- and the choice inside it shows up only at the depths the \
-     margin scales.                                                            \
+     SEE_CAPT_COEFF is **(b) chesso's own exchange scale**, derived exactly as   \
+     SeeQuietCoeff above: the bar at lmr_depth 1 stays under one pawn of         \
+     `see_value` in src/bitboard.cpp, which is 100 there and not                 \
+     `piece_value`'s pawn (94 at the seed's weights), so the interval the        \
+     purpose declares is 0 to 100 and 50 is its midpoint. Every see_value        \
+     difference is a multiple of 100, so the whole interval skips the same set   \
+     at lmr_depth 1 -- captures that lose a pawn or more -- and the choice       \
+     inside it shows up only at the depths the margin scales.                    \
                                                                                \
      SEE_CAPT_MAX_LMRDEPTH is **(c) the midpoint** of 0 to 16, the range the    \
      four caps above declare by the same purpose. It is on the                  \
@@ -936,11 +946,12 @@
      deeper; an alternative failing high instead means some other move already  \
      clears a bar just under the entry's score, which is the multicut.          \
                                                                                \
-     UNITS, and they differ per axis (P6). `SeMarginPerDepth` multiplies the    \
-     remaining depth into a margin compared against search scores, so it is in  \
-     chesso's material scale -- `piece_value` in src/eval_tables.hpp, where     \
-     PAWN is 94 and not `see_value`'s 100. The other three count plies or       \
-     depths and have no unit at all.                                            \
+     UNITS, and they differ per axis (P6). `SeMarginPerDepth` multiplies the     \
+     remaining depth into a margin compared against search scores, so it is in   \
+     chesso's material scale -- `piece_value` in src/eval_tables.hpp, where      \
+     PAWN was 94 at the seed's weights (84 since S083's refit), and not          \
+     `see_value`'s 100. The other three count plies or depths and have no unit   \
+     at all.                                                                     \
                                                                                \
      Under DEC-105 every default here is one of three things and says which,    \
      and **no engine's shipped depth, margin or ply count seeds any of them**,  \
@@ -1026,9 +1037,9 @@
      `depth - ProbCutDepthOffset`. One that clears probBeta ends the node with \
      that fail-soft score (`negamax_at` in src/search.cpp).                    \
                                                                                \
-     UNITS (P6). ProbCutMargin is compared against search scores, so it is in  \
-     chesso's material scale -- `piece_value` in src/eval_tables.hpp, PAWN 94. \
-     The other two count plies.                                                \
+     UNITS (P6). ProbCutMargin is compared against search scores, so it is in    \
+     chesso's material scale -- `piece_value` in src/eval_tables.hpp, PAWN 94    \
+     at the seed's weights (84 since S083's refit). The other two count plies.   \
                                                                                \
      Seeds under DEC-105 and DEC-134, each one of the three forms, and **no    \
      engine's shipped margin, depth or offset seeds any of them**. Every one   \

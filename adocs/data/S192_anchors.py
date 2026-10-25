@@ -63,7 +63,7 @@ CASES = [
     dict(
         title="pawn on e2",
         fen="4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
-        anchors={"evaluate": 135},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 99},    # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=0,
         material=[("PAWN", 1)],
@@ -81,7 +81,7 @@ CASES = [
     dict(
         title="knight on b1",
         fen="4k3/8/8/8/8/8/8/1N2K3 w - - 0 1",
-        anchors={"evaluate": 244},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 276},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=1,
         material=[("KNIGHT", 1)],
@@ -96,7 +96,7 @@ CASES = [
     dict(
         title="bishop on c1",
         fen="4k3/8/8/8/8/8/8/2B1K3 w - - 0 1",
-        anchors={"evaluate": 325},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 355},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=1,
         material=[("BISHOP", 1)],
@@ -111,7 +111,7 @@ CASES = [
     dict(
         title="rook on d1",
         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
-        anchors={"evaluate": 563, "cheap": 567},   # test_evaluation.cpp "each piece is worth what the tables say";
+        anchors={"evaluate": 585, "cheap": 580},   # test_evaluation.cpp "each piece is worth what the tables say";
         # test_search.cpp "a quiet position stands pat" and eight more sites
         stm="w",
         phase=2,
@@ -127,7 +127,7 @@ CASES = [
     dict(
         title="queen on d1",
         fen="4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
-        anchors={"evaluate": 787},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 984},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=4,
         material=[("QUEEN", 1)],
@@ -159,7 +159,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 198},   # test_search.cpp "a side in check may not stand pat"
+        anchors={"evaluate": 209},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
@@ -186,7 +186,7 @@ CASES = [
     dict(
         title="black a rook down, Kh7",
         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
-        anchors={"evaluate": -569},  # test_search.cpp "the losing side takes an available repetition"
+        anchors={"evaluate": -599},  # test_search.cpp "the losing side takes an available repetition"
         stm="b",
         phase=2,
         material=[("ROOK", 1)],
@@ -278,7 +278,7 @@ LEAVES = [
     ),
 ]
 
-QUIESCE_IN_CHECK = -505  # test_search.cpp
+QUIESCE_IN_CHECK = -534  # test_search.cpp
 # "a quiet evasion is a legal answer to a check", on the shipped weights
 
 

@@ -1,0 +1,32 @@
+# S083, the owner's ruling DEC-313 (5), 2026-10-25: tests/test_tuner_gradient.cpp "the fit holds every gauge still and
+# no score sees the hold", the walk's floor 0.1 -> 0.01. Re-read by adocs/data/S083_tuner_preconditions.cpp `walk` (the
+# case's own descent step for step: 38 gauge-fixture rows, 300 epochs, Adam at 1, AdaGrad at 10), built as its header
+# says against this worktree's build/src/libchesso_engine_trace.a, S083's constants (the SPRT's src/), its WALK_FLOOR
+# moved to the case's 0.01 in the same edit. Plain shifts, smallest and largest: Adam 0.1178 (material/table rook) and
+# 4.0181 (knight); AdaGrad 0.0587 (psqt_eg[king]) and 4.5680 (pawn). Every held shift at most 1.13e-14 against the
+# case's 1e-9; the two runs' scores 6.82e-13 apart. 0.01 sits 7 orders of magnitude above the hold's bound and a factor
+# of 5.9 under the smallest walk. The figures equal S083s_eval_only.txt part 4's, read 2026-10-23 on the same src/.
+# Exit 0: every plain shift clears 0.01.
+
+== build/S083_tuner_preconditions walk SCRATCH
+walk: 38 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   +3.0882  held  -1.78e-15  
+    material/table knight  plain   -4.0181  held  -1.94e-15  
+    material/table bishop  plain   -3.6957  held  +2.04e-15  
+    material/table rook    plain   -0.1178  held  -2.78e-15  
+    material/table queen   plain   -3.5648  held  -1.13e-14  
+    psqt_mg[king]          plain   +2.4954  held  +6.66e-16  
+    psqt_eg[king]          plain   -0.4624  held  +1.28e-15  
+    smallest plain walk 0.1178 (material/table rook); runs apart 6.82e-13; plain travelled 1587.0
+  adagrad at lr 10
+    material/table pawn    plain   +4.5680  held  +2.37e-15  
+    material/table knight  plain   -4.5618  held   +2.5e-15  
+    material/table bishop  plain   -3.5488  held  +4.16e-16  
+    material/table rook    plain   -0.1726  held  +7.77e-16  
+    material/table queen   plain   -3.4175  held  -5.55e-15  
+    psqt_mg[king]          plain   +3.0069  held  -7.77e-16  
+    psqt_eg[king]          plain   -0.0587  held  -2.64e-15  
+    smallest plain walk 0.0587 (psqt_eg[king]); runs apart 6.82e-13; plain travelled 1623.3
+walk: every plain shift clears the case's floor 0.01
+exit 0

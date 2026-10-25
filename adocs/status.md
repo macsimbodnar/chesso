@@ -5,7 +5,41 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-23, by hand.
+Updated: 2026-10-25, by hand.
+
+## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
+
+**S083's SPRT read H1** in 16 m (`adocs/data/S083_sprt.log`, archived
+untrimmed as `chesso_S083_sprt_2026-10-23.tar.xz`): the re-landing's
+working tree against `e972bd4`, 8+0.08, Hash 16, `{0, 5}`, 568 games, Elo
++116.07 +/- 23.26, nElo +153.75 +/- 28.57, 0 forfeits. Every decisive game
+was resignation-adjudicated, so each final position went to Stockfish at
+depth 16: it agrees with all 396 adjudicated winners. The first form of that
+check hung 37 h on one position; the second has a 60 s belt
+(`.tuning/coord/S083/verdict/`).
+
+**The owner ruled** (DEC-313, 2026-10-25, every recommended option):
+`EXACT_FLOOR` 158, `MATE_IN_THREE_FLOOR` 11 not separating, the ply-2 clause
+6, the multicut row retired, the gauge-walk floor 0.01; DEC-312 ratified.
+Applied by one Opus 5.5 subagent, fast-checked (one stale DEV_MANUAL command,
+fixed). Fast suite 50/50 in both builds; mutation pass 224 of 225, MW02
+survived and H04 stillborn, both the same at `e972bd4`: **S294**, a DEC-171
+filler. Bench 6042933 -> 3945487.
+
+**Disk**: 107 worktrees of finished steps and old reference builds removed
+with the owner's approval (4.8 GB free -> 37 GB). Each one's diff against
+HEAD, untracked files, `.tuning/` and `config.json` are kept under
+`.tuning/coord/cleanup/<name>/` (1.3 GB, `log.txt`); the eight HEADs no
+branch reached carry `refs/keep/*`. Branches untouched.
+
+**Elo estimate** (owner's question, read only): the last absolute rating is
+S240's 2766 on the CCRL Blitz scale (2026-09-27); with the self-play gains
+since and a conversion factor of 0.5 to 1.0, about 2865-2890 before S083 and
+2930-2975 with it, +/- 60 at least. Only a `rating.sh` with stronger anchors
+(S264's Weiss 1.1, Stash v30.0) decides it: S152, when the machine has a gap.
+
+**Next**: S290 (the budget picker tracked, rebased on S083's budgets), then
+S135. Open fillers to name in every pre-registration: S290, S294.
 
 ## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
 

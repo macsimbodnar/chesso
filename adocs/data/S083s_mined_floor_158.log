@@ -1,0 +1,21 @@
+# S083, the owner's ruling DEC-313 (1), 2026-10-25: EXACT_FLOOR 163 -> 158. python3 adocs/data/S156_mined_floor_sweep.py
+# --ref 352a4db --floor 158 --jobs 12, fixture F1 (352a4db2bd194f4b12d0145f09c170a0d2a65c21: fixture A of S083s_mined_floor.log,
+# e972bd4 plus the SPRT's three src/ files, with tests/test_mate_breadth.cpp's EXACT_FLOOR at 158 and nothing else;
+# a commit object on no branch, .tuning/coord/S083/rulings/fixture.sh). The sweep's counts equal S083s_mined_floor.log's
+# (fixture A, the floor 163 compiled in) row for row: 159 shipping, 154 weakened. 158 sits 1 below the shipping count and
+# 4 above the weakened one, inside the script's band, and the gate built at RfpMinPly 1 with 158 compiled in is red at 154.
+
+318 positions, depth 10, ref 352a4db2bd194f4b12d0145f09c170a0d2a65c21
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     159          163            0   15.3s
+          2     158          161            0   15.5s
+          1     154          158            0   15.0s
+          0     154          158            0   15.0s
+
+  floor 158, asserted by tests/test_mate_breadth.cpp
+    shipping value 159, weakened-guard value 154, gap 5
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_saub6vxv/tests/test_mate_breadth.cpp:281: MESSAGE: mined set at depth 10: 154 exact, 158 right sign, 0 wrong sign
+    logged: the mined set reads 154 exact at depth 10, under the 158 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down

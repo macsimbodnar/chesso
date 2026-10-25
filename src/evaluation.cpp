@@ -114,8 +114,8 @@ static constexpr int largest_weight(const int (&mg)[N], const int (&eg)[N])
 // The term costs 4.5 % of a depth 12 search, measured with the weights forced
 // non-zero because at zero the compiler deletes it, DEC-047. Its SPRT was net
 // of that: +17.34 +/- 13.51 Elo over 1584 games, H1 accepted.
-constexpr int passed_pawn_mg[5] = {0, -6, -4, 19, 59};
-constexpr int passed_pawn_eg[5] = {15, 18, 46, 72, 96};
+constexpr int passed_pawn_mg[5] = {9, -5, -2, 21, 38};
+constexpr int passed_pawn_eg[5] = {18, 24, 51, 75, 119};
 constexpr std::array<score_t, 5> passed_pawn_score =
     pack_scores(passed_pawn_mg, passed_pawn_eg);
 
@@ -158,8 +158,8 @@ enum
 // term with the weights forced non-zero because at zero the compiler deletes
 // them, DEC-047. The SPRT was net of that: +13.05 +/- 11.15 Elo over 2290
 // games, H1 accepted.
-constexpr int pawn_structure_mg[PS_FEATURE_COUNT] = {-10, -9, -11};
-constexpr int pawn_structure_eg[PS_FEATURE_COUNT] = {-12, -32, -8};
+constexpr int pawn_structure_mg[PS_FEATURE_COUNT] = {-9, -2, -11};
+constexpr int pawn_structure_eg[PS_FEATURE_COUNT] = {-15, -18, -2};
 constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
     pack_scores(pawn_structure_mg, pawn_structure_eg);
 
@@ -872,8 +872,8 @@ int evaluate_cheap(const board_t* board)
 // two things that mattered -- a knight's mobility is worth nothing on top of
 // its piece-square table, and a rook's middlegame mobility is worth four times
 // what was guessed. DEC-040. No published table was consulted, DEC-016.
-constexpr int mobility_mg[4] = {-1, 5, 8, 3};  // knight bishop rook queen
-constexpr int mobility_eg[4] = {0, 5, 0, -6};
+constexpr int mobility_mg[4] = {1, 6, 8, 2};  // knight bishop rook queen
+constexpr int mobility_eg[4] = {0, 5, 2, 4};
 constexpr std::array<score_t, 4> mobility_score =
     pack_scores(mobility_mg, mobility_eg);
 
@@ -917,10 +917,10 @@ static bb_t piece_attacks(const bb_tables_t* tables,
 // a count adds several to the incidence total -- so the fit splits one effect
 // across several parameters, exactly the way piece_value and the piece-square
 // tables are degenerate by five dimensions. What is fitted is the sum. DEC-044.
-constexpr int king_safety_mg[KS_FEATURE_COUNT] = {17, 20, 19,  34, -27,
-                                                  26, 14, -40, -25};
-constexpr int king_safety_eg[KS_FEATURE_COUNT] = {-6,  -13, -5,  -61, 10,
-                                                  -10, -10, -14, 22};
+constexpr int king_safety_mg[KS_FEATURE_COUNT] = {18, 13, 5,   30, -27,
+                                                  16, 7,  -47, -25};
+constexpr int king_safety_eg[KS_FEATURE_COUNT] = {-5, -9, 7,  -52, 10,
+                                                  -8, -1, -4, 19};
 constexpr std::array<score_t, KS_FEATURE_COUNT> king_safety_score =
     pack_scores(king_safety_mg, king_safety_eg);
 

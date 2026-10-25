@@ -1,0 +1,53 @@
+# S083's re-landing on S292's and S293's guards, 2026-10-23: .tuning/coord/S083/reland2/bench.sh -- frozen copies of the
+# worktree's Release and tune builds (S083's weights, the queen re-anchored, on e972bd4: S292's and S293's guards) and
+# of the main checkout's Release build at e972bd4 (refused unless it benches 6042933; byte-different from
+# .ref-builds/ad0cfc7's, another build directory, same bench). bench and bench 12 on both; the tune build at its
+# defaults against the Release candidate's stream (0 lines apart); tools/search_bench.py at 9 and 12, two interleaved
+# runs each, nodes and best moves identical within a build. Node counts only; no timing is read. Every candidate
+# figure equals cd50178's tree's (S083r_bench.txt): neither tree's guard moves a bench or search_bench node here.
+
+== totals
+bench_ref            6042933 nodes
+bench_cand           3945487 nodes
+bench12_ref          2339074 nodes
+bench12_cand         2103576 nodes
+bench_tune_default   3945487 nodes
+== the tune build at its defaults against the Release candidate, lines differing (must be 0):
+0
+== search_bench, two interleaved runs each
+-- sb9_ref
+  midgame      0.015s        62042 nodes      4039 knps  best c3d5
+  kiwipete     0.032s       125888 nodes      3964 knps  best e2a6
+  tactical     0.008s        34107 nodes      4128 knps  best d7c8q
+  total        0.055s
+  midgame      0.015s        62042 nodes      4049 knps  best c3d5
+  kiwipete     0.031s       125888 nodes      4038 knps  best e2a6
+  tactical     0.008s        34107 nodes      4212 knps  best d7c8q
+  total        0.055s
+-- sb9_cand
+  midgame      0.010s        42570 nodes      4093 knps  best c3d5
+  kiwipete     0.040s       152468 nodes      3846 knps  best e2a6
+  tactical     0.007s        27750 nodes      4203 knps  best d7c8q
+  total        0.057s
+  midgame      0.011s        42570 nodes      4050 knps  best c3d5
+  kiwipete     0.036s       152468 nodes      4221 knps  best e2a6
+  tactical     0.007s        27750 nodes      4223 knps  best d7c8q
+  total        0.053s
+-- sb12_ref
+  midgame      0.056s       214973 nodes      3837 knps  best c3d5
+  kiwipete     0.150s       595000 nodes      3964 knps  best d5e6
+  tactical     0.055s       217107 nodes      3978 knps  best d7c8q
+  total        0.261s
+  midgame      0.054s       214973 nodes      3986 knps  best c3d5
+  kiwipete     0.148s       595000 nodes      4020 knps  best d5e6
+  tactical     0.055s       217107 nodes      3974 knps  best d7c8q
+  total        0.257s
+-- sb12_cand
+  midgame      0.063s       250176 nodes      3979 knps  best c3d5
+  kiwipete     0.102s       412312 nodes      4057 knps  best e2a6
+  tactical     0.038s       157359 nodes      4106 knps  best d7c8q
+  total        0.203s
+  midgame      0.064s       250176 nodes      3934 knps  best c3d5
+  kiwipete     0.104s       412312 nodes      3974 knps  best e2a6
+  tactical     0.040s       157359 nodes      3930 knps  best d7c8q
+  total        0.207s

@@ -111,11 +111,12 @@ inline const std::vector<std::string> positions = {
     // divide evenly: over the real corpus 135399 of 10795695 positions
     // disagreed with the mirror's model by more than the 2.0 that
     // test_eval_model.cpp used to allow, and none of the twenty-six above does.
-    // These four are here so the bound is exercised by the test rather than
-    // only by a corpus under `.tuning/` that is gitignored and does not exist
-    // on every machine. "the pinned positions reach the truncation bound" in
-    // test_eval_trace.cpp is what says they still do, against the trace's
-    // smooth score since S276 and the mirror's before.
+    // These four were here, at S076's weights, so the bound was exercised by
+    // the test rather than only by a corpus under `.tuning/` that is gitignored
+    // and does not exist on every machine, and "the pinned positions reach the
+    // truncation bound" in test_eval_trace.cpp said they still did, against the
+    // trace's smooth score since S276 and the mirror's before. At S083's
+    // weights that case reads `truncation_positions` instead (below).
     //
     // **A residual belongs to the weights, not to the position**, which is why
     // this list is re-measured whenever the constants are refitted rather than
@@ -123,15 +124,27 @@ inline const std::vector<std::string> positions = {
     // under the constants shipping then; S065's fit moved all four to between
     // 0.25 and 1.25, and S076's fit moved *its* four to between 0.08 and 1.83,
     // each time leaving the case asserting a property of weights no longer in
-    // the tree. Each of these four is at the arithmetic maximum, 69/24 = 2.875
-    // exactly, measured over all 10795695 rows of
+    // the tree. Each of these four was at S076's weights at the arithmetic
+    // maximum, 69/24 = 2.875 exactly, measured over all 10795695 rows of
     // `.tuning/selfplay_v2_dedup.tsv` by `build/tools/truncation_scan` -- 30
     // positions reach it and 69 more sit at 68/24 -- and they span the taper
     // from phase 5 to phase 23 with both sides to move so that a model error
-    // confined to one end of it is still reachable. Phase 17 has no maximal
-    // position under these weights, so the middle two are 11 and 19. DEC-057 is
+    // confined to one end of it is still reachable. Phase 17 had no maximal
+    // position under those weights, so the middle two are 11 and 19. DEC-057 is
     // the decision to re-measure; what it does not permit is lowering the
     // thresholds below to whatever came out.
+    //
+    // **Since S083 these four are coverage rows, no longer the bound's.**
+    // S083's refit moved them to 1.875, 1.708, 2.000 and 1.500, and the four
+    // it re-derived are tests/test_eval_trace.cpp's `truncation_positions`
+    // alone, not rows of this list: this list is test_tuner_gradient's
+    // fixture as well, and S083 measured what moving these rows does there.
+    // Swapped out, they took the only middlegame row for the passed pawn's
+    // bucket-1 weight with them (the gradient check red at parameter 800,
+    // `passed_pawn_mg[1]`, which S100's count cases cannot see); with the new
+    // four appended instead, the nonlinear group's planted recovery missed
+    // its numbers at its measured step. So these stay, with the indices and
+    // labels that fixture gives them.
     "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
     "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
     "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",

@@ -358,6 +358,14 @@ TEST_SUITE("evaluation: score")
   // of them was pasted here. Re-targeted, not relaxed: the assertion is the
   // same exact equality it always was.
   //
+  // S083's refit on S082's pool moved five of the six once more -- to 99, 276,
+  // 355, 585 and 984 -- with the queen re-anchored by DEC-059's form before the
+  // paste (DEC-307): the fit's queen on d1 read 983 against its own `QUEEN` of
+  // 710, a residual of 273 past POSITIONAL_ROOM, so 273 was moved from her 128
+  // squares into `QUEEN` (983), and the same position reads 984, the one
+  // centipawn of a tapered sum crossing zero. Re-derived by the script on the
+  // header that was pasted, after it reproduced all ten at S076's weights.
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -381,11 +389,11 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 135, "pawn on e2"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 244, "knight on b1"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 325, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 563, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 787, "queen on d1"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  99, "pawn on e2"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 276, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 355, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 585, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 984, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on

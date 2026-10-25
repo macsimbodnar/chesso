@@ -89,7 +89,9 @@
 // S099 adds two: `CorrHistMax`, the largest pawn correction applied, whose 0
 // is the parent's tree, and `CorrHistWeightCap`, the cap on the correction's
 // update weight. The count goes 73 to 75; S099's H0 took them out and S286
-// relanded them on S283's H1.
+// relanded them on S283's H1. S083's refit put a pawn at 84, and
+// `CorrHistMax`'s top, one pawn, moved from 94 to 84 with it (DEC-307); the
+// count stays 75.
 //
 // The ranges are held here too, since S142. They had nothing holding them at
 // all: the release build never reads a bound, the tune build's option lines are
@@ -136,7 +138,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"RfpTtEstimate",             1,     0,       1},
   {"RazorMargin",             242,     0,    2000},
   {"RazorDepth",                1,     0,       8},
-  {"CorrHistMax",              47,     0,      94},
+  {"CorrHistMax",              47,     0,      84},
   {"CorrHistWeightCap",       144,     1,     256},
   {"NullMoveBase",              3,     0,      16},
   {"NullMoveDivisor",           6,     1,      64},

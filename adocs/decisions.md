@@ -15874,3 +15874,51 @@ Consequences: `EXACT_FLOOR` sits at its shipping count with no spare point, so
               red and must answer for it. S083's rulings are re-read on S293's
               tree (its `EXACT_FLOOR` figure moves with the shipping end). The
               S170 C budget leaves with any revert.
+
+## DEC-313  2026-10-25  S083's H1: the owner's five rulings -- EXACT_FLOOR to 158, MATE_IN_THREE_FLOOR held at 11 without separating, the ply-2 clause to 6, the multicut row retired, the gauge-walk floor to 0.01 -- and DEC-312 ratified
+Tags:         evaluation, corpus, mate, testing, tuner, multicut, s083, s291, s293, dec-312, dec-308, dec-307, dec-305, dec-299, dec-158, dec-142, dec-116, sprt, owner-question
+Context:      S083's `{0, 5}` working-tree SPRT (cand `e972bd4+c875e362fbb2`
+              vs ref `e972bd4`, 8+0.08, Hash 16) read H1 at Elo +116.07 +/-
+              23.26, nElo +153.75 +/- 28.57, over 568 games in 16 m. All 396
+              decisive games ended by two-sided resignation adjudication;
+              Stockfish at depth 16 on each final position agrees with the
+              adjudicated winner in 396 of 396 (`.tuning/coord/S083/verdict/`).
+              DEC-307 (4) and DEC-308 (3) left five reds for the owner on an
+              H1: `EXACT_FLOOR` 159 shipping against 163 (154 weakened at
+              `RfpMinPly` 1); `MATE_IN_THREE_FLOOR` 11 green at 12 but the
+              weakened end 11, so it no longer separates; the ply-2 case's
+              `mate -2` first at iteration 6 against the clause's 4, held to 8;
+              the multicut row's mate in 5 lost at depth 10 only, S291's
+              attribution reverse futility's price (DEC-158), E21 still killed
+              by S243's direct case; the gauge walk's plain shift 0.0587
+              against the 0.1 floor, the hold still under 1e-9. DEC-312 was
+              the coordinator's under the standing instruction and waited on
+              the owner's ratification.
+Decision:     By the owner, 2026-10-25, each option the coordinator
+              recommended (DEC-265 form, put in one question set).
+              (1) `EXACT_FLOOR` 163 -> 158: one below the shipping count, four
+              above the weakened one, the rule the floor was set by before
+              S293; re-derived by `S156_mined_floor_sweep.py` with the gate
+              built at `RfpMinPly` 1 observed red. (2) `MATE_IN_THREE_FLOOR`
+              stays 11 and is recorded as no longer separating `RfpMinPly` 1;
+              `EXACT_FLOOR` carries that separation. 12 was rejected as a
+              zero-margin floor (DEC-116). (3) The ply-2 case's first-iteration
+              clause 4 -> 6, the property (the mate reported and held to depth
+              8) unchanged. (4) The multicut row "mate the multicut hides,
+              depth 10" is retired, S291's option (b): the multicut's guard
+              keeps S243's direct case, which kills E21. (5) The gauge walk's
+              floor 0.1 -> 0.01, re-read by its own program, the stale comment
+              rewritten to the S083 figures. (6) DEC-312 is ratified: S293's
+              guard stays.
+Rejected:     Raising `MATE_IN_THREE_FLOOR` to 12 -- zero margin, DEC-116.
+              Investigating the four lost mined mates first -- they are
+              S289's and S291's kinds, and +116 Elo outweighs four of 318 at a
+              fixed budget. Keeping the multicut row by `RfpMaxDepth` 4 --
+              DEC-158's H0 priced it at about -6 Elo. A fixed reference vector
+              for the gauge walk -- more machinery than a precondition needs.
+              Keeping any red -- the H1 would not land.
+Consequences: S083 lands as one commit carrying its record, its candidate's
+              `src/` byte for byte as played, the five rulings and DEC-220's
+              block. Every later evaluation refit (S135 first) re-reads these
+              floors under DEC-299's guard from the new ends: 159 / 154 and 12
+              / 11. On a revert of S083 the five rulings revert with it.

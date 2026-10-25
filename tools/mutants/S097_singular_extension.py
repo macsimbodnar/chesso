@@ -81,7 +81,8 @@ H0 removed the rule**: the check extension shared this expression, the two
 lines E01 names became four while it was in the tree, and with `src/` back to
 the byte the anchor is the two lines again. The mutation never changed. The
 twenty-two were re-proved at that landing and again on the reverted tree for
-E21 alone, which is the one a mined row carries.
+E21 alone, which was the one a mined row carried until S083 retired that row
+(DEC-313 (4)).
 """
 
 S = "src/search.cpp"
@@ -302,8 +303,10 @@ m("E21_multicut_mate_band_gate_dropped", S, "search/extension",
   '`beta > -MATE_MIN` term beside it is S165\'s guard on the node\'s own '
   'window and is a different rule, so it is left in place here. Killed by '
   '"the multicut never ends a node on a mate from its verification", S243\'s '
-  'direct drive of the guard, and by the mined row of "pruning does not hide '
-  'a forced mate", which stays as a second witness',
+  'direct drive of the guard. The mined row of "pruning does not hide a '
+  'forced mate" that was its second witness was retired with S083\'s '
+  'constants, DEC-313 (4): S291 traced its loss to reverse futility, not to '
+  'the multicut',
   ('      } else if (SE_MULTICUT != 0 && vscore >= beta && !is_pv &&\n'
    '                 vscore < MATE_MIN && vscore > -MATE_MIN && '
    'beta > -MATE_MIN) {',

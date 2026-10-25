@@ -97,13 +97,17 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 }
 
 
-// The four rows of test_eval_positions pinned for the truncation bound rather
-// than for a feature count, in the order they are listed there. Named
-// separately because "the pinned positions reach the truncation bound" has to
-// be able to fail when *these* stop reaching it, which is a different statement
-// from every position keeping inside it. S038, re-measured at S065 and at
-// S076; in tests/test_eval_model.cpp against the mirror's score until S276
-// moved them here, against the smooth score the mirror's sum became.
+// The four rows pinned for the truncation bound rather than for a feature
+// count. Named separately because "the pinned positions reach the truncation
+// bound" has to be able to fail when *these* stop reaching it, which is a
+// different statement from every position keeping inside it. S038,
+// re-measured at S065 and at S076; in tests/test_eval_model.cpp against the
+// mirror's score until S276 moved them here, against the smooth score the
+// mirror's sum became. Until S083 they were also the four truncation rows of
+// test_eval_positions, in the order listed there; S083's four live here
+// alone, and the exact-reconstruction and within-bound cases below add them,
+// mirrored, to their loops through positions_with_truncation_rows() (the
+// within-bound case says why).
 //
 // GOLDEN (DEC-142): the four positions themselves, drawn from the rows that
 // reach the maximum a chain of truncating divisions can produce. A residual
@@ -111,7 +115,8 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // expected to stop these four qualifying.
 // Re-derive: build/tools/truncation_scan --data <corpus> --min 2.8, which
 // prints `difference, phase, side to move, fen` per hit; the four are chosen
-// from the hits at the maximum to span the taper with both sides to move.
+// from the hits at the maximum to span the taper with both sides to move, by
+// adocs/data/S083_truncation_pick.py over the scan since S083.
 // Measured 2026-09-10 on .tuning/selfplay_v2_dedup.tsv at the shipped weights,
 // with the mirror's scan: 10795695 rows, 138331 past 2.0, 105 past 2.8, 33 at
 // the maximum 2.875, and all four below are among them. Re-derived at S276
@@ -120,7 +125,13 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // all four below still among the 33 at phases 5, 11, 19 and 23 -- the four
 // stand. The 2.0 column read 137108, which is ulp noise on the 60996 rows
 // sitting at exactly 48/24 and asserts nothing here
-// (adocs/data/S276_truncation_scan.txt).
+// (adocs/data/S276_truncation_scan.txt). Re-derived at S083 on its corpus
+// (6226944 rows, `.tuning/s083/curve/s0/cand_6226944_s1.tsv`) at its weights:
+// 64 rows past 2.8, 15 at 2.875, 14 distinct positions; S076's four read
+// 1.875, 1.708, 2.000 and 1.500 there and stopped qualifying, and
+// adocs/data/S083_truncation_pick.py, the sentence above as a rule, took the
+// four below at phases 5, 11, 17 and 23 (adocs/data/S083s_eval_only.txt, whose
+// hits are adocs/data/S083r_truncation_scan.txt's line for line).
 // Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
 // score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
 // that margin, so while the clamp binds the two agree exactly and the residual
@@ -136,11 +147,29 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
 // 4 x 23/24 = 3.833, which this case's precondition reports.
 const std::vector<std::string> truncation_positions = {
-    "8/8/8/6k1/1p1pr3/1Pp4P/2P2KP1/1N1R4 b - - 1 44",
-    "1n6/1p2np2/3k2p1/3P4/8/5BPP/r1b2PN1/1R2K2R w K - 6 33",
-    "r1b2rk1/1p1p2p1/p2pq2p/5B2/2PppP2/P2P2Q1/1P1N2PP/2R2RK1 b - - 0 18",
-    "r2qkb1r/pp1b1ppp/3p4/2p1p3/2PnP3/2NP4/PP4PP/R1BQKBNR w kq - 2 10",
+    "5k2/p1r4p/R5pP/5p2/8/5P2/B5K1/8 b - - 14 47",
+    "6k1/7p/p2b2p1/5n2/8/2Q5/PP3P1P/2KN3q w - - 1 33",
+    "2r4k/8/1pn2qp1/pQbB1p2/3p1P1p/P7/1PPBN1PP/R6K b - - 3 26",
+    "r1b2knr/pp6/1qnN4/6Bp/6pp/P4P2/1PP1Q3/R3KBbR w - - 0 18",
 };
+
+
+// all_positions() and the four pinned rows, each mirrored as that list's rows
+// are. Since S083 the four live here and not in test_eval_positions, so the
+// two cases that tie the trace to evaluate() -- exactly, and within the
+// truncation bound -- take them from here, and the rows at the arithmetic
+// maximum stay in both.
+std::vector<std::string> positions_with_truncation_rows()
+{
+  std::vector<std::string> out = all_positions();
+
+  for (const std::string& fen : truncation_positions) {
+    out.push_back(fen);
+    out.push_back(mirror_fen(fen));
+  }
+
+  return out;
+}
 
 }  // namespace
 
@@ -213,7 +242,10 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   size_t clamped_high = 0;
   size_t clamped_low = 0;
 
-  for (const std::string& fen : all_positions()) {
+  // The pinned truncation rows with their mirrors as well, since S083: the
+  // rows where the smooth and exact scores part most are where exact_score()
+  // most needs to be evaluate().
+  for (const std::string& fen : positions_with_truncation_rows()) {
     CAPTURE(fen);
 
     row_trace_t trace;
@@ -404,7 +436,9 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 
   double worst = 0.0;
 
-  for (const std::string& fen : all_positions()) {
+  // Every position of the shared list, and since S083 the four pinned rows and
+  // their mirrors, which no longer live in that list (below).
+  for (const std::string& fen : positions_with_truncation_rows()) {
     CAPTURE(fen);
 
     row_trace_t trace;
@@ -419,8 +453,18 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     CHECK(gap <= bound + 1e-9);
   }
 
-  // The bound is reached, not merely respected: test_eval_positions carries
+  // The bound is reached, not merely respected: `truncation_positions` carries
   // four rows pinned at 69/24 (DEC-057, DEC-169), and they reach it here.
+  // Until S083 the pinned four were also rows of test_eval_positions, and this
+  // loop reached them through all_positions(). S083's refit moved S076's four
+  // off the bound, and its own four were kept out of that list, which is
+  // test_tuner_gradient's fixture too: putting them there moved what that
+  // file measured -- swapped in, they took the only middlegame row for the
+  // passed pawn's bucket-1 weight out of the list (the gradient check red at
+  // parameter 800); appended, they moved the nonlinear group's recovery off
+  // its planted numbers at its measured step (S083's record). So this loop
+  // takes them from positions_with_truncation_rows(), and S076's four stay in
+  // the list as the coverage rows they had become.
   //
   // GOLDEN (DEC-142): those four rows, the same golden `truncation_positions`
   // and "the pinned positions reach the truncation bound" below pin, with the

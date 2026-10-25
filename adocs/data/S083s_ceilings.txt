@@ -1,0 +1,39 @@
+# S083's re-landing on S292's and S293's guards, 2026-10-23: the S170 ceilings and budgets read off adocs/data/S083s_sweep_s170.txt
+# (the 108-cell grid on a frozen copy of the worktree's Release build, bench 3945487, 1485 mate lines, 23 short), each
+# by its script. The command is the shipped one's five grids (S202, S261, S286, S292, S293) and this one; S083r's
+# grid, taken on cd50178's reverted tree, is not in it. Applied (DEC-299's guard on the ceilings, DEC-307 (3)): the
+# ceilings become 2, 6, 4, 0, 1, 3 -- B 5 -> 6 and F 2 -> 3, each a rise of 1 -- in tests/test_mate_carry.cpp, and the
+# budgets in adocs/data/S170_cases.tsv by pick_budgets.sh's own rewrite of the shipped TSV: A 1000000 and B 100000
+# kept, C 1500000 -> 1000000, D 500000 -> 4000000, E 300000 -> 500000 and F 300000 -> 100000 at stride 2.
+# EXACT_FLOOR falls (S083s_mined_floor.log), so DEC-299's guard is not met in full; DEC-307 (3) applies the ceilings and
+# budgets anyway, with the floor left red for the owner's H1 ruling, as cd50178's tree's were (S083r_ceilings.txt).
+
+== adocs/data/S203_case_sweep.sh --ceilings adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                   6
+C_mate7_depth11                   4
+D_mate_minus6_depth10             0
+E_mate_minus9                     1
+F_mate6_inherited_no_line         3
+
+== adocs/data/S203_case_sweep.sh --ceilings adocs/data/S083s_sweep_s170.txt (this grid alone)
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   0
+B_mate6_shallow                   6
+C_mate7_depth11                   1
+D_mate_minus6_depth10             0
+E_mate_minus9                     0
+F_mate6_inherited_no_line         3
+
+== .tuning/coord/S099/p2/pick_budgets.sh adocs/data/S170_cases.tsv (e972bd4's) adocs/data/S083s_sweep_s170.txt
+A_mate8_shallow            stride 1  nodes 1000000  -> nodes 1000000  (4 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (2 lines, 2 short)
+C_mate7_depth11            stride 1  nodes 1500000  -> nodes 1000000  (1 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 500000   -> nodes 4000000  (4 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 500000   (21 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 100000   (3 lines, 0 short)

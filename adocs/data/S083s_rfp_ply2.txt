@@ -1,0 +1,64 @@
+# S083's re-landing on S292's and S293's guards, 2026-10-23: tests/test_engine.cpp "reverse futility at ply 2 does not hide a mate
+# from the side to move" -- NOT A GOLDEN (DEC-142) -- read as the case's deepen_scores() reads it: uci, position fen,
+# go depth 8 at the defaults, every info line's score (.tuning/coord/S083/land/probe/uci_probe.py, copied unchanged).
+# The candidate: the re-landing's Release build (e972bd4, S292's and S293's guards, the re-anchored paste, bench
+# 3945487); the parent: the main checkout's Release build at e972bd4 (bench 6042933). mate -2 from iteration 6 to 8 on
+# the candidate, from 4 on the parent: as on cd50178's tree (S083r_rfp_ply2.txt) and 908ed57's
+# (S289_complete_paste.txt). The case stays red at REQUIRE( first_exact == 4 ), 6; untouched, the owner's on an H1.
+# FEN: rbrb2R1/p1p1p2p/P1P1P2P/8/8/6K1/8/7k b - - 3 2
+
+== candidate
+info score cp 1168 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 1125 depth 2 nodes 71 hashfull 0 pv h1g1 g3f4
+info score cp 1009 depth 3 nodes 141 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1009 depth 4 nodes 286 hashfull 0 pv h1g1 g8h8 g1h1
+info score cp 1027 depth 5 nodes 488 hashfull 0 pv h1g1 g8h8 g1f1
+info score mate -2 depth 6 nodes 1024 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 7 nodes 2141 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 8 nodes 4149 hashfull 0 pv h1g1 g8f8 g1h1
+bestmove h1g1 ponder g8f8
+
+== parent
+info score cp 854 depth 1 nodes 3 hashfull 0 pv h1g1
+info score cp 855 depth 2 nodes 40 hashfull 0 pv h1g1 g3g4
+info score cp 874 depth 3 nodes 92 hashfull 0 pv h1g1 g8h8 g1h1
+info score mate -2 depth 4 nodes 366 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 5 nodes 749 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 6 nodes 1405 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 7 nodes 2263 hashfull 0 pv h1g1 g8f8 g1h1
+info score mate -2 depth 8 nodes 3617 hashfull 0 pv h1g1 g8f8 g1h1
+bestmove h1g1 ponder g8f8
+
+== 2026-10-25, the owner's ruling DEC-313 (3): the clause 4 -> 6, now a golden read off the engine
+# python3 adocs/data/S083s_rfp_ply2.py ENGINE -- the script DEC-142 asks for at the clause's site: the case's root and
+# depth 8, driven by S154_floor_margin_sweep.py's engine_t (deepen_scores()'s three fields, the same parse), a fresh
+# process at the defaults. The candidate: this worktree's Release build (bench 3945487). The parent: the main
+# checkout's Release build at e972bd4 (bench 6042933). Both equal the 2026-10-23 sections above, node for node.
+
+== candidate, build/src/chesso
+  depth  1  cp 1168
+  depth  2  cp 1125
+  depth  3  cp 1009
+  depth  4  cp 1009
+  depth  5  cp 1027
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 4149
+first_exact 6
+mate -2 at the last iteration: yes
+exit 0
+
+== parent, the main checkout's build/src/chesso
+  depth  1  cp 854
+  depth  2  cp 855
+  depth  3  cp 874
+  depth  4  mate -2
+  depth  5  mate -2
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 3617
+first_exact 4
+mate -2 at the last iteration: yes
+exit 0

@@ -5115,15 +5115,17 @@ TEST_SUITE("engine: mate safety")
   //
   // GOLDEN (DEC-142): 11, the fewest exact mates in three the engine
   // may find over the 82 constructed positions at depth 2m - 1 +
-  // MATE_DEPTH_SLACK. Its two ends are above: 12 at the shipping guard, 7 with
-  // the guard weakened (RfpMinPly 1), read by S250 on 2026-10-01. Re-derive:
+  // MATE_DEPTH_SLACK. Its two ends: 12 at the shipping guard, 11 with the
+  // guard weakened (RfpMinPly 1), read at S083 (below; 12 and 7 by S250 on
+  // 2026-10-01, and again at S286). Re-derive:
   // python3 adocs/data/S154_floor_margin_sweep.py floor, and mode `red` for the
   // weakened end; adocs/data/S168_floor_sweep.log is the reading over the
   // enlarged set. Moves legitimately on: a search change that costs or buys
   // mate finding, and a change to the position set -- either end moving obliges
   // the number to be taken again, not read again. Margin: 1 below the shipping
   // count, which is the narrowest DEC-116 accepts and is why the split by motif
-  // is recorded above, and 4 above the weakened one. Property beside it: the
+  // is recorded above, and 0 above the weakened one since S083 (4 at S286), so
+  // it no longer separates RfpMinPly 1 (DEC-313 (2)). Property beside it: the
   // two assertions that are defects at any count -- no mate score for the side
   // being mated, and none closer than the proved minimum -- which carry no
   // floor at all.
@@ -5143,6 +5145,18 @@ TEST_SUITE("engine: mate safety")
   // 1 below the shipping count, now 4 above the weakened one, so it holds, as
   // DEC-295's guard asks (`adocs/data/S286_floor_sweep.log`). S099 read the
   // same on `6fc7f23` before its H0.
+  //
+  // **Held at 11 at S083 by the owner, and no longer separating (DEC-313
+  // (2)).** On S083's tree the `floor` mode reads 12 of 24 at the shipping
+  // guard and **11** with it weakened (RfpMinPly 1), so `11 >= 11` holds at
+  // the weakened end and this count no longer fails when the guard does;
+  // `red` builds the gate at RfpMinPly 1 and sees it fail on mate-in-two
+  // exactness alone (`adocs/data/S083s_floor_sweep.log`). The owner kept 11:
+  // 12 would sit at the shipping count with no margin, which DEC-116 rejects.
+  // The separation is carried by tests/test_mate_breadth.cpp's EXACT_FLOOR
+  // instead, 158 against 159 shipping and 154 weakened. Either end moving
+  // still obliges this floor to be taken again by its script; a revert of
+  // S083 puts back the 12 and 7 it separated.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,
@@ -5917,11 +5931,23 @@ TEST_SUITE("engine: mate safety")
 
     tt_free(&table);
 
-    // THE PROPERTY. The root reports the mate against itself, at the first
-    // iteration that can hold it -- four plies, the mated side's two moves
-    // and the attacker's two -- and still at the last of eight. NOT A GOLDEN
-    // (DEC-142): 4 and -2 are the oracle's Mate(-2), twice the distance as
-    // S145's case sets `minimum`, never a value read off a run.
+    // THE PROPERTY. The root reports the mate against itself, and still at
+    // the last of eight iterations; -2 is the oracle's Mate(-2), no golden.
+    //
+    // GOLDEN (DEC-142) since S083: 6, the first iteration that reports it.
+    // Until S083 the clause was 4 -- the first iteration that can hold the
+    // mate, four plies, the mated side's two moves and the attacker's two,
+    // twice the distance as S145's case sets `minimum` -- and no golden. At
+    // S083's constants the engine reports `mate -2` first at iteration 6 and
+    // holds it to 8, where its parent reports it from 4; the owner set the
+    // clause to 6 with the rest of the case unchanged (DEC-313 (3)).
+    // Re-derive: python3 adocs/data/S083s_rfp_ply2.py build/src/chesso, which
+    // drives the root as deepen_scores() does and prints `first_exact`
+    // (`adocs/data/S083s_rfp_ply2.txt`: 6 on S083's tree, 4 on its parent).
+    // Moves legitimately on: a change to the evaluation or the search that
+    // moves the iteration this mate is first seen at. Margin: exact. M06a's
+    // kill, S252's `0 == 4` above, is re-read by this tree's mutation pass
+    // (`adocs/data/S083s_mutation.tsv`). A revert of S083 puts 4 back.
     const std::vector<report_t> iterations = deepen_scores(root, 8);
 
     REQUIRE(iterations.size() == 8);
@@ -5934,7 +5960,7 @@ TEST_SUITE("engine: mate safety")
       }
     }
 
-    REQUIRE(first_exact == 4);
+    REQUIRE(first_exact == 6);
     REQUIRE(iterations.back().is_mate);
     REQUIRE(iterations.back().value == -2);
 
