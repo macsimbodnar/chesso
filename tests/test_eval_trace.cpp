@@ -131,7 +131,11 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // 1.875, 1.708, 2.000 and 1.500 there and stopped qualifying, and
 // adocs/data/S083_truncation_pick.py, the sentence above as a rule, took the
 // four below at phases 5, 11, 17 and 23 (adocs/data/S083s_eval_only.txt, whose
-// hits are adocs/data/S083r_truncation_scan.txt's line for line).
+// hits are adocs/data/S083r_truncation_scan.txt's line for line). Re-derived
+// at S135 on the same corpus at its piece placement fit: 65 rows past 2.8, 13
+// distinct positions at 2.875, phases 5 to 19; three of S083's four fell under
+// 2.8 and the pick kept its phase 11 row and took three more, at phases 5, 17
+// and 19 (adocs/data/S135_goldens.txt).
 // Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
 // score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
 // that margin, so while the clamp binds the two agree exactly and the residual
@@ -147,10 +151,10 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
 // 4 x 23/24 = 3.833, which this case's precondition reports.
 const std::vector<std::string> truncation_positions = {
-    "5k2/p1r4p/R5pP/5p2/8/5P2/B5K1/8 b - - 14 47",
+    "2R5/8/3r3p/6p1/1k2B1P1/4K2P/5P2/8 b - - 16 52",
     "6k1/7p/p2b2p1/5n2/8/2Q5/PP3P1P/2KN3q w - - 1 33",
-    "2r4k/8/1pn2qp1/pQbB1p2/3p1P1p/P7/1PPBN1PP/R6K b - - 3 26",
-    "r1b2knr/pp6/1qnN4/6Bp/6pp/P4P2/1PP1Q3/R3KBbR w - - 0 18",
+    "2q3k1/1b1R2p1/2p1r3/p2pNQ1p/Pb1P2pP/4P1P1/1P4K1/2R5 b - - 5 35",
+    "rn5k/ppp3bp/3qbp2/3p2pB/8/1PN2Q1P/P1PP1PP1/R4RK1 w - - 4 16",
 };
 
 

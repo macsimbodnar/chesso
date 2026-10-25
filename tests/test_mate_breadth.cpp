@@ -88,25 +88,25 @@ static constexpr int SCORE_DEPTH = 10;
 
 // GOLDEN (DEC-142): 158, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 159 with the guard shipping, 154 with it weakened (S083, below; 163 and
-// 160 at S293, 164 and 160 at S286).
+// 160 with the guard shipping, 156 with it weakened (S135, below; 159 and
+// 154 at S083, 163 and 160 at S293, 164 and 160 at S286).
 // Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 158, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 1 below the shipping count since S083 (0 at S293), 4 above the
-// weakened one. The S156 script's rule admits any floor strictly above what
-// the weakened guard finds and at or below what ships -- 155 to 159 against
-// S083's 154 and 159 -- and flags one outside that band as no longer
-// separating. The floor this gate kept until S293 sat 1 below the shipping
-// count, as it does again since S083: a single mate the shipping
-// build loses to an unrelated tree change did not turn it red, and the
-// weakened guard still did with 3 to spare. (At S261 the gap was 4 as well,
-// 160 against 156; at S250 it was 3, 146 against 143, and the spare point
-// went above the weakened end because that was the end that had moved, 139 to
-// 141 to 143.)
+// Margin: 2 below the shipping count and 2 above the weakened one since
+// S135 (1 and 4 at S083, 0 below the shipping count at S293). The S156
+// script's rule admits any floor strictly above what the weakened guard finds
+// and at or below what ships -- 157 to 160 against S135's 156 and 160, 155 to
+// 159 against S083's 154 and 159 -- and flags one outside that band as no
+// longer separating. The floor this gate kept until S293 sat 1 below the
+// shipping count, as it did again at S083: a single mate the shipping build
+// loses to an unrelated tree change did not turn it red, and the weakened guard
+// still did with 3 to spare. (At S261 the gap was 4 as well, 160 against 156;
+// at S250 it was 3, 146 against 143, and the spare point went above the
+// weakened end because that was the end that had moved, 139 to 141 to 143.)
 // Property beside it: the `wrong_sign == 0` assertion in the same case -- a
 // mate score for the side being mated is a defect at any total, so it is
 // asserted at zero and carries no floor.
@@ -158,6 +158,15 @@ static constexpr int SCORE_DEPTH = 10;
 // floor carries the RfpMinPly 1 separation that tests/test_engine.cpp's
 // MATE_IN_THREE_FLOOR no longer does: 11 holds at both of that count's ends,
 // 12 and 11 (DEC-313 (2)). A revert of S083 puts 163 back.
+//
+// **158 held at S135, re-read by the script (DEC-142, DEC-299).** S135's
+// piece placement fit raises both ends: on its tree S156's sweep reads
+// **160** exact at RfpMinPly 3, 156 at 2 and **156** at 1 and 0, and the gate
+// built at RfpMinPly 1 with 158 compiled in is red at 156
+// (`adocs/data/S135_goldens.txt`). 158 is inside the band, so it still
+// separates and is not moved: the owner set it (DEC-313 (1)), and a floor
+// that holds needs no decision. MATE_IN_THREE_FLOOR separates again there,
+// 13 shipping against 8 weakened.
 static constexpr int EXACT_FLOOR = 158;
 
 

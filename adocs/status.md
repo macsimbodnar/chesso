@@ -5,7 +5,7 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-25, by hand.
+Updated: 2026-10-26, by hand.
 
 ## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
 
@@ -55,20 +55,41 @@ trapped minor and trapped rook, four columns appended to `piece_placement`
 free. But `all` (0x7f) and `new4` (0x78) execute the same instructions to
 about 20 in 24.9 billion (+5.016 % / +5.255 %), though `all` forces a strict
 superset: the per-part rows (`new4` +4.52 %, `old3` +1.90 %) are suspect.
-A fresh agent diagnoses it from the built binaries, fixes
-`S135_cost_only.patch` and adds a separation guard
-(`.tuning/coord/S135/brief_cost.md`); the coordinator re-runs the cost
-(about 1 h, idle machine) after the screen. The cost decides nothing; the
-screen does not depend on it.
+Diagnosed by a fresh agent from the binaries: g++ vectorised columns 0-3
+into one `vpmulld` that keeps zero lanes, so 0x78 computed all seven and
+0x07 three plus the bad bishop; `parent` and `all` stand, the parts are
+void. Fixed in `62aa1b9` (per-column barriers; stamp, code and read guards,
+each refusing run 1), fast-checked, gate green. The cost decides nothing.
 
-**Running**: the screen (`locate` and `audit` passed: rank 792 of 831, the
-four columns identified), started 2026-10-25 21:18, PID 779040, console
-`.tuning/s135_screen.console`, about 1 to 2.5 h, ceiling 5 h.
+**Screen done** (22:28): kept bishop pair, rook open, rook half open and
+trapped; **bad bishop dropped** (it lowers training loss and raises held-out
+loss, so its best report is the start). **Candidate fit done** (22:37):
+held-out 0.071831 -> 0.071725 at `.tuning/s135/candidate/fit.hpp`.
 
-**Next**: `candidate` on `SCREEN-OUTCOME candidate` (no SPRT on `none`),
-the apply and goldens by an agent, the cost re-run, then the `{0, 5}` SPRT
-at 8+0.08 (up to about 20 h, a night). Open filler to name in every
-pre-registration: S294.
+**Cost run 2** (fixed patch, 22:39-23:34, every guard passed): all seven
+forced +3.92 %, S135's four +3.30 %, S027's three +0.92 %, the zero landing
+free. Reading at `.tuning/coord/S135/cost_reading_run2.txt`.
+
+**Running**: the apply, the dropped column's vector-lane check and the
+goldens, by a fresh agent in `../chesso-s135e` (`.tuning/coord/S135/brief_apply.md`,
+1 to 3 h, from 23:36).
+
+**The candidate is committed** (2026-10-26): the joint fit pasted, bench
+3945487 -> 5184358; the placement sum's form changed so the zero-weighted
+bad bishop is in no expression (g++ had computed it in a vector lane; INV-6
+identical with and without the form, popcnt 26 -> 18); every golden by its
+script (anchors, truncation positions, S170 ceilings D 0 -> 1 and E 1 -> 2
+and four budgets inside DEC-299's guard, `EXACT_FLOOR` 158 against 160/156,
+`MATE_IN_THREE_FLOOR` 11 against 13/8). `test_tuner_gradient` went red on a
+nearly stationary weight (the derivative right, the relative measure
+ill-conditioned): the owner ruled fixture rows (DEC-316), one pair by
+`adocs/data/S135_gradient_rows.cpp`'s rule; the AdaGrad walk margin is now
+0.0135 against 0.01. Fast-checked twice; 50/50 in both builds.
+
+**Next**: pin `adocs/data/S135_sprt.sh` (CAND the candidate, REF `62aa1b9`)
+and run the `{0, 5}` SPRT at 8+0.08 (up to about 20 h, the night). On H1 the
+closing commit also rewrites `src/evaluation.hpp`:150-157 (owed, step file).
+Open filler to name in every pre-registration: S294.
 
 ## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
 

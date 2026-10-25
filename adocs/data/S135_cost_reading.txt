@@ -1,0 +1,42 @@
+# S135's cost reading, run 2 (adocs/data/S135_cost.sh run, CAND_SHA=76c4ad8 PARENT_SHA=b7be983, OUT .tuning/s135/cost2, 2026-10-25 22:39 to 23:34, S135-COST-DONE; code check: four distinct .text, evaluate_cheap() popcnt zero 6, old3 12, new4 24, all 30). Forced columns: all 0x7f (the seven), old3 0x07 (S027's three), new4 0x78 (S135's four).
+# Run 1 (.tuning/s135/cost, 20:21 to 21:16) is void in its new4 and old3 rows: one barrier over the whole forced sum let g++ 13.3 vectorise columns 0 to 3 into one vpmulld, so new4 computed all seven and old3 its three plus PL_BAD_BISHOP; its all and parent rows stood (all +4.51 %, parent zero). The step file's 2026-10-25 cost sections have run 1 verbatim and the fix.
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       -0.066 %  CI -0.282 .. +0.151 %
+  pos11   instructions +0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       -0.041 %  CI -0.112 .. +0.031 %
+  pos11   wall         +0.053 %  CI -0.140 .. +0.247 %  (cand time over base, + is slower)
+all: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +4.729 %  CI +4.729 .. +4.729 %
+  bench16 cycles       +3.936 %  CI +3.743 .. +4.130 %
+  pos11   instructions +4.938 %  CI +4.938 .. +4.938 %
+  pos11   cycles       +4.035 %  CI +3.670 .. +4.401 %
+  pos11   wall         +3.784 %  CI +3.622 .. +3.946 %  (cand time over base, + is slower)
+new4: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +3.341 %  CI +3.341 .. +3.341 %
+  bench16 cycles       +3.274 %  CI +3.128 .. +3.420 %
+  pos11   instructions +3.429 %  CI +3.429 .. +3.429 %
+  pos11   cycles       +3.368 %  CI +3.273 .. +3.463 %
+  pos11   wall         +3.272 %  CI +3.096 .. +3.449 %  (cand time over base, + is slower)
+old3: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.934 %  CI +0.934 .. +0.934 %
+  bench16 cycles       +0.989 %  CI +0.808 .. +1.169 %
+  pos11   instructions +1.016 %  CI +1.016 .. +1.016 %
+  pos11   cycles       +0.926 %  CI +0.770 .. +1.082 %
+  pos11   wall         +0.856 %  CI +0.674 .. +1.037 %  (cand time over base, + is slower)
+parent: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.000 %  CI +0.000 .. +0.000 %
+  bench16 cycles       +0.177 %  CI +0.051 .. +0.304 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.182 %  CI +0.094 .. +0.270 %
+  pos11   wall         +0.084 %  CI -0.117 .. +0.285 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.282 %, pos11 cycles 0.112 %, wall 0.247 %
+masks bench16: A/A instruction floor 1.6 ppb; all +4.7291 .. +4.7291 %, old3 +0.9341 .. +0.9341 %, new4 +3.3413 .. +3.3413 %
+masks bench16: old3 + new4 +4.275 % against all +4.729 %, the parts -0.454 points from it (printed, not gated: shared loads and register pressure make it inexact)
+masks pos11: A/A instruction floor 23.4 ppb; all +4.9381 .. +4.9381 %, old3 +1.0158 .. +1.0158 %, new4 +3.4290 .. +3.4290 %
+masks pos11: old3 + new4 +4.445 % against all +4.938 %, the parts -0.493 points from it (printed, not gated: shared loads and register pressure make it inexact)
+masks: each part above zero and all above each part, beyond the floor; overlap between the parts is the code check's
+all: COST +3.92 % (cycles and wall beyond the floor, instructions the same way)
+new4: COST +3.30 % (cycles and wall beyond the floor, instructions the same way)
+old3: COST +0.92 % (cycles and wall beyond the floor, instructions the same way)
+parent: zero (inside the A/A's floor)

@@ -1,7 +1,7 @@
 id:         S135
 goal:       unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family by the owner's decisions of 2026-08-20 and 2026-10-08
 accepts:    S134 has landed first, so the group is three identified features and carries no unidentified column -- a bundled verdict over this bundle is at least attributable, which S027's was not; the fit is `--only piece_placement` on the corpus S082 and S083 produce, so the SPRT measures the term and not a joint refit of the other 820 constants; bad-bishop and trapped-piece features join the group (DEC-258), each defined from its description before any fit (CPW *Bad Bishop*, *Trapped Pieces*) and each feature screened before the one SPRT (DEC-259); the SPRT bounds are chosen for the effect size and stated in advance, not `--fast` -- DEC-063 is the measurement that the pair and not the hardware sets the cost, and the published parts are +8.2 and +9.86 (DEC-084, order of magnitude only); the term's own speed cost is inside its verdict, measured with the weights forced non-zero because at zero the compiler deletes it (DEC-047); a verdict of zero is recorded as zero, and **if the bundle fails it is bisected** rather than zeroed by hand, which is the S027 failure this step exists not to repeat (DEC-082's bisect rule); the fast suite green
-touches:    src/evaluation.cpp piece_placement_mg/eg and the four new counts, src/evaluation.hpp, tools/tuner_groups.hpp, tools/tuner.cpp, tools/tuner_layout.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_eval_positions.hpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_walked_counts.hpp, tests/test_evaluation.cpp and every other golden the fit's paste moves (each re-derived by its script), tools/tuner_trace.hpp (one comment's parameter count, at the rebase; the trace's term table reads the width), .tuning/verify_fit.py, DEV_MANUAL.md, adocs/data/README.md, adocs/data/S135_*; src/eval_tables.hpp named before phase 1 and needing no change (the tables are not fitted)
+touches:    src/evaluation.cpp piece_placement_mg/eg and the four new counts, src/evaluation.hpp, tools/tuner_groups.hpp, tools/tuner.cpp, tools/tuner_layout.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_eval_positions.hpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_walked_counts.hpp, tests/test_evaluation.cpp and every other golden the fit's paste moves (each re-derived by its script: tests/test_search.cpp, tests/test_mate_breadth.cpp, tests/test_engine.cpp, tests/test_mate_carry.cpp, adocs/data/S170_cases.tsv, adocs/data/S192_anchors.py, MANUAL.md), src/evaluation.cpp add_placement_column (the placement sum's form, behaviour-neutral), tests/test_eval_positions.hpp's DEC-316 pair, tools/tuner_trace.hpp (one comment's parameter count, at the rebase; the trace's term table reads the width), .tuning/verify_fit.py, DEV_MANUAL.md, adocs/data/README.md, adocs/data/S135_*; src/eval_tables.hpp named before phase 1 and needing no change (the tables are not fitted)
 excludes:   tempo, which is S136; the seventh-rank feature, deleted at S134; any change to how the three features are computed
 decisions:  DEC-091, DEC-057, DEC-063, DEC-084, DEC-258, DEC-259
 closes:
@@ -1127,3 +1127,365 @@ About 1 h 05 m by the script's own estimate, ceiling 2 h 30 m; run 1 took
 `.tuning/s135/cost`, whose five worktrees stay until the coordinator removes
 them. The run now prints the `code` lines into `cost.log` before the pairs
 and the `masks` lines before the verdicts.
+
+## 2026-10-25: the candidate's paste -- stopped at the gradient check
+
+Run by one Opus 5.5 subagent in worktree `chesso-s135e`, branch `s135e` at
+`62aa1b9` (bench 3945487). Outputs under `.tuning/s135/apply_candidate/`
+(the script's own) and `.tuning/s135_apply_diag/` (the diagnosis below).
+**Stopped before the goldens**: a red test that is not a golden, so a
+fixture question for the coordinator (the brief's stop rule). Nothing past
+the paste was edited.
+
+### The screen and the candidate, as read
+
+The screen's reading (`.tuning/s135/screen/reading.txt`): kept bishop_pair
++0.000044, rook_open +0.000023, rook_half_open +0.000004 (m 0.000004),
+trapped +0.000036; dropped bad_bishop (best report the start), frozen at
+zero. The candidate fit (`.tuning/s135/candidate/fit.hpp`, sha256
+`19dde95f...`, 10 free): `best: train 0.069222  validation 0.071725  (start
+0.069321 / 0.071831)`; mg {-5, 23, 3, 0, 0, -40, -23}, eg {37, -4, 13, 0, 0,
+-68, -16}; stage-one bound mg 13292, eg 12929 of 32767. Its log stamps
+`engine d652c0a-dirty`, the run `62aa1b9`: the two have identical `src/` and
+`tools/`, so both name the same engine and tuner.
+
+### The apply
+
+`adocs/data/S135_screen.sh apply .tuning/s135/candidate/fit.hpp
+/home/max/ws/chesso-s135e`, 5 m 36 s, `S135-APPLY-DONE`: start-check passed
+(frozen values HEAD's, free columns [0, 1, 2, 5, 6]), headroom mg 19475, eg
+19838; `verify_fit` 831 of 831; only `piece_placement_mg`/`_eg` moved, the
+columns outside the free set unchanged; both builds 0 warnings; **bench
+5184358** (3945487 before); format clean. Fast suite **46 of 50 in both
+builds**, the same four: `test_evaluation` (the six piece anchors),
+`test_search` (`QUIET_ROOK_EVAL`, `_CHEAP`, 209, -534, -599, twelve cases),
+`test_mate_carry` (D's ceiling 0 read 1; 2 of 6 cases report a line, 4
+needed: the budgets), and **`test_tuner_gradient` "gradient() is the
+derivative of the error it descends"**: `CHECK( check.worst < 1e-6 )`, worst
+**2.91446e-06 at parameter 774** (`mobility_mg`, the bishop's), the parent
+3.99e-7 there. `test_mate_breadth` (`EXACT_FLOOR` 158) and `test_engine`
+(`MATE_IN_THREE_FLOOR` 11, `first_exact` 6, `first_mate_depth`) green as
+shipped; their scripts were not run.
+
+### The red, diagnosed (not fixed)
+
+A scratch copy of the case (`.tuning/s135_apply_diag/gradient_diag.cpp`,
+never committed) at the candidate's constants: parameter 774's analytic
+gradient is **-1.342036e-06** against its neighbours' 2.54e-4 (773) and
+3.66e-4 (775), the largest 4.77e-4 -- the fixture's error is all but
+stationary in that weight -- and the finite difference at h = 0.01 is
+-1.342040e-06, **4e-12 apart**. The relative error follows the O(h^2) law
+exactly: h 0.05, 0.02, 0.01, 0.005, 0.002 read 7.28e-5, 1.17e-5, 2.91e-6,
+7.26e-7, 9.6e-8 at 774. So the gradient is right and the check's relative
+measure is ill-conditioned on a near-zero gradient; making it green is a
+fixture or metric change, which is not this subagent's (never loosen a red
+test).
+
+The other weight-dependent preconditions hold (`S083_tuner_preconditions.cpp
+both`, `.tuning/s135_apply_diag/tuner_pre_cand.txt`): "sits clear of the
+clamp" green; the clamp rule still picks **+100**, 8 rows bound, every row
+**23.00** from the kink, fd 6.0e-8; the walk's smallest **0.4015** (Adam) and
+**0.0672** (AdaGrad), both the rook's, above 0.01, holds at most 1.07e-14,
+runs at most 5.68e-13 apart, travelled about 1600.
+
+### Item 3, read only: the zero column is computed
+
+The candidate's `evaluate_cheap()` (`objdump -d --no-show-raw-insn -C`,
+`build/src/chesso`, `.text` 2cf97d7cb84fd92e): **popcnt 26** against the
+zero build's 6 (`.tuning/s135/cost2/bin/zero`); the five non-zero columns
+owe +12 (pair 2, open 2, half open 2, trapped minor 4, trapped rook 2), the
+other +8 is PL_BAD_BISHOP's. The bad bishop's colour masks
+0xaa55aa55aa55aa55 and 0x55aa55aa55aa55aa appear (four `movabs`), and one
+`vpmulld 0x2905(%rip)` reads the constant at 0x467a0, **{2424827, -262121,
+851971, 0}** -- columns 0 to 3 packed, lane 3 the bad bishop at zero. The
+rammed column (4) is deleted. So the shipping sum computes a zero-weight
+column in a vector lane, as the cost run's old3 did: the form change owed
+before the SPRT (a zero-weighted column in no expression, INV-6 against
+this paste) is not made.
+
+### Not done, the step having stopped
+
+The form change; every golden (anchors, `QUIET_ROOK_EVAL`s and the four
+search scores, the S170 ceilings and budgets, both mate floors' scripts,
+first-mate, the mined rows, truncation positions, node budget, ply-2);
+gates; `S135_sprt.sh`'s re-read; the cost reading's commit; docs.
+
+## 2026-10-26: the candidate, its paste and goldens
+
+The same subagent, resumed on the coordinator's ruling after the stop above
+(the gradient case to the owner, everything else to go on), then on the
+owner's ruling for that case (DEC-316, the coordinator's to record). Worktree
+`chesso-s135e`, branch `s135e` at `62aa1b9`; the run's outputs under
+`.tuning/s135e/` and `.tuning/s135_apply_diag/`, the readings in
+`adocs/data/S135_goldens.txt` with each command beside its output. The order:
+the form change and its INV-6, the goldens, then the gradient rows, then the
+gates. No match, SPRT, fit, datagen or timing ran.
+
+### The screen and the candidate, as read
+
+As the stop's section quotes them: the screen kept bishop_pair (+0.000044),
+rook_open (+0.000023), rook_half_open (+0.000004, m 0.000004) and trapped
+(+0.000036) and dropped bad_bishop (its best report the start, train 0.069321
+-> 0.069309, validation 0.071831 -> 0.071839), `SCREEN-OUTCOME candidate
+bishop_pair,rook_open,rook_half_open,trapped`. The candidate fit:
+`best: train 0.069222  validation 0.071725  (start 0.069321 / 0.071831)`,
+10 free, mg {-5, 23, 3, 0, 0, -40, -23}, eg {37, -4, 13, 0, 0, -68, -16},
+stage-one bound mg 13292 and eg 12929 of 32767. HEAD moved from `d652c0a` to
+`62aa1b9` during the screen and the fit's log stamps `d652c0a-dirty`; the two
+have identical `src/` and `tools/`, so every stage names the same engine and
+tuner.
+
+### The apply
+
+`S135-APPLY-DONE` in 5 m 36 s: start-check passed (free columns [0, 1, 2, 5,
+6]), headroom mg 19475 and eg 19838, `verify_fit` 831 of 831, only
+`piece_placement_mg`/`_eg` moved, both builds 0 warnings, bench 3945487 ->
+**5184358**, 46 of 50 in both builds (the anchors, the S170 ceilings and
+budgets, and the gradient case, below).
+
+### Item 3: the zero column, and the form that removes it
+
+At the plain paste g++ 13.3 computed the bad bishop's count at zero weight:
+`evaluate_cheap()` popcnt 26 against the zero build's 6, the colour masks
+present, one `vpmulld` on the packed constant {2424827, -262121, 851971, 0},
+lane 3 the bad bishop (the stop's section has the detail). **Changed**:
+`src/evaluation.cpp` `add_placement_column`, one column a template instance
+with its weight tested by `if constexpr`, so a zero-weighted column is in no
+expression; `add_placement_columns` folds the seven in index order, the trace
+still recording every column. **INV-6 against the plain paste**: bench
+5184358 both, `bench 12` 2024016 both and 0 lines apart, `search_bench.py` at
+9 (48284, 126091, 62646; c3d5, d5e6, d7c8q) and at 12 (226320, 430872,
+157130; c3d5, e2a6, d7c8q) identical, the tune build's bench 5184358 both.
+**Then the disassembly**: popcnt **18** (the five non-zero columns' +12), no
+colour mask, no `vpmulld`, no xmm register, the trapped masks and two `setg`
+present. So the candidate computes S027's three and the two trapped counts
+and nothing else.
+
+### Every golden, each by its script
+
+Fixture A `5ed5e48` (a commit object on no branch: `62aa1b9` plus the
+worktree's src/, the parent's tests) for S154 and S156; frozen copies of the
+candidate's builds for the rest; the parent the main checkout's builds at
+`62aa1b9`. `.tuning/s135e/chain.sh`, 450 s, `CHAIN-DONE`.
+
+| golden | before | now | script |
+|---|---|---|---|
+| six piece anchors | 99, 276, 355, 585, 984, 0 | **99, 276, 355, 583, 984, 0** | `S192_anchors.py` 10 of 10 on the shipped tree, then on the fit's header; its embedded values set to these, 10 of 10 on this tree |
+| `QUIET_ROOK_EVAL`, `_CHEAP`; 396; 209; -534; -599 | 585, 580; 396; 209; -534; -599 | **583, 578; 394; 199; -533; -597**, the four leaves still the four king moves standing pat (-564, -533, -582, -543) | the same; every move through rook_open alone (mg 23, eg -4) |
+| `POSITIONAL_ROOM` | -- | did not fire; `test_evaluation` 33 of 33 | -- |
+| `truncation_positions` | S083's four, phases 5, 11, 17, 23 | **re-picked**: phases 5, 11, 17, 19; S083's phase 11 row kept, its other three under 2.8 | `truncation_scan --min 2.8` on the corpus (65 past 2.8, 13 at 2.875), `S083_truncation_pick.py` |
+| "ordering keeps the tree small" | 65024 / 3251 (7783 at S083) | **unmoved**: 7366, 0.45 of 16256, inside [7270, 32512] by 96 | `S192_node_budget.py` |
+| `first_mate_depth`, `mate_in` | 9, 9; 5 | **unmoved**: 9, 9; 5 | `S188_repair_goldens.py first-mate` |
+| `DRIVE_DEPTH` | 4 | **unmoved**: 4 | `S188_repair_goldens.py s207 --lib` |
+| ply-2 `first_exact` | 6 | **unmoved**: 6 (candidate and parent) | `S083s_rfp_ply2.py` |
+| `capture_mates`, ProbCut, extra-ply rows | each at its depth | **unmoved**: each at its depth; ProbCut 5 at d9-d11, 6 at d12; the retired multicut row still no mate at 10 | `S230_mine_r01_row.py depths`, candidate and parent libraries |
+| late-capture position, 3 and 7 | Rxa4 at 3, Rxe4 at 7 | **unmoved**: the same cells, node counts apart | `S261_mine_late_capture.py sweep` and `pick` on the position |
+| `EXACT_FLOOR` 158 | 159 / 154 | **held**: **160** shipping, 156 at 2, **156** weakened; the gate at RfpMinPly 1 red at 156 | `S156_mined_floor_sweep.py --ref 5ed5e48 --floor 158` |
+| `MATE_IN_THREE_FLOOR` 11 | 12 / 11 | **held, separating again**: **13** shipping, **8** weakened; `red` red at 8 >= 11 and on mate-in-two | `S154_floor_margin_sweep.py floor` and `red` |
+| `short_line_ceiling` | 2, 6, 4, 0, 1, 3 | **2, 6, 4, 1, 2, 3**: D 0 -> 1, E 1 -> 2, the grid alone 0, 0, 1, 1, 2, 0 | `S203_case_sweep.sh --ceilings` over the six grids and `adocs/data/S135_sweep_s170.txt` (108 cells, 1408 lines, 5 short) |
+| S170 budgets | A 1000000, B 100000, C 1000000, D 4000000, E 500000, F 100000 | **A 300000, B 100000, C 500000, D 4000000, E 300000, F 300000** | `adocs/data/S170_pick_budgets.sh` (the tracked picker) |
+| clamp push; walk floor | +100; 0.01 | **unmoved**: +100, every row 23.00 from the kink; walk 0.4015 / 0.0672 (before the rows, below) | `S083_tuner_preconditions.cpp both` |
+| `golden_defaults`, option count, census, book | -- | **unmoved by construction**: no search parameter, UCI option, generator, corpus or book moved | -- |
+
+**DEC-299's guard is met and applied**: both mate floors hold or rise and no
+ceiling rises by more than 2. Neither floor is moved: 158 and 11 are the
+owner's (DEC-313), both still separate, and a floor that holds needs no
+decision; 159 for `EXACT_FLOOR` (1 below the shipping count, the rule until
+S293) is the coordinator's to propose if wanted. Where S083's landing list
+and `DEV_MANUAL.md`'s goldens table differ, the table won: it names the
+tracked picker (`adocs/data/S170_pick_budgets.sh`, S290) where S083's has
+`.tuning/coord/S099/p2/pick_budgets.sh`, and adds the ply-2 clause,
+`DRIVE_DEPTH`, the census, the book and the option count; for the mined rows
+both name full re-mines, and as at S083 the rows were read at their depths
+by `S230_mine_r01_row.py depths` (each holds, so no re-mine is owed), the
+late-capture position by its script's `sweep` and `pick` (S023's ruling:
+re-mined if red).
+
+### The gradient case: red, the owner's ruling, the rows
+
+**Red** at the candidate with the forty rows: worst 2.91446e-06 at 774
+(`mobility_mg[1]`, the bishop's) against the case's 1e-6. **Why**: the
+fixture's error is all but stationary there, the analytic gradient
+-1.342036e-06 against 6e-5 to 5e-4 for the other seven mobility weights,
+the central difference -1.342040e-06, 4e-12 apart; the relative error obeys
+O(h^2) exactly (h 0.05, 0.02, 0.01, 0.005, 0.002: 7.3e-5, 1.2e-5, 2.9e-6,
+7.3e-7, 9.6e-8), so it is truncation over almost nothing, not a wrong
+gradient. **The owner's ruling, 2026-10-26 (DEC-316)**: fixture rows, S100's
+precedent; metric, h = 0.01 and 1e-6 unchanged. **The rows, by a stated
+rule** (`adocs/data/S135_gradient_rows.cpp`, the rule in its header, written
+before it ran): the first position of `all_test_fens()` in order whose pair
+(it, then its colour-mirror) loads, sits clear of the clamp and puts
+|dE/d mobility_mg[1]| at or above a tenth of the smallest of the other seven
+mobility gradients. Candidate 47, castling.json's
+`1r1Nk2r/ppp1n1pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQk - 2 9` and its mirror,
+|g| 1.87e-5 against a threshold of 5.70e-6; python-chess Status.VALID for
+both. Appended to `tests/test_eval_positions.hpp` with its provenance.
+**Green**: worst **1.9989e-07, still at 774**; at the parent's constants
+(the same object against `62aa1b9`'s trace library) **5.0061e-07** at 774,
+green. **Re-read with the rows**: clamp-clear green (largest |stage two|
+99.3 against 183); the clamp rule **+100**, the same 8 rows, 23.00 from the
+kink, fd 1.14e-7 (parent 2.25e-8); the walk **0.2263** (Adam) and **0.0135**
+(AdaGrad), the rook's, over the 0.01 floor by a factor of 1.35 where it was
+0.0672 without the rows (parent 0.1889 and 0.0184), holds at most 5.22e-15;
+the planted recovery, all fourteen placement weights within 1.65e-3 (case
+0.5), passed pawns within 0.068; the nonlinear group's case green at 1.10e-7.
+No golden in the file counts the fixture's rows (every count reads
+`positions.size()`); `test_eval_model` 14 of 14 and `test_eval_trace` 9 of 9
+over the longer list.
+
+### Gates
+
+After the last code and test edit (`.tuning/s135e/gate.sh g2`,
+`CLANG_FORMAT_MAJOR=22`, `-j12`): both builds **0 warnings**; the fast suite
+**50 of 50 in both builds**; `./clang-format.sh --check` clean; bench
+**5184358** in both builds. Before the rows (`g1`) the same gate read 49 of
+50 in both, the gradient case the only red. `tools/plan_prose_check.py`
+`--citations`, `--touches`, `--params`, `--gate`, one mode a call: nothing
+flagged (the two `MISSING` notes are S136's). **Tier 2 (DEC-141) does not
+bind**: `git diff --cached --stat -- src/` names `src/evaluation.cpp` alone,
+the weights and the placement sum's form -- no search, generator,
+`make_move` or `unmake_move` code.
+
+### The SPRT script
+
+`adocs/data/S135_sprt.sh` re-read against this candidate and left with the
+coordinator's markers unfilled (it refuses on them). Its guards stand as
+written: CAND^ is REF, `src/eval_tables.hpp` unchanged, `src/evaluation.cpp`
+the only file under src/ that differs -- the form change is in that file, so
+no guard's wording moved. A dated paragraph is added to its header: the four
+survivors and bad bishop dropped (held at zero and, with the form, computed
+nowhere); the bisection as `read` printed it, `family -> [A -> [A1, A2 ->
+[A2a, A2b]], B]`, B being trapped alone, so six further SPRTs at worst,
+about 119 h, not eight; the cost the verdict pays bounded by two measured
+rows; and S294, the open DEC-171 filler, for the coordinator's sentence.
+
+**A risk for the bisection.** DEC-316's two rows cut the AdaGrad gauge
+walk's margin to 0.0135 against the case's 0.01 floor (0.0672 without them),
+so a bisection part's refit, which moves the constants the walk reads, may
+read it red; that would be a precondition for the owner to rule on, as
+DEC-313 (5) was, never a lower floor.
+
+### The cost reading
+
+Committed as `adocs/data/S135_cost_reading.txt`: run 2's reading verbatim
+under two lines naming the run and run 1's void parts (one barrier over the
+forced sum let g++ 13.3 vectorise columns 0 to 3, so run 1's `new4` computed
+all seven and `old3` its three plus PL_BAD_BISHOP; its `all` and `parent`
+stood). Run 2:
+
+```
+all: COST +3.92 % (cycles and wall beyond the floor, instructions the same way)
+new4: COST +3.30 % (cycles and wall beyond the floor, instructions the same way)
+old3: COST +0.92 % (cycles and wall beyond the floor, instructions the same way)
+parent: zero (inside the A/A's floor)
+```
+
+The SPRT pays no measured row: the candidate computes S027's three and the
+two trapped counts (popcnt 18), a superset of `old3`'s columns (12) and a
+subset of `all`'s (30), so its cost lies between +0.92 % and +3.92 %, `all`
+bounding it from above. Without the form change it would also have computed
+the bad bishop's count (popcnt 26).
+
+### Documents
+
+- `DEV_MANUAL.md`: the goldens table's rows for every golden above (the
+  values since S135 and the readings of the unmoved ones), the ceilings'
+  command with S135's grid, the gradient paragraph (the red, DEC-316's pair,
+  2.00e-7), the gauge walk's 0.0135. The 58 term parameters, the 831 and
+  the partition's widths do not move.
+- `MANUAL.md`: the `RfpMinPly` row's mined-set figures at this tree's 160,
+  156 and 156 against the floor 158. Nothing else on the UCI surface moves.
+- `adocs/data/README.md`: rows for `S135_cost_reading.txt`,
+  `S135_goldens.txt`, `S135_sweep_s170.txt` and `S135_gradient_rows.cpp`.
+- Every changed golden's site names its script.
+
+### Proposed for `adocs/specs.md` (the coordinator writes it)
+
+- **Evaluation row**, after the passed pawn sentence: "Piece placement since
+  S135 is five of its seven counts at fitted weights -- the bishop pair, a
+  rook on an open file, a rook on a half-open file, and DEC-258's trapped
+  pieces (minors on CPW's listed patterns, rooks in the own king's corner) --
+  fitted together on S083's corpus with every other constant frozen
+  (DEC-259, DEC-315) and computed in the cheap stage beside the pawn terms.
+  The bad bishop count and its rammed share stay at zero, dropped by the
+  screen; a zero-weighted placement column is in no expression, so neither
+  is computed."
+- **"absent, evaluation" row**, its first two sentences replaced: "S135's
+  bad bishop and its rammed share, and tempo -- present in the code, shipped
+  at zero weight. At zero they change no node and cost nothing: S135's cost
+  run's `parent` comparison read the zero-weight landing inside the A/A
+  floor on g++ 13.3, and since S135's form a zero-weighted placement column
+  is in no expression whatever the columns beside it weigh; the tuner
+  carries their 6 parameters, making 831 fitted and 825 shipped." The rest of
+  the row stands; its "history of the five" now has three of them shipping.
+
+### Proposed commit message
+
+```
+Paste S135's piece placement fit and re-derive its goldens (S135)
+
+The screen kept four of the five terms (bishop pair, rook on an open and
+on a half-open file, trapped pieces) and dropped bad bishop; their joint
+fit, every other constant frozen, is pasted here for the one SPRT that
+decides it (DEC-259, DEC-315). Bad bishop ships at zero, and the
+placement sum is now one column at a time under if constexpr, so a
+zero-weighted column is in no expression: at the plain paste g++ 13.3
+computed the bad bishop's count in a vpmulld lane at every node. The
+form is behaviour-neutral (INV-6: bench, bench 12 and search_bench at 9
+and 12 identical with and without it); evaluate_cheap()'s popcnt 26 -> 18.
+
+Every golden the paste moves is re-derived by its script (DEC-142):
+the anchors 583/578/394/199/-533/-597, the four truncation positions
+re-picked, the S170 ceilings D 0 -> 1 and E 1 -> 2 and four budgets by
+the tracked picker inside DEC-299's guard, both mate floors holding
+(EXACT_FLOOR 158 against 160 and 156, MATE_IN_THREE_FLOOR 11 against 13
+and 8). The gradient check read 2.91e-6 at mobility_mg[1], whose
+gradient the fit left near zero; the owner ruled for fixture rows
+(DEC-316), one pair picked by adocs/data/S135_gradient_rows.cpp's rule,
+and it reads 2.00e-7. Cost reading committed: all +3.92 %, old3 +0.92 %.
+
+Bench: 5184358
+```
+
+### The fast check's two fixes (2026-10-26)
+
+- `src/evaluation.cpp`'s comments beside the placement weights said every
+  fit since S065 held them at zero and that the term costs nothing to leave;
+  now they say S065 to S083 held them, S027's paragraph is in the past
+  tense, and a paragraph over the declaration says the weights are S135's
+  screen and joint fit (DEC-259, DEC-315), bad bishop and its rammed share at
+  zero because the screen dropped them. Comments only: bench 5184358 in both
+  builds.
+- **Owed at the SPRT's closing commit, on H1 only** (on H0 the revert makes
+  the old text true again): `src/evaluation.hpp`'s comment over
+  `piece_placement_mg` is false at CAND, but `S135_sprt.sh`'s guard allows
+  only `src/evaluation.cpp` under src/, so it is not edited here. Replace
+
+  ```
+  // **Zero in evaluation.cpp, and not because the tuner has not reached them.**
+  // S027 fitted piece placement (mg {2, 32, 8, -26} / eg {55, -8, 12, 11}),
+  // its bundled SPRT read -5.48 +/- 11.46 and H0, and the weights were then
+  // zeroed by hand and held there by `--freeze piece_placement` in every fit
+  // since S065 (DEC-057) -- held at zero, not fitted to it; evaluation.cpp says
+  // so beside the weights and adocs/plan_done/S100_*.md carries the ledger. The
+  // passed pawn, pawn structure and king safety weights above and below ship
+  // fitted since S027; tempo is zero for its own reason, stated at its block.
+  ```
+
+  with
+
+  ```
+  // **Fitted since S135, five of the seven.** S027 fitted piece placement (mg
+  // {2, 32, 8, -26} / eg {55, -8, 12, 11}), its bundled SPRT read -5.48 +/-
+  // 11.46 and H0, and the weights were zeroed by hand and held there by
+  // `--freeze piece_placement` in every fit from S065 to S083 (DEC-057). S135's
+  // screen kept the bishop pair, both rook files and the two trapped counts, and
+  // their joint fit ships on its SPRT's H1 (DEC-259, DEC-315); the bad bishop
+  // and its rammed share stay at zero, dropped by the screen. evaluation.cpp
+  // says so beside the weights, and adocs/plan_done/S100_*.md carries the
+  // ledger. The passed pawn, pawn structure and king safety weights above and
+  // below ship fitted since S027; tempo is zero for its own reason, stated at
+  // its block.
+  ```
+
+  A comment only, so the closing commit's bench stays the candidate's.

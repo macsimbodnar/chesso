@@ -366,6 +366,12 @@ TEST_SUITE("evaluation: score")
   // centipawn of a tapered sum crossing zero. Re-derived by the script on the
   // header that was pasted, after it reproduced all ten at S076's weights.
   //
+  // S135's piece placement fit, an `--only piece_placement` paste, moved one:
+  // the rook on d1, 585 to 583, through the rook on an open file alone (mg 23,
+  // eg -4, at the position's phase 2); the other five positions carry none of
+  // the placement counts. Re-derived by the script on the pasted header after
+  // it reproduced all ten at S083's weights.
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -392,7 +398,7 @@ TEST_SUITE("evaluation: score")
       {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  99, "pawn on e2"},
       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 276, "knight on b1"},
       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 355, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 585, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 583, "rook on d1"},
       {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 984, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };

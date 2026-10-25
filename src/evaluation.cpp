@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
+#include <utility>
 #include "bb_tables.hpp"
 #include "bitboard.hpp"
 #include "eval_tables.hpp"
@@ -236,14 +237,13 @@ enum
 // weights below and their SPRT is net of it; DEC-040 is the warning about
 // judging a term while its speed cost is still unpaid.
 //
-// **Back at zero because the fitted weights measured zero.** They were
+// **S027's weights went back to zero because they measured zero.** They were
 // mg {2, 32, 8, -26} and eg {55, -8, 12, 11}, fitted with the other 817
 // constants frozen, held-out error 0.106766 to 0.106605 -- and they measured
 // -5.48 +/- 11.46 Elo over 2284 games, H0 accepted. At zero the compiler
-// deletes the whole term, which is checked rather than assumed:
-// evaluate_cheap() is the same 164 instructions with it as without. So this
-// costs nothing to leave here, and what it leaves is the plumbing for the split
-// below.
+// deleted the whole term, checked rather than assumed: evaluate_cheap() was
+// the same 164 instructions with it as without. So it cost nothing to leave,
+// and what it left was the plumbing S135 refitted (below).
 //
 // **This is the term that broke the pattern, and that is the useful part.** Its
 // error improvement was 0.000161, the second largest of the step's four terms,
@@ -277,9 +277,9 @@ enum
 // measurement: **one bundled SPRT for four features** at `--fast` bounds
 // `elo0=0 elo1=10`, against published figures of +8.2 for the pair and +9.86
 // for a rook file retune -- bounds that cannot resolve either (DEC-063,
-// DEC-084). Then the weights were zeroed by hand and every fit since S065 has
-// held them there with `--freeze piece_placement` (DEC-057), so they have not
-// been fitted to zero, they have been held at it.
+// DEC-084). Then the weights were zeroed by hand and every fit from S065 to
+// S083 held them there with `--freeze piece_placement` (DEC-057): held at
+// zero, never fitted to it, until S135 fitted them again (below).
 //
 // **Three of the four were the real candidates and one was not a quantity.**
 // R^2 of each column on the tables that could absorb it: bishop pair 0.487,
@@ -305,8 +305,19 @@ enum
 // identity report is what checks that and not this sentence. The seven are
 // screened one term at a time before any of them plays a match (DEC-259) --
 // tools/tuner_groups.hpp `PLACEMENT_TERMS` names the terms.
-constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0};
-constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {0, 0, 0, 0, 0, 0, 0};
+//
+// **The weights below are S135's screen and its joint fit** (DEC-259,
+// DEC-315): each term fitted alone had to lower held-out loss past a stated
+// margin to play at all, so the bishop pair, the two rook files and the two
+// trapped counts were fitted together on S083's corpus, every other constant
+// frozen, and the bad bishop and its rammed share stay at zero because the
+// screen dropped them -- their fit never beat its start. One SPRT decides
+// whether these ship; on its H0 the paste reverts whole and the family is
+// bisected, never zeroed by hand.
+constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {-5, 23,  3,  0,
+                                                      0,  -40, -23};
+constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {37, -4,  13, 0,
+                                                      0,  -68, -16};
 constexpr std::array<score_t, PL_FEATURE_COUNT> piece_placement_score =
     pack_scores(piece_placement_mg, piece_placement_eg);
 
@@ -645,6 +656,40 @@ static inline void piece_placement_features(const board_t* board,
 }
 
 
+// One placement column's share of the sum, and its trace entry.
+//
+// A template on the column, and the weight tested with `if constexpr`,
+// because the plain loop over the seven let g++ 13.3 vectorise columns 0 to 3
+// into one vpmulld against the packed weights: a zero lane is still loaded and
+// multiplied, so with S135's candidate shipping bad bishop at zero beside
+// three non-zero columns, its count was computed at every node for nothing
+// (S135's apply, 2026-10-25: 8 extra popcnt and its colour masks in
+// evaluate_cheap()). Here a zero-weighted column is in no expression, so its
+// count is dead and deleted whatever the columns beside it weigh. The trace
+// still records every column: the tuner fits the zero ones too.
+template <int f>
+static inline void add_placement_column(
+    const int placement[2][PL_FEATURE_COUNT],
+    score_t* sum)
+{
+  const int difference = placement[WHITE][f] - placement[BLACK][f];
+
+  if constexpr (piece_placement_score[f] != 0) {
+    *sum += difference * piece_placement_score[f];
+  }
+  EVAL_TRACE(TERM_PIECE_PLACEMENT, f, difference);
+}
+
+
+// The seven columns in index order, the order the loop traced them in.
+template <int... f>
+static inline void add_placement_columns(
+    const int placement[2][PL_FEATURE_COUNT],
+    score_t* sum,
+    std::integer_sequence<int, f...>)
+{ (add_placement_column<f>(placement, sum), ...); }
+
+
 // Three terms -- passed pawns, pawn structure and piece placement -- White
 // minus Black, as one untapered middlegame and endgame pair for the caller to
 // interpolate.
@@ -829,12 +874,8 @@ static inline void evaluate_pawns(const board_t* board,
   piece_placement_features(board, white_pawn_files, black_pawn_files,
                            placement);
 
-  for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
-    const int difference = placement[WHITE][f] - placement[BLACK][f];
-
-    sum += difference * piece_placement_score[f];
-    EVAL_TRACE(TERM_PIECE_PLACEMENT, f, difference);
-  }
+  add_placement_columns(placement, &sum,
+                        std::make_integer_sequence<int, PL_FEATURE_COUNT>{});
 
   if constexpr (collect) {
     for (int colour = 0; colour < 2; ++colour) {

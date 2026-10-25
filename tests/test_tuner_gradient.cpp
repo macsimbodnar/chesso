@@ -496,6 +496,20 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // parameter 774, the bishop's middlegame mobility weight; 5.87e-08 there at
 // S083's constants, and 3.99e-07, the same weight, all 831, since S135's six
 // fixture rows (adocs/data/S135_preconditions.txt). `-s` prints it.
+//
+// **S135's piece placement fit turned it red, and two rows were added for it
+// (DEC-316, the owner's ruling).** At the fit's constants the forty rows left
+// the error all but stationary in parameter 774: its analytic gradient
+// -1.342036e-06 against 6e-5 to 5e-4 for the other seven mobility weights,
+// the central difference -1.342040e-06, so the relative error was an O(h^2)
+// truncation term over almost nothing -- 2.91e-6 at h = 0.01, and 7.3e-5,
+// 1.2e-5, 7.3e-7 and 9.6e-8 at h 0.05, 0.02, 0.005 and 0.002. The gradient was
+// right and the fixture had stopped asking about that weight, S100's gap in
+// another form. tests/test_eval_positions.hpp's last pair is the fix, picked
+// by adocs/data/S135_gradient_rows.cpp's stated rule and not by this case
+// passing; h, the metric and the 1e-6 are unchanged. With it the gradient
+// there is 1.87e-5 and the worst 2.00e-07, still at 774; at the parent's
+// zero placement weights the same rows read 5.01e-07 there.
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -595,7 +609,9 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // nearest other at 161.0, every row 23 from the kink, finite differences
   // 1.09e-7. On S135's fixture, six rows more (40) and 831 parameters, it
   // answers +100 again with the same eight rows, 434.5, 161.0 and 23, finite
-  // differences 6.0e-8 (adocs/data/S135_preconditions.txt). Re-run it
+  // differences 6.0e-8 (adocs/data/S135_preconditions.txt). At S135's piece
+  // placement fit with the two rows DEC-316 added (42), +100 again, the same
+  // eight rows, 434.5, 161.0 and 23, finite differences 1.14e-7. Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
   // push saturates the sigmoid everywhere, which makes the finite difference
@@ -900,12 +916,18 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // six rows more (44 with the four gauge rows), the smallest is 0.3663
     // under Adam and 0.0437 under AdaGrad, both the rook's, the largest 4.4905,
     // the bishop's, and 5.0396, the pawn's, every hold at most 1.38e-14
-    // (`adocs/data/S135_preconditions.txt`). The 0.1 of before
+    // (`adocs/data/S135_preconditions.txt`). At S135's piece placement fit
+    // with DEC-316's two rows (46 with the gauge rows) the smallest is 0.2263
+    // under Adam and **0.0135** under AdaGrad, both the rook's, every hold at
+    // most 5.22e-15: still over the floor, now by a factor of 1.35 and no
+    // longer four (0.0672 under AdaGrad at the fit without the two rows). The
+    // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
     // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits
-    // seven orders of magnitude above the hold's 1e-9 and a factor of four or
-    // more under the smallest walk, so the two runs stay told apart. Re-read
+    // seven orders of magnitude above the hold's 1e-9 and under the smallest
+    // walk (a factor of four or more at S083, 1.35 at S135), so the two runs
+    // stay told apart. Re-read
     // with adocs/data/S083_tuner_preconditions.cpp `walk`, which runs this
     // case's descent and prints every direction's two shifts against this
     // floor, if the constants or the fixture move. A revert of S083 puts 0.1

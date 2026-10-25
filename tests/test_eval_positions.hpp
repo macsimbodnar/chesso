@@ -182,6 +182,20 @@ inline const std::vector<std::string> positions = {
     "2b2kr1/5ppp/8/8/8/2N5/5PPP/5RK1 b - - 0 1",
     "3r2k1/B1p2ppp/1p2b3/8/8/5N2/5PPP/6K1 w - - 0 1",
     "6k1/5ppp/5n2/8/8/1P2B3/b1P2PPP/3R2K1 b - - 0 1",
+    // The bishop's middlegame mobility weight, added at S135 (DEC-316) for
+    // the gap S100 found in another weight: at S135's piece placement fit the
+    // forty rows above leave the error all but stationary in
+    // `mobility_mg[1]` -- its gradient -1.3e-6 against 6e-5 to 5e-4 for the
+    // other seven mobility weights -- so tests/test_tuner_gradient.cpp's
+    // relative check divided an O(h^2) truncation term by almost nothing and
+    // read 2.9e-6 against its 1e-6. Picked by the rule in
+    // adocs/data/S135_gradient_rows.cpp, not by hand: the first position of
+    // all_test_fens(), in order, whose pair (it, then its colour-mirror)
+    // stays clear of the clamp and puts that gradient at or above a tenth of
+    // the smallest of the other seven. It is castling.json's, candidate 47,
+    // and reads 1.87e-5 there. python-chess reports both Status.VALID.
+    "1r1Nk2r/ppp1n1pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQk - 2 9",
+    "r3k2r/pp2bppp/2p5/8/2B5/8/PPP1N1PP/1R1nK2R b Kkq - 2 9",
 };
 
 }  // namespace test_eval_positions

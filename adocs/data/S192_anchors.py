@@ -111,7 +111,7 @@ CASES = [
     dict(
         title="rook on d1",
         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
-        anchors={"evaluate": 585, "cheap": 580},   # test_evaluation.cpp "each piece is worth what the tables say";
+        anchors={"evaluate": 583, "cheap": 578},   # test_evaluation.cpp "each piece is worth what the tables say";
         # test_search.cpp "a quiet position stands pat" and eight more sites
         stm="w",
         phase=2,
@@ -159,7 +159,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 209},   # test_search.cpp "a side in check may not stand pat"
+        anchors={"evaluate": 199},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
@@ -186,7 +186,7 @@ CASES = [
     dict(
         title="black a rook down, Kh7",
         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
-        anchors={"evaluate": -599},  # test_search.cpp "the losing side takes an available repetition"
+        anchors={"evaluate": -597},  # test_search.cpp "the losing side takes an available repetition"
         stm="b",
         phase=2,
         material=[("ROOK", 1)],
@@ -278,7 +278,7 @@ LEAVES = [
     ),
 ]
 
-QUIESCE_IN_CHECK = -534  # test_search.cpp
+QUIESCE_IN_CHECK = -533  # test_search.cpp
 # "a quiet evasion is a legal answer to a check", on the shipped weights
 
 

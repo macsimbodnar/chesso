@@ -39,7 +39,7 @@ static pawn_correction_t reference_table;
 // "4k3/8/8/8/8/8/8/3RK3 w - - 0 1", White to move, at the shipped weights. Nine
 // cases in this file assert one or both, so they are named once here and a
 // refit edits these two lines rather than eleven. A third line moves with them:
-// the written-out 396 of "a stand pat that is itself a bound is still capped",
+// the written-out 394 of "a stand pat that is itself a bound is still capped",
 // which is this pair's cheap score less LAZY_EVAL_MARGIN (S192).
 // Re-derive: python3 adocs/data/S192_anchors.py, case "rook on d1", which
 // computes both from src/evaluation.cpp's specification rather than from the
@@ -48,8 +48,8 @@ static pawn_correction_t reference_table;
 // Property beside it: "the lazy shortcut cannot change a decision" in
 // tests/test_evaluation.cpp, which holds over the whole corpus and does not
 // move with a fit.
-static constexpr int QUIET_ROOK_EVAL = 585;
-static constexpr int QUIET_ROOK_EVAL_CHEAP = 580;
+static constexpr int QUIET_ROOK_EVAL = 583;
+static constexpr int QUIET_ROOK_EVAL_CHEAP = 578;
 
 
 struct search_fixture_t
@@ -1245,7 +1245,10 @@ TEST_SUITE("search: move ordering state")
   // the 16256 the pair was derived from and inside its middle half, so the
   // pair stays. S023 verdict 1's candidate read the same 13446 and kept the
   // pair against the band's own quartiles, [18694, 49581], which read it as
-  // outside; it read H0 and was reverted.
+  // outside; it read H0 and was reverted. **7783 at S083's refit** and
+  // **7366 at S135's piece placement fit**, 0.45 of 16256 and 96 nodes above
+  // the middle half's lower end, so the pair stays
+  // (`adocs/data/S135_goldens.txt`).
   // Moves legitimately on: any ordering or search change -- re-derive when the
   // count leaves the middle half of the band, [c / sqrt 5, c x sqrt 4] around
   // the count c the pair was derived from, half of the factor from c to either
@@ -1338,7 +1341,8 @@ TEST_SUITE("search: quiescence")
     // S065's fit, DEC-059: 530 to 509. The cheap score does not move -- the
     // fit changed what the tables say, not the two terms evaluate_cheap() adds.
     // S076's refit on the deduplicated corpus moved both: 509 to 563 and 524 to
-    // 567; S083's refit on S082's pool to 585 and 580. Both are the file-scope
+    // 567; S083's refit on S082's pool to 585 and 580; S135's piece placement
+    // fit to 583 and 578, the rook on the open d file. Both are the file-scope
     // goldens above.
     REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
     REQUIRE_EQ(cheap_score, QUIET_ROOK_EVAL_CHEAP);
@@ -1377,12 +1381,12 @@ TEST_SUITE("search: quiescence")
   // The one case where standing pat is not on offer: the side to move is in
   // check and has to reply, so every evasion is searched instead.
   //
-  // GOLDEN (DEC-142): 209, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
+  // GOLDEN (DEC-142): 199, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
   // 1" with Black to move and in check -- the number the case needs a stand pat
   // to be compared against. Re-derive: python3 adocs/data/S192_anchors.py, case
   // "black in check, Re8". Moves legitimately on: a refit. Margin: exact -- the
   // assertions that carry the property are the two inequalities below it, which
-  // have the whole gap between 209 and a mate score of slack. Property beside
+  // have the whole gap between 199 and a mate score of slack. Property beside
   // it: "a quiet evasion is a legal answer to a check".
   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
   {
@@ -1406,9 +1410,10 @@ TEST_SUITE("search: quiescence")
     // does over the summed pair.
     // S065's fit, DEC-059, then moved it again: 266 to 224, and S076's refit on
     // the deduplicated corpus to 198 -- the one anchor of the five that went
-    // down -- and S083's refit on S082's pool to 209.
+    // down -- and S083's refit on S082's pool to 209, and S135's piece
+    // placement fit to 199: White's two rooks on the open e file.
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 209);
+    REQUIRE_EQ(black_static, 199);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -1424,7 +1429,7 @@ TEST_SUITE("search: quiescence")
   // a capture. A quiescence that only ever looks at captures finds no move
   // here and calls a perfectly ordinary position a mate.
   //
-  // GOLDEN (DEC-142): -534, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
+  // GOLDEN (DEC-142): -533, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
   // check -- a one-ply negamax, the best of four leaves' -evaluate(), not an
   // evaluation call.
   // Re-derive: python3 adocs/data/S192_anchors.py, LEAVES and QUIESCE_IN_CHECK.
@@ -1460,12 +1465,13 @@ TEST_SUITE("search: quiescence")
     // is a one-ply negamax. Each of the four leaves has Black to move, not in
     // check and with no capture, so each returns its own stand pat, and the
     // root is the best of them. S065's fit, DEC-059: -491 to -446, and S076's
-    // refit on the deduplicated corpus to -505, and S083's refit on S082's pool
-    // to -534, derived leaf by leaf from the specification rather than read off
+    // refit on the deduplicated corpus to -505, S083's refit on S082's pool to
+    // -534, and S135's piece placement fit to -533 (Black's rook on the open e
+    // file), derived leaf by leaf from the specification rather than read off
     // the engine every time. Ke1-d2 is still the evasion that survives: the
-    // four leaves are -566, -534, -583 and -545 from the root's side, so it is
-    // the best by 11 (by 17 at S076's weights, by 1 before them).
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -534);
+    // four leaves are -564, -533, -582 and -543 from the root's side, so it is
+    // the best by 10 (by 11 at S083's weights, by 17 at S076's, by 1 before).
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -533);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -2627,9 +2633,9 @@ TEST_SUITE("search: quiescence transposition entries")
 
     // Now an entry for this position carrying a static evaluation that is not
     // this position's. The stored *score* is different again and has to be
-    // inert twice over, so that anything but 585 coming back has to have come
+    // inert twice over, so that anything but 583 coming back has to have come
     // from the eval field: a lower bound of -9999 does not answer the node
-    // against a beta of 10000, and it may not raise a stand pat of 585 either.
+    // against a beta of 10000, and it may not raise a stand pat of 583 either.
     //
     // It was an upper bound of -9999 until S130, which is inert on the first
     // count and not on the second: an upper bound below the static score is
@@ -2919,7 +2925,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
 
   // Every case above searches a window wide enough that the lazy shortcut
-  // cannot fire, so `static_eval` is the exact 585 in all of them and the
+  // cannot fire, so `static_eval` is the exact 583 in all of them and the
   // substitution is only ever measured against a static score. It is not
   // always one: where the probe carries no eval and the cheap score is already
   // a margin clear of the window, evaluate_lazy() returns `cheap +/-
@@ -2938,7 +2944,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     static std::atomic_bool never_stop = false;
 
-    // Narrow, and on the beta side: cheap is 580, so 580 - 184 = 396 is
+    // Narrow, and on the beta side: cheap is 578, so 578 - 184 = 394 is
     // already clear of a beta of 100 and the shortcut fires with a lower
     // bound. That is the whole point of the window -- every case above uses
     // (-10000, 10000), where neither test in evaluate_lazy() can pass.
@@ -2973,10 +2979,10 @@ TEST_SUITE("search: quiescence transposition entries")
     REQUIRE_EQ(evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP);
     REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
 
-    // GOLDEN (DEC-142): 396, the same number written out, so the line above
+    // GOLDEN (DEC-142): 394, the same number written out, so the line above
     // cannot pass by both sides moving together -- an assertion spelled only in
     // the symbols it is about asserts nothing (S028).
-    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 580 - 184;
+    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 578 - 184;
     // the first from python3 adocs/data/S192_anchors.py, case "rook on d1", the
     // second from src/search_params.hpp.
     // Moves legitimately on: a refit, and **also** an SPSA run or any step that
@@ -2985,20 +2991,20 @@ TEST_SUITE("search: quiescence transposition entries")
     // stays.
     // Margin: exact. Property beside it: the REQUIRE_FALSE(exact) above, which
     // says the shortcut fired at all and carries no number.
-    REQUIRE_EQ(lazy, 396);
+    REQUIRE_EQ(lazy, 394);
     REQUIRE_NE(lazy, evaluate(&game.board));
     REQUIRE(PLANTED > ALPHA);
     REQUIRE(PLANTED < lazy);
     REQUIRE(PLANTED >= BETA);
 
     // Precondition: with nothing planted the node stands pat on the bound
-    // itself, so anything other than 396 below came from the entry.
+    // itself, so anything other than 394 below came from the entry.
     tt_reset(&tt);
     tt_new_search(&tt);
     REQUIRE_EQ(run(), lazy);
 
     // An upper bound of 200 says the value is at most 200, which is less than
-    // the 396 the shortcut established as a lower bound on the static score --
+    // the 394 the shortcut established as a lower bound on the static score --
     // the two claims are about different things and both hold, the entry's
     // being the tighter one. So the cap applies to a stand pat that is itself
     // a bound, exactly as it applies to a static score.
@@ -3016,7 +3022,7 @@ TEST_SUITE("search: quiescence transposition entries")
     // 200 is still at or above beta, so the node fails high and stores a lower
     // bound. It is sound on this path for the same reason as on the static
     // one, and the reason is worth stating because `static_eval` is not exact
-    // here: the shortcut certified `value >= 396`, the cap only lowered the
+    // here: the shortcut certified `value >= 394`, the cap only lowered the
     // number to 200, and `value >= 200` follows. The eval field stays empty --
     // no exact static score was ever computed at this node, and S094's
     // semantics say only an exact one may be stored.
@@ -3080,7 +3086,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     // Now an entry for this position carrying a static evaluation that is not
     // this position's. Stored at TT_DEPTH_QS, which a depth 1 node may not cut
-    // on, so anything but 585 - margin coming back has to have come from the
+    // on, so anything but 583 - margin coming back has to have come from the
     // eval field.
     //
     // **S234 made the entry's score load-bearing here and the plant moved with
@@ -5440,9 +5446,10 @@ TEST_SUITE("search: draws")
     // the side to move's point of view, so anything other than the repetition
     // is losing by about that much - the rest is where the tables put the
     // kings and the rook. S065's fit, DEC-059: -491 to -537, S076's refit on
-    // the deduplicated corpus to -569, and S083's refit on S082's pool to -599.
+    // the deduplicated corpus to -569, S083's refit on S082's pool to -599, and
+    // S135's piece placement fit to -597 (White's rook on the open a file).
     //
-    // GOLDEN (DEC-142): -599, evaluate() with Black to move a rook down, after
+    // GOLDEN (DEC-142): -597, evaluate() with Black to move a rook down, after
     // the three moves above. It is the precondition, not the property: what the
     // case asserts is that a draw score beats it.
     // Re-derive: python3 adocs/data/S192_anchors.py, case
@@ -5451,7 +5458,7 @@ TEST_SUITE("search: draws")
     // below zero, so a refit that moves it changes nothing else here.
     // Property beside it: the repetition assertion below, which compares
     // against 0 and not against this value.
-    REQUIRE_EQ(evaluate(&game.board), -599);
+    REQUIRE_EQ(evaluate(&game.board), -597);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

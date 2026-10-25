@@ -15986,3 +15986,27 @@ Rejected:     DEC-304's m = 1.645 sqrt(2) s -- its sqrt(2) prices a second
 Consequences: No survivor means no SPRT and five zeros recorded.
               `adocs/data/S135_screen.sh` is the pre-registration and
               `S135_screen.py` its reader.
+
+## DEC-316  2026-10-26  The gradient check's near-zero parameter is answered by fixture rows, not by a different metric
+Tags:         tuner, tests, gradient-check, fixture, s135, s100, dec-142
+Context:      At S135's candidate constants, `test_tuner_gradient` "gradient()
+              is the derivative of the error it descends" read a worst
+              relative error of 2.91e-6 against its 1e-6 bound, at parameter
+              774 (`mobility_mg`, bishop): the fixture's error is nearly
+              stationary in that weight (analytic -1.342036e-6, neighbours
+              2.5e-4 to 4.8e-4). Numeric and analytic agree to 4e-12, and the
+              relative error falls as h^2 (7.28e-5 at h 0.05 to 9.6e-8 at
+              0.002): the derivative is right and the relative measure is
+              ill-conditioned there. Green needed a test change.
+Decision:     By the owner, 2026-10-26, the recommended option: add fixture
+              rows that move that parameter's gradient off zero, S100's
+              precedent; the metric, h = 0.01 and the 1e-6 bound unchanged,
+              every precondition that reads the fixture re-read.
+Rejected:     A relative error floored at the fixture's largest gradient --
+              the standard normwise form, but it makes the check blind to a
+              wrong derivative on a nearly stationary weight and changes what
+              the case measures. h = 0.005 -- 7.26e-7, 1.4x inside the bound,
+              the next refit red again, and S100's measured h re-chosen.
+Consequences: A later refit can land another weight near zero on the fixture;
+              the same answer applies, and the floored metric is the
+              recorded alternative if it recurs.

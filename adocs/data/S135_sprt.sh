@@ -39,7 +39,28 @@
 #
 # The two differ by the placement weights and their goldens alone, which the
 # guards below check: CAND^ is REF, src/eval_tables.hpp is the same at both,
-# and src/evaluation.cpp is the only file under src/ that differs.
+# and src/evaluation.cpp is the only file under src/ that differs. One more
+# change rides in that file, behaviour-neutral (INV-6, the step file's
+# 2026-10-26 section): the placement sum's form, one column at a time under
+# `if constexpr` on its weight, so a zero-weighted column is in no expression
+# -- at the plain paste g++ 13.3 computed the bad bishop's count at zero in a
+# vpmulld lane beside the three non-zero columns; bench, `bench 12` and
+# `tools/search_bench.py` at 9 and 12 identical with and without it.
+#
+# RE-READ 2026-10-26 AGAINST THE CANDIDATE (S135's apply). The screen kept
+# four terms -- bishop_pair, rook_open, rook_half_open, trapped -- and dropped
+# bad_bishop (its fit's best report was the start), which the candidate holds
+# at zero and, with the form above, computes nowhere. So the bisection below
+# runs over the four: reading.txt printed `family -> [A -> [A1, A2 -> [A2a,
+# A2b]], B]`, B being trapped alone (a leaf, B1 empty), and the worst case is
+# six more SPRTs (A and B; A1 and A2 if A fails; A2a and A2b if A2 fails),
+# about 119 h, not eight. The cost the verdict pays is no row the cost run
+# measured: the candidate computes S027's three and the two trapped counts
+# (evaluate_cheap() popcnt 18 against the zero build's 6), more than `old3`
+# (+0.92 %, popcnt 12) and less than `all` (+3.92 %, popcnt 30), which bound
+# it (adocs/data/S135_cost_reading.txt). Open DEC-171 filler while this runs:
+# S294 (MW02 survived, H04 stillborn, the same at e972bd4), for the
+# coordinator's sentence below.
 #
 # WHAT THE VERDICT PRICES. Every surviving term's weights, fitted together on
 # the corpus S083's shipped constants were fitted on (S083 read H1, DEC-313),
