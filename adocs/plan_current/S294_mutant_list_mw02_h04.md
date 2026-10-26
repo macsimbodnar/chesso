@@ -7,7 +7,7 @@ decisions:  DEC-141, DEC-142, DEC-171, DEC-313
 closes:
 blocks:
 paused_by:
-author:
+author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
 done:
 
 ## Why this step exists (the coordinator, 2026-10-25)

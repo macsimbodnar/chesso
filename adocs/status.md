@@ -24,7 +24,9 @@ share stay at zero, in no expression. No bisection follows an H1. Cost
 `evaluation.hpp`'s owed paragraph and the other comments the H1 made false,
 bench unmoved. Closed by one Opus 5.5 subagent in `../chesso-s135f`.
 
-**Next**: S294 (DEC-171 filler: MW02 and H04), then S136 (tempo).
+**S294 in progress** (`plan_current/`, DEC-171 filler: MW02 and H04), by
+one Opus 5.5 subagent in `../chesso-s294` (`.tuning/coord/S294/brief.md`).
+Then S136 (tempo).
 
 ## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
 
