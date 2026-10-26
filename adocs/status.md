@@ -60,8 +60,8 @@ owner shut the workstation down on 2026-10-26 before it began.
 4. Then S136 (tempo).
 
 **Disk** (owner's approval, 2026-10-26): every worktree but the main checkout
-removed -- 32 of finished steps, S296's, the old reference builds and S135's
-cost trees -- 28 GB free -> 40 GB. Each one's diff against HEAD, untracked
+removed, 34 in all -- 17 of finished steps, S296's, 5 reference builds,
+S135's 10 cost trees and S294's mutation fixture -- 28 GB free -> 40 GB. Each one's diff against HEAD, untracked
 files, `.tuning/` and `config.json` are kept under
 `.tuning/coord/cleanup/<name>/` (`log2.txt`); the one HEAD no branch reached,
 S294's mutation fixture, carries `refs/keep/chesso_tuning_s294_mut`.
