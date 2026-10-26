@@ -380,7 +380,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S295  **BUGS-binding, DEC-317: before S136; found by S294** -- a search that ends inside an iteration never prints a line beside a mate score that does not mate at the claimed distance; the completed iteration's mate distance, one move short of the oracle's on S145 mined line 168, traced to its node and rule
+1. S295  **in progress; BUGS-binding, DEC-317: before S136; found by S294** -- a search that ends inside an iteration never prints a line beside a mate score that does not mate at the claimed distance; the completed iteration's mate distance, one move short of the oracle's on S145 mined line 168, traced to its node and rule
 2. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
 3. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 4. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too

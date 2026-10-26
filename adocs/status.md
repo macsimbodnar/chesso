@@ -37,8 +37,10 @@ iteration can print that iteration's line, longer than the completed mate
 beside it and not mate at the claimed distance, with `ponder` from it
 (`adocs/data/S294_aborted_long_line.txt`, S145 mined line 168); the
 completed `mate 4` is one move short of Stockfish's mate in 5 as well.
-MANUAL.md's Known bugs and specs.md carry it. **Next: S295** fixes the
-reporting (INV-6) and traces the distance first; then S136 (tempo).
+MANUAL.md's Known bugs and specs.md carry it. **S295 in progress**
+(`plan_current/`, one Opus 5.5 subagent in `../chesso-s295`,
+`.tuning/coord/S295/brief.md`): the reporting fix (INV-6) and the
+distance's trace. Then S136 (tempo).
 
 ## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
 
