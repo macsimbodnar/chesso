@@ -380,7 +380,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S296  **BUGS-binding, DEC-318: before S136; found by S295** -- a node that skipped moves by a shallow-depth pruning rule no longer returns a mated score it did not prove, so the root never reports a mate shorter than the position's; one form chosen by measurement, decided by a `{-5, 0}` SPRT
+1. S296  **in progress; BUGS-binding, DEC-318: before S136; found by S295** -- a node that skipped moves by a shallow-depth pruning rule no longer returns a mated score it did not prove, so the root never reports a mate shorter than the position's; one form chosen by measurement, decided by a `{-5, 0}` SPRT
 2. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
 3. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 4. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too

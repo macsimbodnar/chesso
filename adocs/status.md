@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-26, by hand.
 
-## 2026-10-26: S295 done; S296 next, BUGS-binding, before S136
+## 2026-10-26: S295 done; S296 in progress, BUGS-binding, before S136
 
 **S295 done** (one Opus 5.5 subagent, `../chesso-s295`, fast-checked
 twice): no line that misses its distance is printed beside `score mate N`
@@ -29,8 +29,9 @@ cell, one move short of Stockfish's mate in 5, comes from a non-PV node at
 depth 3 that skipped six replies by quiet SEE and late move pruning (among
 them the only two escapes) and returned its fail-soft mated best; the table
 carried it to the root (`adocs/data/S295_trace.txt`). Returning alpha there
-restores mate 5. **S296 next**: two forms measured, one shipped, decided by
-a `{-5, 0}` SPRT; then S136 (tempo).
+restores mate 5. **S296 in progress** (`plan_current/`, one Opus 5.5
+subagent in `../chesso-s296`, `.tuning/coord/S296/brief.md`): two forms
+measured, one shipped, decided by a `{-5, 0}` SPRT; then S136 (tempo).
 
 ## 2026-10-26: S135 read H1; the piece placement fit ships; S294 next
 
