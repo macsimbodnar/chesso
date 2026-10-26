@@ -403,17 +403,25 @@ of them still all-or-nothing (DEC-122).
   supplies the line that will be played while the score stays the last
   completed one's, so the pair can claim a mate the line does not reach. The
   line is completed against the score it is printed beside, not only against
-  the score its own iteration returned.
+  the score its own iteration returned. **Known bug, S295 (DEC-317):** an
+  aborted line the walk completes to a *longer* mate is printed as it is,
+  beside the shorter completed score, so it is not mate at the claimed
+  distance and `ponder` comes from it (`adocs/data/S294_aborted_long_line.txt`,
+  found by S294 on a cold table).
 
 `tests/test_mate_carry.cpp` is the guard, in the fast label: four games from
 S147's run replayed move by move through one process at fixed node budgets,
 which is the only shape that reproduces any of this -- `test_mate_pv` gives
-every case its own `ucinewgame`, and on a cold table none of the three exists.
+every case its own `ucinewgame`, and on a cold table the first two do not
+exist. The third does: S294 found it at cold cells, one guarded by
+`test_mate_pv` (the aborted-line fallback runs there) and one the known bug
+above.
 It asserts three things, and the split is S204's, DEC-162. **A line at least as
 long as the distance it claims ends in checkmate at exactly that distance** --
 DEC-122's own guarantee, asserted at zero, at whatever budget the row carries
 and pinned to none; measured 0 in 881 mate lines over both sides of the sweep
-grid by `adocs/data/S204_class_census.py`. **A line shorter than the distance it
+grid by `adocs/data/S204_class_census.py`, and broken outside the fixture by
+the known bug above (S295). **A line shorter than the distance it
 claims is counted against a per-case ceiling** rather than forbidden, because
 DEC-122 leaves it short on a failed walk and S202 owns closing the class; the
 ceiling is the worst cell the recorded grid shows for that case. **A majority of

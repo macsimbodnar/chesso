@@ -42,6 +42,12 @@
 // wider net and this one is the reproducible one: a red here names the FEN and
 // the depth, and it fires in the completion gate rather than after a night of
 // games.
+//
+// AND ONE NODE-LIMITED CELL, S294. The two sets search to a fixed depth, so
+// every iteration they print completed. The last case below ends its search
+// inside an iteration instead, which is the one place the line printed and the
+// score printed come from different iterations: it guards S202's aborted-line
+// fallback (DEC-251) on a cold table.
 
 #ifndef CHESSO_SOURCE_DIR
 #error "CHESSO_SOURCE_DIR must be defined so the test can read the mate sets"
@@ -299,6 +305,174 @@ TEST_SUITE("mate PV completeness")
     initialize_game_const_data(&replay);
 
     check_set("S145_mined_set.tsv", 318);
+
+    uci_shutdown();
+  }
+
+  // S294. When a search ends inside an iteration that has a line of its own,
+  // iterative_deepening_search() prints that line beside the last completed
+  // iteration's score and depth, completed against that score by the walk;
+  // where the walk refuses, the last completed line of the same first move is
+  // printed instead (S202, DEC-251). Mutant MW02 of
+  // tools/mutants/S202_mate_walk.py takes that fallback out. Its guard was
+  // tests/test_mate_carry.cpp's F cell, and on the tree S135 left no cell of
+  // the S170 grid reaches the fallback any more -- of 62 aborted iterations
+  // beside a carried mate there, none falls back
+  // (adocs/data/S294_mw02_reach.txt) -- so MW02 survived the whole fast
+  // suite. This cell reaches it on a cold table.
+  //
+  // GOLDEN (DEC-142): the cell -- the position, line 162 of
+  // adocs/data/S145_mined_set.tsv (game 4593), at `go nodes 150000` on a cold
+  // table at Hash 16 -- the middle of the run of budgets, 100000 to 200000,
+  // where the shipped build prints a line that reaches its mate and the build
+  // with MW02 applied prints the aborted line short.
+  // Re-derive: adocs/data/S294_fallback_cell.py, the four stages in its
+  // header (sweep both builds over the mined set, then `pick`).
+  // Margin: 50000 nodes either side, the run's half-width. Moves legitimately
+  // on: any change that moves the tree, and a change to complete_mate_pv() or
+  // to the reporting layer's aborted path, S202's ground. Re-derived by the
+  // script when either end moves, never re-read from a failing run.
+  //
+  // The preconditions below are what the fallback needs that a test can see
+  // from outside the engine: the search ended in an iteration with a line, the
+  // completed iteration before it scored a mate, and the two lines start with
+  // the same move. The fallback's output is visible too: it prints the
+  // completed line verbatim (iterative_deepening_search()'s aborted path), so
+  // a last line that differs from the completed one proves it did not run --
+  // the case's last check. The aborted line itself is not printed, so that the
+  // walk refuses it is read from outside only as the script's separation on
+  // the MW02 build; a last line equal to the completed one is consistent with
+  // the fallback and does not prove it.
+  TEST_CASE(
+      "an aborted iteration's line printed beside a completed mate "
+      "reaches it")
+  {
+    uci_init();
+    initialize_game_const_data(&replay);
+
+    const std::string fen = "6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39";
+
+    {
+      stdout_capture_t capture;
+      uci_process_line("setoption name Hash value 16");
+      uci_process_line("ucinewgame");
+      uci_process_line("position fen " + fen);
+    }
+
+    std::vector<std::string> lines;
+    {
+      stdout_capture_t capture;
+      uci_process_line("go nodes 150000");
+      uci_wait_for_search();
+      lines = capture.lines();
+    }
+
+    struct info_t
+    {
+      int depth;
+      bool mate;
+      int mate_in;
+      std::vector<std::string> pv;
+    };
+
+    std::vector<info_t> infos;
+    std::vector<std::string> bestmove;
+
+    for (const std::string& line : lines) {
+      std::istringstream stream(line);
+      const std::vector<std::string> token{
+          std::istream_iterator<std::string>(stream),
+          std::istream_iterator<std::string>()};
+
+      if (!token.empty() && token[0] == "bestmove") { bestmove = token; }
+
+      if (token.size() < 4 || token[0] != "info" || token[1] != "score") {
+        continue;
+      }
+
+      info_t entry{0, token[2] == "mate", std::stoi(token[3]), {}};
+
+      for (size_t i = 4; i < token.size(); ++i) {
+        if (token[i] == "depth" && i + 1 < token.size()) {
+          entry.depth = std::stoi(token[i + 1]);
+        }
+
+        if (token[i] == "pv") {
+          entry.pv.assign(token.begin() + static_cast<long>(i) + 1,
+                          token.end());
+          break;
+        }
+      }
+
+      infos.push_back(entry);
+    }
+
+    // The search ended inside an iteration, and that iteration has a line:
+    // the only state in which the aborted path runs at all.
+    const std::vector<aspiration_search_t>& searches =
+        uci_last_aspiration_searches();
+    REQUIRE(!searches.empty());
+
+    const aspiration_search_t& aborted = searches.back();
+    REQUIRE_MESSAGE(aborted.aborted,
+                    "the cell no longer ends inside an iteration; re-derive "
+                    "it with adocs/data/S294_fallback_cell.py");
+    REQUIRE(aborted.pv_move != 0);
+
+    // The completed iteration before it scored a mate, so the score printed
+    // beside the aborted line is a distance the line has to reach.
+    const aspiration_search_t* completed = nullptr;
+    for (const aspiration_search_t& search : searches) {
+      if (!search.aborted) { completed = &search; }
+    }
+    REQUIRE(completed != nullptr);
+    REQUIRE(completed->mate_found);
+    REQUIRE(completed->iteration + 1 == aborted.iteration);
+
+    // The two lines start with the same move, the fallback's own condition.
+    REQUIRE(aborted.pv_move == completed->pv_move);
+
+    // The last two `info` lines are the completed iteration's and the aborted
+    // one's: the loop prints the aborted line under the completed depth and
+    // score.
+    REQUIRE(infos.size() >= 2);
+    const info_t& last = infos.back();
+    const info_t& before = infos[infos.size() - 2];
+    REQUIRE(before.depth == completed->iteration);
+    REQUIRE(last.depth == completed->iteration);
+    REQUIRE(before.mate);
+    REQUIRE(last.mate);
+    REQUIRE(last.mate_in == before.mate_in);
+
+    // The property: the line printed last reaches the mate its score claims,
+    // and the move to play and the move to ponder are that line's.
+    const size_t needed = plies_for(last.mate_in);
+    std::string why;
+
+    CHECK_MESSAGE(last.pv.size() >= needed,
+                  ("the last line is " + std::to_string(last.pv.size()) +
+                   " plies beside mate " + std::to_string(last.mate_in) +
+                   ", which needs " + std::to_string(needed)));
+
+    if (last.pv.size() >= needed) {
+      CHECK_MESSAGE(line_ends_in_mate(fen, last.pv, needed, why), why);
+    }
+
+    REQUIRE(bestmove.size() == 4);
+    REQUIRE(last.pv.size() >= 2);
+    CHECK(bestmove[1] == last.pv[0]);
+    CHECK(bestmove[2] == "ponder");
+    CHECK(bestmove[3] == last.pv[1]);
+
+    // The fallback ran: it prints the completed line verbatim, so anything
+    // else is a line it did not produce. With the property above green, that
+    // is the walk now completing the aborted line itself, and the case has
+    // stopped guarding the fallback without failing on it -- re-derive the
+    // cell rather than accept the green.
+    CHECK_MESSAGE(last.pv == before.pv,
+                  "the last line is not the completed iteration's, so the "
+                  "aborted-line fallback did not run at this cell; re-derive "
+                  "it with adocs/data/S294_fallback_cell.py");
 
     uci_shutdown();
   }

@@ -73,14 +73,19 @@
 // one missing slot, with the entry that certifies the continuation sitting in
 // the children of the position whose entry is gone.
 //
-// F is the fifth, guarded from S202 (DEC-251). At its own cell it is S170's
+// F is the fifth, guarded from S202 (DEC-251). At its own cell it was S170's
 // third cause: the last completed iteration's `mate 6` printed beside an
 // aborted iteration's line, which the table proves a mate 7 and no walk can
-// complete to 11 plies. iterative_deepening_search() now prints the last
-// completed line there, which starts with the same move and reaches the mate,
-// and F's ceiling is 0. On fe5d3b3 this case reports 1 short line in 8 at its
-// cell; mutant MW02 of tools/mutants/S202_mate_walk.py is that tree's aborted
-// path and this case kills it.
+// complete to 11 plies. From S202 iterative_deepening_search() printed the
+// last completed line there, which starts with the same move and reaches the
+// mate, and F's ceiling was 0 -- 3 since, by DEC-282, DEC-295 and DEC-307. On
+// fe5d3b3 this case reported 1 short line in 8 at its cell; mutant MW02 of
+// tools/mutants/S202_mate_walk.py is that tree's aborted path and this case
+// killed it. **It stopped, measured at S294**: on the tree S135 left, F's cell
+// takes the aborted path twice and the walk completes the aborted line both
+// times, so the fallback is never reached, nor anywhere else on the S170 grid
+// (adocs/data/S294_mw02_reach.txt). MW02's killer is tests/test_mate_pv.cpp's
+// cold-table cell since.
 //
 // What S202 also changed under every case here: complete_mate_pv() reads a
 // move certified at the distance still owed -- the entry's own when exact
@@ -172,7 +177,8 @@ struct case_t
   // the class. Under the keys and budget it has now, its one short line is not
   // that census's mechanism but S170's third cause -- an aborted iteration's
   // line beside the last completed `mate 6` -- and S202 closes it in the
-  // reporting layer, so the row is guarded with a ceiling of 0. DEC-251.
+  // reporting layer, so the row was guarded with a ceiling of 0 (DEC-251) --
+  // 3 since, by DEC-282, DEC-295 and DEC-307.
   bool guard;
 };
 

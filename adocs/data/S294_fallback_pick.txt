@@ -1,0 +1,22 @@
+# S294, 2026-10-26: adocs/data/S294_fallback_cell.py on dcb3d83 (bench 5184358), the four stages of its header.
+# Stage 2's two sweeps stay under .tuning/s294/ (318 positions x 39 budgets, 12402 cells each); their headers and sha256 prefixes:
+#   S294_fallback_cell.py sweep, engine build/src/chesso, fens adocs/data/S145_mined_set.tsv, Hash 16, grid 20000..400000 by 10000
+#   sha256 (first 16 hex digits) 28df285bf8031170 shipped.tsv, 65 s wall at --jobs 12
+#   S294_fallback_cell.py sweep, engine /home/max/ws/chesso/.tuning/s294/mw02/build/src/chesso, fens adocs/data/S145_mined_set.tsv, Hash 16, grid 20000..400000 by 10000
+#   sha256 (first 16 hex digits) 98997f5d4392a9c6 mw02.tsv, 65 s wall at --jobs 12
+# Per build, the class of each cell (none: the last line is not an aborted iteration's beside a mate with the
+# completed line's first move; full: it is, and reaches its mate; short: it is, and does not):
+#   shipped: short 13  none 8298  full 4091
+#   mw02: short 28  none 8298  full 4076
+#
+# Stage 3:
+separates    1 budgets  20000..20000  2r2k2/6RR/4P1p1/p4p2/3K1P2/P5r1/8/8 w - - 3 48
+separates    3 budgets  40000..60000  4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+separates   11 budgets  100000..200000  6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39
+3 of 318 positions separate
+pick  6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39  go nodes 150000  (run 100000..200000, 11 budgets, margin 50000 nodes below and 50000 above)
+#
+# The shipped build's 13 short cells are one position at every budget from 80000 to 200000, where the aborted line
+# is longer than the mate beside it needs and is not mate at that distance: adocs/data/S294_aborted_long_line.txt.
+# It separates nothing (both builds short) and the fallback does not run there: its condition is a walked line
+# shorter than the mate needs.

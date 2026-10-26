@@ -7,11 +7,32 @@ reads what they change -- and only the case written for each sees it:
   MW01  the walk reads a bound entry's move   tests/test_search.cpp, "the walk
         before a certified child              takes a certified child over a
                                               bound entry's move"
-  MW02  an aborted line the walk cannot       tests/test_mate_carry.cpp, "a mate
-        complete is printed short             score carried across searches
-                                              keeps a line that reaches it", at
-                                              F_mate6_inherited_no_line's own
-                                              cell, ceiling 0
+  MW02  an aborted line the walk cannot       tests/test_mate_pv.cpp, "an
+        complete is printed short             aborted iteration's line printed
+                                              beside a completed mate reaches
+                                              it", since S294; until then
+                                              tests/test_mate_carry.cpp's
+                                              F_mate6_inherited_no_line cell
+
+WHY MW02'S KILLER MOVED, S294, read from the engine's output and not assumed.
+S202 wrote F's row to kill MW02 at F's own cell, ceiling 0. On dcb3d83 (S135's
+fit) MW02 survived the whole fast suite, 0 of 50, as it had on S083's pass and
+at e972bd4 (adocs/data/S083s_mutation.tsv). A build with the aborted path
+instrumented, never committed, printed what the path does at F's cell (300000
+nodes, stride 2, from ply 64): it runs twice, at ply 74 and 76, each time an
+aborted iteration 10 beside a completed mate 8 and mate 7, and each time the
+walk completes the aborted line to its distance, 15 of 15 and 13 of 13 plies,
+so the fallback's condition -- a walked line still short -- is never met and
+MW02 changes no line there. Over all 108 cells of the S170 grid it runs 62
+times and falls back none (adocs/data/S294_mw02_reach.txt). S202's own cell
+had the aborted iteration find a longer mate than the score beside it, a mate
+7 line beside `mate 6`; on this tree every mate F's last position reports is
+mate 7 and the aborted line walks to that same mate. F's ceiling, 0 -> 3
+since (DEC-282, DEC-295, DEC-307), would have let it absorb up to three short
+lines anyway. The new case is a cold-table
+cell from S145's mined set, at `go nodes 150000`, where the shipped build
+prints a line that reaches its mate and MW02's prints the aborted line 9 of 13
+plies; adocs/data/S294_fallback_cell.py picks it and re-derives it.
 
 MW01 is `complete_mate_pv()` as it stood before S202: the table's move from
 any entry first, a certified child only where the entry named nothing. MW02 is

@@ -65,6 +65,15 @@ m("H03_null_child_keeps_prev", S, "search/ordering",
    '                           child.cut_node, 0);'),
   origin="S222")
 
+# **The replacement carries a `(void)prev_move;` since S294**, the form
+# tools/mutation_check.py's header names for a mutant that orphans a symbol.
+# In quiet_history_sum the term is prev_move's one use -- it was already at
+# eb0bcd6, where S098 verdict 1 moved the anchor here -- so taking the term
+# out left the parameter unused and the Release build's
+# -Werror=unused-parameter refused it: stillborn on S083's pass and at its
+# parent e972bd4 (adocs/data/S083s_mutation.tsv), and on dcb3d83 by S294's
+# baseline. The cast reads the parameter and does nothing else, so what the
+# mutant removes is the term and nothing more.
 m("H04_cont_hist_unread", E, "search/ordering",
   'the quiet history sum stops adding the continuation term, so the table is '
   'written at every cutoff and orders nothing -- the shape a census would call '
@@ -81,5 +90,7 @@ m("H04_cont_hist_unread", E, "search/ordering",
    '  }\n'
    '\n'
    '  return score;',
+   '  (void)prev_move;\n'
+   '\n'
    '  return score;'),
   origin="S222")

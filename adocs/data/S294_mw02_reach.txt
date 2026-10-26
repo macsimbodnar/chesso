@@ -1,0 +1,200 @@
+# S294, 2026-10-26: where iterative_deepening_search()'s aborted path runs on dcb3d83 (bench 5184358), read from the engine's
+# output. A throwaway build of dcb3d83 with the patch below in src/chesso.cpp (in .tuning/s294/diag, never committed,
+# reverted after) prints one 'info string DIAG' line where an aborted iteration has a line, and one more where the
+# last completed score is a mate: the walked length, the length the mate needs, the last completed line's length,
+# whether the two lines start with the same move, and whether the fallback's condition holds. Reporting only.
+#
+# The patch:
+#   diff --git a/src/chesso.cpp b/src/chesso.cpp
+#   index b1ee067..53eb264 100644
+#   --- a/src/chesso.cpp
+#   +++ b/src/chesso.cpp
+#   @@ -1419,10 +1419,28 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
+#        // S202's phase 1 found this on F_mate6_inherited_no_line at its own cell:
+#        // the aborted depth-8 line was a 13-ply mate printed beside the depth-7
+#        // `mate 6`, which no walk can complete to 11 plies. DEC-251.
+#   +    if (state.aborted && has_result) {
+#   +      uci_reply("info string DIAG aborted has_result mate=" +
+#   +                std::to_string(last_score_is_mate) + " depth " +
+#   +                std::to_string(current_depth) + " raw_len " +
+#   +                std::to_string(result.pv.length) + " raw_pv " +
+#   +                pv_to_string(&result.pv));
+#   +    }
+#        if (state.aborted && has_result && last_score_is_mate) {
+#          complete_mate_pv(&game, &state, &result.pv, last_mate_in);
+#
+#          const size_t needed = plies_to_deliver(last_mate_in);
+#   +      uci_reply("info string DIAG walked_len " +
+#   +                std::to_string(result.pv.length) + " needed " +
+#   +                std::to_string(needed) + " last_complete_len " +
+#   +                std::to_string(last_complete_pv.length) + " same_first " +
+#   +                std::to_string(last_complete_pv.table[0] ==
+#   +                               result.pv.table[0]) +
+#   +                " fallback " +
+#   +                std::to_string(result.pv.length < needed &&
+#   +                               last_complete_pv.length >= needed &&
+#   +                               last_complete_pv.table[0] ==
+#   +                                   result.pv.table[0]));
+#
+#          if (result.pv.length < needed && last_complete_pv.length >= needed &&
+#              last_complete_pv.table[0] == result.pv.table[0]) {
+#
+# 1. F_mate6_inherited_no_line at its own cell (nodes 300000, stride 2, from ply 64), every mate line and DIAG line:
+#    ~/.venv/chess/bin/python diag_replay.py chesso_diag adocs/data/S170_cases.tsv F_mate6_inherited_no_line
+=== F_mate6_inherited_no_line go nodes 300000 start 64 stride 2
+ply 74 depth 9 nodes 141009 mate 8 pv 15/15 h8h7 g7f6 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 74 info string DIAG aborted has_result mate=1 depth 10 raw_len 12 raw_pv h8h7 g7f6 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5
+ply 74 info string DIAG walked_len 15 needed 15 last_complete_len 15 same_first 1 fallback 0
+ply 74 depth 9 nodes 300000 mate 8 pv 15/15 h8h7 g7f6 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 74 bestmove h8h7 ponder g7f6
+ply 76 depth 1 nodes 49 mate 7 pv 13/13 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 76 depth 3 nodes 492 mate 7 pv 13/13 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 76 depth 4 nodes 961 mate 7 pv 13/13 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 76 depth 9 nodes 203959 mate 7 pv 13/13 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 76 info string DIAG aborted has_result mate=1 depth 10 raw_len 10 raw_pv e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5
+ply 76 info string DIAG walked_len 13 needed 13 last_complete_len 13 same_first 1 fallback 0
+ply 76 depth 9 nodes 300000 mate 7 pv 13/13 e4e7 f6f5 h7f7 f5g6 f7g7 g6h5 a3h3 h5g4 e7e6 f4f5 e6e2 g4f4 e2f3
+ply 76 bestmove e4e7 ponder f6f5
+#
+# The aborted path runs twice and the walk completes the aborted line both times (15/15, 13/13): 'fallback 0'.
+# MW02 replaces the fallback's condition with false, so at this cell it changes nothing.
+#
+# 2. The S170 grid (adocs/data/S203_case_sweep.sh's: 6 cases x strides 1, 2 x 9 budgets, each case from its own
+#    start ply, Hash 16), the same instrumented build. Per cell: aborted iterations beside a carried mate, and how
+#    many of those fell back. Cells with neither are omitted. 106 s wall at 12 processes.
+case                         stride    nodes  aborted fallback
+A_mate8_shallow                   1  2000000        1        0
+A_mate8_shallow                   1  3000000        1        0
+A_mate8_shallow                   1  4000000        1        0
+B_mate6_shallow                   1   100000        2        0
+B_mate6_shallow                   1   300000        2        0
+B_mate6_shallow                   1   500000        2        0
+B_mate6_shallow                   1  1000000        4        0
+B_mate6_shallow                   1  1200000        2        0
+B_mate6_shallow                   1  1500000        3        0
+B_mate6_shallow                   1  2000000        3        0
+B_mate6_shallow                   1  3000000        4        0
+B_mate6_shallow                   1  4000000        3        0
+C_mate7_depth11                   1  1200000        1        0
+C_mate7_depth11                   1  4000000        2        0
+D_mate_minus6_depth10             1  4000000        1        0
+E_mate_minus9                     1  2000000        1        0
+E_mate_minus9                     1  4000000        2        0
+F_mate6_inherited_no_line         1   100000        1        0
+F_mate6_inherited_no_line         1   300000        2        0
+F_mate6_inherited_no_line         1  1000000        2        0
+F_mate6_inherited_no_line         1  1200000        2        0
+F_mate6_inherited_no_line         1  1500000        2        0
+F_mate6_inherited_no_line         1  2000000        2        0
+F_mate6_inherited_no_line         1  3000000        2        0
+F_mate6_inherited_no_line         1  4000000        3        0
+F_mate6_inherited_no_line         2   300000        2        0
+F_mate6_inherited_no_line         2   500000        1        0
+F_mate6_inherited_no_line         2  1000000        1        0
+F_mate6_inherited_no_line         2  1200000        1        0
+F_mate6_inherited_no_line         2  1500000        1        0
+F_mate6_inherited_no_line         2  2000000        2        0
+F_mate6_inherited_no_line         2  3000000        1        0
+F_mate6_inherited_no_line         2  4000000        2        0
+# total: 62 aborted iterations beside a carried mate over 108 cells, 0 fell back.
+#
+# Of the 62, by walked length against the length the mate needs: 61 equal, 0 longer, 1 shorter. The shorter one is
+# D_mate_minus6_depth10, stride 1, 4000000 nodes, ply 35: the aborted iteration's line starts with another move,
+# so the fallback's first-move condition fails and the line is printed short (DEC-122's visible residue). Its lines:
+#   ply 35 depth 12 nodes 457089 mate -7 pv 14/14 e8f8 d1d7 b7b5 h7g6 h8g8 g6f7 f8f7 d7f7 a5c3 b2c3 b5b4 c3c2 g7g4 h1h8
+#   ply 35 info string DIAG aborted has_result mate=1 depth 13 raw_len 10 raw_pv a5a2 b2a2 d7c6 f6h6 c6h1 d1h1 g7g4 h7f5 h8g8 h6h8
+#   ply 35 info string DIAG walked_len 10 needed 14 last_complete_len 14 same_first 0 fallback 0
+#   ply 35 depth 12 nodes 4000000 mate -7 pv 10/14 a5a2 b2a2 d7c6 f6h6 c6h1 d1h1 g7g4 h7f5 h8g8 h6h8
+#   ply 35 bestmove a5a2 ponder b2a2
+#
+# 3. A cold-table scan for the fallback (pool_scan.py: ucinewgame per cell), the same build, Hash 1, budgets
+#    30000 100000 300000 1000000, over the 408 distinct FENs of S145_mined_set.tsv and S097_candidates.tsv:
+#    600 cells walked, 2 fell back:
+#    HIT	3r2k1/4r1b1/ppQ5/8/1P2pR2/2PP4/P4P2/2R1KN1q b - - 2 38	1000000	1	walked_len 13 needed 15 last_complete_len 15 same_first 1 fallback 1
+#    HIT	6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39	100000	1	walked_len 9 needed 13 last_complete_len 13 same_first 1 fallback 1
+#    Every cell of this scan whose walked length is not the length the mate needs (the other 597 are equal):
+#    HIT  3r2k1/4r1b1/ppQ5/8/1P2pR2/2PP4/P4P2/2R1KN1q b - - 2 38  1000000  1  walked_len 13 needed 15 last_complete_len 15 same_first 1 fallback 1
+#    HIT  6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39  100000  1  walked_len 9 needed 13 last_complete_len 13 same_first 1 fallback 1
+#    walk  6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32  100000  1  walked_len 9 needed 7 last_complete_len 7 same_first 1 fallback 0
+#    walk  8/5p1k/3R2p1/pP6/r1q5/4K3/8/8 b - - 1 57  1000000  1  walked_len 9 needed 11 last_complete_len 11 same_first 0 fallback 0
+#    walk  r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34  1000000  1  walked_len 7 needed 9 last_complete_len 9 same_first 0 fallback 0
+#    The 'walk' at 6rk/5rqp/... 100000 is the line LONGER than its mate, adocs/data/S294_aborted_long_line.txt;
+#    the two other 'walk' rows start with another move than the completed line.
+#    The second HIT, 6k1/3R4/..., at its 100000 cell, then mapped at Hash 1, 2 and 16 over 40000..300000 by 5000: it falls back
+#    from 95000 to 210000 at Hash 1 and 2 and to 205000 at Hash 16 -- not eviction, the aborted line is another line.
+#    adocs/data/S294_fallback_cell.py applies the stated rule at Hash 16 over S145_mined_set.tsv's 318 rows, and picks it.
+#
+# The two drivers, as run from .tuning/s294/ (scratch, gitignored), kept here so the reading can be re-taken:
+#
+# ---- diag_replay.py
+# #!/usr/bin/env python3
+# """S294 diagnosis: replay one S170 case through an engine, printing every
+# `info` line that carries a mate score and every `info string DIAG` line."""
+# import subprocess, sys
+# engine, cases, name = sys.argv[1], sys.argv[2], sys.argv[3]
+# go = sys.argv[4] if len(sys.argv) > 4 else None
+# stride_o = int(sys.argv[5]) if len(sys.argv) > 5 else None
+# row = None
+# for line in open(cases):
+#     f = line.rstrip("\n").split("\t")
+#     if f[0] == name: row = f
+# fen, moves, spec, start, stride = row[1], row[2].split(), go or row[3], int(row[4]), int(row[5])
+# if stride_o: stride = stride_o
+# p = subprocess.Popen([engine], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
+# def send(s): p.stdin.write(s + "\n"); p.stdin.flush()
+# def until(tok):
+#     out = []
+#     while True:
+#         l = p.stdout.readline()
+#         if not l: raise SystemExit("engine closed")
+#         l = l.strip(); out.append(l)
+#         if l.startswith(tok): return out
+# send("uci"); until("uciok"); send("setoption name Hash value 16"); send("ucinewgame")
+# print(f"=== {name} go {spec} start {start} stride {stride}")
+# for i in range(start, len(moves) + 1, stride):
+#     pos = f"position fen {fen}" + (" moves " + " ".join(moves[:i]) if i else "")
+#     send(pos); send("go " + spec)
+#     for l in until("bestmove"):
+#         t = l.split()
+#         if l.startswith("info string DIAG"):
+#             print(f"ply {i} {l}")
+#         elif len(t) > 3 and t[0] == "info" and t[1] == "score":
+#             d = t[t.index("depth") + 1]; n = t[t.index("nodes") + 1]
+#             pv = t[t.index("pv") + 1:] if "pv" in t else []
+#             if t[2] == "mate":
+#                 m = int(t[3]); need = 2 * m - 1 if m > 0 else -2 * m
+#                 print(f"ply {i} depth {d} nodes {n} mate {m} pv {len(pv)}/{need} {' '.join(pv)}")
+#             else:
+#                 print(f"ply {i} depth {d} nodes {n} {t[2]} {t[3]} pvlen {len(pv)}")
+#         elif l.startswith("bestmove"):
+#             print(f"ply {i} {l}")
+# send("quit"); p.wait()
+#
+# ---- pool_scan.py
+# #!/usr/bin/env python3
+# """S294 diagnosis: cold-table scan for cells where the aborted-line fallback
+# fires. argv: engine, fen file (one FEN per line), hash MB, budgets (comma).
+# Prints one line per cell whose DIAG reports fallback 1, and per FEN a count."""
+# import subprocess, sys
+# engine, fens, hash_mb, budgets = sys.argv[1], sys.argv[2], sys.argv[3], [int(x) for x in sys.argv[4].split(",")]
+# p = subprocess.Popen([engine], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
+# def send(s): p.stdin.write(s + "\n"); p.stdin.flush()
+# def until(tok):
+#     out = []
+#     while True:
+#         l = p.stdout.readline()
+#         if not l: raise SystemExit("engine closed")
+#         l = l.strip(); out.append(l)
+#         if l.startswith(tok): return out
+# send("uci"); until("uciok"); send(f"setoption name Hash value {hash_mb}")
+# for fen in open(fens):
+#     fen = fen.strip()
+#     if not fen: continue
+#     for n in budgets:
+#         send("ucinewgame"); send("position fen " + fen); send(f"go nodes {n}")
+#         lines = until("bestmove")
+#         diag = [l for l in lines if l.startswith("info string DIAG walked")]
+#         hits = [l for l in diag if l.endswith("fallback 1")]
+#         if diag:
+#             print(f"{'HIT' if hits else 'walk'}\t{fen}\t{n}\t{hash_mb}\t{diag[-1][len('info string DIAG '):]}", flush=True)
+# send("quit"); p.wait()

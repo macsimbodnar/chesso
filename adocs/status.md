@@ -24,9 +24,21 @@ share stay at zero, in no expression. No bisection follows an H1. Cost
 `evaluation.hpp`'s owed paragraph and the other comments the H1 made false,
 bench unmoved. Closed by one Opus 5.5 subagent in `../chesso-s135f`.
 
-**S294 in progress** (`plan_current/`, DEC-171 filler: MW02 and H04), by
-one Opus 5.5 subagent in `../chesso-s294` (`.tuning/coord/S294/brief.md`).
-Then S136 (tempo).
+**S294 done** (one Opus 5.5 subagent, `../chesso-s294`, fast-checked): MW02
+is killed by a new `test_mate_pv` case at a cold-table cell (S145 mined
+line 162, `go nodes 150000`, `adocs/data/S294_fallback_cell.py`), because
+F's cell and all 108 S170 cells no longer reach S202's aborted-line
+fallback; H04 builds with `(void)prev_move` and is killed. No `src/`
+change. The mutation fixture `.tuning/s294/mut` (332 MB) holds commit
+objects on no branch.
+
+**Found by S294, BUGS-binding (DEC-317)**: a search cut short inside an
+iteration can print that iteration's line, longer than the completed mate
+beside it and not mate at the claimed distance, with `ponder` from it
+(`adocs/data/S294_aborted_long_line.txt`, S145 mined line 168); the
+completed `mate 4` is one move short of Stockfish's mate in 5 as well.
+MANUAL.md's Known bugs and specs.md carry it. **Next: S295** fixes the
+reporting (INV-6) and traces the distance first; then S136 (tempo).
 
 ## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
 

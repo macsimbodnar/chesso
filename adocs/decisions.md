@@ -16010,3 +16010,41 @@ Rejected:     A relative error floored at the fixture's largest gradient --
 Consequences: A later refit can land another weight near zero on the fixture;
               the same answer applies, and the floored metric is the
               recorded alternative if it recurs.
+
+## DEC-317  2026-10-26  S294's aborted long line is BUGS-binding under DEC-171 (c): S295 fixes it before S136
+Tags:         search, mate, pv, reporting, ponder, s294, s295, s202, s136, dec-171, dec-122, dec-251, bugs
+Context:      S294, sweeping for MW02's cell, found a search that ends inside
+              an iteration printing that iteration's line beside the last
+              completed iteration's mate score, with the line longer than the
+              score needs and not mate at the claimed distance
+              (`adocs/data/S294_aborted_long_line.txt`: S145 mined row 168,
+              cold table, Hash 16, `go nodes` 80000 to 200000; at 150000
+              `score mate 4` beside a 9-ply line that python-chess finds mate
+              only at ply 9, and `ponder h1g1` where the completed line's
+              reply is h1h2). S202's fallback (DEC-251 (c1)) does not run: it
+              catches only an aborted line the walk cannot complete. Stockfish
+              at depth 20 reads the root mate in 5 (h1g1), so the completed
+              iteration's `mate 4` is itself one move short. MANUAL.md's
+              `depth` and `pv` rows promise neither can happen.
+Decision:     By the coordinator under the owner's standing instruction. The
+              defect moves a reported line and ponder move wherever a search
+              stops inside an iteration -- a clock, a node limit, a `stop` --
+              which every timed game does: **BUGS-binding under DEC-171 (c)**,
+              as DEC-311 read (c). **S295** takes it, first in Open, before
+              S136 (a play-altering step). Its two readings are kept apart:
+              (1) the reporting layer printing an aborted line that does not
+              mate at the printed distance is fixed there, reporting only,
+              decided by INV-6; (2) the completed iteration's mate distance,
+              one move short of the oracle's, is traced from the engine's
+              output to its node and rule first, and returns to the
+              coordinator with its figures before any search change.
+Why:          (c) binds a defect able to move a reported line with no
+              ordinary-play limit, and MANUAL.md promises the opposite today.
+Rejected:     A DEC-171 filler behind S136: it reads an ordinary-play limit
+              into (c) that (c) does not carry (DEC-311). Folding it into
+              S294: S294 excludes `src/`. Fixing (2) blind with (1): a search
+              change alters play and is measured alone.
+Consequences: S136 waits for S295. S136's pre-registration names any part of
+              S295 still open. If (2) is a known price (DEC-158's class or
+              another recorded one), it is recorded as such, and MANUAL.md's
+              rows are restated to what the engine guarantees.

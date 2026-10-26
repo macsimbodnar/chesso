@@ -1,0 +1,60 @@
+# S294, 2026-10-26, found while sweeping for MW02's cell; NOT fixed here (S294 excludes src/). dcb3d83, bench 5184358.
+#
+# A search that ends inside an iteration prints that iteration's line beside the last completed iteration's mate
+# score, and the line printed is LONGER than that mate needs and is not mate at the claimed distance. S202's
+# fallback (DEC-251) does not run: its condition is a walked line shorter than the mate needs. DEC-122's guarantee
+# -- a line at least as long as its claimed distance ends in checkmate at that distance, asserted at zero by
+# tests/test_mate_carry.cpp's 'unreached' -- is what this line breaks. S202's F cell was the same mechanism with
+# the aborted line shorter: a longer mate found by the aborted iteration, printed beside the completed shorter one.
+#
+# The position is line 168 of adocs/data/S145_mined_set.tsv (game 5850, labelled distance 5), cold table, Hash 16.
+# Every budget of S294_fallback_cell.py's grid from 80000 to 200000 nodes shows it: the shipped sweep's 13 'short'
+# cells, all this position (adocs/data/S294_fallback_pick.txt; the sweep itself is under .tuning/s294/). The cold
+# Hash 1 scan of adocs/data/S294_mw02_reach.txt lists it too, at 100000 nodes, a 'walk' row with walked_len 9 and
+# needed 7, among the cells whose walked length is not the length the mate needs.
+#
+# The shipped build (build/src/chesso of dcb3d83): uci, setoption name Hash value 16, ucinewgame,
+# position fen 6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32, go nodes 150000, read to bestmove. Every info line, time/nps/hashfull dropped:
+score cp 1386 depth 1 nodes 90 pvlen 1: h3f2
+score cp 1386 depth 2 nodes 236 pvlen 2: h3f2 h1h2
+score cp 1411 depth 3 nodes 798 pvlen 3: h3f2 h1g1 f2e4
+score cp 1560 depth 4 nodes 1423 pvlen 4: h3f2 h1h2 g7g3 h2g1
+score cp 1560 depth 5 nodes 1938 pvlen 5: h3f2 h1h2 g7g3 h2g1 f2e4
+score cp 2086 depth 6 nodes 2985 pvlen 6: h3f2 h1h2 g7g3 h2g1 f2e4 d1d2
+score cp 2145 depth 7 nodes 4806 pvlen 7: h3f2 h1h2 g7g3 h2g1 f2e4 d1d2 e4d2
+score mate 4 depth 8 nodes 61914 pvlen 7: h3f2 h1h2 g7h6 e4h4 h6h4 h2g1 h4h1
+score mate 4 depth 8 nodes 150000 pvlen 9: h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3h4
+bestmove h3f2 ponder h1g1
+#
+# The instrumented build of adocs/data/S294_mw02_reach.txt on the same cell, its two lines:
+info string DIAG aborted has_result mate=1 depth 9 raw_len 9 raw_pv h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3h4
+info string DIAG walked_len 9 needed 7 last_complete_len 7 same_first 1 fallback 0
+#
+# The last line replayed by python-chess (a tool, not a judgement): ply, move, check, checkmate, legal replies.
+# 'mate 4' needs 7 plies; ply 7 has a legal reply, and the checkmate is at ply 9.
+1 h3f2 check - 2
+2 h1g1 - - 33
+3 f2e4 - - 23
+4 d1d2 - - 37
+5 e4d2 - - 15
+6 g2g3 - - 35
+7 g7g3 check - 1
+8 g1h1 - - 52
+9 g3h4 check checkmate 0
+#
+# python-chess on the completed depth-8 line, h3f2 h1h2 g7h6 e4h4 h6h4 h2g1 h4h1: checkmate after 7 plies, True.
+#
+# Stockfish (/usr/games/stockfish through python-chess, TOOLCHAIN.md's safe form, depth 20, a fresh process):
+#   root                  #+5  h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3g2
+#   after h3f2 h1h2       #+3  g7h6 e4h4 h6h4 h2g1 h4h1
+#   after h3f2 h1g1       #+4  f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3g2
+# (the mined set's own label for the row is distance 5.) So the pair printed last is a mate-in-5 line beside a
+# 'mate 4' that the oracle reads one move short: the completed iteration's mate 4 rests on h1h2 as the defence, and
+# the aborted iteration found h1g1. The move played, h3f2, is the oracle's; 'ponder h1g1' is the aborted line's
+# reply where the completed line's is h1h2.
+#
+# Reachable wherever a search stops inside an iteration -- a clock, a node limit, a stop -- so it is a reported
+# line (DEC-171 (c)) and the coordinator's to scope. Two readings for whoever takes it, not settled here: the
+# reporting layer printing an aborted line that does not mate at the printed distance (the fallback's condition
+# checks only that a walked line is too short), and the completed iteration's mate distance itself, one move
+# shorter than the oracle's.
