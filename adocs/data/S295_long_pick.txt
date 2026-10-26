@@ -1,0 +1,24 @@
+# S295, 2026-10-26: adocs/data/S295_long_line.py on 4fb915e plus S295's working tree (bench 5184358), the four stages
+# of its header. The mutant build: a throwaway worktree at f8abd40 (a commit object on no branch holding S295's
+# working tree) with MW03_long_aborted_line_kept applied, never committed, removed after.
+# Stage 2's two sweeps stay under .tuning/s295/ (318 positions x 39 budgets, 12402 cells each); headers and sha256
+# prefixes:
+#   S295_long_line.py sweep, engine /home/max/ws/chesso-s295/build/src/chesso, adocs/data/S145_mined_set.tsv, Hash 16,
+#     grid 20000..400000 by 10000 -- sha256 (first 16 hex digits) 0bd0712096b06ece fixed_mined.tsv, 63 s at --jobs 12
+#   S295_long_line.py sweep, engine .tuning/s295/mw03/build/src/chesso, the same -- 094f671b472353be mw03_mined.tsv, 66 s
+# The same sweep of 4fb915e's own engine (shipped_mined.tsv, a9310eb1960aaebe) is mw03_mined.tsv line for line: MW03
+# is the aborted path as 4fb915e has it.
+# Per build, the last `info` line of each cell that ends on a mate (5290 of 12402): an aborted iteration's beside the
+# completed mate with the same first move, by class (full: checkmate at exactly the claimed distance; wrong: at least
+# that long and not checkmate there), and none (any other last line):
+#   fixed: full 4104  wrong 0   none 1186
+#   mw03:  full 4091  wrong 13  none 1186     (S294_fallback_pick.txt's shipped reading: full 4091, short 13)
+#
+# Stage 3:
+separates   13 budgets  80000..200000  6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32
+1 of 318 positions separate
+pick  6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32  go nodes 140000  (run 80000..200000, 13 budgets, margin 60000 nodes below and 60000 above)
+#
+# The position is line 168 (game 5850), S294's cell (adocs/data/S294_aborted_long_line.txt). The step's accepts
+# quote S294's reproduction budget, 150000; the rule, S294's own with the class changed, picks the run's middle,
+# 140000, and the case searches that.

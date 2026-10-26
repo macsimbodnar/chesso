@@ -511,16 +511,29 @@ rewritten with it (S213, DEC-184).
 |---|---|
 | `score cp N` | centipawns, from the point of view of the side to move. `score mate N` instead when a mate is found, `N` in moves |
 | `time` | milliseconds since this search started, not since this iteration started |
-| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair does not claim a mate the line does not reach -- **except one case, a known bug**: a cut-short line already as long as the mate needs that is not mate at that distance is printed as it is ("Known bugs and limitations", the entry on a line from an iteration cut short; S295). Where that completion fails and the last completed depth's line starts with the same move, that line is printed instead, and `bestmove`'s `ponder` is its second move (S202) |
+| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair does not claim a mate the line does not reach. A cut-short line the completion leaves shorter than the mate needs, or at or past that distance without a checkmate there, gives way to the last completed depth's line when that line starts with the same move and is checkmate at the distance (S202, S295); otherwise a short one is printed short and a wrong one is cut to one ply under the distance, never below the move played (S295). `bestmove`'s `ponder` is the second move of the line printed (`iterative_deepening_search()`). The finished depth's mate score itself can claim a mate shorter than the position's -- a known bug ("Known bugs and limitations", the entry on a mate distance shorter than the position's own value) |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
 | `hashfull` | permille of the transposition table this search has written, read after the iteration off its first 1002 entries (334 clusters of three), which a uniform hash fills at the rate of the rest. Entries an earlier search wrote are not counted, so it starts near 0 on every `go` and does not reach 1000 just because the table has been in use. Since S119 |
-| `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate — 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate — **or it is left short, and never wrong**, but for the one known bug below ("Known bugs and limitations", the entry on a line from an iteration cut short; S295): the line is rebuilt from the transposition table after the search and published only if that walk ends in checkmate at exactly the claimed distance, so an entry the table no longer holds leaves the short line the search produced rather than a line that does not deliver. Measured at 8 such lines from 1 search in 3000 games (DEC-150) |
+| `pv` | the line the engine will play, and `bestmove` is its first move. With `score mate N` it reaches the mate — 2N - 1 plies for a mate this side delivers and 2\|N\| for one it receives, ending on the position that is checkmate — **or it is left short, and never wrong**: the line is rebuilt from the transposition table after the search and published only if that walk ends in checkmate at exactly the claimed distance, so an entry the table no longer holds leaves the short line the search produced rather than a line that does not deliver; and a line at or past the distance that is not checkmate there is cut to one ply under it after a finished iteration (`search()`), and after one cut short gives way or is cut as the `depth` row says (S295) -- all but beside `mate 1`, where a wrong one-move line has nothing to cut. Measured at 8 short lines from 1 search in 3000 games (DEC-150) |
 
 `bestmove 0000` means no legal move at all. A search cut off before it finished
 even one move still answers with a legal one — including a search cut inside
 its very first iteration, which then reports `depth 0` or prints no `info` line
 at all before the `bestmove` (S210).
+
+`bestmove` carries `ponder <move>` when the last `pv` printed has a second
+move, and that move is it: taken from the line the search returned, and, where
+a search cut short beside a mate prints another line -- the completed depth's,
+or one cut below the distance -- from the line printed
+(`iterative_deepening_search()`; S202, S295). The answer to a search cut off
+before its first move (S210, above) carries none. Since S295 a cut-short line
+beside a mate that the rebuild extends from one move also gets a `ponder`,
+where it had none; over S294's mined grid (12402 node-limited searches, 4110
+of them ending on a cut-short line beside a mate) and the S170 grid (2043, 62)
+no `ponder` was added or removed, and it changed in 13 searches, all one
+position, from the cut-short line's second move to the completed line's
+(`adocs/data/S295_census.txt`). Pondering itself is not implemented.
 
 **`nodes` on the last `info` line can be under a `go nodes` budget**, and that
 is not a shortfall. The budget bounds the whole search and the loop stops
@@ -631,14 +644,12 @@ against d4 and e4 against e5.
   when the table is large enough — it is simply not the fastest mate. A
   depth-limited search naming a longer mate than the game value is ordinary,
   and the `pv` guarantee above still holds over it: a published line reaches the
-  mate the score claims, or is left short rather than made wrong -- outside the
-  bug on a line from an iteration cut short, two entries down. S171 and
+  mate the score claims, or is left short rather than made wrong. S171 and
   DEC-127 measured this; finding the *shortest* mate is a search question and
   belongs to the reverse-futility entry further down.
 - **A mate line can be shorter than the score's distance.** Not wrong, short:
   the line is published only when it reaches the mate, so the failure mode is a
-  missing tail and never a line that does not deliver -- outside the bug on a
-  line from an iteration cut short, the next entry. It happens when the score
+  missing tail and never a line that does not deliver. It happens when the score
   is read back from the table at a depth too shallow to build its own line and
   the table no longer holds one — measured at 8 `info` lines from 1 search in
   3000 games at 8+0.08 on 2026-09-07. S202 (DEC-251) narrowed it in the
@@ -648,26 +659,24 @@ against d4 and e4 against e5.
   of the same move. On its test grid that took 33 short lines of 873 to 19; a
   3000-game count is owed. DEC-122 is the all-or-nothing rule that makes short
   the only failure, and DEC-150 the first measurement.
-- **A line beside `score mate N` from an iteration cut short can be longer than
-  the mate needs and not mate at the claimed distance**, and `ponder` is then
-  that line's second move. A known bug, ruled binding by DEC-317; S295 is its
-  fix. When a search stops inside an iteration -- the clock, a `go nodes`
-  budget or `stop` -- the last `info` line repeats the last finished depth and
-  its score and prints the cut-short iteration's own line, with `ponder` taken
-  from it (`iterative_deepening_search()`). The rebuild replays that line only
-  as far as the mate needs and changes it only by extending it to a checkmate
-  (`complete_mate_pv()`), and S202's fallback to the last finished line runs
-  only where the result is still shorter than the mate needs. A cut-short line
-  that is already long enough and is not mate there is printed unchanged.
-  Reproduction (S294): `ucinewgame`, Hash 16, `position fen
-  6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32`, `go nodes 150000` (every
-  budget from 80000 to 200000 shows it). The last line is `score mate 4 depth
-  8` with the 9-ply `pv h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3h4`, not
-  checkmate after 7 plies and checkmate after 9, then `bestmove h3f2 ponder
-  h1g1`; the finished depth 8's own line is `h3f2 h1h2 g7h6 e4h4 h6h4 h2g1
-  h4h1`. The move played is the first of both lines. Stockfish at depth 20
-  reads that root as mate in 5, so the finished depth's `mate 4` is itself one
-  move short of it. `adocs/data/S294_aborted_long_line.txt` has the evidence.
+- **A reported mate distance can be shorter than the position's own value.**
+  Found by S294, traced by S295 from the engine's own output
+  (`adocs/data/S295_trace.txt`). A known bug, ruled binding by DEC-318; S296
+  is its fix, a search change measured on its own. `ucinewgame`, Hash 16,
+  `position fen
+  6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32`, `go depth 8` (or `go
+  nodes` 80000 to 200000, whose last finished depth is 8): the finished depth 8
+  prints `score mate 4` with `pv h3f2 h1h2 g7h6 e4h4 h6h4 h2g1 h4h1`, checkmate
+  at its distance, and `bestmove h3f2 ponder h1h2`. Stockfish at depth 20
+  reads the root mate in 5, with the defender's `h1g1` holding a move longer
+  than `h1h2` (#+4 after it against #+3). Depth 9 reads mate 5. Where it comes
+  from: in an earlier iteration a node that quiet SEE pruning and late move
+  pruning had left searching only replies mated in one -- the two replies that
+  are not, by python-chess, are two it skipped -- returned that mated score as
+  its bound, the table carried it up, and depth 8's full-window search answered
+  `h1g1` from it. Until S295 the same cell also printed the cut-short depth 9's
+  9-ply line beside this `mate 4`, with `ponder h1g1`; that line now gives way
+  to the finished depth's (the `depth` and `pv` rows above).
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

@@ -135,11 +135,26 @@ void complete_mate_pv(game_t* game,
                       int mate_in);
 
 // The plies a mate at `mate_in` moves takes: 2N - 1 for one the side to move
-// delivers, 2|N| for one it receives. A line at least this long, from a call
-// to complete_mate_pv() above, reaches its mate; a shorter one was refused.
-// Declared for the reporting layer, which has to tell the two apart for an
-// aborted iteration's line (S202, DEC-251).
+// delivers, 2|N| for one it receives. A line shorter than this after a call
+// to complete_mate_pv() above was refused; one at least this long is not
+// thereby a mate, which is what mate_pv_reaches() below decides. Declared for
+// the reporting layer, which has to tell an aborted iteration's lines apart
+// (S202, DEC-251; S295).
 size_t plies_to_deliver(int mate_in);
+
+// Whether `pv` is checkmate at exactly the distance `mate_in` claims: exactly
+// plies_to_deliver(mate_in) plies, each legal in turn, ending on checkmate.
+// Reporting only: nothing searched, counted or stored, `game` left as it was.
+// For the reporting layer's aborted path (S295).
+bool mate_pv_reaches(game_t* game, const pv_t* pv, int mate_in);
+
+// A line at least plies_to_deliver(mate_in) long that mate_pv_reaches()
+// refuses is cut to one ply under the distance, never below its first move;
+// any other line is left. Returns whether the line was refused, which beside
+// `mate 1` leaves a one-move line as it was. Reporting only: search() calls it
+// on its reported line after complete_mate_pv(), and the reporting layer's
+// aborted path on a wrong line with no completed line to give way to (S295).
+bool cut_unreached_mate_pv(game_t* game, pv_t* pv, int mate_in);
 
 // The published history update, in one place because three tables will use it:
 // S222's continuation history and S023's capture history share the clamp, the

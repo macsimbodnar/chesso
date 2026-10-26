@@ -3761,6 +3761,85 @@ void complete_mate_pv(game_t* game,
 }
 
 
+// Length is not the property. complete_mate_pv() extends a short line only to
+// a checkmate, but a line already as long as the mate needs it leaves as it
+// is, mate or not, so "at least this long after the walk" -- the test S202's
+// aborted-line fallback made -- passes a line that runs past the claimed
+// distance without a mate there. S294 found one printed: an aborted
+// iteration's 9-ply line beside the completed `mate 4`, checkmate only at ply
+// 9 (adocs/data/S294_aborted_long_line.txt). S295.
+//
+// Reporting only, like the walk: a generator and a make and unmake per ply,
+// no node searched, counted or stored, and `game` is left where it was. Each
+// move is looked up in the generator before it is played, as the walk checks
+// a move out of the table, because make_move() is not a legality test.
+bool mate_pv_reaches(game_t* game, const pv_t* pv, int mate_in)
+{
+  const size_t needed = plies_to_deliver(mate_in);
+
+  if (needed == 0 || pv->length != needed) { return false; }
+
+  size_t played = 0;
+  bool replayed = true;
+
+  for (; played < needed; ++played) {
+    move_t moves[MAX_MOVES];
+    const size_t count = generate_moves(game_tables(), &game->board, moves);
+
+    if (std::find(moves, moves + count, pv->table[played]) == moves + count ||
+        !make_move(game, pv->table[played])) {
+      replayed = false;
+      break;
+    }
+  }
+
+  bool mated = false;
+
+  if (replayed) {
+    move_t replies[MAX_MOVES];
+
+    // generate_moves() is legal-only (INV-1), so no reply while in check is
+    // checkmate.
+    mated = (generate_moves(game_tables(), &game->board, replies) == 0) &&
+            is_check(game);
+  }
+
+  for (size_t i = 0; i < played; ++i) {
+    unmake_move(game);
+  }
+
+  return mated;
+}
+
+
+// The line a mate score is printed beside, held to mate_pv_reaches(): one at
+// least as long as the distance that is not checkmate there is cut to one ply
+// under it, never below the move played -- left short, the failure DEC-122
+// allows, never wrong. complete_mate_pv() leaves such a line as it found it,
+// so without this the `pv` guarantee for a completed iteration rested on a
+// measurement -- no such line over S295's census grids -- and not on a check.
+// search() calls it after the walk, and the reporting layer's aborted path
+// for a wrong line with no completed line to give way to -- another first
+// move, or a completed line that does not reach its own mate (S295).
+// Reporting only: what it shortens is the reported copy, never `state`'s
+// table. Returns whether the line was refused: beside `mate 1` a refused
+// one-move line is left as it was, the move played being all it has.
+bool cut_unreached_mate_pv(game_t* game, pv_t* pv, int mate_in)
+{
+  const size_t needed = plies_to_deliver(mate_in);
+
+  // `mate 0` is a root already mated, with no line to hold to anything; it is
+  // also the one distance whose ply under it does not exist.
+  if (needed == 0 || pv->length < needed ||
+      mate_pv_reaches(game, pv, mate_in)) {
+    return false;
+  }
+
+  pv->length = std::max<size_t>(1, needed - 1);
+  return true;
+}
+
+
 search_t search(int depth,
                 game_t* game,
                 search_state_t* state,
@@ -3818,9 +3897,13 @@ search_t search(int depth,
 
   // After the copy, so the extension lands on the reported line and not on the
   // search state, and before the debug PV check below, so a walked line is held
-  // to the same legality invariant a searched one is.
+  // to the same legality invariant a searched one is. Then the line is held to
+  // its distance: the walk extends a short line only to a checkmate and leaves
+  // a long one as it is, so one at or past the distance that is not checkmate
+  // there is cut below it (S295).
   if (search_result.mate_found) {
     complete_mate_pv(game, state, &search_result.pv, search_result.mate_in);
+    cut_unreached_mate_pv(game, &search_result.pv, search_result.mate_in);
   }
 
 #ifndef NDEBUG

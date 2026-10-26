@@ -1041,11 +1041,54 @@ static search_t aspiration_root_search(int depth,
   record.aborted = state->aborted;
   record.best_move = result.best_move;
   record.pv_move = (result.pv.length > 0) ? result.pv.table[0] : 0;
+  record.pv_length = result.pv.length;
 
   last_aspiration_searches.push_back(record);
 
   return result;
 }
+
+
+// The aborted path's line choice, after the walk has had the line: what
+// iterative_deepening_search() prints beside `mate_in`, the last completed
+// iteration's score, and its comment there says why. The line stands only if
+// mate_pv_reaches() it; short or wrong, it gives way to `last_complete` when
+// that starts with the same move and reaches the mate; otherwise a wrong one
+// is cut below the distance and a short one stays short. `root` is the
+// position both lines start from and is left as it was. Its own function so a
+// test can hand it a constructed position and lines -- no search measured
+// reaches the cut (adocs/data/S295_census.txt) -- through
+// uci_aborted_mate_line_probe(). S295.
+static void choose_aborted_mate_line(game_t* root,
+                                     pv_t* line,
+                                     const pv_t* last_complete,
+                                     int mate_in)
+{
+  const size_t needed = plies_to_deliver(mate_in);
+
+  // DEC-122's refusal: shorter than the mate needs.
+  const bool short_line = line->length < needed;
+
+  // Long enough to claim the mate, and not checkmate at its distance.
+  const bool wrong_line = !short_line && !mate_pv_reaches(root, line, mate_in);
+
+  const bool same_choice = last_complete->length > 0 &&
+                           last_complete->table[0] == line->table[0] &&
+                           mate_pv_reaches(root, last_complete, mate_in);
+
+  if ((short_line || wrong_line) && same_choice) {
+    *line = *last_complete;
+  } else if (wrong_line) {
+    cut_unreached_mate_pv(root, line, mate_in);
+  }
+}
+
+
+void uci_aborted_mate_line_probe(game_t* root,
+                                 pv_t* line,
+                                 const pv_t* last_complete,
+                                 int mate_in)
+{ choose_aborted_mate_line(root, line, last_complete, mate_in); }
 
 
 uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
@@ -1419,21 +1462,36 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
     // S202's phase 1 found this on F_mate6_inherited_no_line at its own cell:
     // the aborted depth-8 line was a 13-ply mate printed beside the depth-7
     // `mate 6`, which no walk can complete to 11 plies. DEC-251.
+    //
+    // A walk that does not refuse has not thereby completed the line. The walk
+    // extends a short line only to a checkmate and leaves one already as long
+    // as the mate needs as it is, so an aborted line that runs to a *longer*
+    // mate, or past the distance without one, came out of it unchanged and was
+    // printed: S294's cell, a 9-ply line beside the completed `mate 4`,
+    // checkmate only at ply 9, `ponder` its second move
+    // (adocs/data/S294_aborted_long_line.txt). Such a line is wrong rather than
+    // short, so it takes the same fallback, and where there is none -- the
+    // aborted iteration chose another move, which is the move played and does
+    // not change, or the completed line does not reach its own mate -- it is
+    // cut below the claimed distance: left short, the failure DEC-122 allows,
+    // never wrong. Cut to one ply under the distance, the longest line that
+    // claims no mate, so it reads as the short line DEC-122 already leaves
+    // where the walk refuses a line of another move.
+    // The move played is never cut, so beside `mate 1` the line keeps it. The
+    // last completed line is held to the same test before it stands in.
+    // `ponder` is the second move of whatever is printed. Reporting only, no
+    // node moves (INV-6). S295, DEC-317.
     if (state.aborted && has_result && last_score_is_mate) {
       complete_mate_pv(&game, &state, &result.pv, last_mate_in);
 
-      const size_t needed = plies_to_deliver(last_mate_in);
+      choose_aborted_mate_line(&game, &result.pv, &last_complete_pv,
+                               last_mate_in);
 
-      if (result.pv.length < needed && last_complete_pv.length >= needed &&
-          last_complete_pv.table[0] == result.pv.table[0]) {
-        result.pv = last_complete_pv;
-
-        result.is_ponder_move = result.pv.length > 1;
-        if (result.is_ponder_move) {
-          result.ponder_move = {MOVE_FROM(result.pv.table[1]),
-                                MOVE_TO(result.pv.table[1]),
-                                MOVE_PROMOTED(result.pv.table[1])};
-        }
+      result.is_ponder_move = result.pv.length > 1;
+      if (result.is_ponder_move) {
+        result.ponder_move = {MOVE_FROM(result.pv.table[1]),
+                              MOVE_TO(result.pv.table[1]),
+                              MOVE_PROMOTED(result.pv.table[1])};
       }
     }
 

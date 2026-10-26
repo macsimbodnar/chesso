@@ -1,0 +1,128 @@
+# S295 reading (2), 2026-10-26, on 4fb915e (bench 5184358): why the completed depth-8 iteration on S294's cell
+# reports `mate 4` with h1h2 as the defence when the oracle reads mate in 5 by h1g1. Read from the engine's own
+# output, a throwaway instrumented build; every chess claim below is a tool's (python-chess, Stockfish at depth 20).
+#
+# The cell: line 168 of adocs/data/S145_mined_set.tsv (game 5850), 6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32,
+# `ucinewgame`, Hash 16. `go depth 8` prints the same eight lines as the first eight of `go nodes 150000`
+# (adocs/data/S294_aborted_long_line.txt), nodes 61914 at depth 8, so the depth-8 tree is the node-limited one.
+#
+# THE BUILD. adocs/data/S295_trace_patch.py rewrites a throwaway copy of src/search.cpp (worktree
+# .tuning/s295/diag, detached at 4fb915e, never committed, removed after) so that every node logs its window,
+# path, returned score and the return it took; its header gives the log's grammar. Same nodes: the instrumented
+# engine printed the same `go depth 8` lines, nodes 61914, as the shipped one. Run as
+#   S295_DEPTH=0 S295_DIAG=dall.log chesso < (uci, setoption Hash 16, ucinewgame, position fen <cell>, go depth 8)
+# 29 aspiration searches; iteration 7 is searches 16..23, iteration 8 is 24..29:
+#   S 22 depth 7 [1608,2108]   E 22 score 2145
+#   S 24 depth 8 [2124,2166]   E 24 score 2185      S 28 depth 8 [2124,2656]   E 28 score 48991
+#   S 25 .. 27 fail high again                       S 29 depth 8 [-inf,+inf]   E 29 score 48993  (MATE_MAX 49000: mate 4)
+#
+# THE CHAIN, from the root's exact `mate 4` down to where the claim starts. Node lines are the log's own
+# (`N id parent ply d<depth> [alpha,beta] pv cut ex path -> score rule`), ids from that run.
+#
+# 1. Search 29, the full window. Ply 1 (after h3f2, White to move, both replies searched):
+#      N 5160 5159 1 d7 [-inf,+inf] pv1 h3f2 -> -48993 loop type=1(exact) legal=2 best=h1h2
+#        M h1h2 n=1 cd=6 score=-48993          M h1g1 n=2 cd=6 score=-48993
+#    h1g1 is answered at ply 2 by the table, not by a search:
+#      N 12467 5160 2 d6 [48992,48993] pv0 cut1 h3f2,h1g1 -> 48993 tt d=6 t=3(lower bound) s=48993 m=f2e4
+#    so h1g1 is "mated by ply 7" because an entry says Black mates by ply 7 after h3f2 h1g1.
+# 2. That entry: search 24 (window [2124,2166]), ply 2 after h3f2 h1g1, a PV node:
+#      N 4895 4808 2 d6 [2124,2166] pv1 h3f2,h1g1 -> 48993 loop type=3 legal=1 best=f2e4   (stored as a lower bound)
+#    from its child at ply 3, after h3f2 h1g1 f2e4, White to move, all 23 replies searched:
+#      N 4896 4895 3 d5 [-2166,-2124] pv1 h3f2,h1g1,f2e4 -> -48993 loop type=2(upper bound) legal=23 skipped=0
+#    whose three best replies, g2g4, g2g3 and d1d2, each return -48993 (the other twenty -48995). d1d2 is reduced
+#    (n=17 cd=4 red=3) and answered at ply 4 by the table:
+#      N 4919 4896 4 d1 [2165,2166] pv0 cut1 h3f2,h1g1,f2e4,d1d2 -> 48993 tt d=4 t=3(lower bound) s=48993 m=e4d2
+# 3. That entry: iteration 7, search 22 (window [1608,2108]), ply 4 after ... d1d2, Black to move, a cut node:
+#      N 4341 4275 4 d4 [2107,2108] pv0 cut1 h3f2,h1g1,f2e4,d1d2 -> 48993 loop type=3 legal=1 skipped=0 best=e4d2
+#        M e4d2 n=1 cd=3 score=48993
+#    from its child at ply 5, after ... d1d2 e4d2, White to move -- THE NODE THE CLAIM STARTS AT:
+#      N 4342 4341 5 d3 [-2108,-2107] pv0 cut0 h3f2,h1g1,f2e4,d1d2,e4d2 -> -48993 loop type=2 legal=9 skipped=1
+#        M c5c6 -48993   M g1h1 -48993   M g1h2 -48993   M b2b4 -48993 (red 1)
+#        P g2g3 rule=3 (PRUNE_SEE)   P g2g4 rule=3 (PRUNE_SEE)
+#        M a1a3 -48993   M a1a2 -48993
+#        P a1b1 rule=3 (PRUNE_SEE)
+#        M a1c1 -48993   M a1d1 -48993   M a1e1 -48993
+#        P a1f1 rule=4 (PRUNE_LATE_MOVE)   P b2b3 rule=4   P a4a5 rule=4
+#    A non-PV node, depth 3, its window [-2108,-2107] outside the mate band, so `pruning_node` holds and,
+#    after the first move, `may_prune`: quiet SEE pruning skips g2g3, g2g4 and a1b1, late move pruning a1f1, b2b3
+#    and a4a5. Every move it searched returns -48993, mated at ply 7, and the node returns that fail-soft best as
+#    its value -- an upper bound, sound against the window it was searched with (the node is lost by far more than
+#    -2108) but read through the table as a mate distance: mated in one, for a node that skipped moves.
+#
+# THE ORACLE on that chain (.tuning/s295/trace_oracle.py and oracle_ply3.py, below; python-chess for legality and
+# mate in one, Stockfish d20 in TOOLCHAIN.md's safe form):
+#   ply 0 after [-]                         black to move  #+5  h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3g2
+#   ply 1 after [h3f2]                      white to move  #-4  h1g1 f2e4 d1d2 e4d2 g2g4 g7g4 g1h2 g4g2
+#   ply 2 after [h3f2 h1g1]                 black to move  #+4  f2e4 d1d2 e4d2 g2g4 g7g4 g1h2 g4g2
+#   ply 3 after [h3f2 h1g1 f2e4]            white to move  #-3  d1d2 e4d2 g2g4 g7g4 g1h2 g4g2
+#   ply 4 after [h3f2 h1g1 f2e4 d1d2]       black to move  #+3  e4d2 g2g4 g7g4 g1h2 g4h5
+#   ply 5 after [h3f2 h1g1 f2e4 d1d2 e4d2]  white to move  #-2  g2g4 g7g4 g1h2 g4g2
+#   at ply 3, after each white reply: d1d2 #+3; g2g3 and g2g4 #+2; the other twenty #+1 (g7g2)
+#   at ply 5, after each white reply, Black's checkmating replies (python-chess) and Stockfish after it:
+#     g2g3 (none) #+2    g2g4 (none) #+2    the other thirteen: g7g2 mates, #+1
+# So at ply 5 exactly the two moves that avoid mate in one, g2g3 and g2g4, are the two quiet SEE pruning skipped,
+# and the node's "mated in one" is false by one move; through the table it becomes ply 4's "mate in two" for
+# e4d2 (#+3 by the oracle), ply 3's d1d2 refuted at mate in two (#+3), ply 2's lower bound "mate in three" for
+# f2e4 (#+4), and at the full window h1g1 cut on it: the root's exact `mate 4`, one move short of the #+5.
+#
+# THE COUNTERFACTUAL, a reading of the cause and not a fix (S295_trace_patch.py --counterfactual, S295_CF=1: a
+# node that skipped a move and failed low on a mated best returns its own alpha instead):
+#                   shipped                                         counterfactual
+#   go depth 8      depth 7 cp 2145, depth 8 mate 4 nodes 61914     depth 7 cp 2195, depth 8 mate 5 nodes 74605,
+#                   pv h3f2 h1h2 g7h6 e4h4 h6h4 h2g1 h4h1           pv h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3h4
+#   go depth 10     depth 9 mate 5 nodes 201213, depth 10 mate 5   depth 9 mate 5 nodes 182324, depth 10 mate 5
+#   go nodes 150000 last line mate 4 depth 8 (the 9-ply line)      last line mate 5 depth 8, the same 9 plies
+# The depth-8 distance follows the fail-soft mated bound of the node that skipped moves; the shipped engine's
+# depth 9 reads mate 5 by itself.
+#
+# THE FINDING: not a recorded price. DEC-158 prices reverse futility's ceiling in mates the engine does not find
+# ("the mates the engine does not find ... are what the pruning costs"): a missed or longer mate. This is the
+# other direction, a mate claimed shorter than the position holds, through quiet SEE and late move pruning, not
+# reverse futility. DEC-310 records the shape -- "mated bounds stored by nodes where a shallow-depth rule had
+# skipped moves", refuted by the node's own search "four times in five" -- and rejects "Storing `alpha` at a node
+# that skipped moves: it changes what every reader of the table sees, unmeasured", for the null-move guard; it
+# prices no reported score. DEC-125/DEC-127 and MANUAL.md's entry are about a distance longer than the position's.
+# So a new defect: a completed iteration's exact `score mate N` can be shorter than the position's value, a mate
+# the line beside it delivers only against a defence the oracle reads as not the longest (#+3 after h1h2, #+4 after
+# h1g1), here for one iteration (depth 9 corrects it). It moves a reported score (DEC-171 (c)). Stopped here for the coordinator, no search change.
+#
+# ---- nav.py (the log reader used above)
+# import sys
+# log, ids = sys.argv[1], sys.argv[2:]
+# nodes, kids, moves = {}, {}, {}
+# for line in open(log):
+#     t = line.split()
+#     if not t: continue
+#     if t[0] in ("N", "Q"):
+#         nodes[t[1]] = line.rstrip(); kids.setdefault(t[2], []).append(t[1])
+#     elif t[0] in ("M", "P"):
+#         moves.setdefault(t[1], []).append(line.rstrip())
+# for i in ids:
+#     print("NODE", nodes.get(i))
+#     for m in moves.get(i, []): print("   ", m)
+#     for k in kids.get(i, []): print("  child", nodes[k])
+#
+# ---- trace_oracle.py (the oracle on the chain and at ply 5)
+# import chess, chess.engine
+# ROOT = "6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32"
+# CHAIN = "h3f2 h1g1 f2e4 d1d2 e4d2".split()
+# def sf(board):
+#     with chess.engine.SimpleEngine.popen_uci("/usr/games/stockfish") as e:
+#         info = e.analyse(board, chess.engine.Limit(depth=20))
+#     return info["score"].relative, " ".join(m.uci() for m in info["pv"])
+# def mates_in_one(board):
+#     out = []
+#     for m in board.legal_moves:
+#         board.push(m)
+#         if board.is_checkmate(): out.append(m.uci())
+#         board.pop()
+#     return out
+# b = chess.Board(ROOT)
+# for i in range(len(CHAIN) + 1):
+#     print(i, CHAIN[:i], sf(b))
+#     if i < len(CHAIN): b.push_uci(CHAIN[i])
+# for m in sorted(b.legal_moves, key=lambda m: m.uci()):
+#     b.push(m); print(m.uci(), mates_in_one(b), sf(b)[0]); b.pop()
+#
+# ---- oracle_ply3.py: the same sf() after each legal white move from [h3f2 h1g1 f2e4], one Stockfish process,
+#      `game=object()` per call so python-chess sends `ucinewgame` before each.

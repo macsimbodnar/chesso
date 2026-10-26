@@ -1,0 +1,65 @@
+# S295, 2026-10-26: the class S295 closes, counted before and after -- every `info` line carrying a mate score,
+# classed by adocs/data/S295_long_line.py (python-chess): full, checkmate at exactly the claimed distance; short,
+# fewer plies than that (DEC-122's residue); wrong, at least that many and not checkmate at the distance.
+# "before" is 4fb915e's own Release engine (a throwaway worktree, .tuning/s295/diag, clean at 4fb915e); "after"
+# is S295's (bench 5184358 both, INV-6). The sweeps stay under .tuning/s295/.
+#
+# 1. The mined grid: S145_mined_set.tsv, go nodes 20000..400000 by 10000, cold table per cell, Hash 16
+#    (S294_fallback_cell.py's cells), `S295_long_line.py sweep` then `census`.
+#      before: 33309 mate lines in 5323 cells; full 33290, short 6, wrong 13
+#              from an aborted iteration: full 4091 (same first move), short 6 (another first move), wrong 13 (same)
+#      after:  33309 mate lines in 5323 cells; full 33303, short 6, wrong 0
+#              from an aborted iteration: full 4104 (same), short 6 (other), wrong 0
+#    The 13 are one position, line 168 (game 5850), every budget 80000..200000: `mate 4 depth 8`, 9 plies where 7
+#    are needed, h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3h4. After, each is the completed depth 8's 7-ply line,
+#    h3f2 h1h2 g7h6 e4h4 h6h4 h2g1 h4h1. Those 13 lines are the whole diff between the two sweeps; the 6 short
+#    lines, all aborted lines of another first move, are byte-identical before and after.
+#
+# 2. The S170 grid: the six cases of S170_cases.tsv, strides 1 and 2, nodes 100000 300000 500000 1000000 1200000
+#    1500000 2000000 3000000 4000000, each from its own start ply, one process and one `ucinewgame` per cell,
+#    Hash 16 (adocs/data/S203_case_sweep.sh's grid), `S295_long_line.py s170` then `census`.
+#      before: 1408 mate lines in 63 cells; full 1403, short 5, wrong 0 (aborted: full 61 same, short 1 other)
+#      after:  the same file line for line
+#    The totals are S135_sweep_s170.txt's (108 cells, 1408 mate lines, 5 short), the grid S135 recorded on this
+#    tree and added to the ceilings' `--ceilings` command. So no S170 cell, and no ceiling, moves: test_mate_carry's `--ceilings` reading is unchanged
+#    and nothing is restated (DEC-162); the S170 budgets are untouched (DEC-299).
+#
+# 3. Wider, the shipped engine only, for a cell of the branch neither grid reaches -- an aborted line of another
+#    first move at or past its distance and not mate there, which S295 cuts below the distance: the 408 distinct
+#    positions of S145_mined_set.tsv and S097_candidates.tsv, the mined grid's budgets, cold per cell, at Hash 1
+#    and at Hash 16 (.tuning/s295/scan.py).
+#      Hash 1:  full 51516 (5775 of them aborted, same first move), short 6 (aborted, another), wrong 12 (same)
+#      Hash 16: full 51726 (5793 aborted, same), short 6 (aborted, another), wrong 13 (same)
+#    Every wrong line is line 168's; none is of another first move. The cut branch is reached by no cell measured,
+#    so no node-limited cell can guard it: tests/test_mate_pv.cpp's "the aborted path's line choice, on constructed
+#    lines" drives the choice directly (uci_aborted_mate_line_probe()), and mutant MW04 is the cut taken out.
+#
+# 4. The options, as throwaway patches on S295's tree, the mined grid (section 1's sweep):
+#      F1, S295's: a line short or wrong gives way to the completed line of the same first move that is
+#          checkmate at the distance; otherwise a wrong one is cut to one ply under the distance (at least the
+#          move played). After: full 33303, short 6, wrong 0.
+#      F2: the same, cut to the move played alone. Line for line F1's (0 lines differ): the cut never runs here.
+#      F3: no fallback for a wrong line, cut instead. full 33290, short 19, wrong 0 -- line 168's 13 cells print
+#          the aborted line's first 6 plies, h3f2 h1g1 f2e4 d1d2 e4d2 g2g3, short beside `mate 4`.
+#    F1 over F3: where a true line of the same choice exists the pair is complete, not short, which is what
+#    S202's fallback already does for a short line (DEC-251 (c1)). F1 over F2, unmeasurable here: the longest
+#    line that claims no mate is the shape DEC-122's residue already has where the walk refuses a line of another
+#    move (section 1's 6), so a cut line reads like the residue.
+#
+# 5. `ponder`, added after the coordinator's fast-check request: S295 sets `ponder` from the line printed
+#    wherever the aborted path runs, so a cut-short line the walk extends from one move gets one where it had none.
+#    `S295_long_line.py moves` (every search's `bestmove` and `ponder`) on 4fb915e's engine (a throwaway worktree,
+#    .tuning/s295/shipped) and S295's, then `ponder`, over both grids:
+#      mined grid: 12402 searches, 4110 ending on a cut-short line beside a mate; bestmove differs 0, ponder added 0,
+#                  removed 0, changed 13 -- line 168 at every budget 80000..200000, h1g1 -> h1h2 (the fallback)
+#      S170 grid:  2043 searches, 62 ending on a cut-short line beside a mate; nothing differs
+#    sha256 prefixes (each file's header names its engine): shipped_moves_mined.tsv 85682b81d2d4740d,
+#    fixed_moves_mined.tsv 76a417f16c495492, shipped_moves_s170.tsv f1d8be7824461f19, fixed_moves_s170.tsv
+#    bb8d6feee632e626 (left under .tuning/s295/).
+#
+# 6. Re-taken on the final tree, after the fast check's requests (the line choice in its own function, the
+#    completed-line cut in search() through cut_unreached_mate_pv(), its `mate 0` guard): sections 1, 2 and 5's
+#    sweeps of S295's engine again (fixed4_mined.tsv, fixed4_s170.tsv, fixed4_moves_mined.tsv,
+#    fixed4_moves_s170.tsv; an intermediate set, fixed3_*, before the guard, read the same) are their earlier
+#    files line for line, headers aside. Mined grid full 33303, short 6, wrong 0; S170 grid 1403, 5, 0; ponder
+#    changed in 13 searches, added or removed in none. The completed-line cut runs on no line of either grid.

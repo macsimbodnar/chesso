@@ -378,7 +378,15 @@ there. Behaviour-neutral for play and discharged on node counts: 121512 /
 guard, in the fast label, asserting **every** mate line of every iteration over
 both S145 sets -- 182 lines over the constructed set and 524 over the mined one
 at depth 8 -- because the truncation was a shallow-iteration effect that the
-last line of a search never shows.
+last line of a search never shows. Since S295 the guarantee is checked and not
+only measured: `search()` hands its reported line, after the walk, to
+`cut_unreached_mate_pv()`, which cuts one at or past the distance that is not
+checkmate there to one ply under it -- never below the move played, so beside
+`mate 1` a wrong one-move line stays. **Known bug, S296 (DEC-318):** a
+completed iteration's exact mate score can be shorter than the position's: a
+non-PV node that skipped moves by quiet SEE or late move pruning returns its
+fail-soft mated best as its bound and the table carries it
+(`adocs/data/S295_trace.txt`).
 
 **The guarantee holds for a mate the search did not itself prove, since
 2026-09-02, S170.** S147 left a residue of 10 `Incomplete mating PV` lines in
@@ -403,25 +411,29 @@ of them still all-or-nothing (DEC-122).
   supplies the line that will be played while the score stays the last
   completed one's, so the pair can claim a mate the line does not reach. The
   line is completed against the score it is printed beside, not only against
-  the score its own iteration returned. **Known bug, S295 (DEC-317):** an
-  aborted line the walk completes to a *longer* mate is printed as it is,
-  beside the shorter completed score, so it is not mate at the claimed
-  distance and `ponder` comes from it (`adocs/data/S294_aborted_long_line.txt`,
-  found by S294 on a cold table).
+  the score its own iteration returned, and it stands only if it is then
+  checkmate at exactly that distance (`mate_pv_reaches()`). A line the walk
+  leaves short, or at or past the distance without a checkmate there --
+  S294's cold cell, a 9-ply line beside `mate 4` -- gives way to the last
+  completed line when that line starts with the same move and reaches the
+  mate (S202, S295); otherwise a wrong one is cut to one ply under the
+  distance, never below the move played, and a short one stays short
+  (DEC-122). `ponder` is the second move of whatever is printed. S295,
+  DEC-317.
 
 `tests/test_mate_carry.cpp` is the guard, in the fast label: four games from
 S147's run replayed move by move through one process at fixed node budgets,
 which is the only shape that reproduces any of this -- `test_mate_pv` gives
 every case its own `ucinewgame`, and on a cold table the first two do not
-exist. The third does: S294 found it at cold cells, one guarded by
-`test_mate_pv` (the aborted-line fallback runs there) and one the known bug
-above.
+exist. The third does: S294 found it at cold cells, both guarded by
+`test_mate_pv`, one per half of the aborted-line fallback (S294, S295), and
+its cut and the completed line's own check by cases on constructed lines.
 It asserts three things, and the split is S204's, DEC-162. **A line at least as
 long as the distance it claims ends in checkmate at exactly that distance** --
 DEC-122's own guarantee, asserted at zero, at whatever budget the row carries
 and pinned to none; measured 0 in 881 mate lines over both sides of the sweep
-grid by `adocs/data/S204_class_census.py`, and broken outside the fixture by
-the known bug above (S295). **A line shorter than the distance it
+grid by `adocs/data/S204_class_census.py`, and broken outside the fixture
+once, by the long aborted line S295 closed. **A line shorter than the distance it
 claims is counted against a per-case ceiling** rather than forbidden, because
 DEC-122 leaves it short on a failed walk and S202 owns closing the class; the
 ceiling is the worst cell the recorded grid shows for that case. **A majority of

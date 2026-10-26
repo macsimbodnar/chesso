@@ -235,6 +235,21 @@ struct aspiration_search_t
   bool aborted;
   move_t best_move;
   move_t pv_move;  // the first move of its PV, 0 when it has none
+  // Its PV's length as search() returned it, before the reporting layer
+  // touches it: for an aborted search the line as the iteration left it, which
+  // the loop may then complete, replace or cut (S295).
+  size_t pv_length;
 };
 
 const std::vector<aspiration_search_t>& uci_last_aspiration_searches();
+
+// The aborted path's line choice, S295: what iterative_deepening_search() does
+// to an aborted iteration's line, after the walk, beside the last completed
+// mate score `mate_in` -- `line` replaced by `last_complete`, cut, or left.
+// Test instrumentation like the record above: the engine calls the function
+// behind it and nothing in the engine calls this. `root` is the position both
+// lines start from and is left as it was.
+void uci_aborted_mate_line_probe(game_t* root,
+                                 pv_t* line,
+                                 const pv_t* last_complete,
+                                 int mate_in);

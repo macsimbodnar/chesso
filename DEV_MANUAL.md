@@ -1910,7 +1910,11 @@ both reporting only and both INV-6 identical:
   the move played. That is S170's third cause, and it is what
   `F_mate6_inherited_no_line` showed at its own cell on `fe5d3b3`; since S294
   it is guarded by `test_mate_pv`'s cold-table cell, F's cell no longer
-  reaching it.
+  reaching it. Since S295 the same holds for a line the walk leaves at or past
+  the distance without a checkmate there, which until then was printed as it
+  was (`adocs/data/S294_aborted_long_line.txt`), and such a line with no
+  completed line to give way to -- another first move, or a completed line
+  that does not reach its own mate -- is cut to one ply under the distance.
 
 Over the same grid the two fixes take 33 short lines to 19, with the mate-line
 count unmoved at 873. The census that replaces the standing 8 is
@@ -1926,9 +1930,14 @@ The reproducible half of the same property is `test_mate_pv`, in the fast label
 since S147: every `info` line carrying a mate score over both S145 sets, 706 of
 them at depth 8, asserted for length and for ending on checkmate -- and since
 S294 one node-limited cell that ends inside an iteration, the guard of S202's
-aborted-line fallback (its golden is in "Goldens: named, scripted,
-re-derived" below). The two are complementary and neither replaces the other —
-this one names the FEN and the depth and runs in the completion gate,
+aborted-line fallback, and since S295 a second, the guard of the same path for
+an aborted line already past its distance and not mate there (both goldens are
+in "Goldens: named, scripted, re-derived" below), and two cases on
+constructed lines for the branches no search measured reaches: the aborted
+path's line choice, and the cut `search()` makes on a completed line at or
+past its distance that is not mate there. The two are complementary and
+neither replaces the other — this one names the FEN and the depth and runs in
+the completion gate,
 `-check-mate-pvs` sees the positions two engines actually meet.
 
 **When a count comes back above the standing figure**, the question is which
@@ -2246,7 +2255,8 @@ grep -rn 'GOLDEN (DEC-142)' tests/
 | `test_engine.cpp` `first_mate_depth` and `mate_in` | **9 and 9** since S261 (10 and 9 since S116), and 5 on both positions; S083's refit left both (`adocs/data/S083s_first_mate.txt`); S135's piece placement fit left both (`adocs/data/S135_goldens.txt`); S292's narrowed null-move guard left both (`adocs/data/S292_goldens.txt`); S099's pawn correction, relanded by S286, left both, re-read by the script (`adocs/data/S286_first_mate.txt`) — the iteration a mate score first appears at, and the distance every iteration from there on reports. A bare measurement with no re-derivation until S188, whose extension found both an iteration earlier (8) and whose H0 put them back at 9; the absence of a script was itself a DEC-142 finding and it is closed. S115 re-read it with the script on the pull-only Release build of the tree it lands on -- the tree S114 verdict 1's removal leaves, `build/src/chesso` copied aside as `.ref-builds/bin/cand_release` -- and it did not move under the fail-low pull (9 and 9, the parent's); the root fail-high reduction built beside the pull on the step's first tree moved the first position's to 12, past the case's ten iterations, which is one of the three reds that refused it (DEC-245). S116's razoring moved the first position's to 10 (`d9:cp1135 d10:mate5`) and left the second at 9, re-derived by the script (DEC-248) | `adocs/data/S188_repair_goldens.py first-mate`, which prints every iteration's kind and value, the first mate's depth, the precondition below it and the set of distances |
 | `test_uci_surface.cpp` option-line count | 5 | `printf 'uci\nquit\n' | ./build/src/chesso | grep -c '^option name'` |
 | `test_invariants.cpp` the five census floors | 1000000, 7000, 90, 100000, 100000 | `python3 adocs/data/S190_walk_census.py` |
-| `test_mate_pv.cpp` "an aborted iteration's line printed beside a completed mate reaches it", its cell | **since S294**: line 162 (game 4593) of `S145_mined_set.tsv` at `go nodes 150000`, cold table, Hash 16 -- the middle of the run 100000..200000 where the shipped build's last line reaches its mate and `MW02_aborted_line_no_fallback`'s is short (`adocs/data/S294_fallback_pick.txt`). MW02's kill rests on it: no cell of the S170 grid reaches the fallback on `dcb3d83` (`adocs/data/S294_mw02_reach.txt`) | the four stages in `adocs/data/S294_fallback_cell.py`'s header: `apply` MW02 to a throwaway worktree and build it, `sweep` both builds, `pick` |
+| `test_mate_pv.cpp` "an aborted iteration's line printed beside a completed mate reaches it", its cell | **since S294**: line 162 (game 4593) of `S145_mined_set.tsv` at `go nodes 150000`, cold table, Hash 16 -- the middle of the run 100000..200000 where the shipped build's last line reaches its mate and `MW02_aborted_line_no_fallback`'s is short (`adocs/data/S294_fallback_pick.txt`). MW02's kill rested on it alone: no cell of the S170 grid reaches the fallback on `dcb3d83` (`adocs/data/S294_mw02_reach.txt`); since S295's run 2 the constructed-lines case kills MW02 too (`adocs/data/S295_mutation.tsv`) | the four stages in `adocs/data/S294_fallback_cell.py`'s header: `apply` MW02 to a throwaway worktree and build it, `sweep` both builds, `pick` |
+| `test_mate_pv.cpp` "an aborted iteration's line longer than the mate beside it gives way to the completed line", its cell | **since S295**: line 168 (game 5850) of `S145_mined_set.tsv` at `go nodes 140000`, cold table, Hash 16 -- the middle of the run 80000..200000 (margin 60000 either side) where this build's last line is the completed depth 8's, checkmate at its distance, and `MW03_long_aborted_line_kept`'s is the aborted 9-ply line beside `mate 4` (`adocs/data/S295_long_pick.txt`); 1 of 318 positions separates. MW03's kill rested on it alone, and since S295's run 2 the constructed-lines case kills MW03 too: the cut-short line past its distance occurs at that position alone over the mined grid and at none of the S170 grid (`adocs/data/S295_census.txt`) | the four stages in `adocs/data/S295_long_line.py`'s header: `apply` MW03 to a throwaway worktree and build it, `sweep` both builds, `pick` |
 
 `test_engine.cpp`'s `MATE_DEPTH_SLACK` is marked **NOT A GOLDEN** at its site
 for the same reason the others are marked: it is a depth budget the mate reading

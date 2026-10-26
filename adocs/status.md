@@ -7,6 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-26, by hand.
 
+## 2026-10-26: S295 done; S296 next, BUGS-binding, before S136
+
+**S295 done** (one Opus 5.5 subagent, `../chesso-s295`, fast-checked
+twice): no line that misses its distance is printed beside `score mate N`
+any more. On the aborted path a line at or past the distance must be
+checkmate there (`mate_pv_reaches()`), else it gives way to the completed
+line of the same move, or is cut one ply under the distance, never below
+the move played; `search()` cuts a completed iteration's line the same way
+(`cut_unreached_mate_pv()`), so DEC-122's guarantee is checked, not only
+measured. Reporting only, INV-6 identical (bench 5184358, search_bench d9
+and d12). Guards: a `test_mate_pv` cell (S145 mined line 168, `go nodes
+140000`, `adocs/data/S295_long_line.py`) red on the shipped tree, two
+constructed-lines cases; MW01-MW06 killed. Census 13 wrong lines -> 0, the
+S170 ceilings unmoved. gate_extra 5 stages ok, Debug self-play Assertion 0.
+The first `search()` cut underflowed at `mate 0`; caught by `test_search`
+in the worktree and fixed before landing.
+
+**Found by S295, BUGS-binding (DEC-318)**: the completed `mate 4` on that
+cell, one move short of Stockfish's mate in 5, comes from a non-PV node at
+depth 3 that skipped six replies by quiet SEE and late move pruning (among
+them the only two escapes) and returned its fail-soft mated best; the table
+carried it to the root (`adocs/data/S295_trace.txt`). Returning alpha there
+restores mate 5. **S296 next**: two forms measured, one shipped, decided by
+a `{-5, 0}` SPRT; then S136 (tempo).
+
 ## 2026-10-26: S135 read H1; the piece placement fit ships; S294 next
 
 **S135's SPRT read H1** in 6 h 17 m (`adocs/data/S135_sprt.log`, archived
@@ -37,10 +62,8 @@ iteration can print that iteration's line, longer than the completed mate
 beside it and not mate at the claimed distance, with `ponder` from it
 (`adocs/data/S294_aborted_long_line.txt`, S145 mined line 168); the
 completed `mate 4` is one move short of Stockfish's mate in 5 as well.
-MANUAL.md's Known bugs and specs.md carry it. **S295 in progress**
-(`plan_current/`, one Opus 5.5 subagent in `../chesso-s295`,
-`.tuning/coord/S295/brief.md`): the reporting fix (INV-6) and the
-distance's trace. Then S136 (tempo).
+MANUAL.md's Known bugs and specs.md carry it. S295 followed: the reporting
+fix (INV-6) and the distance's trace.
 
 ## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
 

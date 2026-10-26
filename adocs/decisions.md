@@ -16048,3 +16048,51 @@ Consequences: S136 waits for S295. S136's pre-registration names any part of
               S295 still open. If (2) is a known price (DEC-158's class or
               another recorded one), it is recorded as such, and MANUAL.md's
               rows are restated to what the engine guarantees.
+
+## DEC-318  2026-10-26  S295's short mate distance is a new BUGS-binding defect: a node that skipped moves returns a fail-soft mated best; S296 fixes it by a measured search change before S136
+Tags:         search, mate, pruning, late-move-pruning, see-pruning, transposition-table, fail-soft, s295, s296, s294, s292, s136, dec-310, dec-317, dec-171, dec-158, dec-221, sprt, non-regression, bugs
+Context:      S295 traced reading (2) of DEC-317 (`adocs/data/S295_trace.txt`,
+              re-taken by `adocs/data/S295_trace_patch.py`). On S145 mined line
+              168 the completed depth-8 iteration reports `mate 4` where
+              Stockfish at depth 20 reads mate in 5 by h1g1. The claim starts
+              in iteration 7 at a non-PV node at ply 5, depth 3: it searched 9
+              replies, each mated, skipped six by quiet SEE pruning and late
+              move pruning, and returned its fail-soft mated best (-48993) as
+              its bound. python-chess finds exactly two of White's 15 replies
+              that avoid mate in one, g2g3 and g2g4, both SEE-pruned;
+              Stockfish reads the node `#-2`. The table carried the bound up
+              to the root through two stored lower bounds and one reduced
+              search. In a scratch build, returning alpha there on a mated
+              fail-low after a skip makes depth 8 read mate 5 (74605 nodes
+              against 61914); the shipped engine reads mate 5 at depth 9.
+              DEC-158 prices reverse futility's missed or longer mates, and
+              DEC-310 guards the null move against mated bounds from nodes
+              that skipped moves, but no decision prices a reported mate
+              shorter than the position's.
+Decision:     By the coordinator under the owner's standing instruction. A
+              reported score shorter than the position's value is
+              **BUGS-binding under DEC-171 (c)**, as DEC-311 read (c). S295
+              completes on its reporting fix (INV-6) and this trace. **S296**
+              fixes the cause before S136. It is a search change, so it alters
+              play and is measured alone: the candidate forms are measured on
+              the mate sets (S145, S289's four, S170, the S294 grid) and
+              S292's ordinary-play census, without an SPRT. The forms are
+              (a) a node that skipped a move and fails low with a mated best
+              returns a bound that does not claim the mate (alpha, or the
+              mated band's edge), and (b) the shallow-depth move-loop pruning
+              (quiet SEE pruning, late move pruning, futility) is not applied
+              while no searched move has escaped the mated band. Each is
+              implemented from its description (DEC-221), one is chosen with
+              the figures, and a `{-5, 0}` SPRT at 8+0.08, Hash 16, against
+              its parent decides it, as DEC-310's did.
+Why:          (c) binds a reported score with no ordinary-play limit, and a
+              mate claimed one move short is a wrong score, not a missing one.
+Rejected:     Recording it as a price: no decision prices it. Folding it into
+              S295: S295 is reporting only and INV-6 decides it; a search
+              change is measured alone. Choosing (a) or (b) by argument: DEC-310
+              rejected storing alpha at such nodes as unmeasured, so both are
+              measured first.
+Consequences: S136 waits for S296. MANUAL.md's Known bugs carries the short
+              distance until S296 lands. If neither form clears the mate sets
+              without losing a mate the shipped tree reports, S296 stops and
+              returns to the coordinator with both forms' figures.
