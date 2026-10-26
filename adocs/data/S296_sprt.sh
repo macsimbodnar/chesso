@@ -114,9 +114,20 @@
 # filler (adocs/plan_todo/, 2026-10-26). The harness is S293's and S135's
 # runs': `fastchess.sh` last changed `769ce7a` (S284, 2026-10-15), the same
 # fastchess, book and workstation, so no A/A is owed (DEC-143).
-# [COORDINATOR: the pin -- CAND and REF with their benches and gate, the Open
-# list re-read at the pin commit, the harness against the last A/A, the Debug
-# self-play and gate_extra figures, and when the run starts.]
+# Pinned by the coordinator 2026-10-26 16:45: CAND `25b332b` (S296's rule,
+# bench 5069022, gate green) and REF its parent `b477459` (bench 5184358, src/
+# equal to `c8f1744`'s, S295's reporting fix). The Open list at main's pin
+# commit re-read: no DEC-171 filler is open (adocs/plan_todo/ holds none). The
+# harness is S135's run's of 2026-10-26 -- fastchess alpha 1.8.1
+# 20260720-daa3ea2, `noob_3moves.epd`, `fastchess.sh` last changed `769ce7a`
+# (S284), the same workstation and kernel 7.2.6 -- so no A/A is owed
+# (DEC-143). Before the run: fast suite 50/50 in both builds, Debug self-play
+# 8 games on S296's tree, 0 Assertion and 0 disconnect, gate_extra 5/5 green
+# on S296's tree (src/ changed in comments only after both). Root 76's ruling
+# and the form's are DEC-319's. The run starts when the workstation is back
+# on (the owner shut it down before it began): 12 to 20 h is the night's run
+# and the day's (DEC-155), and nothing better needs the machine, since S136
+# waits behind S296 by the BUGS rule.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -168,8 +179,8 @@ fail()
 # S292_sprt.sh's same block reads them: pinned, refused if set to anything
 # else, and passed on the exec line; ROUNDS, BARE_FEN, SRAND and AA refused if
 # set at all; RELAY_PYTHON unset; OUT overridden.
-ref="[COORDINATOR: REF, the full sha of CAND's parent]"
-cand="[COORDINATOR: CAND, the full sha of S296's commit]"
+ref="b477459e0372ad83839cdd3de1ba88a500980fcb"
+cand="25b332b6e0d00b817588e33da20a20f25027f46a"
 tc="8+0.08"
 hash="16"
 concurrency="12"

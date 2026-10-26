@@ -39,8 +39,25 @@ return `alpha0`, bench 5184358 -> 5069022. Its one lost proof, S145 root
 (`adocs/data/S296_root76.txt`). `EXACT_FLOOR` 158 -> 159 (non-separating;
 `MATE_IN_THREE_FLOOR` carries `RfpMinPly` 1's separation), S295's node cell
 retired, S294's re-picked, S170 budgets A and C by the picker. Fast-checked;
-gate_extra ok, Debug self-play Assertion 0. **The `{-5, 0}` SPRT runs
-next** (`adocs/data/S296_sprt.sh`, about 12 h, 20 h worst case).
+gate_extra ok, Debug self-play Assertion 0. **The `{-5, 0}` SPRT is pinned
+and not started**: `25b332b` against its parent `b477459`
+(`adocs/data/S296_sprt.sh`, about 12 h, 20 h worst case, abort at 40 h). The
+owner shut the workstation down on 2026-10-26 before it began.
+
+**Resume here after the restart:**
+1. Check the reason for the shutdown is known (owner's), `git status` clean
+   at the pin commit, no stray `chesso`/`fastchess` process, the load idle.
+2. Start the run detached from the main checkout:
+   `nohup adocs/data/S296_sprt.sh > .tuning/s296_sprt.console 2>&1 &`, then
+   read the banner (both shas and dates, bounds `{-5, 0}`, 41900 games) and
+   arm a watcher polling the console for `SPRT-RUN-(DONE|FAILED|INVALID)`,
+   the PID, and a 40 h ceiling. No build or gate while it runs (DEC-260).
+3. On the verdict: S135's close procedure (inspect, trim into
+   `adocs/data/S296_sprt.log`, archive to Synckeeper, README row, the Record
+   commit with DEC-220's block moving S296 to `plan_done/`, then the ledger
+   commit). H1 or no verdict: the rule stays. H0: inspect, revert whole, the
+   owner rules (the script's pre-registration).
+4. Then S136 (tempo).
 
 ## 2026-10-26: S135 read H1; the piece placement fit ships; S294 next
 
