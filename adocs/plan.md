@@ -371,32 +371,31 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S135  **the piece placement family's joint fit: H1 at 8+0.08, `{0, 5}`, it ships** -- bad bishop (with its rammed share) and trapped pieces added as four columns at zero from CPW's descriptions (DEC-258, DEC-314); screened one term at a time (DEC-315): the bishop pair, both rook files and trapped kept, bad bishop dropped and held at zero, in no expression since the per-column form; the survivors fitted `--only piece_placement` on S083's corpus, held-out 0.071831 -> 0.071725; `18c2d9a` against `62aa1b9`: LLR 2.98 over 13406 games, nElo +7.86 +/- 5.88, 0 forfeits; cost +0.92 % to +3.92 % inside the verdict; bench 3945487 -> 5184358, S170 ceilings D 0 -> 1 and E 1 -> 2 inside DEC-299's guard, both mate floors held, DEC-316's gradient rows. 2026-10-26.
 - S290  **the S170 budget picker tracked in the tree** -- `adocs/data/S170_pick_budgets.sh`, the awk program the original's byte for byte; re-run on S083's grid it reproduces `01222f3`'s budgets exactly (`adocs/data/S290_picker_check.txt`), and every site that names the budgets names the tracked path; comments only, no play change. 2026-10-25.
 - S083  **the evaluation refit on S082's pool at 46 rows a game: H1 at 8+0.08, `{0, 5}`, it ships** -- curve 0 read stop at 6226944 rows (held-out L 0.071838 against 0.072864, DEC-304), the queen re-anchored (DEC-307), re-landed on S292's and S293's guards; the working tree against `e972bd4`: LLR 2.94 over 568 games, Elo +116.07 +/- 23.26, nElo +153.75 +/- 28.57, 0 forfeits, all 396 adjudicated winners confirmed by Stockfish; the owner's five rulings (DEC-313): `EXACT_FLOOR` 158, `MATE_IN_THREE_FLOOR` 11 not separating, the ply-2 clause 6, the multicut row retired, the gauge-walk floor 0.01; DEC-312 ratified; bench 6042933 -> 3945487. 2026-10-25.
 - S293  **reverse futility's whole-search mated guard: H1 at 8+0.08, `{-5, 0}`, it stays** -- no reverse futility where the entry is a mated upper bound or exact score written by a node that skipped no move (S292's condition, DEC-311, DEC-312); mined row 171's loss under it traced first to reverse futility at another node with no entry (DEC-158's price); `ad0cfc7` against `6ebeadc`: LLR 2.96 over 10954 games, nElo +4.04 +/- 6.51, 0 forfeits; bench 6042933 unmoved, `EXACT_FLOOR`'s shipping end 164 -> 163 (floor held), S170 C 500000 -> 1500000 by the rule. 2026-10-23.
 - S291  **the multicut row S083's re-landing loses: reverse futility's known price, no rule at fault** -- at S083's constants on S292's tree, reverse futility cuts at ply 3 over a lower bound (`RfpMaxDepth` 4 restores the mate), so the row joins S083's H1 rulings (DEC-308 (2), DEC-311); found beside it, reverse futility failing high against a whole search's mated bound (90 returns over four mate sets, 0 in 11503 ordinary-play positions), ruled BUGS-binding under DEC-171 (c) and taken by S293. 2026-10-23.
-- S289  **the mate S083's paste hid: the null move against the table's mated bound, closed by S292's narrowed guard** -- traced from the engine's output (the reduced search stores the defender's mated upper bound, the re-search's null move fails high against it), reached at the shipped weights (six of S165's 31 roots mated in two), fixed in `cd50178`, whose guard read H0 (nElo -10.68 +/- 7.29) and was reverted (DEC-309); completes on S292's H1 (DEC-310): its cases red first and green at the paste's constants; the ply-2 case's `first_exact` (late move reduction, 6 against 4), `EXACT_FLOOR` 158 against 163 and the mate-in-three floor's separation are the owner's on S083's H1 (DEC-307 (4)). 2026-10-23.
 
 ## Open
 
-1. S135  **in progress: the bad-bishop and trapped-piece columns landed at weight zero (DEC-314); the cost run, the screen (DEC-315), the candidate fit and its one `{0, 5}` SPRT next** -- unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family
-2. S294  **filler, DEC-171: behind S135; found by S083's mutation pass, the same at `e972bd4`** -- the mutant list's two off-list verdicts closed: MW02 killed by a guard that still reaches its line, H04 built
-3. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
-4. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
-5. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
-6. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
-7. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
-8. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-9. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
-10. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-11. S102  outpost and space terms in the evaluation, one family
-12. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-13. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-14. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-15. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-16. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-17. S030  move_t drops the moving piece and becomes 16 bits
-18. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-19. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-20. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-21. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+1. S294  **filler, DEC-171: next, S135 closed; found by S083's mutation pass, the same at `e972bd4`** -- the mutant list's two off-list verdicts closed: MW02 killed by a guard that still reaches its line, H04 built
+2. S136  unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
+3. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
+4. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
+5. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
+6. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
+7. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+8. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
+9. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+10. S102  outpost and space terms in the evaluation, one family
+11. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+12. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+13. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+14. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+15. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+16. S030  move_t drops the moving piece and becomes 16 bits
+17. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+18. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+19. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+20. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play

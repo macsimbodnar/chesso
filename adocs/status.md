@@ -7,6 +7,25 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-26, by hand.
 
+## 2026-10-26: S135 read H1; the piece placement fit ships; S294 next
+
+**S135's SPRT read H1** in 6 h 17 m (`adocs/data/S135_sprt.log`, archived
+untrimmed as `chesso_S135_sprt_2026-10-26.tar.xz`): `18c2d9a` against
+`62aa1b9`, 8+0.08, Hash 16, `{0, 5}`, 13406 games, Elo +5.88 +/- 4.40, nElo
++7.86 +/- 5.88, LLR 2.98, 0 forfeits. Inspected first: banner as pinned,
+both binaries at their bench (5184358, 3945487), no crash or disconnect,
+six incomplete mating PVs in two of the candidate's games and none from the
+reference, quarters +5.6, -2.5, +13.8, +6.6, journal clean. A `chesso`
+general protection fault in the kernel log at 2026-10-25 17:43:37 is S083's
+mutation pass's M01 mutant (killed by SEGFAULT, by design), not an engine
+bug. **The five fitted placement weights ship**; bad bishop and its rammed
+share stay at zero, in no expression. No bisection follows an H1. Cost
++0.92 to +3.92 %, inside the verdict. The closing commit rewrote
+`evaluation.hpp`'s owed paragraph and the other comments the H1 made false,
+bench unmoved. Closed by one Opus 5.5 subagent in `../chesso-s135f`.
+
+**Next**: S294 (DEC-171 filler: MW02 and H04), then S136 (tempo).
+
 ## 2026-10-25: S083 landed on its H1 with the owner's five rulings; S290 next
 
 **S083's SPRT read H1** in 16 m (`adocs/data/S083_sprt.log`, archived
@@ -70,10 +89,6 @@ held-out 0.071831 -> 0.071725 at `.tuning/s135/candidate/fit.hpp`.
 forced +3.92 %, S135's four +3.30 %, S027's three +0.92 %, the zero landing
 free. Reading at `.tuning/coord/S135/cost_reading_run2.txt`.
 
-**Running**: the apply, the dropped column's vector-lane check and the
-goldens, by a fresh agent in `../chesso-s135e` (`.tuning/coord/S135/brief_apply.md`,
-1 to 3 h, from 23:36).
-
 **The candidate is committed** (2026-10-26): the joint fit pasted, bench
 3945487 -> 5184358; the placement sum's form changed so the zero-weighted
 bad bishop is in no expression (g++ had computed it in a vector lane; INV-6
@@ -86,10 +101,8 @@ ill-conditioned): the owner ruled fixture rows (DEC-316), one pair by
 `adocs/data/S135_gradient_rows.cpp`'s rule; the AdaGrad walk margin is now
 0.0135 against 0.01. Fast-checked twice; 50/50 in both builds.
 
-**Next**: pin `adocs/data/S135_sprt.sh` (CAND the candidate, REF `62aa1b9`)
-and run the `{0, 5}` SPRT at 8+0.08 (up to about 20 h, the night). On H1 the
-closing commit also rewrites `src/evaluation.hpp`:150-157 (owed, step file).
-Open filler to name in every pre-registration: S294.
+**SPRT started** 2026-10-26 00:52: `18c2d9a` against `62aa1b9` (pinned
+`7a23405`), `{0, 5}` at 8+0.08, Hash 16; banner as pinned.
 
 ## 2026-10-23: S293's guard read H1 and stays; S083 re-lands on it next
 

@@ -1212,7 +1212,8 @@ TEST_SUITE("evaluation: packed score")
     // The copies the evaluation reads, not fresh packings of the plain arrays:
     // a pair packed the wrong way round where the copy is defined is what this
     // guards, and the bench stops guarding it the moment a refit moves the
-    // bench anyway -- for placement and tempo, all zero, it never could.
+    // bench anyway -- for tempo and placement's two bad bishop columns, whose
+    // weights are zero, it never could.
     const auto halves_match = [](const std::string& table,
                                  const score_t* packed, const int* mg,
                                  const int* eg, int n) {

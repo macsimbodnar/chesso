@@ -29,8 +29,8 @@
 //
 // The second is not implied by the first. A coefficient recorded against the
 // wrong index is invisible to the identity wherever the two weights involved
-// are equal, and piece placement and tempo ship at zero, where any
-// coefficient at all satisfies it.
+// are equal, and tempo and piece placement's two bad bishop columns ship at
+// zero, where any coefficient at all satisfies it.
 
 namespace
 {

@@ -1,14 +1,14 @@
 id:         S135
 goal:       unfreeze the piece placement group, add bad-bishop and trapped-piece features, and refit it, one SPRT over the family by the owner's decisions of 2026-08-20 and 2026-10-08
 accepts:    S134 has landed first, so the group is three identified features and carries no unidentified column -- a bundled verdict over this bundle is at least attributable, which S027's was not; the fit is `--only piece_placement` on the corpus S082 and S083 produce, so the SPRT measures the term and not a joint refit of the other 820 constants; bad-bishop and trapped-piece features join the group (DEC-258), each defined from its description before any fit (CPW *Bad Bishop*, *Trapped Pieces*) and each feature screened before the one SPRT (DEC-259); the SPRT bounds are chosen for the effect size and stated in advance, not `--fast` -- DEC-063 is the measurement that the pair and not the hardware sets the cost, and the published parts are +8.2 and +9.86 (DEC-084, order of magnitude only); the term's own speed cost is inside its verdict, measured with the weights forced non-zero because at zero the compiler deletes it (DEC-047); a verdict of zero is recorded as zero, and **if the bundle fails it is bisected** rather than zeroed by hand, which is the S027 failure this step exists not to repeat (DEC-082's bisect rule); the fast suite green
-touches:    src/evaluation.cpp piece_placement_mg/eg and the four new counts, src/evaluation.hpp, tools/tuner_groups.hpp, tools/tuner.cpp, tools/tuner_layout.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_eval_positions.hpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_walked_counts.hpp, tests/test_evaluation.cpp and every other golden the fit's paste moves (each re-derived by its script: tests/test_search.cpp, tests/test_mate_breadth.cpp, tests/test_engine.cpp, tests/test_mate_carry.cpp, adocs/data/S170_cases.tsv, adocs/data/S192_anchors.py, MANUAL.md), src/evaluation.cpp add_placement_column (the placement sum's form, behaviour-neutral), tests/test_eval_positions.hpp's DEC-316 pair, tools/tuner_trace.hpp (one comment's parameter count, at the rebase; the trace's term table reads the width), .tuning/verify_fit.py, DEV_MANUAL.md, adocs/data/README.md, adocs/data/S135_*; src/eval_tables.hpp named before phase 1 and needing no change (the tables are not fitted)
+touches:    src/evaluation.cpp piece_placement_mg/eg and the four new counts (their comments again at the SPRT's closing commit), src/evaluation.hpp (the definitions; the placement comments at the SPRT's closing commit), tools/tuner_groups.hpp, tools/tuner.cpp, tools/tuner_layout.hpp, tools/feature_audit.cpp, tests/test_eval_model.cpp, tests/test_eval_positions.hpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_walked_counts.hpp, tests/test_evaluation.cpp and every other golden the fit's paste moves (each re-derived by its script: tests/test_search.cpp, tests/test_mate_breadth.cpp, tests/test_engine.cpp, tests/test_mate_carry.cpp, adocs/data/S170_cases.tsv, adocs/data/S192_anchors.py, MANUAL.md), src/evaluation.cpp add_placement_column (the placement sum's form, behaviour-neutral), tests/test_eval_positions.hpp's DEC-316 pair, tools/tuner_trace.hpp (one comment's parameter count, at the rebase; the trace's term table reads the width), .tuning/verify_fit.py, DEV_MANUAL.md, adocs/data/README.md, adocs/data/S135_* (S135_sprt.log, the trimmed run, at the closing commit), this file; src/eval_tables.hpp named before phase 1 and needing no change (the tables are not fitted)
 excludes:   tempo, which is S136; the seventh-rank feature, deleted at S134; any change to how the three features are computed
 decisions:  DEC-091, DEC-057, DEC-063, DEC-084, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
-done:
+done:       2026-10-26 07:30 -- H1 at {0, 5} nElo, 8+0.08, Hash 16, CAND 18c2d9a vs REF 62aa1b9: Elo +5.88 +/- 4.40, nElo +7.86 +/- 5.88, LLR 2.98, 13406 games, 6 h 17 m, 0 forfeits (adocs/data/S135_sprt.log, archived as chesso_S135_sprt_2026-10-26.tar.xz); the banner as pinned (7a23405), both binaries at their bench (5184358, 3945487), no crash or disconnect, six incomplete mating PVs in two of the candidate's games, quarters +5.6, -2.5, +13.8, +6.6, kernel journal clean, so by the pre-registered H1 row the five fitted placement weights ship (the bishop pair, rook on an open and a half-open file, trapped minor and trapped rook; DEC-259, DEC-315), bad bishop and its rammed share stay at zero as the screen dropped them, no bisection; the stopping Elo is not the effect size (DEC-063). The four columns defined from CPW's descriptions before any fit (DEC-258, DEC-314), each term screened, the survivors fitted `--only piece_placement` on S083's corpus with every other constant frozen, cost +0.92 % to +3.92 % inside the verdict; bench 3945487 -> 5184358, every golden by its script, DEC-316's fixture rows; the owed evaluation.hpp wording and twelve other placement comments (nine under src/, three under tests/) made true, bench unmoved; fast suite 50/50 in both builds. Implemented by Opus 5.5 subagents, fast-checked at each phase; the run the coordinator's, inspected and recorded by one Opus 5.5 subagent.
 
 ## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
 
@@ -1489,3 +1489,200 @@ Bench: 5184358
   ```
 
   A comment only, so the closing commit's bench stays the candidate's.
+
+## 2026-10-26: the SPRT read H1
+
+One Opus 5.5 subagent, in `../chesso-s135f` (branch `s135f` at `7a23405`),
+read only over the run's outputs and binaries; no match, fit or timing ran.
+
+### The run
+
+`adocs/data/S135_sprt.sh` as pinned at `7a23405`: `18c2d9a` (the candidate,
+bench 5184358) against its parent `62aa1b9` (the zero-weight landing plus the
+cost fix, bench 3945487), 2026-10-26 00:52 to 07:10, `SPRT-RUN-DONE`:
+
+```
+SPRT | cand 18c2d9a vs ref 62aa1b9, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 5.88 +/- 4.40, nElo 7.86 +/- 5.88
+LLR | 2.98 (-2.94, 2.94) -> H1
+Games | N: 13406 W: 3877 L: 3650 D: 5879, Ptnml [506, 1555, 2419, 1652, 571]
+Wall | 6 h 17 m, 2128.4 games/h, forfeits 0
+Log | adocs/data/S135_sprt.log
+```
+
+### The inspection, before the verdict was read as the record
+
+- **Banner** (the console's): candidate `18c2d9a 2026-10-26`, reference
+  `62aa1b9 2026-10-25` (both commits' dates; the pin's 00:47 and 21:52 are
+  `git log`'s), `arch native tune off`, padding on both, 8+0.08, hash 16,
+  12 of 12 cores, `noob_3moves.epd`, seed 20261026005214, `elo0=0 elo1=5
+  alpha=0.05 beta=0.05`, cap 20950 rounds and 41900 games, out
+  `.tuning/sprt_s135_20261026_005214`; no `diff`, `relay` or `A/A
+  CALIBRATION` line; `Started game 1 of 41900`. As the pin says.
+- **Binaries**: `.ref-builds/18c2d9a/build/src/chesso` benches **5184358**
+  and `.ref-builds/62aa1b9/build/src/chesso` **3945487**, both worktrees
+  clean at their sha. The candidate played from fastchess.sh's snapshot of
+  the first, removed at exit; that file was written at 00:52:19, before the
+  first game (00:52:25), and not since.
+- **Crashes, disconnects, illegal moves**: none in the console or
+  `fastchess.log`. 13406 games in the PGN, N's count, game numbers 1 to
+  13406 each once; terminations 8927 adjudication (7524 decisive, 1403
+  drawn), 4479 normal (4476 drawn, 3 decisive).
+- **Forfeits**: `tools/forfeit_report.py` 0 of 13406 for each engine.
+- **Console warnings**: 5 PV-past-threefold blocks (4 the candidate's, 1 the
+  reference's; `trim_console.py`'s count) and **6 `Incomplete mating PV`,
+  all the candidate's, in two games**: 6166 (mate 8, 10, 12 at depths 1, 3,
+  4 with lines of 1, 3 and 4 moves) and 7874 (mate 9, 11, 13 at depths 3, 4,
+  5 with lines of 3, 4 and 5 moves), the candidate Black in both and both won
+  by it on adjudication; none from the reference. The short-line class
+  `test_mate_carry` bounds (S202, DEC-162), whose ceilings this candidate
+  raised by the rule (D 0 -> 1, E 1 -> 2, the 2026-10-26 candidate section).
+- **Quarters**, in game-number order, 3351 or 3352 games each, Elo from the
+  score with its 95 % per-game interval (the method that reproduces S293's
+recorded +4.8, +2.4, +2.0, +2.4 from its PGN): **+5.6,
+  -2.5, +13.8, +6.6**, each +/- 8.8 to 8.9. Their spread about the run's
+  mean is chi-square 6.56 on 3 degrees of freedom, p 0.087.
+- **Kernel journal**, 00:50 to 07:12: no kernel entry at all, and no entry at
+  error level in the whole journal; one boot since 2026-10-22, no suspend.
+  (One older kernel line, a `chesso` general protection fault on
+  2026-10-25 17:43:37, is outside the window and before either binary was
+  built: the coordinator traced it to S083's mutation pass, mutant
+  `M01_nmp_in_check`, whose build log closes 17:43:37 with "no bench line",
+  killed by SEGFAULT -- by design.)
+- **A Stockfish check of the adjudicated games**: no recorded rule requires
+  one. S083's (DEC-313's context) was made for a 568-game early stop at +116
+  in which every decisive game was adjudicated, and no decision or project
+  rule makes it a requirement; the adjudication here is `fastchess.sh`'s
+  two-sided rule (DEC-174), the harness unchanged since S083's run (no A/A
+  owed, the pin's sentence).
+
+The run stands.
+
+### The verdict, by the pre-registration
+
+The H1 row executes: at 8+0.08 the family's fitted weights are accepted as
+gaining, H1's 5 nElo preferred to H0's 0 at alpha = beta = 0.05. **The
+survivors ship together**: the bishop pair, a rook on an open file, a rook on
+a half-open file and the two trapped counts, mg {-5, 23, 3, -40, -23} and eg
+{37, -4, 13, -68, -16} at columns 0, 1, 2, 5 and 6, as `18c2d9a` pasted them.
+**Bad bishop and its rammed share stay at zero**, the screen's drop, with
+its figures: its fit's best report was its start (train 0.069321 ->
+0.069309, validation 0.071831 -> 0.071839), so it never beat its start,
+let alone DEC-315's margin, and since S135's form neither column is in any
+expression. **The stopping run's Elo is upward-biased (DEC-063) and is not
+the effect size**: the run stopped at a bound in 13406 games, under the
+25591 the pre-registration expected with the truth on a bound. **No
+bisection follows an H1**, and none is owed.
+
+**The cost, beside it.** What the run paid is no row the cost run measured:
+the candidate computes S027's three and the two trapped counts
+(`evaluate_cheap()` popcnt 18), a superset of `old3`'s columns and a subset of
+`all`'s, so its cost lies between `old3`'s **+0.92 %** and `all`'s
+**+3.92 %**, `all` bounding it from above
+(`adocs/data/S135_cost_reading.txt`). It is inside the verdict; it decides
+nothing.
+
+### The trim and the archive
+
+`tools/trim_console.py --summary` from `.tuning/s135_sprt.log` (32278 lines)
+into **`adocs/data/S135_sprt.log`**, 32264 lines, 2209504 bytes: the 5
+PV-past-threefold blocks dropped (20 lines), counted at the foot; the six
+incomplete mating PV warnings kept. Its `adocs/data/README.md` row added.
+The untrimmed console and the run directory (`games.pgn`, `fastchess.log`)
+are **`chesso_S135_sprt_2026-10-26.tar.xz`** in the owner's archive
+(DEC-235), sha256 `ab99bc8b...b93d8833`, built, verified and moved in by the
+coordinator.
+
+### The owed wording, and the other comments the H1 made false
+
+Comments only; bench **5184358** in both builds.
+
+- `src/evaluation.hpp` over `piece_placement_mg`: the paragraph that said
+  the weights are zero in the source file replaced by the text the fast
+  check's second fix gives, verbatim; it now opens "Fitted since S135, five
+  of the seven".
+- `src/evaluation.hpp` over `piece_placement_counts()`: "these weights are
+  still zero" now names the two bad bishop columns, and the fitted five.
+- `src/evaluation.hpp` over the packed copies: the bench is blind to a
+  swapped pair "for placement and tempo, whose weights are all zero" now
+  reads tempo and placement's two bad bishop columns.
+- `src/evaluation.cpp` over the placement weights: the first paragraph
+  ("Zero, deliberately") in the past tense, landed at zero at S027 and again
+  at S135; "Nothing measured at these weights" names S027's zero weights;
+  "The 3.1 to 4.0 % is paid by the weights below" is S027's, in the past
+  tense; and "One SPRT decides whether these ship; on its H0 ..." replaced by
+  the H1, `adocs/data/S135_sprt.log`, no bisection, and the cost between
+  +0.92 % and +3.92 % inside the verdict.
+- `src/evaluation.hpp` over the placement definitions: "The three
+  definitions" introduced all seven columns' definitions, three under it and
+  the four S135 added further down the same comment; it now says seven and
+  where the four are (the coordinator's fix, false in S135's own area though
+  older than the H1).
+- The fast check's further five, each made true against the code at its
+  site: `src/evaluation.cpp` over the placement weights, "each of the
+  three" now seven, and the costs and verdict that follow named S027's
+  with S135's closing the comment; `tests/test_eval_trace.cpp` (the
+  coefficient identity), `tests/test_evaluation.cpp` (the packed halves'
+  case) and `tests/test_eval_model.cpp` (the engine-against-walk case) no
+  longer call piece placement zero, only tempo or the two bad bishop
+  columns. A sweep of `tests/` for any other comment calling placement
+  zero, frozen or unfitted found none (`test_tuner_gradient.cpp`'s
+  "the parent's zero placement weights" is the parent's, true).
+
+The rest of `evaluation.hpp`, `evaluation.cpp` and the tuner's comments
+(`tools/tuner.cpp`, `tuner_groups.hpp`, `tuner_layout.hpp`,
+`tuner_trace.hpp`, `feature_audit.cpp`) re-read: nothing else depends on
+the verdict (the conditional "leave with any revert of it" sentences in
+`tests/test_mate_carry.cpp` and `tests/test_engine.cpp` stay true).
+
+### Documents
+
+- `DEV_MANUAL.md`: checked; no statement the H1 makes false. Its S135 rows
+  (the goldens table, the gradient paragraph, the tuner's 831 and the
+  per-term `--only`) describe the shipped tree, and `--freeze
+  tempo,piece_placement`'s "hold two groups at zero" is S065's case,
+  described as such. Unchanged.
+- `MANUAL.md`: checked; the `RfpMinPly` row's figures are the shipped
+  tree's and nothing on the UCI surface moved. Unchanged.
+
+### The accepts, clause by clause
+
+- **S134 landed first, the group three identified features and no
+  unidentified column**: S134 done 2026-10-12 (DEC-090), before this step
+  started; the identity report over the 831 on S083's corpus reads rank
+  exactly 792, S134's 39 null directions and no more, the four new columns
+  identified (the 2026-10-25 rebase section). Holds.
+- **The fit `--only piece_placement` on S082's and S083's corpus, so the
+  SPRT measures the term**: the candidate is `--only piece_placement` with
+  the dropped term in `--freeze`, on S083's curve 0 (6226944 rows, sha256
+  `2e0e3de9...`); `verify_fit` 831 of 831 with only
+  `piece_placement_mg`/`_eg` moved; the script's guards held at the start
+  (CAND^ is REF, `src/eval_tables.hpp` the same, `src/evaluation.cpp` the
+  only file under `src/` that differs). Holds.
+- **Bad bishop and trapped pieces join the group (DEC-258), each defined from
+  its description before any fit, each screened before the one SPRT
+  (DEC-259)**: defined in `src/evaluation.hpp` from CPW's *Bad Bishop* and
+  *Trapped Pieces*, quoted there, and landed at zero weight (`76c4ad8`,
+  DEC-314) before the screen; the screen fitted each term alone against
+  DEC-315's margin and kept four, dropping bad bishop. Holds.
+- **SPRT bounds chosen for the effect size and stated in advance, not
+  `--fast`**: `{0, 5}` nElo at alpha = beta = 0.05, the reasons, the cap,
+  the abort rule and the three outcomes written in `S135_sprt.sh` on
+  2026-10-22 and pinned at `7a23405` before the first game. Holds.
+- **The term's own speed cost inside its verdict, measured with the weights
+  forced non-zero (DEC-047)**: the run played the fitted, non-zero weights;
+  the cost run's second reading forced them (all +3.92 %, new4 +3.30 %, old3
+  +0.92 %, the landing free) and bounds what the run paid. Holds.
+- **A zero recorded as zero; on failure bisected, never zeroed by hand**:
+  H1, so no bisection is owed; bad bishop's zero is the screen's, recorded
+  above with its figures. Holds.
+- **The fast suite green**: 50 of 50 in both builds at this commit, and at
+  `18c2d9a`. Holds.
+
+### Gates
+
+Both builds 0 warnings; the fast suite 50 of 50 in both; `./clang-format.sh
+--check` clean (`CLANG_FORMAT_MAJOR=22`); bench 5184358 in both builds;
+`tools/plan_prose_check.py` one mode a call. **Tier 2 (DEC-141) does not
+bind**: under `src/` the diff is comments in `src/evaluation.cpp` and
+`src/evaluation.hpp` alone, no code.

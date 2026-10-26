@@ -706,8 +706,9 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
 
   // The piece placement counts, engine against walk, over the same corpus, and
   // the case with teeth for this term for the reason the three pairs above have
-  // teeth: the trace records the engine's own counts, and these weights ship at
-  // zero besides, so no score comparison can see a miscount at all.
+  // teeth: the trace records the engine's own counts, and the two bad bishop
+  // columns still weigh zero besides, so no score comparison can see a
+  // miscount in those at all.
   //
   // walked_counts::piece_placement_features() reports White minus Black and
   // nothing else, which is the form the score weighs, so that is what can be

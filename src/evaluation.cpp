@@ -191,22 +191,23 @@ enum
 };
 
 
-// Zero, deliberately, and fitted by tools/tuner afterwards. Same staging as the
-// three terms above and for the same reason: at zero the commit is provably
-// behaviour-neutral, so the SPRT that follows measures the fitted term instead
-// of a guess. No published table was consulted, DEC-016.
+// Landed at zero, deliberately, and fitted by tools/tuner afterwards -- at S027
+// and again at S135. Same staging as the three terms above and for the same
+// reason: at zero the landing commit is provably behaviour-neutral, so the
+// SPRT that follows measures the fitted term instead of a guess. No published
+// table was consulted, DEC-016.
 //
-// The exact definition of each of the three is in evaluation.hpp, written out
+// The exact definition of each of the seven is in evaluation.hpp, written out
 // there because the walk in tests/test_walked_counts.hpp is built from it and
 // the two have to mean the same thing. What is here is why the arithmetic
-// below computes them the way it does. The costs and the verdict below were
-// measured on four features, rook on the seventh among them, before S134
-// deleted it.
+// below computes them the way it does. The costs and the verdict that follow
+// are S027's, measured on four features, rook on the seventh among them,
+// before S134 deleted it; S135's verdict and cost close this comment.
 //
-// **Nothing measured at these weights says anything about what they cost** --
-// clang sees the zeros and deletes the popcounts and the arithmetic that feed
-// them, DEC-047, and evaluate_cheap() disassembles to the same 164 instructions
-// with the term as without it.
+// **Nothing measured at the zero weights S027 landed says anything about what
+// they cost** -- clang sees the zeros and deletes the popcounts and the
+// arithmetic that feed them, DEC-047, and evaluate_cheap() disassembles to the
+// same 164 instructions with the term as without it.
 //
 // Forced non-zero with the other three terms already live, so the figure is the
 // marginal cost of adding this one and not the cost of the four: **3.1 % to
@@ -233,9 +234,9 @@ enum
 // of the general registers and back, +6 cnt.8b, +6 uaddlv.8b and +12 fmov for
 // 65 instructions on a function that was 164. The bishop pair is the one
 // feature that costs nothing -- clang rewrites count_bits(x) >= 2 into x & (x -
-// 1), so it compiles to a tst and a cset. The 3.1 to 4.0 % is paid by the
-// weights below and their SPRT is net of it; DEC-040 is the warning about
-// judging a term while its speed cost is still unpaid.
+// 1), so it compiles to a tst and a cset. The 3.1 to 4.0 % was paid by S027's
+// weights and their SPRT was net of it; DEC-040 is the warning about judging a
+// term while its speed cost is still unpaid.
 //
 // **S027's weights went back to zero because they measured zero.** They were
 // mg {2, 32, 8, -26} and eg {55, -8, 12, 11}, fitted with the other 817
@@ -311,9 +312,11 @@ enum
 // margin to play at all, so the bishop pair, the two rook files and the two
 // trapped counts were fitted together on S083's corpus, every other constant
 // frozen, and the bad bishop and its rammed share stay at zero because the
-// screen dropped them -- their fit never beat its start. One SPRT decides
-// whether these ship; on its H0 the paste reverts whole and the family is
-// bisected, never zeroed by hand.
+// screen dropped them -- their fit never beat its start. Their one SPRT,
+// `{0, 5}` nElo at 8+0.08, read H1 (adocs/data/S135_sprt.log), so the five
+// ship together and no bisection follows; their speed cost, between S135's
+// cost run's +0.92 % and +3.92 % on g++ 13.3
+// (adocs/data/S135_cost_reading.txt), is inside that verdict.
 constexpr int piece_placement_mg[PL_FEATURE_COUNT] = {-5, 23,  3,  0,
                                                       0,  -40, -23};
 constexpr int piece_placement_eg[PL_FEATURE_COUNT] = {37, -4,  13, 0,

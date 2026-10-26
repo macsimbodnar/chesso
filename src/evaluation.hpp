@@ -147,19 +147,22 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 // above: the tuner (tools/tuner_layout.hpp) starts from what the engine ships
 // instead of from a copy of it that would be free to drift.
 //
-// **Zero in evaluation.cpp, and not because the tuner has not reached them.**
-// S027 fitted piece placement (mg {2, 32, 8, -26} / eg {55, -8, 12, 11}),
-// its bundled SPRT read -5.48 +/- 11.46 and H0, and the weights were then
-// zeroed by hand and held there by `--freeze piece_placement` in every fit
-// since S065 (DEC-057) -- held at zero, not fitted to it; evaluation.cpp says
-// so beside the weights and adocs/plan_done/S100_*.md carries the ledger. The
-// passed pawn, pawn structure and king safety weights above and below ship
-// fitted since S027; tempo is zero for its own reason, stated at its block.
+// **Fitted since S135, five of the seven.** S027 fitted piece placement (mg
+// {2, 32, 8, -26} / eg {55, -8, 12, 11}), its bundled SPRT read -5.48 +/-
+// 11.46 and H0, and the weights were zeroed by hand and held there by
+// `--freeze piece_placement` in every fit from S065 to S083 (DEC-057). S135's
+// screen kept the bishop pair, both rook files and the two trapped counts, and
+// their joint fit ships on its SPRT's H1 (DEC-259, DEC-315); the bad bishop
+// and its rammed share stay at zero, dropped by the screen. evaluation.cpp
+// says so beside the weights, and adocs/plan_done/S100_*.md carries the
+// ledger. The passed pawn, pawn structure and king safety weights above and
+// below ship fitted since S027; tempo is zero for its own reason, stated at
+// its block.
 //
-// The three definitions, stated exactly, because the tuner's model is written
-// from this comment and the two have to mean the same thing. Each is about one
-// side's own pieces; the term is the White count minus the Black one, feature
-// by feature.
+// The seven definitions, stated exactly, because the tuner's model is written
+// from this comment and the two have to mean the same thing: the first three
+// here, the four S135 added further down. Each is about one side's own pieces;
+// the term is the White count minus the Black one, feature by feature.
 //
 //   bishop_pair     1 when the side has two or more bishops, 0 otherwise. Not a
 //                   count of bishops: it is the pair that is claimed to be
@@ -238,10 +241,10 @@ extern const int piece_placement_eg[7];
 // The raw counts the term is built from, per colour, WHITE first, in the
 // feature order above. Exists for tests/test_eval_model and per colour rather
 // than as the difference, for the reasons written out over
-// passed_pawn_counts(). Both of them apply here at full strength: these weights
-// are still zero, so no score sees these counts at all, and a miscount that
-// hits both sides equally would stay invisible in a difference after they are
-// fitted.
+// passed_pawn_counts(). Both of them apply here at full strength: the two bad
+// bishop columns still weigh zero, so no score sees those counts at all, and a
+// miscount that hits both sides equally stays invisible in a difference for
+// the five that are fitted.
 //
 // Not on the hot path: it is the collecting instantiation of the same function
 // evaluate_cheap() calls, so there is one extraction and no second
@@ -392,8 +395,9 @@ inline int taper(score_t score, int phase)
 // above, each derived from its mg/eg pair at compile time (S117). Declared for
 // the test that compares their halves with the plain arrays: a pair packed the
 // wrong way round is invisible to the bench once a refit has moved the bench
-// anyway, and invisible to it now for placement and tempo, whose weights are
-// all zero. The piece-square tables' copy, psqt_score, is in eval_tables.hpp.
+// anyway, and invisible to it now for tempo and placement's two bad bishop
+// columns, whose weights are zero. The piece-square tables' copy, psqt_score,
+// is in eval_tables.hpp.
 extern const std::array<score_t, 4> mobility_score;
 extern const std::array<score_t, KS_FEATURE_COUNT> king_safety_score;
 extern const std::array<score_t, 5> passed_pawn_score;
