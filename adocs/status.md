@@ -59,6 +59,14 @@ owner shut the workstation down on 2026-10-26 before it began.
    owner rules (the script's pre-registration).
 4. Then S136 (tempo).
 
+**Disk** (owner's approval, 2026-10-26): every worktree but the main checkout
+removed -- 32 of finished steps, S296's, the old reference builds and S135's
+cost trees -- 28 GB free -> 40 GB. Each one's diff against HEAD, untracked
+files, `.tuning/` and `config.json` are kept under
+`.tuning/coord/cleanup/<name>/` (`log2.txt`); the one HEAD no branch reached,
+S294's mutation fixture, carries `refs/keep/chesso_tuning_s294_mut`.
+Branches, corpora and run outputs under `.tuning/` untouched.
+
 ## 2026-10-26: S135 read H1; the piece placement fit ships; S294 next
 
 **S135's SPRT read H1** in 6 h 17 m (`adocs/data/S135_sprt.log`, archived
