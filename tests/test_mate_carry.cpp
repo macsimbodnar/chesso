@@ -390,12 +390,13 @@ static bool line_ends_in_mate(const std::string& fen,
 // DEC-295. S292's narrowed null-move guard moved none, nor did S293's reverse
 // futility table guard. S083's refit moved B 5 -> 6 and F 2 -> 3, inside
 // DEC-299's +2, applied by DEC-307 (3) with `EXACT_FLOOR` red. S135's piece
-// placement fit moved D 0 -> 1 and E 1 -> 2, inside DEC-299's guard.)
+// placement fit moved D 0 -> 1 and E 1 -> 2, inside DEC-299's guard. S296's
+// rule at a mated fail-low after a skipped move moved none.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 // adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
 // adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
-// adocs/data/S135_sweep_s170.txt
+// adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
 // (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
@@ -426,7 +427,7 @@ static bool line_ends_in_mate(const std::string& fen,
 //       adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 //       adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
 //       adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
-//       adocs/data/S135_sweep_s170.txt
+//       adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -463,7 +464,12 @@ static bool line_ends_in_mate(const std::string& fen,
 // on `cd50178`'s reverted tree and is not in the command. **S135's is the
 // sixth** (`adocs/data/S135_sweep_s170.txt`, S135's piece placement fit on
 // `62aa1b9`, 108 cells, 1408 mate lines and 5 short): it moves D and E,
-// below, and its budgets are in the TSV's header too.
+// below, and its budgets are in the TSV's header too. **S296's is the
+// seventh** (`adocs/data/S296_sweep_s170.txt`, a node that skipped a move and
+// found every searched move mated returning alpha, on fixture `c3ed9cd`
+// (b477459 plus the rule), 108 cells, 1229 mate lines and 10 short): it
+// moves no ceiling, and the budgets it re-derived, A and C, are in the TSV's
+// header.
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;

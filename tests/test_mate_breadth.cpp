@@ -167,7 +167,23 @@ static constexpr int SCORE_DEPTH = 10;
 // separates and is not moved: the owner set it (DEC-313 (1)), and a floor
 // that holds needs no decision. MATE_IN_THREE_FLOOR separates again there,
 // 13 shipping against 8 weakened.
-static constexpr int EXACT_FLOOR = 158;
+//
+// **159 since S296, the coordinator's ruling (DEC-319 (5)), re-derived by the
+// script (DEC-142).** S296's rule -- a node that skipped a move and found
+// every searched move mated returns alpha -- leaves the shipping end at 160
+// and raises the weakened one 156 -> 159: on its tree S156's sweep reads
+// **160** exact at RfpMinPly 3, 161 at 2 and **159** at 1 and 0
+// (`adocs/data/S296_goldens.txt`). The floor rises 158 -> 159, one below the
+// shipping count, DEC-313 (1)'s rule; 160, the only value that would still
+// separate, sits at the shipping count with no margin, which DEC-116 and
+// DEC-313 (2) reject, and S293's at-shipping floor is the one DEC-313 (1)
+// moved back. A rise, inside DEC-299's guard. **It no longer separates
+// RfpMinPly 1**: the gate built there with 159 compiled in reads 159 and
+// stays green on this count. That is DEC-313 (2)'s form with the roles
+// swapped -- tests/test_engine.cpp's MATE_IN_THREE_FLOOR carries the
+// separation again, 13 shipping against 8 weakened, the same weakened gate
+// red there at 8 >= 11. A revert of S296 puts 158 back.
+static constexpr int EXACT_FLOOR = 159;
 
 
 struct row_t

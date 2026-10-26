@@ -1,0 +1,22 @@
+# S296: tests/test_search.cpp "a node that skipped moves claims no mate it did not search", red on the shipped tree
+# and green after. 2026-10-26, worktree chesso-s296 at b477459.
+#
+# A. Red: b477459's src/ plus the probe's two fields (src/data_structures.hpp `loop_ended`, `loop_best`, and their
+#    write in negamax_at under PROBING) and the case; the rule absent. Every REQUIRE held -- 15 legal moves, the
+#    escapes exactly g2g3 and g2g4, the loop reached, both pruned, the loop's best mated -- and the property failed:
+#    ./build/tests/test_search -tc="a node that skipped moves claims*" (the binary also held the scratch case of the
+#    window sweep, S296_forms.txt section 6, hence 220 skipped against 219 below). The line numbers are the
+#    CHECKs' in the tree as handed over; the run printed 9728, 9729 and 9734, before the case's comment and
+#    clang-format moved them.
+tests/test_search.cpp:9733: ERROR: CHECK( value > -MATE_MIN_LOCAL ) is NOT correct!
+  values: CHECK( -48993 >  -48000 )
+tests/test_search.cpp:9734: ERROR: CHECK( value == ALPHA ) is NOT correct!
+  values: CHECK( -48993 == -2108 )
+tests/test_search.cpp:9739: ERROR: CHECK( entry->score > -MATE_MIN_LOCAL ) is NOT correct!
+  values: CHECK( -48998 >  -48000 )
+[doctest] test cases:    1 |    0 passed | 1 failed | 220 skipped
+[doctest] assertions: 1841 | 1838 passed | 3 failed |
+#
+# B. Green: the rule added (src/search.cpp, `node_value`; bench 5184358 -> 5069022), the same command:
+[doctest] test cases:    1 |    1 passed | 0 failed | 219 skipped
+[doctest] assertions: 1841 | 1841 passed | 0 failed |

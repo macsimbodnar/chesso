@@ -1,0 +1,186 @@
+# S296's candidate: every golden form (a) could move, each by its script (DEC-142), inside DEC-299's guard.
+# 2026-10-26, worktree chesso-s296 at b477459 plus form (a). Fixtures, commit objects on no branch: F1 c3ed9cdfa51bc77df4c13b841a7f833d9ecd306b
+# (form (a), its case, SK01-SK02; S154 and S156 --ref and the two cell worktrees), F2 8e241843bcf4a0862b8fdd224c7bf675684d4872 (F1 plus
+# EXACT_FLOOR 160, the re-derived cells and budgets; S156 --floor 160), F4 9f724046731168e14a774b0bb097561dfdc9a22a (EXACT_FLOOR 159,
+# DEC-319 (5); section 4's three readings). Candidate binaries (frozen copies of F1's
+# Release build, sha256 first 16): d9605e0cc5b25753 chesso, 208f8ef4150076ff libchesso_engine.a. Parent: the main
+# checkout's build at b477459 (bench 5184358). Outputs under .tuning/s296/goldens/ and cells/.
+
+== 1. bench and tools/search_bench.py (INV-6 does not apply: a functional change; recorded)
+bench: parent 5184358, candidate 5069022; the eight bestmove replies identical (c3d5 e2a6 d7c8q g7h8q d8e7 a1b2 e5e6 e5e6)
+search_bench 9 and 12, candidate then parent, nodes and best moves identical:
+  midgame             48284 nodes       best c3d5   kiwipete           126091 nodes       best d5e6   tactical            62646 nodes       best d7c8q 
+  midgame             48284 nodes       best c3d5   kiwipete           126091 nodes       best d5e6   tactical            62646 nodes       best d7c8q 
+  midgame            226320 nodes       best c3d5   kiwipete           430872 nodes       best e2a6   tactical           157130 nodes       best d7c8q 
+  midgame            226320 nodes       best c3d5   kiwipete           430872 nodes       best e2a6   tactical           157130 nodes       best d7c8q 
+
+== 2. The two node-limited cells of tests/test_mate_pv.cpp, by their scripts' four stages on F1
+-- S294's, adocs/data/S294_fallback_cell.py (MW02 applied to a worktree at F1): sweeps sha256 shipped c4741ec0bd724adb, mw02 854a7163b71655d7
+separates    1 budgets  20000..20000  2r2k2/6RR/4P1p1/p4p2/3K1P2/P5r1/8/8 w - - 3 48
+separates    4 budgets  30000..60000  4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+separates    3 budgets  180000..200000  6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39
+separates    3 budgets  80000..100000  1R6/5R2/4p1pk/4Nb2/5P1p/r3K3/8/8 w - - 5 49
+4 of 318 positions separate
+pick  4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36  go nodes 40000  (run 30000..60000, 4 budgets, margin 10000 nodes below and 20000 above)
+   -> the pick is line 101 of adocs/data/S145_mined_set.tsv (game 3499); S294's line 162 (6k1/3R4/...) now separates at
+      180000..200000 only. The case's FEN and budget re-pointed, its comment's margin 10000 below and 20000 above.
+-- S295's, adocs/data/S295_long_line.py (MW03 applied to a worktree at F1): sweeps sha256 fixed 8c25d5572477802f (equal, rows
+   for rows, to the throwaway form (a) build's S294-grid sweep in S296_forms.txt), mw03 ec2cae929a179dc1
+0 of 318 positions separate
+no cell separates: the guard has no case on this tree
+   -> no cell separates on S296's tree: the case is retired (the coordinator records it), its history kept in the file's
+      comment; MW03 stays killed by the constructed-lines case (S296_mutation.tsv).
+
+== 3. python3 adocs/data/S154_floor_margin_sweep.py floor --ref F1 --jobs 12  (MATE_IN_THREE_FLOOR 11, unmoved)
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 13/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 6  8921139 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 13/24 d5  m4  2/16 d6  m5  0/16 d-  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 0  9774318 nodes
+  RfpMinPly=1            m2 20/26 on-time 13 d7  m3  8/24 d6  m4  3/16 d8  m5  1/16 d8  short 0  sign 0
+== python3 adocs/data/S154_floor_margin_sweep.py red --ref F1 --jobs 12 (tail)
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S154_sweep_fbv8zhw3/tests/test_engine.cpp:5806: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 8 >= 11 )
+
+== 4. python3 adocs/data/S156_mined_floor_sweep.py --ref F1 --floor 158 --jobs 12  (EXACT_FLOOR: 158 no longer separates)
+318 positions, depth 10, ref c3ed9cdfa51bc77df4c13b841a7f833d9ecd306b
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     160          163            0   16.7s
+          2     161          164            0   16.8s
+          1     159          161            0   16.0s
+          0     159          161            0   15.8s
+  floor 158, asserted by tests/test_mate_breadth.cpp
+    shipping value 160, weakened-guard value 159, gap 1
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+  the gate built with RfpMinPly defaulting to 1: GREEN, WHICH IS THE FAILURE
+    /tmp/S156_sweep_2d920tet/tests/test_mate_breadth.cpp:304: MESSAGE: mined set at depth 10: 159 exact, 161 right sign, 0 wrong sign
+== the same at --ref F2 (EXACT_FLOOR 160 compiled in) --floor 160
+  floor 160, asserted by tests/test_mate_breadth.cpp
+    shipping value 160, weakened-guard value 159, gap 1
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_aq481_cq/tests/test_mate_breadth.cpp:316: MESSAGE: mined set at depth 10: 159 exact, 161 right sign, 0 wrong sign
+    logged: the mined set reads 159 exact at depth 10, under the 160 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+   -> the band (159, 160] is 160 alone, at the shipping count with no margin. The coordinator's ruling (DEC-319 (5)):
+      not 160 -- a zero-margin floor, which DEC-116 and DEC-313 (2) rejected, S293's at-shipping floor the one DEC-313
+      (1) moved back -- but **159**, one below the shipping count, DEC-313 (1)'s rule, a rise inside DEC-299's guard,
+      no longer separating RfpMinPly 1; MATE_IN_THREE_FLOOR carries the separation. The three readings, at F4:
+== (i) python3 adocs/data/S156_mined_floor_sweep.py --ref F4 --floor 159 --jobs 12  -- the weakened gate GREEN at 159 on
+   EXACT_FLOOR, as expected now (the script names it the failure: by DEC-319 (5) this floor no longer separates)
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     160          163            0   16.7s
+          2     161          164            0   16.5s
+          1     159          161            0   15.7s
+          0     159          161            0   15.7s
+
+  floor 159, asserted by tests/test_mate_breadth.cpp
+    shipping value 160, weakened-guard value 159, gap 1
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: GREEN, WHICH IS THE FAILURE
+    /tmp/S156_sweep_zbd10kqx/tests/test_mate_breadth.cpp:320: MESSAGE: mined set at depth 10: 159 exact, 161 right sign, 0 wrong sign
+== (ii) python3 adocs/data/S154_floor_margin_sweep.py red --ref F4 --jobs 12  -- the same weakened gate RED on
+   MATE_IN_THREE_FLOOR at 8 (tail)
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S154_sweep_d6u4dvv_/tests/test_engine.cpp:5813: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 8 >= 11 )
+== (iii) the shipping build (this worktree's build/, EXACT_FLOOR 159 compiled in): test_mate_breadth and
+   test_engine's "a proved mate is never mis-scored, and every mate in two is found on time" green
+[doctest] test cases: 1 | 1 passed | 0 failed | 0 skipped
+[doctest] assertions: 4 | 4 passed | 0 failed |
+[doctest] Status: SUCCESS!
+[doctest] test cases:    1 |    1 passed | 0 failed | 86 skipped
+[doctest] assertions: 3756 | 3756 passed | 0 failed |
+[doctest] Status: SUCCESS!
+    test_mate_breadth: mined set at depth 10: 160 exact, 163 right sign, 0 wrong sign
+
+== 5. The S170 grid: /home/max/ws/chesso/.tuning/s296/bin/sweep.sh (S135's sweep.sh with this step's paths) -> adocs/data/S296_sweep_s170.txt
+elapsed 281 s, 108 rows
+SWEEP-DONE
+== adocs/data/S203_case_sweep.sh --ceilings <S202 S261 S286 S292 S293 S083s S135 grids> adocs/data/S296_sweep_s170.txt
+A_mate8_shallow                   2
+B_mate6_shallow                   6
+C_mate7_depth11                   4
+D_mate_minus6_depth10             1
+E_mate_minus9                     2
+F_mate6_inherited_no_line         3
+   (the seven grids before: the same six, 2 6 4 1 2 3; no ceiling moves)
+== --ceilings adocs/data/S296_sweep_s170.txt alone
+A_mate8_shallow                   0
+B_mate6_shallow                   6
+C_mate7_depth11                   0
+D_mate_minus6_depth10             0
+E_mate_minus9                     0
+F_mate6_inherited_no_line         0
+== adocs/data/S170_pick_budgets.sh <b477459's S170_cases.tsv> adocs/data/S296_sweep_s170.txt (stderr)
+A_mate8_shallow            stride 1  nodes 300000   -> nodes 500000   (12 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (17 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 500000   -> nodes 1500000  (3 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 4000000  -> nodes 4000000  (3 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 300000   (5 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 300000   (7 lines, 0 short)
+   -> A 300000 -> 500000, C 500000 -> 1500000, applied with a header paragraph; DEC-299's guard met (both floors hold
+      or rise, no ceiling rises).
+
+== 6. The other goldens a search change can move, candidate against parent
+-- ~/.venv/chess/bin/python adocs/data/S188_repair_goldens.py first-mate --engine <candidate>  (parent: identical)
+  first_mate_depth: 9
+  mate distances from there on: [5]
+  first_mate_depth: 9
+  mate distances from there on: [5]
+   candidate and parent outputs identical
+-- adocs/data/S188_repair_goldens.py s207 --lib <candidate library>
+# separating depth: 4  (the case drives 4, 5 and 4)
+   the table identical to the parent's
+-- python3 adocs/data/S192_node_budget.py build/tests/test_search
+count         7366 nodes, depth 5 on KIWIPETE_POS, cold table
+middle half   [7270, 32512]: the count is inside it
+-- python3 adocs/data/S083s_rfp_ply2.py <candidate>
+iterations 8, nodes 3702
+first_exact 6
+mate -2 at the last iteration: yes
+   identical to the parent's
+-- ~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens <the seven rows> --lo 3 --hi 12 --lib <candidate library>
+   (rows: capture_mates' four at 9, 8, 11, 12; the retired multicut row at 10; ProbCut at 10; the extra ply at 8)
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - 5 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+- - - - - - - - 5 5 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+- - - - - - 5 5 5 6 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+== the same, --lib <parent library>
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - 5 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 5 - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+- - - - - - - - 5 5 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+- - - - - - 5 5 5 6 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+   -> the fourth capture_mates row loses its depth-10 mate (9 and 12 remain; the case asserts 12); the rest identical
+-- python3 adocs/data/S261_mine_late_capture.py sweep --fens <LATE_CAPTURE_POS> --lo 3 --hi 9 --lib <candidate library>, then pick
+one position for both:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 8125  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 932  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+each on its own:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 8125  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 932  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+   identical to the parent's, node counts included
+
+== 7. Instrument 4, DEV_MANUAL's defender-set sweep: ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py sweep <parent tune> <candidate tune>
+   parent = the main checkout's build-tune at b477459 (bench 5184358), candidate = this worktree's build-tune (bench
+   5069022), each copied aside. One process for the whole set, Hash 16.
+104 defender nodes, depth 2k+8, RfpMinPly held at 3, RfpMaxDepth held at 15
+  per proved distance: m1 50  m2 31  m3 15  m4 8
+
+  par_tune exact  85/104  m1 50/50 d0  m2 31/31 d4  m3 3/15 d7  m4 1/8 d5  short 0  sign 0
+  cand_tune exact  85/104  m1 50/50 d0  m2 31/31 d6  m3 3/15 d7  m4 1/8 d5  short 0  sign 0
+
+S165-SWEEP-DONE
+
+== 8. tests/test_mate_pv.cpp's two sets at depth 8, the lines its MESSAGE counts (DEV_MANUAL's test_mate_pv paragraph)
+   build/tests/test_mate_pv -tc="the * set reports no mate*" -s, from tests/, the candidate's build then the parent's
+   cand  S145_mate_set.tsv at depth 8: 191 mate lines, 0 incomplete
+   cand  S145_mined_set.tsv at depth 8: 516 mate lines, 0 incomplete
+   par  S145_mate_set.tsv at depth 8: 191 mate lines, 0 incomplete
+   par  S145_mined_set.tsv at depth 8: 514 mate lines, 0 incomplete
+   -> 191 + 516 = 707 on S296's tree, 191 + 514 = 705 on its parent

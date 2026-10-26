@@ -44,15 +44,16 @@
 // the depth, and it fires in the completion gate rather than after a night of
 // games.
 //
-// AND TWO NODE-LIMITED CELLS, S294 AND S295. The two sets search to a fixed
-// depth, so every iteration they print completed. Two cases below end their
-// search inside an iteration instead, which is the one place the line printed
-// and the score printed come from different iterations, each on a cold table:
-// S294's guards S202's aborted-line fallback for a line the walk leaves short
-// (DEC-251), S295's the same path for a line already past the claimed
-// distance and not mate there (DEC-317). The last two drive the same line
-// choices on constructed lines, for the branches no search measured reaches:
-// the aborted path's, and the cut search() makes on a completed line.
+// AND A NODE-LIMITED CELL, S294'S. The two sets search to a fixed depth, so
+// every iteration they print completed. One case below ends its search inside
+// an iteration instead, which is the one place the line printed and the score
+// printed come from different iterations, on a cold table: it guards S202's
+// aborted-line fallback for a line the walk leaves short (DEC-251). S295's
+// cell, the same path for a line already past the claimed distance and not
+// mate there (DEC-317), is retired since S296, which removed the short mate
+// it rested on. The last two cases drive the same line choices on
+// constructed lines, for the branches no search measured reaches: the aborted
+// path's, and the cut search() makes on a completed line.
 
 #ifndef CHESSO_SOURCE_DIR
 #error "CHESSO_SOURCE_DIR must be defined so the test can read the mate sets"
@@ -414,14 +415,16 @@ TEST_SUITE("mate PV completeness")
   // (adocs/data/S294_mw02_reach.txt) -- so MW02 survived the whole fast
   // suite. This cell reaches it on a cold table.
   //
-  // GOLDEN (DEC-142): the cell -- the position, line 162 of
-  // adocs/data/S145_mined_set.tsv (game 4593), at `go nodes 150000` on a cold
-  // table at Hash 16 -- the middle of the run of budgets, 100000 to 200000,
-  // where the shipped build prints a line that reaches its mate and the build
-  // with MW02 applied prints the aborted line short.
+  // GOLDEN (DEC-142): the cell -- the position, line 101 of
+  // adocs/data/S145_mined_set.tsv (game 3499), at `go nodes 40000` on a cold
+  // table at Hash 16 -- the lower middle of the run of budgets, 30000 to
+  // 60000, where the shipped build prints a line that reaches its mate and the
+  // build with MW02 applied prints the aborted line short. Since S296; S294
+  // picked line 162 at `go nodes 150000`, whose run S296's tree shortened to
+  // 180000..200000 (adocs/data/S296_goldens.txt).
   // Re-derive: adocs/data/S294_fallback_cell.py, the four stages in its
   // header (sweep both builds over the mined set, then `pick`).
-  // Margin: 50000 nodes either side, the run's half-width. Moves legitimately
+  // Margin: 10000 nodes below and 20000 above. Moves legitimately
   // on: any change that moves the tree, and a change to complete_mate_pv() or
   // to the reporting layer's aborted path, S202's ground. Re-derived by the
   // script when either end moves, never re-read from a failing run.
@@ -443,7 +446,8 @@ TEST_SUITE("mate PV completeness")
     uci_init();
     initialize_game_const_data(&replay);
 
-    const std::string fen = "6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39";
+    const std::string fen =
+        "4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36";
 
     {
       stdout_capture_t capture;
@@ -455,7 +459,7 @@ TEST_SUITE("mate PV completeness")
     std::vector<std::string> lines;
     {
       stdout_capture_t capture;
-      uci_process_line("go nodes 150000");
+      uci_process_line("go nodes 40000");
       uci_wait_for_search();
       lines = capture.lines();
     }
@@ -581,163 +585,16 @@ TEST_SUITE("mate PV completeness")
   // to the completed line of the same move, or is cut below the distance.
   // Mutant MW03 of tools/mutants/S202_mate_walk.py takes that out.
   //
-  // GOLDEN (DEC-142): the cell -- line 168 of adocs/data/S145_mined_set.tsv
-  // (game 5850) at `go nodes 140000` on a cold table at Hash 16 -- the middle
-  // of the run of budgets, 80000 to 200000, where this build prints the
-  // completed line, which reaches its mate, and the build with MW03 applied
-  // prints the aborted line longer than the mate needs and not mate there.
-  // Re-derive: adocs/data/S295_long_line.py, the four stages in its header
-  // (sweep both builds over the mined set, then `pick`).
-  // Margin: 60000 nodes either side, the run's half-width. Moves legitimately
-  // on: any change that moves the tree, and a change to complete_mate_pv() or
-  // to the reporting layer's aborted path. Re-derived by the script when
-  // either end moves, never re-read from a failing run.
-  //
-  // Unlike S294's cell, the aborted line's own length is visible from outside
-  // -- aspiration_search_t::pv_length, the line as search() returned it --
-  // and it is what proves S295's path ran: a line longer than the distance
-  // cannot have been S202's fallback, which runs only on a line the walk left
-  // short, and the walk never shortens one.
-  TEST_CASE(
-      "an aborted iteration's line longer than the mate beside it gives way "
-      "to the completed line")
-  {
-    uci_init();
-    initialize_game_const_data(&replay);
-
-    const std::string fen = "6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32";
-
-    {
-      stdout_capture_t capture;
-      uci_process_line("setoption name Hash value 16");
-      uci_process_line("ucinewgame");
-      uci_process_line("position fen " + fen);
-    }
-
-    std::vector<std::string> lines;
-    {
-      stdout_capture_t capture;
-      uci_process_line("go nodes 140000");
-      uci_wait_for_search();
-      lines = capture.lines();
-    }
-
-    struct info_t
-    {
-      int depth;
-      bool mate;
-      int mate_in;
-      std::vector<std::string> pv;
-    };
-
-    std::vector<info_t> infos;
-    std::vector<std::string> bestmove;
-
-    for (const std::string& line : lines) {
-      std::istringstream stream(line);
-      const std::vector<std::string> token{
-          std::istream_iterator<std::string>(stream),
-          std::istream_iterator<std::string>()};
-
-      if (!token.empty() && token[0] == "bestmove") { bestmove = token; }
-
-      if (token.size() < 4 || token[0] != "info" || token[1] != "score") {
-        continue;
-      }
-
-      info_t entry{0, token[2] == "mate", std::stoi(token[3]), {}};
-
-      for (size_t i = 4; i < token.size(); ++i) {
-        if (token[i] == "depth" && i + 1 < token.size()) {
-          entry.depth = std::stoi(token[i + 1]);
-        }
-
-        if (token[i] == "pv") {
-          entry.pv.assign(token.begin() + static_cast<long>(i) + 1,
-                          token.end());
-          break;
-        }
-      }
-
-      infos.push_back(entry);
-    }
-
-    // The search ended inside an iteration that has a line, and the completed
-    // iteration before it scored a mate: the aborted path's own state.
-    const std::vector<aspiration_search_t>& searches =
-        uci_last_aspiration_searches();
-    REQUIRE(!searches.empty());
-
-    const aspiration_search_t& aborted = searches.back();
-    REQUIRE_MESSAGE(aborted.aborted,
-                    "the cell no longer ends inside an iteration; re-derive "
-                    "it with adocs/data/S295_long_line.py");
-    REQUIRE(aborted.pv_move != 0);
-
-    const aspiration_search_t* completed = nullptr;
-    for (const aspiration_search_t& search : searches) {
-      if (!search.aborted) { completed = &search; }
-    }
-    REQUIRE(completed != nullptr);
-    REQUIRE(completed->mate_found);
-    REQUIRE(completed->iteration + 1 == aborted.iteration);
-    REQUIRE(aborted.pv_move == completed->pv_move);
-
-    // The last two `info` lines are the completed iteration's and the aborted
-    // one's, under the completed depth and score; the completed line reaches
-    // its mate, so there is a true line of the same move to give way to.
-    REQUIRE(infos.size() >= 2);
-    const info_t& last = infos.back();
-    const info_t& before = infos[infos.size() - 2];
-    REQUIRE(before.depth == completed->iteration);
-    REQUIRE(last.depth == completed->iteration);
-    REQUIRE(before.mate);
-    REQUIRE(last.mate);
-    REQUIRE(last.mate_in == before.mate_in);
-
-    const size_t needed = plies_for(last.mate_in);
-    std::string why;
-
-    REQUIRE(before.pv.size() == needed);
-    REQUIRE_MESSAGE(line_ends_in_mate(fen, before.pv, needed, why), why);
-
-    // The class this cell guards: the aborted iteration's own line runs past
-    // the distance the score claims, so no walk changes it and S202's
-    // fallback cannot run.
-    REQUIRE_MESSAGE(
-        aborted.pv_length > needed,
-        ("the aborted line is " + std::to_string(aborted.pv_length) +
-         " plies beside mate " + std::to_string(last.mate_in) +
-         ", which needs " + std::to_string(needed) +
-         "; re-derive the cell with "
-         "adocs/data/S295_long_line.py"));
-
-    // The property: a line printed at or past the claimed distance is
-    // checkmate at exactly that distance, and the move to play and the move
-    // to ponder are that line's.
-    if (last.pv.size() >= needed) {
-      CHECK_MESSAGE(last.pv.size() == needed,
-                    ("the last line is " + std::to_string(last.pv.size()) +
-                     " plies beside mate " + std::to_string(last.mate_in) +
-                     ", which needs exactly " + std::to_string(needed)));
-      CHECK_MESSAGE(line_ends_in_mate(fen, last.pv, needed, why), why);
-    }
-
-    REQUIRE(bestmove.size() == 4);
-    REQUIRE(last.pv.size() >= 2);
-    CHECK(bestmove[1] == last.pv[0]);
-    CHECK(bestmove[2] == "ponder");
-    CHECK(bestmove[3] == last.pv[1]);
-
-    // S295's path ran: what is printed is not the aborted line, whose length
-    // it no longer has, and is the completed line verbatim.
-    CHECK(last.pv.size() != aborted.pv_length);
-    CHECK_MESSAGE(last.pv == before.pv,
-                  "the last line is not the completed iteration's, so the "
-                  "long aborted line did not give way at this cell");
-
-    uci_shutdown();
-  }
+  // **Its node-limited cell is retired at S296.** It was line 168 of
+  // adocs/data/S145_mined_set.tsv (game 5850) at `go nodes 140000`, picked by
+  // adocs/data/S295_long_line.py, and it existed only because the completed
+  // depth-8 iteration read `mate 4` there, one move short of the position's
+  // mate in 5 (adocs/data/S295_trace.txt). S296's rule removes that short
+  // mate: the iteration reads `mate 5` with a 9-ply line, the aborted line is
+  // no longer past the distance, and the script's pick over the whole mined
+  // grid on S296's tree finds no cell that separates (0 of 318,
+  // adocs/data/S296_goldens.txt). The path itself stays guarded by the
+  // constructed-lines case below, which kills MW03 and MW04 without a search.
 
   // S295. The same line choices driven directly, for the branches no search
   // reaches: an aborted line of another first move than the completed one, at

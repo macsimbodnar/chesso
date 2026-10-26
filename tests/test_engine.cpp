@@ -5166,6 +5166,14 @@ TEST_SUITE("engine: mate safety")
   // exactness (`adocs/data/S135_goldens.txt`). 11 holds, 2 below the shipping
   // count and 3 above the weakened one, so it separates RfpMinPly 1 again;
   // the owner's 11 is not moved. A revert of S135 puts back S083's 12 and 11.
+  //
+  // **Re-taken at S296 and unchanged; it carries the separation again.** On
+  // S296's tree the `floor` mode reads 13 of 24 shipping and 8 weakened, and
+  // the gate built at RfpMinPly 1 fails at 8 >= 11
+  // (`adocs/data/S296_goldens.txt`). tests/test_mate_breadth.cpp's EXACT_FLOOR,
+  // raised to 159 by DEC-319 (5), no longer separates RfpMinPly 1 -- its
+  // weakened end is 159 -- so this count is the one that does, DEC-313 (2)'s
+  // form with the roles swapped.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

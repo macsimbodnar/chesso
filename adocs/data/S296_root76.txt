@@ -1,0 +1,83 @@
+# S296: S145 root 76 under form (a), traced before (a) ships (the coordinator's condition, DEC-312's shape). 2026-10-26,
+# on b477459 (bench 5184358). The engine's own output; every chess claim a tool's (Stockfish at 5000000 nodes through
+# python-chess, TOOLCHAIN.md's safe form; python-chess applying the moves).
+#
+# THE ROW. Index 76 of adocs/data/S145_mate_set.tsv's roots, K3k3/1r6/8/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1, a proved
+# mate in 5 for Black (S145's enumeration; the oracle #+5). The oracle after each of Black's 19 moves: b7c7, b7d7, b7e7,
+# b7f7, b7g7 and b7h7 #-4 (the six mates in 5), b7b4 and b7b5 #-5, b7b2 and b7b6 #-6, b7b3 #-12, b7b1 -1715, the
+# king's five moves, b7a7 and b7b8 a mate for White or +8256.
+# Through UCI (Hash 16, `ucinewgame`, `go depth 21`): shipped, mate 5 from depth 16 (b7f7, 1651135 nodes); form (a),
+# no mate through depth 21 (cp 988, b7b2, 1058145 nodes).
+#
+# THE BUILDS. Throwaway worktrees .tuning/s296/t_ship and t_a (b477459, removed after): adocs/data/S295_trace_patch.py
+# on src/search.cpp, then adocs/data/S296_forms_patch.py <wt> ship|a --after-trace, Release, `--target chesso`; benches
+# 5184358 and 5069022, the untraced builds' own, and the same `go depth 21` lines. Every negamax node's line ends
+# `s296=<0|1> bestsf=<best>`: s296=1 marks a move-loop return of a node that skipped a move with a best at or below
+# -MATE_MIN -- form (a)'s firing in t_a, the same shape left alone in t_ship. Logs (S295_DEPTH 0 = every iteration):
+#   S295_DEPTH=0 S295_DIAG=all_a.log    <t_a chesso>    go depth 21   (75 aspiration searches, 268 MB)
+#   S295_DEPTH=0 S295_DIAG=all_ship.log <t_ship chesso> go depth 16   (59 searches, 368 MB)
+#
+# READING. The mate is lost where (a) does not fire. In every iteration from 13 to 21 the root scouts each of the six
+# mates in 5 inside an aspiration window outside the mate band, and at ply 1 the mated side's node, a non-PV cut node,
+# makes a NULL MOVE that fails high: its reduced search's attacker node futility-prunes 12 to 17 quiets and the moves
+# it does search are answered by REVERSE FUTILITY at ply 3 or by the table. Form (a) fires 58 times over the 21
+# iterations, 57 in b7b2's subtree and 1 in b7b8's -- never in the subtree of a mate in 5 -- each at a node that had
+# skipped moves, so none of them a whole search's bound; 39 of the 58 replaced mated bounds were true at their distance
+# and 19 too short. The shipped tree reaches the mate only because at depth 16 its b7b2 line climbs through nine
+# aspiration searches (eight failing high) into a full-window one, where every later scout's window lies inside the mate band and neither
+# the null move nor the move-loop rules are tried. That is DEC-087 (e)'s pass and DEC-158's reverse futility on the
+# changed tree: DEC-306 reads DEC-087 (e) as having "priced the zugzwang where nothing is proved", and DEC-158 says
+# "the mates the engine does not find ... are what the pruning costs". On (a)'s tune build NullMoveBase 16 restores the
+# mate from depth 16 and RfpMinPly 63 from depth 13 (S296_forms.txt section 3). Not (a) discarding a proof.
+#
+# == 1. How the six mates in 5 are answered at ply 1, the last aspiration search of each iteration (ply1.py, below)
+# a     depth 13 to 21, searches 39 43 50 54 59 64 69 73 75: root b7b2 at cp 398, 262, 482, 509, 633, 706, 847, 963,
+#       988; the six at ply 1: null 6 of 6 in every one of the nine
+# ship  depth 13 to 15: null 6 of 6 as well (root b7b2 at 431, 326, 515); depth 16, search 59, window
+#       [-2e9, +2e9]: every one a searched loop -- b7f7 -48991 (exact), b7c7 b7e7 b7g7 b7h7 -48991, b7d7 -48989
+#
+# == 2. The null move's reduced search, depth 17 (search 59, window [488, 707]) and depth 21 (search 75), (a)
+# (nullkids.py, below; the ply-1 node is White's, the null child Black's after the pass)
+#   b7f7  ply 1 d16 [-634,-633] -> 481 null; null child d10 [633,634] -> -481, static -1055: futility prunes 13 quiets;
+#         f7f6 answered at ply 3 by reverse futility (static 1048, margin 567), f7a7 by the table (868)
+#   b7g7  -> 467 null; child static -1038, futility 16; g7g6 rfp (1034, 567), g7g1 rfp (1192, 567), g7a7 tt 868
+#   b7e7  -> 473 null; child static -1042, futility 14; e7e6 rfp (1040), e7e1 rfp (1156), e7a7 tt 868
+#   b7d7  -> 506 null; child static -1055, futility 12; d7b7 rfp (1073), d7a7 tt 868, d7d8 multicut 861
+#   b7h7  -> 521 null; child static -1065, futility 14; h7h8 rfp (1088), h7a7 tt 868
+#   b7c7  -> 592 null; child static -1042, futility 16; c7d7 tt 592, c7c8 multicut 921, c7a7 tt 868
+#   depth 21: ply 1 d20 [-989,-988] -> 287 to 845, null 6 of 6; null children d13, static -1049 to -1080, futility
+#         12 to 17 quiets each; of their searched moves 7 answered by reverse futility, the rest by the table
+#   Every node in this section has s296=0: none of them is a node where form (a) returned alpha0.
+#
+# == 3. Where form (a) fires (firings.py all_a.log, below)
+#   58 returns, by iteration 7:1 10:1 11:1 12:4 13:4 18:2 19:22 20:12 21:11; by root move b7b2 57, b7b8 1; plies 7 to
+#   27, 32 of them at ply 13. Their mated best against the oracle at that node: 39 the node's true distance, 19 a
+#   distance shorter than the oracle's (the defect). The first, iteration 7 (search 12), ply 7 on b7b2 a8a7 b2a2 a7b7
+#   a2b2 b7a7 a3a2, depth 2, one move searched, best -48991 -> 931: the shipped tree's first divergence from (a) (the
+#   two logs are byte-identical before that line).
+#   The shipped tree, the same shape through depth 16: 19 nodes, all in b7b2's subtree (12 true, 7 short). At depth 16
+#   one of them recurs in five of its ten searches (ply 17, d4, mated-in-2 claimed, the oracle #-15).
+#   Counterfactual, a scratch build of t_ship applying form (a) only at listed keys ($S296_KEYS): at that ply-17
+#   node alone, mate 5 at depth 16 as shipped (15 nodes fewer); at all nine shape keys of the shipped tree's search,
+#   mate 5 from depth 17. The mate in 5 does not rest on any one replaced bound; (a)'s tree diverges from iteration 7
+#   and never brings the root into the mate band.
+#
+# ---- ply1.py
+# import sys, collections
+# log = sys.argv[1]; MATES = {"b7c7", "b7d7", "b7e7", "b7f7", "b7g7", "b7h7"}
+# depth_of = {}; cur = None; per = collections.defaultdict(list); root = {}
+# for l in open(log):
+#     t = l.split()
+#     if not t: continue
+#     if t[0] == "S": cur = int(t[1]); depth_of[cur] = int(t[3]); continue
+#     if t[0] == "N" and t[3] == "1" and t[9] in MATES: per[cur].append((t[9], t[11], t[12]))
+#     if t[0] == "N" and t[3] == "0": root[cur] = t[11]
+# last = {d: s for s, d in depth_of.items()}
+# for d in sorted(last): print(d, last[d], root.get(last[d]), collections.Counter(r for _, _, r in per[last[d]]))
+#
+# ---- nullkids.py LOG SEARCH: for each mate in 5's ply-1 node in that search, its null child, the child's pruned moves
+#      by rule (P lines) and how each move it searched was answered (its children's return rule).
+#
+# ---- firings.py LOG: every N line with s296=1, its path applied by python-chess from the root (`null` as
+#      chess.Move.null(), `=k` promotions by the engine's piece code), the mated best's distance from that node against
+#      Stockfish at 5000000 nodes on that position.

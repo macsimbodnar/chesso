@@ -172,6 +172,9 @@ m("E08_tt_cutoff_gate_dropped", S, "search/extension",
    '  if (!is_pv && ply > 0) {'),
   origin="S097")
 
+# E09's anchor was re-pointed at S296, whose rule stores `node_value` -- the
+# fail-soft best, or alpha where a node that skipped a move found every searched
+# move mated. The mutation is unchanged: the store's exclusion gate opened.
 m("E09_store_gate_dropped", S, "search/extension",
   'the excluded node writes its entry. What it computed is the value of a '
   'position with one of its moves removed and the key is the position with the '
@@ -179,9 +182,9 @@ m("E09_store_gate_dropped", S, "search/extension",
   'verification\'s own parent is about to make -- reads a score that is wrong '
   'by construction and an ordering move that is not the best one',
   ('  if (excluded_move == 0) {\n'
-   '    const int to_store = normalize_score(best_so_far, ply);',
+   '    const int to_store = normalize_score(node_value, ply);',
    '  if (true) {\n'
-   '    const int to_store = normalize_score(best_so_far, ply);'),
+   '    const int to_store = normalize_score(node_value, ply);'),
   origin="S097")
 
 # E10's anchor was re-pointed at S114, which moves the null-move floor inside

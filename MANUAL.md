@@ -511,7 +511,7 @@ rewritten with it (S213, DEC-184).
 |---|---|
 | `score cp N` | centipawns, from the point of view of the side to move. `score mate N` instead when a mate is found, `N` in moves |
 | `time` | milliseconds since this search started, not since this iteration started |
-| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair does not claim a mate the line does not reach. A cut-short line the completion leaves shorter than the mate needs, or at or past that distance without a checkmate there, gives way to the last completed depth's line when that line starts with the same move and is checkmate at the distance (S202, S295); otherwise a short one is printed short and a wrong one is cut to one ply under the distance, never below the move played (S295). `bestmove`'s `ponder` is the second move of the line printed (`iterative_deepening_search()`). The finished depth's mate score itself can claim a mate shorter than the position's -- a known bug ("Known bugs and limitations", the entry on a mate distance shorter than the position's own value) |
+| `depth` | the deepest iteration that **finished**. An iteration cut short repeats the previous depth and the previous score, because neither of an unfinished iteration's own figures means anything. The `pv` beside them is still the line that will be played, so the score and the line can come from different iterations; where the score is a mate the line is completed against it, so the pair does not claim a mate the line does not reach. A cut-short line the completion leaves shorter than the mate needs, or at or past that distance without a checkmate there, gives way to the last completed depth's line when that line starts with the same move and is checkmate at the distance (S202, S295); otherwise a short one is printed short and a wrong one is cut to one ply under the distance, never below the move played (S295). `bestmove`'s `ponder` is the second move of the line printed (`iterative_deepening_search()`). The finished depth's mate score could claim a mate shorter than the position's until S296, from a node that had skipped moves ("Known bugs and limitations", the entry on a mate distance shorter than the position's own value) |
 | `nodes` | nodes searched in this search, counting every iteration. It never falls between lines. Subtract two successive lines for one iteration's own count |
 | `nps` | `nodes` over `time`, both for the whole search |
 | `hashfull` | permille of the transposition table this search has written, read after the iteration off its first 1002 entries (334 clusters of three), which a uniform hash fills at the rate of the rest. Entries an earlier search wrote are not counted, so it starts near 0 on every `go` and does not reach 1000 just because the table has been in use. Since S119 |
@@ -659,24 +659,27 @@ against d4 and e4 against e5.
   of the same move. On its test grid that took 33 short lines of 873 to 19; a
   3000-game count is owed. DEC-122 is the all-or-nothing rule that makes short
   the only failure, and DEC-150 the first measurement.
-- **A reported mate distance can be shorter than the position's own value.**
-  Found by S294, traced by S295 from the engine's own output
-  (`adocs/data/S295_trace.txt`). A known bug, ruled binding by DEC-318; S296
-  is its fix, a search change measured on its own. `ucinewgame`, Hash 16,
-  `position fen
-  6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32`, `go depth 8` (or `go
-  nodes` 80000 to 200000, whose last finished depth is 8): the finished depth 8
-  prints `score mate 4` with `pv h3f2 h1h2 g7h6 e4h4 h6h4 h2g1 h4h1`, checkmate
-  at its distance, and `bestmove h3f2 ponder h1h2`. Stockfish at depth 20
-  reads the root mate in 5, with the defender's `h1g1` holding a move longer
-  than `h1h2` (#+4 after it against #+3). Depth 9 reads mate 5. Where it comes
-  from: in an earlier iteration a node that quiet SEE pruning and late move
-  pruning had left searching only replies mated in one -- the two replies that
-  are not, by python-chess, are two it skipped -- returned that mated score as
-  its bound, the table carried it up, and depth 8's full-window search answered
-  `h1g1` from it. Until S295 the same cell also printed the cut-short depth 9's
-  9-ply line beside this `mate 4`, with `ponder h1g1`; that line now gives way
-  to the finished depth's (the `depth` and `pv` rows above).
+- **A reported mate distance shorter than the position's own value: closed
+  since S296 (DEC-318).** Found by S294 and traced by S295
+  (`adocs/data/S295_trace.txt`): a node that quiet SEE pruning and late move
+  pruning had left searching only replies mated in one returned that mated
+  score as its bound, and the table carried it to the root, so `ucinewgame`,
+  Hash 16, `position fen 6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32`,
+  `go depth 8` printed `score mate 4` where Stockfish reads mate in 5. Since
+  S296 a node at which a shallow-depth rule skipped a move and every move it
+  searched came back mated returns its own alpha, a bound that claims no
+  mate (`negamax_at` in `src/search.cpp`); that search prints `score mate 5`
+  at depth 8, `pv h3f2 h1g1 f2e4 d1d2 e4d2 g2g3 g7g3 g1h1 g3h4`, `bestmove
+  h3f2 ponder h1g1`. Over S289's four mate sets, S294's grid of node-limited
+  searches and the S170 grid, no reported mate is shorter than Stockfish's
+  at 5000000 nodes, where the tree before S296 had 2 such iterations, 16
+  searches and 28 (`adocs/data/S296_forms.txt`). What it cost there: S145's
+  constructed root 76, a proved mate in 5, is reported by no iteration up to
+  depth 21 -- each mating move is refuted by the defender's null move where
+  nothing is proved, whose reduced search reverse futility and futility cut:
+  the pass DEC-087 (e) left exposed and reverse futility's price in the entry
+  below (`adocs/data/S296_root76.txt`). A shorter-than-true mate by another
+  route is not excluded, only unmeasured.
 - **No forward futility pruning, razoring or singular extensions.** These are
   planned, not present; see `adocs/plan.md`. *Reverse*
   futility pruning is present since S033 (2026-08-16): a node whose static score

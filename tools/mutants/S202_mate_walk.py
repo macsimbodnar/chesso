@@ -11,13 +11,14 @@ it:
   MW02  an aborted line the walk cannot       tests/test_mate_pv.cpp, "an
         complete is printed short             aborted iteration's line printed
                                               beside a completed mate reaches
-                                              it", since S294; until then
+                                              it", since S294 (its cell
+                                              re-picked at S296); until then
                                               tests/test_mate_carry.cpp's
                                               F_mate6_inherited_no_line cell
-  MW03  an aborted line longer than the       tests/test_mate_pv.cpp, "an
-        mate beside it, not mate at its       aborted iteration's line longer
-        distance, is printed as it is         than the mate beside it gives way
-                                              to the completed line", S295
+  MW03  an aborted line longer than the       tests/test_mate_pv.cpp, "the
+        mate beside it, not mate at its       aborted path's line choice, on
+        distance, is printed as it is         constructed lines"; S295's own
+                                              cell for it retired at S296
   MW04  such a line with no completed line   tests/test_mate_pv.cpp, "the
         to give way to is printed as it is,   aborted path's line choice, on
         not cut below the distance            constructed lines", S295
@@ -33,7 +34,10 @@ it:
         no moves at all
 
 Since S295's run 2 the constructed-lines case kills MW02 and MW03 as well
-(adocs/data/S295_mutation.tsv). Not in the list, and why: search()'s call of
+(adocs/data/S295_mutation.tsv). Since S296 it is MW03's only killer: S296's
+rule removed the short `mate 4` S295's node-limited cell rested on, and
+adocs/data/S295_long_line.py finds no cell that separates on its tree
+(adocs/data/S296_goldens.txt, adocs/data/S296_mutation.tsv). Not in the list, and why: search()'s call of
 cut_unreached_mate_pv() itself. Taking it out survives every case, because no
 search measured prints a completed line at or past its distance that is not
 mate there (adocs/data/S295_census.txt); the function it calls is what MW06
@@ -57,7 +61,8 @@ since (DEC-282, DEC-295, DEC-307), would have let it absorb up to three short
 lines anyway. The new case is a cold-table
 cell from S145's mined set, at `go nodes 150000`, where the shipped build
 prints a line that reaches its mate and MW02's prints the aborted line 9 of 13
-plies; adocs/data/S294_fallback_cell.py picks it and re-derives it.
+plies; adocs/data/S294_fallback_cell.py picks it and re-derives it (at
+S296, line 101 of the mined set at `go nodes 40000`).
 
 MW01 is `complete_mate_pv()` as it stood before S202: the table's move from
 any entry first, a certified child only where the entry named nothing. MW02 is
@@ -75,8 +80,8 @@ completed line nor the cut below the distance. That is 4fb915e's behaviour on
 the `info` lines and not its code: `ponder` is still taken from the line
 printed, and the fallback's test that the completed line reaches its mate is
 kept. Its build's mined sweep matched 4fb915e's `info` lines line for line,
-which is all that was compared. Its cell is picked and re-derived by
-adocs/data/S295_long_line.py.
+which is all that was compared. Its cell was picked by
+adocs/data/S295_long_line.py and is retired since S296, which finds none.
 
 MW04 takes out S295's other branch only: a wrong line with no completed line
 to give way to -- another first move, or a completed line that does not reach

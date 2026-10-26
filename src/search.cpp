@@ -3301,6 +3301,13 @@ static int negamax_at(int alpha0,
 
   assert(best_move != 0);
 
+  if constexpr (PROBING) {
+    if (probe != nullptr) {
+      probe->loop_ended = true;
+      probe->loop_best = best_so_far;
+    }
+  }
+
   // Only the root knows which move the caller is allowed to play. Publishing
   // from every ply meant an aborted search handed back a move belonging to a
   // deep node, and usually to the other side.
@@ -3329,6 +3336,34 @@ static int negamax_at(int alpha0,
     }
   }
 
+  // A node that skipped a move and found every move it searched mated has not
+  // found itself mated, S296. Each skipped move was skipped on its rule's
+  // premise that it scores no better than alpha, so what the node knows is
+  // that it is worth at most alpha -- and nothing lower: no skipped move was
+  // given a value. Its fail-soft best is a mate distance the search never
+  // established, and returned as the bound it reaches the root through the
+  // table: S145 mined line 168 reported `mate 4` at depth 8 where the position
+  // is mate in 5, from one such node at ply 5 whose skipped moves included
+  // the only two that escape mate in one (adocs/data/S295_trace.txt, DEC-318).
+  // So here the node fails hard: it stores and returns `alpha0`, an upper bound
+  // at its own window's edge, the claim the skipped moves' premise makes.
+  //
+  // Only a fail-low reaches this. The rules that skip read `alpha >
+  // -MATE_MIN`, and alpha rises only on a searched move above it, so with
+  // every searched move mated alpha is still `alpha0`, outside the band. The
+  // band's edge was the other value DEC-318 named; it is a number no search
+  // returned, and one point short of the band it could surface as a cp score
+  // where a parent fails high on it. The pawn correction below still reads
+  // `best_so_far`, so it still refuses the mated score as before.
+  // DEC-318's form (a), measured against form (b) -- no move-loop pruning
+  // while every searched move is mated -- in adocs/data/S296_forms.txt.
+  int node_value = best_so_far;
+
+  if (move_skipped && best_so_far <= -MATE_MIN) {
+    assert(alpha == alpha0 && alpha0 > -MATE_MIN);
+    node_value = alpha0;
+  }
+
   // No store while a move is excluded, S097. What this node just computed is
   // the value of a position **with one of its moves removed**, and the key it
   // would be written under is the position with the move in it. Stored, it
@@ -3336,7 +3371,7 @@ static int negamax_at(int alpha0,
   // verification's own parent is about to make -- with a score that is wrong by
   // construction and an ordering move that is not the best one.
   if (excluded_move == 0) {
-    const int to_store = normalize_score(best_so_far, ply);
+    const int to_store = normalize_score(node_value, ply);
     tt_store_entry(state->tt, &game->board, depth, to_store, type, best_move,
                    raw_eval, !move_skipped);
 
@@ -3356,7 +3391,7 @@ static int negamax_at(int alpha0,
     }
   }
 
-  return best_so_far;
+  return node_value;
 }
 
 

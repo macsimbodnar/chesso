@@ -16096,3 +16096,99 @@ Consequences: S136 waits for S296. MANUAL.md's Known bugs carries the short
               distance until S296 lands. If neither form clears the mate sets
               without losing a mate the shipped tree reports, S296 stops and
               returns to the coordinator with both forms' figures.
+
+## DEC-319  2026-10-26  S296 ships DEC-318's form (a): a node that skipped moves and found every searched move mated returns alpha0; S145 root 76's loss is the null move's and reverse futility's price, and a {-5, 0} SPRT decides it
+Tags:         search, mate, pruning, fail-soft, transposition-table, late-move-pruning, see-pruning, futility, null-move, reverse-futility, oracle, stockfish, s296, s295, s294, s293, s170, s145, dec-318, dec-312, dec-306, dec-158, dec-087, dec-299, dec-142, dec-221, sprt, bugs
+Context:      S296 measured DEC-318's two forms against the shipped tree
+              (`adocs/data/S296_forms.txt`). Both remove every reported mate
+              shorter than the oracle's: 2 iterations over S289's four sets,
+              16 searches over S294's grid and 28 over the S170 grid become 0
+              under each. Neither keeps every mate the shipped tree reports,
+              which DEC-318's consequences made a stop. Form (b) (no
+              move-loop pruning while every searched move is mated, over the
+              five rules that read `may_prune`) reads 156 exact on the mined
+              318 at depth 10, under `EXACT_FLOOR` 158. It gains 98 and loses
+              161 of S294's grid, 84 of the losses never coming back there.
+              It moves 450 root moves in 11503 ordinary-play positions, and
+              bench falls to 4723001. Form (a) (return `alpha0`) reads 160.
+              It gains 94 and loses 54 of the grid (all 54 exact again at a
+              larger budget) and 47 against 31 of the S170 grid. It moves 189
+              root moves, each in a search where it fired (median 11 cp), at
+              x1.000063 nodes. Its one lost proved mate is S145 root 76 (mate
+              in 5), through depth 21. The coordinator chose (a) on condition
+              that root 76's loss trace to a rule a decision prices, at nodes
+              where (a) does not fire (DEC-312's shape for row 171). The trace
+              (`adocs/data/S296_root76.txt`) finds that every iteration from
+              13 to 21 scouts the six mates in 5 outside the mate band. At ply
+              1 the mated side's null move fails high, and inside its reduced
+              search futility prunes 12 to 17 quiets and reverse futility or
+              the table answers the rest. (a) fires 58 times, 57 under b7b2
+              and 1 under b7b8, never under a mate in 5. Applied at single
+              keys on the shipped tree it does not lose the mate. The shipped
+              tree reaches it at depth 16 only because its b7b2 line climbs
+              into a full-window search. The oracle for mate distances is
+              Stockfish at 5000000 nodes. At `go depth 20` it stopped on the
+              first mate it found on these positions (S145 mined line 96:
+              `#+10` against a proved 4) and disagreed with S165's proved
+              distances on 50 of 372 rows; 5000000 nodes agrees with all 372.
+Decision:     By the coordinator under the owner's standing instruction (few
+              questions, correctness first).
+              (1) **Form (a) ships.** Where a move was skipped by a
+              shallow-depth rule (`move_skipped`) and the node's best is at
+              or below `-MATE_MIN`, the node stores and returns `alpha0`. It
+              does not return the mated band's edge: the skipped moves'
+              premise ("no better than alpha") bounds the node by alpha0 and
+              by nothing lower, and the edge is a value no search returned.
+              It is implemented from DEC-318's description (DEC-221).
+              (2) **Root 76's loss is DEC-087 (e)'s and DEC-158's price on
+              the changed tree, not (a)'s.** DEC-306 read DEC-087 (e) as
+              having "priced the zugzwang where nothing is proved"; DEC-158
+              says "the mates the engine does not find ... are what the
+              pruning costs". The mate is lost by the null move and reverse
+              futility at nodes where (a) does not fire. DEC-311's "a guard
+              that hides a mate the shipped tree reports is not the fix" is
+              read against the trace, as DEC-312 (2) read it.
+              (3) **The oracle for a mate's distance is Stockfish at 5000000
+              nodes through python-chess**, from S296 on, cached with its
+              command (`adocs/data/S296_oracle.py`, `S296_oracle.tsv`).
+              (4) **S295's `go nodes 140000` cell in `tests/test_mate_pv.cpp`
+              is retired.** It rested on the short `mate 4`, and on (a)'s
+              tree no cell of `S295_long_line.py`'s grid separates (0 of
+              318). The cut's guard stays with the constructed-lines case
+              (MW03's other killer). S294's cell is re-picked by its script
+              (mined line 101, `go nodes 40000`).
+              (5) The goldens move by their scripts inside DEC-299's guard.
+              `EXACT_FLOOR`'s ends are 160 shipping and 159 weakened
+              (`RfpMinPly` 1), so no floor both separates and keeps a spare
+              point. It rises 158 -> 159, one below the shipping count
+              (DEC-313 (1)'s rule), and is recorded as no longer separating.
+              `MATE_IN_THREE_FLOOR` 11 carries the separation again, with 13
+              shipping against 8 weakened. This is DEC-313 (2)'s form with
+              the roles swapped. The S170 ceilings are unmoved; budgets A
+              300000 -> 500000 and C 500000 -> 1500000 by
+              `S170_pick_budgets.sh`.
+              (6) A `{-5, 0}` SPRT against its parent at 8+0.08, Hash 16
+              (`adocs/data/S296_sprt.sh`) decides it. On H1 or no verdict
+              the rule stays. On H0 it reverts whole and the owner rules.
+Why:          (a) closes the BUGS-binding short mate (DEC-318) at the
+              mined set's count, and its one lost proof traces to rules
+              already priced; (b) breaks a floor DEC-299 forbids lowering.
+Rejected:     Form (b): `EXACT_FLOOR` falls (156 < 158) and 161 grid cells
+              are lost. The mated band's edge as (a)'s return: a value no
+              search returned, which could surface as a cp score just short of
+              mate. Stopping for the owner on root 76: the trace answers the
+              question DEC-311 asks, and the figures already make the ruling,
+              as in DEC-312. Stockfish at `go depth 20` as the distance
+              oracle: it contradicted 50 of 372 proved distances. Keeping
+              S295's cell at a raised budget: no cell separates. `EXACT_FLOOR`
+              at 160, the band's one separating value: a zero-margin floor,
+              which DEC-116 and DEC-313 (2) rejected, and S293's at-shipping
+              floor is the one the owner moved back in DEC-313 (1).
+Consequences: `EXACT_FLOOR` keeps one spare point and no longer separates
+              `RfpMinPly` 1; `MATE_IN_THREE_FLOOR` alone does, so a change
+              that moves its weakened end past 10 re-opens the question for
+              the owner. MANUAL.md's Known bugs entry for the short
+              distance is closed. S136 starts after S296's verdict. The S170
+              A and C budgets leave with any revert. `aspiration_search_t::
+              pv_length` (`src/uci.hpp`) has no reader since the retired case;
+              left for a later cleanup.

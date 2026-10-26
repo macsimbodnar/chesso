@@ -921,6 +921,13 @@ struct search_node_probe_t
   int pruned_count = 0;
   move_t pruned_moves[MAX_MOVES];
   int pruned_rule[MAX_MOVES];
+
+  // The move loop ran to its end, and the fail-soft best of the moves it
+  // searched, as the loop left it -- before S296's rule may return alpha in
+  // its place at a node that skipped a move with every searched move mated.
+  // A case reads the mated best here and the node's return beside it.
+  bool loop_ended = false;
+  int loop_best = 0;
 };
 
 

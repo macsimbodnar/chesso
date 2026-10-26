@@ -32,6 +32,15 @@ carried it to the root (`adocs/data/S295_trace.txt`). Returning alpha there
 restores mate 5. **S296 in progress** (`plan_current/`, one Opus 5.5
 subagent in `../chesso-s296`, `.tuning/coord/S296/brief.md`): two forms
 measured, one shipped, decided by a `{-5, 0}` SPRT; then S136 (tempo).
+Both forms clear every short mate (`adocs/data/S296_forms.txt`); (b)
+drops the mined set to 156 under `EXACT_FLOOR`, so **(a) ships** (DEC-319):
+return `alpha0`, bench 5184358 -> 5069022. Its one lost proof, S145 root
+76, traced to the null move and reverse futility where (a) does not fire
+(`adocs/data/S296_root76.txt`). `EXACT_FLOOR` 158 -> 159 (non-separating;
+`MATE_IN_THREE_FLOOR` carries `RfpMinPly` 1's separation), S295's node cell
+retired, S294's re-picked, S170 budgets A and C by the picker. Fast-checked;
+gate_extra ok, Debug self-play Assertion 0. **The `{-5, 0}` SPRT runs
+next** (`adocs/data/S296_sprt.sh`, about 12 h, 20 h worst case).
 
 ## 2026-10-26: S135 read H1; the piece placement fit ships; S294 next
 

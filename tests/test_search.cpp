@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <algorithm>
 #include <bit>
 // S236: the reduction table's own formula, restated in the case that pins the
 // accumulator's unit so the engine cannot supply its own expectation.
@@ -9619,6 +9620,129 @@ TEST_SUITE("search: pruning and reduction guards")
             0, true);
 
     REQUIRE_EQ(static_cast<int>(entry_after()->no_move_skipped), 1);
+  }
+
+
+  // Mutation: SK01_skipped_mated_fail_soft_kept, in
+  // tools/mutants/S296_skipped_mated_fail_low.py -- the engine before S296, a
+  // node that skipped a move returning its fail-soft mated best:
+  //
+  //   search: pruning and reduction guards
+  //    a node that skipped moves claims no mate it did not search
+  //   CHECK( value > -MATE_MIN_LOCAL )
+  //   values: CHECK( -48993 > -48000 )
+  //
+  // S296, DEC-318. The node S295 traced (adocs/data/S295_trace.txt): ply 5 of
+  // S145 mined line 168 after h3f2 h1g1 f2e4 d1d2 e4d2, White to move, a
+  // non-PV node at depth 3. In this case's drive, on a wiped table, quiet SEE
+  // pruning skips b2b3, g2g3, g2g4, a1b1 and a1f1 and late move pruning g1h1
+  // (adocs/data/S296_forms.txt section 6; in the traced search, with its
+  // tables, SEE skipped g2g3, g2g4 and a1b1 and late move pruning a1f1, b2b3
+  // and a4a5); every move it searches is answered by g7g2 mate, so its
+  // fail-soft best is "mated at ply 7". Before S296 it returned
+  // that best as its bound and the table carried it to the root as `mate 4`
+  // where the position is mate in 5. Since S296 a node that skipped a move and
+  // found every searched move mated returns its own alpha.
+  //
+  // The position is not a chess judgement: python-chess applied the five
+  // moves and reports 15 legal moves, g2g3 and g2g4 the only two after which
+  // Black has no checkmating reply; Stockfish reads it #-2. The case
+  // re-asserts the second fact through the engine's own generator before the
+  // drive, so "mated in one" is shown false here and not quoted.
+  //
+  // GOLDEN (DEC-142): the window, alpha -2108 at depth 3 -- the node's own
+  // window and depth in the trace, iteration 7's aspiration search [1608,
+  // 2108] at ply 5. Re-derive: adocs/data/S295_trace_patch.py on the tree,
+  // `go depth 8` on line 168 (the commands in S295_trace.txt), node 4342 of
+  // its log. Margin: 21 below and 203 above. On the wiped table the shipped
+  // tree returns the mated best at depth 3 for every alpha from -2129 to
+  // -1905 (and again from -1804 to -1761); below -2129 the node fails high at
+  // -2129 and elsewhere above it the node is not mated (the sweep, every alpha
+  // from -47999 to 0, in adocs/data/S296_forms.txt section 6). Moves on:
+  // anything that moves this node's ordering, its pruning or its static
+  // score -- re-derive the window, never re-read it from a run.
+  TEST_CASE_FIXTURE(
+      guard_fixture_t,
+      "a node that skipped moves claims no mate it did not search")
+  {
+    const std::string fen = "6rk/5rqp/p7/2P1p3/P7/8/1P1n2P1/R5K1 w - - 0 35";
+    static constexpr int PLY = 5;
+    static constexpr int DEPTH = 3;
+    static constexpr int ALPHA = -2108;
+
+    load(fen, PLY);
+    REQUIRE(!is_check(&game));
+
+    // The engine's own generator: the replies after which Black has no
+    // checkmating move are exactly g2g3 and g2g4, so the node is not mated in
+    // one and a bound of "mated at ply 7" is false.
+    move_t moves[MAX_MOVES];
+    const size_t count = legal_moves(&game, moves);
+    REQUIRE_EQ(count, 15);
+
+    const auto uci = [](move_t m) {
+      return index_to_str(MOVE_FROM(m)) + index_to_str(MOVE_TO(m));
+    };
+
+    std::vector<std::string> escapes;
+    for (size_t i = 0; i < count; ++i) {
+      REQUIRE(make_move(&game, moves[i]));
+      move_t replies[MAX_MOVES];
+      const size_t reply_count = legal_moves(&game, replies);
+      bool mated = false;
+
+      for (size_t j = 0; j < reply_count && !mated; ++j) {
+        REQUIRE(make_move(&game, replies[j]));
+        move_t answers[MAX_MOVES];
+        mated = is_check(&game) && legal_moves(&game, answers) == 0;
+        unmake_move(&game);
+      }
+
+      unmake_move(&game);
+      if (!mated) { escapes.push_back(uci(moves[i])); }
+    }
+
+    REQUIRE(escapes == std::vector<std::string>{"g2g3", "g2g4"});
+
+    // The drive, probed: the node reaches its loop, skips both escapes, and
+    // every move it searches is mated -- the shape, before any rule acts.
+    load(fen, PLY);
+    const int value =
+        negamax_probed(ALPHA, ALPHA + 1, DEPTH, PLY, &game, &state, 0, false);
+
+    REQUIRE(!state.aborted);
+    REQUIRE(probe.loop_ended);
+    REQUIRE(probe.move_count > 0);
+
+    std::vector<std::string> pruned;
+    for (int k = 0; k < probe.pruned_count; ++k) {
+      pruned.push_back(uci(probe.pruned_moves[k]));
+    }
+
+    const auto was_pruned = [&](const std::string& move) {
+      return std::find(pruned.begin(), pruned.end(), move) != pruned.end();
+    };
+
+    REQUIRE(was_pruned("g2g3"));
+    REQUIRE(was_pruned("g2g4"));
+    REQUIRE(probe.loop_best <= -MATE_MIN_LOCAL);
+
+    // The property: the node claims no mate, and the bound it gives is its
+    // own window's edge, stored as an upper bound that says a move was
+    // skipped.
+    CHECK(value > -MATE_MIN_LOCAL);
+    CHECK(value == ALPHA);
+
+    const tt_entry_t* entry = tt_get_entry(&tt, &game.board);
+    REQUIRE(entry != nullptr);
+    CHECK(static_cast<int>(entry->type) == static_cast<int>(TT_ALPHA_NODE));
+    CHECK(entry->score > -MATE_MIN_LOCAL);
+    CHECK(static_cast<int>(entry->no_move_skipped) == 0);
+
+    // The engine's own instantiation decides the same node alike.
+    load(fen, PLY);
+    CHECK(negamax(ALPHA, ALPHA + 1, DEPTH, PLY, &game, &state, 0, false) ==
+          value);
   }
 
 

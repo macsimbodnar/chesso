@@ -1,0 +1,137 @@
+# S296: DEC-318's two forms measured against the shipped tree, before either ships. 2026-10-26, on b477459 (bench
+# 5184358). The engine's output against the oracle's (adocs/data/S296_oracle.tsv); no chess judgement here.
+#
+# THE BUILDS. Three throwaway worktrees detached at b477459 (.tuning/s296/f_ship, f_a, f_b, removed after), each
+# rewritten by adocs/data/S296_forms_patch.py <worktree> ship|a|b and built Release, `--target chesso`:
+#   ship  the counters only                                             bench 5184358 (the tree's own)
+#   a     a node that skipped a move and fails low on a best at or below -MATE_MIN stores and returns alpha0
+#                                                                       bench 5069022
+#   b     the five move-loop rules' eligibility (`may_prune`: futility, history pruning, quiet SEE, capture SEE,
+#         late move pruning) also requires best_so_far > -MATE_MIN       bench 4723001
+# Form (a) returns alpha0 and not the mated band's edge: the skipped moves were skipped on the premise that each
+# scores no better than alpha, so the premises bound the node by alpha0 and by nothing lower: every searched move
+# is mated, and no skipped move was given a value. Form b's drive of S295's node (section 6), which searches one move
+# ship skips there, returns -2145, far above the band's edge. The edge would be a value no search returned, and a cp
+# score one point short of the mate band could then surface where a parent fails high on it.
+#
+# COMMANDS (P=~/.venv/chess/bin/python, S=.tuning/s296, the set files built as adocs/data/S291_reach.txt says:
+# roots82 and def104 from adocs/data/S145_mate_set.tsv and S165_defender_set.tsv, def186 by
+# adocs/data/S291_defender186.py, mined318 from adocs/data/S145_mined_set.tsv at depth 10):
+#   $P adocs/data/S289_rows.py $S/f_<form>/build/src/chesso $S/sets/<set>.set 10 $S/rows/<set>_<form>.txt
+#   $P adocs/data/S295_long_line.py sweep --engine <chesso> --out $S/grid/mined_<form>.tsv     (S294's grid)
+#   $P adocs/data/S295_long_line.py s170 --engine <chesso> --out $S/grid/s170_<form>.tsv      (the S170 grid)
+#   $P adocs/data/S296_oracle.py positions --sets $S/sets/*.set --grids $S/grid/*.tsv --out $S/oracle.fens
+#   $P adocs/data/S296_oracle.py run $S/oracle.fens adocs/data/S296_oracle.tsv          (610 positions)
+#   $P adocs/data/S296_compare.py --oracle adocs/data/S296_oracle.tsv --sets $S/sets --rows $S/rows \
+#       --grids $S/grid --forms ship a b
+#   $P adocs/data/S210_f22_census.py positions adocs/data/S219_aa_calibration.pgn $S/census/census.fens
+#   python3 adocs/data/S296_census.py run <chesso> $S/census/census.fens 10 $S/census/c_<form>.tsv
+#   python3 adocs/data/S296_census.py read $S/census/c_ship.tsv $S/census/c_a.tsv $S/census/c_b.tsv
+# (census.fens is byte-identical to S292's; S296_census.py's first four columns equal S289_census.py's on all three
+# builds.)
+#
+# READING. Both forms close the defect as measured: no reported mate shorter than the oracle's anywhere, against the
+# shipped tree's 2 iterations on the mate sets, 16 searches on S294's grid and 28 on the S170 grid; S295's chain reads
+# mate 5 (a) or no mate (b) at depth 8 where the shipped tree reads mate 4. NEITHER loses no mate the shipped tree
+# reports, so by the brief and DEC-318's consequences S296 stops here for the coordinator, nothing in src/. Form (a)
+# keeps both mate floors (mined 160, m3 13), its set and grid losses are one to two iterations or budgets late except
+# S145 root 76 (m5 lost through depth 21, back at depth 13 with reverse futility off), and it moves 189 ordinary-play
+# root moves, each in a search where it fired. Form (b) fails EXACT_FLOOR (156 < 158), loses 161 mined-grid cells (84
+# never back on the grid) and moves 450 root moves.
+#
+# == 1. Side by side
+#                                              ship              a                  b
+# S295 chain, line 168, `go depth 8`           mate 4 (61914 n)  mate 5 (74605 n)   cp 2200 (5970 n); mate 5 at 9
+#   (the oracle: mate 5)                       mate 5 at depth 9 mate 5 at 9 and 10 mate 5 at 9 and 10
+# exact, S145's 82 roots (S154's m3)           41 (m3 13)        41 (m3 13) +1 -1   41 (m3 13) +0 -0
+# exact, S165's 104 defender nodes             83                83 +0 -0           83 +0 -0
+# exact, S145's 186 defender nodes             143               143 +0 -0          143 +0 -0
+# exact, S145's 318 mined rows, depth 10       160               160 +3 -3          156 +3 -7   (EXACT_FLOOR 158)
+# exact, S294's mined grid (12402 searches)    5208              5248 +94 -54       5145 +98 -161
+# exact, the S170 grid                         121               137 +47 -31        148 +56 -29
+# shorter than the oracle, the four sets       2 iterations      0                  0
+#   (last iteration, every set)                0                 0                  0
+# shorter than the oracle, S294's grid         16 searches, 82   0                  0
+#                                              lines
+# shorter than the oracle, the S170 grid       28 searches, 319  0                  0
+#                                              lines
+# census, 11503 positions at depth 10:
+#   firings (searches touched)                 shape 4993 (1532) 5715 (1532)        127592 nodes (6648)
+#   root best moves changed                    -                 189                450
+#   root scores changed / node counts changed  -                 504 / 954          1358 / 5074
+#   nodes                                      1013553757        x1.000063          x1.000767
+# chesso bench                                 5184358           5069022            4723001
+#
+# "shape" on ship: move-loop returns of a node that skipped a move with a mated best (form a's firing condition),
+# 4993 in 1532 searches; and nodes where a rule's eligibility held while every searched move was mated (form b's),
+# 126277 in 6648 searches. Form b's firing count is those nodes on its own tree (127592; 161300 candidates). The
+# shipped tree's two short iterations on the sets: line 168 depth 8 (mate 4, oracle 5) and line 226 depth 9 (mate
+# 5, oracle 6). The grid's short searches: line 168 (47 lines, mate 4 against 5) and line 226 (35, 5 against 6) on
+# S294's grid; case B, strides 1 and 2, on the S170 grid (319 lines, each one move short). Mined-set line numbers are
+# file lines of adocs/data/S145_mined_set.tsv (index + 7).
+#
+# == 2. The sets, every moved row (index: the set's label, the oracle, ship -> form)
+roots82  a  index 50  (+4, oracle #4): cp 139 -> mate 4 gained;  index 76 (+5, #5): mate 5 -> cp 633 lost
+mined318 a  index 91  (line 98,  #4): mate 4 -> cp 3332 lost;    index 105 (line 112, #4): cp 3122 -> mate 4 gained
+mined318 a  index 158 (line 165, #5): cp 2141 -> mate 5 gained;  index 163 (line 170, #5): mate 5 -> cp 1354 lost
+mined318 a  index 169 (line 176, #5): mate 5 -> cp 2348 lost;    index 247 (line 254, #7): cp 784 -> mate 7 gained
+mined318 b  lost: 89 (line 96, #4 -> cp 1826), 91 (#4 -> cp 3010), 107 (#4 -> mate 5), 150 (#5 -> mate 6), 163 (#5 ->
+            cp 1446), 225 (#6 -> cp 2450), 226 (#6 -> cp 1972); gained: 158 (#5), 216 (#6), 235 (#7)
+# Scores moved without a moved exact count: a 4, 1, 1, 68 (roots, def104, def186, mined), b 2, 2, 2, 79.
+# Per distance, mined318: ship m3 34/37 m4 37/49 m5 34/52 m6 11/50 m7 1/29; a m5 33 m7 2; b m4 34 m5 33 m6 10 m7 2.
+#
+# == 3. The lost rows at deeper depths (S289_rows.py at the set's depth + 4; every iteration from the set's depth - 2)
+roots82  76  ship 15:515 16:m5 17:m5 ... 21:m5    a 15:482 16:509 17:633 18:706 19:847 20:963 21:988    b 17:m5 ...
+mined    91  ship 9:m4                           a 10:3332 11:m4                                       b 12:m4
+mined   163  ship 10:m5                          a 11:1375 12:m5                                       b 11:m5
+mined   169  ship 10:m5                          a 10:2348 11:m5                                       b 10:m5
+mined    89, 225, 226 (b only)                   b 11:m4, 11:m6, 11:m6;  107, 150 (b) mate 5, mate 6 at 10, exact at 12, 11
+# The gains run the other way: index 105 a m4 from 10 (ship 11), 158 a m5 from 10 (ship 11), 247 a m7 from 10 (ship
+# m10 at 11, m7 at 12).
+#
+# Root 76 (K3k3/1r6/8/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1, proved mate in 5), one tune option at a time at depth 17
+# on throwaway tune builds of ship and a (bench 5184358, 5069022), the last six iterations:
+#   defaults               ship 16:m5 17:m5        a 16:509 17:633
+#   RfpMinPly 63           ship 17:m5              a m5 from 13 (12:m7)
+#   RfpMaxDepth 4          ship m5 from 15         a m5 from 16
+#   NullMoveBase 16        ship 17:833 (none)      a m5 from 16
+#   SeMultiCut 0 / ProbCut 0 / RazorDepth 0        ship m5 from 16 / 17 / 15     a m5 from 15 / 16 / 15
+#   LmpMaxLmrDepth 0 / FutMaxLmrDepth 0            ship m5 from 15 / none        a m5 from 16 / 15
+#   SeeQuietMaxLmrDepth 0  ship m5 from 15         a none (17:835)
+#   LmrBase 0              ship m5 from 15         a none (all 0)
+#   SeeCaptureMaxLmrDepth 0  ship 17:m5            a none (17:704)
+#   SeExtend 0, HistPruneMaxLmrDepth 0, RfpTtEstimate 0: neither reports the mate; QsFutility 0: both 17:m5
+# The row is one cold search's tree shape, as S293 found row 171; with reverse futility off form (a) finds it from
+# depth 13, against the shipped tree's 16 at its defaults and 17 with reverse futility off. DEC-158's kind, not
+# traced further here.
+#
+# == 4. The grids: where a lost cell comes back (a cell = one `go nodes` search; the same position at a larger
+#    budget on the grid)
+# S294's grid  a: 54 lost over 10 positions, all 54 exact again at a larger budget; 94 gained over 17 (24 never
+#              exact on ship's grid).  b: 161 lost over 18 positions, 77 back at a larger budget, 84 never.
+# S170 grid    a: 31 lost over 22 positions, 22 back;  b: 29 lost over 18, 20 back.
+# Hash 4 and 64 against 16 on the shipped build over the four sets: no exact mate gained or lost (3, 1, 1, 2 and
+# 1, 0, 0, 0 scores moved), so the forms' gains and losses are their trees, not table pressure.
+#
+# == 5. The census's root moves, from the engine's output (S296_census.py read)
+# a: 189 best moves, 504 scores and 954 node counts moved, every one in a search where the form fired (0 moved
+#    where it did not); |score change| at a moved best move median 11 cp, p90 48, max 852 (census.fens position 6147
+#    counted from 0, b4b3 cp -2027 -> d1d2 cp -1175, 27 firings), no mate score among them.
+# b: 450, 1358, 5074, every one where its condition bound; median 13 cp, p90 42, max 762.
+#
+# == 6. The direct node, a guard ready for either form (not landed): S295's ply-5 node,
+#    6rk/5rqp/p7/2P1p3/P7/8/1P1n2P1/R5K1 w - - 0 35 (python-chess: 15 legal moves, g2g3 and g2g4 the only two that
+#    leave Black no mate in one; Stockfish #-2 in S295_trace.txt), driven through negamax_probed at ply 5, depth 3,
+#    window [-2108, -2107], non-PV, a wiped table:
+#   ship  returns -48993 (mated at ply 7, a mated-in-one claim), searched 9, pruned 6: b2b3 g2g3 g2g4 a1b1 a1f1 by
+#         quiet SEE, g1h1 by late move pruning
+#   a     returns -2108 (alpha0), the same 9 searched and 6 pruned
+#   b     returns -2145, searched 9 (b2b3 among them, which ship skips), pruned g2g3 g2g4 a1b1 (SEE), a1f1 g1h2 g1h1
+#         (LMP)
+# Depths 4 to 6 read the same way (ship -48993, a -2108, b -2145 to -2115); at windows -1000 and 0 futility prunes 14
+# moves and the three agree.
+# The window swept on the shipped tree (+ the probe's loop fields, before the rule), every alpha from -47999 to 0 at
+# depth 3, the same drive: the node skips a move and returns its mated best (-48993) for alpha -2129 to -1905 and
+# -1804 to -1761; below -2129 it fails high at -2129, and between and above those it is not mated. The trace's -2108
+# sits 21 above the band's floor and 203 below its top: tests/test_search.cpp's "a node that skipped moves claims no
+# mate it did not search" drives it.
