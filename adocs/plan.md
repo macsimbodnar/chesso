@@ -317,8 +317,9 @@ is typed by hand.
 | S293 | reverse futility's whole-search mated guard | 5 h 7 m | 10954 | `{-5, 0}` | H1, +2.85 +/- 4.60 |
 | S083 | the evaluation refit at 46 rows a game | 0 h 16 m | 568 | `{0, 5}` | H1, +116.07 +/- 23.26 |
 | S135 | the piece placement family's joint fit | 6 h 17 m | 13406 | `{0, 5}` | H1, +5.88 +/- 4.40 |
+| S296 | the mated fail-low after skipped moves | 8 h 38 m | 18512 | `{-5, 0}` | H1, +0.96 +/- 3.52 |
 
-**The ledger holds 57: mean 6 h 02 m, median 5 h 25 m, 688119 games in 344.62 hours, 1996.7 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty runs, mean **1 h 48 m**. **Slow class**, inside it, on a bound or a true zero -- 37 runs, mean **8 h 20 m**.
+**The ledger holds 58: mean 6 h 05 m, median 5 h 26 m, 706631 games in 353.25 hours, 2000.4 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty runs, mean **1 h 48 m**. **Slow class**, inside it, on a bound or a true zero -- 38 runs, mean **8 h 20 m**.
 
 ### Priced by class
 
