@@ -1,14 +1,14 @@
 id:         S296
 goal:       a node that skipped moves by a shallow-depth pruning rule no longer returns a mated score it did not prove, so the root never reports a mate shorter than the position's; one form chosen by measurement, decided by a {-5, 0} SPRT
 accepts:    S295's chain (`adocs/data/S295_trace.txt`, S145 mined line 168) re-taken on the fixed tree: depth 8 no longer reports `mate 4` (the oracle's mate in 5, Stockfish depth 20), read from the engine's output; both forms of DEC-318, (a) a mated fail-low after a skip returns a bound that does not claim the mate and (b) the move-loop's shallow-depth pruning is not applied while no searched move has escaped the mated band, implemented from their descriptions (DEC-221) and measured before one is chosen -- exact mates gained and lost on S145's set, S289's four mate sets, the S170 cells and S294's grid, the census of printed mate distances shorter than the oracle's on those sets, and S292's ordinary-play census (firings, root moves changed, nodes); if neither form loses no mate the shipped tree reports, stop with both forms' figures for the coordinator; a case observed red first on the shipped tree and green after; a mutant it kills (DEC-141, new pruning-adjacent rule); every golden it moves re-derived by its script (DEC-142), the mate floors and S170 ceilings under DEC-299's guard; Tier 2 (DEC-141) run; S295's node-limited cell in `tests/test_mate_pv.cpp` (the `go nodes 140000` cell on S145 mined line 168, picked by `adocs/data/S295_long_line.py`) exists only because of the short `mate 4`, so it is re-derived by its script on the fixed tree or, if no cell separates, retired by a recorded decision, the cut's guard kept by the constructed-lines case (MW03's other killer); both builds and both fast suites green; then the coordinator's `{-5, 0}` SPRT at 8+0.08, Hash 16, against its parent, pre-registered with its three outcomes
-touches:    src/search.cpp (the move loop's end: `node_value`, alpha0 at a mated fail-low after a skip, stored and returned; the probe's write); src/data_structures.hpp (`search_node_probe_t::loop_ended`, `loop_best`, test instrumentation); tests/test_search.cpp (one case, `<algorithm>`); tests/test_mate_pv.cpp (S294's cell re-picked, S295's node-limited case retired, the header); tests/test_mate_breadth.cpp (`EXACT_FLOOR` 158 -> 159 and its comment); tests/test_engine.cpp (`MATE_IN_THREE_FLOOR`'s comment); tests/test_mate_carry.cpp (the ceilings' command gains S296's grid, comments only); adocs/data/S170_cases.tsv (A's and C's budgets by the rule, and its header); tools/mutants/S296_skipped_mated_fail_low.py (SK01-SK02); tools/mutants/S097_singular_extension.py (E09 re-pointed); tools/mutants/S202_mate_walk.py (MW02's and MW03's killers, docstring only); adocs/data/S296_* (forms_patch.py, oracle.py, oracle.tsv, compare.py, census.py, forms.txt, root76.txt, red.log, goldens.txt, sweep_s170.txt, mutation.tsv, sprt.sh); adocs/data/README.md (twelve rows); MANUAL.md (the Known bugs entry and the `depth` row); DEV_MANUAL.md (the defender set's paragraph, the `test_mate_pv` paragraph, the goldens rows); this file
+touches:    src/search.cpp (the move loop's end: `node_value`, alpha0 at a mated fail-low after a skip, stored and returned; the probe's write); src/data_structures.hpp (`search_node_probe_t::loop_ended`, `loop_best`, test instrumentation); tests/test_search.cpp (one case, `<algorithm>`); tests/test_mate_pv.cpp (S294's cell re-picked, S295's node-limited case retired, the header); tests/test_mate_breadth.cpp (`EXACT_FLOOR` 158 -> 159 and its comment); tests/test_engine.cpp (`MATE_IN_THREE_FLOOR`'s comment); tests/test_mate_carry.cpp (the ceilings' command gains S296's grid, comments only); adocs/data/S170_cases.tsv (A's and C's budgets by the rule, and its header); tools/mutants/S296_skipped_mated_fail_low.py (SK01-SK02); tools/mutants/S097_singular_extension.py (E09 re-pointed); tools/mutants/S202_mate_walk.py (MW02's and MW03's killers, docstring only); adocs/data/S296_* (forms_patch.py, oracle.py, oracle.tsv, compare.py, census.py, forms.txt, root76.txt, red.log, goldens.txt, sweep_s170.txt, mutation.tsv, sprt.sh; at the close sprt.log, sprt_mate_pvs.py, sprt_mate_pvs.txt); adocs/data/README.md (twelve rows, three more at the close); MANUAL.md (the Known bugs entry and the `depth` row); DEV_MANUAL.md (the defender set's paragraph, the `test_mate_pv` paragraph, the goldens rows); this file
 excludes:   reverse futility's margins and ceiling (DEC-158); DEC-310's null-move guard; the reporting layer (S295); the S170 budgets except by S170_pick_budgets.sh under DEC-299's guard
-decisions:  DEC-318, DEC-317, DEC-310, DEC-171, DEC-158, DEC-221, DEC-141, DEC-142, DEC-299, DEC-143
+decisions:  DEC-318, DEC-317, DEC-310, DEC-171, DEC-158, DEC-221, DEC-141, DEC-142, DEC-299, DEC-143, DEC-320
 closes:
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
-done:
+done:       2026-10-27 09:26 -- H1 at {-5, 0} nElo, 8+0.08, Hash 16, CAND 25b332b vs REF b477459: Elo +0.96 +/- 3.52, nElo +1.36 +/- 5.00, LLR 2.96, 18512 games, 8 h 38 m, 0 forfeits (adocs/data/S296_sprt.log, archived as chesso_S296_sprt_2026-10-27.tar.xz); the banner as pinned (33f1eab), both binaries at their bench (5069022, 5184358), no crash or disconnect, quarters -0.7, -3.3, +4.4, +3.3, kernel journal clean; seven incomplete mating PVs, five the candidate's in three games and two the reference's in one, each a line shorter than its distance (DEC-122's class, DEC-162) and none a distance shorter than Stockfish's, two read at 10^9 nodes where DEC-319's 5000000 found no mate (DEC-320; adocs/data/S296_sprt_mate_pvs.txt); so by the pre-registered H1 row the rule stays (DEC-318, DEC-319): a node that skipped moves and found every searched move mated returns alpha0, S295's chain reads mate 5 at depth 8, S145 root 76's mate in 5 stays the null move's and reverse futility's price, and S136 is next. Implemented by one Opus 5.5 subagent (25b332b: both forms measured, stopped as neither kept every mate, form (a) landed on root 76's trace, red first, SK01-SK02 killed, gate_extra 5/5, Debug self-play 0 Assertion, both builds green), fast-checked (one ruling, five nits); the run the coordinator's; inspected, recorded and stamped by one Opus 5.5 subagent (both fast suites 50/50, no src/ change).
 
 ## Why this step exists (the coordinator, 2026-10-26, DEC-318)
 
@@ -448,3 +448,231 @@ Tier 2 was re-run. Gates after these edits, `CLANG_FORMAT_MAJOR=22`: both
 builds, no warning; both fast suites in full, 50 of 50 each; format clean; the
 four prose modes exit 0; `chesso bench` 5069022 in both builds.
 
+## 2026-10-27: the SPRT read H1; the rule stays (one Opus 5.5 subagent, closing)
+
+**The verdict.** `adocs/data/S296_sprt.sh`'s pair as pinned at `33f1eab`:
+`25b332b` (the rule, bench 5069022) against its parent `b477459` (bench
+5184358), 2026-10-27 00:04 to 08:43, `SPRT-RUN-DONE`:
+
+```
+SPRT | cand 25b332b vs ref b477459, 8+0.08, Hash=16, noob_3moves.epd, {-5, 0} nElo
+Elo | 0.96 +/- 3.52, nElo 1.36 +/- 5.00
+LLR | 2.96 (-2.94, 2.94) -> H1
+Games | N: 18512 W: 5029 L: 4978 D: 8505, Ptnml [556, 2286, 3573, 2233, 608]
+Wall | 8 h 38 m, 2142.8 games/h, forfeits 0
+Log | adocs/data/S296_sprt.log
+```
+
+`Wall`'s rate is N over fastchess's `Total Time` 08:38:21, the way S293's
+2139.1, S292's 2140.9, S289's 2151.5 and S135's 2128.4 reproduce from their
+logs.
+
+### The inspection, before the verdict was read as the record
+
+- **Banner** (the console's): candidate `25b332b 2026-10-26`, reference
+  `b477459 2026-10-26` (both commits' dates), `arch native tune off`,
+  padding on both, 8+0.08, hash 16, 12 of 12 cores, `noob_3moves.epd`, seed
+  20261027000443, `elo0=-5 elo1=0 alpha=0.05 beta=0.05`, cap 20950 rounds
+  and 41900 games from `SPRT_ROUNDS`, out
+  `.tuning/sprt_s296_20261027_000443`; no `diff`, `relay` or `A/A
+  CALIBRATION` line; `Started game 1 of 41900`. As the pin and the script's
+  banner sentence say.
+- **Binaries**: `.ref-builds/25b332b/build/src/chesso` benches **5069022**
+  and `.ref-builds/b477459/build/src/chesso` **5184358**, both worktrees
+  clean at their sha. Written 00:04:49 and 00:04:55 and not since; the
+  candidate played from `fastchess.sh`'s snapshot of the first, taken before
+  the first game (`GameStartTime` 00:04:55), the reference from its path.
+- **Crashes, disconnects, illegal moves**: none in the console or
+  `fastchess.log`, whose 10 entries are the warnings below. 18514 games in
+  the PGN, fastchess's game numbers (`2 * Round - 1` with the candidate
+  White, `2 * Round` with it Black) 1 to 18515 each at most once, 18511 the
+  one unfinished when the SPRT stopped; terminations 12011 adjudication
+  (10007 decisive, 2004 drawn), 6503 normal (6502 drawn, 1 decisive).
+- **Forfeits**: `tools/forfeit_report.py` 0 of 18514 for each engine.
+- **Console warnings**: 3 PV-past-threefold blocks (2 the candidate's, 1 the
+  reference's; `trim_console.py`'s count) and **7 `Incomplete mating PV`**,
+  5 the candidate's and 2 the reference's, read in the next section.
+- **Quarters**, in game-number order, 4628 or 4629 games each (boundaries
+  `i * 18514 // 4`), Elo from the candidate's score with its 95 % per-game
+  interval, over the PGN's games -- the method reproduces S293's recorded
+  +4.8, +2.4, +2.0, +2.4 and S135's +5.6, -2.5, +13.8, +6.6 (and its
+  chi-square 6.56) from their PGNs exactly: **-0.7, -3.3, +4.4, +3.3**, each
+  +/- 7.3 to 7.4. Their spread about the run's mean is chi-square 2.73 on 3
+  degrees of freedom, p 0.44.
+- **Kernel journal**, 00:04:43 to 08:44: one kernel entry, 00:05:05 `usb
+  3-2.4: USB disconnect` (the monitor's control device, which also cycled at
+  boot, 00:03:32); no machine check, OOM, thermal or hardware error. One
+  boot since 00:03:24, no suspend. Outside the kernel, at error level, only
+  the desktop session's panel applets restarting at 00:05:12 to 00:05:14
+  (exit 137) -- user space, the first minute, no engine disconnected.
+
+The run stands.
+
+### The seven `Incomplete mating PV` warnings (`adocs/data/S296_sprt_mate_pvs.txt`)
+
+Every position put on a board by python-chess from the console's FEN and
+move list, and its game found in the PGN by `adocs/data/S296_sprt_mate_pvs.py`;
+the oracle Stockfish through python-chess in `TOOLCHAIN.md`'s safe form, at
+DEC-319 (3)'s 5000000 nodes and, since that reads no mate on two, all four
+again deeper -- 10^9 nodes on 12 threads with Hash 2048, labelled as deeper
+and not as DEC-319's setting (DEC-320). Console line numbers are the untrimmed console's (the
+trimmed log's are the same for the first four and 4 lower for the last
+three).
+
+| console line | engine | game, ply | printed | line | Stockfish 5000000 | deeper | printed against it | reproduced |
+|---|---|---|---|---|---|---|---|---|
+| 925 | cand | 375, 42 | mate 6, depth 2, 282 nodes | 2 of 11 plies | mate 5 | mate 5 | longer | no |
+| 3621 | cand | 1493, 102 | mate 8, depth 1, 28 nodes | 1 of 15 | cp +3719 | mate 8 | equal | no |
+| 13659 | ref | 5674, 62 | mate 8, depth 3, 2601 nodes | 3 of 15 | mate 6 | mate 6 | longer | warm replay |
+| 13663 | ref | 5674, 62 | mate 10, depth 4, 4487 nodes | 4 of 19 | mate 6 | mate 6 | longer | warm replay |
+| 18427 | cand | 7655, 88 | mate -11, depth 10, 22357 nodes | 12 of 22 | cp -731 | mate -10 | longer | no |
+| 18431 | cand | 7655, 88 | mate -11, depth 11, 64199 nodes | 14 of 22 | cp -731 | mate -10 | longer | no |
+| 18435 | cand | 7655, 88 | mate -11, depth 12, 310201 nodes | 15 of 22 | cp -731 | mate -10 | longer | no |
+
+**No printed distance is shorter than the oracle's, and the claimed side is
+the oracle's in every one** (the engine's side to move mates in the first
+four rows, is mated in the last three; at 5000000 nodes the two no-mate
+readings carry the same sign; the deeper readings are DEC-320's). Four
+distinct positions, each line legal throughout and shorter than the distance
+it claims: **DEC-122's short-line
+class** -- a walk that fails leaves the line as the search produced it,
+short and visible -- which `test_mate_carry` counts against per-case
+ceilings (DEC-162) and S202 owns; none is the other half, a line at least as
+long as its distance that is not mate there, which is asserted at zero. Two
+recorded shapes:
+
+- **925, 3621, 13659, 13663**: a shallow iteration (depth 1 to 4, 28 to
+  4487 nodes) printing a mate too shallow to build the line it owes, as
+  DEC-150's case was ("too shallow to build the 11 plies a `mate 6` owes"),
+  at the position's distance or longer (3621 equal; 925, 13659, 13663
+  longer) -- the shape of S135's six (mate 8 to 13 at depths 1 to 5). That
+  the mate came off entries the same game's earlier searches wrote is shown
+  for 13659 and 13663 only, by the warm replay below; for 925 and 3621 it is
+  inferred from the depth and node count, since no replay reproduces the
+  candidate's five.
+  Each search's own later iterations printed the oracle's distance (the
+  PGN's last scores, `+M9` = mate 5 in game 375 and `+M11` = mate 6 in game
+  5674) or dropped the mate (game 1493: `+15.08` at depth 15, h1h2 played).
+- **18427, 18431, 18435**: completed iterations 10 to 12 whose `mate -11` is
+  one move longer than the deeper oracle's mate in 10 against the side to
+  move (DEC-320) -- DEC-127's "sound but not optimal", and its "A
+  depth-limited search naming a longer mate than the game value is the
+  search, not the report" -- with the walk leaving the
+  line 7 to 10 plies short; both oracle readings' lines open with its six
+  first plies. The game was adjudicated on the next ply.
+
+**Reproduction.** On a cold table (one fresh process each, `Hash 16`,
+`ucinewgame`, the console's `position fen ... moves ...`, `go depth N` at
+the warning's depth) none reproduces, on either binary: both print the same
+cp lines and no mate line. Replayed through one process of the warning
+side's binary, `Hash 16`, at each of its turns `go nodes n` with the PGN's
+per-move node count: **the reference's two reproduce** (mate 8 at depth 3
+with 3 plies at 2498 nodes, mate 10 at depth 4 with 4 plies at 4263, then
+the complete mate 6 from depth 9); **the candidate's five do not** -- the
+replay's table diverges from the game's (game 375 prints the complete mate
+5 from depth 1, game 1493 the complete mate 8 from depth 12 and plays h7f7,
+game 7655 no mate line at ply 88), no turn of the three replays prints an
+incomplete line, so no entry-by-entry trace (`mate_trace`) of the
+candidate's five exists, and their shape is read from the console's figures
+alone.
+
+**The rates** (`S296_sprt_mate_pvs.py rates`), lines and distinct searches
+per 10000 games a side: this run's candidate **2.70 and 1.62** (5 and 3),
+its reference 1.08 and 0.54 (2 and 1); S293 0 / 0 and 0.91 / 0.91 (the
+reference's one), S292 0 on both sides, S135 4.48 / 1.49 (the candidate's
+six in two) and 0, S289 0 and 4.59 / 2.29 (the reference's four in two),
+S283 0 on both. Pooled over those five runs, 5 searches in 123246 side-games;
+at that rate the candidate's 18514 games expect 0.75 searches, and 3 or more
+has Poisson probability 0.04; within this run, 3 or more of the 4 searches
+falling to the candidate has binomial probability 0.31. Against DEV_MANUAL's
+standing figure, 8 lines from 1 search in 3000 games, this run is 7 lines
+from 4 searches in 18514. The candidate's search rate is the highest of the six
+runs' candidates (S135's 1.49 next, whose 4.48 lines are more), and S289's
+reference's 2.29 is higher still; a count, recorded, not a finding -- what
+S296 forbids, a distance shorter than the position's, is in none of them.
+
+### The verdict, by the pre-registration
+
+The H1 row executes: at 8+0.08 the rule is accepted as not costing 5 nElo,
+H1's 0 preferred to H0's -5 at alpha = beta = 0.05. **The rule stays**; S296
+completes and S136 is next (DEC-318). S145 root 76's mate in 5 stays lost
+through depth 21 as the null move's and reverse futility's price on the
+changed tree, with S296's attribution (DEC-319 (2),
+`adocs/data/S296_root76.txt`). **The stopping run's Elo is biased (DEC-063)
+and is not the effect size**: the run stopped at a bound in 18512 games,
+under the 25591 the pre-registration expected with the truth on a bound.
+
+### The trim and the archive
+
+`tools/trim_console.py --summary` from `.tuning/s296_sprt.console` (44531
+lines, 3065108 bytes) into **`adocs/data/S296_sprt.log`**, 44525 lines,
+3062901 bytes: the 3 PV-past-threefold blocks dropped (12 lines), counted at
+the foot; the seven mating-PV warnings kept. Its `adocs/data/README.md` row
+added, and rows for `S296_sprt_mate_pvs.py` and `S296_sprt_mate_pvs.txt`.
+The untrimmed console and the run directory (`games.pgn`, `fastchess.log`)
+are **`chesso_S296_sprt_2026-10-27.tar.xz`** in the owner's archive
+(DEC-235), sha256 `bc34c13e...03fa3979`, built, verified and moved in by the
+coordinator; a copy in `.tuning/coord/S296/archive/`.
+
+### Comments and documents the H1 makes false
+
+None in `src/`, `tests/` or `tools/`, nor in the S296 data files: a grep for
+"pending SPRT", "if H1", "until the SPRT", "the SPRT decides" and their
+kin finds nothing of S296's; `adocs/data/S296_sprt.sh` keeps the future tense
+of a pre-registration, as S293's does. `src/` untouched; bench 5069022 in
+both builds. `DEV_MANUAL.md` checked -- the `-check-mate-pvs` table and its
+standing figure, the `test_mate_pv` paragraph, the defender set's S296
+paragraph, the goldens rows -- and `MANUAL.md` -- the Known bugs entry
+"closed since S296" and the `depth` row: neither states anything the H1 makes
+false, so neither changes. `specs.md`'s search row says the SPRT "is
+pending"; the coordinator's sentence to replace.
+
+### `accepts`, clause by clause
+
+1. S295's chain on the fixed tree, line 168 `go depth 8`: **`mate 5`** in
+   74605 nodes, not `mate 4` (the oracle mate 5) -- re-read on this close's
+   build of `6e4fe08` (src/ `25b332b`'s), `pv h3f2 h1g1 f2e4 d1d2 e4d2 g2g3
+   g7g3 g1h1 g3h4`; the table of "root 76 traced, form (a) landed",
+   section 3.
+2. Both forms implemented from DEC-318's descriptions (DEC-221) and measured
+   before one was chosen, on every set the clause names, with the census of
+   short distances and S292's ordinary-play census:
+   `adocs/data/S296_forms.txt`, `S296_census.py`, `S296_compare.py`,
+   `S296_oracle.tsv`; sections 1 to 3 of 2026-10-26.
+3. Neither form kept every mate the shipped tree reports, so the implementer
+   stopped with both forms' figures (the first 2026-10-26 section); the
+   coordinator ruled (a) on root 76's trace, DEC-319 (1) and (2),
+   `adocs/data/S296_root76.txt`.
+4. A case red first on the shipped tree and green after: `tests/test_search.cpp`
+   "a node that skipped moves claims no mate it did not search",
+   `adocs/data/S296_red.log`; in `25b332b`.
+5. A mutant it kills (DEC-141): SK01 and SK02 killed, 24 of 24 in the pass,
+   `tools/mutants/S296_skipped_mated_fail_low.py`,
+   `adocs/data/S296_mutation.tsv`.
+6. Every golden it moves re-derived by its script (DEC-142), the mate floors
+   and S170 ceilings under DEC-299's guard: `adocs/data/S296_goldens.txt`,
+   `S296_sweep_s170.txt`, `S170_cases.tsv`'s budgets by `S170_pick_budgets.sh`;
+   `EXACT_FLOOR` 158 -> 159 by DEC-319 (5).
+7. Tier 2 run: `tools/gate_extra.sh` GATE-EXTRA-DONE 5 stages and the Debug
+   self-play's 8 games with 0 `Assertion` (section 8).
+8. S295's node-limited cell: no cell separates on the fixed tree (0 of 318 by
+   `adocs/data/S295_long_line.py`), so it is retired by a recorded decision,
+   DEC-319 (4), the cut's guard kept by the constructed-lines case (MW03
+   killed by it).
+9. Both builds and both fast suites green: section 8 and the fast check's
+   gates, and this close's below.
+10. The coordinator's `{-5, 0}` SPRT at 8+0.08, Hash 16, against its parent,
+    pre-registered with its three outcomes: `adocs/data/S296_sprt.sh` pinned
+    at `33f1eab`; **H1**, `adocs/data/S296_sprt.log`, above.
+
+### Gates
+
+On this close's worktree (`../chesso-s296c`, branch `s296c` at `6e4fe08`),
+`CLANG_FORMAT_MAJOR=22`, builds `-j12`: `build/` and `build-tune/` with
+`-Werror`, no warning; the fast label **50 of 50 in both** (116 s each,
+sequential, AGENTS.md's TESTS command); `./clang-format.sh --check` clean;
+`tools/plan_prose_check.py` `--citations`, `--touches`, `--params`,
+`--gate`, one mode per call, each exit 0; `chesso bench` 5069022 in both
+builds. Tier 2 (DEC-141) does not bind: the close changes no file under
+`src/`, `tests/` or `tools/` (`git diff --cached --stat -- src/` empty), so
+neither `tools/gate_extra.sh` nor the Debug self-play was re-run.

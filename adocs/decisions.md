@@ -16192,3 +16192,33 @@ Consequences: `EXACT_FLOOR` keeps one spare point and no longer separates
               A and C budgets leave with any revert. `aspiration_search_t::
               pv_length` (`src/uci.hpp`) has no reader since the retired case;
               left for a later cleanup.
+
+## DEC-320  2026-10-27  Where DEC-319's 5000000-node oracle finds no mate the engine claims, the reading is taken again at 1000000000 nodes and labelled as deeper
+Tags:         oracle, stockfish, mate, measurement, s296, dec-319, dec-122, dec-162, sprt
+Context:      S296's close checked the SPRT's seven `Incomplete mating PV`
+              warnings against DEC-319 (3)'s oracle, Stockfish at 5000000
+              nodes through python-chess (`adocs/data/S296_sprt_mate_pvs.txt`).
+              On two of the four positions it returned a centipawn score, no
+              mate: game 1493 (cp +3719, the engine printed mate 8) and game
+              7655 (cp -731, the engine printed mate -11). DEC-319 (3) was set
+              on proved sets, where 5000000 nodes agreed with all 372 proved
+              distances; these positions come from play and nothing proves
+              them. The implementer read both again at 1000000000 nodes, 12
+              threads, Hash 2048: mate 8 (equal) and mate -10 (the engine's
+              longer), so none of the seven is shorter than the oracle's.
+Decision:     By the coordinator under the owner's standing instruction (few
+              questions, correctness first). DEC-319 (3)'s setting stays the
+              first reading. Where it finds no mate on a position the engine
+              claims one, the position is read again at 1000000000 nodes, and
+              the deeper reading is labelled as such beside the first. A
+              position where neither finds a mate is reported as unsettled,
+              never counted as agreeing.
+Why:          5000000 nodes was validated on proved distances only; a missing
+              mate there is the oracle's shortfall, not evidence either way.
+Rejected:     Counting the two as agreeing because the engine's sign matched:
+              a mate distance is the thing S296 checks. Raising the default
+              oracle to 1000000000 nodes: about 200 times the cost on every
+              row of the proved sets, where 5000000 already agrees.
+Consequences: S296's record reads seven of seven not shorter than the oracle,
+              two by the deeper reading. A later mate census over positions
+              from play states how many needed it.

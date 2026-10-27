@@ -5,9 +5,27 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-26, by hand.
+Updated: 2026-10-27, by hand.
 
-## 2026-10-26: S295 done; S296 in progress, BUGS-binding, before S136
+## 2026-10-27: S296 read H1; the rule stays; S136 next
+
+**S296's SPRT read H1** in 8 h 38 m (`adocs/data/S296_sprt.log`, archived
+as `chesso_S296_sprt_2026-10-27.tar.xz`): `25b332b` vs `b477459`, 18512
+games, Elo +0.96 +/- 3.52, nElo +1.36 +/- 5.00, LLR 2.96, 0 forfeits.
+Inspected first: banner as pinned, benches 5069022/5184358, quarters -0.7,
+-3.3, +4.4, +3.3, journal clean. Seven incomplete mating PVs (5 cand in 3
+games, 2 ref in 1), all DEC-122's short-line class, none a distance shorter
+than Stockfish's; two needed 1000000000 nodes to show a mate where DEC-319's
+5000000 found none, so DEC-320 makes that the escalation
+(`adocs/data/S296_sprt_mate_pvs.txt`). The candidate's 3 searches against
+0.75 expected from five earlier runs (Poisson p 0.04) is recorded as a
+count. **The rule stays.** Closed by one Opus 5.5 subagent in
+`../chesso-s296c` (branch `s296c`, kept until the owner approves removal;
+its diff is `.tuning/coord/S296/s296_close.diff`). **Next: S136** (tempo,
+the truncation guard re-derived; DEC-259's screen, a `{0, 5}` SPRT if it
+survives), then S121 (mobility curve per piece).
+
+## 2026-10-26: S295 done; S296 started, BUGS-binding, before S136
 
 **S295 done** (one Opus 5.5 subagent, `../chesso-s295`, fast-checked
 twice): no line that misses its distance is printed beside `score mate N`
@@ -39,25 +57,9 @@ return `alpha0`, bench 5184358 -> 5069022. Its one lost proof, S145 root
 (`adocs/data/S296_root76.txt`). `EXACT_FLOOR` 158 -> 159 (non-separating;
 `MATE_IN_THREE_FLOOR` carries `RfpMinPly` 1's separation), S295's node cell
 retired, S294's re-picked, S170 budgets A and C by the picker. Fast-checked;
-gate_extra ok, Debug self-play Assertion 0. **The `{-5, 0}` SPRT is pinned
-and not started**: `25b332b` against its parent `b477459`
-(`adocs/data/S296_sprt.sh`, about 12 h, 20 h worst case, abort at 40 h). The
-owner shut the workstation down on 2026-10-26 before it began.
-
-**Resume here after the restart:**
-1. Check the reason for the shutdown is known (owner's), `git status` clean
-   at the pin commit, no stray `chesso`/`fastchess` process, the load idle.
-2. Start the run detached from the main checkout:
-   `nohup adocs/data/S296_sprt.sh > .tuning/s296_sprt.console 2>&1 &`, then
-   read the banner (both shas and dates, bounds `{-5, 0}`, 41900 games) and
-   arm a watcher polling the console for `SPRT-RUN-(DONE|FAILED|INVALID)`,
-   the PID, and a 40 h ceiling. No build or gate while it runs (DEC-260).
-3. On the verdict: S135's close procedure (inspect, trim into
-   `adocs/data/S296_sprt.log`, archive to Synckeeper, README row, the Record
-   commit with DEC-220's block moving S296 to `plan_done/`, then the ledger
-   commit). H1 or no verdict: the rule stays. H0: inspect, revert whole, the
-   owner rules (the script's pre-registration).
-4. Then S136 (tempo).
+gate_extra ok, Debug self-play Assertion 0. Its `{-5, 0}` SPRT ran 2026-10-27 00:04 to
+08:43; the verdict is in the 2026-10-27 section. The owner's 2026-10-26
+shutdown was clean (journal: poweroff.target 17:20).
 
 **Disk** (owner's approval, 2026-10-26): every worktree but the main checkout
 removed, 34 in all -- 17 of finished steps, S296's, 5 reference builds,
