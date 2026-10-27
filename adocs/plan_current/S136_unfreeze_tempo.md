@@ -1,9 +1,9 @@
 id:         S136
 goal:       unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
 accepts:    the truncation guard is **re-derived, never relaxed** -- and the count it is derived from is **read at this step's own HEAD, not taken from this line**: with N the number of taper divisions in `evaluate()` that can round while tempo ships at zero, unfreezing tempo makes it N+1, so the bound goes N x 23/24 to (N+1) x 23/24, the bound `test_eval_trace` holds the smooth score to goes N to N+1 divisions **from that arithmetic** -- since S276 that case derives the bound from the tempo weights itself, so the step checks the derivation rather than editing a number, and moves the pinned case's tempo precondition, which fires once tempo is fitted (S276 deleted `test_eval_model`'s integer tolerance, which this clause named, with the mirror) -- and the non-vacuity threshold goes from "past (N-1) x 23/24" to "past N x 23/24", since that residual is what proves a pinned position exercised every division that can round; **S055 read H0 and was reverted (2026-10-05), so N is 3 at the time of writing and DEC-092's own numbers are the expected ones** -- bound 3 x 23/24 = 2.875 to 4 x 23/24 = 3.833, non-vacuity threshold past 2.875 -- and they are still re-read at this step's HEAD, never copied from this line and never relaxed to match a stale figure (corrected 2026-10-08, DEC-258; the single-division numbers this clause carried assumed an S055 that did not land); the four pinned FENs are re-measured under the new weights with `build/tools/truncation_scan`, DEC-057 having pre-authorised exactly this re-targeting; the fit is `--only tempo` so the SPRT measures the term; the label is **WDL-heavy** -- `--lambda 0`, stated rather than defaulted, because a score-blend label cannot teach a term the current evaluator scores at zero; the SPRT bounds resolve single digits and are stated in advance, S027's run having reached neither bound over 3000 games at `--fast` (DEC-063); a verdict of zero is recorded as zero and a second unresolved run is recorded as unresolved again, not converted; the fast suite green
-touches:    src/evaluation.cpp tempo_mg/tempo_eg, tests/test_eval_trace.cpp (the tempo precondition, the four pinned FENs and the non-vacuity threshold; tests/test_eval_model.cpp until S276), the tuner's freeze list, adocs/specs.md
+touches:    phase 1 (2026-10-27): adocs/data/S136_screen.sh, adocs/data/S136_screen.py, adocs/data/S136_guard_forecast.cpp, adocs/data/S136_guard_forecast.txt, adocs/data/S136_sprt.sh, adocs/data/README.md, this file -- nothing under src/ or tools/, the freeze being a command-line convention no file holds (the 2026-10-27 section); phase 2, on a candidate: src/evaluation.cpp tempo_mg/tempo_eg (its tempo comments at the SPRT's closing commit), src/evaluation.hpp (the tempo comment, closing commit), tests/test_eval_trace.cpp (the bound's derivation, the tempo precondition, the per-pin and worst thresholds, the four pinned FENs and their comments), every golden the paste moves, each re-derived by its script (tests/test_evaluation.cpp, tests/test_search.cpp, tests/test_mate_carry.cpp, tests/test_mate_breadth.cpp, tests/test_engine.cpp, adocs/data/S170_cases.tsv, adocs/data/S192_anchors.py, MANUAL.md where it quotes a moved figure), tools/truncation_scan.cpp and tools/tuner_trace.hpp (the usage and comments that state 69/24 as the maximum, closing commit), DEV_MANUAL.md, adocs/data/S136_* (the readings; S136_sprt.log at the closing commit), adocs/specs.md (the coordinator's)
 excludes:   piece placement, which is S135; any change to how the tempo feature is computed -- it is the constant 1 for the side to move and there is nothing to change
-decisions:  DEC-092, DEC-057, DEC-053, DEC-063, DEC-258
+decisions:  DEC-092, DEC-057, DEC-053, DEC-063, DEC-258, DEC-259, DEC-304, DEC-315, DEC-321, DEC-322
 closes:
 blocks:
 paused_by:
@@ -277,3 +277,349 @@ divisions. So `evaluate()` still tapers three times, and the passages above
 that plan for "after S055 lands" describe a tree that does not exist. The
 `goal:` line now says three. The `accepts:` field needs no change, because it
 reads N at this step's own HEAD.
+
+## 2026-10-27: phase 1
+
+Written by one Opus 5.5 subagent in worktree `chesso-s136`, branch `s136` at
+`80520d7` (bench 5069022). Built both trees, ran both fast suites, bench and
+the scratch readings below; every stage of the new screen that does not fit
+was dry-run into a scratch directory, nothing written under `.tuning/`. **No
+fit, match, SPRT, datagen or timing ran.** The one tuner invocation was a
+zero-epoch probe on 2000 rows.
+
+### The rulings, as read
+
+1. **DEC-259 governs.** Tempo is a family of one: fitted with every other
+   constant frozen, `--only tempo --lambda 0` at DEC-304's settings as S135's
+   screen ran them, on S083's corpus and five quarter samples, kept only if
+   its gain on S082's fixed set clears DEC-315's m = max(1.645 s, 2e-6).
+   Survives: one SPRT. Fails: zero with its figures, no paste, no match, the
+   guard unchanged. No bisection exists. **The accepts' "the SPRT bounds
+   resolve single digits and are stated in advance" is read as DEC-259 (b)'s
+   `{0, 5}` nElo at alpha = beta = 0.05** (the coordinator's ruling,
+   2026-10-27), stated with DEC-143's worst case in `adocs/data/S136_sprt.sh`.
+   Four readings follow from it, each pre-registered there or in
+   `adocs/data/S136_screen.sh`: the candidate is the full-corpus screen fit
+   itself, since a family of one has no survivors to refit together and the
+   joint fit's command would be the same one; a full fit that rounds to the
+   shipped 0 / 0 owes no match (S076's rule 3); no identity stage, S135's
+   `audit` having read this corpus at this layout (rank 792 of 831, S134's
+   39 null directions, none of them tempo); and **no speed-cost run** --
+   DEC-047's reason is a count the compiler drops at zero and keeps
+   otherwise, and tempo is a constant whose whole cost is one taper, priced
+   inside the verdict.
+2. **N is read at this HEAD**, below.
+3. **The corpus is S083's**, located by `adocs/data/S135_screen.py` `locate`
+   reused by argument, sha256 `2e0e3de9...` pinned as `CORPUS_SHA` in
+   `adocs/data/S136_screen.sh`.
+
+### Unfreezing: nothing under src/ or tools/
+
+The freeze is not in any file. DEC-057's `--freeze tempo,piece_placement` was
+a command-line convention every fit script from S065 to S083 carried
+(`adocs/data/S083_corpus.sh`'s `FIT` the last), and S135's screen held tempo
+by `--only piece_placement.<term>`. The tuner refuses nothing:
+`tools/tuner_groups.hpp` `free_mask` gives `tempo` its two columns, and a
+zero-epoch probe at `80520d7` -- `build/tools/tuner --data <the corpus's first
+2000 rows> --only tempo --lambda 0 --epochs 0` -- printed `831 parameters,
+group tempo, freeze (nothing), 2 free`, its header `// only tempo` and both
+weights 0. `tests/test_tuner_gradient.cpp` "a planted vector comes back
+through the trace path" already recovers a planted tempo 23 / 12. So S136's
+screen unfreezes tempo by not carrying the freeze, the weights stay 0 in
+`src/evaluation.cpp`, and no line under `src/` or `tools/` moves: bench
+5069022 in both builds, the parent's; INV-6 needs no `tools/search_bench.py`
+run, none having been owed (no `src/` line).
+
+### N, read at 80520d7
+
+`evaluate()` is `evaluate_cheap()` plus `evaluate_expensive()`, and each
+`src/evaluation.hpp` `taper` call is one truncating division by
+`GAME_PHASE_MAX`. There are four: `src/evaluation.cpp` `evaluate_cheap`'s
+`positional` (the tables and the pawn-stage terms summed into one pair) and
+its `tempo`; `src/evaluation.cpp` `evaluate_mobility_and_king_safety`'s
+`mobility` and `safety`, two because S055 read H0. Material is untapered; the
+clamp is 1-Lipschitz and only narrows a gap. `tools/tuner_trace.hpp` `smooth`
+drops all four truncations. At `tempo_mg == tempo_eg == 0` tempo's division is
+0 / 24, exact, so **N = 3**: the step file's "S055 read H0" section holds and
+DEC-092's own numbers are the expected ones. Measured, not assumed:
+`adocs/data/S136_guard_forecast.cpp` reads the four pinned rows at +69, -69,
++69, +69 twenty-fourths (smooth minus exact, White relative) -- three
+divisions at their largest remainder, the same sign -- and S083's corpus at
+most 69/24 (16 rows, 13 positions; 65 rows past 2.8, S135's figure).
+
+### The signal on this corpus, re-read (section 7 asks it)
+
+S100's 3.6 cp was the old corpus's. S135's `audit` read S083's
+(`.tuning/s135/audit/report.txt`): 3109435 rows White to move at mean result
+0.554406, 3117509 Black to move at 0.572254, **gap -0.017848, White
+relative** -- the opposite sign to S100's +0.007878. At this corpus's mean
+0.5633 and S135's K = 0.7224 the sigmoid slope is 0.00102293 per centipawn, so
+the gap is -17.4 cp between the groups and a tempo weight near **-8.7 cp**.
+Confounded as S100's was (and the rows are quiescence leaves now), so it is
+the size and sign of what the label offers, not a prediction (DEC-019,
+DEC-084). It is why the forecast below reads both signs.
+
+### The guard, before and after -- and what the arithmetic adds
+
+Tempo's numerator `tempo_mg * phase + tempo_eg * (24 - phase)` is congruent
+to `(tempo_mg - tempo_eg) * phase` modulo 24, so over the 25 phases its
+remainders are exactly the multiples of **g = gcd(tempo_mg - tempo_eg, 24)**:
+none but 0 when 24 divides the spread, at most 24 - g otherwise.
+
+| | at `80520d7`, N = 3 | a fit whose tempo division rounds, N + 1 = 4 |
+|---|---|---|
+| bound, "the smooth score is within the truncation bound of the exact one" | 3 x 23/24 = 2.875 | (69 + 24 - g)/24: 4 x 23/24 = 3.833 at g = 1, 3.792 at g = 2, 3.750 at 3, down to 3.375 at 12 |
+| each pin, "the pinned positions reach the truncation bound" | `> 2.0` (48/24, past (N - 1) x 23/24 = 1.917) | `> 69/24 + 1e-6` (past N x 23/24: three divisions cannot reach past it, so a pin past it proves tempo's rounded too) -- DEC-092's 2.875 with room, because rows sit exactly on 69/24 and ulp noise splits them, the 2.0 = 48/24 column's lesson in `DEV_MANUAL.md` (DEC-322) |
+| the worst pin, and the bound case's own `worst > 2.8` | `> 2.8`, the maximum 2.875 less 0.075 | the bound less 0.075: 3.758 at g = 1 |
+| the tempo precondition | `tempo_unfitted`: both weights zero | tempo's division rounds: `(tempo_mg - tempo_eg) % 24 != 0` |
+
+If the fitted spread is a multiple of 24 -- `4 / 4` would be -- tempo's
+division stays exact, N stays 3, the four pins keep their residuals at every
+phase and no threshold moves; only the precondition's wording does.
+
+Checked, ruling 2: the bound case does derive its bound from the tempo weights
+itself -- `(tempo_unfitted ? 3.0 : 4.0) * 23.0 / 24.0` -- but on "both zero",
+not on "the division rounds". That is never false (4 x 23/24 bounds any pair)
+but it is exact only at g = 1, 8 spreads of 24, and a fit at `4 / 4` would
+fire the precondition and loosen the bound with N still 3. Two things the
+derivation in the accepts does not reach: (a) the worst-pin clause and the
+bound case's own `worst > 2.8` take no weight, so both have to move by hand,
+and moved to 3.833 - 0.075 = 3.758 they are **unreachable for every g >= 3**
+(the reach is at most 3.750); (b) the pick, "The re-draw at four divisions"
+below. Proposed for phase 2 (DEC draft below): compute g in the test, the
+bound `(69 + largest) / 24` with `largest = (spread % 24 == 0) ? 0 : 24 -
+std::gcd(spread, 24)` -- equal to today's at zero, never looser than the
+literal -- and both worst clauses as `bound - 0.075`. **Nothing relaxes**:
+every number is the arithmetic's at the fitted pair, and each is at least as
+tight as the literal it replaces.
+
+### What moves in phase 2, and to what
+
+`tests/test_eval_trace.cpp`, on the fitted pair, after its red is observed:
+
+- "the smooth score is within the truncation bound of the exact one": the
+  `bound` line (the arithmetic above), `CHECK(worst > 2.8)` to the bound less
+  0.075, the comment's "three while tempo ships at zero" and its GOLDEN
+  paragraph (`--min 2.875`, the pick below).
+- "the pinned positions reach the truncation bound": `CHECK_MESSAGE
+  (tempo_unfitted, ...)` to the division-rounds precondition, its message
+  naming the three-division numbers to fall back to; `difference > 2.0` to
+  `> 69.0 / 24.0 + 1e-6` and its message; `worst > 2.8` to the bound less
+  0.075 and its message; the comment block ("2.0 is the threshold the
+  arithmetic gives").
+- `truncation_positions`: the four re-drawn under the fitted weights, and its
+  comment's derivation record (the scan's counts, the pick).
+
+The red forecast, the scan and both picks are printed by
+`adocs/data/S136_screen.sh` `apply` before any test line moves. At the H1
+closing commit, the comments that state 69/24 as the maximum or tempo at zero
+are made true: `src/evaluation.cpp` `evaluate_cheap` ("test_eval_trace's bound
+is 3 x 23/24 with tempo at zero") and the block over `tempo_mg`;
+`src/evaluation.hpp` `tempo_mg`'s comment; `tools/tuner_trace.hpp`'s header;
+`tools/truncation_scan.cpp`'s header and `usage` (default `--min 2.8`, "the
+maximum is 69/24 = 2.875"); `DEV_MANUAL.md`'s truncation_scan section, its
+"at most 3 x 23/24 = 2.875 while tempo ships at zero" sentence and the two
+goldens-table rows for the truncation cases. On H0 or no verdict all of it
+reverts with the paste.
+
+### The red expected first -- forecast, and observed on a dry run
+
+**Certain at any non-zero pair: the precondition**, `CHECK_MESSAGE
+(tempo_unfitted, ...)` in "the pinned positions reach the truncation bound".
+The pins' own clauses depend on the pair: a pin's residual becomes |s3 + t|,
+t tempo's signed remainder at its phase and side. With tempo positive the
+pins at phases 5 (b), 11 (w) and 17 (b) lose t and the phase 19 (w) pin gains
+it, so `> 2.0` goes red on a pin only where t >= 21 there and `worst > 2.8`
+cannot (the phase 19 pin stays at 69/24 or more); tempo negative mirrors it.
+`adocs/data/S136_screen.py` `guard` prints the exact red for any pair:
+S027's 10 / 0 reads 67, 55, 67, 91 twenty-fourths -- only the precondition;
+S065's 39 / 21 reads 51, 63, 51, 75 -- only the precondition; 5 / 2 reads 54,
+60, 66, 78. For a same-sign pair the bound case stays green: its literal
+bound follows the weights, and some pin or mirror stays past 2.8. **A
+mixed-sign pair can take every pin under 68/24** -- `guard --pair -10 30`
+reads all four at 53/24 -- and then the worst-pin clause goes red and the
+bound case's own `worst > 2.8` rests on the shared list's other rows;
+`guard` flags both. Beside it, every golden the paste
+moves goes red as S135's did, each re-derived by its script (S135's landing
+table, `adocs/data/S135_goldens.txt`).
+
+**Observed at a hypothetical pair, 10 / 0**, in a scratch worktree at
+`80520d7` (a probe header with `tempo_mg` set to 10, through
+`adocs/data/S136_screen.sh` `apply` three times -- the second after its fix
+below, the third with the views' scans, 5 m 53 s): the paste moved
+`tempo_mg` alone, both builds clean, bench 5069022 -> 4683032, fast suite
+**46 of 50 in both builds**: `test_eval_trace` one assertion, exactly the
+forecast -- the precondition, 13 of the case's 14 assertions green, the bound
+case's 8419 green -- and the goldens `test_evaluation` (the queen
+anchor 985 against 984), `test_search` (`black_static` 202 against 199, the
+depth-12 capture mate in "pruning does not hide a forced mate") and
+`test_mate_carry` (3 of 6 guarded cases reporting, 4 needed: the S170
+budgets). That pair is not the fit and those goldens are not this step's
+numbers; it shows the forecast and the machinery agree.
+
+### The re-draw at four divisions: S083's pick, and the set it scans
+
+`adocs/data/S083_truncation_pick.py` keeps the scan's hits at its largest
+difference and needs two positions of each side there. At three divisions the
+maximum is common (13 positions at 69/24 on the corpus); at four it needs a
+phase where tempo's remainder is at its largest and a row whose three
+divisions agree with it in sign. `adocs/data/S136_guard_forecast.txt` reads
+every spread modulo 24, both signs, at `80520d7`:
+
+| set | rows | S083's pick refuses | short of the reach | past 69/24, a side |
+|---|---|---|---|---|
+| S083's corpus | 6226944 | **43 of 46** non-zero cases | 8 (spreads 1, 2, 11, 13, 22, 23 positive; 1, 23 negative) | 1528 to 15091 |
+| S082's three training views | 34774692 | **1** (spread 5 negative) | 4 (spreads 1 and 23, both signs: 91 and 88 against 92) | 6989 to 63934 |
+
+On the corpus the four-division maximum is held by one to five positions,
+mostly of one side, at one to three phases. The dry run at 10 / 0 confirmed
+the corpus row on the pasted build's own scan: 13995 rows past 2.875, worst
+3.791667 (91/24, the reach at g = 2), S083's pick "no hit with b to move for
+the target phase 7.00"; over the views the same build's scans read 79842 rows
+past 2.875, worst 3.791667, and S083's rule picked four at 3.791667 (phases 7
+b, 7 w, 19 b, 19 w, the last the pin S135 drew at phase 19). A residual
+belongs to the weights and not to where a position came from, and
+`tools/truncation_scan.cpp` reads any FEN file; the corpus is a sample of the
+first view.
+
+**Ruled, DEC-322** (the coordinator, 2026-10-27; (3) left open): (1) scan
+S082's three training views (`apply` already does,
+about 100 s), and pick by S083's rule unchanged -- four pins at the maximum,
+DEC-057's "chosen from the hits at the maximum to span the taper with both
+sides to move"; (2) where it refuses, `adocs/data/S136_screen.py` `pick`
+over the same scan: the distinct positions past 69/24 + 1e-6, the per-pin
+threshold's own room, the first at the largest
+difference a pin, targets at the lowest phase, the highest and the two thirds
+between with sides b, w, b, w, that pin taking its side's nearest target and
+each other target the unpicked position of its side nearest in phase, then
+largest, then first in scan order (at 10 / 0 over the corpus: 3.4167 at phase
+2 b, 3.3750 at 9 w, 2.9583 at 17 b, 3.7917 at 19 w); (3) **not ruled**:
+where the views' largest residual falls short of the reach (spreads 1 and 23
+modulo 24, either sign), phase 2 stops before the re-targeting and the owner
+rules; no worst-clause threshold is pre-chosen. `apply`'s guard reading ends
+on `S136_screen.py` `short` over the views' scan, which prints REACHED or a
+STOP line, and the stage repeats the STOP before its marker. The options
+that ruling has, as phase 1 saw them: the largest found less 0.075 with the
+gap recorded (a weaker claim than the reach, which no available row meets);
+scanning the fixed validation views too (the set every fit is scored on).
+Rejected: S083's rule on the corpus alone (refuses at 43 of 46); hand-chosen
+rows.
+
+### Built and run, with figures
+
+- `adocs/data/S136_screen.sh`: the pre-registration and stages `locate`,
+  `forecast`, `screen`, `read`, `apply FIT TREE`, each ending on
+  `S136-<STAGE>-DONE|FAILED`, OUT `.tuning/s136`. **One stage more than the
+  brief listed**: `forecast` (2 m 23 s), so `read` and `apply` print the
+  guard's forecast for the fitted pair on both sets.
+  `adocs/data/S136_screen.py`: `read`, `start-check`, `only-tempo`, `guard`,
+  `forecast`, `pick`, importing
+  `adocs/data/S135_screen.py` so the logs parse and the rule's constants are
+  S135's. `adocs/data/S136_guard_forecast.cpp` and its reading
+  `adocs/data/S136_guard_forecast.txt`. `adocs/data/S136_sprt.sh`.
+  `adocs/data/README.md`: the S136 section.
+- Dry runs into scratch: `locate` -- the corpus, sha256 `CORPUS_SHA`'s, 2.3 s;
+  `forecast` -- 2 m 23 s, the pins as `adocs/data/S136_screen.py` `PINS`
+  records them, 139403 corpus rows and 779957 view rows past 46/24; `read`
+  over S135's bishop-pair logs renamed -- gain +0.000044, s 0.000007, m
+  0.000011, kept, S135's own line
+  for that term; `start-check` refusing a frozen value moved and passing tempo
+  under `--free`; `apply` at 10 / 0, above (its first run ran the bound case
+  from the wrong directory -- "Cannot open assets/test_jsons/castling.json" --
+  fixed by running both cases from the test directory, as ctest does;
+  re-run, then run a third time with the views' scans). `S136_sprt.sh`
+  refuses unpinned, and a dry copy pinned at `56e7e1c` / `80520d7` refuses
+  "not S136's paste"; its tempo-lines filter
+  passes the dry paste's diff and refuses a synthetic extra line.
+- Gates (the end of this section): both builds 0 warnings, both fast suites
+  50 of 50, `./clang-format.sh --check` clean, `tools/plan_prose_check.py`
+  `--citations`, `--touches`, `--params` and `--gate` each clean.
+
+### Commands for the coordinator, in order, with expected times
+
+From the main checkout once phase 1 has landed; each detached under a
+four-exit watcher, its marker the last stdout line.
+
+1. `adocs/data/S136_screen.sh locate` -- under a minute.
+2. `adocs/data/S136_screen.sh forecast` -- about 2 min 30 s.
+3. `adocs/data/S136_screen.sh screen` -- one full fit and five quarters:
+   about 14 min typical, 23 min if every fit runs as long as S135's longest,
+   31 min at the 5000-epoch cap (S135's measured 5.3 to 10.7 min a full fit,
+   1.3 to 2.2 a quarter, `quarter_s4_trapped` 2 m 09 s), ceiling 1 h.
+   Daytime. It ends by printing `read`.
+4. `SCREEN-OUTCOME none`: record tempo as zero with its figures; S136
+   completes with no paste and no match. `candidate tempo`: go on to 5.
+5. A worktree for the paste at HEAD; `adocs/data/S136_screen.sh apply
+   .tuning/s136/screen/full_tempo.hpp <worktree>` -- about 8 min (S135's
+   5 m 36 s plus about 2 min of scans). Its `guard.txt` is the red forecast
+   beside the red observed, then both scans, both picks over each and the
+   reach check. A forecast, scan or S136 pick that exits non-zero fails the
+   stage. **A STOP line (spreads 1 or 23) stops phase 2 for the owner's
+   ruling on DEC-322 (3)** before step 6.
+6. Phase 2's implementer: the guard re-targeted by the plan above, the pins
+   by DEC-322 (1) and (2), every golden re-derived by its script (S135's
+   landing table, about 2 to 3 h), the gates. Tier 2 does not bind: no search,
+   generator or make/unmake change.
+7. Pin and run `adocs/data/S136_sprt.sh` -- up to 19.9 h (41900 games at 2110
+   an hour), 12.1 h on a bound; night by DEC-155.
+
+### Decisions: DEC-321 and DEC-322 recorded, DEC-322 (3) open
+
+Ruled by the coordinator 2026-10-27 and recorded by it in `adocs/decisions.md`;
+the text below is the draft they were ruled on, with the per-pin threshold
+set at 69/24 + 1e-6.
+
+- **DEC-321** S136 measures tempo as DEC-259's family of one. Decision (the
+  coordinator's rulings, 2026-10-27): `--only tempo --lambda 0` at DEC-304's
+  settings on S083's corpus and five quarters, kept past DEC-315's m; the
+  candidate is the full fit itself; one `{0, 5}` nElo SPRT at 8+0.08, Hash
+  16, `noob_3moves.epd`, 20950 rounds; H0 recorded as zero, no verdict as
+  unresolved, both reverted; no bisection, no identity stage, no cost run.
+  Why: the accepts' "bounds that resolve single digits" is DEC-259 (b)'s
+  pair; S135's audit already identifies tempo on this corpus; a constant has
+  no count for DEC-047 to time.
+- **DEC-322** At four divisions the truncation guard follows the fitted
+  pair's arithmetic and picks its pins past 69/24. Decision: with g =
+  gcd(tempo_mg - tempo_eg, 24), the bound (69 + 24 - g)/24 (69/24 when 24
+  divides the spread), each pin past 69/24 + 1e-6, both worst clauses past the
+  bound less 0.075, the precondition "tempo's division rounds"; (1) and (2)
+  the pins re-drawn from S082's three training views by S083's pick, by
+  `S136_screen.py pick` where that refuses; (3) short of the reach, **not
+  ruled**: phase 2 stops before the re-targeting and the owner rules, no
+  threshold pre-chosen. Why: DEC-092's 3.833 is exact only at g = 1 and its
+  worst clause is unreachable at g >= 3; on S083's corpus S083's pick refuses at
+  43 of 46 spreads, on the views at 1. Rejected: the 3.833 literal for every
+  pair; S083's pick on the corpus alone; hand-chosen rows.
+
+### Wording proposals
+
+- `adocs/specs.md`: no change at phase 1 (no behaviour moves). On H1, the
+  "absent, evaluation" row's opening becomes "S135's bad bishop and its
+  rammed share -- present in the code, shipped at zero weight", its
+  parameter count "their 4 parameters, making 831 fitted and 827 shipped",
+  and the evaluation row gains "Tempo since S136: a bonus for the side to
+  move, tapered on its own after the side-to-move sign, fitted `--only tempo`
+  on S083's corpus." On H0 or no verdict, no change.
+- `MANUAL.md`: checked, no change -- the UCI surface and play are unchanged.
+- `DEV_MANUAL.md`: checked, no change at phase 1 -- the tuner's behaviour
+  is unchanged and the scripts are documented in `adocs/data/README.md`; the
+  phase 2 sentences are listed above.
+
+### The fast check's five fixes (2026-10-27, the same day)
+
+The coordinator accepted phase 1 with five fixes, made before the landing:
+(1) the per-pin threshold is 69/24 + 1e-6, not the lattice point 2.875, in
+the table, the phase 2 list, DEC-322 and `adocs/data/S136_screen.py`; (2)
+the bound case's "stays green" is limited to same-sign pairs, and `guard`
+flags the bound case's worst clause when every pin is under 68/24; (3) a
+quarter fit is 1.3 to 2.2 min (`quarter_s4_trapped` 2 m 09 s), the totals
+14 / 23 / 31 min; (4) `corpus_of`, and so `locate`'s reuse branch, refuses a
+`corpus.txt` that does not name `CORPUS_SHA` -- checked on a scratch copy
+naming another, `S136-LOCATE-FAILED`; (5) `apply`'s readings fail the stage
+when the forecast, a scan or S136's pick exits non-zero, `guard` runs with
+`2>&1`, the scans run only where tempo's division rounds, and the views'
+reach is checked last (`short`, the STOP line for the unruled DEC-322 (3)).
+The readings were re-run through a harness on a scratch tree pasted at
+10 / 0 (1 m 54 s): the same pins, picks and thresholds as before, `REACHED`
+at 91/24; `short` prints STOP for the same scan at 11 / 0, and compares on
+the 1/24 lattice, since the scan's six decimals print 92/24 as 3.833333.

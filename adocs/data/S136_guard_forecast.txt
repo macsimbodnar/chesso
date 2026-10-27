@@ -1,0 +1,146 @@
+# S136: the truncation guard's forecast, read at 80520d7 (S135's constants, tempo
+# at zero) before any tempo fit: adocs/data/S136_screen.sh forecast, run
+# 2026-10-27 into a scratch OUT, 2 m 23 s. Its steps:
+#
+#   g++ -std=c++20 -O2 -Wall -Wextra -Werror -DCHESSO_TRACE -Isrc -Itools
+#       adocs/data/S136_guard_forecast.cpp build/src/libchesso_engine_trace.a
+#       -lpthread -o $OUT/forecast/bin/guard_forecast
+#   guard_forecast --data pins.fen --min 0 > pins.tsv   (the four pinned FENs)
+#   guard_forecast --data .tuning/s083/curve/s0/cand_6226944_s1.tsv > rows.tsv
+#   guard_forecast --data .tuning/s082/pool.tsv.{qs,root,pv}.train >> views_rows.tsv
+#   adocs/data/S136_screen.py forecast rows.tsv --pins pins.tsv
+#   adocs/data/S136_screen.py forecast views_rows.tsv --pins pins.tsv
+#
+#   corpus    sha256 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+#   rows      sha256 6c0bd02a657ac9ccded023e709bbdfdf221891102065b32fd43d619976361c82  rows.tsv
+#   view      sha256 8e9645b3d01e928fda4b3ed29666d77aeaefb984029ad23796d193dade53e444  .tuning/s082/pool.tsv.qs.train
+#   view      sha256 95a81f0a1ae4552d50b48976757ed06b3b04da1eec0aa471de1b6bc83c13ff4f  .tuning/s082/pool.tsv.root.train
+#   view      sha256 a66e5e340f90cb5acdfd402045b5b11c2771d09f161539bf249a73887a114dec  .tuning/s082/pool.tsv.pv.train
+#   views     sha256 bb8dfc81d81a70aa75be568a81011991d260258cf3a883584b6785ee9bc74168  views_rows.tsv
+#   4 rows, 4 with |residual| >= 0/24
+#   6226944 rows, 139403 with |residual| >= 47/24
+#   11690184 rows, 256679 with |residual| >= 47/24
+#   11692850 rows, 260673 with |residual| >= 47/24
+#   11391658 rows, 262605 with |residual| >= 47/24
+#
+# Each row's four-division residual at a pair is its three-division one plus
+# tempo's own remainder; a row under 47/24 cannot pass 69/24 at any pair.
+# 'reach' is the arithmetic (69 + 24 - g)/24, g = gcd(spread, 24). 'S083's
+# pick' needs two distinct positions of each side at the set's maximum;
+# 'S136's proposed pick' two of each past 69/24. Deciding nothing: the fit's
+# own pair is read by `S136_screen.py guard --header FIT --rows ...` and the
+# re-draw is the pasted build's truncation_scan.
+#
+# pins.tsv:
+#   69	5	b	2R5/8/3r3p/6p1/1k2B1P1/4K2P/5P2/8 b - - 16 52
+#   -69	11	w	6k1/7p/p2b2p1/5n2/8/2Q5/PP3P1P/2KN3q w - - 1 33
+#   69	17	b	2q3k1/1b1R2p1/2p1r3/p2pNQ1p/Pb1P2pP/4P1P1/1P4K1/2R5 b - - 5 35
+#   69	19	w	rn5k/ppp3bp/3qbp2/3p2pB/8/1PN2Q1P/P1PP1PP1/R4RK1 w - - 4 16
+
+== S083's corpus (rows.tsv)
+pins: the four as PINS records them
+139403 rows past 46/24, 124257 distinct positions
+tempo positive, both weights of that sign: the pair (spread, 0); every such pair with the same mg - eg modulo 24 reads the same, a mixed-sign pair is read by `guard --pair`
+  spread  0  gcd 24  reach 69/24  largest 69/24; at it 5 w 8 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 0 w 0 b; S083's pick can pick, S136's proposed pick REFUSES
+  spread  1  gcd  1  reach 92/24  largest 91/24, SHORT of the reach 92/24; at it 1 w 1 b, phases [23]; past 69/24 13312 w 8607 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  2  gcd  2  reach 91/24  largest 90/24, SHORT of the reach 91/24; at it 1 w 4 b, phases [11, 23]; past 69/24 12591 w 8244 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  3  gcd  3  reach 90/24  largest 90/24; at it 1 w 0 b, phases [7]; past 69/24 9930 w 6470 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  4  gcd  4  reach 89/24  largest 89/24; at it 0 w 4 b, phases [5, 17]; past 69/24 8657 w 5736 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  5  gcd  1  reach 92/24  largest 92/24; at it 1 w 0 b, phases [19]; past 69/24 9491 w 6204 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  6  gcd  6  reach 87/24  largest 87/24; at it 2 w 0 b, phases [7, 19]; past 69/24 6228 w 3956 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  7  gcd  1  reach 92/24  largest 92/24; at it 0 w 2 b, phases [17]; past 69/24 9931 w 6769 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  8  gcd  8  reach 85/24  largest 85/24; at it 0 w 4 b, phases [5, 17]; past 69/24 4827 w 3211 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  9  gcd  3  reach 90/24  largest 90/24; at it 0 w 2 b, phases [5]; past 69/24 7209 w 4936 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 10  gcd  2  reach 91/24  largest 91/24; at it 2 w 0 b, phases [7, 19]; past 69/24 7595 w 4983 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 11  gcd  1  reach 92/24  largest 91/24, SHORT of the reach 92/24; at it 1 w 1 b, phases [13]; past 69/24 6237 w 4262 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 12  gcd 12  reach 81/24  largest 81/24; at it 2 w 4 b, phases [5, 7, 17, 19]; past 69/24 2353 w 1528 b; S083's pick can pick, S136's proposed pick can pick
+  spread 13  gcd  1  reach 92/24  largest 91/24, SHORT of the reach 92/24; at it 0 w 3 b, phases [11]; past 69/24 14102 w 8708 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 14  gcd  2  reach 91/24  largest 91/24; at it 0 w 4 b, phases [5, 17]; past 69/24 11865 w 7616 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 15  gcd  3  reach 90/24  largest 90/24; at it 1 w 0 b, phases [19]; past 69/24 9422 w 5986 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 16  gcd  8  reach 85/24  largest 85/24; at it 2 w 0 b, phases [7, 19]; past 69/24 5744 w 3672 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 17  gcd  1  reach 92/24  largest 92/24; at it 1 w 0 b, phases [7]; past 69/24 9197 w 5898 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 18  gcd  6  reach 87/24  largest 87/24; at it 0 w 4 b, phases [5, 17]; past 69/24 5478 w 3627 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 19  gcd  1  reach 92/24  largest 92/24; at it 0 w 2 b, phases [5]; past 69/24 10138 w 6765 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 20  gcd  4  reach 89/24  largest 89/24; at it 2 w 0 b, phases [7, 19]; past 69/24 6124 w 3914 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 21  gcd  3  reach 90/24  largest 90/24; at it 0 w 2 b, phases [17]; past 69/24 6156 w 3908 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 22  gcd  2  reach 91/24  largest 90/24, SHORT of the reach 91/24; at it 1 w 1 b, phases [13]; past 69/24 5517 w 3606 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 23  gcd  1  reach 92/24  largest 88/24, SHORT of the reach 92/24; at it 0 w 2 b, phases [5]; past 69/24 5387 w 3544 b; S083's pick REFUSES, S136's proposed pick can pick
+tempo negative, both weights of that sign: the pair (-spread, 0); every such pair with the same mg - eg modulo 24 reads the same, a mixed-sign pair is read by `guard --pair`
+  spread  0  gcd 24  reach 69/24  largest 69/24; at it 5 w 8 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 0 w 0 b; S083's pick can pick, S136's proposed pick REFUSES
+  spread  1  gcd  1  reach 92/24  largest 90/24, SHORT of the reach 92/24; at it 2 w 2 b, phases [23]; past 69/24 9778 w 14324 b; S083's pick can pick, S136's proposed pick can pick
+  spread  2  gcd  2  reach 91/24  largest 91/24; at it 1 w 0 b, phases [11]; past 69/24 9098 w 13479 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  3  gcd  3  reach 90/24  largest 90/24; at it 1 w 0 b, phases [7]; past 69/24 7374 w 10911 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  4  gcd  4  reach 89/24  largest 89/24; at it 1 w 3 b, phases [5, 11, 17]; past 69/24 6391 w 9513 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  5  gcd  1  reach 92/24  largest 92/24; at it 0 w 1 b, phases [19]; past 69/24 6817 w 10142 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  6  gcd  6  reach 87/24  largest 87/24; at it 2 w 1 b, phases [7, 11, 19]; past 69/24 4484 w 6637 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  7  gcd  1  reach 92/24  largest 92/24; at it 0 w 1 b, phases [17]; past 69/24 7078 w 10359 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  8  gcd  8  reach 85/24  largest 85/24; at it 1 w 3 b, phases [5, 11, 17]; past 69/24 3582 w 5304 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  9  gcd  3  reach 90/24  largest 90/24; at it 1 w 2 b, phases [5, 13]; past 69/24 5338 w 7807 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 10  gcd  2  reach 91/24  largest 91/24; at it 1 w 1 b, phases [7, 19]; past 69/24 5418 w 8089 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 11  gcd  1  reach 92/24  largest 92/24; at it 1 w 0 b, phases [13]; past 69/24 4623 w 6623 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 12  gcd 12  reach 81/24  largest 81/24; at it 3 w 4 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 1703 w 2526 b; S083's pick can pick, S136's proposed pick can pick
+  spread 13  gcd  1  reach 92/24  largest 92/24; at it 1 w 0 b, phases [11]; past 69/24 9681 w 15091 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 14  gcd  2  reach 91/24  largest 91/24; at it 0 w 3 b, phases [5, 17]; past 69/24 8259 w 12906 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 15  gcd  3  reach 90/24  largest 90/24; at it 1 w 1 b, phases [11, 19]; past 69/24 6459 w 9955 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 16  gcd  8  reach 85/24  largest 85/24; at it 2 w 1 b, phases [7, 13, 19]; past 69/24 4016 w 6171 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 17  gcd  1  reach 92/24  largest 92/24; at it 1 w 0 b, phases [7]; past 69/24 6434 w 9881 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 18  gcd  6  reach 87/24  largest 87/24; at it 1 w 3 b, phases [5, 13, 17]; past 69/24 3844 w 5900 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 19  gcd  1  reach 92/24  largest 92/24; at it 0 w 2 b, phases [5]; past 69/24 7074 w 10747 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 20  gcd  4  reach 89/24  largest 89/24; at it 2 w 1 b, phases [7, 13, 19]; past 69/24 4273 w 6532 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 21  gcd  3  reach 90/24  largest 90/24; at it 0 w 1 b, phases [17]; past 69/24 4034 w 6240 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 22  gcd  2  reach 91/24  largest 91/24; at it 1 w 0 b, phases [13]; past 69/24 3925 w 5953 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread 23  gcd  1  reach 92/24  largest 88/24, SHORT of the reach 92/24; at it 0 w 5 b, phases [2, 5]; past 69/24 3909 w 6005 b; S083's pick REFUSES, S136's proposed pick can pick
+
+== S082's three training views (views_rows.tsv)
+pins: the four as PINS records them
+779957 rows past 46/24, 553620 distinct positions
+tempo positive, both weights of that sign: the pair (spread, 0); every such pair with the same mg - eg modulo 24 reads the same, a mixed-sign pair is read by `guard --pair`
+  spread  0  gcd 24  reach 69/24  largest 69/24; at it 41 w 49 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 0 w 0 b; S083's pick can pick, S136's proposed pick REFUSES
+  spread  1  gcd  1  reach 92/24  largest 91/24, SHORT of the reach 92/24; at it 2 w 4 b, phases [23]; past 69/24 51527 w 34324 b; S083's pick can pick, S136's proposed pick can pick
+  spread  2  gcd  2  reach 91/24  largest 91/24; at it 2 w 3 b, phases [11]; past 69/24 51782 w 34273 b; S083's pick can pick, S136's proposed pick can pick
+  spread  3  gcd  3  reach 90/24  largest 90/24; at it 2 w 5 b, phases [7]; past 69/24 41989 w 27820 b; S083's pick can pick, S136's proposed pick can pick
+  spread  4  gcd  4  reach 89/24  largest 89/24; at it 14 w 10 b, phases [5, 11, 17]; past 69/24 37826 w 25191 b; S083's pick can pick, S136's proposed pick can pick
+  spread  5  gcd  1  reach 92/24  largest 92/24; at it 4 w 2 b, phases [19]; past 69/24 39622 w 26648 b; S083's pick can pick, S136's proposed pick can pick
+  spread  6  gcd  6  reach 87/24  largest 87/24; at it 8 w 10 b, phases [7, 11, 19]; past 69/24 25933 w 17593 b; S083's pick can pick, S136's proposed pick can pick
+  spread  7  gcd  1  reach 92/24  largest 92/24; at it 5 w 4 b, phases [17]; past 69/24 43558 w 30023 b; S083's pick can pick, S136's proposed pick can pick
+  spread  8  gcd  8  reach 85/24  largest 85/24; at it 14 w 10 b, phases [5, 11, 17]; past 69/24 21404 w 14422 b; S083's pick can pick, S136's proposed pick can pick
+  spread  9  gcd  3  reach 90/24  largest 90/24; at it 11 w 5 b, phases [5, 13]; past 69/24 33981 w 23068 b; S083's pick can pick, S136's proposed pick can pick
+  spread 10  gcd  2  reach 91/24  largest 91/24; at it 6 w 7 b, phases [7, 19]; past 69/24 33724 w 22748 b; S083's pick can pick, S136's proposed pick can pick
+  spread 11  gcd  1  reach 92/24  largest 92/24; at it 4 w 2 b, phases [13]; past 69/24 27522 w 19357 b; S083's pick can pick, S136's proposed pick can pick
+  spread 12  gcd 12  reach 81/24  largest 81/24; at it 24 w 19 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 10410 w 6989 b; S083's pick can pick, S136's proposed pick can pick
+  spread 13  gcd  1  reach 92/24  largest 92/24; at it 2 w 3 b, phases [11]; past 69/24 60054 w 37854 b; S083's pick can pick, S136's proposed pick can pick
+  spread 14  gcd  2  reach 91/24  largest 91/24; at it 12 w 7 b, phases [5, 17]; past 69/24 52074 w 33524 b; S083's pick can pick, S136's proposed pick can pick
+  spread 15  gcd  3  reach 90/24  largest 90/24; at it 6 w 5 b, phases [11, 19]; past 69/24 39238 w 25688 b; S083's pick can pick, S136's proposed pick can pick
+  spread 16  gcd  8  reach 85/24  largest 85/24; at it 10 w 9 b, phases [7, 13, 19]; past 69/24 24519 w 16032 b; S083's pick can pick, S136's proposed pick can pick
+  spread 17  gcd  1  reach 92/24  largest 92/24; at it 2 w 5 b, phases [7]; past 69/24 41049 w 27264 b; S083's pick can pick, S136's proposed pick can pick
+  spread 18  gcd  6  reach 87/24  largest 87/24; at it 16 w 9 b, phases [5, 13, 17]; past 69/24 24937 w 16362 b; S083's pick can pick, S136's proposed pick can pick
+  spread 19  gcd  1  reach 92/24  largest 92/24; at it 7 w 3 b, phases [5]; past 69/24 47516 w 31895 b; S083's pick can pick, S136's proposed pick can pick
+  spread 20  gcd  4  reach 89/24  largest 89/24; at it 10 w 9 b, phases [7, 13, 19]; past 69/24 27010 w 17974 b; S083's pick can pick, S136's proposed pick can pick
+  spread 21  gcd  3  reach 90/24  largest 90/24; at it 5 w 4 b, phases [17]; past 69/24 27670 w 18078 b; S083's pick can pick, S136's proposed pick can pick
+  spread 22  gcd  2  reach 91/24  largest 91/24; at it 4 w 2 b, phases [13]; past 69/24 25324 w 16849 b; S083's pick can pick, S136's proposed pick can pick
+  spread 23  gcd  1  reach 92/24  largest 88/24, SHORT of the reach 92/24; at it 10 w 8 b, phases [2, 5]; past 69/24 27439 w 18021 b; S083's pick can pick, S136's proposed pick can pick
+tempo negative, both weights of that sign: the pair (-spread, 0); every such pair with the same mg - eg modulo 24 reads the same, a mixed-sign pair is read by `guard --pair`
+  spread  0  gcd 24  reach 69/24  largest 69/24; at it 41 w 49 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 0 w 0 b; S083's pick can pick, S136's proposed pick REFUSES
+  spread  1  gcd  1  reach 92/24  largest 91/24, SHORT of the reach 92/24; at it 2 w 2 b, phases [23]; past 69/24 38987 w 57233 b; S083's pick can pick, S136's proposed pick can pick
+  spread  2  gcd  2  reach 91/24  largest 91/24; at it 4 w 3 b, phases [11]; past 69/24 38194 w 55988 b; S083's pick can pick, S136's proposed pick can pick
+  spread  3  gcd  3  reach 90/24  largest 90/24; at it 5 w 3 b, phases [7]; past 69/24 31654 w 46665 b; S083's pick can pick, S136's proposed pick can pick
+  spread  4  gcd  4  reach 89/24  largest 89/24; at it 9 w 21 b, phases [5, 11, 17]; past 69/24 28630 w 41922 b; S083's pick can pick, S136's proposed pick can pick
+  spread  5  gcd  1  reach 92/24  largest 92/24; at it 0 w 3 b, phases [19]; past 69/24 29681 w 42956 b; S083's pick REFUSES, S136's proposed pick can pick
+  spread  6  gcd  6  reach 87/24  largest 87/24; at it 9 w 9 b, phases [7, 11, 19]; past 69/24 20141 w 28718 b; S083's pick can pick, S136's proposed pick can pick
+  spread  7  gcd  1  reach 92/24  largest 92/24; at it 2 w 6 b, phases [17]; past 69/24 32663 w 46281 b; S083's pick can pick, S136's proposed pick can pick
+  spread  8  gcd  8  reach 85/24  largest 85/24; at it 9 w 21 b, phases [5, 11, 17]; past 69/24 16402 w 23810 b; S083's pick can pick, S136's proposed pick can pick
+  spread  9  gcd  3  reach 90/24  largest 90/24; at it 6 w 15 b, phases [5, 13]; past 69/24 26057 w 37150 b; S083's pick can pick, S136's proposed pick can pick
+  spread 10  gcd  2  reach 91/24  largest 91/24; at it 5 w 6 b, phases [7, 19]; past 69/24 25165 w 36281 b; S083's pick can pick, S136's proposed pick can pick
+  spread 11  gcd  1  reach 92/24  largest 92/24; at it 3 w 3 b, phases [13]; past 69/24 22044 w 30271 b; S083's pick can pick, S136's proposed pick can pick
+  spread 12  gcd 12  reach 81/24  largest 81/24; at it 17 w 30 b, phases [5, 7, 11, 13, 17, 19]; past 69/24 8000 w 11575 b; S083's pick can pick, S136's proposed pick can pick
+  spread 13  gcd  1  reach 92/24  largest 92/24; at it 4 w 3 b, phases [11]; past 69/24 41439 w 63934 b; S083's pick can pick, S136's proposed pick can pick
+  spread 14  gcd  2  reach 91/24  largest 91/24; at it 5 w 18 b, phases [5, 17]; past 69/24 37330 w 56357 b; S083's pick can pick, S136's proposed pick can pick
+  spread 15  gcd  3  reach 90/24  largest 90/24; at it 4 w 6 b, phases [11, 19]; past 69/24 28340 w 42351 b; S083's pick can pick, S136's proposed pick can pick
+  spread 16  gcd  8  reach 85/24  largest 85/24; at it 8 w 9 b, phases [7, 13, 19]; past 69/24 17734 w 26308 b; S083's pick can pick, S136's proposed pick can pick
+  spread 17  gcd  1  reach 92/24  largest 92/24; at it 5 w 3 b, phases [7]; past 69/24 29454 w 44174 b; S083's pick can pick, S136's proposed pick can pick
+  spread 18  gcd  6  reach 87/24  largest 87/24; at it 8 w 21 b, phases [5, 13, 17]; past 69/24 18204 w 26867 b; S083's pick can pick, S136's proposed pick can pick
+  spread 19  gcd  1  reach 92/24  largest 92/24; at it 3 w 12 b, phases [5]; past 69/24 34841 w 51028 b; S083's pick can pick, S136's proposed pick can pick
+  spread 20  gcd  4  reach 89/24  largest 89/24; at it 8 w 9 b, phases [7, 13, 19]; past 69/24 19844 w 28743 b; S083's pick can pick, S136's proposed pick can pick
+  spread 21  gcd  3  reach 90/24  largest 90/24; at it 2 w 6 b, phases [17]; past 69/24 19587 w 28494 b; S083's pick can pick, S136's proposed pick can pick
+  spread 22  gcd  2  reach 91/24  largest 91/24; at it 3 w 3 b, phases [13]; past 69/24 18807 w 27575 b; S083's pick can pick, S136's proposed pick can pick
+  spread 23  gcd  1  reach 92/24  largest 88/24, SHORT of the reach 92/24; at it 5 w 18 b, phases [2, 5]; past 69/24 20524 w 30167 b; S083's pick can pick, S136's proposed pick can pick

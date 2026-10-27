@@ -16222,3 +16222,88 @@ Rejected:     Counting the two as agreeing because the engine's sign matched:
 Consequences: S296's record reads seven of seven not shorter than the oracle,
               two by the deeper reading. A later mate census over positions
               from play states how many needed it.
+
+## DEC-321  2026-10-27  S136 measures tempo as DEC-259's family of one: the screen's full fit is the candidate, one {0, 5} SPRT if it survives
+Tags:         evaluation, tuning, tempo, sprt, screen, s136, s135, dec-259, dec-315, dec-304, dec-092, dec-063, dec-143, dec-047
+Context:      S136's accepts (written before DEC-259) asks for "SPRT bounds
+              [that] resolve single digits ... stated in advance". DEC-259
+              names tempo a family of one, screened offline by held-out loss,
+              and gives every surviving family a `{0, 5}` nElo SPRT. S135's
+              screen (DEC-315) is the template. Phase 1 found no tempo freeze
+              in any file: it was the fit scripts' `--freeze
+              tempo,piece_placement` habit (DEC-057), so a zero-epoch tuner
+              probe already reads `group tempo, freeze (nothing), 2 free`, and
+              nothing under src/ or tools/ moves before the fit. On S083's
+              corpus the side-to-move gap is -0.017848, White relative (S135's
+              audit), the opposite sign to S100's +0.007878: about -8.7 cp of
+              label-side signal, confounded as S100's was.
+Decision:     By the coordinator under the owner's standing instruction (few
+              questions, correctness first). (1) The fit is `--only tempo
+              --lambda 0` at DEC-304's settings as S135's screen ran them, on
+              S083's corpus (sha256 `2e0e3de9...`, `adocs/data/S136_screen.sh`
+              `CORPUS_SHA`) and five quarter samples, seeds 1 to 5. Tempo is
+              kept only if the full fit's held-out gain on S082's fixed set
+              clears DEC-315's m = max(1.645 s, 2e-6). (2) The candidate is the
+              full-corpus screen fit itself: a family of one has no survivors
+              to refit together. A fit that rounds to the shipped 0 / 0 owes
+              no match. (3) A survivor plays one `{0, 5}` nElo SPRT at 8+0.08,
+              Hash 16, `noob_3moves.epd`, 20950 rounds
+              (`adocs/data/S136_sprt.sh`). This is the accepts' "bounds that
+              resolve single digits", read as DEC-259 (b)'s pair. H1 ships. H0
+              is recorded as zero and no verdict as unresolved, the second
+              time after S027; both revert to zero. (4) No bisection, no
+              identity stage, no speed-cost run.
+Why:          DEC-259 already makes the ruling for a family of one. S135's
+              audit identified tempo on this corpus at this layout. A constant
+              has no count for DEC-047's forced-weight timing to measure.
+Rejected:     The accepts' own wording without DEC-259's screen: it would
+              play a match for a term the held-out loss rejects. A separate
+              joint refit after the screen: the same command. A speed-cost
+              run: tempo's whole cost is one taper, priced inside the verdict.
+Consequences: A negative fitted tempo is a possible outcome, and the SPRT
+              judges it like any other. S136's step file "2026-10-27: phase 1"
+              holds the commands and their times.
+
+## DEC-322  2026-10-27  At four rounding divisions the truncation guard follows the fitted pair's gcd, and its pins are re-drawn from S082's training views
+Tags:         testing, evaluation, tempo, truncation, goldens, s136, s083, s135, dec-092, dec-057, dec-053, dec-142, dec-321
+Context:      `evaluate()` has four truncating divisions (positional, tempo,
+              mobility, safety). With tempo at zero, tempo's is 0/24 exactly,
+              so N = 3: the four pins read +69, -69, +69, +69 twenty-fourths,
+              and the corpus maximum is 69/24 (S136 phase 1, read at
+              `80520d7`). After a fit, tempo's remainders are the multiples of
+              g = gcd(tempo_mg - tempo_eg, 24), so the reachable bound is
+              (69 + 24 - g)/24. That equals DEC-092's 4 x 23/24 = 3.833 only at
+              g = 1. DEC-092's worst clause at 3.833 - 0.075 could never pass
+              for g >= 3. S083's pick (`adocs/data/S083_truncation_pick.py`)
+              refuses on S083's corpus for 43 of the 46 non-zero spreads, and
+              on S082's three training views for 1 (spread 5, negative)
+              (`adocs/data/S136_guard_forecast.txt`). On the views, the set's
+              largest residual falls short of the reach at spreads 1 and 23
+              mod 24, both signs (91 and 88 against 92).
+Decision:     By the coordinator under the owner's standing instruction.
+              (1) The guard is re-derived from the fitted pair. The bound is
+              (69 + 24 - g)/24 (69/24 when 24 divides the spread). Each pin is
+              past 69/24 + 1e-6, off the lattice point where ulp noise splits
+              rows (the 2.0 = 48/24 lesson in `DEV_MANUAL.md`). Both worst
+              clauses are past the bound less 0.075.
+              The precondition becomes "tempo's division rounds" ((mg - eg) %
+              24 != 0). This is DEC-092's re-derivation at the exact g, never
+              a relaxation. (2) The four pins are re-drawn from S082's three
+              training views by S083's pick unchanged. Where that refuses,
+              they come from `adocs/data/S136_screen.py pick` over the same
+              scan, a deterministic rule written before the fit. (3) **Not
+              ruled here:** where the views' largest residual falls short of
+              the reach (spreads 1 and 23 mod 24), no worst-clause threshold
+              is chosen. Phase 2 stops and the owner rules, because any
+              threshold below the reach claims less than the arithmetic.
+Why:          DEC-092's literal is exact only at g = 1. A residual belongs to
+              the weights and not to where a position came from (DEC-057), and
+              the views hold the corpus's positions and more.
+Rejected:     DEC-092's 3.833 for every pair: unreachable at g >= 3, so the
+              guard could never be green. S083's pick on the corpus alone: it
+              refuses for 43 of 46 spreads. Hand-chosen rows. Pre-ruling (3)
+              as "the largest found less 0.075": it may never arise, and it
+              would claim less than the reach.
+Consequences: `tests/test_eval_trace.cpp`'s bound case and its pinned case
+              key on g, not on "both zero". A fitted spread of 1 or 23 mod 24
+              pauses S136 for the owner before the re-targeting.

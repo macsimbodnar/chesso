@@ -25,6 +25,14 @@ its diff is `.tuning/coord/S296/s296_close.diff`). **S136 in progress** (tempo,
 the truncation guard re-derived; DEC-259's screen, a `{0, 5}` SPRT if it
 survives; `plan_current/`, one Opus 5.5 subagent in `../chesso-s136`,
 `.tuning/coord/S136/brief.md`), then S121 (mobility curve per piece).
+Phase 1 pre-registered (DEC-321, DEC-322): nothing under src/ or tools/
+moves (no file held a tempo freeze), N = 3 read at `80520d7`; the screen
+(`adocs/data/S136_screen.sh`, `--only tempo --lambda 0`, S083's corpus, full
+plus five quarters, DEC-315's margin), the guard's re-derivation by the
+fitted pair's g with pins re-drawn from S082's training views, and the
+`{0, 5}` SPRT script. A fitted spread of 1 or 23 mod 24 stops phase 2 for
+the owner (DEC-322 (3)). On S083's corpus the side-to-move gap reads -8.7
+cp, the opposite sign to S100's.
 
 ## 2026-10-26: S295 done; S296 started, BUGS-binding, before S136
 
