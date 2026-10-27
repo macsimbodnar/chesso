@@ -7,6 +7,7 @@ decisions:  DEC-092, DEC-057, DEC-053, DEC-063, DEC-258
 closes:
 blocks:
 paused_by:
+author:     coordinator (Claude Opus 5.5); implementer: one Opus 5.5 subagent
 done:
 
 ## The state this inherits

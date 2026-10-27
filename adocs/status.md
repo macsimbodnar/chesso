@@ -21,9 +21,10 @@ than Stockfish's; two needed 1000000000 nodes to show a mate where DEC-319's
 0.75 expected from five earlier runs (Poisson p 0.04) is recorded as a
 count. **The rule stays.** Closed by one Opus 5.5 subagent in
 `../chesso-s296c` (branch `s296c`, kept until the owner approves removal;
-its diff is `.tuning/coord/S296/s296_close.diff`). **Next: S136** (tempo,
+its diff is `.tuning/coord/S296/s296_close.diff`). **S136 in progress** (tempo,
 the truncation guard re-derived; DEC-259's screen, a `{0, 5}` SPRT if it
-survives), then S121 (mobility curve per piece).
+survives; `plan_current/`, one Opus 5.5 subagent in `../chesso-s136`,
+`.tuning/coord/S136/brief.md`), then S121 (mobility curve per piece).
 
 ## 2026-10-26: S295 done; S296 started, BUGS-binding, before S136
 
