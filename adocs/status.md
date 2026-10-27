@@ -33,6 +33,13 @@ fitted pair's g with pins re-drawn from S082's training views, and the
 `{0, 5}` SPRT script. A fitted spread of 1 or 23 mod 24 stops phase 2 for
 the owner (DEC-322 (3)). On S083's corpus the side-to-move gap reads -8.7
 cp, the opposite sign to S100's.
+The screen kept tempo (gain +0.000031 against m 0.000002), fitted mg 10 /
+eg 1; pasted in `../chesso-s136b`, bench 5069022 -> 6007564. `EXACT_FLOOR`
+reads 156 against 159; the lost mined mates are depth churn or the null
+move's and reverse futility's price, none unpriced
+(`adocs/data/S136_lost_mates.txt`). By DEC-323 the `{0, 5}` SPRT plays that
+working tree, and the owner rules on the floor only on H1 (recommended 159 ->
+155).
 
 ## 2026-10-26: S295 done; S296 started, BUGS-binding, before S136
 

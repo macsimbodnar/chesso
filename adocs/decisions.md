@@ -16307,3 +16307,57 @@ Rejected:     DEC-092's 3.833 for every pair: unreachable at g >= 3, so the
 Consequences: `tests/test_eval_trace.cpp`'s bound case and its pinned case
               key on g, not on "both zero". A fitted spread of 1 or 23 mod 24
               pauses S136 for the owner before the re-targeting.
+
+## DEC-323  2026-10-27  S136's paste costs EXACT_FLOOR three mined mates, all priced or depth churn: its SPRT plays the working tree, and the owner rules on the floor only on H1
+Tags:         evaluation, tempo, mate, testing, sprt, s136, s083, dec-307, dec-308, dec-305, dec-299, dec-313, dec-319, dec-158, dec-087, dec-254, dec-322, owner-question
+Context:      S136's screen kept tempo (DEC-321; gain +0.000031 against m
+              0.000002) and fitted mg 10 / eg 1. Pasted, bench 5069022 ->
+              6007564. Four fast tests go red in both builds: the truncation
+              guard (forecast, DEC-322), two evaluation goldens' anchors, and
+              `test_mate_breadth` at 156 exact mined mates against
+              `EXACT_FLOOR` 159. `S156_mined_floor_sweep.py` reads the candidate
+              at 156 shipping / 156 weakened, so no value separates, against
+              the parent's 160 / 159. `MATE_IN_THREE_FLOOR` holds at 13 against
+              10 weakened and separates. DEC-299's guard makes a falling floor
+              the owner's. By DEC-305 and DEC-308 (2), a mate the shipped
+              engine reports and the paste loses is attributed by tool before
+              the run (`adocs/data/S136_lost_mates.txt`). At depth 10, 16 of the
+              318 rows churn: the paste loses 10 and gains 6, row 86 among the
+              gains, which the parent first finds at depth 19 (late move
+              reduction). Eight of the lost rows return within two plies. Row
+              158 (mate in 5, first found at 17) and row 182 (mate in 6, at 13)
+              are cut by the null move and reverse futility at the mated side's
+              non-PV node. The paste reorders a PV node, so the mating move is
+              scouted; the table entries there prove nothing (DEC-319 (2)'s
+              shape for S145 root 76). Reach at the shipped weights, on the
+              mined set at depth 10: reverse futility off reads 199 against
+              160, null move off 161. Stockfish at 5000000 nodes returns every
+              row's labelled mate.
+Decision:     By the coordinator under the owner's standing instruction (few
+              questions, correctness first). (1) No lost row is (iii): each is
+              depth churn or DEC-158's and DEC-087 (e)'s price, as DEC-319 (2)
+              reads it, so nothing is fixed before the run. (2) S136 follows
+              DEC-307's form. Every golden inside DEC-299's guard is
+              re-derived by its own script, and `EXACT_FLOOR` stays at 159,
+              red. The `{0, 5}` SPRT plays the uncommitted working tree of
+              `../chesso-s136b` against its HEAD `ba65b86` (fastchess.sh's
+              dirty-tree mode, DEC-254), and no commit precedes the ruling.
+              (3) On H1 the owner rules on `EXACT_FLOOR`. The coordinator
+              recommends 159 -> 155: one below the 156 the paste ships (DEC-313
+              (1)'s rule), recorded as not separating, with
+              `MATE_IN_THREE_FLOOR` (13 against 10) carrying the separation as
+              since DEC-319 (5). (4) On H0 or no verdict the paste reverts
+              whole, the floor never moves, and no question is asked.
+Why:          The floor is the owner's (DEC-299), and asking before the run
+              would be a question an H0 answers for free. The attribution finds
+              nothing a fix would change before the verdict.
+Rejected:     Asking the owner now: the same question, asked even when the
+              answer is moot. Lowering the floor by the coordinator: DEC-299
+              forbids it. No match because the floor binds: it contradicts
+              DEC-321 (3) and DEC-259, and 8 of the 10 losses are depth churn.
+              Tracing all eight churned rows in full: walking the parent's line
+              already points them at reverse futility or a longer mate (row
+              185), and none survives two more plies.
+Consequences: The SPRT's console names `cand-ba65b86+<hex>`, and the close
+              commits `candidate.diff` beside the log (DEC-254). An H1 record
+              waits on the owner's floor ruling.
