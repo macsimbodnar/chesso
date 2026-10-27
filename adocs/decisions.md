@@ -16361,3 +16361,66 @@ Rejected:     Asking the owner now: the same question, asked even when the
 Consequences: The SPRT's console names `cand-ba65b86+<hex>`, and the close
               commits `candidate.diff` beside the log (DEC-254). An H1 record
               waits on the owner's floor ruling.
+
+## DEC-324  2026-10-27  After S039's H0, S122 keeps the lazy shortcut and the clamp and re-sizes LAZY_EVAL_MARGIN from its own fitted spread
+Tags:         evaluation, king-safety, mobility, lazy-eval, clamp, s122, s121, s039, dec-258, dec-172, dec-169, dec-259, dec-265, owner-question
+Context:      DEC-258 (5) re-formed S039: the lazy shortcut and the +/-184 cp
+              clamp on mobility plus king safety (`LAZY_EVAL_MARGIN`) retire
+              together under one `{-5, 0}` verdict, and "on H0 S122's design is
+              amended by the owner before S121 starts". S039 read H0 (nElo
+              -16.46 +/- 9.52), so both stay. S122's goal and accepts assume an
+              unclamped king safety. S121 is unchanged under every option: its
+              mobility stays under 184. The clamp binds on 0.338 to 0.462 % of
+              rows. S039 measured the bundle only, at pre-S083 weights, so the
+              clamp's own cost is unknown. The question
+              (`.tuning/coord/S121/question_draft.md`, DEC-265 form) offered
+              four options.
+Decision:     By the owner, 2026-10-27, the recommended option. S121 runs as
+              written. S122 fits its terms, then re-derives `LAZY_EVAL_MARGIN`
+              from `tools/eval_spread` at its fitted weights with a fresh
+              `truncation_scan` (DEC-169): S039's section 4 procedure, which
+              DEC-172 placed directly before S122. The shortcut and the clamp
+              stay, and the bound holds by construction, wider. S122's goal and
+              accepts read "clamped at a margin re-derived from its own spread,
+              binding on at most a pre-registered share of rows". The margin is
+              its own part in the family's H0 bisection partition (DEC-259). If
+              the spread stays under 184, nothing moves and the margin owes no
+              run. S122 states how it makes the fit and the margin consistent,
+              since no gradient passes the margin. S122's step file takes this
+              wording when it starts, citing this entry.
+Why:          It leaves S039's result alone. King safety's headroom is sized
+              from data at its own weights. It costs minutes, plus nothing on
+              H1, and it is the procedure the records already wrote.
+Rejected:     Keeping 184 and fitting under it: it gives up S122's premise
+              without a measurement. Splitting king safety out of the shortcut
+              and the clamp: about -5 % nps, a third stage, goldens re-derived,
+              hours spent on the direction S039 measured as costing. 184 now
+              plus a later step that retires both with an unclamped refit:
+              S039's -25.98 to -6.94 nElo interval is its prior.
+Consequences: DEC-258 (5) is discharged and S121 is unblocked. A wider margin
+              lets the shortcut skip less, at worst S039's -2.79 % nps. Still
+              unmeasured: the clamp retired outright, and the margin's own cost
+              unless the family reads H0.
+
+## DEC-325  2026-10-27  On S136's H1 EXACT_FLOOR falls 159 -> 155, ruled by the owner before the verdict
+Tags:         mate, testing, tempo, s136, dec-323, dec-299, dec-313, dec-319, owner-question
+Context:      DEC-323 (3) left `EXACT_FLOOR` to the owner on H1 (DEC-299).
+              The paste reads 156 exact mined mates against 159, shipping and
+              weakened alike, so no value separates. `MATE_IN_THREE_FLOOR`
+              reads 13 against 10 and separates. The owner asked, before a
+              shutdown on 2026-10-27, for every pending question at once, so
+              this one was asked before the verdict.
+Decision:     By the owner, 2026-10-27, the recommended option. If S136's
+              `{0, 5}` SPRT reads H1, `EXACT_FLOOR` moves 159 -> 155. That is
+              one below the 156 shipped (DEC-313 (1)'s rule), and it is
+              recorded as not separating; `MATE_IN_THREE_FLOOR` carries the
+              separation, as it has since DEC-319 (5). On H0 or no verdict
+              nothing moves (DEC-323 (4)). The ruling binds the paste DEC-323
+              names (`.tuning/coord/S136/s136b_pause.diff`). A re-launched run
+              of that tree inherits it; a changed paste does not.
+Why:          DEC-299 makes a falling floor the owner's. Asking now keeps an H1
+              close from waiting on a question.
+Rejected:     Keeping 159: the test stays red, so the tempo cannot land even
+              on H1.
+Consequences: An H1 close lands the paste with this floor change and asks no
+              further question. DEC-323 (3) is discharged in advance.

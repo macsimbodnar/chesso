@@ -7,6 +7,45 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-27, by hand.
 
+## 2026-10-27 16:20: paused for a shutdown; S136's SPRT void, re-launch first
+
+**The owner shut the machine down.** S136's `{0, 5}` SPRT was stopped by
+SIGINT at 16:17 after 3 h 02 m (6520 games, LLR 1.10, no bound) and is
+**void**, as the precedent for a killed run reads: re-launched from the
+pre-registration with a fresh seed, the dead one never pooled or resumed. Its
+console is `.tuning/s136_sprt_void_20261027.console` and its out directory
+`.tuning/sprt_s136_20261027_131508` (fastchess's resume file moved out of the
+tree to `.tuning/coord/S136/void_run_config.json`, unused). The owner ruled
+three questions at once, each the recommended option:
+
+- **DEC-324**: S122 keeps the shortcut and the clamp and re-sizes
+  `LAZY_EVAL_MARGIN` from its own fitted spread. DEC-258 (5) is discharged and
+  **S121 is unblocked**.
+- **DEC-325**: on S136's H1, `EXACT_FLOOR` 159 -> 155, so an H1 close asks
+  nothing more.
+- `../chesso-s296c` and `../chesso-s136` removed with their branches; both
+  trees equalled their saved diffs, already committed as `c1d4b3c` and
+  `ba65b86`.
+
+**Resume here, in order:**
+
+1. `cat /proc/loadavg`, AC power, no other load. `git -C ../chesso-s136b
+   status --short` must equal `.tuning/coord/S136/s136b_pause.diff` (sha256
+   in `.tuning/coord/S136/s136b_pause.diff.sha256`; `git diff --cached
+   --binary` then `git diff --binary`, concatenated, is how it was taken).
+2. In `../chesso-s136b`, check `adocs/data/S136_sprt.sh`'s pin sentence and
+   banner against the new launch, and correct only the date, seed or out
+   directory it names. Re-launch detached from there as on 2026-10-27
+   (console `.tuning/s136_sprt.console`). Read the banner before the first game
+   ends: REF `ba65b86`, `cand-ba65b86+<hex>`, 8+0.08, Hash 16, 12/12,
+   noob_3moves, `{0, 5}`, cap 20950 rounds. A new `<hex>` is expected if the
+   script's edits enter the diff. Arm the four-exit watcher. 12.1 h on a
+   bound, 19.9 h at the cap, abort at 40 h. No build or gate meanwhile
+   (DEC-260).
+3. On the verdict: S136's close as pre-registered and DEC-323, with DEC-325's
+   floor on H1. The step file records this void run.
+4. Then S121 (mobility curve per piece), and S122 under DEC-324.
+
 ## 2026-10-27: S296 read H1; the rule stays; S136 next
 
 **S296's SPRT read H1** in 8 h 38 m (`adocs/data/S296_sprt.log`, archived
@@ -20,10 +59,10 @@ than Stockfish's; two needed 1000000000 nodes to show a mate where DEC-319's
 (`adocs/data/S296_sprt_mate_pvs.txt`). The candidate's 3 searches against
 0.75 expected from five earlier runs (Poisson p 0.04) is recorded as a
 count. **The rule stays.** Closed by one Opus 5.5 subagent in
-`../chesso-s296c` (branch `s296c`, kept until the owner approves removal;
+`../chesso-s296c` (branch `s296c`, removed 2026-10-27 with the owner's approval;
 its diff is `.tuning/coord/S296/s296_close.diff`). **S136 in progress** (tempo,
 the truncation guard re-derived; DEC-259's screen, a `{0, 5}` SPRT if it
-survives; `plan_current/`, one Opus 5.5 subagent in `../chesso-s136`,
+survives; `plan_current/`, one Opus 5.5 subagent in `../chesso-s136` (removed 2026-10-27),
 `.tuning/coord/S136/brief.md`), then S121 (mobility curve per piece).
 Phase 1 pre-registered (DEC-321, DEC-322): nothing under src/ or tools/
 moves (no file held a tempo freeze), N = 3 read at `80520d7`; the screen
@@ -40,6 +79,12 @@ move's and reverse futility's price, none unpriced
 (`adocs/data/S136_lost_mates.txt`). By DEC-323 the `{0, 5}` SPRT plays that
 working tree, and the owner rules on the floor only on H1 (recommended 159 ->
 155).
+**The `{0, 5}` SPRT ran from 2026-10-27 13:15 until the 16:17 pause (void, above)** from `../chesso-s136b`
+(`adocs/data/S136_sprt.sh` pinned there, REF `ba65b86`, candidate
+`cand-ba65b86+75c04550c0f1`), console `.tuning/s136_sprt.console`, out
+`.tuning/sprt_s136_20261027_131508`, banner as pre-registered; 12.1 h on a
+bound, 19.9 h at the cap, abort at 40 h. No build or gate meanwhile
+(DEC-260).
 
 ## 2026-10-26: S295 done; S296 started, BUGS-binding, before S136
 
