@@ -27,6 +27,36 @@ three questions at once, each the recommended option:
   trees equalled their saved diffs, already committed as `c1d4b3c` and
   `ba65b86`.
 
+**Re-launched 2026-10-28 00:35:59** from `../chesso-s136b` after steps 1 and 2
+below: the worktree equalled the saved diff, the same kernel, load 0.8; banner
+as pre-registered, candidate `cand-ba65b86+ea1eb6cfad0b` (its `candidate.diff`
+differs from the void run's only by the re-launch sentence added to
+`S136_sprt.sh`, whose "00:40" was written just before the launch), seed
+20261028003559, console `.tuning/s136_sprt.console`, out
+`.tuning/sprt_s136_20261028_003559`; watcher on fastchess.sh PID 8989,
+ceiling 40 h. **It read H0 at 10:23** (21014 games, nElo -0.90 +/- 4.70, LLR
+-2.96, 0 forfeits, 9 h 47 m); S136's close follows.
+Meanwhile **S121's phase 1a runs blind** (one Opus 5.5 subagent in
+`../chesso-s121`, branch `s121` at `adf77d0`, brief
+`.tuning/coord/S121/brief.md` from the read-only research
+`.tuning/coord/S121/brief_inputs.md`): code at the identity table, the parts
+P1-P3 as patches, screen, cost and SPRT scripts. Nothing is compiled until
+S136's verdict (DEC-260). The coordinator's rulings (parts and their order,
+definitions, the paired gain, the identity seed, tying unsupported cells, no
+test exempted, the H0 partition, the clamp reading) become DEC-326 when
+phase 1b lands. The step file moves to `plan_current/` in that worktree.
+Phase 1a is written (2026-10-28 02:05), fast-checked once and fixed: the
+blocked and low-rank pawns are split into parts P2a and P2b (the order is P0,
+P1, P2a, P2b, P3, and the partition A | B1 | B2a | B2b | C); the span guard
+is held by the freeze or refused by the tuner; the anchors read the mask from
+the source; ties are copied before the first epoch; a constructive generator
+is the coverage-row fallback. Saved as `.tuning/coord/S121/s121_phase1a.diff`
+(sha256 b6c14518...). **After S136's close**, send that agent phase 1b: the
+rebase, both builds, INV-6, the coverage rows, the preconditions, the patch
+at every mask, then landing `No functional change` with DEC-326. The main
+checkout's uncommitted docs (plan.md, status.md, the S121, S122 and S101
+step files) commit first, so the S121 diff applies with `--3way`.
+
 **Resume here, in order:**
 
 1. `cat /proc/loadavg`, AC power, no other load. `git -C ../chesso-s136b

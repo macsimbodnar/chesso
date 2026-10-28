@@ -100,7 +100,7 @@ rests on a published number.
 
 The term needs, for each side, the set of squares attacked by each enemy piece
 class. Those sets are built already, once, in the loop that computes mobility
-(`src/evaluation.cpp` `mobility_mg` is the term; the attack sets are the
+(`src/evaluation.cpp` `mobility_score` is the term; the attack sets are the
 loop's). After S121 the same loop also builds a mobility area from the enemy
 pawn-attack span, which is exactly the input a pawn-threat term needs.
 

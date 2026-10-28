@@ -30,7 +30,8 @@ S262 has landed. S263 built no per-side attack set, since no term read one;
 a term here that needs one builds it once per evaluation. S039 read H0 (record `ca578de`,
 revert `74d0adf`): the lazy shortcut and the clamp are kept. S122's design
 waits on the owner's amendment before S121 starts (DEC-258), and that
-amendment binds here.
+amendment binds here: DEC-324 (2026-10-27) keeps the clamp and re-derives
+its margin at S122, so this step runs as written.
 
 ## What is there, and why the fit could not save it
 

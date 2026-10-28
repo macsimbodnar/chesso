@@ -382,12 +382,12 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 ## Open
 
 1. S136  **in progress** -- unfreeze tempo, re-derive the truncation guard its zero weight holds one division down -- three divisions today, S055 having read H0 -- refit and resolve it at bounds that can
-2. S121  **S122's design amended by the owner first (S039's H0)** -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
+2. S121  (S122's design amended by the owner, DEC-324) -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 3. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
 4. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
 5. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
 6. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-7. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
+7. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
 8. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
 9. S102  outpost and space terms in the evaluation, one family
 10. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign

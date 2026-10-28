@@ -1,13 +1,24 @@
 id:         S122
-goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, and it is no longer clamped
-accepts:    an SPRT verdict, recorded whatever it is; the term can return several hundred centipawns and **no clamp truncates it** -- S039 has retired the shortcut and the clamp before this runs, or its H0 has amended this design by an owner decision (DEC-258); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); shelter and storm come from the pawn hash (S118); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
+goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
+accepts:    an SPRT verdict, recorded whatever it is; the term is clamped with mobility at a `LAZY_EVAL_MARGIN` re-derived from its own fitted spread (`tools/eval_spread` at the fitted weights and a fresh `truncation_scan`), binding on at most a pre-registered share of rows, the margin its own part in the family's H0 partition, and the step states how the fit and the margin are made consistent (S039 read H0; DEC-324, the owner's amendment DEC-258 names); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); shelter and storm come from the pawn hash (S118); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp
-excludes:   mobility, which shares the loop but is S121; the clamp and the lazy shortcut, which are S039
-decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259
+excludes:   mobility, which shares the loop but is S121; retiring the clamp and the lazy shortcut (S039 read H0, DEC-324)
+decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259, DEC-324
 closes:
 blocks:
 paused_by:
 done:
+
+## Amended 2026-10-28, DEC-324: the clamp stays and its margin is re-derived
+
+S039 read H0, so the lazy shortcut and the clamp stay. The owner amended
+this design (DEC-324): the fit runs under the kept clamp, then
+`LAZY_EVAL_MARGIN` is re-derived from the fitted spread with a fresh
+`truncation_scan` (S039's section 4 procedure, DEC-169, DEC-172). If the
+spread stays under 184, nothing moves and the margin owes no run. The
+header above carries the amended goal and accepts. Below, "no clamp", "the
+clamp is the whole problem" and S039 retiring the clamp are the design as
+written before the amendment, kept as history.
 
 ## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
 
