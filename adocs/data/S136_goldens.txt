@@ -1,0 +1,151 @@
+# S136's candidate: every golden the tempo paste moves, each by its script (DEC-142), and the unmoved ones read. 2026-10-27,
+# worktree chesso-s136b at ba65b86 plus the paste of .tuning/s136/screen/full_tempo.hpp (tempo_mg 10, tempo_eg 1;
+# src/evaluation.cpp's two definitions and whole-line comments only), uncommitted: DEC-323 plays it as a working tree.
+# Bench 6007564 in both builds (the parent 5069022). Candidate binaries frozen in the session scratch directory before
+# the readings (sha256, first 16): chesso 1407f16bc07f7a25. Parent readings: S296's candidate's, whose src/ is ba65b86's
+# (adocs/data/S296_goldens.txt), unless stated. The two mate floors: adocs/data/S136_floor.txt; the mates the paste
+# loses at depth 10: adocs/data/S136_lost_mates.txt. No fit, match, SPRT, datagen or timing.
+#
+== 1. The derivation: ba65b86's S192_anchors.py, its anchors S135's, against the fit's header --
+   d=$(mktemp -d); git archive ba65b86 adocs/data/S192_anchors.py src | tar -x -C $d;
+   python3 $d/adocs/data/S192_anchors.py .tuning/s136/screen/full_tempo.hpp
+weights from .tuning/s136/screen/full_tempo.hpp
+stage two clamped at +/-184, LAZY_EVAL_MARGIN in src/search_params.hpp
+pawn on e2             evaluate 100 (was 99)              positional    42 tempo    1 mobility    0 safety   -27
+knight on b1           evaluate 277 (was 276)             positional   -95 tempo    1 mobility    0 safety     0
+bishop on c1           evaluate 356 (was 355)             positional   -32 tempo    1 mobility   35 safety     0
+rook on d1             evaluate 584 (was 583), cheap 579 (was 578) positional    59 tempo    1 mobility   25 safety   -20
+queen on d1            evaluate 986 (was 984)             positional   -91 tempo    2 mobility   62 safety    30
+bare kings cancel      evaluate 1 (was 0)                 positional     0 tempo    1 mobility    0 safety     0
+black in check, Re8    evaluate 203 (was 199)             positional   -35 tempo    4 mobility   22 safety    11
+black a rook down, Kh7 evaluate -596 (was -597)           positional    46 tempo    1 mobility   32 safety     0
+
+  after Ke1-d1           evaluate   565  -> root  -565
+  after Ke1-d2           evaluate   534  -> root  -534
+  after Ke1-f1           evaluate   583  -> root  -583
+  after Ke1-f2           evaluate   544  -> root  -544
+white in check, Re8    quiesce -534 (was -533)
+== python3 adocs/data/S192_anchors.py (this tree, the script's anchors and the tests set to the above)
+10 of 10 reproduced
+
+== 2. build/tools/truncation_scan --data <view> --min 2.875 over .tuning/s082/pool.tsv.{qs,root,pv}.train into one file (stderr), and --data .tuning/s083/curve/s0/cand_6226944_s1.tsv
+11690184 rows scanned, 423009 past 2.0, 25815 past 2.8750, worst 3.750000
+11692850 rows scanned, 415243 past 2.0, 25529 past 2.8750, worst 3.750000
+11391658 rows scanned, 464207 past 2.0, 29457 past 2.8750, worst 3.750000
+6226944 rows scanned, 226446 past 2.0, 13504 past 2.8750, worst 3.750000
+   (byte-identical to the coordinator's apply stage, .tuning/s136/apply_full/views_scan.txt and scan.txt)
+== python3 adocs/data/S083_truncation_pick.py <the views' scan>  (DEC-322 (1): the pins)
+80801 hits, 16 distinct FENs at the maximum 3.750000, phases 5..13, targets 5.00, 7.67, 10.33, 13.00
+3.750000	phase  5	b	8/6pp/1p1bk3/2p4P/P1R5/4P1P1/r4PK1/8 b - - 0 37
+3.750000	phase  5	w	8/8/1k6/7r/8/R7/B4PK1/8 w - - 0 60
+3.750000	phase 13	b	4r1k1/2b2pp1/5n2/2Np4/1P1Pp2p/2P3P1/rB2R1KP/2N4R b - - 1 32
+3.750000	phase 13	w	2r2b1r/4nk2/6p1/p3RnB1/2PN1R1P/Pp6/1P3PK1/8 w - - 2 33
+    "8/6pp/1p1bk3/2p4P/P1R5/4P1P1/r4PK1/8 b - - 0 37",
+    "8/8/1k6/7r/8/R7/B4PK1/8 w - - 0 60",
+    "4r1k1/2b2pp1/5n2/2Np4/1P1Pp2p/2P3P1/rB2R1KP/2N4R b - - 1 32",
+    "2r2b1r/4nk2/6p1/p3RnB1/2PN1R1P/Pp6/1P3PK1/8 w - - 2 33",
+== python3 adocs/data/S083_truncation_pick.py <the corpus's scan>
+13504 hits, 2 distinct FENs at the maximum 3.750000, phases 5..5, targets 5.00, 5.00, 5.00, 5.00
+no hit with w to move for the target phase 5.00
+
+== 3. The S170 grid: S296's sweep.sh with this step's paths -> adocs/data/S136_sweep_s170.txt (elapsed 281 s, 108 rows, SWEEP-DONE)
+== adocs/data/S203_case_sweep.sh --ceilings <S202 S261 S286 S292 S293 S083s S135 S296 grids> adocs/data/S136_sweep_s170.txt
+A_mate8_shallow                   2
+B_mate6_shallow                   6
+C_mate7_depth11                   4
+D_mate_minus6_depth10             1
+E_mate_minus9                     2
+F_mate6_inherited_no_line         3
+   (the eight grids before: the same six, 2 6 4 1 2 3; no ceiling moves)
+== --ceilings adocs/data/S136_sweep_s170.txt alone
+A_mate8_shallow                   0
+B_mate6_shallow                   2
+C_mate7_depth11                   1
+D_mate_minus6_depth10             0
+E_mate_minus9                     0
+F_mate6_inherited_no_line         1
+== adocs/data/S170_pick_budgets.sh <ba65b86's S170_cases.tsv> adocs/data/S136_sweep_s170.txt (stderr)
+A_mate8_shallow            stride 1  nodes 500000   -> nodes 500000   (1 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (9 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 1500000  -> nodes 500000   (10 lines, 0 short)
+D_mate_minus6_depth10      stride 1  nodes 4000000  -> nodes 1500000  (3 lines, 0 short)
+E_mate_minus9              stride 1  nodes 300000   -> nodes 100000   (5 lines, 0 short)
+F_mate6_inherited_no_line  stride 2  nodes 300000   -> nodes 300000   (6 lines, 0 short)
+   -> C 1500000 -> 500000, D 4000000 -> 1500000, E 300000 -> 100000, applied with a header paragraph; DEC-299's guard met
+      but for EXACT_FLOOR, which DEC-323 leaves red for the owner (MATE_IN_THREE_FLOOR holds, no ceiling rises).
+
+== 4. The other goldens a search-visible change can move, on the candidate
+== ~/.venv/chess/bin/python adocs/data/S188_repair_goldens.py first-mate --engine <candidate>
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+== python3 adocs/data/S188_repair_goldens.py s207 --lib <candidate library>
+8	0	0	0
+
+# lib: <scratch>/cand_lib.a
+# separating depth: 4  (the case drives 4, 5 and 4)
+== python3 adocs/data/S192_node_budget.py build/tests/test_search
+binary        /home/max/ws/chesso-s136b/build/tests/test_search
+count         7386 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        29544  (4x the count)
+floor         1477  (the count over 5)
+
+shipping      budget 65024, floor 3251
+the count is  2.27x the shipping floor and 0.11 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.45 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+== python3 adocs/data/S083s_rfp_ply2.py <candidate>
+  depth  1  cp 1182
+  depth  2  cp 1139
+  depth  3  cp 1036
+  depth  4  cp 1036
+  depth  5  cp 1046
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 3842
+first_exact 6
+mate -2 at the last iteration: yes
+   -> first-mate, DRIVE_DEPTH and the ply-2 clause identical to S296's; the node count 7386 (S296 7366), inside [7270, 32512]
+== ~/.venv/chess/bin/python adocs/data/S230_mine_r01_row.py depths --fens <the seven rows> --lo 3 --hi 12 --lib <candidate library>
+   (rows: capture_mates' four at 9, 8, 11, 12; the retired multicut row at 10; ProbCut at 10; the extra ply at 8)
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+- - - - - - - 5 - 5 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+- - - - - - 5 5 5 5 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+   -> each asserted depth holds; capture_mates' first three now first report at exactly 9, 8 and 11 (the parent one ply
+      earlier each), the fourth at 9, 11 and 12 (the parent 9 and 12); ProbCut 5 at 9 to 12 (the parent 6 at 12)
+== python3 adocs/data/S261_mine_late_capture.py sweep --fens <LATE_CAPTURE_POS> --lo 3 --hi 9 --lib <candidate library>, then pick
+one position for both:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 9151  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 919  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+each on its own:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 9151  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 919  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+   -> LQ02 at 7 and LQ03 at 3, unmoved (node counts apart)
+== ~/.venv/chess/bin/python adocs/data/S165_nmp_defender_sweep.py sweep <candidate tune>
+  cand_tune exact  83/104  m1 50/50 d0  m2 31/31 d4  m3 2/15 d7  m4 0/8 d-  short 0  sign 0
+   (S296's candidate, the parent: 85/104, m2 31/31 d6, m3 3/15, m4 1/8)
+== build/tests/test_mate_pv -tc="the * set reports no mate*" -s, from tests/
+   S145_mate_set.tsv at depth 8: 189 mate lines, 0 incomplete
+   S145_mined_set.tsv at depth 8: 513 mate lines, 0 incomplete
+   -> 702 on the candidate (707 on the parent)
+== g++ ... adocs/data/S083_tuner_preconditions.cpp build/src/libchesso_engine_trace.a (its header's line), then both <scratch>
+clamp: the rule picks +100, every row 23.00 from the kink
+    smallest plain walk 0.2646 (material/table rook); runs apart 6.82e-13; plain travelled 1588.8
+    smallest plain walk 0.0116 (material/table rook); runs apart 7.96e-13; plain travelled 1620.6
+walk: every plain shift clears the case's floor 0.01
+   -> the clamp push +100 and every row 23.00 from the kink, unmoved; the AdaGrad walk 0.0116 over the 0.01 floor
+      (S135 0.0135)
+== unmoved by construction: golden_defaults, the option count, the census floors, the book -- no search parameter,
+   UCI option, generator, corpus or book moved

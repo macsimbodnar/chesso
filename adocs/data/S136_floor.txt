@@ -1,0 +1,164 @@
+# S136 phase 2: the two mate floors on the tempo candidate (tempo_mg 10, tempo_eg 1), against its parent. 2026-10-27.
+#
+# Candidate: worktree chesso-s136b, branch s136b at ba65b86 plus the coordinator's paste
+# (`adocs/data/S136_screen.sh apply`, src/evaluation.cpp's two tempo definitions alone; bench 6007564 in both builds,
+# the parent 5069022). Parent: ba65b86 itself, whose src/ is 80520d7's. Uncommitted, so the S156 and S154 sweeps run
+# through adocs/data/S136_overlay_run.py, which copies the working tree's src/evaluation.cpp into each throwaway
+# worktree right after its `git worktree add`; everything else is the script's. The per-row tables run
+# adocs/data/S136_mined_rows.py (S156's score() protocol, one line a row) on the candidate's Release build and on the
+# parent's tune build that run B kept (RfpMinPly bound relaxed, default 3: run B's RfpMinPly 3 row and the table's
+# depth-10 total agree, 160). No fit, match, SPRT, datagen or timing; the wall columns are the scripts' own and
+# decide nothing. Load average before the runs on the next line.
+#
+# Reading: EXACT_FLOOR (159, DEC-319 (5)) reads 156 shipping and 156 weakened on the candidate, so the shipping build is
+# red at 159 and no floor separates (gap 0); passing it needs a floor at or below 156, a fall of at least 3, outside
+# DEC-299's guard. MATE_IN_THREE_FLOOR (11) holds and still separates: 13 shipping, 10 weakened, the weakened gate red at
+# 10 >= 11 (the parent 13 / 8). At depth 10 sixteen of the 318 rows churn, 10 lost and 6 gained; on those sixteen at
+# depth 12 the parent reads 15 exact and the candidate 14, at depth 14 both 15 (the candidate still misses row 158,
+# the parent row 86).
+0.52 1.35 2.29 1/1219 4039204
+== A. python3 adocs/data/S136_overlay_run.py adocs/data/S156_mined_floor_sweep.py src/evaluation.cpp -- --ref HEAD --floor 159 --jobs 12
+318 positions, depth 10, ref HEAD
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s136b
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     156          159            0   16.0s
+          2     157          162            0   16.4s
+          1     156          159            0   15.7s
+          0     156          159            0   15.8s
+
+  floor 159, asserted by tests/test_mate_breadth.cpp
+    shipping value 156, weakened-guard value 156, gap 0
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_7jzgqj6v/tests/test_mate_breadth.cpp:320: MESSAGE: mined set at depth 10: 156 exact, 159 right sign, 0 wrong sign
+    logged: the mined set reads 156 exact at depth 10, under the 159 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+== B. python3 adocs/data/S156_mined_floor_sweep.py --ref HEAD --floor 159 --jobs 12 --keep
+318 positions, depth 10, ref HEAD
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     160          163            0   16.6s
+          2     161          164            0   16.4s
+          1     159          161            0   15.6s
+          0     159          161            0   15.6s
+
+  floor 159, asserted by tests/test_mate_breadth.cpp
+    shipping value 160, weakened-guard value 159, gap 1
+    THE FLOOR NO LONGER SEPARATES. It has to sit above what the weakened guard gives and at or below what ships.
+
+  the gate built with RfpMinPly defaulting to 1: GREEN, WHICH IS THE FAILURE
+    /tmp/S156_sweep_t_3kmv3r/tests/test_mate_breadth.cpp:320: MESSAGE: mined set at depth 10: 159 exact, 161 right sign, 0 wrong sign
+
+  worktree kept at /tmp/S156_sweep_t_3kmv3r
+== C. python3 adocs/data/S136_overlay_run.py adocs/data/S154_floor_margin_sweep.py src/evaluation.cpp -- floor --ref HEAD --jobs 12
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s136b
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 20/24 d8  m4  2/16 d6  m5  0/16 d-  short 0  sign 0
+                         m3 ##########.###.######..#  churn -  10864991 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 1  10159639 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 13/24 d6  m4  2/16 d8  m5  1/16 d6  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 6  9826690 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 12/24 d6  m4  2/16 d8  m5  1/16 d7  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 1  10586339 nodes
+  RfpMinPly=1            m2 20/26 on-time 13 d7  m3 10/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                         m3 ...##...#....#.####.#..#  churn 2  9731810 nodes
+  RfpMinPly=0            m2 20/26 on-time 13 d7  m3 10/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                         m3 ...##...#....#.####.#..#  churn 0  9731810 nodes
+
+  floor, 15.2s
+== D. python3 adocs/data/S136_overlay_run.py adocs/data/S154_floor_margin_sweep.py src/evaluation.cpp -- red --ref HEAD --jobs 12
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s136b
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    values: CHECK( false )
+    /tmp/S154_sweep_km8lk95i/tests/test_engine.cpp:5813: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    /tmp/S154_sweep_km8lk95i/tests/test_engine.cpp:5814: FATAL ERROR: REQUIRE( exact_by_distance[3] >= MATE_IN_THREE_FLOOR ) is NOT correct!
+    values: REQUIRE( 10 >= 11 )
+    [doctest] assertions: 3562 | 3535 passed | 27 failed |
+
+  red, 22.7s
+== E. python3 adocs/data/S154_floor_margin_sweep.py floor --ref HEAD --jobs 12
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  0/16 d-  short 0  sign 0
+                         m3 #######.##.###.######..#  churn -  11351332 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 0  10337721 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 13/24 d6  m4  2/16 d8  m5  0/16 d-  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 6  8921139 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 13/24 d5  m4  2/16 d6  m5  0/16 d-  short 0  sign 0
+                         m3 #####...#....#.####.#..#  churn 0  9774318 nodes
+  RfpMinPly=1            m2 20/26 on-time 13 d7  m3  8/24 d6  m4  3/16 d8  m5  1/16 d8  short 0  sign 0
+                         m3 ...##...#....#..##..#..#  churn 5  10721845 nodes
+  RfpMinPly=0            m2 20/26 on-time 13 d7  m3  8/24 d6  m4  3/16 d8  m5  1/16 d8  short 0  sign 0
+                         m3 ...##...#....#..##..#..#  churn 0  10721845 nodes
+
+  floor, 14.8s
+== F. python3 adocs/data/S136_mined_rows.py <B's kept tree>/build-tune/src/chesso 10, and build/src/chesso 10 (the candidate)
+   totals: parent 160 exact, candidate 156; the rows that differ:
+   row  label  parent         candidate      fen
+    86  m4     cp 1266        mate 4         2r1r1k1/6q1/1pbBp1R1/p2pP3/P1pP3Q/7P/5P2/1R4K1 w - - 1 48
+    89  m4     mate 4         cp 1797        3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+   105  m4     mate 4         cp 2525        7r/1p3p2/4k2p/3n3P/4p1p1/rPbR4/5PPN/1K5R b - - 0 28
+   107  m4     mate 4         cp 2433        8/5Q1p/p5pk/3P4/8/q1N4P/2K2P2/4R3 w - - 1 41
+   116  m4     mate 5         mate 4         R1q2Q2/1p4pk/1p2p1p1/1n1pP2p/3P3P/2P1B1P1/5PK1/4r3 w - - 6 38
+   117  m4     cp 2278        mate 4         R6k/1b2p2p/2p3p1/2N1Nn2/5P2/7P/6PK/2rr4 b - - 1 35
+   155  m5     mate 7         mate 5         6k1/3R4/2R1p1Bp/4P3/6q1/p7/P3KP2/8 w - - 5 39
+   158  m5     mate 5         cp 1283        6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+   163  m5     cp 1354        mate 5         7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54
+   182  m6     mate 6         cp 1035        1R6/5R2/4p1pk/4Nb2/5P1p/r3K3/8/8 w - - 5 49
+   185  m6     mate 6         mate 7         1kN2r1R/3B4/pp1Q4/2pPp1q1/2n5/P4n2/1P2K3/4R3 b - - 0 39
+   210  m6     mate 6         cp 1445        6k1/1p6/3P1Qp1/p3P1K1/6P1/1q5P/8/8 w - - 1 52
+   216  m6     cp 2538        mate 6         8/2N1Pkp1/1p1P3p/2p2p2/5p2/1P3P2/6PP/b4K2 w - - 3 41
+   225  m6     mate 6         cp 2463        8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44
+   247  m7     mate 7         cp 762         8/1k6/3K4/8/8/5b1R/8/8 w - - 100 114
+   256  m7     mate 7         cp 982         r1b5/1p3R2/2p4k/p2n3r/7R/P2B4/1P1K1PP1/6N1 w - - 6 31
+== G12. the same two binaries at depth 12 on those sixteen rows (ROW 86,89,105,107,116,117,155,158,163,182,185,210,216,225,247,256)
+   totals: parent 15 exact, candidate 14
+    86  m4     cp 1361        mate 4
+    89  m4     mate 4         mate 4
+   105  m4     mate 4         mate 4
+   107  m4     mate 4         mate 4
+   116  m4     mate 4         mate 4
+   117  m4     mate 4         mate 4
+   155  m5     mate 5         mate 5
+   158  m5     mate 5         cp 1471
+   163  m5     mate 5         mate 5
+   182  m6     mate 6         cp 1521
+   185  m6     mate 6         mate 6
+   210  m6     mate 6         mate 6
+   216  m6     mate 6         mate 6
+   225  m6     mate 6         mate 6
+   247  m7     mate 7         mate 7
+   256  m7     mate 7         mate 7
+== G14. the same two binaries at depth 14 on those sixteen rows (ROW 86,89,105,107,116,117,155,158,163,182,185,210,216,225,247,256)
+   totals: parent 15 exact, candidate 15
+    86  m4     cp 1613        mate 4
+    89  m4     mate 4         mate 4
+   105  m4     mate 4         mate 4
+   107  m4     mate 4         mate 4
+   116  m4     mate 4         mate 4
+   117  m4     mate 4         mate 4
+   155  m5     mate 5         mate 5
+   158  m5     mate 5         cp 1966
+   163  m5     mate 5         mate 5
+   182  m6     mate 6         mate 6
+   185  m6     mate 6         mate 6
+   210  m6     mate 6         mate 6
+   216  m6     mate 6         mate 6
+   225  m6     mate 6         mate 6
+   247  m7     mate 7         mate 7
+   256  m7     mate 7         mate 7

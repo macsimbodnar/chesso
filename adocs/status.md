@@ -7,74 +7,47 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-27, by hand.
 
-## 2026-10-27 16:20: paused for a shutdown; S136's SPRT void, re-launch first
+## 2026-10-29: S136 read H0, tempo stays zero; S297, then S121
 
-**The owner shut the machine down.** S136's `{0, 5}` SPRT was stopped by
-SIGINT at 16:17 after 3 h 02 m (6520 games, LLR 1.10, no bound) and is
-**void**, as the precedent for a killed run reads: re-launched from the
-pre-registration with a fresh seed, the dead one never pooled or resumed. Its
-console is `.tuning/s136_sprt_void_20261027.console` and its out directory
-`.tuning/sprt_s136_20261027_131508` (fastchess's resume file moved out of the
-tree to `.tuning/coord/S136/void_run_config.json`, unused). The owner ruled
-three questions at once, each the recommended option:
+**S136's SPRT read H0** in 9 h 46 m (`adocs/data/S136_sprt.log`; both
+launches archived as `chesso_S136_sprt_2026-10-28.tar.xz`, verified). Tempo
+10 / 1 from `../chesso-s136b`'s tree against `ba65b86`: 21014 games, nElo
+-0.90 +/- 4.70, LLR -2.96, 0 forfeits. Inspected first: banner as pinned,
+benches 6007564 (a byte-identical rebuild of the played snapshot's source)
+and 5069022, quarters +0.5, +0.7, -0.4, -3.5, journal clean. Five incomplete
+mating PVs (three from the candidate in two games, two from the reference in
+one), DEC-122's class, none shorter than Stockfish's, none reproduced
+(`adocs/data/S136_sprt_mate_pvs.txt`). **Tempo is recorded as zero**, the
+paste reverted whole (`adocs/data/S136_candidate.diff`), `EXACT_FLOOR` stays
+159 and DEC-325 is moot. The first launch (2026-10-27 13:15) was stopped for
+the owner's shutdown after 6520 games and is void; the re-launch ran
+2026-10-28 00:35:59 to 10:23. Closed by one Opus 5.5 subagent in
+`../chesso-s136c` (fast-checked: nothing real, three nits fixed; its diff is
+`.tuning/coord/S136/s136_close.diff`). The owner ruled DEC-324 (S122's
+margin re-derived, S121 unblocked) and DEC-325 on 2026-10-27, and approved
+removing `../chesso-s296c` and `../chesso-s136`, which are removed.
 
-- **DEC-324**: S122 keeps the shortcut and the clamp and re-sizes
-  `LAZY_EVAL_MARGIN` from its own fitted spread. DEC-258 (5) is discharged and
-  **S121 is unblocked**.
-- **DEC-325**: on S136's H1, `EXACT_FLOOR` 159 -> 155, so an H1 close asks
-  nothing more.
-- `../chesso-s296c` and `../chesso-s136` removed with their branches; both
-  trees equalled their saved diffs, already committed as `c1d4b3c` and
-  `ba65b86`.
+**In progress: S297** (owner's request, 2026-10-29): the owner's macOS arm64
+build fails under Apple clang at `tools/tuner_trace.hpp`'s set-but-unused
+`line_number` (`-Werror,-Wunused-but-set-variable`), which GCC does not flag.
+One Opus 5.5 subagent in `../chesso-s297` (branch `s297` at `5a9b931`, brief
+`.tuning/coord/S297/brief.md`) reproduces it with `clang++-22`, builds the
+whole tree under clang and fixes every warning at its cause. Its step file
+is untracked in the main checkout's `plan_todo/` until it lands.
 
-**Re-launched 2026-10-28 00:35:59** from `../chesso-s136b` after steps 1 and 2
-below: the worktree equalled the saved diff, the same kernel, load 0.8; banner
-as pre-registered, candidate `cand-ba65b86+ea1eb6cfad0b` (its `candidate.diff`
-differs from the void run's only by the re-launch sentence added to
-`S136_sprt.sh`, whose "00:40" was written just before the launch), seed
-20261028003559, console `.tuning/s136_sprt.console`, out
-`.tuning/sprt_s136_20261028_003559`; watcher on fastchess.sh PID 8989,
-ceiling 40 h. **It read H0 at 10:23** (21014 games, nElo -0.90 +/- 4.70, LLR
--2.96, 0 forfeits, 9 h 47 m); S136's close follows.
-Meanwhile **S121's phase 1a runs blind** (one Opus 5.5 subagent in
-`../chesso-s121`, branch `s121` at `adf77d0`, brief
-`.tuning/coord/S121/brief.md` from the read-only research
-`.tuning/coord/S121/brief_inputs.md`): code at the identity table, the parts
-P1-P3 as patches, screen, cost and SPRT scripts. Nothing is compiled until
-S136's verdict (DEC-260). The coordinator's rulings (parts and their order,
-definitions, the paired gain, the identity seed, tying unsupported cells, no
-test exempted, the H0 partition, the clamp reading) become DEC-326 when
-phase 1b lands. The step file moves to `plan_current/` in that worktree.
-Phase 1a is written (2026-10-28 02:05), fast-checked once and fixed: the
-blocked and low-rank pawns are split into parts P2a and P2b (the order is P0,
-P1, P2a, P2b, P3, and the partition A | B1 | B2a | B2b | C); the span guard
-is held by the freeze or refused by the tuner; the anchors read the mask from
-the source; ties are copied before the first epoch; a constructive generator
-is the coverage-row fallback. Saved as `.tuning/coord/S121/s121_phase1a.diff`
-(sha256 b6c14518...). **After S136's close**, send that agent phase 1b: the
-rebase, both builds, INV-6, the coverage rows, the preconditions, the patch
-at every mask, then landing `No functional change` with DEC-326. The main
-checkout's uncommitted docs (plan.md, status.md, the S121, S122 and S101
-step files) commit first, so the S121 diff applies with `--3way`.
+**Next: S121's phase 1b.** Phase 1a was written blind during S136's match
+(`../chesso-s121`, branch `s121` at `adf77d0`, diff
+`.tuning/coord/S121/s121_phase1a.diff`, sha256 b6c14518...; one fast check,
+its fixes applied). The parts are P0 curve, P1 enemy pawn attacks, P2a area
+with blocked pawns, P2b low-rank pawns, P3 pins; the partition is A | B1 |
+B2a | B2b | C. Send that agent phase 1b: rebase onto this record, both
+builds, INV-6, the coverage rows (a constructive generator as fallback), the
+preconditions, the patch at every mask, then land `No functional change`
+with DEC-326 from the coordinator's rulings. Then its screen (about 1 h 30
+m) and cost run (about 1 h 35 m), by day.
 
-**Resume here, in order:**
-
-1. `cat /proc/loadavg`, AC power, no other load. `git -C ../chesso-s136b
-   status --short` must equal `.tuning/coord/S136/s136b_pause.diff` (sha256
-   in `.tuning/coord/S136/s136b_pause.diff.sha256`; `git diff --cached
-   --binary` then `git diff --binary`, concatenated, is how it was taken).
-2. In `../chesso-s136b`, check `adocs/data/S136_sprt.sh`'s pin sentence and
-   banner against the new launch, and correct only the date, seed or out
-   directory it names. Re-launch detached from there as on 2026-10-27
-   (console `.tuning/s136_sprt.console`). Read the banner before the first game
-   ends: REF `ba65b86`, `cand-ba65b86+<hex>`, 8+0.08, Hash 16, 12/12,
-   noob_3moves, `{0, 5}`, cap 20950 rounds. A new `<hex>` is expected if the
-   script's edits enter the diff. Arm the four-exit watcher. 12.1 h on a
-   bound, 19.9 h at the cap, abort at 40 h. No build or gate meanwhile
-   (DEC-260).
-3. On the verdict: S136's close as pre-registered and DEC-323, with DEC-325's
-   floor on H1. The step file records this void run.
-4. Then S121 (mobility curve per piece), and S122 under DEC-324.
+`../chesso-s136b` (with `build-s136close/`) and `../chesso-s136c` can go
+once this record lands; removal waits on the owner.
 
 ## 2026-10-27: S296 read H1; the rule stays; S136 next
 

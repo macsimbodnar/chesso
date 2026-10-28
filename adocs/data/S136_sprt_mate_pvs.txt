@@ -1,0 +1,161 @@
+# S136: the five `Incomplete mating PV` warnings of S136's SPRT (cand-ba65b86+ea1eb6cfad0b, the working tree of
+# ../chesso-s136b, against ref-ba65b86; 8+0.08, Hash 16, 2026-10-28 00:35:59 to 10:23, H0; adocs/data/S136_sprt.log),
+# each checked and not assumed residue, by S296's method and script. 2026-10-28, re-run 2026-10-29 after a shutdown
+# killed the first session (every figure below came out the same both times), by the Opus 5.5 subagent closing S136.
+# Every chess claim here is a tool's: python-chess puts the positions on a board and checks the lines, Stockfish gives
+# the distances, the engines give their own lines. The candidate is the H0 candidate (tempo 10 / 1), never shipped.
+#
+# INPUTS, read only: the untrimmed console .tuning/s136_sprt.console (its line numbers; the trimmed log's are the same
+# for the first two warnings and 12, 16 and 16 lower for the last three) and the run's
+# .tuning/sprt_s136_20261028_003559/games.pgn, both in chesso_S136_sprt_2026-10-28.tar.xz in the owner's archive. The
+# reference binary is the one the run played, ../chesso-s136b/.ref-builds/ba65b86/build/src/chesso (bench 5069022).
+# The candidate the run played, fastchess.sh's snapshot /tmp/chesso-candidate.* of ../chesso-s136b/build/src/chesso,
+# was deleted at the run's end; the candidate here is ../chesso-s136b/build-s136close/src/chesso, built from that
+# worktree's tree for this close, byte-identical (sha256 1407f16bc07f7a25...) to build/src/chesso, which is written
+# 2026-10-27 12:57 and not since (bench 6007564). Every command below ran with the main checkout's root as its
+# working directory, where .tuning/ resolves and S296_sprt_mate_pvs.py is committed (c1d4b3c).
+#
+# THE ORACLE. DEC-319 (3)'s, Stockfish at 5000000 nodes through python-chess (TOOLCHAIN.md's safe form, S296_oracle.py's
+# call), from the bare FEN and with the game's moves. It reads a mate on all three positions, so DEC-320's deeper
+# reading does not arise and was not taken. The comparison is S296_compare.py's `classify`.
+#
+# READING.
+#   - No printed distance is shorter than the oracle's, and the side is the oracle's in every one. Game 5096 (ref)
+#     printed mate 8 at depths 5 and 6 where the oracle reads mate 8 (equal); game 6174 (cand) mate -14 at depth 14,
+#     the oracle mate -10 (longer); game 14980 (cand) mate 11 at depth 3 and mate 13 at depth 4, the oracle mate 8
+#     (longer).
+#   - Each is a line shorter than the distance it claims and legal throughout: DEC-122's short-line class, which
+#     test_mate_carry bounds per case (DEC-162) and S202 owns. None is a line at least as long as its distance that
+#     is not mate there. Two recorded shapes, both S296's. A shallow iteration printing a mate too shallow to build
+#     its line, as DEC-150's case was, at the position's distance or longer: game 5096 (depths 5 and 6, 3185 and 6029
+#     nodes, equal) and game 14980 (depths 3 and 4, 733 and 1387 nodes, longer; the game's later iterations printed
+#     +M17 = mate 9, still one move longer than the oracle's, and played the oracle's first move h3h1). And a deep
+#     iteration naming a mate longer than the position's, the walk leaving the line short: game 6174 (depth 14,
+#     1649044 nodes, 21 of 28 plies, its search's last line, the PGN's -M28/14), DEC-127's "sound but not optimal".
+#     That the mates came off entries the games' earlier searches wrote is inferred from the depths and node counts,
+#     as S296 inferred it for its candidate's five: no replay reproduces any of the five.
+#   - Cold, at the warning's depth: none reproduces, on either binary. Warm, the game replayed at the PGN's per-move
+#     node counts through one process of the warning side's binary: none reproduces either, the reference's two
+#     included (the replay's table diverges from the game's: cp +544 at depth 14 where the game printed +M15/13), so
+#     no entry-by-entry trace (`mate_trace`) of any of the five exists.
+#   - Rates per 10000 games a side: candidate 1.43 lines and 0.95 searches (3 and 2), reference 0.95 and 0.48 (2 and
+#     1). Pooled over S296, S293, S292, S135, S289 and S283, 18 lines and 9 searches in 160274 side-games (0.56
+#     searches per 10000); at that rate each side's 21017 games expect 1.18 searches, and 2 or more has Poisson
+#     probability 0.33. Both sides' rates are under S296's (2.70 / 1.62 and 1.08 / 0.54). A count, recorded; what
+#     S296 forbids, a distance shorter than the position's, is in none of them.
+#
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py warnings .tuning/s136_sprt.console .tuning/sprt_s136_20261028_003559/games.pgn
+console line 12253, ref-ba65b86: info score mate 8 time 0 depth 5 nodes 3185 nps 3373940 hashfull 1 pv e4e7 g7h8 e7e8 h8h7 e8g6
+  game 5096 (Round 2548), ref-ba65b86 vs cand-ba65b86+ea1eb6cfad0b, 1-0 {adjudication}, 104 plies; the warning at ply 98, White to move, the PGN's White is ref-ba65b86
+  searched position: 8/1p4k1/5p1p/5P2/4Q1P1/3nB1K1/1rq4P/8 w - - 0 53
+  move played there: e4e7 (n=461548); claimed mate 8, needs 15 plies; line short: 5 of 15 plies, legal
+console line 12257, ref-ba65b86: info score mate 8 time 1 depth 6 nodes 6029 nps 3336469 hashfull 2 pv e4e7 g7h8 e7e8 h8h7 e8g6 h7h8
+  game 5096 (Round 2548), ref-ba65b86 vs cand-ba65b86+ea1eb6cfad0b, 1-0 {adjudication}, 104 plies; the warning at ply 98, White to move, the PGN's White is ref-ba65b86
+  searched position: 8/1p4k1/5p1p/5P2/4Q1P1/3nB1K1/1rq4P/8 w - - 0 53
+  move played there: e4e7 (n=461548); claimed mate 8, needs 15 plies; line short: 6 of 15 plies, legal
+console line 14853, cand-ba65b86+ea1eb6cfad0b: info score mate -14 time 426 depth 14 nodes 1649044 nps 3865206 hashfull 752 pv d7f6 h5f6 g8g7 f6h7 h8g8 h7f6 g8f8 h6h8 f8e7 d5d6 e7f6 h8h6 g7g6 f5g6 f6e6 g6g7 e6d7 d6c7 b7d5 d1d5 d7c8
+  game 6174 (Round 3087), ref-ba65b86 vs cand-ba65b86+ea1eb6cfad0b, 1-0 {adjudication}, 64 plies; the warning at ply 61, Black to move, the PGN's Black is cand-ba65b86+ea1eb6cfad0b
+  searched position: 6rk/1bqn1p1n/pp3B1Q/3PrP1N/P1p1p2P/2N3p1/1P2B1Kb/3R1R2 b - - 9 34
+  move played there: d7f6 (n=1649044); claimed mate -14, needs 28 plies; line short: 21 of 28 plies, legal
+console line 35997, cand-ba65b86+ea1eb6cfad0b: info score mate 11 time 0 depth 3 nodes 733 nps 2776515 hashfull 0 pv g3d3 f1g2 d3g3
+  game 14980 (Round 7490), ref-ba65b86 vs cand-ba65b86+ea1eb6cfad0b, 0-1 {adjudication}, 93 plies; the warning at ply 91, Black to move, the PGN's Black is cand-ba65b86+ea1eb6cfad0b
+  searched position: 6k1/4Q1p1/p3p3/1p2P2p/1P1P3P/P5qr/5R2/B4K2 b - - 4 49
+  move played there: h3h1 (n=1027544); claimed mate 11, needs 21 plies; line short: 3 of 21 plies, legal
+console line 36001, cand-ba65b86+ea1eb6cfad0b: info score mate 13 time 0 depth 4 nodes 1387 nps 3048351 hashfull 0 pv g3d3 f1g2 d3g3 g2f1
+  game 14980 (Round 7490), ref-ba65b86 vs cand-ba65b86+ea1eb6cfad0b, 0-1 {adjudication}, 93 plies; the warning at ply 91, Black to move, the PGN's Black is cand-ba65b86+ea1eb6cfad0b
+  searched position: 6k1/4Q1p1/p3p3/1p2P2p/1P1P3P/P5qr/5R2/B4K2 b - - 4 49
+  move played there: h3h1 (n=1027544); claimed mate 13, needs 25 plies; line short: 4 of 25 plies, legal
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py oracle .tuning/s136_sprt.console .tuning/sprt_s136_20261028_003559/games.pgn
+oracle: Stockfish dev-20260810-5062aee5, go nodes 5000000, python-chess analyse, ucinewgame per call, default Hash and Threads
+console line 12253, ref-ba65b86, game 5096, White to move: engine mate 8 at depth 5
+  oracle (fen): mate 8, depth 87, nodes 5000400, pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8 -> ok
+  oracle (history): mate 8, depth 87, nodes 5000400, pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8 -> ok
+console line 12257, ref-ba65b86, game 5096, White to move: engine mate 8 at depth 6
+  oracle (fen): mate 8, depth 87, nodes 5000400, pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8 -> ok
+  oracle (history): mate 8, depth 87, nodes 5000400, pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8 -> ok
+console line 14853, cand-ba65b86+ea1eb6cfad0b, game 6174, Black to move: engine mate -14 at depth 14
+  oracle (fen): mate -10, depth 45, nodes 5000236, pv d7f6 h5f6 g8g7 f6h7 h8g8 h7f6 -> longer
+  oracle (history): mate -10, depth 45, nodes 5000236, pv d7f6 h5f6 g8g7 f6h7 h8g8 h7f6 -> longer
+console line 35997, cand-ba65b86+ea1eb6cfad0b, game 14980, Black to move: engine mate 11 at depth 3
+  oracle (fen): mate 8, depth 70, nodes 5000124, pv h3h1 f1e2 g3g4 e2e3 h1e1 e3d3 -> longer
+  oracle (history): mate 8, depth 70, nodes 5000124, pv h3h1 f1e2 g3g4 e2e3 h1e1 e3d3 -> longer
+console line 36001, cand-ba65b86+ea1eb6cfad0b, game 14980, Black to move: engine mate 13 at depth 4
+  oracle (fen): mate 8, depth 70, nodes 5000124, pv h3h1 f1e2 g3g4 e2e3 h1e1 e3d3 -> longer
+  oracle (history): mate 8, depth 70, nodes 5000124, pv h3h1 f1e2 g3g4 e2e3 h1e1 e3d3 -> longer
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py cold .tuning/s136_sprt.console .tuning/sprt_s136_20261028_003559/games.pgn --engines cand-ba65b86+ea1eb6cfad0b=../chesso-s136b/build-s136close/src/chesso ref-ba65b86=../chesso-s136b/.ref-builds/ba65b86/build/src/chesso
+console line 12253, ref-ba65b86, game 5096: printed mate 8 at depth 5, 5 plies
+  cand-ba65b86+ea1eb6cfad0b, cold, go depth 5:
+    last: info score cp -275 time 0 depth 5 nodes 1677 nps 4544715 hashfull 1 pv e4e7 g7g8 e7e8 g8h7 e8f7
+    no mate line; bestmove e4e7 ponder g7g8
+  ref-ba65b86, cold, go depth 5:
+    last: info score cp -270 time 0 depth 5 nodes 1761 nps 4658730 hashfull 2 pv e4e7 g7g8 e7e8 g8h7 e8f7
+    no mate line; bestmove e4e7 ponder g7g8
+console line 12257, ref-ba65b86, game 5096: printed mate 8 at depth 6, 6 plies
+  cand-ba65b86+ea1eb6cfad0b, cold, go depth 6:
+    last: info score cp -275 time 0 depth 6 nodes 2330 nps 3386627 hashfull 1 pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8
+    no mate line; bestmove e4e7 ponder g7g8
+  ref-ba65b86, cold, go depth 6:
+    last: info score cp -270 time 0 depth 6 nodes 2416 nps 4238596 hashfull 2 pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8
+    no mate line; bestmove e4e7 ponder g7g8
+console line 14853, cand-ba65b86+ea1eb6cfad0b, game 6174: printed mate -14 at depth 14, 21 plies
+  cand-ba65b86+ea1eb6cfad0b, cold, go depth 14:
+    last: info score cp -2348 time 14 depth 14 nodes 58419 nps 4120979 hashfull 18 pv d7f6 h5f6 g8g7 f6h7 h8g8 h7f6 g8f8 h6h8 g7g8 h8g8 f8e7 d5d6 c7d6 g8e8 e7f6 d1d6 f6g7 e8e5 g7h7 d6b6 b7a8 c3e4
+    no mate line; bestmove d7f6 ponder h5f6
+  ref-ba65b86, cold, go depth 14:
+    last: info score cp -2352 time 11 depth 14 nodes 47112 nps 4074727 hashfull 18 pv d7f6 h5f6 g8g7 f6h7 h8g8 h7f6 g8f8 h6h8 g7g8 h8g8 f8e7 d5d6 c7d6 g8e8 e7f6 d1d6 f6g7 e8e5 g7h7 d6b6 b7a8 c3e4
+    no mate line; bestmove d7f6 ponder h5f6
+console line 35997, cand-ba65b86+ea1eb6cfad0b, game 14980: printed mate 11 at depth 3, 3 plies
+  cand-ba65b86+ea1eb6cfad0b, cold, go depth 3:
+    last: info score cp 1 time 0 depth 3 nodes 773 nps 4342696 hashfull 1 pv h3h1 f1e2 g3g4
+    no mate line; bestmove h3h1 ponder f1e2
+  ref-ba65b86, cold, go depth 3:
+    last: info score cp 6 time 0 depth 3 nodes 780 nps 4457142 hashfull 1 pv h3h1 f1e2 g3g4
+    no mate line; bestmove h3h1 ponder f1e2
+console line 36001, cand-ba65b86+ea1eb6cfad0b, game 14980: printed mate 13 at depth 4, 4 plies
+  cand-ba65b86+ea1eb6cfad0b, cold, go depth 4:
+    last: info score cp 1 time 0 depth 4 nodes 1087 nps 4313492 hashfull 1 pv h3h1 f1e2 g3g4 e2d3
+    no mate line; bestmove h3h1 ponder f1e2
+  ref-ba65b86, cold, go depth 4:
+    last: info score cp 6 time 0 depth 4 nodes 1094 nps 4655319 hashfull 1 pv h3h1 f1e2 g3g4 e2d3
+    no mate line; bestmove h3h1 ponder f1e2
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py replay .tuning/s136_sprt.console .tuning/sprt_s136_20261028_003559/games.pgn --engines cand-ba65b86+ea1eb6cfad0b=../chesso-s136b/build-s136close/src/chesso ref-ba65b86=../chesso-s136b/.ref-builds/ba65b86/build/src/chesso
+game 5096, ref-ba65b86 (../chesso-s136b/.ref-builds/ba65b86/build/src/chesso), replayed to ply 98 at the PGN's node counts:
+  the warning's ply 98, go nodes 461548:
+    last: info score cp 544 time 60 depth 14 nodes 461548 nps 7654322 hashfull 260 pv e4e7 g7g8 e7e8 g8h7 e8f7 h7h8 f7f6 h8g8 f6e6 g8h8 e3d4 d3e5 e6e5 h8g8 e5g7
+    bestmove e4e7 ponder g7g8
+  incomplete mate lines at the earlier turns: 0
+game 6174, cand-ba65b86+ea1eb6cfad0b (../chesso-s136b/build-s136close/src/chesso), replayed to ply 61 at the PGN's node counts:
+  the warning's ply 61, go nodes 1649044:
+    last: info score cp -2463 time 2 depth 14 nodes 12967 nps 4966296 hashfull 0 pv d7f6 h5f6 g8g7 f6h7 h8g8 h7f6 g8f8 h6h8 g7g8 h8g8 f8e7 d5d6 c7d6 g8e8 e7f6 d1d6 f6g7 e8e5 g7h7 d6b6 b7c8 c3e4
+    bestmove d7f6 ponder h5f6
+  incomplete mate lines at the earlier turns: 0
+game 14980, cand-ba65b86+ea1eb6cfad0b (../chesso-s136b/build-s136close/src/chesso), replayed to ply 91 at the PGN's node counts:
+  the warning's ply 91, go nodes 1027544:
+    depth  1 nodes       26 mate   9 pv 17 plies: complete: 17 plies, checkmate
+    depth  2 nodes       53 mate   9 pv 17 plies: complete: 17 plies, checkmate
+    depth  3 nodes      112 mate   9 pv 17 plies: complete: 17 plies, checkmate
+    depth  4 nodes      175 mate   9 pv 17 plies: complete: 17 plies, checkmate
+    depth 13 nodes   493148 mate   9 pv 17 plies: complete: 17 plies, checkmate
+    depth 13 nodes  1027544 mate   9 pv 17 plies: complete: 17 plies, checkmate
+    last: info score mate 9 time 146 depth 13 nodes 1027544 nps 7029210 hashfull 498 pv h3h1 f1e2 g3g4 e2e3 h1e1 e3d3 g4e4 d3c3 e4e3 c3b2 e3c1 b2b3 e1e3 a1c3 e3c3 b3a2 c3a3
+    bestmove h3h1 ponder f1e2
+  incomplete mate lines at the earlier turns: 0
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py rates .tuning/s136_sprt.console adocs/data/S296_sprt.log adocs/data/S293_sprt.log adocs/data/S292_sprt.log adocs/data/S135_sprt.log adocs/data/S289_sprt.log adocs/data/S283_sprt.log
+.tuning/s136_sprt.console: 21017 games; cand 3 lines, 2 searches, 1.43 and 0.95 per 10000; ref 2 lines, 1 searches, 0.95 and 0.48 per 10000
+adocs/data/S296_sprt.log: 18514 games; cand 5 lines, 3 searches, 2.70 and 1.62 per 10000; ref 2 lines, 1 searches, 1.08 and 0.54 per 10000
+adocs/data/S293_sprt.log: 10957 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 1 lines, 1 searches, 0.91 and 0.91 per 10000
+adocs/data/S292_sprt.log: 23804 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+adocs/data/S135_sprt.log: 13406 games; cand 6 lines, 2 searches, 4.48 and 1.49 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+adocs/data/S289_sprt.log: 8716 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 4 lines, 2 searches, 4.59 and 2.29 per 10000
+adocs/data/S283_sprt.log: 4740 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+(exit 0)
+
+MATE-PVS-DONE

@@ -1,0 +1,351 @@
+# S136 phase 2b: the mined mates the tempo paste moves at depth 10, attributed by tool before any SPRT (DEC-305,
+# DEC-308 (2)). 2026-10-27, one Opus 5.5 subagent, worktree chesso-s136b (ba65b86 plus the paste, tempo 10 / 1).
+#
+# Trees. Candidate: build/ and build-tune/ of chesso-s136b (bench 6007564). Parent: a throwaway worktree of ba65b86
+# (`git worktree add --detach <scratch>/wt_ref HEAD`, Release and tune `--target chesso`, bench 5069022 both). Traced
+# builds: two more throwaway worktrees of ba65b86, the candidate's with chesso-s136b's src/evaluation.cpp copied in,
+# each src/search.cpp rewritten by `python3 adocs/data/S136_trace_patch.py <wt>/src/search.cpp --keys` (S295's patch at
+# S296's `return node_value;`, plus the key-level counterfactual); benches 5069022 and 6007564 with the environment
+# unset, the untraced builds' own, and the same `go depth 10` lines (nodes 145376 / 101782 parent, 20420 / 19412
+# candidate, rows 158 / 182). All removed after; the logs stayed in the session scratch directory, not in the tree.
+# Rows are indices into S145's mined set as S156's read_set returns them. Every score is the engine's own; every chess
+# claim is Stockfish's (TOOLCHAIN.md's safe form through python-chess). No fit, match, SPRT, datagen or timing.
+#
+# READING. Of the 10 rows the candidate loses at depth 10, 8 are depth churn: the candidate reports the labelled mate
+# 1 or 2 plies after the parent. Rows 158 (+7: parent 10, candidate 17) and 182 (+3: 10, 13) are not. Both are lost the
+# way S296's root 76 is (DEC-319 (2)). The paste reorders a PV node, so the mating move is no longer first and is
+# scouted. The mated side's non-PV cut node one ply down then cuts it by the null move (DEC-087 (e)) or reverse
+# futility (DEC-158). The table entry at that node is exact and outside the mate band (-1228 and -1380, depth 4),
+# so nothing there proves mated. Turning the null move off at that one key restores both rows at the parent's
+# depth 10. At the shipped weights the same two rules lose mined mates: on the parent at depth 10, reverse futility
+# off finds 42 rows more and loses 3, and the null move off finds 8 and loses 7. Both rows are class (ii), priced.
+# No (iii). The oracle agrees with all 16 labels at 5000000 nodes, so no DEC-320 reading was needed.
+#
+# == 1. The first iteration that reports the labelled mate, to depth 16, then 21 for a row still missing at 16
+#    python3 adocs/data/S136_lost_mates.py depths <wt_ref>/build/src/chesso 16 ROWS   (and build/src/chesso, the candidate)
+#    python3 adocs/data/S136_lost_mates.py depths <engine> 21 158,86                  (both trees)
+#    ROWS 86,89,105,107,116,117,155,158,163,182,185,210,216,225,247,256: the 16 rows that differ at depth 10.
+#    In every row the first exact iteration is also held to the last. Iteration d of one `go depth N` equals a fresh
+#    `go depth d`: the depth 10, 12 and 14 scores of S136_floor.txt's per-row readings match these, 96 of 96.
+#    row  label  parent  candidate
+     86  m4      19       8        gained at 10: parent +11
+     89  m4      10      12        lost at 10: candidate +2
+    105  m4      10      11        lost at 10: candidate +1
+    107  m4      10      12        lost at 10: candidate +2
+    116  m4      11      10        gained at 10: parent +1
+    117  m4      11      10        gained at 10: parent +1
+    155  m5      11      10        gained at 10: parent +1
+    158  m5      10      17        lost at 10: candidate +7
+    163  m5      12      10        gained at 10: parent +2
+    182  m6      10      13        lost at 10: candidate +3
+    185  m6      10      11        lost at 10: candidate +1
+    210  m6      10      11        lost at 10: candidate +1
+    216  m6      12       9        gained at 10: parent +3
+    225  m6      10      12        lost at 10: candidate +2
+    247  m7      10      12        lost at 10: candidate +2
+    256  m7      10      11        lost at 10: candidate +1
+#   the per-iteration scores (depth:score, m = mate), parent then candidate:
+     86 parent    1:675 2:686 3:713 4:726 5:726 6:726 7:751 8:783 9:1121 10:1266 11:1263 12:1361 13:1404 14:1613 15:1791 16:1851 17:1963 18:2004 19:m4 20:m4 21:m4
+     86 candidate 1:680 2:680 3:718 4:731 5:731 6:731 7:780 8:m4 9:m4 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4 17:m4 18:m4 19:m4 20:m4 21:m4
+     89 parent    1:874 2:807 3:877 4:877 5:1324 6:1324 7:1482 8:1670 9:1749 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+     89 candidate 1:870 2:811 3:874 4:874 5:1321 6:1321 7:1346 8:1593 9:1706 10:1797 11:1845 12:m4 13:m4 14:m4 15:m4 16:m4
+    105 parent    1:1592 2:1592 3:1744 4:1744 5:1744 6:1785 7:1937 8:2433 9:2535 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    105 candidate 1:1589 2:1589 3:1747 4:1747 5:1747 6:1782 7:1940 8:2433 9:2568 10:2525 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    107 parent    1:1067 2:1120 3:1120 4:1120 5:1464 6:1464 7:1580 8:1652 9:1683 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    107 candidate 1:1062 2:1125 3:1125 4:1125 5:1488 6:1488 7:1588 8:1586 9:1607 10:2433 11:m5 12:m4 13:m4 14:m4 15:m4 16:m4
+    116 parent    1:1199 2:1231 3:1463 4:1463 5:1466 6:1494 7:1516 8:2091 9:m5 10:m5 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    116 candidate 1:1195 2:1235 3:1459 4:1459 5:1462 6:1498 7:1524 8:2034 9:2126 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    117 parent    1:1237 2:1225 3:1293 4:1470 5:1691 6:1693 7:1735 8:2128 9:2175 10:2278 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    117 candidate 1:1233 2:1229 3:1289 4:1468 5:1688 6:1690 7:1732 8:2143 9:2164 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+    155 parent    1:170 2:170 3:528 4:512 5:296 6:1467 7:1761 8:1877 9:1929 10:m7 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+    155 candidate 1:174 2:167 3:524 4:516 5:1465 6:1465 7:1759 8:1892 9:1931 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+    158 parent    1:1081 2:1046 3:1081 4:1094 5:1134 6:1134 7:1226 8:1259 9:1226 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5 17:m5 18:m5 19:m5 20:m5 21:m5
+    158 candidate 1:1079 2:1048 3:1079 4:1092 5:1134 6:1094 7:1224 8:1206 9:1223 10:1283 11:1333 12:1471 13:1749 14:1966 15:1932 16:2007 17:m5 18:m5 19:m5 20:m5 21:m5
+    163 parent    1:372 2:343 3:525 4:454 5:432 6:432 7:1112 8:1328 9:1328 10:1354 11:1375 12:m5 13:m5 14:m5 15:m5 16:m5
+    163 candidate 1:370 2:345 3:523 4:456 5:434 6:434 7:1110 8:1317 9:1399 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+    182 parent    1:422 2:371 3:416 4:361 5:420 6:420 7:982 8:1013 9:m7 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    182 candidate 1:418 2:375 3:412 4:365 5:420 6:402 7:973 8:1380 9:982 10:1035 11:1045 12:1521 13:m6 14:m6 15:m6 16:m6
+    185 parent    1:197 2:197 3:205 4:205 5:551 6:551 7:551 8:1159 9:2183 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    185 candidate 1:202 2:202 3:210 4:210 5:547 6:547 7:547 8:570 9:m7 10:m7 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    210 parent    1:399 2:464 3:464 4:444 5:456 6:431 7:478 8:528 9:1414 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    210 candidate 1:403 2:460 3:460 4:448 5:452 6:428 7:475 8:530 9:1417 10:1445 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    216 parent    1:1055 2:1062 3:1162 4:1162 5:2119 6:2119 7:2234 8:2265 9:2331 10:2538 11:2717 12:m6 13:m6 14:m6 15:m6 16:m6
+    216 candidate 1:1058 2:1065 3:1159 4:1159 5:2115 6:2115 7:2230 8:2325 9:m6 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    225 parent    1:398 2:450 3:450 4:1037 5:1037 6:1458 7:1996 8:2035 9:2109 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+    225 candidate 1:393 2:445 3:445 4:1035 5:1035 6:1453 7:2043 8:2111 9:2212 10:2463 11:2463 12:m6 13:m6 14:m6 15:m6 16:m6
+    247 parent    1:701 2:689 3:720 4:686 5:707 6:690 7:735 8:747 9:794 10:m7 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+    247 candidate 1:700 2:690 3:719 4:687 5:706 6:688 7:734 8:756 9:762 10:762 11:764 12:m7 13:m7 14:m7 15:m7 16:m7
+    256 parent    1:736 2:736 3:843 4:843 5:843 6:786 7:907 8:915 9:936 10:m7 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+    256 candidate 1:740 2:740 3:839 4:839 5:839 6:790 7:903 8:918 9:961 10:982 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+#
+# == 2. The oracle, DEC-319 (3): ~/.venv/chess/bin/python adocs/data/S136_lost_mates.py oracle ROWS (5000000 nodes)
+#    Asked for the rows where the two trees disagree past depth 12 (158 and 86); all 16 read. Every one is the
+#    label's mate, so DEC-320's 1000000000-node reading did not arise.
+    # oracle: Stockfish dev-20260810-5062aee5, go nodes 5000000, python-chess analyse, ucinewgame per call, default Hash and Threads
+    # row	label	kind	value	depth	nodes	pv
+    86	m4	mate	4	245	3796939	g6g7 g8g7 g1h2 e8g8 b1g1 g7f7 h4e7
+    89	m4	mate	4	245	57406	e5b2 f8d6 d7d6 h5f4 d6e7 f4h3 e7f7
+    105	m4	mate	4	168	5000280	e4d3 h1e1 e6d6 e1e6 f7e6 b1c1 a3a1
+    107	m4	mate	4	180	5000432	e1e4 a3b4 e4b4 h6h5 f7e7 a6a5 e7h4
+    116	m4	mate	4	245	2041233	a8c8 e1g1 g2g1 g6g5 f8f7 h7h6 c8h8
+    117	m4	mate	4	245	47049	b7a8 e5f7 h8g7 c5e6 g7f6 e6d8 d1h1
+    155	m5	mate	5	245	753068	e2e3 g4g5 e3f3 g5d8 d7d8 g8g7 g6h5 g7h7 c6c7
+    158	m5	mate	5	245	4892618	c5e7 g8g7 h4h5 a5a4 h5h6 g7g8 e7f6 g8f8 f6d8
+    163	m5	mate	5	154	5000510	b7e7 h7h6 f7g6 h5g5 f4g5 e5g7 e7e8 g7f8 e8f8
+    182	m6	mate	6	184	5000188	e3d2 a3a2 d2c3 a2c2 c3b3 c2c8 b8c8 g6g5 c8h8 f5h7 f7h7
+    185	m6	mate	6	84	5000020	c4d6 e2f2 d6e4 e1e4 g5g1 f2e2 g1e1 e2d3 e1d2 d3c4 d2c2
+    210	m6	mate	6	153	5000208	d6d7 b3e3 g5g6 e3e4 f6f5 e4c6 e5e6 c6c7 f5f7 g8h8 f7g7
+    216	m6	mate	6	78	5000040	e7e8q f7f6 h2h4 g7g5 d6d7 f6g7 d7d8q h6h5 d8g5 g7h7 e8h5
+    225	m6	mate	6	70	5000266	f7d5 b7g7 f6g7 c5e6 g7g6 e6f4 e5f4 h2h3 d2g2 h3h4 g2g3
+    247	m7	mate	7	158	5000509	h3f3 b7b6 f3f5 b6b7 f5b5 b7a6 d6c6 a6a7 c6c7 a7a6 b5f5 a6a7
+    256	m7	mate	7	59	5000354	f7h7 h6g5 h4h5 g5f6 h5h6 f6e5 g1f3 e5f4 h7f7 d5f6 h6h4 c8g4
+#
+# == 3. One tune option at a time, rows 158 and 182 (first exact / held, to depth 16; '-' none by 16)
+#    python3 adocs/data/S136_lost_mates.py depths <build-tune chesso> 16 158,182 --opt Name=Value
+#    Deciding nothing alone: many options restore 158 on the candidate, which is a fragile tree, not a rule list.
+#    The trace below names the node.
+#    option                     row 158 cand  parent   row 182 cand  parent
+    none                       -/-          10/10    13/13        10/10
+    SeMultiCut=0               13/13        10/10    12/12        10/10
+    SeExtend=0                 14/14        15/15    11/11        15/15
+    RfpMinPly=63               9/9          12/12    10/10        10/10
+    RfpMaxDepth=0              11/11        10/10    9/9          12/12
+    RfpMaxDepth=4              13/13        10/10    12/12        11/11
+    RfpTtEstimate=0            15/15        9/9      11/11        11/16
+    NullMoveBase=16            10/10        10/10    10/10        10/10
+    LmrBase=0                  9/9          11/11    10/10        10/10
+    LmrPv=0                    13/13        10/10    10/10        13/13
+    LmrCutNode=0               11/11        12/12    12/12        10/10
+    ProbCut=0                  16/16        10/10    11/11        9/9
+    RazorDepth=0               12/12        11/11    10/10        10/10
+    HistPruneMaxLmrDepth=0     8/8          11/11    10/10        12/12
+    LmpMaxLmrDepth=0           10/10        11/11    12/12        10/10
+    FutMaxLmrDepth=0           -/-          10/10    11/11        12/12
+    SeeQuietMaxLmrDepth=0      16/16        11/11    10/10        10/10
+    SeeCaptureMaxLmrDepth=0    -/-          10/10    12/12        10/10
+    SeeLmrExtra=0              -/-          11/11    10/10        10/10
+    QsFutility=0               16/16        11/11    13/13        10/10
+    LmrDeeperMinReduction=126  15/15        11/11    10/10        10/10
+    CorrHistMax=0              15/15        9/9      12/12        10/10
+    AspirationMinDepth=64      8/8          8/8      10/10        9/9
+#
+# == 4. Row 158, 6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53, labelled mate in 5 (the oracle #5)
+#    S295_DEPTH=10 S295_DIAG=<log> python3 adocs/data/S136_uci_go.py <traced chesso> "<fen>" 10   (both trees)
+#    S295_DEPTH=0  ... <traced candidate> "<fen>" 16; then, per search,
+#    python3 adocs/data/S136_trace_line.py <log> <search> c5e7,g8g7,h4h5,a5a4,h5h6,g7g8,e7f6,g8h7,f6g7 [--kids]
+#    Parent, depth 10: searches 23 [1205,1247], 24 [1205,1268] -> 48989, 25 full window -> 48991. At ply 2
+#      (c5e7 g8g7, White, PV) h4h5 is searched first, as the table move, and the line stays on PV nodes. At ply 3,
+#      Black's PV node searches a5a4 to -48989, so the mate is found where neither the null move nor reverse
+#      futility is tried.
+#    Candidate, depth 10: one window, search 19 [1202,1297] -> 1283. At ply 2 (PV, d8) e7e5 is first and h4h5 third,
+#      scouted at d7. At ply 3 (Black, the mated side, non-PV cut node, d7, [-1284,-1283]) the node returns by the
+#      NULL MOVE, ns -1173. Its null child (White, d2) answers 1173 from the table, an upper bound at depth 2. The
+#      table entry at the ply-3 key, 7362b180dbe5ac88, is exact -1228 at depth 4, nms 1: nothing there proves
+#      mated, so S289's guard (`whole_search_found_mated`) does not apply. Form (a) never fires on this subtree:
+#      s296=1 on 27 nodes of the search to 16, none under c5e7 g8g7 h4h5.
+#    The same node in the last search of each later iteration (PV ply 2 with e7e5 first, h4h5 third, scouted):
+#      d10 search 19: null ns -1173      d11 22: null -1328      d12 27: null -1328      d13 34: null -1328
+#      d14 42: rfp eval -1129 margin 693  d15 48: rfp -1129 margin 756  d16 53: rfp -1129 margin 819
+#      At depth 17 h4h5 heads the root's PV and the mate is reported.
+#    Counterfactual at that one key (S136_CF_KEYS=7362b180dbe5ac88, the --keys build, to depth 16):
+#      none: no mate to 16      null off (n): m5 from depth 10, held to 16      rfp off (r): no mate to 16
+#      both (nr): m5 from 10
+#    -> the null move at the mated side's scout node, then reverse futility at the same node, where nothing is
+#       proved. That is DEC-087 (e)'s pass and DEC-158's reverse futility, the shape DEC-319 (2) recorded for S145
+#       root 76. The paste's part is the ordering at ply 2.
+#
+# == 5. Row 182, 1R6/5R2/4p1pk/4Nb2/5P1p/r3K3/8/8 w - - 5 49, labelled mate in 6 (the oracle #6)
+#    The same commands, to depth 13; the line e3d2,a3a2,d2c3,a2c2,c3b3,c2c8,b8c8,g6g5,c8h8,f5h7,h8h7.
+#    Parent, depth 10: one full-window search (35) -> 48989. At ply 4 (e3d2 a3a2 d2c3 a2c2, White, PV, d7), c3b3
+#      is first, so the line is searched on PV nodes.
+#    Candidate: through depth 8, c3b3 is the ply-4 node's best. In iteration 9, search 30 scouts it and the ply-5
+#      node (Black, the mated side, cut node, d6) returns by reverse futility (-746, eval -368 margin 378). In
+#      search 33 the same node returns by the NULL MOVE (ns -576), and the ply-4 node's best becomes c3d4. From
+#      then on, c3d4 is first and c3b3 second. Each iteration's last search scouts c3b3, and the ply-5 node,
+#      key 39db2b90f5536bfc, returns by reverse futility:
+#      d10 search 44: rfp eval -365 margin 378 (-743, beta -1035)   d11 51: rfp -369 margin 441   d12 58: rfp -368 margin 504
+#      The table entry at that key is exact -1380 at depth 4, nms 1, so nothing there proves mated. Form (a) fires
+#      once under c3b3 in the search to 13, at depth 8 (search 26, ply 7, under c2b2 b3b2), off the parent's line.
+#    Counterfactual at that one key (to depth 13):
+#      none: m6 from 13      null off (n): m7 at 9, m6 from 10      rfp off (r): m8 at 12, m6 from 13
+#      both (nr): m7 at 9, m6 from 10
+#    -> the null move at the mated side's scout node, in iteration 9, moves the ordering. Reverse futility at the
+#       same node then keeps the scout failing high through depth 12. As at row 158 the rules are DEC-087 (e)'s and
+#       DEC-158's, the shape DEC-319 (2) recorded, and the paste's part is the ordering at ply 4.
+#
+# == 6. Every lost row's parent line walked through the candidate's last search at depth 10
+#    python3 adocs/data/S136_line_cut.py <log> <the parent's depth-10 PV>   (log: S295_DEPTH=10, traced candidate)
+#    The first ply where the candidate's search leaves the parent's line, and the rule there. For the eight
+#    depth-churn rows this is a pointer, not a full trace:
+#      89 and 105: reverse futility at the mated side's scout node (plies 5 and 3).
+#      107, 185, 210 and 225: the line's own defender move is answered by a mate or a large score in the candidate
+#        too. So the difference sits in another defender move's subtree, which the walk does not locate (185 reads
+#        mate 7 for 6 at depth 10, a longer mate).
+#      247 and 256: the line reaches the candidate's horizon (qs at d0) while the parent's PV is 13 plies long.
+#    The walks:
+#    -- row 89, 3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33, the parent at depth 10: score mate 4
+    search 34, line e5b2,f8d6,d7d6,h5f4,d6e7,f4e6,e7f7
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 1797
+        e5b2: searched n=1 cd=9 red=0 score=1797
+      ply 1 e5b2: loop pv1 cut0 x1; depths d9; values -1797
+        f8d6: searched n=1 cd=8 red=0 score=-1797
+      ply 2 f8d6: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d8; values 1001 1797
+        d7d6: searched n=1 cd=8 red=0 score=1797
+      ply 3 d7d6: loop pv1 cut0 x1; depths d8; values -1797
+        h5f4: searched n=1 cd=7 red=0 score=-1797
+      ply 4 h5f4: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d7; values 1479 1797
+        d6e7: searched n=6 cd=2 red=1 score=1309; searched n=7 cd=6 red=3 score=1435
+      ply 5 d6e7: rfp pv0 cut1 x2; depths d1 d3; values -1435 -1309
+      ply 6: no node reaches e5b2,f8d6,d7d6,h5f4,d6e7,f4e6
+#    -- row 105, 7r/1p3p2/4k2p/3n3P/4p1p1/rPbR4/5PPN/1K5R b - - 0 28, the parent at depth 10: score mate 4
+    search 34, line e4d3,h1e1,e6d7,e1e7,d5e7,f2f4,a3a1
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 2525
+        e4d3: searched n=1 cd=9 red=0 score=2525
+      ply 1 e4d3: loop pv1 cut0 x1; depths d9; values -2525
+        h1e1: searched n=1 cd=8 red=0 score=-2525
+      ply 2 h1e1: loop pv1 cut0 x1; depths d8; values 2525
+        e6d7: searched n=4 cd=7 red=0 score=1733
+      ply 3 e6d7: rfp pv0 cut1 x1; depths d7; values -1733
+      ply 4: no node reaches e4d3,h1e1,e6d7,e1e7
+#    -- row 107, 8/5Q1p/p5pk/3P4/8/q1N4P/2K2P2/4R3 w - - 1 41, the parent at depth 10: score mate 4
+    search 28, line e1e4,a3c3,c2c3,a6a5,e4h4,h6g5,f7f4
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 2433
+        e1e4: searched n=1 cd=9 red=0 score=2433
+      ply 1 e1e4: loop pv1 cut0 x1; depths d9; values -2433
+        a3c3: searched n=2 cd=8 red=0 score=-48989
+      ply 2 a3c3: tt pv0 cut1 x1; depths d8; values 48989
+      ply 3: no node reaches e1e4,a3c3,c2c3
+#    -- row 158, 6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53, the parent at depth 10: score mate 5
+    search 19, line c5e7,g8g7,h4h5,a5a4,h5h6,g7g8,e7f6,g8h7,f6g7
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 1283
+        c5e7: searched n=1 cd=9 red=0 score=1283
+      ply 1 c5e7: loop pv1 cut0 x1; depths d9; values -1283
+        g8g7: searched n=2 cd=8 red=0 score=-1283
+      ply 2 g8g7: loop pv0 cut0 x2, loop pv0 cut1 x1, loop pv1 cut0 x1; depths d3 d8; values 1228 1283 1296
+        h4h5: searched n=2 cd=2 red=0 score=1228; searched n=3 cd=7 red=0 score=1173; searched n=2 cd=2 red=0 score=1228; searched n=3 cd=7 red=0 score=1173
+      ply 3 h4h5: null pv0 cut1 x2, tt pv0 cut1 x2; depths d2 d7; values -1228 -1173
+      ply 4: no node reaches c5e7,g8g7,h4h5,a5a4
+#    -- row 182, 1R6/5R2/4p1pk/4Nb2/5P1p/r3K3/8/8 w - - 5 49, the parent at depth 10: score mate 6
+    search 44, line e3d2,a3a2,d2c3,a2c2,c3b3,c2c8,b8c8,g6g5,c8h8,f5h7,h8h7
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 1035
+        e3d2: searched n=1 cd=9 red=0 score=1035
+      ply 1 e3d2: loop pv1 cut0 x1; depths d9; values -1035
+        a3a2: searched n=3 cd=8 red=0 score=-1035
+      ply 2 a3a2: loop pv0 cut0 x2, loop pv0 cut1 x1, loop pv1 cut0 x1; depths d3 d8; values 745 871 1035
+        d2c3: searched n=1 cd=8 red=0 score=871; searched n=1 cd=8 red=0 score=1035
+      ply 3 d2c3: loop pv0 cut0 x1, loop pv1 cut0 x1, tt pv0 cut0 x1; depths d3 d8; values -1035 -1003 -871
+        a2c2: searched n=2 cd=2 red=0 score=-1003; searched n=4 cd=7 red=0 score=-1035
+      ply 4 a2c2: loop pv0 cut0 x2, loop pv0 cut1 x1, loop pv1 cut0 x1, tt pv0 cut1 x1; depths d2 d3 d7; values 1003 1035 1380 1381
+        c3b3: searched n=2 cd=2 red=0 score=1380; searched n=2 cd=6 red=0 score=751; searched n=1 cd=2 red=0 score=1380; searched n=2 cd=6 red=0 score=743
+      ply 5 c3b3: rfp pv0 cut1 x2, tt pv0 cut1 x2; depths d2 d6; values -1380 -751 -743
+      ply 6: no node reaches e3d2,a3a2,d2c3,a2c2,c3b3,c2c8
+#    -- row 185, 1kN2r1R/3B4/pp1Q4/2pPp1q1/2n5/P4n2/1P2K3/4R3 b - - 0 39, the parent at depth 10: score mate 6
+    search 25, line c4d6,d7f5,g5g2,e2e3,d6f5,e3e4,f5g3,e4d3,f3e1,d3c3,g2c2
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 48987
+        c4d6: searched n=1 cd=9 red=0 score=48987
+      ply 1 c4d6: loop pv1 cut0 x1; depths d9; values -48987
+        d7f5: searched n=12 cd=8 red=4 score=-48987
+      ply 2 d7f5: tt pv0 cut1 x1; depths d4; values 48987
+      ply 3: no node reaches c4d6,d7f5,g5g2
+#    -- row 210, 6k1/1p6/3P1Qp1/p3P1K1/6P1/1q5P/8/8 w - - 1 52, the parent at depth 10: score mate 6
+    search 28, line d6d7,b3e3,g5g6,e3d3,f6f5,d3a6,e5e6,a6a8,f5f7,g8h8,f7g7
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 1445
+        d6d7: searched n=1 cd=9 red=0 score=1445
+      ply 1 d6d7: loop pv1 cut0 x1; depths d9; values -1445
+        b3e3: searched n=1 cd=8 red=0 score=-1577
+      ply 2 b3e3: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d8; values 525 1577
+        g5g6: searched n=1 cd=8 red=0 score=1577
+      ply 3 g5g6: loop pv1 cut0 x1; depths d8; values -1577
+        e3d3: searched n=1 cd=7 red=0 score=-1577
+      ply 4 e3d3: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d7; values 471 1577
+        f6f5: searched n=1 cd=7 red=0 score=1577
+      ply 5 f6f5: loop pv1 cut0 x1; depths d7; values -1577
+        d3a6: searched n=25 cd=6 red=0 score=-1577
+      ply 6 d3a6: loop pv0 cut0 x1, loop pv0 cut1 x1; depths d2 d6; values 685 1577
+        e5e6: searched n=1 cd=6 red=0 score=1577
+      ply 7 e5e6: loop pv0 cut0 x1; depths d6; values -1577
+        a6a8: searched n=4 cd=5 red=3 score=-48987
+      ply 8 a6a8: tt pv0 cut1 x1; depths d2; values 48987
+      ply 9: no node reaches d6d7,b3e3,g5g6,e3d3,f6f5,d3a6,e5e6,a6a8,f5f7
+#    -- row 225, 8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44, the parent at depth 10: score mate 6
+    search 46, line f7d5,b7g7,f6g7,c5e6,d5e6,h2g1,e5d4,g1h1,d2h6,g2h3,h6h3
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 2463
+        f7d5: searched n=1 cd=9 red=0 score=2463
+      ply 1 f7d5: loop pv1 cut0 x1; depths d9; values -2463
+        b7g7: searched n=7 cd=8 red=0 score=-2463
+      ply 2 b7g7: loop pv0 cut0 x2, loop pv0 cut1 x1, loop pv1 cut0 x1; depths d3 d8; values 522 2463 2697
+        f6g7: searched n=1 cd=8 red=0 score=2697; searched n=1 cd=8 red=0 score=2463
+      ply 3 f6g7: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d8; values -2697 -2463
+        c5e6: searched n=3 cd=7 red=0 score=-2697; searched n=2 cd=7 red=0 score=-2463
+      ply 4 c5e6: loop pv0 cut0 x3, loop pv0 cut1 x2, loop pv1 cut0 x1; depths d3 d7; values 1796 2463 2697
+        d5e6: searched n=1 cd=7 red=0 score=2697; searched n=1 cd=7 red=0 score=2697; searched n=1 cd=7 red=0 score=2463
+      ply 5 d5e6: loop pv1 cut0 x1, rfp pv0 cut0 x2; depths d7; values -2697 -2463
+        h2g1: searched n=2 cd=6 red=0 score=-48985
+      ply 6 h2g1: loop pv0 cut0 x1, loop pv0 cut1 x1; depths d2 d6; values 2164 48985
+        e5d4: searched n=10 cd=1 red=0 score=2136
+      ply 7 e5d4: loop pv0 cut1 x1; depths d1; values -2136
+      ply 8: no node reaches f7d5,b7g7,f6g7,c5e6,d5e6,h2g1,e5d4,g1h1
+#    -- row 247, 8/1k6/3K4/8/8/5b1R/8/8 w - - 100 114, the parent at depth 10: score mate 7
+    search 15, line h3f3,b7b6,f3f5,b6b7,f5b5,b7a6,d6c6,a6a7,b5b3,a7a8,c6c7,a8a7,b3a3
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 762
+        h3f3: searched n=1 cd=9 red=0 score=762
+      ply 1 h3f3: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d4 d9; values -762
+        b7b6: searched n=1 cd=8 red=0 score=-762
+      ply 2 b7b6: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d8; values 753 762
+        f3f5: searched n=1 cd=8 red=0 score=762
+      ply 3 f3f5: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d8; values -762
+        b6b7: searched n=1 cd=7 red=0 score=-762
+      ply 4 b6b7: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d7; values 762
+        f5b5: searched n=12 cd=2 red=0 score=762; searched n=2 cd=6 red=0 score=762
+      ply 5 f5b5: loop pv0 cut0 x1, loop pv0 cut1 x1, multicut pv0 cut1 x1; depths d2 d6; values -762
+        b7a6: searched n=2 cd=1 red=0 score=-762; searched n=1 cd=1 red=0 score=-762
+      ply 6 b7a6: loop pv0 cut1 x1, tt pv0 cut1 x1; depths d1; values 762
+        d6c6: searched n=1 cd=0 red=0 score=762
+      ply 7 d6c6: qs pv0 cut0 x1, qs-node - - x1; depths q d0; values -762
+      ply 8: no node reaches h3f3,b7b6,f3f5,b6b7,f5b5,b7a6,d6c6,a6a7
+#    -- row 256, r1b5/1p3R2/2p4k/p2n3r/7R/P2B4/1P1K1PP1/6N1 w - - 6 31, the parent at depth 10: score mate 7
+    search 28, line f7h7,h6g5,h4h5,g5f6,h5h6,f6e5,g1f3,e5f4,h6h4,c8g4,h7f7,d5f6,f7f6
+      ply 0 root: loop pv1 cut0 x1; depths d10; values 982
+        f7h7: searched n=1 cd=9 red=0 score=982
+      ply 1 f7h7: loop pv1 cut0 x1; depths d9; values -982
+        h6g5: searched n=1 cd=8 red=0 score=-982
+      ply 2 h6g5: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d3 d8; values 982 48987
+        h4h5: searched n=2 cd=2 red=0 score=48987; searched n=3 cd=7 red=0 score=979
+      ply 3 h4h5: loop pv1 cut0 x1, tt pv0 cut1 x2; depths d2 d7; values -48987 -979
+        g5f6: searched n=1 cd=6 red=0 score=-979
+      ply 4 g5f6: loop pv0 cut0 x1, loop pv1 cut0 x1; depths d2 d6; values 979 48987
+        h5h6: searched n=2 cd=1 red=0 score=48987; searched n=4 cd=5 red=0 score=979
+      ply 5 h5h6: loop pv1 cut0 x1, tt pv0 cut1 x2; depths d1 d5; values -48987 -979
+        f6e5: searched n=1 cd=4 red=0 score=-979
+      ply 6 f6e5: loop pv1 cut0 x1; depths d4; values 979
+        g1f3: searched n=1 cd=3 red=0 score=972
+      ply 7 g1f3: loop pv1 cut0 x1; depths d3; values -972
+        e5f4: searched n=1 cd=2 red=0 score=-972
+      ply 8 e5f4: loop pv1 cut0 x1; depths d2; values 972
+        h6h4: searched n=1 cd=1 red=0 score=846
+      ply 9 h6h4: loop pv1 cut0 x1; depths d1; values -846
+        c8g4: searched n=1 cd=0 red=0 score=-846
+      ply 10 c8g4: qs pv1 cut0 x1, qs-node - - x1; depths q d0; values 846
+      ply 11: no node reaches f7h7,h6g5,h4h5,g5f6,h5h6,f6e5,g1f3,e5f4,h6h4,c8g4,h7f7
+#
+# == 7. Reach at the shipped weights, DEC-308 (2): the same two rules over the mined set at depth 10
+#    python3 adocs/data/S136_lost_mates.py depths <build-tune chesso> 10 0,1,...,317 [--opt NullMoveBase=16 | RfpMinPly=63]
+#    exact at depth 10, and the rows gained / lost against the same tree with the rule on:
+    parent: 160 as shipped; NullMoveBase=16 161 (+8 -7); RfpMinPly=63 199 (+42 -3)
+    candidate: 156 as shipped; NullMoveBase=16 165 (+12 -3); RfpMinPly=63 202 (+48 -2)
+#    So both rules lose reported mates on the mined set at the shipped weights, reverse futility 42 and the null
+#    move 8, and S296 recorded the same two at S145 root 76 on the constructed set (DEC-319 (2), S296_root76.txt).
+#    That is the price DEC-158 and DEC-087 (e) already carry; nothing here is a rule contradicting a proof. With
+#    the null move off, the candidate gains rows 105, 158, 182, 185 and 256 among its ten lost (and 7 more).
+#    Beside it, the parent's own loss of row 86 (the candidate's gain; mate in 4, the oracle #4, parent first at
+#    19): at depth 8 the parent's ply-2 PV node orders the mating g1h2 ninth and reduces it 3 (late move
+#    reduction). The reduced node answers from the table. The shipped tree loses mates to its reductions too.
+#
+# == 8. Classes (the coordinator's: (i) depth churn within 2 plies, (ii) a priced rule, (iii) a rule no decision
+#    prices -- a stop)
+#    (i)  89, 105, 107, 185, 210, 225, 247, 256: the candidate 1 or 2 plies after the parent
+#    (ii) 158: the null move (DEC-087 (e)) at depths 10 to 13, then reverse futility (DEC-158) at 14 to 16, at the
+#         mated side's non-PV cut node, ply 3; the table there proves nothing; DEC-319 (2)'s shape
+#    (ii) 182: the null move (DEC-087 (e)) in iteration 9, then reverse futility (DEC-158) at 9 to 12, at the mated
+#         side's non-PV cut node, ply 5; the table there proves nothing; DEC-319 (2)'s shape
+#    (iii) none
