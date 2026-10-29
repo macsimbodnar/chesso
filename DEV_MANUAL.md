@@ -57,6 +57,25 @@ cmake -S . -B build-tune  -DCMAKE_BUILD_TYPE=Release        -DCMAKE_CXX_COMPILER
 Do not point CMake at Homebrew clang. Different compiler, different codegen, and
 every recorded benchmark becomes incomparable.
 
+**On the workstation, a `clang++-22` build is a compile check, never a measured
+binary** (S297). The same `-Wall -Wextra -Werror` catches different things in
+the two front ends: GCC 13 does not flag a variable that is only ever
+incremented, and clang does (`-Wunused-but-set-variable`). So the owner's macOS
+build, Apple clang, stopped in `tools/tuner_trace.hpp` while the workstation's
+GCC gate was green. On Linux, build two scratch directories with `clang++-22`
+and the project's own flags. `CC` and `CXX` take effect only on a directory that
+does not exist yet. Use Release, because Debug turns the unused-* warnings off.
+Build with `-k 0`, which is why `-G Ninja`, so that every error shows at once.
+Then run both fast suites:
+
+```bash
+export CLANG_FORMAT_MAJOR=22          # this machine only, DEC-146
+CC=clang-22 CXX=clang++-22 cmake -S . -B build-clang      -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+CC=clang-22 CXX=clang++-22 cmake -S . -B build-clang-tune -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCHESSO_TUNE=ON
+cmake --build build-clang      -j12 -- -k 0 && ctest --test-dir build-clang      -L fast --output-on-failure
+cmake --build build-clang-tune -j12 -- -k 0 && ctest --test-dir build-clang-tune -L fast --output-on-failure
+```
+
 **The flags a Release unit compiles with**, as the build directory's
 `compile_commands.json` shows them: `-O3 -DNDEBUG` (CMake's own Release flags),
 `-std=gnu++20` (`CMAKE_CXX_STANDARD 20` in `CMakeLists.txt`, extensions left on),

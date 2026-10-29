@@ -27,13 +27,15 @@ the owner's shutdown after 6520 games and is void; the re-launch ran
 margin re-derived, S121 unblocked) and DEC-325 on 2026-10-27, and approved
 removing `../chesso-s296c` and `../chesso-s136`, which are removed.
 
-**In progress: S297** (owner's request, 2026-10-29): the owner's macOS arm64
-build fails under Apple clang at `tools/tuner_trace.hpp`'s set-but-unused
+**S297 done** (the owner's request, 2026-10-29): the owner's macOS arm64
+build failed under Apple clang at `tools/tuner_trace.hpp`'s set-but-unused
 `line_number` (`-Werror,-Wunused-but-set-variable`), which GCC does not flag.
-One Opus 5.5 subagent in `../chesso-s297` (branch `s297` at `5a9b931`, brief
-`.tuning/coord/S297/brief.md`) reproduces it with `clang++-22`, builds the
-whole tree under clang and fixes every warning at its cause. Its step file
-is untracked in the main checkout's `plan_todo/` until it lands.
+Reproduced with `clang++-22`; a whole-tree clang build (Release, tune, and a
+libc++ probe as the Mac's library) found no other error; the dead counter is
+removed and no message changes. `DEV_MANUAL.md` gains the clang check. One
+Opus 5.5 subagent in `../chesso-s297`, fast-checked (four doc and evidence
+fixes applied); logs `.tuning/coord/S297/logs/`. S298 (a weekly clang stage
+in `tools/gate_extra.sh`) is planned as filler.
 
 **Next: S121's phase 1b.** Phase 1a was written blind during S136's match
 (`../chesso-s121`, branch `s121` at `adf77d0`, diff

@@ -65,7 +65,10 @@ them, so apt will not update them and their versions are the ones below.
 
 > Do not point CMake at `clang++-22`. `g++ 13.3` is the reference compiler here
 > and changing it restarts the baseline — DEC-049, which is the local form of
-> the Homebrew warning in the MacBook's section.
+> the Homebrew warning in the MacBook's section. There are two exceptions, and
+> neither is ever measured: the coverage build in `DEV_MANUAL.md`'s Coverage
+> section, and the scratch clang check in its Build section, which checks that
+> the tree compiles under clang's warnings (S297).
 
 ### Every path, and what printed it
 
@@ -74,7 +77,7 @@ them, so apt will not update them and their versions are the ones below.
 | tool | path here | version, as printed |
 |---|---|---|
 | `c++`, `g++` | `/usr/bin/c++` → `/etc/alternatives/c++` → `/usr/bin/g++` | `g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0` — the reference compiler, DEC-049 |
-| `clang++-22` | `/usr/bin/clang++-22` | `Ubuntu clang version 22.1.8` — a second front end for warnings, never the build compiler |
+| `clang++-22` | `/usr/bin/clang++-22` | `Ubuntu clang version 22.1.8` — a second front end for warnings, never the measured build compiler |
 | `clang-tidy-22`, `run-clang-tidy-22` | `/usr/bin/` | `Ubuntu LLVM version 22.1.8` |
 | `llvm-mca-22` | `/usr/bin/llvm-mca-22` | `Ubuntu LLVM version 22.1.8`, default target `x86_64-pc-linux-gnu` |
 | `clang-format-22` | `/usr/bin/clang-format-22` | `Ubuntu clang-format version 22.1.8` |

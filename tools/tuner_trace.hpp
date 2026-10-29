@@ -632,7 +632,6 @@ inline bool load(const std::string& path,
   std::vector<std::string> failures(threads);
   std::vector<size_t> failed_at(threads);
 
-  uint64_t line_number = 0;
   bool done = false;
 
   while (!done) {
@@ -640,7 +639,6 @@ inline bool load(const std::string& path,
     std::string text;
 
     while (lines.size() < BLOCK && std::getline(file, text)) {
-      line_number++;
       if (text.empty()) { continue; }
       lines.push_back(text);
     }
