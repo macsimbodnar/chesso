@@ -1176,8 +1176,9 @@ int evaluate_cheap(const board_t* board)
 //
 // **Every cell is S121's screen's fit** (adocs/data/S121_screen.sh, DEC-326):
 // `--only mobility` on S083's corpus with every other constant frozen, over
-// the count S121_PARTS 5 defines -- enemy pawn attacks excluded and the pin
-// rule (src/evaluation.hpp) -- the screen's survivors, decided by one SPRT.
+// the count the screen's survivors define -- enemy pawn attacks excluded and
+// the pin rule (src/evaluation.hpp) -- and shipped on one SPRT's H1 at
+// 8+0.08 (adocs/data/S121_sprt.log).
 // The queen's cells 26 and 27 share cell 25's value in both halves, each
 // under 1000 games of support (DEC-326 (5), adocs/data/S121_cells.txt). The
 // fit started from the identity, each cell c times the linear weight it
@@ -1186,8 +1187,8 @@ int evaluate_cheap(const board_t* board)
 // it (DEC-084, DEC-105). The identity's packed sum was the packed sum count *
 // weight was, bit for bit -- packing is exact under integer multiplication
 // (data_structures.hpp) -- so the phase 1 landing scored every position as
-// the linear term did (INV-6), and on H0 the identity comes back. The linear
-// weights were fitted, not chosen: the hand-picked set before them measured
+// the linear term did (INV-6). The linear weights were fitted, not chosen:
+// the hand-picked set before them measured
 // -14.93 Elo and the fitted one +28.46 over 942 games, DEC-040. No published
 // table was consulted, DEC-016.
 //
@@ -1466,28 +1467,17 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
     }
   }
 
-  // S121's parts (src/evaluation.hpp), computed when a part scores or a
-  // cost-only build forces it, and not otherwise: `if constexpr` deletes each
-  // set no expression reads. The pawn attacks are stage one's own sets, built
-  // again here because stage one keeps them local (specs.md): two shifts a
-  // side. The pins are each side's pieces pinned to its own king, both
-  // colours, which the generator's side-to-move masks are not.
-  constexpr int computed = (S121_PARTS) | (S121_COST);
-  [[maybe_unused]] bb_t pawn_attacks[2] = {BB_0, BB_0};
-  [[maybe_unused]] bb_t pinned[2] = {BB_0, BB_0};
-  [[maybe_unused]] index_t king_square[2] = {0, 0};
-
-  if constexpr ((computed & 1) != 0) {
-    pawn_attacks[WHITE] = neighbour_files(board->bitboards[W_PAWN]) >> 8;
-    pawn_attacks[BLACK] = neighbour_files(board->bitboards[B_PAWN]) << 8;
-  }
-
-  if constexpr ((computed & 4) != 0) {
-    pinned[WHITE] = pinned_pieces(tables, board, WHITE);
-    pinned[BLACK] = pinned_pieces(tables, board, BLACK);
-    king_square[WHITE] = get_lsb_index(board->bitboards[W_KING]);
-    king_square[BLACK] = get_lsb_index(board->bitboards[B_KING]);
-  }
+  // What S121's count reads beyond the attack set (src/evaluation.hpp): the
+  // squares each side's pawns attack, stage one's own sets built again here
+  // because stage one keeps them local (specs.md), two shifts a side; and each
+  // side's pieces pinned to its own king, both colours, which the generator's
+  // side-to-move masks are not.
+  const bb_t pawn_attacks[2] = {neighbour_files(board->bitboards[W_PAWN]) >> 8,
+                                neighbour_files(board->bitboards[B_PAWN]) << 8};
+  const bb_t pinned[2] = {pinned_pieces(tables, board, WHITE),
+                          pinned_pieces(tables, board, BLACK)};
+  const index_t king_square[2] = {get_lsb_index(board->bitboards[W_KING]),
+                                  get_lsb_index(board->bitboards[B_KING])};
 
   for (int colour = 0; colour < 2; ++colour) {
     // The piece's own side, which is what mobility is worth to.
@@ -1500,37 +1490,9 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
     const bb_t defended_zone = zone[1 - colour];
     const int base = (colour == WHITE) ? W_KNIGHT : B_KNIGHT;
 
-    // The area's exclusions: P2a the side's blocked pawns, whose push square
-    // holds any piece; P2b its pawns on its own second and third ranks as
-    // well. Index 0 is a8, so White pushes by subtracting 8. One of
-    // S121_PARTS and S121_COST is 0, so `computed` is the active mask.
-    [[maybe_unused]] bb_t own_excluded = BB_0;
-
-    if constexpr ((computed & 2) != 0) {
-      const bb_t own_pawns =
-          board->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
-      own_excluded = (colour == WHITE) ? own_pawns & (occupancy << 8)
-                                       : own_pawns & (occupancy >> 8);
-
-      if constexpr ((computed & 8) != 0) {
-        const bb_t low_ranks = (colour == WHITE)
-                                   ? (rank_masks[48] | rank_masks[40])
-                                   : (rank_masks[8] | rank_masks[16]);
-        own_excluded |= own_pawns & low_ranks;
-      }
-    }
-
-    // The squares the scored count reads: every square but an own piece's
-    // until S121's parts, then each part's rule; and the same for the parts a
-    // cost-only build forces.
-    bb_t area = MOBILITY_AREA ? ~own_excluded : ~own;
-    if constexpr (MOBILITY_PAWN_ATTACKS) { area &= ~pawn_attacks[1 - colour]; }
-
-    [[maybe_unused]] bb_t cost_area =
-        (((S121_COST) & 2) != 0) ? ~own_excluded : ~own;
-    if constexpr (((S121_COST) & 1) != 0) {
-      cost_area &= ~pawn_attacks[1 - colour];
-    }
+    // The squares the count reads: none holding an own piece, and none an
+    // enemy pawn attacks (P1).
+    const bb_t area = ~own & ~pawn_attacks[1 - colour];
 
     for (int type = 0; type < 4; ++type) {
       bb_t pieces = board->bitboards[base + type];
@@ -1541,38 +1503,20 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
         const bb_t attacks = piece_attacks(tables, type, square, occupancy);
 
-        // Squares the piece could move to, own pieces excluded -- at
-        // S121_PARTS 0, the phase 1 landing. Never full safe mobility, which
-        // would exclude every attacked square: since S121's parts the count
-        // is `area`'s, above -- at mask 5, the candidate's, squares an enemy
-        // pawn attacks are excluded too (P1), and the pin rule below holds.
-        // The count picks the piece's cell, which the board keeps inside its
-        // row: a knight reaches 8 squares at most, a bishop 13, a rook 14, a
-        // queen 27 (MOBILITY_WIDTH). Since S121's parts, the area above and,
-        // for a pinned piece, only the squares on its pin line (P3): a pinned
-        // knight has none, a piece pinned across its own lines none either.
+        // The count is `area`'s, above, and for a pinned piece only the
+        // squares on its pin line (P3): a pinned knight has none, a piece
+        // pinned across its own lines none either. Never full safe mobility,
+        // which would exclude every attacked square. The count picks the
+        // piece's cell, which the board keeps inside its row: a knight
+        // reaches 8 squares at most, a bishop 13, a rook 14, a queen 27
+        // (MOBILITY_WIDTH).
         bb_t moves = attacks;
-        if constexpr (MOBILITY_PINS) {
-          if ((pinned[colour] >> square) & 1) {
-            moves &= tables->line[king_square[colour]][square];
-          }
+        if ((pinned[colour] >> square) & 1) {
+          moves &= tables->line[king_square[colour]][square];
         }
 
         const int count = count_bits(moves & area);
         assert(count < MOBILITY_WIDTH[type]);
-
-        // The cost-only build's forced count, computed and discarded so the
-        // compiler keeps it while the score stays the landing's (DEC-047).
-        if constexpr ((S121_COST) != 0) {
-          bb_t cost_moves = attacks;
-          if constexpr (((S121_COST) & 4) != 0) {
-            if ((pinned[colour] >> square) & 1) {
-              cost_moves &= tables->line[king_square[colour]][square];
-            }
-          }
-          const int forced = count_bits(cost_moves & cost_area);
-          asm volatile("" : : "r"(forced));
-        }
 
         const int cell = MOBILITY_OFFSET[type] + count;
 

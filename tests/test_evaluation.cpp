@@ -372,7 +372,7 @@ TEST_SUITE("evaluation: score")
   // the placement counts. Re-derived by the script on the pasted header after
   // it reproduced all ten at S083's weights.
   //
-  // S121's mobility table, an `--only mobility` paste at S121_PARTS 5 (enemy
+  // S121's mobility table, an `--only mobility` paste over its count (enemy
   // pawn attacks excluded, the pin rule), moved four: the knight on b1 276 to
   // 283, the bishop on c1 355 to 353, the rook on d1 583 to 590 and the queen
   // on d1 984 to 1021, each through its own cell of the fitted table; the

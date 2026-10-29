@@ -15,6 +15,8 @@
 #   CAND_SHA=<landing> PARENT_SHA=<its parent> adocs/data/S121_cost.sh check
 #   CAND_SHA=<landing> PARENT_SHA=<its parent> \
 #     nohup adocs/data/S121_cost.sh run > .tuning/s121_cost.console 2>&1 &
+#   CAND_SHA=<landing> PARENT_SHA=<its parent> OUT=<a fresh directory> \
+#     ROWS="p5" nohup adocs/data/S121_cost.sh run > CONSOLE 2>&1 &
 #
 # Run from the main checkout. CAND_SHA is S121's phase 1 landing, the table at
 # identity (HEAD when unset); PARENT_SHA the tree before it (CAND^ when
@@ -46,6 +48,8 @@
 #           p2b less p2a is the low-rank exclusion's own cost
 #   p3      S121_COST=4: both colours' pins and the pin-line mask a pinned
 #           piece takes, src/bitboard.cpp pinned_pieces() among them
+#   p5      S121_COST=5: p1 and p3 together, the shipped count's parts --
+#           added 2026-10-29 at S121's close, below
 #   all     S121_COST=15: the four together
 #   Every patched build carries src/bitboard.cpp pinned_pieces(), called only
 #   where bit 4 is set, so p1's code differs from zero's by that
@@ -81,6 +85,30 @@
 # 1 h 35 m in all, ceiling 3 h 10 m. Disk: seven worktrees of about 240 MB
 # with their builds, 1.7 GB. The machine must be otherwise idle (MACHINE).
 # ============================================================================
+#
+# 2026-10-29, S121's close: THE ROW MASK 5 (p5), added after the run above
+# (adocs/data/S121_cost_reading.txt) and after S121's SPRT read H1 on the
+# candidate at S121_PARTS 5, which the close folded into src/. That run timed
+# no build computing what mask 5 computes; p5 is S121_COST=5, P1's and P3's
+# sets forced together, and is read like every other row: INV-6 against zero,
+# the code check, the A/A's floor, DEC-266's reading. It is nested inside all
+# and holds p1 and p3, so the reading's ordering check gains all > p5, p5 > p1
+# and p5 > p3 wherever both ends of a pair are timed. The other rows are as
+# they were. ROWS names the rows a run times, default "parent p1 p2a p2b p3
+# p5 all"; the A/A, zero, its copy and INV-6 are taken in every run, since
+# the floor is the session's (DEC-266). `ROWS=p5` times aa and p5 alone,
+# about 25 min (two builds, two comparisons, the streams), ceiling 50 min, in
+# a fresh OUT: a run refuses an OUT that holds a reading.txt, since its pairs
+# are the record a reading was taken from and `pairs` empties a comparison's
+# directory before it times it. A build's stamp now names the patch by the
+# sha256 of what `git apply` reads, from its first `--- ` line on, not of the
+# whole file: the patch's preamble was edited twice after the run above (the
+# candidate's commit and the close), each time leaving the applied text as it
+# was, and the old stamp refused a rebuild of the same sources for that.
+# Run from the main checkout after the fold, with CAND_SHA=12cab3c and
+# PARENT_SHA=6ff7485 (CAND_SHA unset is HEAD, whose parent carries the table,
+# and `check` refuses the pair): the cost builds are worktrees of the phase 1
+# landing, which the patch applies to, and the fold changes nothing here.
 
 set -uo pipefail
 
@@ -95,6 +123,13 @@ pc="$root/build/tools/perf_counters"
 python_chess="$HOME/.venv/chess/bin/python"
 
 say() { echo "$*"; }
+
+# The patch as `git apply` reads it, from its first `--- ` line on: a build's
+# stamp names this, so an edit to the preamble alone does not refuse a
+# rebuild of the same sources.
+patch_sha() {
+  sed -n '/^--- /,$p' "$patch" | sha256sum | cut -c1-64
+}
 
 # The tree git would hold for COMMIT with the cost patch applied, written from
 # a scratch index in TREE's repository and printed as its id; the working tree
@@ -122,7 +157,7 @@ patched_tree_id() {
 build_one() {
   local name="$1" commit="$2" mask="${3:-}" tree="$OUT/tree-$1" flags=""
   local stamp="$commit unpatched" had head want applied=""
-  [[ -n "$mask" ]] && stamp="$commit $mask $(sha256sum "$patch" | cut -c1-64)"
+  [[ -n "$mask" ]] && stamp="$commit $mask applied $(patch_sha)"
   if [[ -e "$OUT/bin/$name" ]]; then
     had=$(cat "$OUT/bin/$name.stamp" 2> /dev/null) || had="no stamp"
     if [[ "$had" != "$stamp" ]]; then
@@ -224,6 +259,34 @@ carries_table() {
   [[ "$text" == *mobility_queen_mg* ]]
 }
 
+ROWS="${ROWS:-parent p1 p2a p2b p3 p5 all}"
+
+# The forced rows and their masks.
+mask_of() {
+  case "$1" in
+    p1) echo 1 ;; p2a) echo 2 ;; p2b) echo 10 ;; p3) echo 4 ;; p5) echo 5 ;;
+    all) echo 15 ;; *) return 1 ;;
+  esac
+}
+
+check_rows() {
+  local row seen=" "
+  [[ -n "${ROWS// /}" ]] || { say "refused: ROWS names no row"; return 1; }
+  for row in $ROWS; do
+    [[ "$row" == parent ]] || mask_of "$row" > /dev/null ||
+      { say "refused: ROWS names '$row', not one of parent p1 p2a p2b p3 p5 all"; return 1; }
+    [[ "$seen" == *" $row "* ]] && { say "refused: ROWS names $row twice"; return 1; }
+    seen+="$row "
+  done
+  local shown="aa (zero against its copy)" spec
+  for row in $ROWS; do
+    if [[ "$row" == parent ]]; then spec="parent (PARENT, unpatched)"
+    else spec="$row (S121_COST=$(mask_of "$row"))"; fi
+    shown+=", $spec"
+  done
+  say "rows      $shown, each against zero"
+}
+
 cand=""
 parent=""
 check_pair() {
@@ -254,9 +317,17 @@ check_pair() {
   git -C "$root" show "$cand:adocs/data/S121_parts.patch" > /dev/null 2>&1 ||
     { say "refused: CAND carries no adocs/data/S121_parts.patch"; return 1; }
   say "pair      CAND carries the table, PARENT does not, PARENT is CAND^"
+  [[ -n "$(patched_tree_id "$root" "$cand")" ]] ||
+    { say "refused: $patch does not apply to CAND ${cand:0:12}"; return 1; }
+  say "patch     applies to CAND, applied text sha256 $(patch_sha | cut -c1-16)"
+  check_rows
 }
 
 run() {
+  if [[ -e "$OUT/reading.txt" ]]; then
+    say "refused: $OUT holds a reading.txt, a finished run's record whose pairs a new run would empty; take a fresh OUT"
+    return 1
+  fi
   mkdir -p "$OUT" || return 1
   [[ -x "$pc" ]] || { say "no $pc; build the tools first"; return 1; }
   command -v hyperfine > /dev/null || { say "no hyperfine"; return 1; }
@@ -264,6 +335,7 @@ run() {
   check_pair || return 1
   {
     echo "S121 cost"
+    echo "rows      aa $ROWS"
     echo "started   $(date -Iseconds)"
     echo "cand      $cand"
     echo "parent    $parent"
@@ -275,20 +347,21 @@ run() {
   (( PIPESTATUS[0] == 0 )) || return 1
   [[ -x "$OUT/bin/copy" ]] || cp "$OUT/bin/zero" "$OUT/bin/copy" || return 1
   cmp -s "$OUT/bin/zero" "$OUT/bin/copy" || { say "the A/A copy differs"; return 1; }
-  build_one parent "$parent" | tee -a "$OUT/cost.log"
-  (( PIPESTATUS[0] == 0 )) || return 1
-  local name mask spec
-  for spec in p1:1 p2a:2 p2b:10 p3:4 all:15; do
-    name=${spec%%:*}; mask=${spec#*:}
-    build_one "$name" "$cand" "$mask" | tee -a "$OUT/cost.log"
+  local name
+  for name in $ROWS; do
+    if [[ "$name" == parent ]]; then
+      build_one parent "$parent" | tee -a "$OUT/cost.log"
+    else
+      build_one "$name" "$cand" "$(mask_of "$name")" | tee -a "$OUT/cost.log"
+    fi
     (( PIPESTATUS[0] == 0 )) || return 1
   done
 
   local bin
-  for bin in zero parent p1 p2a p2b p3 all; do
+  for bin in zero $ROWS; do
     streams "$OUT/bin/$bin" "$OUT/inv6/$bin"
   done
-  for bin in parent p1 p2a p2b p3 all; do
+  for bin in $ROWS; do
     if ! diff -r -q "$OUT/inv6/zero" "$OUT/inv6/$bin" > /dev/null; then
       diff -r "$OUT/inv6/zero" "$OUT/inv6/$bin" | head -20
       say "INV-6: $bin does not search zero's tree; no timing is taken"
@@ -298,19 +371,21 @@ run() {
   say "INV-6: bench $(tail -n 1 "$OUT/inv6/zero/bench.txt"), every binary identical" |
     tee -a "$OUT/cost.log"
 
-  python3 "$helper" code "$OUT/bin" | tee -a "$OUT/cost.log"
+  # shellcheck disable=SC2086  # ROWS is a list of names
+  python3 "$helper" code "$OUT/bin" $ROWS | tee -a "$OUT/cost.log"
   (( PIPESTATUS[0] == 0 )) || { say "the forced builds do not differ as their masks do; no timing is taken"; return 1; }
 
   echo "loadavg before pairs: $(cat /proc/loadavg)" >> "$OUT/cost.log"
   pairs aa copy | tee -a "$OUT/cost.log"
   (( PIPESTATUS[0] == 0 )) || return 1
-  for bin in parent p1 p2a p2b p3 all; do
+  for bin in $ROWS; do
     pairs "$bin" "$bin" | tee -a "$OUT/cost.log"
     (( PIPESTATUS[0] == 0 )) || return 1
   done
   echo "loadavg after pairs: $(cat /proc/loadavg)" >> "$OUT/cost.log"
 
-  python3 "$helper" read "$OUT/pairs" | tee "$OUT/reading.txt"
+  # shellcheck disable=SC2086
+  python3 "$helper" read "$OUT/pairs" $ROWS | tee "$OUT/reading.txt"
   (( PIPESTATUS[0] == 0 )) || return 1
   echo "finished  $(date -Iseconds)" >> "$OUT/cost.log"
   say "the worktrees under $OUT stay for a re-run; git worktree remove each when the reading is recorded"

@@ -392,11 +392,12 @@ static bool line_ends_in_mate(const std::string& fen,
 // DEC-299's +2, applied by DEC-307 (3) with `EXACT_FLOOR` red. S135's piece
 // placement fit moved D 0 -> 1 and E 1 -> 2, inside DEC-299's guard. S296's
 // rule at a mated fail-low after a skipped move moved none. S121's mobility
-// table moves B 6 -> 13, outside DEC-299's guard: DEC-327, provisional, the
-// owner rules before an H1 ships. The rise is one cell of S121's grid, B at
-// stride 1 and 1200000 nodes, 13 short of 64 mate lines: two roots' lines,
-// each cut at the horizon where quiescence returned a mate score, the claimed
-// side right and none shorter than Stockfish's (adocs/data/S121_case_b.txt).)
+// table moves B 6 -> 13, outside DEC-299's guard: carried by DEC-327 and
+// accepted by the owner on S121's H1, DEC-328. The rise is one cell of
+// S121's grid, B at stride 1 and 1200000 nodes, 13 short of 64 mate lines:
+// two roots' lines, each cut at the horizon where quiescence returned a mate
+// score, the claimed side right and none shorter than Stockfish's
+// (adocs/data/S121_case_b.txt).)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 // adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
@@ -477,16 +478,18 @@ static bool line_ends_in_mate(const std::string& fen,
 // (b477459 plus the rule), 108 cells, 1229 mate lines and 10 short): it
 // moves no ceiling, and the budgets it re-derived, A and C, are in the TSV's
 // header. **S121's is the eighth** (`adocs/data/S121_sweep_s170.txt`, S121's
-// mobility table at S121_PARTS 5, uncommitted on 12cab3c, 108 cells, 1400
+// mobility table at its candidate's mask 5 (P1 and P3, folded unchanged at
+// S121's close), uncommitted on 12cab3c, 108 cells, 1400
 // mate lines and 26 short): it moves B, below, outside DEC-299's guard
-// (DEC-327, provisional), and its budgets are in the TSV's header.
+// (DEC-327; the owner's acceptance on H1, DEC-328), and its budgets are in
+// the TSV's header.
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;
 //                                         DEC-295, in S286's commit only
 //   B_mate6_shallow                 13  1200000 on the S121 grid, 13 of
-//                                         64; DEC-327, provisional, the
-//                                         owner rules before an H1 ships
+//                                         64; DEC-327, accepted by the
+//                                         owner on S121's H1, DEC-328
 //                                         (DEC-307's 6 before, 4000000 on
 //                                         the S083s grid, 6 of 72; 5 before
 //                                         that, 1500000 on the S202 grid,
@@ -658,8 +661,8 @@ static size_t short_line_ceiling(const std::string& name)
 {
   // A's 2 by DEC-295, in S286's commit only; F's 3 by DEC-307, with S083's
   // refit; D's 1 and E's 2 by DEC-299's guard, with S135's fit. B's 13 by
-  // DEC-327, provisional: the owner rules before an H1 ships (6 by DEC-307
-  // from S083's refit until S121's table).
+  // DEC-327, accepted by the owner on S121's H1, DEC-328 (6 by DEC-307 from
+  // S083's refit until S121's table).
   if (name == "A_mate8_shallow") { return 2; }
   if (name == "B_mate6_shallow") { return 13; }
   if (name == "C_mate7_depth11") { return 4; }

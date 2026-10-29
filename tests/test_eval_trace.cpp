@@ -137,7 +137,7 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // distinct positions at 2.875, phases 5 to 19; three of S083's four fell under
 // 2.8 and the pick kept its phase 11 row and took three more, at phases 5, 17
 // and 19 (adocs/data/S135_goldens.txt). Re-derived at S121 on the same corpus
-// at its mobility table (S121_PARTS 5): 77 rows past 2.8, 18 at 2.875 and 16
+// at its mobility table over its count: 77 rows past 2.8, 18 at 2.875 and 16
 // distinct positions there, phases 5 to 23, the worst still 2.875 = 69/24, so
 // three divisions still round (tempo zero; the table is one taper, as the
 // linear term was); all four of S135's read under 2.8 (one at 1.958) and the

@@ -16576,3 +16576,27 @@ Consequences: S121's done stamp cannot be written on H1 until the owner's
               Stockfish's and the claimed side is right at both; the parent
               reads 1 short at the same cell, the candidate 1 and 0 at the
               neighbouring 1000000 and 1500000.
+
+## DEC-328  2026-10-29  The owner accepts S121's case B mate-carry ceiling 13 on H1
+Tags:         testing, mate, s170, s121, dec-327, dec-299, dec-122, owner-question
+Context:      DEC-327 carried case B's ceiling 6 -> 13 provisionally, outside
+              DEC-299's guard, and left the ruling to the owner before an H1
+              ships. The tool's attribution (`adocs/data/S121_case_b.txt`):
+              the 13 short lines are two carried mate lines, at replay plies
+              33 and 34 of the cell stride 1, 1200000 nodes, each cut at the
+              horizon where quiescence reads a mate from the table or stands
+              in check; no reported mate is shorter than Stockfish's and the
+              claimed side is right at both; the neighbouring cells read 1
+              and 0, the parent 1 at the same cell.
+Decision:     By the owner, 2026-10-29, asked under DEC-265's form with the
+              attribution above: (a) accept 13. On S121's H1 the ceiling and
+              the picker's budgets DEC-327 carried stand as committed in
+              `57a58a4`, and DEC-327's provisional wording at their sites
+              becomes this id. On H0 they revert with the paste and this
+              ruling lapses.
+Rejected:     Keeping 6 and teaching `complete_mate_pv()` to extend a line
+              past a quiescence table read first, a step of its own before
+              the H1 ships: the attribution reads DEC-122's expected residue,
+              not a wrong score.
+Consequences: For case B the ceiling no longer catches a worsening of up to
+              7 short lines. S121's done stamp may be written on H1.

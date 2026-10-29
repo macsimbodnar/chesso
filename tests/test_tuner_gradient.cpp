@@ -621,7 +621,8 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // the farthest at 1066.7, the nearest other at 174.7, every row 9.33 from
   // the kink, finite differences 1.58e-7; +100 there reads 7.93e-7, past the
   // rule's 2e-7 (adocs/data/S121_preconditions.txt). At S121's candidate,
-  // the fitted table at S121_PARTS 5 and the coverage block re-derived there
+  // the fitted table over its count (enemy pawn attacks excluded, the pin
+  // rule) and the coverage block re-derived there
   // (80 rows), it answers +30: two rows bound, the farthest at 197.3, the
   // nearest other at 158.8, every row 13.33 from the kink, finite differences
   // 9.3e-8; +140 there leaves a row 0.75 from the kink

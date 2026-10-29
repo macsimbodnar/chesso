@@ -186,7 +186,8 @@ static constexpr int SCORE_DEPTH = 10;
 // red there at 8 >= 11. A revert of S296 puts 158 back.
 //
 // **159 held at S121, re-read by the script (DEC-142, DEC-299).** S121's
-// mobility table at S121_PARTS 5 moves both ends apart: on its candidate
+// mobility table, over its count (enemy pawn attacks excluded, the pin
+// rule), moves both ends apart: on its candidate
 // S156's sweep reads **165** exact at RfpMinPly 3, 165 at 2 and **154** at 1
 // and 0, and the gate built at RfpMinPly 1 with 159 compiled in is red at 154
 // (adocs/data/S121_goldens.txt). 159 is inside the band, 155 to 165, so it

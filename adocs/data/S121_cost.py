@@ -5,15 +5,19 @@ adocs/data/S135_cost.py, imported so the workload, the counters, the wall
 pairs and the paired CI are S135's to the line (S270's method as DEC-266
 adopts it).
 
-    S121_cost.py code BINDIR
-    S121_cost.py read DIR
+    S121_cost.py code BINDIR [ROW...]
+    S121_cost.py read DIR [ROW...]
 
-CODE runs before any timing on BINDIR/{zero,p1,p2a,p2b,p3,all}: the six .text
-sections pairwise distinct -- a forced build whose code is zero's computes
-nothing, and two forced builds with one .text computed the same parts (S135's
-run 1, where a mask's zero lanes were still multiplied). It cannot see a part
-computing more than its mask names; READ's ordering is the coarse check of
-that.
+ROW is a row S121_cost.sh times, from parent p1 p2a p2b p3 p5 all, and the
+default is all seven; the forced ones among them are the ones checked (p5,
+S121_COST=5, added 2026-10-29 at S121's close, and the selection with it).
+
+CODE runs before any timing on BINDIR/zero and the forced rows' binaries,
+{p1,p2a,p2b,p3,p5,all} by default: their .text sections pairwise distinct --
+a forced build whose code is zero's computes nothing, and two forced builds
+with one .text computed the same parts (S135's run 1, where a mask's zero
+lanes were still multiplied). It cannot see a part computing more than its
+mask names; READ's ordering is the coarse check of that.
 
 READ takes DIR/<comparison>/{bench16,pos11}/{base,cand}_<k>.cnt and
 DIR/<comparison>/wall/pair_<k>.json for every comparison, A/A first, prints
@@ -24,10 +28,13 @@ on both workloads and its wall CI lie wholly beyond the floor the same way and
 its instructions move the same way, and reads zero otherwise. It refuses
 before any verdict unless, on both workloads, each forced build's
 instructions CI lies wholly above the A/A's instruction floor, all's (the
-four parts forced together) lies above each part's, and p2b's (the area with
-both own-pawn exclusions) above p2a's, each by more than that floor. `parent` -- the tree before S121 against the table at identity -- is
-read like any other comparison and is expected to read zero or a small
-negative (a table load in place of a multiply).
+four parts forced together) lies above each part's and p5's, p2b's (the area
+with both own-pawn exclusions) above p2a's, and p5's (p1's and p3's sets
+together) above p1's and p3's, each by more than that floor, for every such
+pair whose two rows are both named; and it refuses a comparison timed in DIR
+that the rows do not name. `parent` -- the tree before S121 against the table
+at identity -- is read like any other comparison and is expected to read zero
+or a small negative (a table load in place of a multiply).
 """
 
 import os
@@ -42,14 +49,28 @@ import S135_cost  # noqa: E402  (adocs/data/, by path)
 
 from S135_cost import counters, wall  # noqa: E402
 
-FORCED = ("p1", "p2a", "p2b", "p3", "all")
+FORCED = ("p1", "p2a", "p2b", "p3", "p5", "all")
 PARTS = ("p1", "p2a", "p2b", "p3")
+ROWS = ("parent",) + FORCED
 # The pairs whose first computes everything the second does and more.
-NESTED = [("all", name) for name in PARTS] + [("p2b", "p2a")]
+NESTED = [("all", name) for name in PARTS + ("p5",)] + [("p2b", "p2a")] + \
+    [("p5", "p1"), ("p5", "p3")]
 
 
-def code(bindir):
-    names = ("zero",) + FORCED
+def rows_of(names):
+    """The rows named, in ROWS's order, or None when one is not a row."""
+    names = list(names) or list(ROWS)
+    bad = [n for n in names if n not in ROWS]
+    if bad or len(set(names)) != len(names):
+        print("refused: rows %s, not distinct names from %s" % (
+            " ".join(names), " ".join(ROWS)))
+        return None
+    return [n for n in ROWS if n in names]
+
+
+def code(bindir, rows):
+    forced = [n for n in rows if n in FORCED]
+    names = ["zero"] + forced
     text = {}
     for name in names:
         path = os.path.join(bindir, name)
@@ -69,24 +90,27 @@ def code(bindir):
                       "builds compute the same thing")
                 ok = False
     if ok:
-        print("code: six distinct .text sections")
+        print(f"code: {len(names)} distinct .text sections")
     return 0 if ok else 1
 
 
-def separates(readings, floor):
-    missing = [name for name in FORCED if name not in readings]
+def separates(readings, floor, forced):
+    missing = [name for name in forced if name not in readings]
     if missing:
         print("refused: no %s comparison" % " and ".join(missing))
+        return False
+    if not forced:
+        print("refused: no forced row named, so nothing is ordered")
         return False
     ok = True
     for workload_name in ("bench16", "pos11"):
         fl = floor(workload_name, "instructions")
         ci = {name: readings[name][workload_name]["instructions"]
-              for name in FORCED}
+              for name in forced}
         print(f"forced {workload_name}: A/A instruction floor {fl * 1e9:.1f} "
               "ppb; " + ", ".join(f"{n} {ci[n][1] * 100:+.4f} .. "
-                                  f"{ci[n][2] * 100:+.4f} %" for n in FORCED))
-        for name in FORCED:
+                                  f"{ci[n][2] * 100:+.4f} %" for n in forced))
+        for name in forced:
             if not ci[name][1] > fl:
                 print(f"refused: {workload_name} {name}'s instructions CI "
                       f"starts at {ci[name][1] * 1e9:+.1f} ppb, not above the "
@@ -94,6 +118,8 @@ def separates(readings, floor):
                       "does not")
                 ok = False
         for big, small in NESTED:
+            if big not in ci or small not in ci:
+                continue
             gap = ci[big][1] - ci[small][2]
             if not gap > fl:
                 print(f"refused: {workload_name} {big} exceeds {small} by "
@@ -101,13 +127,17 @@ def separates(readings, floor):
                       f"more than the floor: {big} forces parts {small} does "
                       f"not, so {small} computed them too")
                 ok = False
-        parts = sum(ci[name][0] for name in ("p1", "p2b", "p3"))
-        print(f"forced {workload_name}: p1 + p2b + p3 {parts * 100:+.3f} % "
-              f"against all {ci['all'][0] * 100:+.3f} % (printed, not gated)")
+        for whole, sum_of in (("all", ("p1", "p2b", "p3")), ("p5", ("p1", "p3"))):
+            if whole not in ci or any(n not in ci for n in sum_of):
+                continue
+            parts = sum(ci[name][0] for name in sum_of)
+            print(f"forced {workload_name}: {' + '.join(sum_of)} "
+                  f"{parts * 100:+.3f} % against {whole} "
+                  f"{ci[whole][0] * 100:+.3f} % (printed, not gated)")
     return ok
 
 
-def read(directory):
+def read(directory, rows):
     order = sorted(d for d in os.listdir(directory)
                    if os.path.isdir(os.path.join(directory, d, "bench16")))
     if "aa" not in order:
@@ -142,7 +172,11 @@ def read(directory):
     print("A/A floor: bench16 cycles %.3f %%, pos11 cycles %.3f %%, wall %.3f %%"
           % tuple(v * 100 for v in floors))
 
-    if not separates(readings, floor):
+    unnamed = [d for d in order[1:] if d not in rows]
+    if unnamed:
+        print("refused: %s timed here but not named" % " ".join(unnamed))
+        return 1
+    if not separates(readings, floor, [n for n in rows if n in FORCED]):
         return 1
 
     for name in order[1:]:
@@ -169,10 +203,13 @@ def read(directory):
 
 
 def main(argv):
-    if len(argv) == 2 and argv[0] == "code":
-        return code(argv[1])
-    if len(argv) == 2 and argv[0] == "read":
-        return read(argv[1])
+    if len(argv) >= 2 and argv[0] in ("code", "read"):
+        rows = rows_of(argv[2:])
+        if rows is None:
+            return 1
+        if argv[0] == "code":
+            return code(argv[1], rows)
+        return read(argv[1], rows)
     print(__doc__, file=sys.stderr)
     return 2
 

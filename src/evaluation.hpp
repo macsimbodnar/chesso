@@ -79,56 +79,20 @@ extern const int mobility_rook_eg[15];
 extern const int mobility_queen_mg[28];
 extern const int mobility_queen_eg[28];
 
-// S121's four parts, as adocs/data/S121_parts.patch adds them to a throwaway
-// tree for the screen's builds (adocs/data/S121_screen.sh). Committed in this
-// form once, for the candidate S121's SPRT plays: the mask below is the
-// screen's survivors, 5 (P1 and P3), and the closing commit folds it on H1 or
-// reverts it with the paste on H0. Each changes the count a piece's cell is
-// read at, and nothing else -- king safety reads the raw attack set -- and
-// each is a bit of S121_PARTS, set below and overridable by the build
-// (`-DS121_PARTS=<mask>`):
-//
-//   1  P1   a square attacked by an enemy pawn is not counted
-//   2  P2a  the mobility area replaces "not an own piece": an own piece's
-//           square counts, unless it holds an own blocked pawn -- one whose
-//           push square holds any piece. Letting own pieces count is
-//           inseparable from the first own-pawn exclusion, so it is this
-//           part's price
-//   8  P2b  an own pawn on the side's own second or third rank is not
-//           counted either; only with P2a's area, since over "not an own
-//           piece" it excludes nothing
-//   4  P3   a piece pinned to its own king counts only the squares on the
-//           line through the king and itself
-//
-// Defined from the descriptions in the S121 step file (DEC-221, DEC-326 (2));
-// the own king's square is not excluded. S121_COST is the cost-only form of
-// the same mask (DEC-047): the parts it names are computed and handed to an
-// asm barrier, and the count scored is S121_PARTS's, which must then be 0, so
-// the search is node for node the landing's (adocs/data/S121_cost.sh). When
-// the screen's survivors land, the macros are folded: a surviving part's code
-// made unconditional, a dropped part's deleted, and INV-6 against the screened
-// build proves the fold.
-#ifndef S121_PARTS
-#define S121_PARTS 5
-#endif
-#ifndef S121_COST
-#define S121_COST 0
-#endif
-
-static_assert((S121_PARTS) >= 0 && (S121_PARTS) <= 15 && (S121_COST) >= 0 &&
-                  (S121_COST) <= 15,
-              "S121_PARTS and S121_COST are masks over the four parts");
-static_assert((S121_PARTS) == 0 || (S121_COST) == 0,
-              "a cost-only build scores the landing's count");
-static_assert(((S121_PARTS) & 8) == 0 || ((S121_PARTS) & 2) != 0,
-              "P2b excludes low-rank pawns from P2a's area and needs it");
-static_assert(((S121_COST) & 8) == 0 || ((S121_COST) & 2) != 0,
-              "P2b excludes low-rank pawns from P2a's area and needs it");
-
-inline constexpr bool MOBILITY_PAWN_ATTACKS = ((S121_PARTS) & 1) != 0;
-inline constexpr bool MOBILITY_AREA = ((S121_PARTS) & 2) != 0;
-inline constexpr bool MOBILITY_LOW_RANK = ((S121_PARTS) & 8) != 0;
-inline constexpr bool MOBILITY_PINS = ((S121_PARTS) & 4) != 0;
+// The count a piece's cell is read at, since S121 (src/evaluation.cpp,
+// evaluate_mobility_and_king_safety()): the squares the piece attacks that
+// hold no piece of its own side, less the squares an enemy pawn attacks (P1);
+// and a piece pinned to its own king -- standing alone between it and an enemy
+// slider that would otherwise attack it -- counts only the squares on the line
+// through the king and itself (P3), so a pinned knight counts none. Both
+// colours' pins, src/bitboard.cpp pinned_pieces(). The count alone changes:
+// king safety reads the raw attack set. Defined from the descriptions in the
+// S121 step file (DEC-221, DEC-326 (2)). S121's screen kept these two of its
+// four parts and dropped the mobility area's two own-pawn exclusions, blocked
+// and low-rank pawns (P2a, P2b), whose code is not here; its one SPRT read H1
+// (adocs/data/S121_sprt.log). The four as they were screened, behind a
+// build-time mask, are adocs/data/S121_parts.patch, which applies to the phase
+// 1 landing (12cab3c) and not to this tree.
 
 // The passed pawn weights, indexed by how far the pawn has advanced: 0 on its
 // own second rank, 4 on its own sixth. Exposed for the same reason as the

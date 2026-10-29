@@ -1,0 +1,472 @@
+# S121: the eight `Incomplete mating PV` warnings of S121's SPRT (57a58a4 against 12cab3c, 8+0.08, Hash 16,
+# 2026-10-29 07:29 to 08:59, adocs/data/S121_sprt.log), each checked and not assumed residue, S296's and S136's
+# method. 2026-10-29, by the Opus 5.5 subagent closing S121. Every chess claim here is a tool's: python-chess puts
+# the positions on a board and checks the lines, Stockfish gives the distances, the engines give their own lines.
+#
+# INPUTS, read only: the untrimmed console .tuning/s121_sprt.log (its line numbers; the trimmed log's are the same,
+# the trim dropping no line before them) and the run's .tuning/sprt_s121_20261029_072938/games.pgn, both in
+# chesso_S121_sprt_2026-10-29.tar.xz in the owner's archive; the two binaries the run played,
+# .ref-builds/57a58a4/build/src/chesso (bench 6016079) and .ref-builds/12cab3c/build/src/chesso (bench 5069022).
+# Every command below ran with the main checkout's root as its working directory, where .tuning/ and .ref-builds/
+# resolve. adocs/data/S296_sprt_mate_pvs.py ran unchanged from the main checkout; adocs/data/S121_sprt_mate_pvs.py
+# (`games`, `quarters`) from the close's worktree, ~/ws/chesso-s121d, until this file and it are committed.
+#
+# THE ORACLE. DEC-319 (3)'s, Stockfish at 5000000 nodes through python-chess (TOOLCHAIN.md's safe form,
+# S296_oracle.py's call), from the bare FEN and with the game's moves. It reads a mate on all three positions, so
+# DEC-320's 1000000000-node reading does not arise. The comparison is S296_compare.py's `classify`.
+#
+# READING.
+#   - All eight are the candidate's, from three consecutive searches of one game: game 1482 (Round 741), the
+#     candidate Black, won by it on adjudication at ply 127, at plies 121, 123 and 125. None is the reference's.
+#   - No printed distance is shorter than the oracle's, and the side is the oracle's in every one (Black, to move,
+#     mates). Ply 121: mate 12 at depth 14, the oracle mate 11. Ply 123: mate 13 at depth 3, 15 at depth 4 and 12 at
+#     depth 14, the oracle mate 10. Ply 125: mate 13 at depths 1, 2 and 3 and 12 at depth 5, the oracle mate 9. All
+#     eight longer. The brief's stop does not arise.
+#   - Each is a line shorter than the distance it claims and legal throughout: DEC-122's short-line class, which
+#     test_mate_carry bounds per case (DEC-162) and S202 owns. None is a line at least as long as its distance that
+#     is not mate there. Both of S296's recorded shapes, no other:
+#       * 3607, 3611, 3619, 3623, 3627, 3631: a shallow iteration (depth 1 to 5, 82 to 2511 nodes) printing a mate
+#         too shallow to build its line, DEC-150's case and S135's six's shape, longer than the position's.
+#       * 3593 and 3615: completed iterations at depth 14, each its search's last line (607502 and 733236 nodes, the
+#         PGN's n= counts; the PGN's +M23/14 twice), naming a mate longer than the position's, DEC-127's "sound but
+#         not optimal" and its "a depth-limited search naming a longer mate than the game value is the search, not
+#         the report"; the walk leaves the line short. S136's 14853's and S296's game 7655's shape.
+#     The game's own searches show the distance carried rather than shortened: mate 12 printed at plies 121 and 123
+#     and 12 or 13 at 125, where the oracle reads 11, 10 and 9. That the shallow iterations' mates came off entries
+#     the game's earlier searches wrote is inferred, as S136 and S296 inferred it; the candidate's warm replay at ply
+#     121 shows the same shape on its own table (below), and no entry-by-entry trace exists.
+#   - Cold, at the warning's depth: none reproduces, on either binary; every search prints cp lines and no mate.
+#   - Warm, the game replayed at the PGN's per-move node counts through one process of the candidate's binary: the
+#     class reproduces at ply 121, the line does not -- every iteration from depth 1 (30 nodes) prints mate 13 with
+#     a line as long as its depth, 1 to 14 plies of 25, a mate a depth-1 search reads off the table its earlier
+#     searches wrote (ply 119's printed mate 14, its own lines short too; inferred, no entry traced); the game
+#     printed mate 12 at depth 14. At plies 123 and 125 the replay prints
+#     complete lines (mate 10; mate 11, 10 and 13), none short. The replay's table diverges from the game's: at plies
+#     117 and 119 the game's searches printed +4.50/18 and +3.83/20, the replay's mate 15 and mate 14.
+#   - Warm through the reference's binary on the candidate's side of the same game (labelled below; the reference
+#     never played these moves): short lines at all three plies -- ply 121 mate 14 at depth 11, ply 123 mates 12, 16,
+#     12 and 17 at depths 7 to 10, ply 125 mates 13 and 12 at depths 3, 7 and 15. The class is the reference's too
+#     when its search meets this game.
+#   - Seen in the replays and not attributed: a search whose last line is a centipawn score after an earlier
+#     iteration printed a mate, in both binaries -- the candidate at ply 125 (complete mate 13 at depth 13, then
+#     cp 449 at depth 14 at the node limit), the reference at plies 121 (mate 14 at depth 11, cp 465 at depth 18)
+#     and 123 (cp 393 at depth 14). No printed distance there is shorter than the oracle's, the move is the mating
+#     line's first in each, and nothing of it is in the run's console.
+#   - Rates per 10000 games a side (S296_sprt_mate_pvs.py rates): candidate 25.32 lines and 9.49 searches,
+#     reference 0 and 0; S136's run candidate 1.43 and 0.95, reference 0.95 and 0.48; S296's candidate 2.70 and
+#     1.62, reference 1.08 and 0.54. The candidate's eight lines are one game's three searches, so the game is the
+#     unit: 1 game of 3160 here, 3.16 per 10000. Pooled over the seven earlier runs (S136, S296, S135, S293, S292,
+#     S289, S283; S121_sprt_mate_pvs.py games): 11 games with a warning in 202308 side-games, 0.54 per 10000, and 12
+#     searches, 0.59. At 0.54 one side's 3160 games expect 0.17 such games, and 1 or more has Poisson probability
+#     0.16. A count, recorded; what S296 forbids, a distance shorter than the position's, is in none of them.
+#   - Quarters (S121_sprt_mate_pvs.py quarters, the inspection's): +10.6, +16.7, +21.6, +28.2, each +/- 17.8 to
+#     19.0, chi-square 1.89 on 3 degrees of freedom about the run's mean, p 0.60. The method reproduces S135's
+#     +5.6, -2.5, +13.8, +6.6 (6.56) and S296's -0.7, -3.3, +4.4, +3.3 (2.73) from their PGNs, the last two runs below.
+#
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py warnings .tuning/s121_sprt.log .tuning/sprt_s121_20261029_072938/games.pgn
+console line 3593, cand-57a58a4: info score mate 12 time 167 depth 14 nodes 607502 nps 3626509 hashfull 359 pv f3g3 g1f1 g3h3 f1g1 e5h2 g1f2 h3e3 f2f1 e3f3 f1e1 h2g3 e1d2 f3f4 d2e2
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 121, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P3qP1/8/6K1 b - - 3 64
+  move played there: f3g3 (n=607502); claimed mate 12, needs 23 plies; line short: 14 of 23 plies, legal
+console line 3607, cand-57a58a4: info score mate 13 time 0 depth 3 nodes 774 nps 3035294 hashfull 0 pv g3f3 f1g1 f3g3
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 123, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P4q1/8/5K2 b - - 1 65
+  move played there: g3h3 (n=733236); claimed mate 13, needs 25 plies; line short: 3 of 25 plies, legal
+console line 3611, cand-57a58a4: info score mate 15 time 0 depth 4 nodes 1159 nps 3140921 hashfull 0 pv g3f3 f1g1 f3g3 g1f1
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 123, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P4q1/8/5K2 b - - 1 65
+  move played there: g3h3 (n=733236); claimed mate 15, needs 29 plies; line short: 4 of 29 plies, legal
+console line 3615, cand-57a58a4: info score mate 12 time 216 depth 14 nodes 733236 nps 3387522 hashfull 426 pv g3h3 f1f2 e5g3 f2f3 g3h2 f3f2 h3e3 f2f1 e3f3 f1e1 h2g3 e1d2 f3f4 d2e2
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 123, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P4q1/8/5K2 b - - 1 65
+  move played there: g3h3 (n=733236); claimed mate 12, needs 23 plies; line short: 14 of 23 plies, legal
+console line 3619, cand-57a58a4: info score mate 13 time 0 depth 1 nodes 82 nps 2050000 hashfull 0 pv h3g3
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 125, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P5q/8/6K1 b - - 3 66
+  move played there: e5h2 (n=1277676); claimed mate 13, needs 25 plies; line short: 1 of 25 plies, legal
+console line 3623, cand-57a58a4: info score mate 13 time 0 depth 2 nodes 133 nps 1985074 hashfull 0 pv h3g3 g1f1
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 125, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P5q/8/6K1 b - - 3 66
+  move played there: e5h2 (n=1277676); claimed mate 13, needs 25 plies; line short: 2 of 25 plies, legal
+console line 3627, cand-57a58a4: info score mate 13 time 0 depth 3 nodes 382 nps 2287425 hashfull 0 pv h3g3 g1f1 g3h3
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 125, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P5q/8/6K1 b - - 3 66
+  move played there: e5h2 (n=1277676); claimed mate 13, needs 25 plies; line short: 3 of 25 plies, legal
+console line 3631, cand-57a58a4: info score mate 12 time 0 depth 5 nodes 2511 nps 3210997 hashfull 0 pv e5h2 g1f2 h2g3 f2f3 g3h2
+  game 1482 (Round 741), ref-12cab3c vs cand-57a58a4, 0-1 {adjudication}, 127 plies; the warning at ply 125, Black to move, the PGN's Black is cand-57a58a4
+  searched position: 8/5Qpk/R6p/2p1bp1P/1pPp4/1P5q/8/6K1 b - - 3 66
+  move played there: e5h2 (n=1277676); claimed mate 12, needs 23 plies; line short: 5 of 23 plies, legal
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py oracle .tuning/s121_sprt.log .tuning/sprt_s121_20261029_072938/games.pgn
+oracle: Stockfish dev-20260810-5062aee5, go nodes 5000000, python-chess analyse, ucinewgame per call, default Hash and Threads
+console line 3593, cand-57a58a4, game 1482, Black to move: engine mate 12 at depth 14
+  oracle (fen): mate 11, depth 66, nodes 5000089, pv f3g3 g1f1 g3h3 f1g1 e5h2 g1f2 -> longer
+  oracle (history): mate 11, depth 66, nodes 5000089, pv f3g3 g1f1 g3h3 f1g1 e5h2 g1f2 -> longer
+console line 3607, cand-57a58a4, game 1482, Black to move: engine mate 13 at depth 3
+  oracle (fen): mate 10, depth 71, nodes 5000547, pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 -> longer
+  oracle (history): mate 10, depth 71, nodes 5000547, pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 -> longer
+console line 3611, cand-57a58a4, game 1482, Black to move: engine mate 15 at depth 4
+  oracle (fen): mate 10, depth 71, nodes 5000547, pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 -> longer
+  oracle (history): mate 10, depth 71, nodes 5000547, pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 -> longer
+console line 3615, cand-57a58a4, game 1482, Black to move: engine mate 12 at depth 14
+  oracle (fen): mate 10, depth 71, nodes 5000547, pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 -> longer
+  oracle (history): mate 10, depth 71, nodes 5000547, pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 -> longer
+console line 3619, cand-57a58a4, game 1482, Black to move: engine mate 13 at depth 1
+  oracle (fen): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+  oracle (history): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+console line 3623, cand-57a58a4, game 1482, Black to move: engine mate 13 at depth 2
+  oracle (fen): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+  oracle (history): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+console line 3627, cand-57a58a4, game 1482, Black to move: engine mate 13 at depth 3
+  oracle (fen): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+  oracle (history): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+console line 3631, cand-57a58a4, game 1482, Black to move: engine mate 12 at depth 5
+  oracle (fen): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+  oracle (history): mate 9, depth 74, nodes 5000584, pv e5h2 g1f2 h3g3 f2f1 g3g1 f1e2 -> longer
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py cold .tuning/s121_sprt.log .tuning/sprt_s121_20261029_072938/games.pgn --engines cand=.ref-builds/57a58a4/build/src/chesso ref=.ref-builds/12cab3c/build/src/chesso
+console line 3593, cand-57a58a4, game 1482: printed mate 12 at depth 14, 14 plies
+  cand, cold, go depth 14:
+    last: info score cp 327 time 27 depth 14 nodes 142641 nps 5250717 hashfull 62 pv f3g3 g1f1 g3h3 f1e1 e5g3 e1d2 g3f4 d2e1 h3h1 e1f2 f4e3 f2g3 f5f4 g3g4 h1g2 g4f5 g2c2
+    no mate line; bestmove f3g3 ponder g1f1
+  ref, cold, go depth 14:
+    last: info score cp 353 time 46 depth 14 nodes 280283 nps 5993178 hashfull 104 pv f3g3 g1f1 g3h3 f1e1 e5g3 e1d2 g3f4 d2e1 h3e3 e1f1 e3f3 f1e1 f4g3 e1d2 f3c3 d2d1 c3b3 d1c1
+    no mate line; bestmove f3g3 ponder g1f1
+console line 3607, cand-57a58a4, game 1482: printed mate 13 at depth 3, 3 plies
+  cand, cold, go depth 3:
+    last: info score cp 287 time 0 depth 3 nodes 1229 nps 5561085 hashfull 0 pv g3f3 f1g1 d4d3
+    no mate line; bestmove g3f3 ponder f1g1
+  ref, cold, go depth 3:
+    last: info score cp 291 time 0 depth 3 nodes 980 nps 5384615 hashfull 0 pv g3f3 f1g1 d4d3
+    no mate line; bestmove g3f3 ponder f1g1
+console line 3611, cand-57a58a4, game 1482: printed mate 15 at depth 4, 4 plies
+  cand, cold, go depth 4:
+    last: info score cp 273 time 0 depth 4 nodes 1807 nps 4857526 hashfull 0 pv g3f3 f1g1 d4d3 a6a8
+    no mate line; bestmove g3f3 ponder f1g1
+  ref, cold, go depth 4:
+    last: info score cp 280 time 0 depth 4 nodes 1488 nps 5679389 hashfull 0 pv g3f3 f1g1 d4d3 a6a8
+    no mate line; bestmove g3f3 ponder f1g1
+console line 3615, cand-57a58a4, game 1482: printed mate 12 at depth 14, 14 plies
+  cand, cold, go depth 14:
+    last: info score cp 1142 time 31 depth 14 nodes 152653 nps 4773389 hashfull 55 pv g3h3 f1g1 e5h2 g1f2 h3e3 f2f1 e3f3 f1e1 h2g3 e1d2 g3f4 d2c2 f3c3 c2b1 c3b3 b1a1 b3d1 a1a2 b4b3
+    no mate line; bestmove g3h3 ponder f1g1
+  ref, cold, go depth 14:
+    last: info score cp 1474 time 24 depth 14 nodes 128386 nps 5149239 hashfull 46 pv g3h3 f1f2 e5g3 f2f3 g3h2 f3e2 d4d3 e2d2 h2f4 d2e1 d3d2 e1e2 h3d3 e2f2
+    no mate line; bestmove g3h3 ponder f1f2
+console line 3619, cand-57a58a4, game 1482: printed mate 13 at depth 1, 1 plies
+  cand, cold, go depth 1:
+    last: info score cp 263 time 0 depth 1 nodes 107 nps 3057142 hashfull 0 pv d4d3
+    no mate line; bestmove d4d3
+  ref, cold, go depth 1:
+    last: info score cp 264 time 0 depth 1 nodes 107 nps 3147058 hashfull 0 pv d4d3
+    no mate line; bestmove d4d3
+console line 3623, cand-57a58a4, game 1482: printed mate 13 at depth 2, 2 plies
+  cand, cold, go depth 2:
+    last: info score cp 249 time 0 depth 2 nodes 375 nps 3947368 hashfull 0 pv d4d3 a6a8
+    no mate line; bestmove d4d3 ponder a6a8
+  ref, cold, go depth 2:
+    last: info score cp 253 time 0 depth 2 nodes 354 nps 3403846 hashfull 0 pv d4d3 a6a8
+    no mate line; bestmove d4d3 ponder a6a8
+console line 3627, cand-57a58a4, game 1482: printed mate 13 at depth 3, 3 plies
+  cand, cold, go depth 3:
+    last: info score cp 286 time 0 depth 3 nodes 1461 nps 5126315 hashfull 0 pv h3g4 g1h1 d4d3
+    no mate line; bestmove h3g4 ponder g1h1
+  ref, cold, go depth 3:
+    last: info score cp 272 time 0 depth 3 nodes 1309 nps 5054054 hashfull 0 pv d4d3 f7g6 h7g8
+    no mate line; bestmove d4d3 ponder f7g6
+console line 3631, cand-57a58a4, game 1482: printed mate 12 at depth 5, 5 plies
+  cand, cold, go depth 5:
+    last: info score cp 287 time 1 depth 5 nodes 6044 nps 4827476 hashfull 2 pv h3g3 g1f1 g3f3 f1g1 d4d3
+    no mate line; bestmove h3g3 ponder g1f1
+  ref, cold, go depth 5:
+    last: info score cp 291 time 1 depth 5 nodes 5856 nps 4658711 hashfull 0 pv h3g3 g1f1 g3f3 f1g1 d4d3
+    no mate line; bestmove h3g3 ponder g1f1
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py replay .tuning/s121_sprt.log .tuning/sprt_s121_20261029_072938/games.pgn --engines cand-57a58a4=.ref-builds/57a58a4/build/src/chesso
+game 1482, cand-57a58a4 (.ref-builds/57a58a4/build/src/chesso), replayed to ply 121 at the PGN's node counts:
+  ply 117, go nodes 253038: info score mate 15 time 23 depth 13 nodes 175649 nps 7552521 hashfull 102 pv e1f2 h2h1 f2e1 h1g2 e1g3 g2f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 13 of 29 plies, legal
+  ply 117, go nodes 253038: info score mate 15 time 33 depth 13 nodes 253038 nps 7488103 hashfull 130 pv e1f2 h2h1 f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 14 of 29 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 1 nodes 25 nps 1785714 hashfull 0 pv f2f3
+    short: 1 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 2 nodes 52 nps 1575757 hashfull 0 pv f2f3 h1g1
+    short: 2 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 3 nodes 107 nps 2229166 hashfull 0 pv f2f3 h1g1 f3g3
+    short: 3 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 16 time 0 depth 4 nodes 316 nps 3098039 hashfull 0 pv f2f1 h1h2 f1f2 h2h1
+    short: 4 of 31 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 1 depth 9 nodes 12373 nps 6990395 hashfull 0 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4
+    short: 9 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 3 depth 10 nodes 22723 nps 6854600 hashfull 9 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2
+    short: 10 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 7 depth 11 nodes 55246 nps 7674121 hashfull 23 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 11 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 15 depth 12 nodes 116466 nps 7491702 hashfull 46 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 12 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 32 depth 13 nodes 260004 nps 7913681 hashfull 110 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2
+    short: 13 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 70 depth 14 nodes 540004 nps 7696201 hashfull 222 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1
+    short: 14 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 117 depth 14 nodes 933957 nps 7919184 hashfull 389 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1 e2e1
+    short: 15 of 27 plies, legal
+  the warning's ply 121, go nodes 607502:
+    depth  1 nodes       30 mate  13 pv  1 plies: short: 1 of 25 plies, legal
+    depth  2 nodes       62 mate  13 pv  2 plies: short: 2 of 25 plies, legal
+    depth  3 nodes      118 mate  13 pv  3 plies: short: 3 of 25 plies, legal
+    depth  4 nodes      178 mate  13 pv  4 plies: short: 4 of 25 plies, legal
+    depth  5 nodes      261 mate  13 pv  5 plies: short: 5 of 25 plies, legal
+    depth  6 nodes      347 mate  13 pv  6 plies: short: 6 of 25 plies, legal
+    depth  7 nodes      452 mate  13 pv  7 plies: short: 7 of 25 plies, legal
+    depth  8 nodes     1550 mate  13 pv  8 plies: short: 8 of 25 plies, legal
+    depth  9 nodes    10323 mate  13 pv  9 plies: short: 9 of 25 plies, legal
+    depth 10 nodes    29605 mate  13 pv 10 plies: short: 10 of 25 plies, legal
+    depth 11 nodes    86206 mate  13 pv 11 plies: short: 11 of 25 plies, legal
+    depth 12 nodes   173581 mate  13 pv 12 plies: short: 12 of 25 plies, legal
+    depth 13 nodes   411128 mate  13 pv 13 plies: short: 13 of 25 plies, legal
+    depth 13 nodes   607502 mate  13 pv 14 plies: short: 14 of 25 plies, legal
+    last: info score mate 13 time 75 depth 13 nodes 607502 nps 8015278 hashfull 354 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3 h2h1 g3f3 h1g1
+    bestmove f3g3 ponder g1f1
+  incomplete mate lines at the earlier turns: 13
+game 1482, cand-57a58a4 (.ref-builds/57a58a4/build/src/chesso), replayed to ply 123 at the PGN's node counts:
+  ply 117, go nodes 253038: info score mate 15 time 23 depth 13 nodes 175649 nps 7579899 hashfull 102 pv e1f2 h2h1 f2e1 h1g2 e1g3 g2f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 13 of 29 plies, legal
+  ply 117, go nodes 253038: info score mate 15 time 33 depth 13 nodes 253038 nps 7496089 hashfull 130 pv e1f2 h2h1 f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 14 of 29 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 1 nodes 25 nps 1785714 hashfull 0 pv f2f3
+    short: 1 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 2 nodes 52 nps 1575757 hashfull 0 pv f2f3 h1g1
+    short: 2 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 3 nodes 107 nps 2229166 hashfull 0 pv f2f3 h1g1 f3g3
+    short: 3 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 16 time 0 depth 4 nodes 316 nps 3067961 hashfull 0 pv f2f1 h1h2 f1f2 h2h1
+    short: 4 of 31 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 1 depth 9 nodes 12373 nps 6790889 hashfull 0 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4
+    short: 9 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 3 depth 10 nodes 22723 nps 6624781 hashfull 9 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2
+    short: 10 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 7 depth 11 nodes 55246 nps 7608593 hashfull 23 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 11 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 16 depth 12 nodes 116466 nps 7187484 hashfull 46 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 12 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 34 depth 13 nodes 260004 nps 7646276 hashfull 110 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2
+    short: 13 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 72 depth 14 nodes 540004 nps 7493082 hashfull 222 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1
+    short: 14 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 120 depth 14 nodes 933957 nps 7762275 hashfull 389 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1 e2e1
+    short: 15 of 27 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 1 nodes 30 nps 1153846 hashfull 0 pv f3g3
+    short: 1 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 2 nodes 62 nps 1441860 hashfull 0 pv f3g3 g1f1
+    short: 2 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 3 nodes 118 nps 2107142 hashfull 0 pv f3g3 g1f1 g3h3
+    short: 3 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 4 nodes 178 nps 2373333 hashfull 0 pv f3g3 g1f1 g3h3 f1f2
+    short: 4 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 5 nodes 261 nps 2806451 hashfull 0 pv f3g3 g1f1 g3h3 f1f2 e5g3
+    short: 5 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 6 nodes 347 nps 3154545 hashfull 0 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3
+    short: 6 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 7 nodes 452 nps 3531250 hashfull 0 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4
+    short: 7 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 8 nodes 1550 nps 4983922 hashfull 3 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2
+    short: 8 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 1 depth 9 nodes 10323 nps 7415948 hashfull 8 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 9 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 4 depth 10 nodes 29605 nps 6768404 hashfull 18 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 10 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 10 depth 11 nodes 86206 nps 8089143 hashfull 50 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2
+    short: 11 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 23 depth 12 nodes 173581 nps 7545359 hashfull 100 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1
+    short: 12 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 49 depth 13 nodes 411128 nps 8374814 hashfull 227 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1 e2e1
+    short: 13 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 74 depth 13 nodes 607502 nps 8107160 hashfull 354 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3 h2h1 g3f3 h1g1
+    short: 14 of 25 plies, legal
+  the warning's ply 123, go nodes 733236:
+    depth  1 nodes       27 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  2 nodes       60 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  3 nodes      116 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  4 nodes      180 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  5 nodes      266 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  6 nodes      365 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  7 nodes      631 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  8 nodes      954 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  9 nodes     5800 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 10 nodes    30019 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 11 nodes   120983 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 12 nodes   294456 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 12 nodes   733236 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    last: info score mate 10 time 87 depth 12 nodes 733236 nps 8349400 hashfull 345 pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3 h2h1 g3f3 h1g1 h4f2 g1f1 f2g3 f1g1 f3f2 g1h1 f2h2
+    bestmove g3h3 ponder f1f2
+  incomplete mate lines at the earlier turns: 27
+game 1482, cand-57a58a4 (.ref-builds/57a58a4/build/src/chesso), replayed to ply 125 at the PGN's node counts:
+  ply 117, go nodes 253038: info score mate 15 time 23 depth 13 nodes 175649 nps 7592021 hashfull 102 pv e1f2 h2h1 f2e1 h1g2 e1g3 g2f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 13 of 29 plies, legal
+  ply 117, go nodes 253038: info score mate 15 time 33 depth 13 nodes 253038 nps 7516352 hashfull 130 pv e1f2 h2h1 f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 14 of 29 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 1 nodes 25 nps 1666666 hashfull 0 pv f2f3
+    short: 1 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 2 nodes 52 nps 1529411 hashfull 0 pv f2f3 h1g1
+    short: 2 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 0 depth 3 nodes 107 nps 2140000 hashfull 0 pv f2f3 h1g1 f3g3
+    short: 3 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 16 time 0 depth 4 nodes 316 nps 3067961 hashfull 0 pv f2f1 h1h2 f1f2 h2h1
+    short: 4 of 31 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 1 depth 9 nodes 12373 nps 6881535 hashfull 0 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4
+    short: 9 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 3 depth 10 nodes 22723 nps 6698997 hashfull 9 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2
+    short: 10 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 7 depth 11 nodes 55246 nps 7578326 hashfull 23 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 11 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 15 depth 12 nodes 116466 nps 7328131 hashfull 46 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 12 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 33 depth 13 nodes 260004 nps 7777565 hashfull 110 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2
+    short: 13 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 70 depth 14 nodes 540004 nps 7611801 hashfull 222 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1
+    short: 14 of 27 plies, legal
+  ply 119, go nodes 933957: info score mate 14 time 120 depth 14 nodes 933957 nps 7744189 hashfull 389 pv f2f3 h1g1 f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1 e2e1
+    short: 15 of 27 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 1 nodes 30 nps 2142857 hashfull 0 pv f3g3
+    short: 1 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 2 nodes 62 nps 2000000 hashfull 0 pv f3g3 g1f1
+    short: 2 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 3 nodes 118 nps 2622222 hashfull 0 pv f3g3 g1f1 g3h3
+    short: 3 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 4 nodes 178 nps 2870967 hashfull 0 pv f3g3 g1f1 g3h3 f1f2
+    short: 4 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 5 nodes 261 nps 3182926 hashfull 0 pv f3g3 g1f1 g3h3 f1f2 e5g3
+    short: 5 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 6 nodes 347 nps 3470000 hashfull 0 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3
+    short: 6 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 7 nodes 452 nps 3830508 hashfull 0 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4
+    short: 7 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 0 depth 8 nodes 1550 nps 5098684 hashfull 3 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2
+    short: 8 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 1 depth 9 nodes 10323 nps 7652335 hashfull 8 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 9 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 4 depth 10 nodes 29605 nps 7027059 hashfull 18 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2
+    short: 10 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 10 depth 11 nodes 86206 nps 8289835 hashfull 50 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2
+    short: 11 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 22 depth 12 nodes 173581 nps 7627587 hashfull 100 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1
+    short: 12 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 49 depth 13 nodes 411128 nps 8294724 hashfull 227 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4e2 h2g1 e2e1
+    short: 13 of 25 plies, legal
+  ply 121, go nodes 607502: info score mate 13 time 76 depth 13 nodes 607502 nps 7977911 hashfull 354 pv f3g3 g1f1 g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3 h2h1 g3f3 h1g1
+    short: 14 of 25 plies, legal
+  the warning's ply 125, go nodes 1277676:
+    depth  1 nodes       66 mate  11 pv 21 plies: complete: 21 plies, checkmate
+    depth  2 nodes      121 mate  11 pv 21 plies: complete: 21 plies, checkmate
+    depth  3 nodes      299 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  4 nodes      494 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  5 nodes      874 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  6 nodes     1286 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  7 nodes     2789 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  8 nodes     5221 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth  9 nodes    13314 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 10 nodes    27323 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 11 nodes    95619 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 12 nodes   216210 mate  10 pv 19 plies: complete: 19 plies, checkmate
+    depth 13 nodes   487706 mate  13 pv 25 plies: complete: 25 plies, checkmate
+    last: info score cp 449 time 162 depth 14 nodes 1277676 nps 7880176 hashfull 573 pv e5h2 g1f2 h2g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3 h2h1 g3f3 h1g1 h4f2 g1f1 f2h4
+    bestmove e5h2 ponder g1f2
+  incomplete mate lines at the earlier turns: 27
+(exit 0)
+
+# The same replay with the reference's binary under the candidate's name, so it plays the candidate's side of
+# game 1482 through the reference's evaluation: a cross-check of whether the reference reproduces the class.
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py replay .tuning/s121_sprt.log .tuning/sprt_s121_20261029_072938/games.pgn --engines cand-57a58a4=.ref-builds/12cab3c/build/src/chesso
+game 1482, cand-57a58a4 (.ref-builds/12cab3c/build/src/chesso), replayed to ply 121 at the PGN's node counts:
+  ply 117, go nodes 253038: info score mate 17 time 1 depth 7 nodes 7875 nps 6812283 hashfull 4 pv e1f2 h2h1 f2f3 h1g1 f3g3 g1f1 g3f4
+    short: 7 of 33 plies, legal
+  the warning's ply 121, go nodes 607502:
+    depth 11 nodes    94991 mate  14 pv 11 plies: short: 11 of 27 plies, legal
+    last: info score cp 465 time 48 depth 18 nodes 304743 nps 6259355 hashfull 111 pv f3g3 g1f1 g3h3 f1g1 e5h2 g1f2 h3e3 f2f1 e3f3 f1e1 h2g3 e1d2 f3c3 d2d1 c3b3 d1d2 b3c3 d2d1
+    bestmove f3g3 ponder g1f1
+  incomplete mate lines at the earlier turns: 1
+game 1482, cand-57a58a4 (.ref-builds/12cab3c/build/src/chesso), replayed to ply 123 at the PGN's node counts:
+  ply 117, go nodes 253038: info score mate 17 time 1 depth 7 nodes 7875 nps 6639966 hashfull 4 pv e1f2 h2h1 f2f3 h1g1 f3g3 g1f1 g3f4
+    short: 7 of 33 plies, legal
+  ply 121, go nodes 607502: info score mate 14 time 13 depth 11 nodes 94991 nps 6968747 hashfull 60 pv f3g3 g1f1 g3h3 f1g1 e5h2 g1f2 h2g3 f2f3 h3g4 f3g2 g3h4
+    short: 11 of 27 plies, legal
+  the warning's ply 123, go nodes 733236:
+    depth  7 nodes     8704 mate  12 pv  7 plies: short: 7 of 23 plies, legal
+    depth  8 nodes    11962 mate  16 pv  8 plies: short: 8 of 31 plies, legal
+    depth  9 nodes    21870 mate  12 pv  9 plies: short: 9 of 23 plies, legal
+    depth 10 nodes    46975 mate  17 pv 10 plies: short: 10 of 33 plies, legal
+    last: info score cp 393 time 97 depth 14 nodes 733236 nps 7556718 hashfull 399 pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3 h2h1 g3f3 h1g1 h4f2 g1f1 f2h4
+    bestmove g3h3 ponder f1f2
+  incomplete mate lines at the earlier turns: 2
+game 1482, cand-57a58a4 (.ref-builds/12cab3c/build/src/chesso), replayed to ply 125 at the PGN's node counts:
+  ply 117, go nodes 253038: info score mate 17 time 1 depth 7 nodes 7875 nps 6465517 hashfull 4 pv e1f2 h2h1 f2f3 h1g1 f3g3 g1f1 g3f4
+    short: 7 of 33 plies, legal
+  ply 121, go nodes 607502: info score mate 14 time 13 depth 11 nodes 94991 nps 7093644 hashfull 60 pv f3g3 g1f1 g3h3 f1g1 e5h2 g1f2 h2g3 f2f3 h3g4 f3g2 g3h4
+    short: 11 of 27 plies, legal
+  ply 123, go nodes 733236: info score mate 12 time 1 depth 7 nodes 8704 nps 6252873 hashfull 0 pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4
+    short: 7 of 23 plies, legal
+  ply 123, go nodes 733236: info score mate 16 time 1 depth 8 nodes 11962 nps 6325753 hashfull 1 pv g3h3 f1f2 h3e3 f2f1 e3f3 f1g1 f3g3 g1f1
+    short: 8 of 31 plies, legal
+  ply 123, go nodes 733236: info score mate 12 time 3 depth 9 nodes 21870 nps 6973852 hashfull 5 pv g3h3 f1f2 e5g3 f2f3 h3g4 f3g2 g3h4 g2h2 g4g3
+    short: 9 of 23 plies, legal
+  ply 123, go nodes 733236: info score mate 17 time 7 depth 10 nodes 46975 nps 6648032 hashfull 14 pv g3f3 f1g1 f3e3 g1h1 e3e4 h1g1 e4e1 g1g2 e1g3 g2f1
+    short: 10 of 33 plies, legal
+  the warning's ply 125, go nodes 1277676:
+    depth  3 nodes      511 mate  13 pv  3 plies: short: 3 of 25 plies, legal
+    depth  7 nodes     5616 mate  12 pv  7 plies: short: 7 of 23 plies, legal
+    depth 15 nodes   753643 mate  12 pv 15 plies: short: 15 of 23 plies, legal
+    depth 15 nodes  1277676 mate  12 pv 17 plies: short: 17 of 23 plies, legal
+    last: info score mate 12 time 173 depth 15 nodes 1277676 nps 7350019 hashfull 536 pv e5h2 g1f2 h3e3 f2f1 e3g1 f1e2 g1g2 e2e1 h2g3 e1d1 g2f1 d1c2 d4d3 c2b2 g3e5 b2a2 f1a1
+    bestmove e5h2 ponder g1f2
+  incomplete mate lines at the earlier turns: 6
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I adocs/data/S296_sprt_mate_pvs.py rates .tuning/s121_sprt.log adocs/data/S136_sprt.log adocs/data/S296_sprt.log adocs/data/S135_sprt.log adocs/data/S293_sprt.log adocs/data/S292_sprt.log adocs/data/S289_sprt.log adocs/data/S283_sprt.log
+.tuning/s121_sprt.log: 3160 games; cand 8 lines, 3 searches, 25.32 and 9.49 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+adocs/data/S136_sprt.log: 21017 games; cand 3 lines, 2 searches, 1.43 and 0.95 per 10000; ref 2 lines, 1 searches, 0.95 and 0.48 per 10000
+adocs/data/S296_sprt.log: 18514 games; cand 5 lines, 3 searches, 2.70 and 1.62 per 10000; ref 2 lines, 1 searches, 1.08 and 0.54 per 10000
+adocs/data/S135_sprt.log: 13406 games; cand 6 lines, 2 searches, 4.48 and 1.49 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+adocs/data/S293_sprt.log: 10957 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 1 lines, 1 searches, 0.91 and 0.91 per 10000
+adocs/data/S292_sprt.log: 23804 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+adocs/data/S289_sprt.log: 8716 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 4 lines, 2 searches, 4.59 and 2.29 per 10000
+adocs/data/S283_sprt.log: 4740 games; cand 0 lines, 0 searches, 0.00 and 0.00 per 10000; ref 0 lines, 0 searches, 0.00 and 0.00 per 10000
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I ~/ws/chesso-s121d/adocs/data/S121_sprt_mate_pvs.py games .tuning/s121_sprt.log adocs/data/S136_sprt.log adocs/data/S296_sprt.log adocs/data/S135_sprt.log adocs/data/S293_sprt.log adocs/data/S292_sprt.log adocs/data/S289_sprt.log adocs/data/S283_sprt.log
+.tuning/s121_sprt.log: 3160 games; cand 1 games with a warning, ref 0
+adocs/data/S136_sprt.log: 21017 games; cand 2 games with a warning, ref 1
+adocs/data/S296_sprt.log: 18514 games; cand 3 games with a warning, ref 1
+adocs/data/S135_sprt.log: 13406 games; cand 2 games with a warning, ref 0
+adocs/data/S293_sprt.log: 10957 games; cand 0 games with a warning, ref 1
+adocs/data/S292_sprt.log: 23804 games; cand 0 games with a warning, ref 0
+adocs/data/S289_sprt.log: 8716 games; cand 0 games with a warning, ref 1
+adocs/data/S283_sprt.log: 4740 games; cand 0 games with a warning, ref 0
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I ~/ws/chesso-s121d/adocs/data/S121_sprt_mate_pvs.py quarters .tuning/sprt_s121_20261029_072938/games.pgn
+quarter 1: games 1 to 790 of 3160 (790), Elo +10.6 +/- 18.8
+quarter 2: games 791 to 1580 of 3160 (790), Elo +16.7 +/- 17.8
+quarter 3: games 1581 to 2370 of 3160 (790), Elo +21.6 +/- 19.0
+quarter 4: games 2371 to 3160 of 3160 (790), Elo +28.2 +/- 18.2
+run Elo +19.26 over 3160 games; chi-square 1.89 on 3 df, p 0.60
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I ~/ws/chesso-s121d/adocs/data/S121_sprt_mate_pvs.py quarters .tuning/sprt_s135_20261026_005214/games.pgn
+quarter 1: games 1 to 3351 of 13406 (3351), Elo +5.6 +/- 8.8
+quarter 2: games 3352 to 6703 of 13406 (3352), Elo -2.5 +/- 8.8
+quarter 3: games 6704 to 10054 of 13406 (3351), Elo +13.8 +/- 8.9
+quarter 4: games 10055 to 13406 of 13406 (3352), Elo +6.6 +/- 8.8
+run Elo +5.88 over 13406 games; chi-square 6.56 on 3 df, p 0.09
+(exit 0)
+
+$ ~/.venv/chess/bin/python -I ~/ws/chesso-s121d/adocs/data/S121_sprt_mate_pvs.py quarters .tuning/sprt_s296_20261027_000443/games.pgn
+quarter 1: games 1 to 4628 of 18514 (4628), Elo -0.7 +/- 7.3
+quarter 2: games 4629 to 9257 of 18514 (4629), Elo -3.3 +/- 7.3
+quarter 3: games 9258 to 13885 of 18514 (4628), Elo +4.4 +/- 7.4
+quarter 4: games 13886 to 18514 of 18514 (4629), Elo +3.3 +/- 7.4
+run Elo +0.94 over 18514 games; chi-square 2.73 on 3 df, p 0.43
+(exit 0)
+

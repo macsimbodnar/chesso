@@ -1,9 +1,13 @@
 S121's four parts, as one throwaway patch over the phase 1 landing (the
 table at identity). Committed to src/ in this form once only, as S121's SPRT
-candidate with `#define S121_PARTS 5` (DEC-326 (7), DEC-327), and folded on
-H1 or reverted on H0 at the close; never shipped in it. The screen, the cost
-run and the candidate's paste apply it. `git apply` reads from the first
-`---` line on, so this text is ignored.
+candidate (57a58a4) with `#define S121_PARTS 5` (DEC-326 (7), DEC-327); never
+shipped in it. The SPRT read H1, and S121's close folded it: P1 and P3 made
+unconditional, P2a and P2b deleted, the masks gone, INV-6 against 57a58a4
+(adocs/data/S121_fold_inv6.txt). **Kept as the record of what was screened**,
+and of what adocs/data/S121_cost.sh still builds: it applies to the phase 1
+landing, 12cab3c, and no longer to HEAD. The screen, the cost run and the
+candidate's paste applied it. `git apply` reads from the first `---` line
+on, so this text is ignored.
 
   S121_PARTS  build-time mask, 0 when unset: 1 P1 enemy pawn attacks dropped,
               2 P2a the mobility area in place of "not an own piece" with own

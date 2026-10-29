@@ -27,6 +27,18 @@
 # (WATCHERS). OUT defaults to .tuning/s121 (DEC-235: a run's outputs stay
 # with the run; the readings go to adocs/data/ and the step file).
 #
+# 2026-10-29, S121's close: the SPRT read H1 and the close folded P1 and P3
+# into src/, so a tree from then on is no longer "S121's phase 1 landed".
+# build/'s tools there count with P1 and P3 -- mask 5's count, not mask 0's,
+# which `variant 0` would freeze as m0 -- and the parts patch does not apply
+# to it. So every stage that builds or freezes a variant's tools, or pastes
+# (audit, screen, part, apply, and all through them), refuses a checkout whose
+# src/bitboard.hpp declares pinned_pieces(), which only the patch adds
+# (`unfolded` below). The screen still runs from a worktree of the phase 1
+# landing, 12cab3c, built there, with OUT, S082_OUT and S083_OUT pointed at
+# the main checkout's .tuning/. `locate` and `read` build nothing and are not
+# refused.
+#
 # ============================================================================
 # PRE-REGISTRATION -- written 2026-10-28 in S121's phase 1a, blind (DEC-260:
 # S136's SPRT held the machine), before any of it ran. Nothing below the line
@@ -374,6 +386,15 @@ locate() {
   mv "$OUT/corpus.txt.tmp" "$OUT/corpus.txt"
 }
 
+# The checkout's sources are the phase 1 landing's form, the parts not folded
+# in: the 2026-10-29 paragraph at the top.
+unfolded() {
+  if grep -q 'pinned_pieces(' "$root/src/bitboard.hpp"; then
+    say "refused: $root/src carries S121's parts, folded at S121's close: build/'s tools count as mask 5 does, not mask 0, and the parts patch does not apply; run from a worktree of the phase 1 landing, 12cab3c, with OUT, S082_OUT and S083_OUT pointed at the main checkout's"
+    return 1
+  fi
+}
+
 # A part's tools for parts mask $1 under $2 (a variants directory): mask 0 is
 # build/'s own tuner and feature_audit, frozen; any other mask a throwaway
 # worktree of HEAD with the parts patch, built with -DS121_PARTS=<mask>. The
@@ -381,6 +402,7 @@ locate() {
 # anything else is refused, never rebuilt over.
 variant() {
   local mask="$1" dir="$2/m$1" tree stamp had
+  unfolded || return 1
   stamp="$(git -C "$root" rev-parse HEAD) mask $mask patch $(sha256sum "$patch" | cut -c1-64)"
   mkdir -p "$dir/bin" || return 1
   if [[ -f "$dir/stamp" ]]; then
@@ -674,6 +696,7 @@ part() {
 # uncommitted; nothing here edits a test.
 apply() {
   local tree="$1" line name mask fit dir info corpus rows
+  unfolded || return 1
   if [[ -n "${2:-}" ]]; then
     # A bisection part's fit, as `part` wrote it, with its mask beside it.
     fit="$2"

@@ -201,8 +201,8 @@ inline const std::vector<std::string> positions = {
     // adocs/data/S121_coverage_rows.cpp's rule and not by hand. The forty-two
     // rows above leave 55 of the table's 132 cell halves with no coefficient
     // at a phase that weights them, at the identity table and again at the
-    // candidate's count (S121_PARTS 5, enemy pawn attacks excluded and the pin
-    // rule) and fitted constants. On them the gradient case's non-vacuity
+    // count S121 ships (enemy pawn attacks excluded and the pin rule) and
+    // fitted constants. On them the gradient case's non-vacuity
     // (test_tuner_gradient) reads red, and "the positions move every term
     // both ways" (test_eval_trace), which also reads the JSON suites, on the
     // queen's count 27. The rule: greedy over all_test_fens(), then S083's

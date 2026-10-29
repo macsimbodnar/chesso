@@ -7,7 +7,35 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-29, by hand.
 
-## 2026-10-29: S121's screen and candidate; its SPRT next
+## 2026-10-29: S121's SPRT read H1; the parts folded; paused for a shutdown
+
+**S121's SPRT read H1** (`57a58a4` vs `12cab3c`, Elo +19.26 +/- 9.29, nElo
++25.18 +/- 12.11, LLR 2.95, 3160 games in 1 h 30 m, 0 forfeits,
+`adocs/data/S121_sprt.log`; archived as `chesso_S121_sprt_2026-10-29.tar.xz`,
+verified). Inspected and it stands: banner as pinned, benches 6016079 and
+5069022, quarters +10.6, +16.7, +21.6, +28.2 (chi² 1.89, p 0.60), journal
+clean. Its 8 incomplete mating PVs are three searches of one candidate game
+(1482), each longer than Stockfish's, S296's shapes
+(`adocs/data/S121_sprt_mate_pvs.txt`). **The mask is folded**: P1 and P3
+unconditional, P2a and P2b deleted, `S121_PARTS` and `S121_COST` gone from
+`src/`; INV-6 against CAND, bench 6016079 (`adocs/data/S121_fold_inv6.txt`);
+gate_extra 5 stages green in 1030 s on the folded tree; DEC-328's wording at
+the ceiling's sites. Closed by one fresh Opus 5.5 subagent in
+`../chesso-s121d` (its diff `.tuning/coord/S121/s121_close.diff`).
+
+**Resume here, in order:**
+1. The p5 cost row, machine idle, about 25 min, ceiling 50 min, watched for
+   `S121-COST-(DONE|FAILED)`:
+   `cd /home/max/ws/chesso && CAND_SHA=12cab3c PARENT_SHA=6ff7485 ROWS=p5 OUT=/home/max/ws/chesso/.tuning/s121/cost5 nohup adocs/data/S121_cost.sh run > .tuning/s121_cost5.console 2>&1 &`
+2. The reading into `adocs/data/S121_cost_reading.txt`, specs' cost clause
+   and the step file, by the close agent's draft `done:` stamp; a fast check
+   over the close commit; the step file to `plan_done/`, plan.md's Done list.
+3. S298 phase b (`../chesso-s298`, the step file's phase b commands, about
+   40 min), then its fast check and commit.
+4. `../chesso-s121c` and `../chesso-s121d` can go after S121's done stamp
+   (the owner approved the earlier removals; ask for these two).
+
+## 2026-10-29: S121's screen and candidate (the record before the verdict)
 
 **The screen** (`adocs/data/S121_screen.sh all`, 02:32 to 04:05,
 `adocs/data/S121_screen_reading.txt`) kept P0 the per-count table
@@ -34,7 +62,9 @@ floors hold (165 / 154 against 159; 12 / 10 against 11). **Case B's
 mate-carry ceiling rises 6 -> 13, outside DEC-299's guard**: carried
 provisionally by DEC-327, the cell attributed by tool
 (`adocs/data/S121_case_b.txt`: two carried lines cut at the horizon, none
-shorter than Stockfish's); **the owner rules before an H1 ships**. Gates:
+shorter than Stockfish's); the owner ruled 2026-10-29: **accept 13 on H1**
+(DEC-328, in the working tree, committed after the SPRT; no gate runs during
+it). Gates:
 both builds and suites 50 of 50, the clang pair, the prose checks,
 `gate_extra` 5 stages green in 1025 s (`GATE-EXTRA-DONE`, 2026-10-29, on
 the candidate tree), Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0
@@ -45,9 +75,11 @@ next refit is likely red (DEC-316's class).
 REF `12cab3c`, a dry copy printed DRY-RUN-WOULD-EXEC) and launched right
 after the pin's commit: `{0, 5}` nElo at 8+0.08, 41900 games worst, 19.86 h,
 console `.tuning/s121_sprt.log`, watcher ceiling 40 h. No build or gate
-while it runs (DEC-260). Worktrees that can go, waiting on the owner: `../chesso-s136b`,
-`../chesso-s136c`, `../chesso-s297`, `../chesso-s121`, `../chesso-s121b`;
-`../chesso-s121c` stays until the close.
+while it runs (DEC-260). The owner approved removing `../chesso-s136b`,
+`../chesso-s136c`, `../chesso-s297`, `../chesso-s121` and `../chesso-s121b`,
+removed with their branches 2026-10-29; `../chesso-s121c` stays until the
+close. S298 phase a written blind in `../chesso-s298` (`5ac067c`), phase b
+after the verdict. Disk: 32 GB free of 449 (93 %).
 
 ## 2026-10-29: S136 read H0, tempo stays zero; S297, then S121
 

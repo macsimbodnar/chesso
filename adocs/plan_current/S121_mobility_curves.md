@@ -1,7 +1,7 @@
 id:         S121
 goal:       mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 accepts:    an SPRT verdict, recorded whatever it is; mobility is a table indexed by piece type and by count -- knight 0 to 8, bishop 0 to 13, rook 0 to 14, queen 0 to 27 -- and **every entry is fitted by our own tuner on our own corpus** (DEC-084); the mobility area excludes squares attacked by enemy pawns and the side's own blocked and low-rank pawns, and each exclusion -- and the pin rule this family gains, a pinned piece counting only moves along its pin ray (DEC-258) -- is screened separately before the family's one SPRT (DEC-259); the tuner's model in tools/eval_model.hpp is updated in the same commit and test_eval_model holds the two against each other; the nps cost is recorded next to the verdict
-touches:    phase 1 (2026-10-28, the table at identity, `No functional change`): src/evaluation.cpp, src/evaluation.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp (the ties), tools/tuner.cpp (the emit, `--tie`), tools/feature_audit.cpp (cell names, the eight mobility levels, the support report), tests/test_walked_counts.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_tuner_groups.cpp, tests/test_eval_positions.hpp (the coverage rows, phase 1b), tests/test_tuner_gradient.cpp (the clamp case's push re-derived, phase 1b), adocs/data/S192_anchors.py, adocs/data/S121_preconditions.txt, adocs/data/S121_inv6.txt, DEV_MANUAL.md, adocs/data/S121_{parts.patch,screen.sh,screen.py,cost.sh,cost.py,sprt.sh,coverage_rows.cpp,construct_rows.py,verify_fit.py}, adocs/data/README.md, this file; tools/tuner_trace.hpp (a comment only: its mobility line reads MOBILITY_COUNT, now 66); phase 2 (2026-10-29, the candidate at S121_PARTS 5): src/evaluation.cpp's eight tables and whole-line comments, and through adocs/data/S121_parts.patch src/evaluation.hpp (the mask line and a whole-line comment), src/bitboard.{hpp,cpp} (`pinned_pieces()`), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (its anchors re-derived too), folded at the closing commit; every golden the paste moves, each by its script: tests/test_evaluation.cpp (the anchors), tests/test_search.cpp (the anchors, the ProbCut row re-mined, ALPHA's comment), tests/test_eval_trace.cpp (the truncation pins), tests/test_eval_positions.hpp (the coverage block re-derived), tests/test_tuner_gradient.cpp (the clamp push, the walk's comment), tests/test_mate_breadth.cpp (its stale header and S121's reading), tests/test_mate_pv.cpp (the aborted-line cell's budget), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (B's ceiling and four budgets, DEC-327, provisional); `.tuning/verify_fit.py` (tracked, not gitignored as phase 1 wrote: adocs/data/S121_verify_fit.py copied over it); adocs/data/S121_sprt.sh (a dated paragraph, the run count); adocs/data/S121_parts.patch (its preamble, before the first `---`); adocs/data/S121_{screen_reading,cells,goldens,cost_reading,sweep_s170,case_b}.txt, adocs/data/S121_{cells,case_b}.py, adocs/data/S121_alpha_window.cpp, adocs/data/README.md; DEV_MANUAL.md, MANUAL.md; this file; adocs/specs.md (the coordinator's)
+touches:    phase 1 (2026-10-28, the table at identity, `No functional change`): src/evaluation.cpp, src/evaluation.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp (the ties), tools/tuner.cpp (the emit, `--tie`), tools/feature_audit.cpp (cell names, the eight mobility levels, the support report), tests/test_walked_counts.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_tuner_groups.cpp, tests/test_eval_positions.hpp (the coverage rows, phase 1b), tests/test_tuner_gradient.cpp (the clamp case's push re-derived, phase 1b), adocs/data/S192_anchors.py, adocs/data/S121_preconditions.txt, adocs/data/S121_inv6.txt, DEV_MANUAL.md, adocs/data/S121_{parts.patch,screen.sh,screen.py,cost.sh,cost.py,sprt.sh,coverage_rows.cpp,construct_rows.py,verify_fit.py}, adocs/data/README.md, this file; tools/tuner_trace.hpp (a comment only: its mobility line reads MOBILITY_COUNT, now 66); phase 2 (2026-10-29, the candidate at S121_PARTS 5): src/evaluation.cpp's eight tables and whole-line comments, and through adocs/data/S121_parts.patch src/evaluation.hpp (the mask line and a whole-line comment), src/bitboard.{hpp,cpp} (`pinned_pieces()`), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (its anchors re-derived too), folded at the closing commit; every golden the paste moves, each by its script: tests/test_evaluation.cpp (the anchors), tests/test_search.cpp (the anchors, the ProbCut row re-mined, ALPHA's comment), tests/test_eval_trace.cpp (the truncation pins), tests/test_eval_positions.hpp (the coverage block re-derived), tests/test_tuner_gradient.cpp (the clamp push, the walk's comment), tests/test_mate_breadth.cpp (its stale header and S121's reading), tests/test_mate_pv.cpp (the aborted-line cell's budget), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (B's ceiling and four budgets, DEC-327, provisional); `.tuning/verify_fit.py` (tracked, not gitignored as phase 1 wrote: adocs/data/S121_verify_fit.py copied over it); adocs/data/S121_sprt.sh (a dated paragraph, the run count); adocs/data/S121_parts.patch (its preamble, before the first `---`); adocs/data/S121_{screen_reading,cells,goldens,cost_reading,sweep_s170,case_b}.txt, adocs/data/S121_{cells,case_b}.py, adocs/data/S121_alpha_window.cpp, adocs/data/README.md; DEV_MANUAL.md, MANUAL.md; this file; adocs/specs.md (the coordinator's); the close (2026-10-29, H1): src/evaluation.{hpp,cpp} (the fold: P1 and P3 unconditional, P2a, P2b and the masks gone), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (folded the same way), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (DEC-328's wording), comments in tests/test_mate_breadth.cpp, tests/test_eval_positions.hpp, tests/test_tuner_gradient.cpp, tests/test_evaluation.cpp and tests/test_eval_trace.cpp, adocs/data/S121_{sprt.log,sprt_mate_pvs.txt,sprt_mate_pvs.py,fold_inv6.txt}, adocs/data/S121_parts.patch (its preamble), adocs/data/S121_cost.{sh,py} (the p5 row, `ROWS`, two guards), adocs/data/S121_screen.sh (the fold guard), adocs/data/S121_cost_reading.txt (the p5 reading, after the coordinator's timing), adocs/data/README.md, DEV_MANUAL.md, this file; src/bitboard.{hpp,cpp} unchanged at the close
 excludes:   king safety, which shares the loop but is S122
 decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
@@ -1146,3 +1146,363 @@ Bench: 6016079
 
 No `done:` stamp: the SPRT, and on H1 the owner's ruling on B (DEC-327),
 come first.
+
+## 2026-10-29: the SPRT read H1; the parts folded
+
+One Opus 5.5 subagent, in `../chesso-s121d` (branch `s121d` at `5ac067c`, the
+SPRT's pin), read only over the run's outputs and binaries; no match, fit or
+timing ran.
+
+### The run
+
+`adocs/data/S121_sprt.sh` as pinned at `5ac067c`: `57a58a4` (the candidate,
+bench 6016079) against its parent `12cab3c` (the phase 1 landing, bench
+5069022), launched 2026-10-29 07:29:39, `SPRT-RUN-DONE` after fastchess's
+Total Time 01:30:07:
+
+```
+SPRT | cand 57a58a4 vs ref 12cab3c, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 19.26 +/- 9.29, nElo 25.18 +/- 12.11
+LLR | 2.95 (-2.94, 2.94) -> H1
+Games | N: 3160 W: 1002 L: 827 D: 1331, Ptnml [108, 358, 528, 423, 163]
+Wall | 1 h 30 m, 2103.9 games/h, forfeits 0
+Log | adocs/data/S121_sprt.log
+```
+
+`Wall`'s rate is N over fastchess's `Total Time`, S296's and S136's rule.
+
+### The inspection, before the verdict was read as the record
+
+- **Banner** (the console's): candidate `57a58a4 2026-10-29`, reference
+  `12cab3c 2026-10-29` (the commits' dates; the pin's 07:23 and 02:32 are
+  `git log`'s), `arch native tune off`, padding on both, 8+0.08, hash 16,
+  12 of 12 cores, `noob_3moves.epd`, seed 20261029072939, `elo0=0 elo1=5
+  alpha=0.05 beta=0.05`, cap 20950 rounds and 41900 games from
+  `SPRT_ROUNDS`, out `.tuning/sprt_s121_20261029_072938`; no `diff`, `relay`
+  or `A/A CALIBRATION` line; `id name`s `cand-57a58a4 Chesso 57a58a4 native`
+  and `ref-12cab3c Chesso 12cab3c native`; `Started game 1 of 41900`. As the
+  pin says. The seed's stamp is one second after the out directory's:
+  `S121_sprt.sh` names OUT before its `exec`, and `fastchess.sh` takes the
+  seed after.
+- **Binaries**: `.ref-builds/57a58a4/build/src/chesso` benches **6016079**
+  and `.ref-builds/12cab3c/build/src/chesso` **5069022**, both worktrees
+  clean at their sha. Written 07:29:45 and 07:29:52 and not since; the first
+  game's `GameStartTime` is 07:29:52.
+- **Crashes, disconnects, illegal moves**: none in the console or in
+  `fastchess.log`, whose 32 lines are the eight warnings below, four lines
+  each. 3160 games in the PGN, N's count; fastchess's game numbers (`2 *
+  Round - 1` with the candidate White, `2 * Round` with it Black) 1 to 3160,
+  each once. Terminations: 2177 adjudication (1828 decisive, 349 drawn) and
+  983 normal (982 drawn, 1 decisive).
+- **Forfeits**: `tools/forfeit_report.py` reads 0 of 3160 for each engine.
+- **Console warnings**: no PV-past-threefold block (`trim_console.py`'s
+  count) and **8 `Incomplete mating PV`**, all the candidate's, read in the
+  next section.
+- **Quarters**, in game-number order, 790 games each (boundaries `i * 3160
+  // 4`), Elo from the candidate's score with its 95 % per-game interval,
+  now a script, `adocs/data/S121_sprt_mate_pvs.py quarters`, which
+  reproduces S135's +5.6, -2.5, +13.8, +6.6 (chi-square 6.56) and S296's
+  -0.7, -3.3, +4.4, +3.3 (2.73) from their PGNs: **+10.6, +16.7, +21.6,
+  +28.2**, each +/- 17.8 to 19.0. Their spread about the run's mean is
+  chi-square 1.89 on 3 degrees of freedom, p 0.60.
+- **Kernel journal**, 07:20 to 09:05 (boot `ea34bee7`, from 00:03:28, no
+  suspend): no kernel entry; the boot's last is 00:06:55, `usb 3-2.4: USB
+  disconnect`, the monitor's control device, before the launch, as on
+  S136's and S296's nights. Nine entries in the window in all, systemd's
+  `fwupd-refresh` and the hourly cron; none at warning level or above. No
+  machine check, OOM or thermal event.
+
+The run stands.
+
+### The eight `Incomplete mating PV` warnings (`adocs/data/S121_sprt_mate_pvs.txt`)
+
+S136's method, by S296's script `adocs/data/S296_sprt_mate_pvs.py`, run
+unchanged from the main checkout. The oracle is DEC-319 (3)'s, Stockfish at
+5000000 nodes through python-chess in `TOOLCHAIN.md`'s safe form, from the
+bare FEN and with the game's moves. It reads a mate on all three positions,
+so DEC-320's 10^9-node escalation does not arise. Console line numbers are
+the untrimmed console's and the trimmed log's alike.
+
+All eight are the candidate's, from three consecutive searches of one game,
+1482, the candidate Black and winning on adjudication at ply 127.
+
+| console line | ply | printed | line | Stockfish 5000000 | against it | cold | warm, the candidate |
+|---|---|---|---|---|---|---|---|
+| 3593 | 121 | mate 12, depth 14, 607502 nodes, the search's last | 14 of 23 plies | mate 11 | longer | no | the class: mate 13 at every depth, 1 to 14 plies of 25 |
+| 3607 | 123 | mate 13, depth 3, 774 nodes | 3 of 25 | mate 10 | longer | no | no: complete mate 10 |
+| 3611 | 123 | mate 15, depth 4, 1159 nodes | 4 of 29 | mate 10 | longer | no | no |
+| 3615 | 123 | mate 12, depth 14, 733236 nodes, the search's last | 14 of 23 | mate 10 | longer | no | no |
+| 3619 | 125 | mate 13, depth 1, 82 nodes | 1 of 25 | mate 9 | longer | no | no: complete mates 11, 10, 13 |
+| 3623 | 125 | mate 13, depth 2, 133 nodes | 2 of 25 | mate 9 | longer | no | no |
+| 3627 | 125 | mate 13, depth 3, 382 nodes | 3 of 25 | mate 9 | longer | no | no |
+| 3631 | 125 | mate 12, depth 5, 2511 nodes | 5 of 23 | mate 9 | longer | no | no |
+
+**No printed distance is shorter than the oracle's, and the claimed side is
+the oracle's in every one**: Black, to move, mates. The brief's stop does not
+arise. Each line is legal throughout and shorter than the distance it claims:
+**DEC-122's short-line class**, which `test_mate_carry` bounds per case
+(DEC-162) and S202 owns. Every cause is a recorded one, S296's two shapes:
+
+- **3607, 3611, 3619, 3623, 3627, 3631**: a shallow iteration (depth 1 to 5,
+  82 to 2511 nodes) printing a mate too shallow to build its line, as
+  DEC-150's case was, longer than the position's.
+- **3593, 3615**: each search's last line, a completed iteration at depth 14
+  (the PGN's `+M23/14` twice), naming a mate longer than the position's:
+  DEC-127's "sound but not optimal", the walk leaving the line short, as
+  S136's 14853 and S296's game 7655.
+
+The game's searches carry the distance rather than shorten it: mate 12 at
+plies 121 and 123 and 12 or 13 at 125, where the oracle reads 11, 10 and 9.
+That the mates came off entries the game's earlier searches wrote is
+inferred, as S136 and S296 inferred it.
+
+**Reproduction.**
+- **Cold**, on both binaries, one fresh process each at the warning's depth:
+  none reproduces; every search prints cp lines and no mate.
+- **Warm**, the game replayed at the PGN's per-move node counts through one
+  candidate process: the class reproduces at ply 121, the line does not --
+  every iteration from depth 1 (30 nodes) prints mate 13 with a line as long
+  as its depth, a mate read off the table the replay's earlier searches
+  wrote; at plies 123 and 125 every line is complete. The replay's table
+  diverges from the game's: at plies 117 and 119 the game printed `+4.50/18`
+  and `+3.83/20`, the replay mate 15 and mate 14.
+- **Warm through the reference's binary** on the candidate's side of the same
+  game (a cross-check; the reference never played these moves): short lines
+  at all three plies. The class is the reference's too when its search meets
+  this game.
+- **Seen in the replays and not attributed**: in both binaries a search
+  whose last line is a centipawn score after an earlier iteration of the same
+  search printed a mate (the candidate at ply 125, the reference at plies 121
+  and 123). No distance there is shorter than the oracle's, the move is the
+  mating line's first, and none of it is in the run's console.
+
+**The rates** (`S296_sprt_mate_pvs.py rates`; `S121_sprt_mate_pvs.py
+games`), per 10000 games a side:
+
+| run | candidate | reference |
+|---|---|---|
+| this run | **25.32 lines, 9.49 searches, 1 game** of 3160 | 0 |
+| S136 | 1.43 / 0.95, 2 games | 0.95 / 0.48, 1 game |
+| S296 | 2.70 / 1.62, 3 games | 1.08 / 0.54, 1 game |
+
+The eight lines are one game's three searches, so the game is the unit.
+Pooled over the seven earlier runs (S136, S296, S135, S293, S292, S289,
+S283): 11 games with a warning in 202308 side-games, 0.54 per 10000. At that
+rate one side's 3160 games expect 0.17 such games, and 1 or more has Poisson
+probability 0.16. A count, recorded, not a finding.
+
+### The verdict, by the pre-registration
+
+**The H1 row executes.** At 8+0.08 the fitted family is accepted as
+gaining: H1's 5 nElo preferred to H0's 0 at alpha = beta = 0.05. **It
+ships**: the table per piece type fitted by the screen over the count with
+enemy pawn attacks excluded (P1) and the pin rule (P3), the screen's
+survivors (`CANDIDATE table_m5 mask 5`). P2a and P2b stay out, the screen's
+drop, with their figures above (full d +0.000001 and -0.000017 against m
+0.000006 and 0.000010). **No bisection follows an H1**, and none is owed.
+
+**The stopping run's Elo is upward-biased (DEC-063) and is not the effect
+size.** The run stopped at a bound in 3160 games, far under the 25591 the
+pre-registration expected with the truth on a bound.
+
+**The cost, beside it**, until the row below is read: no measured row
+computes what mask 5 computes. It lies between p3's **+2.20 %** and all's
+**+3.38 %** (`adocs/data/S121_cost_reading.txt`), p1 + p3 in bench16
+instructions (+2.42 %) the additive estimate. It decides nothing.
+
+### The trim and the archive
+
+`tools/trim_console.py --summary` from `.tuning/s121_sprt.log` (7679 lines,
+525112 bytes) into **`adocs/data/S121_sprt.log`**, 7684 lines, 525317 bytes:
+no PV-past-threefold block, so nothing is dropped and the foot's five lines
+say so; the eight mating-PV warnings are kept. Its `adocs/data/README.md`
+row added. The untrimmed console and the run directory (`games.pgn`,
+`fastchess.log`) are **`chesso_S121_sprt_2026-10-29.tar.xz`** in the owner's
+archive (DEC-235), built, verified and moved in by the coordinator.
+
+### The fold, and its INV-6
+
+The H1 row's fold, against CAND `57a58a4`:
+
+- `src/evaluation.cpp` `evaluate_mobility_and_king_safety`: the pawn
+  attacks, both colours' pins and the kings' squares are computed
+  unconditionally; the count reads `~own & ~pawn_attacks[1 - colour]`, and a
+  pinned piece's moves are cut to its pin line. P2a's and P2b's own-pawn
+  exclusions and the cost-only branch are deleted. The comments over the
+  count and over the tables now describe the shipped count and the H1, and
+  "on H0 the identity comes back" is gone.
+- `src/evaluation.hpp`: `S121_PARTS`, `S121_COST`, their four static_asserts
+  and the four `MOBILITY_*` flags leave `src/`; one comment states the
+  count, the two parts kept, the two dropped and where the masked form is.
+- `src/bitboard.hpp` `pinned_pieces` stays where the patch put it, in
+  `src/bitboard.{hpp,cpp}`, unchanged.
+- `tests/test_walked_counts.hpp` `mobility_cells`: the walk folds the same
+  way -- the pin walk and the enemy-pawn rule unconditional, the area's
+  own-pawn branch gone, an own piece's square never counted.
+- `adocs/data/S192_anchors.py`: each mask-keyed count is mask 5's (the
+  dict's key 1, `5 & 3`), the mask reader `parts_mask` and `count_for` gone.
+  It reads **10 of 10 reproduced** on the folded tree.
+- Comments elsewhere that named `S121_PARTS 5` now name the count:
+  `tests/test_mate_breadth.cpp`, `tests/test_eval_positions.hpp`,
+  `tests/test_tuner_gradient.cpp`, `tests/test_evaluation.cpp`,
+  `tests/test_eval_trace.cpp`, `tests/test_mate_carry.cpp` and
+  `DEV_MANUAL.md`'s anchors row.
+
+**INV-6 against `57a58a4`** (`adocs/data/S121_fold_inv6.txt`): `chesso
+bench` **6016079** in both builds; `bench` and `bench 12` (2200179)
+byte-identical once timing is stripped, and `tools/search_bench.py` node
+counts and best moves identical at depth 9 (26892, 109678, 35636) and depth
+12 (183158, 414751, 221974), across the played binary, CAND's `build/` and
+`build-tune/` and the fold's two. The fold's Release binary differs from the
+played one, as a code change must. **The tune build and the trace build read
+the same counts**: `test_eval_trace` -- "every coefficient is the count its
+index names", the folded walk against the trace cell by cell; "the trace
+reconstructs evaluate() exactly, clamp included"; "tracing changes nothing
+evaluate() returns" -- green in `build/` and `build-tune/`, 1425412
+assertions each.
+
+### The patch and the tooling after the fold
+
+- **`adocs/data/S121_parts.patch`** applies to the landing `12cab3c` and no
+  longer to HEAD (`git apply --check` refuses `src/bitboard.hpp` first). Its
+  preamble now says so, and that it is kept as the record of what was
+  screened and of what `S121_cost.sh` builds. The text `git apply` reads is
+  unchanged: from the first `---` line on it hashes `d82d1fdc...` at
+  `12cab3c`, at `57a58a4` and here.
+- **`adocs/data/S121_cost.sh`** still runs, from the main checkout with
+  `CAND_SHA=12cab3c PARENT_SHA=6ff7485`: its builds are worktrees of the
+  landing, which the patch applies to, so the fold changes nothing it
+  builds. `CAND_SHA` unset (HEAD) is refused by `check`, HEAD's parent
+  carrying the table, as it should be. Two guards were wrong and are fixed:
+  a build's stamp hashed the whole patch file, so each preamble edit (the
+  candidate's commit and this close) made a rebuild of the same sources
+  refuse; it now names the text `git apply` reads. And nothing stopped a run
+  into an OUT holding a finished reading, whose pairs `pairs` empties; `run`
+  now refuses such an OUT.
+- **`adocs/data/S121_screen.sh`** runs from its pinned state, a checkout of
+  the landing; from a folded checkout it misled. `variant 0` freezes
+  `build/`'s tools as m0, and after the fold those count with P1 and P3,
+  mask 5's count under mask 0's name. Every stage that builds, freezes or
+  pastes now refuses a checkout whose `src/bitboard.hpp` declares
+  `pinned_pieces()`, which only the patch adds, and says to run from a
+  worktree of `12cab3c`. `locate` and `read` build nothing and are not
+  refused. This is code below the screen's pre-registration line, changed
+  after its run, recorded here as that header asks; the screen's reading is
+  untouched.
+
+### The cost row owed: mask 5
+
+`adocs/data/S121_cost.sh` gains the row **p5**, `S121_COST=5`: P1's and P3's
+sets forced together, read as every other row is (INV-6 against zero, the
+code check, the session's A/A floor, DEC-266's reading), and ordered by
+`S121_cost.py` under all and over p1 and p3. The other rows are as they
+were. `ROWS` names the rows a run times; the A/A is taken in every run.
+`check` with `ROWS=p5`:
+
+```
+pair      cand 12cab3c6de1f39c20618b4beb3bcab843aeb56a8, parent 6ff7485f64cc2f4ca33810bac58008216bc9cb77
+pair      CAND carries the table, PARENT does not, PARENT is CAND^
+patch     applies to CAND, applied text sha256 d82d1fdc8ac5d4bd
+rows      aa (zero against its copy), p5 (S121_COST=5), each against zero
+S121-COST-CHECK-DONE
+```
+
+`S121_cost.py read` re-reads the old run's pairs, rows named, into the
+committed reading line for line. The row builds: the landing with the patch
+at `S121_COST=5`, built in a scratch copy (Release, padded, no warning),
+benches 5069022 and its `bench`, `bench 12` and `search_bench` streams equal
+the landing's; its `.text` (`f16401be...`) is none of zero's, p1's, p3's or
+all's, and the landing's own binary has zero's `.text` (`179ed51e...`), so a
+rebuild reproduces it. Nothing was timed. The timing is the coordinator's,
+on an idle machine; its reading goes to `adocs/data/S121_cost_reading.txt`
+and here.
+
+### DEC-328
+
+The owner accepted case B's mate-carry ceiling 13 on H1 (DEC-328). DEC-327's
+provisional wording now cites it, values unchanged: `tests/test_mate_carry.cpp`
+(the history paragraph, the eighth grid's sentence, the ceiling table's B row,
+`short_line_ceiling`'s comment), `adocs/data/S170_cases.tsv`'s header
+paragraph, `DEV_MANUAL.md`'s `short_line_ceiling` row and
+`adocs/data/README.md`'s `S121_sweep_s170.txt` row. The ceiling stays 13 and
+the budgets A 1000000, C 500000, D 1500000, E 100000.
+
+### What H1 leaves unmeasured
+
+- **P2a and P2b**, the mobility area's two own-pawn exclusions: zero by the
+  screen (held-out gain +0.000001 and -0.000017 against m 0.000006 and
+  0.000010), never played.
+- **The own king's square**, never excluded and never measured (DEC-326
+  (2)).
+- **The thin cells** `adocs/data/S121_cells.txt` marks: queen mg 20 to 25,
+  queen eg 0 and 24, knight eg 8, bishop mg 11 to 13; the thinnest queen 24
+  (2814 rows, 1768 games) and 25 (1813, 1139), and queen 26 and 27 tied to
+  25 in both halves. S126 inherits the list.
+- **The parts apart in play**: the curve, P1 and P3 shipped together on one
+  verdict; each has only its held-out gain.
+- **Mask 5's cost** as a measured row, until the coordinator's timing.
+
+### Documents
+
+- `DEV_MANUAL.md`: checked. Changed where a statement was now false: the
+  anchors row's `S121_PARTS 5`, a macro that no longer exists, and the
+  `short_line_ceiling` row's DEC-327 wording (DEC-328) and the same macro;
+  and the clamp paragraph's "S122's design ... waits on an owner decision
+  before S121 starts" -- stale since DEC-324 -- now says the amendment came
+  and what it keeps. The rest of its S121 rows describe the shipped tree.
+- `MANUAL.md`: checked; nothing false. Its `RfpMinPly` row's S121 figures
+  are the candidate's, which the fold leaves, and nothing on the UCI surface
+  moved. Unchanged.
+
+### The accepts, clause by clause
+
+- **An SPRT verdict, recorded whatever it is**: H1, above, with DEC-220's
+  block for the closing commit. Holds.
+- **Mobility a table indexed by piece type and by count, knight 0 to 8,
+  bishop 0 to 13, rook 0 to 14, queen 0 to 27**: `src/evaluation.hpp`
+  `MOBILITY_WIDTH` {9, 14, 15, 28} and the eight `mobility_<piece>_<half>`
+  tables, packed into `mobility_score`. Holds.
+- **Every entry fitted by our own tuner on our own corpus (DEC-084)**: the
+  screen's `table_m5` fit, `--only mobility` on S083's corpus (sha256
+  `2e0e3de9...`), `verify_fit` 955 of 955; the queen's 26 and 27 share 25's
+  fitted parameter in both halves, DEC-326 (5)'s tie, a fitted value and not
+  a chosen one. Holds.
+- **The area excludes enemy pawn attacks and the side's own blocked and
+  low-rank pawns, each exclusion and the pin rule screened separately before
+  the one SPRT (DEC-259)**: each screened apart in fixed order
+  (`adocs/data/S121_screen_reading.txt`); the enemy-pawn exclusion and the
+  pin rule kept and shipped, the two own-pawn exclusions dropped by the
+  screen and recorded with their figures, as DEC-259 has a part that fails
+  the screen stay out of the match. The accepts' screening holds; the two
+  own-pawn exclusions are measured zero, not shipped.
+- **The tuner's model updated in the same commit, held to the engine by
+  `test_eval_model`**: discharged by S262's trace, the 2026-10-08 amendment
+  (S276 deleted the mirror): `test_eval_trace` reconstructs `evaluate()`
+  exactly and holds every coefficient to the walk, green in both builds on
+  the folded tree. Holds.
+- **The nps cost recorded next to the verdict**: the bracket above is
+  recorded; the row that measures mask 5 itself is prepared and waits on
+  the coordinator's timing. Open until then.
+
+### Gates
+
+- Both builds with no warning; both fast suites **50 of 50** in `build/` and
+  `build-tune/`; `./clang-format.sh --check` clean (`CLANG_FORMAT_MAJOR=22`);
+  bench 6016079 in both.
+- The S297 clang pair, `build-clang` and `build-clang-tune` with
+  `clang++-22`, Release, `-k 0`: no error, no warning; both fast suites 50
+  of 50.
+- `tools/plan_prose_check.py`, one mode per call, each exit 0:
+  `--citations` 0 over 21 files (8 in this file), `--touches` 0,
+  `--params`, `--gate` agreeing.
+- **`tools/gate_extra.sh`** on the folded tree, detached under a four-exit
+  watcher: `GATE-EXTRA-DONE 5 stages 1030 s` -- prose 0 s, citations 0 s,
+  debug 367 s, sanitize 611 s (the fast label 50 of 50 under the
+  sanitizers), perft 52 s; no `Assertion` in its logs.
+**Tier 2 (DEC-141) does not bind**: under `src/` the diff folds the
+evaluation's mobility count (`src/evaluation.{hpp,cpp}`), proved neutral by
+INV-6; no `make_move`, `unmake_move`, generator or search change, and
+`src/bitboard.{hpp,cpp}` is untouched. `gate_extra` ran anyway, for the Debug
+asserts and the sanitizers over the rewritten source.
+
+No `done:` stamp: the cost row comes first.
