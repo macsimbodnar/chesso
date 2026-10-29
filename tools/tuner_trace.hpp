@@ -935,8 +935,9 @@ inline double error_range(const dataset_t& data,
 // -- 0.118446 against the old path's 0.118449 -- was taken under this
 // treatment. S039 read H0 and kept the clamp (record ca578de, revert 74d0adf),
 // so the treatment stays; S122's design, written for an unclamped king safety,
-// waits on an owner decision before S121 starts (DEC-258). At exactly the
-// margin the inside derivative is taken.
+// took the owner's amendment before S121 started (DEC-258): DEC-324 keeps the
+// shortcut and the clamp, and S122 re-sizes LAZY_EVAL_MARGIN from its own
+// fitted spread. At exactly the margin the inside derivative is taken.
 inline void gradient(const model_t& model,
                      const dataset_t& data,
                      const double* params,

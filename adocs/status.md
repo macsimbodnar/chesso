@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-29, by hand.
 
-## 2026-10-29: S121's SPRT read H1; the parts folded; paused for a shutdown
+## 2026-10-29: S121 done (H1, folded, cost +3.22 %); S298 next
 
 **S121's SPRT read H1** (`57a58a4` vs `12cab3c`, Elo +19.26 +/- 9.29, nElo
 +25.18 +/- 12.11, LLR 2.95, 3160 games in 1 h 30 m, 0 forfeits,
@@ -23,17 +23,20 @@ gate_extra 5 stages green in 1030 s on the folded tree; DEC-328's wording at
 the ceiling's sites. Closed by one fresh Opus 5.5 subagent in
 `../chesso-s121d` (its diff `.tuning/coord/S121/s121_close.diff`).
 
-**Resume here, in order:**
-1. The p5 cost row, machine idle, about 25 min, ceiling 50 min, watched for
-   `S121-COST-(DONE|FAILED)`:
-   `cd /home/max/ws/chesso && CAND_SHA=12cab3c PARENT_SHA=6ff7485 ROWS=p5 OUT=/home/max/ws/chesso/.tuning/s121/cost5 nohup adocs/data/S121_cost.sh run > .tuning/s121_cost5.console 2>&1 &`
-2. The reading into `adocs/data/S121_cost_reading.txt`, specs' cost clause
-   and the step file, by the close agent's draft `done:` stamp; a fast check
-   over the close commit; the step file to `plan_done/`, plan.md's Done list.
-3. S298 phase b (`../chesso-s298`, the step file's phase b commands, about
-   40 min), then its fast check and commit.
-4. `../chesso-s121c` and `../chesso-s121d` can go after S121's done stamp
-   (the owner approved the earlier removals; ask for these two).
+**S121 done** (2026-10-29 23:45, step file in `plan_done/`). The p5 cost
+row ran 23:06 to 23:29 after the restart: **+3.22 %** (cost-only builds,
+which add a popcount the shipped code does not, so a slight overstatement;
+`adocs/data/S121_cost_reading.txt` run 2). The fast check of `e4ec786`
+found no bug; its three stale sentences and the cost caveat are fixed in
+the done commit. Closed by one Opus 5.5 subagent (`../chesso-s121d`,
+`../chesso-s121e`).
+
+**Next:** S298 phase b in `../chesso-s298` (the step file's phase b
+commands, about 40 min), its fast check and commit; then S123. Worktrees
+that can go, waiting on the owner: `../chesso-s121c`, `../chesso-s121d`,
+`../chesso-s121e`; the cost trees under `.tuning/s121/cost*` and the
+variant trees under `.tuning/s121/variants` (tooling's own, gitignored)
+can be removed with `git worktree remove`.
 
 ## 2026-10-29: S121's screen and candidate (the record before the verdict)
 

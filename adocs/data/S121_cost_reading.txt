@@ -82,3 +82,54 @@ p2b: zero (inside the A/A's floor)
 p3: COST +2.20 % (cycles and wall beyond the floor, instructions the same way)
 parent: zero (inside the A/A's floor)
 S121-COST-DONE
+
+# ============================================================================================================================
+# RUN 2, 2026-10-29 23:06 to 23:29, S121-COST-DONE: the p5 row added at S121's close (S121_COST=5, P1's and P3's sets
+# forced together, the count S121 ships), `CAND_SHA=12cab3c PARENT_SHA=6ff7485 ROWS=p5 OUT=.tuning/s121/cost5
+# adocs/data/S121_cost.sh run`, the coordinator's run on a machine just booted (loadavg 1.37 at the start, governor
+# powersave); console .tuning/coord/S121/cost5_console.txt, trimmed to the reading as run 1 is (the per-comparison
+# progress lines and the closing note on the worktrees dropped, nothing else). Run 1 above is as it was.
+# Run 2 times aa and p5 alone. Its A/A is its own session's, so the floor below is run 2's and its p5 is read against
+# that floor, not against run 1's rows.
+# READING: p5 COST +3.22 %, inside run 1's bracket (p3 +2.20 %, all +3.38 %); its instructions, +2.940 % on bench16 and
+# +2.842 % on pos11, lie above run 1's additive estimate p1 + p3, +2.42 % on bench16.
+# CAVEAT (the coordinator's fast check): a cost-only build keeps the landing's popcount and adds a second, forced one
+# per piece (adocs/data/S121_parts.patch, `forced`), which the folded code does not -- it takes one count, over the area
+# and the pin line. So p5 slightly overstates what the shipped code costs. p1's forced build adds the same second
+# popcount and read zero in run 1, so the extra popcount is likely negligible; it is not measured apart.
+
+pair      cand 12cab3c6de1f39c20618b4beb3bcab843aeb56a8, parent 6ff7485f64cc2f4ca33810bac58008216bc9cb77
+pair      CAND carries the table, PARENT does not, PARENT is CAND^
+patch     applies to CAND, applied text sha256 d82d1fdc8ac5d4bd
+rows      aa (zero against its copy), p5 (S121_COST=5), each against zero
+S121 cost
+rows      aa p5
+started   2026-10-29T23:06:13+01:00
+cand      12cab3c6de1f39c20618b4beb3bcab843aeb56a8
+parent    6ff7485f64cc2f4ca33810bac58008216bc9cb77
+loadavg   1.37 0.72 0.27 1/1245 5868
+governor  powersave
+zero f8d30702b50e3872 12cab3c6de1f39c20618b4beb3bcab843aeb56a8 unpatched
+p5 f9edd8b89bab1518 12cab3c6de1f39c20618b4beb3bcab843aeb56a8 5
+INV-6: bench 5069022 nodes, every binary identical
+code zero  .text 179ed51ebc0b8a9d
+code p5    .text af70991e8b90646a
+code: 2 distinct .text sections
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       +0.177 %  CI -0.419 .. +0.776 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       -0.167 %  CI -0.329 .. -0.004 %
+  pos11   wall         +0.078 %  CI -0.100 .. +0.256 %  (cand time over base, + is slower)
+p5: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +2.940 %  CI +2.940 .. +2.940 %
+  bench16 cycles       +3.519 %  CI +3.308 .. +3.729 %
+  pos11   instructions +2.842 %  CI +2.842 .. +2.842 %
+  pos11   cycles       +3.031 %  CI +2.932 .. +3.130 %
+  pos11   wall         +3.102 %  CI +2.959 .. +3.245 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.776 %, pos11 cycles 0.329 %, wall 0.256 %
+forced bench16: A/A instruction floor 5.4 ppb; p5 +2.9403 .. +2.9403 %
+forced pos11: A/A instruction floor 38.7 ppb; p5 +2.8422 .. +2.8422 %
+p5: COST +3.22 % (cycles and wall beyond the floor, instructions the same way)
+the worktrees under /home/max/ws/chesso/.tuning/s121/cost5 stay for a re-run; git worktree remove each when the reading is recorded
+S121-COST-DONE

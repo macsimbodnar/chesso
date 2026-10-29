@@ -1,14 +1,14 @@
 id:         S121
 goal:       mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 accepts:    an SPRT verdict, recorded whatever it is; mobility is a table indexed by piece type and by count -- knight 0 to 8, bishop 0 to 13, rook 0 to 14, queen 0 to 27 -- and **every entry is fitted by our own tuner on our own corpus** (DEC-084); the mobility area excludes squares attacked by enemy pawns and the side's own blocked and low-rank pawns, and each exclusion -- and the pin rule this family gains, a pinned piece counting only moves along its pin ray (DEC-258) -- is screened separately before the family's one SPRT (DEC-259); the tuner's model in tools/eval_model.hpp is updated in the same commit and test_eval_model holds the two against each other; the nps cost is recorded next to the verdict
-touches:    phase 1 (2026-10-28, the table at identity, `No functional change`): src/evaluation.cpp, src/evaluation.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp (the ties), tools/tuner.cpp (the emit, `--tie`), tools/feature_audit.cpp (cell names, the eight mobility levels, the support report), tests/test_walked_counts.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_tuner_groups.cpp, tests/test_eval_positions.hpp (the coverage rows, phase 1b), tests/test_tuner_gradient.cpp (the clamp case's push re-derived, phase 1b), adocs/data/S192_anchors.py, adocs/data/S121_preconditions.txt, adocs/data/S121_inv6.txt, DEV_MANUAL.md, adocs/data/S121_{parts.patch,screen.sh,screen.py,cost.sh,cost.py,sprt.sh,coverage_rows.cpp,construct_rows.py,verify_fit.py}, adocs/data/README.md, this file; tools/tuner_trace.hpp (a comment only: its mobility line reads MOBILITY_COUNT, now 66); phase 2 (2026-10-29, the candidate at S121_PARTS 5): src/evaluation.cpp's eight tables and whole-line comments, and through adocs/data/S121_parts.patch src/evaluation.hpp (the mask line and a whole-line comment), src/bitboard.{hpp,cpp} (`pinned_pieces()`), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (its anchors re-derived too), folded at the closing commit; every golden the paste moves, each by its script: tests/test_evaluation.cpp (the anchors), tests/test_search.cpp (the anchors, the ProbCut row re-mined, ALPHA's comment), tests/test_eval_trace.cpp (the truncation pins), tests/test_eval_positions.hpp (the coverage block re-derived), tests/test_tuner_gradient.cpp (the clamp push, the walk's comment), tests/test_mate_breadth.cpp (its stale header and S121's reading), tests/test_mate_pv.cpp (the aborted-line cell's budget), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (B's ceiling and four budgets, DEC-327, provisional); `.tuning/verify_fit.py` (tracked, not gitignored as phase 1 wrote: adocs/data/S121_verify_fit.py copied over it); adocs/data/S121_sprt.sh (a dated paragraph, the run count); adocs/data/S121_parts.patch (its preamble, before the first `---`); adocs/data/S121_{screen_reading,cells,goldens,cost_reading,sweep_s170,case_b}.txt, adocs/data/S121_{cells,case_b}.py, adocs/data/S121_alpha_window.cpp, adocs/data/README.md; DEV_MANUAL.md, MANUAL.md; this file; adocs/specs.md (the coordinator's); the close (2026-10-29, H1): src/evaluation.{hpp,cpp} (the fold: P1 and P3 unconditional, P2a, P2b and the masks gone), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (folded the same way), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (DEC-328's wording), comments in tests/test_mate_breadth.cpp, tests/test_eval_positions.hpp, tests/test_tuner_gradient.cpp, tests/test_evaluation.cpp and tests/test_eval_trace.cpp, adocs/data/S121_{sprt.log,sprt_mate_pvs.txt,sprt_mate_pvs.py,fold_inv6.txt}, adocs/data/S121_parts.patch (its preamble), adocs/data/S121_cost.{sh,py} (the p5 row, `ROWS`, two guards), adocs/data/S121_screen.sh (the fold guard), adocs/data/S121_cost_reading.txt (the p5 reading, after the coordinator's timing), adocs/data/README.md, DEV_MANUAL.md, this file; src/bitboard.{hpp,cpp} unchanged at the close
+touches:    phase 1 (2026-10-28, the table at identity, `No functional change`): src/evaluation.cpp, src/evaluation.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp (the ties), tools/tuner.cpp (the emit, `--tie`), tools/feature_audit.cpp (cell names, the eight mobility levels, the support report), tests/test_walked_counts.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_tuner_groups.cpp, tests/test_eval_positions.hpp (the coverage rows, phase 1b), tests/test_tuner_gradient.cpp (the clamp case's push re-derived, phase 1b), adocs/data/S192_anchors.py, adocs/data/S121_preconditions.txt, adocs/data/S121_inv6.txt, DEV_MANUAL.md, adocs/data/S121_{parts.patch,screen.sh,screen.py,cost.sh,cost.py,sprt.sh,coverage_rows.cpp,construct_rows.py,verify_fit.py}, adocs/data/README.md, this file; tools/tuner_trace.hpp (a comment only: its mobility line reads MOBILITY_COUNT, now 66); phase 2 (2026-10-29, the candidate at S121_PARTS 5): src/evaluation.cpp's eight tables and whole-line comments, and through adocs/data/S121_parts.patch src/evaluation.hpp (the mask line and a whole-line comment), src/bitboard.{hpp,cpp} (`pinned_pieces()`), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (its anchors re-derived too), folded at the closing commit; every golden the paste moves, each by its script: tests/test_evaluation.cpp (the anchors), tests/test_search.cpp (the anchors, the ProbCut row re-mined, ALPHA's comment), tests/test_eval_trace.cpp (the truncation pins), tests/test_eval_positions.hpp (the coverage block re-derived), tests/test_tuner_gradient.cpp (the clamp push, the walk's comment), tests/test_mate_breadth.cpp (its stale header and S121's reading), tests/test_mate_pv.cpp (the aborted-line cell's budget), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (B's ceiling and four budgets, DEC-327, provisional); `.tuning/verify_fit.py` (tracked, not gitignored as phase 1 wrote: adocs/data/S121_verify_fit.py copied over it); adocs/data/S121_sprt.sh (a dated paragraph, the run count); adocs/data/S121_parts.patch (its preamble, before the first `---`); adocs/data/S121_{screen_reading,cells,goldens,cost_reading,sweep_s170,case_b}.txt, adocs/data/S121_{cells,case_b}.py, adocs/data/S121_alpha_window.cpp, adocs/data/README.md; DEV_MANUAL.md, MANUAL.md; this file; adocs/specs.md (the coordinator's); the close (2026-10-29, H1): src/evaluation.{hpp,cpp} (the fold: P1 and P3 unconditional, P2a, P2b and the masks gone), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (folded the same way), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (DEC-328's wording), comments in tests/test_mate_breadth.cpp, tests/test_eval_positions.hpp, tests/test_tuner_gradient.cpp, tests/test_evaluation.cpp and tests/test_eval_trace.cpp, adocs/data/S121_{sprt.log,sprt_mate_pvs.txt,sprt_mate_pvs.py,fold_inv6.txt}, adocs/data/S121_parts.patch (its preamble), adocs/data/S121_cost.{sh,py} (the p5 row, `ROWS`, two guards), adocs/data/S121_screen.sh (the fold guard), adocs/data/S121_cost_reading.txt (the p5 reading, run 2, after the coordinator's timing), tools/tuner_trace.hpp (the clamp comment, the close's fast check), adocs/data/README.md, DEV_MANUAL.md, this file; src/bitboard.{hpp,cpp} unchanged at the close
 excludes:   king safety, which shares the loop but is S122
 decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
 blocks:
 paused_by:
 author:     Opus 5.5 subagent, coordinated
-done:
+done:       2026-10-29 23:45 -- H1 at {0, 5} nElo, 8+0.08, Hash 16, CAND 57a58a4 vs REF 12cab3c: Elo +19.26 +/- 9.29, nElo +25.18 +/- 12.11, LLR 2.95, 3160 games, 1 h 30 m, 0 forfeits (adocs/data/S121_sprt.log, archived as chesso_S121_sprt_2026-10-29.tar.xz); the banner as pinned (5ac067c), both binaries at their bench (6016079, 5069022), no crash or disconnect, quarters +10.6, +16.7, +21.6, +28.2, kernel journal clean; eight incomplete mating PVs, all the candidate's in three searches of game 1482, each longer than Stockfish's at 5000000 nodes, S296's shapes (adocs/data/S121_sprt_mate_pvs.txt); so by the pre-registered H1 row the per-count table ships over the count with enemy pawn attacks excluded and the pin rule, the own-pawn exclusions out as screened (DEC-259, DEC-326), no bisection; the stopping Elo is not the effect size (DEC-063). Every cell fitted --only mobility on S083's corpus from the identity seed (DEC-084, DEC-134 (b)), queen 26 and 27 tied to 25; case B's ceiling 13 accepted by the owner (DEC-328); the mask folded, INV-6 against 57a58a4 (adocs/data/S121_fold_inv6.txt); cost: mask 5 +3.22 % (S121_COST=5, cost-only, a slight overstatement), within p3 +2.20 % and all +3.38 % (adocs/data/S121_cost_reading.txt, run 2); fast suite 50/50 in both builds, gate_extra 5/5. Implemented by Opus 5.5 subagents per phase, fast-checked; the runs the coordinator's; inspected, folded and recorded by one Opus 5.5 subagent.
 
 ## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
 
@@ -1482,7 +1482,10 @@ the budgets A 1000000, C 500000, D 1500000, E 100000.
   the folded tree. Holds.
 - **The nps cost recorded next to the verdict**: the bracket above is
   recorded; the row that measures mask 5 itself is prepared and waits on
-  the coordinator's timing. Open until then.
+  the coordinator's timing. Open until then. **Holds since the p5 row's
+  reading** (next section): mask 5 costs **+3.22 %**, a slight overstatement
+  of the shipped code, recorded beside the verdict here and in
+  `adocs/data/S121_cost_reading.txt`.
 
 ### Gates
 
@@ -1499,6 +1502,7 @@ the budgets A 1000000, C 500000, D 1500000, E 100000.
   watcher: `GATE-EXTRA-DONE 5 stages 1030 s` -- prose 0 s, citations 0 s,
   debug 367 s, sanitize 611 s (the fast label 50 of 50 under the
   sanitizers), perft 52 s; no `Assertion` in its logs.
+
 **Tier 2 (DEC-141) does not bind**: under `src/` the diff folds the
 evaluation's mobility count (`src/evaluation.{hpp,cpp}`), proved neutral by
 INV-6; no `make_move`, `unmake_move`, generator or search change, and
@@ -1506,3 +1510,47 @@ INV-6; no `make_move`, `unmake_move`, generator or search change, and
 asserts and the sanitizers over the rewritten source.
 
 No `done:` stamp: the cost row comes first.
+
+## 2026-10-29: the p5 row read; the fast check's fixes; done
+
+The coordinator's run of the row the close prepared, `CAND_SHA=12cab3c
+PARENT_SHA=6ff7485 ROWS=p5 OUT=.tuning/s121/cost5 adocs/data/S121_cost.sh
+run`, 23:06 to 23:29, `S121-COST-DONE`, on a machine just booted (loadavg
+1.37 at the start, governor `powersave`); recorded as run 2 of
+`adocs/data/S121_cost_reading.txt`, run 1 as it was. Written by one Opus
+5.5 subagent in `../chesso-s121e` (branch `s121e` at `842bb6c`); nothing
+was run here but builds and tests.
+
+- INV-6: bench 5069022, the zero build and p5 identical; two distinct
+  `.text` sections.
+- Run 2's own A/A floor: bench16 cycles 0.776 %, pos11 cycles 0.329 %, wall
+  0.256 %.
+- p5 against zero: instructions +2.940 % (bench16) and +2.842 % (pos11),
+  cycles +3.519 % and +3.031 %, wall +3.102 %: **`p5: COST +3.22 %`**,
+  cycles and wall beyond the floor and instructions the same way. Inside run
+  1's bracket, p3 +2.20 % to all +3.38 %, and above the additive
+  instruction estimate p1 + p3, +2.42 %.
+- **The caveat** (the coordinator's fast check): a cost-only build keeps
+  the landing's popcount and adds a second, forced one per piece, which the
+  folded code does not -- it takes one count, over the area and the pin
+  line. So p5 slightly overstates the shipped cost. p1's forced build adds
+  the same second popcount and read zero in run 1, so the extra popcount is
+  likely negligible; it is not measured apart.
+- It decides nothing: the cost is inside the verdict the SPRT returned.
+
+The accepts' nps clause holds with that figure (the clause list above).
+Every clause holds.
+
+**The fast check of `e4ec786`: no bugs; four fixes, comments and data
+only.** `DEV_MANUAL.md`'s gradient paragraph names the candidate's mask as
+"mask 5 (P1 and P3, folded unchanged)", not `S121_PARTS` 5;
+`adocs/data/README.md`'s `S121_parts.patch` row says the walk and the
+anchors followed the mask until the fold; `tools/tuner_trace.hpp`'s clamp
+comment no longer says S122 waits on an owner decision before S121 starts,
+but that DEC-324 keeps the shortcut and the clamp and S122 re-sizes
+`LAZY_EVAL_MARGIN`; and the caveat above, here and in the reading.
+
+**Gates**: both builds with no warning, both fast suites 50 of 50,
+`./clang-format.sh --check` clean (`CLANG_FORMAT_MAJOR=22`), the four
+`tools/plan_prose_check.py` modes each exit 0; bench 6016079 in both, only
+a comment under `tools/` having moved.
