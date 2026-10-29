@@ -319,8 +319,9 @@ is typed by hand.
 | S135 | the piece placement family's joint fit | 6 h 17 m | 13406 | `{0, 5}` | H1, +5.88 +/- 4.40 |
 | S296 | the mated fail-low after skipped moves | 8 h 38 m | 18512 | `{-5, 0}` | H1, +0.96 +/- 3.52 |
 | S136 | tempo fitted alone at 10 / 1 | 9 h 46 m | 21014 | `{0, 5}` | H0, -0.66 +/- 3.44 |
+| S121 | the mobility table and fold its parts | 1 h 30 m | 3160 | `{0, 5}` | H1, +19.26 +/- 9.29 |
 
-**The ledger holds 59: mean 6 h 09 m, median 5 h 26 m, 727645 games in 363.02 hours, 2004.4 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty runs, mean **1 h 48 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
+**The ledger holds 60: mean 6 h 04 m, median 5 h 26 m, 730805 games in 364.52 hours, 2004.8 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-one runs, mean **1 h 47 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
 
 ### Priced by class
 
