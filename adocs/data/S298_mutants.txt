@@ -1,0 +1,35 @@
+# S298 phase b, 2026-10-29: tests/test_gate_extra_script.sh over every cut of
+# adocs/data/S298_script_mutants.py (N*) and adocs/data/S197_script_mutants.py (M*),
+# on f91d60b with S298's changes uncommitted. 'FAIL: n' lists the cases that went red.
+killed N10_tune_half_not_tune.sh FAIL: 1 FAIL: 15 
+killed N11_first_half_stops.sh FAIL: 2 
+killed N12_no_fast_suite.sh FAIL: 1 FAIL: 2 
+killed N13_status_dropped.sh FAIL: 12 FAIL: 15 FAIL: 2 
+killed N14_expect_build_type_only.sh FAIL: 15 
+killed N15_cc_unchecked.sh FAIL: 16 
+killed N16_no_ninja_check.sh FAIL: 17 
+killed N1_not_a_default_stage.sh FAIL: 1 FAIL: 12 FAIL: 13 FAIL: 14 FAIL: 15 FAIL: 16 FAIL: 17 FAIL: 2 
+killed N2_no_cache_compiler_check.sh FAIL: 12 
+killed N3_cxx_compiler_only.sh FAIL: 12 
+killed N4_pinned_name_only.sh FAIL: 13 
+killed N5_trusted_by_name.sh FAIL: 1 FAIL: 12 FAIL: 14 FAIL: 16 FAIL: 2 FAIL: 9 
+killed N6_skip_without_clang.sh FAIL: 14 
+killed N7_no_keep_going.sh FAIL: 1 
+killed N8_no_libcxx.sh FAIL: 1 FAIL: 12 FAIL: 13 FAIL: 16 FAIL: 2 FAIL: 9 
+killed N9_debug_build.sh FAIL: 1 FAIL: 12 FAIL: 13 FAIL: 15 FAIL: 16 FAIL: 2 FAIL: 9 
+killed M10_no_sanitizer_option.sh FAIL: 1 FAIL: 11 FAIL: 12 FAIL: 13 FAIL: 14 FAIL: 15 FAIL: 16 FAIL: 17 FAIL: 4 FAIL: 5 FAIL: 8 FAIL: 9 
+killed M11_debug_is_release.sh FAIL: 1 
+killed M12_no_root_check.sh FAIL: 6 
+killed M13_trust_any_cache.sh FAIL: 9 
+killed M14_no_cache_verify.sh FAIL: 15 FAIL: 7 
+killed M15_release_line_unchecked.sh FAIL: 8 
+killed M16_marker_to_stderr.sh FAIL: 10 
+killed M1_no_done_marker.sh FAIL: 1 FAIL: 11 FAIL: 13 
+killed M2_no_failed_marker.sh FAIL: 12 FAIL: 14 FAIL: 15 FAIL: 17 FAIL: 2 FAIL: 4 FAIL: 5 FAIL: 7 
+killed M3_stop_on_first_fail.sh FAIL: 2 
+killed M4_unanchored_regex.sh FAIL: 1 
+killed M5_no_bench_compare.sh FAIL: 4 
+killed M6_no_cmake_check.sh FAIL: 3 
+killed M7_fail_unmarked.sh FAIL: 3 FAIL: 6 
+killed M8_dirname_again.sh FAIL: 1 FAIL: 11 FAIL: 12 FAIL: 13 FAIL: 14 FAIL: 15 FAIL: 16 FAIL: 17 FAIL: 2 FAIL: 3 FAIL: 4 FAIL: 5 FAIL: 7 FAIL: 8 FAIL: 9 
+killed M9_no_signature_check.sh FAIL: 5 FAIL: 8 

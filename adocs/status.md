@@ -5,7 +5,30 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-29, by hand.
+Updated: 2026-10-30, by hand.
+
+## 2026-10-30: S298 done; S123 next
+
+**S298 done**: `tools/gate_extra.sh` gains stage 6, `clang` (build-clang
+and build-clang-tune, `clang++-22` here and Apple clang's `c++` on the Mac,
+Ninja, libc++, `-k 0`, both fast suites; a cache not of that shape is
+refused). S297's warning planted back turned the stage red with exactly its
+ten diagnostics; reverted, green, 50/50 in both directories. The script's
+test grows to 17 cases; 32 of 32 cuts killed (`adocs/data/S298_mutants.txt`).
+Written blind during S121's SPRT, run after it, two fast checks, every fix
+applied; one Opus 5.5 subagent (`../chesso-s298`, `../chesso-s298b`).
+`.moltke.local.md`'s "do not build with clang" names the stage as its
+exception.
+
+- **gate_extra, last `GATE-EXTRA-DONE`:** 2026-10-30, six stages green in
+  1322 s on `f91d60b` plus S298's tree (`.tuning/coord/S298/phase_b/full.log`);
+  stage times prose 0, citations 0, debug 364, sanitize 632, perft 52, clang
+  274 s (warm). Next weekly run due by 2026-11-06.
+
+**Next:** S123 (passed pawns), its step file read against the code first
+(stale since S134 and DEC-324). Worktrees that can go, waiting on the owner:
+`../chesso-s121c`, `../chesso-s121d`, `../chesso-s121e`, `../chesso-s298`,
+`../chesso-s298b`.
 
 ## 2026-10-29: S121 done (H1, folded, cost +3.22 %); S298 next
 

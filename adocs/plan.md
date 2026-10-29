@@ -375,29 +375,28 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S298  **gate_extra gains stage 6, clang, weekly: the Mac's compiler on the workstation** -- build-clang and build-clang-tune with clang++-22 here and Apple clang's c++ on the Mac, Ninja, libc++, -k 0, both fast suites; S297's warning planted back turned it red with its ten diagnostics and the revert green; 17 script cases, 32 of 32 cuts killed; gate_extra six stages green in 1322 s
 - S121  **mobility is a fitted per-count table over a count without enemy pawn attacks, with a pin rule: H1 at 8+0.08, `{0, 5}`** -- the screen kept the table, the enemy-pawn exclusion and the pin rule and dropped both own-pawn exclusions (DEC-326); the SPRT read Elo +19.26 +/- 9.29 over 3160 games (an early stop, biased upward); the mask folded neutral (INV-6), bench 6016079; cost +3.22 %; case B's ceiling 13 accepted by the owner (DEC-328)
 - S297  **the tree builds clean under clang -Werror, as under GCC** -- the owner's macOS arm64 build (Apple clang) stopped at `load()`'s set-but-unused `line_number` in `tools/tuner_trace.hpp`, which GCC 13 does not flag; reproduced with `clang++-22`, a whole-tree clang build (Release, tune, and a libc++ probe) found no other error, the dead counter removed with no message changed; `DEV_MANUAL.md` gains the clang check; bench 5069022, no src/ change. 2026-10-29.
 - S136  **tempo fitted alone: H0 at 8+0.08, `{0, 5}`, tempo stays zero** -- the freeze was a command-line convention no file held (DEC-057), so tempo was fitted `--only tempo --lambda 0` on S083's corpus to mg 10 / eg 1 and kept by DEC-315's screen (gain +0.000031 against m 0.000002, DEC-321); on the candidate the truncation guard was re-derived at the fitted pair's g (DEC-322) and every golden re-derived, `EXACT_FLOOR` red at 156 (DEC-323); played as a working tree, `cand-ba65b86+ea1eb6cfad0b` vs `ba65b86`: LLR -2.96 over 21014 games, nElo -0.90 +/- 4.70, 0 forfeits; recorded as zero, the paste reverted whole (`adocs/data/S136_candidate.diff`); none of the five incomplete mating PVs shorter than Stockfish's; a first launch void after a shutdown; bench 5069022 unchanged. 2026-10-28.
 - S296  **a node that skipped moves claims no mate it did not search: H1 at 8+0.08, `{-5, 0}`, the rule stays** -- where a shallow-depth rule skipped a move and every searched move came back mated, the node returns `alpha0` (DEC-318's form (a), DEC-319); S295's chain reads mate 5 at depth 8; no reported mate over S289's sets, S294's grid or the S170 grid is shorter than Stockfish's; form (b) rejected (`EXACT_FLOOR` 156); S145 root 76 lost to the null move and reverse futility (DEC-319 (2)); `EXACT_FLOOR` 159, S295's cell retired; `25b332b` vs `b477459`: LLR 2.96 over 18512 games, nElo +1.36 +/- 5.00, 0 forfeits; the seven incomplete mating PVs none shorter than Stockfish's (DEC-320); bench 5184358 -> 5069022. 2026-10-27.
-- S295  **no mate line that misses its distance is printed beside its score** -- on the aborted path a line at or past the distance must be checkmate there (`mate_pv_reaches()`), else it gives way to the completed line of the same move or is cut below the distance; `search()` cuts a completed line the same way (`cut_unreached_mate_pv()`), so DEC-122's guarantee is checked, not only measured; reporting only, INV-6 identical (bench 5184358); guarded by a `test_mate_pv` cell (S145 mined line 168, `go nodes 140000`, `adocs/data/S295_long_line.py`) and two constructed-lines cases, MW03-MW06 killed; census 13 wrong lines -> 0; the completed `mate 4` one move short of the oracle's traced to quiet SEE pruning's fail-soft mated bound (DEC-318, S296). 2026-10-26.
 
 ## Open
 
-1. S298  `tools/gate_extra.sh` gains a clang stage, so a compile break that only clang reports is found weekly on the workstation instead of on the owner's Mac
-2. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
-3. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
-4. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
-5. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-6. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-7. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-8. S102  outpost and space terms in the evaluation, one family
-9. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-10. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-11. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-12. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-13. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-14. S030  move_t drops the moving piece and becomes 16 bits
-15. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-16. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-17. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-18. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+1. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
+2. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
+3. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
+4. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+5. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
+6. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+7. S102  outpost and space terms in the evaluation, one family
+8. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+9. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+10. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+11. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+12. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+13. S030  move_t drops the moving piece and becomes 16 bits
+14. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+15. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+16. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+17. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play

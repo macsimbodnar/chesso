@@ -68,7 +68,8 @@ them, so apt will not update them and their versions are the ones below.
 > the Homebrew warning in the MacBook's section. There are two exceptions, and
 > neither is ever measured: the coverage build in `DEV_MANUAL.md`'s Coverage
 > section, and the scratch clang check in its Build section, which checks that
-> the tree compiles under clang's warnings (S297).
+> the tree compiles under clang's warnings (S297) and is stage 6 of
+> `tools/gate_extra.sh` since S298.
 
 ### Every path, and what printed it
 
@@ -313,8 +314,12 @@ forbids; the probe is the answer, not the start of one.
 ## Install, on the MacBook
 
 ```bash
-brew install hyperfine ccache samply llvm
+brew install hyperfine ccache samply llvm ninja
 ```
+
+`ninja` is required, not optional: the owner's builds use it, and
+`tools/gate_extra.sh`'s clang stage configures with `-G Ninja` for `-k 0` and
+refuses a machine without it (S298).
 
 Homebrew LLVM is keg-only. Put it on PATH *after* the system toolchain so
 `clang-tidy` and `llvm-mca` resolve while `c++` stays Apple clang:

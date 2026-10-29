@@ -62,19 +62,27 @@ binary** (S297). The same `-Wall -Wextra -Werror` catches different things in
 the two front ends: GCC 13 does not flag a variable that is only ever
 incremented, and clang does (`-Wunused-but-set-variable`). So the owner's macOS
 build, Apple clang, stopped in `tools/tuner_trace.hpp` while the workstation's
-GCC gate was green. On Linux, build two scratch directories with `clang++-22`
-and the project's own flags. `CC` and `CXX` take effect only on a directory that
-does not exist yet. Use Release, because Debug turns the unused-* warnings off.
-Build with `-k 0`, which is why `-G Ninja`, so that every error shows at once.
-Then run both fast suites:
+GCC gate was green. **The check is stage 6 of `tools/gate_extra.sh`** (S298),
+so it runs weekly with the rest of that gate; "The extra gate" under Test has
+what it configures and how it picks its clang. It builds two scratch
+directories, `build-clang` and `build-clang-tune`, with clang, the project's
+own flags and libc++, the Mac's standard library. Release, because Debug turns
+the unused-* warnings off. Ninja and `-k 0`, so that every error shows at once.
+Then both fast suites. Run alone, and then, while fixing what it found, the two
+directories it leaves:
 
 ```bash
 export CLANG_FORMAT_MAJOR=22          # this machine only, DEC-146
-CC=clang-22 CXX=clang++-22 cmake -S . -B build-clang      -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-CC=clang-22 CXX=clang++-22 cmake -S . -B build-clang-tune -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCHESSO_TUNE=ON
+STAGES=clang tools/gate_extra.sh      # configures, builds and tests both
 cmake --build build-clang      -j12 -- -k 0 && ctest --test-dir build-clang      -L fast --output-on-failure
 cmake --build build-clang-tune -j12 -- -k 0 && ctest --test-dir build-clang-tune -L fast --output-on-failure
 ```
+
+The configure lines are the stage's own, in `clang_half()`, and nowhere else,
+so the directories are always configured one way. S297's recipe passed the
+compiler as `CC` and `CXX`, which a directory that already exists ignores; the
+stage passes it as `-DCMAKE_C_COMPILER` and `-DCMAKE_CXX_COMPILER` and then
+refuses a cache that holds anything but clang.
 
 **The flags a Release unit compiles with**, as the build directory's
 `compile_commands.json` shows them: `-O3 -DNDEBUG` (CMake's own Release flags),
@@ -1133,24 +1141,31 @@ search completes, and otherwise weekly. The date and sha of the last
 week is visible.
 
 ```bash
-tools/gate_extra.sh                             # all five stages
+tools/gate_extra.sh                             # all six stages
 STAGES="sanitize perft" tools/gate_extra.sh     # a subset, after a fix
 JOBS=6 OUT=/tmp/run tools/gate_extra.sh         # override cores and outdir
 ```
 
 `JOBS` defaults to `nproc`, then `sysctl -n hw.logicalcpu`; `OUT` defaults to
 `/tmp/chesso_gate_extra_<stamp>` and holds one log per stage,
-`NN_<stage>.log`. The five stages run cheapest first, and **every stage runs
+`NN_<stage>.log`. The six stages run in the order below, and **every stage runs
 even after one fails** — the weekly run's value is the whole picture in one
-pass, so the marker names every stage that failed rather than the first:
+pass, so the marker names every stage that failed rather than the first. The
+wall times are one full run on the workstation, 2026-10-30, on `f91d60b` with
+S298's changes uncommitted on top: `GATE-EXTRA-DONE 6 stages 1322 s`. The
+`clang` row is warm. Both of its directories were left built by the runs
+before it, so its 274 s is the two fast suites, 137 s each. Building both
+directories from nothing took about 80 s (S298's planted run, which stopped
+five units short in each):
 
-| # | stage | what it catches that the automatic gate cannot |
-|---|---|---|
-| 1 | `prose` | stale tense in `adocs/plan.md`, `tools/plan_prose_check.py --prose` — the one mode of that tool the fast label does not run |
-| 2 | `citations` | nothing the automatic gate cannot — `--citations` is in the fast label as `test_plan_citation_freshness` since S187 (DEC-159). It costs a second and re-asserts it outside the sanitizer build; the `accepts:` named both modes and it is kept for that |
-| 3 | `debug` | INV-2 and INV-4 and every other `assert(` in `src/`, over the six binaries that drive `make_move` — `test_chesso`, `test_openings`, `test_movegen`, `test_evaluation`, `test_search`, `test_engine`. Both gated builds are Release, where those asserts are dead |
-| 4 | `sanitize` | out-of-bounds reads, use-after-free, signed overflow, bad shifts, misaligned loads, and leaks on Linux — ASan and UBSan over the `fast` label, plus `bench` |
-| 5 | `perft` | INV-1 at the depths the fast label does not reach, `ctest -L slow` |
+| # | stage | what it catches that the automatic gate cannot | wall |
+|---|---|---|---|
+| 1 | `prose` | stale tense in `adocs/plan.md`, `tools/plan_prose_check.py --prose` — the one mode of that tool the fast label does not run | 0 s |
+| 2 | `citations` | nothing the automatic gate cannot — `--citations` is in the fast label as `test_plan_citation_freshness` since S187 (DEC-159). It costs a second and re-asserts it outside the sanitizer build; the `accepts:` named both modes and it is kept for that | 0 s |
+| 3 | `debug` | INV-2 and INV-4 and every other `assert(` in `src/`, over the six binaries that drive `make_move` — `test_chesso`, `test_openings`, `test_movegen`, `test_evaluation`, `test_search`, `test_engine`. Both gated builds are Release, where those asserts are dead | 364 s |
+| 4 | `sanitize` | out-of-bounds reads, use-after-free, signed overflow, bad shifts, misaligned loads, and leaks on Linux — ASan and UBSan over the `fast` label, plus `bench` | 632 s |
+| 5 | `perft` | INV-1 at the depths the fast label does not reach, `ctest -L slow` | 52 s |
+| 6 | `clang` | a compile break only clang reports — the whole tree under clang and libc++, Release and tune, then both `fast` labels (S297, S298). Both gated builds are GCC, and the owner's Mac builds with Apple clang | 274 s |
 
 **Stage 4 also asserts INV-6 across builds** (DEC-167): the sanitizer build's
 `bench` total must equal `build/src/chesso`'s. The two directories differ only
@@ -1171,6 +1186,42 @@ and exits **0**. Measured with a planted overflow on 2026-09-10: exit 0 without
 the flag, exit 1 with it. `-fno-omit-frame-pointer` is there for the same
 reason ASan's documentation asks for it — with `UBSAN_OPTIONS=print_stacktrace=1`
 the same report came back with six named frames instead of a bare line.
+
+**Stage 6, `clang`, is the Mac's compiler on the workstation** (S298). It
+configures `build-clang` (Release) and `build-clang-tune` (the same with
+`CHESSO_TUNE=ON`), both with `-stdlib=libc++` and Ninja, builds every target
+with `-k 0` and runs the `fast` label in each. `ninja` is required, as it is
+for the owner's Mac build, and a machine without it is refused by name. The second directory is built
+and tested even when the first fails, for the reason the driver runs every
+stage. It is last so that no stage was renumbered: stages 3 and 4 are cited by
+number above, in `adocs/specs.md` and in finished step files. It is a compile
+check, never a measured binary, and no bench total is read from it.
+
+**It asks a compiler what it is rather than trusting its name.** It takes the
+first of three pairs whose C++ and C drivers are both on `PATH` and both answer
+`--version` with `clang version`: `c++` and `cc`, the machine's default, when
+that is clang; then `clang++-22` and `clang-22`; then `clang++` and `clang`.
+On the Mac the first pair is Apple clang, the compiler the owner's own `build/`
+uses and the one S297's break came from, on a machine with no `clang++-22`;
+TOOLCHAIN.md appends Homebrew LLVM to `PATH` there so that `c++` stays
+`/usr/bin/c++`. On the workstation `c++` is g++ 13.3 (DEC-049) and the stage
+passes it over for `clang++-22`. C as well as C++, because the project enables
+C and ASM and ASM takes the C compiler. With no clang on `PATH` the stage is
+red and names the six names it tried — not skipped, because a green that
+compiled nothing under clang is the class this script exists to remove.
+
+**A clang directory whose cache is not the Mac's build is refused**, as a
+`build-sanitize` without `SANITIZER=ON` is. The cache must carry Ninja,
+Release, the directory's `CHESSO_TUNE` and both libc++ flags strings, and after
+the configure the C++ and C compilers it records are asked the same question;
+anything else stops that directory before it builds. Built, a `build-clang`
+holding g++ would pass both `fast` labels and report `clang ok` with no clang
+having run. For this stage the compiler check is a backstop: the configure
+always passes both compilers as `-D`, so a cache holding anything else means
+CMake did not do what it was told. The hazards that make such a directory — a
+`CXX` in the environment, which a directory that already exists ignores, and
+DEC-052's VS Code writing a compiler into one uninvited — belong to S297's
+hand recipe, which passed the compiler that way.
 
 A red `citations` stage means fix the citation in the step file, by symbol
 (DEC-135) — never relax the check. A red anything else is a bug and the BUGS
@@ -1206,11 +1257,12 @@ refers to the sink's TLS init function, `_ZTHN10eval_trace4sinkE`.
 
 **`STAGES` as a command prefix is supported, because the script unsets it.**
 It is read once into the stage list and then `unset`, so no stage inherits it.
-That matters because stage 4's `fast` label holds `test_gate_extra_script`,
-which drives a nested `gate_extra.sh` over a fake tree and expects the default
-five stages: while the variable leaked, `STAGES="sanitize" tools/gate_extra.sh`
-gave that nested run one stage, nine of its checks over two cases went red, and
-the sanitize stage failed with a green C++ build (measured 2026-09-13). Case 11
+That matters because the `fast` label that stages 4 and 6 run holds
+`test_gate_extra_script`, which drives a nested `gate_extra.sh` over a fake
+tree and expects the default stages: while the variable leaked,
+`STAGES="sanitize" tools/gate_extra.sh` gave that nested run one stage, nine of
+its checks over two cases went red, and the sanitize stage failed with a green
+C++ build (measured 2026-09-13). Case 11
 of that test is the guard — it runs the script with `STAGES` exported and
 asserts the stages' environment carries none. S225.
 
@@ -1219,7 +1271,8 @@ label under the sanitizer, so any red in that label fails the sanitize stage —
 and the marker then names the sanitizers for something that is not theirs, after
 the build has been paid for. The first real run failed exactly that way:
 `test_clang_format_script` could not resolve its pinned major, and 514 s of
-Debug and sanitizer building went by before it said so. On the machine
+Debug and sanitizer building went by before it said so. Stage 6 runs the same
+label twice under clang and is read the same way. On the machine
 `.moltke.local.md` describes that means exporting DEC-146's override **in the
 launching shell**, because a detached run inherits no interactive environment:
 
@@ -1260,15 +1313,22 @@ GATE-EXTRA-FAILED: <stage> <stage>... <outdir>
 ```
 
 `tests/test_gate_extra_script.sh` is the guard on all of that, in the `fast`
-label at about 0.4 s: eleven cases over a sandbox whose `PATH` holds stubs for
-`cmake`, `ctest`, `python3` and `nproc`, so no stage does any real work. Both
-`fastchess.sh` and `rating.sh` shipped with a path that printed no marker at
+label at about 5.5 s on the workstation (4.98 to 6.01 s under ctest; the
+eleven-case version read 1.01 to 1.80 s there, 2026-10-30): seventeen cases
+over a sandbox whose `PATH` holds stubs for `cmake`, `ctest`, `python3`,
+`nproc`, `ninja` and the compilers the clang stage asks for, so no stage does
+any real work. Both `fastchess.sh` and
+`rating.sh` shipped with a path that printed no marker at
 all and both were found after the fact (S167, S177); this one is checked from
 the day the script exists. The sixteen cuts the first ten cases were observed
 red under are `adocs/data/S197_script_mutants.py`, all sixteen still killed at
 S225; case 11 was observed red against the script as it stood before its fix.
+The clang stage's cuts are `adocs/data/S298_script_mutants.py`, one per thing
+the stage claims, each naming the case meant to kill it: all 16 killed, each by
+the case it names, and S197's sixteen still killed, on 2026-10-29
+(`adocs/data/S298_mutants.txt`).
 
-Two of those cases guard against a stage returning a green that means nothing.
+Four of those cases guard against a stage returning a green that means nothing.
 **A build directory is configured and then verified, never trusted because it
 has a `CMakeCache.txt`**: a `build-sanitize` left without `-DSANITIZER=ON`
 would otherwise build an uninstrumented tree, run the whole `fast` label with no
@@ -1278,7 +1338,8 @@ uninvited, so it is a live hazard and not a hypothetical. And **both bench lines
 are checked against the signature pattern**, not only the sanitizer's: an
 unvalidated Release line from a stale `build/` made the "total" the word
 `bestmove`, and the stage then accused the tree of a memory bug and escalated it
-to the BUGS rule.
+to the BUGS rule. The other two are cases 12 and 15, the clang directories'
+compilers and cache strings, under stage 6 above.
 
 #### Coverage, on demand and never a stage
 

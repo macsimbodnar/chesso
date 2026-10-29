@@ -10,7 +10,7 @@
 # the day the script exists.
 #
 #   1. every stub succeeds: exit 0, exactly one marker and it is DONE, and the
-#      five stages ran in the documented order with the documented commands
+#      six stages ran in the documented order with the documented commands
 #   2. the fast label goes red under the sanitizer: exit non-zero, exactly one
 #      marker, FAILED naming sanitize -- and the later stages still ran, which
 #      is what "every stage runs even after one fails" means
@@ -40,15 +40,31 @@
 #      environment of the stages — stage 4's `fast` label holds this very test,
 #      whose nested gate_extra.sh then ran one stage where nine checks over
 #      cases 1 and 2 expect five (2026-09-13, S225)
+#  12. a clang directory whose cache names g++ as its C++ or its C compiler:
+#      the clang stage refuses it by name and builds nothing in it, instead of
+#      passing both fast labels under GCC and reporting `clang ok` (S298)
+#  13. the Mac -- c++ and cc are Apple clang, and clang++-22 does not exist:
+#      the stage takes the default compiler and is green, because a stage red
+#      only for a Linux compiler name the Mac lacks would be a defect
+#  14. no clang on PATH at all: the stage is red and says what it tried, and
+#      configures nothing -- not skipped, which would be a green that compiled
+#      nothing under clang
+#  15. a clang directory whose compilers are right but whose cache lacks Ninja,
+#      libc++, or CHESSO_TUNE=ON in the tune directory: refused by name, and
+#      that directory is not built
+#  16. mixed defaults, c++ Apple clang and cc g++: the default pair is passed
+#      over for clang++-22 and clang-22, because both halves must be clang
+#  17. no ninja on PATH: the stage is red, names ninja, and configures nothing
 #
 # Cases 4 and 5 exist because a first version of this file asserted only that
 # the comparison had run, and a cut replacing its condition with `false`
 # survived every case.
 #
-# No stage does any real work: cmake, ctest and python3 are stubs that record
-# their arguments, and the two engine binaries are one-line scripts printing a
-# bench signature. Nothing is built and no test binary runs, so the whole thing
-# is seconds and belongs in the fast label even though what it covers does not.
+# No stage does any real work: cmake, ctest, python3 and the compilers are stubs
+# that record their arguments, and the two engine binaries are one-line scripts
+# printing a bench signature. Nothing is built and no test binary runs, so the
+# whole thing is seconds and belongs in the fast label even though what it
+# covers does not.
 #
 # Usage: test_gate_extra_script.sh <gate_extra.sh>
 
@@ -110,7 +126,12 @@ make_stub()
 # cmake writes the cache its arguments describe, because the script verifies the
 # directory rather than trusting that it exists. With stale_sanitize_cache the
 # sanitizer directory comes back configured but without SANITIZER=ON -- the
-# vacuous green case 7 exists for.
+# vacuous green case 7 exists for. With stale_clang_cache, the compiler that
+# file names (CMAKE_CXX_COMPILER or CMAKE_C_COMPILER) comes back as the g++
+# stub whatever the configure asked for -- the vacuous green case 12 exists for.
+# With stale_clang_flags, the cache line that file names is left out: the
+# generator or the libc++ flags in both clang directories, or CHESSO_TUNE in
+# build-clang-tune alone -- case 15.
 make_stub cmake "
 b=''
 prev=''
@@ -118,10 +139,19 @@ for a in \"\$@\"; do
   if [ \"\$prev\" = -B ]; then b=\"\$a\"; fi
   prev=\"\$a\"
 done
+stale=''
+if [ -f \"$tmp/stale_clang_cache\" ]; then stale=\$(cat \"$tmp/stale_clang_cache\"); fi
+drop=''
+if [ -f \"$tmp/stale_clang_flags\" ]; then drop=\$(cat \"$tmp/stale_clang_flags\"); fi
 if [ -n \"\$b\" ]; then
   mkdir -p \"\$b\"
   : > \"\$b/CMakeCache.txt\"
+  prev=''
   for a in \"\$@\"; do
+    if [ \"\$prev\" = -G ] && [ \"\$drop\" != CMAKE_GENERATOR ]; then
+      echo \"CMAKE_GENERATOR:INTERNAL=\$a\" >> \"\$b/CMakeCache.txt\"
+    fi
+    prev=\"\$a\"
     case \"\$a\" in
       -DCMAKE_BUILD_TYPE=*)
         echo \"CMAKE_BUILD_TYPE:STRING=\${a#-DCMAKE_BUILD_TYPE=}\" >> \"\$b/CMakeCache.txt\" ;;
@@ -129,12 +159,47 @@ if [ -n \"\$b\" ]; then
         if [ ! -f \"$tmp/stale_sanitize_cache\" ]; then
           echo \"SANITIZER:BOOL=\${a#-DSANITIZER=}\" >> \"\$b/CMakeCache.txt\"
         fi ;;
+      -DCHESSO_TUNE=*)
+        case \"\$drop:\$b\" in
+          CHESSO_TUNE:*/build-clang-tune) ;;
+          *) echo \"CHESSO_TUNE:BOOL=\${a#-DCHESSO_TUNE=}\" >> \"\$b/CMakeCache.txt\" ;;
+        esac ;;
+      -DCMAKE_CXX_FLAGS=*)
+        if [ \"\$drop\" != CMAKE_CXX_FLAGS ]; then
+          echo \"CMAKE_CXX_FLAGS:STRING=\${a#-DCMAKE_CXX_FLAGS=}\" >> \"\$b/CMakeCache.txt\"
+        fi ;;
+      -DCMAKE_EXE_LINKER_FLAGS=*)
+        echo \"CMAKE_EXE_LINKER_FLAGS:STRING=\${a#-DCMAKE_EXE_LINKER_FLAGS=}\" >> \"\$b/CMakeCache.txt\" ;;
+      -DCMAKE_CXX_COMPILER=*)
+        v=\"\${a#-DCMAKE_CXX_COMPILER=}\"
+        if [ \"\$stale\" = CMAKE_CXX_COMPILER ]; then v=\"$tmp/stub/c++\"; fi
+        echo \"CMAKE_CXX_COMPILER:FILEPATH=\$v\" >> \"\$b/CMakeCache.txt\" ;;
+      -DCMAKE_C_COMPILER=*)
+        v=\"\${a#-DCMAKE_C_COMPILER=}\"
+        if [ \"\$stale\" = CMAKE_C_COMPILER ]; then v=\"$tmp/stub/cc\"; fi
+        echo \"CMAKE_C_COMPILER:FILEPATH=\$v\" >> \"\$b/CMakeCache.txt\" ;;
     esac
   done
 fi
 exit 0"
 make_stub python3 'exit 0'
 make_stub nproc 'echo 8'
+
+# The compilers the clang stage asks for, each answering --version the way the
+# real one does. The default sandbox is the workstation: c++ and cc are g++
+# 13.3, which the stage must pass over, and clang++-22 and clang-22 are the
+# clang it takes. Case 13 swaps in the Mac's Apple clang, case 14 takes the
+# clang away.
+compiler_stub() { make_stub "$1" "echo '$2'"; }
+gcc_said='c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0'
+apple_said='Apple clang version 17.0.0 (clang-1700.0.13.5)'
+compiler_stub c++ "$gcc_said"
+compiler_stub cc "$gcc_said"
+compiler_stub clang++-22 'Ubuntu clang version 22.1.8 (stub)'
+compiler_stub clang-22 'Ubuntu clang version 22.1.8 (stub)'
+# The clang stage refuses a machine without ninja, so the sandbox has one;
+# case 17 takes it away.
+make_stub ninja 'exit 0'
 
 # The one stub with an opinion: red on the fast label, and only when the case
 # asks for it by touching the flag file. It also records whether STAGES was in
@@ -178,7 +243,8 @@ run_sandbox()
   : > "$calls"
   : > "$ctest_env"
   [[ -n "${tmp:-}" ]] && rm -rf "$tmp/out" "$tmp/build/CMakeCache.txt" \
-                               "$tmp/build-debug" "$tmp/build-sanitize/CMakeCache.txt"
+                               "$tmp/build-debug" "$tmp/build-sanitize/CMakeCache.txt" \
+                               "$tmp/build-clang" "$tmp/build-clang-tune"
   # Case 9 needs the directory to exist *before* the script runs, which is the
   # only state in which "it already has a cache" can be trusted or verified.
   if [[ -f "$tmp/plant_stale_cache" ]]; then
@@ -189,8 +255,8 @@ run_sandbox()
     cd "$tmp" || exit 127
     export PATH="$tmp/stub" OUT="$tmp/out" TMPDIR="$tmp"
     # The caller's shell may carry STAGES (someone typed `export STAGES=...`
-    # before ctest); cases 1 to 10 expect the default five stages, so only the
-    # case that asks for a subset gets one.
+    # before ctest); every case but 11 expects the default six stages, so only
+    # the case that asks for a subset gets one.
     unset STAGES
     # Case 11 drives the script the way its header documents the subset, with
     # STAGES exported in the script's own environment rather than set for its
@@ -225,8 +291,8 @@ fi
 if [[ "$(markers)" -ne 1 ]]; then
   fail "1: expected exactly one marker, got $(markers)"; show
 fi
-if ! grep -q '^GATE-EXTRA-DONE 5 stages ' "$tmp/out.txt"; then
-  fail "1: no DONE marker naming five stages"; show
+if ! grep -q '^GATE-EXTRA-DONE 6 stages ' "$tmp/out.txt"; then
+  fail "1: no DONE marker naming six stages"; show
 fi
 
 prose_at="$(call_line 'python3 .*--prose')"
@@ -285,6 +351,49 @@ if ! grep -rq 'INV-6 across builds: both 12345 nodes' "$tmp/out"; then
   fail "1: the sanitize stage did not compare the two bench totals"; show
 fi
 
+# The clang stage, S298, sixth and last: both directories configured as the
+# Mac's build -- clang, libc++, Release, Ninja -- and the second with
+# CHESSO_TUNE=ON; each built with Ninja's keep-going, so every error reaches
+# the log, then its fast label. The sandbox's c++ is the workstation's g++, so
+# the compiler passed must be the clang++-22 stub and not c++.
+for dir in build-clang build-clang-tune; do
+  tune=OFF
+  [[ "$dir" == build-clang-tune ]] && tune=ON
+  for want in '-G Ninja' '-DCMAKE_BUILD_TYPE=Release' "-DCHESSO_TUNE=$tune" \
+              '-DCMAKE_CXX_COMPILER=[^ ]*/clang++-22' '-DCMAKE_C_COMPILER=[^ ]*/clang-22' \
+              '-DCMAKE_CXX_FLAGS=-stdlib=libc++' '-DCMAKE_EXE_LINKER_FLAGS=-stdlib=libc++'; do
+    if ! grep -q -- "cmake -S .* -B [^ ]*/$dir .*$want" "$calls"; then
+      fail "1: $dir is not configured with $want"; show
+    fi
+  done
+  if ! grep -q -- "cmake --build [^ ]*/$dir -j[0-9]* -- -k 0" "$calls"; then
+    fail "1: $dir is not built with -k 0, so its first error would hide the rest"; show
+  fi
+  if ! grep -q -- "ctest --test-dir [^ ]*/$dir -L fast .*--no-tests=error" "$calls"; then
+    fail "1: the fast label did not run in $dir"; show
+  fi
+done
+
+cconf_at="$(call_line 'cmake -S .* -B [^ ]*/build-clang ')"
+cbuild_at="$(call_line 'cmake --build [^ ]*/build-clang ')"
+cfast_at="$(call_line 'ctest --test-dir [^ ]*/build-clang ')"
+tconf_at="$(call_line 'cmake -S .* -B [^ ]*/build-clang-tune ')"
+tbuild_at="$(call_line 'cmake --build [^ ]*/build-clang-tune ')"
+tfast_at="$(call_line 'ctest --test-dir [^ ]*/build-clang-tune ')"
+for var in cconf_at cbuild_at cfast_at tconf_at tbuild_at tfast_at; do
+  eval "[[ -n \"\${$var}\" ]] || $var=0"
+done
+if ((slow_at > 0 && tfast_at > 0)); then
+  if ! ((slow_at < cconf_at && cconf_at < cbuild_at && cbuild_at < cfast_at \
+         && cfast_at < tconf_at && tconf_at < tbuild_at && tbuild_at < tfast_at)); then
+    fail "1: the clang stage is not last, or its halves ran out of order (slow" \
+         "$slow_at, build-clang configure $cconf_at, build $cbuild_at, fast" \
+         "$cfast_at, build-clang-tune configure $tconf_at, build $tbuild_at," \
+         "fast $tfast_at)"
+    show
+  fi
+fi
+
 # 2. The fast label is red under the sanitizer: one FAILED marker naming
 #    sanitize, and the stages after it still ran.
 : > "$tmp/fail_ctest_fast"
@@ -309,6 +418,21 @@ if ((slow_at == 0)); then
   fail "2: the perft stage did not run after the sanitize stage failed"; show
 elif ((slow_at < sfast_at)); then
   fail "2: the slow label ran before the stage that failed"; show
+fi
+# The stub's fast label is red in the clang directories too, so the clang stage
+# fails beside sanitize -- and inside it the same rule holds: build-clang-tune
+# is still configured, built and tested after build-clang's fast label failed.
+if ! grep -q '^GATE-EXTRA-FAILED: sanitize clang ' "$tmp/out.txt"; then
+  fail "2: the marker does not name exactly sanitize and clang"; show
+fi
+cfast_at="$(call_line 'ctest --test-dir [^ ]*/build-clang ')"
+tfast_at="$(call_line 'ctest --test-dir [^ ]*/build-clang-tune ')"
+[[ -n "$cfast_at" ]] || cfast_at=0
+[[ -n "$tfast_at" ]] || tfast_at=0
+if ((cfast_at == 0)); then
+  fail "2: build-clang's fast label never ran"; show
+elif ((tfast_at < cfast_at)); then
+  fail "2: build-clang-tune was not tested after build-clang's fast label failed"; show
 fi
 
 # 3. No cmake: the refusal comes from fail(), and the EXIT trap does not add a
@@ -483,7 +607,149 @@ if [[ ! -s "$ctest_env" ]]; then
 fi
 if grep -qv '^STAGES=unset$' "$ctest_env"; then
   fail "11: STAGES reached a stage's environment ($(tr '\n' ' ' < "$ctest_env"))," \
-       "so a nested gate_extra.sh would not run all five stages"; show
+       "so a nested gate_extra.sh would not run all its default stages"; show
+fi
+
+# 12. A clang directory comes back with g++ in its cache, after a configure that
+#     asked for clang. Built, it would pass both fast labels under GCC and the
+#     stage would report `clang ok` with no clang having run -- the vacuous
+#     green case 7 guards on the sanitizer directory. A backstop for this
+#     stage, which always passes both compilers by -D: the stub plays a CMake
+#     that did not do what it was told. Once per compiler, because the stage
+#     checks both: C and ASM are in the project too.
+for var in CMAKE_CXX_COMPILER CMAKE_C_COMPILER; do
+  echo "$var" > "$tmp/stale_clang_cache"
+  status="$(run_sandbox)"
+  rm -f "$tmp/stale_clang_cache"
+  if [[ "$status" -eq 0 ]]; then
+    fail "12: exited 0 with a clang directory whose $var is g++"; show
+  fi
+  if ! grep -q '^GATE-EXTRA-FAILED: clang ' "$tmp/out.txt"; then
+    fail "12: a $var that is not clang did not fail the clang stage alone"; show
+  fi
+  if ! grep -q "its $var is .*, which is not clang" "$tmp/out.txt"; then
+    fail "12: the refusal does not name the cache's $var"; show
+  fi
+  if grep -q 'cmake --build [^ ]*/build-clang' "$calls" \
+     || grep -q 'ctest --test-dir [^ ]*/build-clang' "$calls"; then
+    fail "12: a clang directory whose $var is g++ was built or tested anyway"; show
+  fi
+done
+
+# 13. The Mac: c++ and cc are Apple clang and there is no clang++-22. The stage
+#     takes the default compiler -- the one the owner's own build/ uses -- and
+#     is green. A stage red there only because a Linux compiler name is absent
+#     would be a defect.
+compiler_stub c++ "$apple_said"
+compiler_stub cc "$apple_said"
+mv "$tmp/stub/clang++-22" "$tmp/clang++-22.parked"
+mv "$tmp/stub/clang-22" "$tmp/clang-22.parked"
+status="$(run_sandbox)"
+mv "$tmp/clang++-22.parked" "$tmp/stub/clang++-22"
+mv "$tmp/clang-22.parked" "$tmp/stub/clang-22"
+compiler_stub c++ "$gcc_said"
+compiler_stub cc "$gcc_said"
+if [[ "$status" -ne 0 ]]; then
+  fail "13: exited $status on the Mac's compilers"; show
+fi
+if ! grep -q '^GATE-EXTRA-DONE 6 stages ' "$tmp/out.txt"; then
+  fail "13: no DONE marker naming six stages on the Mac's compilers"; show
+fi
+for dir in build-clang build-clang-tune; do
+  for want in '-DCMAKE_CXX_COMPILER=[^ ]*/c++' '-DCMAKE_C_COMPILER=[^ ]*/cc'; do
+    if ! grep -q -- "cmake -S .* -B [^ ]*/$dir .*$want" "$calls"; then
+      fail "13: $dir is not configured with the default compiler, $want"; show
+    fi
+  done
+done
+
+# 14. No clang at all: c++ is g++ and nothing else answers. Red, not skipped --
+#     a green that compiled nothing under clang is the vacuous pass this
+#     script exists to remove -- and it says what it looked for rather than
+#     configuring a clang directory with no clang.
+mv "$tmp/stub/clang++-22" "$tmp/clang++-22.parked"
+mv "$tmp/stub/clang-22" "$tmp/clang-22.parked"
+status="$(run_sandbox)"
+mv "$tmp/clang++-22.parked" "$tmp/stub/clang++-22"
+mv "$tmp/clang-22.parked" "$tmp/stub/clang-22"
+if [[ "$status" -eq 0 ]]; then
+  fail "14: exited 0 with no clang on PATH"; show
+fi
+if ! grep -q '^GATE-EXTRA-FAILED: clang ' "$tmp/out.txt"; then
+  fail "14: no clang on PATH did not fail the clang stage alone"; show
+fi
+if ! grep -q 'no clang on PATH' "$tmp/out.txt"; then
+  fail "14: the failure does not say no clang was found"; show
+fi
+if grep -q 'cmake -S .* -B [^ ]*/build-clang' "$calls"; then
+  fail "14: a clang directory was configured with no clang on PATH"; show
+fi
+if grep -q 'command not found' "$tmp/out.txt"; then
+  fail "14: a 'command not found' reached the output"; show
+fi
+
+# 15. The compilers are right and the cache is not the Mac's build: no Ninja
+#     generator, no libc++, or the tune directory without CHESSO_TUNE=ON. The
+#     cache strings are verified as every stage's are, so the directory is
+#     refused by name and not built -- a build-clang-tune built without the
+#     tune option would test the untuned code twice and report both halves.
+for drop in CMAKE_GENERATOR CMAKE_CXX_FLAGS CHESSO_TUNE; do
+  case "$drop" in
+    CMAKE_GENERATOR) dir=build-clang      want='CMAKE_GENERATOR:INTERNAL=Ninja' ;;
+    CMAKE_CXX_FLAGS) dir=build-clang      want='CMAKE_CXX_FLAGS:STRING=-stdlib=libc++' ;;
+    CHESSO_TUNE)     dir=build-clang-tune want='CHESSO_TUNE:BOOL=ON' ;;
+  esac
+  echo "$drop" > "$tmp/stale_clang_flags"
+  status="$(run_sandbox)"
+  rm -f "$tmp/stale_clang_flags"
+  if [[ "$status" -eq 0 ]]; then
+    fail "15: exited 0 with $dir's cache carrying no $want"; show
+  fi
+  if ! grep -q '^GATE-EXTRA-FAILED: clang ' "$tmp/out.txt"; then
+    fail "15: $dir's cache without $want did not fail the clang stage alone"; show
+  fi
+  if ! grep -q -- "$dir/CMakeCache.txt carries no $want" "$tmp/out.txt"; then
+    fail "15: the refusal does not name $want in $dir"; show
+  fi
+  if grep -q -- "cmake --build [^ ]*/$dir " "$calls"; then
+    fail "15: $dir was built with its cache carrying no $want"; show
+  fi
+done
+
+# 16. Mixed defaults: c++ answers as Apple clang and cc as g++. A pair is taken
+#     only when both halves are clang, so the stage passes over the default for
+#     clang++-22 and clang-22 and is green; taking c++ with a gcc cc would build
+#     the C and ASM sources with GCC.
+compiler_stub c++ "$apple_said"
+status="$(run_sandbox)"
+compiler_stub c++ "$gcc_said"
+if [[ "$status" -ne 0 ]]; then
+  fail "16: exited $status with c++ clang and cc g++"; show
+fi
+for dir in build-clang build-clang-tune; do
+  for want in '-DCMAKE_CXX_COMPILER=[^ ]*/clang++-22' '-DCMAKE_C_COMPILER=[^ ]*/clang-22'; do
+    if ! grep -q -- "cmake -S .* -B [^ ]*/$dir .*$want" "$calls"; then
+      fail "16: $dir is not configured with $want past a half-clang default"; show
+    fi
+  done
+done
+
+# 17. No ninja: the stage configures with -G Ninja for -k 0, so it is red,
+#     says ninja is missing, and configures nothing.
+mv "$tmp/stub/ninja" "$tmp/ninja.parked"
+status="$(run_sandbox)"
+mv "$tmp/ninja.parked" "$tmp/stub/ninja"
+if [[ "$status" -eq 0 ]]; then
+  fail "17: exited 0 with no ninja on PATH"; show
+fi
+if ! grep -q '^GATE-EXTRA-FAILED: clang ' "$tmp/out.txt"; then
+  fail "17: no ninja on PATH did not fail the clang stage alone"; show
+fi
+if ! grep -q 'no ninja on PATH' "$tmp/out.txt"; then
+  fail "17: the failure does not say ninja is missing"; show
+fi
+if grep -q 'cmake -S .* -B [^ ]*/build-clang' "$calls"; then
+  fail "17: a clang directory was configured with no ninja on PATH"; show
 fi
 
 if [[ $failures -ne 0 ]]; then

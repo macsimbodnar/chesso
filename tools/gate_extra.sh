@@ -3,7 +3,7 @@ set -uo pipefail
 
 # The second tier of the gate. S197, DEC-141 clause 3, DEC-167.
 #
-#   tools/gate_extra.sh                    all five stages
+#   tools/gate_extra.sh                    all six stages
 #   STAGES="sanitize perft" tools/gate_extra.sh    a subset, after a fix
 #   JOBS=6 OUT=/tmp/run tools/gate_extra.sh        override cores and outdir
 #
@@ -19,6 +19,9 @@ set -uo pipefail
 #   * a sanitizer build, which existed as a CMake option nobody ran since the
 #     2026-08-13 audit;
 #   * deep perft, INV-1 at depths the fast label cannot reach;
+#   * a clang build of the whole tree against libc++, Release and tune: both
+#     gated builds are GCC, which reads -Wall -Wextra -Werror differently from
+#     the Apple clang the owner's Mac builds with (S297, S298);
 #   * tools/plan_prose_check.py --prose, the one mode the fast label does not
 #     already run. --citations is in it as test_plan_citation_freshness since
 #     S187 (DEC-159); stage 2 re-asserts it here for a second's cost rather
@@ -46,7 +49,8 @@ set -uo pipefail
 # marker then says "sanitize" for something that has nothing to do with the
 # sanitizers, after the build has already been paid for. The first real run of
 # this script, 2026-09-10, failed exactly that way: 514 s spent to be told
-# test_clang_format_script could not resolve its pinned major. On the machine
+# test_clang_format_script could not resolve its pinned major. Stage 6 runs the
+# same label twice under clang and is read the same way. On the machine
 # .moltke.local.md describes that means exporting DEC-146's override, and a
 # detached run does not inherit an interactive shell's environment:
 #
@@ -70,7 +74,7 @@ set -uo pipefail
 # EXIT trap would stay silent because `marked` is already 1. Measured before the
 # fix: the terminal log was empty and `GATE-EXTRA-FAILED` was in the stage log.
 # No stage calls `fail` today -- this keeps the header's "one line on every exit
-# path" true for whoever adds stage 6.
+# path" true for whoever adds stage 7.
 exec 9>&2
 
 marked=0
@@ -288,17 +292,144 @@ stage_perft()
   return $?
 }
 
+# True when the compiler at $1 says it is clang. Captured rather than piped into
+# `grep -q`, which exits at its first match: under pipefail a compiler still
+# writing its last lines would turn the yes into a SIGPIPE and a no.
+is_clang()
+{
+  local said
+  said="$("$1" --version 2> /dev/null)" || return 1
+  [[ "$said" == *"clang version"* ]]
+}
+
+# The clang the stage builds with, into clang_cxx and clang_cc: the first pair
+# whose C++ and C drivers are both on PATH and both say they are clang.
+#
+#   c++ and cc            the machine's default, when that is clang. It is on
+#                         the Mac: Apple clang, the compiler the owner's own
+#                         build/ uses and the one S297's break came from, on a
+#                         machine where clang++-22 does not exist. TOOLCHAIN.md
+#                         appends Homebrew LLVM to PATH there so that c++
+#                         stays /usr/bin/c++: Apple clang, not Homebrew's.
+#   clang++-22, clang-22  the workstation, whose c++ is g++ 13.3 (DEC-049).
+#   clang++, clang        any other machine with a clang.
+#
+# Asked rather than trusted by name, because c++ is g++ on one machine and
+# Apple clang on the other. C as well as C++: the project enables C and ASM,
+# and ASM takes the C compiler (CMakeLists.txt). No pair found is red, not
+# skipped -- a machine without clang cannot run this check, and a green that
+# compiled nothing under clang is the class this script exists to remove.
+find_clang()
+{
+  local pair cxx cc cxx_path cc_path
+  clang_cxx=""
+  clang_cc=""
+  for pair in c++:cc clang++-22:clang-22 clang++:clang; do
+    cxx="${pair%%:*}"
+    cc="${pair#*:}"
+    cxx_path="$(command -v "$cxx")" || continue
+    cc_path="$(command -v "$cc")" || continue
+    if ! is_clang "$cxx_path" || ! is_clang "$cc_path"; then
+      continue
+    fi
+    clang_cxx="$cxx_path"
+    clang_cc="$cc_path"
+    return 0
+  done
+  echo "no clang on PATH: tried c++ and cc, clang++-22 and clang-22, clang++ and clang" >&2
+  return 1
+}
+
+# The compilers a clang directory's cache records, asked what they are. The
+# cache strings configure_and_verify greps for cannot say "is clang": the path
+# is /usr/bin/clang++-22 here and /usr/bin/c++ on the Mac. For this stage it is
+# a backstop. The configure always passes both compilers by -D, so a cache
+# holding anything else means CMake did not do what it was told -- and a
+# directory holding g++ would build, pass both fast labels and report
+# `clang ok` with no clang having run. The hazards that make such a directory,
+# CXX ignored by a directory that exists and DEC-052's VS Code writing a
+# compiler into one, belong to S297's hand recipe and not to this stage.
+clang_cache_or_fail()
+{
+  local dir="$1" var value
+  for var in CMAKE_CXX_COMPILER CMAKE_C_COMPILER; do
+    value="$(sed -n "s/^${var}:[A-Z]*=//p" "$repo/$dir/CMakeCache.txt")"
+    if [[ -z "$value" ]] || ! is_clang "$value"; then
+      echo "$dir is not the directory this stage needs: its $var is '$value', which is not clang" >&2
+      echo "remove $repo/$dir and run again" >&2
+      return 1
+    fi
+  done
+  return 0
+}
+
+# One clang directory: configured and verified, built with every error shown,
+# then the fast label. $2 is CHESSO_TUNE, passed either way, so a directory
+# configured by hand with the other value comes back to this one.
+clang_half()
+{
+  local dir="$1" tune="$2" expect
+  expect="CMAKE_GENERATOR:INTERNAL=Ninja CMAKE_BUILD_TYPE:STRING=Release"
+  expect="$expect CHESSO_TUNE:BOOL=$tune CMAKE_CXX_FLAGS:STRING=-stdlib=libc++"
+  expect="$expect CMAKE_EXE_LINKER_FLAGS:STRING=-stdlib=libc++"
+  configure_and_verify "$dir" "$expect" \
+      -G Ninja -DCMAKE_BUILD_TYPE=Release -DCHESSO_TUNE="$tune" \
+      -DCMAKE_C_COMPILER="$clang_cc" -DCMAKE_CXX_COMPILER="$clang_cxx" \
+      -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DCMAKE_EXE_LINKER_FLAGS=-stdlib=libc++ \
+    && clang_cache_or_fail "$dir" \
+    && cmake --build "$repo/$dir" -j"$jobs_n" -- -k 0 \
+    && ctest --test-dir "$repo/$dir" -L fast --output-on-failure --no-tests=error
+  return $?
+}
+
+# A compile break only clang reports, found here weekly instead of on the
+# owner's Mac (S297, S298). The same -Wall -Wextra -Werror reads differently in
+# the two front ends: GCC 13 does not flag a variable that is only incremented
+# and clang does (-Wunused-but-set-variable), so the Mac's build stopped in
+# tools/tuner_trace.hpp while both gated GCC builds were green.
+#
+# Two directories, as the automatic gate has two: build-clang, and
+# build-clang-tune with CHESSO_TUNE=ON, because src/search_params.hpp is
+# different code in the tune build (DEC-118). Release, because Debug turns the
+# unused-* warnings off (CMakeLists.txt). libc++ in both, the Mac's standard
+# library: clang here compiles against GCC's libstdc++ unless told otherwise,
+# and an #include one library supplies transitively and the other does not is
+# the same kind of break. Ninja, because `-k 0` is its flag: every error in the
+# tree reaches the log, not only the first, and a machine without ninja is
+# refused by name -- the owner's Mac builds with it. The second directory is
+# built and tested even when the first fails, for the reason the driver runs
+# every stage.
+#
+# A compile check, never a measured binary: no bench total is read from either
+# directory (DEV_MANUAL.md "Build"). Last in the order so that no stage before
+# it was renumbered -- stages 3 and 4 are cited by number in DEV_MANUAL.md,
+# adocs/specs.md and finished step files.
+stage_clang()
+{
+  local status=0
+  find_clang || return $?
+  if ! command -v ninja > /dev/null; then
+    echo "no ninja on PATH: the clang stage configures with -G Ninja for -k 0" >&2
+    return 1
+  fi
+  echo "clang stage: C++ $clang_cxx, C $clang_cc"
+  "$clang_cxx" --version || return $?
+  clang_half build-clang OFF || status=$?
+  clang_half build-clang-tune ON || status=$?
+  return $status
+}
+
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
 
-all_stages="prose citations debug sanitize perft"
+all_stages="prose citations debug sanitize perft clang"
 stages="${STAGES:-$all_stages}"
 
-# Read once, then taken out of the environment before any stage runs. Stage 4
-# runs the whole `fast` label, and tests/test_gate_extra_script.sh is in it:
-# that test drives a nested gate_extra.sh over a fake tree and its cases expect
-# the default five stages. Inherited, `STAGES="sanitize" tools/gate_extra.sh`
+# Read once, then taken out of the environment before any stage runs. Stages 4
+# and 6 run the whole `fast` label, and tests/test_gate_extra_script.sh is in
+# it: that test drives a nested gate_extra.sh over a fake tree and its cases
+# expect the default six stages. Inherited, `STAGES="sanitize" tools/gate_extra.sh`
 # gave the nested script one stage, nine of its checks over two cases went red,
 # and the documented subset invocation failed its own gate with a green C++
 # build. `unset`, not `export -n`: the variable is only exported when it was
