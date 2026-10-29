@@ -170,6 +170,10 @@ struct options_t
   double plant_k =
       0.7624;  // S065's fitted K over this corpus, printed by that run
   size_t sample = 200000;  // rows the regression uses; every row for the rest
+  // S121: the free set the identity report is read for, a tuner `--only`
+  // group. A null direction the run's frozen columns hold is held; one free
+  // on every side is a direction the fit can walk.
+  std::string free_group = "all";
   bool columns = true;
   bool identities = true;
   bool occurrence = true;
@@ -500,9 +504,16 @@ std::string column_name(size_t i)
                  std::string(types[s / 64]) + "][" + square(s % 64));
   }
   if (i < KS_MG_BASE) {
+    // A cell of S121's table: its piece type and its count.
     const bool mg = i < MOB_EG_BASE;
+    const int cell = static_cast<int>(i - (mg ? MOB_MG_BASE : MOB_EG_BASE));
+    int type = 3;
+    while (cell < MOBILITY_OFFSET[type]) {
+      type--;
+    }
     return block("mobility", mg,
-                 mobility[i - (mg ? MOB_MG_BASE : MOB_EG_BASE)]);
+                 std::string(mobility[type]) + "][" +
+                     std::to_string(cell - MOBILITY_OFFSET[type]));
   }
   if (i < PP_MG_BASE) {
     const bool mg = i < KS_EG_BASE;
@@ -735,7 +746,10 @@ std::string describe(const std::vector<std::pair<size_t, int64_t>>& v)
 // the rank of the design over the whole corpus, the dependencies the
 // parameterisation has by construction checked exactly, and whatever is left
 // after those found and printed rather than argued about.
-void report_identities(const dataset_t& data, size_t sample)
+void report_identities(const dataset_t& data,
+                       size_t sample,
+                       const std::vector<uint8_t>& mask,
+                       const std::string& free_name)
 {
   // A nonlinear group's per-side entries have no column in a linear design.
   // load() refuses them while no group is declared (tools/tuner_trace.hpp,
@@ -927,6 +941,47 @@ void report_identities(const dataset_t& data, size_t sample)
     }
   }
 
+  // S121's eight: every piece of type t adds one cell of its mobility row, so
+  // in each half the row's cells summed and the type's table squares summed
+  // carry the same coefficient on every row, White's pieces of that type
+  // minus Black's. Adding c to every cell and taking c off every square of
+  // the half's table is the same linear score; the clamp over stage two is
+  // the only thing that tells them apart, and the design leaves it out. One
+  // per piece type with a mobility row and half: knight, bishop, rook, queen.
+  for (int type = 0; type < 4; ++type) {
+    for (const bool mg : {true, false}) {
+      known_t k;
+      const std::string name =
+          column_name((mg ? MOB_MG_BASE : MOB_EG_BASE) +
+                      static_cast<size_t>(MOBILITY_OFFSET[type]));
+      const std::string half = mg ? "mg" : "eg";
+      const std::string piece = name.substr(12, name.find(']') - 12);
+      k.what = "the sum of every mobility_" + half + "[" + piece +
+               "] cell = the sum of every psqt_" + half + "[" + piece +
+               "] column (S121)";
+      k.drop = PARAM_COUNT;
+
+      for (int c = 0; c < MOBILITY_WIDTH[type]; ++c) {
+        const size_t cell = (mg ? MOB_MG_BASE : MOB_EG_BASE) +
+                            static_cast<size_t>(MOBILITY_OFFSET[type] + c);
+        if (!dropped[cell]) {
+          k.vector.push_back({cell, 1});
+          if (k.drop == PARAM_COUNT) { k.drop = cell; }
+        }
+      }
+
+      // The piece-square table of the same piece: psqt type = mobility type
+      // + 1, the pawn having no mobility row.
+      for (size_t s = 0; s < 64; ++s) {
+        const size_t column =
+            (mg ? MG_BASE : EG_BASE) + static_cast<size_t>(type + 1) * 64 + s;
+        if (!dropped[column]) { k.vector.push_back({column, -1}); }
+      }
+
+      known.push_back(k);
+    }
+  }
+
   size_t known_held = 0;
 
   for (const known_t& k : known) {
@@ -1077,18 +1132,64 @@ void report_identities(const dataset_t& data, size_t sample)
     }
   }
 
+  // S121's eight mobility levels are no gauge: they are null only where the
+  // clamp does not bind, so a hold would move the rows where it does. A level
+  // is held when the audited free set freezes either side of it -- its row's
+  // cells or its piece's table half -- since no free parameter can then move
+  // along it; every S121 fit is `--only mobility`, the tables frozen. A level
+  // free on both sides (S126's `--only all`) is a direction nothing holds and
+  // fails the span below, as S275's walk did before its gauges, and the tuner
+  // refuses such a mask (tools/tuner_groups.hpp, mobility_levels_held()).
+  size_t levels_frozen = 0;
+
+  for (const known_t& k : known) {
+    if (k.what.find("(S121)") == std::string::npos) { continue; }
+    if (quadratic_form(gram, k.vector) != 0) { continue; }
+
+    bool cells_free = false;
+    bool table_free = false;
+    for (const auto& [column, sign] : k.vector) {
+      if (!mask[column]) { continue; }
+      if (sign > 0) {
+        cells_free = true;
+      } else {
+        table_free = true;
+      }
+    }
+
+    if (cells_free && table_free) {
+      printf(
+          "identities: mobility level, %s: free on both sides under --free "
+          "%s, and no gauge holds it; a fit freeing both must hold or freeze "
+          "it\n",
+          k.what.c_str(), free_name.c_str());
+      continue;
+    }
+
+    printf(
+        "identities: mobility level, %s: held by the freeze under --free %s "
+        "(its %s are frozen); a fit freeing both must hold or freeze it\n",
+        k.what.c_str(), free_name.c_str(),
+        table_free ? "cells" : "table squares");
+    pinned.push_back(k.vector);
+    levels_frozen++;
+  }
+
   const size_t spanned = rank_of_vectors(pinned);
   const size_t nullity_bound = PARAM_COUNT - full_rank;
 
   printf(
-      "identities: %zu zero columns and %zu held gauges span %zu of at most "
-      "%zu null dimensions: %s\n",
-      zero_count, gauges_null, spanned, nullity_bound,
-      (spanned == nullity_bound)
+      "identities: %zu zero columns, %zu held gauges and %zu frozen mobility "
+      "levels span %zu of at most %zu null dimensions: %s\n",
+      zero_count, gauges_null, levels_frozen, spanned, nullity_bound,
+      (spanned != nullity_bound)
+          ? "a null direction the tuner does not hold, pin it or measure it "
+            "before a fit"
+      : (levels_frozen == 0)
           ? "every null direction is one Adam never moves or one the tuner "
             "holds"
-          : "a null direction the tuner does not hold, pin it or measure it "
-            "before a fit");
+          : "every null direction is one Adam never moves, one the tuner "
+            "holds, or a mobility level the run's frozen columns hold");
 }
 
 
@@ -1098,8 +1199,12 @@ void usage()
       "usage: feature_audit --data FILE [--plant FILE] [--plant-k K]\n"
       "                     [--plant-group "
       "all|passed_pawns|piece_placement|tempo]\n"
-      "                     [--sample N] [--no-columns] [--no-identities]\n"
-      "                     [--no-occurrence] [--no-collinearity]\n");
+      "                     [--sample N] [--free GROUP] [--no-columns]\n"
+      "                     [--no-identities] [--no-occurrence] "
+      "[--no-collinearity]\n"
+      "  --free GROUP   the tuner `--only` group the identity report is read\n"
+      "                 for (default all); S121's eight mobility levels are\n"
+      "                 held only where it freezes one side of each\n");
 }
 
 }  // namespace
@@ -1123,6 +1228,8 @@ int main(int argc, char** argv)
       opts.plant_k = atof(argv[++i]);
     } else if (arg == "--sample" && has_value) {
       opts.sample = static_cast<size_t>(atoll(argv[++i]));
+    } else if (arg == "--free" && has_value) {
+      opts.free_group = argv[++i];
     } else if (arg == "--no-columns") {
       opts.columns = false;
     } else if (arg == "--no-identities") {
@@ -1235,7 +1342,15 @@ int main(int argc, char** argv)
   }
 
   // ------------------------------------------------------------ identities
-  if (opts.identities) { report_identities(data, opts.sample); }
+  if (opts.identities) {
+    std::vector<uint8_t> mask;
+    if (!tuner_groups::free_mask(opts.free_group, &mask)) {
+      fprintf(stderr, "unknown --free group '%s'; groups are: %s\n",
+              opts.free_group.c_str(), tuner_groups::GROUP_LIST);
+      return 1;
+    }
+    report_identities(data, opts.sample, mask, opts.free_group);
+  }
 
   // ----------------------------------------------------------- occurrence
   if (opts.occurrence) {
@@ -1323,6 +1438,73 @@ int main(int argc, char** argv)
         printf(" %8.2f", share);
       }
       printf("\n");
+    }
+
+    // S121's support report: per mobility cell and half, the rows on which the
+    // cell's coefficient is non-zero and the half's taper weight is too --
+    // phase above 0 for the middlegame half, below 24 for the endgame one --
+    // and how many games those rows come from, games being where the labels
+    // are independent (S066's boundaries, tools/tuner_split.hpp). A half with
+    // no such row is a zero column of the identity report. One line a column,
+    // `support <name> rows N games G`, which adocs/data/S121_screen.py ties
+    // reads to tie the cells under its pre-registered threshold.
+    {
+      std::vector<uint32_t> starts;
+      tuner_split::game_starts(data.ply, &starts);
+
+      const uint32_t first = feature_of(eval_trace::TERM_MOBILITY, 0);
+      const uint32_t last = feature_of(eval_trace::TERM_MOBILITY,
+                                       static_cast<size_t>(MOBILITY_CELLS));
+      const size_t width = last - first;
+
+      std::vector<uint64_t> rows(2 * width, 0);
+      std::vector<uint64_t> games(2 * width, 0);
+      std::vector<int64_t> seen(2 * width, -1);  // the last game counted
+      size_t game = 0;
+
+      for (size_t row = 0; row < data.size(); ++row) {
+        while (game + 1 < starts.size() && starts[game + 1] <= row) {
+          game++;
+        }
+
+        const bool has_mg = data.phase[row] > 0;
+        const bool has_eg = data.phase[row] < GAME_PHASE_MAX;
+
+        for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+          const tuner_trace::entry_t e = data.entries[j];
+          if (e.feature < first || e.feature >= last || e.coef == 0) {
+            continue;
+          }
+
+          const size_t cell = e.feature - first;
+          for (size_t half = 0; half < 2; ++half) {
+            if ((half == 0) ? !has_mg : !has_eg) { continue; }
+
+            const size_t slot = half * width + cell;
+            rows[slot]++;
+            if (seen[slot] != static_cast<int64_t>(game)) {
+              seen[slot] = static_cast<int64_t>(game);
+              games[slot]++;
+            }
+          }
+        }
+      }
+
+      printf(
+          "\nmobility support: rows with a non-zero cell coefficient and a "
+          "non-zero taper weight for the half, and the games they come from, "
+          "%zu games in all\n",
+          starts.size());
+
+      for (size_t half = 0; half < 2; ++half) {
+        for (size_t cell = 0; cell < width; ++cell) {
+          const size_t slot = half * width + cell;
+          printf("support %s rows %" PRIu64 " games %" PRIu64 "\n",
+                 column_name(((half == 0) ? MOB_MG_BASE : MOB_EG_BASE) + cell)
+                     .c_str(),
+                 rows[slot], games[slot]);
+        }
+      }
     }
 
     // Tempo is not a count and has no zero case; what it has is a label-side

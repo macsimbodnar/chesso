@@ -16424,3 +16424,111 @@ Rejected:     Keeping 159: the test stays red, so the tempo cannot land even
               on H1.
 Consequences: An H1 close lands the paste with this floor change and asks no
               further question. DEC-323 (3) is discharged in advance.
+
+## DEC-326  2026-10-28  S121's screen: five parts in fixed order, a table at identity, ties, one mask patch, a guarded mobility level
+Tags:         evaluation, mobility, tuning, screening, sprt, s121, dec-259, dec-315, dec-084, dec-134, dec-221, dec-258, dec-324, dec-047, dec-316
+Context:      S121's accepts asks for a per-count mobility table that is
+              fitted entry by entry, an area with three exclusions, and a pin
+              rule. Each is to be screened apart before one family SPRT
+              (DEC-259). The research pass of 2026-10-28 found these problems:
+              (a) both own-pawn exclusions are a no-op on today's
+              `attacks & ~own`;
+              (b) "blocked" and "low-rank" are undefined;
+              (c) section 1's king square contradicts the accepts;
+              (d) DEC-315's gain is undefined for two fitted ends;
+              (e) pitfall 1 rules out the only neutral seed;
+              (f) the corpus barely reaches some cells;
+              (g) two coverage tests go red on the table.
+              The phase 1a fast check found that counting the eight new null
+              directions as spanned would pass S126's `--only all` with eight
+              unheld directions, S275's drift. Phase 1b found the fixture's
+              coverage rule refused twice by its own checks (below, (6)).
+Decision:     By the coordinator, 2026-10-28, under the owner's standing
+              instruction, amended the same day.
+              (1) Five parts in fixed order, earlier survivors live:
+              P0 the table over `attacks & ~own`;
+              P1 enemy pawn attacks excluded;
+              P2a the area replaces `~own`, own blocked pawns excluded. The
+              switch that lets own pieces count is inseparable from the first
+              own-pawn exclusion, so it is P2a's price, read as the accepts'
+              own form;
+              P2b own low-rank pawns excluded as well, always inside the area.
+              Its predecessor is P2a if P2a survives; otherwise it is the area
+              with both exclusions against the last survivor;
+              P3 a pinned piece counts only its pin line.
+              The area and the pins change the mobility count only.
+              (2) Blocked: any piece on the push square. Low-rank: the side's
+              own second and third ranks. The own king is not excluded and is
+              recorded unmeasured.
+              (3) P0 by DEC-315 against the shipped start. P1 to P3 by a gain
+              paired by sample against the last survivor, kept iff the full d
+              > max(1.645 sd(d_q), 2e-6), with one K a sample at the shipped
+              constants. If P0 is dropped, the parts are screened over the
+              linear model (cells tied c times their count-1 cell) against
+              its own refit over today's count, fitted against fitted. A
+              linear candidate ships lround(c x w).
+              (4) The identity seed, c times S083's weights, DEC-134 (b).
+              It overrules the step file's section 4, "No seeds", and its
+              pitfall 1, "the linear weights are not a starting point": the
+              seed is what makes phase 1 bit-identical and DEC-315's start
+              the shipped evaluation. Pitfall 1's concern is answered by
+              convergence; the reading prints per fit the epoch of its best
+              report and whether it stopped on patience or at the
+              5000-epoch cap. Phase 1 lands `No functional change`.
+              (5) A cell half under 1000 games is tied to the nearest
+              supported cell of its piece and half, one shared parameter. The
+              ties are written before any fit and applied before the first
+              gradient.
+              (6) Coverage by fixture rows, found by a tool. A constructive
+              generator is the fallback, and an owner ruling is needed only
+              if both fail. The tool starts from the 42 rows before its
+              block and re-derives the block itself (DEC-142). Its
+              eligibility was amended twice at phase 1b, before any pick was
+              kept: a pick and its mirror score within 800 cp of level, since
+              lopsided picks left the case's sigmoid flat and four parameters
+              without a gradient (DEC-316's non-vacuity class); and both load
+              with either side to move, since `test_eval_model` "the move is
+              worth the same to either side" REQUIREs it of every row. Every
+              precondition is re-derived by its script; the clamp case's
+              push becomes +140 by its own rule.
+              The planted-vector check is replaced by five checks: the
+              per-cell walk, the gradient check, exact reconstruction, INV-6
+              at identity, and the audit's rank.
+              (7) The parts live in one throwaway patch behind a build-time
+              mask (P1 1, P2a 2, P3 4, P2b 8 only beside 2), so `src/` stays
+              single. Cost-only builds of the same patch are timed by
+              DEC-047's method.
+              (8) Bisection on H0 or no verdict: A | B1 | B2a | B2b | C, each
+              its own `{0, 5}` SPRT, survivors only. A part without A plays a
+              linear refit over its count. At worst six SPRTs.
+              (9) If the candidate's clamp share passes 1.0 % of the corpus's
+              rows, phase 2 stops. Its mobility p99 and maximum are recorded
+              for S122.
+              (10) The eight mobility levels have no gauge. The tuner refuses
+              a free set that frees both sides of one. feature_audit counts a
+              level held only where the audited set freezes one side, which
+              `--only mobility` does.
+Why:          Each part becomes a measured decision with a defined
+              predecessor. The landing is provably neutral. No shipped entry
+              is unfitted. No fit walks a direction nothing holds.
+Rejected:     Keeping `~own` and dropping both own-pawn exclusions as
+              vacuous: the accepts names them.
+              One P2 bundling both exclusions: the accepts screens each.
+              P2b over `~own`: a no-op.
+              A count cap at the supported width: it ships cells unfitted.
+              Three cumulative patches: they cannot screen a part whose
+              predecessor was dropped.
+              A compile-time selector in `src/`: DEC-118's class.
+              DEC-304's √2: both ends are fitted and paired.
+              Counting the mobility levels as spanned in every audit: it
+              would pass S126's drift.
+Consequences: `PARAM_COUNT` goes 831 -> 955, and the shipped constants 825
+              -> 949. feature_audit's rank is 908 less the unreached columns,
+              read `--free mobility`. `tuner --tie` exists, and the tuner now
+              refuses `--only all` and any free set that walks a level, so
+              S126 must hold or freeze the levels. The fixture gains 38 rows
+              (19 pairs, 80 in all), each pick within 800 cp of level and
+              loadable with either side to move, the two eligibility
+              amendments above. A later change to the counts or the
+              constants re-derives them by the same tool. The clamp case's
+              push becomes +140. S122 inherits the clamp readings.

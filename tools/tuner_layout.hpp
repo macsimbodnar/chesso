@@ -8,7 +8,8 @@
 // layout lives here, where the trace's term table, those tools and
 // tools/tuner_groups.hpp read it. Nothing in it changed in the move: the
 // indices, the order and the 823 are the ones every fit from S134 to S135
-// emitted. S135 widened the piece placement block from three to seven, 831.
+// emitted. S135 widened the piece placement block from three to seven, 831;
+// S121 made mobility a table, 66 cells a half where it had four, 955.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -23,15 +24,18 @@ namespace tuner_layout
 constexpr size_t MATERIAL_COUNT = 5;
 constexpr size_t SQUARE_COUNT = 6 * 64;
 
-// Mobility, added at S034: four weights for the middlegame and four for the
-// endgame, in knight, bishop, rook, queen order. Pawns and kings have no
-// mobility term.
+// Mobility, added at S034, a table since S121: one cell per count a piece can
+// have, knight 0..8, bishop 0..13, rook 0..14, queen 0..27, laid end to end in
+// that order (src/evaluation.hpp, MOBILITY_OFFSET), 66 for the middlegame and
+// 66 for the endgame. Four weights a half, one per type times the count, until
+// S121. Pawns and kings have no mobility term.
 //
-// The counts themselves are a property of the position and not of the
-// parameters, so they enter as features and the model stays linear -- which is
-// what keeps a pass over a million positions cheap and the gradient closed
-// form.
-constexpr size_t MOBILITY_COUNT = 4;
+// A cell's coefficient is how many White pieces of its type have its count
+// minus how many Black ones do, a property of the position and not of the
+// parameters, so the model stays linear -- which is what keeps a pass over a
+// million positions cheap and the gradient closed form. Taken from the
+// engine's own width, as the counts below are.
+constexpr size_t MOBILITY_COUNT = static_cast<size_t>(MOBILITY_CELLS);
 
 // King safety, added at S027: nine counts about a side's own king, weighted for
 // the middlegame and for the endgame and tapered the way mobility is. Linear in
@@ -136,9 +140,17 @@ inline void starting_params(double* params)
     }
   }
 
-  for (size_t t = 0; t < MOBILITY_COUNT; ++t) {
-    params[MOB_MG_BASE + t] = mobility_mg[t];
-    params[MOB_EG_BASE + t] = mobility_eg[t];
+  const int* const mobility_mg[4] = {mobility_knight_mg, mobility_bishop_mg,
+                                     mobility_rook_mg, mobility_queen_mg};
+  const int* const mobility_eg[4] = {mobility_knight_eg, mobility_bishop_eg,
+                                     mobility_rook_eg, mobility_queen_eg};
+
+  for (int type = 0; type < 4; ++type) {
+    for (int c = 0; c < MOBILITY_WIDTH[type]; ++c) {
+      const size_t cell = static_cast<size_t>(MOBILITY_OFFSET[type] + c);
+      params[MOB_MG_BASE + cell] = mobility_mg[type][c];
+      params[MOB_EG_BASE + cell] = mobility_eg[type][c];
+    }
   }
 
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {

@@ -196,6 +196,80 @@ inline const std::vector<std::string> positions = {
     // and reads 1.87e-5 there. python-chess reports both Status.VALID.
     "1r1Nk2r/ppp1n1pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQk - 2 9",
     "r3k2r/pp2bppp/2p5/8/2B5/8/PPP1N1PP/1R1nK2R b Kkq - 2 9",
+    // S121's mobility table, added at S121's phase 1b: each position, then
+    // its colour-mirror, picked by adocs/data/S121_coverage_rows.cpp's rule
+    // and not by hand. The forty-two rows above leave 55 of the table's 132
+    // cell halves with no coefficient at a phase that weights them. On them
+    // the gradient case's non-vacuity (test_tuner_gradient) read red on 55
+    // parameters, and "the positions move every term both ways"
+    // (test_eval_trace), which also reads the JSON suites, on one feature,
+    // the queen's count 27. The rule: greedy over all_test_fens(), then
+    // S083's corpus for what stays open; each pick and its mirror at a phase
+    // from 1 to 23, a centipawn clear of the lazy clamp, within 800 cp of
+    // level and loadable with either side to move. Each comment names the
+    // cells its pair closes, both halves unless it names one. Every position
+    // is VALID by python-chess. The program starts from the 42 rows above
+    // this comment (its BASE_ROWS, asserted against this comment's first
+    // line), re-checks every row below, and must pick exactly these pairs
+    // in this order. Re-derive by its header whenever the counts or the
+    // shipped constants move what it reads (DEC-142).
+    // bishop 1, 4; queen 5 eg, 17
+    "rnb1k2N/ppp1n1pp/8/2b5/3q4/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/3Q4/2B5/8/PPP1N1PP/RNB1K2n b Q - 2 9",
+    // bishop 13; rook 14
+    "4k2r/8/8/8/3BB3/4K3/8/r7 w k - 1 2",
+    "R7/8/4k3/3bb3/8/8/8/4K2R b K - 1 2",
+    // queen 15, 18
+    "5rk1/pp4pp/4p3/2R2nQ1/8/2q4r/P1P2PPP/5RK1 w - - 1 2",
+    "5rk1/p1p2ppp/2Q4R/8/2r2Nq1/4P3/PP4PP/5RK1 b - - 1 2",
+    // queen 7, 14
+    "rnbqk2r/ppp1n1pp/8/2b5/8/2P5/PP3PPP/RNBQKB1R b KQkq - 0 8",
+    "rnbqkb1r/pp3ppp/2p5/8/2B5/8/PPP1N1PP/RNBQK2R w KQkq - 0 8",
+    // rook 13
+    "1r2k2r/R6R/8/8/8/8/4K3/8 w - - 1 2",
+    "8/4k3/8/8/8/8/r6r/1R2K2R b - - 1 2",
+    // queen 3
+    "3k4/8/1K6/8/8/8/ppppppp1/RRRRRRqR w - - 0 2",
+    "rrrrrrQr/PPPPPPP1/8/8/8/1k6/8/3K4 b - - 0 2",
+    // queen 25
+    "4k3/r7/8/5Q2/8/8/4K3/8 w - - 0 2",
+    "8/4k3/8/8/5q2/8/R7/4K3 b - - 0 2",
+    // queen 13
+    "5rk1/pp4pp/4p3/2R3Q1/1q1n4/7r/P1P2PPP/5RK1 w - - 1 2",
+    "5rk1/p1p2ppp/7R/1Q1N4/2r3q1/4P3/PP4PP/5RK1 b - - 1 2",
+    // knight 1
+    "Nnnnnnnn/P1PPPPPP/8/8/8/8/8/K6k b - - 0 1",
+    "k6K/8/8/8/8/8/p1pppppp/nNNNNNNN w - - 0 1",
+    // queen 0
+    "r1bqk2N/pppnn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPNN1PP/R1BQK2n b Q - 2 9",
+    // bishop 11
+    "rn1qk2N/ppp1n1pp/4b3/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/4B3/PPP1N1PP/RN1QK2n b Q - 2 9",
+    // queen 4 eg
+    "3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2",
+    "rrQrrrrr/P1PPPPPP/8/8/8/1k6/8/3K4 b - - 0 2",
+    // queen 1 eg
+    "rn1qk2N/pppbn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPBN1PP/RN1QK2n b Q - 2 9",
+    // queen 20, 22
+    "r5kr/p6p/1p2n1p1/3q2P1/5Q2/7P/P1P2P2/R1B2RK1 w - - 3 24",
+    "r1b2rk1/p1p2p2/7p/5q2/3Q2p1/1P2N1P1/P6P/R5KR b - - 3 24",
+    // bishop 12; queen 23
+    "1r3k1r/p5p1/3b4/Q2B2B1/7P/P7/2q4P/4R2K w - - 0 35",
+    "4r2k/2Q4p/p7/7p/q2b2b1/3B4/P5P1/1R3K1R b - - 0 35",
+    // queen 21, 24
+    "6k1/4Q3/2p3K1/8/1P3q2/8/8/8 w - - 0 50",
+    "8/8/8/1p3Q2/8/2P3k1/4q3/6K1 b - - 0 50",
+    // knight 0; queen 2
+    "rn1qk2r/3ppp1p/bpp2np1/3P4/p1B1P3/P1P2N2/2P2PPP/R1BQ1RK1 w kq - 3 10",
+    "r1bq1rk1/2p2ppp/p1p2n2/P1b1p3/3p4/BPP2NP1/3PPP1P/RN1QK2R b KQ - 3 10",
+    // queen 26
+    "r1r3k1/1p3p2/7B/4q3/P5P1/1Q4P1/7P/5BK1 b - - 0 33",
+    "5bk1/7p/1q4p1/p5p1/4Q3/7b/1P3P2/R1R3K1 w - - 0 33",
+    // queen 27
+    "8/p7/B4k2/1P6/4q3/2K5/8/8 b - - 3 63",
+    "8/8/2k5/4Q3/1p6/b4K2/P7/8 w - - 3 63",
 };
 
 }  // namespace test_eval_positions

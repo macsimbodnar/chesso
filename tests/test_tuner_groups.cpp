@@ -656,3 +656,139 @@ TEST_CASE("--freeze takes terms, and clears exactly their columns")
   CHECK_FALSE(tuner_groups::freeze_mask("piece_placement.traped", &misspelt));
   CHECK_FALSE(tuner_groups::free_mask("piece_placement.", &misspelt));
 }
+
+
+// S121's ties. A tie list names cells by table and count, and parse_ties()
+// turns each line into the two parameters it joins; fold and copy are the
+// chain rule and the shared value. What this holds: a line lands on the
+// parameter tools/tuner_layout.hpp puts that cell at, every malformed or
+// contradictory line is refused rather than half applied, the gradient a tie
+// folds is the derivative of the tied parameterisation, and after a copy the
+// tied cell is its anchor times the scale.
+TEST_CASE("a tie joins the cells it names and refuses every other line")
+{
+  std::vector<tuner_groups::tie_t> ties;
+  std::string error;
+
+  REQUIRE(tuner_groups::parse_ties(
+      "# queen tail\nmobility_queen_mg 27 24\n\nmobility_knight_eg 0 1 "
+      "0.5  # half\n",
+      &ties, &error));
+  REQUIRE(ties.size() == 2);
+
+  const size_t queen_mg =
+      tuner_layout::MOB_MG_BASE + static_cast<size_t>(MOBILITY_OFFSET[3]);
+  const size_t knight_eg =
+      tuner_layout::MOB_EG_BASE + static_cast<size_t>(MOBILITY_OFFSET[0]);
+  CHECK(ties[0].tied == queen_mg + 27);
+  CHECK(ties[0].anchor == queen_mg + 24);
+  CHECK(ties[0].scale == 1.0);
+  CHECK(ties[1].tied == knight_eg + 0);
+  CHECK(ties[1].anchor == knight_eg + 1);
+  CHECK(ties[1].scale == 0.5);
+
+  // Every one of these is refused, with a reason.
+  for (const char* bad : {
+           "mobility_queen_mg 28 24\n",    // past the queen's row
+           "mobility_knight_mg 9 1\n",     // past the knight's row
+           "mobility_king_mg 1 2\n",       // no such table
+           "mobility_rook_mg 3 3\n",       // tied to itself
+           "mobility_rook_mg 3\n",         // too few words
+           "mobility_rook_mg 3 4 x\n",     // an unreadable scale
+           "mobility_rook_mg 3 4 nan\n",   // not a number
+           "mobility_rook_mg 3 4 -inf\n",  // not finite
+           "mobility_rook_mg -1 4\n",      // not a count
+           "mobility_rook_mg 3 4\nmobility_rook_mg 3 5\n",  // tied twice
+           "mobility_rook_mg 3 4\nmobility_rook_mg 4 5\n",  // a chain
+           "mobility_rook_mg 4 5\nmobility_rook_mg 3 4\n",  // the same chain
+       }) {
+    CAPTURE(bad);
+    std::vector<tuner_groups::tie_t> refused;
+    std::string why;
+    CHECK_FALSE(tuner_groups::parse_ties(bad, &refused, &why));
+    CHECK(!why.empty());
+  }
+
+  // Both ends free, or the list is refused for this run.
+  std::vector<uint8_t> mobility;
+  REQUIRE(tuner_groups::free_mask("mobility", &mobility));
+  CHECK(tuner_groups::ties_fit_mask(ties, mobility, &error));
+
+  std::vector<uint8_t> tempo;
+  REQUIRE(tuner_groups::free_mask("tempo", &tempo));
+  std::string why;
+  CHECK_FALSE(tuner_groups::ties_fit_mask(ties, tempo, &why));
+  CHECK(!why.empty());
+
+  // The chain rule: with the tied cell set to scale * anchor, a gradient over
+  // the two cells folds onto the anchor as g_anchor + scale * g_tied, and the
+  // tied cell takes no step of its own.
+  std::vector<double> grad(tuner_layout::PARAM_COUNT, 0.0);
+  grad[knight_eg + 1] = 3.0;
+  grad[knight_eg + 0] = 4.0;
+  grad[queen_mg + 24] = -1.0;
+  grad[queen_mg + 27] = 2.0;
+  tuner_groups::fold_ties(ties, &grad);
+  CHECK(grad[knight_eg + 1] == 3.0 + 0.5 * 4.0);
+  CHECK(grad[knight_eg + 0] == 0.0);
+  CHECK(grad[queen_mg + 24] == -1.0 + 2.0);
+  CHECK(grad[queen_mg + 27] == 0.0);
+
+  std::vector<double> params(tuner_layout::PARAM_COUNT, 7.0);
+  params[knight_eg + 1] = 10.0;
+  params[queen_mg + 24] = -3.0;
+  tuner_groups::copy_ties(ties, params.data());
+  CHECK(params[knight_eg + 0] == 5.0);
+  CHECK(params[queen_mg + 27] == -3.0);
+  CHECK(params[queen_mg + 26] == 7.0);  // untied, untouched
+}
+
+
+// S121's eight mobility levels have no gauge, so a free set that frees both a
+// row's cells and its piece's table half is refused: the precondition first,
+// that `--only all` really frees both sides of every level, then the refusal,
+// then the masks the screen and the table fits use, each of which freezes one
+// side and passes.
+TEST_CASE("a free set that walks a mobility level is refused")
+{
+  std::vector<uint8_t> all;
+  REQUIRE(tuner_groups::free_mask("all", &all));
+
+  const size_t knight_cells =
+      tuner_layout::MOB_MG_BASE + static_cast<size_t>(MOBILITY_OFFSET[0]);
+  const size_t knight_table = tuner_layout::MG_BASE + 64;
+  REQUIRE(all[knight_cells] == 1);
+  REQUIRE(all[knight_table] == 1);
+
+  std::string why;
+  CHECK_FALSE(tuner_groups::mobility_levels_held(all, &why));
+  CHECK(why.find("knight middlegame") != std::string::npos);
+
+  // One level walkable alone is enough: everything frozen but the queen's
+  // endgame row and one square of the queen's endgame table.
+  std::vector<uint8_t> one(tuner_layout::PARAM_COUNT, 0);
+  one[tuner_layout::MOB_EG_BASE + static_cast<size_t>(MOBILITY_OFFSET[3]) + 5] =
+      1;
+  one[tuner_layout::EG_BASE + 4 * 64 + 27] = 1;
+  why.clear();
+  CHECK_FALSE(tuner_groups::mobility_levels_held(one, &why));
+  CHECK(why.find("queen endgame") != std::string::npos);
+
+  for (const char* group : {"mobility", "psqt", "material", "king_safety"}) {
+    CAPTURE(group);
+    std::vector<uint8_t> mask;
+    REQUIRE(tuner_groups::free_mask(group, &mask));
+    std::string none;
+    CHECK(tuner_groups::mobility_levels_held(mask, &none));
+  }
+
+  std::vector<uint8_t> without = all;
+  REQUIRE(tuner_groups::freeze_mask("mobility", &without));
+  CHECK(tuner_groups::mobility_levels_held(without, &why));
+
+  // A pawn's table is no level's: freeing it beside the mobility rows is fine.
+  std::vector<uint8_t> pawn_too;
+  REQUIRE(tuner_groups::free_mask("mobility", &pawn_too));
+  pawn_too[tuner_layout::MG_BASE + 20] = 1;
+  CHECK(tuner_groups::mobility_levels_held(pawn_too, &why));
+}

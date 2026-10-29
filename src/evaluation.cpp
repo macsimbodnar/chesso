@@ -1169,16 +1169,81 @@ int evaluate_cheap(const board_t* board)
 // 14.6 -- the difference is cache misses in 2 MB of rook attack tables that a
 // ten-position benchmark loop never pays.
 //
-// These weights are fitted, not chosen. The hand-picked set they replaced
-// measured -14.93 Elo; fitted, and behind the lazy shortcut, the same term
-// measured +28.46 over 942 games. The fit disagreed with the guess about the
-// two things that mattered -- a knight's mobility is worth nothing on top of
-// its piece-square table, and a rook's middlegame mobility is worth four times
-// what was guessed. DEC-040. No published table was consulted, DEC-016.
-constexpr int mobility_mg[4] = {1, 6, 8, 2};  // knight bishop rook queen
-constexpr int mobility_eg[4] = {0, 5, 2, 4};
-constexpr std::array<score_t, 4> mobility_score =
-    pack_scores(mobility_mg, mobility_eg);
+// A table per piece type since S121, one cell per count the piece can have:
+// a piece scores its own cell, not its count times a weight, so the value of
+// a square need not be the same for the first square as for the twentieth.
+// The widths are the board's (src/evaluation.hpp, MOBILITY_WIDTH).
+//
+// **Each cell is c times the linear weight it replaced**, mg {1, 6, 8, 2} and
+// eg {0, 5, 2, 4}: S083's fit (01222f3), our own constants, so the seed is
+// DEC-134 form (b) and no engine's table is in it (DEC-084, DEC-105). The
+// packed sum of these cells is the packed sum count * weight was, bit for bit
+// -- packing is exact under integer multiplication (data_structures.hpp) --
+// so this table scores every position exactly as the linear term did until
+// S121's screen fits it (INV-6). The linear weights were fitted, not chosen:
+// the hand-picked set before them measured -14.93 Elo and the fitted one
+// +28.46 over 942 games, DEC-040. No published table was consulted, DEC-016.
+//
+// What a cell is worth when the fit has spoken is a residual over the
+// piece-square table, not a valuation: every piece adds exactly one cell, so
+// adding c to every cell of a type and taking c off every square of its
+// tables is the same evaluation wherever the clamp does not bind -- eight
+// directions the data cannot see, one per type and half (tools/feature_audit
+// lists them). An `--only mobility` fit holds the tables, so it cannot walk
+// them.
+constexpr int mobility_knight_mg[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+constexpr int mobility_knight_eg[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+constexpr int mobility_bishop_mg[14] = {0,  6,  12, 18, 24, 30, 36,
+                                        42, 48, 54, 60, 66, 72, 78};
+constexpr int mobility_bishop_eg[14] = {0,  5,  10, 15, 20, 25, 30,
+                                        35, 40, 45, 50, 55, 60, 65};
+constexpr int mobility_rook_mg[15] = {0,  8,  16, 24, 32, 40,  48, 56,
+                                      64, 72, 80, 88, 96, 104, 112};
+constexpr int mobility_rook_eg[15] = {0,  2,  4,  6,  8,  10, 12, 14,
+                                      16, 18, 20, 22, 24, 26, 28};
+constexpr int mobility_queen_mg[28] = {0,  2,  4,  6,  8,  10, 12, 14, 16, 18,
+                                       20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
+                                       40, 42, 44, 46, 48, 50, 52, 54};
+constexpr int mobility_queen_eg[28] = {0,  4,  8,  12, 16, 20,  24,  28, 32, 36,
+                                       40, 44, 48, 52, 56, 60,  64,  68, 72, 76,
+                                       80, 84, 88, 92, 96, 100, 104, 108};
+
+// The widths of the arrays above against the board's, so a cell added or lost
+// in a paste is a build error and not a read past a row.
+template <size_t N>
+static constexpr int width_of(const int (&)[N])
+{ return static_cast<int>(N); }
+
+static_assert(width_of(mobility_knight_mg) == MOBILITY_WIDTH[0] &&
+                  width_of(mobility_knight_eg) == MOBILITY_WIDTH[0] &&
+                  width_of(mobility_bishop_mg) == MOBILITY_WIDTH[1] &&
+                  width_of(mobility_bishop_eg) == MOBILITY_WIDTH[1] &&
+                  width_of(mobility_rook_mg) == MOBILITY_WIDTH[2] &&
+                  width_of(mobility_rook_eg) == MOBILITY_WIDTH[2] &&
+                  width_of(mobility_queen_mg) == MOBILITY_WIDTH[3] &&
+                  width_of(mobility_queen_eg) == MOBILITY_WIDTH[3],
+              "a mobility table is not the width the board gives its piece");
+
+// The four tables packed into one, the cells of type t at MOBILITY_OFFSET[t]
+// onwards, so the loop below reads one cell with one load.
+static constexpr std::array<score_t, MOBILITY_CELLS> pack_mobility()
+{
+  std::array<score_t, MOBILITY_CELLS> packed{};
+  const int* const mg[4] = {mobility_knight_mg, mobility_bishop_mg,
+                            mobility_rook_mg, mobility_queen_mg};
+  const int* const eg[4] = {mobility_knight_eg, mobility_bishop_eg,
+                            mobility_rook_eg, mobility_queen_eg};
+
+  for (int type = 0; type < 4; ++type) {
+    for (int c = 0; c < MOBILITY_WIDTH[type]; ++c) {
+      packed[MOBILITY_OFFSET[type] + c] = make_score(mg[type][c], eg[type][c]);
+    }
+  }
+
+  return packed;
+}
+
+constexpr std::array<score_t, MOBILITY_CELLS> mobility_score = pack_mobility();
 
 
 // The four types every stage-two term iterates over, in the order the weight
@@ -1227,13 +1292,18 @@ constexpr int king_safety_eg[KS_FEATURE_COUNT] = {-5, -9, 7,  -52, 10,
 constexpr std::array<score_t, KS_FEATURE_COUNT> king_safety_score =
     pack_scores(king_safety_mg, king_safety_eg);
 
-// Stage two's two packed sums, bounded the way stage one's is: 32 pieces each
-// reaching at most 27 squares for mobility; for king safety, 16 attackers a
-// side each adding one attacker count and at most nine zone incidences, plus
-// four shelter features a side that count files and pawns around the king and
-// stay under 8.
-static_assert(32 * 27 * largest_weight(mobility_mg, mobility_eg) <= 32767,
-              "mobility's packed sum can overflow a 16-bit half");
+// Stage two's two packed sums, bounded the way stage one's is: for mobility,
+// 32 pieces each adding one cell (S121; 32 x 27 x its weight while it was
+// linear); for king safety, 16 attackers a side each adding one attacker
+// count and at most nine zone incidences, plus four shelter features a side
+// that count files and pawns around the king and stay under 8.
+static_assert(
+    32 * std::max({largest_weight(mobility_knight_mg, mobility_knight_eg),
+                   largest_weight(mobility_bishop_mg, mobility_bishop_eg),
+                   largest_weight(mobility_rook_mg, mobility_rook_eg),
+                   largest_weight(mobility_queen_mg, mobility_queen_eg)}) <=
+        32767,
+    "mobility's packed sum can overflow a 16-bit half");
 static_assert(2 * (16 * (1 + 9) + 4 * 8) *
                       largest_weight(king_safety_mg, king_safety_eg) <=
                   32767,
@@ -1411,10 +1481,15 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
         // Squares the piece could move to, own pieces excluded. Not safe
         // mobility: no enemy-pawn-attack mask, which is the expensive variant.
+        // The count picks the piece's cell, which the board keeps inside its
+        // row: a knight reaches 8 squares at most, a bishop 13, a rook 14, a
+        // queen 27 (MOBILITY_WIDTH).
         const int count = count_bits(attacks & ~own);
+        assert(count < MOBILITY_WIDTH[type]);
+        const int cell = MOBILITY_OFFSET[type] + count;
 
-        mobility_sum += mover * count * mobility_score[type];
-        EVAL_TRACE(TERM_MOBILITY, type, mover * count);
+        mobility_sum += mover * mobility_score[cell];
+        EVAL_TRACE(TERM_MOBILITY, cell, mover);
 
         const bb_t hits = attacks & defended_zone;
 

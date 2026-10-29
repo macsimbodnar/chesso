@@ -18,8 +18,10 @@
 //
 // Since S275 it also holds the seven gauges, the null directions a fit keeps
 // still, because whether one is held depends on the same mask.
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include "tuner_layout.hpp"
@@ -365,6 +367,236 @@ inline void hold_gauges(const std::vector<gauge_t>& held,
 
     if (gauge.absorb < PARAM_COUNT) { params[gauge.absorb] += drift; }
   }
+}
+
+
+// Tied mobility cells, S121. A cell the corpus barely reaches is not fitted
+// on its own -- AdaGrad and Adam step a coordinate at the learning rate however
+// few rows its gradient comes from, so a cell a handful of rows reach walks to
+// whatever those rows' results say -- and it is not left at its seed either,
+// because DEC-084 ships no constant unfitted. It is tied: it shares one
+// parameter with a supported cell of the same piece and half, and ships that
+// cell's fitted value times the tie's scale. The tie list is a run's input,
+// written before the fit from tools/feature_audit's support report
+// (adocs/data/S121_screen.py ties), and stamped into the emitted header.
+//
+// The same map serves the linear model DEC-326 screens a part over when the
+// curve itself is dropped: every cell of a row tied to its count-1 cell with
+// scale c, so the row is c times one weight -- the four-weight term S121
+// replaced, over whatever count the part defines.
+//
+// One line a tie, `#` to the end of a line a comment:
+//
+//   mobility_<piece>_<half> <cell> <anchor> [<scale>]
+//
+// piece knight, bishop, rook or queen; half mg or eg; scale 1 when absent. A
+// cell is tied once at most, never to itself, and an anchor is never tied, so
+// no tie reads a value another tie has yet to write.
+struct tie_t
+{
+  size_t tied;
+  size_t anchor;
+  double scale;
+};
+
+
+inline bool parse_ties(const std::string& text,
+                       std::vector<tie_t>* out,
+                       std::string* error)
+{
+  static const char* const pieces[4] = {"knight", "bishop", "rook", "queen"};
+
+  out->clear();
+  std::vector<uint8_t> tied(PARAM_COUNT, 0);
+  std::vector<uint8_t> anchors(PARAM_COUNT, 0);
+  size_t line_number = 0;
+  size_t start = 0;
+
+  while (start < text.size()) {
+    size_t end = text.find('\n', start);
+    if (end == std::string::npos) { end = text.size(); }
+
+    std::string line = text.substr(start, end - start);
+    start = end + 1;
+    line_number++;
+
+    const size_t hash = line.find('#');
+    if (hash != std::string::npos) { line.resize(hash); }
+
+    std::vector<std::string> words;
+    std::string word;
+    for (const char c : line + " ") {
+      if (c == ' ' || c == '\t' || c == '\r') {
+        if (!word.empty()) { words.push_back(word); }
+        word.clear();
+      } else {
+        word.push_back(c);
+      }
+    }
+
+    if (words.empty()) { continue; }
+
+    const auto refuse = [&](const std::string& why) {
+      *error = "tie line " + std::to_string(line_number) + ": " + why;
+      return false;
+    };
+
+    if (words.size() != 3 && words.size() != 4) {
+      return refuse(
+          "expected `mobility_<piece>_<half> <cell> <anchor> "
+          "[<scale>]`");
+    }
+
+    int type = -1;
+    size_t base = PARAM_COUNT;
+    for (int p = 0; p < 4; ++p) {
+      for (const char* half : {"mg", "eg"}) {
+        if (words[0] == std::string("mobility_") + pieces[p] + "_" + half) {
+          type = p;
+          base = ((half[0] == 'm') ? tuner_layout::MOB_MG_BASE
+                                   : tuner_layout::MOB_EG_BASE) +
+                 static_cast<size_t>(MOBILITY_OFFSET[p]);
+        }
+      }
+    }
+
+    if (type < 0) { return refuse("no mobility table named " + words[0]); }
+
+    const auto cell_of = [&](const std::string& s, size_t* cell) {
+      if (s.empty() || s.size() > 2 ||
+          s.find_first_not_of("0123456789") != std::string::npos) {
+        return false;
+      }
+      const unsigned long value = std::stoul(s);
+      if (value >= static_cast<unsigned long>(MOBILITY_WIDTH[type])) {
+        return false;
+      }
+      *cell = static_cast<size_t>(value);
+      return true;
+    };
+
+    size_t cell = 0;
+    size_t anchor = 0;
+    if (!cell_of(words[1], &cell) || !cell_of(words[2], &anchor)) {
+      return refuse("a cell outside " + words[0] + "'s row");
+    }
+
+    if (cell == anchor) { return refuse("a cell tied to itself"); }
+
+    double scale = 1.0;
+    if (words.size() == 4) {
+      char* rest = nullptr;
+      scale = std::strtod(words[3].c_str(), &rest);
+      if (rest == words[3].c_str() || *rest != '\0' || !std::isfinite(scale)) {
+        return refuse("an unreadable scale " + words[3]);
+      }
+    }
+
+    const tie_t tie{base + cell, base + anchor, scale};
+
+    if (tied[tie.tied]) { return refuse("a cell tied twice"); }
+    if (tied[tie.anchor] || anchors[tie.tied]) {
+      return refuse(
+          "a chain: an anchor that is tied, or a tied cell that "
+          "anchors another");
+    }
+
+    tied[tie.tied] = 1;
+    anchors[tie.anchor] = 1;
+    out->push_back(tie);
+  }
+
+  return true;
+}
+
+
+// A tie binds only where the fit is free to move both ends: a frozen anchor
+// would hand a frozen value to a cell the fit means to fit, and a frozen tied
+// cell would be written by a run that promised to leave it alone.
+inline bool ties_fit_mask(const std::vector<tie_t>& ties,
+                          const std::vector<uint8_t>& mask,
+                          std::string* error)
+{
+  for (const tie_t& tie : ties) {
+    if (!mask[tie.tied] || !mask[tie.anchor]) {
+      *error = "a tie whose cell or anchor the run holds frozen";
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+// The step's half of a tie: the tied cell takes no step of its own -- its
+// parameter is the anchor's -- and its gradient joins the anchor's through the
+// chain rule, d(error)/d(anchor) += scale * d(error)/d(tied).
+inline void fold_ties(const std::vector<tie_t>& ties, std::vector<double>* grad)
+{
+  for (const tie_t& tie : ties) {
+    (*grad)[tie.anchor] += tie.scale * (*grad)[tie.tied];
+    (*grad)[tie.tied] = 0.0;
+  }
+}
+
+
+// And the value's half: every tied cell is its anchor times the scale. The
+// tuner calls it once before the first step -- after the run's start figures
+// are read at the shipped constants, so a fit's gain is still read against
+// what ships (DEC-315), and so the first gradient is taken on the tied
+// parameterisation -- and after every step.
+inline void copy_ties(const std::vector<tie_t>& ties, double* params)
+{
+  for (const tie_t& tie : ties) {
+    params[tie.tied] = tie.scale * params[tie.anchor];
+  }
+}
+
+
+// S121's eight mobility levels, the null directions of a table whose every
+// piece adds one cell: per piece type and half, c on every cell of the row and
+// -c on every square of the piece's table half moves no row the clamp does
+// not bind (tools/feature_audit lists them). No gauge holds them -- a hold
+// would move the clamped rows -- so a free mask that frees both sides of one
+// is a fit that walks it for nothing but the clamped rows, S275's drift in
+// another form. False, with `error` naming the first, for such a mask; true
+// when every level has a frozen side, which is every `--only mobility` and
+// `--only psqt` fit. A fit that frees both (S126's joint refit) must first
+// give the levels a hold of their own.
+inline bool mobility_levels_held(const std::vector<uint8_t>& mask,
+                                 std::string* error)
+{
+  static const char* const pieces[4] = {"knight", "bishop", "rook", "queen"};
+
+  for (int type = 0; type < 4; ++type) {
+    for (int half = 0; half < 2; ++half) {
+      const size_t cells = ((half == 0) ? tuner_layout::MOB_MG_BASE
+                                        : tuner_layout::MOB_EG_BASE) +
+                           static_cast<size_t>(MOBILITY_OFFSET[type]);
+      const size_t table = ((half == 0) ? MG_BASE : EG_BASE) +
+                           static_cast<size_t>(type + 1) * 64;
+
+      bool cells_free = false;
+      for (int c = 0; c < MOBILITY_WIDTH[type]; ++c) {
+        cells_free = cells_free || mask[cells + static_cast<size_t>(c)] != 0;
+      }
+
+      bool table_free = false;
+      for (size_t square = 0; square < 64; ++square) {
+        table_free = table_free || mask[table + square] != 0;
+      }
+
+      if (cells_free && table_free) {
+        *error = std::string("the free set walks the mobility level of the ") +
+                 pieces[type] + ((half == 0) ? " middlegame" : " endgame") +
+                 " half: its row's cells and its piece-square table are both "
+                 "free and no gauge holds the level; freeze one side";
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 }  // namespace tuner_groups

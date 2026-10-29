@@ -46,11 +46,38 @@ int evaluate_lazy(const board_t* board,
                   int beta,
                   bool* exact = nullptr);
 
-// The mobility weights, per piece type in knight, bishop, rook, queen order.
-// Exposed so that the tuner (tools/tuner_layout.hpp's starting_params()) starts
-// from what the engine ships instead of from a copy of it, which could drift.
-extern const int mobility_mg[4];
-extern const int mobility_eg[4];
+// The mobility table's shape, S121: one row per piece type in knight, bishop,
+// rook, queen order, one cell per count the piece can have, 0 to the most
+// squares it can reach on an empty board -- 8, 13, 14 and 27, computed with
+// python-chess over all 64 squares (the S121 step file, section 4) -- so the
+// widths come from the rules of chess and not from any engine. Laid end to
+// end, a type's cells from MOBILITY_OFFSET[type], in the packed table below,
+// the trace's indices and the tuner's vector alike.
+inline constexpr int MOBILITY_WIDTH[4] = {9, 14, 15, 28};
+inline constexpr int MOBILITY_OFFSET[4] = {0, 9, 23, 38};
+inline constexpr int MOBILITY_CELLS = 66;
+
+static_assert(MOBILITY_OFFSET[1] == MOBILITY_OFFSET[0] + MOBILITY_WIDTH[0] &&
+                  MOBILITY_OFFSET[2] ==
+                      MOBILITY_OFFSET[1] + MOBILITY_WIDTH[1] &&
+                  MOBILITY_OFFSET[3] ==
+                      MOBILITY_OFFSET[2] + MOBILITY_WIDTH[2] &&
+                  MOBILITY_CELLS == MOBILITY_OFFSET[3] + MOBILITY_WIDTH[3],
+              "the mobility rows are laid end to end");
+
+// The mobility tables, one middlegame and one endgame array per piece type,
+// indexed by the count. One-dimensional so the tuner's header pastes over them
+// as it pastes every other weight array. Exposed so that the tuner
+// (tools/tuner_layout.hpp's starting_params()) starts from what the engine
+// ships instead of from a copy of it, which could drift.
+extern const int mobility_knight_mg[9];
+extern const int mobility_knight_eg[9];
+extern const int mobility_bishop_mg[14];
+extern const int mobility_bishop_eg[14];
+extern const int mobility_rook_mg[15];
+extern const int mobility_rook_eg[15];
+extern const int mobility_queen_mg[28];
+extern const int mobility_queen_eg[28];
 
 // The passed pawn weights, indexed by how far the pawn has advanced: 0 on its
 // own second rank, 4 on its own sixth. Exposed for the same reason as the
@@ -392,13 +419,14 @@ inline int taper(score_t score, int phase)
 }
 
 // The packed copies the evaluation reads in place of the plain weight arrays
-// above, each derived from its mg/eg pair at compile time (S117). Declared for
+// above, each derived from its mg/eg pair at compile time (S117); mobility's
+// is the four tables end to end, MOBILITY_OFFSET[type] + count. Declared for
 // the test that compares their halves with the plain arrays: a pair packed the
 // wrong way round is invisible to the bench once a refit has moved the bench
 // anyway, and invisible to it now for tempo and placement's two bad bishop
 // columns, whose weights are zero. The piece-square tables' copy, psqt_score,
 // is in eval_tables.hpp.
-extern const std::array<score_t, 4> mobility_score;
+extern const std::array<score_t, MOBILITY_CELLS> mobility_score;
 extern const std::array<score_t, KS_FEATURE_COUNT> king_safety_score;
 extern const std::array<score_t, 5> passed_pawn_score;
 extern const std::array<score_t, 3> pawn_structure_score;

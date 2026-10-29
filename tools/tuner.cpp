@@ -6,9 +6,10 @@
 // constants that evaluate() already uses -- piece_value[0..4], psqt_mg[6][64]
 // and psqt_eg[6][64], the mobility weights since S034, the king safety weights
 // since S027, the passed pawn weights since S035 and the pawn structure, piece
-// placement and tempo weights since S027, 823 numbers from S134 and 831 since
-// S135 widened piece placement -- so that a sigmoid of the evaluation predicts
-// the outcome of the game the position came from.
+// placement and tempo weights since S027, 823 numbers from S134, 831 since
+// S135 widened piece placement and 955 since S121 made mobility a table of 66
+// cells a half -- so that a sigmoid of the evaluation predicts the outcome of
+// the game the position came from.
 // This is Texel tuning; the objective is the mean squared error of that
 // prediction.
 //
@@ -89,7 +90,6 @@ using tuner_layout::MATERIAL_COUNT;
 using tuner_layout::MG_BASE;
 using tuner_layout::MOB_EG_BASE;
 using tuner_layout::MOB_MG_BASE;
-using tuner_layout::MOBILITY_COUNT;
 using tuner_layout::PARAM_COUNT;
 using tuner_layout::PASSED_PAWN_COUNT;
 using tuner_layout::PAWN_STRUCTURE_COUNT;
@@ -157,6 +157,7 @@ struct options_t
   std::string out = "tuned_tables.hpp";
   std::string only = "all";
   std::string freeze;  // empty means nothing is held, the behaviour before S065
+  std::string tie;     // S121: a tie list's path; empty ties nothing
   double k = 0.0;      // 0 means fit it
   double lambda = 0.0;  // 0 is the game outcome alone, the fit before S075
   tuner_optimiser::kind_t optimiser = tuner_optimiser::ADAM;
@@ -225,7 +226,8 @@ void write_tables(const std::string& path,
                   double wdl_validation_error,
                   double start_wdl_validation_error,
                   size_t gauges_held,
-                  const tuner_trace::load_report_t& trace)
+                  const tuner_trace::load_report_t& trace,
+                  const std::string& tie_line)
 {
   FILE* out = fopen(path.c_str(), "w");
 
@@ -302,6 +304,9 @@ void write_tables(const std::string& path,
       // from. The split between a piece's value and its tables is the gauge's,
       // not the data's, so a table emitted without it is not comparable.
       "// gauges     %zu of %zu held at the levels this started from\n"
+      // S121: which cells shared a parameter, so a table with equal or
+      // proportional neighbours says why.
+      "// tie        %s\n"
       "// lambda     %.4f  target = lambda * sigma(K * score) + (1 - lambda) * "
       "result\n"
       "%s"
@@ -319,7 +324,8 @@ void write_tables(const std::string& path,
       tuner_optimiser::kind_name(opts.optimiser), opts.epochs, opts.report,
       opts.patience, opts.threads, split.c_str(), opts.only.c_str(),
       opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), gauges_held,
-      tuner_groups::gauges().size(), opts.lambda, wdl_line.c_str());
+      tuner_groups::gauges().size(), tie_line.c_str(), opts.lambda,
+      wdl_line.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -360,24 +366,38 @@ void write_tables(const std::string& path,
   // since S027, the passed pawn weights since S035 and the pawn structure,
   // piece placement and tempo weights since S027, and none of them lives in
   // eval_tables.hpp with everything else. Emitting them here is what stops a
-  // fit quietly discarding fifty-four of its own parameters, which is exactly
-  // what this function did with mobility's eight until it was checked.
-  fprintf(
-      out,
-      "\n// These eight live in src/evaluation.cpp, not eval_tables.hpp.\n");
+  // fit quietly discarding its own parameters, which is exactly what this
+  // function did with mobility's eight until it was checked.
+  //
+  // Mobility since S121 is eight tables, one per piece type and half, each one
+  // dimensional so .tuning/apply_fit.py pastes them as it pastes every array.
+  // The widths are the engine's own (MOBILITY_WIDTH), never literals here.
+  fprintf(out,
+          "\n// The mobility tables live in src/evaluation.cpp, not "
+          "eval_tables.hpp.\n");
 
-  for (int table = 0; table < 2; ++table) {
-    const size_t base = (table == 0) ? MOB_MG_BASE : MOB_EG_BASE;
+  static const char* const mobility_names[4] = {"knight", "bishop", "rook",
+                                                "queen"};
+  static_assert(
+      tuner_layout::MOBILITY_COUNT == static_cast<size_t>(MOBILITY_CELLS),
+      "the tuner's mobility block is the engine's table");
 
-    fprintf(out, "constexpr int mobility_%s[4] = {",
-            (table == 0) ? "mg" : "eg");
+  for (int type = 0; type < 4; ++type) {
+    for (int table = 0; table < 2; ++table) {
+      const size_t base = ((table == 0) ? MOB_MG_BASE : MOB_EG_BASE) +
+                          static_cast<size_t>(MOBILITY_OFFSET[type]);
 
-    for (size_t i = 0; i < MOBILITY_COUNT; ++i) {
-      fprintf(out, "%s%d", (i == 0) ? "" : ", ",
-              static_cast<int>(std::lround(params[base + i])));
+      fprintf(out, "constexpr int mobility_%s_%s[%d] = {", mobility_names[type],
+              (table == 0) ? "mg" : "eg", MOBILITY_WIDTH[type]);
+
+      for (int c = 0; c < MOBILITY_WIDTH[type]; ++c) {
+        fprintf(out, "%s%d", (c == 0) ? "" : ", ",
+                static_cast<int>(
+                    std::lround(params[base + static_cast<size_t>(c)])));
+      }
+
+      fprintf(out, "};\n");
     }
-
-    fprintf(out, "};  // knight bishop rook queen\n");
   }
 
   for (int table = 0; table < 2; ++table) {
@@ -470,6 +490,9 @@ void usage()
       "  --freeze LIST    hold these groups or terms instead, comma\n"
       "                   separated, and fit everything else; not `all`.\n"
       "                   Applied after --only, so the two intersect\n"
+      "  --tie FILE       S121: mobility cells that share a parameter, one\n"
+      "                   `mobility_<piece>_<half> <cell> <anchor> [scale]`\n"
+      "                   a line; both ends must be free\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"
@@ -524,6 +547,8 @@ int main(int argc, char** argv)
       opts.only = value;
     } else if (arg == "--freeze") {
       opts.freeze = value;
+    } else if (arg == "--tie") {
+      opts.tie = value;
     } else if (arg == "--k") {
       opts.k = atof(value.c_str());
     } else if (arg == "--lambda") {
@@ -599,6 +624,53 @@ int main(int argc, char** argv)
             "unusable --freeze list '%s'; it takes a comma-separated subset of "
             "%s, or of %s, and not `all`\n",
             opts.freeze.c_str(), GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST);
+    return 1;
+  }
+
+  // S121's ties, read and checked before anything is loaded: a tied cell is
+  // taken out of the mask -- its parameter is its anchor's -- so it is not
+  // counted free and takes no step of its own.
+  std::vector<tuner_groups::tie_t> ties;
+  std::string tie_line = "(nothing)";
+
+  if (!opts.tie.empty()) {
+    std::ifstream tie_file(opts.tie);
+    std::stringstream tie_text;
+    tie_text << tie_file.rdbuf();
+    std::string tie_error;
+
+    if (!tie_file ||
+        !tuner_groups::parse_ties(tie_text.str(), &ties, &tie_error) ||
+        !tuner_groups::ties_fit_mask(ties, mask, &tie_error)) {
+      fprintf(stderr, "unusable --tie %s: %s\n", opts.tie.c_str(),
+              tie_error.empty() ? "cannot read it" : tie_error.c_str());
+      return 1;
+    }
+
+    corpus_id_t tie_id;
+    if (!corpus_hash::hash_file(opts.tie, &tie_id.sha256, &tie_id.bytes,
+                                &tie_id.rows)) {
+      fprintf(stderr, "could not hash %s\n", opts.tie.c_str());
+      return 1;
+    }
+
+    for (const tuner_groups::tie_t& tie : ties) {
+      mask[tie.tied] = 0;
+    }
+
+    tie_line = opts.tie + ", sha256 " + tie_id.sha256 + ", " +
+               std::to_string(ties.size()) + " cells tied";
+    fprintf(stderr, "ties: %s\n", tie_line.c_str());
+  }
+
+  // S121: a mask that frees both sides of a mobility level walks a direction
+  // no gauge holds -- S275's drift -- so it is refused until the level has a
+  // hold (tools/tuner_groups.hpp, mobility_levels_held()).
+  std::string level_error;
+  if (!tuner_groups::mobility_levels_held(mask, &level_error)) {
+    fprintf(stderr, "--only %s --freeze %s: %s\n", opts.only.c_str(),
+            opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(),
+            level_error.c_str());
     return 1;
   }
 
@@ -901,11 +973,19 @@ int main(int argc, char** argv)
   double best_wdl = start_wdl;
   int since_best = 0;
 
+  // S121's ties, put on their anchors once the start figures and the start
+  // vector are taken at the shipped constants -- so a fit's gain is read
+  // against what ships (DEC-315) -- and before the first gradient, so every
+  // step is taken on the tied parameterisation.
+  tuner_groups::copy_ties(ties, params.data());
+
   for (int epoch = 1; epoch <= opts.epochs; ++epoch) {
     gradient(data, params.data(), opts.k, index, 0, train_count, opts.threads,
              train_target, &grad);
 
+    tuner_groups::fold_ties(ties, &grad);
     descend(grad, mask, start.data(), opts.lr, &optimiser, params.data());
+    tuner_groups::copy_ties(ties, params.data());
 
     if (epoch % opts.report != 0) { continue; }
 
@@ -978,7 +1058,7 @@ int main(int argc, char** argv)
 
   write_tables(opts.out, best.data(), opts, corpus, data.size(), split,
                final_train, best_validation, best_wdl, start_wdl, held.size(),
-               trace);
+               trace, tie_line);
 
   return 0;
 }

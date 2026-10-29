@@ -25,7 +25,8 @@
 //                 against counts taken outside the trace -- the engine's own
 //                 per-colour accessors, the board's bitboards, and for
 //                 mobility, which has no accessor, the ray walk in
-//                 tests/test_walked_counts.hpp (the mirror's until S276).
+//                 tests/test_walked_counts.hpp (the mirror's until S276),
+//                 cell by cell of S121's table.
 //
 // The second is not implied by the first. A coefficient recorded against the
 // wrong index is invisible to the identity wherever the two weights involved
@@ -369,14 +370,17 @@ TEST_CASE_FIXTURE(trace_fixture_t,
             safety[WHITE][f] - safety[BLACK][f]);
     }
 
-    // Mobility has no engine accessor per piece type; the hand walk, the
-    // mirror's until S276, is an implementation the trace shares nothing with.
-    int mobility[4] = {};
-    REQUIRE(walked_counts::mobility_features(fen.substr(0, fen.find(' ')),
-                                             mobility));
-    for (size_t t = 0; t < 4; ++t) {
-      CAPTURE(t);
-      CHECK(coefficient(data, eval_trace::TERM_MOBILITY, t) == mobility[t]);
+    // Mobility has no engine accessor; the hand walk, the mirror's until
+    // S276, is an implementation the trace shares nothing with. Per cell of
+    // S121's table: White's pieces with that count minus Black's.
+    int mobility[2][MOBILITY_CELLS] = {};
+    REQUIRE(
+        walked_counts::mobility_cells(fen.substr(0, fen.find(' ')), mobility));
+    for (int cell = 0; cell < MOBILITY_CELLS; ++cell) {
+      CAPTURE(cell);
+      CHECK(coefficient(data, eval_trace::TERM_MOBILITY,
+                        static_cast<size_t>(cell)) ==
+            mobility[WHITE][cell] - mobility[BLACK][cell]);
     }
 
     CHECK(coefficient(data, eval_trace::TERM_TEMPO, 0) ==

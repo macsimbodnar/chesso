@@ -34,6 +34,10 @@ def sq(name):
 
 PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING = range(6)
 
+# The mobility tables by the type index the `mobility` entries carry, knight 0
+# to queen 3 (src/evaluation.cpp, S121).
+MOBILITY_TABLES = ("knight", "bishop", "rook", "queen")
+
 KS = {  # king_safety_feature_t's order
     "KNIGHT_ATT": 0,
     "BISHOP_ATT": 1,
@@ -56,7 +60,9 @@ KS = {  # king_safety_feature_t's order
 #  structure  isolated, doubled, backward, White minus Black
 #  placement  pair, rook open, rook half open, White minus Black (rook seventh was
 #             a fourth until S134 folded it into the rook table, DEC-090)
-#  mobility   (type, attacked squares not occupied by own pieces, sign)
+#  mobility   (type, attacked squares not occupied by own pieces, sign); since
+#             S121 the count picks the piece's cell of its type's table, which
+#             is what the piece scores, and is no longer multiplied by anything
 #  attackers  (type, zone-attack incidences, sign of the *defender*)
 #  shelter    per colour: the shield and file counts of that king
 CASES = [
@@ -362,10 +368,11 @@ def score(case, w, margin):
     tempo = trunc_div(w["tempo_mg"] * phase + w["tempo_eg"] * endgame, MAX)
     cheap = stm * (material + positional) + tempo
 
+    # S121: one cell per piece, its type's table read at its count.
     mob_mg = mob_eg = 0
     for t, count, sign in case["mobility"]:
-        mob_mg += sign * count * w["mobility_mg"][t]
-        mob_eg += sign * count * w["mobility_eg"][t]
+        mob_mg += sign * w["mobility_%s_mg" % MOBILITY_TABLES[t]][count]
+        mob_eg += sign * w["mobility_%s_eg" % MOBILITY_TABLES[t]][count]
 
     # An attack on a king zone is worth its weight to the king under fire, so it
     # enters the White-relative sum with the defender's sign.

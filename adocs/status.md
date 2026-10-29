@@ -37,19 +37,25 @@ Opus 5.5 subagent in `../chesso-s297`, fast-checked (four doc and evidence
 fixes applied); logs `.tuning/coord/S297/logs/`. S298 (a weekly clang stage
 in `tools/gate_extra.sh`) is planned as filler.
 
-**Next: S121's phase 1b.** Phase 1a was written blind during S136's match
-(`../chesso-s121`, branch `s121` at `adf77d0`, diff
-`.tuning/coord/S121/s121_phase1a.diff`, sha256 b6c14518...; one fast check,
-its fixes applied). The parts are P0 curve, P1 enemy pawn attacks, P2a area
-with blocked pawns, P2b low-rank pawns, P3 pins; the partition is A | B1 |
-B2a | B2b | C. Send that agent phase 1b: rebase onto this record, both
-builds, INV-6, the coverage rows (a constructive generator as fallback), the
-preconditions, the patch at every mask, then land `No functional change`
-with DEC-326 from the coordinator's rulings. Then its screen (about 1 h 30
-m) and cost run (about 1 h 35 m), by day.
+**S121 in progress: phase 1 landed** (one Opus 5.5 subagent, phase 1a blind
+in `../chesso-s121`, phase 1b in `../chesso-s121b` at `6ff7485`; three fast
+checks, every fix applied). Mobility is a per-count table per piece at the
+identity (c times S083's weights), `No functional change`: bench 5069022 and
+search_bench identical at depths 9 and 12 (`adocs/data/S121_inv6.txt`). The
+tuner grows to 955 parameters, gains `--tie`, and refuses a free set that
+walks the table's 8 null directions (S126 must hold or freeze them). The
+fixture gains 38 rows picked by `adocs/data/S121_coverage_rows.cpp`; the
+clamp case's push is re-derived +100 -> +140 by its script. The parts live in
+`adocs/data/S121_parts.patch` (masks P1 = 1, P2a = 2, P2b = 8 with 2, P3 = 4).
+DEC-326 records the rulings. **Next, the coordinator's runs, by day:** copy
+`adocs/data/S121_verify_fit.py` over `.tuning/verify_fit.py`, rebuild
+`build/`, then `adocs/data/S121_screen.sh all` (about 1 h 30 m, 2 h 55 m at
+the cap, ceiling 6 h 30 m), then `CAND_SHA=<landing> adocs/data/S121_cost.sh
+run` (about 1 h 35 m, ceiling 3 h 10 m); then phase 2 (`apply`, goldens),
+then the SPRT, a night run.
 
-`../chesso-s136b` (with `build-s136close/`) and `../chesso-s136c` can go
-once this record lands; removal waits on the owner.
+`../chesso-s136b` (with `build-s136close/`), `../chesso-s136c`, `../chesso-s297`
+and `../chesso-s121` can go; removal waits on the owner.
 
 ## 2026-10-27: S296 read H1; the rule stays; S136 next
 

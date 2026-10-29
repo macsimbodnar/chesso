@@ -1225,8 +1225,18 @@ TEST_SUITE("evaluation: packed score")
       }
     };
 
-    halves_match("mobility", mobility_score.data(), mobility_mg, mobility_eg,
-                 4);
+    // S121's four tables, each against its own run of the one packed table,
+    // and the runs laid end to end over the whole of it.
+    halves_match("mobility knight", mobility_score.data() + MOBILITY_OFFSET[0],
+                 mobility_knight_mg, mobility_knight_eg, MOBILITY_WIDTH[0]);
+    halves_match("mobility bishop", mobility_score.data() + MOBILITY_OFFSET[1],
+                 mobility_bishop_mg, mobility_bishop_eg, MOBILITY_WIDTH[1]);
+    halves_match("mobility rook", mobility_score.data() + MOBILITY_OFFSET[2],
+                 mobility_rook_mg, mobility_rook_eg, MOBILITY_WIDTH[2]);
+    halves_match("mobility queen", mobility_score.data() + MOBILITY_OFFSET[3],
+                 mobility_queen_mg, mobility_queen_eg, MOBILITY_WIDTH[3]);
+    CHECK(static_cast<int>(mobility_score.size()) ==
+          MOBILITY_OFFSET[3] + MOBILITY_WIDTH[3]);
     // The two widths below come from the packed arrays rather than literals:
     // S134 narrowed both, and a literal left behind reads past the end of the
     // array without a compiler word about it.

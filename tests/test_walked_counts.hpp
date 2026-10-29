@@ -95,12 +95,17 @@ inline int piece_from_char(char c, bool* black)
 }
 
 
-// Mobility counts, White minus Black, per piece type in knight, bishop, rook,
-// queen order. Walked ray by ray from the placement rather than read out of the
+// Mobility, as S121's table reads it: per side, WHITE first, how many of the
+// side's pieces have each count, the cell MOBILITY_OFFSET[type] + count for a
+// piece of type knight, bishop, rook or queen (src/evaluation.hpp). A piece's
+// count is the squares it attacks that do not hold one of its own side's
+// pieces. Walked ray by ray from the placement rather than read out of the
 // engine's magic tables, deliberately: this file exists to disagree with the
 // engine when the two stop computing the same thing, and a shared
-// implementation cannot do that.
-inline bool mobility_features(const std::string& placement, int out[4])
+// implementation cannot do that. The width is the engine's, and a count past
+// its row is refused rather than written past it.
+inline bool mobility_cells(const std::string& placement,
+                           int out[2][MOBILITY_CELLS])
 {
   int kind_at[64];
   bool white_at[64];
@@ -135,8 +140,10 @@ inline bool mobility_features(const std::string& placement, int out[4])
   static const int bishop_rays[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
   static const int rook_rays[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
-  for (int i = 0; i < 4; ++i) {
-    out[i] = 0;
+  for (int side = 0; side < 2; ++side) {
+    for (int i = 0; i < MOBILITY_CELLS; ++i) {
+      out[side][i] = 0;
+    }
   }
 
   for (int from = 0; from < 64; ++from) {
@@ -189,7 +196,9 @@ inline bool mobility_features(const std::string& placement, int out[4])
       }
     }
 
-    out[type - 1] += white ? targets : -targets;
+    if (targets >= MOBILITY_WIDTH[type - 1]) { return false; }
+
+    out[white ? 0 : 1][MOBILITY_OFFSET[type - 1] + targets]++;
   }
 
   return true;

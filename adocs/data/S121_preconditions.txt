@@ -1,0 +1,176 @@
+S121 phase 1b, 2026-10-29: the readings the coverage rows move, on the identity table
+tree: ../chesso-s121b, branch s121b on 6ff7485 with the phase 1a diff (sha256 b6c14518...) and phase 1b's edits
+
+== adocs/data/S121_coverage_rows.cpp, S121_COVERAGE_DATA = S083's corpus (sha256 2e0e3de9...), from the base 42 rows (BASE_ROWS) with the landed block re-checked: the rule as amended twice, reproducing the landed 19 pairs
+tests/test_eval_positions.hpp: 80 rows, 42 before S121's block (marker found)
+landed block: 19 pairs, 0 not eligible
+the list, 42 rows: 55 of 132 needs open
+all_test_fens(): 365 eligible candidates close an open need
+pick, phase 22, closes 7: mobility_bishop_mg[1] mobility_bishop_eg[1] mobility_bishop_mg[4] mobility_bishop_eg[4] mobility_queen_eg[5] mobility_queen_mg[17] mobility_queen_eg[17]
+  rnb1k2N/ppp1n1pp/8/2b5/3q4/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+pick, phase 6, closes 4: mobility_bishop_mg[13] mobility_bishop_eg[13] mobility_rook_mg[14] mobility_rook_eg[14]
+  4k2r/8/8/8/3BB3/4K3/8/r7 w k - 1 2
+pick, phase 17, closes 4: mobility_queen_mg[15] mobility_queen_eg[15] mobility_queen_mg[18] mobility_queen_eg[18]
+  5rk1/pp4pp/4p3/2R2nQ1/8/2q4r/P1P2PPP/5RK1 w - - 1 2
+pick, phase 23, closes 4: mobility_queen_mg[7] mobility_queen_eg[7] mobility_queen_mg[14] mobility_queen_eg[14]
+  rnbqk2r/ppp1n1pp/8/2b5/8/2P5/PP3PPP/RNBQKB1R b KQkq - 0 8
+pick, phase 8, closes 2: mobility_rook_mg[13] mobility_rook_eg[13]
+  1r2k2r/R6R/8/8/8/8/4K3/8 w - - 1 2
+pick, phase 18, closes 2: mobility_queen_mg[3] mobility_queen_eg[3]
+  3k4/8/1K6/8/8/8/ppppppp1/RRRRRRqR w - - 0 2
+pick, phase 6, closes 2: mobility_queen_mg[25] mobility_queen_eg[25]
+  4k3/r7/8/5Q2/8/8/4K3/8 w - - 0 2
+pick, phase 17, closes 2: mobility_queen_mg[13] mobility_queen_eg[13]
+  5rk1/pp4pp/4p3/2R3Q1/1q1n4/7r/P1P2PPP/5RK1 w - - 1 2
+pick, phase 8, closes 2: mobility_knight_mg[1] mobility_knight_eg[1]
+  Nnnnnnnn/P1PPPPPP/8/8/8/8/8/K6k b - - 0 1
+pick, phase 22, closes 2: mobility_queen_mg[0] mobility_queen_eg[0]
+  r1bqk2N/pppnn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+pick, phase 22, closes 2: mobility_bishop_mg[11] mobility_bishop_eg[11]
+  rn1qk2N/ppp1n1pp/4b3/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+pick, phase 18, closes 1: mobility_queen_eg[4]
+  3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2
+pick, phase 22, closes 1: mobility_queen_eg[1]
+  rn1qk2N/pppbn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 rows read, 622 candidates kept
+pick, phase 18, closes 4: mobility_queen_mg[20] mobility_queen_eg[20] mobility_queen_mg[22] mobility_queen_eg[22]
+  r5kr/p6p/1p2n1p1/3q2P1/5Q2/7P/P1P2P2/R1B2RK1 w - - 3 24
+pick, phase 17, closes 4: mobility_bishop_mg[12] mobility_bishop_eg[12] mobility_queen_mg[23] mobility_queen_eg[23]
+  1r3k1r/p5p1/3b4/Q2B2B1/7P/P7/2q4P/4R2K w - - 0 35
+pick, phase 8, closes 4: mobility_queen_mg[21] mobility_queen_eg[21] mobility_queen_mg[24] mobility_queen_eg[24]
+  6k1/4Q3/2p3K1/8/1P3q2/8/8/8 w - - 0 50
+pick, phase 22, closes 4: mobility_knight_mg[0] mobility_knight_eg[0] mobility_queen_mg[2] mobility_queen_eg[2]
+  rn1qk2r/3ppp1p/bpp2np1/3P4/p1B1P3/P1P2N2/2P2PPP/R1BQ1RK1 w kq - 3 10
+pick, phase 14, closes 2: mobility_queen_mg[26] mobility_queen_eg[26]
+  r1r3k1/1p3p2/7B/4q3/P5P1/1Q4P1/7P/5BK1 b - - 0 33
+pick, phase 5, closes 2: mobility_queen_mg[27] mobility_queen_eg[27]
+  8/p7/B4k2/1P6/4q3/2K5/8/8 b - - 3 63
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 4.924e-08
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+38 rows the rule picks, for tests/test_eval_positions.hpp:
+[doctest] test cases:       1 |       1 passed | 0 failed | 0 skipped
+[doctest] Status: SUCCESS!
+
+== run 1 (before the 800 cp limit), not kept: its picks, each with evaluate() White relative at the shipped constants (a one-off linked to build/src/libchesso_engine.a), and its gradient check
+  +205  rnb1k2N/ppp1n1pp/8/2b5/3q4/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+ +1303  5bnr/4p1pq/4Qpkr/7p/7P/4P3/PPPP1PP1/RNB1KBNR b KQ - 2 10
+ +1266  1r2k3/R7/8/5Q2/8/8/4K3/8 w - - 1 2
+  -424  6k1/pp4pp/4p3/2R3Q1/3n1r2/2q4r/P1P2PPP/5RK1 w - - 1 2
+  +328  8/8/4k3/3bb3/8/8/3K4/R6R b - - 1 1
+ +5646  1BQKRBRN/PPPPPPPP/1N6/8/8/8/3k4/8 b - - 1 1
+ +3767  1Bk5/B1B5/1B1B4/B1B5/1B6/B4B2/5K2/8 b - - 1 1
+ +1084  1k3Q2/8/8/8/8/8/8/4K3 b - - 0 1
+ +2221  1r2k2r/pp2bppp/2p5/8/2B5/8/PPP1N1PP/RNBQK2R w KQk - 0 9
+ +1045  3KQ2r/2PP4/8/2k5/8/8/8/8 b - - 0 1
+  +854  3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR w - - 0 2
+  +782  3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2
+  +158  rn1qk2N/pppbn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+   +75  1r3k1r/p5p1/3b4/Q2B2B1/7P/P7/2q4P/4R2K w - - 0 35
+  +104  3Q4/5k2/6p1/5n2/4q3/5NP1/5PK1/8 w - - 11 56
+  +258  8/p4k1p/1p6/4q3/P5R1/3Q4/6P1/2r2NK1 b - - 0 43
+  +396  r1bqk2r/p3ppBp/np1p1n2/2p1Q3/3P4/1P6/P1P1PPPP/RN2KBNR w KQkq - 0 8
+  -168  r1r3k1/1p3p2/7B/4q3/P5P1/1Q4P1/7P/5BK1 b - - 0 33
+FLAT parameter 774: |gradient| 2.786e-19
+FLAT parameter 793: |gradient| 1.164e-14
+FLAT parameter 840: |gradient| 2.786e-19
+FLAT parameter 859: |gradient| 1.629e-14
+check gradient: 78 rows, 4 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 2.786e-19
+  the two flat cells, knight count 1 and bishop count 11, were closed by the +5646 and +3767 picks alone: the case's sigmoid at K = 1 is flat there
+
+== run 2 (before the either-side-to-move rule), not kept: its one pick that run 3 changed
+pick, phase 2, closes 2: mobility_rook_mg[13] mobility_rook_eg[13]
+  1k3R2/8/8/8/8/8/8/4K3 b - - 0 1
+  tests/test_eval_model.cpp "the move is worth the same to either side": REQUIRE( load_FEN(with_side_to_move(fen, 'w'), &game) ) failed on it, Black in check
+
+== python-chess validity of the kept rows
+tests/test_eval_positions.hpp: 80 rows; the 38 after the first 42 (S121's block), python-chess 1.11.2 Board(fen).status():
+  <Status.VALID: 0>  rnb1k2N/ppp1n1pp/8/2b5/3q4/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+  <Status.VALID: 0>  rnbq1k1r/pp1Pbppp/2p5/3Q4/2B5/8/PPP1N1PP/RNB1K2n b Q - 2 9
+  <Status.VALID: 0>  4k2r/8/8/8/3BB3/4K3/8/r7 w k - 1 2
+  <Status.VALID: 0>  R7/8/4k3/3bb3/8/8/8/4K2R b K - 1 2
+  <Status.VALID: 0>  5rk1/pp4pp/4p3/2R2nQ1/8/2q4r/P1P2PPP/5RK1 w - - 1 2
+  <Status.VALID: 0>  5rk1/p1p2ppp/2Q4R/8/2r2Nq1/4P3/PP4PP/5RK1 b - - 1 2
+  <Status.VALID: 0>  rnbqk2r/ppp1n1pp/8/2b5/8/2P5/PP3PPP/RNBQKB1R b KQkq - 0 8
+  <Status.VALID: 0>  rnbqkb1r/pp3ppp/2p5/8/2B5/8/PPP1N1PP/RNBQK2R w KQkq - 0 8
+  <Status.VALID: 0>  1r2k2r/R6R/8/8/8/8/4K3/8 w - - 1 2
+  <Status.VALID: 0>  8/4k3/8/8/8/8/r6r/1R2K2R b - - 1 2
+  <Status.VALID: 0>  3k4/8/1K6/8/8/8/ppppppp1/RRRRRRqR w - - 0 2
+  <Status.VALID: 0>  rrrrrrQr/PPPPPPP1/8/8/8/1k6/8/3K4 b - - 0 2
+  <Status.VALID: 0>  4k3/r7/8/5Q2/8/8/4K3/8 w - - 0 2
+  <Status.VALID: 0>  8/4k3/8/8/5q2/8/R7/4K3 b - - 0 2
+  <Status.VALID: 0>  5rk1/pp4pp/4p3/2R3Q1/1q1n4/7r/P1P2PPP/5RK1 w - - 1 2
+  <Status.VALID: 0>  5rk1/p1p2ppp/7R/1Q1N4/2r3q1/4P3/PP4PP/5RK1 b - - 1 2
+  <Status.VALID: 0>  Nnnnnnnn/P1PPPPPP/8/8/8/8/8/K6k b - - 0 1
+  <Status.VALID: 0>  k6K/8/8/8/8/8/p1pppppp/nNNNNNNN w - - 0 1
+  <Status.VALID: 0>  r1bqk2N/pppnn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+  <Status.VALID: 0>  rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPNN1PP/R1BQK2n b Q - 2 9
+  <Status.VALID: 0>  rn1qk2N/ppp1n1pp/4b3/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+  <Status.VALID: 0>  rnbq1k1r/pp1Pbppp/2p5/8/2B5/4B3/PPP1N1PP/RN1QK2n b Q - 2 9
+  <Status.VALID: 0>  3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2
+  <Status.VALID: 0>  rrQrrrrr/P1PPPPPP/8/8/8/1k6/8/3K4 b - - 0 2
+  <Status.VALID: 0>  rn1qk2N/pppbn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+  <Status.VALID: 0>  rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPBN1PP/RN1QK2n b Q - 2 9
+  <Status.VALID: 0>  r5kr/p6p/1p2n1p1/3q2P1/5Q2/7P/P1P2P2/R1B2RK1 w - - 3 24
+  <Status.VALID: 0>  r1b2rk1/p1p2p2/7p/5q2/3Q2p1/1P2N1P1/P6P/R5KR b - - 3 24
+  <Status.VALID: 0>  1r3k1r/p5p1/3b4/Q2B2B1/7P/P7/2q4P/4R2K w - - 0 35
+  <Status.VALID: 0>  4r2k/2Q4p/p7/7p/q2b2b1/3B4/P5P1/1R3K1R b - - 0 35
+  <Status.VALID: 0>  6k1/4Q3/2p3K1/8/1P3q2/8/8/8 w - - 0 50
+  <Status.VALID: 0>  8/8/8/1p3Q2/8/2P3k1/4q3/6K1 b - - 0 50
+  <Status.VALID: 0>  rn1qk2r/3ppp1p/bpp2np1/3P4/p1B1P3/P1P2N2/2P2PPP/R1BQ1RK1 w kq - 3 10
+  <Status.VALID: 0>  r1bq1rk1/2p2ppp/p1p2n2/P1b1p3/3p4/BPP2NP1/3PPP1P/RN1QK2R b KQ - 3 10
+  <Status.VALID: 0>  r1r3k1/1p3p2/7B/4q3/P5P1/1Q4P1/7P/5BK1 b - - 0 33
+  <Status.VALID: 0>  5bk1/7p/1q4p1/p5p1/4Q3/7b/1P3P2/R1R3K1 w - - 0 33
+  <Status.VALID: 0>  8/p7/B4k2/1P6/4q3/2K5/8/8 b - - 3 63
+  <Status.VALID: 0>  8/8/2k5/4Q3/1p6/b4K2/P7/8 w - - 3 63
+all VALID
+
+== adocs/data/S083_tuner_preconditions.cpp both, over the 80-row fixture
+clamp: 80 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 99.3 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       81.0      103.00   1.16e-07         -1         -1  binds on none or all; 
+  +20      0        0.0      108.0       76.00   1.73e-07         -1         -1  binds on none or all; 
+  +30      2      186.7      138.0        2.67   1.74e-07          0   0.000699  ok
+  +40      4      266.7      168.0        3.08   3.22e-08          0   0.000835  ok
+  +50     10      346.7      153.8        0.50   1.58e-07          0    0.00031  a row within 1 cp of the kink; 
+  +60     12      426.7      183.8        0.25   7.76e-07          0   0.000323  a row within 1 cp of the kink; fd past 2e-7; 
+  +70     17      506.7      183.9        0.12   2.34e-07          0   0.000213  a row within 1 cp of the kink; fd past 2e-7; 
+  +80     21      586.7      174.0       10.04   2.34e-07          0   0.000241  fd past 2e-7; 
+  +90     24      666.7      151.7        4.33   1.58e-07          0   0.000364  ok
+ +100     24      746.7      171.7       12.33   7.93e-07          0   0.000364  fd past 2e-7; 
+ +110     26      826.7      181.0        3.00   3.81e-08          0   0.000336  ok
+ +120     30      906.7      175.7        5.96   1.58e-07          0   0.000302  ok
+ +130     32      986.7      184.0        0.00        1.6          0   0.000283  a row within 1 cp of the kink; fd past 2e-7; 
+ +140     34     1066.7      174.7        9.33   1.58e-07          0   0.000292  ok  <- CHOSEN
+ +150     36     1146.7      178.3        0.67   1.58e-07          0   0.000486  a row within 1 cp of the kink; 
+ +160     38     1226.7      183.7        0.33   1.58e-07          0   0.000461  a row within 1 cp of the kink; 
+ +170     44     1306.7      166.0        1.50   4.54e-08          0   0.000338  ok
+ +180     44     1386.7      176.0        8.00   1.58e-07          0   0.000338  ok
+ +190     47     1466.7      177.7        1.00   1.58e-07          0   0.000316  a row within 1 cp of the kink; 
+ +200     53     1546.7      175.5        2.00   1.58e-07          0   0.000233  ok
+clamp: the rule picks +140, every row 9.33 from the kink
+walk: 84 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   +5.2201  held  -4.14e-15  
+    material/table knight  plain   -4.3532  held  +1.33e-15  
+    material/table bishop  plain   -6.1937  held  +1.25e-16  
+    material/table rook    plain   +0.6177  held     -2e-15  
+    material/table queen   plain   -2.1184  held  +2.44e-15  
+    psqt_mg[king]          plain   -2.9168  held  +5.55e-16  
+    psqt_eg[king]          plain   -2.7841  held  -5.55e-17  
+    smallest plain walk 0.6177 (material/table rook); runs apart 5.68e-13; plain travelled 1566.3
+  adagrad at lr 10
+    material/table pawn    plain   +6.5836  held  +4.74e-15  
+    material/table knight  plain   -4.9021  held  +3.33e-16  
+    material/table bishop  plain   -6.1740  held  -1.39e-16  
+    material/table rook    plain   +0.9240  held  +5.66e-15  
+    material/table queen   plain   -1.5790  held  -4.22e-15  
+    psqt_mg[king]          plain   -2.6273  held  +2.78e-15  
+    psqt_eg[king]          plain   -2.1756  held  +2.39e-15  
+    smallest plain walk 0.9240 (material/table rook); runs apart 2.27e-12; plain travelled 1606.0
+walk: every plain shift clears the case's floor 0.01
+
+== tests/test_tuner_gradient -s, the three MESSAGE lines (clamp case at +140)
+test_tuner_gradient.cpp:548: MESSAGE: worst relative error 5.45668e-08 at parameter 141
+test_tuner_gradient.cpp:666: MESSAGE: clamp case: worst relative error 1.58078e-07 at parameter 766
+test_tuner_gradient.cpp:1230: MESSAGE: group: worst relative error 2.2897e-08 at parameter 959

@@ -5931,7 +5931,9 @@ structure 6, piece placement 8 and tempo 2 at S027. S134 deleted passer bucket 5
 and rook on the seventh, two parameters each, after folding their weights into
 the tables (DEC-090): 827 until then, 823 after. S135 added four piece
 placement columns, the two bad bishop and two trapped piece counts, eight
-parameters: 831. The count is
+parameters: 831. S121 made mobility a table, one cell per count a piece can
+have -- knight 0 to 8, bishop 0 to 13, rook 0 to 14, queen 0 to 27, 66 cells a
+half where there were 4 -- so mobility is 132 and the vector 955. The count is
 `tuner_layout::PARAM_COUNT` and the run prints it on its first line, with the
 number the `--only` group left free beside it. It never calls the search, and
 since S262 it carries no copy of the evaluation either: it fits `evaluate()`'s
@@ -6022,7 +6024,7 @@ emitted order:
 |---|---|
 | `PAWN`, `KNIGHT`, `BISHOP`, `ROOK`, `QUEEN` defines | `src/eval_tables.hpp` |
 | `psqt_mg[6][64]`, `psqt_eg[6][64]` | `src/eval_tables.hpp` |
-| `mobility_mg[4]`, `mobility_eg[4]` | `src/evaluation.cpp` |
+| `mobility_knight_mg[9]` and `_eg[9]`, `mobility_bishop_mg[14]` and `_eg[14]`, `mobility_rook_mg[15]` and `_eg[15]`, `mobility_queen_mg[28]` and `_eg[28]` (S121; `mobility_mg[4]`, `mobility_eg[4]` until then) | `src/evaluation.cpp` |
 | `king_safety_mg[KS_FEATURE_COUNT]`, `king_safety_eg[KS_FEATURE_COUNT]` | `src/evaluation.cpp` |
 | `passed_pawn_mg[5]`, `passed_pawn_eg[5]` | `src/evaluation.cpp` |
 | `pawn_structure_mg[3]`, `pawn_structure_eg[3]` | `src/evaluation.cpp` |
@@ -6054,8 +6056,37 @@ build/tools/tuner --data .tuning/selfplay_v2.tsv \
 ships. Groups are `all` (default), `material`, `psqt`, `mobility`,
 `king_safety`, `passed_pawns`, `pawn_structure`, `piece_placement`, `tempo`, and
 the emitted header records which was used. The eight named groups partition all
-831 parameters: 5, 768, 8, 18, 10, 6, 14, 2 in that order, which the run's first
+955 parameters: 5, 768, 132, 18, 10, 6, 14, 2 in that order, which the run's first
 line reports as the free count.
+
+**Since S121 `--tie FILE` joins mobility cells**: each line
+`mobility_<piece>_<half> <cell> <anchor> [<scale>]` makes the cell share the
+anchor's parameter, its value the anchor's times the scale (1 when absent).
+The tied cell takes no step of its own and its gradient joins the anchor's;
+the cell is set to the anchor's value times the scale once the run's start
+figures are read at the shipped constants and before the first step, and
+again after every step, so a run's start figure is still the shipped
+constants' and every gradient is taken on the tied parameterisation. A cell tied twice, tied to
+itself, past its row, or a chain -- an anchor that is itself tied -- refuses
+the file, and so does a tie with either end outside what `--only` and
+`--freeze` leave free. The header's `tie` line names the file, its sha256 and
+how many cells it tied. Two uses, both S121's screen
+(`adocs/data/S121_screen.sh`): cells the corpus barely reaches tied to the
+nearest supported cell, so every shipped entry is a fitted value (DEC-084),
+and a whole row tied to its count-1 cell with scale c, the linear model a part
+is screened over when the curve is dropped.
+
+**Since S121 the tuner refuses a free set that walks a mobility level.** Every
+piece adds exactly one cell of its row, so c on every cell of a row and -c on
+every square of the piece's table half moves no row the clamp does not bind;
+no gauge holds those eight directions, so `--only all`, the default, and any
+`--freeze` that leaves a piece's mobility row and its table half both free are
+refused before anything is loaded (`tools/tuner_groups.hpp`
+`mobility_levels_held`). Freeze one side -- `--only mobility`, `--only psqt`,
+`--freeze mobility` -- or give the levels a hold first, which is S126's to
+do. `tools/feature_audit --free GROUP` reads the identity report for a free
+set the same way: a level counts as held only where the group freezes one of
+its sides, and S121's screen audits with `--free mobility`.
 
 **Since S135 `--only` and `--freeze` also take a piece placement term**:
 `piece_placement.bishop_pair`, `.rook_open`, `.rook_half_open`, `.bad_bishop`
@@ -6331,7 +6362,7 @@ positions both ways round and the 2696 positions of the JSON suites, 478 of
 which bind the clamp: the identity on every one; every coefficient
 against a count the trace did not take (the engine's per-colour accessors, the
 bitboards, and for mobility the ray walk in `tests/test_walked_counts.hpp`, the
-mirror's until S276) -- the check that sees a wrong
+mirror's until S276, cell by cell of S121's table) -- the check that sees a wrong
 coefficient on a weight that ships at zero, where the identity cannot; tracing
 changing nothing `evaluate()` returns; the smooth score inside the truncation
 bound, and since S276 the four positions pinned to reach it; and the refusals

@@ -509,7 +509,10 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // by adocs/data/S135_gradient_rows.cpp's stated rule and not by this case
 // passing; h, the metric and the 1e-6 are unchanged. With it the gradient
 // there is 1.87e-5 and the worst 2.00e-07, still at 774; at the parent's
-// zero placement weights the same rows read 5.01e-07 there.
+// zero placement weights the same rows read 5.01e-07 there. S121 made
+// mobility a table (955 parameters) and added 38 rows so every cell has a
+// gradient here (tests/test_eval_positions.hpp says by what rule): at the
+// identity table the worst is 5.46e-08, at parameter 141, psqt_mg[bishop][a7].
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -562,7 +565,9 @@ TEST_CASE("gradient() is the derivative of the error it descends")
   }
 
   // The piece-square side, where an empty square legitimately contributes
-  // nothing. 158 of the 768 columns are occupied somewhere in this corpus; the
+  // nothing. 281 of the 768 columns have a gradient over this corpus since
+  // S121's 38 rows, 173 over the 42 before them (the 158 this said had gone
+  // stale; both counted at S121's phase 1b with the case's labels and K); the
   // floor is under that and fails if the corpus is ever emptied out.
   size_t psqt_nonzero = 0;
   for (size_t p = MG_BASE; p < MOB_MG_BASE; ++p) {
@@ -611,14 +616,18 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // answers +100 again with the same eight rows, 434.5, 161.0 and 23, finite
   // differences 6.0e-8 (adocs/data/S135_preconditions.txt). At S135's piece
   // placement fit with the two rows DEC-316 added (42), +100 again, the same
-  // eight rows, 434.5, 161.0 and 23, finite differences 1.14e-7. Re-run it
+  // eight rows, 434.5, 161.0 and 23, finite differences 1.14e-7. With S121's
+  // coverage rows (80) at the identity table it answers +140: 34 rows bound,
+  // the farthest at 1066.7, the nearest other at 174.7, every row 9.33 from
+  // the kink, finite differences 1.58e-7; +100 there reads 7.93e-7, past the
+  // rule's 2e-7 (adocs/data/S121_preconditions.txt). Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
   // push saturates the sigmoid everywhere, which makes the finite difference
   // itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
-    params[KS_MG_BASE + t] += 100.0;
-    params[KS_EG_BASE + t] += 100.0;
+    params[KS_MG_BASE + t] += 140.0;
+    params[KS_EG_BASE + t] += 140.0;
   }
 
   std::vector<uint32_t> binding;
@@ -920,7 +929,11 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // with DEC-316's two rows (46 with the gauge rows) the smallest is 0.2263
     // under Adam and **0.0135** under AdaGrad, both the rook's, every hold at
     // most 5.22e-15: still over the floor, now by a factor of 1.35 and no
-    // longer four (0.0672 under AdaGrad at the fit without the two rows). The
+    // longer four (0.0672 under AdaGrad at the fit without the two rows). With
+    // S121's 38 coverage rows (84 with the gauge rows) at the identity table
+    // the smallest is 0.6177 under Adam and 0.9240 under AdaGrad, both the
+    // rook's, the largest 6.1937, the bishop's, and 6.5836, the pawn's, every
+    // hold at most 5.66e-15 (`adocs/data/S121_preconditions.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which

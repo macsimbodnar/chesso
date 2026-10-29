@@ -1,0 +1,512 @@
+S121's four parts, as one throwaway patch over the phase 1 landing (the
+table at identity). Never committed to src/ in this form (DEC-326 (7)); the
+screen, the cost run and the candidate's paste apply it, and a landing folds
+it. `git apply` reads from the first `---` line on, so this text is ignored.
+
+  S121_PARTS  build-time mask, 0 when unset: 1 P1 enemy pawn attacks dropped,
+              2 P2a the mobility area in place of "not an own piece" with own
+              blocked pawns dropped, 8 P2b own low-rank pawns dropped as well
+              (only with bit 2), 4 P3 the pin rule. 0 is the phase 1 landing
+              node for node.
+  S121_COST   the cost-only form of the same mask (DEC-047): the parts it
+              names computed and handed to an asm barrier, the score
+              S121_PARTS's, which must then be 0.
+
+Files: src/evaluation.{hpp,cpp} (the parts), src/bitboard.{hpp,cpp}
+(pinned_pieces(), both colours), tests/test_walked_counts.hpp (the walk under
+the same mask), adocs/data/S192_anchors.py (each case's count per mask, from
+the descriptions; the mask read from src/evaluation.hpp's #define, the
+environment's S121_PARTS only checked against it). Written 2026-10-28,
+blind; re-cut clang-format clean at phase 1b, 2026-10-29, and built there at
+masks 1, 2, 10, 4 and 15 and at S121_COST=15 (mask 8 alone refused by its
+static_assert), the walk held to the engine at mask 15 and INV-6 at mask 0.
+
+--- a/src/bitboard.cpp
++++ b/src/bitboard.cpp
+@@ -598,6 +598,17 @@
+ }
+ 
+ 
++bb_t pinned_pieces(const bb_tables_t* tables, const board_t* board, int colour)
++{
++  assert(board != nullptr);
++
++  return (colour == WHITE) ? pinned_to_king<WHITE>(tables, board,
++                                                   king_square_of<WHITE>(board))
++                           : pinned_to_king<BLACK>(
++                                 tables, board, king_square_of<BLACK>(board));
++}
++
++
+ bb_t side_to_move_checkers(const bb_tables_t* tables, const board_t* board)
+ {
+   assert(board != nullptr);
+--- a/src/bitboard.hpp
++++ b/src/bitboard.hpp
+@@ -119,6 +119,13 @@
+ 
+ bb_t side_to_move_checkers(const bb_tables_t* tables, const board_t* board);
+ 
++// The pieces of `colour` pinned to its own king: standing alone between it and
++// an enemy slider that would otherwise attack it. Either colour, not only the
++// side to move, for S121's P3 -- a pinned piece's mobility counts only the
++// squares on its pin line. The generator's own pins, in gen_masks_t, are the
++// side to move's and computed where it generates.
++bb_t pinned_pieces(const bb_tables_t* tables, const board_t* board, int colour);
++
+ // The pin half, for a caller that already holds the checkers -- the search
+ // needs them at node entry and the pins only once it generates.
+ gen_masks_t gen_masks_with_checkers(const bb_tables_t* tables,
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1459,6 +1459,29 @@
+     }
+   }
+ 
++  // S121's parts (src/evaluation.hpp), computed when a part scores or a
++  // cost-only build forces it, and not otherwise: `if constexpr` deletes each
++  // set no expression reads. The pawn attacks are stage one's own sets, built
++  // again here because stage one keeps them local (specs.md): two shifts a
++  // side. The pins are each side's pieces pinned to its own king, both
++  // colours, which the generator's side-to-move masks are not.
++  constexpr int computed = (S121_PARTS) | (S121_COST);
++  [[maybe_unused]] bb_t pawn_attacks[2] = {BB_0, BB_0};
++  [[maybe_unused]] bb_t pinned[2] = {BB_0, BB_0};
++  [[maybe_unused]] index_t king_square[2] = {0, 0};
++
++  if constexpr ((computed & 1) != 0) {
++    pawn_attacks[WHITE] = neighbour_files(board->bitboards[W_PAWN]) >> 8;
++    pawn_attacks[BLACK] = neighbour_files(board->bitboards[B_PAWN]) << 8;
++  }
++
++  if constexpr ((computed & 4) != 0) {
++    pinned[WHITE] = pinned_pieces(tables, board, WHITE);
++    pinned[BLACK] = pinned_pieces(tables, board, BLACK);
++    king_square[WHITE] = get_lsb_index(board->bitboards[W_KING]);
++    king_square[BLACK] = get_lsb_index(board->bitboards[B_KING]);
++  }
++
+   for (int colour = 0; colour < 2; ++colour) {
+     // The piece's own side, which is what mobility is worth to.
+     const int mover = (colour == WHITE) ? 1 : -1;
+@@ -1470,6 +1493,38 @@
+     const bb_t defended_zone = zone[1 - colour];
+     const int base = (colour == WHITE) ? W_KNIGHT : B_KNIGHT;
+ 
++    // The area's exclusions: P2a the side's blocked pawns, whose push square
++    // holds any piece; P2b its pawns on its own second and third ranks as
++    // well. Index 0 is a8, so White pushes by subtracting 8. One of
++    // S121_PARTS and S121_COST is 0, so `computed` is the active mask.
++    [[maybe_unused]] bb_t own_excluded = BB_0;
++
++    if constexpr ((computed & 2) != 0) {
++      const bb_t own_pawns =
++          board->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
++      own_excluded = (colour == WHITE) ? own_pawns & (occupancy << 8)
++                                       : own_pawns & (occupancy >> 8);
++
++      if constexpr ((computed & 8) != 0) {
++        const bb_t low_ranks = (colour == WHITE)
++                                   ? (rank_masks[48] | rank_masks[40])
++                                   : (rank_masks[8] | rank_masks[16]);
++        own_excluded |= own_pawns & low_ranks;
++      }
++    }
++
++    // The squares the scored count reads: every square but an own piece's
++    // until S121's parts, then each part's rule; and the same for the parts a
++    // cost-only build forces.
++    bb_t area = MOBILITY_AREA ? ~own_excluded : ~own;
++    if constexpr (MOBILITY_PAWN_ATTACKS) { area &= ~pawn_attacks[1 - colour]; }
++
++    [[maybe_unused]] bb_t cost_area =
++        (((S121_COST) & 2) != 0) ? ~own_excluded : ~own;
++    if constexpr (((S121_COST) & 1) != 0) {
++      cost_area &= ~pawn_attacks[1 - colour];
++    }
++
+     for (int type = 0; type < 4; ++type) {
+       bb_t pieces = board->bitboards[base + type];
+ 
+@@ -1483,9 +1538,32 @@
+         // mobility: no enemy-pawn-attack mask, which is the expensive variant.
+         // The count picks the piece's cell, which the board keeps inside its
+         // row: a knight reaches 8 squares at most, a bishop 13, a rook 14, a
+-        // queen 27 (MOBILITY_WIDTH).
+-        const int count = count_bits(attacks & ~own);
++        // queen 27 (MOBILITY_WIDTH). Since S121's parts, the area above and,
++        // for a pinned piece, only the squares on its pin line (P3): a pinned
++        // knight has none, a piece pinned across its own lines none either.
++        bb_t moves = attacks;
++        if constexpr (MOBILITY_PINS) {
++          if ((pinned[colour] >> square) & 1) {
++            moves &= tables->line[king_square[colour]][square];
++          }
++        }
++
++        const int count = count_bits(moves & area);
+         assert(count < MOBILITY_WIDTH[type]);
++
++        // The cost-only build's forced count, computed and discarded so the
++        // compiler keeps it while the score stays the landing's (DEC-047).
++        if constexpr ((S121_COST) != 0) {
++          bb_t cost_moves = attacks;
++          if constexpr (((S121_COST) & 4) != 0) {
++            if ((pinned[colour] >> square) & 1) {
++              cost_moves &= tables->line[king_square[colour]][square];
++            }
++          }
++          const int forced = count_bits(cost_moves & cost_area);
++          asm volatile("" : : "r"(forced));
++        }
++
+         const int cell = MOBILITY_OFFSET[type] + count;
+ 
+         mobility_sum += mover * mobility_score[cell];
+--- a/src/evaluation.hpp
++++ b/src/evaluation.hpp
+@@ -79,6 +79,54 @@
+ extern const int mobility_queen_mg[28];
+ extern const int mobility_queen_eg[28];
+ 
++// S121's four parts, as adocs/data/S121_parts.patch adds them to a throwaway
++// tree for the screen's builds (adocs/data/S121_screen.sh); never committed in
++// this form. Each changes the count a piece's cell is read at, and nothing
++// else -- king safety reads the raw attack set -- and each is a bit of
++// S121_PARTS, set by the build (`-DS121_PARTS=<mask>`), 0 when unset:
++//
++//   1  P1   a square attacked by an enemy pawn is not counted
++//   2  P2a  the mobility area replaces "not an own piece": an own piece's
++//           square counts, unless it holds an own blocked pawn -- one whose
++//           push square holds any piece. Letting own pieces count is
++//           inseparable from the first own-pawn exclusion, so it is this
++//           part's price
++//   8  P2b  an own pawn on the side's own second or third rank is not
++//           counted either; only with P2a's area, since over "not an own
++//           piece" it excludes nothing
++//   4  P3   a piece pinned to its own king counts only the squares on the
++//           line through the king and itself
++//
++// Defined from the descriptions in the S121 step file (DEC-221, DEC-326 (2));
++// the own king's square is not excluded. S121_COST is the cost-only form of
++// the same mask (DEC-047): the parts it names are computed and handed to an
++// asm barrier, and the count scored is S121_PARTS's, which must then be 0, so
++// the search is node for node the landing's (adocs/data/S121_cost.sh). When
++// the screen's survivors land, the macros are folded: a surviving part's code
++// made unconditional, a dropped part's deleted, and INV-6 against the screened
++// build proves the fold.
++#ifndef S121_PARTS
++#define S121_PARTS 0
++#endif
++#ifndef S121_COST
++#define S121_COST 0
++#endif
++
++static_assert((S121_PARTS) >= 0 && (S121_PARTS) <= 15 && (S121_COST) >= 0 &&
++                  (S121_COST) <= 15,
++              "S121_PARTS and S121_COST are masks over the four parts");
++static_assert((S121_PARTS) == 0 || (S121_COST) == 0,
++              "a cost-only build scores the landing's count");
++static_assert(((S121_PARTS) & 8) == 0 || ((S121_PARTS) & 2) != 0,
++              "P2b excludes low-rank pawns from P2a's area and needs it");
++static_assert(((S121_COST) & 8) == 0 || ((S121_COST) & 2) != 0,
++              "P2b excludes low-rank pawns from P2a's area and needs it");
++
++inline constexpr bool MOBILITY_PAWN_ATTACKS = ((S121_PARTS) & 1) != 0;
++inline constexpr bool MOBILITY_AREA = ((S121_PARTS) & 2) != 0;
++inline constexpr bool MOBILITY_LOW_RANK = ((S121_PARTS) & 8) != 0;
++inline constexpr bool MOBILITY_PINS = ((S121_PARTS) & 4) != 0;
++
+ // The passed pawn weights, indexed by how far the pawn has advanced: 0 on its
+ // own second rank, 4 on its own sixth. Exposed for the same reason as the
+ // mobility weights: the tuner (tools/tuner_layout.hpp) starts from what the
+--- a/tests/test_walked_counts.hpp
++++ b/tests/test_walked_counts.hpp
+@@ -104,6 +104,15 @@
+ // engine when the two stop computing the same thing, and a shared
+ // implementation cannot do that. The width is the engine's, and a count past
+ // its row is refused rather than written past it.
++//
++// S121's parts (adocs/data/S121_parts.patch), walked from the same
++// descriptions src/evaluation.hpp states and under the same S121_PARTS mask,
++// each by its own rule here and none read from the engine's bitboards: P1
++// drops a square an enemy pawn attacks; P2a counts an own piece's square
++// unless it holds an own pawn that is blocked -- any piece on its push square;
++// P2b drops an own pawn on the side's own second or third rank as well; P3
++// keeps, for a piece pinned to its own king, only the squares on the line
++// through the king and the piece, the pin found by walking out from the king.
+ inline bool mobility_cells(const std::string& placement,
+                            int out[2][MOBILITY_CELLS])
+ {
+@@ -140,6 +149,98 @@
+   static const int bishop_rays[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+   static const int rook_rays[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+ 
++  const auto inside = [](int r, int f) {
++    return r >= 0 && r <= 7 && f >= 0 && f <= 7;
++  };
++  const auto holds = [&](int r, int f, int type, bool white) {
++    return inside(r, f) && kind_at[r * 8 + f] == type &&
++           white_at[r * 8 + f] == white;
++  };
++
++  // P3: each piece pinned to its own king, and the direction from that king
++  // to it. Row 0 is rank 8, so White's pawns advance towards row 0.
++  int pin_dr[64] = {};
++  int pin_df[64] = {};
++  bool is_pinned[64] = {};
++  int king_r[2] = {-1, -1};
++  int king_f[2] = {-1, -1};
++
++  for (int s = 0; s < 64; ++s) {
++    if (kind_at[s] == 5) {
++      king_r[white_at[s] ? 0 : 1] = s / 8;
++      king_f[white_at[s] ? 0 : 1] = s % 8;
++    }
++  }
++
++  for (int side = 0; side < 2 && MOBILITY_PINS; ++side) {
++    const bool white = (side == 0);
++    if (king_r[side] < 0) { return false; }
++
++    for (int d = 0; d < 8; ++d) {
++      const int* step = (d < 4) ? rook_rays[d] : bishop_rays[d - 4];
++      const int slider = (d < 4) ? 3 : 2;  // rook or bishop, and the queen
++      int r = king_r[side] + step[0];
++      int f = king_f[side] + step[1];
++      int first = -1;
++
++      while (inside(r, f)) {
++        const int at = r * 8 + f;
++        if (kind_at[at] >= 0) {
++          if (first < 0) {
++            if (white_at[at] != white) { break; }
++            first = at;
++          } else {
++            if (white_at[at] != white &&
++                (kind_at[at] == slider || kind_at[at] == 4)) {
++              is_pinned[first] = true;
++              pin_dr[first] = step[0];
++              pin_df[first] = step[1];
++            }
++            break;
++          }
++        }
++        r += step[0];
++        f += step[1];
++      }
++    }
++  }
++
++  // Whether the piece on `from`, of side `white`, counts the square `to` it
++  // attacks.
++  const auto counted = [&](int from, int to, bool white) {
++    const int r = to / 8;
++    const int f = to % 8;
++    const int side = white ? 0 : 1;
++
++    if (MOBILITY_PINS && is_pinned[from]) {
++      // On the pin line when (to - king) is parallel to the pin direction.
++      const int dr = r - king_r[side];
++      const int df = f - king_f[side];
++      if (dr * pin_df[from] - df * pin_dr[from] != 0) { return false; }
++    }
++
++    if (MOBILITY_PAWN_ATTACKS) {
++      // An enemy pawn attacks `to` from the row behind it as the enemy
++      // advances: a Black pawn from row r - 1, a White one from row r + 1.
++      const int pr = white ? r - 1 : r + 1;
++      if (holds(pr, f - 1, 0, !white) || holds(pr, f + 1, 0, !white)) {
++        return false;
++      }
++    }
++
++    if (kind_at[to] >= 0 && white_at[to] == white) {
++      if (!MOBILITY_AREA) { return false; }
++      if (kind_at[to] == 0) {
++        const int push = white ? r - 1 : r + 1;
++        const bool blocked = inside(push, f) && kind_at[push * 8 + f] >= 0;
++        const bool low = white ? (r == 6 || r == 5) : (r == 1 || r == 2);
++        if (blocked || (MOBILITY_LOW_RANK && low)) { return false; }
++      }
++    }
++
++    return true;
++  };
++
+   for (int side = 0; side < 2; ++side) {
+     for (int i = 0; i < MOBILITY_CELLS; ++i) {
+       out[side][i] = 0;
+@@ -166,7 +267,7 @@
+         if (r < 0 || r > 7 || f < 0 || f > 7) { continue; }
+ 
+         const int to = r * 8 + f;
+-        if (kind_at[to] < 0 || white_at[to] != white) { targets++; }
++        if (counted(from, to, white)) { targets++; }
+       }
+     } else {
+       const int (*rays)[2] = (type == 3) ? rook_rays : bishop_rays;
+@@ -183,12 +284,9 @@
+         while (r >= 0 && r <= 7 && f >= 0 && f <= 7) {
+           const int to = r * 8 + f;
+ 
+-          if (kind_at[to] < 0) {
+-            targets++;
+-          } else {
+-            if (white_at[to] != white) { targets++; }
+-            break;
+-          }
++          // The ray stops on the first piece, whoever's, and attacks it.
++          if (counted(from, to, white)) { targets++; }
++          if (kind_at[to] >= 0) { break; }
+ 
+           r += step[0];
+           f += step[1];
+--- a/adocs/data/S192_anchors.py
++++ b/adocs/data/S192_anchors.py
+@@ -38,6 +38,42 @@
+ # to queen 3 (src/evaluation.cpp, S121).
+ MOBILITY_TABLES = ("knight", "bishop", "rook", "queen")
+ 
++# S121's parts (adocs/data/S121_parts.patch, src/evaluation.hpp): the mask the
++# engine is built with, read from the source as weights() reads the weights --
++# `#define S121_PARTS <mask>` in src/evaluation.hpp -- so a re-derive with no
++# environment computes the engine's own counts (DEC-142). S121_PARTS in the
++# environment is a check and never an input: a value other than the source's
++# is refused, since a mask given to the build by -D and not written in the
++# header is a tree whose anchors this script cannot reproduce. A `mobility`
++# count below is either one number, the same under every mask, or a dict keyed
++# by the mask's P1 and P2a bits (P1 = 1, enemy pawn attacks dropped; P2a = 2,
++# the area that counts own pieces bar own blocked pawns). P2b (8, own
++# low-rank pawns dropped too) and P3 (4, the pin rule) move none of these
++# counts: no own pawn of a side with a mobility piece stands on a square that
++# piece attacks, and no piece stands alone between its own king and an enemy
++# slider, each walked by hand.
++def parts_mask():
++    text = open(os.path.join(REPO, "src", "evaluation.hpp")).read()
++    found = re.findall(r"^#define S121_PARTS (\d+)$", text, re.M)
++    if len(found) != 1:
++        sys.exit("src/evaluation.hpp: expected one `#define S121_PARTS <mask>`, "
++                 "found %d" % len(found))
++    mask = int(found[0])
++    if not (0 <= mask <= 15 and (mask & 8 == 0 or mask & 2)):
++        sys.exit("src/evaluation.hpp: S121_PARTS %d is no parts mask" % mask)
++    given = os.environ.get("S121_PARTS")
++    if given is not None and given != str(mask):
++        sys.exit("S121_PARTS=%s in the environment, %d in src/evaluation.hpp: "
++                 "the anchors are the source's mask's, refused" % (given, mask))
++    return mask
++
++
++PARTS = parts_mask()
++
++
++def count_for(count):
++    return count[PARTS & 3] if isinstance(count, dict) else count
++
+ KS = {  # king_safety_feature_t's order
+     "KNIGHT_ATT": 0,
+     "BISHOP_ATT": 1,
+@@ -126,7 +162,9 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, 1, 0),  # no pawn of either colour on the d file
+-        mobility=[(ROOK - 1, 10, 1)],  # a1 b1 c1, d2..d8; e1 is own-occupied
++        # a1 b1 c1, d2..d8; e1 is own-occupied, counted under P2a (the own king
++        # is not excluded)
++        mobility=[(ROOK - 1, {0: 10, 1: 10, 2: 11, 3: 11}, 1)],
+         attackers=[(ROOK - 1, 2, -1)],  # d7 and d8 are in Black's king zone
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+     ),
+@@ -141,7 +179,8 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, 0, 0),  # the open-file feature counts rooks only
+-        mobility=[(QUEEN - 1, 17, 1)],  # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4
++        # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4; e1, the own king, under P2a
++        mobility=[(QUEEN - 1, {0: 17, 1: 17, 2: 18, 3: 18}, 1)],
+         attackers=[(QUEEN - 1, 2, -1)],
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+     ),
+@@ -182,7 +221,13 @@
+         passed={0: -3},  # White has no pawns, so all three of Black's pass
+         structure=(0, 0, 0),  # f g h are mutual neighbours; nothing is backward
+         placement=(0, 2, 0),  # both white rooks on the open e file
+-        mobility=[(ROOK - 1, 12, 1), (ROOK - 1, 11, 1), (QUEEN - 1, 21, -1)],
++        # Re8: a8..d8, f8 and the king on g8, e7..e2; Re1: a1..d1, f1, e2..e7.
++        # Black's f7 pawn attacks e6, on both rooks' file (P1); P2a adds e1 to
++        # Re8 and e8 and the own king on g1 to Re1. Qa4 has no own piece on
++        # its lines and White has no pawn.
++        mobility=[(ROOK - 1, {0: 12, 1: 11, 2: 13, 3: 12}, 1),
++                  (ROOK - 1, {0: 11, 1: 10, 2: 13, 3: 12}, 1),
++                  (QUEEN - 1, 21, -1)],
+         attackers=[(ROOK - 1, 2, -1)],  # Re8 bears on f8 and g8
+         shelter={"w": {"HALF_OPEN_FILE": 3},  # f g h each hold a black pawn only
+                  "b": {"SHIELD_NEAR": 3}},  # f7 g7 h7 in front of the king
+@@ -200,8 +245,9 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, 1, 0),  # the a file holds no pawn of either colour
+-        # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied
+-        mobility=[(ROOK - 1, 13, 1)],
++        # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied,
++        # counted under P2a
++        mobility=[(ROOK - 1, {0: 13, 1: 13, 2: 14, 3: 14}, 1)],
+         attackers=[],  # the a file and the second rank miss h7's zone entirely
+         # a1 sees files a and b, h7 sees g and h: the edge clips both to two
+         shelter={"w": {"OPEN_FILE": 2}, "b": {"OPEN_FILE": 2}},
+@@ -232,8 +278,9 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, -1, 0),  # Black's rook, on the open e file
+-        # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied
+-        mobility=[(ROOK - 1, 11, -1)],
++        # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied,
++        # counted under P2a
++        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],
+         attackers=[(ROOK - 1, 2, 1)],  # d1's zone holds e1 and e2
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+     ),
+@@ -248,7 +295,7 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, -1, 0),
+-        mobility=[(ROOK - 1, 11, -1)],
++        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],  # as d1's
+         attackers=[(ROOK - 1, 3, 1)],  # d2's zone holds e1, e2 and e3
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+     ),
+@@ -263,7 +310,7 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, -1, 0),
+-        mobility=[(ROOK - 1, 11, -1)],
++        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],  # as d1's
+         attackers=[(ROOK - 1, 2, 1)],  # f1's zone holds e1 and e2
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+     ),
+@@ -278,7 +325,7 @@
+         passed={},
+         structure=(0, 0, 0),
+         placement=(0, -1, 0),
+-        mobility=[(ROOK - 1, 11, -1)],
++        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],  # as d1's
+         attackers=[(ROOK - 1, 3, 1)],  # f2's zone holds e1, e2 and e3
+         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+     ),
+@@ -371,6 +418,7 @@
+     # S121: one cell per piece, its type's table read at its count.
+     mob_mg = mob_eg = 0
+     for t, count, sign in case["mobility"]:
++        count = count_for(count)
+         mob_mg += sign * w["mobility_%s_mg" % MOBILITY_TABLES[t]][count]
+         mob_eg += sign * w["mobility_%s_eg" % MOBILITY_TABLES[t]][count]
+ 
+@@ -412,6 +460,7 @@
+     w = weights(source)
+     margin = lazy_eval_margin()
+     print("weights from %s" % (source or "src/eval_tables.hpp + src/evaluation.cpp"))
++    print("S121 parts mask %d (S121_PARTS)" % PARTS)
+     print("stage two clamped at +/-%d, LAZY_EVAL_MARGIN in src/search_params.hpp" % margin)
+     bad = 0
+     for case in CASES:
