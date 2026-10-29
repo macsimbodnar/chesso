@@ -38,6 +38,42 @@ PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING = range(6)
 # to queen 3 (src/evaluation.cpp, S121).
 MOBILITY_TABLES = ("knight", "bishop", "rook", "queen")
 
+# S121's parts (adocs/data/S121_parts.patch, src/evaluation.hpp): the mask the
+# engine is built with, read from the source as weights() reads the weights --
+# `#define S121_PARTS <mask>` in src/evaluation.hpp -- so a re-derive with no
+# environment computes the engine's own counts (DEC-142). S121_PARTS in the
+# environment is a check and never an input: a value other than the source's
+# is refused, since a mask given to the build by -D and not written in the
+# header is a tree whose anchors this script cannot reproduce. A `mobility`
+# count below is either one number, the same under every mask, or a dict keyed
+# by the mask's P1 and P2a bits (P1 = 1, enemy pawn attacks dropped; P2a = 2,
+# the area that counts own pieces bar own blocked pawns). P2b (8, own
+# low-rank pawns dropped too) and P3 (4, the pin rule) move none of these
+# counts: no own pawn of a side with a mobility piece stands on a square that
+# piece attacks, and no piece stands alone between its own king and an enemy
+# slider, each walked by hand.
+def parts_mask():
+    text = open(os.path.join(REPO, "src", "evaluation.hpp")).read()
+    found = re.findall(r"^#define S121_PARTS (\d+)$", text, re.M)
+    if len(found) != 1:
+        sys.exit("src/evaluation.hpp: expected one `#define S121_PARTS <mask>`, "
+                 "found %d" % len(found))
+    mask = int(found[0])
+    if not (0 <= mask <= 15 and (mask & 8 == 0 or mask & 2)):
+        sys.exit("src/evaluation.hpp: S121_PARTS %d is no parts mask" % mask)
+    given = os.environ.get("S121_PARTS")
+    if given is not None and given != str(mask):
+        sys.exit("S121_PARTS=%s in the environment, %d in src/evaluation.hpp: "
+                 "the anchors are the source's mask's, refused" % (given, mask))
+    return mask
+
+
+PARTS = parts_mask()
+
+
+def count_for(count):
+    return count[PARTS & 3] if isinstance(count, dict) else count
+
 KS = {  # king_safety_feature_t's order
     "KNIGHT_ATT": 0,
     "BISHOP_ATT": 1,
@@ -87,7 +123,7 @@ CASES = [
     dict(
         title="knight on b1",
         fen="4k3/8/8/8/8/8/8/1N2K3 w - - 0 1",
-        anchors={"evaluate": 276},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 283},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=1,
         material=[("KNIGHT", 1)],
@@ -102,7 +138,7 @@ CASES = [
     dict(
         title="bishop on c1",
         fen="4k3/8/8/8/8/8/8/2B1K3 w - - 0 1",
-        anchors={"evaluate": 355},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 353},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=1,
         material=[("BISHOP", 1)],
@@ -117,7 +153,7 @@ CASES = [
     dict(
         title="rook on d1",
         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
-        anchors={"evaluate": 583, "cheap": 578},   # test_evaluation.cpp "each piece is worth what the tables say";
+        anchors={"evaluate": 590, "cheap": 578},   # test_evaluation.cpp "each piece is worth what the tables say";
         # test_search.cpp "a quiet position stands pat" and eight more sites
         stm="w",
         phase=2,
@@ -126,14 +162,16 @@ CASES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, 1, 0),  # no pawn of either colour on the d file
-        mobility=[(ROOK - 1, 10, 1)],  # a1 b1 c1, d2..d8; e1 is own-occupied
+        # a1 b1 c1, d2..d8; e1 is own-occupied, counted under P2a (the own king
+        # is not excluded)
+        mobility=[(ROOK - 1, {0: 10, 1: 10, 2: 11, 3: 11}, 1)],
         attackers=[(ROOK - 1, 2, -1)],  # d7 and d8 are in Black's king zone
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
     ),
     dict(
         title="queen on d1",
         fen="4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
-        anchors={"evaluate": 984},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 1021},  # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=4,
         material=[("QUEEN", 1)],
@@ -141,7 +179,8 @@ CASES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, 0, 0),  # the open-file feature counts rooks only
-        mobility=[(QUEEN - 1, 17, 1)],  # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4
+        # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4; e1, the own king, under P2a
+        mobility=[(QUEEN - 1, {0: 17, 1: 17, 2: 18, 3: 18}, 1)],
         attackers=[(QUEEN - 1, 2, -1)],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
     ),
@@ -165,7 +204,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 199},   # test_search.cpp "a side in check may not stand pat"
+        anchors={"evaluate": 181},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
@@ -182,7 +221,13 @@ CASES = [
         passed={0: -3},  # White has no pawns, so all three of Black's pass
         structure=(0, 0, 0),  # f g h are mutual neighbours; nothing is backward
         placement=(0, 2, 0),  # both white rooks on the open e file
-        mobility=[(ROOK - 1, 12, 1), (ROOK - 1, 11, 1), (QUEEN - 1, 21, -1)],
+        # Re8: a8..d8, f8 and the king on g8, e7..e2; Re1: a1..d1, f1, e2..e7.
+        # Black's f7 pawn attacks e6, on both rooks' file (P1); P2a adds e1 to
+        # Re8 and e8 and the own king on g1 to Re1. Qa4 has no own piece on
+        # its lines and White has no pawn.
+        mobility=[(ROOK - 1, {0: 12, 1: 11, 2: 13, 3: 12}, 1),
+                  (ROOK - 1, {0: 11, 1: 10, 2: 13, 3: 12}, 1),
+                  (QUEEN - 1, 21, -1)],
         attackers=[(ROOK - 1, 2, -1)],  # Re8 bears on f8 and g8
         shelter={"w": {"HALF_OPEN_FILE": 3},  # f g h each hold a black pawn only
                  "b": {"SHIELD_NEAR": 3}},  # f7 g7 h7 in front of the king
@@ -192,7 +237,7 @@ CASES = [
     dict(
         title="black a rook down, Kh7",
         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
-        anchors={"evaluate": -597},  # test_search.cpp "the losing side takes an available repetition"
+        anchors={"evaluate": -603},  # test_search.cpp "the losing side takes an available repetition"
         stm="b",
         phase=2,
         material=[("ROOK", 1)],
@@ -200,8 +245,9 @@ CASES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, 1, 0),  # the a file holds no pawn of either colour
-        # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied
-        mobility=[(ROOK - 1, 13, 1)],
+        # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied,
+        # counted under P2a
+        mobility=[(ROOK - 1, {0: 13, 1: 13, 2: 14, 3: 14}, 1)],
         attackers=[],  # the a file and the second rank miss h7's zone entirely
         # a1 sees files a and b, h7 sees g and h: the edge clips both to two
         shelter={"w": {"OPEN_FILE": 2}, "b": {"OPEN_FILE": 2}},
@@ -232,8 +278,9 @@ LEAVES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, -1, 0),  # Black's rook, on the open e file
-        # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied
-        mobility=[(ROOK - 1, 11, -1)],
+        # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied,
+        # counted under P2a
+        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],
         attackers=[(ROOK - 1, 2, 1)],  # d1's zone holds e1 and e2
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
     ),
@@ -248,7 +295,7 @@ LEAVES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, -1, 0),
-        mobility=[(ROOK - 1, 11, -1)],
+        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],  # as d1's
         attackers=[(ROOK - 1, 3, 1)],  # d2's zone holds e1, e2 and e3
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
     ),
@@ -263,7 +310,7 @@ LEAVES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, -1, 0),
-        mobility=[(ROOK - 1, 11, -1)],
+        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],  # as d1's
         attackers=[(ROOK - 1, 2, 1)],  # f1's zone holds e1 and e2
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
     ),
@@ -278,13 +325,13 @@ LEAVES = [
         passed={},
         structure=(0, 0, 0),
         placement=(0, -1, 0),
-        mobility=[(ROOK - 1, 11, -1)],
+        mobility=[(ROOK - 1, {0: 11, 1: 11, 2: 12, 3: 12}, -1)],  # as d1's
         attackers=[(ROOK - 1, 3, 1)],  # f2's zone holds e1, e2 and e3
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
     ),
 ]
 
-QUIESCE_IN_CHECK = -533  # test_search.cpp
+QUIESCE_IN_CHECK = -541  # test_search.cpp
 # "a quiet evasion is a legal answer to a check", on the shipped weights
 
 
@@ -371,6 +418,7 @@ def score(case, w, margin):
     # S121: one cell per piece, its type's table read at its count.
     mob_mg = mob_eg = 0
     for t, count, sign in case["mobility"]:
+        count = count_for(count)
         mob_mg += sign * w["mobility_%s_mg" % MOBILITY_TABLES[t]][count]
         mob_eg += sign * w["mobility_%s_eg" % MOBILITY_TABLES[t]][count]
 
@@ -412,6 +460,7 @@ def main():
     w = weights(source)
     margin = lazy_eval_margin()
     print("weights from %s" % (source or "src/eval_tables.hpp + src/evaluation.cpp"))
+    print("S121 parts mask %d (S121_PARTS)" % PARTS)
     print("stage two clamped at +/-%d, LAZY_EVAL_MARGIN in src/search_params.hpp" % margin)
     bad = 0
     for case in CASES:

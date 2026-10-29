@@ -14,6 +14,29 @@
 # below, and until then the script refuses to start (the self-check at the
 # bottom).
 #
+# 2026-10-29, S121's phase 2, re-read against the candidate before it is
+# pinned (the step file's "2026-10-29: the screen and the candidate"). The
+# screen kept P0, P1 and P3 and dropped P2a and P2b: `CANDIDATE table_m5 mask
+# 5`, the fit .tuning/s121/fits/table_m5/full.hpp (sha256 cd5761cd...), pasted
+# by `S121_screen.sh apply` with `#define S121_PARTS 5`. So `mask=` is 5, and
+# the guards below hold as written: CAND's src/ is REF's with the parts patch
+# applied -- the patch's src/bitboard.{hpp,cpp} (`pinned_pieces()`) and its
+# src/evaluation.{hpp,cpp} come through that expected tree -- and differs
+# from it outside whole-line comments only in the eight tables and the
+# S121_PARTS line, so src/evaluation.cpp and src/evaluation.hpp are the only
+# files the check can name (read on the worktree: exactly those two, nothing
+# outside the three allowed line forms). The bisection the screen printed is
+# A | B1 | C: B2a and B2b were dropped and are not run. So the H0 paragraph's
+# worst case is three more SPRTs after this one, four in all, each up to
+# 19.86 h, 79.4 h with this run; B1 and C each play over the table refitted
+# when A has landed and over the linear model refitted over their count when
+# it has not. The cost the verdict pays is no measured row of
+# adocs/data/S121_cost.sh's (adocs/data/S121_cost_reading.txt): mask 5
+# computes P1's and P3's sets, bounded below by p3's +2.20 % and above by
+# all's +3.38 %, with p1 + p3 in bench16 instructions, +2.42 %, the additive
+# estimate. The clamp at the candidate binds on 22083 of 6226944 corpus rows,
+# 0.355 % against DEC-326 (9)'s 1.0 %; mobility p99 107, maximum 229.
+#
 # THE PAIR.
 #
 #   CAND  S121's candidate commit: `adocs/data/S121_screen.sh apply` pasted
@@ -132,7 +155,9 @@
 #                   pawns excluded, B2b low-rank pawns excluded as well
 #                   (always inside the area), C the pin rule, each its own
 #                   `{0, 5}` SPRT in this file's shape -- at worst five more
-#                   runs after this one, six in all, each up to 19.86 h. B1,
+#                   runs after this one, six in all, each up to 19.86 h, had
+#                   all five parts survived; with this candidate's survivors,
+#                   A | B1 | C, at worst three more, four in all. B1,
 #                   B2a, B2b and C play their count over what has landed by
 #                   then: the
 #                   table refitted when A has landed, the linear model refitted

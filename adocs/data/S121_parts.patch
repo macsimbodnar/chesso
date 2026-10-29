@@ -1,7 +1,9 @@
 S121's four parts, as one throwaway patch over the phase 1 landing (the
-table at identity). Never committed to src/ in this form (DEC-326 (7)); the
-screen, the cost run and the candidate's paste apply it, and a landing folds
-it. `git apply` reads from the first `---` line on, so this text is ignored.
+table at identity). Committed to src/ in this form once only, as S121's SPRT
+candidate with `#define S121_PARTS 5` (DEC-326 (7), DEC-327), and folded on
+H1 or reverted on H0 at the close; never shipped in it. The screen, the cost
+run and the candidate's paste apply it. `git apply` reads from the first
+`---` line on, so this text is ignored.
 
   S121_PARTS  build-time mask, 0 when unset: 1 P1 enemy pawn attacks dropped,
               2 P2a the mobility area in place of "not an own piece" with own

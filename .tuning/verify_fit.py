@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every one of the 831 fitted numbers reached the engine's sources.
+"""Check that every one of the 955 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
@@ -16,6 +16,17 @@ four placement columns make piece_placement seven wide: a fit emitted by a
 tuner built before S135 is three wide there and is refused here, which is
 right, because it cannot place the four. --root names the tree read, the main
 checkout by default.
+
+955 since S121, whose mobility is eight one-dimensional tables, one per piece
+type and half, 9, 14, 15 and 28 wide (src/evaluation.hpp, MOBILITY_WIDTH),
+where it was mobility_mg[4] and mobility_eg[4]: a fit emitted by a tuner built
+before S121 names arrays the engine no longer has and is refused, which is
+right. .tuning/verify_fit.py is tracked -- .gitignore ignores `.tuning/*` and
+then keeps `!.tuning/*.py` -- although S121's phase 1 wrote that it was
+gitignored and landed this layout as adocs/data/S121_verify_fit.py alone; the
+two are one file, copied over .tuning/verify_fit.py by S121's phase 2 commit.
+.tuning/apply_fit.py needs no change, because its array pattern already takes
+any one-dimensional `constexpr int name[N] = {...};`.
 """
 import re
 import sys
@@ -54,7 +65,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 831
+TOTAL = 955
 
 WIDTHS = [
     ("PAWN", 1),
@@ -64,8 +75,14 @@ WIDTHS = [
     ("QUEEN", 1),
     ("psqt_mg", 384),
     ("psqt_eg", 384),
-    ("mobility_mg", 4),
-    ("mobility_eg", 4),
+    ("mobility_knight_mg", 9),
+    ("mobility_knight_eg", 9),
+    ("mobility_bishop_mg", 14),
+    ("mobility_bishop_eg", 14),
+    ("mobility_rook_mg", 15),
+    ("mobility_rook_eg", 15),
+    ("mobility_queen_mg", 28),
+    ("mobility_queen_eg", 28),
     ("king_safety_mg", 9),
     ("king_safety_eg", 9),
     ("passed_pawn_mg", 5),

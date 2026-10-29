@@ -1,7 +1,7 @@
 id:         S121
 goal:       mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 accepts:    an SPRT verdict, recorded whatever it is; mobility is a table indexed by piece type and by count -- knight 0 to 8, bishop 0 to 13, rook 0 to 14, queen 0 to 27 -- and **every entry is fitted by our own tuner on our own corpus** (DEC-084); the mobility area excludes squares attacked by enemy pawns and the side's own blocked and low-rank pawns, and each exclusion -- and the pin rule this family gains, a pinned piece counting only moves along its pin ray (DEC-258) -- is screened separately before the family's one SPRT (DEC-259); the tuner's model in tools/eval_model.hpp is updated in the same commit and test_eval_model holds the two against each other; the nps cost is recorded next to the verdict
-touches:    phase 1 (2026-10-28, the table at identity, `No functional change`): src/evaluation.cpp, src/evaluation.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp (the ties), tools/tuner.cpp (the emit, `--tie`), tools/feature_audit.cpp (cell names, the eight mobility levels, the support report), tests/test_walked_counts.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_tuner_groups.cpp, tests/test_eval_positions.hpp (the coverage rows, phase 1b), tests/test_tuner_gradient.cpp (the clamp case's push re-derived, phase 1b), adocs/data/S192_anchors.py, adocs/data/S121_preconditions.txt, adocs/data/S121_inv6.txt, DEV_MANUAL.md, adocs/data/S121_{parts.patch,screen.sh,screen.py,cost.sh,cost.py,sprt.sh,coverage_rows.cpp,construct_rows.py,verify_fit.py}, adocs/data/README.md, this file; `.tuning/verify_fit.py` (gitignored) is replaced by adocs/data/S121_verify_fit.py at the landing; tools/tuner_trace.hpp (a comment only: its mobility line reads MOBILITY_COUNT, now 66); phase 2, on a candidate: src/evaluation.cpp's eight tables, and with a surviving part src/evaluation.hpp, src/bitboard.{hpp,cpp}, tests/test_walked_counts.hpp and adocs/data/S192_anchors.py through adocs/data/S121_parts.patch, folded at the closing commit; every golden the paste moves, each by its script (tests/test_evaluation.cpp, tests/test_search.cpp, tests/test_eval_trace.cpp's truncation pins, tests/test_tuner_gradient.cpp's preconditions, the search goldens S135's table lists); adocs/data/S121_* readings; adocs/specs.md (the coordinator's)
+touches:    phase 1 (2026-10-28, the table at identity, `No functional change`): src/evaluation.cpp, src/evaluation.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp (the ties), tools/tuner.cpp (the emit, `--tie`), tools/feature_audit.cpp (cell names, the eight mobility levels, the support report), tests/test_walked_counts.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_tuner_groups.cpp, tests/test_eval_positions.hpp (the coverage rows, phase 1b), tests/test_tuner_gradient.cpp (the clamp case's push re-derived, phase 1b), adocs/data/S192_anchors.py, adocs/data/S121_preconditions.txt, adocs/data/S121_inv6.txt, DEV_MANUAL.md, adocs/data/S121_{parts.patch,screen.sh,screen.py,cost.sh,cost.py,sprt.sh,coverage_rows.cpp,construct_rows.py,verify_fit.py}, adocs/data/README.md, this file; tools/tuner_trace.hpp (a comment only: its mobility line reads MOBILITY_COUNT, now 66); phase 2 (2026-10-29, the candidate at S121_PARTS 5): src/evaluation.cpp's eight tables and whole-line comments, and through adocs/data/S121_parts.patch src/evaluation.hpp (the mask line and a whole-line comment), src/bitboard.{hpp,cpp} (`pinned_pieces()`), tests/test_walked_counts.hpp and adocs/data/S192_anchors.py (its anchors re-derived too), folded at the closing commit; every golden the paste moves, each by its script: tests/test_evaluation.cpp (the anchors), tests/test_search.cpp (the anchors, the ProbCut row re-mined, ALPHA's comment), tests/test_eval_trace.cpp (the truncation pins), tests/test_eval_positions.hpp (the coverage block re-derived), tests/test_tuner_gradient.cpp (the clamp push, the walk's comment), tests/test_mate_breadth.cpp (its stale header and S121's reading), tests/test_mate_pv.cpp (the aborted-line cell's budget), tests/test_mate_carry.cpp and adocs/data/S170_cases.tsv (B's ceiling and four budgets, DEC-327, provisional); `.tuning/verify_fit.py` (tracked, not gitignored as phase 1 wrote: adocs/data/S121_verify_fit.py copied over it); adocs/data/S121_sprt.sh (a dated paragraph, the run count); adocs/data/S121_parts.patch (its preamble, before the first `---`); adocs/data/S121_{screen_reading,cells,goldens,cost_reading,sweep_s170,case_b}.txt, adocs/data/S121_{cells,case_b}.py, adocs/data/S121_alpha_window.cpp, adocs/data/README.md; DEV_MANUAL.md, MANUAL.md; this file; adocs/specs.md (the coordinator's)
 excludes:   king safety, which shares the loop but is S122
 decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
@@ -511,7 +511,9 @@ Phase 1b, after S136 closes (agent work, the machine idle):
    walk against the engine under every part), and at mask 0 INV-6 against
    step 3's streams; then `git diff` the scratch tree into the patch. 25 min.
 7. `.tuning/verify_fit.py` replaced by `adocs/data/S121_verify_fit.py`
-   (gitignored, so a copy). `plan_prose_check --citations`: S101's step file
+   (a copy; **corrected 2026-10-29**: `.tuning/verify_fit.py` is tracked,
+   `.gitignore`'s `!.tuning/*.py`, not gitignored, so phase 2's commit
+   carries the copy). `plan_prose_check --citations`: S101's step file
    cites `mobility_mg`, which no longer exists -- S101's to correct, or a
    citation the check is told about.
 8. Land `No functional change`, the commit's `Bench:` the parent's total.
@@ -737,3 +739,410 @@ it is not in `src/`.
 
 No `done:` stamp: the step continues with the screen
 (`adocs/data/S121_screen.sh`, the coordinator's).
+
+## 2026-10-29: the screen and the candidate -- stopped at the S170 ceilings
+
+One Opus 5.5 subagent, worktree `../chesso-s121c`, branch `s121c` at
+`12cab3c`, the phase 1 landing. Written in two halves: the reading while the
+coordinator's cost run held the machine, the runs after its "go" and its
+three rulings (`.tuning/coord/S121/rulings_phase2.md`). Every reading with its
+command is in `adocs/data/S121_goldens.txt`. No match, SPRT, fit, datagen or
+timing ran. **Stopped at the S170 ceilings** (DEC-299's guard, below); every
+other golden is re-derived and the tree is green.
+
+### The screen, as read
+
+`adocs/data/S121_screen.sh all`, 2026-10-29 02:32 to 04:05, `S121-ALL-DONE`,
+on S083's corpus (6226944 rows, sha256 `2e0e3de9...`) against S082's qs
+validation view. The five readings, the corpus line and every fit's sha256
+are in `adocs/data/S121_screen_reading.txt`.
+
+| part | against | full d | s | m | verdict |
+|---|---|---|---|---|---|
+| P0, the table over `attacks & ~own` | its start | +0.000066 | 0.000011 | 0.000018 | kept |
+| P1, enemy pawn attacks excluded | P0 | +0.000021 | 0.000005 | 0.000009 | kept |
+| P2a, the area, own blocked pawns excluded | P1 | +0.000001 | 0.000004 | 0.000006 | dropped |
+| P2b, low-rank pawns as well, inside the area | P1 | -0.000017 | 0.000006 | 0.000010 | dropped |
+| P3, the pin rule | P1 | +0.000028 | 0.000002 | 0.000003 | kept |
+
+- Survivors P0, P1, P3: `CANDIDATE table_m5 mask 5`. The candidate is
+  `.tuning/s121/fits/table_m5/full.hpp` (sha256 `cd5761cd...`): best
+  validation 0.071617 from 0.071739, at epoch 600, stopped on patience.
+- The bisection order printed: A | B1 | C.
+- Ties at mask 5: 4 of 132 cell halves. Queen 26 and 27 are tied to 25 in
+  both halves (rows 359 and 305, games 256 and 220).
+- **The cap, as read; it decides nothing.** Every q5 fit stopped at the
+  5000-epoch cap, and so did q4 for m3 and m11. Every full fit stopped on
+  patience.
+- **Thin cells.** `adocs/data/S121_cells.txt` lists all 132 cell halves,
+  each with its fitted value, its gap to its neighbours' mean and its support
+  (rows and games, the m5 audit's `support` lines). It is written by
+  `adocs/data/S121_cells.py`. The cells the brief named are marked: queen mg
+  20 to 25, queen eg 0 and 24, knight eg 8, bishop mg 11 to 13. The thinnest
+  of them are queen mg and eg 24 (2814 rows, 1768 games) and 25 (1813, 1139).
+  The planted-curve recovery is not built (ruling 6 names it the next answer
+  if a fit's tables look wrong): the SPRT decides, and S126 inherits the list.
+
+### The apply
+
+`S121-APPLY-DONE` (`.tuning/s121/apply_table_m5.console`, OUT
+`.tuning/s121/apply_table_m5/`).
+- start-check passed; headroom 32 x 119 = 3808 of 32767.
+- The parts patch applied, `#define S121_PARTS 5`.
+- `verify_fit`: 955 of 955. Only the eight mobility tables moved.
+- Both builds with no warning. Bench 5069022 -> **6016079**.
+- 46 of 50 in each build. The reds were `test_evaluation` (the anchors),
+  `test_search` (the anchors and the ProbCut row), `test_tuner_gradient` (the
+  coverage non-vacuity, the clamp push's kink) and `test_eval_trace` (the
+  coverage both ways on queen 27, the truncation pins).
+
+### The clamp, which S122 inherits
+
+The stage-two clamp binds on **22083 of 6226944 rows, 0.355 %**, against
+DEC-326 (9)'s 1.0 % (the shipped 0.338 to 0.462 %). No STOP. Mobility
+spread: **p99 107, maximum 229**.
+
+### The coverage rows at mask 5, by ruling (b)
+
+The tool's run on the landed block:
+- 2 of its 19 pairs are no longer eligible at the fitted constants (pairs 6
+  and 12, the seven-rook rows), and its picks differ: "reproduces the landed
+  block: NO".
+- From the base 42, 55 of 132 needs are open. 13 pairs come from
+  `all_test_fens()` and 6 from the corpus; none is UNCLOSED.
+- Gradient check: 0 parameters at or under 1e-12 (smallest 2.153e-09). Both
+  ways: 0 features.
+
+The block is replaced by those 38 rows, all VALID by python-chess. The tool,
+rebuilt, then reads "reproduces the landed block: yes", 0 ineligible.
+
+### Every golden, each by its script
+
+| golden | before | now | script |
+|---|---|---|---|
+| six piece anchors | 99, 276, 355, 583, 984, 0 | **99, 283, 353, 590, 1021, 0** | `S192_anchors.py`: 10 of 10 at identity, then on the fit (mask 5 from the header), then 10 of 10 on this tree |
+| `QUIET_ROOK_EVAL`, `_CHEAP`; 394 | 583, 578; 394 | **590**, 578 unmoved; 394 unmoved (mobility is stage two) | the same |
+| `black_static`; quiet evasion; repetition | 199; -533; -597 | **181; -541** (leaves -572, -541, -590, -551, still the four king moves standing pat); **-603** | the same |
+| `POSITIONAL_ROOM` | -- | did not fire | -- |
+| `truncation_positions` | S135's four | **re-picked**: 8/3k4/... b (phase 5), 8/6k1/... w (11), 5rk1/5pbp/... b (19), 2k1r3/... w (17) | `truncation_scan --min 2.8` on the corpus, then `S083_truncation_pick.py` (ruling Q2). 77 rows past 2.8, 18 at 2.875, 16 distinct. The worst is 2.875 = 69/24, so N stays 3. S135's four read 2.625 at most |
+| coverage block | phase 1b's 19 pairs | **19 new pairs** | `S121_coverage_rows.cpp` (above) |
+| clamp push; walk | +140; 0.6177 / 0.9240 | **+30** (2 rows bound, 197.3, next 158.8, 13.33 from the kink, fd 9.3e-8); walk **0.1552 / 0.0671**, both the rook's, over 0.01 | `S083_tuner_preconditions.cpp both` |
+| fixture clear of the clamp | 99.3 | **121.1** against 183 | the same |
+| gradient check (DEC-316) | 5.46e-08 at 141 | **9.50e-07 at 849, `mobility_eg[bishop][1]`**, both builds: green by a factor of 1.05 | `test_tuner_gradient -s` |
+| `EXACT_FLOOR` 159 | 160 / 159 (not separating) | **held**: **165** shipping, **154** weakened; the gate at RfpMinPly 1 is red at 154 | `S156_mined_floor_sweep.py --floor 159`, via `S136_overlay_run.py` (the paste's five files) |
+| `MATE_IN_THREE_FLOOR` 11 | 13 / 8 | **held**: **12** / **10**; `red` red at 10 >= 11 and on mate-in-two | `S154_floor_margin_sweep.py floor`, `red` |
+| node budget | 65024 / 3251 | **unmoved**: 8367 nodes, 0.51 of c, inside [7270, 32512] | `S192_node_budget.py` |
+| first-mate; `DRIVE_DEPTH`; ply-2 | 9, 9, 5; 4; 6 | **unmoved** | `S188_repair_goldens.py first-mate`, `s207`; `S083s_rfp_ply2.py` |
+| `capture_mates`; extra ply; retired multicut row | at their depths | **unmoved**: each at its asserted depth (the fourth only at 12) | `S230_mine_r01_row.py depths` |
+| `mate_probcut_hides` | S261's row, depth 10, mate in 5 | **re-mined**: `8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60`, depth 10, **mate in 4**. Shipped `d9 d10`, B04 `d9`. 5 of 269 separate; the guard-mode witness fires at 8 to 10. Stockfish at 5000000 nodes reads `#+4`, and python-chess reads its line as ending in mate. Observed red under B04, green shipped | `S277_mine_mate_row.py`, six stages, guard mode. S261's row read 9, 11 and 12, not 10 |
+| `LATE_CAPTURE_*` | LQ02 at 7, LQ03 at 3 | **unmoved** | `S261_mine_late_capture.py sweep`, `pick` |
+| aborted-line cell | line 101 at 40000 (30000..60000) | **line 101 at 50000** (run 40000..70000; margin 10000 below, 20000 above; 2 of 318 separate). Observed red under MW02, green shipped | `S294_fallback_cell.py`, four stages |
+| `ALPHA` | -2108 (band -2129 .. -1905) | **-2108 kept**: band -2163 .. -1932, 55 below and 176 above. The trace now meets the node at -2011, -2086, -2202 and -2381 | `adocs/data/S121_alpha_window.cpp` (new: S296's sweep had no tracked script; it reproduces S296 on the parent); `S136_trace_patch.py` (S295's no longer applies) |
+| `short_line_ceiling` | 2, 6, 4, 1, 2, 3 | **NOT APPLIED**: the script answers 2, **13**, 4, 1, 2, 3 | `S203_case_sweep.sh --ceilings`: the eight grids plus `adocs/data/S121_sweep_s170.txt` |
+| S170 budgets | A 500000, C 1500000, D 4000000, E 300000 | **NOT APPLIED**: the picker answers A 1000000, C 500000, D 1500000, E 100000; B and F unmoved | `S170_pick_budgets.sh` |
+| readings | 707 mate_pv lines; defender 85/104 | 697; 84/104 | `test_mate_pv -s`; `S165_nmp_defender_sweep.py` |
+| `golden_defaults`, option count, census, book | -- | unmoved by construction | -- |
+
+**The stop.** Both floors hold or rise. B_mate6_shallow's ceiling, though,
+rises 6 -> 13, by 7, against DEC-299's +2. It comes from one cell of S121's
+grid: stride 1 at 1200000 nodes, 64 mate lines, 13 short. B's other cells
+read 0 to 2; S296's worst for B was 6, at 4000000 nodes. By the brief, the
+ceilings and the budgets are read and not applied. `tests/test_mate_carry.cpp`
+and `adocs/data/S170_cases.tsv` stay HEAD's, and `test_mate_carry` is green
+on the candidate at them. The owner rules.
+
+### For the coordinator's question (DEC-265 form; the owner rules)
+
+**Why it is needed.** DEC-299 makes a ceiling that rises by more than 2 the
+owner's. No recorded decision covers a rise of 7.
+
+**What each answer implies:**
+- **(a) Apply the script's answer**: B's ceiling 13, and the four budgets.
+  - Changes: `test_mate_carry` lets B report up to 13 short lines in a cell.
+  - Costs: nothing.
+  - Risks: the ceiling no longer catches a B case that gets worse by up to 7.
+  - Leaves unmeasured: why this one cell rose.
+- **(b) Hold 6 and today's budgets.** The tree is green at them, and the SPRT
+  plays this tree.
+  - Changes: nothing.
+  - Costs: the ceiling is not the rule's answer (DEC-142), recorded as such.
+  - Reverts: with the paste on H0.
+- **(c) Attribute the cell by tool first, then rule (a) or (b).** This is
+  DEC-305's form, as S136 used it for the floor.
+  - What it reads: the 13 short lines' distances and why the walk refuses
+    them, a short line being DEC-122's expected residue. Before S202 B's
+    ceiling was 15.
+  - Costs: about an hour of agent work.
+
+**Recommendation: (c), then (a) if the short lines are DEC-122's residue.**
+The ceiling bounds a reporting residue that an evaluation change is expected
+to move. An attribution decides whether a reporting defect is behind it,
+which is the one thing (a) would hide.
+
+### Gates (on the tree as it stands)
+
+- Both builds: 0 warnings.
+- `ctest -L fast`: **50 of 50** in `build/` and in `build-tune/`, sequential.
+- `./clang-format.sh --check` clean (`CLANG_FORMAT_MAJOR=22`).
+- Bench 6016079 in both.
+
+**Not run, the step having stopped:**
+- the clang pair;
+- `tools/plan_prose_check.py`'s four modes;
+- `tools/gate_extra.sh`;
+- the Debug self-play, which is the coordinator's.
+
+**Tier 2 (DEC-141) does not bind.** The diff under `src/` is the eight tables
+and two whole-line comments in `src/evaluation.cpp`, plus the patch:
+`src/evaluation.{hpp,cpp}`'s parts and mask, and `src/bitboard.{hpp,cpp}`'s
+new `pinned_pieces()`. That function calls the generator's `pinned_to_king`
+unchanged. There is no `make_move`, `unmake_move`, generator or search
+change. The brief asks for `gate_extra` anyway, for the Debug asserts and
+sanitizers over the new code.
+
+### The SPRT script
+
+`adocs/data/S121_sprt.sh` gains a dated 2026-10-29 paragraph:
+- the mask is 5;
+- the guards are as written: the patch's `src/bitboard.{hpp,cpp}` come
+  through the expected tree. Simulated on this worktree, `src/evaluation.cpp`
+  and `src/evaluation.hpp` are the only files the check names, and nothing
+  falls outside the three allowed line forms;
+- the bisection is A | B1 | C, B1 and C over the table refitted if A lands
+  and over the linear refit if not;
+- the cost bound;
+- the clamp reading.
+
+The H0 paragraph's "at worst five more runs, six in all" now reads "had all
+five parts survived; with this candidate's survivors, at worst three more,
+four in all". The coordinator's markers are left unfilled, and the script
+refuses on them.
+
+### The cost (the coordinator's run)
+
+`adocs/data/S121_cost_reading.txt`: all +3.38 %, p3 +2.20 %, p1, p2a, p2b
+and parent zero. Mask 5 is not a measured row. It lies between p3 (+2.20 %)
+and all (+3.38 %), with p1 + p3 in bench16 instructions (+2.42 %) as the
+additive estimate.
+
+### Also changed
+
+- `.tuning/verify_fit.py` is the copy of `adocs/data/S121_verify_fit.py`.
+  Both docstrings and the README row now say it is tracked.
+- `src/evaluation.hpp`'s parts comment no longer says "never committed" or
+  "0 when unset".
+- `src/evaluation.cpp`'s table comment says the cells are the screen's fit.
+- `tests/test_mate_breadth.cpp`'s header read 158 and S135's ends from S296
+  on. It now reads 159 with S121's ends.
+
+**Not done:**
+- `DEV_MANUAL.md`'s goldens rows, gradient and walk sentences, and the
+  `--ceilings` command, which also lacks S296's grid;
+- `MANUAL.md`'s `RfpMinPly` row, which the paste moves (165, 165, 154
+  against 159);
+- the `specs.md` proposal (in the report);
+- the proposed commit message, which waits on the ruling.
+
+No `done:` stamp.
+
+## 2026-10-29: resumed under DEC-327 -- B carried provisionally, attributed by tool
+
+The coordinator ruled the stop in DEC-301's and DEC-304 (2)'s form:
+**DEC-327** (drafted in `.tuning/coord/S121/dec327.md`, the coordinator's to
+record). The script's answer is carried provisionally, B's cell is
+attributed by tool before the SPRT, and the owner rules on B before an H1
+ships.
+
+### Applied, provisionally (DEC-327)
+
+- `tests/test_mate_carry.cpp` `short_line_ceiling`: B 6 -> **13**. The
+  command now lists S296's and S121's grids.
+- `adocs/data/S170_cases.tsv`, by `S170_pick_budgets.sh` with a header
+  paragraph: A 1000000, C 500000, D 1500000, E 100000; B and F unmoved.
+- Each site cites DEC-327 ("provisional: the owner rules before an H1
+  ships").
+- `test_mate_carry` is green at the new values in both builds.
+
+### Case B's cell, attributed by tool (`adocs/data/S121_case_b.txt`)
+
+Read by `adocs/data/S121_case_b.py` on a traced build of the candidate
+(`S136_trace_patch.py`), whose info lines equal the shipped candidate's.
+
+**The cell.** Stride 1 at 1200000 nodes reads 13 short lines of 64, from two
+roots:
+
+| root | lines | reported mate | printed length | oracle |
+|---|---|---|---|---|
+| ply 33, White to move, best d1g4 | depths 7, 8 and 9 | 10 | 7, 9 and 9 of 19 plies | Stockfish **#+10**, at 1e9 nodes (DEC-320's deeper reading; 5e6 found no mate) |
+| ply 33 | depth 10, and the aborted iteration 11 printed at 10 | 12 | 10 and 11 of 23 | the same #+10 |
+| ply 34, Black to move | depths 1 to 8 | -13 | 1 to 8 of 26 | **#-9** at 5e6 nodes |
+
+**Where each line is cut.** Every one is cut at the search's horizon. The
+PV's last node is a depth-0 node, and quiescence there returns a mate score
+with no line of its own:
+- **11 lines** end where quiescence reads an exact TT entry holding a mate:
+  - ply 34's eight read entries **stored by ply 33's search**, its aborted
+    iteration 11, at the positions along ply 33's own PV, one key further
+    along that PV per iteration;
+  - ply 33's depth 8 and 9 lines read one entry stored by **ply 32's
+    search**;
+  - its depth 10 line reads one stored by its own iteration 8.
+- **2 lines** (ply 33 at depth 7, and the aborted iteration) end in
+  quiescence **in check**, which searches its two evasions.
+
+**One carried line, not 13.** The 13 are not independent. Each root carries
+one mate line, and every iteration's horizon reads the next entry along it.
+
+**Mate distances: no wrong score.** The claimed side is right at both roots,
+and **no reported mate is shorter than the oracle's**. At ply 33 the
+engine's 10 equals Stockfish's and its 12 is longer. At ply 34 its -13 is
+longer than -9.
+
+**The parent at the same cell.** Its 1200000-node cell reads 35 lines and 1
+short (ply 34, depth 4, mate -9). It finds no mate at ply 33 at all (cp 901
+down to 566).
+
+**The neighbouring cells:**
+
+| tree | 1000000 nodes | 1200000 nodes | 1500000 nodes |
+|---|---|---|---|
+| parent | 0 short | 1 short | 1 short |
+| candidate | 1 short | 13 short | 0 short |
+
+### For the owner (DEC-265 form)
+
+**Why.** DEC-299 makes a ceiling rise past +2 the owner's, and DEC-327
+carries B's 13 only until the owner rules. The ruling is needed only on H1.
+
+**(a) Accept 13.**
+- Changes: the provisional ceiling and budgets become final.
+- Costs: nothing.
+- Risks: B can report up to 13 short lines in a cell before the test goes
+  red, so a real reporting regression in B smaller than that passes. The
+  other five cases' ceilings still hold theirs.
+- Leaves unmeasured: whether S202's walk could certify a line through a
+  quiescence TT read.
+
+**(b) Keep 6 and fix first.**
+- Changes: the walk (`complete_mate_pv()`, S202's ground, DEC-251) would
+  have to extend a mate line past a horizon where quiescence answered from
+  the TT.
+- Costs: a separate step with its own design, measurement and goldens,
+  before S121 can ship on H1.
+- Risks: the step changes the reporting layer under every case.
+
+**Recommendation: (a).** The 13 are DEC-122's expected residue as the tool
+reads them: true mates, the claimed side right, none shorter than the
+oracle's, cut at the horizon by TT reads of entries that earlier searches
+wrote. The candidate finds the mate at ply 33 a move earlier than the parent
+does, and that is what produces the extra lines. A walk that reaches through
+quiescence is a reporting step of its own, not a precondition of
+S121's verdict.
+
+### Also finished
+
+- `DEV_MANUAL.md`:
+  - every goldens row S121 moved or re-read;
+  - the `--ceilings` command, which now lists S296's and S121's grids;
+  - the `EXACT_FLOOR` command `--floor 159`;
+  - the ALPHA row's commands;
+  - the gradient and walk sentences.
+- `MANUAL.md`: the `RfpMinPly` row's mined-set figures (165, 165, 154
+  against 159).
+
+`adocs/data/S121_parts.patch`'s preamble said "never committed to `src/`
+in this form", which is false at CAND. **Corrected after the fast check**:
+the form is committed once only, as S121's SPRT candidate with `#define
+S121_PARTS 5` (DEC-326 (7), DEC-327), folded on H1 or reverted on H0, never
+shipped. `git apply` reads from the first `---` line on, so the preamble
+cannot move the guard's expected tree: re-simulated after the edit, it is
+`b024945c...` as before, `src/evaluation.cpp` and `src/evaluation.hpp` are
+the only files that differ, and nothing differs outside the allowed lines.
+`adocs/data/S121_sprt.sh` applies the patch from CAND and hashes no file.
+
+### The fast check's other corrections (comments and data only)
+
+- `src/evaluation.cpp`, the comment over the count: "Not safe mobility: no
+  enemy-pawn-attack mask" was false at mask 5. It now says that the raw
+  `~own` count is mask 0's, that the count is `area`'s, and that at mask 5
+  enemy pawn attacks are excluded and the pin rule holds.
+- `tests/test_walked_counts.hpp`'s header: the raw `~own` count is now
+  stated as mask 0's, with what mask 5 changes.
+- `tests/test_eval_trace.cpp`'s and `DEV_MANUAL.md`'s "18 at 2.875": the
+  scan line that gives it (the rows at the maximum, before the pick folds
+  them into 16 distinct positions) is added to `adocs/data/S121_goldens.txt`
+  section 2.
+
+### Known, not fixed
+
+- **The gradient check sits 1.05x inside its bound**: 9.50e-07 at parameter
+  849, `mobility_eg[bishop][1]`. The coverage tool's smallest |gradient|
+  from `MOB_MG_BASE` on is 2.153e-09. This is DEC-316's class, so the next
+  refit (a bisection part's, or S126's) is likely red there and will need
+  fixture rows.
+- **Mask 5's cost is a bracket**: p3's +2.20 % to all's +3.38 %, with p1 +
+  p3's +2.42 % in instructions as the estimate. The coordinator times an
+  `S121_COST=5` row before the done stamp, on H1 only.
+
+### Gates, after DEC-327
+
+- **Both builds:** 0 warnings. Both fast suites 50 of 50, sequential, the
+  AGENTS.md TESTS command (the final gate, below).
+- `./clang-format.sh --check` clean (`CLANG_FORMAT_MAJOR=22`).
+- **The S297 clang check:** `build-clang` and `build-clang-tune` with
+  `clang++-22`, Release, `-k 0`. No error, no warning; both fast suites 50 of
+  50.
+- `tools/plan_prose_check.py`, one mode per call, each exit 0:
+  - `--citations`: 0 over 21 files;
+  - `--touches`: 0;
+  - `--params`;
+  - `--gate`: agrees.
+- **`tools/gate_extra.sh`**, detached under a four-exit watcher:
+  `GATE-EXTRA-DONE 5 stages 1025 s`.
+  - prose 0 s, citations 0 s, debug 363 s, sanitize 610 s (the fast label 50
+    of 50 under the sanitizers), perft 52 s;
+  - no `Assertion` in its logs;
+  - Release bench 6016079, the same across builds.
+- **Bench 6016079** in both builds.
+- **Tier 2 (DEC-141) does not bind**, by what the diff touches. The Debug
+  self-play is the coordinator's.
+
+### The SPRT script
+
+`adocs/data/S121_sprt.sh` is as the stop left it: the dated paragraph, the
+run count corrected, the coordinator's markers unfilled. DEC-327 adds no
+guard. The changed files outside `src/` (`tests/`, `adocs/data/`) are
+outside its src/ check, and its src/ check reads the same on this tree.
+
+### Proposed commit message
+
+```
+Paste S121's mobility fit at P1 and P3 for its SPRT (S121)
+
+The screen kept the per-count table, the enemy pawn attack exclusion
+and the pin rule, and dropped both own-pawn exclusions (DEC-326). Its
+full-corpus fit at S121_PARTS 5 is pasted with the parts patch for the
+one {0, 5} SPRT that decides the family (DEC-259). The stage-two clamp
+binds on 0.355 % of the corpus against the 1.0 % bound.
+
+Every golden the paste moves is re-derived by its script (DEC-142):
+the anchors 283, 353, 590, 1021, 181, -541 and -603; the truncation
+pins re-picked, N still 3; the coverage block re-derived; the clamp
+push +140 -> +30; the ProbCut row re-mined, mate in 4 at depth 10; the
+aborted-line cell's budget 40000 -> 50000; ALPHA kept inside its band,
+whose sweep is now a tracked script. Both mate floors hold: EXACT_FLOOR
+159 against 165 and 154, MATE_IN_THREE_FLOOR 11 against 12 and 10.
+
+Case B's mate-carry ceiling rises 6 -> 13, outside DEC-299's guard. It
+is carried provisionally with the picker's budgets by DEC-327, and the
+owner rules before an H1 ships. The cell is attributed by tool: two
+roots' lines cut at the horizon, the claimed side right and none
+shorter than Stockfish's. The cost reading is committed: all +3.38 %,
+p3 +2.20 %. .tuning/verify_fit.py, which is tracked, takes S121's
+layout.
+
+Bench: 6016079
+```
+
+No `done:` stamp: the SPRT, and on H1 the owner's ruling on B (DEC-327),
+come first.

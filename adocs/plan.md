@@ -382,7 +382,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S121  **in progress** (phase 1 landed at identity; the screen next) -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
+1. S121  **in progress** (the screen kept P0, P1 and P3; the candidate committed, its SPRT next) -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
 2. S298  `tools/gate_extra.sh` gains a clang stage, so a compile break that only clang reports is found weekly on the workstation instead of on the owner's Mac
 3. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
 4. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted

@@ -620,14 +620,19 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // coverage rows (80) at the identity table it answers +140: 34 rows bound,
   // the farthest at 1066.7, the nearest other at 174.7, every row 9.33 from
   // the kink, finite differences 1.58e-7; +100 there reads 7.93e-7, past the
-  // rule's 2e-7 (adocs/data/S121_preconditions.txt). Re-run it
+  // rule's 2e-7 (adocs/data/S121_preconditions.txt). At S121's candidate,
+  // the fitted table at S121_PARTS 5 and the coverage block re-derived there
+  // (80 rows), it answers +30: two rows bound, the farthest at 197.3, the
+  // nearest other at 158.8, every row 13.33 from the kink, finite differences
+  // 9.3e-8; +140 there leaves a row 0.75 from the kink
+  // (adocs/data/S121_goldens.txt). Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
   // push saturates the sigmoid everywhere, which makes the finite difference
   // itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
-    params[KS_MG_BASE + t] += 140.0;
-    params[KS_EG_BASE + t] += 140.0;
+    params[KS_MG_BASE + t] += 30.0;
+    params[KS_EG_BASE + t] += 30.0;
   }
 
   std::vector<uint32_t> binding;
@@ -933,7 +938,11 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // S121's 38 coverage rows (84 with the gauge rows) at the identity table
     // the smallest is 0.6177 under Adam and 0.9240 under AdaGrad, both the
     // rook's, the largest 6.1937, the bishop's, and 6.5836, the pawn's, every
-    // hold at most 5.66e-15 (`adocs/data/S121_preconditions.txt`). The
+    // hold at most 5.66e-15 (`adocs/data/S121_preconditions.txt`). At S121's
+    // candidate, the fitted table and the re-derived block, the smallest is
+    // 0.1552 under Adam and 0.0671 under AdaGrad, both the rook's, the largest
+    // 8.2585 and 6.9883, both the queen's, every hold at most 1.35e-14
+    // (`adocs/data/S121_goldens.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which

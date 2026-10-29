@@ -97,13 +97,24 @@ inline int piece_from_char(char c, bool* black)
 
 // Mobility, as S121's table reads it: per side, WHITE first, how many of the
 // side's pieces have each count, the cell MOBILITY_OFFSET[type] + count for a
-// piece of type knight, bishop, rook or queen (src/evaluation.hpp). A piece's
-// count is the squares it attacks that do not hold one of its own side's
-// pieces. Walked ray by ray from the placement rather than read out of the
-// engine's magic tables, deliberately: this file exists to disagree with the
-// engine when the two stop computing the same thing, and a shared
-// implementation cannot do that. The width is the engine's, and a count past
-// its row is refused rather than written past it.
+// piece of type knight, bishop, rook or queen (src/evaluation.hpp). At
+// S121_PARTS 0 a piece's count is the squares it attacks that do not hold one
+// of its own side's pieces; under a mask the parts below change it, and at
+// mask 5, the candidate's, squares an enemy pawn attacks are dropped too and
+// a pinned piece keeps only its pin line. Walked ray by ray from the placement
+// rather than read out of the engine's magic tables, deliberately: this file
+// exists to disagree with the engine when the two stop computing the same
+// thing, and a shared implementation cannot do that. The width is the engine's,
+// and a count past its row is refused rather than written past it.
+//
+// S121's parts (adocs/data/S121_parts.patch), walked from the same
+// descriptions src/evaluation.hpp states and under the same S121_PARTS mask,
+// each by its own rule here and none read from the engine's bitboards: P1
+// drops a square an enemy pawn attacks; P2a counts an own piece's square
+// unless it holds an own pawn that is blocked -- any piece on its push square;
+// P2b drops an own pawn on the side's own second or third rank as well; P3
+// keeps, for a piece pinned to its own king, only the squares on the line
+// through the king and the piece, the pin found by walking out from the king.
 inline bool mobility_cells(const std::string& placement,
                            int out[2][MOBILITY_CELLS])
 {
@@ -140,6 +151,98 @@ inline bool mobility_cells(const std::string& placement,
   static const int bishop_rays[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
   static const int rook_rays[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
+  const auto inside = [](int r, int f) {
+    return r >= 0 && r <= 7 && f >= 0 && f <= 7;
+  };
+  const auto holds = [&](int r, int f, int type, bool white) {
+    return inside(r, f) && kind_at[r * 8 + f] == type &&
+           white_at[r * 8 + f] == white;
+  };
+
+  // P3: each piece pinned to its own king, and the direction from that king
+  // to it. Row 0 is rank 8, so White's pawns advance towards row 0.
+  int pin_dr[64] = {};
+  int pin_df[64] = {};
+  bool is_pinned[64] = {};
+  int king_r[2] = {-1, -1};
+  int king_f[2] = {-1, -1};
+
+  for (int s = 0; s < 64; ++s) {
+    if (kind_at[s] == 5) {
+      king_r[white_at[s] ? 0 : 1] = s / 8;
+      king_f[white_at[s] ? 0 : 1] = s % 8;
+    }
+  }
+
+  for (int side = 0; side < 2 && MOBILITY_PINS; ++side) {
+    const bool white = (side == 0);
+    if (king_r[side] < 0) { return false; }
+
+    for (int d = 0; d < 8; ++d) {
+      const int* step = (d < 4) ? rook_rays[d] : bishop_rays[d - 4];
+      const int slider = (d < 4) ? 3 : 2;  // rook or bishop, and the queen
+      int r = king_r[side] + step[0];
+      int f = king_f[side] + step[1];
+      int first = -1;
+
+      while (inside(r, f)) {
+        const int at = r * 8 + f;
+        if (kind_at[at] >= 0) {
+          if (first < 0) {
+            if (white_at[at] != white) { break; }
+            first = at;
+          } else {
+            if (white_at[at] != white &&
+                (kind_at[at] == slider || kind_at[at] == 4)) {
+              is_pinned[first] = true;
+              pin_dr[first] = step[0];
+              pin_df[first] = step[1];
+            }
+            break;
+          }
+        }
+        r += step[0];
+        f += step[1];
+      }
+    }
+  }
+
+  // Whether the piece on `from`, of side `white`, counts the square `to` it
+  // attacks.
+  const auto counted = [&](int from, int to, bool white) {
+    const int r = to / 8;
+    const int f = to % 8;
+    const int side = white ? 0 : 1;
+
+    if (MOBILITY_PINS && is_pinned[from]) {
+      // On the pin line when (to - king) is parallel to the pin direction.
+      const int dr = r - king_r[side];
+      const int df = f - king_f[side];
+      if (dr * pin_df[from] - df * pin_dr[from] != 0) { return false; }
+    }
+
+    if (MOBILITY_PAWN_ATTACKS) {
+      // An enemy pawn attacks `to` from the row behind it as the enemy
+      // advances: a Black pawn from row r - 1, a White one from row r + 1.
+      const int pr = white ? r - 1 : r + 1;
+      if (holds(pr, f - 1, 0, !white) || holds(pr, f + 1, 0, !white)) {
+        return false;
+      }
+    }
+
+    if (kind_at[to] >= 0 && white_at[to] == white) {
+      if (!MOBILITY_AREA) { return false; }
+      if (kind_at[to] == 0) {
+        const int push = white ? r - 1 : r + 1;
+        const bool blocked = inside(push, f) && kind_at[push * 8 + f] >= 0;
+        const bool low = white ? (r == 6 || r == 5) : (r == 1 || r == 2);
+        if (blocked || (MOBILITY_LOW_RANK && low)) { return false; }
+      }
+    }
+
+    return true;
+  };
+
   for (int side = 0; side < 2; ++side) {
     for (int i = 0; i < MOBILITY_CELLS; ++i) {
       out[side][i] = 0;
@@ -166,7 +269,7 @@ inline bool mobility_cells(const std::string& placement,
         if (r < 0 || r > 7 || f < 0 || f > 7) { continue; }
 
         const int to = r * 8 + f;
-        if (kind_at[to] < 0 || white_at[to] != white) { targets++; }
+        if (counted(from, to, white)) { targets++; }
       }
     } else {
       const int (*rays)[2] = (type == 3) ? rook_rays : bishop_rays;
@@ -183,12 +286,9 @@ inline bool mobility_cells(const std::string& placement,
         while (r >= 0 && r <= 7 && f >= 0 && f <= 7) {
           const int to = r * 8 + f;
 
-          if (kind_at[to] < 0) {
-            targets++;
-          } else {
-            if (white_at[to] != white) { targets++; }
-            break;
-          }
+          // The ray stops on the first piece, whoever's, and attacks it.
+          if (counted(from, to, white)) { targets++; }
+          if (kind_at[to] >= 0) { break; }
 
           r += step[0];
           f += step[1];

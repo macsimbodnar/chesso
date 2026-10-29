@@ -5,7 +5,46 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-27, by hand.
+Updated: 2026-10-29, by hand.
+
+## 2026-10-29: S121's screen and candidate; its SPRT next
+
+**The screen** (`adocs/data/S121_screen.sh all`, 02:32 to 04:05,
+`adocs/data/S121_screen_reading.txt`) kept P0 the per-count table
+(+0.000066 against m 0.000018), P1 enemy pawn attacks excluded (+0.000021,
+m 0.000009) and P3 the pin rule (+0.000028, m 0.000003), and dropped P2a
+the area with own blocked pawns excluded (+0.000001, m 0.000006) and P2b
+low-rank pawns as well (-0.000017). Candidate `table_m5`, mask 5; H0
+bisects A | B1 | C, at worst four SPRTs in all. Ties at mask 5: the queen's
+26 and 27 to 25. Every q5 fit stopped at the 5000-epoch cap, every full fit
+on patience. Several thin cells sit far from their neighbours
+(`adocs/data/S121_cells.txt`); S126 inherits the list. **The cost**
+(`adocs/data/S121_cost_reading.txt`, 04:06 to 05:20): all +3.38 %, p3
++2.20 %, p1, p2a, p2b and the table alone zero; mask 5 lies between p3 and
+all, an `S121_COST=5` row is owed before the done stamp on H1. Both runs
+archived as `chesso_S121_screen_cost_2026-10-29.tar.xz`, verified.
+
+**The candidate** (one fresh Opus 5.5 subagent in `../chesso-s121c`, fast
+checked: nothing blocking, the fixes applied): the fit pasted with
+`S121_PARTS` 5, bench 5069022 -> 6016079. Clamp binds on 0.355 % of the
+corpus against the 1.0 % bound; mobility p99 107, max 229 (S122 inherits).
+Every golden re-derived by its script (`adocs/data/S121_goldens.txt`); the
+coverage block re-derived by its tool (DEC-326's consequence); both mate
+floors hold (165 / 154 against 159; 12 / 10 against 11). **Case B's
+mate-carry ceiling rises 6 -> 13, outside DEC-299's guard**: carried
+provisionally by DEC-327, the cell attributed by tool
+(`adocs/data/S121_case_b.txt`: two carried lines cut at the horizon, none
+shorter than Stockfish's); **the owner rules before an H1 ships**. Gates:
+both builds and suites 50 of 50, the clang pair, the prose checks,
+`gate_extra` 5 stages green in 1025 s (`GATE-EXTRA-DONE`, 2026-10-29, on
+the candidate tree), Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0
+`disconnect`. Known: the gradient check reads 9.50e-7 against 1e-6, so the
+next refit is likely red (DEC-316's class).
+
+**Next:** pin and launch `adocs/data/S121_sprt.sh` (41900 games worst,
+19.86 h). Worktrees that can go, waiting on the owner: `../chesso-s136b`,
+`../chesso-s136c`, `../chesso-s297`, `../chesso-s121`, `../chesso-s121b`;
+`../chesso-s121c` stays until the close.
 
 ## 2026-10-29: S136 read H0, tempo stays zero; S297, then S121
 

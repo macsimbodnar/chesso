@@ -21,11 +21,12 @@ checkout by default.
 type and half, 9, 14, 15 and 28 wide (src/evaluation.hpp, MOBILITY_WIDTH),
 where it was mobility_mg[4] and mobility_eg[4]: a fit emitted by a tuner built
 before S121 names arrays the engine no longer has and is refused, which is
-right. .tuning/ is gitignored, so this file is kept as
-adocs/data/S121_verify_fit.py and copied over .tuning/verify_fit.py when
-S121's phase 1 lands (the S121 step file says when); .tuning/apply_fit.py needs
-no change, because its array pattern already takes any one-dimensional
-`constexpr int name[N] = {...};`.
+right. .tuning/verify_fit.py is tracked -- .gitignore ignores `.tuning/*` and
+then keeps `!.tuning/*.py` -- although S121's phase 1 wrote that it was
+gitignored and landed this layout as adocs/data/S121_verify_fit.py alone; the
+two are one file, copied over .tuning/verify_fit.py by S121's phase 2 commit.
+.tuning/apply_fit.py needs no change, because its array pattern already takes
+any one-dimensional `constexpr int name[N] = {...};`.
 """
 import re
 import sys

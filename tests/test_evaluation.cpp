@@ -372,6 +372,14 @@ TEST_SUITE("evaluation: score")
   // the placement counts. Re-derived by the script on the pasted header after
   // it reproduced all ten at S083's weights.
   //
+  // S121's mobility table, an `--only mobility` paste at S121_PARTS 5 (enemy
+  // pawn attacks excluded, the pin rule), moved four: the knight on b1 276 to
+  // 283, the bishop on c1 355 to 353, the rook on d1 583 to 590 and the queen
+  // on d1 984 to 1021, each through its own cell of the fitted table; the
+  // pawn and the bare kings carry no mobility. Re-derived by the script on the
+  // pasted header after it reproduced all ten at the identity table
+  // (adocs/data/S121_goldens.txt).
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -396,10 +404,10 @@ TEST_SUITE("evaluation: score")
     // clang-format off
     const std::vector<case_t> cases = {
       {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",  99, "pawn on e2"},
-      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 276, "knight on b1"},
-      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 355, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 583, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 984, "queen on d1"},
+      {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 283, "knight on b1"},
+      {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 353, "bishop on c1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 590, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1021, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on

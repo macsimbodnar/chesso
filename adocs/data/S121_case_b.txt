@@ -1,0 +1,180 @@
+# S121 phase 2, DEC-327 (2): case B's cell, stride 1 at 1200000 nodes, 13 short mate lines of 64, attributed by tool
+# before the SPRT. 2026-10-29, worktree chesso-s121c: the candidate (12cab3c plus the paste at S121_PARTS 5, bench
+# 6016079; chesso 6400a3aa60190dcc) against the parent (12cab3c, chesso 7e6d60f370aea1ed). The trace is a throwaway tree
+# of the candidate patched by adocs/data/S136_trace_patch.py (chesso 6125decead9ce3bf), whose info lines equal the
+# shipped candidate's for every ply traced. Every chess fact is a tool's: Stockfish through python-chess in
+# TOOLCHAIN.md's safe form, DEC-319 (3)'s 5000000 nodes, DEC-320's 1000000000 where it finds no mate.
+#
+# READING. The 13 are two roots' lines, not 13 independent ones: ply 33 (White to move, 5 lines: mate 10 at depths 7,
+# 8 and 9, mate 12 at depth 10 and in the aborted iteration 11) and ply 34 (Black to move, 8 lines, mate -13 at depths
+# 1 to 8). Every one is cut at the horizon: the PV's last node is a depth-0 node of the search, where negamax drops to
+# quiescence, and quiescence returns a mate score with no line of its own. 11 of the 13 quiescence returns are reads
+# of an exact (t=1) TT entry carrying a mate score; 2 (ply 33 at depth 7 and the aborted iteration 11) are quiescence
+# in check, its return after searching its 2 evasions. The entries read: ply 34's 8 were all stored
+# by ply 33's aborted iteration 11 (S 358), one key along ply 33's own PV per iteration, d1g4 g7h8 ... h5g6 at
+# depths 9 down to 2 -- one carried line read back as each iteration's horizon reaches its next position; ply 33's
+# depth 8 and 9 lines read one exact entry stored by ply 32's search (S 337, depth 17), its depth 10 line one stored by
+# its own iteration 8 (S 355). The claimed side is right at both roots, and no reported mate is shorter than the
+# oracle's: ply 33 #+10 (the deeper reading; 5000000 nodes found none), the engine's 10 equal and 12 longer; ply 34
+# #-9, the engine's -13 longer. The parent at this cell finds no mate at ply 33 (cp 901 to 566) and one at ply 34,
+# mate -9 at depth 4, its one short line; its neighbours read 0 short at 1000000 and 1 at 1500000 (ply 41).
+
+== 1. The cell and its neighbours, each tree: ~/.venv/chess/bin/python adocs/data/S170_replay.py --engine <chesso> --cases adocs/data/S170_cases.tsv --only B_mate6_shallow --hash 16 --verbose --go "nodes N" --stride-override 1
+   cand_1000000: 50 mate lines, 1 short
+   cand_1200000: 64 mate lines, 13 short
+   cand_1500000: 66 mate lines, 0 short
+   par_1000000: 49 mate lines, 0 short
+   par_1200000: 35 mate lines, 1 short
+   par_1500000: 59 mate lines, 1 short
+-- the candidate's SHORT lines at 1200000
+SHORT B_mate6_shallow ply 33 depth 7 mate 10 pv 7 plies, 19 needed: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5
+SHORT B_mate6_shallow ply 33 depth 8 mate 10 pv 9 plies, 19 needed: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+SHORT B_mate6_shallow ply 33 depth 9 mate 10 pv 9 plies, 19 needed: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+SHORT B_mate6_shallow ply 33 depth 10 mate 12 pv 10 plies, 23 needed: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6 g8h8
+SHORT B_mate6_shallow ply 33 depth 10 mate 12 pv 11 plies, 23 needed: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6 g8h8 g6h5
+SHORT B_mate6_shallow ply 34 depth 1 mate -13 pv 1 plies, 26 needed: g7h8
+SHORT B_mate6_shallow ply 34 depth 2 mate -13 pv 2 plies, 26 needed: g7h8 g4h4
+SHORT B_mate6_shallow ply 34 depth 3 mate -13 pv 3 plies, 26 needed: g7h8 g4h4 h8g8
+SHORT B_mate6_shallow ply 34 depth 4 mate -13 pv 4 plies, 26 needed: g7h8 g4h4 h8g8 h4g4
+SHORT B_mate6_shallow ply 34 depth 5 mate -13 pv 5 plies, 26 needed: g7h8 g4h4 h8g8 h4g4 g8h7
+SHORT B_mate6_shallow ply 34 depth 6 mate -13 pv 6 plies, 26 needed: g7h8 g4h4 h8g8 h4g4 g8h7 g4h5
+SHORT B_mate6_shallow ply 34 depth 7 mate -13 pv 7 plies, 26 needed: g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8
+SHORT B_mate6_shallow ply 34 depth 8 mate -13 pv 8 plies, 26 needed: g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+-- the other SHORT lines
+par_1200000.txt:SHORT B_mate6_shallow ply 34 depth 4 mate -9 pv 4 plies, 18 needed: g7h8 g4h4 h8g7 h4g4
+par_1500000.txt:SHORT B_mate6_shallow ply 41 depth 7 mate 6 pv 7 plies, 11 needed: h5g6 g7h8 g1f2 c5d3 f2e3 d3f2 e3f2
+cand_1000000.txt:SHORT B_mate6_shallow ply 41 depth 7 mate 6 pv 7 plies, 11 needed: h5g6 g7h8 g1f2 c5d3 f2e3 d3f2 e3f2
+
+== 2. Plies 33 and 34, every info line: python3 adocs/data/S121_case_b.py replay <chesso> 1200000 34 (time, nps, hashfull dropped)
+-- candidate
+ply 33 info score cp 1353 depth 1 nodes 47 pv d1g4
+ply 33 info score cp 1353 depth 2 nodes 91 pv d1g4 g7h8
+ply 33 info score cp 1353 depth 3 nodes 181 pv d1g4 g7h8 g4h4
+ply 33 info score cp 1353 depth 4 nodes 263 pv d1g4 g7h8 g4h4 h8g8
+ply 33 info score cp 94 depth 5 nodes 4506 pv d1g4 g7h8 g4h4 h8g8 h4g4
+ply 33 info score cp 94 depth 6 nodes 5220 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7
+ply 33 info score mate 10 depth 7 nodes 52613 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5
+ply 33 info score mate 10 depth 8 nodes 113052 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+ply 33 info score mate 10 depth 9 nodes 272800 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+ply 33 info score mate 12 depth 10 nodes 534061 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6 g8h8
+ply 33 info score mate 12 depth 10 nodes 1200000 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6 g8h8 g6h5
+ply 33 bestmove d1g4 ponder g7h8
+ply 34 info score mate -13 depth 1 nodes 6 pv g7h8
+ply 34 info score mate -13 depth 2 nodes 49 pv g7h8 g4h4
+ply 34 info score mate -13 depth 3 nodes 94 pv g7h8 g4h4 h8g8
+ply 34 info score mate -13 depth 4 nodes 178 pv g7h8 g4h4 h8g8 h4g4
+ply 34 info score mate -13 depth 5 nodes 265 pv g7h8 g4h4 h8g8 h4g4 g8h7
+ply 34 info score mate -13 depth 6 nodes 393 pv g7h8 g4h4 h8g8 h4g4 g8h7 g4h5
+ply 34 info score mate -13 depth 7 nodes 522 pv g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8
+ply 34 info score mate -13 depth 8 nodes 695 pv g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+ply 34 info score cp -330 depth 9 nodes 1639 pv g7h8 g4h4 h8g8 h4g4 g8h7 g4g6 h7h8 g1f2 c5e4
+ply 34 info score cp -1353 depth 10 nodes 3637 pv g7h8 g4h4 h8g8 h4g4 g8h7 g4g6 h7h8 g1f2 c5d3 f2e3 d3e1 a1e1 b5b4
+ply 34 info score cp -158 depth 11 nodes 100234 pv g7h8 g4h4 h8g8 h4g4 g8h8 g4g6 e7e5 d5e6 c5d3 a1d1 d3b2 d1f1
+ply 34 info score cp -672 depth 12 nodes 204285 pv g7h7 g4h4 h7g8 h4g4 g8h8 g4h5 h8g8 h5g6 g8h8 g1f2 c5d3 f2e3 d3c1 a1c1 e7e6
+ply 34 info score cp -672 depth 12 nodes 1200000 pv g7h7 g4h4 h7g8 h4g4 g8h8 g4h5 h8g8 h5g6 g8h8 g1f2 c5d3 f2e3 d3f2 e3f2 e7e6 a1h1
+ply 34 bestmove g7h7 ponder g4h4
+-- parent
+ply 33 info score cp 901 depth 1 nodes 45 pv d1g4
+ply 33 info score cp 901 depth 2 nodes 88 pv d1g4 g7h8
+ply 33 info score cp 901 depth 3 nodes 177 pv d1g4 g7h8 g4h4
+ply 33 info score cp 901 depth 4 nodes 258 pv d1g4 g7h8 g4h4 h8g8
+ply 33 info score cp 855 depth 5 nodes 505 pv d1g4 g7h8 g4h4 h8g8 h4g4
+ply 33 info score cp 855 depth 6 nodes 714 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7
+ply 33 info score cp 901 depth 7 nodes 1061 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4g6
+ply 33 info score cp 901 depth 8 nodes 1384 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4g6 h7h8 g1f2
+ply 33 info score cp 901 depth 9 nodes 1891 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4g6 h7h8 g6h5 h8g8 h5g6
+ply 33 info score cp 489 depth 10 nodes 54566 pv d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4g6 h7h8 g1f2 c5d3 f2e3 d3c1 g6h6 h8g8
+ply 33 info score cp 118 depth 11 nodes 148105 pv d1g4 g7h7 d4b5 c7d7 g4h4 h7g8 h4g4 g8h8 g4h5 h8g8 h5g6 g8h8 g6h6
+ply 33 info score cp 489 depth 12 nodes 156472 pv d1g4 g7h7 g4h4 h7g8 h4g3 g8h8 g3h3 h8g8 h3g4 g8h7 g4g6 h7h8 g1f2 c5d3
+ply 33 info score cp 566 depth 13 nodes 837071 pv d1g4 g7h7 g4h4 h7g7 h4g4 g7h8 g4h3 h8g8 h3g3 g8h7 g3g6 h7h8 g1f2 c5d3 f2e3 d3c1 g6h6 h8g8
+ply 33 bestmove d1g4 ponder g7h7
+ply 34 info score cp -587 depth 1 nodes 8 pv g7h7
+ply 34 info score cp -700 depth 2 nodes 134 pv g7h7 g4h4
+ply 34 info score cp -700 depth 3 nodes 224 pv g7h7 g4h4 h7g8
+ply 34 info score mate -9 depth 4 nodes 361 pv g7h8 g4h4 h8g7 h4g4
+ply 34 info score cp -778 depth 5 nodes 456 pv g7h8 g4h4 h8g7 h4g4 g7h8
+ply 34 info score cp -778 depth 6 nodes 612 pv g7h8 g4h4 h8g7 h4g4 g7h8 g4h5
+ply 34 info score cp -114 depth 7 nodes 1018 pv g7h8 g4h4 h8g7 h4g3 g7h7 g3g6 h7h8
+ply 34 info score cp -630 depth 8 nodes 28517 pv g7h7 g4h4 h7g7 h4g3 g7h7 g3g6 h7h8 g1f2 c5e4
+ply 34 info score cp -855 depth 9 nodes 29573 pv g7h7 g4h4 h7g7 h4g4 g7h8 g4h5 h8g8 h5g6 g8h8 g1f2 c5e4
+ply 34 info score cp -1088 depth 10 nodes 32358 pv g7h7 g4h4 h7g7 h4g4 g7h8 g4h5 h8g8 h5g6 g8h8 g1f2
+ply 34 info score cp -126 depth 11 nodes 38587 pv g7h8 g4h4 h8g7 h4g3 g7h8 g3h3 h8g7 h3g4 g7h8 g4h5 h8g8 h5g6 g8h8 d4b5 c7a5 g6h6
+ply 34 info score cp -126 depth 12 nodes 43220 pv g7h8 g4h4 h8g7 h4g4 g7h8 g4h5 h8g8 h5g6 g8h8 d4b5 c7a5 g6h6
+ply 34 info score cp -435 depth 13 nodes 45031 pv g7h8 g4h4 h8g7 h4g3 g7h7 g3g6 h7h8 g1f2 c5d3 f2g3 d3c1 g6h6 h8g8
+ply 34 info score cp -1156 depth 14 nodes 120785 pv g7h8 g4h4 h8g7 h4g3 g7h8 g3h3 h8g7 h3g4 g7h8 g4h5 h8g8 h5g6 g8h8 g1f2
+ply 34 bestmove g7h8 ponder g4h4
+
+== 3. The oracle, the two roots (FENs by python-chess from the row's moves)
+ply 33  r4r2/p1q1p1k1/3p1p2/1pnP1P2/2pNP2p/2P5/PP4B1/R2Q2K1 w - - 0 23  stockfish 5000000 nodes: +682  depth 20  nodes 5000200  pv d1g4 g7h8 g4h5 h8g7 h5g6 g7h8 d4e6 c5e6 g6h6 h8g8 d5e6 h4h3
+ply 34  r4r2/p1q1p1k1/3p1p2/1pnP1P2/2pNP1Qp/2P5/PP4B1/R5K1 b - - 1 23  stockfish 5000000 nodes: #-9  depth 52  nodes 5000123  pv g7h8 g4h4 h8g7 h4g4 g7h8 g4h5 h8g8 h5g6 g8h8 g1f2 c5d3 f2e3
+ply 33  r4r2/p1q1p1k1/3p1p2/1pnP1P2/2pNP2p/2P5/PP4B1/R2Q2K1 w - - 0 23  stockfish 1000000000 nodes, 12 threads, Hash 2048 (DEC-320, the deeper reading): #+10  depth 91  nodes 1000004175  pv d1g4 g7h8 g4h4 h8g7 h4g4 g7h8 g4h5 h8g8 h5g6 g8h8 g1f2 c5d3 f2e3 d3e1 a1e1 e7e5 e1h1 c7h7 g6h7  ends in checkmate (python-chess): True
+
+== 4. Where each line is cut: python3 adocs/data/S121_case_b.py trace <traced chesso> 1200000 34 <the SHORT lines> LOG <the cut keys>, then read LOG <its replay>
+   (the traced engine's 226 info lines over plies 20 to 34 equal the shipped candidate's, timing apart)
+   (a quiescence read's entry is the latest logged store of its key, its type and its side of the mate band; ply 33's
+   depth 7 line's first quiescence read has none logged -- its final return is quiescence in check, below it)
+SHORT ply 33 depth 7 mate 10, pv 7 of 19 plies: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5
+  its last aspiration search: S 354 depth 7 [-2000000000,2000000000]; E 354 score 48981 aborted 0
+  the PV's deepest searched node, ply 7 of 7:  d0 [-2000000000,-115] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5 -> -48981 qs h=2450c56071ca4fe2
+    its quiescence:  q0 [-116,-115] d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5 -> -48981 tt t=2 s=-48981 m=0 x=0 h=2450c56071ca4fe2
+    its quiescence:  q0 [-2000000000,-115] d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5 -> -48981 qend inchk=1 legal=2 cand=2 n=2 best=h7g8 h=2450c56071ca4fe2
+    no store of key 2450c56071ca4fe2 logged before it
+SHORT ply 33 depth 8 mate 10, pv 9 of 19 plies: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+  its last aspiration search: S 355 depth 8 [-2000000000,2000000000]; E 355 score 48981 aborted 0
+  the PV's deepest searched node, ply 9 of 9:  d0 [-2000000000,-48979] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48981 qs h=c7a3663bb21f2b12
+    its quiescence:  q0 [-2000000000,-48979] d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48981 tt t=1 s=-48981 m=0 x=0 h=c7a3663bb21f2b12
+    the entry it read, the last store of its key and type: ply 32's search, S 337 depth 17 [-2000000000,2000000000]:  d11 [-2000000000,2000000000] pv1 cut0 ex=null g8g7,d1g4,g7h8,g4h4,h8g7,h4g4,g7h8,g4h5,h8g8,h5g6 -> -48980 loop type=1 legal=1 skipped=0 se=0 best=g8h8 h=c7a3663bb21f2b12
+SHORT ply 33 depth 9 mate 10, pv 9 of 19 plies: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+  its last aspiration search: S 356 depth 9 [-2000000000,2000000000]; E 356 score 48981 aborted 0
+  the PV's deepest searched node, ply 9 of 9:  d0 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48981 qs h=c7a3663bb21f2b12
+    its quiescence:  q0 [-2000000000,2000000000] d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48981 tt t=1 s=-48981 m=0 x=0 h=c7a3663bb21f2b12
+    the entry it read, the last store of its key and type: ply 32's search, S 337 depth 17 [-2000000000,2000000000]:  d11 [-2000000000,2000000000] pv1 cut0 ex=null g8g7,d1g4,g7h8,g4h4,h8g7,h4g4,g7h8,g4h5,h8g8,h5g6 -> -48980 loop type=1 legal=1 skipped=0 se=0 best=g8h8 h=c7a3663bb21f2b12
+SHORT ply 33 depth 10 mate 12, pv 10 of 23 plies: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6 g8h8
+  its last aspiration search: S 357 depth 10 [-2000000000,2000000000]; E 357 score 48977 aborted 0
+  the PV's deepest searched node, ply 10 of 10:  d0 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6,g8h8 -> 48977 qs h=6226252229361c33
+    its quiescence:  q0 [-2000000000,2000000000] d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6,g8h8 -> 48977 tt t=1 s=48977 m=0 x=0 h=6226252229361c33
+    the entry it read, the last store of its key and type: ply 33's search, S 355 depth 8 [-2000000000,2000000000]:  d1 [118,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4g6,h7h8 -> 48979 loop type=1 legal=36 skipped=0 se=0 best=g6h5 h=6226252229361c33
+SHORT ply 33 depth 10 (the aborted iteration 11) mate 12, pv 11 of 23 plies: d1g4 g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6 g8h8 g6h5
+  its last aspiration search: S 358 depth 11 [-2000000000,2000000000]; E 358 score 0 aborted 1
+  the PV's deepest searched node, ply 11 of 11:  d0 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6,g8h8,g6h5 -> -48973 qs h=5c35fd2bddf29ef2
+    its quiescence:  q0 [-2000000000,2000000000] d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6,g8h8,g6h5 -> -48973 qend inchk=1 legal=2 cand=2 n=2 best=h8g8 h=5c35fd2bddf29ef2
+SHORT ply 34 depth 1 mate -13, pv 1 of 26 plies: g7h8
+  its last aspiration search: S 359 depth 1 [-2000000000,2000000000]; E 359 score -48974 aborted 0
+  the PV's deepest searched node, ply 1 of 1:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8 -> 48974 qs h=0c76d4caebcf698c
+    its quiescence:  q0 [-2000000000,2000000000] g7h8 -> 48974 tt t=1 s=48974 m=0 x=0 h=0c76d4caebcf698c
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d9 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8 -> 48973 loop type=1 legal=37 skipped=0 se=0 best=g4h4 h=0c76d4caebcf698c
+SHORT ply 34 depth 2 mate -13, pv 2 of 26 plies: g7h8 g4h4
+  its last aspiration search: S 360 depth 2 [-2000000000,2000000000]; E 360 score -48974 aborted 0
+  the PV's deepest searched node, ply 2 of 2:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4 -> -48974 qs h=c3967768fef0249b
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4 -> -48974 tt t=1 s=-48974 m=0 x=0 h=c3967768fef0249b
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d8 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4 -> -48973 loop type=1 legal=2 skipped=0 se=0 best=h8g8 h=c3967768fef0249b
+SHORT ply 34 depth 3 mate -13, pv 3 of 26 plies: g7h8 g4h4 h8g8
+  its last aspiration search: S 361 depth 3 [-2000000000,2000000000]; E 361 score -48974 aborted 0
+  the PV's deepest searched node, ply 3 of 3:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4,h8g8 -> 48974 qs h=6613347165d913ba
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4,h8g8 -> 48974 tt t=1 s=48974 m=0 x=0 h=6613347165d913ba
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d7 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8 -> 48973 loop type=1 legal=39 skipped=0 se=0 best=h4g4 h=6613347165d913ba
+SHORT ply 34 depth 4 mate -13, pv 4 of 26 plies: g7h8 g4h4 h8g8 h4g4
+  its last aspiration search: S 362 depth 4 [-2000000000,2000000000]; E 362 score -48974 aborted 0
+  the PV's deepest searched node, ply 4 of 4:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4,h8g8,h4g4 -> -48974 qs h=ed849514a26df759
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4,h8g8,h4g4 -> -48974 tt t=1 s=-48974 m=0 x=0 h=ed849514a26df759
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d6 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4 -> -48973 loop type=1 legal=3 skipped=0 se=0 best=g8h7 h=ed849514a26df759
+SHORT ply 34 depth 5 mate -13, pv 5 of 26 plies: g7h8 g4h4 h8g8 h4g4 g8h7
+  its last aspiration search: S 363 depth 5 [-2000000000,2000000000]; E 363 score -48974 aborted 0
+  the PV's deepest searched node, ply 5 of 5:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4,h8g8,h4g4,g8h7 -> 48974 qs h=3064ee46957c1168
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4,h8g8,h4g4,g8h7 -> 48974 tt t=1 s=48974 m=0 x=0 h=3064ee46957c1168
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d5 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7 -> 48973 loop type=1 legal=37 skipped=0 se=0 best=g4h5 h=3064ee46957c1168
+SHORT ply 34 depth 6 mate -13, pv 6 of 26 plies: g7h8 g4h4 h8g8 h4g4 g8h7 g4h5
+  its last aspiration search: S 364 depth 6 [-2000000000,2000000000]; E 364 score -48974 aborted 0
+  the PV's deepest searched node, ply 6 of 6:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4,h8g8,h4g4,g8h7,g4h5 -> -48974 qs h=2450c56071ca4fe2
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4,h8g8,h4g4,g8h7,g4h5 -> -48974 tt t=1 s=-48974 m=0 x=0 h=2450c56071ca4fe2
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d4 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5 -> -48973 loop type=1 legal=2 skipped=0 se=0 best=h7g8 h=2450c56071ca4fe2
+SHORT ply 34 depth 7 mate -13, pv 7 of 26 plies: g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8
+  its last aspiration search: S 365 depth 7 [-2000000000,2000000000]; E 365 score -48974 aborted 0
+  the PV's deepest searched node, ply 7 of 7:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8 -> 48974 qs h=f9b0be3246dba9d3
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8 -> 48974 tt t=1 s=48974 m=0 x=0 h=f9b0be3246dba9d3
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d3 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8 -> 48973 loop type=1 legal=40 skipped=0 se=0 best=h5g6 h=f9b0be3246dba9d3
+SHORT ply 34 depth 8 mate -13, pv 8 of 26 plies: g7h8 g4h4 h8g8 h4g4 g8h7 g4h5 h7g8 h5g6
+  its last aspiration search: S 366 depth 8 [-2000000000,2000000000]; E 366 score -48974 aborted 0
+  the PV's deepest searched node, ply 8 of 8:  d0 [-2000000000,2000000000] pv1 cut0 ex=null g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48974 qs h=c7a3663bb21f2b12
+    its quiescence:  q0 [-2000000000,2000000000] g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48974 tt t=1 s=-48974 m=0 x=0 h=c7a3663bb21f2b12
+    the entry it read, the last store of its key and type: ply 33's search, S 358 depth 11 [-2000000000,2000000000]:  d2 [-2000000000,2000000000] pv1 cut0 ex=null d1g4,g7h8,g4h4,h8g8,h4g4,g8h7,g4h5,h7g8,h5g6 -> -48973 loop type=1 legal=1 skipped=0 se=0 best=g8h8 h=c7a3663bb21f2b12

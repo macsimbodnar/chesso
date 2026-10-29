@@ -86,11 +86,12 @@
 // test_engine.
 static constexpr int SCORE_DEPTH = 10;
 
-// GOLDEN (DEC-142): 158, the fewest exact mate distances the engine may find
+// GOLDEN (DEC-142): 159, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 160 with the guard shipping, 156 with it weakened (S135, below; 159 and
-// 154 at S083, 163 and 160 at S293, 164 and 160 at S286).
-// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 158, which
+// 165 with the guard shipping, 154 with it weakened (S121, below; 160 and 159
+// at S296, 160 and 156 at S135, 159 and 154 at S083, 163 and 160 at S293, 164
+// and 160 at S286). This header read 158 and S135's ends from S296 to S121.
+// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 159, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
@@ -183,6 +184,15 @@ static constexpr int SCORE_DEPTH = 10;
 // swapped -- tests/test_engine.cpp's MATE_IN_THREE_FLOOR carries the
 // separation again, 13 shipping against 8 weakened, the same weakened gate
 // red there at 8 >= 11. A revert of S296 puts 158 back.
+//
+// **159 held at S121, re-read by the script (DEC-142, DEC-299).** S121's
+// mobility table at S121_PARTS 5 moves both ends apart: on its candidate
+// S156's sweep reads **165** exact at RfpMinPly 3, 165 at 2 and **154** at 1
+// and 0, and the gate built at RfpMinPly 1 with 159 compiled in is red at 154
+// (adocs/data/S121_goldens.txt). 159 is inside the band, 155 to 165, so it
+// separates RfpMinPly 1 again and is not moved: a floor that holds needs no
+// decision, and one below the shipping count, 164, is a rise for the
+// coordinator to propose. A revert of S121's paste puts 160 and 159 back.
 static constexpr int EXACT_FLOOR = 159;
 
 

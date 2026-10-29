@@ -16532,3 +16532,47 @@ Consequences: `PARAM_COUNT` goes 831 -> 955, and the shipped constants 825
               amendments above. A later change to the counts or the
               constants re-derives them by the same tool. The clamp case's
               push becomes +140. S122 inherits the clamp readings.
+
+## DEC-327  2026-10-29  S121's case B mate-carry ceiling rises 6 -> 13, outside DEC-299's guard: carried provisionally, the owner rules before an H1 ships
+Tags:         testing, mate, s170, s121, dec-299, dec-301, dec-304, sprt, owner-question
+Context:      S121's candidate (the screen's table_m5 at `S121_PARTS` 5,
+              bench 5069022 -> 6016079) re-swept `adocs/data/S170_cases.tsv`
+              (`adocs/data/S121_sweep_s170.txt`). `S203_case_sweep.sh
+              --ceilings` with S121's grid added answers 2, 13, 4, 1, 2, 3
+              against 2, 6, 4, 1, 2, 3: **B +7**, outside DEC-299's guard, from
+              one cell -- stride 1 at 1200000 nodes, 64 mate lines with 13
+              short; B's other 17 cells read 0 to 2. Both mate floors hold
+              (`EXACT_FLOOR` 159: 165 shipping, 154 weakened;
+              `MATE_IN_THREE_FLOOR` 11: 12 and 10). DEC-299 stops phase 2 for
+              the owner outside the guard; the owner's standing instruction
+              says do not get blocked.
+Decision:     By the coordinator, in DEC-301's and DEC-304 (2)'s form. S121's
+              candidate commit carries the script's ceilings and budgets, B's
+              13 included, each moved site citing this id; the rest of phase
+              2 and the SPRT proceed. The 13 short lines are attributed by
+              tool before the SPRT (which plies, which entry, against the
+              parent at the same cell and the oracle's distance), and **the
+              owner rules on B before an H1 ships**: accept the ceiling, or
+              keep 6 with a fix first. An H0 reverts the commit and the
+              question with it. The same commit carries
+              `adocs/data/S121_parts.patch` applied with `S121_PARTS` 5 as
+              `src/evaluation.hpp`'s default, the form `S121_sprt.sh`
+              pre-registered and its guard measures: the compile-time
+              selector DEC-326 rejected for `src/` exists there for the SPRT
+              alone, and never ships. H1's closing commit folds it (P1 and P3
+              unconditional, P2a and P2b deleted, INV-6 against CAND); H0
+              reverts it whole.
+Rejected:     Idling the machine until the owner answers -- the ruling is
+              needed only on H1. Accepting 13 as final without the owner --
+              DEC-299's guard is the owner's form and was breached. Keeping 6
+              unapplied -- the test would then pin a value the rule does not
+              give (DEC-142).
+Consequences: S121's done stamp cannot be written on H1 until the owner's
+              ruling is recorded; the H1 commit names it. The attribution
+              (`adocs/data/S121_case_b.txt`): the 13 short lines are two
+              carried mate lines, at replay plies 33 and 34, each cut at the
+              horizon where quiescence reads a mate from the table (11) or
+              stands in check (2); no reported mate is shorter than
+              Stockfish's and the claimed side is right at both; the parent
+              reads 1 short at the same cell, the candidate 1 and 0 at the
+              neighbouring 1000000 and 1500000.

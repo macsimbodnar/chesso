@@ -1,0 +1,143 @@
+# S121's thin cells: every cell half of the screen's candidate, the full fit .tuning/s121/fits/table_m5/full.hpp
+# (sha256 cd5761cd...), beside its support at mask 5 (the m5 audit's `support` lines, .tuning/s121/audit/m5/report.txt:
+# the rows putting a non-zero coefficient on the cell at a phase giving the half a taper weight, and the games they
+# come from) and its tie (audit/m5/ties.txt, DEC-326 (5): a half under 1000 games shares the nearest supported cell).
+# v-nbr is the value less the mean of its one or two neighbours in the row, arithmetic and no judgement. `named` marks
+# the cells the coordinator's brief listed as far from their neighbours: queen mg 20 to 25, queen eg 0 and 24, knight
+# eg 8, bishop mg 11 to 13. Recorded so the record shows which cells are thin; nothing is refitted here, no planted
+# recovery was built (the step file's 2026-10-28 ruling 6 names it as the next answer if a fit's tables look wrong),
+# the SPRT decides, and S126 inherits the list. Written by: python3 adocs/data/S121_cells.py <fit> <report> <ties>.
+#
+piece  half cell value  v-nbr     rows   games  tie        brief
+knight mg      0    -9   -19.0   336826   68171  -
+knight mg      1    10    +7.0   790040  114749  -
+knight mg      2    15    +2.5  1421802  136439  -
+knight mg      3    15    -1.0  1678918  137015  -
+knight mg      4    17    -0.5  1622359  136619  -
+knight mg      5    20    +0.5  1542490  135890  -
+knight mg      6    22    -2.5  1100367  126431  -
+knight mg      7    29    -3.0   493751   90106  -
+knight mg      8    42   +13.0   167214   42427  -
+knight eg      0   -46   -31.0   209755   48494  -
+knight eg      1   -15    +6.5   406937   75004  -
+knight eg      2     3    +7.0   836338  115230  -
+knight eg      3     7    +1.5  1100937  126846  -
+knight eg      4     8    +0.0  1177221  130018  -
+knight eg      5     9    +1.0  1160415  129235  -
+knight eg      6     8    +3.5   903082  117650  -
+knight eg      7     0    +5.5   453819   85085  -
+knight eg      8   -19   -19.0   163697   41521  -          named
+bishop mg      0    11    -9.0   942691  128857  -
+bishop mg      1    20    +0.0  1020334  121671  -
+bishop mg      2    29    +0.0  1565170  135100  -
+bishop mg      3    38    +1.5  1535198  135617  -
+bishop mg      4    44    +1.0  1554338  136311  -
+bishop mg      5    48    +0.0  1300988  134055  -
+bishop mg      6    52    +1.5  1031920  128613  -
+bishop mg      7    53    -2.5   828405  118223  -
+bishop mg      8    59    +1.5   492509   95510  -
+bishop mg      9    62    -1.5   373218   76583  -
+bishop mg     10    68    -7.0   145040   43522  -
+bishop mg     11    88   +19.0   105103   31494  -          named
+bishop mg     12    70   -19.5    15738    7049  -          named
+bishop mg     13    91   +21.0    21084    8353  -          named
+bishop eg      0   -29   -12.0   481735   84611  -
+bishop eg      1   -17    -2.0   595186   95477  -
+bishop eg      2    -1    +3.5  1001851  123417  -
+bishop eg      3     8    -0.5  1101510  128510  -
+bishop eg      4    18    +1.0  1134510  130189  -
+bishop eg      5    26    +0.5  1009457  127281  -
+bishop eg      6    33    +3.5   850906  120832  -
+bishop eg      7    33    -1.0   725784  110692  -
+bishop eg      8    35    +2.5   454673   90162  -
+bishop eg      9    32    -1.5   357511   73662  -
+bishop eg     10    32    +5.5   140310   42218  -
+bishop eg     11    21   -12.5   104193   31217  -
+bishop eg     12    35   +21.0    15706    7035  -
+bishop eg     13     7   -28.0    21083    8352  -
+rook   mg      0    16   -11.0   865381  123591  -
+rook   mg      1    27    +1.5  1492666  136530  -
+rook   mg      2    35    +0.5  1553588  136865  -
+rook   mg      3    42    +1.0  1361547  134250  -
+rook   mg      4    47    -1.5  1308631  133577  -
+rook   mg      5    55    +0.0  1236557  133064  -
+rook   mg      6    63    +0.5  1158407  132128  -
+rook   mg      7    70    +1.0  1089562  130937  -
+rook   mg      8    75    -2.0   934094  127316  -
+rook   mg      9    84    +2.5   803858  121953  -
+rook   mg     10    88    -1.0   651043  113852  -
+rook   mg     11    94    +1.5   510272  102388  -
+rook   mg     12    97    +1.5   370084   86189  -
+rook   mg     13    97    -1.0   263787   70536  -
+rook   mg     14    99    +2.0   232881   55301  -
+rook   eg      0   -48   -40.0   417541   70733  -
+rook   eg      1    -8   +14.5   878576  114661  -
+rook   eg      2     3    +2.5  1002045  124320  -
+rook   eg      3     9    +1.5  1012085  126551  -
+rook   eg      4    12    +1.0  1104931  129771  -
+rook   eg      5    13    -2.0  1109534  130622  -
+rook   eg      6    18    +3.0  1053574  129802  -
+rook   eg      7    17    -3.0  1033677  129634  -
+rook   eg      8    22    +0.5   906113  126320  -
+rook   eg      9    26    +1.5   789965  121179  -
+rook   eg     10    27    -1.0   645162  113336  -
+rook   eg     11    30    +0.5   508210  102110  -
+rook   eg     12    32    +0.5   369213   86029  -
+rook   eg     13    33    +4.5   263323   70423  -
+rook   eg     14    25    -8.0   232871   55297  -
+queen  mg      0   -13    +0.0   157105   59062  -
+queen  mg      1   -13    -0.5   202802   69252  -
+queen  mg      2   -12    -1.0   311647   93301  -
+queen  mg      3    -9    +0.5   427751  108077  -
+queen  mg      4    -7    +0.5   510406  114226  -
+queen  mg      5    -6    -1.5   583256  117521  -
+queen  mg      6    -2    +1.5   624394  118924  -
+queen  mg      7    -1    -1.5   611020  117587  -
+queen  mg      8     3    +0.5   571939  115232  -
+queen  mg      9     6    +1.0   513795  111017  -
+queen  mg     10     7    -0.5   440018  104208  -
+queen  mg     11     9    +1.5   367294   95891  -
+queen  mg     12     8    +0.0   302759   86131  -
+queen  mg     13     7    -2.0   244364   75518  -
+queen  mg     14    10    +3.0   195188   64692  -
+queen  mg     15     7    -2.0   151113   53628  -
+queen  mg     16     8    -1.5   116415   43665  -
+queen  mg     17    12    -1.5    86119   34148  -
+queen  mg     18    19    +1.0    62619   26117  -
+queen  mg     19    24    -8.5    43586   19068  -
+queen  mg     20    46    -5.0    29793   13803  -          named
+queen  mg     21    78    +9.0    20831    9978  -          named
+queen  mg     22    92    +5.0    10412    5535  -          named
+queen  mg     23    96   +30.5     6599    3714  -          named
+queen  mg     24    39   -48.5     2814    1768  -          named
+queen  mg     25    79   +20.0     1813    1139  -          named
+queen  mg     26    79    +0.0      359     256  tied to 25
+queen  mg     27    79    +0.0      305     220  tied to 25
+queen  eg      0   -57   -75.0    36330   13774  -          named
+queen  eg      1    18   +41.0    56961   22463  -
+queen  eg      2    11    -1.0   106517   38196  -
+queen  eg      3     6   -18.5   175174   55495  -
+queen  eg      4    38   +13.0   255831   72128  -
+queen  eg      5    44    +0.5   339032   85716  -
+queen  eg      6    49    -5.5   411232   95199  -
+queen  eg      7    65    +2.5   449367   99833  -
+queen  eg      8    76    -1.0   453191  101316  -
+queen  eg      9    89    +6.5   430069   99910  -
+queen  eg     10    89    -3.5   386196   95487  -
+queen  eg     11    96    +0.5   331270   88853  -
+queen  eg     12   102    -1.5   278482   80473  -
+queen  eg     13   111    +5.5   228449   71018  -
+queen  eg     14   109    -1.5   185378   61440  -
+queen  eg     15   110    -4.0   145234   51341  -
+queen  eg     16   119    +5.5   112906   42091  -
+queen  eg     17   117    +3.0    84241   33256  -
+queen  eg     18   109    +3.5    61784   25658  -
+queen  eg     19    94    +1.5    43259   18899  -
+queen  eg     20    76    +5.0    29686   13731  -
+queen  eg     21    48    -2.5    20783    9950  -
+queen  eg     22    25    -3.0    10402    5527  -
+queen  eg     23     8   -25.5     6597    3712  -
+queen  eg     24    42   +49.0     2814    1768  -          named
+queen  eg     25   -22   -32.0     1813    1139  -
+queen  eg     26   -22    +0.0      359     256  tied to 25
+queen  eg     27   -22    +0.0      305     220  tied to 25

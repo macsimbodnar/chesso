@@ -1174,15 +1174,22 @@ int evaluate_cheap(const board_t* board)
 // a square need not be the same for the first square as for the twentieth.
 // The widths are the board's (src/evaluation.hpp, MOBILITY_WIDTH).
 //
-// **Each cell is c times the linear weight it replaced**, mg {1, 6, 8, 2} and
-// eg {0, 5, 2, 4}: S083's fit (01222f3), our own constants, so the seed is
-// DEC-134 form (b) and no engine's table is in it (DEC-084, DEC-105). The
-// packed sum of these cells is the packed sum count * weight was, bit for bit
-// -- packing is exact under integer multiplication (data_structures.hpp) --
-// so this table scores every position exactly as the linear term did until
-// S121's screen fits it (INV-6). The linear weights were fitted, not chosen:
-// the hand-picked set before them measured -14.93 Elo and the fitted one
-// +28.46 over 942 games, DEC-040. No published table was consulted, DEC-016.
+// **Every cell is S121's screen's fit** (adocs/data/S121_screen.sh, DEC-326):
+// `--only mobility` on S083's corpus with every other constant frozen, over
+// the count S121_PARTS 5 defines -- enemy pawn attacks excluded and the pin
+// rule (src/evaluation.hpp) -- the screen's survivors, decided by one SPRT.
+// The queen's cells 26 and 27 share cell 25's value in both halves, each
+// under 1000 games of support (DEC-326 (5), adocs/data/S121_cells.txt). The
+// fit started from the identity, each cell c times the linear weight it
+// replaced, mg {1, 6, 8, 2} and eg {0, 5, 2, 4}: S083's fit (01222f3), our
+// own constants, so the seed is DEC-134 form (b) and no engine's table is in
+// it (DEC-084, DEC-105). The identity's packed sum was the packed sum count *
+// weight was, bit for bit -- packing is exact under integer multiplication
+// (data_structures.hpp) -- so the phase 1 landing scored every position as
+// the linear term did (INV-6), and on H0 the identity comes back. The linear
+// weights were fitted, not chosen: the hand-picked set before them measured
+// -14.93 Elo and the fitted one +28.46 over 942 games, DEC-040. No published
+// table was consulted, DEC-016.
 //
 // What a cell is worth when the fit has spoken is a residual over the
 // piece-square table, not a valuation: every piece adds exactly one cell, so
@@ -1191,22 +1198,22 @@ int evaluate_cheap(const board_t* board)
 // directions the data cannot see, one per type and half (tools/feature_audit
 // lists them). An `--only mobility` fit holds the tables, so it cannot walk
 // them.
-constexpr int mobility_knight_mg[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
-constexpr int mobility_knight_eg[9] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-constexpr int mobility_bishop_mg[14] = {0,  6,  12, 18, 24, 30, 36,
-                                        42, 48, 54, 60, 66, 72, 78};
-constexpr int mobility_bishop_eg[14] = {0,  5,  10, 15, 20, 25, 30,
-                                        35, 40, 45, 50, 55, 60, 65};
-constexpr int mobility_rook_mg[15] = {0,  8,  16, 24, 32, 40,  48, 56,
-                                      64, 72, 80, 88, 96, 104, 112};
-constexpr int mobility_rook_eg[15] = {0,  2,  4,  6,  8,  10, 12, 14,
-                                      16, 18, 20, 22, 24, 26, 28};
-constexpr int mobility_queen_mg[28] = {0,  2,  4,  6,  8,  10, 12, 14, 16, 18,
-                                       20, 22, 24, 26, 28, 30, 32, 34, 36, 38,
-                                       40, 42, 44, 46, 48, 50, 52, 54};
-constexpr int mobility_queen_eg[28] = {0,  4,  8,  12, 16, 20,  24,  28, 32, 36,
-                                       40, 44, 48, 52, 56, 60,  64,  68, 72, 76,
-                                       80, 84, 88, 92, 96, 100, 104, 108};
+constexpr int mobility_knight_mg[9] = {-9, 10, 15, 15, 17, 20, 22, 29, 42};
+constexpr int mobility_knight_eg[9] = {-46, -15, 3, 7, 8, 9, 8, 0, -19};
+constexpr int mobility_bishop_mg[14] = {11, 20, 29, 38, 44, 48, 52,
+                                        53, 59, 62, 68, 88, 70, 91};
+constexpr int mobility_bishop_eg[14] = {-29, -17, -1, 8,  18, 26, 33,
+                                        33,  35,  32, 32, 21, 35, 7};
+constexpr int mobility_rook_mg[15] = {16, 27, 35, 42, 47, 55, 63, 70,
+                                      75, 84, 88, 94, 97, 97, 99};
+constexpr int mobility_rook_eg[15] = {-48, -8, 3,  9,  12, 13, 18, 17,
+                                      22,  26, 27, 30, 32, 33, 25};
+constexpr int mobility_queen_mg[28] = {
+    -13, -13, -12, -9, -7, -6, -2, -1, 3,  6,  7,  9,  8,  7,
+    10,  7,   8,   12, 19, 24, 46, 78, 92, 96, 39, 79, 79, 79};
+constexpr int mobility_queen_eg[28] = {
+    -57, 18,  11,  6,   38,  44, 49, 65, 76, 89, 89, 96,  102, 111,
+    109, 110, 119, 117, 109, 94, 76, 48, 25, 8,  42, -22, -22, -22};
 
 // The widths of the arrays above against the board's, so a cell added or lost
 // in a paste is a build error and not a read past a row.
@@ -1459,6 +1466,29 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
     }
   }
 
+  // S121's parts (src/evaluation.hpp), computed when a part scores or a
+  // cost-only build forces it, and not otherwise: `if constexpr` deletes each
+  // set no expression reads. The pawn attacks are stage one's own sets, built
+  // again here because stage one keeps them local (specs.md): two shifts a
+  // side. The pins are each side's pieces pinned to its own king, both
+  // colours, which the generator's side-to-move masks are not.
+  constexpr int computed = (S121_PARTS) | (S121_COST);
+  [[maybe_unused]] bb_t pawn_attacks[2] = {BB_0, BB_0};
+  [[maybe_unused]] bb_t pinned[2] = {BB_0, BB_0};
+  [[maybe_unused]] index_t king_square[2] = {0, 0};
+
+  if constexpr ((computed & 1) != 0) {
+    pawn_attacks[WHITE] = neighbour_files(board->bitboards[W_PAWN]) >> 8;
+    pawn_attacks[BLACK] = neighbour_files(board->bitboards[B_PAWN]) << 8;
+  }
+
+  if constexpr ((computed & 4) != 0) {
+    pinned[WHITE] = pinned_pieces(tables, board, WHITE);
+    pinned[BLACK] = pinned_pieces(tables, board, BLACK);
+    king_square[WHITE] = get_lsb_index(board->bitboards[W_KING]);
+    king_square[BLACK] = get_lsb_index(board->bitboards[B_KING]);
+  }
+
   for (int colour = 0; colour < 2; ++colour) {
     // The piece's own side, which is what mobility is worth to.
     const int mover = (colour == WHITE) ? 1 : -1;
@@ -1470,6 +1500,38 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
     const bb_t defended_zone = zone[1 - colour];
     const int base = (colour == WHITE) ? W_KNIGHT : B_KNIGHT;
 
+    // The area's exclusions: P2a the side's blocked pawns, whose push square
+    // holds any piece; P2b its pawns on its own second and third ranks as
+    // well. Index 0 is a8, so White pushes by subtracting 8. One of
+    // S121_PARTS and S121_COST is 0, so `computed` is the active mask.
+    [[maybe_unused]] bb_t own_excluded = BB_0;
+
+    if constexpr ((computed & 2) != 0) {
+      const bb_t own_pawns =
+          board->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
+      own_excluded = (colour == WHITE) ? own_pawns & (occupancy << 8)
+                                       : own_pawns & (occupancy >> 8);
+
+      if constexpr ((computed & 8) != 0) {
+        const bb_t low_ranks = (colour == WHITE)
+                                   ? (rank_masks[48] | rank_masks[40])
+                                   : (rank_masks[8] | rank_masks[16]);
+        own_excluded |= own_pawns & low_ranks;
+      }
+    }
+
+    // The squares the scored count reads: every square but an own piece's
+    // until S121's parts, then each part's rule; and the same for the parts a
+    // cost-only build forces.
+    bb_t area = MOBILITY_AREA ? ~own_excluded : ~own;
+    if constexpr (MOBILITY_PAWN_ATTACKS) { area &= ~pawn_attacks[1 - colour]; }
+
+    [[maybe_unused]] bb_t cost_area =
+        (((S121_COST) & 2) != 0) ? ~own_excluded : ~own;
+    if constexpr (((S121_COST) & 1) != 0) {
+      cost_area &= ~pawn_attacks[1 - colour];
+    }
+
     for (int type = 0; type < 4; ++type) {
       bb_t pieces = board->bitboards[base + type];
 
@@ -1479,13 +1541,39 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
         const bb_t attacks = piece_attacks(tables, type, square, occupancy);
 
-        // Squares the piece could move to, own pieces excluded. Not safe
-        // mobility: no enemy-pawn-attack mask, which is the expensive variant.
+        // Squares the piece could move to, own pieces excluded -- at
+        // S121_PARTS 0, the phase 1 landing. Never full safe mobility, which
+        // would exclude every attacked square: since S121's parts the count
+        // is `area`'s, above -- at mask 5, the candidate's, squares an enemy
+        // pawn attacks are excluded too (P1), and the pin rule below holds.
         // The count picks the piece's cell, which the board keeps inside its
         // row: a knight reaches 8 squares at most, a bishop 13, a rook 14, a
-        // queen 27 (MOBILITY_WIDTH).
-        const int count = count_bits(attacks & ~own);
+        // queen 27 (MOBILITY_WIDTH). Since S121's parts, the area above and,
+        // for a pinned piece, only the squares on its pin line (P3): a pinned
+        // knight has none, a piece pinned across its own lines none either.
+        bb_t moves = attacks;
+        if constexpr (MOBILITY_PINS) {
+          if ((pinned[colour] >> square) & 1) {
+            moves &= tables->line[king_square[colour]][square];
+          }
+        }
+
+        const int count = count_bits(moves & area);
         assert(count < MOBILITY_WIDTH[type]);
+
+        // The cost-only build's forced count, computed and discarded so the
+        // compiler keeps it while the score stays the landing's (DEC-047).
+        if constexpr ((S121_COST) != 0) {
+          bb_t cost_moves = attacks;
+          if constexpr (((S121_COST) & 4) != 0) {
+            if ((pinned[colour] >> square) & 1) {
+              cost_moves &= tables->line[king_square[colour]][square];
+            }
+          }
+          const int forced = count_bits(cost_moves & cost_area);
+          asm volatile("" : : "r"(forced));
+        }
+
         const int cell = MOBILITY_OFFSET[type] + count;
 
         mobility_sum += mover * mobility_score[cell];

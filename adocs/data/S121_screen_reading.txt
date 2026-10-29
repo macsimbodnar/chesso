@@ -1,0 +1,200 @@
+# S121's screen reading: adocs/data/S121_screen.sh all, 2026-10-29 02:32 to 04:05, S121-ALL-DONE (.tuning/s121_screen_all.console).
+# The five read/P*.txt in the screen's order, concatenated verbatim; then the corpus `locate` recorded (.tuning/s121/corpus.txt)
+# and the sha256 of every fit header (.tuning/s121/fits/table_m*/{full,q1..q5}.hpp) and tie file. The candidate is
+# table_m5's full.hpp (CANDIDATE table_m5 mask 5). Outputs stay under .tuning/s121/ (DEC-235).
+
+== read/P0.txt
+S121 screen reading, P0: the curve, a table over attacks & ~own
+form table, mask 0, fit table_m0, against its start
+  table_m0     full  start 0.071732 best 0.071666 at epoch 200, stopped on patience
+  table_m0     q1    start 0.071724 best 0.071684 at epoch 100, stopped on patience
+  table_m0     q2    start 0.071727 best 0.071680 at epoch 200, stopped on patience
+  table_m0     q3    start 0.071729 best 0.071683 at epoch 100, stopped on patience
+  table_m0     q4    start 0.071722 best 0.071676 at epoch 200, stopped on patience
+  table_m0     q5    start 0.071728 best 0.071660 at epoch 4100, stopped on cap 5000
+rule g = start - best (DEC-315): full +0.000066, s 0.000011, m 0.000018; quarters +0.000040 +0.000047 +0.000046 +0.000046 +0.000068
+headroom: 32 x 100 = 3200 of 32767
+tables, full fit (deciding nothing): 
+  mobility_bishop_eg [-54, -21, -13, -1, 7, 19, 26, 28, 35, 34, 37, 26, 29, 19]
+  mobility_bishop_mg [2, 9, 18, 23, 30, 35, 41, 43, 41, 47, 47, 61, 67, 73]
+  mobility_knight_eg [-73, -17, 8, 7, 3, 5, 5, 4, 0]
+  mobility_knight_mg [-3, 8, 9, 8, 11, 12, 11, 13, 11]
+  mobility_queen_eg [-50, 1, -7, -14, 6, 17, 12, 25, 37, 46, 52, 72, 66, 75, 85, 88, 92, 86, 100, 94, 91, 74, 71, 49, 64, 45, 45, 45]
+  mobility_queen_mg [-4, -3, -4, 2, 2, 5, 9, 10, 13, 16, 17, 16, 19, 18, 21, 20, 21, 28, 21, 20, 24, 38, 48, 62, 37, 43, 43, 43]
+  mobility_rook_eg [-43, -4, 5, 11, 15, 13, 13, 15, 20, 25, 27, 29, 31, 30, 28]
+  mobility_rook_mg [4, 14, 23, 29, 34, 41, 50, 57, 60, 62, 69, 75, 76, 87, 85]
+P0 kept
+PART-OUTCOME kept
+
+== read/P1.txt
+S121 screen reading, P1: squares attacked by enemy pawns excluded
+form table, mask 1, fit table_m1, against table_m0
+  table_m1     full  start 0.071750 best 0.071645 at epoch 600, stopped on patience
+  table_m1     q1    start 0.071742 best 0.071671 at epoch 400, stopped on patience
+  table_m1     q2    start 0.071744 best 0.071655 at epoch 500, stopped on patience
+  table_m1     q3    start 0.071747 best 0.071662 at epoch 400, stopped on patience
+  table_m1     q4    start 0.071738 best 0.071659 at epoch 2000, stopped on patience
+  table_m1     q5    start 0.071746 best 0.071648 at epoch 5000, stopped on cap 5000
+  table_m0     full  start 0.071732 best 0.071666 at epoch 200, stopped on patience
+  table_m0     q1    start 0.071724 best 0.071684 at epoch 100, stopped on patience
+  table_m0     q2    start 0.071727 best 0.071680 at epoch 200, stopped on patience
+  table_m0     q3    start 0.071729 best 0.071683 at epoch 100, stopped on patience
+  table_m0     q4    start 0.071722 best 0.071676 at epoch 200, stopped on patience
+  table_m0     q5    start 0.071728 best 0.071660 at epoch 4100, stopped on cap 5000
+rule d = best(table_m0) - best(table_m1) (DEC-326 (3)): full +0.000021, s 0.000005, m 0.000009; quarters +0.000013 +0.000025 +0.000021 +0.000017 +0.000012
+headroom: 32 x 121 = 3872 of 32767
+tables, full fit (deciding nothing): 
+  mobility_bishop_eg [-51, -19, -3, 6, 16, 25, 32, 32, 34, 31, 31, 19, 33, 4]
+  mobility_bishop_mg [10, 18, 28, 36, 43, 47, 51, 53, 58, 61, 68, 88, 71, 93]
+  mobility_knight_eg [-67, -17, 2, 5, 7, 8, 7, -1, -21]
+  mobility_knight_mg [-6, 8, 14, 13, 15, 18, 20, 27, 40]
+  mobility_queen_eg [-77, -1, 2, 8, 41, 46, 51, 66, 76, 90, 90, 97, 103, 113, 111, 112, 121, 118, 111, 96, 79, 50, 30, 12, 42, -22, -22, -22]
+  mobility_queen_mg [-15, -14, -14, -10, -9, -8, -3, -2, 2, 5, 6, 8, 8, 7, 10, 7, 7, 11, 18, 22, 44, 78, 86, 94, 40, 79, 79, 79]
+  mobility_rook_eg [-44, -7, 3, 9, 13, 14, 18, 18, 22, 26, 28, 30, 32, 32, 24]
+  mobility_rook_mg [15, 25, 34, 40, 46, 53, 62, 68, 74, 83, 87, 93, 96, 95, 97]
+P1 kept
+PART-OUTCOME kept
+
+== read/P2a.txt
+S121 screen reading, P2a: the area replaces ~own: own pieces count, own blocked pawns do not (the switch is inseparable from this exclusion)
+form table, mask 3, fit table_m3, against table_m1
+  table_m3     full  start 0.071730 best 0.071644 at epoch 400, stopped on patience
+  table_m3     q1    start 0.071723 best 0.071674 at epoch 400, stopped on patience
+  table_m3     q2    start 0.071725 best 0.071659 at epoch 300, stopped on patience
+  table_m3     q3    start 0.071728 best 0.071663 at epoch 300, stopped on patience
+  table_m3     q4    start 0.071721 best 0.071669 at epoch 4900, stopped on cap 5000
+  table_m3     q5    start 0.071727 best 0.071650 at epoch 5000, stopped on cap 5000
+  table_m1     full  start 0.071750 best 0.071645 at epoch 600, stopped on patience
+  table_m1     q1    start 0.071742 best 0.071671 at epoch 400, stopped on patience
+  table_m1     q2    start 0.071744 best 0.071655 at epoch 500, stopped on patience
+  table_m1     q3    start 0.071747 best 0.071662 at epoch 400, stopped on patience
+  table_m1     q4    start 0.071738 best 0.071659 at epoch 2000, stopped on patience
+  table_m1     q5    start 0.071746 best 0.071648 at epoch 5000, stopped on cap 5000
+rule d = best(table_m1) - best(table_m3) (DEC-326 (3)): full +0.000001, s 0.000004, m 0.000006; quarters -0.000003 -0.000004 -0.000001 -0.000010 -0.000002
+headroom: 32 x 122 = 3904 of 32767
+tables, full fit (deciding nothing): 
+  mobility_bishop_eg [-118, -66, -22, 1, 9, 16, 28, 31, 35, 32, 35, 25, 34, 15]
+  mobility_bishop_mg [-15, 2, 19, 30, 34, 45, 50, 54, 58, 63, 65, 75, 94, 67]
+  mobility_knight_eg [-26, -26, -11, 7, 3, 5, 6, 6, -3]
+  mobility_knight_mg [-42, 5, 8, 15, 17, 13, 18, 21, 26]
+  mobility_queen_eg [42, 42, 42, 42, -96, -29, 20, 45, 69, 65, 82, 91, 89, 98, 102, 108, 114, 115, 122, 108, 101, 89, 70, 31, 42, 5, 5, 5]
+  mobility_queen_mg [-33, -33, -33, -33, -6, -1, 2, 5, 8, 11, 13, 18, 20, 22, 23, 24, 21, 24, 22, 27, 35, 48, 59, 96, 56, 76, 76, 76]
+  mobility_rook_eg [-97, -97, -30, 0, 9, 18, 19, 19, 24, 27, 29, 30, 31, 32, 25]
+  mobility_rook_mg [1, 1, 20, 25, 36, 41, 49, 56, 65, 74, 85, 90, 99, 102, 103]
+P2a dropped
+PART-OUTCOME dropped
+
+== read/P2b.txt
+S121 screen reading, P2b: own low-rank pawns excluded as well, always inside P2a's area
+form table, mask 11, fit table_m11, against table_m1
+  table_m11    full  start 0.071748 best 0.071662 at epoch 600, stopped on patience
+  table_m11    q1    start 0.071742 best 0.071682 at epoch 300, stopped on patience
+  table_m11    q2    start 0.071744 best 0.071676 at epoch 400, stopped on patience
+  table_m11    q3    start 0.071746 best 0.071682 at epoch 200, stopped on patience
+  table_m11    q4    start 0.071740 best 0.071686 at epoch 4800, stopped on cap 5000
+  table_m11    q5    start 0.071745 best 0.071665 at epoch 5000, stopped on cap 5000
+  table_m1     full  start 0.071750 best 0.071645 at epoch 600, stopped on patience
+  table_m1     q1    start 0.071742 best 0.071671 at epoch 400, stopped on patience
+  table_m1     q2    start 0.071744 best 0.071655 at epoch 500, stopped on patience
+  table_m1     q3    start 0.071747 best 0.071662 at epoch 400, stopped on patience
+  table_m1     q4    start 0.071738 best 0.071659 at epoch 2000, stopped on patience
+  table_m1     q5    start 0.071746 best 0.071648 at epoch 5000, stopped on cap 5000
+rule d = best(table_m1) - best(table_m11) (DEC-326 (3)): full -0.000017, s 0.000006, m 0.000010; quarters -0.000011 -0.000021 -0.000020 -0.000027 -0.000017
+headroom: 32 x 123 = 3936 of 32767
+tables, full fit (deciding nothing): 
+  mobility_bishop_eg [-59, -36, -13, 3, 14, 19, 28, 32, 35, 31, 33, 21, 33, 11]
+  mobility_bishop_mg [8, 14, 27, 29, 35, 42, 48, 51, 55, 60, 64, 84, 81, 72]
+  mobility_knight_eg [-83, -29, 2, 4, 4, 6, 7, 5, -8]
+  mobility_knight_mg [-3, 5, 12, 11, 12, 13, 16, 20, 23]
+  mobility_queen_eg [-40, -40, -40, -21, -24, 10, 56, 62, 68, 76, 96, 89, 99, 95, 112, 109, 112, 116, 123, 103, 95, 74, 53, 19, 23, -27, -27, -27]
+  mobility_queen_mg [-15, -15, -15, -14, -9, -8, -5, -5, -2, 2, 4, 9, 9, 12, 13, 12, 13, 13, 9, 21, 33, 50, 52, 100, 70, 108, 108, 108]
+  mobility_rook_eg [-46, -46, -8, 3, 13, 18, 20, 19, 24, 27, 28, 30, 31, 32, 23]
+  mobility_rook_mg [14, 14, 25, 30, 36, 40, 46, 57, 62, 71, 82, 86, 96, 100, 101]
+P2b dropped
+PART-OUTCOME dropped
+
+== read/P3.txt
+S121 screen reading, P3: a pinned piece counts only its pin line
+form table, mask 5, fit table_m5, against table_m1
+  table_m5     full  start 0.071739 best 0.071617 at epoch 600, stopped on patience
+  table_m5     q1    start 0.071730 best 0.071643 at epoch 400, stopped on patience
+  table_m5     q2    start 0.071733 best 0.071631 at epoch 500, stopped on patience
+  table_m5     q3    start 0.071736 best 0.071634 at epoch 400, stopped on patience
+  table_m5     q4    start 0.071727 best 0.071632 at epoch 1900, stopped on patience
+  table_m5     q5    start 0.071735 best 0.071620 at epoch 4900, stopped on cap 5000
+  table_m1     full  start 0.071750 best 0.071645 at epoch 600, stopped on patience
+  table_m1     q1    start 0.071742 best 0.071671 at epoch 400, stopped on patience
+  table_m1     q2    start 0.071744 best 0.071655 at epoch 500, stopped on patience
+  table_m1     q3    start 0.071747 best 0.071662 at epoch 400, stopped on patience
+  table_m1     q4    start 0.071738 best 0.071659 at epoch 2000, stopped on patience
+  table_m1     q5    start 0.071746 best 0.071648 at epoch 5000, stopped on cap 5000
+rule d = best(table_m1) - best(table_m5) (DEC-326 (3)): full +0.000028, s 0.000002, m 0.000003; quarters +0.000028 +0.000024 +0.000028 +0.000027 +0.000028
+headroom: 32 x 119 = 3808 of 32767
+tables, full fit (deciding nothing): 
+  mobility_bishop_eg [-29, -17, -1, 8, 18, 26, 33, 33, 35, 32, 32, 21, 35, 7]
+  mobility_bishop_mg [11, 20, 29, 38, 44, 48, 52, 53, 59, 62, 68, 88, 70, 91]
+  mobility_knight_eg [-46, -15, 3, 7, 8, 9, 8, 0, -19]
+  mobility_knight_mg [-9, 10, 15, 15, 17, 20, 22, 29, 42]
+  mobility_queen_eg [-57, 18, 11, 6, 38, 44, 49, 65, 76, 89, 89, 96, 102, 111, 109, 110, 119, 117, 109, 94, 76, 48, 25, 8, 42, -22, -22, -22]
+  mobility_queen_mg [-13, -13, -12, -9, -7, -6, -2, -1, 3, 6, 7, 9, 8, 7, 10, 7, 8, 12, 19, 24, 46, 78, 92, 96, 39, 79, 79, 79]
+  mobility_rook_eg [-48, -8, 3, 9, 12, 13, 18, 17, 22, 26, 27, 30, 32, 33, 25]
+  mobility_rook_mg [16, 27, 35, 42, 47, 55, 63, 70, 75, 84, 88, 94, 97, 97, 99]
+P3 kept
+survivors P0,P1,P3
+candidate table_m5: /home/max/ws/chesso/.tuning/s121/fits/table_m5/full.hpp
+bisection on H0 or no verdict, in order: A | B1 | C
+CANDIDATE table_m5 mask 5
+PART-OUTCOME kept
+
+== corpus.txt
+source s083
+stage 0
+corpus /home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv
+sha256 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+rows 6226944
+s083_fit /home/max/ws/chesso/.tuning/s083/curve/s0/fit_6226944_s1.hpp
+
+== sha256 of the fits and their tie files
+9b4a74609a18bc9b5f252dd44840e9f151efba654306d7e8045cb45ccebae5ca  table_m0/full.hpp
+f87e08b45c00f2e8db88ff60a1be5024f44a03ad17289c18035d876114b47245  table_m0/q1.hpp
+3d38fe472216c2a14b2d32ff415096f56f0c9e4a7277343801898d312b461439  table_m0/q2.hpp
+08a533d1642f2883f8b495ca24cd46051725f56310412e7a1e7378e42c3a7864  table_m0/q3.hpp
+a82bd83c55b1b3f8d6bc9c2ead14438163e552b37395ef64895dccf2bdae6de0  table_m0/q4.hpp
+8d5c11d2898aff9ea7e32e582e80c64ec1d3d3ff26540fff7ef2925755008f0b  table_m0/q5.hpp
+4ca508b40357065ef14dc84a9e0662386edb944fe75ef54f06d275b88474f3e0  table_m0/ties.txt
+726356ed4a6068b7b88ae4eaab9b0729d01e67b896bedd6ba9c7ff02017e89b0  table_m1/full.hpp
+119ca543b2e472fccbea74399a37188a30cb82beb2fecbeb53fa110f9c56604c  table_m1/q1.hpp
+363316fcd3e7237f6fe26a1ea704ebaa64a76600007a38077ce8d519c9fc1457  table_m1/q2.hpp
+f00709a652233df41b84d2453beb7a58192ba99bb01548693f8ca7dedec8b8c9  table_m1/q3.hpp
+ba8e92134c949558de797571547fe98410c8332d20ef9fdd8f3ae78c482f5f40  table_m1/q4.hpp
+63641eb9e1c5965fd12d865979430e7360154876fd38e1a3050157656bca42db  table_m1/q5.hpp
+319e3e012e287a8e755ec61f4f11096f3882bd9f583762bb6c04ec47cabf201e  table_m1/ties.txt
+4d5cfeed3f4698a3a031e697271496e06cc2137c0146b64ec8e0e5b8d55194b7  table_m3/full.hpp
+adea051a833e77c7c9fb7e56d86907065702c5bc54cc8be5fb8ad4ba0025d06c  table_m3/q1.hpp
+d8f7b0813778316224b88b98b9cde6804622352673423c0128eb75ba472f721f  table_m3/q2.hpp
+467f754381b8cfad1f248adfec9de4a3ea501910dd49eff7e061d13b43667d61  table_m3/q3.hpp
+7ab9a201f1ef3ca9bee61fd3162da67428ccbb49dae3b6258541822faf41c26a  table_m3/q4.hpp
+d5c9b21479f7712faae35f117d1314b99124ed6c014c4e87aadf383782f36b14  table_m3/q5.hpp
+eafb0a9b1d99449490bc4ed080ae70755488b18c61b038a74baeb87ee51db876  table_m3/ties.txt
+6615d4d043caf513ba79570b80beaa711450c246a8ffa3a6db1b083e0c1f64aa  table_m11/full.hpp
+1db2d8f17183b630f664f5f23d0338e644e4ca6762bd84c905eaa0ebe65aafce  table_m11/q1.hpp
+3058334fa54be7e07b4fafea11306fc9c54a5cee2c04e8c21d1cd39bd56a2651  table_m11/q2.hpp
+998d85405ac03995ca1039044699e114d398b7c8a8962c46db93440b8fa44243  table_m11/q3.hpp
+9ba69832ec2c90c821dd27ecd8ae71ef8d95b6e7ecf50b3078ede1053437aaf6  table_m11/q4.hpp
+fe54c1bba7a3a6ad1b9ca87c00384c83affe797f2dabf54a2ec03eaef865bdf0  table_m11/q5.hpp
+2a43eab0dc971365406d23491f1c56c0263fbc62d2f41419bb28cca87dda6784  table_m11/ties.txt
+cd5761cd3c04168d18654ace143080514ea183b53307cde68b1b4983f54d2fb6  table_m5/full.hpp
+6479e1281209ba12c0288694e0af342c242b833db41de553c463e3ad7e6d0c6f  table_m5/q1.hpp
+e841ead28d78702d6192b9e7e27d6206736f7ffa3fd4ced61e895474e3592d44  table_m5/q2.hpp
+b0f85d03ad64449e3f03356ccb530d76e95dd317c1ed4654e7e17f4f071fb83f  table_m5/q3.hpp
+96a7e808bf1ac963bcb02dc944ffa50177f04b63189ca76f4507589acc42bdc6  table_m5/q4.hpp
+962b3f905ae0f39e3e437bfde9ff03d7d92d5530f72987745cb3090b2ea27e8c  table_m5/q5.hpp
+fc005c20234f0a4cd6acf8794d8131ce90c3e4d74e68cb594fd9945b27b1cf07  table_m5/ties.txt
+
+== the ties at mask 5 (audit/m5/ties.txt)
+# S121 ties from /home/max/ws/chesso/.tuning/s121/audit/m5/report.txt
+# a half of a cell is supported from 1000 games; an unsupported one shares the nearest supported cell of its piece and half, the lower count on a tie (DEC-326 (5))
+mobility_queen_mg 26 25  # rows 359 games 256
+mobility_queen_mg 27 25  # rows 305 games 220
+mobility_queen_eg 26 25  # rows 359 games 256
+mobility_queen_eg 27 25  # rows 305 games 220

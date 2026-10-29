@@ -598,6 +598,17 @@ static inline size_t generate_dispatch(const bb_tables_t* tables,
 }
 
 
+bb_t pinned_pieces(const bb_tables_t* tables, const board_t* board, int colour)
+{
+  assert(board != nullptr);
+
+  return (colour == WHITE) ? pinned_to_king<WHITE>(tables, board,
+                                                   king_square_of<WHITE>(board))
+                           : pinned_to_king<BLACK>(
+                                 tables, board, king_square_of<BLACK>(board));
+}
+
+
 bb_t side_to_move_checkers(const bb_tables_t* tables, const board_t* board)
 {
   assert(board != nullptr);

@@ -119,6 +119,13 @@ struct gen_masks_t
 
 bb_t side_to_move_checkers(const bb_tables_t* tables, const board_t* board);
 
+// The pieces of `colour` pinned to its own king: standing alone between it and
+// an enemy slider that would otherwise attack it. Either colour, not only the
+// side to move, for S121's P3 -- a pinned piece's mobility counts only the
+// squares on its pin line. The generator's own pins, in gen_masks_t, are the
+// side to move's and computed where it generates.
+bb_t pinned_pieces(const bb_tables_t* tables, const board_t* board, int colour);
+
 // The pin half, for a caller that already holds the checkers -- the search
 // needs them at node entry and the pins only once it generates.
 gen_masks_t gen_masks_with_checkers(const bb_tables_t* tables,
