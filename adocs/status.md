@@ -41,8 +41,11 @@ the candidate tree), Debug self-play 8 games at 4+0.04, 0 `Assertion`, 0
 `disconnect`. Known: the gradient check reads 9.50e-7 against 1e-6, so the
 next refit is likely red (DEC-316's class).
 
-**Next:** pin and launch `adocs/data/S121_sprt.sh` (41900 games worst,
-19.86 h). Worktrees that can go, waiting on the owner: `../chesso-s136b`,
+**The SPRT** is pinned (`adocs/data/S121_sprt.sh`, CAND `57a58a4` against
+REF `12cab3c`, a dry copy printed DRY-RUN-WOULD-EXEC) and launched right
+after the pin's commit: `{0, 5}` nElo at 8+0.08, 41900 games worst, 19.86 h,
+console `.tuning/s121_sprt.log`, watcher ceiling 40 h. No build or gate
+while it runs (DEC-260). Worktrees that can go, waiting on the owner: `../chesso-s136b`,
 `../chesso-s136c`, `../chesso-s297`, `../chesso-s121`, `../chesso-s121b`;
 `../chesso-s121c` stays until the close.
 

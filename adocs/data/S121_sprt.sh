@@ -105,8 +105,8 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this
 # run's shas, dates and out directory --
 #
-#   candidate  <CAND, short>  <its commit date>
-#   reference  <REF, short>   <its commit date>
+#   candidate  57a58a4  2026-10-29 07:23
+#   reference  12cab3c  2026-10-29 02:32
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -120,15 +120,35 @@
 # `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
-# [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and
-# `cand=` below, the phase 1 landing's sha into `landing=`, the candidate's
-# parts mask into `mask=`, their dates into the banner lines above, the
-# screen's five readings and their sha256 (each part's gain, s, m and
-# verdict), the corpus `locate` recorded, the candidate fit's sha256 and its
-# tie file's, the clamp's two readings (share against the 1.0 % bound, the
-# mobility p99 and maximum), the cost run's reading, plan.md's Open list
-# re-read, the A/A rule checked, and this bracketed sentence replaced by what
-# was found.]
+# Pinned by the coordinator 2026-10-29 07:30: CAND `57a58a4` (committed
+# 2026-10-29 07:23, the screen's table_m5 pasted with the parts patch at
+# S121_PARTS 5, bench 6016079) and REF `12cab3c` (committed 2026-10-29
+# 02:32, the phase 1 landing, the table at identity, bench 5069022), CAND's
+# parent; `landing=` is REF. The screen's five readings
+# (`.tuning/s121/read/`, concatenated in `adocs/data/S121_screen_reading.txt`,
+# sha256 867f1fb0...): P0 +0.000066 s 0.000011 m 0.000018 kept (P0.txt
+# ebdfa654...); P1 +0.000021 s 0.000005 m 0.000009 kept (P1.txt 170c00f6...);
+# P2a +0.000001 s 0.000004 m 0.000006 dropped (P2a.txt 4a42c850...); P2b
+# -0.000017 s 0.000006 m 0.000010 dropped (P2b.txt 03a70af0...); P3 +0.000028
+# s 0.000002 m 0.000003 kept (P3.txt 6aab9c15...), so mask 5 and the H0
+# order A | B1 | C. The corpus `locate` recorded: S083's curve 0, 6226944
+# rows, sha256 2e0e3de9... (CORPUS_SHA's). The candidate fit
+# `.tuning/s121/fits/table_m5/full.hpp`, sha256 cd5761cd..., its tie file
+# `.tuning/s121/audit/m5/ties.txt` fc005c20... (the queen's 26 and 27 to 25,
+# both halves). The clamp at `apply`: binds on 22083 of 6226944 rows, 0.355 %
+# against the 1.0 % bound; mobility p99 107, maximum 229. The cost
+# (`adocs/data/S121_cost_reading.txt`): all +3.38 %, p3 +2.20 %, p1, p2a,
+# p2b and the table alone zero; mask 5 lies between p3 and all and is not
+# measured as such. The Open list at `57a58a4` re-read: no DEC-171 filler is
+# open (S298, the weekly clang stage, is gate tooling and no defect). DEC-327
+# carries case B's mate-carry ceiling 13 provisionally; the owner rules on it
+# before an H1 ships. The harness is S136's run's of 2026-10-28 -- fastchess
+# alpha 1.8.1 20260720-daa3ea2, `noob_3moves.epd`, `fastchess.sh` last
+# changed `769ce7a` (S284), the same workstation and kernel 7.2.6 -- so no
+# A/A is owed (DEC-143). Before the run: the commit gate green at CAND (both
+# fast suites 50 of 50, format and the prose checks clean), `gate_extra` 5
+# stages green on CAND's tree, Debug self-play 8 games, 0 `Assertion`, 0
+# `disconnect`, and a dry copy of this script printed DRY-RUN-WOULD-EXEC.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -190,10 +210,10 @@ fail()
 
 # THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT, as
 # S136_sprt.sh's same block reads them.
-ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
-landing="[COORDINATOR: the phase 1 landing's sha]"
-mask="[COORDINATOR: the candidate's parts mask, 0 to 15, bit 8 only with 2]"
+ref="12cab3c6de1f39c20618b4beb3bcab843aeb56a8"
+cand="57a58a40119c2ea38bb3e5453b9993bbcdf8975b"
+landing="12cab3c6de1f39c20618b4beb3bcab843aeb56a8"
+mask="5"
 tc="8+0.08"
 hash="16"
 concurrency="12"
