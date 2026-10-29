@@ -383,20 +383,21 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 ## Open
 
 1. S121  (S122's design amended by the owner, DEC-324) -- mobility becomes a fitted curve per piece over a mobility area that excludes what a piece cannot safely stand on, and a pinned piece counts only the moves along its pin
-2. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
-3. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
-4. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
-5. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-6. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-7. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-8. S102  outpost and space terms in the evaluation, one family
-9. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-10. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-11. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-12. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-13. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-14. S030  move_t drops the moving piece and becomes 16 bits
-15. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-16. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-17. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-18. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+2. S298  `tools/gate_extra.sh` gains a clang stage, so a compile break that only clang reports is found weekly on the workstation instead of on the owner's Mac
+3. S123  passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
+4. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
+5. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
+6. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+7. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
+8. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+9. S102  outpost and space terms in the evaluation, one family
+10. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+11. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+12. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+13. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+14. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+15. S030  move_t drops the moving piece and becomes 16 bits
+16. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+17. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+18. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+19. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
