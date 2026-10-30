@@ -41,7 +41,10 @@ def run(engine, depth):
     def send(s):
         p.stdin.write(s + "\n"); p.stdin.flush()
     send("uci")
-    while "uciok" not in p.stdout.readline(): pass
+    while True:
+        line = p.stdout.readline()
+        if not line: raise RuntimeError("engine closed its output before uciok")
+        if "uciok" in line: break
     total, results = 0.0, []
     for name, fen in POSITIONS:
         send("ucinewgame")

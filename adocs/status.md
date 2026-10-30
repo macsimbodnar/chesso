@@ -21,6 +21,11 @@ each red on a one-colour plant. The audit: rank 1026 of 1073, no new
 dependency; two halves tied (`phalanx[5]`). The planted recovery leaves
 `doubled_files` and `phalanx` unmeasured on the fixture (DEC-331 (14)).
 
+- **The first screen run is void** (2026-10-30 10:17 to 11:17): a
+  docs-only commit moved HEAD mid-run and the screen's frozen-tools guard
+  refused P2, as it should. P0 and P1 had read (P1 dropped, d -0.000004
+  against m 0.000003); kept as `.tuning/s125_void1/`, not a reading. No
+  commit lands while a screen runs.
 - **Next, in order:** `S125_screen.sh all` (about 2 h 25 m, 4 h 50 m at
   the epoch cap); `S125_cost.sh check` then `run` (about 1 h 55 m); then
   `apply` and phase 2's goldens; Debug self-play; the pin; the SPRT at
@@ -28,9 +33,13 @@ dependency; two halves tied (`phalanx[5]`). The planted recovery leaves
   candidate and no SPRT, and the flats wait for S126 (DEC-331 (14)).
 - **S299 done** (filler, DEC-171): S121's and S135's cost scripts check
   every command their INV-6 streams run, and S121's and S123's screens
-  refuse an empty or junk K, shown without a timing. Filed from it: S300,
-  `tools/search_bench.py` spins forever on an engine that closes its
-  output before `uciok` (filler, behind S125).
+  refuse an empty or junk K, shown without a timing.
+- **S300 done** (filler, DEC-171): `tools/search_bench.py` raises on an
+  engine that closes its output before `uciok` instead of spinning; the
+  real binary's output identical at depths 9 and 12. Filed from it:
+  S301, the same loop in `build_release.sh`, `adocs/data/S135_cost.py`
+  (the cost scripts' timed workload) and `tools/error_profile.py`, and
+  `search_bench.py`'s `go` loop dropping a row at end of file.
 - **Worktrees removed** with the owner's approval (2026-10-30):
   `../chesso-s121c`, `s121d`, `s121e`, `s298`, `s298b`, `s123`, `s123b`,
   `s123c`, `s123d`, and the cost trees under `.tuning/s121/` and

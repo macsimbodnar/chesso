@@ -376,16 +376,16 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S300  **`tools/search_bench.py` fails on an engine that closes its output before `uciok`, instead of spinning** -- the handshake loop raises as the `isready` loop does; a planted stand-in spun to a 3 s timeout before and exits 1 in 0.14 s after; the real binary's output identical at depths 9 and 12; filler (DEC-171), tool only; the same loop in three more live tools filed as S301
 - S299  **S121's and S135's cost scripts check every command their INV-6 streams run, and S121's and S123's screens refuse a bad K** -- `streams()` is S123_cost.sh's and `run` stops on it; `k_check` (S125_screen.sh's) in `part()` and `samples()`; shown on planted engines and K files without a timing; filler (DEC-171), tooling only
 - S123  **passed pawns score free and safe pushes and both kings' distance per rank, and candidate passers: H1 at 8+0.08, `{0, 5}`** -- the screen kept all three groups (DEC-329); the SPRT read Elo +49.19 +/- 15.06 over 1166 games (an early stop, biased upward); bench 6016079 -> 5434393; cost +4.96 %; `MATE_IN_THREE_FLOOR` held at 11 at zero margin (DEC-330); the comments made true, neutral (INV-6)
 - S298  **gate_extra gains stage 6, clang, weekly: the Mac's compiler on the workstation** -- build-clang and build-clang-tune with clang++-22 here and Apple clang's c++ on the Mac, Ninja, libc++, -k 0, both fast suites; S297's warning planted back turned it red with its ten diagnostics and the revert green; 17 script cases, 32 of 32 cuts killed; gate_extra six stages green in 1322 s
 - S121  **mobility is a fitted per-count table over a count without enemy pawn attacks, with a pin rule: H1 at 8+0.08, `{0, 5}`** -- the screen kept the table, the enemy-pawn exclusion and the pin rule and dropped both own-pawn exclusions (DEC-326); the SPRT read Elo +19.26 +/- 9.29 over 3160 games (an early stop, biased upward); the mask folded neutral (INV-6), bench 6016079; cost +3.22 %; case B's ceiling 13 accepted by the owner (DEC-328)
-- S297  **the tree builds clean under clang -Werror, as under GCC** -- the owner's macOS arm64 build (Apple clang) stopped at `load()`'s set-but-unused `line_number` in `tools/tuner_trace.hpp`, which GCC 13 does not flag; reproduced with `clang++-22`, a whole-tree clang build (Release, tune, and a libc++ probe) found no other error, the dead counter removed with no message changed; `DEV_MANUAL.md` gains the clang check; bench 5069022, no src/ change. 2026-10-29.
 
 ## Open
 
 1. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
-2. S300  `tools/search_bench.py` stops with an error when the engine closes its output before `uciok`, instead of spinning (filler, DEC-171)
+2. S301  the live tools that drive the engine over UCI stop with an error when it closes its output, as `search_bench.py` does since S300 (filler, DEC-171)
 3. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
 4. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
 5. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
