@@ -74,10 +74,10 @@ DEC-331 (14) records what phase 1 found and the bisection ruling.
 **Filler steps queued** behind S125, for agent-only work while a long run
 holds the machine (landing held until it ends): S303.
 
-**Waiting on the owner:** removing the worktrees `../chesso-s125`,
-`../chesso-s300`, `../chesso-s301` and `../chesso-s302` (each landed:
-`b5f133c`, `733ba63`, `173ade1`, and S302's commit), and whether a step's own worktree may be removed at its
-close without asking once its work is verified in the commits.
+**Worktrees:** `../chesso-s125`, `s300`, `s301` and `s302` removed with the
+owner's approval (2026-10-30). **Standing rule, the owner's (2026-10-30):** a
+step's own worktree is removed at its close without asking, once its staged
+work is verified in the commits; any other removal is still asked.
 
 **gate_extra**, last `GATE-EXTRA-DONE` 2026-10-30; next weekly run due by
 2026-11-06.
