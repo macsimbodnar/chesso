@@ -216,8 +216,12 @@ enum
 };
 
 
-// Fitted with the other 811 constants frozen -- `tuner --only pawn_structure`
-// over 1490839 self-play positions, held-out error 0.106892 to 0.106766.
+// First fitted at S027 with the other 811 constants frozen -- `tuner --only
+// pawn_structure` over 1490839 self-play positions, held-out error 0.106892 to
+// 0.106766. What ships is S083's refit of the whole evaluation at 46 rows a
+// game (01222f3, H1); S125's screen refits these three alone first, its P0,
+// and its family's tables by file and by rank take them as their baselines
+// (DEC-331 (4), (5)).
 //
 // That improvement is the smallest of S027's three terms: king safety moved the
 // error 0.000304 and measured +20.87 Elo, passed pawns 0.000206 and measured
@@ -225,9 +229,10 @@ enum
 //
 // A residual, not a valuation. The middlegame doubled weight was the one that
 // showed it while S027's fit stood: +5, which read as chess would say doubling
-// a pawn helps. It said nothing of the kind, and the two refits since -- S065
-// to {-9, -10, -12} and S076's deduplicated corpus to what ships -- moved it to
-// a sign that happens to read the other way, which is the same non-statement.
+// a pawn helps. It said nothing of the kind, and the refits since -- S065 to
+// {-9, -10, -12}, S076's deduplicated corpus to {-10, -9, -11} and S083's to
+// what ships -- moved it to a sign that happens to read the other way, which
+// is the same non-statement.
 // The three features overlap by construction -- the header says they are not
 // exclusive -- and they sit on top of a pawn piece-square table that has
 // already priced the files, so the fit distributes one effect across whatever
@@ -246,6 +251,67 @@ constexpr int pawn_structure_mg[PS_FEATURE_COUNT] = {-9, -2, -11};
 constexpr int pawn_structure_eg[PS_FEATURE_COUNT] = {-15, -18, -2};
 constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
     pack_scores(pawn_structure_mg, pawn_structure_eg);
+
+
+// S125's pawn structure family, seven groups on top of the three features
+// above (DEC-331): the isolated and backward increment, isolated and doubled
+// pawns by file, backward pawns by rank, phalanx and supported pawns by rank,
+// and weak unopposed pawns. evaluation.hpp defines each set and count;
+// evaluate_pawns() computes them from the fills it already builds.
+//
+// **Landed at zero, S123's form, to be fitted afterwards** (DEC-259's screen,
+// adocs/data/S125_screen.sh, the three flats above refitted first). No seed:
+// nothing here was taken from any engine or page, and every entry starts the
+// fit at zero (DEC-084). At zero a group is in no expression -- the liveness
+// flags below keep a group whose weights are all zero out of the engine's
+// evaluate_cheap() -- so the landing scores every position as before and
+// costs nothing (INV-6, adocs/data/S125_inv6.txt).
+//
+// A table indexed by file or by rank drops one baseline cell when a flat
+// weight above already prices the whole set: the a file for isolated and
+// doubled, own rank 2 for backward. Without the drop the cells would sum to
+// the flat's column on every row, one exact dependency a half a term
+// (DEC-331 (4)). Phalanx and supported have no flat, so their tables are
+// whole.
+constexpr int isolated_backward_mg[1] = {0};
+constexpr int isolated_backward_eg[1] = {0};
+constexpr int isolated_file_mg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int isolated_file_eg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int doubled_file_mg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int doubled_file_eg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int backward_rank_mg[3] = {0, 0, 0};
+constexpr int backward_rank_eg[3] = {0, 0, 0};
+constexpr int phalanx_mg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int phalanx_eg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int supported_mg[5] = {0, 0, 0, 0, 0};
+constexpr int supported_eg[5] = {0, 0, 0, 0, 0};
+constexpr int weak_unopposed_mg[1] = {0};
+constexpr int weak_unopposed_eg[1] = {0};
+constexpr std::array<score_t, 1> isolated_backward_score =
+    pack_scores(isolated_backward_mg, isolated_backward_eg);
+constexpr std::array<score_t, 7> isolated_file_score =
+    pack_scores(isolated_file_mg, isolated_file_eg);
+constexpr std::array<score_t, 7> doubled_file_score =
+    pack_scores(doubled_file_mg, doubled_file_eg);
+constexpr std::array<score_t, 3> backward_rank_score =
+    pack_scores(backward_rank_mg, backward_rank_eg);
+constexpr std::array<score_t, 6> phalanx_score =
+    pack_scores(phalanx_mg, phalanx_eg);
+constexpr std::array<score_t, 5> supported_score =
+    pack_scores(supported_mg, supported_eg);
+constexpr std::array<score_t, 1> weak_unopposed_score =
+    pack_scores(weak_unopposed_mg, weak_unopposed_eg);
+
+// One flag a group, as S123's above: a group whose weights are all zero is
+// not in the engine's evaluate_cheap() at all.
+static constexpr bool isolated_backward_live =
+    any_weight(isolated_backward_score);
+static constexpr bool isolated_file_live = any_weight(isolated_file_score);
+static constexpr bool doubled_file_live = any_weight(doubled_file_score);
+static constexpr bool backward_rank_live = any_weight(backward_rank_score);
+static constexpr bool phalanx_live = any_weight(phalanx_score);
+static constexpr bool supported_live = any_weight(supported_score);
+static constexpr bool weak_unopposed_live = any_weight(weak_unopposed_score);
 
 
 // The three piece placement features, in the order their weights are indexed.
@@ -478,19 +544,55 @@ static constexpr int passer_family_half(const int (&free)[6],
 }
 
 
+// How far one of S125's arrays reaches in one half. Each puts a side's pawns
+// in one cell each, at most 15 of them, so White's sum lies between 15 times
+// the array's lowest entry, or 0, and 15 times its highest, or 0, and Black's
+// is subtracted from it: the difference is within 15 times the spread.
+template <size_t N>
+static constexpr int pawn_cells_reach(const int (&weights)[N])
+{
+  int high = 0;
+  int low = 0;
+  for (size_t i = 0; i < N; ++i) {
+    high = std::max(high, weights[i]);
+    low = std::min(low, weights[i]);
+  }
+  return 15 * (high - low);
+}
+
+
+// S125's family in one half: the seven arrays' reaches summed.
+static constexpr int structure_family_half(const int (&isolated_backward)[1],
+                                           const int (&isolated_file)[7],
+                                           const int (&doubled_file)[7],
+                                           const int (&backward_rank)[3],
+                                           const int (&phalanx)[6],
+                                           const int (&supported)[5],
+                                           const int (&weak_unopposed)[1])
+{
+  return pawn_cells_reach(isolated_backward) + pawn_cells_reach(isolated_file) +
+         pawn_cells_reach(doubled_file) + pawn_cells_reach(backward_rank) +
+         pawn_cells_reach(phalanx) + pawn_cells_reach(supported) +
+         pawn_cells_reach(weak_unopposed);
+}
+
+
 // One half of stage one's packed sum, bounded. Passers add for White and
 // subtract for Black, at most 15 a side, so all 30 can push the half the same
 // way. Structure and placement enter as White's count minus Black's: two
 // counts of 0 to 15 for each structure feature, and each placement feature's
-// reach above. S123's family is `family`, passer_family_half() above.
+// reach above. S123's family is `family`, passer_family_half() above, and
+// S125's `structure_family`, structure_family_half().
 static constexpr int stage_one_half(const int (&table)[6][64],
                                     const int (&passed)[5],
                                     const int (&structure)[PS_FEATURE_COUNT],
                                     const int (&placement)[PL_FEATURE_COUNT],
-                                    int family)
+                                    int family,
+                                    int structure_family)
 {
   int bound = table_reach(table) + 2 * 15 * largest_entry(passed) +
-              PS_FEATURE_COUNT * 15 * largest_entry(structure) + family;
+              PS_FEATURE_COUNT * 15 * largest_entry(structure) + family +
+              structure_family;
 
   for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
     const int weight = (placement[f] < 0) ? -placement[f] : placement[f];
@@ -521,7 +623,9 @@ static constexpr int stage_one_half(const int (&table)[6][64],
 // header, so a fit that would fail the assert is refused before it is pasted.
 // With S123's family shipping fitted the whole bound reads 19982 and 25799,
 // 12785 and 6968 of room (adocs/data/S123_goldens.txt, by S123_screen.py's
-// `headroom`, which adds passer_family_half()).
+// `headroom`, which adds passer_family_half()). S125's family adds
+// structure_family_half(), 0 at its zero landing; adocs/data/S125_screen.py's
+// `headroom` adds it to S123's arithmetic for every fit before a paste.
 static constexpr int stage_one_bound =
     std::max(stage_one_half(psqt_mg,
                             passed_pawn_mg,
@@ -531,7 +635,14 @@ static constexpr int stage_one_bound =
                                                passed_safe_mg,
                                                passed_king_own_mg,
                                                passed_king_enemy_mg,
-                                               candidate_passer_mg)),
+                                               candidate_passer_mg),
+                            structure_family_half(isolated_backward_mg,
+                                                  isolated_file_mg,
+                                                  doubled_file_mg,
+                                                  backward_rank_mg,
+                                                  phalanx_mg,
+                                                  supported_mg,
+                                                  weak_unopposed_mg)),
              stage_one_half(psqt_eg,
                             passed_pawn_eg,
                             pawn_structure_eg,
@@ -540,7 +651,14 @@ static constexpr int stage_one_bound =
                                                passed_safe_eg,
                                                passed_king_own_eg,
                                                passed_king_enemy_eg,
-                                               candidate_passer_eg)));
+                                               candidate_passer_eg),
+                            structure_family_half(isolated_backward_eg,
+                                                  isolated_file_eg,
+                                                  doubled_file_eg,
+                                                  backward_rank_eg,
+                                                  phalanx_eg,
+                                                  supported_eg,
+                                                  weak_unopposed_eg)));
 static_assert(stage_one_bound <= 32767,
               "stage one's packed sum can overflow a 16-bit half");
 
@@ -949,6 +1067,27 @@ static inline void candidate_passers(bb_t white_pawns,
 }
 
 
+// A pawn's own rank, 2 to 7 on the squares a pawn can stand on: White's
+// second rank is row 6 of this indexing, index 0 being a8, and Black's row 1.
+template <color_t colour>
+static inline int own_rank(int square)
+{ return (colour == WHITE) ? 8 - (square >> 3) : (square >> 3) + 1; }
+
+
+// Each pawn of `pawns` into one of S125's tables: `cell` maps the pawn's
+// square to its cell, or to -1 for the baseline cell no parameter holds, and
+// `record` takes the cell once per pawn.
+template <typename Cell, typename Record>
+static inline void for_each_cell(bb_t pawns, Cell cell, Record record)
+{
+  while (pawns) {
+    const int c = cell(get_lsb_index(pawns));
+    pawns &= pawns - 1;
+    if (c >= 0) { record(c); }
+  }
+}
+
+
 // Three terms -- passed pawns, pawn structure and piece placement -- White
 // minus Black, as one untapered middlegame and endgame pair for the caller to
 // interpolate. Since S123 the passed pawns are the buckets and the family
@@ -1017,7 +1156,8 @@ static inline void evaluate_pawns(const board_t* board,
                                   int structure_out[2][PS_FEATURE_COUNT],
                                   int placement_out[2][PL_FEATURE_COUNT],
                                   bb_t passer_set_out[2],
-                                  passer_family_t* family_out)
+                                  passer_family_t* family_out,
+                                  structure_family_t* structure_family_out)
 {
   const bb_t white_pawns = board->bitboards[W_PAWN];
   const bb_t black_pawns = board->bitboards[B_PAWN];
@@ -1239,6 +1379,198 @@ static inline void evaluate_pawns(const board_t* board,
     }
   }
 
+  // S125's family (DEC-331), after S123's: seven groups over the sets above,
+  // each computed where its weights are live, in the trace build, and when
+  // collecting, and nowhere else -- at zero a group is in no expression, as
+  // S123's are. evaluation.hpp defines every set and cell.
+  constexpr bool isolated_backward_on =
+      collect || trace_build || isolated_backward_live;
+  constexpr bool isolated_file_on =
+      collect || trace_build || isolated_file_live;
+  constexpr bool doubled_file_on = collect || trace_build || doubled_file_live;
+  constexpr bool backward_rank_on =
+      collect || trace_build || backward_rank_live;
+  constexpr bool phalanx_on = collect || trace_build || phalanx_live;
+  constexpr bool supported_on = collect || trace_build || supported_live;
+  constexpr bool weak_unopposed_on =
+      collect || trace_build || weak_unopposed_live;
+
+  if constexpr (collect) { *structure_family_out = structure_family_t{}; }
+
+  // An isolated pawn whose stop square an enemy pawn attacks: backward's
+  // second clause, read from the same shifted attack set backward reads.
+  if constexpr (isolated_backward_on) {
+    const bb_t white_ib = white_isolated & (black_attacks << 8);
+    const bb_t black_ib = black_isolated & (white_attacks >> 8);
+    const int difference = count_bits(white_ib) - count_bits(black_ib);
+
+    sum += difference * isolated_backward_score[0];
+    EVAL_TRACE(TERM_ISOLATED_BACKWARD, 0, difference);
+
+    if constexpr (collect) {
+      structure_family_out->isolated_backward_set[WHITE] = white_ib;
+      structure_family_out->isolated_backward_set[BLACK] = black_ib;
+      structure_family_out->isolated_backward[WHITE][0] = count_bits(white_ib);
+      structure_family_out->isolated_backward[BLACK][0] = count_bits(black_ib);
+    }
+  }
+
+  // A table by file takes the pawn's file less one, the a file the baseline;
+  // a table by rank, its own rank less the table's first.
+  if constexpr (isolated_file_on) {
+    const auto file_cell = [](int square) { return (square & 7) - 1; };
+
+    for_each_cell(white_isolated, file_cell, [&](int c) {
+      sum += isolated_file_score[c];
+      EVAL_TRACE(TERM_ISOLATED_FILE, c, 1);
+      if constexpr (collect) {
+        structure_family_out->isolated_file[WHITE][c]++;
+      }
+    });
+    for_each_cell(black_isolated, file_cell, [&](int c) {
+      sum -= isolated_file_score[c];
+      EVAL_TRACE(TERM_ISOLATED_FILE, c, -1);
+      if constexpr (collect) {
+        structure_family_out->isolated_file[BLACK][c]++;
+      }
+    });
+  }
+
+  if constexpr (doubled_file_on) {
+    const auto file_cell = [](int square) { return (square & 7) - 1; };
+
+    for_each_cell(white_doubled, file_cell, [&](int c) {
+      sum += doubled_file_score[c];
+      EVAL_TRACE(TERM_DOUBLED_FILE, c, 1);
+      if constexpr (collect) { structure_family_out->doubled_file[WHITE][c]++; }
+    });
+    for_each_cell(black_doubled, file_cell, [&](int c) {
+      sum -= doubled_file_score[c];
+      EVAL_TRACE(TERM_DOUBLED_FILE, c, -1);
+      if constexpr (collect) { structure_family_out->doubled_file[BLACK][c]++; }
+    });
+  }
+
+  // Backward pawns that are not isolated, by own rank 3 to 5: rank 2 is the
+  // baseline, and no backward pawn stands past its own fifth.
+  if constexpr (backward_rank_on) {
+    const bb_t white_only = white_backward & ~white_isolated;
+    const bb_t black_only = black_backward & ~black_isolated;
+
+    for_each_cell(
+        white_only, [](int square) { return own_rank<WHITE>(square) - 3; },
+        [&](int c) {
+          assert(c < 3);
+          sum += backward_rank_score[c];
+          EVAL_TRACE(TERM_BACKWARD_RANK, c, 1);
+          if constexpr (collect) {
+            structure_family_out->backward_rank[WHITE][c]++;
+          }
+        });
+    for_each_cell(
+        black_only, [](int square) { return own_rank<BLACK>(square) - 3; },
+        [&](int c) {
+          assert(c < 3);
+          sum -= backward_rank_score[c];
+          EVAL_TRACE(TERM_BACKWARD_RANK, c, -1);
+          if constexpr (collect) {
+            structure_family_out->backward_rank[BLACK][c]++;
+          }
+        });
+
+    if constexpr (collect) {
+      structure_family_out->backward_only_set[WHITE] = white_only;
+      structure_family_out->backward_only_set[BLACK] = black_only;
+    }
+  }
+
+  // Own pawns level with an own pawn on a neighbouring file, by own rank 2
+  // to 7: beside is exactly the squares level with one.
+  if constexpr (phalanx_on) {
+    const bb_t white_phalanx = white_pawns & white_beside;
+    const bb_t black_phalanx = black_pawns & black_beside;
+
+    for_each_cell(
+        white_phalanx, [](int square) { return own_rank<WHITE>(square) - 2; },
+        [&](int c) {
+          assert(c < 6);
+          sum += phalanx_score[c];
+          EVAL_TRACE(TERM_PHALANX, c, 1);
+          if constexpr (collect) { structure_family_out->phalanx[WHITE][c]++; }
+        });
+    for_each_cell(
+        black_phalanx, [](int square) { return own_rank<BLACK>(square) - 2; },
+        [&](int c) {
+          assert(c < 6);
+          sum -= phalanx_score[c];
+          EVAL_TRACE(TERM_PHALANX, c, -1);
+          if constexpr (collect) { structure_family_out->phalanx[BLACK][c]++; }
+        });
+
+    if constexpr (collect) {
+      structure_family_out->phalanx_set[WHITE] = white_phalanx;
+      structure_family_out->phalanx_set[BLACK] = black_phalanx;
+    }
+  }
+
+  // Own pawns an own pawn attacks, by own rank 3 to 7.
+  if constexpr (supported_on) {
+    const bb_t white_supported = white_pawns & white_attacks;
+    const bb_t black_supported = black_pawns & black_attacks;
+
+    for_each_cell(
+        white_supported, [](int square) { return own_rank<WHITE>(square) - 3; },
+        [&](int c) {
+          assert(c < 5);
+          sum += supported_score[c];
+          EVAL_TRACE(TERM_SUPPORTED, c, 1);
+          if constexpr (collect) {
+            structure_family_out->supported[WHITE][c]++;
+          }
+        });
+    for_each_cell(
+        black_supported, [](int square) { return own_rank<BLACK>(square) - 3; },
+        [&](int c) {
+          assert(c < 5);
+          sum -= supported_score[c];
+          EVAL_TRACE(TERM_SUPPORTED, c, -1);
+          if constexpr (collect) {
+            structure_family_out->supported[BLACK][c]++;
+          }
+        });
+
+    if constexpr (collect) {
+      structure_family_out->supported_set[WHITE] = white_supported;
+      structure_family_out->supported_set[BLACK] = black_supported;
+    }
+  }
+
+  // Weak: backward's first clause alone, no own pawn on a neighbouring file
+  // level with the pawn or behind it. Open: no enemy pawn ahead on its file,
+  // the other side's front span missing it, as candidate_passers() reads it.
+  if constexpr (weak_unopposed_on) {
+    const bb_t white_weak = white_pawns & ~(white_beside | white_attack_span);
+    const bb_t black_weak = black_pawns & ~(black_beside | black_attack_span);
+    const bb_t white_open = white_pawns & ~black_front;
+    const bb_t black_open = black_pawns & ~white_front;
+    const int difference = count_bits(white_weak & white_open) -
+                           count_bits(black_weak & black_open);
+
+    sum += difference * weak_unopposed_score[0];
+    EVAL_TRACE(TERM_WEAK_UNOPPOSED, 0, difference);
+
+    if constexpr (collect) {
+      structure_family_out->weak_set[WHITE] = white_weak;
+      structure_family_out->weak_set[BLACK] = black_weak;
+      structure_family_out->open_set[WHITE] = white_open;
+      structure_family_out->open_set[BLACK] = black_open;
+      structure_family_out->weak_unopposed[WHITE][0] =
+          count_bits(white_weak & white_open);
+      structure_family_out->weak_unopposed[BLACK][0] =
+          count_bits(black_weak & black_open);
+    }
+  }
+
   *score = sum;
 }
 
@@ -1254,8 +1586,10 @@ void passed_pawn_counts(const board_t* board, int out[2][5])
   int placement[2][PL_FEATURE_COUNT];
   bb_t sets[2];
   passer_family_t family;
+  structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, out, structure, placement, sets, &family);
+  evaluate_pawns<true>(board, &score, out, structure, placement, sets, &family,
+                       &structure_family);
 }
 
 
@@ -1271,8 +1605,10 @@ void pawn_structure_counts(const board_t* board, int out[2][3])
   int placement[2][PL_FEATURE_COUNT];
   bb_t sets[2];
   passer_family_t family;
+  structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, out, placement, sets, &family);
+  evaluate_pawns<true>(board, &score, passed, out, placement, sets, &family,
+                       &structure_family);
 }
 
 
@@ -1287,8 +1623,10 @@ void piece_placement_counts(const board_t* board, int out[2][PL_FEATURE_COUNT])
   int structure[2][PS_FEATURE_COUNT];
   bb_t sets[2];
   passer_family_t family;
+  structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, out, sets, &family);
+  evaluate_pawns<true>(board, &score, passed, structure, out, sets, &family,
+                       &structure_family);
 }
 
 
@@ -1302,9 +1640,10 @@ void passed_pawn_sets(const board_t* board, bb_t out[2])
   int structure[2][PS_FEATURE_COUNT];
   int placement[2][PL_FEATURE_COUNT];
   passer_family_t family;
+  structure_family_t structure_family;
 
   evaluate_pawns<true>(board, &score, passed, structure, placement, out,
-                       &family);
+                       &family, &structure_family);
 }
 
 
@@ -1316,8 +1655,26 @@ void passer_family_counts(const board_t* board, passer_family_t* out)
   int structure[2][PS_FEATURE_COUNT];
   int placement[2][PL_FEATURE_COUNT];
   bb_t sets[2];
+  structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, placement, sets, out);
+  evaluate_pawns<true>(board, &score, passed, structure, placement, sets, out,
+                       &structure_family);
+}
+
+
+// S125's family, sets and counts, through the same collecting call again, so
+// the sets the mirror case reads are the sets the terms score.
+void structure_family_counts(const board_t* board, structure_family_t* out)
+{
+  score_t score = 0;
+  int passed[2][5];
+  int structure[2][PS_FEATURE_COUNT];
+  int placement[2][PL_FEATURE_COUNT];
+  bb_t sets[2];
+  passer_family_t family;
+
+  evaluate_pawns<true>(board, &score, passed, structure, placement, sets,
+                       &family, out);
 }
 
 
@@ -1464,7 +1821,7 @@ int evaluate_cheap(const board_t* board)
 
   score_t pawns = 0;
   evaluate_pawns<false>(board, &pawns, nullptr, nullptr, nullptr, nullptr,
-                        nullptr);
+                        nullptr, nullptr);
 
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that

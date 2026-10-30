@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every one of the 1013 fitted numbers reached the engine's sources.
+"""Check that every one of the 1073 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
@@ -33,6 +33,12 @@ in src/evaluation.cpp: passed_free, passed_safe, passed_king_own and
 passed_king_enemy six wide a half (own ranks 2 to 7), candidate_passer five
 (ranks 2 to 6). A fit emitted by a tuner built before S123 lacks them and is
 refused, which is right.
+
+1073 since S125, whose pawn structure family is fourteen more: isolated_backward
+and weak_unopposed one wide a half, isolated_file and doubled_file seven (files
+b to h), backward_rank three (own ranks 3 to 5), phalanx six (2 to 7) and
+supported five (3 to 7). A fit emitted by a tuner built before S125 lacks them
+and is refused, which is right.
 """
 import re
 import sys
@@ -71,7 +77,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 1013
+TOTAL = 1073
 
 WIDTHS = [
     ("PAWN", 1),
@@ -109,6 +115,20 @@ WIDTHS = [
     ("passed_king_enemy_eg", 6),
     ("candidate_passer_mg", 5),
     ("candidate_passer_eg", 5),
+    ("isolated_backward_mg", 1),
+    ("isolated_backward_eg", 1),
+    ("isolated_file_mg", 7),
+    ("isolated_file_eg", 7),
+    ("doubled_file_mg", 7),
+    ("doubled_file_eg", 7),
+    ("backward_rank_mg", 3),
+    ("backward_rank_eg", 3),
+    ("phalanx_mg", 6),
+    ("phalanx_eg", 6),
+    ("supported_mg", 5),
+    ("supported_eg", 5),
+    ("weak_unopposed_mg", 1),
+    ("weak_unopposed_eg", 1),
 ]
 
 

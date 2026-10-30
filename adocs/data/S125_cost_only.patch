@@ -1,0 +1,195 @@
+S125's cost-only patch (adocs/data/S125_cost.sh), never committed to src/:
+the groups S125_COST names (bit 1 P1, 2 P2, 4 P3, 8 P4, 16 P5, 32 P6, 64 P7)
+computed at forced weights into a sink an asm barrier consumes, the score the
+landing's. Applies to S125's phase 1 landing; regenerate from its
+src/evaluation.cpp if that moves.
+
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -282,31 +282,48 @@
+ constexpr int supported_eg[5] = {0, 0, 0, 0, 0};
+ constexpr int weak_unopposed_mg[1] = {0};
+ constexpr int weak_unopposed_eg[1] = {0};
++// S125's cost-only build, never committed (adocs/data/S125_cost.sh applies
++// this patch to a throwaway tree). The groups S125_COST names -- bit 1 P1, 2
++// P2, 4 P3, 8 P4, 16 P5, 32 P6, 64 P7 -- are computed at forced non-zero
++// weights into a sum of their own that an asm barrier consumes and the score
++// never sees, so the search, node for node, is the shipping build's and the
++// wall time is the cost (DEC-047). A group whose bit is clear is not live, so
++// it is in no expression, as it ships at zero.
++#ifndef S125_COST
++#define S125_COST 127
++#endif
++static_assert((S125_COST) >= 1 && (S125_COST) <= 127,
++              "S125_COST forces one to seven of the seven groups");
++constexpr int s125_forced1[1] = {3};
++constexpr int s125_forced3[3] = {3, 5, 7};
++constexpr int s125_forced5[5] = {3, 5, 7, 9, 11};
++constexpr int s125_forced6[6] = {3, 5, 7, 9, 11, 13};
++constexpr int s125_forced7[7] = {3, 5, 7, 9, 11, 13, 15};
+ constexpr std::array<score_t, 1> isolated_backward_score =
+-    pack_scores(isolated_backward_mg, isolated_backward_eg);
++    pack_scores(s125_forced1, s125_forced1);
+ constexpr std::array<score_t, 7> isolated_file_score =
+-    pack_scores(isolated_file_mg, isolated_file_eg);
++    pack_scores(s125_forced7, s125_forced7);
+ constexpr std::array<score_t, 7> doubled_file_score =
+-    pack_scores(doubled_file_mg, doubled_file_eg);
++    pack_scores(s125_forced7, s125_forced7);
+ constexpr std::array<score_t, 3> backward_rank_score =
+-    pack_scores(backward_rank_mg, backward_rank_eg);
++    pack_scores(s125_forced3, s125_forced3);
+ constexpr std::array<score_t, 6> phalanx_score =
+-    pack_scores(phalanx_mg, phalanx_eg);
++    pack_scores(s125_forced6, s125_forced6);
+ constexpr std::array<score_t, 5> supported_score =
+-    pack_scores(supported_mg, supported_eg);
++    pack_scores(s125_forced5, s125_forced5);
+ constexpr std::array<score_t, 1> weak_unopposed_score =
+-    pack_scores(weak_unopposed_mg, weak_unopposed_eg);
++    pack_scores(s125_forced1, s125_forced1);
+ 
+ // One flag a group, as S123's above: a group whose weights are all zero is
+ // not in the engine's evaluate_cheap() at all.
+-static constexpr bool isolated_backward_live =
+-    any_weight(isolated_backward_score);
+-static constexpr bool isolated_file_live = any_weight(isolated_file_score);
+-static constexpr bool doubled_file_live = any_weight(doubled_file_score);
+-static constexpr bool backward_rank_live = any_weight(backward_rank_score);
+-static constexpr bool phalanx_live = any_weight(phalanx_score);
+-static constexpr bool supported_live = any_weight(supported_score);
+-static constexpr bool weak_unopposed_live = any_weight(weak_unopposed_score);
++// The cost build's liveness is its mask's.
++static constexpr bool isolated_backward_live = ((S125_COST) & 1) != 0;
++static constexpr bool isolated_file_live = ((S125_COST) & 2) != 0;
++static constexpr bool doubled_file_live = ((S125_COST) & 4) != 0;
++static constexpr bool backward_rank_live = ((S125_COST) & 8) != 0;
++static constexpr bool phalanx_live = ((S125_COST) & 16) != 0;
++static constexpr bool supported_live = ((S125_COST) & 32) != 0;
++static constexpr bool weak_unopposed_live = ((S125_COST) & 64) != 0;
+ 
+ 
+ // The three piece placement features, in the order their weights are indexed.
+@@ -1392,6 +1409,9 @@
+ 
+   if constexpr (collect) { *structure_family_out = structure_family_t{}; }
+ 
++  // The cost build's sink: the forced groups add here, never to `sum`.
++  score_t structure_sum = 0;
++
+   // An isolated pawn whose stop square an enemy pawn attacks: backward's
+   // second clause, read from the same shifted attack set backward reads.
+   if constexpr (isolated_backward_on) {
+@@ -1399,7 +1419,7 @@
+     const bb_t black_ib = black_isolated & (white_attacks >> 8);
+     const int difference = count_bits(white_ib) - count_bits(black_ib);
+ 
+-    sum += difference * isolated_backward_score[0];
++    structure_sum += difference * isolated_backward_score[0];
+     EVAL_TRACE(TERM_ISOLATED_BACKWARD, 0, difference);
+ 
+     if constexpr (collect) {
+@@ -1416,14 +1436,14 @@
+     const auto file_cell = [](int square) { return (square & 7) - 1; };
+ 
+     for_each_cell(white_isolated, file_cell, [&](int c) {
+-      sum += isolated_file_score[c];
++      structure_sum += isolated_file_score[c];
+       EVAL_TRACE(TERM_ISOLATED_FILE, c, 1);
+       if constexpr (collect) {
+         structure_family_out->isolated_file[WHITE][c]++;
+       }
+     });
+     for_each_cell(black_isolated, file_cell, [&](int c) {
+-      sum -= isolated_file_score[c];
++      structure_sum -= isolated_file_score[c];
+       EVAL_TRACE(TERM_ISOLATED_FILE, c, -1);
+       if constexpr (collect) {
+         structure_family_out->isolated_file[BLACK][c]++;
+@@ -1435,12 +1455,12 @@
+     const auto file_cell = [](int square) { return (square & 7) - 1; };
+ 
+     for_each_cell(white_doubled, file_cell, [&](int c) {
+-      sum += doubled_file_score[c];
++      structure_sum += doubled_file_score[c];
+       EVAL_TRACE(TERM_DOUBLED_FILE, c, 1);
+       if constexpr (collect) { structure_family_out->doubled_file[WHITE][c]++; }
+     });
+     for_each_cell(black_doubled, file_cell, [&](int c) {
+-      sum -= doubled_file_score[c];
++      structure_sum -= doubled_file_score[c];
+       EVAL_TRACE(TERM_DOUBLED_FILE, c, -1);
+       if constexpr (collect) { structure_family_out->doubled_file[BLACK][c]++; }
+     });
+@@ -1456,7 +1476,7 @@
+         white_only, [](int square) { return own_rank<WHITE>(square) - 3; },
+         [&](int c) {
+           assert(c < 3);
+-          sum += backward_rank_score[c];
++          structure_sum += backward_rank_score[c];
+           EVAL_TRACE(TERM_BACKWARD_RANK, c, 1);
+           if constexpr (collect) {
+             structure_family_out->backward_rank[WHITE][c]++;
+@@ -1466,7 +1486,7 @@
+         black_only, [](int square) { return own_rank<BLACK>(square) - 3; },
+         [&](int c) {
+           assert(c < 3);
+-          sum -= backward_rank_score[c];
++          structure_sum -= backward_rank_score[c];
+           EVAL_TRACE(TERM_BACKWARD_RANK, c, -1);
+           if constexpr (collect) {
+             structure_family_out->backward_rank[BLACK][c]++;
+@@ -1489,7 +1509,7 @@
+         white_phalanx, [](int square) { return own_rank<WHITE>(square) - 2; },
+         [&](int c) {
+           assert(c < 6);
+-          sum += phalanx_score[c];
++          structure_sum += phalanx_score[c];
+           EVAL_TRACE(TERM_PHALANX, c, 1);
+           if constexpr (collect) { structure_family_out->phalanx[WHITE][c]++; }
+         });
+@@ -1497,7 +1517,7 @@
+         black_phalanx, [](int square) { return own_rank<BLACK>(square) - 2; },
+         [&](int c) {
+           assert(c < 6);
+-          sum -= phalanx_score[c];
++          structure_sum -= phalanx_score[c];
+           EVAL_TRACE(TERM_PHALANX, c, -1);
+           if constexpr (collect) { structure_family_out->phalanx[BLACK][c]++; }
+         });
+@@ -1517,7 +1537,7 @@
+         white_supported, [](int square) { return own_rank<WHITE>(square) - 3; },
+         [&](int c) {
+           assert(c < 5);
+-          sum += supported_score[c];
++          structure_sum += supported_score[c];
+           EVAL_TRACE(TERM_SUPPORTED, c, 1);
+           if constexpr (collect) {
+             structure_family_out->supported[WHITE][c]++;
+@@ -1527,7 +1547,7 @@
+         black_supported, [](int square) { return own_rank<BLACK>(square) - 3; },
+         [&](int c) {
+           assert(c < 5);
+-          sum -= supported_score[c];
++          structure_sum -= supported_score[c];
+           EVAL_TRACE(TERM_SUPPORTED, c, -1);
+           if constexpr (collect) {
+             structure_family_out->supported[BLACK][c]++;
+@@ -1551,7 +1571,7 @@
+     const int difference = count_bits(white_weak & white_open) -
+                            count_bits(black_weak & black_open);
+ 
+-    sum += difference * weak_unopposed_score[0];
++    structure_sum += difference * weak_unopposed_score[0];
+     EVAL_TRACE(TERM_WEAK_UNOPPOSED, 0, difference);
+ 
+     if constexpr (collect) {
+@@ -1566,6 +1586,8 @@
+     }
+   }
+ 
++  asm volatile("" : : "r"(structure_sum));
++
+   *score = sum;
+ }
+ 

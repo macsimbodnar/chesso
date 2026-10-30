@@ -105,20 +105,21 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // constant, so no group runs to PARAM_COUNT any more. The case below, "every
   // group frees exactly its own block", now holds each group to its block, the
   // last included; this line still says, in the event's own words, what an
-  // appended block looks like.
+  // appended block looks like. S125 appended its family after S123's and named
+  // its last block, weak unopposed pawns, here.
   //
   // The message is the whole value of this assertion (DEC-184 item 4): without
   // it a failure reads as two constants disagreeing, which is the symptom and
   // not the event, and the reader has to re-derive the event from the comment
   // above.
   REQUIRE_MESSAGE(
-      tuner_layout::CP_EG_BASE + tuner_layout::CANDIDATE_PASSER_COUNT ==
+      tuner_layout::WKU_EG_BASE + tuner_layout::WEAK_UNOPPOSED_COUNT ==
           tuner_layout::PARAM_COUNT,
-      "a parameter block was appended after S123's candidate passers, the last "
-      "block, and given no group of its own: CP_EG_BASE "
-          << tuner_layout::CP_EG_BASE << " + CANDIDATE_PASSER_COUNT "
-          << tuner_layout::CANDIDATE_PASSER_COUNT << " = "
-          << (tuner_layout::CP_EG_BASE + tuner_layout::CANDIDATE_PASSER_COUNT)
+      "a parameter block was appended after S125's weak unopposed pawns, the "
+      "last block, and given no group of its own: WKU_EG_BASE "
+          << tuner_layout::WKU_EG_BASE << " + WEAK_UNOPPOSED_COUNT "
+          << tuner_layout::WEAK_UNOPPOSED_COUNT << " = "
+          << (tuner_layout::WKU_EG_BASE + tuner_layout::WEAK_UNOPPOSED_COUNT)
           << " against PARAM_COUNT " << tuner_layout::PARAM_COUNT
           << ". Give it an end constant and a group, and name it here and in "
              "\"every group frees exactly its own block\".");
@@ -262,6 +263,13 @@ TEST_CASE("every group frees exactly its own block")
       {"passed_advance", PF_MG_BASE, PSF_EG_BASE + PASSED_SAFE_COUNT},
       {"passed_kings", PKO_MG_BASE, PKE_EG_BASE + PASSED_KING_COUNT},
       {"candidate_passers", CP_MG_BASE, CP_EG_BASE + CANDIDATE_PASSER_COUNT},
+      {"isolated_backward", IB_MG_BASE, IB_EG_BASE + ISOLATED_BACKWARD_COUNT},
+      {"isolated_files", ISF_MG_BASE, ISF_EG_BASE + ISOLATED_FILE_COUNT},
+      {"doubled_files", DBF_MG_BASE, DBF_EG_BASE + DOUBLED_FILE_COUNT},
+      {"backward_ranks", BKR_MG_BASE, BKR_EG_BASE + BACKWARD_RANK_COUNT},
+      {"phalanx", PHX_MG_BASE, PHX_EG_BASE + PHALANX_COUNT},
+      {"supported", SUP_MG_BASE, SUP_EG_BASE + SUPPORTED_COUNT},
+      {"weak_unopposed", WKU_MG_BASE, WKU_EG_BASE + WEAK_UNOPPOSED_COUNT},
   };
 
   size_t next = 0;
@@ -921,6 +929,59 @@ TEST_CASE("a tie names S123's rank cells by array and half")
   REQUIRE(tuner_groups::free_mask("passed_kings", &kings));
   std::string why;
   CHECK_FALSE(tuner_groups::ties_fit_mask(ties, kings, &why));
+}
+
+
+// S125's arrays the same way (DEC-331 (6)): a cell lands on its own array and
+// half, the cells being its weights' -- files b to h, the tables' own ranks
+// from their first -- and a cell past the array is refused, the one-wide
+// counts' included.
+TEST_CASE("a tie names S125's cells by array and half")
+{
+  std::vector<tuner_groups::tie_t> ties;
+  std::string error;
+
+  REQUIRE(tuner_groups::parse_ties(
+      "isolated_file_mg 0 1\ndoubled_file_eg 6 5\nbackward_rank_mg 2 1\n"
+      "phalanx_eg 5 4\nsupported_mg 4 3 0.5\n",
+      &ties, &error));
+  REQUIRE(ties.size() == 5);
+
+  CHECK(ties[0].tied == tuner_layout::ISF_MG_BASE + 0);
+  CHECK(ties[0].anchor == tuner_layout::ISF_MG_BASE + 1);
+  CHECK(ties[1].tied == tuner_layout::DBF_EG_BASE + 6);
+  CHECK(ties[1].anchor == tuner_layout::DBF_EG_BASE + 5);
+  CHECK(ties[2].tied == tuner_layout::BKR_MG_BASE + 2);
+  CHECK(ties[3].tied == tuner_layout::PHX_EG_BASE + 5);
+  CHECK(ties[4].tied == tuner_layout::SUP_MG_BASE + 4);
+  CHECK(ties[4].scale == 0.5);
+
+  for (const char* bad : {
+           "isolated_file_mg 7 6\n",      // past the h file
+           "backward_rank_eg 3 2\n",      // past own rank 5
+           "supported_mg 5 4\n",          // past own rank 7
+           "isolated_backward_mg 1 0\n",  // a count has one cell
+           "weak_unopposed_eg 1 0\n",     // and so has this one
+           "phalanx 1 2\n",               // no half
+           "isolated_files_mg 1 2\n",     // a group, not an array
+       }) {
+    CAPTURE(bad);
+    std::vector<tuner_groups::tie_t> refused;
+    std::string why;
+    CHECK_FALSE(tuner_groups::parse_ties(bad, &refused, &why));
+    CHECK(!why.empty());
+  }
+
+  std::vector<uint8_t> free_set;
+  REQUIRE(tuner_groups::only_mask(
+      "isolated_files,doubled_files,backward_ranks,phalanx,supported",
+      &free_set));
+  CHECK(tuner_groups::ties_fit_mask(ties, free_set, &error));
+
+  std::vector<uint8_t> phalanx;
+  REQUIRE(tuner_groups::free_mask("phalanx", &phalanx));
+  std::string why;
+  CHECK_FALSE(tuner_groups::ties_fit_mask(ties, phalanx, &why));
 }
 
 

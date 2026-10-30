@@ -7,6 +7,28 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-30, by hand.
 
+## 2026-10-30: S125's phase 1 landed at zero; its screen next
+
+**S125 (pawn structure) is in progress**, its step file in `plan_current/`.
+Phase 1, by one Opus 5.5 subagent in `../chesso-s125` and fast-checked:
+seven groups at zero in the cheap stage, in no expression (DEC-331): the
+isolated-and-backward increment, isolated and doubled by file, backward
+by rank (`backward & ~isolated`), phalanx, supported, weak unopposed.
+`PARAM_COUNT` 1013 -> 1073, no index moved. INV-6: bench 5434393 both
+builds, `search_bench` identical at depths 9 and 12, the search's object
+code unchanged (`adocs/data/S125_inv6.txt`). The mirror tests came first,
+each red on a one-colour plant. The audit: rank 1026 of 1073, no new
+dependency; two halves tied (`phalanx[5]`). The planted recovery leaves
+`doubled_files` and `phalanx` unmeasured on the fixture (DEC-331 (14)).
+
+- **Next, in order:** `S125_screen.sh all` (about 2 h 25 m, 4 h 50 m at
+  the epoch cap); `S125_cost.sh check` then `run` (about 1 h 55 m); then
+  `apply` and phase 2's goldens; Debug self-play; the pin; the SPRT at
+  night (up to 19.86 h). With no survivor in P1 to P7 there is no
+  candidate and no SPRT, and the flats wait for S126 (DEC-331 (14)).
+- **S299 widened:** `part()` in `S121_screen.sh` and `S123_screen.sh`
+  passes an unchecked K probe; filler, DEC-171.
+
 ## 2026-10-30: S123 done (H1, +49 Elo); S125 next
 
 **S123's SPRT read H1** (`0553160` vs `1a231dd`, Elo +49.19 +/- 15.06,

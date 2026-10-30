@@ -1338,6 +1338,173 @@ TEST_SUITE("evaluation: passer symmetry")
 }
 
 
+// S125's pawn structure family under the same mirror, DEC-331 (10), written
+// before any of its terms scored: the six sets its terms read, and then each
+// count cell by cell. A file keeps its letter under the mirror and an own rank
+// its number, so Black's sets in the mirror are White's in the original with
+// the ranks mirrored, and Black's cells are White's. A set wrong for one
+// colour only -- an edge mask missing on one side's shift, a stop square one
+// rank off for Black -- moves no score while the weights it feeds are zero,
+// and moves one fitted only on a position that reaches the cell it gets
+// wrong. Each observed red on a planted one-colour defect before it was
+// trusted (the S125 step file, 2026-10-30, records both runs).
+TEST_SUITE("evaluation: structure family symmetry")
+{
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the structure family's sets mirror exactly")
+  {
+    // Positions whose set holds a pawn on each edge file, per set and
+    // colour: the precondition that the mirror can fail where a one-sided
+    // mask would.
+    const auto sets = [](const structure_family_t& family, int index,
+                         int colour) {
+      const bb_t* rows[6] = {family.isolated_backward_set,
+                             family.backward_only_set,
+                             family.phalanx_set,
+                             family.supported_set,
+                             family.weak_set,
+                             family.open_set};
+      return rows[index][colour];
+    };
+    static const char* const names[6] = {
+        "isolated_backward", "backward_only", "phalanx",
+        "supported",         "weak",          "open"};
+
+    size_t edge[6][2][2] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : passer_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      structure_family_t family;
+      structure_family_t mirror;
+      structure_family_counts(&game.board, &family);
+      structure_family_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      for (int s = 0; s < 6; ++s) {
+        const std::string name = names[s];
+        CAPTURE(name);
+        REQUIRE(sets(mirror, s, BLACK) == mirror_ranks(sets(family, s, WHITE)));
+        REQUIRE(sets(mirror, s, WHITE) == mirror_ranks(sets(family, s, BLACK)));
+
+        for (int colour = 0; colour < 2; ++colour) {
+          const bb_t set = sets(family, s, colour);
+          if ((set & file_masks[0]) != 0) { edge[s][colour][0]++; }
+          if ((set & file_masks[7]) != 0) { edge[s][colour][1]++; }
+        }
+      }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    size_t fewest = SIZE_MAX;
+    for (int s = 0; s < 6; ++s) {
+      for (int colour = 0; colour < 2; ++colour) {
+        const std::string name = names[s];
+        CAPTURE(name);
+        CAPTURE(colour);
+        REQUIRE(edge[s][colour][0] > 100);
+        REQUIRE(edge[s][colour][1] > 100);
+        fewest = std::min({fewest, edge[s][colour][0], edge[s][colour][1]});
+      }
+    }
+
+    MESSAGE("structure family sets: " << checked
+                                      << " positions; the rarest set and edge "
+                                         "file is held on "
+                                      << fewest);
+  }
+
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the structure family's counts mirror exactly")
+  {
+    // How often each cell is non-zero, per colour, over the population: the
+    // precondition that the mirror compares something on every cell.
+    structure_family_t seen{};
+    size_t checked = 0;
+
+    const auto mirrors = [](const std::string& what, const auto& original,
+                            const auto& mirror, int width) {
+      for (int cell = 0; cell < width; ++cell) {
+        CAPTURE(what);
+        CAPTURE(cell);
+        REQUIRE(mirror[BLACK][cell] == original[WHITE][cell]);
+        REQUIRE(mirror[WHITE][cell] == original[BLACK][cell]);
+      }
+    };
+
+    const auto tally = [](auto& count, const auto& family, int width) {
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int cell = 0; cell < width; ++cell) {
+          count[colour][cell] += (family[colour][cell] != 0);
+        }
+      }
+    };
+
+    for (const std::string& fen : passer_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      structure_family_t family;
+      structure_family_t mirror;
+      structure_family_counts(&game.board, &family);
+      structure_family_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      mirrors("isolated_backward", family.isolated_backward,
+              mirror.isolated_backward, 1);
+      mirrors("isolated_file", family.isolated_file, mirror.isolated_file, 7);
+      mirrors("doubled_file", family.doubled_file, mirror.doubled_file, 7);
+      mirrors("backward_rank", family.backward_rank, mirror.backward_rank, 3);
+      mirrors("phalanx", family.phalanx, mirror.phalanx, 6);
+      mirrors("supported", family.supported, mirror.supported, 5);
+      mirrors("weak_unopposed", family.weak_unopposed, mirror.weak_unopposed,
+              1);
+
+      tally(seen.isolated_backward, family.isolated_backward, 1);
+      tally(seen.isolated_file, family.isolated_file, 7);
+      tally(seen.doubled_file, family.doubled_file, 7);
+      tally(seen.backward_rank, family.backward_rank, 3);
+      tally(seen.phalanx, family.phalanx, 6);
+      tally(seen.supported, family.supported, 5);
+      tally(seen.weak_unopposed, family.weak_unopposed, 1);
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    int fewest = INT32_MAX;
+    const auto least = [&fewest](const auto& count, int width) {
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int cell = 0; cell < width; ++cell) {
+          fewest = std::min(fewest, count[colour][cell]);
+        }
+      }
+    };
+    least(seen.isolated_backward, 1);
+    least(seen.isolated_file, 7);
+    least(seen.doubled_file, 7);
+    least(seen.backward_rank, 3);
+    least(seen.phalanx, 6);
+    least(seen.supported, 5);
+    least(seen.weak_unopposed, 1);
+
+    MESSAGE("structure family counts: " << checked
+                                        << " positions; the rarest cell is "
+                                           "non-zero on "
+                                        << fewest);
+    REQUIRE(fewest > 50);
+  }
+}
+
+
 // S117 packs every mg/eg pair into one score_t. The evaluation is only
 // behaviour-neutral if every half reads back exactly, and the half most likely
 // not to is the high one whenever the low one is negative: the low half borrows
@@ -1494,6 +1661,26 @@ TEST_SUITE("evaluation: packed score")
     halves_match("candidate_passer", candidate_passer_score.data(),
                  candidate_passer_mg, candidate_passer_eg,
                  static_cast<int>(candidate_passer_score.size()));
+
+    // S125's family, the same way: at its zero landing no bench sees these.
+    halves_match("isolated_backward", isolated_backward_score.data(),
+                 isolated_backward_mg, isolated_backward_eg,
+                 static_cast<int>(isolated_backward_score.size()));
+    halves_match("isolated_file", isolated_file_score.data(), isolated_file_mg,
+                 isolated_file_eg,
+                 static_cast<int>(isolated_file_score.size()));
+    halves_match("doubled_file", doubled_file_score.data(), doubled_file_mg,
+                 doubled_file_eg, static_cast<int>(doubled_file_score.size()));
+    halves_match("backward_rank", backward_rank_score.data(), backward_rank_mg,
+                 backward_rank_eg,
+                 static_cast<int>(backward_rank_score.size()));
+    halves_match("phalanx", phalanx_score.data(), phalanx_mg, phalanx_eg,
+                 static_cast<int>(phalanx_score.size()));
+    halves_match("supported", supported_score.data(), supported_mg,
+                 supported_eg, static_cast<int>(supported_score.size()));
+    halves_match("weak_unopposed", weak_unopposed_score.data(),
+                 weak_unopposed_mg, weak_unopposed_eg,
+                 static_cast<int>(weak_unopposed_score.size()));
   }
 
   TEST_CASE("taper truncates exactly as the unpacked formula does")

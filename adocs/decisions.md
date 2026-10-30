@@ -16756,3 +16756,172 @@ Rejected:     10: it equals the weakened count and cannot fail for the
 Consequences: On H0 the paste reverts and the parent's 12 and 10 return,
               one point of margin. `EXACT_FLOOR` keeps one point
               below what ships and six above the weakened count.
+
+## DEC-331  2026-10-30  S125's pawn structure: three new terms and the backward fix at zero in stage one, the old flats refit first, seven parts screened in order
+Tags:         evaluation, pawn-structure, s125, screen, dec-259, dec-315, dec-326, dec-329, dec-084, dec-221, dec-047
+Context:      S125's accepts asks for phalanx, supported and weak unopposed
+              pawns beside the isolated, doubled and backward pawns that
+              exist, for backward to stop counting an isolated pawn twice,
+              for terms indexed by file or by rank where the published
+              results did so, for each group screened offline (DEC-259)
+              before one family SPRT, and for an H0 bisected by group. The
+              research pass (2026-10-30, `.tuning/coord/S125/brief_inputs.md`)
+              found the following. The shipped flats are S083's
+              {-9, -2, -11} / {-15, -18, -2}, not the step file's. No CPW page
+              gives a rule for the fix, or for the "+10.68" conditioning the
+              body names. "Weak unopposed" is assembled from three CPW pages
+              (*Weak Pawns*, *Open Pawns (Bitboards)*, *Isolated Pawn*). Every
+              hand case with a backward count is an isolated pawn. A flat
+              plus a full increment table re-creates one exact dependency a
+              half a term. Backward can stand only on own ranks 2 to 5, and
+              supported only on 3 to 7.
+Decision:     By the coordinator under the owner's standing instruction
+              (2026-10-21 and 2026-10-27: few questions, the recommended
+              option, correctness first).
+              (1) **Scope.** Three new terms (phalanx, supported, weak
+              unopposed) and the fix. The conditioning is out: it has no
+              computable rule (DEC-221), and it is recorded as unbuilt. No
+              separate "connected" column: CPW's connected is phalanx union
+              supported.
+              (2) **Definitions from the description (DEC-221).**
+              - Phalanx: an own pawn with an own pawn beside it on the same
+                rank (*Duo Trio Quart (Bitboards)*), each member counted.
+              - Supported: an own pawn attacked by an own pawn (*Defended
+                Pawns (Bitboards)*), counted once however many defenders.
+              - Weak unopposed: CPW's weak set (not defended and not
+                defensible by own pawns, *Weak Pawns*) that is also open (no
+                enemy pawn ahead on its file, *Open Pawns (Bitboards)*). The
+                name and the composition are chesso's, said so.
+              - Passers are not excluded from any of the three: S123's
+                family is additive beside them.
+              - The fix: IB = isolated and its stop square attacked by an
+                enemy pawn, the old backward set intersected with isolated.
+              (3) **The fix's form: an increment at zero, folded at the
+                close.** IB lands as an increment at zero, so an IB pawn
+                scores isolated + backward + IB. At the close a neutral
+                reparametrization (INV-6, S121's fold form) makes backward
+                read `backward & ~isolated` and gives IB its own weight,
+                backward's plus the increment. The scores are identical,
+                and backward counts no isolated pawn. The fit picks the
+                increment; Ethereal's choice is the point where it cancels
+                backward. Backward's rank increments read `backward &
+                ~isolated` from the landing, so the fold stays neutral.
+              (4) **Indexing: flat kept, increments with one baseline cell
+                dropped, at zero.** This form has no exact dependency.
+                - Isolated by file, 8 files, the a-file cell dropped: 7 a
+                  half.
+                - Doubled by file, the same: 7 a half.
+                - Backward by own rank 2 to 5, rank 2 dropped: 3 a half.
+                - Phalanx by own rank 2 to 7: 6 a half.
+                - Supported by own rank 3 to 7: 5 a half.
+                - Weak unopposed flat: 1 a half.
+                - IB: 1 a half.
+                That is 60 in all; `PARAM_COUNT` 1013 -> 1073 (inferred
+                until built). The blocks are appended after S123's in
+                S123's form, each with its own term, group and end
+                constant. A file index keeps its file under the mirror, and
+                a rank index maps own rank to own rank.
+              (5) **The old flats are refit first.** A baseline cell is the
+                flat, so a part that indexes a term frees that term's flat.
+                - P0 refits the three flats alone (`--only pawn_structure`).
+                  Its g is recorded, and P0 is the predecessor the first
+                  part pairs against, so refit gain is credited to no part.
+                - Every other old constant stays frozen.
+              (6) **Screen: S123's order and readings, seven parts after
+                P0.** P1 IB, P2 isolated by file, P3 doubled by file, P4
+                backward by rank, P5 phalanx, P6 supported, P7 weak
+                unopposed.
+                - Each part frees its own new weights, the earlier
+                  survivors', and P0's flats.
+                - Each part's gain is DEC-326 (3)'s paired d against the
+                  last survivor's fit, or against P0's when none has
+                  survived. A part is kept iff d > max(1.645 sd(d_s), 2e-6).
+                - The corpus is S083's against S082's fixed set.
+                - A cell half under 1000 games ties to the nearest supported
+                  cell of its array and half, written by the audit before
+                  any fit.
+                - Tables are printed and decide nothing; monotonicity is
+                  never imposed.
+              (7) **H0 partition** A = P0 to P4, the reshaped existing terms
+                | B = P5, P6, connected | C = P7. Each is `{0, 5}` nElo at
+                8+0.08, survivors only, in order, each refit over what has
+                landed then. At worst four SPRTs.
+              (8) **Stage one**, summed into the pawn pair. Each group is
+                compiled out at zero (S123's form), so the landing is
+                `No functional change` and pays nothing. N, the clamp,
+                `eval_spread` and S122's margin are unchanged. A
+                stage-one bound for the new terms, and a headroom check on
+                every fit, as S123's.
+              (9) **Pawns only.** Every S125 predicate reads pawns alone, so
+                S118's pawn cache can hold it. S125 does not restructure the
+                pawn pair: that is S118's.
+              (10) **The test first** (DEC-329 (6)'s form). Before any fit,
+                each new per-colour set and count mirrors exactly under board
+                mirroring, observed red on a planted one-colour defect.
+              (11) **Coverage and tools, S123's lessons.** S123's coverage
+                tool is scoped to S123's blocks, with its block unchanged and
+                its reproduce check green. S125 gets its own tool, with the
+                fixture's rows as base. A pawn-structure planted recovery is
+                added, or recorded as unmeasured.
+              (12) **Cost** by DEC-047's forced-weight method per part, in
+                S123_cost.sh's form, recorded beside the verdict.
+              (13) **The hand cases.** At the close fold, the hand cases and
+                comments that assert the double count are rewritten with the
+                definition, in the same commit as specs.md's wording. That is
+                the accepts' change of specification, not a weakened test.
+                Phase 1 adds non-isolated backward cases in both colours.
+              (14) **As phase 1 built it (2026-10-30).**
+              - The names: arrays `isolated_backward`, `isolated_file`,
+                `doubled_file`, `backward_rank`, `phalanx`, `supported`,
+                `weak_unopposed`; groups `isolated_backward`,
+                `isolated_files`, `doubled_files`, `backward_ranks`,
+                `phalanx`, `supported`, `weak_unopposed`. `PARAM_COUNT`
+                1013 -> 1073 as inferred, no index moved.
+              - The trace records non-zero cells only (`sum_record()` drops
+                zeros), which its exact reconstruction allows. Entries a
+                row 31.86 -> 36.04 (+13.1 %) on the first 20000 corpus
+                rows, measured; the research pass's "about 33 more a row"
+                was wrong.
+              - The audit, run once after the screen's rules were written
+                (2026-10-30 08:55): rank 1026 of 1073, nullity 47, no
+                further exact dependency, no zero column, as (4) expected.
+                The ties: `phalanx[5]`, a phalanx on its own seventh, mg
+                210 and eg 211 games, each tied to its sixth.
+              - If no part of P1 to P7 survives there is no candidate and
+                no SPRT: P0's refit of the flats is recorded, not pasted,
+                and the flats wait for S126's refit. A refit of three old
+                constants alone is not what S125 measures.
+              - Bisection part A always holds P0's flats, which every part
+                frees. B and C exist only if they hold a survivor. The
+                cost run has no P0 row: the flats are live at the landing
+                and cost nothing new.
+              - The accepts' "`eval_spread` for where it lands" cannot
+                hold: `eval_spread` reads stage two only, and these terms
+                are stage one. Where it lands is the forced-weight cost
+                run per group (12), with `bench_eval` printed beside it.
+              - The planted recovery returns the flats and five groups
+                within 0.5. `doubled_files` (0 of 14 halves) and `phalanx`
+                (7 of 12) do not on the fixture, and are recorded as
+                unmeasured there. The implementer's reason, too few phases
+                or independent combinations reaching those cells, is
+                inferred, not measured.
+              - (7) as ruled after the fast check: part A exists only if a
+                part in P1 to P4 survives, and B and C only if they hold a
+                survivor. Every part that exists frees P0's flats with its
+                own groups, as every screen part did, so the flats land
+                with the first part that exists and never alone.
+Rejected:     An identity column for IB at the landing: it computes at the
+              landing, unpriced, and needs a seed. The literal constraint
+              (IB scores isolated only): not neutral, and it needs a variant
+              start. A full increment table beside a kept flat: 6 exact
+              dependencies that S126's refit would walk. Replacing the flats
+              by identity tables (S121's form): every index from 939 up
+              moves, it computes at the landing, and DEC-329 rejected it
+              for S123. Frozen flats: a baseline cell dropped would then
+              fix that cell at S083's value, and the table's span would not
+              be whole. Five parts (P2 to P4 as one): coarser attribution
+              for about 30 min of machine saved. The conditioning: no rule.
+Consequences: S125's phase 1 starts after S123's verdict closes, on that
+              close. The trace records only non-zero cells unless its exact
+              reconstruction needs more; the phase 1 agent says which.
+              S126's refit inherits no new dependency.

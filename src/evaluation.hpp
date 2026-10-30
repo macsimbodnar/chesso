@@ -274,6 +274,107 @@ extern const int pawn_structure_eg[3];
 // implementation to drift.
 void pawn_structure_counts(const board_t* board, int out[2][3]);
 
+// S125's pawn structure family (DEC-331), seven groups beside the three
+// features above, each fitted on its own screen part before one family SPRT,
+// and landed at zero. The definitions, stated exactly because the walk in
+// tests/test_walked_counts.hpp is written from them and the two have to mean
+// the same thing, each implemented from its description (DEC-221). Each is
+// about one side's own pawns; "ahead" and "behind" are that side's own
+// directions, as above, and a pawn's own rank counts from its side's first, so
+// White's second rank is Black's seventh. Every one reads pawns and nothing
+// else (DEC-331 (9)), and no set excludes passers: S123's family scores them
+// beside these.
+//
+// The sets:
+//
+//   isolated_backward  isolated pawns whose stop square -- the square directly
+//                      ahead -- an enemy pawn attacks. Exactly the pawns
+//                      counted both isolated and backward above: an isolated
+//                      pawn meets backward's first clause trivially.
+//   backward_only      backward pawns that are not isolated.
+//   phalanx            own pawns with an own pawn on a neighbouring file on
+//                      the same rank. CPW *Duo Trio Quart (Bitboards)*: "two
+//                      adjacent pawns of the same color on the same rank";
+//                      every member counts, so a trio counts three.
+//   supported          own pawns an own pawn attacks. CPW *Defended Pawns
+//                      (Bitboards)*: "each pawn, member of the own pawn attack
+//                      set"; defended twice counts once.
+//   weak               own pawns with no own pawn on either neighbouring file
+//                      level with them or behind them: backward's first clause
+//                      alone, CPW *Weak Pawns*' "not defended and not
+//                      defensible by the pawns of the same color". Every
+//                      isolated and every backward pawn is weak.
+//   open               own pawns with no enemy pawn ahead on their own file.
+//                      CPW *Open Pawns (Bitboards)*: "no mechanical obstruction
+//                      - an opponent pawn in front".
+//   weak_unopposed     weak and open. The name and the composition are
+//                      chesso's (DEC-331 (2)), assembled from those two pages
+//                      and from CPW *Isolated Pawn* and *Backward Pawn*, which
+//                      call such a pawn weaker still on a half-open file.
+//
+// The weights, each a middlegame and an endgame array, every cell a count of
+// a side's pawns in it; the term is White's minus Black's, cell by cell:
+//
+//   isolated_backward[1]  isolated_backward pawns. An increment: such a pawn
+//                         scores isolated, backward and this. S125's close
+//                         folds it (DEC-331 (3)).
+//   isolated_file[7]      isolated pawns by file, b to h. The a file has no
+//                         cell: its pawns score the flat isolated weight
+//                         alone, which is every cell's baseline.
+//   doubled_file[7]       doubled pawns by file, b to h, the same way.
+//   backward_rank[3]      backward_only pawns by own rank, 3 to 5; rank 2 is
+//                         the flat backward weight's. A backward pawn stands
+//                         on its own rank 2 to 5 only: the enemy pawn that
+//                         attacks its stop square stands two ranks ahead.
+//   phalanx[6]            phalanx pawns by own rank, 2 to 7.
+//   supported[5]          supported pawns by own rank, 3 to 7: the defender
+//                         stands a rank behind.
+//   weak_unopposed[1]     weak_unopposed pawns.
+//
+// A file keeps its letter under the colour mirror and an own rank its number,
+// which is what tests/test_evaluation's mirror case holds them to.
+extern const int isolated_backward_mg[1];
+extern const int isolated_backward_eg[1];
+extern const int isolated_file_mg[7];
+extern const int isolated_file_eg[7];
+extern const int doubled_file_mg[7];
+extern const int doubled_file_eg[7];
+extern const int backward_rank_mg[3];
+extern const int backward_rank_eg[3];
+extern const int phalanx_mg[6];
+extern const int phalanx_eg[6];
+extern const int supported_mg[5];
+extern const int supported_eg[5];
+extern const int weak_unopposed_mg[1];
+extern const int weak_unopposed_eg[1];
+
+// The family's sets and raw counts per colour, WHITE first, each a side's own
+// and positive, for the reason over passed_pawn_counts(): a miscount that hits
+// both sides equally cancels in a difference, and at zero weights no score
+// sees these at all. The counts are indexed by the weights' cells above, so
+// isolated_file[colour][0] is the b file and backward_rank[colour][0] own rank
+// 3. tests/test_evaluation holds each to its mirror (DEC-331 (10)),
+// tests/test_eval_model to the walk.
+struct structure_family_t
+{
+  bb_t isolated_backward_set[2];
+  bb_t backward_only_set[2];
+  bb_t phalanx_set[2];
+  bb_t supported_set[2];
+  bb_t weak_set[2];
+  bb_t open_set[2];
+  int isolated_backward[2][1];
+  int isolated_file[2][7];
+  int doubled_file[2][7];
+  int backward_rank[2][3];
+  int phalanx[2][6];
+  int supported[2][5];
+  int weak_unopposed[2][1];
+};
+
+// Not on the hot path: the collecting instantiation, as above.
+void structure_family_counts(const board_t* board, structure_family_t* out);
+
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
 // open file, 2 rook on a half-open file, 3 bad bishop, 4 bad bishop rammed, 5
 // trapped minor, 6 trapped rook. Exposed for the same reason as the weights
@@ -543,6 +644,13 @@ extern const std::array<score_t, 6> passed_safe_score;
 extern const std::array<score_t, 6> passed_king_own_score;
 extern const std::array<score_t, 6> passed_king_enemy_score;
 extern const std::array<score_t, 5> candidate_passer_score;
+extern const std::array<score_t, 1> isolated_backward_score;
+extern const std::array<score_t, 7> isolated_file_score;
+extern const std::array<score_t, 7> doubled_file_score;
+extern const std::array<score_t, 3> backward_rank_score;
+extern const std::array<score_t, 6> phalanx_score;
+extern const std::array<score_t, 5> supported_score;
+extern const std::array<score_t, 1> weak_unopposed_score;
 int capture_score(const board_t* board, move_t move);
 
 // The raw signed history a quiet move carries -- the butterfly entry plus

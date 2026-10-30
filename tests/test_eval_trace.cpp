@@ -32,7 +32,8 @@
 // wrong index is invisible to the identity wherever the two weights involved
 // are equal, and tempo and piece placement's two bad bishop columns ship at
 // zero, where any coefficient at all satisfies it, as S123's whole family did
-// until its fit shipped on its SPRT's H1.
+// until its fit shipped on its SPRT's H1, and as S125's whole family does at
+// its landing.
 
 namespace
 {
@@ -421,6 +422,27 @@ TEST_CASE_FIXTURE(trace_fixture_t,
       CHECK(coefficient(data, eval_trace::TERM_CANDIDATE_PASSER, rank) ==
             family.candidate[WHITE][rank] - family.candidate[BLACK][rank]);
     }
+
+    // S125's family the same way, cell by cell.
+    structure_family_t structure_family;
+    structure_family_counts(&board, &structure_family);
+    const auto cells = [&](eval_trace::term_t term, const auto& counts,
+                           size_t width) {
+      for (size_t cell = 0; cell < width; ++cell) {
+        CAPTURE(term);
+        CAPTURE(cell);
+        CHECK(coefficient(data, term, cell) ==
+              counts[WHITE][cell] - counts[BLACK][cell]);
+      }
+    };
+    cells(eval_trace::TERM_ISOLATED_BACKWARD,
+          structure_family.isolated_backward, 1);
+    cells(eval_trace::TERM_ISOLATED_FILE, structure_family.isolated_file, 7);
+    cells(eval_trace::TERM_DOUBLED_FILE, structure_family.doubled_file, 7);
+    cells(eval_trace::TERM_BACKWARD_RANK, structure_family.backward_rank, 3);
+    cells(eval_trace::TERM_PHALANX, structure_family.phalanx, 6);
+    cells(eval_trace::TERM_SUPPORTED, structure_family.supported, 5);
+    cells(eval_trace::TERM_WEAK_UNOPPOSED, structure_family.weak_unopposed, 1);
 
     CHECK(trace.phase == game_phase(&board));
   }

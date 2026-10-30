@@ -46,7 +46,8 @@ using tuner_layout::TEMPO_MG_BASE;
 inline constexpr const char* GROUP_LIST =
     "all, material, psqt, mobility, king_safety, passed_pawns, "
     "pawn_structure, piece_placement, tempo, passed_advance, passed_kings, "
-    "candidate_passers";
+    "candidate_passers, isolated_backward, isolated_files, doubled_files, "
+    "backward_ranks, phalanx, supported, weak_unopposed";
 
 
 // The piece placement group's terms, S135, each a name `--only` and `--freeze`
@@ -184,6 +185,35 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     // S123's C.
     first = tuner_layout::CP_MG_BASE;
     last = tuner_layout::CANDIDATE_PASSER_END;
+  } else if (group == "isolated_backward") {
+    // S125's seven, one block each (DEC-331 (4)): P1, the isolated and
+    // backward increment.
+    first = tuner_layout::IB_MG_BASE;
+    last = tuner_layout::ISOLATED_BACKWARD_END;
+  } else if (group == "isolated_files") {
+    // P2, isolated pawns by file.
+    first = tuner_layout::ISF_MG_BASE;
+    last = tuner_layout::ISOLATED_FILE_END;
+  } else if (group == "doubled_files") {
+    // P3, doubled pawns by file.
+    first = tuner_layout::DBF_MG_BASE;
+    last = tuner_layout::DOUBLED_FILE_END;
+  } else if (group == "backward_ranks") {
+    // P4, backward pawns not isolated by rank.
+    first = tuner_layout::BKR_MG_BASE;
+    last = tuner_layout::BACKWARD_RANK_END;
+  } else if (group == "phalanx") {
+    // P5.
+    first = tuner_layout::PHX_MG_BASE;
+    last = tuner_layout::PHALANX_END;
+  } else if (group == "supported") {
+    // P6.
+    first = tuner_layout::SUP_MG_BASE;
+    last = tuner_layout::SUPPORTED_END;
+  } else if (group == "weak_unopposed") {
+    // P7.
+    first = tuner_layout::WKU_MG_BASE;
+    last = tuner_layout::WEAK_UNOPPOSED_END;
   } else {
     return false;
   }
@@ -453,9 +483,13 @@ inline void hold_gauges(const std::vector<gauge_t>& held,
 // S123 one of its passed pawn arrays, passed_free, passed_safe,
 // passed_king_own, passed_king_enemy or candidate_passer, followed by _<half>,
 // whose cells are the own ranks from the second (DEC-329 (4): a weight under
-// its support is tied to its nearest rank's same term); half mg or eg; scale 1
-// when absent. A cell is tied once at most, never to itself, and an anchor is
-// never tied, so no tie reads a value another tie has yet to write.
+// its support is tied to its nearest rank's same term), or since S125 one of
+// its arrays, isolated_backward, isolated_file, doubled_file, backward_rank,
+// phalanx, supported or weak_unopposed, followed by _<half>, whose cells are
+// its weights' (src/evaluation.hpp; DEC-331 (6): the nearest supported cell of
+// the same array and half); half mg or eg; scale 1 when absent. A cell is tied
+// once at most, never to itself, and an anchor is never tied, so no tie reads a
+// value another tie has yet to write.
 struct tie_t
 {
   size_t tied;
@@ -482,7 +516,7 @@ inline bool tie_row(const std::string& name, size_t* base, size_t* width)
     }
   }
 
-  struct passer_row_t
+  struct family_row_t
   {
     const char* name;
     size_t mg_base;
@@ -490,7 +524,7 @@ inline bool tie_row(const std::string& name, size_t* base, size_t* width)
     size_t width;
   };
 
-  static const passer_row_t rows[] = {
+  static const family_row_t rows[] = {
       {"passed_free", tuner_layout::PF_MG_BASE, tuner_layout::PF_EG_BASE,
        tuner_layout::PASSED_FREE_COUNT},
       {"passed_safe", tuner_layout::PSF_MG_BASE, tuner_layout::PSF_EG_BASE,
@@ -501,9 +535,23 @@ inline bool tie_row(const std::string& name, size_t* base, size_t* width)
        tuner_layout::PKE_EG_BASE, tuner_layout::PASSED_KING_COUNT},
       {"candidate_passer", tuner_layout::CP_MG_BASE, tuner_layout::CP_EG_BASE,
        tuner_layout::CANDIDATE_PASSER_COUNT},
+      {"isolated_backward", tuner_layout::IB_MG_BASE, tuner_layout::IB_EG_BASE,
+       tuner_layout::ISOLATED_BACKWARD_COUNT},
+      {"isolated_file", tuner_layout::ISF_MG_BASE, tuner_layout::ISF_EG_BASE,
+       tuner_layout::ISOLATED_FILE_COUNT},
+      {"doubled_file", tuner_layout::DBF_MG_BASE, tuner_layout::DBF_EG_BASE,
+       tuner_layout::DOUBLED_FILE_COUNT},
+      {"backward_rank", tuner_layout::BKR_MG_BASE, tuner_layout::BKR_EG_BASE,
+       tuner_layout::BACKWARD_RANK_COUNT},
+      {"phalanx", tuner_layout::PHX_MG_BASE, tuner_layout::PHX_EG_BASE,
+       tuner_layout::PHALANX_COUNT},
+      {"supported", tuner_layout::SUP_MG_BASE, tuner_layout::SUP_EG_BASE,
+       tuner_layout::SUPPORTED_COUNT},
+      {"weak_unopposed", tuner_layout::WKU_MG_BASE, tuner_layout::WKU_EG_BASE,
+       tuner_layout::WEAK_UNOPPOSED_COUNT},
   };
 
-  for (const passer_row_t& row : rows) {
+  for (const family_row_t& row : rows) {
     for (const char* half : {"mg", "eg"}) {
       if (name == std::string(row.name) + "_" + half) {
         *base = (half[0] == 'm') ? row.mg_base : row.eg_base;

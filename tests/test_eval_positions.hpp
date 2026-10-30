@@ -308,6 +308,37 @@ inline const std::vector<std::string> positions = {
     // candidate_passer_eg[4]
     "5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30",
     "6kr/p1b2p1p/q5P1/n1pBr3/3p4/3p3P/PP1B2QP/5RKR b - - 0 30",
+    // S125's pawn structure family, added at S125's phase 1: each position,
+    // then its colour-mirror, picked by adocs/data/S125_coverage_rows.cpp's
+    // rule and not by hand. The eighty-eight rows above leave 15 of the
+    // family's 60 parameters with no coefficient at a phase that weights
+    // them -- doubled pawns on the b, c, e and g files in either half, a
+    // backward pawn on its own fourth, phalanx pawns on their own fourth and
+    // sixth, a supported pawn on its own seventh in the middlegame -- and on
+    // them the gradient case's non-vacuity (test_tuner_gradient) reads red,
+    // and "the positions move every term both ways" (test_eval_trace) on the
+    // doubled and phalanx cells. The rule is S121's, as S123's block above
+    // has it: greedy over all_test_fens() (which closed none), then S083's
+    // corpus, then a seeded constructive fallback for what stays open (not
+    // needed here); each pick and its mirror at a phase from 1 to 23, a
+    // centipawn clear of the lazy clamp, within 800 cp of level and loadable
+    // with either side to move. Each comment names the parameters its pair
+    // closes, both halves unless it names one. Every position is VALID by
+    // python-chess. The program starts from the 88 rows above this comment
+    // (its BASE_ROWS, asserted against this comment's first line), re-checks
+    // every row below, and must pick exactly these pairs in this order.
+    // Re-derive by its header whenever the counts or the shipped constants
+    // move what it reads (DEC-142, DEC-331 (11)).
+    // S125 coverage, closes doubled_file_mg[0] doubled_file_eg[0]
+    // doubled_file_mg[1] doubled_file_eg[1] phalanx_mg[2] phalanx_eg[2]
+    // phalanx_mg[4] phalanx_eg[4] supported_mg[4]
+    "6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42",
+    "2r5/2P2rk1/pPPp2p1/4pp2/2Rp3p/R2P3P/1P1b1PP1/6K1 b - - 0 42",
+    // S125 coverage, closes doubled_file_mg[3] doubled_file_eg[3]
+    // doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1]
+    // backward_rank_eg[1]
+    "6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35",
+    "8/1ppk4/4p3/1p2P1p1/3Pp2p/P1P3rP/KP4p1/6R1 b - - 1 35",
 };
 
 }  // namespace test_eval_positions

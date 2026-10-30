@@ -1,0 +1,174 @@
+S125 phase 1, 2026-10-30: the readings S125's coverage rows move, on the zero-weight landing
+tree: ../chesso-s125, branch s125 on 42631b4 with the phase 1 diff
+
+== adocs/data/S125_coverage_rows.cpp, S125_COVERAGE_DATA = S083's corpus (sha256 2e0e3de9...), from the base 88 rows (BASE_ROWS) with the landed block re-checked, reproducing the landed 2 pairs (1m14.632s)
+tests/test_eval_positions.hpp: 92 rows, 88 before S125's block (marker found)
+landed block: 2 pairs, 0 not eligible
+the list, 88 rows: 15 of 60 needs open
+  open doubled_file_mg[0]
+  open doubled_file_mg[1]
+  open doubled_file_mg[3]
+  open doubled_file_mg[5]
+  open backward_rank_mg[1]
+  open phalanx_mg[2]
+  open phalanx_mg[4]
+  open supported_mg[4]
+  open doubled_file_eg[0]
+  open doubled_file_eg[1]
+  open doubled_file_eg[3]
+  open doubled_file_eg[5]
+  open backward_rank_eg[1]
+  open phalanx_eg[2]
+  open phalanx_eg[4]
+all_test_fens(): 0 eligible candidates close an open need
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 478 candidates kept
+pick, phase 9, closes 9: doubled_file_mg[0] doubled_file_eg[0] doubled_file_mg[1] doubled_file_eg[1] phalanx_mg[2] phalanx_eg[2] phalanx_mg[4] phalanx_eg[4] supported_mg[4]
+  6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42
+pick, phase 4, closes 6: doubled_file_mg[3] doubled_file_eg[3] doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1] backward_rank_eg[1]
+  6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.725e-09, over S125's family 3.485e-07
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (4 picked rows, 4 landed)
+4 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S125 coverage, closes doubled_file_mg[0] doubled_file_eg[0] doubled_file_mg[1] doubled_file_eg[1] phalanx_mg[2] phalanx_eg[2] phalanx_mg[4] phalanx_eg[4] supported_mg[4]
+    "6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42",
+    "2r5/2P2rk1/pPPp2p1/4pp2/2Rp3p/R2P3P/1P1b1PP1/6K1 b - - 0 42",
+    // S125 coverage, closes doubled_file_mg[3] doubled_file_eg[3] doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1] backward_rank_eg[1]
+    "6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35",
+    "8/1ppk4/4p3/1p2P1p1/3Pp2p/P1P3rP/KP4p1/6R1 b - - 1 35",
+[doctest] test cases:       1 |       1 passed | 0 failed | 0 skipped
+[doctest] assertions: 6232720 | 6232720 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+== run 1, before the block landed (marker absent): the same picks
+the list, 88 rows: 15 of 60 needs open
+  open doubled_file_mg[0]
+  open doubled_file_mg[1]
+  open doubled_file_mg[3]
+  open doubled_file_mg[5]
+  open backward_rank_mg[1]
+  open phalanx_mg[2]
+  open phalanx_mg[4]
+  open supported_mg[4]
+  open doubled_file_eg[0]
+  open doubled_file_eg[1]
+  open doubled_file_eg[3]
+  open doubled_file_eg[5]
+  open backward_rank_eg[1]
+  open phalanx_eg[2]
+  open phalanx_eg[4]
+all_test_fens(): 0 eligible candidates close an open need
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 478 candidates kept
+pick, phase 9, closes 9: doubled_file_mg[0] doubled_file_eg[0] doubled_file_mg[1] doubled_file_eg[1] phalanx_mg[2] phalanx_eg[2] phalanx_mg[4] phalanx_eg[4] supported_mg[4]
+  6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42
+pick, phase 4, closes 6: doubled_file_mg[3] doubled_file_eg[3] doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1] backward_rank_eg[1]
+  6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.725e-09, over S125's family 3.485e-07
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: NO (4 picked rows, 0 landed)
+
+== adocs/data/S123_coverage_rows.cpp on this tree, scoped (its header, 2026-10-30): S123_COVERAGE_DATA = the same corpus (1m14.213s)
+tests/test_eval_positions.hpp: 92 rows, 80 before S123's block (marker found), the block ends at row 88
+landed block: 4 pairs, 0 not eligible
+the list, 80 rows: 11 of 58 needs open
+all_test_fens(): 63 eligible candidates close an open need
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 187 candidates kept
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.985e-09, over S123's family 4.669e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+[doctest] test cases:       1 |       1 passed | 0 failed | 0 skipped
+
+== adocs/data/S121_coverage_rows.cpp on this tree, unchanged: S121_COVERAGE_DATA = the same corpus (1m15.397s)
+tests/test_eval_positions.hpp: 92 rows, 42 before S121's block (marker found), the block ends at row 80
+landed block: 19 pairs, 0 not eligible
+the list, 42 rows: 55 of 132 needs open
+all_test_fens(): 313 eligible candidates close an open need
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 rows read, 659 candidates kept
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| over the mobility span 6.584e-09
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+[doctest] test cases:       1 |       1 passed | 0 failed | 0 skipped
+
+== python-chess validity of the kept rows
+tests/test_eval_positions.hpp: 92 rows; the 4 after the first 88 (S125's block), python-chess 1.11.2 Board(fen).status():
+  <Status.VALID: 0>  6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42
+  <Status.VALID: 0>  2r5/2P2rk1/pPPp2p1/4pp2/2Rp3p/R2P3P/1P1b1PP1/6K1 b - - 0 42
+  <Status.VALID: 0>  6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35
+  <Status.VALID: 0>  8/1ppk4/4p3/1p2P1p1/3Pp2p/P1P3rP/KP4p1/6R1 b - - 1 35
+all VALID
+
+== adocs/data/S083_tuner_preconditions.cpp both, over the 92-row fixture
+clamp: 92 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 121.1 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      108.4       75.58   6.65e-08         -1         -1  binds on none or all; 
+  +20      0        0.0      118.4       65.58   6.38e-08         -1         -1  binds on none or all; 
+  +30      2      197.3      158.8       13.33   8.75e-08          0   0.000699  ok  <- CHOSEN
+  +40      4      277.3      171.0       13.00   5.91e-08          0    0.00124  ok
+  +50      6      357.3      175.8        8.17   4.87e-07          0   0.000824  fd past 2e-7; 
+  +60     11      437.3      183.0        1.00   2.11e-07          0   0.000471  fd past 2e-7; 
+  +70     16      517.3      179.3        4.67   1.89e-07          0   0.000852  ok
+  +80     22      597.3      178.4        3.71   4.62e-08          0    0.00062  ok
+  +90     25      677.3      179.5        4.42   4.13e-08          0    0.00196  ok
+ +100     26      757.3      178.0        6.00   9.38e-08          0    0.00189  ok
+ +110     32      837.3      175.7        2.08   1.89e-07          0    0.00153  ok
+ +120     36      917.3      176.9        1.67   3.18e-07          0    0.00136  fd past 2e-7; 
+ +130     38      997.3      173.2        6.00   1.22e-07          0    0.00129  ok
+ +140     38     1077.3      183.2        0.75   1.39e-06          0    0.00129  a row within 1 cp of the kink; fd past 2e-7; 
+ +150     46     1157.3      176.2        0.50    6.7e-08          0   0.000922  a row within 1 cp of the kink; 
+ +160     48     1237.3      179.5        2.17   2.49e-07          0    0.00088  fd past 2e-7; 
+ +170     52     1317.3      174.0        5.00   8.44e-08          0   0.000812  ok
+ +180     54     1397.3      177.2        0.00     0.0372   1.26e-06   0.000789  a row within 1 cp of the kink; fd past 2e-7; bound rows not silent; 
+ +190     57     1477.3      164.8        2.00   4.09e-08          0   0.000748  ok
+ +200     57     1557.3      174.8        9.17   2.98e-07          0   0.000748  fd past 2e-7; 
+clamp: the rule picks +30, every row 13.33 from the kink
+walk: 96 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   +2.0896  held   -7.4e-16  
+    material/table knight  plain   -2.3994  held  -8.33e-17  
+    material/table bishop  plain   +0.0666  held  -2.78e-15  
+    material/table rook    plain   +0.4115  held  -7.99e-15  
+    material/table queen   plain   -3.8879  held  -1.03e-14  
+    psqt_mg[king]          plain   +1.2128  held  +1.55e-15  
+    psqt_eg[king]          plain   +1.5924  held  -1.89e-15  
+    smallest plain walk 0.0666 (material/table bishop); runs apart 8.24e-13; plain travelled 1700.4
+  adagrad at lr 10
+    material/table pawn    plain   +1.5609  held  +1.18e-15  
+    material/table knight  plain   -2.4315  held  -1.36e-15  
+    material/table bishop  plain   -0.0760  held  -3.05e-16  
+    material/table rook    plain   +0.7544  held  -1.22e-14  
+    material/table queen   plain   -3.5522  held  -5.77e-15  
+    psqt_mg[king]          plain   +2.2878  held  -1.33e-15  
+    psqt_eg[king]          plain   +2.7401  held  -2.22e-16  
+    smallest plain walk 0.0760 (material/table bishop); runs apart 6.96e-12; plain travelled 1736.7
+walk: every plain shift clears the case's floor 0.01
+
+== tests/test_tuner_gradient -s, the three MESSAGE lines (clamp case at +30)
+test_tuner_gradient.cpp:571: MESSAGE: worst relative error 3.45458e-07 at parameter 857
+test_tuner_gradient.cpp:710: MESSAGE: clamp case: worst relative error 8.74602e-08 at parameter 960
+test_tuner_gradient.cpp:1343: MESSAGE: group: worst relative error 6.23233e-08 at parameter 1081
+every case green; over the 88 rows before S125's block (the block removed in a throwaway build, restored, cmp identical) the worst reads 2.78762e-07 at parameter 985 and the non-vacuity check reads red on S125's parameters, which is what the block answers
+
+== the planted recoveries, tests/test_tuner_gradient.cpp "a planted vector comes back through the trace path"
+tried 2026-10-30 with the three flats and all seven of S125's groups planted, each fitted alone from the shipped constants, 6000 epochs at lr 1, K 1.0, within 0.5 of the plant:
+  pawn_structure (the flats, P0)  6 of 6   back
+  isolated_backward               2 of 2   back
+  isolated_files                 14 of 14  back
+  doubled_files                   0 of 14  NOT back (parameters 1029 to 1042 fitted -7.81 .. 8.11, planted mg {-3, 4, -5, 6, -7, 8, -9}, eg {5, -6, 7, -8, 9, -10, 11})
+  backward_ranks                  6 of 6   back
+  phalanx                         7 of 12  NOT back (mg[3] 10.60 for 9, mg[4] 3.85 for 11, eg[2] -4.15 for 8, eg[3] 3.91 for 10, eg[4] 4.15 for 12; parameters 1052, 1053, 1057, 1058, 1059)
+  supported                      10 of 10  back
+  weak_unopposed                  2 of 2   back
+kept in the case: the flats and the five that come back; doubled_files and phalanx recorded unmeasured -- inferred, not measured: the fixture reaches their cells at too few phases, or with too few independent combinations, to tell a cell's halves or its neighbours apart (S123's reason for its family); feature_audit --plant over a corpus slice is where it would go
+
+== the constructive fallback exercised: the same program with no S125_COVERAGE_DATA (0m3.628s; not kept -- the landed block is the corpus's pick)
+the constructive fallback: 268228 read, 333 candidates kept
+pick, phase 4, closes 10: doubled_file_mg[0] doubled_file_eg[0] doubled_file_mg[1] doubled_file_eg[1] doubled_file_mg[3] doubled_file_eg[3] phalanx_mg[2] phalanx_eg[2] phalanx_mg[4] phalanx_eg[4]
+  6k1/1p1Pr3/pp1P3K/1pPPP3/1PP1p3/4pp2/1p5R/8 w - - 0 1
+pick, phase 4, closes 5: doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1] backward_rank_eg[1] supported_mg[4]
+  r7/1P3P1P/5p2/p1PK4/2P3P1/2p1ppp1/6pk/6R1 w - - 0 1
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.725e-09, over S125's family 4.722e-07
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: NO (4 picked rows, 4 landed)
+4 rows the rule picks, for tests/test_eval_positions.hpp:
+  values: CHECK( false )
+the fallback closes the fifteen needs the corpus closed, from its 268228 loadable draws of 400000; "reproduces: NO" is the expected answer of a run that is not the rule's (the rule takes the corpus before the fallback)

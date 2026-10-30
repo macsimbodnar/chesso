@@ -647,6 +647,19 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
          "a2 is isolated, doubled and backward at once",
          {2, 1, 1},
          {1, 0, 1}},
+        // S125: a backward pawn that is not isolated, one a colour. Every
+        // backward pawn above is isolated too, so without these the backward
+        // rows would say nothing about a pawn whose neighbour stands ahead.
+        {"4k3/8/8/p1P5/8/1P6/8/4K3",
+         "b3 is backward with its only neighbour ahead on c5, and not "
+         "isolated; a5 is isolated and backward on b3",
+         {0, 0, 1},
+         {1, 0, 1}},
+        {"4k3/8/1p6/8/P1p5/8/8/4K3",
+         "the same placement mirrored: b6 is Black's backward pawn with its "
+         "neighbour ahead on c4, and a4 White's isolated one",
+         {1, 0, 1},
+         {0, 0, 1}},
     };
 
     int positive[walked_counts::PAWN_STRUCTURE_COUNT] = {};
@@ -1450,6 +1463,345 @@ TEST_SUITE("eval counts: S123's passed pawn family")
             CHECK(family_cell(engine, array, colour, rank) == expected);
           }
         }
+      }
+    }
+  }
+}
+
+
+// S125's pawn structure family against the walk and by hand. The engine's
+// sets and counts per colour (structure_family_counts()) against
+// walked_counts::structure_family_features(), which walks evaluation.hpp's
+// definitions square by square and shares no code with the engine -- per
+// colour, for the reason S123's family is: at the landing's zero weights no
+// score sees these, and at any weight a count credited to both sides cancels.
+namespace
+{
+
+// The sets and every cell, engine against walk, per colour.
+void check_structure_family(const std::string& fen,
+                            structure_family_t* engine_out)
+{
+  CAPTURE(fen);
+  REQUIRE(load_FEN(fen, &game));
+
+  structure_family_t engine;
+  structure_family_counts(&game.board, &engine);
+
+  walked_counts::structure_family_walk_t walk;
+  REQUIRE(walked_counts::structure_family_features(fen.substr(0, fen.find(' ')),
+                                                   &walk));
+
+  const auto cells = [](const char* what, const auto& mine, const auto& theirs,
+                        int width) {
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int cell = 0; cell < width; ++cell) {
+        const std::string name = what;
+        CAPTURE(name);
+        CAPTURE(colour);
+        CAPTURE(cell);
+        CHECK(mine[colour][cell] == theirs[colour][cell]);
+      }
+    }
+  };
+
+  for (int colour = 0; colour < 2; ++colour) {
+    CAPTURE(colour);
+    CHECK(engine.isolated_backward_set[colour] ==
+          walk.isolated_backward_set[colour]);
+    CHECK(engine.backward_only_set[colour] == walk.backward_only_set[colour]);
+    CHECK(engine.phalanx_set[colour] == walk.phalanx_set[colour]);
+    CHECK(engine.supported_set[colour] == walk.supported_set[colour]);
+    CHECK(engine.weak_set[colour] == walk.weak_set[colour]);
+    CHECK(engine.open_set[colour] == walk.open_set[colour]);
+  }
+
+  cells("isolated_backward", engine.isolated_backward, walk.isolated_backward,
+        1);
+  cells("isolated_file", engine.isolated_file, walk.isolated_file, 7);
+  cells("doubled_file", engine.doubled_file, walk.doubled_file, 7);
+  cells("backward_rank", engine.backward_rank, walk.backward_rank, 3);
+  cells("phalanx", engine.phalanx, walk.phalanx, 6);
+  cells("supported", engine.supported, walk.supported, 5);
+  cells("weak_unopposed", engine.weak_unopposed, walk.weak_unopposed, 1);
+
+  *engine_out = engine;
+}
+
+
+// One array's cell of the engine's counts, by the array's name.
+int structure_cell(const structure_family_t& family,
+                   const std::string& array,
+                   int colour,
+                   int cell)
+{
+  if (array == "isolated_backward") {
+    return (cell < 1) ? family.isolated_backward[colour][cell] : 0;
+  }
+  if (array == "isolated_file") {
+    return (cell < 7) ? family.isolated_file[colour][cell] : 0;
+  }
+  if (array == "doubled_file") {
+    return (cell < 7) ? family.doubled_file[colour][cell] : 0;
+  }
+  if (array == "backward_rank") {
+    return (cell < 3) ? family.backward_rank[colour][cell] : 0;
+  }
+  if (array == "phalanx") {
+    return (cell < 6) ? family.phalanx[colour][cell] : 0;
+  }
+  if (array == "supported") {
+    return (cell < 5) ? family.supported[colour][cell] : 0;
+  }
+  return (cell < 1) ? family.weak_unopposed[colour][cell] : 0;
+}
+
+struct structure_array_t
+{
+  const char* name;
+  int width;
+};
+
+const structure_array_t structure_arrays[] = {
+    {"isolated_backward", 1}, {"isolated_file", 7}, {"doubled_file", 7},
+    {"backward_rank", 3},     {"phalanx", 6},       {"supported", 5},
+    {"weak_unopposed", 1}};
+
+}  // namespace
+
+
+TEST_SUITE("eval counts: S125's pawn structure family")
+{
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the engine counts the structure family the walk counts")
+  {
+    // Every cell, per colour, non-zero somewhere, and every set non-empty:
+    // the comparison above is vacuous on a cell nobody reached.
+    int seen[7][2][7] = {};
+    size_t sets_seen[6][2] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : family_population()) {
+      structure_family_t engine;
+      check_structure_family(fen, &engine);
+
+      for (int a = 0; a < 7; ++a) {
+        for (int colour = 0; colour < 2; ++colour) {
+          for (int cell = 0; cell < structure_arrays[a].width; ++cell) {
+            seen[a][colour][cell] +=
+                (structure_cell(engine, structure_arrays[a].name, colour,
+                                cell) != 0);
+          }
+        }
+      }
+
+      for (int colour = 0; colour < 2; ++colour) {
+        const bb_t sets[6] = {engine.isolated_backward_set[colour],
+                              engine.backward_only_set[colour],
+                              engine.phalanx_set[colour],
+                              engine.supported_set[colour],
+                              engine.weak_set[colour],
+                              engine.open_set[colour]};
+        for (int s = 0; s < 6; ++s) {
+          sets_seen[s][colour] += (sets[s] != 0);
+        }
+      }
+
+      checked++;
+    }
+
+    CHECK(checked > 10000);
+
+    for (int a = 0; a < 7; ++a) {
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int cell = 0; cell < structure_arrays[a].width; ++cell) {
+          const std::string name = structure_arrays[a].name;
+          CAPTURE(name);
+          CAPTURE(colour);
+          CAPTURE(cell);
+          CHECK(seen[a][colour][cell] > 0);
+        }
+      }
+    }
+
+    for (int s = 0; s < 6; ++s) {
+      for (int colour = 0; colour < 2; ++colour) {
+        CAPTURE(s);
+        CAPTURE(colour);
+        CHECK(sets_seen[s][colour] > 0);
+      }
+    }
+  }
+
+  // Hand-worked placements from evaluation.hpp's definitions, each run as
+  // written and as its colour mirror with the rows swapped: a definition is
+  // the same for both colours, so the mirror's answer is the case's with
+  // White and Black exchanged. Every cell of every array is reached, by each
+  // colour and with each sign of the difference, which the loop at the end
+  // checks. Ranks named are the side's own; a file cell is the file less one.
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the walk and the engine count the structure family by "
+                    "hand")
+  {
+    const std::vector<family_case_t> cases = {
+        {"4k3/8/8/8/8/8/1P1P1P1P/4K3",
+         "b2, d2, f2 and h2 are isolated, open and weak",
+         {{"isolated_file", WHITE, 0, 1},
+          {"isolated_file", WHITE, 2, 1},
+          {"isolated_file", WHITE, 4, 1},
+          {"isolated_file", WHITE, 6, 1},
+          {"weak_unopposed", WHITE, 0, 4}}},
+        {"4k3/8/8/8/8/8/P1P1P1P1/4K3",
+         "a2, c2, e2 and g2 the same; the a file has no cell",
+         {{"isolated_file", WHITE, 1, 1},
+          {"isolated_file", WHITE, 3, 1},
+          {"isolated_file", WHITE, 5, 1},
+          {"weak_unopposed", WHITE, 0, 4}}},
+        {"4k3/8/8/8/1P1P1P1P/8/1P1P1P1P/4K3",
+         "doubled on b, d, f and h: the rear pawn of each file, and all "
+         "eight isolated",
+         {{"isolated_file", WHITE, 0, 2},
+          {"isolated_file", WHITE, 2, 2},
+          {"isolated_file", WHITE, 4, 2},
+          {"isolated_file", WHITE, 6, 2},
+          {"doubled_file", WHITE, 0, 1},
+          {"doubled_file", WHITE, 2, 1},
+          {"doubled_file", WHITE, 4, 1},
+          {"doubled_file", WHITE, 6, 1},
+          {"weak_unopposed", WHITE, 0, 8}}},
+        {"4k3/8/8/8/P1P1P1P1/8/P1P1P1P1/4K3",
+         "doubled on a, c, e and g",
+         {{"isolated_file", WHITE, 1, 2},
+          {"isolated_file", WHITE, 3, 2},
+          {"isolated_file", WHITE, 5, 2},
+          {"doubled_file", WHITE, 1, 1},
+          {"doubled_file", WHITE, 3, 1},
+          {"doubled_file", WHITE, 5, 1},
+          {"weak_unopposed", WHITE, 0, 8}}},
+        {"4k3/8/8/p1P5/8/1P6/8/4K3",
+         "b3 backward on its third with c5 ahead; a5 isolated, its stop a4 "
+         "attacked by b3",
+         {{"backward_rank", WHITE, 0, 1},
+          {"weak_unopposed", WHITE, 0, 1},
+          {"isolated_backward", BLACK, 0, 1},
+          {"weak_unopposed", BLACK, 0, 1}}},
+        {"4k3/8/p1P5/8/1P6/8/8/4K3",
+         "b4 backward on its fourth with c6 ahead; a6 isolated and backward",
+         {{"backward_rank", WHITE, 1, 1},
+          {"weak_unopposed", WHITE, 0, 1},
+          {"isolated_backward", BLACK, 0, 1},
+          {"weak_unopposed", BLACK, 0, 1}}},
+        {"4k3/p1P5/8/1P6/8/8/8/4K3",
+         "b5 backward on its fifth with c7 ahead; a7 isolated and backward",
+         {{"backward_rank", WHITE, 2, 1},
+          {"weak_unopposed", WHITE, 0, 1},
+          {"isolated_backward", BLACK, 0, 1},
+          {"weak_unopposed", BLACK, 0, 1}}},
+        {"4k3/8/8/8/p1P5/8/1P6/4K3",
+         "b2 backward on its second, the baseline, in no cell",
+         {{"weak_unopposed", WHITE, 0, 1},
+          {"isolated_backward", BLACK, 0, 1},
+          {"weak_unopposed", BLACK, 0, 1}}},
+        {"4k3/8/8/3p4/2p5/8/1P6/4K3",
+         "b2 isolated and backward on c4; c4 supported by d5 on Black's "
+         "fifth; d5 weak with c4 ahead",
+         {{"isolated_backward", WHITE, 0, 1},
+          {"isolated_file", WHITE, 0, 1},
+          {"weak_unopposed", WHITE, 0, 1},
+          {"supported", BLACK, 2, 1},
+          {"weak_unopposed", BLACK, 0, 1}}},
+        {"4k3/PP6/8/PP6/8/PP6/8/4K3",
+         "three phalanxes on the third, fifth and seventh, each member "
+         "counted; b3 and b5 doubled",
+         {{"phalanx", WHITE, 1, 2},
+          {"phalanx", WHITE, 3, 2},
+          {"phalanx", WHITE, 5, 2},
+          {"doubled_file", WHITE, 0, 2}}},
+        {"4k3/8/PP6/8/PP6/8/PP6/4K3",
+         "three on the second, fourth and sixth",
+         {{"phalanx", WHITE, 0, 2},
+          {"phalanx", WHITE, 2, 2},
+          {"phalanx", WHITE, 4, 2},
+          {"doubled_file", WHITE, 0, 2}}},
+        {"4k3/8/8/8/8/8/PPP5/4K3",
+         "a trio counts three",
+         {{"phalanx", WHITE, 0, 3}}},
+        {"7k/5P2/4P3/3P4/2P5/1P6/P7/K7",
+         "a chain from a2 to f7: each link supported but a2, which is weak",
+         {{"supported", WHITE, 0, 1},
+          {"supported", WHITE, 1, 1},
+          {"supported", WHITE, 2, 1},
+          {"supported", WHITE, 3, 1},
+          {"supported", WHITE, 4, 1},
+          {"weak_unopposed", WHITE, 0, 1}}},
+        {"4k3/8/8/8/8/1P6/P1P5/4K3",
+         "b3 defended twice counts once; a2 and c2 weak",
+         {{"supported", WHITE, 0, 1}, {"weak_unopposed", WHITE, 0, 2}}},
+        {"4k3/8/p7/8/8/8/P7/4K3",
+         "a2 and a6 weak but opposed: neither unopposed",
+         {}},
+        {"4k3/8/8/P7/p7/8/8/4K3",
+         "a5 and a4 have passed each other: an enemy pawn behind does not "
+         "oppose",
+         {{"weak_unopposed", WHITE, 0, 1}, {"weak_unopposed", BLACK, 0, 1}}},
+    };
+
+    int positive[7][7] = {};
+    int negative[7][7] = {};
+    int white_row[7][7] = {};
+    int black_row[7][7] = {};
+
+    for (const family_case_t& item : cases) {
+      for (const bool mirror : {false, true}) {
+        const std::string placement = item.placement;
+        const std::string what = item.what;
+        const std::string fen = mirror ? mirror_fen(placement + " w - - 0 1")
+                                       : placement + " w - - 0 1";
+        CAPTURE(what);
+        CAPTURE(mirror);
+
+        structure_family_t engine;
+        check_structure_family(fen, &engine);
+
+        for (int a = 0; a < 7; ++a) {
+          const std::string array = structure_arrays[a].name;
+          int expected[2][7] = {};
+
+          for (const family_cell_t& cell : item.cells) {
+            if (array == cell.array) {
+              const int colour = mirror ? 1 - cell.colour : cell.colour;
+              expected[colour][cell.rank] = cell.value;
+            }
+          }
+
+          for (int c = 0; c < structure_arrays[a].width; ++c) {
+            for (int colour = 0; colour < 2; ++colour) {
+              CAPTURE(array);
+              CAPTURE(colour);
+              CAPTURE(c);
+              CHECK(structure_cell(engine, array, colour, c) ==
+                    expected[colour][c]);
+            }
+
+            const int difference = expected[WHITE][c] - expected[BLACK][c];
+            if (difference > 0) { positive[a][c]++; }
+            if (difference < 0) { negative[a][c]++; }
+            if (expected[WHITE][c] != 0) { white_row[a][c]++; }
+            if (expected[BLACK][c] != 0) { black_row[a][c]++; }
+          }
+        }
+      }
+    }
+
+    for (int a = 0; a < 7; ++a) {
+      for (int c = 0; c < structure_arrays[a].width; ++c) {
+        const std::string name = structure_arrays[a].name;
+        CAPTURE(name);
+        CAPTURE(c);
+        CHECK_MESSAGE(positive[a][c] > 0, "never White ahead");
+        CHECK_MESSAGE(negative[a][c] > 0, "never Black ahead");
+        CHECK_MESSAGE(white_row[a][c] > 0, "no White row claimed");
+        CHECK_MESSAGE(black_row[a][c] > 0, "no Black row claimed");
       }
     }
   }

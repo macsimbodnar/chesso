@@ -313,9 +313,9 @@ void write_tables(const std::string& path,
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
-      "// passed pawn, pawn structure, piece placement, tempo and S123's\n"
-      "// passed pawn family weights at the end live in src/evaluation.cpp,\n"
-      "// a different file and easy to miss.\n"
+      "// passed pawn, pawn structure, piece placement, tempo, S123's\n"
+      "// passed pawn family and S125's pawn structure family weights at the\n"
+      "// end live in src/evaluation.cpp, a different file and easy to miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
@@ -514,6 +514,44 @@ void write_tables(const std::string& path,
     }
   }
 
+  // S125's family, the same way: seven arrays a half.
+  const family_array_t structure_family[] = {
+      {"isolated_backward", tuner_layout::IB_MG_BASE, tuner_layout::IB_EG_BASE,
+       tuner_layout::ISOLATED_BACKWARD_COUNT},
+      {"isolated_file", tuner_layout::ISF_MG_BASE, tuner_layout::ISF_EG_BASE,
+       tuner_layout::ISOLATED_FILE_COUNT},
+      {"doubled_file", tuner_layout::DBF_MG_BASE, tuner_layout::DBF_EG_BASE,
+       tuner_layout::DOUBLED_FILE_COUNT},
+      {"backward_rank", tuner_layout::BKR_MG_BASE, tuner_layout::BKR_EG_BASE,
+       tuner_layout::BACKWARD_RANK_COUNT},
+      {"phalanx", tuner_layout::PHX_MG_BASE, tuner_layout::PHX_EG_BASE,
+       tuner_layout::PHALANX_COUNT},
+      {"supported", tuner_layout::SUP_MG_BASE, tuner_layout::SUP_EG_BASE,
+       tuner_layout::SUPPORTED_COUNT},
+      {"weak_unopposed", tuner_layout::WKU_MG_BASE, tuner_layout::WKU_EG_BASE,
+       tuner_layout::WEAK_UNOPPOSED_COUNT},
+  };
+
+  fprintf(out,
+          "\n// S125's pawn structure family, by the cells src/evaluation.hpp "
+          "names.\n");
+
+  for (const family_array_t& array : structure_family) {
+    for (int table = 0; table < 2; ++table) {
+      const size_t base = (table == 0) ? array.mg_base : array.eg_base;
+
+      fprintf(out, "constexpr int %s_%s[%zu] = {", array.name,
+              (table == 0) ? "mg" : "eg", array.width);
+
+      for (size_t i = 0; i < array.width; ++i) {
+        fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+                static_cast<int>(std::lround(params[base + i])));
+      }
+
+      fprintf(out, "};\n");
+    }
+  }
+
   fclose(out);
   fprintf(stderr, "constants written to %s\n", path.c_str());
 }
@@ -537,8 +575,11 @@ void usage()
       "                   `mobility_<piece>_<half> <cell> <anchor> [scale]`\n"
       "                   a line, or since S123 a passed pawn rank,\n"
       "                   `<passed_free|passed_safe|passed_king_own|\n"
-      "                   passed_king_enemy|candidate_passer>_<half> ...`;\n"
-      "                   both ends must be free\n"
+      "                   passed_king_enemy|candidate_passer>_<half> ...`,\n"
+      "                   or since S125 a pawn structure cell,\n"
+      "                   `<isolated_backward|isolated_file|doubled_file|\n"
+      "                   backward_rank|phalanx|supported|weak_unopposed>\n"
+      "                   _<half> ...` (S125); both ends must be free\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"

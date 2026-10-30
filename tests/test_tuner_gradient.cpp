@@ -44,7 +44,13 @@
 namespace
 {
 
+using tuner_layout::BKR_EG_BASE;
+using tuner_layout::BKR_MG_BASE;
 using tuner_layout::EG_BASE;
+using tuner_layout::IB_EG_BASE;
+using tuner_layout::IB_MG_BASE;
+using tuner_layout::ISF_EG_BASE;
+using tuner_layout::ISF_MG_BASE;
 using tuner_layout::KING_SAFETY_COUNT;
 using tuner_layout::KS_EG_BASE;
 using tuner_layout::KS_MG_BASE;
@@ -60,8 +66,14 @@ using tuner_layout::PL_EG_BASE;
 using tuner_layout::PL_MG_BASE;
 using tuner_layout::PP_EG_BASE;
 using tuner_layout::PP_MG_BASE;
+using tuner_layout::PS_EG_BASE;
+using tuner_layout::PS_MG_BASE;
+using tuner_layout::SUP_EG_BASE;
+using tuner_layout::SUP_MG_BASE;
 using tuner_layout::TEMPO_EG_BASE;
 using tuner_layout::TEMPO_MG_BASE;
+using tuner_layout::WKU_EG_BASE;
+using tuner_layout::WKU_MG_BASE;
 
 using test_eval_positions::positions;
 using tuner_trace::dataset_t;
@@ -519,7 +531,11 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // mobility_eg[bishop][1], over the 80 rows before them
 // (adocs/data/S123_preconditions.txt). At the family's fit, which ships since
 // S123's H1, it is 2.79e-07, at parameter 985, passed_king_own_eg[0]
-// (adocs/data/S123_goldens.txt).
+// (adocs/data/S123_goldens.txt). S125 appended its pawn structure family
+// (1073 parameters) and four rows so that each of its 60 has a gradient here:
+// at the family's zero landing the worst is 3.45e-07, at parameter 857,
+// mobility_eg[bishop][9]; 2.79e-07 at 985 over the 88 rows before them
+// (adocs/data/S125_preconditions.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -642,7 +658,10 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // farthest at 197.3, the nearest other at 158.8, every row 13.33 from the
   // kink, finite differences 6.61e-8; +80 still passes the rule's checks
   // there, but its nearest row is 3.71 from the kink and the rule takes the
-  // farthest (adocs/data/S123_goldens.txt).
+  // farthest (adocs/data/S123_goldens.txt). With S125's four coverage rows
+  // (92) at its zero-weight landing it answers +30 still: two rows bound, the
+  // farthest at 197.3, the nearest other at 158.8, every row 13.33 from the
+  // kink, finite differences 8.75e-8 (adocs/data/S125_preconditions.txt).
   // Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
@@ -965,7 +984,11 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // **0.0235** under Adam, the bishop's, and 0.2272 under AdaGrad, the
     // bishop's again, the largest 4.9580, the queen's, and 4.4351, the
     // pawn's, every hold at most 8.88e-15: over the floor by a factor of
-    // 2.35 (`adocs/data/S123_preconditions.txt`). The
+    // 2.35 (`adocs/data/S123_preconditions.txt`). With S125's four coverage
+    // rows (96 with the gauge rows) at its zero-weight landing the smallest is
+    // 0.0666 under Adam and 0.0760 under AdaGrad, both the bishop's, the
+    // largest 3.8879 and 3.5522, both the queen's, every hold at most 1.22e-14
+    // (`adocs/data/S125_preconditions.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
@@ -1078,6 +1101,59 @@ TEST_CASE("a planted vector comes back through the trace path")
         {PL_EG_BASE + 5, -26},
         {PL_EG_BASE + 6, -9}}},
       {"tempo", {{TEMPO_MG_BASE, 23}, {TEMPO_EG_BASE, 12}}},
+      // S125's (DEC-331 (11)): the three flats P0 refits, and five of its
+      // seven groups, with numbers written here and derived from nothing
+      // outside this repository. Doubled pawns by file and phalanx pawns by
+      // rank are not planted: on these rows the fit returned none of
+      // doubled_files' 14 halves and 5 of phalanx's 12 within half a
+      // centipawn of a plant (2026-10-30) -- inferred, not measured: the
+      // rows reach their cells at too few phases, or in too few independent
+      // combinations, to tell a cell's halves or its neighbours apart,
+      // S123's reason for its family -- so their recovery is unmeasured
+      // here, and `feature_audit --plant` over a corpus slice is where it
+      // would go (adocs/data/S125_preconditions.txt).
+      {"pawn_structure",
+       {{PS_MG_BASE + 0, -14},
+        {PS_MG_BASE + 1, -6},
+        {PS_MG_BASE + 2, -9},
+        {PS_EG_BASE + 0, -21},
+        {PS_EG_BASE + 1, -27},
+        {PS_EG_BASE + 2, -5}}},
+      {"isolated_backward", {{IB_MG_BASE, -8}, {IB_EG_BASE, 6}}},
+      {"isolated_files",
+       {{ISF_MG_BASE + 0, -3},
+        {ISF_MG_BASE + 1, 4},
+        {ISF_MG_BASE + 2, -5},
+        {ISF_MG_BASE + 3, 6},
+        {ISF_MG_BASE + 4, -7},
+        {ISF_MG_BASE + 5, 8},
+        {ISF_MG_BASE + 6, -9},
+        {ISF_EG_BASE + 0, 5},
+        {ISF_EG_BASE + 1, -6},
+        {ISF_EG_BASE + 2, 7},
+        {ISF_EG_BASE + 3, -8},
+        {ISF_EG_BASE + 4, 9},
+        {ISF_EG_BASE + 5, -10},
+        {ISF_EG_BASE + 6, 11}}},
+      {"backward_ranks",
+       {{BKR_MG_BASE + 0, -4},
+        {BKR_MG_BASE + 1, 5},
+        {BKR_MG_BASE + 2, -6},
+        {BKR_EG_BASE + 0, 7},
+        {BKR_EG_BASE + 1, -8},
+        {BKR_EG_BASE + 2, 9}}},
+      {"supported",
+       {{SUP_MG_BASE + 0, 3},
+        {SUP_MG_BASE + 1, 5},
+        {SUP_MG_BASE + 2, 7},
+        {SUP_MG_BASE + 3, 9},
+        {SUP_MG_BASE + 4, 11},
+        {SUP_EG_BASE + 0, 4},
+        {SUP_EG_BASE + 1, 6},
+        {SUP_EG_BASE + 2, 8},
+        {SUP_EG_BASE + 3, 10},
+        {SUP_EG_BASE + 4, 12}}},
+      {"weak_unopposed", {{WKU_MG_BASE, -7}, {WKU_EG_BASE, -11}}},
   };
 
   const double k = 1.0;

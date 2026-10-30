@@ -1,8 +1,8 @@
 #pragma once
 // The evaluation's counts walked by hand from a FEN's placement -- mobility,
-// king safety, passed pawns, pawn structure, piece placement, and since S123
-// the passed pawn family -- a second implementation the engine's own counts
-// are checked against. S276.
+// king safety, passed pawns, pawn structure, piece placement, since S123 the
+// passed pawn family and since S125 the pawn structure family -- a second
+// implementation the engine's own counts are checked against. S276.
 //
 // These walks are the feature half of tools/eval_model.hpp, the hand-written
 // mirror of evaluate() the tuner fitted from S028 to S262 and
@@ -1115,6 +1115,168 @@ inline bool passer_family_features(const std::string& placement,
       if (rank > 4) { return false; }
       out->candidate[side][rank]++;
     }
+  }
+
+  return true;
+}
+
+
+// S125's pawn structure family, per side, WHITE first, each a side's own count
+// and positive: src/evaluation.hpp's definitions walked square by square from
+// the placement, sharing no code with the engine -- no bitboard algebra, no
+// fill, no shift. The sets are returned as well, a bit per square in the
+// board's own index order (0 = a8), so the engine's sets can be compared bit
+// for bit. Cells are the weights' cells: files b to h from 0, own ranks from
+// each table's first.
+//
+//   isolated_backward  no own pawn on either neighbouring file, and an enemy
+//                      pawn on a neighbouring file two squares ahead, which is
+//                      what attacks the square directly ahead;
+//   backward_only      no own pawn on either neighbouring file level with or
+//                      behind, that enemy pawn, and an own pawn on a
+//                      neighbouring file somewhere (so not isolated);
+//   phalanx            an own pawn on a neighbouring file on the same rank;
+//   supported          an own pawn on a neighbouring file one rank behind;
+//   weak               no own pawn on a neighbouring file level with or
+//                      behind;
+//   open               no enemy pawn ahead on the pawn's own file;
+//   weak_unopposed     weak and open.
+//
+// isolated_file and doubled_file count isolated pawns and doubled pawns (an
+// own pawn ahead on the file) by file, the a file in no cell.
+struct structure_family_walk_t
+{
+  unsigned long long isolated_backward_set[2];
+  unsigned long long backward_only_set[2];
+  unsigned long long phalanx_set[2];
+  unsigned long long supported_set[2];
+  unsigned long long weak_set[2];
+  unsigned long long open_set[2];
+  int isolated_backward[2][1];
+  int isolated_file[2][7];
+  int doubled_file[2][7];
+  int backward_rank[2][3];
+  int phalanx[2][6];
+  int supported[2][5];
+  int weak_unopposed[2][1];
+};
+
+
+inline bool structure_family_features(const std::string& placement,
+                                      structure_family_walk_t* out)
+{
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+    white_at[i] = false;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int type = piece_from_char(c, &black);
+
+    if (type < 0 || square > 63) { return false; }
+
+    kind_at[square] = type;
+    white_at[square] = !black;
+    square++;
+  }
+
+  if (square != 64) { return false; }
+
+  *out = structure_family_walk_t{};
+
+  // A pawn of colour `white` on (row, file), false off the board.
+  const auto pawn = [&](int row, int file, bool white) {
+    if (row < 0 || row > 7 || file < 0 || file > 7) { return false; }
+    const int sq = row * 8 + file;
+    return kind_at[sq] == 0 && white_at[sq] == white;
+  };
+
+  for (int from = 0; from < 64; ++from) {
+    if (kind_at[from] != 0) { continue; }
+
+    const bool white = white_at[from];
+    const int side = white ? 0 : 1;
+    const int row = from / 8;
+    const int file = from % 8;
+
+    if (row == 0 || row == 7) { return false; }
+
+    // Rows run 0 (rank 8) to 7 (rank 1): White's ahead is a lower row.
+    const int ahead = white ? -1 : 1;
+    const int rank = white ? 8 - row : row + 1;  // the side's own rank
+
+    bool neighbour_anywhere = false;
+    bool neighbour_level_or_behind = false;
+    bool beside = false;
+    bool defender = false;
+
+    for (const int f : {file - 1, file + 1}) {
+      for (int r = 0; r < 8; ++r) {
+        if (!pawn(r, f, white)) { continue; }
+
+        neighbour_anywhere = true;
+        // Behind is the other way from ahead; level is the same row.
+        if ((r - row) * ahead <= 0) { neighbour_level_or_behind = true; }
+        if (r == row) { beside = true; }
+        if (r == row - ahead) { defender = true; }
+      }
+    }
+
+    const bool stop_attacked = pawn(row + 2 * ahead, file - 1, !white) ||
+                               pawn(row + 2 * ahead, file + 1, !white);
+
+    bool own_ahead = false;
+    bool enemy_ahead = false;
+    for (int r = row + ahead; r >= 0 && r <= 7; r += ahead) {
+      if (pawn(r, file, white)) { own_ahead = true; }
+      if (pawn(r, file, !white)) { enemy_ahead = true; }
+    }
+
+    const bool isolated = !neighbour_anywhere;
+    const bool weak = !neighbour_level_or_behind;
+    const bool backward = weak && stop_attacked;
+    const unsigned long long bit = 1ULL << from;
+
+    if (isolated && stop_attacked) {
+      out->isolated_backward_set[side] |= bit;
+      out->isolated_backward[side][0]++;
+    }
+
+    if (isolated && file > 0) { out->isolated_file[side][file - 1]++; }
+    if (own_ahead && file > 0) { out->doubled_file[side][file - 1]++; }
+
+    if (backward && !isolated) {
+      out->backward_only_set[side] |= bit;
+      if (rank < 2 || rank > 5) { return false; }
+      if (rank >= 3) { out->backward_rank[side][rank - 3]++; }
+    }
+
+    if (beside) {
+      out->phalanx_set[side] |= bit;
+      out->phalanx[side][rank - 2]++;
+    }
+
+    if (defender) {
+      out->supported_set[side] |= bit;
+      if (rank < 3) { return false; }
+      out->supported[side][rank - 3]++;
+    }
+
+    if (weak) { out->weak_set[side] |= bit; }
+    if (!enemy_ahead) { out->open_set[side] |= bit; }
+    if (weak && !enemy_ahead) { out->weak_unopposed[side][0]++; }
   }
 
   return true;

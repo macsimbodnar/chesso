@@ -539,7 +539,8 @@ std::string column_name(size_t i)
   }
 
   // S123's family: an array, its half and the pawn's own rank index, 0 for
-  // the second -- the cell numbering `tuner --tie` reads.
+  // the second -- the cell numbering `tuner --tie` reads. S125's after it,
+  // each by its weights' cell (src/evaluation.hpp).
   struct family_block_t
   {
     const char* name;
@@ -559,6 +560,20 @@ std::string column_name(size_t i)
        tuner_layout::PKE_EG_BASE, tuner_layout::PASSED_KING_COUNT},
       {"candidate_passer", tuner_layout::CP_MG_BASE, tuner_layout::CP_EG_BASE,
        tuner_layout::CANDIDATE_PASSER_COUNT},
+      {"isolated_backward", tuner_layout::IB_MG_BASE, tuner_layout::IB_EG_BASE,
+       tuner_layout::ISOLATED_BACKWARD_COUNT},
+      {"isolated_file", tuner_layout::ISF_MG_BASE, tuner_layout::ISF_EG_BASE,
+       tuner_layout::ISOLATED_FILE_COUNT},
+      {"doubled_file", tuner_layout::DBF_MG_BASE, tuner_layout::DBF_EG_BASE,
+       tuner_layout::DOUBLED_FILE_COUNT},
+      {"backward_rank", tuner_layout::BKR_MG_BASE, tuner_layout::BKR_EG_BASE,
+       tuner_layout::BACKWARD_RANK_COUNT},
+      {"phalanx", tuner_layout::PHX_MG_BASE, tuner_layout::PHX_EG_BASE,
+       tuner_layout::PHALANX_COUNT},
+      {"supported", tuner_layout::SUP_MG_BASE, tuner_layout::SUP_EG_BASE,
+       tuner_layout::SUPPORTED_COUNT},
+      {"weak_unopposed", tuner_layout::WKU_MG_BASE, tuner_layout::WKU_EG_BASE,
+       tuner_layout::WEAK_UNOPPOSED_COUNT},
   };
 
   for (const family_block_t& f : family) {
@@ -1427,8 +1442,8 @@ int main(int argc, char** argv)
                          feature_of(eval_trace::TERM_PIECE_PLACEMENT, i)});
     }
 
-    // S123's family, one column a cell; named by the middlegame half's
-    // parameter, which is the cell's own name less the half.
+    // S123's family and S125's after it, one column a cell; named by the
+    // middlegame half's parameter, which is the cell's own name less the half.
     std::vector<std::string> family_names;
     for (uint32_t f =
              tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE];
@@ -1508,7 +1523,8 @@ int main(int argc, char** argv)
     // `support <name> rows N games G`, which adocs/data/S121_screen.py ties
     // reads to tie the cells under its pre-registered threshold. S123 reads
     // the same lines for its family's cells (adocs/data/S123_screen.py ties),
-    // printed after the mobility block under a heading of their own.
+    // printed after the mobility block under a heading of their own, and
+    // S125 for its family's (adocs/data/S125_screen.py ties) under another.
     {
       std::vector<uint32_t> starts;
       tuner_split::game_starts(data.ply, &starts);
@@ -1574,9 +1590,14 @@ int main(int argc, char** argv)
               feature_of(eval_trace::TERM_MOBILITY,
                          static_cast<size_t>(MOBILITY_CELLS)),
               "mobility");
-      support(tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE],
-              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
-              "passer family (S123)");
+      support(
+          tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE],
+          tuner_trace::feature_table().base[eval_trace::TERM_ISOLATED_BACKWARD],
+          "passer family (S123)");
+      support(
+          tuner_trace::feature_table().base[eval_trace::TERM_ISOLATED_BACKWARD],
+          tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+          "structure family (S125)");
     }
 
     // Tempo is not a count and has no zero case; what it has is a label-side

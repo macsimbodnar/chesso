@@ -10,7 +10,8 @@
 // indices, the order and the 823 are the ones every fit from S134 to S135
 // emitted. S135 widened the piece placement block from three to seven, 831;
 // S121 made mobility a table, 66 cells a half where it had four, 955; S123
-// appended its passed pawn family after tempo, 1013.
+// appended its passed pawn family after tempo, 1013; S125 its pawn structure
+// family after S123's, 1073.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -127,6 +128,34 @@ static_assert(sizeof(passed_king_enemy_mg) == sizeof(passed_king_own_mg) &&
                   PASSED_SAFE_COUNT == PASSED_FREE_COUNT,
               "A's two arrays and B's two are per rank 2 to 7");
 
+// S125's pawn structure family (DEC-331), appended after S123's for the same
+// reason S123's was appended after tempo. Seven arrays, each a middlegame and
+// an endgame half (src/evaluation.hpp defines the counts and the cells):
+//
+//   isolated_backward   the isolated pawns backward too, an increment, 1
+//   isolated_file       isolated pawns by file b to h, 7
+//   doubled_file        doubled pawns by file b to h, 7
+//   backward_rank       backward pawns not isolated by own rank 3 to 5, 3
+//   phalanx             phalanx pawns by own rank 2 to 7, 6
+//   supported           supported pawns by own rank 3 to 7, 5
+//   weak_unopposed      weak pawns with no enemy pawn ahead on the file, 1
+//
+// 60 parameters, each block a group of its own in tools/tuner_groups.hpp.
+// Widths from the engine's own arrays, as above.
+constexpr size_t ISOLATED_BACKWARD_COUNT =
+    sizeof(isolated_backward_mg) / sizeof(isolated_backward_mg[0]);
+constexpr size_t ISOLATED_FILE_COUNT =
+    sizeof(isolated_file_mg) / sizeof(isolated_file_mg[0]);
+constexpr size_t DOUBLED_FILE_COUNT =
+    sizeof(doubled_file_mg) / sizeof(doubled_file_mg[0]);
+constexpr size_t BACKWARD_RANK_COUNT =
+    sizeof(backward_rank_mg) / sizeof(backward_rank_mg[0]);
+constexpr size_t PHALANX_COUNT = sizeof(phalanx_mg) / sizeof(phalanx_mg[0]);
+constexpr size_t SUPPORTED_COUNT =
+    sizeof(supported_mg) / sizeof(supported_mg[0]);
+constexpr size_t WEAK_UNOPPOSED_COUNT =
+    sizeof(weak_unopposed_mg) / sizeof(weak_unopposed_mg[0]);
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -151,6 +180,20 @@ constexpr size_t PKE_MG_BASE = PKO_EG_BASE + PASSED_KING_COUNT;
 constexpr size_t PKE_EG_BASE = PKE_MG_BASE + PASSED_KING_COUNT;
 constexpr size_t CP_MG_BASE = PKE_EG_BASE + PASSED_KING_COUNT;
 constexpr size_t CP_EG_BASE = CP_MG_BASE + CANDIDATE_PASSER_COUNT;
+constexpr size_t IB_MG_BASE = CP_EG_BASE + CANDIDATE_PASSER_COUNT;
+constexpr size_t IB_EG_BASE = IB_MG_BASE + ISOLATED_BACKWARD_COUNT;
+constexpr size_t ISF_MG_BASE = IB_EG_BASE + ISOLATED_BACKWARD_COUNT;
+constexpr size_t ISF_EG_BASE = ISF_MG_BASE + ISOLATED_FILE_COUNT;
+constexpr size_t DBF_MG_BASE = ISF_EG_BASE + ISOLATED_FILE_COUNT;
+constexpr size_t DBF_EG_BASE = DBF_MG_BASE + DOUBLED_FILE_COUNT;
+constexpr size_t BKR_MG_BASE = DBF_EG_BASE + DOUBLED_FILE_COUNT;
+constexpr size_t BKR_EG_BASE = BKR_MG_BASE + BACKWARD_RANK_COUNT;
+constexpr size_t PHX_MG_BASE = BKR_EG_BASE + BACKWARD_RANK_COUNT;
+constexpr size_t PHX_EG_BASE = PHX_MG_BASE + PHALANX_COUNT;
+constexpr size_t SUP_MG_BASE = PHX_EG_BASE + PHALANX_COUNT;
+constexpr size_t SUP_EG_BASE = SUP_MG_BASE + SUPPORTED_COUNT;
+constexpr size_t WKU_MG_BASE = SUP_EG_BASE + SUPPORTED_COUNT;
+constexpr size_t WKU_EG_BASE = WKU_MG_BASE + WEAK_UNOPPOSED_COUNT;
 
 // Where each block ends, so that no group has to run to PARAM_COUNT: every
 // `--only` group in tools/tuner_groups.hpp ends at its own block's end, and
@@ -159,16 +202,26 @@ constexpr size_t TEMPO_END = TEMPO_EG_BASE + TEMPO_COUNT;
 constexpr size_t PASSER_ADVANCE_END = PSF_EG_BASE + PASSED_SAFE_COUNT;
 constexpr size_t PASSER_KINGS_END = PKE_EG_BASE + PASSED_KING_COUNT;
 constexpr size_t CANDIDATE_PASSER_END = CP_EG_BASE + CANDIDATE_PASSER_COUNT;
+constexpr size_t ISOLATED_BACKWARD_END = IB_EG_BASE + ISOLATED_BACKWARD_COUNT;
+constexpr size_t ISOLATED_FILE_END = ISF_EG_BASE + ISOLATED_FILE_COUNT;
+constexpr size_t DOUBLED_FILE_END = DBF_EG_BASE + DOUBLED_FILE_COUNT;
+constexpr size_t BACKWARD_RANK_END = BKR_EG_BASE + BACKWARD_RANK_COUNT;
+constexpr size_t PHALANX_END = PHX_EG_BASE + PHALANX_COUNT;
+constexpr size_t SUPPORTED_END = SUP_EG_BASE + SUPPORTED_COUNT;
+constexpr size_t WEAK_UNOPPOSED_END = WKU_EG_BASE + WEAK_UNOPPOSED_COUNT;
 
 constexpr size_t PARAM_COUNT =
     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
     2 * KING_SAFETY_COUNT + 2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT +
     2 * PIECE_PLACEMENT_COUNT + 2 * TEMPO_COUNT + 2 * PASSED_FREE_COUNT +
-    2 * PASSED_SAFE_COUNT + 4 * PASSED_KING_COUNT + 2 * CANDIDATE_PASSER_COUNT;
+    2 * PASSED_SAFE_COUNT + 4 * PASSED_KING_COUNT + 2 * CANDIDATE_PASSER_COUNT +
+    2 * ISOLATED_BACKWARD_COUNT + 2 * ISOLATED_FILE_COUNT +
+    2 * DOUBLED_FILE_COUNT + 2 * BACKWARD_RANK_COUNT + 2 * PHALANX_COUNT +
+    2 * SUPPORTED_COUNT + 2 * WEAK_UNOPPOSED_COUNT;
 
-static_assert(CANDIDATE_PASSER_END == PARAM_COUNT,
-              "a block was appended after S123's candidate passers: give it "
-              "an end constant and a group of its own");
+static_assert(WEAK_UNOPPOSED_END == PARAM_COUNT,
+              "a block was appended after S125's weak unopposed pawns: give "
+              "it an end constant and a group of its own");
 
 
 // The constants the engine currently ships, as the parameter vector. This is
@@ -243,5 +296,27 @@ inline void starting_params(double* params)
     params[CP_MG_BASE + r] = candidate_passer_mg[r];
     params[CP_EG_BASE + r] = candidate_passer_eg[r];
   }
+
+  // S125's family, block by block.
+  const auto block = [params](size_t mg_base, size_t eg_base, size_t width,
+                              const int* mg, const int* eg) {
+    for (size_t i = 0; i < width; ++i) {
+      params[mg_base + i] = mg[i];
+      params[eg_base + i] = eg[i];
+    }
+  };
+
+  block(IB_MG_BASE, IB_EG_BASE, ISOLATED_BACKWARD_COUNT, isolated_backward_mg,
+        isolated_backward_eg);
+  block(ISF_MG_BASE, ISF_EG_BASE, ISOLATED_FILE_COUNT, isolated_file_mg,
+        isolated_file_eg);
+  block(DBF_MG_BASE, DBF_EG_BASE, DOUBLED_FILE_COUNT, doubled_file_mg,
+        doubled_file_eg);
+  block(BKR_MG_BASE, BKR_EG_BASE, BACKWARD_RANK_COUNT, backward_rank_mg,
+        backward_rank_eg);
+  block(PHX_MG_BASE, PHX_EG_BASE, PHALANX_COUNT, phalanx_mg, phalanx_eg);
+  block(SUP_MG_BASE, SUP_EG_BASE, SUPPORTED_COUNT, supported_mg, supported_eg);
+  block(WKU_MG_BASE, WKU_EG_BASE, WEAK_UNOPPOSED_COUNT, weak_unopposed_mg,
+        weak_unopposed_eg);
 }
 }  // namespace tuner_layout

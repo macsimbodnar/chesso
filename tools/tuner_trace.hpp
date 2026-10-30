@@ -85,8 +85,8 @@ using tuner_target::sigmoid;
 // evaluate().
 //
 //   MATERIAL    board->material, added untapered in evaluate_cheap()
-//   POSITIONAL  board->psqt plus the pawn terms (S123's family among them),
-//               one taper
+//   POSITIONAL  board->psqt plus the pawn terms (S123's and S125's families
+//               among them), one taper
 //   TEMPO       its own taper, added after the side-to-move sign
 //   MOBILITY    its own taper, in evaluate_expensive()
 //   KING_SAFETY its own taper, and the two summed and clamped to the margin
@@ -151,6 +151,22 @@ inline term_layout_t term_layout(term_t term)
       return {PASSED_KING_COUNT, PKE_MG_BASE, PKE_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_CANDIDATE_PASSER:
       return {CANDIDATE_PASSER_COUNT, CP_MG_BASE, CP_EG_BASE, SITE_POSITIONAL};
+    // S125's family, summed into the same pair in evaluate_pawns(), so the
+    // same one taper.
+    case eval_trace::TERM_ISOLATED_BACKWARD:
+      return {ISOLATED_BACKWARD_COUNT, IB_MG_BASE, IB_EG_BASE, SITE_POSITIONAL};
+    case eval_trace::TERM_ISOLATED_FILE:
+      return {ISOLATED_FILE_COUNT, ISF_MG_BASE, ISF_EG_BASE, SITE_POSITIONAL};
+    case eval_trace::TERM_DOUBLED_FILE:
+      return {DOUBLED_FILE_COUNT, DBF_MG_BASE, DBF_EG_BASE, SITE_POSITIONAL};
+    case eval_trace::TERM_BACKWARD_RANK:
+      return {BACKWARD_RANK_COUNT, BKR_MG_BASE, BKR_EG_BASE, SITE_POSITIONAL};
+    case eval_trace::TERM_PHALANX:
+      return {PHALANX_COUNT, PHX_MG_BASE, PHX_EG_BASE, SITE_POSITIONAL};
+    case eval_trace::TERM_SUPPORTED:
+      return {SUPPORTED_COUNT, SUP_MG_BASE, SUP_EG_BASE, SITE_POSITIONAL};
+    case eval_trace::TERM_WEAK_UNOPPOSED:
+      return {WEAK_UNOPPOSED_COUNT, WKU_MG_BASE, WKU_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_COUNT:
       break;
   }

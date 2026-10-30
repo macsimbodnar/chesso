@@ -46,7 +46,10 @@ namespace eval_trace
 // mirrored for Black exactly as eval_add_piece() mirrors it, the enum index for
 // the rest, 0 for tempo, and the pawn's own rank, 0 for its second, for
 // S123's five passed pawn arrays. Those five come after tempo so that every
-// term before them keeps the feature numbers it had.
+// term before them keeps the feature numbers it had, and S125's seven come
+// after them for the same reason, each indexed by its weights' cell
+// (src/evaluation.hpp): 0 for the two counts, the file less one for the two
+// tables by file, the own rank less the table's first for the three by rank.
 enum term_t : uint8_t
 {
   TERM_MATERIAL,
@@ -62,6 +65,13 @@ enum term_t : uint8_t
   TERM_PASSED_KING_OWN,
   TERM_PASSED_KING_ENEMY,
   TERM_CANDIDATE_PASSER,
+  TERM_ISOLATED_BACKWARD,
+  TERM_ISOLATED_FILE,
+  TERM_DOUBLED_FILE,
+  TERM_BACKWARD_RANK,
+  TERM_PHALANX,
+  TERM_SUPPORTED,
+  TERM_WEAK_UNOPPOSED,
   TERM_COUNT
 };
 
