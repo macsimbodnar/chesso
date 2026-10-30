@@ -125,19 +125,24 @@ constexpr std::array<score_t, 5> passed_pawn_score =
 // (DEC-329): A, a free and a safe increment per own rank 2 to 7; B, a slope
 // per own rank 2 to 7 on each king's distance to the push square; C, a weight
 // per own rank 2 to 6 for a candidate passer. evaluation.hpp defines each
-// count; passer_family() below computes them.
+// count; passer_family_side() and candidate_passers() below compute them.
 //
-// **Landed at zero, S135's form, and fitted afterwards** (DEC-259's screen,
-// adocs/data/S123_screen.sh). No seed: nothing here was taken from any
-// engine or page, and every entry starts the fit at zero (DEC-084). At zero a
-// group is in no expression -- passer_family() is not compiled into the
-// engine for a group whose weights are all zero -- so the landing scores
-// every position as before and costs nothing (INV-6). What a group costs is
-// measured with its weights forced (DEC-047, adocs/data/S123_cost.sh).
+// **Landed at zero, S135's form, fitted afterwards, and shipped on one SPRT's
+// H1** (DEC-259's screen, adocs/data/S123_screen.sh). No seed: nothing here
+// was taken from any engine or page, and every entry started the fit at zero
+// (DEC-084). At zero a group is in no expression -- the liveness flags below
+// keep a group whose weights are all zero out of the engine's
+// evaluate_cheap() -- so the landing scored every position as before and
+// cost nothing (INV-6, adocs/data/S123_inv6.txt).
 //
 // The values below are the screen's full fit with all three groups kept, ABC
 // (adocs/data/S123_screen_reading.txt), pasted unchanged: monotonicity is not
 // imposed, so a row that is not monotonic is the fit's, not corrected by hand.
+// Their one SPRT, `{0, 5}` nElo at 8+0.08, read H1 (adocs/data/S123_sprt.log),
+// so the three groups ship together and no bisection follows. Their speed
+// cost, +4.96 % with every group live, measured with the weights forced
+// (DEC-047, adocs/data/S123_cost_reading.txt), is inside that verdict and
+// was never priced apart from it.
 //
 // Rank 7 enters A and B as increments and slopes and never as a base cell: a
 // per-rank weight on the seventh alone would be the signed sum of eight
@@ -166,6 +171,14 @@ constexpr std::array<score_t, 5> candidate_passer_score =
 
 // Whether a weight array pair has a non-zero entry: a group none of whose
 // arrays does is not computed by the engine's evaluate_cheap() at all.
+//
+// Since S123's H1 every group is live, so the three flags below are true and
+// gate nothing. They stay for the refit that zeroes a group again -- S126
+// refits everything S123 landed, and a group a later screen drops is held at
+// zero and recorded as a corpus finding (S126's rule). Without them such a
+// group's work is left to the compiler to prove dead, and A's could not be:
+// is_attacked() is an out-of-line call it cannot delete as it deletes a dead
+// popcount (passer_family_side()).
 template <size_t N>
 static constexpr bool any_weight(const std::array<score_t, N>& packed)
 {
@@ -506,6 +519,9 @@ static constexpr int stage_one_half(const int (&table)[6][64],
 // reaches -- fifteen queens against fifteen bishops -- and still a proof.
 // adocs/data/S135_screen.py's `headroom` repeats this arithmetic for a fitted
 // header, so a fit that would fail the assert is refused before it is pasted.
+// With S123's family shipping fitted the whole bound reads 19982 and 25799,
+// 12785 and 6968 of room (adocs/data/S123_goldens.txt, by S123_screen.py's
+// `headroom`, which adds passer_family_half()).
 static constexpr int stage_one_bound =
     std::max(stage_one_half(psqt_mg,
                             passed_pawn_mg,
@@ -808,8 +824,9 @@ static inline int chebyshev(int a, int b)
 // passes the groups' liveness, so a group whose weights are all zero is not
 // in its evaluate_cheap() -- is_attacked() is an out-of-line call the
 // compiler could not delete as it deletes a dead popcount, so this is what
-// keeps the zero-weight landing free (S135's form, DEC-329 (3)). The trace
-// build and the accessors pass true for both.
+// kept the zero-weight landing free (S135's form, DEC-329 (3)). Both groups
+// are live since S123's H1; the gate is there for a refit that zeroes one
+// again. The trace build and the accessors pass true for both.
 //
 // Safe reads is_attacked() once per passer whose push square is empty, and
 // only then: a blocked passer is neither free nor safe. That repeats slider

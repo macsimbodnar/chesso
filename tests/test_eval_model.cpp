@@ -1173,8 +1173,9 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
 // per colour (passer_family_counts()) against walked_counts::
 // passer_family_features(), which walks evaluation.hpp's definitions square
 // by square and shares no code with the engine -- per colour, not as the
-// difference, because at zero weights no score sees these counts and a count
-// credited to both sides cancels in any difference.
+// difference, because at the landing's zero weights no score saw these
+// counts, and at any weight a count credited to both sides cancels in any
+// difference.
 namespace
 {
 

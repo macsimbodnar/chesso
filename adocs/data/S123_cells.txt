@@ -1,0 +1,87 @@
+# S123's cells: every cell half of the shipped fit, the screen's candidate .tuning/s123/fits/ABC/full.hpp (sha256
+# c7f340c6..., the ten arrays src/evaluation.cpp ships since the SPRT's H1, identical by line), beside its support in
+# the audit (.tuning/s123/audit/report.txt, sha256 33470986..., its `passer family (S123) support:` lines: the rows
+# putting a non-zero coefficient on the cell at a phase giving the half a taper weight, and the games they come from)
+# and its tie (audit/ties_{A,B,C}.txt, DEC-329 (4): a half under 1000 games shares the nearest supported rank; none
+# did). Rank is the pawn's own rank, 2 to 7 (C 2 to 6). v-nbr is the value less the mean of its one or two neighbours
+# in its row, arithmetic and no judgement; a B slope multiplies a distance of 0 to 7, so its v-nbr is per step. The
+# `far` list is the cells at |v-nbr| >= 10, a cutoff chosen at the close and deciding nothing. Monotonicity was not
+# imposed (S123's accepts). Recorded at S123's close, 2026-10-30, so the record shows which cells stand apart and on
+# how much support; nothing is refitted, the SPRT decided, and S126 inherits the list. Both inputs are in the owner's
+# archive (chesso_S123_screen_cost_2026-10-30.tar.xz). Written by:
+#   python3 -I adocs/data/S123_cells.py .tuning/s123/fits/ABC/full.hpp .tuning/s123/audit/report.txt \
+#       .tuning/s123/audit/ties_A.txt .tuning/s123/audit/ties_B.txt .tuning/s123/audit/ties_C.txt
+#
+array              half rank value  v-nbr     rows   games  tie
+passed_free        mg      2     2    -6.0   647406   73693  -
+passed_free        mg      3     8    +6.0   667960   80134  -
+passed_free        mg      4     2    -5.5   761420   94960  -
+passed_free        mg      5     7    -8.0   660476   90827  -
+passed_free        mg      6    28   -13.5   331115   65787  -
+passed_free        mg      7    76   +48.0   105778   30269  -
+passed_free        eg      2    23   +20.0   627782   72747  -
+passed_free        eg      3     3   -15.5   659777   79928  -
+passed_free        eg      4    14    +6.0   754304   94840  -
+passed_free        eg      5    13    +3.5   641788   89843  -
+passed_free        eg      6     5    -4.5   327847   65370  -
+passed_free        eg      7     6    +1.0   106172   30459  -
+passed_safe        mg      2    -1    -2.0   451896   64145  -
+passed_safe        mg      3     1    +0.5   434826   68755  -
+passed_safe        mg      4     2    +1.5   438631   79423  -
+passed_safe        mg      5     0    -6.0   312952   70000  -
+passed_safe        mg      6    10    -6.5   143333   45223  -
+passed_safe        mg      7    33   +23.0    30674   14246  -
+passed_safe        eg      2     8    +2.0   446010   63715  -
+passed_safe        eg      3     6    -3.0   433377   68728  -
+passed_safe        eg      4    10    -4.0   439965   79690  -
+passed_safe        eg      5    22    -8.5   313652   70333  -
+passed_safe        eg      6    51   +13.5   144584   45665  -
+passed_safe        eg      7    53    +2.0    31164   14548  -
+passed_king_own    mg      2     2    -3.0   764613   76746  -
+passed_king_own    mg      3     5    +0.5   808998   84219  -
+passed_king_own    mg      4     7    +3.0   972089   99404  -
+passed_king_own    mg      5     3    +0.5   858237   94876  -
+passed_king_own    mg      6    -2    -2.0   462587   70990  -
+passed_king_own    mg      7    -3    -1.0   187639   37568  -
+passed_king_own    eg      2    -3    +2.0   740638   75800  -
+passed_king_own    eg      3    -5    +3.0   798390   83985  -
+passed_king_own    eg      4   -13    -2.5   960682   99213  -
+passed_king_own    eg      5   -16    -1.0   835089   93911  -
+passed_king_own    eg      6   -17    +0.5   456656   70504  -
+passed_king_own    eg      7   -19    -2.0   187411   37663  -
+passed_king_enemy  mg      2    -2    +5.0   777493   77070  -
+passed_king_enemy  mg      3    -7    -2.5   819049   84485  -
+passed_king_enemy  mg      4    -7    -1.0   975192   99478  -
+passed_king_enemy  mg      5    -5    -1.5   850602   94723  -
+passed_king_enemy  mg      6     0    +1.5   441311   70146  -
+passed_king_enemy  mg      7     2    +2.0   176116   36004  -
+passed_king_enemy  eg      2    -3    -6.0   753880   76128  -
+passed_king_enemy  eg      3     3    +0.0   808724   84263  -
+passed_king_enemy  eg      4     9    +0.0   963861   99301  -
+passed_king_enemy  eg      5    15    +1.5   826794   93755  -
+passed_king_enemy  eg      6    18    -1.0   435267   69661  -
+passed_king_enemy  eg      7    23    +5.0   176036   36120  -
+candidate_passer   mg      2    -6   +10.0   324340   53774  -
+candidate_passer   mg      3   -16   -15.0   233544   45383  -
+candidate_passer   mg      4     4    +7.0   220729   51437  -
+candidate_passer   mg      5    10    +9.0   114678   41172  -
+candidate_passer   mg      6    -2   -12.0    30042   16482  -
+candidate_passer   eg      2     4    -4.0   296228   50189  -
+candidate_passer   eg      3     8    -9.0   218801   42956  -
+candidate_passer   eg      4    30    +3.0   202525   47774  -
+candidate_passer   eg      5    46    +1.5    95318   35269  -
+candidate_passer   eg      6    59   +13.0    25004   14025  -
+
+ties: 0
+far, |v-nbr| >= 10 (own rank, value, v-nbr, rows, games):
+  passed_free_mg         rank 6     28   -13.5   331115   65787
+  passed_free_mg         rank 7     76   +48.0   105778   30269
+  passed_free_eg         rank 2     23   +20.0   627782   72747
+  passed_free_eg         rank 3      3   -15.5   659777   79928
+  passed_safe_mg         rank 7     33   +23.0    30674   14246
+  passed_safe_eg         rank 6     51   +13.5   144584   45665
+  candidate_passer_mg    rank 2     -6   +10.0   324340   53774
+  candidate_passer_mg    rank 3    -16   -15.0   233544   45383
+  candidate_passer_mg    rank 6     -2   -12.0    30042   16482
+  candidate_passer_eg    rank 6     59   +13.0    25004   14025
+thinnest support: candidate_passer_eg rank 6, 25004 rows, 14025 games

@@ -1190,8 +1190,11 @@ TEST_SUITE("evaluation: passer symmetry")
   // each colour's counts against a square-by-square walk and the score against
   // its mirror; neither compares the two colours' *sets*, and a set wrong for
   // one colour only -- a missing edge mask on one side's span, a Black shift
-  // one rank off -- moves no score while the weights it feeds are zero. Two
-  // published passed-pawn bugs were of that shape (the S123 step file).
+  // one rank off -- moved no score while the weights it feeds were zero, as
+  // they were when this was written; fitted, as they ship since S123's H1, it
+  // moves one, which the score's mirror case sees only on a position that
+  // reaches the cell it gets wrong. Two published passed-pawn bugs were of
+  // that shape (the S123 step file).
   //
   // Observed red on a planted one-colour defect before it was trusted: the
   // edge masks dropped from Black's attack span alone (the S123 step file,
@@ -1475,8 +1478,9 @@ TEST_SUITE("evaluation: packed score")
                  king_safety_eg, KS_FEATURE_COUNT);
     halves_match("tempo", &tempo_score, &tempo_mg, &tempo_eg, 1);
 
-    // S123's family, landed at zero: until a fit, the bench cannot see a pair
-    // packed the wrong way round here at all.
+    // S123's family: at its zero landing the bench could not see a pair packed
+    // the wrong way round here at all, and fitted it sees one only as a moved
+    // total with no array named.
     halves_match("passed_free", passed_free_score.data(), passed_free_mg,
                  passed_free_eg, static_cast<int>(passed_free_score.size()));
     halves_match("passed_safe", passed_safe_score.data(), passed_safe_mg,

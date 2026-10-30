@@ -30,8 +30,9 @@
 //
 // The second is not implied by the first. A coefficient recorded against the
 // wrong index is invisible to the identity wherever the two weights involved
-// are equal, and tempo, piece placement's two bad bishop columns and S123's
-// whole family ship at zero, where any coefficient at all satisfies it.
+// are equal, and tempo and piece placement's two bad bishop columns ship at
+// zero, where any coefficient at all satisfies it, as S123's whole family did
+// until its fit shipped on its SPRT's H1.
 
 namespace
 {

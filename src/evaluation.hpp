@@ -145,8 +145,10 @@ void passed_pawn_counts(const board_t* board, int out[2][5]);
 // It exists for S123's symmetry case (tests/test_evaluation.cpp, DEC-329 (6)):
 // a position's mirror must hold each side's set exactly where the original
 // held the other side's, rank for rank. A set wrong for one colour only -- an
-// edge mask missing on one side's span, a shift one rank off for Black -- is
-// invisible to every score while the weights it feeds are zero, and two
+// edge mask missing on one side's span, a shift one rank off for Black -- was
+// invisible to every score while the weights it feeds were zero, at the
+// landing; fitted and shipping, it moves a score, which the score's own mirror
+// case sees only on a position that reaches the cell it gets wrong. Two
 // published passed-pawn bugs were of that shape (the S123 step file).
 //
 // Not on the hot path: the collecting instantiation of the same function
@@ -154,7 +156,8 @@ void passed_pawn_counts(const board_t* board, int out[2][5]);
 void passed_pawn_sets(const board_t* board, bb_t out[2]);
 
 // S123's passed pawn family (DEC-329), three groups beside the buckets above,
-// each fitted on its own screen part before one family SPRT. Indexed by the
+// each kept by its own part of the screen, fitted together and shipped on one
+// family SPRT's H1 (evaluation.cpp says so beside the weights). Indexed by the
 // pawn's own rank, 0 for its second: ranks 2 to 7 for A and B, 2 to 6 for C.
 // The definitions, stated exactly because the walk in
 // tests/test_walked_counts.hpp is written from them and the two have to mean
@@ -210,9 +213,9 @@ extern const int candidate_passer_eg[5];
 
 // The family's raw counts per colour, WHITE first, each row a side's own and
 // positive, for the reason over passed_pawn_counts(): a miscount that hits
-// both sides equally cancels in a difference, and at zero weights no score
-// sees these at all. tests/test_evaluation holds each to its mirror (DEC-329
-// (6)), tests/test_eval_model to the walk.
+// both sides equally cancels in a difference at any weight, and at the
+// landing's zero weights no score saw these at all. tests/test_evaluation
+// holds each to its mirror (DEC-329 (6)), tests/test_eval_model to the walk.
 struct passer_family_t
 {
   int free[2][6];
@@ -285,9 +288,9 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 // their joint fit ships on its SPRT's H1 (DEC-259, DEC-315); the bad bishop
 // and its rammed share stay at zero, dropped by the screen. evaluation.cpp
 // says so beside the weights, and adocs/plan_done/S100_*.md carries the
-// ledger. The passed pawn, pawn structure and king safety weights above and
-// below ship fitted since S027; tempo is zero for its own reason, stated at
-// its block.
+// ledger. The passed pawn buckets, pawn structure and king safety weights
+// above and below ship fitted since S027, and S123's passed pawn family above
+// since its SPRT's H1; tempo is zero for its own reason, stated at its block.
 //
 // The seven definitions, stated exactly, because the tuner's model is written
 // from this comment and the two have to mean the same thing: the first three

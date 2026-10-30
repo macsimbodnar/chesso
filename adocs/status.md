@@ -7,6 +7,39 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-30, by hand.
 
+## 2026-10-30: S123 done (H1, +49 Elo); S125 next
+
+**S123's SPRT read H1** (`0553160` vs `1a231dd`, Elo +49.19 +/- 15.06,
+nElo +66.07 +/- 19.94, LLR 2.96, 1166 games in 33 m, 0 forfeits,
+`adocs/data/S123_sprt.log`; archived as `chesso_S123_sprt_2026-10-30.tar.xz`
+and `chesso_S123_screen_cost_2026-10-30.tar.xz`, verified). Inspected and it
+stands: banner as pinned, benches 5434393 and 6016079, quarters +60.1,
++44.3, +55.2, +35.8 (chi² 1.50, p 0.68), journal clean, no warning of any
+kind. The family ships whole, no bisection. Comments made true, INV-6
+against CAND (`adocs/data/S123_close_inv6.txt`). Ten cells far from their
+neighbours listed for S126 (`adocs/data/S123_cells.txt`). Closed by one
+Opus 5.5 subagent in `../chesso-s123d`, fast-checked.
+
+- **S118 inherits a correction** its own phase 1 makes: its accepts says
+  the table stores "the mg/eg pawn score", but S123's A reads every enemy
+  piece and B both kings, so a pawn-only key caches the passer bitboard
+  and C, not A or B (DEC-329's consequences); under its pawn-and-king key
+  B would be cacheable and A not.
+- **gate_extra, last `GATE-EXTRA-DONE`:** 2026-10-30, six stages green in
+  1365 s on S123's candidate tree (`../chesso-s123b`). Next weekly run due
+  by 2026-11-06.
+
+**Filed:** S299, DEC-171 filler behind S125: S121's and S135's cost
+scripts' `streams()` check no command (S123's phase 1 fast check).
+
+**Next:** S125 (pawn structure), its rulings drafted as DEC-331
+(`.tuning/coord/S125/dec331.md`) from a read-only research pass, its phase 1
+brief at `.tuning/coord/S125/brief.md`. Worktrees that can go, waiting on
+the owner: `../chesso-s121c`, `../chesso-s121d`, `../chesso-s121e`,
+`../chesso-s298`, `../chesso-s298b`, `../chesso-s123`, `../chesso-s123b`,
+`../chesso-s123c`, `../chesso-s123d`; the cost trees under
+`.tuning/s123/cost/` (reading recorded).
+
 ## 2026-10-30: S123's candidate committed; its SPRT next
 
 **The screen kept all three groups** (`S123_screen.sh all`, 02:32 to

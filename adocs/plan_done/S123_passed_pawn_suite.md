@@ -1,14 +1,14 @@
 id:         S123
 goal:       passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
 accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the table is rank crossed with can-advance and safe-advance rather than a single rank curve; the distance to **each** king is scaled by rank, because the same distance is worth more to a pawn on the seventh; candidate passers are scored; **monotonicity is not imposed** -- a fit that returns a non-monotonic middlegame curve is reporting something and is not corrected by hand; a test asserts the passer bitboard is colour-symmetric under board mirroring, written before any fit, because two published passed-pawn bugs shipped invisible to everything except an SPRT
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S121_coverage_rows.cpp, adocs/data/S123_*, DEV_MANUAL.md, adocs/data/README.md; at the paste (phase 2), each golden by its script: tests/test_search.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, adocs/data/S170_cases.tsv, MANUAL.md
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S121_coverage_rows.cpp, adocs/data/S123_*, DEV_MANUAL.md, adocs/data/README.md; at the paste (phase 2), each golden by its script: tests/test_search.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, tests/test_engine.cpp, tests/test_mate_breadth.cpp, adocs/data/S170_cases.tsv, MANUAL.md; the close (2026-10-30, H1), comments only under src/ and tests/: src/evaluation.hpp, src/evaluation.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp; adocs/data/S123_sprt.log, adocs/data/S123_close_inv6.txt, adocs/data/S123_cells.py, adocs/data/S123_cells.txt, adocs/data/README.md, this file; src/eval_trace.hpp, DEV_MANUAL.md and MANUAL.md read and unchanged at the close
 excludes:   pawn structure terms, which are S125
 decisions:  DEC-071, DEC-084, DEC-259, DEC-315, DEC-326, DEC-324, DEC-221, DEC-134, DEC-090, DEC-047, DEC-142, DEC-329
 closes:
 blocks:
 paused_by:
 author:     Opus 5.5 subagent, coordinated
-done:
+done:       2026-10-30 07:33 -- H1 at {0, 5} nElo, 8+0.08, Hash 16, CAND 0553160 vs REF 1a231dd: Elo +49.19 +/- 15.06, nElo +66.07 +/- 19.94, LLR 2.96, 1166 games, 33 m, 0 forfeits (adocs/data/S123_sprt.log, archived as chesso_S123_sprt_2026-10-30.tar.xz); the banner as pinned (a060435), both binaries at their bench (5434393, 6016079), no crash or disconnect, quarters +60.1, +44.3, +55.2, +35.8, kernel journal clean; no warning of any kind, 0 incomplete mating PVs; so by the pre-registered H1 row the family ships whole -- A the free and safe increments per own rank 2 to 7, B both kings' distance slopes per own rank 2 to 7, C candidate passers per own rank 2 to 6, each kept by DEC-329's screen (A g +0.000070, B d +0.000109, C d +0.000018, each past its margin) -- and no bisection; the stopping Elo is not the effect size (DEC-063). Every weight fitted on S083's corpus from zero with every old constant frozen (DEC-084, no seed), monotonicity not imposed; the definitions implemented from their descriptions, CPW's Candidate Passed Pawn page and DEC-329 (2) (DEC-221); the passer symmetry test written and seen red before any fit; cost +4.96 % (adocs/data/S123_cost_reading.txt); MATE_IN_THREE_FLOOR held at 11 at zero margin (DEC-330); the comments made true, INV-6 against 0553160 (adocs/data/S123_close_inv6.txt); the cells far from their neighbours listed for S126 (adocs/data/S123_cells.txt); fast suite 50/50 in both builds, the clang pair clean. Implemented by Opus 5.5 subagents per phase, fast-checked; the runs the coordinator's; inspected and recorded by one Opus 5.5 subagent.
 
 ## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
 
@@ -450,7 +450,7 @@ comparison in S123's scripts; `S123_screen.sh` compares tie files with
   the gap S123's copy had: no exit status checked and no bench total
   required, so a bench or `search_bench.py` failing the same way for every
   binary writes identical error text and passes their INV-6 `diff -r`. Both
-  are finished steps' records and are not edited here.
+  are finished steps' records and are not edited here (filed as S299).
 
 ### Commands for the coordinator, in order
 
@@ -775,3 +775,295 @@ Bench: 5434393
 ```
 
 No `done:` stamp: the SPRT comes first.
+
+## 2026-10-30: the SPRT read H1
+
+One Opus 5.5 subagent, in `../chesso-s123d` (branch `s123d` at `a060435`,
+the SPRT's pin), read only over the run's outputs and binaries; no match,
+fit or timing ran.
+
+### The run
+
+`adocs/data/S123_sprt.sh` as pinned at `a060435`: `0553160` (the candidate,
+the screen's ABC fit over the ten family arrays, bench 5434393) against its
+parent `1a231dd` (the phase 1 landing's `src/`, the family at zero, bench
+6016079), launched 2026-10-30 06:20:21, `SPRT-RUN-DONE` after fastchess's
+Total Time 00:33:00:
+
+```
+SPRT | cand 0553160 vs ref 1a231dd, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 49.19 +/- 15.06, nElo 66.07 +/- 19.94
+LLR | 2.96 (-2.94, 2.94) -> H1
+Games | N: 1166 W: 410 L: 246 D: 510, Ptnml [26, 109, 196, 179, 73]
+Wall | 0 h 33 m, 2120.0 games/h, forfeits 0
+Log | adocs/data/S123_sprt.log
+```
+
+`Wall`'s rate is N over fastchess's `Total Time`, S296's, S136's and S121's
+rule: 1166 games in 1980 s.
+
+### The inspection, before the verdict was read as the record
+
+- **Banner** (the console's): candidate `0553160 2026-10-30`, reference
+  `1a231dd 2026-10-30` (the commits' dates; their times, 06:14 and 03:29, are
+  `git log`'s; the pin `a060435` was committed at 06:20:21), `arch native tune off`, padding on both, 8+0.08, hash 16,
+  12 of 12 cores, `noob_3moves.epd`, seed 20261030062021, `elo0=0 elo1=5
+  alpha=0.05 beta=0.05`, cap 20950 rounds and 41900 games from
+  `SPRT_ROUNDS`, out `.tuning/sprt_s123_20261030_062021`; no `diff`,
+  `relay` or `A/A CALIBRATION` line; `id name`s `cand-0553160 Chesso
+  0553160 native` and `ref-1a231dd Chesso 1a231dd native`; `Started game 1
+  of 41900`. As the pin says. Above it the script's guards printed the ten
+  family arrays as the only weights moved and `only-family-pair: every
+  non-family weight is REF's`. The seed's stamp and the out directory's
+  are the same second this time.
+- **Binaries**: `.ref-builds/0553160/build/src/chesso` benches **5434393**
+  and `.ref-builds/1a231dd/build/src/chesso` **6016079**, both worktrees
+  clean at their sha. Written 06:20:27 and 06:20:33 and not since; the
+  first game's `GameStartTime` is 06:20:33, the last `GameEndTime` 06:53:30.
+- **Crashes, disconnects, illegal moves**: none. `fastchess.log` is empty
+  (0 bytes), and the console holds nothing but the guards' and build lines,
+  the banner, the game lines, fastchess's periodic result blocks, its stop
+  lines and the foot. 1179
+  games started and 1168 finished, the 11 others in flight at the stop.
+  The PGN's 1168 games carry fastchess's game numbers (`2 * Round - 1`
+  with the candidate White, `2 * Round` with it Black) 1 to 1170, each at
+  most once, 1161 and 1166 absent: 583 complete pairs, the 1166 games
+  fastchess scored, and games 1162 and 1165 whose partners never finished.
+  Terminations: 786 adjudication (657 decisive, 129 drawn) and 382 normal,
+  all drawn (252 threefold, 87 insufficient material, 41 fifty-move, 2
+  stalemate).
+- **Forfeits**: `tools/forfeit_report.py` reads 0 of 1168 for each engine.
+- **Console warnings**: none of any kind; no PV-past-threefold block
+  (`trim_console.py`'s count) and no `Incomplete mating PV` (next section).
+- **Quarters**, in game-number order over the PGN's 1168 games, 292 each
+  (boundaries `i * 1168 // 4`), by `adocs/data/S121_sprt_mate_pvs.py
+  quarters`, which reproduces S121's +10.6, +16.7, +21.6, +28.2 (chi-square
+  1.89) from S121's PGN, still in `.tuning/`: **+60.1, +44.3, +55.2,
+  +35.8**, each +/- 28.7 to 31.0. Their spread about the run's mean is
+  chi-square 1.50 on 3 degrees of freedom, p 0.68.
+- **Kernel journal**, 06:20 to 06:55 (boot `a3198101`, from 2026-10-29
+  23:04:41, no suspend): no kernel entry; the boot's last is 00:00:06, an
+  AppArmor `DENIED` audit line for `cupsd`, before the launch, and before
+  it 23:05:53's `usb 3-2.4: USB disconnect`, the monitor's control device,
+  as on S121's night. Six entries in the window in all: the 06:25
+  `cron.daily` run and `fwupd-refresh` at 06:54:06, after the last game; none
+  at warning level or above. No machine check, OOM or thermal event.
+
+The run stands.
+
+### Mating PVs
+
+`grep -c "Incomplete mating PV" .tuning/s123_sprt.log` reads **0**, and
+`grep -ci warning` over the same console reads 0: no warning of any kind,
+so no mate-distance check is owed and DEC-319 (3)'s oracle and DEC-320's
+deeper reading do not arise. `adocs/data/S296_sprt_mate_pvs.py` reads the
+same marker (`Warning; Incomplete mating PV - from`) and would find
+nothing. A count, recorded: the candidate's rate this run is 0 per 10000
+side-games over 1168.
+
+### The verdict, by the pre-registration
+
+**The H1 row executes.** At 8+0.08 the fitted family is accepted as
+gaining: H1's 5 nElo preferred to H0's 0 at alpha = beta = 0.05. **It
+ships**: A, the free and safe increments per own rank 2 to 7; B, both
+kings' distance slopes per own rank 2 to 7; C, candidate passers per own
+rank 2 to 6; the screen's ABC fit, every group kept, so no group stays at
+zero. **No bisection follows an H1**, and none is owed.
+
+**The stopping run's Elo is upward-biased (DEC-063) and is not the effect
+size.** The run stopped at a bound in 1166 games, far under the 25591 the
+pre-registration expected with the truth on a bound; nElo +66.07 is the
+early stop's figure.
+
+**The cost, beside it**: every group is live at the candidate, so its row is
+all's, **+4.96 %** (a +2.59 %, b +1.52 %, c +1.48 %, parent zero;
+`adocs/data/S123_cost_reading.txt`), on cost-only builds of the landing at
+forced weights (DEC-047). It decides nothing; the SPRT priced it.
+
+### The trim and the archive
+
+`tools/trim_console.py --summary` from `.tuning/s123_sprt.log` (2864 lines,
+191623 bytes) into **`adocs/data/S123_sprt.log`**, 2869 lines, 191828
+bytes: its first 2864 lines are the console byte for byte, since no
+PV-past-threefold block exists, and the foot's five lines say so. Its
+`adocs/data/README.md` row added. The untrimmed console and the run
+directory (`games.pgn`, `fastchess.log`) are
+**`chesso_S123_sprt_2026-10-30.tar.xz`** in the owner's archive (DEC-235),
+built, verified and moved in by the coordinator, beside
+`chesso_S123_screen_cost_2026-10-30.tar.xz`.
+
+### The comment pass, and its INV-6
+
+Comments only; no code, no weight and no definition moved. Each now
+describes the shipped, fitted family:
+
+- `src/evaluation.hpp`: `passed_pawn_sets()`'s symmetry paragraph (a
+  one-colour set bug was invisible at the zero landing, and fitted it moves
+  a score the mirror case sees only where a position reaches it); the
+  family's definitions block (each group kept by its screen
+  part, fitted together, shipped on one SPRT's H1); `passer_family_t`'s
+  "at zero weights no score sees these" now the landing's, past tense; and
+  the placement block's "ship fitted since S027" sentence, which now names
+  S123's family as fitted since its H1.
+- `src/evaluation.cpp`: the paragraph over the ten arrays (landed at zero,
+  fitted, shipped on the H1, with the SPRT's log and the cost reading); its
+  passer_family(), a name no function has, is now `passer_family_side()`
+  and `candidate_passers()`; the liveness flags' comment (below); the
+  stage-one bound's comment, whose "with the pawn terms ... of room"
+  figures were S135's and which now gives the bound with the family
+  shipping, 19982 and 25799, 12785 and 6968 of room
+  (`adocs/data/S123_goldens.txt`, `S123_screen.py headroom`); and
+  `passer_family_side()`'s comment (the gate kept the landing free; both
+  groups live since the H1).
+- `src/eval_trace.hpp`: read, and nothing in it calls the family zero,
+  pending or compiled out; its five `TERM_PASSED_*` / `TERM_CANDIDATE_PASSER`
+  entries are what ships. Unchanged.
+- Tests, comments only: `tests/test_evaluation.cpp` (the passer-sets case's
+  "moves no score while the weights it feeds are zero", and the packed
+  halves' "landed at zero: until a fit, the bench cannot see"),
+  `tests/test_eval_trace.cpp` (its header listed S123's whole family among
+  what ships at zero), `tests/test_eval_model.cpp` (the family cases' "at
+  zero weights no score sees these counts") and
+  `tests/test_tuner_gradient.cpp` (the gradient case's history ended at the
+  zero landing; the candidate's 2.79e-7 at parameter 985 added, from
+  `adocs/data/S123_goldens.txt`). No assertion, golden or input moved.
+- Tools, `DEV_MANUAL.md` and `adocs/data/README.md`: read; no site calls
+  the family at zero or pending other than as the landing's history.
+  `adocs/data/S192_anchors.py`'s "at S123's landing every weight was zero"
+  is past tense and true.
+
+**The liveness gating keeps a purpose, and stays.** Since the H1 every
+group is live, so `passer_advance_live`, `passer_kings_live` and
+`candidate_passer_live` are all true and gate nothing in the shipped
+binary. They are kept for the refit that zeroes a group again -- S126
+refits everything this step landed, and a group a later screen drops is
+held at zero and recorded as a corpus finding (S126's rule) -- because A's `is_attacked()` is
+an out-of-line call the compiler cannot delete as it deletes a dead
+popcount. The comment over `any_weight()` says so.
+`adocs/data/S123_cost_only.patch` replaces the same three flags with its
+mask, but it applies to the landing `03680ab` only, so HEAD's flags do not
+bind it.
+
+**INV-6 against `0553160`** (`adocs/data/S123_close_inv6.txt`): `chesso
+bench` **5434393** in both builds; `bench`, `bench 12` (2089917) and
+`tools/search_bench.py` at depth 9 (c3d5 26906, d5e6 93894, d7c8q 35629)
+and depth 12 (c3d5 317968, d5e6 341523, d7c8q 205179) byte-identical once
+timing is stripped, across the played binary, the worktree's `build/` and
+`build-tune/` before the pass, and both after it. The object code beside
+it: the clean pre-pass `build/` binary's `.text` is the played binary's
+byte for byte; after the pass the binaries answer `a060435-dirty`, a longer
+string that moves `.rodata`, so `.text` differs in rip-relative
+displacements only -- the disassembly with displacements masked is
+identical across played, pre and post in each build. A rebuild at the
+commit should read the played `.text` again (`f20704bc...`); that is the
+coordinator's check.
+
+### S118, after DEC-329
+
+DEC-329's consequence holds in this file (section 7, "A pawn-key cache can
+hold the bitboard and C, never A or B, which read pieces and kings"). S118's
+accepts does not yet say so: it has the table store "the mg/eg pawn score,
+the passed-pawn bitboard and both kings' shelter and storm scores", and the
+pawn score now includes A, which reads every enemy piece through
+`is_attacked()` and the push square's occupancy, and B, which reads both
+kings. S118's file is not this step's; its sentence is quoted to the
+coordinator.
+
+### What H1 leaves unmeasured
+
+- **Each group's own share.** A, B and C shipped on one verdict and were
+  never played apart; each has only its screen gain (A g +0.000070, B d
+  +0.000109 against A, C d +0.000018 against AB, against m 0.000009,
+  0.000013 and 0.000010).
+- **The cost apart from the verdict.** +4.96 % is priced inside it; no run
+  measured the family's strength net of its speed or the groups' costs in
+  play.
+- **`MATE_IN_THREE_FLOOR` at zero margin** (DEC-330): 11 shipping and 10
+  weakened, so it still separates; a refit that costs one more mate in
+  three turns it red, a stop for the owner (DEC-303).
+- **The cells far from their neighbours** (`adocs/data/S123_cells.txt`, by
+  `adocs/data/S123_cells.py`: the value less its neighbours' mean, the
+  cutoff |v-nbr| >= 10 chosen here and deciding nothing), with their
+  support in the audit, rows and games:
+  - `passed_free_mg` rank 7, 76 (+48.0), 105778 / 30269; rank 6, 28
+    (-13.5), 331115 / 65787;
+  - `passed_free_eg` rank 2, 23 (+20.0), 627782 / 72747; rank 3, 3
+    (-15.5), 659777 / 79928;
+  - `passed_safe_mg` rank 7, 33 (+23.0), 30674 / 14246;
+  - `passed_safe_eg` rank 6, 51 (+13.5), 144584 / 45665;
+  - `candidate_passer_mg` rank 2, -6 (+10.0), 324340 / 53774; rank 3, -16
+    (-15.0), 233544 / 45383; rank 6, -2 (-12.0), 30042 / 16482;
+  - `candidate_passer_eg` rank 6, 59 (+13.0), 25004 / 14025.
+
+  Every family cell half is supported by 14025 games or more (the thinnest
+  `candidate_passer_eg` rank 6), far over the 1000-game tie rule, and none
+  is tied. No B slope reaches the cutoff. The end cells of a row have one
+  neighbour, so a steep row's last cell reads far by construction.
+  Recorded for S126, which refits them; no planted recovery was built, as
+  phase 1 recorded.
+- **The family's planted recovery**, never built (phase 1's preconditions).
+
+### Documents
+
+- `DEV_MANUAL.md`: checked. Nothing false: its S123 rows (the goldens
+  table, the gradient paragraph, `feature_audit`, the tuner's groups) state
+  the candidate's readings, which are what ships, and the landing's as
+  history. Unchanged.
+- `MANUAL.md`: checked; nothing false. Its `RfpMinPly` row's S123 figures
+  are the candidate's, and nothing on the UCI surface moved. Unchanged.
+- `adocs/data/README.md`: a close section with `S123_sprt.log`,
+  `S123_close_inv6.txt`, `S123_cells.py` and `S123_cells.txt`.
+
+### The accepts, clause by clause
+
+- **One SPRT verdict for the family, recorded whatever it is**: H1, above,
+  with DEC-220's block for the closing commit. Holds.
+- **After each group passes DEC-259's offline screen**: A, B and C each
+  cleared its margin on S082's fixed set before the match
+  (`adocs/data/S123_screen_reading.txt`). Holds.
+- **A family H0 bisected by group**: the verdict is H1, so no bisection is
+  owed; the partition A | B | C was pre-registered and `S123_screen.sh part
+  NAME` prepared. Holds.
+- **The table is rank crossed with can-advance and safe-advance rather than a
+  single rank curve**: A's `passed_free` and `passed_safe` per own rank 2 to
+  7 on top of the five buckets, so each rank scores blocked, free but
+  attacked, or free and safe apart (`src/evaluation.hpp` defines the
+  three). Holds.
+- **The distance to each king scaled by rank**: B's `passed_king_own` and
+  `passed_king_enemy`, one fitted slope per own rank 2 to 7 per king.
+  Holds.
+- **Candidate passers are scored**: C's `candidate_passer`, per own rank 2
+  to 6, CPW's per-square rule. Holds.
+- **Monotonicity is not imposed**: the fit pasted unchanged; non-monotonic
+  rows ship as fitted (`passed_free_eg` {23, 3, 14, 13, 5, 6},
+  `candidate_passer_mg` {-6, -16, 4, 10, -2}). Holds.
+- **A test asserts the passer bitboard colour-symmetric under board
+  mirroring, written before any fit**: `tests/test_evaluation.cpp` "the
+  passer sets mirror exactly under board mirroring", written and observed
+  red on a planted one-colour defect in phase 1, before the screen ran
+  (above), green in both builds here. Holds.
+
+Section 6's nps clause holds too: the cost, +4.96 %, is recorded beside
+the verdict.
+
+### Gates
+
+- Both builds with no warning (the touched translation units rebuilt, 0
+  warning lines); both fast suites **50 of 50** in `build/` and
+  `build-tune/`, `CLANG_FORMAT_MAJOR=22`, run again after the pass's last
+  edit; `./clang-format.sh --check` clean; bench 5434393 in both.
+- **The S297 clang pair** (`STAGES=clang tools/gate_extra.sh`):
+  `build-clang` and `build-clang-tune` with clang 22.1.8, no error and no
+  warning, both fast suites 50 of 50; 307 s on the final tree (a first run,
+  343 s, overlapped the last comment edit and was taken again).
+- `tools/plan_prose_check.py`, one mode per call, each exit 0:
+  `--citations` 0 flagged over 19 files (this file 6 code citations, 0
+  flagged), `--touches` 0 over 19, `--params`, `--gate` agreeing, `--prose`
+  0 flagged.
+- **`tools/gate_extra.sh` is not run**, by what the diff touches: under
+  `src/` only whole-line comments in `src/evaluation.hpp` and
+  `src/evaluation.cpp`, shown neutral by INV-6 above, since its six-stage
+  green run on CAND's tree (phase 2, 1365 s). **Tier 2 (DEC-141) does not
+  bind**: no `make_move`, `unmake_move`, generator or search change.
+
+Every clause holds. Done.

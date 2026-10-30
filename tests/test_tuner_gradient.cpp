@@ -517,7 +517,9 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // that each of its 58 has a gradient here: at the family's zero landing the
 // worst is 6.94e-07, at parameter 869, mobility_eg[rook][7]; 9.50e-07 at 849,
 // mobility_eg[bishop][1], over the 80 rows before them
-// (adocs/data/S123_preconditions.txt).
+// (adocs/data/S123_preconditions.txt). At the family's fit, which ships since
+// S123's H1, it is 2.79e-07, at parameter 985, passed_king_own_eg[0]
+// (adocs/data/S123_goldens.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
