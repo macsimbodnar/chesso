@@ -220,13 +220,25 @@ same directory.
 tree-wide.** Under `-Werror` a missing profile stops the build, which is the right
 outcome — a binary that quietly is not profile-guided is worse than one that does
 not build. Blanket-silencing it was the first version of `cmake/pgo.cmake` and it
-is what let the two-directory bug hide. Exactly one translation unit is exempt, by
-name: every caller of `src/search_params.cpp` sits inside `#ifdef CHESSO_TUNE`
-(in `command_uci` and `command_setoption`, `src/chesso.cpp`), so a release link
-references none of its symbols, the linker drops the object out of the static
-library, its gcov constructor never runs and no `.gcda` can be written for it by
-any workload. Eight of the nine files in `src/` get a profile and the error
-stays live for all eight.
+is what let the two-directory bug hide. Exactly two translation units are exempt,
+by name, because the engine binary references none of their symbols: the linker
+never pulls their objects out of the static library, their gcov constructors
+never run and no `.gcda` can be written for them by any workload. Every caller
+of `src/search_params.cpp` sits inside `#ifdef CHESSO_TUNE` (in `command_uci`
+and `command_setoption`, `src/chesso.cpp`); `src/leaf_walk.cpp` is called by
+`datagen` and `test_leaf_walk` and by no engine binary, though the `SRCS` glob
+compiles it into `chesso_engine`. Eight of the ten `.cpp` files in `src/` get a
+profile, the error stays live for all eight, and eight is the `profile files`
+count the script prints after its workload. A new file in `src/` that no engine
+binary links stops pass 3 the same way, and is exempted in `cmake/pgo.cmake`
+only for the same reason.
+
+**Release builds work again from S302 (2026-10-30).** From S082's commit, which
+added `src/leaf_walk.cpp`, until S302 named it beside `src/search_params.cpp`,
+pass 3 stopped on it with `-Werror=missing-profile` and no release binary could
+be built; S274's, 2026-10-12, is the last on record before the gap. S302 ran
+`portable`, `bmi2` and `avx2` through all three passes, and each binary's
+`chesso bench` total equals `build/`'s.
 
 **The workload is the part that decides whether PGO is worth anything.** It is a
 fixed-depth search — depth 10, `PGO_DEPTH` overrides — over **400 positions, 16

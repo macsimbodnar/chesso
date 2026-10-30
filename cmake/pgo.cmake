@@ -34,13 +34,25 @@
 # profile stops the build, which is the right outcome -- a binary that quietly is
 # not profile-guided is worse than one that does not build.
 #
-# Exactly one translation unit is exempt, by name, because its absence is
-# structural rather than a gap in the workload. Every caller of
-# `src/search_params.cpp` sits inside `#ifdef CHESSO_TUNE` (`src/chesso.cpp:934`
-# and `:1043`), so a release link references none of its symbols, the linker
-# drops the object out of the static library, its gcov constructor never runs and
-# no .gcda is ever written. No workload can reach it. Naming the one file keeps
-# the error live for the other eight.
+# Exactly two translation units are exempt, by name, because their absence is
+# structural rather than a gap in the workload. The engine binary references
+# none of their symbols, so the linker never pulls their objects out of the
+# static library, their gcov constructors never run and no .gcda is ever
+# written. No workload can reach them.
+#
+#   * `src/search_params.cpp`. Every caller sits inside `#ifdef CHESSO_TUNE`, in
+#     `src/chesso.cpp`'s `command_uci()` and `command_setoption()`, and a release
+#     build is never a tune build.
+#   * `src/leaf_walk.cpp`, S082. `tools/datagen` and `test_leaf_walk` call it and
+#     no engine binary does, but the `SRCS` glob in `src/CMakeLists.txt` compiles
+#     it into `chesso_engine` with these flags all the same. S302: pass 3 stopped
+#     on it from S082's commit until it was named here.
+#
+# Naming the two files keeps the error live for the other eight -- every C++
+# translation unit the engine binary links, `src/main.cpp` included -- and eight
+# is the count of profile files `build_release.sh` prints after its workload. A
+# source added to `src/` that no engine binary links stops pass 3 the same way;
+# it is exempted only for the same reason, and the count here moves with it.
 
 set(CHESSO_PGO "off" CACHE STRING "Profile-guided optimisation pass: off, generate, use")
 set_property(CACHE CHESSO_PGO PROPERTY STRINGS off generate use)
@@ -91,8 +103,11 @@ endforeach()
 if(CHESSO_PGO STREQUAL "use")
      # Source-scoped, so it lands after the target options on the command line and
      # wins. TARGET_DIRECTORY because source properties are directory scoped and
-     # this file is included from the top level, not from src/.
-     set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/search_params.cpp
+     # this file is included from the top level, not from src/. The two files and
+     # why each has no profile are in the header above.
+     set_source_files_properties(
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/search_params.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/leaf_walk.cpp
           TARGET_DIRECTORY chesso_engine
           PROPERTIES COMPILE_OPTIONS -Wno-missing-profile)
 endif()

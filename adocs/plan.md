@@ -376,29 +376,28 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S302  **the release build works again: `leaf_walk.cpp` exempt from the profile check, as `search_params.cpp` is** -- since `5b0e170` (S082) the file sat in the engine library, linked by datagen only, so pass 3 stopped on `-Werror=missing-profile`; `cmake/pgo.cmake` names it beside `search_params.cpp` and the error stays live for the eight units the engine links (shown by removing `utils.cpp`'s profile); `portable`, `bmi2` and `avx2` each 3 of 3 passes in about 41 s, bench 5434393; done before a shutdown at the owner's request (DEC-171)
 - S301  **the live UCI-driving tools fail on an engine that closes its output, instead of spinning** -- every `uciok`, `readyok` and `bestmove` wait in `build_release.sh`, `S135_cost.py`, `error_profile.py` and `search_bench.py` stops naming its token; the old `error_profile.py` exited 0 with a report costed from zeros; output on the real binary identical; filler (DEC-171), tools only; found: the release build fails at pass 3 (S302), two more placeholder returns (S303)
 - S300  **`tools/search_bench.py` fails on an engine that closes its output before `uciok`, instead of spinning** -- the handshake loop raises as the `isready` loop does; a planted stand-in spun to a 3 s timeout before and exits 1 in 0.14 s after; the real binary's output identical at depths 9 and 12; filler (DEC-171), tool only; the same loop in three more live tools filed as S301
 - S299  **S121's and S135's cost scripts check every command their INV-6 streams run, and S121's and S123's screens refuse a bad K** -- `streams()` is S123_cost.sh's and `run` stops on it; `k_check` (S125_screen.sh's) in `part()` and `samples()`; shown on planted engines and K files without a timing; filler (DEC-171), tooling only
 - S123  **passed pawns score free and safe pushes and both kings' distance per rank, and candidate passers: H1 at 8+0.08, `{0, 5}`** -- the screen kept all three groups (DEC-329); the SPRT read Elo +49.19 +/- 15.06 over 1166 games (an early stop, biased upward); bench 6016079 -> 5434393; cost +4.96 %; `MATE_IN_THREE_FLOOR` held at 11 at zero margin (DEC-330); the comments made true, neutral (INV-6)
-- S298  **gate_extra gains stage 6, clang, weekly: the Mac's compiler on the workstation** -- build-clang and build-clang-tune with clang++-22 here and Apple clang's c++ on the Mac, Ninja, libc++, -k 0, both fast suites; S297's warning planted back turned it red with its ten diagnostics and the revert green; 17 script cases, 32 of 32 cuts killed; gate_extra six stages green in 1322 s
 
 ## Open
 
 1. S125  phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, and each is fitted
-2. S302  `./build_release.sh` builds a release again: pass 3 stops failing on `src/leaf_walk.cpp`, which no profiled binary runs (filler, DEC-171)
-3. S303  `depth_vs_eval.py` and `spsa_driver.py` stop with an error when the engine closes its output, instead of a placeholder move or a partial count (filler, DEC-171)
-4. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
-5. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-6. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-7. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-8. S102  outpost and space terms in the evaluation, one family
-9. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-10. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-11. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-12. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-13. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-14. S030  move_t drops the moving piece and becomes 16 bits
-15. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-16. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-17. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-18. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+2. S303  `depth_vs_eval.py` and `spsa_driver.py` stop with an error when the engine closes its output, instead of a placeholder move or a partial count (filler, DEC-171)
+3. S118  the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
+4. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+5. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
+6. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+7. S102  outpost and space terms in the evaluation, one family
+8. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+9. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+10. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+11. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+12. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+13. S030  move_t drops the moving piece and becomes 16 bits
+14. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+15. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+16. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+17. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play

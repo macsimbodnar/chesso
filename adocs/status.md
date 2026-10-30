@@ -72,11 +72,11 @@ DEC-331 (14) records what phase 1 found and the bisection ruling.
    the record commit with the DEC-220 block, the ledger commit.
 
 **Filler steps queued** behind S125, for agent-only work while a long run
-holds the machine (landing held until it ends): S302, S303.
+holds the machine (landing held until it ends): S303.
 
 **Waiting on the owner:** removing the worktrees `../chesso-s125`,
-`../chesso-s300` and `../chesso-s301` (each landed: `b5f133c`, `733ba63`,
-and this commit), and whether a step's own worktree may be removed at its
+`../chesso-s300`, `../chesso-s301` and `../chesso-s302` (each landed:
+`b5f133c`, `733ba63`, `173ade1`, and S302's commit), and whether a step's own worktree may be removed at its
 close without asking once its work is verified in the commits.
 
 **gate_extra**, last `GATE-EXTRA-DONE` 2026-10-30; next weekly run due by
@@ -100,6 +100,7 @@ close without asking once its work is verified in the commits.
   datagen only); the last release build on record is S274's, 2026-10-12;
   the owner is told. S303, `depth_vs_eval.py`'s and `spsa_driver.py`'s
   end-of-file returns.
+- **S302 done** at the owner's request, before the shutdown: `./build_release.sh` builds again; `cmake/pgo.cmake` exempts `leaf_walk.cpp` from the profile check as it does `search_params.cpp`, the error kept live for the eight units the engine links; `portable`, `bmi2` and `avx2` each 3 of 3 passes, bench 5434393.
 - **Worktrees removed** with the owner's approval (2026-10-30):
   `../chesso-s121c`, `s121d`, `s121e`, `s298`, `s298b`, `s123`, `s123b`,
   `s123c`, `s123d`, and the cost trees under `.tuning/s121/` and
