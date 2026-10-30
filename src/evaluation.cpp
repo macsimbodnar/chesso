@@ -135,20 +135,24 @@ constexpr std::array<score_t, 5> passed_pawn_score =
 // every position as before and costs nothing (INV-6). What a group costs is
 // measured with its weights forced (DEC-047, adocs/data/S123_cost.sh).
 //
+// The values below are the screen's full fit with all three groups kept, ABC
+// (adocs/data/S123_screen_reading.txt), pasted unchanged: monotonicity is not
+// imposed, so a row that is not monotonic is the fit's, not corrected by hand.
+//
 // Rank 7 enters A and B as increments and slopes and never as a base cell: a
 // per-rank weight on the seventh alone would be the signed sum of eight
 // psqt[PAWN] columns again, S134's bucket 5. C stops at the sixth because a
 // pawn on its own seventh is always passed.
-constexpr int passed_free_mg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_free_eg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_safe_mg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_safe_eg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_king_own_mg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_king_own_eg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_king_enemy_mg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int passed_king_enemy_eg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int candidate_passer_mg[5] = {0, 0, 0, 0, 0};
-constexpr int candidate_passer_eg[5] = {0, 0, 0, 0, 0};
+constexpr int passed_free_mg[6] = {2, 8, 2, 7, 28, 76};
+constexpr int passed_free_eg[6] = {23, 3, 14, 13, 5, 6};
+constexpr int passed_safe_mg[6] = {-1, 1, 2, 0, 10, 33};
+constexpr int passed_safe_eg[6] = {8, 6, 10, 22, 51, 53};
+constexpr int passed_king_own_mg[6] = {2, 5, 7, 3, -2, -3};
+constexpr int passed_king_own_eg[6] = {-3, -5, -13, -16, -17, -19};
+constexpr int passed_king_enemy_mg[6] = {-2, -7, -7, -5, 0, 2};
+constexpr int passed_king_enemy_eg[6] = {-3, 3, 9, 15, 18, 23};
+constexpr int candidate_passer_mg[5] = {-6, -16, 4, 10, -2};
+constexpr int candidate_passer_eg[5] = {4, 8, 30, 46, 59};
 constexpr std::array<score_t, 6> passed_free_score =
     pack_scores(passed_free_mg, passed_free_eg);
 constexpr std::array<score_t, 6> passed_safe_score =

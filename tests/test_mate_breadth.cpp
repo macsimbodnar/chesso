@@ -88,17 +88,19 @@ static constexpr int SCORE_DEPTH = 10;
 
 // GOLDEN (DEC-142): 159, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 165 with the guard shipping, 154 with it weakened (S121, below; 160 and 159
-// at S296, 160 and 156 at S135, 159 and 154 at S083, 163 and 160 at S293, 164
-// and 160 at S286). This header read 158 and S135's ends from S296 to S121.
+// 160 with the guard shipping, 153 with it weakened (S123, below; 165 and 154
+// at S121, 160 and 159 at S296, 160 and 156 at S135, 159 and 154 at S083,
+// 163 and 160 at S293, 164 and 160 at S286). This header read 158 and
+// S135's ends from S296 to S121.
 // Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 159, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 2 below the shipping count and 2 above the weakened one since
-// S135 (1 and 4 at S083, 0 below the shipping count at S293). The S156
+// Margin: 1 below the shipping count and 6 above the weakened one since
+// S123 (6 and 5 at S121, 1 and 0 at S296, 2 and 2 at S135, 1 and 4 at S083,
+// 0 below the shipping count at S293). The S156
 // script's rule admits any floor strictly above what the weakened guard finds
 // and at or below what ships -- 157 to 160 against S135's 156 and 160, 155 to
 // 159 against S083's 154 and 159 -- and flags one outside that band as no
@@ -194,6 +196,14 @@ static constexpr int SCORE_DEPTH = 10;
 // separates RfpMinPly 1 again and is not moved: a floor that holds needs no
 // decision, and one below the shipping count, 164, is a rise for the
 // coordinator to propose. A revert of S121's paste puts 160 and 159 back.
+//
+// **159 held at S123, re-read by the script (DEC-142, DEC-299).** S123's
+// passed pawn family, the screen's ABC fit, moves both ends down: on its
+// candidate S156's sweep reads **160** exact at RfpMinPly 3, 158 at 2 and
+// **153** at 1 and 0, and the gate built at RfpMinPly 1 with 159 compiled in
+// is red at 153 (adocs/data/S123_goldens.txt). 159 is inside the band, 154
+// to 160, so it separates and is not moved, one below the shipping count,
+// DEC-313 (1)'s rule. A revert of S123's paste puts 165 and 154 back.
 static constexpr int EXACT_FLOOR = 159;
 
 

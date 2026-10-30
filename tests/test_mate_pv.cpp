@@ -416,13 +416,15 @@ TEST_SUITE("mate PV completeness")
   // suite. This cell reaches it on a cold table.
   //
   // GOLDEN (DEC-142): the cell -- the position, line 101 of
-  // adocs/data/S145_mined_set.tsv (game 3499), at `go nodes 50000` on a cold
-  // table at Hash 16 -- the lower middle of the run of budgets, 40000 to
-  // 70000, where the shipped build prints a line that reaches its mate and the
-  // build with MW02 applied prints the aborted line short. Since S121, whose
-  // mobility table moved the run from S296's 30000..60000 on the same
-  // position (2 of 318 positions separate; adocs/data/S121_goldens.txt), so
-  // the budget from 40000; since S296 the position; S294 picked line 162 at
+  // adocs/data/S145_mined_set.tsv (game 3499), at `go nodes 40000` on a cold
+  // table at Hash 16 -- the lower middle of the run of budgets, 30000 to
+  // 60000, where the shipped build prints a line that reaches its mate and the
+  // build with MW02 applied prints the aborted line short. Since S123, whose
+  // passed pawn family moved the run back from S121's 40000..70000 on the
+  // same position (3 of 318 positions separate; adocs/data/S123_goldens.txt),
+  // so the budget 50000 -> 40000; S121's mobility table had moved it from
+  // S296's 30000..60000 (2 of 318; adocs/data/S121_goldens.txt), the budget
+  // 40000 -> 50000; since S296 the position; S294 picked line 162 at
   // `go nodes 150000`, whose run S296's tree shortened to 180000..200000
   // (adocs/data/S296_goldens.txt).
   // Re-derive: adocs/data/S294_fallback_cell.py, the four stages in its
@@ -462,7 +464,7 @@ TEST_SUITE("mate PV completeness")
     std::vector<std::string> lines;
     {
       stdout_capture_t capture;
-      uci_process_line("go nodes 50000");
+      uci_process_line("go nodes 40000");
       uci_wait_for_search();
       lines = capture.lines();
     }

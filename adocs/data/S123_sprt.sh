@@ -16,6 +16,31 @@
 # below, and until then the script refuses to start (the self-check at the
 # bottom).
 #
+# 2026-10-30, S123's phase 2, re-read against the candidate before it is
+# pinned (the step file's "2026-10-30: the screen and the candidate"). The
+# screen kept all three groups: `CANDIDATE ABC groups
+# passed_advance,passed_kings,candidate_passers`, the fit
+# .tuning/s123/fits/ABC/full.hpp (sha256 c7f340c6...), pasted by
+# `S123_screen.sh apply` over the ten family arrays, bench 6016079 -> 5434393.
+# The guards below hold as written, read on the worktree against its HEAD
+# `1a231dd`: src/evaluation.cpp is the only file under src/, CMakeLists.txt
+# and cmake/ that differs;
+# outside whole-line comments its 20 changed lines are the ten family
+# definitions, old and new, nothing outside the allowed forms; and every
+# weight array and define outside the ten reads HEAD's by name
+# (`S123_screen.py only-family`, the working-tree form of only-family-pair).
+# REF `1a231dd` with `landing=` `03680ab` passes the landing check: their
+# src/ is identical, and CAND's parent will be `1a231dd`. The bisection the
+# screen printed is A | B | C, so the H0 paragraph's "at worst three more
+# runs after this one, four in all" holds as written; each part is its group
+# refitted alone over what has landed by then (`part NAME`, `--only` its
+# group, the landed parts held in the sources), so B and C under H0 are not
+# the screen's B and C, which were fitted with the earlier parts free. The
+# verdict pays all's cost: every group is live at the candidate, and
+# adocs/data/S123_cost.sh's `all` row reads +4.96 % (a +2.59 %, b +1.52 %, c
+# +1.48 %, parent zero; adocs/data/S123_cost_reading.txt). There is no clamp
+# reading: the family is stage one.
+#
 # THE PAIR.
 #
 #   CAND  S123's candidate commit: `adocs/data/S123_screen.sh apply` pasted the
@@ -26,16 +51,24 @@
 #         src/evaluation.cpp; every golden the paste moved re-derived by its
 #         own script (DEC-142); so the commit is green.
 #   REF   CAND's parent: S123's phase 1 landing, the family at zero and in no
-#         expression (adocs/data/S123_inv6.txt), or a documents-only
-#         descendant of it.
+#         expression (adocs/data/S123_inv6.txt), or a descendant of it whose
+#         src/ is the landing's byte for byte -- `1a231dd`, the cost script's
+#         fix and the step file over `03680ab`, `No functional change`, is
+#         one.
 #
-# The two differ by the fitted family arrays and nothing else in src/, which
-# the guards below check: CAND^ is REF; REF's src/ is the phase 1 landing's
-# byte for byte; and CAND's src/ is REF's but for src/evaluation.cpp, which
-# differs outside whole-line comments only in lines of the ten family
-# definitions' shape (passed_free, passed_safe, passed_king_own,
-# passed_king_enemy and candidate_passer, mg and eg), and in which every other
-# weight array and define reads REF's value by name. A dropped group's arrays stay zero and are in
+# The two differ by the fitted family arrays and nothing else in src/ or the
+# build's flags, which the guards below check: CAND^ is REF; REF's src/, its
+# top-level CMakeLists.txt and cmake/ are the phase 1 landing's byte for byte
+# (src/CMakeLists.txt is under src/; the engine target reads no other build
+# file); and CAND's are REF's but for src/evaluation.cpp, which differs
+# outside whole-line comments only in whole one-line definitions of the ten
+# family arrays (passed_free, passed_safe, passed_king_own, passed_king_enemy
+# and candidate_passer, mg and eg; nothing after the closing `};`) or
+# numbers-only lines, and in which every other weight array and define reads
+# REF's value by name. The build-file and end-of-line clauses were added at
+# phase 2's fast check (2026-10-30): before them a flag change in
+# CMakeLists.txt or cmake/, or code appended after a family line's `};`,
+# passed. A dropped group's arrays stay zero and are in
 # no expression at CAND either.
 #
 # WHAT THE VERDICT PRICES. The fitted survivors and their cost together:
@@ -204,14 +237,19 @@ if [[ "$(git rev-parse "$cand^")" != "$(git rev-parse "$ref")" ]]; then
   fail "REF is not CAND's parent -- the pair would measure more than S123"
 fi
 
+# The files the engine's build reads: src/ (src/CMakeLists.txt with it), the
+# top-level CMakeLists.txt and cmake/'s flag files. tests/ and tools/ build no
+# part of the chesso target fastchess.sh plays.
+build_paths=(src CMakeLists.txt cmake)
+
 # REF's engine is the phase 1 landing's: the family at zero.
-if ! git diff --quiet "$landing" "$ref" -- src/; then
-  fail "REF's src/ differs from the phase 1 landing's -- REF is not the" \
-       "family at zero or a documents-only descendant of it"
+if ! git diff --quiet "$landing" "$ref" -- "${build_paths[@]}"; then
+  fail "REF's src/ or build files differ from the phase 1 landing's -- REF is" \
+       "not the family at zero or a descendant of it with the landing's src/"
 fi
 
-# CAND's src/ is REF's but for src/evaluation.cpp.
-changed="$(git diff --name-only "$ref" "$cand" -- src)"
+# CAND's src/ and build files are REF's but for src/evaluation.cpp.
+changed="$(git diff --name-only "$ref" "$cand" -- "${build_paths[@]}")"
 if [[ -z "$changed" ]]; then
   fail "CAND's src/ is REF's -- not S123's paste"
 fi
@@ -224,7 +262,7 @@ done <<< "$changed"
 code_lines="$(git diff -U0 "$ref" "$cand" -- src |
               grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' | cut -c2- |
               grep -vE '^[[:space:]]*(//.*)?$')"
-table='^constexpr int (passed_free|passed_safe|passed_king_own|passed_king_enemy|candidate_passer)_(mg|eg)\[[0-9]+\] = \{'
+table='^constexpr int (passed_free|passed_safe|passed_king_own|passed_king_enemy|candidate_passer)_(mg|eg)\[[0-9]+\] = \{[[:space:]]*-?[0-9]+([[:space:]]*,[[:space:]]*-?[0-9]+)*[[:space:]]*,?[[:space:]]*\};[[:space:]]*$'
 values='^[[:space:]]*-?[0-9]+(,[[:space:]]*-?[0-9]+)*,?[[:space:]]*(\};)?$'
 if grep -qvE "($table)|($values)" <<< "$code_lines"; then
   fail "CAND's src/ differs outside comments in more than the family's" \

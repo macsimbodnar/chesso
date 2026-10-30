@@ -1,0 +1,133 @@
+# S123's screen reading: adocs/data/S123_screen.sh all, 2026-10-30 02:32 to 03:19, S123-ALL-DONE (.tuning/s123_screen_all.console),
+# from the main checkout at 03680ab, the phase 1 landing. The three read/{A,B,C}.txt in the screen's order, concatenated
+# verbatim; then the corpus `locate` recorded (.tuning/s123/corpus.txt), the audit's pass line, and the sha256 of every fit
+# header (.tuning/s123/fits/{A,AB,ABC}/{full,q1..q5}.hpp) and tie file. The candidate is ABC's full.hpp
+# (CANDIDATE ABC groups passed_advance,passed_kings,candidate_passers). Outputs stay under .tuning/s123/ (DEC-235).
+
+== read/A.txt
+S123 screen reading, A: can-advance and safe-advance increments per own rank 2 to 7
+free passed_advance, fit A, against its start
+  A    full  start 0.071622 best 0.071552 at epoch 200, stopped on patience
+  A    q1    start 0.071615 best 0.071560 at epoch 100, stopped on patience
+  A    q2    start 0.071617 best 0.071552 at epoch 100, stopped on patience
+  A    q3    start 0.071619 best 0.071565 at epoch 100, stopped on patience
+  A    q4    start 0.071612 best 0.071554 at epoch 100, stopped on patience
+  A    q5    start 0.071619 best 0.071554 at epoch 200, stopped on patience
+rule g = start - best (DEC-315): full +0.000070, s 0.000005, m 0.000009; quarters +0.000055 +0.000065 +0.000054 +0.000058 +0.000065
+headroom: stage-one bound mg 16112 of 32767, eg 15509 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  candidate_passer_eg [0, 0, 0, 0, 0]
+  candidate_passer_mg [0, 0, 0, 0, 0]
+  passed_free_eg [1, -2, -4, -9, -18, -5]
+  passed_free_mg [-2, -2, 2, 3, 11, 47]
+  passed_king_enemy_eg [0, 0, 0, 0, 0, 0]
+  passed_king_enemy_mg [0, 0, 0, 0, 0, 0]
+  passed_king_own_eg [0, 0, 0, 0, 0, 0]
+  passed_king_own_mg [0, 0, 0, 0, 0, 0]
+  passed_safe_eg [8, 7, 17, 38, 68, 67]
+  passed_safe_mg [-2, 0, -3, -7, 13, 47]
+A kept
+PART-OUTCOME kept
+
+== read/B.txt
+S123 screen reading, B: a slope per own rank 2 to 7 on each king's distance to the push square
+free passed_advance,passed_kings, fit AB, against A
+  AB   full  start 0.071622 best 0.071443 at epoch 1200, stopped on patience
+  AB   q1    start 0.071615 best 0.071476 at epoch 100, stopped on patience
+  AB   q2    start 0.071617 best 0.071451 at epoch 100, stopped on patience
+  AB   q3    start 0.071619 best 0.071462 at epoch 1000, stopped on patience
+  AB   q4    start 0.071612 best 0.071451 at epoch 100, stopped on patience
+  AB   q5    start 0.071619 best 0.071457 at epoch 200, stopped on patience
+  A    full  start 0.071622 best 0.071552 at epoch 200, stopped on patience
+  A    q1    start 0.071615 best 0.071560 at epoch 100, stopped on patience
+  A    q2    start 0.071617 best 0.071552 at epoch 100, stopped on patience
+  A    q3    start 0.071619 best 0.071565 at epoch 100, stopped on patience
+  A    q4    start 0.071612 best 0.071554 at epoch 100, stopped on patience
+  A    q5    start 0.071619 best 0.071554 at epoch 200, stopped on patience
+rule d = best(A) - best(AB) (DEC-326 (3)): full +0.000109, s 0.000008, m 0.000013; quarters +0.000084 +0.000101 +0.000103 +0.000103 +0.000097
+headroom: stage-one bound mg 19382 of 32767, eg 24059 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  candidate_passer_eg [0, 0, 0, 0, 0]
+  candidate_passer_mg [0, 0, 0, 0, 0]
+  passed_free_eg [23, 4, 14, 14, 5, 6]
+  passed_free_mg [2, 8, 2, 7, 28, 77]
+  passed_king_enemy_eg [-3, 3, 9, 15, 18, 23]
+  passed_king_enemy_mg [-2, -7, -7, -5, 0, 2]
+  passed_king_own_eg [-3, -5, -13, -15, -17, -19]
+  passed_king_own_mg [2, 5, 7, 3, -2, -3]
+  passed_safe_eg [8, 6, 10, 21, 51, 54]
+  passed_safe_mg [-1, 1, 2, 0, 10, 28]
+B kept
+PART-OUTCOME kept
+
+== read/C.txt
+S123 screen reading, C: candidate passers per own rank 2 to 6
+free passed_advance,passed_kings,candidate_passers, fit ABC, against AB
+  ABC  full  start 0.071622 best 0.071425 at epoch 500, stopped on patience
+  ABC  q1    start 0.071615 best 0.071453 at epoch 100, stopped on patience
+  ABC  q2    start 0.071617 best 0.071432 at epoch 700, stopped on patience
+  ABC  q3    start 0.071619 best 0.071436 at epoch 4200, stopped on cap 5000
+  ABC  q4    start 0.071612 best 0.071438 at epoch 1100, stopped on patience
+  ABC  q5    start 0.071619 best 0.071429 at epoch 2000, stopped on patience
+  AB   full  start 0.071622 best 0.071443 at epoch 1200, stopped on patience
+  AB   q1    start 0.071615 best 0.071476 at epoch 100, stopped on patience
+  AB   q2    start 0.071617 best 0.071451 at epoch 100, stopped on patience
+  AB   q3    start 0.071619 best 0.071462 at epoch 1000, stopped on patience
+  AB   q4    start 0.071612 best 0.071451 at epoch 100, stopped on patience
+  AB   q5    start 0.071619 best 0.071457 at epoch 200, stopped on patience
+rule d = best(AB) - best(ABC) (DEC-326 (3)): full +0.000018, s 0.000006, m 0.000010; quarters +0.000023 +0.000019 +0.000026 +0.000013 +0.000028
+headroom: stage-one bound mg 19982 of 32767, eg 25799 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  candidate_passer_eg [4, 8, 30, 46, 59]
+  candidate_passer_mg [-6, -16, 4, 10, -2]
+  passed_free_eg [23, 3, 14, 13, 5, 6]
+  passed_free_mg [2, 8, 2, 7, 28, 76]
+  passed_king_enemy_eg [-3, 3, 9, 15, 18, 23]
+  passed_king_enemy_mg [-2, -7, -7, -5, 0, 2]
+  passed_king_own_eg [-3, -5, -13, -16, -17, -19]
+  passed_king_own_mg [2, 5, 7, 3, -2, -3]
+  passed_safe_eg [8, 6, 10, 22, 51, 53]
+  passed_safe_mg [-1, 1, 2, 0, 10, 33]
+C kept
+survivors A,B,C
+candidate ABC: /home/max/ws/chesso/.tuning/s123/fits/ABC/full.hpp
+bisection on H0 or no verdict, in order: A | B | C
+CANDIDATE ABC groups passed_advance,passed_kings,candidate_passers
+PART-OUTCOME kept
+
+== corpus.txt
+source s083
+stage 0
+corpus /home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv
+sha256 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+rows 6226944
+s083_fit /home/max/ws/chesso/.tuning/s083/curve/s0/fit_6226944_s1.hpp
+
+== audit/pass
+pass 2026-10-30T02:32:56+01:00 corpus 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+
+== sha256, fits and tie files
+9e493be0c8006b216efd8430d38a3a4fee449378aed6f89fbeb067d6dc9e8901  .tuning/s123/fits/A/full.hpp
+9e6431caeaea4c27c608954be1c036935477b69e8c349e1a7da52428253752a7  .tuning/s123/fits/A/q1.hpp
+44bef35a480c3df3ea5dd5f4805ac3e41f23611b58d0e56ed661dfe230c7a69b  .tuning/s123/fits/A/q2.hpp
+63f90114cca68ee7a65d4ce4498c3c0a5be4c0d739cfb8db8f54658c5903461a  .tuning/s123/fits/A/q3.hpp
+d10c3c4f48bccbc90b252b10a163591ce2fc62e4a2c76ff1d73652e91ec1ee20  .tuning/s123/fits/A/q4.hpp
+56055723f216ea45909463881cf21ed21b7e59c0689550ad17a8c43a0a00204d  .tuning/s123/fits/A/q5.hpp
+a3b4ae448e38f9fda5e79c7c0419420efc05f8a9762900bc354ecb3b1c25f713  .tuning/s123/fits/A/ties.txt
+ce83e27d53867902b7d675d8d7e85ce4df292d1d1f6b8e92a745962a99b60f42  .tuning/s123/fits/AB/full.hpp
+a0c3bd34a38a08ad8abd1510f7b2b0c1919ee539ca9819d46ec93f667aa5f0e7  .tuning/s123/fits/AB/q1.hpp
+b7806a8d7c54253968a581447d1e314d3a35d28b37a878fad30c02c5ab989b3c  .tuning/s123/fits/AB/q2.hpp
+61c2492c5f4e102f51aba63abf153ff3b678d8ac9b8c5eba9e74fa582d87e4cd  .tuning/s123/fits/AB/q3.hpp
+afbe9d65c721d3d6f602cdf806b82045b2cf5e89c8e948974ca9d0162ad7b31f  .tuning/s123/fits/AB/q4.hpp
+363653b591601e10cd233b7b8c3eb8ec562c8467fcdb34db40d34d2e7d54eed7  .tuning/s123/fits/AB/q5.hpp
+33b8c12b615216bb479a9fb86ad60f95de0a989bad67b5ba498ba31cb6821884  .tuning/s123/fits/AB/ties.txt
+c7f340c6bfe083b557d5365cea4f8932ac950d3148961974870dea3cbc0fa0e4  .tuning/s123/fits/ABC/full.hpp
+608da1ad2ccc427654091ae64d9fa74c48b135ea3ae365351bb5f801de177b8b  .tuning/s123/fits/ABC/q1.hpp
+9d7b4fb576d23d3fa8ce90235a5514b0b6c02f37d0c57c23ce240a2d5411da8f  .tuning/s123/fits/ABC/q2.hpp
+4e00dd5b48d45351b264e272e39226eab39bc4472594a44a4ff14568dd5cc12a  .tuning/s123/fits/ABC/q3.hpp
+bb0c22eba2a7dfb494e19d485c69555741316d4518c6d36344036ab180916ea0  .tuning/s123/fits/ABC/q4.hpp
+a72e5c4cb811c69263c9160169261870600cc822ce543f962153683aa4f0cf2d  .tuning/s123/fits/ABC/q5.hpp
+901ac94c9398065daf2e25f2dcb4e1f8b695f0348f9c22212c87673a62df3dea  .tuning/s123/fits/ABC/ties.txt
+a3b4ae448e38f9fda5e79c7c0419420efc05f8a9762900bc354ecb3b1c25f713  .tuning/s123/audit/ties_A.txt
+d5f0ad16ef173d68dc7e33c8067e5cfe9b400dc163131a5069758abea2fc83e6  .tuning/s123/audit/ties_B.txt
+d9a042452e084dcb2456853b09f77f5185081e6b6c2136ff4e7db0cc602f8861  .tuning/s123/audit/ties_C.txt

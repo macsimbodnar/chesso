@@ -7,6 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-30, by hand.
 
+## 2026-10-30: S123's candidate committed; its SPRT next
+
+**The screen kept all three groups** (`S123_screen.sh all`, 02:32 to
+03:19): A +0.000070 (m 0.000009), B +0.000109 against A (m 0.000013), C
++0.000018 against AB (m 0.000010); no ties; the candidate is the ABC fit
+(`adocs/data/S123_screen_reading.txt`). **Cost** (DEC-047's forced
+weights, 03:29 to 04:37 after a first launch voided by a script bug fixed
+in `1a231dd`): a +2.59 %, b +1.52 %, c +1.48 %, **all +4.96 %**, parent
+zero (`adocs/data/S123_cost_reading.txt`). **The candidate** pastes ABC
+over the ten family arrays, bench 6016079 -> 5434393; every golden it
+moves re-derived by its script (`adocs/data/S123_goldens.txt`); both mate
+floors hold, `MATE_IN_THREE_FLOOR` 11 at zero margin (DEC-330);
+gate_extra six stages green in 1365 s on the candidate tree; Debug
+self-play 8 games, 0 Assertion. Built by one Opus 5.5 subagent in
+`../chesso-s123b`, fast-checked, fixes applied.
+
+**Next:** pin and run `adocs/data/S123_sprt.sh` (`{0, 5}` at 8+0.08, up to
+41900 games, 19.86 h; watcher 40 h). On H0: `S123_screen.sh part NAME`
+in the order A | B | C. Worktrees that can go, waiting on the owner:
+`../chesso-s121c`, `../chesso-s121d`, `../chesso-s121e`, `../chesso-s298`,
+`../chesso-s298b`, `../chesso-s123`, `../chesso-s123c`; the cost trees
+under `.tuning/s123/cost/` once the reading is recorded (it is).
+
 ## 2026-10-30: S123 phase 1 landed; its screen next
 
 **S123 phase 1 landed** (passed pawns, DEC-329): three groups at zero in

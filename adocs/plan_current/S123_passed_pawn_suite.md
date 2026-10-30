@@ -1,7 +1,7 @@
 id:         S123
 goal:       passed pawns are scored by rank crossed with whether the push is available and safe, by both kings' distance, and candidates are scored too
 accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the table is rank crossed with can-advance and safe-advance rather than a single rank curve; the distance to **each** king is scaled by rank, because the same distance is worth more to a pawn on the seventh; candidate passers are scored; **monotonicity is not imposed** -- a fit that returns a non-monotonic middlegame curve is reporting something and is not corrected by hand; a test asserts the passer bitboard is colour-symmetric under board mirroring, written before any fit, because two published passed-pawn bugs shipped invisible to everything except an SPRT
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S121_coverage_rows.cpp, adocs/data/S123_*, DEV_MANUAL.md, adocs/data/README.md; at the paste (phase 2) every golden it moves, each by its script
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S121_coverage_rows.cpp, adocs/data/S123_*, DEV_MANUAL.md, adocs/data/README.md; at the paste (phase 2), each golden by its script: tests/test_search.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, adocs/data/S170_cases.tsv, MANUAL.md
 excludes:   pawn structure terms, which are S125
 decisions:  DEC-071, DEC-084, DEC-259, DEC-315, DEC-326, DEC-324, DEC-221, DEC-134, DEC-090, DEC-047, DEC-142, DEC-329
 closes:
@@ -468,3 +468,310 @@ comparison in S123's scripts; `S123_screen.sh` compares tie files with
 5. Pin `adocs/data/S123_sprt.sh` (the bracketed lines) and run it at night:
    up to 41900 games, 19.86 h; watcher ceiling 40 h; on H0, the bisection's
    `S123_screen.sh part NAME` (about 15 min each) and up to three more SPRTs.
+
+## 2026-10-30: the screen and the candidate
+
+One Opus 5.5 subagent, worktree `../chesso-s123b`, branch `s123b` at
+`1a231dd` (the cost script's fix, `No functional change`, over `03680ab`, the
+phase 1 landing). Written in two halves: the reading while the coordinator's
+cost run held the machine, the runs after its "go" and its rulings on the
+half 1 points. Every reading with its command is in
+`adocs/data/S123_goldens.txt`. No match, SPRT, fit, datagen or timing ran.
+Every golden the paste moves is re-derived by its script, every guard held,
+and nothing stopped.
+
+**The screen's launch, by the coordinator.** `S123_screen.sh all` started
+2026-10-30 02:32:04 from the main checkout at `03680ab` (the landing), PID
+3111735, console `.tuning/s123_screen_all.console`, OUT `.tuning/s123`;
+load 0.95 at launch, 27 GB free. Open findings (BUGS as scoped by DEC-171):
+the Open list at `03680ab` re-read, no DEC-171 filler is open.
+
+### The screen, as read
+
+`adocs/data/S123_screen.sh all`, 2026-10-30 02:32 to 03:19, `S123-ALL-DONE`,
+on S083's corpus (6226944 rows, sha256 `2e0e3de9...`) against S082's qs
+validation view, the three views' sha256 checked; the audit passed at
+02:32:56. The three readings, the corpus line, the audit's pass line and
+every fit's and tie file's sha256 are in `adocs/data/S123_screen_reading.txt`.
+
+| part | against | full gain | s | m | verdict |
+|---|---|---|---|---|---|
+| A, the free and safe increments | its start (g, DEC-315) | +0.000070 | 0.000005 | 0.000009 | kept |
+| B, both kings' distance slopes | A (paired d, DEC-326 (3)) | +0.000109 | 0.000008 | 0.000013 | kept |
+| C, candidate passers | AB (paired d) | +0.000018 | 0.000006 | 0.000010 | kept |
+
+- Survivors A, B, C: `CANDIDATE ABC groups
+  passed_advance,passed_kings,candidate_passers`. The candidate is
+  `.tuning/s123/fits/ABC/full.hpp` (sha256 `c7f340c6...`): best validation
+  0.071425 from 0.071622, at epoch 500, stopped on patience.
+- The bisection order printed: A | B | C.
+- Ties: none. The three tie files list no tie: every family rank cell's half
+  is supported by 1000 games or more.
+- **The cap, as read; it decides nothing.** ABC's q3 stopped at the
+  5000-epoch cap, its best at epoch 4200. Every other fit of the eighteen
+  stopped on patience.
+- Stage-one headroom at ABC: mg 19982 and eg 25799 of 32767 (A's fit 16112
+  and 15509, AB's 19382 and 24059).
+- **The full fit's tables, recorded; they decide nothing**, and monotonicity
+  is not imposed (the accepts). Own rank 2 first; C stops at the sixth.
+
+      passed_free_mg       {2, 8, 2, 7, 28, 76}
+      passed_free_eg       {23, 3, 14, 13, 5, 6}
+      passed_safe_mg       {-1, 1, 2, 0, 10, 33}
+      passed_safe_eg       {8, 6, 10, 22, 51, 53}
+      passed_king_own_mg   {2, 5, 7, 3, -2, -3}
+      passed_king_own_eg   {-3, -5, -13, -16, -17, -19}
+      passed_king_enemy_mg {-2, -7, -7, -5, 0, 2}
+      passed_king_enemy_eg {-3, 3, 9, 15, 18, 23}
+      candidate_passer_mg  {-6, -16, 4, 10, -2}
+      candidate_passer_eg  {4, 8, 30, 46, 59}
+
+  How the arrays combine, the code's arithmetic only: a free and safe passer
+  collects both increments, since safe implies free (DEC-329 (2)), and a king
+  slope multiplies that king's Chebyshev distance to the push square.
+
+### The apply
+
+`S123-APPLY-DONE` (`.tuning/s123/apply_ABC.console`, OUT
+`.tuning/s123/apply_ABC/`).
+- start-check passed: 35 definitions against HEAD `1a231dd`, the three groups
+  free, every held value HEAD's.
+- headroom: mg 19982, eg 25799 of 32767.
+- `verify_fit`: 1013 of 1013 identical to the emitted header. only-family:
+  the ten family arrays moved, nothing else.
+- Both builds with no warning. Bench 6016079 -> **5434393**.
+- 47 of 50 in each build. The reds: `test_evaluation` (the pawn on e2, 109
+  against 99), `test_search` (Re8, 196 against 181) and `test_mate_carry`
+  (the majority clause, 3 of 6 guarded cases reporting a mate line, A, C and
+  E silent: the budgets wanted re-sweeping, as its message says).
+  `test_eval_trace` and `test_tuner_gradient` were green.
+
+### The coverage rows at the candidate
+
+Both tools, run on the candidate's constants against S083's corpus
+(`S121_COVERAGE_DATA` / `S123_COVERAGE_DATA`), as their headers say:
+- `adocs/data/S121_coverage_rows.cpp`: landed block 19 pairs, 0 ineligible;
+  from the base 42, 55 of 132 needs open, the same 38 picks; gradient over
+  the mobility span, 0 parameters at or under 1e-12 (smallest 6.584e-09);
+  both ways, 0 features; "reproduces the landed block: yes".
+- `adocs/data/S123_coverage_rows.cpp`: landed block 4 pairs, 0 ineligible;
+  from the base 80, 11 of 58 needs open, the same 8 picks (three from
+  `all_test_fens()`, one from the corpus); gradient from `MOB_MG_BASE`, 0 at
+  or under 1e-12 (smallest 5.985e-09, over the family 4.669e-07); both ways,
+  0 features; "reproduces the landed block: yes".
+
+The landed blocks still cover every parameter both ways. No row moved, so no
+block was re-derived and no parameter is open.
+
+### The preconditions, each by its script
+
+- Fixture clear of the clamp: 121.1 against 183.0, unmoved (stage two does
+  not move with a stage-one family, and no row moved).
+- The clamp case's push, `S083_tuner_preconditions.cpp clamp`: **+80 -> +30**
+  by its rule: two rows bound, the farthest at 197.3, the nearest other at
+  158.8, every row 13.33 from the kink, finite differences 6.61e-8. +80 still
+  passes the rule's checks there, but its nearest row is 3.71 from the kink
+  and the rule takes the farthest. An input, re-derived by its script, with
+  its comment (`tests/test_tuner_gradient.cpp`).
+- The gauge walk: 0.0409 under Adam (`psqt_eg[king]`) and 0.0590 under
+  AdaGrad (the bishop), over the case's 0.01 floor; held at most 9.66e-15.
+- The gradient case's worst (`test_tuner_gradient -s`, both builds):
+  **2.79e-7 at parameter 985, `passed_king_own_eg[0]`**, against 1e-6, green
+  by a factor of 3.6 (6.94e-7 at 869 at the landing). No DEC-316 rows owed.
+- Planted recoveries (passed_pawns, piece_placement, tempo): green in both
+  fast suites.
+
+### Every golden, each by its script
+
+| golden | before | now | script |
+|---|---|---|---|
+| six piece anchors | 99, 283, 353, 590, 1021, 0 | **109**, 283, 353, 590, 1021, 0 | `S192_anchors.py`: 10 of 10 at the landing, then on the fit, then 10 of 10 on this tree. Only the pawn on e2 carries a passer |
+| `QUIET_ROOK_EVAL`, `_CHEAP`; 394 | 590, 578; 394 | unmoved: no pawn | the same |
+| `black_static`; quiet evasion; repetition | 181; -541; -603 | **196** (Re8's three passers); -541 unmoved, the four leaves pawnless and still the four king moves standing pat; -603 unmoved, no pawn | the same |
+| `POSITIONAL_ROOM` | -- | did not fire: the white pawn's residual is \|109 - 84\| = 25 against 150 | -- |
+| `truncation_positions` | S121's four, phases 5, 11, 19, 17 | **re-picked**: phases 5, 7, 13 and 17, S121's phase 17 row kept. 89 past 2.8, 18 at 2.875, 16 distinct. The worst is 2.875 = 69/24, so N stays 3. S121's four read 2.333, 2.625, 2.792 and 2.875 there: green, three of them off the maximum | `truncation_scan --data <S083's corpus> --min 2.8`, then `S083_truncation_pick.py` |
+| coverage blocks | S121's 19 pairs, S123's 4 | reproduced, unmoved | `S121_coverage_rows.cpp`, `S123_coverage_rows.cpp` |
+| clamp push; walk | +80; 0.0235 / 0.2272 | **+30**; 0.0409 / 0.0590 | `S083_tuner_preconditions.cpp both` |
+| fixture clear of the clamp | 121.1 | 121.1 against 183 | the same |
+| gradient check (DEC-316) | 6.94e-7 at 869 | 2.79e-7 at 985 | `test_tuner_gradient -s` |
+| `EXACT_FLOOR` 159 | 165 / 154 | **held**: 160 shipping, 153 weakened; the gate at RfpMinPly 1 red at 153 | `S156_mined_floor_sweep.py --floor 159` via `S136_overlay_run.py` (the paste's one file, `src/evaluation.cpp`) |
+| `MATE_IN_THREE_FLOOR` 11 | 12 / 10 | **held**: 11 shipping, 10 weakened; `red` red at 10 >= 11 and on mate-in-two exactness | `S154_floor_margin_sweep.py floor`, `red`, the same overlay |
+| node budget | 65024 / 3251 (8367, 0.51 of c) | unmoved: 12104 nodes, 0.74 of c, inside [7270, 32512] | `S192_node_budget.py` |
+| first-mate; `DRIVE_DEPTH`; ply-2 | 9, 9, 5; 4; 6 | unmoved | `S188_repair_goldens.py first-mate`, `s207`; `S083s_rfp_ply2.py` |
+| `capture_mates`; extra ply; ProbCut row | 9, 8, 11, 12; 8 (mate 4); 10 (mate 4) | unmoved: each at its asserted depth (the fourth capture row at 8, 9 and 12); mutant separation not re-read, every case green | `S230_mine_r01_row.py depths`, candidate and parent |
+| `LATE_CAPTURE_*` | LQ02 at 7, LQ03 at 3 | unmoved | `S261_mine_late_capture.py sweep`, `pick` |
+| aborted-line cell | line 101 at 50000 (40000..70000) | **line 101 at 40000** (run 30000..60000; margin 10000 below, 20000 above; 3 of 318 separate). Observed red under MW02, green shipped | `S294_fallback_cell.py`, four stages, MW02 on a throwaway tree of the candidate |
+| `ALPHA` | -2108 (band -2163 .. -1932) | **-2108 kept**: band -2153 .. -1923, 45 below and 185 above; the trace meets the node at -2039, -2155 and -2334 | `S121_alpha_window.cpp` (it reproduces S121's band on the parent); `S136_trace_patch.py` |
+| `short_line_ceiling` | 2, 13, 4, 1, 2, 3 | unmoved; the command gains `adocs/data/S123_sweep_s170.txt` | `S203_case_sweep.sh --ceilings`: the nine grids plus S123's |
+| S170 budgets | A 1000000, B 100000, C 500000, D 1500000, E 100000, F 300000 | **A 1200000, C 1200000, E 300000, F 100000**; B and D unmoved | `S170_pick_budgets.sh` |
+| readings | 697 mate_pv lines; defender 84/104 | 697; 86/104 | `test_mate_pv -s`; `S165_nmp_defender_sweep.py` |
+| `golden_defaults`, option count, census, book | -- | unmoved by construction | -- |
+
+**DEC-299's guard is met**: both mate floors hold and no ceiling moves, so
+the budgets the picker answers are applied, with a header paragraph in
+`adocs/data/S170_cases.tsv`, and the ceilings' command gains S123's grid
+(`tests/test_mate_carry.cpp`, `DEV_MANUAL.md`). S123's grid: 108 cells, 1397
+mate lines, 18 short; it alone answers 0, 3, 1, 0, 1, 2.
+
+**Both floors now sit at or one below the shipping count.** `EXACT_FLOOR`
+159 is one below the 160 that ships (DEC-313 (1)'s rule). `MATE_IN_THREE_FLOOR`
+11 equals the 11 that ships, with no spare point: no integer lies strictly
+between 10 and 11, so DEC-116's form is not available, and 10 would be a
+falling floor that does not separate. Neither answer is lower than its
+golden, so neither stops the step and neither golden moves. A bisection
+part's refit, or S126's, that costs one more mate in three turns the floor
+red, and that is a stop for the owner (DEC-303).
+
+### Gates
+
+- Both builds: 0 warnings. `ctest -L fast`: **50 of 50** in `build/` and in
+  `build-tune/`, sequential, `CLANG_FORMAT_MAJOR=22`.
+- `./clang-format.sh --check` clean.
+- **The S297 clang pair** (`STAGES=clang tools/gate_extra.sh`): `build-clang`
+  and `build-clang-tune` with clang 22.1.8, no error and no warning; both
+  fast suites 50 of 50; 343 s.
+- `tools/plan_prose_check.py`, one mode per call, each exit 0: `--citations`
+  0 flagged over 19 files; `--touches` 0; `--params`; `--gate` agrees;
+  `--prose` 0 flagged.
+- **`tools/gate_extra.sh`**, all six stages, detached under a four-exit
+  watcher: `GATE-EXTRA-DONE 6 stages 1365 s`. prose 0 s, citations 1 s, debug
+  384 s (6 of 6), sanitize 668 s (the fast label 50 of 50 under the
+  sanitizers; INV-6 across builds, both 5434393), perft 52 s, clang 260 s
+  (50 of 50 twice). No `Assertion` in its logs.
+- **Tier 2 (DEC-141) does not bind**, by what the diff touches: under `src/`
+  only `src/evaluation.cpp`, its ten family arrays and one whole-line
+  comment; no `make_move`, `unmake_move`, generator or search change.
+  gate_extra ran anyway, as the brief asks, because the candidate puts
+  `is_attacked()` and the family's code into every stage-one evaluation. The
+  Debug self-play is the coordinator's.
+- **Bench 5434393** in both builds: the commit's `Bench:`.
+
+### The cost (the coordinator's run)
+
+`adocs/data/S123_cost_reading.txt`, both runs:
+- **The first launch**, 2026-10-30 03:20:09, stopped at INV-6 before any
+  timing (`.tuning/s123_cost_void1.console`): `streams()` kept
+  `search_bench.py`'s raw output, seconds and knps included, in the directory
+  `diff -r` compares, so zero against parent read different on timings
+  alone, nodes and best moves identical; `S123-COST-FAILED`. Fixed in
+  `1a231dd`.
+- **The run**, 03:29:42 to 04:37, `03680ab` against `244d89d`,
+  `S123-COST-DONE` (`.tuning/s123_cost.console`): INV-6 bench 6016079 on
+  every binary; five distinct `.text` sections.
+  - a COST **+2.59 %**, b **+1.52 %**, c **+1.48 %**, all **+4.96 %**: cycles
+    and wall beyond the floor, instructions the same way.
+  - parent: zero, inside the A/A floor.
+  - The A/A floor: bench16 cycles 0.445 %, pos11 cycles 0.246 %, wall
+    0.303 %.
+  - Forced instructions, printed and not gated: bench16 a + b + c +5.195 %
+    against all +4.308 %; pos11 +7.761 % against +6.882 %.
+- Every group is live at the candidate, so `all` is its row: +4.96 %. It
+  decides nothing; the SPRT prices the family with its cost.
+
+### The SPRT script
+
+`adocs/data/S123_sprt.sh`, re-read against this candidate:
+- The guard accepts `1a231dd` as REF with `03680ab` as the landing
+  (the coordinator's ruling): `git diff --quiet 03680ab 1a231dd -- src/`
+  holds, and CAND's parent will be `1a231dd`. "a documents-only descendant"
+  was false of a commit that changes a script; it now reads "a descendant of
+  it whose src/ is the landing's byte for byte", in the header and in the
+  guard's message. No guard changed.
+- The guard simulated on this worktree against HEAD: `src/evaluation.cpp` the
+  only file under `src/` that differs; its 20 changed code lines are the ten
+  family definitions, old and new, nothing outside the allowed forms (the
+  comment this paste adds over the arrays is whole-line); and every weight
+  outside the ten is HEAD's by name (`S123_screen.py only-family`).
+- The bisection A | B | C; the H0 paragraph's "at worst three more runs
+  after this one, four in all" holds with three survivors. Each part under
+  H0 is its group refitted alone over what has landed (`part NAME`), so B's
+  and C's models there are not the screen's, which were fitted with the
+  earlier parts free; the new paragraph says so.
+- A dated 2026-10-30 paragraph: the candidate ABC, the guards as read, the
+  bisection, the cost (all +4.96 %), no clamp reading.
+- The coordinator's markers are left unfilled; run once, the script refuses
+  on them before anything else.
+- The fast check's two guard gaps are closed (below): the family-line form
+  ends at `};`, and the build files are compared beside `src/`.
+
+### Also changed
+
+- `src/evaluation.cpp`: one whole-line comment over the family's arrays,
+  that the values are the screen's ABC fit pasted unchanged, monotonicity not
+  imposed. `src/evaluation.hpp` is untouched: the SPRT guard allows
+  `src/evaluation.cpp` alone, and the definitions' comments wait for the
+  closing commit.
+- `adocs/data/S192_anchors.py`: the two anchors and the family's note.
+- `DEV_MANUAL.md`: every goldens row S123 moved or re-read, the `--ceilings`
+  command with S123's grid, the gradient and walk sentences. Where the step
+  file and `DEV_MANUAL.md` differ, the manual's commands were followed; they
+  did not differ on any command run here.
+- `MANUAL.md`: the `RfpMinPly` row's mined-set figures (160, 158, 153
+  against 159).
+- `adocs/data/README.md`: rows for `S123_screen_reading.txt`,
+  `S123_cost_reading.txt`, `S123_sweep_s170.txt` and `S123_goldens.txt`.
+
+### The fast check's three, fixed before completion
+
+- **Three golden sites still carried old figures** (DEV_MANUAL.md had the
+  new ones): each gains a dated S123 paragraph in S121's and S293's form.
+  `tests/test_mate_breadth.cpp` `EXACT_FLOOR`: the header's ends 165 and 154
+  become 160 and 153 with the history kept, the margin sentence 1 below and 6
+  above since S123, and "159 held at S123". `tests/test_engine.cpp`
+  `MATE_IN_THREE_FLOOR`: the header's "13 ... 8 ... read at S135" (stale since
+  S121) becomes 11 and 10 at S123, the false "Margin: 1 below the shipping
+  count (2 since S135)" becomes 0 below since S123, and a paragraph holds the
+  floor at 11 at zero margin, separating, under DEC-299's guard, a further
+  lost mate in three a stop for the owner (DEC-303), citing **DEC-330**, the
+  coordinator's record in this commit. `tests/test_search.cpp` `ALPHA`: the
+  candidate's band, -2153 to -1923 (45 below, 185 above) and -1828 to -1790,
+  and its trace, iteration 7's searches 20 to 22 at alphas -2039, -2155 and
+  -2334. `DEV_MANUAL.md`'s mate-in-three row cites DEC-330 too.
+- `tests/test_mate_pv.cpp`'s history sentence "so the budget from 50000"
+  now reads "50000 -> 40000" (and S121's "40000 -> 50000").
+- **`adocs/data/S123_sprt.sh`'s guards, two gaps older than this diff,
+  strengthened.** The family-line form anchored only the line's start, so
+  code appended after `= {...};` passed; it now requires the whole line, a
+  one-line definition ending at `};`. And the landing and CAND checks read
+  `src/` alone, so a flag change in the top-level `CMakeLists.txt` or
+  `cmake/` passed; both now read `src`, `CMakeLists.txt` and `cmake`
+  (`src/CMakeLists.txt` is under `src/`; tests/ and tools/ build no part of
+  the engine target). In a scratch clone (REF `1a231dd`, the landing
+  `03680ab`, CAND this paste committed on REF), the script copied with its
+  markers and the pair filled and its `exec` replaced by an echo:
+  - the real pair passes (`only-family-pair` too) under the old guards and
+    the new;
+  - code appended after `passed_free_mg`'s `};` passed the old guards and is
+    refused by the new: "CAND's src/ differs outside comments in more than
+    the family's weight definitions";
+  - `add_compile_options(-fno-inline)` appended to `CMakeLists.txt` passed
+    the old and is refused: "CAND changes CMakeLists.txt beyond the paste";
+  - a line added to `cmake/arch.cmake` at REF passed the old and is refused:
+    "REF's src/ or build files differ from the phase 1 landing's".
+
+### Proposed commit message
+
+```
+Paste S123's passed pawn family fit for its SPRT (S123)
+
+The screen kept all three groups (DEC-329): the free and safe
+increments, both kings' distance slopes and candidate passers, each
+past its margin on S082's fixed set. Their full-corpus fit, ABC, is
+pasted over the ten family arrays for the one {0, 5} SPRT that
+decides the family (DEC-259); an H0 is bisected A | B | C.
+
+Every golden the paste moves is re-derived by its script (DEC-142):
+the anchors 109 and 196; the truncation pins re-picked, N still 3;
+the clamp push +80 -> +30; the aborted-line cell's budget 50000 ->
+40000; ALPHA kept inside its band; both coverage blocks reproduce.
+Both mate floors hold: EXACT_FLOOR 159 against 160 and 153,
+MATE_IN_THREE_FLOOR 11 against 11 and 10, held at zero margin
+(DEC-330). No mate-carry ceiling moves, so the picker's budgets for
+A, C, E and F apply (DEC-299). The screen's reading and the cost
+run's, all +4.96 %, are committed. S123_sprt.sh's guards now read the
+build files beside src/ and a family line to its end.
+
+Bench: 5434393
+```
+
+No `done:` stamp: the SPRT comes first.

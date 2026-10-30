@@ -73,7 +73,9 @@ KS = {  # king_safety_feature_t's order
 #             {own-rank index: signed count}, White minus Black; a king
 #             distance's count is the summed distance. Every case states it,
 #             an empty dict where no pawn stands; at S123's landing every weight
-#             is zero, so these counts move no anchor until a fit
+#             was zero, so these counts moved no anchor; at its candidate, the
+#             screen's ABC fit, they move the two cases with pawns, the pawn on
+#             e2 99 -> 109 and Re8 181 -> 196 (adocs/data/S123_goldens.txt)
 #  mobility   (type, attacked squares not occupied by own pieces nor attacked
 #             by an enemy pawn, sign); since S121 the count picks the piece's
 #             cell of its type's table, which is what the piece scores, and is
@@ -84,7 +86,7 @@ CASES = [
     dict(
         title="pawn on e2",
         fen="4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
-        anchors={"evaluate": 99},    # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 109},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=0,
         material=[("PAWN", 1)],
@@ -192,7 +194,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 181},   # test_search.cpp "a side in check may not stand pat"
+        anchors={"evaluate": 196},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],

@@ -1385,12 +1385,12 @@ TEST_SUITE("search: quiescence")
   // The one case where standing pat is not on offer: the side to move is in
   // check and has to reply, so every evasion is searched instead.
   //
-  // GOLDEN (DEC-142): 181, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
+  // GOLDEN (DEC-142): 196, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
   // 1" with Black to move and in check -- the number the case needs a stand pat
   // to be compared against. Re-derive: python3 adocs/data/S192_anchors.py, case
   // "black in check, Re8". Moves legitimately on: a refit. Margin: exact -- the
   // assertions that carry the property are the two inequalities below it, which
-  // have the whole gap between 181 and a mate score of slack. Property beside
+  // have the whole gap between 196 and a mate score of slack. Property beside
   // it: "a quiet evasion is a legal answer to a check".
   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
   {
@@ -1416,9 +1416,12 @@ TEST_SUITE("search: quiescence")
     // the deduplicated corpus to 198 -- the one anchor of the five that went
     // down -- and S083's refit on S082's pool to 209, and S135's piece
     // placement fit to 199: White's two rooks on the open e file; and S121's
-    // mobility table to 181, the three pieces' cells at P1's count.
+    // mobility table to 181, the three pieces' cells at P1's count; and
+    // S123's passed pawn family, the screen's ABC fit, to 196: Black's three
+    // passers on its own second rank, each free and safe, its king two from
+    // each push square and White's five (adocs/data/S123_goldens.txt).
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 181);
+    REQUIRE_EQ(black_static, 196);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -9698,6 +9701,14 @@ TEST_SUITE("search: pruning and reduction guards")
   // 3 in iteration 7's searches 18 to 21 at alphas -2011, -2086, -2202 and
   // -2381, S296's rule firing at each, so -2108 is S295's window and no
   // longer one this tree's trace shows (adocs/data/S121_goldens.txt).
+  //
+  // Re-derived at S123's passed pawn family, the screen's ABC fit, both
+  // halves. The same sweep (it reproduces S121's -2163 to -1932 and -1838 to
+  // -1788 on the parent) reads the shape on the candidate for every alpha
+  // from -2153 to -1923 and from -1828 to -1790, so -2108 stays, 45 below and
+  // 185 above. The trace, by the same patch, visits the node at depth 3 in
+  // iteration 7's searches 20 to 22 at alphas -2039, -2155 and -2334, S296's
+  // rule firing at each (adocs/data/S123_goldens.txt).
   TEST_CASE_FIXTURE(
       guard_fixture_t,
       "a node that skipped moves claims no mate it did not search")

@@ -16726,3 +16726,33 @@ Consequences: The step file's stale sentences are corrected in phase 1.
               S118's pawn-key cache can hold the passer bitboard and C, not
               A or B, which read pieces and kings. A tie or a dropped group
               is recorded as a corpus finding (S126's rule).
+
+## DEC-330  2026-10-30  MATE_IN_THREE_FLOOR holds at 11 at zero margin on S123's candidate, still separating
+Tags:         testing, mates, s123, s154, dec-116, dec-299, dec-303, dec-313
+Context:      S123's candidate (the passed-pawn family's ABC fit, bench
+              5434393) re-derived the mate floors by their scripts under
+              DEC-299's guard. `S154_floor_margin_sweep.py` reads the mate
+              in three set at 11 shipping and 10 with the guard weakened
+              (`RfpMinPly` 1); the parent `1a231dd` reads 12 and 10. DEC-313 (2)
+              held the floor at 11 while it did not separate (12 and 11 at
+              S083); it separated again from S121 on. On the candidate the
+              shipping count falls to the floor's own value: `11 >= 11` is
+              green and the weakened build red at `10 >= 11`. It still
+              separates, but at zero margin, the state DEC-116 rejects when
+              it is chosen rather than reached.
+              `EXACT_FLOOR` 159 holds one below the candidate's 160, and
+              its weakened 153 is red.
+Decision:     By the coordinator under the owner's standing instruction.
+              `MATE_IN_THREE_FLOOR` stays 11: it holds, so DEC-299's guard
+              is met and nothing is lowered. Lowering it to 10 would not
+              separate, and no integer lies between 10 and 11. The site
+              comment states the zero margin and this id. If a bisection
+              part's refit, or a later fit, reads it below 11, that is a
+              fallen floor, and it stops for the owner before any commit
+              (DEC-303).
+Rejected:     10: it equals the weakened count and cannot fail for the
+              reason it exists (DEC-116). Asking the owner now: nothing has
+              fallen, and the ruling would be needed only on a fall.
+Consequences: On H0 the paste reverts and the parent's 12 and 10 return,
+              one point of margin. `EXACT_FLOOR` keeps one point
+              below what ships and six above the weakened count.

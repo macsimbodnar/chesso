@@ -635,14 +635,20 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // its zero-weight landing it answers +80: 22 rows bound, the farthest at
   // 597.3, the nearest other at 178.4, every row 3.71 from the kink, finite
   // differences 1.97e-7; +30 there reads 2.28e-7, past the rule's 2e-7
-  // (adocs/data/S123_preconditions.txt). Re-run it
+  // (adocs/data/S123_preconditions.txt). At S123's candidate, the screen's
+  // ABC fit with the same 88 rows, it answers +30 again: two rows bound, the
+  // farthest at 197.3, the nearest other at 158.8, every row 13.33 from the
+  // kink, finite differences 6.61e-8; +80 still passes the rule's checks
+  // there, but its nearest row is 3.71 from the kink and the rule takes the
+  // farthest (adocs/data/S123_goldens.txt).
+  // Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
   // push saturates the sigmoid everywhere, which makes the finite difference
   // itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
-    params[KS_MG_BASE + t] += 80.0;
-    params[KS_EG_BASE + t] += 80.0;
+    params[KS_MG_BASE + t] += 30.0;
+    params[KS_EG_BASE + t] += 30.0;
   }
 
   std::vector<uint32_t> binding;

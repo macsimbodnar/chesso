@@ -397,13 +397,14 @@ static bool line_ends_in_mate(const std::string& fen,
 // S121's grid, B at stride 1 and 1200000 nodes, 13 short of 64 mate lines:
 // two roots' lines, each cut at the horizon where quiescence returned a mate
 // score, the claimed side right and none shorter than Stockfish's
-// (adocs/data/S121_case_b.txt).)
+// (adocs/data/S121_case_b.txt). S123's passed pawn family moved none; its
+// grid re-derived the budgets in adocs/data/S170_cases.tsv, A, C, E and F.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 // adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
 // adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
 // adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
-// adocs/data/S121_sweep_s170.txt
+// adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
 // (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
@@ -435,7 +436,7 @@ static bool line_ends_in_mate(const std::string& fen,
 //       adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
 //       adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
 //       adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
-//       adocs/data/S121_sweep_s170.txt
+//       adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -482,7 +483,10 @@ static bool line_ends_in_mate(const std::string& fen,
 // S121's close), uncommitted on 12cab3c, 108 cells, 1400
 // mate lines and 26 short): it moves B, below, outside DEC-299's guard
 // (DEC-327; the owner's acceptance on H1, DEC-328), and its budgets are in
-// the TSV's header.
+// the TSV's header. **S123's is the ninth** (`adocs/data/S123_sweep_s170.txt`,
+// S123's passed pawn family at the screen's ABC fit, uncommitted on
+// `1a231dd`, 108 cells, 1397 mate lines and 18 short): it moves no ceiling,
+// and the budgets it re-derived, A, C, E and F, are in the TSV's header.
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;
