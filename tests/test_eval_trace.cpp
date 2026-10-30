@@ -30,8 +30,8 @@
 //
 // The second is not implied by the first. A coefficient recorded against the
 // wrong index is invisible to the identity wherever the two weights involved
-// are equal, and tempo and piece placement's two bad bishop columns ship at
-// zero, where any coefficient at all satisfies it.
+// are equal, and tempo, piece placement's two bad bishop columns and S123's
+// whole family ship at zero, where any coefficient at all satisfies it.
 
 namespace
 {
@@ -391,6 +391,28 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 
     CHECK(coefficient(data, eval_trace::TERM_TEMPO, 0) ==
           ((board.active_color == WHITE) ? 1 : -1));
+
+    // S123's family against the engine's per-colour counts, which
+    // tests/test_eval_model.cpp holds to the walk in
+    // tests/test_walked_counts.hpp.
+    passer_family_t family;
+    passer_family_counts(&board, &family);
+    for (size_t rank = 0; rank < 6; ++rank) {
+      CAPTURE(rank);
+      CHECK(coefficient(data, eval_trace::TERM_PASSED_FREE, rank) ==
+            family.free[WHITE][rank] - family.free[BLACK][rank]);
+      CHECK(coefficient(data, eval_trace::TERM_PASSED_SAFE, rank) ==
+            family.safe[WHITE][rank] - family.safe[BLACK][rank]);
+      CHECK(coefficient(data, eval_trace::TERM_PASSED_KING_OWN, rank) ==
+            family.king_own[WHITE][rank] - family.king_own[BLACK][rank]);
+      CHECK(coefficient(data, eval_trace::TERM_PASSED_KING_ENEMY, rank) ==
+            family.king_enemy[WHITE][rank] - family.king_enemy[BLACK][rank]);
+    }
+    for (size_t rank = 0; rank < 5; ++rank) {
+      CAPTURE(rank);
+      CHECK(coefficient(data, eval_trace::TERM_CANDIDATE_PASSER, rank) ==
+            family.candidate[WHITE][rank] - family.candidate[BLACK][rank]);
+    }
 
     CHECK(trace.phase == game_phase(&board));
   }

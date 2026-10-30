@@ -121,6 +121,72 @@ constexpr std::array<score_t, 5> passed_pawn_score =
     pack_scores(passed_pawn_mg, passed_pawn_eg);
 
 
+// S123's passed pawn family, three groups on top of the buckets above
+// (DEC-329): A, a free and a safe increment per own rank 2 to 7; B, a slope
+// per own rank 2 to 7 on each king's distance to the push square; C, a weight
+// per own rank 2 to 6 for a candidate passer. evaluation.hpp defines each
+// count; passer_family() below computes them.
+//
+// **Landed at zero, S135's form, and fitted afterwards** (DEC-259's screen,
+// adocs/data/S123_screen.sh). No seed: nothing here was taken from any
+// engine or page, and every entry starts the fit at zero (DEC-084). At zero a
+// group is in no expression -- passer_family() is not compiled into the
+// engine for a group whose weights are all zero -- so the landing scores
+// every position as before and costs nothing (INV-6). What a group costs is
+// measured with its weights forced (DEC-047, adocs/data/S123_cost.sh).
+//
+// Rank 7 enters A and B as increments and slopes and never as a base cell: a
+// per-rank weight on the seventh alone would be the signed sum of eight
+// psqt[PAWN] columns again, S134's bucket 5. C stops at the sixth because a
+// pawn on its own seventh is always passed.
+constexpr int passed_free_mg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_free_eg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_safe_mg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_safe_eg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_king_own_mg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_king_own_eg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_king_enemy_mg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int passed_king_enemy_eg[6] = {0, 0, 0, 0, 0, 0};
+constexpr int candidate_passer_mg[5] = {0, 0, 0, 0, 0};
+constexpr int candidate_passer_eg[5] = {0, 0, 0, 0, 0};
+constexpr std::array<score_t, 6> passed_free_score =
+    pack_scores(passed_free_mg, passed_free_eg);
+constexpr std::array<score_t, 6> passed_safe_score =
+    pack_scores(passed_safe_mg, passed_safe_eg);
+constexpr std::array<score_t, 6> passed_king_own_score =
+    pack_scores(passed_king_own_mg, passed_king_own_eg);
+constexpr std::array<score_t, 6> passed_king_enemy_score =
+    pack_scores(passed_king_enemy_mg, passed_king_enemy_eg);
+constexpr std::array<score_t, 5> candidate_passer_score =
+    pack_scores(candidate_passer_mg, candidate_passer_eg);
+
+// Whether a weight array pair has a non-zero entry: a group none of whose
+// arrays does is not computed by the engine's evaluate_cheap() at all.
+template <size_t N>
+static constexpr bool any_weight(const std::array<score_t, N>& packed)
+{
+  for (size_t i = 0; i < N; ++i) {
+    if (packed[i] != 0) { return true; }
+  }
+  return false;
+}
+
+static constexpr bool passer_advance_live =
+    any_weight(passed_free_score) || any_weight(passed_safe_score);
+static constexpr bool passer_kings_live =
+    any_weight(passed_king_own_score) || any_weight(passed_king_enemy_score);
+static constexpr bool candidate_passer_live =
+    any_weight(candidate_passer_score);
+
+// The trace build records every coefficient whatever its weight -- the tuner
+// fits the zero ones too -- so it computes every group.
+#ifdef CHESSO_TRACE
+static constexpr bool trace_build = true;
+#else
+static constexpr bool trace_build = false;
+#endif
+
+
 // The three pawn structure features, in the order their weights are indexed.
 // Shared between the weights, the counts and the accessor so that none of the
 // three can disagree with the others about which index means what.
@@ -379,18 +445,35 @@ static constexpr int table_reach(const int (&table)[6][64])
 }
 
 
+// S123's family in one half, bounded the same way: a side has at most 15
+// pawns, each in one rank cell of A's two arrays, of B's two with a distance
+// of at most 7, and of C's, so each array's White-minus-Black sum is within
+// 2 x 15 (x 7 for a distance) of its largest entry.
+static constexpr int passer_family_half(const int (&free)[6],
+                                        const int (&safe)[6],
+                                        const int (&king_own)[6],
+                                        const int (&king_enemy)[6],
+                                        const int (&candidate)[5])
+{
+  return 2 * 15 * (largest_entry(free) + largest_entry(safe)) +
+         2 * 15 * 7 * (largest_entry(king_own) + largest_entry(king_enemy)) +
+         2 * 15 * largest_entry(candidate);
+}
+
+
 // One half of stage one's packed sum, bounded. Passers add for White and
 // subtract for Black, at most 15 a side, so all 30 can push the half the same
 // way. Structure and placement enter as White's count minus Black's: two
 // counts of 0 to 15 for each structure feature, and each placement feature's
-// reach above.
+// reach above. S123's family is `family`, passer_family_half() above.
 static constexpr int stage_one_half(const int (&table)[6][64],
                                     const int (&passed)[5],
                                     const int (&structure)[PS_FEATURE_COUNT],
-                                    const int (&placement)[PL_FEATURE_COUNT])
+                                    const int (&placement)[PL_FEATURE_COUNT],
+                                    int family)
 {
   int bound = table_reach(table) + 2 * 15 * largest_entry(passed) +
-              PS_FEATURE_COUNT * 15 * largest_entry(structure);
+              PS_FEATURE_COUNT * 15 * largest_entry(structure) + family;
 
   for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
     const int weight = (placement[f] < 0) ? -placement[f] : placement[f];
@@ -423,11 +506,21 @@ static constexpr int stage_one_bound =
     std::max(stage_one_half(psqt_mg,
                             passed_pawn_mg,
                             pawn_structure_mg,
-                            piece_placement_mg),
+                            piece_placement_mg,
+                            passer_family_half(passed_free_mg,
+                                               passed_safe_mg,
+                                               passed_king_own_mg,
+                                               passed_king_enemy_mg,
+                                               candidate_passer_mg)),
              stage_one_half(psqt_eg,
                             passed_pawn_eg,
                             pawn_structure_eg,
-                            piece_placement_eg));
+                            piece_placement_eg,
+                            passer_family_half(passed_free_eg,
+                                               passed_safe_eg,
+                                               passed_king_own_eg,
+                                               passed_king_enemy_eg,
+                                               candidate_passer_eg)));
 static_assert(stage_one_bound <= 32767,
               "stage one's packed sum can overflow a 16-bit half");
 
@@ -693,9 +786,152 @@ static inline void add_placement_columns(
 { (add_placement_column<f>(placement, sum), ...); }
 
 
+// The king's distance between two squares, 0 to 7: the larger of the rank gap
+// and the file gap.
+static inline int chebyshev(int a, int b)
+{
+  const int ranks = (a >> 3) - (b >> 3);
+  const int files = (a & 7) - (b & 7);
+  return std::max((ranks < 0) ? -ranks : ranks, (files < 0) ? -files : files);
+}
+
+
+// S123's A and B for one side's passers, its own seventh included, into the
+// stage-one sum and the trace, and into `out` when collecting. evaluation.hpp
+// defines the counts.
+//
+// `advance` and `kings` say which groups are computed at all. The engine
+// passes the groups' liveness, so a group whose weights are all zero is not
+// in its evaluate_cheap() -- is_attacked() is an out-of-line call the
+// compiler could not delete as it deletes a dead popcount, so this is what
+// keeps the zero-weight landing free (S135's form, DEC-329 (3)). The trace
+// build and the accessors pass true for both.
+//
+// Safe reads is_attacked() once per passer whose push square is empty, and
+// only then: a blocked passer is neither free nor safe. That repeats slider
+// lookups stage two makes for mobility, deliberately -- stage two is behind
+// the lazy shortcut and its clamp, which would truncate these terms on the
+// positions they exist for (DEC-329 (1)).
+template <color_t colour, bool advance, bool kings, bool collect>
+static inline void passer_family_side(const board_t* board,
+                                      bb_t passers,
+                                      score_t* sum,
+                                      passer_family_t* out)
+{
+  constexpr int sign = (colour == WHITE) ? 1 : -1;
+  constexpr color_t enemy = (colour == WHITE) ? BLACK : WHITE;
+
+  // A passer whose push square is empty: White's push square is eight below
+  // its index and Black's eight above, so the empty set shifted the other way
+  // lands each push square's bit on its pawn.
+  const bb_t empty = ~board->occupancies[BOTH];
+  const bb_t free = passers & ((colour == WHITE) ? (empty << 8) : (empty >> 8));
+
+  int own_king = 0;
+  int enemy_king = 0;
+  if constexpr (kings) {
+    own_king =
+        get_lsb_index(board->bitboards[(colour == WHITE) ? W_KING : B_KING]);
+    enemy_king =
+        get_lsb_index(board->bitboards[(colour == WHITE) ? B_KING : W_KING]);
+  }
+
+  while (passers) {
+    const int square = get_lsb_index(passers);
+    passers &= passers - 1;
+
+    // The own rank, 0 for the second to 5 for the seventh; a pawn cannot
+    // stand on the first or the eighth.
+    const int rank = (colour == WHITE) ? 6 - (square >> 3) : (square >> 3) - 1;
+    const int push = (colour == WHITE) ? square - 8 : square + 8;
+
+    assert(rank >= 0 && rank < 6);
+
+    if constexpr (advance) {
+      if ((free >> square) & 1) {
+        *sum += sign * passed_free_score[rank];
+        EVAL_TRACE(TERM_PASSED_FREE, rank, sign);
+        if constexpr (collect) { out->free[colour][rank]++; }
+
+        if (!is_attacked(game_tables(), board, static_cast<index_t>(push),
+                         enemy)) {
+          *sum += sign * passed_safe_score[rank];
+          EVAL_TRACE(TERM_PASSED_SAFE, rank, sign);
+          if constexpr (collect) { out->safe[colour][rank]++; }
+        }
+      }
+    }
+
+    if constexpr (kings) {
+      const int own = chebyshev(own_king, push);
+      const int other = chebyshev(enemy_king, push);
+
+      *sum += (sign * own) * passed_king_own_score[rank];
+      *sum += (sign * other) * passed_king_enemy_score[rank];
+      EVAL_TRACE(TERM_PASSED_KING_OWN, rank, sign * own);
+      EVAL_TRACE(TERM_PASSED_KING_ENEMY, rank, sign * other);
+
+      if constexpr (collect) {
+        out->king_own[colour][rank] += own;
+        out->king_enemy[colour][rank] += other;
+      }
+    }
+  }
+}
+
+
+// S123's C, set-wise: each side's candidate passers, evaluation.hpp's
+// definition. `white_passers` and `black_passers` are each side's passers,
+// the own seventh included; `white_front` and `black_front` each side's front
+// span, which for the other side's pawns is the set of squares with an enemy
+// pawn strictly ahead on the file -- both built for the passers already.
+//
+// A square's pawn control, per colour, is a count of 0 to 2, held as two sets:
+// attacked by at least one pawn of the colour, and by two. The enemy controls
+// a square with more pawns than the side when it attacks it twice and the
+// side not twice, or at all and the side not at all. A pawn whose path holds
+// such a square is behind it on its file: that square's backward fill, less
+// the square itself.
+static inline void candidate_passers(bb_t white_pawns,
+                                     bb_t black_pawns,
+                                     bb_t white_passers,
+                                     bb_t black_passers,
+                                     bb_t white_front,
+                                     bb_t black_front,
+                                     bb_t out[2])
+{
+  // A White pawn attacks the squares one rank up and one file to each side,
+  // index minus 9 and minus 7; Black's plus 7 and plus 9. The file masks drop
+  // the pawns on the edge file a shift would wrap from.
+  const bb_t white_west = (white_pawns & ~file_masks[0]) >> 9;
+  const bb_t white_east = (white_pawns & ~file_masks[7]) >> 7;
+  const bb_t black_west = (black_pawns & ~file_masks[0]) << 7;
+  const bb_t black_east = (black_pawns & ~file_masks[7]) << 9;
+
+  const bb_t white_once = white_west | white_east;
+  const bb_t white_twice = white_west & white_east;
+  const bb_t black_once = black_west | black_east;
+  const bb_t black_twice = black_west & black_east;
+
+  const bb_t black_holds =
+      (black_twice & ~white_twice) | (black_once & ~white_once);
+  const bb_t white_holds =
+      (white_twice & ~black_twice) | (white_once & ~black_once);
+
+  // Behind for White is toward index 63, so a held square's fill toward rank
+  // 1, shifted one rank further, is every square with it strictly ahead.
+  const bb_t white_contested = fill_toward_rank1(black_holds) << 8;
+  const bb_t black_contested = fill_toward_rank8(white_holds) >> 8;
+
+  out[WHITE] = white_pawns & ~white_passers & ~black_front & ~white_contested;
+  out[BLACK] = black_pawns & ~black_passers & ~white_front & ~black_contested;
+}
+
+
 // Three terms -- passed pawns, pawn structure and piece placement -- White
 // minus Black, as one untapered middlegame and endgame pair for the caller to
-// interpolate.
+// interpolate. Since S123 the passed pawns are the buckets and the family
+// beside them, A, B and C, summed into the same pair.
 //
 // One function and not three because they are the same four fills read several
 // different ways, and a second pass over the pawns would recompute them.
@@ -758,7 +994,9 @@ static inline void evaluate_pawns(const board_t* board,
                                   score_t* score,
                                   int passed_out[2][5],
                                   int structure_out[2][PS_FEATURE_COUNT],
-                                  int placement_out[2][PL_FEATURE_COUNT])
+                                  int placement_out[2][PL_FEATURE_COUNT],
+                                  bb_t passer_set_out[2],
+                                  passer_family_t* family_out)
 {
   const bb_t white_pawns = board->bitboards[W_PAWN];
   const bb_t black_pawns = board->bitboards[B_PAWN];
@@ -824,13 +1062,17 @@ static inline void evaluate_pawns(const board_t* board,
   const bb_t white_stops = white_front | white_attack_span;
   const bb_t black_stops = black_front | black_attack_span;
 
-  // A pawn on its own seventh rank is left out, here and explicitly rather than
-  // by a weight: it is a passer by definition, so its bucket was exactly eight
-  // piece-square columns, and S134 moved that bucket's weight into
-  // psqt[PAWN][8..15] (DEC-090). The table prices it. Left in, it would compute
-  // bucket 5 and read past the end of the five-entry tables below.
-  bb_t white_passed = white_pawns & ~black_stops & ~rank_masks[a7];
-  bb_t black_passed = black_pawns & ~white_stops & ~rank_masks[a2];
+  // Every passer, the own seventh rank included: S123's terms read those.
+  const bb_t white_passers = white_pawns & ~black_stops;
+  const bb_t black_passers = black_pawns & ~white_stops;
+
+  // The buckets leave a pawn on its own seventh rank out, here and explicitly
+  // rather than by a weight: it is a passer by definition, so its bucket was
+  // exactly eight piece-square columns, and S134 moved that bucket's weight
+  // into psqt[PAWN][8..15] (DEC-090). The table prices it. Left in, it would
+  // compute bucket 5 and read past the end of the five-entry tables below.
+  bb_t white_passed = white_passers & ~rank_masks[a7];
+  bb_t black_passed = black_passers & ~rank_masks[a2];
 
   // A pawn is isolated when neither neighbouring file holds an own pawn at any
   // rank, so the file fill is the whole file set and the rank drops out.
@@ -894,6 +1136,9 @@ static inline void evaluate_pawns(const board_t* board,
         passed_out[colour][bucket] = 0;
       }
     }
+
+    passer_set_out[WHITE] = white_passers;
+    passer_set_out[BLACK] = black_passers;
   }
 
   while (white_passed) {
@@ -929,6 +1174,50 @@ static inline void evaluate_pawns(const board_t* board,
     if constexpr (collect) { passed_out[BLACK][bucket]++; }
   }
 
+  // S123's family. A group is computed where its weights are live, in the
+  // trace build, and when collecting, and nowhere else (passer_family_side()
+  // says why that matters for A).
+  constexpr bool advance = collect || trace_build || passer_advance_live;
+  constexpr bool kings = collect || trace_build || passer_kings_live;
+  constexpr bool candidates = collect || trace_build || candidate_passer_live;
+
+  if constexpr (collect) { *family_out = passer_family_t{}; }
+
+  if constexpr (advance || kings) {
+    passer_family_side<WHITE, advance, kings, collect>(board, white_passers,
+                                                       &sum, family_out);
+    passer_family_side<BLACK, advance, kings, collect>(board, black_passers,
+                                                       &sum, family_out);
+  }
+
+  if constexpr (candidates) {
+    bb_t candidate[2];
+    candidate_passers(white_pawns, black_pawns, white_passers, black_passers,
+                      white_front, black_front, candidate);
+
+    // A pawn on its own seventh is always passed, so a candidate's rank is
+    // 0 to 4, the second to the sixth.
+    while (candidate[WHITE]) {
+      const int rank = 6 - (get_lsb_index(candidate[WHITE]) >> 3);
+      candidate[WHITE] &= candidate[WHITE] - 1;
+      assert(rank >= 0 && rank < 5);
+
+      sum += candidate_passer_score[rank];
+      EVAL_TRACE(TERM_CANDIDATE_PASSER, rank, 1);
+      if constexpr (collect) { family_out->candidate[WHITE][rank]++; }
+    }
+
+    while (candidate[BLACK]) {
+      const int rank = (get_lsb_index(candidate[BLACK]) >> 3) - 1;
+      candidate[BLACK] &= candidate[BLACK] - 1;
+      assert(rank >= 0 && rank < 5);
+
+      sum -= candidate_passer_score[rank];
+      EVAL_TRACE(TERM_CANDIDATE_PASSER, rank, -1);
+      if constexpr (collect) { family_out->candidate[BLACK][rank]++; }
+    }
+  }
+
   *score = sum;
 }
 
@@ -942,8 +1231,10 @@ void passed_pawn_counts(const board_t* board, int out[2][5])
   score_t score = 0;
   int structure[2][PS_FEATURE_COUNT];
   int placement[2][PL_FEATURE_COUNT];
+  bb_t sets[2];
+  passer_family_t family;
 
-  evaluate_pawns<true>(board, &score, out, structure, placement);
+  evaluate_pawns<true>(board, &score, out, structure, placement, sets, &family);
 }
 
 
@@ -957,8 +1248,10 @@ void pawn_structure_counts(const board_t* board, int out[2][3])
   score_t score = 0;
   int passed[2][5];
   int placement[2][PL_FEATURE_COUNT];
+  bb_t sets[2];
+  passer_family_t family;
 
-  evaluate_pawns<true>(board, &score, passed, out, placement);
+  evaluate_pawns<true>(board, &score, passed, out, placement, sets, &family);
 }
 
 
@@ -971,8 +1264,39 @@ void piece_placement_counts(const board_t* board, int out[2][PL_FEATURE_COUNT])
   score_t score = 0;
   int passed[2][5];
   int structure[2][PS_FEATURE_COUNT];
+  bb_t sets[2];
+  passer_family_t family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, out);
+  evaluate_pawns<true>(board, &score, passed, structure, out, sets, &family);
+}
+
+
+// The passer sets, S123, through the same collecting call as the three above,
+// so the set the test mirrors is the set the terms read and not a second
+// computation of it.
+void passed_pawn_sets(const board_t* board, bb_t out[2])
+{
+  score_t score = 0;
+  int passed[2][5];
+  int structure[2][PS_FEATURE_COUNT];
+  int placement[2][PL_FEATURE_COUNT];
+  passer_family_t family;
+
+  evaluate_pawns<true>(board, &score, passed, structure, placement, out,
+                       &family);
+}
+
+
+// The family's counts, through the same collecting call once more.
+void passer_family_counts(const board_t* board, passer_family_t* out)
+{
+  score_t score = 0;
+  int passed[2][5];
+  int structure[2][PS_FEATURE_COUNT];
+  int placement[2][PL_FEATURE_COUNT];
+  bb_t sets[2];
+
+  evaluate_pawns<true>(board, &score, passed, structure, placement, sets, out);
 }
 
 
@@ -1118,7 +1442,8 @@ int evaluate_cheap(const board_t* board)
   EVAL_TRACE_ACCUMULATORS(board);
 
   score_t pawns = 0;
-  evaluate_pawns<false>(board, &pawns, nullptr, nullptr, nullptr);
+  evaluate_pawns<false>(board, &pawns, nullptr, nullptr, nullptr, nullptr,
+                        nullptr);
 
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that

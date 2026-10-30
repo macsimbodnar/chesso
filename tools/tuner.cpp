@@ -313,9 +313,9 @@ void write_tables(const std::string& path,
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
-      "// passed pawn, pawn structure, piece placement and tempo weights at\n"
-      "// the end live in src/evaluation.cpp, a different file and easy to\n"
-      "// miss.\n"
+      "// passed pawn, pawn structure, piece placement, tempo and S123's\n"
+      "// passed pawn family weights at the end live in src/evaluation.cpp,\n"
+      "// a different file and easy to miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
@@ -473,6 +473,47 @@ void write_tables(const std::string& path,
           static_cast<int>(std::lround(params[TEMPO_MG_BASE])),
           static_cast<int>(std::lround(params[TEMPO_EG_BASE])));
 
+  // S123's family, the same way: five arrays a half, widths the model's.
+  struct family_array_t
+  {
+    const char* name;
+    size_t mg_base;
+    size_t eg_base;
+    size_t width;
+  };
+
+  const family_array_t family[] = {
+      {"passed_free", tuner_layout::PF_MG_BASE, tuner_layout::PF_EG_BASE,
+       tuner_layout::PASSED_FREE_COUNT},
+      {"passed_safe", tuner_layout::PSF_MG_BASE, tuner_layout::PSF_EG_BASE,
+       tuner_layout::PASSED_SAFE_COUNT},
+      {"passed_king_own", tuner_layout::PKO_MG_BASE, tuner_layout::PKO_EG_BASE,
+       tuner_layout::PASSED_KING_COUNT},
+      {"passed_king_enemy", tuner_layout::PKE_MG_BASE,
+       tuner_layout::PKE_EG_BASE, tuner_layout::PASSED_KING_COUNT},
+      {"candidate_passer", tuner_layout::CP_MG_BASE, tuner_layout::CP_EG_BASE,
+       tuner_layout::CANDIDATE_PASSER_COUNT},
+  };
+
+  fprintf(out,
+          "\n// S123's passed pawn family, by own rank from the second.\n");
+
+  for (const family_array_t& array : family) {
+    for (int table = 0; table < 2; ++table) {
+      const size_t base = (table == 0) ? array.mg_base : array.eg_base;
+
+      fprintf(out, "constexpr int %s_%s[%zu] = {", array.name,
+              (table == 0) ? "mg" : "eg", array.width);
+
+      for (size_t i = 0; i < array.width; ++i) {
+        fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+                static_cast<int>(std::lround(params[base + i])));
+      }
+
+      fprintf(out, "};\n");
+    }
+  }
+
   fclose(out);
   fprintf(stderr, "constants written to %s\n", path.c_str());
 }
@@ -487,12 +528,17 @@ void usage()
       "  --only GROUP     fit only this group and hold the rest at what\n"
       "                   the engine ships: %s\n"
       "                   or one piece placement term (S135): %s\n"
+      "                   or a comma-separated list of them, their union\n"
+      "                   (S123)\n"
       "  --freeze LIST    hold these groups or terms instead, comma\n"
       "                   separated, and fit everything else; not `all`.\n"
       "                   Applied after --only, so the two intersect\n"
       "  --tie FILE       S121: mobility cells that share a parameter, one\n"
       "                   `mobility_<piece>_<half> <cell> <anchor> [scale]`\n"
-      "                   a line; both ends must be free\n"
+      "                   a line, or since S123 a passed pawn rank,\n"
+      "                   `<passed_free|passed_safe|passed_king_own|\n"
+      "                   passed_king_enemy|candidate_passer>_<half> ...`;\n"
+      "                   both ends must be free\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"
@@ -609,9 +655,13 @@ int main(int argc, char** argv)
 
   std::vector<uint8_t> mask;
 
-  if (!free_mask(opts.only, &mask)) {
+  // A comma-separated list frees the union, S123 (tools/tuner_groups.hpp,
+  // only_mask()); one name frees what it always did.
+  if (!tuner_groups::only_mask(opts.only, &mask)) {
     fprintf(stderr,
-            "unknown --only group '%s'; groups are: %s; terms are: %s\n",
+            "unknown --only group '%s'; groups are: %s; terms are: %s; a "
+            "comma-separated list of them frees their union, never with "
+            "`all`\n",
             opts.only.c_str(), GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST);
     return 1;
   }

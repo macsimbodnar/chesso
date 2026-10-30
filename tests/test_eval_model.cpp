@@ -1,12 +1,15 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <algorithm>
 #include <cstddef>
+#include <random>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "evaluation.hpp"
 #include "test_eval_positions.hpp"
+#include "test_helpers.hpp"
 #include "test_walked_counts.hpp"
 
 // The counts evaluate() weighs, the engine's own against a second
@@ -1162,5 +1165,291 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
     CHECK(phases_seen == static_cast<int>(positions.size()));
     CHECK(seen_low_phase);
     CHECK(seen_high_phase);
+  }
+}
+
+
+// S123's passed pawn family against the walk and by hand. The engine's counts
+// per colour (passer_family_counts()) against walked_counts::
+// passer_family_features(), which walks evaluation.hpp's definitions square
+// by square and shares no code with the engine -- per colour, not as the
+// difference, because at zero weights no score sees these counts and a count
+// credited to both sides cancels in any difference.
+namespace
+{
+
+// The test positions with their colour mirrors, the JSON suites', and seeded
+// random placements of two kings and up to eight pawns a side. The suites'
+// tactics put pieces against the push squares far more often than the
+// fixture does; the placements put pawns against each other on every rank and
+// edge, which is where candidates on their own second and third rank are, and
+// play and the fixture almost never have one there. A placement is kept with
+// White to move when load_FEN() accepts it, and is skipped otherwise.
+std::vector<std::string> family_population()
+{
+  std::vector<std::string> out;
+
+  for (const std::string& fen : positions) {
+    out.push_back(fen);
+    out.push_back(mirror_fen(fen));
+  }
+
+  for (const std::string& fen : all_test_fens()) {
+    out.push_back(fen);
+  }
+
+  std::mt19937 rng(20261031U);
+  std::uniform_int_distribution<int> pawns_a_side(0, 8);
+
+  for (size_t trial = 0; trial < 10000; ++trial) {
+    std::vector<int> order(64);
+    for (int square = 0; square < 64; ++square) {
+      order[static_cast<size_t>(square)] = square;
+    }
+    std::shuffle(order.begin(), order.end(), rng);
+
+    char squares[64] = {};
+    size_t next = 0;
+    squares[order[next++]] = 'K';
+    squares[order[next++]] = 'k';
+
+    for (const char pawn : {'P', 'p'}) {
+      int placed = 0;
+      const int wanted = pawns_a_side(rng);
+
+      while (placed < wanted && next < 64) {
+        const int square = order[next++];
+        if ((square / 8) == 0 || (square / 8) == 7) { continue; }
+        squares[square] = pawn;
+        placed++;
+      }
+    }
+
+    std::string fen;
+    for (int row = 0; row < 8; ++row) {
+      int empty = 0;
+      for (int file = 0; file < 8; ++file) {
+        const char c = squares[row * 8 + file];
+        if (c == '\0') {
+          empty++;
+          continue;
+        }
+        if (empty > 0) { fen += static_cast<char>('0' + empty); }
+        empty = 0;
+        fen += c;
+      }
+      if (empty > 0) { fen += static_cast<char>('0' + empty); }
+      if (row < 7) { fen += '/'; }
+    }
+    fen += " w - - 0 1";
+
+    if (load_FEN(fen, &game)) { out.push_back(fen); }
+  }
+
+  return out;
+}
+
+
+void check_family(const std::string& fen, passer_family_t* engine_out)
+{
+  CAPTURE(fen);
+  REQUIRE(load_FEN(fen, &game));
+
+  passer_family_t engine;
+  passer_family_counts(&game.board, &engine);
+
+  walked_counts::passer_family_walk_t walk;
+  REQUIRE(walked_counts::passer_family_features(fen.substr(0, fen.find(' ')),
+                                                &walk));
+
+  for (int colour = 0; colour < 2; ++colour) {
+    CAPTURE(colour);
+
+    for (int rank = 0; rank < 6; ++rank) {
+      CAPTURE(rank);
+      CHECK(engine.free[colour][rank] == walk.free[colour][rank]);
+      CHECK(engine.safe[colour][rank] == walk.safe[colour][rank]);
+      CHECK(engine.king_own[colour][rank] == walk.king_own[colour][rank]);
+      CHECK(engine.king_enemy[colour][rank] == walk.king_enemy[colour][rank]);
+    }
+
+    for (int rank = 0; rank < 5; ++rank) {
+      CAPTURE(rank);
+      CHECK(engine.candidate[colour][rank] == walk.candidate[colour][rank]);
+    }
+  }
+
+  *engine_out = engine;
+}
+
+
+// One hand-worked placement and its answer, per colour: the cells that are
+// not zero, every other cell zero. Hand-worked from evaluation.hpp's
+// definitions, so the two implementations are held to the specification and
+// not only to each other.
+struct family_cell_t
+{
+  const char* array;  // free, safe, king_own, king_enemy, candidate
+  int colour;
+  int rank;
+  int value;
+};
+
+struct family_case_t
+{
+  const char* placement;
+  const char* what;
+  std::vector<family_cell_t> cells;
+};
+
+int family_cell(const passer_family_t& family,
+                const std::string& array,
+                int colour,
+                int rank)
+{
+  if (array == "free") { return family.free[colour][rank]; }
+  if (array == "safe") { return family.safe[colour][rank]; }
+  if (array == "king_own") { return family.king_own[colour][rank]; }
+  if (array == "king_enemy") { return family.king_enemy[colour][rank]; }
+  return (rank < 5) ? family.candidate[colour][rank] : 0;
+}
+
+}  // namespace
+
+
+TEST_SUITE("eval counts: S123's passed pawn family")
+{
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the engine counts the passer family the walk counts")
+  {
+    // Every cell of every array, per colour, non-zero somewhere: the
+    // comparison above is vacuous on a cell nobody reached.
+    passer_family_t seen{};
+    size_t checked = 0;
+
+    for (const std::string& fen : family_population()) {
+      passer_family_t engine;
+      check_family(fen, &engine);
+
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int rank = 0; rank < 6; ++rank) {
+          seen.free[colour][rank] += (engine.free[colour][rank] != 0);
+          seen.safe[colour][rank] += (engine.safe[colour][rank] != 0);
+          seen.king_own[colour][rank] += (engine.king_own[colour][rank] != 0);
+          seen.king_enemy[colour][rank] +=
+              (engine.king_enemy[colour][rank] != 0);
+        }
+
+        for (int rank = 0; rank < 5; ++rank) {
+          seen.candidate[colour][rank] += (engine.candidate[colour][rank] != 0);
+        }
+      }
+
+      checked++;
+    }
+
+    CHECK(checked > 10000);
+
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int rank = 0; rank < 6; ++rank) {
+        CAPTURE(colour);
+        CAPTURE(rank);
+        CHECK(seen.free[colour][rank] > 0);
+        CHECK(seen.safe[colour][rank] > 0);
+        CHECK(seen.king_own[colour][rank] > 0);
+        CHECK(seen.king_enemy[colour][rank] > 0);
+      }
+
+      for (int rank = 0; rank < 5; ++rank) {
+        CAPTURE(colour);
+        CAPTURE(rank);
+        CHECK(seen.candidate[colour][rank] > 0);
+      }
+    }
+  }
+
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the walk and the engine count the passer family by hand")
+  {
+    // Ranks are the pawn's own from its second: e5 is White's 3, e4 Black's.
+    const std::vector<family_case_t> cases = {
+        {"4k3/8/8/4P3/8/8/8/4K3",
+         "a free and safe passer, both kings' distances to e6",
+         {{"free", WHITE, 3, 1},
+          {"safe", WHITE, 3, 1},
+          {"king_own", WHITE, 3, 5},
+          {"king_enemy", WHITE, 3, 2}}},
+        {"4k3/8/4n3/4P3/8/8/8/4K3",
+         "a piece on the push square: neither free nor safe",
+         {{"king_own", WHITE, 3, 5}, {"king_enemy", WHITE, 3, 2}}},
+        {"2b1k3/8/8/4P3/8/8/8/4K3",
+         "free, but a bishop on c8 attacks e6: not safe",
+         {{"free", WHITE, 3, 1},
+          {"king_own", WHITE, 3, 5},
+          {"king_enemy", WHITE, 3, 2}}},
+        {"2b1k3/3N4/8/4P3/8/8/8/4K3",
+         "the bishop's ray stopped by a knight on d7: no x-ray, safe",
+         {{"free", WHITE, 3, 1},
+          {"safe", WHITE, 3, 1},
+          {"king_own", WHITE, 3, 5},
+          {"king_enemy", WHITE, 3, 2}}},
+        {"8/4P3/8/8/8/8/k7/4K3",
+         "the own seventh is counted, its push square the eighth",
+         {{"free", WHITE, 5, 1},
+          {"safe", WHITE, 5, 1},
+          {"king_own", WHITE, 5, 7},
+          {"king_enemy", WHITE, 5, 6}}},
+        {"4k3/8/8/8/4p3/8/8/4K3",
+         "Black's passer on e4 is its own fifth, push square e3",
+         {{"free", BLACK, 3, 1},
+          {"safe", BLACK, 3, 1},
+          {"king_own", BLACK, 3, 5},
+          {"king_enemy", BLACK, 3, 2}}},
+        // CPW Candidate Passed Pawn's own diagram, kings added on e1 and e8:
+        // its caption names b5 and g5 the candidates.
+        {"4k3/p7/8/PP3ppp/8/5P1P/8/4K3",
+         "CPW's diagram: b5 and g5 are candidates, nothing is passed",
+         {{"candidate", WHITE, 3, 1}, {"candidate", BLACK, 2, 1}}},
+        {"4k3/2p5/8/1P6/8/8/8/4K3",
+         "one sentry and no helper: b5 is no candidate, nor c7",
+         {}},
+        {"4k3/2p5/8/PP6/8/8/8/4K3",
+         "a5 helps on b6: b5 a candidate, a5 itself passed",
+         {{"free", WHITE, 3, 1},
+          {"safe", WHITE, 3, 1},
+          {"king_own", WHITE, 3, 5},
+          {"king_enemy", WHITE, 3, 4},
+          {"candidate", WHITE, 3, 1}}},
+    };
+
+    for (const family_case_t& item : cases) {
+      const std::string placement = item.placement;
+      const std::string what = item.what;
+      CAPTURE(placement);
+      CAPTURE(what);
+
+      passer_family_t engine;
+      check_family(placement + " w - - 0 1", &engine);
+
+      for (const std::string array :
+           {"free", "safe", "king_own", "king_enemy", "candidate"}) {
+        for (int colour = 0; colour < 2; ++colour) {
+          for (int rank = 0; rank < 6; ++rank) {
+            int expected = 0;
+            for (const family_cell_t& cell : item.cells) {
+              if (array == cell.array && colour == cell.colour &&
+                  rank == cell.rank) {
+                expected = cell.value;
+              }
+            }
+
+            CAPTURE(array);
+            CAPTURE(colour);
+            CAPTURE(rank);
+            CHECK(family_cell(engine, array, colour, rank) == expected);
+          }
+        }
+      }
+    }
   }
 }

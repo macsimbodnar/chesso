@@ -7,6 +7,30 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-30, by hand.
 
+## 2026-10-30: S123 phase 1 landed; its screen next
+
+**S123 phase 1 landed** (passed pawns, DEC-329): three groups at zero in
+the cheap stage and in no expression -- A, a free and a safe increment per
+own rank 2 to 7; B, a slope on each king's Chebyshev distance to the push
+square per rank; C, candidate passers per own rank 2 to 6, by CPW's
+per-square rule. 58 parameters, the tuner's layout 955 -> 1013, 949
+shipped. INV-6 against `244d89d`: bench 6016079, `search_bench.py`
+identical at depths 9 and 12 (`adocs/data/S123_inv6.txt`). The mirror
+tests came first, each seen red on a one-colour plant. The fixture gains 8
+rows; the clamp case's push re-derived +30 -> +80 by its rule. Built by one
+Opus 5.5 subagent in `../chesso-s123`, fast-checked.
+
+**Next:** `adocs/data/S123_screen.sh all` (about 55 min, 1 h 50 m at the
+epoch cap), then `S123_cost.sh` (about 1 h 15 m), then phase 2 (apply,
+goldens) by a fresh agent, then the family SPRT `{0, 5}` at 8+0.08 (up to
+19.9 h, at night). Worktrees that can go, waiting on the owner:
+`../chesso-s121c`, `../chesso-s121d`, `../chesso-s121e`, `../chesso-s298`,
+`../chesso-s298b`.
+
+- **gate_extra, last `GATE-EXTRA-DONE`:** 2026-10-30, six stages green in
+  1322 s on `f91d60b` plus S298's tree (`.tuning/coord/S298/phase_b/full.log`).
+  Next weekly run due by 2026-11-06.
+
 ## 2026-10-30: S298 done; S123 next
 
 **S298 done**: `tools/gate_extra.sh` gains stage 6, `clang` (build-clang

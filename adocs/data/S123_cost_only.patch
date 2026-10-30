@@ -1,0 +1,102 @@
+S123's cost-only patch (adocs/data/S123_cost.sh), never committed to src/:
+the groups S123_COST names (bit 1 A, 2 B, 4 C) computed at forced weights
+into a sink an asm barrier consumes, the score the landing's. Applies to
+S123's phase 1 landing; regenerate from its src/evaluation.cpp if that moves.
+
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -149,16 +149,30 @@
+ constexpr int passed_king_enemy_eg[6] = {0, 0, 0, 0, 0, 0};
+ constexpr int candidate_passer_mg[5] = {0, 0, 0, 0, 0};
+ constexpr int candidate_passer_eg[5] = {0, 0, 0, 0, 0};
++// S123's cost-only build, never committed (adocs/data/S123_cost.sh applies
++// this patch to a throwaway tree). The groups S123_COST names -- bit 1 A, 2 B,
++// 4 C -- are computed at forced non-zero weights into a sum of their own that
++// an asm barrier consumes and the score never sees, so the search, node for
++// node, is the shipping build's and the wall time is the cost (DEC-047). A
++// group whose bit is clear is not live, so it is in no expression, as it
++// ships at zero.
++#ifndef S123_COST
++#define S123_COST 7
++#endif
++static_assert((S123_COST) >= 1 && (S123_COST) <= 7,
++              "S123_COST forces one to three of the three groups");
++constexpr int s123_forced6[6] = {3, 5, 7, 9, 11, 13};
++constexpr int s123_forced5[5] = {3, 5, 7, 9, 11};
+ constexpr std::array<score_t, 6> passed_free_score =
+-    pack_scores(passed_free_mg, passed_free_eg);
++    pack_scores(s123_forced6, s123_forced6);
+ constexpr std::array<score_t, 6> passed_safe_score =
+-    pack_scores(passed_safe_mg, passed_safe_eg);
++    pack_scores(s123_forced6, s123_forced6);
+ constexpr std::array<score_t, 6> passed_king_own_score =
+-    pack_scores(passed_king_own_mg, passed_king_own_eg);
++    pack_scores(s123_forced6, s123_forced6);
+ constexpr std::array<score_t, 6> passed_king_enemy_score =
+-    pack_scores(passed_king_enemy_mg, passed_king_enemy_eg);
++    pack_scores(s123_forced6, s123_forced6);
+ constexpr std::array<score_t, 5> candidate_passer_score =
+-    pack_scores(candidate_passer_mg, candidate_passer_eg);
++    pack_scores(s123_forced5, s123_forced5);
+ 
+ // Whether a weight array pair has a non-zero entry: a group none of whose
+ // arrays does is not computed by the engine's evaluate_cheap() at all.
+@@ -171,12 +185,10 @@
+   return false;
+ }
+ 
+-static constexpr bool passer_advance_live =
+-    any_weight(passed_free_score) || any_weight(passed_safe_score);
+-static constexpr bool passer_kings_live =
+-    any_weight(passed_king_own_score) || any_weight(passed_king_enemy_score);
+-static constexpr bool candidate_passer_live =
+-    any_weight(candidate_passer_score);
++// The cost build's liveness is its mask's.
++static constexpr bool passer_advance_live = ((S123_COST) & 1) != 0;
++static constexpr bool passer_kings_live = ((S123_COST) & 2) != 0;
++static constexpr bool candidate_passer_live = ((S123_COST) & 4) != 0;
+ 
+ // The trace build records every coefficient whatever its weight -- the tuner
+ // fits the zero ones too -- so it computes every group.
+@@ -1183,11 +1195,14 @@
+ 
+   if constexpr (collect) { *family_out = passer_family_t{}; }
+ 
++  // The cost build's sink: the forced groups add here, never to `sum`.
++  score_t family_sum = 0;
++
+   if constexpr (advance || kings) {
+     passer_family_side<WHITE, advance, kings, collect>(board, white_passers,
+-                                                       &sum, family_out);
++                                                       &family_sum, family_out);
+     passer_family_side<BLACK, advance, kings, collect>(board, black_passers,
+-                                                       &sum, family_out);
++                                                       &family_sum, family_out);
+   }
+ 
+   if constexpr (candidates) {
+@@ -1202,7 +1217,7 @@
+       candidate[WHITE] &= candidate[WHITE] - 1;
+       assert(rank >= 0 && rank < 5);
+ 
+-      sum += candidate_passer_score[rank];
++      family_sum += candidate_passer_score[rank];
+       EVAL_TRACE(TERM_CANDIDATE_PASSER, rank, 1);
+       if constexpr (collect) { family_out->candidate[WHITE][rank]++; }
+     }
+@@ -1212,12 +1227,14 @@
+       candidate[BLACK] &= candidate[BLACK] - 1;
+       assert(rank >= 0 && rank < 5);
+ 
+-      sum -= candidate_passer_score[rank];
++      family_sum -= candidate_passer_score[rank];
+       EVAL_TRACE(TERM_CANDIDATE_PASSER, rank, -1);
+       if constexpr (collect) { family_out->candidate[BLACK][rank]++; }
+     }
+   }
+ 
++  asm volatile("" : : "r"(family_sum));
++
+   *score = sum;
+ }
+ 

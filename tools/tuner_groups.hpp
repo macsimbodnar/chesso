@@ -45,7 +45,8 @@ using tuner_layout::TEMPO_MG_BASE;
 
 inline constexpr const char* GROUP_LIST =
     "all, material, psqt, mobility, king_safety, passed_pawns, "
-    "pawn_structure, piece_placement, tempo";
+    "pawn_structure, piece_placement, tempo, passed_advance, passed_kings, "
+    "candidate_passers";
 
 
 // The piece placement group's terms, S135, each a name `--only` and `--freeze`
@@ -164,8 +165,25 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     first = PL_MG_BASE;
     last = TEMPO_MG_BASE;
   } else if (group == "tempo") {
+    // Ends at its own block since S123. It ran to PARAM_COUNT until then and
+    // would have swallowed S123's family appended after it -- the fifth time
+    // this function met the defect. Every group now ends at its block's end
+    // constant in tools/tuner_layout.hpp, and tests/test_tuner_groups.cpp
+    // holds each to exactly its block, so the last one is no exception.
     first = TEMPO_MG_BASE;
-    last = PARAM_COUNT;
+    last = tuner_layout::TEMPO_END;
+  } else if (group == "passed_advance") {
+    // S123's A: the free and safe increments, both halves.
+    first = tuner_layout::PF_MG_BASE;
+    last = tuner_layout::PASSER_ADVANCE_END;
+  } else if (group == "passed_kings") {
+    // S123's B: both kings' distance slopes, both halves.
+    first = tuner_layout::PKO_MG_BASE;
+    last = tuner_layout::PASSER_KINGS_END;
+  } else if (group == "candidate_passers") {
+    // S123's C.
+    first = tuner_layout::CP_MG_BASE;
+    last = tuner_layout::CANDIDATE_PASSER_END;
   } else {
     return false;
   }
@@ -233,6 +251,48 @@ inline bool freeze_mask(const std::string& groups, std::vector<uint8_t>* mask)
   }
 
   return true;
+}
+
+
+// `--only` with a list, S123: the union of the named groups and terms, each
+// as free_mask() frees it. S123's screen frees a part's own weights with the
+// earlier survivors' -- `--only passed_advance,passed_kings` -- and one name
+// is the list of one, so every run before it frees exactly what it did. A
+// name free_mask() refuses refuses the list, and so does `all` beside
+// another name, which would be the whole vector whatever the rest said.
+inline bool only_mask(const std::string& groups, std::vector<uint8_t>* mask)
+{
+  if (groups.find(',') == std::string::npos) { return free_mask(groups, mask); }
+
+  mask->assign(PARAM_COUNT, 0);
+
+  std::string name;
+  std::vector<uint8_t> group_mask;
+  size_t names = 0;
+
+  for (size_t i = 0; i <= groups.size(); ++i) {
+    const char c = (i < groups.size()) ? groups[i] : ',';
+
+    if (c == ' ') { continue; }
+
+    if (c != ',') {
+      name.push_back(c);
+      continue;
+    }
+
+    if (name.empty()) { return false; }
+    if (name == "all") { return false; }
+    if (!free_mask(name, &group_mask)) { return false; }
+
+    for (size_t j = 0; j < PARAM_COUNT; ++j) {
+      if (group_mask[j]) { (*mask)[j] = 1; }
+    }
+
+    names++;
+    name.clear();
+  }
+
+  return names > 0;
 }
 
 
@@ -387,11 +447,15 @@ inline void hold_gauges(const std::vector<gauge_t>& held,
 //
 // One line a tie, `#` to the end of a line a comment:
 //
-//   mobility_<piece>_<half> <cell> <anchor> [<scale>]
+//   <row> <cell> <anchor> [<scale>]
 //
-// piece knight, bishop, rook or queen; half mg or eg; scale 1 when absent. A
-// cell is tied once at most, never to itself, and an anchor is never tied, so
-// no tie reads a value another tie has yet to write.
+// row mobility_<piece>_<half>, piece knight, bishop, rook or queen, or since
+// S123 one of its passed pawn arrays, passed_free, passed_safe,
+// passed_king_own, passed_king_enemy or candidate_passer, followed by _<half>,
+// whose cells are the own ranks from the second (DEC-329 (4): a weight under
+// its support is tied to its nearest rank's same term); half mg or eg; scale 1
+// when absent. A cell is tied once at most, never to itself, and an anchor is
+// never tied, so no tie reads a value another tie has yet to write.
 struct tie_t
 {
   size_t tied;
@@ -400,12 +464,63 @@ struct tie_t
 };
 
 
+// A tie row's name to its first parameter and its width; false for a name
+// that is no row.
+inline bool tie_row(const std::string& name, size_t* base, size_t* width)
+{
+  static const char* const pieces[4] = {"knight", "bishop", "rook", "queen"};
+
+  for (int p = 0; p < 4; ++p) {
+    for (const char* half : {"mg", "eg"}) {
+      if (name == std::string("mobility_") + pieces[p] + "_" + half) {
+        *base = ((half[0] == 'm') ? tuner_layout::MOB_MG_BASE
+                                  : tuner_layout::MOB_EG_BASE) +
+                static_cast<size_t>(MOBILITY_OFFSET[p]);
+        *width = static_cast<size_t>(MOBILITY_WIDTH[p]);
+        return true;
+      }
+    }
+  }
+
+  struct passer_row_t
+  {
+    const char* name;
+    size_t mg_base;
+    size_t eg_base;
+    size_t width;
+  };
+
+  static const passer_row_t rows[] = {
+      {"passed_free", tuner_layout::PF_MG_BASE, tuner_layout::PF_EG_BASE,
+       tuner_layout::PASSED_FREE_COUNT},
+      {"passed_safe", tuner_layout::PSF_MG_BASE, tuner_layout::PSF_EG_BASE,
+       tuner_layout::PASSED_SAFE_COUNT},
+      {"passed_king_own", tuner_layout::PKO_MG_BASE, tuner_layout::PKO_EG_BASE,
+       tuner_layout::PASSED_KING_COUNT},
+      {"passed_king_enemy", tuner_layout::PKE_MG_BASE,
+       tuner_layout::PKE_EG_BASE, tuner_layout::PASSED_KING_COUNT},
+      {"candidate_passer", tuner_layout::CP_MG_BASE, tuner_layout::CP_EG_BASE,
+       tuner_layout::CANDIDATE_PASSER_COUNT},
+  };
+
+  for (const passer_row_t& row : rows) {
+    for (const char* half : {"mg", "eg"}) {
+      if (name == std::string(row.name) + "_" + half) {
+        *base = (half[0] == 'm') ? row.mg_base : row.eg_base;
+        *width = row.width;
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+
 inline bool parse_ties(const std::string& text,
                        std::vector<tie_t>* out,
                        std::string* error)
 {
-  static const char* const pieces[4] = {"knight", "bishop", "rook", "queen"};
-
   out->clear();
   std::vector<uint8_t> tied(PARAM_COUNT, 0);
   std::vector<uint8_t> anchors(PARAM_COUNT, 0);
@@ -442,25 +557,15 @@ inline bool parse_ties(const std::string& text,
     };
 
     if (words.size() != 3 && words.size() != 4) {
-      return refuse(
-          "expected `mobility_<piece>_<half> <cell> <anchor> "
-          "[<scale>]`");
+      return refuse("expected `<row> <cell> <anchor> [<scale>]`");
     }
 
-    int type = -1;
     size_t base = PARAM_COUNT;
-    for (int p = 0; p < 4; ++p) {
-      for (const char* half : {"mg", "eg"}) {
-        if (words[0] == std::string("mobility_") + pieces[p] + "_" + half) {
-          type = p;
-          base = ((half[0] == 'm') ? tuner_layout::MOB_MG_BASE
-                                   : tuner_layout::MOB_EG_BASE) +
-                 static_cast<size_t>(MOBILITY_OFFSET[p]);
-        }
-      }
-    }
+    size_t width = 0;
 
-    if (type < 0) { return refuse("no mobility table named " + words[0]); }
+    if (!tie_row(words[0], &base, &width)) {
+      return refuse("no table named " + words[0]);
+    }
 
     const auto cell_of = [&](const std::string& s, size_t* cell) {
       if (s.empty() || s.size() > 2 ||
@@ -468,9 +573,7 @@ inline bool parse_ties(const std::string& text,
         return false;
       }
       const unsigned long value = std::stoul(s);
-      if (value >= static_cast<unsigned long>(MOBILITY_WIDTH[type])) {
-        return false;
-      }
+      if (value >= width) { return false; }
       *cell = static_cast<size_t>(value);
       return true;
     };

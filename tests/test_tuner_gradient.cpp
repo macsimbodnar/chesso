@@ -513,6 +513,11 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // mobility a table (955 parameters) and added 38 rows so every cell has a
 // gradient here (tests/test_eval_positions.hpp says by what rule): at the
 // identity table the worst is 5.46e-08, at parameter 141, psqt_mg[bishop][a7].
+// S123 appended its passed pawn family (1013 parameters) and eight rows so
+// that each of its 58 has a gradient here: at the family's zero landing the
+// worst is 6.94e-07, at parameter 869, mobility_eg[rook][7]; 9.50e-07 at 849,
+// mobility_eg[bishop][1], over the 80 rows before them
+// (adocs/data/S123_preconditions.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -626,14 +631,18 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // (80 rows), it answers +30: two rows bound, the farthest at 197.3, the
   // nearest other at 158.8, every row 13.33 from the kink, finite differences
   // 9.3e-8; +140 there leaves a row 0.75 from the kink
-  // (adocs/data/S121_goldens.txt). Re-run it
+  // (adocs/data/S121_goldens.txt). With S123's eight coverage rows (88) at
+  // its zero-weight landing it answers +80: 22 rows bound, the farthest at
+  // 597.3, the nearest other at 178.4, every row 3.71 from the kink, finite
+  // differences 1.97e-7; +30 there reads 2.28e-7, past the rule's 2e-7
+  // (adocs/data/S123_preconditions.txt). Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
   // push saturates the sigmoid everywhere, which makes the finite difference
   // itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
-    params[KS_MG_BASE + t] += 30.0;
-    params[KS_EG_BASE + t] += 30.0;
+    params[KS_MG_BASE + t] += 80.0;
+    params[KS_EG_BASE + t] += 80.0;
   }
 
   std::vector<uint32_t> binding;
@@ -943,7 +952,12 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // candidate, the fitted table and the re-derived block, the smallest is
     // 0.1552 under Adam and 0.0671 under AdaGrad, both the rook's, the largest
     // 8.2585 and 6.9883, both the queen's, every hold at most 1.35e-14
-    // (`adocs/data/S121_goldens.txt`). The
+    // (`adocs/data/S121_goldens.txt`). With S123's eight coverage rows (92
+    // with the gauge rows) at its zero-weight landing the smallest is
+    // **0.0235** under Adam, the bishop's, and 0.2272 under AdaGrad, the
+    // bishop's again, the largest 4.9580, the queen's, and 4.4351, the
+    // pawn's, every hold at most 8.88e-15: over the floor by a factor of
+    // 2.35 (`adocs/data/S123_preconditions.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which

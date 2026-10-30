@@ -1,0 +1,273 @@
+# S123 phase 1: INV-6 for the passed pawn family landed at zero (DEC-329 (3)).
+# Parent: 244d89d, built Release native (build/) and CHESSO_TUNE (build-tune/)
+# in a throwaway worktree of that commit; S123: the phase 1 tree (worktree
+# ../chesso-s123, branch s123), the same two configurations.
+# 2026-10-30, i7-8700K, g++ 13.3. Nothing was timed: this proves the trees are
+# the same, not that they cost the same (adocs/data/S123_cost.sh does that).
+#
+# Every stream is the binary's output with `time`, `nps` and `hashfull`
+# stripped (S135_cost.sh's sed), compared byte for byte; md5 of each:
+#
+#   bench (121 lines, total 6016079 nodes)
+#     parent build/       7c754ed19de0eb165a2a3db17158634c
+#     parent build-tune/  7c754ed19de0eb165a2a3db17158634c
+#     S123 build/         7c754ed19de0eb165a2a3db17158634c
+#     S123 build-tune/    7c754ed19de0eb165a2a3db17158634c
+#   bench 12 (total 2200179 nodes)
+#     parent build/       fcb61100875ffb07ce625f0937b50556
+#     parent build-tune/  fcb61100875ffb07ce625f0937b50556
+#     S123 build/         fcb61100875ffb07ce625f0937b50556
+#     S123 build-tune/    fcb61100875ffb07ce625f0937b50556
+#   tools/search_bench.py, position, nodes, best move
+#     depth 9:  parent and S123, build/ and build-tune/  2622f577bd0f5cee72a84279c777d0ee
+#     depth 12: parent and S123, build/ and build-tune/  f2d8f77c3d9e323c1cedb77674975a3e
+#
+# The landing is in no expression, checked on the object code as well as on
+# the streams: evaluate_cheap() in build/'s evaluation.cpp.o disassembles to
+# 381 instructions in both trees, identical once the branch-padding `cs`
+# prefixes and the alignment nops (-Wa,-mbranches-within-32B-boundaries, which
+# move with the code around the function) are dropped. The family's three
+# groups are compiled into the collecting accessors and the trace library
+# only (src/evaluation.cpp passer_family_side()).
+#
+# The streams, S123 build/ (each other row above is byte-identical to these):
+
+== search_bench depth 9
+midgame 26892 nodes c3d5
+kiwipete 109678 nodes e2a6
+tactical 35636 nodes d7c8q
+
+== search_bench depth 12
+midgame 183158 nodes c3d5
+kiwipete 414751 nodes d5e6
+tactical 221974 nodes d7c8q
+
+== bench
+info score cp 23 depth 1 nodes 236 pv c4d5 
+info score cp 145 depth 2 nodes 1166 pv c3d5 e7d8 
+info score cp 145 depth 3 nodes 1838 pv c3d5 e7d8 d5f6 
+info score cp 145 depth 4 nodes 2288 pv c3d5 e7d8 d5f6 g7f6 
+info score cp 161 depth 5 nodes 3056 pv c3d5 e7d8 d5f6 g7f6 g5h6 
+info score cp 142 depth 6 nodes 4848 pv c3d5 e7d8 d5f6 g7f6 g5h6 f8e8 
+info score cp 126 depth 7 nodes 9043 pv c3d5 e7d8 g5f6 g7f6 c2c3 f6f5 h2h3 g4f3 
+info score cp 167 depth 8 nodes 16461 pv c3d5 e7d8 c2c3 g4e6 d5f6 g7f6 g5h6 e6c4 
+info score cp 153 depth 9 nodes 26892 pv c3d5 e7d8 c2c3 b7b5 g5f6 g7f6 c4b3 f6f5 h2h3 g4f3 
+info score cp 161 depth 10 nodes 59161 pv c3d5 e7d8 c2c3 f8e8 g5f6 g7f6 h2h3 g4e6 b2b4 e6d5 c4d5 
+info score cp 160 depth 11 nodes 91985 pv c3d5 e7d8 c2c3 f8e8 g5f6 g7f6 h2h3 g4e6 b2b4 c5b6 d3d4 f6f5 d5b6 c7b6 
+info score cp 170 depth 12 nodes 183158 pv c3d5 e7d8 c2c3 c6a5 c4a2 a5c6 g5f6 g7f6 b2b4 c5b6 a2b3 g4e6 e2d2 e6d5 b3d5 
+info score cp 179 depth 13 nodes 326572 pv c3d5 e7d8 c2c3 f8e8 g5f6 g7f6 h2h3 g4e6 b2b4 c5a7 e2d2 g8g7 d3d4 f6f5 e4f5 e6f5 a1e1 h7h6 c4d3 d8d7 
+info score cp 181 depth 14 nodes 746134 pv c3d5 e7d8 c2c3 f8e8 g5f6 g7f6 h2h3 g4e6 b2b4 c5a7 f3h4 c6b8 e2f3 b8d7 f3g3 g8h8 h4f5 e6f5 e4f5 c7c6 
+bestmove c3d5
+info score cp -6 depth 1 nodes 1335 pv e2a6 
+info score cp -6 depth 2 nodes 1801 pv e2a6 b4c3 
+info score cp -33 depth 3 nodes 4698 pv e2a6 e6d5 e5f7 
+info score cp -33 depth 4 nodes 5521 pv e2a6 e6d5 e5f7 e7f7 
+info score cp -60 depth 5 nodes 11091 pv e2a6 e6d5 e5g6 f7g6 c3b5 
+info score cp -105 depth 6 nodes 34741 pv e2a6 e6d5 c3d5 b6d5 e1c1 h3g2 
+info score cp -124 depth 7 nodes 48423 pv e2a6 e6d5 c3d5 f6d5 e5d3 h8h4 g2g4 a8d8 
+info score cp -116 depth 8 nodes 72576 pv e2a6 e6d5 c3d5 f6d5 e5d3 h3g2 f3g2 a8d8 
+info score cp -114 depth 9 nodes 109678 pv e2a6 e6d5 c3b5 e7e5 d2f4 e5b2 b5c7 e8f8 f4d6 f8g8 e1g1 
+info score cp -147 depth 10 nodes 185581 pv e2a6 e6d5 c3d5 f6d5 e1f1 e7e5 e4d5 e8g8 f3h3 b6d5 a1e1 e5b2 
+info score cp -81 depth 11 nodes 306383 pv d5e6 e7e6 e2a6 h3g2 f3g2 e6e5 f2f4 e5c5 c3b5 c5c2 e1g1 c2c5 g1h1 
+info score cp -104 depth 12 nodes 414751 pv d5e6 a6e2 c3e2 e7e6 d2f4 h3g2 f3g2 e6h3 g2h3 h8h3 e2g3 d7d5 f2f3 d5e4 f3e4 f6d7 e5d3 
+info score cp -122 depth 13 nodes 535357 pv d5e6 a6e2 c3e2 e7e6 d2f4 h3g2 f3g2 f6h5 e5d3 h5f4 e2f4 e6c4 a1d1 e8c8 e1g1 a7a5 c2c3 b4c3 
+info score cp -112 depth 14 nodes 1065056 pv d5e6 e7e6 e2a6 h3g2 f3g2 e6e5 f2f4 e5a5 a6b7 b4c3 d2c3 a5h5 b7a8 b6a8 e1g1 h5c5 g2f2 c5c4 
+bestmove d5e6
+info score cp 690 depth 1 nodes 100 pv d7c8q 
+info score cp 690 depth 2 nodes 491 pv d7c8q f2d1 
+info score cp 690 depth 3 nodes 1230 pv d7c8q f2d1 c8d8 
+info score cp 627 depth 4 nodes 2065 pv d7c8q d8c8 e1f2 f8g8 
+info score cp 676 depth 5 nodes 3192 pv d7c8q d8c8 e1f2 c8g4 c1f4 
+info score cp 606 depth 6 nodes 6122 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 
+info score cp 654 depth 7 nodes 11300 pv d7c8q d8c8 e1f2 f8g8 c1f4 b7b5 c4b3 
+info score cp 618 depth 8 nodes 22051 pv d7c8q d8c8 e1f2 f8g8 e2f4 b7b5 c4d3 e7c5 c1e3 b8d7 
+info score cp 630 depth 9 nodes 35636 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 h1f1 d7e5 b1d2 d8b6 
+info score cp 627 depth 10 nodes 48527 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 c1f4 d8b6 f4d6 f8g8 h1f1 d7f6 b1d2 a8e8 
+info score cp 646 depth 11 nodes 142523 pv d7c8q f2d1 c8d8 e7d8 e1d1 d8f6 c4d3 b8d7 b1c3 d7e5 c3e4 f8e7 h1f1 e5d3 c2d3 
+info score cp 644 depth 12 nodes 221974 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 c1f4 b7b5 c4d3 f8g8 d1c1 d8b6 b1c3 a8e8 h1f1 h7h6 
+info score cp 642 depth 13 nodes 307311 pv d7c8q d8c8 e1f2 c8f5 f2g1 f5c5 d1d4 c5d4 e2d4 b8d7 b1c3 d7e5 c4d3 e5d3 
+info score cp 658 depth 14 nodes 537711 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 c1f4 d7b6 b1d2 d8f6 d1c1 f8g8 c4d3 b6a4 c2c3 a8e8 
+bestmove d7c8q
+info score cp 2330 depth 1 nodes 105 pv g7h8q 
+info score cp 2344 depth 2 nodes 882 pv g7h8q d7d6 
+info score cp 2347 depth 3 nodes 2181 pv g7h8q c5d4 h1h7 
+info score cp 2322 depth 4 nodes 3487 pv g7h8q c5d4 h8e5 d8e7 
+info score cp 2349 depth 5 nodes 6007 pv g7h8q c5d4 h8e5 d8e7 e5h8 
+info score cp 2343 depth 6 nodes 10085 pv g7h8q c5d4 h1h7 b8c6 h8g8 d8e7 
+info score cp 2321 depth 7 nodes 16379 pv g7h8q c5d4 h8e5 d8e7 e5h8 d7d5 f5f6 e7b4 
+info score cp 2321 depth 8 nodes 24625 pv g7h8q c5d4 h8e5 d8e7 e5h8 d7d5 f5f6 e7b4 c2c3 d4c3 h1h7 
+info score cp 2381 depth 9 nodes 51785 pv g7h8q c5d4 h1h7 d7d6 f5f6 b8d7 c1g5 d8b6 b1d2 b6b4 f1g2 
+info score cp 2404 depth 10 nodes 98160 pv g7h8q d7d6 d4e5 c8f5 h1h5 f5g4 c1g5 d8d7 h5h7 c5b4 
+info score cp 2422 depth 11 nodes 178096 pv g7h8q c5d4 h1h7 d7d6 f5f6 b8d7 c1g5 d8c7 f1g2 a7a5 h8g8 
+info score cp 2442 depth 12 nodes 399375 pv g7h8q c5d4 c1h6 d8e7 h6f8 e7f8 h8e5 f8e7 e5h8 e7f8 h1h7 b8c6 b4b5 f8h8 h7h8 e8e7 
+info score cp 2464 depth 13 nodes 574048 pv g7h8q d7d5 h8e5 d8e7 e5d5 c5d4 h1h7 b8c6 c2c3 d4c3 b1c3 c6b4 d5b5 e7d7 b5e5 
+info score cp 2485 depth 14 nodes 1384139 pv g7h8q d7d6 e2e4 e5d4 h1h7 d8c7 h8g8 b8c6 b4c5 d6c5 c2c3 c7e7 g1e2 d4c3 b1c3 c6e5 
+bestmove g7h8q
+info score cp 117 depth 1 nodes 95 pv d8e7 
+info score cp 76 depth 2 nodes 598 pv d8d7 f3g5 
+info score cp 104 depth 3 nodes 1533 pv d8d7 f3g5 a7a5 
+info score cp 102 depth 4 nodes 2910 pv d8d7 f3g5 h7h6 g5e6 
+info score cp 102 depth 5 nodes 6745 pv d8d7 f3g5 h7h6 g5e6 d7e6 
+info score cp 58 depth 6 nodes 16358 pv a7a5 f3g5 d8e7 g5e6 e7e6 c1d2 
+info score cp 68 depth 7 nodes 21680 pv a7a5 f3g5 d8e7 g5e6 e7e6 c1d2 e6d7 a2a3 h7h6 
+info score cp 51 depth 8 nodes 41662 pv d8e7 c1d2 a8d8 f3g5 e6d7 c2c3 h7h6 c3d4 
+info score cp 52 depth 9 nodes 65590 pv d8e7 c1d2 a8d8 a2a4 a7a6 f3g5 h7h6 g5e6 e7e6 a4a5 
+info score cp 63 depth 10 nodes 87118 pv d8e7 c1d2 a8d8 a2a4 a7a5 f3g5 h7h6 g5e6 e7e6 f2f4 c6b4 f4e5 
+info score cp 52 depth 11 nodes 150053 pv d8e7 c1d2 a8d8 a2a4 a7a5 f3g5 h7h6 g5e6 e7e6 f2f4 f8e8 g1h1 c6b4 f4e5 e6e5 f1f5 
+info score cp 50 depth 12 nodes 347150 pv d8d7 f3g5 h7h6 g5e6 d7e6 c1d2 a7a5 c2c3 d4c3 d2c3 e6d7 d1c2 c6b4 
+info score cp 46 depth 13 nodes 733481 pv d8d7 f3g5 h7h6 g5e6 d7e6 c1d2 a7a5 c2c3 d4c3 b2c3 e6d7 d2e3 c5e3 f2e3 a5a4 d1c2 
+info score cp 54 depth 14 nodes 1030173 pv d8e7 c1d2 a8d8 a2a4 h7h6 a4a5 b7b5 a5b6 c7b6 f3h4 a7a5 f2f4 e7c7 h4f5 e6f5 
+bestmove d8e7
+info score cp 72 depth 1 nodes 9 pv a1b2 
+info score cp 38 depth 2 nodes 39 pv a1b2 a7b6 
+info score cp 72 depth 3 nodes 109 pv a1b2 a7b6 b2c3 
+info score cp 68 depth 4 nodes 212 pv a1b2 a7b6 b2c3 b6c7 
+info score cp 82 depth 5 nodes 335 pv a1b2 a7b6 b2c3 b6c7 c3c4 
+info score cp 74 depth 6 nodes 535 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7d7 
+info score cp 82 depth 7 nodes 784 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 
+info score cp 63 depth 8 nodes 1489 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3e3 c7d7 
+info score cp 63 depth 9 nodes 1873 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3e3 c7d7 
+info score cp 63 depth 10 nodes 2081 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3e3 c7d7 
+info score cp 63 depth 11 nodes 2629 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3c3 c7b7 c3c2 b7c7 c2d3 
+info score cp 63 depth 12 nodes 3617 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3c3 c7b6 c3d2 b6c7 d2d3 c7b6 d3e3 b6c7 
+info score cp 63 depth 13 nodes 4354 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3c3 c7b6 c3d2 b6b7 d2e2 b7c7 e2d3 c7b6 
+info score cp 63 depth 14 nodes 4978 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3c3 c7b6 c3d2 b6c7 d2d3 c7b7 d3e2 b7c7 
+bestmove a1b2
+info score cp 1203 depth 1 nodes 73 pv a7c7 
+info score cp 1196 depth 2 nodes 158 pv a7c7 e8f8 
+info score mate 2 depth 3 nodes 1267 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 4 nodes 2818 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 5 nodes 9737 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 6 nodes 16159 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 7 nodes 34417 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 8 nodes 49583 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 9 nodes 87514 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 10 nodes 132563 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 11 nodes 207785 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 12 nodes 300205 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 13 nodes 417648 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 14 nodes 577928 pv e5e6 e8f8 a7f7 
+bestmove e5e6
+info score cp 1085 depth 1 nodes 79 pv a7a1 
+info score cp 1042 depth 2 nodes 258 pv a7a1 e8d7 
+info score mate 2 depth 3 nodes 1693 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 4 nodes 3321 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 5 nodes 9882 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 6 nodes 16110 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 7 nodes 34915 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 8 nodes 53249 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 9 nodes 96634 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 10 nodes 146457 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 11 nodes 226807 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 12 nodes 329949 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 13 nodes 481726 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 14 nodes 669960 pv e5e6 e8d8 a7b8 
+bestmove e5e6
+6016079 nodes
+
+== bench 12
+info score cp 23 depth 1 nodes 236 pv c4d5 
+info score cp 145 depth 2 nodes 1166 pv c3d5 e7d8 
+info score cp 145 depth 3 nodes 1838 pv c3d5 e7d8 d5f6 
+info score cp 145 depth 4 nodes 2288 pv c3d5 e7d8 d5f6 g7f6 
+info score cp 161 depth 5 nodes 3056 pv c3d5 e7d8 d5f6 g7f6 g5h6 
+info score cp 142 depth 6 nodes 4848 pv c3d5 e7d8 d5f6 g7f6 g5h6 f8e8 
+info score cp 126 depth 7 nodes 9043 pv c3d5 e7d8 g5f6 g7f6 c2c3 f6f5 h2h3 g4f3 
+info score cp 167 depth 8 nodes 16461 pv c3d5 e7d8 c2c3 g4e6 d5f6 g7f6 g5h6 e6c4 
+info score cp 153 depth 9 nodes 26892 pv c3d5 e7d8 c2c3 b7b5 g5f6 g7f6 c4b3 f6f5 h2h3 g4f3 
+info score cp 161 depth 10 nodes 59161 pv c3d5 e7d8 c2c3 f8e8 g5f6 g7f6 h2h3 g4e6 b2b4 e6d5 c4d5 
+info score cp 160 depth 11 nodes 91985 pv c3d5 e7d8 c2c3 f8e8 g5f6 g7f6 h2h3 g4e6 b2b4 c5b6 d3d4 f6f5 d5b6 c7b6 
+info score cp 170 depth 12 nodes 183158 pv c3d5 e7d8 c2c3 c6a5 c4a2 a5c6 g5f6 g7f6 b2b4 c5b6 a2b3 g4e6 e2d2 e6d5 b3d5 
+bestmove c3d5
+info score cp -6 depth 1 nodes 1335 pv e2a6 
+info score cp -6 depth 2 nodes 1801 pv e2a6 b4c3 
+info score cp -33 depth 3 nodes 4698 pv e2a6 e6d5 e5f7 
+info score cp -33 depth 4 nodes 5521 pv e2a6 e6d5 e5f7 e7f7 
+info score cp -60 depth 5 nodes 11091 pv e2a6 e6d5 e5g6 f7g6 c3b5 
+info score cp -105 depth 6 nodes 34741 pv e2a6 e6d5 c3d5 b6d5 e1c1 h3g2 
+info score cp -124 depth 7 nodes 48423 pv e2a6 e6d5 c3d5 f6d5 e5d3 h8h4 g2g4 a8d8 
+info score cp -116 depth 8 nodes 72576 pv e2a6 e6d5 c3d5 f6d5 e5d3 h3g2 f3g2 a8d8 
+info score cp -114 depth 9 nodes 109678 pv e2a6 e6d5 c3b5 e7e5 d2f4 e5b2 b5c7 e8f8 f4d6 f8g8 e1g1 
+info score cp -147 depth 10 nodes 185581 pv e2a6 e6d5 c3d5 f6d5 e1f1 e7e5 e4d5 e8g8 f3h3 b6d5 a1e1 e5b2 
+info score cp -81 depth 11 nodes 306383 pv d5e6 e7e6 e2a6 h3g2 f3g2 e6e5 f2f4 e5c5 c3b5 c5c2 e1g1 c2c5 g1h1 
+info score cp -104 depth 12 nodes 414751 pv d5e6 a6e2 c3e2 e7e6 d2f4 h3g2 f3g2 e6h3 g2h3 h8h3 e2g3 d7d5 f2f3 d5e4 f3e4 f6d7 e5d3 
+bestmove d5e6
+info score cp 690 depth 1 nodes 100 pv d7c8q 
+info score cp 690 depth 2 nodes 491 pv d7c8q f2d1 
+info score cp 690 depth 3 nodes 1230 pv d7c8q f2d1 c8d8 
+info score cp 627 depth 4 nodes 2065 pv d7c8q d8c8 e1f2 f8g8 
+info score cp 676 depth 5 nodes 3192 pv d7c8q d8c8 e1f2 c8g4 c1f4 
+info score cp 606 depth 6 nodes 6122 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 
+info score cp 654 depth 7 nodes 11300 pv d7c8q d8c8 e1f2 f8g8 c1f4 b7b5 c4b3 
+info score cp 618 depth 8 nodes 22051 pv d7c8q d8c8 e1f2 f8g8 e2f4 b7b5 c4d3 e7c5 c1e3 b8d7 
+info score cp 630 depth 9 nodes 35636 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 h1f1 d7e5 b1d2 d8b6 
+info score cp 627 depth 10 nodes 48527 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 c1f4 d8b6 f4d6 f8g8 h1f1 d7f6 b1d2 a8e8 
+info score cp 646 depth 11 nodes 142523 pv d7c8q f2d1 c8d8 e7d8 e1d1 d8f6 c4d3 b8d7 b1c3 d7e5 c3e4 f8e7 h1f1 e5d3 c2d3 
+info score cp 644 depth 12 nodes 221974 pv d7c8q f2d1 c8d8 e7d8 e1d1 b8d7 c1f4 b7b5 c4d3 f8g8 d1c1 d8b6 b1c3 a8e8 h1f1 h7h6 
+bestmove d7c8q
+info score cp 2330 depth 1 nodes 105 pv g7h8q 
+info score cp 2344 depth 2 nodes 882 pv g7h8q d7d6 
+info score cp 2347 depth 3 nodes 2181 pv g7h8q c5d4 h1h7 
+info score cp 2322 depth 4 nodes 3487 pv g7h8q c5d4 h8e5 d8e7 
+info score cp 2349 depth 5 nodes 6007 pv g7h8q c5d4 h8e5 d8e7 e5h8 
+info score cp 2343 depth 6 nodes 10085 pv g7h8q c5d4 h1h7 b8c6 h8g8 d8e7 
+info score cp 2321 depth 7 nodes 16379 pv g7h8q c5d4 h8e5 d8e7 e5h8 d7d5 f5f6 e7b4 
+info score cp 2321 depth 8 nodes 24625 pv g7h8q c5d4 h8e5 d8e7 e5h8 d7d5 f5f6 e7b4 c2c3 d4c3 h1h7 
+info score cp 2381 depth 9 nodes 51785 pv g7h8q c5d4 h1h7 d7d6 f5f6 b8d7 c1g5 d8b6 b1d2 b6b4 f1g2 
+info score cp 2404 depth 10 nodes 98160 pv g7h8q d7d6 d4e5 c8f5 h1h5 f5g4 c1g5 d8d7 h5h7 c5b4 
+info score cp 2422 depth 11 nodes 178096 pv g7h8q c5d4 h1h7 d7d6 f5f6 b8d7 c1g5 d8c7 f1g2 a7a5 h8g8 
+info score cp 2442 depth 12 nodes 399375 pv g7h8q c5d4 c1h6 d8e7 h6f8 e7f8 h8e5 f8e7 e5h8 e7f8 h1h7 b8c6 b4b5 f8h8 h7h8 e8e7 
+bestmove g7h8q
+info score cp 117 depth 1 nodes 95 pv d8e7 
+info score cp 76 depth 2 nodes 598 pv d8d7 f3g5 
+info score cp 104 depth 3 nodes 1533 pv d8d7 f3g5 a7a5 
+info score cp 102 depth 4 nodes 2910 pv d8d7 f3g5 h7h6 g5e6 
+info score cp 102 depth 5 nodes 6745 pv d8d7 f3g5 h7h6 g5e6 d7e6 
+info score cp 58 depth 6 nodes 16358 pv a7a5 f3g5 d8e7 g5e6 e7e6 c1d2 
+info score cp 68 depth 7 nodes 21680 pv a7a5 f3g5 d8e7 g5e6 e7e6 c1d2 e6d7 a2a3 h7h6 
+info score cp 51 depth 8 nodes 41662 pv d8e7 c1d2 a8d8 f3g5 e6d7 c2c3 h7h6 c3d4 
+info score cp 52 depth 9 nodes 65590 pv d8e7 c1d2 a8d8 a2a4 a7a6 f3g5 h7h6 g5e6 e7e6 a4a5 
+info score cp 63 depth 10 nodes 87118 pv d8e7 c1d2 a8d8 a2a4 a7a5 f3g5 h7h6 g5e6 e7e6 f2f4 c6b4 f4e5 
+info score cp 52 depth 11 nodes 150053 pv d8e7 c1d2 a8d8 a2a4 a7a5 f3g5 h7h6 g5e6 e7e6 f2f4 f8e8 g1h1 c6b4 f4e5 e6e5 f1f5 
+info score cp 50 depth 12 nodes 347150 pv d8d7 f3g5 h7h6 g5e6 d7e6 c1d2 a7a5 c2c3 d4c3 d2c3 e6d7 d1c2 c6b4 
+bestmove d8d7
+info score cp 72 depth 1 nodes 9 pv a1b2 
+info score cp 38 depth 2 nodes 39 pv a1b2 a7b6 
+info score cp 72 depth 3 nodes 109 pv a1b2 a7b6 b2c3 
+info score cp 68 depth 4 nodes 212 pv a1b2 a7b6 b2c3 b6c7 
+info score cp 82 depth 5 nodes 335 pv a1b2 a7b6 b2c3 b6c7 c3c4 
+info score cp 74 depth 6 nodes 535 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7d7 
+info score cp 82 depth 7 nodes 784 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 
+info score cp 63 depth 8 nodes 1489 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3e3 c7d7 
+info score cp 63 depth 9 nodes 1873 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3e3 c7d7 
+info score cp 63 depth 10 nodes 2081 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3e3 c7d7 
+info score cp 63 depth 11 nodes 2629 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3c3 c7b7 c3c2 b7c7 c2d3 
+info score cp 63 depth 12 nodes 3617 pv a1b2 a7b6 b2c3 b6c7 c3c4 c7b6 c4d3 b6c7 d3c3 c7b6 c3d2 b6c7 d2d3 c7b6 d3e3 b6c7 
+bestmove a1b2
+info score cp 1203 depth 1 nodes 73 pv a7c7 
+info score cp 1196 depth 2 nodes 158 pv a7c7 e8f8 
+info score mate 2 depth 3 nodes 1267 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 4 nodes 2818 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 5 nodes 9737 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 6 nodes 16159 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 7 nodes 34417 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 8 nodes 49583 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 9 nodes 87514 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 10 nodes 132563 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 11 nodes 207785 pv e5e6 e8f8 a7f7 
+info score mate 2 depth 12 nodes 300205 pv e5e6 e8f8 a7f7 
+bestmove e5e6
+info score cp 1085 depth 1 nodes 79 pv a7a1 
+info score cp 1042 depth 2 nodes 258 pv a7a1 e8d7 
+info score mate 2 depth 3 nodes 1693 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 4 nodes 3321 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 5 nodes 9882 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 6 nodes 16110 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 7 nodes 34915 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 8 nodes 53249 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 9 nodes 96634 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 10 nodes 146457 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 11 nodes 226807 pv e5e6 e8d8 a7b8 
+info score mate 2 depth 12 nodes 329949 pv e5e6 e8d8 a7b8 
+bestmove e5e6
+2200179 nodes

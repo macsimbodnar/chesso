@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every one of the 955 fitted numbers reached the engine's sources.
+"""Check that every one of the 1013 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
@@ -27,6 +27,12 @@ gitignored and landed this layout as adocs/data/S121_verify_fit.py alone; the
 two are one file, copied over .tuning/verify_fit.py by S121's phase 2 commit.
 .tuning/apply_fit.py needs no change, because its array pattern already takes
 any one-dimensional `constexpr int name[N] = {...};`.
+
+1013 since S123, whose passed pawn family is ten more one-dimensional arrays
+in src/evaluation.cpp: passed_free, passed_safe, passed_king_own and
+passed_king_enemy six wide a half (own ranks 2 to 7), candidate_passer five
+(ranks 2 to 6). A fit emitted by a tuner built before S123 lacks them and is
+refused, which is right.
 """
 import re
 import sys
@@ -65,7 +71,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 955
+TOTAL = 1013
 
 WIDTHS = [
     ("PAWN", 1),
@@ -93,6 +99,16 @@ WIDTHS = [
     ("piece_placement_eg", 7),
     ("tempo_mg", 1),
     ("tempo_eg", 1),
+    ("passed_free_mg", 6),
+    ("passed_free_eg", 6),
+    ("passed_safe_mg", 6),
+    ("passed_safe_eg", 6),
+    ("passed_king_own_mg", 6),
+    ("passed_king_own_eg", 6),
+    ("passed_king_enemy_mg", 6),
+    ("passed_king_enemy_eg", 6),
+    ("candidate_passer_mg", 5),
+    ("candidate_passer_eg", 5),
 ]
 
 

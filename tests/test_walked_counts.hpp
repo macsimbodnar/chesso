@@ -1,7 +1,8 @@
 #pragma once
 // The evaluation's counts walked by hand from a FEN's placement -- mobility,
-// king safety, passed pawns, pawn structure, piece placement -- a second
-// implementation the engine's own counts are checked against. S276.
+// king safety, passed pawns, pawn structure, piece placement, and since S123
+// the passed pawn family -- a second implementation the engine's own counts
+// are checked against. S276.
 //
 // These walks are the feature half of tools/eval_model.hpp, the hand-written
 // mirror of evaluate() the tuner fitted from S028 to S262 and
@@ -916,6 +917,203 @@ inline bool piece_placement_features(const std::string& placement,
       for (const char* rook : corner.rooks) {
         if (is(named(rook, side), 3, side)) { out[PL_TRAPPED_ROOK] += sign; }
       }
+    }
+  }
+
+  return true;
+}
+
+
+// S123's passed pawn family, per side, WHITE first, each a side's own count
+// and positive: src/evaluation.hpp's definitions walked square by square from
+// the placement, sharing no code with the engine -- no bitboard, no attack
+// table, no fill. Indexed by the pawn's own rank from its second, 0 to 5 for
+// the first four, 0 to 4 for candidates.
+//
+//   free        passers (no enemy pawn strictly ahead on the file or either
+//               neighbouring file, the own seventh included) whose push
+//               square, the square directly ahead, is empty;
+//   safe        free passers whose push square no enemy piece attacks, the
+//               rays walked outward and stopped at the first piece;
+//   king_own    the Chebyshev distance from the side's own king to the push
+//   king_enemy  square, or from the enemy king, summed over the rank's
+//               passers;
+//   candidate   pawns not passed with no enemy pawn strictly ahead on their
+//               file, and no square strictly ahead on that file attacked by
+//               more enemy pawns than own pawns.
+struct passer_family_walk_t
+{
+  int free[2][6];
+  int safe[2][6];
+  int king_own[2][6];
+  int king_enemy[2][6];
+  int candidate[2][5];
+};
+
+
+inline bool passer_family_features(const std::string& placement,
+                                   passer_family_walk_t* out)
+{
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+    white_at[i] = false;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int type = piece_from_char(c, &black);
+
+    if (type < 0 || square > 63) { return false; }
+
+    kind_at[square] = type;
+    white_at[square] = !black;
+    square++;
+  }
+
+  if (square != 64) { return false; }
+
+  *out = passer_family_walk_t{};
+
+  const auto on_board = [](int row, int file) {
+    return row >= 0 && row <= 7 && file >= 0 && file <= 7;
+  };
+  const auto piece = [&](int row, int file, int type, bool white) {
+    const int sq = row * 8 + file;
+    return on_board(row, file) && kind_at[sq] == type && white_at[sq] == white;
+  };
+
+  // Whether a piece of colour `white` attacks (row, file).
+  const auto attacked_by = [&](int row, int file, bool white) {
+    // A pawn attacks one row toward its enemy, one file to each side: White's
+    // from the row below in this indexing, Black's from the row above.
+    const int pawn_row = white ? row + 1 : row - 1;
+    if (piece(pawn_row, file - 1, 0, white) ||
+        piece(pawn_row, file + 1, 0, white)) {
+      return true;
+    }
+
+    static const int knight[8][2] = {{1, 2},   {2, 1},   {2, -1}, {1, -2},
+                                     {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}};
+    for (const auto& d : knight) {
+      if (piece(row + d[0], file + d[1], 1, white)) { return true; }
+    }
+
+    for (int dr = -1; dr <= 1; ++dr) {
+      for (int df = -1; df <= 1; ++df) {
+        if ((dr != 0 || df != 0) && piece(row + dr, file + df, 5, white)) {
+          return true;
+        }
+      }
+    }
+
+    // Sliders: out along each ray to the first piece of either colour.
+    for (int dr = -1; dr <= 1; ++dr) {
+      for (int df = -1; df <= 1; ++df) {
+        if (dr == 0 && df == 0) { continue; }
+
+        const bool diagonal = (dr != 0 && df != 0);
+
+        for (int r = row + dr, f = file + df; on_board(r, f);
+             r += dr, f += df) {
+          const int sq = r * 8 + f;
+          if (kind_at[sq] < 0) { continue; }
+
+          if (white_at[sq] == white &&
+              (kind_at[sq] == 4 || kind_at[sq] == (diagonal ? 2 : 3))) {
+            return true;
+          }
+
+          break;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  // How many pawns of colour `white` attack (row, file): 0 to 2.
+  const auto pawn_attackers = [&](int row, int file, bool white) {
+    const int pawn_row = white ? row + 1 : row - 1;
+    return (piece(pawn_row, file - 1, 0, white) ? 1 : 0) +
+           (piece(pawn_row, file + 1, 0, white) ? 1 : 0);
+  };
+
+  int king_square[2] = {-1, -1};
+  for (int sq = 0; sq < 64; ++sq) {
+    if (kind_at[sq] == 5) { king_square[white_at[sq] ? 0 : 1] = sq; }
+  }
+
+  if (king_square[0] < 0 || king_square[1] < 0) { return false; }
+
+  const auto distance = [](int a, int b) {
+    const int ranks = (a / 8 > b / 8) ? a / 8 - b / 8 : b / 8 - a / 8;
+    const int files = (a % 8 > b % 8) ? a % 8 - b % 8 : b % 8 - a % 8;
+    return (ranks > files) ? ranks : files;
+  };
+
+  for (int from = 0; from < 64; ++from) {
+    if (kind_at[from] != 0) { continue; }
+
+    const bool white = white_at[from];
+    const int side = white ? 0 : 1;
+    const int row = from / 8;
+    const int file = from % 8;
+
+    if (row == 0 || row == 7) { return false; }
+
+    const int ahead = white ? -1 : 1;
+    const int rank = white ? 6 - row : row - 1;
+
+    bool passed = true;
+    bool file_clear = true;
+
+    for (int r = row + ahead; r >= 0 && r <= 7; r += ahead) {
+      for (int df = -1; df <= 1; ++df) {
+        if (piece(r, file + df, 0, !white)) {
+          passed = false;
+          if (df == 0) { file_clear = false; }
+        }
+      }
+    }
+
+    if (passed) {
+      const int push_row = row + ahead;
+      const int push = push_row * 8 + file;
+
+      if (kind_at[push] < 0) {
+        out->free[side][rank]++;
+        if (!attacked_by(push_row, file, !white)) { out->safe[side][rank]++; }
+      }
+
+      out->king_own[side][rank] += distance(king_square[side], push);
+      out->king_enemy[side][rank] += distance(king_square[1 - side], push);
+      continue;
+    }
+
+    if (!file_clear) { continue; }
+
+    bool contested = false;
+    for (int r = row + ahead; r >= 0 && r <= 7; r += ahead) {
+      if (pawn_attackers(r, file, !white) > pawn_attackers(r, file, white)) {
+        contested = true;
+      }
+    }
+
+    // A pawn on its own seventh is always passed, so this is ranks 2 to 6.
+    if (!contested) {
+      if (rank > 4) { return false; }
+      out->candidate[side][rank]++;
     }
   }
 

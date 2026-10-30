@@ -117,6 +117,19 @@
 //
 // It prints the open needs, each pick with the needs it closes, the two
 // checks, and the picks as C++ lines for tests/test_eval_positions.hpp.
+//
+// SCOPED TO ITS OWN BLOCK AND SPAN, 2026-10-30 (S123's phase 1, DEC-329 (8)).
+// S123 appended its passed pawn family after tempo and its own block of rows
+// after this one, picked by adocs/data/S123_coverage_rows.cpp. Read on that
+// tree as written, this program would hold S123's 58 parameters to its
+// gradient check over its own 80 rows, S123's terms to its both-ways check,
+// and S123's rows to its "landed block". So: the gradient check reads the
+// mobility span its rule was written for, [MOB_MG_BASE, KS_MG_BASE); the
+// both-ways check reads the terms that existed when it was written, every
+// term before S123's TERM_PASSED_FREE but the tables; and the landed block
+// ends at S123's block marker when the header has one. Its rule, its picks
+// and its block are unchanged, and it must still reproduce the block.
+// S123's program checks S123's span, terms and block.
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cmath>
@@ -145,6 +158,8 @@ constexpr size_t PER_NEED = 64;
 constexpr int SCORE_LIMIT = 800;  // centipawns, White relative, either way
 constexpr size_t BASE_ROWS = 42;  // the fixture before S121's block
 const char* const BLOCK_MARKER = "S121's mobility table, added at S121's";
+// Where this block ends, since S123: the next block's marker.
+const char* const NEXT_MARKER = "S123's passed pawn family, added at S123's";
 
 game_t game;
 
@@ -354,6 +369,7 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
   // The base, asserted against the block's marker comment: the FEN lines
   // before it are BASE_ROWS, and the file's FEN lines are the list.
   const std::vector<std::string>& landed = test_eval_positions::positions;
+  size_t block_end = 0;  // one past S121's block: S123's marker, or the end
   {
     const char* path = std::getenv("S121_POSITIONS_HPP");
     std::ifstream header(path ? path : "../../tests/test_eval_positions.hpp");
@@ -368,6 +384,10 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
         marker = true;
         before_marker = fens;
       }
+      if (line.find(NEXT_MARKER) != std::string::npos) {
+        REQUIRE_MESSAGE(block_end == 0, "S123's marker twice");
+        block_end = fens;
+      }
       const size_t open_quote = line.find_first_not_of(' ');
       if (open_quote != std::string::npos && line[open_quote] == '"' &&
           line.size() >= 2 && line.compare(line.size() - 2, 2, "\",") == 0) {
@@ -375,16 +395,18 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
       }
     }
     if (!marker) { before_marker = fens; }
+    if (block_end == 0) { block_end = fens; }
     printf("tests/test_eval_positions.hpp: %zu rows, %zu before S121's block "
-           "(marker %s)\n",
-           fens, before_marker, marker ? "found" : "absent");
+           "(marker %s), the block ends at row %zu\n",
+           fens, before_marker, marker ? "found" : "absent", block_end);
     REQUIRE(fens == landed.size());
     REQUIRE(before_marker == BASE_ROWS);
+    REQUIRE(block_end >= BASE_ROWS);
   }
 
   // Every landed row of the block held to `eligible` again, pair by pair.
   size_t ineligible = 0;
-  for (size_t i = BASE_ROWS; i + 1 < landed.size(); i += 2) {
+  for (size_t i = BASE_ROWS; i + 1 < block_end; i += 2) {
     const offer_t offer = offer_of(landed[i], params.data());
     if (!offer.eligible || offer.mirror != landed[i + 1]) {
       ineligible++;
@@ -392,9 +414,9 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
              landed[i].c_str());
     }
   }
-  REQUIRE((landed.size() - BASE_ROWS) % 2 == 0);
+  REQUIRE((block_end - BASE_ROWS) % 2 == 0);
   printf("landed block: %zu pairs, %zu not eligible\n",
-         (landed.size() - BASE_ROWS) / 2, ineligible);
+         (block_end - BASE_ROWS) / 2, ineligible);
 
   std::vector<std::string> rows(landed.begin(), landed.begin() + BASE_ROWS);
   std::vector<uint8_t> open(NEEDS, 1);
@@ -530,9 +552,10 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
   tuner_trace::gradient(fixture, params.data(), 1.0, index, 0, fixture.size(),
                         1, target, &analytic);
 
+  // The mobility span, since S123 (the header says why).
   size_t flat = 0;
   double smallest = INFINITY;
-  for (size_t p = MOB_MG_BASE; p < PARAM_COUNT; ++p) {
+  for (size_t p = MOB_MG_BASE; p < tuner_layout::KS_MG_BASE; ++p) {
     smallest = std::min(smallest, std::fabs(analytic[p]));
     if (!(std::fabs(analytic[p]) > 1e-12)) {
       flat++;
@@ -540,7 +563,7 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
     }
   }
   printf("check gradient: %zu rows, %zu parameters at or under 1e-12, the "
-         "smallest |gradient| from MOB_MG_BASE on %.3e\n",
+         "smallest |gradient| over the mobility span %.3e\n",
          fixture.size(), flat, smallest);
   if (flat > 0) { ok = false; }
 
@@ -564,8 +587,9 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
       if (e.coef < 0) { negative[e.feature]++; }
     }
   }
+  // The terms before S123's, since S123 (the header says why).
   size_t one_way = 0;
-  for (int t = 0; t < eval_trace::TERM_COUNT; ++t) {
+  for (int t = 0; t < eval_trace::TERM_PASSED_FREE; ++t) {
     if (t == eval_trace::TERM_PSQT) { continue; }
     for (uint32_t f = table.base[t]; f < table.base[t + 1]; ++f) {
       if (positive[f] == 0 || negative[f] == 0) {
@@ -580,8 +604,9 @@ TEST_CASE("S121: the fixture rows that move every mobility cell")
   if (one_way > 0) { ok = false; }
 
   // The picks against the landed block: the same pairs in the same order.
-  const std::vector<std::string> block(landed.begin() + BASE_ROWS,
-                                       landed.end());
+  const std::vector<std::string> block(
+      landed.begin() + BASE_ROWS,
+      landed.begin() + static_cast<std::ptrdiff_t>(block_end));
   const std::vector<std::string> picks(rows.begin() + BASE_ROWS, rows.end());
   const bool reproduces = (block == picks);
   printf("reproduces the landed block: %s (%zu picked rows, %zu landed)\n",

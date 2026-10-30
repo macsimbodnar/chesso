@@ -137,6 +137,94 @@ extern const int passed_pawn_eg[5];
 // implementation to drift.
 void passed_pawn_counts(const board_t* board, int out[2][5]);
 
+// Each side's passed pawns as a bitboard, WHITE first: own pawns with no enemy
+// pawn strictly ahead on their own file or either neighbouring file. **The own
+// seventh rank included**, unlike the buckets above, because S123's
+// can-advance, safe-advance and king-distance terms read a passer there too.
+//
+// It exists for S123's symmetry case (tests/test_evaluation.cpp, DEC-329 (6)):
+// a position's mirror must hold each side's set exactly where the original
+// held the other side's, rank for rank. A set wrong for one colour only -- an
+// edge mask missing on one side's span, a shift one rank off for Black -- is
+// invisible to every score while the weights it feeds are zero, and two
+// published passed-pawn bugs were of that shape (the S123 step file).
+//
+// Not on the hot path: the collecting instantiation of the same function
+// evaluate_cheap() calls, like the counts above.
+void passed_pawn_sets(const board_t* board, bb_t out[2]);
+
+// S123's passed pawn family (DEC-329), three groups beside the buckets above,
+// each fitted on its own screen part before one family SPRT. Indexed by the
+// pawn's own rank, 0 for its second: ranks 2 to 7 for A and B, 2 to 6 for C.
+// The definitions, stated exactly because the walk in
+// tests/test_walked_counts.hpp is written from them and the two have to mean
+// the same thing. A passer is a pawn of passed_pawn_sets() above, its own
+// seventh included; its push square is the square directly ahead of it, and
+// only that square is read -- not the double push. Each count is a side's own;
+// the term is White's minus Black's, cell by cell.
+//
+//   A  passed_free    passers whose push square holds no piece of either
+//                     colour.
+//      passed_safe    those of them whose push square no enemy piece attacks
+//                     -- pawn, knight, bishop, rook, queen or king, the
+//                     board's own is_attacked() with sliders stopped by any
+//                     piece, x-rays not counted. Every safe passer is a free
+//                     one, so a passer is blocked, free but attacked, or free
+//                     and safe, and the fit prices safe as an increment on
+//                     free. Safe over enemy pawns alone would be no count at
+//                     all: a pawn attacking the push square would stand in
+//                     the passer's attack span and the pawn would not be
+//                     passed (DEC-329's research pass).
+//   B  passed_king_own    the Chebyshev distance, 0 to 7, from the side's own
+//      passed_king_enemy  king, or the enemy king, to the passer's push
+//                         square, summed over the side's passers of the rank.
+//                         Linear in the distance per rank, the slope fitted,
+//                         so "scaled by rank" is a per-rank slope and not a
+//                         declared multiplier (DEC-329 (3)).
+//   C  candidate_passer   pawns not passed whose own file holds no enemy pawn
+//                         strictly ahead, and on no square of whose path --
+//                         the squares strictly ahead on its file -- more enemy
+//                         pawns than own pawns attack. CPW's *Candidate Passed
+//                         Pawn* page's approximation, "no square on its path
+//                         is controlled by more enemy pawns than own pawns",
+//                         of its definition "a pawn on a half-open file,
+//                         which, if the board had only pawns on it, would
+//                         eventually become a passed pawn"
+//                         (https://www.chessprogramming.org/Candidate_Passed_Pawn,
+//                         fetched 2026-10-30); the file clear ahead is
+//                         *Candidates (Bitboards)*'s "the intersection of the
+//                         frontspan with opposing pawns is empty". Pawns only:
+//                         no piece and no king is read.
+//
+// Counts, not booleans: two free passers on one rank count two.
+extern const int passed_free_mg[6];
+extern const int passed_free_eg[6];
+extern const int passed_safe_mg[6];
+extern const int passed_safe_eg[6];
+extern const int passed_king_own_mg[6];
+extern const int passed_king_own_eg[6];
+extern const int passed_king_enemy_mg[6];
+extern const int passed_king_enemy_eg[6];
+extern const int candidate_passer_mg[5];
+extern const int candidate_passer_eg[5];
+
+// The family's raw counts per colour, WHITE first, each row a side's own and
+// positive, for the reason over passed_pawn_counts(): a miscount that hits
+// both sides equally cancels in a difference, and at zero weights no score
+// sees these at all. tests/test_evaluation holds each to its mirror (DEC-329
+// (6)), tests/test_eval_model to the walk.
+struct passer_family_t
+{
+  int free[2][6];
+  int safe[2][6];
+  int king_own[2][6];
+  int king_enemy[2][6];
+  int candidate[2][5];
+};
+
+// Not on the hot path: the collecting instantiation, as above.
+void passer_family_counts(const board_t* board, passer_family_t* out);
+
 // The pawn structure weights, indexed by feature: 0 isolated, 1 doubled, 2
 // backward. Exposed for the same reason as the passed pawn weights above: the
 // tuner (tools/tuner_layout.hpp) starts from what the engine ships instead of
@@ -447,6 +535,11 @@ extern const std::array<score_t, 5> passed_pawn_score;
 extern const std::array<score_t, 3> pawn_structure_score;
 extern const std::array<score_t, 7> piece_placement_score;
 extern const score_t tempo_score;
+extern const std::array<score_t, 6> passed_free_score;
+extern const std::array<score_t, 6> passed_safe_score;
+extern const std::array<score_t, 6> passed_king_own_score;
+extern const std::array<score_t, 6> passed_king_enemy_score;
+extern const std::array<score_t, 5> candidate_passer_score;
 int capture_score(const board_t* board, move_t move);
 
 // The raw signed history a quiet move carries -- the butterfly entry plus

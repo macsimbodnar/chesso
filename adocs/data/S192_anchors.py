@@ -69,6 +69,11 @@ KS = {  # king_safety_feature_t's order
 #  structure  isolated, doubled, backward, White minus Black
 #  placement  pair, rook open, rook half open, White minus Black (rook seventh was
 #             a fourth until S134 folded it into the rook table, DEC-090)
+#  family     S123's passed pawn family (src/evaluation.hpp): array name ->
+#             {own-rank index: signed count}, White minus Black; a king
+#             distance's count is the summed distance. Every case states it,
+#             an empty dict where no pawn stands; at S123's landing every weight
+#             is zero, so these counts move no anchor until a fit
 #  mobility   (type, attacked squares not occupied by own pieces nor attacked
 #             by an enemy pawn, sign); since S121 the count picks the piece's
 #             cell of its type's table, which is what the piece scores, and is
@@ -85,6 +90,11 @@ CASES = [
         material=[("PAWN", 1)],
         psqt=[(PAWN, sq("e2"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={0: 1},  # no black pawns at all, so e2 passes: 6 - (52 >> 3) = 0
+        # S123: e2 is a passer on its own second rank (index 0); e3 is empty
+        # and no black piece but the king on e8 stands, so it is free and safe;
+        # e1 is two from e3, e8 five
+        family={"passed_free": {0: 1}, "passed_safe": {0: 1},
+                "passed_king_own": {0: 2}, "passed_king_enemy": {0: 5}},
         structure=(1, 0, 0),  # isolated: no white pawn on d or f
         placement=(0, 0, 0),
         mobility=[],
@@ -103,6 +113,7 @@ CASES = [
         material=[("KNIGHT", 1)],
         psqt=[(KNIGHT, sq("b1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, 0, 0),
         mobility=[(KNIGHT - 1, 3, 1)],  # a3, c3, d2
@@ -118,6 +129,7 @@ CASES = [
         material=[("BISHOP", 1)],
         psqt=[(BISHOP, sq("c1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, 0, 0),  # one bishop is not a pair
         mobility=[(BISHOP - 1, 7, 1)],  # d2 e3 f4 g5 h6, b2 a3
@@ -134,6 +146,7 @@ CASES = [
         material=[("ROOK", 1)],
         psqt=[(ROOK, sq("d1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, 1, 0),  # no pawn of either colour on the d file
         # a1 b1 c1, d2..d8; e1 is own-occupied
@@ -150,6 +163,7 @@ CASES = [
         material=[("QUEEN", 1)],
         psqt=[(QUEEN, sq("d1"), 1), (KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, 0, 0),  # the open-file feature counts rooks only
         # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4
@@ -166,6 +180,7 @@ CASES = [
         material=[],
         psqt=[(KING, sq("e1"), 1), (KING, sq("e1"), -1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, 0, 0),
         mobility=[],
@@ -192,6 +207,12 @@ CASES = [
             (PAWN, sq("h2"), -1),
         ],
         passed={0: -3},  # White has no pawns, so all three of Black's pass
+        # S123: f7 g7 h7 on Black's own second rank (index 0), push squares f6
+        # g6 h6 all empty and none attacked -- Re8's rank stops at the king on
+        # g8, Re1's file and rank never reach the sixth, Kg1 is far -- so three
+        # free and safe; Kg8 is two from each push square (6), Kg1 five (15)
+        family={"passed_free": {0: -3}, "passed_safe": {0: -3},
+                "passed_king_own": {0: -6}, "passed_king_enemy": {0: -15}},
         structure=(0, 0, 0),  # f g h are mutual neighbours; nothing is backward
         placement=(0, 2, 0),  # both white rooks on the open e file
         # Re8: a8..d8, f8 and the king on g8, e7..e2; Re1: a1..d1, f1, e2..e7.
@@ -215,6 +236,7 @@ CASES = [
         material=[("ROOK", 1)],
         psqt=[(ROOK, sq("a2"), 1), (KING, sq("a1"), 1), (KING, sq("h2"), -1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, 1, 0),  # the a file holds no pawn of either colour
         # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied
@@ -247,6 +269,7 @@ LEAVES = [
         material=[("ROOK", -1)],
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("d1"), 1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, -1, 0),  # Black's rook, on the open e file
         # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied
@@ -263,6 +286,7 @@ LEAVES = [
         material=[("ROOK", -1)],
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("d2"), 1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
@@ -278,6 +302,7 @@ LEAVES = [
         material=[("ROOK", -1)],
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("f1"), 1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
@@ -293,6 +318,7 @@ LEAVES = [
         material=[("ROOK", -1)],
         psqt=[(ROOK, sq("e1"), -1), (KING, sq("f1"), -1), (KING, sq("f2"), 1)],
         passed={},
+        family={},  # S123's family: no pawn, so no passer and no candidate
         structure=(0, 0, 0),
         placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
@@ -378,6 +404,11 @@ def score(case, w, margin):
     for f, count in enumerate(case["placement"]):
         pawn_mg += count * w["piece_placement_mg"][f]
         pawn_eg += count * w["piece_placement_eg"][f]
+    # S123: summed into the same pair as the pawn terms, one taper
+    for name, cells in case["family"].items():
+        for rank, count in cells.items():
+            pawn_mg += count * w[name + "_mg"][rank]
+            pawn_eg += count * w[name + "_eg"][rank]
 
     positional = trunc_div(
         (psqt_mg + pawn_mg) * phase + (psqt_eg + pawn_eg) * endgame, MAX

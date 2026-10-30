@@ -16600,3 +16600,129 @@ Rejected:     Keeping 6 and teaching `complete_mate_pv()` to extend a line
               not a wrong score.
 Consequences: For case B the ceiling no longer catches a worsening of up to
               7 short lines. S121's done stamp may be written on H1.
+
+## DEC-329  2026-10-30  S123's passed-pawn family: three groups at zero in stage one, screened in fixed order, every new weight fitted with the old constants frozen
+Tags:         evaluation, passed-pawns, s123, screen, dec-259, dec-315, dec-326, dec-084, dec-221, dec-047
+Context:      S123's accepts asks for a rank x can-advance x safe-advance
+              table in place of a single rank curve, the distance to each
+              king scaled by rank, candidate passers, no monotonicity
+              imposed, a colour-symmetry test of the passer bitboard written
+              before any fit, each group screened offline (DEC-259) before
+              one family SPRT, and an H0 bisected by group. The research pass
+              (2026-10-30, `.tuning/coord/S123/brief_inputs.md`) found
+              the step file stale on five counts (five buckets since S134;
+              S122's amendment discharged by DEC-324; `eval_model.hpp`
+              deleted by S276; S121 built no per-side attack set; S083's
+              corpus, not S082's). It also found that "safe" read over
+              enemy pawns alone is true of every passer by the passer's own
+              definition, and that no per-side attack set exists. It found
+              that a one-hot rank x distance table re-creates exact
+              dependencies against the buckets and psqt, and that S121's
+              coverage tool checks every parameter from `MOB_MG_BASE` to
+              `PARAM_COUNT`.
+Decision:     By the coordinator under the owner's standing instruction
+              (2026-10-21 and 2026-10-27: few questions, the recommended
+              option, correctness first).
+              (1) **Stage one.** Every new term is computed in
+              `evaluate_cheap()` beside the buckets, never under the lazy
+              clamp, where its comment already puts passers. Safe-advance
+              reads `is_attacked()` once per passer whose push square is
+              empty. The clamp, `N`, `eval_spread` and S122's margin are
+              unchanged.
+              (2) **Definitions from the description (DEC-221).**
+              - Can-advance: the push square is empty, and the double push
+                is not read.
+              - Safe-advance: can-advance, and no enemy piece attacks the
+                push square (the king included, x-rays not counted). So a
+                passer is in one of three states: blocked, free but
+                attacked, or free and safe.
+              - King distance: Chebyshev, from each king to the passer's
+                push square (0 to 7), own and enemy king weighted apart.
+              - Candidate, by CPW's *Candidate Passed Pawn* page: not
+                passed, no enemy pawn strictly ahead on its file, and no
+                square on its path (strictly ahead, on its file) attacked by
+                more enemy pawns than own pawns. The page states no
+                helpers-against-sentries total; the per-square rule is the
+                page's.
+              (3) **Shapes, S135's form: the buckets stay and the new terms
+              land at zero.**
+              - A: per rank 2 to 7, a free increment and a safe increment, a
+                half each: 24 parameters.
+              - B: per rank 2 to 7 and per king, one slope over the
+                distance: 24 parameters.
+              - C: per rank 2 to 6, one weight: 10 parameters.
+              - 58 in all; `PARAM_COUNT` 955 -> 1013 (inferred until
+                built).
+              - Rank 7 enters A and B as increments and slopes, never as a
+                base cell, which would be S134's bucket 5 again.
+              - A zero-weighted term is in no expression (S135's form), so
+                the landing is `No functional change` (INV-6) and pays
+                nothing.
+              - No seeds: every new weight starts at zero, as the step file
+                says.
+              (4) **Screen: S121's order on S135's landing.**
+              - Three parts, A, B, C, in that order. Each part frees its own
+                new weights and the earlier survivors'. Every old constant,
+                the buckets included, stays frozen at what it ships ("each
+                term fitted with every other constant frozen").
+              - A's gain is DEC-315's g = start - best. Its start is the
+                shipped evaluation, since every new weight is zero.
+              - B's and C's gains are DEC-326 (3)'s d, paired by quarter
+                seed against the last survivor's fit. A part is kept iff the
+                full-corpus d > max(1.645 sd(d_s), 2e-6).
+              - The corpus is S083's against S082's fixed validation set.
+              - A weight whose support is under 1000 games a half is tied to
+                its nearest rank's same term (DEC-326 (5)). The audit writes
+                the ties before any fit.
+              - Monotonicity is never imposed. Tables are printed deciding
+                nothing.
+              (5) **H0 partition** A | B | C, each `{0, 5}` nElo at 8+0.08,
+              survivors only, in order, each over what has landed and refit
+              then. At worst four SPRTs.
+              (6) **The test first.** Before the first fit there is a case
+              asserting that the passer bitboard, and each new per-colour
+              coefficient (states, distances, candidates), mirror exactly
+              under board mirroring. It must be observed red on a planted
+              one-colour defect.
+              (7) **Layout.** The new blocks get their own groups. No
+              `free_mask` may swallow a block it does not name; tempo's
+              currently runs to `PARAM_COUNT`. A test asserts that each
+              group covers exactly its block.
+              (8) **Coverage rows.** S121's coverage tool is scoped to the
+              mobility span its rule was written for (its block unchanged,
+              its reproduce check green). S123 gets its own tool in S121's
+              shape. Its base is the fixture's 80 rows, its rule and
+              eligibility are S121's, and it re-derives its own block
+              (DEC-142).
+              (9) **Cost** by DEC-047's forced-weight method per part
+              (S135's cost form), recorded beside the verdict.
+              (10) **As phase 1 built it (2026-10-30).**
+              - (2)'s candidate rule is the page's, read and cited by the
+                phase 1 agent; "half-open" reads as no enemy pawn strictly
+                ahead on the file (CPW, *Candidates (Bitboards)*). The
+                coordinator's first draft had *Candidates (Bitboards)*'s
+                helpers-against-sentries totals, which this page does not
+                state; they were never built.
+              - A part with no survivor before it reads against its own
+                start, which is then the predecessor's evaluation, so its
+                paired d is A's g, with the same margin.
+              - `tuner --only a,b,...` frees the union of the named groups,
+                and `feature_audit --free` takes the same list. (4)'s "own
+                weights plus earlier survivors'" is that list.
+Rejected:     Safe over enemy pawns only: a no-op by the passer's
+              definition. A per-side attack union in stage two: it puts
+              passers under the clamp that `evaluate_cheap()` keeps them
+              out of, adds a truncating division and moves S122's margin.
+              An identity table in place of the buckets (S121's form): its
+              predicates would be computed at the landing, so the SPRT's
+              reference would pay the cost and the verdict would not price
+              it. Its rank-7 base cell is also degenerate. A one-hot rank x
+              distance table: 20 exact dependencies and thin cells. A
+              declared rank scale: a constant nobody fitted (DEC-084).
+              Screening each group alone against the start (S135's order):
+              A and B act on the same passers, so their interaction would go
+              unpriced.
+Consequences: The step file's stale sentences are corrected in phase 1.
+              S118's pawn-key cache can hold the passer bitboard and C, not
+              A or B, which read pieces and kings. A tie or a dropped group
+              is recorded as a corpus finding (S126's rule).

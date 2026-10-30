@@ -274,6 +274,40 @@ inline const std::vector<std::string> positions = {
     // queen 27
     "5k2/8/p7/4q3/7p/1P1R4/3K4/8 b - - 5 70",
     "8/3k4/1p1r4/7P/4Q3/P7/8/5K2 w - - 5 70",
+    // S123's passed pawn family, added at S123's phase 1: each position, then
+    // its colour-mirror, picked by adocs/data/S123_coverage_rows.cpp's rule
+    // and not by hand. The eighty rows above leave 11 of the family's 58
+    // parameters with no coefficient at a phase that weights them -- a free
+    // and safe passer on its own seventh in either half, a safe one on its
+    // fifth in the middlegame, a candidate on its own second, third, fourth
+    // or sixth -- and on them the gradient case's non-vacuity
+    // (test_tuner_gradient) reads red, and "the positions move every term
+    // both ways" (test_eval_trace) on the candidates. The rule is S121's:
+    // greedy over all_test_fens(), then S083's corpus, then a seeded
+    // constructive fallback for what stays open (not needed here); each pick
+    // and its mirror at a phase from 1 to 23, a centipawn clear of the lazy
+    // clamp, within 800 cp of level and loadable with either side to move.
+    // Each comment names the parameters its pair closes, both halves unless
+    // it names one. Every position is VALID by python-chess. The program
+    // starts from the 80 rows above this comment (its BASE_ROWS, asserted
+    // against this comment's first line), re-checks every row below, and
+    // must pick exactly these pairs in this order. Re-derive by its header
+    // whenever the counts or the shipped constants move what it reads
+    // (DEC-142, DEC-329 (8)).
+    // S123 coverage, closes passed_safe_mg[5] passed_safe_eg[5]
+    "3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1",
+    "8/8/8/8/2K5/8/2pp4/3kb2R w - - 0 1",
+    // S123 coverage, closes candidate_passer_mg[1] candidate_passer_eg[1]
+    "r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18",
+    "3r1k1r/p4ppp/q1N2n2/2b5/2bp4/1QP1B1P1/PP3PBP/R3R1K1 w - - 0 18",
+    // S123 coverage, closes passed_safe_mg[3]
+    "2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1",
+    "8/8/8/p4k2/PR1Pp2p/6pP/6P1/2K5 w - - 1 1",
+    // S123 coverage, closes candidate_passer_mg[0] candidate_passer_eg[0]
+    // candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4]
+    // candidate_passer_eg[4]
+    "5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30",
+    "6kr/p1b2p1p/q5P1/n1pBr3/3p4/3p3P/PP1B2QP/5RKR b - - 0 30",
 };
 
 }  // namespace test_eval_positions

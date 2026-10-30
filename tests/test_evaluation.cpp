@@ -1119,6 +1119,215 @@ TEST_SUITE("evaluation: shared pawn sets")
 }
 
 
+// S123's population for the mirror cases below: the test positions, then
+// seeded random placements of two kings and up to eight pawns a side on rows 1
+// to 6, which put passers on the a and h files for both colours far more often
+// than play does -- the edges are where a one-sided mask or shift shows. Each
+// placement with both sides to move, kept when load_FEN() accepts it and its
+// mirror; the mirror is checked in the case, never assumed.
+static std::vector<std::string> passer_mirror_population()
+{
+  std::vector<std::string> fens = all_test_fens();
+
+  std::mt19937 rng(20261030U);
+  std::uniform_int_distribution<int> pawns_a_side(0, 8);
+
+  for (size_t trial = 0; trial < 20000; ++trial) {
+    std::array<char, 64> squares{};
+    squares.fill('\0');
+
+    std::vector<index_t> order(64);
+    for (index_t square = 0; square < 64; ++square) {
+      order[square] = square;
+    }
+    std::shuffle(order.begin(), order.end(), rng);
+
+    size_t next = 0;
+    squares[order[next++]] = 'K';
+    squares[order[next++]] = 'k';
+
+    for (const char pawn : {'P', 'p'}) {
+      int placed = 0;
+      const int wanted = pawns_a_side(rng);
+
+      while (placed < wanted && next < 64) {
+        const index_t square = order[next++];
+
+        if ((square / 8) == 0 || (square / 8) == 7) { continue; }
+
+        squares[square] = pawn;
+        placed++;
+      }
+    }
+
+    for (const char side : {'w', 'b'}) {
+      fens.push_back(placement_to_fen(squares, side));
+    }
+  }
+
+  return fens;
+}
+
+
+// A bitboard with every rank mirrored, rank r to 9 - r and the file kept:
+// square ^ 56 in this indexing, which is the byte order reversed.
+static bb_t mirror_ranks(bb_t squares)
+{ return __builtin_bswap64(squares); }
+
+
+TEST_SUITE("evaluation: passer symmetry")
+{
+  // DEC-329 (6), written before any of S123's terms. A position's colour
+  // mirror must hold Black's passers exactly where the original held White's,
+  // rank mirrored, and White's where it held Black's. The existing cases check
+  // each colour's counts against a square-by-square walk and the score against
+  // its mirror; neither compares the two colours' *sets*, and a set wrong for
+  // one colour only -- a missing edge mask on one side's span, a Black shift
+  // one rank off -- moves no score while the weights it feeds are zero. Two
+  // published passed-pawn bugs were of that shape (the S123 step file).
+  //
+  // Observed red on a planted one-colour defect before it was trusted: the
+  // edge masks dropped from Black's attack span alone (the S123 step file,
+  // 2026-10-30, records both runs).
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the passer sets mirror exactly under board mirroring")
+  {
+    // Positions whose sets put a passer on each edge file, per colour, and on
+    // its own seventh rank: the precondition that makes the mirror able to
+    // fail where a one-sided mask or rank would.
+    size_t edge[2][2] = {};
+    size_t seventh[2] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : passer_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      bb_t sets[2];
+      bb_t mirror_sets[2];
+      passed_pawn_sets(&game.board, sets);
+      passed_pawn_sets(&mirrored.board, mirror_sets);
+
+      CAPTURE(fen);
+      REQUIRE(mirror_sets[BLACK] == mirror_ranks(sets[WHITE]));
+      REQUIRE(mirror_sets[WHITE] == mirror_ranks(sets[BLACK]));
+
+      for (int colour = 0; colour < 2; ++colour) {
+        if ((sets[colour] & file_masks[0]) != 0) { edge[colour][0]++; }
+        if ((sets[colour] & file_masks[7]) != 0) { edge[colour][1]++; }
+        if ((sets[colour] & rank_masks[(colour == WHITE) ? a7 : a2]) != 0) {
+          seventh[colour]++;
+        }
+      }
+
+      checked++;
+    }
+
+    MESSAGE("passer sets: " << checked << " positions; White a/h-file "
+                            << edge[WHITE][0] << "/" << edge[WHITE][1]
+                            << ", Black " << edge[BLACK][0] << "/"
+                            << edge[BLACK][1] << "; own seventh "
+                            << seventh[WHITE] << " and " << seventh[BLACK]);
+    REQUIRE(checked > 20000);
+
+    for (int colour = 0; colour < 2; ++colour) {
+      CAPTURE(colour);
+      REQUIRE(edge[colour][0] > 100);
+      REQUIRE(edge[colour][1] > 100);
+      REQUIRE(seventh[colour] > 100);
+    }
+  }
+}
+
+
+// The family's per-colour counts under the same mirror, each array cell by
+// cell: Black's in the mirror are White's in the original and the other way
+// round, rank for rank, since each is indexed by the pawn's own rank. DEC-329
+// (6): states, distances and candidates, each observed red on a planted
+// one-colour defect before it was trusted (the S123 step file, 2026-10-30).
+TEST_SUITE("evaluation: passer symmetry")
+{
+  TEST_CASE_FIXTURE(eval_fixture_t, "the passer family's counts mirror exactly")
+  {
+    // How often each cell is non-zero, per colour, over the population: the
+    // precondition that the mirror compares something on every cell.
+    passer_family_t seen{};
+    size_t checked = 0;
+
+    const auto mirrors = [](const std::string& what,
+                            const int (&original)[2][6],
+                            const int (&mirror)[2][6], int width) {
+      for (int rank = 0; rank < width; ++rank) {
+        CAPTURE(what);
+        CAPTURE(rank);
+        REQUIRE(mirror[BLACK][rank] == original[WHITE][rank]);
+        REQUIRE(mirror[WHITE][rank] == original[BLACK][rank]);
+      }
+    };
+
+    for (const std::string& fen : passer_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      passer_family_t family;
+      passer_family_t mirror;
+      passer_family_counts(&game.board, &family);
+      passer_family_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      mirrors("free", family.free, mirror.free, 6);
+      mirrors("safe", family.safe, mirror.safe, 6);
+      mirrors("king_own", family.king_own, mirror.king_own, 6);
+      mirrors("king_enemy", family.king_enemy, mirror.king_enemy, 6);
+
+      for (int rank = 0; rank < 5; ++rank) {
+        CAPTURE(rank);
+        REQUIRE(mirror.candidate[BLACK][rank] == family.candidate[WHITE][rank]);
+        REQUIRE(mirror.candidate[WHITE][rank] == family.candidate[BLACK][rank]);
+      }
+
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int rank = 0; rank < 6; ++rank) {
+          seen.free[colour][rank] += (family.free[colour][rank] != 0);
+          seen.safe[colour][rank] += (family.safe[colour][rank] != 0);
+          seen.king_own[colour][rank] += (family.king_own[colour][rank] != 0);
+          seen.king_enemy[colour][rank] +=
+              (family.king_enemy[colour][rank] != 0);
+        }
+
+        for (int rank = 0; rank < 5; ++rank) {
+          seen.candidate[colour][rank] += (family.candidate[colour][rank] != 0);
+        }
+      }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    int fewest = INT32_MAX;
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int rank = 0; rank < 6; ++rank) {
+        fewest = std::min({fewest, seen.free[colour][rank],
+                           seen.safe[colour][rank], seen.king_own[colour][rank],
+                           seen.king_enemy[colour][rank]});
+      }
+      for (int rank = 0; rank < 5; ++rank) {
+        fewest = std::min(fewest, seen.candidate[colour][rank]);
+      }
+    }
+
+    MESSAGE("passer family: " << checked
+                              << " positions; the rarest cell is "
+                                 "non-zero on "
+                              << fewest);
+    REQUIRE(fewest > 50);
+  }
+}
+
+
 // S117 packs every mg/eg pair into one score_t. The evaluation is only
 // behaviour-neutral if every half reads back exactly, and the half most likely
 // not to is the high one whenever the low one is negative: the low half borrows
@@ -1258,6 +1467,22 @@ TEST_SUITE("evaluation: packed score")
     halves_match("king_safety", king_safety_score.data(), king_safety_mg,
                  king_safety_eg, KS_FEATURE_COUNT);
     halves_match("tempo", &tempo_score, &tempo_mg, &tempo_eg, 1);
+
+    // S123's family, landed at zero: until a fit, the bench cannot see a pair
+    // packed the wrong way round here at all.
+    halves_match("passed_free", passed_free_score.data(), passed_free_mg,
+                 passed_free_eg, static_cast<int>(passed_free_score.size()));
+    halves_match("passed_safe", passed_safe_score.data(), passed_safe_mg,
+                 passed_safe_eg, static_cast<int>(passed_safe_score.size()));
+    halves_match("passed_king_own", passed_king_own_score.data(),
+                 passed_king_own_mg, passed_king_own_eg,
+                 static_cast<int>(passed_king_own_score.size()));
+    halves_match("passed_king_enemy", passed_king_enemy_score.data(),
+                 passed_king_enemy_mg, passed_king_enemy_eg,
+                 static_cast<int>(passed_king_enemy_score.size()));
+    halves_match("candidate_passer", candidate_passer_score.data(),
+                 candidate_passer_mg, candidate_passer_eg,
+                 static_cast<int>(candidate_passer_score.size()));
   }
 
   TEST_CASE("taper truncates exactly as the unpacked formula does")

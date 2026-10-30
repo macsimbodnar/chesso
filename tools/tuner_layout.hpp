@@ -9,7 +9,8 @@
 // tools/tuner_groups.hpp read it. Nothing in it changed in the move: the
 // indices, the order and the 823 are the ones every fit from S134 to S135
 // emitted. S135 widened the piece placement block from three to seven, 831;
-// S121 made mobility a table, 66 cells a half where it had four, 955.
+// S121 made mobility a table, 66 cells a half where it had four, 955; S123
+// appended its passed pawn family after tempo, 1013.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -103,6 +104,29 @@ constexpr size_t PIECE_PLACEMENT_COUNT =
 // *second* field, the only term here that does.
 constexpr size_t TEMPO_COUNT = 1;
 
+// S123's passed pawn family (DEC-329), appended after tempo so that every
+// index before it, and every comment that pins one, keeps its meaning. Five
+// arrays, each a middlegame and an endgame half, each indexed by the pawn's
+// own rank from its second (src/evaluation.hpp defines the counts):
+//
+//   A  passed_free, passed_safe              ranks 2 to 7, 6 entries each
+//   B  passed_king_own, passed_king_enemy    ranks 2 to 7, 6 entries each
+//   C  candidate_passer                      ranks 2 to 6, 5 entries
+//
+// 58 parameters. Widths from the engine's own arrays, as above.
+constexpr size_t PASSED_FREE_COUNT =
+    sizeof(passed_free_mg) / sizeof(passed_free_mg[0]);
+constexpr size_t PASSED_SAFE_COUNT =
+    sizeof(passed_safe_mg) / sizeof(passed_safe_mg[0]);
+constexpr size_t PASSED_KING_COUNT =
+    sizeof(passed_king_own_mg) / sizeof(passed_king_own_mg[0]);
+constexpr size_t CANDIDATE_PASSER_COUNT =
+    sizeof(candidate_passer_mg) / sizeof(candidate_passer_mg[0]);
+
+static_assert(sizeof(passed_king_enemy_mg) == sizeof(passed_king_own_mg) &&
+                  PASSED_SAFE_COUNT == PASSED_FREE_COUNT,
+              "A's two arrays and B's two are per rank 2 to 7");
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -117,11 +141,34 @@ constexpr size_t PL_MG_BASE = PS_EG_BASE + PAWN_STRUCTURE_COUNT;
 constexpr size_t PL_EG_BASE = PL_MG_BASE + PIECE_PLACEMENT_COUNT;
 constexpr size_t TEMPO_MG_BASE = PL_EG_BASE + PIECE_PLACEMENT_COUNT;
 constexpr size_t TEMPO_EG_BASE = TEMPO_MG_BASE + TEMPO_COUNT;
+constexpr size_t PF_MG_BASE = TEMPO_EG_BASE + TEMPO_COUNT;
+constexpr size_t PF_EG_BASE = PF_MG_BASE + PASSED_FREE_COUNT;
+constexpr size_t PSF_MG_BASE = PF_EG_BASE + PASSED_FREE_COUNT;
+constexpr size_t PSF_EG_BASE = PSF_MG_BASE + PASSED_SAFE_COUNT;
+constexpr size_t PKO_MG_BASE = PSF_EG_BASE + PASSED_SAFE_COUNT;
+constexpr size_t PKO_EG_BASE = PKO_MG_BASE + PASSED_KING_COUNT;
+constexpr size_t PKE_MG_BASE = PKO_EG_BASE + PASSED_KING_COUNT;
+constexpr size_t PKE_EG_BASE = PKE_MG_BASE + PASSED_KING_COUNT;
+constexpr size_t CP_MG_BASE = PKE_EG_BASE + PASSED_KING_COUNT;
+constexpr size_t CP_EG_BASE = CP_MG_BASE + CANDIDATE_PASSER_COUNT;
+
+// Where each block ends, so that no group has to run to PARAM_COUNT: every
+// `--only` group in tools/tuner_groups.hpp ends at its own block's end, and
+// tests/test_tuner_groups.cpp holds each to exactly its block.
+constexpr size_t TEMPO_END = TEMPO_EG_BASE + TEMPO_COUNT;
+constexpr size_t PASSER_ADVANCE_END = PSF_EG_BASE + PASSED_SAFE_COUNT;
+constexpr size_t PASSER_KINGS_END = PKE_EG_BASE + PASSED_KING_COUNT;
+constexpr size_t CANDIDATE_PASSER_END = CP_EG_BASE + CANDIDATE_PASSER_COUNT;
 
 constexpr size_t PARAM_COUNT =
     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
     2 * KING_SAFETY_COUNT + 2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT +
-    2 * PIECE_PLACEMENT_COUNT + 2 * TEMPO_COUNT;
+    2 * PIECE_PLACEMENT_COUNT + 2 * TEMPO_COUNT + 2 * PASSED_FREE_COUNT +
+    2 * PASSED_SAFE_COUNT + 4 * PASSED_KING_COUNT + 2 * CANDIDATE_PASSER_COUNT;
+
+static_assert(CANDIDATE_PASSER_END == PARAM_COUNT,
+              "a block was appended after S123's candidate passers: give it "
+              "an end constant and a group of its own");
 
 
 // The constants the engine currently ships, as the parameter vector. This is
@@ -177,5 +224,24 @@ inline void starting_params(double* params)
   // vector here to index, which is exactly the thing this term does not have.
   params[TEMPO_MG_BASE] = tempo_mg;
   params[TEMPO_EG_BASE] = tempo_eg;
+
+  for (size_t r = 0; r < PASSED_FREE_COUNT; ++r) {
+    params[PF_MG_BASE + r] = passed_free_mg[r];
+    params[PF_EG_BASE + r] = passed_free_eg[r];
+    params[PSF_MG_BASE + r] = passed_safe_mg[r];
+    params[PSF_EG_BASE + r] = passed_safe_eg[r];
+  }
+
+  for (size_t r = 0; r < PASSED_KING_COUNT; ++r) {
+    params[PKO_MG_BASE + r] = passed_king_own_mg[r];
+    params[PKO_EG_BASE + r] = passed_king_own_eg[r];
+    params[PKE_MG_BASE + r] = passed_king_enemy_mg[r];
+    params[PKE_EG_BASE + r] = passed_king_enemy_eg[r];
+  }
+
+  for (size_t r = 0; r < CANDIDATE_PASSER_COUNT; ++r) {
+    params[CP_MG_BASE + r] = candidate_passer_mg[r];
+    params[CP_EG_BASE + r] = candidate_passer_eg[r];
+  }
 }
 }  // namespace tuner_layout

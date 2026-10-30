@@ -94,31 +94,34 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // PARAM_COUNT is tuner_layout.hpp's own sum of the block widths; the base
   // constants are a separate chain of running offsets. The two are written
   // independently and can disagree -- and they disagree exactly when a block is
-  // appended after tempo, which is the one case the partition cannot see:
-  // `tempo` runs to PARAM_COUNT, so it would cover the new block and all three
-  // properties would still hold.
+  // appended after the last one, which the partition alone could not see while
+  // the last group ran to PARAM_COUNT: it would cover the new block and all
+  // three properties would still hold.
   //
-  // If this fires, a parameter block was appended after tempo. Give it a group,
-  // move `tempo`'s end to the new block, and name the new last block here.
+  // Until S123 the last block was tempo's and `tempo` ran to PARAM_COUNT.
+  // S123 appended its family after it, did what this comment then said -- gave
+  // each block a group, moved `tempo`'s end to its own block, and named the
+  // new last block here -- and ended every group at its own block's end
+  // constant, so no group runs to PARAM_COUNT any more. The case below, "every
+  // group frees exactly its own block", now holds each group to its block, the
+  // last included; this line still says, in the event's own words, what an
+  // appended block looks like.
   //
   // The message is the whole value of this assertion (DEC-184 item 4): without
   // it a failure reads as two constants disagreeing, which is the symptom and
   // not the event, and the reader has to re-derive the event from the comment
-  // above. S041 left the structure accepted -- the last `--only` group still
-  // runs to PARAM_COUNT and the partition below still cannot see past it -- so
-  // this line is the only thing standing between an appended block and a fit
-  // that silently hands its weights back unchanged.
+  // above.
   REQUIRE_MESSAGE(
-      tuner_layout::TEMPO_EG_BASE + tuner_layout::TEMPO_COUNT ==
+      tuner_layout::CP_EG_BASE + tuner_layout::CANDIDATE_PASSER_COUNT ==
           tuner_layout::PARAM_COUNT,
-      "a parameter block was appended after `tempo` and given no group of its "
-      "own, so `tempo` -- the last group, whose range runs to PARAM_COUNT -- "
-      "silently covers it: TEMPO_EG_BASE "
-          << tuner_layout::TEMPO_EG_BASE << " + TEMPO_COUNT "
-          << tuner_layout::TEMPO_COUNT << " = "
-          << (tuner_layout::TEMPO_EG_BASE + tuner_layout::TEMPO_COUNT)
+      "a parameter block was appended after S123's candidate passers, the last "
+      "block, and given no group of its own: CP_EG_BASE "
+          << tuner_layout::CP_EG_BASE << " + CANDIDATE_PASSER_COUNT "
+          << tuner_layout::CANDIDATE_PASSER_COUNT << " = "
+          << (tuner_layout::CP_EG_BASE + tuner_layout::CANDIDATE_PASSER_COUNT)
           << " against PARAM_COUNT " << tuner_layout::PARAM_COUNT
-          << ". The partition cases below cannot see this and will all pass.");
+          << ". Give it an end constant and a group, and name it here and in "
+             "\"every group frees exactly its own block\".");
 
   std::vector<uint8_t> mask;
 
@@ -226,6 +229,132 @@ TEST_CASE("the --only groups partition the parameter vector")
                           << first_uncovered
                           << ". A parameter block added without a group of its "
                              "own looks exactly like this");
+}
+
+
+// S123, DEC-329 (7). Each group frees exactly its own block, read off the
+// layout's base chain and widths here rather than off the end constants
+// free_mask() uses, so a group that stops at the wrong end -- `tempo` running
+// on into the block appended after it, the defect this file's first comment
+// counts four times and S123 would have been the fifth -- reads red with the
+// group and the index named. The blocks are listed in vector order and must
+// tile it, so a block with no group fails the last check.
+TEST_CASE("every group frees exactly its own block")
+{
+  using namespace tuner_layout;
+
+  struct block_t
+  {
+    const char* group;
+    size_t first;
+    size_t last;  // one past
+  };
+
+  const block_t blocks[] = {
+      {"material", 0, MATERIAL_COUNT},
+      {"psqt", MG_BASE, EG_BASE + SQUARE_COUNT},
+      {"mobility", MOB_MG_BASE, MOB_EG_BASE + MOBILITY_COUNT},
+      {"king_safety", KS_MG_BASE, KS_EG_BASE + KING_SAFETY_COUNT},
+      {"passed_pawns", PP_MG_BASE, PP_EG_BASE + PASSED_PAWN_COUNT},
+      {"pawn_structure", PS_MG_BASE, PS_EG_BASE + PAWN_STRUCTURE_COUNT},
+      {"piece_placement", PL_MG_BASE, PL_EG_BASE + PIECE_PLACEMENT_COUNT},
+      {"tempo", TEMPO_MG_BASE, TEMPO_EG_BASE + TEMPO_COUNT},
+      {"passed_advance", PF_MG_BASE, PSF_EG_BASE + PASSED_SAFE_COUNT},
+      {"passed_kings", PKO_MG_BASE, PKE_EG_BASE + PASSED_KING_COUNT},
+      {"candidate_passers", CP_MG_BASE, CP_EG_BASE + CANDIDATE_PASSER_COUNT},
+  };
+
+  size_t next = 0;
+
+  for (const block_t& block : blocks) {
+    CAPTURE(block.group);
+
+    // The blocks tile the vector in order: each starts where the last ended.
+    CHECK(block.first == next);
+    REQUIRE(block.last > block.first);
+    next = block.last;
+
+    std::vector<uint8_t> mask;
+    REQUIRE(tuner_groups::free_mask(block.group, &mask));
+    REQUIRE(mask.size() == PARAM_COUNT);
+
+    size_t outside = 0;
+    size_t missing = 0;
+    size_t first_wrong = PARAM_COUNT;
+
+    for (size_t i = 0; i < PARAM_COUNT; ++i) {
+      const bool inside = (i >= block.first && i < block.last);
+      if (mask[i] != 0 && !inside) { outside++; }
+      if (mask[i] == 0 && inside) { missing++; }
+      if ((mask[i] != 0) != inside && first_wrong == PARAM_COUNT) {
+        first_wrong = i;
+      }
+    }
+
+    CHECK_MESSAGE(outside + missing == 0,
+                  std::string(block.group)
+                      << " frees " << outside
+                      << " parameters outside its block and leaves " << missing
+                      << " of it held; the first is index " << first_wrong
+                      << ", the block [" << block.first << ", " << block.last
+                      << ")");
+  }
+
+  CHECK(next == PARAM_COUNT);
+
+  // Every partition group is in the list above, so the tiling covers all of
+  // GROUP_LIST and a group added there without a block here fails.
+  CHECK(partition_groups().size() == sizeof(blocks) / sizeof(blocks[0]));
+}
+
+
+// S123's screen frees a part's own weights with the earlier survivors':
+// `--only` with a list is the union of the names, one name is exactly
+// free_mask()'s, and a list with an unknown name, an empty name or `all` is
+// refused whole rather than half applied.
+TEST_CASE("--only takes a list and frees exactly the union")
+{
+  std::vector<uint8_t> advance;
+  std::vector<uint8_t> kings;
+  std::vector<uint8_t> candidates;
+  REQUIRE(tuner_groups::free_mask("passed_advance", &advance));
+  REQUIRE(tuner_groups::free_mask("passed_kings", &kings));
+  REQUIRE(tuner_groups::free_mask("candidate_passers", &candidates));
+
+  // Preconditions: three non-empty, disjoint groups.
+  REQUIRE(std::count(advance.begin(), advance.end(), uint8_t{1}) == 24);
+  REQUIRE(std::count(kings.begin(), kings.end(), uint8_t{1}) == 24);
+  REQUIRE(std::count(candidates.begin(), candidates.end(), uint8_t{1}) == 10);
+
+  std::vector<uint8_t> one;
+  REQUIRE(tuner_groups::only_mask("passed_kings", &one));
+  CHECK(one == kings);
+
+  std::vector<uint8_t> two;
+  REQUIRE(tuner_groups::only_mask("passed_advance, passed_kings", &two));
+  std::vector<uint8_t> three;
+  REQUIRE(tuner_groups::only_mask(
+      "passed_advance,passed_kings,candidate_passers", &three));
+
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+    CAPTURE(i);
+    CHECK(two[i] == ((advance[i] || kings[i]) ? 1 : 0));
+    CHECK(three[i] == ((advance[i] || kings[i] || candidates[i]) ? 1 : 0));
+  }
+
+  // A term beside a group is a name like any other.
+  std::vector<uint8_t> mixed;
+  REQUIRE(
+      tuner_groups::only_mask("piece_placement.trapped, passed_kings", &mixed));
+  CHECK(std::count(mixed.begin(), mixed.end(), uint8_t{1}) == 4 + 24);
+
+  for (const char* bad :
+       {"passed_advance,not_a_group", "passed_advance,,passed_kings",
+        "passed_advance,", "all,passed_kings", ","}) {
+    CAPTURE(bad);
+    std::vector<uint8_t> refused;
+    CHECK_FALSE(tuner_groups::only_mask(bad, &refused));
+  }
 }
 
 
@@ -741,6 +870,57 @@ TEST_CASE("a tie joins the cells it names and refuses every other line")
   CHECK(params[knight_eg + 0] == 5.0);
   CHECK(params[queen_mg + 27] == -3.0);
   CHECK(params[queen_mg + 26] == 7.0);  // untied, untouched
+}
+
+
+// S123's rows take ties as mobility's do (DEC-329 (4)): a rank cell lands on
+// the parameter tools/tuner_layout.hpp puts it at, its own half and array,
+// and a cell past the array's ranks is refused.
+TEST_CASE("a tie names S123's rank cells by array and half")
+{
+  std::vector<tuner_groups::tie_t> ties;
+  std::string error;
+
+  REQUIRE(tuner_groups::parse_ties(
+      "passed_free_mg 5 4\npassed_safe_eg 0 1\npassed_king_own_mg 2 3\n"
+      "passed_king_enemy_eg 5 4 0.5\ncandidate_passer_eg 4 3\n",
+      &ties, &error));
+  REQUIRE(ties.size() == 5);
+
+  CHECK(ties[0].tied == tuner_layout::PF_MG_BASE + 5);
+  CHECK(ties[0].anchor == tuner_layout::PF_MG_BASE + 4);
+  CHECK(ties[1].tied == tuner_layout::PSF_EG_BASE + 0);
+  CHECK(ties[1].anchor == tuner_layout::PSF_EG_BASE + 1);
+  CHECK(ties[2].tied == tuner_layout::PKO_MG_BASE + 2);
+  CHECK(ties[3].tied == tuner_layout::PKE_EG_BASE + 5);
+  CHECK(ties[3].scale == 0.5);
+  CHECK(ties[4].tied == tuner_layout::CP_EG_BASE + 4);
+  CHECK(ties[4].anchor == tuner_layout::CP_EG_BASE + 3);
+
+  for (const char* bad : {
+           "passed_free_mg 6 5\n",       // past rank 7
+           "candidate_passer_mg 5 4\n",  // past rank 6
+           "passed_free 1 2\n",          // no half
+           "passed_kings_mg 1 2\n",      // a group, not an array
+       }) {
+    CAPTURE(bad);
+    std::vector<tuner_groups::tie_t> refused;
+    std::string why;
+    CHECK_FALSE(tuner_groups::parse_ties(bad, &refused, &why));
+    CHECK(!why.empty());
+  }
+
+  // Both ends free under the group the screen fits them in, and refused under
+  // another.
+  std::vector<uint8_t> advance;
+  REQUIRE(tuner_groups::only_mask(
+      "passed_advance,passed_kings,candidate_passers", &advance));
+  CHECK(tuner_groups::ties_fit_mask(ties, advance, &error));
+
+  std::vector<uint8_t> kings;
+  REQUIRE(tuner_groups::free_mask("passed_kings", &kings));
+  std::string why;
+  CHECK_FALSE(tuner_groups::ties_fit_mask(ties, kings, &why));
 }
 
 

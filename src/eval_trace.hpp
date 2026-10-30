@@ -44,7 +44,9 @@ namespace eval_trace
 // one for the untapered piece values. `index` is the array index: the piece
 // type 0..4 for material, `type * 64 + square` for the tables with the square
 // mirrored for Black exactly as eval_add_piece() mirrors it, the enum index for
-// the rest, 0 for tempo.
+// the rest, 0 for tempo, and the pawn's own rank, 0 for its second, for
+// S123's five passed pawn arrays. Those five come after tempo so that every
+// term before them keeps the feature numbers it had.
 enum term_t : uint8_t
 {
   TERM_MATERIAL,
@@ -55,6 +57,11 @@ enum term_t : uint8_t
   TERM_PAWN_STRUCTURE,
   TERM_PIECE_PLACEMENT,
   TERM_TEMPO,
+  TERM_PASSED_FREE,
+  TERM_PASSED_SAFE,
+  TERM_PASSED_KING_OWN,
+  TERM_PASSED_KING_ENEMY,
+  TERM_CANDIDATE_PASSER,
   TERM_COUNT
 };
 

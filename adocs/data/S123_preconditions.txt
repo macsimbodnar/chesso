@@ -1,0 +1,164 @@
+S123 phase 1, 2026-10-30: the readings S123's coverage rows move, on the zero-weight landing
+tree: ../chesso-s123, branch s123 on 244d89d with the phase 1 diff
+
+== adocs/data/S123_coverage_rows.cpp, S123_COVERAGE_DATA = S083's corpus (sha256 2e0e3de9...), from the base 80 rows (BASE_ROWS) with the landed block re-checked, reproducing the landed 4 pairs (1 m 07 s)
+tests/test_eval_positions.hpp: 88 rows, 80 before S123's block (marker found)
+landed block: 4 pairs, 0 not eligible
+the list, 80 rows: 11 of 58 needs open
+  open passed_safe_mg[3]
+  open passed_safe_mg[5]
+  open candidate_passer_mg[0]
+  open candidate_passer_mg[1]
+  open candidate_passer_mg[2]
+  open candidate_passer_mg[4]
+  open passed_safe_eg[5]
+  open candidate_passer_eg[0]
+  open candidate_passer_eg[1]
+  open candidate_passer_eg[2]
+  open candidate_passer_eg[4]
+all_test_fens(): 63 eligible candidates close an open need
+pick, phase 3, closes 2: passed_safe_mg[5] passed_safe_eg[5]
+  3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1
+pick, phase 22, closes 2: candidate_passer_mg[1] candidate_passer_eg[1]
+  r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18
+pick, phase 2, closes 1: passed_safe_mg[3]
+  2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 187 candidates kept
+pick, phase 20, closes 6: candidate_passer_mg[0] candidate_passer_eg[0] candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4] candidate_passer_eg[4]
+  5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 1.958e-09, over S123's family 8.150e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+
+8 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S123 coverage, closes passed_safe_mg[5] passed_safe_eg[5]
+    "3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1",
+    "8/8/8/8/2K5/8/2pp4/3kb2R w - - 0 1",
+    // S123 coverage, closes candidate_passer_mg[1] candidate_passer_eg[1]
+    "r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18",
+    "3r1k1r/p4ppp/q1N2n2/2b5/2bp4/1QP1B1P1/PP3PBP/R3R1K1 w - - 0 18",
+    // S123 coverage, closes passed_safe_mg[3]
+    "2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1",
+    "8/8/8/p4k2/PR1Pp2p/6pP/6P1/2K5 w - - 1 1",
+    // S123 coverage, closes candidate_passer_mg[0] candidate_passer_eg[0] candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4] candidate_passer_eg[4]
+    "5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30",
+    "6kr/p1b2p1p/q5P1/n1pBr3/3p4/3p3P/PP1B2QP/5RKR b - - 0 30",
+[doctest] test cases:       1 |       1 passed | 0 failed | 0 skipped
+[doctest] assertions: 6232702 | 6232702 passed | 0 failed |
+[doctest] Status: SUCCESS!
+
+== run 1, before the block landed (marker absent): the same picks
+  open passed_safe_mg[3]
+  open passed_safe_mg[5]
+  open candidate_passer_mg[0]
+  open candidate_passer_mg[1]
+  open candidate_passer_mg[2]
+  open candidate_passer_mg[4]
+  open passed_safe_eg[5]
+  open candidate_passer_eg[0]
+  open candidate_passer_eg[1]
+  open candidate_passer_eg[2]
+  open candidate_passer_eg[4]
+all_test_fens(): 63 eligible candidates close an open need
+pick, phase 3, closes 2: passed_safe_mg[5] passed_safe_eg[5]
+  3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1
+pick, phase 22, closes 2: candidate_passer_mg[1] candidate_passer_eg[1]
+  r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18
+pick, phase 2, closes 1: passed_safe_mg[3]
+  2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 187 candidates kept
+pick, phase 20, closes 6: candidate_passer_mg[0] candidate_passer_eg[0] candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4] candidate_passer_eg[4]
+  5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 1.958e-09, over S123's family 8.150e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: NO (8 picked rows, 0 landed)
+
+== adocs/data/S121_coverage_rows.cpp on this tree, scoped (its header, 2026-10-30): S121_COVERAGE_DATA = the same corpus (1 m 10 s)
+tests/test_eval_positions.hpp: 88 rows, 42 before S121's block (marker found), the block ends at row 80
+landed block: 19 pairs, 0 not eligible
+the list, 42 rows: 55 of 132 needs open
+all_test_fens(): 317 eligible candidates close an open need
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 rows read, 659 candidates kept
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| over the mobility span 2.153e-09
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+[doctest] test cases:       1 |       1 passed | 0 failed | 0 skipped
+
+== python-chess validity of the kept rows
+tests/test_eval_positions.hpp: 88 rows; the 8 after the first 80 (S123's block), python-chess 1.11.2 Board(fen).status():
+  <Status.VALID: 0>  3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1
+  <Status.VALID: 0>  8/8/8/8/2K5/8/2pp4/3kb2R w - - 0 1
+  <Status.VALID: 0>  r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18
+  <Status.VALID: 0>  3r1k1r/p4ppp/q1N2n2/2b5/2bp4/1QP1B1P1/PP3PBP/R3R1K1 w - - 0 18
+  <Status.VALID: 0>  2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1
+  <Status.VALID: 0>  8/8/8/p4k2/PR1Pp2p/6pP/6P1/2K5 w - - 1 1
+  <Status.VALID: 0>  5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30
+  <Status.VALID: 0>  6kr/p1b2p1p/q5P1/n1pBr3/3p4/3p3P/PP1B2QP/5RKR b - - 0 30
+all VALID
+
+== adocs/data/S083_tuner_preconditions.cpp both, over the 88-row fixture
+clamp: 88 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 121.1 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      108.4       75.58   1.73e-07         -1         -1  binds on none or all; 
+  +20      0        0.0      118.4       65.58   1.06e-07         -1         -1  binds on none or all; 
+  +30      2      197.3      158.8       13.33   2.28e-07          0   0.000699  fd past 2e-7; 
+  +40      4      277.3      171.0       13.00   6.05e-07          0    0.00121  fd past 2e-7; 
+  +50      6      357.3      175.8        8.17   1.54e-06          0   0.000809  fd past 2e-7; 
+  +60     11      437.3      183.0        1.00   1.41e-06          0   0.000468  fd past 2e-7; 
+  +70     16      517.3      179.3        4.67   2.34e-07          0   0.000785  fd past 2e-7; 
+  +80     22      597.3      178.4        3.71   1.97e-07          0   0.000571  ok  <- CHOSEN
+  +90     25      677.3      179.5        4.42   2.34e-07          0     0.0022  fd past 2e-7; 
+ +100     26      757.3      178.0        6.00   2.34e-07          0    0.00211  fd past 2e-7; 
+ +110     32      837.3      175.7        2.08   2.34e-07          0    0.00171  fd past 2e-7; 
+ +120     36      917.3      176.9        1.67   1.97e-07          0    0.00152  ok
+ +130     38      997.3      173.2        6.00   2.34e-07          0    0.00144  fd past 2e-7; 
+ +140     38     1077.3      183.2        0.75   2.34e-07          0    0.00144  a row within 1 cp of the kink; fd past 2e-7; 
+ +150     46     1157.3      176.2        0.50   1.97e-07          0    0.00114  a row within 1 cp of the kink; 
+ +160     48     1237.3      179.5        2.17   1.97e-07          0    0.00109  ok
+ +170     52     1317.3      167.2        5.00   2.34e-07          0    0.00101  fd past 2e-7; 
+ +180     52     1397.3      177.2        6.75   2.34e-07          0    0.00101  fd past 2e-7; 
+ +190     55     1477.3      164.8        2.00   1.97e-07          0   0.000952  ok
+ +200     55     1557.3      174.8        9.17   2.34e-07          0   0.000952  fd past 2e-7; 
+clamp: the rule picks +80, every row 3.71 from the kink
+walk: 92 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   +3.8973  held  +8.88e-16  
+    material/table knight  plain   -2.4554  held  +7.77e-16  
+    material/table bishop  plain   -0.0235  held  +4.83e-15  
+    material/table rook    plain   +0.5106  held  -2.89e-15  
+    material/table queen   plain   -4.9580  held  +8.88e-15  
+    psqt_mg[king]          plain   +0.6613  held  -1.11e-15  
+    psqt_eg[king]          plain   +0.1977  held  -2.22e-16  
+    smallest plain walk 0.0235 (material/table bishop); runs apart 4.55e-13; plain travelled 1819.4
+  adagrad at lr 10
+    material/table pawn    plain   +4.4351  held  -8.88e-16  
+    material/table knight  plain   -2.3004  held  -1.44e-15  
+    material/table bishop  plain   +0.2272  held   -8.6e-16  
+    material/table rook    plain   +0.7529  held  +3.33e-15  
+    material/table queen   plain   -4.4334  held  -5.55e-15  
+    psqt_mg[king]          plain   +1.7346  held     +2e-15  
+    psqt_eg[king]          plain   +1.1378  held  -2.33e-15  
+    smallest plain walk 0.2272 (material/table bishop); runs apart 5.63e-11; plain travelled 1742.9
+walk: every plain shift clears the case's floor 0.01
+
+== tests/test_tuner_gradient -s, the three MESSAGE lines (clamp case at +80)
+test_tuner_gradient.cpp:553: MESSAGE: worst relative error 6.94172e-07 at parameter 869
+test_tuner_gradient.cpp:683: MESSAGE: clamp case: worst relative error 1.97305e-07 at parameter 766
+test_tuner_gradient.cpp:1260: MESSAGE: group: worst relative error 7.82349e-08 at parameter 1016
+every case green, the planted recoveries (passed_pawns, piece_placement, tempo) among them; tempo's free set now ends at its own block (tools/tuner_groups.hpp)
+
+== the constructive fallback exercised: the same program with no S123_COVERAGE_DATA, so the needs the suites leave open fall to it (3.5 s; not kept -- the landed block is the corpus's pick)
+pick, phase 3, closes 2: passed_safe_mg[5] passed_safe_eg[5]
+  3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1
+pick, phase 22, closes 2: candidate_passer_mg[1] candidate_passer_eg[1]
+  r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18
+pick, phase 2, closes 1: passed_safe_mg[3]
+  2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1
+the constructive fallback: 268228 read, 157 candidates kept
+pick, phase 4, closes 6: candidate_passer_mg[0] candidate_passer_eg[0] candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4] candidate_passer_eg[4]
+  7r/1p6/4k2p/RP3p1p/1K4p1/1p6/P2P1pP1/8 w - - 0 1
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 1.958e-09, over S123's family 2.448e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: NO (8 picked rows, 8 landed)
+  values: CHECK( false )
+the fallback closes the six needs the corpus closed, from its 268228 loadable draws of 400000; "reproduces: NO" is the expected answer of a run that is not the rule's (the rule takes the corpus before the fallback)

@@ -534,7 +534,43 @@ std::string column_name(size_t i)
     return block("piece_placement", mg,
                  PLACEMENT_NAMES[i - (mg ? PL_MG_BASE : PL_EG_BASE)]);
   }
-  return (i == TEMPO_MG_BASE) ? "tempo_mg" : "tempo_eg";
+  if (i < tuner_layout::PF_MG_BASE) {
+    return (i == TEMPO_MG_BASE) ? "tempo_mg" : "tempo_eg";
+  }
+
+  // S123's family: an array, its half and the pawn's own rank index, 0 for
+  // the second -- the cell numbering `tuner --tie` reads.
+  struct family_block_t
+  {
+    const char* name;
+    size_t mg_base;
+    size_t eg_base;
+    size_t width;
+  };
+
+  static const family_block_t family[] = {
+      {"passed_free", tuner_layout::PF_MG_BASE, tuner_layout::PF_EG_BASE,
+       tuner_layout::PASSED_FREE_COUNT},
+      {"passed_safe", tuner_layout::PSF_MG_BASE, tuner_layout::PSF_EG_BASE,
+       tuner_layout::PASSED_SAFE_COUNT},
+      {"passed_king_own", tuner_layout::PKO_MG_BASE, tuner_layout::PKO_EG_BASE,
+       tuner_layout::PASSED_KING_COUNT},
+      {"passed_king_enemy", tuner_layout::PKE_MG_BASE,
+       tuner_layout::PKE_EG_BASE, tuner_layout::PASSED_KING_COUNT},
+      {"candidate_passer", tuner_layout::CP_MG_BASE, tuner_layout::CP_EG_BASE,
+       tuner_layout::CANDIDATE_PASSER_COUNT},
+  };
+
+  for (const family_block_t& f : family) {
+    if (i >= f.mg_base && i < f.mg_base + f.width) {
+      return block(f.name, true, std::to_string(i - f.mg_base));
+    }
+    if (i >= f.eg_base && i < f.eg_base + f.width) {
+      return block(f.name, false, std::to_string(i - f.eg_base));
+    }
+  }
+
+  return "unnamed[" + std::to_string(i) + "]";
 }
 
 
@@ -1203,8 +1239,10 @@ void usage()
       "                     [--no-identities] [--no-occurrence] "
       "[--no-collinearity]\n"
       "  --free GROUP   the tuner `--only` group the identity report is read\n"
-      "                 for (default all); S121's eight mobility levels are\n"
-      "                 held only where it freezes one side of each\n");
+      "                 for (default all), or a comma-separated list of\n"
+      "                 them, their union (S123); S121's eight mobility\n"
+      "                 levels are held only where it freezes one side of\n"
+      "                 each\n");
 }
 
 }  // namespace
@@ -1343,8 +1381,9 @@ int main(int argc, char** argv)
 
   // ------------------------------------------------------------ identities
   if (opts.identities) {
+    // A list is the union, as `tuner --only` reads one since S123.
     std::vector<uint8_t> mask;
-    if (!tuner_groups::free_mask(opts.free_group, &mask)) {
+    if (!tuner_groups::only_mask(opts.free_group, &mask)) {
       fprintf(stderr, "unknown --free group '%s'; groups are: %s\n",
               opts.free_group.c_str(), tuner_groups::GROUP_LIST);
       return 1;
@@ -1388,6 +1427,26 @@ int main(int argc, char** argv)
                          feature_of(eval_trace::TERM_PIECE_PLACEMENT, i)});
     }
 
+    // S123's family, one column a cell; named by the middlegame half's
+    // parameter, which is the cell's own name less the half.
+    std::vector<std::string> family_names;
+    for (uint32_t f =
+             tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE];
+         f < tuner_trace::feature_table().base[eval_trace::TERM_COUNT]; ++f) {
+      std::string name =
+          column_name(tuner_trace::feature_table().features[f].mg);
+      name.replace(name.find("_mg["), 4, "[");
+      family_names.push_back(name);
+    }
+    {
+      const uint32_t first =
+          tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE];
+      for (size_t i = 0; i < family_names.size(); ++i) {
+        columns.push_back(
+            {family_names[i].c_str(), first + static_cast<uint32_t>(i)});
+      }
+    }
+
     size_t band_rows[BAND_COUNT] = {};
     for (size_t row = 0; row < data.size(); ++row) {
       for (size_t b = 0; b < BAND_COUNT; ++b) {
@@ -1398,12 +1457,12 @@ int main(int argc, char** argv)
     }
 
     printf("\noccurrence: percent of rows with a non-zero differential\n");
-    printf("%-18s %8s", "column", "all");
+    printf("%-22s %8s", "column", "all");
     for (size_t b = 0; b < BAND_COUNT; ++b) {
       printf(" %8s", bands[b].name);
     }
     printf("\n");
-    printf("%-18s %8.2f", "rows (millions)",
+    printf("%-22s %8.2f", "rows (millions)",
            static_cast<double>(data.size()) / 1e6);
     for (size_t b = 0; b < BAND_COUNT; ++b) {
       printf(" %8.2f", static_cast<double>(band_rows[b]) / 1e6);
@@ -1428,7 +1487,7 @@ int main(int argc, char** argv)
       }
 
       printf(
-          "%-18s %8.2f", column.name,
+          "%-22s %8.2f", column.name,
           100.0 * static_cast<double>(all) / static_cast<double>(data.size()));
       for (size_t b = 0; b < BAND_COUNT; ++b) {
         const double share = (band_rows[b] > 0)
@@ -1447,64 +1506,77 @@ int main(int argc, char** argv)
     // are independent (S066's boundaries, tools/tuner_split.hpp). A half with
     // no such row is a zero column of the identity report. One line a column,
     // `support <name> rows N games G`, which adocs/data/S121_screen.py ties
-    // reads to tie the cells under its pre-registered threshold.
+    // reads to tie the cells under its pre-registered threshold. S123 reads
+    // the same lines for its family's cells (adocs/data/S123_screen.py ties),
+    // printed after the mobility block under a heading of their own.
     {
       std::vector<uint32_t> starts;
       tuner_split::game_starts(data.ply, &starts);
 
-      const uint32_t first = feature_of(eval_trace::TERM_MOBILITY, 0);
-      const uint32_t last = feature_of(eval_trace::TERM_MOBILITY,
-                                       static_cast<size_t>(MOBILITY_CELLS));
-      const size_t width = last - first;
+      const auto support = [&](uint32_t first, uint32_t last,
+                               const char* heading) {
+        const size_t width = last - first;
 
-      std::vector<uint64_t> rows(2 * width, 0);
-      std::vector<uint64_t> games(2 * width, 0);
-      std::vector<int64_t> seen(2 * width, -1);  // the last game counted
-      size_t game = 0;
+        std::vector<uint64_t> rows(2 * width, 0);
+        std::vector<uint64_t> games(2 * width, 0);
+        std::vector<int64_t> seen(2 * width, -1);  // the last game counted
+        size_t game = 0;
 
-      for (size_t row = 0; row < data.size(); ++row) {
-        while (game + 1 < starts.size() && starts[game + 1] <= row) {
-          game++;
-        }
-
-        const bool has_mg = data.phase[row] > 0;
-        const bool has_eg = data.phase[row] < GAME_PHASE_MAX;
-
-        for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
-          const tuner_trace::entry_t e = data.entries[j];
-          if (e.feature < first || e.feature >= last || e.coef == 0) {
-            continue;
+        for (size_t row = 0; row < data.size(); ++row) {
+          while (game + 1 < starts.size() && starts[game + 1] <= row) {
+            game++;
           }
 
-          const size_t cell = e.feature - first;
-          for (size_t half = 0; half < 2; ++half) {
-            if ((half == 0) ? !has_mg : !has_eg) { continue; }
+          const bool has_mg = data.phase[row] > 0;
+          const bool has_eg = data.phase[row] < GAME_PHASE_MAX;
 
-            const size_t slot = half * width + cell;
-            rows[slot]++;
-            if (seen[slot] != static_cast<int64_t>(game)) {
-              seen[slot] = static_cast<int64_t>(game);
-              games[slot]++;
+          for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+            const tuner_trace::entry_t e = data.entries[j];
+            if (e.feature < first || e.feature >= last || e.coef == 0) {
+              continue;
+            }
+
+            const size_t cell = e.feature - first;
+            for (size_t half = 0; half < 2; ++half) {
+              if ((half == 0) ? !has_mg : !has_eg) { continue; }
+
+              const size_t slot = half * width + cell;
+              rows[slot]++;
+              if (seen[slot] != static_cast<int64_t>(game)) {
+                seen[slot] = static_cast<int64_t>(game);
+                games[slot]++;
+              }
             }
           }
         }
-      }
 
-      printf(
-          "\nmobility support: rows with a non-zero cell coefficient and a "
-          "non-zero taper weight for the half, and the games they come from, "
-          "%zu games in all\n",
-          starts.size());
+        printf(
+            "\n%s support: rows with a non-zero cell coefficient and a "
+            "non-zero taper weight for the half, and the games they come "
+            "from, %zu games in all\n",
+            heading, starts.size());
 
-      for (size_t half = 0; half < 2; ++half) {
-        for (size_t cell = 0; cell < width; ++cell) {
-          const size_t slot = half * width + cell;
-          printf("support %s rows %" PRIu64 " games %" PRIu64 "\n",
-                 column_name(((half == 0) ? MOB_MG_BASE : MOB_EG_BASE) + cell)
-                     .c_str(),
-                 rows[slot], games[slot]);
+        const std::vector<tuner_trace::feature_t>& features =
+            tuner_trace::feature_table().features;
+
+        for (size_t half = 0; half < 2; ++half) {
+          for (size_t cell = 0; cell < width; ++cell) {
+            const size_t slot = half * width + cell;
+            const tuner_trace::feature_t& f = features[first + cell];
+            printf("support %s rows %" PRIu64 " games %" PRIu64 "\n",
+                   column_name((half == 0) ? f.mg : f.eg).c_str(), rows[slot],
+                   games[slot]);
+          }
         }
-      }
+      };
+
+      support(feature_of(eval_trace::TERM_MOBILITY, 0),
+              feature_of(eval_trace::TERM_MOBILITY,
+                         static_cast<size_t>(MOBILITY_CELLS)),
+              "mobility");
+      support(tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE],
+              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+              "passer family (S123)");
     }
 
     // Tempo is not a count and has no zero case; what it has is a label-side
