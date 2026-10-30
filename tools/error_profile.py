@@ -166,8 +166,12 @@ class Engine:
             [path], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             text=True, bufsize=1)
         self._send("uci")
-        while "uciok" not in self.p.stdout.readline():
-            pass
+        while True:
+            line = self.p.stdout.readline()
+            if not line:
+                raise RuntimeError("engine closed its output before uciok")
+            if "uciok" in line:
+                break
 
     def _send(self, line):
         self.p.stdin.write(line + "\n")
@@ -178,8 +182,12 @@ class Engine:
         worker happened to analyse before it."""
         self._send("ucinewgame")
         self._send("isready")
-        while "readyok" not in self.p.stdout.readline():
-            pass
+        while True:
+            line = self.p.stdout.readline()
+            if not line:
+                raise RuntimeError("engine closed its output before readyok")
+            if "readyok" in line:
+                break
 
     def evaluate(self, fen, limit):
         """`limit` is a UCI go argument, "nodes 1000000" or "depth 20"."""
@@ -200,7 +208,7 @@ class Engine:
         while True:
             line = self.p.stdout.readline()
             if not line:
-                break
+                raise RuntimeError("engine closed its output before bestmove")
             if line[0] == "i":
                 if " score " in line:
                     last_any = line

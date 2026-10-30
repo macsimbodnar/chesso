@@ -90,8 +90,12 @@ def workload(engine, depth):
         engine_process.stdin.flush()
 
     send("uci")
-    while "uciok" not in engine_process.stdout.readline():
-        pass
+    while True:
+        line = engine_process.stdout.readline()
+        if not line:
+            sys.exit("engine closed its output before uciok")
+        if "uciok" in line:
+            break
     total = 0
     for fen in fens:
         send("position fen " + fen)
@@ -100,7 +104,7 @@ def workload(engine, depth):
         while True:
             line = engine_process.stdout.readline()
             if not line:
-                sys.exit("engine died")
+                sys.exit("engine closed its output before bestmove")
             if line.startswith("info") and " nodes " in line:
                 nodes = int(line.split(" nodes ")[1].split()[0])
             if line.startswith("bestmove"):

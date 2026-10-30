@@ -7,30 +7,81 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-30, by hand.
 
-## 2026-10-30: S125's phase 1 landed at zero; its screen next
+## 2026-10-30: paused for a shutdown; S125's screen next (handover)
+
+**Main HEAD is clean, nothing is running, no watcher is armed.** The next
+coordinator starts here. Mode: the owner's standing instruction
+(2026-10-21, 2026-10-27): one fresh Opus 5.5 subagent per step, the
+coordinator implements nothing, few questions, batched in Italian with the
+recommended option first, which is taken wherever the choice is not the
+owner's.
 
 **S125 (pawn structure) is in progress**, its step file in `plan_current/`.
-Phase 1, by one Opus 5.5 subagent in `../chesso-s125` and fast-checked:
-seven groups at zero in the cheap stage, in no expression (DEC-331): the
-isolated-and-backward increment, isolated and doubled by file, backward
-by rank (`backward & ~isolated`), phalanx, supported, weak unopposed.
-`PARAM_COUNT` 1013 -> 1073, no index moved. INV-6: bench 5434393 both
-builds, `search_bench` identical at depths 9 and 12, the search's object
-code unchanged (`adocs/data/S125_inv6.txt`). The mirror tests came first,
-each red on a one-colour plant. The audit: rank 1026 of 1073, no new
-dependency; two halves tied (`phalanx[5]`). The planted recovery leaves
-`doubled_files` and `phalanx` unmeasured on the fixture (DEC-331 (14)).
+Phase 1 landed at `b5f133c` (parent `63d5bcf`), by one Opus 5.5 subagent,
+fast-checked: seven groups at zero in the cheap stage, in no expression
+(DEC-331): the isolated-and-backward increment, isolated and doubled by
+file, backward by rank (`backward & ~isolated`), phalanx, supported, weak
+unopposed. `PARAM_COUNT` 1013 -> 1073, no index moved. INV-6: bench
+5434393 both builds, `search_bench` identical at depths 9 and 12, the
+search's object code unchanged (`adocs/data/S125_inv6.txt`). The mirror
+tests came first, each red on a one-colour plant. The audit: rank 1026 of
+1073, no new dependency; two halves tied (`phalanx[5]`). The planted
+recovery leaves `doubled_files` and `phalanx` unmeasured on the fixture.
+DEC-331 (14) records what phase 1 found and the bisection ruling.
 
-- **The first screen run is void** (2026-10-30 10:17 to 11:17): a
-  docs-only commit moved HEAD mid-run and the screen's frozen-tools guard
-  refused P2, as it should. P0 and P1 had read (P1 dropped, d -0.000004
-  against m 0.000003); kept as `.tuning/s125_void1/`, not a reading. No
-  commit lands while a screen runs.
-- **Next, in order:** `S125_screen.sh all` (about 2 h 25 m, 4 h 50 m at
-  the epoch cap); `S125_cost.sh check` then `run` (about 1 h 55 m); then
-  `apply` and phase 2's goldens; Debug self-play; the pin; the SPRT at
-  night (up to 19.86 h). With no survivor in P1 to P7 there is no
-  candidate and no SPRT, and the flats wait for S126 (DEC-331 (14)).
+- **Two screen runs are void, neither a reading.** Run 1 (10:17 to
+  11:17) failed at P2: a docs-only commit moved HEAD and the frozen-tools
+  guard refused, as it should; P0 and P1 had read (P1 dropped, d
+  -0.000004 against m 0.000003). Run 2 (11:38 to 11:58) was stopped by
+  SIGINT for the shutdown, inside P0. Both are kept as
+  `.tuning/s125_void1/` and `.tuning/s125_void2/`, to delete once a fresh
+  screen has read.
+- **Rule learned:** no commit lands in the main checkout while a screen,
+  a cost run or an SPRT runs from it, and none between the screen and its
+  `apply` either: the screen freezes its tools at HEAD, and `apply` reads
+  them. Agents may work in worktrees meanwhile; their landings wait.
+
+**Next, in order** (commands from the main checkout,
+`export CLANG_FORMAT_MAJOR=22`):
+
+1. `cmake --build build -j12`, then
+   `nohup adocs/data/S125_screen.sh all > .tuning/s125_screen_all.console 2>&1 &`,
+   about 2 h 25 m, 4 h 50 m at the epoch cap. Watcher: four exits on
+   `S125-ALL-(DONE|FAILED)`, the PID, a 10 h ceiling, polling the whole
+   file (a background bash until-loop; Monitor caps at 30 min).
+2. If no part of P1 to P7 survives there is no candidate and no SPRT:
+   record the reading, and the flats wait for S126 (DEC-331 (14)).
+   Otherwise:
+   `CAND_SHA=b5f133c PARENT_SHA=63d5bcf adocs/data/S125_cost.sh check`,
+   then `run`, about 1 h 55 m, the machine otherwise idle; marker
+   `S125-COST-(DONE|FAILED)`, ceiling 4 h.
+3. Phase 2, a fresh subagent: brief it from
+   `.tuning/coord/S123/brief_phase2.md` (S123's, the template) as
+   `.tuning/coord/S125/brief_phase2.md`. Half 1 reads during the cost
+   run; half 2 runs `S125_screen.sh apply <clean worktree at HEAD>` (about
+   8 min), then the goldens. The anchors that move are e2 and Re8. A mate
+   floor that falls stops for the owner (DEC-303, DEC-304 (11));
+   `MATE_IN_THREE_FLOOR` has zero margin (DEC-330). The cost reading goes
+   to it with "go".
+4. Fast check; land the candidate (`Bench: <n>`); Debug self-play
+   (DEC-141); fill `S125_sprt.sh`'s markers and commit the pin; the SPRT
+   at night (up to 41900 games, 19.86 h, ceiling 40 h); on H0, `part
+   A|B|C` in order (DEC-331 (7) as ruled in (14)).
+5. The close, as S123's: trim, archive to the owner's Synckeeper folder
+   (`.moltke.local.md`; build the tar.xz under `.tuning`, verify, move),
+   the record commit with the DEC-220 block, the ledger commit.
+
+**Filler steps queued** behind S125, for agent-only work while a long run
+holds the machine (landing held until it ends): S302, S303.
+
+**Waiting on the owner:** removing the worktrees `../chesso-s125`,
+`../chesso-s300` and `../chesso-s301` (each landed: `b5f133c`, `733ba63`,
+and this commit), and whether a step's own worktree may be removed at its
+close without asking once its work is verified in the commits.
+
+**gate_extra**, last `GATE-EXTRA-DONE` 2026-10-30; next weekly run due by
+2026-11-06.
+
 - **S299 done** (filler, DEC-171): S121's and S135's cost scripts check
   every command their INV-6 streams run, and S121's and S123's screens
   refuse an empty or junk K, shown without a timing.
@@ -40,6 +91,15 @@ dependency; two halves tied (`phalanx[5]`). The planted recovery leaves
   S301, the same loop in `build_release.sh`, `adocs/data/S135_cost.py`
   (the cost scripts' timed workload) and `tools/error_profile.py`, and
   `search_bench.py`'s `go` loop dropping a row at end of file.
+- **S301 done** (filler, DEC-171): every `uciok`, `readyok` and
+  `bestmove` wait in the live UCI-driving tools stops at end of file;
+  the old `error_profile.py` exited 0 with a report costed from zeros.
+  Filed from it: **S302, the release build is broken** --
+  `./build_release.sh` fails at pass 3 with `-Werror=missing-profile` on
+  `src/leaf_walk.cpp` (in the engine library since `5b0e170`, linked by
+  datagen only); the last release build on record is S274's, 2026-10-12;
+  the owner is told. S303, `depth_vs_eval.py`'s and `spsa_driver.py`'s
+  end-of-file returns.
 - **Worktrees removed** with the owner's approval (2026-10-30):
   `../chesso-s121c`, `s121d`, `s121e`, `s298`, `s298b`, `s123`, `s123b`,
   `s123c`, `s123d`, and the cost trees under `.tuning/s121/` and

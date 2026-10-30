@@ -120,8 +120,12 @@ def send(command):
     engine_proc.stdin.flush()
 
 send("uci")
-while "uciok" not in engine_proc.stdout.readline():
-    pass
+while True:
+    line = engine_proc.stdout.readline()
+    if not line:
+        sys.exit("build_release.sh: engine closed its output before uciok")
+    if "uciok" in line:
+        break
 
 total_nodes, last = 0, 0
 for fen in fens:
@@ -130,7 +134,7 @@ for fen in fens:
     while True:
         line = engine_proc.stdout.readline()
         if not line:
-            sys.exit("build_release.sh: engine died during the workload")
+            sys.exit("build_release.sh: engine closed its output before bestmove")
         if line.startswith("info") and " nodes " in line:
             last = int(line.split(" nodes ")[1].split()[0])
         if line.startswith("bestmove"):

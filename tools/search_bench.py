@@ -58,7 +58,7 @@ def run(engine, depth):
         t0, nodes, last = time.perf_counter(), 0, ""
         while True:
             line = p.stdout.readline()
-            if not line: break
+            if not line: raise RuntimeError("engine closed its output before bestmove")
             if line.startswith("info") and " nodes " in line:
                 last = line
                 nodes = int(line.split(" nodes ")[1].split()[0])
