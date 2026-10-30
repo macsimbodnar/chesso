@@ -26,8 +26,15 @@ dependency; two halves tied (`phalanx[5]`). The planted recovery leaves
   `apply` and phase 2's goldens; Debug self-play; the pin; the SPRT at
   night (up to 19.86 h). With no survivor in P1 to P7 there is no
   candidate and no SPRT, and the flats wait for S126 (DEC-331 (14)).
-- **S299 widened:** `part()` in `S121_screen.sh` and `S123_screen.sh`
-  passes an unchecked K probe; filler, DEC-171.
+- **S299 done** (filler, DEC-171): S121's and S135's cost scripts check
+  every command their INV-6 streams run, and S121's and S123's screens
+  refuse an empty or junk K, shown without a timing. Filed from it: S300,
+  `tools/search_bench.py` spins forever on an engine that closes its
+  output before `uciok` (filler, behind S125).
+- **Worktrees removed** with the owner's approval (2026-10-30):
+  `../chesso-s121c`, `s121d`, `s121e`, `s298`, `s298b`, `s123`, `s123b`,
+  `s123c`, `s123d`, and the cost trees under `.tuning/s121/` and
+  `.tuning/s123/`; 31 GB free after.
 
 ## 2026-10-30: S123 done (H1, +49 Elo); S125 next
 
@@ -56,11 +63,7 @@ scripts' `streams()` check no command (S123's phase 1 fast check).
 
 **Next:** S125 (pawn structure), its rulings drafted as DEC-331
 (`.tuning/coord/S125/dec331.md`) from a read-only research pass, its phase 1
-brief at `.tuning/coord/S125/brief.md`. Worktrees that can go, waiting on
-the owner: `../chesso-s121c`, `../chesso-s121d`, `../chesso-s121e`,
-`../chesso-s298`, `../chesso-s298b`, `../chesso-s123`, `../chesso-s123b`,
-`../chesso-s123c`, `../chesso-s123d`; the cost trees under
-`.tuning/s123/cost/` (reading recorded).
+brief at `.tuning/coord/S125/brief.md`.
 
 ## 2026-10-30: S123's candidate committed; its SPRT next
 

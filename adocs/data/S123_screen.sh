@@ -427,6 +427,21 @@ ties_for() {
   mv "$out.tmp" "$out"
 }
 
+# A K file as `--k` will read it: one positive decimal and nothing else.
+# `tuner --k ""` and `--k junk` exit 0 -- atof() reads 0, and 0 means "fit K"
+# -- so a probe that printed no K would hand a fit a K of its own in silence
+# (S125's fast check, 2026-10-30; S125_screen.sh's `k_check`, taken here by
+# S299).
+k_check() {
+  local value
+  value=$(cat "$1" 2> /dev/null) || { say "refused: no K file $1"; return 1; }
+  if [[ ! "$value" =~ ^[0-9]*\.?[0-9]+$ ]] ||
+     ! awk -v k="$value" 'BEGIN { exit !(k > 0) }'; then
+    say "refused: $1 holds '$value', not a positive K; remove it and re-run its probe"
+    return 1
+  fi
+}
+
 # The five quarter samples and the six K, drawn and fitted once.
 samples() {
   local info corpus rows quarter s dir="$OUT/samples"
@@ -449,14 +464,17 @@ samples() {
   done
   local x data tuner="$OUT/bin/tuner"
   for x in full q1 q2 q3 q4 q5; do
-    [[ -f "$OUT/k/$x.k" ]] && continue
+    if [[ -f "$OUT/k/$x.k" ]]; then
+      k_check "$OUT/k/$x.k" || return 1
+      continue
+    fi
     data="$corpus"; [[ "$x" != full ]] && data="$dir/$x.tsv"
     check_copy "$tuner" || return 1
     "$tuner" --data "$data" --holdout "$HOLDOUT" --out "$OUT/k/$x.hpp" \
         --epochs 0 --only "$EVERY_GROUP" --threads "$THREADS" > "$OUT/k/$x.log" 2>&1 ||
       { tail -5 "$OUT/k/$x.log"; say "the K probe on $x failed"; return 1; }
     sed -n 's/^fitted K = \([0-9.]*\)$/\1/p' "$OUT/k/$x.log" > "$OUT/k/$x.k"
-    [[ -s "$OUT/k/$x.k" ]] || { say "the K probe on $x printed no K"; return 1; }
+    k_check "$OUT/k/$x.k" || { say "the K probe on $x printed no K"; return 1; }
     say "K $x $(cat "$OUT/k/$x.k")"
   done
 }
@@ -587,6 +605,7 @@ part() {
       { say "the K probe failed"; return 1; }
     sed -n 's/^fitted K = \([0-9.]*\)$/\1/p' "$base/k/full.log" > "$base/k/full.k"
   fi
+  k_check "$base/k/full.k" || return 1
   cp "$base/audit/$tiefile" "$base/fits/$fit/ties.txt" || return 1
   probe_tuner "$base/bin/tuner" "$corpus" "$base/fits/$fit" || return 1
   fit_one "$base/bin/tuner" "$corpus" "$base/fits/$fit/full.log" \

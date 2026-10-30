@@ -194,16 +194,35 @@ build_one() {
   say "$name $(sha256sum "$OUT/bin/$name" | cut -c1-16) $commit ${mask:-unpatched}"
 }
 
-# The timing-stripped INV-6 streams of one binary.
+# The timing-stripped INV-6 streams of one binary. Each command's status is
+# checked and each bench must end on its total line: a bench or
+# search_bench.py failing the same way for every binary would otherwise write
+# the same error text everywhere and pass the diff below. DIR holds the four
+# stripped streams and nothing else, since `run` compares whole directories:
+# it is emptied first, and search_bench.py's raw output, timings and knps
+# included, goes to a sibling tree, $OUT/inv6_raw/<bin>, which nothing
+# compares. S123_cost.sh's form (its phase 1 fast check, then `1a231dd`),
+# taken here by S299.
 streams() {
-  local bin="$1" dir="$2" d
-  mkdir -p "$dir"
+  local bin="$1" dir="$2" d b raw
+  raw="${dir%/*}_raw/${dir##*/}"
+  rm -rf "$dir" "$raw"
+  mkdir -p "$dir" "$raw"
   strip() { sed -E 's/ time [0-9]+//; s/ nps [0-9]+//; s/ hashfull [0-9]+//; s/^([0-9]+ nodes) [0-9]+ nps/\1/'; }
   "$bin" bench 2>&1 | strip > "$dir/bench.txt"
+  (( PIPESTATUS[0] == 0 )) || { say "$bin bench failed"; return 1; }
   "$bin" bench 12 2>&1 | strip > "$dir/bench12.txt"
+  (( PIPESTATUS[0] == 0 )) || { say "$bin bench 12 failed"; return 1; }
+  for b in bench bench12; do
+    tail -n 1 "$dir/$b.txt" | grep -qE '^[0-9]+ nodes$' ||
+      { say "$bin: $dir/$b.txt does not end on a bench total"; return 1; }
+  done
   for d in 9 12; do
-    "$python_chess" "$root/tools/search_bench.py" "$bin" "$d" 2>&1 |
-      awk '{print $1, $3, $4, $(NF)}' | grep -v total > "$dir/sb$d.txt"
+    "$python_chess" "$root/tools/search_bench.py" "$bin" "$d" > "$raw/sb$d.raw" 2>&1 ||
+      { say "$bin: search_bench.py at depth $d failed"; return 1; }
+    awk '{print $1, $3, $4, $(NF)}' "$raw/sb$d.raw" | grep -v total > "$dir/sb$d.txt"
+    [[ "$(grep -c ' nodes ' "$dir/sb$d.txt")" == 3 ]] ||
+      { say "$bin: search_bench.py at depth $d printed no three positions"; return 1; }
   done
 }
 
@@ -314,7 +333,7 @@ run() {
   # INV-6 before any timing: every binary searches zero's tree.
   local bin
   for bin in zero parent all old3 new4; do
-    streams "$OUT/bin/$bin" "$OUT/inv6/$bin"
+    streams "$OUT/bin/$bin" "$OUT/inv6/$bin" || { say "INV-6: no streams from $bin; no timing is taken"; return 1; }
   done
   for bin in parent all old3 new4; do
     if ! diff -r -q "$OUT/inv6/zero" "$OUT/inv6/$bin" > /dev/null; then
