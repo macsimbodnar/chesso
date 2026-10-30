@@ -120,8 +120,8 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this
 # run's shas, dates and out directory --
 #
-#   candidate  <CAND, short>  <its commit date>
-#   reference  <REF, short>   <its commit date>
+#   candidate  0553160  2026-10-30 06:14
+#   reference  1a231dd  2026-10-30 03:29
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -135,13 +135,31 @@
 # `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
-# [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and
-# `cand=` below, the phase 1 landing's sha into `landing=`, their dates into
-# the banner lines above, the screen's three readings and their sha256 (each
-# part's gain, s, m and verdict), the survivors and the H0 order the screen
-# printed, the corpus `locate` recorded, the candidate fit's sha256 and its
-# tie files', the cost run's reading, plan.md's Open list re-read, the A/A
-# rule checked, and this bracketed sentence replaced by what was found.]
+# Pinned by the coordinator 2026-10-30 06:20: CAND `0553160` (committed
+# 2026-10-30 06:14, the screen's ABC fit pasted over the ten family arrays,
+# bench 5434393) and REF `1a231dd` (committed 2026-10-30 03:29, the cost
+# script's fix, `src/` and the build files byte for byte the landing's,
+# bench 6016079), CAND's parent; `landing=` is `03680ab`, the phase 1
+# landing (committed 2026-10-30 02:31, the family at zero). The screen's three
+# readings (`.tuning/s123/read/`, concatenated in
+# `adocs/data/S123_screen_reading.txt`, sha256 04309775...): A g +0.000070
+# s 0.000005 m 0.000009 kept (A.txt fa084279...); B d +0.000109 against A,
+# s 0.000008 m 0.000013 kept (B.txt dd2d0d3d...); C d +0.000018 against AB,
+# s 0.000006 m 0.000010 kept (C.txt 6ba292fd...); survivors A, B, C, the H0
+# order A | B | C. The corpus `locate` recorded: S083's curve 0, 6226944
+# rows, sha256 2e0e3de9... The candidate fit `.tuning/s123/fits/ABC/full.hpp`,
+# sha256 c7f340c6...; the tie files, none tied, ties_A.txt a3b4ae44...,
+# ties_B.txt d5f0ad16..., ties_C.txt d9a04245.... The cost
+# (`adocs/data/S123_cost_reading.txt`, a2652990...): a +2.59 %, b +1.52 %,
+# c +1.48 %, all +4.96 %, parent zero. The Open list at `0553160` re-read:
+# no DEC-171 filler is open. `MATE_IN_THREE_FLOOR` holds at 11 at zero
+# margin (DEC-330). The harness is S121's run's of 2026-10-29 -- fastchess
+# alpha 1.8.1 20260720-daa3ea2, `noob_3moves.epd`, `fastchess.sh` last
+# changed `769ce7a` (S284), the same workstation and kernel 7.2.6 -- so no
+# A/A is owed (DEC-143). Before the run: the commit gate green at CAND (both
+# fast suites 50 of 50, format and the prose checks clean), `gate_extra` 6
+# stages green on CAND's tree, Debug self-play 8 games, 0 `Assertion`, 0
+# `disconnect`, and a dry copy of this script printed DRY-RUN-WOULD-EXEC.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -190,9 +208,9 @@ fail()
 
 # THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT, as
 # S136_sprt.sh's same block reads them.
-ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
-landing="[COORDINATOR: the phase 1 landing's sha]"
+ref="1a231dd"
+cand="0553160"
+landing="03680ab"
 tc="8+0.08"
 hash="16"
 concurrency="12"
