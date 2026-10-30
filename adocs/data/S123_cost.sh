@@ -184,10 +184,17 @@ build_one() {
 # The timing-stripped INV-6 streams of one binary. Each command's status is
 # checked and each bench must end on its total line: a bench or
 # search_bench.py failing the same way for every binary would otherwise write
-# the same error text everywhere and pass the diff below.
+# the same error text everywhere and pass the diff below. DIR holds the four
+# stripped streams and nothing else, since `run` compares whole directories:
+# it is emptied first, and search_bench.py's raw output, timings and knps
+# included, goes to a sibling tree, $OUT/inv6_raw/<bin>, which nothing
+# compares (2026-10-30: the first run kept it in DIR, and zero against parent
+# read different on seconds and knps alone, nodes and moves identical).
 streams() {
-  local bin="$1" dir="$2" d b
-  mkdir -p "$dir"
+  local bin="$1" dir="$2" d b raw
+  raw="${dir%/*}_raw/${dir##*/}"
+  rm -rf "$dir" "$raw"
+  mkdir -p "$dir" "$raw"
   strip() { sed -E 's/ time [0-9]+//; s/ nps [0-9]+//; s/ hashfull [0-9]+//; s/^([0-9]+ nodes) [0-9]+ nps/\1/'; }
   "$bin" bench 2>&1 | strip > "$dir/bench.txt"
   (( PIPESTATUS[0] == 0 )) || { say "$bin bench failed"; return 1; }
@@ -198,9 +205,9 @@ streams() {
       { say "$bin: $dir/$b.txt does not end on a bench total"; return 1; }
   done
   for d in 9 12; do
-    "$python_chess" "$root/tools/search_bench.py" "$bin" "$d" > "$dir/sb$d.raw" 2>&1 ||
+    "$python_chess" "$root/tools/search_bench.py" "$bin" "$d" > "$raw/sb$d.raw" 2>&1 ||
       { say "$bin: search_bench.py at depth $d failed"; return 1; }
-    awk '{print $1, $3, $4, $(NF)}' "$dir/sb$d.raw" | grep -v total > "$dir/sb$d.txt"
+    awk '{print $1, $3, $4, $(NF)}' "$raw/sb$d.raw" | grep -v total > "$dir/sb$d.txt"
     [[ "$(grep -c ' nodes ' "$dir/sb$d.txt")" == 3 ]] ||
       { say "$bin: search_bench.py at depth $d printed no three positions"; return 1; }
   done

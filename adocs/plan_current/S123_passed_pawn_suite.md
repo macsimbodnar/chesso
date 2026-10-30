@@ -429,6 +429,21 @@ so DEC-141's tier two does not bind.
 - The screen's pre-registration now says it was written before any fit, the
   audit run once after the rules were fixed.
 
+### The cost run's first attempt, 2026-10-30
+
+`S123_cost.sh run` stopped at INV-6 before any timing: the fast check's
+`streams()` kept `search_bench.py`'s raw output, seconds and knps included,
+in the directory `run` compares with `diff -r`, so zero against parent read
+different on timings alone, nodes and best moves identical
+(`.tuning/s123_cost.console`). `streams()` now empties its directory first
+and writes the raw output to `$OUT/inv6_raw/<bin>`, which nothing compares.
+Shown on the run's own zero and parent binaries without a timing: `INV-6:
+bench 6016079 nodes, every binary identical`, also over a stale raw file
+left in the compared directory; and refused on a parent whose bench total is
+planted one digit off. The `diff -r` over `$OUT/inv6` is the only directory
+comparison in S123's scripts; `S123_screen.sh` compares tie files with
+`cmp`, and `S123_sprt.sh` reads `git diff` over `src/` and weights by name.
+
 ### Known and unfixed
 
 - `adocs/data/S121_cost.sh` and `adocs/data/S135_cost.sh` `streams()` have
