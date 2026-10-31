@@ -7,37 +7,62 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-31, by hand.
 
-## 2026-10-31, afternoon: paused for a shutdown; S118 waiting for its timing (handover)
+## 2026-10-31, evening: S118 resumed, its timing next; the comment study waits for the owner (handover)
 
-**Main HEAD is clean, nothing is running, no watcher is armed.** The owner stopped the work at about
-14:40 to shut the workstation down; a subagent's final report never came, and every state below was
-read from the tree and its logs. The next coordinator starts here. Mode: one fresh Opus 5.5 subagent
-per step, the coordinator implements nothing, few questions, batched in Italian with the recommended
-option first, which is taken wherever the choice is not the owner's.
+Mode: one fresh Opus 5.5 subagent per step, the coordinator implements nothing, few questions, batched
+in Italian with the recommended option first, which is taken wherever the choice is not the owner's.
 
 **S118 (pawn cache) is in progress on branch `s118`, worktree `../chesso-s118`, not on `achesso`**
 (DEC-332 (9)): `2f7b08a` the cache, `654ab89` the shelter slot, both `No functional change`, bench
-5707449, `f36762f` the scripts and the record; clean. Its step file is on `s118`
-(`adocs/plan_current/S118_pawn_hash_table.md`, its last section is where it stopped), so on `achesso`
-it still reads `plan_todo/`. `gate_extra` green on the tree (1467 s). Instructions -9.01 % on `bench
-16` and -9.63 % on S020's positions, node-identical: **a count, no timing exists**. Session evidence:
-`.tuning/coord/S118/evidence/`.
+5707449, then the scripts and the record. Its step file is on `s118`
+(`adocs/plan_current/S118_pawn_hash_table.md`, its section "2026-10-31: resumed" is the state), so on
+`achesso` it still reads `plan_todo/`. `gate_extra` green on the tree (1467 s). Instructions -9.01 % on
+`bench 16` and -9.63 % on S020's positions, node-identical: **a count, no timing exists**.
+`S118_cost.sh build` passed for the first time on record: INV-6 `bench 5707449`, eight binaries, seven
+functions differ at every size; trees in `../chesso-s118/.tuning/s118/cost`. PT14 to PT24 killed, 11 of
+11, on `f36762f`. The fast check over `85b7847..s118` found no wrong-score path; its four findings are
+fixed or recorded, and the size rule's gap is DEC-332 (10).
 
 **Next, in order:**
-1. `python3 tools/mutation_check.py tools/mutants/S118_pawn_cache.py <clean worktree of s118> --only
-   PT14 ... PT24`, about 30 min: PT01 to PT13 are killed on this tree, 13 of 13.
-2. A fast check over `85b7847..s118`.
-3. In `../chesso-s118`: `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89 adocs/data/S118_cost.sh run` (`check`
-   passes; about 1 h 50 m, machine idle, marker `S118-COST-(DONE|FAILED)`, ceiling 4 h), and
-   `adocs/data/S118_hitrate.py` (about 10 min). Read the real PID from `$!`.
-4. Read by DEC-332 (7), (8). A credited gain lands the commits on `achesso`, with DEC-046 marked VOID,
-   a Debug self-play and the record, and the `specs.md` wording, which is owed: the subagent's proposal
-   never arrived. A zero or a loss does not land them: DEC-046 stands and S122's accepts is amended to
-   read the shelter from stage two.
-5. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
+1. **PT01 to PT13 again on `s118`'s tip**, about 36 min: their only log has no table, names a clone's
+   commit that is gone (`4cfe4cd`), and its `same` rows can mean an unread bench (S305). It settles PT07,
+   whose `same` disagrees with the reading of PT06. Linked worktree, `--only`, then remove it.
+2. In `../chesso-s118`: `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89 adocs/data/S118_cost.sh run` (about
+   1 h 50 m, machine idle, marker `S118-COST-(DONE|FAILED)`, ceiling 4 h), and
+   `adocs/data/S118_hitrate.py` (about 10 min). Read the real PID from `$!`. No commit in that checkout
+   while it runs.
+3. Read by DEC-332 (7), (8), (10). A credited gain lands the commits on `achesso`, with DEC-046 marked
+   VOID, a Debug self-play and the record, the `specs.md` wording (the subagent's proposal never arrived),
+   the re-read of `DEV_MANUAL.md` and `MANUAL.md`, and `adocs/data/README.md` rows for `S118_inv6.txt`,
+   `S118_cost.py`, `S118_cost.sh`, `S118_hitrate.py`. A zero or a loss does not land them: DEC-046 stands
+   and S122's accepts is amended to read the shelter from stage two.
+4. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
    coordinator on 2026-10-31**: S121, S123 and S125 were each measured against their own parent and
    their sum has not been played. Fixed length, an estimate and no verdict (DEC-108).
-6. S102's citation of `evaluate_pawns` for the pawn fills moves to `pawn_pass` when the cache lands.
+5. S102's citation of `evaluate_pawns` for the pawn fills moves to `pawn_pass` when the cache lands.
+
+**The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The
+owner asked whether cleaning or compressing comments helps the project and token use. Read on `5954c12`
+by one subagent, scripts and tables in `.tuning/coord/comment_study/`; **its full report is on no file**,
+the harness having refused that write, and the owner was told. Measured: comments are 61 % of `src/`'s
+bytes, 48 % of `tests/`', 41 % of `tools/`', 1.93 MB, growing 15.5 KB a day; by class (one reader, 140
+blocks) 44 % reason or hazard, 24 % contract, 22 % history, 6 % rule-required, 2 % restating; 61 % of
+changed `src/` lines in the last 150 commits are comment-only; false claims follow length and not age,
+which refutes "the old ones above all". Estimated: comments in code read are 7.4 % of cost-weighted
+consumption, so a 30 % cut saves about 1 % and a 60 % cut about 2 %, and no sweep pays back inside the
+15 open steps. A pilot compressed `search.cpp` lines 1781 to 2089 by 51 % of comment bytes and
+`test_mate_carry.cpp` by 74 %, code identical, and its first draft held two errors only a re-read of old
+against new caught. Options put to the owner, recommended first: a rule for new comments then the 72
+log-shaped blocks (294 KB, about one mean step of work, justified by false claims and not by tokens); the
+rule alone; the rule then the 16 most-read files. The aggressive option deletes reasons held nowhere else
+(7 of 25 in a hand test) and is not recommended. The plan: `tools/comment_budget.py` (report and code
+identity), the rule and "replace, never append" in briefs, tests' golden logs after S118, `src/` in the
+gap before S101, `tools/` with no run active, then re-measure after five steps. The rule as proposed:
+a comment says what the code cannot, about the code as it stands; a new reading replaces the old in
+place; no per-step log; a rejected idea keeps one line at its site; one id per claim, never standing in
+for a reason the reader needs there; a golden keeps DEC-142's form and its current value; a block over 15
+lines is a specification and moves or says why not; `adocs/data/` and `plan_done/` are not cleaned;
+rewriting a comment reads old against new. **S306 fixes the false comments it found in any case.**
 
 **Removed with the owner's yes (2026-10-31):** S125's cost trees and `.tuning/s125_void1`, `_void2`;
 33 GB free.

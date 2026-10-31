@@ -17008,6 +17008,12 @@ Decision:     By the coordinator under the owner's standing instruction
               instructions move the same way. Zero or a loss: not shipped.
               (9) **The timing comes before the landing.** The two commits sit on
               branch `s118`, and `achesso` takes them only on (8).
+              (10) **If no size lies within both floors**, added 2026-10-31 before any
+              timing, on the fast check's finding that the script would raise there and
+              (7) has no answer: the candidate with the smallest larger-of-the-two
+              excess, a row's excess on a workload being its cycles minus that
+              workload's best; ties go to the smaller size. (8) then reads the chosen
+              row as usual.
 Rejected:     A pawn-and-king key: hits at 2^12 fall from 89.7, 96.4 and 94.1 % to
               80.9, 86.7 and 80.9 %, every pawn term is recomputed on a king move, and
               `board_t` gains a key in three primitives and unmake. No slot until S122:
