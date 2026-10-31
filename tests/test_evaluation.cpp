@@ -387,6 +387,12 @@ TEST_SUITE("evaluation: score")
   // pasted header after it reproduced all ten at the landing
   // (adocs/data/S123_goldens.txt).
   //
+  // S125's pawn structure family, the screen's 02567 fit pasted over the three
+  // flats and arrays that landed at zero, moved one: the pawn on e2, 109 to
+  // 107, the one case here with a pawn -- isolated, on the e file, weak and
+  // unopposed. Re-derived by the script on the pasted header after it
+  // reproduced all ten at the landing (adocs/data/S125_goldens.txt).
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -410,7 +416,7 @@ TEST_SUITE("evaluation: score")
 
     // clang-format off
     const std::vector<case_t> cases = {
-      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 109, "pawn on e2"},
+      {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 107, "pawn on e2"},
       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 283, "knight on b1"},
       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 353, "bishop on c1"},
       {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 590, "rook on d1"},

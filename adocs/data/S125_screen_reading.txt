@@ -1,0 +1,369 @@
+# S125's screen reading: adocs/data/S125_screen.sh all, 2026-10-31 00:35 to 03:44, S125-ALL-DONE (.tuning/s125_screen_all.console),
+# from the main checkout at f08d9db, b5f133c (the phase 1 landing) with S299 to S302 on top, src/ and CMakeLists.txt the
+# landing's byte for byte. The eight read/P{0..7}.txt in the screen's order, concatenated verbatim; then the corpus `locate`
+# recorded (.tuning/s125/corpus.txt), the audit's pass line, and the sha256 of every fit header
+# (.tuning/s125/fits/{0,01,02,023,024,025,0256,02567}/{full,q1..q5}.hpp) and tie file. The candidate is 02567's full.hpp
+# (CANDIDATE 02567 groups pawn_structure,isolated_files,phalanx,supported,weak_unopposed). Outputs stay under .tuning/s125/ (DEC-235).
+
+== read/P0.txt
+S125 screen reading, P0: the three flats refitted alone: isolated, doubled, backward
+free pawn_structure, fit 0, against its start
+  0         full  start 0.071425 best 0.071418 at epoch 4600, stopped on cap 5000
+  0         q1    start 0.071417 best 0.071417 at epoch 0, stopped on patience
+  0         q2    start 0.071419 best 0.071413 at epoch 100, stopped on patience
+  0         q3    start 0.071422 best 0.071415 at epoch 2000, stopped on patience
+  0         q4    start 0.071415 best 0.071409 at epoch 100, stopped on patience
+  0         q5    start 0.071422 best 0.071418 at epoch 3400, stopped on cap 5000
+rule g = start - best (DEC-315), recorded: full +0.000007, s 0.000003, m 0.000005; quarters +0.000000 +0.000006 +0.000007 +0.000006 +0.000004
+headroom: stage-one bound mg 19937 of 32767, eg 25709 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [0, 0, 0, 0, 0, 0, 0]
+  isolated_file_mg [0, 0, 0, 0, 0, 0, 0]
+  pawn_structure_eg [-16, -16, 0]
+  pawn_structure_mg [-8, -6, -10]
+  phalanx_eg [0, 0, 0, 0, 0, 0]
+  phalanx_mg [0, 0, 0, 0, 0, 0]
+  supported_eg [0, 0, 0, 0, 0]
+  supported_mg [0, 0, 0, 0, 0]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P0 recorded: the predecessor of P1, and of every part before the first survivor
+PART-OUTCOME recorded
+
+== read/P1.txt
+S125 screen reading, P1: the isolated and backward increment
+free pawn_structure,isolated_backward, fit 01, against 0
+  01        full  start 0.071425 best 0.071422 at epoch 1600, stopped on patience
+  01        q1    start 0.071417 best 0.071417 at epoch 0, stopped on patience
+  01        q2    start 0.071419 best 0.071417 at epoch 100, stopped on patience
+  01        q3    start 0.071422 best 0.071420 at epoch 100, stopped on patience
+  01        q4    start 0.071415 best 0.071411 at epoch 1700, stopped on patience
+  01        q5    start 0.071422 best 0.071422 at epoch 0, stopped on patience
+  0         full  start 0.071425 best 0.071418 at epoch 4600, stopped on cap 5000
+  0         q1    start 0.071417 best 0.071417 at epoch 0, stopped on patience
+  0         q2    start 0.071419 best 0.071413 at epoch 100, stopped on patience
+  0         q3    start 0.071422 best 0.071415 at epoch 2000, stopped on patience
+  0         q4    start 0.071415 best 0.071409 at epoch 100, stopped on patience
+  0         q5    start 0.071422 best 0.071418 at epoch 3400, stopped on cap 5000
+rule d = best(0) - best(01) (DEC-326 (3)): full -0.000004, s 0.000002, m 0.000003; quarters +0.000000 -0.000004 -0.000005 -0.000002 -0.000004
+headroom: stage-one bound mg 20027 of 32767, eg 25949 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [10]
+  isolated_backward_mg [3]
+  isolated_file_eg [0, 0, 0, 0, 0, 0, 0]
+  isolated_file_mg [0, 0, 0, 0, 0, 0, 0]
+  pawn_structure_eg [-18, -16, -5]
+  pawn_structure_mg [-9, -6, -11]
+  phalanx_eg [0, 0, 0, 0, 0, 0]
+  phalanx_mg [0, 0, 0, 0, 0, 0]
+  supported_eg [0, 0, 0, 0, 0]
+  supported_mg [0, 0, 0, 0, 0]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P1 dropped
+PART-OUTCOME dropped
+
+== read/P2.txt
+S125 screen reading, P2: isolated pawns by file, b to h
+free pawn_structure,isolated_files, fit 02, against 0
+  02        full  start 0.071425 best 0.071406 at epoch 2000, stopped on patience
+  02        q1    start 0.071417 best 0.071416 at epoch 2000, stopped on patience
+  02        q2    start 0.071419 best 0.071408 at epoch 100, stopped on patience
+  02        q3    start 0.071422 best 0.071410 at epoch 800, stopped on patience
+  02        q4    start 0.071415 best 0.071402 at epoch 2900, stopped on patience
+  02        q5    start 0.071422 best 0.071410 at epoch 3800, stopped on cap 5000
+  0         full  start 0.071425 best 0.071418 at epoch 4600, stopped on cap 5000
+  0         q1    start 0.071417 best 0.071417 at epoch 0, stopped on patience
+  0         q2    start 0.071419 best 0.071413 at epoch 100, stopped on patience
+  0         q3    start 0.071422 best 0.071415 at epoch 2000, stopped on patience
+  0         q4    start 0.071415 best 0.071409 at epoch 100, stopped on patience
+  0         q5    start 0.071422 best 0.071418 at epoch 3400, stopped on cap 5000
+rule d = best(0) - best(02) (DEC-326 (3)): full +0.000012, s 0.000003, m 0.000004; quarters +0.000001 +0.000005 +0.000005 +0.000007 +0.000008
+headroom: stage-one bound mg 20132 of 32767, eg 25859 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [-4, -2, -3, -1, -2, 3, 2]
+  isolated_file_mg [3, -5, -13, -13, -1, -6, 0]
+  pawn_structure_eg [-15, -17, 0]
+  pawn_structure_mg [-6, -6, -9]
+  phalanx_eg [0, 0, 0, 0, 0, 0]
+  phalanx_mg [0, 0, 0, 0, 0, 0]
+  supported_eg [0, 0, 0, 0, 0]
+  supported_mg [0, 0, 0, 0, 0]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P2 kept
+PART-OUTCOME kept
+
+== read/P3.txt
+S125 screen reading, P3: doubled pawns by file, b to h
+free pawn_structure,isolated_files,doubled_files, fit 023, against 02
+  023       full  start 0.071425 best 0.071408 at epoch 100, stopped on patience
+  023       q1    start 0.071417 best 0.071417 at epoch 0, stopped on patience
+  023       q2    start 0.071419 best 0.071406 at epoch 100, stopped on patience
+  023       q3    start 0.071422 best 0.071422 at epoch 0, stopped on patience
+  023       q4    start 0.071415 best 0.071406 at epoch 100, stopped on patience
+  023       q5    start 0.071422 best 0.071422 at epoch 0, stopped on patience
+  02        full  start 0.071425 best 0.071406 at epoch 2000, stopped on patience
+  02        q1    start 0.071417 best 0.071416 at epoch 2000, stopped on patience
+  02        q2    start 0.071419 best 0.071408 at epoch 100, stopped on patience
+  02        q3    start 0.071422 best 0.071410 at epoch 800, stopped on patience
+  02        q4    start 0.071415 best 0.071402 at epoch 2900, stopped on patience
+  02        q5    start 0.071422 best 0.071410 at epoch 3800, stopped on cap 5000
+rule d = best(02) - best(023) (DEC-326 (3)): full -0.000002, s 0.000006, m 0.000011; quarters -0.000001 +0.000002 -0.000012 -0.000004 -0.000012
+headroom: stage-one bound mg 20687 of 32767, eg 27359 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [23, 31, 39, 22, 20, 15, 3]
+  doubled_file_mg [6, 2, -1, 3, 11, 24, 4]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [-6, -6, -6, -3, -4, 2, 2]
+  isolated_file_mg [2, -6, -14, -14, -4, -10, 0]
+  pawn_structure_eg [-13, -37, 0]
+  pawn_structure_mg [-4, -13, -9]
+  phalanx_eg [0, 0, 0, 0, 0, 0]
+  phalanx_mg [0, 0, 0, 0, 0, 0]
+  supported_eg [0, 0, 0, 0, 0]
+  supported_mg [0, 0, 0, 0, 0]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P3 dropped
+PART-OUTCOME dropped
+
+== read/P4.txt
+S125 screen reading, P4: backward pawns not isolated by own rank, 3 to 5
+free pawn_structure,isolated_files,backward_ranks, fit 024, against 02
+  024       full  start 0.071425 best 0.071401 at epoch 100, stopped on patience
+  024       q1    start 0.071417 best 0.071404 at epoch 1600, stopped on patience
+  024       q2    start 0.071419 best 0.071407 at epoch 100, stopped on patience
+  024       q3    start 0.071422 best 0.071403 at epoch 1900, stopped on patience
+  024       q4    start 0.071415 best 0.071402 at epoch 100, stopped on patience
+  024       q5    start 0.071422 best 0.071406 at epoch 100, stopped on patience
+  02        full  start 0.071425 best 0.071406 at epoch 2000, stopped on patience
+  02        q1    start 0.071417 best 0.071416 at epoch 2000, stopped on patience
+  02        q2    start 0.071419 best 0.071408 at epoch 100, stopped on patience
+  02        q3    start 0.071422 best 0.071410 at epoch 800, stopped on patience
+  02        q4    start 0.071415 best 0.071402 at epoch 2900, stopped on patience
+  02        q5    start 0.071422 best 0.071410 at epoch 3800, stopped on cap 5000
+rule d = best(02) - best(024) (DEC-326 (3)): full +0.000005, s 0.000005, m 0.000008; quarters +0.000012 +0.000001 +0.000007 +0.000000 +0.000004
+headroom: stage-one bound mg 20867 of 32767, eg 26069 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [-14, -10, -1]
+  backward_rank_mg [-9, -23, 34]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [-4, -2, -3, -1, -2, 3, 2]
+  isolated_file_mg [2, -6, -15, -14, -2, -6, 0]
+  pawn_structure_eg [-16, -17, 3]
+  pawn_structure_mg [-6, -5, -5]
+  phalanx_eg [0, 0, 0, 0, 0, 0]
+  phalanx_mg [0, 0, 0, 0, 0, 0]
+  supported_eg [0, 0, 0, 0, 0]
+  supported_mg [0, 0, 0, 0, 0]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P4 dropped
+PART-OUTCOME dropped
+
+== read/P5.txt
+S125 screen reading, P5: phalanx pawns by own rank, 2 to 7
+free pawn_structure,isolated_files,phalanx, fit 025, against 02
+  025       full  start 0.071425 best 0.071370 at epoch 2700, stopped on patience
+  025       q1    start 0.071417 best 0.071382 at epoch 3000, stopped on patience
+  025       q2    start 0.071419 best 0.071377 at epoch 4300, stopped on cap 5000
+  025       q3    start 0.071422 best 0.071375 at epoch 2800, stopped on patience
+  025       q4    start 0.071415 best 0.071368 at epoch 100, stopped on patience
+  025       q5    start 0.071422 best 0.071374 at epoch 3700, stopped on cap 5000
+  02        full  start 0.071425 best 0.071406 at epoch 2000, stopped on patience
+  02        q1    start 0.071417 best 0.071416 at epoch 2000, stopped on patience
+  02        q2    start 0.071419 best 0.071408 at epoch 100, stopped on patience
+  02        q3    start 0.071422 best 0.071410 at epoch 800, stopped on patience
+  02        q4    start 0.071415 best 0.071402 at epoch 2900, stopped on patience
+  02        q5    start 0.071422 best 0.071410 at epoch 3800, stopped on cap 5000
+rule d = best(02) - best(025) (DEC-326 (3)): full +0.000036, s 0.000002, m 0.000003; quarters +0.000034 +0.000031 +0.000035 +0.000034 +0.000036
+headroom: stage-one bound mg 21377 of 32767, eg 26909 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [-3, -2, -2, 0, -1, 3, 2]
+  isolated_file_mg [2, -6, -14, -13, -2, -6, 0]
+  pawn_structure_eg [-16, -17, 0]
+  pawn_structure_mg [-4, -6, -8]
+  phalanx_eg [-1, 0, 2, 6, 70, 70]
+  phalanx_mg [3, 2, 4, 18, 86, 86]
+  supported_eg [0, 0, 0, 0, 0]
+  supported_mg [0, 0, 0, 0, 0]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P5 kept
+PART-OUTCOME kept
+
+== read/P6.txt
+S125 screen reading, P6: supported pawns by own rank, 3 to 7
+free pawn_structure,isolated_files,phalanx,supported, fit 0256, against 025
+  0256      full  start 0.071425 best 0.071339 at epoch 2300, stopped on patience
+  0256      q1    start 0.071417 best 0.071357 at epoch 2900, stopped on patience
+  0256      q2    start 0.071419 best 0.071350 at epoch 3100, stopped on cap 5000
+  0256      q3    start 0.071422 best 0.071354 at epoch 100, stopped on patience
+  0256      q4    start 0.071415 best 0.071339 at epoch 2500, stopped on patience
+  0256      q5    start 0.071422 best 0.071348 at epoch 2900, stopped on patience
+  025       full  start 0.071425 best 0.071370 at epoch 2700, stopped on patience
+  025       q1    start 0.071417 best 0.071382 at epoch 3000, stopped on patience
+  025       q2    start 0.071419 best 0.071377 at epoch 4300, stopped on cap 5000
+  025       q3    start 0.071422 best 0.071375 at epoch 2800, stopped on patience
+  025       q4    start 0.071415 best 0.071368 at epoch 100, stopped on patience
+  025       q5    start 0.071422 best 0.071374 at epoch 3700, stopped on cap 5000
+rule d = best(025) - best(0256) (DEC-326 (3)): full +0.000031, s 0.000003, m 0.000005; quarters +0.000025 +0.000027 +0.000021 +0.000029 +0.000026
+headroom: stage-one bound mg 24122 of 32767, eg 27764 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [-3, -2, -3, 0, -1, 3, 2]
+  isolated_file_mg [2, -6, -14, -13, -2, -5, 0]
+  pawn_structure_eg [-15, -18, 0]
+  pawn_structure_mg [-1, -7, -8]
+  phalanx_eg [-1, 1, 4, 7, 69, 69]
+  phalanx_mg [5, 2, 7, 20, 86, 86]
+  supported_eg [8, -4, 0, 22, -33]
+  supported_mg [8, 5, 6, 29, 183]
+  weak_unopposed_eg [0]
+  weak_unopposed_mg [0]
+P6 kept
+PART-OUTCOME kept
+
+== read/P7.txt
+S125 screen reading, P7: weak unopposed pawns
+free pawn_structure,isolated_files,phalanx,supported,weak_unopposed, fit 02567, against 0256
+  02567     full  start 0.071425 best 0.071322 at epoch 3000, stopped on patience
+  02567     q1    start 0.071417 best 0.071338 at epoch 2700, stopped on patience
+  02567     q2    start 0.071419 best 0.071337 at epoch 1400, stopped on patience
+  02567     q3    start 0.071422 best 0.071336 at epoch 100, stopped on patience
+  02567     q4    start 0.071415 best 0.071317 at epoch 2300, stopped on patience
+  02567     q5    start 0.071422 best 0.071330 at epoch 5000, stopped on cap 5000
+  0256      full  start 0.071425 best 0.071339 at epoch 2300, stopped on patience
+  0256      q1    start 0.071417 best 0.071357 at epoch 2900, stopped on patience
+  0256      q2    start 0.071419 best 0.071350 at epoch 3100, stopped on cap 5000
+  0256      q3    start 0.071422 best 0.071354 at epoch 100, stopped on patience
+  0256      q4    start 0.071415 best 0.071339 at epoch 2500, stopped on patience
+  0256      q5    start 0.071422 best 0.071348 at epoch 2900, stopped on patience
+rule d = best(0256) - best(02567) (DEC-326 (3)): full +0.000017, s 0.000003, m 0.000005; quarters +0.000019 +0.000013 +0.000018 +0.000022 +0.000018
+headroom: stage-one bound mg 24227 of 32767, eg 27929 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  backward_rank_eg [0, 0, 0]
+  backward_rank_mg [0, 0, 0]
+  doubled_file_eg [0, 0, 0, 0, 0, 0, 0]
+  doubled_file_mg [0, 0, 0, 0, 0, 0, 0]
+  isolated_backward_eg [0]
+  isolated_backward_mg [0]
+  isolated_file_eg [-3, -1, -2, 0, -1, 3, 2]
+  isolated_file_mg [1, -6, -11, -10, -3, -7, 1]
+  pawn_structure_eg [-11, -20, 0]
+  pawn_structure_mg [1, -7, -6]
+  phalanx_eg [-1, 1, 4, 7, 68, 68]
+  phalanx_mg [5, 2, 7, 20, 86, 86]
+  supported_eg [11, 0, 4, 26, -29]
+  supported_mg [8, 5, 7, 32, 187]
+  weak_unopposed_eg [-6]
+  weak_unopposed_mg [-10]
+P7 kept
+survivors P2,P5,P6,P7
+candidate 02567: /home/max/ws/chesso/.tuning/s125/fits/02567/full.hpp
+bisection on H0 or no verdict, in order: A = P0,P2 | B = P0,P5,P6 | C = P0,P7
+CANDIDATE 02567 groups pawn_structure,isolated_files,phalanx,supported,weak_unopposed
+PART-OUTCOME kept
+
+== corpus.txt
+source s083
+stage 0
+corpus /home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv
+sha256 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+rows 6226944
+s083_fit /home/max/ws/chesso/.tuning/s083/curve/s0/fit_6226944_s1.hpp
+
+== audit/pass
+pass 2026-10-31T00:36:19+01:00 corpus 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+
+== sha256, fits and tie files
+1fa65ef068e84593d9157338a94305f3441ad44c7f28a37b90f9560b195f90a6  .tuning/s125/fits/0/full.hpp
+e897c07135711d049cbe887e5fb5a004feffad4f60f42e7972c8bf2427fcf02c  .tuning/s125/fits/0/q1.hpp
+a12ecdcbabec098b68c00441a8407ca0c8ea2b88c2956a55e3f09aa295f624dc  .tuning/s125/fits/0/q2.hpp
+87e49930c4e31cf841b3b2961dca17308a85b704c1dbab249095f785bf32f0b5  .tuning/s125/fits/0/q3.hpp
+483459330851a4378947e0c8a1e1c8140924f124f988f66b252113bca77c842b  .tuning/s125/fits/0/q4.hpp
+40211225e4974db04be82f95f580aea4b41936ecae0d99007fe77ccf09d3eed8  .tuning/s125/fits/0/q5.hpp
+fdbe77f161849914940bb2459326d0b4c5c55a918d9436ec5614f64ddbea15b5  .tuning/s125/fits/01/full.hpp
+a4b11c94322003c25275f7e35921319d979c288d31f9bee3098dc0bc48593f33  .tuning/s125/fits/01/q1.hpp
+d4ed9bac779846fcf3f4e09506e427ce1f5ac492eda22ecbbbdece7222bf3260  .tuning/s125/fits/01/q2.hpp
+294803d5547e1a969fd1b5d937663ddb0263237057747aab127c7c84b25190e3  .tuning/s125/fits/01/q3.hpp
+67c7c0107901f7e7d9d3e895a89c9fc8dc21365ffb2324fa0c1d862fc5192981  .tuning/s125/fits/01/q4.hpp
+c1b469b1f736bc6c6a99cda0023f94ceea70f8c3c0c97b37f66ed36faea25d0b  .tuning/s125/fits/01/q5.hpp
+b1c454e33673103b547fa515500f0d120cb07477bf966610542dac22dadb8eed  .tuning/s125/fits/02/full.hpp
+2d16f9bb85ff1d9e2a3dda513d86d247f5676de9e2cf5940cf9679e7de52e607  .tuning/s125/fits/02/q1.hpp
+d34893d237318cdc04efbbc795831a1966e0765c57b2b52aca1c81ec29cdeac7  .tuning/s125/fits/02/q2.hpp
+7d5d47be9ef5afe44ccf8d616a1319659d206f3bd0f5ffa80810a84eca5154e6  .tuning/s125/fits/02/q3.hpp
+7546d4e7149f5a2dede7f0e4b2a7b891ebf00669747d4e4584d1c61a83e55060  .tuning/s125/fits/02/q4.hpp
+dc1913c8a30b59598ebd728efcfbf0f0e52ff0988b6230b127d757c7e4a1ecbf  .tuning/s125/fits/02/q5.hpp
+0f82fab23d4c9b78d5c2158508f078e1390b79850eebb6034b431c039ef920d3  .tuning/s125/fits/023/full.hpp
+b57ca09247883b551ca068dd80a4d05e3887eeefe343145c01be6cd38399d907  .tuning/s125/fits/023/q1.hpp
+54db0e62a81bd01088cb4ab4ef160de0961cf205fed86499977475af99acd141  .tuning/s125/fits/023/q2.hpp
+db4308849c4ed92b8b893eb2f167fbc7c3f946e51e8f3aac40a236e24527675d  .tuning/s125/fits/023/q3.hpp
+c308414f98faeb6e47edb5981718dcfe42ac1527461f489c38e1a78b2d35e1ab  .tuning/s125/fits/023/q4.hpp
+8ee4e8c10d56007848dfa5a9a1eea00140799f4ff88faa68f19bdb483b027f21  .tuning/s125/fits/023/q5.hpp
+96b4c1984644d7e1e7f42bbc83ed950b8a7b61060b5d1329c6d2f0e4b31cc75c  .tuning/s125/fits/024/full.hpp
+4b11d1bfdc8c8c1f830faa4617e736adee668e3dee484236482e67001bbf6bb2  .tuning/s125/fits/024/q1.hpp
+c5ce355eb32583dda61f7d2e0cf73435f3dfa71d81cf46879bed69e0ccc85762  .tuning/s125/fits/024/q2.hpp
+ad3a2ac19e3afdf2fa73f3f5448f6a4e56c1a423cdaeb13cb17ee8806fa72a21  .tuning/s125/fits/024/q3.hpp
+3cbde0b1076af286f77f823597b9c754fb2b3204b03f5a385ad87cb372376c95  .tuning/s125/fits/024/q4.hpp
+da91e60f890a9f948852eecc23544f09eaeceb9b87ead2901cf6cd471fadc1d8  .tuning/s125/fits/024/q5.hpp
+b9247cef46a4c7536001d7da46061b92b515de79a1dbdd9018d0cf7c761f7f4b  .tuning/s125/fits/025/full.hpp
+6427d7290d51a11cd55d991006080b411b0e41f21dd8182a225fcb69e0c534bf  .tuning/s125/fits/025/q1.hpp
+952dc02dac72e81e32efcbb4b12993609ad2280f6f28069b6f96e03eb3a8369f  .tuning/s125/fits/025/q2.hpp
+e812b2d863c45688286367fae25b320b81b1c5b1a27f5eaa2f70873aae123ad0  .tuning/s125/fits/025/q3.hpp
+d35fcfb3cc0e1ac5c301e328084efe825ea9593a4e06ed9b00c078ba29be8bd6  .tuning/s125/fits/025/q4.hpp
+46aad7bafdc3c423ffe4d11c2b68d75f96460a8d60fa9cc2568aea15195301b1  .tuning/s125/fits/025/q5.hpp
+29c14187cade909ff5a664a67c0fb86063524d4b6ae6699fc370573f6dbb3384  .tuning/s125/fits/0256/full.hpp
+335ee93fd8e7bce82073460c7a520d179d6ae1145a236436e78de0c4ffc6cd8b  .tuning/s125/fits/0256/q1.hpp
+ee8bf35860ac844a385055668fa430c7b136d9a3e057fa00321b45ec28074d83  .tuning/s125/fits/0256/q2.hpp
+d9cecdf777eb3a4e591bfe25699035975482cf8f8763e2d8efa84479bf13f32a  .tuning/s125/fits/0256/q3.hpp
+57789a6f3c223f2a940f39a56ad447d228eb5c31f9c5d5dfcf8c0f5f568ff664  .tuning/s125/fits/0256/q4.hpp
+964019fbe4af41928db0a26add7077219d2a280fdd14a72df57bc0c20dca5880  .tuning/s125/fits/0256/q5.hpp
+176755dae36ffc534aac8ed3168f5fde3681fbd44a74821aa012cbd018619559  .tuning/s125/fits/02567/full.hpp
+cf1e67507d8c101f731119fd461142457d9bab0d4fa95b7fe50aced84dbca367  .tuning/s125/fits/02567/q1.hpp
+3a1fdfea46dd265b3931eb930426275ffacf6cd0e49fe2b2eb033317e43d34de  .tuning/s125/fits/02567/q2.hpp
+56256a647ca16c892c7d2fb8e36884a42cbeabd4c38a58426ee0435382ba59dd  .tuning/s125/fits/02567/q3.hpp
+e87b3a0b84229e43b9045ba1c715c24b2884a7e8655f9e4b9848bd959eee6dfc  .tuning/s125/fits/02567/q4.hpp
+aca56dce9eca45469f0d96d6aa078dbf0006265e18c9b66b3a633d14f2fc64eb  .tuning/s125/fits/02567/q5.hpp
+2558330dae9c207189d66723b88ac587372523cafe2c98ecc9c9db7826066755  .tuning/s125/audit/ties_P0.txt
+614d3b974beee4c5b4823118ab7c99b14004785210e34d57ec28fa541c72b63f  .tuning/s125/audit/ties_P1.txt
+712df8f30dee68e3ae8a6c03509c8686b4698a3053610471ca45aa3d1127ece1  .tuning/s125/audit/ties_P2.txt
+88521c8f8ae68670ea1bca6d57a1c8cc48e8467ba94af510df6ec1e07b1d2938  .tuning/s125/audit/ties_P3.txt
+64a1dd30ad241c0939914df7701e6a50621bd58fb166841f5e4921005c63beae  .tuning/s125/audit/ties_P4.txt
+9e1f4c7df905bb684e4fe645b0d7136a14bc542a7f2b8d59f4628c194d28b0b9  .tuning/s125/audit/ties_P5.txt
+0307403a35962c3b4d9b07955136e35b99cc5ccece8c257d96b00b13248d7b4b  .tuning/s125/audit/ties_P6.txt
+705b18402e02063ddaf71e3949289056ea376de6b53df6cd865af40266116acf  .tuning/s125/audit/ties_P7.txt

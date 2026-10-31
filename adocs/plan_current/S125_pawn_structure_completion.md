@@ -1,7 +1,7 @@
 id:         S125
 goal:       phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, backward stops counting an isolated pawn twice, and each is fitted
 accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the terms are indexed by file or by rank where the surveyed record says the indexing is what pays, and the step states which indexing it chose and why; **an isolated pawn is never also counted backward**, which is a documented double-count worth +4.01 to fix; every constant is fitted (DEC-084); **the pawn hash is not a precondition and the plan order is not reversed** -- these terms are what make S118 worth building, so they are measured recomputed at every `evaluate()` call, and the per-call cost the additions carry is measured here (`bench_eval`, and `build/tools/eval_spread` for where it lands) and recorded as the baseline S118 is later asked to reclaim
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S123_coverage_rows.cpp (scoped), adocs/data/S125_*, DEV_MANUAL.md, adocs/data/README.md; MANUAL.md read and unchanged at phase 1
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S123_coverage_rows.cpp (scoped), adocs/data/S125_*, DEV_MANUAL.md, adocs/data/README.md; MANUAL.md read and unchanged at phase 1; at phase 2 also tests/test_search.cpp, tests/test_engine.cpp, tests/test_mate_breadth.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, adocs/data/S170_cases.tsv and MANUAL.md
 excludes:   passed pawns, which are S123
 decisions:  DEC-071, DEC-084, DEC-259, DEC-315, DEC-326, DEC-329, DEC-330, DEC-331, DEC-221, DEC-134, DEC-105, DEC-090, DEC-047, DEC-142, DEC-316
 closes:
@@ -622,3 +622,420 @@ so DEC-141's tier two does not bind.
 5. Pin `adocs/data/S125_sprt.sh` (the bracketed lines) and run it at night: up
    to 41900 games, 19.86 h; watcher ceiling 40 h; on H0, `S125_screen.sh part
    A|B|C` (about 17 min each) and up to three more SPRTs.
+
+## 2026-10-31: the screen and the candidate
+
+One Opus 5.5 subagent, worktree `../chesso-s125b`, branch `s125b` at `f08d9db`
+(`b5f133c`, the phase 1 landing, with S299 to S302 on top, none touching `src/`
+or `CMakeLists.txt`). Written in two halves: the reading while the coordinator's
+cost run held the machine, the runs after its "go" and its rulings on the half 1
+points. Every reading with its command is in `adocs/data/S125_goldens.txt`. No
+match, SPRT, fit, datagen or timing ran. Every golden the paste moves is
+re-derived by its script, every guard held, and nothing stopped for the owner.
+One question went to the coordinator and came back ruled: the planted recovery
+(below).
+
+**The screen's launch, by the coordinator.** `S125_screen.sh all` started
+2026-10-31 00:35 from the main checkout at `f08d9db`, PID 8772, console
+`.tuning/s125_screen_all.console`, OUT `.tuning/s125`, and read `S125-ALL-DONE`
+by 03:44; load about 1 at launch, 35 GB free. HEAD is not the phase 1 landing
+`b5f133c` but a descendant whose `src/` and `CMakeLists.txt` are the landing's
+byte for byte: `git diff --stat b5f133c f08d9db` over `src`, the tuner's
+sources, `feature_audit`, `CMakeLists.txt` and `tests` is empty, and
+`cmake/pgo.cmake` differs by S302 alone. `landing-check` passed at launch. Two
+earlier runs are void and no reading (the step file and `status.md`):
+`.tuning/s125_void1/`, `.tuning/s125_void2/`. The no-survivor reading in the
+screen's header was confirmed by DEC-331 (14) before P0. Open findings (BUGS as
+scoped by DEC-171): S304, tools only, `depth_vs_eval.py` and `spsa_driver.py`,
+neither reached by the screen; S303, the filler open at this launch, landed at
+`9cbeb68` and left S304 as its residuals.
+
+### The screen, as read
+
+`adocs/data/S125_screen.sh all`, on S083's corpus (6226944 rows, sha256
+`2e0e3de9...`) against S082's qs validation view. The eight readings, the corpus
+line and every fit's and tie file's sha256 are in
+`adocs/data/S125_screen_reading.txt`.
+
+| part | against | full gain | s | m | verdict |
+|---|---|---|---|---|---|
+| P0, the three flats | its start (g, DEC-315) | +0.000007 | 0.000003 | 0.000005 | recorded |
+| P1, the isolated and backward increment | P0 (paired d, DEC-326 (3)) | -0.000004 | 0.000002 | 0.000003 | dropped |
+| P2, isolated pawns by file, b to h | P0 | +0.000012 | 0.000003 | 0.000004 | kept |
+| P3, doubled pawns by file, b to h | P2 | -0.000002 | 0.000006 | 0.000011 | dropped |
+| P4, backward pawns not isolated by own rank, 3 to 5 | P2 | +0.000005 | 0.000005 | 0.000008 | dropped |
+| P5, phalanx pawns by own rank, 2 to 7 | P2 | +0.000036 | 0.000002 | 0.000003 | kept |
+| P6, supported pawns by own rank, 3 to 7 | P5 | +0.000031 | 0.000003 | 0.000005 | kept |
+| P7, weak unopposed pawns | P6 | +0.000017 | 0.000003 | 0.000005 | kept |
+
+- Survivors P2, P5, P6, P7: `CANDIDATE 02567 groups
+  pawn_structure,isolated_files,phalanx,supported,weak_unopposed`. The candidate
+  is `.tuning/s125/fits/02567/full.hpp` (sha256 `176755da...`): best validation
+  0.071322 from 0.071425, at epoch 3000, stopped on patience.
+- The bisection order printed: A = P0,P2 | B = P0,P5,P6 | C = P0,P7.
+- **Ties, as the tie files hold them.** `ties_P5.txt` holds two lines:
+  `phalanx_mg 5 4` (rows 264, games 210) and `phalanx_eg 5 4` (rows 265, games
+  211), a phalanx on its own seventh sharing its sixth's cell. The other seven
+  files hold their two comment lines and no tie.
+- **The cap, as read; it decides nothing.** 7 of the 48 fits stopped at the
+  5000-epoch cap: 0's full (best at 4600) and q5 (3400), 02's q5 (3800), 025's q2
+  (4300) and q5 (3700), 0256's q2 (3100), and 02567's q5 (5000). The other 41
+  stopped on patience, five of them with their best at epoch 0: 0's q1, 01's q1
+  and q5, and 023's q3 and q5.
+- Stage-one headroom at 02567: mg 24227 and eg 27929 of 32767 (8540 and 4838 of
+  room).
+- **The full fit's tables, recorded; they decide nothing**, and monotonicity is
+  not imposed (DEC-331 (6)). Isolated by file b to h; phalanx own rank 2 to 7;
+  supported own rank 3 to 7; the flats isolated, doubled, backward.
+
+      pawn_structure_mg  {1, -7, -6}                    was {-9, -2, -11}
+      pawn_structure_eg  {-11, -20, 0}                  was {-15, -18, -2}
+      isolated_file_mg   {1, -6, -11, -10, -3, -7, 1}
+      isolated_file_eg   {-3, -1, -2, 0, -1, 3, 2}
+      phalanx_mg         {5, 2, 7, 20, 86, 86}
+      phalanx_eg         {-1, 1, 4, 7, 68, 68}
+      supported_mg       {8, 5, 7, 32, 187}
+      supported_eg       {11, 0, 4, 26, -29}
+      weak_unopposed_mg  {-10}
+      weak_unopposed_eg  {-6}
+
+  `isolated_backward`, `doubled_file` and `backward_rank`, dropped, stay zero and
+  are in no expression at the candidate.
+- **The cells far from their neighbours** (`adocs/data/S125_cells.txt`, by
+  `adocs/data/S125_cells.py`: the value less its neighbours' mean, S123's cutoff
+  |v-nbr| >= 10, deciding nothing), rows and games from the audit:
+  - `supported_mg` own 7th, 187 (+155.0), 9476 / 2525; own 6th, 32 (-65.0), 99795
+    / 17225; own 5th, 7 (-11.5), 1153721 / 95910;
+  - `supported_eg` own 7th, -29 (-55.0), 9515 / 2528; own 6th, 26 (+38.5), 98067 /
+    17057; own 3rd, 11 (+11.0), 2694291 / 133350;
+  - `phalanx_mg` own 6th, 86 (+33.0), 4088 / 2000; own 5th, 20 (-26.5), 77008 /
+    23000;
+  - `phalanx_eg` own 6th, 68 (+30.5), 4086 / 1999; own 5th, 7 (-29.0), 71647 /
+    21545.
+
+  The phalanx seventh shares the sixth's cell by the tie, so its 86 and 68 stand
+  on the sixth's support: the two halves' 2000 and 1999 games are about twice the
+  tie rule's 1000, and the seventh's own 210 and 211 are under it. The end cells of a
+  row have one neighbour, so a steep row's last cell reads far by construction. A
+  reading of the fit, not a chess judgement, and no constant is changed for it
+  (DEC-084). Recorded for S126, which refits them.
+
+### The apply
+
+`S125-APPLY-DONE` (console and OUT `.tuning/s125/apply_02567/`).
+- start-check passed: 49 definitions against HEAD `f08d9db`, every held value
+  HEAD's.
+- headroom: mg 24227, eg 27929 of 32767.
+- `verify_fit`: 1073 of 1073 identical to the emitted header. only-family: ten
+  arrays moved, `isolated_file`, `pawn_structure`, `phalanx`, `supported` and
+  `weak_unopposed`, mg and eg, nothing else.
+- Both builds with no warning. Bench 5434393 -> **5707449**.
+- 46 of 50 in each build. The reds: `test_evaluation` (the pawn on e2, 107
+  against 109), `test_search` (Re8, 199 against 196; then the ProbCut row, no
+  mate at its depth), `test_tuner_gradient` (the planted recovery on
+  `supported`'s own seventh) and `test_eval_trace` (the truncation pins).
+  `test_engine`, `test_mate_breadth`, `test_mate_carry` and `test_mate_pv` were
+  green at the paste.
+
+### The coverage rows at the candidate
+
+All three tools, run on the candidate's constants against S083's corpus, as
+their headers say.
+
+- **`adocs/data/S121_coverage_rows.cpp` refused**: landed block 19 pairs, 1 not
+  eligible (`k6K/8/8/8/8/8/1ppppppp/NqNNNNNN w - - 0 2` and its mirror, past the
+  800 cp, seven pawns on their own seventh each a phalanx member), "reproduces
+  the landed block: NO". Coverage itself held: 0 parameters at or under 1e-12
+  (smallest 3.250e-08), 0 features one way.
+- **By the coordinator's ruling, S121's ruling (b), the tool's picks replace the
+  block.** 19 pairs still, so S123's and S125's base counts stand: queen 3 is now
+  `3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR w - - 0 2` and its mirror, both VALID by
+  python-chess, picked earlier in the list; the other 18 pairs are as they were.
+  The constructive fallback was not needed.
+- Re-run on the new fixture, all three reproduce, no parameter open:
+  - S121: 19 pairs, 0 ineligible, from the base 42, 55 of 132 needs open;
+    gradient smallest 3.250e-08; 0 one-way; "reproduces: yes".
+  - S123: 4 pairs, 0 ineligible, from the base 80, 11 of 58 open, the same 8
+    picks; gradient smallest 2.955e-08, over its family 5.423e-07; 0 one-way;
+    "reproduces: yes".
+  - S125: 2 pairs, 0 ineligible, from the base 88, 15 of 60 open, the same 4
+    picks; gradient smallest 2.563e-09, over its family 1.452e-07; 0 one-way;
+    "reproduces: yes".
+
+### The preconditions, each by its script
+
+- Fixture clear of the clamp: 121.1 against 183.0, unmoved (stage two does not
+  move with a stage-one family).
+- The clamp case's push, `S083_tuner_preconditions.cpp clamp`: **+30 still** by
+  its rule: four rows bound, the farthest at 197.3, the nearest other at 158.8,
+  every row 13.25 from the kink, finite differences 1.01e-7.
+- The gauge walk: **0.0124 under Adam**, the pawn's, and 0.0538 under AdaGrad, the
+  bishop's, over the case's 0.01 floor by a factor of 1.24; held at most
+  1.35e-14.
+- The gradient case's worst (`test_tuner_gradient -s`, both builds): **9.22e-7 at
+  parameter 800, `mobility_mg[rook][4]`**, against 1e-6, green by a factor of
+  1.08, the thinnest since S121's 9.50e-7. No DEC-316 rows owed; they are the
+  answer if a later fit passes the bound, which does not move. The clamp case
+  1.01e-7; the synthetic group 3.62e-8.
+- **Planted recoveries: red at the paste, the coordinator's ruling, green.** At
+  6000 epochs `supported`'s own seventh did not come back: 16.735 against plant 11
+  (parameter 1065) and 8.870 against plant 12 (1070). The cause is the distance
+  and not the reach, because the paste moved the fit's start to 187 and -29. A
+  scratch copy of the case, the tracked test untouched, bound 0.5, `supported`'s
+  plant alone:
+
+  | epochs | mg[4] | eg[4] | worst of the ten cells |
+  |---|---|---|---|
+  | 6000 | 16.735 | 8.870 | 5.735, red |
+  | 8000 | 12.896 | 10.964 | 1.896 |
+  | 10000 | 11.625 | 11.658 | 0.625 |
+  | 12000 | 11.206 | 11.887 | 0.206 |
+  | 16000 | 11.022 | 11.988 | 0.022 |
+  | 24000 | 11.000 | 12.000 | 0.000 |
+
+  The ruling, DEC-331 (15): the same fit and the same 0.5, `supported`'s plant at
+  16000 epochs and every other plant at 6000; the budget's reason is at the site.
+  **The 16000 is a budget and not a golden**: the case reads the recovery within
+  0.5, a budget too small goes red, as the table shows, and the site carries no
+  GOLDEN tag. The plant and the bound do not move, so the assertion stays as
+  strict. The site's comment already held the class: 3000 -> 6000 for passed
+  bucket 1. `doubled_files` and `phalanx` stay unmeasured here, as phase 1
+  recorded.
+
+### Every golden, each by its script
+
+| golden | before | now | script |
+|---|---|---|---|
+| six piece anchors | 109, 283, 353, 590, 1021, 0 | **107**, 283, 353, 590, 1021, 0 | `S192_anchors.py`: 10 of 10 at the landing, then on the fit, then 10 of 10 on this tree. Only the pawn on e2 holds a pawn |
+| `QUIET_ROOK_EVAL`, `_CHEAP`; 394 | 590, 578; 394 | unmoved: no pawn | the same |
+| `black_static`; quiet evasion; repetition | 196; -541; -603 | **199** (f7, g7, h7, three phalanx pawns); -541 unmoved, the four leaves pawnless and still the four king moves standing pat; -603 unmoved, no pawn | the same |
+| `POSITIONAL_ROOM` | -- | did not fire: the white pawn's residual is \|107 - 84\| = 23 against 150 | -- |
+| `truncation_positions` | S123's four, phases 5, 7, 13, 17 | **re-picked**: phases 5, 11, 17 and 23. 111 past 2.8, 35 at 2.875, 31 distinct. The worst is 2.875 = 69/24, so N stays 3, tempo zero and DEC-322's fourth division not arising. Of S123's four, two read 1.917 and 1.958 and the worst 2.75 | `truncation_scan --data <S083's corpus> --min 2.8`, then `S083_truncation_pick.py` |
+| coverage blocks | 19, 4, 2 pairs | S121's **queen 3 pair replaced** by the tool's pick; S123's and S125's unmoved; all three reproduce | `S121_`, `S123_`, `S125_coverage_rows.cpp` |
+| clamp push; walk | +30; 0.0666 / 0.0760 | +30 unmoved; **0.0124 / 0.0538** | `S083_tuner_preconditions.cpp both` |
+| fixture clear of the clamp | 121.1 | 121.1 against 183 | the same |
+| gradient check (DEC-316) | 3.45e-7 at 857 | **9.22e-7 at 800** | `test_tuner_gradient -s` |
+| `EXACT_FLOOR` 159 | 160 / 153 | **held**: 168 shipping, 158 weakened; the gate at RfpMinPly 1 red at 158 | `S156_mined_floor_sweep.py --floor 159` via `S136_overlay_run.py` (the paste's one file, `src/evaluation.cpp`) |
+| `MATE_IN_THREE_FLOOR` 11 | 11 / 10 | **held**: 12 shipping, 10 weakened; `red` red at 10 >= 11 and on mate-in-two exactness | `S154_floor_margin_sweep.py floor`, `red`, the same overlay |
+| node budget | 65024 / 3251 (12104, 0.74 of c) | unmoved: 10306 nodes, 0.63 of c, inside [7270, 32512] | `S192_node_budget.py` |
+| first-mate; `DRIVE_DEPTH`; ply-2 | 9, 9, 5; 4; 6 | unmoved | `S188_repair_goldens.py first-mate`, `s207`; `S083s_rfp_ply2.py` |
+| `capture_mates`; extra ply | 9, 8, 11, 12; 8 (mate 4) | unmoved: each at its asserted depth (the fourth capture row at 9 and 12); mutant separation not re-read, every case green | `S230_mine_r01_row.py depths`, candidate and parent |
+| `mate_probcut_hides` | S121's row, depth 10, mate in 4 | **re-mined**: `1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52`, depth 9, **mate in 5**. Shipped `d9` against B04's `d10` in the range 7 to 10; `d9 d11 d12` over 3 to 12. 3 of 269 separate, two by distance only; the guard-mode witness fires at 7 to 10. Stockfish at 5000000 nodes reads `#+5`, and python-chess reads its line as ending in mate. Observed red under B04, green shipped. S121's row read no mate at any depth from 3 to 12 | `S277_mine_mate_row.py`, six stages, guard mode |
+| `LATE_CAPTURE_*` | LQ02 at 7, LQ03 at 3 | unmoved, node counts apart | `S261_mine_late_capture.py sweep`, `pick` |
+| aborted-line cell | line 101 at 40000 (30000..60000) | **line 114 (game 4543) at 250000** (run 150000..360000; margin 100000 below, 110000 above; 4 of 318 separate). Line 101's run stays 30000..60000 and the rule takes the longest run. Observed red under MW02 (9 >= 11), green shipped | `S294_fallback_cell.py`, four stages, MW02 on a throwaway tree of the candidate |
+| `ALPHA` | -2108 (band -2153 .. -1923) | **-2108 kept**: band -2165 .. -1935, 57 below and 173 above; the trace meets the node at -2013, -2088, -2204 and -2383 | `S121_alpha_window.cpp` (it reproduces S123's band on the parent); `S136_trace_patch.py` |
+| `short_line_ceiling` | 2, 13, 4, 1, 2, 3 | unmoved; the command gains `adocs/data/S125_sweep_s170.txt` | `S203_case_sweep.sh --ceilings`: the ten grids plus S125's |
+| S170 budgets | A 1200000, B 100000, C 1200000, D 1500000, E 300000, F 100000 | **A 1000000, C 1000000, F 500000**; B, D and E unmoved | `S170_pick_budgets.sh` |
+| readings | 697 mate_pv lines; defender 86/104 | 699; 86/104 | `test_mate_pv -s`; `S165_nmp_defender_sweep.py` |
+| `golden_defaults`, option count, census, book | -- | unmoved by construction | -- |
+
+**DEC-299's guard is met**: both mate floors hold and no ceiling moves, so the
+budgets the picker answers are applied, with a header paragraph in
+`adocs/data/S170_cases.tsv`, and the ceilings' command gains S125's grid
+(`tests/test_mate_carry.cpp`, `DEV_MANUAL.md`). S125's grid: 108 cells, 1404 mate
+lines, 22 short; it alone answers 0, 1, 1, 0, 2, 2.
+
+**The floors' margins.** `MATE_IN_THREE_FLOOR` 11 is one below the 12 that ships
+again, where DEC-330 left it at zero, and one above the weakened 10: on an H0 the
+paste reverts and the zero margin returns. `EXACT_FLOOR` 159 is 9 below the 168
+that ships and 1 above the weakened 158. A floor that holds is not moved here; one
+below the shipping count, 167, is a rise for the coordinator to propose.
+
+### Gates
+
+- Both builds: 0 warnings. `ctest -L fast`: **50 of 50** in `build/` and in
+  `build-tune/`, sequential, `CLANG_FORMAT_MAJOR=22`.
+- `./clang-format.sh --check` clean.
+- **The S297 clang pair** (`STAGES=clang tools/gate_extra.sh`): `build-clang` and
+  `build-clang-tune` with clang 22.1.8, no error and no warning; both fast suites
+  50 of 50; 357 s.
+- `tools/plan_prose_check.py`, one mode per call, each exit 0: `--citations` 0
+  flagged over 19 files; `--touches` 0; `--params`; `--gate` agrees; `--prose` 0
+  flagged.
+- **`tools/gate_extra.sh`**, all six stages, on the candidate tree, detached under
+  a four-exit watcher: `GATE-EXTRA-DONE 6 stages 1441 s`. prose 0 s, citations 0 s,
+  debug 394 s (6 of 6), sanitize 736 s (the fast label 50 of 50 under the
+  sanitizers; INV-6 across builds, both 5707449), perft 51 s, clang 260 s (50 of 50
+  twice). No `Assertion` in its logs.
+- **The ruled plant under the sanitizers**: `test_tuner_gradient`, its `supported`
+  plant at 16000 epochs, passes in 79.86 s against that build's 600 s timeout
+  (12.47 s and 12.29 s under clang), so nothing more is owed on it.
+- **Tier 2 (DEC-141) does not bind**, by what the diff touches: under `src/` only
+  `src/evaluation.cpp`, its ten arrays and whole-line comments; no `make_move`,
+  `unmake_move`, generator or search change. `gate_extra` ran anyway, as the brief
+  asks, because the candidate puts the family's code into every stage-one
+  evaluation. The Debug self-play is the coordinator's.
+- **Bench 5707449** in both builds: the commit's `Bench:`.
+
+### The cost (the coordinator's run)
+
+`adocs/data/S125_cost_reading.txt`, 2026-10-31 03:44:37 to 05:43:05, `b5f133c`
+against `63d5bcf`, `S125-COST-DONE` (`.tuning/s125_cost.console`): INV-6 bench
+5434393 on every binary; nine distinct `.text` sections; 16 of 16 pairs on every
+row.
+- all **+4.20 %**; p2 **+1.18 %**, p3 **+0.65 %**, p4 **+0.55 %**, p5 **+1.36 %**,
+  p6 **+1.05 %**: cycles and wall beyond the floor, instructions the same way.
+- p1, p7 and parent: zero, inside the A/A floor.
+- The A/A floor: bench16 cycles 0.315 %, pos11 cycles 0.380 %, wall 0.364 %.
+- Forced instructions, printed and not gated: bench16 the seven rows sum to
+  +4.866 % against all +4.642 %; pos11 +4.394 % against +4.007 %.
+
+**`all` is not the candidate's set**: it also forces P1, P3 and P4, which the
+candidate drops. The candidate's set is mask 114, P2, P5, P6 and P7, so **the row
+`cand`, `S125_COST=114`, is added**, by the coordinator's ruling, to
+`adocs/data/S125_cost.sh` and `S125_cost.py` in the existing rows' form: nested
+inside all and over p2, p5, p6 and p7 in the reading's ordering check. Nothing was
+timed.
+
+**That holds for CAND and not after the close.** The close's fold (DEC-331 (3),
+(15)) makes `isolated_backward` live, so the engine then also computes P1 and the
+`& ~isolated`. The fold adds P1's forced row, +0.37 % instructions, read zero with
+its cycles and wall CIs reaching inside the A/A floor, and S118's baseline is read
+with both rows, `cand` and p1. No further row is added.
+- `check` with `ROWS=cand`: `rows aa (zero against its copy), cand (S125_COST=114),
+  each against zero`, `S125-COST-CHECK-DONE`. `p9`, `cand cand` and a PARENT that
+  is not CAND^ each refuse.
+- `S125_cost.py read` over the first run's pairs, its nine rows named, reproduces
+  its reading line for line (0 diff lines).
+- The row builds: `b5f133c` with the patch at `S125_COST=114` in a scratch tree,
+  Release, padded, no warning, bench 5434393 and `bench 12`'s stream equal zero's;
+  its `.text` (`7eb198c6...`) is none of zero's, p2's, p5's, p6's, p7's or all's.
+
+**The command, from the main checkout, once the candidate's commit carries the
+row**, machine idle, after the gates and before the SPRT:
+
+```
+cd /home/max/ws/chesso
+CAND_SHA=b5f133c PARENT_SHA=63d5bcf ROWS=cand OUT=/home/max/ws/chesso/.tuning/s125/cost_cand adocs/data/S125_cost.sh check
+CAND_SHA=b5f133c PARENT_SHA=63d5bcf ROWS=cand OUT=/home/max/ws/chesso/.tuning/s125/cost_cand \
+  nohup adocs/data/S125_cost.sh run > .tuning/s125_cost_cand.console 2>&1 &
+```
+
+It times `aa` and `cand`, so the row comes with its own session's A/A floor: about
+25 min (two builds, two comparisons, the streams; S121's one-row run took 23 min),
+watcher ceiling 50 min, `S125-COST-DONE|FAILED`. `OUT` is fresh because a run
+refuses an OUT holding a `reading.txt`, which `.tuning/s125/cost/` does. No guard
+is weakened. The reading's place is `adocs/data/S125_cost_reading.txt`'s RUN 2 and
+the next paragraph.
+
+**The row `cand`'s reading: not yet timed.** The coordinator records it here and
+in `adocs/data/S125_cost_reading.txt` in the pin commit.
+
+### The SPRT script
+
+`adocs/data/S125_sprt.sh`, re-read against this candidate. The markers are left
+unfilled and the script refuses on them before anything else.
+- **The landing guard.** `landing=b5f133c` would refuse every descendant, since
+  S302 changed `cmake/pgo.cmake`: seen by git, `b5f133c` is an ancestor of
+  `f08d9db`, `src` and `CMakeLists.txt` equal, `cmake/pgo.cmake` differing. By the
+  coordinator's ruling the bracket stays, its text names `f08d9db`, the commit the
+  screen ran from, `phase1="b5f133c"` is a filled constant, and THE LANDING
+  paragraph says so in words. The run-time check: `phase1` is an ancestor of
+  `landing`, and the build-path diff between them is exactly `cmake/pgo.cmake`.
+- **The header's parts** now name the survivors P2, P5, P6 and P7 and the three
+  dropped, P1, P3 and P4, with their figures.
+- **The line guard narrowed**, a strengthening, by the coordinator's ruling: from
+  the sixteen arrays to the ten that move. Before it, nothing enforced "a dropped
+  group's arrays stay zero". The weight-by-name check still reads the sixteen.
+- **How the guards read a part.** A new booked setting, `part=`, empty for the
+  family or A, B or C, is re-pinned with `ref=` and `cand=` for a part's run; each
+  part reads the same line test with its own subset, never a wider list. CAND may
+  move A: flats, `isolated_file`; B: flats, `phalanx`, `supported`; C: flats,
+  `weak_unopposed`. REF may carry past `landing` nothing for the family and A; A's
+  arrays for B; A's and B's for C, read by the same line test from `landing` to
+  REF, because a later part plays over what has landed. The family's guard on REF
+  is as it was, and REF must also descend from `landing`.
+- **The H1 row**: "A dropped group stays at zero" was false of IB after the fold;
+  it now says that with P1 dropped the increment is zero, so IB's weight at the
+  fold is backward's flat alone, {-6} and {0}, and P3 and P4 stay at zero.
+- **The H0 and No verdict rows** now say the fold is owed on those outcomes too,
+  with what it is folded over: on a family fully H0, the parent's flats, {-11} and
+  {-2} (DEC-331 (15)).
+- **WHAT THE VERDICT PRICES** says that the dropped groups cost nothing at CAND,
+  and that the close's fold, which this verdict does not price, adds P1's row.
+- **The H0 row**: the partition as the screen printed it and each part's model, A
+  `pawn_structure,isolated_files`, B `pawn_structure,phalanx,supported` with P5's
+  two ties, C `pawn_structure,weak_unopposed`, each refit over what has landed, so
+  B's and C's models under H0 are not the screen's. "At worst three more runs after
+  this one, four in all" holds.
+- **Its mode.** The file was 100644 where its siblings are 100755, so the header's
+  `nohup adocs/data/S125_sprt.sh` would have read `Permission denied` at launch;
+  now 100755. Phase 1's guards were shown through a dry copy, which is why it did
+  not show.
+- **Shown on a scratch pin** (`adocs/data/S125_goldens.txt` section 11), a
+  throwaway clone, each pair committed there, the exec replaced by an echo: the
+  real pair over a tools-only descendant, S303's shape, prints
+  DRY-RUN-WOULD-EXEC, and so do part A; B with A at H0 and with A landed; C with
+  nothing, A, B, and A and B landed. **Refused, 23 of 23**: a dropped group's array
+  moved (three plants); S123's weight; a mobility continuation line; code appended
+  after a `};`; a wrapped definition; a flag in `CMakeLists.txt`;
+  `src/evaluation.hpp` touched; `landing` the phase 1 commit itself, not descending
+  from it, with `src/` moved, and with a second build file moved; REF's
+  `cmake/arch.cmake` moved, a part landed in the family's REF, REF older than
+  `landing`; part A moving `phalanx`, part B moving `weak_unopposed`, part B moving
+  A's landed array, part A over a landed part, part B's REF carrying
+  `weak_unopposed`, part C's REF carrying a dropped array, and part D.
+
+### What the close owes after P1's drop: the ruling, DEC-331 (15)
+
+The accepts says "an isolated pawn is never also counted backward", with no
+condition, and DEC-331 (3) and (13) put the fold at the close. **By the
+coordinator's ruling, DEC-331 (15), the fold is owed at S125's close on every
+verdict.** It is neutral (INV-6). P1's drop sets the increment to zero, so IB takes
+backward's flat as it stands on the tree at the close: {-6} and {0} on H1; on a
+family fully H0, the parent's flats, {-11} and {-2}; with a part landed, that part's
+refit of them. Rejected: IB scoring isolated alone, which DEC-331 rejected and which
+is unmeasured; and amending the accepts with no fold, which needs the owner's words
+for a clause the fold already satisfies.
+
+### Also changed
+
+- `src/evaluation.cpp`: whole-line comments only beside the ten arrays: the
+  family's paragraph (the 02567 fit, pasted unchanged, the dropped groups at zero),
+  the flats' provenance, and the stage-one bound's 24227 and 27929. `src/evaluation.hpp`
+  is untouched: the SPRT guard allows `src/evaluation.cpp` alone, and the definitions'
+  comments wait for the closing commit.
+- `adocs/data/S192_anchors.py`: the two anchors and the family's note.
+- `DEV_MANUAL.md`: every goldens row S125 moved or re-read, the `--ceilings` command
+  with S125's grid, the gradient and walk sentences. Where the step file and
+  `DEV_MANUAL.md` differ, the manual's commands were followed; they did not differ on
+  any command run here. `.tuning/coord/S125/brief_inputs.md` section 5 is stale where
+  it differs from the manual: its walk and gradient figures are S123's, and it omits
+  `mate_probcut_hides` and `mate_the_extra_ply_hides`, both of which the manual carries.
+- `MANUAL.md`: the `RfpMinPly` row's mined-set figures (168, 162, 158 against 159).
+- `adocs/data/README.md`: rows for `S125_screen_reading.txt`, `S125_cost_reading.txt`,
+  `S125_sweep_s170.txt`, `S125_cells.py`, `S125_cells.txt` and `S125_goldens.txt`,
+  and the `cand` row in `S125_cost.sh`'s and `S125_cost.py`'s.
+- `tests/test_eval_trace.cpp`: the header's sentence on what ships at zero.
+
+### Proposed commit message
+
+```
+Paste S125's pawn structure fit for its SPRT (S125)
+
+The screen kept isolated pawns by file, phalanx, supported and weak
+unopposed pawns and dropped the increment, doubled by file and backward
+by rank (DEC-331). Their full-corpus fit, 02567, is pasted over ten
+arrays, the three flats among them, for the one {0, 5} SPRT that decides
+the family (DEC-259); an H0 is bisected A | B | C.
+
+Every golden the paste moves is re-derived by its script (DEC-142): the
+anchors 107 and 199; the truncation pins re-picked, N still 3; S121's
+queen 3 pair replaced by the coverage tool's pick; the ProbCut row
+re-mined; the aborted-line cell at line 114, 250000 nodes; ALPHA kept
+inside its band. Both mate floors hold: EXACT_FLOOR 159 against 168 and
+158, MATE_IN_THREE_FLOOR 11 against 12 and 10. No mate-carry ceiling
+moves, so the picker's budgets for A, C and F apply (DEC-299). The
+supported plant takes 16000 epochs, a budget and not a golden: the paste
+moved its start, the bound and the plant did not move (DEC-331 (15)).
+
+S125_sprt.sh's landing guard holds REF to f08d9db, the commit the screen
+ran from, and checks that against b5f133c; its line guard reads the ten
+arrays that move, a part's own subset by part=. S125_cost.sh gains the
+row cand, the candidate's set; S118's baseline reads it with p1, which
+the close's fold adds. The fold is owed on every verdict (DEC-331 (15)).
+
+Bench: 5707449
+```
+
+No `done:` stamp: the SPRT comes first.

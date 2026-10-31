@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 #
-# S125: THE PAWN STRUCTURE FAMILY -- the survivors of S125's screen (P1, the
-# isolated and backward increment; P2, isolated pawns by file; P3, doubled
-# pawns by file; P4, backward pawns not isolated by rank; P5, phalanx pawns;
-# P6, supported pawns; P7, weak unopposed pawns) with P0's three flats refitted
-# beside them, fitted on S083's corpus with every other constant frozen,
-# against the phase 1 landing that ships the family at zero: one SPRT at the
-# harness's 8+0.08, Hash 16, {0, 5} nElo (DEC-259 (b)), bisected along DEC-331
-# (7)'s partition on H0 or no verdict.
+# S125: THE PAWN STRUCTURE FAMILY -- the survivors of S125's screen (P2, isolated
+# pawns by file; P5, phalanx pawns; P6, supported pawns; P7, weak unopposed
+# pawns) with P0's three flats refitted beside them, fitted on S083's corpus with
+# every other constant frozen, against the phase 1 landing's engine, which ships
+# the family at zero: one SPRT at the harness's 8+0.08, Hash 16, {0, 5} nElo
+# (DEC-259 (b)), bisected along DEC-331 (7)'s partition on H0 or no verdict. The
+# screen dropped P1, the isolated and backward increment, P3, doubled pawns by
+# file, and P4, backward pawns not isolated by rank: their arrays stay at zero,
+# in no expression, and this run does not measure them.
 #
 #   nohup adocs/data/S125_sprt.sh > .tuning/s125_sprt.log 2>&1 &
 #
@@ -20,6 +21,37 @@
 # lines below, and until then the script refuses to start (the self-check at
 # the bottom).
 #
+# 2026-10-31, S125's phase 2, re-read against the candidate before it is pinned
+# (the step file's "2026-10-31: the screen and the candidate"). The screen kept
+# P2, P5, P6 and P7 and dropped P1 (d -0.000004 against m 0.000003), P3
+# (-0.000002 against 0.000011) and P4 (+0.000005 against 0.000008): `CANDIDATE
+# 02567 groups pawn_structure,isolated_files,phalanx,supported,weak_unopposed`,
+# the fit .tuning/s125/fits/02567/full.hpp (sha256 176755da...), pasted by
+# `S125_screen.sh apply` over ten arrays, bench 5434393 -> 5707449. The guards
+# below hold, read on the worktree against its HEAD `f08d9db`, and were narrowed
+# and shown on a scratch pin: src/evaluation.cpp is the only file under src/,
+# CMakeLists.txt and cmake/ that differs; outside whole-line comments its 20
+# changed lines are the ten definitions, old and new; and every weight outside
+# them reads HEAD's by name. The bisection the screen printed is A = P0,P2 | B =
+# P0,P5,P6 | C = P0,P7, three parts, so the H0 row's "at worst three more runs
+# after this one, four in all" holds as written. The verdict pays the set the
+# candidate computes, mask 114, adocs/data/S125_cost.sh's row `cand`, which the
+# coordinator times before this run; `all`'s +4.20 % also forces P1, P3 and P4
+# and is not its row (one group alone: p2 +1.18 %, p5 +1.36 %, p6 +1.05 %, p7
+# zero; adocs/data/S125_cost_reading.txt). There is no clamp reading: the family
+# is stage one.
+#
+# THE LANDING, AND WHY `landing=` IS NOT THE LANDING'S COMMIT. S125's phase 1
+# landed the family at zero in `b5f133c`. The screen ran from `f08d9db`, which is
+# `b5f133c` with S299 to S302 on top, none of them touching src/ or the top-level
+# CMakeLists.txt; the sole build-file difference between the two is S302's
+# cmake/pgo.cmake, comments and a branch only a `CHESSO_PGO=use` build takes,
+# which fastchess.sh's build is not. `landing=` names `f08d9db`, the tree every
+# gain was read against (DEC-331 (14)), and REF is held to it. What makes the
+# sentence above true is checked at run time, not assumed: `phase1` is an
+# ancestor of `landing`, and the only path under src/, CMakeLists.txt and cmake/
+# that differs between them is exactly cmake/pgo.cmake.
+#
 # THE PAIR.
 #
 #   CAND  S125's candidate commit: `adocs/data/S125_screen.sh apply` pasted the
@@ -30,32 +62,61 @@
 #         arrays and the three flats in src/evaluation.cpp; every golden the
 #         paste moved re-derived by its own script (DEC-142); so the commit is
 #         green.
-#   REF   CAND's parent: S125's phase 1 landing, the family at zero and in no
-#         expression (adocs/data/S125_inv6.txt), or a descendant of it whose
-#         src/ and build files are the landing's byte for byte.
+#   REF   CAND's parent: a descendant of `landing` whose src/ and build files
+#         are `landing`'s byte for byte, the family at zero and in no expression
+#         (adocs/data/S125_inv6.txt). A later bisection part's REF may also
+#         carry what has landed by then, and nothing else (THE PARTS below).
 #
 # The two differ by the fitted family and flats and nothing else in src/ or the
 # build's flags, which the guards below check:
-#   - CAND^ is REF;
-#   - REF's src/, its top-level CMakeLists.txt and cmake/ are the phase 1
-#     landing's byte for byte (src/CMakeLists.txt is under src/; the engine
-#     target reads no other build file);
+#   - CAND^ is REF, and REF descends from `landing`;
+#   - `landing` is the phase 1 landing's engine but for cmake/pgo.cmake (THE
+#     LANDING above);
+#   - REF's src/, its top-level CMakeLists.txt and cmake/ are `landing`'s byte
+#     for byte (src/CMakeLists.txt is under src/; the engine target reads no
+#     other build file);
 #   - CAND's are REF's but for src/evaluation.cpp, which differs outside
-#     whole-line comments only in whole one-line definitions of the family's
-#     sixteen arrays -- isolated_backward, isolated_file, doubled_file,
-#     backward_rank, phalanx, supported, weak_unopposed and pawn_structure (P0's
-#     flats are the family's too, DEC-331 (5)), mg and eg -- each read to its
+#     whole-line comments only in whole one-line definitions of the ten arrays
+#     this run moves -- pawn_structure (P0's flats, DEC-331 (5)), isolated_file,
+#     phalanx, supported and weak_unopposed, mg and eg -- each read to its
 #     closing `};` and nothing after it. A definition clang-format wrapped onto
-#     a second line is refused, not read: join it before pinning;
-#   - and every weight array and define outside those sixteen reads REF's
-#     value by name (S125_screen.py only-family-pair). A dropped group's
-#     arrays stay zero and are in no expression at CAND either.
+#     a second line is refused, not read: join it before pinning. The three
+#     dropped groups' six arrays are not in that list, so they cannot move: REF
+#     holds them at zero, CAND holds what REF holds, and a group at zero is in
+#     no expression (the liveness flags in src/evaluation.cpp);
+#   - and every weight array and define outside the family's sixteen reads REF's
+#     value by name (S125_screen.py only-family-pair).
+#
+# THE PARTS: HOW THE GUARDS READ A BISECTION PART. A part's run is this file with
+# `ref=`, `cand=` and `part=` re-pinned and the coordinator's sentence rewritten;
+# `landing=` and `phase1=` stay. Each part's arrays are a subset of the ten, and
+# `part=` names that subset, so a part reads the same guards with a narrower list
+# and never a wider one:
+#
+#   part   CAND may move                         REF may carry past `landing`
+#   ""     the ten, the family                   nothing
+#   A      pawn_structure, isolated_file         nothing: the paste reverted
+#   B      pawn_structure, phalanx, supported    pawn_structure, isolated_file
+#   C      pawn_structure, weak_unopposed        those and phalanx, supported
+#
+# What REF carries is read by the same line test, from `landing` to REF, and is
+# what the parts before it may have landed: B's REF holds A's arrays if A read
+# H1, C's holds A's and B's as they read. The flats are in every part because
+# every part refits them over what has landed (the H0 row). The family's run and
+# part A take no REF past `landing`, as this guard always read.
 #
 # WHAT THE VERDICT PRICES. The fitted survivors and their cost together:
-# every evaluation pays the groups whose weights are live -- a few set
+# every evaluation pays the four groups whose weights are live -- a few set
 # operations over the pawn fills, a popcount for each count, a loop over the
 # pawns of each table -- at every node, the shortcut's nodes included, since
-# the family is stage one (DEC-331 (8)); the flats' refit costs nothing. The
+# the family is stage one (DEC-331 (8)); the flats' refit costs nothing and, at
+# CAND, the dropped groups cost nothing, being in no expression. That holds for
+# CAND and not after the close: the close's fold (DEC-331 (3), (15)) makes
+# isolated_backward live, so the engine then also computes P1 and the
+# `& ~isolated`, which this verdict does not price. The fold adds P1's forced
+# row, +0.37 % instructions, read zero with its cycles and wall CIs reaching
+# inside the A/A floor, and S118's baseline is read with both rows, `cand` and
+# p1. The
 # cost is recorded apart, on identical trees, by adocs/data/S125_cost.sh
 # (DEC-047's method), and printed beside the verdict; it decides nothing.
 #
@@ -117,7 +178,7 @@
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
 # [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and
-# `cand=` below, the phase 1 landing's sha into `landing=`, their dates into
+# `cand=` below, `f08d9db` into `landing=` (THE LANDING above), their dates into
 # the banner lines above, the screen's eight readings and their sha256 (P0's g
 # and each part's d, s, m and verdict), the survivors and the H0 partition the
 # screen printed, the corpus `locate` recorded, the candidate fit's sha256 and
@@ -136,9 +197,14 @@
 #                   comments that assert the double count are rewritten with
 #                   the definition, in the same commit as specs.md's wording
 #                   (DEC-331 (13)), and the comments over the weights made
-#                   true. A dropped group stays at zero, in no expression,
-#                   recorded as a zero (S126's rule). The stopping run's Elo is
-#                   upward-biased (DEC-063) and is not the effect size.
+#                   true. P1 was dropped, so the increment is zero and IB's own
+#                   weight at the fold is backward's flat alone, {-6} and {0} at
+#                   this fit: the one dropped group the fold takes out of zero,
+#                   by DEC-331 (3)'s arithmetic and at no change of score. The
+#                   fold is owed on every verdict (DEC-331 (15)).
+#                   P3 and P4 stay at zero, in no expression, recorded as zeros
+#                   (S126's rule). The stopping run's Elo is upward-biased
+#                   (DEC-063) and is not the effect size.
 #
 #   H0           -> not shown to gain. **The paste is reverted whole** -- the
 #                   family back to zero, the flats back to S083's, the goldens
@@ -146,21 +212,37 @@
 #                   partition as ruled at phase 1's fast check, survivors
 #                   only, in order: A = P1 to P4, the reshaped existing terms,
 #                   B = P5 and P6, connected pawns, C = P7, weak unopposed
-#                   pawns; a part with no survivor does not exist. P0's flats
+#                   pawns; a part with no survivor does not exist. The screen
+#                   printed A = P0,P2 | B = P0,P5,P6 | C = P0,P7, so A is
+#                   `--only pawn_structure,isolated_files`, B
+#                   `pawn_structure,phalanx,supported` with P5's two ties, and C
+#                   `pawn_structure,weak_unopposed`. P0's flats
 #                   never land alone: every part that exists frees them with
 #                   its groups, as every screen part did, so they enter with
 #                   the first and each later part refits them over what has
-#                   landed. Each part its own `{0, 5}` SPRT in this file's
+#                   landed. So B and C under H0 are not the screen's fits, which
+#                   carried the parts before them free; a part's fit is refit
+#                   over what has landed and read by THE PARTS' guards above.
+#                   Each part its own `{0, 5}` SPRT in this file's
 #                   shape -- at worst three more runs after this one, four in
 #                   all, each up to 19.86 h, 79.4 h with this run. Each plays
 #                   over what has landed by then, its groups refitted then
 #                   (`adocs/data/S125_screen.sh part NAME`); a part's H1 lands
 #                   before the next is fitted; a part's H0 or no verdict is
-#                   that part's zero.
+#                   that part's zero. **The fold of DEC-331 (3) is owed at S125's
+#                   close on this outcome too, as on H1** (DEC-331 (15): the
+#                   accepts' clause is unconditional): neutral (INV-6), IB taking
+#                   backward's flat as it stands on the tree at the close, the
+#                   increment being zero. On a family fully H0 that is the
+#                   parent's flats, {-11} and {-2}; with a part landed, that
+#                   part's refit of them.
 #
 #   No verdict   -> the 41900-game cap, or the 40 h abort, with neither bound:
 #                   reverted whole as H0 is, recorded as **unresolved**, and
-#                   bisected as H0 is (DEC-259 (c)).
+#                   bisected as H0 is (DEC-259 (c)). **The fold is owed here
+#                   too**, as on H0, over the flats the tree carries at the
+#                   close: the parent's, {-11} and {-2}, if no part lands
+#                   (DEC-331 (15)).
 #
 # THE CLOSING COMMIT carries DEC-220's block -- `SPRT | cand <CAND> vs ref
 # <REF>, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo` and the `Elo`, `LLR`,
@@ -184,7 +266,9 @@ fail()
 # S136_sprt.sh's same block reads them.
 ref="[COORDINATOR: REF's sha]"
 cand="[COORDINATOR: CAND's sha]"
-landing="[COORDINATOR: the phase 1 landing's sha]"
+landing="[COORDINATOR: f08d9db, the commit the screen ran from, THE LANDING above]"
+phase1="b5f133c"  # the commit that landed the family at zero
+part=""           # THE PARTS above: empty for the family, or A, B or C
 tc="8+0.08"
 hash="16"
 concurrency="12"
@@ -234,10 +318,60 @@ fi
 # part of the chesso target fastchess.sh plays.
 build_paths=(src CMakeLists.txt cmake)
 
-# REF's engine is the phase 1 landing's: the family at zero, the flats S083's.
-if ! git diff --quiet "$landing" "$ref" -- "${build_paths[@]}"; then
-  fail "REF's src/ or build files differ from the phase 1 landing's -- REF is" \
-       "not the family at zero or a descendant of it with the landing's src/"
+# THE PARTS: what this run may move, and what REF may carry past `landing`.
+case "$part" in
+  "") moves="pawn_structure|isolated_file|phalanx|supported|weak_unopposed"
+      carries="" ;;
+  A)  moves="pawn_structure|isolated_file"
+      carries="" ;;
+  B)  moves="pawn_structure|phalanx|supported"
+      carries="pawn_structure|isolated_file" ;;
+  C)  moves="pawn_structure|weak_unopposed"
+      carries="pawn_structure|isolated_file|phalanx|supported" ;;
+  *)  fail "part is '$part', not empty, A, B or C" ;;
+esac
+
+# Whether FROM and TO differ under src/, outside whole-line comments, only in
+# whole one-line definitions of ARRAYS, each to its closing `};` and nothing
+# after it: no continuation line, and no code appended to a definition.
+only_definitions()
+{
+  local lines form
+  lines="$(git diff -U0 "$1" "$2" -- src |
+           grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' | cut -c2- |
+           grep -vE '^[[:space:]]*(//.*)?$')"
+  form='^constexpr int ('"$3"')_(mg|eg)\[([0-9]+|PS_FEATURE_COUNT)\] = \{[[:space:]]*-?[0-9]+([[:space:]]*,[[:space:]]*-?[0-9]+)*[[:space:]]*,?[[:space:]]*\};[[:space:]]*$'
+  ! grep -qvE "$form" <<< "$lines"
+}
+
+# `landing` is the commit the screen ran from (THE LANDING above): the phase 1
+# landing's engine, S302's cmake/pgo.cmake apart, and nothing else apart.
+if ! git merge-base --is-ancestor "$phase1" "$landing"; then
+  fail "the phase 1 landing $phase1 is not an ancestor of landing $landing"
+fi
+landing_diff="$(git diff --name-only "$phase1" "$landing" -- "${build_paths[@]}")"
+if [[ "$landing_diff" != cmake/pgo.cmake ]]; then
+  fail "landing's src/ and build files differ from $phase1's in" \
+       "'${landing_diff//$'\n'/ }', and cmake/pgo.cmake is the one difference" \
+       "it may hold"
+fi
+
+# REF's engine is `landing`'s: the family at zero, the flats S083's; a later
+# bisection part's REF may also carry what has landed by then, and nothing else.
+if ! git merge-base --is-ancestor "$landing" "$ref"; then
+  fail "REF does not descend from landing $landing"
+fi
+ref_changed="$(git diff --name-only "$landing" "$ref" -- "${build_paths[@]}")"
+if [[ -n "$ref_changed" ]]; then
+  [[ -n "$carries" ]] ||
+    fail "REF's src/ or build files differ from landing's -- REF is not the" \
+         "family at zero or a descendant of it with landing's src/"
+  [[ "$ref_changed" == src/evaluation.cpp ]] ||
+    fail "REF changes '${ref_changed//$'\n'/ }' beyond what part $part may" \
+         "have landed"
+  only_definitions "$landing" "$ref" "$carries" ||
+    fail "REF's src/ differs from landing's outside comments in more than whole" \
+         "one-line definitions of what part $part may have landed"
 fi
 
 # CAND's src/ and build files are REF's but for src/evaluation.cpp.
@@ -250,17 +384,11 @@ while IFS= read -r file; do
     fail "CAND changes $file beyond the paste of the family's weights"
 done <<< "$changed"
 
-# And there only whole one-line definitions of the family's sixteen arrays,
-# outside whole-line comments, each to its closing `};` and nothing after it:
-# no continuation line, and no code appended to a definition.
-code_lines="$(git diff -U0 "$ref" "$cand" -- src |
-              grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' | cut -c2- |
-              grep -vE '^[[:space:]]*(//.*)?$')"
-table='^constexpr int (isolated_backward|isolated_file|doubled_file|backward_rank|phalanx|supported|weak_unopposed|pawn_structure)_(mg|eg)\[([0-9]+|PS_FEATURE_COUNT)\] = \{[[:space:]]*-?[0-9]+([[:space:]]*,[[:space:]]*-?[0-9]+)*[[:space:]]*,?[[:space:]]*\};[[:space:]]*$'
-if grep -qvE "$table" <<< "$code_lines"; then
+# And there only whole one-line definitions of the arrays this run moves. A
+# dropped group's arrays are not among them, so they read REF's zero at CAND.
+only_definitions "$ref" "$cand" "$moves" ||
   fail "CAND's src/ differs outside comments in more than whole one-line" \
-       "definitions of the family's weights"
-fi
+       "definitions of the arrays this run moves ($moves)"
 
 # Every weight array and define outside the family's sixteen is REF's at CAND,
 # compared by name (S125_screen.py only-family-pair, `apply`'s only-family

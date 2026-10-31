@@ -1,0 +1,75 @@
+array              half cell value  v-nbr     rows   games  tie
+isolated_backward  mg      -     0    +0.0  1289314  114402  -
+isolated_backward  eg      -     0    +0.0  1184956  109937  -
+isolated_file      mg      b     1    +7.0   577489   55501  -
+isolated_file      mg      c    -6    -1.0   865505   71091  -
+isolated_file      mg      d   -11    -3.0   804213   71660  -
+isolated_file      mg      e   -10    -3.0   691798   62379  -
+isolated_file      mg      f    -3    +5.5   913628   68703  -
+isolated_file      mg      g    -7    -6.0   515376   48889  -
+isolated_file      mg      h     1    +8.0  1774660   97951  -
+isolated_file      eg      b    -3    -2.0   564808   54899  -
+isolated_file      eg      c    -1    +1.5   838860   69598  -
+isolated_file      eg      d    -2    -1.5   759410   68905  -
+isolated_file      eg      e     0    +1.5   666143   60831  -
+isolated_file      eg      f    -1    -2.5   888914   67947  -
+isolated_file      eg      g     3    +2.5   506444   48510  -
+isolated_file      eg      h     2    -1.0  1600619   94035  -
+doubled_file       mg      b     0    +0.0   219579   25073  -
+doubled_file       mg      c     0    +0.0   278590   34081  -
+doubled_file       mg      d     0    +0.0   217920   31068  -
+doubled_file       mg      e     0    +0.0   257479   35564  -
+doubled_file       mg      f     0    +0.0   372710   37715  -
+doubled_file       mg      g     0    +0.0   264309   26219  -
+doubled_file       mg      h     0    +0.0   253905   20305  -
+doubled_file       eg      b     0    +0.0   186216   20680  -
+doubled_file       eg      c     0    +0.0   254710   28312  -
+doubled_file       eg      d     0    +0.0   190160   23711  -
+doubled_file       eg      e     0    +0.0   224493   28194  -
+doubled_file       eg      f     0    +0.0   349555   33493  -
+doubled_file       eg      g     0    +0.0   235353   22724  -
+doubled_file       eg      h     0    +0.0   239535   18066  -
+backward_rank      mg      3     0    +0.0   819582   75899  -
+backward_rank      mg      4     0    +0.0   332654   37510  -
+backward_rank      mg      5     0    +0.0    27070    4605  -
+backward_rank      eg      3     0    +0.0   687504   67973  -
+backward_rank      eg      4     0    +0.0   308864   35401  -
+backward_rank      eg      5     0    +0.0    26685    4542  -
+phalanx            mg      2     5    +3.0  3185528  137840  -
+phalanx            mg      3     2    -4.0  1226664   98538  -
+phalanx            mg      4     7    -4.0   769402  112062  -
+phalanx            mg      5    20   -26.5    77008   23000  -
+phalanx            mg      6    86   +33.0     4088    2000  -
+phalanx            mg      7    86    +0.0      264     210  tied to 4
+phalanx            eg      2    -1    -2.0  2334922  129269  -
+phalanx            eg      3     1    -0.5   929979   85585  -
+phalanx            eg      4     4    +0.0   534980   87766  -
+phalanx            eg      5     7   -29.0    71647   21545  -
+phalanx            eg      6    68   +30.5     4086    1999  -
+phalanx            eg      7    68    +0.0      265     211  tied to 4
+supported          mg      3     8    +3.0  3429919  137527  -
+supported          mg      4     5    -2.5  2586895  133547  -
+supported          mg      5     7   -11.5  1153721   95910  -
+supported          mg      6    32   -65.0    99795   17225  -
+supported          mg      7   187  +155.0     9476    2525  -
+supported          eg      3    11   +11.0  2694291  133350  -
+supported          eg      4     0    -7.5  2059504  125512  -
+supported          eg      5     4    -9.0   986673   87567  -
+supported          eg      6    26   +38.5    98067   17057  -
+supported          eg      7   -29   -55.0     9515    2528  -
+weak_unopposed     mg      -   -10    +0.0  3040951  134704  -
+weak_unopposed     eg      -    -6    +0.0  2752055  133379  -
+
+ties: 2
+far, |v-nbr| >= 10 (cell, value, v-nbr, rows, games):
+  phalanx_mg             cell 5     20   -26.5    77008   23000
+  phalanx_mg             cell 6     86   +33.0     4088    2000
+  phalanx_eg             cell 5      7   -29.0    71647   21545
+  phalanx_eg             cell 6     68   +30.5     4086    1999
+  supported_mg           cell 5      7   -11.5  1153721   95910
+  supported_mg           cell 6     32   -65.0    99795   17225
+  supported_mg           cell 7    187  +155.0     9476    2525
+  supported_eg           cell 3     11   +11.0  2694291  133350
+  supported_eg           cell 6     26   +38.5    98067   17057
+  supported_eg           cell 7    -29   -55.0     9515    2528
+thinnest support: phalanx_mg cell 7, 264 rows, 210 games

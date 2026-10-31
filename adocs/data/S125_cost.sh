@@ -49,6 +49,8 @@
 #   p1..p7  CAND + the patch, S125_COST=1, 2, 4, 8, 16, 32, 64: one group
 #           forced
 #   all     S125_COST=127: the seven together
+#   cand    S125_COST=114: P2, P5, P6 and P7, the set the candidate computes,
+#           added 2026-10-31 (below)
 #   Phase 1 built every mask in a scratch copy of the landing: bench 5434393
 #   at each, nine distinct .text sections with zero's, and evaluate_pawns()'s
 #   out-of-line clone grows from 699 instructions to 899 at mask 127
@@ -89,6 +91,27 @@
 # The machine must be otherwise idle (MACHINE): a match, a fit or datagen
 # beside it makes the floor meaningless.
 # ============================================================================
+#
+# 2026-10-31, S125's phase 2: THE ROW `cand`, added after the run above
+# (adocs/data/S125_cost_reading.txt). The screen kept P2, P5, P6 and P7 and
+# dropped P1, P3 and P4, so `all` forces three groups the candidate does not
+# compute, and that run timed no build computing what the candidate computes.
+# `cand` is S125_COST=114, those four groups forced together: the candidate's
+# set, which holds for CAND and not after the close. The close's fold (DEC-331
+# (3), (15)) makes isolated_backward live, so the engine then also computes P1
+# and the `& ~isolated`; the fold adds P1's forced row, +0.37 % instructions,
+# read zero with its cycles and wall CIs reaching inside the A/A floor, and
+# S118's baseline is read with both rows. `cand` is read like every other row:
+# INV-6 against zero, the code check, the A/A's floor, DEC-266's reading. It is
+# nested inside all and holds p2, p5, p6 and p7, so the reading's ordering check
+# gains all > cand and cand > each of the four wherever both ends of a pair are
+# timed. The
+# other rows are as they were. ROWS names the rows a run times, default "parent
+# p1 p2 p3 p4 p5 p6 p7 cand all"; the A/A, zero, its copy and INV-6 are taken in
+# every run, since the floor is the session's (DEC-266). `ROWS=cand` times aa
+# and cand alone, about 25 min (two builds, two comparisons, the streams; S121's
+# one-row run took 23 min), ceiling 50 min, in a fresh OUT: a run refuses an OUT
+# that holds a reading.txt.
 
 set -uo pipefail
 
@@ -258,13 +281,14 @@ carries_family() {
   [[ "$text" == *structure_family_counts* ]]
 }
 
-ROWS="${ROWS:-parent p1 p2 p3 p4 p5 p6 p7 all}"
+ROWS="${ROWS:-parent p1 p2 p3 p4 p5 p6 p7 cand all}"
 
 # The forced rows and their masks.
 mask_of() {
   case "$1" in
     p1) echo 1 ;; p2) echo 2 ;; p3) echo 4 ;; p4) echo 8 ;;
-    p5) echo 16 ;; p6) echo 32 ;; p7) echo 64 ;; all) echo 127 ;;
+    p5) echo 16 ;; p6) echo 32 ;; p7) echo 64 ;; cand) echo 114 ;;
+    all) echo 127 ;;
     *) return 1 ;;
   esac
 }
@@ -274,7 +298,7 @@ check_rows() {
   [[ -n "${ROWS// /}" ]] || { say "refused: ROWS names no row"; return 1; }
   for row in $ROWS; do
     [[ "$row" == parent ]] || mask_of "$row" > /dev/null ||
-      { say "refused: ROWS names '$row', not one of parent p1 p2 p3 p4 p5 p6 p7 all"; return 1; }
+      { say "refused: ROWS names '$row', not one of parent p1 p2 p3 p4 p5 p6 p7 cand all"; return 1; }
     [[ "$seen" == *" $row "* ]] && { say "refused: ROWS names $row twice"; return 1; }
     seen+="$row "
   done

@@ -1385,12 +1385,12 @@ TEST_SUITE("search: quiescence")
   // The one case where standing pat is not on offer: the side to move is in
   // check and has to reply, so every evasion is searched instead.
   //
-  // GOLDEN (DEC-142): 196, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
+  // GOLDEN (DEC-142): 199, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
   // 1" with Black to move and in check -- the number the case needs a stand pat
   // to be compared against. Re-derive: python3 adocs/data/S192_anchors.py, case
   // "black in check, Re8". Moves legitimately on: a refit. Margin: exact -- the
   // assertions that carry the property are the two inequalities below it, which
-  // have the whole gap between 196 and a mate score of slack. Property beside
+  // have the whole gap between 199 and a mate score of slack. Property beside
   // it: "a quiet evasion is a legal answer to a check".
   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
   {
@@ -1419,9 +1419,12 @@ TEST_SUITE("search: quiescence")
     // mobility table to 181, the three pieces' cells at P1's count; and
     // S123's passed pawn family, the screen's ABC fit, to 196: Black's three
     // passers on its own second rank, each free and safe, its king two from
-    // each push square and White's five (adocs/data/S123_goldens.txt).
+    // each push square and White's five (adocs/data/S123_goldens.txt); and
+    // S125's pawn structure family, the screen's 02567 fit, to 199: Black's f7,
+    // g7 and h7, three phalanx pawns on its own second rank
+    // (adocs/data/S125_goldens.txt).
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 196);
+    REQUIRE_EQ(black_static, 199);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -4737,8 +4740,9 @@ TEST_SUITE("search: draws")
     // Confirmed: S277's sweep gives the parent's distances and node counts on
     // S286's library at 7 to 12, and B04 still fails this row
     // (`adocs/data/S286_rows.log`).
-    // GOLDEN (DEC-142): the position, the depth 10 and the distance 4 below
-    // (5 from S261 to S121, the re-mines at the end of this block).
+    // GOLDEN (DEC-142): the position, the depth 9 and the distance 5 below
+    // (depth 10 and distance 4 from S121 to S125, 5 from S261 to S121, the
+    // re-mines at the end of this block).
     // Re-derive with the six commands in `adocs/data/S277_mine_mate_row.py`'s
     // own header: the candidate list, the shipped sweep, the same sweep
     // against a library built with `B04_probcut_defender_gate_dropped` applied,
@@ -4877,15 +4881,34 @@ TEST_SUITE("search: draws")
     // green**: with B04 applied the case fails here at `REQUIRE(
     // result.mate_found )` and passes with the guard in place
     // (adocs/data/S121_goldens.txt).
+    //
+    // **Re-mined at S125, guard mode (DEC-142, DEC-238).** Its pawn structure
+    // family moved the tree: S121's row above,
+    // `8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60`, reports no mate at any depth
+    // from 3 to 12 on the candidate. The six commands of
+    // adocs/data/S277_mine_mate_row.py's header, on the candidate's libraries
+    // and B04's built from the candidate's tree: three of the 269 separate, two
+    // by distance only, and the pick takes the row below at **depth 9, mate in
+    // 5**, shipped `d9` against B04's `d10` in the range 7 to 10 (`d9 d11 d12`
+    // shipped over 3 to 12), the mutant's ProbCut firing at 7 to 10, 279892
+    // nodes, about 45 ms. Not read off the board: python-chess reports
+    // `is_valid()` True, `is_check()` False, 37 legal moves, 1 capture and no
+    // promotion; Stockfish at 5000000 nodes through python-chess (DEC-319 (3))
+    // reads **`#+5`** for White, the side to move, pv c4d5 f8g8 d6f5 b8b7 d7b7
+    // g8f8 b7g7 f8e8 g7e7, a line python-chess reads as ending in checkmate,
+    // the label `adocs/data/S097_candidates.tsv` already held. **Observed red,
+    // then green**: with B04 applied the case fails here at `REQUIRE(
+    // result.mate_found )` and passes with the guard in place
+    // (adocs/data/S125_goldens.txt).
     const std::string mate_probcut_hides =
-        "8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60";
+        "1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52";
 
     {
-      const std::string title = "mate probcut hides, depth 10";
-      const search_t result = search_fen(mate_probcut_hides, 10);
+      const std::string title = "mate probcut hides, depth 9";
+      const search_t result = search_fen(mate_probcut_hides, 9);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 4, title);
+      REQUIRE_MESSAGE(result.mate_in == 5, title);
     }
 
     // S091's own cases, for the two rules that act on a **capture**. The one
@@ -9709,6 +9732,14 @@ TEST_SUITE("search: pruning and reduction guards")
   // 185 above. The trace, by the same patch, visits the node at depth 3 in
   // iteration 7's searches 20 to 22 at alphas -2039, -2155 and -2334, S296's
   // rule firing at each (adocs/data/S123_goldens.txt).
+  //
+  // Re-derived at S125's pawn structure family, the screen's 02567 fit, both
+  // halves. The same sweep (it reproduces S123's -2153 to -1923 and -1828 to
+  // -1790 on the parent) reads the shape on the candidate for every alpha
+  // from -2165 to -1935 and from -1840 to -1802, so -2108 stays, 57 below and
+  // 173 above. The trace, by the same patch, visits the node at depth 3 at
+  // alphas -2013, -2088, -2204 and -2383, S296's rule firing at each
+  // (adocs/data/S125_goldens.txt).
   TEST_CASE_FIXTURE(
       guard_fixture_t,
       "a node that skipped moves claims no mate it did not search")

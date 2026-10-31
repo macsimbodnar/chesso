@@ -8,10 +8,12 @@ S135's to the line (S270's method as DEC-266 adopts it).
     S125_cost.py code BINDIR [ROW...]
     S125_cost.py read DIR [ROW...]
 
-ROW is a row S125_cost.sh times, from parent p1 to p7 and all, and the default
-is all nine; the forced ones among them -- p1 to p7 and all,
-adocs/data/S125_cost_only.patch at S125_COST 1, 2, 4, 8, 16, 32, 64 and 127 --
-are the ones checked.
+ROW is a row S125_cost.sh times, from parent p1 to p7, cand and all, and the
+default is all ten; the forced ones among them -- p1 to p7, cand and all,
+adocs/data/S125_cost_only.patch at S125_COST 1, 2, 4, 8, 16, 32, 64, 114 and 127
+-- are the ones checked. `cand` is P2, P5, P6 and P7 together, the set S125's
+candidate computes, added 2026-10-31 after the first run; that run's pairs
+re-read with its nine rows named give its reading line for line.
 
 CODE runs before any timing on BINDIR/zero and the forced rows' binaries:
 their .text sections pairwise distinct -- a forced build whose code is
@@ -27,9 +29,10 @@ largest CI bound per workload and instrument; a cost counts when its cycles CI
 on both workloads and its wall CI lie wholly beyond the floor the same way and
 its instructions move the same way, and reads zero otherwise. It refuses
 before any verdict unless, on both workloads, each forced build's
-instructions CI lies wholly above the A/A's instruction floor and all's (the
-seven groups forced together) above each group's, by more than that floor,
-for every such pair whose two rows are both named; and it refuses a
+instructions CI lies wholly above the A/A's instruction floor, all's (the
+seven groups forced together) above each group's and cand's, and cand's above
+each of its four groups', by more than that floor, for every such pair whose
+two rows are both named; and it refuses a
 comparison timed in DIR that the rows do not name. `parent` -- the tree
 before S125 against the landing -- is read like any other comparison and is
 expected to read zero: the landing is in no expression (adocs/data/
@@ -49,10 +52,13 @@ import S135_cost  # noqa: E402  (adocs/data/, by path)
 from S135_cost import counters, wall  # noqa: E402
 
 PARTS = ("p1", "p2", "p3", "p4", "p5", "p6", "p7")
-FORCED = PARTS + ("all",)
+# The groups the candidate computes: the screen's survivors, S125_COST=114.
+CAND_PARTS = ("p2", "p5", "p6", "p7")
+FORCED = PARTS + ("cand", "all",)
 ROWS = ("parent",) + FORCED
 # The pairs whose first computes everything the second does and more.
-NESTED = [("all", name) for name in PARTS]
+NESTED = [("all", name) for name in PARTS + ("cand",)] + \
+    [("cand", name) for name in CAND_PARTS]
 
 
 def rows_of(names):
@@ -125,7 +131,7 @@ def separates(readings, floor, forced):
                       f"more than the floor: {big} forces parts {small} does "
                       f"not, so {small} computed them too")
                 ok = False
-        for whole, sum_of in (("all", PARTS),):
+        for whole, sum_of in (("all", PARTS), ("cand", CAND_PARTS)):
             if whole not in ci or any(n not in ci for n in sum_of):
                 continue
             parts = sum(ci[name][0] for name in sum_of)

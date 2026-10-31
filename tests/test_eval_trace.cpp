@@ -32,8 +32,8 @@
 // wrong index is invisible to the identity wherever the two weights involved
 // are equal, and tempo and piece placement's two bad bishop columns ship at
 // zero, where any coefficient at all satisfies it, as S123's whole family did
-// until its fit shipped on its SPRT's H1, and as S125's whole family does at
-// its landing.
+// until its fit shipped on its SPRT's H1, and as S125's whole family did at
+// its landing and its three dropped groups do at its candidate.
 
 namespace
 {
@@ -151,7 +151,14 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // pawn terms' pair and shares their one taper); S121's four read 2.333,
 // 2.625, 2.792 and 2.875 there, still green but three of them off the
 // maximum, and the pick kept the phase 17 row and took three new ones at
-// phases 5, 7 and 13 (adocs/data/S123_goldens.txt).
+// phases 5, 7 and 13 (adocs/data/S123_goldens.txt). Re-derived at S125 on the
+// same corpus at its pawn structure family's fit: 111 rows past 2.8, 35 at
+// 2.875 and 31 distinct positions there, phases 5 to 23, the worst still
+// 2.875 = 69/24, so three divisions still round (tempo zero, so DEC-322's
+// fourth does not arise; the family is summed into the pawn terms' pair and
+// shares their one taper); of S123's four, two read 1.917 and 1.958 there,
+// under 2.0, and the worst 2.75, under 2.8, and the pick took four new rows at
+// phases 5, 11, 17 and 23 (adocs/data/S125_goldens.txt).
 // Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
 // score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
 // that margin, so while the clamp binds the two agree exactly and the residual
@@ -167,10 +174,10 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
 // 4 x 23/24 = 3.833, which this case's precondition reports.
 const std::vector<std::string> truncation_positions = {
-    "8/PR5p/5Bp1/1K3kP1/8/8/r7/8 b - - 2 53",
-    "4r1k1/ppp3pp/2b2p2/2P1n3/3B4/1P2P3/P2K4/5R2 w - - 3 41",
-    "r5k1/ppp2pp1/2q5/2b3Pp/4Q3/1P3K2/P1P4P/3R4 b - - 0 32",
-    "2k1r3/pp3p2/3p1p1b/2qP4/b5P1/2P2Q2/P2NNP2/3RK2B w - - 0 20",
+    "8/8/R7/P6B/4P3/1r2P2k/4K3/8 b - - 2 46",
+    "8/2nnQpk1/1rb3pp/3p4/3Pp3/P3P2P/N2B1PP1/6K1 w - - 4 38",
+    "2r1r2k/4q1bp/1Rp5/P1P1p2p/2Q2p2/3P1N1P/2B2PP1/6K1 b - - 0 39",
+    "r1bq1bnr/ppp3p1/2n3k1/5pNp/7P/PB6/1BPP1PP1/R2Q1RK1 w - - 1 13",
 };
 
 

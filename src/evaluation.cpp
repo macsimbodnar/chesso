@@ -219,9 +219,11 @@ enum
 // First fitted at S027 with the other 811 constants frozen -- `tuner --only
 // pawn_structure` over 1490839 self-play positions, held-out error 0.106892 to
 // 0.106766. What ships is S083's refit of the whole evaluation at 46 rows a
-// game (01222f3, H1); S125's screen refits these three alone first, its P0,
-// and its family's tables by file and by rank take them as their baselines
-// (DEC-331 (4), (5)).
+// game (01222f3, H1), {-9, -2, -11} and {-15, -18, -2}; S125's screen refit
+// these three alone first, its P0, and its family's tables by file and by rank
+// take them as their baselines (DEC-331 (4), (5)). The values below are the
+// flats of its candidate, the full fit that freed them with its four kept
+// groups (adocs/data/S125_screen_reading.txt).
 //
 // That improvement is the smallest of S027's three terms: king safety moved the
 // error 0.000304 and measured +20.87 Elo, passed pawns 0.000206 and measured
@@ -231,7 +233,7 @@ enum
 // showed it while S027's fit stood: +5, which read as chess would say doubling
 // a pawn helps. It said nothing of the kind, and the refits since -- S065 to
 // {-9, -10, -12}, S076's deduplicated corpus to {-10, -9, -11} and S083's to
-// what ships -- moved it to a sign that happens to read the other way, which
+// {-9, -2, -11} -- moved it to a sign that happens to read the other way, which
 // is the same non-statement.
 // The three features overlap by construction -- the header says they are not
 // exclusive -- and they sit on top of a pawn piece-square table that has
@@ -247,8 +249,8 @@ enum
 // term with the weights forced non-zero because at zero the compiler deletes
 // them, DEC-047. The SPRT was net of that: +13.05 +/- 11.15 Elo over 2290
 // games, H1 accepted.
-constexpr int pawn_structure_mg[PS_FEATURE_COUNT] = {-9, -2, -11};
-constexpr int pawn_structure_eg[PS_FEATURE_COUNT] = {-15, -18, -2};
+constexpr int pawn_structure_mg[PS_FEATURE_COUNT] = {1, -7, -6};
+constexpr int pawn_structure_eg[PS_FEATURE_COUNT] = {-11, -20, 0};
 constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
     pack_scores(pawn_structure_mg, pawn_structure_eg);
 
@@ -273,20 +275,26 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
 // the flat's column on every row, one exact dependency a half a term
 // (DEC-331 (4)). Phalanx and supported have no flat, so their tables are
 // whole.
+//
+// The values below are the screen's full fit with four groups kept, 02567
+// (adocs/data/S125_screen_reading.txt), pasted unchanged: monotonicity is not
+// imposed, so a row that is not monotonic is the fit's, not corrected by hand.
+// The groups the screen dropped -- the increment, doubled by file, backward by
+// rank -- stay at zero and in no expression.
 constexpr int isolated_backward_mg[1] = {0};
 constexpr int isolated_backward_eg[1] = {0};
-constexpr int isolated_file_mg[7] = {0, 0, 0, 0, 0, 0, 0};
-constexpr int isolated_file_eg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int isolated_file_mg[7] = {1, -6, -11, -10, -3, -7, 1};
+constexpr int isolated_file_eg[7] = {-3, -1, -2, 0, -1, 3, 2};
 constexpr int doubled_file_mg[7] = {0, 0, 0, 0, 0, 0, 0};
 constexpr int doubled_file_eg[7] = {0, 0, 0, 0, 0, 0, 0};
 constexpr int backward_rank_mg[3] = {0, 0, 0};
 constexpr int backward_rank_eg[3] = {0, 0, 0};
-constexpr int phalanx_mg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int phalanx_eg[6] = {0, 0, 0, 0, 0, 0};
-constexpr int supported_mg[5] = {0, 0, 0, 0, 0};
-constexpr int supported_eg[5] = {0, 0, 0, 0, 0};
-constexpr int weak_unopposed_mg[1] = {0};
-constexpr int weak_unopposed_eg[1] = {0};
+constexpr int phalanx_mg[6] = {5, 2, 7, 20, 86, 86};
+constexpr int phalanx_eg[6] = {-1, 1, 4, 7, 68, 68};
+constexpr int supported_mg[5] = {8, 5, 7, 32, 187};
+constexpr int supported_eg[5] = {11, 0, 4, 26, -29};
+constexpr int weak_unopposed_mg[1] = {-10};
+constexpr int weak_unopposed_eg[1] = {-6};
 constexpr std::array<score_t, 1> isolated_backward_score =
     pack_scores(isolated_backward_mg, isolated_backward_eg);
 constexpr std::array<score_t, 7> isolated_file_score =
@@ -625,7 +633,9 @@ static constexpr int stage_one_half(const int (&table)[6][64],
 // 12785 and 6968 of room (adocs/data/S123_goldens.txt, by S123_screen.py's
 // `headroom`, which adds passer_family_half()). S125's family adds
 // structure_family_half(), 0 at its zero landing; adocs/data/S125_screen.py's
-// `headroom` adds it to S123's arithmetic for every fit before a paste.
+// `headroom` adds it to S123's arithmetic for every fit before a paste: at the
+// 02567 fit the whole bound reads 24227 and 27929, 8540 and 4838 of room
+// (adocs/data/S125_goldens.txt).
 static constexpr int stage_one_bound =
     std::max(stage_one_half(psqt_mg,
                             passed_pawn_mg,

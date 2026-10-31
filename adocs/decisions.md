@@ -16910,6 +16910,38 @@ Decision:     By the coordinator under the owner's standing instruction
                 survivor. Every part that exists frees P0's flats with its
                 own groups, as every screen part did, so the flats land
                 with the first part that exists and never alone.
+              (15) **As the screen read and the candidate landed
+                (2026-10-31), by the coordinator.**
+              - The screen kept P2, P5, P6 and P7 and dropped P1, P3 and P4;
+                the candidate is the 02567 fit, and the dropped groups stay
+                at zero, in no expression.
+              - **P1's drop does not discharge the fold.** The accepts'
+                clause is unconditional, so (3)'s fold is owed at S125's
+                close on every verdict, neutrally (INV-6): IB takes
+                backward's flat as it stands on the tree at the close,
+                {-6} / {0} on H1, the parent's {-11} / {-2} on a family
+                fully H0, and over a landed part's refit otherwise. The
+                pawn still pays that amount, under IB's name, for S126 to
+                fit. Rejected: IB scoring isolated alone, a play change
+                that (3) rejected and P1's fit does not support, unmeasured;
+                amending the accepts, which needs the owner's words for a
+                clause the fold satisfies.
+              - **The `supported` planted recovery takes 16000 epochs, the
+                other plants 6000.** The paste moved its start to 187 and -29
+                against plants of 11 and 12; at 6000 the worst of its ten
+                cells reads 5.735, at 16000 0.022, and the plant and the 0.5
+                bound did not move. A budget and not a golden (DEC-142): too
+                small goes red. Measured on a scratch copy of the case.
+              - `S125_sprt.sh`'s `landing=` names `f08d9db`, the commit the
+                screen ran from, because S302 moved `cmake/pgo.cmake` after
+                `b5f133c` and no REF would have passed; the script holds
+                `b5f133c` as its ancestor and that file as the only
+                build-path difference. Its line guard narrows to the ten
+                arrays that move, a part's own subset by `part=`.
+              - The cost run's `all` forces the dropped groups, so it is not
+                the candidate's set. Row `cand`, mask 114, is added and timed
+                before the SPRT; S118's baseline reads it with p1, which the
+                close's fold adds.
 Rejected:     An identity column for IB at the landing: it computes at the
               landing, unpriced, and needs a seed. The literal constraint
               (IB scores isolated only): not neutral, and it needs a variant

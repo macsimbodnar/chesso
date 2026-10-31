@@ -216,7 +216,11 @@ inline const std::vector<std::string> positions = {
     // Re-derive by its header whenever the counts or the shipped constants
     // move what it reads (DEC-142, DEC-326): at phase 2 two of phase 1b's
     // pairs were no longer eligible at the fitted constants and the picks
-    // moved, so the block was replaced (adocs/data/S121_goldens.txt).
+    // moved, so the block was replaced (adocs/data/S121_goldens.txt); at
+    // S125's candidate the queen 3 pair's score left the 800 cp, seven pawns on
+    // their own seventh forming a phalanx, and the rule's pick for that cell
+    // moved up the list, so the block was replaced again
+    // (adocs/data/S125_goldens.txt).
     // bishop 13; rook 14
     "4k2r/8/8/8/3BB3/4K3/8/r7 w k - 1 2",
     "R7/8/4k3/3bb3/8/8/8/4K2R b K - 1 2",
@@ -232,6 +236,9 @@ inline const std::vector<std::string> positions = {
     // rook 13
     "1r2k2r/R6R/8/8/8/8/4K3/8 w - - 1 2",
     "8/4k3/8/8/8/8/r6r/1R2K2R b - - 1 2",
+    // queen 3
+    "3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR w - - 0 2",
+    "rQrrrrrr/1PPPPPPP/8/8/8/1k6/8/3K4 b - - 0 2",
     // queen 25
     "4k3/r7/8/5Q2/8/8/4K3/8 w - - 0 2",
     "8/4k3/8/8/5q2/8/R7/4K3 b - - 0 2",
@@ -241,9 +248,6 @@ inline const std::vector<std::string> positions = {
     // queen 16
     "5rk1/pp4pp/4p3/2R3Q1/3n4/7r/P1q2PPP/5RK1 w - - 0 2",
     "5rk1/p1Q2ppp/7R/3N4/2r3q1/4P3/PP4PP/5RK1 b - - 0 2",
-    // queen 3
-    "k6K/8/8/8/8/8/1ppppppp/NqNNNNNN w - - 0 2",
-    "nQnnnnnn/1PPPPPPP/8/8/8/8/8/K6k b - - 0 2",
     // queen 0
     "r1bqk2N/pppnn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
     "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPNN1PP/R1BQK2n b Q - 2 9",

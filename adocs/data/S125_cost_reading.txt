@@ -1,0 +1,124 @@
+# S125's cost reading: CAND_SHA=b5f133c PARENT_SHA=63d5bcf adocs/data/S125_cost.sh run, 2026-10-31 03:44:37 to 05:43:05,
+# S125-COST-DONE, the coordinator's run (console .tuning/s125_cost.console, 118 lines). The console trimmed to the reading:
+# the per-comparison progress lines ("<name>: 16 pairs") and the closing note on the worktrees are dropped, nothing else.
+# It decides nothing (the script's pre-registration); the SPRT prices the fitted family with its cost.
+#
+# `all` IS NOT THE CANDIDATE'S SET. The screen kept P2, P5, P6 and P7 and dropped P1, P3 and P4, which stay at zero and in no
+# expression at the candidate, and `all` (S125_COST=127) forces those three as well. The candidate's set is mask 2 + 16 + 32
+# + 64 = 114, the row `cand`, which this run did not time; RUN 2 below holds its place. That holds for CAND and not after the
+# close: the fold of DEC-331 (3), (15) makes isolated_backward live, so it adds p1 below (+0.37 % instructions, read zero with
+# its cycles and wall CIs reaching inside the floor), and S118's baseline is read with both rows. The candidate's one-group rows
+# read p2 +1.18 %, p5 +1.36 %, p6 +1.05 % and p7 zero. The forced builds' instructions are not additive: the seven read above
+# all on both workloads, the groups sharing the pawn sets they read (printed, not gated).
+
+pair      cand b5f133c81fc1bbd678f602b4dca8e10f23b2c11b, parent 63d5bcf650b6df1038ec4b80aa357aa8028ac7c9
+pair      CAND carries the family, PARENT does not, PARENT is CAND^
+patch     applies to CAND, applied text sha256 c0f56bfd74befae6
+rows      aa (zero against its copy), parent (PARENT, unpatched), p1 (S125_COST=1), p2 (S125_COST=2), p3 (S125_COST=4), p4 (S125_COST=8), p5 (S125_COST=16), p6 (S125_COST=32), p7 (S125_COST=64), all (S125_COST=127), each against zero
+S125 cost
+rows      aa parent p1 p2 p3 p4 p5 p6 p7 all
+started   2026-10-31T03:44:37+01:00
+cand      b5f133c81fc1bbd678f602b4dca8e10f23b2c11b
+parent    63d5bcf650b6df1038ec4b80aa357aa8028ac7c9
+loadavg   4.62 9.61 10.77 1/1219 2073701
+governor  performance
+zero 62293cacba0a4e06 b5f133c81fc1bbd678f602b4dca8e10f23b2c11b unpatched
+parent ac07e2741c53059e 63d5bcf650b6df1038ec4b80aa357aa8028ac7c9 unpatched
+p1 18f5f0567d490f41 b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 1
+p2 50b391082a20ac0f b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 2
+p3 34180f518b081546 b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 4
+p4 8a719c44d18965ff b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 8
+p5 c97acf9a1956e424 b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 16
+p6 607fbc5bea4a803d b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 32
+p7 c4fe52197c076fbb b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 64
+all f010bc0154408359 b5f133c81fc1bbd678f602b4dca8e10f23b2c11b 127
+INV-6: bench 5434393 nodes, every binary identical
+code zero  .text bd1ddbf98597a125
+code p1    .text a44b83db2f24a0f6
+code p2    .text 2a84365e5af45245
+code p3    .text 520f3795ecc4dd23
+code p4    .text e936f54d840eeb54
+code p5    .text 3175d2ae4a478211
+code p6    .text dea58cda8a77a977
+code p7    .text 1059edb12b69b92b
+code all   .text a6bf1953474e9bbe
+code: 9 distinct .text sections
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       +0.144 %  CI -0.027 .. +0.315 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.130 %  CI -0.121 .. +0.380 %
+  pos11   wall         +0.100 %  CI -0.163 .. +0.364 %  (cand time over base, + is slower)
+all: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +4.642 %  CI +4.642 .. +4.642 %
+  bench16 cycles       +5.049 %  CI +4.862 .. +5.236 %
+  pos11   instructions +4.007 %  CI +4.007 .. +4.007 %
+  pos11   cycles       +3.833 %  CI +3.764 .. +3.902 %
+  pos11   wall         +3.708 %  CI +3.561 .. +3.856 %  (cand time over base, + is slower)
+p1: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.368 %  CI +0.368 .. +0.368 %
+  bench16 cycles       +0.398 %  CI +0.265 .. +0.530 %
+  pos11   instructions +0.373 %  CI +0.373 .. +0.373 %
+  pos11   cycles       +0.265 %  CI +0.172 .. +0.358 %
+  pos11   wall         +0.423 %  CI +0.281 .. +0.564 %  (cand time over base, + is slower)
+p2: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.744 %  CI +0.744 .. +0.744 %
+  bench16 cycles       +1.186 %  CI +0.996 .. +1.377 %
+  pos11   instructions +0.974 %  CI +0.974 .. +0.974 %
+  pos11   cycles       +1.203 %  CI +1.120 .. +1.285 %
+  pos11   wall         +1.140 %  CI +0.998 .. +1.283 %  (cand time over base, + is slower)
+p3: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.589 %  CI +0.589 .. +0.589 %
+  bench16 cycles       +0.836 %  CI +0.707 .. +0.965 %
+  pos11   instructions +0.562 %  CI +0.562 .. +0.562 %
+  pos11   cycles       +0.509 %  CI +0.427 .. +0.592 %
+  pos11   wall         +0.600 %  CI +0.443 .. +0.758 %  (cand time over base, + is slower)
+p4: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.480 %  CI +0.480 .. +0.480 %
+  bench16 cycles       +0.624 %  CI +0.476 .. +0.772 %
+  pos11   instructions +0.529 %  CI +0.529 .. +0.529 %
+  pos11   cycles       +0.530 %  CI +0.483 .. +0.578 %
+  pos11   wall         +0.492 %  CI +0.375 .. +0.609 %  (cand time over base, + is slower)
+p5: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +1.619 %  CI +1.619 .. +1.619 %
+  bench16 cycles       +1.856 %  CI +1.694 .. +2.019 %
+  pos11   instructions +0.908 %  CI +0.908 .. +0.908 %
+  pos11   cycles       +1.089 %  CI +1.027 .. +1.151 %
+  pos11   wall         +1.124 %  CI +0.943 .. +1.306 %  (cand time over base, + is slower)
+p6: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.902 %  CI +0.902 .. +0.902 %
+  bench16 cycles       +1.178 %  CI +0.985 .. +1.371 %
+  pos11   instructions +0.829 %  CI +0.829 .. +0.829 %
+  pos11   cycles       +0.913 %  CI +0.833 .. +0.993 %
+  pos11   wall         +1.054 %  CI +0.850 .. +1.257 %  (cand time over base, + is slower)
+p7: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.165 %  CI +0.165 .. +0.165 %
+  bench16 cycles       +0.245 %  CI +0.034 .. +0.457 %
+  pos11   instructions +0.220 %  CI +0.220 .. +0.220 %
+  pos11   cycles       +0.175 %  CI +0.108 .. +0.241 %
+  pos11   wall         +0.079 %  CI -0.093 .. +0.252 %  (cand time over base, + is slower)
+parent: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       -0.148 %  CI -0.264 .. -0.031 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       -0.051 %  CI -0.116 .. +0.015 %
+  pos11   wall         -0.029 %  CI -0.263 .. +0.205 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.315 %, pos11 cycles 0.380 %, wall 0.364 %
+forced bench16: A/A instruction floor 2.1 ppb; p1 +0.3680 .. +0.3680 %, p2 +0.7436 .. +0.7436 %, p3 +0.5890 .. +0.5890 %, p4 +0.4798 .. +0.4798 %, p5 +1.6187 .. +1.6187 %, p6 +0.9020 .. +0.9020 %, p7 +0.1652 .. +0.1652 %, all +4.6415 .. +4.6415 %
+forced bench16: p1 + p2 + p3 + p4 + p5 + p6 + p7 +4.866 % against all +4.642 % (printed, not gated)
+forced pos11: A/A instruction floor 8.4 ppb; p1 +0.3725 .. +0.3725 %, p2 +0.9737 .. +0.9737 %, p3 +0.5615 .. +0.5615 %, p4 +0.5294 .. +0.5294 %, p5 +0.9077 .. +0.9077 %, p6 +0.8290 .. +0.8290 %, p7 +0.2199 .. +0.2199 %, all +4.0073 .. +4.0073 %
+forced pos11: p1 + p2 + p3 + p4 + p5 + p6 + p7 +4.394 % against all +4.007 % (printed, not gated)
+all: COST +4.20 % (cycles and wall beyond the floor, instructions the same way)
+p1: zero (inside the A/A's floor)
+p2: COST +1.18 % (cycles and wall beyond the floor, instructions the same way)
+p3: COST +0.65 % (cycles and wall beyond the floor, instructions the same way)
+p4: COST +0.55 % (cycles and wall beyond the floor, instructions the same way)
+p5: COST +1.36 % (cycles and wall beyond the floor, instructions the same way)
+p6: COST +1.05 % (cycles and wall beyond the floor, instructions the same way)
+p7: zero (inside the A/A's floor)
+parent: zero (inside the A/A's floor)
+S125-COST-DONE
+
+# RUN 2, THE ROW `cand` (S125_COST=114, P2, P5, P6 and P7 forced together, the set the candidate computes): NOT YET TIMED.
+# The coordinator's run, on an idle machine, after the gates and before the SPRT; the reading is recorded here in the pin
+# commit, with its own session's A/A floor. The exact command is the step file's "The cost".

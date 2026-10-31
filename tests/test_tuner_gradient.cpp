@@ -535,7 +535,10 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // (1073 parameters) and four rows so that each of its 60 has a gradient here:
 // at the family's zero landing the worst is 3.45e-07, at parameter 857,
 // mobility_eg[bishop][9]; 2.79e-07 at 985 over the 88 rows before them
-// (adocs/data/S125_preconditions.txt).
+// (adocs/data/S125_preconditions.txt). At the family's fit with S121's block
+// re-derived, its candidate, it is 9.22e-07, at parameter 800,
+// mobility_mg[rook][4], green by a factor of 1.08; DEC-316's rows are the
+// answer if a later fit passes the bound (adocs/data/S125_goldens.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -661,7 +664,11 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // farthest (adocs/data/S123_goldens.txt). With S125's four coverage rows
   // (92) at its zero-weight landing it answers +30 still: two rows bound, the
   // farthest at 197.3, the nearest other at 158.8, every row 13.33 from the
-  // kink, finite differences 8.75e-8 (adocs/data/S125_preconditions.txt).
+  // kink, finite differences 8.75e-8 (adocs/data/S125_preconditions.txt). At
+  // S125's candidate, the 02567 fit with S121's block re-derived, it answers
+  // +30 again: four rows bound, the farthest at 197.3, the nearest other at
+  // 158.8, every row 13.25 from the kink, finite differences 1.01e-7
+  // (adocs/data/S125_goldens.txt).
   // Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
@@ -988,7 +995,11 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // rows (96 with the gauge rows) at its zero-weight landing the smallest is
     // 0.0666 under Adam and 0.0760 under AdaGrad, both the bishop's, the
     // largest 3.8879 and 3.5522, both the queen's, every hold at most 1.22e-14
-    // (`adocs/data/S125_preconditions.txt`). The
+    // (`adocs/data/S125_preconditions.txt`). At S125's candidate, the 02567 fit
+    // with S121's block re-derived, the smallest is **0.0124** under Adam, the
+    // pawn's, and 0.0538 under AdaGrad, the bishop's, the largest 3.0976 and
+    // 3.4942, both the knight's, every hold at most 1.35e-14: over the floor by
+    // a factor of 1.24 (`adocs/data/S125_goldens.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
@@ -1068,6 +1079,7 @@ TEST_CASE("a planted vector comes back through the trace path")
   {
     const char* group;
     std::vector<std::pair<size_t, double>> values;
+    int epochs = 6000;
   };
 
   const std::vector<plant_t> plants = {
@@ -1152,7 +1164,8 @@ TEST_CASE("a planted vector comes back through the trace path")
         {SUP_EG_BASE + 1, 6},
         {SUP_EG_BASE + 2, 8},
         {SUP_EG_BASE + 3, 10},
-        {SUP_EG_BASE + 4, 12}}},
+        {SUP_EG_BASE + 4, 12}},
+       16000},
       {"weak_unopposed", {{WKU_MG_BASE, -7}, {WKU_EG_BASE, -11}}},
   };
 
@@ -1179,9 +1192,16 @@ TEST_CASE("a planted vector comes back through the trace path")
     // The tuner's own step, 1.0. Passed pawn bucket 1's middlegame weight is
     // the slowest to come back: few of these positions put a passer there at
     // a non-zero phase, and at 3000 epochs it read 13.02 against 14 planted,
-    // at 6000 13.95.
+    // at 6000 13.95. Supported's own seventh is the slowest since S125's fit,
+    // from the distance and not the reach: it starts at 187 and -29 against 11
+    // and 12 planted, and read 16.735 and 8.870 at 6000 epochs, red, 11.206 and
+    // 11.887 at 12000, 11.022 and 11.988 at 16000, and both exact at 24000
+    // (adocs/data/S125_goldens.txt), so that plant runs 16000 and the bound
+    // below does not move. The 16000 is a budget and not a golden (DEC-331
+    // (15)): this case reads the recovery within the half centipawn below, and
+    // a budget too small goes red, as 6000 does.
     std::vector<double> fitted = shipped;
-    fit(model, data, target, mask, k, 1.0, 6000, &fitted);
+    fit(model, data, target, mask, k, 1.0, plant.epochs, &fitted);
 
     // Within half a centipawn is what the emitted integer needs to be the
     // planted one.

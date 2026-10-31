@@ -415,21 +415,24 @@ TEST_SUITE("mate PV completeness")
   // (adocs/data/S294_mw02_reach.txt) -- so MW02 survived the whole fast
   // suite. This cell reaches it on a cold table.
   //
-  // GOLDEN (DEC-142): the cell -- the position, line 101 of
-  // adocs/data/S145_mined_set.tsv (game 3499), at `go nodes 40000` on a cold
-  // table at Hash 16 -- the lower middle of the run of budgets, 30000 to
-  // 60000, where the shipped build prints a line that reaches its mate and the
-  // build with MW02 applied prints the aborted line short. Since S123, whose
-  // passed pawn family moved the run back from S121's 40000..70000 on the
-  // same position (3 of 318 positions separate; adocs/data/S123_goldens.txt),
-  // so the budget 50000 -> 40000; S121's mobility table had moved it from
+  // GOLDEN (DEC-142): the cell -- the position, line 114 of
+  // adocs/data/S145_mined_set.tsv (game 4543), at `go nodes 250000` on a cold
+  // table at Hash 16 -- the lower middle of the run of budgets, 150000 to
+  // 360000, where the shipped build prints a line that reaches its mate and
+  // the build with MW02 applied prints the aborted line short. Since S125,
+  // whose pawn structure family left line 101's run at 30000..60000 and opened
+  // this longer one, so the rule takes this position (4 of 318 positions
+  // separate; adocs/data/S125_goldens.txt). S123's passed pawn family had
+  // moved line 101's run back from S121's 40000..70000 (3 of 318;
+  // adocs/data/S123_goldens.txt), the budget 50000 -> 40000 at line 101 (game
+  // 3499); S121's mobility table had moved it from
   // S296's 30000..60000 (2 of 318; adocs/data/S121_goldens.txt), the budget
   // 40000 -> 50000; since S296 the position; S294 picked line 162 at
   // `go nodes 150000`, whose run S296's tree shortened to 180000..200000
   // (adocs/data/S296_goldens.txt).
   // Re-derive: adocs/data/S294_fallback_cell.py, the four stages in its
   // header (sweep both builds over the mined set, then `pick`).
-  // Margin: 10000 nodes below and 20000 above. Moves legitimately
+  // Margin: 100000 nodes below and 110000 above. Moves legitimately
   // on: any change that moves the tree, and a change to complete_mate_pv() or
   // to the reporting layer's aborted path, S202's ground. Re-derived by the
   // script when either end moves, never re-read from a failing run.
@@ -451,8 +454,7 @@ TEST_SUITE("mate PV completeness")
     uci_init();
     initialize_game_const_data(&replay);
 
-    const std::string fen =
-        "4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36";
+    const std::string fen = "8/5Q1p/p5pk/3P4/8/q1N4P/2K2P2/4R3 w - - 1 41";
 
     {
       stdout_capture_t capture;
@@ -464,7 +466,7 @@ TEST_SUITE("mate PV completeness")
     std::vector<std::string> lines;
     {
       stdout_capture_t capture;
-      uci_process_line("go nodes 40000");
+      uci_process_line("go nodes 250000");
       uci_wait_for_search();
       lines = capture.lines();
     }

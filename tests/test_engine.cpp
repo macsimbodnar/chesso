@@ -5115,19 +5115,20 @@ TEST_SUITE("engine: mate safety")
   //
   // GOLDEN (DEC-142): 11, the fewest exact mates in three the engine
   // may find over the 82 constructed positions at depth 2m - 1 +
-  // MATE_DEPTH_SLACK. Its two ends: 11 at the shipping guard, 10 with the
-  // guard weakened (RfpMinPly 1), read at S123 (below; 12 and 10 at S121, 13
-  // and 8 at S135 and S296, 12 and 11 at S083, 12 and 7 by S250 on
-  // 2026-10-01, and again at S286). Re-derive:
+  // MATE_DEPTH_SLACK. Its two ends: 12 at the shipping guard, 10 with the
+  // guard weakened (RfpMinPly 1), read at S125 (below; 11 and 10 at S123, 12
+  // and 10 at S121, 13 and 8 at S135 and S296, 12 and 11 at S083, 12 and 7 by
+  // S250 on 2026-10-01, and again at S286). Re-derive:
   // python3 adocs/data/S154_floor_margin_sweep.py floor, and mode `red` for the
   // weakened end; adocs/data/S168_floor_sweep.log is the reading over the
   // enlarged set. Moves legitimately on: a search change that costs or buys
   // mate finding, and a change to the position set -- either end moving obliges
-  // the number to be taken again, not read again. Margin: **0 below the
-  // shipping count since S123** (DEC-330), under the 1 DEC-116 accepts and
-  // held there by DEC-299's guard, below; 1 at S121 and at S083, 2 at S135 and
-  // S296, and 1 above the weakened one since S121 (3 at S135 and S296, 0 at
-  // S083, so it did not separate RfpMinPly 1 there, DEC-313 (2); 4 at S286).
+  // the number to be taken again, not read again. Margin: 1 below the
+  // shipping count since S125, the narrowest DEC-116 accepts; **0 at S123**
+  // (DEC-330), held there by DEC-299's guard, below; 1 at S121 and at S083, 2
+  // at S135 and S296, and 1 above the weakened one since S121 (3 at S135 and
+  // S296, 0 at S083, so it did not separate RfpMinPly 1 there, DEC-313 (2); 4
+  // at S286).
   // The split by motif is recorded above for that reason. Property beside
   // it: the two assertions that are defects at any count -- no mate score for
   // the side being mated, and none closer than the proved minimum -- which
@@ -5189,6 +5190,15 @@ TEST_SUITE("engine: mate safety")
   // DEC-299's guard refuses. So the floor stays 11, and a further mate in
   // three lost turns this case red, a stop for the owner (DEC-303). A revert
   // of S123's paste puts back S121's 12 and 10.
+  //
+  // **Re-taken at S125 and unchanged, one point back.** On S125's candidate,
+  // its pawn structure family at the screen's 02567 fit, the `floor` mode reads
+  // **12** of 24 at the shipping guard and **10** with it weakened (RfpMinPly
+  // 1), and `red` builds the gate at RfpMinPly 1 and sees it fail at 10 >= 11
+  // as well as on mate-in-two exactness (`adocs/data/S125_goldens.txt`). 11
+  // holds, one below the shipping count, and separates. A revert of S125's
+  // paste puts back S123's 11 and 10, DEC-330's zero margin, where a further
+  // mate in three lost is a stop for the owner.
   static constexpr int MATE_IN_THREE_FLOOR = 11;
 
   TEST_CASE_FIXTURE(engine_fixture_t,

@@ -80,8 +80,11 @@ KS = {  # king_safety_feature_t's order
 #             name -> {cell: signed count}, White minus Black, the cells the
 #             weights' (a file cell is the file less one, a rank cell the own
 #             rank less the table's first). Every case states it, an empty
-#             dict where no pawn stands; at S125's landing every weight is
-#             zero, so these counts move no anchor until a fit
+#             dict where no pawn stands; at S125's landing every weight was
+#             zero, so these counts moved no anchor; at its candidate, the
+#             screen's 02567 fit, they and the three flats' refit move the two
+#             cases with pawns, the pawn on e2 109 -> 107 and Re8 196 -> 199
+#             (adocs/data/S125_goldens.txt)
 #  mobility   (type, attacked squares not occupied by own pieces nor attacked
 #             by an enemy pawn, sign); since S121 the count picks the piece's
 #             cell of its type's table, which is what the piece scores, and is
@@ -92,7 +95,7 @@ CASES = [
     dict(
         title="pawn on e2",
         fen="4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
-        anchors={"evaluate": 109},   # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 107},   # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=0,
         material=[("PAWN", 1)],
@@ -208,7 +211,7 @@ CASES = [
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 196},   # test_search.cpp "a side in check may not stand pat"
+        anchors={"evaluate": 199},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
