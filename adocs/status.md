@@ -9,37 +9,42 @@ Updated: 2026-10-31, by hand.
 
 ## 2026-10-31, afternoon: paused for a shutdown; S118 waiting for its timing (handover)
 
-**The owner is shutting the workstation down and asked that nothing new start.** No match,
-fit or timing is running; none is owed before the shutdown. The next coordinator starts here.
+**Main HEAD is clean, nothing is running, no watcher is armed.** The owner stopped the work at about
+14:40 to shut the workstation down; a subagent's final report never came, and every state below was
+read from the tree and its logs. The next coordinator starts here. Mode: one fresh Opus 5.5 subagent
+per step, the coordinator implements nothing, few questions, batched in Italian with the recommended
+option first, which is taken wherever the choice is not the owner's.
 
-**S118 (pawn cache) is in progress on branch `s118`, worktree `../chesso-s118`, not on
-`achesso`** (DEC-332 (9)): `2f7b08a` the cache, `654ab89` the shelter slot, both `No
-functional change`, bench 5707449. Staged and uncommitted over them: `adocs/data/S118_cost.sh`,
-`S118_cost.py`, `S118_hitrate.py`, `DEV_MANUAL.md` and the step file, with
-`.tuning/coord/S118/commit_scripts.txt` as the proposed message. `gate_extra` green on the final
-tree (2026-10-31, 1467 s). The final mutant run, PT01 to PT24, may be unfinished: if the agent's
-final report is not recorded below, re-run `tools/mutation_check.py
-tools/mutants/S118_pawn_cache.py` on a clean worktree of `s118`. S118's step file lives on `s118`
-until it lands; on `achesso` it still reads `plan_todo/`.
+**S118 (pawn cache) is in progress on branch `s118`, worktree `../chesso-s118`, not on `achesso`**
+(DEC-332 (9)): `2f7b08a` the cache, `654ab89` the shelter slot, both `No functional change`, bench
+5707449, `f36762f` the scripts and the record; clean. Its step file is on `s118`
+(`adocs/plan_current/S118_pawn_hash_table.md`, its last section is where it stopped), so on `achesso`
+it still reads `plan_todo/`. `gate_extra` green on the tree (1467 s). Instructions -9.01 % on `bench
+16` and -9.63 % on S020's positions, node-identical: **a count, no timing exists**. Session evidence:
+`.tuning/coord/S118/evidence/`.
 
 **Next, in order:**
-1. Commit the staged scripts on `s118`; a fast check over `85b7847..s118`.
-2. Run `adocs/data/S118_cost.sh` `check`, then `run` (about 1 h 50 m, machine idle, marker
-   `S118-COST-(DONE|FAILED)`), and `adocs/data/S118_hitrate.py` (about 10 min).
-3. Read by DEC-332 (7), (8). A credited gain lands the two commits on `achesso`, with DEC-046 marked
-   VOID, a Debug self-play and the record. A zero or a loss does not land them: DEC-046 stands and
-   S122's accepts is amended to read the shelter from stage two.
-4. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
+1. `python3 tools/mutation_check.py tools/mutants/S118_pawn_cache.py <clean worktree of s118> --only
+   PT14 ... PT24`, about 30 min: PT01 to PT13 are killed on this tree, 13 of 13.
+2. A fast check over `85b7847..s118`.
+3. In `../chesso-s118`: `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89 adocs/data/S118_cost.sh run` (`check`
+   passes; about 1 h 50 m, machine idle, marker `S118-COST-(DONE|FAILED)`, ceiling 4 h), and
+   `adocs/data/S118_hitrate.py` (about 10 min). Read the real PID from `$!`.
+4. Read by DEC-332 (7), (8). A credited gain lands the commits on `achesso`, with DEC-046 marked VOID,
+   a Debug self-play and the record, and the `specs.md` wording, which is owed: the subagent's proposal
+   never arrived. A zero or a loss does not land them: DEC-046 stands and S122's accepts is amended to
+   read the shelter from stage two.
+5. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
    coordinator on 2026-10-31**: S121, S123 and S125 were each measured against their own parent and
    their sum has not been played. Fixed length, an estimate and no verdict (DEC-108).
-5. S102's citation of `evaluate_pawns` for the pawn fills moves to `pawn_pass` when the cache lands.
+6. S102's citation of `evaluate_pawns` for the pawn fills moves to `pawn_pass` when the cache lands.
 
 **Removed with the owner's yes (2026-10-31):** S125's cost trees and `.tuning/s125_void1`, `_void2`;
 33 GB free.
 
-**A reading to carry, simulated 2026-10-31:** at H1 a `{0, 5}` run's estimate is nearly a function of
-its length, nElo about 2.5 + 71000/games at S125's variance, and the stopping bias is only about +1.6
-nElo from 15 to 40 true nElo, +2.5 at 5. So a short H1 is a large effect, not a large error; what cuts
+**A reading to carry, simulated 2026-10-31 (`adocs/data/S125_stopping_bias.py`):** at H1 a `{0, 5}`
+run's estimate is nearly a function of its length, nElo about 2.5 + 71000/games at S125's variance, and
+the stopping bias is only about +1.6 nElo from 15 to 40 true nElo, +2.5 at 5. The owner asked about it. So a short H1 is a large effect, not a large error; what cuts
 these figures is self-play against the list and the longer control.
 
 ## 2026-10-31: S125 done (H1, +23 Elo); S118 next
