@@ -463,7 +463,11 @@ so such an axis would random-walk through a run and read exactly like a tuned
 one. Bounds that round to the *same* UCI value — `uci_value` clamps and rounds,
 so `min 1.2 / max 1.4` is 1 and 1 — are refused by name as a config fault
 before any probe, because both probes would then be the same probe and the axis
-would be blamed for the config.
+would be blamed for the config. A config that will not load, or an engine that
+fails under the check — will not start, closes its output before `bestmove`,
+prints a node count that is no number — ends it in one `ERROR:` line and
+`SPSA-FAILED`, exit 1, with that engine killed (S304). A bad command line is
+argparse's exit 2, before any of this, and a signal prints nothing.
 
 The probes are a ladder, cheapest first, stopping at the first one that
 separates: depth 9 on the midgame position, depth 13 on it, depth 13 on the
@@ -494,6 +498,9 @@ all separate at the first rung — `RfpMargin` 0 searched 54843 nodes and 2000
 searched 569950 at depth 9 — and eight of the nine `Tm*` ones separate on the
 clock. `tools/spsa_dryrun.json` costs 0.2 s and the 12-axis
 `tools/spsa_s085.json` 0.7 s, both unchanged: neither reaches the clock rung.
+`spsa_s085.json` is the record of what S085 ran and not a runnable config
+(DEC-200): `check` refuses it by name, its `RfpMinPly` minimum of 0 against the
+binary's 3, and the 0.7 s is the probe of its other eleven axes.
 
 **Expect a `Tm*` axis to come back *not repeatable*, and how often depends on
 what else the machine is doing.** Ten runs at load ~0.3: six named
@@ -813,8 +820,8 @@ from noise in the objective at any budget this machine can afford — a sign err
 and a parameter that does not matter produce the same flat trajectory. The
 sign-flipped run is asserted to **fail** the criterion the honest one passes.
 
-`tests/test_spsa_probe.py` is the other half, also in the fast suite, 12 cases
-and about a second: the reachability probe of "Tune search parameters with
+`tests/test_spsa_probe.py` is the other half, also in the fast suite, 32 cases
+and under twenty seconds: the reachability probe of "Tune search parameters with
 SPSA" above, driven against an engine stub whose `info ... nodes N` is a formula
 over the option, the `go` command and how many probes came before it. That last
 term is what makes a jittery clock reproducible, so the guard that has to reject
@@ -822,7 +829,9 @@ it can be tested at all — and a live axis, a dead one and one only a clock run
 can see are each a line of formula. The probe shipped without a test and had
 three defects when one was written: a one-sided jitter guard, a failure message
 quoting a measurement that had not happened, and collapsed bounds blamed on the
-axis.
+axis. Its `/bin/sh` stubs cover what no formula reaches, an engine closing its
+output or cutting a line, for `probe_nodes`, for `check`'s marker and, since it
+has no test file of its own, for `tools/depth_vs_eval.py` (S304).
 
 The constants are measured there, not inherited. On that objective, at 20000
 pairs, with the axis starting 300 units from its optimum:
@@ -5307,6 +5316,12 @@ which errors are asked about; the defaults take errors of 100 cp or more in
 positions inside +/-300, because centipawns given away in an already-decided
 position do not decide games. DEC-033 is the run this produced and
 `adocs/data/DEC033_depth_vs_eval.tsv` is its output.
+
+An engine that closes its output, or answers with a `bestmove` line holding no
+whole move, stops the run: exit 1, a message naming the wait, no `--out` file, no
+move handed to the reference. A worker opens its two engines at its first task, so
+one with no task opens none, and when it leaves it sends them `quit`, waits up to
+5 s and kills what is left (S304).
 
 ## Generate self-play data and fit the evaluation
 

@@ -27,7 +27,10 @@ recorded in DEC-030: depth is unbudgetable and movetime is not reproducible.
 
 import argparse
 import csv
+import multiprocessing.util
 import random
+import re
+import subprocess
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -42,14 +45,51 @@ from error_profile import Engine, clamp  # noqa: E402
 # because ProcessPoolExecutor's initializer has nowhere else to put it.
 _ENGINE = None
 _REFERENCE = None
+_PATHS = None
 _CONFIG = None
+
+# How long a worker leaving waits for an engine it told to quit. An engine that
+# reads takes it at once and this is spent only on one that stopped reading.
+QUIT_WAIT_S = 5
+
+# The whole line, its newline included. Only end of file returns a line without
+# one, and what is left can read as a move: `e7e8` is `e7e8q` cut short.
+BESTMOVE_RE = re.compile(r"bestmove\s+([a-h][1-8][a-h][1-8][nbrq]?)(?:\s.*)?\n")
+
+
+def _close_engines():
+    """A healthy engine ends by itself, so its exit-time work happens: the tune
+    build writes its census from a destructor (src/search.cpp). The kill is for
+    what `quit` does not end, because closing stdin does not end it either."""
+    for engine in (_ENGINE, _REFERENCE):
+        if engine is None:
+            continue
+        try:
+            engine._send("quit")
+            engine.p.wait(timeout=QUIT_WAIT_S)
+        except (OSError, subprocess.TimeoutExpired):
+            engine.p.kill()
 
 
 def _init(engine_path, reference_path, config):
-    global _ENGINE, _REFERENCE, _CONFIG
-    _ENGINE = Engine(engine_path)
-    _REFERENCE = Engine(reference_path)
+    global _PATHS, _CONFIG
+    # Finalize and not atexit: Python 3.12's forked worker leaves by os._exit, so
+    # atexit never runs, and this runs on every way a worker returns.
+    multiprocessing.util.Finalize(None, _close_engines, exitpriority=0)
+    _PATHS = (engine_path, reference_path)
     _CONFIG = config
+
+
+def _open_engines():
+    """In a task and not in the initializer. An initializer that raises breaks
+    the pool, the pool sends the other workers SIGTERM, and a signal ends a
+    worker without its Finalize, so an engine that never reads would outlive the
+    run. A task that raises ends it the ordinary way."""
+    global _ENGINE, _REFERENCE
+    if _ENGINE is None:
+        _ENGINE = Engine(_PATHS[0])
+    if _REFERENCE is None:
+        _REFERENCE = Engine(_PATHS[1])
 
 
 def best_move(engine, fen, nodes):
@@ -62,7 +102,11 @@ def best_move(engine, fen, nodes):
         if not line:
             raise RuntimeError("engine closed its output before bestmove")
         if line.startswith("bestmove"):
-            return line.split()[1]
+            whole = BESTMOVE_RE.fullmatch(line)
+            if not whole:
+                raise RuntimeError(f"waiting for bestmove, engine sent {line!r}, "
+                                   "which holds no whole move")
+            return whole.group(1)
 
 
 def cost_of(fen, ref_before, move, limit):
@@ -82,6 +126,7 @@ def cost_of(fen, ref_before, move, limit):
 
 
 def probe(record):
+    _open_engines()
     fen, ref_before = record["fen"], int(record["ref"])
     base_nodes, deep_nodes, limit = _CONFIG
 

@@ -498,7 +498,9 @@ set_tests_properties(test_analyse_game PROPERTIES LABELS "fast" TIMEOUT 60)
 # axis, a dead one, one only a clock rung can see, or a machine whose clock
 # count alternates on its own. None of the four is a sequence a correct engine
 # produces on demand, and the jittery one cannot be produced at all without
-# controlling the clock. 12 cases, ~1 s, stdlib only, nothing built.
+# controlling the clock. S304 added shell stubs that close their output or cut a
+# line, tools/depth_vs_eval.py's included. 32 cases, under 20 s, one of them
+# waiting out that tool's QUIT_WAIT_S, stdlib only, nothing built.
 add_test(NAME test_spsa_probe
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_spsa_probe.py)
 set_tests_properties(test_spsa_probe PROPERTIES LABELS "fast" TIMEOUT 120)

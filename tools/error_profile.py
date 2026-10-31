@@ -165,13 +165,20 @@ class Engine:
         self.p = subprocess.Popen(
             [path], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             text=True, bufsize=1)
-        self._send("uci")
-        while True:
-            line = self.p.stdout.readline()
-            if not line:
-                raise RuntimeError("engine closed its output before uciok")
-            if "uciok" in line:
-                break
+        try:
+            self._send("uci")
+            while True:
+                line = self.p.stdout.readline()
+                if not line:
+                    raise RuntimeError("engine closed its output before uciok")
+                if "uciok" in line:
+                    break
+        except Exception:
+            # Nothing holds this process once the constructor raises, so nothing
+            # could kill it later, and an engine that never reads outlives its
+            # stdin closing.
+            self.p.kill()
+            raise
 
     def _send(self, line):
         self.p.stdin.write(line + "\n")

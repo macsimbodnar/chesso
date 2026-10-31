@@ -417,20 +417,27 @@ def probe_nodes(engine, name, value, fen, go):
         while True:
             line = proc.stdout.readline()
             if not line:
-                # An engine still alive with its output closed would hold this
-                # error in the wait below for the whole 30 s.
-                proc.kill()
                 raise ConfigError(
                     f"{engine} closed its output before bestmove under `{go}`")
             if line.startswith("info") and " nodes " in line:
                 # End of file can cut this line off before its number. None and
                 # not the last count, so a `bestmove` after it cannot read stale.
                 count = line.split(" nodes ")[1].split()
+                # Digits and not int(), which also takes `-5` and `1_000`.
+                if count and not (count[0].isascii() and count[0].isdigit()):
+                    raise ConfigError(
+                        f"{engine} printed a node count that is no number under "
+                        f"`{go}`: {line.strip()}")
                 nodes = int(count[0]) if count else None
             if line.startswith("bestmove"):
                 break
         proc.stdin.write("quit\n")
         proc.stdin.flush()
+    except Exception:
+        # An engine still alive after any of these would hold the error in the
+        # wait below for the whole 30 s.
+        proc.kill()
+        raise
     finally:
         try:
             proc.wait(timeout=30)
@@ -818,27 +825,38 @@ def main(argv=None):
     args = ap.parse_args(argv)
     # Inside the marker's reach: a config that will not load is the most likely
     # way a detached run fails, and a traceback is not a line any watcher exits
-    # on -- it would sit until its ceiling (DEC-061).
+    # on -- it would sit until its ceiling (DEC-061). Every exception: JSON of the
+    # wrong shape is an AttributeError or a TypeError, a number too large an
+    # OverflowError, nesting too deep a RecursionError.
     try:
         with open(args.config) as fh:
             cfg = Config(json.load(fh))
-    except (OSError, ValueError, ConfigError) as exc:
+    except Exception as exc:
         print(f"ERROR: {args.config}: {exc}")
         print("SPSA-FAILED")
         return 1
 
     if args.cmd == "check":
-        problems = check(cfg, args.engine)
-        for w in cfg.warnings():
-            print(f"WARNING: {w}")
-        for p in problems:
-            print(f"PROBLEM: {p}")
-        if problems:
+        # Whatever it was and not only a ConfigError: an engine gone from under a
+        # write is an OSError, one that never answers `uci` a TimeoutExpired, an
+        # iteration count no float holds an OverflowError in `warnings()`, and a
+        # traceback is not a line any watcher exits on (DEC-061).
+        try:
+            problems = check(cfg, args.engine)
+            for w in cfg.warnings():
+                print(f"WARNING: {w}")
+            for p in problems:
+                print(f"PROBLEM: {p}")
+            if problems:
+                print("SPSA-FAILED")
+                return 1
+            pairs = cfg.iterations * cfg.pairs_per_iter
+            print(f"{len(cfg.params)} parameters, {cfg.iterations} iterations x "
+                  f"{cfg.pairs_per_iter} pairs = {pairs} pairs, {2 * pairs} games")
+        except Exception as exc:
+            print(f"ERROR: {type(exc).__name__}: {exc}")
             print("SPSA-FAILED")
             return 1
-        pairs = cfg.iterations * cfg.pairs_per_iter
-        print(f"{len(cfg.params)} parameters, {cfg.iterations} iterations x "
-              f"{cfg.pairs_per_iter} pairs = {pairs} pairs, {2 * pairs} games")
         print("SPSA-DONE")
         return 0
 

@@ -40,14 +40,22 @@ every verdict. **The SPRT is pinned, `cf8661b` against `9cbeb68`, and runs from 
 main checkout: `.tuning/s125_sprt.log`, up to 41900 games, 19.86 h, ceiling 40 h.
 No commit lands in main until it ends;** S304 may be written in a worktree and held.
 
-**Next:** the verdict; on H0 `S125_screen.sh part A|B|C` in order; on H1 the close:
-the fold (INV-6), hand cases and specs (DEC-331 (13)), archive and ledger. The
+**The SPRT read H1** (`cf8661b` vs `9cbeb68`, Elo +22.89 +/- 10.02, nElo +31.16 +/-
+13.60, LLR 2.96, 2508 games in 1 h 12 m, 0 forfeits); archived, verified, as
+`chesso_S125_sprt_2026-10-31.tar.xz` and `chesso_S125_screen_cost_2026-10-31.tar.xz`.
+
+**Next:** the close, running in `../chesso-s125d`, brief
+`.tuning/coord/S125/brief_close.md`: the fold (INV-6), hand cases and specs (DEC-331
+(13)), the record and the ledger. Then S118. The
 worktrees `../chesso-s125b` and S125's cost trees under `.tuning/s125/`: the first
 goes at the close, the others need the owner's yes.
 
 - **S303 done** (filler, DEC-171): `depth_vs_eval.py` and `spsa_driver.py` fail
   on an engine that closes its output; worktree `../chesso-s303` removed. Filed
   S304, the residuals, the next filler.
+- **S304 done** (filler, DEC-171): the residuals closed; comparison `failures=0`;
+  worktree `../chesso-s304` removed. Named, not fixed, in its step file: SIGTERM to the
+  tool's main process, reads without a timeout, `run`'s marker past the load.
 
 ## 2026-10-30: paused for a shutdown; S125's screen next (handover)
 

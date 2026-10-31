@@ -30,6 +30,10 @@ S214's own diff:
 3. An axis whose bounds round to the same UCI value was probed twice at that
    one value and then failed by name as unreachable, when the fault is the
    config.
+
+S303 and S304 added what an engine does to its own output: closes it, cuts a
+line, prints a count that is no number. `tools/depth_vs_eval.py` has no test file
+of its own and the same device reaches it, so its `bestmove` cases are here too.
 """
 
 import contextlib
@@ -37,13 +41,16 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
+import depth_vs_eval as dve  # noqa: E402
 import spsa_driver as sd  # noqa: E402
 
 AXIS = "Axis"
@@ -111,6 +118,39 @@ JITTERY_DEAD = "4242 if 'depth' in go else (7000 if call % 2 == 0 else 9000)"
 # The eight `Tm*` axes: invisible to every fixed-depth probe, live on a clock.
 CLOCK_ONLY = "4242 if 'depth' in go else 1000 + value"
 
+# What no formula reaches: an engine doing something to its own output. Answers
+# `uci` with the axis and runs a case's own shell at `go`, with `$go` counting
+# them. A stub that stays alive does it by `exec sleep`, bounded, so a case that
+# fails cannot leave one behind for long. `read` and `exec 1>&-` are the same
+# device S303's stand-ins used.
+SH_STUB = r"""#!/bin/sh
+echo $$ > {pidfile}
+echo $$ >> {pidfile}.all
+trap 'echo exit-time work >> {log}' EXIT
+go=0
+while read -r line; do
+    case "$line" in
+        uci) printf 'option name {axis} type spin default 0 min 0 max 1000\nuciok\n' ;;
+        isready) printf 'readyok\n' ;;
+        position*) echo "$line" >> {log} ;;
+        go*)
+            go=$((go + 1))
+            {at_go}
+            ;;
+        quit)
+            echo quit >> {log}
+            exit 0
+            ;;
+    esac
+done
+"""
+
+# Comfortably under the 30 s `probe_nodes` waits on an engine it did not kill, so
+# a case that finishes inside this bound shows the kill and not the wait. A kill
+# runs no shell trap, so `exit-time work` in a stub's log is its own exit.
+KILLED_WITHIN_S = 15
+STAYS_ALIVE = "exec sleep 45"
+
 
 class ProbeCase(unittest.TestCase):
     def setUp(self):
@@ -127,6 +167,37 @@ class ProbeCase(unittest.TestCase):
                 counter=self.counter, axis=name, expr=expr))
         os.chmod(path, 0o755)
         return path
+
+    def sh_engine(self, at_go, name="sh_engine"):
+        """The shell stub, with its pid and every `position` it took in files."""
+        path = os.path.join(self.dir, name)
+        with open(path, "w") as fh:
+            fh.write(SH_STUB.format(pidfile=path + ".pid", log=path + ".log",
+                                    axis=AXIS, at_go=at_go))
+        os.chmod(path, 0o755)
+        return path
+
+    def script(self, name, body):
+        """A stub with no loop at all, its pid in the same file."""
+        path = os.path.join(self.dir, name)
+        with open(path, "w") as fh:
+            fh.write(f"#!/bin/sh\necho $$ > {path}.pid\n{body}")
+        os.chmod(path, 0o755)
+        return path
+
+    def gone(self, engine):
+        """Whether the process a shell stub recorded has ended. `ps` and not
+        `kill -0`, which a zombie answers, and a moment's grace: a killed process
+        is reaped by whoever inherits it, on that process's schedule."""
+        with open(engine + ".pid") as fh:
+            pid = fh.read().strip()
+        for _ in range(100):
+            state = subprocess.run(["ps", "-o", "stat=", "-p", pid],
+                                   capture_output=True, text=True).stdout.strip()
+            if not state or state.startswith("Z"):
+                return True
+            time.sleep(0.05)
+        return False
 
     def go_calls(self):
         """How many `go` commands the stub answered. 0 proves an axis was
@@ -305,22 +376,323 @@ class CollapsedBounds(ProbeCase):
         self.assertEqual(self.go_calls(), 0)
 
 
+class MisbehavingOutput(ProbeCase):
+    """`probe_nodes` on an engine that does not finish its answer. S303, S304.
+
+    A partial count read as a measurement: an engine that died at its first
+    `info` line passed the check that exists to prove an axis reaches the search.
+    """
+
+    PARTIAL = "printf 'info depth 1 nodes 1500\\n'; "
+
+    def probe(self, engine):
+        return sd.probe_nodes(engine, AXIS, 500, sd.PROBE_FEN, "go depth 9")
+
+    def refused(self, at_go, *words):
+        engine = self.sh_engine(at_go)
+        started = time.monotonic()
+        with self.assertRaises(sd.ConfigError) as ctx:
+            self.probe(engine)
+        for word in words:
+            self.assertIn(word, str(ctx.exception))
+        self.assertIn("go depth 9", str(ctx.exception))
+        self.assertLess(time.monotonic() - started, KILLED_WITHIN_S)
+        self.assertTrue(self.gone(engine), f"still alive after: {at_go}")
+
+    def test_closing_without_bestmove_names_the_wait(self):
+        """Exits, closes and reads on, closes and never reads again."""
+        for end in ("exit 0", "exec 1>&-", f"exec 1>&-; {STAYS_ALIVE}"):
+            with self.subTest(end=end):
+                self.refused(self.PARTIAL + end, "before bestmove")
+
+    def test_a_line_cut_before_its_number_is_not_a_stale_count(self):
+        self.refused("printf 'info depth 1 nodes 900\\ninfo depth 2 nodes '; exec 1>&-",
+                     "before bestmove")
+
+    def test_a_count_that_is_no_number_is_refused_and_the_engine_killed(self):
+        """int() takes `-5` and `1_000`, so it is digits and not int() that decides,
+        and the engine stays alive after the line so only a kill ends it in time."""
+        for count in ("abc", "-5", "1_000", "12x4"):
+            with self.subTest(count=count):
+                self.refused(f"printf 'info depth 1 nodes {count}\\n'; {STAYS_ALIVE}",
+                             "no number", count)
+
+    def test_bestmove_cut_before_its_word_ends_is_no_bestmove(self):
+        self.refused(self.PARTIAL + "printf 'bestmov'; exec 1>&-", "before bestmove")
+
+    def test_bestmove_cut_after_its_word_keeps_the_whole_count(self):
+        """The one cut this lets through, on purpose: the count comes from a whole
+        `info` line and the probe never reads the move."""
+        for cut in ("bestmove", "bestmove e3", "bestmove e2e4 pon"):
+            with self.subTest(cut=cut):
+                engine = self.sh_engine(self.PARTIAL + f"printf '{cut}'; exec 1>&-")
+                self.assertEqual(self.probe(engine), 1500)
+
+
+class BestMoveLine(unittest.TestCase):
+    """`depth_vs_eval.py`'s reading of the line, without a process. S304."""
+
+    def test_a_whole_move_with_its_newline_is_read(self):
+        for line, move in (("bestmove e2e4\n", "e2e4"),
+                           ("bestmove e7e8q\n", "e7e8q"),
+                           ("bestmove e2e4 ponder e7e5\n", "e2e4"),
+                           ("bestmove e2e4 pon\n", "e2e4"),
+                           ("bestmove  e2e4 \n", "e2e4")):
+            with self.subTest(line=line):
+                self.assertEqual(dve.BESTMOVE_RE.fullmatch(line).group(1), move)
+
+    def test_anything_else_holds_no_move(self):
+        """Without its newline a line was cut by end of file, however whole it
+        reads: `e7e8` is what is left of `e7e8q`."""
+        for line in ("bestmove", "bestmove\n", "bestmove e3", "bestmove e3\n",
+                     "bestmove e2e4", "bestmove e7e8", "bestmove e2e4 pon",
+                     "bestmove e7e8qq\n", "bestmove e2e9\n", "bestmove (none)\n",
+                     "bestmove 0000\n", "bestmovee2e4\n"):
+            with self.subTest(line=line):
+                self.assertIsNone(dve.BESTMOVE_RE.fullmatch(line))
+
+
+class DepthVsEvalCli(ProbeCase):
+    """The tool end to end on one position: its first `go` answers whole, so the
+    case sits at the deep search, where S301 traced the worst of it. S303, S304."""
+
+    FIRST = 'if [ "$go" = 1 ]; then printf \'bestmove e3d4\\n\'; continue; fi; '
+    # Opaque here: no stub parses a position or a move, it only logs them.
+    FEN = "rn1qk2r/pp2ppbp/8/2pp1p2/3P4/1P2PQ1P/P1P2PP1/RN2KB1R w KQkq c6 0 9"
+
+    def setUp(self):
+        super().setUp()
+        self.raw = os.path.join(self.dir, "raw.tsv")
+        with open(self.raw, "w") as fh:
+            fh.write("game\tply\tphase\tcost\tref\town\tmate\tsan\tfen\n")
+            fh.write(f"0\t16\t20\t150\t-5\t-8\t0\tQxf5\t{self.FEN}\n")
+        self.out = os.path.join(self.dir, "out.tsv")
+        self.reference = self.sh_engine(
+            "printf 'info depth 1 score cp 46 nodes 1 pv e2e4\\nbestmove e2e4\\n'",
+            name="reference")
+
+    def run_tool(self, engine, reference=None, workers=1, raw=None):
+        # stderr to a file and not a pipe: an engine left behind inherits it, so
+        # `capture_output` would wait out that engine's life before returning and
+        # the case looking for it would find it gone. It did, on the old tool.
+        with tempfile.TemporaryFile("w+") as err:
+            done = subprocess.run(
+                [sys.executable, os.path.join(ROOT, "tools", "depth_vs_eval.py"),
+                 raw or self.raw, "--engine", engine,
+                 "--reference", reference or self.reference,
+                 "--base-nodes", "1000", "--deep-nodes", "2000",
+                 "--reference-nodes", "500", "--workers", str(workers),
+                 "--out", self.out],
+                stdout=subprocess.PIPE, stderr=err, text=True, timeout=60)
+            err.seek(0)
+            done.stderr = err.read()
+        return done
+
+    def handed(self):
+        """Every `position` the reference took: a refused move never reaches it."""
+        return [line for line in self.log(self.reference)
+                if line.startswith("position")]
+
+    def log(self, stub):
+        if not os.path.exists(stub + ".log"):
+            return []
+        with open(stub + ".log") as fh:
+            return fh.read().splitlines()
+
+    def starts(self, stub):
+        """How many processes of a stub were started, over a whole run."""
+        with open(stub + ".pid.all") as fh:
+            return len(fh.read().splitlines())
+
+    def stops(self, engine, said):
+        done = self.run_tool(engine)
+        self.assertEqual(done.returncode, 1, done.stdout + done.stderr)
+        self.assertIn(said, done.stderr)
+        self.assertFalse(os.path.exists(self.out), "a row was written")
+        self.assertEqual(self.handed(), [])
+
+    def test_a_bestmove_with_no_whole_move_stops_the_run(self):
+        """`bestmove e3` used to exit 0 with `deep_move` `e3`, costed by a reference
+        that answers, and bare `bestmove` died in an IndexError with no message."""
+        for line in ("'bestmove e3'", "'bestmove'", "'bestmove e7e8'",
+                     "'bestmove e3\\n'", "'bestmove (none)\\n'"):
+            with self.subTest(line=line):
+                engine = self.sh_engine(self.FIRST + f"printf {line}; exit 0")
+                self.stops(engine, "waiting for bestmove")
+
+    def test_closing_without_bestmove_stops_the_run(self):
+        self.stops(self.sh_engine(self.FIRST + "exit 0"),
+                   "closed its output before bestmove")
+
+    def test_a_whole_move_is_a_row(self):
+        """The control: the first `go`'s move and a promotion with a ponder word."""
+        engine = self.sh_engine(self.FIRST + "printf 'bestmove e7e8q ponder e2e4\\n'")
+        done = self.run_tool(engine)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        with open(self.out) as fh:
+            head, row = fh.read().splitlines()
+        row = dict(zip(head.split("\t"), row.split("\t")))
+        self.assertEqual((row["base_move"], row["deep_move"]), ("e3d4", "e7e8q"))
+        self.assertEqual([p.split()[-1] for p in self.handed()], ["e3d4", "e7e8q"])
+        self.assertTrue(self.gone(engine))
+
+    def never_reads(self, name):
+        """Closes its output and never looks at stdin, from its first instruction."""
+        return self.script(name, f"exec 1>&-\n{STAYS_ALIVE}\n")
+
+    def test_a_healthy_engine_takes_quit_and_ends_by_itself(self):
+        """The ruling on S304's fast check: a kill here lost the tune build's census,
+        which a destructor writes. Both sides, on a run that succeeds and on one that
+        fails beside them."""
+        engine = self.sh_engine("printf 'bestmove e3d4\\n'", name="healthy")
+        self.assertEqual(self.run_tool(engine).returncode, 0)
+        for stub in (engine, self.reference):
+            self.assertEqual(self.log(stub)[-2:], ["quit", "exit-time work"])
+
+        cut = self.sh_engine(self.FIRST + "printf 'bestmove e3\\n'", name="cut")
+        self.assertEqual(self.run_tool(cut).returncode, 1)
+        self.assertEqual(self.log(cut)[-2:], ["quit", "exit-time work"])
+
+    def test_an_engine_that_stops_reading_does_not_outlive_the_tool(self):
+        """Closing a worker's end of the pipe ends only an engine that reads it. Costs
+        `QUIT_WAIT_S`, once, for the one that keeps its stdin. The reference beside it
+        takes `quit`, so its kill would show in its log."""
+        engine = self.sh_engine(self.FIRST + f"exec 1>&-; {STAYS_ALIVE}")
+        self.assertEqual(self.run_tool(engine).returncode, 1)
+        self.assertTrue(self.gone(engine))
+        self.assertTrue(self.gone(self.reference))
+        self.assertEqual(self.log(self.reference)[-2:], ["quit", "exit-time work"])
+
+    def test_an_engine_that_closed_its_stdin_is_killed_without_the_wait(self):
+        """`quit` has nowhere to go, so the write is what fails."""
+        engine = self.sh_engine(self.FIRST + f"exec 0<&- 1>&-; {STAYS_ALIVE}")
+        started = time.monotonic()
+        done = self.run_tool(engine)
+        self.assertEqual(done.returncode, 1)
+        self.assertLess(time.monotonic() - started, dve.QUIT_WAIT_S)
+        self.assertNotIn("BrokenPipeError", done.stderr)
+        self.assertTrue(self.gone(engine))
+
+    def test_a_worker_with_no_task_opens_no_engine(self):
+        """Above one worker, and the engines open in the task. Back in the pool's
+        initializer this starts three of each: S304's stated departure, the count, and
+        its reason, below."""
+        engine = self.sh_engine("printf 'bestmove e3d4\\n'", name="healthy")
+        self.assertEqual(self.run_tool(engine, workers=3).returncode, 0)
+        self.assertEqual((self.starts(engine), self.starts(self.reference)), (1, 1))
+
+    def test_an_engine_dead_at_birth_fails_its_task_and_not_the_pool(self):
+        """An initializer that raises breaks the pool, and the pool's SIGTERM ends the
+        other workers past their Finalize. In a task the wait is what the run says."""
+        engine = self.never_reads("never_reads")
+        done = self.run_tool(engine, workers=3)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("before uciok", done.stderr)
+        self.assertNotIn("BrokenProcessPool", done.stderr)
+        self.assertTrue(self.gone(engine))
+
+    def test_rows_do_not_depend_on_the_worker_count(self):
+        """`workers.map` keeps the sample's order and the stubs answer alike, so this
+        is the order and the first-task opening together. It says nothing about an
+        engine with memory: the pending comparison's `--workers 3` section does."""
+        raw = os.path.join(self.dir, "raw6.tsv")
+        with open(raw, "w") as fh:
+            fh.write("game\tply\tphase\tcost\tref\town\tmate\tsan\tfen\n")
+            for game in range(6):
+                fh.write(f"{game}\t16\t20\t150\t-5\t-8\t0\tQxf5\t{self.FEN}\n")
+        engine = self.sh_engine("printf 'bestmove e3d4\\n'", name="healthy")
+        tables = []
+        for workers in (1, 3):
+            self.assertEqual(self.run_tool(engine, workers=workers, raw=raw).returncode, 0)
+            with open(self.out) as fh:
+                tables.append(fh.read())
+        self.assertEqual(tables[0], tables[1])
+        self.assertEqual(len(tables[0].splitlines()), 7)
+
+    def test_an_engine_that_never_read_does_not_outlive_the_tool(self):
+        """Nothing holds a process whose constructor raised, on either side."""
+        engine = self.never_reads("never_reads")
+        done = self.run_tool(engine)
+        self.assertEqual(done.returncode, 1)
+        self.assertIn("before uciok", done.stderr)
+        self.assertTrue(self.gone(engine))
+
+        healthy = self.sh_engine("printf 'bestmove e3d4\\n'", name="healthy")
+        reference = self.never_reads("never_reads_reference")
+        done = self.run_tool(healthy, reference)
+        self.assertEqual(done.returncode, 1)
+        self.assertTrue(self.gone(reference))
+        self.assertTrue(self.gone(healthy))
+
+
 class Cli(ProbeCase):
     """One end-to-end pass, so the exit status and DEC-061's marker are covered
     and not only the function's return value."""
 
-    def test_a_dead_axis_fails_the_command_with_the_marker(self):
-        import subprocess
+    def test_a_config_of_any_wrong_shape_ends_check_in_the_marker(self):
+        """S304's fast check: the load took `OSError`, `ValueError` and `ConfigError`,
+        so these died in a traceback with no marker. The last is the one that loads
+        and falls over later, in `warnings()`."""
+        one = '[{"name": "A", "start": 5, "min": 0, "max": 10, "c_end": 1}]'
+        for text in ("[]", "5", '{"iterations": null, "pairs_per_iter": 1, "params": %s}' % one,
+                     '{"iterations": 5, "pairs_per_iter": 1, "params": '
+                     '[{"name": "A", "start": null, "min": 0, "max": 10, "c_end": 1}]}',
+                     '{"iterations": 5, "pairs_per_iter": 1, "params": 5}',
+                     '{"iterations": 5, "pairs_per_iter": 1, "params": [5]}',
+                     '{"iterations": 1e400, "pairs_per_iter": 1, "params": %s}' % one,
+                     '{"iterations": 1%s, "pairs_per_iter": 1, "params": %s}' % ("0" * 400, one)):
+            with self.subTest(config=text[:60]):
+                path = os.path.join(self.dir, "bad.json")
+                with open(path, "w") as fh:
+                    fh.write(text)
+                done = subprocess.run(
+                    [sys.executable, os.path.join(ROOT, "tools", "spsa_driver.py"),
+                     "check", path], capture_output=True, text=True, timeout=60)
+                self.assertEqual(done.returncode, 1, done.stdout)
+                lines = done.stdout.splitlines()
+                self.assertEqual(lines[-1], "SPSA-FAILED", done.stdout + done.stderr)
+                self.assertTrue(lines[-2].startswith("ERROR: "), done.stdout)
+                self.assertNotIn("Traceback", done.stderr)
+
+    def run_check(self, engine):
         cfg_path = os.path.join(self.dir, "config.json")
         with open(cfg_path, "w") as fh:
             json.dump(self.config().raw, fh)
-        done = subprocess.run(
+        return subprocess.run(
             [sys.executable, os.path.join(ROOT, "tools", "spsa_driver.py"),
-             "check", cfg_path, "--engine", self.engine(DEAD)],
+             "check", cfg_path, "--engine", engine],
             capture_output=True, text=True, timeout=120)
+
+    def test_a_dead_axis_fails_the_command_with_the_marker(self):
+        done = self.run_check(self.engine(DEAD))
         self.assertEqual(done.returncode, 1, done.stdout)
         self.assertIn(f"PROBLEM: {AXIS}", done.stdout)
         self.assertTrue(done.stdout.strip().endswith("SPSA-FAILED"), done.stdout)
+
+    def test_a_live_axis_passes_the_command_with_the_marker(self):
+        done = self.run_check(self.engine(LIVE))
+        self.assertEqual(done.returncode, 0, done.stdout)
+        self.assertTrue(done.stdout.strip().endswith("SPSA-DONE"), done.stdout)
+
+    def test_a_raise_inside_check_ends_in_the_marker_and_not_a_traceback(self):
+        """A traceback is not a line a watcher exits on, DEC-061. Every way out of
+        `check()` that is not a list of problems, S304: its own ConfigErrors, and
+        the OSError of an engine that is not there."""
+        closes = self.sh_engine("printf 'info depth 1 nodes 1500\\n'; exec 1>&-")
+        malformed = self.sh_engine("printf 'info depth 1 nodes abc\\n'; exec 1>&-",
+                                   name="malformed")
+        lists_nothing = self.script("lists_nothing", "exit 0\n")
+        for engine, said in ((closes, "before bestmove"), (malformed, "no number"),
+                             (lists_nothing, "no spin options"),
+                             (os.path.join(self.dir, "absent"), "No such file")):
+            with self.subTest(said=said):
+                done = self.run_check(engine)
+                self.assertEqual(done.returncode, 1, done.stdout)
+                lines = done.stdout.splitlines()
+                self.assertEqual(lines[-1], "SPSA-FAILED", done.stdout)
+                self.assertTrue(lines[-2].startswith("ERROR: "), done.stdout)
+                self.assertIn(said, lines[-2])
+                self.assertNotIn("Traceback", done.stderr)
 
 
 if __name__ == "__main__":
