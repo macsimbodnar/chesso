@@ -3,7 +3,9 @@ goal:       the pawn terms and the king shelter are computed once per pawn struc
 accepts:    an SPRT verdict if the tree changes and a node-identity check if it does not -- state which before the run; the key is a pawn-only zobrist maintained incrementally in add_piece, remove_piece and move_piece (INV-4), never recomputed in evaluate(); the hit rate is measured over a real search and recorded, not assumed; the table stores the mg/eg pawn score, the passed-pawn bitboard and **both kings' shelter and storm scores**, because the shelter is the expensive half of what this saves; a collision returns a recomputation rather than a wrong score, and a test forces one
 touches:    src/evaluation.cpp, src/evaluation.hpp, src/data_structures.hpp, src/search.cpp,
             tests/test_evaluation.cpp, tests/test_eval_trace.cpp, tests/test_search.cpp,
-            tools/mutants/S118_pawn_cache.py, adocs/data/S118_inv6.txt; a stale comment
+            tools/mutants/S118_pawn_cache.py, adocs/data/S118_inv6.txt,
+            adocs/data/S118_cost.sh, adocs/data/S118_cost.py, adocs/data/S118_hitrate.py,
+            DEV_MANUAL.md, MANUAL.md; a stale comment
             each in src/chesso.cpp, tools/datagen.cpp, tools/tuner_trace.hpp,
             tests/test_engine.cpp, tests/test_audit_fen_semantics.cpp, and a symbol
             in one comment of src/bitboard.cpp: no code there
@@ -400,3 +402,22 @@ checked hit recomputes what the parent computed anyway.
 **Gates**, on the staged tree: both builds 0 warnings; `ctest -L fast` 50 of 50 in both;
 format clean; the S297 clang pair 50 of 50 twice, 365 s; `plan_prose_check.py`'s five modes
 each exit 0.
+
+## 2026-10-31: stopped for a shutdown (the coordinator)
+
+The owner stopped the work at about 14:40 to shut the workstation down, before the subagent's
+final report. What stands on `654ab89`, read from its logs:
+
+- **`tools/gate_extra.sh`: `GATE-EXTRA-DONE 6 stages 1467 s`** on this tree, 13:41 to 14:06. Nothing
+  under `src/` or `tests/` moved after it.
+- **The mutants on this tree: PT01 to PT13 killed, 13 of 13, none survived; PT14 to PT24 not re-run
+  on it**, the run stopped by the owner during PT14. Each of those was killed on its own earlier
+  fixture, in the 15 of 15 and the 9 of 9 above, and those fixtures predate small edits, so this
+  still owes `python3 tools/mutation_check.py tools/mutants/S118_pawn_cache.py <clean worktree>
+  --only PT14 ... PT24`, about 30 min. PT07 took 554 s against about 145 s for the others.
+- **`adocs/data/S118_cost.sh check`** passes at `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89`: rows aa, s8,
+  s10, s12, s14, s16, s18, total, slot. Its `build` and `run` have never run, nor has
+  `adocs/data/S118_hitrate.py` on a real search. **No timing exists for this step.**
+- **Owed by the subagent and not delivered:** the `specs.md` proposal (INV-2 or INV-4 if they name the
+  key's readers, the evaluation row, the absent row's "a pawn hash"), and a re-read of `DEV_MANUAL.md`
+  and `MANUAL.md` at the landing.

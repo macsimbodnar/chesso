@@ -3638,6 +3638,31 @@ The lesson is the one this file already gives about `-n`: **an absolute timing i
 a property of a machine and a build, and only a ratio measured in one run
 travels.**
 
+**`bench_eval` calls the pure form, and the pawn table is not in it** (S118,
+DEC-332). `evaluate(board)` takes no table and runs the pawn pass every call, so this
+figure stays comparable across S118 and says nothing about what the table buys: the
+search's two sites call `evaluate(board, table)` and `evaluate_lazy(..., table)`, and
+ten positions in a table would sit at a hit rate no search has, which is what
+DEC-046's reading of 61 % recovered was. Read the table with its own two tools:
+
+```bash
+# what it buys, DEC-266's form: 9 comparisons, about 1 h 50 m, the machine idle
+CACHE_SHA=<the cache's commit> SHELTER_SHA=<the slot's commit> adocs/data/S118_cost.sh check
+# its hit rate over a real search, on a tune build: about 10 min, one process
+~/.venv/chess/bin/python adocs/data/S118_hitrate.py build-tune/src/chesso --pgn <games.pgn>
+```
+
+The second works through `CHESSO_PAWN_TABLE_CENSUS=<file>`, which only a tune build
+reads: `pawn_table_census_t` in `src/evaluation.cpp` appends one line to it at the
+process's end, `hits <n> misses <n> slot_hits <n> slot_misses <n>`, the slot's counted
+per king. The size is the one constant `PAWN_TABLE_BITS` in `src/data_structures.hpp`,
+no UCI option; the table is zeroed with `search_state_t`, every `go`. A cost-only build
+that forces a pawn group (DEC-047, `adocs/data/S125_cost.sh`'s form) prices it through
+the table from S118 on, which is its shipped cost; `adocs/data/S125_cost_only.patch` is
+a recorded run and no longer applies. The Debug build asserts every hit of the entry
+and of the slot against a fresh computation, for +0.33 % of the instructions of `bench
+11`, a hit recomputing what the tree before the table computed anyway.
+
 A/B timing with statistics, always interleaved so machine drift cancels:
 
 ```bash
