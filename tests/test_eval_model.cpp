@@ -599,8 +599,9 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
   // the specification and not merely with each other. Each clause of that
   // specification that could be read another way has a case here: the rank a
   // neighbour has to be on before it stops a pawn being backward, that rank
-  // does not enter the isolated question at all, and that a file with n pawns
-  // on it is worth n - 1 doubled and not one.
+  // does not enter the isolated question at all, that a file with n pawns on it
+  // is worth n - 1 doubled and not one, and that an isolated pawn is never
+  // backward however its stop square stands (DEC-331 (3)).
   TEST_CASE_FIXTURE(counts_fixture_t,
                     "the walk and the engine count pawn structure by hand")
   {
@@ -626,40 +627,52 @@ TEST_SUITE("eval counts: the engine against the walk and by hand")
          "ahead still answers it",
          {0, 0, 0},
          {0, 0, 0}},
+        // An isolated pawn with its stop attacked is never backward: every case
+        // from here to the last pair asserted the opposite until S125's close,
+        // and each such pawn now counts isolated_backward in the structure
+        // family (DEC-331 (3), (13)).
         {"4k3/8/8/8/2p5/8/PP6/4K3",
-         "a neighbour abreast stops b2 being backward, and c4 is "
-         "backward on a2",
+         "a neighbour abreast stops b2 being backward, and c4, its stop "
+         "attacked by b2, is isolated and so not backward",
          {0, 0, 0},
-         {1, 0, 1}},
+         {1, 0, 0}},
         {"4k3/8/8/3p4/2p5/8/1P6/4K3",
-         "b2 is backward on c4, and d5 behind c4 stops c4 being "
-         "backward itself",
-         {1, 0, 1},
+         "b2, its stop attacked by c4, is isolated and so not backward, and "
+         "d5 behind c4 stops c4 being backward itself",
+         {1, 0, 0},
          {0, 0, 0}},
         {"4k3/1p6/8/2P5/3P4/8/8/4K3",
-         "the same placement mirrored, so Black is the backward "
-         "side",
+         "the same placement mirrored, so b7 is the isolated pawn",
          {0, 0, 0},
-         {1, 0, 1}},
-        // The three features are not exclusive and are not meant to be, so one
-        // pawn counted in all three is the case that says so.
+         {1, 0, 0}},
         {"4k3/8/8/8/1p6/P7/P7/4K3",
-         "a2 is isolated, doubled and backward at once",
-         {2, 1, 1},
-         {1, 0, 1}},
-        // S125: a backward pawn that is not isolated, one a colour. Every
-        // backward pawn above is isolated too, so without these the backward
-        // rows would say nothing about a pawn whose neighbour stands ahead.
+         "a2 is isolated and doubled, and its stop attacked by b4 does not "
+         "make it backward; nor is b4, its stop attacked by a2",
+         {2, 1, 0},
+         {1, 0, 0}},
+        // S125: a backward pawn that is not isolated, one a colour. Backward
+        // holds no other pawn, so these are what the backward rows say.
         {"4k3/8/8/p1P5/8/1P6/8/4K3",
          "b3 is backward with its only neighbour ahead on c5, and not "
-         "isolated; a5 is isolated and backward on b3",
+         "isolated; a5 is isolated, its stop attacked by b3, and not backward",
          {0, 0, 1},
-         {1, 0, 1}},
+         {1, 0, 0}},
         {"4k3/8/1p6/8/P1p5/8/8/4K3",
          "the same placement mirrored: b6 is Black's backward pawn with its "
          "neighbour ahead on c4, and a4 White's isolated one",
-         {1, 0, 1},
+         {1, 0, 0},
          {0, 0, 1}},
+        // Doubled overlaps backward and is meant to, so a pawn counted in both
+        // is the case that says so, one a colour.
+        {"4k3/8/8/2P5/pP6/8/1P6/4K3",
+         "b2 is doubled and backward at once, its only neighbour ahead on c5 "
+         "and its stop attacked by a4; a4 is isolated, its stop attacked by b2",
+         {0, 1, 1},
+         {1, 0, 0}},
+        {"4k3/1p6/8/Pp6/2p5/8/8/4K3",
+         "the same placement mirrored: b7 is doubled and backward at once",
+         {1, 0, 0},
+         {0, 1, 1}},
     };
 
     int positive[walked_counts::PAWN_STRUCTURE_COUNT] = {};
@@ -1473,8 +1486,8 @@ TEST_SUITE("eval counts: S123's passed pawn family")
 // sets and counts per colour (structure_family_counts()) against
 // walked_counts::structure_family_features(), which walks evaluation.hpp's
 // definitions square by square and shares no code with the engine -- per
-// colour, for the reason S123's family is: at the landing's zero weights no
-// score sees these, and at any weight a count credited to both sides cancels.
+// colour, for the reason S123's family is: no score sees a group at zero, and
+// at any weight a count credited to both sides cancels.
 namespace
 {
 
@@ -1633,6 +1646,90 @@ TEST_SUITE("eval counts: S125's pawn structure family")
     }
   }
 
+  // The accepts' clause, DEC-331 (3): an isolated pawn whose stop square an
+  // enemy pawn attacks counts isolated_backward and is not counted backward, in
+  // both colours. Each placement holds such a pawn for the colour it names, so
+  // the precondition that would make a double count happen stands before the
+  // two counts that say it does not. tests/test_evaluation's mirror case cannot
+  // say this: backward_only_set wrong the same way for both colours still
+  // mirrors, and it reads red only on a defect in one colour.
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "an isolated pawn with its stop attacked is not backward")
+  {
+    struct by_hand_t
+    {
+      const char* placement;
+      int colour;
+      int other_backward;
+    };
+    static const by_hand_t cases[] = {
+        // b2, its stop attacked by c4; c4 and d5 are neighbours.
+        {"4k3/8/8/3p4/2p5/8/1P6/4K3", WHITE, 0},
+        {"4k3/1p6/8/2P5/3P4/8/8/4K3", BLACK, 0},
+        // a5 attacked on a4 by b3, and b3 backward, the other colour's and not
+        // isolated, so the flat is not simply empty; then the mirror.
+        {"4k3/8/8/p1P5/8/1P6/8/4K3", BLACK, 1},
+        {"4k3/8/1p6/8/P1p5/8/8/4K3", WHITE, 1},
+    };
+
+    for (const by_hand_t& item : cases) {
+      const std::string placement = item.placement;
+      CAPTURE(placement);
+      REQUIRE(load_FEN(placement + " w - - 0 1", &game));
+
+      int flat[2][3];
+      structure_family_t family;
+      pawn_structure_counts(&game.board, flat);
+      structure_family_counts(&game.board, &family);
+
+      // The precondition: isolated, its stop attacked.
+      REQUIRE(flat[item.colour][0] == 1);
+      REQUIRE(family.isolated_backward[item.colour][0] == 1);
+
+      CHECK(flat[item.colour][2] == 0);
+      CHECK(family.backward_only_set[item.colour] == 0);
+      CHECK(flat[1 - item.colour][2] == item.other_backward);
+    }
+
+    // Over S123's population, and the flat's own count against the family's
+    // set: the flat holds the backward pawns and nothing else. Both sets met,
+    // per colour, or the two checks are agreeing about nothing.
+    size_t both[2][2] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : family_population()) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      int flat[2][3];
+      structure_family_t family;
+      pawn_structure_counts(&game.board, flat);
+      structure_family_counts(&game.board, &family);
+
+      for (int colour = 0; colour < 2; ++colour) {
+        CAPTURE(colour);
+        CHECK((family.isolated_backward_set[colour] &
+               family.backward_only_set[colour]) == 0);
+        CHECK(flat[colour][2] == count_bits(family.backward_only_set[colour]));
+        both[colour][0] += (family.isolated_backward_set[colour] != 0);
+        both[colour][1] += (family.backward_only_set[colour] != 0);
+      }
+
+      checked++;
+    }
+
+    CHECK(checked > 10000);
+    for (int colour = 0; colour < 2; ++colour) {
+      CAPTURE(colour);
+      CHECK(both[colour][0] > 100);
+      CHECK(both[colour][1] > 100);
+    }
+    MESSAGE("isolated and backward apart: "
+            << checked << " positions; isolated_backward on " << both[WHITE][0]
+            << " and " << both[BLACK][0] << ", backward on " << both[WHITE][1]
+            << " and " << both[BLACK][1]);
+  }
+
   // Hand-worked placements from evaluation.hpp's definitions, each run as
   // written and as its colour mirror with the rows swapped: a definition is
   // the same for both colours, so the mirror's answer is the case's with
@@ -1686,13 +1783,15 @@ TEST_SUITE("eval counts: S125's pawn structure family")
           {"isolated_backward", BLACK, 0, 1},
           {"weak_unopposed", BLACK, 0, 1}}},
         {"4k3/8/p1P5/8/1P6/8/8/4K3",
-         "b4 backward on its fourth with c6 ahead; a6 isolated and backward",
+         "b4 backward on its fourth with c6 ahead; a6 isolated, its stop a5 "
+         "attacked by b4",
          {{"backward_rank", WHITE, 1, 1},
           {"weak_unopposed", WHITE, 0, 1},
           {"isolated_backward", BLACK, 0, 1},
           {"weak_unopposed", BLACK, 0, 1}}},
         {"4k3/p1P5/8/1P6/8/8/8/4K3",
-         "b5 backward on its fifth with c7 ahead; a7 isolated and backward",
+         "b5 backward on its fifth with c7 ahead; a7 isolated, its stop a6 "
+         "attacked by b5",
          {{"backward_rank", WHITE, 2, 1},
           {"weak_unopposed", WHITE, 0, 1},
           {"isolated_backward", BLACK, 0, 1},
@@ -1703,7 +1802,7 @@ TEST_SUITE("eval counts: S125's pawn structure family")
           {"isolated_backward", BLACK, 0, 1},
           {"weak_unopposed", BLACK, 0, 1}}},
         {"4k3/8/8/3p4/2p5/8/1P6/4K3",
-         "b2 isolated and backward on c4; c4 supported by d5 on Black's "
+         "b2 isolated, its stop attacked by c4; c4 supported by d5 on Black's "
          "fifth; d5 weak with c4 ahead",
          {{"isolated_backward", WHITE, 0, 1},
           {"isolated_file", WHITE, 0, 1},

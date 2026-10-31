@@ -574,8 +574,8 @@ inline bool passed_pawn_features(const std::string& placement,
 
 
 // Pawn structure counts, White minus Black, in isolated, doubled, backward
-// order. Each is about a side's own pawns, and the three are not exclusive: one
-// pawn can be counted in all of them.
+// order. Each is about a side's own pawns. Doubled overlaps the other two, and
+// isolated and backward exclude each other (DEC-331 (3)).
 //
 // The definitions are src/evaluation.hpp's, stated there because this file is
 // written from that comment and the two have to mean the same thing:
@@ -583,10 +583,10 @@ inline bool passed_pawn_features(const std::string& placement,
 //   isolated  no own pawn anywhere on either neighbouring file, rank ignored.
 //   doubled   another own pawn ahead on the same file, so a file with n own
 //             pawns contributes n - 1.
-//   backward  no own pawn on either neighbouring file at or behind its own
-//             rank, the pawn's own rank counting as behind, and the square
-//             directly ahead attacked by an enemy pawn. Whether that square is
-//             occupied is not asked.
+//   backward  not isolated, no own pawn on either neighbouring file at or
+//             behind its own rank, the pawn's own rank counting as behind, and
+//             the square directly ahead attacked by an enemy pawn. Whether that
+//             square is occupied is not asked.
 //
 // Walked by hand from the placement for the same reason mobility_features() is:
 // this file has to be able to disagree with the engine, and code shared with it
@@ -673,7 +673,9 @@ inline bool pawn_structure_features(const std::string& placement,
       }
     }
 
-    if (neighbour_at_or_behind) { continue; }
+    // Not isolated, so an own pawn stands on a neighbouring file, and all of
+    // them are ahead.
+    if (!neighbour_anywhere || neighbour_at_or_behind) { continue; }
 
     // An enemy pawn attacking the stop square stands one square further ahead
     // again, on a neighbouring file. Both bounds hold for any pawn a legal
@@ -1246,7 +1248,7 @@ inline bool structure_family_features(const std::string& placement,
 
     const bool isolated = !neighbour_anywhere;
     const bool weak = !neighbour_level_or_behind;
-    const bool backward = weak && stop_attacked;
+    const bool backward = !isolated && weak && stop_attacked;
     const unsigned long long bit = 1ULL << from;
 
     if (isolated && stop_attacked) {
@@ -1257,7 +1259,7 @@ inline bool structure_family_features(const std::string& placement,
     if (isolated && file > 0) { out->isolated_file[side][file - 1]++; }
     if (own_ahead && file > 0) { out->doubled_file[side][file - 1]++; }
 
-    if (backward && !isolated) {
+    if (backward) {
       out->backward_only_set[side] |= bit;
       if (rank < 2 || rank > 5) { return false; }
       if (rank >= 3) { out->backward_rank[side][rank - 3]++; }

@@ -30,10 +30,11 @@
 //
 // The second is not implied by the first. A coefficient recorded against the
 // wrong index is invisible to the identity wherever the two weights involved
-// are equal, and tempo and piece placement's two bad bishop columns ship at
-// zero, where any coefficient at all satisfies it, as S123's whole family did
-// until its fit shipped on its SPRT's H1, and as S125's whole family did at
-// its landing and its three dropped groups do at its candidate.
+// are equal, as backward's flat and isolated_backward are since S125's close,
+// and tempo and piece placement's two bad bishop columns ship at zero, where
+// any coefficient at all satisfies it, as S123's whole family did until its fit
+// shipped on its SPRT's H1, as S125's whole family did at its landing, and as
+// its doubled pawns by file and backward pawns by rank do since its H1.
 
 namespace
 {

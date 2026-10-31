@@ -7,55 +7,47 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-31, by hand.
 
-## 2026-10-31: S125's screen and cost read, its phase 2 running; S303 done (handover)
+## 2026-10-31: S125 done (H1, +23 Elo); S118 next
 
-**Read this section first; it replaces "Next, in order" in the 2026-10-30 one
-below up to its item 3.** Mode unchanged. The owner asked on 2026-10-31 for
-Italian in this session when writing to them.
+**Main HEAD is clean, nothing is running, no watcher is armed.** Mode unchanged:
+one fresh Opus 5.5 subagent per step, the coordinator implements nothing, few
+questions, batched in Italian with the recommended option first. The owner asked on
+2026-10-31 for Italian in this session when writing to them.
 
-- **The screen read** (`S125_screen.sh all`, 00:35 to 03:44 from `f08d9db`,
-  `S125-ALL-DONE`): kept P2 isolated by file, P5 phalanx, P6 supported, P7 weak
-  unopposed; dropped P1 the increment, P3 doubled by file, P4 backward by rank.
-  `CANDIDATE 02567`, `.tuning/s125/fits/02567/full.hpp`; H0 bisection A = P0,P2 |
-  B = P0,P5,P6 | C = P0,P7. Readings `.tuning/s125/read/`. `.tuning/s125_void1`
-  and `_void2` can now go, with the owner's yes.
-- **The cost run read** (`b5f133c` over `63d5bcf`, `S125-COST-DONE`): all +4.20 %,
-  p2 +1.18 %, p3 +0.65 %, p4 +0.55 %, p5 +1.36 %, p6 +1.05 %, p1 and p7 zero; `all`
-  forces the dropped groups. **A row for the candidate's set is owed**, mask 114,
-  before the SPRT: the phase 2 agent adds it and gives the command.
-- **Phase 2 is running** in `../chesso-s125b` (branch `s125b`, `f08d9db`), brief
-  `.tuning/coord/S125/brief_phase2.md`, diff to
-  `.tuning/coord/S125/s125_candidate.diff`. `apply` done: bench 5707449. No main
-  commit is held any more, except during a run.
-- **Rulings given:** `landing=` in `S125_sprt.sh` names `f08d9db`, because S302
-  moved `cmake/pgo.cmake` after `b5f133c`, with `b5f133c` as a checked ancestor;
-  the line guard narrowed to the ten arrays that move.
-- **Open for the close:** P1's drop against the accepts' "an isolated pawn is
-  never also counted backward" (DEC-331 (3), (13)): the agent proposes.
+**S125's SPRT read H1** (`cf8661b` vs `9cbeb68`, Elo +22.89 +/- 10.02, nElo +31.16
++/- 13.60, LLR 2.96, 2508 games in 1 h 12 m, 0 forfeits, `adocs/data/S125_sprt.log`;
+archived as `chesso_S125_sprt_2026-10-31.tar.xz` and
+`chesso_S125_screen_cost_2026-10-31.tar.xz`, verified). Inspected and it stands: banner
+as pinned, benches 5707449 and 5434393, quarters +18.3, +37.8, +14.4, +21.6 (chi² 2.99,
+p 0.39), journal clean, no warning of any kind. The family ships, no bisection: isolated
+by file, phalanx, supported, weak unopposed, the three flats refitted; the screen dropped
+the increment, doubled by file and backward by rank. The fold lands with it, neutral:
+backward reads `backward & ~isolated`, `isolated_backward` {-6} / {0}, INV-6 against CAND
+(`adocs/data/S125_close_inv6.txt`). The gauge walk moved to 0.0882 and 0.1165, no other
+golden. Far cells for S126 in `adocs/data/S125_cells.txt`, `supported_mg` own seventh +187
+first. Cost `cand` +3.50 %; `evaluate()` 63.99 -> 75.93 ns. Closed by one Opus 5.5
+subagent in `../chesso-s125d`, fast-checked; DEC-331 (15) holds the coordinator's rulings.
 
-**The candidate landed at `cf8661b`** (bench 5707449), fast-checked; both mate
-floors hold, `MATE_IN_THREE_FLOOR` 12 against 11 and 10. Row `cand` read +3.50 %.
-Debug self-play clean. DEC-331 (15) records the rulings, and the fold is owed on
-every verdict. **The SPRT is pinned, `cf8661b` against `9cbeb68`, and runs from the
-main checkout: `.tuning/s125_sprt.log`, up to 41900 games, 19.86 h, ceiling 40 h.
-No commit lands in main until it ends;** S304 may be written in a worktree and held.
+- **S118 inherits a correction**, written in its step file: S125's family and S123's C are
+  pawn-keyed, S123's A and B are not; baseline rows `cand` and p1 and 75.93 ns.
+- **S303 and S304 done** (fillers, DEC-171). Named, not fixed, in S304's step file:
+  SIGTERM to `depth_vs_eval.py`'s main process, reads without a timeout, `run`'s marker past
+  the load.
+- **The thin margin to watch:** the gradient case's worst, 9.22e-7 at parameter 800 against
+  1e-6; a later fit past it takes DEC-316's rows.
+- **A rule learned, still binding:** no commit in the main checkout while a screen, a cost
+  run or an SPRT runs from it, nor between a screen and its `apply`.
 
-**The SPRT read H1** (`cf8661b` vs `9cbeb68`, Elo +22.89 +/- 10.02, nElo +31.16 +/-
-13.60, LLR 2.96, 2508 games in 1 h 12 m, 0 forfeits); archived, verified, as
-`chesso_S125_sprt_2026-10-31.tar.xz` and `chesso_S125_screen_cost_2026-10-31.tar.xz`.
+**Next:** S118, a pawn cache: its first question is whether the tree changes, stated before
+the run, then the cost it reclaims.
 
-**Next:** the close, running in `../chesso-s125d`, brief
-`.tuning/coord/S125/brief_close.md`: the fold (INV-6), hand cases and specs (DEC-331
-(13)), the record and the ledger. Then S118. The
-worktrees `../chesso-s125b` and S125's cost trees under `.tuning/s125/`: the first
-goes at the close, the others need the owner's yes.
+**Worktrees:** `../chesso-s125b` and `../chesso-s125d`, S125's own, removed at the close.
+**Waiting for the owner's yes, not blocking** (31 GB free): S125's cost trees under
+`.tuning/s125/cost` and `cost_cand`, about 3.1 GB, and `.tuning/s125_void1`, `_void2`, about
+1.2 GB. S125's readings are recorded; the archive holds their logs.
 
-- **S303 done** (filler, DEC-171): `depth_vs_eval.py` and `spsa_driver.py` fail
-  on an engine that closes its output; worktree `../chesso-s303` removed. Filed
-  S304, the residuals, the next filler.
-- **S304 done** (filler, DEC-171): the residuals closed; comparison `failures=0`;
-  worktree `../chesso-s304` removed. Named, not fixed, in its step file: SIGTERM to the
-  tool's main process, reads without a timeout, `run`'s marker past the load.
+**gate_extra**, last `GATE-EXTRA-DONE` 2026-10-31, six stages green in 1514 s on S125's fold
+tree; next weekly run due by 2026-11-07.
 
 ## 2026-10-30: paused for a shutdown; S125's screen next (handover)
 

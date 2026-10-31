@@ -235,11 +235,14 @@ enum
 // {-9, -10, -12}, S076's deduplicated corpus to {-10, -9, -11} and S083's to
 // {-9, -2, -11} -- moved it to a sign that happens to read the other way, which
 // is the same non-statement.
-// The three features overlap by construction -- the header says they are not
-// exclusive -- and they sit on top of a pawn piece-square table that has
-// already priced the files, so the fit distributes one effect across whatever
-// is available to it. Third time in this file;
-// DEC-044 and the passed pawn comment above record the other two.
+// The features overlap by construction -- a doubled pawn can be isolated or
+// backward too, the header says how -- and they sit on top of a pawn
+// piece-square table that has already priced the files, so the fit distributes
+// one effect across whatever is available to it. Third time in this file;
+// DEC-044 and the passed pawn comment above record the other two. Isolated and
+// backward overlapped as well until S125's close, which made them exclusive
+// (DEC-331 (3)): backward's flat now prices the backward pawns that are not
+// isolated.
 //
 // The exact definition of each of the three is in evaluation.hpp, written out
 // there because the walk in tests/test_walked_counts.hpp is built from it and
@@ -256,18 +259,20 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
 
 
 // S125's pawn structure family, seven groups on top of the three features
-// above (DEC-331): the isolated and backward increment, isolated and doubled
-// pawns by file, backward pawns by rank, phalanx and supported pawns by rank,
-// and weak unopposed pawns. evaluation.hpp defines each set and count;
-// evaluate_pawns() computes them from the fills it already builds.
+// above (DEC-331): isolated pawns whose stop an enemy pawn attacks, isolated
+// and doubled pawns by file, backward pawns by rank, phalanx and supported
+// pawns by rank, and weak unopposed pawns. evaluation.hpp defines each set and
+// count; evaluate_pawns() computes them from the fills it already builds.
 //
-// **Landed at zero, S123's form, to be fitted afterwards** (DEC-259's screen,
-// adocs/data/S125_screen.sh, the three flats above refitted first). No seed:
-// nothing here was taken from any engine or page, and every entry starts the
-// fit at zero (DEC-084). At zero a group is in no expression -- the liveness
-// flags below keep a group whose weights are all zero out of the engine's
-// evaluate_cheap() -- so the landing scores every position as before and
-// costs nothing (INV-6, adocs/data/S125_inv6.txt).
+// **Fitted, and shipped on one SPRT's H1** at {0, 5} nElo, 8+0.08: the screen's
+// four kept groups and the three flats above, together
+// (adocs/data/S125_sprt.log; the stopping Elo is not the effect size, DEC-063).
+// The family landed at zero, S123's form, so that DEC-259's screen could read
+// each group from the shipped engine (INV-6, adocs/data/S125_inv6.txt). No
+// seed: nothing here was taken from any engine or page. Every family entry
+// started the fit at zero and the three flats at S083's {-9, -2, -11} and
+// {-15, -18, -2}, this project's own fit (DEC-084, DEC-331 (5)). What it costs:
+// adocs/data/S125_cost_reading.txt, rows `cand` and p1, and RUN 3's per call.
 //
 // A table indexed by file or by rank drops one baseline cell when a flat
 // weight above already prices the whole set: the a file for isolated and
@@ -279,9 +284,18 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
 // The values below are the screen's full fit with four groups kept, 02567
 // (adocs/data/S125_screen_reading.txt), pasted unchanged: monotonicity is not
 // imposed, so a row that is not monotonic is the fit's, not corrected by hand.
-// The groups the screen dropped -- the increment, doubled by file, backward by
-// rank -- stay at zero and in no expression.
-constexpr int isolated_backward_mg[1] = {0};
+//
+// isolated_backward is not a fit of its own. It landed as an increment on top
+// of isolated and backward, and the screen dropped it, so the increment is
+// zero. S125's close then took those pawns out of backward's flat and gave them
+// this weight, backward's flat plus that zero: every score is what it was
+// (DEC-331 (3), (15); INV-6 against the candidate,
+// adocs/data/S125_close_inv6.txt). These pawns have their own weight for S126
+// to fit, and until then pay what they paid.
+//
+// The two other groups the screen dropped -- doubled by file, backward by rank
+// -- stay at zero and in no expression.
+constexpr int isolated_backward_mg[1] = {-6};
 constexpr int isolated_backward_eg[1] = {0};
 constexpr int isolated_file_mg[7] = {1, -6, -11, -10, -3, -7, 1};
 constexpr int isolated_file_eg[7] = {-3, -1, -2, 0, -1, 3, 2};
@@ -311,7 +325,9 @@ constexpr std::array<score_t, 1> weak_unopposed_score =
     pack_scores(weak_unopposed_mg, weak_unopposed_eg);
 
 // One flag a group, as S123's above: a group whose weights are all zero is
-// not in the engine's evaluate_cheap() at all.
+// not in the engine's evaluate_cheap() at all. That keeps a purpose here:
+// doubled_file and backward_rank are at zero today, so those two flags are
+// false and their loops compiled out, and a refit could zero another.
 static constexpr bool isolated_backward_live =
     any_weight(isolated_backward_score);
 static constexpr bool isolated_file_live = any_weight(isolated_file_score);
@@ -632,10 +648,11 @@ static constexpr int stage_one_half(const int (&table)[6][64],
 // With S123's family shipping fitted the whole bound reads 19982 and 25799,
 // 12785 and 6968 of room (adocs/data/S123_goldens.txt, by S123_screen.py's
 // `headroom`, which adds passer_family_half()). S125's family adds
-// structure_family_half(), 0 at its zero landing; adocs/data/S125_screen.py's
-// `headroom` adds it to S123's arithmetic for every fit before a paste: at the
-// 02567 fit the whole bound reads 24227 and 27929, 8540 and 4838 of room
-// (adocs/data/S125_goldens.txt).
+// structure_family_half(); adocs/data/S125_screen.py's `headroom` adds it to
+// S123's arithmetic for every fit before a paste: with the family shipping
+// fitted, and isolated_backward's weight from S125's close, the whole bound
+// reads 24317 and 27929, 8450 and 4838 of room
+// (adocs/data/S125_close_inv6.txt).
 static constexpr int stage_one_bound =
     std::max(stage_one_half(psqt_mg,
                             passed_pawn_mg,
@@ -1258,7 +1275,9 @@ static inline void evaluate_pawns(const board_t* board,
   const bb_t white_doubled = white_pawns & (white_behind << 8);
   const bb_t black_doubled = black_pawns & (black_behind >> 8);
 
-  // Backward, both halves. The neighbour test uses the *forward* fill: a square
+  // Backward, both halves, and never an isolated pawn: one meets the neighbour
+  // half trivially, and with its stop square attacked is isolated_backward's,
+  // below (DEC-331 (3)). The neighbour test uses the *forward* fill: a square
   // is in neighbour_files(white_ahead) exactly when an own pawn on an adjacent
   // file stands at or behind it, since the fill of that pawn covers every
   // square from it forward. The forward fill is the pawns and their front span,
@@ -1266,10 +1285,12 @@ static inline void evaluate_pawns(const board_t* board,
   // stop-square test shifts the enemy attack set back by one rank instead of
   // the pawns forward by one, so the pawn's own bit is what is tested and no
   // second shift is needed to get back.
-  const bb_t white_backward =
-      white_pawns & ~(white_beside | white_attack_span) & (black_attacks << 8);
-  const bb_t black_backward =
-      black_pawns & ~(black_beside | black_attack_span) & (white_attacks >> 8);
+  const bb_t white_backward = white_pawns & ~white_isolated &
+                              ~(white_beside | white_attack_span) &
+                              (black_attacks << 8);
+  const bb_t black_backward = black_pawns & ~black_isolated &
+                              ~(black_beside | black_attack_span) &
+                              (white_attacks >> 8);
 
   score_t sum = 0;
 
@@ -1408,7 +1429,8 @@ static inline void evaluate_pawns(const board_t* board,
   if constexpr (collect) { *structure_family_out = structure_family_t{}; }
 
   // An isolated pawn whose stop square an enemy pawn attacks: backward's
-  // second clause, read from the same shifted attack set backward reads.
+  // second clause, read from the same shifted attack set backward reads, on the
+  // pawns backward leaves out.
   if constexpr (isolated_backward_on) {
     const bb_t white_ib = white_isolated & (black_attacks << 8);
     const bb_t black_ib = black_isolated & (white_attacks >> 8);
@@ -1461,14 +1483,11 @@ static inline void evaluate_pawns(const board_t* board,
     });
   }
 
-  // Backward pawns that are not isolated, by own rank 3 to 5: rank 2 is the
-  // baseline, and no backward pawn stands past its own fifth.
+  // Backward pawns by own rank 3 to 5: rank 2 is the baseline, and no backward
+  // pawn stands past its own fifth.
   if constexpr (backward_rank_on) {
-    const bb_t white_only = white_backward & ~white_isolated;
-    const bb_t black_only = black_backward & ~black_isolated;
-
     for_each_cell(
-        white_only, [](int square) { return own_rank<WHITE>(square) - 3; },
+        white_backward, [](int square) { return own_rank<WHITE>(square) - 3; },
         [&](int c) {
           assert(c < 3);
           sum += backward_rank_score[c];
@@ -1478,7 +1497,7 @@ static inline void evaluate_pawns(const board_t* board,
           }
         });
     for_each_cell(
-        black_only, [](int square) { return own_rank<BLACK>(square) - 3; },
+        black_backward, [](int square) { return own_rank<BLACK>(square) - 3; },
         [&](int c) {
           assert(c < 3);
           sum -= backward_rank_score[c];
@@ -1489,8 +1508,8 @@ static inline void evaluate_pawns(const board_t* board,
         });
 
     if constexpr (collect) {
-      structure_family_out->backward_only_set[WHITE] = white_only;
-      structure_family_out->backward_only_set[BLACK] = black_only;
+      structure_family_out->backward_only_set[WHITE] = white_backward;
+      structure_family_out->backward_only_set[BLACK] = black_backward;
     }
   }
 

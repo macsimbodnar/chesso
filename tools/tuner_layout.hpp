@@ -132,7 +132,7 @@ static_assert(sizeof(passed_king_enemy_mg) == sizeof(passed_king_own_mg) &&
 // reason S123's was appended after tempo. Seven arrays, each a middlegame and
 // an endgame half (src/evaluation.hpp defines the counts and the cells):
 //
-//   isolated_backward   the isolated pawns backward too, an increment, 1
+//   isolated_backward   isolated pawns with their stop attacked, 1
 //   isolated_file       isolated pawns by file b to h, 7
 //   doubled_file        doubled pawns by file b to h, 7
 //   backward_rank       backward pawns not isolated by own rank 3 to 5, 3

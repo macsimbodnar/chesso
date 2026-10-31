@@ -248,18 +248,19 @@ void passer_family_counts(const board_t* board, passer_family_t* out);
 //   doubled   own pawns with another own pawn ahead of them on the same file.
 //             Per file that is one less than the number of own pawns on it, so
 //             three pawns on a file count two.
-//   backward  own pawns meeting both of: no own pawn on either neighbouring
-//             file at or behind their own rank -- the same rank counts as
-//             behind, so a neighbour abreast of the pawn stops it being
-//             backward -- and the square directly ahead of it is attacked by an
-//             enemy pawn. Whether that square is occupied is not asked, and
-//             neither is whether the pawn could be defended after advancing.
+//   backward  own pawns that are not isolated and meet both of: no own pawn on
+//             either neighbouring file at or behind their own rank -- the same
+//             rank counts as behind, so a neighbour abreast of the pawn stops
+//             it being backward -- and the square directly ahead of it is
+//             attacked by an enemy pawn. Whether that square is occupied is not
+//             asked, and neither is whether the pawn could be defended after
+//             advancing.
 //
-// Counts and not booleans: three isolated pawns count three. The three features
-// are not exclusive and are not meant to be -- an isolated pawn whose stop
-// square an enemy pawn attacks is counted as isolated and again as backward,
-// and the fit splits the shared effect between them the way DEC-044 describes
-// for king safety's collinear counts.
+// Counts and not booleans: three isolated pawns count three. Isolated and
+// backward exclude each other since S125's close (DEC-331 (3)): an isolated
+// pawn whose stop square an enemy pawn attacks is isolated_backward's, below.
+// Doubled overlaps both and is meant to, and the fit splits the shared effect
+// between them the way DEC-044 describes for king safety's collinear counts.
 extern const int pawn_structure_mg[3];
 extern const int pawn_structure_eg[3];
 
@@ -275,10 +276,11 @@ extern const int pawn_structure_eg[3];
 void pawn_structure_counts(const board_t* board, int out[2][3]);
 
 // S125's pawn structure family (DEC-331), seven groups beside the three
-// features above, each fitted on its own screen part before one family SPRT,
-// and landed at zero. The definitions, stated exactly because the walk in
-// tests/test_walked_counts.hpp is written from them and the two have to mean
-// the same thing, each implemented from its description (DEC-221). Each is
+// features above: landed at zero, each screened on its own part, and the
+// survivors fitted together and shipped on one SPRT's H1 (evaluation.cpp says
+// which, and what the others hold). The definitions, stated exactly because the
+// walk in tests/test_walked_counts.hpp is written from them and the two have to
+// mean the same thing, each implemented from its description (DEC-221). Each is
 // about one side's own pawns; "ahead" and "behind" are that side's own
 // directions, as above, and a pawn's own rank counts from its side's first, so
 // White's second rank is Black's seventh. Every one reads pawns and nothing
@@ -289,9 +291,11 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 //
 //   isolated_backward  isolated pawns whose stop square -- the square directly
 //                      ahead -- an enemy pawn attacks. Exactly the pawns
-//                      counted both isolated and backward above: an isolated
-//                      pawn meets backward's first clause trivially.
-//   backward_only      backward pawns that are not isolated.
+//                      backward's two clauses would take but for its isolated
+//                      rule: an isolated pawn meets the first trivially.
+//   backward_only      the backward pawns above, the flat's own set: named
+//                      apart at S125's landing, when the flat still counted
+//                      isolated pawns as well.
 //   phalanx            own pawns with an own pawn on a neighbouring file on
 //                      the same rank. CPW *Duo Trio Quart (Bitboards)*: "two
 //                      adjacent pawns of the same color on the same rank";
@@ -315,9 +319,10 @@ void pawn_structure_counts(const board_t* board, int out[2][3]);
 // The weights, each a middlegame and an endgame array, every cell a count of
 // a side's pawns in it; the term is White's minus Black's, cell by cell:
 //
-//   isolated_backward[1]  isolated_backward pawns. An increment: such a pawn
-//                         scores isolated, backward and this. S125's close
-//                         folds it (DEC-331 (3)).
+//   isolated_backward[1]  isolated_backward pawns: such a pawn scores isolated
+//                         and this, and not backward. It landed as an increment
+//                         on top of both, and S125's close folded it into a
+//                         weight of its own, the same scores (DEC-331 (3)).
 //   isolated_file[7]      isolated pawns by file, b to h. The a file has no
 //                         cell: its pawns score the flat isolated weight
 //                         alone, which is every cell's baseline.
@@ -350,8 +355,8 @@ extern const int weak_unopposed_eg[1];
 
 // The family's sets and raw counts per colour, WHITE first, each a side's own
 // and positive, for the reason over passed_pawn_counts(): a miscount that hits
-// both sides equally cancels in a difference, and at zero weights no score
-// sees these at all. The counts are indexed by the weights' cells above, so
+// both sides equally cancels in a difference, and no score sees a group at zero
+// at all. The counts are indexed by the weights' cells above, so
 // isolated_file[colour][0] is the b file and backward_rank[colour][0] own rank
 // 3. tests/test_evaluation holds each to its mirror (DEC-331 (10)),
 // tests/test_eval_model to the walk.

@@ -1,0 +1,164 @@
+0.13 0.17 0.81 1/1214 334196
+== round 1 R .ref-builds/9cbeb68/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -27
+  midgame            phase 24  score      0
+  open midgame       phase 22  score   -107
+  rooks and minors   phase  6  score    -53
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -23124600315962 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 2551.7 ms, median 2555.2 ms, worst 2564.8 ms, spread 0.5%
+  63.79 ns per call, 15.7 M calls per second
+  resolution 0.0%  (the two halves of this run disagree by that much)
+== round 1 C .ref-builds/cf8661b/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -16
+  midgame            phase 24  score      0
+  open midgame       phase 22  score    -93
+  rooks and minors   phase  6  score    -59
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -13730545627483 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 2980.1 ms, median 2987.5 ms, worst 3002.2 ms, spread 0.7%
+  74.50 ns per call, 13.4 M calls per second
+  resolution 0.2%  (the two halves of this run disagree by that much)
+== round 1 F ../chesso-s125d/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -16
+  midgame            phase 24  score      0
+  open midgame       phase 22  score    -93
+  rooks and minors   phase  6  score    -59
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -13730545627483 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 3025.5 ms, median 3036.6 ms, worst 3052.8 ms, spread 0.9%
+  75.64 ns per call, 13.2 M calls per second
+  resolution 0.3%  (the two halves of this run disagree by that much)
+== round 2 R .ref-builds/9cbeb68/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -27
+  midgame            phase 24  score      0
+  open midgame       phase 22  score   -107
+  rooks and minors   phase  6  score    -53
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -23124600315962 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 2555.0 ms, median 2557.0 ms, worst 2571.2 ms, spread 0.6%
+  63.87 ns per call, 15.7 M calls per second
+  resolution 0.1%  (the two halves of this run disagree by that much)
+== round 2 C .ref-builds/cf8661b/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -16
+  midgame            phase 24  score      0
+  open midgame       phase 22  score    -93
+  rooks and minors   phase  6  score    -59
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -13730545627483 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 2956.3 ms, median 2960.9 ms, worst 2976.3 ms, spread 0.7%
+  73.91 ns per call, 13.5 M calls per second
+  resolution 0.1%  (the two halves of this run disagree by that much)
+== round 2 F ../chesso-s125d/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -16
+  midgame            phase 24  score      0
+  open midgame       phase 22  score    -93
+  rooks and minors   phase  6  score    -59
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -13730545627483 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 3054.3 ms, median 3060.6 ms, worst 3067.8 ms, spread 0.4%
+  76.36 ns per call, 13.1 M calls per second
+  resolution 0.2%  (the two halves of this run disagree by that much)
+== round 3 R .ref-builds/9cbeb68/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -27
+  midgame            phase 24  score      0
+  open midgame       phase 22  score   -107
+  rooks and minors   phase  6  score    -53
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -23124600315962 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 2572.1 ms, median 2575.3 ms, worst 2581.5 ms, spread 0.4%
+  64.30 ns per call, 15.6 M calls per second
+  resolution 0.0%  (the two halves of this run disagree by that much)
+== round 3 C .ref-builds/cf8661b/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -16
+  midgame            phase 24  score      0
+  open midgame       phase 22  score    -93
+  rooks and minors   phase  6  score    -59
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -13730545627483 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 2950.9 ms, median 2956.8 ms, worst 2963.6 ms, spread 0.4%
+  73.77 ns per call, 13.6 M calls per second
+  resolution 0.2%  (the two halves of this run disagree by that much)
+== round 3 F ../chesso-s125d/build/tests/bench_eval
+positions
+  start              phase 24  score      0
+  kiwipete           phase 24  score    -16
+  midgame            phase 24  score      0
+  open midgame       phase 22  score    -93
+  rooks and minors   phase  6  score    -59
+  queen endgame      phase  8  score    -67
+  rook endgame       phase  4  score     -7
+  minor endgame      phase  2  score     19
+  pawn endgame       phase  0  score      0
+  bare kings         phase  0  score      0
+  checksum -13730545627483 over 10 positions
+
+evaluate() over 40000000 calls per sweep, 9 sweeps
+  best 3032.1 ms, median 3042.2 ms, worst 3052.1 ms, spread 0.7%
+  75.80 ns per call, 13.2 M calls per second
+  resolution 0.3%  (the two halves of this run disagree by that much)
+1.05 0.71 0.89 1/1215 334290

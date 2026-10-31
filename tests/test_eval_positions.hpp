@@ -92,8 +92,9 @@ inline const std::vector<std::string> positions = {
     // and the twenty-two positions above turned out to reach one of the three
     // features from one direction only: no side ever had a doubled pawn
     // anywhere, and only White was ever backward. A doubled f-pawn, an isolated
-    // and backward d-pawn stopped by an enemy pawn on c5, and the same position
-    // mirrored so that Black is the side carrying all three.
+    // d-pawn stopped by an enemy pawn on c5, and the same position mirrored so
+    // that Black is the side carrying all three. That d-pawn counted backward
+    // until S125's close, and counts isolated_backward since (DEC-331 (3)).
     "r2q1rk1/pp3ppp/4pn2/2p5/8/2NP1P2/PP3PPP/R2Q1RK1 w - - 0 14",
     "r2q1rk1/pp3ppp/2np1p2/8/2P5/4PN2/PP3PPP/R2Q1RK1 b - - 0 14",
     // Piece placement, added at S027 when the engine's own counts were exposed

@@ -141,3 +141,18 @@ A/A floor: bench16 cycles 0.271 %, pos11 cycles 0.139 %, wall 0.227 %
 forced bench16: A/A instruction floor 1.9 ppb; cand +3.7823 .. +3.7823 %
 forced pos11: A/A instruction floor 20.8 ppb; cand +3.2131 .. +3.2131 %
 cand: COST +3.50 % (cycles and wall beyond the floor, instructions the same way)
+
+# RUN 3, `bench_eval`, THE PER-CALL FIGURE THE ACCEPTS AND DEC-331 (14) NAME: timed by the coordinator 2026-10-31, after the
+# close's fold, machine idle, interleaved, 3 rounds each of `bench_eval -r 9 -n 4000000`, 40000000 calls a sweep. Its log whole is
+# adocs/data/S125_bench_eval.txt. The fold's binary is ../chesso-s125d's, the same Release, native and padded.
+
+REF  9cbeb68   63.79, 63.87, 64.30 ns per call, mean 63.99, checksum -23124600315962
+CAND cf8661b   74.50, 73.91, 73.77 ns per call, mean 74.06, checksum -13730545627483
+fold           75.64, 76.36, 75.80 ns per call, mean 75.93, checksum -13730545627483
+resolution 0.0 to 0.3 %, spread within a run 0.4 to 0.9 %
+CAND over REF +15.7 %; the fold over CAND +2.5 %
+
+# evaluate() alone on ten compiled-in positions, so these do not compare with the whole-engine rows above, `cand` +3.50 % and
+# p1's +0.37 % instructions. The checksum equal on CAND and the fold is the neutrality again. The fold's +2.5 % is under
+# DEC-266's 3 % line for layout and clears its 2 % workstation rule on one layout only: one layout, not perturbed, deciding
+# nothing. **S118's baseline: 75.93 ns on the tree it starts from.**

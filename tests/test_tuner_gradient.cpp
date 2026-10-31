@@ -538,7 +538,9 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // (adocs/data/S125_preconditions.txt). At the family's fit with S121's block
 // re-derived, its candidate, it is 9.22e-07, at parameter 800,
 // mobility_mg[rook][4], green by a factor of 1.08; DEC-316's rows are the
-// answer if a later fit passes the bound (adocs/data/S125_goldens.txt).
+// answer if a later fit passes the bound (adocs/data/S125_goldens.txt). S125's
+// close left it at that: the same scores, and only the columns of backward's
+// flat and isolated_backward moved (adocs/data/S125_close_inv6.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -668,7 +670,8 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // S125's candidate, the 02567 fit with S121's block re-derived, it answers
   // +30 again: four rows bound, the farthest at 197.3, the nearest other at
   // 158.8, every row 13.25 from the kink, finite differences 1.01e-7
-  // (adocs/data/S125_goldens.txt).
+  // (adocs/data/S125_goldens.txt); S125's close reads the same
+  // (adocs/data/S125_close_inv6.txt).
   // Re-run it
   // whenever the constants or the fixture move; the
   // precondition below re-establishes the binding either way. A much larger
@@ -999,7 +1002,12 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // with S121's block re-derived, the smallest is **0.0124** under Adam, the
     // pawn's, and 0.0538 under AdaGrad, the bishop's, the largest 3.0976 and
     // 3.4942, both the knight's, every hold at most 1.35e-14: over the floor by
-    // a factor of 1.24 (`adocs/data/S125_goldens.txt`). The
+    // a factor of 1.24 (`adocs/data/S125_goldens.txt`). At S125's close, the
+    // same scores with isolated pawns out of backward's column and in
+    // isolated_backward's, the smallest is **0.0882** under Adam and 0.1165
+    // under AdaGrad, both the bishop's, the largest 3.1452 and 3.5837, both the
+    // knight's, every hold at most 6.88e-15: over the floor by a factor of 8.82
+    // (`adocs/data/S125_close_inv6.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which

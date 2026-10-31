@@ -1,14 +1,14 @@
 id:         S125
 goal:       phalanx, supported and weak unopposed pawns join the isolated, doubled and backward pawns that exist, backward stops counting an isolated pawn twice, and each is fitted
 accepts:    one SPRT verdict for the family, recorded whatever it is, after each group passes DEC-259's offline screen, and a family H0 bisected by group; the terms are indexed by file or by rank where the surveyed record says the indexing is what pays, and the step states which indexing it chose and why; **an isolated pawn is never also counted backward**, which is a documented double-count worth +4.01 to fix; every constant is fitted (DEC-084); **the pawn hash is not a precondition and the plan order is not reversed** -- these terms are what make S118 worth building, so they are measured recomputed at every `evaluate()` call, and the per-call cost the additions carry is measured here (`bench_eval`, and `build/tools/eval_spread` for where it lands) and recorded as the baseline S118 is later asked to reclaim
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S123_coverage_rows.cpp (scoped), adocs/data/S125_*, DEV_MANUAL.md, adocs/data/README.md; MANUAL.md read and unchanged at phase 1; at phase 2 also tests/test_search.cpp, tests/test_engine.cpp, tests/test_mate_breadth.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, adocs/data/S170_cases.tsv and MANUAL.md
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, tools/tuner_layout.hpp, tools/tuner_groups.hpp, tools/tuner_trace.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tests/test_evaluation.cpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_eval_positions.hpp, tests/test_walked_counts.hpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, .tuning/verify_fit.py, adocs/data/S192_anchors.py, adocs/data/S123_coverage_rows.cpp (scoped), adocs/data/S125_*, DEV_MANUAL.md, adocs/data/README.md; MANUAL.md read and unchanged at phase 1; at phase 2 also tests/test_search.cpp, tests/test_engine.cpp, tests/test_mate_breadth.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, adocs/data/S170_cases.tsv and MANUAL.md; the close (2026-10-31, H1): src/evaluation.cpp and src/evaluation.hpp (the fold and the comments), tests/test_walked_counts.hpp and tests/test_eval_model.cpp and tests/test_evaluation.cpp (the definition, the hand cases, the guard), comments in tests/test_eval_trace.cpp, tests/test_eval_positions.hpp and tests/test_tuner_gradient.cpp, tools/tuner_layout.hpp and tools/tuner_groups.hpp (comments), adocs/data/S192_anchors.py (its prose), adocs/data/S125_sprt.log, adocs/data/S125_close_inv6.txt, adocs/data/S125_bench_eval.txt, adocs/data/S125_cost_reading.txt (RUN 3), adocs/data/README.md, DEV_MANUAL.md, this file; src/eval_trace.hpp, tools/tuner.cpp, tools/tuner_trace.hpp, tools/feature_audit.cpp, .tuning/verify_fit.py and MANUAL.md read and unchanged at the close
 excludes:   passed pawns, which are S123
 decisions:  DEC-071, DEC-084, DEC-259, DEC-315, DEC-326, DEC-329, DEC-330, DEC-331, DEC-221, DEC-134, DEC-105, DEC-090, DEC-047, DEC-142, DEC-316
 closes:
 blocks:
 paused_by:
 author:     Opus 5.5 subagent, coordinated
-done:
+done:       2026-10-31 10:32 -- H1 at {0, 5} nElo, 8+0.08, Hash 16, CAND cf8661b vs REF 9cbeb68: Elo +22.89 +/- 10.02, nElo +31.16 +/- 13.60, LLR 2.96, 2508 games, 1 h 12 m, 0 forfeits (adocs/data/S125_sprt.log, archived as chesso_S125_sprt_2026-10-31.tar.xz); the banner as pinned (9bcafb9), both binaries at their bench (5707449, 5434393), no crash or disconnect, quarters +18.3, +37.8, +14.4, +21.6, kernel journal clean; no warning of any kind, 0 incomplete mating PVs; so by the pre-registered H1 row the family ships -- P2 isolated pawns by file b to h, P5 phalanx by own rank 2 to 7, P6 supported by own rank 3 to 7, P7 one weak unopposed weight, the three flats refitted beside them, the screen's 02567 fit (DEC-259, DEC-331), d +0.000012, +0.000036, +0.000031 and +0.000017, each past its margin; P1, P3 and P4 dropped, P3 and P4 at zero and in no expression -- and no bisection; the stopping Elo is not the effect size (DEC-063). An isolated pawn is never also counted backward: the fold of DEC-331 (3), (13), (15), isolated_backward taking backward's flat plus the zero increment, {-6} / {0}, INV-6 against cf8661b (adocs/data/S125_close_inv6.txt), the tuner exact on all 6226944 corpus rows, the audit's rank 1026 of 1073 and no new dependency, the hand cases rewritten with the definition, a guard in both colours seen red with the mask removed. Every family weight fitted on S083's corpus from zero and the three flats from S083's own {-9, -2, -11} / {-15, -18, -2}, with every other constant frozen (DEC-084, no seed), monotonicity not imposed; every definition implemented from its description, CPW's pages and DEC-331 (2) (DEC-221); the mirror test written and seen red before any fit; cost cand +3.50 %, all +4.20 %, p1 zero (adocs/data/S125_cost_reading.txt), the baseline S118 is asked to reclaim, with bench_eval per call, evaluate() alone on ten positions, REF 63.99 ns, CAND 74.06, the fold 75.93 (adocs/data/S125_bench_eval.txt; one layout, not perturbed, deciding nothing); both mate floors hold; every golden the fold moves re-derived by its script, the gauge walk alone moving (0.0882, 0.1165); the far cells listed for S126 (adocs/data/S125_cells.txt). Fast suite 50/50 in both builds, the clang pair clean, gate_extra 6/6 in 1514 s; Tier 2 does not bind. Implemented by Opus 5.5 subagents per phase, fast-checked; the runs the coordinator's; inspected, folded and recorded by one Opus 5.5 subagent.
 
 ## Amended 2026-10-08, DEC-259: screened offline, one SPRT for the family
 
@@ -924,6 +924,18 @@ cycles +4.153 %; pos11 instructions +3.213 %, cycles +3.112 %, wall +3.248 %; it
 session's A/A floor bench16 cycles 0.271 %, pos11 cycles 0.139 %, wall 0.227 %.
 `adocs/data/S125_cost_reading.txt`, RUN 2.
 
+**`bench_eval`'s per-call figure, the coordinator's, at the close:** REF `9cbeb68`
+63.79, 63.87, 64.30 ns, mean **63.99**; CAND `cf8661b` 74.50, 73.91, 73.77 ns, mean
+**74.06**; the fold 75.64, 76.36, 75.80 ns, mean **75.93**: machine idle, interleaved,
+3 rounds each of `-r 9 -n 4000000`, resolutions 0.0 to 0.3 %
+(`adocs/data/S125_bench_eval.txt`, `adocs/data/S125_cost_reading.txt` RUN 3). CAND over
+REF +15.7 %; the fold over CAND +2.5 %. It is evaluate() alone on ten compiled-in
+positions, so it does not compare with the whole-engine rows, +3.50 % `cand` and p1's
++0.37 % instructions. CAND and the fold read the same checksum, -13730545627483, the
+neutrality again. The fold's +2.5 % is under DEC-266's 3 % line for layout and clears its
+2 % workstation rule on one layout only: one layout, not perturbed, deciding nothing.
+**S118's baseline: 75.93 ns on the tree it starts from.**
+
 **Debug self-play, the coordinator's, at `cf8661b`:** 8 games at 4+0.04, 0
 `Assertion`, 0 `disconnect`, in the form DEV_MANUAL.md gives
 (`.tuning/coord/S125/debug_selfplay/`).
@@ -1046,3 +1058,333 @@ Bench: 5707449
 ```
 
 No `done:` stamp: the SPRT comes first.
+
+## 2026-10-31: the SPRT read H1
+
+One Opus 5.5 subagent, in `../chesso-s125d` (branch `s125d` at `9bcafb9`, the
+SPRT's pin), read only over the run's outputs and binaries. No match, fit or
+timing ran in it; the `bench_eval` reading below is the coordinator's, after it.
+Not comments only: the fold is code, and neutral.
+
+### The run
+
+`adocs/data/S125_sprt.sh` as pinned at `9bcafb9`: `cf8661b` (the candidate, the
+screen's 02567 fit over ten arrays, bench 5707449) against its parent `9cbeb68`
+(the phase 1 landing's `src/`, the family at zero, bench 5434393), launched
+2026-10-31 07:52:21, `SPRT-RUN-DONE` after fastchess's Total Time 01:12:21:
+
+```
+SPRT | cand cf8661b vs ref 9cbeb68, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 22.89 +/- 10.02, nElo 31.16 +/- 13.60
+LLR | 2.96 (-2.94, 2.94) -> H1
+Games | N: 2508 W: 776 L: 611 D: 1121, Ptnml [70, 269, 465, 326, 124]
+Wall | 1 h 12 m, 2079.9 games/h, forfeits 0
+Log | adocs/data/S125_sprt.log
+```
+
+`Wall`'s rate is N over fastchess's `Total Time`, S296's, S136's, S121's and
+S123's rule: 2508 games in 4341 s.
+
+### The inspection, before the verdict was read as the record
+
+- **Banner** (the console's): candidate `cf8661b 2026-10-31`, reference
+  `9cbeb68 2026-10-31` (the commits' dates; their times, 07:21 and 05:55, are
+  `git log`'s and the pinned sentence's, and fastchess.sh prints the date alone,
+  as at S123), `arch native tune off`, padding on both, 8+0.08, hash 16, 12 of 12
+  cores, `noob_3moves.epd`, seed 20261031075221, `elo0=0 elo1=5 alpha=0.05
+  beta=0.05`, cap 20950 rounds and 41900 games from `SPRT_ROUNDS`, out
+  `.tuning/sprt_s125_20261031_075221`; no `diff`, `relay` or `A/A CALIBRATION`
+  line; `id name`s `cand-cf8661b Chesso cf8661b native` and `ref-9cbeb68 Chesso
+  9cbeb68 native`; `Started game 1 of 41900`. As the pin says. Above it the
+  script's guards printed the ten arrays as the only weights moved and
+  `only-family-pair: every weight outside the family and the flats is REF's`.
+  The governor reads `performance` at this reading.
+- **Binaries**: `.ref-builds/cf8661b/build/src/chesso` benches **5707449** and
+  `.ref-builds/9cbeb68/build/src/chesso` **5434393**, both worktrees clean at
+  their sha. Written 07:52:27 and 07:52:33 and not since; the first game's
+  `GameStartTime` is 07:52:33, the last `GameEndTime` 09:04:51.
+- **Crashes, disconnects, illegal moves**: none. `fastchess.log` is empty (0
+  bytes), `Assertion`, `disconnect` and `illegal` each grep 0 over the console,
+  and the console holds nothing but the guards' and build lines, the banner, the
+  game lines, fastchess's periodic result blocks, its stop lines and the foot.
+  2522 games started and 2511 finished, the 11 others in flight at the stop. The
+  PGN's 2511 games carry fastchess's game numbers 1 to 2513, each at most once,
+  2510 and 2511 absent: 1254 complete pairs, the 2508 games fastchess scored, and
+  games 2509, 2512 and 2513 whose partners never finished. Terminations: 1668
+  adjudication (1390 decisive, 278 drawn) and 843 normal, all drawn (537
+  threefold, 203 insufficient material, 94 fifty-move, 9 stalemate).
+- **Forfeits**: `tools/forfeit_report.py` reads 0 of 2511 for each engine.
+- **Console warnings**: none of any kind; no PV-past-threefold block
+  (`trim_console.py`'s count) and no `Incomplete mating PV` (next section).
+- **Quarters**, in game-number order over the PGN's 2511 games, 627 or 628 each,
+  by `adocs/data/S121_sprt_mate_pvs.py quarters`: **+18.3, +37.8, +14.4, +21.6**,
+  each +/- 20.1 to 20.4. Their spread about the run's mean is chi-square 2.99 on
+  3 degrees of freedom, p 0.39.
+- **Kernel journal**, 07:52 to 09:06 (boot `98b74e5d`, from 2026-10-31 00:30:36,
+  no suspend): no kernel entry; the boot's last is 00:36:35's `usb 3-2.4: USB
+  disconnect`, the monitor's control device, as on S121's and S123's nights. Six
+  entries in the window in all: 08:17:01's `cron.hourly` and 08:23:44's
+  `fwupd-refresh`; none at warning level or above. No machine check, OOM or
+  thermal event.
+
+The run stands.
+
+### Mating PVs
+
+`grep -c "Incomplete mating PV" .tuning/s125_sprt.log` reads **0**, and `grep -ci
+warning` over the same console reads 0: no warning of any kind, so no
+mate-distance check is owed and DEC-319 (3)'s oracle and DEC-320's deeper reading
+do not arise. `adocs/data/S296_sprt_mate_pvs.py` reads the same marker and would
+find nothing. A count, recorded: the candidate's rate this run is 0 per 10000
+side-games over 2511.
+
+### The verdict, by the pre-registration
+
+**The H1 row executes.** At 8+0.08 the fitted family is accepted as gaining: H1's
+5 nElo preferred to H0's 0 at alpha = beta = 0.05. **It ships**: P2, isolated pawns
+by file b to h; P5, phalanx pawns by own rank 2 to 7; P6, supported pawns by own
+rank 3 to 7; P7, one weak unopposed weight; and P0's flats refitted beside them,
+the 02567 fit. **No bisection follows an H1**, and none is owed. P3 and P4 stay at
+zero, in no expression, recorded as zeros (S126's rule). P1's increment is zero,
+and the fold below is the one thing that takes `isolated_backward` out of zero, by
+DEC-331 (3)'s arithmetic and at no change of score.
+
+**The stopping run's Elo is upward-biased (DEC-063) and is not the effect size.**
+The run stopped at a bound in 2508 games, far under the 25591 the pre-registration
+expected with the truth on a bound; nElo +31.16 is the early stop's figure.
+
+**The cost, beside it**: `cand`, the set the run played, **+3.50 %** on its own A/A
+floor (`adocs/data/S125_cost_reading.txt`, RUN 2), on cost-only builds of the
+landing at forced weights (DEC-047). It decides nothing; the SPRT priced it.
+`bench_eval` per call, evaluate() alone: REF 63.99 ns, CAND 74.06, the fold 75.93 (RUN 3,
+the cost section above).
+
+### The trim and the archive
+
+`tools/trim_console.py --summary` from `.tuning/s125_sprt.log` (6086 lines, 411880
+bytes) into **`adocs/data/S125_sprt.log`**, 6091 lines, 412085 bytes: its first
+6086 lines are the console byte for byte, since no PV-past-threefold block exists,
+and the foot's five lines say so. Its `adocs/data/README.md` row added. The
+untrimmed console and the run directory (`games.pgn`, `fastchess.log`) are
+**`chesso_S125_sprt_2026-10-31.tar.xz`** in the owner's archive (DEC-235), built,
+verified and moved in by the coordinator, beside
+`chesso_S125_screen_cost_2026-10-31.tar.xz`; both sidecars re-verified from inside
+the folder here.
+
+### The fold, and its INV-6
+
+The H1 row's fold, DEC-331 (3), (13), (15), against CAND `cf8661b`:
+
+- `src/evaluation.cpp` `evaluate_pawns`: `white_backward` and `black_backward`
+  carry `~white_isolated` and `~black_isolated`, so `PS_BACKWARD` counts no isolated
+  pawn. `backward_rank`'s cells read that set directly, the local `& ~isolated` gone
+  from the block; `backward_only_set` is that set. The name stays: a rename is ten
+  lines of churn for no meaning, and the header says what it is now.
+- `isolated_backward_mg` {0} -> **{-6}**, `isolated_backward_eg` {0} stays: backward's
+  flat, {-6} / {0}, plus the increment P1's drop left at zero. An isolated pawn whose
+  stop an enemy pawn attacks paid isolated + backward + 0 and now pays isolated +
+  `isolated_backward`, the same number.
+- **Liveness**: `isolated_backward_live` reads true on its own, by `any_weight()`.
+  **The gating keeps a purpose, and stays**: `doubled_file_live` and
+  `backward_rank_live` are false and those two loops compiled out, and a refit could
+  zero another group. The comment over the flags says so.
+- **The stage-one bound**: `structure_family_half()` already summed the array, so no
+  code moves there. `S125_screen.py headroom` reads mg 24227 -> **24317**, eg 27929
+  unmoved, 8450 and 4838 of room: the reach of -6 over 15 pawns is 90.
+- `src/evaluation.hpp`: backward's definition, the "not exclusive" paragraph, and the
+  family's `isolated_backward` and `backward_only` entries. `structure_family_counts()`
+  moves with the collecting call, no code of its own. `src/eval_trace.hpp`: read;
+  nothing in it says the family is at zero, pending or a double count. Unchanged.
+- `tests/test_walked_counts.hpp` `pawn_structure_features` and
+  `structure_family_features`, and `tests/test_evaluation.cpp`'s
+  `pawn_counts_by_definition`: the walks read the new definition, square by square.
+- `tools/tuner_layout.hpp`'s table line and `tools/tuner_groups.hpp`'s group comment
+  no longer call it an increment on backward. `tools/tuner.cpp`, `tools/tuner_trace.hpp`
+  and `tools/feature_audit.cpp`: re-read, nothing false; the coefficient comes from
+  `EVAL_TRACE` at the engine's own difference. `.tuning/verify_fit.py` unchanged.
+
+**The hand cases, DEC-331 (13)**, `tests/test_eval_model.cpp` "the walk and the engine
+count pawn structure by hand": the four that asserted the double count, and the isolated
+half of the two phase 1 added, now read backward 0 on an isolated pawn, and the comment
+"not exclusive and are not meant to be" is gone with the definition. **Phase 1's
+non-isolated backward cases hold unchanged where they are about that pawn**: b3 on the
+White row and b6 on the Black row still count {0, 0, 1}; only a5's and a4's rows fall,
+{1, 0, 1} -> {1, 0, 0}, being the isolated pawn beside each. Added: `4k3/8/8/2P5/pP6/8/1P6/4K3`
+and its mirror, a pawn doubled and backward at once, one a colour, because doubled still
+overlaps and "not exclusive" is now a statement about that pair. In "the walk and the
+engine count the structure family by hand", three descriptive strings only: no cell
+moved. Reds seen before the rewrite: only that case, in `test_eval_model`; `test_evaluation`
+and `test_eval_trace` read green on the fold unedited but for the walk.
+
+**The guard**, `tests/test_eval_model.cpp` "an isolated pawn with its stop attacked is
+not backward": four placements, each colour twice, each first requiring the pawn
+isolated and counted `isolated_backward`, then backward 0, `backward_only_set` empty for
+that colour, and the other colour's flat as stated; then over S123's population, 10906
+positions, the two sets disjoint and the flat's count the set's, per colour, with
+`isolated_backward` met on 1003 and 935 and backward on 732 and 754.
+
+**Observed red on the planted defect**, the mask removed and restored, `cmp` identical:
+
+- Both colours: 5 of `test_eval_model`'s 19 cases red, the guard among them (flat
+  1 == 0 and the set 562949953421312 == 0 at `4k3/8/8/3p4/2p5/8/1P6/4K3`), and in
+  `test_evaluation` "the shared pawn sets count what the definitions say" alone.
+- Black alone: the guard at `4k3/1p6/8/2P5/3P4/8/8/4K3`, the same five, and in
+  `test_evaluation` five: the structure family's sets (134217728 == 0) and counts mirror,
+  "colour symmetry over every test position" (299 == 304), the corrected score and the
+  definitions. White alone: the same, 0 == 134217728.
+
+**How the mirror test reads it**: "the structure family's sets mirror exactly" reads
+`backward_only_set` per colour, so it goes red on a defect in one colour and **stays green
+on the same defect in both**, because a symmetric wrong set mirrors. The hand guard and the
+walks carry that case; the comment over the mirror suite says so. `test_eval_trace` is green
+under all three plants: the trace and the accessors agree on what the defect counts. Its
+header now names this pair, the two weights being equal, so the identity cannot tell a
+coefficient on one from the other, and "every coefficient is the count its index names" with
+the guard is what does.
+
+**INV-6 against `cf8661b`** (`adocs/data/S125_close_inv6.txt`): `chesso bench` **5707449**
+in both builds; `bench`, `bench 12` (1861982) and `tools/search_bench.py` at depth 9
+(c3d5 37187, d5e6 105585, d7c8q 56111) and depth 12 (c3d5 147063, d5e6 343485, d7c8q
+192032) byte-identical once timing is stripped, across the played binary, the worktree's
+`build/` and `build-tune/` before the fold, and both after it. The fold's binaries differ
+from the played one, as a code change must.
+
+**The tuner**: `tuner --epochs 0` on S083's 6226944 rows: **0 differ from `evaluate()`**,
+the clamp binds on 22083 as at the audit, 226750073 entries (36.41 a row), start validation
+0.071323; `verify_fit` 1073 of 1073. **The audit**: rank exactly **1026 of 1073**, nullity 47,
+**no new exact dependency**, `audit-check` passes; `diff` against phase 1's report reads one
+line, the entries. It could not read otherwise: the new column is the old one less
+`isolated_backward`'s, a change of basis. **The screen's reading stands as it was read on the
+old definition**; no part is re-read, and DEC-331 (4)'s expectation holds.
+
+### The goldens and preconditions, each by its script
+
+`adocs/data/S125_close_inv6.txt` holds each command's reading.
+
+| golden | at the candidate | at the fold | script |
+|---|---|---|---|
+| gauge walk | 0.0124 / 0.0538 | **moved: 0.0882 / 0.1165**, both the bishop's, over the floor by 8.82; the plain run descends two columns differently; the floor does not move | `S083_tuner_preconditions.cpp both` |
+| clamp push | +30, 13.25 from the kink, 1.01e-7 | unmoved | the same |
+| fixture clear of the clamp | 121.1 against 183 | unmoved | the same |
+| gradient check (DEC-316) | 9.22e-7 at 800 | **unmoved**: the same function, and only two columns moved, neither the worst; no DEC-316 rows owed, no bound relaxed | `test_tuner_gradient -s`, both builds |
+| coverage blocks | 19, 4, 2 pairs | unmoved, all three "reproduces: yes", 0 ineligible, the same smallest gradients: each tool reads its own terms and the scores. S121's ruling (b) did not arise | `S121_`, `S123_`, `S125_coverage_rows.cpp` |
+| planted recoveries | green, `supported` at 16000 | green, the same budgets and bound; `isolated_backward`'s plant now starts from -6 / 0 | `test_tuner_gradient` |
+| anchors | 107, 283, 353, 590, 1021, 0, 199, -603, -541 | unmoved, 10 of 10: no anchor holds a pawn whose stop an enemy pawn attacks; its prose moves | `S192_anchors.py` |
+| truncation pins | phases 5, 11, 17, 23, N = 3 | unmoved: 111 past 2.8, 35 at 2.875, the same four | `truncation_scan`, `S083_truncation_pick.py` |
+| both mate floors, ceilings, S170 budgets, node budget, first-mate, `DRIVE_DEPTH`, ply 2, `capture_mates`, the extra ply, `mate_probcut_hides`, `LATE_CAPTURE_*`, the aborted-line cell, `ALPHA` | as phase 2 | unmoved, **by INV-6**: the same scores make the same search, and each is green in both fast suites; not re-run | -- |
+
+No test bound was relaxed.
+
+### The comment pass
+
+Every comment that said the family is at zero, in no expression, compiled out or pending
+its SPRT now says what ships: `src/evaluation.hpp` (the family's heading, `isolated_backward`'s
+entries, `structure_family_t`'s), `src/evaluation.cpp` (the paragraph over the arrays, the
+liveness flags, the stage-one bound, the flats' overlap, `evaluate_pawns`'s backward and
+isolated_backward blocks). Doubled by file and backward by rank **stay at zero and in no
+expression, and the comment over the arrays says that**. In tests, comments only beyond the
+rewrite: `tests/test_evaluation.cpp`, `tests/test_eval_trace.cpp`,
+`tests/test_eval_positions.hpp`, `tests/test_tuner_gradient.cpp` (the walk's new reading, the
+gradient's and the push's as read again), `tests/test_eval_model.cpp`'s heading.
+`adocs/data/S192_anchors.py`'s two prose lines. `adocs/data/README.md` and `DEV_MANUAL.md`:
+no site called the family at zero or pending other than as the landing's history.
+
+### S118, after DEC-331 (9)
+
+The pawn-key cache can hold S125's whole family, which reads pawns alone; `isolated_backward`
+live and backward's new mask read pawns too. S118's accepts, whose sentence reads "the table
+stores the mg/eg pawn score, the passed-pawn bitboard and **both kings' shelter and storm
+scores**", still needs the correction S123 quoted for A and B, and it can now say what the
+pawn score is. S118's file is not this step's; the sentence is quoted to the coordinator. Its
+baseline, per `adocs/data/S125_sprt.sh`, is rows `cand` and p1 together, with `bench_eval`'s
+75.93 ns on the tree it starts from.
+
+### What H1 leaves unmeasured
+
+- **Each group's own share.** P2, P5, P6 and P7 shipped on one verdict and were never played
+  apart; each has only its screen gain (d +0.000012, +0.000036, +0.000031 and +0.000017
+  against m 0.000004, 0.000003, 0.000005 and 0.000005).
+- **The cost apart from the verdict.** +3.50 % is priced inside it; no run measured the
+  family's strength net of its speed or a group's cost in play. The fold adds P1's row, +0.37 %
+  instructions, read zero with its cycles and wall CIs reaching inside the A/A floor, and this
+  verdict did not play it.
+- **`isolated_backward`'s own weight.** -6 / 0 is backward's flat, inherited: P1 dropped the
+  increment, and no fit has read these pawns apart with the flat holding only the others. S126's.
+- **The far cells, for S126** (`adocs/data/S125_cells.txt`): **`supported_mg` own seventh +187
+  above all** (+155.0 over its neighbour, 9476 rows, 2525 games), `supported_eg` own seventh -29
+  (-55.0), own sixth 26 (+38.5), `supported_mg` own sixth 32 (-65.0), `phalanx_mg` own sixth 86
+  (+33.0) and own fifth 20 (-26.5), `phalanx_eg` own sixth 68 (+30.5) and own fifth 7 (-29.0);
+  the phalanx seventh tied to its sixth. A reading of the fit, no constant changed for it (DEC-084).
+- **The long control.** Section 1 says every traced figure in this group shrinks at 60+0.6, so an
+  8+0.08 verdict over-reports it. Nothing here measured that: S267's DEC-202 reading at 32+0.32
+  and its drift series are where it is read, an estimate and never a verdict.
+- **The thin margins.** The gradient, 9.22e-7 against 1e-6, a factor of 1.08, unmoved, and DEC-316's
+  class on any later fit. The walk at 8.82 now and not 1.24, but only because the fold reshaped two
+  columns; a refit can take it back. `MATE_IN_THREE_FLOOR` 11 is one below the 12 that ships and one
+  above the weakened 10.
+- **Doubled pawns by file and phalanx pawns' planted recovery**, unmeasured on the fixture, as phase
+  1 recorded; `feature_audit --plant` is where it would go. P3 and P4 themselves: zeros, by the
+  screen and not by any match.
+
+### Documents
+
+- `DEV_MANUAL.md`: checked. Three sentences added, each true of the fold: the audit reads the same,
+  the gradient the same, the walk moves. Its S125 goldens rows state the candidate's readings, which
+  are what ships. Nothing else false.
+- `MANUAL.md`: checked; no sentence names isolated or backward pawns, and nothing on the UCI surface
+  moved. Its `RfpMinPly` row's S125 figures are INV-6's. Unchanged.
+- `adocs/data/README.md`: a close section, `S125_sprt.log` and `S125_close_inv6.txt`.
+
+### The accepts, clause by clause
+
+- **One SPRT verdict for the family, recorded whatever it is**: H1, above, with DEC-220's block for
+  the closing commit. Holds.
+- **After each group passes DEC-259's offline screen**: P2, P5, P6 and P7 each cleared its margin on
+  S082's fixed set before the match; P1, P3 and P4 did not and did not enter it
+  (`adocs/data/S125_screen_reading.txt`). Holds.
+- **A family H0 bisected by group**: the verdict is H1, so no bisection is owed; the partition A = P0,P2 |
+  B = P0,P5,P6 | C = P0,P7 was printed and pre-registered, the guards shown on a scratch pin. Holds.
+- **Indexed by file or by rank where the surveyed record says the indexing is what pays, and the step
+  states which and why**: isolated by file, kept; doubled by file and backward by rank, offered and
+  dropped; phalanx and supported by own rank; weak unopposed flat. Why: section 1's record gives one
+  instance of each indexing, and section 4 derives each width from the board with DEC-331 (4)'s baseline
+  cell. Holds.
+- **An isolated pawn is never also counted backward**: the fold, with no condition on the verdict
+  (DEC-331 (15)); `src/evaluation.cpp` `evaluate_pawns`, the guard red with the mask removed, the corpus's
+  trace exact. Holds.
+- **Every constant is fitted (DEC-084)**: the 02567 fit pasted unchanged, no seed, every family weight from
+  zero and the three flats from S083's {-9, -2, -11} / {-15, -18, -2}, this project's own fit; P3's and P4's zeros
+  recorded as the screen's; `isolated_backward` is backward's fitted flat plus P1's zero, the form DEC-331
+  (3) names, and S126 fits it. Holds, with that named.
+- **The pawn hash is not a precondition and the plan order is not reversed; measured recomputed at every
+  call, the per-call cost recorded as S118's baseline**: S118 has not started, every term is recomputed, and
+  the cost is DEC-047's forced-weight run (`adocs/data/S125_cost_reading.txt`: `cand` +3.50 %, all +4.20 %,
+  p2 +1.18 %, p5 +1.36 %, p6 +1.05 %, p1 and p7 zero), with `bench_eval` beside it per call: REF 63.99 ns,
+  CAND 74.06, the fold 75.93 (`adocs/data/S125_bench_eval.txt`; one layout, not perturbed, deciding nothing),
+  S118's baseline 75.93 ns on the tree it starts from. `eval_spread` reads stage two only, so where a stage-one
+  term lands is the forced-weight rows (corrected above, DEC-331 (14)). Holds.
+
+### Gates
+
+- Both builds: 0 warning lines over a rebuild of `src/evaluation.cpp` and everything that
+  links it. `ctest -L fast`: **50 of 50** in `build/` and in `build-tune/`, sequential,
+  `CLANG_FORMAT_MAJOR=22`. Bench **5707449** in both: the commit's `Bench:`.
+- `./clang-format.sh --check` clean.
+- **The S297 clang pair**, inside `gate_extra`'s stage 6: `build-clang` and
+  `build-clang-tune` with clang 22.1.8, no error and no warning, both fast suites 50 of 50.
+- `tools/plan_prose_check.py`, one mode per call, each exit 0: `--citations` 0 flagged over
+  19 files, `--touches` 0 over 19, `--params`, `--gate` agreeing, `--prose` 0 flagged. Read
+  again after this section was written.
+- **`tools/gate_extra.sh`**, all six stages, on this tree, detached under a four-exit watcher:
+  `GATE-EXTRA-DONE 6 stages 1514 s`. prose 0 s, citations 0 s, debug 390 s (6 of 6), sanitize
+  729 s (the fast label 50 of 50 under the sanitizers), perft 52 s, clang 343 s (50 of 50
+  twice). 0 `Assertion` in the debug and sanitize logs. One comment sentence in
+  `evaluate_pawns` was reworded after it, and both binaries read byte-identical after the
+  rebuild, so it stands.
+- **Tier 2 (DEC-141) does not bind**, by what the diff touches: under `src/` only
+  `evaluate_pawns`'s backward sets and the rank block, one weight, and comments; no
+  `make_move`, `unmake_move`, generator or search change, and no pruning, reduction or
+  extension rule. `gate_extra` ran anyway, as the brief asks, because the fold is code in
+  every stage-one evaluation. The Debug self-play at landing is the coordinator's.
+
+Every clause holds. Done.

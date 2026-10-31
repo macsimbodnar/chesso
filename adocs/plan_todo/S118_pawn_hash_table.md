@@ -9,6 +9,20 @@ blocks:
 paused_by:
 done:
 
+## Corrected 2026-10-31, S125's close: what a pawn key can hold, and the baseline
+
+The accepts' "the mg/eg pawn score" is not all pawn-keyed. **S125's whole family
+reads pawns alone** (DEC-331 (9)), as do the flats, and S123's candidate passers,
+which DEC-329 says; S123's free and safe increments and both kings' distance slopes
+read pieces and kings, so they stay outside the table or are stored apart. Say which,
+with the key's contents, before any code.
+
+**The baseline, measured:** `evaluate()` 75.93 ns a call on S125's closed tree,
+against 63.99 before its family (`adocs/data/S125_bench_eval.txt`, one layout, ten
+compiled-in positions, deciding nothing); whole-engine rows `cand` +3.50 % and p1,
+the fold's, +0.37 % instructions, read zero (`adocs/data/S125_cost_reading.txt`).
+A cache's value is read against those, not against the 53.90 ns of 2026-08-19.
+
 ## Moved out of the speed block, 2026-08-19, DEC-087
 
 The published record has a warning, and S186 traced it to what it actually

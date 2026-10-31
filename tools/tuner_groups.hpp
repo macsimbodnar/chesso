@@ -186,8 +186,10 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     first = tuner_layout::CP_MG_BASE;
     last = tuner_layout::CANDIDATE_PASSER_END;
   } else if (group == "isolated_backward") {
-    // S125's seven, one block each (DEC-331 (4)): P1, the isolated and
-    // backward increment.
+    // S125's seven, one block each (DEC-331 (4)): P1, isolated pawns with
+    // their stop attacked. Screened as an increment over isolated and backward;
+    // since S125's close the pawns' own weight, and backward's flat holds none
+    // of them (DEC-331 (3)).
     first = tuner_layout::IB_MG_BASE;
     last = tuner_layout::ISOLATED_BACKWARD_END;
   } else if (group == "isolated_files") {

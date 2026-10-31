@@ -66,7 +66,9 @@ KS = {  # king_safety_feature_t's order
 #  psqt       (type, square, sign); Black's pieces read the mirrored square
 #  material   (name, signed count)
 #  passed     bucket -> signed count
-#  structure  isolated, doubled, backward, White minus Black
+#  structure  isolated, doubled, backward, White minus Black; since S125's close
+#             backward holds no isolated pawn, which moves no anchor here: no
+#             case has a pawn whose stop an enemy pawn attacks
 #  placement  pair, rook open, rook half open, White minus Black (rook seventh was
 #             a fourth until S134 folded it into the rook table, DEC-090)
 #  family     S123's passed pawn family (src/evaluation.hpp): array name ->
@@ -84,7 +86,8 @@ KS = {  # king_safety_feature_t's order
 #             zero, so these counts moved no anchor; at its candidate, the
 #             screen's 02567 fit, they and the three flats' refit move the two
 #             cases with pawns, the pawn on e2 109 -> 107 and Re8 196 -> 199
-#             (adocs/data/S125_goldens.txt)
+#             (adocs/data/S125_goldens.txt). isolated_backward, weighted by
+#             S125's close, counts no pawn in any case here
 #  mobility   (type, attacked squares not occupied by own pieces nor attacked
 #             by an enemy pawn, sign); since S121 the count picks the piece's
 #             cell of its type's table, which is what the piece scores, and is

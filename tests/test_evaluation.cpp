@@ -328,8 +328,9 @@ TEST_SUITE("evaluation: score")
   // there are no enemy pawns anywhere, and at phase 0 it collects
   // passed_pawn_eg[0] = -15 and nothing else. The pawn structure weights then
   // moved the same case alone again, 89 to 88: that pawn is also isolated, with
-  // no own pawn on the d or the f file, and it is not backward because nothing
-  // attacks e3, so it collects pawn_structure_eg[isolated] = -1 once. Those
+  // no own pawn on the d or the f file, and nothing attacks e3, which would not
+  // make it backward since S125's close but isolated_backward, so it collects
+  // pawn_structure_eg[isolated] = -1 once. Those
   // three are positions where king_safety_features() reports the same nine
   // counts for both colours, so the term cancels in the difference the score is
   // built from rather than being absent from it.
@@ -966,7 +967,7 @@ static pawn_counts_t pawn_counts_by_definition(const board_t* board)
 
         if (!neighbour) { counts.structure[colour][0]++; }
         if (own_ahead) { counts.structure[colour][1]++; }
-        if (!neighbour_at_or_behind && stop_attacked) {
+        if (neighbour && !neighbour_at_or_behind && stop_attacked) {
           counts.structure[colour][2]++;
         }
       }
@@ -1350,10 +1351,12 @@ TEST_SUITE("evaluation: passer symmetry")
 // its number, so Black's sets in the mirror are White's in the original with
 // the ranks mirrored, and Black's cells are White's. A set wrong for one
 // colour only -- an edge mask missing on one side's shift, a stop square one
-// rank off for Black -- moves no score while the weights it feeds are zero,
-// and moves one fitted only on a position that reaches the cell it gets
-// wrong. Each observed red on a planted one-colour defect before it was
-// trusted (the S125 step file, 2026-10-30, records both runs).
+// rank off for Black -- moves no score in a group at zero, and moves one fitted
+// only on a position that reaches the cell it gets wrong. Each observed red on
+// a planted one-colour defect before it was trusted (the S125 step file,
+// 2026-10-30, records both runs). An isolated pawn let into backward reads red
+// here in one colour only; in both it still mirrors, so "an isolated pawn with
+// its stop attacked is not backward" (tests/test_eval_model.cpp) is that guard.
 TEST_SUITE("evaluation: structure family symmetry")
 {
   TEST_CASE_FIXTURE(eval_fixture_t,
@@ -1668,7 +1671,8 @@ TEST_SUITE("evaluation: packed score")
                  candidate_passer_mg, candidate_passer_eg,
                  static_cast<int>(candidate_passer_score.size()));
 
-    // S125's family, the same way: at its zero landing no bench sees these.
+    // S125's family, the same way: at its zero landing no bench saw these, and
+    // no bench sees a group at zero now.
     halves_match("isolated_backward", isolated_backward_score.data(),
                  isolated_backward_mg, isolated_backward_eg,
                  static_cast<int>(isolated_backward_score.size()));
