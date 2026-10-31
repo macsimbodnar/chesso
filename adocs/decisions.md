@@ -16957,3 +16957,71 @@ Consequences: S125's phase 1 starts after S123's verdict closes, on that
               close. The trace records only non-zero cells unless its exact
               reconstruction needs more; the phase 1 agent says which.
               S126's refit inherits no new dependency.
+
+## DEC-332  2026-10-31  S118: a pawn-only cache re-opens DEC-046, and lands only if DEC-266 credits its gain; storm is S122's
+Tags:         evaluation, performance, cache, s118, s122, dec-046, dec-266, dec-257, dec-083
+Context:      S118's accepts asks for a pawn table holding the pawn score, the
+              passers and both kings' shelter and storm scores. Its design pass
+              (2026-10-31, `.tuning/coord/S118/`, instruction counts only, no
+              timing) found: DEC-046 built this cache and discarded it, and
+              nothing amends it; two of its premises have moved, the key being
+              paid already (`board_t::pawn_hash`, S099, relanded by S286) and the
+              pawn pass now 12.69 % of instructions on `bench` against a 4.5 %
+              term then; a scratch prototype is node-identical at every size and
+              reads -8.42 % instructions on `bench 16` and -8.87 % on S020's
+              positions at 2^12 entries, a prediction for cycles and not a
+              result; the shelter exists, in stage two, at 1.63 % of instructions
+              and skipped by the lazy shortcut on 29 to 39 % of calls, so it is
+              not "the expensive half"; storm exists nowhere in `src/`; and
+              `bench_eval` cannot price a cache, as DEC-039 and DEC-046 said.
+Decision:     By the coordinator under the owner's standing instruction
+              (2026-10-21, 2026-10-27).
+              (1) **DEC-046 is re-opened, not voided.** A credited gain marks it
+              VOID with a pointer here; anything else leaves it standing, with
+              S122's accepts amended to read the shelter from stage two.
+              (2) **The key: `board_t::pawn_hash`, pawns only, an index and no
+              more.** The verifier is both pawn bitboards, the pass's whole input,
+              so a hit is exact and a wrong key costs a miss, never a score. No
+              primitive is touched.
+              (3) **The entry** holds what reads pawns alone: the flats, passed
+              buckets, S123's candidate passers, S125's family; and what an outside
+              term needs, the passers and both file sets. Piece placement and S123's
+              increments and king distances stay outside it. 32 B, two to a line.
+              (4) **The table** is a value member of `search_state_t`, zeroed per
+              `go`, no UCI option, size by (7). `evaluate(board)` stays pure and
+              `bench_eval` and the tools read it; the search's two call sites read
+              the table; the trace and collecting paths never see it.
+              (5) **The shelter is a parallel slot, its own commit and its own
+              timing row**, raw before the clamp and the taper, filled only by stage
+              two, so shortcut nodes pay nothing. It stays if it does not read a loss
+              beyond the floor, S122 being the reason; a loss drops it and S122
+              decides. **Storm is S122's**: the accepts' word is corrected, since
+              nothing computes one.
+              (6) **The verdict type, before any run: bit-identical, no SPRT owed.**
+              INV-6 in both builds. The gain is read under DEC-266 (3), (4), and
+              DEC-083 converts it.
+              (7) **The size, pre-registered:** the smallest of 2^8 to 2^16 whose
+              cycles on both workloads lie within the floor of the best row. 2^18 is
+              informative, never a candidate.
+              (8) **The bar is DEC-266 and no other:** ships if the chosen size's
+              cycles on both workloads and its wall clear the floor as a gain and its
+              instructions move the same way. Zero or a loss: not shipped.
+              (9) **The timing comes before the landing.** The two commits sit on
+              branch `s118`, and `achesso` takes them only on (8).
+Rejected:     A pawn-and-king key: hits at 2^12 fall from 89.7, 96.4 and 94.1 % to
+              80.9, 86.7 and 80.9 %, every pawn term is recomputed on a king move, and
+              `board_t` gains a key in three primitives and unmake. No slot until S122:
+              cheaper, against the goal, and S122 would add an unmeasured line. A
+              stored 64-bit key: not exact. `thread_local`, S120's form: cold per `go`
+              anyway, and hidden state in `evaluate()`. A static table: 0.37 points of
+              hit rate on replay for a null branch. **A +2 % wall bar**, the design
+              pass's proposal: with the key already paid a credited gain is strength
+              at any size, and S122 adds pawn-keyed work; an extra bar would be chosen
+              before the number for no measured reason. Landing first and timing after:
+              a zero would then need a revert.
+Consequences: S118's `touches:` gains `src/search.cpp`, so DEC-141's Debug self-play and
+              `gate_extra` bind, not through the primitives; no new pruning rule, the
+              mutants run anyway. No golden moves; commits read `No functional change`.
+              From S118 a forced pawn group is priced through the cache, its shipped
+              cost, and `adocs/data/S125_cost_only.patch` stays a recorded run. The pure
+              path's `bench_eval` remains comparable with 75.93 ns and is not the bar.
