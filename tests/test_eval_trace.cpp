@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -309,6 +310,71 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 
 // The trace is a side channel: with the sink set, evaluate() returns what it
 // returns without one, and trace_board() leaves the sink cleared.
+// S118, DEC-332. The search's form reads pawn terms from its table, and a hit
+// records no coefficient for them: a row traced through it would fit the tuner
+// to a position with half its terms missing, whichever call came second. So in
+// this build that form is the pure one, whatever the sink, and the table is not
+// touched. What makes it bite is a position whose pawn pass records something:
+// the pass's own terms are in the first trace, or nothing here could go
+// missing.
+TEST_CASE_FIXTURE(trace_fixture_t,
+                  "the search's form records what the pure form records, twice")
+{
+  static eval_trace::record_t record;
+  auto table = std::make_unique<pawn_table_t>();
+
+  const auto traced = [&](bool read_table, row_trace_t* out) {
+    std::string error;
+
+    record.clear();
+    eval_trace::sink = &record;
+    if (read_table) {
+      evaluate(&game.board, table.get());
+    } else {
+      evaluate(&game.board);
+    }
+    eval_trace::sink = nullptr;
+
+    REQUIRE_MESSAGE(tuner_trace::sum_record(record, out, &error), error);
+  };
+
+  const auto same = [](const row_trace_t& a, const row_trace_t& b) {
+    return a.phase == b.phase && a.entries.size() == b.entries.size() &&
+           std::equal(a.entries.begin(), a.entries.end(), b.entries.begin(),
+                      [](const auto& x, const auto& y) {
+                        return x.feature == y.feature && x.coef == y.coef;
+                      });
+  };
+
+  size_t with_pawn_terms = 0;
+
+  for (const std::string& fen : all_positions()) {
+    CAPTURE(fen);
+    REQUIRE(load_FEN(fen, &game));
+
+    row_trace_t pure, first, second;
+
+    traced(false, &pure);
+    traced(true, &first);
+    traced(true, &second);
+
+    REQUIRE(same(pure, first));
+    REQUIRE(same(pure, second));
+
+    const pawn_entry_t& entry =
+        table->entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)];
+
+    // The table is not written here, so an entry stays what it was made.
+    REQUIRE_EQ(entry.white_pawns, bb_t{0});
+    REQUIRE_EQ(entry.black_pawns, bb_t{0});
+
+    if (game.board.bitboards[W_PAWN] != 0) { with_pawn_terms++; }
+  }
+
+  REQUIRE(with_pawn_terms > 0);
+}
+
+
 TEST_CASE_FIXTURE(trace_fixture_t, "tracing changes nothing evaluate() returns")
 {
   for (const std::string& fen : all_positions()) {

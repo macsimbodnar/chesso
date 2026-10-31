@@ -736,6 +736,55 @@ struct correction_table_t
 using pawn_correction_t = correction_table_t<CORRHIST_PAWN_ENTRIES>;
 
 
+// THE PAWN TABLE, S118, DEC-332. What the pawn pass computes from the two pawn
+// bitboards and nothing else, kept per structure so the pass runs once for it:
+// src/evaluation.cpp `pawn_pass` is the pass, and takes the two bitboards as
+// its only inputs so that it cannot read anything else.
+//
+// **board_t::pawn_hash is only the index.** The verifier is the two bitboards
+// themselves, the pass's whole input, so a hit is exact by construction: a
+// collision of the slot, or of all 64 bits of the key, is a recomputation and
+// never another structure's score, and a wrong key costs a miss (the accepts;
+// a stored key would not be exact). The verifier is why an empty table needs
+// no initialising: an entry of zeros is the board without pawns, whose key is
+// 0, and zeros are that structure's true entry.
+//
+// White relative, as the pass is, so both sides to move share an entry.
+// `passers` is both colours' and the pawns split it, the own seventh included;
+// `white_files` and `black_files` are one rank of each side's whole-file set,
+// bit n the file n, and expand by a multiply. They are what the terms outside
+// the entry need from the pass (evaluation.cpp `outside_pawn_terms`), which
+// read pieces and kings as well and so cannot be keyed on the pawns.
+//
+// 32 bytes, two to a cache line and none straddling one, which is what
+// the alignment on the table is for.
+//
+// PAWN_TABLE_BITS: the size in entries is DEC-105 form (a), CPW *Pawn Hash
+// Table*'s "a few K" (https://www.chessprogramming.org/Pawn_Hash_Table), swept
+// by adocs/data/S118_cost.sh. A power of two because the slot is the key's low
+// bits, as the correction table's is. No engine's size seeded it (DEC-134).
+inline constexpr int PAWN_TABLE_BITS = 12;
+inline constexpr size_t PAWN_TABLE_ENTRIES = size_t{1} << PAWN_TABLE_BITS;
+
+struct pawn_entry_t
+{
+  bb_t white_pawns;
+  bb_t black_pawns;
+  bb_t passers;
+  score_t score;
+  uint8_t white_files;
+  uint8_t black_files;
+  uint16_t spare;
+};
+
+static_assert(sizeof(pawn_entry_t) == 32, "two entries to a cache line");
+
+struct pawn_table_t
+{
+  alignas(64) pawn_entry_t entries[PAWN_TABLE_ENTRIES];
+};
+
+
 struct search_t
 {
   move_t best_move;
@@ -1054,7 +1103,7 @@ struct search_state_t
   // cont_hist clears exactly the way quiet_history and counter_moves already
   // do and `ucinewgame` needs no separate clear for any of the three.
   //
-  // What that costs is where the struct may be built. 1.2 MiB does not fit the
+  // What that costs is where the struct may be built. 1.3 MiB does not fit the
   // 512 KiB a macOS std::thread gets by default, which the discarded MacBook
   // attempt at S024 is the record of. So every instance built off the main
   // thread is heap-owned by its builder -- iterative_deepening_search()'s one
@@ -1108,6 +1157,12 @@ struct search_state_t
   move_t root_move_keys[MAX_MOVES];
   uint64_t root_move_nodes[MAX_MOVES];
   size_t root_move_count = 0;
+
+  // The pawn table, S118: above, and DEC-332. Per search, zeroed with the
+  // struct, which is every `go`, so nothing owes it a clear and `ucinewgame`
+  // has nothing to do: an entry cannot be wrong, so neither a stale one nor a
+  // cold one moves a node. Last, so that no field above moves.
+  pawn_table_t pawn_table;
 };
 
 

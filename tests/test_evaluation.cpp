@@ -5,8 +5,11 @@
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
+#include <memory>
 #include <random>
 #include <string>
+#include <utility>
 #include <vector>
 #include "bitboard.hpp"
 #include "correction_history.hpp"
@@ -22,7 +25,7 @@ static game_t game;
 static game_t mirrored;
 
 // S099's mirror case: a correction table and the search state that carries it
-// into search_corrected_eval_probe(). Static because the state is 1.2 MiB; the
+// into search_corrected_eval_probe(). Static because the state is 1.3 MiB; the
 // table keeps it company.
 static pawn_correction_t mirror_correction;
 static search_state_t mirror_state;
@@ -2244,5 +2247,368 @@ TEST_SUITE("evaluation: score_move ordering")
 
     REQUIRE(score_move(&game, &state, to_queen, 0, 0, 0) >
             score_move(&game, &state, to_knight, 0, 0, 0));
+  }
+}
+
+
+// S118's pawn table, DEC-332. A cached evaluation has one way of being wrong
+// that nothing else here can see: it answers, and the answer belongs to some
+// other position. So every case holds the two forms equal on a table that has
+// demonstrably been read -- each states the slot's contents the read depends
+// on, because a table nobody reads agrees with the pure form on everything.
+//
+// Mutations: tools/mutants/S118_pawn_cache.py.
+namespace
+{
+
+game_t pawn_table_other;
+
+struct pawn_table_fixture_t : eval_fixture_t
+{
+  pawn_table_fixture_t() { initialize_game_const_data(&pawn_table_other); }
+};
+
+// Zeroed, on the heap: 128 KiB, and these cases want one each.
+std::unique_ptr<pawn_table_t> fresh_pawn_table()
+{ return std::make_unique<pawn_table_t>(); }
+
+const pawn_entry_t& pawn_slot(const pawn_table_t& table, const game_t& g)
+{ return table.entries[g.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)]; }
+
+bool pawn_slot_holds(const pawn_table_t& table, const game_t& g)
+{
+  const pawn_entry_t& entry = pawn_slot(table, g);
+
+  return entry.white_pawns == g.board.bitboards[W_PAWN] &&
+         entry.black_pawns == g.board.bitboards[B_PAWN];
+}
+
+// Two positions with one pawn structure whose difference is one term outside
+// the entry, each named by what differs. Pieces and kings only, so the pass
+// cannot tell them apart and the second call of a pair is a hit.
+struct same_pawns_t
+{
+  const char* what;
+  const char* first;
+  const char* second;
+};
+
+constexpr same_pawns_t same_pawns[] = {
+    {"own king's distance to a passer's push square",
+     "4k3/8/8/8/8/P7/8/4K3 w - - 0 1", "4k3/8/8/8/8/P7/8/K7 w - - 0 1"},
+    {"enemy king's distance to a passer's push square",
+     "4k3/8/8/8/8/P7/8/4K3 w - - 0 1", "8/8/8/k7/8/P7/8/4K3 w - - 0 1"},
+    {"a piece on a passer's push square", "4k3/8/8/8/8/P7/8/4K3 w - - 0 1",
+     "4k3/8/8/8/n7/P7/8/4K3 w - - 0 1"},
+    {"an enemy rook on a passer's push square's rank",
+     "4k3/8/8/8/8/P7/8/4K3 w - - 0 1", "4k3/8/8/8/7r/P7/8/4K3 w - - 0 1"},
+    {"a rook on an open file", "4k3/8/8/8/8/P7/8/R3K3 w - - 0 1",
+     "4k3/8/8/8/8/P7/8/4K2R w - - 0 1"},
+    {"a rook on a half open file", "4k3/7p/8/8/8/P7/8/R3K3 w - - 0 1",
+     "4k3/7p/8/8/8/P7/8/4K2R w - - 0 1"},
+    {"the bishop pair", "4k3/8/8/8/8/P7/8/2N1KB2 w - - 0 1",
+     "4k3/8/8/8/8/P7/8/2B1KB2 w - - 0 1"},
+    {"a knight in a trap", "k7/5p2/8/8/7N/P7/8/4K3 w - - 0 1",
+     "k6N/5p2/8/8/8/P7/8/4K3 w - - 0 1"},
+    {"a rook hemmed in by its own king", "4k3/8/8/8/8/P7/8/4K2R w - - 0 1",
+     "4k3/8/8/8/8/P7/8/5K1R w - - 0 1"},
+};
+
+bool outside_counts_differ(const board_t* a, const board_t* b)
+{
+  passer_family_t family_a, family_b;
+  passer_family_counts(a, &family_a);
+  passer_family_counts(b, &family_b);
+
+  int placement_a[2][7];
+  int placement_b[2][7];
+  piece_placement_counts(a, placement_a);
+  piece_placement_counts(b, placement_b);
+
+  return std::memcmp(&family_a.free, &family_b.free, sizeof(family_a.free)) ||
+         std::memcmp(&family_a.safe, &family_b.safe, sizeof(family_a.safe)) ||
+         std::memcmp(&family_a.king_own, &family_b.king_own,
+                     sizeof(family_a.king_own)) ||
+         std::memcmp(&family_a.king_enemy, &family_b.king_enemy,
+                     sizeof(family_a.king_enemy)) ||
+         std::memcmp(placement_a, placement_b, sizeof(placement_a));
+}
+
+}  // namespace
+
+
+TEST_SUITE("evaluation: pawn table")
+{
+  // The accepts' test. Two structures in one slot under one 64-bit key, which
+  // no search can arrange and a planted key can: a verifier of anything less
+  // than both bitboards answers the second with the first's entry. Each pair
+  // shares one colour's pawns, so a verifier reading only the other is caught
+  // too, and each runs in both orders.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "a forced collision recomputes and never answers for "
+                    "another structure")
+  {
+    const char* const passers_both = "4k3/pppp4/8/8/8/8/4PPPP/4K3 w - - 0 1";
+    const char* const black_differs = "4k3/4pppp/8/8/8/8/4PPPP/4K3 w - - 0 1";
+    const char* const white_differs = "4k3/pppp4/8/8/8/8/PPPP4/4K3 w - - 0 1";
+
+    const std::pair<const char*, const char*> pairs[] = {
+        {passers_both, black_differs},
+        {black_differs, passers_both},
+        {passers_both, white_differs},
+        {white_differs, passers_both},
+    };
+
+    for (const auto& pair : pairs) {
+      const std::string first = pair.first;
+      const std::string second = pair.second;
+      CAPTURE(first);
+      CAPTURE(second);
+      REQUIRE(load_FEN(first, &game));
+      REQUIRE(load_FEN(second, &pawn_table_other));
+
+      // The collision: not two keys that share a slot, the same key.
+      pawn_table_other.board.pawn_hash = game.board.pawn_hash;
+
+      auto table = fresh_pawn_table();
+
+      CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+      REQUIRE(pawn_slot_holds(*table, game));
+
+      const pawn_entry_t held = pawn_slot(*table, game);
+
+      // What makes the case bite: the slot, read for the second position,
+      // holds something the second position's pass does not produce.
+      REQUIRE_FALSE(pawn_slot_holds(*table, pawn_table_other));
+
+      CHECK_EQ(evaluate(&pawn_table_other.board, table.get()),
+               evaluate(&pawn_table_other.board));
+      CHECK(pawn_slot_holds(*table, pawn_table_other));
+
+      const pawn_entry_t& replaced = pawn_slot(*table, pawn_table_other);
+      REQUIRE(
+          (held.passers != replaced.passers || held.score != replaced.score));
+
+      CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+      CHECK(pawn_slot_holds(*table, game));
+    }
+  }
+
+  // The whole list twice through one table, which a real slot collision is
+  // free to hit in the second pass, and each position twice in a row, whose
+  // second call is a hit by construction: the slot was just written. A hit that
+  // moved a score by anything shows here; what cannot be told from a recompute
+  // is the next case's.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "every test position reads the same through the table")
+  {
+    auto table = fresh_pawn_table();
+    size_t checked = 0;
+    size_t still_held = 0;
+
+    for (int pass = 0; pass < 2; ++pass) {
+      for (const std::string& fen : all_test_fens()) {
+        CAPTURE(fen);
+        REQUIRE(load_FEN(fen, &game));
+
+        if (pass == 1 && pawn_slot_holds(*table, game)) { still_held++; }
+
+        const int pure = evaluate(&game.board);
+
+        REQUIRE_EQ(evaluate(&game.board, table.get()), pure);
+        REQUIRE(pawn_slot_holds(*table, game));
+        REQUIRE_EQ(evaluate(&game.board, table.get()), pure);
+        checked++;
+      }
+    }
+
+    REQUIRE(checked > 100);
+    REQUIRE(still_held > 0);
+  }
+
+#ifdef NDEBUG
+  // That a hit answers from the entry at all, which agreement cannot show: a
+  // table that recomputed on every call would pass every other case here and
+  // be slower than none. The planted score is what the entry says and the pass
+  // does not. Release only: the Debug build asserts every hit against a fresh
+  // pass, and this one is planted to fail that.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t, "a hit answers from the entry")
+  {
+    REQUIRE(load_FEN("4k3/pppp4/8/8/8/8/4PPPP/4K3 w - - 0 1", &game));
+
+    auto table = fresh_pawn_table();
+    const int pure = evaluate(&game.board, table.get());
+
+    REQUIRE(pawn_slot_holds(*table, game));
+
+    table->entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)].score +=
+        make_score(48, 48);
+
+    CHECK_NE(evaluate(&game.board, table.get()), pure);
+  }
+#endif
+
+  // What the entry must not hold. Piece placement and S123's increments and
+  // king distances read pieces and kings, so one structure has many values of
+  // them: stored, the second position of a pair would read the first's. Each
+  // pair is checked to differ in a count outside the entry, in both orders and
+  // in both colours.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "the same pawns with other pieces read their own terms")
+  {
+    for (const same_pawns_t& pair : same_pawns) {
+      const std::string what = pair.what;
+      CAPTURE(what);
+
+      const std::string fens[][2] = {
+          {pair.first, pair.second},
+          {pair.second, pair.first},
+          {mirror_fen(pair.first), mirror_fen(pair.second)},
+          {mirror_fen(pair.second), mirror_fen(pair.first)},
+      };
+
+      for (const auto& fen : fens) {
+        CAPTURE(fen[0]);
+        CAPTURE(fen[1]);
+        REQUIRE(load_FEN(fen[0], &game));
+        REQUIRE(load_FEN(fen[1], &pawn_table_other));
+
+        REQUIRE_EQ(game.board.pawn_hash, pawn_table_other.board.pawn_hash);
+        REQUIRE_EQ(game.board.bitboards[W_PAWN],
+                   pawn_table_other.board.bitboards[W_PAWN]);
+        REQUIRE_EQ(game.board.bitboards[B_PAWN],
+                   pawn_table_other.board.bitboards[B_PAWN]);
+        REQUIRE(outside_counts_differ(&game.board, &pawn_table_other.board));
+
+        auto table = fresh_pawn_table();
+
+        CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+        REQUIRE(pawn_slot_holds(*table, pawn_table_other));
+
+        CHECK_EQ(evaluate(&pawn_table_other.board, table.get()),
+                 evaluate(&pawn_table_other.board));
+      }
+    }
+  }
+
+  // INV-5 through the table: a position and its mirror agree, each read through
+  // one shared table, and a second pass reads the entries the first left. The
+  // entry is White relative and the sign is resolved after it, so a colour
+  // dropped or swapped anywhere in it breaks here and nowhere near as often in
+  // the case above, whose second call is the same position.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "a mirrored position reads the same through one table")
+  {
+    auto table = fresh_pawn_table();
+    size_t checked = 0;
+
+    for (int pass = 0; pass < 2; ++pass) {
+      for (const std::string& fen : all_test_fens()) {
+        const std::string flipped = mirror_fen(fen);
+
+        CAPTURE(fen);
+        REQUIRE(load_FEN(fen, &game));
+        REQUIRE(load_FEN(flipped, &mirrored));
+
+        const int score = evaluate(&game.board, table.get());
+        REQUIRE(pawn_slot_holds(*table, game));
+
+        const int mirrored_score = evaluate(&mirrored.board, table.get());
+        REQUIRE(pawn_slot_holds(*table, mirrored));
+
+        REQUIRE_EQ(score, mirrored_score);
+        REQUIRE_EQ(score, evaluate(&game.board));
+        checked++;
+      }
+    }
+
+    REQUIRE(checked > 100);
+  }
+
+  // No side to move in the key, none in the entry: one structure, one entry,
+  // and the sign is applied to the sum after the read.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t, "both sides to move read one entry")
+  {
+    REQUIRE(load_FEN("4k3/ppp5/8/8/8/8/5PP1/4K3 w - - 0 1", &game));
+    REQUIRE(load_FEN("4k3/ppp5/8/8/8/8/5PP1/4K3 b - - 0 1", &pawn_table_other));
+    REQUIRE_EQ(game.board.pawn_hash, pawn_table_other.board.pawn_hash);
+
+    auto table = fresh_pawn_table();
+
+    CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+    REQUIRE(pawn_slot_holds(*table, pawn_table_other));
+
+    const pawn_entry_t held = pawn_slot(*table, game);
+
+    CHECK_EQ(evaluate(&pawn_table_other.board, table.get()),
+             evaluate(&pawn_table_other.board));
+    CHECK_EQ(pawn_slot(*table, game).score, held.score);
+  }
+
+  // Key 0, the slot every pawnless position shares, and an empty table's every
+  // entry reads as that structure's. The zeros have to be true: no pawn term,
+  // no passer and no file. The rooks are there because those file sets are what
+  // they read: a position this empty tells the two apart only through them.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "an empty entry is the pawnless board's own")
+  {
+    REQUIRE(load_FEN("4k3/8/8/8/8/8/8/R3K2R w - - 0 1", &game));
+    REQUIRE_EQ(game.board.pawn_hash, hash_t{0});
+
+    auto table = fresh_pawn_table();
+
+    REQUIRE(pawn_slot_holds(*table, game));
+
+    CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+
+    const pawn_entry_t& entry = pawn_slot(*table, game);
+
+    CHECK_EQ(entry.score, 0);
+    CHECK_EQ(entry.passers, bb_t{0});
+    CHECK_EQ(entry.white_files, 0);
+    CHECK_EQ(entry.black_files, 0);
+  }
+
+  // The lazy form through the table: both shortcuts and the exact path, value
+  // and flag, against the pure form. Windows set off the cheap score so that
+  // each path is the one taken, as "the lazy shortcut cannot change a decision"
+  // does it.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "the lazy form reads the same through the table")
+  {
+    auto table = fresh_pawn_table();
+    size_t checked = 0;
+
+    for (const std::string& fen : all_test_fens()) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      const int cheap = evaluate_cheap(&game.board);
+      const int full = evaluate(&game.board);
+
+      const int windows[][2] = {
+          {full - 1000, full + 1000},
+          {cheap - LAZY_EVAL_MARGIN - 1000, cheap - LAZY_EVAL_MARGIN},
+          {cheap + LAZY_EVAL_MARGIN, cheap + LAZY_EVAL_MARGIN + 1000},
+      };
+
+      for (const auto& window : windows) {
+        bool pure_exact = false;
+        bool table_exact = false;
+
+        const int pure =
+            evaluate_lazy(&game.board, window[0], window[1], &pure_exact);
+        const int read = evaluate_lazy(&game.board, window[0], window[1],
+                                       &table_exact, table.get());
+
+        REQUIRE(pawn_slot_holds(*table, game));
+        REQUIRE_EQ(read, pure);
+        REQUIRE_EQ(table_exact, pure_exact);
+      }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 100);
   }
 }

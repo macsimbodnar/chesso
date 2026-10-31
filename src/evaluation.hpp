@@ -46,6 +46,18 @@ int evaluate_lazy(const board_t* board,
                   int beta,
                   bool* exact = nullptr);
 
+// The two the search calls, S118, DEC-332: the same numbers as the two above,
+// bit for bit, with the pawn terms read from `table`. Everything else calls the
+// pure forms, which see no table at all: the tests, the tools, bench_eval, and
+// the trace build's every path, where these compile to the pure forms so that
+// no coefficient can be skipped for a hit.
+int evaluate(const board_t* board, pawn_table_t* table);
+int evaluate_lazy(const board_t* board,
+                  int alpha,
+                  int beta,
+                  bool* exact,
+                  pawn_table_t* table);
+
 // The mobility table's shape, S121: one row per piece type in knight, bishop,
 // rook, queen order, one cell per count the piece can have, 0 to the most
 // squares it can reach on an empty board -- 8, 13, 14 and 27, computed with

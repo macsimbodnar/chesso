@@ -2,6 +2,11 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#ifdef CHESSO_TUNE
+#include <atomic>
+#include <cstdlib>
+#include <fstream>
+#endif
 #include <unordered_map>
 #include <utility>
 #include "bb_tables.hpp"
@@ -110,7 +115,7 @@ static constexpr int largest_weight(const int (&mg)[N], const int (&eg)[N])
 // evaluate_cheap() adds the pawn terms to the piece-square pair before its one
 // taper, so the weight moved between two summands of a single division. A
 // pawn on its own seventh scores through the table alone now, and
-// evaluate_pawns() says so where it collects the passers.
+// pawn_pass() says so where it collects the passers.
 //
 // The term costs 4.5 % of a depth 12 search, measured with the weights forced
 // non-zero because at zero the compiler deletes it, DEC-047. Its SPRT was net
@@ -262,7 +267,7 @@ constexpr std::array<score_t, PS_FEATURE_COUNT> pawn_structure_score =
 // above (DEC-331): isolated pawns whose stop an enemy pawn attacks, isolated
 // and doubled pawns by file, backward pawns by rank, phalanx and supported
 // pawns by rank, and weak unopposed pawns. evaluation.hpp defines each set and
-// count; evaluate_pawns() computes them from the fills it already builds.
+// count; pawn_pass() computes them from the fills it already builds.
 //
 // **Fitted, and shipped on one SPRT's H1** at {0, 5} nElo, 8+0.08: the screen's
 // four kept groups and the three flats above, together
@@ -1115,12 +1120,18 @@ static inline void for_each_cell(bb_t pawns, Cell cell, Record record)
 }
 
 
-// Three terms -- passed pawns, pawn structure and piece placement -- White
-// minus Black, as one untapered middlegame and endgame pair for the caller to
-// interpolate. Since S123 the passed pawns are the buckets and the family
-// beside them, A, B and C, summed into the same pair.
+// The pawn pass: everything that reads the two pawn bitboards and nothing else,
+// White minus Black, as one untapered middlegame and endgame pair for the
+// caller to interpolate. Passed pawns and pawn structure, and since S123 and
+// S125 C and S125's family beside them, summed into the same pair.
 //
-// One function and not three because they are the same four fills read several
+// **The two bitboards are its only inputs, in the signature**, which is what
+// lets S118's table key on them and call a hit exact: no board reaches this
+// function, so nothing here can read a piece, a king or the side to move.
+// What reads pawns and something else is outside_pawn_terms() below, and takes
+// what it needs from here: the passers, and the file sets the fills leave.
+//
+// One function and not two because they are the same four fills read several
 // different ways, and a second pass over the pawns would recompute them.
 // The fusion is the one mobility and king safety already use, for the reason
 // recorded there: asking the same question twice cost 7.7 % of the search.
@@ -1136,11 +1147,11 @@ static inline void for_each_cell(bb_t pawns, Cell cell, Record record)
 // exactly. Their signs are not decided here: the weights are fitted, so a
 // penalty arrives as a negative weight rather than as a minus in this file.
 //
-// Piece placement is here for its two rook file counts and gets the bishop pair
-// for free. The rook file features need to know which files carry which side's
-// pawns, and the fills below already answer that; the bishop pair reads no pawn
-// at all. A third pass over the pawns to rebuild what is already in registers
-// is exactly what the fusion above exists to avoid.
+// Piece placement is outside it and leans on it for its two rook file counts,
+// and gets the bishop pair for free. The rook file features need to know which
+// files carry which side's pawns, and the fills below already answer that; the
+// bishop pair reads no pawn at all. A third pass over the pawns to rebuild what
+// the fills hold is exactly what the fusion above exists to avoid.
 //
 // The first form of this looped over every pawn and asked
 // passed_w_pawns_masks[square] whether that one was passed. It cost 8.50 ns per
@@ -1169,26 +1180,23 @@ static inline void for_each_cell(bb_t pawns, Cell cell, Record record)
 // passed_pawn_counts() below, which is why `collect` is here. Pawn structure
 // has the same hole and pawn_structure_counts() is the same answer to it.
 //
-// `collect` is how the three accessors read the counts out without the search
-// paying for it. A template rather than a flag, the arrangement king safety
-// arrived at: at <false> the stores and the out pointers are not compiled at
-// all, and the instantiation the search calls keeps exactly one caller, so
-// clang still inlines it and the zero weights still fold everything downstream
-// away. Handing that instantiation a second caller instead is what cost 21 %
-// once -- see king_shelter_features() below.
+// `collect` is how the accessors read the counts out without the search paying
+// for it. A template rather than a flag, the arrangement king safety arrived
+// at: at <false> the stores and the out pointers are not compiled at all, and
+// that instantiation keeps exactly one caller, pawn_entry_fill(), so the zero
+// weights still fold everything downstream away. Handing a hot instantiation a
+// second caller instead is what cost 21 % once -- see king_shelter_features()
+// below.
 template <bool collect>
-static inline void evaluate_pawns(const board_t* board,
-                                  score_t* score,
-                                  int passed_out[2][5],
-                                  int structure_out[2][PS_FEATURE_COUNT],
-                                  int placement_out[2][PL_FEATURE_COUNT],
-                                  bb_t passer_set_out[2],
-                                  passer_family_t* family_out,
-                                  structure_family_t* structure_family_out)
+static inline void pawn_pass(bb_t white_pawns,
+                             bb_t black_pawns,
+                             pawn_entry_t* entry,
+                             int passed_out[2][5],
+                             int structure_out[2][PS_FEATURE_COUNT],
+                             bb_t passer_set_out[2],
+                             passer_family_t* family_out,
+                             structure_family_t* structure_family_out)
 {
-  const bb_t white_pawns = board->bitboards[W_PAWN];
-  const bb_t black_pawns = board->bitboards[B_PAWN];
-
   // Four fills, each spent on more than one thing, which is the reason the
   // three terms share a function at all. Forward -- toward rank 8 for White,
   // toward rank 1 for Black -- gives the passed pawn spans and the "no
@@ -1307,21 +1315,10 @@ static inline void evaluate_pawns(const board_t* board,
     EVAL_TRACE(TERM_PAWN_STRUCTURE, f, difference);
   }
 
-  int placement[2][PL_FEATURE_COUNT];
-  piece_placement_features(board, white_pawn_files, black_pawn_files,
-                           placement);
-
-  add_placement_columns(placement, &sum,
-                        std::make_integer_sequence<int, PL_FEATURE_COUNT>{});
-
   if constexpr (collect) {
     for (int colour = 0; colour < 2; ++colour) {
       for (int f = 0; f < PS_FEATURE_COUNT; ++f) {
         structure_out[colour][f] = structure[colour][f];
-      }
-
-      for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
-        placement_out[colour][f] = placement[colour][f];
       }
 
       for (int bucket = 0; bucket < 5; ++bucket) {
@@ -1366,21 +1363,12 @@ static inline void evaluate_pawns(const board_t* board,
     if constexpr (collect) { passed_out[BLACK][bucket]++; }
   }
 
-  // S123's family. A group is computed where its weights are live, in the
-  // trace build, and when collecting, and nowhere else (passer_family_side()
-  // says why that matters for A).
-  constexpr bool advance = collect || trace_build || passer_advance_live;
-  constexpr bool kings = collect || trace_build || passer_kings_live;
+  // S123's C, its one group that reads pawns alone; A and B are
+  // outside_pawn_terms()'s. Computed where its weights are live, in the trace
+  // build, and when collecting, and nowhere else.
   constexpr bool candidates = collect || trace_build || candidate_passer_live;
 
   if constexpr (collect) { *family_out = passer_family_t{}; }
-
-  if constexpr (advance || kings) {
-    passer_family_side<WHITE, advance, kings, collect>(board, white_passers,
-                                                       &sum, family_out);
-    passer_family_side<BLACK, advance, kings, collect>(board, black_passers,
-                                                       &sum, family_out);
-  }
 
   if constexpr (candidates) {
     bb_t candidate[2];
@@ -1600,6 +1588,82 @@ static inline void evaluate_pawns(const board_t* board,
     }
   }
 
+  entry->white_pawns = white_pawns;
+  entry->black_pawns = black_pawns;
+  entry->passers = white_passers | black_passers;
+  entry->score = sum;
+
+  // One rank of each whole-file set: every rank of it is the same eight bits.
+  entry->white_files = static_cast<uint8_t>(white_pawn_files);
+  entry->black_files = static_cast<uint8_t>(black_pawn_files);
+}
+
+
+// What reads the pawn pass and something else, so one pawn structure has many
+// values of it and it cannot sit in the entry the pass fills (DEC-332 (3)):
+// piece placement, which reads pieces and a king against the pawns, and S123's
+// A and B, which read the occupancy, the attacks on a push square and the two
+// kings. Paid at every evaluation, hit or miss, added to `sum`.
+//
+// A group is computed where its weights are live, in the trace build, and when
+// collecting, and nowhere else (passer_family_side() says why that matters for
+// A). The family's counts are added to what pawn_pass() left in `family_out`.
+template <bool collect>
+static inline void outside_pawn_terms(const board_t* board,
+                                      const pawn_entry_t* entry,
+                                      score_t* sum,
+                                      int placement_out[2][PL_FEATURE_COUNT],
+                                      passer_family_t* family_out)
+{
+  // One rank to the whole file set: a byte times 0x01 on every rank cannot
+  // carry.
+  constexpr bb_t every_rank = 0x0101010101010101ULL;
+
+  int placement[2][PL_FEATURE_COUNT];
+  piece_placement_features(board, entry->white_files * every_rank,
+                           entry->black_files * every_rank, placement);
+
+  add_placement_columns(placement, sum,
+                        std::make_integer_sequence<int, PL_FEATURE_COUNT>{});
+
+  if constexpr (collect) {
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int f = 0; f < PL_FEATURE_COUNT; ++f) {
+        placement_out[colour][f] = placement[colour][f];
+      }
+    }
+  }
+
+  constexpr bool advance = collect || trace_build || passer_advance_live;
+  constexpr bool kings = collect || trace_build || passer_kings_live;
+
+  if constexpr (advance || kings) {
+    passer_family_side<WHITE, advance, kings, collect>(
+        board, entry->passers & board->bitboards[W_PAWN], sum, family_out);
+    passer_family_side<BLACK, advance, kings, collect>(
+        board, entry->passers & board->bitboards[B_PAWN], sum, family_out);
+  }
+}
+
+
+// The two passes with every count kept, for the accessors below. Never the
+// search's: this is the collecting instantiation, and it sees no table.
+static void evaluate_pawns(const board_t* board,
+                           score_t* score,
+                           int passed_out[2][5],
+                           int structure_out[2][PS_FEATURE_COUNT],
+                           int placement_out[2][PL_FEATURE_COUNT],
+                           bb_t passer_set_out[2],
+                           passer_family_t* family_out,
+                           structure_family_t* structure_family_out)
+{
+  pawn_entry_t entry;
+  pawn_pass<true>(board->bitboards[W_PAWN], board->bitboards[B_PAWN], &entry,
+                  passed_out, structure_out, passer_set_out, family_out,
+                  structure_family_out);
+
+  score_t sum = entry.score;
+  outside_pawn_terms<true>(board, &entry, &sum, placement_out, family_out);
   *score = sum;
 }
 
@@ -1617,16 +1681,15 @@ void passed_pawn_counts(const board_t* board, int out[2][5])
   passer_family_t family;
   structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, out, structure, placement, sets, &family,
-                       &structure_family);
+  evaluate_pawns(board, &score, out, structure, placement, sets, &family,
+                 &structure_family);
 }
 
 
 // Another of the same call, and thrown away the same way. All three accessors
-// go through the collecting instantiation, so the one evaluate_cheap() calls
-// keeps exactly one caller and clang keeps inlining it -- handing a hot-path
-// function a second caller is what cost 21 % once, see king_shelter_features()
-// below.
+// go through the collecting instantiation, so the one the evaluation runs keeps
+// exactly one caller -- handing a hot-path function a second caller is what
+// cost 21 % once, see king_shelter_features() below.
 void pawn_structure_counts(const board_t* board, int out[2][3])
 {
   score_t score = 0;
@@ -1636,8 +1699,8 @@ void pawn_structure_counts(const board_t* board, int out[2][3])
   passer_family_t family;
   structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, out, placement, sets, &family,
-                       &structure_family);
+  evaluate_pawns(board, &score, passed, out, placement, sets, &family,
+                 &structure_family);
 }
 
 
@@ -1654,8 +1717,8 @@ void piece_placement_counts(const board_t* board, int out[2][PL_FEATURE_COUNT])
   passer_family_t family;
   structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, out, sets, &family,
-                       &structure_family);
+  evaluate_pawns(board, &score, passed, structure, out, sets, &family,
+                 &structure_family);
 }
 
 
@@ -1671,8 +1734,8 @@ void passed_pawn_sets(const board_t* board, bb_t out[2])
   passer_family_t family;
   structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, placement, out,
-                       &family, &structure_family);
+  evaluate_pawns(board, &score, passed, structure, placement, out, &family,
+                 &structure_family);
 }
 
 
@@ -1686,8 +1749,8 @@ void passer_family_counts(const board_t* board, passer_family_t* out)
   bb_t sets[2];
   structure_family_t structure_family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, placement, sets, out,
-                       &structure_family);
+  evaluate_pawns(board, &score, passed, structure, placement, sets, out,
+                 &structure_family);
 }
 
 
@@ -1702,8 +1765,8 @@ void structure_family_counts(const board_t* board, structure_family_t* out)
   bb_t sets[2];
   passer_family_t family;
 
-  evaluate_pawns<true>(board, &score, passed, structure, placement, sets,
-                       &family, out);
+  evaluate_pawns(board, &score, passed, structure, placement, sets, &family,
+                 out);
 }
 
 
@@ -1839,7 +1902,12 @@ static void trace_accumulators(const board_t* board)
 // evaluate() would be invisible to every node the search actually evaluates.
 // The lazy margin is unaffected -- it bounds the difference between the two
 // stages, and this term is in the same stage on both sides of that difference.
-int evaluate_cheap(const board_t* board)
+//
+// `entry` is the pawn pass's, from a table or fresh: every form of the score
+// comes through here, which is what makes them one score (DEC-332 (6)). The
+// entry's sum and the outside terms' are the one integer pawn_pass() and
+// outside_pawn_terms() would add in any order, bounded by stage_one_half().
+static inline int cheap_score(const board_t* board, const pawn_entry_t* entry)
 {
   // Interpolate the two tables on how much material is left, so a term slides
   // from its middlegame value to its endgame one instead of jumping when some
@@ -1848,9 +1916,8 @@ int evaluate_cheap(const board_t* board)
   EVAL_TRACE_PHASE(phase);
   EVAL_TRACE_ACCUMULATORS(board);
 
-  score_t pawns = 0;
-  evaluate_pawns<false>(board, &pawns, nullptr, nullptr, nullptr, nullptr,
-                        nullptr, nullptr);
+  score_t pawns = entry->score;
+  outside_pawn_terms<false>(board, entry, &pawns, nullptr, nullptr);
 
   // Summed into the accumulated pair before the interpolation rather than
   // tapered on its own. One integer division instead of two, on a function that
@@ -1890,6 +1957,113 @@ int evaluate_cheap(const board_t* board)
   EVAL_TRACE(TERM_TEMPO, 0, (board->active_color == WHITE) ? 1 : -1);
 
   return ((board->active_color == WHITE) ? score : -score) + tempo;
+}
+
+
+// The pass at the board's pawns. A table's miss and every pure evaluation,
+// which is a miss into an entry nobody keeps, so the pass the tests and the
+// tools hold to account is the one the search's table is filled by.
+static void pawn_entry_fill(bb_t white_pawns,
+                            bb_t black_pawns,
+                            pawn_entry_t* entry)
+{
+  pawn_pass<false>(white_pawns, black_pawns, entry, nullptr, nullptr, nullptr,
+                   nullptr, nullptr);
+}
+
+
+int evaluate_cheap(const board_t* board)
+{
+  pawn_entry_t entry;
+  pawn_entry_fill(board->bitboards[W_PAWN], board->bitboards[B_PAWN], &entry);
+
+  return cheap_score(board, &entry);
+}
+
+
+#ifdef CHESSO_TUNE
+// S118's hit rate, counted over a real search and read at the process's end.
+// Tune build only, on only when CHESSO_PAWN_TABLE_CENSUS names a file, which
+// gets one line appended: `hits <n> misses <n>`. The binary a timing or an SPRT
+// measures compiles none of it. adocs/data/S118_hitrate.py drives it.
+namespace
+{
+struct pawn_table_census_t
+{
+  const char* path = std::getenv("CHESSO_PAWN_TABLE_CENSUS");
+  std::atomic<uint64_t> hits{0};
+  std::atomic<uint64_t> misses{0};
+
+  ~pawn_table_census_t()
+  {
+    if (path == nullptr) { return; }
+
+    std::ofstream out(path, std::ios::app);
+
+    if (out) { out << "hits " << hits << " misses " << misses << '\n'; }
+  }
+};
+
+pawn_table_census_t pawn_table_census;
+}  // namespace
+
+#define PAWN_TABLE_COUNT(field) \
+  pawn_table_census.field.fetch_add(1, std::memory_order_relaxed)
+#else
+#define PAWN_TABLE_COUNT(field) ((void)0)
+#endif
+
+
+#ifndef NDEBUG
+// A hit against a fresh pass, field by field. The verifier makes this true by
+// construction, and this is what says so of every hit a Debug search takes.
+static bool pawn_entry_is_fresh(const pawn_entry_t* entry)
+{
+  pawn_entry_t fresh;
+  pawn_entry_fill(entry->white_pawns, entry->black_pawns, &fresh);
+
+  return fresh.passers == entry->passers && fresh.score == entry->score &&
+         fresh.white_files == entry->white_files &&
+         fresh.black_files == entry->black_files;
+}
+#endif
+
+
+// The entry of the board's pawns, filled if the slot holds another structure.
+// DEC-332 (2): the key is the index and no more, and the verifier is the pass's
+// whole input, so what comes back is what the pass would compute. Unused in the
+// trace build, which never reads a table; clang says so unless told.
+[[maybe_unused]] static inline const pawn_entry_t* pawn_entry_of(
+    const board_t* board,
+    pawn_table_t* table)
+{
+  pawn_entry_t* entry =
+      &table->entries[board->pawn_hash & (PAWN_TABLE_ENTRIES - 1)];
+  const bb_t white_pawns = board->bitboards[W_PAWN];
+  const bb_t black_pawns = board->bitboards[B_PAWN];
+
+  if (entry->white_pawns != white_pawns || entry->black_pawns != black_pawns)
+      [[unlikely]] {
+    pawn_entry_fill(white_pawns, black_pawns, entry);
+    PAWN_TABLE_COUNT(misses);
+  } else {
+    assert(pawn_entry_is_fresh(entry));
+    PAWN_TABLE_COUNT(hits);
+  }
+
+  return entry;
+}
+
+
+// evaluate_cheap() through a table, except in the trace build: a hit records no
+// coefficient, and that build's every coefficient is the point (DEC-332 (4)).
+static inline int cheap_from_table(const board_t* board, pawn_table_t* table)
+{
+  if constexpr (trace_build) {
+    return evaluate_cheap(board);
+  } else {
+    return cheap_score(board, pawn_entry_of(board, table));
+  }
 }
 
 
@@ -2380,10 +2554,17 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
 }
 
 
-int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
-{
-  const int cheap = evaluate_cheap(board);
+int evaluate(const board_t* board, pawn_table_t* table)
+{ return cheap_from_table(board, table) + evaluate_expensive(board); }
 
+
+// The lazy shortcut, on a cheap score from either form.
+static inline int lazy_from_cheap(const board_t* board,
+                                  int cheap,
+                                  int alpha,
+                                  int beta,
+                                  bool* exact)
+{
   // Set on both shortcut paths before either returns, so a caller reading it
   // after a bound sees false rather than whatever it initialised.
   if (exact != nullptr) { *exact = false; }
@@ -2402,6 +2583,21 @@ int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
   // added, so the number kept here is the static evaluation and not an
   // approximation of it.
   return cheap + evaluate_expensive(board);
+}
+
+
+int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
+{ return lazy_from_cheap(board, evaluate_cheap(board), alpha, beta, exact); }
+
+
+int evaluate_lazy(const board_t* board,
+                  int alpha,
+                  int beta,
+                  bool* exact,
+                  pawn_table_t* table)
+{
+  return lazy_from_cheap(board, cheap_from_table(board, table), alpha, beta,
+                         exact);
 }
 
 

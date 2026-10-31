@@ -2234,7 +2234,7 @@ bool load_FEN(const std::string& FEN, game_t* game, std::string* reason)
    * was run under.
    *
    * **A pawn on rank 1 or rank 8 indexes the passed-pawn table out of bounds.**
-   * src/evaluation.cpp evaluate_pawns() computes the bucket as `6 - rank` for
+   * src/evaluation.cpp pawn_pass() computes the bucket as `6 - rank` for
    * White and `rank - 1` for Black over a five-entry table (six until S134,
    * which masks each side's own seventh out before the bucket is taken), and
    * what keeps it in range is exactly that a pawn cannot stand on either back

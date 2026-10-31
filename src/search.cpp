@@ -1194,7 +1194,8 @@ int quiescence(int alpha,
   const int static_eval =
       static_eval_is_exact
           ? tt_entry->eval
-          : evaluate_lazy(&game->board, alpha, beta, &static_eval_is_exact);
+          : evaluate_lazy(&game->board, alpha, beta, &static_eval_is_exact,
+                          &state->pawn_table);
 
   // Only a number the shortcut did not replace with a bound is worth keeping:
   // a bound holds on one side of one window and this entry will be read from
@@ -1816,10 +1817,11 @@ static int negamax_at(int alpha0,
   // the correction's own update, and nowhere else, so the entry always holds
   // what evaluate() said and a read-back is corrected once, here, and never
   // twice.
-  const int raw_eval =
-      is_in_check
-          ? TT_EVAL_NONE
-          : ((tt_eval != TT_EVAL_NONE) ? tt_eval : evaluate(&game->board));
+  const int raw_eval = is_in_check
+                           ? TT_EVAL_NONE
+                           : ((tt_eval != TT_EVAL_NONE)
+                                  ? tt_eval
+                                  : evaluate(&game->board, &state->pawn_table));
 
   // The static evaluation every consumer below reads: the raw score plus what
   // the pawn correction table has learned for this side to move and pawn

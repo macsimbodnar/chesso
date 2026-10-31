@@ -322,7 +322,7 @@ TEST_SUITE(
 
   TEST_CASE_FIXTURE(fen_fixture_t, "a pawn on either end of rank 1 is refused")
   {
-    // The mirror, because evaluate_pawns() computes the bucket separately per
+    // The mirror, because pawn_pass() computes the bucket separately per
     // colour and the sanitizer reported both sites. `>= 56` is the comparison
     // here and `>= 57` is its off-by-one, which leaks a1.
     const char* cases[] = {

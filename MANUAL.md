@@ -301,8 +301,8 @@ position with an empty move history, clears the transposition table and the
 pawn correction table, drops the proved mate line, and re-opens the book for a
 new game** — `reset_for_new_game` in `src/chesso.cpp`. Nothing set by
 `setoption` is touched: the `Hash` size, `OwnBook`, `Best Book Move` and `Book
-File` survive it. The killer, history and counter-move tables are per `go` and
-have nothing to reset; the pawn correction table (S099) is per game, learns
+File` survive it. The killer, history and counter-move tables and the pawn table
+(S118) are per `go` and have nothing to reset; the pawn correction table (S099) is per game, learns
 across every `go` until the next `ucinewgame`, and is also cleared by `test`
 wherever `test` clears the transposition table, and by nothing else -- not by
 `clean-tt`, not by `position`. `bench` runs the same reset between its

@@ -1099,7 +1099,7 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   // If no move found in the book search by engine
   // NOTE: stop_search_signal is cleared by the caller before the timer is
   // armed. Clearing it here would race with the timer and with "stop".
-  // Heap-owned, not a local: search_state_t is 1.2 MiB and this runs on
+  // Heap-owned, not a local: search_state_t is 1.3 MiB and this runs on
   // search_thread, where a macOS std::thread's default 512 KiB stack would not
   // hold it. Value-initialised exactly as `= {}` was. S222.
   auto state_owner = std::make_unique<search_state_t>();

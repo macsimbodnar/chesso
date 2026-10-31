@@ -116,6 +116,116 @@ static search_t search_fen_with(const std::string& fen,
 }
 
 
+// S118, DEC-332. What the pawn table holds cannot move a search: its verifier
+// is the whole input of what it stores, so a slot that holds anything else is a
+// miss and only a miss. Every slot here starts out claiming a structure no
+// position has, with a score no pass produces, against a table that starts
+// empty; a verifier that let any of them answer moves the tree. The other half
+// is that the table was read at all, or the two searches agree for nothing.
+//
+// Mutations: tools/mutants/S118_pawn_cache.py.
+TEST_SUITE("search: pawn table")
+{
+  TEST_CASE_FIXTURE(
+      search_fixture_t,
+      "a search's tree does not depend on what its pawn table holds")
+  {
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    REQUIRE(load_FEN(KIWIPETE_POS, &game));
+
+    const auto run = [&](search_state_t* state) {
+      tt_reset(&tt);
+      tt_new_search(&tt);
+      state->tt = &tt;
+      state->stop = &never_stop;
+      return search(7, &game, state);
+    };
+
+    auto empty = std::make_unique<search_state_t>();
+    auto stale = std::make_unique<search_state_t>();
+
+    for (pawn_entry_t& entry : stale->pawn_table.entries) {
+      entry.white_pawns = ~bb_t{0};
+      entry.black_pawns = ~bb_t{0};
+      entry.passers = ~bb_t{0};
+      entry.score = make_score(999, -999);
+      entry.white_files = 0xff;
+      entry.black_files = 0xff;
+    }
+
+    const search_t from_empty = run(empty.get());
+    const search_t from_stale = run(stale.get());
+
+    REQUIRE(from_empty.explored_nodes > 0);
+    CHECK_EQ(from_stale.explored_nodes, from_empty.explored_nodes);
+    CHECK_EQ(from_stale.best_move, from_empty.best_move);
+    CHECK_EQ(from_stale.score, from_empty.score);
+
+    size_t written = 0;
+    for (const pawn_entry_t& entry : stale->pawn_table.entries) {
+      if (entry.white_pawns != ~bb_t{0}) { written++; }
+    }
+
+    REQUIRE(written > 0);
+  }
+
+  // Each of the search's two sites reads the table, one at a time, because a
+  // site that calls the pure form scores the same and nothing else notices.
+  // Nothing but the root can have written the root's pawns into its slot: no
+  // capture exists here at all for the first, and for the second every move
+  // the root has moves a pawn, so no child reads that structure.
+  TEST_CASE_FIXTURE(search_fixture_t, "a quiescence node reads the pawn table")
+  {
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    REQUIRE(load_FEN("4k3/8/8/8/8/P7/8/4K3 w - - 0 1", &game));
+
+    const bb_t white_pawns = game.board.bitboards[W_PAWN];
+    auto state = std::make_unique<search_state_t>();
+    state->tt = &tt;
+    state->stop = &never_stop;
+
+    quiescence(-SEARCH_SCORE_INF, SEARCH_SCORE_INF, 0, 0, &game, state.get());
+
+    CHECK_EQ(state->pawn_table
+                 .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)]
+                 .white_pawns,
+             white_pawns);
+  }
+
+  TEST_CASE_FIXTURE(search_fixture_t, "a main search node reads the pawn table")
+  {
+    static std::atomic_bool never_stop = false;
+    never_stop = false;
+
+    REQUIRE(load_FEN("1r2k3/8/8/8/8/8/P7/K7 w - - 0 1", &game));
+
+    move_t moves[MAX_MOVES];
+    const size_t count = generate_moves(game_tables(), &game.board, moves);
+
+    REQUIRE(count > 0);
+    for (size_t i = 0; i < count; ++i) {
+      REQUIRE_EQ(MOVE_PIECE(moves[i]), W_PAWN);
+    }
+
+    const bb_t white_pawns = game.board.bitboards[W_PAWN];
+    auto state = std::make_unique<search_state_t>();
+    state->tt = &tt;
+    state->stop = &never_stop;
+
+    search(1, &game, state.get());
+
+    CHECK_EQ(state->pawn_table
+                 .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)]
+                 .white_pawns,
+             white_pawns);
+  }
+}
+
+
 TEST_SUITE("search: mate detection")
 {
   TEST_CASE_FIXTURE(search_fixture_t, "mate in one")
@@ -412,7 +522,7 @@ TEST_SUITE("search: budgets")
     REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
   }
 
-  // Heap-owned and fresh per search: the struct is 1.2 MiB (S222), and a case
+  // Heap-owned and fresh per search: the struct is 1.3 MiB (S222), and a case
   // holding several on its own frame comes close to the 8 MiB stack.
   static std::unique_ptr<search_state_t> budget_state(uint64_t node_limit)
   {
@@ -15177,7 +15287,7 @@ TEST_SUITE("search: pawn correction history")
   TEST_CASE_FIXTURE(correction_fixture_t,
                     "the search teaches the table exactly where the gate does")
   {
-    // Once: the state is 1.2 MiB and zeroing it for every drive would cost
+    // Once: the state is 1.3 MiB and zeroing it for every drive would cost
     // more than the drives. Nothing a depth-one node reads from it decides
     // what this case compares -- the case reads the node's outputs, whatever
     // the ordering tables made of them.

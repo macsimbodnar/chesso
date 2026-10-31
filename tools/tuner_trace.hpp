@@ -139,8 +139,8 @@ inline term_layout_t term_layout(term_t term)
       return {PIECE_PLACEMENT_COUNT, PL_MG_BASE, PL_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_TEMPO:
       return {TEMPO_COUNT, TEMPO_MG_BASE, TEMPO_EG_BASE, SITE_TEMPO};
-    // S123's family is summed into the pawn terms' pair in evaluate_pawns(),
-    // so it shares their one taper and adds no truncating division.
+    // S123's family is summed into the pawn terms' pair in stage one, so it
+    // shares their one taper and adds no truncating division.
     case eval_trace::TERM_PASSED_FREE:
       return {PASSED_FREE_COUNT, PF_MG_BASE, PF_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_PASSED_SAFE:
@@ -151,8 +151,8 @@ inline term_layout_t term_layout(term_t term)
       return {PASSED_KING_COUNT, PKE_MG_BASE, PKE_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_CANDIDATE_PASSER:
       return {CANDIDATE_PASSER_COUNT, CP_MG_BASE, CP_EG_BASE, SITE_POSITIONAL};
-    // S125's family, summed into the same pair in evaluate_pawns(), so the
-    // same one taper.
+    // S125's family, summed into the same pair in stage one, so the same one
+    // taper.
     case eval_trace::TERM_ISOLATED_BACKWARD:
       return {ISOLATED_BACKWARD_COUNT, IB_MG_BASE, IB_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_ISOLATED_FILE:

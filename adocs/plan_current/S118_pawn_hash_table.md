@@ -1,13 +1,46 @@
 id:         S118
 goal:       the pawn terms and the king shelter are computed once per pawn structure and cached, instead of at every evaluation call
 accepts:    an SPRT verdict if the tree changes and a node-identity check if it does not -- state which before the run; the key is a pawn-only zobrist maintained incrementally in add_piece, remove_piece and move_piece (INV-4), never recomputed in evaluate(); the hit rate is measured over a real search and recorded, not assumed; the table stores the mg/eg pawn score, the passed-pawn bitboard and **both kings' shelter and storm scores**, because the shelter is the expensive half of what this saves; a collision returns a recomputation rather than a wrong score, and a test forces one
-touches:    src/evaluation.cpp, src/data_structures.hpp, src/bitboard.cpp piece primitives
-excludes:   new pawn terms, which are S125; the passed pawn suite, which is S123
-decisions:  DEC-071, DEC-087
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/data_structures.hpp, src/search.cpp,
+            tests/test_evaluation.cpp, tests/test_eval_trace.cpp, tests/test_search.cpp,
+            tools/mutants/S118_pawn_cache.py, adocs/data/S118_inv6.txt; a stale comment
+            each in src/chesso.cpp, tools/datagen.cpp, tools/tuner_trace.hpp,
+            tests/test_engine.cpp, tests/test_audit_fen_semantics.cpp, and a symbol
+            in one comment of src/bitboard.cpp: no code there
+excludes:   new pawn terms, which are S125; the passed pawn suite, which is S123; storm, which is S122 (DEC-332 (5))
+decisions:  DEC-071, DEC-087, DEC-046, DEC-266, DEC-332
 closes:
 blocks:
 paused_by:
+author:     Opus 5.5 subagent, coordinated
 done:
+
+## Corrected 2026-10-31, DEC-332: what the design pass found stale here
+
+Read this file below this section with these corrections; DEC-332 holds the
+rulings and the measurements behind each.
+
+- **The accepts' "storm".** Nothing computes one anywhere in `src/`, so there is
+  nothing to cache: the table holds both kings' **shelter** scores, and storm is
+  S122's to add.
+- **The key is pawn-only**, as the accepts says, and section 2's "a pawn-and-king
+  key" is wrong: at 2^12 entries a pawn-and-king key hits 80.9, 86.7 and 80.9 %
+  against 89.7, 96.4 and 94.1 % (`bench 16`, S020's positions, 20 replayed games).
+  A king move touches the shelter slot's tag, not the entry.
+- **The key's maintenance is done.** `board_t::pawn_hash` landed with S099 and was
+  relanded by S286; no primitive is touched here, `src/bitboard.cpp` leaves
+  `touches:`, and `src/search.cpp` joins it. The key's wording is in INV-2, and
+  INV-4 holds the accumulators; this file's citations of INV-4 for it are stale.
+- **"The expensive half."** The shelter is 1.63 % of instructions over `bench`
+  against about 9 % for what reads pawns alone, about a sixth of it, and the lazy
+  shortcut skips it on 29 to 39 % of calls.
+- **"One move in eight."** Over the same workloads the pawns differ from the
+  previous `evaluate()` call's on 43 to 55 % of calls.
+- **"95 to 99 %."** Here, at a few K entries: 89.7 to 96.4 %.
+- **"Four bitboard fills plus per-pawn work."** S123 and S125 have grown that to
+  12.69 % of instructions, 554 per call.
+- **DEC-046 is the same cache, built and discarded**, and this file did not cite
+  it. DEC-332 (1) re-opens it.
 
 ## Corrected 2026-10-31, S125's close: what a pawn key can hold, and the baseline
 
@@ -237,3 +270,80 @@ S125's measured per-call cost, and that is what the verdict is read against.
 - - https://www.chessprogramming.org/Pawn_Hash_Table -- "a few K" entries for a
   hit rate "above 95% or even 99%"; **no speed figure and no Elo figure**.
   Fetched 2026-09-13.
+
+## 2026-10-31: phase B, the cache
+
+On branch `s118`, not on `achesso`: DEC-332 (9) has the timing come first and (8)
+decides. **From the description (DEC-221):** the technique is CPW *Pawn Hash Table*'s;
+no engine's source or table was read, and the size starts from that page's "a few K".
+The step's verdict type, stated before any run (DEC-332 (6)): bit-identical, INV-6,
+no SPRT.
+
+**What landed.** `evaluate_pawns()` split in two. `pawn_pass()` takes the two pawn
+bitboards as its only inputs, so the signature is what says an entry keyed on them is
+exact, and fills a `pawn_entry_t`; `outside_pawn_terms()` reads an entry and adds piece
+placement and S123's A and B at every evaluation. `evaluate_pawns()` stays as the
+collecting form the accessors call. `cheap_score()` is stage one over an entry, and
+every form comes through it: the pure `evaluate_cheap()` fills an entry nobody keeps,
+so the pass the tests and the tools hold to account is the one that fills the table.
+`pawn_entry_of()` probes: slot from `board_t::pawn_hash`, verifier both bitboards. The
+table is a value member of `search_state_t`, last, 128 KiB at `PAWN_TABLE_BITS` 12,
+taking the struct from 1.21 to 1.34 MiB. `evaluate(board, table)` and
+`evaluate_lazy(..., table)` are the only forms that read it, from `negamax_at`'s
+`raw_eval` and from `quiescence`; `search.cpp`'s `MAX_PLY` return stays pure, being
+rare. In the trace build both forms are the pure ones. Tune build: a census of hits and
+misses, `CHESSO_PAWN_TABLE_CENSUS`. Debug: every hit asserted against a fresh pass.
+
+**Observed red first.** Against a stub of the two forms that left the table untouched:
+7 of 8 cases of "evaluation: pawn table" and "a search's tree does not depend on what
+its pawn table holds", each at a read of the slot. The eighth, "an empty entry is the
+pawnless board's own", and the trace case pass against that stub by construction, and
+go red under PT08 and PT12. The precondition `outside_counts_differ` caught one pair
+written wrong while the guards were being built: e8 and a8 are the same distance from
+a4. In Debug, with one wrong store planted after the fill (`entry->score += 1`): `bench
+4` aborts on the `pawn_entry_is_fresh` assertion, 134.
+
+**Guards.** `tests/test_evaluation.cpp`, suite "evaluation: pawn table": the forced
+collision (the same 64-bit key planted on another structure, each pair sharing one
+colour's pawns, both orders); every test position twice through one table; "a hit
+answers from the entry" (Release only: a planted score, which a table that recomputed
+would never show); nine pairs of one structure with other pieces, in both orders and
+both colours, each checked to differ in a count outside the entry; the mirror through
+one table, two passes; both sides to move on one entry; the pawnless zero entry; the
+lazy form's three paths. `tests/test_search.cpp`, suite "search: pawn table": a search
+from a table of stale entries against a search from an empty one, nodes, move and
+score; each of the two call sites reading the table, on a position where nothing else
+could have written the slot. `tests/test_eval_trace.cpp`: the search's form records
+what the pure form records, twice, and leaves the table empty.
+
+**Mutants** (`tools/mutants/S118_pawn_cache.py`, `tools/mutation_check.py`, on a private
+clone holding the staged tree as one commit, the tool refusing anything but a clean
+linked worktree): **15 of 15 killed**, in 2490 s. DEC-141's clause (2) does not bind, no
+new pruning rule; DEC-332 runs them anyway. PT03, the verifier cut to a stored piece of
+the key, is the one only the planted collision sees among the suite's guards, and it moves
+the bench besides. PT05,
+PT06, PT12, PT14 and PT15 leave the bench where it was, and one case each catches them.
+PT08 goes red on all nine pairs of the same-pawns case in all four orders, read from its
+log, so each pair bites on its own.
+
+**INV-6**: `adocs/data/S118_inv6.txt`, both builds, identical to `85b7847`. Bench 5707449:
+`No functional change`.
+
+**Instructions, a count and no timing** (`build/tools/perf_counters`, its cycle and wall
+fields not read): `bench 16` 26452862216 -> 24275319795, **-8.23 %**; S020's positions at
+depth 11 84510982917 -> 77042207471, **-8.84 %**. The design pass's prototype read -8.42 %
+and -8.87 %; it skipped the outside terms' family calls when the entry held no passer and
+this form does not, the likely reason for the 0.19 and 0.03 points, inferred and not
+isolated. Nothing here says what the cycles will read: DEC-046's cache hit 89.8 % and read
+zero. The tune build's census agrees with the design pass's simulated table: `bench`,
+2963238 probes, 89.703 %.
+
+**Gates**, on the staged tree: both builds 0 warnings; `ctest -L fast` 50 of 50 in `build/`
+and `build-tune/`, `CLANG_FORMAT_MAJOR=22`; `./clang-format.sh --check` clean; the S297 clang
+pair, `STAGES=clang tools/gate_extra.sh`, 50 of 50 twice, 307 s, after it found
+`pawn_entry_of` unneeded in the trace build (`-Wunneeded-internal-declaration`, a discarded
+`if constexpr` being no use to clang), now `[[maybe_unused]]`; `tools/plan_prose_check.py`,
+one mode per call, each exit 0, `--citations` and `--touches` 0 flagged over 17 files.
+`MANUAL.md` checked: its new-game paragraph gains the table among what is per `go`.
+`DEV_MANUAL.md` is checked with the scripts it will name. `gate_extra`'s other stages and the
+Debug self-play bind by `search.cpp` (DEC-141) and are taken on the final tree.

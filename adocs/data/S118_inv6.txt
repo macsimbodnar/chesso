@@ -1,0 +1,23 @@
+# S118 phase B: INV-6 for the pawn table, DEC-332 (6). Parent: 85b7847, built
+# Release native (build/) and CHESSO_TUNE (build-tune/) in the worktree ../chesso-s118
+# before any S118 source was written, the binaries kept; each commit: that worktree,
+# the same two configurations, rebuilt from the sources staged for it. 2026-10-31,
+# i7-8700K, g++ 13.3. Nothing was timed: this proves the trees are the same, not
+# what they cost (adocs/data/S118_cost.sh does that).
+#
+# Every stream is the binary's output with `time`, `nps` and `hashfull` stripped
+# (S135_cost.sh's sed), and tools/search_bench.py's position, nodes and best move;
+# compared byte for byte, and every row of each stream reads the parent's md5:
+#
+#   bench (121 lines, total 5707449 nodes)    4c4764094a88a1b4a70bbe4904ddebc9
+#   bench 12 (total 1861982 nodes)            7173c300b4948a4e027f2e78867259a7
+#   search_bench.py depth 9                   18a3d90b088629075772b266bfac9a9a
+#   search_bench.py depth 12                  e508a99050e1b634599702347058a39e
+#
+#   parent  build/  build-tune/  all four as above
+#   cache   build/  build-tune/  all four as above
+#
+# Also node-identical, and not stream-compared: bench 16, 11505888 nodes, and S020's
+# 300 positions at depth 11, 38364944 (adocs/data/S135_cost.py workload), against
+# the parent. And in the Debug build, where every hit is asserted against a fresh
+# pass: bench 11, 1218142 nodes, 0 `Assertion`.
