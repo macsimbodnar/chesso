@@ -18,12 +18,15 @@ all, and the terms that must stay out of it.
   PT06  the slot from the whole key          the cases' own slot reads: the entry
                                              right, every king move a miss, and
                                              since the slot a stale shelter (below)
-  PT07  the mask off by one                  the same: two slots in the table
+  PT07  the mask off by one                  the same: two slots in the table, and
+                                             the engine aborts, its bench unread
+                                             (below)
   PT08  the terms outside the entry stored   "the same pawns with other pieces
         in it on a miss                      read their own terms"
   PT09  the file bytes swapped               the pure form shares the entry, so
-                                             the counts' own cases and the mirror
-  PT10  the passers one colour's             the same
+                                             the counts' own cases; no mirror case
+                                             sees it, the swap being symmetric
+  PT10  the passers one colour's             the counts' own cases and the mirror
   PT11  a rank missing from the file sets    the same, the rook file counts
   PT12  the trace build reads the table      test_eval_trace "the search's form
                                              records what the pure form records,
@@ -65,6 +68,11 @@ pawn_entry_of() and not the one pawn_shelter_of() writes for itself, so a filled
 entry empties a slot stage two does not read, and the slot stage two does read
 keeps another structure's tags: a wrong shelter for the same kings, PT16's defect
 by another road. Read from the code, not isolated.
+
+PT07 is the one row whose bench reads `n/a` in the kill table: no bench line, three
+cases and test_datagen_exit crashing on SIGABRT, 10 of 50. So its `same` in the run
+this file's mutants were first taken in was an unread bench (S305), and nothing here
+says whether it moves.
 
 The list is data: `m` is bound by tools/mutation_check.py, which execs this
 file. `old` must occur exactly once in `file`. `expected` is "killed" unless a

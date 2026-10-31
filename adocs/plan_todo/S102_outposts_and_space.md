@@ -1,7 +1,7 @@
 id:         S102
 goal:       outpost and space terms in the evaluation, fitted like every other constant
-accepts:    one SPRT verdict for the family -- outposts and space, each screened first (DEC-259), and a family H0 bisected into the two; each fitted with every other constant frozen, held-out error reported before and after; both share the pawn-derived bitboard fills the three S027 pawn terms already build, and the step states which fill each reuses rather than adding a pass; INV-5 holds, asserted by the mirror case in tests/test_evaluation.cpp; the taper keeps the divisions HEAD has (S055 read H0) and the model guard's bound still holds; tools/eval_model.hpp gains each feature and tools/tuner_groups.hpp a group per term with the partition properties intact; the fast suite green
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp
+accepts:    one SPRT verdict for the family -- outposts and space, each screened first (DEC-259), and a family H0 bisected into the two; each fitted with every other constant frozen, held-out error reported before and after; each reads a pawn-derived fill from `pawn_entry_t` or builds it itself at every evaluation, and the step states which and prices it, adding no second pawn pass (amended 2026-11-01 on S118's landing, DEC-332 (3)); INV-5 holds, asserted by the mirror case in tests/test_evaluation.cpp; the taper keeps the divisions HEAD has (S055 read H0) and the model guard's bound still holds; tools/eval_model.hpp gains each feature and tools/tuner_groups.hpp a group per term with the partition properties intact; the fast suite green
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp, src/data_structures.hpp
 excludes:   threat terms, which are S101; mobility, which exists; any term that needs a pass over the board that is not already being made
 decisions:  DEC-071, DEC-259
 closes:
@@ -114,10 +114,7 @@ measurement risk this step carries" above now says that.
   not published and would not be seeds if they were (DEC-105). The step states
   which square set it counts and why, and any departure from the page's set.
 
-Both terms reuse the pawn-derived fills `src/evaluation.cpp` `evaluate_pawns`
-already builds -- the accepts requires the step to name which fill each one
-reuses rather than adding a pass, and after S121 the enemy pawn-attack span is
-the mobility area's input as well.
+Both terms reuse the pawn-derived fills `src/evaluation.cpp` `pawn_pass` already builds -- the accepts requires the step to name which fill each one reuses rather than adding a pass, and after S121 the enemy pawn-attack span is the mobility area's input as well. **Since S118 those fills are that function's locals, over the two pawn bitboards alone, on a table miss only**: a term that reads pieces reads what `pawn_entry_t` stores, or builds the fill itself at every evaluation, and the entry is 32 bytes with two spare (DEC-332 (3)). The step says which and prices it.
 
 ### 3. Implementation sketch
 

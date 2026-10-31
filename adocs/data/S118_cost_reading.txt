@@ -1,0 +1,166 @@
+# S118's cost reading: CACHE_SHA=2f7b08a SHELTER_SHA=654ab89 adocs/data/S118_cost.sh run, 2026-10-31 21:55:22 to
+# 23:42:50, 1 h 47 m, S118-COST-DONE, the coordinator's run in worktree ../chesso-s118 (console
+# .tuning/s118_cost.console, tree .tuning/s118/cost/, not committed). DEC-332 (6): bit-identical, so this timing is
+# the verdict and no SPRT follows it. The rules were written in S118_cost.sh's header before any of it ran.
+#
+# COMMITS: base 85b7847, cache 2f7b08a, shelter 654ab89, on branch s118. The landing's shas differ: the step file's
+# close maps them. All Release, -march=native, padded (CHESSO_BRANCH_PAD, DEC-266 (1)), g++ 13.3.0, built from clean
+# worktrees: `git diff --numstat` in tree-s8, s10, s14, s16 and s18 reads one line added and one removed in
+# src/data_structures.hpp, and nothing in tree-base, s12 and shelter (read back at the close).
+#
+# THE MACHINE: i7-8700K, 6 cores, 12 threads; nothing else run (mut_pt01_13 ended 21:54; the close's builds ended
+# 23:44). Governor powersave, recorded and not set (DEC-195), and S268's and S269's readings were under it too. Load
+# 1.12 before the pairs and 1.01 after. `journalctl -k` over 21:55 to 23:43: no entries, the last before it 20:24:51,
+# a USB disconnect. The whole journal holds 12 lines in the window, none at warning: cron.hourly at 22:17 and 23:17,
+# fwupd-refresh at 22:14 and 23:23, each under a second.
+#
+# CHECKED BEFORE THIS FILE WAS WRITTEN, 2026-10-31:
+#   `S118_cost.py read` re-run on .tuning/s118/cost/pairs: byte-identical to reading.txt, sha256 a18b4b904e4afd387a1ab862de5f9dcf10bfe48acdba35f7d5d8404364ba8da0.
+#   aa, s10, s12, s14, total and slot recomputed from the raw .cnt and .json with no project code: every figure agrees.
+#   576 of 576 counter files read `scaled 0`; bench 16 reads 11505888 nodes in all 288 runs, pos11 38364944 in all
+#   288; pairs alternate, base first in pair 1 and cand first in pair 2 (read from the files' times, aa).
+#   INV-6: `diff -r` of each binary's four streams against base's is clean, and base's md5s are the four in
+#   adocs/data/S118_inv6.txt. The A/A is byte copies: `cmp` bin/base bin/copy.
+#
+# THE FLOORS, DEC-266 (3), the A/A's largest CI bound per workload and instrument: bench16 cycles +0.603, pos11 cycles
+# +0.087, wall -0.255. The A/A's bench16 CI, +0.057 .. +0.603, excludes zero between byte copies: its +0.603 is the
+# floor, as the decision reads it, and the bench16 floor is about twice S125's session's 0.315. Its pos11 floor is under
+# a quarter of S125's 0.380.
+#
+# DEC-332 (7), by hand from the cycles below: each row's excess over that workload's best (bench16 s14 -6.544, pos11
+# s12 -6.674), against floors 0.603 and 0.087. Point estimates, as the script's docstring pre-registered.
+#   row   bench16   pos11
+#   s8    0.740 out 0.363 out
+#   s10   0.227     0.152 out
+#   s12   0.284     0.000     within both, and the smallest such: chosen
+#   s14   0.000     0.067     within both
+#   s16   0.220     0.526 out
+# (10) did not bind. s10 is out by 0.065 points on one workload: at S125's session's floor it would have been within,
+# and it would have been chosen. The session's floor is the rule (DEC-266), so s12 stands, and that is not a claim that
+# s12 is faster than s10.
+#
+# DEC-332 (8), s12: cycles CI -6.381 .. -6.139 and -6.792 .. -6.555, wall -6.653 .. -6.349, each wholly past its floor;
+# instructions -8.232 and -8.838, the same way. It ships. DEC-266 (4)'s perturbations are not owed.
+#
+# WHAT LANDS IS `total`, s12 and the slot, which clears the same bar: cycles -6.287 and -6.542, wall -6.367,
+# instructions -9.009 and -9.633.
+#
+# DEC-332 (5), slot: no row is wholly past a floor as a loss (lower bounds -0.059, +0.025, +0.027 against 0.603, 0.087,
+# 0.255), so it reads zero and stays, S122 being the reason. Its cycles and wall point the other way from its
+# instructions, -0.85 % and -0.87 %, and pos11's and wall's CIs exclude zero. That is inside the floor and is recorded.
+#
+# s18 IS INFORMATIVE, NEVER A CANDIDATE: instructions -8.918 on pos11, the second largest fall of the sizes, and cycles
+# -4.353 against s12's -6.674. The gap between the two is memory by inference, not isolated. 8 MiB is inside this
+# machine's 12 MiB last-level cache; the published failure in the step file is a table past it.
+#
+# `bench_eval` is not read and is not the bar (DEC-332): it calls the pure form, which has no table.
+#
+# The console, trimmed: its first three lines (the commits' check) and last two (the worktrees' note and the marker) are
+# dropped, and the code check's function-by-function listing, which the step file's "resumed" tabulates. Nothing else.
+
+S118 cost
+rows      aa s8 s10 s12 s14 s16 s18 total slot
+started   2026-10-31T21:55:22+01:00
+base      85b7847648398f63aab3e1ec7d3674edc2dcd5fc
+cache     2f7b08a9c9b73a8e1b568cca646925c9339da493
+shelter   654ab89147f9955e34139a3520b5a69f36c7317f
+loadavg   0.61 1.04 1.05 1/1041 485833
+governor  powersave
+base b607a9da8886d5be 85b7847648398f63aab3e1ec7d3674edc2dcd5fc 12
+s8 d5f0f5770e7c3107 2f7b08a9c9b73a8e1b568cca646925c9339da493 8
+s10 c5089e4e0091c101 2f7b08a9c9b73a8e1b568cca646925c9339da493 10
+s12 ab90b4d5fde4d9c9 2f7b08a9c9b73a8e1b568cca646925c9339da493 12
+s14 91500bb7d7904185 2f7b08a9c9b73a8e1b568cca646925c9339da493 14
+s16 bc357834ec1b3a78 2f7b08a9c9b73a8e1b568cca646925c9339da493 16
+s18 2737bac6b2cf7c6c 2f7b08a9c9b73a8e1b568cca646925c9339da493 18
+shelter efde489cd2c3d941 654ab89147f9955e34139a3520b5a69f36c7317f 12
+INV-6: bench 5707449 nodes, every binary identical
+code base     .text f39dd1f34031495f
+code s10      .text 6fc3489d7ff1da89
+code s12      .text f2f485a72733e5c7
+code s14      .text 6aed40d5ae4dc7b1
+code s16      .text e61cbb8785c446ba
+code s18      .text 4d648b7e5b6aa15f
+code s8       .text be033abeacaa5a10
+code shelter  .text 579be3799b14cdc9
+code: 8 distinct .text sections
+loadavg before pairs: 1.12 1.13 1.08 1/1047 486387
+aa: 16 pairs
+s8: 16 pairs
+s10: 16 pairs
+s12: 16 pairs
+s14: 16 pairs
+s16: 16 pairs
+s18: 16 pairs
+total: 16 pairs
+slot: 16 pairs
+loadavg after pairs: 1.01 1.01 1.00 1/1033 663915
+finished  2026-10-31T23:42:50+01:00
+
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       +0.330 %  CI +0.057 .. +0.603 %
+  pos11   instructions +0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.017 %  CI -0.052 .. +0.087 %
+  pos11   wall         -0.061 %  CI -0.255 .. +0.133 %  (cand time over base, + is slower)
+s8: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -7.667 %  CI -7.667 .. -7.667 %
+  bench16 cycles       -5.804 %  CI -5.916 .. -5.692 %
+  pos11   instructions -8.476 %  CI -8.476 .. -8.476 %
+  pos11   cycles       -6.311 %  CI -6.378 .. -6.244 %
+  pos11   wall         -6.195 %  CI -6.343 .. -6.047 %  (cand time over base, + is slower)
+s10: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -7.967 %  CI -7.967 .. -7.967 %
+  bench16 cycles       -6.317 %  CI -6.510 .. -6.124 %
+  pos11   instructions -8.699 %  CI -8.699 .. -8.699 %
+  pos11   cycles       -6.522 %  CI -6.619 .. -6.424 %
+  pos11   wall         -6.385 %  CI -6.534 .. -6.235 %  (cand time over base, + is slower)
+s12: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -8.232 %  CI -8.232 .. -8.232 %
+  bench16 cycles       -6.260 %  CI -6.381 .. -6.139 %
+  pos11   instructions -8.838 %  CI -8.838 .. -8.838 %
+  pos11   cycles       -6.674 %  CI -6.792 .. -6.555 %
+  pos11   wall         -6.501 %  CI -6.653 .. -6.349 %  (cand time over base, + is slower)
+s14: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -8.470 %  CI -8.470 .. -8.470 %
+  bench16 cycles       -6.544 %  CI -6.651 .. -6.438 %
+  pos11   instructions -8.893 %  CI -8.893 .. -8.893 %
+  pos11   cycles       -6.607 %  CI -6.664 .. -6.549 %
+  pos11   wall         -6.468 %  CI -6.625 .. -6.309 %  (cand time over base, + is slower)
+s16: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -8.675 %  CI -8.675 .. -8.675 %
+  bench16 cycles       -6.324 %  CI -6.478 .. -6.171 %
+  pos11   instructions -8.937 %  CI -8.937 .. -8.937 %
+  pos11   cycles       -6.148 %  CI -6.225 .. -6.072 %
+  pos11   wall         -5.819 %  CI -5.924 .. -5.714 %  (cand time over base, + is slower)
+s18: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -8.731 %  CI -8.731 .. -8.731 %
+  bench16 cycles       -5.808 %  CI -5.962 .. -5.654 %
+  pos11   instructions -8.918 %  CI -8.918 .. -8.918 %
+  pos11   cycles       -4.353 %  CI -4.475 .. -4.231 %
+  pos11   wall         -4.128 %  CI -4.323 .. -3.932 %  (cand time over base, + is slower)
+total: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -9.009 %  CI -9.009 .. -9.009 %
+  bench16 cycles       -6.287 %  CI -6.375 .. -6.199 %
+  pos11   instructions -9.633 %  CI -9.633 .. -9.633 %
+  pos11   cycles       -6.542 %  CI -6.607 .. -6.477 %
+  pos11   wall         -6.367 %  CI -6.473 .. -6.261 %  (cand time over base, + is slower)
+slot: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.847 %  CI -0.847 .. -0.847 %
+  bench16 cycles       +0.055 %  CI -0.059 .. +0.169 %
+  pos11   instructions -0.872 %  CI -0.872 .. -0.872 %
+  pos11   cycles       +0.144 %  CI +0.025 .. +0.263 %
+  pos11   wall         +0.230 %  CI +0.027 .. +0.433 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.603 %, pos11 cycles 0.087 %, wall 0.255 %
+s8: gain, mean of the three -6.10 %
+s10: gain, mean of the three -6.41 %
+s12: gain, mean of the three -6.48 %
+s14: gain, mean of the three -6.54 %
+s16: gain, mean of the three -6.10 %
+s18: gain, mean of the three -4.76 %
+total: gain, mean of the three -6.40 %
+slot: zero, mean of the three +0.14 %
+size: best cycles bench16 -6.544 %, pos11 -6.674 %, among s8 s10 s12 s14 s16
+size: within the floor of the best s12 s14; DEC-332 (7) chooses s12
+bar: s12 clears DEC-266 (3), (4): SHIPS
+shelter: reads zero: the slot stays, S122 being the reason

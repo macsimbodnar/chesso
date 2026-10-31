@@ -24,7 +24,7 @@ again here. Each row's quoted words find its block.
 | `src/search_params.hpp` | "S098 owns moving the rule onto the sum" | S098 is closed and the rule still reads the raw entry |
 | `src/search_params.hpp` | "the build prints 4493659" | bench is 5707449 |
 | `src/search_params.hpp` | cites `evaluation.cpp` lines 33 to 37 | `ORDER_COUNTER` is on line 39 |
-| `src/evaluation.cpp` | "clang still inlines it", "the zero weights still fold" | g++ is the reference since DEC-049; `passed_pawn_mg` is no longer zero |
+| `src/evaluation.cpp` | "the zero weights still fold" | g++ is the reference since DEC-049; `passed_pawn_mg` is no longer zero |
 | `src/data_structures.hpp` | "evaluate() is material plus tapered tables" | mobility, king safety and pawn terms too |
 | `tests/test_search.cpp` | "S065 is a pending 827-constant paste" | S065 is done |
 | `tests/test_search.cpp` | "an H0 on S234 flips `RfpTtEstimate`" | S234 is closed and it ships at 1 |

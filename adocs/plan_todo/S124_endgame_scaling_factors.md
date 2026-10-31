@@ -143,7 +143,7 @@ traced record above scales in its own engine's framing and none of the
 messages states which half it multiplies, so the figure this file used to quote
 for "the specific change from scaling the whole score to scaling only the
 endgame half" had no source and the design choice is chesso's own. It is the right one
-here for a mechanical reason: `src/evaluation.cpp` `evaluate_cheap` divides the
+here for a mechanical reason: `src/evaluation.cpp` `cheap_score` divides the
 middlegame and endgame sums by phase, so a factor on the whole score would
 scale a middlegame evaluation toward a draw in a position with a queen on the
 board.

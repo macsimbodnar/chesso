@@ -1,0 +1,20 @@
+# S118's hit rate over a real search, the accepts' "measured and not assumed". 2026-10-31, about 23:44 to 23:48, i7-8700K.
+#   ~/.venv/chess/bin/python adocs/data/S118_hitrate.py build-tune/src/chesso \
+#     --pgn /home/max/ws/chesso/.tuning/sprt_s125_20261031_075221/games.pgn
+# THE ENGINE: the tune build (CHESSO_TUNE, tree-identical to Release by INV-6) at 40831fa, on branch s118, whose src/ is
+# 654ab89's, PAWN_TABLE_BITS 12. It counts and does not time, so the Debug self-play ran beside it (close_runs.sh).
+# THE GAMES: the first 20 of S125's SPRT PGN, cf8661b vs 9cbeb68, 2026-10-31 07:52; its archive is
+# chesso_S125_sprt_2026-10-31.tar.xz. Each move's recorded n= is `go nodes`, ucinewgame per game, Hash 16: the positions
+# and budgets of those games on this tree, not those games' trees.
+# Read: `probes` are the entry's, `slot probes` one per king past the lazy shortcut; a table is empty at each `go`.
+# Beside it: DEC-332's design pass simulated this replay (.tuning/coord/S118/evidence/sim_replay.txt), and its cold
+# column read 93.694 and 70.487 at 2^12, these figures, over the same 445624368 calls. The 94.1 in DEC-332 is that
+# simulation's table kept across `go`s, 94.065, which is not what shipped. CPW's "95 to 99 %" is a sentence on its page;
+# here, at a few K entries, 89.7 to 96.4 %.
+
+workload   probes        hit %      slot probes   slot hit %
+bench      2963238       89.703     3615594       74.441
+bench16    6140795       89.652     7505226       74.619
+pos11      21106681      96.438     27108080      73.007
+replay     445624368     93.694     631875854     70.487
+S118-HITRATE-DONE

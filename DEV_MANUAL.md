@@ -3646,9 +3646,12 @@ ten positions in a table would sit at a hit rate no search has, which is what
 DEC-046's reading of 61 % recovered was. Read the table with its own two tools:
 
 ```bash
-# what it buys, DEC-266's form: 9 comparisons, about 1 h 50 m, the machine idle
-CACHE_SHA=<the cache's commit> SHELTER_SHA=<the slot's commit> adocs/data/S118_cost.sh check
-# its hit rate over a real search, on a tune build: about 10 min, one process
+# what it buys, DEC-266's form: 9 comparisons, 1 h 47 m, the machine idle, detached.
+# It refuses an OUT holding a reading.txt. On record: adocs/data/S118_cost_reading.txt
+CACHE_SHA=<the cache's commit> SHELTER_SHA=<the slot's commit> OUT=<a fresh directory> \
+  nohup adocs/data/S118_cost.sh run > <console> 2>&1 &
+# its hit rate over a real search, on a tune build: about 4 min, one process.
+# On record: adocs/data/S118_hitrate.txt
 ~/.venv/chess/bin/python adocs/data/S118_hitrate.py build-tune/src/chesso --pgn <games.pgn>
 ```
 
@@ -6419,7 +6422,7 @@ and without them, in `build` and in `build-tune`, and `bench`, `bench 12` and
 `tools/search_bench.py` at depths 9 and 12 print the parent's node counts and
 best moves (S262). The material and table coefficients are the exception that
 costs something in the trace build: `make_move` accumulates those sums, so the
-trace build walks the pieces in `evaluate_cheap()` to write them out -- the
+trace build walks the pieces in `cheap_score()` to write them out -- the
 recomputation the search was rid of at S014, present only where the define is.
 
 **Every row is checked against the engine as it loads.** The trace, scored with

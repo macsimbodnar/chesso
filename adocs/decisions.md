@@ -1691,6 +1691,9 @@ Consequences: The shortcut still makes the search score window dependent, and
               cost in play is what the SPRT measures.
 
 ## DEC-046  2026-08-12  No pawn hash: it was built, measured, and recovers nothing
+
+**VOID, 2026-11-01 -- superseded by DEC-332.** S118 built this cache again, on a key S099 already pays and over a pawn pass of 12.69 % of instructions against the 4.5 % term here, and DEC-266 credited it: -6.29 % and -6.54 % cycles, -6.37 % wall (`adocs/data/S118_cost_reading.txt`, row `total`). The evidence below is not void and is not restated elsewhere: 1.892 s against 1.897 s, the 89.8 % hit rate, the 2.2 % with the term off. Its warning stands: `bench_eval` cannot price a cache.
+
 Tags:         evaluation, performance, cache, s027, passed-pawns, dec-039
 
 Context:      S027's passed pawn term goes in stage one, where it is paid at

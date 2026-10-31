@@ -1,7 +1,7 @@
 id:         S122
 goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-accepts:    an SPRT verdict, recorded whatever it is; the term is clamped with mobility at a `LAZY_EVAL_MARGIN` re-derived from its own fitted spread (`tools/eval_spread` at the fitted weights and a fresh `truncation_scan`), binding on at most a pre-registered share of rows, the margin its own part in the family's H0 partition, and the step states how the fit and the margin are made consistent (S039 read H0; DEC-324, the owner's amendment DEC-258 names); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); shelter and storm come from the pawn hash (S118); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp
+accepts:    an SPRT verdict, recorded whatever it is; the term is clamped with mobility at a `LAZY_EVAL_MARGIN` re-derived from its own fitted spread (`tools/eval_spread` at the fitted weights and a fresh `truncation_scan`), binding on at most a pre-registered share of rows, the margin its own part in the family's H0 partition, and the step states how the fit and the margin are made consistent (S039 read H0; DEC-324, the owner's amendment DEC-258 names); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); the shelter comes from the pawn table's slot (S118, `pawn_shelter_t`, raw before the clamp and the taper) and storm, which nothing computes yet, is added here, in that slot's score or its spare bytes (DEC-332 (5)); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
+touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, src/data_structures.hpp
 excludes:   mobility, which shares the loop but is S121; retiring the clamp and the lazy shortcut (S039 read H0, DEC-324)
 decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259, DEC-324
 closes:
@@ -144,8 +144,7 @@ Three readings. **The two terms this step's accepts names -- safe checks and
 weak squares in the king zone -- were both shipped at the one engine that
 records them, and neither carries an Elo number**, so their size here is
 unknown and the bounds cannot be sized on the record. **The shelter and storm
-arrays are the one traced positive at +6.40**, and they are what S118's cache
-feeds this step. And **every long-control half is smaller than its short-control
+arrays are the one traced positive at +6.40**; S118's slot feeds this step the shelter half, and storm is this step's own (DEC-332 (5)). And **every long-control half is smaller than its short-control
 half** in the two rows that have both, which is the same downward
 control-sensitivity S125's record shows.
 
@@ -201,8 +200,7 @@ clamped with mobility to `LAZY_EVAL_MARGIN` inside `src/evaluation.cpp`
   its group, the engine's integer finaliser over the two per-side sums, so
   that the identity on every corpus row and that case cover it; the case's
   precondition gains a fixture row on which the group is non-zero.
-- Shelter and storm come out of the pawn hash S118 adds, which is why S118 is
-  ordered directly before this step.
+- The shelter comes out of the slot S118 added, read past the lazy shortcut; storm is computed here. The slot read zero on its own (DEC-332 (5)), and this step is its only reason to stay, so what it adds to the slot is timed as S118's row was.
 - Safe checks are counted per piece type and weak squares over the king zone;
   both read attack sets the mobility loop already builds (S121), not a second
   pass.
@@ -264,8 +262,7 @@ run, not after.
 
 - **S039 (immediately before)**: the clamp decision. This step states what it
   inherited.
-- **S118 (immediately before)**: supplies the shelter and storm slots -- the
-  one traced positive in the group, +6.40.
+- **S118 (before)**: supplies the shelter slot, storm being this step's -- the one traced positive in the group, +6.40, is the two together.
 - **S121 (before)**: the attack sets and the mobility area.
 - **S101 (before)**: threats; the two must not count the same attack twice.
 - **S127 (after)**: SPSA over the finaliser's constants.

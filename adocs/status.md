@@ -7,39 +7,27 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-31, by hand.
 
-## 2026-10-31, evening: S118 resumed, its timing next; the comment study waits for the owner (handover)
+## 2026-11-01: S118 done (credited, -6.4 % wall, no SPRT); a drift point next (handover)
 
 Mode: one fresh Opus 5.5 subagent per step, the coordinator implements nothing, few questions, batched
 in Italian with the recommended option first, which is taken wherever the choice is not the owner's.
 
-**S118 (pawn cache) is in progress on branch `s118`, worktree `../chesso-s118`, not on `achesso`**
-(DEC-332 (9)): `2f7b08a` the cache, `654ab89` the shelter slot, both `No functional change`, bench
-5707449, then the scripts and the record. Its step file is on `s118`
-(`adocs/plan_current/S118_pawn_hash_table.md`, its section "2026-10-31: resumed" is the state), so on
-`achesso` it still reads `plan_todo/`. `gate_extra` green on the tree (1467 s). Instructions -9.01 % on
-`bench 16` and -9.63 % on S020's positions, node-identical: **a count, no timing exists**.
-`S118_cost.sh build` passed for the first time on record: INV-6 `bench 5707449`, eight binaries, seven
-functions differ at every size; trees in `../chesso-s118/.tuning/s118/cost`. PT14 to PT24 killed, 11 of
-11, on `f36762f`. The fast check over `85b7847..s118` found no wrong-score path; its four findings are
-fixed or recorded, and the size rule's gap is DEC-332 (10).
+**S118 landed**: `0885aa3` the pawn pass per pawn structure, `6e7e5c5` each king's shelter, both `No
+functional change`, bench 5707449, timed on `s118` as `2f7b08a` and `654ab89`, which the branch keeps
+because the data files cite them. DEC-332 (7) chose 2^12 and (8) credited it; what landed reads -6.287 %
+and -6.542 % cycles, -6.367 % wall, -9.009 % and -9.633 % instructions, floors 0.603, 0.087, 0.255, about
++9.7 Elo at long control as a conversion, no game played. The slot alone reads zero and stays for S122,
+which owes storm. Hits 89.7 to 96.4 %. DEC-046 VOID. Unmeasured: match load, any other machine. S102's
+fills now sit behind a table miss, and its accepts was amended. Archived: `chesso_S118_cost_2026-10-31`
+and `chesso_S118_close_runs_2026-10-31`, verified.
 
 **Next, in order:**
-1. **PT01 to PT13 again on `s118`'s tip**, about 36 min: their only log has no table, names a clone's
-   commit that is gone (`4cfe4cd`), and its `same` rows can mean an unread bench (S305). It settles PT07,
-   whose `same` disagrees with the reading of PT06. Linked worktree, `--only`, then remove it.
-2. In `../chesso-s118`: `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89 adocs/data/S118_cost.sh run` (about
-   1 h 50 m, machine idle, marker `S118-COST-(DONE|FAILED)`, ceiling 4 h), and
-   `adocs/data/S118_hitrate.py` (about 10 min). Read the real PID from `$!`. No commit in that checkout
-   while it runs.
-3. Read by DEC-332 (7), (8), (10). A credited gain lands the commits on `achesso`, with DEC-046 marked
-   VOID, a Debug self-play and the record, the `specs.md` wording (the subagent's proposal never arrived),
-   the re-read of `DEV_MANUAL.md` and `MANUAL.md`, and `adocs/data/README.md` rows for `S118_inv6.txt`,
-   `S118_cost.py`, `S118_cost.sh`, `S118_hitrate.py`. A zero or a loss does not land them: DEC-046 stands
-   and S122's accepts is amended to read the shelter from stage two.
-4. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
+1. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
    coordinator on 2026-10-31**: S121, S123 and S125 were each measured against their own parent and
-   their sum has not been played. Fixed length, an estimate and no verdict (DEC-108).
-5. S102's citation of `evaluate_pawns` for the pawn fills moves to `pawn_pass` when the cache lands.
+   their sum has not been played; S118's speed is now inside it. Fixed length, an estimate and no verdict
+   (DEC-108). S261's drift point is the precedent.
+2. S305, then S306 in the gap before S101, because nine open steps touch `src/evaluation.cpp`.
+3. S101.
 
 **The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The
 owner asked whether cleaning or compressing comments helps the project and token use. Read on `5954c12`

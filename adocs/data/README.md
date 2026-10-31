@@ -1512,8 +1512,14 @@ The close, 2026-10-31: the SPRT read H1, the increment folded, neutral. S125's s
 
 ### S118, the pawn table (DEC-332)
 
-The two commits sit on branch `s118` until DEC-332 (8) reads. S118's step file, "2026-10-31: resumed".
+The two commits were timed on branch `s118` and landed on DEC-332 (8)'s reading: the shas in these files are that branch's, `2f7b08a` the cache and `654ab89` the slot. S118's step file, "2026-10-31: resumed" and "the close".
 
 | file | what it is |
 |---|---|
-| `S118_mutants.txt` | `tools/mutants/S118_pawn_cache.py` on the final tree, 24 of 24 killed, in the two runs' own lines: PT01 to PT13 on `654ab89`, progress lines only, that run stopped before its kill table; PT14 to PT24 on `f36762f`, the kill table and what caught each; `src/` and `tests/` the same at both, and why a `same` in the first run means "not seen to move" |
+| `S118_inv6.txt` | INV-6 for the two commits against their parent `85b7847`, `build/` and `build-tune/`: `bench` (5707449), `bench 12` (1861982) and `tools/search_bench.py` at depths 9 and 12 byte-identical once the timing fields are stripped, their md5s named; `bench 16` and S020's positions node-identical and not stream-compared; the Debug `bench 11`, 0 `Assertion` |
+| `S118_cost.sh` | the pre-registration and the run of S118's speed verdict (DEC-332 (5), (7), (8), (10), DEC-266): the builds, each padded from a throwaway worktree, a size row differing by one line; INV-6 and the code check first; 16 interleaved pairs a comparison on `bench 16` and S020's positions with `build/tools/perf_counters`, hyperfine wall on the second. Stages `check`, `build`, `run`, each ending on its own marker; its header was written before any of it ran and stays as written, so it reads as before the landing |
+| `S118_cost.py` | the same script's `code`, each size row's objects against s12's, refusing a difference outside what reads the table's size; and `read`, each comparison's geometric mean ratio and paired CI by `S135_cost.py`, with DEC-332's rules applied and printed. Standard library |
+| `S118_cost_reading.txt` | that `run`, 2026-10-31 21:55:22 to 23:42:50, on `2f7b08a` and `654ab89`, the console trimmed, with the machine's state and what was checked before it was recorded: s12 chosen, -6.260 % and -6.674 % cycles, -6.501 % wall, -8.232 % and -8.838 % instructions, clearing floors 0.603, 0.087 and 0.255; `total`, what landed, -6.287 %, -6.542 %, -6.367 %, -9.009 % and -9.633 %; `slot` reads zero |
+| `S118_hitrate.py` | the hit rate over a real search, on a tune build's census (`CHESSO_PAWN_TABLE_CENSUS`): `bench`, `bench 16`, S020's positions and games replayed move by move at their recorded node counts. Counts and does not time; `python-chess` for the replay |
+| `S118_hitrate.txt` | its output on `40831fa`, the first 20 games of S125's SPRT PGN: probes hit 89.703 %, 89.652 %, 96.438 %, 93.694 %, a king's slot 74.441 %, 74.619 %, 73.007 %, 70.487 %; the replay's two are the design pass's simulated cold figures to the digit |
+| `S118_mutants.txt` | `tools/mutants/S118_pawn_cache.py` on the final tree, 24 of 24 killed, in the two runs' own lines with their kill tables and what caught each: PT01 to PT13 on `40831fa`, a second run replacing the rows of a first stopped before its table; PT14 to PT24 on `f36762f`; `src/` and `tests/` the same at both; PT07's bench reads `n/a` |

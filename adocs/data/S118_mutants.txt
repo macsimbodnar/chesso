@@ -1,47 +1,261 @@
 # S118's mutants on the final tree: 24 of 24 killed, none survived. The list is
-# tools/mutants/S118_pawn_cache.py and the tool tools/mutation_check.py, in two runs,
-# because the owner stopped the first during PT14 for a shutdown. 2026-10-31,
-# i7-8700K, g++ 13.3. Both runs' lines are verbatim from their logs.
+# tools/mutants/S118_pawn_cache.py and the tool tools/mutation_check.py, in two runs, each
+# with its kill table. 2026-10-31, i7-8700K, g++ 13.3. Both runs' lines are verbatim from
+# their logs.
 #
-# src/ and tests/ do not differ between 654ab89 and f36762f: `git diff --stat 654ab89
-# f36762f -- src tests` prints nothing. Nor do the list and the tool, with `--
-# tools/mutants/S118_pawn_cache.py tools/mutation_check.py`. After both runs the list's
-# docstring and PT06's note were corrected, and no mutant's old or new text.
+# src/ and tests/ do not differ between 654ab89, f36762f and 40831fa: `git diff --stat` of
+# each pair `-- src tests` prints nothing. The list's old and new texts do not differ
+# between f36762f and 40831fa, only its docstring and PT06's description, and the corrections
+# made after both runs are of the docstring alone. tools/mutation_check.py does not differ.
 #
-# Run one's first line names 4cfe4cd: a private clone holding the tree as one commit,
-# since the tool refuses anything but a clean linked worktree. That clone is gone, so
-# that it held 654ab89's src/ and tests/ is the step file's statement, not re-checked.
+# PT01 TO PT13 ARE A SECOND RUN, AND ITS TABLE REPLACES THE ROWS THIS FILE FIRST CARRIED. The
+# first, on 654ab89 (.tuning/coord/S118/evidence/mut_final.log), was stopped by the owner's
+# SIGTERM during PT14, so it had no kill table; its first line named 4cfe4cd, a private
+# clone's commit now gone; and a progress line says `same` for any bench that did not move,
+# the one the tool could not read included (S305), so its `same` rows could be unread benches.
+# It read 13 of 13 killed, and this run reads the same 13 at the same counts.
 #
-# Run one has no kill table: SIGTERM reached it during PT14, and its traceback is left
-# out here. What it printed is the progress lines. A progress line says `same` for
-# any bench that did not move, the one the tool could not read included, where the
-# kill table says `n/a` (tools/mutation_check.py, bench_moved against bench_column()).
-# So run one's `same` means "not seen to move". PT07's 554.2 s against about 145 s
-# is the row where that may matter: by the code it ought to move the bench, as PT06
-# does, and only `--only PT07` would print its table word. Its verdict stands either
-# way: a suite gone red is a kill.
+# WHAT THE TABLE SETTLES. PT07 reads `n/a` and no other row does: `[no bench signature: no
+# bench line]`, three cases and test_datagen_exit crashing on SIGABRT, exit 134. Its `same`
+# in the first run was an unread bench, so it never disagreed with the reading of PT06, and
+# nothing here says whether its bench moves. The rest of the first run's `same` rows, PT03,
+# PT05 and PT12, read `same` in the table too. PT07 took 557 s against about 160 s for the
+# others, and five of its tests left no assertion text in the log; why is not isolated.
 
-== PT01 to PT13, tree 654ab89, from .tuning/coord/S118/evidence/mut_final.log, progress lines ==
-worktree /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut at 4cfe4cd clean
-build    /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut/build   jobs 12   label fast
-logs     /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut/build/mutation
-list     /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut/tools/mutants/S118_pawn_cache.py   clean
-mutants  24 of 24
+== PT01 to PT13, tree 40831fa, from .tuning/coord/S118/mut_pt01_13.log, whole ==
+worktree /home/max/ws/chesso/.ref-builds/mut118 at 40831fa clean
+build    /home/max/ws/chesso/.ref-builds/mut118/build   jobs 12   label fast
+logs     /home/max/ws/chesso/.ref-builds/mut118/build/mutation
+list     /home/max/ws/chesso/.ref-builds/mut118/tools/mutants/S118_pawn_cache.py   clean
+mutants  13 of 24
 baseline green, 50 tests, bench 5707449 nodes via engine
-  PT01_verifier_ignores_black        killed      fast 3/50  bench moved  148.4s
-  PT02_verifier_ignores_white        killed      fast 4/50  bench moved  146.1s
-  PT03_verifier_is_the_key           killed      fast 1/50  bench same  146.3s
-  PT04_no_verifier                   killed      fast 5/50  bench moved  132.8s
-  PT05_hit_recomputes                killed      fast 1/50  bench same  146.8s
-  PT06_slot_from_the_whole_key       killed      fast 3/50  bench moved  148.1s
-  PT07_mask_off_by_one               killed      fast 10/50  bench same  554.2s
-  PT08_outside_terms_stored          killed      fast 5/50  bench moved  133.2s
-  PT09_file_bytes_swapped            killed      fast 4/50  bench moved  140.3s
-  PT10_passers_one_colour            killed      fast 6/50  bench moved  141.1s
-  PT11_file_set_short_a_rank         killed      fast 3/50  bench moved  140.7s
-  PT12_trace_reads_the_table         killed      fast 1/50  bench same  141.8s
-  PT13_lazy_window_turned_round      killed      fast 5/50  bench moved  144.5s
-MUTATION-RUN-FAILED: Terminated: signal 15
+  PT01_verifier_ignores_black        killed      fast 3/50  bench moved  161.9s
+  PT02_verifier_ignores_white        killed      fast 4/50  bench moved  161.3s
+  PT03_verifier_is_the_key           killed      fast 1/50  bench same  162.5s
+  PT04_no_verifier                   killed      fast 5/50  bench moved  151.9s
+  PT05_hit_recomputes                killed      fast 1/50  bench same  166.0s
+  PT06_slot_from_the_whole_key       killed      fast 3/50  bench moved  168.5s
+  PT07_mask_off_by_one               killed      fast 10/50  bench same  557.0s
+  PT08_outside_terms_stored          killed      fast 5/50  bench moved  138.5s
+  PT09_file_bytes_swapped            killed      fast 4/50  bench moved  159.2s
+  PT10_passers_one_colour            killed      fast 6/50  bench moved  160.2s
+  PT11_file_set_short_a_rank         killed      fast 3/50  bench moved  160.9s
+  PT12_trace_reads_the_table         killed      fast 1/50  bench same  160.3s
+  PT13_lazy_window_turned_round      killed      fast 5/50  bench moved  164.5s
+
+kill table   second oracle: engine bench signature (total nodes and the eight best moves)
+
+id                                 built  fast      bench   verdict     expected        s
+-----------------------------------------------------------------------------------------
+PT01_verifier_ignores_black        yes    3/50      moved   killed      killed      161.9
+PT02_verifier_ignores_white        yes    4/50      moved   killed      killed      161.3
+PT03_verifier_is_the_key           yes    1/50      same    killed      killed      162.5
+PT04_no_verifier                   yes    5/50      moved   killed      killed      151.9
+PT05_hit_recomputes                yes    1/50      same    killed      killed      166.0
+PT06_slot_from_the_whole_key       yes    3/50      moved   killed      killed      168.5
+PT07_mask_off_by_one               yes    10/50     n/a     killed      killed      557.0
+PT08_outside_terms_stored          yes    5/50      moved   killed      killed      138.5
+PT09_file_bytes_swapped            yes    4/50      moved   killed      killed      159.2
+PT10_passers_one_colour            yes    6/50      moved   killed      killed      160.2
+PT11_file_set_short_a_rank         yes    3/50      moved   killed      killed      160.9
+PT12_trace_reads_the_table         yes    1/50      same    killed      killed      160.3
+PT13_lazy_window_turned_round      yes    5/50      moved   killed      killed      164.5
+
+what caught each mutant
+
+== PT01_verifier_ignores_black: a slot holding the same White pawns over other Black pawns answers
+   ctest: 3 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  CHECK( pawn_slot_holds(*table, pawn_table_other) )  (+1 more)
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+1 more)
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE( pawn_slot_holds(*table, mirrored) )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK( stands_pat(walk.fen) )  (+7 more)
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+
+== PT02_verifier_ignores_white: a slot holding the same Black pawns over other White pawns answers
+   ctest: 4 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+2 more)
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+1 more)
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] a replaced structure takes its shelter with it  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_search] a quiescence node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] a main search node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] the exchange gate declines a queen promotion onto a defended square  |  CHECK_EQ( run.score, static_score )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK( stands_pat(walk.fen) )  (+13 more)
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+
+== PT03_verifier_is_the_key: the entry verified by a stored piece of the key, which is not exact: two structures under one key share an entry
+   ctest: 1 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  CHECK( pawn_slot_holds(*table, pawn_table_other) )  (+1 more)
+   [test_evaluation] a replaced structure takes its shelter with it  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+
+== PT04_no_verifier: every read is a hit, on whatever the slot holds
+   ctest: 5 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+1 more)
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] a hit answers from the entry  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+1 more)
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] both sides to move read one entry  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+1 more)
+   [test_evaluation] only stage two fills the shelter slot  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] a king that moved reads its own shelter  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+5 more)
+   [test_evaluation] a replaced structure takes its shelter with it  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_search] a search's tree does not depend on what its pawn table holds  |  CHECK_EQ( from_stale.explored_nodes, from_empty.explored_nodes )  (+3 more)
+   [test_search] a quiescence node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] a main search node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] a capture that cannot reach alpha is skipped and its best case is the node's value  |  CHECK_EQ( run.score, futility_value )
+   [test_search] a capture that can reach alpha is searched  |  CHECK( qs_run(PAWN_TAKES_PAWN, alpha, beta).nodes >= 2 )
+   [test_search] the exchange gate declines a queen promotion onto a defended square  |  CHECK_EQ( run.score, static_score )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_search] a node that is not improving reduces its late quiets by LmrNotImproving more  |  REQUIRE_EQ( worse.reduction[k], better.reduction[k] + LMR_NOT_IMPROVING )
+   [test_search] a probcut store keeps the raw static evaluation  |  REQUIRE_EQ( state.static_evals[1], raw + 1 )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_engine] the iteration loop scales its soft limit by the history it counted  |  REQUIRE( falling > 0 )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+
+== PT05_hit_recomputes: a hit runs the pass as well: every score right and nothing saved
+   ctest: 1 of 50 failed
+   [test_evaluation] a hit answers from the entry  |  CHECK_NE( evaluate(&game.board, table.get()), pure )
+
+== PT06_slot_from_the_whole_key: the entry's slot is the position's key's: the entry right, a miss per position instead of per pawn structure, and the shelter slot left unemptied
+   ctest: 3 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] a hit answers from the entry  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  REQUIRE( pawn_slot_holds(*table, pawn_table_other) )
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] both sides to move read one entry  |  REQUIRE( pawn_slot_holds(*table, pawn_table_other) )
+   [test_evaluation] only stage two fills the shelter slot  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] a replaced structure takes its shelter with it  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_search] a search's tree does not depend on what its pawn table holds  |  CHECK_EQ( from_stale.explored_nodes, from_empty.explored_nodes )  (+1 more)
+   [test_search] a quiescence node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] a main search node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+
+== PT07_mask_off_by_one: the index masks with the size and not the size less one: two slots, and one of them past the end  [no bench signature: no bench line]
+   ctest: 10 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] a hit answers from the entry  |  REQUIRE( pawn_slot_holds(*table, game) )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  REQUIRE( pawn_slot_holds(*table, pawn_table_other) )  (+1 more)
+   [test_search] a search's tree does not depend on what its pawn table holds  |  CHECK_EQ( from_stale.explored_nodes, from_empty.explored_nodes )  (+2 more)
+   [test_search] a quiescence node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] a main search node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+   [test_search] a table cutoff that spends the node budget stops the search  |  test case CRASHED: SIGABRT - Abort (abnormal termination) signal
+   [test_engine] -  |  (no assertion text in the log)
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  test case CRASHED: SIGABRT - Abort (abnormal termination) signal
+   [test_datagen_exit] -  |  control: a writable run exited 134; log: datagen: 1 games, 200 nodes per move, 1 threads, seed 3, quiet-limit 1000, leaf root
+   [test_audit_go_infinite] -  |  (no assertion text in the log)
+   [test_uci_surface] bench prints one final signature line and repeats its total  |  test case CRASHED: SIGABRT - Abort (abnormal termination) signal
+   [test_mate_breadth] -  |  (no assertion text in the log)
+   [test_mate_pv] -  |  (no assertion text in the log)
+   [test_mate_carry] -  |  (no assertion text in the log)
+
+== PT08_outside_terms_stored: piece placement and S123's A and B folded into the entry when it is filled, so a hit reads the pieces of whoever filled it
+   ctest: 5 of 50 failed
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+35 more)
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, evaluate(&game.board) )
+   [test_evaluation] an empty entry is the pawnless board's own  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )
+   [test_evaluation] a king that moved reads its own shelter  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+1 more)
+   [test_evaluation] an empty slot is not a king's on a8  |  CHECK_EQ( evaluate(&game.board, table.get()), evaluate(&game.board) )  (+1 more)
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE_EQ( read, pure )
+   [test_search] a quiet position stands pat  |  REQUIRE_EQ( quiesce(fen, -10000, 10000), static_score )
+   [test_search] a quiet evasion is a legal answer to a check  |  REQUIRE_EQ( quiesce(fen, -10000000, 10000000), -541 )
+   [test_search] a quiescence entry carries the static score, never a bound  |  REQUIRE_EQ( wide->eval, static_score )
+   [test_search] quiescence stands pat on the stored static score  |  REQUIRE_EQ( run(), static_score )
+   [test_search] quiescence stands pat on the stored score where the bound allows it  |  REQUIRE_EQ( run(-10000, 10000), static_score )
+   [test_search] a mate score is never used as a stand pat  |  CHECK_EQ( mating, static_score )  (+1 more)
+   [test_search] a substituted stand pat is stored as the bound it is  |  REQUIRE_EQ( plain->score, static_score )
+   [test_search] a stand pat that is itself a bound is still capped  |  REQUIRE_EQ( run(), lazy )
+   [test_search] reverse futility prunes on the stored static score  |  REQUIRE_EQ( run(false), pruned )
+   [test_search] a main-search store records this node's evaluation  |  CHECK_EQ( entry->eval, static_score )
+   [test_search] the table never changes the answer  |  REQUIRE( cold.score == without.score )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK( !stands_pat(fen) )  (+2 more)
+   [test_leaf_walk] a walk stopped by its ply bound is refused as truncated  |  CHECK( cut.outcome == LEAF_TRUNCATED )  (+2 more)
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_leaf_walk] a repetition refuses a leaf only where the search draws it  |  CHECK( once.outcome == LEAF_QUIET )  (+1 more)
+   [test_leaf_walk] a call past the walker's node cap is refused as aborted  |  CHECK( cut.outcome == LEAF_ABORTED )  (+15 more)
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( reporting >= majority )
+
+== PT09_file_bytes_swapped: each side's rook file counts read the other side's files
+   ctest: 4 of 50 failed
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_eval_model] the engine counts the piece placement the walk counts  |  CHECK( engine[WHITE][feature] - engine[BLACK][feature] == walk[feature] )  (+30 more)
+   [test_eval_model] the walk and the engine count piece placement by hand  |  CHECK( engine[WHITE][feature] == item.white[feature] )  (+4 more)
+   [test_eval_trace] the pinned positions reach the truncation bound  |  CHECK( difference > 2.0 )
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+
+== PT10_passers_one_colour: the entry keeps White's passers only, so Black's have no A or B
+   ctest: 6 of 50 failed
+   [test_evaluation] colour symmetry over every test position  |  REQUIRE( score == mirrored_score )
+   [test_evaluation] a mirrored position reads the same corrected score  |  REQUIRE( raw == mirrored_raw )
+   [test_evaluation] the passer family's counts mirror exactly  |  REQUIRE( mirror[BLACK][rank] == original[WHITE][rank] )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  REQUIRE( outside_counts_differ(&game.board, &pawn_table_other.board) )
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, mirrored_score )
+   [test_search] a side in check may not stand pat  |  REQUIRE_EQ( black_static, 199 )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_eval_model] the engine counts the passer family the walk counts  |  CHECK( engine.king_own[colour][rank] == walk.king_own[colour][rank] )  (+60919 more)
+   [test_eval_model] the walk and the engine count the passer family by hand  |  CHECK( engine.free[colour][rank] == walk.free[colour][rank] )  (+7 more)
+   [test_tuner_gradient] gradient() is the derivative of the error it descends  |  CHECK( check.worst < 1e-6 )
+   [test_tuner_gradient] the clamp's derivative is exact where it binds  |  CHECK( check.worst < 1e-6 )
+   [test_tuner_gradient] a planted vector comes back through the trace path  |  CHECK( std::fabs(fitted[param] - value) < 0.5 )
+   [test_eval_trace] the positions move every term both ways  |  CHECK( negative[f] > 0 )  (+23 more)
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+
+== PT11_file_set_short_a_rank: the byte expands to seven ranks of the whole-file set, so a rook on the missing one reads every file as open
+   ctest: 3 of 50 failed
+   [test_evaluation] colour symmetry over every test position  |  REQUIRE( score == mirrored_score )
+   [test_evaluation] a mirrored position reads the same corrected score  |  REQUIRE( raw == mirrored_raw )
+   [test_evaluation] the start position is balanced  |  REQUIRE_EQ( evaluate(&game.board), tempo_mg )
+   [test_evaluation] a mirrored start position is balanced  |  REQUIRE_EQ( evaluate(&game.board), tempo_mg )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  REQUIRE( outside_counts_differ(&game.board, &pawn_table_other.board) )
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, mirrored_score )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_eval_model] the engine counts the piece placement the walk counts  |  CHECK( engine[WHITE][feature] - engine[BLACK][feature] == walk[feature] )  (+64 more)
+   [test_eval_model] the walk and the engine count piece placement by hand  |  CHECK( engine[WHITE][feature] == item.white[feature] )  (+4 more)
+
+== PT12_trace_reads_the_table: the trace build reads the table like the search: a hit records no pawn coefficient, so a row traced through it fits half its terms
+   ctest: 1 of 50 failed
+   [test_eval_trace] the search's form records what the pure form records, twice  |  REQUIRE_EQ( entry.white_pawns, bb_t{0} )
+
+== PT13_lazy_window_turned_round: the lazy form through the table takes its shortcuts on the wrong edges
+   ctest: 5 of 50 failed
+   [test_evaluation] only stage two fills the shelter slot  |  REQUIRE( exact )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE_EQ( read, pure )
+   [test_search] a quiet position stands pat  |  REQUIRE_EQ( quiesce(fen, -10000, 10000), static_score )
+   [test_search] a quiet evasion is a legal answer to a check  |  REQUIRE_EQ( quiesce(fen, -10000000, 10000000), -541 )
+   [test_search] the exchange gate declines a queen promotion onto a defended square  |  CHECK_EQ( run.score, static_score )
+   [test_search] a quiescence entry carries the static score, never a bound  |  REQUIRE_EQ( wide->eval, static_score )
+   [test_search] quiescence stands pat on the stored static score  |  REQUIRE_EQ( run(), static_score )
+   [test_search] quiescence stands pat on the stored score where the bound allows it  |  REQUIRE_EQ( run(-10000, 10000), static_score )
+   [test_search] a mate score is never used as a stand pat  |  CHECK_EQ( mating, static_score )  (+1 more)
+   [test_search] a substituted stand pat is stored as the bound it is  |  REQUIRE_EQ( plain->score, static_score )
+   [test_search] the table never changes the answer  |  REQUIRE( cold.score == without.score )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_engine] reverse futility at ply 2 does not hide a mate from the side to move  |  REQUIRE( first_exact == 6 )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_leaf_walk] a repetition refuses a leaf only where the search draws it  |  CHECK( once.outcome == LEAF_QUIET )  (+1 more)
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+
+mutation score 13 of 13 (100%)   killed 13
+wall 2642s   results /home/max/ws/chesso/.ref-builds/mut118/build/mutation/results.tsv
+MUTATION-RUN-DONE
 
 == PT14 to PT24, tree f36762f, from .tuning/coord/S118/mut_pt14_24.log, whole ==
 worktree /home/max/ws/chesso/.ref-builds/mut118 at f36762f clean

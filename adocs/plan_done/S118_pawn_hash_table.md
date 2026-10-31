@@ -4,19 +4,20 @@ accepts:    an SPRT verdict if the tree changes and a node-identity check if it 
 touches:    src/evaluation.cpp, src/evaluation.hpp, src/data_structures.hpp, src/search.cpp,
             tests/test_evaluation.cpp, tests/test_eval_trace.cpp, tests/test_search.cpp,
             tools/mutants/S118_pawn_cache.py, adocs/data/S118_inv6.txt,
-            adocs/data/S118_cost.sh, adocs/data/S118_cost.py, adocs/data/S118_hitrate.py,
+            adocs/data/S118_cost.sh, adocs/data/S118_cost.py, adocs/data/S118_cost_reading.txt,
+            adocs/data/S118_hitrate.py, adocs/data/S118_hitrate.txt,
             adocs/data/S118_mutants.txt, adocs/data/README.md,
             DEV_MANUAL.md, MANUAL.md; a stale comment
             each in src/chesso.cpp, tools/datagen.cpp, tools/tuner_trace.hpp,
             tests/test_engine.cpp, tests/test_audit_fen_semantics.cpp, and a symbol
             in one comment of src/bitboard.cpp: no code there
 excludes:   new pawn terms, which are S125; the passed pawn suite, which is S123; storm, which is S122 (DEC-332 (5))
-decisions:  DEC-071, DEC-087, DEC-046, DEC-266, DEC-332
+decisions:  DEC-071, DEC-087, DEC-046, DEC-083, DEC-141, DEC-266, DEC-332
 closes:
 blocks:
 paused_by:
 author:     Opus 5.5 subagent, coordinated
-done:
+done:       2026-11-01 00:03 -- BEHAVIOUR-NEUTRAL, INV-6 discharged against 85b7847: bench 5707449, bench 12 1861982, tools/search_bench.py at depths 9 and 12, every stream identical in both builds at both commits (adocs/data/S118_inv6.txt) and over the eight binaries of the timing. No SPRT owed (DEC-332 (6), DEC-083); the timing is the verdict, DEC-266, 16 interleaved pairs a comparison, the session's floors 0.603, 0.087 and 0.255 (adocs/data/S118_cost_reading.txt, 2026-10-31, kernel journal clean, governor powersave, recorded and not set): DEC-332 (7) chooses s12, 2^12, -6.260 % and -6.674 % cycles, -6.501 % wall, -8.232 % and -8.838 % instructions, and (8) SHIPS it; `total`, what lands, -6.287 %, -6.542 %, -6.367 %, -9.009 %, -9.633 %; `slot` reads zero and stays for S122 by (5). About +9.7 Elo at long time control as DEC-083's conversion, not a verdict, and no game was played. Hit rate over a real search 89.7 to 96.4 %, a king's slot 70.5 to 74.6 % (adocs/data/S118_hitrate.txt). The accepts' fourth clause holds only as DEC-332 (3), (5) rule: storm is S122's, nothing computing one; its other four hold, the second's INV-4 citation being stale for INV-2. Debug self-play on the final tree (DEC-141): four rounds of fastchess at 4+0.04, 8 games, 0 Assertion, 0 disconnect, .tuning/coord/S118/debug_selfplay/. gate_extra: GATE-EXTRA-DONE 6 stages 1467 s on 654ab89, and nothing under src/ or tests/ moved after it. 24 of 24 mutants killed (adocs/data/S118_mutants.txt), PT01 to PT13 on 40831fa, PT14 to PT24 on f36762f, src/ and tests/ the same at both; the observed red and the guards in "phase B". Fast suites 50 of 50 in both builds on that tree, each mutant run's baseline among them. No golden moved (DEC-142). From CPW's description, size DEC-105 form (a); DEC-221 does not bind. MANUAL.md checked, no change; DEV_MANUAL.md checked, two sentences corrected. Shas are branch s118's: 2f7b08a the cache, 654ab89 the slot; the coordinator's record maps the landing's. bench_eval is not the bar and was not taken (DEC-332).
 
 ## Corrected 2026-10-31, DEC-332: what the design pass found stale here
 
@@ -327,8 +328,7 @@ the key, is the one only the planted collision sees among the suite's guards: it
 the bench on this fixture, whose log is not kept, and reads `bench same` on the final tree,
 1 of 50 (`adocs/data/S118_mutants.txt`). PT05, PT12, PT14 and PT15 leave the bench where it
 was, on this fixture and on the final tree. One case each caught them here; on the final
-tree one test of the 50 does, the case named in the log for PT14 and PT15, and the run
-that took PT05 and PT12 stopped before it named theirs. PT06 left the bench too on this
+tree one test of the 50 does, the case named in the log for each. PT06 left the bench too on this
 fixture, which had no slot, and moves it on the final tree, 3 of 50. It moves the index in
 `pawn_entry_of()` and not the one `pawn_shelter_of()` writes for itself, so a filled entry
 empties a slot stage two does not read, and the slot stage two does read keeps another
@@ -432,6 +432,9 @@ final report. What stands on `654ab89`, read from its logs:
   key's readers, the evaluation row, the absent row's "a pawn hash"), and a re-read of `DEV_MANUAL.md`
   and `MANUAL.md` at the landing.
 
+(Added at the close: all of this is discharged, in "the close" below. PT01 to PT13 were run again
+on `40831fa`, with their kill table.)
+
 ## 2026-10-31: resumed
 
 After the shutdown the coordinator ran the rest of the mutants, `build` and a fast check. Written
@@ -445,7 +448,9 @@ its words are the progress line's, which says `same` also for a bench the tool c
 the table says `n/a` (`tools/mutation_check.py`). That matters at one row. PT07 misdirects the slot's
 emptying as PT06 does, so by the same reading its bench ought to move, and it reads `same`, in 554 s.
 Either the bench could not be read, or the reading of PT06 is incomplete; `--only PT07` would say,
-about 10 min, and was not run here. Its kill stands either way, 10 of 50.
+about 10 min, and was not run here. Its kill stands either way, 10 of 50. (Added at the close: the
+bench could not be read. PT01 to PT13 were run again on `40831fa`, 13 of 13 at the same counts, and
+the table reads PT07 `n/a`, no bench line, SIGABRT. The reading of PT06 is not in question.)
 
 **`adocs/data/S118_cost.sh build`, the first known to the record**, 2026-10-31 20:44:07, 91 s to the
 marker, `S118-COST-BUILD-DONE`: `.tuning/s118/build.console`, `.tuning/s118/cost/cost.log`. Loadavg
@@ -500,3 +505,123 @@ corrected; this paragraph is the reading it cites.
    run; `gate_extra` above is a different gate.
 5. The `specs.md` proposal, as the stop above lists it.
 6. The re-read of `DEV_MANUAL.md` and `MANUAL.md`.
+
+(Added at the close: 1, 2, 3 and 6 are done, in "the close" below, and so is 4's Debug self-play. 5 went to
+the coordinator, which owns `specs.md`, and 4's landing is the coordinator's.)
+
+## 2026-11-01: the close
+
+**The verdict: S118 ships, by DEC-332 (8) and no SPRT.** The run is 2026-10-31 21:55:22 to 23:42:50,
+`adocs/data/S118_cost_reading.txt`. `bench_eval` is not the bar and was not taken: it calls the pure
+form, which has no table (DEC-332). Cycles and wall, 16 interleaved pairs a comparison, percent against
+the parent `85b7847`, CIs paired:
+
+| row | `bench 16` cycles | pos11 cycles | pos11 wall | `bench 16` instructions | pos11 instructions |
+|---|---|---|---|---|---|
+| A/A | +0.330, +0.057 .. +0.603 | +0.017, -0.052 .. +0.087 | -0.061, -0.255 .. +0.133 | 0.000 | 0.000 |
+| **floor** | **0.603** | **0.087** | **0.255** | | |
+| **s12, chosen** | **-6.260**, -6.381 .. -6.139 | **-6.674**, -6.792 .. -6.555 | **-6.501**, -6.653 .. -6.349 | -8.232 | -8.838 |
+| `total`, what lands | -6.287, -6.375 .. -6.199 | -6.542, -6.607 .. -6.477 | -6.367, -6.473 .. -6.261 | -9.009 | -9.633 |
+| `slot`, against s12 | +0.055, -0.059 .. +0.169 | +0.144, +0.025 .. +0.263 | +0.230, +0.027 .. +0.433 | -0.847 | -0.872 |
+
+**The size, DEC-332 (7): s12**, the smaller of the two within both floors, s12 and s14. s10 is out on
+pos11 alone, 0.152 points from the best against the 0.087 floor, and s8 and s16 are out too; (10) did not
+bind. s18 is informative: -8.918 % instructions and -4.353 % cycles on pos11. The table is 128 KiB of
+entries and 64 KiB of slots, 192 KiB, and the prototype's -8.42 % and -8.87 % instructions read -8.232 %
+and -8.838 %.
+
+**The shelter, DEC-332 (5): the slot stays**, reading zero, S122 being the reason. Its instructions
+fall and its cycles and wall do not; pos11's and wall's CIs exclude zero, inside the floor, and it buys
+nothing measured here.
+
+**Checked before it was recorded.** `S118_cost.py read` re-run on the pairs,
+`.tuning/coord/S118/reading_recheck.txt`: byte-identical to `reading.txt`. Six rows recomputed from the
+raw counters with no project code: every figure agrees. (7), (8) and (5) applied by hand from the printed
+figures, the table in the reading: each as DEC-332 states it. The floors are the A/A's largest CI bound
+per workload and instrument, DEC-266 (3). INV-6 passed in this run over eight binaries, the streams read
+back, base's md5s those of `adocs/data/S118_inv6.txt`; `bench 16` 11505888 and pos11 38364944 nodes in every
+one of the 288 runs each. The banner names `2f7b08a` and `654ab89`, and `85b7847` is the first's parent.
+`journalctl -k` over the window: no entries. Governor `powersave`, recorded and not set (DEC-195); load 1.0.
+
+**The hit rate**, `adocs/data/S118_hitrate.txt`, on the tune build at `40831fa`, the first 20 games of S125's
+SPRT PGN, a table empty per `go`:
+
+| workload | probes | hit % | slot probes | slot hit % |
+|---|---|---|---|---|
+| `bench` | 2963238 | 89.703 | 3615594 | 74.441 |
+| `bench 16` | 6140795 | 89.652 | 7505226 | 74.619 |
+| pos11 | 21106681 | 96.438 | 27108080 | 73.007 |
+| replay | 445624368 | 93.694 | 631875854 | 70.487 |
+
+The replay's two figures are the design pass's simulated cold column to the digit. DEC-332's 94.1 is that
+simulation's table kept across `go`s, which is not what shipped.
+
+**The Debug self-play, DEC-141**, binding through `src/search.cpp`: the Debug build at `40831fa`, four rounds
+of `fastchess` at 4+0.04, Hash 16, `noob_3moves.epd`, 8 games, exit 0, `Assertion` 0 in the log and the
+console, `disconnect` 0, no forfeit. `.tuning/coord/S118/debug_selfplay/`, `close_runs.log`.
+
+**`gate_extra`**: `GATE-EXTRA-DONE 6 stages 1467 s` on `654ab89`. `git diff --stat 654ab89 40831fa -- src tests`
+prints nothing, so it stands.
+
+**The mutants: 24 of 24 killed**, `adocs/data/S118_mutants.txt`, PT01 to PT13 on `40831fa` in 2642 s, PT14 to PT24
+on `f36762f` in 1927 s, `src/` and `tests/` the same at both. Every `same` on record is now a table's. PT07 is the
+only row reading `n/a`. `tools/mutants/S118_pawn_cache.py`'s docstring corrected against the tables, PT07's row and
+PT09's, whose log holds no mirror case; every `old` and `new` read the same by executing both versions.
+
+**What DEC-083 says a pure speed-up converts to, and it is not measured here.** A behaviour-neutral change is
+accepted on an interleaved timing and never on an SPRT; the strength claim is the measured nps difference
+converted at the published 1.43 Elo per percent at long time control and 2.10 at short, named as a conversion
+and not as a verdict. `total`'s wall, -6.367 %, is +6.80 % nps, so that conversion reads about +9.7 Elo at long
+control and +14.3 at short. No game was played. Published figures do not transfer here (DEC-019), which is why
+this is a conversion and is quoted as one.
+
+**What this leaves unmeasured.**
+- Strength: no game, no SPRT, by DEC-083.
+- Under match load: the timing is one process on an idle machine, and a match runs twelve, two to a core,
+  sharing what the table must fit in.
+- Any other machine, and the shipped `bmi2` binary: every row is `native`, padded, on this Coffee Lake (DEC-267).
+- What the slot is worth to S122, which is its only reason to stay; S122 decides.
+- s10 against s12: s10 is out by 0.065 points on one workload, at a pos11 floor under a quarter of S125's
+  session's. At that session's floor (7) would have chosen s10. The session's floor is the rule, and that does
+  not say s12 is faster.
+- The cost of zeroing the table per `go` is inside every row, not isolated. So is why s18's cycles and
+  instructions part, which is memory only by inference.
+- DEC-266 (4)'s perturbations: not owed, instructions moving the same way, and not run.
+
+**The accepts, clause by clause.**
+1. *"An SPRT verdict if the tree changes and a node-identity check if it does not -- state which before the
+   run."* **Holds.** Node identity, stated in DEC-332 (6) and in "phase B, the cache" before any run;
+   `adocs/data/S118_inv6.txt`, both builds, and the timing's own INV-6.
+2. *"The key is a pawn-only zobrist maintained incrementally in add_piece, remove_piece and move_piece (INV-4),
+   never recomputed in evaluate()."* **Holds, with its citation stale.** `board_t::pawn_hash`, in the three
+   primitives of `src/bitboard.cpp`, landed by S099 and S286 and untouched here; `src/evaluation.cpp` reads it
+   twice and `compute_full_pawn_hash` occurs nowhere in it. The key's wording is INV-2's, not INV-4's.
+3. *"The hit rate is measured over a real search and recorded, not assumed."* **Holds.** Above.
+4. *"The table stores the mg/eg pawn score, the passed-pawn bitboard and both kings' shelter and storm scores,
+   because the shelter is the expensive half of what this saves."* **Does not hold as written; it holds as
+   DEC-332 (3), (5) rule.** No storm: nothing computes one, and it is S122's. Not the whole pawn score: piece
+   placement and S123's increments and king distances read pieces and stay outside. The shelter is in a parallel
+   slot, not the entry. And the "because" is false: 1.63 % of instructions against about 9 %, and the slot reads
+   zero. The passers and both kings' shelter are stored.
+5. *"A collision returns a recomputation rather than a wrong score, and a test forces one."* **Holds.** The verifier
+   is both bitboards, so a hit is exact. "a forced collision recomputes and never answers for another structure"
+   plants the same 64-bit key on another structure; PT01 to PT04 go red on it.
+
+**The manuals.** `MANUAL.md`, no change: its new-game paragraph, "The killer, history and counter-move tables and the
+pawn table (S118) are per `go` and have nothing to reset", holds, `search_state_t` being built per `go`
+(`iterative_deepening_search` in `src/chesso.cpp`); the `Hash` row and "`Hash` is not honoured when memory is
+refused" are about the transposition table alone and hold; no sentence states the search's memory. `DEV_MANUAL.md`,
+two sentences false and changed: the timing's command named `check`, which times nothing, and now names `run`, with
+the measured 1 h 47 m and about 4 min and where each reading is; "walks the pieces in `evaluate_cheap()`" now names
+`cheap_score()`, where the walk is. Checked and holding: "`bench_eval` calls `evaluate()` and nothing else"; "calls the
+pure form, and the pawn table is not in it" and its "two sites"; the census's one line, per king, in
+`pawn_table_census_t`; the one constant, no UCI option, zeroed every `go`; `S125_cost_only.patch` "no longer applies"
+(`git apply --check`, exit 1); the Debug build's +0.33 %; "`evaluate() - evaluate_cheap()`", which is the pure forms'.
+
+**How the technique was taken.** DEC-221 binds what the 2026-09-19 analysis proposed, and that study names S118 only
+to set pawn history apart from it, so it does not bind here. It was taken the same way all the same, as "phase B, the
+cache" says: CPW *Pawn Hash Table*'s description, the size from its "a few K" (DEC-105 form (a)) then this project's
+sweep; every engine record read is a message, a pull request or a forum post (DEC-016).
+
+**Goldens, DEC-142:** none moved and none re-derived; bench 5707449 at every commit. **The shas here** are branch `s118`'s,
+`2f7b08a` the cache and `654ab89` the slot, the commits timed; the coordinator's record maps the landing's to them.
