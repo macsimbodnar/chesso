@@ -34,8 +34,29 @@ all, and the terms that must stay out of it.
   PT15  a main node calls the pure form      "a main search node reads the pawn
                                              table"
 
-Each of PT05, PT06, PT14 and PT15 leaves every score and node count where it was
-and costs only speed, so `chesso bench` cannot see them and the suite has to.
+The shelter slot, the second commit:
+
+  PT16  a filled entry keeps its slot's tags  "a replaced structure takes its
+                                              shelter with it"
+  PT17  the tag is the square, no plus one    "an empty slot is not a king's on a8"
+  PT18  the tag is not compared with the      "a king that moved reads its own
+        king, only with empty                 shelter"
+  PT19  a king's slot tagged with the other   the same
+        king's square
+  PT20  the sign of the slot's score dropped  the pure form shares it: "colour
+                                              symmetry over every test position"
+  PT21  a slot's hit recomputes as well       "a slot's hit answers from the slot"
+  PT22  stage one fills the slot              "only stage two fills the shelter
+                                              slot"
+  PT23  the search's stage two is the pure    the same
+        form
+  PT24  the trace build's lazy form reads     test_eval_trace "the search's form
+        the table and the slot                records what the pure form records,
+                                              twice"
+
+Each of PT05, PT06, PT14, PT15, PT21, PT22 and PT23 leaves every score and node
+count where it was and costs only speed, so `chesso bench` cannot see them and
+the suite has to.
 
 The list is data: `m` is bound by tools/mutation_check.py, which execs this
 file. `old` must occur exactly once in `file`. `expected` is "killed" unless a
@@ -50,8 +71,8 @@ S = "src/search.cpp"
 
 VERIFIER = ("  if (entry->white_pawns != white_pawns || "
             "entry->black_pawns != black_pawns)\n")
-FILL = ("    pawn_entry_fill(white_pawns, black_pawns, entry);\n"
-        "    PAWN_TABLE_COUNT(misses);\n")
+FILL = ("    pawn_entry_fill(white_pawns, black_pawns, entry);\n\n"
+        "    // The slot's scores were another structure's.\n")
 
 m("PT01_verifier_ignores_black", E, "eval/pawn table",
   "a slot holding the same White pawns over other Black pawns answers",
@@ -86,15 +107,15 @@ m("PT05_hit_recomputes", E, "eval/pawn table",
 m("PT06_slot_from_the_whole_key", E, "eval/pawn table",
   "the slot is the position's key's: right scores, and a miss per position "
   "instead of per pawn structure",
-  ("      &table->entries[board->pawn_hash & (PAWN_TABLE_ENTRIES - 1)];\n",
-   "      &table->entries[board->hash & (PAWN_TABLE_ENTRIES - 1)];\n"),
+  ("  const size_t slot = board->pawn_hash & (PAWN_TABLE_ENTRIES - 1);\n",
+   "  const size_t slot = board->hash & (PAWN_TABLE_ENTRIES - 1);\n"),
   origin="S118")
 
 m("PT07_mask_off_by_one", E, "eval/pawn table",
   "the index masks with the size and not the size less one: two slots, and "
   "one of them past the end",
-  ("      &table->entries[board->pawn_hash & (PAWN_TABLE_ENTRIES - 1)];\n",
-   "      &table->entries[board->pawn_hash & PAWN_TABLE_ENTRIES];\n"),
+  ("  const size_t slot = board->pawn_hash & (PAWN_TABLE_ENTRIES - 1);\n",
+   "  const size_t slot = board->pawn_hash & PAWN_TABLE_ENTRIES;\n"),
   origin="S118")
 
 m("PT08_outside_terms_stored", E, "eval/pawn table",
@@ -111,8 +132,14 @@ m("PT08_outside_terms_stored", E, "eval/pawn table",
    "  if (!stored) {\n"
    "    outside_pawn_terms<false>(board, entry, &pawns, nullptr, nullptr);\n"
    "  }\n"),
-  ("    return cheap_score(board, pawn_entry_of(board, table));\n",
-   "    return cheap_score(board, pawn_entry_of(board, table), true);\n"),
+  ("    const int cheap = cheap_score(board, pawn_entry_of(board, table));\n\n"
+   "    return cheap + expensive_score(board, pawn_shelter_of(board, table));\n",
+   "    const int cheap = cheap_score(board, pawn_entry_of(board, table), true);\n\n"
+   "    return cheap + expensive_score(board, pawn_shelter_of(board, table));\n"),
+  ("    const int cheap = cheap_score(board, pawn_entry_of(board, table));\n\n"
+   "    return lazy_from_cheap(",
+   "    const int cheap = cheap_score(board, pawn_entry_of(board, table), true);\n\n"
+   "    return lazy_from_cheap("),
   origin="S118")
 
 m("PT09_file_bytes_swapped", E, "eval/pawn table",
@@ -139,16 +166,14 @@ m("PT11_file_set_short_a_rank", E, "eval/pawn table",
 m("PT12_trace_reads_the_table", E, "eval/pawn table",
   "the trace build reads the table like the search: a hit records no pawn "
   "coefficient, so a row traced through it fits half its terms",
-  ("  if constexpr (trace_build) {\n    return evaluate_cheap(board);\n",
-   "  if constexpr (false) {\n    return evaluate_cheap(board);\n"),
+  ("  if constexpr (trace_build) {\n    return evaluate(board);\n",
+   "  if constexpr (false) {\n    return evaluate(board);\n"),
   origin="S118")
 
 m("PT13_lazy_window_turned_round", E, "eval/pawn table",
   "the lazy form through the table takes its shortcuts on the wrong edges",
-  ("  return lazy_from_cheap(board, cheap_from_table(board, table), alpha, beta,\n"
-   "                         exact);\n",
-   "  return lazy_from_cheap(board, cheap_from_table(board, table), beta, alpha,\n"
-   "                         exact);\n"),
+  ("    return lazy_from_cheap(cheap, alpha, beta, exact, [board, table] {\n",
+   "    return lazy_from_cheap(cheap, beta, alpha, exact, [board, table] {\n"),
   origin="S118")
 
 m("PT14_quiescence_site_pure", S, "eval/pawn table",
@@ -164,4 +189,72 @@ m("PT15_main_site_pure", S, "eval/pawn table",
   "saved",
   ("                 : evaluate(&game->board, &state->pawn_table));\n",
    "                 : evaluate(&game->board));\n"),
+  origin="S118")
+
+SHELTER_TAG = "    const uint8_t tag = static_cast<uint8_t>(king_square[colour] + 1);\n"
+SLOT_TEST = "    if (shelter->king[colour] != tag) {\n"
+
+m("PT16_filled_entry_keeps_its_slot", E, "eval/pawn table",
+  "a slot's tags outlive the structure they were taken on, so another structure "
+  "with the same kings reads the first's shelter",
+  ("    table->shelter[slot].king[WHITE] = 0;\n"
+   "    table->shelter[slot].king[BLACK] = 0;\n",
+   "    (void)slot;\n"),
+  origin="S118")
+
+m("PT17_tag_without_the_plus_one", E, "eval/pawn table",
+  "the tag is the square, so a king on a8 reads an empty slot's zeros",
+  (SHELTER_TAG,
+   "    const uint8_t tag = static_cast<uint8_t>(king_square[colour]);\n"),
+  origin="S118")
+
+m("PT18_tag_only_tested_for_empty", E, "eval/pawn table",
+  "any tag is a hit, so a king that moved reads where it was",
+  (SLOT_TEST, "    if (shelter->king[colour] == 0) {\n"),
+  origin="S118")
+
+m("PT19_tagged_with_the_other_king", E, "eval/pawn table",
+  "a king's slot is checked against the other king's square",
+  (SHELTER_TAG,
+   "    const uint8_t tag = static_cast<uint8_t>(king_square[1 - colour] + 1);\n"),
+  origin="S118")
+
+m("PT20_slot_sign_dropped", E, "eval/pawn table",
+  "both kings' shelter added for White",
+  ("    safety_sum += sign * shelter->score[colour];\n",
+   "    (void)sign;\n    safety_sum += shelter->score[colour];\n"),
+  origin="S118")
+
+m("PT21_slot_hit_recomputes", E, "eval/pawn table",
+  "a slot's hit counts the features as well: every score right and nothing saved",
+  ("      assert(shelter_is_fresh(board, colour, shelter));\n",
+   "      int features[KS_FEATURE_COUNT];\n"
+   "      king_shelter_features(board, colour, features);\n"
+   "      shelter->score[colour] = shelter_score(features);\n"),
+  origin="S118")
+
+m("PT22_stage_one_fills_the_slot", E, "eval/pawn table",
+  "stage one takes the slot's line, so a shortcut node pays for a shelter it "
+  "never reads",
+  ("    const int cheap = cheap_score(board, pawn_entry_of(board, table));\n\n"
+   "    return lazy_from_cheap(cheap, alpha, beta, exact, [board, table] {\n",
+   "    const int cheap = cheap_score(board, pawn_entry_of(board, table));\n"
+   "    expensive_score(board, pawn_shelter_of(board, table));\n\n"
+   "    return lazy_from_cheap(cheap, alpha, beta, exact, [board, table] {\n"),
+  origin="S118")
+
+m("PT23_search_stage_two_pure", E, "eval/pawn table",
+  "the search's lazy form computes stage two without its slot: every score right "
+  "and nothing saved",
+  ("      return expensive_score(board, pawn_shelter_of(board, table));\n",
+   "      return evaluate_expensive(board);\n"),
+  origin="S118")
+
+m("PT24_trace_lazy_reads_the_table", E, "eval/pawn table",
+  "the trace build's lazy form reads the table and the slot, as PT12 does the "
+  "full form's: a hit records no coefficient for what it answers",
+  ("  if constexpr (trace_build) {\n"
+   "    return evaluate_lazy(board, alpha, beta, exact);\n",
+   "  if constexpr (false) {\n"
+   "    return evaluate_lazy(board, alpha, beta, exact);\n"),
   origin="S118")

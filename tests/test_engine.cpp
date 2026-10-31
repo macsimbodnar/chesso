@@ -5923,7 +5923,7 @@ TEST_SUITE("engine: mate safety")
       REQUIRE(load_FEN(ply_two, &game));
       tt_reset(&table);
       tt_new_search(&table);
-      // Heap-owned and fresh per drive: the struct is 1.3 MiB (S222).
+      // Heap-owned and fresh per drive: the struct is 1.4 MiB (S222).
       state = std::make_unique<search_state_t>();
       state->tt = &table;
       state->stop = &never_stop;

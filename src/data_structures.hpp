@@ -779,9 +779,36 @@ struct pawn_entry_t
 
 static_assert(sizeof(pawn_entry_t) == 32, "two entries to a cache line");
 
+// Each king's shelter on the structure the same index's entry holds, DEC-332
+// (5): the four features of src/evaluation.cpp `king_shelter_features` read the
+// pawns and that one king's square and nothing else, so they are one more thing
+// to compute once. A slot of its own and not fields of the entry, because stage
+// one never reads it: the search's every evaluation touches the entry's line,
+// and this line only behind the lazy shortcut.
+//
+// `king` is the square the score was taken at, plus one, per colour, 0 for
+// none: so an empty table is empty for a king on a8 too, whose square is 0. The
+// pawn half of the verifier is the entry's, which is why filling an entry
+// empties its slot, and why stage two reads a slot only after stage one has
+// read its entry. `score` is the king's side's own, packed, raw: before the
+// sign, the clamp and the taper, so what is added to the sum is what the
+// features would have added.
+//
+// S122's storm adds to this score or takes the spare bytes: nothing computes
+// one today (DEC-332 (5)).
+struct pawn_shelter_t
+{
+  score_t score[2];
+  uint8_t king[2];
+  uint8_t spare[6];
+};
+
+static_assert(sizeof(pawn_shelter_t) == 16, "four slots to a cache line");
+
 struct pawn_table_t
 {
   alignas(64) pawn_entry_t entries[PAWN_TABLE_ENTRIES];
+  alignas(64) pawn_shelter_t shelter[PAWN_TABLE_ENTRIES];
 };
 
 
@@ -1103,7 +1130,7 @@ struct search_state_t
   // cont_hist clears exactly the way quiet_history and counter_moves already
   // do and `ucinewgame` needs no separate clear for any of the three.
   //
-  // What that costs is where the struct may be built. 1.3 MiB does not fit the
+  // What that costs is where the struct may be built. 1.4 MiB does not fit the
   // 512 KiB a macOS std::thread gets by default, which the discarded MacBook
   // attempt at S024 is the record of. So every instance built off the main
   // thread is heap-owned by its builder -- iterative_deepening_search()'s one

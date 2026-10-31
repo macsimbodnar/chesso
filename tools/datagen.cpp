@@ -207,7 +207,7 @@ search_t run_search(game_t* game,
                     uint64_t nodes,
                     int max_depth)
 {
-  // Heap-owned, not a local: search_state_t is 1.3 MiB and play_games() calls
+  // Heap-owned, not a local: search_state_t is 1.4 MiB and play_games() calls
   // this from a worker std::thread, whose default stack is 512 KiB on macOS.
   // Value-initialised exactly as `= {}` was. S222.
   auto state_owner = std::make_unique<search_state_t>();

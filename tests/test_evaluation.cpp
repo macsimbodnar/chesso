@@ -25,7 +25,7 @@ static game_t game;
 static game_t mirrored;
 
 // S099's mirror case: a correction table and the search state that carries it
-// into search_corrected_eval_probe(). Static because the state is 1.3 MiB; the
+// into search_corrected_eval_probe(). Static because the state is 1.4 MiB; the
 // table keeps it company.
 static pawn_correction_t mirror_correction;
 static search_state_t mirror_state;
@@ -2275,6 +2275,10 @@ std::unique_ptr<pawn_table_t> fresh_pawn_table()
 const pawn_entry_t& pawn_slot(const pawn_table_t& table, const game_t& g)
 { return table.entries[g.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)]; }
 
+const pawn_shelter_t& pawn_slot_shelter(const pawn_table_t& table,
+                                        const game_t& g)
+{ return table.shelter[g.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)]; }
+
 bool pawn_slot_holds(const pawn_table_t& table, const game_t& g)
 {
   const pawn_entry_t& entry = pawn_slot(table, g);
@@ -2568,6 +2572,145 @@ TEST_SUITE("evaluation: pawn table")
     CHECK_EQ(entry.white_files, 0);
     CHECK_EQ(entry.black_files, 0);
   }
+
+  // The shelter slot, DEC-332 (5). Filled by stage two and by nothing else: a
+  // shortcut node leaves it empty, which is the whole reason it is apart from
+  // the entry and the reason its line is not paid for there.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "only stage two fills the shelter slot")
+  {
+    REQUIRE(load_FEN("4k3/ppp5/8/8/8/8/5PP1/4K3 w - - 0 1", &game));
+
+    auto table = fresh_pawn_table();
+    const int cheap = evaluate_cheap(&game.board);
+    const pawn_shelter_t& slot = pawn_slot_shelter(*table, game);
+
+    bool exact = true;
+    const int beyond_beta = cheap - LAZY_EVAL_MARGIN;
+    evaluate_lazy(&game.board, beyond_beta - 1000, beyond_beta, &exact,
+                  table.get());
+
+    REQUIRE_FALSE(exact);
+    REQUIRE(pawn_slot_holds(*table, game));
+    CHECK_EQ(slot.king[WHITE], 0);
+    CHECK_EQ(slot.king[BLACK], 0);
+
+    const int full = evaluate(&game.board);
+    evaluate_lazy(&game.board, full - 1000, full + 1000, &exact, table.get());
+
+    REQUIRE(exact);
+    CHECK_EQ(slot.king[WHITE], e1 + 1);
+    CHECK_EQ(slot.king[BLACK], e8 + 1);
+  }
+
+  // A king moved over the same pawns: the entry is a hit and the slot is not,
+  // for that king, and only for that king. Each side moves its king in turn.
+  // What makes this bite is the shelter having changed: the two positions'
+  // features are checked to differ.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "a king that moved reads its own shelter")
+  {
+    const char* const home = "4k3/5ppp/8/8/8/8/PPP5/1K6 w - - 0 1";
+    const char* const pairs[][2] = {
+        {home, "4k3/5ppp/8/8/8/8/PPP5/7K w - - 0 1"},
+        {home, "k7/5ppp/8/8/8/8/PPP5/1K6 w - - 0 1"},
+    };
+
+    for (const auto& pair : pairs) {
+      const std::string first = pair[0];
+      const std::string second = pair[1];
+      CAPTURE(first);
+      CAPTURE(second);
+      REQUIRE(load_FEN(first, &game));
+      REQUIRE(load_FEN(second, &pawn_table_other));
+      REQUIRE_EQ(game.board.pawn_hash, pawn_table_other.board.pawn_hash);
+
+      int features_a[2][KS_FEATURE_COUNT];
+      int features_b[2][KS_FEATURE_COUNT];
+      king_safety_features(&game.board, features_a);
+      king_safety_features(&pawn_table_other.board, features_b);
+      REQUIRE(std::memcmp(features_a, features_b, sizeof(features_a)) != 0);
+
+      auto table = fresh_pawn_table();
+
+      CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+      CHECK_EQ(evaluate(&pawn_table_other.board, table.get()),
+               evaluate(&pawn_table_other.board));
+      CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+    }
+  }
+
+  // The slot answers for the structure its entry holds, so a replaced entry
+  // takes the slot's tags with it. Same kings, same 64 bits of key, other
+  // pawns: tags that survived would answer the second structure with the
+  // first's shelter.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t,
+                    "a replaced structure takes its shelter with it")
+  {
+    REQUIRE(load_FEN("4k3/5ppp/8/8/8/8/5PPP/6K1 w - - 0 1", &game));
+    REQUIRE(load_FEN("4k3/5ppp/8/8/8/8/PPP5/6K1 w - - 0 1", &pawn_table_other));
+    pawn_table_other.board.pawn_hash = game.board.pawn_hash;
+
+    int features_a[2][KS_FEATURE_COUNT];
+    int features_b[2][KS_FEATURE_COUNT];
+    king_safety_features(&game.board, features_a);
+    king_safety_features(&pawn_table_other.board, features_b);
+    REQUIRE(std::memcmp(features_a, features_b, sizeof(features_a)) != 0);
+
+    auto table = fresh_pawn_table();
+
+    CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+    REQUIRE_EQ(pawn_slot_shelter(*table, game).king[WHITE], g1 + 1);
+
+    CHECK_EQ(evaluate(&pawn_table_other.board, table.get()),
+             evaluate(&pawn_table_other.board));
+    CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+  }
+
+  // A king on a8, square 0, against an empty slot. A tag that was the square
+  // itself would read the empty slot's zeros as this king's shelter, and a king
+  // with open files around it does not have a shelter of zero.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t, "an empty slot is not a king's on a8")
+  {
+    const char* const fens[] = {"k7/8/8/8/8/8/8/1R2K2R w - - 0 1",
+                                "K7/8/8/8/8/8/8/1r2k2r b - - 0 1"};
+
+    for (const std::string fen : fens) {
+      CAPTURE(fen);
+      REQUIRE(load_FEN(fen, &game));
+
+      int features[2][KS_FEATURE_COUNT];
+      king_safety_features(&game.board, features);
+
+      const int on_a8 =
+          (game.board.bitboards[W_KING] == (BB_1 << a8)) ? WHITE : BLACK;
+      REQUIRE_EQ(game.board.bitboards[on_a8 == WHITE ? W_KING : B_KING],
+                 BB_1 << a8);
+      REQUIRE(features[on_a8][KS_OPEN_FILE] > 0);
+
+      auto table = fresh_pawn_table();
+
+      CHECK_EQ(evaluate(&game.board, table.get()), evaluate(&game.board));
+      CHECK_EQ(pawn_slot_shelter(*table, game).king[on_a8], a8 + 1);
+    }
+  }
+
+#ifdef NDEBUG
+  // As "a hit answers from the entry", for the slot, and Release only for the
+  // same reason.
+  TEST_CASE_FIXTURE(pawn_table_fixture_t, "a slot's hit answers from the slot")
+  {
+    REQUIRE(load_FEN("4k3/ppp5/8/8/8/8/5PP1/4K3 w - - 0 1", &game));
+
+    auto table = fresh_pawn_table();
+    const int pure = evaluate(&game.board, table.get());
+
+    table->shelter[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)]
+        .score[WHITE] += make_score(48, 48);
+
+    CHECK_NE(evaluate(&game.board, table.get()), pure);
+  }
+#endif
 
   // The lazy form through the table: both shortcuts and the exact path, value
   // and flag, against the pure form. Windows set off the cheap score so that

@@ -155,6 +155,15 @@ TEST_SUITE("search: pawn table")
       entry.black_files = 0xff;
     }
 
+    // Tags for the kings this position has, on scores no count produces: only
+    // emptying a slot with its entry stops these from answering.
+    for (pawn_shelter_t& slot : stale->pawn_table.shelter) {
+      slot.king[WHITE] = e1 + 1;
+      slot.king[BLACK] = e8 + 1;
+      slot.score[WHITE] = make_score(999, -999);
+      slot.score[BLACK] = make_score(-999, 999);
+    }
+
     const search_t from_empty = run(empty.get());
     const search_t from_stale = run(stale.get());
 
@@ -522,7 +531,7 @@ TEST_SUITE("search: budgets")
     REQUIRE(load_FEN(QS_CUTOFF_FEN, &game));
   }
 
-  // Heap-owned and fresh per search: the struct is 1.3 MiB (S222), and a case
+  // Heap-owned and fresh per search: the struct is 1.4 MiB (S222), and a case
   // holding several on its own frame comes close to the 8 MiB stack.
   static std::unique_ptr<search_state_t> budget_state(uint64_t node_limit)
   {
@@ -15287,7 +15296,7 @@ TEST_SUITE("search: pawn correction history")
   TEST_CASE_FIXTURE(correction_fixture_t,
                     "the search teaches the table exactly where the gate does")
   {
-    // Once: the state is 1.3 MiB and zeroing it for every drive would cost
+    // Once: the state is 1.4 MiB and zeroing it for every drive would cost
     // more than the drives. Nothing a depth-one node reads from it decides
     // what this case compares -- the case reads the node's outputs, whatever
     // the ordering tables made of them.

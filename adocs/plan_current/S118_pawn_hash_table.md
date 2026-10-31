@@ -347,3 +347,56 @@ one mode per call, each exit 0, `--citations` and `--touches` 0 flagged over 17 
 `MANUAL.md` checked: its new-game paragraph gains the table among what is per `go`.
 `DEV_MANUAL.md` is checked with the scripts it will name. `gate_extra`'s other stages and the
 Debug self-play bind by `search.cpp` (DEC-141) and are taken on the final tree.
+
+## 2026-10-31: phase B, the shelter slot
+
+Its own commit and its own timing row, DEC-332 (5).
+
+**What landed.** `pawn_shelter_t`, 16 bytes, parallel to the entries: a packed score and
+a tag per king, the tag being the square plus one and 0 being empty. `pawn_entry_of()`
+empties it when it fills the entry, and that is the pawn half of its verifier, so stage
+two reads it only after stage one has read the entry: `pawn_shelter_of()`, called past
+the lazy shortcut, and two statements in `evaluate(board, table)` because `+` does not
+order its operands. `evaluate_mobility_and_king_safety` takes the slot. The pure forms
+and the two accessors hand it an empty one nobody keeps, so every king misses and the
+features are read, traced and collected as before; there is one instantiation and no
+branch on a null. `lazy_from_cheap()` takes stage two as a callable, so a shortcut node
+never touches the slot's line. The trace gate moved from `cheap_from_table()` to the two
+forms, which now hold both stages. The table is 192 KiB at `PAWN_TABLE_BITS` 12, the
+struct 1.40 MiB, the census gains `slot_hits` and `slot_misses`, per king, and the "1.3 MiB"
+this step's first commit wrote in seven comments reads 1.4.
+
+**Bit-identical**, as the cache: the slot's score is the integer the features would have
+added, before the sign, the clamp and the one taper. `adocs/data/S118_inv6.txt` carries the
+row, both builds. The slot holds what is before the clamp, so `LazyEvalMargin` set in the
+tune build stales nothing, as no entry field does.
+
+**Observed red first.** Against a stub of both forms calling the pure stage two: "only stage
+two fills the shelter slot", "a replaced structure takes its shelter with it", "an empty
+slot is not a king's on a8", "a slot's hit answers from the slot". "A king that moved reads
+its own shelter" passes the stub by construction and goes red under PT18 and PT19. A fixture
+was wrong on the way: a rook on a1 gives check to a king on a8 with White to move, which
+`load_FEN` refuses, and the guard's first run said so. In Debug, a wrong store planted in
+the fill: `bench 4` aborts on `shelter_is_fresh`, 134.
+
+**Guards.** The five cases named, in "evaluation: pawn table". The stale-table search case
+gains slots whose tags are this position's kings on scores no count produces, which only
+emptying a slot with its entry defeats. The trace case gains the lazy form and an empty slot.
+The cases over the whole list run both stages through the slot already.
+
+**Mutants** PT16 to PT24, on a private clone holding the tree as one commit: **9 of 9 killed**.
+PT20 was stillborn on its first run, `sign` left unused under `-Werror`, and carries a `(void)`
+now, the tool's documented form. PT17, PT21, PT22, PT23 and PT24 leave the bench where it was,
+and what catches PT21, PT22, PT23 and PT24 is one case each. PT24 reads the trace build's lazy
+form, which PT12 does not. The whole list PT01 to PT24 is run again on the final tree.
+
+**Instructions, a count and no timing:** `bench 16` 24275319795 -> 24069772518, **-0.85 %**
+on the cache and **-9.01 %** on the parent; S020's positions 77042207471 -> 76370063958,
+**-0.87 %** and **-9.63 %**. `bench`'s census: 2963238 probes at 89.703 %, 3615594 of a king's
+slot at 74.441 %, which is the design pass's simulated figure. Debug `bench 11`, every hit
+checked: 45007823300 instructions against 44858231746 on the parent, **+0.33 %**, since a
+checked hit recomputes what the parent computed anyway.
+
+**Gates**, on the staged tree: both builds 0 warnings; `ctest -L fast` 50 of 50 in both;
+format clean; the S297 clang pair 50 of 50 twice, 365 s; `plan_prose_check.py`'s five modes
+each exit 0.

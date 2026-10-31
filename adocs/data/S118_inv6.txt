@@ -14,10 +14,12 @@
 #   search_bench.py depth 9                   18a3d90b088629075772b266bfac9a9a
 #   search_bench.py depth 12                  e508a99050e1b634599702347058a39e
 #
-#   parent  build/  build-tune/  all four as above
-#   cache   build/  build-tune/  all four as above
+#   parent   build/  build-tune/  all four as above
+#   cache    build/  build-tune/  all four as above
+#   shelter  build/  build-tune/  all four as above
 #
-# Also node-identical, and not stream-compared: bench 16, 11505888 nodes, and S020's
-# 300 positions at depth 11, 38364944 (adocs/data/S135_cost.py workload), against
-# the parent. And in the Debug build, where every hit is asserted against a fresh
-# pass: bench 11, 1218142 nodes, 0 `Assertion`.
+# Also node-identical at each commit, and not stream-compared: bench 16, 11505888
+# nodes, and S020's 300 positions at depth 11, 38364944 (adocs/data/S135_cost.py
+# workload), the parent's totals. And in the Debug build, where every hit of the entry
+# and of the slot is asserted against a fresh computation: bench 11, 1218142 nodes,
+# 0 `Assertion`, at each commit.

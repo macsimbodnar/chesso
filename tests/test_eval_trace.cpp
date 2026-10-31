@@ -9,6 +9,7 @@
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "evaluation.hpp"
+#include "search.hpp"
 #include "test_eval_positions.hpp"
 #include "test_helpers.hpp"
 #include "test_walked_counts.hpp"
@@ -323,13 +324,25 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   static eval_trace::record_t record;
   auto table = std::make_unique<pawn_table_t>();
 
-  const auto traced = [&](bool read_table, row_trace_t* out) {
+  enum form_t
+  {
+    PURE,
+    FULL,
+    LAZY
+  };
+
+  const auto traced = [&](form_t form, row_trace_t* out) {
     std::string error;
+    bool exact = false;
 
     record.clear();
     eval_trace::sink = &record;
-    if (read_table) {
+    if (form == FULL) {
       evaluate(&game.board, table.get());
+    } else if (form == LAZY) {
+      // A window nothing is outside, so stage two runs and records.
+      evaluate_lazy(&game.board, -SEARCH_SCORE_INF, SEARCH_SCORE_INF, &exact,
+                    table.get());
     } else {
       evaluate(&game.board);
     }
@@ -352,14 +365,18 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     CAPTURE(fen);
     REQUIRE(load_FEN(fen, &game));
 
-    row_trace_t pure, first, second;
+    row_trace_t pure, first, second, lazy_first, lazy_second;
 
-    traced(false, &pure);
-    traced(true, &first);
-    traced(true, &second);
+    traced(PURE, &pure);
+    traced(FULL, &first);
+    traced(FULL, &second);
+    traced(LAZY, &lazy_first);
+    traced(LAZY, &lazy_second);
 
     REQUIRE(same(pure, first));
     REQUIRE(same(pure, second));
+    REQUIRE(same(pure, lazy_first));
+    REQUIRE(same(pure, lazy_second));
 
     const pawn_entry_t& entry =
         table->entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)];
@@ -367,6 +384,12 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     // The table is not written here, so an entry stays what it was made.
     REQUIRE_EQ(entry.white_pawns, bb_t{0});
     REQUIRE_EQ(entry.black_pawns, bb_t{0});
+
+    const pawn_shelter_t& slot =
+        table->shelter[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)];
+
+    REQUIRE_EQ(slot.king[WHITE], 0);
+    REQUIRE_EQ(slot.king[BLACK], 0);
 
     if (game.board.bitboards[W_PAWN] != 0) { with_pawn_terms++; }
   }

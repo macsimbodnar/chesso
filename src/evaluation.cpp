@@ -1984,8 +1984,9 @@ int evaluate_cheap(const board_t* board)
 #ifdef CHESSO_TUNE
 // S118's hit rate, counted over a real search and read at the process's end.
 // Tune build only, on only when CHESSO_PAWN_TABLE_CENSUS names a file, which
-// gets one line appended: `hits <n> misses <n>`. The binary a timing or an SPRT
-// measures compiles none of it. adocs/data/S118_hitrate.py drives it.
+// gets one line appended: `hits <n> misses <n> slot_hits <n> slot_misses <n>`,
+// the slot's counted per king. The binary a timing or an SPRT measures compiles
+// none of it. adocs/data/S118_hitrate.py drives it.
 namespace
 {
 struct pawn_table_census_t
@@ -1993,6 +1994,8 @@ struct pawn_table_census_t
   const char* path = std::getenv("CHESSO_PAWN_TABLE_CENSUS");
   std::atomic<uint64_t> hits{0};
   std::atomic<uint64_t> misses{0};
+  std::atomic<uint64_t> slot_hits{0};
+  std::atomic<uint64_t> slot_misses{0};
 
   ~pawn_table_census_t()
   {
@@ -2000,7 +2003,10 @@ struct pawn_table_census_t
 
     std::ofstream out(path, std::ios::app);
 
-    if (out) { out << "hits " << hits << " misses " << misses << '\n'; }
+    if (out) {
+      out << "hits " << hits << " misses " << misses << " slot_hits "
+          << slot_hits << " slot_misses " << slot_misses << '\n';
+    }
   }
 };
 
@@ -2037,14 +2043,18 @@ static bool pawn_entry_is_fresh(const pawn_entry_t* entry)
     const board_t* board,
     pawn_table_t* table)
 {
-  pawn_entry_t* entry =
-      &table->entries[board->pawn_hash & (PAWN_TABLE_ENTRIES - 1)];
+  const size_t slot = board->pawn_hash & (PAWN_TABLE_ENTRIES - 1);
+  pawn_entry_t* entry = &table->entries[slot];
   const bb_t white_pawns = board->bitboards[W_PAWN];
   const bb_t black_pawns = board->bitboards[B_PAWN];
 
   if (entry->white_pawns != white_pawns || entry->black_pawns != black_pawns)
       [[unlikely]] {
     pawn_entry_fill(white_pawns, black_pawns, entry);
+
+    // The slot's scores were another structure's.
+    table->shelter[slot].king[WHITE] = 0;
+    table->shelter[slot].king[BLACK] = 0;
     PAWN_TABLE_COUNT(misses);
   } else {
     assert(pawn_entry_is_fresh(entry));
@@ -2052,18 +2062,6 @@ static bool pawn_entry_is_fresh(const pawn_entry_t* entry)
   }
 
   return entry;
-}
-
-
-// evaluate_cheap() through a table, except in the trace build: a hit records no
-// coefficient, and that build's every coefficient is the point (DEC-332 (4)).
-static inline int cheap_from_table(const board_t* board, pawn_table_t* table)
-{
-  if constexpr (trace_build) {
-    return evaluate_cheap(board);
-  } else {
-    return cheap_score(board, pawn_entry_of(board, table));
-  }
 }
 
 
@@ -2319,6 +2317,33 @@ static inline void king_shelter_features(const board_t* board,
 }
 
 
+// One king's shelter, packed, from its own side.
+static inline score_t shelter_score(const int features[KS_FEATURE_COUNT])
+{
+  score_t score = 0;
+
+  for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
+    score += features[f] * king_safety_score[f];
+  }
+
+  return score;
+}
+
+
+#ifndef NDEBUG
+// A slot's hit against a fresh count, as pawn_entry_is_fresh() is the entry's.
+static bool shelter_is_fresh(const board_t* board,
+                             int colour,
+                             const pawn_shelter_t* shelter)
+{
+  int features[KS_FEATURE_COUNT];
+  king_shelter_features(board, colour, features);
+
+  return shelter->score[colour] == shelter_score(features);
+}
+#endif
+
+
 // Mobility and king safety in one pass, White relative. The two terms ask the
 // same question of every piece -- where does it attack -- and asking it twice
 // cost 7.7 % of the search at depth 12 with king safety weighted at zero, since
@@ -2350,8 +2375,14 @@ static inline void king_shelter_features(const board_t* board,
 // The two tapered terms are handed back separately through `mobility_out` and
 // `safety_out` for the same reason and under the same `if constexpr`: at
 // <false> the pointers and the stores are not compiled at all.
+//
+// `shelter` is where the shelter features' score comes from and goes to: the
+// table's slot in the search, and an empty one of the caller's everywhere else,
+// which every king misses, so the features are read, traced and collected
+// there.
 template <bool collect>
 static int evaluate_mobility_and_king_safety(const board_t* board,
+                                             pawn_shelter_t* shelter,
                                              int out[2][KS_FEATURE_COUNT],
                                              int* mobility_out = nullptr,
                                              int* safety_out = nullptr)
@@ -2460,16 +2491,28 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
   for (int colour = 0; colour < 2; ++colour) {
     const int sign = (colour == WHITE) ? 1 : -1;
+    const uint8_t tag = static_cast<uint8_t>(king_square[colour] + 1);
 
-    int features[KS_FEATURE_COUNT];
-    king_shelter_features(board, colour, features);
+    if (shelter->king[colour] != tag) {
+      int features[KS_FEATURE_COUNT];
+      king_shelter_features(board, colour, features);
 
-    for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
-      safety_sum += sign * features[f] * king_safety_score[f];
-      EVAL_TRACE(TERM_KING_SAFETY, f, sign * features[f]);
+      shelter->score[colour] = shelter_score(features);
+      shelter->king[colour] = tag;
 
-      if constexpr (collect) { out[colour][f] = features[f]; }
+      for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
+        EVAL_TRACE(TERM_KING_SAFETY, f, sign * features[f]);
+
+        if constexpr (collect) { out[colour][f] = features[f]; }
+      }
+    } else {
+      assert(shelter_is_fresh(board, colour, shelter));
     }
+
+    // The sum the features would have added one at a time: packing is exact
+    // under integer multiplication and addition (data_structures.hpp), so this
+    // is the same integer before the same taper (DEC-332 (6)).
+    safety_sum += sign * shelter->score[colour];
   }
 
   const int phase = game_phase(board);
@@ -2510,12 +2553,22 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 // mobility ran p99 81 and a maximum of 143, so the clamp does not bind there at
 // all; it binds only in the promotion pile-ups where the number was never
 // meaningful anyway.
-static int evaluate_expensive(const board_t* board)
+static int expensive_score(const board_t* board, pawn_shelter_t* shelter)
 {
-  const int score = evaluate_mobility_and_king_safety<false>(board, nullptr);
+  const int score =
+      evaluate_mobility_and_king_safety<false>(board, shelter, nullptr);
   const int bounded = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
 
   return (board->active_color == WHITE) ? bounded : -bounded;
+}
+
+
+// The pure form: an empty slot nobody keeps.
+static int evaluate_expensive(const board_t* board)
+{
+  pawn_shelter_t empty = {};
+
+  return expensive_score(board, &empty);
 }
 
 
@@ -2527,7 +2580,11 @@ int evaluate(const board_t* board)
 // so the score it also computes is thrown away rather than split out: a second
 // entry point into the same loop would be one more thing to keep in step.
 void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT])
-{ evaluate_mobility_and_king_safety<true>(board, out); }
+{
+  pawn_shelter_t empty = {};
+
+  evaluate_mobility_and_king_safety<true>(board, &empty, out);
+}
 
 
 // What evaluate_expensive() computed before the clamp took it away. The counts
@@ -2539,9 +2596,10 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
   int counts[2][KS_FEATURE_COUNT];
   int mobility_white = 0;
   int safety_white = 0;
+  pawn_shelter_t empty = {};
 
-  evaluate_mobility_and_king_safety<true>(board, counts, &mobility_white,
-                                          &safety_white);
+  evaluate_mobility_and_king_safety<true>(board, &empty, counts,
+                                          &mobility_white, &safety_white);
 
   // The same sign evaluate_expensive() applies, so the sum is the correction as
   // the caller would have received it and not a White-relative number that has
@@ -2554,16 +2612,61 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
 }
 
 
+// The slot of the board's pawns, for stage two. A slot answers for the
+// structure its entry holds, so this comes after pawn_entry_of() on the same
+// board and never before it: on a miss, that call is what empties the slot of
+// another structure.
+// Unused in the trace build, as pawn_entry_of() is.
+[[maybe_unused]] static inline pawn_shelter_t* pawn_shelter_of(
+    const board_t* board,
+    pawn_table_t* table)
+{
+  pawn_shelter_t* shelter =
+      &table->shelter[board->pawn_hash & (PAWN_TABLE_ENTRIES - 1)];
+
+#ifdef CHESSO_TUNE
+  if (shelter->king[WHITE] == get_lsb_index(board->bitboards[W_KING]) + 1) {
+    PAWN_TABLE_COUNT(slot_hits);
+  } else {
+    PAWN_TABLE_COUNT(slot_misses);
+  }
+
+  if (shelter->king[BLACK] == get_lsb_index(board->bitboards[B_KING]) + 1) {
+    PAWN_TABLE_COUNT(slot_hits);
+  } else {
+    PAWN_TABLE_COUNT(slot_misses);
+  }
+#endif
+
+  return shelter;
+}
+
+
+// Through the table, except in the trace build: a hit records no coefficient,
+// and that build's every coefficient is the point (DEC-332 (4)). Two
+// statements, because `+` does not order its operands and the slot has to
+// follow the entry.
 int evaluate(const board_t* board, pawn_table_t* table)
-{ return cheap_from_table(board, table) + evaluate_expensive(board); }
+{
+  if constexpr (trace_build) {
+    return evaluate(board);
+  } else {
+    const int cheap = cheap_score(board, pawn_entry_of(board, table));
+
+    return cheap + expensive_score(board, pawn_shelter_of(board, table));
+  }
+}
 
 
-// The lazy shortcut, on a cheap score from either form.
-static inline int lazy_from_cheap(const board_t* board,
-                                  int cheap,
+// The lazy shortcut, on a cheap score from either form. `expensive` is stage
+// two as that form computes it, called only past the shortcut, so that shortcut
+// nodes pay nothing for it, the slot's line included (DEC-332 (5)).
+template <typename Expensive>
+static inline int lazy_from_cheap(int cheap,
                                   int alpha,
                                   int beta,
-                                  bool* exact)
+                                  bool* exact,
+                                  Expensive expensive)
 {
   // Set on both shortcut paths before either returns, so a caller reading it
   // after a bound sees false rather than whatever it initialised.
@@ -2582,12 +2685,15 @@ static inline int lazy_from_cheap(const board_t* board,
   // Identical to evaluate() by construction: that function is these two terms
   // added, so the number kept here is the static evaluation and not an
   // approximation of it.
-  return cheap + evaluate_expensive(board);
+  return cheap + expensive();
 }
 
 
 int evaluate_lazy(const board_t* board, int alpha, int beta, bool* exact)
-{ return lazy_from_cheap(board, evaluate_cheap(board), alpha, beta, exact); }
+{
+  return lazy_from_cheap(evaluate_cheap(board), alpha, beta, exact,
+                         [board] { return evaluate_expensive(board); });
+}
 
 
 int evaluate_lazy(const board_t* board,
@@ -2596,8 +2702,15 @@ int evaluate_lazy(const board_t* board,
                   bool* exact,
                   pawn_table_t* table)
 {
-  return lazy_from_cheap(board, cheap_from_table(board, table), alpha, beta,
-                         exact);
+  if constexpr (trace_build) {
+    return evaluate_lazy(board, alpha, beta, exact);
+  } else {
+    const int cheap = cheap_score(board, pawn_entry_of(board, table));
+
+    return lazy_from_cheap(cheap, alpha, beta, exact, [board, table] {
+      return expensive_score(board, pawn_shelter_of(board, table));
+    });
+  }
 }
 
 
