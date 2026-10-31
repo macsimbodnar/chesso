@@ -15,8 +15,9 @@ all, and the terms that must stay out of it.
   PT05  a hit recomputes as well             "a hit answers from the entry": the
                                              score is right and the table buys
                                              nothing, which agreement cannot see
-  PT06  the slot from the whole key          the cases' own slot reads: no wrong
-                                             score, and every king move a miss
+  PT06  the slot from the whole key          the cases' own slot reads: the entry
+                                             right, every king move a miss, and
+                                             since the slot a stale shelter (below)
   PT07  the mask off by one                  the same: two slots in the table
   PT08  the terms outside the entry stored   "the same pawns with other pieces
         in it on a miss                      read their own terms"
@@ -54,9 +55,16 @@ The shelter slot, the second commit:
         the table and the slot                records what the pure form records,
                                               twice"
 
-Each of PT05, PT06, PT14, PT15, PT21, PT22 and PT23 leaves every score and node
-count where it was and costs only speed, so `chesso bench` cannot see them and
-the suite has to.
+Each of PT05, PT14, PT15, PT21, PT22 and PT23 leaves every score and node count
+where it was and costs only speed, so `chesso bench` cannot see them and the
+suite has to.
+
+PT06 was of that class until the shelter slot and is not on the final tree, where
+it moves the bench (adocs/data/S118_mutants.txt). It moves the index in
+pawn_entry_of() and not the one pawn_shelter_of() writes for itself, so a filled
+entry empties a slot stage two does not read, and the slot stage two does read
+keeps another structure's tags: a wrong shelter for the same kings, PT16's defect
+by another road. Read from the code, not isolated.
 
 The list is data: `m` is bound by tools/mutation_check.py, which execs this
 file. `old` must occur exactly once in `file`. `expected` is "killed" unless a
@@ -105,8 +113,8 @@ m("PT05_hit_recomputes", E, "eval/pawn table",
   origin="S118")
 
 m("PT06_slot_from_the_whole_key", E, "eval/pawn table",
-  "the slot is the position's key's: right scores, and a miss per position "
-  "instead of per pawn structure",
+  "the entry's slot is the position's key's: the entry right, a miss per "
+  "position instead of per pawn structure, and the shelter slot left unemptied",
   ("  const size_t slot = board->pawn_hash & (PAWN_TABLE_ENTRIES - 1);\n",
    "  const size_t slot = board->hash & (PAWN_TABLE_ENTRIES - 1);\n"),
   origin="S118")

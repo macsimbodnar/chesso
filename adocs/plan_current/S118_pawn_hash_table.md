@@ -5,6 +5,7 @@ touches:    src/evaluation.cpp, src/evaluation.hpp, src/data_structures.hpp, src
             tests/test_evaluation.cpp, tests/test_eval_trace.cpp, tests/test_search.cpp,
             tools/mutants/S118_pawn_cache.py, adocs/data/S118_inv6.txt,
             adocs/data/S118_cost.sh, adocs/data/S118_cost.py, adocs/data/S118_hitrate.py,
+            adocs/data/S118_mutants.txt, adocs/data/README.md,
             DEV_MANUAL.md, MANUAL.md; a stale comment
             each in src/chesso.cpp, tools/datagen.cpp, tools/tuner_trace.hpp,
             tests/test_engine.cpp, tests/test_audit_fen_semantics.cpp, and a symbol
@@ -322,9 +323,16 @@ what the pure form records, twice, and leaves the table empty.
 clone holding the staged tree as one commit, the tool refusing anything but a clean
 linked worktree): **15 of 15 killed**, in 2490 s. DEC-141's clause (2) does not bind, no
 new pruning rule; DEC-332 runs them anyway. PT03, the verifier cut to a stored piece of
-the key, is the one only the planted collision sees among the suite's guards, and it moves
-the bench besides. PT05,
-PT06, PT12, PT14 and PT15 leave the bench where it was, and one case each catches them.
+the key, is the one only the planted collision sees among the suite's guards: it moved
+the bench on this fixture, whose log is not kept, and reads `bench same` on the final tree,
+1 of 50 (`adocs/data/S118_mutants.txt`). PT05, PT12, PT14 and PT15 leave the bench where it
+was, on this fixture and on the final tree. One case each caught them here; on the final
+tree one test of the 50 does, the case named in the log for PT14 and PT15, and the run
+that took PT05 and PT12 stopped before it named theirs. PT06 left the bench too on this
+fixture, which had no slot, and moves it on the final tree, 3 of 50. It moves the index in
+`pawn_entry_of()` and not the one `pawn_shelter_of()` writes for itself, so a filled entry
+empties a slot stage two does not read, and the slot stage two does read keeps another
+structure's tags: a wrong shelter for the same kings. Read from the code, not isolated.
 PT08 goes red on all nine pairs of the same-pawns case in all four orders, read from its
 log, so each pair bites on its own.
 
@@ -414,10 +422,81 @@ final report. What stands on `654ab89`, read from its logs:
   on it**, the run stopped by the owner during PT14. Each of those was killed on its own earlier
   fixture, in the 15 of 15 and the 9 of 9 above, and those fixtures predate small edits, so this
   still owes `python3 tools/mutation_check.py tools/mutants/S118_pawn_cache.py <clean worktree>
-  --only PT14 ... PT24`, about 30 min. PT07 took 554 s against about 145 s for the others.
+  --only PT14 ... PT24`, about 30 min. PT07 took 554 s against about 145 s for the others. (Added
+  later that day: that run has been taken, on `f36762f`, 11 of 11 killed; "resumed" below.)
 - **`adocs/data/S118_cost.sh check`** passes at `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89`: rows aa, s8,
   s10, s12, s14, s16, s18, total, slot. Its `build` and `run` have never run, nor has
-  `adocs/data/S118_hitrate.py` on a real search. **No timing exists for this step.**
+  `adocs/data/S118_hitrate.py` on a real search. **No timing exists for this step.** (Added later that
+  day: `build` has now run, "resumed" below; `run` and the hit rate have not, and still no timing exists.)
 - **Owed by the subagent and not delivered:** the `specs.md` proposal (INV-2 or INV-4 if they name the
   key's readers, the evaluation row, the absent row's "a pawn hash"), and a re-read of `DEV_MANUAL.md`
   and `MANUAL.md` at the landing.
+
+## 2026-10-31: resumed
+
+After the shutdown the coordinator ran the rest of the mutants, `build` and a fast check. Written
+on `f36762f`'s tree, before any timing.
+
+**Mutants: 24 of 24 killed, none survived**, `adocs/data/S118_mutants.txt`. PT01 to PT13 on
+`654ab89`, PT14 to PT24 on `f36762f` (11 of 11, 1927 s); `git diff --stat 654ab89 f36762f -- src
+tests` prints nothing. Two rows no longer read as "phase B, the cache" wrote them, and it now says
+so: PT06 moves the bench and PT03 does not. PT01 to PT13's run was stopped before its kill table, so
+its words are the progress line's, which says `same` also for a bench the tool could not read, where
+the table says `n/a` (`tools/mutation_check.py`). That matters at one row. PT07 misdirects the slot's
+emptying as PT06 does, so by the same reading its bench ought to move, and it reads `same`, in 554 s.
+Either the bench could not be read, or the reading of PT06 is incomplete; `--only PT07` would say,
+about 10 min, and was not run here. Its kill stands either way, 10 of 50.
+
+**`adocs/data/S118_cost.sh build`, the first known to the record**, 2026-10-31 20:44:07, 91 s to the
+marker, `S118-COST-BUILD-DONE`: `.tuning/s118/build.console`, `.tuning/s118/cost/cost.log`. Loadavg
+0.62, governor `powersave`, recorded and not set (DEC-195). **INV-6 passed**: `INV-6: bench 5707449
+nodes, every binary identical`, over base, s8, s10, s12, s14, s16, s18 and shelter. Read back: each
+binary's four streams `diff -r` clean against base's, and base's md5s are the four in
+`adocs/data/S118_inv6.txt`. Eight distinct `.text` sections. The code check against s12 refused
+nothing and printed:
+
+| row | functions | `evaluate` | `evaluate_lazy` | the mask | struct | against s12 |
+|---|---|---|---|---|---|---|
+| s12 | reference | 465 | 501 | `and $0xfff,%eax` | `0x156300` | |
+| s8 | 7 | 464 | 500 | `movzbl 0xc0(%rdi),%eax`, for that `and` and the 64-bit load | `0x138300` | -120 KiB |
+| s10 | 7 | 465 | 501 | `and $0x3ff,%eax` | `0x13e300` | -96 KiB |
+| s14 | 7 | 465 | 501 | `and $0x3fff,%eax` | `0x1b6300` | +384 KiB |
+| s16 | 7 | 464 | 500 | `movzwl 0xc0(%rdi),%eax`, for that `and` and the 64-bit load | `0x336300` | +1920 KiB |
+| s18 | 7 | 465 | 501 | `and $0x3ffff,%eax` | `0x936300` | +8064 KiB |
+
+The seven at every size: the two forms, `iterative_deepening_search` and its `.cold`,
+`leaf_walker_t`'s constructor and its `.cold`, and its destructor; those last five keep their counts,
+1721, 72, 40, 11 and 14. The struct's moves are the table sizes `adocs/data/S118_cost.sh` names, less
+s12's 128 KiB. So its header's sentence held and stands, as does `SIZE_READERS`. The comment over
+`SIZE_READERS` said "the same instruction counts", false for the two forms at s8 and s16, and is
+corrected; this paragraph is the reading it cites.
+
+**The fast check's four findings, and what became of each.**
+
+1. `read`'s `chosen = within[0]` raised IndexError when no candidate lay within both floors, which
+   DEC-332 (7) did not cover. Fixed by the coordinator's ruling, DEC-332 (10), stated in the
+   pre-registration and over the code. Observed red first, on synthetic pairs outside the tree: `read`
+   takes its directory as its argument, and `S118_cost.sh` is what passes it `$OUT/pairs`, so the run
+   never saw `.tuning/s118/cost/`. Rows 4, 3, 2, 3 and 4 points of larger excess: an IndexError at
+   `f36762f`, and now `size: no candidate lay within both floors; larger excess s8 4.000, s10 3.000,
+   s12 2.000, s14 3.000, s16 4.000 points; DEC-332 (10) chooses s12`, then the bar on s12. An exact tie
+   of s10 and s14 chooses s10. The normal path's output is byte-identical.
+2. DEC-141's Debug self-play was on no owed list. It is on the one below.
+3. PT06's stated class was false on the final tree. The mutant file's sentence no longer names it,
+   and "phase B, the cache" says what each mutant reads, PT03's clause included. No `old` or `new`
+   text moved.
+4. The record of `build` and of the mutants was missing. It is the two paragraphs above and
+   `adocs/data/S118_mutants.txt`.
+
+**Still owed, in order:**
+
+1. The timing: `CACHE_SHA=2f7b08a SHELTER_SHA=654ab89 adocs/data/S118_cost.sh run`, about 1 h 50 m, the
+   machine idle, the coordinator.
+2. The hit rate: `adocs/data/S118_hitrate.py` on a real search, about 10 min, the coordinator.
+3. The reading: DEC-332 (7), or (10) where it binds, then (8) and (5).
+4. The landing, on (8)'s credited gain, with DEC-141's Debug self-play on the final tree: four rounds
+   of `fastchess` at 4+0.04, the log grepped for `Assertion`, run by the coordinator at the landing,
+   and the stamp says so. It binds through `src/search.cpp` (DEC-332's Consequences) and has not been
+   run; `gate_extra` above is a different gate.
+5. The `specs.md` proposal, as the stop above lists it.
+6. The re-read of `DEV_MANUAL.md` and `MANUAL.md`.

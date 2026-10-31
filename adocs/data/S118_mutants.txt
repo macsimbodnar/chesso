@@ -1,0 +1,200 @@
+# S118's mutants on the final tree: 24 of 24 killed, none survived. The list is
+# tools/mutants/S118_pawn_cache.py and the tool tools/mutation_check.py, in two runs,
+# because the owner stopped the first during PT14 for a shutdown. 2026-10-31,
+# i7-8700K, g++ 13.3. Both runs' lines are verbatim from their logs.
+#
+# src/ and tests/ do not differ between 654ab89 and f36762f: `git diff --stat 654ab89
+# f36762f -- src tests` prints nothing. Nor do the list and the tool, with `--
+# tools/mutants/S118_pawn_cache.py tools/mutation_check.py`. After both runs the list's
+# docstring and PT06's note were corrected, and no mutant's old or new text.
+#
+# Run one's first line names 4cfe4cd: a private clone holding the tree as one commit,
+# since the tool refuses anything but a clean linked worktree. That clone is gone, so
+# that it held 654ab89's src/ and tests/ is the step file's statement, not re-checked.
+#
+# Run one has no kill table: SIGTERM reached it during PT14, and its traceback is left
+# out here. What it printed is the progress lines. A progress line says `same` for
+# any bench that did not move, the one the tool could not read included, where the
+# kill table says `n/a` (tools/mutation_check.py, bench_moved against bench_column()).
+# So run one's `same` means "not seen to move". PT07's 554.2 s against about 145 s
+# is the row where that may matter: by the code it ought to move the bench, as PT06
+# does, and only `--only PT07` would print its table word. Its verdict stands either
+# way: a suite gone red is a kill.
+
+== PT01 to PT13, tree 654ab89, from .tuning/coord/S118/evidence/mut_final.log, progress lines ==
+worktree /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut at 4cfe4cd clean
+build    /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut/build   jobs 12   label fast
+logs     /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut/build/mutation
+list     /tmp/claude-1000/-home-max-ws-chesso/32bc1423-547e-495e-b04b-5a3c2ba86c69/scratchpad/mut/tools/mutants/S118_pawn_cache.py   clean
+mutants  24 of 24
+baseline green, 50 tests, bench 5707449 nodes via engine
+  PT01_verifier_ignores_black        killed      fast 3/50  bench moved  148.4s
+  PT02_verifier_ignores_white        killed      fast 4/50  bench moved  146.1s
+  PT03_verifier_is_the_key           killed      fast 1/50  bench same  146.3s
+  PT04_no_verifier                   killed      fast 5/50  bench moved  132.8s
+  PT05_hit_recomputes                killed      fast 1/50  bench same  146.8s
+  PT06_slot_from_the_whole_key       killed      fast 3/50  bench moved  148.1s
+  PT07_mask_off_by_one               killed      fast 10/50  bench same  554.2s
+  PT08_outside_terms_stored          killed      fast 5/50  bench moved  133.2s
+  PT09_file_bytes_swapped            killed      fast 4/50  bench moved  140.3s
+  PT10_passers_one_colour            killed      fast 6/50  bench moved  141.1s
+  PT11_file_set_short_a_rank         killed      fast 3/50  bench moved  140.7s
+  PT12_trace_reads_the_table         killed      fast 1/50  bench same  141.8s
+  PT13_lazy_window_turned_round      killed      fast 5/50  bench moved  144.5s
+MUTATION-RUN-FAILED: Terminated: signal 15
+
+== PT14 to PT24, tree f36762f, from .tuning/coord/S118/mut_pt14_24.log, whole ==
+worktree /home/max/ws/chesso/.ref-builds/mut118 at f36762f clean
+build    /home/max/ws/chesso/.ref-builds/mut118/build   jobs 12   label fast
+logs     /home/max/ws/chesso/.ref-builds/mut118/build/mutation
+list     /home/max/ws/chesso/.ref-builds/mut118/tools/mutants/S118_pawn_cache.py   clean
+mutants  11 of 24
+baseline green, 50 tests, bench 5707449 nodes via engine
+  PT14_quiescence_site_pure          killed      fast 1/50  bench same  153.8s
+  PT15_main_site_pure                killed      fast 1/50  bench same  143.3s
+  PT16_filled_entry_keeps_its_slot   killed      fast 3/50  bench moved  158.6s
+  PT17_tag_without_the_plus_one      killed      fast 3/50  bench same  154.5s
+  PT18_tag_only_tested_for_empty     killed      fast 6/50  bench moved  140.7s
+  PT19_tagged_with_the_other_king    killed      fast 4/50  bench moved  162.1s
+  PT20_slot_sign_dropped             killed      fast 5/50  bench moved  142.3s
+  PT21_slot_hit_recomputes           killed      fast 1/50  bench same  162.4s
+  PT22_stage_one_fills_the_slot      killed      fast 1/50  bench same  170.7s
+  PT23_search_stage_two_pure         killed      fast 1/50  bench same  160.7s
+  PT24_trace_lazy_reads_the_table    killed      fast 1/50  bench same  161.6s
+
+kill table   second oracle: engine bench signature (total nodes and the eight best moves)
+
+id                                 built  fast      bench   verdict     expected        s
+-----------------------------------------------------------------------------------------
+PT14_quiescence_site_pure          yes    1/50      same    killed      killed      153.8
+PT15_main_site_pure                yes    1/50      same    killed      killed      143.3
+PT16_filled_entry_keeps_its_slot   yes    3/50      moved   killed      killed      158.6
+PT17_tag_without_the_plus_one      yes    3/50      same    killed      killed      154.5
+PT18_tag_only_tested_for_empty     yes    6/50      moved   killed      killed      140.7
+PT19_tagged_with_the_other_king    yes    4/50      moved   killed      killed      162.1
+PT20_slot_sign_dropped             yes    5/50      moved   killed      killed      142.3
+PT21_slot_hit_recomputes           yes    1/50      same    killed      killed      162.4
+PT22_stage_one_fills_the_slot      yes    1/50      same    killed      killed      170.7
+PT23_search_stage_two_pure         yes    1/50      same    killed      killed      160.7
+PT24_trace_lazy_reads_the_table    yes    1/50      same    killed      killed      161.6
+
+what caught each mutant
+
+== PT14_quiescence_site_pure: quiescence, where the evaluation is called most, never reads the table: every score right and nothing saved
+   ctest: 1 of 50 failed
+   [test_search] a quiescence node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+
+== PT15_main_site_pure: a main search node never reads the table: every score right and nothing saved
+   ctest: 1 of 50 failed
+   [test_search] a main search node reads the pawn table  |  CHECK_EQ( state->pawn_table .entries[game.board.pawn_hash & (PAWN_TABLE_ENTRIES - 1)] .white_pawns, white_pawns )
+
+== PT16_filled_entry_keeps_its_slot: a slot's tags outlive the structure they were taken on, so another structure with the same kings reads the first's shelter
+   ctest: 3 of 50 failed
+   [test_evaluation] a forced collision recomputes and never answers for another structure  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+3 more)
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, mirrored_score )
+   [test_evaluation] a replaced structure takes its shelter with it  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE_EQ( read, pure )
+   [test_search] a search's tree does not depend on what its pawn table holds  |  CHECK_EQ( from_stale.explored_nodes, from_empty.explored_nodes )  (+2 more)
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK( stands_pat(walk.fen) )  (+1 more)
+
+== PT17_tag_without_the_plus_one: the tag is the square, so a king on a8 reads an empty slot's zeros
+   ctest: 3 of 50 failed
+   [test_evaluation] colour symmetry over every test position  |  REQUIRE( score == mirrored_score )
+   [test_evaluation] a mirrored position reads the same corrected score  |  REQUIRE( raw == mirrored_raw )
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, mirrored_score )
+   [test_evaluation] only stage two fills the shelter slot  |  CHECK_EQ( slot.king[WHITE], e1 + 1 )  (+1 more)
+   [test_evaluation] a king that moved reads its own shelter  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )
+   [test_evaluation] a replaced structure takes its shelter with it  |  REQUIRE_EQ( pawn_slot_shelter(*table, game).king[WHITE], g1 + 1 )
+   [test_evaluation] an empty slot is not a king's on a8  |  REQUIRE( features[on_a8][KS_OPEN_FILE] > 0 )
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE_EQ( read, pure )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+
+== PT18_tag_only_tested_for_empty: any tag is a hit, so a king that moved reads where it was
+   ctest: 6 of 50 failed
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+7 more)
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, evaluate(&game.board) )
+   [test_evaluation] a king that moved reads its own shelter  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+1 more)
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE_EQ( read, pure )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK( stands_pat(walk.fen) )  (+8 more)
+   [test_leaf_walk] a walk stopped by its ply bound is refused as truncated  |  CHECK( cut.outcome == LEAF_TRUNCATED )  (+5 more)
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR )
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->iteration + 1 == aborted.iteration )
+   [test_mate_carry] a mate score carried across searches keeps a line that reaches it  |  CHECK( reporting >= majority )
+
+== PT19_tagged_with_the_other_king: a king's slot is checked against the other king's square
+   ctest: 4 of 50 failed
+   [test_evaluation] every test position reads the same through the table  |  REQUIRE_EQ( evaluate(&game.board, table.get()), pure )
+   [test_evaluation] the same pawns with other pieces read their own terms  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+7 more)
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, evaluate(&game.board) )
+   [test_evaluation] only stage two fills the shelter slot  |  CHECK_EQ( slot.king[WHITE], e1 + 1 )  (+1 more)
+   [test_evaluation] a king that moved reads its own shelter  |  CHECK_EQ( evaluate(&pawn_table_other.board, table.get()), evaluate(&pawn_table_other.board) )  (+1 more)
+   [test_evaluation] a replaced structure takes its shelter with it  |  REQUIRE_EQ( pawn_slot_shelter(*table, game).king[WHITE], g1 + 1 )
+   [test_evaluation] an empty slot is not a king's on a8  |  CHECK_EQ( pawn_slot_shelter(*table, game).king[on_a8], a8 + 1 )  (+1 more)
+   [test_evaluation] the lazy form reads the same through the table  |  REQUIRE_EQ( read, pure )
+   [test_search] the table never changes the answer  |  REQUIRE( cold.score == without.score )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_search] the search teaches the table exactly where the gate does  |  REQUIRE( state.static_evals[1] == corrected )
+   [test_leaf_walk] every quiet leaf the walk records is one quiescence stands pat at  |  CHECK( !stands_pat(fen) )  (+2 more)
+   [test_leaf_walk] a walk stopped by its ply bound is refused as truncated  |  CHECK( cut.outcome == LEAF_TRUNCATED )  (+19 more)
+   [test_leaf_walk] a principal variation is played out and then resolved  |  CHECK_EQ( outcomes[LEAF_UNCERTIFIED], 0 )  (+1 more)
+   [test_mate_breadth] the engine finds at least the floor of the mined mates  |  REQUIRE( found_exact >= EXACT_FLOOR )
+
+== PT20_slot_sign_dropped: both kings' shelter added for White
+   ctest: 5 of 50 failed
+   [test_evaluation] colour symmetry over every test position  |  REQUIRE( score == mirrored_score )
+   [test_evaluation] a mirrored position reads the same corrected score  |  REQUIRE( raw == mirrored_raw )
+   [test_evaluation] the start position is balanced  |  REQUIRE_EQ( evaluate(&game.board), tempo_mg )
+   [test_evaluation] a mirrored start position is balanced  |  REQUIRE_EQ( evaluate(&game.board), tempo_mg )
+   [test_evaluation] each piece is worth what the tables say  |  REQUIRE( evaluate(&game.board) == test.score )
+   [test_evaluation] a mirrored position reads the same through one table  |  REQUIRE_EQ( score, mirrored_score )
+   [test_search] a quiet position stands pat  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] a quiet evasion is a legal answer to a check  |  REQUIRE_EQ( quiesce(fen, -10000000, 10000000), -541 )
+   [test_search] a quiescence entry carries the static score, never a bound  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] quiescence stands pat on the stored static score  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] quiescence stands pat on the stored score where the bound allows it  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] a mate score is never used as a stand pat  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] a substituted stand pat is stored as the bound it is  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] reverse futility prunes on the stored static score  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] a main-search store records this node's evaluation  |  REQUIRE_EQ( static_score, QUIET_ROOK_EVAL )
+   [test_search] pruning does not hide a forced mate  |  REQUIRE( result.mate_found )
+   [test_search] the losing side takes an available repetition  |  REQUIRE_EQ( evaluate(&game.board), -603 )
+   [test_tuner_gradient] the fixture corpus loads through the tuner's trace  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] load() tapers on the engine's phase, not the stored column  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] every stored row is its FEN's trace, at any thread count  |  CHECK( report.mismatches == 0 )  (+1 more)
+   [test_tuner_gradient] the fixture sits clear of the clamp at the shipped constants  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] gradient() is the derivative of the error it descends  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] the clamp's derivative is exact where it binds  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] moving along a gauge moves no fixture row's score  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] the fit holds every gauge still and no score sees the hold  |  CHECK( report.mismatches == 0 )
+   [test_tuner_gradient] adagrad leaves frozen and unreached parameters bit-identical  |  CHECK( report.mismatches == 0 )
+   [test_eval_trace] the trace reconstructs evaluate() exactly, clamp included  |  CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine )  (+2313 more)
+   [test_mate_pv] an aborted iteration's line printed beside a completed mate reaches it  |  REQUIRE( completed->mate_found )
+
+== PT21_slot_hit_recomputes: a slot's hit counts the features as well: every score right and nothing saved
+   ctest: 1 of 50 failed
+   [test_evaluation] a slot's hit answers from the slot  |  CHECK_NE( evaluate(&game.board, table.get()), pure )
+
+== PT22_stage_one_fills_the_slot: stage one takes the slot's line, so a shortcut node pays for a shelter it never reads
+   ctest: 1 of 50 failed
+   [test_evaluation] only stage two fills the shelter slot  |  CHECK_EQ( slot.king[WHITE], 0 )  (+1 more)
+
+== PT23_search_stage_two_pure: the search's lazy form computes stage two without its slot: every score right and nothing saved
+   ctest: 1 of 50 failed
+   [test_evaluation] only stage two fills the shelter slot  |  CHECK_EQ( slot.king[WHITE], e1 + 1 )  (+1 more)
+
+== PT24_trace_lazy_reads_the_table: the trace build's lazy form reads the table and the slot, as PT12 does the full form's: a hit records no coefficient for what it answers
+   ctest: 1 of 50 failed
+   [test_eval_trace] the search's form records what the pure form records, twice  |  REQUIRE_EQ( entry.white_pawns, bb_t{0} )
+
+mutation score 11 of 11 (100%)   killed 11
+wall 1927s   results /home/max/ws/chesso/.ref-builds/mut118/build/mutation/results.tsv
+MUTATION-RUN-DONE

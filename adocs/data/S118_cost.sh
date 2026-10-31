@@ -32,6 +32,12 @@
 #       within the floor of the best row. s18 is informative, never a candidate
 #       (the step file: a table past the last-level cache is the published
 #       failure, and 8 MiB is two thirds of this machine's 12).
+#   (10) written 2026-10-31, after `build` first ran and before any timing: when no
+#       candidate lies within both floors, the size is the candidate with the
+#       smallest larger-of-the-two excess, a row's excess on a workload being its
+#       cycles minus that workload's best, ties going to the smallest size. It
+#       prints that no candidate lay within both floors, each candidate's larger
+#       excess and which it chooses, and (8) then reads the chosen row as usual.
 #   (8) the bar: DEC-266 (3), (4) and no other. The cache ships if the chosen
 #       size's cycles on both workloads and its wall clear the floor as a gain and
 #       its instructions move the same way. Zero or a loss: not shipped, and
@@ -82,7 +88,8 @@
 # per workload and instrument; a row counts when its cycles CI on both workloads
 # and its wall CI lie wholly beyond the floor the same way and its instructions
 # move the same way (DEC-266 (3), (4)); otherwise zero, or owing (4)'s
-# perturbations when instructions disagree. It prints (7), (8) and (5) applied.
+# perturbations when instructions disagree. It prints (7) or (10), (8) and (5)
+# applied.
 # bench_eval is not read: it calls the pure form, which has no table, and DEC-046
 # and DEC-332 say why it could not price one.
 #

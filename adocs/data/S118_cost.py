@@ -24,10 +24,12 @@ READ takes DIR/<comparison>/{bench16,pos11}/{base,cand}_<k>.cnt and
 DIR/<comparison>/wall/pair_<k>.json for every comparison, A/A first, and prints
 per comparison and instrument the geometric mean ratio cand/base with its 95 % CI,
 then applies DEC-332's three rules, written in S118_cost.sh's header before any
-run:
+run, and (10), written there before any timing:
 
   (7) the size: the smallest of s8 to s16 whose cycles on both workloads lie
       within the floor of the best row. s18 is informative, never a candidate.
+  (10) when none lies within both: the smallest larger-of-the-two excess over
+      the workloads' best rows, ties to the smallest size.
   (8) the bar, DEC-266 (3), (4) and no other: it ships if the chosen size's
       cycles on both workloads and its wall clear the floor as a gain and its
       instructions move the same way. Zero or a loss: not shipped.
@@ -63,9 +65,11 @@ BINARY.update({"total": "shelter", "slot": "shelter"})
 
 # What may read the table's size, by demangled name: the two forms that index
 # the table, and whatever builds, zeroes or frees the struct that holds it. Read
-# off the first real comparison, 2026-10-31 (S118's step file), not assumed: at
-# every size the same functions, the same instruction counts, and the differing
-# lines only the mask and the struct's size.
+# off the first real comparison, 2026-10-31 (S118's step file, "resumed"), not
+# assumed: at every size the same seven functions, each at s12's instruction count
+# but for the two forms at s8 and s16, one fewer, where a narrower load does the
+# mask's work; and the differing lines only the mask, that load and the struct's
+# size.
 SIZE_READERS = (
     "evaluate(board_t const*, pawn_table_t*)",
     "evaluate_lazy(board_t const*, int, int, bool*, pawn_table_t*)",
@@ -216,6 +220,10 @@ def read(directory, rows):
         print(f"{name}: {verdict(r, floors)}, mean of the three {mean * 100:+.2f} %")
 
     # DEC-332 (7): smallest candidate within the floor of the best, both ways.
+    # DEC-332 (10), written 2026-10-31 before any timing: when no candidate lies
+    # within both floors, the candidate with the smallest larger-of-the-two
+    # excess, a row's excess on a workload being its cycles minus that workload's
+    # best, ties going to the smallest size. (8) then reads the chosen row as usual.
     timed = [r for r in CANDIDATES if r in rows]
     chosen = None
     if timed:
@@ -227,9 +235,19 @@ def read(directory, rows):
                   if readings[r]["bench16"]["cycles"][0] - best["bench16"]
                   <= floors[0] and
                   readings[r]["pos11"]["cycles"][0] - best["pos11"] <= floors[1]]
-        chosen = within[0]
-        print(f"size: within the floor of the best {' '.join(within)}; "
-              f"DEC-332 (7) chooses {chosen}")
+        if within:
+            chosen = within[0]
+            print(f"size: within the floor of the best {' '.join(within)}; "
+                  f"DEC-332 (7) chooses {chosen}")
+        else:
+            excess = {r: max(readings[r]["bench16"]["cycles"][0] - best["bench16"],
+                             readings[r]["pos11"]["cycles"][0] - best["pos11"])
+                      for r in timed}
+            # min() keeps the first of equals, and `timed` runs smallest first.
+            chosen = min(timed, key=lambda r: excess[r])
+            print("size: no candidate lay within both floors; larger excess "
+                  + ", ".join(f"{r} {excess[r] * 100:.3f}" for r in timed)
+                  + f" points; DEC-332 (10) chooses {chosen}")
 
         # DEC-332 (8): the bar.
         answer = verdict(readings[chosen], floors)

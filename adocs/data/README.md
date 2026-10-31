@@ -1509,3 +1509,11 @@ The close, 2026-10-31: the SPRT read H1, the increment folded, neutral. S125's s
 | `S125_sprt.log` | S125's one family SPRT, 2026-10-31 07:52:21 to 09:04:51, 1 h 12 m 21 s: the candidate `cf8661b` (the screen's 02567 fit over ten arrays) against its parent `9cbeb68` (the phase 1 landing's `src/`, the family at zero), `{0, 5}` nElo at 8+0.08, Hash 16, on `noob_3moves.epd`, 12 of 12 cores, capped at 20950 rounds; **H1**, Elo +22.89 +/- 10.02, nElo +31.16 +/- 13.60, LLR 2.96, 2508 games, 0 forfeits. `tools/trim_console.py --summary` over the console: 6091 lines, no block omitted, the first 6086 lines the console byte for byte. The PGN and fastchess's log are `chesso_S125_sprt_2026-10-31.tar.xz` in the owner's archive |
 | `S125_bench_eval.txt` | the coordinator's `bench_eval` log whole, interleaved, 3 rounds each of `-r 9 -n 4000000`, machine idle: REF `9cbeb68` mean 63.99 ns a call, CAND `cf8661b` 74.06, the fold 75.93, the same checksum on CAND and the fold. Read in `S125_cost_reading.txt`, RUN 3; evaluate() alone on ten compiled-in positions, one layout, deciding nothing; S118's baseline |
 | `S125_close_inv6.txt` | the fold of DEC-331 (3), (13), (15) against the played candidate: `bench` (5707449), `bench 12` (1861982) and `tools/search_bench.py` at depths 9 and 12, stripped of timing, byte-identical across the played binary and the worktree's `build/` and `build-tune/` before and after; the tuner at `--epochs 0` over S083's corpus (0 of 6226944 rows differ); `tools/feature_audit` (rank 1026 of 1073, nullity 47, no new dependency); the stage-one bound 24317 and 27929; the planted defect's reds; every precondition and golden the fold moves or leaves, each by its script (the gauge walk moves, 0.0882 and 0.1165) |
+
+### S118, the pawn table (DEC-332)
+
+The two commits sit on branch `s118` until DEC-332 (8) reads. S118's step file, "2026-10-31: resumed".
+
+| file | what it is |
+|---|---|
+| `S118_mutants.txt` | `tools/mutants/S118_pawn_cache.py` on the final tree, 24 of 24 killed, in the two runs' own lines: PT01 to PT13 on `654ab89`, progress lines only, that run stopped before its kill table; PT14 to PT24 on `f36762f`, the kill table and what caught each; `src/` and `tests/` the same at both, and why a `same` in the first run means "not seen to move" |
