@@ -417,9 +417,16 @@ def probe_nodes(engine, name, value, fen, go):
         while True:
             line = proc.stdout.readline()
             if not line:
-                break
+                # An engine still alive with its output closed would hold this
+                # error in the wait below for the whole 30 s.
+                proc.kill()
+                raise ConfigError(
+                    f"{engine} closed its output before bestmove under `{go}`")
             if line.startswith("info") and " nodes " in line:
-                nodes = int(line.split(" nodes ")[1].split()[0])
+                # End of file can cut this line off before its number. None and
+                # not the last count, so a `bestmove` after it cannot read stale.
+                count = line.split(" nodes ")[1].split()
+                nodes = int(count[0]) if count else None
             if line.startswith("bestmove"):
                 break
         proc.stdin.write("quit\n")

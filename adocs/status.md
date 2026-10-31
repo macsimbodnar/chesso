@@ -5,7 +5,41 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-30, by hand.
+Updated: 2026-10-31, by hand.
+
+## 2026-10-31: S125's screen and cost read, its phase 2 running; S303 done (handover)
+
+**Read this section first; it replaces "Next, in order" in the 2026-10-30 one
+below up to its item 3.** Mode unchanged. The owner asked on 2026-10-31 for
+Italian in this session when writing to them.
+
+- **The screen read** (`S125_screen.sh all`, 00:35 to 03:44 from `f08d9db`,
+  `S125-ALL-DONE`): kept P2 isolated by file, P5 phalanx, P6 supported, P7 weak
+  unopposed; dropped P1 the increment, P3 doubled by file, P4 backward by rank.
+  `CANDIDATE 02567`, `.tuning/s125/fits/02567/full.hpp`; H0 bisection A = P0,P2 |
+  B = P0,P5,P6 | C = P0,P7. Readings `.tuning/s125/read/`. `.tuning/s125_void1`
+  and `_void2` can now go, with the owner's yes.
+- **The cost run read** (`b5f133c` over `63d5bcf`, `S125-COST-DONE`): all +4.20 %,
+  p2 +1.18 %, p3 +0.65 %, p4 +0.55 %, p5 +1.36 %, p6 +1.05 %, p1 and p7 zero; `all`
+  forces the dropped groups. **A row for the candidate's set is owed**, mask 114,
+  before the SPRT: the phase 2 agent adds it and gives the command.
+- **Phase 2 is running** in `../chesso-s125b` (branch `s125b`, `f08d9db`), brief
+  `.tuning/coord/S125/brief_phase2.md`, diff to
+  `.tuning/coord/S125/s125_candidate.diff`. `apply` done: bench 5707449. No main
+  commit is held any more, except during a run.
+- **Rulings given:** `landing=` in `S125_sprt.sh` names `f08d9db`, because S302
+  moved `cmake/pgo.cmake` after `b5f133c`, with `b5f133c` as a checked ancestor;
+  the line guard narrowed to the ten arrays that move.
+- **Open for the close:** P1's drop against the accepts' "an isolated pawn is
+  never also counted backward" (DEC-331 (3), (13)): the agent proposes.
+
+**Next:** the phase 2 report; fast check; the candidate's cost row, machine idle;
+land (`Bench: 5707449` unless it moves); Debug self-play; pin; the SPRT; then
+items 4 and 5 of the section below.
+
+- **S303 done** (filler, DEC-171): `depth_vs_eval.py` and `spsa_driver.py` fail
+  on an engine that closes its output; worktree `../chesso-s303` removed. Filed
+  S304, the residuals, the next filler.
 
 ## 2026-10-30: paused for a shutdown; S125's screen next (handover)
 

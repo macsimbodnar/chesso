@@ -60,7 +60,7 @@ def best_move(engine, fen, nodes):
     while True:
         line = engine.p.stdout.readline()
         if not line:
-            return "-"
+            raise RuntimeError("engine closed its output before bestmove")
         if line.startswith("bestmove"):
             return line.split()[1]
 
