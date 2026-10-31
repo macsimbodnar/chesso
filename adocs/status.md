@@ -7,6 +7,41 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-31, by hand.
 
+## 2026-10-31, afternoon: paused for a shutdown; S118 waiting for its timing (handover)
+
+**The owner is shutting the workstation down and asked that nothing new start.** No match,
+fit or timing is running; none is owed before the shutdown. The next coordinator starts here.
+
+**S118 (pawn cache) is in progress on branch `s118`, worktree `../chesso-s118`, not on
+`achesso`** (DEC-332 (9)): `2f7b08a` the cache, `654ab89` the shelter slot, both `No
+functional change`, bench 5707449. Staged and uncommitted over them: `adocs/data/S118_cost.sh`,
+`S118_cost.py`, `S118_hitrate.py`, `DEV_MANUAL.md` and the step file, with
+`.tuning/coord/S118/commit_scripts.txt` as the proposed message. `gate_extra` green on the final
+tree (2026-10-31, 1467 s). The final mutant run, PT01 to PT24, may be unfinished: if the agent's
+final report is not recorded below, re-run `tools/mutation_check.py
+tools/mutants/S118_pawn_cache.py` on a clean worktree of `s118`. S118's step file lives on `s118`
+until it lands; on `achesso` it still reads `plan_todo/`.
+
+**Next, in order:**
+1. Commit the staged scripts on `s118`; a fast check over `85b7847..s118`.
+2. Run `adocs/data/S118_cost.sh` `check`, then `run` (about 1 h 50 m, machine idle, marker
+   `S118-COST-(DONE|FAILED)`), and `adocs/data/S118_hitrate.py` (about 10 min).
+3. Read by DEC-332 (7), (8). A credited gain lands the two commits on `achesso`, with DEC-046 marked
+   VOID, a Debug self-play and the record. A zero or a loss does not land them: DEC-046 stands and
+   S122's accepts is amended to read the shelter from stage two.
+4. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
+   coordinator on 2026-10-31**: S121, S123 and S125 were each measured against their own parent and
+   their sum has not been played. Fixed length, an estimate and no verdict (DEC-108).
+5. S102's citation of `evaluate_pawns` for the pawn fills moves to `pawn_pass` when the cache lands.
+
+**Removed with the owner's yes (2026-10-31):** S125's cost trees and `.tuning/s125_void1`, `_void2`;
+33 GB free.
+
+**A reading to carry, simulated 2026-10-31:** at H1 a `{0, 5}` run's estimate is nearly a function of
+its length, nElo about 2.5 + 71000/games at S125's variance, and the stopping bias is only about +1.6
+nElo from 15 to 40 true nElo, +2.5 at 5. So a short H1 is a large effect, not a large error; what cuts
+these figures is self-play against the list and the longer control.
+
 ## 2026-10-31: S125 done (H1, +23 Elo); S118 next
 
 **Main HEAD is clean, nothing is running, no watcher is armed.** Mode unchanged:
@@ -38,13 +73,9 @@ subagent in `../chesso-s125d`, fast-checked; DEC-331 (15) holds the coordinator'
 - **A rule learned, still binding:** no commit in the main checkout while a screen, a cost
   run or an SPRT runs from it, nor between a screen and its `apply`.
 
-**Next:** S118, a pawn cache: its first question is whether the tree changes, stated before
-the run, then the cost it reclaims.
+**Next:** S118, a pawn cache: the handover above is where it stands.
 
 **Worktrees:** `../chesso-s125b` and `../chesso-s125d`, S125's own, removed at the close.
-**Waiting for the owner's yes, not blocking** (31 GB free): S125's cost trees under
-`.tuning/s125/cost` and `cost_cand`, about 3.1 GB, and `.tuning/s125_void1`, `_void2`, about
-1.2 GB. S125's readings are recorded; the archive holds their logs.
 
 **gate_extra**, last `GATE-EXTRA-DONE` 2026-10-31, six stages green in 1514 s on S125's fold
 tree; next weekly run due by 2026-11-07.
