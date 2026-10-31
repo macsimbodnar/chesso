@@ -119,6 +119,25 @@ p7: zero (inside the A/A's floor)
 parent: zero (inside the A/A's floor)
 S125-COST-DONE
 
-# RUN 2, THE ROW `cand` (S125_COST=114, P2, P5, P6 and P7 forced together, the set the candidate computes): NOT YET TIMED.
-# The coordinator's run, on an idle machine, after the gates and before the SPRT; the reading is recorded here in the pin
-# commit, with its own session's A/A floor. The exact command is the step file's "The cost".
+# RUN 2, THE ROW `cand` (S125_COST=114, P2, P5, P6 and P7 forced together, the set the candidate computes): timed by the
+# coordinator 2026-10-31, machine idle, OUT .tuning/s125/cost_cand, console .tuning/s125_cost_cand.console, recorded in the
+# pin commit. Its own session's A/A floor, so its figures do not compare to the first run's floor but to this one.
+
+aa: 16 pairs
+cand: 16 pairs
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       +0.053 %  CI -0.165 .. +0.271 %
+  pos11   instructions +0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       -0.029 %  CI -0.139 .. +0.082 %
+  pos11   wall         -0.060 %  CI -0.227 .. +0.107 %  (cand time over base, + is slower)
+cand: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +3.782 %  CI +3.782 .. +3.782 %
+  bench16 cycles       +4.153 %  CI +4.064 .. +4.243 %
+  pos11   instructions +3.213 %  CI +3.213 .. +3.213 %
+  pos11   cycles       +3.112 %  CI +3.021 .. +3.203 %
+  pos11   wall         +3.248 %  CI +2.633 .. +3.867 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.271 %, pos11 cycles 0.139 %, wall 0.227 %
+forced bench16: A/A instruction floor 1.9 ppb; cand +3.7823 .. +3.7823 %
+forced pos11: A/A instruction floor 20.8 ppb; cand +3.2131 .. +3.2131 %
+cand: COST +3.50 % (cycles and wall beyond the floor, instructions the same way)

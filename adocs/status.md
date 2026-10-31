@@ -33,9 +33,17 @@ Italian in this session when writing to them.
 - **Open for the close:** P1's drop against the accepts' "an isolated pawn is
   never also counted backward" (DEC-331 (3), (13)): the agent proposes.
 
-**Next:** the phase 2 report; fast check; the candidate's cost row, machine idle;
-land (`Bench: 5707449` unless it moves); Debug self-play; pin; the SPRT; then
-items 4 and 5 of the section below.
+**The candidate landed at `cf8661b`** (bench 5707449), fast-checked; both mate
+floors hold, `MATE_IN_THREE_FLOOR` 12 against 11 and 10. Row `cand` read +3.50 %.
+Debug self-play clean. DEC-331 (15) records the rulings, and the fold is owed on
+every verdict. **The SPRT is pinned, `cf8661b` against `9cbeb68`, and runs from the
+main checkout: `.tuning/s125_sprt.log`, up to 41900 games, 19.86 h, ceiling 40 h.
+No commit lands in main until it ends;** S304 may be written in a worktree and held.
+
+**Next:** the verdict; on H0 `S125_screen.sh part A|B|C` in order; on H1 the close:
+the fold (INV-6), hand cases and specs (DEC-331 (13)), archive and ledger. The
+worktrees `../chesso-s125b` and S125's cost trees under `.tuning/s125/`: the first
+goes at the close, the others need the owner's yes.
 
 - **S303 done** (filler, DEC-171): `depth_vs_eval.py` and `spsa_driver.py` fail
   on an engine that closes its output; worktree `../chesso-s303` removed. Filed

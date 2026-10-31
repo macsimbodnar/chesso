@@ -918,8 +918,15 @@ refuses an OUT holding a `reading.txt`, which `.tuning/s125/cost/` does. No guar
 is weakened. The reading's place is `adocs/data/S125_cost_reading.txt`'s RUN 2 and
 the next paragraph.
 
-**The row `cand`'s reading: not yet timed.** The coordinator records it here and
-in `adocs/data/S125_cost_reading.txt` in the pin commit.
+**The row `cand`'s reading, the coordinator's, 2026-10-31: COST +3.50 %**, cycles
+and wall beyond the floor, instructions the same way: bench16 instructions +3.782 %,
+cycles +4.153 %; pos11 instructions +3.213 %, cycles +3.112 %, wall +3.248 %; its
+session's A/A floor bench16 cycles 0.271 %, pos11 cycles 0.139 %, wall 0.227 %.
+`adocs/data/S125_cost_reading.txt`, RUN 2.
+
+**Debug self-play, the coordinator's, at `cf8661b`:** 8 games at 4+0.04, 0
+`Assertion`, 0 `disconnect`, in the form DEV_MANUAL.md gives
+(`.tuning/coord/S125/debug_selfplay/`).
 
 ### The SPRT script
 

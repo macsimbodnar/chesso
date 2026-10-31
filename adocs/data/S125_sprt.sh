@@ -162,8 +162,8 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this
 # run's shas, dates and out directory --
 #
-#   candidate  <CAND, short>  <its commit date>
-#   reference  <REF, short>   <its commit date>
+#   candidate  cf8661b  2026-10-31 07:21
+#   reference  9cbeb68  2026-10-31 05:55
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -177,13 +177,41 @@
 # `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171):
-# [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and
-# `cand=` below, `f08d9db` into `landing=` (THE LANDING above), their dates into
-# the banner lines above, the screen's eight readings and their sha256 (P0's g
-# and each part's d, s, m and verdict), the survivors and the H0 partition the
-# screen printed, the corpus `locate` recorded, the candidate fit's sha256 and
-# its tie files', the cost run's reading, plan.md's Open list re-read, the A/A
-# rule checked, and this bracketed sentence replaced by what was found.]
+# Pinned by the coordinator 2026-10-31 07:55: CAND `cf8661b` (committed
+# 2026-10-31 07:21, the screen's 02567 fit pasted over ten arrays, bench
+# 5707449) and REF `9cbeb68` (committed 2026-10-31 05:55, S303's landing, tools
+# and documents only, `src/` and the build files byte for byte `f08d9db`'s,
+# bench 5434393), CAND's parent; `landing=` is `f08d9db` (committed 2026-10-30
+# 13:10), the commit the screen ran from, `b5f133c` and S299 to S302 with the
+# family at zero. The screen's eight readings (`.tuning/s125/read/`,
+# concatenated in `adocs/data/S125_screen_reading.txt`, sha256 67a1c678...): P0
+# g +0.000007 s 0.000003 m 0.000005 recorded (P0.txt 8e5b72e7...); P1 d
+# -0.000004 against P0, s 0.000002 m 0.000003 dropped (f644fc59...); P2 d
+# +0.000012 against P0, s 0.000003 m 0.000004 kept (01611811...); P3 d -0.000002
+# against P2, s 0.000006 m 0.000011 dropped (5defa9bc...); P4 d +0.000005 against
+# P2, s 0.000005 m 0.000008 dropped (ac349f44...); P5 d +0.000036 against P2, s
+# 0.000002 m 0.000003 kept (806c7a04...); P6 d +0.000031 against P5, s 0.000003 m
+# 0.000005 kept (8afe0105...); P7 d +0.000017 against P6, s 0.000003 m 0.000005
+# kept (9c34d684...). Survivors P2, P5, P6, P7, the H0 partition A = P0,P2 | B =
+# P0,P5,P6 | C = P0,P7. The corpus `locate` recorded: S083's curve 0, 6226944
+# rows, sha256 2e0e3de9... The candidate fit `.tuning/s125/fits/02567/full.hpp`,
+# sha256 176755da...; the tie files, phalanx[5] mg and eg tied to their sixth,
+# ties_P0.txt 2558330d..., ties_P1.txt 614d3b97..., ties_P2.txt 712df8f3...,
+# ties_P3.txt 88521c8f..., ties_P4.txt 64a1dd30..., ties_P5.txt 9e1f4c7d...,
+# ties_P6.txt 0307403a..., ties_P7.txt 705b1840.... The cost
+# (`adocs/data/S125_cost_reading.txt`, d8c55c2b...): cand, the candidate's set,
+# +3.50 % on its own A/A floor; p2 +1.18 %, p5 +1.36 %, p6 +1.05 %, p7 zero, all
+# +4.20 % with the dropped groups forced. The Open list at `cf8661b` re-read: S304
+# is the one open DEC-171 filler, tools only, `spsa_driver.py` and
+# `depth_vs_eval.py`, neither run by this match. Both mate floors hold,
+# `EXACT_FLOOR` 159 against 168 and 158, `MATE_IN_THREE_FLOOR` 11 against 12 and
+# 10. The harness is S123's run's of 2026-10-30 -- fastchess alpha 1.8.1
+# 20260720-daa3ea2, `noob_3moves.epd`, `fastchess.sh` last changed `769ce7a`
+# (S284), the same workstation and kernel 7.2.6 -- so no A/A is owed (DEC-143).
+# Before the run: the commit gate green at CAND (both fast suites 50 of 50, format
+# and the prose checks clean), `gate_extra` 6 stages green on CAND's tree, Debug
+# self-play 8 games, 0 `Assertion`, 0 `disconnect`, and a dry copy of this script
+# printed DRY-RUN-WOULD-EXEC.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -264,9 +292,9 @@ fail()
 
 # THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT, as
 # S136_sprt.sh's same block reads them.
-ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
-landing="[COORDINATOR: f08d9db, the commit the screen ran from, THE LANDING above]"
+ref="9cbeb68"
+cand="cf8661b"
+landing="f08d9db"
 phase1="b5f133c"  # the commit that landed the family at zero
 part=""           # THE PARTS above: empty for the family, or A, B or C
 tc="8+0.08"
