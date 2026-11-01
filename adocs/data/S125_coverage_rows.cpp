@@ -92,6 +92,16 @@
 //
 // It prints the open needs, each pick with the needs it closes, the checks,
 // and the picks as C++ lines for tests/test_eval_positions.hpp.
+//
+// SCOPED TO ITS OWN BLOCK, 2026-11-01 (S101's phase 1), as S125 scoped
+// adocs/data/S123_coverage_rows.cpp. S101 appended its threat family after this
+// one's and its own block of rows after this one, picked by
+// adocs/data/S101_coverage_rows.cpp. This program's features, span and terms
+// already end at S125's last; only its landed block ran to the list's end, and
+// read S101's rows as its own. So the landed block ends at S101's block marker
+// when the header has one. Its rule, its picks and its block are unchanged, and it
+// reproduces its own block. S101's program checks S101's features, span, terms and
+// block.
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cmath>
@@ -123,6 +133,8 @@ constexpr size_t CONSTRUCT_DRAWS = 400000;
 constexpr uint32_t CONSTRUCT_SEED = 20261030U;
 const char* const BLOCK_MARKER =
     "S125's pawn structure family, added at S125's";
+// Where this block ends, since S101: the next block's marker.
+const char* const NEXT_MARKER = "S101's threat family, added at S101's";
 
 game_t game;
 
@@ -408,6 +420,7 @@ TEST_CASE("S125: the fixture rows that move every structure family column")
   // The base, asserted against the block's marker comment: the FEN lines
   // before it are BASE_ROWS, and the file's FEN lines are the list.
   const std::vector<std::string>& landed = test_eval_positions::positions;
+  size_t block_end = 0;  // one past S125's block: S101's marker, or the end
   {
     const char* path = std::getenv("S125_POSITIONS_HPP");
     std::ifstream header(path ? path : "../../tests/test_eval_positions.hpp");
@@ -422,6 +435,10 @@ TEST_CASE("S125: the fixture rows that move every structure family column")
         marker = true;
         before_marker = fens;
       }
+      if (line.find(NEXT_MARKER) != std::string::npos) {
+        REQUIRE_MESSAGE(block_end == 0, "S101's marker twice");
+        block_end = fens;
+      }
       const size_t open_quote = line.find_first_not_of(' ');
       if (open_quote != std::string::npos && line[open_quote] == '"' &&
           line.size() >= 2 && line.compare(line.size() - 2, 2, "\",") == 0) {
@@ -429,16 +446,18 @@ TEST_CASE("S125: the fixture rows that move every structure family column")
       }
     }
     if (!marker) { before_marker = fens; }
+    if (block_end == 0) { block_end = fens; }
     printf("tests/test_eval_positions.hpp: %zu rows, %zu before S125's block "
-           "(marker %s)\n",
-           fens, before_marker, marker ? "found" : "absent");
+           "(marker %s), the block ends at row %zu\n",
+           fens, before_marker, marker ? "found" : "absent", block_end);
     REQUIRE(fens == landed.size());
     REQUIRE(before_marker == BASE_ROWS);
+    REQUIRE(block_end >= BASE_ROWS);
   }
 
   // Every landed row of the block held to `eligible` again, pair by pair.
   size_t ineligible = 0;
-  for (size_t i = BASE_ROWS; i + 1 < landed.size(); i += 2) {
+  for (size_t i = BASE_ROWS; i + 1 < block_end; i += 2) {
     const offer_t offer = offer_of(landed[i], params.data());
     if (!offer.eligible || offer.mirror != landed[i + 1]) {
       ineligible++;
@@ -446,9 +465,9 @@ TEST_CASE("S125: the fixture rows that move every structure family column")
              landed[i].c_str());
     }
   }
-  REQUIRE((landed.size() - BASE_ROWS) % 2 == 0);
+  REQUIRE((block_end - BASE_ROWS) % 2 == 0);
   printf("landed block: %zu pairs, %zu not eligible\n",
-         (landed.size() - BASE_ROWS) / 2, ineligible);
+         (block_end - BASE_ROWS) / 2, ineligible);
 
   std::vector<std::string> rows(landed.begin(), landed.begin() + BASE_ROWS);
   std::vector<uint8_t> open(needs, 1);
@@ -645,8 +664,9 @@ TEST_CASE("S125: the fixture rows that move every structure family column")
   if (one_way > 0) { ok = false; }
 
   // The picks against the landed block: the same pairs in the same order.
-  const std::vector<std::string> block(landed.begin() + BASE_ROWS,
-                                       landed.end());
+  const std::vector<std::string> block(
+      landed.begin() + BASE_ROWS,
+      landed.begin() + static_cast<std::ptrdiff_t>(block_end));
   const std::vector<std::string> picks(rows.begin() + BASE_ROWS, rows.end());
   const bool reproduces = (block == picks);
   printf("reproduces the landed block: %s (%zu picked rows, %zu landed)\n",

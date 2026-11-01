@@ -1,8 +1,9 @@
 #pragma once
 // The evaluation's counts walked by hand from a FEN's placement -- mobility,
 // king safety, passed pawns, pawn structure, piece placement, since S123 the
-// passed pawn family and since S125 the pawn structure family -- a second
-// implementation the engine's own counts are checked against. S276.
+// passed pawn family, since S125 the pawn structure family and since S101 the
+// threat family -- a second implementation the engine's own counts are checked
+// against. S276.
 //
 // These walks are the feature half of tools/eval_model.hpp, the hand-written
 // mirror of evaluate() the tuner fitted from S028 to S262 and
@@ -1279,6 +1280,256 @@ inline bool structure_family_features(const std::string& placement,
     if (weak) { out->weak_set[side] |= bit; }
     if (!enemy_ahead) { out->open_set[side] |= bit; }
     if (weak && !enemy_ahead) { out->weak_unopposed[side][0]++; }
+  }
+
+  return true;
+}
+
+
+// S101's threat family, per attacking side, WHITE first, each a side's own
+// count and positive: src/evaluation.hpp's definitions walked square by square
+// from the placement, sharing no code with the engine: no magic table, no
+// shift, every ray followed to the first man. The sets come back as well, a bit
+// per square in the board's own index order (0 = a8), so the engine's can be
+// compared bit for bit; attacks[side][class] is pawn, knight, bishop, rook,
+// queen, king, the king's with its own square.
+struct threat_family_walk_t
+{
+  unsigned long long attacks[2][6];
+  unsigned long long nonking[2];
+  unsigned long long all[2];
+  unsigned long long hanging_set[2];
+  unsigned long long king_only_set[2];
+  unsigned long long push_targets[2];
+  unsigned long long push_hits[2];
+  int threat_pawn[2][4];
+  int threat_piece[2][5];
+  int threat_minor[2][2];
+  int hanging_piece[2][4];
+  int hanging_pawn[2][1];
+  int threat_king[2][4];
+  int threat_push[2][4];
+};
+
+
+inline bool threat_family_features(const std::string& placement,
+                                   threat_family_walk_t* out)
+{
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+    white_at[i] = false;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int type = piece_from_char(c, &black);
+
+    if (type < 0 || square > 63) { return false; }
+
+    kind_at[square] = type;
+    white_at[square] = !black;
+    square++;
+  }
+
+  if (square != 64) { return false; }
+
+  *out = threat_family_walk_t{};
+
+  const auto on_board = [](int row, int file) {
+    return row >= 0 && row <= 7 && file >= 0 && file <= 7;
+  };
+
+  // What each man attacks. Rows run 0 (rank 8) to 7 (rank 1): White's ahead is
+  // a lower row.
+  for (int from = 0; from < 64; ++from) {
+    const int type = kind_at[from];
+
+    if (type < 0) { continue; }
+
+    const int side = white_at[from] ? 0 : 1;
+    const int row = from / 8;
+    const int file = from % 8;
+
+    const auto mark = [&](int r, int f) {
+      if (on_board(r, f)) { out->attacks[side][type] |= 1ULL << (r * 8 + f); }
+    };
+
+    const auto rays = [&](const int (*steps)[2], int count) {
+      for (int i = 0; i < count; ++i) {
+        int r = row + steps[i][0];
+        int f = file + steps[i][1];
+
+        while (on_board(r, f)) {
+          out->attacks[side][type] |= 1ULL << (r * 8 + f);
+
+          if (kind_at[r * 8 + f] >= 0) { break; }
+
+          r += steps[i][0];
+          f += steps[i][1];
+        }
+      }
+    };
+
+    static const int diagonal[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+    static const int straight[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    static const int leaps[8][2] = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
+                                    {1, -2},  {1, 2},  {2, -1},  {2, 1}};
+
+    switch (type) {
+      case 0: {
+        const int ahead = white_at[from] ? -1 : 1;
+        mark(row + ahead, file - 1);
+        mark(row + ahead, file + 1);
+        break;
+      }
+      case 1:
+        for (const auto& leap : leaps) {
+          mark(row + leap[0], file + leap[1]);
+        }
+        break;
+      case 2:
+        rays(diagonal, 4);
+        break;
+      case 3:
+        rays(straight, 4);
+        break;
+      case 4:
+        rays(diagonal, 4);
+        rays(straight, 4);
+        break;
+      default:
+        for (int r = row - 1; r <= row + 1; ++r) {
+          for (int f = file - 1; f <= file + 1; ++f) {
+            mark(r, f);
+          }
+        }
+        break;
+    }
+  }
+
+  for (int side = 0; side < 2; ++side) {
+    for (int type = 0; type < 5; ++type) {
+      out->nonking[side] |= out->attacks[side][type];
+    }
+    out->all[side] = out->nonking[side] | out->attacks[side][5];
+  }
+
+  const auto held = [](unsigned long long set, int sq) {
+    return ((set >> sq) & 1) != 0;
+  };
+
+  // Each enemy man, against the attacking side.
+  for (int sq = 0; sq < 64; ++sq) {
+    const int type = kind_at[sq];
+
+    if (type < 0 || type == 5) { continue; }
+
+    const int side = white_at[sq] ? 1 : 0;  // the side attacking it
+    const int enemy = 1 - side;
+    const bool undefended = !held(out->all[enemy], sq);
+    const bool by_nonking = held(out->nonking[side], sq);
+    const unsigned long long bit = 1ULL << sq;
+    const auto* by = out->attacks[side];
+
+    if (type >= 1 && held(by[0], sq)) { out->threat_pawn[side][type - 1]++; }
+
+    if (type == 3 && held(by[1], sq)) { out->threat_piece[side][0]++; }
+    if (type == 4 && held(by[1], sq)) { out->threat_piece[side][1]++; }
+    if (type == 3 && held(by[2], sq)) { out->threat_piece[side][2]++; }
+    if (type == 4 && held(by[2], sq)) { out->threat_piece[side][3]++; }
+    if (type == 4 && held(by[3], sq)) { out->threat_piece[side][4]++; }
+
+    if (type == 2 && held(by[1], sq)) { out->threat_minor[side][0]++; }
+    if (type == 1 && held(by[2], sq)) { out->threat_minor[side][1]++; }
+
+    if (by_nonking && undefended) {
+      out->hanging_set[side] |= bit;
+      if (type == 0) {
+        out->hanging_pawn[side][0]++;
+      } else {
+        out->hanging_piece[side][type - 1]++;
+      }
+    }
+
+    if (!by_nonking && undefended && type != 4 && held(by[5], sq)) {
+      out->king_only_set[side] |= bit;
+      out->threat_king[side][type]++;
+    }
+  }
+
+  // Each own pawn's pushes, then the men a safe target reaches.
+  for (int from = 0; from < 64; ++from) {
+    if (kind_at[from] != 0) { continue; }
+
+    const int side = white_at[from] ? 0 : 1;
+    const int enemy = 1 - side;
+    const int ahead = white_at[from] ? -1 : 1;
+    const int row = from / 8;
+    const int file = from % 8;
+
+    if (!on_board(row + ahead, file)) { continue; }
+
+    const int first = (row + ahead) * 8 + file;
+
+    if (kind_at[first] >= 0) { continue; }
+
+    const auto safe = [&](int sq) {
+      return !held(out->attacks[enemy][0], sq) &&
+             (!held(out->all[enemy], sq) || held(out->all[side], sq));
+    };
+
+    if (safe(first)) { out->push_targets[side] |= 1ULL << first; }
+
+    // The double push's rank, from a first step no enemy pawn attacks.
+    const int double_from = white_at[from] ? 6 : 1;
+
+    if (row == double_from && !held(out->attacks[enemy][0], first)) {
+      const int second = (row + 2 * ahead) * 8 + file;
+
+      if (kind_at[second] < 0 && safe(second)) {
+        out->push_targets[side] |= 1ULL << second;
+      }
+    }
+  }
+
+  for (int side = 0; side < 2; ++side) {
+    const int ahead = (side == 0) ? -1 : 1;
+
+    for (int target = 0; target < 64; ++target) {
+      if (!held(out->push_targets[side], target)) { continue; }
+
+      for (const int f : {target % 8 - 1, target % 8 + 1}) {
+        const int r = target / 8 + ahead;
+
+        if (!on_board(r, f)) { continue; }
+
+        const int sq = r * 8 + f;
+        const int type = kind_at[sq];
+        const bool enemy_man =
+            type >= 1 && type <= 4 && white_at[sq] == (side == 1);
+
+        if (enemy_man && !held(out->attacks[side][0], sq)) {
+          out->push_hits[side] |= 1ULL << sq;
+        }
+      }
+    }
+
+    for (int sq = 0; sq < 64; ++sq) {
+      if (held(out->push_hits[side], sq)) {
+        out->threat_push[side][kind_at[sq] - 1]++;
+      }
+    }
   }
 
   return true;

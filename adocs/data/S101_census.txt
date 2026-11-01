@@ -1,0 +1,326 @@
+# S101's research pass, 2026-11-01, on 4d3edf6: counts and instructions only, no match, fit,
+# tuner or timing. adocs/data/S101_census.cpp and S101_census_zone.cpp read the FEN field;
+# no label was read. The prototype's instruction rows are perf_counters' instructions on
+# adocs/data/S101_research_prototype.patch's builds, each bench's node count equal to
+# 5707449 or 11505888; cycles and wall were printed and not read. No weight here is a
+# proposal: the flat grid is a probe of reach.
+
+== census, S083's corpus (sha256 2e0e3de9...)
+rows 6226944 clamped_now 22083 (0.355 %) margin 184
+  |stage two| > margin-0: 22083 (0.355 %)
+  |stage two| > margin-10: 30598 (0.491 %)
+  |stage two| > margin-25: 50074 (0.804 %)
+  |stage two| > margin-50: 112467 (1.806 %)
+  |stage two| > margin-75: 253847 (4.077 %)
+  |stage two| > margin-100: 573300 (9.207 %)
+  |stage two| p50 30
+  |stage two| p90 82
+  |stage two| p99 153
+  |stage two| p99.9 222
+
+mean non-zero threat cells a row (25 cells): 0.952
+
+kind rows_nonzero rows% mean_per_row_stm mean_per_row_other share_stm worst|d|
+hanging B                             221215   3.55   0.0044   0.0327  11.8   2
+hanging N                             189389   3.04   0.0039   0.0277  12.4   2
+hanging P                            1123223  18.04   0.0607   0.1749  25.8   4
+hanging Q                             124052   1.99   0.0004   0.0197   1.9   2
+hanging R                             191964   3.08   0.0017   0.0302   5.4   2
+hanging&lesser B                       41788   0.67   0.0010   0.0058  15.1   2
+hanging&lesser N                       38057   0.61   0.0008   0.0053  13.5   2
+hanging&lesser P                           0   0.00   0.0000   0.0000   0.0   0
+hanging&lesser Q                       88841   1.43   0.0003   0.0141   2.3   2
+hanging&lesser R                      105855   1.70   0.0009   0.0164   5.4   2
+kinganyy B                             15024   0.24   0.0004   0.0020  17.1   1
+kinganyy N                             32323   0.52   0.0005   0.0047  10.2   2
+kinganyy P                             62119   1.00   0.0024   0.0081  22.8   3
+kinganyy Q                                 0   0.00   0.0000   0.0000   0.0   0
+kinganyy R                             42370   0.68   0.0001   0.0067   1.5   2
+kingonly B                             12408   0.20   0.0003   0.0017  13.6   1
+kingonly N                             28303   0.45   0.0004   0.0042   8.9   2
+kingonly P                             52444   0.84   0.0021   0.0068  23.4   2
+kingonly Q                                 0   0.00   0.0000   0.0000   0.0   0
+kingonly R                             41457   0.67   0.0001   0.0066   1.5   2
+least B                                97173   1.56   0.0022   0.0137  13.7   2
+least N                               184009   2.96   0.0033   0.0268  11.0   2
+least Q                               185784   2.98   0.0008   0.0297   2.7   2
+least R                               219263   3.52   0.0028   0.0340   7.5   2
+pair B>N                              906524  14.56   0.0753   0.0919  45.0   2
+pair B>Q                               46627   0.75   0.0002   0.0073   3.1   1
+pair B>R                              119215   1.91   0.0014   0.0182   7.0   2
+pair N>B                              251452   4.04   0.0117   0.0298  28.2   2
+pair N>Q                               57550   0.92   0.0002   0.0091   2.1   2
+pair N>R                               78916   1.27   0.0011   0.0121   8.1   2
+pair P>B                               97173   1.56   0.0022   0.0137  13.7   2
+pair P>N                              184009   2.96   0.0033   0.0268  11.0   2
+pair P>Q                               32855   0.53   0.0002   0.0051   3.3   1
+pair P>R                               26003   0.42   0.0003   0.0039   8.2   2
+pair R>Q                               53402   0.86   0.0002   0.0084   2.7   2
+push safe0 both B                     873417  14.03   0.0824   0.0757  52.1   2
+push safe0 both N                    1068658  17.16   0.1127   0.0946  54.4   2
+push safe0 both Q                     533424   8.57   0.0493   0.0439  52.9   1
+push safe0 both R                     328670   5.28   0.0295   0.0264  52.8   2
+push safe0 single B                   671189  10.78   0.0601   0.0570  51.3   2
+push safe0 single N                   854497  13.72   0.0856   0.0725  54.2   2
+push safe0 single Q                   399506   6.42   0.0352   0.0333  51.4   1
+push safe0 single R                   270857   4.35   0.0237   0.0219  52.0   2
+push safe1 both B                          0   0.00   0.0000   0.0000   0.0   0
+push safe1 both N                     819052  13.15   0.0836   0.0684  55.0   2
+push safe1 both Q                          0   0.00   0.0000   0.0000   0.0   0
+push safe1 both R                     239242   3.84   0.0215   0.0186  53.6   2
+push safe1 single B                        0   0.00   0.0000   0.0000   0.0   0
+push safe1 single N                   631967  10.15   0.0621   0.0510  54.9   2
+push safe1 single Q                        0   0.00   0.0000   0.0000   0.0   0
+push safe1 single R                   191196   3.07   0.0168   0.0150  52.9   2
+push safe2 both B                     538005   8.64   0.0496   0.0445  52.7   2
+push safe2 both N                     969278  15.57   0.1005   0.0840  54.5   2
+push safe2 both Q                     304423   4.89   0.0279   0.0240  53.7   1
+push safe2 both R                     275329   4.42   0.0248   0.0217  53.4   2
+push safe2 single B                   399711   6.42   0.0356   0.0324  52.4   2
+push safe2 single N                   762959  12.25   0.0754   0.0635  54.3   2
+push safe2 single Q                   215630   3.46   0.0190   0.0171  52.7   1
+push safe2 single R                   220611   3.54   0.0194   0.0175  52.6   2
+push&hanging safe0 both B              28383   0.46   0.0004   0.0042   8.4   2
+push&hanging safe0 both N              28527   0.46   0.0005   0.0041  10.5   2
+push&hanging safe0 both Q              18679   0.30   0.0000   0.0030   1.3   1
+push&hanging safe0 both R               7369   0.12   0.0001   0.0011   4.9   1
+push&hanging safe0 single B            20651   0.33   0.0003   0.0030   8.8   2
+push&hanging safe0 single N            21083   0.34   0.0004   0.0030  10.8   2
+push&hanging safe0 single Q            13255   0.21   0.0000   0.0021   1.4   1
+push&hanging safe0 single R             5988   0.10   0.0000   0.0009   5.0   1
+push&hanging safe1 both B                  0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 both N              22807   0.37   0.0004   0.0033  10.0   2
+push&hanging safe1 both Q                  0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 both R               5712   0.09   0.0000   0.0009   4.8   1
+push&hanging safe1 single B                0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 single N            16999   0.27   0.0003   0.0025  10.3   2
+push&hanging safe1 single Q                0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 single R             4581   0.07   0.0000   0.0007   5.0   1
+push&hanging safe2 both B              18904   0.30   0.0003   0.0028   9.0   2
+push&hanging safe2 both N              27024   0.43   0.0005   0.0039  10.5   2
+push&hanging safe2 both Q              13641   0.22   0.0000   0.0022   1.3   1
+push&hanging safe2 both R               6733   0.11   0.0001   0.0010   4.9   1
+push&hanging safe2 single B            13645   0.22   0.0002   0.0020   9.6   2
+push&hanging safe2 single N            19894   0.32   0.0003   0.0029  10.8   2
+push&hanging safe2 single Q             9400   0.15   0.0000   0.0015   1.4   1
+push&hanging safe2 single R             5435   0.09   0.0000   0.0008   5.0   1
+
+clamp share with the group added at flat hypothetical weight w (a reach probe, no weight proposed):
+group      w=5      w=10     w=15     w=20     w=30     w=40     w=60     w=80    
+lesser9      0.354   0.354   0.357   0.362   0.380   0.411   0.521   0.741
+hanging5     0.351   0.352   0.358   0.370   0.414   0.497   0.858   1.667
+kingonly5    0.354   0.354   0.353   0.353   0.353   0.354   0.358   0.372
+push         0.351   0.353   0.357   0.366   0.400   0.460   0.724   1.352
+all          0.347   0.351   0.369   0.401   0.533   0.810   2.142   4.673
+
+|White-Black count| per row, cumulative: group p50 p90 p99 p99.9 max
+lesser9    0 1 1 2 5
+hanging5   0 1 2 3 6
+kingonly5  0 0 1 1 3
+push       0 1 2 2 4
+all        0 2 3 4 8
+
+== census, S082's qs validation view
+rows 1015332 clamped_now 2821 (0.278 %) margin 184
+  |stage two| > margin-0: 2821 (0.278 %)
+  |stage two| > margin-10: 3958 (0.390 %)
+  |stage two| > margin-25: 6600 (0.650 %)
+  |stage two| > margin-50: 15164 (1.494 %)
+  |stage two| > margin-75: 35833 (3.529 %)
+  |stage two| > margin-100: 82986 (8.173 %)
+  |stage two| p50 29
+  |stage two| p90 78
+  |stage two| p99 146
+  |stage two| p99.9 213
+
+mean non-zero threat cells a row (25 cells): 0.917
+
+kind rows_nonzero rows% mean_per_row_stm mean_per_row_other share_stm worst|d|
+hanging B                              35554   3.50   0.0043   0.0322  11.8   2
+hanging N                              30907   3.04   0.0039   0.0277  12.2   2
+hanging P                             180925  17.82   0.0595   0.1726  25.6   4
+hanging Q                              19047   1.88   0.0003   0.0186   1.7   2
+hanging R                              31330   3.09   0.0017   0.0303   5.4   2
+hanging&lesser B                        6496   0.64   0.0010   0.0055  15.9   2
+hanging&lesser N                        6076   0.60   0.0008   0.0052  13.8   2
+hanging&lesser P                           0   0.00   0.0000   0.0000   0.0   0
+hanging&lesser Q                       13467   1.33   0.0003   0.0131   2.2   1
+hanging&lesser R                       17321   1.71   0.0009   0.0165   5.3   2
+kinganyy B                              2527   0.25   0.0004   0.0021  15.7   1
+kinganyy N                              5708   0.56   0.0006   0.0051  10.3   2
+kinganyy P                             12254   1.21   0.0029   0.0098  22.8   2
+kinganyy Q                                 0   0.00   0.0000   0.0000   0.0   0
+kinganyy R                              7977   0.79   0.0001   0.0078   1.5   2
+kingonly B                              2034   0.20   0.0002   0.0018  11.1   1
+kingonly N                              4990   0.49   0.0004   0.0045   9.0   2
+kingonly P                             10404   1.02   0.0025   0.0082  23.7   2
+kingonly Q                                 0   0.00   0.0000   0.0000   0.0   0
+kingonly R                              7850   0.77   0.0001   0.0077   1.4   2
+least B                                14829   1.46   0.0021   0.0127  14.2   2
+least N                                28142   2.77   0.0032   0.0250  11.4   2
+least Q                                28100   2.77   0.0007   0.0276   2.6   1
+least R                                35243   3.47   0.0025   0.0336   7.0   2
+pair B>N                              138388  13.63   0.0697   0.0860  44.8   2
+pair B>Q                                7059   0.70   0.0002   0.0068   3.0   1
+pair B>R                               19018   1.87   0.0013   0.0179   6.6   2
+pair N>B                               38977   3.84   0.0109   0.0285  27.8   2
+pair N>Q                                8743   0.86   0.0002   0.0085   1.8   1
+pair N>R                               12526   1.23   0.0010   0.0118   7.5   2
+pair P>B                               14829   1.46   0.0021   0.0127  14.2   2
+pair P>N                               28142   2.77   0.0032   0.0250  11.4   2
+pair P>Q                                5039   0.50   0.0002   0.0048   3.2   1
+pair P>R                                4383   0.43   0.0003   0.0040   7.4   2
+pair R>Q                                7976   0.79   0.0002   0.0078   2.8   1
+push safe0 both B                     135499  13.35   0.0787   0.0719  52.2   2
+push safe0 both N                     163591  16.11   0.1048   0.0888  54.1   2
+push safe0 both Q                      79978   7.88   0.0454   0.0404  52.9   1
+push safe0 both R                      54919   5.41   0.0303   0.0272  52.8   2
+push safe0 single B                   104189  10.26   0.0575   0.0539  51.7   2
+push safe0 single N                   130201  12.82   0.0790   0.0674  54.0   2
+push safe0 single Q                    60499   5.96   0.0330   0.0307  51.8   1
+push safe0 single R                    45243   4.46   0.0242   0.0225  51.9   2
+push safe1 both B                          0   0.00   0.0000   0.0000   0.0   0
+push safe1 both N                     125246  12.34   0.0778   0.0642  54.8   2
+push safe1 both Q                          0   0.00   0.0000   0.0000   0.0   0
+push safe1 both R                      40177   3.96   0.0222   0.0192  53.7   2
+push safe1 single B                        0   0.00   0.0000   0.0000   0.0   0
+push safe1 single N                    96427   9.50   0.0575   0.0474  54.8   2
+push safe1 single Q                        0   0.00   0.0000   0.0000   0.0   0
+push safe1 single R                    32030   3.15   0.0173   0.0154  52.8   2
+push safe2 both B                      82993   8.17   0.0471   0.0420  52.9   2
+push safe2 both N                     148640  14.64   0.0937   0.0791  54.2   2
+push safe2 both Q                      45971   4.53   0.0258   0.0224  53.6   1
+push safe2 both R                      45793   4.51   0.0254   0.0223  53.3   2
+push safe2 single B                    61601   6.07   0.0339   0.0303  52.7   2
+push safe2 single N                   116567  11.48   0.0699   0.0593  54.1   2
+push safe2 single Q                    32972   3.25   0.0179   0.0160  52.9   1
+push safe2 single R                    36617   3.61   0.0197   0.0179  52.5   2
+push&hanging safe0 both B               4366   0.43   0.0004   0.0039   9.2   2
+push&hanging safe0 both N               4437   0.44   0.0005   0.0040  10.2   2
+push&hanging safe0 both Q               2743   0.27   0.0000   0.0027   1.3   1
+push&hanging safe0 both R               1258   0.12   0.0001   0.0012   5.7   1
+push&hanging safe0 single B             3164   0.31   0.0003   0.0028   9.4   2
+push&hanging safe0 single N             3246   0.32   0.0003   0.0029  10.6   2
+push&hanging safe0 single Q             1966   0.19   0.0000   0.0019   1.4   1
+push&hanging safe0 single R             1009   0.10   0.0001   0.0009   5.5   1
+push&hanging safe1 both B                  0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 both N               3626   0.36   0.0004   0.0032  10.2   2
+push&hanging safe1 both Q                  0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 both R                974   0.10   0.0001   0.0009   6.0   1
+push&hanging safe1 single B                0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 single N             2689   0.26   0.0003   0.0024  10.5   2
+push&hanging safe1 single Q                0   0.00   0.0000   0.0000   0.0   0
+push&hanging safe1 single R              764   0.08   0.0000   0.0007   5.8   1
+push&hanging safe2 both B               2934   0.29   0.0003   0.0026  10.2   2
+push&hanging safe2 both N               4180   0.41   0.0004   0.0037  10.3   2
+push&hanging safe2 both Q               2000   0.20   0.0000   0.0019   1.6   1
+push&hanging safe2 both R               1156   0.11   0.0001   0.0011   5.9   1
+push&hanging safe2 single B             2100   0.21   0.0002   0.0019  10.7   2
+push&hanging safe2 single N             3072   0.30   0.0003   0.0027  10.6   2
+push&hanging safe2 single Q             1403   0.14   0.0000   0.0014   1.6   1
+push&hanging safe2 single R              917   0.09   0.0001   0.0009   5.6   1
+
+clamp share with the group added at flat hypothetical weight w (a reach probe, no weight proposed):
+group      w=5      w=10     w=15     w=20     w=30     w=40     w=60     w=80    
+lesser9      0.277   0.278   0.279   0.282   0.294   0.320   0.417   0.613
+hanging5     0.276   0.279   0.286   0.295   0.332   0.404   0.723   1.498
+kingonly5    0.277   0.277   0.277   0.276   0.277   0.277   0.281   0.296
+push         0.275   0.275   0.278   0.283   0.306   0.354   0.580   1.155
+all          0.272   0.274   0.286   0.313   0.417   0.658   1.901   4.369
+
+|White-Black count| per row, cumulative: group p50 p90 p99 p99.9 max
+lesser9    0 0 1 2 4
+hanging5   0 1 2 3 4
+kingonly5  0 0 1 1 3
+push       0 1 2 2 4
+all        0 1 3 4 7
+
+== S101_census_zone.cpp over S083's corpus, and the fixture before S101's rows
+rows 6226944
+lesser9        victims 708830, in their own king's zone 7.99 %
+hanging PNBRQ  victims 2218608, in their own king's zone 0.00 %
+push           victims 2348125, in their own king's zone 2.90 %
+
+fixture rows 92: cell, rows with White ahead, rows with Black ahead
+  P>N        0   0
+  P>B        5   5
+  P>R        8   8
+  P>Q        1   1
+  N>R        1   1
+  N>Q        0   1
+  B>R        2   3
+  B>Q        2   1
+  R>Q        5   5
+  N>B        0   0
+  B>N        3   4
+  hang P    12  10
+  hang N     1   1
+  hang B     1   2
+  hang R     9  10
+  hang Q     0   0
+  konly P    0   0
+  konly N    0   0
+  konly B    0   0
+  konly R    0   0
+  push N     2   4
+  push B     7   8
+  push R     4   4
+  push Q     5   4
+cells not reached both ways: 8 of 24
+
+== the search census, `chesso bench`, S101_CENSUS
+site search evaluate()          calls 716329
+  lesser9          attacker on move 0.2638 a call, not on move 0.1786, share on move 59.6 %, calls with stm's 23.03 %, with other's 15.63 %
+  hanging NBRQ     attacker on move 0.2601 a call, not on move 0.1750, share on move 59.8 %, calls with stm's 23.68 %, with other's 16.03 %
+  hanging P        attacker on move 0.2794 a call, not on move 0.2611, share on move 51.7 %, calls with stm's 23.54 %, with other's 22.29 %
+  king-only PNBR   attacker on move 0.0103 a call, not on move 0.0102, share on move 50.3 %, calls with stm's 1.03 %, with other's 1.02 %
+  push safe2       attacker on move 0.3684 a call, not on move 0.3669, share on move 50.1 %, calls with stm's 30.99 %, with other's 30.88 %
+  minor on minor   attacker on move 0.1531 a call, not on move 0.1409, share on move 52.1 %, calls with stm's 14.35 %, with other's 13.36 %
+site lazy, every call           calls 2246909
+  lesser9          attacker on move 0.2415 a call, not on move 0.2041, share on move 54.2 %, calls with stm's 21.09 %, with other's 17.98 %
+  hanging NBRQ     attacker on move 0.3243 a call, not on move 0.2532, share on move 56.2 %, calls with stm's 28.94 %, with other's 22.22 %
+  hanging P        attacker on move 0.3319 a call, not on move 0.3200, share on move 50.9 %, calls with stm's 28.40 %, with other's 27.35 %
+  king-only PNBR   attacker on move 0.0256 a call, not on move 0.0176, share on move 59.2 %, calls with stm's 2.54 %, with other's 1.75 %
+  push safe2       attacker on move 0.3335 a call, not on move 0.3175, share on move 51.2 %, calls with stm's 28.79 %, with other's 27.53 %
+  minor on minor   attacker on move 0.1312 a call, not on move 0.1234, share on move 51.5 %, calls with stm's 12.47 %, with other's 11.79 %
+site lazy, past the shortcut    calls 1091468
+  lesser9          attacker on move 0.2129 a call, not on move 0.1809, share on move 54.1 %, calls with stm's 18.96 %, with other's 16.49 %
+  hanging NBRQ     attacker on move 0.2806 a call, not on move 0.2028, share on move 58.0 %, calls with stm's 25.35 %, with other's 18.15 %
+  hanging P        attacker on move 0.3225 a call, not on move 0.2765, share on move 53.8 %, calls with stm's 27.79 %, with other's 24.22 %
+  king-only PNBR   attacker on move 0.0244 a call, not on move 0.0135, share on move 64.4 %, calls with stm's 2.43 %, with other's 1.34 %
+  push safe2       attacker on move 0.3435 a call, not on move 0.3632, share on move 48.6 %, calls with stm's 29.79 %, with other's 30.94 %
+  minor on minor   attacker on move 0.1515 a call, not on move 0.1235, share on move 55.1 %, calls with stm's 14.30 %, with other's 11.83 %
+
+== instructions, base 11636561009 on `bench` and 24069772468 on `bench 16`
+v0 'bench' nodes 5707449 instr 11636561009
+v0 'bench 16' nodes 11505888 instr 24069772468
+v1 'bench' nodes 5707449 instr 11938414907
+v1 'bench 16' nodes 11505888 instr 24698531251
+v2 'bench' nodes 5707449 instr 11847553757
+v2 'bench 16' nodes 11505888 instr 24509607710
+v4 'bench' nodes 5707449 instr 11843037449
+v4 'bench 16' nodes 11505888 instr 24500262875
+v8 'bench' nodes 5707449 instr 11939843513
+v8 'bench 16' nodes 11505888 instr 24701519187
+v16 'bench' nodes 5707449 instr 11774020684
+v16 'bench 16' nodes 11505888 instr 24356932634
+v15 'bench' nodes 5707449 instr 12528336679
+v15 'bench 16' nodes 11505888 instr 25922564420
+v31 'bench' nodes 5707449 instr 12555856394
+v31 'bench 16' nodes 11505888 instr 25979683751
+v32 'bench' nodes 5707449 instr 13861668479
+v32 'bench 16' nodes 11505888 instr 28703916038
+v64 'bench' nodes 5707449 instr 11859079847
+v64 'bench 16' nodes 11505888 instr 24530616666
+g1 'bench' nodes 5707449 instr 11857364352
+g1 'bench 16' nodes 11505888 instr 24530986484
+g2 'bench' nodes 5707449 instr 11860878392
+g2 'bench 16' nodes 11505888 instr 24538203848
+g4 'bench' nodes 5707449 instr 11840063489
+g4 'bench 16' nodes 11505888 instr 24494418233
+g8 'bench' nodes 5707449 instr 11953963706
+g8 'bench 16' nodes 11505888 instr 24730302454
+g15 'bench' nodes 5707449 instr 12258772591
+g15 'bench 16' nodes 11505888 instr 25364705559
+twice 'bench' nodes 5707449 instr 12979011646
+twice 'bench 16' nodes 11505888 instr 26884219749

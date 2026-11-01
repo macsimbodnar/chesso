@@ -13,7 +13,10 @@
 // the first field: the label and the stored score say nothing about how far the
 // expensive terms move a position. Mobility and king safety are reported apart
 // as well as together, because a margin that binds on their sum and a margin
-// that binds on one term are different problems with different fixes.
+// that binds on one term are different problems with different fixes. S101's
+// threat family is in the "combined" column, what the clamp reads, and in a
+// short table of its own, so that "mobility" stays S121's column for S122 to
+// read.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -140,6 +143,10 @@ int main(int argc, char** argv)
                         {"king safety", {}, -1, ""},
                         {"combined", {}, -1, ""}};
 
+  // S101's family, a column of its own so that "mobility" stays S121's, which
+  // S122 reads. "combined" holds all three: it is what the clamp reads.
+  series_t threat_column = {"threats", {}, -1, ""};
+
   size_t rejected = 0;
 
   // The clamped correction is what evaluate() applies, and it is observable
@@ -166,17 +173,19 @@ int main(int argc, char** argv)
 
     int mobility = 0;
     int safety = 0;
-    evaluate_expensive_terms(&game.board, &mobility, &safety);
+    int threats = 0;
+    evaluate_expensive_terms(&game.board, &mobility, &safety, &threats);
 
+    const int total = mobility + threats + safety;
     const int applied = evaluate(&game.board) - evaluate_cheap(&game.board);
-    const int expected =
-        std::clamp(mobility + safety, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
+    const int expected = std::clamp(total, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
 
     if (applied != expected) { disagreements++; }
 
     series[0].add(std::abs(mobility), fen);
     series[1].add(std::abs(safety), fen);
-    series[2].add(std::abs(mobility + safety), fen);
+    series[2].add(std::abs(total), fen);
+    threat_column.add(std::abs(threats), fen);
   }
 
   const size_t positions = series[2].values.size();
@@ -209,6 +218,15 @@ int main(int argc, char** argv)
            percentile(series[0].values, fractions[row]),
            percentile(series[1].values, fractions[row]),
            percentile(series[2].values, fractions[row]));
+  }
+
+  std::sort(threat_column.values.begin(), threat_column.values.end());
+
+  printf("\nthreats alone, absolute centipawns\n");
+
+  for (int row = 0; row < 6; ++row) {
+    printf("  threats %-6s %12d\n", labels[row],
+           percentile(threat_column.values, fractions[row]));
   }
 
   printf("\nabove a candidate margin\n");

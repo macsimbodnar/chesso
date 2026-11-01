@@ -1,0 +1,77 @@
+# S101 phase 1: INV-6 for the threat family landed at zero (DEC-333 (5)).
+# Parent: b0338b5 (DEC-333's record, src/ 4d3edf6's), built Release native and CHESSO_TUNE from
+# `git archive` into a scratch tree; S101: the phase 1 tree (worktree ../chesso-s101, branch
+# s101), the same two configurations, rebuilt from the final sources. 2026-11-01, i7-8700K, g++
+# 13.3. Nothing was timed: this proves the trees are the same, not that they cost the same
+# (adocs/data/S101_cost.sh does that).
+#
+# Every stream is the binary's output with `time`, `nps` and `hashfull` stripped (S135_cost.sh's
+# sed), compared byte for byte; md5 of each, the four builds equal on every line:
+#
+#   bench (total 5707449 nodes)     4c4764094a88a1b4a70bbe4904ddebc9
+#   bench 12 (total 1861982 nodes)  7173c300b4948a4e027f2e78867259a7
+#   tools/search_bench.py, position, nodes, best move
+#     depth 9:  18a3d90b088629075772b266bfac9a9a  c3d5 37187 / d5e6 105585 / d7c8q 56111
+#     depth 12: e508a99050e1b634599702347058a39e  c3d5 147063 / d5e6 343485 / d7c8q 192032
+#
+# The landing is in no expression, checked on the object code as well as on the streams:
+# adocs/data/S101_objdiff.py over build/'s and build-tune/'s
+# src/CMakeFiles/chesso_engine.dir/evaluation.cpp.o, parent against S101, each function's
+# instructions once the branch-padding prefixes, the alignment nops, the addresses and branch
+# offsets and S101's added parameters in the symbol names are dropped. Every function the search
+# reaches is identical: expensive_score() 526 instructions (527 in the tune build), which inlines
+# stage two, evaluate_cheap() 456, evaluate_lazy() through the table 515 (520). Only the
+# collecting instantiation evaluate_mobility_and_king_safety<true>, which computes every group,
+# 584 -> 968, and the accessors that call it differ, and S101's new one. The same comparison against
+# the all-forced cost build reads red, expensive_score() 526 -> 890.
+#
+# == Release
+  identical     14    14  capture_score(board_t const*, unsigned int)
+  identical    462   462  evaluate(board_t const*)
+  identical    477   477  evaluate(board_t const*, pawn_table_t*)
+  identical    456   456  evaluate_cheap(board_t const*)
+  differs       38    50  evaluate_expensive_terms(board_t const*, int*, int*)
+  identical    488   488  evaluate_lazy(board_t const*, int, int, bool*)
+  identical    515   515  evaluate_lazy(board_t const*, int, int, bool*, pawn_table_t*)
+  identical   1126  1126  evaluate_pawns(board_t const*, int*, int (*) [5], int (*) [3], int (*) [7], unsigned long*, passer_family_t*, structure_family_t*)
+  identical    526   526  expensive_score(board_t const*, pawn_shelter_t*)
+  identical      6     6  game_phase(board_t const*)
+  differs      584   968  int evaluate_mobility_and_king_safety<true>(board_t const*, pawn_shelter_t*, int (*) [9], int*, int*) [clone .isra.0]
+  differs       18    23  king_safety_features(board_t const*, int (*) [9])
+  identical     23    23  passed_pawn_counts(board_t const*, int (*) [5])
+  identical     23    23  passed_pawn_sets(board_t const*, unsigned long*)
+  identical     23    23  passer_family_counts(board_t const*, passer_family_t*)
+  identical     23    23  pawn_structure_counts(board_t const*, int (*) [3])
+  identical     23    23  piece_placement_counts(board_t const*, int (*) [7])
+  identical    102   102  score_move(game_t const*, search_state_t const*, unsigned int, unsigned int, unsigned long, unsigned int)
+  identical     23    23  structure_family_counts(board_t const*, structure_family_t*)
+  new            -    24  threat_family_counts(board_t const*, threat_family_t*)
+  identical    403   403  void pawn_pass<false>(unsigned long, unsigned long, pawn_entry_t*, int (*) [5], int (*) [3], unsigned long*, passer_family_t*, structure_family_t*) [clone .constprop.0]
+every function the search reaches is identical modulo padding
+
+# == tune
+  identical    161   161  (anonymous namespace)::pawn_table_census_t::~pawn_table_census_t()
+  identical     16    16  (anonymous namespace)::pawn_table_census_t::~pawn_table_census_t() [clone .cold]
+  identical     14    14  _GLOBAL__sub_I_passed_pawn_mg
+  identical     14    14  capture_score(board_t const*, unsigned int)
+  identical    462   462  evaluate(board_t const*)
+  identical    499   499  evaluate(board_t const*, pawn_table_t*)
+  identical    456   456  evaluate_cheap(board_t const*)
+  differs       38    50  evaluate_expensive_terms(board_t const*, int*, int*)
+  identical    487   487  evaluate_lazy(board_t const*, int, int, bool*)
+  identical    520   520  evaluate_lazy(board_t const*, int, int, bool*, pawn_table_t*)
+  identical   1126  1126  evaluate_pawns(board_t const*, int*, int (*) [5], int (*) [3], int (*) [7], unsigned long*, passer_family_t*, structure_family_t*)
+  identical    527   527  expensive_score(board_t const*, pawn_shelter_t*)
+  identical      6     6  game_phase(board_t const*)
+  differs      584   968  int evaluate_mobility_and_king_safety<true>(board_t const*, pawn_shelter_t*, int (*) [9], int*, int*) [clone .isra.0]
+  differs       18    23  king_safety_features(board_t const*, int (*) [9])
+  identical     23    23  passed_pawn_counts(board_t const*, int (*) [5])
+  identical     23    23  passed_pawn_sets(board_t const*, unsigned long*)
+  identical     23    23  passer_family_counts(board_t const*, passer_family_t*)
+  identical     23    23  pawn_structure_counts(board_t const*, int (*) [3])
+  identical     23    23  piece_placement_counts(board_t const*, int (*) [7])
+  identical    102   102  score_move(game_t const*, search_state_t const*, unsigned int, unsigned int, unsigned long, unsigned int)
+  identical     23    23  structure_family_counts(board_t const*, structure_family_t*)
+  new            -    24  threat_family_counts(board_t const*, threat_family_t*)
+  identical    403   403  void pawn_pass<false>(unsigned long, unsigned long, pawn_entry_t*, int (*) [5], int (*) [3], unsigned long*, passer_family_t*, structure_family_t*) [clone .constprop.0]
+every function the search reaches is identical modulo padding

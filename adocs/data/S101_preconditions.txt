@@ -1,0 +1,200 @@
+S101 phase 1, 2026-11-01: the readings S101's coverage rows move, on the zero-weight landing
+tree: ../chesso-s101, branch s101 on b0338b5 with the phase 1 diff
+
+== adocs/data/S101_coverage_rows.cpp, S101_COVERAGE_DATA = S083's corpus (sha256 2e0e3de9...),
+from the base 92 rows (BASE_ROWS) with the landed block re-checked. all_test_fens() closes every
+need, so the corpus is not read; the run with it and the run without are byte-identical.
+tests/test_eval_positions.hpp: 104 rows, 92 before S101's block (marker found)
+landed block: 6 pairs, 0 not eligible
+the list, 92 rows: 14 of 48 needs open
+  open threat_pawn_mg[0]
+  open threat_minor_mg[0]
+  open hanging_piece_mg[3]
+  open threat_king_mg[0]
+  open threat_king_mg[1]
+  open threat_king_mg[2]
+  open threat_king_mg[3]
+  open threat_pawn_eg[0]
+  open threat_minor_eg[0]
+  open hanging_piece_eg[3]
+  open threat_king_eg[0]
+  open threat_king_eg[1]
+  open threat_king_eg[2]
+  open threat_king_eg[3]
+all_test_fens(): 138 eligible candidates close an open need
+pick, phase 17, closes 4: hanging_piece_mg[3] hanging_piece_eg[3] threat_king_mg[3] threat_king_eg[3]
+  5rk1/pp4pp/4p3/2R3Q1/3n4/2q5/P1P2PPr/5RK1 w - - 0 2
+pick, phase 8, closes 2: threat_pawn_mg[0] threat_pawn_eg[0]
+  1k5K/8/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2
+pick, phase 2, closes 2: threat_king_mg[0] threat_king_eg[0]
+  4k3/8/1K6/p3Pp1r/Pp5p/6pP/6P1/8 b - - 1 1
+pick, phase 12, closes 2: threat_minor_mg[0] threat_minor_eg[0]
+  r1N1k2r/ppp1n1pp/1b6/8/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9
+pick, phase 12, closes 2: threat_king_mg[1] threat_king_eg[1]
+  r1nNk2r/ppp3pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9
+pick, phase 22, closes 2: threat_king_mg[2] threat_king_eg[2]
+  rnbq1k1r/pp1PbBpp/2p5/8/8/8/PPP1N1PP/RNBQK2n b Q - 0 8
+check gradient: 104 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 2.500e-08, over S101's family 9.580e-08
+check both ways: 2904 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (12 picked rows, 12 landed)
+
+12 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S101 coverage, closes hanging_piece_mg[3] hanging_piece_eg[3] threat_king_mg[3] threat_king_eg[3]
+    "5rk1/pp4pp/4p3/2R3Q1/3n4/2q5/P1P2PPr/5RK1 w - - 0 2",
+    "5rk1/p1p2ppR/2Q5/3N4/2r3q1/4P3/PP4PP/5RK1 b - - 0 2",
+    // S101 coverage, closes threat_pawn_mg[0] threat_pawn_eg[0]
+    "1k5K/8/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2",
+    "nnnnnnnn/PPPPPPPP/8/8/8/8/8/1K5k b - - 1 2",
+    // S101 coverage, closes threat_king_mg[0] threat_king_eg[0]
+    "4k3/8/1K6/p3Pp1r/Pp5p/6pP/6P1/8 b - - 1 1",
+    "8/6p1/6Pp/pP5P/P3pP1R/1k6/8/4K3 w - - 1 1",
+    // S101 coverage, closes threat_minor_mg[0] threat_minor_eg[0]
+    "r1N1k2r/ppp1n1pp/1b6/8/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9",
+    "r3k2r/pp2bppp/2p5/8/8/1B6/PPP1N1PP/R1n1K2R b KQkq - 2 9",
+    // S101 coverage, closes threat_king_mg[1] threat_king_eg[1]
+    "r1nNk2r/ppp3pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9",
+    "r3k2r/pp2bppp/2p5/8/2B5/8/PPP3PP/R1NnK2R b KQkq - 2 9",
+    // S101 coverage, closes threat_king_mg[2] threat_king_eg[2]
+    "rnbq1k1r/pp1PbBpp/2p5/8/8/8/PPP1N1PP/RNBQK2n b Q - 0 8",
+    "rnbqk2N/ppp1n1pp/8/8/8/2P5/PP1pBbPP/RNBQ1K1R w q - 0 8",
+
+== the earlier tools, each with its COVERAGE_DATA naming S083's corpus, scoped to its own block
+-- S125_coverage_rows
+tests/test_eval_positions.hpp: 104 rows, 88 before S125's block (marker found), the block ends at row 92
+landed block: 2 pairs, 0 not eligible
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 2.563e-09, over S125's family 1.452e-07
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (4 picked rows, 4 landed)
+-- S123_coverage_rows
+tests/test_eval_positions.hpp: 104 rows, 80 before S123's block (marker found), the block ends at row 88
+landed block: 4 pairs, 0 not eligible
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 2.955e-08, over S123's family 5.423e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+-- S121_coverage_rows
+tests/test_eval_positions.hpp: 104 rows, 42 before S121's block (marker found), the block ends at row 80
+landed block: 19 pairs, 0 not eligible
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| over the mobility span 3.250e-08
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+
+== python-chess, the twelve rows of S101's block: every one VALID, status 0.
+
+== adocs/data/S083_tuner_preconditions.cpp both
+clamp: 104 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 121.1 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      137.2       46.75   1.36e-07         -1         -1  binds on none or all; 
+  +20      0        0.0      167.2       16.75   5.92e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +30      4      197.3      158.8       13.25   1.53e-07          0    0.00192  ok  <- CHOSEN
+  +40      6      277.3      171.0       13.00   2.66e-07          0    0.00128  fd past 2e-7; 
+  +50     10      357.3      175.8        2.00   1.57e-07          0    0.00751  ok
+  +60     15      437.3      183.0        1.00   3.85e-07          0    0.00501  fd past 2e-7; 
+  +70     20      517.3      179.3        4.67   1.57e-07          0    0.00376  ok
+  +80     28      597.3      172.5        0.71   1.57e-07          0     0.0029  a row within 1 cp of the kink; 
+  +90     29      677.3      179.5        4.46   4.93e-07          0     0.0028  fd past 2e-7; 
+ +100     30      757.3      178.0        6.00   1.58e-07          0     0.0027  ok
+ +110     38      837.3      175.7        2.08   1.58e-07          0     0.0021  ok
+ +120     42      917.3      176.9        1.67   1.58e-07          0     0.0019  ok
+ +130     44      997.3      173.2        6.00   1.58e-07          0    0.00181  ok
+ +140     44     1077.3      183.2        0.75   1.58e-07          0    0.00181  a row within 1 cp of the kink; 
+ +150     52     1157.3      176.2        0.50   1.58e-07          0     0.0015  a row within 1 cp of the kink; 
+ +160     54     1237.3      179.5        2.17   1.59e-07          0    0.00144  ok
+ +170     58     1317.3      174.0        5.00   4.01e-07          0    0.00134  fd past 2e-7; 
+ +180     60     1397.3      177.2        0.00       1.67   1.39e-06     0.0013  a row within 1 cp of the kink; fd past 2e-7; bound rows not silent; 
+ +190     63     1477.3      164.8        2.00   1.59e-07          0    0.00124  ok
+ +200     63     1557.3      174.8        9.17   1.97e-06          0    0.00124  fd past 2e-7; 
+clamp: the rule picks +30, every row 13.25 from the kink
+walk: 108 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   -3.1790  held  -2.74e-15  
+    material/table knight  plain   -4.0138  held  +6.66e-16  
+    material/table bishop  plain   -0.9618  held  +1.47e-15  
+    material/table rook    plain   -1.6513  held  -3.33e-15  
+    material/table queen   plain   -2.9337  held  -7.77e-16  
+    psqt_mg[king]          plain   +1.9629  held  -4.44e-16  
+    psqt_eg[king]          plain   +2.2781  held  -5.55e-16  
+    smallest plain walk 0.9618 (material/table bishop); runs apart 1.19e-12; plain travelled 1857.4
+  adagrad at lr 10
+    material/table pawn    plain   -4.1944  held  +1.85e-15  
+    material/table knight  plain   -1.5137  held  +5.55e-17  
+    material/table bishop  plain   -1.2480  held  -1.39e-16  
+    material/table rook    plain   -2.1507  held  -8.22e-15  
+    material/table queen   plain   -2.7501  held  +4.44e-15  
+    psqt_mg[king]          plain   +4.1742  held  -3.55e-15  
+    psqt_eg[king]          plain   +3.8577  held     +2e-15  
+    smallest plain walk 1.2480 (material/table bishop); runs apart 4.25e-11; plain travelled 1852.0
+walk: every plain shift clears the case's floor 0.01
+
+== tests/test_tuner_gradient.cpp, its reading (the worst relative errors the case prints; parameter
+990 is passed_king_own_eg[5]; before S101's rows and threats, S125's close read 9.22e-07 at 800):
+/home/max/ws/chesso-s101/tests/test_tuner_gradient.cpp:590: MESSAGE: worst relative error 4.97533e-07 at parameter 990
+/home/max/ws/chesso-s101/tests/test_tuner_gradient.cpp:734: MESSAGE: clamp case: worst relative error 1.52542e-07 at parameter 990
+/home/max/ws/chesso-s101/tests/test_tuner_gradient.cpp:1445: MESSAGE: group: worst relative error 3.46229e-08 at parameter 1129
+[doctest] test cases:    13 |    13 passed | 0 failed | 0 skipped
+[doctest] assertions: 50741 | 50741 passed | 0 failed |
+
+== the fixture clear of the clamp: largest |stage two| 121.1 against 183.0, unmoved: at zero weights
+stage two has not moved, and the new rows do not exceed it.
+
+== the planted recoveries: S101's seven groups added to the case, each within half a centipawn of
+its plant fitted alone from the shipped constants. threat_king runs 32000 epochs: its pawn cell's
+one middlegame row stands at phase 2, so that half's gradient is scaled twice by 2/24; it read 0.70
+at 6000 epochs and 2.39 at 24000 against 3 planted. A budget and not a golden. No group of S101's
+is unmeasured.
+
+== the audit, tools/feature_audit --free the seven groups over S083's corpus, 2026-11-01 03:25:21 to
+03:26:27, 66 s: S101_screen.py audit-check passes
+trace: 6226944 rows, 232675289 entries; 0 differ from evaluate(), the clamp binds on 22083
+identities: rank modulo 2^61-1: 1074 of 1121, nullity 47; 32 zero columns and 15 dependencies by construction account for 47 of it
+identities: no exact dependency beyond the ones listed above
+identities: rank over the rationals exactly 1074 of 1121, nullity 47, every null direction listed above
+identities: 32 zero columns, 7 held gauges and 8 frozen mobility levels span 47 of at most 47 null dimensions: every null direction is one Adam never moves, one the tuner holds, or a mobility level the run's frozen columns hold
+ties: 0 of 48 cell halves tied at 1000 games; the support lines:
+support threat_pawn_mg[0] rows 184009 games 84257
+support threat_pawn_mg[1] rows 97173 games 54378
+support threat_pawn_mg[2] rows 26003 games 18357
+support threat_pawn_mg[3] rows 32855 games 24264
+support threat_piece_mg[0] rows 78916 games 44519
+support threat_piece_mg[1] rows 57550 games 38689
+support threat_piece_mg[2] rows 119215 games 60383
+support threat_piece_mg[3] rows 46627 games 32548
+support threat_piece_mg[4] rows 53402 games 34057
+support threat_minor_mg[0] rows 251452 games 82534
+support threat_minor_mg[1] rows 906524 games 123030
+support hanging_piece_mg[0] rows 189389 games 83709
+support hanging_piece_mg[1] rows 221215 games 93297
+support hanging_piece_mg[2] rows 191964 games 87848
+support hanging_piece_mg[3] rows 124052 games 68763
+support hanging_pawn_mg[0] rows 1122984 games 135733
+support threat_king_mg[0] rows 50516 games 25345
+support threat_king_mg[1] rows 28303 games 17720
+support threat_king_mg[2] rows 12408 games 9187
+support threat_king_mg[3] rows 41457 games 28693
+support threat_push_mg[0] rows 969278 games 126946
+support threat_push_mg[1] rows 538005 games 104221
+support threat_push_mg[2] rows 275329 games 67499
+support threat_push_mg[3] rows 304423 games 77914
+support threat_pawn_eg[0] rows 128802 games 63382
+support threat_pawn_eg[1] rows 74742 games 42333
+support threat_pawn_eg[2] rows 25073 games 17736
+support threat_pawn_eg[3] rows 27086 games 19883
+support threat_piece_eg[0] rows 72967 games 41622
+support threat_piece_eg[1] rows 44620 games 30415
+support threat_piece_eg[2] rows 104508 games 54019
+support threat_piece_eg[3] rows 36330 games 25604
+support threat_piece_eg[4] rows 50771 games 32505
+support threat_minor_eg[0] rows 202011 games 71602
+support threat_minor_eg[1] rows 635999 games 109822
+support hanging_piece_eg[0] rows 160503 games 73346
+support hanging_piece_eg[1] rows 196374 games 85580
+support hanging_piece_eg[2] rows 173662 games 82569
+support hanging_piece_eg[3] rows 109314 games 61712
+support hanging_pawn_eg[0] rows 980639 games 132776
+support threat_king_eg[0] rows 52316 games 26122
+support threat_king_eg[1] rows 27718 games 17340
+support threat_king_eg[2] rows 12347 games 9149
+support threat_king_eg[3] rows 41425 games 28673
+support threat_push_eg[0] rows 682441 games 109936
+support threat_push_eg[1] rows 409526 games 88771
+support threat_push_eg[2] rows 269189 games 66454
+support threat_push_eg[3] rows 250766 games 67184

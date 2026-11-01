@@ -50,6 +50,8 @@ namespace eval_trace
 // after them for the same reason, each indexed by its weights' cell
 // (src/evaluation.hpp): 0 for the two counts, the file less one for the two
 // tables by file, the own rank less the table's first for the three by rank.
+// S101's seven come after those, each indexed by its weights' cell
+// (src/evaluation.hpp).
 enum term_t : uint8_t
 {
   TERM_MATERIAL,
@@ -72,6 +74,13 @@ enum term_t : uint8_t
   TERM_PHALANX,
   TERM_SUPPORTED,
   TERM_WEAK_UNOPPOSED,
+  TERM_THREAT_PAWN,
+  TERM_THREAT_PIECE,
+  TERM_THREAT_MINOR,
+  TERM_HANGING_PIECE,
+  TERM_HANGING_PAWN,
+  TERM_THREAT_KING,
+  TERM_THREAT_PUSH,
   TERM_COUNT
 };
 

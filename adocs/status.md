@@ -33,8 +33,12 @@ false comments now say what the code does, the "Golden" mark off the timer board
 A clean reader found two errors in S306's twelve rewrites, after the writer's own check: for the comment
 study, a measured rate that says a rewrite needs that reader.
 
-**Next: S101, in progress: its research pass read, DEC-333 ruled, phase 1 on branch `s101`, worktree
-`../chesso-s101`.** Its pre-registration names S307 and S308 as open filler (DEC-171), neither moving play. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
+**S101 in progress, phase 1 landed on `achesso` at this commit:** seven threat groups at zero in stage two
+(DEC-333), INV-6 against `b0338b5`, rank 1074 of 1121, nullity 47, 26 guard scenarios; the fast check's
+findings fixed. Its step file in `plan_current/` holds the commands in order. **Next: the screen,
+`adocs/data/S101_screen.sh all`, about 2 h 50 m, no commit while it runs; then the cost, `apply`, phase 2,
+the SPRT.** Its pre-registration names S307 and S308 as open filler (DEC-171), neither moving play; S309
+is filler too, and lands before S102's plants. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
 answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
 
 **The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The

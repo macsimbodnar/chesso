@@ -1525,3 +1525,27 @@ The two commits were timed on branch `s118` and landed on DEC-332 (8)'s reading:
 | `S118_drift.log` | a drift point after S118's landing, 2026-11-01, S199's form in S267's series: `8ffce9b` against `1680439`, 2000 games at 8+0.08, Hash 16, `noob_3moves.epd`, 52 m 56 s, Elo +293.62 +/- 17.15, nElo +404.66 +/- 15.23, 0 forfeits; not a verdict and not a rating (DEC-108); trimmed with `tools/trim_console.py --summary`, the run in `chesso_S118_drift_2026-11-01.tar.xz` |
 | `S118_mutants.txt` | `tools/mutants/S118_pawn_cache.py` on the final tree, 24 of 24 killed, in the two runs' own lines with their kill tables and what caught each: PT01 to PT13 on `40831fa`, a second run replacing the rows of a first stopped before its table; PT14 to PT24 on `f36762f`; `src/` and `tests/` the same at both; PT07's bench reads `n/a` |
 | `S306_identity.txt` | S306's comment edits, old `b385761` against the worktree, 2026-11-01: seven C++ files byte-equal under `g++ -fpreprocessed -dD -E -P`, the one Python file's `ast` without docstrings and its tokens after the docstring equal, with its one docstring edit, and `fastchess.sh` and `tests/CMakeLists.txt` with only comment lines changed, those lines printed. `S306-IDENTITY HOLDS` |
+
+### S101, the threat family (DEC-259, DEC-333)
+
+The research pass, 2026-11-01, on `4d3edf6`: counts and instructions, no match, fit or
+timing. Phase 1, the same day: the family's seven groups landed at zero, `No functional
+change`, and the screen, cost and SPRT pre-registered. S101's step file, "2026-11-01: the
+research pass" and "2026-11-01: phase 1".
+
+| file | what it is |
+|---|---|
+| `S101_census.txt` | the research pass's figures: each threat kind's rows and share with the attacker on move on S083's corpus and S082's qs set, the overlaps, the clamp share at a flat hypothetical weight (a probe, no weight proposed), the same counts over `chesso bench`'s evaluation calls, and the prototype's instructions |
+| `S101_census.cpp`, `S101_census_zone.cpp`, `S101_threat_core.hpp` | the counters behind it, FEN field only, each with its build line or by the census's |
+| `S101_research_prototype.patch` | the forced-weight sink and search census those figures read, over `4d3edf6`, never committed to `src/`; not the cost run's patch |
+| `S101_inv6.txt` | INV-6 for the landing against its parent `b0338b5`, Release and tune builds: `bench` (5707449), `bench 12` (1861982) and `tools/search_bench.py` at depths 9 and 12 byte-identical, and every function of `evaluation.cpp.o` the search reaches identical modulo padding |
+| `S101_objdiff.py` | that object comparison as a program, `S125_objdiff.py`'s form |
+| `S101_coverage_rows.cpp` | S121's rule over the family's 48 parameters, `S125_coverage_rows.cpp`'s shape (its header has the build line): from the base 92 rows, 14 needs open, `all_test_fens()` closes them in 6 pairs, and it exits 1 unless it reproduces its block |
+| `S101_preconditions.txt` | the readings those rows move, each by its script: the four coverage tools, the clamp push +30 and the gauge walk 0.9618 / 1.2480, the fixture 121.1 against 183, the gradient's worst 4.98e-7 at 990, the planted recoveries, and the audit: rank 1074 of 1121, nullity 47, 0 ties |
+| `S101_screen.sh` | the pre-registration and the run of S101's screen (DEC-333 (5)): S083's corpus, one audit with ties before any fit, P1 to P7 in order with the earlier survivors live, paired d, `apply` with S121's clamp reading; it names the transfer gap, and S307 and S308 as open filler |
+| `S101_screen.py` | the program those stages run: `plan`, `audit-check`, `ties`, `read`, `start-check`, `headroom` (the assert on mobility's packed sum), `only-family`, `landing-check [--commit]`, `only-family-pair`, `part`, `clamp` |
+| `S101_cost.sh` | the speed cost of S101's groups, deciding nothing, no bar, in `S125_cost.sh`'s shape: the landing, its byte copy, its parent, seven forced groups, all, and `cand` at the screen's mask |
+| `S101_cost.py` | `code` and the reading of those pairs, `S125_cost.py`'s with S101's rows |
+| `S101_cost_only.patch` | the cost-only form, applying to the phase 1 landing: the groups `S101_COST` names computed at forced weights in stage two into a sum an asm barrier consumes |
+| `S101_sprt.sh` | the pre-registration of S101's one family SPRT at 8+0.08, Hash 16, `noob_3moves.epd`, `{0, 5}`, cap 20950 rounds; its guards name each commit by what they check, so a commit touching neither `src/` nor a build file trips none; it refuses to start unpinned |
+| `S101_sprt_guards.txt` | those guards on a scratch clone: 26 scenarios, 7 run, 19 refused, the two S307 shapes among those that run |

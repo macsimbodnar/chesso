@@ -541,6 +541,17 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     cells(eval_trace::TERM_SUPPORTED, structure_family.supported, 5);
     cells(eval_trace::TERM_WEAK_UNOPPOSED, structure_family.weak_unopposed, 1);
 
+    // S101's family the same way.
+    threat_family_t threat_family;
+    threat_family_counts(&board, &threat_family);
+    cells(eval_trace::TERM_THREAT_PAWN, threat_family.threat_pawn, 4);
+    cells(eval_trace::TERM_THREAT_PIECE, threat_family.threat_piece, 5);
+    cells(eval_trace::TERM_THREAT_MINOR, threat_family.threat_minor, 2);
+    cells(eval_trace::TERM_HANGING_PIECE, threat_family.hanging_piece, 4);
+    cells(eval_trace::TERM_HANGING_PAWN, threat_family.hanging_pawn, 1);
+    cells(eval_trace::TERM_THREAT_KING, threat_family.threat_king, 4);
+    cells(eval_trace::TERM_THREAT_PUSH, threat_family.threat_push, 4);
+
     CHECK(trace.phase == game_phase(&board));
   }
 }

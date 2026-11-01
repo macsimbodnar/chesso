@@ -88,6 +88,12 @@ KS = {  # king_safety_feature_t's order
 #             cases with pawns, the pawn on e2 109 -> 107 and Re8 196 -> 199
 #             (adocs/data/S125_goldens.txt). isolated_backward, weighted by
 #             S125's close, counts no pawn in any case here
+#  threats    S101's threat family (src/evaluation.hpp): array name -> {cell:
+#             signed count}, White minus Black, summed into mobility's pair. Every
+#             case states it, and every case's is empty: no case here holds a man
+#             any cell counts, read off the engine's threat_family_counts() and the
+#             walk on all twelve FENs at S101's landing, so no anchor moves with the
+#             family's weights
 #  mobility   (type, attacked squares not occupied by own pieces nor attacked
 #             by an enemy pawn, sign); since S121 the count picks the piece's
 #             cell of its type's table, which is what the piece scores, and is
@@ -112,6 +118,7 @@ CASES = [
         # S125: e2 is isolated on the e file (cell 3), so weak, and no black
         # pawn stands ahead on its file, so unopposed; nothing attacks e3
         structure_family={"isolated_file": {3: 1}, "weak_unopposed": {0: 1}},
+        threats={},  # S101's family: no man attacked
         structure=(1, 0, 0),  # isolated: no white pawn on d or f
         placement=(0, 0, 0),
         mobility=[],
@@ -132,6 +139,7 @@ CASES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, 0, 0),
         mobility=[(KNIGHT - 1, 3, 1)],  # a3, c3, d2
@@ -149,6 +157,7 @@ CASES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, 0, 0),  # one bishop is not a pair
         mobility=[(BISHOP - 1, 7, 1)],  # d2 e3 f4 g5 h6, b2 a3
@@ -167,6 +176,7 @@ CASES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, 1, 0),  # no pawn of either colour on the d file
         # a1 b1 c1, d2..d8; e1 is own-occupied
@@ -185,6 +195,7 @@ CASES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, 0, 0),  # the open-file feature counts rooks only
         # the rook's 10 plus e2 f3 g4 h5, c2 b3 a4
@@ -203,6 +214,7 @@ CASES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, 0, 0),
         mobility=[],
@@ -239,6 +251,7 @@ CASES = [
         # rank (cell 0), so three phalanx pawns and none weak; no pawn stands
         # behind them, so none is supported
         structure_family={"phalanx": {0: -3}},
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),  # f g h are mutual neighbours; nothing is backward
         placement=(0, 2, 0),  # both white rooks on the open e file
         # Re8: a8..d8, f8 and the king on g8, e7..e2; Re1: a1..d1, f1, e2..e7.
@@ -264,6 +277,7 @@ CASES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, 1, 0),  # the a file holds no pawn of either colour
         # a3..a8 is 6 and b2..h2 is 7; a1 is in the attack set and own-occupied
@@ -298,6 +312,7 @@ LEAVES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, -1, 0),  # Black's rook, on the open e file
         # a8..d8 is 4 and e1..e7 is 7; f8 is in the attack set and own-occupied
@@ -316,6 +331,7 @@ LEAVES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
@@ -333,6 +349,7 @@ LEAVES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
@@ -350,6 +367,7 @@ LEAVES = [
         passed={},
         family={},  # S123's family: no pawn, so no passer and no candidate
         structure_family={},  # S125's family: no pawn
+        threats={},  # S101's family: no man attacked
         structure=(0, 0, 0),
         placement=(0, -1, 0),
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
@@ -457,6 +475,12 @@ def score(case, w, margin):
     for t, count, sign in case["mobility"]:
         mob_mg += sign * w["mobility_%s_mg" % MOBILITY_TABLES[t]][count]
         mob_eg += sign * w["mobility_%s_eg" % MOBILITY_TABLES[t]][count]
+
+    # S101: summed into mobility's pair, one taper.
+    for name, cells in case["threats"].items():
+        for cell, count in cells.items():
+            mob_mg += count * w[name + "_mg"][cell]
+            mob_eg += count * w[name + "_eg"][cell]
 
     # An attack on a king zone is worth its weight to the king under fire, so it
     # enters the White-relative sum with the defender's sign.

@@ -1,0 +1,82 @@
+S101's cost-only patch (adocs/data/S101_cost.sh), never committed to src/: the
+groups S101_COST names (bit 1 P1, 2 P2, 4 P3, 8 P4, 16 P5, 32 P6, 64 P7) computed at
+forced weights in stage two, the search's own path, into a sum an asm barrier
+consumes, the score the landing's. Applies to S101's phase 1 landing; regenerate from
+its src/evaluation.cpp if that moves.
+
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -2184,31 +2184,48 @@
+ constexpr int threat_king_eg[4] = {0, 0, 0, 0};
+ constexpr int threat_push_mg[4] = {0, 0, 0, 0};
+ constexpr int threat_push_eg[4] = {0, 0, 0, 0};
++// S101's cost-only build, never committed (adocs/data/S101_cost.sh applies this
++// patch to a throwaway tree). The groups S101_COST names -- bit 1 P1, 2 P2, 4 P3, 8
++// P4, 16 P5, 32 P6, 64 P7 -- are computed at forced non-zero weights into the sum
++// threat_terms() returns, which an asm barrier consumes and the score never sees,
++// so the search, node for node, is the shipping build's and the wall time is the
++// cost (DEC-047). A group whose bit is clear is not live, so it is in no expression,
++// and the unions are built only if a group that reads them is forced.
++#ifndef S101_COST
++#define S101_COST 127
++#endif
++static_assert((S101_COST) >= 1 && (S101_COST) <= 127,
++              "S101_COST forces one to seven of the seven groups");
++constexpr int s101_forced1[1] = {3};
++constexpr int s101_forced2[2] = {3, 5};
++constexpr int s101_forced4[4] = {3, 5, 7, 9};
++constexpr int s101_forced5[5] = {3, 5, 7, 9, 11};
+ constexpr std::array<score_t, 4> threat_pawn_score =
+-    pack_scores(threat_pawn_mg, threat_pawn_eg);
++    pack_scores(s101_forced4, s101_forced4);
+ constexpr std::array<score_t, 5> threat_piece_score =
+-    pack_scores(threat_piece_mg, threat_piece_eg);
++    pack_scores(s101_forced5, s101_forced5);
+ constexpr std::array<score_t, 2> threat_minor_score =
+-    pack_scores(threat_minor_mg, threat_minor_eg);
++    pack_scores(s101_forced2, s101_forced2);
+ constexpr std::array<score_t, 4> hanging_piece_score =
+-    pack_scores(hanging_piece_mg, hanging_piece_eg);
++    pack_scores(s101_forced4, s101_forced4);
+ constexpr std::array<score_t, 1> hanging_pawn_score =
+-    pack_scores(hanging_pawn_mg, hanging_pawn_eg);
++    pack_scores(s101_forced1, s101_forced1);
+ constexpr std::array<score_t, 4> threat_king_score =
+-    pack_scores(threat_king_mg, threat_king_eg);
++    pack_scores(s101_forced4, s101_forced4);
+ constexpr std::array<score_t, 4> threat_push_score =
+-    pack_scores(threat_push_mg, threat_push_eg);
++    pack_scores(s101_forced4, s101_forced4);
+ 
+ // One flag a group, as S123's and S125's. P1 reads the pawn attacks stage two
+ // has anyway, so it alone needs no union, and that is the difference between
+ // the two flags at the end.
+-static constexpr bool threat_pawn_live = any_weight(threat_pawn_score);
+-static constexpr bool threat_piece_live = any_weight(threat_piece_score);
+-static constexpr bool threat_minor_live = any_weight(threat_minor_score);
+-static constexpr bool hanging_piece_live = any_weight(hanging_piece_score);
+-static constexpr bool hanging_pawn_live = any_weight(hanging_pawn_score);
+-static constexpr bool threat_king_live = any_weight(threat_king_score);
+-static constexpr bool threat_push_live = any_weight(threat_push_score);
++// The cost build's liveness is its mask's.
++static constexpr bool threat_pawn_live = ((S101_COST) & 1) != 0;
++static constexpr bool threat_piece_live = ((S101_COST) & 2) != 0;
++static constexpr bool threat_minor_live = ((S101_COST) & 4) != 0;
++static constexpr bool hanging_piece_live = ((S101_COST) & 8) != 0;
++static constexpr bool hanging_pawn_live = ((S101_COST) & 16) != 0;
++static constexpr bool threat_king_live = ((S101_COST) & 32) != 0;
++static constexpr bool threat_push_live = ((S101_COST) & 64) != 0;
+ static constexpr bool threat_totals_live = hanging_piece_live ||
+                                            hanging_pawn_live ||
+                                            threat_king_live || threat_push_live;
+@@ -2851,6 +2868,10 @@
+   } else {
+     threat_terms<false>(board, attacks_by, pawn_attacks, zone, &threat_sum,
+                         nullptr);
++    // The cost build's sink: the forced groups were computed, and nothing of them
++    // reaches the score.
++    asm volatile("" : : "r"(threat_sum));
++    threat_sum = 0;
+   }
+ 
+   for (int colour = 0; colour < 2; ++colour) {

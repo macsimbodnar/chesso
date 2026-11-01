@@ -1,0 +1,34 @@
+# adocs/data/S101_sprt.sh's guards on a scratch clone, 2026-11-01: a dry copy pinned to each
+# scenario's commits, the markers filled, the exec replaced by an echo, run from the phase 1
+# landing's tree. .tuning/s101/bin/stamp holds the screened commit's short sha, as S101_screen.sh
+# writes it, unless the line says otherwise. "runs" prints DRY-RUN-WOULD-EXEC. The scenarios the
+# coordinator asked for are the two S307 lines: a commit touching tests alone, either side of the
+# pair, trips nothing; and the last three, added after phase 1's fast check: `screened` tied to the
+# screen's stamp. Those three ran before the guard existed, and each read DRY-RUN-WOULD-EXEC.
+runs     the family over the landing: DRY-RUN-WOULD-EXEC
+runs     S307 shape: a tests-only commit between the screened commit and REF: DRY-RUN-WOULD-EXEC
+runs     S307 shape: a tests-only commit after CAND, the pair as it was: DRY-RUN-WOULD-EXEC
+refused  the pin narrows moves and CAND moves a dropped group: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|hanging_pie
+refused  a mobility weight moved beside the paste: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_min
+refused  code appended after a definition: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hangi
+refused  a definition wrapped onto two lines: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|ha
+refused  CMakeLists.txt touched beside the paste: SPRT-RUN-FAILED: CAND changes CMakeLists.txt beyond the paste of the family's weights
+refused  src/evaluation.hpp touched beside the paste: SPRT-RUN-FAILED: CAND changes src/evaluation.hpp beyond the paste of the family's weights
+refused  the named screened commit is not the family at zero: SPRT-RUN-FAILED: the commit named as the one the screen ran from, 7a206de99fdcd9e58d8b20f3ffa967912e45cd42, is not the family at zero
+refused  S308 shape: a src/ comment between the screened commit and REF: SPRT-RUN-FAILED: REF's src/ or build files differ from the screened commit's -- REF is not the family at zero
+refused  REF does not descend from the screened commit: SPRT-RUN-FAILED: REF does not descend from the screened commit 11dc286d5387d298dd37de0852e5cf558397a8b9
+refused  CAND's src/ is REF's: a tests-only commit named as the paste: SPRT-RUN-FAILED: CAND's src/ is REF's -- not S101's paste
+refused  CAND is not REF's child: SPRT-RUN-FAILED: REF is not CAND's parent -- the pair would measure more than S101
+runs     part A over the landing: DRY-RUN-WOULD-EXEC
+runs     part B over the landing, A at H0: DRY-RUN-WOULD-EXEC
+runs     part B with A landed: DRY-RUN-WOULD-EXEC
+runs     part C with A and B landed: DRY-RUN-WOULD-EXEC
+refused  part A moving hanging_piece: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor)
+refused  part C moving threat_pawn: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_push)
+refused  part A over a landed part: SPRT-RUN-FAILED: REF's src/ or build files differ from the screened commit's -- REF is not the family at zero
+refused  part B with REF carrying its own arrays: SPRT-RUN-FAILED: REF's src/ differs from the screened commit's outside comments in more than whole one-line definitions of what part B may have landed
+refused  part D: SPRT-RUN-FAILED: part is 'D', not empty, A, B or C
+refused  a src/ commit lands after the screen and `screened` is re-pinned past it: SPRT-RUN-FAILED: screened cd45831abcafb58c66ae89eb41cf457e55087eee is not 11dc286d5387d298dd37de0852e5cf558397a8b9, the commit .tuning/s101/bin/stamp names
+refused  no stamp: nothing records the commit the screen ran from: SPRT-RUN-FAILED: no .tuning/s101/bin/stamp, so nothing records the commit the screen ran from
+refused  a stamp that names no commit: SPRT-RUN-FAILED: .tuning/s101/bin/stamp holds 'not-a-sha', which names no commit
+26 scenarios, 7 run, 19 refused, 0 not as expected

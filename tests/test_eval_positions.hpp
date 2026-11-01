@@ -344,6 +344,48 @@ inline const std::vector<std::string> positions = {
     // backward_rank_eg[1]
     "6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35",
     "8/1ppk4/4p3/1p2P1p1/3Pp2p/P1P3rP/KP4p1/6R1 b - - 1 35",
+    // S101's threat family, added at S101's phase 1: each position, then its
+    // colour-mirror, picked by adocs/data/S101_coverage_rows.cpp's rule and not
+    // by
+    // hand. The ninety-two rows above leave 14 of the family's 48 parameters
+    // with
+    // no coefficient on them -- a knight a pawn attacks, a bishop a knight
+    // attacks,
+    // a hanging queen, and every man the king alone attacks -- and on them the
+    // gradient case's non-vacuity (test_tuner_gradient) reads red. The rule is
+    // S121's, as the blocks above have it: greedy over all_test_fens(), which
+    // closes all fourteen, so neither S083's corpus nor the constructive
+    // fallback
+    // is read; each pick and its mirror at a phase from 1 to 23, a centipawn
+    // clear of
+    // the lazy clamp, within 800 cp of level and loadable with either side to
+    // move.
+    // Each comment names the parameters its pair closes. The program starts
+    // from
+    // the 92 rows above this comment (its BASE_ROWS, asserted against this
+    // comment's first line), re-checks every row below, and must pick exactly
+    // these
+    // pairs in this order. Re-derive by its header whenever the counts or the
+    // shipped constants move what it reads (DEC-142).
+    // S101 coverage, closes hanging_piece_mg[3] hanging_piece_eg[3]
+    // threat_king_mg[3] threat_king_eg[3]
+    "5rk1/pp4pp/4p3/2R3Q1/3n4/2q5/P1P2PPr/5RK1 w - - 0 2",
+    "5rk1/p1p2ppR/2Q5/3N4/2r3q1/4P3/PP4PP/5RK1 b - - 0 2",
+    // S101 coverage, closes threat_pawn_mg[0] threat_pawn_eg[0]
+    "1k5K/8/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2",
+    "nnnnnnnn/PPPPPPPP/8/8/8/8/8/1K5k b - - 1 2",
+    // S101 coverage, closes threat_king_mg[0] threat_king_eg[0]
+    "4k3/8/1K6/p3Pp1r/Pp5p/6pP/6P1/8 b - - 1 1",
+    "8/6p1/6Pp/pP5P/P3pP1R/1k6/8/4K3 w - - 1 1",
+    // S101 coverage, closes threat_minor_mg[0] threat_minor_eg[0]
+    "r1N1k2r/ppp1n1pp/1b6/8/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9",
+    "r3k2r/pp2bppp/2p5/8/8/1B6/PPP1N1PP/R1n1K2R b KQkq - 2 9",
+    // S101 coverage, closes threat_king_mg[1] threat_king_eg[1]
+    "r1nNk2r/ppp3pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9",
+    "r3k2r/pp2bppp/2p5/8/2B5/8/PPP3PP/R1NnK2R b KQkq - 2 9",
+    // S101 coverage, closes threat_king_mg[2] threat_king_eg[2]
+    "rnbq1k1r/pp1PbBpp/2p5/8/8/8/PPP1N1PP/RNBQK2n b Q - 0 8",
+    "rnbqk2N/ppp1n1pp/8/8/8/2P5/PP1pBbPP/RNBQ1K1R w q - 0 8",
 };
 
 }  // namespace test_eval_positions

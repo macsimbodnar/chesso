@@ -392,6 +392,116 @@ struct structure_family_t
 // Not on the hot path: the collecting instantiation, as above.
 void structure_family_counts(const board_t* board, structure_family_t* out);
 
+// S101's threat family (DEC-333), seven groups scored in stage two: summed into
+// mobility's pair before its taper, under the clamp, so no truncating division
+// is added and the lazy shortcut cannot change a decision at any weight. Landed
+// at zero, each screened on its own part (DEC-259, adocs/data/S101_screen.sh).
+// The definitions are stated exactly because the walk in
+// tests/test_walked_counts.hpp is written from them and the two have to mean
+// the same thing, each implemented from its description (DEC-221): CPW *Hanging
+// Piece*, "an attacked piece not defended by own man", *Loose Piece*, and *Pawn
+// Pushes (Bitboards)*. Each count belongs to the attacking side.
+//
+// The attack sets, per side, each the raw squares its men attack on the board
+// as it stands: no x-ray through a piece and no pin is read (DEC-333 (1)).
+//
+//   pawn, knight, bishop, rook, queen  the squares that class attacks.
+//   king      the king's zone: its square and the eight around it, the set king
+//             safety already reads. No man of either side shares the king's
+//             square, so the extra bit reaches no count.
+//   nonking   the five above together.
+//   all       nonking and king: what the side defends, king and pawns included.
+//
+// The cells, each a middlegame and an endgame array, every cell a count of the
+// enemy's men in it; the term is White's count minus Black's, cell by cell. A
+// man is `undefended` when its own side's `all` does not hold its square.
+//
+//   threat_pawn[4]    enemy knight, bishop, rook, queen that own pawns attack.
+//   threat_piece[5]   a piece attacked by a greater piece's lesser: enemy rook
+//                     and queen that own knights attack, the same for own
+//                     bishops, enemy queen that own rooks attack. Per pair: a
+//                     rook both a knight and a bishop attack counts in both.
+//   threat_minor[2]   enemy bishops own knights attack, enemy knights own
+//   bishops
+//                     attack. The two are one rank: no order between a knight
+//                     and a bishop can be derived, since piece_value's split
+//                     against the tables is arbitrary, so these are not
+//                     "lesser" and sit apart.
+//   hanging_piece[4]  enemy knight, bishop, rook, queen in own `nonking`,
+//                     undefended. Adds to the lesser cells above: a distinct
+//                     fact, the fit pricing the sum (DEC-333 (3)).
+//   hanging_pawn[1]   enemy pawns in own `nonking`, undefended.
+//   threat_king[4]    enemy pawn, knight, bishop, rook in the own king's zone,
+//   not
+//                     in own `nonking`, undefended: the rest of hanging, what
+//                     only the king attacks. A queen has no cell: beside the
+//                     enemy king it gives check, so the position is one no
+//                     evaluation scores.
+//   threat_push[4]    enemy knight, bishop, rook, queen attacked from a safe
+//   push
+//                     target and not attacked by an own pawn already. A fork
+//                     counts each. A king's cell is S122's, a safe check.
+//
+// Push targets: an empty square directly ahead of an own pawn, and the empty
+// square beyond it on the double push's rank, the fourth for White and the
+// fifth for Black, from a first step no enemy pawn attacks, which leaves no en
+// passant capture. A target is **safe**, chesso's own word (DEC-333 (4)), when
+// no enemy pawn attacks it and it is unattacked or own-defended: enemy `all`
+// does not hold it, or own `all` does. An approximation, stated: it ignores the
+// square the pawn leaves and counts no exchange. "Nothing enemy attacks it",
+// DEC-329 (2)'s word for a passer's push, cannot serve: a bishop or queen on
+// the target's diagonal is itself the victim attacking it, two exact zero
+// columns.
+//
+// Every man read here is a piece on the board, so no group can sit in the pawn
+// table (DEC-332 (3)). S122's boundary is by target (DEC-333 (9)): S101 owns
+// attacks on men, S122 squares and the king.
+extern const int threat_pawn_mg[4];
+extern const int threat_pawn_eg[4];
+extern const int threat_piece_mg[5];
+extern const int threat_piece_eg[5];
+extern const int threat_minor_mg[2];
+extern const int threat_minor_eg[2];
+extern const int hanging_piece_mg[4];
+extern const int hanging_piece_eg[4];
+extern const int hanging_pawn_mg[1];
+extern const int hanging_pawn_eg[1];
+extern const int threat_king_mg[4];
+extern const int threat_king_eg[4];
+extern const int threat_push_mg[4];
+extern const int threat_push_eg[4];
+
+// The family's sets and raw counts per attacking colour, WHITE first, each a
+// side's own and positive, for the reason over passed_pawn_counts(). The sets
+// are the attack sets above, then the enemy men each kind reaches and the safe
+// push targets. tests/test_evaluation holds each to its mirror (DEC-329 (6)),
+// tests/test_eval_model to the walk.
+struct threat_family_t
+{
+  bb_t pawn_attacks[2];
+  bb_t knight_attacks[2];
+  bb_t bishop_attacks[2];
+  bb_t rook_attacks[2];
+  bb_t queen_attacks[2];
+  bb_t king_attacks[2];
+  bb_t nonking[2];
+  bb_t all[2];
+  bb_t hanging_set[2];
+  bb_t king_only_set[2];
+  bb_t push_targets[2];
+  bb_t push_hits[2];
+  int threat_pawn[2][4];
+  int threat_piece[2][5];
+  int threat_minor[2][2];
+  int hanging_piece[2][4];
+  int hanging_pawn[2][1];
+  int threat_king[2][4];
+  int threat_push[2][4];
+};
+
+// Not on the hot path: the collecting instantiation of stage two.
+void threat_family_counts(const board_t* board, threat_family_t* out);
+
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
 // open file, 2 rook on a half-open file, 3 bad bishop, 4 bad bishop rammed, 5
 // trapped minor, 6 trapped rook. Exposed for the same reason as the weights
@@ -575,22 +685,30 @@ extern const int king_safety_eg[KS_FEATURE_COUNT];
 // drift.
 void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT]);
 
-// The two expensive terms before the clamp, in the orientation the correction
-// is applied in: clamping their sum to the margin below reproduces exactly what
+// The expensive terms before the clamp, in the orientation the correction is
+// applied in: clamping their sum to the margin below reproduces exactly what
 // evaluate() adds to evaluate_cheap().
 //
 // It exists because the clamp lives inside evaluate_expensive() and nothing
 // outside that file can see the number it truncated, so the margin cannot be
 // re-decided from data without this. tools/eval_spread reads a position corpus
-// through it. Split into two terms because a large correction coming from
-// mobility, from king safety or from both at once are three different answers.
+// through it. Split because a large correction coming from mobility, from king
+// safety or from both at once are three different answers.
+//
+// `threats` is S101's family, kept apart so that S122 can still read mobility's
+// own spread (DEC-333 (10)). The family shares mobility's taper, so it is the
+// taper of the two together less the taper of mobility alone: the three add up
+// to the number the clamp reads, digit for digit.
 //
 // Off the hot path by construction rather than by measurement: it goes through
 // the same collecting instantiation king_safety_features() uses, so the
 // instantiation the search compiles keeps exactly one caller. Handing that one
 // a second caller is what cost 21 % once -- see king_shelter_features() in
 // evaluation.cpp.
-void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety);
+void evaluate_expensive_terms(const board_t* board,
+                              int* mobility,
+                              int* safety,
+                              int* threats);
 
 // The largest correction the expensive terms are allowed to apply. The shortcut
 // is only sound while that holds, so it is asserted over a position list rather

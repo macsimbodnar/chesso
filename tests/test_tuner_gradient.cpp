@@ -47,6 +47,10 @@ namespace
 using tuner_layout::BKR_EG_BASE;
 using tuner_layout::BKR_MG_BASE;
 using tuner_layout::EG_BASE;
+using tuner_layout::HGP_EG_BASE;
+using tuner_layout::HGP_MG_BASE;
+using tuner_layout::HGW_EG_BASE;
+using tuner_layout::HGW_MG_BASE;
 using tuner_layout::IB_EG_BASE;
 using tuner_layout::IB_MG_BASE;
 using tuner_layout::ISF_EG_BASE;
@@ -72,6 +76,16 @@ using tuner_layout::SUP_EG_BASE;
 using tuner_layout::SUP_MG_BASE;
 using tuner_layout::TEMPO_EG_BASE;
 using tuner_layout::TEMPO_MG_BASE;
+using tuner_layout::TKG_EG_BASE;
+using tuner_layout::TKG_MG_BASE;
+using tuner_layout::TMN_EG_BASE;
+using tuner_layout::TMN_MG_BASE;
+using tuner_layout::TPC_EG_BASE;
+using tuner_layout::TPC_MG_BASE;
+using tuner_layout::TPU_EG_BASE;
+using tuner_layout::TPU_MG_BASE;
+using tuner_layout::TPW_EG_BASE;
+using tuner_layout::TPW_MG_BASE;
 using tuner_layout::WKU_EG_BASE;
 using tuner_layout::WKU_MG_BASE;
 
@@ -541,6 +555,10 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // answer if a later fit passes the bound (adocs/data/S125_goldens.txt). S125's
 // close left it at that: the same scores, and only the columns of backward's
 // flat and isolated_backward moved (adocs/data/S125_close_inv6.txt).
+// S101 appended its threat family (1121 parameters) and twelve rows so that
+// each of its 48 has a gradient here: at the family's zero landing the worst is
+// 4.98e-07, at parameter 990, passed_king_own_eg[5]
+// (adocs/data/S101_preconditions.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -672,11 +690,12 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // 158.8, every row 13.25 from the kink, finite differences 1.01e-7
   // (adocs/data/S125_goldens.txt); S125's close reads the same
   // (adocs/data/S125_close_inv6.txt).
-  // Re-run it
-  // whenever the constants or the fixture move; the
-  // precondition below re-establishes the binding either way. A much larger
-  // push saturates the sigmoid everywhere, which makes the finite difference
-  // itself unreliable.
+  // With S101's twelve coverage rows (104) at its zero-weight landing it
+  // answers +30 again: the same four rows bound and the same distances, finite
+  // differences 1.53e-7 (adocs/data/S101_preconditions.txt). Re-run it whenever
+  // the constants or the fixture move; the precondition below re-establishes
+  // the binding either way. A much larger push saturates the sigmoid
+  // everywhere, which makes the finite difference itself unreliable.
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
     params[KS_MG_BASE + t] += 30.0;
     params[KS_EG_BASE + t] += 30.0;
@@ -1007,7 +1026,12 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // isolated_backward's, the smallest is **0.0882** under Adam and 0.1165
     // under AdaGrad, both the bishop's, the largest 3.1452 and 3.5837, both the
     // knight's, every hold at most 6.88e-15: over the floor by a factor of 8.82
-    // (`adocs/data/S125_close_inv6.txt`). The
+    // (`adocs/data/S125_close_inv6.txt`). With S101's twelve coverage rows (108
+    // with the gauge rows) at its zero-weight landing the smallest is 0.9618
+    // under Adam and 1.2480 under AdaGrad, both the bishop's, the
+    // largest 4.0138, the knight's, and 4.1944, the pawn's, every hold at
+    // most 8.22e-15
+    // (`adocs/data/S101_preconditions.txt`). The
     // 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
@@ -1175,6 +1199,66 @@ TEST_CASE("a planted vector comes back through the trace path")
         {SUP_EG_BASE + 4, 12}},
        16000},
       {"weak_unopposed", {{WKU_MG_BASE, -7}, {WKU_EG_BASE, -11}}},
+      // S101's, each with numbers written here and derived from nothing outside
+      // this repository. threat_king runs 32000 epochs: its pawn cell's one
+      // middlegame row stands at phase 2, so that half's gradient is scaled
+      // twice by 2/24, and it read 0.70 at 6000 epochs and 2.39 at 24000
+      // against 3 planted. A budget and not a golden: a budget too small goes
+      // red.
+      {"threat_pawn",
+       {{TPW_MG_BASE + 0, 5},
+        {TPW_MG_BASE + 1, -6},
+        {TPW_MG_BASE + 2, 7},
+        {TPW_MG_BASE + 3, -8},
+        {TPW_EG_BASE + 0, -4},
+        {TPW_EG_BASE + 1, 9},
+        {TPW_EG_BASE + 2, -5},
+        {TPW_EG_BASE + 3, 6}}},
+      {"threat_piece",
+       {{TPC_MG_BASE + 0, 5},
+        {TPC_MG_BASE + 1, -6},
+        {TPC_MG_BASE + 2, 7},
+        {TPC_MG_BASE + 3, -8},
+        {TPC_MG_BASE + 4, 9},
+        {TPC_EG_BASE + 0, -4},
+        {TPC_EG_BASE + 1, 6},
+        {TPC_EG_BASE + 2, -7},
+        {TPC_EG_BASE + 3, 8},
+        {TPC_EG_BASE + 4, -9}}},
+      {"threat_minor",
+       {{TMN_MG_BASE + 0, 4},
+        {TMN_MG_BASE + 1, -5},
+        {TMN_EG_BASE + 0, -6},
+        {TMN_EG_BASE + 1, 7}}},
+      {"hanging_piece",
+       {{HGP_MG_BASE + 0, -5},
+        {HGP_MG_BASE + 1, 6},
+        {HGP_MG_BASE + 2, -7},
+        {HGP_MG_BASE + 3, 8},
+        {HGP_EG_BASE + 0, 4},
+        {HGP_EG_BASE + 1, -9},
+        {HGP_EG_BASE + 2, 5},
+        {HGP_EG_BASE + 3, -6}}},
+      {"hanging_pawn", {{HGW_MG_BASE, 6}, {HGW_EG_BASE, -8}}},
+      {"threat_king",
+       {{TKG_MG_BASE + 0, 3},
+        {TKG_MG_BASE + 1, -4},
+        {TKG_MG_BASE + 2, 5},
+        {TKG_MG_BASE + 3, -6},
+        {TKG_EG_BASE + 0, -7},
+        {TKG_EG_BASE + 1, 8},
+        {TKG_EG_BASE + 2, -9},
+        {TKG_EG_BASE + 3, 10}},
+       32000},
+      {"threat_push",
+       {{TPU_MG_BASE + 0, -3},
+        {TPU_MG_BASE + 1, 4},
+        {TPU_MG_BASE + 2, -5},
+        {TPU_MG_BASE + 3, 6},
+        {TPU_EG_BASE + 0, 7},
+        {TPU_EG_BASE + 1, -8},
+        {TPU_EG_BASE + 2, 9},
+        {TPU_EG_BASE + 3, -10}}},
   };
 
   const double k = 1.0;

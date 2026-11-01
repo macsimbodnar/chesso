@@ -1905,3 +1905,406 @@ TEST_SUITE("eval counts: S125's pawn structure family")
     }
   }
 }
+
+
+// S101's threat family against the walk and by hand. The engine's sets and
+// counts per attacking colour (threat_family_counts()) against
+// walked_counts::threat_family_features(), which walks evaluation.hpp's
+// definitions square by square and shares no code with the engine -- per
+// colour, for the reason S123's family is: no score sees a group at zero, and
+// at any weight a count credited to both sides cancels.
+namespace
+{
+
+// The test positions with their colour mirrors, the JSON suites', and seeded
+// random placements of two kings, pawns and a handful of pieces a side: the
+// placements put each attacker against each victim, on every edge, far more
+// often than the suites do. A placement is kept with White to move when
+// load_FEN() accepts it, and is skipped otherwise.
+std::vector<std::string> threat_population()
+{
+  std::vector<std::string> out;
+
+  for (const std::string& fen : positions) {
+    out.push_back(fen);
+    out.push_back(mirror_fen(fen));
+  }
+
+  for (const std::string& fen : all_test_fens()) {
+    out.push_back(fen);
+  }
+
+  std::mt19937 rng(20261101U);
+  std::uniform_int_distribution<int> pawns_a_side(0, 8);
+  std::uniform_int_distribution<int> pieces_of_a_kind(0, 2);
+
+  for (size_t trial = 0; trial < 20000; ++trial) {
+    std::vector<int> order(64);
+    for (int square = 0; square < 64; ++square) {
+      order[static_cast<size_t>(square)] = square;
+    }
+    std::shuffle(order.begin(), order.end(), rng);
+
+    char squares[64] = {};
+    size_t next = 0;
+    squares[order[next++]] = 'K';
+    squares[order[next++]] = 'k';
+
+    for (const char pawn : {'P', 'p'}) {
+      int placed = 0;
+      const int wanted = pawns_a_side(rng);
+
+      while (placed < wanted && next < 64) {
+        const int square = order[next++];
+        if ((square / 8) == 0 || (square / 8) == 7) { continue; }
+        squares[square] = pawn;
+        placed++;
+      }
+    }
+
+    for (const char piece : {'N', 'B', 'R', 'Q', 'n', 'b', 'r', 'q'}) {
+      const int wanted = pieces_of_a_kind(rng);
+
+      for (int placed = 0; placed < wanted && next < 64; ++placed) {
+        squares[order[next++]] = piece;
+      }
+    }
+
+    std::string fen;
+    for (int row = 0; row < 8; ++row) {
+      int empty = 0;
+      for (int file = 0; file < 8; ++file) {
+        const char c = squares[row * 8 + file];
+        if (c == '\0') {
+          empty++;
+          continue;
+        }
+        if (empty > 0) { fen += static_cast<char>('0' + empty); }
+        empty = 0;
+        fen += c;
+      }
+      if (empty > 0) { fen += static_cast<char>('0' + empty); }
+      if (row < 7) { fen += '/'; }
+    }
+    fen += " w - - 0 1";
+
+    if (load_FEN(fen, &game)) { out.push_back(fen); }
+  }
+
+  return out;
+}
+
+
+// The sets and every cell, engine against walk, per colour.
+void check_threat_family(const std::string& fen, threat_family_t* engine_out)
+{
+  CAPTURE(fen);
+  REQUIRE(load_FEN(fen, &game));
+
+  threat_family_t engine;
+  threat_family_counts(&game.board, &engine);
+
+  walked_counts::threat_family_walk_t walk;
+  REQUIRE(walked_counts::threat_family_features(fen.substr(0, fen.find(' ')),
+                                                &walk));
+
+  const auto cells = [](const char* what, const auto& mine, const auto& theirs,
+                        int width) {
+    for (int colour = 0; colour < 2; ++colour) {
+      for (int cell = 0; cell < width; ++cell) {
+        const std::string name = what;
+        CAPTURE(name);
+        CAPTURE(colour);
+        CAPTURE(cell);
+        CHECK(mine[colour][cell] == theirs[colour][cell]);
+      }
+    }
+  };
+
+  for (int colour = 0; colour < 2; ++colour) {
+    CAPTURE(colour);
+    CHECK(engine.pawn_attacks[colour] == walk.attacks[colour][0]);
+    CHECK(engine.knight_attacks[colour] == walk.attacks[colour][1]);
+    CHECK(engine.bishop_attacks[colour] == walk.attacks[colour][2]);
+    CHECK(engine.rook_attacks[colour] == walk.attacks[colour][3]);
+    CHECK(engine.queen_attacks[colour] == walk.attacks[colour][4]);
+    CHECK(engine.king_attacks[colour] == walk.attacks[colour][5]);
+    CHECK(engine.nonking[colour] == walk.nonking[colour]);
+    CHECK(engine.all[colour] == walk.all[colour]);
+    CHECK(engine.hanging_set[colour] == walk.hanging_set[colour]);
+    CHECK(engine.king_only_set[colour] == walk.king_only_set[colour]);
+    CHECK(engine.push_targets[colour] == walk.push_targets[colour]);
+    CHECK(engine.push_hits[colour] == walk.push_hits[colour]);
+  }
+
+  cells("threat_pawn", engine.threat_pawn, walk.threat_pawn, 4);
+  cells("threat_piece", engine.threat_piece, walk.threat_piece, 5);
+  cells("threat_minor", engine.threat_minor, walk.threat_minor, 2);
+  cells("hanging_piece", engine.hanging_piece, walk.hanging_piece, 4);
+  cells("hanging_pawn", engine.hanging_pawn, walk.hanging_pawn, 1);
+  cells("threat_king", engine.threat_king, walk.threat_king, 4);
+  cells("threat_push", engine.threat_push, walk.threat_push, 4);
+
+  *engine_out = engine;
+}
+
+
+// One array's cell of the engine's counts, by the array's name.
+int threat_cell(const threat_family_t& family,
+                const std::string& array,
+                int colour,
+                int cell)
+{
+  if (array == "threat_pawn") { return family.threat_pawn[colour][cell]; }
+  if (array == "threat_piece") { return family.threat_piece[colour][cell]; }
+  if (array == "threat_minor") { return family.threat_minor[colour][cell]; }
+  if (array == "hanging_piece") { return family.hanging_piece[colour][cell]; }
+  if (array == "hanging_pawn") { return family.hanging_pawn[colour][cell]; }
+  if (array == "threat_king") { return family.threat_king[colour][cell]; }
+  return family.threat_push[colour][cell];
+}
+
+struct threat_array_t
+{
+  const char* name;
+  int width;
+};
+
+const threat_array_t threat_arrays[] = {
+    {"threat_pawn", 4},   {"threat_piece", 5}, {"threat_minor", 2},
+    {"hanging_piece", 4}, {"hanging_pawn", 1}, {"threat_king", 4},
+    {"threat_push", 4}};
+
+}  // namespace
+
+
+TEST_SUITE("eval counts: S101's threat family")
+{
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the engine counts the threat family the walk counts")
+  {
+    // Every cell, per colour, non-zero somewhere: the comparison above is
+    // vacuous on a cell nobody reached.
+    int seen[7][2][5] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : threat_population()) {
+      threat_family_t engine;
+      check_threat_family(fen, &engine);
+
+      for (int a = 0; a < 7; ++a) {
+        for (int colour = 0; colour < 2; ++colour) {
+          for (int cell = 0; cell < threat_arrays[a].width; ++cell) {
+            seen[a][colour][cell] +=
+                (threat_cell(engine, threat_arrays[a].name, colour, cell) != 0);
+          }
+        }
+      }
+
+      checked++;
+    }
+
+    CHECK(checked > 10000);
+
+    int fewest = INT32_MAX;
+    for (int a = 0; a < 7; ++a) {
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int cell = 0; cell < threat_arrays[a].width; ++cell) {
+          const std::string name = threat_arrays[a].name;
+          CAPTURE(name);
+          CAPTURE(colour);
+          CAPTURE(cell);
+          CHECK(seen[a][colour][cell] > 50);
+          fewest = std::min(fewest, seen[a][colour][cell]);
+        }
+      }
+    }
+    MESSAGE("threat family walk: " << checked
+                                   << " positions; the rarest cell is "
+                                   << "non-zero on " << fewest);
+  }
+
+  // Hand-worked placements from evaluation.hpp's definitions, each run as
+  // written and as its colour mirror with the rows swapped. Every cell of every
+  // array is reached, by each colour and with each sign of the difference,
+  // which the loop at the end checks, and the placements with no cells at all
+  // hold what would make a count happen and the one clause that stops it.
+  // Cells: threat_pawn and threat_push N, B, R, Q; threat_piece N>R, N>Q, B>R,
+  // B>Q, R>Q; threat_minor N>B, B>N; hanging_piece N, B, R, Q; threat_king P,
+  // N, B, R.
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the walk and the engine count the threat family by hand")
+  {
+    const std::vector<family_case_t> cases = {
+        {"k7/8/8/8/3n4/4P3/8/7K",
+         "e3 attacks the knight on d4, which nothing defends",
+         {{"threat_pawn", WHITE, 0, 1}, {"hanging_piece", WHITE, 0, 1}}},
+        {"k7/8/8/8/3b4/4P3/8/7K",
+         "e3 attacks the bishop on d4, and the bishop attacks e3: both loose",
+         {{"threat_pawn", WHITE, 1, 1},
+          {"hanging_piece", WHITE, 1, 1},
+          {"hanging_pawn", BLACK, 0, 1}}},
+        {"k7/8/8/8/3r4/4P3/8/7K",
+         "e3 attacks the rook on d4; e4 is attacked and undefended, so no push",
+         {{"threat_pawn", WHITE, 2, 1}, {"hanging_piece", WHITE, 2, 1}}},
+        {"k7/8/8/8/3q4/4P3/8/7K",
+         "e3 attacks the queen on d4, and the queen attacks e3",
+         {{"threat_pawn", WHITE, 3, 1},
+          {"hanging_piece", WHITE, 3, 1},
+          {"hanging_pawn", BLACK, 0, 1}}},
+        {"k7/8/8/8/3r4/8/4N3/7K",
+         "the knight on e2 attacks the rook on d4",
+         {{"threat_piece", WHITE, 0, 1}, {"hanging_piece", WHITE, 2, 1}}},
+        {"k7/8/8/8/3q4/8/4N3/7K",
+         "the knight on e2 attacks the queen on d4",
+         {{"threat_piece", WHITE, 1, 1}, {"hanging_piece", WHITE, 3, 1}}},
+        {"k7/8/8/8/3r4/8/5B2/7K",
+         "the bishop on f2 attacks the rook on d4",
+         {{"threat_piece", WHITE, 2, 1}, {"hanging_piece", WHITE, 2, 1}}},
+        {"k7/8/8/8/3q4/8/5B2/7K",
+         "the bishop on f2 attacks the queen on d4, which attacks it back",
+         {{"threat_piece", WHITE, 3, 1},
+          {"hanging_piece", WHITE, 3, 1},
+          {"hanging_piece", BLACK, 1, 1}}},
+        {"k7/8/8/8/3q4/8/8/3R3K",
+         "the rook on d1 attacks the queen on d4, which attacks it back",
+         {{"threat_piece", WHITE, 4, 1},
+          {"hanging_piece", WHITE, 3, 1},
+          {"hanging_piece", BLACK, 2, 1}}},
+        {"k7/8/8/8/3r4/8/4NB2/7K",
+         "a rook a knight and a bishop both attack counts in both pairs, and "
+         "hangs once",
+         {{"threat_piece", WHITE, 0, 1},
+          {"threat_piece", WHITE, 2, 1},
+          {"hanging_piece", WHITE, 2, 1}}},
+        {"k7/8/8/8/3b4/8/4N3/7K",
+         "the knight on e2 attacks the bishop on d4: a minor on a minor",
+         {{"threat_minor", WHITE, 0, 1}, {"hanging_piece", WHITE, 1, 1}}},
+        {"k7/8/8/8/3n4/8/5B2/7K",
+         "the bishop on f2 attacks the knight on d4",
+         {{"threat_minor", WHITE, 1, 1}, {"hanging_piece", WHITE, 0, 1}}},
+        {"k7/8/8/3p4/8/8/3R4/7K",
+         "the rook attacks d5, which nothing defends; d4 is attacked and "
+         "undefended, so Black's push is not safe",
+         {{"hanging_pawn", WHITE, 0, 1}}},
+        {"k7/8/2p5/3p4/8/8/3R4/7K",
+         "the same d5, defended by c6: an own pawn is defence",
+         {}},
+        {"8/8/8/3pk3/8/8/3R4/7K",
+         "the same d5, defended by the king on e5: a king is defence",
+         {}},
+        {"k7/8/8/8/8/8/7p/7K",
+         "h2 beside the king, which it does not attack: only the king attacks "
+         "it",
+         {{"threat_king", WHITE, 0, 1}}},
+        {"k7/8/8/8/8/8/6n1/7K",
+         "the knight on g2 the same",
+         {{"threat_king", WHITE, 1, 1}}},
+        {"k7/8/8/8/8/8/8/6bK",
+         "a bishop beside the king on its rank does not attack it",
+         {{"threat_king", WHITE, 2, 1}}},
+        {"k7/8/8/8/8/8/6r1/7K",
+         "a rook beside the king on its diagonal does not attack it",
+         {{"threat_king", WHITE, 3, 1}}},
+        {"k7/8/8/8/8/8/6n1/6RK",
+         "the knight attacked by the king and the rook is hanging, not the "
+         "king's alone",
+         {{"hanging_piece", WHITE, 0, 1}}},
+        {"k7/8/8/8/8/7p/6n1/7K",
+         "the knight the king attacks, defended by h3: nothing",
+         {}},
+        {"k7/8/8/3n4/8/4P3/3P4/7K",
+         "e3 to e4 would attack the knight; e3 stands defended by d2",
+         {{"threat_push", WHITE, 0, 1}}},
+        {"k7/8/8/3n4/8/8/4P3/7K",
+         "e2 to e4, the double push: e3 is attacked by the knight and so no "
+         "target, and no enemy pawn attacks it, so e4 is",
+         {{"threat_push", WHITE, 0, 1}}},
+        {"k7/8/8/2b5/8/3PP3/5P2/7K",
+         "d3 to d4 attacks the bishop, which attacks d4: safe only because e3 "
+         "defends it",
+         {{"threat_push", WHITE, 1, 1}}},
+        {"k7/8/8/3r4/8/4P3/8/7K",
+         "e3 to e4 would attack the rook on d5",
+         {{"threat_push", WHITE, 2, 1}}},
+        {"k7/8/8/3q4/8/4PP2/6P1/7K",
+         "e3 to e4 attacks the queen, which attacks e4: f3 defends it",
+         {{"threat_push", WHITE, 3, 1}}},
+        {"k7/8/8/3n1r2/8/4P3/3P4/7K",
+         "e3 to e4 forks the knight and the rook: each counted",
+         {{"threat_push", WHITE, 0, 1}, {"threat_push", WHITE, 2, 1}}},
+        {"k7/8/8/3n1p2/8/4P3/3P4/7K",
+         "e4 would attack the knight, but f5 attacks e4: not safe",
+         {}},
+        {"k7/8/8/3n4/2P5/4P3/8/7K",
+         "e4 would attack the knight c4 attacks already: no push cell; it "
+         "attacks e3, which nothing defends",
+         {{"threat_pawn", WHITE, 0, 1},
+          {"hanging_piece", WHITE, 0, 1},
+          {"hanging_pawn", BLACK, 0, 1}}},
+        {"k7/8/8/3n4/5p2/8/4P3/7K",
+         "f4 attacks e3, so e2 has no double push, though e4 would attack the "
+         "knight",
+         {}},
+    };
+
+    int positive[7][5] = {};
+    int negative[7][5] = {};
+    int white_row[7][5] = {};
+    int black_row[7][5] = {};
+
+    for (const family_case_t& item : cases) {
+      for (const bool mirror : {false, true}) {
+        const std::string placement = item.placement;
+        const std::string what = item.what;
+        const std::string fen = mirror ? mirror_fen(placement + " w - - 0 1")
+                                       : placement + " w - - 0 1";
+        CAPTURE(what);
+        CAPTURE(mirror);
+
+        threat_family_t engine;
+        check_threat_family(fen, &engine);
+
+        for (int a = 0; a < 7; ++a) {
+          const std::string array = threat_arrays[a].name;
+          int expected[2][5] = {};
+
+          for (const family_cell_t& cell : item.cells) {
+            if (array == cell.array) {
+              const int colour = mirror ? 1 - cell.colour : cell.colour;
+              expected[colour][cell.rank] = cell.value;
+            }
+          }
+
+          for (int c = 0; c < threat_arrays[a].width; ++c) {
+            for (int colour = 0; colour < 2; ++colour) {
+              CAPTURE(array);
+              CAPTURE(colour);
+              CAPTURE(c);
+              CHECK(threat_cell(engine, array, colour, c) ==
+                    expected[colour][c]);
+            }
+
+            const int difference = expected[WHITE][c] - expected[BLACK][c];
+            if (difference > 0) { positive[a][c]++; }
+            if (difference < 0) { negative[a][c]++; }
+            if (expected[WHITE][c] != 0) { white_row[a][c]++; }
+            if (expected[BLACK][c] != 0) { black_row[a][c]++; }
+          }
+        }
+      }
+    }
+
+    for (int a = 0; a < 7; ++a) {
+      for (int c = 0; c < threat_arrays[a].width; ++c) {
+        const std::string name = threat_arrays[a].name;
+        CAPTURE(name);
+        CAPTURE(c);
+        CHECK_MESSAGE(positive[a][c] > 0, "never White ahead");
+        CHECK_MESSAGE(negative[a][c] > 0, "never Black ahead");
+        CHECK_MESSAGE(white_row[a][c] > 0, "never in White's row");
+        CHECK_MESSAGE(black_row[a][c] > 0, "never in Black's row");
+      }
+    }
+  }
+}

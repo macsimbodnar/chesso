@@ -574,6 +574,20 @@ std::string column_name(size_t i)
        tuner_layout::SUPPORTED_COUNT},
       {"weak_unopposed", tuner_layout::WKU_MG_BASE, tuner_layout::WKU_EG_BASE,
        tuner_layout::WEAK_UNOPPOSED_COUNT},
+      {"threat_pawn", tuner_layout::TPW_MG_BASE, tuner_layout::TPW_EG_BASE,
+       tuner_layout::THREAT_PAWN_COUNT},
+      {"threat_piece", tuner_layout::TPC_MG_BASE, tuner_layout::TPC_EG_BASE,
+       tuner_layout::THREAT_PIECE_COUNT},
+      {"threat_minor", tuner_layout::TMN_MG_BASE, tuner_layout::TMN_EG_BASE,
+       tuner_layout::THREAT_MINOR_COUNT},
+      {"hanging_piece", tuner_layout::HGP_MG_BASE, tuner_layout::HGP_EG_BASE,
+       tuner_layout::HANGING_PIECE_COUNT},
+      {"hanging_pawn", tuner_layout::HGW_MG_BASE, tuner_layout::HGW_EG_BASE,
+       tuner_layout::HANGING_PAWN_COUNT},
+      {"threat_king", tuner_layout::TKG_MG_BASE, tuner_layout::TKG_EG_BASE,
+       tuner_layout::THREAT_KING_COUNT},
+      {"threat_push", tuner_layout::TPU_MG_BASE, tuner_layout::TPU_EG_BASE,
+       tuner_layout::THREAT_PUSH_COUNT},
   };
 
   for (const family_block_t& f : family) {
@@ -1442,8 +1456,9 @@ int main(int argc, char** argv)
                          feature_of(eval_trace::TERM_PIECE_PLACEMENT, i)});
     }
 
-    // S123's family and S125's after it, one column a cell; named by the
-    // middlegame half's parameter, which is the cell's own name less the half.
+    // S123's family, S125's and S101's after it, one column a cell; named by
+    // the middlegame half's parameter, which is the cell's own name less the
+    // half.
     std::vector<std::string> family_names;
     for (uint32_t f =
              tuner_trace::feature_table().base[eval_trace::TERM_PASSED_FREE];
@@ -1596,8 +1611,11 @@ int main(int argc, char** argv)
           "passer family (S123)");
       support(
           tuner_trace::feature_table().base[eval_trace::TERM_ISOLATED_BACKWARD],
-          tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+          tuner_trace::feature_table().base[eval_trace::TERM_THREAT_PAWN],
           "structure family (S125)");
+      support(tuner_trace::feature_table().base[eval_trace::TERM_THREAT_PAWN],
+              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+              "threat family (S101)");
     }
 
     // Tempo is not a count and has no zero case; what it has is a label-side

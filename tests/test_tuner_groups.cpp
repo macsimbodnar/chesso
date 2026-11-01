@@ -106,20 +106,21 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // group frees exactly its own block", now holds each group to its block, the
   // last included; this line still says, in the event's own words, what an
   // appended block looks like. S125 appended its family after S123's and named
-  // its last block, weak unopposed pawns, here.
+  // its last block, weak unopposed pawns, here; S101 its family after S125's
+  // and named its last block, push threats, here.
   //
   // The message is the whole value of this assertion (DEC-184 item 4): without
   // it a failure reads as two constants disagreeing, which is the symptom and
   // not the event, and the reader has to re-derive the event from the comment
   // above.
   REQUIRE_MESSAGE(
-      tuner_layout::WKU_EG_BASE + tuner_layout::WEAK_UNOPPOSED_COUNT ==
+      tuner_layout::TPU_EG_BASE + tuner_layout::THREAT_PUSH_COUNT ==
           tuner_layout::PARAM_COUNT,
-      "a parameter block was appended after S125's weak unopposed pawns, the "
-      "last block, and given no group of its own: WKU_EG_BASE "
-          << tuner_layout::WKU_EG_BASE << " + WEAK_UNOPPOSED_COUNT "
-          << tuner_layout::WEAK_UNOPPOSED_COUNT << " = "
-          << (tuner_layout::WKU_EG_BASE + tuner_layout::WEAK_UNOPPOSED_COUNT)
+      "a parameter block was appended after S101's push threats, the last "
+      "block, and given no group of its own: TPU_EG_BASE "
+          << tuner_layout::TPU_EG_BASE << " + THREAT_PUSH_COUNT "
+          << tuner_layout::THREAT_PUSH_COUNT << " = "
+          << (tuner_layout::TPU_EG_BASE + tuner_layout::THREAT_PUSH_COUNT)
           << " against PARAM_COUNT " << tuner_layout::PARAM_COUNT
           << ". Give it an end constant and a group, and name it here and in "
              "\"every group frees exactly its own block\".");
@@ -270,6 +271,13 @@ TEST_CASE("every group frees exactly its own block")
       {"phalanx", PHX_MG_BASE, PHX_EG_BASE + PHALANX_COUNT},
       {"supported", SUP_MG_BASE, SUP_EG_BASE + SUPPORTED_COUNT},
       {"weak_unopposed", WKU_MG_BASE, WKU_EG_BASE + WEAK_UNOPPOSED_COUNT},
+      {"threat_pawn", TPW_MG_BASE, TPW_EG_BASE + THREAT_PAWN_COUNT},
+      {"threat_piece", TPC_MG_BASE, TPC_EG_BASE + THREAT_PIECE_COUNT},
+      {"threat_minor", TMN_MG_BASE, TMN_EG_BASE + THREAT_MINOR_COUNT},
+      {"hanging_piece", HGP_MG_BASE, HGP_EG_BASE + HANGING_PIECE_COUNT},
+      {"hanging_pawn", HGW_MG_BASE, HGW_EG_BASE + HANGING_PAWN_COUNT},
+      {"threat_king", TKG_MG_BASE, TKG_EG_BASE + THREAT_KING_COUNT},
+      {"threat_push", TPU_MG_BASE, TPU_EG_BASE + THREAT_PUSH_COUNT},
   };
 
   size_t next = 0;
@@ -982,6 +990,46 @@ TEST_CASE("a tie names S125's cells by array and half")
   REQUIRE(tuner_groups::free_mask("phalanx", &phalanx));
   std::string why;
   CHECK_FALSE(tuner_groups::ties_fit_mask(ties, phalanx, &why));
+}
+
+
+// S101's arrays the same way: a cell lands on its own array and half, and a
+// cell past the array is refused, threat_king's absent queen included.
+TEST_CASE("a tie names S101's cells by array and half")
+{
+  std::vector<tuner_groups::tie_t> ties;
+  std::string error;
+
+  REQUIRE(tuner_groups::parse_ties(
+      "threat_pawn_mg 3 2\nthreat_piece_eg 4 3\nthreat_minor_mg 1 0\n"
+      "hanging_piece_eg 3 2\nthreat_king_mg 3 2\nthreat_push_eg 3 2 0.5\n",
+      &ties, &error));
+  REQUIRE(ties.size() == 6);
+
+  CHECK(ties[0].tied == tuner_layout::TPW_MG_BASE + 3);
+  CHECK(ties[0].anchor == tuner_layout::TPW_MG_BASE + 2);
+  CHECK(ties[1].tied == tuner_layout::TPC_EG_BASE + 4);
+  CHECK(ties[2].tied == tuner_layout::TMN_MG_BASE + 1);
+  CHECK(ties[3].tied == tuner_layout::HGP_EG_BASE + 3);
+  CHECK(ties[4].tied == tuner_layout::TKG_MG_BASE + 3);
+  CHECK(ties[5].tied == tuner_layout::TPU_EG_BASE + 3);
+  CHECK(ties[5].scale == 0.5);
+
+  for (const char* bad : {
+           "threat_pawn_mg 4 3\n",   // past the queen
+           "threat_piece_eg 5 4\n",  // past R>Q
+           "threat_minor_mg 2 1\n",  // past B>N
+           "hanging_pawn_mg 1 0\n",  // a count has one cell
+           "threat_king_eg 4 3\n",   // no queen cell
+           "threat_push_mg 4 3\n",   // past the queen
+           "threat_push 1 2\n",      // no half
+       }) {
+    CAPTURE(bad);
+    std::vector<tuner_groups::tie_t> refused;
+    std::string why;
+    CHECK_FALSE(tuner_groups::parse_ties(bad, &refused, &why));
+    CHECK(!why.empty());
+  }
 }
 
 

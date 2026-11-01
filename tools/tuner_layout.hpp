@@ -11,7 +11,7 @@
 // emitted. S135 widened the piece placement block from three to seven, 831;
 // S121 made mobility a table, 66 cells a half where it had four, 955; S123
 // appended its passed pawn family after tempo, 1013; S125 its pawn structure
-// family after S123's, 1073.
+// family after S123's, 1073; S101 its threat family after S125's, 1121.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -156,6 +156,35 @@ constexpr size_t SUPPORTED_COUNT =
 constexpr size_t WEAK_UNOPPOSED_COUNT =
     sizeof(weak_unopposed_mg) / sizeof(weak_unopposed_mg[0]);
 
+// S101's threat family (DEC-333), appended after S125's for the same reason.
+// Seven arrays, each a middlegame and an endgame half (src/evaluation.hpp
+// defines the sets and the cells), summed into mobility's pair in stage two:
+//
+//   threat_pawn    enemy N, B, R, Q an own pawn attacks, 4
+//   threat_piece   N>R, N>Q, B>R, B>Q, R>Q, 5
+//   threat_minor   N>B, B>N, 2
+//   hanging_piece  enemy N, B, R, Q attacked and undefended, 4
+//   hanging_pawn   enemy pawns attacked and undefended, 1
+//   threat_king    enemy P, N, B, R only the king attacks, undefended, 4
+//   threat_push    enemy N, B, R, Q a safe push would attack, 4
+//
+// 48 parameters, each block a group of its own in tools/tuner_groups.hpp.
+// Widths from the engine's own arrays, as above.
+constexpr size_t THREAT_PAWN_COUNT =
+    sizeof(threat_pawn_mg) / sizeof(threat_pawn_mg[0]);
+constexpr size_t THREAT_PIECE_COUNT =
+    sizeof(threat_piece_mg) / sizeof(threat_piece_mg[0]);
+constexpr size_t THREAT_MINOR_COUNT =
+    sizeof(threat_minor_mg) / sizeof(threat_minor_mg[0]);
+constexpr size_t HANGING_PIECE_COUNT =
+    sizeof(hanging_piece_mg) / sizeof(hanging_piece_mg[0]);
+constexpr size_t HANGING_PAWN_COUNT =
+    sizeof(hanging_pawn_mg) / sizeof(hanging_pawn_mg[0]);
+constexpr size_t THREAT_KING_COUNT =
+    sizeof(threat_king_mg) / sizeof(threat_king_mg[0]);
+constexpr size_t THREAT_PUSH_COUNT =
+    sizeof(threat_push_mg) / sizeof(threat_push_mg[0]);
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -194,6 +223,20 @@ constexpr size_t SUP_MG_BASE = PHX_EG_BASE + PHALANX_COUNT;
 constexpr size_t SUP_EG_BASE = SUP_MG_BASE + SUPPORTED_COUNT;
 constexpr size_t WKU_MG_BASE = SUP_EG_BASE + SUPPORTED_COUNT;
 constexpr size_t WKU_EG_BASE = WKU_MG_BASE + WEAK_UNOPPOSED_COUNT;
+constexpr size_t TPW_MG_BASE = WKU_EG_BASE + WEAK_UNOPPOSED_COUNT;
+constexpr size_t TPW_EG_BASE = TPW_MG_BASE + THREAT_PAWN_COUNT;
+constexpr size_t TPC_MG_BASE = TPW_EG_BASE + THREAT_PAWN_COUNT;
+constexpr size_t TPC_EG_BASE = TPC_MG_BASE + THREAT_PIECE_COUNT;
+constexpr size_t TMN_MG_BASE = TPC_EG_BASE + THREAT_PIECE_COUNT;
+constexpr size_t TMN_EG_BASE = TMN_MG_BASE + THREAT_MINOR_COUNT;
+constexpr size_t HGP_MG_BASE = TMN_EG_BASE + THREAT_MINOR_COUNT;
+constexpr size_t HGP_EG_BASE = HGP_MG_BASE + HANGING_PIECE_COUNT;
+constexpr size_t HGW_MG_BASE = HGP_EG_BASE + HANGING_PIECE_COUNT;
+constexpr size_t HGW_EG_BASE = HGW_MG_BASE + HANGING_PAWN_COUNT;
+constexpr size_t TKG_MG_BASE = HGW_EG_BASE + HANGING_PAWN_COUNT;
+constexpr size_t TKG_EG_BASE = TKG_MG_BASE + THREAT_KING_COUNT;
+constexpr size_t TPU_MG_BASE = TKG_EG_BASE + THREAT_KING_COUNT;
+constexpr size_t TPU_EG_BASE = TPU_MG_BASE + THREAT_PUSH_COUNT;
 
 // Where each block ends, so that no group has to run to PARAM_COUNT: every
 // `--only` group in tools/tuner_groups.hpp ends at its own block's end, and
@@ -209,6 +252,13 @@ constexpr size_t BACKWARD_RANK_END = BKR_EG_BASE + BACKWARD_RANK_COUNT;
 constexpr size_t PHALANX_END = PHX_EG_BASE + PHALANX_COUNT;
 constexpr size_t SUPPORTED_END = SUP_EG_BASE + SUPPORTED_COUNT;
 constexpr size_t WEAK_UNOPPOSED_END = WKU_EG_BASE + WEAK_UNOPPOSED_COUNT;
+constexpr size_t THREAT_PAWN_END = TPW_EG_BASE + THREAT_PAWN_COUNT;
+constexpr size_t THREAT_PIECE_END = TPC_EG_BASE + THREAT_PIECE_COUNT;
+constexpr size_t THREAT_MINOR_END = TMN_EG_BASE + THREAT_MINOR_COUNT;
+constexpr size_t HANGING_PIECE_END = HGP_EG_BASE + HANGING_PIECE_COUNT;
+constexpr size_t HANGING_PAWN_END = HGW_EG_BASE + HANGING_PAWN_COUNT;
+constexpr size_t THREAT_KING_END = TKG_EG_BASE + THREAT_KING_COUNT;
+constexpr size_t THREAT_PUSH_END = TPU_EG_BASE + THREAT_PUSH_COUNT;
 
 constexpr size_t PARAM_COUNT =
     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
@@ -217,11 +267,13 @@ constexpr size_t PARAM_COUNT =
     2 * PASSED_SAFE_COUNT + 4 * PASSED_KING_COUNT + 2 * CANDIDATE_PASSER_COUNT +
     2 * ISOLATED_BACKWARD_COUNT + 2 * ISOLATED_FILE_COUNT +
     2 * DOUBLED_FILE_COUNT + 2 * BACKWARD_RANK_COUNT + 2 * PHALANX_COUNT +
-    2 * SUPPORTED_COUNT + 2 * WEAK_UNOPPOSED_COUNT;
+    2 * SUPPORTED_COUNT + 2 * WEAK_UNOPPOSED_COUNT + 2 * THREAT_PAWN_COUNT +
+    2 * THREAT_PIECE_COUNT + 2 * THREAT_MINOR_COUNT + 2 * HANGING_PIECE_COUNT +
+    2 * HANGING_PAWN_COUNT + 2 * THREAT_KING_COUNT + 2 * THREAT_PUSH_COUNT;
 
-static_assert(WEAK_UNOPPOSED_END == PARAM_COUNT,
-              "a block was appended after S125's weak unopposed pawns: give "
-              "it an end constant and a group of its own");
+static_assert(THREAT_PUSH_END == PARAM_COUNT,
+              "a block was appended after S101's push threats: give it an end "
+              "constant and a group of its own");
 
 
 // The constants the engine currently ships, as the parameter vector. This is
@@ -318,5 +370,21 @@ inline void starting_params(double* params)
   block(SUP_MG_BASE, SUP_EG_BASE, SUPPORTED_COUNT, supported_mg, supported_eg);
   block(WKU_MG_BASE, WKU_EG_BASE, WEAK_UNOPPOSED_COUNT, weak_unopposed_mg,
         weak_unopposed_eg);
+
+  // S101's family, the same way.
+  block(TPW_MG_BASE, TPW_EG_BASE, THREAT_PAWN_COUNT, threat_pawn_mg,
+        threat_pawn_eg);
+  block(TPC_MG_BASE, TPC_EG_BASE, THREAT_PIECE_COUNT, threat_piece_mg,
+        threat_piece_eg);
+  block(TMN_MG_BASE, TMN_EG_BASE, THREAT_MINOR_COUNT, threat_minor_mg,
+        threat_minor_eg);
+  block(HGP_MG_BASE, HGP_EG_BASE, HANGING_PIECE_COUNT, hanging_piece_mg,
+        hanging_piece_eg);
+  block(HGW_MG_BASE, HGW_EG_BASE, HANGING_PAWN_COUNT, hanging_pawn_mg,
+        hanging_pawn_eg);
+  block(TKG_MG_BASE, TKG_EG_BASE, THREAT_KING_COUNT, threat_king_mg,
+        threat_king_eg);
+  block(TPU_MG_BASE, TPU_EG_BASE, THREAT_PUSH_COUNT, threat_push_mg,
+        threat_push_eg);
 }
 }  // namespace tuner_layout

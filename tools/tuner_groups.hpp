@@ -47,7 +47,9 @@ inline constexpr const char* GROUP_LIST =
     "all, material, psqt, mobility, king_safety, passed_pawns, "
     "pawn_structure, piece_placement, tempo, passed_advance, passed_kings, "
     "candidate_passers, isolated_backward, isolated_files, doubled_files, "
-    "backward_ranks, phalanx, supported, weak_unopposed";
+    "backward_ranks, phalanx, supported, weak_unopposed, threat_pawn, "
+    "threat_piece, threat_minor, hanging_piece, hanging_pawn, threat_king, "
+    "threat_push";
 
 
 // The piece placement group's terms, S135, each a name `--only` and `--freeze`
@@ -216,6 +218,34 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     // P7.
     first = tuner_layout::WKU_MG_BASE;
     last = tuner_layout::WEAK_UNOPPOSED_END;
+  } else if (group == "threat_pawn") {
+    // S101's P1, a piece a pawn attacks; its parts below in the screen's order.
+    first = tuner_layout::TPW_MG_BASE;
+    last = tuner_layout::THREAT_PAWN_END;
+  } else if (group == "threat_piece") {
+    // P2, a piece a lesser piece attacks.
+    first = tuner_layout::TPC_MG_BASE;
+    last = tuner_layout::THREAT_PIECE_END;
+  } else if (group == "threat_minor") {
+    // P3, a minor a minor attacks.
+    first = tuner_layout::TMN_MG_BASE;
+    last = tuner_layout::THREAT_MINOR_END;
+  } else if (group == "hanging_piece") {
+    // P4, a piece attacked and undefended.
+    first = tuner_layout::HGP_MG_BASE;
+    last = tuner_layout::HANGING_PIECE_END;
+  } else if (group == "hanging_pawn") {
+    // P5, a pawn attacked and undefended.
+    first = tuner_layout::HGW_MG_BASE;
+    last = tuner_layout::HANGING_PAWN_END;
+  } else if (group == "threat_king") {
+    // P6, a man only the king attacks, undefended.
+    first = tuner_layout::TKG_MG_BASE;
+    last = tuner_layout::THREAT_KING_END;
+  } else if (group == "threat_push") {
+    // P7, a piece a safe pawn push would attack.
+    first = tuner_layout::TPU_MG_BASE;
+    last = tuner_layout::THREAT_PUSH_END;
   } else {
     return false;
   }
@@ -551,6 +581,20 @@ inline bool tie_row(const std::string& name, size_t* base, size_t* width)
        tuner_layout::SUPPORTED_COUNT},
       {"weak_unopposed", tuner_layout::WKU_MG_BASE, tuner_layout::WKU_EG_BASE,
        tuner_layout::WEAK_UNOPPOSED_COUNT},
+      {"threat_pawn", tuner_layout::TPW_MG_BASE, tuner_layout::TPW_EG_BASE,
+       tuner_layout::THREAT_PAWN_COUNT},
+      {"threat_piece", tuner_layout::TPC_MG_BASE, tuner_layout::TPC_EG_BASE,
+       tuner_layout::THREAT_PIECE_COUNT},
+      {"threat_minor", tuner_layout::TMN_MG_BASE, tuner_layout::TMN_EG_BASE,
+       tuner_layout::THREAT_MINOR_COUNT},
+      {"hanging_piece", tuner_layout::HGP_MG_BASE, tuner_layout::HGP_EG_BASE,
+       tuner_layout::HANGING_PIECE_COUNT},
+      {"hanging_pawn", tuner_layout::HGW_MG_BASE, tuner_layout::HGW_EG_BASE,
+       tuner_layout::HANGING_PAWN_COUNT},
+      {"threat_king", tuner_layout::TKG_MG_BASE, tuner_layout::TKG_EG_BASE,
+       tuner_layout::THREAT_KING_COUNT},
+      {"threat_push", tuner_layout::TPU_MG_BASE, tuner_layout::TPU_EG_BASE,
+       tuner_layout::THREAT_PUSH_COUNT},
   };
 
   for (const family_row_t& row : rows) {

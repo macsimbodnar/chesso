@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every one of the 1073 fitted numbers reached the engine's sources.
+"""Check that every one of the 1121 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
@@ -39,6 +39,11 @@ and weak_unopposed one wide a half, isolated_file and doubled_file seven (files
 b to h), backward_rank three (own ranks 3 to 5), phalanx six (2 to 7) and
 supported five (3 to 7). A fit emitted by a tuner built before S125 lacks them
 and is refused, which is right.
+
+1121 since S101, whose threat family is fourteen more: threat_pawn, hanging_piece,
+threat_king and threat_push four wide a half, threat_piece five, threat_minor two
+and hanging_pawn one. A fit emitted by a tuner built before S101 lacks them and is
+refused, which is right.
 """
 import re
 import sys
@@ -77,7 +82,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 1073
+TOTAL = 1121
 
 WIDTHS = [
     ("PAWN", 1),
@@ -129,6 +134,20 @@ WIDTHS = [
     ("supported_eg", 5),
     ("weak_unopposed_mg", 1),
     ("weak_unopposed_eg", 1),
+    ("threat_pawn_mg", 4),
+    ("threat_pawn_eg", 4),
+    ("threat_piece_mg", 5),
+    ("threat_piece_eg", 5),
+    ("threat_minor_mg", 2),
+    ("threat_minor_eg", 2),
+    ("hanging_piece_mg", 4),
+    ("hanging_piece_eg", 4),
+    ("hanging_pawn_mg", 1),
+    ("hanging_pawn_eg", 1),
+    ("threat_king_mg", 4),
+    ("threat_king_eg", 4),
+    ("threat_push_mg", 4),
+    ("threat_push_eg", 4),
 ]
 
 

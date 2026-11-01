@@ -655,10 +655,11 @@ TEST_SUITE("evaluation: score")
 
       int mobility = 0;
       int safety = 0;
-      evaluate_expensive_terms(&game.board, &mobility, &safety);
+      int threats = 0;
+      evaluate_expensive_terms(&game.board, &mobility, &safety, &threats);
 
       const int applied = evaluate(&game.board) - evaluate_cheap(&game.board);
-      const int raw = mobility + safety;
+      const int raw = mobility + threats + safety;
 
       if (std::abs(raw) > LAZY_EVAL_MARGIN) { clamped++; }
 
@@ -1523,6 +1524,226 @@ TEST_SUITE("evaluation: structure family symmetry")
 // one from it, so a bare `score >> 16` reads one too small. That is the
 // sign-extension bug these cases exist for, and it is routine here -- rook
 // middlegame tables are mostly negative.
+// S101's population for the mirror cases below: the test positions, then seeded
+// random placements of two kings, pawns on rows 1 to 6 and a handful of pieces
+// a side, which put each attacker against each victim on every edge far more
+// often than play does. Each placement with both sides to move, kept when
+// load_FEN() accepts it and its mirror; the mirror is checked in the case,
+// never assumed.
+static std::vector<std::string> threat_mirror_population()
+{
+  std::vector<std::string> fens = all_test_fens();
+
+  std::mt19937 rng(20261101U);
+  std::uniform_int_distribution<int> pawns_a_side(0, 8);
+  std::uniform_int_distribution<int> pieces_of_a_kind(0, 2);
+
+  for (size_t trial = 0; trial < 30000; ++trial) {
+    std::array<char, 64> squares{};
+    squares.fill('\0');
+
+    std::vector<index_t> order(64);
+    for (index_t square = 0; square < 64; ++square) {
+      order[square] = square;
+    }
+    std::shuffle(order.begin(), order.end(), rng);
+
+    size_t next = 0;
+    squares[order[next++]] = 'K';
+    squares[order[next++]] = 'k';
+
+    for (const char pawn : {'P', 'p'}) {
+      int placed = 0;
+      const int wanted = pawns_a_side(rng);
+
+      while (placed < wanted && next < 64) {
+        const index_t square = order[next++];
+
+        if ((square / 8) == 0 || (square / 8) == 7) { continue; }
+
+        squares[square] = pawn;
+        placed++;
+      }
+    }
+
+    for (const char piece : {'N', 'B', 'R', 'Q', 'n', 'b', 'r', 'q'}) {
+      const int wanted = pieces_of_a_kind(rng);
+
+      for (int placed = 0; placed < wanted && next < 64; ++placed) {
+        squares[order[next++]] = piece;
+      }
+    }
+
+    for (const char side : {'w', 'b'}) {
+      fens.push_back(placement_to_fen(squares, side));
+    }
+  }
+
+  return fens;
+}
+
+
+// S101's threat family under the same mirror, DEC-329 (6), written before any
+// of its terms scored: the sets it reads, and then each count cell by cell.
+// White's attacks in the original are Black's in the mirror with the ranks
+// mirrored, and a cell keeps its index. A set wrong for one colour only -- the
+// double push on the wrong rank for Black, a push shifted the wrong way, one
+// side's king or pawns missing from its defence -- moves no score in a group at
+// zero, and moves one fitted only on a position that reaches the cell it gets
+// wrong. Each observed red on a planted one-colour defect before it was trusted
+// (the S101 step file, 2026-11-01, records both runs).
+TEST_SUITE("evaluation: threat family symmetry")
+{
+  TEST_CASE_FIXTURE(eval_fixture_t, "the threat family's sets mirror exactly")
+  {
+    const auto sets = [](const threat_family_t& family, int index, int colour) {
+      const bb_t* rows[12] = {family.pawn_attacks,   family.knight_attacks,
+                              family.bishop_attacks, family.rook_attacks,
+                              family.queen_attacks,  family.king_attacks,
+                              family.nonking,        family.all,
+                              family.hanging_set,    family.king_only_set,
+                              family.push_targets,   family.push_hits};
+      return rows[index][colour];
+    };
+    static const char* const names[12] = {
+        "pawn_attacks",  "knight_attacks", "bishop_attacks", "rook_attacks",
+        "queen_attacks", "king_attacks",   "nonking",        "all",
+        "hanging_set",   "king_only_set",  "push_targets",   "push_hits"};
+
+    // Positions whose set holds a square on each edge file, per set and colour:
+    // the precondition that the mirror can fail where a one-sided mask would.
+    size_t edge[12][2][2] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : threat_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      threat_family_t family;
+      threat_family_t mirror;
+      threat_family_counts(&game.board, &family);
+      threat_family_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      for (int s = 0; s < 12; ++s) {
+        const std::string name = names[s];
+        CAPTURE(name);
+        REQUIRE(sets(mirror, s, BLACK) == mirror_ranks(sets(family, s, WHITE)));
+        REQUIRE(sets(mirror, s, WHITE) == mirror_ranks(sets(family, s, BLACK)));
+
+        for (int colour = 0; colour < 2; ++colour) {
+          const bb_t set = sets(family, s, colour);
+          if ((set & file_masks[0]) != 0) { edge[s][colour][0]++; }
+          if ((set & file_masks[7]) != 0) { edge[s][colour][1]++; }
+        }
+      }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    size_t fewest = SIZE_MAX;
+    for (int s = 0; s < 12; ++s) {
+      for (int colour = 0; colour < 2; ++colour) {
+        const std::string name = names[s];
+        CAPTURE(name);
+        CAPTURE(colour);
+        REQUIRE(edge[s][colour][0] > 100);
+        REQUIRE(edge[s][colour][1] > 100);
+        fewest = std::min({fewest, edge[s][colour][0], edge[s][colour][1]});
+      }
+    }
+
+    MESSAGE("threat family sets: "
+            << checked
+            << " positions; the rarest set and edge file "
+               "is held on "
+            << fewest);
+  }
+
+  TEST_CASE_FIXTURE(eval_fixture_t, "the threat family's counts mirror exactly")
+  {
+    // How often each cell is non-zero, per colour, over the population: the
+    // precondition that the mirror compares something on every cell.
+    threat_family_t seen{};
+    size_t checked = 0;
+
+    const auto mirrors = [](const std::string& what, const auto& original,
+                            const auto& mirror, int width) {
+      for (int cell = 0; cell < width; ++cell) {
+        CAPTURE(what);
+        CAPTURE(cell);
+        REQUIRE(mirror[BLACK][cell] == original[WHITE][cell]);
+        REQUIRE(mirror[WHITE][cell] == original[BLACK][cell]);
+      }
+    };
+
+    const auto tally = [](auto& count, const auto& family, int width) {
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int cell = 0; cell < width; ++cell) {
+          count[colour][cell] += (family[colour][cell] != 0);
+        }
+      }
+    };
+
+    for (const std::string& fen : threat_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      threat_family_t family;
+      threat_family_t mirror;
+      threat_family_counts(&game.board, &family);
+      threat_family_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      mirrors("threat_pawn", family.threat_pawn, mirror.threat_pawn, 4);
+      mirrors("threat_piece", family.threat_piece, mirror.threat_piece, 5);
+      mirrors("threat_minor", family.threat_minor, mirror.threat_minor, 2);
+      mirrors("hanging_piece", family.hanging_piece, mirror.hanging_piece, 4);
+      mirrors("hanging_pawn", family.hanging_pawn, mirror.hanging_pawn, 1);
+      mirrors("threat_king", family.threat_king, mirror.threat_king, 4);
+      mirrors("threat_push", family.threat_push, mirror.threat_push, 4);
+
+      tally(seen.threat_pawn, family.threat_pawn, 4);
+      tally(seen.threat_piece, family.threat_piece, 5);
+      tally(seen.threat_minor, family.threat_minor, 2);
+      tally(seen.hanging_piece, family.hanging_piece, 4);
+      tally(seen.hanging_pawn, family.hanging_pawn, 1);
+      tally(seen.threat_king, family.threat_king, 4);
+      tally(seen.threat_push, family.threat_push, 4);
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    int fewest = INT32_MAX;
+    const auto least = [&fewest](const auto& count, int width) {
+      for (int colour = 0; colour < 2; ++colour) {
+        for (int cell = 0; cell < width; ++cell) {
+          fewest = std::min(fewest, count[colour][cell]);
+        }
+      }
+    };
+    least(seen.threat_pawn, 4);
+    least(seen.threat_piece, 5);
+    least(seen.threat_minor, 2);
+    least(seen.hanging_piece, 4);
+    least(seen.hanging_pawn, 1);
+    least(seen.threat_king, 4);
+    least(seen.threat_push, 4);
+
+    MESSAGE("threat family counts: " << checked
+                                     << " positions; the rarest cell is "
+                                        "non-zero on "
+                                     << fewest);
+    REQUIRE(fewest > 50);
+  }
+}
+
 TEST_SUITE("evaluation: packed score")
 {
   TEST_CASE("each half reads back in all four sign quadrants")

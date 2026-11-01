@@ -88,7 +88,8 @@ using tuner_target::sigmoid;
 //   POSITIONAL  board->psqt plus the pawn terms (S123's and S125's families
 //               among them), one taper
 //   TEMPO       its own taper, added after the side-to-move sign
-//   MOBILITY    its own taper, in evaluate_expensive()
+//   MOBILITY    its own taper, in evaluate_expensive(); S101's threat family
+//               is summed into its pair, so it shares that one taper
 //   KING_SAFETY its own taper, and the two summed and clamped to the margin
 enum site_t : uint8_t
 {
@@ -167,6 +168,23 @@ inline term_layout_t term_layout(term_t term)
       return {SUPPORTED_COUNT, SUP_MG_BASE, SUP_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_WEAK_UNOPPOSED:
       return {WEAK_UNOPPOSED_COUNT, WKU_MG_BASE, WKU_EG_BASE, SITE_POSITIONAL};
+    // S101's family, summed into mobility's pair in stage two, so the same
+    // taper and under the clamp; exact_score() and gradient() read it from the
+    // site.
+    case eval_trace::TERM_THREAT_PAWN:
+      return {THREAT_PAWN_COUNT, TPW_MG_BASE, TPW_EG_BASE, SITE_MOBILITY};
+    case eval_trace::TERM_THREAT_PIECE:
+      return {THREAT_PIECE_COUNT, TPC_MG_BASE, TPC_EG_BASE, SITE_MOBILITY};
+    case eval_trace::TERM_THREAT_MINOR:
+      return {THREAT_MINOR_COUNT, TMN_MG_BASE, TMN_EG_BASE, SITE_MOBILITY};
+    case eval_trace::TERM_HANGING_PIECE:
+      return {HANGING_PIECE_COUNT, HGP_MG_BASE, HGP_EG_BASE, SITE_MOBILITY};
+    case eval_trace::TERM_HANGING_PAWN:
+      return {HANGING_PAWN_COUNT, HGW_MG_BASE, HGW_EG_BASE, SITE_MOBILITY};
+    case eval_trace::TERM_THREAT_KING:
+      return {THREAT_KING_COUNT, TKG_MG_BASE, TKG_EG_BASE, SITE_MOBILITY};
+    case eval_trace::TERM_THREAT_PUSH:
+      return {THREAT_PUSH_COUNT, TPU_MG_BASE, TPU_EG_BASE, SITE_MOBILITY};
     case eval_trace::TERM_COUNT:
       break;
   }

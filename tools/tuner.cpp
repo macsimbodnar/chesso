@@ -314,8 +314,9 @@ void write_tables(const std::string& path,
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
       "// passed pawn, pawn structure, piece placement, tempo, S123's\n"
-      "// passed pawn family and S125's pawn structure family weights at the\n"
-      "// end live in src/evaluation.cpp, a different file and easy to miss.\n"
+      "// passed pawn family, S125's pawn structure family and S101's threat\n"
+      "// family weights at the end live in src/evaluation.cpp, a different\n"
+      "// file and easy to miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
@@ -552,6 +553,44 @@ void write_tables(const std::string& path,
     }
   }
 
+  // S101's family, the same way: seven arrays a half.
+  const family_array_t threat_family[] = {
+      {"threat_pawn", tuner_layout::TPW_MG_BASE, tuner_layout::TPW_EG_BASE,
+       tuner_layout::THREAT_PAWN_COUNT},
+      {"threat_piece", tuner_layout::TPC_MG_BASE, tuner_layout::TPC_EG_BASE,
+       tuner_layout::THREAT_PIECE_COUNT},
+      {"threat_minor", tuner_layout::TMN_MG_BASE, tuner_layout::TMN_EG_BASE,
+       tuner_layout::THREAT_MINOR_COUNT},
+      {"hanging_piece", tuner_layout::HGP_MG_BASE, tuner_layout::HGP_EG_BASE,
+       tuner_layout::HANGING_PIECE_COUNT},
+      {"hanging_pawn", tuner_layout::HGW_MG_BASE, tuner_layout::HGW_EG_BASE,
+       tuner_layout::HANGING_PAWN_COUNT},
+      {"threat_king", tuner_layout::TKG_MG_BASE, tuner_layout::TKG_EG_BASE,
+       tuner_layout::THREAT_KING_COUNT},
+      {"threat_push", tuner_layout::TPU_MG_BASE, tuner_layout::TPU_EG_BASE,
+       tuner_layout::THREAT_PUSH_COUNT},
+  };
+
+  fprintf(
+      out,
+      "\n// S101's threat family, by the cells src/evaluation.hpp names.\n");
+
+  for (const family_array_t& array : threat_family) {
+    for (int table = 0; table < 2; ++table) {
+      const size_t base = (table == 0) ? array.mg_base : array.eg_base;
+
+      fprintf(out, "constexpr int %s_%s[%zu] = {", array.name,
+              (table == 0) ? "mg" : "eg", array.width);
+
+      for (size_t i = 0; i < array.width; ++i) {
+        fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+                static_cast<int>(std::lround(params[base + i])));
+      }
+
+      fprintf(out, "};\n");
+    }
+  }
+
   fclose(out);
   fprintf(stderr, "constants written to %s\n", path.c_str());
 }
@@ -579,7 +618,10 @@ void usage()
       "                   or since S125 a pawn structure cell,\n"
       "                   `<isolated_backward|isolated_file|doubled_file|\n"
       "                   backward_rank|phalanx|supported|weak_unopposed>\n"
-      "                   _<half> ...` (S125); both ends must be free\n"
+      "                   _<half> ...` (S125), or since S101 a threat cell,\n"
+      "                   `<threat_pawn|threat_piece|threat_minor|\n"
+      "                   hanging_piece|hanging_pawn|threat_king|threat_push>\n"
+      "                   _<half> ...` (S101); both ends must be free\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"

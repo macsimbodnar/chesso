@@ -2160,6 +2160,62 @@ static constexpr std::array<score_t, MOBILITY_CELLS> pack_mobility()
 constexpr std::array<score_t, MOBILITY_CELLS> mobility_score = pack_mobility();
 
 
+// S101's threat family, seven groups summed into mobility's pair (DEC-333):
+// evaluation.hpp defines each set and cell, threat_terms() below computes them.
+//
+// **At zero, S135's form, and fitted afterwards** (DEC-259's screen,
+// adocs/data/S101_screen.sh). No seed: nothing here was taken from any engine
+// or page, and every entry starts the fit at zero (DEC-084). A group whose
+// weights are all zero is in no expression: the liveness flags below keep it,
+// and the ORs that build the unions it reads, out of the engine's stage two, so
+// the landing scores every position as before and pays nothing (INV-6,
+// DEC-047).
+constexpr int threat_pawn_mg[4] = {0, 0, 0, 0};
+constexpr int threat_pawn_eg[4] = {0, 0, 0, 0};
+constexpr int threat_piece_mg[5] = {0, 0, 0, 0, 0};
+constexpr int threat_piece_eg[5] = {0, 0, 0, 0, 0};
+constexpr int threat_minor_mg[2] = {0, 0};
+constexpr int threat_minor_eg[2] = {0, 0};
+constexpr int hanging_piece_mg[4] = {0, 0, 0, 0};
+constexpr int hanging_piece_eg[4] = {0, 0, 0, 0};
+constexpr int hanging_pawn_mg[1] = {0};
+constexpr int hanging_pawn_eg[1] = {0};
+constexpr int threat_king_mg[4] = {0, 0, 0, 0};
+constexpr int threat_king_eg[4] = {0, 0, 0, 0};
+constexpr int threat_push_mg[4] = {0, 0, 0, 0};
+constexpr int threat_push_eg[4] = {0, 0, 0, 0};
+constexpr std::array<score_t, 4> threat_pawn_score =
+    pack_scores(threat_pawn_mg, threat_pawn_eg);
+constexpr std::array<score_t, 5> threat_piece_score =
+    pack_scores(threat_piece_mg, threat_piece_eg);
+constexpr std::array<score_t, 2> threat_minor_score =
+    pack_scores(threat_minor_mg, threat_minor_eg);
+constexpr std::array<score_t, 4> hanging_piece_score =
+    pack_scores(hanging_piece_mg, hanging_piece_eg);
+constexpr std::array<score_t, 1> hanging_pawn_score =
+    pack_scores(hanging_pawn_mg, hanging_pawn_eg);
+constexpr std::array<score_t, 4> threat_king_score =
+    pack_scores(threat_king_mg, threat_king_eg);
+constexpr std::array<score_t, 4> threat_push_score =
+    pack_scores(threat_push_mg, threat_push_eg);
+
+// One flag a group, as S123's and S125's. P1 reads the pawn attacks stage two
+// has anyway, so it alone needs no union, and that is the difference between
+// the two flags at the end.
+static constexpr bool threat_pawn_live = any_weight(threat_pawn_score);
+static constexpr bool threat_piece_live = any_weight(threat_piece_score);
+static constexpr bool threat_minor_live = any_weight(threat_minor_score);
+static constexpr bool hanging_piece_live = any_weight(hanging_piece_score);
+static constexpr bool hanging_pawn_live = any_weight(hanging_pawn_score);
+static constexpr bool threat_king_live = any_weight(threat_king_score);
+static constexpr bool threat_push_live = any_weight(threat_push_score);
+static constexpr bool threat_totals_live = hanging_piece_live ||
+                                           hanging_pawn_live ||
+                                           threat_king_live || threat_push_live;
+static constexpr bool threat_unions_live =
+    threat_totals_live || threat_piece_live || threat_minor_live;
+
+
 // The four types every stage-two term iterates over, in the order the weight
 // arrays are indexed. Shared so that mobility and king safety cannot disagree
 // about which weight belongs to which piece.
@@ -2206,18 +2262,70 @@ constexpr int king_safety_eg[KS_FEATURE_COUNT] = {-5, -9, 7,  -52, 10,
 constexpr std::array<score_t, KS_FEATURE_COUNT> king_safety_score =
     pack_scores(king_safety_mg, king_safety_eg);
 
+// S101's family in one half, bounded array by array. A side has at most 15 men
+// beside its king. Each stands in one cell of every array but threat_piece, so
+// that array's White-minus-Black sum is within 15 times its spread
+// (pawn_cells_reach()), or 8 times for threat_king: a king reaches eight
+// squares. In threat_piece a rook is in two cells and a queen in three, so a
+// man adds at most the larger of those two sums, or subtracts at least the
+// smaller. adocs/data/S101_screen.py's `headroom` repeats this for a fitted
+// header, so a fit that would fail the assert below is refused before it is
+// pasted.
+static constexpr int threat_piece_reach(const int (&weights)[5])
+{
+  const auto above = [](int w) { return std::max(w, 0); };
+  const auto below = [](int w) { return std::min(w, 0); };
+  const int high =
+      std::max(above(weights[0]) + above(weights[2]),
+               above(weights[1]) + above(weights[3]) + above(weights[4]));
+  const int low =
+      std::min(below(weights[0]) + below(weights[2]),
+               below(weights[1]) + below(weights[3]) + below(weights[4]));
+  return 15 * (high - low);
+}
+
+static constexpr int threat_family_half(const int (&pawn)[4],
+                                        const int (&piece)[5],
+                                        const int (&minor)[2],
+                                        const int (&hanging)[4],
+                                        const int (&hanging_pawn)[1],
+                                        const int (&king)[4],
+                                        const int (&push)[4])
+{
+  return pawn_cells_reach(pawn) + threat_piece_reach(piece) +
+         pawn_cells_reach(minor) + pawn_cells_reach(hanging) +
+         pawn_cells_reach(hanging_pawn) + pawn_cells_reach(king) * 8 / 15 +
+         pawn_cells_reach(push);
+}
+
 // Stage two's two packed sums, bounded the way stage one's is: for mobility,
 // 32 pieces each adding one cell (S121; 32 x 27 x its weight while it was
-// linear); for king safety, 16 attackers a side each adding one attacker
-// count and at most nine zone incidences, plus four shelter features a side
-// that count files and pawns around the king and stay under 8.
+// linear), and S101's family, which is summed into that pair; for king safety,
+// 16 attackers a side each adding one attacker count and at most nine zone
+// incidences, plus four shelter features a side that count files and pawns
+// around the king and stay under 8.
 static_assert(
     32 * std::max({largest_weight(mobility_knight_mg, mobility_knight_eg),
                    largest_weight(mobility_bishop_mg, mobility_bishop_eg),
                    largest_weight(mobility_rook_mg, mobility_rook_eg),
-                   largest_weight(mobility_queen_mg, mobility_queen_eg)}) <=
+                   largest_weight(mobility_queen_mg, mobility_queen_eg)}) +
+            std::max(threat_family_half(threat_pawn_mg,
+                                        threat_piece_mg,
+                                        threat_minor_mg,
+                                        hanging_piece_mg,
+                                        hanging_pawn_mg,
+                                        threat_king_mg,
+                                        threat_push_mg),
+                     threat_family_half(threat_pawn_eg,
+                                        threat_piece_eg,
+                                        threat_minor_eg,
+                                        hanging_piece_eg,
+                                        hanging_pawn_eg,
+                                        threat_king_eg,
+                                        threat_push_eg)) <=
         32767,
-    "mobility's packed sum can overflow a 16-bit half");
+    "mobility's packed sum, with the threats in it, can overflow a 16-bit "
+    "half");
 static_assert(2 * (16 * (1 + 9) + 4 * 8) *
                       largest_weight(king_safety_mg, king_safety_eg) <=
                   32767,
@@ -2346,6 +2454,238 @@ static bool shelter_is_fresh(const board_t* board,
 #endif
 
 
+// S101's family (src/evaluation.hpp defines every set and cell), White minus
+// Black, added to `sum`. `attacks_by` is each side's knight, bishop, rook and
+// queen unions, which stage two's piece loop built as it looked each piece's
+// attacks up; `pawn_attacks` and `zone` are the sets it held already. Nothing
+// here looks an attack up, so what a group costs is set algebra and a popcount
+// a cell, and a group not live is in no expression. Each group skips its cells
+// when the set they read is empty, which is most nodes.
+template <bool collect>
+static inline void threat_terms(const board_t* board,
+                                const bb_t attacks_by[2][4],
+                                const bb_t pawn_attacks[2],
+                                const bb_t zone[2],
+                                score_t* sum,
+                                threat_family_t* out)
+{
+  constexpr bool any_on =
+      collect || trace_build || threat_pawn_live || threat_unions_live;
+
+  if constexpr (any_on) {
+    constexpr bool pawn_on = collect || trace_build || threat_pawn_live;
+    constexpr bool piece_on = collect || trace_build || threat_piece_live;
+    constexpr bool minor_on = collect || trace_build || threat_minor_live;
+    constexpr bool hanging_on = collect || trace_build || hanging_piece_live;
+    constexpr bool hanging_pawn_on =
+        collect || trace_build || hanging_pawn_live;
+    constexpr bool king_on = collect || trace_build || threat_king_live;
+    constexpr bool push_on = collect || trace_build || threat_push_live;
+    constexpr bool totals_on = collect || trace_build || threat_totals_live;
+
+    // The enemy's men and the attacker's unions, by these names.
+    enum
+    {
+      MAN_PAWN,
+      MAN_KNIGHT,
+      MAN_BISHOP,
+      MAN_ROOK,
+      MAN_QUEEN
+    };
+    enum
+    {
+      BY_KNIGHT,
+      BY_BISHOP,
+      BY_ROOK,
+      BY_QUEEN
+    };
+
+    if constexpr (collect) { *out = threat_family_t{}; }
+
+    [[maybe_unused]] bb_t nonking[2] = {0, 0};
+    [[maybe_unused]] bb_t all[2] = {0, 0};
+
+    if constexpr (totals_on) {
+      for (int colour = 0; colour < 2; ++colour) {
+        nonking[colour] = pawn_attacks[colour] | attacks_by[colour][BY_KNIGHT] |
+                          attacks_by[colour][BY_BISHOP] |
+                          attacks_by[colour][BY_ROOK] |
+                          attacks_by[colour][BY_QUEEN];
+        all[colour] = nonking[colour] | zone[colour];
+      }
+    }
+
+    for (int colour = 0; colour < 2; ++colour) {
+      const int mover = (colour == WHITE) ? 1 : -1;
+      const int enemy = 1 - colour;
+      const bb_t* men = &board->bitboards[(colour == WHITE) ? B_PAWN : W_PAWN];
+      const bb_t pieces =
+          men[MAN_KNIGHT] | men[MAN_BISHOP] | men[MAN_ROOK] | men[MAN_QUEEN];
+
+      if constexpr (collect) {
+        out->pawn_attacks[colour] = pawn_attacks[colour];
+        out->knight_attacks[colour] = attacks_by[colour][BY_KNIGHT];
+        out->bishop_attacks[colour] = attacks_by[colour][BY_BISHOP];
+        out->rook_attacks[colour] = attacks_by[colour][BY_ROOK];
+        out->queen_attacks[colour] = attacks_by[colour][BY_QUEEN];
+        out->king_attacks[colour] = zone[colour];
+        out->nonking[colour] = nonking[colour];
+        out->all[colour] = all[colour];
+      }
+
+      if constexpr (pawn_on) {
+        const bb_t hit = pawn_attacks[colour] & pieces;
+
+        if (hit != 0) {
+          for (int cell = 0; cell < 4; ++cell) {
+            const int count = count_bits(hit & men[MAN_KNIGHT + cell]);
+
+            *sum += mover * count * threat_pawn_score[cell];
+            EVAL_TRACE(TERM_THREAT_PAWN, cell, mover * count);
+
+            if constexpr (collect) { out->threat_pawn[colour][cell] = count; }
+          }
+        }
+      }
+
+      if constexpr (piece_on) {
+        const bb_t majors = men[MAN_ROOK] | men[MAN_QUEEN];
+        const bb_t knights = attacks_by[colour][BY_KNIGHT];
+        const bb_t bishops = attacks_by[colour][BY_BISHOP];
+        const bb_t rooks = attacks_by[colour][BY_ROOK];
+
+        if ((((knights | bishops) & majors) | (rooks & men[MAN_QUEEN])) != 0) {
+          const bb_t hits[5] = {
+              knights & men[MAN_ROOK], knights & men[MAN_QUEEN],
+              bishops & men[MAN_ROOK], bishops & men[MAN_QUEEN],
+              rooks & men[MAN_QUEEN]};
+
+          for (int cell = 0; cell < 5; ++cell) {
+            const int count = count_bits(hits[cell]);
+
+            *sum += mover * count * threat_piece_score[cell];
+            EVAL_TRACE(TERM_THREAT_PIECE, cell, mover * count);
+
+            if constexpr (collect) { out->threat_piece[colour][cell] = count; }
+          }
+        }
+      }
+
+      if constexpr (minor_on) {
+        const bb_t hits[2] = {attacks_by[colour][BY_KNIGHT] & men[MAN_BISHOP],
+                              attacks_by[colour][BY_BISHOP] & men[MAN_KNIGHT]};
+
+        if ((hits[0] | hits[1]) != 0) {
+          for (int cell = 0; cell < 2; ++cell) {
+            const int count = count_bits(hits[cell]);
+
+            *sum += mover * count * threat_minor_score[cell];
+            EVAL_TRACE(TERM_THREAT_MINOR, cell, mover * count);
+
+            if constexpr (collect) { out->threat_minor[colour][cell] = count; }
+          }
+        }
+      }
+
+      if constexpr (totals_on) {
+        const bb_t undefended = ~all[enemy];
+
+        if constexpr (hanging_on) {
+          const bb_t hit = nonking[colour] & undefended & pieces;
+
+          if (hit != 0) {
+            for (int cell = 0; cell < 4; ++cell) {
+              const int count = count_bits(hit & men[MAN_KNIGHT + cell]);
+
+              *sum += mover * count * hanging_piece_score[cell];
+              EVAL_TRACE(TERM_HANGING_PIECE, cell, mover * count);
+
+              if constexpr (collect) {
+                out->hanging_piece[colour][cell] = count;
+              }
+            }
+          }
+        }
+
+        if constexpr (hanging_pawn_on) {
+          const bb_t hit = nonking[colour] & undefended & men[MAN_PAWN];
+
+          if (hit != 0) {
+            const int count = count_bits(hit);
+
+            *sum += mover * count * hanging_pawn_score[0];
+            EVAL_TRACE(TERM_HANGING_PAWN, 0, mover * count);
+
+            if constexpr (collect) { out->hanging_pawn[colour][0] = count; }
+          }
+        }
+
+        if constexpr (king_on) {
+          const bb_t hit = zone[colour] & ~nonking[colour] & undefended &
+                           (men[MAN_PAWN] | men[MAN_KNIGHT] | men[MAN_BISHOP] |
+                            men[MAN_ROOK]);
+
+          if (hit != 0) {
+            for (int cell = 0; cell < 4; ++cell) {
+              const int count = count_bits(hit & men[MAN_PAWN + cell]);
+
+              *sum += mover * count * threat_king_score[cell];
+              EVAL_TRACE(TERM_THREAT_KING, cell, mover * count);
+
+              if constexpr (collect) { out->threat_king[colour][cell] = count; }
+            }
+          }
+
+          if constexpr (collect) { out->king_only_set[colour] = hit; }
+        }
+
+        if constexpr (collect) {
+          out->hanging_set[colour] =
+              nonking[colour] & undefended & (pieces | men[MAN_PAWN]);
+        }
+
+        if constexpr (push_on) {
+          // White advances by decreasing the index, a8 being 0.
+          constexpr bb_t WHITE_DOUBLE = 0x000000FF00000000ULL;
+          constexpr bb_t BLACK_DOUBLE = 0x00000000FF000000ULL;
+          const bb_t empty = ~board->occupancies[BOTH];
+          const bb_t own_pawns =
+              board->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
+          const bb_t enemy_pawn_attacks = pawn_attacks[enemy];
+          const bb_t safe = ~enemy_pawn_attacks & (undefended | all[colour]);
+          const bb_t first =
+              ((colour == WHITE) ? own_pawns >> 8 : own_pawns << 8) & empty;
+          const bb_t clear = first & ~enemy_pawn_attacks;
+          const bb_t second = (colour == WHITE)
+                                  ? (clear >> 8) & empty & WHITE_DOUBLE
+                                  : (clear << 8) & empty & BLACK_DOUBLE;
+          const bb_t targets = (first | second) & safe;
+          const bb_t reach = (colour == WHITE) ? neighbour_files(targets) >> 8
+                                               : neighbour_files(targets) << 8;
+          const bb_t hit = reach & ~pawn_attacks[colour] & pieces;
+
+          if (hit != 0) {
+            for (int cell = 0; cell < 4; ++cell) {
+              const int count = count_bits(hit & men[MAN_KNIGHT + cell]);
+
+              *sum += mover * count * threat_push_score[cell];
+              EVAL_TRACE(TERM_THREAT_PUSH, cell, mover * count);
+
+              if constexpr (collect) { out->threat_push[colour][cell] = count; }
+            }
+          }
+
+          if constexpr (collect) {
+            out->push_targets[colour] = targets;
+            out->push_hits[colour] = hit;
+          }
+        }
+      }
+    }
+  }
+}
+
+
 // Mobility and king safety in one pass, White relative. The two terms ask the
 // same question of every piece -- where does it attack -- and asking it twice
 // cost 7.7 % of the search at depth 12 with king safety weighted at zero, since
@@ -2356,10 +2696,11 @@ static bool shelter_is_fresh(const board_t* board,
 // for any weights, not only for the zeros king safety currently ships.
 //
 // The piece's own attack set is the only one either term reads, and it is
-// looked up once here and read by both. No per-side union -- attacks by piece
-// type, all attacks, squares attacked twice -- is built, because no term reads
-// one yet: each would be paid at every node for nothing (S263). The first term
-// that reads one builds it in this loop and its measurement pays for it.
+// looked up once here and read by both. S101's threat family is the first term
+// that reads a per-side union, so it builds its unions in this loop, one OR a
+// piece, and only where a group that reads them is live: a set no live group
+// reads would be paid at every node for nothing (S263). Squares attacked twice
+// are still built nowhere.
 //
 // The sign is the part to read carefully. Mobility belongs to the piece that
 // has it, an attack on a king zone belongs to the king being attacked, and
@@ -2383,11 +2724,14 @@ static bool shelter_is_fresh(const board_t* board,
 // which every king misses, so the features are read, traced and collected
 // there.
 template <bool collect>
-static int evaluate_mobility_and_king_safety(const board_t* board,
-                                             pawn_shelter_t* shelter,
-                                             int out[2][KS_FEATURE_COUNT],
-                                             int* mobility_out = nullptr,
-                                             int* safety_out = nullptr)
+static int evaluate_mobility_and_king_safety(
+    const board_t* board,
+    pawn_shelter_t* shelter,
+    int out[2][KS_FEATURE_COUNT],
+    int* mobility_out = nullptr,
+    int* safety_out = nullptr,
+    int* threats_out = nullptr,
+    threat_family_t* threat_out = nullptr)
 {
   const bb_tables_t* tables = game_tables();
   const bb_t occupancy = board->occupancies[BOTH];
@@ -2397,6 +2741,13 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
 
   score_t mobility_sum = 0;
   score_t safety_sum = 0;
+  score_t threat_sum = 0;
+
+  // S101's four unions, one OR a piece in the loop below, and only where a
+  // group that reads them is live (threat_terms()).
+  constexpr bool threat_unions_on =
+      collect || trace_build || threat_unions_live;
+  [[maybe_unused]] bb_t attacks_by[2][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
 
   if constexpr (collect) {
     for (int colour = 0; colour < 2; ++colour) {
@@ -2441,6 +2792,8 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
         pieces &= pieces - 1;
 
         const bb_t attacks = piece_attacks(tables, type, square, occupancy);
+
+        if constexpr (threat_unions_on) { attacks_by[colour][type] |= attacks; }
 
         // The count is `area`'s, above, and for a pinned piece only the
         // squares on its pin line (P3): a pinned knight has none, a piece
@@ -2491,6 +2844,15 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
     }
   }
 
+  if constexpr (collect) {
+    threat_family_t unused;
+    threat_terms<true>(board, attacks_by, pawn_attacks, zone, &threat_sum,
+                       (threat_out != nullptr) ? threat_out : &unused);
+  } else {
+    threat_terms<false>(board, attacks_by, pawn_attacks, zone, &threat_sum,
+                        nullptr);
+  }
+
   for (int colour = 0; colour < 2; ++colour) {
     const int sign = (colour == WHITE) ? 1 : -1;
     const uint8_t tag = static_cast<uint8_t>(king_square[colour] + 1);
@@ -2523,12 +2885,20 @@ static int evaluate_mobility_and_king_safety(const board_t* board,
   // them is a play change and was measured as one: S055's single taper read H0
   // at nElo -8.78 +/- 6.39 and was reverted. The packing keeps both
   // truncations exactly, which is what makes it behaviour-neutral (S117).
-  const int mobility = taper(mobility_sum, phase);
+  //
+  // S101's threat family shares mobility's division (DEC-333 (1)), so it adds
+  // none. What the two columns read apart is mobility's own taper and what the
+  // family moved it by, so that the three still add up to the number the clamp
+  // reads.
+  const int mobility = taper(mobility_sum + threat_sum, phase);
   const int safety = taper(safety_sum, phase);
 
   if constexpr (collect) {
-    if (mobility_out != nullptr) { *mobility_out = mobility; }
+    const int mobility_alone = taper(mobility_sum, phase);
+
+    if (mobility_out != nullptr) { *mobility_out = mobility_alone; }
     if (safety_out != nullptr) { *safety_out = safety; }
+    if (threats_out != nullptr) { *threats_out = mobility - mobility_alone; }
   }
 
   return mobility + safety;
@@ -2593,15 +2963,19 @@ void king_safety_features(const board_t* board, int out[2][KS_FEATURE_COUNT])
 // it also collects are thrown away here, for the reason above: the collecting
 // instantiation is the one the search does not compile, so a tool riding on it
 // cannot slow the search down whatever clang decides to inline.
-void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
+void evaluate_expensive_terms(const board_t* board,
+                              int* mobility,
+                              int* safety,
+                              int* threats)
 {
   int counts[2][KS_FEATURE_COUNT];
   int mobility_white = 0;
   int safety_white = 0;
+  int threats_white = 0;
   pawn_shelter_t empty = {};
 
-  evaluate_mobility_and_king_safety<true>(board, &empty, counts,
-                                          &mobility_white, &safety_white);
+  evaluate_mobility_and_king_safety<true>(
+      board, &empty, counts, &mobility_white, &safety_white, &threats_white);
 
   // The same sign evaluate_expensive() applies, so the sum is the correction as
   // the caller would have received it and not a White-relative number that has
@@ -2611,6 +2985,18 @@ void evaluate_expensive_terms(const board_t* board, int* mobility, int* safety)
 
   *mobility = sign * mobility_white;
   *safety = sign * safety_white;
+  *threats = sign * threats_white;
+}
+
+
+// S101's sets and counts, through the same collecting instantiation.
+void threat_family_counts(const board_t* board, threat_family_t* out)
+{
+  int counts[2][KS_FEATURE_COUNT];
+  pawn_shelter_t empty = {};
+
+  evaluate_mobility_and_king_safety<true>(board, &empty, counts, nullptr,
+                                          nullptr, nullptr, out);
 }
 
 
