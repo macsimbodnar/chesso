@@ -1,0 +1,22 @@
+id:         S311
+goal:       `tools/comment_budget.py` reports what breaks the comment rule, proves a comment edit left the code identical and applies a writer's edit list refusing any code token; the rule enters `AGENTS.md`
+accepts:    the rule in `AGENTS.md`'s Project rules as DEC-336 states it, written by the coordinator in the closing commit; `--report <ref>` flags log-shaped blocks new or grown, id chains, `file:line` citations, paths gone from the tree, `S### owns` on a closed step, a GOLDEN without name, command and margin, an id that does not exist, and narration as a noisy warning, and on HEAD lists the log-shaped set; no length flag (DEC-336 (1)); `--identical <ref>` proves code identity per changed file: the lexer's stripped text for every language, blank lines aside, and for C++ `clang++ -x c++ -fsyntax-only -Xclang -dump-raw-tokens` where clang is the compiler or `g++ -fpreprocessed -dD -E -P` where it is g++, Python by `ast` without docstrings and by tokens with a docstring read through `__doc__` treated as code, shell and CMake by the lexer, and the multiset of directive comments (`clang-format`, `noqa`, `NOLINT`, `shellcheck` and the like) unchanged; observed red on an injected code change, on one in an inactive `#if` branch and on a dropped directive, and green on `adocs/data/comment_study/pilot/`; `--apply <edits>` takes `file, start line, end line, text` against a ref, refuses a range touching a code token or overlapping another, and writes a tree or a directory; `--new-facts <ref>` lists ids and numbers in new comment text absent from the old; `--anchors` finds every `tools/mutants/` anchor once; `--tiers <ref>` lists each block with its DEC-336 tier; the study's lexer fixtures a fast ctest in `tests/test_comment_budget.py`; `adocs/data/S312_local_gate.sh` per DEC-336 (4), observed red on an injected code change; a `DEV_MANUAL.md` entry; report only, `tools/gate.sh` untouched; no dependency; Python 3.9; both builds green by that local gate
+touches:    AGENTS.md, tools/comment_budget.py, tests/CMakeLists.txt, tests/test_comment_budget.py, adocs/data/S312_local_gate.sh, DEV_MANUAL.md
+excludes:   `adocs/data/` and `adocs/plan_done/`, which are evidence; any hunk `adocs/data/S101_pause_check.sh` names, until S101 closes; any match, fit or timing; any comment edit, which is S312's
+decisions:  DEC-336, DEC-335, DEC-142, DEC-171
+closes:
+blocks:
+paused_by:
+author:
+done:
+
+## Why
+
+`adocs/data/comment_study/report.md` and `literature/report.md`, the latter's sections 2 to 4 before starting: DEC-336 is the owner's ruling on the draft,
+and the study's lexers are the start of the tool. A rule costs almost nothing and stops about half of 15.5 KB a day, which no sweep does.
+
+## The second machine
+
+No `.tuning/`, books, worktrees or `.moltke.local.md`. `tools/gate.sh` on it may need its own `CLANG_FORMAT_MAJOR` (DEC-146): the pin is 23
+and the workstation runs 22, so a rewrapped comment is the thing to check for. The compiler there is Apple clang, so the tool cannot assume
+g++, and DEC-049's reference stays g++ on the workstation.

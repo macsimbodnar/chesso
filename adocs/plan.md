@@ -385,9 +385,9 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S311  a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+1. S311  `tools/comment_budget.py` reports what breaks the comment rule, proves a comment edit left the code identical and applies a writer's edit list refusing any code token; the rule enters `AGENTS.md`
 2. S308  the nine comments S306 and its reader found beside its twelve are made true or removed
-3. S312  the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+3. S312  all live comments read against the rule in DEC-336's three tiers, the log-shaped blocks made current, history and false claims out of the long ones, the short ones read and touched only where false
 4. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
 5. S307  the timer case establishes that its board's first iteration outlasts the bound, so a dead timer cannot pass on a lighter board
 6. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone

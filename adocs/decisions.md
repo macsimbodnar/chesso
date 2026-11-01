@@ -17203,3 +17203,45 @@ Consequences: On H0 the bisection's parts are not re-read here: `S101_screen.sh 
               checkout's HEAD, so a part needs that guard read against this split first. S311 owns the tool and the rule,
               S312 the blocks, S313 the re-measure after five further steps. `AGENTS.md` gains the rule by the owner's
               word, as a decision.
+
+## DEC-336  2026-11-01  The comment rule, without a length threshold; all live code read, short blocks read-only; parallel writers for this job; a local proof on the MacBook
+Tags:         comments, workflow, s311, s312, s308, s313, s314, dec-335, dec-185, dec-141, dec-143, dec-142, machine, owner-question
+Context:      DEC-335 left the rule and the scope to the owner. Asked for a study of literature and community first, the owner
+              got `adocs/data/comment_study/literature/report.md` and answered four questions on 2026-11-01, on the MacBook Air M5. No
+              peer-reviewed study measures comment removal with a frontier agent on a real repository, so the rule rests on indirect
+              evidence and this repository's own numbers. Also read that day: `tools/gate.sh` is red on that machine before any comment
+              work (S314), and S311's `--identical` as written cannot run there, Apple clang refusing `-fpreprocessed`.
+Decision:     By the owner:
+              (1) The COMMENTS rule as `AGENTS.md` now states it, the study's draft without its "block over 15 lines" clause: per byte
+              the long blocks' excess reads 1.98x to 4.88x and not 13x, and 15 is arbitrary.
+              (2) The scope is all live code, in three tiers read in this order. T1, the log-shaped blocks by the study's selector (76,
+              307577 B at `55d7e75`): a log becomes current form. T2, the other blocks of 1200 B or more (228, 496002 B): history
+              sentences go and false ones are repaired. T3, everything smaller (4637, 1166127 B): **read-only**, only a false claim,
+              narration or restating is touched and nothing is compressed. T3 may run on as filler after S101 resumes.
+              (3) DEC-185's "one task at a time" is waived for this job and no other: two batches in series, then three or four writers on
+              disjoint files, the coordinator applying and committing in series.
+              (4) A comment-only commit on that machine proves itself by `adocs/data/S312_local_gate.sh`: identity, both builds' fast suite
+              without `test_fastchess_script`, `clang-format.sh --check` reading exactly today's two lines, `bench` 5707449, the
+              anchors, the citations, `S101_pause_check.sh`. This narrows DEC-335 (5) until S314. DEC-141's Debug self-play and
+              DEC-143's A/A are not owed for a comment-only commit: identity proves nothing moved. One `tools/gate_extra.sh` on the
+              workstation at the end of the scope, and DEC-335 (7)'s full gate each evening, stand.
+              By the coordinator, under the standing instruction:
+              (5) A writer never touches the tree. It emits an edit list that `tools/comment_budget.py --apply` refuses if a range touches
+              a code token, and a block takes one of four outcomes with a register line: keep byte for byte, the default; delete whole
+              sentences, no new word; replace a false claim with a true one, its source read and named; golden form. No free
+              paraphrase outside T1, since a deletion makes no new claim and a rewrite does.
+              (6) A clean reader on a fresh context reads old against new for incorrectness only, with three errors seeded in its copy and
+              never in the tree, so its recall is a measurement. Each finding is checked against the code before a fix.
+              (7) It stops for the owner on more than one meaning-changing error per 1000 comment lines after review, on a reader missing
+              two seeds of three in two batches running, on the cost projecting past 37 M units at the second batch, or on a removed
+              reason being re-derived. Every commit is a valid stop.
+              (8) The local A/B the report designs, about 13 M units, is proposed with S313. Its "before" arm stays in git, so waiting
+              loses nothing.
+Why:          The owner wants the whole codebase in line now. An LLM writer states false things at a rate comparable to those it repairs on
+              small samples, so subtraction, a reader and a stop at every commit are what make it safe, and tokens do not justify it.
+Rejected:     Keeping the 15-line clause: only this project's data behind it, at an arbitrary number. A default of no comments: it loses
+              reasons held nowhere else, 7 of 25. T1 and T2 alone, 40.8 % of bytes and 77 % of dead blocks: short of what was asked.
+              Compressing T3: it rewrites the short reasons. Series throughout: about 15 to 20 h by the coordinator's estimate. Fixing S314
+              first: code work against the owner's note, its cause unread. Full rigor per commit: it needs the workstation that resumes S101.
+Consequences: S311 and S312 are amended here. The rule enters `AGENTS.md` with S311's closing commit, since it names S311's tool. A comment
+              commit on the MacBook is not `tools/gate.sh` green until S314, and the evening's gate is the first full reading of each day's work.

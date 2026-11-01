@@ -1,9 +1,9 @@
 id:         S312
-goal:       the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-accepts:    the scope the owner set under S311, by default the log-shaped blocks `tools/comment_budget.py` lists, each now holding contracts, hazards, reasons and deciding numbers in the present tense, DEC-142's form and current value at every golden (name, command, what moves it, margin), and a rejected idea one line at its site; `--identical` green at every commit, bench and `tools/search_bench.py` identical, each `src/` commit `No functional change`; every `tools/mutants/` anchor still found once, those overlapping a comment moved in the same commit; `plan_prose_check.py --citations` 0 flagged; `adocs/data/S101_pause_check.sh` green at every commit; **a clean reader, on a fresh context, reads old against new over every rewritten block**, its findings fixed and its error rate per 1000 comment lines recorded, more than one meaning-changing error per 1000 after that review stopping the step for the owner; a removed reason that exists nowhere else is kept; what a removed log held that no step file holds goes into `DEV_MANUAL.md`'s goldens table; both builds green at every commit; the hunks S101's diff held back are named here, for after its close
-touches:    src/, tests/, tools/, cmake/, fastchess.sh, rating.sh, DEV_MANUAL.md
+goal:       all live comments read against the rule in DEC-336's three tiers, the log-shaped blocks made current, history and false claims out of the long ones, the short ones read and touched only where false
+accepts:    DEC-336's tiers in its order, by traffic within a tier, S101's seven files last, each batch about 75 KB of comment, one writer, one reader, one commit: each block has a register line with its outcome, keep, delete, replace or golden, and a replacement names the source read; DEC-142's form at every golden (name, command, what moves it, margin), a value kept only where a test reads it; a rejected idea one line at its site; a removed reason that exists nowhere else is kept; `adocs/data/S312_local_gate.sh` green at every commit, each `src/` commit `No functional change`; **a clean reader on a fresh context reads old against new over every changed block, with three seeded errors**, its findings checked against the code and fixed, its recall and the error rate per 1000 comment lines recorded per batch; DEC-336 (7)'s stops read at every batch; what a removed log held that no step file holds goes into `DEV_MANUAL.md`'s goldens table, and its three rows that say history stays in a comment are corrected; the blocks S101's diff holds back are named here, for after its close; T3 may close this step's first part and run on as filler, the stamp saying where it stood
+touches:    src/, tests/, tools/, cmake/, fastchess.sh, rating.sh, build_release.sh, clang-format.sh, test_uci.sh, CMakeLists.txt, DEV_MANUAL.md, adocs/data/comment_study/cleanup/
 excludes:   `adocs/data/` and `adocs/plan_done/`, which are evidence; any hunk `adocs/data/S101_pause_check.sh` names, until S101 closes; any match, fit or timing; moving a number that decides something: a golden whose current value is false is re-derived by its script or the step stops and says why it cannot be on this machine
-decisions:  DEC-335, DEC-142, DEC-171
+decisions:  DEC-336, DEC-335, DEC-142, DEC-171
 closes:
 blocks:
 paused_by:
@@ -12,7 +12,7 @@ done:
 
 ## Why
 
-Long blocks are where false claims live: 9 of 36 blocks of 1200 bytes or more against 2 of 104 smaller. In the selected blocks 4 of 10 sampled
+Long blocks are where false claims live: 9 of 36 blocks of 1200 bytes or more against 2 of 104 smaller, though per byte that excess reads 1.98x to 4.88x. In the selected blocks 4 of 10 sampled
 hold one. Tokens do not justify this, by the study's own figures; defects and the 61 % of changed `src/` lines that are comment-only do.
 
 ## What the study found hard
