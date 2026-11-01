@@ -1525,6 +1525,7 @@ The two commits were timed on branch `s118` and landed on DEC-332 (8)'s reading:
 | `S118_drift.log` | a drift point after S118's landing, 2026-11-01, S199's form in S267's series: `8ffce9b` against `1680439`, 2000 games at 8+0.08, Hash 16, `noob_3moves.epd`, 52 m 56 s, Elo +293.62 +/- 17.15, nElo +404.66 +/- 15.23, 0 forfeits; not a verdict and not a rating (DEC-108); trimmed with `tools/trim_console.py --summary`, the run in `chesso_S118_drift_2026-11-01.tar.xz` |
 | `S118_mutants.txt` | `tools/mutants/S118_pawn_cache.py` on the final tree, 24 of 24 killed, in the two runs' own lines with their kill tables and what caught each: PT01 to PT13 on `40831fa`, a second run replacing the rows of a first stopped before its table; PT14 to PT24 on `f36762f`; `src/` and `tests/` the same at both; PT07's bench reads `n/a` |
 | `S306_identity.txt` | S306's comment edits, old `b385761` against the worktree, 2026-11-01: seven C++ files byte-equal under `g++ -fpreprocessed -dD -E -P`, the one Python file's `ast` without docstrings and its tokens after the docstring equal, with its one docstring edit, and `fastchess.sh` and `tests/CMakeLists.txt` with only comment lines changed, those lines printed. `S306-IDENTITY HOLDS` |
+| `S308_identity.txt` | S308's comment edits, old `1c86c1a` against the worktree, 2026-11-01, MacBook Air M5: eight code files by `tools/comment_budget.py --identical`, `S308-IDENTITY HOLDS` |
 
 ### S101, the threat family (DEC-259, DEC-333)
 

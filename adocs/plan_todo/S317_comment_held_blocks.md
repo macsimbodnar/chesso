@@ -13,3 +13,6 @@ done:
 ## Why
 
 11 of T1's 76 blocks, 53717 B, 17.5 % of its bytes, cannot be touched on the second machine today, and S312's list would otherwise sit in an immutable file nothing reads.
+
+Also here from S308's list. `tests/test_engine.cpp`'s `depth_1_floor_ms` is an asserted floor read from a measurement, a golden by DEC-142's "value or floor", with no `GOLDEN (DEC-142)` form and no table row; the row sits in S101's `DEV_MANUAL.md` hunk. `fastchess.sh`'s "(AGENTS.md 12, DEC-061)" is a dead citation, in a held file.
+

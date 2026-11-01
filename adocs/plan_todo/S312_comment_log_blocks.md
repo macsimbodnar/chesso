@@ -23,3 +23,13 @@ hold one. Tokens do not justify this, by the study's own figures; defects and th
 - Five of 244 mutant anchors overlapped a comment at the study's commit (M36, M03, TC04, K06, NB01), and nothing fails until the next mutation run. Re-count.
 - `src/search_params.hpp`'s comments sit in a macro, each line ending in an aligned backslash. A comment wrap goes through the format gate.
 - A golden's script may need `.tuning/` or the workstation. One that cannot run on the second machine keeps its value, and goes on this step's list.
+
+## Siblings S308 found and left, for part one or a block they fall in
+
+Each re-read at landing. None is known to move a score, a move or a line.
+
+- `src/evaluation.cpp`, `neighbour_files`: "invisible while the weights are zero", S308's row 4's class.
+- `src/search_params.hpp` and `src/search.cpp`: range top 16384 as "twice the band's own edge". `QuietHistoryMax` ships 8831, so twice is 17662; true only of the old 8192.
+- `tests/test_search.cpp`'s GOLDEN block: readings stop at 7366; the script reads 10306 and `DEV_MANUAL.md`'s row has S121, S123 and S125. That row sits in S101's hunk, so only the block can move here.
+- `src/evaluation.cpp`, `king_shelter_features`: "`inline` is load-bearing" rests on a measurement from before S118 cached the shelter, with zero weights. Not shown false. It needs a build and a timing, so it stays, and goes on this step's list for the workstation.
+

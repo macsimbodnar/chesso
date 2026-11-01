@@ -245,9 +245,8 @@ rule about which directories an agent may write to is neither. (2026-08-21, S140
 
 ## Behaviour
 
-Chesso is a UCI engine. The protocol surface is the product surface, which is
-why `surface_guard` is `cli`; `MANUAL.md` documents it and S017 makes it
-checkable.
+Chesso is a UCI engine. The protocol surface is the product surface; `MANUAL.md`
+documents it and S017 makes it checkable.
 
 **`id name` says which build answered, since 2026-09-13, S212.** The reply is
 `id name Chesso <sha>[-dirty] <arch>[ tune]`: the short commit the binary was

@@ -959,15 +959,21 @@ TEST_SUITE("engine: uci layer")
       "search within its bound")
   {
     // Eight queens a side. Depth 1 here is a wide root over deep capture
-    // chains in quiescence, so the stop has a window to land in. **Golden**:
-    // 36165 nodes and 6 to 9 ms on this machine, median 6.8 ms, re-taken at
-    // S247 on the idle machine with `position fen <below>` then `go depth 1`
-    // in a fresh `chesso` process, reading the info line's `nodes` and `time`
-    // (`nodes * 1e6 / nps` for microseconds), 400 runs interleaved with the
-    // start position. The case was written at 13.8 ms, which no run here
-    // reproduces. The precondition below asserts 3 ms of it, which is where a
-    // twice faster machine would still leave the case separating; under that
-    // it needs a heavier position, not a smaller floor.
+    // chains in quiescence, so the stop has a window to land in. It reads
+    // 49231 nodes every run and `time` from 4 ms to about 20 ms on a MacBook
+    // Air M5, taken at S308 on `1c86c1a` with `position fen <below>` then
+    // `go depth 1` in a fresh `chesso` process, reading the info line's `nodes`
+    // and `time` (`nodes * 1e6 / nps` for microseconds). By that the median is
+    // about 5 ms over runs back to back and 16 to 19 ms over runs 0.3 s apart,
+    // the cause unread. **Not a golden** (DEC-142): no assertion reads this
+    // figure, the floor below being what the case holds. It is a dated reading
+    // of what the floor is judged against. At S247 it read 36165 nodes and 6 to
+    // 9 ms on the idle i7-8700K, median 6.8 ms, 400 runs interleaved with the
+    // start position. The case was written at 13.8 ms, which no run on the
+    // i7-8700K reproduced. The precondition below asserts 3 ms of it, 1 ms
+    // under the M5's fastest run. At S247's 6.8 ms that is where a twice faster
+    // machine would still leave the case separating; under that it needs a
+    // heavier position, not a smaller floor.
     //
     // **The board moved at S022's second verdict, by that rule, and came back
     // at its reading.** That verdict's node-level early-out in quiescence
@@ -977,7 +983,7 @@ TEST_SUITE("engine: uci layer")
     // `r1r1r1r1/1r1r1r1k/8/2n1n3/2N1N3/8/1R1R1R1K/R1R1R1R1 w - - 0 1` while
     // the early-out was in, 146994 nodes and 24 to 31 ms at depth 1, a board
     // on which it never fired. The early-out left with the verdict's reading
-    // and this board came back byte for byte: depth 1 here is 36165 nodes
+    // and this board came back byte for byte: depth 1 here read 36165 nodes
     // again.
     const std::string fen =
         "q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1";
@@ -1132,12 +1138,12 @@ TEST_SUITE("engine: uci layer")
     // The bound has to separate as well, and on the board above it cannot: a
     // timer that never fires does not leave `go movetime` running to its depth
     // cap, because the soft limit is the same 1 ms and ends the search at the
-    // first iteration that completes -- one depth-1 iteration, the golden
+    // first iteration that completes -- one depth-1 iteration, the reading
     // above, far inside any bound with this allowance. So this half has a
     // board of its own, the start position's pieces with eight queens on each
     // pawn rank and no bishops: python-chess reports `is_valid()` True,
     // `is_check()` False and 94 legal moves. Its depth-1 iteration reads
-    // 35516352 nodes and about 6.8 s on this machine, taken at S306 on
+    // 35516352 nodes and about 6.8 s on the i7-8700K, taken at S306 on
     // `b385761` with `position fen <below>` then `go depth 1`, reading the
     // `nodes` and `time` fields -- and that is what a timer that never fires
     // produces here, measured at S306 with the timer disarmed in a throwaway
