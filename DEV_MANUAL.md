@@ -2600,139 +2600,6 @@ started; the status narrowed back to `src/`, which measured a tree whose
 count read from the first summary line in the log instead of the last, which
 alone broke three cases.
 
-### Comments: `tools/comment_budget.py` and the local proof
-
-The COMMENTS rule in `AGENTS.md` is checked for shape by this tool and for truth
-by a reader; no mode here sees a false sentence. Stdlib only. Every mode ends in
-`COMMENT-BUDGET-DONE` or `COMMENT-BUDGET-FAILED`, and exits 0 when it ran and
-proved what it proves, 1 on a red proof or a refused edit, 2 when it could not
-run, which proves nothing. The file's header has each mode's contract.
-
-```bash
-tools/comment_budget.py --report HEAD              # the log-shaped set and every candidate
-tools/comment_budget.py --report <parent> --new-only   # REVIEW's fast check, one screen
-tools/comment_budget.py --identical HEAD           # each changed file, every arm its language has
-tools/comment_budget.py --identical <ref> --against DIR --stray NAME  # copies, instead of the tree
-tools/comment_budget.py --apply edits.json --tree  # or --out DIR; one refusal writes nothing
-tools/comment_budget.py --new-facts HEAD           # ids and numbers the new comments add
-tools/comment_budget.py --anchors                  # every tools/mutants/ anchor, exactly once
-tools/comment_budget.py --tiers <ref>              # each block, its tier, its character offsets
-```
-
-**`--report` is never a gate.** No comment check has a measured precision, so it
-exits 0 whatever it finds, and `tools/gate.sh` does not run it (DEC-336). It looks
-at live files: `src/`, `tests/` without its vendored code, `tools/`, `cmake/` and
-the root's scripts. A row reads `new` when its line is not in the ref's comments
-and `old` when it is. Narration is a word list, so an old hit is only counted. No
-row is about length, DEC-336 (1): a long block with a reason in it stays long.
-
-**`--identical` compares the code, arm by arm.** The lexer's stripped text for every
-language, whitespace-only and `\`-only lines read as blank, so a whole block leaving
-`CHESSO_SEARCH_PARAMS` stays green while a default moved, a row gone or a `\` dropped
-from the macro is red; a blank line after a `\` still ends the continuation, so a
-macro's extent moving is red too. For C++ also `clang++ -x c++ -fsyntax-only -Xclang
--dump-raw-tokens` or `g++ -fpreprocessed -dD -E -P`, by what `$CXX`, or `c++` without
-it, says it is; each sees inactive `#if` branches. A clang that exits non-zero or
-prints a record nobody can read proves nothing: exit 2. For Python `ast` and tokens,
-docstrings out unless the file names `__doc__`, where they are code. For shell, each
-script wrapped in a function and printed back by `declare -f`. Directive comments as a
-multiset. A `//` comment ending in a backslash, spaces after it or not, is red: g++
-`-Wcomment` stops the build on it under `-Werror`, and clang does not warn.
-
-A changed file with no lexer is red outside `adocs/`. Named and passing, not read:
-`.md` anywhere, an `adocs/` file with no lexer, and any new file under `adocs/`. A
-changed `.py`, `.sh` or `.awk` under `adocs/` has a lexer and goes through its arms.
-`--exempt PATH` names a path that is not comment-only, for the commit that lands a
-tool, and refuses anything under `src/`. Under `--against` a copy with no counterpart
-at the ref is red unless `--stray NAME` lists it: a stray proves nothing about itself.
-
-**What each arm cannot see**, read off cases and not argued:
-
-| arm | reads as identical |
-|---|---|
-| lexer, every language | blank lines, trailing spaces and `\`-only lines inside a string, a raw string or a heredoc; `int /* c */x;` to `intx;`, since its strip takes the comment and the space before it |
-| raw tokens, clang | the line structure: a dropped `\` is the lexer's to see. Directives. It is a cc1 flag and no stable interface |
-| g++ text | how much whitespace, anywhere, since it folds to one space: `"a  b"` against `"a b"`, which the lexer sees on one line, and a blank line or trailing spaces inside a raw string, which only clang sees. `#define X 1 \ // c` losing the comment, where the stray `\` becomes a continuation and the macro grows; clang sees that too. This arm has run on a model of g++'s output only |
-| CMake, lexer only | `set(X a\#b)` to `a\#c`, since `\#` reads as a comment's start; a blank line or trailing spaces in a quoted or bracket argument, and an `--apply` range over one passes |
-| awk, lexer only | anything after a regex literal holding `#`, which reads as a comment, or holding `"`, which reads as a string |
-| `__doc__` | a read other than the name in that same file: `f"{__doc__}"` under Python 3.9, `globals()["__doc__"]`, `inspect.getdoc`, another module's. Those docstrings count as comments |
-| directives | a directive moved; a form the list does not hold, `// fall through`, `# cmake-format: off`, a `# -*- coding: -*-` line whose loss changes how the file decodes; `NOLINT` mid-comment; a `shellcheck` line's second key |
-| shell, bash 3.2 | nothing false: it keeps a comment inside `$(...)` verbatim, so a correct edit there reads red on this machine's bash. No live shell file holds one |
-
-**A known false red.** `tests/test_search.cpp`'s `search_fen_with(fen, depth, &tt,
-/*reset=*/false);`. A range over the comment alone leaves `&tt, false`, and the lexer
-strip of the old side reads `&tt,false`: red on the lexer arm, green on raw tokens.
-Taking the space too is green here and a format violation. The comment stays.
-
-**`--apply` takes an edit list and never retypes code.**
-`{"ref": <commit>, "edits": [...]}`, each edit `{"file", "start", "end", "old", "text"}`
-in characters against that ref's blob, the offsets `--tiers` prints, or `{"file",
-"lines": [first, last], "old", "text"}`, whole lines, 1-based. `old` is required and
-must equal the range exactly, a line's newline included: it is the only guard on a
-drifted range, say byte offsets on a line with non-ASCII, since a wrong cut inside a
-comment reads `SAME` on every arm. `text` defaults to nothing. A range touching a code
-token is refused, as is an overlap, a shebang, a docstring the file reads through
-`__doc__`, a file under `adocs/` or vendored code, and any result an identity arm reads
-red. A `lines` edit may also take a line whose remainder is a lone `\` inside a
-format-off macro, which is how a block leaves `src/search_params.hpp`'s
-`CHESSO_SEARCH_PARAMS`; a character range may not. `clang-format -i` is never the way
-to tidy what it leaves: the macro is format-off, so a misaligned `\` there is invisible
-to the format check.
-
-**`--apply --seeds` keeps a writer's recall from costing a true sentence.** A seed is
-a known-false claim in the writer's scratch copy and never in the tree:
-`{"ref": <commit>, "seeds": [{"id", "file", "start", "end", "text"}]}`, the same ref as
-the edit list. Refused unless it keeps its length in bytes and in characters and holds
-no newline, since either moves what the writer's offsets or lines read. `old` reads the
-writer's copy, so a list cut from it cannot apply without its seeds. An edit
-overlapping a seed is dropped, never applied, and printed as `DROPPED <file> edit <n>
-seed <id>`: a caught seed leaves its true sentence in the tree, and the batch's register
-subtracts that id from its dead claims. A kept edit whose `text` holds a seed's text is
-refused, in any file. A seed no edit overlaps prints as `SEED-UNTOUCHED <id>`, the
-writer's miss. Neither is a failure: the run exits 0.
-
-**The local proof, `adocs/data/S312_local_gate.sh`.** What a comment-only commit
-owes on a machine where `tools/gate.sh` is red before any comment (DEC-336 (4),
-S314). Run it on the uncommitted batch. First, always, the index is empty or equal to
-the tree, tracked files read: the proof reads the tree and a commit takes the index,
-so code staged and then restored in the tree would otherwise pass every stage and land.
-Then stages `identity`, `anchors`, `s101`, `format`, `suite`, `bench`, `citations`,
-cheap ones first, stopping at the first red, ending in `S312-GATE-DONE`,
-`S312-GATE-PARTIAL` under `--only` or `S312-GATE-FAILED`. `s101` builds a candidate commit through a scratch index, in
-no ref, and runs `adocs/data/S101_pause_check.sh` in a throwaway worktree of it,
-since that script reads `HEAD` and would otherwise read the parent. `format` runs
-`clang-format.sh --check` and takes the flagged lines by what they are,
-`tt_cluster_t`'s two and no other, so a comment deleted above them cannot turn it
-red. `suite` is both builds' fast label without `test_fastchess_script`. `bench` wants
-5707449, or `EXPECTED_BENCH` from the environment once a code commit moves it. It does
-not see major 22's format opinion or g++ `-Wcomment`: the workstation's full gate
-does, each evening.
-
-```bash
-adocs/data/S312_local_gate.sh                      # about 7 minutes
-adocs/data/S312_local_gate.sh --only identity,s101 # seconds, while a batch is being cut
-```
-
-**A rewrite gets a clean reader**, since identity cannot see a false sentence. A
-fresh agent, not the writer, with the rule in its brief, reads each changed block,
-old against new with the code around it, for incorrectness only: is each sentence
-of the new in the old or the code, which claim is false, a dangling reference
-included, which removed fact is in no record. The coordinator checks each finding
-against the code before a fix. `--new-facts` narrows what it reads first and
-replaces nothing. A close brief carries the rule's text and says **replace, never
-append**: a new reading takes the old one's place, and the story goes in the step file.
-
-`tests/test_comment_budget.py` is the tool's own gate, in the fast suite: the
-lexers on fixtures with known answers, the `$(...)` nesting on the line of
-`tests/test_fastchess_script.sh` that once read as a comment, and each mode and each of
-the gate's stages as a command over a throwaway git repository, with stubs for `cmake`,
-`ctest`, the engine, `clang-format.sh` and `tools/plan_prose_check.py`. A model of g++'s
-output stands in for it on the MacBook: a comment becomes one space, nothing else moves.
-On the workstation the default compiler is g++, so
-`test_a_whole_block_leaves_the_real_macro_and_identity_stays_green` runs that arm for
-real on the real macro. A red of it there means g++ prints the macro otherwise than the
-model does, and `_gpp_text` is what to read, not the edit.
-
 ## Format
 
 ```bash
@@ -4828,7 +4695,7 @@ done
 ```
 
 **The last two conditions are not optional and this loop went without them.**
-AGENTS.md WATCHERS requires four exits, and a marker-only loop has one: a run
+AGENTS.md par.12 requires four exits, and a marker-only loop has one: a run
 killed by the OOM killer or by `kill -9` writes no marker, and the watcher then
 polls a finished log forever. The pid check is placed *after* the marker grep so
 a run that wrote `SPRT-RUN-DONE` and exited between two polls is read as done

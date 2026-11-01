@@ -1,15 +1,27 @@
-# Lo studio sui commenti e gli LLM, 2026-11-01: il report, invariato salvo questa testata
+# Come usare i commenti in un repository gestito da LLM: lo studio del 2026-11-01
 
-Chiesto dal proprietario il 2026-11-01, sul MacBook Air M5 (DEC-335). Quattro ricercatori e uno scrittore, in `notes/` le note intere con le
-fonti lette e non lette. Gli script di `head_55d7e75/` sono record: i path sono dello scratchpad di quella sessione, e `blocks_head.json` si
-rigenera con `census.py`. La provenienza in fondo al report nomina lo scratchpad, che non esiste più: i file sono in `head_55d7e75/`.
+**Documento di studio, non una regola in vigore.** La regola e il metodo che propone non sono stati adottati: `AGENTS.md` non li contiene e nessun commento del codice è stato cambiato. Il proprietario ha fatto rimuovere il lavoro costruito sopra (DEC-341): piano, due audit, `tools/comment_budget.py`, regola, riparazioni, tutto recuperabile in git a `8ebb2bd`. Il report qui sotto è invariato, quindi cita step e decisioni di quella fase, oggi non attivi.
 
-**Aggiunte del coordinatore, che ha ricontrollato livelli, hunk di S101, `-fpreprocessed`, `__doc__` e raw token, e non `objid.py` né `perbyte.py`:**
-- Il report dice che il default attivo non è determinato. Per il coordinatore di questa sessione lo è: il suo prompt dice "Write code that
-  reads like the surrounding code: match its comment density, naming, and idiom." Letto dal prompt stesso; il prompt dei subagent non è stato visto.
-- Il gate a `55d7e75` è rosso su questa macchina, per cause precedenti a ogni commento: S314. Il report lo dà come non eseguito.
+Fonti e note intere, con ciò che è stato letto e ciò che non lo è: `adocs/data/comment_study/literature/notes/`. Conteggi a `55d7e75`: `head_55d7e75/`, script con i path della sessione, `blocks_head.json` si rigenera con `census.py`. Lo studio del progetto che questo estende: `adocs/data/comment_study/report.md`.
 
-# Togliere i log, tenere le ragioni
+## Sistemare i commenti vecchi o lasciarli
+
+Conteggio dai registri del repo, 170 righe su 272 step fatti, un solo lettore, tutti valori minimi (`literature/benefit_incidents.md`). Non si può misurare da questi registri se un agente ha perso turni per un commento falso.
+
+| cosa | conteggio |
+|---|---|
+| commento falso legato a lavoro sbagliato | 6, tutti falsi già alla scrittura, nessuno diventato falso col tempo. Per quel lettore il commento è la causa vera in 2. Nessuna run rifatta per colpa di un commento |
+| commento falso trovato, nessun danno registrato | 110, di cui 75 diventati falsi col tempo |
+| commento che ha davvero aiutato | 34: 14 fatti, 10 pericoli, 4 stop. Nessun registro mostra una lapide che ferma un nuovo tentativo |
+| step esistiti soprattutto per i commenti | 7 su 272 |
+| frase falsa nata da una riparazione | 9. S306: 2 su 12 riscritture dopo il controllo dello scrittore |
+| trovabile da uno script | 48 su 116 falsi; per 66 serve un lettore |
+
+**Lettura: sistemare tutto non si ripaga.** Stima corretta da due audit: 21-46 M unità più il coordinatore (+11-34 M), contro circa 0,7 M risparmiati nel piano aperto; il report sotto dice 18-39 M. Il danno registrato è piccolo e sta su testo mai stato vero, cioè la classe che una riscrittura produce, quindi cancellare frasi è più sicuro che riformulare. Il primo blocco di lavoro reale, prima dell'annullamento, ha confermato il tasso: un lettore pulito ha trovato 4 errori in 84 righe di commento riparate, tra cui 1 frase falsa su 6 sostituzioni. Il segnale più forte a favore di una pulizia è solo una correlazione: nello stesso commit, chi tocca un file denso scrive più commenti (Spearman 0,61 in `src`, 0,34 in `tests`).
+
+**Un dato sui default degli agenti.** Il prompt del coordinatore di quella sessione diceva "match its comment density"; il prompt di un implementatore non aveva nessuna frase sui commenti.
+
+## Il report: togliere i log, tenere le ragioni
 
 La letteratura non dice quanti commenti servono a un agente: **nessuno studio peer-reviewed misura la rimozione dei commenti con un agente di frontiera su un repository reale**, l'unico esperimento repo-level su agenti è un blog senza numeri, e l'unico studio dedicato ai commenti davvero stale non è leggibile oltre l'abstract. Regge una tesi più stretta. Conta l'informazione che il codice non ha, un falso plausibile costa più dell'assenza, un LLM che riscrive un commento sbaglia spesso, nessun rilevatore regge come gate. La community concorda solo contro i log di sessione nei commenti; sulle ragioni scritte da agenti è spaccata. Per chesso: una riga `COMMENTS` in `AGENTS.md`, con override esplicito dei default dell'harness, `tools/comment_budget.py` solo report, lettore pulito obbligatorio su ogni riscrittura. L'intero codice vivo (164 file, 1.969.706 byte di commento) si può allineare a **17-37 M unità pesate stimate, circa 70-150 $ a listino, payback 134-291 step medi**: i token non lo giustificano, lo giustificano claim morti e churn. Il modo sicuro è sottrattivo: livelli ordinati per resa, ogni commit è un punto d'arresto, e sotto i 1200 byte si legge e si corregge senza comprimere. Il numero che manca lo può dare solo un A/B locale.
 

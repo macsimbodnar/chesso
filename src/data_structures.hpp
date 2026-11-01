@@ -956,8 +956,10 @@ struct search_node_probe_t
   // window that search was run against, the score it came back with, and the
   // depth it ran at.
   //
-  // `se_multicut` is what the tune build's case reads to show `SE_MULTICUT`'s
-  // off value is off rather than assumed (DEC-215).
+  // `se_multicut` is false in every release build the gate runs, because
+  // `SE_MULTICUT` is 0 there and the compiler folds the branch away. That is
+  // the point: the field is what the tune build's case reads to show the off
+  // value is off rather than assumed (DEC-215).
   bool se_verified = false;
   bool se_extended = false;
   bool se_multicut = false;

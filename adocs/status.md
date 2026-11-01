@@ -7,17 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-01, by hand.
 
+## 2026-11-01, later: the comment work was removed at the owner's word (DEC-341)
+
+All of it but the study, `adocs/comment_study.md`. Code, tests and tools are byte for byte `55d7e75`, so the section below holds as written and S101's REF and parts are untouched. S311, S308, S312 and S313 are as they were, not run. Read on the MacBook Air and now in no step: `tools/gate.sh` is red there before any change, `test_fastchess_script` and two format lines of `tt_cluster_t`; `bench` 5707449.
+
 ## 2026-11-01: read this first. By day the second machine cleans comments, by evening the workstation resumes S101 (DEC-335)
 
-**The comment cleanup stopped at the owner's word, for its token cost (DEC-340).** The rule is in force and S311 and S308 are landed; S312, S313 and S317 are parked and no log block was deleted. That machine has no `.tuning/`, no books, no `.moltke.local.md` and no worktrees,
+**On the second machine, the owner's MacBook Air M5: S311, then S308, then S312, in `plan.md`'s order, and nothing else.** First ask the
+owner for the rule and the scope: the recommendation is the study's, the rule and then the 72 log-shaped blocks, and
+`adocs/data/comment_study/report.md` has the numbers. That machine has no `.tuning/`, no books, no `.moltke.local.md` and no worktrees,
 and no match, fit, timing or S101 script belongs on it. `adocs/data/S101_pause_check.sh` is green at every comment commit (DEC-335 (3)).
-`adocs/plan_current/S101_threat_terms.md` is not edited. That machine's build gives `bench` 5707449, read 2026-11-01 at `55d7e75`. Commit, and the owner pushes.
-
-**Where that machine stands, 2026-11-01:** the owner asked for a study of literature and community first, and it is done: `adocs/data/comment_study/literature/report.md`,
-and the owner answered four questions (DEC-336). Then the owner asked, before anything proceeds, for a written plan, a full adversarial audit of it and an evaluation of fixing the old comments against
-leaving them: `adocs/comment_strategy.md`, `literature/benefit_incidents.md`, `adocs/audit/2026-11-01_comment_plan.md`, 15 findings. The owner narrowed the scope on those (DEC-337). Second audit, 5 medium and 7 low, no high: answered in the plan's third version and DEC-338, no third run. S311 and S308 done, the cleanup stopped there (DEC-340). The first `src/` comment commit has landed, so DEC-338 (1) binds S101's parts. Spent so far 12.8 M units, read by `transcripts.py`. **`tools/gate.sh` is red there at `55d7e75`, before any comment
-work:** `test_fastchess_script`, 72 s against its 60 s clock and a `BARE_FEN=1` case, and `clang-format.sh --check` on two lines of `src/data_structures.hpp` under major 23. S314 holds
-the readings. S315 is a small defect the study met. DEC-335 (5) asks that gate of every comment commit, so how to read it there is part of the owner's word.
+`adocs/plan_current/S101_threat_terms.md` is not edited. Unread on that machine: whether its build gives `bench` 5707449. If it does not,
+stop and ask: no signature means anything until that is explained. Then commit, and the owner pushes.
 
 **On the workstation, after the owner's pull:** (1) `CLANG_FORMAT_MAJOR=22 tools/gate.sh` at the new HEAD, with a message or by its
 test form; a format disagreement with major 22 is read first (DEC-146). (2) The stage below, untouched by the pull. Do not move
@@ -54,7 +55,7 @@ The screen, 2026-11-01 04:28 to 06:11, kept all seven parts; the cost, all seven
 (`adocs/data/S101_screen_reading.txt`, `S101_cost_reading.txt`); `apply` read the clamp at 0.400 %, bench
 5482277. Phase 2's diff is staged there and saved at `.tuning/coord/S101/phase2.diff`, every golden
 re-derived but `EXACT_FLOOR`, 158 against 159 and red, which is the owner's on H1 only (recommended 157).
-On H0 or no verdict nothing is committed and `S101_screen.sh part A|B|C` follows, **started from `../chesso-s101/adocs/data/S101_screen.sh` with `OUT`, `S082_OUT` and `S083_OUT` pointing into the main checkout's `.tuning/` once a `src/` comment commit has landed (DEC-338 (1)),** about 17 min each, up to
+On H0 or no verdict nothing is committed and `S101_screen.sh part A|B|C` follows, about 17 min each, up to
 three more runs. Open filler named in its pre-registration, neither moving play: S307, S308, S309, S310;
 none lands while the run holds the machine.
 

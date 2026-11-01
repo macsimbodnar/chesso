@@ -1,10 +1,10 @@
 id:         S312
-goal:       the script's candidates, each read, go across all live files, and T1's log-shaped blocks lose their history by deletion and golden form, no paraphrase
-accepts:    DEC-337's scope in `adocs/comment_strategy.md` section 4's order and form: part one, `--report`'s candidates across all live files, each read and none applied blind; part two, the calibration batch and then T1 by traffic, about 75 KB a batch, one writer, one reader, one commit; each block a register line, keep, delete or golden, deleted false sentences counted as dead claims; DEC-142's form at every golden with a value only where a test reads it; a removed reason held nowhere else is kept; `adocs/data/S312_local_gate.sh` green at every commit, each `src/` commit `No functional change`; seeds in the writer's and the reader's copies, none in the tree, recall recorded with its interval; a second reader over all of T1, its pooled error rate per 1000 changed comment lines recorded; the stops read as that section states them; cost read by `transcripts.py` with `ROOT` adapted in a scratch copy, or the agents' token counts as a stated proxy; the held blocks and goldens the machine could not re-derive are listed here, for after S101's close and for the workstation; T1's register prepared for the owner in blocks, seeds subtracted by id, with the writer's recall and intervals, whatever it reads; bytes removed per block and how many blocks stay log-shaped by the selector recorded, a T1 of all keeps being no pass; the residual read after the second batch as well as over the pool
-touches:    src/, tests/, tools/, cmake/, rating.sh, build_release.sh, clang-format.sh, test_uci.sh, CMakeLists.txt, adocs/data/comment_study/cleanup/
-excludes:   `adocs/plan_done/` and existing files under `adocs/data/`; `fastchess.sh` and `tests/test_fastchess_script.sh` until a machine runs that test; any hunk `adocs/data/S101_pause_check.sh` names and the blocks `DEV_MANUAL.md`'s goldens rows 2376, 2377 and 2385 say hold history, until S101 closes; T2 and T3 (DEC-337); any match, fit or timing; moving a number that decides something
-decisions:  DEC-337, DEC-336, DEC-335, DEC-142, DEC-171
-closes:     2026-11-01_comment_plan-F09
+goal:       the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+accepts:    the scope the owner set under S311, by default the log-shaped blocks `tools/comment_budget.py` lists, each now holding contracts, hazards, reasons and deciding numbers in the present tense, DEC-142's form and current value at every golden (name, command, what moves it, margin), and a rejected idea one line at its site; `--identical` green at every commit, bench and `tools/search_bench.py` identical, each `src/` commit `No functional change`; every `tools/mutants/` anchor still found once, those overlapping a comment moved in the same commit; `plan_prose_check.py --citations` 0 flagged; `adocs/data/S101_pause_check.sh` green at every commit; **a clean reader, on a fresh context, reads old against new over every rewritten block**, its findings fixed and its error rate per 1000 comment lines recorded, more than one meaning-changing error per 1000 after that review stopping the step for the owner; a removed reason that exists nowhere else is kept; what a removed log held that no step file holds goes into `DEV_MANUAL.md`'s goldens table; both builds green at every commit; the hunks S101's diff held back are named here, for after its close
+touches:    src/, tests/, tools/, cmake/, fastchess.sh, rating.sh, DEV_MANUAL.md
+excludes:   `adocs/data/` and `adocs/plan_done/`, which are evidence; any hunk `adocs/data/S101_pause_check.sh` names, until S101 closes; any match, fit or timing; moving a number that decides something: a golden whose current value is false is re-derived by its script or the step stops and says why it cannot be on this machine
+decisions:  DEC-335, DEC-142, DEC-171
+closes:
 blocks:
 paused_by:
 author:
@@ -12,24 +12,14 @@ done:
 
 ## Why
 
-Long blocks are where false claims live: 9 of 36 blocks of 1200 bytes or more against 2 of 104 smaller, though per byte that excess reads 1.98x to 4.88x. In the selected blocks 4 of 10 sampled
+Long blocks are where false claims live: 9 of 36 blocks of 1200 bytes or more against 2 of 104 smaller. In the selected blocks 4 of 10 sampled
 hold one. Tokens do not justify this, by the study's own figures; defects and the 61 % of changed `src/` lines that are comment-only do.
 
 ## What the study found hard
 
 - Its pilot's first draft stated two false things, a fabricated pointer and a wrong denominator, and S306's twelve rewrites held two more. Code
   identity sees neither, so the clean reader is not optional, and it has no stake in the rewrite.
-- Short reasons are often held nowhere else, 7 of 25 in a hand test. Delete the logs, leave the reasons.
+- Short reasons are often held nowhere else, 7 of 25 in a hand test. Compress the logs, leave the reasons.
 - Five of 244 mutant anchors overlapped a comment at the study's commit (M36, M03, TC04, K06, NB01), and nothing fails until the next mutation run. Re-count.
 - `src/search_params.hpp`'s comments sit in a macro, each line ending in an aligned backslash. A comment wrap goes through the format gate.
-- A golden's script may need `.tuning/` or the workstation. One that cannot run on the second machine keeps its value, and goes on this step's list.
-
-## Siblings S308 found and left, for part one or a block they fall in
-
-Each re-read at landing. None is known to move a score, a move or a line.
-
-- `src/evaluation.cpp`, `neighbour_files`: "invisible while the weights are zero", S308's row 4's class.
-- `src/search_params.hpp` and `src/search.cpp`: range top 16384 as "twice the band's own edge". `QuietHistoryMax` ships 8831, so twice is 17662; true only of the old 8192.
-- `tests/test_search.cpp`'s GOLDEN block: readings stop at 7366; the script reads 10306 and `DEV_MANUAL.md`'s row has S121, S123 and S125. That row sits in S101's hunk, so only the block can move here.
-- `src/evaluation.cpp`, `king_shelter_features`: "`inline` is load-bearing" rests on a measurement from before S118 cached the shelter, with zero weights. Not shown false. It needs a build and a timing, so it stays, and goes on this step's list for the workstation.
-
+- A golden's script may need `.tuning/` or the workstation. One that cannot run on the second machine keeps its value, and the step says so.

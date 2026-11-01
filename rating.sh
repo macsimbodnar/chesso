@@ -191,8 +191,8 @@ done < "$manifest"
 
 # Snapshot the candidate before playing a single game. fastchess spawns the
 # engine once per game, so pointing it at build/ lets a rebuild swap the engine
-# mid-run and mix two versions into one result. fastchess.sh's own comment above
-# `snapshot` has the incident this comes from.
+# mid-run and mix two versions into one result. fastchess.sh:71-84 has the
+# incident this comes from.
 snapshot="$(mktemp "${TMPDIR:-/tmp}/chesso-rated.XXXXXX")"
 cp "$candidate" "$snapshot"
 chmod +x "$snapshot"
