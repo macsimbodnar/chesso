@@ -1,7 +1,7 @@
 id:         S306
-goal:       the eleven comments the 2026-10-31 study read as false are made true or removed
-accepts:    each of the eleven below is re-checked against the code at landing, with what the check read, and then says what the code does or is gone; `tests/test_engine.cpp`'s figure is re-taken by its command (DEC-142), or its "Golden" mark goes with the reason stated; every commit touching `src/` reads `No functional change` and the gate passes it; every anchor in `tools/mutants/` is still found once; a clean reader compares old against new
-touches:    src/search.cpp, src/search_params.hpp, src/evaluation.cpp, src/data_structures.hpp, tests/test_engine.cpp, tests/test_search.cpp, tests/test_uci_surface.cpp, tools/timer_race_stress.py, fastchess.sh
+goal:       the eleven comments the 2026-10-31 study read as false, and one S305 found, are made true or removed
+accepts:    each of the twelve below is re-checked against the code at landing, with what the check read, and then says what the code does or is gone; `tests/test_engine.cpp`'s figure is re-taken by its command (DEC-142), or its "Golden" mark goes with the reason stated; every commit touching `src/` reads `No functional change` and the gate passes it; every anchor in `tools/mutants/` is still found once; a clean reader compares old against new
+touches:    src/search.cpp, src/search_params.hpp, src/evaluation.cpp, src/data_structures.hpp, tests/test_engine.cpp, tests/test_search.cpp, tests/test_uci_surface.cpp, tools/timer_race_stress.py, fastchess.sh, tests/CMakeLists.txt
 excludes:   shortening comments or removing history, which waits for the owner's decision on the study (`adocs/status.md`); `adocs/data/` and `adocs/plan_done/`, which are evidence
 decisions:  DEC-171, DEC-142
 closes:
@@ -30,6 +30,7 @@ again here. Each row's quoted words find its block.
 | `tests/test_search.cpp` | "an H0 on S234 flips `RfpTtEstimate`" | S234 is closed and it ships at 1 |
 | `tools/timer_race_stress.py` | cites a numbered paragraph of `AGENTS.md` | none since DEC-109; `tests/test_uci_surface.cpp`'s header is the same class |
 | `fastchess.sh` | cites lines 72 to 77 of `rating.sh` as doing the same | those lines count cores |
+| `tests/CMakeLists.txt` | `24 cases, ~1.6 s` for `tests/test_mutation_check.py` | 31 cases since S305, found by that step and not by the study |
 
 Filler by DEC-171: none moves a score, a move or a line. It runs in the gap after S118's landing
 or refusal and before S101, because S118 rewrites `src/evaluation.cpp` and nine open steps touch

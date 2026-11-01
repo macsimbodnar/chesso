@@ -2580,7 +2580,7 @@ Per-mutant build and ctest logs, and a `results.tsv` of the whole table, land in
 `tests/test_mutation_check.py` is the tool's own gate, in the fast suite: a
 throwaway git repository, a four-line `src/x.cpp` beside a committed `tests/`,
 `adocs/`, root `CMakeLists.txt` and `.gitignore` to dirty, and `cmake`, `ctest`
-and the engine as stubs on PATH. Thirty cases — 1.6 s when S196 wrote the first
+and the engine as stubs on PATH. Thirty-one cases — 1.6 s when S196 wrote the first
 twenty-four on an idle machine, 6.9 s on 2026-09-22 with a match on every core
 — and it is what catches an anchor counted wrong, a revert that leaves a mutant
 behind, a verdict on the wrong branch or a missing marker. Each was observed

@@ -562,6 +562,25 @@ class MutationCheckTest(unittest.TestCase):
                          r"B01_bench_broken\s+yes\s+1/1\s+n/a\s+killed")
         self.assertEqual(last_line(proc.stdout), "MUTATION-RUN-DONE")
 
+    def test_the_progress_line_reads_the_bench_as_the_table_does(self):
+        """A run stopped before its table leaves only these lines, and they
+        called every unread bench `same`: S118's first run has PT07 as `bench
+        same` on its line and `n/a` in its table. `same` is a claim about the
+        tree, so it takes a signature that was read. S305. The two rows that
+        did read one are here so a line printing `n/a` always would not pass."""
+        proc = self.box.run(self.box.mutant_file(
+            BENCH_BROKEN + STILLBORN + BENCH_SURVIVOR + BLIND_SURVIVOR))
+        for mutant, bench in (("B01_bench_broken", "n/a"),
+                              ("D01_stillborn", "-"),
+                              ("S01_bench_moved", "moved"),
+                              ("S02_bench_blind", "same")):
+            with self.subTest(mutant=mutant):
+                self.assertRegex(
+                    proc.stdout,
+                    rf"(?m)^  {mutant}\s+\S+\s+fast \S+\s+bench {bench}  ")
+                self.assertRegex(proc.stdout,
+                                 rf"(?m)^{mutant}\s+\S+\s+\S+\s+{bench}\s")
+
     def test_ctest_that_failed_to_run_is_not_a_kill(self):
         """A non-zero exit with no failing row parsed is ctest failing, not a
         test failing -- the naive-parser trap the ceiling rule was written

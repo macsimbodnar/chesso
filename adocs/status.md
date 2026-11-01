@@ -28,8 +28,10 @@ last row was +147.40 at `e9d91e3`. S267's gate reads G >= 232 after S133 and bef
 recorded without action and does not discharge it. Taken while S305 and S306 were open, neither of which
 moves play.
 
-**Next, in order:** S305, then S306 in the gap before S101, because nine open steps touch
-`src/evaluation.cpp`, then S101. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
+**S305 done** (filler, DEC-171): the mutation progress line prints the table's bench word.
+
+**Next, in order:** S306 in the gap before S101, because nine open steps touch `src/evaluation.cpp`,
+then S101. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
 answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
 
 **The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The

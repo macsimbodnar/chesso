@@ -583,7 +583,8 @@ def verdict_of(row):
 def bench_column(row):
     """`same` is a claim about the tree and is only made when the signature was
     read. A mutant that leaves the engine unable to print one gets `n/a`, which
-    is what the second oracle actually said."""
+    is what the second oracle actually said. The progress line reads it here too,
+    because a run stopped before its table leaves nothing else (S305)."""
     if not row["built"]:
         return "-"
     if not row["bench_read"]:
@@ -803,7 +804,7 @@ def main(argv=None):
         rows.append(row)
         print(f"  {row['id']:<34} {row['verdict']:<11} "
               f"fast {row['failed']}/{row['total']}  "
-              f"bench {'moved' if row['bench_moved'] else 'same'}  "
+              f"bench {bench_column(row)}  "
               f"{row['seconds']:.1f}s", flush=True)
 
     # The build directory still holds the last mutant's object files; leave the
