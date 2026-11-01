@@ -7,7 +7,7 @@ decisions:  DEC-171, DEC-142
 closes:
 blocks:
 paused_by:
-author:
+author:     Opus 5.5 subagent, coordinated
 done:
 
 ## Why
