@@ -17289,3 +17289,12 @@ Why:          An audit asked to find something keeps finding something, and what
 Rejected:     A third run: cost, and it would re-read words. Holding every `src/` comment commit until S101 closes, which also answers `.2-F01`: it leaves `src/` uncleaned for up to 79.4 h to avoid one invocation. Amending `apply`
               to compare comment-stripped `src/`: a change to a pre-registered script, which (1) does not need.
 Consequences: The plan's fixes were read by no clean reader. If (1) fails on the workstation, the refusal is loud and costs no game. S101's resume text carries (1).
+
+## DEC-339  2026-11-01  S311's findings close on their own reproductions, and the COMMENTS rule is in force
+Tags:         comments, audit, s311, dec-338, dec-336
+Context:      DEC-338 (4) ran no third audit, so `2026-11-01_comment_plan` F05, F07, F08, F12 and `.2` F02, F06, all S311's, need a decision naming them to close.
+Decision:     By the coordinator: each closes because `tests/test_comment_budget.py` now holds its reproduction, observed red, and a cut to the code it guards is red. The rule enters `AGENTS.md`'s
+              Project rules as `adocs/comment_strategy.md` section 5 states it, and REVIEW reads `--report` over each step's diff as a finding.
+Why:          A test that reproduces a finding and goes red without the fix is stronger proof than a re-read.
+Rejected:     Leaving them `planned` until a run that DEC-338 ruled out.
+Consequences: S311's real g++ arm stays unread until the evening's gate. `test_comment_budget` adds about 68 s per build to the fast suite on this machine, against about 200 s before it; S318 owns that.

@@ -79,7 +79,7 @@ Status: closed
 **Suggested resolution.** Replace the assumed half with the located share, and state payback as T1 over O0, marked unknown where it is.
 
 ### 2026-11-01_comment_plan-F05  medium  `S101_pause_check.sh` reads `HEAD`, so a proof run before the commit cannot see the batch
-Status: planned
+Status: closed
 
 **Evidence.** `adocs/data/S101_pause_check.sh:15`: `git worktree add -q --detach "$tmp/w" HEAD`. In a scratch clone at `b949eea`:
 
@@ -113,7 +113,7 @@ Status: planned
 **Suggested resolution.** Re-state the overlap over the whole diff. Decide before T1: hold the blocks those rows name, as S101's other hunks are held, or send a removed log's residue to a place outside the hunk until S101 closes.
 
 ### 2026-11-01_comment_plan-F07  medium  The shell identity proof calls code a comment on `tests/test_fastchess_script.sh:1419`, in the one test the local proof does not run
-Status: planned
+Status: closed
 
 **Evidence.** Line 80: lexer-stripped text "sees every language". S311: "shell and CMake by the lexer", with no second arm. `lex_shell`'s double-quote scan does not know `$(...)` nests quotes.
 
@@ -138,7 +138,7 @@ So a change to a test's expected count passes the only identity check shell has.
 **Suggested resolution.** Add a parser arm for shell as C++ has raw tokens: the `declare -f` comparison, or `shfmt` if the owner takes the dependency. Fix `lex_shell`'s `$(` handling in S311's copy with this line as a fixture. Hold `fastchess.sh` and `tests/test_fastchess_script.sh` until a machine can run the test.
 
 ### 2026-11-01_comment_plan-F08  medium  `--apply`'s line ranges and the lexer proof cannot express the whole-block delete in T1's largest file, and the acceptance test never meets it
-Status: planned
+Status: closed
 
 **Evidence.** T1's largest file by bytes is `src/search_params.hpp`, 15 blocks, 50831 B, 16.5 % of T1, all inside the `CHESSO_SEARCH_PARAMS` macro (re-measured). Each such block ends `*/   \`.
 
@@ -217,7 +217,7 @@ Whole-line `//` only. Not causal: a dense file is partly dense because of what i
 **Suggested resolution.** Put this reading in section 3 with its confounds. Read an implementing subagent's actual prompt before resting the override clause on it. Run a same-shape reading of id density and of log-block growth by file, then decide whether T1 is needed to answer the question at all.
 
 ### 2026-11-01_comment_plan-F12  low  The proof's blind column omits g++ `-Wcomment`, whose precedent is this exact pair of machines
-Status: planned
+Status: closed
 
 **Evidence.** Commit `d54f690`: a trailing backslash in a `//` comment, "clang does not warn on it, which is why it survived S171 (136b03f): that step was built on the MacBook", and on the workstation "no step could have been completed". `CMakeLists.txt:55` has `-Wall -Wextra -Werror`. Here:
 

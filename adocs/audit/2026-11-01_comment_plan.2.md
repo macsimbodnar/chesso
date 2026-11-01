@@ -32,7 +32,7 @@ src/chesso.cpp src/data_structures.hpp src/eval_tables.hpp src/evaluation.cpp sr
 **Suggested resolution.** Add the cost to section 3. Name a step that reads the guard on the workstation before S308 lands, and state the amendment: `apply` comparing code-stripped `src/`, or the part's tree staying at REF with that guard waived by decision.
 
 ### 2026-11-01_comment_plan.2-F02  medium  A writer's edit list is read off a seeded copy and applied to the unseeded ref, and no step says how it is translated
-Status: planned
+Status: closed
 
 **Evidence.**
 - `comment_strategy.md:75`: seeds are "each substituted in place so no line moves", in "the writer's copy of the old text". `:73`: the writer "emits an edit list". S311: `--apply <edits>` "takes character ranges against a ref". `grep -ci seed adocs/plan_current/S311_comment_rule_and_tool.md` reads 0. S312 has one clause, "seeds in the writer's and the reader's copies, none in the tree". A sentence in a wrapped comment starts and ends mid-line, so deleting whole sentences needs the character form.
@@ -104,7 +104,7 @@ Status: closed
 **Suggested resolution.** Drop "at most". Add the second reader, the truth check and the coordinator as cost lines, unknown where unknown. Move S311's T1-only modes to O2. Set the ceiling above the corrected range, or say it is meant to fire. Correct 1.3 to 1.7.
 
 ### 2026-11-01_comment_plan.2-F06  low  `--identical`'s lexer arm stays red on a whole macro block deleted by the form S311 now allows
-Status: planned
+Status: closed
 
 **Evidence.** Line 83, S311: "the lexer's stripped text ... blank lines aside". S311's `\`-only clause sits on `--apply` alone, its macro and trailing-comment fixtures are `--apply`'s, and `--identical` need only be "green on `adocs/data/comment_study/pilot/`", which holds no macro. On the T1-deleted tree against `ca3ec71`:
 

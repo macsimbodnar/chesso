@@ -9,14 +9,14 @@ Updated: 2026-11-01, by hand.
 
 ## 2026-11-01: read this first. By day the second machine cleans comments, by evening the workstation resumes S101 (DEC-335)
 
-**On the second machine, the owner's MacBook Air M5: S311, then S308, then S312, in `plan.md`'s order, and nothing else.** The owner has ruled on rule and
+**On the second machine, the owner's MacBook Air M5: S308, then S312, in `plan.md`'s order, and nothing else.** The owner has ruled on rule and
 scope (DEC-336, DEC-337): the rule, S308, a script pass over all live files, and T1's 76 blocks by deletion, in the form `adocs/comment_strategy.md` states. That machine has no `.tuning/`, no books, no `.moltke.local.md` and no worktrees,
 and no match, fit, timing or S101 script belongs on it. `adocs/data/S101_pause_check.sh` is green at every comment commit (DEC-335 (3)).
 `adocs/plan_current/S101_threat_terms.md` is not edited. That machine's build gives `bench` 5707449, read 2026-11-01 at `55d7e75`. Commit, and the owner pushes.
 
 **Where that machine stands, 2026-11-01:** the owner asked for a study of literature and community first, and it is done: `adocs/data/comment_study/literature/report.md`,
 and the owner answered four questions (DEC-336). Then the owner asked, before anything proceeds, for a written plan, a full adversarial audit of it and an evaluation of fixing the old comments against
-leaving them: `adocs/comment_strategy.md`, `literature/benefit_incidents.md`, `adocs/audit/2026-11-01_comment_plan.md`, 15 findings. The owner narrowed the scope on those (DEC-337). Second audit, 5 medium and 7 low, no high: answered in the plan's third version and DEC-338, no third run. S311 is being written; no comment has moved. Spent so far 12.8 M units, read by `transcripts.py`. **`tools/gate.sh` is red there at `55d7e75`, before any comment
+leaving them: `adocs/comment_strategy.md`, `literature/benefit_incidents.md`, `adocs/audit/2026-11-01_comment_plan.md`, 15 findings. The owner narrowed the scope on those (DEC-337). Second audit, 5 medium and 7 low, no high: answered in the plan's third version and DEC-338, no third run. S311 done; S308 next; no comment has moved yet. Spent so far 12.8 M units, read by `transcripts.py`. **`tools/gate.sh` is red there at `55d7e75`, before any comment
 work:** `test_fastchess_script`, 72 s against its 60 s clock and a `BARE_FEN=1` case, and `clang-format.sh --check` on two lines of `src/data_structures.hpp` under major 23. S314 holds
 the readings. S315 is a small defect the study met. DEC-335 (5) asks that gate of every comment commit, so how to read it there is part of the owner's word.
 

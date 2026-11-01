@@ -535,6 +535,15 @@ add_test(NAME test_ledger
          COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_ledger.py)
 set_tests_properties(test_ledger PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# tools/comment_budget.py and adocs/data/S312_local_gate.sh, the proof a comment-only
+# commit gives. Each mode as a command over a throwaway git repository, and the lexers on
+# fixtures with known answers. Report only: it tests the tool, no comment in the tree. Stdlib,
+# git, bash and a C++ compiler; nothing built. About 65 s on the MacBook, whose git takes
+# 25 ms to start.
+add_test(NAME test_comment_budget
+         COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/test_comment_budget.py)
+set_tests_properties(test_comment_budget PROPERTIES LABELS "fast" TIMEOUT 180)
+
 # S257, DEC-254: adocs/data/S198_pairs.py, the band check DEC-143's A/A is
 # read with after every harness change. It passed the literal `candidate` to
 # S105_pairs.report, S256 renamed every candidate `cand-...`, and a name that is

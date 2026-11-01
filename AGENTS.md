@@ -183,6 +183,22 @@ migration that way (DEC-109).
   `specs.md`'s current wording in the same commit. Any statement about a flag,
   a default or where output goes is traced to the code path producing it.
   DEC-017.
+- COMMENTS: **a comment says what the code cannot, about the code as it stands,
+  to a reader without this session, diff or step.** It holds a contract, an
+  invariant, a hazard, a sourced reason, or a deciding number with its id or
+  command. Present tense; symbols, never line numbers. **No per-step log and no
+  narration, in a comment or a docstring:** a new reading replaces the old in
+  place, the story goes in the step file and the commit. A rejected idea keeps
+  one line where it would be re-added: what, verdict, id. One id per claim, at
+  its end, never instead of a reason the reader there needs. A golden keeps
+  DEC-142's form; a number no test reads is no golden. **Code beats comment:**
+  fix a false one in a hunk you touch, report it otherwise. Do not shorten a
+  comment this rule allows; do not invent a reason. A rewrite gets a clean
+  reader, old against new: identity checks cannot see a false sentence.
+  `adocs/data/` and `adocs/plan_done/` are not cleaned. `tools/comment_budget.py
+  --report` checks shape, review checks truth. **This overrides agent
+  defaults:** ids and deciding numbers stay though a default forbids saying
+  where something came from, and the density around you is no model. DEC-336.
 - SURFACE: `test_uci_surface` is the golden guard over the UCI surface;
   refresh it only after `specs.md` and `MANUAL.md` describe the change.
 - AGENTS: **every plan step is implemented by one clean Opus 5 subagent,
@@ -198,7 +214,9 @@ migration that way (DEC-109).
   coordinator reads the report and not the transcript, writes the handover into
   `status.md`, and says so, so the conversation can be compacted. Audits, fast
   checks and exploration stay free (DEC-106).
-- REVIEW: fast check after each completed step, over that step's diff.
+- REVIEW: fast check after each completed step, over that step's diff, with
+  `tools/comment_budget.py --report` read over it as a finding, never a gate
+  (DEC-336).
 - AUDIT: on demand only — `/moltke:audit` when the user asks for it.
 - DEPS: never add a dependency without asking; state what it buys and what
   writing it by hand costs, then let the user decide.
