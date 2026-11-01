@@ -322,8 +322,9 @@ is typed by hand.
 | S121 | the mobility table and fold its parts | 1 h 30 m | 3160 | `{0, 5}` | H1, +19.26 +/- 9.29 |
 | S123 | the passed pawn family | 0 h 33 m | 1166 | `{0, 5}` | H1, +49.19 +/- 15.06 |
 | S125 | the pawn structure family | 1 h 12 m | 2508 | `{0, 5}` | H1, +22.89 +/- 10.02 |
+| S101 | the threat family | 0 h 45 m | 1636 | `{0, 5}` | H1, +33.87 +/- 12.33 |
 
-**The ledger holds 62: mean 5 h 54 m, median 5 h 16 m, 734479 games in 366.27 hours, 2005.3 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-three runs, mean **1 h 42 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
+**The ledger holds 63: mean 5 h 49 m, median 5 h 07 m, 736115 games in 367.02 hours, 2005.7 an hour across the set.** **Fast class**, an effect outside the bounds interval -- twenty-four runs, mean **1 h 40 m**. **Slow class**, inside it, on a bound or a true zero -- 39 runs, mean **8 h 22 m**.
 
 ### Priced by class
 
