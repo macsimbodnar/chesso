@@ -19,7 +19,7 @@ it than the plan knew. Four parts of the proof design fail on this tree as it st
 ## Findings
 
 ### 2026-11-01_comment_plan-F01  high  T1 cannot measure pass-through or imitation for T2's decision, which is the recommendation's deciding reason
-Status: open
+Status: planned
 
 **Evidence.**
 - `adocs/comment_strategy.md:59`: T1 "is the only cut that can measure pass-through and the imitation argument for T2's decision"; the recommendation is "O2, measure, then decide T2". The only instrument is S313: "five steps after S312".
@@ -34,7 +34,7 @@ Status: open
 **Suggested resolution.** State T2's decision rule now, by a quantity that can be read: defect evidence from T1's register, or a replay of recorded line windows against old and new trees for a per-file pass-through. Or say plainly that S313 cannot decide T2. Drop "only cut that can measure" from the recommendation.
 
 ### 2026-11-01_comment_plan-F02  high  The option table counts dead blocks repaired gross, never nets the false text T1 writes, and "lowest review risk per dead block" contradicts its own columns
-Status: open
+Status: planned
 
 **Evidence.**
 - `benefit_incidents.md` origin table: A rows birth 6, drift 0. The plan's own line 33: "all 6 false when written, none from drift". So all recorded harm sits on the class a rewrite produces, and the class T1 repairs is the one with "no recorded harm" (line 34).
@@ -51,7 +51,7 @@ In T1's favour, and also not in the table: of located rows, log-shaped blocks ho
 **Suggested resolution.** Add a "false sentences expected, before and after reader" column and a helped-rows column. Evaluate T1 as deletion plus golden form with no free paraphrase, which DEC-336 (5)'s own reason supports and which the table does not offer. Evaluate an option aimed at write-time truth for new comments. Correct or withdraw "lowest review risk".
 
 ### 2026-11-01_comment_plan-F03  medium  The whole-scope cost omits its own table's rows and the coordinator, the 37 M stop sits inside the estimate, and the instrument that reads it has no owner
-Status: open
+Status: planned
 
 **Evidence.**
 - Line 57: "O4 is 18 to 39 M". Lines 51 to 55 sum to 21.2 to 46.2 M: 1+2+3.4+4.5+10.3 and 3+4+7.3+9.6+22.3. 18 to 39 is T1+T2+T3 alone. At the plan's rates the corrected total is a net 3.0 to 6.7 mean steps and about 85 to 185 $, not 2.6 to 5.6 and 70 to 155 $. The recommended O2 is cumulatively 6.4 to 14.3 M, and the table prints only the increment.
@@ -65,7 +65,7 @@ Status: open
 **Suggested resolution.** Fix line 57's sum. Add the coordinator as a row, unknown if unknown. Define the ceiling per scope, and project T3 separately. Name the step that ports `transcripts.py` before the calibration batch.
 
 ### 2026-11-01_comment_plan-F04  medium  "T1 pays back in 13 to 66 days" assumes half of C-class work where the plan's own rows give a quarter to a third, and takes no baseline for the rule
-Status: open
+Status: planned
 
 **Evidence.**
 - Line 47: "At an assumed half, T1 pays back in 13 to 66 days". The arithmetic is right: 3.4 / 0.26 and 7.3 / 0.11.
@@ -79,7 +79,7 @@ Status: open
 **Suggested resolution.** Replace the assumed half with the located share, and state payback as T1 over O0, marked unknown where it is.
 
 ### 2026-11-01_comment_plan-F05  medium  `S101_pause_check.sh` reads `HEAD`, so a proof run before the commit cannot see the batch
-Status: open
+Status: planned
 
 **Evidence.** `adocs/data/S101_pause_check.sh:15`: `git worktree add -q --detach "$tmp/w" HEAD`. In a scratch clone at `b949eea`:
 
@@ -99,7 +99,7 @@ The plan requires both "A red proof: the commit does not exist until its cause i
 **Suggested resolution.** `S312_local_gate.sh` runs the check on a candidate commit it creates in a throwaway worktree, without editing the evidence script, which already works from `git rev-parse --show-toplevel`. Add to S311's `accepts`: observed red on an uncommitted edit that conflicts.
 
 ### 2026-11-01_comment_plan-F06  medium  S101's overlap is counted over code files only, and S312's own required edits to `DEV_MANUAL.md` are inside one S101 hunk
-Status: open
+Status: planned
 
 **Evidence.**
 - Line 20 and `s101ov.py` count "13 blocks ... in seven code files"; the script filters to `src/` and `tests/`. Hunks in the diff, old side: `DEV_MANUAL.md` (1504,1510), (2030,2037), **(2355,2389)**, (3823,3829), (6405,6411); `MANUAL.md` (231,237); `adocs/data/README.md` (1551,1553).
@@ -113,7 +113,7 @@ Status: open
 **Suggested resolution.** Re-state the overlap over the whole diff. Decide before T1: hold the blocks those rows name, as S101's other hunks are held, or send a removed log's residue to a place outside the hunk until S101 closes.
 
 ### 2026-11-01_comment_plan-F07  medium  The shell identity proof calls code a comment on `tests/test_fastchess_script.sh:1419`, in the one test the local proof does not run
-Status: open
+Status: planned
 
 **Evidence.** Line 80: lexer-stripped text "sees every language". S311: "shell and CMake by the lexer", with no second arm. `lex_shell`'s double-quote scan does not know `$(...)` nests quotes.
 
@@ -138,7 +138,7 @@ So a change to a test's expected count passes the only identity check shell has.
 **Suggested resolution.** Add a parser arm for shell as C++ has raw tokens: the `declare -f` comparison, or `shfmt` if the owner takes the dependency. Fix `lex_shell`'s `$(` handling in S311's copy with this line as a fixture. Hold `fastchess.sh` and `tests/test_fastchess_script.sh` until a machine can run the test.
 
 ### 2026-11-01_comment_plan-F08  medium  `--apply`'s line ranges and the lexer proof cannot express the whole-block delete in T1's largest file, and the acceptance test never meets it
-Status: open
+Status: planned
 
 **Evidence.** T1's largest file by bytes is `src/search_params.hpp`, 15 blocks, 50831 B, 16.5 % of T1, all inside the `CHESSO_SEARCH_PARAMS` macro (re-measured). Each such block ends `*/   \`.
 
@@ -160,7 +160,7 @@ Same format, other blocks: 334 of 4941 blocks, 8383 B, are trailing comments on 
 **Suggested resolution.** S311 takes character ranges or treats a `\`-only remainder as blank inside `format-off` macros, with a fixture from this file and a trailing-comment fixture in its `accepts`.
 
 ### 2026-11-01_comment_plan-F09  medium  The yield columns assume a writer that finds every dead claim, and nothing measures whether it does
-Status: open
+Status: planned
 
 **Evidence.**
 - Lines 53 to 55 title "dead blocks repaired" with "about 30", "about 43", "about 22", which are population estimates of what exists. T2 and T3 are detection tasks, with keep as the default (line 72).
@@ -174,7 +174,7 @@ Status: open
 **Suggested resolution.** Seed known-false claims into the writer's copy of the old text and read its recall per batch. Label the column "dead blocks present". Give the before-and-after sampling an owner. Add this comment to S308.
 
 ### 2026-11-01_comment_plan-F10  medium  The stops cannot read their own thresholds
-Status: open
+Status: planned
 
 **Evidence.**
 - Residual errors: "More than one meaning-changing error per 1000 comment lines after review" (line 89), read from "a second reader on 10 %" (line 74). T1 is 4647 lines. Second-read lines: 465, or 186 at the pilot's 40 % size. With zero errors found, the 95 % upper bound is 6.5 or 16 per 1000, and with one found the stop fires. Certifying 1 per 1000 needs 3000 second-read lines, 30000 changed lines at 10 %, against 31355 comment lines in the tree. The reader's own recall is not in this.
@@ -196,7 +196,7 @@ Status: open
 **Suggested resolution.** State the denominator. Pool over a tier and state the lines needed before the stop is read. Second-read 100 % of T1, the only tier that writes free text. Report seed recall with its interval, and add a natural-error class such as a true fact attached to the wrong term.
 
 ### 2026-11-01_comment_plan-F11  medium  "Neither has a number" is false for imitation: a reading is free from `git log`, it is positive, and its one citation is the wrong agent's prompt
-Status: open
+Status: planned
 
 **Evidence.** Lines 46 and 47: "this session's own harness prompt says 'match its comment density' ... Neither has a number." The literature report's header says the sentence was read from the coordinator's prompt and "il prompt dei subagent non è stato visto". `AGENTS.md` AGENTS: the coordinator "implements nothing". Writers are subagents. This auditor's own subagent prompt holds no such sentence, and an implementing subagent's remains unread.
 
@@ -217,7 +217,7 @@ Whole-line `//` only. Not causal: a dense file is partly dense because of what i
 **Suggested resolution.** Put this reading in section 3 with its confounds. Read an implementing subagent's actual prompt before resting the override clause on it. Run a same-shape reading of id density and of log-block growth by file, then decide whether T1 is needed to answer the question at all.
 
 ### 2026-11-01_comment_plan-F12  low  The proof's blind column omits g++ `-Wcomment`, whose precedent is this exact pair of machines
-Status: open
+Status: planned
 
 **Evidence.** Commit `d54f690`: a trailing backslash in a `//` comment, "clang does not warn on it, which is why it survived S171 (136b03f): that step was built on the MacBook", and on the workstation "no step could have been completed". `CMakeLists.txt:55` has `-Wall -Wextra -Werror`. Here:
 
@@ -235,7 +235,7 @@ Raw tokens over the two forms compare identical, 5 tokens each, since the next l
 **Suggested resolution.** A one-line check in `--apply` or the local gate: no `//` comment ends in `\`. Name g++ in the blind column.
 
 ### 2026-11-01_comment_plan-F13  low  Section 3's harm row states cost for the two "actual" rows only, and the larger costs sit in four single-rater "symptom" rows
-Status: open
+Status: planned
 
 **Evidence.** Line 32: "Together: one step, one clause, 0 games, 0 runs". `benefit_incidents.md` class A, the other four: A01, S088's 3340-game rating played one-sided under the false property; A04, 72.5 % of a parameter's iterations in a 30000-pair SPSA at an unshippable bound; A05, 7.16 % nps forgone from S109 to S268, "about +10 Elo ... a conversion, not a verdict"; A06, its own SPRT. Each may well be a symptom, for the reasons the file gives, and A05's comment does copy its step file. But "actual" against "symptom" is one reader's call (line 28), and the owner sees only the small total. The file's own text is fair; the plan's row is not its equal.
 
@@ -244,7 +244,7 @@ Status: open
 **Suggested resolution.** One clause in the row naming the symptom rows' costs and the single rater.
 
 ### 2026-11-01_comment_plan-F14  low  Plan and record disagree in places an implementer will trip on
-Status: open
+Status: planned
 
 **Evidence.**
 - Line 66, S308: "four code files". S308's table and `touches` name six: `src/data_structures.hpp`, `src/search.cpp`, `src/evaluation.cpp`, `tests/test_engine.cpp`, `tests/test_search.cpp`, `tests/test_uci_surface.cpp`. Three are S101 files, so step 2 enters them before step 5's "S101's seven files last".
@@ -259,7 +259,7 @@ Status: open
 **Suggested resolution.** Correct line 66 and 93. Match the two lines by content. Choose one rule for a false golden that this machine cannot re-derive. DEC-336 (1) by a following decision, since an entry is not rewritten.
 
 ### 2026-11-01_comment_plan-F15  low  Several figures in the options table have no tracked derivation
-Status: open
+Status: planned
 
 **Evidence.** `git grep` over `adocs/data/comment_study`, the plan, `status.md` and `decisions.md`: 67.6, 53.6 and 65.4 (line 51), 22.5, 21.8 and 55.7 (lines 53 to 55) and "0.22 to 0.52" occur in `comment_strategy.md` only. O0's 1 to 3 M and O1's 2 to 4 M have no stated basis, and "201 s plus 161 s ... [M]" has no log. Re-derived here: 22.5, 21.8 and 55.7 reproduce exactly from `read_files.json`, uniform within a file. The ceilings do not: union of `touches:` over open steps without the comment steps gave 68.7, 58.1 and 73.1, by a method I had to guess. Tracked scripts exist for `benefit_*.py` and not for this table.
 

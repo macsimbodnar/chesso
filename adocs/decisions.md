@@ -17245,3 +17245,28 @@ Rejected:     Keeping the 15-line clause: only this project's data behind it, at
               first: code work against the owner's note, its cause unread. Full rigor per commit: it needs the workstation that resumes S101.
 Consequences: S311 and S312 are amended here. The rule enters `AGENTS.md` with S311's closing commit, since it names S311's tool. A comment
               commit on the MacBook is not `tools/gate.sh` green until S314, and the evening's gate is the first full reading of each day's work.
+
+## DEC-337  2026-11-01  The comment scope narrows to a script pass and T1 by deletion; T2 is read from T1's register, and T3 is no sweep
+Tags:         comments, s311, s312, s313, s308, s316, dec-336, dec-335, dec-142, audit, owner-question
+Context:      The owner gave DEC-336 (2) before the incident count existed, then asked for a written plan, an adversarial audit and an evaluation of
+              fixing the old comments against leaving them. `literature/benefit_incidents.md`: 6 A rows in 272 steps, all false when written, none from
+              drift; 110 B rows with no recorded harm; 34 D rows. `adocs/audit/2026-11-01_comment_plan.md`: 15 findings, two high, at `b949eea`.
+              Asked again with those in hand, on 2026-11-01.
+Decision:     By the owner:
+              (1) The scope is the rule; S308; a script pass over all live files; and T1's 76 blocks **by deletion and golden form only, no paraphrase and no
+              replacement**. This amends DEC-336 (2): T2 and T3 are out of it. DEC-336 (1), (3) and (4) stand.
+              By the coordinator, under the standing instruction:
+              (2) T2's question goes to the owner only if T1's register records at least 15 dead claims in its blocks, half the estimate, and T1's pooled second
+              read stays inside the stop. Otherwise it is recorded as not worth it and not asked. S313 cannot decide it (F01). T3 is no sweep either way.
+              (3) DEC-336 (5)'s outcomes in T1 are keep, delete and golden. (6) and (7) are replaced by `adocs/comment_strategy.md` section 4: seeds in the writer's
+              copy as well as the reader's, a second reader over all of T1, stops read pooled over a tier with their denominators, a cost ceiling of 19 M.
+              (4) Held until a machine runs its test: `fastchess.sh`, `tests/test_fastchess_script.sh` (F07). Held until S101 closes: the blocks its diff overlaps and
+              those `DEV_MANUAL.md`'s goldens rows 2376, 2377 and 2385 name (F06).
+              (5) A golden whose false value this machine cannot re-derive keeps its value and goes on S312's list for the workstation. This replaces S312's
+              "the step stops" (F14). DEC-336 (1)'s "as `AGENTS.md` now states it" reads: as `comment_strategy.md` section 5 states it, until S311's close (F14).
+              (6) Each finding's home is in that report's `Status:` lines and the steps' `closes:`: S316 the plan's text, S311 the proof, S312 and S308 the rest.
+Why:          Tokens do not pay for any sweep, recorded harm is small and sits on text never true, and a rewrite writes that class at a measured rate. Deletion writes
+              none, and T1 holds the fewest helped rows. That T1 still beats O0 is a judgement on an unmeasured benefit, stated as one.
+Rejected:     O0, leaving all but new comments: defensible, and it moves rewrites of log blocks inside later steps unreviewed. O1 alone: the logs stay. T1 and T2 by deletion:
+              T2 holds 11 of 31 helped rows, and its case can wait for T1's register. The whole of DEC-336 (2): 21.2 to 46.2 M, T3's yield resting on 2 events.
+Consequences: `comment_strategy.md` is rewritten to this. T2 and T3 stay unread, 4865 blocks, but for what the script flags and what a step touches. S316 owns the re-audit.
