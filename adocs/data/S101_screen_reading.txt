@@ -1,0 +1,308 @@
+# S101's screen reading: adocs/data/S101_screen.sh all, 2026-11-01 04:28 to 06:11, S101-ALL-DONE (.tuning/s101_screen_all.console),
+# from the main checkout at c2f2025, S101's phase 1 landing. The seven read/P{1..7}.txt in the screen's order, concatenated verbatim; then the
+# corpus `locate` recorded (.tuning/s101/corpus.txt), the audit's pass line, and the sha256 of every fit header
+# (.tuning/s101/fits/{1,12,123,1234,12345,123456,1234567}/{full,q1..q5}.hpp) and tie file. The candidate is 1234567's full.hpp. Outputs stay under .tuning/s101/ (DEC-235).
+== P1.txt, sha256 2862827cc225522d
+S101 screen reading, P1: a piece a pawn attacks
+free threat_pawn, fit 1, against its start
+  1         full  start 0.071321 best 0.071270 at epoch 200, stopped on patience
+  1         q1    start 0.071313 best 0.071261 at epoch 100, stopped on patience
+  1         q2    start 0.071315 best 0.071264 at epoch 100, stopped on patience
+  1         q3    start 0.071319 best 0.071267 at epoch 100, stopped on patience
+  1         q4    start 0.071311 best 0.071259 at epoch 200, stopped on patience
+  1         q5    start 0.071318 best 0.071268 at epoch 200, stopped on patience
+rule d = start - best (DEC-329 (10), no survivor before it): full +0.000051, s 0.000001, m 0.000002; quarters +0.000052 +0.000051 +0.000052 +0.000052 +0.000050
+headroom: mobility's packed sum mg 4333 of 32767, eg 4393 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [0]
+  hanging_pawn_mg [0]
+  hanging_piece_eg [0, 0, 0, 0]
+  hanging_piece_mg [0, 0, 0, 0]
+  threat_king_eg [0, 0, 0, 0]
+  threat_king_mg [0, 0, 0, 0]
+  threat_minor_eg [0, 0]
+  threat_minor_mg [0, 0]
+  threat_pawn_eg [15, 37, 30, -2]
+  threat_pawn_mg [34, 35, 25, 27]
+  threat_piece_eg [0, 0, 0, 0, 0]
+  threat_piece_mg [0, 0, 0, 0, 0]
+  threat_push_eg [0, 0, 0, 0]
+  threat_push_mg [0, 0, 0, 0]
+P1 kept
+PART-OUTCOME kept
+== P2.txt, sha256 8130f61afd476040
+S101 screen reading, P2: a piece a lesser piece attacks, N>R N>Q B>R B>Q R>Q
+free threat_pawn,threat_piece, fit 12, against 1
+  12        full  start 0.071321 best 0.071245 at epoch 100, stopped on patience
+  12        q1    start 0.071313 best 0.071236 at epoch 100, stopped on patience
+  12        q2    start 0.071315 best 0.071240 at epoch 100, stopped on patience
+  12        q3    start 0.071319 best 0.071242 at epoch 100, stopped on patience
+  12        q4    start 0.071311 best 0.071235 at epoch 200, stopped on patience
+  12        q5    start 0.071318 best 0.071243 at epoch 100, stopped on patience
+  1         full  start 0.071321 best 0.071270 at epoch 200, stopped on patience
+  1         q1    start 0.071313 best 0.071261 at epoch 100, stopped on patience
+  1         q2    start 0.071315 best 0.071264 at epoch 100, stopped on patience
+  1         q3    start 0.071319 best 0.071267 at epoch 100, stopped on patience
+  1         q4    start 0.071311 best 0.071259 at epoch 200, stopped on patience
+  1         q5    start 0.071318 best 0.071268 at epoch 200, stopped on patience
+rule d = best(1) - best(12) (DEC-326 (3)): full +0.000025, s 0.000001, m 0.000002; quarters +0.000025 +0.000024 +0.000025 +0.000024 +0.000025
+headroom: mobility's packed sum mg 5623 of 32767, eg 5953 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [0]
+  hanging_pawn_mg [0]
+  hanging_piece_eg [0, 0, 0, 0]
+  hanging_piece_mg [0, 0, 0, 0]
+  threat_king_eg [0, 0, 0, 0]
+  threat_king_mg [0, 0, 0, 0]
+  threat_minor_eg [0, 0]
+  threat_minor_mg [0, 0]
+  threat_pawn_eg [16, 37, 29, 5]
+  threat_pawn_mg [34, 35, 26, 26]
+  threat_piece_eg [11, 23, 16, 45, 38]
+  threat_piece_mg [21, 12, 17, 27, 47]
+  threat_push_eg [0, 0, 0, 0]
+  threat_push_mg [0, 0, 0, 0]
+P2 kept
+PART-OUTCOME kept
+== P3.txt, sha256 8110bba831aaafdc
+S101 screen reading, P3: a minor a minor attacks, N>B B>N
+free threat_pawn,threat_piece,threat_minor, fit 123, against 12
+  123       full  start 0.071321 best 0.071198 at epoch 100, stopped on patience
+  123       q1    start 0.071313 best 0.071187 at epoch 100, stopped on patience
+  123       q2    start 0.071315 best 0.071200 at epoch 100, stopped on patience
+  123       q3    start 0.071319 best 0.071195 at epoch 100, stopped on patience
+  123       q4    start 0.071311 best 0.071187 at epoch 100, stopped on patience
+  123       q5    start 0.071318 best 0.071196 at epoch 100, stopped on patience
+  12        full  start 0.071321 best 0.071245 at epoch 100, stopped on patience
+  12        q1    start 0.071313 best 0.071236 at epoch 100, stopped on patience
+  12        q2    start 0.071315 best 0.071240 at epoch 100, stopped on patience
+  12        q3    start 0.071319 best 0.071242 at epoch 100, stopped on patience
+  12        q4    start 0.071311 best 0.071235 at epoch 200, stopped on patience
+  12        q5    start 0.071318 best 0.071243 at epoch 100, stopped on patience
+rule d = best(12) - best(123) (DEC-326 (3)): full +0.000047, s 0.000004, m 0.000006; quarters +0.000049 +0.000040 +0.000047 +0.000048 +0.000047
+headroom: mobility's packed sum mg 5848 of 32767, eg 6328 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [0]
+  hanging_pawn_mg [0]
+  hanging_piece_eg [0, 0, 0, 0]
+  hanging_piece_mg [0, 0, 0, 0]
+  threat_king_eg [0, 0, 0, 0]
+  threat_king_mg [0, 0, 0, 0]
+  threat_minor_eg [24, 15]
+  threat_minor_mg [14, 12]
+  threat_pawn_eg [15, 37, 29, 5]
+  threat_pawn_mg [35, 36, 25, 26]
+  threat_piece_eg [11, 25, 15, 44, 38]
+  threat_piece_mg [18, 12, 17, 27, 47]
+  threat_push_eg [0, 0, 0, 0]
+  threat_push_mg [0, 0, 0, 0]
+P3 kept
+PART-OUTCOME kept
+== P4.txt, sha256 b4573d9f40211f3b
+S101 screen reading, P4: a piece attacked and undefended, N B R Q
+free threat_pawn,threat_piece,threat_minor,hanging_piece, fit 1234, against 123
+  1234      full  start 0.071321 best 0.071192 at epoch 100, stopped on patience
+  1234      q1    start 0.071313 best 0.071184 at epoch 100, stopped on patience
+  1234      q2    start 0.071315 best 0.071194 at epoch 100, stopped on patience
+  1234      q3    start 0.071319 best 0.071191 at epoch 100, stopped on patience
+  1234      q4    start 0.071311 best 0.071184 at epoch 100, stopped on patience
+  1234      q5    start 0.071318 best 0.071191 at epoch 100, stopped on patience
+  123       full  start 0.071321 best 0.071198 at epoch 100, stopped on patience
+  123       q1    start 0.071313 best 0.071187 at epoch 100, stopped on patience
+  123       q2    start 0.071315 best 0.071200 at epoch 100, stopped on patience
+  123       q3    start 0.071319 best 0.071195 at epoch 100, stopped on patience
+  123       q4    start 0.071311 best 0.071187 at epoch 100, stopped on patience
+  123       q5    start 0.071318 best 0.071196 at epoch 100, stopped on patience
+rule d = best(123) - best(1234) (DEC-326 (3)): full +0.000006, s 0.000001, m 0.000002; quarters +0.000003 +0.000006 +0.000004 +0.000003 +0.000005
+headroom: mobility's packed sum mg 5833 of 32767, eg 6268 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [0]
+  hanging_pawn_mg [0]
+  hanging_piece_eg [9, 12, -6, -5]
+  hanging_piece_mg [18, 13, 10, 14]
+  threat_king_eg [0, 0, 0, 0]
+  threat_king_mg [0, 0, 0, 0]
+  threat_minor_eg [20, 14]
+  threat_minor_mg [13, 12]
+  threat_pawn_eg [11, 31, 30, 1]
+  threat_pawn_mg [32, 31, 23, 21]
+  threat_piece_eg [13, 21, 18, 42, 32]
+  threat_piece_mg [15, 7, 13, 23, 42]
+  threat_push_eg [0, 0, 0, 0]
+  threat_push_mg [0, 0, 0, 0]
+P4 kept
+PART-OUTCOME kept
+== P5.txt, sha256 82dc176f00b9a4c8
+S101 screen reading, P5: a pawn attacked and undefended
+free threat_pawn,threat_piece,threat_minor,hanging_piece,hanging_pawn, fit 12345, against 1234
+  12345     full  start 0.071321 best 0.071178 at epoch 100, stopped on patience
+  12345     q1    start 0.071313 best 0.071171 at epoch 100, stopped on patience
+  12345     q2    start 0.071315 best 0.071179 at epoch 100, stopped on patience
+  12345     q3    start 0.071319 best 0.071176 at epoch 100, stopped on patience
+  12345     q4    start 0.071311 best 0.071170 at epoch 100, stopped on patience
+  12345     q5    start 0.071318 best 0.071176 at epoch 100, stopped on patience
+  1234      full  start 0.071321 best 0.071192 at epoch 100, stopped on patience
+  1234      q1    start 0.071313 best 0.071184 at epoch 100, stopped on patience
+  1234      q2    start 0.071315 best 0.071194 at epoch 100, stopped on patience
+  1234      q3    start 0.071319 best 0.071191 at epoch 100, stopped on patience
+  1234      q4    start 0.071311 best 0.071184 at epoch 100, stopped on patience
+  1234      q5    start 0.071318 best 0.071191 at epoch 100, stopped on patience
+rule d = best(1234) - best(12345) (DEC-326 (3)): full +0.000014, s 0.000001, m 0.000002; quarters +0.000013 +0.000015 +0.000015 +0.000014 +0.000015
+headroom: mobility's packed sum mg 5833 of 32767, eg 6478 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [15]
+  hanging_pawn_mg [0]
+  hanging_piece_eg [9, 12, -6, -6]
+  hanging_piece_mg [18, 13, 10, 14]
+  threat_king_eg [0, 0, 0, 0]
+  threat_king_mg [0, 0, 0, 0]
+  threat_minor_eg [19, 15]
+  threat_minor_mg [13, 12]
+  threat_pawn_eg [10, 32, 30, 1]
+  threat_pawn_mg [32, 31, 23, 21]
+  threat_piece_eg [12, 20, 18, 42, 32]
+  threat_piece_mg [15, 7, 13, 23, 42]
+  threat_push_eg [0, 0, 0, 0]
+  threat_push_mg [0, 0, 0, 0]
+P5 kept
+PART-OUTCOME kept
+== P6.txt, sha256 d7abf618ccb9ecee
+S101 screen reading, P6: a man only the king attacks, undefended, P N B R
+free threat_pawn,threat_piece,threat_minor,hanging_piece,hanging_pawn,threat_king, fit 123456, against 12345
+  123456    full  start 0.071321 best 0.071170 at epoch 200, stopped on patience
+  123456    q1    start 0.071313 best 0.071166 at epoch 100, stopped on patience
+  123456    q2    start 0.071315 best 0.071172 at epoch 100, stopped on patience
+  123456    q3    start 0.071319 best 0.071168 at epoch 1900, stopped on patience
+  123456    q4    start 0.071311 best 0.071161 at epoch 200, stopped on patience
+  123456    q5    start 0.071318 best 0.071171 at epoch 100, stopped on patience
+  12345     full  start 0.071321 best 0.071178 at epoch 100, stopped on patience
+  12345     q1    start 0.071313 best 0.071171 at epoch 100, stopped on patience
+  12345     q2    start 0.071315 best 0.071179 at epoch 100, stopped on patience
+  12345     q3    start 0.071319 best 0.071176 at epoch 100, stopped on patience
+  12345     q4    start 0.071311 best 0.071170 at epoch 100, stopped on patience
+  12345     q5    start 0.071318 best 0.071176 at epoch 100, stopped on patience
+rule d = best(12345) - best(123456) (DEC-326 (3)): full +0.000008, s 0.000002, m 0.000003; quarters +0.000005 +0.000007 +0.000008 +0.000009 +0.000005
+headroom: mobility's packed sum mg 6246 of 32767, eg 7311 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [15]
+  hanging_pawn_mg [0]
+  hanging_piece_eg [9, 12, -7, -15]
+  hanging_piece_mg [17, 13, 10, 16]
+  threat_king_eg [20, 0, 14, -11]
+  threat_king_mg [12, 46, 40, 61]
+  threat_minor_eg [19, 15]
+  threat_minor_mg [13, 12]
+  threat_pawn_eg [9, 32, 32, 1]
+  threat_pawn_mg [33, 31, 22, 20]
+  threat_piece_eg [12, 30, 19, 65, 29]
+  threat_piece_mg [15, 5, 13, 19, 43]
+  threat_push_eg [0, 0, 0, 0]
+  threat_push_mg [0, 0, 0, 0]
+P6 kept
+PART-OUTCOME kept
+== P7.txt, sha256 0c7535daf5761350
+S101 screen reading, P7: a piece a safe pawn push would attack, N B R Q
+free threat_pawn,threat_piece,threat_minor,hanging_piece,hanging_pawn,threat_king,threat_push, fit 1234567, against 123456
+  1234567   full  start 0.071321 best 0.071117 at epoch 200, stopped on patience
+  1234567   q1    start 0.071313 best 0.071114 at epoch 100, stopped on patience
+  1234567   q2    start 0.071315 best 0.071120 at epoch 100, stopped on patience
+  1234567   q3    start 0.071319 best 0.071116 at epoch 5000, stopped on cap 5000
+  1234567   q4    start 0.071311 best 0.071111 at epoch 200, stopped on patience
+  1234567   q5    start 0.071318 best 0.071120 at epoch 100, stopped on patience
+  123456    full  start 0.071321 best 0.071170 at epoch 200, stopped on patience
+  123456    q1    start 0.071313 best 0.071166 at epoch 100, stopped on patience
+  123456    q2    start 0.071315 best 0.071172 at epoch 100, stopped on patience
+  123456    q3    start 0.071319 best 0.071168 at epoch 1900, stopped on patience
+  123456    q4    start 0.071311 best 0.071161 at epoch 200, stopped on patience
+  123456    q5    start 0.071318 best 0.071171 at epoch 100, stopped on patience
+rule d = best(123456) - best(1234567) (DEC-326 (3)): full +0.000053, s 0.000001, m 0.000002; quarters +0.000052 +0.000052 +0.000052 +0.000050 +0.000051
+headroom: mobility's packed sum mg 6584 of 32767, eg 7521 of 32767
+tables, full fit (deciding nothing; monotonicity is not imposed): 
+  hanging_pawn_eg [15]
+  hanging_pawn_mg [1]
+  hanging_piece_eg [10, 12, -7, -14]
+  hanging_piece_mg [16, 12, 10, 15]
+  threat_king_eg [20, 0, 13, -11]
+  threat_king_mg [12, 48, 42, 62]
+  threat_minor_eg [20, 14]
+  threat_minor_mg [14, 12]
+  threat_pawn_eg [10, 33, 33, 1]
+  threat_pawn_mg [34, 32, 22, 20]
+  threat_piece_eg [12, 31, 19, 62, 30]
+  threat_piece_mg [14, 6, 13, 22, 44]
+  threat_push_eg [13, 14, 10, 8]
+  threat_push_mg [14, 15, 4, 7]
+P7 kept
+survivors P1,P2,P3,P4,P5,P6,P7
+candidate 1234567: /home/max/ws/chesso/.tuning/s101/fits/1234567/full.hpp
+bisection on H0 or no verdict, in order: A = P1,P2,P3 | B = P4,P5,P6 | C = P7
+CANDIDATE 1234567 groups threat_pawn,threat_piece,threat_minor,hanging_piece,hanging_pawn,threat_king,threat_push
+PART-OUTCOME kept
+== corpus
+source s083
+stage 0
+corpus /home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv
+sha256 2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
+rows 6226944
+s083_fit /home/max/ws/chesso/.tuning/s083/curve/s0/fit_6226944_s1.hpp
+== audit
+audit-check /home/max/ws/chesso/.tuning/s101/audit/report.txt: 0 mobility and 0 family columns zero on every row
+audit-check: the rule's rank 1074 of 1121, the 8 mobility levels and the 7 S134 directions by construction, nothing else
+audit-check: pass
+== hashes
+33b6beac88a4ba34a5c926e44f466d046c2df6dda2d6fd3fd208c038eef3567d  fits/1234567/full.hpp
+d88617affa1ae492b4bfb778d39d01cac1ac3956c75d6c863353ba5cf011567c  fits/123456/full.hpp
+53caf23894a8a384a9d430d4ea0d53b23f6dfe44dcda0d644e5cf0e03afc7d0a  fits/12345/full.hpp
+f7de5c53078132be525ac5ac23d6b8004bc598014eebaee3746a969156a0c158  fits/1234/full.hpp
+bbdf8dfcf4b07eae9e16d7331b4e58e80ebda9accefcecf1fa82c3b7197cb7ac  fits/123/full.hpp
+e9ff455918cd1cd449d5b6999589c1745fdec5c0aea7b20bdaa9d51a017bd4bb  fits/12/full.hpp
+3f22a5af1e7b981689ffaa036748e82423c49164447773e953700c3bf5e2c8e8  fits/1/full.hpp
+88a1d1af967f0e0835cc64cd4a65e3bcdb649c3933a1ba1c8e505d7b8dcf6df7  fits/1234567/q1.hpp
+307c11af43094667e6813209b51d1d23870d889d031a37e2a9724ac797c6b217  fits/1234567/q2.hpp
+4e85b3a69735417270b95799ff48343cb56574f6aa6f8c78ee2bc54f9cfb549b  fits/1234567/q3.hpp
+3adf47d7f4dbb3499cddb5424455c5d969aa28257cc948c2a4af21dc7c71faac  fits/1234567/q4.hpp
+0536c05faf983ad2631c1a26dd33b1a18f05cb9dcf5dc0886202cc9760133875  fits/1234567/q5.hpp
+45b436e9d7dfd161cc6da947ac73fafc7421a617f00bccf3f513010fdf383cf1  fits/123456/q1.hpp
+0670baae4362e350039280d276b1b0c7313e2f43dd22f53eb8b1f202e0f35c27  fits/123456/q2.hpp
+ea273569bcb803ed48cee63a05cff1510f0ec2e43df8f9e8875e8679475af732  fits/123456/q3.hpp
+03651ef986c11617703183a3501c5e5126fa3bc6bd41eef4f9bf6381c1e416a7  fits/123456/q4.hpp
+e0ff16a06f2179c93cc8feae9ce671a6bbb3b03155708c60182095abfae12b78  fits/123456/q5.hpp
+0f9702346d866985efd25ebcaa65c47f9cbd36bec89d42ceb0012f538b888a9d  fits/12345/q1.hpp
+d078bde29c36b987f5543fdcb593f6924386073df6d26f2a13aa08bf58e4defa  fits/12345/q2.hpp
+71addc94f6e1a73b04823b9ae1360a16f2018ead4141248590d405e47dd6b41b  fits/12345/q3.hpp
+f016827ab43fcbd0cc89aed1004671e641a9dc8dfaf31cca849b894a387b0d90  fits/12345/q4.hpp
+f028876e80f302ef986f11c73cc120adf02aee4109d64a0aa9a5f759550674e7  fits/12345/q5.hpp
+b53b026a7d6a5773f7ca40548e6739917afb4e4eff6090ecde835da7fd6d9679  fits/1234/q1.hpp
+3b34f6f1e27747789345ff870e0a35993236d355765076fcad692cc8a05f744d  fits/1234/q2.hpp
+647e62c8ab47057adc3722a043c19dfa14eb290feabe6da0ae5dffc08278aafc  fits/1234/q3.hpp
+3cd91a7f4146695c713193e4f7345a5105a515fe9b48e35a617958919cf883a9  fits/1234/q4.hpp
+3c765530e83da1ae3f6de206737b9ce45b3adf040545fc0992755a417b6db959  fits/1234/q5.hpp
+20892c5b3f0059d69dadfd3bc0a62ca31c58e85c3be38414d0f47e8bb9e56f3b  fits/123/q1.hpp
+7a7c466ee7084de425de90b4fd30e0de428b654cf0673c8046c73d3e2d53d8dd  fits/123/q2.hpp
+690b0303ea00cfd5b26e4d0480c43925175947335b7f5a1f5ebd5adf7f8e96c3  fits/123/q3.hpp
+bc3519e840b7833cdc524d9c5e553cf8b88dcbeaeda1601a3d2ae14960a8b1ee  fits/123/q4.hpp
+03f8dae38b29d004c186922736e8b0966242e20c6e960a664aadbed5b1aeaf66  fits/123/q5.hpp
+34eadf2564ce710709d1f789f4ac85d391fabdcd71171bb0c5f6165577a7d3ee  fits/12/q1.hpp
+9d1c42cdf01f43ed7aba18e893ef077b00e6c72310f8398800904184723559e2  fits/12/q2.hpp
+5f50be61a81271e296b2a54fec89048576013a2ef0b65ea35b0c3ae70b5c6c60  fits/12/q3.hpp
+425d5a5c52ed13b441ecbc86983331470b1277653501af72edfd3cd1f8b86010  fits/12/q4.hpp
+fb7a304246ea13f3fa50e30e5e387d1b69cc9185b344550a6fe87d07b19b00b8  fits/12/q5.hpp
+06a62b67765596c2a6e452bad128bc06bfb09ef2e0a631588a164514803758e2  fits/1/q1.hpp
+205dfe52d3395183797b7e522749082892eb29b860361ab1cf35485187f91260  fits/1/q2.hpp
+ba3c57ec8a979e891affc29c3b195afe6ea126683db57607a10bc400a43f92d9  fits/1/q3.hpp
+15801456dc7ea8b4ade8f7caf3407e9a9c008f82b49411c2c97245532dae7909  fits/1/q4.hpp
+3e04dcce1a668cd46ea91a65c5c50f7c63dff880405f44ff02191279912e1939  fits/1/q5.hpp
+09e714e2068d3aad0dd411f7ad768ba7fa511411b46a5babdc5dd175d5109d86  audit/ties_P1.txt
+f77fd9cbb0eb714114bbc1f4934693c1b3bd7d6b4c87786b4db76c888094a553  audit/ties_P2.txt
+0e0dd273c05360fde61b897ff5ae5a37852ed5ad8fa7d1e982ec60de9529f1a1  audit/ties_P3.txt
+c13f62fafb7d32a875bc726d9938e7f65dea0713e79427c2ad2a046022f29414  audit/ties_P4.txt
+19d01cf89844cafe09fec8d885c90166e64336a7eef985ce8e780197a0e2964d  audit/ties_P5.txt
+8bbdeef4a8c77bfa9550b344a99cb3ea37a6133a57f9de19155cea110e5e3518  audit/ties_P6.txt
+4867297c1390bf972eee7754a18fe841a4cfb088e9c9893019549c07c86cb3f8  audit/ties_P7.txt
+3382b78c4dfcf172b5a5af3b9890ac3cf462b892aed0bd1675fa16b59330266b  fits/1234567/ties.txt
+1f74b38964d0fb56485597d95b187d97aae23d8df3ba2a0883987b6d551595fe  fits/123456/ties.txt
+0476185896db896391f4ef749ce529cbba52476cbf44d009a2f2b3267744761b  fits/12345/ties.txt
+3e3e5972a5837303e28f53c884cc4e54430a383f5b9a1e5760ae80671288bc80  fits/1234/ties.txt
+0837d782249d2a41705b47415d95ff43e3f7e1b900b08d097bf5e6cd04a25232  fits/123/ties.txt
+ff6af722bc094e9c5093281b9213670f9ceb3b2cfede7614280518c22f479bd0  fits/12/ties.txt
+09e714e2068d3aad0dd411f7ad768ba7fa511411b46a5babdc5dd175d5109d86  fits/1/ties.txt

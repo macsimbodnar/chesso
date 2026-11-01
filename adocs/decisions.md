@@ -17110,3 +17110,56 @@ Consequences: `PARAM_COUNT` goes 1073 -> 1121; `feature_audit` is expected to re
               gains S121's clamp reading at `apply`. S122's sentence that the mobility loop
               builds these sets is true only if a part ships; otherwise S122 builds them.
               Overload stays out, with no owner.
+
+## DEC-334  2026-11-01  S101's paste costs EXACT_FLOOR one mined mate against 159: its SPRT plays the working tree, and the owner rules on the floor only on H1
+Tags:         evaluation, threats, mate, testing, sprt, s101, s156, dec-333, dec-323, dec-325, dec-313, dec-303, dec-299, dec-254, dec-158, owner-question
+Context:      S101's screen kept all seven parts, and `apply` read the clamp at 0.400 %
+              against 1.0 %. Pasted, bench 5707449 -> 5482277. S101's phase 2 re-derived
+              every golden and stopped at one: `S156_mined_floor_sweep.py` reads the
+              candidate at 158 exact mined mates shipping, 154 with the guard weakened
+              (`RfpMinPly` 1), against the parent's 168 and 158. `EXACT_FLOOR` 159 is red
+              in both builds. `MATE_IN_THREE_FLOOR` holds, 12 and 10 against 11. By depth
+              over the 318 rows: parent 168, 187, 199 and candidate 158, 191, 206 at depths
+              10, 11, 12. 16 rows lost at depth 10 and 6 gained. All 16 return by depth 16 and
+              are held: 12 within 2 plies of the parent, rows 107, 129 and 136 at 3, row 163
+              at 6. Stockfish at 5000000 nodes returns all 16 labels. Traced: in rows 129,
+              136 and 163 the mating move is scouted and a mated side's non-PV node returns
+              by reverse futility (DEC-158's price, DEC-319 (2)'s shape); in row 107 the
+              multicut at ply 1, depths 9 to 11, the kind DEC-313 (4) retired a row for. The
+              rest are depth churn (`adocs/data/S101_lost_mates.txt`). DEC-299's guard and
+              DEC-303's consequence make a falling floor the owner's before any commit; every
+              commit is green; `adocs/data/S101_sprt.sh` was written for a commit.
+Decision:     By the coordinator under the owner's standing instruction (few questions,
+              correctness first), in DEC-323's form.
+              (1) No lost row is a rule defect: each is depth churn or a recorded price, so
+              nothing is fixed before the run.
+              (2) `EXACT_FLOOR` stays 159, red. S101's `{0, 5}` SPRT plays the staged, uncommitted
+              tree of `../chesso-s101` in fastchess.sh's dirty-tree mode (S256, DEC-254), against
+              a REF that is a documents-only child of the screened commit `c2f2025` and carries
+              this decision and the script. No commit of the paste precedes the verdict.
+              `S101_sprt.sh` is switched to that form, every number in it unmoved.
+              (3) On H1 the owner rules on `EXACT_FLOOR`. The coordinator recommends 159 -> 157:
+              one below the 158 shipped (DEC-313 (1)'s rule), 3 above the 154 weakened, so unlike
+              DEC-325 it still separates; the gate at `RfpMinPly` 1 is to be observed red with
+              157 compiled in. With the ruling the items DEC-299 held land: E's ceiling 2 -> 3,
+              S170's budgets A 100000, D 1000000, F 100000, each by its script, and their
+              `DEV_MANUAL.md` and `MANUAL.md` rows.
+              (4) On H0 or no verdict nothing was committed, the floor never moves, and no
+              question is asked. DEC-333 (7)'s bisection follows, each part in this same form
+              whatever its floors read; a part's fallen floor is the same rule.
+              (5) `tools/gate_extra.sh` and the Debug self-play are taken on the tree before the run,
+              since the family's live path has run under no Debug or sanitizer build; the one red
+              they may read is this floor. The fast check over the phase 2 diff waits for the
+              verdict: the run plays only `src/evaluation.cpp`, whose lines the script's guards
+              check, and an H0 voids the rest of the diff.
+Why:          The floor is the owner's, and asking before the run is a question an H0 answers
+              for free. At depth 11 and 12 the candidate leads the parent.
+Rejected:     Asking now and committing 157 first (phase 2's recommendation): keeps
+              the commit-form guards, but spends the question even on H0 and waits on an answer
+              with the machine idle. Dropping or refitting the family: discards a screen where all
+              seven survived, for a count that leads from depth 11. Lowering the floor by
+              the coordinator: DEC-299 forbids it.
+Consequences: The console names `cand-<REF>+<hex>`, and the close commits `candidate.diff` beside
+              the log (DEC-254). An H1 record waits on the owner's ruling. S101's `cand` cost row
+              is not run: all seven survive, so its mask, 127, is the `all` row already read, +4.68 %.
+              Phase 2 flagged three things in `test_tuner_gradient`, filler by DEC-171, S310.

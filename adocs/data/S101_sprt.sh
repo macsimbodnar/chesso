@@ -5,17 +5,24 @@
 # the family at zero: one SPRT at the harness's 8+0.08, Hash 16, {0, 5} nElo (DEC-259
 # (b), DEC-333 (7)), bisected along DEC-333 (7)'s partition on H0 or no verdict.
 #
-#   nohup adocs/data/S101_sprt.sh > .tuning/s101_sprt.log 2>&1 &
+#   cd /home/max/ws/chesso-s101 && nohup adocs/data/S101_sprt.sh > /home/max/ws/chesso/.tuning/s101_sprt.console 2>&1 &
 #
 # Written 2026-11-01 in S101's phase 1, before any of it ran, in adocs/data/S125_sprt.sh's
 # shape with the guards that shape strengthened (the build files beside src/, a family
 # line read to its end, every other weight compared by name), and S121_sprt.sh's harness
-# section -- S283_sprt.sh's before it -- relied on and not repeated. Nothing here was
-# run. The pair does not exist yet; the coordinator pins it in the bracketed lines below,
-# and until then the script refuses to start (the self-check at the bottom).
+# section -- S283_sprt.sh's before it -- relied on and not repeated. **Switched to
+# WORKING-TREE MODE in phase 2 by DEC-334, 2026-11-01**, in adocs/data/S136_sprt.sh's form
+# (DEC-323, DEC-254): the paste reads `EXACT_FLOOR` red, 158 exact mined mates at depth 10
+# against the floor 159; a fallen mate floor is the owner's before any commit (DEC-299,
+# DEC-303) and every commit is green, so the candidate is not committed. The run plays the
+# uncommitted, staged tree of the worktree `/home/max/ws/chesso-s101` against its HEAD,
+# fastchess.sh's dirty-tree mode (S256, DEC-254): the candidate is named `cand-<HEAD>+<hex>`
+# and the run saves its diff as `$OUT/candidate.diff`. Nothing here was run. The coordinator
+# pins REF and `screened` and fills the bracketed lines below, and until then the script
+# refuses to start (the self-check at the bottom).
 #
-# THE COMMITS, EACH NAMED BY WHAT IS CHECKED OF IT. No guard names a commit for its
-# place in the log, so a commit that touches neither src/ nor a build file -- S307,
+# THE COMMITS AND THE TREE, EACH NAMED BY WHAT IS CHECKED OF IT. No guard names a commit
+# for its place in the log, so a commit that touches neither src/ nor a build file -- S307,
 # tests only, which may land between runs (DEC-333 (11)) -- trips none of them, wherever
 # it falls. S308 touches src/ and lands after this step's close, and these guards refuse
 # it before then, as they should.
@@ -23,44 +30,56 @@
 #   screened  the commit the screen ran from, the engine every gain was read against.
 #             Checked: its fourteen family arrays are all zero (S101_screen.py
 #             landing-check --commit), at that commit and not at whatever is checked out;
-#             and it is the commit .tuning/s101/bin/stamp names, which the screen wrote on
-#             freezing its tuner and held every stage to (S101_screen.sh tools). A missing
-#             stamp or another commit is refused, so `screened` cannot be re-pinned past a
-#             src/ commit that landed after the screen. That file stays until the last run.
-#   ref       what the candidate is played against. Checked: it descends from `screened`;
-#             its src/ and build files are `screened`'s byte for byte, or for a later
-#             bisection part that plus what has landed (THE PARTS below).
-#   cand      the paste. Checked: its parent is `ref`; its src/ and build files are
-#             `ref`'s but for src/evaluation.cpp, which differs outside whole-line comments
-#             only in whole one-line definitions of the arrays this run moves, each read
-#             to its closing `};` and nothing after it (a definition clang-format wrapped
-#             is refused, not read: join it before pinning); and every weight array and
-#             define outside the family's fourteen reads `ref`'s value by name
-#             (S101_screen.py only-family-pair).
+#             and it is the commit /home/max/ws/chesso/.tuning/s101/bin/stamp names, which
+#             the screen wrote on freezing its tuner and held every stage to (S101_screen.sh
+#             tools); the main checkout's file, gitignored and absent from the worktree. A
+#             missing stamp or another commit is refused, so `screened` cannot be re-pinned
+#             past a src/ commit that landed after the screen. That file stays until the
+#             last run.
+#   ref       what the candidate is played against, and the worktree's HEAD. Checked: it
+#             descends from `screened`; its src/ and build files are `screened`'s byte for
+#             byte, or for a later bisection part that plus what has landed (THE PARTS
+#             below). Expected to be a documents-only child of `screened`, carrying this
+#             file and DEC-334. A commit cannot hold its own sha, so the pin is an
+#             uncommitted edit of the worktree's copy of this file, and the run's
+#             candidate.diff holds it, as S136's did.
+#   the tree  the paste: `ref` plus the staged diff, uncommitted. Checked: it is dirty;
+#             nothing unstaged under src/, tests/, cmake/ or CMakeLists.txt, nothing
+#             untracked under src/ or cmake/; cmake/ and CMakeLists.txt are `ref`'s;
+#             src/evaluation.cpp is the only file under src/ that differs from `ref`, and it
+#             differs outside whole-line comments only in whole one-line definitions of the
+#             arrays this run moves, each read to its closing `};` and nothing after it (a
+#             definition clang-format wrapped is refused, not read: join it before pinning);
+#             every weight array and define outside the family's fourteen reads `ref`'s
+#             value by name (S101_screen.py only-family); and build/'s binary is no older
+#             than any source it is built from.
 #
-# So `cand` and `ref` differ by the fitted family and nothing else in src/ or the build's
+# So the tree and `ref` differ by the fitted family and nothing else in src/ or the build's
 # flags. The files the engine's build reads are src/ (src/CMakeLists.txt with it), the
 # top-level CMakeLists.txt and cmake/; tests/ and tools/ build no part of the chesso
 # target fastchess.sh plays.
 #
 # THE PAIR.
 #
-#   CAND  S101's candidate commit: `adocs/data/S101_screen.sh apply` pasted the screen's
+#   CAND  the working tree of `/home/max/ws/chesso-s101`, uncommitted: its HEAD (REF) plus
+#         S101's staged paste. `adocs/data/S101_screen.sh apply` pasted the screen's
 #         candidate -- the last survivor's full-corpus fit, `--only` the survivors'
 #         groups with their ties on S083's corpus (6226944 rows, sha256 2e0e3de9...,
 #         S101_screen.sh's CORPUS_SHA) against S082's fixed validation set -- over the
 #         family's arrays in src/evaluation.cpp; every golden the paste moved re-derived
-#         by its own script (DEC-142); so the commit is green.
-#   REF   CAND's parent.
+#         by its own script (DEC-142) but `EXACT_FLOOR`, left red at 159 (DEC-334), and
+#         what it holds with it (H1 below); so the tree is not green and is not committed.
+#   REF   the worktree's HEAD, which the coordinator pins below.
 #
-# THE PARTS: HOW THE GUARDS READ A BISECTION PART. A part's run is this file with `ref=`,
-# `cand=` and `part=` re-pinned and the coordinator's sentence rewritten; `screened=` stays.
-# Each part's arrays are a subset of the family, and `part=` names that subset, so a part
-# reads the same guards with a narrower list and never a wider one:
+# THE PARTS: HOW THE GUARDS READ A BISECTION PART. A part's run is this file over its own
+# uncommitted tree, with `ref=` and `part=` re-pinned and the coordinator's sentence
+# rewritten; `screened=` stays. Each part's arrays are a subset of the family, and `part=`
+# names that subset, so a part reads the same guards with a narrower list and never a wider
+# one:
 #
 #   part   CAND may move                               REF may carry past `screened`
 #   ""     the fourteen (narrowed at the pin)          nothing
-#   A      threat_pawn, threat_piece, threat_minor     nothing: the paste reverted
+#   A      threat_pawn, threat_piece, threat_minor     nothing: the paste never landed
 #   B      hanging_piece, hanging_pawn, threat_king    A's arrays
 #   C      threat_push                                 A's and B's
 #
@@ -119,8 +138,9 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this run's shas, dates
 # and out directory --
 #
-#   candidate  <CAND, short>  <its commit date>
-#   reference  <REF, short>   <its commit date>
+#   candidate  <REF, short>  <its commit date>  + uncommitted changes
+#   diff       /home/max/ws/chesso/.tuning/sprt_s101_<stamp>/candidate.diff  blob <12 hex>
+#   reference  <REF, short>  <its commit date>
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -130,15 +150,16 @@
 #   cap        20950 rounds, 41900 games, from SPRT_ROUNDS; no bound by then is no verdict
 #   out        /home/max/ws/chesso/.tuning/sprt_s101_<stamp>
 #
-# with no `diff`, `relay` or `A/A CALIBRATION` line, and fastchess's first `Started game 1
-# of N` line reading N = 41900.
+# with no `relay` or `A/A CALIBRATION` line, fastchess's engine names `cand-<REF, short>+<the
+# same 12 hex>` and `ref-<REF, short>`, the candidate's `id name` carrying `-dirty`, and
+# fastchess's first `Started game 1 of N` line reading N = 41900.
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171): S307 and S308,
 # neither moving play, unless plan.md's Open list says otherwise on the day.
-# [COORDINATOR, on the day it pins: CAND's and REF's shas into `ref=` and `cand=` below, the
-# commit the screen ran from, as .tuning/s101/bin/stamp names it, into `screened=`, their
-# dates into the banner lines above, the screen's seven readings and their sha256 (each
-# part's d, s, m and verdict), the survivors
+# [COORDINATOR, on the day it pins: REF's sha into `ref=` below, the commit the screen ran
+# from, as /home/max/ws/chesso/.tuning/s101/bin/stamp names it, into `screened=`, REF's date
+# into the banner lines above, the screen's seven readings and their sha256 (each part's d,
+# s, m and verdict), the survivors
 # and the H0 partition the screen printed, the corpus `locate` recorded, the candidate fit's
 # sha256 and its tie files', the clamp share `apply` read against its 1.0 %, the cost run's
 # reading, plan.md's Open list re-read, the A/A rule checked, and this bracketed sentence
@@ -147,37 +168,48 @@
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
 #   H1 accepted  -> at 8+0.08 the fitted family is accepted as gaining: H1's 5 nElo
-#                   preferred to H0's 0 at alpha = beta = 0.05. **It ships.** A part the
-#                   screen dropped stays at zero, in no expression, recorded as a zero
-#                   (S126's rule). The stopping run's Elo is upward-biased (DEC-063) and
-#                   is not the effect size. S122 inherits the clamp's readings and the
-#                   sets the survivors build; `LAZY_EVAL_MARGIN` is its to re-derive
-#                   (DEC-324, DEC-333 (6)).
+#                   preferred to H0's 0 at alpha = beta = 0.05. **Before any commit the
+#                   owner rules on `EXACT_FLOOR` (DEC-334).** Then **it ships**: the tree
+#                   lands with the DEC-142 items phase 2 read and held: `EXACT_FLOOR` by
+#                   the ruling, with the gate at `RfpMinPly` 1 observed red; E's ceiling
+#                   2 -> 3 (`S203_case_sweep.sh --ceilings`); S170's budgets A 100000,
+#                   D 1000000, F 100000 (`.tuning/coord/S101/S170_cases_after_ruling.tsv`);
+#                   the `DEV_MANUAL.md` and `MANUAL.md` rows. A part the screen dropped
+#                   stays at zero, in no expression, recorded as a zero (S126's rule). The
+#                   stopping run's Elo is upward-biased (DEC-063) and is not the effect
+#                   size. S122 inherits the clamp's readings and the sets the survivors
+#                   build; `LAZY_EVAL_MARGIN` is its to re-derive (DEC-324, DEC-333 (6)).
 #
-#   H0           -> not shown to gain. **The paste is reverted whole** -- the family back
-#                   to zero, the goldens back -- and the family is bisected along DEC-333
+#   H0           -> not shown to gain. **Nothing was committed, so the paste is simply not
+#                   landed**: REF's family stays at zero, with REF's goldens, and no
+#                   question is asked. The family is bisected along DEC-333
 #                   (7)'s partition, survivors only, in order: A = P1 to P3, attacked by a
 #                   lesser or a like piece, | B = P4 to P6, undefended, | C = P7, the push;
 #                   a part with no survivor does not exist. Each part its own `{0, 5}` SPRT
-#                   in this file's shape -- at worst three more runs after this one, four in
-#                   all, each up to 19.86 h, 79.4 h with this run. Each plays over what has
+#                   in this file's shape, its own uncommitted tree whatever its floors read,
+#                   `ref` and `part` re-pinned -- at worst three more runs after this one, four
+#                   in all, each up to 19.86 h, 79.4 h with this run. Each plays over what has
 #                   landed by then, its groups refitted then (`adocs/data/S101_screen.sh part
-#                   NAME`); a part's H1 lands before the next is fitted; a part's H0 or no
+#                   NAME`); a part's H1 lands after its verdict and before the next is fitted,
+#                   its floor question, if any, being the same rule; a part's H0 or no
 #                   verdict is that part's zero. The cells doubled by side to move are the
 #                   first lead (DEC-333 (8)), unbuilt, and no part of this bisection.
 #
-#   No verdict   -> the 41900-game cap, or the 40 h abort, with neither bound: reverted
-#                   whole as H0 is, recorded as **unresolved**, and bisected as H0 is
-#                   (DEC-259 (c)).
+#   No verdict   -> the 41900-game cap, or the 40 h abort, with neither bound: not landed,
+#                   as H0 is, recorded as **unresolved**, and bisected as H0 is (DEC-259 (c)).
 #
 # ON ANY OUTCOME, before any commit: `MATE_IN_THREE_FLOOR` read under 11 stops for the owner
 # (DEC-303, DEC-330); a candidate over 1.0 % on the clamp has stopped phase 2 before this
 # run exists (DEC-333 (6)).
 #
-# THE CLOSING COMMIT carries DEC-220's block -- `SPRT | cand <CAND> vs ref <REF>, 8+0.08,
-# Hash=16, noob_3moves.epd, {0, 5} nElo` and the `Elo`, `LLR`, `Games`, `Wall` and `Log`
-# lines -- with the log trimmed into `adocs/data/S101_sprt.log` by `tools/trim_console.py`;
-# `tools/ledger.py` regenerates plan.md's ledger table from it.
+# THE COMMIT THAT CLOSES THE VERDICT -- the record commit on H0 or no verdict, on H1 the one
+# that lands the tree after the ruling, green -- carries DEC-220's block -- `SPRT | cand
+# <REF>+<hex> vs ref <REF>, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo` and the `Elo`,
+# `LLR`, `Games`, `Wall` and `Log` lines -- with the log trimmed into
+# `adocs/data/S101_sprt.log` by `tools/trim_console.py` and the run's `candidate.diff`
+# committed beside it as `adocs/data/S101_candidate.diff` (DEC-254: `tools/gate.sh` and
+# `tools/ledger.py` find it by its blob id, the `<hex>`); `tools/ledger.py` regenerates
+# plan.md's ledger table from it.
 #
 # AGENTS.md WATCHERS and DEC-061: fastchess.sh prints SPRT-RUN-DONE or SPRT-RUN-FAILED on
 # every exit path, and this script execs it and adds nothing after.
@@ -191,9 +223,10 @@ fail()
 }
 
 # THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT, as S136_sprt.sh's
-# same block reads them.
+# same block reads them: CAND above all, which would turn the run into a commit's and leave
+# the tree unplayed.
 ref="[COORDINATOR: REF's sha]"
-cand="[COORDINATOR: CAND's sha]"
+worktree="/home/max/ws/chesso-s101"
 screened="[COORDINATOR: the sha the screen ran from]"
 part=""           # THE PARTS above: empty for the family, or A, B or C
 tc="8+0.08"
@@ -210,12 +243,12 @@ marker='[COORD'"INATOR"
 grep -qF -- "$marker" "$self"
 case $? in
   0) fail "$self still holds the coordinator's unfilled marker ($marker" \
-          "...]); pin the pair and fill the sentence before the run" ;;
+          "...]); pin REF and screened and fill the sentence before the run" ;;
   1) ;;
   *) fail "could not read $self to check for the coordinator's marker" ;;
 esac
 
-for pair in "REF=$ref" "CAND=$cand" "TC=$tc" "HASH=$hash" \
+for pair in "REF=$ref" "TC=$tc" "HASH=$hash" \
             "CONCURRENCY=$concurrency" "SPRT_BOUNDS=$sprt_bounds" \
             "SPRT_ROUNDS=$sprt_rounds"; do
   name="${pair%%=*}"
@@ -225,19 +258,27 @@ for pair in "REF=$ref" "CAND=$cand" "TC=$tc" "HASH=$hash" \
          "$name=$want; unset it"
   fi
 done
-for name in ROUNDS BARE_FEN SRAND AA; do
+for name in CAND ROUNDS BARE_FEN SRAND AA; do
   if [[ -n "${!name+set}" ]]; then
     fail "$name is set in the environment ('${!name}'), and this run is" \
          "booked without it; unset it"
   fi
 done
 
-cd /home/max/ws/chesso || fail "cd"
+cd "$worktree" || fail "cd $worktree"
 
-# `cand`'s parent is `ref`, so the run measures S101's paste and nothing else.
-if [[ "$(git rev-parse "$cand^")" != "$(git rev-parse "$ref")" ]]; then
-  fail "REF is not CAND's parent -- the pair would measure more than S101"
+# THE PAIR: the worktree's HEAD is REF, so the reference is the tree the candidate's diff is
+# taken against, and the run measures S101's paste and nothing else.
+if [[ "$(git rev-parse HEAD)" != "$(git rev-parse "$ref")" ]]; then
+  fail "$worktree's HEAD is $(git rev-parse --short HEAD), not REF" \
+       "$(git rev-parse --short "$ref") -- the pair would measure more than S101"
 fi
+
+# THE TREE IS DIRTY: the candidate is the uncommitted change, so a clean tree would be an
+# A/A. Only an early refusal: fastchess.sh's own test names the candidate, and the pin's edit
+# of this file alone reads dirty here and is refused below, with no paste under src/.
+[[ -n "$(git status --porcelain)" ]] \
+  || fail "$worktree is clean: there is no candidate change to play"
 
 # The files the engine's build reads: src/ (src/CMakeLists.txt with it), the top-level
 # CMakeLists.txt and cmake/'s flag files.
@@ -259,16 +300,20 @@ case "$part" in
   *)  fail "part is '$part', not empty, A, B or C" ;;
 esac
 
-# Whether FROM and TO differ under src/, outside whole-line comments, only in whole one-line
+# Whether a diff differs under src/, outside whole-line comments, only in whole one-line
 # definitions of ARRAYS, each to its closing `};` and nothing after it: no continuation
-# line, and no code appended to a definition.
+# line, and no code appended to a definition. REVISIONS go to `git diff` as given, so one
+# commit reads against the tree and two against each other. A diff of comments alone leaves
+# the here-string one empty line, which fails the form: it moved no weight.
+#   only_definitions ARRAYS REVISION...
 only_definitions()
 {
-  local lines form
-  lines="$(git diff -U0 "$1" "$2" -- src |
+  local arrays="$1" lines form
+  shift
+  lines="$(git diff -U0 "$@" -- src |
            grep -E '^[-+]' | grep -vE '^(\+\+\+|---) ' | cut -c2- |
            grep -vE '^[[:space:]]*(//.*)?$')"
-  form='^constexpr int ('"$3"')_(mg|eg)\[[0-9]+\] = \{[[:space:]]*-?[0-9]+([[:space:]]*,[[:space:]]*-?[0-9]+)*[[:space:]]*,?[[:space:]]*\};[[:space:]]*$'
+  form='^constexpr int ('"$arrays"')_(mg|eg)\[[0-9]+\] = \{[[:space:]]*-?[0-9]+([[:space:]]*,[[:space:]]*-?[0-9]+)*[[:space:]]*,?[[:space:]]*\};[[:space:]]*$'
   ! grep -qvE "$form" <<< "$lines"
 }
 
@@ -280,8 +325,9 @@ python3 adocs/data/S101_screen.py landing-check --tree . --commit "$screened" ||
 # And it is the commit the screen recorded. Every other guard compares `screened` with itself
 # or with REF, so a src/ commit landing after the screen, `screened` re-pinned past it, would
 # pass them all and play gains read on the old engine on the new one. The stamp holds a short
-# sha, so the two are compared as the commits they name.
-stamp_file=".tuning/s101/bin/stamp"
+# sha, so the two are compared as the commits they name. It is the main checkout's: gitignored,
+# so the worktree has none.
+stamp_file="/home/max/ws/chesso/.tuning/s101/bin/stamp"
 [[ -f "$stamp_file" ]] ||
   fail "no $stamp_file, so nothing records the commit the screen ran from"
 stamped="$(git rev-parse --verify --quiet "$(cat "$stamp_file")^{commit}")" ||
@@ -303,31 +349,68 @@ if [[ -n "$ref_changed" ]]; then
          "family at zero"
   [[ "$ref_changed" == src/evaluation.cpp ]] ||
     fail "REF changes '${ref_changed//$'\n'/ }' beyond what part $part may have landed"
-  only_definitions "$screened" "$ref" "$carries" ||
+  only_definitions "$carries" "$screened" "$ref" ||
     fail "REF's src/ differs from the screened commit's outside comments in more than whole" \
          "one-line definitions of what part $part may have landed"
 fi
 
-# `cand`: its src/ and build files are REF's but for src/evaluation.cpp.
-changed="$(git diff --name-only "$ref" "$cand" -- "${build_paths[@]}")"
-if [[ -z "$changed" ]]; then
-  fail "CAND's src/ is REF's -- not S101's paste"
-fi
-while IFS= read -r file; do
-  [[ "$file" == src/evaluation.cpp ]] ||
-    fail "CAND changes $file beyond the paste of the family's weights"
-done <<< "$changed"
+# ONLY THE STAGED PASTE IS PLAYED. fastchess.sh builds and diffs the working tree, staged,
+# unstaged and untracked alike; the paste is the staged diff the fast check read, so an
+# unstaged edit under src/, tests/, cmake/ or the root CMakeLists.txt -- the build's inputs
+# outside src/: CMakeLists.txt includes cmake/arch.cmake and cmake/pgo.cmake -- or an untracked
+# file under src/ or cmake/, would put something nobody read into the candidate or its
+# recorded diff.
+git diff --quiet -- src tests cmake CMakeLists.txt \
+  || fail "unstaged changes under src/, tests/, cmake/ or CMakeLists.txt:" \
+          "$(git diff --name-only -- src tests cmake CMakeLists.txt |
+             head -5 | tr '\n' ' ')"
+untracked="$(git ls-files --others --exclude-standard -- src cmake | head -5)"
+[[ -z "$untracked" ]] || fail "untracked files under src/ or cmake/: $untracked"
 
-# And there only whole one-line definitions of the arrays this run moves.
-only_definitions "$ref" "$cand" "$moves" ||
-  fail "CAND's src/ differs outside comments in more than whole one-line definitions of" \
-       "the arrays this run moves ($moves)"
+# THE BUILD IS REF'S: any change there would build the candidate with other flags than the
+# reference.
+git diff --quiet "$ref" -- cmake CMakeLists.txt \
+  || fail "cmake/ or CMakeLists.txt differs between the tree and REF:" \
+          "$(git diff --name-only "$ref" -- cmake CMakeLists.txt |
+             head -5 | tr '\n' ' ')"
 
-# Every weight array and define outside the family's fourteen is REF's at CAND, compared by
-# name (S101_screen.py only-family-pair, `apply`'s only-family between two commits): the
-# line test reads the diff, this reads the values.
-python3 adocs/data/S101_screen.py only-family-pair "$ref" "$cand" --tree . ||
-  fail "CAND moves a weight outside the family's fourteen arrays against REF"
+# THE PASTE IS THE FAMILY'S WEIGHTS, so one file can hold it, and no other file may ride
+# along in the binary under the verdict's name.
+changed="$(git diff --name-only "$ref" -- src)"
+[[ -n "$changed" ]] || fail "the tree's src/ is REF's -- not S101's paste"
+[[ "$changed" == src/evaluation.cpp ]] ||
+  fail "the tree changes '${changed//$'\n'/ }' under src/ beyond the paste of the family's weights"
+
+# And there only whole one-line definitions of the arrays this run moves. Against REF's
+# commit, the tree as staged (the check above has refused anything unstaged).
+only_definitions "$moves" "$ref" ||
+  fail "the tree's src/ differs from REF's outside comments in more than whole one-line" \
+       "definitions of the arrays this run moves ($moves)"
+
+# Every weight array and define outside the family's fourteen is REF's in the tree, compared
+# by name: the line test reads the diff, this reads the values. only-family and not
+# only-family-pair, which reads two commits and has no second one here: it reads the tree
+# against HEAD, which the first guard holds to REF. A family array the tree deleted, which it
+# would pass, does not compile in the build below.
+python3 adocs/data/S101_screen.py only-family . ||
+  fail "the tree moves a weight outside the family's fourteen arrays against REF"
+
+# BUILD/ WAS BUILT FROM THIS TREE. fastchess.sh plays build/src/chesso as it finds it.
+# Checked two ways: `cmake --build` of the engine target first, so a stale binary is rebuilt
+# from the tree before the snapshot rather than trusted; then no file of the engine's sources
+# -- src/, cmake/ or a CMakeLists.txt -- may be newer than the binary, which a build that failed
+# part way, or a tree edited after it, would leave behind.
+binary="$worktree/build/src/chesso"
+cmake --build "$worktree/build" -j "$concurrency" --target chesso > /dev/null \
+  || fail "cmake --build $worktree/build --target chesso failed"
+[[ -x "$binary" ]] || fail "no engine at $binary after the build"
+newer="$(find "$worktree/src" "$worktree/cmake" "$worktree/CMakeLists.txt" \
+           -newer "$binary" -type f 2> /dev/null | head -5)"
+[[ -z "$newer" ]] || fail "sources newer than $binary: $newer"
+
+# THE BOOK: books/*.epd is gitignored, so a fresh worktree has none.
+[[ -s books/noob_3moves.epd ]] \
+  || fail "no books/noob_3moves.epd in $worktree; copy the main checkout's"
 
 [[ -x ./fastchess.sh ]] || fail "no executable ./fastchess.sh"
 
@@ -341,9 +424,8 @@ for name in SPRT_BOUNDS SPRT_ROUNDS; do
 done
 
 shopt -s execfail
-exec env -u ROUNDS -u BARE_FEN -u SRAND -u AA -u RELAY_PYTHON \
+exec env -u CAND -u ROUNDS -u BARE_FEN -u SRAND -u AA -u RELAY_PYTHON \
      REF="$ref" \
-     CAND="$cand" \
      TC="$tc" \
      HASH="$hash" \
      CONCURRENCY="$concurrency" \

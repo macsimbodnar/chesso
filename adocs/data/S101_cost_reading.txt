@@ -1,0 +1,77 @@
+# S101's cost reading: CAND_SHA=c2f2025 PARENT_SHA=b0338b5 adocs/data/S101_cost.sh run, 2026-11-01 06:12 to 08:09, S101-COST-DONE, the coordinator's run
+# (console .tuning/s101_cost.console). .tuning/s101/cost/reading.txt verbatim. It decides nothing (the script's pre-registration); the SPRT prices the fitted family with its cost.
+# No `cand` row: all seven parts survive, so its mask, 127, is the `all` row (DEC-334).
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       -0.112 %  CI -0.363 .. +0.139 %
+  pos11   instructions +0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.030 %  CI -0.097 .. +0.157 %
+  pos11   wall         +0.105 %  CI -0.040 .. +0.250 %  (cand time over base, + is slower)
+all: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +5.670 %  CI +5.670 .. +5.670 %
+  bench16 cycles       +4.819 %  CI +4.391 .. +5.248 %
+  pos11   instructions +5.931 %  CI +5.931 .. +5.931 %
+  pos11   cycles       +4.728 %  CI +4.576 .. +4.880 %
+  pos11   wall         +4.506 %  CI +4.238 .. +4.775 %  (cand time over base, + is slower)
+p1: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.357 %  CI +0.357 .. +0.357 %
+  bench16 cycles       +0.281 %  CI -0.030 .. +0.592 %
+  pos11   instructions +0.253 %  CI +0.253 .. +0.253 %
+  pos11   cycles       -0.140 %  CI -0.278 .. -0.001 %
+  pos11   wall         -0.169 %  CI -0.410 .. +0.074 %  (cand time over base, + is slower)
+p2: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +1.302 %  CI +1.302 .. +1.302 %
+  bench16 cycles       +0.259 %  CI +0.105 .. +0.413 %
+  pos11   instructions +1.198 %  CI +1.198 .. +1.198 %
+  pos11   cycles       -0.104 %  CI -0.167 .. -0.042 %
+  pos11   wall         -0.178 %  CI -0.349 .. -0.006 %  (cand time over base, + is slower)
+p3: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.991 %  CI +0.991 .. +0.991 %
+  bench16 cycles       -0.010 %  CI -0.195 .. +0.175 %
+  pos11   instructions +0.837 %  CI +0.837 .. +0.837 %
+  pos11   cycles       -0.541 %  CI -0.714 .. -0.368 %
+  pos11   wall         -0.503 %  CI -0.700 .. -0.306 %  (cand time over base, + is slower)
+p4: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +1.640 %  CI +1.640 .. +1.640 %
+  bench16 cycles       +0.797 %  CI +0.619 .. +0.975 %
+  pos11   instructions +1.587 %  CI +1.587 .. +1.587 %
+  pos11   cycles       +0.481 %  CI +0.401 .. +0.560 %
+  pos11   wall         +0.427 %  CI +0.197 .. +0.658 %  (cand time over base, + is slower)
+p5: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +1.222 %  CI +1.222 .. +1.222 %
+  bench16 cycles       +0.432 %  CI +0.300 .. +0.564 %
+  pos11   instructions +1.113 %  CI +1.113 .. +1.113 %
+  pos11   cycles       +0.324 %  CI +0.262 .. +0.386 %
+  pos11   wall         +0.227 %  CI -0.003 .. +0.457 %  (cand time over base, + is slower)
+p6: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +1.528 %  CI +1.528 .. +1.528 %
+  bench16 cycles       +0.246 %  CI +0.061 .. +0.431 %
+  pos11   instructions +1.471 %  CI +1.471 .. +1.471 %
+  pos11   cycles       +0.024 %  CI -0.087 .. +0.135 %
+  pos11   wall         +0.123 %  CI -0.076 .. +0.322 %  (cand time over base, + is slower)
+p7: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +2.599 %  CI +2.599 .. +2.599 %
+  bench16 cycles       +1.328 %  CI +1.177 .. +1.479 %
+  pos11   instructions +2.568 %  CI +2.568 .. +2.568 %
+  pos11   cycles       +0.983 %  CI +0.918 .. +1.047 %
+  pos11   wall         +0.879 %  CI +0.682 .. +1.076 %  (cand time over base, + is slower)
+parent: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       -0.044 %  CI -0.147 .. +0.060 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       -0.241 %  CI -0.385 .. -0.097 %
+  pos11   wall         -0.145 %  CI -0.311 .. +0.021 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.363 %, pos11 cycles 0.157 %, wall 0.250 %
+forced bench16: A/A instruction floor 1.3 ppb; p1 +0.3574 .. +0.3574 %, p2 +1.3016 .. +1.3016 %, p3 +0.9912 .. +0.9912 %, p4 +1.6400 .. +1.6400 %, p5 +1.2218 .. +1.2218 %, p6 +1.5283 .. +1.5283 %, p7 +2.5991 .. +2.5991 %, all +5.6700 .. +5.6700 %
+forced bench16: p1 + p2 + p3 + p4 + p5 + p6 + p7 +9.639 % against all +5.670 % (printed, not gated)
+forced pos11: A/A instruction floor 20.3 ppb; p1 +0.2527 .. +0.2527 %, p2 +1.1977 .. +1.1977 %, p3 +0.8368 .. +0.8368 %, p4 +1.5871 .. +1.5871 %, p5 +1.1129 .. +1.1129 %, p6 +1.4709 .. +1.4709 %, p7 +2.5678 .. +2.5678 %, all +5.9305 .. +5.9305 %
+forced pos11: p1 + p2 + p3 + p4 + p5 + p6 + p7 +9.026 % against all +5.931 % (printed, not gated)
+all: COST +4.68 % (cycles and wall beyond the floor, instructions the same way)
+p1: zero (inside the A/A's floor)
+p2: zero (inside the A/A's floor)
+p3: zero (inside the A/A's floor)
+p4: zero (inside the A/A's floor)
+p5: zero (inside the A/A's floor)
+p6: zero (inside the A/A's floor)
+p7: COST +1.06 % (cycles and wall beyond the floor, instructions the same way)
+parent: zero (inside the A/A's floor)

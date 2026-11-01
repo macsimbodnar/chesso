@@ -33,8 +33,8 @@ weights, threat_family_half() included. ONLY-FAMILY refuses a paste that moved a
 weight but the family's arrays. LANDING-CHECK refuses a TREE whose HEAD is not the
 landing, S101's fourteen arrays all zero, because `screen` and `all` read every gain
 against that evaluation; `part`, which fits over landed parts, does not run it.
-ONLY-FAMILY-PAIR is ONLY-FAMILY between two commits, for adocs/data/S101_sprt.sh's
-guard. PART prints the free set of a bisection part, A, B or C, from the survivors
+ONLY-FAMILY-PAIR is ONLY-FAMILY between two commits; adocs/data/S101_sprt.sh plays a
+tree, so its guard is ONLY-FAMILY. PART prints the free set of a bisection part, A, B or C, from the survivors
 P7's reading names. CLAMP is DEC-326 (9)'s reading, as DEC-333 (6) carries it: the
 share of rows the clamp binds on, against the bound, and the spreads S122 inherits.
 """

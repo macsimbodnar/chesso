@@ -1,34 +1,79 @@
-# adocs/data/S101_sprt.sh's guards on a scratch clone, 2026-11-01: a dry copy pinned to each
-# scenario's commits, the markers filled, the exec replaced by an echo, run from the phase 1
-# landing's tree. .tuning/s101/bin/stamp holds the screened commit's short sha, as S101_screen.sh
-# writes it, unless the line says otherwise. "runs" prints DRY-RUN-WOULD-EXEC. The scenarios the
-# coordinator asked for are the two S307 lines: a commit touching tests alone, either side of the
-# pair, trips nothing; and the last three, added after phase 1's fast check: `screened` tied to the
-# screen's stamp. Those three ran before the guard existed, and each read DRY-RUN-WOULD-EXEC.
-runs     the family over the landing: DRY-RUN-WOULD-EXEC
-runs     S307 shape: a tests-only commit between the screened commit and REF: DRY-RUN-WOULD-EXEC
-runs     S307 shape: a tests-only commit after CAND, the pair as it was: DRY-RUN-WOULD-EXEC
-refused  the pin narrows moves and CAND moves a dropped group: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|hanging_pie
-refused  a mobility weight moved beside the paste: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_min
-refused  code appended after a definition: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hangi
-refused  a definition wrapped onto two lines: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|ha
-refused  CMakeLists.txt touched beside the paste: SPRT-RUN-FAILED: CAND changes CMakeLists.txt beyond the paste of the family's weights
-refused  src/evaluation.hpp touched beside the paste: SPRT-RUN-FAILED: CAND changes src/evaluation.hpp beyond the paste of the family's weights
-refused  the named screened commit is not the family at zero: SPRT-RUN-FAILED: the commit named as the one the screen ran from, 7a206de99fdcd9e58d8b20f3ffa967912e45cd42, is not the family at zero
+# adocs/data/S101_sprt.sh's guards in working-tree mode (DEC-334), on a scratch clone, 2026-11-01: a dry copy pinned to each
+# scenario's commits, the markers filled unless the line says otherwise, the worktree path pointed at the clone (<worktree>), the
+# stamp path at a file holding the screened commit's short sha unless the line says otherwise (<stamp>), and the exec replaced by a
+# line printing the pair. "runs" prints DRY-RUN-WOULD-EXEC. The commits are the phase 1 landing c2f2025 and, over it, a documents-only
+# child carrying this script, S101_screen.py and adocs/data/README.md; every other sha below is the clone's and went with it.
+# "The real candidate" is `git -C ../chesso-s101 diff --cached --binary --full-index`, applied by `git apply --index --3way`: its src/
+# byte for byte the worktree's (`diff -r`, rc 0), the line test reading 28 lines, the 14 definitions old and new, 0 outside its form.
+# Over the documents-only child that apply conflicts on one file, adocs/data/README.md, the staged block sitting directly under the
+# row this file's count is on: resolved here as the new row, then the block. Over c2f2025 it applies clean.
+# cmake is a no-op on PATH and the binary a stub, so a stale binary stays stale, except in the last four lines: one real configure,
+# one real build of the chesso target through the script's own `cmake --build`. No fastchess, match, tuner or timing ran.
+refused  the file as it stands, nothing pinned: SPRT-RUN-FAILED: <the dry copy> still holds the coordinator's unfilled marker ([COORDINATOR ...]); pin REF and screened and fill the sentence before the run
+refused  the shas pinned and the bracketed lines not filled: SPRT-RUN-FAILED: <the dry copy> still holds the coordinator's unfilled marker ([COORDINATOR ...]); pin REF and screened and fill the sentence before the run
+runs     the real candidate: the staged diff, whole, over a documents-only child of screened: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part ''
+runs     the same, the pin an unstaged edit of the worktree's copy, run from it: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part ''
+runs     the same with REF the screened commit itself: DRY-RUN-WOULD-EXEC REF=c2f2025 candidate=c2f2025+tree, part ''
+runs     S307 shape: a tests-only commit between the screened commit and REF: DRY-RUN-WOULD-EXEC REF=3621ad2 candidate=3621ad2+tree, part ''
+runs     S307 shape: a tests-only commit after REF, the worktree left on REF: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part ''
+runs     the pin narrows moves and the tree moves the survivors alone: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part ''
+refused  a clean tree: SPRT-RUN-FAILED: <worktree> is clean: there is no candidate change to play
+refused  the pin's edit is the tree's only change: dirty, and no paste under src/: SPRT-RUN-FAILED: the tree's src/ is REF's -- not S101's paste
+refused  a dirty tree with nothing under src/: SPRT-RUN-FAILED: the tree's src/ is REF's -- not S101's paste
+refused  HEAD not REF: HEAD a documents-only child of REF: SPRT-RUN-FAILED: <worktree>'s HEAD is cdf277c, not REF c2f2025 -- the pair would measure more than S101
+refused  HEAD not REF: HEAD REF's parent: SPRT-RUN-FAILED: <worktree>'s HEAD is c2f2025, not REF cdf277c -- the pair would measure more than S101
+refused  an unstaged change under src/: SPRT-RUN-FAILED: unstaged changes under src/, tests/, cmake/ or CMakeLists.txt: src/evaluation.cpp 
+refused  an unstaged change under tests/: SPRT-RUN-FAILED: unstaged changes under src/, tests/, cmake/ or CMakeLists.txt: tests/test_engine.cpp 
+refused  an unstaged change under cmake/: SPRT-RUN-FAILED: unstaged changes under src/, tests/, cmake/ or CMakeLists.txt: cmake/arch.cmake 
+refused  an unstaged change to CMakeLists.txt: SPRT-RUN-FAILED: unstaged changes under src/, tests/, cmake/ or CMakeLists.txt: CMakeLists.txt 
+refused  an untracked file under src/: SPRT-RUN-FAILED: untracked files under src/ or cmake/: src/extra.cpp
+refused  an untracked file under cmake/: SPRT-RUN-FAILED: untracked files under src/ or cmake/: cmake/extra.cmake
+refused  a staged change to CMakeLists.txt: SPRT-RUN-FAILED: cmake/ or CMakeLists.txt differs between the tree and REF: CMakeLists.txt 
+refused  a staged change under cmake/: SPRT-RUN-FAILED: cmake/ or CMakeLists.txt differs between the tree and REF: cmake/pgo.cmake 
+refused  a second file under src/: src/evaluation.hpp: SPRT-RUN-FAILED: the tree changes 'src/evaluation.cpp src/evaluation.hpp' under src/ beyond the paste of the family's weights
+refused  a second file under src/: src/eval_tables.hpp: SPRT-RUN-FAILED: the tree changes 'src/eval_tables.hpp src/evaluation.cpp' under src/ beyond the paste of the family's weights
+refused  comments alone under src/: no weight moved: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hanging_piece|hanging_pawn|threat_king|thre
+refused  a mobility weight moved beside the paste: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hanging_piece|hanging_pawn|threat_king|thre
+refused  the same with the line test disarmed in this dry copy: the names alone refuse it: SPRT-RUN-FAILED: the tree moves a weight outside the family's fourteen arrays against REF
+refused  code after a definition's closing };: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hanging_piece|hanging_pawn|threat_king|thre
+refused  a comment after a definition's closing };: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hanging_piece|hanging_pawn|threat_king|thre
+refused  a definition wrapped onto two lines: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor|hanging_piece|hanging_pawn|threat_king|thre
+refused  the pin narrows moves and the tree moves a dropped group: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|hanging_piece)
+refused  screened not the stamp: a src/ commit landed after the screen and screened re-pinned past it: SPRT-RUN-FAILED: screened 3c86c0292293bdb8e3784762581ede603c08b1e0 is not c2f202534519aa0609a835697b322669d41a0e08, the commit <stamp> names
+refused  screened not the stamp: the documents-only child named as screened: SPRT-RUN-FAILED: screened cdf277c633f44bdbda1f71d61362c9c758121e02 is not c2f202534519aa0609a835697b322669d41a0e08, the commit <stamp> names
+refused  no stamp: SPRT-RUN-FAILED: no <stamp>, so nothing records the commit the screen ran from
+refused  a stamp that names no commit: SPRT-RUN-FAILED: <stamp> holds 'not-a-sha', which names no commit
+refused  screened not the family at zero, the stamp agreeing: SPRT-RUN-FAILED: the commit named as the one the screen ran from, 8aaff2a75d8af432f270cd6bef31b6f6fc7736c6, is not the family at zero
+refused  REF does not descend from the screened commit: SPRT-RUN-FAILED: REF does not descend from the screened commit c2f202534519aa0609a835697b322669d41a0e08
 refused  S308 shape: a src/ comment between the screened commit and REF: SPRT-RUN-FAILED: REF's src/ or build files differ from the screened commit's -- REF is not the family at zero
-refused  REF does not descend from the screened commit: SPRT-RUN-FAILED: REF does not descend from the screened commit 11dc286d5387d298dd37de0852e5cf558397a8b9
-refused  CAND's src/ is REF's: a tests-only commit named as the paste: SPRT-RUN-FAILED: CAND's src/ is REF's -- not S101's paste
-refused  CAND is not REF's child: SPRT-RUN-FAILED: REF is not CAND's parent -- the pair would measure more than S101
-runs     part A over the landing: DRY-RUN-WOULD-EXEC
-runs     part B over the landing, A at H0: DRY-RUN-WOULD-EXEC
-runs     part B with A landed: DRY-RUN-WOULD-EXEC
-runs     part C with A and B landed: DRY-RUN-WOULD-EXEC
-refused  part A moving hanging_piece: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor)
-refused  part C moving threat_pawn: SPRT-RUN-FAILED: CAND's src/ differs outside comments in more than whole one-line definitions of the arrays this run moves (threat_push)
+refused  CMakeLists.txt changed between the screened commit and REF: SPRT-RUN-FAILED: REF's src/ or build files differ from the screened commit's -- REF is not the family at zero
+refused  a stale binary the build left older than its sources (cmake a no-op here): SPRT-RUN-FAILED: sources newer than <worktree>/build/src/chesso: <worktree>/src/search_params.cpp
+refused  the build fails (cmake a failure here): SPRT-RUN-FAILED: cmake --build <worktree>/build --target chesso failed
+refused  no binary after the build (cmake a no-op here): SPRT-RUN-FAILED: no engine at <worktree>/build/src/chesso after the build
+refused  CAND in the environment: SPRT-RUN-FAILED: CAND is set in the environment ('cdf277c633f44bdbda1f71d61362c9c758121e02'), and this run is booked without it; unset it
+refused  CAND set and empty: SPRT-RUN-FAILED: CAND is set in the environment (''), and this run is booked without it; unset it
+refused  REF in the environment, another commit: SPRT-RUN-FAILED: REF is 'c2f202534519aa0609a835697b322669d41a0e08' in the environment, and this run is booked at REF=cdf277c633f44bdbda1f71d61362c9c758121e02; unset it
+refused  SPRT_ROUNDS in the environment, another cap: SPRT-RUN-FAILED: SPRT_ROUNDS is '100' in the environment, and this run is booked at SPRT_ROUNDS=20950; unset it
+refused  ROUNDS in the environment: SPRT-RUN-FAILED: ROUNDS is set in the environment ('100'), and this run is booked without it; unset it
+refused  AA in the environment: SPRT-RUN-FAILED: AA is set in the environment ('1'), and this run is booked without it; unset it
+refused  no book in the worktree: SPRT-RUN-FAILED: no books/noob_3moves.epd in <worktree>; copy the main checkout's
+refused  an empty book: SPRT-RUN-FAILED: no books/noob_3moves.epd in <worktree>; copy the main checkout's
+refused  fastchess.sh not executable: SPRT-RUN-FAILED: no executable ./fastchess.sh
+refused  fastchess.sh does not read SPRT_ROUNDS: SPRT-RUN-FAILED: ./fastchess.sh does not read SPRT_ROUNDS, so this run's bounds or cap would be ignored -- see THE HARNESS in adocs/data/S283_sprt.sh
+refused  fastchess.sh does not read SPRT_BOUNDS: SPRT-RUN-FAILED: ./fastchess.sh does not read SPRT_BOUNDS, so this run's bounds or cap would be ignored -- see THE HARNESS in adocs/data/S283_sprt.sh
+runs     part A over the landing: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part 'A'
+runs     part B over the landing, A at H0: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part 'B'
+runs     part B with A landed: DRY-RUN-WOULD-EXEC REF=ff349dc candidate=ff349dc+tree, part 'B'
+runs     part C with A and B landed: DRY-RUN-WOULD-EXEC REF=02c58de candidate=02c58de+tree, part 'C'
+refused  part A's tree moving hanging_piece: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_pawn|threat_piece|threat_minor)
+refused  part B's tree moving threat_pawn: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (hanging_piece|hanging_pawn|threat_king)
+refused  part C's tree moving threat_pawn: SPRT-RUN-FAILED: the tree's src/ differs from REF's outside comments in more than whole one-line definitions of the arrays this run moves (threat_push)
 refused  part A over a landed part: SPRT-RUN-FAILED: REF's src/ or build files differ from the screened commit's -- REF is not the family at zero
 refused  part B with REF carrying its own arrays: SPRT-RUN-FAILED: REF's src/ differs from the screened commit's outside comments in more than whole one-line definitions of what part B may have landed
+refused  part B with REF carrying a second file under src/: SPRT-RUN-FAILED: REF changes 'src/evaluation.cpp src/evaluation.hpp' beyond what part B may have landed
 refused  part D: SPRT-RUN-FAILED: part is 'D', not empty, A, B or C
-refused  a src/ commit lands after the screen and `screened` is re-pinned past it: SPRT-RUN-FAILED: screened cd45831abcafb58c66ae89eb41cf457e55087eee is not 11dc286d5387d298dd37de0852e5cf558397a8b9, the commit .tuning/s101/bin/stamp names
-refused  no stamp: nothing records the commit the screen ran from: SPRT-RUN-FAILED: no .tuning/s101/bin/stamp, so nothing records the commit the screen ran from
-refused  a stamp that names no commit: SPRT-RUN-FAILED: .tuning/s101/bin/stamp holds 'not-a-sha', which names no commit
-26 scenarios, 7 run, 19 refused, 0 not as expected
+runs     real cmake, a real build of the real candidate: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part ''
+runs     real cmake: a source touched after the build is rebuilt, not trusted: DRY-RUN-WOULD-EXEC REF=cdf277c candidate=cdf277c+tree, part ''
+refused  real cmake: a build file touched with nothing to relink leaves the binary older: SPRT-RUN-FAILED: sources newer than <worktree>/build/src/chesso: <worktree>/cmake/arch.cmake
+refused  real cmake: a family definition deleted, which the line test and the names pass, does not compile: SPRT-RUN-FAILED: cmake --build <worktree>/build --target chesso failed
+67 scenarios, 12 run, 55 refused, 0 not as expected

@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-31, by hand.
 
-## 2026-11-01: S118 done (credited, -6.4 % wall, no SPRT), its drift point read; S305 next (handover)
+## 2026-11-01: S101 screened, phase 2 staged, its SPRT next and not started; S118, S305, S306 done (handover)
 
 Mode: one fresh Opus 5.5 subagent per step, the coordinator implements nothing, few questions, batched
 in Italian with the recommended option first, which is taken wherever the choice is not the owner's.
@@ -33,13 +33,29 @@ false comments now say what the code does, the "Golden" mark off the timer board
 A clean reader found two errors in S306's twelve rewrites, after the writer's own check: for the comment
 study, a measured rate that says a rewrite needs that reader.
 
-**S101 in progress, phase 1 landed on `achesso` at this commit:** seven threat groups at zero in stage two
-(DEC-333), INV-6 against `b0338b5`, rank 1074 of 1121, nullity 47, 26 guard scenarios; the fast check's
-findings fixed. Its step file in `plan_current/` holds the commands in order. **Next: the screen,
-`adocs/data/S101_screen.sh all`, about 2 h 50 m, no commit while it runs; then the cost, `apply`, phase 2,
-the SPRT.** Its pre-registration names S307 and S308 as open filler (DEC-171), neither moving play; S309
-is filler too, and lands before S102's plants. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
-answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
+**S101 in progress, its SPRT next, playing the working tree of `../chesso-s101` (DEC-334).** Phase 1 `c2f2025`.
+The screen, 2026-11-01 04:28 to 06:11, kept all seven parts; the cost, all seven forced, reads +4.68 %
+(`adocs/data/S101_screen_reading.txt`, `S101_cost_reading.txt`); `apply` read the clamp at 0.400 %, bench
+5482277. Phase 2's diff is staged there and saved at `.tuning/coord/S101/phase2.diff`, every golden
+re-derived but `EXACT_FLOOR`, 158 against 159 and red, which is the owner's on H1 only (recommended 157).
+On H0 or no verdict nothing is committed and `S101_screen.sh part A|B|C` follows, about 17 min each, up to
+three more runs. Open filler named in its pre-registration, neither moving play: S307, S308, S309, S310;
+none lands while the run holds the machine.
+
+**Stopped 2026-11-01 for a workstation shutdown, the SPRT not started. To resume, in order:** (1) `git -C
+../chesso-s101 merge --ff-only achesso`, or if refused `git reset --hard achesso` there and `git apply --index --3way
+.tuning/coord/S101/phase2.diff` (sha256 first 16 `25408998187fd479`), whose one expected conflict is
+`adocs/data/README.md`: the new count row, then the block. (2) On the tree, what DEC-334 (5) still owes: `STAGES=clang
+tools/gate_extra.sh`, stopped for the shutdown, and the Debug self-play (`DEV_MANUAL.md`, 4 rounds at 4+0.04), neither read.
+`gate_extra` otherwise read on the tree: prose, citations, debug, perft ok; sanitize stops at `test_mate_breadth`, 158 against
+159, the floor, 49 of 50 and no sanitizer report, so its bench signature was not reached. (3) `cp books/noob_3moves.epd
+../chesso-s101/books/`, rebuild `build/` there. (4) Pin the worktree's copy of `adocs/data/S101_sprt.sh`: `ref` this
+commit, `screened` `c2f2025`, both bracketed sentences (the survivors are all seven, so `moves` stays; the readings are in
+the two data files above; fastchess and book unchanged since S118's drift point, re-check for the A/A rule). (5)
+`cd ../chesso-s101 && nohup adocs/data/S101_sprt.sh > ../chesso/.tuning/s101_sprt.console 2>&1 &`, up to 41900 games,
+19.86 h, watcher ceiling 40 h. Phase 2's owed items and `specs.md` wording for an H1: `.tuning/coord/S101/close_notes.md`
+and the step file. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until
+the owner answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
 
 **The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The
 owner asked whether cleaning or compressing comments helps the project and token use. Read on `5954c12`
