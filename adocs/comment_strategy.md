@@ -1,7 +1,7 @@
 # The comment plan: fix the old ones or leave them, and how
 
 Third version, 2026-11-01, on the MacBook Air M5, after two adversarial audits, `adocs/audit/2026-11-01_comment_plan.md` and `.2.md`, the owner's ruling in DEC-337, and DEC-338.
-**Nothing here has been executed.** Marks: [M] measured here, [E] estimated, assumption stated, [R] a record. `adocs/data/comment_study/literature/head_55d7e75/options_reach.py`, after `census.py HEAD blocks_head.json`, prints the reads and ceilings; `benefit_report.py` the incident tallies; `gate_reading.txt` the gate. The rest is arithmetic stated where it stands. O0's and O1's costs are the coordinator's estimate at the size of one small step each, no batch having run.
+**Stopped by the owner the same day, for its token cost (DEC-340): sections 1 to 3 and 5 stand as the record and the rule, S311 and S308 landed, and section 4's script pass and T1 did not run.** Marks: [M] measured here, [E] estimated, assumption stated, [R] a record. `adocs/data/comment_study/literature/head_55d7e75/options_reach.py`, after `census.py HEAD blocks_head.json`, prints the reads and ceilings; `benefit_report.py` the incident tallies; `gate_reading.txt` the gate. The rest is arithmetic stated where it stands. O0's and O1's costs are the coordinator's estimate at the size of one small step each, no batch having run.
 
 ## 1. What the owner asked
 

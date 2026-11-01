@@ -17298,3 +17298,11 @@ Decision:     By the coordinator: each closes because `tests/test_comment_budget
 Why:          A test that reproduces a finding and goes red without the fix is stronger proof than a re-read.
 Rejected:     Leaving them `planned` until a run that DEC-338 ruled out.
 Consequences: S311's real g++ arm stays unread until the evening's gate. `test_comment_budget` adds about 68 s per build to the fast suite on this machine, against about 200 s before it; S318 owns that.
+
+## DEC-340  2026-11-01  The comment cleanup stops at the rule and S308; S312, S313 and S317 are parked, for the token cost
+Tags:         comments, s312, s313, s317, s318, dec-337, dec-338, owner-question
+Context:      The owner, at 23 % of the weekly quota: this work costs too many tokens, better the rules and no cleaning. The study had said tokens pay for no sweep, and recorded harm from old comments is small.
+Decision:     By the owner. The COMMENTS rule stays in force, with `tools/comment_budget.py`, as S311 landed them, and S308's ten repairs stand. No further cleaning: S312, S313 and S317 are parked, and the findings they hold stay with them. T1 was not started and no block was deleted. A false comment is fixed in a hunk a step touches, as the rule says.
+Why:          The owner's quota. Leaving the old comments, option O0 in `adocs/comment_strategy.md`, was already defensible on the evidence.
+Rejected:     Finishing T1 by deletion, at an estimated 7.7 to 15.6 M units beyond what was spent.
+Consequences: Log-shaped blocks stay, 76 of them. `test_comment_budget` keeps costing about 68 s per build, S318. DEC-338 (1) still binds S101's parts, since S308 touched `src/`.
