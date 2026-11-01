@@ -1175,10 +1175,9 @@ static inline void for_each_cell(bb_t pawns, Cell cell, Record record)
 // The bucket arithmetic is the part of this term that is easy to get backwards.
 // Index 0 is a8 and index 63 is h1, so White advances by *decreasing* the
 // index: square >> 3 is 6 on White's second rank and 2 on the sixth. Reversed
-// it pays for retreating pawns, and while the weights are zero no test can say
-// so, because every score it produces is the same score. What can say so is
-// passed_pawn_counts() below, which is why `collect` is here. Pawn structure
-// has the same hole and pawn_structure_counts() is the same answer to it.
+// it pays for retreating pawns. passed_pawn_counts() below reads the buckets
+// without a score, which is why `collect` is here, and pawn_structure_counts()
+// does the same for pawn structure.
 //
 // `collect` is how the accessors read the counts out without the search paying
 // for it. A template rather than a flag, the arrangement king safety arrived
@@ -2373,9 +2372,9 @@ static bb_t king_zone(const bb_tables_t* tables,
 // `inline` is load-bearing and was measured, not assumed. Collecting the counts
 // for the test gave this function a second caller, clang stopped inlining it at
 // the first, and evaluate() went from 18.60 to 22.55 ns per call in bench_eval
-// -- 21 % for a term that is supposed to be free. Inlined, the zero weights
-// downstream fold the whole thing away again and the number comes back to
-// 18.54.
+// -- 21 % for a term that was then supposed to be free. Inlined, the zero
+// weights it landed with folded the whole thing away again and the number came
+// back to 18.54. Those weights are non-zero now.
 static inline void king_shelter_features(const board_t* board,
                                          int colour,
                                          int features[KS_FEATURE_COUNT])
@@ -2704,7 +2703,7 @@ static inline void threat_terms(const board_t* board,
 //
 // They are still tapered and summed as two separate terms below, so the fusion
 // is exact rather than nearly exact: the score is identical to the unfused form
-// for any weights, not only for the zeros king safety currently ships.
+// for any weights.
 //
 // The piece's own attack set is the only one either term reads, and it is
 // looked up once here and read by both. S101's threat family is the first term

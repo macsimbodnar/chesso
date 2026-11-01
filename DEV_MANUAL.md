@@ -4695,7 +4695,7 @@ done
 ```
 
 **The last two conditions are not optional and this loop went without them.**
-AGENTS.md par.12 requires four exits, and a marker-only loop has one: a run
+AGENTS.md WATCHERS requires four exits, and a marker-only loop has one: a run
 killed by the OOM killer or by `kill -9` writes no marker, and the watcher then
 polls a finished log forever. The pid check is placed *after* the marker grep so
 a run that wrote `SPRT-RUN-DONE` and exited between two polls is read as done

@@ -1324,16 +1324,16 @@ TEST_SUITE("search: move ordering state")
   // stopped ordering anything fails here instead of running until the test
   // times out.
   //
-  // The budget was 1000000 until S067 and the search costs 109575, so ordering
+  // The budget was 1000000 until S067, when the search cost 109575, so ordering
   // had to get nine times worse before the case could fire. Measured rather
   // than guessed: `CHECK(result.explored_nodes == 0)` in this case on
   // 2026-08-14 reported `CHECK( 109575 == 0 )`, cold table, depth 5, this
-  // position. The budget is **4x** that, rounded, which fires on the kind of
-  // regression the case exists for while leaving room for the tree to move
-  // when the evaluation constants change - they order the moves, and S065 was
-  // then a pending 827-constant paste, which has since landed. When the budget
-  // moves now is the GOLDEN block's rule below, not a fit's landing.
-  // 2026-08-14_test_review-F06.
+  // position. The budget is **4x** the count the GOLDEN block below derives it
+  // from, which fires on the kind of regression the case exists for while
+  // leaving room for the tree to move when the evaluation constants change -
+  // they order the moves, and S065 was then a pending 827-constant paste, which
+  // has since landed. When the budget moves now is the GOLDEN block's rule
+  // below, not a fit's landing. 2026-08-14_test_review-F06.
   //
   // **Read at S286 and unmoved, by construction.** This case builds its own
   // search state, which carries no pawn correction table, and drives no UCI

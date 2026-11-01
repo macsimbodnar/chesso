@@ -378,17 +378,17 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S308  **eleven comments the code no longer bore out now say what it does** -- the nine and two added, all false or incomplete at `7071407`; the first board's figure is no golden, no test reading it, re-taken at 48840 nodes and 9 to 13 ms with the 3 ms floor unmoved; the timer board now reads 36024721; a clean reader found no error from the rewrite, one inherited clause and one thin claim fixed; code identical by `adocs/data/S308_identity.txt`, bench 5482277, 264 mutants pass `validate`; filler (DEC-171), comments only
 - S307  **the timer case proves its board's first iteration outlasts the bound** -- `go depth 1`, `stop` at 403 ms, no depth reported, 17.6 times below the 7.1 s the iteration reads, no cushion; case 21 -> 425 ms against +7.1 s to read it to its end; TB01 names `stop_search_after_ms`, TB02 and a lighter `timer_fen` fail the new assertion where the old case passed them, also with a dead timer; 402 ms bound unmoved, 264 anchors; filler (DEC-171), no `src/`
 - S101  **a piece attacked by a lesser piece, hanging pieces and safe pawn-push threats: H1 at 8+0.08, `{0, 5}`** -- the screen kept all seven parts (DEC-333); the SPRT read Elo +33.87 +/- 12.33 over 1636 games (an early stop, biased upward), from the working tree against `4e34e61` (DEC-334); bench 5707449 -> 5482277; cost +4.68 %, the clamp binding on 0.400 % of rows; `EXACT_FLOOR` 159 -> 157 by the owner (DEC-343), `MATE_IN_THREE_FLOOR` holds; E's ceiling 2 -> 3 and S170's budgets A, D and F by their scripts
 - S306  **twelve comments the code no longer bore out now say what it does** -- all twelve read false; the timer board's figure is no golden, no test reading it, re-taken at 35516352 nodes with the 402 ms bound unmoved and about 17 times below; code identical by `adocs/data/S306_identity.txt`, bench 5707449, 262 anchors found once; a clean reader found two errors in the rewrites, both fixed; S307 and S308 hold what it found beside them; filler (DEC-171), comments only
 - S305  **`mutation_check.py`'s progress line stops calling an unread bench `same`** -- it prints the table's own `bench_column`, so `n/a` for a mutant with no bench line and `-` for a stillborn one, which the step had not named; red on today's line, then green; `DEV_MANUAL.md`'s case count now thirty-one; filler (DEC-171), tools only
-- S118  **the pawn pass and each king's shelter cached per pawn structure, read at the search's two evaluation sites: credited by DEC-266, no SPRT owed** -- `board_t::pawn_hash` an index, both pawn bitboards the verifier, 2^12 by DEC-332 (7), 192 KiB per `go`; what landed -6.29 % and -6.54 % cycles, -6.37 % wall, -9.01 % and -9.63 % instructions, floors 0.603, 0.087, 0.255, about +9.7 Elo at long control as a conversion, no game played; hits 89.7 to 96.4 %; the slot alone reads zero and stays for S122; storm is S122's; bit-identical, bench 5707449 (INV-6); DEC-046 VOID; 24 of 24 mutants, Debug self-play and `gate_extra` clean; `bench_eval` not the bar
 
 ## Open
 
-1. S308  the nine comments S306 and its reader found beside its twelve are made true or removed
-2. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
-3. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory
+1. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
+2. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory
+3. S319  the false comments S308 found and held to its rows are made true or removed, and `depth_1_floor_ms` takes DEC-142's form
 4. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
 5. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
 6. S102  outpost and space terms in the evaluation, one family

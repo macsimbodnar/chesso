@@ -2852,8 +2852,8 @@ static int negamax_at(int alpha0,
       // ContHistWeight * CONT_HIST_BOUND / 100 that derivation has to be taken
       // again, which is a decision with its own seed and not a line moved.
       // S222's lane fits HistPruneCoeff where it stands (DEC-205) and its SPRT
-      // re-prices the rule; the sum belongs with S098, which scales its
-      // reduction by that same sum by design.
+      // re-prices the rule. HP_COEFF's block says what became of the move onto
+      // the sum.
       if (prune_rule == PRUNE_NONE && lmr_depth < HP_MAX_LMRDEPTH &&
           state->quiet_history[game->board.active_color][MOVE_FROM(moves[i])]
                               [MOVE_TO(moves[i])] < -HP_COEFF * lmr_depth) {

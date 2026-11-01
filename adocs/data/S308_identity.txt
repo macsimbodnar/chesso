@@ -1,0 +1,31 @@
+# S308 identity: what the comment edits leave of each file, old (7071407) against the worktree. S306_identity.txt's form.
+# Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show 7071407:<file>` and over the new
+#      file, compared whole; the bytes and hash below are the stripped output. Machine: i7-8700K, g++ 13.3, 2026-11-01.
+# Shell and prose: `git diff -U0 7071407 -- <file>`, for shell every changed line a comment by script, printed and read by eye.
+base 7071407; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+
+C++: g++ -fpreprocessed -dD -E -P, old against new
+  SAME  src/data_structures.hpp  12930 bytes  sha256 b2a4c810724415ee
+  SAME  src/search.cpp  53510 bytes  sha256 5e1113547f2367d0
+  SAME  src/evaluation.cpp  69618 bytes  sha256 60b232abfa0a148b
+  SAME  tests/test_engine.cpp  131792 bytes  sha256 dd314cfbbd992d3d
+  SAME  tests/test_search.cpp  272499 bytes  sha256 060220bbe796a841
+  SAME  tests/test_uci_surface.cpp  28174 bytes  sha256 229f4a9788a7fbf8
+
+Shell: changed lines of git diff -U0, each a comment by this script's test (optional space, then #)
+  ONLY COMMENTS  rating.sh
+    -# mid-run and mix two versions into one result. fastchess.sh:71-84 has the
+    -# incident this comes from.
+    +# mid-run and mix two versions into one result. fastchess.sh's own comment above
+    +# `snapshot` has the incident this comes from.
+  bash -n rating.sh: rc 0
+
+Prose: changed lines of git diff -U0, one line of DEV_MANUAL.md
+    -AGENTS.md par.12 requires four exits, and a marker-only loop has one: a run
+    +AGENTS.md WATCHERS requires four exits, and a marker-only loop has one: a run
+
+S308-IDENTITY HOLDS
