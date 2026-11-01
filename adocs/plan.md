@@ -377,19 +377,19 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S316  **the comment plan is written, audited twice on a clean context, and answered** -- 15 findings then 12, the second none high; every finding homed; no third run by DEC-338 (4); the owner narrowed the scope to a script pass and T1 by deletion, DEC-337
 - S306  **twelve comments the code no longer bore out now say what it does** -- all twelve read false; the timer board's figure is no golden, no test reading it, re-taken at 35516352 nodes with the 402 ms bound unmoved and about 17 times below; code identical by `adocs/data/S306_identity.txt`, bench 5707449, 262 anchors found once; a clean reader found two errors in the rewrites, both fixed; S307 and S308 hold what it found beside them; filler (DEC-171), comments only
 - S305  **`mutation_check.py`'s progress line stops calling an unread bench `same`** -- it prints the table's own `bench_column`, so `n/a` for a mutant with no bench line and `-` for a stillborn one, which the step had not named; red on today's line, then green; `DEV_MANUAL.md`'s case count now thirty-one; filler (DEC-171), tools only
 - S118  **the pawn pass and each king's shelter cached per pawn structure, read at the search's two evaluation sites: credited by DEC-266, no SPRT owed** -- `board_t::pawn_hash` an index, both pawn bitboards the verifier, 2^12 by DEC-332 (7), 192 KiB per `go`; what landed -6.29 % and -6.54 % cycles, -6.37 % wall, -9.01 % and -9.63 % instructions, floors 0.603, 0.087, 0.255, about +9.7 Elo at long control as a conversion, no game played; hits 89.7 to 96.4 %; the slot alone reads zero and stays for S122; storm is S122's; bit-identical, bench 5707449 (INV-6); DEC-046 VOID; 24 of 24 mutants, Debug self-play and `gate_extra` clean; `bench_eval` not the bar
 - S125  **phalanx, supported and weak unopposed pawns and isolated pawns by file, and backward no longer counts an isolated pawn: H1 at 8+0.08, `{0, 5}`** -- the screen kept four groups and dropped the increment, doubled by file and backward by rank (DEC-331); the SPRT read Elo +22.89 +/- 10.02 over 2508 games (an early stop, biased upward); bench 5434393 -> 5707449; cost +3.50 %, `evaluate()` 63.99 -> 75.93 ns; the fold neutral, `isolated_backward` at backward's flat (INV-6, DEC-331 (15)); both mate floors hold
-- S304  **`spsa_driver.py check` always ends in its failure marker, a malformed engine line stops naming the wait, and no engine outlives `depth_vs_eval.py`** -- a cut `bestmove e3` passed as a move on chesso before; a healthy engine still ends on `quit`, the kill only after a bounded wait; engines open in a worker's first task, a stated departure, and the rows are identical at one and three workers; `spsa_s085.json` stays as a finished run's record; filler (DEC-171), tools only
 
 ## Open
 
-1. S316  `adocs/comment_strategy.md` answers the plan's audit, and a re-run on a clean context reads no high and no medium
-2. S311  `tools/comment_budget.py` reports what breaks the comment rule, proves a comment edit left the code identical and applies a writer's edit list refusing any code token; the rule enters `AGENTS.md`
-3. S308  the ten comments S306, its reader and the plan's audit found beside its twelve are made true or removed
-4. S312  the script's dead references go across all live files, and T1's log-shaped blocks lose their history by deletion and golden form, no paraphrase
-5. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+1. S311  `tools/comment_budget.py` reports what breaks the comment rule, proves a comment edit left the code identical and applies a writer's edit list refusing any code token; the rule enters `AGENTS.md`
+2. S308  the ten comments S306, its reader and the plan's audit found beside its twelve are made true or removed
+3. S312  the script's candidates, each read, go across all live files, and T1's log-shaped blocks lose their history by deletion and golden form, no paraphrase
+4. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+5. S317  the T1 blocks held for S101 and for `test_fastchess_script` get S312's treatment, and `DEV_MANUAL.md`'s three goldens rows stop saying history stays in a comment
 6. S307  the timer case establishes that its board's first iteration outlasts the bound, so a dead timer cannot pass on a lighter board
 7. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
 8. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory

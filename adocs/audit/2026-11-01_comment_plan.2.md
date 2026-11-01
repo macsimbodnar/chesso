@@ -7,7 +7,7 @@ Verdict, for the reader who stops here: **five medium, seven low, no high.** S31
 ## Findings
 
 ### 2026-11-01_comment_plan.2-F01  medium  On S101's H0 or no verdict, a `src/` comment commit leaves no tree both part scripts accept, and the plan says a comment commit reaches nothing
-Status: open
+Status: closed
 
 **Evidence.**
 - `adocs/comment_strategy.md:17`: "REF stays `4e34e61`, so a comment commit reaches neither the SPRT's REF nor what it plays." True of the family run. The same plan's section 1 has S101 resuming straight after.
@@ -32,7 +32,7 @@ src/chesso.cpp src/data_structures.hpp src/eval_tables.hpp src/evaluation.cpp sr
 **Suggested resolution.** Add the cost to section 3. Name a step that reads the guard on the workstation before S308 lands, and state the amendment: `apply` comparing code-stripped `src/`, or the part's tree staying at REF with that guard waived by decision.
 
 ### 2026-11-01_comment_plan.2-F02  medium  A writer's edit list is read off a seeded copy and applied to the unseeded ref, and no step says how it is translated
-Status: open
+Status: planned
 
 **Evidence.**
 - `comment_strategy.md:75`: seeds are "each substituted in place so no line moves", in "the writer's copy of the old text". `:73`: the writer "emits an edit list". S311: `--apply <edits>` "takes character ranges against a ref". `grep -ci seed adocs/plan_current/S311_comment_rule_and_tool.md` reads 0. S312 has one clause, "seeds in the writer's and the reader's copies, none in the tree". A sentence in a wrapped comment starts and ends mid-line, so deleting whole sentences needs the character form.
@@ -55,7 +55,7 @@ range inside comments: True
 **Suggested resolution.** State the mechanism in S311 or S312: seeds of equal byte length, or edits expressed against the ref by a script that maps seeded offsets back; any edit touching a seed dropped before `--apply`, its true text kept; seeds subtracted from the register by id. Add a fixture.
 
 ### 2026-11-01_comment_plan.2-F03  medium  "Deletion writes no false text" is asserted with no measured rate, and neither seeds nor stops read the errors deletion makes
-Status: open
+Status: closed
 
 **Evidence.**
 - The claim: line 47's cell, new false sentences "golden forms only", and line 55, "writes no free text: the rate that makes a rewrite dangerous does not apply". The same plan, line 73: "A deletion that leaves a pronoun or qualifier dangling is a false sentence too." Every rate on record is a rewrite's: S306's 2 in 12, the pilot's 2 in 1136. No deletion rate exists.
@@ -70,7 +70,7 @@ Status: open
 **Suggested resolution.** State line 47's cell as unmeasured, and read a deletion rate from the calibration batch before the next. Specify seed form: on both sides of the diff, plus deletion-class seeds, a dangling pronoun and a removed unique reason. Give the residual an interim read after the second batch. Put a number on golden forms.
 
 ### 2026-11-01_comment_plan.2-F04  medium  T2's gate is "15, half the estimate", and by the plan's own figures 15 is above what the register can show if the estimate is exactly right
-Status: open
+Status: closed
 
 **Evidence.** Line 57 and DEC-337 (2): T2 goes to the owner only if "T1's register records at least 15 dead claims in its 76 blocks, half the estimate", otherwise "recorded as not worth it and is not asked". The estimate is 76 x 4/10 at `5954c12` (`report.md:434,441`). By the time the register is read, on the plan's own order:
 
@@ -90,7 +90,7 @@ The opposite biases are also unstated. The study's `stale` column flags a block 
 **Suggested resolution.** Restate the threshold against what steps 2 and 3 and the held list leave, divide by T1's measured writer recall, subtract seeds, count blocks as the estimate does, state the interval. Or drop the gate and put the register in front of the owner either way.
 
 ### 2026-11-01_comment_plan.2-F05  medium  "At most" fails on the plan's own anchors, the 19 M stop sits inside its range, and the payback omits the cost the plan says is omitted
-Status: open
+Status: closed
 
 **Evidence.**
 - Lines 47 and 51: T1 costs "at most" +3.4 to 7.3 M, "an upper bound for deletion, which reads as much as a rewrite and writes less". The rate is `report.md:415`, a 75 KB batch at 0.8 to 1.8 M, anchored on one median review agent at 0.33 M. DEC-337 (3) added a second reader over all of T1, a register requiring the writer to check truth against code, which the pilot's 61 KB read did not, and seed preparation. What writing less saves: the pilot wrote 6 K real tokens, 30 K units at 5x, about 37 K per 75 KB, 2 to 5 % of the batch rate. One second reader at the anchor is 9 times that. Held blocks cut the other way, 17.5 % of T1 until S101 closes. Nothing nets them.
@@ -104,7 +104,7 @@ Status: open
 **Suggested resolution.** Drop "at most". Add the second reader, the truth check and the coordinator as cost lines, unknown where unknown. Move S311's T1-only modes to O2. Set the ceiling above the corrected range, or say it is meant to fire. Correct 1.3 to 1.7.
 
 ### 2026-11-01_comment_plan.2-F06  low  `--identical`'s lexer arm stays red on a whole macro block deleted by the form S311 now allows
-Status: open
+Status: planned
 
 **Evidence.** Line 83, S311: "the lexer's stripped text ... blank lines aside". S311's `\`-only clause sits on `--apply` alone, its macro and trailing-comment fixtures are `--apply`'s, and `--identical` need only be "green on `adocs/data/comment_study/pilot/`", which holds no macro. On the T1-deleted tree against `ca3ec71`:
 
@@ -120,7 +120,7 @@ First T1 block, `src/search_params.hpp:72-100`, character range over the comment
 **Suggested resolution.** One clause in S311: the macro fixture also passes `--identical`, whitespace-only and `\`-only lines read as blank there.
 
 ### 2026-11-01_comment_plan.2-F07  low  The held list has no owner once S312 closes
-Status: open
+Status: planned
 
 **Evidence.** S312's `accepts`: "the held blocks and goldens the machine could not re-derive are listed here, for after S101's close and for the workstation". DEC-335 (3): "Whatever has to stay is S312's after S101's close". `plan.md`: S312 is item 4, S101 item 5. `AGENTS.md`: `plan_done/` is never edited. No open step names the list, and S313 excludes further cleanup. Size, re-measured: 11 of 76 T1 blocks, 53717 B, 17.5 %, 820 lines: `fastchess.sh` 2, `tests/test_fastchess_script.sh` 1, S101 overlap 6 (`test_eval_trace.cpp:106`, `test_mate_pv.cpp:406`, `test_search.cpp:4849`, `test_tuner_gradient.cpp:511,650,987`), rows' blocks 2 (`test_search.cpp:4395` for row 2376, `:4815` for row 2377). The plan's table and T2's gate still say 76. S312's `closes` names the prior F06, and closing it leaves those rows and blocks with nobody.
 
@@ -129,7 +129,7 @@ Status: open
 **Suggested resolution.** A step in `plan_todo/`, behind S101, owning the list and the three `DEV_MANUAL.md` rows.
 
 ### 2026-11-01_comment_plan.2-F08  low  Section 6's first test reads noise at 5 steps, the same defect the plan names for tokens
-Status: open
+Status: closed
 
 **Evidence.** Line 120: the rule fails if it does "not halve 15.5 KB a day or lower the comment share of changed lines over 5 steps, read as bytes and shares and not as tokens per step, which 5 steps cannot resolve". Read from `git log`, 575 code commits grouped into 206 runs by the step id in the subject, whole-line comments by marker, heuristic, no rule in force:
 
@@ -146,7 +146,7 @@ S313's `accepts` says 5 steps cannot resolve tokens per step and says nothing of
 **Suggested resolution.** State the steps a halving needs at this variance, or read the comparison over a named longer window and call the 5-step reading a look.
 
 ### 2026-11-01_comment_plan.2-F09  low  O2's saving is the study's rewrite figure, unchanged for deletion and the held blocks, and T1 has no exit criterion
-Status: open
+Status: planned
 
 **Evidence.** Line 47: "0.41 %, 0.4 M" is `report.md:425`, B1 at a 55 % cut, 72 blocks, with free paraphrase and goldens. DEC-337 forbids paraphrase and keep is the default (line 73). `report.md:441` puts history at 40 % of the selected blocks. At a 40 % cut and 82.5 % of bytes in scope: 0.41 x 0.40 / 0.55 x 0.825 = 0.25 %, about 0.25 M, level with O3's row at 0.24 %. S312's `accepts` asks a register line per block and nothing about what is left: a T1 of all keeps passes, and no reading says `--report` stops listing a block as log-shaped.
 
@@ -155,7 +155,7 @@ Status: open
 **Suggested resolution.** Re-derive the cell for the form chosen. Have S312 record bytes removed per block, and how many blocks remain log-shaped by the selector.
 
 ### 2026-11-01_comment_plan.2-F10  low  "That workflow already catches this class" is a numerator with no denominator
-Status: open
+Status: closed
 
 **Evidence.** Line 113: "22 of the 26 B rows written in the step that found them name a fast check, so that workflow already catches this class." Same-step rows are found by definition. `benefit_rows.json`: 37 A and B rows false at birth, 19 same-step, 18 not, those including 6 of 6 A. Fast checks are recorded from 2026-08-13 (`adocs/worklog.md:2607`), and A01, A03, A04 and A05 were born after that. Against the finding: Tier-1 entered `AGENTS.md` at `45ec005`, 2026-08-19, and of the 18 only A05 has a known birth after it, 5 being unknown. Younger text has also had less time to be found. So the record does not settle it either way.
 
@@ -164,7 +164,7 @@ Status: open
 **Suggested resolution.** Replace the clause with those figures, and say no option in section 3 changes what reaches the harmed class beyond Tier-1.
 
 ### 2026-11-01_comment_plan.2-F11  low  The best argument for cleaning is about file density, and T1 barely moves density where most steps work
-Status: open
+Status: closed
 
 **Evidence.** Line 39 gives the correlation and calls it unproved, fairly. Re-run: `src` Spearman 0.70, within one commit 0.58; `tests` 0.55, 0.35 (plan 0.61, 0.34; dense half 62.6 % over non-blank added lines, against the plan's 51.6 %). It does not say what T1 does to the x-axis. Whole-line `//` density, all in-scope T1 blocks deleted, a ceiling: `tests/test_search.cpp` 0.396 to 0.385, `src/search.cpp` 0.510 to 0.484, `src/chesso.cpp` 0.294 to 0.280, `src/data_structures.hpp` 0.500 to 0.486, `tests/test_engine.cpp` 0.292 to 0.251, `src/evaluation.cpp` 0.354 to 0.269. Only `tests/test_mate_carry.cpp` (0.589 to 0.165) and `tests/test_mate_breadth.cpp` (0.584 to 0.140) change class. At OLS slope 1.16, `src/search.cpp` at the ceiling is about 3 points of comment share.
 
@@ -173,7 +173,7 @@ Status: open
 **Suggested resolution.** One sentence with those numbers.
 
 ### 2026-11-01_comment_plan.2-F12  low  Plan and record disagree in places a briefed subagent will trip on
-Status: open
+Status: closed
 
 **Evidence.**
 - Line 5: "Figures print from `benefit_report.py` and `options_reach.py`". Neither prints 18 to 136, 3.0 to 6.7, 85 to 185, 8 to 13 or the cost and yield columns (`grep` on both). `options_reach.py` needs a `blocks_head.json` no line says how to make; `census.py HEAD blocks_head.json` does it. "201 s plus 161 s ... [M]" still has no log.

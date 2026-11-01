@@ -2,7 +2,7 @@ id:         S308
 goal:       the ten comments S306 and its reader found beside its twelve are made true or removed
 accepts:    each row below is re-checked against the code at landing, with what the check read, and then says what the code does or is gone; the first board's figure in `tests/test_engine.cpp` is treated as S306 treated the timer board's (DEC-142); commits touching `src/` read `No functional change`; code identity shown per file as `adocs/data/S306_identity.txt` shows it; every anchor in `tools/mutants/` still found once; a clean reader compares old against new
 touches:    src/data_structures.hpp, src/chesso.cpp, src/search.cpp, src/evaluation.cpp, tests/test_engine.cpp, tests/test_search.cpp, tests/test_uci_surface.cpp, DEV_MANUAL.md, rating.sh
-excludes:   shortening comments or removing history, which waits for the owner's decision on the comment study (`adocs/status.md`); `adocs/data/` and `adocs/plan_done/`
+excludes:   shortening comments or removing history, which is S312's by DEC-337; `adocs/data/` and `adocs/plan_done/`
 decisions:  DEC-171, DEC-142
 closes:
 blocks:
@@ -29,5 +29,5 @@ that step being bound to its twelve. Each row's quoted words find its block.
 | `tests/test_search.cpp`, the budget beside S306's S065 row | "the search costs 109575", "The budget is **4x** that" | the pair is 65024 from 16256, as the GOLDEN block below it says |
 
 Two errors in S306's twelve rewrites survived its writer's own check, so the reader is not optional.
-Filler by DEC-171: none moves a score, a move or a line. If the owner takes the comment study's cleanup,
-this folds into its step that covers `src/`.
+Filler by DEC-171: none moves a score, a move or a line. Run on its own, as DEC-337 keeps it. It is the first `src/` comment commit,
+so DEC-338 (1) is in force from here.

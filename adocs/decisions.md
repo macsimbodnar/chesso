@@ -17270,3 +17270,22 @@ Why:          Tokens do not pay for any sweep, recorded harm is small and sits o
 Rejected:     O0, leaving all but new comments: defensible, and it moves rewrites of log blocks inside later steps unreviewed. O1 alone: the logs stay. T1 and T2 by deletion:
               T2 holds 11 of 31 helped rows, and its case can wait for T1's register. The whole of DEC-336 (2): 21.2 to 46.2 M, T3's yield resting on 2 events.
 Consequences: `comment_strategy.md` is rewritten to this. T2 and T3 stay unread, 4865 blocks, but for what the script flags and what a step touches. S316 owns the re-audit.
+
+## DEC-338  2026-11-01  The comment plan's second audit: no third run, its mediums closed by this entry; S101's parts run from the REF worktree; T2 has no numeric gate
+Tags:         comments, audit, s316, s311, s312, s313, s317, s308, s101, dec-337, dec-336, dec-335
+Context:      `adocs/audit/2026-11-01_comment_plan.2.md` at `ca3ec71`: no high, 5 medium, 7 low. The mechanical proof held: T1 deleted whole in a scratch clone kept `bench`, the Release
+              fast suite and all 274 anchors. S316's `accepts` asked a re-run reading no high and no medium. The study, the plan and the audits had by then cost 12.8 M units, read by `transcripts.py`.
+Decision:     By the coordinator, under the standing instruction, for the owner to overrule:
+              (1) On S101's H0 or no verdict, its part runs start from `../chesso-s101/adocs/data/S101_screen.sh`, with `OUT`, `S082_OUT` and `S083_OUT` pointing into the main checkout's `.tuning/`: the
+              script's root is then the worktree at REF, `apply`'s guard passes, `S101_sprt.sh`'s still reads REF, and no script is amended. `.tuning/apply_fit.py` and `verify_fit.py` are tracked at REF. Read on the
+              MacBook as far as the guard, where a run from the main checkout reads "is not at HEAD" and a run from the worktree goes on to ask for its corpus; past that it is unread, and on the workstation the first
+              `apply` reads it. Closes `.2-F01`.
+              (2) DEC-337 (2) is replaced: T2 has no numeric gate. T1's register goes to the owner whatever it reads, in blocks, seeds subtracted, with the writer's recall and intervals. Closes `.2-F04`.
+              (3) `adocs/comment_strategy.md`'s third version holds the seed form, the keep-wins rule for a dependent sentence, a residual read after the second batch as well as over the pool, the 24 M ceiling and
+              the corrected cost cells. Closes `.2-F03`, `.2-F05`, `.2-F08`, `.2-F10`, `.2-F11`, `.2-F12`. `.2-F02` and `.2-F06` are S311's, `.2-F09` is S312's, `.2-F07` is S317's.
+              (4) **No third run.** S316's `accepts` is amended accordingly, and this is below the audit skill's stopping profile, closing mediums by a decision naming them and not by a re-run: its own section allows that,
+              a run costs about 1.8 M and 30 minutes, none of the five reached the mechanical proof, and the calibration batch reads what no audit can.
+Why:          An audit asked to find something keeps finding something, and what remains are the plan's words and figures. The first batch measures the rest.
+Rejected:     A third run: cost, and it would re-read words. Holding every `src/` comment commit until S101 closes, which also answers `.2-F01`: it leaves `src/` uncleaned for up to 79.4 h to avoid one invocation. Amending `apply`
+              to compare comment-stripped `src/`: a change to a pre-registered script, which (1) does not need.
+Consequences: The plan's fixes were read by no clean reader. If (1) fails on the workstation, the refusal is loud and costs no game. S101's resume text carries (1).
