@@ -17163,3 +17163,43 @@ Consequences: The console names `cand-<REF>+<hex>`, and the close commits `candi
               the log (DEC-254). An H1 record waits on the owner's ruling. S101's `cand` cost row
               is not run: all seven survive, so its mask, 127, is the `all` row already read, +4.68 %.
               Phase 2 flagged three things in `test_tuner_gradient`, filler by DEC-171, S310.
+
+## DEC-335  2026-11-01  The comment cleanup runs on another machine by day, before S101's SPRT; S101's REF stays pinned and its paused diff keeps its hunks
+Tags:         comments, workflow, s311, s312, s313, s308, s101, dec-334, dec-333, dec-142, dec-146, machine, owner-question
+Context:      The comment study's options went to the owner on 2026-10-31. S101's SPRT is ready and unstarted
+              (DEC-334). The owner will spend the day cleaning comments on a second machine, a MacBook Air M5,
+              with this repository, pushing `achesso`, and resume S101 on the workstation that evening, with the
+              comments clean and the new rule in force. Three things would break by default: `S101_sprt.sh` refuses
+              a REF whose `src/` is not the screened commit's, S101's diff touches comment blocks in seven files,
+              and the second machine holds no `.tuning/`, so nothing gitignored reaches it.
+Decision:     By the owner: the cleanup runs now, on the second machine, ahead of the SPRT, and its scope and its
+              rule are the owner's, taken there. The study's recommendation stands as the default: the rule, then
+              the 72 log-shaped blocks. By the coordinator, under the standing instruction:
+              (1) S101's REF stays `4e34e61`, `src/` byte for byte the screened `c2f2025`. `../chesso-s101` is at REF
+              with the paste staged and never moves with `achesso`. A pull on the workstation reaches the main checkout
+              only. So nothing here changes what the SPRT plays or the guards it reads, and `S101_sprt.sh` is
+              unamended.
+              (2) The paused diff is committed, `adocs/data/S101_phase2_pause.diff`, so the second machine can see it and
+              it is off this one disk. It is a record and it is not applied: every commit stays green and DEC-334 (2) holds.
+              (3) Comment work leaves the diff's hunks alone: `adocs/data/S101_pause_check.sh` is green at every comment
+              commit, or the commit gives way. Whatever has to stay is S312's after S101's close.
+              (4) S308 lands by day with the cleanup. DEC-333 (11) kept it behind S101's close because a comment under
+              `src/` moves REF; REF no longer follows `achesso`, so the reason is gone. S307, S309 and S310 stay on the
+              workstation, which holds their runs and readings.
+              (5) A comment-only commit proves itself as S306 did: comment-stripped sources byte for byte,
+              `No functional change`, the gate on that machine. No SPRT, no timing and no fit on the second machine.
+              (6) At S101's close on H1, the diff lands on the cleaned `achesso` three-way, and the code of
+              `src/evaluation.cpp` is compared stripped of comments with the tree played; DEC-220's block names
+              `cand 4e34e61+<hex> vs ref 4e34e61` all the same.
+              (7) The evening's first act on the workstation, after the pull, is the gate at the new HEAD with DEC-146's
+              override. If the second machine's formatter disagrees with major 22, that is read before S101 resumes.
+Why:          The owner has a free machine and a day. REF pinned keeps a verdict's meaning, and the check moves a
+              conflict from the close, where it costs a landing, to the commit that causes it.
+Rejected:     Re-pinning REF to the cleaned `achesso`: the guards would need a comment-only exemption, and the run's
+              REF would be built from a tree no reading was taken on, to gain nothing, since no code moves. Applying the
+              paused diff by hand after the cleanup, with no check: known conflicts found only on an H1. Committing the
+              paste on a side branch: a red commit, against DEC-334 (2).
+Consequences: On H0 the bisection's parts are not re-read here: `S101_screen.sh apply` compares its tree with the main
+              checkout's HEAD, so a part needs that guard read against this split first. S311 owns the tool and the rule,
+              S312 the blocks, S313 the re-measure after five further steps. `AGENTS.md` gains the rule by the owner's
+              word, as a decision.

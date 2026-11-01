@@ -1,0 +1,50 @@
+group	class	name	share	lo90	hi90
+all census	C	contract/invariant	0.2527	0.1905	0.3674
+all census	W	non-derivable why/hazard	0.3124	0.2832	0.3459
+all census	R	required by a project rule	0.2032	0.1012	0.2730
+all census	H	history/narration	0.2120	0.1593	0.2612
+all census	P	pointer only	0.0059	0.0037	0.0086
+all census	T	restates the code	0.0116	0.0069	0.0166
+all census	X	stale or wrong	0.0022	0.0012	0.0029
+src	C	contract/invariant	0.3255	0.2655	0.3907
+src	W	non-derivable why/hazard	0.4279	0.3688	0.4885
+src	R	required by a project rule	0.0585	0.0303	0.0883
+src	H	history/narration	0.1490	0.1113	0.1849
+src	P	pointer only	0.0162	0.0095	0.0231
+src	T	restates the code	0.0175	0.0081	0.0302
+src	X	stale or wrong	0.0053	0.0019	0.0093
+tests	C	contract/invariant	0.1428	0.0956	0.1924
+tests	W	non-derivable why/hazard	0.4586	0.4036	0.5112
+tests	R	required by a project rule	0.0858	0.0574	0.1148
+tests	H	history/narration	0.2678	0.2332	0.3033
+tests	P	pointer only	0.0100	0.0035	0.0176
+tests	T	restates the code	0.0309	0.0146	0.0471
+tests	X	stale or wrong	0.0042	0.0014	0.0059
+tools	C	contract/invariant	0.3792	0.3129	0.4470
+tools	W	non-derivable why/hazard	0.4154	0.3452	0.4838
+tools	R	required by a project rule	0.0053	0.0000	0.0109
+tools	H	history/narration	0.1937	0.1335	0.2546
+tools	P	pointer only	0.0050	0.0000	0.0126
+tools	T	restates the code	0.0000	0.0000	0.0000
+tools	X	stale or wrong	0.0014	0.0000	0.0029
+root+cmake	C	contract/invariant	0.2942	0.1964	0.4087
+root+cmake	W	non-derivable why/hazard	0.4755	0.4193	0.5161
+root+cmake	R	required by a project rule	0.0000	0.0000	0.0000
+root+cmake	H	history/narration	0.2303	0.1462	0.3057
+root+cmake	P	pointer only	0.0000	0.0000	0.0000
+root+cmake	T	restates the code	0.0000	0.0000	0.0000
+root+cmake	X	stale or wrong	0.0000	0.0000	0.0000
+adocs_data	C	contract/invariant	0.2686	0.1309	0.5211
+adocs_data	W	non-derivable why/hazard	0.1446	0.0931	0.2061
+adocs_data	R	required by a project rule	0.3857	0.1528	0.5511
+adocs_data	H	history/narration	0.2011	0.0842	0.3087
+adocs_data	P	pointer only	0.0000	0.0000	0.0000
+adocs_data	T	restates the code	0.0000	0.0000	0.0000
+adocs_data	X	stale or wrong	0.0000	0.0000	0.0000
+src+tests+tools+root	C	contract/invariant	0.2403	0.2086	0.2746
+src+tests+tools+root	W	non-derivable why/hazard	0.4432	0.4081	0.4758
+src+tests+tools+root	R	required by a project rule	0.0611	0.0446	0.0779
+src+tests+tools+root	H	history/narration	0.2204	0.1968	0.2428
+src+tests+tools+root	P	pointer only	0.0105	0.0066	0.0150
+src+tests+tools+root	T	restates the code	0.0207	0.0122	0.0297
+src+tests+tools+root	X	stale or wrong	0.0038	0.0022	0.0052

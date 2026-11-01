@@ -1,0 +1,823 @@
+{
+"agg": {
+"root+cmake": {
+"blocks": 97,
+"bytes": 72782,
+"id_token_bytes": 875,
+"blocks_with_id": 54,
+"bytes_in_blocks_with_id": 61568,
+"blocks_with_step": 51,
+"blocks_with_dec": 30,
+"blocks_with_date": 14,
+"bytes_in_blocks_with_date": 20961,
+"blocks_with_measure": 30,
+"bytes_in_blocks_with_measure": 41465,
+"blocks_with_past": 25,
+"bytes_in_blocks_with_past": 34173,
+"dead_paths": 3,
+"blocks_with_seed": 2,
+"line_citations": 2
+},
+"adocs_data": {
+"blocks": 2021,
+"bytes": 1506848,
+"id_token_bytes": 29207,
+"blocks_with_date": 133,
+"bytes_in_blocks_with_date": 915551,
+"blocks_with_measure": 230,
+"bytes_in_blocks_with_measure": 1171147,
+"blocks_with_past": 176,
+"bytes_in_blocks_with_past": 962135,
+"blocks_with_id": 547,
+"bytes_in_blocks_with_id": 1361825,
+"blocks_with_step": 487,
+"blocks_with_dec": 281,
+"line_citations": 15,
+"blocks_with_golden": 52,
+"bytes_in_blocks_with_golden": 393691,
+"blocks_with_seed": 113,
+"dead_paths": 140,
+"agents_par": 9,
+"forward_about_done": 6
+},
+"src": {
+"blocks": 1143,
+"bytes": 539585,
+"id_token_bytes": 6516,
+"blocks_with_id": 439,
+"bytes_in_blocks_with_id": 426349,
+"blocks_with_step": 420,
+"dead_paths": 35,
+"blocks_with_dec": 122,
+"blocks_with_seed": 42,
+"blocks_with_past": 150,
+"bytes_in_blocks_with_past": 220313,
+"blocks_with_measure": 102,
+"bytes_in_blocks_with_measure": 207979,
+"blocks_with_date": 20,
+"bytes_in_blocks_with_date": 51165,
+"line_citations": 1,
+"forward_about_done": 1
+},
+"tests": {
+"blocks": 2822,
+"bytes": 987650,
+"id_token_bytes": 13201,
+"blocks_with_id": 738,
+"bytes_in_blocks_with_id": 618825,
+"blocks_with_dec": 235,
+"blocks_with_date": 55,
+"bytes_in_blocks_with_date": 83892,
+"blocks_with_measure": 152,
+"bytes_in_blocks_with_measure": 279300,
+"blocks_with_step": 682,
+"blocks_with_past": 283,
+"bytes_in_blocks_with_past": 355071,
+"dead_paths": 27,
+"blocks_with_golden": 55,
+"bytes_in_blocks_with_golden": 168911,
+"line_citations": 8,
+"blocks_with_seed": 32,
+"forward_about_done": 3,
+"agents_par": 1
+},
+"tools": {
+"blocks": 777,
+"bytes": 333844,
+"id_token_bytes": 3712,
+"blocks_with_id": 280,
+"bytes_in_blocks_with_id": 248746,
+"blocks_with_step": 250,
+"blocks_with_past": 87,
+"bytes_in_blocks_with_past": 122788,
+"blocks_with_dec": 95,
+"blocks_with_measure": 59,
+"bytes_in_blocks_with_measure": 120934,
+"dead_paths": 31,
+"blocks_with_seed": 15,
+"line_citations": 13,
+"blocks_with_date": 16,
+"bytes_in_blocks_with_date": 46319,
+"blocks_with_golden": 2,
+"bytes_in_blocks_with_golden": 576,
+"forward_about_done": 1,
+"agents_par": 1
+}
+},
+"dead_paths": [
+[
+"adocs_data",
+"books/noob_3moves.epd",
+60
+],
+[
+"adocs_data",
+"tools/feature_audit",
+14
+],
+[
+"adocs_data",
+"tools/tuner",
+13
+],
+[
+"tools",
+"tools/eval_model.hpp",
+8
+],
+[
+"adocs_data",
+"books/UHO_4060_v3.epd",
+7
+],
+[
+"src",
+"tools/tuner",
+7
+],
+[
+"src",
+"tests/test_eval_model",
+6
+],
+[
+"tools",
+"tools/tuner_model.hpp",
+6
+],
+[
+"adocs_data",
+"tests/doctest/doctest",
+5
+],
+[
+"src",
+"books/UHO_4060_v3.epd",
+5
+],
+[
+"adocs_data",
+"tests/json",
+4
+],
+[
+"src",
+"tools/eval_spread",
+4
+],
+[
+"tests",
+"tools/eval_spread",
+4
+],
+[
+"tools",
+"tools/datagen",
+4
+],
+[
+"tools",
+"tools/feature_audit",
+4
+],
+[
+"adocs_data",
+"src/evaluation",
+3
+],
+[
+"adocs_data",
+"adocs/data/S083s_",
+3
+],
+[
+"adocs_data",
+"tools/eval_spread",
+3
+],
+[
+"adocs_data",
+"adocs/plan_current/S261_search_block_spsa_lane.md",
+3
+],
+[
+"src",
+"tools/feature_audit",
+3
+],
+[
+"src",
+"tests/test_evaluation",
+3
+],
+[
+"tests",
+"tools/eval_model.hpp",
+3
+],
+[
+"tests",
+"tools/feature_audit",
+3
+],
+[
+"adocs_data",
+"adocs/plan_todo/S245_",
+2
+],
+[
+"adocs_data",
+"books/UHO_Lichess_4852_v1.epd",
+2
+],
+[
+"adocs_data",
+"adocs/plan_current/S199_drift_match_against_pinned_reference.md",
+2
+],
+[
+"src",
+"tools/make_book",
+2
+],
+[
+"tests",
+"tools/truncation_scan",
+2
+],
+[
+"tests",
+"tools/tuner_model.hpp",
+2
+],
+[
+"tests",
+"tools/tuner",
+2
+],
+[
+"tests",
+"src/x.cpp",
+2
+],
+[
+"adocs_data",
+"src/search",
+1
+],
+[
+"adocs_data",
+"adocs/plan_current/S024_continuation_history.md",
+1
+],
+[
+"adocs_data",
+"adocs/data/S024_mac_attempt",
+1
+],
+[
+"adocs_data",
+"adocs/data/S083r_",
+1
+],
+[
+"adocs_data",
+"tools/mutants/S098_lmr_history.py",
+1
+],
+[
+"adocs_data",
+"tools/spsa_s098v1.json",
+1
+],
+[
+"adocs_data",
+"adocs/data/S114_v2_sweep_s170.txt",
+1
+],
+[
+"adocs_data",
+"tools/mutants/S114_v2_entry_gate.py",
+1
+],
+[
+"adocs_data",
+"src/transposition_table",
+1
+],
+[
+"adocs_data",
+"src/bitboard",
+1
+],
+[
+"adocs_data",
+"src/evaluation.cpp.o",
+1
+],
+[
+"adocs_data",
+"adocs/plan_todo/S242_test_engine_capture_flake.md",
+1
+],
+[
+"adocs_data",
+"adocs/plan_todo/S243_multicut_mate_band_guard_test.md",
+1
+],
+[
+"adocs_data",
+"tools/perf_counters",
+1
+],
+[
+"adocs_data",
+"adocs/data/S135_sprt_",
+1
+],
+[
+"adocs_data",
+"books/popularpos_lichess_v3.epd",
+1
+],
+[
+"adocs_data",
+"books/UHO_4060_v4.epd",
+1
+],
+[
+"adocs_data",
+"adocs/data/S222_sprt_pinned.sh",
+1
+],
+[
+"adocs_data",
+"adocs/data/S231_sprt_pinned.sh",
+1
+],
+[
+"root+cmake",
+"tools/tuner",
+1
+],
+[
+"root+cmake",
+"tests/json",
+1
+],
+[
+"root+cmake",
+"tools/datagen",
+1
+],
+[
+"src",
+"tools/magic_gen",
+1
+],
+[
+"src",
+"tools/eval_model.hpp",
+1
+],
+[
+"src",
+"adocs/plan_done/S100_",
+1
+],
+[
+"src",
+"src/openings.book",
+1
+],
+[
+"src",
+"adocs/data/S115_reduction_",
+1
+],
+[
+"tests",
+"tests/json",
+1
+],
+[
+"tests",
+"tools/datagen",
+1
+],
+[
+"tests",
+"tools/corpus_dedupe",
+1
+],
+[
+"tests",
+"tests/reprosearch.sh",
+1
+],
+[
+"tests",
+"tests/test_evaluation",
+1
+],
+[
+"tests",
+"tests/doctest/doc/markdown/reporters.md",
+1
+],
+[
+"tests",
+"tools/magic_gen",
+1
+],
+[
+"tests",
+"tools/make_book",
+1
+],
+[
+"tests",
+"tests/test_eval_model",
+1
+],
+[
+"tools",
+"tools/eval_spread",
+1
+],
+[
+"tools",
+"tools/mutants/S098_lmr_history.py",
+1
+],
+[
+"tools",
+"src/chesso",
+1
+],
+[
+"tools",
+"tests/doctest/doctest/doctest.h",
+1
+],
+[
+"tools",
+"tests/test_mutation_check",
+1
+],
+[
+"tools",
+"adocs/plan_todo/S091_",
+1
+],
+[
+"tools",
+"adocs/plan_done/S138_",
+1
+],
+[
+"tools",
+"tests/doctest/.../doctest.h",
+1
+],
+[
+"tools",
+"tools/truncation_scan",
+1
+]
+],
+"line_refs": [
+[
+"adocs/data/S021_sprt.sh",
+2,
+"fastchess.sh:118-134"
+],
+[
+"adocs/data/S039_sprt.sh",
+2,
+"fastchess.sh:347-351"
+],
+[
+"adocs/data/S039_sprt.sh",
+2,
+"fastchess.sh:350"
+],
+[
+"adocs/data/S068_sprt_run2.sh",
+2,
+"fastchess.sh:118-134"
+],
+[
+"adocs/data/S075_sprt.sh",
+2,
+"fastchess.sh:118-134"
+],
+[
+"adocs/data/S076_sprt.sh",
+2,
+"fastchess.sh:118-134"
+],
+[
+"adocs/data/S144_paths.py",
+2,
+"src/search.cpp:645"
+],
+[
+"adocs/data/S144_paths.py",
+2,
+"src/search.cpp:654"
+],
+[
+"adocs/data/S144_paths.py",
+261,
+"src/search.cpp:293"
+],
+[
+"adocs/data/S149_sprt.sh",
+2,
+"src/chesso.cpp:647"
+],
+[
+"adocs/data/S149_sprt.sh",
+2,
+"src/evaluation.cpp:1160-1161"
+],
+[
+"adocs/data/S169_recite.py",
+340,
+"src/search.cpp:210"
+],
+[
+"adocs/data/S169_recite.py",
+340,
+"src/search.cpp:2101"
+],
+[
+"adocs/data/S283_sprt.sh",
+2,
+"fastchess.sh:44-57"
+],
+[
+"adocs/data/S283_sprt.sh",
+2,
+"fastchess.sh:208-219"
+],
+[
+"fastchess.sh",
+565,
+"rating.sh:72-77"
+],
+[
+"rating.sh",
+192,
+"fastchess.sh:71-84"
+],
+[
+"src/search_params.hpp",
+72,
+"src/evaluation.cpp:33-37"
+],
+[
+"tests/test_audit_fen_semantics.cpp",
+1,
+"src/bitboard.cpp:395-435"
+],
+[
+"tests/test_audit_fen_semantics.cpp",
+1,
+"src/bitboard.cpp:645-659"
+],
+[
+"tests/test_audit_fen_semantics.cpp",
+1,
+"src/bitboard.cpp:1755-1765"
+],
+[
+"tests/test_audit_fen_semantics.cpp",
+242,
+"src/evaluation.cpp:516"
+],
+[
+"tests/test_evaluation.cpp",
+317,
+"tuner.cpp:26-30"
+],
+[
+"tests/test_helpers.hpp",
+101,
+"src/bitboard.cpp:754"
+],
+[
+"tests/test_search.cpp",
+1074,
+"src/bitboard.cpp:885"
+],
+[
+"tests/test_search.cpp",
+5393,
+"src/search.cpp:264"
+],
+[
+"tools/corpus_dedupe.hpp",
+2,
+"src/bitboard.cpp:1518-1545"
+],
+[
+"tools/corpus_dedupe.hpp",
+119,
+"src/bitboard.cpp:2597"
+],
+[
+"tools/mutants/time.py",
+32,
+"src/chesso.cpp:823"
+],
+[
+"tools/plan_prose_check.py",
+2,
+"src/evaluation.cpp:951"
+],
+[
+"tools/plan_prose_check.py",
+2,
+"transposition_table.cpp:96-103"
+],
+[
+"tools/plan_prose_check.py",
+302,
+"chesso.cpp:698"
+],
+[
+"tools/plan_prose_check.py",
+302,
+"src/chesso.cpp:698"
+],
+[
+"tools/plan_prose_check.py",
+310,
+"src/search_params.hpp:145-195"
+],
+[
+"tools/plan_prose_check.py",
+318,
+"tests/test_search.cpp:1274"
+],
+[
+"tools/plan_prose_check.py",
+324,
+"src/search.cpp:479"
+],
+[
+"tools/plan_prose_check.py",
+487,
+"src/search.cpp:1274"
+],
+[
+"tools/spsa_driver.py",
+281,
+"fastchess.sh:141-147"
+],
+[
+"tools/tuner_split.hpp",
+92,
+"src/bitboard.cpp:883"
+]
+],
+"dead_ids": [
+[
+"adocs_data",
+"S060",
+3
+],
+[
+"adocs_data",
+"S061",
+2
+]
+],
+"par_refs": [
+[
+"adocs/data/S024_sprt.sh",
+2,
+"AGENTS.md par.0"
+],
+[
+"adocs/data/S024_sprt.sh",
+2,
+"AGENTS.md par.12"
+],
+[
+"adocs/data/S075_lambda_sweep.sh",
+4,
+"AGENTS.md section 0"
+],
+[
+"adocs/data/S108_sprt.sh",
+2,
+"AGENTS.md par.4"
+],
+[
+"adocs/data/S108_sprt.sh",
+2,
+"AGENTS.md par.12"
+],
+[
+"adocs/data/S165_sprt.sh",
+2,
+"AGENTS.md par.0"
+],
+[
+"adocs/data/S165_sprt.sh",
+2,
+"AGENTS.md par.12"
+],
+[
+"adocs/data/S207_sprt.sh",
+2,
+"AGENTS.md par.0"
+],
+[
+"adocs/data/S207_sprt.sh",
+2,
+"AGENTS.md par.12"
+],
+[
+"tests/test_uci_surface.cpp",
+14,
+"AGENTS.md section 7"
+],
+[
+"tools/timer_race_stress.py",
+2,
+"AGENTS.md par.12"
+]
+],
+"forward_done": [
+[
+"adocs_data",
+"adocs/data/S082_recipe.sh",
+2,
+"S083 owns"
+],
+[
+"adocs_data",
+"adocs/data/S083_corpus.sh",
+2,
+"S076 owns"
+],
+[
+"adocs_data",
+"adocs/data/S108_sprt.sh",
+2,
+"pending steps read, and S005, S006"
+],
+[
+"adocs_data",
+"adocs/data/S151_ltc.sh",
+2,
+"S171, so `-check-mate-pvs` will"
+],
+[
+"adocs_data",
+"adocs/data/S203_mine_cases.py",
+2,
+"S202 owns"
+],
+[
+"adocs_data",
+"adocs/data/S223_fen_census.py",
+130,
+"S208 owns"
+],
+[
+"src",
+"src/search_params.hpp",
+813,
+"S098 owns"
+],
+[
+"tests",
+"tests/test_mate_carry.cpp",
+14,
+"S202 owns"
+],
+[
+"tests",
+"tests/test_mate_carry.cpp",
+97,
+"S202 owns"
+],
+[
+"tests",
+"tests/test_mate_carry.cpp",
+379,
+"S202 still owns"
+],
+[
+"tools",
+"tools/plan_prose_check.py",
+2,
+"S184 added the pending"
+]
+]
+}

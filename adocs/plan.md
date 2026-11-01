@@ -385,21 +385,24 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Open
 
-1. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-2. S307  the timer case establishes that its board's first iteration outlasts the bound, so a dead timer cannot pass on a lighter board
-3. S308  the nine comments S306 and its reader found beside its twelve are made true or removed
-4. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
-5. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory
-6. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-7. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-8. S102  outpost and space terms in the evaluation, one family
-9. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-10. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-11. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-12. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-13. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-14. S030  move_t drops the moving piece and becomes 16 bits
-15. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-16. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-17. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-18. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+1. S311  a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+2. S308  the nine comments S306 and its reader found beside its twelve are made true or removed
+3. S312  the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+4. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
+5. S307  the timer case establishes that its board's first iteration outlasts the bound, so a dead timer cannot pass on a lighter board
+6. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
+7. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory
+8. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
+9. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+10. S102  outpost and space terms in the evaluation, one family
+11. S313  five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+12. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+13. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+14. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+15. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+16. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+17. S030  move_t drops the moving piece and becomes 16 bits
+18. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+19. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+20. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+21. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play

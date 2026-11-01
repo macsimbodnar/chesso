@@ -1,0 +1,164 @@
+id	fractions	stale	note
+B001	H.5,R.4,W.1	0	self-declared stale pre-registration; history kept on purpose
+B002	R1	0	tool-written header of a fit file; adocs evidence is byte-for-byte (clang-format.sh S075)
+B003	R1	0	tool-written
+B004	R1	0	tool-written
+B005	C.6,H.2,W.2	0	recipe contract
+B006	W1	0
+B007	W1	0
+B008	H1	0
+B009	W1	0
+B010	R.6,C.4	0	pre-registration pair
+B011	C1	0
+B012	C1	0	script docs
+B013	C.4,H.3,R.3	0	pre-registered rule plus what was red
+B014	C.3,H.6,W.1	0
+B015	W.7,H.3	0
+B016	R.6,H.4	0	pre-registration
+B017	W1	0
+B018	C.5,R.3,W.2	0	re-derivation script for goldens
+B019	C.7,W.3	0
+B020	C.8,W.2	0
+B021	R.9,H.1	0	pre-registration
+B022	W1	0
+B023	C1	0
+B024	C.6,W.4	0
+B025	W.8,C.1,H.1	0
+B026	C1	0
+B027	H.7,W.3	0
+B028	C.5,W.4,H.1	0
+B029	W.6,C.3,H.1	0
+B030	H.6,W.4	1	cites rating.sh:72-77, which now holds the concurrency code
+B031	W.6,C.2,H.2	0
+B032	C.7,W.3	0
+B033	H.6,W.3,C.1	0
+B034	W1	0
+B035	W1	0
+B036	H.5,W.3,C.2	0
+B037	C1	0
+B038	W1	0
+B039	W.85,H.15	0
+B040	W1	0
+B041	W1	0
+B042	C.6,W.4	0
+B043	T1	0	section label
+B044	C1	0
+B045	T.5,C.5	0
+B046	C1	0
+B047	C.5,T.5	0
+B048	W.9,P.1	0
+B049	W.9,P.1	0
+B050	W1	0
+B051	H.4,W.3,C.2,R.1	0
+B052	C.7,W.3	0
+B053	C.5,W.2,H.3	1	"evaluate() is material plus tapered tables" false since mobility, king safety and pawn terms
+B054	C1	0
+B055	C1	0
+B056	T1	0
+B057	W.8,C.2	0
+B058	C.5,W.5	0
+B059	W.45,H.3,C.2,X.05	1	"clang still inlines it" (g++ is the reference since DEC-049); "the zero weights still fold" (weights are not zero)
+B060	W.8,H.2	0
+B061	C1	0
+B062	C.7,W.2,P.1	0
+B063	C.8,W.2	0
+B064	C1	0
+B065	C.5,W.5	0
+B066	C.5,W.5	0
+B067	W.75,R.25	0	DEC-134 seed form
+B068	W.95,P.05	0
+B069	C.6,W.35,P.05	0
+B070	W.7,H.3	0
+B071	C.8,W.1,P.1	0
+B072	W.55,H.3,C.15	0
+B073	W.55,H.25,C.2	0
+B074	W.55,H.25,C.1,R.05,T.05	0
+B075	W.57,C.3,T.1,X.03	1	"the second of them ships switched off": X(SE_MULTICUT, ..., 1, 0, 1) ships on
+B076	W.75,C.15,H.1	0
+B077	W.5,H.4,C.1	0
+B078	C.7,T.3	0
+B079	W.9,P.1	0
+B080	W.6,H.4	0
+B081	W.5,H.4,C.1	0
+B082	C.9,P.1	0
+B083	C.9,P.1	0
+B084	C.25,W.2,R.25,H.25,P.03,X.02	1	cites src/evaluation.cpp:33-37; those lines stop short of ORDER_COUNTER at 39
+B085	C.35,R.35,H.15,W.1,P.05	0
+B086	H.42,C.2,R.2,W.15,X.03	1	"the build prints 4493659": bench is 5707449 at HEAD
+B087	C.3,W.2,R.3,H.15,P.05	0
+B088	C.25,W.25,R.25,H.23,X.02	1	"S098 owns moving the rule onto the sum": S098 closed, the rule still reads the raw entry
+B089	C.7,W.3	0
+B090	W.6,H.4	0
+B091	C.7,W.3	0
+B092	H.3,W.7	0
+B093	H.5,W.4,P.1	0
+B094	W.75,H.25	0
+B095	T1	0	banner
+B096	H.6,R.2,W.1,P.1	0
+B097	C1	0
+B098	T1	0
+B099	H.6,W.4	0
+B100	R.38,W.4,H.2,X.02	1	"depth-1 iteration is 25933707 nodes", labelled Golden: the current build answers 35516352, about 9 s; no test holds the number
+B101	W.8,H.1,P.1	0
+B102	H.4,W.4,C.2	0
+B103	H.4,W.5,P.1	0
+B104	T.5,C.5	0
+B105	W.6,C.4	0
+B106	C.6,W.4	0
+B107	C.7,T.3	0
+B108	C.5,W.5	0
+B109	W1	0
+B110	W1	0
+B111	W.9,P.1	0
+B112	H.48,R.4,W.1,X.02	1	"S065 is a pending 827-constant paste": S065 is done
+B113	C.8,W.2	0
+B114	W1	0
+B115	H.5,W.5	0
+B116	C.7,T.3	0
+B117	W1	0
+B118	W1	0
+B119	H.67,R.2,W.1,X.03	1	"an H0 on S234 flips RfpTtEstimate": S234 closed and it ships at 1
+B120	R.3,W.35,C.2,H.15	0
+B121	H.6,W.4	0
+B122	W.35,H.35,R.2,C.1	0
+B123	W.7,H.3	0
+B124	H.5,C.3,R.2	0
+B125	W.8,H.2	0
+B126	H.5,W.5	0
+B127	W.7,H.3	0
+B128	W1	0
+B129	R.5,W.5	0
+B130	C.5,W.5	0
+B131	W.4,H.3,C.3	0
+B132	C1	0
+B133	H.75,R.15,W.1	0	log of one input's re-derivation at each step
+B134	W1	0
+B135	W.7,C.3	0
+B136	C1	0
+B137	C.5,W.3,H.2	0
+B138	W1	0
+B139	C1	0
+B140	W.8,C.2	0
+B141	W.5,H.3,P.2	0
+B142	W.7,H.3	0
+B143	W.6,C.4	0
+B144	W.5,C.5	0
+B145	W1	0
+B146	W.5,H.5	0
+B147	C.5,H.25,W.2,R.05	0	33 mutant files repeat the "list is data" paragraph
+B148	C.35,W.4,H.25	0
+B149	W.7,H.2,P.1	0
+B150	C.6,W.4	0
+B151	W.5,H.5	0
+B152	W.9,H.1	0
+B153	C.8,W.2	0
+B154	C1	0
+B155	W1	0
+B156	W1	0
+B157	C.58,W.4,X.02	1	"AGENTS.md par.12": AGENTS.md has had no numbered paragraphs since DEC-109
+B158	C.5,H.3,W.2	0
+B159	C.35,H.5,W.15	0
+B160	H.7,C.3	0
+B161	W1	0
+B162	C.5,H.3,W.2	0
+B163	C1	0

@@ -5,7 +5,20 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-10-31, by hand.
+Updated: 2026-11-01, by hand.
+
+## 2026-11-01: read this first. By day the second machine cleans comments, by evening the workstation resumes S101 (DEC-335)
+
+**On the second machine, the owner's MacBook Air M5: S311, then S308, then S312, in `plan.md`'s order, and nothing else.** First ask the
+owner for the rule and the scope: the recommendation is the study's, the rule and then the 72 log-shaped blocks, and
+`adocs/data/comment_study/report.md` has the numbers. That machine has no `.tuning/`, no books, no `.moltke.local.md` and no worktrees,
+and no match, fit, timing or S101 script belongs on it. `adocs/data/S101_pause_check.sh` is green at every comment commit (DEC-335 (3)).
+`adocs/plan_current/S101_threat_terms.md` is not edited. Unread on that machine: whether its build gives `bench` 5707449. If it does not,
+stop and ask: no signature means anything until that is explained. Then commit, and the owner pushes.
+
+**On the workstation, after the owner's pull:** (1) `CLANG_FORMAT_MAJOR=22 tools/gate.sh` at the new HEAD, with a message or by its
+test form; a format disagreement with major 22 is read first (DEC-146). (2) The stage below, untouched by the pull. Do not move
+`../chesso-s101` to `achesso`, its HEAD stays REF `4e34e61`.
 
 ## 2026-11-01: S101 screened, phase 2 staged, its SPRT next and not started; S118, S305, S306 done (handover)
 
@@ -42,25 +55,20 @@ On H0 or no verdict nothing is committed and `S101_screen.sh part A|B|C` follows
 three more runs. Open filler named in its pre-registration, neither moving play: S307, S308, S309, S310;
 none lands while the run holds the machine.
 
-**Stopped 2026-11-01 for a workstation shutdown, the SPRT not started. To resume, in order:** (1) `git -C
-../chesso-s101 merge --ff-only achesso`, or if refused `git reset --hard achesso` there and `git apply --index --3way
-.tuning/coord/S101/phase2.diff` (sha256 first 16 `25408998187fd479`), whose one expected conflict is
-`adocs/data/README.md`: the new count row, then the block. (2) On the tree, what DEC-334 (5) still owes: `STAGES=clang
-tools/gate_extra.sh`, stopped for the shutdown, and the Debug self-play (`DEV_MANUAL.md`, 4 rounds at 4+0.04), neither read.
-`gate_extra` otherwise read on the tree: prose, citations, debug, perft ok; sanitize stops at `test_mate_breadth`, 158 against
-159, the floor, 49 of 50 and no sanitizer report, so its bench signature was not reached. (3) `cp books/noob_3moves.epd
-../chesso-s101/books/`, rebuild `build/` there. (4) Pin the worktree's copy of `adocs/data/S101_sprt.sh`: `ref` this
-commit, `screened` `c2f2025`, both bracketed sentences (the survivors are all seven, so `moves` stays; the readings are in
-the two data files above; fastchess and book unchanged since S118's drift point, re-check for the A/A rule). (5)
-`cd ../chesso-s101 && nohup adocs/data/S101_sprt.sh > ../chesso/.tuning/s101_sprt.console 2>&1 &`, up to 41900 games,
-19.86 h, watcher ceiling 40 h. Phase 2's owed items and `specs.md` wording for an H1: `.tuning/coord/S101/close_notes.md`
-and the step file. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until
-the owner answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
+**Stopped 2026-11-01, the SPRT not started. `../chesso-s101` is at REF `4e34e61`, the paste staged, the book copied; its diff is
+`.tuning/coord/S101/phase2.diff`, the same bytes as `adocs/data/S101_phase2_pause.diff`. To resume there, in order:** (1) What DEC-334 (5)
+still owes on that tree: `STAGES=clang tools/gate_extra.sh`, stopped for the shutdown, and the Debug self-play (`DEV_MANUAL.md`, 4 rounds at
+4+0.04), neither read. `gate_extra` otherwise read on the tree: prose, citations, debug, perft ok; sanitize stops at `test_mate_breadth`, 158
+against 159, the floor, 49 of 50 and no sanitizer report, so its bench signature was not reached. (2) Rebuild `build/` there. (3) Pin the
+worktree's copy of `adocs/data/S101_sprt.sh`: `ref` `4e34e61`, `screened` `c2f2025`, both bracketed sentences (the survivors are all seven, so
+`moves` stays; the readings are in the two data files above; fastchess and book unchanged since S118's drift point, re-check for the A/A rule;
+Open list re-read). (4) `cd ../chesso-s101 && nohup adocs/data/S101_sprt.sh > ../chesso/.tuning/s101_sprt.console 2>&1 &`, up to 41900 games,
+19.86 h, watcher ceiling 40 h. Phase 2's owed items and `specs.md` wording for an H1: `.tuning/coord/S101/close_notes.md` and the step file
+in the diff. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner answers (asked 2026-11-01); branch `s118` stays in any case.
 
-**The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The
+**The comment study, 2026-10-31: the owner runs it on the second machine (DEC-335), and its report is now `adocs/data/comment_study/report.md`.** The
 owner asked whether cleaning or compressing comments helps the project and token use. Read on `5954c12`
-by one subagent, scripts and tables in `.tuning/coord/comment_study/`; **its full report is on no file**,
-the harness having refused that write, and the owner was told. Measured: comments are 61 % of `src/`'s
+by one subagent. Measured: comments are 61 % of `src/`'s
 bytes, 48 % of `tests/`', 41 % of `tools/`', 1.93 MB, growing 15.5 KB a day; by class (one reader, 140
 blocks) 44 % reason or hazard, 24 % contract, 22 % history, 6 % rule-required, 2 % restating; 61 % of
 changed `src/` lines in the last 150 commits are comment-only; false claims follow length and not age,

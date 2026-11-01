@@ -1,0 +1,82 @@
+{
+"src": {
+"totals": {
+"comment_added": 9648,
+"comment_removed": 3873,
+"code_added": 6020,
+"code_removed": 2519
+},
+"commits": 150,
+"comment_only_commits": 15,
+"churn_share": 0.6129193109700816
+},
+"tests": {
+"totals": {
+"comment_added": 20730,
+"comment_removed": 6420,
+"code_added": 38968,
+"code_removed": 7514
+},
+"commits": 150,
+"comment_only_commits": 13,
+"churn_share": 0.36872555410691005
+},
+"tools": {
+"totals": {
+"comment_added": 6764,
+"comment_removed": 2136,
+"code_added": 13182,
+"code_removed": 3671
+},
+"commits": 150,
+"comment_only_commits": 8,
+"churn_share": 0.3455908049547626
+},
+"anchors": {
+"total": 244,
+"stats": {
+"found": 244,
+"anchor_overlaps_comment": 5,
+"anchor_text_has_comment_marker": 5
+},
+"files": {
+"src/transposition_table.cpp": 1,
+"src/chesso.cpp": 1,
+"src/search.cpp": 2,
+"src/bitboard.cpp": 1
+},
+"examples": [
+[
+"tools/mutants/S119_tt_cluster.py",
+"TC04_new_position_refused",
+"src/transposition_table.cpp"
+],
+[
+"tools/mutants/S132_node_time.py",
+"K06_buckets_cleared_per_iteration",
+"src/chesso.cpp"
+],
+[
+"tools/mutants/S279_qs_node_budget.py",
+"NB01_qs_limit_check_below_probe",
+"src/search.cpp"
+],
+[
+"tools/mutants/board.py",
+"M36_repetition_ignores_the_root",
+"src/bitboard.cpp"
+],
+[
+"tools/mutants/search.py",
+"M03_nmp_zugzwang",
+"src/search.cpp"
+]
+]
+},
+"citations": {
+"counts": {
+"symbol_citations": 18
+},
+"only_comment": []
+}
+}

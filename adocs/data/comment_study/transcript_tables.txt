@@ -1,0 +1,109 @@
+excluded this study's own transcript(s): 1
+transcripts: 262 main 16 subagent 246
+span: 2026-08-13T15:06:05.755Z 2026-10-31T19:22:29.181Z
+requests: 28371 main 4577 sub 23794
+totals: {'input': 85604, 'cache_write': 213769516, 'cache_write_5m': 190745791, 'cache_write_1h': 23023725, 'cache_read': 7213280540, 'output': 9950727, 'thinking': 3416282, 'raw_context': 7427135660, 'weighted_input_side': 657749234, 'weighted_output': 49753635, 'weighted_total': 707502869}
+main {'input': 14694, 'cache_write': 23023725, 'cache_write_5m': 0, 'cache_write_1h': 23023725, 'cache_read': 855414917, 'output': 3419395, 'thinking': 939931, 'raw_context': 878453336, 'weighted_input_side': 93558757, 'weighted_output': 17096975, 'weighted_total': 110655732}
+subagent {'input': 70910, 'cache_write': 190745791, 'cache_write_5m': 190745791, 'cache_write_1h': 0, 'cache_read': 6357865623, 'output': 6531332, 'thinking': 2476351, 'raw_context': 6548682324, 'weighted_input_side': 564190476, 'weighted_output': 32656660, 'weighted_total': 596847136}
+models by assistant record: [('claude-opus-5-5', 49319), ('claude-opus-5', 2933), ('claude-fable-5', 323), ('claude-sonnet-5', 122), ('claude-haiku-4-5-20251001', 49), ('claude-sonnet-5-5', 24), ('<synthetic>', 20)]
+
+Context load by category (tokens=bytes/4; raw is token x requests it sat in; weighted is cache-priced)
+category                   results     tok_in   cmt_tok  cmt%           raw   raw%    weighted   wtd%
+cmd/binaries_scripts          4049    2286471         0     0     426537903   5.74    36462712   5.15
+assistant_tool_inputs        27586    4423519         0     0     349301080   4.70    36308051   5.13
+attachments                    884    3768943         0     0     388013441   5.22    35152622   4.97
+assistant_thinking               0    3416282         0     0     256852573   3.46    23827325   3.37
+src                           1642    1581322    887295    56     245294489   3.30    21207123   3.00
+assistant_edit_inputs         2581    1550714         0     0     189928207   2.56    18273492   2.58
+tests                         1706    1462640    749866    51     202204041   2.72    17508115   2.47
+adocs/data_script             1206    1404128    658370    47     147067867   1.98    12840216   1.81
+tools                         1410    1243516    455847    37     145574793   1.96    12501483   1.77
+adocs/plan_current             823    1059634         0     0     103865376   1.40     9786329   1.38
+tuning                        1748    1015507         0     0      87851107   1.18     8468518   1.20
+root_docs                      951     724075         0     0      73797999   0.99     7247545   1.02
+adocs/decisions                601     634763         0     0      79283385   1.07     6925317   0.98
+adocs/plan_done                381     548669         0     0      76380604   1.03     6619672   0.94
+user_text                     1141     757292         0     0      58665301   0.79     6547481   0.93
+adocs/data_other               914     764747         0     0      66610724   0.90     6177942   0.87
+cmd/git_diff_show              860    1159888    260045    22      63998975   0.86     6046510   0.85
+cmd/other                     1114     365351         0     0      44565788   0.60     4489408   0.63
+cmd/read_unknown              1169     527292         0     0      47215532   0.64     4484187   0.63
+claude_home                     48     423895         0     0      53825815   0.72     4477575   0.63
+briefs                         196     293373         0     0      45018924   0.61     3840332   0.54
+cmd/python                    2587     466247         0     0      37165523   0.50     3826631   0.54
+adocs/specs                    305     259420         0     0      39401201   0.53     3162362   0.45
+adocs/plan_todo                290     259723         0     0      29158856   0.39     2689740   0.38
+cmd/git_other                  949     279258         0     0      23960165   0.32     2489611   0.35
+cmd/shell_misc                1132     290685         0     0      22333913   0.30     2296604   0.32
+adocs/plan                     153     165085         0     0      14527450   0.20     1769273   0.25
+tool_other                    3301     159960         0     0      13792400   0.19     1459498   0.21
+root_scripts                   306     191048     88975    47      14092749   0.19     1390096   0.20
+cmd/git_log_grep               281     160825         0     0      14356629   0.19     1377643   0.19
+assistant_text                2502     182318         0     0       9760953   0.13     1235362   0.17
+agent_prompts_sent             246     126588         0     0       7729656   0.10     1030505   0.15
+cmd/build_test                 733     110456         0     0      10037504   0.14     1021268   0.14
+adocs/status                   135     105932         0     0       9021300   0.12     1003517   0.14
+prompt_first                   261     118274         0     0       8405000   0.11      862608   0.12
+cmd/loop                       241      92246         0     0       7302825   0.10      789736   0.11
+adocs/other                    138      80537         0     0       5902822   0.08      787430   0.11
+adocs/audit                     68      79128         0     0       6110810   0.08      702422   0.10
+agent_report                   417      74731         0     0       4859959   0.07      603662   0.09
+cmd/watch                      341      58787         0     0       4562508   0.06      562707   0.08
+tmp                             20      64996         0     0       5295388   0.07      467668   0.07
+attributed raw 46.4% of context processed; weighted items 45.1% of weighted total
+output at 5x: 7.0% of weighted total; base context (first request size x requests) raw 15.8%
+COMMENTS IN CONTEXT: raw 404369845 = 5.44% of context processed; weighted 35011906 = 4.95% of weighted total
+   src                      raw   2.04%  weighted   1.82%  tokens in 887295
+   tests                    raw   1.38%  weighted   1.26%  tokens in 749866
+   adocs/data_script        raw   0.97%  weighted   0.91%  tokens in 658370
+   tools                    raw   0.75%  weighted   0.67%  tokens in 455847
+   cmd/git_diff_show        raw   0.21%  weighted   0.19%  tokens in 260045
+   root_scripts             raw   0.09%  weighted   0.10%  tokens in 88975
+   attachments              raw   0.00%  weighted   0.00%  tokens in 0
+   prompt_first             raw   0.00%  weighted   0.00%  tokens in 0
+   assistant_text           raw   0.00%  weighted   0.00%  tokens in 0
+   user_text                raw   0.00%  weighted   0.00%  tokens in 0
+   tool_other               raw   0.00%  weighted   0.00%  tokens in 0
+   assistant_tool_inputs    raw   0.00%  weighted   0.00%  tokens in 0
+authored through Edit/Write: 5121392 bytes, of which code files 2485766, comment lines in those 1235877 (50%)
+authored by area: {'adocs/data_script:bytes': 1109933, 'tests:bytes': 696479, 'briefs:bytes': 610329, 'tuning:bytes': 603835, 'adocs/data_script:comment_bytes': 523728, 'adocs/plan_current:bytes': 434310, 'tmp:bytes': 431150, 'tests:comment_bytes': 360649, 'tools:bytes': 358202, 'src:bytes': 307004, 'src:comment_bytes': 202501, 'adocs/plan_todo:bytes': 174172, 'tools:comment_bytes': 139583, 'root_docs:bytes': 130655, 'adocs/data_other:bytes': 100849, 'adocs/audit:bytes': 72774}
+authored comment tokens 308969; at output price 5x = 1544846 units = 0.22% of weighted total (retention in context not added; counted as output only)
+
+Per subagent: requests, raw context, weighted, comment shares
+all        n=241 req med 59 p90 232 | raw med 6896575 p90 76409420 | weighted med 735645 p90 6467451 | output med 2964 | cmt wtd% med 4.5 p90 9.4 agg 5.7 | cmt raw% med 4.5 p90 9.0 agg 6.0
+implement  n=101 req med 132 p90 324 | raw med 23927951 p90 138898260 | weighted med 2732215 p90 12712438 | output med 5683 | cmt wtd% med 5.2 p90 9.5 agg 5.9 | cmt raw% med 5.3 p90 9.5 agg 6.3
+close      n= 11 req med 147 p90 233 | raw med 28802740 p90 77871048 | weighted med 3621546 p90 5146086 | output med 15161 | cmt wtd% med 4.4 p90 7.2 agg 4.2 | cmt raw% med 4.9 p90 8.3 agg 4.6
+review     n=115 req med 30 p90 64 | raw med 2908183 p90 9256784 | weighted med 331936 p90 803667 | output med 537 | cmt wtd% med 4.0 p90 9.4 agg 4.8 | cmt raw% med 3.5 p90 8.5 agg 5.0
+explore    n= 10 req med 68 p90 223 | raw med 9684704 p90 51677274 | weighted med 1033423 p90 3704618 | output med 51810 | cmt wtd% med 5.7 p90 14.3 agg 5.1 | cmt raw% med 7.6 p90 14.1 agg 5.7
+
+steps with at least one subagent attributed: 87
+per step medians: subagents 2 requests 158 raw 26430398 weighted 2903218 comment raw 991531 comment weighted 95828 comment tokens read 15619
+per step comment share of weighted: med 4.5 p25 2.2 p75 6.4 p90 8.9; of raw: med 5.0 p25 2.2 p75 6.7 p90 8.8
+top 12 steps by weighted:
+  S023 agents 4 requests 1390 raw 660115187 weighted 59134667 cmt_raw 30677418 (4.6%) cmt_w 2695764 (4.6%) cmt_tok_read 130889
+  S099 agents 4 requests 1469 raw 647438954 weighted 57040162 cmt_raw 33633546 (5.2%) cmt_w 2627679 (4.6%) cmt_tok_read 107573
+  S261 agents 3 requests 606 raw 322763778 weighted 33456149 cmt_raw 19789545 (6.1%) cmt_w 2035756 (6.1%) cmt_tok_read 56203
+  S121 agents 8 requests 1075 raw 377350696 weighted 31542738 cmt_raw 27878380 (7.4%) cmt_w 1989429 (6.3%) cmt_tok_read 189338
+  S125 agents 7 requests 641 raw 222700719 weighted 24206219 cmt_raw 16234166 (7.3%) cmt_w 1304310 (5.4%) cmt_tok_read 165923
+  S123 agents 7 requests 976 raw 272856248 weighted 23011774 cmt_raw 26054887 (9.5%) cmt_w 1855531 (8.1%) cmt_tok_read 206032
+  S039 agents 5 requests 995 raw 303149774 weighted 19789016 cmt_raw 13915688 (4.6%) cmt_w 857574 (4.3%) cmt_tok_read 66618
+  S083 agents 12 requests 1109 raw 256279021 weighted 19269007 cmt_raw 14851345 (5.8%) cmt_w 1193284 (6.2%) cmt_tok_read 169839
+  S135 agents 10 requests 1031 raw 244770439 weighted 18239528 cmt_raw 19510162 (8.0%) cmt_w 1508442 (8.3%) cmt_tok_read 193808
+  S296 agents 4 requests 591 raw 181322576 weighted 16936253 cmt_raw 8997166 (5.0%) cmt_w 831648 (4.9%) cmt_tok_read 57040
+  S136 agents 6 requests 707 raw 187803504 weighted 16441834 cmt_raw 10919439 (5.8%) cmt_w 803444 (4.9%) cmt_tok_read 113045
+  S289 agents 5 requests 673 raw 196461460 weighted 16356904 cmt_raw 14442335 (7.4%) cmt_w 1227369 (7.5%) cmt_tok_read 77973
+
+Main sessions
+  f8ebe539 2026-10-21..2026-10-30 req 1925 compact 15 base 53856 raw 351339117 wtd 35820078 out 1400152 cw 5768371 cr 345566494 cmt_w 1.06%
+  68d80046 2026-10-12..2026-10-20 req 959 compact 5 base 50077 raw 199419106 wtd 22667278 out 705144 cw 4701829 cr 194715133 cmt_w 0.86%
+  cdf92f03 2026-09-30..2026-10-04 req 389 compact 1 base 47951 raw 91024999 wtd 17980631 out 227304 cw 6303606 cr 84720519 cmt_w 0.99%
+  95b64fd4 2026-08-14..2026-08-14 req 207 compact 0 base 53244 raw 56279667 wtd 8312209 out 148300 cw 1022000 cr 55256620 cmt_w 2.32%
+  5afa22dc 2026-10-08..2026-10-12 req 330 compact 2 base 48543 raw 60627006 wtd 7389916 out 217070 cw 1678211 cr 58948053 cmt_w 0.57%
+  5fbb1cb2 2026-08-13..2026-08-14 req 110 compact 0 base 53203 raw 18636455 wtd 4466873 out 150570 cw 972924 cr 17661506 cmt_w 0.00%
+  32bc1423 2026-10-30..2026-10-31 req 147 compact 1 base 48539 raw 35701147 wtd 3944366 out 157946 cw 702176 cr 34998617 cmt_w 0.82%
+  7ff708c6 2026-10-05..2026-10-06 req 170 compact 1 base 49142 raw 26001949 wtd 3014625 out 119045 cw 573829 cr 25427766 cmt_w 2.35%
+  2b6b0c55 2026-08-13..2026-08-13 req 72 compact 0 base 53503 raw 11692693 wtd 2779892 out 113840 cw 547002 cr 11143336 cmt_w 0.00%
+  33c7b8a7 2026-08-13..2026-08-13 req 96 compact 0 base 53109 raw 10674625 wtd 1802827 out 63993 cw 218546 cr 10455898 cmt_w 1.19%
+subagent base context, first request size: median 39358 p90 41338
+brief bytes: median 1689 p90 3961
+cache writes: 5m 190745791 1h 23023725; read/write ratio 33.7; uncached input 85604
