@@ -13,8 +13,12 @@ Updated: 2026-11-01, by hand.
 owner for the rule and the scope: the recommendation is the study's, the rule and then the 72 log-shaped blocks, and
 `adocs/data/comment_study/report.md` has the numbers. That machine has no `.tuning/`, no books, no `.moltke.local.md` and no worktrees,
 and no match, fit, timing or S101 script belongs on it. `adocs/data/S101_pause_check.sh` is green at every comment commit (DEC-335 (3)).
-`adocs/plan_current/S101_threat_terms.md` is not edited. Unread on that machine: whether its build gives `bench` 5707449. If it does not,
-stop and ask: no signature means anything until that is explained. Then commit, and the owner pushes.
+`adocs/plan_current/S101_threat_terms.md` is not edited. That machine's build gives `bench` 5707449, read 2026-11-01 at `55d7e75`. Commit, and the owner pushes.
+
+**Where that machine stands, 2026-11-01:** the owner asked for a study of literature and community first, and it is done: `adocs/data/comment_study/literature/report.md`,
+its rule and its method for the whole live code waiting on the owner's word. S311 not started; no comment touched. **`tools/gate.sh` is red there at `55d7e75`, before any comment
+work:** `test_fastchess_script`, 72 s against its 60 s clock and a `BARE_FEN=1` case, and `clang-format.sh --check` on two lines of `src/data_structures.hpp` under major 23. S314 holds
+the readings. S315 is a small defect the study met. DEC-335 (5) asks that gate of every comment commit, so how to read it there is part of the owner's word.
 
 **On the workstation, after the owner's pull:** (1) `CLANG_FORMAT_MAJOR=22 tools/gate.sh` at the new HEAD, with a message or by its
 test form; a format disagreement with major 22 is read first (DEC-146). (2) The stage below, untouched by the pull. Do not move

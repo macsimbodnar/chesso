@@ -1536,6 +1536,7 @@ research pass" and "2026-11-01: phase 1".
 | file | what it is |
 |---|---|
 | `comment_study/` | the comment study of 2026-10-31 at `5954c12`: `report.md` verbatim, its counters, tables and pilot; regenerable outputs left out, as its header says. DEC-335 |
+| `comment_study/literature/` | the literature and community study of 2026-11-01 at `55d7e75`: `report.md`, in Italian, the proposed rule and method; `notes/`, its four sourced notes; `head_55d7e75/`, the counters re-run at that commit. DEC-335 |
 | `S101_phase2_pause.diff` | S101's phase 2 as staged on the workstation over REF `4e34e61`, every golden but `EXACT_FLOOR`, red and so not committed as code (DEC-334); a record, never applied before the verdict (DEC-335) |
 | `S101_pause_check.sh` | whether that diff still lands three-way at HEAD, run at each comment commit (DEC-335) |
 | `S101_census.txt` | the research pass's figures: each threat kind's rows and share with the attacker on move on S083's corpus and S082's qs set, the overlaps, the clamp share at a flat hypothetical weight (a probe, no weight proposed), the same counts over `chesso bench`'s evaluation calls, and the prototype's instructions |
