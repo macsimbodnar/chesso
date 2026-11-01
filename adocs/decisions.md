@@ -17221,3 +17221,24 @@ Decision:     By the owner, 2026-11-01: the comment work was inconclusive and is
               comment work to run it on, and it stays for a commit that touches the diff's files before the close.
 Why:          The owner's word. S308 carries real false claims and stays filler (DEC-171), not parked with the sweep.
 Rejected:     Deleting the parked steps: ids are never reused, and the owner said aside, not gone.
+
+## DEC-343  2026-11-01  S101's H1: EXACT_FLOOR falls 159 -> 157 by the owner, and DEC-316's rows answer a weight its text does not name
+Tags:         mate, testing, threats, s101, s156, s170, dec-334, dec-316, dec-313, dec-299, dec-142, owner-question
+Context:      S101's `{0, 5}` SPRT, `cand 4e34e61+7d6f96ec896c` against `4e34e61`, read H1 at Elo +33.87 +/- 12.33 over 1636
+              games. DEC-334 (3) left the floor to the owner on H1. The paste reads 158 exact mined mates against 159,
+              154 weakened, 168 and 158 at its parent; at depths 11 and 12 it leads, 191 and 206 against 187 and 199.
+              Separately, the paste moved `test_tuner_gradient`'s worst to 2.07e-6 at parameter 984 against its 1e-6
+              bound, a weight not near zero, which DEC-316 does not name.
+Decision:     By the owner, 2026-11-01, the recommended option: `EXACT_FLOOR` 159 -> 157. One below the 158 shipped (DEC-313 (1)'s
+              rule), 3 above the 154 weakened, so it still separates: the gate at `RfpMinPly` 1 with 157 compiled in is red at 154
+              (`adocs/data/S101_mined_floor_157.log`). What DEC-299 held lands with it as the scripts answer: E's ceiling 2 -> 3,
+              S170's budgets A 100000, D 1000000, F 100000. By the coordinator, under the owner's standing instruction: the
+              gradient case takes DEC-316's rows, the first eligible pair of `all_test_fens()` that triples that gradient
+              (`adocs/data/S101_gradient_rows.cpp`), the metric, h and the bound unmoved, worst 2.68e-7. This applies DEC-316 to a
+              case its text does not name. Its recorded alternative, the floored metric, stays unadopted.
+Why:          The owner's ruling (DEC-299). A floor that still separates keeps the test able to fail for the reason it exists.
+              Rows keep the check able to see a wrong derivative, which a floored metric would blind on a stationary weight.
+Rejected:     158: zero margin (DEC-116), the next refit asks again. Classifying all 16 lost mates before landing: 4 traced, each a
+              recorded price, all 16 back by depth 16, and the count leads from depth 11.
+Consequences: Later refits re-read the floors under DEC-299's guard from 158 and 154. A revert of S101's paste puts 159, E's 2 and the
+              old budgets back. A third recurrence on the gradient case reopens the floored metric, for the owner.

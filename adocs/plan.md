@@ -377,32 +377,31 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S101  **a piece attacked by a lesser piece, hanging pieces and safe pawn-push threats: H1 at 8+0.08, `{0, 5}`** -- the screen kept all seven parts (DEC-333); the SPRT read Elo +33.87 +/- 12.33 over 1636 games (an early stop, biased upward), from the working tree against `4e34e61` (DEC-334); bench 5707449 -> 5482277; cost +4.68 %, the clamp binding on 0.400 % of rows; `EXACT_FLOOR` 159 -> 157 by the owner (DEC-343), `MATE_IN_THREE_FLOOR` holds; E's ceiling 2 -> 3 and S170's budgets A, D and F by their scripts
 - S306  **twelve comments the code no longer bore out now say what it does** -- all twelve read false; the timer board's figure is no golden, no test reading it, re-taken at 35516352 nodes with the 402 ms bound unmoved and about 17 times below; code identical by `adocs/data/S306_identity.txt`, bench 5707449, 262 anchors found once; a clean reader found two errors in the rewrites, both fixed; S307 and S308 hold what it found beside them; filler (DEC-171), comments only
 - S305  **`mutation_check.py`'s progress line stops calling an unread bench `same`** -- it prints the table's own `bench_column`, so `n/a` for a mutant with no bench line and `-` for a stillborn one, which the step had not named; red on today's line, then green; `DEV_MANUAL.md`'s case count now thirty-one; filler (DEC-171), tools only
 - S118  **the pawn pass and each king's shelter cached per pawn structure, read at the search's two evaluation sites: credited by DEC-266, no SPRT owed** -- `board_t::pawn_hash` an index, both pawn bitboards the verifier, 2^12 by DEC-332 (7), 192 KiB per `go`; what landed -6.29 % and -6.54 % cycles, -6.37 % wall, -9.01 % and -9.63 % instructions, floors 0.603, 0.087, 0.255, about +9.7 Elo at long control as a conversion, no game played; hits 89.7 to 96.4 %; the slot alone reads zero and stays for S122; storm is S122's; bit-identical, bench 5707449 (INV-6); DEC-046 VOID; 24 of 24 mutants, Debug self-play and `gate_extra` clean; `bench_eval` not the bar
 - S125  **phalanx, supported and weak unopposed pawns and isolated pawns by file, and backward no longer counts an isolated pawn: H1 at 8+0.08, `{0, 5}`** -- the screen kept four groups and dropped the increment, doubled by file and backward by rank (DEC-331); the SPRT read Elo +22.89 +/- 10.02 over 2508 games (an early stop, biased upward); bench 5434393 -> 5707449; cost +3.50 %, `evaluate()` 63.99 -> 75.93 ns; the fold neutral, `isolated_backward` at backward's flat (INV-6, DEC-331 (15)); both mate floors hold
-- S304  **`spsa_driver.py check` always ends in its failure marker, a malformed engine line stops naming the wait, and no engine outlives `depth_vs_eval.py`** -- a cut `bestmove e3` passed as a move on chesso before; a healthy engine still ends on `quit`, the kill only after a bounded wait; engines open in a worker's first task, a stated departure, and the rows are identical at one and three workers; `spsa_s085.json` stays as a finished run's record; filler (DEC-171), tools only
 
 ## Open
 
-1. S101  threat terms: a piece attacked by a lesser piece, an attacked piece nobody defends, and a safe pawn push that would attack a piece
-2. S307  the timer case establishes that its board's first iteration outlasts the bound, so a dead timer cannot pass on a lighter board
-3. S308  the nine comments S306 and its reader found beside its twelve are made true or removed
-4. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
-5. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory
-6. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-7. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-8. S102  outpost and space terms in the evaluation, one family
-9. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-10. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-11. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-12. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-13. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-14. S030  move_t drops the moving piece and becomes 16 bits
-15. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-16. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-17. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-18. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
-19. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
-20. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-21. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+1. S307  the timer case establishes that its board's first iteration outlasts the bound, so a dead timer cannot pass on a lighter board
+2. S308  the nine comments S306 and its reader found beside its twelve are made true or removed
+3. S309  `test_tuner_gradient` stops running close to its 60 s clock, so a later family's planted recovery cannot turn it red on time alone
+4. S310  `test_tuner_gradient`'s clamp block names S101's cells, its AdaGrad hold reads a margin and not a chance, and it runs from any directory
+5. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
+6. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+7. S102  outpost and space terms in the evaluation, one family
+8. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+9. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+10. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+11. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+12. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+13. S030  move_t drops the moving piece and becomes 16 bits
+14. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+15. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+16. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+17. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+18. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+19. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+20. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included

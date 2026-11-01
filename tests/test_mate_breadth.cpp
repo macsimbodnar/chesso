@@ -86,30 +86,31 @@
 // test_engine.
 static constexpr int SCORE_DEPTH = 10;
 
-// GOLDEN (DEC-142): 159, the fewest exact mate distances the engine may find
+// GOLDEN (DEC-142): 157, the fewest exact mate distances the engine may find
 // over the 318 mined positions of the tracked TSV at depth 10. Its two ends:
-// 168 with the guard shipping, 158 with it weakened (S125, below; 160 and 153
-// at S123, 165 and 154 at S121, 160 and 159 at S296, 160 and 156 at S135, 159
-// and 154 at S083, 163 and 160 at S293, 164 and 160 at S286). This header read
-// 158 and S135's ends from S296 to S121.
-// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 159, which
+// 158 with the guard shipping, 154 with it weakened (S101, below; 168 and 158
+// at S125, 160 and 153 at S123, 165 and 154 at S121, 160 and 159 at S296, 160
+// and 156 at S135, 159 and 154 at S083, 163 and 160 at S293, 164 and 160 at
+// S286). This header read 158 and S135's ends from S296 to S121.
+// Re-derive: python3 adocs/data/S156_mined_floor_sweep.py --floor 157, which
 // builds a throwaway worktree because the red end is no longer reachable by
 // setoption; S250 read the gate built at RfpMinPly 1 red at 145.
 // Moves legitimately on: a search change that costs or buys mate finding --
 // re-derive when either end moves, and never read a replacement off the failing
 // run.
-// Margin: 9 below the shipping count and 1 above the weakened one since
-// S125 (1 and 6 at S123, 6 and 5 at S121, 1 and 0 at S296, 2 and 2 at S135, 1
-// and 4 at S083, 0 below the shipping count at S293). The S156
-// script's rule admits any floor strictly above what the weakened guard finds
-// and at or below what ships -- 157 to 160 against S135's 156 and 160, 155 to
-// 159 against S083's 154 and 159 -- and flags one outside that band as no
-// longer separating. The floor this gate kept until S293 sat 1 below the
-// shipping count, as it did again at S083: a single mate the shipping build
-// loses to an unrelated tree change did not turn it red, and the weakened guard
-// still did with 3 to spare. (At S261 the gap was 4 as well, 160 against 156;
-// at S250 it was 3, 146 against 143, and the spare point went above the
-// weakened end because that was the end that had moved, 139 to 141 to 143.)
+// Margin: 1 below the shipping count and 3 above the weakened one since S101 (9
+// and 1 at S125, 1 and 6 at S123, 6 and 5 at S121, 1 and 0 at S296, 2 and 2 at
+// S135, 1 and 4 at S083, 0 below the shipping count at S293). The S156 script's
+// rule admits any floor strictly above what the weakened guard finds and at or
+// below what ships -- 155 to 158 against S101's 154 and 158, 157 to 160 against
+// S135's 156 and 160, 155 to 159 against S083's 154 and 159 -- and flags one
+// outside that band as no longer separating. The floor this gate kept until
+// S293 sat 1 below the shipping count, as it did again at S083 and does at
+// S101: a single mate the shipping build loses to an unrelated tree change did
+// not turn it red, and the weakened guard still did with 3 to spare. (At S261
+// the gap was 4 as well, 160 against 156; at S250 it was 3, 146 against 143,
+// and the spare point went above the weakened end because that was the end that
+// had moved, 139 to 141 to 143.)
 // Property beside it: the `wrong_sign == 0` assertion in the same case -- a
 // mate score for the side being mated is a defect at any total, so it is
 // asserted at zero and carries no floor.
@@ -213,7 +214,20 @@ static constexpr int SCORE_DEPTH = 10;
 // 168, so it separates and is not moved: a floor that holds needs no decision,
 // and one below the shipping count, 167, is a rise for the coordinator to
 // propose. A revert of S125's paste puts 160 and 153 back.
-static constexpr int EXACT_FLOOR = 159;
+//
+// **157 since S101, by the owner (DEC-343), re-derived by the script
+// (DEC-142).** S101's threat family, the screen's 1234567 fit, moves both ends
+// down: on its tree S156's sweep reads **158** exact at RfpMinPly 3, 159 at 2
+// and **154** at 1 and 0, so the shipping build is red at 159
+// (adocs/data/S101_goldens.txt). A falling floor is outside DEC-299's guard, so
+// it went to the owner, who lowered it to 157 on S101's H1: 1 below the
+// shipping count, DEC-313 (1)'s rule, and 3 above the weakened one, so it still
+// separates. The 16 rows lost at depth 10 all return by depth 16, and the count
+// reads 191 and 206 against the parent's 187 and 199 at depths 11 and 12
+// (adocs/data/S101_lost_mates.txt). The gate built at RfpMinPly 1 with 157
+// compiled in is red at 154 (adocs/data/S101_mined_floor_157.log). A revert of
+// S101's paste puts 159 and S125's 168 and 158 back.
+static constexpr int EXACT_FLOOR = 157;
 
 
 struct row_t

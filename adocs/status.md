@@ -7,15 +7,22 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-01, by hand.
 
-## 2026-11-01, evening: comments parked (DEC-342), S101 resumed on the workstation
+## 2026-11-01, evening: S101 done, H1; S307 next (handover)
 
-The owner parked the comment work as inconclusive. DEC-341 had already removed it from the tree, all but the study,
-`adocs/comment_study.md`; code, tests and tools are byte for byte `55d7e75`, so S101's REF and diff are untouched. S311, S312 and S313 sit at
-the end of the Open list, parked; S308 is back behind S101. Read on the MacBook Air and now in no step: `tools/gate.sh` is red there
-before any change, `test_fastchess_script` and two format lines of `tt_cluster_t`; `bench` 5707449. The section below holds for S101. Do not move
-`../chesso-s101` to `achesso`: its HEAD stays REF `4e34e61`.
+**S101 done, H1** (`cand 4e34e61+7d6f96ec896c` vs `4e34e61`, Elo +33.87 +/- 12.33, nElo +46.57 +/- 16.84, an early stop and not the effect size, LLR 2.95,
+1636 games in 45 m, 0 forfeits, `adocs/data/S101_sprt.log`, archived, verified). Inspected and it stands: banner, both benches, the diff the tree played, no warning
+of any kind, quarters +46.1, +20.4, +39.2, +30.6, journal clean. All seven parts ship at the screen's 1234567 fit, bench 5482277; cost +4.68 %, clamp 0.400 %. The
+owner lowered `EXACT_FLOOR` to 157 (DEC-343), the gate at `RfpMinPly` 1 red at 154; E's ceiling 3 and S170's budgets land with it. Under `src/` the tree played plus
+comments, the binary byte-identical. `gate_extra` 6 of 6 on the final tree. Unmeasured: each part's share, the transfer gap of DEC-333 (8), the long control, the negative
+and far cells for S126, P7's q3 fit at the 5000 cap. S122 inherits the clamp's readings, the unions and `LAZY_EVAL_MARGIN`.
 
-## 2026-11-01: S101 screened, phase 2 staged, its SPRT next and not started; S118, S305, S306 done (handover)
+**Next: S307, S308 (allowed now; `085180b` holds it done once), S309 (before S102's plants), S310, then S122.** S311, S312 and S313 are parked (DEC-342): the owner read the
+comment work as inconclusive, and DEC-341 removed it from the tree but for the study, `adocs/comment_study.md`. Read on the MacBook Air and now in no step: `tools/gate.sh` is
+red there before any change, `test_fastchess_script` and two format lines of `tt_cluster_t`; `bench` 5707449.
+
+**Removed with the owner's yes (2026-11-01):** S118's eight cost trees and `../chesso-s118`, S101's cost trees; branch `s118` stays, since the data files cite its shas.
+
+## 2026-11-01: S118, S305 and S306 done (handover)
 
 Mode: one fresh Opus 5.5 subagent per step, the coordinator implements nothing, few questions, batched
 in Italian with the recommended option first, which is taken wherever the choice is not the owner's.
@@ -40,26 +47,6 @@ moves play.
 false comments now say what the code does, the "Golden" mark off the timer board, `No functional change`.
 A clean reader found two errors in S306's twelve rewrites, after the writer's own check: for the comment
 study, a measured rate that says a rewrite needs that reader.
-
-**S101 in progress, its SPRT next, playing the working tree of `../chesso-s101` (DEC-334).** Phase 1 `c2f2025`.
-The screen, 2026-11-01 04:28 to 06:11, kept all seven parts; the cost, all seven forced, reads +4.68 %
-(`adocs/data/S101_screen_reading.txt`, `S101_cost_reading.txt`); `apply` read the clamp at 0.400 %, bench
-5482277. Phase 2's diff is staged there and saved at `.tuning/coord/S101/phase2.diff`, every golden
-re-derived but `EXACT_FLOOR`, 158 against 159 and red, which is the owner's on H1 only (recommended 157).
-On H0 or no verdict nothing is committed and `S101_screen.sh part A|B|C` follows, about 17 min each, up to
-three more runs. Open filler named in its pre-registration, neither moving play: S307, S308, S309, S310;
-none lands while the run holds the machine.
-
-**Stopped 2026-11-01, the SPRT not started. `../chesso-s101` is at REF `4e34e61`, the paste staged, the book copied; its diff is
-`.tuning/coord/S101/phase2.diff`, the same bytes as `adocs/data/S101_phase2_pause.diff`. To resume there, in order:** (1) What DEC-334 (5)
-still owes on that tree: `STAGES=clang tools/gate_extra.sh`, stopped for the shutdown, and the Debug self-play (`DEV_MANUAL.md`, 4 rounds at
-4+0.04), neither read. `gate_extra` otherwise read on the tree: prose, citations, debug, perft ok; sanitize stops at `test_mate_breadth`, 158
-against 159, the floor, 49 of 50 and no sanitizer report, so its bench signature was not reached. (2) Rebuild `build/` there. (3) Pin the
-worktree's copy of `adocs/data/S101_sprt.sh`: `ref` `4e34e61`, `screened` `c2f2025`, both bracketed sentences (the survivors are all seven, so
-`moves` stays; the readings are in the two data files above; fastchess and book unchanged since S118's drift point, re-check for the A/A rule;
-Open list re-read). (4) `cd ../chesso-s101 && nohup adocs/data/S101_sprt.sh > ../chesso/.tuning/s101_sprt.console 2>&1 &`, up to 41900 games,
-19.86 h, watcher ceiling 40 h. Phase 2's owed items and `specs.md` wording for an H1: `.tuning/coord/S101/close_notes.md` and the step file
-in the diff. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner answers (asked 2026-11-01); branch `s118` stays in any case.
 
 **The comment study, 2026-10-31: parked (DEC-342), its report `adocs/data/comment_study/report.md`, a later one `adocs/comment_study.md`.** The
 owner asked whether cleaning or compressing comments helps the project and token use. Read on `5954c12`

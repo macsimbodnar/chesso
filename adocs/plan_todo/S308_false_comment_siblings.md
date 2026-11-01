@@ -2,7 +2,7 @@ id:         S308
 goal:       the nine comments S306 and its reader found beside its twelve are made true or removed
 accepts:    each row below is re-checked against the code at landing, with what the check read, and then says what the code does or is gone; the first board's figure in `tests/test_engine.cpp` is treated as S306 treated the timer board's (DEC-142); commits touching `src/` read `No functional change`; code identity shown per file as `adocs/data/S306_identity.txt` shows it; every anchor in `tools/mutants/` still found once; a clean reader compares old against new
 touches:    src/data_structures.hpp, src/search.cpp, src/evaluation.cpp, tests/test_engine.cpp, tests/test_search.cpp, tests/test_uci_surface.cpp, DEV_MANUAL.md, rating.sh
-excludes:   shortening comments or removing history, which waits for the owner's decision on the comment study (`adocs/status.md`); `adocs/data/` and `adocs/plan_done/`
+excludes:   shortening comments or removing history, which is parked (DEC-342); `adocs/data/` and `adocs/plan_done/`
 decisions:  DEC-171, DEC-142
 closes:
 blocks:
@@ -30,3 +30,8 @@ that step being bound to its twelve. Each row's quoted words find its block.
 Two errors in S306's twelve rewrites survived its writer's own check, so the reader is not optional.
 Filler by DEC-171: none moves a score, a move or a line. If the owner takes the comment study's cleanup,
 this folds into its step that covers `src/`.
+
+## Added 2026-11-01
+
+S101's close flagged a tenth: `src/evaluation.cpp`'s fusion comment, "not only for the zeros king safety currently ships", looks stale. `085180b`
+holds this step done once on another machine and removed with the rest (DEC-341): re-read it before redoing the work.

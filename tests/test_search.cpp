@@ -4861,20 +4861,21 @@ TEST_SUITE("search: draws")
     // Confirmed: S277's sweep gives the parent's distances and node counts on
     // S286's library at 7 to 12, and B04 still fails this row
     // (`adocs/data/S286_rows.log`).
-    // GOLDEN (DEC-142): the position, the depth 9 and the distance 5 below
-    // (depth 10 and distance 4 from S121 to S125, 5 from S261 to S121, the
-    // re-mines at the end of this block).
-    // Re-derive with the six commands in `adocs/data/S277_mine_mate_row.py`'s
-    // own header: the candidate list, the shipped sweep, the same sweep
-    // against a library built with `B04_probcut_defender_gate_dropped` applied,
-    // the separator set, the firing witness over it, and the pick. **Since
-    // S277 the witness and the pick run in guard mode**, `--mode guard`
-    // (DEC-238): this row witnesses a guard, so the witness is taken on a tune
-    // library built with B04 applied. The script is S113's miner,
-    // `adocs/data/S113_mine_mate_row.py`, with S097's `--mode` passed through;
-    // S113's script has no mode and derived every row below in what is now
-    // the default one. On `338705e` S277's guard-mode stages reproduce S259's
-    // guard witness cell for cell and take this row
+    // GOLDEN (DEC-142): the position, the depth 10 and the distance 6 below
+    // (depth 9 and distance 5 from S125 to S101, depth 10 and distance 4 from
+    // S121 to S125, 5 from S261 to S121, the re-mines at the end of this
+    // block). Re-derive with the six commands in
+    // `adocs/data/S277_mine_mate_row.py`'s own header: the candidate list, the
+    // shipped sweep, the same sweep against a library built with
+    // `B04_probcut_defender_gate_dropped` applied, the separator set, the
+    // firing witness over it, and the pick. **Since S277 the witness and the
+    // pick run in guard mode**, `--mode guard` (DEC-238): this row witnesses a
+    // guard, so the witness is taken on a tune library built with B04 applied.
+    // The script is S113's miner, `adocs/data/S113_mine_mate_row.py`, with
+    // S097's `--mode` passed through; S113's script has no mode and derived
+    // every row below in what is now the default one. On `338705e` S277's
+    // guard-mode stages reproduce S259's guard witness cell for cell and take
+    // this row
     // (`adocs/data/S277_repro.log`).
     // Moves legitimately on: any change to ProbCut, to pruning or to ordering.
     // Margin: exact -- the row asserts the distance too.
@@ -5021,15 +5022,34 @@ TEST_SUITE("search: draws")
     // then green**: with B04 applied the case fails here at `REQUIRE(
     // result.mate_found )` and passes with the guard in place
     // (adocs/data/S125_goldens.txt).
+    //
+    // **Re-mined at S101, guard mode (DEC-142, DEC-238).** Its threat family
+    // left S125's row above still separating, shipped `d9` against B04's `d10`,
+    // and the script's pick moved: the six commands of
+    // adocs/data/S277_mine_mate_row.py's header, on the candidate's libraries
+    // and B04's built from the candidate's tree: three of the 269 separate, one
+    // by distance only, and the pick takes the row below, the cheaper cell of
+    // the two runs of one, at **depth 10, mate in 6**, shipped `d10` against
+    // B04's none in the range 7 to 10 (`d10 d11` shipped and `d11` under B04
+    // over 3 to 12), the mutant's ProbCut firing at 7 to 10, 111261 nodes,
+    // about 33 ms. Not read off the board: python-chess reports `is_valid()`
+    // True, `is_check()` True, 4 legal moves, no capture and no promotion;
+    // Stockfish at 5000000 nodes through python-chess (DEC-319 (3)) reads
+    // **`#+6`** for White, the side to move, pv d2c1 b3c3 c1b2 f3g5 g2g5 c3b3
+    // b2b3 c5c4 b3c3 a6a5 g5g8, a line python-chess reads as ending in
+    // checkmate, the label `adocs/data/S097_candidates.tsv` already held.
+    // **Observed red, then green**: with B04 applied the case fails here at
+    // `REQUIRE( result.mate_found )` and passes with the guard in place
+    // (adocs/data/S101_goldens.txt).
     const std::string mate_probcut_hides =
-        "1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52";
+        "7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42";
 
     {
-      const std::string title = "mate probcut hides, depth 9";
-      const search_t result = search_fen(mate_probcut_hides, 9);
+      const std::string title = "mate probcut hides, depth 10";
+      const search_t result = search_fen(mate_probcut_hides, 10);
 
       REQUIRE_MESSAGE(result.mate_found, title);
-      REQUIRE_MESSAGE(result.mate_in == 5, title);
+      REQUIRE_MESSAGE(result.mate_in == 6, title);
     }
 
     // S091's own cases, for the two rules that act on a **capture**. The one

@@ -1,0 +1,29 @@
+# S101's close identity: what the comment pass leaves of each file under src/, the tree played against the worktree. S306_identity.txt's form.
+# Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over the played file and over the new file, compared whole; the
+# bytes and hash below are the stripped output. Control: `int a = 1;` and `int a = 2;` through the same command differ, and a line comment and a two-line
+# block comment both vanish. Machine: i7-8700K, g++ 13.3, 2026-11-01.
+# The played file: REF 4e34e61 plus the run's candidate.diff, blob 7d6f96ec896c; the diff's post-image blob is checked against the index below.
+base 4e34e61 plus candidate.diff; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with the two comments added  f9d474b81d62f2db
+
+the played file named by the diff
+  src/evaluation.cpp  candidate.diff's post-image 054a6542518a1a04f3c9a5562a5650a4dbe9c653; this index 054a6542518a1a04f3c9a5562a5650a4dbe9c653
+  files under src/ in candidate.diff: 1
+
+C++ under src/: the played file against the worktree, every file the pass changed
+  SAME  src/evaluation.cpp  69618 bytes  sha256 60b232abfa0a148b
+  SAME  src/evaluation.hpp  7149 bytes  sha256 9ba8c91fac364c88
+
+git diff -U0 -- src, whole-line comments only
+  changed lines 47, not a whole-line comment: 0
+
+the rest of src/ against REF, every path: src/evaluation.cpp src/evaluation.hpp 
+
+the binary: build/src/chesso as played, copied before the pass, against the Release build of this tree
+  played  6c936a8158c0608f  3162976 bytes  5482277 nodes
+  rebuilt 6c936a8158c0608f  3162976 bytes  5482277 nodes
+  byte-identical
+  tune build  5482277 nodes

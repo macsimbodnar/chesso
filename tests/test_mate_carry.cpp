@@ -377,7 +377,7 @@ static bool line_ends_in_mate(const std::string& fen,
 
 
 // GOLDEN (DEC-142): the most short mating PVs a case may report -- 2, 13, 4,
-// 1, 2 and 3, one per replayed game of adocs/data/S170_cases.tsv at its own
+// 1, 3 and 3, one per replayed game of adocs/data/S170_cases.tsv at its own
 // budget and stride. (The line read "5, 11, 0, 1, 8 and 2" until S095 and had
 // been stale since S109 moved three of them; it is the function below that
 // ships, and these six are now the same numbers. C's 0 became 2 while S236's
@@ -399,14 +399,16 @@ static bool line_ends_in_mate(const std::string& fen,
 // score, the claimed side right and none shorter than Stockfish's
 // (adocs/data/S121_case_b.txt). S123's passed pawn family moved none; its
 // grid re-derived the budgets in adocs/data/S170_cases.tsv, A, C, E and F.
-// S125's pawn structure family moved none; its grid re-derived A, C and F.)
+// S125's pawn structure family moved none; its grid re-derived A, C and F.
+// S101's threat family moves E 2 -> 3, DEC-299's +2 held for the owner's floor
+// ruling and landing with it, DEC-343; its grid re-derived A, D and F.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 // adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
 // adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
 // adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
 // adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
-// adocs/data/S125_sweep_s170.txt
+// adocs/data/S125_sweep_s170.txt adocs/data/S101_sweep_s170.txt
 // (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
@@ -439,7 +441,7 @@ static bool line_ends_in_mate(const std::string& fen,
 //       adocs/data/S293_sweep_s170.txt adocs/data/S083s_sweep_s170.txt
 //       adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
 //       adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
-//       adocs/data/S125_sweep_s170.txt
+//       adocs/data/S125_sweep_s170.txt adocs/data/S101_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -493,7 +495,11 @@ static bool line_ends_in_mate(const std::string& fen,
 // **S125's is the tenth** (`adocs/data/S125_sweep_s170.txt`, S125's pawn
 // structure family at the screen's 02567 fit, uncommitted on `f08d9db`, 108
 // cells, 1404 mate lines and 22 short): it moves no ceiling, and the budgets
-// it re-derived, A, C and F, are in the TSV's header.
+// it re-derived, A, C and F, are in the TSV's header. **S101's is the
+// eleventh** (`adocs/data/S101_sweep_s170.txt`, S101's threat family at the
+// screen's 1234567 fit, uncommitted on `c2f2025`, 108 cells, 1441 mate lines
+// and 22 short): it moves E, below, and the budgets it re-derived, A, D and F,
+// are in the TSV's header.
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;
@@ -510,11 +516,13 @@ static bool line_ends_in_mate(const std::string& fen,
 //                                         DEC-299's guard, standing only
 //                                         with S135's fit (0 before, no
 //                                         short line in any cell)
-//   E_mate_minus9                    2  2000000 on the S135 grid, 2 of
-//                                         19; DEC-299's guard, standing
-//                                         only with S135's fit (DEC-295's 1
-//                                         on the S286 grid before, 4000000,
-//                                         1 of 23)
+//   E_mate_minus9                    3  1500000 on the S101 grid, 3 of 6;
+//                                         DEC-299's +2, DEC-343, standing
+//                                         only with S101's family
+//                                         (S135's 2 before, 2000000 on the
+//                                         S135 grid, 2 of 19, DEC-299's guard;
+//                                         DEC-295's 1 on the S286 grid before
+//                                         that, 4000000, 1 of 23)
 //   F_mate6_inherited_no_line        3  300000 on the S083s grid at stride
 //                                         2, 3 of 4; DEC-307, standing only
 //                                         with S083's refit (DEC-295's 2 on
@@ -592,6 +600,22 @@ static bool line_ends_in_mate(const std::string& fen,
 // moved by the same grid and the tracked picker: A 1000000 -> 300000 (2
 // lines), C 1000000 -> 500000 (1), E 500000 -> 300000 (15) and F 100000 ->
 // 300000 (7), none short; B 100000 and D 4000000 stay.
+//
+// **One rose at S101, inside DEC-299's +2, and landed with the owner's floor
+// ruling (DEC-343).** S101's threat family moves every static score whose board
+// holds a threat, so a replay builds a different tree. Its grid
+// (`adocs/data/S101_sweep_s170.txt`, S101's candidate, uncommitted on
+// `c2f2025`) shows E's 1500000 cell at stride 1 reporting 6 mate lines, 3
+// short, so the script over the twelve grids answers E 2 -> 3 and nothing else
+// moves; a rise of 1. `EXACT_FLOOR` fell on that tree, 158 shipping and 154
+// weakened against 159, so DEC-299's guard, both floors holding or rising, was
+// not met, and the ceiling and the budgets were read and held until the owner
+// lowered the floor to 157 on S101's H1 (DEC-334 (3), DEC-343);
+// `MATE_IN_THREE_FLOOR` holds at 11, 12 and 10. They stand only with S101's
+// family and leave with any revert of it. The budgets moved by the same grid
+// and the tracked picker: A 1000000 -> 100000 (2 lines), D 1500000 -> 1000000
+// (4) and F 500000 -> 100000 (8), none short; B 100000, C 1000000 and E 300000
+// stay.
 //
 // **Three of them rose at S109 and that is the decision the block owes.** The
 // shallow-depth pruning block takes 74 % of the tree, and a line the search
@@ -671,14 +695,15 @@ static bool line_ends_in_mate(const std::string& fen,
 static size_t short_line_ceiling(const std::string& name)
 {
   // A's 2 by DEC-295, in S286's commit only; F's 3 by DEC-307, with S083's
-  // refit; D's 1 and E's 2 by DEC-299's guard, with S135's fit. B's 13 by
-  // DEC-327, accepted by the owner on S121's H1, DEC-328 (6 by DEC-307 from
-  // S083's refit until S121's table).
+  // refit; D's 1 by DEC-299's guard, with S135's fit. B's 13 by DEC-327,
+  // accepted by the owner on S121's H1, DEC-328 (6 by DEC-307 from S083's refit
+  // until S121's table). E's 3 by DEC-343, with S101's family (2 by DEC-299's
+  // guard from S135's fit until then).
   if (name == "A_mate8_shallow") { return 2; }
   if (name == "B_mate6_shallow") { return 13; }
   if (name == "C_mate7_depth11") { return 4; }
   if (name == "D_mate_minus6_depth10") { return 1; }
-  if (name == "E_mate_minus9") { return 2; }
+  if (name == "E_mate_minus9") { return 3; }
   if (name == "F_mate6_inherited_no_line") { return 3; }
 
   FAIL("unknown case " << name);

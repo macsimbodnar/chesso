@@ -558,7 +558,21 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // S101 appended its threat family (1121 parameters) and twelve rows so that
 // each of its 48 has a gradient here: at the family's zero landing the worst is
 // 4.98e-07, at parameter 990, passed_king_own_eg[5]
-// (adocs/data/S101_preconditions.txt).
+// (adocs/data/S101_preconditions.txt). **S101's fit turned it red, and two rows
+// were added for it: DEC-316's answer, on a weight its text does not name,
+// which DEC-343 records.** At the fit's constants the 104 rows
+// read 2.07e-06 at parameter 984, passed_king_own_mg[5]: its gradient
+// +7.507e-05 and the central difference 1.55e-10 from it, the relative error
+// again O(h^2) (5.17e-5, 8.26e-6, 5.17e-7 and 8.22e-8 at h 0.05, 0.02, 0.005
+// and 0.002). That weight is not stationary, as S135's was, its gradient
+// standing among its siblings', so the pair is picked by
+// adocs/data/S101_gradient_rows.cpp's rule, the first eligible pair that
+// triples it, and not by this case passing; h, the metric and the 1e-6 are
+// unchanged. With it the worst is 2.68e-07, at parameter 985,
+// passed_king_own_eg[0], a factor of 3.7, and 984 reads 1.11e-07, under the
+// 2.5e-07 the 1/|gradient| law gives because the pair moves the truncation term
+// as well (adocs/data/S101_gradient_rows.cpp prints it,
+// adocs/data/S101_goldens.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -692,7 +706,11 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // (adocs/data/S125_close_inv6.txt).
   // With S101's twelve coverage rows (104) at its zero-weight landing it
   // answers +30 again: the same four rows bound and the same distances, finite
-  // differences 1.53e-7 (adocs/data/S101_preconditions.txt). Re-run it whenever
+  // differences 1.53e-7 (adocs/data/S101_preconditions.txt). At S101's
+  // candidate, the screen's 1234567 fit with DEC-316's pair (106), it answers
+  // +30 again: two rows bound, the farthest at 198.7, the nearest other at
+  // 158.8, every row 14.67 from the kink, finite differences 1.52e-7; on the
+  // 104 rows it answered +50 (adocs/data/S101_goldens.txt). Re-run it whenever
   // the constants or the fixture move; the precondition below re-establishes
   // the binding either way. A much larger push saturates the sigmoid
   // everywhere, which makes the finite difference itself unreliable.
@@ -956,8 +974,13 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
   // 25, 1e-7 at 75, 5e-4 at 125 and 1.6 cp at 175 -- last-bit rounding grown a
   // hundredfold every 25 epochs while every level stays held within 1e-9 -- so
   // the comparison would measure the chaos and not the hold. At 3 and at 10
-  // the two stay within 6e-13 for all 300 epochs. The full-corpus fit at 30 has
-  // 9716070 training rows and descended smoothly (S262_fits.txt).
+  // S262 read the two within 6e-13 for all 300 epochs on those rows. The
+  // full-corpus fit at 30 has 9716070 training rows and descended smoothly
+  // (S262_fits.txt). A fit can bring the onset down to 10: S101's on the 108
+  // gauge rows read 5e-9 at epoch 250, 1e-6 at 275 and 5e-6 at 300, and at most
+  // 5e-12 at 7. Today, on the 110 with S101's pair, the two stay within
+  // 1.30e-11 at 3 and 6.28e-11 at 10, every 25 epochs, 7.39e-12 at epoch 300 at
+  // 10: a reading and no margin (adocs/data/S101_goldens.txt).
   const double k = 1.0;
   const int epochs = 300;
 
@@ -1031,8 +1054,10 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // under Adam and 1.2480 under AdaGrad, both the bishop's, the
     // largest 4.0138, the knight's, and 4.1944, the pawn's, every hold at
     // most 8.22e-15
-    // (`adocs/data/S101_preconditions.txt`). The
-    // 0.1 of before
+    // (`adocs/data/S101_preconditions.txt`). At S101's candidate, the 1234567
+    // fit with DEC-316's pair (110 with the gauge rows), the smallest is 0.7951
+    // under Adam, the knight's, and 0.6157 under AdaGrad, the bishop's, every
+    // hold at most 1.13e-14 (`adocs/data/S101_goldens.txt`). The 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
     // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits

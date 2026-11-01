@@ -3206,17 +3206,30 @@ TEST_SUITE("engine: uci go")
   {
     uci_init();
 
-    // The later board's FEN, read off the engine's own board rather than
-    // written here (CHESS rule). The base stays startpos, so this line itself
-    // clears nothing under either rule.
+    // The later board is two plies down the line this search reports, not a
+    // fixed pair of moves: which replies the tree holds is the evaluation's to
+    // change, and the precondition below needs a board the search did store.
+    // Its FEN is read off the engine's own board rather than written here
+    // (CHESS rule). The base stays startpos, so neither `position` line clears
+    // anything under either rule.
     std::string later_fen;
     {
       stdout_capture_t capture;
-      uci_process_line("position startpos moves e2e4 e7e5 g1f3 b8c6");
-      later_fen = generate_FEN(&uci_game()->board);
       uci_process_line("position startpos moves e2e4 e7e5");
       uci_process_line("go depth 6");
       uci_wait_for_search();
+
+      std::vector<std::string> line;
+      for (const std::string& info : capture.lines()) {
+        const std::vector<std::string> token = split_string(info);
+        const auto pv = std::find(token.begin(), token.end(), "pv");
+        if (pv != token.end()) { line.assign(pv + 1, token.end()); }
+      }
+      REQUIRE(line.size() >= 2);
+
+      uci_process_line("position startpos moves e2e4 e7e5 " + line[0] + " " +
+                       line[1]);
+      later_fen = generate_FEN(&uci_game()->board);
     }
 
     // The precondition, without which the check below cannot fail: the search

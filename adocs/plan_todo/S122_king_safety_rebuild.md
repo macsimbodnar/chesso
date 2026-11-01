@@ -37,8 +37,7 @@ H0 or no verdict the family is bisected along a partition written in the
 pre-registration, each part its own SPRT. Where this file names
 `tools/eval_model.hpp` or `test_eval_model` as the tuner's mirror of a term,
 S262's trace and its exact-reconstruction test discharge that clause once
-S262 has landed. S263 built no per-side attack set, since no term read one;
-a term here that needs one builds it once per evaluation. S039 runs before this family
+S262 has landed. S263 built no per-side attack set; S101 built the sets by class in stage two's loop (DEC-333), and a term here reads them. S039 runs before this family
 and retires the lazy shortcut and the clamp; if S039 read H0 instead, the
 owner's amendment of that outcome binds here.
 
@@ -202,7 +201,7 @@ clamped with mobility to `LAZY_EVAL_MARGIN` inside `src/evaluation.cpp`
   precondition gains a fixture row on which the group is non-zero.
 - The shelter comes out of the slot S118 added, read past the lazy shortcut; storm is computed here. The slot read zero on its own (DEC-332 (5)), and this step is its only reason to stay, so what it adds to the slot is timed as S118's row was.
 - Safe checks are counted per piece type and weak squares over the king zone;
-  both read attack sets the mobility loop already builds (S121), not a second
+  both read attack sets the mobility loop already builds (S101), not a second
   pass.
 - The move-ordering band clearance is re-checked. `piece_values_abs` and the
   100-point band separation are the hazard `CLAUDE.md` records; this term's
@@ -263,7 +262,7 @@ run, not after.
 - **S039 (immediately before)**: the clamp decision. This step states what it
   inherited.
 - **S118 (before)**: supplies the shelter slot, storm being this step's -- the one traced positive in the group, +6.40, is the two together.
-- **S121 (before)**: the attack sets and the mobility area.
+- **S121 and S101 (before)**: S121's mobility area, and S101's attack sets by class, under the clamp.
 - **S101 (before)**: threats; the two must not count the same attack twice.
 - **S127 (after)**: SPSA over the finaliser's constants.
 - **S126 (block end)**: the full refit, whose gradient must carry this step's
@@ -290,3 +289,9 @@ run, not after.
   Chess, Thomas, 2013-10-19: a king-safety tuning write-up reporting "Only 10
   (selfplay) ELO" as a **gain**; **not** the regression this file quotes.
   Fetched 2026-09-13.
+
+## From S101's H1, 2026-11-01
+
+S122 inherits the clamp's readings at S101's fit, deciding nothing there: it binds on 0.400 % of S083's rows; mobility p99 107, max 229;
+threats p99 50, max 151; combined p99 156, max 415. `LAZY_EVAL_MARGIN` is S122's to re-derive with threats inside the sum (DEC-324, DEC-333 (6)). The
+boundary is by target (DEC-333 (9)). `threat_king_mg` and the negative cells of `hanging_piece_eg` and `threat_king_eg` are listed for S126.

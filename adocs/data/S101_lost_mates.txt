@@ -1,0 +1,150 @@
+# S101 phase 2: the mined mates S101's candidate moves at depth 10, attributed by tool (DEC-305, DEC-308 (2), S136's method). 2026-11-01,
+# one Opus 5.5 subagent, worktree chesso-s101 (c2f2025 plus the screen's 1234567 fit, bench 5482277; the parent's bench 5707449). Rows are
+# indices into S145's mined set as S156's read_set returns them. Every score is the engine's own; every chess claim is Stockfish's (TOOLCHAIN.md's
+# safe form through python-chess). No fit, match, SPRT, datagen or timing.
+#
+# READING. EXACT_FLOOR 159 falls: 158 shipping and 154 weakened against the parent's 168 and 158 (S156). 16 rows are lost at depth 10 and 6 gained, -10 net.
+# At depth 11 the candidate reads 191 against the parent's 187, and at depth 12 206 against 199: the count falls at depth 10 and leads from depth 11.
+# Of the 16 lost, all are found again by depth 16 and held: 12 within 2 plies of the parent, rows 107, 129 and 136 at 3 plies, row 163 at 6 (10 -> 16).
+# The oracle agrees with all 16 labels at 5000000 nodes. Rows traced: 107, 129, 136 and 163: in each the parent's root or PV node searches the mating
+# line first or on PV nodes; the candidate scouts it, and a mated side's non-PV node returns by reverse futility (129, 136, 163: DEC-158's price, the
+# shape DEC-319 (2) recorded) or by the multicut (107: ply 1, depths 9 to 11; DEC-313 (4) retired the multicut's mate row on S291's attribution).
+# No row reads as a rule defect, by the trace; that reading is the coordinator's to rule on, as DEC-323 (1) did.
+#
+# == 1. S156: python3 adocs/data/S136_overlay_run.py adocs/data/S156_mined_floor_sweep.py src/evaluation.cpp -- --ref HEAD --floor 159 --jobs 12; parent without the overlay.
+#    adocs/data/S101_goldens.txt section 5 holds both outputs. RfpMinPly 3, 2, 1, 0: candidate 158, 159, 154, 154; parent 168, 162, 158, 158.
+#
+# == 2. python3 adocs/data/S136_mined_rows.py ENGINE DEPTH, exact over the 318
+#    depth   parent  candidate
+#    10      168     158
+#    11      187     191
+#    12      199     206
+#
+# == 3. First exact iteration: python3 adocs/data/S136_lost_mates.py depths ENGINE 16 ROWS, both builds. Each is held to 16.
+#    row  label  parent  candidate
+#    91   m4     10      11        lost, +1
+#    97   m4     10      11        lost, +1
+#    102  m4     10      11        lost, +1
+#    107  m4     10      13        lost, +3
+#    129  m5     8       11        lost, +3
+#    136  m5     9       12        lost, +3
+#    138  m5     10      11        lost, +1
+#    163  m5     10      16        lost, +6
+#    166  m5     9       11        lost, +2
+#    179  m5     10      11        lost, +1
+#    192  m6     10      11        lost, +1
+#    193  m6     9       11        lost, +2
+#    201  m6     10      12        lost, +2
+#    210  m6     10      11        lost, +1
+#    221  m6     10      11        lost, +1
+#    235  m7     10      11        lost, +1
+#    86   m4     -       8         gained
+#    124  m4     11      10        gained
+#    190  m6     11      9         gained
+#    232  m7     13      10        gained
+#    246  m7     -       10        gained
+#    255  m7     11      10        gained
+#
+#  the per-iteration scores, parent then candidate:
+# # .tuning/s101p2/bin/par_chesso, go depth 16, Hash 16, ucinewgame per row
+# # row	label	first	held	per iteration (depth:score)
+# 91	m4	10	10	1:813 2:757 3:1275 4:1256 5:1698 6:1627 7:2763 8:2002 9:2507 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 97	m4	10	10	1:1352 2:1352 3:1647 4:1850 5:1850 6:1850 7:1907 8:2069 9:2092 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 102	m4	10	10	1:539 2:539 3:568 4:563 5:645 6:720 7:835 8:1010 9:1067 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 107	m4	10	10	1:1058 2:1111 3:1111 4:1111 5:1257 6:1257 7:2401 8:m6 9:m5 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 129	m5	8	8	1:259 2:259 3:265 4:265 5:296 6:282 7:1051 8:m5 9:m5 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 136	m5	9	9	1:961 2:961 3:993 4:1242 5:1242 6:1242 7:1249 8:1273 9:m5 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 138	m5	10	10	1:1129 2:1129 3:1159 4:1159 5:1159 6:1173 7:1244 8:1245 9:1265 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 163	m5	10	10	1:427 2:415 3:560 4:507 5:561 6:657 7:707 8:734 9:1207 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 166	m5	9	9	1:178 2:156 3:781 4:1104 5:1127 6:1279 7:1341 8:2127 9:m5 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 179	m5	10	10	1:908 2:940 3:1071 4:1071 5:1071 6:1213 7:1237 8:1259 9:1347 10:m5 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 192	m6	10	10	1:1335 2:1335 3:1335 4:1335 5:1341 6:1341 7:1350 8:1570 9:1570 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 193	m6	9	9	1:429 2:510 3:534 4:517 5:645 6:645 7:738 8:792 9:m6 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 201	m6	10	10	1:648 2:567 3:609 4:554 5:626 6:558 7:632 8:1115 9:m8 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 210	m6	10	10	1:519 2:633 3:633 4:517 5:590 6:622 7:683 8:716 9:1420 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 221	m6	10	10	1:383 2:383 3:348 4:348 5:398 6:398 7:597 8:698 9:849 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 235	m7	10	10	1:454 2:418 3:484 4:484 5:734 6:902 7:965 8:990 9:974 10:m7 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+# 86	m4	-	-	1:654 2:699 3:711 4:711 5:711 6:711 7:739 8:825 9:864 10:1185 11:1247 12:1292 13:1607 14:1736 15:1758 16:1850
+# 124	m4	11	11	1:1760 2:1760 3:1830 4:1880 5:2169 6:2216 7:2293 8:2337 9:m5 10:m5 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 190	m6	11	11	1:186 2:186 3:468 4:468 5:468 6:468 7:468 8:1130 9:1640 10:2358 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 232	m7	13	13	1:411 2:411 3:738 4:738 5:741 6:1020 7:1020 8:1020 9:1247 10:2137 11:2181 12:2327 13:m7 14:m7 15:m7 16:m7
+# 246	m7	-	-	1:507 2:507 3:507 4:507 5:555 6:555 7:573 8:557 9:562 10:727 11:777 12:787 13:810 14:1581 15:1603 16:1702
+# 255	m7	11	11	1:634 2:795 3:795 4:1156 5:1293 6:1280 7:1373 8:1746 9:1901 10:2046 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+# # .tuning/s101p2/bin/cand_chesso, go depth 16, Hash 16, ucinewgame per row
+# # row	label	first	held	per iteration (depth:score)
+# 91	m4	11	11	1:828 2:744 3:1308 4:1221 5:1337 6:1634 7:1798 8:1859 9:3067 10:2660 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 97	m4	11	11	1:1352 2:1352 3:1647 4:1850 5:1850 6:1850 7:1907 8:2074 9:2115 10:2131 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 102	m4	11	11	1:539 2:539 3:571 4:566 5:645 6:720 7:774 8:975 9:1050 10:1367 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 107	m4	13	13	1:1058 2:1103 3:1104 4:1121 5:1614 6:1623 7:1685 8:1774 9:2546 10:1732 11:2355 12:2578 13:m4 14:m4 15:m4 16:m4
+# 129	m5	11	11	1:259 2:259 3:265 4:265 5:296 6:276 7:276 8:360 9:846 10:1036 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 136	m5	12	12	1:961 2:961 3:993 4:1232 5:1232 6:1232 7:1261 8:1284 9:1350 10:1397 11:1387 12:m5 13:m5 14:m5 15:m5 16:m5
+# 138	m5	11	11	1:1129 2:1129 3:1168 4:1168 5:1168 6:1173 7:1238 8:1239 9:1260 10:m6 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 163	m5	16	16	1:439 2:415 3:576 4:507 5:575 6:669 7:719 8:746 9:801 10:893 11:970 12:1172 13:1192 14:1192 15:1228 16:m5
+# 166	m5	11	11	1:189 2:179 3:794 4:1104 5:1142 6:1279 7:1341 8:1374 9:1449 10:1500 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 179	m5	11	11	1:908 2:949 3:1102 4:1102 5:1102 6:1213 7:1241 8:1267 9:1425 10:2412 11:m5 12:m5 13:m5 14:m5 15:m5 16:m5
+# 192	m6	11	11	1:1298 2:1298 3:1298 4:1298 5:1341 6:1341 7:1520 8:1570 9:m7 10:2071 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 193	m6	11	11	1:438 2:510 3:530 4:530 5:645 6:645 7:746 8:842 9:865 10:2138 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 201	m6	12	12	1:648 2:567 3:609 4:554 5:588 6:571 7:614 8:896 9:1168 10:1304 11:1618 12:m6 13:m6 14:m6 15:m6 16:m6
+# 210	m6	11	11	1:508 2:623 3:623 4:507 5:625 6:591 7:683 8:762 9:1420 10:1493 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 221	m6	11	11	1:354 2:354 3:348 4:348 5:389 6:389 7:597 8:698 9:1440 10:1412 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 235	m7	11	11	1:450 2:423 3:484 4:484 5:740 6:907 7:972 8:996 9:973 10:1642 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+# 86	m4	8	8	1:654 2:709 3:711 4:711 5:711 6:711 7:864 8:m4 9:m4 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 124	m4	10	10	1:1769 2:1769 3:1848 4:1865 5:2176 6:2217 7:2301 8:2271 9:2377 10:m4 11:m4 12:m4 13:m4 14:m4 15:m4 16:m4
+# 190	m6	9	9	1:140 2:140 3:477 4:477 5:477 6:477 7:477 8:477 9:m6 10:m6 11:m6 12:m6 13:m6 14:m6 15:m6 16:m6
+# 232	m7	10	10	1:411 2:411 3:698 4:698 5:701 6:1020 7:1020 8:1048 9:1586 10:m7 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+# 246	m7	10	10	1:486 2:486 3:486 4:486 5:544 6:544 7:573 8:573 9:1017 10:m7 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+# 255	m7	10	10	1:592 2:795 3:795 4:1156 5:1293 6:1280 7:1534 8:1841 9:2211 10:m7 11:m7 12:m7 13:m7 14:m7 15:m7 16:m7
+#
+# == 4. The oracle, DEC-319 (3), 5000000 nodes: ~/.venv/chess/bin/python adocs/data/S136_lost_mates.py oracle ROWS. All 16 lost rows read their label's mate.
+#    Row 246, gained, read cp +744 there, so DEC-320's deeper reading: --nodes 1000000000 --threads 12 --hash 2048 reads mate 7, its label.
+# # oracle: Stockfish dev-20260810-5062aee5, go nodes 5000000, python-chess analyse, ucinewgame per call, default Hash and Threads
+# # row	label	kind	value	depth	nodes	pv
+# 91	m4	mate	4	245	99031	d7c7 d4b6 c7b8 a7c6 b8a8 b6d8 h5h1
+# 97	m4	mate	4	200	5000022	g6e4 d1d3 e4d3 g3g4 f8f3 f2g1 d3d1
+# 102	m4	mate	4	167	5000153	g6d3 a2c2 d3f1 c2d1 e6f5 d1f1 b3b1
+# 107	m4	mate	4	180	5000432	e1e4 a3b4 e4b4 h6h5 f7e7 a6a5 e7h4
+# 129	m5	mate	5	184	5000268	g4f3 b8b7 f7g6 b7g7 g6g7 h2h3 f4g2 e1f1 d3d1
+# 136	m5	mate	5	74	5000108	h4h7 d5e7 a4a8 f8e8 a8c8 e7c8 g1g8 f6f8 h7d7
+# 138	m5	mate	5	75	5000245	d1h1 c5f2 h8g8 f7g8 h1h8 g8f7 g7g8q f7e7 g8e8
+# 163	m5	mate	5	154	5000510	b7e7 h7h6 f7g6 h5g5 f4g5 e5g7 e7e8 g7f8 e8f8
+# 166	m5	mate	5	245	1054490	h3g4 h1h4 g4h4 d2f3 g2f3 c7c6 f4f5 g6h6 h7h8q
+# 179	m5	mate	5	88	5000001	a1g1 g7g6 f5g6 f7g6 g3g6 a8f8 h4f6 f8f6 g6g8
+# 192	m6	mate	6	75	5000240	b2c2 d1d2 c2d2 e2f1 d2e1 f1g2 e1e2 g2g1 c3d4 h2f2 e2f2
+# 193	m6	mate	6	68	5000336	c8c2 f4d2 c2d2 h1h2 e2f3 a4a5 d2g2 h2h1 g2g1 h1g1 f3g2
+# 201	m6	mate	6	92	5000121	h6h7 e8e3 g3g4 e3e4 g4h5 e4h4 h5h4 d4f3 h4g3 f3d2 h7h8q
+# 210	m6	mate	6	153	5000208	d6d7 b3e3 g5g6 e3e4 f6f5 e4c6 e5e6 c6c7 f5f7 g8h8 f7g7
+# 221	m6	mate	6	96	5000468	e6f5 g7g6 e1e7 h7h6 f5f4 g6g5 f4f8 h6h5 e7h7 h5g4 f8f3
+# 235	m7	mate	7	56	5000421	f6f7 g8f7 c1f1 f7e7 d4e5 g4e6 e5c7 e6d7 h6g5 e7e8 c7e5 d7e6
+# 86	m4	mate	4	245	3796939	g6g7 g8g7 g1h2 e8g8 b1g1 g7f7 h4e7
+# 124	m4	mate	4	142	5000218	f4f7 g7h8 f1h1 h7h5 f7g6 a8g8 h1h5
+# 190	m6	mate	6	80	5000149	a7c5 c8b8 e7d7 d1g1 e3g1 d8d7 c5f8 b8c7 g1b6 c7c6 f8c5
+# 232	m7	mate	7	70	5000097	h2g2 g1h1 f8h8 f4h4 g2h2 h1g1 h2h4 d1d2 c2d2 g3h4 h8h4 d5c6
+# 246	m7	cp	744	18	5000036	c3c1 f4c1 f1c4 a5a4 d7c7 a4c4 c7c4 c1a3 d5d6 g8f7 d6d7 a3e7
+# 255	m7	mate	7	49	5000013	f4e5 a6f1 d1f1 e6g5 d5f7 e8f8 f7b3 c8f5 g6f5 g7f6 f5f6 f8e8
+# deeper: # oracle: Stockfish dev-20260810-5062aee5, go nodes 1000000000, python-chess analyse, ucinewgame per call, Threads 12, Hash 2048
+# deeper: # row	label	kind	value	depth	nodes	pv
+# deeper: 246	m7	mate	7	175	1000008795	e4f6 g8f8 f6h7 f8e8 h7f6 e8f8 c3h3 c1f1 g1f1 f4h6 h3h6 a5a2
+#
+# == 5. The traces. A throwaway tree of the candidate, src/search.cpp rewritten by python3 adocs/data/S136_trace_patch.py <tree>/src/search.cpp --keys (bench 5482277 with the
+#    environment unset); S295_DEPTH=d S295_DIAG=<log> python3 adocs/data/S136_uci_go.py <traced chesso> "<fen>" d; python3 adocs/data/S136_line_cut.py <log> <the parent's line>.
+#    The rules at each row's cut; the tree removed after.
+#
+#    Row 163, 7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54, m5, the oracle's #5. The parent's depth 10 line: b7a7 h7h6 f7g6 h5g5 f4g5 e5c7 a7a8 c7b8 a8b8.
+#      Candidate's root plays f4e5 first and scouts b7a7. Depth 10: ply 1 (b7a7, the mated side, non-PV) returns by the multicut, its verification at d4 reaching f7g6, whose
+#      node (d2) returns by reverse futility, -346. Depth 12: ply 1 returns from its loop by another reply, cut1. Depth 14: the multicut again, the f7g6 node (d4, [-697,-696]) rfp eval -220 margin 252, -472.
+#      Depth 15: ply 1's loop. At 16 the mate is reported. One tune option at a time, first exact on the candidate (-: none to 16): none 16, RfpMaxDepth=0 9, SeExtend=0 14, NullMoveMinDepth=64 16, SeMultiCut=0 -, ProbCut=0 -.
+#
+#    Row 107, 8/5Q1p/p5pk/3P4/8/q1N4P/2K2P2/4R3 w - - 1 41, m4, the oracle's #4. The parent's depth 10 line: e1e4 a3b4 e4b4 h6h5 f7e7 a6a5 b4h4.
+#      Candidate's root plays e1e7 first and scouts e1e4, the fourteenth searched. Ply 1 (e1e4, the mated side, non-PV) returns by the multicut at d9, d10 and d11 (verification d4, d4, d5). No node reaches a3b4.
+#      First exact: none 13, SeMultiCut=0 11, ProbCut=0 11, RfpMaxDepth=0 12, SeExtend=0 12, NullMoveMinDepth=64 13.
+#
+#    Row 129, 1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41, m5, the oracle's #5. The parent's depth 10 line: g4f3 b8b7 f7g6 b7d7 f4g2 e1f1 d3d7 b2b3 d7d1.
+#      Candidate, depth 10: ply 2 (g4f3 b8b7, PV) searches f7g6 second, scouted at d7. Ply 3 (White, the mated side, non-PV) answers from the table at d7, and by reverse futility at d2 in the node's first pass.
+#      First exact: none 11, RfpMaxDepth=0 8, NullMoveBase=16 8, SeMultiCut=0 8. Parent 8. Fragile, as S136 said of its rows: many options restore it.
+#
+#    Row 136, 2b2k2/1p6/2p1pq2/2PnNp2/R6Q/P7/P4P1P/6RK w - - 3 35, m5, the oracle's #5. The parent's depth 10 line: h4h7 d5e7 a4a8 f8e8 a8c8 e7c8 g1g8 f6f8 h7d7.
+#      Candidate's root plays h4f6 first and scouts h4h7, the twelfth. Ply 3 (h4h7 d5e7 a4a8, the mated side, non-PV, reduced 3, d5) returns by reverse futility, -1297.
+#      First exact: none 12, RfpMaxDepth=0 10, NullMoveBase=16 11, SeMultiCut=0 12. Parent 9.
+#
+# Classes, S136's: (i) depth churn, the label within 2 plies of the parent: 91, 97, 102, 138, 166, 179, 192, 193, 201, 210, 221, 235. Rows 129 and 136, +3, traced above, reverse futility at the
+# mated side's scout node. (ii) priced: 163 (+6), reverse futility inside the multicut's verification and the loop's reply; 107 (+3), the multicut. (iii) a rule defect: none found.

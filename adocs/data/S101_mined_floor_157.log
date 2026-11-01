@@ -1,0 +1,20 @@
+# S101, 2026-11-01: EXACT_FLOOR as the owner ruled it, DEC-343. The gate at RfpMinPly 1 with 157 compiled in. The tree is REF 4e34e61 with the paste's src/evaluation.cpp and tests/test_mate_breadth.cpp overlaid:
+# python3 adocs/data/S136_overlay_run.py adocs/data/S156_mined_floor_sweep.py src/evaluation.cpp,tests/test_mate_breadth.cpp -- --ref HEAD --floor 157 --jobs 12
+230:static constexpr int EXACT_FLOOR = 157;
+318 positions, depth 10, ref HEAD
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s101
+  overlaid tests/test_mate_breadth.cpp from /home/max/ws/chesso-s101
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     158          162            0   18.5s
+          2     159          161            0   18.3s
+          1     154          158            0   18.1s
+          0     154          158            0   18.2s
+
+  floor 157, asserted by tests/test_mate_breadth.cpp
+    shipping value 158, weakened-guard value 154, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_ilwgx05g/tests/test_mate_breadth.cpp:364: MESSAGE: mined set at depth 10: 154 exact, 158 right sign, 0 wrong sign
+    logged: the mined set reads 154 exact at depth 10, under the 157 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+rc 0

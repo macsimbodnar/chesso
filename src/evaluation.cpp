@@ -2163,27 +2163,33 @@ constexpr std::array<score_t, MOBILITY_CELLS> mobility_score = pack_mobility();
 // S101's threat family, seven groups summed into mobility's pair (DEC-333):
 // evaluation.hpp defines each set and cell, threat_terms() below computes them.
 //
-// **At zero, S135's form, and fitted afterwards** (DEC-259's screen,
-// adocs/data/S101_screen.sh). No seed: nothing here was taken from any engine
-// or page, and every entry starts the fit at zero (DEC-084). A group whose
-// weights are all zero is in no expression: the liveness flags below keep it,
-// and the ORs that build the unions it reads, out of the engine's stage two, so
-// the landing scores every position as before and pays nothing (INV-6,
-// DEC-047).
-constexpr int threat_pawn_mg[4] = {0, 0, 0, 0};
-constexpr int threat_pawn_eg[4] = {0, 0, 0, 0};
-constexpr int threat_piece_mg[5] = {0, 0, 0, 0, 0};
-constexpr int threat_piece_eg[5] = {0, 0, 0, 0, 0};
-constexpr int threat_minor_mg[2] = {0, 0};
-constexpr int threat_minor_eg[2] = {0, 0};
-constexpr int hanging_piece_mg[4] = {0, 0, 0, 0};
-constexpr int hanging_piece_eg[4] = {0, 0, 0, 0};
-constexpr int hanging_pawn_mg[1] = {0};
-constexpr int hanging_pawn_eg[1] = {0};
-constexpr int threat_king_mg[4] = {0, 0, 0, 0};
-constexpr int threat_king_eg[4] = {0, 0, 0, 0};
-constexpr int threat_push_mg[4] = {0, 0, 0, 0};
-constexpr int threat_push_eg[4] = {0, 0, 0, 0};
+// **Fitted, and shipped on one SPRT's H1** at {0, 5} nElo, 8+0.08: all seven
+// parts, together (adocs/data/S101_sprt.log; the stopping Elo is not the effect
+// size, DEC-063). The family landed at zero, S123's and S125's form, so that
+// DEC-259's screen could read each part from the shipped engine (INV-6,
+// adocs/data/S101_inv6.txt). No seed: nothing here was taken from any engine or
+// page, and every entry started the fit at zero (DEC-084).
+//
+// Every part survived the screen, and the values below are its full-corpus fit,
+// 1234567 (adocs/data/S101_screen_reading.txt), pasted unchanged with every
+// other constant frozen: a negative cell or a far one is the fit's, not
+// corrected by hand. Their speed cost, +4.68 % with all seven live, measured
+// with the weights forced (DEC-047, adocs/data/S101_cost_reading.txt), is
+// inside that verdict and was never priced apart from it.
+constexpr int threat_pawn_mg[4] = {34, 32, 22, 20};
+constexpr int threat_pawn_eg[4] = {10, 33, 33, 1};
+constexpr int threat_piece_mg[5] = {14, 6, 13, 22, 44};
+constexpr int threat_piece_eg[5] = {12, 31, 19, 62, 30};
+constexpr int threat_minor_mg[2] = {14, 12};
+constexpr int threat_minor_eg[2] = {20, 14};
+constexpr int hanging_piece_mg[4] = {16, 12, 10, 15};
+constexpr int hanging_piece_eg[4] = {10, 12, -7, -14};
+constexpr int hanging_pawn_mg[1] = {1};
+constexpr int hanging_pawn_eg[1] = {15};
+constexpr int threat_king_mg[4] = {12, 48, 42, 62};
+constexpr int threat_king_eg[4] = {20, 0, 13, -11};
+constexpr int threat_push_mg[4] = {14, 15, 4, 7};
+constexpr int threat_push_eg[4] = {13, 14, 10, 8};
 constexpr std::array<score_t, 4> threat_pawn_score =
     pack_scores(threat_pawn_mg, threat_pawn_eg);
 constexpr std::array<score_t, 5> threat_piece_score =
@@ -2199,9 +2205,14 @@ constexpr std::array<score_t, 4> threat_king_score =
 constexpr std::array<score_t, 4> threat_push_score =
     pack_scores(threat_push_mg, threat_push_eg);
 
-// One flag a group, as S123's and S125's. P1 reads the pawn attacks stage two
-// has anyway, so it alone needs no union, and that is the difference between
-// the two flags at the end.
+// One flag a group, as S123's and S125's: a group whose weights are all zero is
+// in no expression, and its flag keeps it, and the ORs that build the unions it
+// reads, out of the engine's stage two, so it scores nothing and pays nothing
+// (INV-6, DEC-047). Since S101's H1 every group is live, so the flags are true
+// and gate nothing. They stay for the refit that zeroes a group again: S126
+// refits everything, and a group a later screen drops is held at zero. P1 reads
+// the pawn attacks stage two has anyway, so it alone needs no union, and that
+// is the difference between the two flags at the end.
 static constexpr bool threat_pawn_live = any_weight(threat_pawn_score);
 static constexpr bool threat_piece_live = any_weight(threat_piece_score);
 static constexpr bool threat_minor_live = any_weight(threat_minor_score);

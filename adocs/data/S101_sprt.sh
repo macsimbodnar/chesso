@@ -84,9 +84,7 @@
 #   C      threat_push                                 A's and B's
 #
 # What REF carries is read by the same line test, from `screened` to REF, and is what the
-# parts before it may have landed. [COORDINATOR, at the pin: `moves` below narrowed to the
-# survivors' arrays, so a dropped group's array cannot move, and this sentence replaced by
-# what the screen kept.]
+# parts before it may have landed. The screen kept all seven, so `moves` below stays the fourteen arrays.
 #
 # WHAT THE VERDICT PRICES. The fitted survivors and their cost together: every stage-two
 # evaluation pays the groups whose weights are live, the unions they read, one OR a piece,
@@ -138,9 +136,9 @@
 # THE BANNER, READ BEFORE THE FIRST GAME FINISHES: S283's lines with this run's shas, dates
 # and out directory --
 #
-#   candidate  <REF, short>  <its commit date>  + uncommitted changes
+#   candidate  4e34e61  2026-11-01 09:35  + uncommitted changes
 #   diff       /home/max/ws/chesso/.tuning/sprt_s101_<stamp>/candidate.diff  blob <12 hex>
-#   reference  <REF, short>  <its commit date>
+#   reference  4e34e61  2026-11-01 09:35
 #   config     arch native  tune off
 #   padding    cand on  ref on
 #   tc 8+0.08  hash 16  concurrency 12 of 12 cores
@@ -156,14 +154,32 @@
 #
 # OPEN FINDINGS THIS RUN IS TAKEN WHILE OPEN (BUGS as scoped by DEC-171): S307 and S308,
 # neither moving play, unless plan.md's Open list says otherwise on the day.
-# [COORDINATOR, on the day it pins: REF's sha into `ref=` below, the commit the screen ran
-# from, as /home/max/ws/chesso/.tuning/s101/bin/stamp names it, into `screened=`, REF's date
-# into the banner lines above, the screen's seven readings and their sha256 (each part's d,
-# s, m and verdict), the survivors
-# and the H0 partition the screen printed, the corpus `locate` recorded, the candidate fit's
-# sha256 and its tie files', the clamp share `apply` read against its 1.0 %, the cost run's
-# reading, plan.md's Open list re-read, the A/A rule checked, and this bracketed sentence
-# replaced by what was found.]
+# Pinned by the coordinator 2026-11-01 18:52: REF `4e34e61` (committed 2026-11-01 09:35, DEC-334
+# and this script in its working-tree form, documents only, `src/` and the build files byte for byte
+# `c2f2025`'s, bench 5707449); `screened` `c2f2025` (committed 2026-11-01 04:28), the commit the stamp
+# names. The tree: `/home/max/ws/chesso-s101`, REF plus the staged diff,
+# `adocs/data/S101_phase2_pause.diff`, sha256 f75246a8..., bench 5482277; this pin is an unstaged edit of
+# this file beside it. The screen's seven readings (`.tuning/s101/read/`, concatenated in
+# `adocs/data/S101_screen_reading.txt`, sha256 4aac4b91...): P1 d +0.000051 s 0.000001 m 0.000002 kept
+# (2862827c...); P2 d +0.000025 s 0.000001 m 0.000002 kept (8130f61a...); P3 d +0.000047 s 0.000004 m
+# 0.000006 kept (8110bba8...); P4 d +0.000006 s 0.000001 m 0.000002 kept (b4573d9f...); P5 d +0.000014 s
+# 0.000001 m 0.000002 kept (82dc176f...); P6 d +0.000008 s 0.000002 m 0.000003 kept (d7abf618...); P7 d
+# +0.000053 s 0.000001 m 0.000002 kept (0c7535da...). Survivors all seven, the H0 partition A = P1,P2,P3 |
+# B = P4,P5,P6 | C = P7. The corpus `locate` recorded: S083's curve 0, 6226944 rows, sha256 2e0e3de9...
+# The candidate fit `.tuning/s101/fits/1234567/full.hpp`, sha256 33b6beac...; its tie files ties_P1.txt
+# 09e714e2..., ties_P2.txt f77fd9cb..., ties_P3.txt 0e0dd273..., ties_P4.txt c13f62fa..., ties_P5.txt
+# 19d01cf8..., ties_P6.txt 8bbdeef4..., ties_P7.txt 4867297c.... The clamp: 24897 of 6226944 rows, 0.400 %
+# against 1.0 %. The cost (`adocs/data/S101_cost_reading.txt`, f6629743...): all seven +4.68 % on its A/A
+# floor, instructions +5.67 % and +5.93 %; p7 +1.06 %; p1 to p6 and the parent zero; no `cand` row, its mask
+# being `all`'s (DEC-334). The Open list at `a8cd8e1` re-read: S307, S308, S309 and S310 are the open
+# DEC-171 filler, none moving play; S311 to S313 are parked (DEC-342). The mate floors: `EXACT_FLOOR` 159 red
+# at 158 shipping and 154 weakened (DEC-334), `MATE_IN_THREE_FLOOR` 11 at 12 and 10. The harness is S118's
+# drift point's of 2026-11-01 -- fastchess alpha 1.8.1 20260720-daa3ea2, `noob_3moves.epd` sha256
+# 2011193b..., `fastchess.sh` last changed `4d3edf6` (S306, comments only), the same workstation and kernel
+# 7.2.6 -- so no A/A is owed (DEC-143). Before the run, on the tree: `tools/gate_extra.sh`'s prose, citations,
+# debug and perft green, sanitize and clang red at `test_mate_breadth` alone, the floor, 49 of 50 in each
+# build, no sanitizer report; Debug self-play 8 games, 0 `Assertion`, 0 `disconnect`; the fast check over the
+# diff waits for the verdict (DEC-334 (5)); a dry copy of this script printed DRY-RUN-WOULD-EXEC.
 #
 # PRE-REGISTERED INTERPRETATION, written before a game is played (DEC-063).
 #
@@ -225,9 +241,9 @@ fail()
 # THE BOOKED SETTINGS, AND NOTHING ELSE FROM THE CALLER'S ENVIRONMENT, as S136_sprt.sh's
 # same block reads them: CAND above all, which would turn the run into a commit's and leave
 # the tree unplayed.
-ref="[COORDINATOR: REF's sha]"
+ref="4e34e61"
 worktree="/home/max/ws/chesso-s101"
-screened="[COORDINATOR: the sha the screen ran from]"
+screened="c2f2025"
 part=""           # THE PARTS above: empty for the family, or A, B or C
 tc="8+0.08"
 hash="16"

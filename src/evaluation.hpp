@@ -395,12 +395,14 @@ void structure_family_counts(const board_t* board, structure_family_t* out);
 // S101's threat family (DEC-333), seven groups scored in stage two: summed into
 // mobility's pair before its taper, under the clamp, so no truncating division
 // is added and the lazy shortcut cannot change a decision at any weight. Landed
-// at zero, each screened on its own part (DEC-259, adocs/data/S101_screen.sh).
-// The definitions are stated exactly because the walk in
-// tests/test_walked_counts.hpp is written from them and the two have to mean
-// the same thing, each implemented from its description (DEC-221): CPW *Hanging
-// Piece*, "an attacked piece not defended by own man", *Loose Piece*, and *Pawn
-// Pushes (Bitboards)*. Each count belongs to the attacking side.
+// at zero, each screened on its own part (DEC-259, adocs/data/S101_screen.sh),
+// and all seven survivors fitted together and shipped on one SPRT's H1
+// (evaluation.cpp says what they hold). The definitions are stated exactly
+// because the walk in tests/test_walked_counts.hpp is written from them and the
+// two have to mean the same thing, each implemented from its description
+// (DEC-221): CPW *Hanging Piece*, "an attacked piece not defended by own man",
+// *Loose Piece*, and *Pawn Pushes (Bitboards)*. Each count belongs to the
+// attacking side.
 //
 // The attack sets, per side, each the raw squares its men attack on the board
 // as it stands: no x-ray through a piece and no pin is read (DEC-333 (1)).

@@ -161,7 +161,15 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // fourth does not arise; the family is summed into the pawn terms' pair and
 // shares their one taper); of S123's four, two read 1.917 and 1.958 there,
 // under 2.0, and the worst 2.75, under 2.8, and the pick took four new rows at
-// phases 5, 11, 17 and 23 (adocs/data/S125_goldens.txt).
+// phases 5, 11, 17 and 23 (adocs/data/S125_goldens.txt). Re-derived at S101 on
+// the same corpus at its threat family's fit: 99 rows past 2.8, 27 at 2.875 and
+// 26 distinct positions there, phases 5 to 23, the worst still 2.875 = 69/24,
+// so three divisions still round (tempo zero, so DEC-322's fourth does not
+// arise; the family is summed into mobility's pair and shares its one taper);
+// of S125's four, three still read 2.875 and phase 23's 1.958, under 2.0, and
+// the pick took four new rows at phases 5, 11, 17 and 17, the top target 23's
+// White row at phase 17 because no White row at the maximum stands higher
+// (adocs/data/S101_goldens.txt).
 // Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
 // score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
 // that margin, so while the clamp binds the two agree exactly and the residual
@@ -177,10 +185,10 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
 // 4 x 23/24 = 3.833, which this case's precondition reports.
 const std::vector<std::string> truncation_positions = {
-    "8/8/R7/P6B/4P3/1r2P2k/4K3/8 b - - 2 46",
-    "8/2nnQpk1/1rb3pp/3p4/3Pp3/P3P2P/N2B1PP1/6K1 w - - 4 38",
-    "2r1r2k/4q1bp/1Rp5/P1P1p2p/2Q2p2/3P1N1P/2B2PP1/6K1 b - - 0 39",
-    "r1bq1bnr/ppp3p1/2n3k1/5pNp/7P/PB6/1BPP1PP1/R2Q1RK1 w - - 1 13",
+    "8/1B3r2/pK6/4RP2/8/2k5/8/8 b - - 4 56",
+    "2r5/3p4/3k2n1/1Pn4N/1Bp1P1p1/P3Rb2/1KP2P1P/R7 w - - 1 31",
+    "2qr2k1/p4pp1/4P3/6P1/5Q1P/P1r2N2/4R2K/4R3 b - - 0 31",
+    "1R6/3b1q1p/5k2/P2p4/1Q4p1/4P1P1/2r2r2/4K2R w - - 14 48",
 };
 
 

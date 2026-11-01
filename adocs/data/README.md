@@ -1555,3 +1555,21 @@ research pass" and "2026-11-01: phase 1".
 | `S101_cost_reading.txt` | the coordinator's `S101_cost.sh run`, 2026-11-01 06:12 to 08:09, `reading.txt` verbatim: all +4.68 %, p7 +1.06 %, p1 to p6 and the parent zero; no `cand` row, its mask being `all`'s (DEC-334) |
 | `S101_sprt.sh` | the pre-registration of S101's one family SPRT at 8+0.08, Hash 16, `noob_3moves.epd`, `{0, 5}`, cap 20950 rounds; its guards name each commit by what they check, so a commit touching neither `src/` nor a build file trips none; it refuses to start unpinned |
 | `S101_sprt_guards.txt` | those guards on a scratch clone: 67 scenarios, 12 run, 55 refused, the two S307 shapes among those that run |
+
+Phase 2, 2026-11-01: the paste, every golden it moves, each by its script. S101's step file, "2026-11-01: phase 2".
+
+| file | what it holds |
+|---|---|
+| `S101_goldens.txt` | every golden S101's candidate moves, each command beside its output: the truncation pins re-picked at N = 3, DEC-316's pair and the preconditions it moves, the two floors (`EXACT_FLOOR` 159 red at 158 shipping, 154 weakened, the owner's; `MATE_IN_THREE_FLOOR` holds, 12 and 10), the ProbCut row re-mined, the aborted-line cell at line 162, `ALPHA` kept, S170's answer read and held for the ruling, each moved fixture observed red under its mutant; its last section is the close's, DEC-343's items applied and the fast check's readings |
+| `S101_lost_mates.txt` | the 16 mined rows the candidate loses at depth 10 and the 6 it gains, attributed by tool, S136's method: first exact iteration on both builds, the oracle, traces of rows 107, 129, 136 and 163, the counts at depths 10, 11 and 12 |
+| `S101_gradient_rows.cpp` | DEC-316's answer for parameter 984, a weight its text does not name (DEC-343), its header stating why S135's threshold does not separate there: the first eligible pair of `all_test_fens()` that triples the gradient; it re-derives the pair the fixture carries, prints every candidate it tried and, after the pick, the case's relative error at 984 before and after |
+| `S101_sweep_s170.txt` | the S170 grid on S101's candidate (`S203_case_sweep.sh`, one process a case, 108 cells, 1441 mate lines, 22 short): with it `--ceilings` answers 2, 13, 4, 1, 3, 3 and the picker A 100000, D 1000000, F 100000. Held by DEC-299's guard until the owner's ruling, and applied with it (DEC-334 (3), DEC-343) |
+
+The close, 2026-11-01: the SPRT read H1, the floor as the owner ruled it. S101's step file, "2026-11-01: the SPRT read H1".
+
+| file | what it holds |
+|---|---|
+| `S101_candidate.diff` | the run's `candidate.diff` byte for byte, blob `7d6f96ec896c` (DEC-254): the working tree the candidate `cand-4e34e61+7d6f96ec896c` was built from in `../chesso-s101`, against `4e34e61` |
+| `S101_sprt.log` | S101's one family SPRT, 2026-11-01 18:52:21, `SPRT-RUN-DONE` in 00:45:59: the screen's 1234567 fit over the family's fourteen arrays, uncommitted, against `4e34e61`, the family at zero, `{0, 5}` nElo at 8+0.08, Hash 16, on `noob_3moves.epd`, H1. `tools/trim_console.py --summary` over the console: its 3982 lines byte for byte and the foot's five, no warning of any kind. The untrimmed console and the run directory are `chesso_S101_sprt_2026-11-01.tar.xz` in the owner's archive |
+| `S101_mined_floor_157.log` | `S156_mined_floor_sweep.py --floor 157` through `S136_overlay_run.py`: 158 shipping and 154 weakened, 157 inside the script's band, and the gate built at `RfpMinPly` 1 with 157 compiled in red at 154 -- `EXACT_FLOOR` as the owner ruled it, DEC-343 |
+| `S101_close_identity.txt` | the comment pass under `src/` against the tree played, `S306_identity.txt`'s form: stripped of comments byte for byte, the Release binary byte-identical to the played one, bench 5482277 in both builds |

@@ -386,6 +386,15 @@ inline const std::vector<std::string> positions = {
     // S101 coverage, closes threat_king_mg[2] threat_king_eg[2]
     "rnbq1k1r/pp1PbBpp/2p5/8/8/8/PPP1N1PP/RNBQK2n b Q - 0 8",
     "rnbqk2N/ppp1n1pp/8/8/8/2P5/PP1pBbPP/RNBQ1K1R w q - 0 8",
+    // DEC-316's pair at S101's candidate, for tests/test_tuner_gradient.cpp's
+    // derivative check: the 104 rows above leave `passed_king_own_mg[5]`'s
+    // relative error at 2.07e-6, an O(h^2) term over too small a gradient.
+    // Picked by adocs/data/S101_gradient_rows.cpp's rule, not by hand: the
+    // first eligible pair of all_test_fens() that triples that gradient.
+    // Re-derive by its header whenever the shipped constants or the rows above
+    // move what it reads.
+    "3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2",
+    "rrQrrrrr/P1PPPPPP/8/8/8/1k6/8/3K4 b - - 0 2",
 };
 
 }  // namespace test_eval_positions
