@@ -593,7 +593,9 @@ struct tt_entry_t
   // erased -- see tt_eval_to_store(). S108.
   //
   // 16 bits is not a constraint anything real approaches. evaluate() is
-  // material plus tapered tables: S213's case measured a maximum |evaluate()|
+  // untapered material, plus the tapered tables, pawn terms and piece
+  // placement, plus mobility and king safety, tapered and clamped: S213's case
+  // measured a maximum |evaluate()|
   // of 22945 over 66430 accepted generated placements (fifteen queens against
   // a lone king among them), against the 32767 this holds -- 1.4x headroom,
   // and the case asserts the score stays below MATE_MIN's 48000.

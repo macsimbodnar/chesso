@@ -87,7 +87,7 @@
      the block.                                                                \
                                                                                \
      The band above is the countermove's 700000 and the bands clear each other \
-     by 100 (src/evaluation.cpp:33-37), so the ceiling has six orders of       \
+     by 100 (src/evaluation.cpp, ORDER_*), so the ceiling has six orders of    \
      clearance rather than the 100 the old ORDER_HISTORY_MAX had to be trimmed \
      to. It is still asserted, in tests/test_evaluation.cpp "the declared      \
      history ceiling clears the band above it", and now at both edges: the     \
@@ -537,9 +537,9 @@
      At 0 every consumer reads the number it read before S236 -- the truncated \
      table plus whole plies -- and the engine is the whole-ply engine, bench   \
      signature included. Proved on the tree and not declared from a range's    \
-     end: the build prints 4493659 with all eight bestmove replies identical   \
-     and tools/search_bench.py reproduces the pre-S236 tree at depths 9 and    \
-     12.                                                                       \
+     end: at S236 the build printed 4493659 with all eight bestmove replies    \
+     identical and tools/search_bench.py reproduced the pre-S236 tree at       \
+     depths 9 and 12.                                                          \
                                                                                \
      **THE REASON IT SHIPS AT ITS OFF VALUE IS MEASURED.** The seed was to be  \
      512 -- (c), the midpoint of the declared range, which is round-to-        \
@@ -821,7 +821,8 @@
      books/UHO_4060_v3.epd, adocs/data/S222_spsa_trajectory.tsv, and nothing    \
      else is behind it. It was in that lane because it reads the same scale     \
      the lane moves (DEC-205) and it still reads the raw plain entry, not the   \
-     sum; S098 owns moving the rule onto the sum.                               \
+     sum. DEC-209 gave S098 the move onto the sum; S098 closed without making   \
+     it and no open step holds it.                                              \
                                                                                \
      What it replaces was **(c) the midpoint** of a per-lmr-depth region        \
      declared on chesso's own history scale: `M/64` to `M/8` with `M` =         \

@@ -1330,8 +1330,9 @@ TEST_SUITE("search: move ordering state")
   // 2026-08-14 reported `CHECK( 109575 == 0 )`, cold table, depth 5, this
   // position. The budget is **4x** that, rounded, which fires on the kind of
   // regression the case exists for while leaving room for the tree to move
-  // when the evaluation constants change - they order the moves, and S065 is a
-  // pending 827-constant paste. Tighten it when a fit lands, not before.
+  // when the evaluation constants change - they order the moves, and S065 was
+  // then a pending 827-constant paste, which has since landed. When the budget
+  // moves now is the GOLDEN block's rule below, not a fit's landing.
   // 2026-08-14_test_review-F06.
   //
   // **Read at S286 and unmoved, by construction.** This case builds its own
@@ -4445,10 +4446,11 @@ TEST_SUITE("search: draws")
     // shipped build while the position did not. The script's own pick rule,
     // re-run whole on that tree, returned **this same position** at depth 8,
     // where the shipped build reports the mate and the unguarded one does not
-    // (`adocs/data/S234_remine.log`). The old depth is kept in this block for
-    // the same reason S236's old row was: an H0 on S234 flips `RfpTtEstimate`
-    // to 0, which restores the parent's tree to the node, and 11 comes back as
-    // a revert rather than a second re-mine.
+    // (`adocs/data/S234_remine.log`). The old depth was kept in this block for
+    // the same reason S236's old row was: an H0 on S234 would have flipped
+    // `RfpTtEstimate` to 0, which restores the parent's tree to the node, and
+    // 11 would have come back as a revert rather than a second re-mine. S234
+    // read H1 and `RfpTtEstimate` ships at 1, so the 11 stays as history.
     //
     // **RE-MINED AT S236 AND RESTORED WHEN THAT STEP'S TERM LEFT, AND BOTH
     // FACTS ARE HISTORY THIS BLOCK KEEPS.** S236 gave a late quiet's reduction

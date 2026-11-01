@@ -28,10 +28,12 @@ last row was +147.40 at `e9d91e3`. S267's gate reads G >= 232 after S133 and bef
 recorded without action and does not discharge it. Taken while S305 and S306 were open, neither of which
 moves play.
 
-**S305 done** (filler, DEC-171): the mutation progress line prints the table's bench word.
+**S305 and S306 done** (filler, DEC-171): the mutation progress line prints the table's bench word; twelve
+false comments now say what the code does, the "Golden" mark off the timer board, `No functional change`.
+A clean reader found two errors in S306's twelve rewrites, after the writer's own check: for the comment
+study, a measured rate that says a rewrite needs that reader.
 
-**Next, in order:** S306 in the gap before S101, because nine open steps touch `src/evaluation.cpp`,
-then S101. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
+**Next: S101.** Its pre-registration names S307 and S308 as open filler (DEC-171), neither moving play. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
 answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
 
 **The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The

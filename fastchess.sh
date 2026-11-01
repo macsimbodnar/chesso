@@ -562,7 +562,7 @@ case "$seed" in
   '' | *[!0-9]*) fail "SRAND must be an unsigned integer, got '$seed'" ;;
 esac
 
-# One directory per run, stamped, as rating.sh:72-77 already does. The old
+# One directory per run, stamped, as rating.sh's outdir already does. The old
 # fixed /tmp/fastchess_<tag>.pgn was appended to by every run that shared a
 # tag, so a census over it mixed matches: after S089's 500-game run the file
 # held 587 games, 87 of them against an earlier reference, and an unfiltered

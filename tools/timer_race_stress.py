@@ -28,7 +28,7 @@ the store becomes plausible instead of merely possible.
 
 Prints TIMER-RACE-CLEAN, TIMER-RACE-HIT or TIMER-RACE-FAILED as its last line,
 and exits 0, 1 or 2. All three are terminal, so a watcher armed on the
-alternation exits on a crash instead of waiting out its ceiling (AGENTS.md par.12).
+alternation exits on a crash instead of waiting out its ceiling (AGENTS.md WATCHERS).
 S163, closing 2026-08-22_adversarial-F05.
 """
 

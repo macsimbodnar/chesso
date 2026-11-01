@@ -1122,7 +1122,7 @@ TEST_SUITE("engine: uci layer")
     // time, and that is asserted, once per run and never retried:
     //
     //   timer_ms                the movetime, when the flag is due
-    //   check_granularity_ms    check_limits() reads it every 2048 nodes, 0.46
+    //   check_granularity_ms    check_limits() reads it every 2048 nodes, 0.39
     //                           ms at this board's own depth-1 rate below
     //   scheduler_allowance_ms  an order of magnitude above the largest latency
     //                           measured under a full match, 36941 us for
@@ -1136,20 +1136,26 @@ TEST_SUITE("engine: uci layer")
     // above, far inside any bound with this allowance. So this half has a
     // board of its own, the start position's pieces with eight queens on each
     // pawn rank and no bishops: python-chess reports `is_valid()` True,
-    // `is_check()` False and 94 legal moves. **Golden** (DEC-142): its
-    // depth-1 iteration is 25933707 nodes and about 5.9 s on this machine,
-    // re-derived with `position fen <below>` then `go depth 1`, reading the
-    // `time` field -- and that is what a timer that never fires produces here,
-    // measured once with the timer disarmed in a throwaway fixture: depth 1,
-    // the same 25933707 nodes, `bestmove` after 5913 and 6285 ms, against 1.3
-    // to 1.9 ms for the engine as shipped. The bound sits about 14 times below
-    // it, and a four times faster machine still leaves it separating; under
-    // that the board needs to be heavier, not the bound tighter. **Re-taken
-    // at S022's second verdict and back at its reading**: that verdict's
-    // early-out cut this iteration to 18594285 nodes and about 3.9 s,
-    // `bestmove` after 3915 and 3935 ms with the timer disarmed, the bound
-    // about 10 times below; the early-out left and the figure above is this
-    // tree's again, 25933707 nodes at depth 1. The board did not move.
+    // `is_check()` False and 94 legal moves. Its depth-1 iteration reads
+    // 35516352 nodes and about 6.8 s on this machine, taken at S306 on
+    // `b385761` with `position fen <below>` then `go depth 1`, reading the
+    // `nodes` and `time` fields -- and that is what a timer that never fires
+    // produces here, measured at S306 with the timer disarmed in a throwaway
+    // fixture: depth 1, the same 35516352 nodes, `bestmove` after 6747 to 6777
+    // ms, against 1.9 to 2.1 ms for the engine as shipped. The bound sits about
+    // 17 times below it, and a four times faster machine still leaves it
+    // separating; under that the board needs to be heavier, not the bound
+    // tighter. **Not a golden**, and S306 took that mark off (DEC-142): no
+    // assertion reads this figure, the bound below being what the case holds,
+    // and it moved with the search and the evaluation while the mark stood. It
+    // is a dated reading of what the bound is judged against. Written at S246's
+    // landing, 2026-09-29, it read 25933707 nodes, `bestmove` after 5913 and
+    // 6285 ms disarmed, against 1.3 to 1.9 ms as shipped, the bound about 14
+    // times below. **Re-taken at S022's second verdict and back at its
+    // reading**: that verdict's early-out cut this iteration to 18594285 nodes
+    // and about 3.9 s, `bestmove` after 3915 and 3935 ms with the timer
+    // disarmed, the bound about 10 times below; the early-out left and it read
+    // 25933707 nodes at depth 1 again. The board did not move.
     const std::string timer_fen =
         "rn1qk1nr/qqqqqqqq/8/8/8/8/QQQQQQQQ/RN1QK1NR w - - 0 1";
     const int timer_ms = 1;

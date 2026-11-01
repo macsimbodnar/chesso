@@ -1183,10 +1183,12 @@ static inline void for_each_cell(bb_t pawns, Cell cell, Record record)
 // `collect` is how the accessors read the counts out without the search paying
 // for it. A template rather than a flag, the arrangement king safety arrived
 // at: at <false> the stores and the out pointers are not compiled at all, and
-// that instantiation keeps exactly one caller, pawn_entry_fill(), so the zero
-// weights still fold everything downstream away. Handing a hot instantiation a
-// second caller instead is what cost 21 % once -- see king_shelter_features()
-// below.
+// that instantiation keeps exactly one caller, pawn_entry_fill(). The zero
+// weights that once folded everything downstream away are non-zero now, all but
+// doubled_file's and backward_rank's, and g++, the reference compiler since
+// DEC-049, keeps the instantiation out of line in the Release build (`nm`,
+// S306). Handing a hot instantiation a second caller instead is what cost 21 %
+// once -- see king_shelter_features() below.
 template <bool collect>
 static inline void pawn_pass(bb_t white_pawns,
                              bb_t black_pawns,

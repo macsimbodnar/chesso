@@ -11,7 +11,7 @@
 #include "test_helpers.hpp"
 #include "uci.hpp"
 
-// The golden surface test required by AGENTS.md section 7 and DEC-024. Chesso's
+// The golden surface test required by AGENTS.md SURFACE and DEC-024. Chesso's
 // whole product surface is the UCI protocol, so `surface_guard` is `cli` and
 // this file is what holds MANUAL.md to account: adding, renaming or removing a
 // command or an option fails here until MANUAL.md is updated in the same

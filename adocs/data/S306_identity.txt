@@ -1,0 +1,33 @@
+# S306 identity: what the comment edits leave of each file, old (b385761) against the worktree.
+# Comments only is the claim, and each file class proves it its own way. Machine: i7-8700K, g++ 13.3, 2026-11-01.
+# C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show b385761:<file>` and over the new file,
+#      compared whole; the bytes and hash below are the stripped output. Control: `int a = 1;` and `int a = 2;`
+#      through the same command differ, and a line comment and a two-line block comment both vanish.
+# Python: `ast.dump` of the tree with every module, class and function docstring removed, compared whole, and the
+#      `tokenize` stream with comments dropped and everything up to the end of the module docstring skipped.
+# Shell and CMake: `git diff -U0 b385761 -- <file>`, every changed line a comment by script and read by eye.
+base b385761; g++ 13
+
+C++: g++ -fpreprocessed -dD -E -P, old against new
+  SAME  src/search.cpp  53510 bytes  sha256 5e1113547f2367d0
+  SAME  src/search_params.hpp  9927 bytes  sha256 f4bfd3f65fd4b2b6
+  SAME  src/evaluation.cpp  56143 bytes  sha256 ae854a9c80051f15
+  SAME  src/data_structures.hpp  12930 bytes  sha256 b2a4c810724415ee
+  SAME  tests/test_engine.cpp  130538 bytes  sha256 afcfeddd21b8d086
+  SAME  tests/test_search.cpp  272495 bytes  sha256 b64151a09185819c
+  SAME  tests/test_uci_surface.cpp  28174 bytes  sha256 229f4a9788a7fbf8
+
+Python: ast without docstrings; tokens after the module docstring, comments out
+  SAME ast  SAME tokens  tools/timer_race_stress.py  module docstring changed, the one edit
+
+Shell and CMake: changed lines of git diff -U0, read by eye and by the test below
+  ONLY COMMENTS  fastchess.sh
+    -# One directory per run, stamped, as rating.sh:72-77 already does. The old
+    +# One directory per run, stamped, as rating.sh's outdir already does. The old
+  ONLY COMMENTS  tests/CMakeLists.txt
+    -# rule and want to know their new test bites (DEC-141 clause 2). 24 cases,
+    -# ~1.6 s.
+    +# rule and want to know their new test bites (DEC-141 clause 2). 31 cases,
+    +# ~3.8 s.
+
+S306-IDENTITY HOLDS

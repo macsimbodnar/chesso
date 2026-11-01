@@ -2432,7 +2432,7 @@ static int negamax_at(int alpha0,
   }
 
   // SINGULAR EXTENSION AND MULTICUT, S097. One verification search, two
-  // answers, and the second of them ships switched off.
+  // answers, and the second of them ships switched on since its own verdict.
   //
   // The table's move at a node deep enough to be worth the nodes is searched
   // one ply deeper when **every other move** fails a search against a window a
