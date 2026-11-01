@@ -1,0 +1,171 @@
+S307, 2026-11-01: the timer case's precondition, its mutants and what it costs.
+Base 36b5659, bench 5482277. Twelve-thread workstation, Release unless named, g++.
+`CLANG_FORMAT_MAJOR=22` set for every ctest. Raw output of the commands named.
+
+== 1. The board on this tree
+
+python3 adocs/data/S307_matrix.py readings <worktree>
+
+load average 0.91 1.38 1.67 1/1221 2829508
+Release, `go depth 1` on the timer board, a fresh process each run
+  run 1: bestmove  7069.3 ms, time 7060, nodes 36024721
+  run 2: bestmove  7092.8 ms, time 7084, nodes 36024721
+  run 3: bestmove  7091.5 ms, time 7083, nodes 36024721
+  run 4: bestmove  7138.6 ms, time 7130, nodes 36024721
+  run 5: bestmove  7142.9 ms, time 7134, nodes 36024721
+tune build, `go depth 1` at each MaxQsearchDepth, ms from go to bestmove
+  horizon  timer board ms    nodes  eight-queens ms  nodes  over the bound?
+        8            24.3    59339                3  15827  no, a dead timer passes
+       10            72.7   259588               12  58232  no, a dead timer passes
+       11           199.7   849975                8  40711  no, a dead timer passes
+       12           277.4  1188184               10  50553  no, a dead timer passes
+       13           668.1  3196049                9  47364  yes
+       14           994.3  4538637               10  48394  yes
+       16          2808.3 13672239                9  48815  yes
+       19          7322.5 36024721                9  48840  yes
+load average 1.12 1.36 1.65 1/1214 2829558
+
+The same iteration on a loaded machine and in Debug, each once more by hand: `go depth 1` on the
+board, reading the info line. S306's table has the same node count at 6746 ms idle, and the study's
+8962 ms at the same node count on a busier machine, 1.33 times.
+
+24 `yes` loops on the 12 threads, Release:
+load 6.03 3.60 2.64 25/1235 2831088
+1 info score cp 1199 time 38300 depth 1 nodes 36024721 nps 940579 hashfu
+2 info score cp 1199 time 40021 depth 1 nodes 36024721 nps 900124 hashfu
+3 info score cp 1199 time 37859 depth 1 nodes 36024721 nps 951530 hashfu
+load 22.22 10.44 5.25 26/1232 2831135
+
+Debug (`-DCMAKE_BUILD_TYPE=Debug`, this tree, load falling from 9):
+Debug go depth 1: info score cp 1199 time 173420 depth 1 nodes 36024721 nps 207730 hashfull 1000 pv f2f7
+
+== 2. The tool, on the final form
+
+Fixture: this tree through a temporary index and `git commit-tree`, no ref moved (S279's procedure);
+the worktree under this worktree's `.ref-builds/`, removed after.
+fixture commit 9afbc2c4ec185a3041b4d2606b55904d0b7e3ed0 on no branch, parent 36b5659
+
+cd <worktree>/.ref-builds/mut
+python3 tools/mutation_check.py tools/mutants <worktree>/.ref-builds/mut --only TB01 --only TB02 --log-dir <scratch>/mut_logs
+
+worktree <worktree>/.ref-builds/mut at 9afbc2c clean
+build    <worktree>/.ref-builds/mut/build   jobs 12   label fast
+logs     <scratch>/mut_logs
+list     <worktree>/.ref-builds/mut/tools/mutants   clean
+mutants  2 of 264
+baseline green, 50 tests, bench 5482277 nodes via engine
+  TB01_hard_timer_never_fires        killed      fast 1/50  bench same  156.2s
+  TB02_quiescence_horizon_lightens_the_board killed      fast 1/50  bench moved  144.4s
+
+kill table   second oracle: engine bench signature (total nodes and the eight best moves)
+
+id                                 built  fast      bench   verdict     expected        s
+-----------------------------------------------------------------------------------------
+TB01_hard_timer_never_fires        yes    1/50      same    killed      killed      156.2
+TB02_quiescence_horizon_lightens_the_board yes    1/50      moved   killed      killed      144.4
+
+what caught each mutant
+
+== TB01_hard_timer_never_fires: `stop_search_after_ms` sleeps and then raises nothing: on `go movetime 1` only the soft limit ends the search, at the end of the first iteration, whatever that costs the clock
+   ctest: 1 of 50 failed
+   [test_engine] a stop inside the first iteration cuts it and the hard timer ends the search within its bound  |  CHECK( elapsed_ms <= bestmove_bound_ms )
+
+== TB02_quiescence_horizon_lightens_the_board: quiescence stands pat at 12 plies, and depth 1 on the timer board ends inside the wait, which leaves `go movetime 1` as prompt as ever and the bound unable to tell a dead timer from a live one
+   ctest: 1 of 50 failed
+   [test_engine] a stop inside the first iteration cuts it and the hard timer ends the search within its bound  |  REQUIRE( still_running )
+
+mutation score 2 of 2 (100%)   killed 2
+wall 464s   results <scratch>/mut_logs/results.tsv
+MUTATION-RUN-DONE
+rc 0 wall 464 s
+
+== 3. The case alone, each mutation with and without the precondition
+
+`tools/mutation_check.py` refuses a file outside src/, so the plain lightening, a lighter
+`timer_fen`, is run here and is no row in tools/mutants/. Each row rebuilds `test_engine`, runs the
+one case, and reverts; "reverted" is the case again on the tree as it was, and is the proof each
+mutation left it green. "before S307" is `tests/test_engine.cpp` as of 36b5659 on the same engine.
+Under each red its first assertion, its values, and the two lines of the engine's reply it logged.
+
+python3 adocs/data/S307_matrix.py matrix <worktree>/.ref-builds/mut
+
+worktree <worktree>/.ref-builds/mut at 9afbc2c, 36b5659 for the test before S307
+the light board: timer_fen becomes q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1
+this tree    as shipped                   green   0.425 s
+this tree    TB01 dead timer              RED     7.552 s
+    tests/test_engine.cpp:1232: ERROR: CHECK( elapsed_ms <= bestmove_bound_ms ) is NOT correct!
+    values: CHECK( 7128 <= 402 )
+    info score cp 1199 time 7127 depth 1 nodes 36024721 nps 5054128 hashfull 1000 pv f2f7
+    bestmove f2f7
+               reverted                   green   0.425 s
+this tree    TB02 horizon 12              RED     0.424 s
+    tests/test_engine.cpp:1203: FATAL ERROR: REQUIRE( still_running ) is NOT correct!
+    values: REQUIRE( false )
+    info score cp 1371 time 264 depth 1 nodes 1188184 nps 4497885 hashfull 720 pv a2f7
+    bestmove a2f7
+               reverted                   green   0.425 s
+this tree    light board                  RED     0.424 s
+    tests/test_engine.cpp:1203: FATAL ERROR: REQUIRE( still_running ) is NOT correct!
+    values: REQUIRE( false )
+    info score mate 1 time 9 depth 1 nodes 48840 nps 4904599 hashfull 49 pv d2h6
+    bestmove d2h6
+               reverted                   green   0.425 s
+this tree    TB01 + TB02                  RED     0.425 s
+    tests/test_engine.cpp:1203: FATAL ERROR: REQUIRE( still_running ) is NOT correct!
+    values: REQUIRE( false )
+    info score cp 1371 time 265 depth 1 nodes 1188184 nps 4468368 hashfull 720 pv a2f7
+    bestmove a2f7
+               reverted                   green   0.425 s
+this tree    TB01 + light board           RED     0.424 s
+    tests/test_engine.cpp:1203: FATAL ERROR: REQUIRE( still_running ) is NOT correct!
+    values: REQUIRE( false )
+    info score mate 1 time 9 depth 1 nodes 48840 nps 5033494 hashfull 49 pv d2h6
+    bestmove d2h6
+               reverted                   green   0.425 s
+before S307  as shipped                   green   0.021 s
+before S307  TB01 dead timer              RED     7.075 s
+    tests/test_engine.cpp:1186: ERROR: CHECK( elapsed_ms <= bestmove_bound_ms ) is NOT correct!
+    values: CHECK( 7054 <= 402 )
+    info score cp 1199 time 7054 depth 1 nodes 36024721 nps 5106810 hashfull 1000 pv f2f7
+    bestmove f2f7
+before S307  TB02 horizon 12              green   0.022 s
+before S307  light board                  green   0.021 s
+before S307  TB01 + TB02                  green   0.291 s
+before S307  TB01 + light board           green   0.031 s
+
+The four green rows at the foot are the gap: the old case passes a dead timer on a lighter board,
+both ways of lightening it. Each is red above, by `REQUIRE( still_running )` and not by the bound.
+
+== 4. What the case costs
+
+doctest's `-d` over 8 runs each, on an idle machine, Release, load about 1:
+  before (36b5659):  0.021102 to 0.022030 s
+  after:             0.424193 to 0.424938 s, +0.403 s, which is the wait
+Debug, this form, 3 runs, straight after its build:
+0.705759 s: a stop inside the first iter [doctest] Status: SUCCESS! 
+0.702399 s: a stop inside the first iter [doctest] Status: SUCCESS! 
+0.698648 s: a stop inside the first iter [doctest] Status: SUCCESS! 
+
+Whole binary and whole suite, one run of each, so these move with the machine and are the line and
+not the case:
+  `test_engine`, Release:  8.04 s before, 8.41 s after
+  `test_engine`, tune:     8.12 s after
+  fast suite, Release:     147.29 s after (50 of 50)
+  fast suite, tune:        160.79 s after (50 of 50)
+The form not taken, reading the iteration to its end: +7.1 s in Release, +173 s in Debug.
+The 8.04 s is from a fast run without `CLANG_FORMAT_MAJOR` set, red on `test_clang_format_script` for
+that alone; every run in this file sets it from here on.
+
+== 5. Whether the new assertion can go red on a healthy engine
+
+The case repeated on the final form, 24 `yes` loops on 12 threads for the second block:
+
+idle, load 1.11 2.33 3.21
+  50 runs: 50 green, 0 red, case 0.423864 to 0.425012 s
+24 busy loops on 12 cores, load 7.65 3.64 3.61
+  30 runs: 30 green, 0 red, case 0.49793 to 0.539523 s
+after, load 12.58 5.03 4.06
+FLAKE-DONE
+
+The precondition can go red only if `stop` is held off for the iteration's length, 7.1 s idle, and
+the slowest `stop` S242 measured beside a full match is 36.9 ms (`tests/test_engine.cpp`).

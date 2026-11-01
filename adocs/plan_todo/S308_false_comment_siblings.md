@@ -35,3 +35,4 @@ this folds into its step that covers `src/`.
 
 S101's close flagged a tenth: `src/evaluation.cpp`'s fusion comment, "not only for the zeros king safety currently ships", looks stale. `085180b`
 holds this step done once on another machine and removed with the rest (DEC-341): re-read it before redoing the work.
+S307 flagged another, in `tests/test_engine.cpp` above the timer board: S306's dated 35516352 reads 36024721 at S101's fit, and "the bound below being what the case holds" is incomplete since S307.

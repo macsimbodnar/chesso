@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-01, by hand.
 
-## 2026-11-01, evening: S101 done, H1; S307 next (handover)
+## 2026-11-01, evening: S101 done, H1; S307 done; S308 next (handover)
 
 **S101 done, H1** (`cand 4e34e61+7d6f96ec896c` vs `4e34e61`, Elo +33.87 +/- 12.33, nElo +46.57 +/- 16.84, an early stop and not the effect size, LLR 2.95,
 1636 games in 45 m, 0 forfeits, `adocs/data/S101_sprt.log`, archived, verified). Inspected and it stands: banner, both benches, the diff the tree played, no warning
@@ -16,7 +16,9 @@ owner lowered `EXACT_FLOOR` to 157 (DEC-343), the gate at `RfpMinPly` 1 red at 1
 comments, the binary byte-identical. `gate_extra` 6 of 6 on the final tree. Unmeasured: each part's share, the transfer gap of DEC-333 (8), the long control, the negative
 and far cells for S126, P7's q3 fit at the 5000 cap. S122 inherits the clamp's readings, the unions and `LAZY_EVAL_MARGIN`.
 
-**Next: S307, S308 (allowed now; `085180b` holds it done once), S309 (before S102's plants), S310, then S122.** S311, S312 and S313 are parked (DEC-342): the owner read the
+**S307 done** (filler, no `src/`): the timer case asks whether its board's iteration still runs at 403 ms, 264 mutants.
+
+**Next: S308 (allowed now; `085180b` holds it done once), S309 (before S102's plants), S310, then S122.** S311, S312 and S313 are parked (DEC-342): the owner read the
 comment work as inconclusive, and DEC-341 removed it from the tree but for the study, `adocs/comment_study.md`. Read on the MacBook Air and now in no step: `tools/gate.sh` is
 red there before any change, `test_fastchess_script` and two format lines of `tt_cluster_t`; `bench` 5707449.
 

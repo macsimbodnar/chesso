@@ -1164,6 +1164,52 @@ TEST_SUITE("engine: uci layer")
     const int64_t bestmove_bound_ms =
         timer_ms + check_granularity_ms + scheduler_allowance_ms;
 
+    // The precondition of this half: the bound tells a dead timer from a live
+    // one only while the first iteration outlasts it, and this iteration moves
+    // with every change to quiescence. At `36b5659` it read about 7.1 s, and a
+    // quiescence horizon of 12 in place of 19 put it at about 280 ms, where a
+    // timer that never fires passes. Mutants:
+    // tools/mutants/S307_timer_board.py.
+    //
+    // `go depth 1` arms no timer, so only this thread's `stop` can cut the
+    // iteration, and a cut iteration reports no depth. Running it to its end
+    // would read its length, at about 7 s in every fast run and 173 s in Debug.
+    // Asking whether it is over at the first millisecond the bound refuses,
+    // `elapsed_ms` being truncated, is all the bound needs, costs that wait in
+    // any build, and stores no figure to go stale, which a node budget would.
+    //
+    // The margin is the iteration against this wait, about 17.6 times there,
+    // and the assertion adds no cushion. A loaded machine reads it leniently,
+    // the iteration 38 s beside 24 busy loops, 5.4 times; covering that would
+    // cost every run 2 s, and the next idle run says the same for nothing.
+    const int64_t still_running_at_ms = bestmove_bound_ms + 1;
+
+    {
+      uci_init();
+
+      stdout_capture_t capture;
+      uci_process_line("position fen " + timer_fen);
+      uci_process_line("go depth 1");
+      std::this_thread::sleep_for(
+          std::chrono::milliseconds(still_running_at_ms));
+      uci_process_line("stop");
+      uci_wait_for_search();
+
+      const bool still_running = deepest_completed_depth(capture) < 1;
+      const std::string seen = capture.str();
+
+      uci_shutdown();
+
+      REQUIRE_MESSAGE(
+          still_running,
+          ("the first iteration on the timer's board finished inside " +
+           std::to_string(still_running_at_ms) + " ms, so the bound of " +
+           std::to_string(bestmove_bound_ms) +
+           " ms no longer tells a dead timer from a live one; pick a heavier "
+           "board:\n" +
+           seen));
+    }
+
     {
       uci_init();
 
