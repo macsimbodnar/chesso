@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-10-31, by hand.
 
-## 2026-11-01: S118 done (credited, -6.4 % wall, no SPRT); a drift point next (handover)
+## 2026-11-01: S118 done (credited, -6.4 % wall, no SPRT), its drift point read; S305 next (handover)
 
 Mode: one fresh Opus 5.5 subagent per step, the coordinator implements nothing, few questions, batched
 in Italian with the recommended option first, which is taken wherever the choice is not the owner's.
@@ -21,13 +21,16 @@ which owes storm. Hits 89.7 to 96.4 %. DEC-046 VOID. Unmeasured: match load, any
 fills now sit behind a table miss, and its accepts was amended. Archived: `chesso_S118_cost_2026-10-31`
 and `chesso_S118_close_runs_2026-10-31`, verified.
 
-**Next, in order:**
-1. **A drift point against `1680439`, about 55 min, 8+0.08, unplanned here and decided by the
-   coordinator on 2026-10-31**: S121, S123 and S125 were each measured against their own parent and
-   their sum has not been played; S118's speed is now inside it. Fixed length, an estimate and no verdict
-   (DEC-108). S261's drift point is the precedent.
-2. S305, then S306 in the gap before S101, because nine open steps touch `src/evaluation.cpp`.
-3. S101.
+**A drift point after the landing, S267's series, not a verdict and not a rating (DEC-108):** `8ffce9b`
+against `1680439`, 2000 games at 8+0.08, Elo +293.62 +/- 17.15, nElo +404.66 +/- 15.23, Ptnml
+[5, 24, 130, 271, 570], 52 m 56 s, 0 forfeits (`adocs/data/S118_drift.log`, `S267_drift.tsv`). The series'
+last row was +147.40 at `e9d91e3`. S267's gate reads G >= 232 after S133 and before S126: this row is
+recorded without action and does not discharge it. Taken while S305 and S306 were open, neither of which
+moves play.
+
+**Next, in order:** S305, then S306 in the gap before S101, because nine open steps touch
+`src/evaluation.cpp`, then S101. S118's eight cost trees and `../chesso-s118`, 4 GB, stay until the owner
+answers (asked 2026-11-01); branch `s118` stays in any case, since the data files cite its shas.
 
 **The comment study, 2026-10-31: the owner's decision is pending, nothing of it starts before.** The
 owner asked whether cleaning or compressing comments helps the project and token use. Read on `5954c12`
