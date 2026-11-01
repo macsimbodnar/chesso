@@ -17034,3 +17034,79 @@ Consequences: S118's `touches:` gains `src/search.cpp`, so DEC-141's Debug self-
               From S118 a forced pawn group is priced through the cache, its shipped
               cost, and `adocs/data/S125_cost_only.patch` stays a recorded run. The pure
               path's `bench_eval` remains comparable with 75.93 ns and is not the bar.
+
+## DEC-333  2026-11-01  S101's threats: seven parts at zero in stage two, in mobility's pair, screened in order, under the clamp
+Tags:         evaluation, threats, s101, s122, screen, dec-259, dec-326, dec-329, dec-331, dec-332, dec-221
+Context:      S101's research pass (2026-11-01, on `4d3edf6`, counts and instructions
+              only, no match, fit or timing) found: no stage holds a union of attacks
+              by class or a side total, so this term builds them in stage two's loop,
+              as that loop's comment expects; a forced-weight prototype costs +5.3 to
+              +7.7 % instructions on `bench`, the largest evaluation cost yet, against
+              about +16 to +20 % in stage one; S118 returned -9.0 %. The clamp binds on
+              0.355 % of S083's rows, and a flat hypothetical weight of 45 to 50 across
+              all kinds would pass DEC-326 (9)'s 1.0 %. **The largest unknown is
+              transfer:** in the corpus, quiescence leaves, 92 % of lesser and hanging
+              threats are against the side to move, and in the search's lazy calls about
+              55 % are by it, so a fit reads almost one case and the engine applies its
+              weight to both. CPW's *Hanging Piece* and *Loose Piece* give the form with
+              no figure, Ethereal's release notes give titles only, and "safe" has no
+              source. DEC-329 (2)'s word, nothing enemy attacks the square, gives two
+              exact zero columns here, because the victim itself attacks the target.
+Decision:     By the coordinator under the owner's standing instruction (2026-10-21,
+              2026-10-27).
+              (1) **Stage two, summed into mobility's pair before its taper.** N stays
+              3 and the term is under the clamp, so the lazy shortcut cannot change a
+              decision at any weight. Raw `attacks`, no pins and no x-rays.
+              (2) **Seven parts in this order, each its own group:** P1 pawn attacks
+              piece (4 cells); P2 piece attacks greater, N>R N>Q B>R B>Q R>Q (5); P3 minor
+              on minor (2); P4 hanging N B R Q (4); P5 hanging pawn (1); P6 attacked only
+              by the king and undefended, P N B R (4); P7 safe push attacks N B R Q (4).
+              24 cells, 48 parameters. A queen cell in P6 cannot exist, a queen beside
+              the enemy king giving check. Hanging comes after lesser so that their
+              overlap is priced as an increment, and push comes last, being nearly
+              disjoint with the costliest sets.
+              (3) **Lesser counts per pair and adds to hanging**: a distinct fact each,
+              the fit pricing the sum, unlike S125's double count inside one concept.
+              Defence includes king and pawns.
+              (4) **"Safe" is chesso's own word, and is said to be:** no enemy pawn
+              attacks the target, and it is unattacked or own-defended. An approximation,
+              stated: it ignores the pawn's vacated square and counts no exchange. Pushes
+              are single and double, the double from a single-push square no enemy pawn
+              attacks.
+              (5) **The screen is DEC-329's and DEC-331's form:** fixed order, earlier
+              survivors live, paired d, margin max(1.645 sd(d_s), 2e-6), old constants
+              frozen, every weight starting at zero, no seed, no each-alone. No P0, since
+              no old flat is refit. A part the screen drops is a zero, recorded.
+              (6) **DEC-326 (9) carries:** a candidate over 1.0 % on the clamp stops
+              phase 2 for the coordinator, and `LAZY_EVAL_MARGIN` is S122's to re-derive
+              and not this step's. `MATE_IN_THREE_FLOOR` under 11 stops for the owner
+              before any commit (DEC-303, DEC-330).
+              (7) **One `{0, 5}` SPRT; on H0 or no verdict the partition is A = P1 to P3 |
+              B = P4 to P6 | C = P7**, survivors only, each refit over what has landed.
+              (8) **One weight both ways, and the transfer gap goes in the
+              pre-registration:** the screen cannot see it and the SPRT can. Doubling the
+              cells by side to move is the first lead on an H0, unbuilt.
+              (9) **S122's boundary is by target.** S101 owns attacks on men; S122 owns
+              squares and the king: zone incidences, weak squares, defenders, safe checks.
+              A man in its own king's zone scores in both, and S122 re-derives its margin
+              with threats inside the sum.
+              (10) **The cost is read and carried by the verdict, with no bar**
+              (DEC-259). A separate threats column is kept so that S122 can still read
+              mobility's spread.
+              (11) **S307 may land between runs, S308 after this step's close.** Both are
+              named in the pre-registration (DEC-171). No commit during a screen.
+Rejected:     Stage one: about +16 to +20 %, the direction S039 read H0 on. A third stage
+              outside the clamp: the lazy bound is lost. Mobility's taper kept apart:
+              N goes to 4, a new site, no gain. Pawn-attacker cells in stage one: +1.9 %
+              against about +1.2 %, for no measured need. Masking men in the king's zone
+              out of S101: loses rows, no evidence. Per-part bisection: 8 SPRTs for
+              attribution the screen gives already. Cells doubled by side to move now: on-
+              move cells as thin as about 1250 rows, wider than the goal. Single pushes
+              only: against CPW's push set, and rows fall 20 to 30 %.
+Consequences: `PARAM_COUNT` goes 1073 -> 1121; `feature_audit` is expected to read rank
+              1074, nullity 47, and decides. DEC-332's sentence on forced pawn groups does
+              not bind this step's cost form, no term here being a pawn group: a new
+              `S101_cost_only.patch` forces the sets and cells in stage two. The screen
+              gains S121's clamp reading at `apply`. S122's sentence that the mobility loop
+              builds these sets is true only if a part ships; otherwise S122 builds them.
+              Overload stays out, with no owner.
