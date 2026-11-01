@@ -17209,3 +17209,15 @@ Tags:         comments, workflow, dec-335
 Context:      On the MacBook the owner asked for a comment rule and a cleanup, then stopped both for their token cost and asked that everything done be removed.
 Decision:     By the owner. A forward commit restores the tree to `55d7e75`, keeping only `adocs/comment_study.md` and its sources under `adocs/data/comment_study/literature/`. No rule was adopted and no comment changed. History is not rewritten: `6ee03c6` to `8ebb2bd` hold the plan, the two audits, the tool and the repairs. **Their ids stay spent: DEC-336 to DEC-340, S314 to S318.** The next ids are DEC-342 and S319.
 Why:          The owner's quota, and the study found that a sweep does not pay.
+
+## DEC-342  2026-11-01  The comment cleanup is parked; S101 resumes with its REF and diff as they were
+Tags:         comments, workflow, dec-341, dec-335, dec-333, s101, s308, s311, s312, s313
+Context:      DEC-341 restored the tree to `55d7e75` but for the study and left S311, S308, S312 and S313 first in
+              `plan.md`'s Open list, as DEC-335 had put them.
+Decision:     By the owner, 2026-11-01: the comment work was inconclusive and is parked, and the engine work continues where
+              it stopped. By the coordinator: S311, S312 and S313 go to the end of the Open list, parked, unstarted. S308 returns
+              behind S101, DEC-335 (4) having no day to serve, so DEC-333 (11) binds again: it lands after S101's close.
+              S101 follows DEC-334 and DEC-335 (1), (2) and (6); its pause check is no longer run at any commit, there being no
+              comment work to run it on, and it stays for a commit that touches the diff's files before the close.
+Why:          The owner's word. S308 carries real false claims and stays filler (DEC-171), not parked with the sweep.
+Rejected:     Deleting the parked steps: ids are never reused, and the owner said aside, not gone.
