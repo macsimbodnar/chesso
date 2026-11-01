@@ -16,7 +16,8 @@ and no match, fit, timing or S101 script belongs on it. `adocs/data/S101_pause_c
 `adocs/plan_current/S101_threat_terms.md` is not edited. That machine's build gives `bench` 5707449, read 2026-11-01 at `55d7e75`. Commit, and the owner pushes.
 
 **Where that machine stands, 2026-11-01:** the owner asked for a study of literature and community first, and it is done: `adocs/data/comment_study/literature/report.md`,
-its rule and its method for the whole live code waiting on the owner's word. S311 not started; no comment touched. **`tools/gate.sh` is red there at `55d7e75`, before any comment
+and the owner answered four questions (DEC-336). Then the owner asked, before anything proceeds, for a written plan, a full adversarial audit of it and an evaluation of fixing the old comments against
+leaving them: `adocs/comment_strategy.md`, `literature/benefit_incidents.md`, and the audit report under `adocs/audit/`. S311 not started; no comment touched. **`tools/gate.sh` is red there at `55d7e75`, before any comment
 work:** `test_fastchess_script`, 72 s against its 60 s clock and a `BARE_FEN=1` case, and `clang-format.sh --check` on two lines of `src/data_structures.hpp` under major 23. S314 holds
 the readings. S315 is a small defect the study met. DEC-335 (5) asks that gate of every comment commit, so how to read it there is part of the owner's word.
 

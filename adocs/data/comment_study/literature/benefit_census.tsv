@@ -1,0 +1,36 @@
+sha	date	subject	added	removed	code_files	src_files	files
+5590c71	2026-08-09	Fix a comment that now describes an engine this is not	3	3	1	1	src/search.cpp
+b6ef5c4	2026-08-09	Adopt the moltke workflow and reelaborate both plans into it	5	5	2	1	src/eval_tables.hpp,tools/pgn_to_positions.cpp
+d853843	2026-08-13	Format the header S041 added and the check never saw	6	5	1	0	tools/tuner_groups.hpp
+428db08	2026-08-20	Correct two wrong claims about RFP_MIN_PLY, found by S085's run	32	7	1	1	src/search_params.hpp
+bfc0463	2026-08-21	Point the RFP_MAX_DEPTH citation at line 522, not 521 (S142)	1	1	1	1	src/search_params.hpp
+987510e	2026-08-29	Repoint two comments at the gate's new home (DEC-109)	6	4	2	0	clang-format.sh,tests/test_clang_format_script.sh
+b59c52a	2026-08-30	Say that the SPRT bounds are nElo, and restate what they proved (S157)	15	0	1	0	fastchess.sh
+3d2fb61	2026-09-01	State the mate set's single motif where its breadth is claimed (S155)	38	0	1	0	tests/test_engine.cpp
+120497e	2026-09-01	Back the no-promotion clause with the generator's own count (S155)	4	1	1	0	tests/test_engine.cpp
+7c34797	2026-09-02	Rule the Polyglot 781 constants format, not a copied table (S146)	11	1	1	1	src/openings.cpp
+18deccf	2026-09-04	Plan S179: regenerate the magic numbers under a project seed (DEC-132)	6	0	1	1	src/bb_tables.hpp
+d54f690	2026-09-07	Fix the g++ -Werror break in mate_trace's usage comment	1	1	1	0	tools/mate_trace.cpp
+7ac047b	2026-09-08	Complete S179 on its magics half and split the keys out as S203	9	0	1	0	tests/test_mate_carry.cpp
+2b198f6	2026-09-09	Correct four stale search.cpp citations the S148 check found (S148)	4	4	1	1	src/search_params.hpp
+fbffd36	2026-09-09	Correct S204's cost ratio and harden its ceilings derivation	1	1	1	0	tests/test_mate_carry.cpp
+d2c78c1	2026-09-10	Name the two commits that moved truncation_scan's counts (S206)	6	1	1	0	tests/test_eval_model.cpp
+52f4c37	2026-09-11	Quote S209's own TSan count, not the audit's unverified 11	16	10	2	1	src/chesso.cpp,tests/test_engine.cpp
+31f4b7d	2026-09-12	Correct two prose slips the fast check over 50b1ff9 found	6	3	1	0	tests/test_en_passant_key.cpp
+05ab85d	2026-09-29	Pin S022 v1's SPRT pair: d446783 against the landing a97bc1a	4	2	1	0	tests/test_search.cpp
+ad18661	2026-09-30	Re-derive the S170 mate-carry budgets on S114's tree (DEC-162)	4	3	1	0	tests/test_mate_carry.cpp
+f5eaa99	2026-09-30	Re-derive the S170 mate-carry budgets on the reverted tree (DEC-162)	3	2	1	0	tests/test_mate_carry.cpp
+0cf3ec8	2026-10-01	Re-take the eight-queens stop half's depth-1 time (S247)	10	8	1	0	tests/test_engine.cpp
+16c8883	2026-10-10	Record LTO and an inline game_tables() as slower here (S270)	4	3	1	1	src/evaluation.hpp
+1edb3b1	2026-10-13	Give the ProbCut mate-row miner a --mode (S277)	10	2	1	0	tests/test_search.cpp
+e7b1d04	2026-10-14	Re-point evaluation comments off the deleted mirror	38	43	2	2	src/evaluation.cpp,src/evaluation.hpp
+bacead1	2026-10-14	Complete S261: the block-boundary readings beside the H1	9	4	1	0	tests/test_mate_breadth.cpp
+6fc7f23	2026-10-14	Allow the file transport on the mutation fixture's submodule (S280)	16	2	1	0	tools/mutation_check.py
+2bdc7cc	2026-10-15	Read the node band's middle half around its own count (S282)	22	7	1	0	tests/test_search.cpp
+1174478	2026-10-21	Restate S039's stale claims for its H0: both are kept (S287)	24	15	6	2	src/evaluation.hpp,src/search_params.hpp,tests/test_search.cpp,tests/test_search_params.cpp,tools/plan_prose_check.py,to
+b7be983	2026-10-25	Track the S170 budget picker in the tree (S290)	8	0	1	0	tests/test_mate_carry.cpp
+c51561b	2026-10-26	Record S135's H1 for the piece placement family's joint fit	51	42	5	2	src/evaluation.cpp,src/evaluation.hpp,tests/test_eval_model.cpp,tests/test_eval_trace.cpp,tests/test_evaluation.cpp
+f91d60b	2026-10-29	Complete S121: the p5 cost row reads +3.22 % (S121)	3	2	1	0	tools/tuner_trace.hpp
+7621172	2026-10-30	Record S123's H1 for the passed pawn family	56	28	6	2	src/evaluation.cpp,src/evaluation.hpp,tests/test_eval_model.cpp,tests/test_eval_trace.cpp,tests/test_evaluation.cpp,test
+8ffce9b	2026-11-01	Close S118: DEC-266 credits the pawn table, DEC-046 void	11	3	1	0	tools/mutants/S118_pawn_cache.py
+4d3edf6	2026-11-01	Make twelve false comments true (S306)	50	37	10	4	fastchess.sh,src/data_structures.hpp,src/evaluation.cpp,src/search.cpp,src/search_params.hpp,tests/CMakeLists.txt,tests/
