@@ -91,8 +91,9 @@ set -euo pipefail
 # it; if it changes the tree, expect the result to mix the two effects.
 
 # A MARKER ON EVERY EXIT PATH, SUCCESS AND FAILURE BOTH, because a detached run
-# is watched by something that has to be able to stop (AGENTS.md 12, DEC-061).
-# `marked` keeps the trap from printing a second one after fail() has spoken.
+# is watched by something that has to be able to stop (AGENTS.md WATCHERS,
+# DEC-061). `marked` keeps the trap from printing a second one after fail() has
+# spoken.
 #
 # Armed here, before the first git call, and not after the candidate snapshot
 # where it used to sit. S160 put `git rev-parse --short HEAD` above the old

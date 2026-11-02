@@ -984,6 +984,33 @@ TEST_SUITE("engine: uci layer")
     // on which it never fired. The early-out left with the verdict's reading
     // and this board came back byte for byte: depth 1 here read 36165 nodes
     // again.
+    //
+    // GOLDEN (DEC-142): `depth_1_floor_ms`, 3, the fewest milliseconds this
+    // board's depth-1 `time` may read, and, halved, `prompt_stop_us` below. A
+    // choice made off a reading and no rule's answer: S210 set it under the
+    // 13.8 ms of its day for a four times faster machine.
+    // Re-derive what it is judged against, on each machine the suite runs on,
+    // with this, where `sleep` holds `quit` past `bestmove`:
+    //   fen='q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1'
+    //   for i in $(seq 200); do
+    //     { printf 'position fen %s\ngo depth 1\n' "$fen"; sleep 0.2
+    //       echo quit; } | build/src/chesso | grep -o ' time [0-9]*'
+    //   done | sort -k2n | uniq -c
+    // The rule: the floor stands while the lowest `time` printed is at or above
+    // it, and one under it takes a heavier board, not a smaller floor.
+    // Margin: 9 against 3 on the i7-8700K at S319 on `046c3dd`, 158 of 200 runs
+    // at 9 and none lower; 4 against 3 on the MacBook Air M5 at `1c86c1a`,
+    // S308's step file, not re-taken.
+    // Moves legitimately on: anything that moves this board's depth-1 tree,
+    // quiescence above all, and a faster machine.
+    // **A finding by DEC-142, open:** this golden is not re-derived as that
+    // rule asks. No script produces 3: the command above only re-reads a run,
+    // and the rule says when 3 stands, not what it should be. The floor's other
+    // end has no script either: `prompt_stop_us` clocks the stop half's send,
+    // and that send read a 63 us median and 299 of 300 under 1500 us at S242,
+    // beside a match, from a temporary MESSAGE in a diagnostic build.
+    // Property beside it: none of its own. It is the precondition of the stop
+    // half below, which asserts the property.
     const std::string fen =
         "q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1";
     const int depth_1_floor_ms = 3;

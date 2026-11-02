@@ -264,9 +264,10 @@ double stage_two(const dataset_t& data, size_t row, const double* p)
 }
 
 
-// The 2764 positions tests/test_eval_trace.cpp runs over -- the curated list
-// both ways round, and every position of the JSON suites -- traced into one
-// dataset with a neutral label. The recovery cases replace the labels.
+// The positions of tests/test_eval_trace.cpp's all_positions(), 2908 at S319 --
+// the curated list both ways round, and every position of the JSON suites --
+// traced into one dataset with a neutral label. The recovery cases replace the
+// labels.
 dataset_t trace_positions()
 {
   game_t game;
@@ -1591,9 +1592,9 @@ dataset_t danger_positions()
 // The nonlinear group's derivative, checked as the linear terms' is: by
 // central differences, over each of the group's ten parameters, at weights
 // where every side the group reads sits on the transform's rising part. The
-// linear parameters' derivative is the case above's; over these 2764 positions
-// some table columns' gradients nearly cancel across rows, and a relative
-// error there measures the sigmoid's curvature, not the derivative.
+// linear parameters' derivative is the case above's; over these positions some
+// table columns' gradients nearly cancel across rows, and a relative error
+// there measures the sigmoid's curvature, not the derivative.
 TEST_CASE("a nonlinear group's gradient is the derivative of the error")
 {
   const tuner_trace::model_t model = danger_model();

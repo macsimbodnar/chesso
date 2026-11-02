@@ -7,7 +7,7 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-02, by hand.
 
-## 2026-11-02: S309 and S310 done; 2026-11-01: S101 done, H1; S307 and S308 done; S319 next (handover)
+## 2026-11-02: S309, S310 and S319 done; 2026-11-01: S101 done, H1; S307 and S308 done; S122 next (handover)
 
 **S101 done, H1** (`cand 4e34e61+7d6f96ec896c` vs `4e34e61`, Elo +33.87 +/- 12.33, nElo +46.57 +/- 16.84, an early stop and not the effect size, LLR 2.95,
 1636 games in 45 m, 0 forfeits, `adocs/data/S101_sprt.log`, archived, verified). Inspected and it stands: banner, both benches, the diff the tree played, no warning
@@ -26,7 +26,9 @@ a row for two comments saying 2764 positions where the binary reads 2908.
 
 **S310 done, 2026-11-02** (filler, no `src/` or `tools/`): the clamp block is derived from `clamped_site` and every row bound on each side, 198 of 198 planted gradients red where 12 were, S101's cells 48 of 48 where 2 were; AdaGrad's step 2 by a rule in `adocs/data/S310_adagrad_step.cpp`, a broken hold seen red, the threshold cost 7.49x and 5.83x stated; `load_json` from the source tree, tally the same from any directory. Largest entry at `-j12` 20.85 s of the 30 bar. S320 holds the six other binaries that fail from the root. S122's file now says the clamp case does not reach its finalizer.
 
-**Next: S319, S122, then S320.** S311, S312 and S313 are parked (DEC-342): the owner read the
+**S319 done, 2026-11-02** (filler, comments only): all eight rows changed, `No functional change`, objects byte-equal to base, bench 5482277. `inline` on `king_shelter_features` read zero by DEC-266: unresolved on this machine, the word stays, the comment says what it rested on. `depth_1_floor_ms` takes DEC-142's form with an open finding, no script behind its 3 or its send. A clean reader found five errors in the rewrites, all fixed. S321 holds the rest.
+
+**Next: S122, the next strength step, then S320 and S321 as filler.** S311, S312 and S313 are parked (DEC-342): the owner read the
 comment work as inconclusive, and DEC-341 removed it from the tree but for the study, `adocs/comment_study.md`. Read on the MacBook Air and now in no step: `tools/gate.sh` is
 red there before any change, `test_fastchess_script` and two format lines of `tt_cluster_t`; `bench` 5707449.
 

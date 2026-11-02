@@ -1,0 +1,32 @@
+# S319 identity: what the comment edits leave of each file, old (046c3dd) against the worktree. S306_identity.txt's form.
+# Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show 046c3dd:<file>` and over the new
+#      file, compared whole; the bytes and hash below are the stripped output. Machine: i7-8700K, g++ 13.3, 2026-11-02.
+# Shell and prose: `git diff -U0 046c3dd -- <file>`, for shell every changed line a comment by script, printed and read by eye.
+base 046c3dd; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+
+C++: g++ -fpreprocessed -dD -E -P, old against new
+  SAME  src/chesso.cpp  49512 bytes  sha256 67dcf1aaaae03254
+  SAME  src/evaluation.cpp  69618 bytes  sha256 60b232abfa0a148b
+  SAME  src/search_params.hpp  9927 bytes  sha256 f4bfd3f65fd4b2b6
+  SAME  src/search.cpp  53510 bytes  sha256 5e1113547f2367d0
+  SAME  tests/test_engine.cpp  131792 bytes  sha256 dd314cfbbd992d3d
+  SAME  tests/test_search.cpp  272499 bytes  sha256 060220bbe796a841
+  SAME  tests/test_tuner_gradient.cpp  38020 bytes  sha256 99d23db16076b7e5
+
+Shell: changed lines of git diff -U0, each a comment by this script's test (optional space, then #)
+  ONLY COMMENTS  fastchess.sh
+    -# is watched by something that has to be able to stop (AGENTS.md 12, DEC-061).
+    -# `marked` keeps the trap from printing a second one after fail() has spoken.
+    +# is watched by something that has to be able to stop (AGENTS.md WATCHERS,
+    +# DEC-061). `marked` keeps the trap from printing a second one after fail() has
+    +# spoken.
+  bash -n fastchess.sh: rc 0
+
+Prose: changed lines of git diff -U0, the one row added to DEV_MANUAL.md's goldens table
+    +| `test_engine.cpp` "a stop inside the first iteration cuts it and the hard timer ends the search within its bound", `depth_1_floor_ms` | 3 since S210, the fewest milliseconds the eight-queens board's depth-1 `time` may read, and, halved, `prompt_stop_us`. A choice made off a reading and no rule's answer: S210 set it under the 13.8 ms of its day for a four times faster machine. It stands while the lowest `time` is at or above it, and one under it takes a heavier board, not a smaller floor: the lowest read 9 on the i7-8700K at S319 on `046c3dd`, 158 of 200 runs at 9, and 4 on the MacBook Air M5 at `1c86c1a` (`adocs/plan_done/S308_false_comment_siblings.md`), not re-taken. **A finding by DEC-142, open:** this golden is not re-derived as that rule asks. No script produces 3: the command only re-reads a run, and the rule says when 3 stands, not what it should be. The floor's other end has no script either: `prompt_stop_us` clocks the stop half's send, and that send read a 63 us median and 299 of 300 under 1500 us at S242, beside a match, from a temporary MESSAGE in a diagnostic build (`adocs/plan_done/S242_test_engine_capture_flake.md`) | `fen='q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1'; for i in $(seq 200); do { printf 'position fen %s\ngo depth 1\n' "$fen"; sleep 0.2; echo quit; } | build/src/chesso | grep -o ' time [0-9]*'; done | sort -k2n | uniq -c`, on each machine the suite runs on; `sleep` holds `quit` past `bestmove` |
+
+S319-IDENTITY HOLDS

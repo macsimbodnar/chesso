@@ -837,9 +837,10 @@
      purpose as FutMaxLmrDepth. **Off is the cap at 0, and nothing else.**      \
      The threshold is `-HP_COEFF * lmr_depth`, so at lmr_depth 0 it is 0        \
      whatever HP_COEFF holds and the rule still skips every quiet whose entry   \
-     is negative. 16384 is the range top -- twice the band's own edge, so no    \
-     entry sits below it at any lmr_depth of 1 or more -- and a range top is    \
-     not an off value. */                                                       \
+     is negative. 16384 is the range top -- twice the 8192 edge it was set      \
+     against and about 1.86 times the 8831 shipping at S319, so no entry of     \
+     that band sits below it at any lmr_depth of 1 or more -- and a range       \
+     top is not an off value. */                                                \
   X(HP_COEFF,          "HistPruneCoeff",  612,    0, 16384)                    \
   X(HP_MAX_LMRDEPTH,   "HistPruneMaxLmrDepth", 11, 0, 16)                      \
                                                                                \

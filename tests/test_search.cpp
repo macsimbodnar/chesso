@@ -1371,7 +1371,14 @@ TEST_SUITE("search: move ordering state")
   // outside; it read H0 and was reverted. **7783 at S083's refit** and
   // **7366 at S135's piece placement fit**, 0.45 of 16256 and 96 nodes above
   // the middle half's lower end, so the pair stays
-  // (`adocs/data/S135_goldens.txt`).
+  // (`adocs/data/S135_goldens.txt`). **7366 again at S296's rule**, unmoved
+  // (`adocs/data/S296_goldens.txt`); then, each candidate's count inside the
+  // middle half so the pair stays, **8367 at S121**, 0.51 of 16256
+  // (`adocs/data/S121_goldens.txt`), **12104 at S123**, 0.74
+  // (`adocs/data/S123_goldens.txt`), **10306 at S125**, 0.63
+  // (`adocs/data/S125_goldens.txt`), and **10467 at S101**, 0.64
+  // (`adocs/data/S101_goldens.txt`), which the script read again at S319 on
+  // `046c3dd`.
   // Moves legitimately on: any ordering or search change -- re-derive when the
   // count leaves the middle half of the band, [c / sqrt 5, c x sqrt 4] around
   // the count c the pair was derived from, half of the factor from c to either

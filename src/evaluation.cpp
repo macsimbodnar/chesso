@@ -721,11 +721,11 @@ static inline bb_t fill_toward_rank1(bb_t squares)
 // themselves. The file masks are the whole point of the function: a bit on the
 // h file shifted one to the left lands on the a file of the next rank down, so
 // without them a pawn on one edge of the board would stop a passer on the
-// other. That is the bug these terms are most likely to have and it is
-// invisible while the weights are zero, so it was not reasoned about: dropping
-// the two masks and re-running the corpus comparison that replaced the old
-// per-pawn form disagreed on 3 of the 2696 test positions and 129574 of the
-// 1490839 tuning ones.
+// other. That is the bug these terms are most likely to have and it was
+// invisible while the weights were zero, as they were when the first of them
+// landed, so it was not reasoned about: dropping the two masks and re-running
+// the corpus comparison that replaced the old per-pawn form disagreed on 3 of
+// the 2696 test positions and 129574 of the 1490839 tuning ones.
 static inline bb_t neighbour_files(bb_t squares)
 {
   return ((squares << 1) & ~file_masks[0]) | ((squares >> 1) & ~file_masks[7]);
@@ -2369,12 +2369,23 @@ static bb_t king_zone(const bb_tables_t* tables,
 // that do not need a single attack set, which is why they sit outside the piece
 // loop rather than inside it. Indices 0 to 4 are counted there.
 //
-// `inline` is load-bearing and was measured, not assumed. Collecting the counts
-// for the test gave this function a second caller, clang stopped inlining it at
-// the first, and evaluate() went from 18.60 to 22.55 ns per call in bench_eval
-// -- 21 % for a term that was then supposed to be free. Inlined, the zero
-// weights it landed with folded the whole thing away again and the number came
-// back to 18.54. Those weights are non-zero now.
+// `inline` was load-bearing, and that was measured, not assumed. Collecting the
+// counts for the test gave this function a second caller, clang stopped
+// inlining it at the first, and evaluate() went from 18.60 to 22.55 ns per call
+// in bench_eval -- 21 % for a term that was then supposed to be free. Inlined,
+// the zero weights it landed with folded the whole thing away again and the
+// number came back to 18.54. Those weights are non-zero now, g++ is the
+// reference compiler (DEC-049), and since S118 a Release search reaches this
+// only when the shelter slot misses.
+//
+// Read again at S319 on `046c3dd`, the word taken out of a scratch copy: g++
+// 13.3 then keeps one out-of-line copy where it had none, called from both
+// instantiations of its caller, the same nodes searched. DEC-266 records that
+// as zero: instructions +0.18 % on `bench 16` and +0.20 % on pos11, cycles
+// +0.27 % and +0.26 %, wall +0.23 %, those three CIs above 0 and each reaching
+// inside the A/A's floor of 0.34 %, 0.23 % and 0.25 %. So the word is shown to
+// buy those instructions and no time this machine resolves, and it stays
+// because S319 changed only comments. Its step file has the reading.
 static inline void king_shelter_features(const board_t* board,
                                          int colour,
                                          int features[KS_FEATURE_COUNT])

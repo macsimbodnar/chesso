@@ -1126,11 +1126,11 @@ uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
   // case was written on, eight queens a side
   // (q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1), spent 13.5 ms and
   // 42371 nodes finishing a depth-1 iteration that was told to stop before it
-  // began. `go depth 1` there reports 36165 nodes now. It is the board
-  // tests/test_engine.cpp "a stop inside the first iteration cuts it and the
-  // hard timer ends the search within its bound" stops -- again since S022's
-  // second verdict left, whose early-out had cut it to 10187 nodes -- and the
-  // case times its hard limit on a board of its own.
+  // began. `go depth 1` there read 48840 nodes at S319, on `046c3dd`. It is the
+  // board tests/test_engine.cpp "a stop inside the first iteration cuts it and
+  // the hard timer ends the search within its bound" stops -- again since
+  // S022's second verdict left, whose early-out had cut it to 10187 nodes --
+  // and the case times its hard limit on a board of its own.
   //
   // A depth-1 iteration that is cut still owes a move and still produces one:
   // it publishes no PV, so the first_legal_move() fallback below answers.

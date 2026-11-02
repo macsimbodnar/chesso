@@ -2848,7 +2848,8 @@ static int negamax_at(int alpha0,
       // third change inside it could not be attributed (MEASUREMENT). And
       // HistPruneCoeff's declared range is derived from the plain band's own
       // edge, `QuietHistoryMax/64` to `QuietHistoryMax/8` with a range top at
-      // twice that edge; against a sum whose span is QuietHistoryMax plus
+      // twice the 8192 edge it was set against, 16384, about 1.86 times the
+      // 8831 shipping at S319; against a sum whose span is QuietHistoryMax plus
       // ContHistWeight * CONT_HIST_BOUND / 100 that derivation has to be taken
       // again, which is a decision with its own seed and not a line moved.
       // S222's lane fits HistPruneCoeff where it stands (DEC-205) and its SPRT
