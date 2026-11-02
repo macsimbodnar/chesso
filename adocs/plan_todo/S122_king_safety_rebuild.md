@@ -9,6 +9,13 @@ blocks:
 paused_by:
 done:
 
+## Noted 2026-11-02, S310's fast check: the clamp case does not reach the finalizer
+
+`tests/test_tuner_gradient.cpp` "the clamp's derivative is exact where it binds" derives its block from
+`tools/tuner_trace.hpp` `clamped_site`, over the feature table. `model.groups` are outside that table and are
+added after the clamp, so S262's nonlinear group, this step's finalizer, is not covered by the case. If the
+curve sits inside the clamp, the case is extended to assert it silent on a bound row, with a plant seen red.
+
 ## Amended 2026-10-28, DEC-324: the clamp stays and its margin is re-derived
 
 S039 read H0, so the lazy shortcut and the clamp stay. The owner amended

@@ -169,8 +169,15 @@ set(CHESSO_FIT_THREADS 4)
 add_trace_doctest_target(test_tuner_gradient
                          "--test-case-exclude=${chesso_plant_exclusions}")
 target_include_directories(test_tuner_gradient PRIVATE ../tools)
+
+# The JSON suites come from the source tree, so the binary reads the same tally
+# from any directory. The main entry runs from the repository root and the plant
+# entries from the binary's own directory, so the suite keeps both true.
+target_compile_definitions(test_tuner_gradient
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 set_tests_properties(test_tuner_gradient PROPERTIES
-                     PROCESSORS ${CHESSO_FIT_THREADS})
+                     PROCESSORS ${CHESSO_FIT_THREADS}
+                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 foreach(family IN LISTS CHESSO_PLANT_FAMILIES)
      add_test(NAME test_tuner_gradient_plants_${family}

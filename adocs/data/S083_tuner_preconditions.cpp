@@ -1,8 +1,12 @@
 // S083. The two measured preconditions in tests/test_tuner_gradient.cpp,
 // re-derived by S262's procedure at whatever constants the tree is built with
 // (DEC-142: a measured number with no script is a finding; this is the
-// script). Both are inputs the cases establish at run time, not goldens, and
-// neither case's assertions are touched by what this prints.
+// script). Both are inputs the cases establish at run time, and neither case's
+// assertions are touched by what this prints. The case's CLAMP_PUSH and
+// ADAGRAD_HOLD_STEP are read out of its source, so run this from the repository
+// root: `clamp` exits 2 if its rule answers anything but that push, `walk` runs
+// at that step, and either exits 2 if it cannot read one. WALK_FLOOR and the
+// fixture below are copied by hand and compared with nothing.
 //
 //   clamp  "the clamp's derivative is exact where it binds": the push added to
 //          each of the eighteen king safety weights so that the clamp binds on
@@ -36,8 +40,10 @@
 //
 //   walk   "the fit holds every gauge still and no score sees the hold": the
 //          plain update's walk along the seven gauges, per optimiser, 300
-//          epochs over the gauge fixture, Adam at 1 and AdaGrad at 10 -- the
-//          case's own run, step for step. S262 read the smallest walk 0.32 a
+//          epochs over the gauge fixture, Adam at 1 and AdaGrad at the case's
+//          ADAGRAD_HOLD_STEP -- the case's own run, step for step. Figures below
+//          until S310 are at the 10 it ran then, adocs/data/S310_adagrad_step.cpp
+//          being what picks that step now. S262 read the smallest walk 0.32 a
 //          square under Adam and 0.20 under AdaGrad (the rook's) at f57b92f's
 //          constants -- this program reads 0.3179 and 0.1957 at b860a8a's --
 //          and set the case's floor at 0.1, "far above the hold's 1e-9 and
@@ -91,13 +97,30 @@ using tuner_layout::KS_EG_BASE;
 using tuner_layout::KS_MG_BASE;
 using tuner_layout::MATERIAL_COUNT;
 using tuner_layout::MG_BASE;
-using tuner_layout::MOB_MG_BASE;
 using tuner_layout::PARAM_COUNT;
 using test_eval_positions::positions;
 using tuner_trace::dataset_t;
 
 // tests/test_tuner_gradient.cpp's `> 0.01` on every plain shift (DEC-313 (5)).
 constexpr double WALK_FLOOR = 0.01;
+
+// A constant the case carries, read from its source. Exits 2 if it is not there.
+double case_constant(const std::string& name)
+{
+  const std::string path = "tests/test_tuner_gradient.cpp";
+  const std::string key = "constexpr double " + name + " = ";
+  std::ifstream in(path);
+  std::string line;
+
+  while (std::getline(in, line)) {
+    const size_t at = line.find(key);
+    if (at != std::string::npos) { return std::stod(line.substr(at + key.size())); }
+  }
+
+  fprintf(stderr, "no %s in %s: run from the repository root\n", name.c_str(),
+          path.c_str());
+  exit(2);
+}
 
 int engine_phase(const std::string& fen)
 {
@@ -306,10 +329,19 @@ int clamp_sweep(const std::string& dir)
       std::vector<double> on_binding;
       tuner_trace::gradient(data, params.data(), k, binding, 0, binding.size(),
                             1, target, &on_binding);
+      std::vector<uint8_t> clamped(PARAM_COUNT, 0);
+      for (const tuner_trace::feature_t& f :
+           tuner_trace::feature_table().features) {
+        if (tuner_trace::clamped_site(f.site)) {
+          clamped[f.mg] = 1;
+          clamped[f.eg] = 1;
+        }
+      }
+
       clamped_block = 0.0;
       elsewhere = 0.0;
       for (size_t p = 0; p < PARAM_COUNT; ++p) {
-        if (p >= MOB_MG_BASE && p < KS_EG_BASE + KING_SAFETY_COUNT) {
+        if (clamped[p]) {
           clamped_block = std::max(clamped_block, std::fabs(on_binding[p]));
         } else {
           elsewhere = std::max(elsewhere, std::fabs(on_binding[p]));
@@ -350,9 +382,11 @@ int clamp_sweep(const std::string& dir)
     printf("clamp: no push from +10 to +200 satisfies the rule\n");
     return 2;
   }
-  printf("clamp: the rule picks +%d, every row %.2f from the kink\n", chosen,
-         chosen_clearance);
-  return 0;
+  const double carried = case_constant("CLAMP_PUSH");
+  printf("clamp: the rule picks +%d, every row %.2f from the kink; the case "
+         "carries +%g\n",
+         chosen, chosen_clearance, carried);
+  return (chosen == carried) ? 0 : 2;
 }
 
 int walk(const std::string& dir)
@@ -416,7 +450,9 @@ int walk(const std::string& dir)
 
   for (const tuner_optimiser::kind_t kind :
        {tuner_optimiser::ADAM, tuner_optimiser::ADAGRAD}) {
-    const double lr = (kind == tuner_optimiser::ADAM) ? 1.0 : 10.0;
+    const double lr = (kind == tuner_optimiser::ADAM)
+                          ? 1.0
+                          : case_constant("ADAGRAD_HOLD_STEP");
     std::vector<double> held = start;
     std::vector<double> plain = start;
     tuner_optimiser::state_t held_state(PARAM_COUNT, kind);

@@ -76,6 +76,7 @@ using tuner_layout::SUP_EG_BASE;
 using tuner_layout::SUP_MG_BASE;
 using tuner_layout::TEMPO_EG_BASE;
 using tuner_layout::TEMPO_MG_BASE;
+using tuner_layout::THREAT_PUSH_END;
 using tuner_layout::TKG_EG_BASE;
 using tuner_layout::TKG_MG_BASE;
 using tuner_layout::TMN_EG_BASE;
@@ -649,7 +650,9 @@ TEST_CASE("gradient() is the derivative of the error it descends")
 // nothing. Push the king safety weights until it binds on some rows, and the
 // gradient still matches finite differences on every parameter, including
 // the clamped block -- and on the binding rows alone it is exactly zero there
-// while it is not zero elsewhere.
+// while it is not zero elsewhere. Then every row is bound in turn on each side
+// of the clamp, so that each weight of the block is silenced on a row that
+// reads it.
 TEST_CASE("the clamp's derivative is exact where it binds")
 {
   const std::string path = fixture_path();
@@ -661,8 +664,10 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   std::vector<double> params(PARAM_COUNT, 0.0);
   tuner_layout::starting_params(params.data());
 
-  // The push is an input, measured and not a golden: S262's +40 on each of the
-  // eighteen king safety weights bound the clamp on one row of the 34, at
+  // GOLDEN (DEC-142): CLAMP_PUSH, an input this case re-establishes below
+  // rather than a figure it asserts. Moving the constants or the fixture moves
+  // it, and the script below exits 2 until it follows. S262's +40 on each of
+  // the eighteen king safety weights bound the clamp on one row of the 34, at
   // 263.7 against 184, the nearest other at 150, but at S083's refit it binds
   // on none. Re-derived by adocs/data/S083_tuner_preconditions.cpp `clamp`
   // (built as its header says), which sweeps +10 to +200 and picks by a rule
@@ -714,9 +719,11 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // the constants or the fixture move; the precondition below re-establishes
   // the binding either way. A much larger push saturates the sigmoid
   // everywhere, which makes the finite difference itself unreliable.
+  constexpr double CLAMP_PUSH = 30.0;
+
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
-    params[KS_MG_BASE + t] += 30.0;
-    params[KS_EG_BASE + t] += 30.0;
+    params[KS_MG_BASE + t] += CLAMP_PUSH;
+    params[KS_EG_BASE + t] += CLAMP_PUSH;
   }
 
   std::vector<uint32_t> binding;
@@ -758,6 +765,30 @@ TEST_CASE("the clamp's derivative is exact where it binds")
                                               << check.worst_param);
   CHECK(check.worst < 1e-6);
 
+  // The block is every weight the trace scores on a clamped site, so a family
+  // declared on one is in it with no edit here. The floor is the families that
+  // ship there today, so that one moved off its site by mistake is named here.
+  const std::vector<tuner_trace::feature_t>& features =
+      tuner_trace::feature_table().features;
+
+  std::vector<uint8_t> clamped(PARAM_COUNT, 0);
+  for (const tuner_trace::feature_t& f : features) {
+    if (tuner_trace::clamped_site(f.site)) {
+      clamped[f.mg] = 1;
+      clamped[f.eg] = 1;
+    }
+  }
+
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    const bool mobility_or_king =
+        p >= MOB_MG_BASE && p < KS_EG_BASE + KING_SAFETY_COUNT;
+    const bool threat = p >= TPW_MG_BASE && p < THREAT_PUSH_END;
+    if (mobility_or_king || threat) {
+      CAPTURE(p);
+      CHECK(clamped[p] == 1);
+    }
+  }
+
   // On the binding rows alone, the clamped block's gradient is exactly zero
   // and something else's is not -- the rows are in the sum, and only the
   // clamped weights are silent there.
@@ -768,7 +799,7 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   double clamped_block = 0.0;
   double elsewhere = 0.0;
   for (size_t p = 0; p < PARAM_COUNT; ++p) {
-    if (p >= MOB_MG_BASE && p < KS_EG_BASE + KING_SAFETY_COUNT) {
+    if (clamped[p]) {
       clamped_block = std::max(clamped_block, std::fabs(on_binding[p]));
     } else {
       elsewhere = std::max(elsewhere, std::fabs(on_binding[p]));
@@ -779,6 +810,104 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   CAPTURE(elsewhere);
   CHECK(clamped_block == 0.0);
   CHECK(elsewhere > 1e-9);
+
+  // The push binds few rows and they read few of the block's weights, and a
+  // weight a row does not read is zero there whatever the clamp does. So each
+  // row is bound alone, by moving only the clamped weights it reads, each the
+  // way its coefficient counts, until they move its sum by twice the margin:
+  // past the margin from anywhere inside it, once on each side, since the clamp
+  // has a branch for each. No row binds at the shipped constants, so a weight
+  // counts as silenced on a row only if that row gives it a gradient there, and
+  // every weight of the block has to be silenced on one. Whether a family's
+  // weights are live or zero changes none of this.
+  std::vector<double> shipped(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(shipped.data());
+
+  std::vector<uint8_t> silenced(PARAM_COUNT, 0);
+
+  for (size_t row = 0; row < data.size(); ++row) {
+    CAPTURE(positions[row]);
+
+    double reach = 0.0;
+    for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+      const tuner_trace::entry_t e = data.entries[j];
+      if (clamped[features[e.feature].mg]) { reach += std::abs(e.coef); }
+    }
+
+    // Stage two is empty on this row, so the clamp has nothing to silence.
+    if (reach == 0.0) { continue; }
+
+    REQUIRE(std::fabs(stage_two(data, row, shipped.data())) < LAZY_EVAL_MARGIN);
+
+    const std::vector<uint32_t> one_row = {static_cast<uint32_t>(row)};
+    std::vector<double> unbound_gradient;
+    tuner_trace::gradient(data, shipped.data(), k, one_row, 0, 1, 1, target,
+                          &unbound_gradient);
+
+    for (size_t p = 0; p < PARAM_COUNT; ++p) {
+      if (clamped[p] && unbound_gradient[p] != 0.0) { silenced[p] = 1; }
+    }
+
+    for (const double side : {1.0, -1.0}) {
+      CAPTURE(side);
+
+      std::vector<double> bound = shipped;
+      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+        const tuner_trace::entry_t e = data.entries[j];
+        const tuner_trace::feature_t& f = features[e.feature];
+        if (!clamped[f.mg]) { continue; }
+
+        const double push =
+            side * std::copysign(2.0 * LAZY_EVAL_MARGIN / reach, e.coef);
+        bound[f.mg] += push;
+        bound[f.eg] += push;
+      }
+
+      REQUIRE(side * stage_two(data, row, bound.data()) >
+              LAZY_EVAL_MARGIN + 1.0);
+
+      std::vector<double> bound_gradient;
+      tuner_trace::gradient(data, bound.data(), k, one_row, 0, 1, 1, target,
+                            &bound_gradient);
+
+      size_t loudest_param = 0;
+      double loudest = 0.0;
+      double rest = 0.0;
+      for (size_t p = 0; p < PARAM_COUNT; ++p) {
+        if (!clamped[p]) {
+          rest = std::max(rest, std::fabs(bound_gradient[p]));
+        } else if (std::fabs(bound_gradient[p]) > loudest) {
+          loudest = std::fabs(bound_gradient[p]);
+          loudest_param = p;
+        }
+      }
+
+      CAPTURE(loudest_param);
+      CHECK(loudest == 0.0);
+      CHECK(rest > 0.0);
+
+      // The other end of the derivative: the score itself does not move.
+      const double bound_score = tuner_trace::score(data, row, bound.data());
+      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+        const tuner_trace::feature_t& f = features[data.entries[j].feature];
+        if (!clamped[f.mg]) { continue; }
+
+        for (const uint32_t half : {f.mg, f.eg}) {
+          std::vector<double> moved = bound;
+          moved[half] += 0.005;
+          CAPTURE(half);
+          CHECK(tuner_trace::score(data, row, moved.data()) == bound_score);
+        }
+      }
+    }
+  }
+
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    if (clamped[p]) {
+      CAPTURE(p);
+      CHECK(silenced[p] == 1);
+    }
+  }
 
   std::filesystem::remove(path);
 }
@@ -968,19 +1097,25 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
   };
 
   // K at the scale the sigmoid was written around, as in the gradient case
-  // above. Adam at its default step; AdaGrad at 10 and not its default 30,
-  // because on these 38 rows a step of 30 makes the descent itself chaotic:
-  // measured at S262, the held and plain runs' scores part by 7e-13 at epoch
-  // 25, 1e-7 at 75, 5e-4 at 125 and 1.6 cp at 175 -- last-bit rounding grown a
-  // hundredfold every 25 epochs while every level stays held within 1e-9 -- so
-  // the comparison would measure the chaos and not the hold. At 3 and at 10
-  // S262 read the two within 6e-13 for all 300 epochs on those rows. The
-  // full-corpus fit at 30 has 9716070 training rows and descended smoothly
-  // (S262_fits.txt). A fit can bring the onset down to 10: S101's on the 108
-  // gauge rows read 5e-9 at epoch 250, 1e-6 at 275 and 5e-6 at 300, and at most
-  // 5e-12 at 7. Today, on the 110 with S101's pair, the two stay within
-  // 1.30e-11 at 3 and 6.28e-11 at 10, every 25 epochs, 7.39e-12 at epoch 300 at
-  // 10: a reading and no margin (adocs/data/S101_goldens.txt).
+  // above. Adam at its default step. AdaGrad at ADAGRAD_HOLD_STEP and not its
+  // default 30, because the two runs differ by rounding alone, and where the
+  // descent is chaotic that rounding grows until it passes any bound with every
+  // level still held within 1e-9: the comparison would then measure the chaos
+  // and not the hold. The full-corpus fit at 30 has 9716070 training rows and
+  // descended smoothly (S262_fits.txt); these rows do not. How large a step
+  // stays quiet moves with the constants and the rows.
+  //
+  // GOLDEN (DEC-142): ADAGRAD_HOLD_STEP, the largest step on a ladder at most
+  // half the smallest one at which any of 98 nearby starts passes 1e-9 by four
+  // times these epochs, not a step this case happened to pass at. Today that
+  // smallest one is 5, `apart` here reads 2.84e-12 and never passes 6.68e-11 by
+  // then, and the shipped constants themselves go chaotic at 10
+  // (adocs/data/S310_adagrad_step.txt). Re-derived by
+  // adocs/data/S310_adagrad_step.cpp, whose header states the rule and which
+  // exits 2 until this follows it, whenever the constants or the fixture move.
+  // The bound below does not follow it. A smaller step shows a small error in
+  // the hold less than a larger one does; S310's step file has what that costs.
+  constexpr double ADAGRAD_HOLD_STEP = 2.0;
   const double k = 1.0;
   const int epochs = 300;
 
@@ -988,7 +1123,7 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
        {tuner_optimiser::ADAM, tuner_optimiser::ADAGRAD}) {
     CAPTURE(tuner_optimiser::kind_name(kind));
 
-    const double lr = (kind == tuner_optimiser::ADAM) ? 1.0 : 10.0;
+    const double lr = (kind == tuner_optimiser::ADAM) ? 1.0 : ADAGRAD_HOLD_STEP;
 
     std::vector<double> held = start;
     std::vector<double> plain = start;
@@ -1057,7 +1192,10 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // (`adocs/data/S101_preconditions.txt`). At S101's candidate, the 1234567
     // fit with DEC-316's pair (110 with the gauge rows), the smallest is 0.7951
     // under Adam, the knight's, and 0.6157 under AdaGrad, the bishop's, every
-    // hold at most 1.13e-14 (`adocs/data/S101_goldens.txt`). The 0.1 of before
+    // hold at most 1.13e-14 (`adocs/data/S101_goldens.txt`). Those AdaGrad
+    // figures are at the step of 10 the case ran then; at ADAGRAD_HOLD_STEP on
+    // the same constants the smallest is 0.7369, psqt_eg[king]'s, every hold at
+    // most 6.66e-15 (`adocs/data/S310_adagrad_step.txt`). The 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
     // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits
@@ -1093,6 +1231,8 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
 
     CAPTURE(apart);
     CAPTURE(travelled);
+    MESSAGE(std::string(tuner_optimiser::kind_name(kind))
+            << " hold: runs apart " << apart << ", travelled " << travelled);
     CHECK(travelled > 50.0);
     CHECK(apart < 1e-6);
 

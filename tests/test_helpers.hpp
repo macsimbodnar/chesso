@@ -19,7 +19,9 @@
 // executable already links chesso_engine, and a second library target for a
 // hundred lines of glue is not worth the build graph.
 
-// The JSON move suites, relative to the test working directory.
+// The JSON move suites. A binary tests/CMakeLists.txt gives CHESSO_SOURCE_DIR
+// reads them from the source tree, wherever it runs; any other reads them
+// relative to its working directory.
 // clang-format off
 inline const std::vector<std::string> json_test_files = {
   "assets/test_jsons/castling.json",
@@ -36,8 +38,15 @@ inline const std::vector<std::string> json_test_files = {
 
 inline nlohmann::json load_json(const std::string& filename)
 {
-  std::ifstream file(filename);
-  REQUIRE_MESSAGE(file.good(), ("Cannot open " + filename));
+#ifdef CHESSO_SOURCE_DIR
+  const std::string path =
+      std::string(CHESSO_SOURCE_DIR) + "/tests/" + filename;
+#else
+  const std::string& path = filename;
+#endif
+
+  std::ifstream file(path);
+  REQUIRE_MESSAGE(file.good(), ("Cannot open " + path));
 
   nlohmann::json data;
   file >> data;
