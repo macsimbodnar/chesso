@@ -7,7 +7,36 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-02, by hand.
 
-## 2026-11-02: S122 phase 1 landed (DEC-345); the corpus, a fresh sample and the screen next (handover)
+## 2026-11-02 18:45: shutdown by the owner; S122's corpus stopped at 102412 games, a top-up owed (handover)
+
+**S122's corpus was stopped on purpose for the shutdown** (SIGTERM to datagen, 18:45). `generate.log` ends `exit 143`, `S122-CORPUS-FAILED`.
+The three files end on a newline, with no NUL tail. Read-only, `python3 adocs/data/S082_pool_merge.py part1 .tuning/s122/corpus/pool.tsv
+.tuning/s122/corpus/generate.log` checks them clean:
+- **Kept:** 102412 games (root 9470372 rows, qs 9467560, pv 9229963).
+- **Cut:** game 102522 is dropped.
+- **Next offset:** 1000000.
+
+**On resume, before `S122_corpus.sh all`, DEC-296's form:**
+1. **Top-up:** the frozen `.tuning/s122/corpus/datagen` into its own directory, with run.sh's command but `--games 47588
+   --seed 2026300203`. That is about 4.8 h at about 9900 games an hour, for 150000 in all. The seed's worker range
+   [2026300203, 2026300215) and its games-wide range [2026300203, 2026347791) meet neither the corpus's [2026110203, 2026260203)
+   nor the fresh sample's [2026260203, 2026272203) (DEC-345 (5)).
+2. **Merge:** `S082_pool_merge.py merge --games 150000 --seed 2026110203 --topup-seed 2026300203 --nodes 100000 ...` into a pool
+   whose log `S122_corpus.sh verify` accepts.
+3. **Owed first, to an agent:** `S122_corpus.sh` checks `S122-CORPUS-DONE` in the pool's `generate.log`. `S122_screen.sh sample`
+   reads the corpus's seed range from that log's one command line. Neither is written for a merged pool of two runs. Adapt both to
+   the merged pool, with the top-up's range in the sample's overlap check, smoked on scratch. This is a pre-registration change,
+   allowed while `filter` has not run on the pool, and is noted in S122's step file.
+
+**S322 was started and stopped by the shutdown.** Its agent was cut off while building. `../chesso-s322` (branch `s322` at `d3541c6`)
+holds unstaged, unverified edits to `DEV_MANUAL.md` and `tests/CMakeLists.txt`, saved as `.tuning/coord/S322/partial_unverified.diff`.
+A fresh agent restarts it from its brief (`.tuning/coord/S322/brief.md`), told that the partial edits are unverified.
+
+**Nothing else was running.** All commits are gated; the last is S321's. Order on resume: the corpus top-up (the machine), and in
+parallel the agent adapting the two scripts; then the merge, `S122_corpus.sh all`, `sample`, then `screen all` at night. S322 and
+S323 are filler, landed before the screen starts or after it ends.
+
+## 2026-11-02: S122 phase 1 landed (DEC-345); the corpus, a fresh sample and the screen next
 
 **S122 phase 1 committed**, `No functional change`, bench 5482277: the family at zero and the curve at its seed (c 45, d 2048), the
 tuner at 1171, the walked counts, the mirror test, the clamp case with the group, the curve's plants (`slow` label, `king_curve`), and
