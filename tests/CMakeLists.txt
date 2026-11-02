@@ -15,8 +15,9 @@ endif()
 message("-- Test timeout ${CHESSO_TEST_TIMEOUT}s (build type ${CMAKE_BUILD_TYPE})")
 
 # Every doctest binary needs the same include paths and the same engine
-# library, and every one of them is expected to finish in seconds. Perft is the
-# exception and is registered separately with the "slow" label.
+# library, and every ctest entry of theirs is expected to finish in seconds but
+# test_tuner_gradient_plants_king_curve. That one and test_perft, which is not
+# doctest and is registered separately further down, carry the "slow" label.
 #
 # The library is chesso_engine for every test but those of the tuner's model,
 # which link its trace build (S262, src/eval_trace.hpp) through
@@ -329,6 +330,21 @@ add_doctest_target(test_search_params)
 # same definition test_uci_surface does.
 target_compile_definitions(test_search
      PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
+# S320: the binaries that read tests/assets/ -- the JSON suites and the perft
+# assets through test_helpers.hpp's load_json, and test_chesso through its own
+# loader -- read them out of the source tree, so each reads the same tally from
+# the repository root, from build/tests and from anywhere else. Their entries
+# run from the root, as test_tuner_gradient's main entry does, because
+# build/tests holds a copy of the assets that a relative read passes on: from
+# the root each of these read 1 to 20 cases red until this.
+foreach(name IN ITEMS test_chesso test_movegen test_evaluation test_eval_model
+                      test_leaf_walk test_eval_trace test_invariants)
+     target_compile_definitions(${name}
+          PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+     set_tests_properties(${name} PROPERTIES
+                          WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endforeach()
 
 # The surface guard reads MANUAL.md out of the source tree, so it needs to know
 # where that tree is.
@@ -765,8 +781,13 @@ add_executable(test_perft test_perft.cpp)
 target_include_directories(test_perft SYSTEM PRIVATE third_party/nlohmann)
 target_include_directories(test_perft PRIVATE ../src)
 target_link_libraries(test_perft PRIVATE chesso_engine)
+# S320: its assets from the source tree and its entry from the root, for the
+# reason the S320 block after test_search's definition gives.
+target_compile_definitions(test_perft
+     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)
-set_tests_properties(test_perft PROPERTIES LABELS "slow" TIMEOUT 1800)
+set_tests_properties(test_perft PROPERTIES LABELS "slow" TIMEOUT 1800
+                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # Move generation benchmark. Registered so it can be run through ctest, but
 # under its own label and with no threshold: timings depend on the machine, so

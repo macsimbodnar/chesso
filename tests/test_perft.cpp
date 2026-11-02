@@ -235,13 +235,21 @@ expected_stats_t load_expected_stats(const json& stats_dict)
 // missing or unparseable asset iterated zero cases and the binary exited 0, so
 // the gate reported a pass for a run that checked nothing. Every check that
 // must hold in the gate exits explicitly. S193, 2026-09-04_test_review-F05.
+//
+// Under CHESSO_SOURCE_DIR, which tests/CMakeLists.txt gives this binary, the
+// assets come from the source tree wherever it runs (S320).
 json load_json(const std::string& filename)
 {
-  std::ifstream file(filename);
+#ifdef CHESSO_SOURCE_DIR
+  const std::string path =
+      std::string(CHESSO_SOURCE_DIR) + "/tests/" + filename;
+#else
+  const std::string& path = filename;
+#endif
+
+  std::ifstream file(path);
   if (!file) {
-    std::cerr << RED << "test_perft: cannot open asset: " << filename << RESET
-              << "\nRun from a directory holding assets/perft_json/, such as "
-                 "build/tests."
+    std::cerr << RED << "test_perft: cannot open asset: " << path << RESET
               << std::endl;
     std::exit(2);
   }
@@ -250,7 +258,7 @@ json load_json(const std::string& filename)
   try {
     file >> json_data;
   } catch (const json::parse_error& e) {
-    std::cerr << RED << "test_perft: cannot parse asset: " << filename << ": "
+    std::cerr << RED << "test_perft: cannot parse asset: " << path << ": "
               << e.what() << RESET << std::endl;
     std::exit(2);
   }

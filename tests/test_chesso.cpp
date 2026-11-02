@@ -44,9 +44,19 @@ const static std::vector<std::string> test_files = {
 // clang-format on
 
 
+// Under CHESSO_SOURCE_DIR, which tests/CMakeLists.txt gives this binary, the
+// suites come from the source tree wherever it runs, as test_helpers.hpp's
+// load_json reads them.
 json load_json(const std::string& filename)
 {
-  std::ifstream file(filename);
+#ifdef CHESSO_SOURCE_DIR
+  const std::string path =
+      std::string(CHESSO_SOURCE_DIR) + "/tests/" + filename;
+#else
+  const std::string& path = filename;
+#endif
+
+  std::ifstream file(path);
   REQUIRE(file);
 
   json json_data;

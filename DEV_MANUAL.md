@@ -871,7 +871,8 @@ machine lacks a tool, the relay is not broken. A skip in the gate's output is
 therefore something to read, not to ignore. Its session, `tests/assets/bare_fen_relay_session.txt`, is rewritten by
 `adocs/data/S272_relay_session.py` from a recorded fastchess log.
 
-`test_perft`, the slow label's one binary, **exits non-zero on a missing or an
+`test_perft`, one of the slow label's two entries with
+`test_tuner_gradient_plants_king_curve`, **exits non-zero on a missing or an
 unparseable asset** and on a mismatch in any of the **nine** columns it reads —
 `nodes`, `captures`, `en_passant`, `castles`, `promotions`, `checks`,
 `discovery_checks`, `double_checks`, `checkmates`. Both refusals used to be
@@ -880,8 +881,10 @@ iterated zero cases and exited 0; and only `nodes` reached the pass flag, so the
 other four printed red and the run passed anyway (S193). The last four were
 parsed or ignored and never compared until S205, which is why the binary went
 from about 53 s to about 67 s: a check test at every leaf and a move generation
-at every check leaf. It reads its assets relative to the working directory, so
-run it through `ctest` or from `build/tests`.
+at every check leaf. It reads its assets from the source tree
+(`CHESSO_SOURCE_DIR`, S320), so it runs from any directory; until S320 it read
+them relative to the working directory and exited 2 from any directory without
+`assets/perft_json/` in it, the repository root among them.
 
 **The four check columns are not four independent counts**, and reading them as
 such puts the run red on Kiwipete at depth 5. `checks` is every check leaf,
@@ -1113,12 +1116,18 @@ That gate is necessary and not sufficient. Deep perft, the debug-build
 assertions and any SPRT are named in each step's `accepts:` field and run by
 hand. DEC-025.
 
-**Run test binaries from `tests/`** — the ones that read assets mostly do so by
-relative path. `test_tuner_gradient` and `test_search` read the JSON suites from
-the source tree (`CHESSO_SOURCE_DIR`) and run from any directory:
+**Test binaries run from any directory.** Every one that reads a fixture -- the
+JSON suites, the perft assets, a set under `adocs/data/`, `MANUAL.md` -- reads it
+out of the source tree through the `CHESSO_SOURCE_DIR` compile definition, so a
+binary run by hand reads the tally ctest does. Until S320 eight of them read
+`tests/assets/` relative to the working directory, and from the repository root
+seven failed 1 to 20 cases each and `test_perft` exited 2, while all eight passed
+in `build/tests`, which holds a copy; their entries and `test_tuner_gradient`'s
+main one now run from the root, where a relative read fails, so the suite holds
+it:
 
 ```bash
-cd tests && ../build-debug/tests/test_movegen
+./build-debug/tests/test_movegen
 ```
 
 Or through ctest, which since S067 no longer times the debug build out:

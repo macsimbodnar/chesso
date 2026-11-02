@@ -1,7 +1,7 @@
 id:         S321
-goal:       the three stale statements S319 found beyond its rows say what the tree does, and DEC-142's open finding on `depth_1_floor_ms` is closed by a script or a recorded reason
+goal:       the stale statements S319 and S320 found beyond their rows say what the tree does, and DEC-142's open finding on `depth_1_floor_ms` is closed by a script or a recorded reason
 accepts:    each row below re-checked against the code at landing, with what the check read, then true or gone; `depth_1_floor_ms` has a tracked script that reads its send and its command, or a stated reason, recorded where `DEV_MANUAL.md`'s row can name it, why it has none; comments only under `src/`, the code identical by S306's form, `No functional change`; a clean reader old against new
-touches:    DEV_MANUAL.md, src/search.cpp, tools/spsa_driver.py, tests/test_engine.cpp, adocs/data/S321_*, adocs/data/README.md
+touches:    DEV_MANUAL.md, src/search.cpp, tools/spsa_driver.py, tests/test_engine.cpp, adocs/data/S136_screen.sh, adocs/data/S321_*, adocs/data/README.md
 excludes:   shortening comments or removing history, which is parked (DEC-342)
 decisions:  DEC-171, DEC-142, DEC-342
 closes:
@@ -20,3 +20,4 @@ Found 2026-11-02 by S319's implementer and its clean reader, and by neither chan
 | `src/search.cpp`, the history band's block | "S222 lands that table", "The step's one SPRT already prices", "S222's lane fits HistPruneCoeff where it stands" | the present tense of a closed step |
 | `tools/spsa_driver.py`, the snapshot docstring | cites lines 141 to 147 of `fastchess.sh` for an incident | at `046c3dd` those lines are the `git` wrapper's comment; the incident is in the comment above `snapshot=`; cite it by a phrase |
 | `tests/test_engine.cpp`, `depth_1_floor_ms` | named a golden by S319, with its command | no script produces its 3 and the command only re-reads a run; S242's send, median 63 us, came from a temporary `MESSAGE` build, so its other end has no script |
+| `adocs/data/S136_screen.sh`, the red-observed block | "From the test directory, as ctest runs them: the shared position list reads assets/test_jsons/ relative to it" | found by S320's implementer, 2026-11-02: since S320 `test_eval_trace` reads its fixtures from the source tree and ctest runs it from the repository root, so the `cd` is no longer needed and the reason is false; the script still works |

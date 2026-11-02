@@ -26,8 +26,25 @@ The step file's "Commands for the coordinator" is the order. When the corpus end
 3. `S122_screen.sh all` at night (about 19 h typical, up to 39 h more per escalation, about 110 h worst; inferred).
 4. `side`, the cost run, `apply`, phase 2, the SPRT.
 
-**No commit while a screen, the margin or `side` runs.** Still owed: S309's 30 s bar read with the machine idle (`ctest -L fast -j12`,
-then `ctest -R plants_king_curve` once).
+**No commit while a screen, the margin or `side` runs.** S309's 30 s bar, read at `b62becb` with the corpus paused (load 0.87):
+- `ctest -L fast -j12`: the largest plant entry is `plants_threats` at 25.02 s, against 20.85 s at S310. The 1171-parameter layout
+  narrowed the margin to 5 s, and the next family that grows it may cross the bar.
+- `plants_king_safety` 8.79 s.
+- The slow `plants_king_curve`: 25.49 s alone, against 265 s under the corpus's load.
+
+The gate passed 54/54 in both builds, with `CLANG_FORMAT_MAJOR=22`. Without it, `test_clang_format_script` is red. That is the
+machine's known requirement and is not a defect.
+
+**S320 done** (filler, no `src/` or `tools/`): eight test binaries read their fixtures from the source tree and run under ctest from the root,
+all 27 reading one tally from any directory; the hold `CAPTURE` prints the optimiser's name. Its fast check found nothing in the diff
+and two comments made stale by `b62becb` (`test_perft` as the slow label's one entry), both fixed in it. New: S322 (the macro for
+every doctest target by construction, the unread `tests/assets/` copy); S321 gains `adocs/data/S136_screen.sh`'s comment. Under the
+corpus's load `plants_pawns` and `plants_threats` time out at 60 s even alone, so every gate runs with datagen stopped.
+The shared `.git/config`'s `submodule.tests/doctest.url` had been set to `../chesso-s122/tests/doctest` by an agent (09:56 today);
+restored to `.gitmodules`' URL. S320 initialised its worktree's doctest offline with a command-line
+`-c submodule.tests/doctest.url=/home/max/ws/chesso/tests/doctest`, leaving the shared config alone: the form for later briefs.
+
+**Next: S321** (filler) while the corpus runs; then S122's commands when it ends.
 
 ## 2026-11-02: S122 started, research pass done and ruled (DEC-344); head's corpus generating
 

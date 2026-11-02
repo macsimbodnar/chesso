@@ -1277,7 +1277,10 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
 
   for (const tuner_optimiser::kind_t kind :
        {tuner_optimiser::ADAM, tuner_optimiser::ADAGRAD}) {
-    CAPTURE(tuner_optimiser::kind_name(kind));
+    // A string and not kind_name()'s const char*, which doctest prints as an
+    // address.
+    const std::string optimiser = tuner_optimiser::kind_name(kind);
+    CAPTURE(optimiser);
 
     const double lr = (kind == tuner_optimiser::ADAM) ? 1.0 : ADAGRAD_HOLD_STEP;
 
