@@ -228,3 +228,11 @@ different situation and is not a prediction.
   document and `tools/tuner.cpp` diverge. Local, not literature.
 - - `adocs/plan_done/S028_*` -- +188.74 measured in this engine. Local
   evidence, and the one the step's argument rests on.
+
+## Noted 2026-11-02, S122's research pass and DEC-344: a corpus from head's own games
+
+S122 fits on a new corpus, 150000 games played by `ba1cad6` on S082's command with `--quiet-limit 30000`
+(the recipe's 1000 applied offline), under `.tuning/s122/corpus/`. Its reason is S122's: on a 12000-game
+sample of head's games the king-danger gap read about half of S083's, and S083's best attacker curve was
+not shown to transfer. S122 also reads one fit of its family on S083 against the new held-out set, which
+prices the corpus change. Which corpus this step refits on stays this step's decision.

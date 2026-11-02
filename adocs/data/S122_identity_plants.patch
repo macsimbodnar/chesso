@@ -1,0 +1,86 @@
+S122's identity plants, 2026-11-02, over S122_research_prototype.patch and never committed
+to src/: S122_PLANT picks one defect at run time, at the scored probe w 48, so that one build
+reads what tools/truncation_scan and tools/eval_spread each catch (DEC-344 (5)). It also exports
+the prototype loop's counts for S122_cmp_units.cpp. `S122_census.sh plants` applies and runs it.
+
+diff --git a/src/evaluation.cpp b/src/evaluation.cpp
+index 85dad88..9278519 100644
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -2876,6 +2876,8 @@ static inline int s122_storm(const board_t* b, int colour)
+ // table's slot in the search, and an empty one of the caller's everywhere else,
+ // which every king misses, so the features are read, traced and collected
+ // there.
++int s122_debug_units[2] = {0, 0};
++
+ template <bool collect>
+ static int evaluate_mobility_and_king_safety(
+     const board_t* board,
+@@ -3146,9 +3148,13 @@ static int evaluate_mobility_and_king_safety(
+   // Scored at a flat forced weight, inside the safety pair's one taper, so that the
+   // clamp reads it: White's king less Black's, the term against the king it names.
+   int t_mg = 0, t_eg = 0;
++  s122_debug_units[0] = s122_units[0];
++  s122_debug_units[1] = s122_units[1];
++  if (s122_plant() == 4) { s122_units[WHITE]++; }
+   for (int side = 0; side < 2; ++side) {
+     const int sign2 = (side == WHITE) ? -1 : 1;
+-    EVAL_TRACE_SIDE(TERM_KS_GROUP, static_cast<eval_trace::side_t>(side), 0, s122_units[side]);
++    EVAL_TRACE_SIDE(TERM_KS_GROUP, static_cast<eval_trace::side_t>(side), 0,
++                    s122_units[side] + ((s122_plant() == 1 && side == WHITE) ? 1 : 0));
+     const int x_mg = S122_SCORE_W * s122_units[side];
+ #ifdef S122_SCORE_BOTH
+     const int x_eg = S122_SCORE_W * s122_units[side];
+@@ -3158,6 +3164,12 @@ static int evaluate_mobility_and_king_safety(
+     t_mg += sign2 * (x_mg * x_mg / S122_DIVISOR);
+     t_eg += sign2 * (x_eg * x_eg / S122_DIVISOR);
+   }
++  if constexpr (collect) {
++    if (s122_plant() == 5) {
++      t_mg = 0;
++      t_eg = 0;
++    }
++  }
+   const int safety =
+       ((mg_value(safety_sum) + t_mg) * phase + (eg_value(safety_sum) + t_eg) * (GAME_PHASE_MAX - phase)) / GAME_PHASE_MAX;
+ #else
+diff --git a/src/search_params.hpp b/src/search_params.hpp
+index 406ea05..751cf05 100644
+--- a/src/search_params.hpp
++++ b/src/search_params.hpp
+@@ -1,4 +1,15 @@
+ #pragma once
++#include <cstdlib>
++// S122's identity plants, one build and a runtime switch: 1 the trace records White's count
++// off by one, the engine right; 2 the tuner's exact score divides by the wrong divisor; 3 it
++// adds Black's T with the wrong sign; 4 the engine's count is wrong, in the score and the
++// trace alike; 5 T reaches the search's instantiation and not the collecting one.
++inline int s122_plant()
++{
++  static const int value = std::getenv("S122_PLANT") ? std::atoi(std::getenv("S122_PLANT")) : 0;
++  return value;
++}
++extern int s122_debug_units[2];
+ #ifndef S122_MARGIN_VALUE
+ #define S122_MARGIN_VALUE 184
+ #endif
+diff --git a/tools/tuner_trace.hpp b/tools/tuner_trace.hpp
+index 4c15a41..bad875e 100644
+--- a/tools/tuner_trace.hpp
++++ b/tools/tuner_trace.hpp
+@@ -560,11 +560,12 @@ inline exact_parts_t exact_parts(const dataset_t& data,
+       x_eg[e.side] += e.coef * w[tuner_layout::KSG_EG_BASE];
+     }
+     for (int side = 0; side < 2; ++side) {
+-      const int64_t sign = (side == 0) ? -1 : 1;
++      const int64_t sign = (side == 0 || s122_plant() == 3) ? -1 : 1;
+       const int64_t m = std::max<int64_t>(x_mg[side], 0);
+       const int64_t n = std::max<int64_t>(x_eg[side], 0);
+-      mg[SITE_KING_SAFETY] += sign * (m * m / S122_DIVISOR);
+-      eg[SITE_KING_SAFETY] += sign * (n * n / S122_DIVISOR);
++      const int64_t divisor = (s122_plant() == 2) ? 2 * S122_DIVISOR : S122_DIVISOR;
++      mg[SITE_KING_SAFETY] += sign * (m * m / divisor);
++      eg[SITE_KING_SAFETY] += sign * (n * n / divisor);
+     }
+   }
+ #endif

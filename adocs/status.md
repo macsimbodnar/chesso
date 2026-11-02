@@ -7,7 +7,26 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-02, by hand.
 
-## 2026-11-02: S309, S310 and S319 done; 2026-11-01: S101 done, H1; S307 and S308 done; S122 next (handover)
+## 2026-11-02: S122 started, research pass done and ruled (DEC-344); head's corpus generating (handover)
+
+**S122 in progress** (`adocs/plan_current/`). The research pass (counts and instructions only, no fit, no match) proposed a quadratic over
+attackers, incidences, weak squares, defenders and safe checks, fitted on S083 with the checks last. Its fast check found the evidence for
+that order does not hold: one linear safe-check cell reads -108.1 +/- 4.1 (S083) and -69.2 +/- 11.1 (head's 12000-game sample) in dMSE
+1e-6, the flat curve -58.4 and -14.2, attackers and incidences through the curve -17.9 and +6.3 +/- 6.9. DEC-344, by the coordinator
+under the owner's standing instruction: a new corpus from head's games; linear checks, weak, defenders and storm screened first, the
+curve last and kept only if it earns over them; d 2048 (4096 refused, being from memory another engine's divisor), c 45; the margin's
+second bar by gradient mass at the clamped score; M alone `{-5, 0}` first in the H0 partition. Research pass committed with the fast
+check's scans as an in-tree stage (`adocs/data/S122_census.sh scans`).
+
+**Running: S122's corpus**, `.tuning/s122/corpus/run.sh`, pid in `pid`, marker `S122-CORPUS-DONE|FAILED` in `generate.log`, started
+2026-11-02 07:32, 150000 games, 12.9 to 19 h. Datagen has no clock, so it is paused with SIGSTOP during a gate (the planted-recovery
+entries time out at 60 s under its load) and resumed after. A power cut: S082's merge (`adocs/data/S082_pool_merge.py`) and a top-up
+on a new seed, as DEC-296.
+
+**Next: S122 phase 1** (every part at the seed, `No functional change`), then the fits on the corpus; S320 and S321 as filler while a
+run holds the machine.
+
+## 2026-11-02: S309, S310 and S319 done; 2026-11-01: S101 done, H1; S307 and S308 done; S122 next
 
 **S101 done, H1** (`cand 4e34e61+7d6f96ec896c` vs `4e34e61`, Elo +33.87 +/- 12.33, nElo +46.57 +/- 16.84, an early stop and not the effect size, LLR 2.95,
 1636 games in 45 m, 0 forfeits, `adocs/data/S101_sprt.log`, archived, verified). Inspected and it stands: banner, both benches, the diff the tree played, no warning

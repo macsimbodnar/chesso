@@ -1577,3 +1577,21 @@ The close, 2026-11-01: the SPRT read H1, the floor as the owner ruled it. S101's
 | `S307_matrix.py` | the script behind that file's first and third sections: `readings` asks a Release and a tune binary, `matrix` runs the one case under each mutation in a clean linked worktree |
 | `S308_identity.txt` | S308's comment edits, old `7071407` against the worktree, `S306_identity.txt`'s form: six C++ files byte-equal under `g++ -fpreprocessed -dD -E -P`, `rating.sh` with only comment lines changed, those lines printed, and the one line of `DEV_MANUAL.md`. `S308-IDENTITY HOLDS` |
 | `S319_identity.txt` | S319's comment edits, old `046c3dd` against the worktree, `S306_identity.txt`'s form: seven C++ files byte-equal under `g++ -fpreprocessed -dD -E -P`, `fastchess.sh` with only comment lines changed, those lines printed, and the one row added to `DEV_MANUAL.md`'s goldens table. `S319-IDENTITY HOLDS` |
+
+### S122, king safety's research pass and its fast check (DEC-259, DEC-324, DEC-333, DEC-344)
+
+On `ba1cad6`, counts and instructions only, no fit, no match, no timing: S122's step file, "2026-11-02: the research pass" and "2026-11-02: what the fast check corrected, and the ruling".
+
+| file | what it holds |
+|---|---|
+| `S122_census.txt` | the pass's figures, written by `S122_census_read.py`: head's spread and truncation, each candidate input's rows and share with the attacker on move and games per half on S083's corpus, S082's three views and the pool's three training sides; the attack grades by count; the scans DEC-344's Context and (4) rest on, on S083's corpus and head's 12000-game sample each at its stated K, with whole-game errors; what each tool's identity check catches; the instruction rows, the search census, the margin rows, the forced-weight probes, and the sample split at the 1000 filter. No weight in it is a proposal |
+| `S122_census.cpp` | the census, its build line in its header; FEN and game columns, plus the result column with `--k`, passed for S083's training corpus and the sample only |
+| `S122_census_core.hpp` | the candidate counts' definitions, each chesso's own and said to be, shared with the prototype and the scans; includes `S101_threat_core.hpp` |
+| `S122_census.sh` | every stage that writes those figures, `head`, `census`, `prototype`, `cost`, `margins`, `search`, `probes`, `sample`, `scans`, `plants`, `read`, each ending `S122-<STAGE>-DONE` or `-FAILED` and exiting non-zero on a failure; `sample` plays only if its games are absent |
+| `S122_census_read.py` | arithmetic over the stages' outputs into `S122_census.txt`, refusing a missing file |
+| `S122_scan_rec.hpp` | one fixed record a corpus row, what the dump writes and the scans read |
+| `S122_scan_dump.cpp` | writes that record from a corpus, holding the counts to the engine's on every row |
+| `S122_scans.cpp` | flat weights over labels, DEC-344's Context and (4): the gap by unit difference, by phase and with checks and weak squares held equal; the Context table's rows; P1's curve over linear cells; P1's grid and its cross-read; seed gradients at DEC-344's seed; the margin table by rows and by gradient mass. In sample, no tuner. From the fast check's `an1` to `an7` |
+| `S122_research_prototype.patch` | the forced-weight sink, the search census, the real margin and the scored probe behind macros, over `ba1cad6`, never committed to `src/`; the probe moves S262's group inside the clamp and gives `exact_parts()` the integer finalizer, and leaves `gradient()` alone, no fit reading it |
+| `S122_identity_plants.patch` | one more patch over the prototype, a runtime switch: five defects, so that one build reads what `truncation_scan` and `eval_spread` each catch; never committed to `src/` |
+| `S122_cmp_units.cpp` | the census's units against the prototype's loop on that build |

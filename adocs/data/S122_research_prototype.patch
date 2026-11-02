@@ -1,0 +1,554 @@
+S122's research-pass prototype, 2026-11-02, never committed to src/, over the tree of
+ba1cad6, DEC-221: from the description, no engine's source read. Behind macros:
+S122_VARIANT, a forced-weight sink whose node counts equal the tree's (bits 1 the
+accumulator over today's counts, 2 safe checks, 4 weak zone squares, 8 defenders, 16 storm
+on a slot miss, 32 the checks gated on an attacked king, 64 the finalizer alone, 128 bit
+1's counts over the zone plus its forward rank, 256 defenders by squares); S122_TWICE, stage two run twice, one
+call's price; S122_CENSUS, the search census, with the shortcut's skip share at eight
+margins; S122_MARGIN_VALUE, a real margin; S122_SCORE_W, a flat forced weight scored inside
+the clamp with the tuner's model following it (its per-side term, the group inside the
+clamp in smooth(), exact_parts()'s integer finalizer), so that eval_spread and
+truncation_scan read it. gradient() is not changed, no fit reads this. No weight in it is a
+proposal. Its figures are adocs/data/S122_census.txt, and adocs/data/S122_census.sh applies
+and builds it. It includes S122_census_core.hpp and S101_threat_core.hpp from adocs/data/.
+
+diff --git a/src/eval_trace.hpp b/src/eval_trace.hpp
+index 2472f34..a57a13a 100644
+--- a/src/eval_trace.hpp
++++ b/src/eval_trace.hpp
+@@ -81,6 +81,9 @@ enum term_t : uint8_t
+   TERM_HANGING_PAWN,
+   TERM_THREAT_KING,
+   TERM_THREAT_PUSH,
++#ifdef S122_SCORE_W
++  TERM_KS_GROUP,
++#endif
+   TERM_COUNT
+ };
+ 
+diff --git a/src/evaluation.cpp b/src/evaluation.cpp
+index 7e63c0d..85dad88 100644
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -2707,6 +2707,138 @@ static inline void threat_terms(const board_t* board,
+ }
+ 
+ 
++
++// S122's research prototype, never committed to src/: DEC-221, from the description; a
++// sink at forced weights unless S122_SCORE_W is set. No weight here is a proposal.
++#include "S122_census_core.hpp"
++#ifndef S122_VARIANT
++#define S122_VARIANT 0
++#endif
++// bits: 1 the accumulator and the finalizer over today's counts; 2 safe checks by type;
++// 4 weak zone squares; 8 defenders; 16 storm on a slot miss; 32 the checks gated on a
++// king with an attacker; 64 the finalizer alone, every side at the constant; 128 bit 1's
++// counts over the zone plus its forward rank; 256 defenders by squares, not pieces.
++static inline void s122_consume(int value) { asm volatile("" : : "r"(value)); }
++
++#ifdef S122_CENSUS
++struct s122_census_t
++{
++  enum { SITES = 3, WHO = 2 };
++  uint64_t calls[SITES] = {};
++  uint64_t in_check[SITES] = {};
++  struct side_t
++  {
++    uint64_t attackers = 0, incidences = 0, weak = 0, def = 0, checks[4] = {}, reach[4] = {};
++    uint64_t weak_man = 0, capture = 0;
++    uint64_t a2 = 0, a3 = 0, a4 = 0, a3q = 0, chk = 0, a3qc = 0, units = 0;
++    uint64_t units_hist[64] = {};
++  } side[SITES][WHO];
++  static constexpr int MARGINS = 8;
++  const int margin[MARGINS] = {184, 200, 250, 300, 400, 500, 600, 800};
++  uint64_t lazy_calls = 0, skip[MARGINS] = {};
++  uint64_t skip_low[MARGINS] = {};
++  void note(int site, const board_t* b)
++  {
++    s101::sets_t s;
++    s101::build_sets(game_tables(), b, &s);
++    calls[site]++;
++    // A corpus row is never in check, so a call in check is counted and not read.
++    if (side_to_move_checkers(game_tables(), b) != BB_0) {
++      in_check[site]++;
++      return;
++    }
++    for (int king = 0; king < 2; ++king) {
++      s122::ks_counts_t c;
++      s122::ks_counts(game_tables(), b, s, king, &c);
++      side_t& w = side[site][(king == b->active_color) ? 1 : 0];  // 0: attacker on move
++      const int a = c.attacker_total();
++      const bool q = c.attackers[3] > 0;
++      const bool chk = c.checks_total(2) > 0;
++      w.attackers += a;
++      w.incidences += c.incidences;
++      w.weak += c.weak[0];
++      w.def += c.def[0] + c.def[1];
++      w.weak_man += c.weak_man;
++      w.capture += c.check_capture;
++      for (int t = 0; t < 4; ++t) {
++        w.checks[t] += c.checks[2][t];
++        w.reach[t] += c.checks[0][t];
++      }
++      w.a2 += a >= 2;
++      w.a3 += a >= 3;
++      w.a4 += a >= 4;
++      w.a3q += a >= 3 && q;
++      w.chk += chk;
++      w.a3qc += a >= 3 && q && chk;
++      const int u = s122::ks_units(c);
++      w.units += u;
++      w.units_hist[std::min(u, 63)]++;
++    }
++  }
++  void note_lazy(int cheap, int alpha, int beta)
++  {
++    lazy_calls++;
++    for (int m = 0; m < MARGINS; ++m) {
++      if (cheap - margin[m] >= beta || cheap + margin[m] <= alpha) { skip[m]++; }
++    }
++  }
++  ~s122_census_t()
++  {
++    const char* name[SITES] = {"search evaluate()", "lazy, every call", "lazy, past the shortcut"};
++    for (int i = 0; i < SITES; ++i) {
++      fprintf(stderr, "site %-24s calls %llu in check %llu\n", name[i], (unsigned long long)calls[i], (unsigned long long)in_check[i]);
++      const double n = (calls[i] - in_check[i]) ? double(calls[i] - in_check[i]) : 1.0;
++      for (int who = 0; who < WHO; ++who) {
++        const side_t& w = side[i][who];
++        fprintf(stderr, "  attacker %-12s a call: attackers %.4f incidences %.4f weak %.4f def %.4f units %.4f safe N %.4f B %.4f R %.4f Q %.4f reach N %.4f B %.4f R %.4f Q %.4f weak on a man %.4f safe check on a man %.4f | sides %% >=2 %.3f >=3 %.3f >=4 %.3f >=3Q %.3f safe check %.3f >=3Q+check %.3f\n",
++                who == 0 ? "on move" : "not on move", w.attackers / n, w.incidences / n, w.weak / n, w.def / n, w.units / n,
++                w.checks[0] / n, w.checks[1] / n, w.checks[2] / n, w.checks[3] / n, w.reach[0] / n, w.reach[1] / n, w.reach[2] / n, w.reach[3] / n, w.weak_man / n, w.capture / n,
++                100.0 * w.a2 / n, 100.0 * w.a3 / n, 100.0 * w.a4 / n, 100.0 * w.a3q / n, 100.0 * w.chk / n, 100.0 * w.a3qc / n);
++      }
++    }
++    fprintf(stderr, "lazy calls %llu, skipped at margin:", (unsigned long long)lazy_calls);
++    for (int m = 0; m < MARGINS; ++m) {
++      fprintf(stderr, " %d:%.2f%%", margin[m], lazy_calls ? 100.0 * skip[m] / lazy_calls : 0.0);
++    }
++    fprintf(stderr, "\n");
++  }
++};
++static s122_census_t s122_census;
++#define S122_NOTE(site, board) s122_census.note(site, board)
++#define S122_NOTE_LAZY(cheap, alpha, beta) s122_census.note_lazy(cheap, alpha, beta)
++#else
++#define S122_NOTE(site, board) ((void)0)
++#define S122_NOTE_LAZY(cheap, alpha, beta) ((void)0)
++#endif
++
++#if (S122_VARIANT & 16) != 0
++// Storm cells for one king, counted the way the census does, once per slot fill.
++static inline int s122_storm(const board_t* b, int colour)
++{
++  const bb_t enemy = b->bitboards[(colour == WHITE) ? B_PAWN : W_PAWN];
++  const bb_t own = b->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
++  const int ksq = get_lsb_index(b->bitboards[(colour == WHITE) ? W_KING : B_KING]);
++  const int kf = ksq & 7;
++  const int kr = ksq >> 3;
++  const int step = (colour == WHITE) ? -1 : 1;
++  int sum = 0;
++  for (int file = kf - 1; file <= kf + 1; ++file) {
++    if (file < 0 || file > 7) { continue; }
++    for (int d = 1; d <= 4; ++d) {
++      const int rank = kr + step * d;
++      if (rank < 0 || rank > 7) { break; }
++      if ((enemy >> (rank * 8 + file)) & 1) {
++        const bool blocked = (own >> ((rank - step) * 8 + file)) & 1;
++        sum += (d * 2 + (blocked ? 1 : 0)) * 3;
++        break;
++      }
++    }
++  }
++  return sum;
++}
++#endif
++
++
+ // Mobility and king safety in one pass, White relative. The two terms ask the
+ // same question of every piece -- where does it attack -- and asking it twice
+ // cost 7.7 % of the search at depth 12 with king safety weighted at zero, since
+@@ -2770,6 +2902,14 @@ static int evaluate_mobility_and_king_safety(
+       collect || trace_build || threat_unions_live;
+   [[maybe_unused]] bb_t attacks_by[2][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
+ 
++#ifdef S122_SCORE_W
++  int s122_units[2] = {0, 0};
++#endif
++#if (S122_VARIANT & 511) != 0
++  score_t s122_x[2] = {make_score(64, 64), make_score(64, 64)};
++  [[maybe_unused]] int s122_attacked[2] = {0, 0};
++#endif
++
+   if constexpr (collect) {
+     for (int colour = 0; colour < 2; ++colour) {
+       for (int f = 0; f < KS_FEATURE_COUNT; ++f) {
+@@ -2838,8 +2978,33 @@ static int evaluate_mobility_and_king_safety(
+ 
+         const bb_t hits = attacks & defended_zone;
+ 
++#if (S122_VARIANT & 128) != 0
++        // The accumulator's counts over the zone plus its forward rank.
++        const bb_t wide_zone = (colour == WHITE) ? defended_zone | (defended_zone << 8)
++                                                 : defended_zone | (defended_zone >> 8);
++        const bb_t wide_hits = attacks & wide_zone;
++        if (wide_hits != 0) {
++          s122_x[1 - colour] += make_score(41 + type, 23 + type) +
++                                count_bits(wide_hits) * make_score(17, 11);
++        }
++#endif
++#if (S122_VARIANT & 8) != 0
++        // Own minors covering the own zone, one test a minor.
++        if (type < 2 && (attacks & zone[colour]) != 0) {
++          s122_x[colour] += make_score(-13 - type, -7 - type);
++        }
++#endif
+         if (hits == 0) { continue; }
+ 
++#if (S122_VARIANT & 1) != 0
++        s122_x[1 - colour] += make_score(41 + type, 23 + type) +
++                              count_bits(hits) * make_score(17, 11);
++        s122_attacked[1 - colour] = 1;
++#endif
++#ifdef S122_SCORE_W
++        s122_units[1 - colour] += 1 + count_bits(hits);
++#endif
++
+         const int attacker = KS_KNIGHT_ATTACKERS + type;
+ 
+         safety_sum += defender * king_safety_score[attacker];
+@@ -2874,6 +3039,68 @@ static int evaluate_mobility_and_king_safety(
+                         nullptr);
+   }
+ 
++#if (S122_VARIANT & 256) != 0
++  // Defenders by squares and not by pieces: one popcount a side, no test in the loop.
++  for (int c = 0; c < 2; ++c) {
++    s122_x[c] += count_bits((attacks_by[c][0] | attacks_by[c][1]) & zone[c]) * make_score(-5, -3);
++  }
++#endif
++#if (S122_VARIANT & 6) != 0 || defined(S122_SCORE_W)
++  {
++    bb_t s122_nonking[2], s122_all[2];
++    for (int c = 0; c < 2; ++c) {
++      s122_nonking[c] = pawn_attacks[c] | attacks_by[c][0] | attacks_by[c][1] |
++                        attacks_by[c][2] | attacks_by[c][3];
++      s122_all[c] = s122_nonking[c] | zone[c];
++    }
++    for (int D = 0; D < 2; ++D) {
++      const int A = 1 - D;
++      [[maybe_unused]] const index_t ksq = king_square[D];
++#if (S122_VARIANT & 2) != 0 || defined(S122_SCORE_W)
++#if (S122_VARIANT & 32) != 0
++      if (s122_attacked[D])
++#endif
++      {
++        const bb_t from_b = get_bishop_attacks(tables, ksq, occupancy);
++        const bb_t from_r = get_rook_attacks(tables, ksq, occupancy);
++        const bb_t ring = tables->king_attacks[ksq];
++        const bb_t not_own = ~board->occupancies[A];
++        const bb_t guarded = ~s122_nonking[D];
++        const bb_t from[4] = {tables->knight_attacks[ksq], from_b, from_r, from_b | from_r};
++        const bb_t common = pawn_attacks[A] | zone[A];
++        const bb_t others[4] = {
++            common | attacks_by[A][1] | attacks_by[A][2] | attacks_by[A][3],
++            common | attacks_by[A][0] | attacks_by[A][2] | attacks_by[A][3],
++            common | attacks_by[A][0] | attacks_by[A][1] | attacks_by[A][3],
++            common | attacks_by[A][0] | attacks_by[A][1] | attacks_by[A][2]};
++        for (int t = 0; t < 4; ++t) {
++          const int n = count_bits(attacks_by[A][t] & from[t] & not_own & guarded &
++                                   (~ring | others[t]));
++#if (S122_VARIANT & 2) != 0
++          s122_x[D] += n * make_score(29 + t, 19 + t);
++#endif
++#ifdef S122_SCORE_W
++          s122_units[D] += n;
++#endif
++        }
++      }
++#endif
++#if (S122_VARIANT & 4) != 0 || defined(S122_SCORE_W)
++      {
++        const int weak = count_bits(zone[D] & s122_nonking[A] & ~s122_nonking[D]);
++#if (S122_VARIANT & 4) != 0
++        s122_x[D] += weak * make_score(31, 37);
++#endif
++#ifdef S122_SCORE_W
++        s122_units[D] += weak;
++#endif
++      }
++#endif
++    }
++    (void)s122_all;
++  }
++#endif
++
+   for (int colour = 0; colour < 2; ++colour) {
+     const int sign = (colour == WHITE) ? 1 : -1;
+     const uint8_t tag = static_cast<uint8_t>(king_square[colour] + 1);
+@@ -2884,6 +3111,9 @@ static int evaluate_mobility_and_king_safety(
+ 
+       shelter->score[colour] = shelter_score(features);
+       shelter->king[colour] = tag;
++#if (S122_VARIANT & 16) != 0
++      s122_consume(s122_storm(board, colour));
++#endif
+ 
+       for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
+         EVAL_TRACE(TERM_KING_SAFETY, f, sign * features[f]);
+@@ -2912,7 +3142,40 @@ static int evaluate_mobility_and_king_safety(
+   // family moved it by, so that the three still add up to the number the clamp
+   // reads.
+   const int mobility = taper(mobility_sum + threat_sum, phase);
++#ifdef S122_SCORE_W
++  // Scored at a flat forced weight, inside the safety pair's one taper, so that the
++  // clamp reads it: White's king less Black's, the term against the king it names.
++  int t_mg = 0, t_eg = 0;
++  for (int side = 0; side < 2; ++side) {
++    const int sign2 = (side == WHITE) ? -1 : 1;
++    EVAL_TRACE_SIDE(TERM_KS_GROUP, static_cast<eval_trace::side_t>(side), 0, s122_units[side]);
++    const int x_mg = S122_SCORE_W * s122_units[side];
++#ifdef S122_SCORE_BOTH
++    const int x_eg = S122_SCORE_W * s122_units[side];
++#else
++    const int x_eg = 0;
++#endif
++    t_mg += sign2 * (x_mg * x_mg / S122_DIVISOR);
++    t_eg += sign2 * (x_eg * x_eg / S122_DIVISOR);
++  }
++  const int safety =
++      ((mg_value(safety_sum) + t_mg) * phase + (eg_value(safety_sum) + t_eg) * (GAME_PHASE_MAX - phase)) / GAME_PHASE_MAX;
++#else
+   const int safety = taper(safety_sum, phase);
++#endif
++#if (S122_VARIANT & 511) != 0
++  {
++    int t_mg2 = 0, t_eg2 = 0;
++    for (int side = 0; side < 2; ++side) {
++      const int sign2 = (side == WHITE) ? -1 : 1;
++      const int x_mg = std::max(mg_value(s122_x[side]), 0);
++      const int x_eg = std::max(eg_value(s122_x[side]), 0);
++      t_mg2 += sign2 * (x_mg * x_mg / S122_DIVISOR);
++      t_eg2 += sign2 * (x_eg * x_eg / S122_DIVISOR);
++    }
++    s122_consume((t_mg2 * phase + t_eg2 * (GAME_PHASE_MAX - phase)) / GAME_PHASE_MAX);
++  }
++#endif
+ 
+   if constexpr (collect) {
+     const int mobility_alone = taper(mobility_sum, phase);
+@@ -2950,6 +3213,12 @@ static int expensive_score(const board_t* board, pawn_shelter_t* shelter)
+ {
+   const int score =
+       evaluate_mobility_and_king_safety<false>(board, shelter, nullptr);
++#ifdef S122_TWICE
++  {
++    const int again = evaluate_mobility_and_king_safety<false>(board, shelter, nullptr);
++    asm volatile("" : : "r"(again));
++  }
++#endif
+   const int bounded = std::clamp(score, -LAZY_EVAL_MARGIN, LAZY_EVAL_MARGIN);
+ 
+   return (board->active_color == WHITE) ? bounded : -bounded;
+@@ -3060,6 +3329,7 @@ int evaluate(const board_t* board, pawn_table_t* table)
+   if constexpr (trace_build) {
+     return evaluate(board);
+   } else {
++    S122_NOTE(0, board);
+     const int cheap = cheap_score(board, pawn_entry_of(board, table));
+ 
+     return cheap + expensive_score(board, pawn_shelter_of(board, table));
+@@ -3114,9 +3384,12 @@ int evaluate_lazy(const board_t* board,
+   if constexpr (trace_build) {
+     return evaluate_lazy(board, alpha, beta, exact);
+   } else {
++    S122_NOTE(1, board);
+     const int cheap = cheap_score(board, pawn_entry_of(board, table));
++    S122_NOTE_LAZY(cheap, alpha, beta);
+ 
+     return lazy_from_cheap(cheap, alpha, beta, exact, [board, table] {
++      S122_NOTE(2, board);
+       return expensive_score(board, pawn_shelter_of(board, table));
+     });
+   }
+diff --git a/src/search_params.hpp b/src/search_params.hpp
+index d9c91a1..406ea05 100644
+--- a/src/search_params.hpp
++++ b/src/search_params.hpp
+@@ -1,4 +1,10 @@
+ #pragma once
++#ifndef S122_MARGIN_VALUE
++#define S122_MARGIN_VALUE 184
++#endif
++#ifndef S122_DIVISOR
++#define S122_DIVISOR 4096
++#endif
+ #include <cstddef>
+ 
+ // The search constants that are a setting rather than a definition, in one
+@@ -1093,7 +1099,7 @@
+      to apply. src/evaluation.hpp carries what the number means and what it    \
+      was measured from; S039 read H0 and kept it (record ca578de, revert       \
+      74d0adf). */                                                              \
+-  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)                     \
++  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  S122_MARGIN_VALUE,    0, 32000)      \
+                                                                                \
+   /* Aspiration windows. The root of an iteration is searched in a band around \
+      the previous iteration's score instead of from -inf to +inf, and the band \
+diff --git a/tools/tuner_layout.hpp b/tools/tuner_layout.hpp
+index c42e936..4837c79 100644
+--- a/tools/tuner_layout.hpp
++++ b/tools/tuner_layout.hpp
+@@ -260,7 +260,14 @@ constexpr size_t HANGING_PAWN_END = HGW_EG_BASE + HANGING_PAWN_COUNT;
+ constexpr size_t THREAT_KING_END = TKG_EG_BASE + THREAT_KING_COUNT;
+ constexpr size_t THREAT_PUSH_END = TPU_EG_BASE + THREAT_PUSH_COUNT;
+ 
++#ifdef S122_SCORE_W
++inline constexpr size_t KSG_MG_BASE = THREAT_PUSH_END;
++inline constexpr size_t KSG_EG_BASE = KSG_MG_BASE + 1;
++#endif
+ constexpr size_t PARAM_COUNT =
++#ifdef S122_SCORE_W
++    2 +
++#endif
+     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
+     2 * KING_SAFETY_COUNT + 2 * PASSED_PAWN_COUNT + 2 * PAWN_STRUCTURE_COUNT +
+     2 * PIECE_PLACEMENT_COUNT + 2 * TEMPO_COUNT + 2 * PASSED_FREE_COUNT +
+@@ -271,9 +278,11 @@ constexpr size_t PARAM_COUNT =
+     2 * THREAT_PIECE_COUNT + 2 * THREAT_MINOR_COUNT + 2 * HANGING_PIECE_COUNT +
+     2 * HANGING_PAWN_COUNT + 2 * THREAT_KING_COUNT + 2 * THREAT_PUSH_COUNT;
+ 
++#ifndef S122_SCORE_W
+ static_assert(THREAT_PUSH_END == PARAM_COUNT,
+               "a block was appended after S101's push threats: give it an end "
+               "constant and a group of its own");
++#endif
+ 
+ 
+ // The constants the engine currently ships, as the parameter vector. This is
+@@ -386,5 +395,13 @@ inline void starting_params(double* params)
+         threat_king_eg);
+   block(TPU_MG_BASE, TPU_EG_BASE, THREAT_PUSH_COUNT, threat_push_mg,
+         threat_push_eg);
++#ifdef S122_SCORE_W
++  params[KSG_MG_BASE] = S122_SCORE_W;
++#ifdef S122_SCORE_BOTH
++  params[KSG_EG_BASE] = S122_SCORE_W;
++#else
++  params[KSG_EG_BASE] = 0;
++#endif
++#endif
+ }
+ }  // namespace tuner_layout
+diff --git a/tools/tuner_trace.hpp b/tools/tuner_trace.hpp
+index 325c23b..4c15a41 100644
+--- a/tools/tuner_trace.hpp
++++ b/tools/tuner_trace.hpp
+@@ -185,6 +185,10 @@ inline term_layout_t term_layout(term_t term)
+       return {THREAT_KING_COUNT, TKG_MG_BASE, TKG_EG_BASE, SITE_MOBILITY};
+     case eval_trace::TERM_THREAT_PUSH:
+       return {THREAT_PUSH_COUNT, TPU_MG_BASE, TPU_EG_BASE, SITE_MOBILITY};
++#ifdef S122_SCORE_W
++    case eval_trace::TERM_KS_GROUP:
++      return {1, tuner_layout::KSG_MG_BASE, tuner_layout::KSG_EG_BASE, SITE_KING_SAFETY};
++#endif
+     case eval_trace::TERM_COUNT:
+       break;
+   }
+@@ -286,7 +290,20 @@ struct model_t
+ 
+ inline const model_t& engine_model()
+ {
++#ifdef S122_SCORE_W
++  static const model_t model = [] {
++    model_t m;
++    group_t g;
++    g.name = "s122_probe";
++    g.divisor = S122_DIVISOR;
++    g.sign = -1.0;
++    g.inputs.push_back({tuner_layout::KSG_MG_BASE, tuner_layout::KSG_EG_BASE});
++    m.groups.push_back(g);
++    return m;
++  }();
++#else
+   static const model_t model;
++#endif
+   return model;
+ }
+ 
+@@ -294,8 +311,14 @@ inline const model_t& engine_model()
+ // term evaluate() starts recording with EVAL_TRACE_SIDE gets its group declared
+ // in engine_model() and its index here, and until then load() refuses its
+ // records rather than dropping them.
+-inline int group_of_term(term_t)
+-{ return -1; }
++inline int group_of_term(term_t term)
++{
++#ifdef S122_SCORE_W
++  if (term == eval_trace::TERM_KS_GROUP) { return 0; }
++#endif
++  (void)term;
++  return -1;
++}
+ 
+ 
+ // ---------------------------------------------------------------- the data
+@@ -528,6 +551,24 @@ inline exact_parts_t exact_parts(const dataset_t& data,
+ 
+   const int phase = data.phase[row];
+ 
++#ifdef S122_SCORE_W
++  {
++    int64_t x_mg[2] = {0, 0}, x_eg[2] = {0, 0};
++    for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1]; ++j) {
++      const side_entry_t e = data.side_entries[j];
++      x_mg[e.side] += e.coef * w[tuner_layout::KSG_MG_BASE];
++      x_eg[e.side] += e.coef * w[tuner_layout::KSG_EG_BASE];
++    }
++    for (int side = 0; side < 2; ++side) {
++      const int64_t sign = (side == 0) ? -1 : 1;
++      const int64_t m = std::max<int64_t>(x_mg[side], 0);
++      const int64_t n = std::max<int64_t>(x_eg[side], 0);
++      mg[SITE_KING_SAFETY] += sign * (m * m / S122_DIVISOR);
++      eg[SITE_KING_SAFETY] += sign * (n * n / S122_DIVISOR);
++    }
++  }
++#endif
++
+   parts.positional =
+       exact_taper(mg[SITE_POSITIONAL], eg[SITE_POSITIONAL], phase);
+   parts.tempo = exact_taper(mg[SITE_TEMPO], eg[SITE_TEMPO], phase);
+@@ -862,6 +903,16 @@ inline smooth_t smooth(const model_t& model,
+   const double margin = LAZY_EVAL_MARGIN;
+   double stage_two = (mg[SITE_MOBILITY] + mg[SITE_KING_SAFETY]) * mg_weight +
+                      (eg[SITE_MOBILITY] + eg[SITE_KING_SAFETY]) * eg_weight;
++#ifdef S122_SCORE_W
++  for (size_t g = 0; g < model.groups.size(); ++g) {
++    const group_t& group = model.groups[g];
++    const group_sums_t x = group_sums(group, g, data, row, p);
++    stage_two += group.sign * ((transform(group.transform, group.divisor, x.mg[0]) -
++                                transform(group.transform, group.divisor, x.mg[1])) * mg_weight +
++                               (transform(group.transform, group.divisor, x.eg[0]) -
++                                transform(group.transform, group.divisor, x.eg[1])) * eg_weight);
++  }
++#endif
+ 
+   if (stage_two > margin) {
+     stage_two = margin;
+@@ -874,6 +925,7 @@ inline smooth_t smooth(const model_t& model,
+   out.score = material + (mg[SITE_POSITIONAL] + mg[SITE_TEMPO]) * mg_weight +
+               (eg[SITE_POSITIONAL] + eg[SITE_TEMPO]) * eg_weight + stage_two;
+ 
++#ifndef S122_SCORE_W
+   for (size_t g = 0; g < model.groups.size(); ++g) {
+     const group_t& group = model.groups[g];
+     const group_sums_t x = group_sums(group, g, data, row, p);
+@@ -885,6 +937,7 @@ inline smooth_t smooth(const model_t& model,
+ 
+     out.score += group.sign * (half_mg * mg_weight + half_eg * eg_weight);
+   }
++#endif
+ 
+   return out;
+ }
