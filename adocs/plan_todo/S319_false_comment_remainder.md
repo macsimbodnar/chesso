@@ -1,7 +1,7 @@
 id:         S319
 goal:       the false comments S308 found and held to its rows are made true or removed, and `depth_1_floor_ms` takes DEC-142's form
 accepts:    each row below re-checked against the code at landing, with what the check read, then true or gone; `depth_1_floor_ms` named a golden at its site with what re-derives it and listed with `DEV_MANUAL.md`'s goldens, or a stated reason it is not one; `tests/test_search.cpp`'s GOLDEN block and `DEV_MANUAL.md`'s row agree; comments only but for that, the code identical by S306's form, `No functional change`; a clean reader old against new
-touches:    src/chesso.cpp, src/evaluation.cpp, src/search_params.hpp, src/search.cpp, tests/test_engine.cpp, tests/test_search.cpp, fastchess.sh, DEV_MANUAL.md
+touches:    src/chesso.cpp, src/evaluation.cpp, src/search_params.hpp, src/search.cpp, tests/test_engine.cpp, tests/test_search.cpp, tests/test_tuner_gradient.cpp, fastchess.sh, DEV_MANUAL.md
 excludes:   shortening comments or removing history, which is parked (DEC-342); `adocs/data/` and `adocs/plan_done/`
 decisions:  DEC-171, DEC-142, DEC-342
 closes:
@@ -23,3 +23,4 @@ Found 2026-11-01 by S308's implementer and its clean reader, and by neither chan
 | `fastchess.sh`, the watcher line | "AGENTS.md 12" | no numbered paragraphs since DEC-109 |
 | `tests/test_engine.cpp`, `depth_1_floor_ms` | an asserted floor | a golden by `DEV_MANUAL.md`'s definition, no DEC-142 form or row |
 | `tests/test_search.cpp`, the GOLDEN block | its readings stop at 7366 | `DEV_MANUAL.md`'s row has 10467 |
+| `tests/test_tuner_gradient.cpp`, the fixture's two mentions | "the 2764 positions" | S309 read 2908 rows, 2 x 106 curated + 2696 JSON; S310 edits this file first, so re-read at landing |

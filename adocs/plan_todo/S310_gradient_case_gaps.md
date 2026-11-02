@@ -20,5 +20,6 @@ Found 2026-11-01 by S101's phase 2, on its paste, none reachable in play, so fil
   fixture pair moved it to 7.39e-12, which is a reading and not a margin, and a later fit can bring it back.
 - Three of the 13 cases fail when the binary runs from the repository root and pass from `build/tests`, where
   ctest runs it. Cause not investigated.
+  [2026-11-02, S309: the binary now holds 15 cases; how many of the 15 fail from the root is unmeasured, the three are of 13.]
 
 Depends on S101's verdict, since which cells are live decides what the clamp case can plant.

@@ -5,9 +5,9 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-01, by hand.
+Updated: 2026-11-02, by hand.
 
-## 2026-11-01, evening: S101 done, H1; S307 and S308 done; S309 next (handover)
+## 2026-11-02: S309 done; 2026-11-01: S101 done, H1; S307 and S308 done; S310 next (handover)
 
 **S101 done, H1** (`cand 4e34e61+7d6f96ec896c` vs `4e34e61`, Elo +33.87 +/- 12.33, nElo +46.57 +/- 16.84, an early stop and not the effect size, LLR 2.95,
 1636 games in 45 m, 0 forfeits, `adocs/data/S101_sprt.log`, archived, verified). Inspected and it stands: banner, both benches, the diff the tree played, no warning
@@ -20,7 +20,11 @@ and far cells for S126, P7's q3 fit at the 5000 cap. S122 inherits the clamp's r
 
 **S308 done** (filler, comments only): eleven false comments, a clean reader over them.
 
-**Next: S309 (before S102's plants), S310, S319, then S122.** S311, S312 and S313 are parked (DEC-342): the owner read the
+**S309 done, 2026-11-02** (filler, no `src/` or `tools/`): one ctest entry per family's planted recoveries, suite 53, every entry `PROCESSORS 4`, the threads `fit()` runs. The largest entry reads 18.37
+to 19.57 s at `-j12` against a bar of 30, 11.20 s serial, 49.62 s of Debug's 600; before 35.34 s. The fast check found the undeclared threads: the split alone read 29.59 s, which was contention. S319 gained
+a row for two comments saying 2764 positions where the binary reads 2908.
+
+**Next: S310, S319, then S122.** S311, S312 and S313 are parked (DEC-342): the owner read the
 comment work as inconclusive, and DEC-341 removed it from the tree but for the study, `adocs/comment_study.md`. Read on the MacBook Air and now in no step: `tools/gate.sh` is
 red there before any change, `test_fastchess_script` and two format lines of `tt_cluster_t`; `bench` 5707449.
 

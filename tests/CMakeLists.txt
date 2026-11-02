@@ -31,7 +31,9 @@ function(add_doctest_target_linking name library)
 
      target_link_libraries(${name} PRIVATE ${library})
 
-     add_test(NAME ${name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name})
+     # Anything past the two named arguments goes to the binary: a doctest filter,
+     # where one binary is split over several entries.
+     add_test(NAME ${name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${name} ${ARGN})
 
      # A fast test that stops making progress is a bug. Without an explicit
      # timeout it would burn CTest's 1500 second default before saying so.
@@ -54,7 +56,7 @@ function(add_doctest_target name)
 endfunction()
 
 function(add_trace_doctest_target name)
-     add_doctest_target_linking(${name} chesso_engine_trace)
+     add_doctest_target_linking(${name} chesso_engine_trace ${ARGN})
 endfunction()
 
 add_doctest_target(test_chesso)
@@ -133,8 +135,53 @@ set_tests_properties(test_datagen_exit PROPERTIES LABELS "fast" TIMEOUT 60)
 #
 # Since S262 its model is the engine's trace (tools/tuner_trace.hpp), so it
 # links the trace build, as does test_eval_trace below.
-add_trace_doctest_target(test_tuner_gradient)
+#
+# The planted recoveries are nearly all of this binary's time and every family
+# adds to them, so each family is a case of its own and an entry of its own. A
+# later family's epochs then count on its own clock and not on another's. In a
+# serial run, which is how the gate runs, that is the whole of it. Under -j the
+# entries still share the machine and can slow each other: threats reads 11.2 s
+# serial and 18.8 s at -j12 (S309). A new family is a TEST_CASE named "a planted
+# vector comes back: <word>" and the word here.
+#
+# The main entry's exclusions come from the same list as the filters, so a case
+# runs in exactly one entry. A case with no word runs in the main entry, which
+# costs time and never coverage. A word with no case selects nothing and doctest
+# exits 0 for that, which is what the regex is for: it adds to the exit code,
+# where PASS_REGULAR_EXPRESSION would replace it.
+#
+# PROCESSORS is the threads these cases really run, and ctest counts an entry as
+# one slot unless told. fit() in test_tuner_gradient.cpp passes a literal 4 to
+# tuner_trace::gradient(), which spawns them every epoch; change the two
+# together. The main entry runs them too, in "at any thread count", "stuck at
+# zero" and "adagrad". Undeclared, -j12 ran the machine oversubscribed and
+# threats read 29.4 s against 18.8 s declared (S309). It changes nothing without
+# -j.
+set(CHESSO_PLANT_FAMILIES base pawns threats)
+set(chesso_plant_cases "")
+foreach(family IN LISTS CHESSO_PLANT_FAMILIES)
+     list(APPEND chesso_plant_cases "a planted vector comes back: ${family}")
+endforeach()
+list(JOIN chesso_plant_cases "," chesso_plant_exclusions)
+
+set(CHESSO_FIT_THREADS 4)
+
+add_trace_doctest_target(test_tuner_gradient
+                         "--test-case-exclude=${chesso_plant_exclusions}")
 target_include_directories(test_tuner_gradient PRIVATE ../tools)
+set_tests_properties(test_tuner_gradient PROPERTIES
+                     PROCESSORS ${CHESSO_FIT_THREADS})
+
+foreach(family IN LISTS CHESSO_PLANT_FAMILIES)
+     add_test(NAME test_tuner_gradient_plants_${family}
+              COMMAND test_tuner_gradient
+                      "--test-case=a planted vector comes back: ${family}")
+     set_tests_properties(test_tuner_gradient_plants_${family} PROPERTIES
+                          LABELS "fast"
+                          TIMEOUT ${CHESSO_TEST_TIMEOUT}
+                          PROCESSORS ${CHESSO_FIT_THREADS}
+                          FAIL_REGULAR_EXPRESSION "test cases: +0 [|]")
+endforeach()
 
 # S262: the trace build's contract. The trace, scored the engine's way, is
 # evaluate() exactly on every position here -- the curated list both ways

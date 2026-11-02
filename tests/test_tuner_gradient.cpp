@@ -1124,7 +1124,17 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
 // only answer that drives the error to zero is the planted one. A frozen base
 // is the shape S100 found exact for every group; the joint fit is the run the
 // step file records over a corpus slice.
-TEST_CASE("a planted vector comes back through the trace path")
+namespace
+{
+
+struct plant_t
+{
+  const char* group;
+  std::vector<std::pair<size_t, double>> values;
+  int epochs = 6000;
+};
+
+void check_recovery(const std::vector<plant_t>& plants)
 {
   const dataset_t data = trace_positions();
   const tuner_trace::model_t& model = tuner_trace::engine_model();
@@ -1132,13 +1142,63 @@ TEST_CASE("a planted vector comes back through the trace path")
   std::vector<double> shipped(PARAM_COUNT, 0.0);
   tuner_layout::starting_params(shipped.data());
 
-  struct plant_t
-  {
-    const char* group;
-    std::vector<std::pair<size_t, double>> values;
-    int epochs = 6000;
-  };
+  const double k = 1.0;
 
+  for (const plant_t& plant : plants) {
+    const std::string group = plant.group;
+    CAPTURE(group);
+
+    std::vector<double> planted = shipped;
+    for (const auto& [param, value] : plant.values) {
+      planted[param] = value;
+    }
+
+    std::vector<double> target(data.size());
+    for (size_t row = 0; row < data.size(); ++row) {
+      target[row] = tuner_target::sigmoid(
+          tuner_trace::score(model, data, row, planted.data()), k);
+    }
+
+    std::vector<uint8_t> mask;
+    REQUIRE(tuner_groups::free_mask(plant.group, &mask));
+
+    // The tuner's own step, 1.0. Passed pawn bucket 1's middlegame weight is
+    // the slowest to come back: few of these positions put a passer there at
+    // a non-zero phase, and at 3000 epochs it read 13.02 against 14 planted,
+    // at 6000 13.95. Supported's own seventh is the slowest since S125's fit,
+    // from the distance and not the reach: it starts at 187 and -29 against 11
+    // and 12 planted, and read 16.735 and 8.870 at 6000 epochs, red, 11.206 and
+    // 11.887 at 12000, 11.022 and 11.988 at 16000, and both exact at 24000
+    // (adocs/data/S125_goldens.txt), so that plant runs 16000 and the bound
+    // below does not move. The 16000 is a budget and not a golden (DEC-331
+    // (15)): this case reads the recovery within the half centipawn below, and
+    // a budget too small goes red, as 6000 does.
+    std::vector<double> fitted = shipped;
+    fit(model, data, target, mask, k, 1.0, plant.epochs, &fitted);
+
+    // Within half a centipawn is what the emitted integer needs to be the
+    // planted one.
+    for (const auto& [param, value] : plant.values) {
+      CAPTURE(param);
+      CAPTURE(fitted[param]);
+      CHECK(std::fabs(fitted[param] - value) < 0.5);
+    }
+
+    // And the frozen rest came out bit-identical.
+    for (size_t p = 0; p < PARAM_COUNT; ++p) {
+      if (!mask[p]) { CHECK(fitted[p] == shipped[p]); }
+    }
+  }
+}
+
+}  // namespace
+
+
+// One case per family, because the fits are nearly all of this binary's time
+// and each ctest entry gets one clock: tests/CMakeLists.txt holds the split,
+// and a new family is a case here and a word there.
+TEST_CASE("a planted vector comes back: base")
+{
   const std::vector<plant_t> plants = {
       {"passed_pawns",
        {{PP_MG_BASE + 0, 7},
@@ -1170,6 +1230,15 @@ TEST_CASE("a planted vector comes back through the trace path")
         {PL_EG_BASE + 5, -26},
         {PL_EG_BASE + 6, -9}}},
       {"tempo", {{TEMPO_MG_BASE, 23}, {TEMPO_EG_BASE, 12}}},
+  };
+
+  check_recovery(plants);
+}
+
+
+TEST_CASE("a planted vector comes back: pawns")
+{
+  const std::vector<plant_t> plants = {
       // S125's (DEC-331 (11)): the three flats P0 refits, and five of its
       // seven groups, with numbers written here and derived from nothing
       // outside this repository. Doubled pawns by file and phalanx pawns by
@@ -1224,6 +1293,15 @@ TEST_CASE("a planted vector comes back through the trace path")
         {SUP_EG_BASE + 4, 12}},
        16000},
       {"weak_unopposed", {{WKU_MG_BASE, -7}, {WKU_EG_BASE, -11}}},
+  };
+
+  check_recovery(plants);
+}
+
+
+TEST_CASE("a planted vector comes back: threats")
+{
+  const std::vector<plant_t> plants = {
       // S101's, each with numbers written here and derived from nothing outside
       // this repository. threat_king runs 32000 epochs: its pawn cell's one
       // middlegame row stands at phase 2, so that half's gradient is scaled
@@ -1286,53 +1364,7 @@ TEST_CASE("a planted vector comes back through the trace path")
         {TPU_EG_BASE + 3, -10}}},
   };
 
-  const double k = 1.0;
-
-  for (const plant_t& plant : plants) {
-    const std::string group = plant.group;
-    CAPTURE(group);
-
-    std::vector<double> planted = shipped;
-    for (const auto& [param, value] : plant.values) {
-      planted[param] = value;
-    }
-
-    std::vector<double> target(data.size());
-    for (size_t row = 0; row < data.size(); ++row) {
-      target[row] = tuner_target::sigmoid(
-          tuner_trace::score(model, data, row, planted.data()), k);
-    }
-
-    std::vector<uint8_t> mask;
-    REQUIRE(tuner_groups::free_mask(plant.group, &mask));
-
-    // The tuner's own step, 1.0. Passed pawn bucket 1's middlegame weight is
-    // the slowest to come back: few of these positions put a passer there at
-    // a non-zero phase, and at 3000 epochs it read 13.02 against 14 planted,
-    // at 6000 13.95. Supported's own seventh is the slowest since S125's fit,
-    // from the distance and not the reach: it starts at 187 and -29 against 11
-    // and 12 planted, and read 16.735 and 8.870 at 6000 epochs, red, 11.206 and
-    // 11.887 at 12000, 11.022 and 11.988 at 16000, and both exact at 24000
-    // (adocs/data/S125_goldens.txt), so that plant runs 16000 and the bound
-    // below does not move. The 16000 is a budget and not a golden (DEC-331
-    // (15)): this case reads the recovery within the half centipawn below, and
-    // a budget too small goes red, as 6000 does.
-    std::vector<double> fitted = shipped;
-    fit(model, data, target, mask, k, 1.0, plant.epochs, &fitted);
-
-    // Within half a centipawn is what the emitted integer needs to be the
-    // planted one.
-    for (const auto& [param, value] : plant.values) {
-      CAPTURE(param);
-      CAPTURE(fitted[param]);
-      CHECK(std::fabs(fitted[param] - value) < 0.5);
-    }
-
-    // And the frozen rest came out bit-identical.
-    for (size_t p = 0; p < PARAM_COUNT; ++p) {
-      if (!mask[p]) { CHECK(fitted[p] == shipped[p]); }
-    }
-  }
+  check_recovery(plants);
 }
 
 

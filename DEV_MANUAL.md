@@ -1485,7 +1485,14 @@ S100 wrote it over the tuner's mirror model, `tools/tuner_model.hpp`; since S262
 the tuner fits the engine's own trace (`tools/tuner_trace.hpp`, "What the tuner
 fits" below) and the file follows it, linking the trace build. Its corpus is a
 fixture it writes into the temp directory from the same curated FEN list
-`test_eval_model` runs over, so it needs no dataset. The mirror's own loader
+`test_eval_model` runs over, so it needs no dataset. ctest runs its planted
+recoveries apart, one entry per family, `test_tuner_gradient_plants_<word>`,
+each on its own clock, since they are nearly all of its time and every family
+adds to them. Every entry of the binary declares `PROCESSORS 4`, the threads
+`fit()` runs, so `ctest -j` counts them; serially it changes nothing.
+`tests/CMakeLists.txt` holds the words, and a new family is a case named `a
+planted vector comes back: <word>` and its word there; the binary run by hand
+still runs every case. The mirror's own loader
 kept its five cases in `test_eval_model` until S276 deleted the mirror, and
 them with it. `test_eval_trace` is the trace's contract with the engine: the
 identity, what every coefficient means, and since S276 the four positions
