@@ -1,0 +1,193 @@
+S122 phase 1's guard plants, never committed: one build of the landing with this patch applied
+picks one defect at run time, S122_PLANT=N, and -DS122_FORCED builds it at forced curve
+weights instead of the seed (adocs/data/S122_phase1_plants.sh runs each against its guard;
+the S122 step file's "Guards, each seen red on a plant" has the table). Applies to S122's
+phase 1 landing.
+  1 Black's storm walked the wrong way          2 Black's check guard ignores Black's pawns
+  3 Black's weak squares ignore Black's guard   4 Black's defended squares take its rooks
+  5 both colours' contact clause dropped        6 both colours' defenders read knights only
+  7 the trace records White's knight attackers' curve input one too high
+  8 exact_parts() divides the curve by twice its divisor
+  9 exact_parts() takes Black's T with White's sign
+ 10 gradient() does not silence the curve on a bound row
+ 11 smooth() adds the curve after the clamp
+ 13 (with -DS122_FORCED) the engine divides the curve by 4096
+
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -16,6 +16,19 @@
+ #include "eval_trace.hpp"
+ #include "transposition_table.hpp"
+ #include "utils.hpp"
++#include <cstdlib>
++// S122 phase 1's plants, a scratch tree only: S122_PLANT picks one defect.
++static int s122_plant()
++{
++  static const int value =
++      std::getenv("S122_PLANT") ? std::atoi(std::getenv("S122_PLANT")) : 0;
++  return value;
++}
++#ifdef S122_FORCED
++#define S122_DIVISOR_PLANT ((s122_plant() == 13) ? 4096 : KS_CURVE_DIVISOR)
++#else
++#define S122_DIVISOR_PLANT KS_CURVE_DIVISOR
++#endif
+ 
+ // clang-format off
+ 
+@@ -2287,8 +2300,13 @@
+ constexpr int ks_defenders_eg[1] = {0};
+ constexpr int ks_storm_mg[7] = {0, 0, 0, 0, 0, 0, 0};
+ constexpr int ks_storm_eg[7] = {0, 0, 0, 0, 0, 0, 0};
++#ifdef S122_FORCED
++constexpr int ks_curve_mg[12] = {12, 37, 21, 29, 45, 11, 33, 27, 31, 41, 17, -60};
++constexpr int ks_curve_eg[12] = {-9, 13, 25, 19, 31, 7, 15, 23, 17, 29, 21, -35};
++#else
+ constexpr int ks_curve_mg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+ constexpr int ks_curve_eg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
++#endif
+ constexpr std::array<score_t, 4> ks_checks_score =
+     pack_scores(ks_checks_mg, ks_checks_eg);
+ constexpr std::array<score_t, 1> ks_weak_score =
+@@ -2585,7 +2603,7 @@
+   const int king_rank = king_square >> 3;
+ 
+   // Toward the enemy, in index rows: row 0 is the eighth rank.
+-  const int step = (colour == WHITE) ? -1 : 1;
++  const int step = (colour == WHITE || s122_plant() == 1) ? -1 : 1;
+ 
+   for (int file = king_file - 1; file <= king_file + 1; ++file) {
+     if (file < 0 || file > 7) { continue; }
+@@ -3101,7 +3119,9 @@
+         // No man of K's but its king attacks the target, and beside K another
+         // class of A's has to attack it as well, a pawn and A's king being
+         // classes of their own.
+-        const bb_t unguarded = ~nonking[king];
++        const bb_t unguarded =
++            ~nonking[king] |
++            ((s122_plant() == 2 && king == BLACK) ? pawn_attacks[BLACK] : 0);
+         const bb_t common = pawn_attacks[attacker] | zone[attacker];
+         const bb_t* by = attacks_by[attacker];
+         const bb_t others[4] = {
+@@ -3112,7 +3132,8 @@
+         for (int type = 0; type < 4; ++type) {
+           const bb_t safe = by[type] & from[type] & unguarded &
+                             ~board->occupancies[attacker] &
+-                            (~ring | others[type]);
++                            ((s122_plant() == 5) ? ~bb_t{0}
++                                                 : (~ring | others[type]));
+           const bb_t targets = safe & empty;
+           const int count = count_bits(targets);
+ 
+@@ -3130,7 +3151,9 @@
+       }
+ 
+       if constexpr (weak_on) {
+-        const bb_t weak = zone[king] & nonking[attacker] & ~nonking[king];
++        const bb_t weak =
++            zone[king] & nonking[attacker] &
++            ((s122_plant() == 3 && king == BLACK) ? ~bb_t{0} : ~nonking[king]);
+         const int count = count_bits(weak);
+ 
+         safety_sum += sign * count * ks_weak_score[0];
+@@ -3146,7 +3169,10 @@
+ 
+       if constexpr (defenders_on) {
+         const bb_t defended =
+-            (attacks_by[king][0] | attacks_by[king][1]) & zone[king];
++            (attacks_by[king][0] |
++             ((s122_plant() == 6) ? 0 : attacks_by[king][1]) |
++             ((s122_plant() == 4 && king == BLACK) ? attacks_by[king][2] : 0)) &
++            zone[king];
+         const int count = count_bits(defended);
+ 
+         safety_sum += sign * count * ks_defenders_score[0];
+@@ -3249,8 +3275,9 @@
+         x_eg += inputs[i] * ks_curve_eg[i];
+ 
+         if (inputs[i] != 0) {
+-          EVAL_TRACE_SIDE(TERM_KS_CURVE, static_cast<eval_trace::side_t>(king),
+-                          i, inputs[i]);
++          EVAL_TRACE_SIDE(
++              TERM_KS_CURVE, static_cast<eval_trace::side_t>(king), i,
++              inputs[i] + ((s122_plant() == 7 && king == WHITE && i == 1) ? 1 : 0));
+         }
+ 
+         if constexpr (collect) { danger.curve[king][i] = inputs[i]; }
+@@ -3260,8 +3287,8 @@
+       const int positive_eg = std::max(x_eg, 0);
+       const int sign = (king == WHITE) ? -1 : 1;
+ 
+-      halves[0] += sign * (positive_mg * positive_mg / KS_CURVE_DIVISOR);
+-      halves[1] += sign * (positive_eg * positive_eg / KS_CURVE_DIVISOR);
++      halves[0] += sign * (positive_mg * positive_mg / S122_DIVISOR_PLANT);
++      halves[1] += sign * (positive_eg * positive_eg / S122_DIVISOR_PLANT);
+     }
+ 
+     safety = ((mg_value(safety_sum) + halves[0]) * phase +
+--- a/tools/tuner_trace.hpp
++++ b/tools/tuner_trace.hpp
+@@ -73,6 +73,14 @@
+ namespace tuner_trace
+ {
+ 
++// S122 phase 1's plants, a scratch tree only.
++inline int s122_plant()
++{
++  static const int value =
++      std::getenv("S122_PLANT") ? std::atoi(std::getenv("S122_PLANT")) : 0;
++  return value;
++}
++
+ using eval_trace::term_t;
+ using tuner_target::LN10_OVER_400;
+ using tuner_target::sigmoid;
+@@ -598,11 +606,13 @@
+       x_eg[e.side] += e.coef * w[group.inputs[e.input].second];
+     }
+ 
+-    const int64_t divisor = static_cast<int64_t>(group.divisor);
++    const int64_t divisor =
++        static_cast<int64_t>(group.divisor) * ((s122_plant() == 8) ? 2 : 1);
+     const int64_t sign = static_cast<int64_t>(group.sign);
+ 
+     for (int side = 0; side < 2; ++side) {
+-      const int64_t side_sign = (side == 0) ? sign : -sign;
++      const int64_t side_sign =
++          (side == 0 || s122_plant() == 9) ? sign : -sign;
+       const int64_t m = std::max<int64_t>(x_mg[side], 0);
+       const int64_t n = std::max<int64_t>(x_eg[side], 0);
+ 
+@@ -965,7 +975,9 @@
+                      (eg[SITE_MOBILITY] + eg[SITE_KING_SAFETY]) * eg_weight;
+ 
+   for (size_t g = 0; g < model.groups.size(); ++g) {
+-    if (model.groups[g].clamped) { stage_two += group_score(g); }
++    if (model.groups[g].clamped && s122_plant() != 11) {
++      stage_two += group_score(g);
++    }
+   }
+ 
+   if (stage_two > margin) {
+@@ -980,7 +992,9 @@
+               (eg[SITE_POSITIONAL] + eg[SITE_TEMPO]) * eg_weight + stage_two;
+ 
+   for (size_t g = 0; g < model.groups.size(); ++g) {
+-    if (!model.groups[g].clamped) { out.score += group_score(g); }
++    if (!model.groups[g].clamped || s122_plant() == 11) {
++      out.score += group_score(g);
++    }
+   }
+ 
+   return out;
+@@ -1139,7 +1153,9 @@
+         for (size_t g = 0; g < model.groups.size(); ++g) {
+           const group_t& group = model.groups[g];
+ 
+-          if (s.clamp_binds && group.clamped) { continue; }
++          if (s.clamp_binds && group.clamped && s122_plant() != 10) {
++            continue;
++          }
+ 
+           const group_sums_t x = group_sums(group, g, data, row, params);
+ 

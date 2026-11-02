@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that every one of the 1121 fitted numbers reached the engine's sources.
+"""Check that every one of the 1171 fitted numbers reached the engine's sources.
 
 Re-extracts the weights from src/eval_tables.hpp and src/evaluation.cpp after the
 paste and compares them, one by one, against the emitted header. A half-applied
@@ -44,6 +44,11 @@ and is refused, which is right.
 threat_king and threat_push four wide a half, threat_piece five, threat_minor two
 and hanging_pawn one. A fit emitted by a tuner built before S101 lacks them and is
 refused, which is right.
+
+1171 since S122, whose king safety family is ten more: ks_checks four wide a half,
+ks_weak and ks_defenders one, ks_storm seven, and the curve's twelve inputs,
+ks_curve. A fit emitted by a tuner built before S122 lacks them and is refused,
+which is right.
 """
 import re
 import sys
@@ -82,7 +87,7 @@ def arguments(flags):
 
 
 EMITTED, ROOT, _ = arguments(set())
-TOTAL = 1121
+TOTAL = 1171
 
 WIDTHS = [
     ("PAWN", 1),
@@ -148,6 +153,16 @@ WIDTHS = [
     ("threat_king_eg", 4),
     ("threat_push_mg", 4),
     ("threat_push_eg", 4),
+    ("ks_checks_mg", 4),
+    ("ks_checks_eg", 4),
+    ("ks_weak_mg", 1),
+    ("ks_weak_eg", 1),
+    ("ks_defenders_mg", 1),
+    ("ks_defenders_eg", 1),
+    ("ks_storm_mg", 7),
+    ("ks_storm_eg", 7),
+    ("ks_curve_mg", 12),
+    ("ks_curve_eg", 12),
 ]
 
 

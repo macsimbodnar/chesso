@@ -7,7 +7,29 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-02, by hand.
 
-## 2026-11-02: S122 started, research pass done and ruled (DEC-344); head's corpus generating (handover)
+## 2026-11-02: S122 phase 1 landed (DEC-345); the corpus, a fresh sample and the screen next (handover)
+
+**S122 phase 1 committed**, `No functional change`, bench 5482277: the family at zero and the curve at its seed (c 45, d 2048), the
+tuner at 1171, the walked counts, the mirror test, the clamp case with the group, the curve's plants (`slow` label, `king_curve`), and
+`tools/margin_census`. The screen's scripts are pre-registered (`adocs/data/S122_screen.sh`, `S122_corpus.sh`, `S122_cost.sh`). Two
+fast checks: eight script defects, then three, all confirmed and fixed. DEC-345 rules the following.
+- One 20000-epoch cap for every fit; a dropped curve at the cap is re-read at 80000.
+- P6's mask covers attackers and incidences only.
+- The x > 0 re-seed rule is withdrawn.
+- **A fresh side sample:** the research pass's sample was mostly the corpus's own games. datagen seeds each worker, not each game,
+  from `seed + worker`, so the pools at seeds 2026110201 and 2026110202 are the corpus's workers shifted by one or two.
+- DEC-344's head column counted 2750 games twice, so its errors are understated by about 1.21 (inferred). No ruling changes.
+
+The step file's "Commands for the coordinator" is the order. When the corpus ends `S122-CORPUS-DONE`:
+1. `S122_corpus.sh all` (about 30 min).
+2. `S122_screen.sh sample` (about 75 min, then the guard).
+3. `S122_screen.sh all` at night (about 19 h typical, up to 39 h more per escalation, about 110 h worst; inferred).
+4. `side`, the cost run, `apply`, phase 2, the SPRT.
+
+**No commit while a screen, the margin or `side` runs.** Still owed: S309's 30 s bar read with the machine idle (`ctest -L fast -j12`,
+then `ctest -R plants_king_curve` once).
+
+## 2026-11-02: S122 started, research pass done and ruled (DEC-344); head's corpus generating
 
 **S122 in progress** (`adocs/plan_current/`). The research pass (counts and instructions only, no fit, no match) proposed a quadratic over
 attackers, incidences, weak squares, defenders and safe checks, fitted on S083 with the checks last. Its fast check found the evidence for
@@ -23,8 +45,8 @@ check's scans as an in-tree stage (`adocs/data/S122_census.sh scans`).
 entries time out at 60 s under its load) and resumed after. A power cut: S082's merge (`adocs/data/S082_pool_merge.py`) and a top-up
 on a new seed, as DEC-296.
 
-**Next: S122 phase 1** (every part at the seed, `No functional change`), then the fits on the corpus; S320 and S321 as filler while a
-run holds the machine.
+**Next (as of then): S122 phase 1** (every part at the seed, `No functional change`), then the fits on the corpus; S320 and S321 as
+filler while a run holds the machine.
 
 ## 2026-11-02: S309, S310 and S319 done; 2026-11-01: S101 done, H1; S307 and S308 done; S122 next
 

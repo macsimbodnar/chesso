@@ -40,8 +40,8 @@ int shipped_margin()
 
 
 // Not goldens: the tool's fixed comparison points, chosen rather than
-// measured, and the same five it printed before S288.
-const std::vector<int> FIXED = {150, 200, 250, 300, 400};
+// measured, the five it printed before S288 and S122's three between them.
+const std::vector<int> FIXED = {150, 200, 225, 250, 275, 300, 350, 400};
 
 
 long count_of(const std::vector<int>& margins, int value)
@@ -96,7 +96,7 @@ TEST_SUITE("eval_spread margins")
     CHECK(moved.size() == FIXED.size() + 1);
 
     // A set onto a fixed point exercises the deduplication, which the shipped
-    // value does not reach unless a refit lands on one of the five.
+    // value does not reach unless a refit lands on one of the eight.
     REQUIRE(search_param_set("LazyEvalMargin", 200));
 
     const std::vector<int> landed = eval_spread::candidate_margins();

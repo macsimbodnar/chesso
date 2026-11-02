@@ -1744,6 +1744,191 @@ TEST_SUITE("evaluation: threat family symmetry")
   }
 }
 
+// S122's king safety family under the same mirror, DEC-329 (6), written first
+// (DEC-344 (5)): each king's sets, then each count cell by cell, the curve's
+// inputs among them. White's king in the original is Black's in the mirror
+// with the ranks mirrored, and a cell keeps its index. A count wrong for one
+// colour only -- the storm walked the wrong way for Black, one side's pawns
+// missing from a check's guard -- moves no score at the landing's zeros, and
+// one fitted only on a position that reaches the cell. Each observed red on a
+// planted one-colour defect before it was trusted (the S122 step file,
+// 2026-11-02, phase 1, records the runs).
+TEST_SUITE("evaluation: king safety family symmetry")
+{
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the king safety family's sets mirror exactly")
+  {
+    const auto sets = [](const king_danger_t& family, int index, int king) {
+      if (index < 4) { return family.check_targets[king][index]; }
+      return (index == 4) ? family.weak_set[king] : family.defended_set[king];
+    };
+    static const char* const names[6] = {
+        "knight check targets", "bishop check targets", "rook check targets",
+        "queen check targets",  "weak squares",         "defended squares"};
+
+    size_t edge[6][2][2] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : threat_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      king_danger_t family;
+      king_danger_t mirror;
+      king_danger_counts(&game.board, &family);
+      king_danger_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      for (int s = 0; s < 6; ++s) {
+        const std::string name = names[s];
+        CAPTURE(name);
+        REQUIRE(sets(mirror, s, BLACK) == mirror_ranks(sets(family, s, WHITE)));
+        REQUIRE(sets(mirror, s, WHITE) == mirror_ranks(sets(family, s, BLACK)));
+
+        for (int king = 0; king < 2; ++king) {
+          const bb_t set = sets(family, s, king);
+          if ((set & file_masks[0]) != 0) { edge[s][king][0]++; }
+          if ((set & file_masks[7]) != 0) { edge[s][king][1]++; }
+        }
+      }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    size_t fewest = SIZE_MAX;
+    for (int s = 0; s < 6; ++s) {
+      for (int king = 0; king < 2; ++king) {
+        const std::string name = names[s];
+        CAPTURE(name);
+        CAPTURE(king);
+        REQUIRE(edge[s][king][0] > 100);
+        REQUIRE(edge[s][king][1] > 100);
+        fewest = std::min({fewest, edge[s][king][0], edge[s][king][1]});
+      }
+    }
+
+    MESSAGE("king safety family sets: "
+            << checked << " positions; the rarest set and edge file is held on "
+            << fewest);
+  }
+
+  TEST_CASE_FIXTURE(eval_fixture_t,
+                    "the king safety family's counts mirror exactly")
+  {
+    king_danger_t seen{};
+    size_t checked = 0;
+
+    const auto mirrors = [](const std::string& what, const auto& original,
+                            const auto& mirror, int width) {
+      for (int cell = 0; cell < width; ++cell) {
+        CAPTURE(what);
+        CAPTURE(cell);
+        REQUIRE(mirror[BLACK][cell] == original[WHITE][cell]);
+        REQUIRE(mirror[WHITE][cell] == original[BLACK][cell]);
+      }
+    };
+
+    const auto tally = [](auto& count, const auto& family, int width) {
+      for (int king = 0; king < 2; ++king) {
+        for (int cell = 0; cell < width; ++cell) {
+          count[king][cell] += (family[king][cell] != 0);
+        }
+      }
+    };
+
+    for (const std::string& fen : threat_mirror_population()) {
+      const std::string flipped = mirror_fen(fen);
+
+      if (!load_FEN(fen, &game) || !load_FEN(flipped, &mirrored)) { continue; }
+
+      king_danger_t family;
+      king_danger_t mirror;
+      king_danger_counts(&game.board, &family);
+      king_danger_counts(&mirrored.board, &mirror);
+
+      CAPTURE(fen);
+      mirrors("checks", family.checks, mirror.checks, 4);
+      mirrors("checks_any", family.checks_any, mirror.checks_any, 4);
+      mirrors("weak", family.weak, mirror.weak, 1);
+      mirrors("defenders", family.defenders, mirror.defenders, 1);
+      mirrors("storm", family.storm, mirror.storm, KST_CELL_COUNT);
+      mirrors("curve", family.curve, mirror.curve, KS_CURVE_INPUTS);
+
+      tally(seen.checks, family.checks, 4);
+      tally(seen.checks_any, family.checks_any, 4);
+      tally(seen.weak, family.weak, 1);
+      tally(seen.defenders, family.defenders, 1);
+      tally(seen.storm, family.storm, KST_CELL_COUNT);
+      tally(seen.curve, family.curve, KS_CURVE_INPUTS);
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+
+    int fewest = INT32_MAX;
+    const auto least = [&fewest](const auto& count, int width) {
+      for (int king = 0; king < 2; ++king) {
+        for (int cell = 0; cell < width; ++cell) {
+          fewest = std::min(fewest, count[king][cell]);
+        }
+      }
+    };
+    least(seen.checks, 4);
+    least(seen.checks_any, 4);
+    least(seen.weak, 1);
+    least(seen.defenders, 1);
+    least(seen.storm, KST_CELL_COUNT);
+    least(seen.curve, KS_CURVE_INPUTS);
+
+    MESSAGE("king safety family counts: "
+            << checked << " positions; the rarest cell is non-zero on "
+            << fewest);
+    REQUIRE(fewest > 50);
+  }
+
+  // The curve's inputs are the engine's own counts: the attackers and
+  // incidences king_safety_features() counts, and the four arrays above. The
+  // curve reads no count of its own, so a count the curve and the linear
+  // term disagree about is a second count where there should be one.
+  TEST_CASE_FIXTURE(eval_fixture_t, "the curve reads the family's own counts")
+  {
+    size_t checked = 0;
+
+    for (const std::string& fen : threat_mirror_population()) {
+      if (!load_FEN(fen, &game)) { continue; }
+
+      king_danger_t family;
+      int safety[2][KS_FEATURE_COUNT];
+      king_danger_counts(&game.board, &family);
+      king_safety_features(&game.board, safety);
+
+      CAPTURE(fen);
+      for (int king = 0; king < 2; ++king) {
+        CAPTURE(king);
+        REQUIRE(family.curve[king][KSC_CONSTANT] == 1);
+        for (int type = 0; type < 4; ++type) {
+          REQUIRE(family.curve[king][KSC_KNIGHT_ATTACKERS + type] ==
+                  safety[king][KS_KNIGHT_ATTACKERS + type]);
+          REQUIRE(family.curve[king][KSC_KNIGHT_CHECKS + type] ==
+                  family.checks[king][type]);
+        }
+        REQUIRE(family.curve[king][KSC_ZONE_ATTACKS] ==
+                safety[king][KS_ZONE_ATTACKS]);
+        REQUIRE(family.curve[king][KSC_WEAK] == family.weak[king][0]);
+        REQUIRE(family.curve[king][KSC_DEFENDERS] == family.defenders[king][0]);
+      }
+
+      checked++;
+    }
+
+    REQUIRE(checked > 20000);
+  }
+}
+
 TEST_SUITE("evaluation: packed score")
 {
   TEST_CASE("each half reads back in all four sign quadrants")

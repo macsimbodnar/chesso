@@ -56,8 +56,19 @@ using tuner_layout::IB_MG_BASE;
 using tuner_layout::ISF_EG_BASE;
 using tuner_layout::ISF_MG_BASE;
 using tuner_layout::KING_SAFETY_COUNT;
+using tuner_layout::KS_CURVE_END;
 using tuner_layout::KS_EG_BASE;
 using tuner_layout::KS_MG_BASE;
+using tuner_layout::KSC_EG_BASE;
+using tuner_layout::KSC_MG_BASE;
+using tuner_layout::KSD_EG_BASE;
+using tuner_layout::KSD_MG_BASE;
+using tuner_layout::KSK_EG_BASE;
+using tuner_layout::KSK_MG_BASE;
+using tuner_layout::KSS_EG_BASE;
+using tuner_layout::KSS_MG_BASE;
+using tuner_layout::KSW_EG_BASE;
+using tuner_layout::KSW_MG_BASE;
 using tuner_layout::MATERIAL_COUNT;
 using tuner_layout::MG_BASE;
 using tuner_layout::MOB_EG_BASE;
@@ -240,7 +251,9 @@ difference_check_t check_differences(const tuner_trace::model_t& model,
 
 
 // The tapered mobility-plus-king-safety sum the clamp is applied to, in the
-// smooth model: the stage-two half of tuner_trace::smooth().
+// smooth model: the stage-two half of tuner_trace::smooth(), S122's curve in
+// it. Written out again rather than read from smooth(), so that a curve
+// smooth() moved outside the clamp would disagree with this.
 double stage_two(const dataset_t& data, size_t row, const double* p)
 {
   const std::vector<tuner_trace::feature_t>& features =
@@ -258,6 +271,22 @@ double stage_two(const dataset_t& data, size_t row, const double* p)
     if (!tuner_trace::clamped_site(f.site)) { continue; }
 
     sum += e.coef * (p[f.mg] * mg_weight + p[f.eg] * eg_weight);
+  }
+
+  // Each king's x per half, and max(0, x)^2 / 2048 taken off its side.
+  double x[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1];
+       ++j) {
+    const tuner_trace::side_entry_t e = data.side_entries[j];
+    if (e.group != 0) { continue; }
+    x[e.side][0] += e.coef * p[KSC_MG_BASE + e.input];
+    x[e.side][1] += e.coef * p[KSC_EG_BASE + e.input];
+  }
+  for (int side = 0; side < 2; ++side) {
+    const double own = (side == 0) ? -1.0 : 1.0;
+    const double m = std::max(x[side][0], 0.0);
+    const double n = std::max(x[side][1], 0.0);
+    sum += own * (m * m * mg_weight + n * n * eg_weight) / KS_CURVE_DIVISOR;
   }
 
   return sum;
@@ -615,9 +644,21 @@ TEST_CASE("gradient() is the derivative of the error it descends")
   // Non-vacuity, and S100 found a real gap with it: a parameter whose analytic
   // gradient is zero is one the finite difference confirms for free. Every
   // parameter outside the tables has a gradient here -- three passed pawn
-  // middlegame weights had none until S100 added four positions to the list.
+  // middlegame weights had none until S100 added four positions to the list --
+  // but S122's curve's constant, whose gradient is exactly zero at the seed by
+  // construction: both kings' x are the constant there, so their slopes are
+  // equal and the constant's 1 on each side cancels (DEC-344 (3), "the
+  // constant's two zeros"). Zero but for the sum's rounding -- each row adds
+  // a term and takes the same term away again, into a total other rows have
+  // already moved, which read -7.8e-23 and -1.3e-22 at the seed -- so it is
+  // asserted under 1e-15, three orders below the floor every other parameter
+  // clears, and a seed that stopped being one shows here.
   for (size_t p = MOB_MG_BASE; p < PARAM_COUNT; ++p) {
     CAPTURE(p);
+    if (p == KSC_MG_BASE + KSC_CONSTANT || p == KSC_EG_BASE + KSC_CONSTANT) {
+      CHECK(std::fabs(analytic[p]) < 1e-15);
+      continue;
+    }
     CHECK(std::fabs(analytic[p]) > 1e-12);
   }
 
@@ -784,10 +825,22 @@ TEST_CASE("the clamp's derivative is exact where it binds")
     const bool mobility_or_king =
         p >= MOB_MG_BASE && p < KS_EG_BASE + KING_SAFETY_COUNT;
     const bool threat = p >= TPW_MG_BASE && p < THREAT_PUSH_END;
-    if (mobility_or_king || threat) {
+    const bool king_family = p >= KSK_MG_BASE && p < KSC_MG_BASE;
+    if (mobility_or_king || threat || king_family) {
       CAPTURE(p);
       CHECK(clamped[p] == 1);
     }
+  }
+
+  // S122's curve is inside the clamp as well (DEC-344 (2)), a group and not
+  // a feature: its inputs join the block the clamp silences.
+  std::vector<uint8_t> curve(PARAM_COUNT, 0);
+  for (const auto& [mg, eg] : tuner_trace::engine_model().groups[0].inputs) {
+    REQUIRE(tuner_trace::engine_model().groups[0].clamped);
+    curve[mg] = 1;
+    curve[eg] = 1;
+    clamped[mg] = 1;
+    clamped[eg] = 1;
   }
 
   // On the binding rows alone, the clamped block's gradient is exactly zero
@@ -904,9 +957,111 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   }
 
   for (size_t p = 0; p < PARAM_COUNT; ++p) {
-    if (clamped[p]) {
+    if (clamped[p] && !curve[p]) {
       CAPTURE(p);
       CHECK(silenced[p] == 1);
+    }
+  }
+
+  // The curve, silent on a bound row (S310's note, DEC-344 (5)). At its seed
+  // both kings' x are the constant, so the constant's gradient is zero on
+  // every row, bound or not, and the loop above could not tell a silenced
+  // curve from a seeded one. So the curve is moved off its seed -- weights
+  // written here, derived from nothing -- where every input reads a gradient
+  // on some unbound row, and each such row is bound as above, by the linear
+  // clamped weights it reads: there the curve's whole gradient is exactly
+  // zero, and moving any of its weights moves no score.
+  std::vector<double> off_seed = shipped;
+  for (int i = 0; i < KS_CURVE_INPUTS; ++i) {
+    off_seed[KSC_MG_BASE + static_cast<size_t>(i)] = 20.0 + 3.0 * i;
+    off_seed[KSC_EG_BASE + static_cast<size_t>(i)] = 15.0 + 2.0 * i;
+  }
+
+  std::vector<uint8_t> curve_heard(PARAM_COUNT, 0);
+  std::vector<uint8_t> curve_silenced(PARAM_COUNT, 0);
+  size_t curve_rows = 0;
+
+  for (size_t row = 0; row < data.size(); ++row) {
+    CAPTURE(positions[row]);
+
+    if (std::fabs(stage_two(data, row, off_seed.data())) >=
+        LAZY_EVAL_MARGIN - 1.0) {
+      continue;
+    }
+
+    const std::vector<uint32_t> one_row = {static_cast<uint32_t>(row)};
+    std::vector<double> unbound_gradient;
+    tuner_trace::gradient(data, off_seed.data(), k, one_row, 0, 1, 1, target,
+                          &unbound_gradient);
+
+    bool heard = false;
+    for (size_t p = 0; p < PARAM_COUNT; ++p) {
+      if (curve[p] && unbound_gradient[p] != 0.0) {
+        curve_heard[p] = 1;
+        heard = true;
+      }
+    }
+
+    double reach = 0.0;
+    for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+      const tuner_trace::entry_t e = data.entries[j];
+      if (clamped[features[e.feature].mg]) { reach += std::abs(e.coef); }
+    }
+
+    if (!heard || reach == 0.0) { continue; }
+
+    for (const double side : {1.0, -1.0}) {
+      CAPTURE(side);
+
+      // Far enough that the curve, which the push leaves where it is, cannot
+      // bring the sum back inside the margin.
+      const double room = 2.0 * LAZY_EVAL_MARGIN +
+                          std::fabs(stage_two(data, row, off_seed.data()));
+      std::vector<double> bound = off_seed;
+      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+        const tuner_trace::entry_t e = data.entries[j];
+        const tuner_trace::feature_t& f = features[e.feature];
+        if (!clamped[f.mg]) { continue; }
+
+        const double push = side * std::copysign(room / reach, e.coef);
+        bound[f.mg] += push;
+        bound[f.eg] += push;
+      }
+
+      REQUIRE(side * stage_two(data, row, bound.data()) >
+              LAZY_EVAL_MARGIN + 1.0);
+
+      std::vector<double> bound_gradient;
+      tuner_trace::gradient(data, bound.data(), k, one_row, 0, 1, 1, target,
+                            &bound_gradient);
+
+      for (size_t p = 0; p < PARAM_COUNT; ++p) {
+        if (!curve[p]) { continue; }
+        CAPTURE(p);
+        CHECK(bound_gradient[p] == 0.0);
+        if (unbound_gradient[p] != 0.0) { curve_silenced[p] = 1; }
+      }
+
+      const double bound_score = tuner_trace::score(data, row, bound.data());
+      for (size_t p = 0; p < PARAM_COUNT; ++p) {
+        if (!curve[p]) { continue; }
+        std::vector<double> moved = bound;
+        moved[p] += 0.5;
+        CAPTURE(p);
+        CHECK(tuner_trace::score(data, row, moved.data()) == bound_score);
+      }
+    }
+
+    curve_rows++;
+  }
+
+  CAPTURE(curve_rows);
+  CHECK(curve_rows > 0);
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    if (curve[p]) {
+      CAPTURE(p);
+      CHECK(curve_heard[p] == 1);
+      CHECK(curve_silenced[p] == 1);
     }
   }
 
@@ -1509,6 +1664,92 @@ TEST_CASE("a planted vector comes back: threats")
 }
 
 
+TEST_CASE("a planted vector comes back: king_safety")
+{
+  const std::vector<plant_t> plants = {
+      // S122's four linear groups (DEC-344 (3), (5)) from their zero landing,
+      // each with numbers written here and derived from nothing outside this
+      // repository. The curve is the next case's.
+      {"ks_checks",
+       {{KSK_MG_BASE + 0, -9},
+        {KSK_MG_BASE + 1, -7},
+        {KSK_MG_BASE + 2, -11},
+        {KSK_MG_BASE + 3, -13},
+        {KSK_EG_BASE + 0, -5},
+        {KSK_EG_BASE + 1, -6},
+        {KSK_EG_BASE + 2, -4},
+        {KSK_EG_BASE + 3, -8}}},
+      {"ks_weak", {{KSW_MG_BASE, -6}, {KSW_EG_BASE, -3}}},
+      {"ks_defenders", {{KSD_MG_BASE, 5}, {KSD_EG_BASE, 2}}},
+      {"ks_storm",
+       {{KSS_MG_BASE + 0, -12},
+        {KSS_MG_BASE + 1, -9},
+        {KSS_MG_BASE + 2, -7},
+        {KSS_MG_BASE + 3, -4},
+        {KSS_MG_BASE + 4, -5},
+        {KSS_MG_BASE + 5, -3},
+        {KSS_MG_BASE + 6, -2},
+        {KSS_EG_BASE + 0, -6},
+        {KSS_EG_BASE + 1, -5},
+        {KSS_EG_BASE + 2, -3},
+        {KSS_EG_BASE + 3, -2},
+        {KSS_EG_BASE + 4, -4},
+        {KSS_EG_BASE + 5, -2},
+        {KSS_EG_BASE + 6, -1}}},
+  };
+
+  check_recovery(plants);
+}
+
+
+// S122's curve from its seed, d 2048, at the tuner's own step, 1.0: run before
+// any fit, because whether Adam leaves the curve's linear regime from the seed
+// was unmeasured (DEC-344 (2)). The second is planted at c 0, where a side with
+// no other input sits at x = 0 and has no slope, S262's flat part. Numbers
+// written here and derived from nothing.
+//
+// **It leaves the linear regime, and slowly along one direction: a slow case,
+// not a fast one.** Measured on these rows at phase 1 (2026-11-02, the S122
+// step file): at the 6000 epochs the other families take, the error to the
+// planted labels had fallen three orders and the middlegame half was within
+// about a centipawn, but the endgame constant stood 15 from the first plant and
+// 39 from the second -- a constant moves every king's x and is read only where
+// the two kings' x differ, which in the endgame half these rows rarely put
+// apart. The first plant came back within half a centipawn by 28000 epochs
+// (0.478 there, 0.232 at 32000), the second by 76000 (0.520 at 72000, 0.324 at
+// 80000, its last slow input the knight checks' endgame half). So the budgets
+// are 32000 and 80000, budgets and not goldens, and the case runs in its own
+// entry under the `slow` label: it cannot meet S309's bar of 30 s at -j12, and
+// tests/CMakeLists.txt says so beside it.
+TEST_CASE("a planted vector comes back: king_curve")
+{
+  const std::vector<plant_t> plants = {
+      {"ks_curve",
+       {{KSC_MG_BASE + 0, 30}, {KSC_MG_BASE + 1, 14},  {KSC_MG_BASE + 2, 11},
+        {KSC_MG_BASE + 3, 9},  {KSC_MG_BASE + 4, 22},  {KSC_MG_BASE + 5, 7},
+        {KSC_MG_BASE + 6, 16}, {KSC_MG_BASE + 7, 13},  {KSC_MG_BASE + 8, 15},
+        {KSC_MG_BASE + 9, 19}, {KSC_MG_BASE + 10, 10}, {KSC_MG_BASE + 11, -8},
+        {KSC_EG_BASE + 0, 20}, {KSC_EG_BASE + 1, 7},   {KSC_EG_BASE + 2, 6},
+        {KSC_EG_BASE + 3, 5},  {KSC_EG_BASE + 4, 12},  {KSC_EG_BASE + 5, 4},
+        {KSC_EG_BASE + 6, 9},  {KSC_EG_BASE + 7, 7},   {KSC_EG_BASE + 8, 8},
+        {KSC_EG_BASE + 9, 10}, {KSC_EG_BASE + 10, 6},  {KSC_EG_BASE + 11, -5}},
+       32000},
+      {"ks_curve",
+       {{KSC_MG_BASE + 0, 0},  {KSC_MG_BASE + 1, 14},  {KSC_MG_BASE + 2, 11},
+        {KSC_MG_BASE + 3, 9},  {KSC_MG_BASE + 4, 22},  {KSC_MG_BASE + 5, 7},
+        {KSC_MG_BASE + 6, 16}, {KSC_MG_BASE + 7, 13},  {KSC_MG_BASE + 8, 15},
+        {KSC_MG_BASE + 9, 19}, {KSC_MG_BASE + 10, 10}, {KSC_MG_BASE + 11, -8},
+        {KSC_EG_BASE + 0, 0},  {KSC_EG_BASE + 1, 7},   {KSC_EG_BASE + 2, 6},
+        {KSC_EG_BASE + 3, 5},  {KSC_EG_BASE + 4, 12},  {KSC_EG_BASE + 5, 4},
+        {KSC_EG_BASE + 6, 9},  {KSC_EG_BASE + 7, 7},   {KSC_EG_BASE + 8, 8},
+        {KSC_EG_BASE + 9, 10}, {KSC_EG_BASE + 10, 6},  {KSC_EG_BASE + 11, -5}},
+       80000},
+  };
+
+  check_recovery(plants);
+}
+
+
 namespace
 {
 
@@ -1516,16 +1757,20 @@ namespace
 // danger, the four attacker counts and the zone incidences the engine already
 // counts per colour (king_safety_features()), weighted and squared above zero
 // -- the shape S122's curve is written for -- and subtracted from that side's
-// score. evaluate() has no such term, so its per-side entries come from the
-// engine's accessor and not from a trace call; everything after that is the
-// path a traced group would take: the dataset's per-side entries, the model's
-// group, the smooth score, the gradient and the seed.
+// score, outside the clamp. Its per-side entries come from the engine's
+// accessor and not from a trace call; everything after that is the path a
+// traced group takes: the dataset's per-side entries, the model's group, the
+// smooth score, the gradient and the seed. Since S122 the engine's own curve
+// is group 0 of the model, at its seed, where it scores nothing, so this one
+// is group 1.
 constexpr size_t DANGER_INPUTS = 5;
 constexpr double DANGER_DIVISOR = 64.0;
+constexpr uint8_t DANGER_GROUP = 1;
 
 tuner_trace::model_t danger_model()
 {
-  tuner_trace::model_t model;
+  tuner_trace::model_t model = tuner_trace::engine_model();
+  REQUIRE(model.groups.size() == DANGER_GROUP);
   model.param_count = PARAM_COUNT + 2 * DANGER_INPUTS;
 
   tuner_trace::group_t group;
@@ -1575,7 +1820,8 @@ dataset_t danger_positions()
       for (size_t input = 0; input < DANGER_INPUTS; ++input) {
         if (counts[side][input] == 0) { continue; }
         trace.side_entries.push_back(
-            {0, static_cast<uint8_t>(side), static_cast<uint16_t>(input),
+            {DANGER_GROUP, static_cast<uint8_t>(side),
+             static_cast<uint16_t>(input),
              static_cast<int16_t>(counts[side][input])});
       }
     }
@@ -1616,8 +1862,8 @@ TEST_CASE("a nonlinear group's gradient is the derivative of the error")
   double nearest_kink = 1e9;
 
   for (size_t row = 0; row < data.size(); ++row) {
-    const tuner_trace::group_sums_t x =
-        tuner_trace::group_sums(model.groups[0], 0, data, row, params.data());
+    const tuner_trace::group_sums_t x = tuner_trace::group_sums(
+        model.groups[DANGER_GROUP], DANGER_GROUP, data, row, params.data());
 
     for (int side = 0; side < 2; ++side) {
       for (const double sum : {x.mg[side], x.eg[side]}) {
@@ -1729,7 +1975,7 @@ TEST_CASE("a nonlinear group stuck at zero is recovered from its derived seed")
   // From the derived seed: every input seeded positive, and the fit recovers
   // the planted group.
   std::vector<double> seeded = base;
-  tuner_trace::derive_seed(model, 0, data, index, 0, data.size(),
+  tuner_trace::derive_seed(model, DANGER_GROUP, data, index, 0, data.size(),
                            seeded.data());
 
   for (size_t p = PARAM_COUNT; p < model.param_count; ++p) {

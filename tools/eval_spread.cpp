@@ -16,7 +16,16 @@
 // that binds on one term are different problems with different fixes. S101's
 // threat family is in the "combined" column, what the clamp reads, and in a
 // short table of its own, so that "mobility" stays S121's column for S122 to
-// read.
+// read. S122's family is in "king safety", its curve inside the pair's taper.
+//
+// Its identity check -- the clamped pair against evaluate() less
+// evaluate_cheap() -- holds the collecting instantiation to the search's: a
+// term missing from one of them turns it red. It reads no trace, so a trace
+// count off by one, or exact_score() with the curve's divisor or a side's
+// sign wrong, leaves it green (adocs/data/S122_identity_plants.patch); that is
+// tools/truncation_scan's check, and the tuner's load(). Neither sees a count
+// wrong in the engine itself: tests/test_walked_counts.hpp's walk does
+// (DEC-344 (5)).
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -89,7 +98,12 @@ void usage()
   fprintf(stderr,
           "eval_spread --data FILE [options]\n"
           "  --limit N        stop after N positions (default: the whole "
-          "file)\n");
+          "file)\n"
+          "Its last line checks the clamped pair against evaluate() less\n"
+          "evaluate_cheap(): the collecting instantiation against the\n"
+          "search's. It reads no trace, so tools/truncation_scan is the check\n"
+          "of the tuner's exact_score(); neither sees a count wrong in the\n"
+          "engine, which tests/test_walked_counts.hpp's walk does.\n");
 }
 
 }  // namespace

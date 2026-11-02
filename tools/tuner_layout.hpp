@@ -11,7 +11,8 @@
 // emitted. S135 widened the piece placement block from three to seven, 831;
 // S121 made mobility a table, 66 cells a half where it had four, 955; S123
 // appended its passed pawn family after tempo, 1013; S125 its pawn structure
-// family after S123's, 1073; S101 its threat family after S125's, 1121.
+// family after S123's, 1073; S101 its threat family after S125's, 1121; S122
+// its king safety family after S101's, 1171.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -185,6 +186,34 @@ constexpr size_t THREAT_KING_COUNT =
 constexpr size_t THREAT_PUSH_COUNT =
     sizeof(threat_push_mg) / sizeof(threat_push_mg[0]);
 
+// S122's king safety family (DEC-344), appended after S101's for the same
+// reason. Four linear arrays in king safety's pair and one curve, each a
+// middlegame and an endgame half (src/evaluation.hpp defines the counts):
+//
+//   ks_checks     safe checks on empty targets by N, B, R, Q, 4
+//   ks_weak       weak zone squares, 1
+//   ks_defenders  zone squares own knights and bishops attack, 1
+//   ks_storm      the closest enemy pawn per file by distance, free or
+//                 blocked, 7
+//   ks_curve      the curve's inputs, the constant first, 12: not a linear
+//                 term. Its parameters are a nonlinear group's
+//                 (tools/tuner_trace.hpp, engine_model()) and no trace
+//                 feature reaches them.
+//
+// 50 parameters, each block a group of its own in tools/tuner_groups.hpp.
+// Widths from the engine's own arrays, as above.
+constexpr size_t KS_CHECKS_COUNT =
+    sizeof(ks_checks_mg) / sizeof(ks_checks_mg[0]);
+constexpr size_t KS_WEAK_COUNT = sizeof(ks_weak_mg) / sizeof(ks_weak_mg[0]);
+constexpr size_t KS_DEFENDERS_COUNT =
+    sizeof(ks_defenders_mg) / sizeof(ks_defenders_mg[0]);
+constexpr size_t KS_STORM_COUNT = sizeof(ks_storm_mg) / sizeof(ks_storm_mg[0]);
+constexpr size_t KS_CURVE_COUNT = sizeof(ks_curve_mg) / sizeof(ks_curve_mg[0]);
+
+static_assert(KS_CURVE_COUNT == static_cast<size_t>(KS_CURVE_INPUTS) &&
+                  KS_STORM_COUNT == static_cast<size_t>(KST_CELL_COUNT),
+              "S122's arrays are the engine's inputs and cells");
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -237,6 +266,16 @@ constexpr size_t TKG_MG_BASE = HGW_EG_BASE + HANGING_PAWN_COUNT;
 constexpr size_t TKG_EG_BASE = TKG_MG_BASE + THREAT_KING_COUNT;
 constexpr size_t TPU_MG_BASE = TKG_EG_BASE + THREAT_KING_COUNT;
 constexpr size_t TPU_EG_BASE = TPU_MG_BASE + THREAT_PUSH_COUNT;
+constexpr size_t KSK_MG_BASE = TPU_EG_BASE + THREAT_PUSH_COUNT;
+constexpr size_t KSK_EG_BASE = KSK_MG_BASE + KS_CHECKS_COUNT;
+constexpr size_t KSW_MG_BASE = KSK_EG_BASE + KS_CHECKS_COUNT;
+constexpr size_t KSW_EG_BASE = KSW_MG_BASE + KS_WEAK_COUNT;
+constexpr size_t KSD_MG_BASE = KSW_EG_BASE + KS_WEAK_COUNT;
+constexpr size_t KSD_EG_BASE = KSD_MG_BASE + KS_DEFENDERS_COUNT;
+constexpr size_t KSS_MG_BASE = KSD_EG_BASE + KS_DEFENDERS_COUNT;
+constexpr size_t KSS_EG_BASE = KSS_MG_BASE + KS_STORM_COUNT;
+constexpr size_t KSC_MG_BASE = KSS_EG_BASE + KS_STORM_COUNT;
+constexpr size_t KSC_EG_BASE = KSC_MG_BASE + KS_CURVE_COUNT;
 
 // Where each block ends, so that no group has to run to PARAM_COUNT: every
 // `--only` group in tools/tuner_groups.hpp ends at its own block's end, and
@@ -259,6 +298,11 @@ constexpr size_t HANGING_PIECE_END = HGP_EG_BASE + HANGING_PIECE_COUNT;
 constexpr size_t HANGING_PAWN_END = HGW_EG_BASE + HANGING_PAWN_COUNT;
 constexpr size_t THREAT_KING_END = TKG_EG_BASE + THREAT_KING_COUNT;
 constexpr size_t THREAT_PUSH_END = TPU_EG_BASE + THREAT_PUSH_COUNT;
+constexpr size_t KS_CHECKS_END = KSK_EG_BASE + KS_CHECKS_COUNT;
+constexpr size_t KS_WEAK_END = KSW_EG_BASE + KS_WEAK_COUNT;
+constexpr size_t KS_DEFENDERS_END = KSD_EG_BASE + KS_DEFENDERS_COUNT;
+constexpr size_t KS_STORM_END = KSS_EG_BASE + KS_STORM_COUNT;
+constexpr size_t KS_CURVE_END = KSC_EG_BASE + KS_CURVE_COUNT;
 
 constexpr size_t PARAM_COUNT =
     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
@@ -269,10 +313,12 @@ constexpr size_t PARAM_COUNT =
     2 * DOUBLED_FILE_COUNT + 2 * BACKWARD_RANK_COUNT + 2 * PHALANX_COUNT +
     2 * SUPPORTED_COUNT + 2 * WEAK_UNOPPOSED_COUNT + 2 * THREAT_PAWN_COUNT +
     2 * THREAT_PIECE_COUNT + 2 * THREAT_MINOR_COUNT + 2 * HANGING_PIECE_COUNT +
-    2 * HANGING_PAWN_COUNT + 2 * THREAT_KING_COUNT + 2 * THREAT_PUSH_COUNT;
+    2 * HANGING_PAWN_COUNT + 2 * THREAT_KING_COUNT + 2 * THREAT_PUSH_COUNT +
+    2 * KS_CHECKS_COUNT + 2 * KS_WEAK_COUNT + 2 * KS_DEFENDERS_COUNT +
+    2 * KS_STORM_COUNT + 2 * KS_CURVE_COUNT;
 
-static_assert(THREAT_PUSH_END == PARAM_COUNT,
-              "a block was appended after S101's push threats: give it an end "
+static_assert(KS_CURVE_END == PARAM_COUNT,
+              "a block was appended after S122's curve: give it an end "
               "constant and a group of its own");
 
 
@@ -386,5 +432,13 @@ inline void starting_params(double* params)
         threat_king_eg);
   block(TPU_MG_BASE, TPU_EG_BASE, THREAT_PUSH_COUNT, threat_push_mg,
         threat_push_eg);
+
+  // S122's family, the same way, the curve's seed included.
+  block(KSK_MG_BASE, KSK_EG_BASE, KS_CHECKS_COUNT, ks_checks_mg, ks_checks_eg);
+  block(KSW_MG_BASE, KSW_EG_BASE, KS_WEAK_COUNT, ks_weak_mg, ks_weak_eg);
+  block(KSD_MG_BASE, KSD_EG_BASE, KS_DEFENDERS_COUNT, ks_defenders_mg,
+        ks_defenders_eg);
+  block(KSS_MG_BASE, KSS_EG_BASE, KS_STORM_COUNT, ks_storm_mg, ks_storm_eg);
+  block(KSC_MG_BASE, KSC_EG_BASE, KS_CURVE_COUNT, ks_curve_mg, ks_curve_eg);
 }
 }  // namespace tuner_layout

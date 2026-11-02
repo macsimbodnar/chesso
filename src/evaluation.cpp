@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <fstream>
 #endif
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include "bb_tables.hpp"
@@ -2272,6 +2273,62 @@ constexpr int king_safety_eg[KS_FEATURE_COUNT] = {-5, -9, 7,  -52, 10,
 constexpr std::array<score_t, KS_FEATURE_COUNT> king_safety_score =
     pack_scores(king_safety_mg, king_safety_eg);
 
+// S122's family (DEC-344; src/evaluation.hpp defines every count), landed at
+// its seed so that DEC-259's screen reads each part from the shipped engine
+// (INV-6). The four linear groups at zero; the curve at its one seed, the
+// constant at 45 in both halves and every other input at zero, which scores
+// exactly nothing (src/evaluation.hpp says why). Nothing here was taken from
+// any engine or page: 45 is floor(sqrt(2048)), DEC-344 (2).
+constexpr int ks_checks_mg[4] = {0, 0, 0, 0};
+constexpr int ks_checks_eg[4] = {0, 0, 0, 0};
+constexpr int ks_weak_mg[1] = {0};
+constexpr int ks_weak_eg[1] = {0};
+constexpr int ks_defenders_mg[1] = {0};
+constexpr int ks_defenders_eg[1] = {0};
+constexpr int ks_storm_mg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int ks_storm_eg[7] = {0, 0, 0, 0, 0, 0, 0};
+constexpr int ks_curve_mg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+constexpr int ks_curve_eg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+constexpr std::array<score_t, 4> ks_checks_score =
+    pack_scores(ks_checks_mg, ks_checks_eg);
+constexpr std::array<score_t, 1> ks_weak_score =
+    pack_scores(ks_weak_mg, ks_weak_eg);
+constexpr std::array<score_t, 1> ks_defenders_score =
+    pack_scores(ks_defenders_mg, ks_defenders_eg);
+constexpr std::array<score_t, 7> ks_storm_score =
+    pack_scores(ks_storm_mg, ks_storm_eg);
+
+// One flag a group, as S101's: a group whose weights are all zero is in no
+// expression and its counts are not computed, so it scores nothing and pays
+// nothing (INV-6, DEC-047). The curve is live when any input but the constant
+// is weighted: with the constant alone both sides' x are equal in each half,
+// so their T are, and the term is exactly zero at any constant. A count the
+// curve reads is computed when the curve weighs it, whatever its own linear
+// cells hold.
+static constexpr bool ks_curve_reads(int input)
+{ return ks_curve_mg[input] != 0 || ks_curve_eg[input] != 0; }
+
+static constexpr bool ks_curve_reads_any(int first, int last)
+{
+  for (int input = first; input <= last; ++input) {
+    if (ks_curve_reads(input)) { return true; }
+  }
+  return false;
+}
+
+static constexpr bool ks_curve_live =
+    ks_curve_reads_any(KSC_KNIGHT_ATTACKERS, KSC_DEFENDERS);
+static constexpr bool ks_checks_live =
+    any_weight(ks_checks_score) ||
+    ks_curve_reads_any(KSC_KNIGHT_CHECKS, KSC_QUEEN_CHECKS);
+static constexpr bool ks_weak_live =
+    any_weight(ks_weak_score) || ks_curve_reads(KSC_WEAK);
+static constexpr bool ks_defenders_live =
+    any_weight(ks_defenders_score) || ks_curve_reads(KSC_DEFENDERS);
+static constexpr bool ks_storm_live = any_weight(ks_storm_score);
+static constexpr bool ks_danger_live =
+    ks_checks_live || ks_weak_live || ks_defenders_live;
+
 // S101's family in one half, bounded array by array. A side has at most 15 men
 // beside its king. Each stands in one cell of every array but threat_piece, so
 // that array's White-minus-Black sum is within 15 times its spread
@@ -2336,10 +2393,56 @@ static_assert(
         32767,
     "mobility's packed sum, with the threats in it, can overflow a 16-bit "
     "half");
+// S122's linear groups in one half, one king's: a type's safe checks stand on
+// squares that type reaches from the king's square, at most 8, 13, 14 and 27;
+// weak and defended squares are zone squares, at most 9; the storm puts one
+// pawn in one cell on each of three files. Both kings' sums are in the pair,
+// so its White-minus-Black lies within twice this.
+static constexpr int ks_family_half(const int (&checks)[4],
+                                    const int (&weak)[1],
+                                    const int (&defenders)[1],
+                                    const int (&storm)[7])
+{
+  const auto magnitude = [](int w) { return (w < 0) ? -w : w; };
+  return 8 * magnitude(checks[0]) + 13 * magnitude(checks[1]) +
+         14 * magnitude(checks[2]) + 27 * magnitude(checks[3]) +
+         9 * magnitude(weak[0]) + 9 * magnitude(defenders[0]) +
+         3 * largest_entry(storm);
+}
+
 static_assert(2 * (16 * (1 + 9) + 4 * 8) *
-                      largest_weight(king_safety_mg, king_safety_eg) <=
+                          largest_weight(king_safety_mg, king_safety_eg) +
+                      2 * std::max(ks_family_half(ks_checks_mg,
+                                                  ks_weak_mg,
+                                                  ks_defenders_mg,
+                                                  ks_storm_mg),
+                                   ks_family_half(ks_checks_eg,
+                                                  ks_weak_eg,
+                                                  ks_defenders_eg,
+                                                  ks_storm_eg)) <=
                   32767,
               "king safety's packed sum can overflow a 16-bit half");
+
+// The curve's x in one half, one king's, by each input's largest count: the
+// constant 1; a side's 15 men beside its king as attackers, of which at most
+// 10 of a type; 15 attackers on at most 9 zone squares each; the checks'
+// squares as above; 9 weak and 9 defended squares. x is squared in an int, so
+// it has to stay under 46341; the taper's products, under 2^31, follow, the
+// square being at most 1048530 a side. adocs/data/S122_screen.py headroom
+// repeats this for a fitted header before it is pasted.
+static constexpr int ks_curve_reach(const int (&w)[12])
+{
+  constexpr int most[12] = {1, 10, 10, 10, 9, 135, 8, 13, 14, 27, 9, 9};
+  int reach = 0;
+  for (int i = 0; i < 12; ++i) {
+    reach += most[i] * ((w[i] < 0) ? -w[i] : w[i]);
+  }
+  return reach;
+}
+
+static_assert(std::max(ks_curve_reach(ks_curve_mg),
+                       ks_curve_reach(ks_curve_eg)) <= 46340,
+              "the king safety curve's x can overflow its square");
 
 
 // A king's own zone: its square and the eight around it.
@@ -2461,8 +2564,71 @@ static inline score_t shelter_score(const int features[KS_FEATURE_COUNT])
 }
 
 
+// S122's storm for one king (src/evaluation.hpp defines the cells). Pawns and
+// the king's square only, like the shelter above, so it is read where the
+// shelter is, on a slot miss, and its score joins the shelter's in the slot.
+static inline void king_storm_features(const board_t* board,
+                                       int colour,
+                                       int storm[KST_CELL_COUNT])
+{
+  for (int cell = 0; cell < KST_CELL_COUNT; ++cell) {
+    storm[cell] = 0;
+  }
+
+  const bb_t own_pawns = board->bitboards[(colour == WHITE) ? W_PAWN : B_PAWN];
+  const bb_t enemy_pawns =
+      board->bitboards[(colour == WHITE) ? B_PAWN : W_PAWN];
+  const index_t king_square =
+      get_lsb_index(board->bitboards[(colour == WHITE) ? W_KING : B_KING]);
+
+  const int king_file = king_square & 7;
+  const int king_rank = king_square >> 3;
+
+  // Toward the enemy, in index rows: row 0 is the eighth rank.
+  const int step = (colour == WHITE) ? -1 : 1;
+
+  for (int file = king_file - 1; file <= king_file + 1; ++file) {
+    if (file < 0 || file > 7) { continue; }
+
+    for (int distance = 1; distance <= 4; ++distance) {
+      const int row = king_rank + step * distance;
+
+      if (row < 0 || row > 7) { break; }
+
+      if (((enemy_pawns >> (row * 8 + file)) & 1) == 0) { continue; }
+
+      // Directly before it is one row back toward the king.
+      const bool blocked = ((own_pawns >> ((row - step) * 8 + file)) & 1) != 0;
+
+      if (distance == 1) {
+        storm[KST_D1]++;
+      } else {
+        storm[(blocked ? KST_D2_BLOCKED : KST_D2_FREE) + distance - 2]++;
+      }
+
+      break;
+    }
+  }
+}
+
+
+// One king's storm, packed, from its own side.
+static inline score_t storm_score(const int storm[KST_CELL_COUNT])
+{
+  score_t score = 0;
+
+  for (int cell = 0; cell < KST_CELL_COUNT; ++cell) {
+    score += storm[cell] * ks_storm_score[cell];
+  }
+
+  return score;
+}
+
+
 #ifndef NDEBUG
 // A slot's hit against a fresh count, as pawn_entry_is_fresh() is the entry's.
+// The storm's score is in the slot only while it is live, and adds nothing at
+// zero weights, so it is added here whatever the flag says.
 static bool shelter_is_fresh(const board_t* board,
                              int colour,
                              const pawn_shelter_t* shelter)
@@ -2470,7 +2636,10 @@ static bool shelter_is_fresh(const board_t* board,
   int features[KS_FEATURE_COUNT];
   king_shelter_features(board, colour, features);
 
-  return shelter->score[colour] == shelter_score(features);
+  int storm[KST_CELL_COUNT];
+  king_storm_features(board, colour, storm);
+
+  return shelter->score[colour] == shelter_score(features) + storm_score(storm);
 }
 #endif
 
@@ -2752,7 +2921,8 @@ static int evaluate_mobility_and_king_safety(
     int* mobility_out = nullptr,
     int* safety_out = nullptr,
     int* threats_out = nullptr,
-    threat_family_t* threat_out = nullptr)
+    threat_family_t* threat_out = nullptr,
+    king_danger_t* danger_out = nullptr)
 {
   const bb_tables_t* tables = game_tables();
   const bb_t occupancy = board->occupancies[BOTH];
@@ -2764,10 +2934,31 @@ static int evaluate_mobility_and_king_safety(
   score_t safety_sum = 0;
   score_t threat_sum = 0;
 
+  // S122's family, each part computed only where it is live (the flags over
+  // its weights say when).
+  constexpr bool checks_on = collect || trace_build || ks_checks_live;
+  constexpr bool weak_on = collect || trace_build || ks_weak_live;
+  constexpr bool defenders_on = collect || trace_build || ks_defenders_live;
+  constexpr bool storm_on = collect || trace_build || ks_storm_live;
+  constexpr bool curve_on = collect || trace_build || ks_curve_live;
+
+  // What king_danger_counts() hands back, held only by the collecting
+  // instantiation: the search's has an empty struct here and no store.
+  struct no_danger_t
+  {};
+  [[maybe_unused]] std::conditional_t<collect, king_danger_t, no_danger_t>
+      danger{};
+
+  // The curve's attacker counts and incidences, per king: the linear term's
+  // own, which it keeps as White's less Black's.
+  [[maybe_unused]] int curve_attackers[2][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
+  [[maybe_unused]] int curve_incidences[2] = {0, 0};
+
   // S101's four unions, one OR a piece in the loop below, and only where a
-  // group that reads them is live (threat_terms()).
+  // group that reads them is live (threat_terms(), and S122's checks, weak
+  // and defended squares).
   constexpr bool threat_unions_on =
-      collect || trace_build || threat_unions_live;
+      collect || trace_build || threat_unions_live || ks_danger_live;
   [[maybe_unused]] bb_t attacks_by[2][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
 
   if constexpr (collect) {
@@ -2861,6 +3052,11 @@ static int evaluate_mobility_and_king_safety(
           out[1 - colour][attacker]++;
           out[1 - colour][KS_ZONE_ATTACKS] += incidences;
         }
+
+        if constexpr (curve_on) {
+          curve_attackers[1 - colour][type]++;
+          curve_incidences[1 - colour] += incidences;
+        }
       }
     }
   }
@@ -2874,6 +3070,98 @@ static int evaluate_mobility_and_king_safety(
                         nullptr);
   }
 
+  // S122's checks, weak and defended squares, per king K, its attacker A the
+  // other side (src/evaluation.hpp defines them). Nothing here looks a piece's
+  // attacks up: the unions are the loop's, and a safe check costs the two
+  // slider sets from K's square, which is where a checking piece would stand
+  // to be seen from.
+  [[maybe_unused]] int curve_checks[2][4] = {{0, 0, 0, 0}, {0, 0, 0, 0}};
+  [[maybe_unused]] int curve_weak[2] = {0, 0};
+  [[maybe_unused]] int curve_defenders[2] = {0, 0};
+
+  if constexpr (checks_on || weak_on || defenders_on) {
+    bb_t nonking[2];
+    for (int c = 0; c < 2; ++c) {
+      nonking[c] = pawn_attacks[c] | attacks_by[c][0] | attacks_by[c][1] |
+                   attacks_by[c][2] | attacks_by[c][3];
+    }
+
+    for (int king = 0; king < 2; ++king) {
+      const int attacker = 1 - king;
+      const int sign = (king == WHITE) ? 1 : -1;
+
+      if constexpr (checks_on) {
+        const index_t square = king_square[king];
+        const bb_t ring = tables->king_attacks[square];
+        const bb_t diagonals = get_bishop_attacks(tables, square, occupancy);
+        const bb_t lines = get_rook_attacks(tables, square, occupancy);
+        const bb_t from[4] = {tables->knight_attacks[square], diagonals, lines,
+                              diagonals | lines};
+
+        // No man of K's but its king attacks the target, and beside K another
+        // class of A's has to attack it as well, a pawn and A's king being
+        // classes of their own.
+        const bb_t unguarded = ~nonking[king];
+        const bb_t common = pawn_attacks[attacker] | zone[attacker];
+        const bb_t* by = attacks_by[attacker];
+        const bb_t others[4] = {
+            common | by[1] | by[2] | by[3], common | by[0] | by[2] | by[3],
+            common | by[0] | by[1] | by[3], common | by[0] | by[1] | by[2]};
+        const bb_t empty = ~occupancy;
+
+        for (int type = 0; type < 4; ++type) {
+          const bb_t safe = by[type] & from[type] & unguarded &
+                            ~board->occupancies[attacker] &
+                            (~ring | others[type]);
+          const bb_t targets = safe & empty;
+          const int count = count_bits(targets);
+
+          safety_sum += sign * count * ks_checks_score[type];
+          EVAL_TRACE(TERM_KS_CHECKS, type, sign * count);
+
+          if constexpr (curve_on) { curve_checks[king][type] = count; }
+
+          if constexpr (collect) {
+            danger.check_targets[king][type] = targets;
+            danger.checks[king][type] = count;
+            danger.checks_any[king][type] = count_bits(safe);
+          }
+        }
+      }
+
+      if constexpr (weak_on) {
+        const bb_t weak = zone[king] & nonking[attacker] & ~nonking[king];
+        const int count = count_bits(weak);
+
+        safety_sum += sign * count * ks_weak_score[0];
+        EVAL_TRACE(TERM_KS_WEAK, 0, sign * count);
+
+        if constexpr (curve_on) { curve_weak[king] = count; }
+
+        if constexpr (collect) {
+          danger.weak_set[king] = weak;
+          danger.weak[king][0] = count;
+        }
+      }
+
+      if constexpr (defenders_on) {
+        const bb_t defended =
+            (attacks_by[king][0] | attacks_by[king][1]) & zone[king];
+        const int count = count_bits(defended);
+
+        safety_sum += sign * count * ks_defenders_score[0];
+        EVAL_TRACE(TERM_KS_DEFENDERS, 0, sign * count);
+
+        if constexpr (curve_on) { curve_defenders[king] = count; }
+
+        if constexpr (collect) {
+          danger.defended_set[king] = defended;
+          danger.defenders[king][0] = count;
+        }
+      }
+    }
+  }
+
   for (int colour = 0; colour < 2; ++colour) {
     const int sign = (colour == WHITE) ? 1 : -1;
     const uint8_t tag = static_cast<uint8_t>(king_square[colour] + 1);
@@ -2882,7 +3170,22 @@ static int evaluate_mobility_and_king_safety(
       int features[KS_FEATURE_COUNT];
       king_shelter_features(board, colour, features);
 
-      shelter->score[colour] = shelter_score(features);
+      score_t slot = shelter_score(features);
+
+      // S122's storm rides in the same slot, on the same miss (DEC-332 (5)).
+      if constexpr (storm_on) {
+        int storm[KST_CELL_COUNT];
+        king_storm_features(board, colour, storm);
+        slot += storm_score(storm);
+
+        for (int cell = 0; cell < KST_CELL_COUNT; ++cell) {
+          EVAL_TRACE(TERM_KS_STORM, cell, sign * storm[cell]);
+
+          if constexpr (collect) { danger.storm[colour][cell] = storm[cell]; }
+        }
+      }
+
+      shelter->score[colour] = slot;
       shelter->king[colour] = tag;
 
       for (int f = KS_SHIELD_NEAR; f <= KS_HALF_OPEN_FILE; ++f) {
@@ -2912,7 +3215,65 @@ static int evaluate_mobility_and_king_safety(
   // family moved it by, so that the three still add up to the number the clamp
   // reads.
   const int mobility = taper(mobility_sum + threat_sum, phase);
-  const int safety = taper(safety_sum, phase);
+
+  // S122's curve, added to king safety's halves before their one taper, so it
+  // adds no division and sits under the clamp (DEC-344 (2)). Each king's x in
+  // each half is its inputs weighted, and T(x) = max(0, x)^2 / the divisor,
+  // truncating, is taken off that king's side: White's king's T less Black's
+  // off White's score. A trace build records each king's inputs as that
+  // side's own, the constant's 1 among them.
+  int safety = 0;
+
+  if constexpr (curve_on) {
+    int halves[2] = {0, 0};
+
+    for (int king = 0; king < 2; ++king) {
+      const int inputs[KS_CURVE_INPUTS] = {1,
+                                           curve_attackers[king][0],
+                                           curve_attackers[king][1],
+                                           curve_attackers[king][2],
+                                           curve_attackers[king][3],
+                                           curve_incidences[king],
+                                           curve_checks[king][0],
+                                           curve_checks[king][1],
+                                           curve_checks[king][2],
+                                           curve_checks[king][3],
+                                           curve_weak[king],
+                                           curve_defenders[king]};
+
+      int x_mg = 0;
+      int x_eg = 0;
+
+      for (int i = 0; i < KS_CURVE_INPUTS; ++i) {
+        x_mg += inputs[i] * ks_curve_mg[i];
+        x_eg += inputs[i] * ks_curve_eg[i];
+
+        if (inputs[i] != 0) {
+          EVAL_TRACE_SIDE(TERM_KS_CURVE, static_cast<eval_trace::side_t>(king),
+                          i, inputs[i]);
+        }
+
+        if constexpr (collect) { danger.curve[king][i] = inputs[i]; }
+      }
+
+      const int positive_mg = std::max(x_mg, 0);
+      const int positive_eg = std::max(x_eg, 0);
+      const int sign = (king == WHITE) ? -1 : 1;
+
+      halves[0] += sign * (positive_mg * positive_mg / KS_CURVE_DIVISOR);
+      halves[1] += sign * (positive_eg * positive_eg / KS_CURVE_DIVISOR);
+    }
+
+    safety = ((mg_value(safety_sum) + halves[0]) * phase +
+              (eg_value(safety_sum) + halves[1]) * (GAME_PHASE_MAX - phase)) /
+             GAME_PHASE_MAX;
+  } else {
+    safety = taper(safety_sum, phase);
+  }
+
+  if constexpr (collect) {
+    if (danger_out != nullptr) { *danger_out = danger; }
+  }
 
   if constexpr (collect) {
     const int mobility_alone = taper(mobility_sum, phase);
@@ -3018,6 +3379,17 @@ void threat_family_counts(const board_t* board, threat_family_t* out)
 
   evaluate_mobility_and_king_safety<true>(board, &empty, counts, nullptr,
                                           nullptr, nullptr, out);
+}
+
+
+// S122's sets and counts, through the same collecting instantiation.
+void king_danger_counts(const board_t* board, king_danger_t* out)
+{
+  int counts[2][KS_FEATURE_COUNT];
+  pawn_shelter_t empty = {};
+
+  evaluate_mobility_and_king_safety<true>(board, &empty, counts, nullptr,
+                                          nullptr, nullptr, nullptr, out);
 }
 
 

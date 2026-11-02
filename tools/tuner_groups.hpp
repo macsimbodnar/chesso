@@ -49,7 +49,7 @@ inline constexpr const char* GROUP_LIST =
     "candidate_passers, isolated_backward, isolated_files, doubled_files, "
     "backward_ranks, phalanx, supported, weak_unopposed, threat_pawn, "
     "threat_piece, threat_minor, hanging_piece, hanging_pawn, threat_king, "
-    "threat_push";
+    "threat_push, ks_checks, ks_weak, ks_defenders, ks_storm, ks_curve";
 
 
 // The piece placement group's terms, S135, each a name `--only` and `--freeze`
@@ -100,6 +100,30 @@ inline constexpr const char* PLACEMENT_TERM_LIST =
     "piece_placement.trapped";
 
 
+// S122's curve's terms, the same way (DEC-344 (3)): P5 frees the curve's core
+// -- the constant, the four attacker counts and the incidences -- and the
+// inputs of the P1 to P3 parts that survived, so a dropped part's count stays
+// at zero in the curve as well. Columns of the ks_curve group, its
+// ks_curve_input_t order.
+inline constexpr placement_term_t CURVE_TERMS[] = {
+    {"ks_curve.core", 0, 6},
+    {"ks_curve.checks", 6, 4},
+    {"ks_curve.weak", 10, 1},
+    {"ks_curve.defenders", 11, 1},
+};
+
+inline constexpr size_t CURVE_TERM_COUNT =
+    sizeof(CURVE_TERMS) / sizeof(CURVE_TERMS[0]);
+
+static_assert(CURVE_TERMS[CURVE_TERM_COUNT - 1].first +
+                      CURVE_TERMS[CURVE_TERM_COUNT - 1].width ==
+                  tuner_layout::KS_CURVE_COUNT,
+              "the engine's curve changed width: name its terms here again");
+
+inline constexpr const char* CURVE_TERM_LIST =
+    "ks_curve.core, ks_curve.checks, ks_curve.weak, ks_curve.defenders";
+
+
 // Marks the parameters a --only group leaves free; the rest keep the value the
 // engine ships and come out of the run unchanged.
 //
@@ -123,6 +147,20 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     for (size_t i = 0; i < term.width; ++i) {
       (*mask)[PL_MG_BASE + term.first + i] = 1;
       (*mask)[PL_EG_BASE + term.first + i] = 1;
+    }
+
+    return true;
+  }
+
+  // A curve term, S122, the same way over the curve's two halves.
+  for (const placement_term_t& term : CURVE_TERMS) {
+    if (group != term.name) { continue; }
+
+    mask->assign(PARAM_COUNT, 0);
+
+    for (size_t i = 0; i < term.width; ++i) {
+      (*mask)[tuner_layout::KSC_MG_BASE + term.first + i] = 1;
+      (*mask)[tuner_layout::KSC_EG_BASE + term.first + i] = 1;
     }
 
     return true;
@@ -246,6 +284,27 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     // P7, a piece a safe pawn push would attack.
     first = tuner_layout::TPU_MG_BASE;
     last = tuner_layout::THREAT_PUSH_END;
+  } else if (group == "ks_checks") {
+    // S122's P1 (DEC-344 (3)), safe checks on empty targets by type.
+    first = tuner_layout::KSK_MG_BASE;
+    last = tuner_layout::KS_CHECKS_END;
+  } else if (group == "ks_weak") {
+    // P2, weak zone squares.
+    first = tuner_layout::KSW_MG_BASE;
+    last = tuner_layout::KS_WEAK_END;
+  } else if (group == "ks_defenders") {
+    // P3, zone squares own knights and bishops attack.
+    first = tuner_layout::KSD_MG_BASE;
+    last = tuner_layout::KS_DEFENDERS_END;
+  } else if (group == "ks_storm") {
+    // P4, the storm's seven cells in S118's slot.
+    first = tuner_layout::KSS_MG_BASE;
+    last = tuner_layout::KS_STORM_END;
+  } else if (group == "ks_curve") {
+    // P5, the curve's inputs, its constant among them: a nonlinear group's
+    // parameters (tools/tuner_trace.hpp, engine_model()).
+    first = tuner_layout::KSC_MG_BASE;
+    last = tuner_layout::KS_CURVE_END;
   } else {
     return false;
   }
@@ -519,7 +578,9 @@ inline void hold_gauges(const std::vector<gauge_t>& held,
 // its arrays, isolated_backward, isolated_file, doubled_file, backward_rank,
 // phalanx, supported or weak_unopposed, followed by _<half>, whose cells are
 // its weights' (src/evaluation.hpp; DEC-331 (6): the nearest supported cell of
-// the same array and half); half mg or eg; scale 1 when absent. A cell is tied
+// the same array and half), or S101's seven arrays and S122's four linear
+// ones the same way, never the curve; half mg or eg; scale 1 when absent. A
+// cell is tied
 // once at most, never to itself, and an anchor is never tied, so no tie reads a
 // value another tie has yet to write.
 struct tie_t
@@ -595,6 +656,16 @@ inline bool tie_row(const std::string& name, size_t* base, size_t* width)
        tuner_layout::THREAT_KING_COUNT},
       {"threat_push", tuner_layout::TPU_MG_BASE, tuner_layout::TPU_EG_BASE,
        tuner_layout::THREAT_PUSH_COUNT},
+      // S122's linear four. The curve has no tie row: a tie scales an
+      // anchor's linear weight, and a curve input's weight enters squared.
+      {"ks_checks", tuner_layout::KSK_MG_BASE, tuner_layout::KSK_EG_BASE,
+       tuner_layout::KS_CHECKS_COUNT},
+      {"ks_weak", tuner_layout::KSW_MG_BASE, tuner_layout::KSW_EG_BASE,
+       tuner_layout::KS_WEAK_COUNT},
+      {"ks_defenders", tuner_layout::KSD_MG_BASE, tuner_layout::KSD_EG_BASE,
+       tuner_layout::KS_DEFENDERS_COUNT},
+      {"ks_storm", tuner_layout::KSS_MG_BASE, tuner_layout::KSS_EG_BASE,
+       tuner_layout::KS_STORM_COUNT},
   };
 
   for (const family_row_t& row : rows) {

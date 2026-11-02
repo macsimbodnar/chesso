@@ -1509,7 +1509,7 @@ out by hand. The walk's mobility is checked in `test_eval_trace`, against the
 trace's coefficients.
 
 The gradient check is Jon Dart's prescription: central differences against
-`gradient()` for every parameter, 823 since S134, 831 since S135, 955 since S121, 1013 since S123, 1073 since S125 and 1121 since S101, tolerance 1e-6 relative. `h = 0.01` is
+`gradient()` for every parameter, 823 since S134, 831 since S135, 955 since S121, 1013 since S123, 1073 since S125, 1121 since S101 and 1171 since S122, tolerance 1e-6 relative. `h = 0.01` is
 measured and a comment in the file carries the sweep — the error follows the
 O(h²) truncation law down to a cancellation floor near 0.005, and h = 0.5 fails
 at 5.7e-4 on a mobility weight because mobility counts reach the tens. Worst
@@ -1524,8 +1524,13 @@ before -- has a gradient to check** at all. The second is what
 found a real gap — three passed pawn middlegame weights had none, because every
 position reaching their buckets was a phase-0 endgame, and a feature-count test
 cannot see that. Where the clamp does bind, a case of its own checks the trace
-path's treatment: the gradient still matches finite differences on all 1121,
-and the binding rows give the mobility and king safety weights exactly nothing.
+path's treatment: the gradient still matches finite differences on all 1171,
+and the binding rows give the mobility and king safety weights exactly nothing;
+since S122 the curve, which sits inside the clamp, is moved off its seed and each
+row it reads is bound in turn, where its whole gradient is exactly zero and no
+weight of it moves the score. At the seed its constant's gradient is zero but for
+rounding, both kings' x being the constant, and the non-vacuity check asserts that
+instead of a gradient.
 
 `tools/plan_prose_check.py` carries five plan-hygiene checks. Four of the
 five -- `--touches`, `--params`, `--citations` and `--gate` -- are in the fast
@@ -3816,8 +3821,8 @@ alone, then how many positions exceed each candidate margin, then the worst posi
 per term. The first candidate is the shipped
 `LAZY_EVAL_MARGIN`, read from `src/search_params.hpp` and not typed, so the
 combined column of its row counts the positions the clamp binds on; 150, 200,
-250, 300 and 400 follow, less any equal to it (`tools/eval_spread_margins.hpp`,
-S288).
+225, 250, 275, 300, 350 and 400 follow, less any equal to it
+(`tools/eval_spread_margins.hpp`, S288; S122 added 225, 275 and 350).
 
 Three terms and not one because a margin that binds on the sum and a margin that
 binds on a single term are different problems. `--limit N` stops after N
@@ -3842,6 +3847,50 @@ below the first prints the threats alone. At S101's landing they were zero; as t
 Every run re-checks itself: clamping the sum it reports must reproduce
 `evaluate() - evaluate_cheap()` on every position, and it says so on the last
 line or exits non-zero.
+
+**What that check covers, and what it does not (S122, DEC-344 (5)).** It holds the
+collecting instantiation of stage two, which reports the pair, to the search's,
+which `evaluate()` runs: a term present in one and missing from the other turns it
+red. It reads no trace, so it cannot see the tuner's side at all -- a trace whose
+count is off by one, an `exact_score()` that divides by the wrong divisor or takes
+a side with the wrong sign all leave it green, as S122's research plants showed
+(`adocs/data/S122_identity_plants.patch`). `tools/truncation_scan` is the check
+for those: it holds `exact_score()` to `evaluate()` on every row it reads, and the
+tuner's `load()` does the same on every row it fits. And neither sees a count that
+is wrong in the engine, since both read the engine's own variables:
+`tests/test_eval_model.cpp` holds those to the walk in
+`tests/test_walked_counts.hpp`.
+
+### The clamp's census at a fit's own weights, `tools/margin_census`
+
+```bash
+build/tools/margin_census --data CORPUS --vector FIT.vector             # K from the vector
+build/tools/margin_census --data CORPUS --k 0.74 --also 325             # the build's weights
+build/tools/margin_census --data SAMPLE --vector FIT.vector --k 0.74 \
+    --loss-margin 250 --games games.txt                                 # per-game losses
+```
+
+S122, DEC-344 (4). Reads a corpus through the tuner's trace (`load()`, the identity
+checked at the build's weights and margin on every row) and a fit's vector, the
+one `tools/tuner --vector FILE` writes beside its header: the header's integers in
+the layout's order, with K and the margin the fit was at. At those integers,
+with `exact_score()`'s arithmetic and the clamp put at each margin in turn, it
+prints per margin -- `eval_spread`'s candidates, `--also`'s, the build's first --
+the rows bound, the graded set's bound rows and the share of the graded set's
+gradient mass on them, sigma(1 - sigma) at K, at the clamped score and beside it
+unclamped, and the mean squared error against the result column; then `pick`, the
+build's margin when it passes DEC-344 (4)'s two bars (rows bound at most 0.5 %,
+graded mass bound at most 10 % at the clamped score) and otherwise the smallest
+multiple of 25 above it that does, up to 2000. The graded set is a king with three
+or more attackers, a queen among them, and a safe check under the research pass's
+reading 2, a check that captures counted (`king_danger_t::checks_any`); `x > 0` is
+the share of kings whose curve sum is positive in each half. `--games FILE` writes
+`index game rows sse` a game at `--loss-margin`, a game a run of one id at a rising
+ply, so two pools joined in one file whose ids both start at 0 stay apart, and
+prints the games and rows it wrote; for pairing two vectors by game
+(`adocs/data/S122_screen.py side-read`, which refuses two files whose games
+differ in id or rows, line for line). It decides nothing;
+`adocs/data/S122_screen.sh margin` acts on it.
 
 The two distributions on record differ in weights as well as corpus, so quote
 them apart. Mobility with the pre-fit weights over 149084 positions: p50 19,
@@ -6226,10 +6275,13 @@ since S123 `passed_advance`, `passed_kings` and `candidate_passers`, and since
 S125 `isolated_backward`, `isolated_files`, `doubled_files`, `backward_ranks`,
 `phalanx`, `supported` and `weak_unopposed`, since S101 `threat_pawn`,
 `threat_piece`, `threat_minor`, `hanging_piece`, `hanging_pawn`, `threat_king` and
-`threat_push`, and the emitted header records which was used. The twenty-five named
-groups partition all 1121 parameters: 5, 768, 132, 18, 10, 6, 14, 2, 24, 24, 10, 2,
-14, 14, 6, 12, 10, 2, 8, 10, 4, 8, 2, 8, 8 in that order, which the run's first line
-reports as the free count. Every group ends at its
+`threat_push`, since S122 `ks_checks`, `ks_weak`, `ks_defenders`, `ks_storm` and
+`ks_curve`, and the emitted header records which was used. The thirty named
+groups partition all 1171 parameters: 5, 768, 132, 18, 10, 6, 14, 2, 24, 24, 10, 2,
+14, 14, 6, 12, 10, 2, 8, 10, 4, 8, 2, 8, 8, 8, 2, 2, 14, 24 in that order, which the
+run's first line reports as the free count. `ks_curve` is the curve's twelve inputs
+a half, a nonlinear group's parameters (`tools/tuner_trace.hpp` `engine_model()`),
+and no trace feature reaches them. Every group ends at its
 own block's end constant in `tools/tuner_layout.hpp` since S123 -- `tempo`
 ran to `PARAM_COUNT` until then and would have swallowed the family appended
 after it -- and `test_tuner_groups` "every group frees exactly its own block"
@@ -6256,7 +6308,9 @@ weights' (`src/evaluation.hpp`; `adocs/data/S125_screen.sh`'s ties, DEC-331
 (6)), and since S101 `threat_pawn_<half>`, `threat_piece_<half>`,
 `threat_minor_<half>`, `hanging_piece_<half>`, `hanging_pawn_<half>`,
 `threat_king_<half>` or `threat_push_<half>`, the same way
-(`adocs/data/S101_screen.sh`'s ties).
+(`adocs/data/S101_screen.sh`'s ties), and since S122 `ks_checks_<half>`,
+`ks_weak_<half>`, `ks_defenders_<half>` or `ks_storm_<half>`; the curve has no
+tie row, a tie scaling a linear weight and a curve input's entering squared.
 The tied cell takes no step of its own and its gradient joins the anchor's;
 the cell is set to the anchor's value times the scale once the run's start
 figures are read at the shipped constants and before the first step, and
@@ -6297,6 +6351,23 @@ so S134's narrowing moved them without an edit to `tools/tuner_groups.hpp`;
 `test_tuner_groups` is what says so, and with a base left at its 827-layout
 value it reads red -- on `tempo` freeing nothing and on the chain precondition,
 not on disjointness or union, which a base left too high cannot break here.
+
+**Since S122 they also take the curve's terms**: `ks_curve.core` (the constant, the
+four attacker counts and the incidences, six columns), `ks_curve.checks` (four),
+`ks_curve.weak` and `ks_curve.defenders` (one each), so DEC-344 (3)'s P5 frees the
+curve's core and the inputs of the P1 to P3 parts that survived and no other
+(`tools/tuner_groups.hpp` `CURVE_TERMS`; `test_tuner_groups` holds them to a
+partition of `ks_curve`).
+
+**Since S122 the tuner takes `--vector FILE` and, in the tune build, `--margin M`.**
+`--vector` writes the emitted vector beside the header: `#` lines naming the engine,
+the parameter count, K and the margin, then one integer a line in the layout's
+order, the header's own `std::lround`s, which `tools/margin_census --vector` reads.
+`--margin M` sets `LazyEvalMargin` before anything is loaded, so the load's identity,
+the smooth score's clamp and the gradient's are all at M -- DEC-344 (4)'s "a tuner
+build whose clamp and identity are at it"; the default build's margin is a
+constant and it refuses the option rather than ignore it. Every header now says the
+margin it was read at (`// margin`).
 
 ```bash
 build/tools/tuner --data .tuning/selfplay_v2.tsv \

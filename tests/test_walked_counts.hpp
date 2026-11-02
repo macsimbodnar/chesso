@@ -1,9 +1,9 @@
 #pragma once
 // The evaluation's counts walked by hand from a FEN's placement -- mobility,
 // king safety, passed pawns, pawn structure, piece placement, since S123 the
-// passed pawn family, since S125 the pawn structure family and since S101 the
-// threat family -- a second implementation the engine's own counts are checked
-// against. S276.
+// passed pawn family, since S125 the pawn structure family, since S101 the
+// threat family and since S122 the king safety family -- a second
+// implementation the engine's own counts are checked against. S276.
 //
 // These walks are the feature half of tools/eval_model.hpp, the hand-written
 // mirror of evaluate() the tuner fitted from S028 to S262 and
@@ -1528,6 +1528,228 @@ inline bool threat_family_features(const std::string& placement,
     for (int sq = 0; sq < 64; ++sq) {
       if (held(out->push_hits[side], sq)) {
         out->threat_push[side][kind_at[sq] - 1]++;
+      }
+    }
+  }
+
+  return true;
+}
+
+
+// S122's king safety family, per king, WHITE's first, each a side's own count
+// and positive: src/evaluation.hpp's definitions walked square by square from
+// the placement, sharing no code with the engine. The attack sets are
+// threat_family_features()'s walk above; what a piece would attack from a
+// target is walked out from the king's square, ray by ray to the first man;
+// each attacker's own zone squares by its own walk. The sets come back as
+// bits in the board's index order (0 = a8). `checks_any` drops the empty
+// target clause, as the engine's collecting copy does.
+struct king_danger_walk_t
+{
+  unsigned long long check_targets[2][4];
+  unsigned long long weak_set[2];
+  unsigned long long defended_set[2];
+  int checks[2][4];
+  int checks_any[2][4];
+  int weak[2][1];
+  int defenders[2][1];
+  int storm[2][7];
+  int curve[2][12];
+};
+
+
+inline bool king_danger_features(const std::string& placement,
+                                 king_danger_walk_t* out)
+{
+  threat_family_walk_t sets;
+  if (!threat_family_features(placement, &sets)) { return false; }
+
+  int kind_at[64];
+  bool white_at[64];
+
+  for (int i = 0; i < 64; ++i) {
+    kind_at[i] = -1;
+    white_at[i] = false;
+  }
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    kind_at[square] = piece_from_char(c, &black);
+    white_at[square] = !black;
+    square++;
+  }
+
+  *out = king_danger_walk_t{};
+
+  const auto on_board = [](int row, int file) {
+    return row >= 0 && row <= 7 && file >= 0 && file <= 7;
+  };
+  const auto held = [](unsigned long long set, int sq) {
+    return ((set >> sq) & 1) != 0;
+  };
+
+  static const int diagonal[4][2] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
+  static const int straight[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+  static const int leaps[8][2] = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
+                                  {1, -2},  {1, 2},  {2, -1},  {2, 1}};
+
+  // What a knight, bishop, rook or queen standing on `from` attacks, each ray
+  // to the first man, that man's square included.
+  const auto reach = [&](int type, int from) {
+    unsigned long long set = 0;
+    const int row = from / 8;
+    const int file = from % 8;
+
+    const auto rays = [&](const int (*steps)[2]) {
+      for (int i = 0; i < 4; ++i) {
+        int r = row + steps[i][0];
+        int f = file + steps[i][1];
+
+        while (on_board(r, f)) {
+          set |= 1ULL << (r * 8 + f);
+          if (kind_at[r * 8 + f] >= 0) { break; }
+          r += steps[i][0];
+          f += steps[i][1];
+        }
+      }
+    };
+
+    if (type == 1) {
+      for (const auto& leap : leaps) {
+        if (on_board(row + leap[0], file + leap[1])) {
+          set |= 1ULL << ((row + leap[0]) * 8 + file + leap[1]);
+        }
+      }
+    }
+    if (type == 2 || type == 4) { rays(diagonal); }
+    if (type == 3 || type == 4) { rays(straight); }
+
+    return set;
+  };
+
+  for (int king = 0; king < 2; ++king) {
+    const int attacker = 1 - king;
+    int king_square = -1;
+
+    for (int sq = 0; sq < 64; ++sq) {
+      if (kind_at[sq] == 5 && white_at[sq] == (king == 0)) { king_square = sq; }
+    }
+
+    if (king_square < 0) { return false; }
+
+    const int king_row = king_square / 8;
+    const int king_file = king_square % 8;
+
+    unsigned long long zone = 0;
+    for (int r = king_row - 1; r <= king_row + 1; ++r) {
+      for (int f = king_file - 1; f <= king_file + 1; ++f) {
+        if (on_board(r, f)) { zone |= 1ULL << (r * 8 + f); }
+      }
+    }
+    const unsigned long long ring = zone & ~(1ULL << king_square);
+
+    out->curve[king][KSC_CONSTANT] = 1;
+
+    // The attackers and their zone squares, piece by piece.
+    for (int sq = 0; sq < 64; ++sq) {
+      const int type = kind_at[sq];
+      if (type < 1 || type > 4 || white_at[sq] != (attacker == 0)) { continue; }
+
+      const unsigned long long hits = reach(type, sq) & zone;
+      if (hits == 0) { continue; }
+
+      out->curve[king][KSC_KNIGHT_ATTACKERS + type - 1]++;
+      out->curve[king][KSC_ZONE_ATTACKS] += __builtin_popcountll(hits);
+    }
+
+    // The checks: a target a piece of the type attacks and from which that
+    // type would attack the king, which is the king's own reach walked as if
+    // it were that piece.
+    for (int type = 1; type <= 4; ++type) {
+      const unsigned long long from = reach(type, king_square);
+
+      for (int sq = 0; sq < 64; ++sq) {
+        if (!held(from, sq) || !held(sets.attacks[attacker][type], sq)) {
+          continue;
+        }
+        if (kind_at[sq] >= 0 && white_at[sq] == (attacker == 0)) { continue; }
+        if (held(sets.nonking[king], sq)) { continue; }
+
+        if (held(ring, sq)) {
+          bool another = held(sets.attacks[attacker][0], sq) ||
+                         held(sets.attacks[attacker][5], sq);
+          for (int other = 1; other <= 4; ++other) {
+            if (other != type && held(sets.attacks[attacker][other], sq)) {
+              another = true;
+            }
+          }
+          if (!another) { continue; }
+        }
+
+        out->checks_any[king][type - 1]++;
+
+        if (kind_at[sq] < 0) {
+          out->checks[king][type - 1]++;
+          out->check_targets[king][type - 1] |= 1ULL << sq;
+        }
+      }
+
+      out->curve[king][KSC_KNIGHT_CHECKS + type - 1] =
+          out->checks[king][type - 1];
+    }
+
+    for (int sq = 0; sq < 64; ++sq) {
+      if (!held(zone, sq)) { continue; }
+
+      if (held(sets.nonking[attacker], sq) && !held(sets.nonking[king], sq)) {
+        out->weak_set[king] |= 1ULL << sq;
+        out->weak[king][0]++;
+      }
+
+      if (held(sets.attacks[king][1], sq) || held(sets.attacks[king][2], sq)) {
+        out->defended_set[king] |= 1ULL << sq;
+        out->defenders[king][0]++;
+      }
+    }
+
+    out->curve[king][KSC_WEAK] = out->weak[king][0];
+    out->curve[king][KSC_DEFENDERS] = out->defenders[king][0];
+
+    // The storm: in front of the king is toward the enemy, a lower row for
+    // White; blocked when the king's own pawn stands one row nearer the king
+    // on that file; distance 1 is one cell, blocked or not.
+    const int ahead = (king == 0) ? -1 : 1;
+
+    for (int file = king_file - 1; file <= king_file + 1; ++file) {
+      if (file < 0 || file > 7) { continue; }
+
+      for (int distance = 1; distance <= 4; ++distance) {
+        const int row = king_row + ahead * distance;
+        if (row < 0 || row > 7) { break; }
+
+        const int sq = row * 8 + file;
+        if (kind_at[sq] != 0 || white_at[sq] == (king == 0)) { continue; }
+
+        const int before = (row - ahead) * 8 + file;
+        const bool blocked =
+            kind_at[before] == 0 && white_at[before] == (king == 0);
+
+        if (distance == 1) {
+          out->storm[king][KST_D1]++;
+        } else if (blocked) {
+          out->storm[king][KST_D2_BLOCKED + distance - 2]++;
+        } else {
+          out->storm[king][KST_D2_FREE + distance - 2]++;
+        }
+        break;
       }
     }
   }

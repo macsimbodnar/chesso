@@ -23,9 +23,10 @@ inline std::vector<int> candidate_margins()
 {
   std::vector<int> margins = {LAZY_EVAL_MARGIN};
 
-  // Fixed comparison points, kept from before S288. One equal to the shipped
-  // margin is dropped so that no row is printed twice.
-  for (const int margin : {150, 200, 250, 300, 400}) {
+  // Fixed comparison points, kept from before S288, and since S122 225, 275
+  // and 350, the steps DEC-344 (4)'s census reads between them. One equal to
+  // the shipped margin is dropped so that no row is printed twice.
+  for (const int margin : {150, 200, 225, 250, 275, 300, 350, 400}) {
     if (margin != LAZY_EVAL_MARGIN) { margins.push_back(margin); }
   }
 

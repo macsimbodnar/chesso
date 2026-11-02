@@ -1,0 +1,68 @@
+S122 phase 1, the guards each against its plant, 2026-11-02. adocs/data/S122_phase1_plants.patch in a scratch worktree
+of the landing (removed after), build/ at the seed and build-forced/ at -DS122_FORCED; the script-side
+guards in a scratch git repository holding the landing's two evaluation sources; the corpus smoke's 203 games.
+
+| guard | plant (adocs/data/S122_phase1_plants.patch) | read |
+|---|---|---|
+| mirror, `test_evaluation` "evaluation: king safety family symmetry" | none | green, 3 of 3 |
+| | 1 Black's storm walked the wrong way | red: `storm` |
+| | 2 Black's check guard ignores Black's pawns | red: `knight check targets`, then the counts |
+| | 3 Black's weak squares ignore Black's guard | red: `weak squares` |
+| | 4 Black's defended squares take its rooks | red: `defended squares` |
+| | 5 both colours' contact clause dropped | green, as it must be: a defect both colours share mirrors |
+| | 6 both colours' defenders read knights only | green, the same |
+| walk, `test_eval_model` "eval counts: S122's king safety family" | none | green, 3 of 3 |
+| | 5 | red: `checks_any` on a contact square |
+| | 6 | red: a defended set |
+| trace, `test_eval_trace`, the forced-weight case and "every coefficient is the count its index names" | none | green, 12 of 12 |
+| | 7 the trace's White knight-attackers curve input one too high | red: both cases; the seed's identity case green, blind as DEC-344 (5) says |
+| | 8 `exact_parts()` divides the curve by twice its divisor | red: the forced-weight case alone; the seed's identity case green |
+| | 9 `exact_parts()` takes Black's T with White's sign | red: the forced-weight case alone; the seed's identity case green |
+| clamp case, `test_tuner_gradient` "the clamp's derivative is exact where it binds" | none | green, 16002 assertions |
+| | 10 `gradient()` does not silence the curve on a bound row | red: 2042 checks, the finite differences (1.33 relative) and every bound row's curve gradient |
+| | 11 `smooth()` adds the curve after the clamp | red: 1767 checks, a bound row's score moving with the curve (221.081 against 221.107) |
+| identity at forced weights, `build-forced` `test_eval_trace` "the trace reconstructs evaluate() exactly" | none | green: `exact_score()` is `evaluate()` on every position with the curve live |
+| | 13 the engine divides the curve by 4096 | red: 398 against 397 on `8/2k5/8/8/3B4/2K5/8/8 b` |
+| `truncation_scan` at forced weights, the corpus smoke's 8333 rows | none | every row's identity holds; worst 3.459, past 2.875 and under 3.875 (DEC-344 (5)) |
+| | 13 | refused at the first row it disagrees on |
+| `S122_screen.py start-check` | a held `ks_checks_mg[2]` at 3 | refused; passed with `--free ks_checks` |
+| | a curve checks input moved under `--free ks_curve.core` alone | refused; passed with `ks_curve.checks` freed too |
+| `S122_screen.py landing-check` (a scratch repository) | `ks_weak_eg` at 2; the curve's endgame constant at 44 | each refused; the landing passed, and passed by `--commit` past them |
+| `S122_screen.py headroom` | the curve's incidences at 400 (x 54045); a queen check at 500 (packed 46968) | each refused; the landing's 19968 and 45 passed |
+| `S122_screen.py only-family` | the linear five zeroed | refused; passed with `--allow-five`, P7's |
+| `S122_screen.py side-read` | a sample reading the other way, beyond its error | STOP; one agreeing passed |
+| `S122_screen.py audit-check`, `ties` | the 203-game smoke slice | refused, each by the rule's own clause (zero columns, the rank; the curve's support under 1000 games) |
+
+== each run's doctest tally
+clamp_p0: [doctest] test cases: 1 | 1 passed | 0 failed | 15 skipped [doctest] assertions: 16002 | 16002 passed | 0 failed | 
+clamp_p10: [doctest] test cases: 1 | 0 passed | 1 failed | 15 skipped [doctest] assertions: 16002 | 13960 passed | 2042 failed | 
+clamp_p11: [doctest] test cases: 1 | 0 passed | 1 failed | 15 skipped [doctest] assertions: 16002 | 14235 passed | 1767 failed | 
+forced_all: [doctest] test cases: 12 | 12 passed | 0 failed | 0 skipped [doctest] assertions: 1924972 | 1924972 passed | 0 failed | 
+forced_case_p0: [doctest] test cases: 1 | 1 passed | 0 failed | 11 skipped [doctest] assertions: 8871 | 8871 passed | 0 failed | 
+forced_identity_p0: [doctest] test cases: 1 | 1 passed | 0 failed | 11 skipped [doctest] assertions: 11785 | 11785 passed | 0 failed | 
+forced_identity_p13: [doctest] test cases: 1 | 0 passed | 1 failed | 11 skipped [doctest] assertions: 11785 | 10500 passed | 1285 failed | 
+mirror_p0: [doctest] test cases: 3 | 3 passed | 0 failed | 52 skipped [doctest] assertions: 2930952 | 2930952 passed | 0 failed | 
+mirror_p1: [doctest] test cases: 3 | 2 passed | 1 failed | 52 skipped [doctest] assertions: 1139039 | 1139038 passed | 1 failed | 
+mirror_p2: [doctest] test cases: 3 | 1 passed | 2 failed | 52 skipped [doctest] assertions: 721573 | 721571 passed | 2 failed | 
+mirror_p3: [doctest] test cases: 3 | 1 passed | 2 failed | 52 skipped [doctest] assertions: 718573 | 718571 passed | 2 failed | 
+mirror_p4: [doctest] test cases: 3 | 1 passed | 2 failed | 52 skipped [doctest] assertions: 716345 | 716343 passed | 2 failed | 
+mirror_p5: [doctest] test cases: 3 | 3 passed | 0 failed | 52 skipped [doctest] assertions: 2930952 | 2930952 passed | 0 failed | 
+mirror_p6: [doctest] test cases: 3 | 3 passed | 0 failed | 52 skipped [doctest] assertions: 2930952 | 2930952 passed | 0 failed | 
+scan_p0: 8333 rows scanned, 304 past 2.0, 0 past 3.9000, worst 3.459086
+scan_p13: the trace disagrees with evaluate(): 41 against 42: r3k2r/p2nbpp1/1q1ppn1p/8/4P3/1N4P1/PPP1QP1P/RNB2RK1 b kq - 2 12
+trace_p0: [doctest] test cases: 12 | 12 passed | 0 failed | 0 skipped [doctest] assertions: 1924972 | 1924972 passed | 0 failed | 
+trace_p7: [doctest] test cases: 12 | 10 passed | 2 failed | 0 skipped [doctest] assertions: 1924972 | 1923469 passed | 1503 failed | 
+trace_p8: [doctest] test cases: 12 | 11 passed | 1 failed | 0 skipped [doctest] assertions: 1924972 | 1923189 passed | 1783 failed | 
+trace_p9: [doctest] test cases: 12 | 11 passed | 1 failed | 0 skipped [doctest] assertions: 1924972 | 1923921 passed | 1051 failed | 
+walk_p0: [doctest] test cases: 3 | 3 passed | 0 failed | 21 skipped [doctest] assertions: 873615 | 873615 passed | 0 failed | 
+walk_p5: [doctest] test cases: 3 | 1 passed | 2 failed | 21 skipped [doctest] assertions: 873615 | 847966 passed | 25649 failed | 
+walk_p6: [doctest] test cases: 3 | 1 passed | 2 failed | 21 skipped [doctest] assertions: 873615 | 848191 passed | 25424 failed | 
+
+== the cost masks
+mask 1: 5482277 nodes, .text sha 6415091153c99035
+mask 2: 5482277 nodes, .text sha be9ffe1e69f94da9
+mask 4: 5482277 nodes, .text sha d3b0259c73c3df5c
+mask 8: 5482277 nodes, .text sha 69642ccb3dc7944d
+mask 16: 5482277 nodes, .text sha 11d187b6f27c0b20
+mask 31: 5482277 nodes, .text sha 02d70202555c8cb4
+zero: 5482277 nodes, .text sha 48179291caf4f881

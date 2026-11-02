@@ -1,0 +1,77 @@
+S122 phase 1, INV-6 against 1b2539a, 2026-11-02, worktree ../chesso-s122 at 1b2539a plus the staged landing.
+Reference binary: build/src/chesso built at 1b2539a before any edit, copied to .tuning/s122/phase1/ref/chesso_1b2539a,
+sha256 55165d2880d189701a6bf57a92f64bc630596bcc859050c26a28b9ba18da5af5.
+
+== chesso bench, reference
+5482277 nodes
+== chesso bench, landing (build)
+5482277 nodes
+
+== tools/search_bench.py depth 9, reference then landing (timings stripped)
+midgame 39080 nodes c3d5
+kiwipete 110485 nodes d5e6
+tactical 44098 nodes d7c8q
+midgame 39080 nodes c3d5
+kiwipete 110485 nodes d5e6
+tactical 44098 nodes d7c8q
+== depth 12, reference then landing
+midgame 219796 nodes c3d5
+kiwipete 307606 nodes e2a6
+tactical 256487 nodes d7c8q
+midgame 219796 nodes c3d5
+kiwipete 307606 nodes e2a6
+tactical 256487 nodes d7c8q
+
+== adocs/data/S122_objdiff.py: the parent's src/evaluation.cpp.o (git archive 1b2539a src, compiled with build/'s command) against the landing's
+  identical     14    14  capture_score(board_t const*, unsigned int)
+  identical    462   462  evaluate(board_t const*)
+  identical    477   477  evaluate(board_t const*, pawn_table_t*)
+  identical    456   456  evaluate_cheap(board_t const*)
+  differs       50    50  evaluate_expensive_terms(board_t const*, int*, int*, int*)
+  identical    488   488  evaluate_lazy(board_t const*, int, int, bool*)
+  identical    515   515  evaluate_lazy(board_t const*, int, int, bool*, pawn_table_t*)
+  identical   1126  1126  evaluate_pawns(board_t const*, int*, int (*) [5], int (*) [3], int (*) [7], unsigned long*, passer_family_t*, structure_family_t*)
+  identical    884   884  expensive_score(board_t const*, pawn_shelter_t*)
+  identical      6     6  game_phase(board_t const*)
+  differs     1097  1672  int evaluate_mobility_and_king_safety<true>(board_t const*, pawn_shelter_t*, int (*) [9], int*, int*, int*, threat_family_t*) [clone .isra.0]
+  new            -    24  king_danger_counts(board_t const*)
+  differs       23    23  king_safety_features(board_t const*, int (*) [9])
+  identical     23    23  passed_pawn_counts(board_t const*, int (*) [5])
+  identical     23    23  passed_pawn_sets(board_t const*, unsigned long*)
+  identical     23    23  passer_family_counts(board_t const*, passer_family_t*)
+  identical     23    23  pawn_structure_counts(board_t const*, int (*) [3])
+  identical     23    23  piece_placement_counts(board_t const*, int (*) [7])
+  identical    102   102  score_move(game_t const*, search_state_t const*, unsigned int, unsigned int, unsigned long, unsigned int)
+  identical     23    23  structure_family_counts(board_t const*, structure_family_t*)
+  differs       24    24  threat_family_counts(board_t const*, threat_family_t*)
+  identical    403   403  void pawn_pass<false>(unsigned long, unsigned long, pawn_entry_t*, int (*) [5], int (*) [3], unsigned long*, passer_family_t*, structure_family_t*) [clone .constprop.0]
+every function the search reaches is identical modulo padding
+
+== chesso bench, landing (build-tune)
+5482277 nodes
+
+== the comparison reads red on adocs/data/S122_cost_only.patch at mask 31 (adocs/data/S122_cost_masks.sh's object)
+  identical     14    14  capture_score(board_t const*, unsigned int)
+  differs      462   470  evaluate(board_t const*)
+  differs      477   488  evaluate(board_t const*, pawn_table_t*)
+  identical    456   456  evaluate_cheap(board_t const*)
+  differs       50    50  evaluate_expensive_terms(board_t const*, int*, int*, int*)
+  differs      488   494  evaluate_lazy(board_t const*, int, int, bool*)
+  differs      515   520  evaluate_lazy(board_t const*, int, int, bool*, pawn_table_t*)
+  identical   1126  1126  evaluate_pawns(board_t const*, int*, int (*) [5], int (*) [3], int (*) [7], unsigned long*, passer_family_t*, structure_family_t*)
+  gone         884     -  expensive_score(board_t const*, pawn_shelter_t*)
+  identical      6     6  game_phase(board_t const*)
+  new            -  1431  int evaluate_mobility_and_king_safety<false>(board_t const*, pawn_shelter_t*, int (*) [9], int*, int*, int*, threat_family_t*) [clone .constprop.0]
+  differs     1097  1762  int evaluate_mobility_and_king_safety<true>(board_t const*, pawn_shelter_t*, int (*) [9], int*, int*, int*, threat_family_t*) [clone .isra.0]
+  new            -    24  king_danger_counts(board_t const*)
+  differs       23    23  king_safety_features(board_t const*, int (*) [9])
+  identical     23    23  passed_pawn_counts(board_t const*, int (*) [5])
+  identical     23    23  passed_pawn_sets(board_t const*, unsigned long*)
+  identical     23    23  passer_family_counts(board_t const*, passer_family_t*)
+  identical     23    23  pawn_structure_counts(board_t const*, int (*) [3])
+  identical     23    23  piece_placement_counts(board_t const*, int (*) [7])
+  identical    102   102  score_move(game_t const*, search_state_t const*, unsigned int, unsigned int, unsigned long, unsigned int)
+  identical     23    23  structure_family_counts(board_t const*, structure_family_t*)
+  differs       24    24  threat_family_counts(board_t const*, threat_family_t*)
+  identical    403   403  void pawn_pass<false>(unsigned long, unsigned long, pawn_entry_t*, int (*) [5], int (*) [3], unsigned long*, passer_family_t*, structure_family_t*) [clone .constprop.0]
+NOT INV-6: a function the search reaches differs: evaluate(board_t const*); evaluate(board_t const*, pawn_table_t*); evaluate_lazy(board_t const*, int, int, bool*); evaluate_lazy(board_t const*, int, int, bool*, pawn_table_t*); expensive_score(board_t const*, pawn_shelter_t*); int evaluate_mobility_and_king_safety<false>(board_t const*, pawn_shelter_t*, int (*) [9], int*, int*, int*, threat_family_t*) [clone .constprop.0]

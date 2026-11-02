@@ -527,3 +527,410 @@ The coordinator's fast check (`.tuning/coord/S122/fastcheck/`, `an1` to `an7`) r
 - **The second bar's reading of mass.** Sigma(1 - sigma) at the unclamped score, 8.80 % on S083's rows and 8.56 % on the sample's at T = 0; at the score the clamp leaves, 9.41 % and 9.13 %. Both pass 10 %, by under 1.5 points, and phase 1's tool should say which it reads.
 
 **The ruling, DEC-344.** The corpus is 150000 games of head's self-play, generating as this is written, the filter applied offline. The parts: P0 the margin alone, then linear safe checks on empty targets, weak squares, defenders by square and seven storm cells, then the curve over what survives and only if it earns, then the wide zone and the linear five's retirement only if it does. T(x) = max(0, x)^2 / 2048, c seeded at 45, at most 50 new parameters, `PARAM_COUNT` 1121 -> 1171, at the seed rank 1100 and nullity 71, decided by the run. The margin passes at most 0.5 % of rows and at most 10 % of the graded set's gradient mass, at the fit's own weights. The research section's T, parts, seed, counts and share are what it proposed, and they stand there as that.
+
+## 2026-11-02: phase 1
+
+One Opus 5.5 subagent, coordinated; worktree `../chesso-s122`, branch `s122` on `1b2539a`. Every part DEC-344 (3) names
+landed at its seed, `No functional change`; the screen, the margin's fixed point, the side readings, the cost run and the
+SPRT pre-registered; nothing fitted on real data, timed or played, and no game generated. Every definition implemented from
+its description (DEC-221; src/evaluation.hpp states each); no engine's source was read, and no weight or constant came from
+one: the curve's 45 is floor(sqrt(2048)) and 2048 is DEC-344 (2)'s.
+
+### The design as built, DEC-344
+
+- **Four linear groups and one curve, all in king safety's pair, under the clamp.** `ks_checks[4]` (P1), `ks_weak[1]` (P2),
+  `ks_defenders[1]` (P3) and `ks_storm[7]` (P4) score a king's own count, White's less Black's, into `safety_sum`, the way the
+  shipped nine do; the storm rides in S118's slot beside the shelter, on the same miss, its score joining the shelter's
+  (`king_storm_features()`, `storm_score()`; the Debug freshness check reads both). The curve (P5) adds each king's
+  T(x) = max(0, x)^2 / 2048, truncating, to the pair's halves before its one taper, White's king's T taken off White's
+  score: no new division, inside the clamp. x is the twelve `ks_curve_input_t` inputs weighted, the constant's 1 first.
+  `EVAL_TRACE` per linear cell, `EVAL_TRACE_SIDE(TERM_KS_CURVE, king, input, count)` per non-zero curve input.
+- **The storm's distance 1 blocked maps to distance 1's cell** (DEC-344 (3)'s "stated mapping"): seven cells, d1, d2 to d4
+  free, d2 to d4 blocked. `4k3/8/8/8/8/7p/6KP/8 w` reads d1 1 and nothing else for White's king, the position in check
+  (`test_eval_model` "distance 1 blocked is read on the position that has it", and the hand case).
+- **Safe checks count empty targets only** (DEC-344 (8)): the census's reading 2 -- no man of K's but its king attacks the
+  target, and beside K another class of A's attacks it too. `king_danger_t::checks_any` keeps the reading without the
+  empty clause for `tools/margin_census`'s graded set, in the collecting instantiation alone; no term reads it.
+- **50 parameters, `PARAM_COUNT` 1121 -> 1171 (built: 1171)**: blocks `KSK_`, `KSW_`, `KSD_`, `KSS_`, `KSC_`, an end constant
+  and an `--only` group each, `KS_CURVE_END == PARAM_COUNT` asserted, no earlier index moved. The curve's four terms for
+  P5's free set: `ks_curve.core` (the constant, the attackers N B R Q, the incidences), `.checks`, `.weak`, `.defenders`.
+- **Liveness, S101's form.** Each linear group compiles out at zero; a count the curve weighs is computed when the curve
+  weighs it; the curve is live when any input but its constant is weighted, since the constant alone gives both kings one x
+  a half and so equal T. At the seed nothing is live and the search's instantiation is the parent's (INV-6 below).
+- **The packed bounds.** King safety's assert gains `ks_family_half()` (8, 13, 14, 27 check squares a type, 9 zone squares
+  twice, 3 storm pawns), and the curve's x gets its own: `ks_curve_reach()` under 46340, so x squared stays in an int.
+  `S122_screen.py headroom` repeats both for a fitted header.
+
+### The model moves with the engine
+
+- `tools/tuner_trace.hpp`: `group_t` gains `clamped`; `engine_model()` declares the curve (divisor 2048, sign -1, clamped,
+  `group_of_term(TERM_KS_CURVE) == 0`); a group's term has no feature (`feature_table()` skips it) and a White-minus-Black
+  entry for it is refused. `smooth()` adds a clamped group to stage two before the clamp; `gradient()` gives a clamped group
+  nothing on a bound row; `exact_parts()` carries the curve's integer finalizer at the king safety site, per king and half,
+  so `exact_score()` is `evaluate()` with the curve live. The synthetic group of `test_tuner_gradient` stays outside the
+  clamp, now group 1.
+- `tools/tuner.cpp`: the five arrays emitted; `--vector FILE`, the emitted vector one integer a line with K and the margin;
+  `--margin M` in the tune build, `LazyEvalMargin` set before the load so the identity, the smooth clamp and the gradient's
+  are at M (DEC-344 (4)), refused by the default build; every header says its margin.
+- `tools/feature_audit.cpp` audits per-side rows: where every king of every row shares one x a half -- the seed -- the
+  curve's columns are the integer sign x (White's count less Black's), the common slope dropped, and its 22 duplicates of
+  linear cells are dependencies by construction, "held by the freeze" or "null at the seed only" in the span; elsewhere
+  "not computed", as before. Its design check sums stage two by site, so S101's and S122's families are in it. The curve
+  gets a support block for the ties. `.tuning/verify_fit.py` reads 1171.
+- `tools/margin_census.cpp`, new: the census at a fit's own vector (below, and DEV_MANUAL.md "The clamp's census").
+- `tools/eval_spread_margins.hpp` gains 225, 275 and 350. `tools/eval_spread`'s identity is not repaired: it states in its
+  header, its help and DEV_MANUAL.md that it holds the collecting instantiation to the search's and nothing of the trace,
+  `truncation_scan` and the tuner's `load()` being the check of `exact_score()` (DEC-344 (5)).
+
+### The mirror test first, then the walk
+
+`test_evaluation` "evaluation: king safety family symmetry", over S101's `threat_mirror_population()`: each king's six sets
+(check targets by type, weak, defended), then every count cell by cell, the curve's twelve inputs among them; and the curve
+reads the family's own counts. **Green, 29846 positions; the rarest set and edge file held on 114, the rarest cell non-zero
+on 179; 2930952 assertions.** Run before the walk's comparison, but **not written before the scoring lines**, as
+S101's was: the counts, their zero-weight cells and the trace calls went in in one pass, and the mirror after them. It
+reads red on each one-colour plant below, so it can fail; what the order would have added is that it failed before a
+line scored, which at zero weights no score could show either way.
+
+`walked_counts::king_danger_features()` (tests/test_walked_counts.hpp), every ray followed to the first man, each attacker's
+zone squares by its own walk, the attack sets threat_family_features()'s: every set bit for bit and every cell per king,
+12075 positions of S101's population, the rarest cell non-zero on 95. 23 hand cases from the definitions, each as written
+and as its mirror, every storm cell reached by each king with each sign, and the clauses that stop a count -- a pawn's
+guard, a capture's target, a contact check with and without another class -- held to their arrays. They passed on first
+run; the plants are what say the code can fail.
+
+### INV-6
+
+`chesso bench` 5482277 in `build` and in `build-tune` (5482277 both); `tools/search_bench.py` against `1b2539a`'s binary
+(`.tuning/s122/phase1/ref/chesso_1b2539a`, sha256 55165d28...): depth 9 c3d5 39080 / d5e6 110485 / d7c8q 44098 and depth
+12 c3d5 219796 / e2a6 307606 / d7c8q 256487, node counts and best moves identical. Every function of `evaluation.cpp.o` the search reaches is identical once the padding is dropped (`adocs/data/S122_objdiff.py`, the parent's object from `git archive 1b2539a src` and build/'s command): `expensive_score()` 884 instructions, `evaluate()` 462 and 477, `evaluate_lazy()` 488 and 515, `evaluate_cheap()` 456; only the collecting instantiation (1097 to 1672) and its accessors differ, and `king_danger_counts()` is new. It reads red on the all-forced cost build, mask 31: `expensive_score()` no longer stands alone, and `evaluate()` and `evaluate_lazy()` differ. `adocs/data/S122_inv6.txt` has the streams.
+
+### Guards, each seen red on a plant
+
+In a scratch worktree of the landing, removed after (the patch and the script below rebuild it), one build whose plants a runtime switch picks
+(`S122_PLANT`), and a second at forced curve weights (`-DS122_FORCED`, the weights `test_eval_trace`'s forced case uses);
+`adocs/data/S122_phase1_plants.sh` runs them and `adocs/data/S122_phase1_guards.txt` has every run's tally:
+
+| guard | plant (adocs/data/S122_phase1_plants.patch) | read |
+|---|---|---|
+| mirror, `test_evaluation` "evaluation: king safety family symmetry" | none | green, 3 of 3 |
+| | 1 Black's storm walked the wrong way | red: `storm` |
+| | 2 Black's check guard ignores Black's pawns | red: `knight check targets`, then the counts |
+| | 3 Black's weak squares ignore Black's guard | red: `weak squares` |
+| | 4 Black's defended squares take its rooks | red: `defended squares` |
+| | 5 both colours' contact clause dropped | green, as it must be: a defect both colours share mirrors |
+| | 6 both colours' defenders read knights only | green, the same |
+| walk, `test_eval_model` "eval counts: S122's king safety family" | none | green, 3 of 3 |
+| | 5 | red: `checks_any` on a contact square |
+| | 6 | red: a defended set |
+| trace, `test_eval_trace`, the forced-weight case and "every coefficient is the count its index names" | none | green, 12 of 12 |
+| | 7 the trace's White knight-attackers curve input one too high | red: both cases; the seed's identity case green, blind as DEC-344 (5) says |
+| | 8 `exact_parts()` divides the curve by twice its divisor | red: the forced-weight case alone; the seed's identity case green |
+| | 9 `exact_parts()` takes Black's T with White's sign | red: the forced-weight case alone; the seed's identity case green |
+| clamp case, `test_tuner_gradient` "the clamp's derivative is exact where it binds" | none | green, 16002 assertions |
+| | 10 `gradient()` does not silence the curve on a bound row | red: 2042 checks, the finite differences (1.33 relative) and every bound row's curve gradient |
+| | 11 `smooth()` adds the curve after the clamp | red: 1767 checks, a bound row's score moving with the curve (221.081 against 221.107) |
+| identity at forced weights, `build-forced` `test_eval_trace` "the trace reconstructs evaluate() exactly" | none | green: `exact_score()` is `evaluate()` on every position with the curve live |
+| | 13 the engine divides the curve by 4096 | red: 398 against 397 on `8/2k5/8/8/3B4/2K5/8/8 b` |
+| `truncation_scan` at forced weights, the corpus smoke's 8333 rows | none | every row's identity holds; worst 3.459, past 2.875 and under 3.875 (DEC-344 (5)) |
+| | 13 | refused at the first row it disagrees on |
+| `S122_screen.py start-check` | a held `ks_checks_mg[2]` at 3 | refused; passed with `--free ks_checks` |
+| | a curve checks input moved under `--free ks_curve.core` alone | refused; passed with `ks_curve.checks` freed too |
+| `S122_screen.py landing-check` (a scratch repository) | `ks_weak_eg` at 2; the curve's endgame constant at 44 | each refused; the landing passed, and passed by `--commit` past them |
+| `S122_screen.py headroom` | the curve's incidences at 400 (x 54045); a queen check at 500 (packed 46968) | each refused; the landing's 19968 and 45 passed |
+| `S122_screen.py only-family` | the linear five zeroed | refused; passed with `--allow-five`, P7's |
+| `S122_screen.py side-read` | a sample reading the other way, beyond its error | STOP; one agreeing passed |
+| `S122_screen.py audit-check`, `ties` | the 203-game smoke slice | refused, each by the rule's own clause (zero columns, the rank; the curve's support under 1000 games) |
+
+**The scripts end to end, on the 203-game smoke slice, in a scratch clone with the landing committed** (`git clone
+--shared`, its own repository; `FIT_EPOCHS=200`, a smoke and no reading): `landing-check`, `locate`, `audit` (refused by
+the rule, as it must be on 8333 rows; its pass and empty ties then written by hand to go on), `margin` (`MARGIN 184` in one
+round), `p0`, `all` through P1 to P7 (each dropped, P5's fit on `ks_curve.core` with its census at start and end, P6 and
+P7 skipped), and `side` on a 20000-row slice of the 12000-game sample. It found one defect, fixed: a skipped P7 read its own
+unwritten reading for the candidate; `read P7` then printed `CANDIDATE none`. `adocs/data/S122_corpus.sh smoke` found three
+before it (a worktree's `.tuning`, a view of no rows passing `verify`, the K stage's free set), fixed.
+
+### The planted recoveries: the curve leaves its linear regime, slowly
+
+`test_tuner_gradient` "a planted vector comes back: king_safety", the four linear groups from zero at lr 1 and 6000 epochs:
+green. **The curve from its seed is not a fast case.** At the 6000 epochs the other families take, from the seed at lr 1,
+d 2048, the error to the planted labels fell about three orders and the middlegame half came within about a centipawn, but
+the endgame constant stood 15 from the plant at c 30 and 39 from the plant at c 0: a constant moves every king's x and is
+read only where the two kings' x differ, which in the endgame half these 2908 rows rarely put apart. Measured by
+`adocs/data/S122_curve_probe.cpp`, the same fit on the same rows (its output in `adocs/data/S122_preconditions.txt`),
+worst miss a half:
+
+| plant | 6000 | 12000 | 24000 | 28000 | 32000 | 40000 | 72000 | 80000 |
+|---|---|---|---|---|---|---|---|---|
+| c 30, mg / eg | 1.00 / 15.0 | 0.62 / 7.34 | 0.10 / 0.98 | 0.05 / 0.48 | 0.02 / 0.23 | 0.005 / 0.056 | | |
+| c 0, mg / eg | 2.36 / 38.8 | 2.62 / 31.8 | 1.48 / 10.5 | | 0.65 / 4.62 | 0.32 / 3.18 | 0.05 / 0.52 | 0.03 / 0.32 |
+| c 30 at lr 0.2, mg / eg | 1.83 / 24.3 | 0.78 / 22.4 | 1.13 / 18.8 | | | | | |
+
+So Adam at lr 1 does leave the linear regime from the seed, and recovers both plants, the second only by about 76000
+epochs, its slow inputs the endgame constant and then the knight checks' endgame half; lr 0.2, the synthetic group's step,
+is slower here, not faster. The case "a planted vector comes back: king_curve" holds the two at 32000 and 80000 epochs,
+budgets and not goldens, in an entry of its own under the `slow` label: it cannot meet S309's bar of 30 s at -j12 (265 s
+in Release under the corpus's load). **What this means for the screen is the coordinator's (below, "Open"): DEC-304's
+5000-epoch cap may stop P5's fits on the curve's slow direction.**
+
+### Coverage and the preconditions
+
+- No coverage rows owed: on the 106-row fixture every new parameter has a gradient (`gradient() is the derivative`), but
+  the curve's constant, whose gradient at the seed is zero but for rounding (-7.8e-23 and -1.3e-22), both kings' x being
+  the constant; the case asserts it under 1e-15 in its place, three orders below the floor every other parameter clears.
+- The gradient case's worst: 2.68e-7 at parameter 985, `passed_king_own_eg[0]`, S101's close's reading unmoved; the clamp
+  case 1.52e-7 at 141; the synthetic group 3.46e-7 at its fourth input, as `1b2539a`'s binary reads it (3.45506e-07 at 1124
+  there, 1174 here: the same input 50 parameters on).
+- `CLAMP_PUSH` +30 stands: at the seed the curve adds nothing to any row's stage two, so no row moves; the extended case
+  binds every row the curve reads, off the seed, and every curve parameter is heard unbound and silenced bound.
+- The fixture is clear of the clamp, unmoved.
+
+### Gates
+
+Both builds without a warning (`-Werror`). `ctest -L fast`, serial, under the corpus's load: **52 of 54 in each build,
+the two red the pawns' and the threats' plant families, Timeout at their 60 s clock**, as the brief foresaw; run without a
+clock in each build they pass (build-tune 108 s and 153 s, build 108 s and 161 s). `test_tuner_gradient_plants_king_safety`
+passed in 56.6 s and 55.3 s at that clock, so S309's 30 s at -j12 is unread and the coordinator's with the machine idle.
+`test_clang_format_script` needs `CLANG_FORMAT_MAJOR=22` in ctest's environment on this machine and passes with it.
+The slow entry, `test_tuner_gradient_plants_king_curve`: green in `build`, 265 s, 8274 assertions. `./clang-format.sh --check` clean
+(`CLANG_FORMAT_MAJOR=22`). `tools/plan_prose_check.py`, one mode per call, each exit 0 with this section in: `--touches`, `--params`, `--citations`, `--gate`, `--prose`, 0 flagged; `ctest -R test_plan` 5 of 5.
+Nothing in the fast suite fits the clamped curve end to end from its seed, and the engine's curve at live weights is
+checked per commit only through plant 13's scratch build: accepted (the coordinator, after the fast check), because the
+`slow` entry runs in `tools/gate_extra.sh` and `apply` runs `truncation_scan` and the identity test on the pasted tree.
+`chesso bench` 5482277 in both builds; `tools/search_bench.py` identical (INV-6, above). The tune build's tuner at
+`--margin 250` on the corpus smoke: the identity on all 8333 rows, the clamp binding on 5 of them against 26 at 184, the
+header and vector stamped 250; the default build refuses `--margin`. **Tier 2 (DEC-141) does not bind** by what the diff
+touches: no `make_move`, `unmake_move`, generator or search change, and no pruning, reduction or extension rule; under
+`src/` only `evaluation.cpp`, `evaluation.hpp` and `eval_trace.hpp`. `tools/gate_extra.sh` was not run. DEV_MANUAL.md
+updated (the margin's census, `eval_spread`'s coverage, the groups, terms, `--vector` and `--margin`, the gradient check's
+counts); MANUAL.md read and unchanged: no option, command or output of the engine moves.
+
+### Pre-registered
+
+The rules are the scripts' headers, written before any of them ran on real data; nothing below changes once
+`adocs/data/S122_corpus.sh filter` has run on the pool, and a change is a dated section here and a decision.
+
+- **The corpus**, `adocs/data/S122_corpus.sh`: S083's recipe on head's pool, every departure stated -- the band at 1000 on
+  column 3 applied offline (column 3 is the root search score datagen's `inside_band` tests, so the filter is the recipe's
+  row for row), the fixed set drawn from this pool under seed 20261102, 12000 games, all three views; every training game
+  at 46 qs rows; K on the new rows. A pool whose log lacks `S122-CORPUS-DONE` is refused: a top-up is S082's merge
+  (DEC-296), the coordinator's, and **a top-up takes a seed range that meets neither the corpus's [2026110203,
+  2026260203) nor the sample's [2026260203, 2026272203)** (DEC-345 (5)). Smoked on 203 games of the first sample's pool,
+  under 20000 rows a view.
+- **The screen**, `adocs/data/S122_screen.sh`, DEC-331's form at the screen's margin M: P0 the margin alone (a reading),
+  P1 to P4 linear, P5 the curve over its core and P1 to P3's survivors' counts, P6 and P7 only if P5 survives, each on a
+  variant tree (`adocs/data/S122_p6_wide_zone.patch`: the curve's attackers and incidences over the zone and its forward
+  rank, the linear five keeping the zone; `S122_screen.py zero-five`: the linear five at zero). Six fits a part, five
+  quarter samples; kept iff d > max(1.645 s, 2e-6), P7 iff d >= -m. The identity rule before any fit: rank 1100 of 1171,
+  nullity 71, the 32 dead pawn columns and the curve constant's two the only zero columns, 37 dependencies by construction
+  (S134's 7, S121's 8, the curve's 22), nothing beyond them. Ties at 1000 games for the linear four; a curve input half
+  under 1000 games stops. **Every fit at `FIT_EPOCHS` 20000, `--report 100 --patience 20` (DEC-345)**: each fit set's
+  directory names its cap, the cap a fit ran at is read from its header, and no pair or reuse crosses caps. **DEC-345's
+  escalation**: P5 or P6 dropped, or P7 failing, where a fit of its pair stopped on the cap, re-runs both sides of that
+  pair at 80000 and decides on the 80000 pair, both pairs recorded; a fit stopping on the cap at 80000 prints `STOP` for
+  the coordinator. A part pairs with its predecessor's decided fit at that fit's cap. **No re-seed rule** (DEC-345): every
+  group fit starts at the seed, where every side's x is the constant and positive; a curve part's x > 0 share at its
+  decided fit's end, by its tree's own census, is a reading. P6's curve bound is 15 x 12 = 180 for the incidences, the
+  zone and its forward rank being up to 12 squares, in the patch's `ks_curve_reach()` and `headroom --wide`. About 19 h
+  typical, up to 39 h more an escalation, about 110 h at worst (below): the coordinator's schedule.
+- **The margin**, `S122_screen.sh margin`, DEC-324's order as DEC-344 (4) rules it: one fit of every part under 184; it
+  passes there if at most 0.5 % of rows bind and the graded set's bound rows hold at most 10 % of its gradient mass at the
+  clamped score (`tools/margin_census`); otherwise the smallest multiple of 25 above 184 that passes, refit at it from the
+  same start by build-tune's tuner (`--margin`), read again, to a fixed point in at most three rounds, then `MARGIN-STOP`.
+  DEC-333 (6)'s 1.0 % reads at the candidate's M (`apply`).
+- **The side readings**, `S122_screen.sh side`, DEC-344 (1): (a) the candidate's free set fitted on S083's corpus less its
+  rows on the new set's positions, read on the new fixed set beside the candidate's own best -- deciding nothing, the
+  price of the corpus change for S126; (b) P0 (the shipped constants at 184 against them at M, beside d0), every part's
+  decided full fit and the candidate on the 12000-game sample less its rows on a position the corpus or the set holds, at
+  the sample's own K at M, each paired with the fit it was decided against by game, each by the census of the tree it was
+  fitted on (`margin_census --games`, a game a run of one id at a rising ply; `S122_screen.py side-read`, the jackknife
+  by game, the games and rows it paired printed): **STOP for the coordinator before any SPRT** when a part's sample d has
+  the other sign from its screen d and lies beyond 1.96 errors. `sample-prep` refuses a sample more than 1 % of whose
+  games sit over half on an excluded position, or more than 0.1 % of whose games (12 of 12000) repeat another's rows,
+  the count printed (DEC-345 (5): independent workers' openings transpose into one game about 4.7e-9 a pair, 0.34
+  expected in 12000 games, kept as independent draws; a worker seed two pools share repeats about 1000); the first
+  sample is refused by both
+  (below, "The sample is the corpus's own games"). **Side (b) reads a fresh sample (DEC-345 (5))**, `S122_screen.sh
+  sample`: the corpus's frozen datagen, its sha256 the corpus log's, `--leaf qs --games 12000 --nodes 100000 --threads 12
+  --seed 2026260203 --quiet-limit 30000`, split at |column 3| < 1000 into the inside file as `S122_census.sh`'s
+  `stage_sample` split the first; refused unless the corpus log ends `S122-CORPUS-DONE`, and if [seed, seed + games)
+  meets the corpus's range, read from that log's command line; `sample-prep`'s guard read at its end against the
+  prepared corpus and the set, so it is read before the screen. `side`'s default `SAMPLE` is its inside file.
+- **The cost**, `adocs/data/S122_cost.sh` with `adocs/data/S122_cost_only.patch`: S101's cost run with S122's masks (p1
+  to p5, 1 to 16, all 31, cand), INV-6 on every binary before any timing, 16 interleaved pairs of perf_counters and
+  hyperfine on `bench 16` and pos11, S122_cost.py read; it decides nothing and the verdict carries it. Instructions and
+  cycles are this script's; nps is the coordinator's on its binaries, the machine idle. Phase 1 built the patch at masks 1, 2, 4, 8, 16 and 31 (`adocs/data/S122_cost_masks.sh`: `evaluation.cpp` alone recompiled with the mask and linked with the landing's other objects): bench 5482277 at each, the six .text sections distinct from each other and from the landing's. No instruction was read.
+- **The SPRT**: one `{0, 5}` nElo at 8+0.08, Hash 16, `books/noob_3moves.epd`, concurrency 12, the survivors at M
+  against the landing (DEC-259 (b), DEC-344 (6)). The nElo formula's arithmetic (`adocs/testing_strategy.md` section
+  1.1, S101_sprt.sh's): **41861 games** expected with the truth at the interval's midpoint, 19.84 h at the 2110 games an
+  hour `.moltke.local.md` budgets; 25591 on a bound, 12.13 h. Cap 20950 rounds, 41900 games, 19.86 h; DEC-155's night
+  rule; watcher ceiling 40 h. **Abort rule**, S101's: a time-forfeit rate past 1.0 % on either side, a crash or a
+  disconnect, mains power lost, another load on the machine, a banner not the pinned one, or 40 h with neither bound;
+  nothing else stops it. An A/A of 1000 games first if fastchess, the book, the adjudication or the machine moved since
+  the last (DEC-143). The script is phase 2's: S101_sprt.sh's working-tree form, re-pinned to S122's arrays, its REF, its
+  `screened` commit and its mode, which phase 2's paste decides (DEC-334's form if a floor falls).
+- **On H0 or no verdict, DEC-344 (6)'s partition, in order, each stopping for the coordinator**: M alone at the shipped
+  constants, `{-5, 0}`, if M is not 184, whose answer says whether the rest run at M or refit at 184; then A = P1, B = P2
+  to P4, C = P5 to P7, survivors only, each `{0, 5}` against what has landed, each refit by `S122_screen.sh part NAME` at
+  M, or by `part NAME --margin 184` when M alone's answer says the rest refit at 184, and at no other margin. The margin
+  names the part's directory (`part_NAME_mM_eCAP`) and its K, the fit's headers say it, a fit at one margin is never
+  reused or pasted as another's, and `apply` pastes a part at its own margin and K, moving `src/search_params.hpp`'s row
+  only where the tree's differs. A part on a P6 or P7 tree builds its variant at the HEAD it runs at, in a directory of
+  that HEAD's (`variant_NAME_HEAD`), and never reads one built at another.
+  Leads on H0, none built: the check cells doubled by side to move; shelter inside x.
+- **Reserved to the owner, stopping before any commit (DEC-344 (9))**: `EXACT_FLOOR` under 157, `MATE_IN_THREE_FLOOR` under
+  11, a mate-carry ceiling rising by more than 2, a third recurrence on `test_tuner_gradient`'s bound (DEC-343), in DEC-334's
+  form: the SPRT plays the staged tree and the owner rules only on H1. At the landing both floors read their shipped values
+  in the fast suite (`test_mate_breadth`'s mined set at depth 10: 158 exact against `EXACT_FLOOR` 157; `test_engine`'s `MATE_IN_THREE_FLOOR` 11 green: neither moved, the search being the parent's).
+
+### 2026-11-02: the fast check's eight findings, fixed, and DEC-345
+
+The coordinator's fast check found no defect in `src/`, the tuner model or the corpus preparation, and eight in the screen
+scripts; each was confirmed here before its fix, and each fix seen to work on a probe or the smoke (scratch under
+`.tuning/s122/phase1/probe_f1`, `probe_fix`, `smoke_clone`, `screen_smoke2` to `screen_smoke4`, `sample_smoke`). DEC-345's rulings are in the scripts.
+
+| finding | confirmed | the fix | seen |
+|---|---|---|---|
+| 1 side (b)'s pairing keyed games by id, and the sample's two pools both start at 0 | yes: the sample is 12000 runs of an id over 9000 ids; the delivered `side-read` reads the coordinator's probe as 2 games, 20 rows. **Not confirmed: "the sample's K split merges the colliding games too"**: the tuner's split finds a game where the ply falls, and on the sample that is 12000 games, the id runs' count | `margin_census --games` writes `index game rows sse`, a game a run of one id at a rising ply, and prints the games and rows; `side-read` pairs line by line, refusing two files whose ids or rows differ, and prints what it paired | a two-pool slice of 776 rows: 12 games, 776 rows, where keying by id keeps 10; a cut file and the delivered three-column form refused |
+| 2 side (b) read P6 with the landing's census | yes: the delivered `S122_screen.sh` lines 717 and 729 | each decided fit is read by the census of the tree its `tree.txt` names, the variant built first; `side/censuses.txt` records which binary read which fit | a P6 reading written by hand on a copy of the smoke: its fit read by `variant_p6`'s census (sha256 3ee67c8c...), built from the patch at `most[5]` 180, its identity holding on the 20033 rows; P1 to P5's by the landing's (de185135...) |
+| 3 the x > 0 re-seed rule cannot fire | yes: the delivered smoke's start census read 100 %, every side's x being the constant at the seed | DEC-345: the rule is gone; a curve part's end share, by its tree's census, is printed as a reading | the smoke's P5 reading: `x > 0 at the fit's end, a reading: 100.00 % mg, 100.00 % eg of kings`, no rule |
+| 4 bisection part C held P1 to P3's curve terms at zero | yes: with P1, P3 and P5 kept the delivered `part C` frees `ks_curve.core` alone | a part holding P5 frees the curve terms of every P1 to P3 survivor, the model the screen kept | the same records: `ks_curve.core,ks_curve.checks,ks_curve.defenders` |
+| 5 `part` wrote no `tree.txt`, so `apply TREE FIT` read the landing | yes: the delivered line 827 read a missing `tree.txt` as `landing` | `part` writes `tree.txt`, `groups.txt` and `cap.txt`; `apply` refuses a fit with none, or whose tree is not the one its part or candidate line names | a copy of the smoke with P1 kept: `part A` wrote its tree, `landing`, beside the fit; `apply` passed the tree check, refused it at `p6` and without `tree.txt`, and refused a fit outside `bisect/` |
+| 6 fits at two caps could pair or be reused, and `M.txt` named no cap | yes: `fit_one` reused any log with a `best:` line, and `read` labelled the stop from the environment | every fit set's directory is `NAME_eCAP`; a pair, a reuse or a margin at another cap than its header's `// run N epochs max` is refused; `M.txt` is `MARGIN M epochs E` | a copy of the smoke: a quarter's header at another cap read unreadable, and `screen P1` refused to reuse it; `read` and `side` at `FIT_EPOCHS` 300 refused the margin found at 200 |
+| 7 P0 had no sample reading | yes | P0, the shipped constants at 184 against them at M, by the landing's census, beside d0 | the smoke's first side line: P0 at 184 against M (184), 236 games, 20033 rows |
+| 8 P6's curve bound was 25 % short | yes: `most[5]` is 15 x 9 = 135, and the zone with its forward rank is up to 12 squares | the patch moves `ks_curve_reach()` to 180 and its comment with it; `headroom --wide`, which `read` and `apply` use on a P6 tree and `part` names | the curve's incidences at 300: x 40545 passes the landing's bound and the narrow `headroom`, 54045 is refused by `--wide`, and the patched tree does not compile; the patched tree at its seed compiles in both builds |
+
+DEC-345's rulings as applied: `FIT_EPOCHS` 20000 in both scripts, every fit, `--report 100 --patience 20` unchanged; the
+escalation (Pre-registered, above), both pairs kept in their own directories and read into the part's reading; P6's mask
+as built; the curve's plants under `slow`, the mirror test in the walk's pass and `S122_sprt.sh` left to phase 2 stand.
+
+**The scripts end to end again on the 203-game slice**, a scratch clone with the landing committed (`FIT_EPOCHS=200
+ESCALATE_EPOCHS=4000`, both overridable for a smoke and nothing else; a smoke and no reading): `landing-check`, `locate`,
+`audit` (refused by the rule on 8333 rows, as before; its pass forged by hand to go on), `margin` (`MARGIN 184 epochs
+200`), `p0`, `all`: P1 to P4 dropped, every fit on the 200 cap; P5 dropped with its pair on the cap, so `ESCALATE 4000`,
+its six fits refitted at 4000 (it has no predecessor), every one then stopping on patience, decided on that pair and
+dropped, `PART-CAP 4000`; P6 and P7 skipped, `CANDIDATE none`. `side` on 236 games of the sample's second pool, ids from
+3000, which no game of the smoke corpus's pool repeats: `sample-prep` passed it, and P0 and P1 to P5 each paired 236
+games and 20033 rows. It found one defect, fixed: `part` ran `$base/bin/tuner`, frozen only when its audit ran in the
+same call, so a part whose audit had passed before and whose `bin` was gone could not run; it now freezes its tools itself.
+
+**The sample is the corpus's own games** (found here, while probing finding 1). datagen seeds worker w from `seed + w`
+(`tools/datagen.cpp` `play_games()`, `std::mt19937_64 rng(opts.seed + index)`, `index` the worker), and worker w plays
+games w, w + T, w + 2T and so on from that one stream (its `game_id = kept * opts.threads + index`). The sample's pools were seeds
+2026110201 (3000 games) and 2026110202 (9000), and the corpus is 2026110203, all at 12 threads: the corpus's worker w is
+the second pool's worker w + 1 and the first pool's w + 2, so corpus game g is the second pool's game g + 1 (g mod 12 up
+to 10) and the first pool's g + 2 (g mod 12 up to 9). Read, not assumed: corpus game 9 and the first pool's game 11 hold
+the same 72 rows. Over the whole sample: **2750 of the first pool's games repeat the second pool's game one lower, row
+for row -- every game of its workers 1 to 11, 11 x 250, exactly -- and none of its worker 0's 250**; and against corpus
+games 0 to 9099 as generated so far, **10750 of the sample's 12000 games sit over half on a position those games hold**,
+10 x 250 + 11 x 750, exactly the games of the workers the corpus repeats; 108212 of its 1029320 rows sit on none. So side
+(b) on it would read about 1250 games and count 2750 twice, and the research pass's 12000-game reading counted 2750 games
+twice (DEC-345's context). Every predicted repeat holds row for row: datagen is reproducible per seed and worker, a
+game's table and correction reset (`play_games()`'s `tt_reset` and `correction_reset`) and a search's state built anew
+(`run_search()`'s `search_state_t`). `sample-prep` now
+refuses it (over 1 % of games over half excluded; over 0.1 % repeated). **DEC-345 (5)**: side (b) kept, on a fresh sample
+from seed 2026260203 (Pre-registered, above), about 75 min of the machine by the second pool's 9000 games in 55 min.
+Reproducible in content and not in order: the corpus's frozen datagen at seed 2026260203, 24 games, twice, wrote the same
+2382 rows sorted, in another game order, the workers finishing in another order (`play_games()`'s `output_lock`).
+
+**The sample stage, smoked on scratch copies only** (`.tuning/s122/phase1/sample_smoke`; `SAMPLE_GAMES=24`, overridable
+for a smoke and nothing else; the corpus untouched and only its datagen copied): refused with no prepared record, on the
+real corpus log (it does not end `S122-CORPUS-DONE`), on a log whose seeds [2026260100, 2026261100) the sample's meet, on
+a datagen whose sha256 is not the log's, and on a run that did not finish. On a copy of the log ending `S122-CORPUS-DONE`
+with the prepared smoke corpus: 24 games, 2382 rows, 2127 inside and 255 past, the guard passed (24 games, 0 rows
+excluded, 0 repeated), `S122-SAMPLE-DONE`; run again, `sampled before` and the same. A forged sample, the smoke corpus
+itself, was refused by the guard: 183 of 183 games over half excluded, `S122-SAMPLE-FAILED`.
+
+**The second fast check's three findings**, each confirmed in the code before its fix, each fix seen on a scratch copy
+(`.tuning/s122/phase1/probe_fc2`, `screen_smoke5`, `screen_smoke6`; the corpus only read):
+
+- **`sample-prep` refused any repeated game, and independent workers repeat games**: their 8 random opening plies
+  transpose. The checker found 7 cross-worker pairs in the corpus's first 54645 games, about 4.7e-9 a pair, 0.34 expected
+  in 12000 games; read here, corpus games 9582 and 11437, workers 6 and 1, hold the same 108 positions row for row. Now,
+  DEC-345 (5), refused only past 0.1 % of the sample's games (12 of 12000), the count printed, the refusal naming a
+  shared worker seed and not "seed ranges" alone. Seen: 9250 games of the first sample with no twin among them (its
+  second pool and its first pool's worker 0) and 9 twins added passed; 10 added, past 0.1 % of 9260, refused; the first
+  sample's 2750 refused.
+- **`part` always fitted at `M.txt`'s margin**, so DEC-344 (6)'s refit at 184 would have run at M. Now `part NAME
+  --margin 184`, 184 or M and nothing else; the margin names the directory (`part_NAME_mM_eCAP`), the K
+  (`k/full_mM.k`), a `margin.txt` and the headers; `fit_one` refuses a reuse at another margin than its header's;
+  `apply` takes the part's margin from `margin.txt`, refuses a header or a fit name that disagrees, pastes with that
+  margin's K and moves `src/search_params.hpp`'s row from the tree's own value. Seen, `M.txt` forged to 250: `part A`
+  and `part A --margin 184` in two directories, headers 250 and 184, K 0.8305 and 0.8306; `--margin 300` refused; the
+  184 fit put in the 250 directory refused by `part` and by `apply`; a `margin.txt` changed refused by `apply`; in a
+  scratch tree `apply` moved the row 184 -> 250 for the part at M and left 184 for the refit, each stopped at the build.
+- **A variant belonged to no HEAD**, so `part C` on a P6 or P7 tree was refused once A or B landed. Now
+  `variant_NAME_HEAD`, `census_for` naming the same, the stamp check kept. Seen, the clone's HEAD moved by an empty
+  commit: the delivered `variant()` refused `part C` (built at 36cfb08, not d4d3cfb); the fix built `variant_p6_d4d3cfb`
+  (its tree at `most[5]` 180) beside the screen's `variant_p6_36cfb08`, left that one unread, and fitted `part C`, tree
+  p6, margin 184. Each variant is a git worktree, removed with the step's others at its close.
+
+**Machine hours at 20000**, inferred, nothing timed: S101's part, six fits or 2.25 full-corpus fits, ran 0.58 s an epoch
+(48.6 min at its 5000 cap) on 6226944 rows of 37.37 trace entries; S122's corpus is about 6.9 M rows (x 1.11) and the
+family adds about 13 entries a row (x 1.35, its cost unmeasured): about 0.87 s a part-epoch. A linear part at S101's
+patience, about 2500 epochs: about 36 min. A part on the 20000 cap: about 4 h 50 m. A margin round, one full fit on the
+cap: about 2 h 10 m. **Typical** -- one margin round, P1 to P4 at patience, P5 to P7 on the cap, no escalation: **about
+19 h**. An escalation adds both sides at 80000, about 19 h 30 m each, a side fitted before reused: **up to 39 h**.
+**Worst** -- three margin rounds, every part on the cap, P5 escalated and kept and P6 and P7 then at 80000: **about 110
+h**. `side` about 2 h; `part` up to 2 h 10 m; `sample` about 75 min of datagen and minutes of guard.
+
+### Open, and what phase 2 moves
+
+- The side reading's sample is ruled (DEC-345 (5)): a fresh one, `S122_screen.sh sample`, generated once the corpus's log
+  ends `S122-CORPUS-DONE` and its preparation is recorded, before `screen all`, so `sample-prep`'s guard is read before the
+  night is spent (Commands 4).
+- The curve's epoch budget is ruled (DEC-345: 20000, the escalation to 80000), and so is P6's mask (the curve's attacker
+  and incidence inputs over the zone and its forward rank; checks, weak squares and defenders keep the zone). With P6 in a
+  candidate, `test_evaluation` "the curve reads the family's own counts" and the walk of the curve's two inputs follow the
+  patch at phase 2.
+- `S122_sprt.sh` is owed by phase 2, as above.
+- The slow plant entry's runtime, and the fast families' at -j12, were read under the corpus's load only: S309's 30 s is
+  the coordinator's to read with the machine idle (`ctest -L fast -j12`, then `ctest -L slow -R king_curve`).
+- Goldens that move at phase 2 if P5 or M moves them, each by its script (S101's table is the list): the anchors
+  (`S192_anchors.py`), `truncation_positions` and both truncation cases (`truncation_scan --min 2.8` at the candidate,
+  `S083_truncation_pick.py`; the bound goes 3 x 23/24 = 2.875 to 3.875 only if P5 survives, its two per-side divisions
+  adding under 1, and the cases' comments with it), the coverage blocks (`S101_coverage_rows.cpp`'s rule), the fixture's
+  clear-of-the-clamp reading and `CLAMP_PUSH` (`S083_tuner_preconditions.cpp clamp`), the gauge walk and `apart`, the
+  gradient case's worst (DEC-316's rows if it passes 1e-6), both floors (`S083_floor_sweep`'s mining, DEC-334's form), the
+  node budget, first-mate and `DRIVE_DEPTH`, `capture_mates`, `mate_probcut_hides`, `LATE_CAPTURE_*`, the aborted-line
+  cell, `ALPHA`, `short_line_ceiling`, S170's budgets; if M moves, `src/search_params.hpp`'s margin row (`S122_screen.sh
+  apply` writes it), `tests/test_eval_spread.cpp`'s shipped-margin cases and `adocs/specs.md`'s two rows.
+
+### Commands for the coordinator, in order
+
+Run from the main checkout (`/home/max/ws/chesso`) unless a step says otherwise; every stage prints its terminal
+marker last, so each goes detached under a four-exit watcher (WATCHERS). **No commit while a screen, the margin or `side`
+runs** (a commit mid-run voids it: the stages freeze their tools at HEAD).
+
+1. Commit phase 1 (`No functional change`, bench 5482277); rebuild `build/` and `build-tune/` at the commit in the main
+   checkout (`cmake --build build -j12 && cmake --build build-tune -j12`). `adocs/data/S122_screen.sh landing-check`.
+   Read S309's bar with the machine idle: `ctest --test-dir build -L fast -j12`, and once
+   `ctest --test-dir build -R plants_king_curve` (slow: 265 s under the corpus's load).
+2. Nothing waits on a ruling: the epoch budget, P6's mask and the sample are DEC-345's, in the scripts. Steps 3 to 6 run in
+   this order and one at a time.
+3. When `.tuning/s122/corpus/generate.log` ends `S122-CORPUS-DONE`:
+   `nohup adocs/data/S122_corpus.sh all > .tuning/s122_corpus.console 2>&1 &`, about 30 min, ceiling 2 h,
+   `S122-CORPUS-ALL-DONE|FAILED`. A pool that did not finish is refused: S082's merge first (DEC-296), on a seed range
+   meeting neither the corpus's nor the sample's.
+4. `nohup adocs/data/S122_screen.sh sample > .tuning/s122_sample.console 2>&1 &`: 12000 games, about 75 min, then
+   `sample-prep`'s guard against the prepared corpus, minutes; ceiling 3 h, `S122-SAMPLE-DONE|FAILED`. A refusal by the
+   guard is the coordinator's before step 5.
+5. `nohup adocs/data/S122_screen.sh all > .tuning/s122_screen_all.console 2>&1 &` -- locate, audit (about 2 min), the
+   margin's one to three rounds (about 2 h 10 m each on the cap), P0, P1 to P7 (P6 and P7 only if P5 survives, each with
+   a variant build of about 10 min), an escalated part's 80000 pair inside its `screen`: about 19 h typical, up to 39 h
+   more an escalation, about 110 h at worst (inferred, "Machine hours" below); ceiling 2 x the figure the run is planned
+   at, or `screen PART` one at a time, each its own; `S122-ALL-DONE|FAILED`. `MARGIN-STOP`, an identity refusal or a
+   `STOP` stops for the coordinator.
+6. `nohup adocs/data/S122_screen.sh side > .tuning/s122_side.console 2>&1 &`, about 2 h, ceiling 4 h,
+   `S122-SIDE-DONE|FAILED`, on the sample step 4 wrote; a `STOP` line is the coordinator's before any SPRT.
+7. `CAND_SHA=<the landing> PARENT_SHA=1b2539a adocs/data/S122_cost.sh check`, then `run` with the machine idle: about
+   1 h 40 m, ceiling 3 h 30 m, `S122-COST-DONE|FAILED`. Any time after step 1, never beside steps 3 to 6 or the corpus.
+   Then nps on its `zero` and `all` binaries, the coordinator's.
+8. `adocs/data/S122_screen.sh apply <a clean worktree at HEAD>`, about 15 min: the paste, the margin into
+   `src/search_params.hpp` if it moved, both builds, bench and both fast suites (their reds recorded), the census's clamp
+   at M (over 1.0 % prints STOP) and a fresh `truncation_scan`. Then phase 2 (an agent): every golden the paste moves, each
+   by its script; `EXACT_FLOOR` under 157 or `MATE_IN_THREE_FLOOR` under 11 stops for the owner; `S122_sprt.sh`.
+9. `CAND_SHA=<the landing> PARENT_SHA=1b2539a ROWS=cand CAND_MASK=<the survivors' bits> OUT=.tuning/s122/cost_cand
+   adocs/data/S122_cost.sh check`, then `run`, about 25 min.
+10. The one `{0, 5}` SPRT at night (phase 2's script): up to 41900 games, 19.86 h; ceiling 40 h; on H0 or no verdict,
+   DEC-344 (6)'s partition, `S122_screen.sh part A|B|C` for each refit.

@@ -405,18 +405,90 @@ struct design_row_t
 };
 
 
+// S122: a nonlinear group's columns, where they can be integers. A group's
+// derivative in input i is sign * (T'(x_W) n_W,i - T'(x_B) n_B,i), each
+// side's slope at its own x, so it is linear in the counts only where every
+// side of every row sits at one x a half -- S122's curve at its seed, where x
+// is the constant on every side. There each half's column is that one slope
+// times the integer sign * (n_W,i - n_B,i), and a non-zero factor common to a
+// column changes no rank and no dependency, so the design takes the integer;
+// a slope of zero leaves the column zero. Anywhere else the derivative moves
+// row by row with the fit and this design has no exact column for it.
+struct group_slopes_t
+{
+  bool shared = false;            // every side of every row at one x a half
+  bool live[2] = {false, false};  // that x positive, mg and eg
+  double x[2] = {0.0, 0.0};
+};
+
+group_slopes_t group_slopes(const dataset_t& data, const double* params)
+{
+  group_slopes_t out;
+  const tuner_trace::model_t& model = tuner_trace::engine_model();
+
+  if (model.groups.empty()) { return out; }
+
+  bool first = true;
+  out.shared = true;
+
+  for (size_t g = 0; g < model.groups.size() && out.shared; ++g) {
+    for (size_t row = 0; row < data.size(); ++row) {
+      const tuner_trace::group_sums_t x =
+          tuner_trace::group_sums(model.groups[g], g, data, row, params);
+
+      for (int side = 0; side < 2; ++side) {
+        if (first) {
+          out.x[0] = x.mg[side];
+          out.x[1] = x.eg[side];
+          first = false;
+        }
+
+        if (x.mg[side] != out.x[0] || x.eg[side] != out.x[1]) {
+          out.shared = false;
+          return out;
+        }
+      }
+    }
+  }
+
+  out.live[0] = out.x[0] > 0.0;
+  out.live[1] = out.x[1] > 0.0;
+  return out;
+}
+
+
 class design_builder_t
 {
 public:
   design_builder_t() : dense_(PARAM_COUNT, 0), marked_(PARAM_COUNT, 0) {}
 
-  void build(const dataset_t& data, size_t row, design_row_t* out)
+  void build(const dataset_t& data,
+             size_t row,
+             design_row_t* out,
+             const group_slopes_t& slopes = group_slopes_t{})
   {
     const std::vector<tuner_trace::feature_t>& features =
         tuner_trace::feature_table().features;
 
     const int64_t mg = data.phase[row];
     const int64_t eg = GAME_PHASE_MAX - mg;
+
+    // The groups' integer columns, at the slope every side shares.
+    if (slopes.shared) {
+      const tuner_trace::model_t& model = tuner_trace::engine_model();
+
+      for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1];
+           ++j) {
+        const tuner_trace::side_entry_t e = data.side_entries[j];
+        const tuner_trace::group_t& group = model.groups[e.group];
+        const int64_t sign =
+            static_cast<int64_t>(group.sign) * ((e.side == 0) ? 1 : -1);
+        const std::pair<uint32_t, uint32_t>& in = group.inputs[e.input];
+
+        if (slopes.live[0]) { add(in.first, sign * e.coef * mg); }
+        if (slopes.live[1]) { add(in.second, sign * e.coef * eg); }
+      }
+    }
 
     // Accumulated rather than appended, as before S276, although the trace
     // has already summed each feature once: two features never share a
@@ -588,6 +660,16 @@ std::string column_name(size_t i)
        tuner_layout::THREAT_KING_COUNT},
       {"threat_push", tuner_layout::TPU_MG_BASE, tuner_layout::TPU_EG_BASE,
        tuner_layout::THREAT_PUSH_COUNT},
+      {"ks_checks", tuner_layout::KSK_MG_BASE, tuner_layout::KSK_EG_BASE,
+       tuner_layout::KS_CHECKS_COUNT},
+      {"ks_weak", tuner_layout::KSW_MG_BASE, tuner_layout::KSW_EG_BASE,
+       tuner_layout::KS_WEAK_COUNT},
+      {"ks_defenders", tuner_layout::KSD_MG_BASE, tuner_layout::KSD_EG_BASE,
+       tuner_layout::KS_DEFENDERS_COUNT},
+      {"ks_storm", tuner_layout::KSS_MG_BASE, tuner_layout::KSS_EG_BASE,
+       tuner_layout::KS_STORM_COUNT},
+      {"ks_curve", tuner_layout::KSC_MG_BASE, tuner_layout::KSC_EG_BASE,
+       tuner_layout::KS_CURVE_COUNT},
   };
 
   for (const family_block_t& f : family) {
@@ -816,16 +898,31 @@ void report_identities(const dataset_t& data,
                        const std::vector<uint8_t>& mask,
                        const std::string& free_name)
 {
-  // A nonlinear group's per-side entries have no column in a linear design.
-  // load() refuses them while no group is declared (tools/tuner_trace.hpp,
-  // group_of_term()), so this is the day one is: the rank of the linear part
-  // alone would be printed as the rank of the whole.
-  if (!data.side_entries.empty()) {
+  std::vector<double> params(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+
+  // A nonlinear group's per-side entries have a column in a linear design
+  // only where every side shares one slope (group_slopes() above): S122's
+  // curve at its seed. Anywhere else the rank of the linear part alone would
+  // be printed as the rank of the whole, so it is not computed.
+  const group_slopes_t slopes = group_slopes(data, params.data());
+
+  if (!data.side_entries.empty() && !slopes.shared) {
     printf(
-        "identities: not computed: the trace carries %zu per-side entries, "
-        "which a linear design has no column for\n",
+        "identities: not computed: the trace carries %zu per-side entries "
+        "and their sides do not share one x at these weights, so the "
+        "group's derivative has no integer column\n",
         data.side_entries.size());
     return;
+  }
+
+  if (!data.side_entries.empty()) {
+    printf(
+        "identities: the curve's columns at its shared x, mg %.0f and eg "
+        "%.0f on every side of every row: each its integer sign x (White's "
+        "count less Black's), the slope 2x/divisor a common factor; a column "
+        "at x <= 0 is zero\n",
+        slopes.x[0], slopes.x[1]);
   }
 
   const unsigned threads = std::max(1u, std::thread::hardware_concurrency());
@@ -836,10 +933,28 @@ void report_identities(const dataset_t& data,
   std::vector<size_t> compared(threads, 0);
   std::vector<std::thread> workers;
 
-  std::vector<double> params(PARAM_COUNT, 0.0);
-  tuner_layout::starting_params(params.data());
-
   const size_t stride = (data.size() > sample) ? data.size() / sample : 1;
+
+  // The parameters a clamped site's features reach, so the design check
+  // below skips the rows the clamp binds on whatever block a term sits in.
+  std::vector<uint8_t> clamped_param(PARAM_COUNT, 0);
+  for (const tuner_trace::feature_t& f :
+       tuner_trace::feature_table().features) {
+    if (tuner_trace::clamped_site(f.site)) {
+      clamped_param[f.mg] = 1;
+      clamped_param[f.eg] = 1;
+    }
+  }
+
+  // And the groups' own, which the design check leaves out of its sum: at a
+  // shared x both sides' T are equal and the group scores nothing.
+  std::vector<uint8_t> group_param(PARAM_COUNT, 0);
+  for (const tuner_trace::group_t& group : tuner_trace::engine_model().groups) {
+    for (const auto& [mg_param, eg_param] : group.inputs) {
+      group_param[mg_param] = 1;
+      group_param[eg_param] = 1;
+    }
+  }
 
   for (unsigned t = 0; t < threads; ++t) {
     workers.emplace_back([&, t]() {
@@ -849,7 +964,7 @@ void report_identities(const dataset_t& data,
       design_row_t x;
 
       for (size_t row = t; row < data.size(); row += threads) {
-        builder.build(data, row, &x);
+        builder.build(data, row, &x, slopes);
 
         const size_t n = x.index.size();
         for (size_t a = 0; a < n; ++a) {
@@ -869,12 +984,12 @@ void report_identities(const dataset_t& data,
         double total = 0.0;
         double stage_two = 0.0;
         for (size_t a = 0; a < n; ++a) {
+          if (group_param[x.index[a]]) { continue; }
+
           const double term = static_cast<double>(x.value[a]) *
                               params[x.index[a]] / GAME_PHASE_MAX;
           total += term;
-          if (x.index[a] >= MOB_MG_BASE && x.index[a] < PP_MG_BASE) {
-            stage_two += term;
-          }
+          if (clamped_param[x.index[a]]) { stage_two += term; }
         }
 
         if (std::fabs(stage_two) >= LAZY_EVAL_MARGIN) { continue; }
@@ -1044,6 +1159,58 @@ void report_identities(const dataset_t& data,
       }
 
       known.push_back(k);
+    }
+  }
+
+  // S122's: at the shared x each of the curve's inputs but the constant is a
+  // count some linear cell also carries as White's less Black's, and the
+  // curve's column is the group's sign, -1, times that cell's, so the two
+  // columns summed are zero on every row. Null only at the shared x: once a
+  // fit moves the sides apart the curve's column is each side's slope times
+  // its own count and the pair is two directions. The constant's columns are
+  // zero there, and among the zero columns above.
+  if (slopes.shared && !data.side_entries.empty()) {
+    const size_t linear[KS_CURVE_INPUTS] = {PARAM_COUNT,
+                                            KS_MG_BASE + KS_KNIGHT_ATTACKERS,
+                                            KS_MG_BASE + KS_BISHOP_ATTACKERS,
+                                            KS_MG_BASE + KS_ROOK_ATTACKERS,
+                                            KS_MG_BASE + KS_QUEEN_ATTACKERS,
+                                            KS_MG_BASE + KS_ZONE_ATTACKS,
+                                            tuner_layout::KSK_MG_BASE + 0,
+                                            tuner_layout::KSK_MG_BASE + 1,
+                                            tuner_layout::KSK_MG_BASE + 2,
+                                            tuner_layout::KSK_MG_BASE + 3,
+                                            tuner_layout::KSW_MG_BASE,
+                                            tuner_layout::KSD_MG_BASE};
+    // The same cell's endgame half sits its block's width further on.
+    const size_t width[KS_CURVE_INPUTS] = {0,
+                                           KING_SAFETY_COUNT,
+                                           KING_SAFETY_COUNT,
+                                           KING_SAFETY_COUNT,
+                                           KING_SAFETY_COUNT,
+                                           KING_SAFETY_COUNT,
+                                           tuner_layout::KS_CHECKS_COUNT,
+                                           tuner_layout::KS_CHECKS_COUNT,
+                                           tuner_layout::KS_CHECKS_COUNT,
+                                           tuner_layout::KS_CHECKS_COUNT,
+                                           tuner_layout::KS_WEAK_COUNT,
+                                           tuner_layout::KS_DEFENDERS_COUNT};
+
+    for (size_t i = 1; i < KS_CURVE_INPUTS; ++i) {
+      for (const bool mg : {true, false}) {
+        const size_t curve =
+            (mg ? tuner_layout::KSC_MG_BASE : tuner_layout::KSC_EG_BASE) + i;
+        const size_t cell = linear[i] + (mg ? 0 : width[i]);
+
+        if (dropped[curve] || dropped[cell]) { continue; }
+
+        known_t k;
+        k.what = column_name(curve) + " + " + column_name(cell) +
+                 " = 0 at the curve's shared x (S122)";
+        k.vector = {{curve, 1}, {cell, 1}};
+        k.drop = curve;
+        known.push_back(k);
+      }
     }
   }
 
@@ -1240,21 +1407,47 @@ void report_identities(const dataset_t& data,
     levels_frozen++;
   }
 
+  // S122's duplicates at the curve's shared x: held by the freeze when one
+  // side is frozen, and otherwise null at the seed alone -- the curve's
+  // curvature parts the pair the moment a fit moves any side's x, which the
+  // first step from the seed does wherever the pair's count differs between
+  // the two sides. Each is named either way, and counted apart in the span.
+  size_t seed_frozen = 0;
+  size_t seed_only = 0;
+
+  for (const known_t& k : known) {
+    if (k.what.find("(S122)") == std::string::npos) { continue; }
+    if (quadratic_form(gram, k.vector) != 0) { continue; }
+
+    const bool both_free = mask[k.vector[0].first] && mask[k.vector[1].first];
+
+    printf("identities: curve duplicate, %s: %s under --free %s\n",
+           k.what.c_str(),
+           both_free ? "free on both sides, null at the seed only"
+                     : "held by the freeze",
+           free_name.c_str());
+    pinned.push_back(k.vector);
+    (both_free ? seed_only : seed_frozen)++;
+  }
+
   const size_t spanned = rank_of_vectors(pinned);
   const size_t nullity_bound = PARAM_COUNT - full_rank;
 
   printf(
-      "identities: %zu zero columns, %zu held gauges and %zu frozen mobility "
-      "levels span %zu of at most %zu null dimensions: %s\n",
-      zero_count, gauges_null, levels_frozen, spanned, nullity_bound,
+      "identities: %zu zero columns, %zu held gauges, %zu frozen mobility "
+      "levels and %zu curve duplicates (%zu held by the freeze, %zu null at "
+      "the seed only) span %zu of at most %zu null dimensions: %s\n",
+      zero_count, gauges_null, levels_frozen, seed_frozen + seed_only,
+      seed_frozen, seed_only, spanned, nullity_bound,
       (spanned != nullity_bound)
           ? "a null direction the tuner does not hold, pin it or measure it "
             "before a fit"
-      : (levels_frozen == 0)
+      : (levels_frozen == 0 && seed_frozen + seed_only == 0)
           ? "every null direction is one Adam never moves or one the tuner "
             "holds"
           : "every null direction is one Adam never moves, one the tuner "
-            "holds, or a mobility level the run's frozen columns hold");
+            "holds, a mobility level the run's frozen columns hold, or a "
+            "curve duplicate the freeze or the curve's curvature holds");
 }
 
 
@@ -1614,8 +1807,68 @@ int main(int argc, char** argv)
           tuner_trace::feature_table().base[eval_trace::TERM_THREAT_PAWN],
           "structure family (S125)");
       support(tuner_trace::feature_table().base[eval_trace::TERM_THREAT_PAWN],
-              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+              tuner_trace::feature_table().base[eval_trace::TERM_KS_CHECKS],
               "threat family (S101)");
+      support(tuner_trace::feature_table().base[eval_trace::TERM_KS_CHECKS],
+              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+              "king safety family (S122)");
+
+      // S122's curve has no feature: its inputs are each side's own, so its
+      // support is a side's non-zero input at a phase giving the half a
+      // taper weight, and a row counts once whichever side has it.
+      {
+        const size_t width = tuner_layout::KS_CURVE_COUNT;
+        std::vector<uint64_t> rows(2 * width, 0);
+        std::vector<uint64_t> games(2 * width, 0);
+        std::vector<int64_t> seen(2 * width, -1);
+        std::vector<int64_t> row_seen(2 * width, -1);
+        size_t game = 0;
+
+        for (size_t row = 0; row < data.size(); ++row) {
+          while (game + 1 < starts.size() && starts[game + 1] <= row) {
+            game++;
+          }
+
+          const bool has_mg = data.phase[row] > 0;
+          const bool has_eg = data.phase[row] < GAME_PHASE_MAX;
+
+          for (uint32_t j = data.side_offsets[row];
+               j < data.side_offsets[row + 1]; ++j) {
+            const tuner_trace::side_entry_t e = data.side_entries[j];
+            if (e.group != 0 || e.coef == 0) { continue; }
+
+            for (size_t half = 0; half < 2; ++half) {
+              if ((half == 0) ? !has_mg : !has_eg) { continue; }
+
+              const size_t slot = half * width + e.input;
+              if (row_seen[slot] == static_cast<int64_t>(row)) { continue; }
+              row_seen[slot] = static_cast<int64_t>(row);
+              rows[slot]++;
+              if (seen[slot] != static_cast<int64_t>(game)) {
+                seen[slot] = static_cast<int64_t>(game);
+                games[slot]++;
+              }
+            }
+          }
+        }
+
+        printf(
+            "\nking safety curve (S122) support: rows with a non-zero input "
+            "on either side and a non-zero taper weight for the half, and the "
+            "games they come from, %zu games in all\n",
+            starts.size());
+
+        for (size_t half = 0; half < 2; ++half) {
+          for (size_t input = 0; input < width; ++input) {
+            const size_t slot = half * width + input;
+            const size_t param = ((half == 0) ? tuner_layout::KSC_MG_BASE
+                                              : tuner_layout::KSC_EG_BASE) +
+                                 input;
+            printf("support %s rows %" PRIu64 " games %" PRIu64 "\n",
+                   column_name(param).c_str(), rows[slot], games[slot]);
+          }
+        }
+      }
     }
 
     // Tempo is not a count and has no zero case; what it has is a label-side

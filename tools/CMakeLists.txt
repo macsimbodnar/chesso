@@ -66,6 +66,15 @@ target_include_directories(truncation_scan PRIVATE ../src)
 target_link_libraries(truncation_scan PRIVATE chesso_engine_trace
                       Threads::Threads)
 
+# S122, DEC-344 (4): the clamp's census at a fit's own weights -- the rows
+# bound and the graded set's gradient mass at each candidate margin, a
+# vector's held-out loss, the curve's sides above zero -- read off the trace
+# at the vector's integers, so no build is owed per fit.
+add_executable(margin_census margin_census.cpp)
+target_include_directories(margin_census PRIVATE ../src)
+target_link_libraries(margin_census PRIVATE chesso_engine_trace
+                      Threads::Threads)
+
 # S100. What the tuning corpus contains per evaluation feature: every stored
 # row against its FEN traced again, the rank of the tuner's design and every
 # exact dependency in it (S134, which folded the two S100 found into the

@@ -29,9 +29,9 @@
 // a king-safety curve, say, where the side's sum is squared before the two are
 // subtracted -- needs each side's coefficients separately, because the
 // transform of a difference is not the difference of the transforms. That is
-// EVAL_TRACE_SIDE. No term in evaluate() takes it today; the format carries
-// it, and tests/test_tuner_gradient.cpp exercises the path with a synthetic
-// group.
+// EVAL_TRACE_SIDE. S122's king safety curve is the one term in evaluate()
+// that takes it (DEC-344 (2)); tests/test_tuner_gradient.cpp also exercises
+// the path with a synthetic group.
 #include <cstddef>
 #include <cstdint>
 
@@ -51,7 +51,10 @@ namespace eval_trace
 // (src/evaluation.hpp): 0 for the two counts, the file less one for the two
 // tables by file, the own rank less the table's first for the three by rank.
 // S101's seven come after those, each indexed by its weights' cell
-// (src/evaluation.hpp).
+// (src/evaluation.hpp), and S122's five after S101's, the same way: the
+// curve's index is its input, ks_curve_input_t, and it is the one term
+// recorded per side (EVAL_TRACE_SIDE), its group declared in
+// tools/tuner_trace.hpp.
 enum term_t : uint8_t
 {
   TERM_MATERIAL,
@@ -81,6 +84,11 @@ enum term_t : uint8_t
   TERM_HANGING_PAWN,
   TERM_THREAT_KING,
   TERM_THREAT_PUSH,
+  TERM_KS_CHECKS,
+  TERM_KS_WEAK,
+  TERM_KS_DEFENDERS,
+  TERM_KS_STORM,
+  TERM_KS_CURVE,
   TERM_COUNT
 };
 

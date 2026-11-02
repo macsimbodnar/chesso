@@ -40,8 +40,10 @@
 // Nonlinear groups -- a per-side transform of a weighted sum, the shape a
 // king-safety curve takes -- are carried by the same records: each side's
 // coefficients, not their difference, and a model_t that names the group's
-// transform. None exists in evaluate() today; tests/test_tuner_gradient.cpp
-// fits a synthetic one through this path.
+// transform. S122's curve is the one evaluate() has (DEC-344): inside the
+// clamp, at the king safety site, and exact_score() carries its integer
+// arithmetic. tests/test_tuner_gradient.cpp also fits a synthetic one, outside
+// the clamp, through this path.
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
@@ -90,7 +92,9 @@ using tuner_target::sigmoid;
 //   TEMPO       its own taper, added after the side-to-move sign
 //   MOBILITY    its own taper, in evaluate_expensive(); S101's threat family
 //               is summed into its pair, so it shares that one taper
-//   KING_SAFETY its own taper, and the two summed and clamped to the margin
+//   KING_SAFETY its own taper, and the two summed and clamped to the margin;
+//               S122's linear groups are summed into its pair, and its curve
+//               is added to the pair's halves before that taper
 enum site_t : uint8_t
 {
   SITE_MATERIAL,
@@ -185,6 +189,19 @@ inline term_layout_t term_layout(term_t term)
       return {THREAT_KING_COUNT, TKG_MG_BASE, TKG_EG_BASE, SITE_MOBILITY};
     case eval_trace::TERM_THREAT_PUSH:
       return {THREAT_PUSH_COUNT, TPU_MG_BASE, TPU_EG_BASE, SITE_MOBILITY};
+    // S122's family, summed into king safety's pair in stage two, so its taper
+    // and under the clamp. The curve's width is its inputs': it is a group's
+    // term (group_of_term() below), recorded per side, and has no feature.
+    case eval_trace::TERM_KS_CHECKS:
+      return {KS_CHECKS_COUNT, KSK_MG_BASE, KSK_EG_BASE, SITE_KING_SAFETY};
+    case eval_trace::TERM_KS_WEAK:
+      return {KS_WEAK_COUNT, KSW_MG_BASE, KSW_EG_BASE, SITE_KING_SAFETY};
+    case eval_trace::TERM_KS_DEFENDERS:
+      return {KS_DEFENDERS_COUNT, KSD_MG_BASE, KSD_EG_BASE, SITE_KING_SAFETY};
+    case eval_trace::TERM_KS_STORM:
+      return {KS_STORM_COUNT, KSS_MG_BASE, KSS_EG_BASE, SITE_KING_SAFETY};
+    case eval_trace::TERM_KS_CURVE:
+      return {KS_CURVE_COUNT, KSC_MG_BASE, KSC_EG_BASE, SITE_KING_SAFETY};
     case eval_trace::TERM_COUNT:
       break;
   }
@@ -193,9 +210,18 @@ inline term_layout_t term_layout(term_t term)
 }
 
 
-// A feature is one coefficient slot of a row: one entry of one term, and so
-// one parameter pair. Numbered term by term in term_t's order, so the dataset
-// stores a 16-bit feature and not a 32-bit parameter twice.
+// Which group of engine_model() a per-side trace entry feeds, -1 for a linear
+// term. A term evaluate() records with EVAL_TRACE_SIDE gets its group declared
+// in engine_model() and its index here, and until then load() refuses its
+// records rather than dropping them. S122's curve is group 0.
+inline int group_of_term(term_t term)
+{ return (term == eval_trace::TERM_KS_CURVE) ? 0 : -1; }
+
+
+// A feature is one coefficient slot of a row: one entry of one linear term,
+// and so one parameter pair. Numbered term by term in term_t's order, so the
+// dataset stores a 16-bit feature and not a 32-bit parameter twice. A group's
+// term has none: its parameters are its group's inputs.
 struct feature_t
 {
   uint32_t mg;
@@ -218,6 +244,8 @@ inline const feature_table_t& feature_table()
     for (int t = 0; t < eval_trace::TERM_COUNT; ++t) {
       const term_layout_t layout = term_layout(static_cast<term_t>(t));
       out.base[t] = next;
+
+      if (group_of_term(static_cast<term_t>(t)) >= 0) { continue; }
 
       for (size_t i = 0; i < layout.width; ++i) {
         const uint32_t eg = (layout.eg_base == NO_PARAM)
@@ -245,11 +273,14 @@ inline const feature_table_t& feature_table()
 //   x[side] = sum_i coef[side][i] * w[i]              (mg and eg halves apart)
 //   group   = sign * (T(x[WHITE]) - T(x[BLACK])), each half, then tapered
 //
-// with its own taper and outside the clamp. The one transform provided is the
-// one S122's king-safety curve is written for, T(x) = max(0, x)^2 / divisor:
-// convex, zero below zero, and with a derivative of exactly zero at x = 0 --
-// which is why a group of these cannot start from zero weights. derive_seed()
-// is the answer to that (DEC-134 form b).
+// tapered as the linear terms are, and either outside the clamp, added to the
+// score after it, or `clamped`: added to stage two before the clamp, as
+// S122's curve is (DEC-344 (2)), so a row the clamp binds on gives it nothing.
+// The one transform provided is the one that curve is written for, T(x) =
+// max(0, x)^2 / divisor: convex, zero below zero, and with a derivative of
+// exactly zero at x = 0 -- which is why a group of these cannot start from
+// zero weights. The curve starts from its constant (DEC-344 (2)), and
+// derive_seed() is S262's other answer (DEC-134 form b).
 enum transform_t : uint8_t
 {
   TRANSFORM_SQUARED_POSITIVE
@@ -270,32 +301,46 @@ struct group_t
   transform_t transform = TRANSFORM_SQUARED_POSITIVE;
   double divisor = 1.0;
   double sign = 1.0;
+  bool clamped = false;
   // One (mg, eg) parameter pair per input, in input order.
   std::vector<std::pair<uint32_t, uint32_t>> inputs;
 };
 
 // What is being fitted: how long the vector is, and the groups on top of the
 // linear terms. The engine's own is tools/tuner_layout.hpp's PARAM_COUNT, 831
-// since S135 and 955 since S121, and no group; a test grows it to fit a
-// synthetic group.
+// since S135, 955 since S121 and 1171 since S122, and S122's curve; a test
+// grows it to fit a synthetic group.
 struct model_t
 {
   size_t param_count = tuner_layout::PARAM_COUNT;
   std::vector<group_t> groups;
 };
 
+// S122's curve (src/evaluation.hpp): White's king's T less Black's taken off
+// White's score, so its sign is -1, at the engine's divisor, inside the clamp,
+// one input per ks_curve_input_t.
 inline const model_t& engine_model()
 {
-  static const model_t model;
+  static const model_t model = [] {
+    model_t m;
+    group_t curve;
+    curve.name = "ks_curve";
+    curve.divisor = KS_CURVE_DIVISOR;
+    curve.sign = -1.0;
+    curve.clamped = true;
+
+    for (size_t i = 0; i < tuner_layout::KS_CURVE_COUNT; ++i) {
+      curve.inputs.push_back(
+          {static_cast<uint32_t>(tuner_layout::KSC_MG_BASE + i),
+           static_cast<uint32_t>(tuner_layout::KSC_EG_BASE + i)});
+    }
+
+    m.groups.push_back(curve);
+    return m;
+  }();
+
   return model;
 }
-
-// Which group of engine_model() a per-side trace entry feeds: none, today. A
-// term evaluate() starts recording with EVAL_TRACE_SIDE gets its group declared
-// in engine_model() and its index here, and until then load() refuses its
-// records rather than dropping them.
-inline int group_of_term(term_t)
-{ return -1; }
 
 
 // ---------------------------------------------------------------- the data
@@ -359,10 +404,11 @@ struct row_trace_t
 // and its per-side entries into their groups. False, with `error` saying why,
 // on a record the dataset cannot hold: one past its capacity, without a usable
 // phase, with an index outside its term, a per-side entry for a term no group
-// is declared for, or a summed coefficient outside int16. The summing buffer is
-// thread local and left all zero on every return, refused or not, so a refused
-// record cannot leak into the next. Split from trace_board() so a test can hand
-// it a record evaluate() could not write.
+// is declared for, a White-minus-Black entry for a group's term, which has no
+// feature to sum it into, or a summed coefficient outside int16. The summing
+// buffer is thread local and left all zero on every return, refused or not, so
+// a refused record cannot leak into the next. Split from trace_board() so a
+// test can hand it a record evaluate() could not write.
 inline bool sum_record(const eval_trace::record_t& record,
                        row_trace_t* out,
                        std::string* error)
@@ -410,6 +456,10 @@ inline bool sum_record(const eval_trace::record_t& record,
                                    static_cast<uint8_t>(e.side), e.index,
                                    static_cast<int16_t>(e.coef)});
       continue;
+    }
+
+    if (group_of_term(e.term) >= 0) {
+      return refuse("a White-minus-Black trace entry for a group's term");
     }
 
     dense[table.base[e.term] + e.index] += e.coef;
@@ -526,6 +576,41 @@ inline exact_parts_t exact_parts(const dataset_t& data,
     eg[f.site] += e.coef * w[f.eg];
   }
 
+  // S122's curve, the engine's integer arithmetic: each king's x per half,
+  // T = max(0, x)^2 / divisor truncating, the group's sign on White's T less
+  // Black's, added to the king safety halves before their taper. A group the
+  // engine's model does not declare -- a test's synthetic one -- has no engine
+  // arithmetic to be exact to and is not read.
+  const std::vector<group_t>& groups = engine_model().groups;
+
+  for (size_t g = 0; g < groups.size(); ++g) {
+    const group_t& group = groups[g];
+    int64_t x_mg[2] = {0, 0};
+    int64_t x_eg[2] = {0, 0};
+
+    for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1];
+         ++j) {
+      const side_entry_t e = data.side_entries[j];
+
+      if (e.group != g) { continue; }
+
+      x_mg[e.side] += e.coef * w[group.inputs[e.input].first];
+      x_eg[e.side] += e.coef * w[group.inputs[e.input].second];
+    }
+
+    const int64_t divisor = static_cast<int64_t>(group.divisor);
+    const int64_t sign = static_cast<int64_t>(group.sign);
+
+    for (int side = 0; side < 2; ++side) {
+      const int64_t side_sign = (side == 0) ? sign : -sign;
+      const int64_t m = std::max<int64_t>(x_mg[side], 0);
+      const int64_t n = std::max<int64_t>(x_eg[side], 0);
+
+      mg[SITE_KING_SAFETY] += side_sign * (m * m / divisor);
+      eg[SITE_KING_SAFETY] += side_sign * (n * n / divisor);
+    }
+  }
+
   const int phase = data.phase[row];
 
   parts.positional =
@@ -545,7 +630,8 @@ inline exact_parts_t exact_parts(const dataset_t& data,
 // what load() checks on every row. Tempo's coefficient carries the side to
 // move's sign, and both the taper's truncation and the clamp are odd, so the
 // White-relative form is the engine's side-to-move one negated, digit for
-// digit. Groups have no engine arithmetic to be exact to and are not read.
+// digit. S122's curve is in exact_parts()'s king safety halves; a group the
+// engine does not have is not read.
 inline int64_t exact_score(const dataset_t& data, size_t row, const int64_t* w)
 {
   const exact_parts_t parts = exact_parts(data, row, w);
@@ -858,10 +944,29 @@ inline smooth_t smooth(const model_t& model,
 
   smooth_t out;
 
-  // One clamp over the two expensive terms together, where evaluate() puts it.
+  // A group's score: each side's transform, White's less Black's, its sign
+  // and the halves' taper weights.
+  const auto group_score = [&](size_t g) {
+    const group_t& group = model.groups[g];
+    const group_sums_t x = group_sums(group, g, data, row, p);
+
+    const double half_mg = transform(group.transform, group.divisor, x.mg[0]) -
+                           transform(group.transform, group.divisor, x.mg[1]);
+    const double half_eg = transform(group.transform, group.divisor, x.eg[0]) -
+                           transform(group.transform, group.divisor, x.eg[1]);
+
+    return group.sign * (half_mg * mg_weight + half_eg * eg_weight);
+  };
+
+  // One clamp over the two expensive terms together, where evaluate() puts it,
+  // a clamped group's score in it (S122's curve, DEC-344 (2)).
   const double margin = LAZY_EVAL_MARGIN;
   double stage_two = (mg[SITE_MOBILITY] + mg[SITE_KING_SAFETY]) * mg_weight +
                      (eg[SITE_MOBILITY] + eg[SITE_KING_SAFETY]) * eg_weight;
+
+  for (size_t g = 0; g < model.groups.size(); ++g) {
+    if (model.groups[g].clamped) { stage_two += group_score(g); }
+  }
 
   if (stage_two > margin) {
     stage_two = margin;
@@ -875,15 +980,7 @@ inline smooth_t smooth(const model_t& model,
               (eg[SITE_POSITIONAL] + eg[SITE_TEMPO]) * eg_weight + stage_two;
 
   for (size_t g = 0; g < model.groups.size(); ++g) {
-    const group_t& group = model.groups[g];
-    const group_sums_t x = group_sums(group, g, data, row, p);
-
-    const double half_mg = transform(group.transform, group.divisor, x.mg[0]) -
-                           transform(group.transform, group.divisor, x.mg[1]);
-    const double half_eg = transform(group.transform, group.divisor, x.eg[0]) -
-                           transform(group.transform, group.divisor, x.eg[1]);
-
-    out.score += group.sign * (half_mg * mg_weight + half_eg * eg_weight);
+    if (!model.groups[g].clamped) { out.score += group_score(g); }
   }
 
   return out;
@@ -984,7 +1081,9 @@ inline double error_range(const dataset_t& data,
 // so the treatment stays; S122's design, written for an unclamped king safety,
 // took the owner's amendment before S121 started (DEC-258): DEC-324 keeps the
 // shortcut and the clamp, and S122 re-sizes LAZY_EVAL_MARGIN from its own
-// fitted spread. At exactly the margin the inside derivative is taken.
+// fitted spread. At exactly the margin the inside derivative is taken. A
+// clamped group -- S122's curve -- is silent on a bound row as the clamped
+// sites are, for the same reason; a group outside the clamp is not.
 inline void gradient(const model_t& model,
                      const dataset_t& data,
                      const double* params,
@@ -1039,6 +1138,9 @@ inline void gradient(const model_t& model,
 
         for (size_t g = 0; g < model.groups.size(); ++g) {
           const group_t& group = model.groups[g];
+
+          if (s.clamp_binds && group.clamped) { continue; }
+
           const group_sums_t x = group_sums(group, g, data, row, params);
 
           double slope_mg[2];

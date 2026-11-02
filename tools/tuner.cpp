@@ -158,6 +158,8 @@ struct options_t
   std::string only = "all";
   std::string freeze;  // empty means nothing is held, the behaviour before S065
   std::string tie;     // S121: a tie list's path; empty ties nothing
+  std::string vector;  // S122: where the emitted vector is also written
+  int margin = -1;     // S122: the clamp's margin, tune build only; -1 keeps it
   double k = 0.0;      // 0 means fit it
   double lambda = 0.0;  // 0 is the game outcome alone, the fit before S075
   tuner_optimiser::kind_t optimiser = tuner_optimiser::ADAM;
@@ -309,14 +311,17 @@ void write_tables(const std::string& path,
       "// tie        %s\n"
       "// lambda     %.4f  target = lambda * sigma(K * score) + (1 - lambda) * "
       "result\n"
+      // S122: the clamp the fit, its smooth score and its load's identity were
+      // at, which --margin moves in the tune build (DEC-344 (4)).
+      "// margin     %d, the stage-two clamp this fit was read at\n"
       "%s"
       "//\n"
       "// Paste over the corresponding definitions. The piece defines and the\n"
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
       "// passed pawn, pawn structure, piece placement, tempo, S123's\n"
-      "// passed pawn family, S125's pawn structure family and S101's threat\n"
-      "// family weights at the end live in src/evaluation.cpp, a different\n"
-      "// file and easy to miss.\n"
+      "// passed pawn family, S125's pawn structure family, S101's threat\n"
+      "// family and S122's king safety family weights at the end live in\n"
+      "// src/evaluation.cpp, a different file and easy to miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
@@ -326,7 +331,7 @@ void write_tables(const std::string& path,
       opts.patience, opts.threads, split.c_str(), opts.only.c_str(),
       opts.freeze.empty() ? "(nothing)" : opts.freeze.c_str(), gauges_held,
       tuner_groups::gauges().size(), tie_line.c_str(), opts.lambda,
-      wdl_line.c_str());
+      static_cast<int>(LAZY_EVAL_MARGIN), wdl_line.c_str());
 
   const char* material_names[5] = {"PAWN", "KNIGHT", "BISHOP", "ROOK", "QUEEN"};
 
@@ -591,8 +596,77 @@ void write_tables(const std::string& path,
     }
   }
 
+  // S122's family, the same way: four linear arrays and the curve's inputs, a
+  // half each.
+  const family_array_t king_family[] = {
+      {"ks_checks", tuner_layout::KSK_MG_BASE, tuner_layout::KSK_EG_BASE,
+       tuner_layout::KS_CHECKS_COUNT},
+      {"ks_weak", tuner_layout::KSW_MG_BASE, tuner_layout::KSW_EG_BASE,
+       tuner_layout::KS_WEAK_COUNT},
+      {"ks_defenders", tuner_layout::KSD_MG_BASE, tuner_layout::KSD_EG_BASE,
+       tuner_layout::KS_DEFENDERS_COUNT},
+      {"ks_storm", tuner_layout::KSS_MG_BASE, tuner_layout::KSS_EG_BASE,
+       tuner_layout::KS_STORM_COUNT},
+      {"ks_curve", tuner_layout::KSC_MG_BASE, tuner_layout::KSC_EG_BASE,
+       tuner_layout::KS_CURVE_COUNT},
+  };
+
+  fprintf(out,
+          "\n// S122's king safety family, by the cells and inputs "
+          "src/evaluation.hpp names.\n");
+
+  for (const family_array_t& array : king_family) {
+    for (int table = 0; table < 2; ++table) {
+      const size_t base = (table == 0) ? array.mg_base : array.eg_base;
+
+      fprintf(out, "constexpr int %s_%s[%zu] = {", array.name,
+              (table == 0) ? "mg" : "eg", array.width);
+
+      for (size_t i = 0; i < array.width; ++i) {
+        fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+                static_cast<int>(std::lround(params[base + i])));
+      }
+
+      fprintf(out, "};\n");
+    }
+  }
+
   fclose(out);
   fprintf(stderr, "constants written to %s\n", path.c_str());
+}
+
+
+// S122: the vector the header above holds, one rounded integer a line in the
+// layout's order, so a reader takes a fit's weights without parsing C++
+// (tools/margin_census --vector). The same std::lround as the header, so the
+// two are one vector.
+bool write_vector(const std::string& path,
+                  const double* params,
+                  const options_t& opts)
+{
+  FILE* out = fopen(path.c_str(), "w");
+
+  if (out == nullptr) {
+    fprintf(stderr, "cannot write %s\n", path.c_str());
+    return false;
+  }
+
+  fprintf(out,
+          "# chesso parameter vector, tools/tuner --vector\n"
+          "# engine %s\n"
+          "# params %zu\n"
+          "# K %.4f\n"
+          "# margin %d\n",
+          CHESSO_BUILD_COMMIT, PARAM_COUNT, opts.k,
+          static_cast<int>(LAZY_EVAL_MARGIN));
+
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    fprintf(out, "%ld\n", std::lround(params[i]));
+  }
+
+  const bool ok = (fclose(out) == 0);
+  if (ok) { fprintf(stderr, "vector written to %s\n", path.c_str()); }
+  return ok;
 }
 
 
@@ -605,6 +679,7 @@ void usage()
       "  --only GROUP     fit only this group and hold the rest at what\n"
       "                   the engine ships: %s\n"
       "                   or one piece placement term (S135): %s\n"
+      "                   or one king safety curve term (S122): %s\n"
       "                   or a comma-separated list of them, their union\n"
       "                   (S123)\n"
       "  --freeze LIST    hold these groups or terms instead, comma\n"
@@ -621,7 +696,9 @@ void usage()
       "                   _<half> ...` (S125), or since S101 a threat cell,\n"
       "                   `<threat_pawn|threat_piece|threat_minor|\n"
       "                   hanging_piece|hanging_pawn|threat_king|threat_push>\n"
-      "                   _<half> ...` (S101); both ends must be free\n"
+      "                   _<half> ...` (S101), or since S122 a linear king\n"
+      "                   safety cell, `<ks_checks|ks_weak|ks_defenders|\n"
+      "                   ks_storm>_<half> ...`; both ends must be free\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"
@@ -641,9 +718,15 @@ void usage()
       "                   a split, --validation and --seed unused; refused\n"
       "                   when the two share a position\n"
       "  --threads N      worker threads (default: every hardware thread)\n"
-      "  --seed N         seed the game-level split shuffles (default 1)\n",
+      "  --seed N         seed the game-level split shuffles (default 1)\n"
+      "  --vector FILE    S122: also write the emitted vector, one integer\n"
+      "                   a line in the layout's order, with K and the margin\n"
+      "  --margin M       S122, the tune build only: the stage-two clamp's\n"
+      "                   margin, LazyEvalMargin, for the load's identity,\n"
+      "                   the fit and the header; the default build refuses\n"
+      "                   it\n",
       GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST,
-      tuner_optimiser::ADAGRAD_DEFAULT_LR);
+      tuner_groups::CURVE_TERM_LIST, tuner_optimiser::ADAGRAD_DEFAULT_LR);
 }
 
 }  // namespace
@@ -705,6 +788,10 @@ int main(int argc, char** argv)
       opts.threads = static_cast<unsigned>(atoi(value.c_str()));
     } else if (arg == "--seed") {
       opts.seed = strtoull(value.c_str(), nullptr, 10);
+    } else if (arg == "--vector") {
+      opts.vector = value;
+    } else if (arg == "--margin") {
+      opts.margin = atoi(value.c_str());
     } else {
       usage();
       return 1;
@@ -714,6 +801,26 @@ int main(int argc, char** argv)
   if (opts.data.empty() || opts.threads == 0) {
     usage();
     return 1;
+  }
+
+  // S122, DEC-344 (4): a fit at another margin has to be one whose clamp and
+  // identity are at it, so the margin is the engine's own parameter, which
+  // only the tune build can set. Refused rather than ignored elsewhere: a fit
+  // stamped 184 that the caller believed was at 250 would be read as one.
+  if (opts.margin >= 0) {
+#ifdef CHESSO_TUNE
+    if (!search_param_set("LazyEvalMargin", opts.margin)) {
+      fprintf(stderr, "--margin %d is outside LazyEvalMargin's range\n",
+              opts.margin);
+      return 1;
+    }
+#else
+    fprintf(stderr,
+            "--margin needs the tune build (build-tune/tools/tuner): this "
+            "build's margin is the constant %d\n",
+            static_cast<int>(LAZY_EVAL_MARGIN));
+    return 1;
+#endif
   }
 
   // Each optimiser's own default step, unless --lr named one. A step that is
@@ -1192,6 +1299,10 @@ int main(int argc, char** argv)
   write_tables(opts.out, best.data(), opts, corpus, data.size(), split,
                final_train, best_validation, best_wdl, start_wdl, held.size(),
                trace, tie_line);
+
+  if (!opts.vector.empty() && !write_vector(opts.vector, best.data(), opts)) {
+    return 1;
+  }
 
   return 0;
 }

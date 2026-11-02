@@ -2308,3 +2308,345 @@ TEST_SUITE("eval counts: S101's threat family")
     }
   }
 }
+
+
+// S122's king safety family against the walk and by hand (DEC-344 (5)): the
+// trace reads the engine's own variables, so no identity scan can see a count
+// that is wrong in the engine, and the walk is the one implementation of each
+// count that shares no code with it. Per king, every set bit for bit and every
+// cell, over S101's population, whose seeded placements put each piece against
+// each king on every edge.
+namespace
+{
+
+void check_king_danger(const std::string& fen, king_danger_t* engine_out)
+{
+  CAPTURE(fen);
+  REQUIRE(load_FEN(fen, &game));
+
+  king_danger_t engine;
+  king_danger_counts(&game.board, &engine);
+
+  walked_counts::king_danger_walk_t walk;
+  REQUIRE(
+      walked_counts::king_danger_features(fen.substr(0, fen.find(' ')), &walk));
+
+  const auto cells = [](const char* what, const auto& mine, const auto& theirs,
+                        int width) {
+    for (int king = 0; king < 2; ++king) {
+      for (int cell = 0; cell < width; ++cell) {
+        const std::string name = what;
+        CAPTURE(name);
+        CAPTURE(king);
+        CAPTURE(cell);
+        CHECK(mine[king][cell] == theirs[king][cell]);
+      }
+    }
+  };
+
+  for (int king = 0; king < 2; ++king) {
+    CAPTURE(king);
+    for (int type = 0; type < 4; ++type) {
+      CAPTURE(type);
+      CHECK(engine.check_targets[king][type] == walk.check_targets[king][type]);
+    }
+    CHECK(engine.weak_set[king] == walk.weak_set[king]);
+    CHECK(engine.defended_set[king] == walk.defended_set[king]);
+  }
+
+  cells("checks", engine.checks, walk.checks, 4);
+  cells("checks_any", engine.checks_any, walk.checks_any, 4);
+  cells("weak", engine.weak, walk.weak, 1);
+  cells("defenders", engine.defenders, walk.defenders, 1);
+  cells("storm", engine.storm, walk.storm, KST_CELL_COUNT);
+  cells("curve", engine.curve, walk.curve, KS_CURVE_INPUTS);
+
+  *engine_out = engine;
+}
+
+
+struct danger_array_t
+{
+  const char* name;
+  int width;
+};
+
+const danger_array_t danger_arrays[] = {
+    {"checks", 4},    {"checks_any", 4},         {"weak", 1},
+    {"defenders", 1}, {"storm", KST_CELL_COUNT}, {"curve", KS_CURVE_INPUTS}};
+
+int danger_cell(const king_danger_t& family,
+                const std::string& array,
+                int king,
+                int cell)
+{
+  if (array == "checks") { return family.checks[king][cell]; }
+  if (array == "checks_any") { return family.checks_any[king][cell]; }
+  if (array == "weak") { return family.weak[king][cell]; }
+  if (array == "defenders") { return family.defenders[king][cell]; }
+  if (array == "storm") { return family.storm[king][cell]; }
+  return family.curve[king][cell];
+}
+
+
+// A hand case asserts the arrays it names, every cell of them for both kings,
+// and leaves the others to the walk: a position's every safe check for both
+// kings by hand is a count nobody could check, and the walk checks it.
+struct danger_case_t
+{
+  const char* placement;
+  const char* what;
+  std::vector<std::string> arrays;
+  std::vector<family_cell_t> cells;  // `rank` is the cell, `colour` the king
+};
+
+}  // namespace
+
+
+TEST_SUITE("eval counts: S122's king safety family")
+{
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the engine counts the king safety family the walk counts")
+  {
+    // Every cell, per king, non-zero somewhere, so the comparison is not
+    // vacuous; the storm's distance-1 cell only by its hand case below, since
+    // a random placement rarely puts a pawn beside a king that is not in check.
+    int seen[6][2][KS_CURVE_INPUTS] = {};
+    size_t checked = 0;
+
+    for (const std::string& fen : threat_population()) {
+      king_danger_t engine;
+      check_king_danger(fen, &engine);
+
+      for (int a = 0; a < 6; ++a) {
+        for (int king = 0; king < 2; ++king) {
+          for (int cell = 0; cell < danger_arrays[a].width; ++cell) {
+            seen[a][king][cell] +=
+                (danger_cell(engine, danger_arrays[a].name, king, cell) != 0);
+          }
+        }
+      }
+
+      checked++;
+    }
+
+    CHECK(checked > 10000);
+
+    int fewest = INT32_MAX;
+    for (int a = 0; a < 6; ++a) {
+      for (int king = 0; king < 2; ++king) {
+        for (int cell = 0; cell < danger_arrays[a].width; ++cell) {
+          const std::string name = danger_arrays[a].name;
+          CAPTURE(name);
+          CAPTURE(king);
+          CAPTURE(cell);
+          CHECK(seen[a][king][cell] > 50);
+          fewest = std::min(fewest, seen[a][king][cell]);
+        }
+      }
+    }
+    MESSAGE("king safety family walk: " << checked
+                                        << " positions; the rarest cell is "
+                                        << "non-zero on " << fewest);
+  }
+
+  // Hand-worked placements from evaluation.hpp's definitions, each as written
+  // and as its colour mirror. Every storm cell is reached by each king, among
+  // them distance 1 blocked, DEC-344 (3)'s mapping: White's king on g2 with
+  // its pawn on h2, and Black's pawn on h3 giving check.
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the walk and the engine count the king safety family by "
+                    "hand")
+  {
+    const std::vector<danger_case_t> cases = {
+        {"4k3/8/8/8/8/7p/6KP/8",
+         "h3 beside g2 with h2 before it: distance 1 blocked, distance 1's "
+         "cell",
+         {"storm"},
+         {{"storm", WHITE, KST_D1, 1}}},
+        {"6k1/8/8/8/8/7p/6K1/8",
+         "h3 beside g2 with nothing before it: distance 1",
+         {"storm"},
+         {{"storm", WHITE, KST_D1, 1}}},
+        {"6k1/8/8/8/7p/8/6K1/8",
+         "h4, two ranks in front of g2, free",
+         {"storm"},
+         {{"storm", WHITE, KST_D2_FREE, 1}}},
+        {"6k1/8/8/8/7p/7P/6K1/8",
+         "h4 with White's h3 before it: blocked",
+         {"storm"},
+         {{"storm", WHITE, KST_D2_BLOCKED, 1}}},
+        {"6k1/8/8/7p/8/8/6K1/8",
+         "h5, three in front, free",
+         {"storm"},
+         {{"storm", WHITE, KST_D3_FREE, 1}}},
+        {"6k1/8/8/7p/7P/8/6K1/8",
+         "h5 blocked by h4; for Black's king h4 stands four in front, "
+         "blocked by its own h5",
+         {"storm"},
+         {{"storm", WHITE, KST_D3_BLOCKED, 1},
+          {"storm", BLACK, KST_D4_BLOCKED, 1}}},
+        {"6k1/8/7p/8/8/8/6K1/8",
+         "h6, four in front, free",
+         {"storm"},
+         {{"storm", WHITE, KST_D4_FREE, 1}}},
+        {"6k1/8/7p/7P/8/8/6K1/8",
+         "h6 blocked by h5; for Black's king h5 stands three in front, "
+         "blocked by h6",
+         {"storm"},
+         {{"storm", WHITE, KST_D4_BLOCKED, 1},
+          {"storm", BLACK, KST_D3_BLOCKED, 1}}},
+        {"6k1/8/8/7p/8/7p/6K1/8",
+         "only the closest pawn on a file counts",
+         {"storm"},
+         {{"storm", WHITE, KST_D1, 1}}},
+        {"6k1/8/8/8/8/8/5r2/6K1",
+         "the rook attacks f1, g2 and h2 beside the king, which nothing of "
+         "White's but the king defends; f1 and g2 are checks beside the king "
+         "no other Black man attacks, so not safe",
+         {"weak", "checks", "defenders"},
+         {{"weak", WHITE, 0, 3}}},
+        {"6k1/8/8/8/8/4N3/5r2/6K1",
+         "the knight on e3 defends f1 and g2: h2 alone is weak",
+         {"weak", "checks", "defenders"},
+         {{"weak", WHITE, 0, 1}, {"defenders", WHITE, 0, 2}}},
+        {"6k1/8/8/3N4/8/8/8/6K1",
+         "the knight on d5 reaches e7 and f6, from which it would check g8",
+         {"checks", "checks_any", "weak"},
+         {{"checks", BLACK, 0, 2}, {"checks_any", BLACK, 0, 2}}},
+        {"6k1/6p1/8/3N4/8/8/8/6K1",
+         "g7 defends f6: e7 alone is safe",
+         {"checks", "checks_any", "weak"},
+         {{"checks", BLACK, 0, 1}, {"checks_any", BLACK, 0, 1}}},
+        {"6k1/4b3/8/3N4/8/8/8/6K1",
+         "a check that takes the bishop on e7 is S101's, by target: counted "
+         "only without the empty-square clause; the bishop guards f6, and "
+         "reaches c5 on g1's diagonal, which no White man guards",
+         {"checks", "checks_any", "weak"},
+         {{"checks_any", BLACK, 0, 1},
+          {"checks", WHITE, 1, 1},
+          {"checks_any", WHITE, 1, 1}}},
+        {"6k1/8/8/8/8/8/8/5BK1",
+         "the bishop on f1 reaches c4 on g8's diagonal",
+         {"checks", "checks_any"},
+         {{"checks", BLACK, 1, 1}, {"checks_any", BLACK, 1, 1}}},
+        {"6k1/8/8/8/8/8/8/R5K1",
+         "the rook on a1 reaches a8 on g8's rank",
+         {"checks", "checks_any"},
+         {{"checks", BLACK, 2, 1}, {"checks_any", BLACK, 2, 1}}},
+        {"6k1/8/8/8/8/8/8/3Q2K1",
+         "the queen on d1 reaches d5, d8, b3 and g4",
+         {"checks", "checks_any"},
+         {{"checks", BLACK, 3, 4}, {"checks_any", BLACK, 3, 4}}},
+        {"6k1/8/8/8/8/8/8/2B3K1",
+         "the bishop on c1 reaches no square of g8's diagonals",
+         {"checks", "checks_any"},
+         {}},
+        {"6k1/8/7P/8/8/8/8/5RK1",
+         "the rook on f1 reaches f8 beside g8, which no other White man "
+         "attacks; the pawn on h6 attacks g7, which the rook does not reach",
+         {"checks", "checks_any"},
+         {}},
+        {"6k1/8/6N1/8/8/8/8/5RK1",
+         "the knight on g6 attacks f8: the rook's contact check there is "
+         "safe; the knight itself reaches f8, h8 and e7, and e7 checks",
+         {"checks", "checks_any"},
+         {{"checks", BLACK, 2, 1},
+          {"checks_any", BLACK, 2, 1},
+          {"checks", BLACK, 0, 1},
+          {"checks_any", BLACK, 0, 1}}},
+        {"6k1/5n2/8/8/8/8/8/R5K1",
+         "the rook's check on a8 stands, and the knight on f7 guards nothing "
+         "on the rank: still one",
+         {"checks", "checks_any"},
+         {{"checks", BLACK, 2, 1}, {"checks_any", BLACK, 2, 1}}},
+        {"6k1/8/8/8/8/2n5/8/R5K1",
+         "Black's knight on c3 guards nothing on the eighth: the rook's check "
+         "stands; it reaches e2, from which it would check g1, and no White "
+         "man guards e2",
+         {"checks", "checks_any"},
+         {{"checks", BLACK, 2, 1},
+          {"checks_any", BLACK, 2, 1},
+          {"checks", WHITE, 0, 1},
+          {"checks_any", WHITE, 0, 1}}},
+        {"6k1/8/8/8/8/8/6B1/6K1",
+         "the bishop on g2 attacks h1, f1, h3, f3: g1's defenders by square "
+         "are f1 and h1; and it reaches d5 on g8's diagonal",
+         {"defenders", "checks"},
+         {{"defenders", WHITE, 0, 2}, {"checks", BLACK, 1, 1}}},
+    };
+
+    int positive[6][KS_CURVE_INPUTS] = {};
+    int negative[6][KS_CURVE_INPUTS] = {};
+
+    for (const danger_case_t& item : cases) {
+      for (const bool mirror : {false, true}) {
+        const std::string placement = item.placement;
+        const std::string what = item.what;
+        const std::string fen = mirror ? mirror_fen(placement + " w - - 0 1")
+                                       : placement + " w - - 0 1";
+        CAPTURE(what);
+        CAPTURE(mirror);
+
+        king_danger_t engine;
+        check_king_danger(fen, &engine);
+
+        for (int a = 0; a < 6; ++a) {
+          const std::string array = danger_arrays[a].name;
+          if (std::find(item.arrays.begin(), item.arrays.end(), array) ==
+              item.arrays.end()) {
+            continue;
+          }
+
+          int expected[2][KS_CURVE_INPUTS] = {};
+
+          for (const family_cell_t& cell : item.cells) {
+            if (array == cell.array) {
+              const int king = mirror ? 1 - cell.colour : cell.colour;
+              expected[king][cell.rank] = cell.value;
+            }
+          }
+
+          for (int c = 0; c < danger_arrays[a].width; ++c) {
+            for (int king = 0; king < 2; ++king) {
+              CAPTURE(array);
+              CAPTURE(king);
+              CAPTURE(c);
+              CHECK(danger_cell(engine, array, king, c) == expected[king][c]);
+            }
+
+            const int difference = expected[WHITE][c] - expected[BLACK][c];
+            if (difference > 0) { positive[a][c]++; }
+            if (difference < 0) { negative[a][c]++; }
+          }
+        }
+      }
+    }
+
+    // Each storm cell reached by each king, with each sign of the difference.
+    for (int c = 0; c < KST_CELL_COUNT; ++c) {
+      CAPTURE(c);
+      CHECK_MESSAGE(positive[4][c] > 0, "never White's");
+      CHECK_MESSAGE(negative[4][c] > 0, "never Black's");
+    }
+  }
+
+  // DEC-344 (3)'s position, read through the engine's own evaluation: the
+  // mapping is a count and not a refusal, and the position is one the engine
+  // loads and scores.
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "distance 1 blocked is read on the position that has it")
+  {
+    REQUIRE(load_FEN("4k3/8/8/8/8/7p/6KP/8 w - - 0 1", &game));
+    CHECK(is_check(&game));
+
+    king_danger_t engine;
+    king_danger_counts(&game.board, &engine);
+    CHECK(engine.storm[WHITE][KST_D1] == 1);
+
+    for (int cell = KST_D2_FREE; cell < KST_CELL_COUNT; ++cell) {
+      CAPTURE(cell);
+      CHECK(engine.storm[WHITE][cell] == 0);
+    }
+  }
+}

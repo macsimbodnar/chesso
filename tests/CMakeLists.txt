@@ -157,9 +157,14 @@ set_tests_properties(test_datagen_exit PROPERTIES LABELS "fast" TIMEOUT 60)
 # zero" and "adagrad". Undeclared, -j12 ran the machine oversubscribed and
 # threats read 29.4 s against 18.8 s declared (S309). It changes nothing without
 # -j.
-set(CHESSO_PLANT_FAMILIES base pawns threats)
+set(CHESSO_PLANT_FAMILIES base pawns threats king_safety)
+# S122's curve recovers from its seed only past 28000 and 76000 epochs on these
+# rows (test_tuner_gradient.cpp says what was measured), so it cannot meet
+# S309's 30 s at -j12 and runs under the `slow` label, an entry of its own, out
+# of the main entry like the fast families.
+set(CHESSO_SLOW_PLANT_FAMILIES king_curve)
 set(chesso_plant_cases "")
-foreach(family IN LISTS CHESSO_PLANT_FAMILIES)
+foreach(family IN LISTS CHESSO_PLANT_FAMILIES CHESSO_SLOW_PLANT_FAMILIES)
      list(APPEND chesso_plant_cases "a planted vector comes back: ${family}")
 endforeach()
 list(JOIN chesso_plant_cases "," chesso_plant_exclusions)
@@ -186,6 +191,19 @@ foreach(family IN LISTS CHESSO_PLANT_FAMILIES)
      set_tests_properties(test_tuner_gradient_plants_${family} PROPERTIES
                           LABELS "fast"
                           TIMEOUT ${CHESSO_TEST_TIMEOUT}
+                          PROCESSORS ${CHESSO_FIT_THREADS}
+                          FAIL_REGULAR_EXPRESSION "test cases: +0 [|]")
+endforeach()
+
+# Measured under the corpus's load at phase 1: the two curve plants' 112000
+# epochs in 265 s in Release, so an hour's clock covers Debug's budget too.
+foreach(family IN LISTS CHESSO_SLOW_PLANT_FAMILIES)
+     add_test(NAME test_tuner_gradient_plants_${family}
+              COMMAND test_tuner_gradient
+                      "--test-case=a planted vector comes back: ${family}")
+     set_tests_properties(test_tuner_gradient_plants_${family} PROPERTIES
+                          LABELS "slow"
+                          TIMEOUT 3600
                           PROCESSORS ${CHESSO_FIT_THREADS}
                           FAIL_REGULAR_EXPRESSION "test cases: +0 [|]")
 endforeach()

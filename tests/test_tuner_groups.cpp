@@ -107,20 +107,21 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // last included; this line still says, in the event's own words, what an
   // appended block looks like. S125 appended its family after S123's and named
   // its last block, weak unopposed pawns, here; S101 its family after S125's
-  // and named its last block, push threats, here.
+  // and named its last block, push threats, here; S122 its family after
+  // S101's and named its last block, the curve's inputs, here.
   //
   // The message is the whole value of this assertion (DEC-184 item 4): without
   // it a failure reads as two constants disagreeing, which is the symptom and
   // not the event, and the reader has to re-derive the event from the comment
   // above.
   REQUIRE_MESSAGE(
-      tuner_layout::TPU_EG_BASE + tuner_layout::THREAT_PUSH_COUNT ==
+      tuner_layout::KSC_EG_BASE + tuner_layout::KS_CURVE_COUNT ==
           tuner_layout::PARAM_COUNT,
-      "a parameter block was appended after S101's push threats, the last "
-      "block, and given no group of its own: TPU_EG_BASE "
-          << tuner_layout::TPU_EG_BASE << " + THREAT_PUSH_COUNT "
-          << tuner_layout::THREAT_PUSH_COUNT << " = "
-          << (tuner_layout::TPU_EG_BASE + tuner_layout::THREAT_PUSH_COUNT)
+      "a parameter block was appended after S122's curve, the last "
+      "block, and given no group of its own: KSC_EG_BASE "
+          << tuner_layout::KSC_EG_BASE << " + KS_CURVE_COUNT "
+          << tuner_layout::KS_CURVE_COUNT << " = "
+          << (tuner_layout::KSC_EG_BASE + tuner_layout::KS_CURVE_COUNT)
           << " against PARAM_COUNT " << tuner_layout::PARAM_COUNT
           << ". Give it an end constant and a group, and name it here and in "
              "\"every group frees exactly its own block\".");
@@ -278,6 +279,11 @@ TEST_CASE("every group frees exactly its own block")
       {"hanging_pawn", HGW_MG_BASE, HGW_EG_BASE + HANGING_PAWN_COUNT},
       {"threat_king", TKG_MG_BASE, TKG_EG_BASE + THREAT_KING_COUNT},
       {"threat_push", TPU_MG_BASE, TPU_EG_BASE + THREAT_PUSH_COUNT},
+      {"ks_checks", KSK_MG_BASE, KSK_EG_BASE + KS_CHECKS_COUNT},
+      {"ks_weak", KSW_MG_BASE, KSW_EG_BASE + KS_WEAK_COUNT},
+      {"ks_defenders", KSD_MG_BASE, KSD_EG_BASE + KS_DEFENDERS_COUNT},
+      {"ks_storm", KSS_MG_BASE, KSS_EG_BASE + KS_STORM_COUNT},
+      {"ks_curve", KSC_MG_BASE, KSC_EG_BASE + KS_CURVE_COUNT},
   };
 
   size_t next = 0;
@@ -749,6 +755,66 @@ TEST_CASE("the piece placement terms partition the piece placement group")
 }
 
 
+// S122. The curve's terms, the same three properties over the ks_curve group:
+// P5 frees its core and the counts of P1 to P3's survivors, so a term that
+// strayed into another's column or off the group would free a dropped part's
+// count in the curve.
+TEST_CASE("the curve's terms partition the curve's group")
+{
+  const std::vector<std::string> terms =
+      parse_group_list(tuner_groups::CURVE_TERM_LIST);
+
+  REQUIRE(terms.size() == tuner_groups::CURVE_TERM_COUNT);
+  for (size_t t = 0; t < terms.size(); ++t) {
+    CHECK(terms[t] == tuner_groups::CURVE_TERMS[t].name);
+  }
+
+  std::vector<uint8_t> group;
+  REQUIRE(tuner_groups::free_mask("ks_curve", &group));
+  REQUIRE(
+      static_cast<size_t>(std::count(group.begin(), group.end(), uint8_t{1})) ==
+      2 * tuner_layout::KS_CURVE_COUNT);
+
+  std::vector<size_t> claims(tuner_layout::PARAM_COUNT, 0);
+
+  for (size_t t = 0; t < terms.size(); ++t) {
+    CAPTURE(terms[t]);
+
+    std::vector<uint8_t> mask;
+    REQUIRE(tuner_groups::free_mask(terms[t], &mask));
+    REQUIRE(mask.size() == tuner_layout::PARAM_COUNT);
+
+    const tuner_groups::placement_term_t& term = tuner_groups::CURVE_TERMS[t];
+
+    for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+      CAPTURE(i);
+
+      bool expected = false;
+      for (size_t c = term.first; c < term.first + term.width; ++c) {
+        expected = expected || i == tuner_layout::KSC_MG_BASE + c ||
+                   i == tuner_layout::KSC_EG_BASE + c;
+      }
+
+      CHECK((mask[i] != 0) == expected);
+      if (mask[i] != 0) { claims[i]++; }
+    }
+  }
+
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+    CAPTURE(i);
+    CHECK(claims[i] == (group[i] != 0 ? 1u : 0u));
+  }
+
+  // The core is the constant and the five counts the linear term already
+  // reads, in ks_curve_input_t's order.
+  CHECK(tuner_groups::CURVE_TERMS[0].first == KSC_CONSTANT);
+  CHECK(tuner_groups::CURVE_TERMS[0].width == KSC_ZONE_ATTACKS + 1);
+  CHECK(tuner_groups::CURVE_TERMS[1].first == KSC_KNIGHT_CHECKS);
+  CHECK(tuner_groups::CURVE_TERMS[2].first == KSC_WEAK);
+  CHECK(tuner_groups::CURVE_TERMS[3].first == KSC_DEFENDERS);
+}
+
+
 // The candidate fit's shape: the group free but for the terms that failed the
 // screen. `--freeze` with a term inside `--only piece_placement` has to clear
 // exactly that term's columns, and a list of terms all of theirs; a term
@@ -1023,6 +1089,39 @@ TEST_CASE("a tie names S101's cells by array and half")
            "threat_king_eg 4 3\n",   // no queen cell
            "threat_push_mg 4 3\n",   // past the queen
            "threat_push 1 2\n",      // no half
+       }) {
+    CAPTURE(bad);
+    std::vector<tuner_groups::tie_t> refused;
+    std::string why;
+    CHECK_FALSE(tuner_groups::parse_ties(bad, &refused, &why));
+    CHECK(!why.empty());
+  }
+}
+
+
+// S122's linear four by array and half; the curve has no tie row, a tie
+// scaling a linear weight and a curve input's entering squared.
+TEST_CASE("a tie names S122's linear cells by array and half, never the curve")
+{
+  std::vector<tuner_groups::tie_t> ties;
+  std::string error;
+
+  REQUIRE(tuner_groups::parse_ties(
+      "ks_checks_mg 3 2\nks_storm_eg 6 5\nks_storm_mg 4 1 0.5\n", &ties,
+      &error));
+  REQUIRE(ties.size() == 3);
+
+  CHECK(ties[0].tied == tuner_layout::KSK_MG_BASE + 3);
+  CHECK(ties[0].anchor == tuner_layout::KSK_MG_BASE + 2);
+  CHECK(ties[1].tied == tuner_layout::KSS_EG_BASE + 6);
+  CHECK(ties[2].tied == tuner_layout::KSS_MG_BASE + 4);
+  CHECK(ties[2].scale == 0.5);
+
+  for (const char* bad : {
+           "ks_checks_mg 4 3\n",  // past the queen
+           "ks_weak_eg 1 0\n",    // a count has one cell
+           "ks_storm_mg 7 6\n",   // past distance 4 blocked
+           "ks_curve_mg 2 1\n",   // the curve is no row
        }) {
     CAPTURE(bad);
     std::vector<tuner_groups::tie_t> refused;

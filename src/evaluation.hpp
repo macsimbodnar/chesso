@@ -504,6 +504,116 @@ struct threat_family_t
 // Not on the hot path: the collecting instantiation of stage two.
 void threat_family_counts(const board_t* board, threat_family_t* out);
 
+// S122's king safety family (DEC-344), four linear groups and one curve, all
+// in king safety's pair before its one taper, so under the clamp. Landed at its
+// seed, `No functional change`, each part screened offline (DEC-259,
+// adocs/data/S122_screen.sh). The definitions are chesso's own and stated
+// exactly, because the walk in tests/test_walked_counts.hpp is written from
+// them and the two have to mean the same thing (DEC-221): CPW *King Safety*
+// gives the zone, the attacker count and the words "safe queen contact check"
+// and defines neither "safe", "weak" nor "defender". Each count belongs to the
+// king it is about, K, the attacker A being the other side; the attack sets
+// are S101's above, raw, no x-ray and no pin.
+//
+//   checks[4]     safe checks by A's knight, bishop, rook, queen on empty
+//                 targets: an empty square a piece of that type of A's
+//                 attacks, from which that type would attack K's square
+//                 through the board as it stands, that no man of K's but its
+//                 king attacks, and, if K's king does attack it, that another
+//                 class of A's -- a pawn, the king or another piece type --
+//                 attacks too. A check that captures is S101's, by target
+//                 (DEC-344 (8)).
+//   weak[1]       zone squares A's `nonking` holds and K's `nonking` does not:
+//                 attacked by A's men, defended by no man of K's but the king.
+//   defenders[1]  zone squares K's knights and bishops attack, the union.
+//   storm[7]      per file of K's file and its neighbours, the closest enemy
+//                 pawn in front of K at rank distance 1 to 4, free or blocked:
+//                 blocked when K's pawn stands directly before it, a rank
+//                 nearer K. Cells: distance 1; 2, 3, 4 free; 2, 3, 4
+//                 blocked. **Distance 1 blocked maps to distance 1's cell**:
+//                 K's pawn would stand beside K on its rank and the enemy pawn
+//                 gives check, which no corpus row is in (DEC-344 (3)), so
+//                 one cell takes both. Pawns and the king square only, so it
+//                 sits in S118's slot beside the shelter.
+//
+// The curve, T(x) = max(0, x)^2 / KS_CURVE_DIVISOR per side and per half,
+// White's king's less Black's taken off White's score, added to the pair's
+// halves before the taper: x is a weighted sum of KS_CURVE_INPUTS counts of
+// that king's, the constant 1 first, then the four attacker counts and the
+// zone incidences king_safety_features() counts, then the four checks, weak
+// and defenders above. Seeded at the constant alone, 45 in both halves:
+// 45^2 / 2048 is 0, and in reals both sides' T are equal, so the term is
+// exactly zero while every input's gradient is not where its counts differ
+// (DEC-134 form b, DEC-344 (2)). The divisor is a gauge for reals, chosen
+// from chesso's own scale, and is not 4096 for DEC-344 (2)'s reason.
+extern const int ks_checks_mg[4];
+extern const int ks_checks_eg[4];
+extern const int ks_weak_mg[1];
+extern const int ks_weak_eg[1];
+extern const int ks_defenders_mg[1];
+extern const int ks_defenders_eg[1];
+extern const int ks_storm_mg[7];
+extern const int ks_storm_eg[7];
+extern const int ks_curve_mg[12];
+extern const int ks_curve_eg[12];
+
+inline constexpr int KS_CURVE_DIVISOR = 2048;
+inline constexpr int KS_CURVE_INPUTS = 12;
+
+enum ks_curve_input_t
+{
+  KSC_CONSTANT,
+  KSC_KNIGHT_ATTACKERS,
+  KSC_BISHOP_ATTACKERS,
+  KSC_ROOK_ATTACKERS,
+  KSC_QUEEN_ATTACKERS,
+  KSC_ZONE_ATTACKS,
+  KSC_KNIGHT_CHECKS,
+  KSC_BISHOP_CHECKS,
+  KSC_ROOK_CHECKS,
+  KSC_QUEEN_CHECKS,
+  KSC_WEAK,
+  KSC_DEFENDERS,
+  KSC_INPUT_COUNT
+};
+
+static_assert(KSC_INPUT_COUNT == KS_CURVE_INPUTS, "the curve's inputs");
+
+enum ks_storm_cell_t
+{
+  KST_D1,
+  KST_D2_FREE,
+  KST_D3_FREE,
+  KST_D4_FREE,
+  KST_D2_BLOCKED,
+  KST_D3_BLOCKED,
+  KST_D4_BLOCKED,
+  KST_CELL_COUNT
+};
+
+// The family's sets and counts per king, WHITE's first, each a side's own and
+// positive, for the reason over passed_pawn_counts(). `curve` is each side's
+// inputs, the constant's 1 included. `checks_any` is the census's reading 2
+// without the empty-target clause, a check that captures counted too: no term
+// reads it, and it is collected for tools/margin_census's graded set, the
+// set DEC-344 (4)'s bar is written over. tests/test_evaluation holds each to
+// its mirror, tests/test_eval_model to the walk.
+struct king_danger_t
+{
+  bb_t check_targets[2][4];
+  bb_t weak_set[2];
+  bb_t defended_set[2];
+  int checks[2][4];
+  int checks_any[2][4];
+  int weak[2][1];
+  int defenders[2][1];
+  int storm[2][7];
+  int curve[2][12];
+};
+
+// Not on the hot path: the collecting instantiation of stage two.
+void king_danger_counts(const board_t* board, king_danger_t* out);
+
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
 // open file, 2 rook on a half-open file, 3 bad bishop, 4 bad bishop rammed, 5
 // trapped minor, 6 trapped rook. Exposed for the same reason as the weights

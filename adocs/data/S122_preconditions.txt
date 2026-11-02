@@ -1,0 +1,106 @@
+S122 phase 1, the preconditions and the curve's planted recovery, 2026-11-02, worktree ../chesso-s122 (1b2539a plus the landing).
+Every figure below printed by the command named; the machine shared with the 150000-game corpus (12 threads) throughout.
+
+== build/tests/test_tuner_gradient, the main entry (the four plant cases excluded): the MESSAGE lines
+MESSAGE: worst relative error 2.67724e-07 at parameter 985
+MESSAGE: clamp case: worst relative error 1.52379e-07 at parameter 141
+MESSAGE: adam hold: runs apart 1.36424e-12, travelled 1907.02
+MESSAGE: adagrad hold: runs apart 5.68434e-13, travelled 1469.06
+MESSAGE: group: worst relative error 3.45506e-07 at parameter 1174
+   (the run also read the curve's constant's gradient at the seed, -7.7911e-23 at 1147 and -1.30351e-22 at 1159,
+    which the case first asserted exactly zero; it asserts under 1e-15 since, the step file says why)
+
+== build/tests/test_tuner_gradient "--test-case=a planted vector comes back: king_safety", the six plants at 6000 epochs before the split:
+   the four linear groups within 0.5; 31 checks of the curve's 48 (its 24 parameters at c 30 and at c 0) missed:
+   param 1147 fitted 28.9978
+   param 1159 fitted 34.9959
+   param 1160 fitted 4.08532
+   param 1161 fitted 3.07068
+   param 1162 fitted 2.05725
+   param 1163 fitted 7.65192
+   param 1165 fitted 5.73156
+   param 1166 fitted 5.03015
+   param 1167 fitted 6.02219
+   param 1168 fitted 9.36368
+   param 1169 fitted 4.56859
+   param 1170 fitted -4.08206
+   param 1147 fitted -2.35843
+   param 1149 fitted 10.4647
+   param 1150 fitted 9.72875
+   param 1151 fitted 20.9474
+   param 1152 fitted 7.62333
+   param 1153 fitted 16.6916
+   param 1157 fitted 10.9834
+   param 1159 fitted 38.8278
+   param 1160 fitted -0.0865786
+   param 1161 fitted -0.726852
+   param 1162 fitted -1.54972
+   param 1163 fitted 2.6742
+   param 1164 fitted 3.17301
+   param 1165 fitted 1.74275
+   param 1166 fitted 1.92957
+   param 1167 fitted 2.63692
+   param 1168 fitted 7.98884
+   param 1169 fitted 2.08202
+   param 1170 fitted -2.05685
+
+== adocs/data/S122_curve_probe.cpp, the same fit on the same 2908 rows (EPOCHS LR C REPORT):
+-- lr1_c30.txt
+epoch   3000 error 2.780e-10 worst mg 0.929 at 0, eg 19.417 at 0
+epoch   6000 error 1.793e-10 worst mg 1.002 at 0, eg 14.996 at 0
+epoch   9000 error 1.071e-10 worst mg 0.829 at 0, eg 10.859 at 0
+epoch  12000 error 5.582e-11 worst mg 0.615 at 0, eg 7.340 at 0
+epoch  15000 error 2.537e-11 worst mg 0.418 at 0, eg 4.668 at 0
+epoch  18000 error 1.036e-11 worst mg 0.265 at 0, eg 2.840 at 0
+epoch  21000 error 3.944e-12 worst mg 0.161 at 0, eg 1.682 at 0
+epoch  24000 error 1.447e-12 worst mg 0.095 at 0, eg 0.983 at 0
+fitted mg: 29.90 14.02 11.01 9.07 22.02 7.00 16.04 13.02 15.01 19.00 10.02 -8.00
+fitted eg: 20.98 6.75 5.72 4.69 11.58 4.03 8.53 6.83 7.84 9.97 5.89 -4.95
+-- lr02_c30.txt
+epoch   3000 error 1.890e-09 worst mg 8.450 at 0, eg 25.358 at 0
+epoch   6000 error 5.619e-10 worst mg 1.830 at 0, eg 24.280 at 0
+epoch   9000 error 3.911e-10 worst mg 0.563 at 2, eg 23.311 at 0
+epoch  12000 error 3.410e-10 worst mg 0.778 at 0, eg 22.378 at 0
+epoch  15000 error 3.112e-10 worst mg 1.005 at 0, eg 21.464 at 0
+epoch  18000 error 2.875e-10 worst mg 1.092 at 0, eg 20.560 at 0
+epoch  21000 error 2.666e-10 worst mg 1.124 at 0, eg 19.660 at 0
+epoch  24000 error 2.473e-10 worst mg 1.130 at 0, eg 18.762 at 0
+fitted mg: 28.87 14.10 10.98 9.49 22.00 7.11 16.27 13.17 15.07 19.04 10.27 -8.07
+fitted eg: 38.76 3.59 2.63 1.63 6.69 3.89 5.31 4.67 5.64 9.21 4.28 -3.85
+-- lr1_c0.txt
+epoch   3000 error 8.183e-10 worst mg 2.032 at 4, eg 41.738 at 0
+epoch   6000 error 7.065e-10 worst mg 2.358 at 0, eg 38.828 at 0
+epoch   9000 error 6.578e-10 worst mg 2.595 at 0, eg 35.556 at 0
+epoch  12000 error 6.038e-10 worst mg 2.624 at 0, eg 31.778 at 0
+epoch  15000 error 5.332e-10 worst mg 2.545 at 0, eg 27.377 at 0
+epoch  18000 error 4.362e-10 worst mg 2.355 at 0, eg 22.236 at 0
+epoch  21000 error 3.073e-10 worst mg 2.008 at 0, eg 16.401 at 0
+epoch  24000 error 1.675e-10 worst mg 1.481 at 0, eg 10.521 at 0
+fitted mg: -1.48 14.33 11.10 10.15 21.93 7.05 16.41 13.32 15.51 19.07 10.43 -8.10
+fitted eg: 10.52 3.22 1.98 0.76 9.08 4.28 2.99 4.67 5.59 9.36 4.49 -4.42
+-- lr1_c30_40k.txt
+epoch   4000 error 2.400e-10 worst mg 1.029 at 0, eg 17.924 at 0
+epoch   8000 error 1.289e-10 worst mg 0.895 at 0, eg 12.187 at 0
+epoch  12000 error 5.582e-11 worst mg 0.615 at 0, eg 7.340 at 0
+epoch  16000 error 1.901e-11 worst mg 0.362 at 0, eg 3.972 at 0
+epoch  20000 error 5.471e-12 worst mg 0.191 at 0, eg 2.007 at 0
+epoch  24000 error 1.447e-12 worst mg 0.095 at 0, eg 0.983 at 0
+epoch  28000 error 3.711e-13 worst mg 0.046 at 0, eg 0.478 at 0
+epoch  32000 error 9.447e-14 worst mg 0.022 at 0, eg 0.232 at 0
+epoch  36000 error 2.409e-14 worst mg 0.011 at 0, eg 0.114 at 0
+epoch  40000 error 6.169e-15 worst mg 0.005 at 0, eg 0.056 at 0
+fitted mg: 29.99 14.00 11.00 9.00 22.00 7.00 16.00 13.00 15.00 19.00 10.00 -8.00
+fitted eg: 20.06 6.99 5.98 4.98 11.96 4.00 8.96 6.99 7.99 10.00 5.99 -5.00
+-- lr1_c0_80k.txt
+epoch   8000 error 6.738e-10 worst mg 2.551 at 0, eg 36.697 at 0
+epoch  16000 error 5.042e-10 worst mg 2.496 at 0, eg 25.750 at 0
+epoch  24000 error 1.675e-10 worst mg 1.481 at 0, eg 10.521 at 0
+epoch  32000 error 1.561e-11 worst mg 0.651 at 3, eg 4.624 at 6
+epoch  40000 error 3.828e-12 worst mg 0.319 at 3, eg 3.175 at 6
+epoch  48000 error 1.502e-12 worst mg 0.182 at 3, eg 2.072 at 6
+epoch  56000 error 6.037e-13 worst mg 0.114 at 6, eg 1.322 at 6
+epoch  64000 error 2.377e-13 worst mg 0.073 at 6, eg 0.833 at 6
+epoch  72000 error 9.197e-14 worst mg 0.046 at 6, eg 0.520 at 6
+epoch  80000 error 3.523e-14 worst mg 0.029 at 6, eg 0.324 at 6
+fitted mg: -0.01 14.00 11.00 9.03 22.01 7.00 16.03 13.00 14.99 19.00 10.00 -8.00
+fitted eg: 0.03 7.04 5.99 4.96 11.94 4.01 8.68 6.97 8.00 10.00 6.00 -5.00

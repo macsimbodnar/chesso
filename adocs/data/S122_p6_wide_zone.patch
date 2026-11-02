@@ -1,0 +1,75 @@
+S122's P6 variant (adocs/data/S122_screen.sh, DEC-344 (3)), never committed to src/: the
+curve's attacker and incidence inputs counted over each king's zone and the rank in front
+of it, the research pass's mask (adocs/data/S122_census_core.hpp zone_plus). The linear
+five keep the zone; the curve's other inputs are unchanged. The zone and its forward rank
+are up to 12 squares, so ks_curve_reach's incidences bound moves from 15 x 9 = 135 to
+15 x 12 = 180 with it (S122's fast check, finding 8). Applies to S122's phase 1 landing;
+regenerate from its src/evaluation.cpp if that moves.
+
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -2425,14 +2425,15 @@
+ 
+ // The curve's x in one half, one king's, by each input's largest count: the
+ // constant 1; a side's 15 men beside its king as attackers, of which at most
+-// 10 of a type; 15 attackers on at most 9 zone squares each; the checks'
+-// squares as above; 9 weak and 9 defended squares. x is squared in an int, so
+-// it has to stay under 46341; the taper's products, under 2^31, follow, the
+-// square being at most 1048530 a side. adocs/data/S122_screen.py headroom
+-// repeats this for a fitted header before it is pasted.
++// 10 of a type; 15 attackers on at most 12 squares each, P6's zone and its
++// forward rank; the checks' squares as above; 9 weak and 9 defended squares.
++// x is squared in an int, so it has to stay under 46341; the taper's products,
++// under 2^31, follow, the square being at most 1048530 a side.
++// adocs/data/S122_screen.py headroom --wide repeats this for a fitted header
++// before it is pasted.
+ static constexpr int ks_curve_reach(const int (&w)[12])
+ {
+-  constexpr int most[12] = {1, 10, 10, 10, 9, 135, 8, 13, 14, 27, 9, 9};
++  constexpr int most[12] = {1, 10, 10, 10, 9, 180, 8, 13, 14, 27, 9, 9};
+   int reach = 0;
+   for (int i = 0; i < 12; ++i) {
+     reach += most[i] * ((w[i] < 0) ? -w[i] : w[i]);
+@@ -2930,6 +2931,15 @@
+   const bb_t zone[2] = {king_zone(tables, board, WHITE),
+                         king_zone(tables, board, BLACK)};
+ 
++  // S122's P6, a screen-time variant never committed (adocs/data/S122_screen.sh
++  // applies this patch to a throwaway tree): the curve's attacker counts and
++  // incidences over each king's zone and the rank in front of it, toward the
++  // enemy -- White's forward is a lower index, a8 being 0 -- the research pass's
++  // mask (adocs/data/S122_census_core.hpp, zone_plus). The linear five keep
++  // the zone.
++  [[maybe_unused]] const bb_t wide_zone[2] = {zone[WHITE] | (zone[WHITE] >> 8),
++                                              zone[BLACK] | (zone[BLACK] << 8)};
++
+   score_t mobility_sum = 0;
+   score_t safety_sum = 0;
+   score_t threat_sum = 0;
+@@ -3029,6 +3039,15 @@
+ 
+         const bb_t hits = attacks & defended_zone;
+ 
++        if constexpr (curve_on) {
++          const bb_t wide_hits = attacks & wide_zone[1 - colour];
++
++          if (wide_hits != 0) {
++            curve_attackers[1 - colour][type]++;
++            curve_incidences[1 - colour] += count_bits(wide_hits);
++          }
++        }
++
+         if (hits == 0) { continue; }
+ 
+         const int attacker = KS_KNIGHT_ATTACKERS + type;
+@@ -3053,10 +3072,6 @@
+           out[1 - colour][KS_ZONE_ATTACKS] += incidences;
+         }
+ 
+-        if constexpr (curve_on) {
+-          curve_attackers[1 - colour][type]++;
+-          curve_incidences[1 - colour] += incidences;
+-        }
+       }
+     }
+   }

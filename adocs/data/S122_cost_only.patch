@@ -1,0 +1,151 @@
+S122's cost-only patch (adocs/data/S122_cost.sh), never committed to src/: the parts
+S122_COST names (bit 1 P1 the checks, 2 P2 weak squares, 4 P3 defenders, 8 P4 the storm,
+16 P5 the curve over its core, and over P1 to P3's counts where their bits are set too)
+computed at forced weights in stage two, the search's own path, into a sum an asm
+barrier consumes, the score the landing's. The storm is computed on a slot miss, and its
+score never enters the slot. Applies to S122's phase 1 landing; regenerate from its
+src/evaluation.cpp if that moves.
+
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -2289,14 +2289,48 @@
+ constexpr int ks_storm_eg[7] = {0, 0, 0, 0, 0, 0, 0};
+ constexpr int ks_curve_mg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+ constexpr int ks_curve_eg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
++// S122's cost-only build, never committed (adocs/data/S122_cost.sh applies this
++// patch to a throwaway tree). The parts S122_COST names -- bit 1 P1 the checks, 2
++// P2 weak squares, 4 P3 defenders, 8 P4 the storm, 16 P5 the curve over its core,
++// and over P1 to P3's counts where their bits are set too -- are computed at forced
++// non-zero weights into a sum an asm barrier consumes and the score never sees, so
++// the search, node for node, is the landing's and the cost is the counts' (DEC-047).
++#ifndef S122_COST
++#define S122_COST 31
++#endif
++static_assert((S122_COST) >= 1 && (S122_COST) <= 31,
++              "S122_COST forces one to five of the five parts");
++// Through a function, so a mask given as a literal is no tautology to -Werror.
++static constexpr bool s122_cost_has(int bits)
++{ return ((S122_COST) & bits) == bits; }
++constexpr int s122_forced1[1] = {3};
++constexpr int s122_forced4[4] = {3, 5, 7, 9};
++constexpr int s122_forced7[7] = {3, 5, 7, 9, 11, 13, 15};
++constexpr int s122_cost_curve[12] = {
++    45,
++    s122_cost_has(16) ? 7 : 0,
++    s122_cost_has(16) ? 6 : 0,
++    s122_cost_has(16) ? 5 : 0,
++    s122_cost_has(16) ? 9 : 0,
++    s122_cost_has(16) ? 3 : 0,
++    s122_cost_has(17) ? 5 : 0,
++    s122_cost_has(17) ? 5 : 0,
++    s122_cost_has(17) ? 5 : 0,
++    s122_cost_has(17) ? 5 : 0,
++    s122_cost_has(18) ? 4 : 0,
++    s122_cost_has(20) ? -3 : 0};
+ constexpr std::array<score_t, 4> ks_checks_score =
+-    pack_scores(ks_checks_mg, ks_checks_eg);
++    s122_cost_has(1) ? pack_scores(s122_forced4, s122_forced4)
++                      : pack_scores(ks_checks_mg, ks_checks_eg);
+ constexpr std::array<score_t, 1> ks_weak_score =
+-    pack_scores(ks_weak_mg, ks_weak_eg);
++    s122_cost_has(2) ? pack_scores(s122_forced1, s122_forced1)
++                      : pack_scores(ks_weak_mg, ks_weak_eg);
+ constexpr std::array<score_t, 1> ks_defenders_score =
+-    pack_scores(ks_defenders_mg, ks_defenders_eg);
++    s122_cost_has(4) ? pack_scores(s122_forced1, s122_forced1)
++                      : pack_scores(ks_defenders_mg, ks_defenders_eg);
+ constexpr std::array<score_t, 7> ks_storm_score =
+-    pack_scores(ks_storm_mg, ks_storm_eg);
++    s122_cost_has(8) ? pack_scores(s122_forced7, s122_forced7)
++                      : pack_scores(ks_storm_mg, ks_storm_eg);
+ 
+ // One flag a group, as S101's: a group whose weights are all zero is in no
+ // expression and its counts are not computed, so it scores nothing and pays
+@@ -2306,7 +2340,7 @@
+ // curve reads is computed when the curve weighs it, whatever its own linear
+ // cells hold.
+ static constexpr bool ks_curve_reads(int input)
+-{ return ks_curve_mg[input] != 0 || ks_curve_eg[input] != 0; }
++{ return s122_cost_curve[input] != 0; }
+ 
+ static constexpr bool ks_curve_reads_any(int first, int last)
+ {
+@@ -2934,6 +2968,10 @@
+   score_t safety_sum = 0;
+   score_t threat_sum = 0;
+ 
++  // The cost build's sink: what the forced parts score, which the score never
++  // sees.
++  [[maybe_unused]] score_t cost_sink = 0;
++
+   // S122's family, each part computed only where it is live (the flags over
+   // its weights say when).
+   constexpr bool checks_on = collect || trace_build || ks_checks_live;
+@@ -3116,7 +3154,7 @@
+           const bb_t targets = safe & empty;
+           const int count = count_bits(targets);
+ 
+-          safety_sum += sign * count * ks_checks_score[type];
++          cost_sink += sign * count * ks_checks_score[type];
+           EVAL_TRACE(TERM_KS_CHECKS, type, sign * count);
+ 
+           if constexpr (curve_on) { curve_checks[king][type] = count; }
+@@ -3133,7 +3171,7 @@
+         const bb_t weak = zone[king] & nonking[attacker] & ~nonking[king];
+         const int count = count_bits(weak);
+ 
+-        safety_sum += sign * count * ks_weak_score[0];
++        cost_sink += sign * count * ks_weak_score[0];
+         EVAL_TRACE(TERM_KS_WEAK, 0, sign * count);
+ 
+         if constexpr (curve_on) { curve_weak[king] = count; }
+@@ -3149,7 +3187,7 @@
+             (attacks_by[king][0] | attacks_by[king][1]) & zone[king];
+         const int count = count_bits(defended);
+ 
+-        safety_sum += sign * count * ks_defenders_score[0];
++        cost_sink += sign * count * ks_defenders_score[0];
+         EVAL_TRACE(TERM_KS_DEFENDERS, 0, sign * count);
+ 
+         if constexpr (curve_on) { curve_defenders[king] = count; }
+@@ -3176,7 +3214,7 @@
+       if constexpr (storm_on) {
+         int storm[KST_CELL_COUNT];
+         king_storm_features(board, colour, storm);
+-        slot += storm_score(storm);
++        cost_sink += storm_score(storm);
+ 
+         for (int cell = 0; cell < KST_CELL_COUNT; ++cell) {
+           EVAL_TRACE(TERM_KS_STORM, cell, sign * storm[cell]);
+@@ -3245,8 +3283,8 @@
+       int x_eg = 0;
+ 
+       for (int i = 0; i < KS_CURVE_INPUTS; ++i) {
+-        x_mg += inputs[i] * ks_curve_mg[i];
+-        x_eg += inputs[i] * ks_curve_eg[i];
++        x_mg += inputs[i] * s122_cost_curve[i];
++        x_eg += inputs[i] * s122_cost_curve[i];
+ 
+         if (inputs[i] != 0) {
+           EVAL_TRACE_SIDE(TERM_KS_CURVE, static_cast<eval_trace::side_t>(king),
+@@ -3264,9 +3302,8 @@
+       halves[1] += sign * (positive_eg * positive_eg / KS_CURVE_DIVISOR);
+     }
+ 
+-    safety = ((mg_value(safety_sum) + halves[0]) * phase +
+-              (eg_value(safety_sum) + halves[1]) * (GAME_PHASE_MAX - phase)) /
+-             GAME_PHASE_MAX;
++    asm volatile("" : : "r"(halves[0] + halves[1]));
++    safety = taper(safety_sum, phase);
+   } else {
+     safety = taper(safety_sum, phase);
+   }
+@@ -3275,6 +3312,8 @@
+     if (danger_out != nullptr) { *danger_out = danger; }
+   }
+ 
++  asm volatile("" : : "r"(cost_sink));
++
+   if constexpr (collect) {
+     const int mobility_alone = taper(mobility_sum, phase);
+ 

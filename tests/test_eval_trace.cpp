@@ -231,10 +231,11 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 }
 
 
-// Every parameter is some feature's middlegame or endgame half, exactly once,
-// and nothing else is. A parameter no feature reaches is one the fit can never
-// move -- the silent failure the old per-term gradient blocks had -- and one
-// two features reach is a parameter two terms think they own.
+// Every parameter is some feature's middlegame or endgame half, or since S122
+// some engine group's input's, exactly once, and nothing else is. A parameter
+// nothing reaches is one the fit can never move -- the silent failure the old
+// per-term gradient blocks had -- and one two reach is a parameter two terms
+// think they own.
 TEST_CASE("the trace's features cover the parameter vector exactly once")
 {
   const std::vector<tuner_trace::feature_t>& features =
@@ -242,6 +243,19 @@ TEST_CASE("the trace's features cover the parameter vector exactly once")
 
   std::vector<int> owners(tuner_layout::PARAM_COUNT, 0);
   size_t untapered = 0;
+
+  // S122's curve: its inputs are its own, and no feature reaches them.
+  size_t group_inputs = 0;
+  for (const tuner_trace::group_t& group : tuner_trace::engine_model().groups) {
+    for (const auto& [mg, eg] : group.inputs) {
+      REQUIRE(mg < tuner_layout::PARAM_COUNT);
+      REQUIRE(eg < tuner_layout::PARAM_COUNT);
+      owners[mg]++;
+      owners[eg]++;
+      group_inputs++;
+    }
+  }
+  CHECK(group_inputs == tuner_layout::KS_CURVE_COUNT);
 
   for (const tuner_trace::feature_t& f : features) {
     REQUIRE(f.mg < tuner_layout::PARAM_COUNT);
@@ -314,6 +328,111 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   CHECK(checked > 2000);
   CHECK(clamped_high > 0);
   CHECK(clamped_low > 0);
+}
+
+
+// S122's curve at weights that move it, which the case above cannot reach:
+// at the seed both kings' x are the constant and the curve scores nothing, so
+// exact_parts() could read the group's entries wrongly -- a count off by one,
+// the wrong divisor or sign, a half or a side swapped -- and still equal
+// evaluate() on every row. Here the curve's weights are forced, and the king
+// safety part exact_parts() returns is held to the same arithmetic written
+// again: the linear king safety halves summed from the row's features, and
+// each king's T from the engine's own per-king counts (king_danger_counts(),
+// the collecting instantiation, not the trace), divided and signed as
+// src/evaluation.hpp states. The engine's search instantiation at such
+// weights is a build of its own; the S122 step file records that one, read in
+// a scratch build at forced weights.
+TEST_CASE_FIXTURE(trace_fixture_t,
+                  "the curve's integer arithmetic is reconstructed at weights "
+                  "that move it")
+{
+  std::vector<int64_t> weights = tuner_trace::engine_weights();
+
+  // Written here and derived from nothing outside this file: a curve whose
+  // halves differ and whose x crosses zero on some sides (the negative
+  // defenders' weight), so the max() is exercised as well.
+  static const int64_t forced_mg[KS_CURVE_INPUTS] = {12, 37, 21, 29, 45, 11,
+                                                     33, 27, 31, 41, 17, -60};
+  static const int64_t forced_eg[KS_CURVE_INPUTS] = {-9, 13, 25, 19, 31, 7,
+                                                     15, 23, 17, 29, 21, -35};
+  for (int i = 0; i < KS_CURVE_INPUTS; ++i) {
+    weights[tuner_layout::KSC_MG_BASE + static_cast<size_t>(i)] = forced_mg[i];
+    weights[tuner_layout::KSC_EG_BASE + static_cast<size_t>(i)] = forced_eg[i];
+  }
+
+  const std::vector<tuner_trace::feature_t>& features =
+      tuner_trace::feature_table().features;
+
+  size_t checked = 0;
+  size_t moved = 0;
+  size_t flat_side = 0;
+  size_t each_sign[2] = {0, 0};
+
+  for (const std::string& fen : positions_with_truncation_rows()) {
+    CAPTURE(fen);
+
+    row_trace_t trace;
+    const dataset_t data = trace_of(fen, &trace);
+
+    king_danger_t danger;
+    king_danger_counts(&game.board, &danger);
+
+    int64_t mg = 0;
+    int64_t eg = 0;
+    for (uint32_t j = data.offsets[0]; j < data.offsets[1]; ++j) {
+      const tuner_trace::entry_t e = data.entries[j];
+      const tuner_trace::feature_t& f = features[e.feature];
+      if (f.site != tuner_trace::SITE_KING_SAFETY) { continue; }
+      mg += e.coef * weights[f.mg];
+      eg += e.coef * weights[f.eg];
+    }
+
+    int64_t t_mg = 0;
+    int64_t t_eg = 0;
+    for (int king = 0; king < 2; ++king) {
+      int64_t x_mg = 0;
+      int64_t x_eg = 0;
+      for (int i = 0; i < KS_CURVE_INPUTS; ++i) {
+        x_mg += danger.curve[king][i] * forced_mg[i];
+        x_eg += danger.curve[king][i] * forced_eg[i];
+      }
+      if (x_mg <= 0 || x_eg <= 0) { flat_side++; }
+
+      // A king's T is taken off its own side: White's off White's score.
+      const int64_t own = (king == WHITE) ? -1 : 1;
+      const int64_t m = std::max<int64_t>(x_mg, 0);
+      const int64_t n = std::max<int64_t>(x_eg, 0);
+      t_mg += own * (m * m / KS_CURVE_DIVISOR);
+      t_eg += own * (n * n / KS_CURVE_DIVISOR);
+    }
+
+    const int phase = game_phase(&game.board);
+    const int64_t expected =
+        ((mg + t_mg) * phase + (eg + t_eg) * (GAME_PHASE_MAX - phase)) /
+        GAME_PHASE_MAX;
+
+    const tuner_trace::exact_parts_t parts =
+        tuner_trace::exact_parts(data, 0, weights.data());
+    CHECK(parts.safety == expected);
+
+    if (t_mg != 0 || t_eg != 0) {
+      moved++;
+      each_sign[(t_mg + t_eg > 0) ? 0 : 1]++;
+    }
+    checked++;
+  }
+
+  // The precondition: the curve moves the score here, both ways, and some
+  // side sits on its flat part.
+  CAPTURE(checked);
+  CAPTURE(moved);
+  CAPTURE(flat_side);
+  CHECK(checked > 2000);
+  CHECK(moved > 1000);
+  CHECK(each_sign[0] > 100);
+  CHECK(each_sign[1] > 100);
+  CHECK(flat_side > 0);
 }
 
 
@@ -560,6 +679,31 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     cells(eval_trace::TERM_THREAT_KING, threat_family.threat_king, 4);
     cells(eval_trace::TERM_THREAT_PUSH, threat_family.threat_push, 4);
 
+    // S122's family the same way, each a king's own count, and the curve's
+    // inputs against the same counts per king, each side's own entry.
+    king_danger_t danger;
+    king_danger_counts(&board, &danger);
+    cells(eval_trace::TERM_KS_CHECKS, danger.checks, 4);
+    cells(eval_trace::TERM_KS_WEAK, danger.weak, 1);
+    cells(eval_trace::TERM_KS_DEFENDERS, danger.defenders, 1);
+    cells(eval_trace::TERM_KS_STORM, danger.storm, KST_CELL_COUNT);
+
+    int curve[2][KS_CURVE_INPUTS] = {};
+    for (uint32_t j = data.side_offsets[0]; j < data.side_offsets[1]; ++j) {
+      const tuner_trace::side_entry_t e = data.side_entries[j];
+      REQUIRE(e.group == 0);
+      REQUIRE(e.side < 2);
+      REQUIRE(e.input < KS_CURVE_INPUTS);
+      curve[e.side][e.input] += e.coef;
+    }
+    for (int king = 0; king < 2; ++king) {
+      for (int input = 0; input < KS_CURVE_INPUTS; ++input) {
+        CAPTURE(king);
+        CAPTURE(input);
+        CHECK(curve[king][input] == danger.curve[king][input]);
+      }
+    }
+
     CHECK(trace.phase == game_phase(&board));
   }
 }
@@ -593,6 +737,49 @@ TEST_CASE_FIXTURE(trace_fixture_t, "the positions move every term both ways")
       CAPTURE(f - table.base[t]);
       CHECK(positive[f] > 0);
       CHECK(negative[f] > 0);
+    }
+  }
+}
+
+
+// The same for S122's curve, which has no feature: each input is reached on
+// each king's side, and on some row with each sign of White's count less
+// Black's -- the constant excepted, 1 on every side of every row.
+TEST_CASE_FIXTURE(trace_fixture_t, "the positions reach every curve input")
+{
+  int on_side[2][KS_CURVE_INPUTS] = {};
+  int white_more[KS_CURVE_INPUTS] = {};
+  int black_more[KS_CURVE_INPUTS] = {};
+
+  for (const std::string& fen : all_positions()) {
+    row_trace_t trace;
+    const dataset_t data = trace_of(fen, &trace);
+
+    int counts[2][KS_CURVE_INPUTS] = {};
+    for (uint32_t j = data.side_offsets[0]; j < data.side_offsets[1]; ++j) {
+      const tuner_trace::side_entry_t e = data.side_entries[j];
+      counts[e.side][e.input] += e.coef;
+    }
+
+    for (int input = 0; input < KS_CURVE_INPUTS; ++input) {
+      for (int side = 0; side < 2; ++side) {
+        if (counts[side][input] != 0) { on_side[side][input]++; }
+      }
+      if (counts[0][input] > counts[1][input]) { white_more[input]++; }
+      if (counts[0][input] < counts[1][input]) { black_more[input]++; }
+    }
+  }
+
+  for (int input = 0; input < KS_CURVE_INPUTS; ++input) {
+    CAPTURE(input);
+    CHECK(on_side[0][input] > 0);
+    CHECK(on_side[1][input] > 0);
+    if (input == KSC_CONSTANT) {
+      CHECK(white_more[input] == 0);
+      CHECK(black_more[input] == 0);
+    } else {
+      CHECK(white_more[input] > 0);
+      CHECK(black_more[input] > 0);
     }
   }
 }
@@ -724,11 +911,13 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 
 
 // The refusals no legal board reaches. evaluate() writes at most two entries a
-// piece and load_FEN() accepts at most 32 pieces, so a record from the engine
-// never comes near the 1024-entry capacity, never carries an index outside
-// its term, and never a per-side entry today; sum_record() is handed synthetic
-// records instead. Each refusal must leave the thread-local summing buffer
-// clear: the valid record summed after it comes out exactly as it does alone.
+// piece, beside S122's curve's 24 a row at most, and load_FEN() accepts at
+// most 32 pieces, so a record from the engine never comes near the 1024-entry
+// capacity, never carries an index outside its term, never a per-side entry
+// but its curve's and never a White-minus-Black one for it; sum_record() is
+// handed synthetic records instead. Each refusal must leave the thread-local
+// summing buffer clear: the valid record summed after it comes out exactly as
+// it does alone.
 TEST_CASE("a record the dataset cannot hold is refused and leaves nothing")
 {
   static eval_trace::record_t record;
@@ -801,6 +990,15 @@ TEST_CASE("a record the dataset cannot hold is refused and leaves nothing")
   eval_trace::add(eval_trace::TERM_KING_SAFETY, eval_trace::SIDE_WHITE, 0, 1);
   eval_trace::sink = nullptr;
   refused_then_clean("per-side entry without a group");
+
+  // A White-minus-Black entry for a group's term, which has no feature.
+  record.clear();
+  eval_trace::sink = &record;
+  eval_trace::set_phase(12);
+  eval_trace::add(eval_trace::TERM_MOBILITY, eval_trace::SIDE_BOTH, 3, 7);
+  eval_trace::add(eval_trace::TERM_KS_CURVE, eval_trace::SIDE_BOTH, 1, 1);
+  eval_trace::sink = nullptr;
+  refused_then_clean("both-sides entry for a group's term");
 
   // A summed coefficient past int16, refused while the buffer is emitted.
   record.clear();
