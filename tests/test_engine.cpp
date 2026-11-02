@@ -989,26 +989,39 @@ TEST_SUITE("engine: uci layer")
     // board's depth-1 `time` may read, and, halved, `prompt_stop_us` below. A
     // choice made off a reading and no rule's answer: S210 set it under the
     // 13.8 ms of its day for a four times faster machine.
-    // Re-derive what it is judged against, on each machine the suite runs on,
-    // with this, where `sleep` holds `quit` past `bestmove`:
-    //   fen='q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1'
-    //   for i in $(seq 200); do
-    //     { printf 'position fen %s\ngo depth 1\n' "$fen"; sleep 0.2
-    //       echo quit; } | build/src/chesso | grep -o ' time [0-9]*'
-    //   done | sort -k2n | uniq -c
-    // The rule: the floor stands while the lowest `time` printed is at or above
-    // it, and one under it takes a heavier board, not a smaller floor.
-    // Margin: 9 against 3 on the i7-8700K at S319 on `046c3dd`, 158 of 200 runs
-    // at 9 and none lower; 4 against 3 on the MacBook Air M5 at `1c86c1a`,
-    // S308's step file, not re-taken.
+    // Re-derive both its ends, on each machine the suite runs on, with
+    //   python3 adocs/data/S321_depth1_floor.py
+    // which reads the floor and this board out of this file. The upper end is
+    // the lowest `time` of 200 fresh `chesso` processes, each sent `position
+    // fen` and `go depth 1`, and `quit` only after `bestmove`: what S319's
+    // shell command here read until S321. The lower end is the stop half's
+    // send as this case clocks it, over 300 runs of the case, which prints it
+    // under doctest's `--success`, so no build is changed to read it.
+    // The rule: the floor stands while the lowest `time` is at or above it,
+    // and one under it takes a heavier board, not a smaller floor; and, since
+    // S321, while the 99th-percentile send is under `prompt_stop_us`, the
+    // quantile chosen at S321 because S242 read 299 of 300 sends under it
+    // beside a match. The whole floors both ends admit are the band. For a
+    // floor, DEC-142's re-derivation is the band's, with the chosen value and
+    // its margin stated, DEC-116's form: the script re-derives the band and
+    // not 3, which stays S210's choice inside it.
+    // Margin, idle: the band 1 to 9 on the i7-8700K at S321 on `d0220d1`, the
+    // lowest `time` 9 against 3, three times, 164 of 200 runs at 9 and none
+    // lower, and the p99 send 93 us against 1500, 16 times; S319 read 9 there
+    // too, on `046c3dd`. 4 against 3 on the MacBook Air M5 at `1c86c1a`,
+    // S308's step file, not re-taken. Beside a 12-thread corpus run at S321
+    // the band read 1 to 17: load lengthens the `time` in the floor's favour,
+    // so the idle band is the one that binds. Both readings are in
+    // `adocs/data/S321_depth1_floor.txt`.
     // Moves legitimately on: anything that moves this board's depth-1 tree,
-    // quiescence above all, and a faster machine.
-    // **A finding by DEC-142, open:** this golden is not re-derived as that
-    // rule asks. No script produces 3: the command above only re-reads a run,
-    // and the rule says when 3 stands, not what it should be. The floor's other
-    // end has no script either: `prompt_stop_us` clocks the stop half's send,
-    // and that send read a 63 us median and 299 of 300 under 1500 us at S242,
-    // beside a match, from a temporary MESSAGE in a diagnostic build.
+    // quiescence above all, a faster machine, and the load.
+    // **DEC-142's finding here, open from S319 and closed at S321, both
+    // parts:** the floor was not re-derived as that rule asks, S319's command
+    // only re-reading one end of a run, and its other end had no script, the
+    // send having been read at S242, a 63 us median and 299 of 300 under
+    // 1500 us beside a match, from a temporary MESSAGE in a diagnostic build.
+    // The script reads both ends and re-derives the band; 3 is the choice
+    // inside it.
     // Property beside it: none of its own. It is the precondition of the stop
     // half below, which asserts the property.
     const std::string fen =

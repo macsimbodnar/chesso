@@ -288,7 +288,8 @@ class MatchObjective:
     spawns it once per game, so pointing a multi-hour run at `build-tune/` means
     a rebuild part way through swaps the engine under the run and the trajectory
     becomes a mixture of two versions -- which has already happened once to the
-    SPRT harness (fastchess.sh:141-147).
+    SPRT harness (fastchess.sh, the comment "Snapshot the candidate before
+    playing a single game.").
     """
 
     def __init__(self, match, params, rundir):

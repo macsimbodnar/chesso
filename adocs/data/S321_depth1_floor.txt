@@ -1,0 +1,44 @@
+# S321: adocs/data/S321_depth1_floor.py's readings of tests/test_engine.cpp's depth_1_floor_ms, each verbatim under its
+# own header. Both ran on S321's build/ (d0220d1-dirty: comment edits only, every object byte-equal to d0220d1's but the
+# stamp's and test_engine.cpp.o's line numbers, adocs/data/S321_identity.txt), i7-8700K, 12 hardware threads, by the script
+# before its failure paths were made to refuse, which changed no line that reads or prints a figure.
+
+# THE IDLE READING, the one that binds. Taken by the coordinator, 2026-11-02, about 18:12 to 18:14 (2 m 12 s by `time`),
+# with the 12-thread datagen corpus run stopped. Its `load before` lags: datagen had stopped only 5 s earlier.
+
+case          tests/test_engine.cpp "a stop inside the first iteration cuts it and the hard timer ends the search within its bound"
+floor         depth_1_floor_ms 3, prompt_stop_us 1500 us
+board         q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1
+binaries      /home/max/ws/chesso-s321/build/src/chesso, /home/max/ws/chesso-s321/build/tests/test_engine
+load before   11.71 12.70 13.47 1/1303 268473
+
+upper end     depth-1 time over 200 fresh processes, ms: 164 x 9, 34 x 10, 2 x 11
+              nodes 48840
+              lowest 9 against the floor 3: at or above it, margin 3.00 times
+lower end     send over 300 runs of the case, 300 attempts, us: median 47, p90 61, p99 93, max 120
+              300 of 300 under prompt_stop_us 1500; p99 under it, margin 16.1 times
+load after    2.22 8.57 11.84 1/1305 271353
+
+band          whole floors both ends admit: 1 to 9; the floor 3 is inside it
+S321-FLOOR-STANDS
+
+# THE LOADED READING. Taken by S321's implementer, 2026-11-02, 17:28:25 to 17:31:00, from /tmp, beside the coordinator's
+# 12-thread datagen corpus run. That load lengthens both readings, the `time`'s in the floor's favour: lowest time 17
+# here against the idle 9. An earlier run, on d0220d1's own build, 17:16 to 17:19, read the lowest time 17 and sends
+# median 73, p99 94, max 149 us, 300 of 300 under 1500, the same band.
+
+case          tests/test_engine.cpp "a stop inside the first iteration cuts it and the hard timer ends the search within its bound"
+floor         depth_1_floor_ms 3, prompt_stop_us 1500 us
+board         q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1
+binaries      /home/max/ws/chesso-s321/build/src/chesso, /home/max/ws/chesso-s321/build/tests/test_engine
+load before   12.96 13.26 14.16 14/1468 2722397
+
+upper end     depth-1 time over 200 fresh processes, ms: 5 x 17, 2 x 19, 2 x 20, 2 x 21, 1 x 28, 3 x 32, 5 x 33, 8 x 34, 33 x 35, 89 x 36, 37 x 37, 9 x 38, 2 x 39, 2 x 40
+              nodes 48840
+              lowest 17 against the floor 3: at or above it, margin 5.67 times
+lower end     send over 300 runs of the case, 300 attempts, us: median 71, p90 78, p99 85, max 107
+              300 of 300 under prompt_stop_us 1500; p99 under it, margin 17.6 times
+load after    13.08 13.20 13.99 13/1459 2724994
+
+band          whole floors both ends admit: 1 to 17; the floor 3 is inside it
+S321-FLOOR-STANDS

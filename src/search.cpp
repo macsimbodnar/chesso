@@ -2840,20 +2840,21 @@ static int negamax_at(int alpha0,
       // has no symptom but lost rating.
       //
       // **Still the plain entry alone, with the continuation table live.**
-      // S222 lands that table and DEC-205 records what this rule costs without
+      // S222 landed that table, and DEC-205 records what this rule cost without
       // it -- 0.8 % of the nodes at depth 10, because plain history alone
-      // rarely reaches the threshold -- so reading the sum is the obvious next
-      // move and it is deliberately not made here. Two reasons. The step's one
-      // SPRT already prices a new table and a fitted history scale, and a
-      // third change inside it could not be attributed (MEASUREMENT). And
+      // rarely reaches the threshold -- so reading the sum was the obvious next
+      // move, and S222 deliberately did not make it. Two reasons. That step's
+      // one SPRT priced a new table and a fitted history scale, and a third
+      // change inside it could not have been attributed (MEASUREMENT). And
       // HistPruneCoeff's declared range is derived from the plain band's own
       // edge, `QuietHistoryMax/64` to `QuietHistoryMax/8` with a range top at
       // twice the 8192 edge it was set against, 16384, about 1.86 times the
       // 8831 shipping at S319; against a sum whose span is QuietHistoryMax plus
       // ContHistWeight * CONT_HIST_BOUND / 100 that derivation has to be taken
       // again, which is a decision with its own seed and not a line moved.
-      // S222's lane fits HistPruneCoeff where it stands (DEC-205) and its SPRT
-      // re-prices the rule. HP_COEFF's block says what became of the move onto
+      // S222's lane fitted HistPruneCoeff where it stands (DEC-205), and its
+      // SPRT, H1 on 2026-09-15, priced the rule only inside the whole vector it
+      // measured (DEC-210). HP_COEFF's block says what became of the move onto
       // the sum.
       if (prune_rule == PRUNE_NONE && lmr_depth < HP_MAX_LMRDEPTH &&
           state->quiet_history[game->board.active_color][MOVE_FROM(moves[i])]

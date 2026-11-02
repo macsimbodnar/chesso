@@ -1,0 +1,78 @@
+# S321 identity: what the comment edits leave of each file, old (d0220d1) against the worktree. S319_identity.txt's form.
+# Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show d0220d1:<file>` and over the new
+#      file, compared whole; the bytes and hash below are the stripped output. Machine: i7-8700K, g++ 13.3, 2026-11-02.
+# Python, S306's form: `ast.dump` with every module, class and function docstring removed, compared whole, and the `tokenize`
+#      stream with comments dropped and every docstring's lines skipped; then which docstrings changed.
+# Shell and prose: `git diff -U0 d0220d1 -- <file>`, for shell every changed line a comment by script, printed and read by eye.
+base d0220d1; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+  DIFFER  python, return 1 / return 2, ast and tokens
+  SAME    python, a one-line docstring made two lines and a comment added, ast and tokens
+
+C++: g++ -fpreprocessed -dD -E -P, old against new
+  SAME  src/search.cpp  53510 bytes  sha256 5e1113547f2367d0
+  SAME  tests/test_engine.cpp  131792 bytes  sha256 dd314cfbbd992d3d
+
+Python: ast without docstrings; tokens with comments and docstrings out
+  SAME ast  SAME tokens  tools/spsa_driver.py  18 docstrings, 1 changed
+
+Shell: changed lines of git diff -U0, each a comment by this script's test (optional space, then #)
+  ONLY COMMENTS  adocs/data/S136_screen.sh
+    -  # From the test directory, as ctest runs them: the shared position list
+    -  # reads assets/test_jsons/ relative to it.
+    +  # From the test directory, as ctest ran them at S136: the shared position
+    +  # list read assets/test_jsons/ relative to it then. Since S320 the binary
+    +  # reads it out of the tree it was built from and ctest runs it from the
+    +  # repository root, so on a TREE from S320 on the `cd` no longer matters for
+    +  # the fixtures; it is still what finds ./test_eval_trace.
+  bash -n adocs/data/S136_screen.sh: rc 0
+
+Prose: changed lines of git diff -U0
+  DEV_MANUAL.md
+    -| `test_engine.cpp` "a stop inside the first iteration cuts it and the hard timer ends the search within its bound", `depth_1_floor_ms` | 3 since S210, the fewest milliseconds the eight-queens board's depth-1 `time` may read, and, halved, `prompt_stop_us`. A choice made off a reading and no rule's answer: S210 set it under the 13.8 ms of its day for a four times faster machine. It stands while the lowest `time` is at or above it, and one under it takes a heavier board, not a smaller floor: the lowest read 9 on the i7-8700K at S319 on `046c3dd`, 158 of 200 runs at 9, and 4 on the MacBook Air M5 at `1c86c1a` (`adocs/plan_done/S308_false_comment_siblings.md`), not re-taken. **A finding by DEC-142, open:** this golden is not re-derived as that rule asks. No script produces 3: the command only re-reads a run, and the rule says when 3 stands, not what it should be. The floor's other end has no script either: `prompt_stop_us` clocks the stop half's send, and that send read a 63 us median and 299 of 300 under 1500 us at S242, beside a match, from a temporary MESSAGE in a diagnostic build (`adocs/plan_done/S242_test_engine_capture_flake.md`) | `fen='q1q1q1q1/1q1q1q1k/8/8/8/8/1Q1Q1Q1K/Q1Q1Q1Q1 w - - 0 1'; for i in $(seq 200); do { printf 'position fen %s\ngo depth 1\n' "$fen"; sleep 0.2; echo quit; } | build/src/chesso | grep -o ' time [0-9]*'; done | sort -k2n | uniq -c`, on each machine the suite runs on; `sleep` holds `quit` past `bestmove` |
+    +| `test_engine.cpp` "a stop inside the first iteration cuts it and the hard timer ends the search within its bound", `depth_1_floor_ms` | 3 since S210, the fewest milliseconds the eight-queens board's depth-1 `time` may read, and, halved, `prompt_stop_us`, the clock the stop half reads its send against. A choice made off a reading and no rule's answer: S210 set it under the 13.8 ms of its day for a four times faster machine. Since S321 a script reads both its ends. It stands while the lowest `time` is at or above it, and one under it takes a heavier board, not a smaller floor; and, since S321, while the 99th-percentile send is under `prompt_stop_us`, the quantile chosen at S321 because S242 read 299 of 300 sends under it beside a match. The whole floors both ends admit are the band. For a floor, DEC-142's re-derivation is the band's, with the chosen value and its margin stated, DEC-116's form: the script re-derives the band and not 3, which stays S210's choice inside it. **Idle, the band read 1 to 9** on the i7-8700K at S321 on `d0220d1`: the lowest `time` 9 against 3, three times, 164 of 200 runs at 9 and none lower, and the p99 send 93 us against 1500, 16 times. S319 read 9 there too, on `046c3dd`, 158 of 200 runs at 9; 4 on the MacBook Air M5 at `1c86c1a` (`adocs/plan_done/S308_false_comment_siblings.md`), not re-taken. Beside a 12-thread corpus run at S321 the band read 1 to 17: load lengthens the `time` in the floor's favour, so the idle band is the one that binds. Both readings are in `adocs/data/S321_depth1_floor.txt`. **DEC-142's finding here, open from S319 and closed at S321, both parts:** the floor was not re-derived as that rule asks, S319's shell command, this row's last column until S321, only re-reading one end of a run; and its other end had no script, the send having been read at S242, a 63 us median and 299 of 300 under 1500 us beside a match, from a temporary MESSAGE in a diagnostic build (`adocs/plan_done/S242_test_engine_capture_flake.md`). The script reads both ends and re-derives the band; 3 is the choice inside it | `python3 adocs/data/S321_depth1_floor.py`, on each machine the suite runs on: 200 fresh `chesso` processes for the `time`, each sent `quit` only after `bestmove`, and 300 runs of the case for the send, which doctest's `--success` prints |
+    -positions both ways round and the 2696 positions of the JSON suites, 478 of
+    -which bind the clamp: the identity on every one; every coefficient
+    +positions both ways round and the 2696 positions of the JSON suites, 492 of
+    +which bind the clamp at S321 on `d0220d1`, 246 each way, where no curated row
+    +does (478 of the 2764 positions the list held at `f57b92f` bound it): the
+    +identity on every one; every coefficient
+
+Objects: every .o and .a of build/ and build-tune/ snapshotted at d0220d1 before any edit (stamps "d0220d1"), against the
+  edited tree rebuilt with CCACHE_DISABLE=1, so every recompile is a real one. cmp, byte for byte.
+  objects and archives compared: 136; byte-equal 124; differ 12
+    DIFFER  build-tune/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o
+    DIFFER  build-tune/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o
+    DIFFER  build-tune/src/libchesso_engine.a
+    DIFFER  build-tune/src/libchesso_engine_trace.a
+    DIFFER  build-tune/tests/CMakeFiles/test_engine.dir/test_engine.cpp.o
+    DIFFER  build-tune/tools/CMakeFiles/tuner.dir/tuner.cpp.o
+    DIFFER  build/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o
+    DIFFER  build/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o
+    DIFFER  build/src/libchesso_engine.a
+    DIFFER  build/src/libchesso_engine_trace.a
+    DIFFER  build/tests/CMakeFiles/test_engine.dir/test_engine.cpp.o
+    DIFFER  build/tools/CMakeFiles/tuner.dir/tuner.cpp.o
+
+    BYTE-EQUAL  build-tune/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since d0220d1) against the base header
+    BYTE-EQUAL  build-tune/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since d0220d1) against the base header
+    BYTE-EQUAL  build-tune/tools/CMakeFiles/tuner.dir/tuner.cpp.o recompiled from tools/tuner.cpp (unchanged since d0220d1) against the base header
+    BYTE-EQUAL  build/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since d0220d1) against the base header
+    BYTE-EQUAL  build/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since d0220d1) against the base header
+    BYTE-EQUAL  build/tools/CMakeFiles/tuner.dir/tuner.cpp.o recompiled from tools/tuner.cpp (unchanged since d0220d1) against the base header
+  test_engine.cpp.o differs by doctest's __LINE__ alone: the GOLDEN block grew 13 lines.
+  BYTE-EQUAL  build/tests/CMakeFiles/test_engine.dir/test_engine.cpp.o: the new source, with #line 1 naming its real path and #line 1014 before its line 1027, the board's, compiled by its own flags
+  BYTE-EQUAL  build-tune/tests/CMakeFiles/test_engine.dir/test_engine.cpp.o: the new source, with #line 1 naming its real path and #line 1014 before its line 1027, the board's, compiled by its own flags
+  BYTE-EQUAL  control: the old source (git show d0220d1), with #line 1 naming the real path, by the same method, against build's base object
+  BYTE-EQUAL  control: the old source (git show d0220d1), with #line 1 naming the real path, by the same method, against build-tune's base object
+  The archives, by `ar x` and cmp member by member:
+    build/src/libchesso_engine.a: 10 members, differing: chesso.cpp.o
+    build/src/libchesso_engine_trace.a: 10 members, differing: chesso.cpp.o
+    build-tune/src/libchesso_engine.a: 10 members, differing: chesso.cpp.o
+    build-tune/src/libchesso_engine_trace.a: 10 members, differing: chesso.cpp.o
+  Bench 5482277 in both builds, the parent's.
+
+S321-IDENTITY HOLDS

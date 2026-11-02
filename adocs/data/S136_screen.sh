@@ -461,8 +461,11 @@ guard_readings() {
     { say "the guard forecast failed"; return 1; }
 
   note "== the red observed: the two truncation cases on the pasted build"
-  # From the test directory, as ctest runs them: the shared position list
-  # reads assets/test_jsons/ relative to it.
+  # From the test directory, as ctest ran them at S136: the shared position
+  # list read assets/test_jsons/ relative to it then. Since S320 the binary
+  # reads it out of the tree it was built from and ctest runs it from the
+  # repository root, so on a TREE from S320 on the `cd` no longer matters for
+  # the fixtures; it is still what finds ./test_eval_trace.
   (
     cd "$tree/build/tests" || exit 1
     ./test_eval_trace -tc="the pinned positions reach the truncation bound"

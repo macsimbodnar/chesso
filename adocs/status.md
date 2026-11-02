@@ -44,7 +44,16 @@ The shared `.git/config`'s `submodule.tests/doctest.url` had been set to `../che
 restored to `.gitmodules`' URL. S320 initialised its worktree's doctest offline with a command-line
 `-c submodule.tests/doctest.url=/home/max/ws/chesso/tests/doctest`, leaving the shared config alone: the form for later briefs.
 
-**Next: S321** (filler) while the corpus runs; then S122's commands when it ends.
+**S321 done** (filler, comments only, code identical, bench 5482277). Five stale statements are made true, and
+`depth_1_floor_ms` is re-derived by `adocs/data/S321_depth1_floor.py`: idle band 1 to 9 ms (read by the coordinator with datagen
+stopped), 3 inside it at 3 times, p99 send 93 us against 1500.
+- Coordinator's rulings: the DEC-142 finding is closed in DEC-116's form (for a floor, re-deriving means its band); the p99 rule needs
+  no DEC, since the script and the site hold it.
+- The clean reader's four findings are fixed.
+- New: S323, for S321's leftovers (`tests/CMakeLists.txt`'s 478 comment, ten line-number citations).
+
+**Next: S122's commands when the corpus ends** (about 23:30), the step file's order: `S122_corpus.sh all`, `S122_screen.sh sample`,
+`S122_screen.sh all` (the night). Filler S322 and S323 only while a run leaves the machine idle for agents. No commit during the screen.
 
 ## 2026-11-02: S122 started, research pass done and ruled (DEC-344); head's corpus generating
 
