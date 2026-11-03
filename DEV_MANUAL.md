@@ -5567,9 +5567,27 @@ in every leaf's file (worker `i` of `T` plays games `i`, `i + T`, `i + 2T`
 ...); `ply` is the sampled position's half-move, `2 * (fullmove - 1) + (black
 to move)`; `distance` is how many plies past it the FEN stands. The tuner reads
 the first four and `ply`, and `tools/corpus_split.py` reads `game`. Openings
-are 8 uniform random plies, discarded if the search found a mate or scored the
-position past `--opening-limit`; games are adjudicated once one side holds
-`--resign-score` for `--resign-plies`.
+are 8 uniform random plies, discarded if the game is already over there, or if
+the search found a mate or scored the position past `--opening-limit`; games
+are adjudicated once one side holds `--resign-score` for `--resign-plies`.
+
+**What ends a game**, S331, `terminal_result()` in `tools/datagen_rules.hpp`:
+mate, scored 1 or 0; stalemate, insufficient material, the fifty-move rule or
+the **third occurrence** of a position, scored 0.5; adjudication, scored for the
+side that held the margin; or `--max-plies` without a verdict, scored 0.5. The
+repetition test is `classify_repetition()` with every earlier entry treated as
+before the root (`history.size`), so only a third occurrence draws: the
+search's rule for a position from before its root since S207 (DEC-173), the
+occurrence FIDE 9.2 lets a player claim, and fastchess's `Draw by 3-fold
+repetition`. **Until S331 the second occurrence ended the game**, drawn, by
+`is_position_repeated()`, and an opening whose last position had occurred
+before was discarded. From S207 on the search no longer read one earlier
+occurrence as a draw, so a game could repeat a position once and be scored a
+draw there that the laws do not give. Every corpus written before S331 was
+generated under that rule, S082's, S083's and S122's among them;
+`adocs/data/S331_measure.sh` reads how many games and labels it changed, and
+every run prints the same figures for its own games (the `repetition:` line
+below).
 
 **Which position a row names is `--leaf`'s choice**, S082:
 
@@ -5639,6 +5657,7 @@ coverage qs, rows by the written position's phase and the sampled position's |sc
   phase              <50       <150       <300       <600       rest
       0 to  4        ...
 walk: <n> nodes, <p> % of the <n> the games' searches spent
+repetition: <n> games reached a position that had occurred before, which drew a game until S331; <n> of them ended other than drawn, <n> won by White and <n> lost; <n> positions passed in them, a root row each, <n> before the first recurrence; <n> openings ended on one, discarded until S331
 ```
 
 Each `filter` figure is the number of positions that would have been written but
@@ -5649,6 +5668,30 @@ for, and the refusal shares are what the walk declined; the `pv` line adds how
 many of the plies were the line's. The coverage matrix is the print the
 2026-09-27 tuning comparison kept (DEC-237): counts, never a resampling. The
 `walk` line is what the leaves cost, in nodes against the games' own.
+
+The `repetition` line, S331, is what the rule before S331 would have changed
+in this run's games. A game counts once a position on the board had occurred
+before in it, after its opening -- where the old rule ended it, drawn -- and
+the line says how many of those ended 1 or 0 instead. Its rows are the
+positions that passed the filter in those games, a root row each, and the
+ones sampled before the game's first recurrence are the rows the old rule
+would have written, labelled 0.5. A game whose opening ended on a recurrence
+is counted apart: the old rule discarded that opening and played another. A
+game is a function of its opening at a node budget -- the table and the
+correction history are cleared per game and the random draws are the
+opening's -- so up to its first recurrence it is the game the old rule
+played; S331's premise check (`adocs/data/S331_measure.sh premise`) found
+the old datagen's rows equal to the new one's before each first recurrence,
+over all three leaves.
+
+`--games-out FILE`, S331, writes one line a game, five tab-separated columns,
+under the same lock as the game's rows: the game's number, its result as its
+rows carry it, the ply of its first position after the opening, the ply of
+its first recurrence or -1, and the ply it ended on, each counted as the
+rows' `ply` column counts. A row is before its game's first recurrence when
+its `ply` is below the fourth column, which is how S331's reading splits the
+rows. Nothing is written there unless it is named; a failed write to it fails
+the run as a failed row write does.
 
 **The exit status says whether the files hold what those lines count.**
 `datagen` exits 1, after printing them, when a write or a flush to an output

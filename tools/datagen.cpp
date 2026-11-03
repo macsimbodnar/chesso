@@ -47,6 +47,13 @@
 // differs from the root and how often the walk was refused, so the next corpus
 // is sized from a measurement rather than from this comment.
 //
+// A GAME ENDS by the rules -- mate, stalemate, insufficient material, the
+// fifty-move rule, or the third occurrence of a position, which is
+// tools/datagen_rules.hpp -- by adjudication once one side holds
+// --resign-score for --resign-plies, or at --max-plies, scored a draw. Until
+// S331 the second occurrence ended it, as a draw; every run prints how many of
+// its games that rule would have drawn and what they ended as instead.
+//
 // Nothing here reads another engine. The positions are chesso's own play and
 // the labels are game outcomes, which is what DEC-016 requires of training
 // data.
@@ -65,6 +72,7 @@
 #include <vector>
 #include "bitboard.hpp"
 #include "correction_history.hpp"
+#include "datagen_rules.hpp"
 #include "evaluation.hpp"
 #include "leaf_walk.hpp"
 #include "search.hpp"
@@ -113,6 +121,7 @@ struct options_t
   uint64_t seed = 1;
   int tt_mb = 16;
   std::string out = "";
+  std::string games_out = "";  // one line a game when named, S331
 };
 
 struct sample_t
@@ -196,6 +205,21 @@ leaf_stats_t leaf_stats[KIND_COUNT];
 std::atomic<uint64_t> walk_nodes{0};
 std::atomic<uint64_t> game_nodes{0};
 
+// The games that reached a position which had occurred before in the game:
+// where the rule before S331 ended a game as a draw. Counted so that rule's
+// effect is read from any run. A game whose first recurrence was its opening's
+// last position is counted apart, in `recurred_openings`: the old rule
+// discarded that opening rather than drew a game. The rows are the positions
+// that passed the filter, a root row each, and `recurred_rows_before` the ones
+// sampled before the game's first recurrence -- the rows the old rule kept,
+// labelled 0.5. S331.
+std::atomic<uint64_t> recurred_games{0};
+std::atomic<uint64_t> recurred_won{0};   // White's result, 1
+std::atomic<uint64_t> recurred_lost{0};  // and 0
+std::atomic<uint64_t> recurred_rows{0};
+std::atomic<uint64_t> recurred_rows_before{0};
+std::atomic<uint64_t> recurred_openings{0};
+
 
 // Iterative deepening against a node budget, which is the same shape as the
 // UCI layer's loop with everything that reports to a GUI taken out. The budget
@@ -253,22 +277,6 @@ search_t run_search(game_t* game,
 }
 
 
-bool has_legal_move(game_t* game)
-{
-  move_t moves[MAX_MOVES];
-  const size_t count = generate_moves(game_tables(), &game->board, moves);
-
-  for (size_t i = 0; i < count; ++i) {
-    if (make_move(game, moves[i])) {
-      unmake_move(game);
-      return true;
-    }
-  }
-
-  return false;
-}
-
-
 // A uniform choice among the legal moves. Returns 0 when there are none, which
 // is how a randomised opening that walked into mate is detected.
 move_t random_move(game_t* game, std::mt19937_64& rng)
@@ -290,23 +298,6 @@ move_t random_move(game_t* game, std::mt19937_64& rng)
 
   std::uniform_int_distribution<size_t> pick(0, legal_count - 1);
   return legal[pick(rng)];
-}
-
-
-// 1.0, 0.5 or 0.0 from White's point of view, or -1 when the game is not over.
-double terminal_result(game_t* game)
-{
-  if (game->board.halfmove_clock >= 100) { return 0.5; }
-  if (is_insufficient_material(&game->board)) { return 0.5; }
-  if (is_position_repeated(&game->history, &game->board)) { return 0.5; }
-
-  if (!has_legal_move(game)) {
-    // Stalemate is a draw; mate is a loss for the side that has to move.
-    if (!is_check(game)) { return 0.5; }
-    return (game->board.active_color == WHITE) ? 0.0 : 1.0;
-  }
-
-  return -1.0;
 }
 
 
@@ -365,12 +356,14 @@ void sample_leaf(leaf_kind_t kind,
 
 void play_games(const options_t& opts,
                 unsigned index,
-                const std::array<FILE*, KIND_COUNT>& outs)
+                const std::array<FILE*, KIND_COUNT>& outs,
+                FILE* games_out)
 {
   // Per worker, and not optional: the zobrist keys live in game_t, so a game
   // that skips this hashes every position to zero. Nothing complains — the
   // transposition table collapses onto one entry and repetition detection
-  // reports a draw two plies into every game.
+  // reports a draw two plies into every game, four since S331's third
+  // occurrence.
   game_t game;
   initialize_game_const_data(&game);
 
@@ -436,8 +429,22 @@ void play_games(const options_t& opts,
     int decisive_run = 0;
     int decisive_sign = 0;
 
+    // The sampled ply of the first position on the board that had occurred
+    // before in the game, or -1, and the positions that passed the filter in
+    // all and before it. S331.
+    const int first_ply = sampled_ply(&game.board);
+    int recurred_ply = -1;
+    uint64_t game_passed = 0;
+    uint64_t game_passed_before = 0;
+
     for (int ply = 0; ply < opts.max_plies; ++ply) {
-      result = terminal_result(&game);
+      bool recurred = false;
+      result = terminal_result(&game, &recurred);
+
+      if (recurred && recurred_ply < 0) {
+        recurred_ply = sampled_ply(&game.board);
+      }
+
       if (result >= 0.0) { break; }
 
       const search_t found =
@@ -472,6 +479,8 @@ void play_games(const options_t& opts,
 
       if (completed && not_in_check && no_mate && inside_band) {
         passed++;
+        game_passed++;
+        if (recurred_ply < 0) { game_passed_before++; }
 
         const uint64_t nodes_before = walker.nodes;
 
@@ -507,6 +516,18 @@ void play_games(const options_t& opts,
     // what a 400-ply game with neither side making progress amounts to.
     if (result < 0.0) { result = 0.5; }
 
+    const int end_ply = sampled_ply(&game.board);
+
+    if (recurred_ply == first_ply) {
+      recurred_openings++;
+    } else if (recurred_ply >= 0) {
+      recurred_games++;
+      if (result == 1.0) { recurred_won++; }
+      if (result == 0.0) { recurred_lost++; }
+      recurred_rows += game_passed;
+      recurred_rows_before += game_passed_before;
+    }
+
     {
       const std::lock_guard<std::mutex> guard(output_lock);
 
@@ -525,6 +546,15 @@ void play_games(const options_t& opts,
         }
 
         if (fflush(outs[kind]) != 0) { write_failed = true; }
+      }
+
+      if (games_out != nullptr) {
+        if (fprintf(games_out, "%" PRIu64 "\t%.1f\t%d\t%d\t%d\n", game_id,
+                    result, first_ply, recurred_ply, end_ply) < 0) {
+          write_failed = true;
+        }
+
+        if (fflush(games_out) != 0) { write_failed = true; }
       }
     }
 
@@ -608,7 +638,9 @@ void usage()
       "                     FILE.root, FILE.qs, FILE.pv from the same games\n"
       "  --threads N        worker threads (default: every hardware thread)\n"
       "  --seed N           rng seed (default 1)\n"
-      "  --hash N           transposition table MB per thread (default 16)\n");
+      "  --hash N           transposition table MB per thread (default 16)\n"
+      "  --games-out FILE   one line a game: game, result, first ply, ply of\n"
+      "                     the first recurrence or -1, last ply\n");
 }
 
 }  // namespace
@@ -661,6 +693,8 @@ int main(int argc, char** argv)
       opts.seed = strtoull(value.c_str(), nullptr, 10);
     } else if (arg == "--hash") {
       opts.tt_mb = atoi(value.c_str());
+    } else if (arg == "--games-out") {
+      opts.games_out = value;
     } else {
       // --allow-tactical lands here since S082: its clause is retired, and a
       // run that asks for it is asking for a corpus this tool no longer makes.
@@ -699,6 +733,22 @@ int main(int argc, char** argv)
     }
   }
 
+  FILE* games_out = nullptr;
+
+  if (!opts.games_out.empty()) {
+    games_out = fopen(opts.games_out.c_str(), "w");
+
+    if (games_out == nullptr) {
+      fprintf(stderr, "cannot write %s\n", opts.games_out.c_str());
+
+      for (FILE* opened : outs) {
+        if (opened != nullptr) { fclose(opened); }
+      }
+
+      return 1;
+    }
+  }
+
   fprintf(stderr,
           "datagen: %" PRIu64 " games, %" PRIu64
           " nodes per move, %u threads, "
@@ -716,7 +766,8 @@ int main(int argc, char** argv)
   std::vector<std::thread> workers;
 
   for (unsigned i = 0; i < opts.threads; ++i) {
-    workers.emplace_back(play_games, std::cref(opts), i, std::cref(outs));
+    workers.emplace_back(play_games, std::cref(opts), i, std::cref(outs),
+                         games_out);
   }
 
   for (std::thread& worker : workers) {
@@ -726,6 +777,8 @@ int main(int argc, char** argv)
   for (FILE* out : outs) {
     if (out != nullptr && fclose(out) != 0) { write_failed = true; }
   }
+
+  if (games_out != nullptr && fclose(games_out) != 0) { write_failed = true; }
 
   // What the filter cost, per clause. Each figure is what loosening that one
   // clause alone would have admitted, which is the only form of the number that
@@ -810,6 +863,23 @@ int main(int argc, char** argv)
           " the games' searches spent\n",
           walk_nodes.load(), share_of(walk_nodes.load(), game_nodes.load()),
           game_nodes.load());
+
+  // What the rule before S331, a draw at the first recurrence of a position,
+  // would have changed in this run's games: the games it would have drawn,
+  // what they ended as instead, and the rows it would have kept and labelled
+  // 0.5 -- those before the first recurrence. S331.
+  fprintf(stderr,
+          "repetition: %" PRIu64
+          " games reached a position that had occurred before, which drew a "
+          "game until S331; %" PRIu64
+          " of them ended other than drawn, %" PRIu64
+          " won by White and %" PRIu64 " lost; %" PRIu64
+          " positions passed in them, a root row each, %" PRIu64
+          " before the first recurrence; %" PRIu64
+          " openings ended on one, discarded until S331\n",
+          recurred_games.load(), recurred_won.load() + recurred_lost.load(),
+          recurred_won.load(), recurred_lost.load(), recurred_rows.load(),
+          recurred_rows_before.load(), recurred_openings.load());
 
   // The two ways the files can fall short of what was booked, each a failed
   // run: the lines above are kept, since they say how far it got.

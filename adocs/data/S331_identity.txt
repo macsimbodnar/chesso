@@ -1,0 +1,48 @@
+# S331 identity: the comment edits to src/bitboard.hpp (above is_position_repeated) and src/leaf_walk.cpp (above
+# rules_decide), the base tree bafb5da8 (1bb3080 with the steps before S331 staged) against the worktree,
+# S330_identity.txt's form. Comments only is the claim. The bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over each
+# file before and after, compared whole; then every object of chesso_engine and chesso deleted and recompiled with
+# CCACHE_DISABLE=1 in build/ and build-tune/ (Release; build-tune -DCHESSO_TUNE=ON) before and after, the build log read
+# for the recompiles, and compared by cmp. The files grow by one line and two, so the objects are the check that no line
+# number reached the code. i7-8700K, g++ 13.3, 2026-11-03, under nice -n 10 while S122's screen held the machine. Every
+# sha256 is its first 16 hex digits.
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment, a trailing comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+
+== before
+   src/bitboard.hpp, 242 lines, sha256 02eb32c18eaee60b; g++ -fpreprocessed -dD -E -P: 4927 bytes, sha256 b1df8355ef694e22
+   src/leaf_walk.cpp, 246 lines, sha256 8b053df122b238b0; g++ -fpreprocessed -dD -E -P: 4661 bytes, sha256 7f989488926837c9
+   build: 11 objects of chesso_engine and chesso recompiled with CCACHE_DISABLE=1 (11 compiles read in the build log, one the ASM object), leaf_walk.cpp.o f816321c5fadbc32, bitboard.cpp.o a7ee77ae84bd9e9e
+   build-tune: 11 objects of chesso_engine and chesso recompiled with CCACHE_DISABLE=1 (11 compiles read in the build log, one the ASM object), leaf_walk.cpp.o c06207c6af28d9b4, bitboard.cpp.o a7ee77ae84bd9e9e
+== after
+   src/bitboard.hpp, 243 lines, sha256 3fb93f2bcdc770d2; g++ -fpreprocessed -dD -E -P: 4927 bytes, sha256 b1df8355ef694e22
+   src/leaf_walk.cpp, 248 lines, sha256 a4d4e79f116b836a; g++ -fpreprocessed -dD -E -P: 4661 bytes, sha256 7f989488926837c9
+   build: 11 objects of chesso_engine and chesso recompiled with CCACHE_DISABLE=1 (11 compiles read in the build log, one the ASM object), leaf_walk.cpp.o f816321c5fadbc32, bitboard.cpp.o a7ee77ae84bd9e9e
+   build-tune: 11 objects of chesso_engine and chesso recompiled with CCACHE_DISABLE=1 (11 compiles read in the build log, one the ASM object), leaf_walk.cpp.o c06207c6af28d9b4, bitboard.cpp.o a7ee77ae84bd9e9e
+
+cmp, before against after
+  BYTE-EQUAL  bitboard.hpp preprocessed
+  BYTE-EQUAL  leaf_walk.cpp preprocessed
+  BYTE-EQUAL  build: all 11 objects of chesso_engine and chesso
+  BYTE-EQUAL  build-tune: all 11 objects of chesso_engine and chesso
+
+git diff -U0 bafb5da8863c017d504b66bc30c7f72a87b3d999 -- src/bitboard.hpp src/leaf_walk.cpp
+  @@ -214,3 +214,4 @@ repetition_kind_t classify_repetition(const history_t* history,
+  -// True on a two-fold anywhere in the window: the game-level contract, which is
+  -// what draw adjudication in self-play wants. A search wants
+  -// classify_repetition() instead.
+  +// True on a two-fold anywhere in the window. Until S331 that was datagen's
+  +// draw adjudication in self-play, called the game-level contract here; since
+  +// S331 datagen ends a game on the third occurrence (tools/datagen_rules.hpp)
+  +// and only tests call this. A search wants classify_repetition() instead.
+  @@ -64,2 +64,4 @@ namespace
+  -// would drop a real leaf. That is the difference from datagen's game-ending
+  -// test, is_position_repeated(), which adjudicates a game on any two-fold.
+  +// would drop a real leaf. Until S331 that was the difference from datagen's
+  +// game-ending test, is_position_repeated(), which adjudicated a game on any
+  +// two-fold; datagen ends a game on the third occurrence since, which is
+  +// classify_repetition() with every earlier entry before the root.
+
+S331-IDENTITY HOLDS

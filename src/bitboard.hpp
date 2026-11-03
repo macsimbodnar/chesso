@@ -211,9 +211,10 @@ repetition_kind_t classify_repetition(const history_t* history,
                                       const board_t* board,
                                       size_t root_history_size);
 
-// True on a two-fold anywhere in the window: the game-level contract, which is
-// what draw adjudication in self-play wants. A search wants
-// classify_repetition() instead.
+// True on a two-fold anywhere in the window. Until S331 that was datagen's
+// draw adjudication in self-play, called the game-level contract here; since
+// S331 datagen ends a game on the third occurrence (tools/datagen_rules.hpp)
+// and only tests call this. A search wants classify_repetition() instead.
 bool is_position_repeated(const history_t* history, const board_t* board);
 
 // True when neither side can force mate with what is left on the board.

@@ -1,0 +1,44 @@
+# S331's measurement, 2026-11-03: `adocs/data/S331_measure.sh` (run), the step's datagen sha256 730f827ae9f8d702 at
+# `--leaf root,qs,pv --games 2400 --nodes 100000 --threads 12 --seed 2026400331 --quiet-limit 30000 --games-out`, the
+# machine to itself (S122's screen paused), started 22:14:21, 1160 s for the 2400 games, 7448 games an hour. Below:
+# the run's own lines from .tuning/s331/measure/generate.log, then its reading.txt verbatim. The wrapper's first pass
+# printed S331-MEASURE-FAILED after the complete run (`line 128: s-out: command not found`): the script had been
+# rewritten in place while it ran (tests/test_s331_measure.sh case 5). The coordinator read the run by hand; the same
+# script, made immune to that, then read it again without replaying it, S331-MEASURE-DONE, every file of the run
+# byte-unchanged, reading.txt included.
+
+S331 run, 2026-11-03T22:14:21+01:00
+load      9.99 11.93 12.84 2/1224 1811550
+datagen   sha256 730f827ae9f8d702d2be867803b5a2bd976cf16c46e863655d7eb274c9068add  /home/max/ws/chesso-s331/build/tools/datagen
+command   datagen --out pool.tsv --leaf root,qs,pv --games 2400 --nodes 100000 --threads 12 --seed 2026400331 --quiet-limit 30000 --games-out games.tsv
+datagen: 2400 games, 100000 nodes per move, 12 threads, seed 2026400331, quiet-limit 30000, leaf root,qs,pv
+filter: 336079 considered, 300644 passed; skipped in-check 29892, mate 0, score past 30000 0; no completed iteration 0
+leaf root: 300644 rows from 2400 games written to pool.tsv.root, 125.27 a game; the leaf differs from the root on 0 (0.00 %), 0.000 plies on average
+leaf qs: 300316 rows from 2400 games written to pool.tsv.qs, 125.13 a game; the leaf differs from the root on 67237 (22.39 %), 0.420 plies on average
+leaf pv: 286569 rows from 2400 games written to pool.tsv.pv, 119.40 a game; the leaf differs from the root on 286569 (100.00 %), 14.902 plies on average, 14.471 of them the line's
+walk: 5768797 nodes, 0.017 % of the 33572259110 the games' searches spent
+repetition: 1297 games reached a position that had occurred before, which drew a game until S331; 547 of them ended other than drawn, 344 won by White and 203 lost; 187472 positions passed in them, a root row each, 109667 before the first recurrence; 0 openings ended on one, discarded until S331
+exit      0
+elapsed   1160 s
+RUN-DONE
+
+S331 reading of /home/max/ws/chesso/.tuning/s331/measure: datagen 2400 games, 100000 nodes a move, 12 threads, seed 2026400331, quiet-limit 30000, leaf root,qs,pv
+files     games.tsv 2400 games; pool.tsv.root 300644 rows; every row's result its game's; the repetition: line equal to the files, [1297, 547, 344, 203, 187472, 109667, 0]
+
+GAMES. Recurred: a position on the board had occurred before, after the opening; the old rule drew the game there.
+  games 2400; recurred 1297 (54.04 % +/- 1.02 of all); openings ended on a recurrence 0, outside both sides
+  of the recurred, ended other than drawn 547 (42.17 % +/- 1.37): won by White 344 (26.52 % +/- 1.23), lost 203 (15.65 % +/- 1.01)
+  of all games, relabelled from a draw 22.79 % +/- 0.86
+  draws, of the 2400 games both rules play: old rule 1335 (55.62 % +/- 1.01), new 788 (32.83 % +/- 0.96)
+
+ROOT ROWS. Old: the rows the old rule wrote, every row of a game with no recurrence and the rows before the first recurrence of a recurred game. Differs: an old row whose game ended 1 or 0, labelled 0.5 by the old rule. Errors clustered by game.
+  all phases      old   222839  differs   43988   19.740 % +/- 0.820   to win   27205   12.208 % +/- 0.667   to loss   16783    7.531 % +/- 0.543
+  phase 0 to 4    old    29308  differs    4098   13.983 % +/- 1.311   to win    2370    8.087 % +/- 1.008   to loss    1728    5.896 % +/- 0.918
+  phase 5 to 9    old    50636  differs    8309   16.409 % +/- 1.034   to win    5286   10.439 % +/- 0.856   to loss    3023    5.970 % +/- 0.643
+  phase 10 to 14  old    33125  differs    6934   20.933 % +/- 1.181   to win    4221   12.743 % +/- 0.946   to loss    2713    8.190 % +/- 0.824
+  phase 15 to 19  old    25290  differs    5668   22.412 % +/- 1.289   to win    3521   13.922 % +/- 1.081   to loss    2147    8.490 % +/- 0.850
+  phase 20 to 24  old    84480  differs   18979   22.466 % +/- 0.911   to win   11807   13.976 % +/- 0.758   to loss    7172    8.490 % +/- 0.604
+  phase <= 6      old    56351  differs    8244   14.630 % +/- 1.051   to win    5103    9.056 % +/- 0.852   to loss    3141    5.574 % +/- 0.683
+  phase > 6       old   166488  differs   35744   21.469 % +/- 0.861   to win   22102   13.275 % +/- 0.707   to loss   13642    8.194 % +/- 0.577
+  of the 43988 that differ, the new label goes the way of the row's own score in 36542, against it in 6829, score 0 in 617
+  new rows the old rule never wrote: 77805 after a first recurrence and 0 from the openings, 25.879 % +/- 0.646 of the 300644 root rows

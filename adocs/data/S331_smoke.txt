@@ -1,0 +1,31 @@
+# S331's smoke: `adocs/data/S331_measure.sh premise`, verbatim output, 2026-11-03, run from the worktree under nice -n 10
+# on 2 threads while S122's screen held the machine (load 11.5 on 12). BASE was the base tree bafb5da8's Release datagen
+# (1bb3080 with the steps before S331 staged), sha256 7f3293550d461d50; the step's datagen sha256 730f827ae9f8d702, the
+# final tree's Release binary byte for byte. OUT_PREMISE was a scratch directory and LOG_DIRS the main tree's .tuning/
+# and the worktree's adocs/data/. The old run's games stop at their first recurrence and the new run's go on, so the two
+# runs' row counts differ; the premise is that every old row is a new row before its game's first recurrence, label
+# apart. 24 games at 10000 nodes a move are a smoke and not a measurement: no share below is a reading of the corpus's
+# settings.
+
+seeds     [2026410331, 2026410355), workers [2026410331, 2026410333): meet none of the 14 runs named in logs under /home/max/ws/chesso/.tuning /home/max/ws/chesso-s331/adocs/data (its own OUT apart)
+== old: sha256 7f3293550d461d50b914027286f211d9234ff6bbc160b810d8fb67fcc9feab8b  /tmp/claude-1000/-home-max-ws-chesso/047769e8-2648-448b-ac91-c33a2343af32/scratchpad/base/datagen
+filter: 2450 considered, 2211 passed; skipped in-check 215, mate 0, score past 30000 0; no completed iteration 0
+leaf root: 2211 rows from 24 games written to pool.tsv.root, 92.12 a game; the leaf differs from the root on 0 (0.00 %), 0.000 plies on average
+leaf qs: 2211 rows from 24 games written to pool.tsv.qs, 92.12 a game; the leaf differs from the root on 563 (25.46 %), 0.456 plies on average
+leaf pv: 2198 rows from 24 games written to pool.tsv.pv, 91.58 a game; the leaf differs from the root on 2198 (100.00 %), 7.890 plies on average, 7.395 of them the line's
+walk: 54886 nodes, 0.224 % of the 24500000 the games' searches spent
+elapsed   5 s
+== new: sha256 730f827ae9f8d702d2be867803b5a2bd976cf16c46e863655d7eb274c9068add  /home/max/ws/chesso-s331/build/tools/datagen
+filter: 3772 considered, 3365 passed; skipped in-check 348, mate 0, score past 30000 0; no completed iteration 0
+leaf root: 3365 rows from 24 games written to pool.tsv.root, 140.21 a game; the leaf differs from the root on 0 (0.00 %), 0.000 plies on average
+leaf qs: 3364 rows from 24 games written to pool.tsv.qs, 140.17 a game; the leaf differs from the root on 654 (19.44 %), 0.347 plies on average
+leaf pv: 3287 rows from 24 games written to pool.tsv.pv, 136.96 a game; the leaf differs from the root on 3287 (100.00 %), 8.455 plies on average, 8.055 of them the line's
+walk: 59900 nodes, 0.159 % of the 37691661 the games' searches spent
+repetition: 14 games reached a position that had occurred before, which drew a game until S331; 7 of them ended other than drawn, 4 won by White and 3 lost; 2447 positions passed in them, a root row each, 1293 before the first recurrence; 0 openings ended on one, discarded until S331
+elapsed   6 s
+premise   24 games, 14 of them recurred after the opening
+premise   leaf root: 2211 old rows, each the new run's row before its game's first recurrence but the label, which is 0.5 there and the game's elsewhere
+premise   leaf qs: 2211 old rows, each the new run's row before its game's first recurrence but the label, which is 0.5 there and the game's elsewhere
+premise   leaf pv: 2198 old rows, each the new run's row before its game's first recurrence but the label, which is 0.5 there and the game's elsewhere
+premise   holds
+S331-PREMISE-DONE

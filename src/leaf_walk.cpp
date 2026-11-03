@@ -61,8 +61,10 @@ namespace
 // position as the root -- one inside the walk, or a third occurrence anywhere.
 // A single occurrence before the root is not one: the search goes on
 // searching such a position and evaluate() is asked about it, so refusing it
-// would drop a real leaf. That is the difference from datagen's game-ending
-// test, is_position_repeated(), which adjudicates a game on any two-fold.
+// would drop a real leaf. Until S331 that was the difference from datagen's
+// game-ending test, is_position_repeated(), which adjudicated a game on any
+// two-fold; datagen ends a game on the third occurrence since, which is
+// classify_repetition() with every earlier entry before the root.
 bool rules_decide(game_t* game, size_t root_history_size)
 {
   if (game->board.halfmove_clock >= 100) { return true; }

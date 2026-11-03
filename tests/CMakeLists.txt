@@ -116,6 +116,13 @@ target_include_directories(test_tuner_split PRIVATE ../tools)
 # is a fast test like the rest.
 add_doctest_target(test_leaf_walk)
 
+# S331: what ends a datagen self-play game, tools/datagen_rules.hpp's
+# terminal_result(), which tools/datagen.cpp plays every game by: a draw on the
+# third occurrence of a position, never on the second. No game is played, so
+# it is a fast test like the rest.
+add_doctest_target(test_datagen)
+target_include_directories(test_datagen PRIVATE ../tools)
+
 # S082: tools/corpus_split.py, which builds the fixed validation set every later
 # fit and screen reads (DEC-259) and samples the corpora fitted against it. No
 # game on both sides, no position on both sides, nothing lost, seeded, and a
@@ -133,6 +140,25 @@ add_test(NAME test_datagen_exit
          COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_datagen_exit.sh
                       $<TARGET_FILE:datagen>)
 set_tests_properties(test_datagen_exit PROPERTIES LABELS "fast" TIMEOUT 60)
+
+# S331: datagen plays on past the second occurrence of a position, and its
+# closing `repetition:` line and `--games-out` file are the games and rows it
+# actually wrote -- the counts the rule before S331 is read by. Six games at
+# 1000 nodes a move, under a second.
+add_test(NAME test_datagen_repetition
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_datagen_repetition.sh
+                      $<TARGET_FILE:datagen>)
+set_tests_properties(test_datagen_repetition PROPERTIES LABELS "fast" TIMEOUT 60)
+
+# S331: adocs/data/S331_measure.sh, the measurement's wrapper, over a stub
+# datagen: its arguments reach datagen intact, a finished run is read again and
+# not replayed, an unfinished one and an overlapping seed range are refused, and
+# an edit to the script mid-run does not reach the run -- the failure of the
+# measurement's first run. A few seconds, no game played.
+add_test(NAME test_s331_measure
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_s331_measure.sh
+                      ${CMAKE_SOURCE_DIR})
+set_tests_properties(test_s331_measure PROPERTIES LABELS "fast" TIMEOUT 60)
 
 # S100: the fit's two unchecked halves -- that the columns load() packs are the
 # columns evaluate_position() reads, and that gradient() is the derivative of
