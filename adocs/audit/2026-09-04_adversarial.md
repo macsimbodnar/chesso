@@ -81,7 +81,7 @@ dispositioned in the table.
 
 ### 2026-09-04_adversarial-F01  low  `go infinite` prints `bestmove` without a `stop` on any root whose tree collapses -- insufficient material, a stalemated or checkmated root -- because the infinite search is the iterative-deepening loop to `MAX_DEPTH` and nothing holds it open
 
-Status: planned -- S210 (DEC-170), where F19 of the 2026-09-10 report re-triggers it
+Status: closed -- S210, 2026-09-14; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S210 (DEC-170), where F19 of the 2026-09-10 report re-triggers it.
 
 **Evidence.** `src/chesso.cpp:1472` seeds every `go` with
 `search_options.depth = MAX_DEPTH` (126, `src/data_structures.hpp:43`), the
@@ -154,7 +154,7 @@ discharged it: nothing here touches a searched node.
 
 ### 2026-09-04_adversarial-F02  low  a `moves` token that does not parse or is not legal is skipped and the rest of the list is applied, so `position` ends on a board the GUI did not send -- the S176 rule for the FEN half of the same command, not applied to the moves half -- and the skip is silent in the shipped binary
 
-Status: planned -- S210 (DEC-181)
+Status: closed -- S210, 2026-09-14; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S210 (DEC-181).
 
 **Evidence.** `src/chesso.cpp:1378-1407`, the `moves` loop: a token
 `algebraic_to_uci_move()` rejects is passed over, a move `try_move()` cannot
@@ -201,7 +201,7 @@ layer suite beside the S176 cases. Not on a search path; INV-6 on node counts.
 
 ### 2026-09-04_adversarial-F03  low  the root's move order after an aborted iteration rests on the root's table entry surviving the iteration, which the replacement rule does not guarantee; the premise is written in a comment and enforced nowhere. Mechanism shown, occurrence not reproduced
 
-Status: planned -- S210 (DEC-181)
+Status: closed -- S210, 2026-09-14; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S210 (DEC-181).
 
 **Evidence.** `src/chesso.cpp:906-911` accepts an aborted iteration's move on
 this argument: "the root replaces its move only when that move beats every

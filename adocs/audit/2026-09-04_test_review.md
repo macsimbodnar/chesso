@@ -99,7 +99,7 @@ them: the suite and the signature see different things and both are needed.
 
 ### 2026-09-04_test_review-F01  medium  INV-2 and INV-4 are enforced only by assertions the gate compiles out, and nothing in Release checks the accumulators after a move
 
-Status: planned — S190
+Status: closed — S190, 2026-09-09; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S190.
 
 Evidence: the gate is `cmake --build build -j8 && ctest --test-dir build -L fast
 ... && cmake --build build-tune -j8 && ctest --test-dir build-tune -L fast`
@@ -333,7 +333,7 @@ heaviest entry. Not applied here.
 
 ### 2026-09-04_test_review-F07  low  the INV-6 node signature is compared by hand and recorded nowhere the gate can read; the `test` command still checks nothing
 
-Status: planned — S189
+Status: closed — S189, 2026-09-08; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S189.
 
 Evidence: `tools/search_bench.py` prints node counts and best moves and
 compares nothing; INV-6 is discharged by a person running it twice

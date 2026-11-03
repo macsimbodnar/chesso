@@ -1,0 +1,332 @@
+S328's readings, 2026-11-03, written by the commands below in the order shown, each printed before its output.
+Before: the reports and steps of 1bb3080, read through git archive. After: the working tree of ../chesso-s328,
+1bb3080 plus S328's edits; once S328 lands, --rev <its commit> --against-rev 1bb3080 reads the same.
+
+$ python3 adocs/data/S328_planned_done.py --rev 1bb3080
+tree: 1bb3080; closes: ids read as [\w.\-]+-F\d+
+reports: 17, findings: 168, with a Status: line: 150, without: 18
+Status: lines outside fences, by first word: accepted 6, closed 70, open 2, planned 72
+findings' Status: lines, by first word:      accepted 6, closed 70, open 2, planned 72
+
+without a Status: line, with the steps naming it in closes:: 18
+  2026-09-10_adversarial-F17  2026-09-10_adversarial.md:768  [S210 plan_done]
+  2026-09-10_adversarial-F18  2026-09-10_adversarial.md:779  [S210 plan_done]
+  2026-09-10_adversarial-F19  2026-09-10_adversarial.md:789  [S210 plan_done]
+  2026-09-10_adversarial-F20  2026-09-10_adversarial.md:795  [S210 plan_done]
+  2026-09-10_adversarial-F21  2026-09-10_adversarial.md:801  [S210 plan_done]
+  2026-09-10_adversarial-F22  2026-09-10_adversarial.md:809  [S210 plan_done]
+  2026-09-10_adversarial-F23  2026-09-10_adversarial.md:814  [S210 plan_done]
+  2026-09-10_adversarial-F24  2026-09-10_adversarial.md:824  [S126 plan_todo]
+  2026-09-10_adversarial-F26  2026-09-10_adversarial.md:840  [S213 plan_done]
+  2026-09-10_adversarial-F27  2026-09-10_adversarial.md:850  [S213 plan_done]
+  2026-09-10_adversarial-F28  2026-09-10_adversarial.md:858  [S214 plan_done]
+  2026-09-10_adversarial-F29  2026-09-10_adversarial.md:865  [S214 plan_done]
+  2026-09-10_adversarial-F30  2026-09-10_adversarial.md:871  [S199 plan_done]
+  2026-09-10_adversarial-F31  2026-09-10_adversarial.md:878  [S212 plan_done]
+  2026-09-10_adversarial-F32  2026-09-10_adversarial.md:885  [S212 plan_done]
+  2026-09-10_adversarial-F33  2026-09-10_adversarial.md:890  [S213 plan_done]
+  2026-09-10_adversarial-F35  2026-09-10_adversarial.md:907  [S214 plan_done]
+  2026-09-10_adversarial-F37  2026-09-10_adversarial.md:920  [S186 plan_done]
+
+planned: 72; every closing step in plan_done/: 63 of 72
+
+planned, every step naming it in closes: is in plan_done/: 63
+  2026-08-13_adversarial-F01  2026-08-13_adversarial.md:70  [S035 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F02  2026-08-13_adversarial.md:126  [S036 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F03  2026-08-13_adversarial.md:190  [S037 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F04  2026-08-13_adversarial.md:236  [S038 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F06  2026-08-13_adversarial.md:330  [S040 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F07  2026-08-13_adversarial.md:366  [S041 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F08  2026-08-13_adversarial.md:400  [S042 plan_done]
+    Status: planned
+  2026-08-13_adversarial-F09  2026-08-13_adversarial.md:445  [S043 plan_done]
+    Status: planned
+  2026-08-13_plan_review.2-F06  2026-08-13_plan_review.2.md:317  [S023 plan_done]
+    Status: planned
+  2026-08-13_plan_review.2-F07  2026-08-13_plan_review.2.md:359  [S062 plan_done]
+    Status: planned
+  2026-08-13_plan_review.2-F09  2026-08-13_plan_review.2.md:432  [S064 plan_done]
+    Status: planned
+  2026-08-14_test_review-F01  2026-08-14_test_review.md:69  [S067 plan_done]
+    Status: planned — S067
+  2026-08-14_test_review-F02  2026-08-14_test_review.md:99  [S067 plan_done]
+    Status: planned — S067
+  2026-08-14_test_review-F03  2026-08-14_test_review.md:126  [S067 plan_done]
+    Status: planned — S067
+  2026-08-14_test_review-F04  2026-08-14_test_review.md:158  [S067 plan_done]
+    Status: planned — S067
+  2026-08-14_test_review-F05  2026-08-14_test_review.md:186  [S067 plan_done]
+    Status: planned — S067
+  2026-08-14_test_review-F06  2026-08-14_test_review.md:209  [S067 plan_done]
+    Status: planned — S067
+  2026-08-16_plan_review-F04  2026-08-16_plan_review.md:284  [S072 plan_done]
+    Status: planned — S072
+  2026-08-16_plan_review-F05  2026-08-16_plan_review.md:359  [S069 plan_done]
+    Status: planned — S069
+  2026-08-16_plan_review-F06  2026-08-16_plan_review.md:411  [S070 plan_done]
+    Status: planned — S070
+  2026-08-16_plan_review-F07  2026-08-16_plan_review.md:450  [S074 plan_done]
+    Status: planned — S074
+  2026-08-16_plan_review-F09  2026-08-16_plan_review.md:541  [S078 plan_done]
+    Status: planned — S078
+  2026-08-16_plan_review-F10  2026-08-16_plan_review.md:578  [S071 plan_done]
+    Status: planned — S071
+  2026-08-20_plan_review-F01  2026-08-20_plan_review.md:95  [S138 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F02  2026-08-20_plan_review.md:206  [S139 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F03  2026-08-20_plan_review.md:264  [S139 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F04  2026-08-20_plan_review.md:348  [S139 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F05  2026-08-20_plan_review.md:392  [S140 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F06  2026-08-20_plan_review.md:439  [S141 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F07  2026-08-20_plan_review.md:519  [S139 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F08  2026-08-20_plan_review.md:581  [S142 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F09  2026-08-20_plan_review.md:646  [S085 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F10  2026-08-20_plan_review.md:678  [S140 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F11  2026-08-20_plan_review.md:752  [S140 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F12  2026-08-20_plan_review.md:800  [S138 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F13  2026-08-20_plan_review.md:835  [S138 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F14  2026-08-20_plan_review.md:872  [S142 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F15  2026-08-20_plan_review.md:919  [S139 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F16  2026-08-20_plan_review.md:960  [S140 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F17  2026-08-20_plan_review.md:1006  [S140 plan_done]
+    Status: planned
+  2026-08-20_plan_review-F18  2026-08-20_plan_review.md:1045  [S085 plan_done]
+    Status: planned
+  2026-08-22_adversarial-F01  2026-08-22_adversarial.md:68  [S161 plan_done]
+    Status: planned — S161
+  2026-08-22_adversarial-F04  2026-08-22_adversarial.md:207  [S165 plan_done]
+    Status: planned — S165
+  2026-08-22_adversarial-F05  2026-08-22_adversarial.md:253  [S163 plan_done]
+    Status: planned — S163
+  2026-08-22_adversarial-F07  2026-08-22_adversarial.md:338  [S164 plan_done]
+    Status: planned — S164
+  2026-09-04_adversarial-F01  2026-09-04_adversarial.md:84  [S210 plan_done]
+    Status: planned -- S210 (DEC-170), where F19 of the 2026-09-10 report re-triggers it
+  2026-09-04_adversarial-F02  2026-09-04_adversarial.md:157  [S210 plan_done]
+    Status: planned -- S210 (DEC-181)
+  2026-09-04_adversarial-F03  2026-09-04_adversarial.md:204  [S210 plan_done]
+    Status: planned -- S210 (DEC-181)
+  2026-09-04_plan_review-F02  2026-09-04_plan_review.md:139  [S181 plan_done]
+    Status: planned — S181
+  2026-09-04_plan_review-F03  2026-09-04_plan_review.md:195  [S182 plan_done]
+    Status: planned — S182
+  2026-09-04_plan_review-F04  2026-09-04_plan_review.md:241  [S183 plan_done]
+    Status: planned — S183
+  2026-09-04_plan_review-F06  2026-09-04_plan_review.md:355  [S185 plan_done]
+    Status: planned — S185
+  2026-09-04_plan_review-F07  2026-09-04_plan_review.md:415  [S187 plan_done]
+    Status: planned — S187
+  2026-09-04_test_review-F01  2026-09-04_test_review.md:102  [S190 plan_done]
+    Status: planned — S190
+  2026-09-04_test_review-F07  2026-09-04_test_review.md:336  [S189 plan_done]
+    Status: planned — S189
+  2026-09-10_adversarial-F01  2026-09-10_adversarial.md:73  [S211 plan_done]
+    Status: planned -- S211 (DEC-170). VERIFIED.
+  2026-09-10_adversarial-F02  2026-09-10_adversarial.md:144  [S211 plan_done]
+    Status: planned -- S211 (DEC-170). VERIFIED, with a stated caveat.
+  2026-09-10_adversarial-F03  2026-09-10_adversarial.md:178  [S211 plan_done]
+    Status: planned -- S211 (DEC-170). VERIFIED.
+  2026-09-10_adversarial-F04  2026-09-10_adversarial.md:249  [S212 plan_done]
+    Status: planned -- S212 (DEC-170, DEC-174). VERIFIED, and quantified further here.
+  2026-09-10_adversarial-F05  2026-09-10_adversarial.md:319  [S212 plan_done]
+    Status: planned -- S212 (DEC-170). VERIFIED.
+  2026-09-10_adversarial-F06  2026-09-10_adversarial.md:351  [S212 plan_done]
+    Status: planned -- S212 (DEC-170). VERIFIED (the mechanism; no contaminated verdict found).
+  2026-09-10_adversarial-F07  2026-09-10_adversarial.md:383  [S212 plan_done]
+    Status: planned -- S212; the specs.md sentence corrected 2026-09-11 (DEC-170). VERIFIED.
+  2026-09-10_adversarial-F16  2026-09-10_adversarial.md:732  [S039 plan_done]
+    Status: planned -- S122, 2026-10-21: S039 measured retiring the lazy shortcut and the clamp together and read H0 at {-5, 0}, nElo -16.46 +/- 9.52 (record `ca578de`), so both are kept; the clamp's own cost is still unmeasured apart from the shortcut, and S122's design (an unclamped king safety) is where it is removed or kept. Previously: planned -- S039 amended and moved before S122 (DEC-170, DEC-172). VERIFIED.
+
+planned, a step naming it is not in plan_done/: 0
+
+planned, no step names it in closes:: 9
+  2026-08-13_plan_review.2-F01  2026-08-13_plan_review.2.md:57  [no step]
+    Status: planned
+  2026-08-13_plan_review.2-F02  2026-08-13_plan_review.2.md:131  [no step]
+    Status: planned
+  2026-08-13_plan_review.2-F03  2026-08-13_plan_review.2.md:189  [no step]
+    Status: planned
+  2026-08-13_plan_review.2-F04  2026-08-13_plan_review.2.md:250  [no step]
+    Status: planned
+  2026-08-13_plan_review.2-F05  2026-08-13_plan_review.2.md:283  [no step]
+    Status: planned
+  2026-08-13_plan_review.2-F08  2026-08-13_plan_review.2.md:404  [no step]
+    Status: planned
+  2026-08-16_plan_review-F01  2026-08-16_plan_review.md:60  [no step]
+    Status: planned — S080
+  2026-08-16_plan_review-F02  2026-08-16_plan_review.md:160  [no step]
+    Status: planned — S079
+  2026-08-16_plan_review-F03  2026-08-16_plan_review.md:230  [no step]
+    Status: planned — S081
+
+open, with the steps naming it in closes:: 2
+  2026-08-21_adversarial-F04  2026-08-21_adversarial.md:348  [S152 plan_todo]
+    Status: open
+  2026-08-22_adversarial-F06  2026-08-22_adversarial.md:304  [S146 plan_done]
+    Status: open
+
+closes: ids that name no finding: 0
+exit 0
+
+$ python3 adocs/data/S328_planned_done.py --rev 1bb3080 --dotless-ids | grep -E "^tree:|^planned:|name no finding|^  2-F"
+tree: 1bb3080; closes: ids read as [\w\-]+-F\d+
+planned: 72; every closing step in plan_done/: 60 of 72
+closes: ids that name no finding: 3
+  2-F06  [S023 plan_done]
+  2-F07  [S062 plan_done]
+  2-F09  [S064 plan_done]
+
+$ python3 adocs/data/S328_planned_done.py --against-rev 1bb3080
+tree: the working tree; closes: ids read as [\w.\-]+-F\d+
+reports: 17, findings: 168, with a Status: line: 168, without: 0
+Status: lines outside fences, by first word: accepted 7, closed 158, planned 3
+findings' Status: lines, by first word:      accepted 7, closed 158, planned 3
+
+without a Status: line, with the steps naming it in closes:: 0
+
+planned: 3; every closing step in plan_done/: 1 of 3
+
+planned, every step naming it in closes: is in plan_done/: 1
+  2026-09-10_adversarial-F16  2026-09-10_adversarial.md:732  [S039 plan_done]
+    Status: planned -- S122, 2026-10-21: S039 measured retiring the lazy shortcut and the clamp together and read H0 at {-5, 0}, nElo -16.46 +/- 9.52 (record `ca578de`), so both are kept; the clamp's own cost is still unmeasured apart from the shortcut, and S122's design (an unclamped king safety) is where it is removed or kept. Previously: planned -- S039 amended and moved before S122 (DEC-170, DEC-172). VERIFIED.
+
+planned, a step naming it is not in plan_done/: 2
+  2026-08-21_adversarial-F04  2026-08-21_adversarial.md:348  [S152 plan_todo]
+    Status: planned — S152, in plan_todo/, whose `closes:` names this finding; DEC-108, 2026-08-23, names neither the audit nor the finding and moved S152 to near the goal, "Deferred is not retired"; 2026-09-03_adversarial and 2026-09-04_adversarial agree on accepted (DEC-108), 2026-09-04_plan_review files it planned under "recorded, not moved", and 2026-09-12_plan_adversarial_review reads it "explicitly deferred by DEC-108/DEC-179"; moved by S328, 2026-11-03. Previously: open.
+  2026-09-10_adversarial-F24  2026-09-10_adversarial.md:848  [S126 plan_todo]
+    Status: planned — S126, in plan_todo/, whose `closes:` names this finding (DEC-170); moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
+planned, no step names it in closes:: 0
+
+open, with the steps naming it in closes:: 0
+
+closes: ids that name no finding: 0
+
+the reports of the working tree against 1bb3080's: changed Status: lines, and Status: lines inserted with an empty line under a finding that had none, in 2026-09-10_adversarial.md alone:
+  2026-08-13_adversarial.md: lines 471 -> 471, Status: lines changed 8, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-13_plan_review.2.md: lines 619 -> 619, Status: lines changed 9, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-13_plan_review.md: lines 431 -> 431, Status: lines changed 0, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-14_test_review.md: lines 281 -> 281, Status: lines changed 6, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-16_plan_review.md: lines 749 -> 749, Status: lines changed 9, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-20_plan_review.md: lines 1116 -> 1116, Status: lines changed 18, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-21_adversarial.md: lines 811 -> 811, Status: lines changed 1, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-08-22_adversarial.md: lines 484 -> 484, Status: lines changed 5, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-03_adversarial.md: lines 527 -> 527, Status: lines changed 0, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-04_adversarial.md: lines 439 -> 439, Status: lines changed 3, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-04_plan_review.md: lines 826 -> 826, Status: lines changed 5, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-04_test_review.md: lines 584 -> 584, Status: lines changed 2, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-10_adversarial.md: lines 1045 -> 1081, Status: lines changed 7, inserted 18, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-12_adversarial.md: lines 125 -> 125, Status: lines changed 0, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-12_plan_adversarial_review.md: lines 202 -> 202, Status: lines changed 0, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-09-19_study_review.md: lines 622 -> 622, Status: lines changed 0, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  2026-10-08_performance.md: lines 389 -> 389, Status: lines changed 0, inserted 0, refusals 0, masked diff of the rest: 0 lines, holds
+  all reports: Status: lines changed 73, inserted 18
+S328-REPORTS-STATUS-ONLY
+exit 0
+
+The proof against eight planted edits, each in a copy of the working tree's adocs/ (audit and the three plan
+directories) under the plant's name, read with --tree; the working tree itself is never edited.
+
+plant ws-after-inserted, a space on the empty line after F17's inserted Status: line:
+$ (cd ws-after-inserted/adocs/audit && sed -i '780s/^$/ /' 2026-09-10_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree ws-after-inserted --against-rev 1bb3080 | grep -E '^  2026-09-10_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-09-10_adversarial.md: lines 1045 -> 1081, Status: lines changed 7, inserted 18, refusals 1, masked diff of the rest: 0 lines, REFUSED
+    REFUSED: 2026-09-10_adversarial-F17, line 779: not its own paragraph between two exactly empty lines
+S328-REPORTS-DIFFER
+exit 1
+
+plant ws-after-changed, a space on the empty line after F01's changed Status: line:
+$ (cd ws-after-changed/adocs/audit && sed -i '71s/^$/ /' 2026-08-13_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree ws-after-changed --against-rev 1bb3080 | grep -E '^  2026-08-13_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-08-13_adversarial.md: lines 471 -> 471, Status: lines changed 8, inserted 0, refusals 1, masked diff of the rest: 11 lines, REFUSED
+    REFUSED: REV line 71, a line that is not a finding's Status: line, differs at column 1: '' -> ' '
+S328-REPORTS-DIFFER
+exit 1
+
+plant mid-paragraph, a Status: line and an empty line inside F18's paragraph:
+$ (cd mid-paragraph/adocs/audit && sed -i '782a Status: planted' 2026-09-10_adversarial.md && sed -i '783a\\' 2026-09-10_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree mid-paragraph --against-rev 1bb3080 | grep -E '^  2026-09-10_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-09-10_adversarial.md: lines 1045 -> 1083, Status: lines changed -, inserted 18, refusals 4, masked diff of the rest: 11 lines, REFUSED
+    REFUSED: 2026-09-10_adversarial-F18, line 783: not its own paragraph between two exactly empty lines
+    REFUSED: line 793: a second Status: line, under 2026-09-10_adversarial-F18
+    REFUSED: +2 lines besides the inserted pairs
+    REFUSED: the first, Status: lines masked, at REV line 789: insert [] -> ['Status: <masked>', '']
+S328-REPORTS-DIFFER
+exit 1
+
+plant second-status, a second Status: line and its empty line under F34, which has one:
+$ (cd second-status/adocs/audit && sed -i '938a Status: planted' 2026-09-10_adversarial.md && sed -i '939a\\' 2026-09-10_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree second-status --against-rev 1bb3080 | grep -E '^  2026-09-10_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-09-10_adversarial.md: lines 1045 -> 1083, Status: lines changed -, inserted 18, refusals 3, masked diff of the rest: 11 lines, REFUSED
+    REFUSED: line 939: a second Status: line, under 2026-09-10_adversarial-F34
+    REFUSED: +2 lines besides the inserted pairs
+    REFUSED: the first, Status: lines masked, at REV line 907: insert [] -> ['Status: <masked>', '']
+S328-REPORTS-DIFFER
+exit 1
+
+plant other-report, a Status: line and its empty line under F04 of 2026-08-21_adversarial:
+$ (cd other-report/adocs/audit && sed -i '349a Status: planted' 2026-08-21_adversarial.md && sed -i '350a\\' 2026-08-21_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree other-report --against-rev 1bb3080 | grep -E '^  2026-08-21_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-08-21_adversarial.md: lines 811 -> 813, Status: lines changed -, inserted 0, refusals 4, masked diff of the rest: 11 lines, REFUSED
+    REFUSED: line 350: a second Status: line, under 2026-08-21_adversarial-F04
+    REFUSED: +1 Status: lines, outside ['2026-09-10_adversarial.md']
+    REFUSED: +2 lines besides the inserted pairs
+    REFUSED: the first, Status: lines masked, at REV line 347: insert [] -> ['', 'Status: <masked>']
+S328-REPORTS-DIFFER
+exit 1
+
+plant character, a character on F17's text:
+$ (cd character/adocs/audit && sed -i '770s/$/x/' 2026-09-10_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree character --against-rev 1bb3080 | grep -E '^  2026-09-10_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-09-10_adversarial.md: lines 1045 -> 1081, Status: lines changed 7, inserted 18, refusals 1, masked diff of the rest: 11 lines, REFUSED
+    REFUSED: REV line 770, a line that is not a finding's Status: line, differs at column 81: 'Both consumers then fail:' -> 'Both consumers then fail:x'
+S328-REPORTS-DIFFER
+exit 1
+
+plant lone-blank, a lone empty line inside F17's paragraph:
+$ (cd lone-blank/adocs/audit && sed -i '769a\\' 2026-09-10_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree lone-blank --against-rev 1bb3080 | grep -E '^  2026-09-10_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-09-10_adversarial.md: lines 1045 -> 1082, Status: lines changed -, inserted 18, refusals 2, masked diff of the rest: 10 lines, REFUSED
+    REFUSED: +1 lines besides the inserted pairs
+    REFUSED: the first, Status: lines masked, at REV line 770: insert [] -> ['']
+S328-REPORTS-DIFFER
+exit 1
+
+plant deleted-insert, F37's inserted Status: line deleted, its empty line left:
+$ (cd deleted-insert/adocs/audit && sed -i '961d' 2026-09-10_adversarial.md)
+$ python3 adocs/data/S328_planned_done.py --tree deleted-insert --against-rev 1bb3080 | grep -E '^  2026-09-10_adversarial.md|REFUSED|^S328-REPORTS'
+  2026-09-10_adversarial.md: lines 1045 -> 1080, Status: lines changed -, inserted 17, refusals 2, masked diff of the rest: 10 lines, REFUSED
+    REFUSED: +1 lines besides the inserted pairs
+    REFUSED: the first, Status: lines masked, at REV line 927: insert [] -> ['']
+S328-REPORTS-DIFFER
+exit 1
+
+$ git diff -U0 1bb3080 -- adocs/audit | grep -E "^[-+]" | grep -vE "^(\+\+\+|---) " > changed
+$ grep -vcE "^[-+](Status:|$)" changed   # neither Status: nor empty
+0
+$ grep -c "^-Status:" changed; grep -c "^+Status:" changed; grep -c "^+$" changed; grep -c "^-$" changed
+73
+91
+18
+0

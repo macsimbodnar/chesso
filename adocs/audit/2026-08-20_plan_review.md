@@ -92,7 +92,7 @@ role's to do. The hook's output is the handover list.
 
 ### 2026-08-20_plan_review-F01 — high — 70 of 147 `file:line` citations in pending step files are stale, and six of them now point at the wrong test
 
-Status: planned
+Status: closed — S138, 2026-08-21, and S187, 2026-09-09; re-run by 2026-09-04_plan_review, which found the wrong-test hazard gone and the census form back, recorded as its own F07, closed by S187; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S138, landed 2026-08-21
 
 **Evidence.**
@@ -203,7 +203,7 @@ others.
 
 ### 2026-08-20_plan_review-F02 — high — S119's `accepts:` demands a verdict at Hash 128, which DEC-088 explicitly ordered removed and which the harness cannot produce
 
-Status: planned
+Status: closed — S139, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S139, landed 2026-08-21
 Applied: S119's accepts now reads "at the S105 harness setting, with the pressure
 ratio stated", DEC-088's `Consequences:` clause verbatim, with the 60-120 overwrites
@@ -261,7 +261,7 @@ named as one, with `rating.sh` in `touches:`.
 
 ### 2026-08-20_plan_review-F03 — medium — S136's accepts arithmetic (and DEC-092's) is one taper division out at the point the plan runs it
 
-Status: planned
+Status: closed — S139, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed for the plan documents and leaves DEC-092's literals to the owner; S136 ran on DEC-322's re-derivation instead; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S139, landed 2026-08-21
 Applied: half. S136's accepts is now derived -- N divisions can round at its own HEAD,
 unfreezing tempo makes it N+1 -- with the S055-landed case spelled out (N=2: bound
@@ -345,7 +345,7 @@ name the other.
 
 ### 2026-08-20_plan_review-F04 — medium — S125's accepts requires S118, which the plan deliberately orders after it
 
-Status: planned
+Status: closed — S139, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S139, landed 2026-08-21
 Applied: the first of the two options. S125's accepts drops the S118 dependency and
 states that the terms are measured recomputed per call, the per-call cost recorded as
@@ -389,7 +389,7 @@ reversal of DEC-087's ordering as a decision.
 
 ### 2026-08-20_plan_review-F05 — medium — `specs.md` still routes check extensions to S096, which DEC-087 retired
 
-Status: planned
+Status: closed — S140, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S140, landed 2026-08-21
 Applied: the sentence in `specs.md`'s "Open items" now opens **"Check extensions have
 no step and are not owed one"** and records S096 as retired outright by DEC-087 (a),
@@ -436,7 +436,7 @@ the id.
 
 ### 2026-08-20_plan_review-F06 — medium — three pending steps' `touches:` omits the file the change has to land in
 
-Status: planned
+Status: closed — S141, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S141, landed 2026-08-21; S085's own third of it fixed 2026-08-20
 Applied: S039's `touches:` now names `src/search_params.hpp` as where the value has
 lived since S073 and where a re-decision has to land, keeps `src/evaluation.hpp` for
@@ -516,7 +516,7 @@ value and the comment as two separate obligations in two separate files.
 
 ### 2026-08-20_plan_review-F07 — medium — S109's accepts contains a clause that cannot bind one of the four rules it gates
 
-Status: planned
+Status: closed — S139, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S139, landed 2026-08-21
 Applied: S109's accepts now splits the clause. In check, PV, first move and near-mate
 bounds bind all four rules; the gives-check exemption binds futility, history and
@@ -578,7 +578,7 @@ before the step starts, not at its completion.
 
 ### 2026-08-20_plan_review-F08 — medium — `RfpMinPly`'s declared minimum admits values the same file records as red, and the running SPSA has spent a third of that axis there
 
-Status: planned
+Status: closed — S142, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S142, paused behind S145 by DEC-095
 
 **Evidence.**
@@ -643,7 +643,7 @@ call.
 
 ### 2026-08-20_plan_review-F09 — low — S085's goal names twenty parameters; the live surface is 22 and the frozen run is 12
 
-Status: planned
+Status: closed — S085, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S085, resolved by DEC-094 -- goal line amended to the frozen 12
 
 **Evidence.**
@@ -675,7 +675,7 @@ entry, or record the deviation as a decision. Not both left implicit.
 
 ### 2026-08-20_plan_review-F10 — low — three `excludes:` fields route work to retired step ids
 
-Status: planned
+Status: closed — S140, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S140, landed 2026-08-21
 Applied: all three re-pointed, each to the document that decides it. S098 excludes
 "late move pruning, which is **S109** -- S090 was retired into it by DEC-082" and
@@ -749,7 +749,7 @@ consumes"; S097 and S042 → name the retirement instead of the id.
 
 ### 2026-08-20_plan_review-F11 — low — `plan.md`'s block 3 prose omits all three of S134, S135 and S136
 
-Status: planned
+Status: closed — S140, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S140, landed 2026-08-21
 Applied: the block-3 paragraph is rewritten. The header range is **S134 to S126**,
 matching the list, and the paragraph now opens on S134 -- the fold of the two exact
@@ -797,7 +797,7 @@ against the amended block.
 
 ### 2026-08-20_plan_review-F12 — low — S115's accepts names a results file as the source of its 300 positions
 
-Status: planned
+Status: closed — S138, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S138, landed 2026-08-21
 
 **Evidence.**
@@ -832,7 +832,7 @@ step's own body, and correct the script's docstring while the step is open.
 
 ### 2026-08-20_plan_review-F13 — low — two accepts clauses gate on "the mate-in-quiescence case", a test title that does not exist
 
-Status: planned
+Status: closed — S138, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S138, landed 2026-08-21
 
 **Evidence.**
@@ -869,7 +869,7 @@ forced mate"`.
 
 ### 2026-08-20_plan_review-F14 — low — `ORDER_HISTORY_MAX`'s declared range breaks the band clearance S093's accepts reasons from
 
-Status: planned
+Status: closed — S142, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S142
 
 **Evidence.**
@@ -916,7 +916,7 @@ against `ORDER_COUNTER` rather than against a killer.
 
 ### 2026-08-20_plan_review-F15 — low — S117's accepts admits a truncation change with "no SPRT owed", which INV-6 and its own body forbid
 
-Status: planned
+Status: closed — S139, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S139, landed 2026-08-21
 Applied: the "or" branch is gone. S117's accepts makes the identity a gate rather
 than a claim, requires the truncation behaviour unchanged, calls a moved bound a
@@ -957,7 +957,7 @@ which is what the body already says.
 
 ### 2026-08-20_plan_review-F16 — low — `status.md`'s enrichment census disagrees with the filesystem it says derives it
 
-Status: planned
+Status: closed — S140, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S140, landed 2026-08-21
 Applied: the suggested resolution, plus a dated snapshot. The twenty-id enumeration
 and "28 of 48" are gone and the item says why -- both ends move, every completion
@@ -1003,7 +1003,7 @@ item and keep only the `grep -L` recipe, which is correct and self-updating.
 
 ### 2026-08-20_plan_review-F17 — low — INV-7 is referenced by the repository's own history and defined nowhere
 
-Status: planned
+Status: closed — S140, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S140, landed 2026-08-21
 Applied: the second option -- the record is corrected, no INV-7 is allocated.
 `specs.md`'s Invariants section now closes with **"The numbering ends at INV-6 and
@@ -1042,7 +1042,7 @@ enforcing AGENTS.md §2/§10 rather than a numbered invariant.
 
 ### 2026-08-20_plan_review-F18 — low — S085's stated watcher command names a path that does not exist and a ceiling that is not 2x its own budget
 
-Status: planned
+Status: closed — S085, 2026-08-21; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 Planned in: S085, watcher path corrected 2026-08-20
 
 **Evidence.**

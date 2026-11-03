@@ -136,7 +136,7 @@ recorded exception "in the DEC-087 Fathom style". Delete the sentence at
 
 ### 2026-09-04_plan_review-F02  medium  DEC-087's reason for keeping S099 in the main order and demoting S110/S111 rests on a Lynx rating band the CCRL list contradicts by ~400 Elo
 
-Status: planned — S181
+Status: closed — S181, 2026-09-11; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S181.
 
 **Evidence.** `adocs/decisions.md:5015-5017` (DEC-087 (b)): *"Non-pawn and
 continuation correction history measure +3 to +8 only above ~3100. **S099
@@ -192,7 +192,7 @@ the corrected band, stating the real reason if S099 stays. S098's split at
 
 ### 2026-09-04_plan_review-F03  medium  "What this costs" prices a verdict at 45 to 75 minutes; the seven verdict runs since S105 averaged 4 h 40 m
 
-Status: planned — S182
+Status: closed — S182, 2026-09-11; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S182.
 
 **Evidence.** `adocs/plan.md:348-352`: *"roughly 45 to 55 SPRT verdicts ...
 At the S105 settings a typical verdict is 45 to 75 minutes, so **roughly 75
@@ -238,7 +238,7 @@ verdict, the way `status.md` is rewritten.
 
 ### 2026-09-04_plan_review-F04  medium  The Elo arithmetic's inputs are recorded nowhere, and the one discount it applies is not the one the project's ledger has measured since it was written
 
-Status: planned — S183
+Status: closed — S183, 2026-09-11; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S183.
 
 **Evidence.** `adocs/plan.md:365-367`: *"Discounting self-play to list Elo
 at the ratio the published per-release records support (~60 % sticks), and
@@ -352,7 +352,7 @@ the mode holds no line numbers, and a named-constant phrase holds none either.
 
 ### 2026-09-04_plan_review-F06  low  Block 3 is ordered by figures no tracked document sources, and the enrichment pass that would source them has not moved since DEC-097 resumed it
 
-Status: planned — S185
+Status: closed — S185, 2026-09-11; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S185.
 
 **Evidence.** `adocs/plan.md:328` orders block 3 "in the order the Stash
 ledger prices them: mobility area and curves (S121, +20 class), passed pawns
@@ -412,7 +412,7 @@ it, so the order is seen to rest on what it rests on.
 
 ### 2026-09-04_plan_review-F07  low  59 citations have drifted three days after the re-anchor, one in an accepts field; and the checker cannot see a citation that was already wrong when it was written
 
-Status: planned — S187
+Status: closed — S187, 2026-09-09; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned — S187.
 
 **Evidence.**
 

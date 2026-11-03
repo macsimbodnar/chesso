@@ -65,7 +65,7 @@ tree, as expected for planned work.
 
 ### 2026-08-22_adversarial-F01  medium  load_FEN accepts semantically illegal castling rights and en-passant squares, and the moves they license corrupt the board in Release
 
-Status: planned — S161
+Status: closed — S161, 2026-08-22; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S161.
 Verification: statically confirmed (mechanism); end-to-end demonstration is
 the written test, to be registered and run when the machine is free.
 
@@ -204,7 +204,7 @@ it with `stockfish` (`go depth 20`) before pinning it in a test.
 
 ### 2026-08-22_adversarial-F04  low  null move pruning has no negative mate-band guard, unlike reverse futility beside it, and the asymmetry is recorded nowhere
 
-Status: planned — S165
+Status: closed — S165, 2026-08-23; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S165.
 Verification: statically confirmed (asymmetry); strength/mate-distance impact
 needs-run.
 
@@ -250,7 +250,7 @@ build, machine idle.
 
 ### 2026-08-22_adversarial-F05  low  a stale hard-limit timer can kill the next search: the session check and the stop store are not atomic together
 
-Status: planned — S163
+Status: closed — S163, 2026-08-23; re-run by 2026-09-03_adversarial, which reports it closed; its stress harness not re-run; moved by S328, 2026-11-03. Previously: planned — S163.
 Verification: statically confirmed (race window); reproduction run — the unwidened race did not fire in 513787 iterations, the window widened 500 us fired 46 times in 12328. Closes on an audit re-run.
 
 **Evidence.** `src/chesso.cpp:413-424`:
@@ -301,7 +301,7 @@ the machine is free.
 
 ### 2026-08-22_adversarial-F06  low  the Polyglot random table in src/openings.cpp is a verbatim third-party constant table, and S146's own excludes put it out of scope
 
-Status: open
+Status: accepted — DEC-121, 2026-09-02: the 781 constants are the Polyglot format's published specification, kept and cited at the table, the citation placed by S146, 2026-09-03, whose `closes:` names this finding; re-run by 2026-09-03_adversarial and 2026-09-04_adversarial, which both report it accepted (DEC-121); moved by S328, 2026-11-03. Previously: open.
 Verification: statically confirmed.
 
 **Evidence.** `src/openings.cpp:44-45` and onward: `const uint64_t
@@ -335,7 +335,7 @@ its own line in that step's `accepts`.
 
 ### 2026-08-22_adversarial-F07  low  S130's substitution is untested against a lazy-bound stand pat, the one input class where its comparison runs on a bound instead of a score
 
-Status: planned — S164
+Status: closed — S164, 2026-08-23; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S164.
 Verification: statically confirmed (test reading); the suggested test is the
 run.
 

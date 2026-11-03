@@ -54,7 +54,7 @@ and no longer reports it. Fixing without re-running leaves it `planned`.
 
 ### 2026-08-13_plan_review.2-F01  medium  S055's accepts cannot be met: the change it prescribes necessarily fails the guard S038 added hours earlier, and the step file never mentions it
 
-Status: planned
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F01: does not reproduce, S055 re-pins the thresholds in its own commit, closed); moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan_todo/S055_taper_stage_two_once.md:3`:
 
@@ -128,7 +128,7 @@ re-target rather than a relaxation.
 
 ### 2026-08-13_plan_review.2-F02  medium  S039's first acceptance criterion cannot be run on this machine: the corpus it names does not exist
 
-Status: planned
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F02: does not reproduce as a plan defect, closed); moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan_todo/S039_lazy_margin_redecide.md:3`:
 
@@ -186,7 +186,7 @@ HEAD.
 
 ### 2026-08-13_plan_review.2-F03  medium  S030's neutrality remedy is wrong for two of the four sites it points at, and would index a 12-row table with 12
 
-Status: planned
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F03: does not reproduce, S030 splits the sites by what they key on, closed); moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan_todo/S030_move_encoding_16_bit.md`, "Estimate and
 risk":
@@ -247,7 +247,7 @@ S024 add to it.
 
 ### 2026-08-13_plan_review.2-F04  low  S025's gate requires a timing outcome its own evidence says will not happen
 
-Status: planned
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F04: does not reproduce, S025's accepts is outcome-neutral, closed); moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan_todo/S025_bad_capture_ordering_retry.md:3`:
 
@@ -280,7 +280,7 @@ it.
 
 ### 2026-08-13_plan_review.2-F05  low  S026's completion gate is weaker than its own hazard paragraph, unlike the adjacent S033
 
-Status: planned
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F05: does not reproduce, S026 retired into S109, whose accepts carries the mate clause, closed); moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan_todo/S026_futility_and_razoring.md:3`:
 
@@ -314,7 +314,7 @@ technique, since forward futility and razoring prune at different places.
 
 ### 2026-08-13_plan_review.2-F06  low  S023's second acceptance criterion has no instrument, and the test nearest to it has 99200 points of slack
 
-Status: planned
+Status: closed — S023, 2026-10-15; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan_todo/S023_capture_history.md:3`:
 
@@ -356,7 +356,7 @@ offering a king capture.
 
 ### 2026-08-13_plan_review.2-F07  low  plan.md's prose says S037 is pending and S054 is next; both are in plan_done at this commit
 
-Status: planned
+Status: closed — S062, 2026-08-16; re-run by 2026-08-16_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan.md:44-46`:
 
@@ -401,7 +401,7 @@ paragraph rewritten as history or dropped.
 
 ### 2026-08-13_plan_review.2-F08  info  three pending step files cite line numbers that moved two lines at S037
 
-Status: planned
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F08: the three re-pointed, the class recurring as its own F07, closed); that F07 closed by S187, 2026-09-09; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** Every `file:line` citation in the pending step files was resolved
 against HEAD. Three miss, all by the same two lines, all in `src/evaluation.cpp`:
@@ -429,7 +429,7 @@ line where the file is likely to move again.
 
 ### 2026-08-13_plan_review.2-F09  info  plan.md describes the checker's pruning as oldest-completion-first; it is last-five-by-position, and the ledger follows
 
-Status: planned
+Status: closed — S064, 2026-08-16; re-run by 2026-08-16_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `adocs/plan.md:83-86`:
 

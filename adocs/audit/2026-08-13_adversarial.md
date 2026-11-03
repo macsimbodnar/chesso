@@ -67,7 +67,7 @@ and no longer reports it. Fixing without re-running leaves it `planned`.
 
 ### 2026-08-13_adversarial-F01  high  `fastchess.sh` aborts before playing a game, and reports success
 
-Status: planned
+Status: closed — S035, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed by S035 and S167; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `fastchess.sh:108` still prints a variable the commit under audit
 deleted:
@@ -123,7 +123,7 @@ exercises any shell script today.
 
 ### 2026-08-13_adversarial-F02  high  `go` with a 1 ms clock arms no timer and never answers
 
-Status: planned
+Status: closed — S036, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `compute_search_time_ms()` (`src/chesso.cpp:393-405`) returns 0
 for `remaining_ms == 1` at every increment and every `movestogo`, because
@@ -187,7 +187,7 @@ and fall back to `FALLBACK_SEARCH_TIME_MS`. Red first: add `{1, 0, 20}` and
 
 ### 2026-08-13_adversarial-F03  medium  `info ... nodes` is the last iteration's count, so `search_bench.py` compares the wrong number
 
-Status: planned
+Status: closed — S037, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `iterative_deepening_search` zeroes the counter at the top of
 every iteration (`src/chesso.cpp:571`, `state.explored_nodes = 0;`), accumulates
@@ -233,7 +233,7 @@ move with it.
 
 ### 2026-08-13_adversarial-F04  medium  the tuner-model guard's 2 cp tolerance is exceeded on 1.7 % of the real corpus
 
-Status: planned
+Status: closed — S038, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed by S038 and DEC-053; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `tests/test_eval_model.cpp:313` asserts
 `std::abs(model - engine_white) <= 2.0`, justified by a comment saying
@@ -327,7 +327,7 @@ so this is a step and not an edit.
 
 ### 2026-08-13_adversarial-F06  low  `DEV_MANUAL.md`'s tuner section is stale against `tools/tuner.cpp` in four places
 
-Status: planned
+Status: closed — S040, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** Code first, document second.
 
@@ -363,7 +363,7 @@ occurrences of the swallowing bug.
 
 ### 2026-08-13_adversarial-F07  low  `free_mask()` has broken four times and has no test
 
-Status: planned
+Status: closed — S041, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `tools/tuner.cpp:157-209`. Four consecutive comments in the same
 function record the same defect —"`king_safety` ran past the passed pawn
@@ -397,7 +397,7 @@ unit; the mask logic is 50 lines and has no dependencies.
 
 ### 2026-08-13_adversarial-F08  low  the en passant square is set after every double push, splitting the hash of identical positions
 
-Status: planned
+Status: closed — S042, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `src/bitboard.cpp:824-833` sets `new_en_passant` from the double
 push unconditionally, with no test for an enemy pawn that could capture. Two
@@ -442,7 +442,7 @@ by INV-6's first test and not by its second, which means an SPRT.
 
 ### 2026-08-13_adversarial-F09  info  `CMAKE_TOOLCHAIN_FILE` points at a file that does not exist and is set too late to matter
 
-Status: planned
+Status: closed — S043, 2026-08-13; re-run by 2026-09-03_adversarial, which reports it closed; moved by S328, 2026-11-03. Previously: planned.
 
 **Evidence.** `CMakeLists.txt:7`:
 

@@ -70,7 +70,7 @@ order contain no engine feature.
 
 ### 2026-09-10_adversarial-F01  high  Three tables in `src/bb_tables.hpp` are copies from a GPL-3.0 engine, and the whitespace proves it
 
-Status: planned -- S211 (DEC-170). VERIFIED.
+Status: closed -- S211, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S211 (DEC-170). VERIFIED.
 
 Evidence. `github.com/maksimKorzh/bbc` ("Bit Board Chess (BBC) ... by Code Monkey
 King") is **GPL-3.0** -- confirmed from the GitHub API, `license.spdx_id`. This
@@ -141,7 +141,7 @@ constants.
 
 ### 2026-09-10_adversarial-F02  medium  Five mask builders in `src/bitboard.cpp` are line-for-line transliterations of the same source, and `CMK_POS` names its author in the shipped header
 
-Status: planned -- S211 (DEC-170). VERIFIED, with a stated caveat.
+Status: closed -- S211, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S211 (DEC-170). VERIFIED, with a stated caveat.
 
 Evidence. `src/bitboard.cpp` `precompute_knight_attacks` against BBC
 `mask_knight_attacks`: the same eight shifts in the same order
@@ -175,7 +175,7 @@ which is what the wiki calls it.
 
 ### 2026-09-10_adversarial-F03  medium  Twelve pieces of third-party artwork are redistributed with no licence or attribution, and `books/fetch_book.sh` asserts that this cannot happen
 
-Status: planned -- S211 (DEC-170). VERIFIED.
+Status: closed -- S211, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S211 (DEC-170). VERIFIED.
 
 Evidence. `git ls-files tests/assets/gui/` tracks `Chess_{b,k,n,p,q,r}{d,l}t60.png`
 -- Wikimedia Commons' Cburnett naming scheme -- plus `background_l.jpg`,
@@ -246,7 +246,7 @@ F02 are: `bb_tables.hpp` 73 %, `openings.cpp` 68 %, `bitboard.cpp` 52 %,
 
 ### 2026-09-10_adversarial-F04  high  Resign adjudication is one-sided in both harnesses, and `rating.sh` states the opposite in the comment that justifies it
 
-Status: planned -- S212 (DEC-170, DEC-174). VERIFIED, and quantified further here.
+Status: closed -- S212, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S212 (DEC-170, DEC-174). VERIFIED, and quantified further here.
 
 Evidence. `fastchess.sh:178` and `rating.sh:80` both pass
 `-resign movecount=3 score=400`, and neither passes `twosided`. The installed
@@ -316,7 +316,7 @@ reader will rely on. First measurement is free -- re-score
 
 ### 2026-09-10_adversarial-F05  medium  The engine's `id name` carries no version, so the identity check the project enforces on every opponent it cannot enforce on itself
 
-Status: planned -- S212 (DEC-170). VERIFIED.
+Status: closed -- S212, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S212 (DEC-170). VERIFIED.
 
 Evidence. `src/chesso.cpp:1074` is `uci_reply("id name Chesso");` -- a literal,
 with no version, no commit, no build configuration. `printf 'uci\nquit\n' |
@@ -348,7 +348,7 @@ project already enforces on everyone else.
 
 ### 2026-09-10_adversarial-F06  medium  `.ref-builds/` binaries are reused forever with nothing checking the worktree, the build's freshness, or its configuration
 
-Status: planned -- S212 (DEC-170). VERIFIED (the mechanism; no contaminated verdict found).
+Status: closed -- S212, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S212 (DEC-170). VERIFIED (the mechanism; no contaminated verdict found).
 
 Evidence. `fastchess.sh:356` is `if [[ ! -x "$reference" ]]; then` -- the
 worktree is created and built only when the binary is absent. Nothing
@@ -380,7 +380,7 @@ banner.
 
 ### 2026-09-10_adversarial-F07  medium  `adocs/specs.md` says `./rating.sh` re-derives 2559; it cannot, and the changed variant of that run was voided by the project
 
-Status: planned -- S212; the specs.md sentence corrected 2026-09-11 (DEC-170). VERIFIED.
+Status: closed -- S212, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: planned -- S212; the specs.md sentence corrected 2026-09-11 (DEC-170). VERIFIED.
 
 Evidence. `adocs/specs.md:32-33`: *"`adocs/data/rating_2026-08-18_S088_ccrl_blitz.md`
 is the record and **`./rating.sh` re-derives it**."*
@@ -776,6 +776,8 @@ reset the fifty move counter and shrink the repetition search window"* -- the
 exact harm the increment then produces. Out of reach of any adjudicated match;
 silent when it happens. Fix: `uint16_t`, or saturate at 255 with the reason.
 
+Status: closed — S210, 2026-09-14; re-run by 2026-10-08_performance, which reports it closed by re-run; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F18 low a long `position` line makes the engine answer `bestmove 0000` in a
 position with 22 legal moves.** At 4999 plies the root's own `make_move` refuses
 (`src/bitboard.cpp:759`), every move is skipped, and `first_legal_move()`
@@ -786,17 +788,23 @@ line left. `make_null_move` has only an assert, dead in Release, unreachable
 today solely because NMP forbids two passes in a row, which is written down
 nowhere.
 
+Status: closed — S210, 2026-09-14; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F19 low `go infinite depth N` returns without a `stop`.** `UCI.txt:171`: *"Do
 not exit the search without being told so in this mode!"* `command_go`
 pre-seeds `depth = MAX_DEPTH` (`src/chesso.cpp:1486`) and `infinite` does not
 clear it. A second trigger for `2026-09-04_adversarial-F01`, which is still open
 and whose description does not cover this one.
 
+Status: closed — S210, 2026-09-14; re-run by 2026-10-08_performance, which reports it closed by re-run; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F20 low `movestogo 0` is clamped to 1**, so the engine spends ~46 % of its
 clock on one move (measured: 4.64 s of a 10 s clock, identical to `movestogo 1`).
 `src/chesso.cpp:1523` clamps rather than rejects, while `src/uci.hpp:47-50` and
 S089 are explicit that 0 means sudden death and *"is not a stand-in for some
 number of moves"*. Needs a non-conforming GUI.
+
+Status: closed — S210, 2026-09-14; re-run by 2026-10-08_performance, which reports it closed by re-run; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F21 low the first iteration cannot be stopped.** `src/chesso.cpp:777-778` sets
 `state.stop = &never_stop;` and swaps in the real signal only after the first
@@ -806,10 +814,14 @@ exposure in ordinary play is small -- depth-1 wall time over 400 positions from
 `STATUS_VALID` board the reviewer measured 254 ms used against a 100 ms clock
 (a 50 ms hard limit) -- a forfeit. Latent, not a current match risk.
 
+Status: closed — S210, 2026-09-14; re-run by 2026-10-08_performance, which reports it closed by re-run; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F22 low quiescence never tests insufficient material.** `is_insufficient_material`
 has one call site, `src/search.cpp:668`, inside `negamax_at`. A capture made
 inside quiescence that leaves KvK, KNvK or KBvK is scored statically (-103,
 +190, +235 measured) instead of `DRAW_SCORE`.
+
+Status: closed — S210, 2026-09-14; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F23 low same-coloured bishops are not drawn, and the stated reason is wrong.**
 `src/bitboard.cpp:1393-1409` counts minors and never asks about square colour;
@@ -821,6 +833,8 @@ family, though the comment's argument does hold for KNvKN. The behavioural half
 is recorded (`2026-08-14_test_review-F05`, pinned by S067); the false
 justification is not.
 
+Status: closed — S210, 2026-09-14, for the justification, the behavioural half staying accepted as 2026-08-14_test_review-F05 (DEC-170); no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F24 low the tuner's gradient ignores the model's clamp on a stale
 justification.** `tools/tuner_model.hpp:391-396` defends it with *"the term's
 maximum over 149084 real positions was 143 against a bound of 150"* -- a
@@ -830,6 +844,8 @@ rows: 0.33 % of rows clamped, carrying 0.44 % of the stage-two gradient
 magnitude. `tests/test_tuner_gradient.cpp:357` and `:580-585` choose a fixture
 where no row is clamped, so the finite-difference check has **zero coverage** of
 the region where the gradient is knowingly not the derivative.
+
+Status: planned — S126, in plan_todo/, whose `closes:` names this finding (DEC-170); moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F25 low `tools/eval_spread`'s candidate margins are `{150, 200, 250, 300,
 400}`** (`tools/eval_spread.cpp:32-35`) and do not include the 184 that has
@@ -847,6 +863,8 @@ themselves are the only thing that can be checked today"* -- guards
 (`evaluation.cpp:80-81`, non-zero). S039's own file records this exact staleness
 class in this exact file for a different sentence; the file was never swept.
 
+Status: closed — S213, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F27 low the "static score cannot approach the mate band" argument names the
 wrong bound.** `src/search.cpp:775-779` and `src/search_params.hpp:119-122`
 attribute it to the `evaluate_expensive()` clamp, which bounds only the
@@ -855,6 +873,8 @@ expensive stage; `evaluate_cheap` is bounded by nothing. The conclusion is true
 bound 16991, against `MATE_MIN` 48000 -- but the reason given does not
 establish it, and no test asserts `|evaluate()| < MATE_MIN`.
 
+Status: closed — S213, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F28 low `tools/analyse_game.py` can silently return 0.00.** `:41-57`
 initialises `score, best = 0, "-"` and returns them if no `info` line carrying
 both a score and a pv arrives; it also accepts `lowerbound`/`upperbound` lines.
@@ -862,11 +882,15 @@ This is the tool `CLAUDE.md` mandates *because* agent chess judgement is banned,
 so a silent 0.00 is the DEC-023 failure mode arriving through the instrument
 that exists to prevent it.
 
+Status: closed — S214, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F29 low `spsa_driver.py check` proves reachability for one axis.** It
 validates every parameter's presence and bounds, then probes that a value
 actually reaches the search with a hardcoded `RfpMargin` node comparison -- one
 of the twelve axes S085 tuned. An axis wired to a variable nothing reads would
 random-walk and be indistinguishable from a tuned one.
+
+Status: closed — S214, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F30 low S199's drift reading rule has no term for DEC-083 conversions.** It
 reads a point as *"inside the previous point's interval plus the verdicts landed
@@ -875,6 +899,8 @@ discharged by timing conversion -- `plan.md` says *"Six steps stop owing a match
 at all under DEC-083"* -- so a drift point taken after block 2 reads high
 against a rule with no slot for them.
 
+Status: closed — S199, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F31 low `fastchess.sh` censuses crashes and disconnects but never voids on
 them**, where `rating.sh:250-256` greps for the same and prints
 `RATING-RUN-INVALID`. The stated justification covers time forfeits only (*"Both
@@ -882,10 +908,14 @@ sides here are chesso"*), which does not extend to a crash, since only one side
 carries the new code. Never observed: 17682 tracked games show only
 `adjudication`, `normal` and 4 `time forfeit`. Given F09, worth closing.
 
+Status: closed — S212, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
+
 **F32 low the busy-machine guard carries no information.** `fastchess.sh:370-377`
 sums `ps -A -o %cpu=`, which is each process's *lifetime* average, and warns
 above 60. Measured here: loadavg 0.79, `ps` sum **255** -- 3.2x over-reported, so
 it fires on every run. `CLAUDE.md` founding rule 4 recommends the same statistic.
+
+Status: closed — S212, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F33 low dead API and stale comments.** `swap_side` and `set_en_passant`
 (`src/bitboard.hpp:152-153`) have zero callers anywhere -- and `set_en_passant`
@@ -895,6 +925,8 @@ pass a possibly-negative `char` to `isdigit`/`isspace`, UB outside `unsigned
 char`. `src/data_structures.hpp:437` still says *"20 bytes of content in 24"*;
 it is 22 since the `eval` field landed (`sizeof` is 24, which is the
 load-bearing half and is right).
+
+Status: closed — S213, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F34 low the tuner has no regularisation and no decision recording that**, over
 a parameterisation whose own source documents two exact linear degeneracies at
@@ -908,6 +940,8 @@ Status: closed — S134, 2026-10-12: DEC-170 ruled against regularisation; S134 
 `tools/tuner.cpp:249-282` emits the commit, corpus digest, K, seed, lr and
 split, but not `--epochs`, `--report`, `--patience` or `--threads` -- and
 `--report`/`--patience` select *which vector is emitted* (`:713`, `:735`).
+
+Status: closed — S214, 2026-09-12; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 **F36 low the tuner trusts the corpus's `phase` column** (`tools/tuner_model.hpp:158`,
 range-checked only) instead of recomputing it with `eval_model::phase_of()`,
@@ -923,6 +957,8 @@ full-batch (`tools/tuner.cpp:434`), and its Phase A requires an in-engine eval
 trace and UCI exposure of every tunable, neither of which exists -- the trace
 lives in `tools/eval_model.hpp` as a second implementation. The document's other
 divergences (leaf labels, non-linear king safety) are recorded and planned.
+
+Status: closed — S186, 2026-09-13; no audit has re-run it since; moved by S328, 2026-11-03. Previously: open (this report's header: open on all of them).
 
 ---
 

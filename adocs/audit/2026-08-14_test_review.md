@@ -66,7 +66,7 @@ and no longer reports it. Fixing without re-running leaves it `planned`.
 
 ### 2026-08-14_test_review-F01  high  a tactical case has exactly one legal move
 
-Status: planned — S067
+Status: closed — S067, 2026-08-14; re-run by 2026-09-04_test_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S067.
 
 Evidence: `tests/test_search.cpp:348`, inside `"the winning move is found"`,
 which asserts a specific `from`, `to` and promotion at depths 4, 5 and 6.
@@ -96,7 +96,7 @@ of defect cannot return. Not applied here.
 
 ### 2026-08-14_test_review-F02  high  the mate-in-zero position is mated by a king
 
-Status: planned — S067
+Status: closed — S067, 2026-08-14; re-run by 2026-09-04_test_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S067.
 
 Evidence: `tests/test_search.cpp:144` (`"a mated side reports mate in zero"`)
 and `tests/test_search.cpp:610` (`"mate is recognised at depth zero"`), both
@@ -123,7 +123,7 @@ here.
 
 ### 2026-08-14_test_review-F03  medium  the invariant asserts have no gate, and no working ctest invocation
 
-Status: planned — S067
+Status: closed — S067, 2026-08-14; re-run by 2026-09-04_test_review, which reports it closed as filed and carries its second half as its own F01, closed by S190, 2026-09-09; moved by S328, 2026-11-03. Previously: planned — S067.
 
 Evidence: `.moltke.json`'s `test_command` is
 `cmake --build build -j12 && ctest --test-dir build -L fast --output-on-failure && ./clang-format.sh --check`.
@@ -155,7 +155,7 @@ a separate decision. Not applied here.
 
 ### 2026-08-14_test_review-F04  medium  a test helper states the opposite of INV-1
 
-Status: planned — S067
+Status: closed — S067, 2026-08-14, and S193, 2026-09-09; re-run by 2026-09-04_test_review, which found it open again in a new wording and folded it into its own F05, closed by S193; moved by S328, 2026-11-03. Previously: planned — S067.
 
 Evidence: `tests/test_helpers.hpp:75-76`:
 
@@ -183,7 +183,7 @@ here.
 
 ### 2026-08-14_test_review-F05  low  the insufficient-material test skips every boundary case
 
-Status: planned — S067
+Status: closed — S067, 2026-08-14; re-run by 2026-09-04_test_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S067.
 
 Evidence: `tests/test_search.cpp:901`, `"which material can still mate"`, 8
 cases: KvK, KNvK, KNvKN, KNNvK, KBvK, KRvK, KQvK, KPvK.
@@ -206,7 +206,7 @@ not this. Not applied here.
 
 ### 2026-08-14_test_review-F06  low  the move-ordering guard has an order of magnitude of headroom
 
-Status: planned — S067
+Status: closed — S067, 2026-08-14; re-run by 2026-09-04_test_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S067.
 
 Evidence: `tests/test_search.cpp:450`, `"ordering keeps the tree small"`, sets
 `state.node_limit = 1000000` and asserts `REQUIRE_FALSE(state.aborted)` after

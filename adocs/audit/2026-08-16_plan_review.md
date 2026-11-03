@@ -57,7 +57,7 @@ and no longer reports it. Fixing without re-running leaves it `planned`.
 
 ### 2026-08-16_plan_review-F01  high  S057 is obsolete in every particular: the corpus it says is missing exists, and both its figures and S039's understate the measured spread by four times
 
-Status: planned — S080
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F01: S057 folded into S039 by DEC-086, closed); S080, the step this line named, retired by DEC-086; moved by S328, 2026-11-03. Previously: planned — S080.
 
 **Evidence.** S057 exists to give S039 "a corpus that exists in this tree, with
 its spread figures re-measured at HEAD"
@@ -157,7 +157,7 @@ king-safety sentence — the comment's leading claim is the false one.
 
 ### 2026-08-16_plan_review-F02  medium  17 file:line citations across six pending step files no longer resolve, and 9 of them are outside the reach of S063, the step created to fix exactly this
 
-Status: planned — S079
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F02: re-anchored by S138 and S169, the class recurring as its own F07, closed); that F07 closed by S187, 2026-09-09; S079, the step this line named, retired by DEC-086; moved by S328, 2026-11-03. Previously: planned — S079.
 
 **Evidence.** Every `file:line` citation in the 22 pending step files was
 resolved against HEAD. Seventeen miss. The 2026-08-13 re-run found three
@@ -227,7 +227,7 @@ writes citations into another step.
 
 ### 2026-08-16_plan_review-F03  medium  S056's numeric evidence describes a pinned corpus S065 replaced, so the step that re-targets S055's thresholds carries thresholds measured against positions no longer in the test
 
-Status: planned — S081
+Status: closed — 2026-09-04_plan_review re-ran this report and does not report it ("Verdicts on prior findings", F03: S056 folded into S055, closed); S081, the step this line named, retired by DEC-086; moved by S328, 2026-11-03. Previously: planned — S081.
 
 **Evidence.** S056 exists to re-target the four pinned thresholds S055 would
 break. `S056:22-29`:
@@ -281,7 +281,7 @@ re-measured in S055's own commit"), leaving the body the only stale part.
 
 ### 2026-08-16_plan_review-F04  medium  S068 is the next step and its entire evidence base is two files in a per-session scratchpad, produced by a method that cannot be re-run at HEAD
 
-Status: planned — S072
+Status: closed — S072, 2026-08-16; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S072.
 
 **Evidence.** `adocs/status.md:10` gives `Next: S068`, which the list confirms
 (entry 45, first entry not in `plan_done/`). `S068_rfp_margin_retune.md:27`:
@@ -356,7 +356,7 @@ one, RED at 2886952 in the other). Either guard the three `#define`s with
 
 ### 2026-08-16_plan_review-F05  low  status.md's parked list contradicts specs.md about the machine and is stale in its own worked example of the retention window
 
-Status: planned — S069
+Status: closed — S069, 2026-08-16; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S069.
 
 **Evidence.** `adocs/status.md:53-59`:
 
@@ -408,7 +408,7 @@ id list and point at `plan.md:130-138`, which S064 already made correct.
 
 ### 2026-08-16_plan_review-F06  low  2026-08-14_test_review-F02 is only half fixed: the illegal mate-in-zero FEN survives in tests/test_engine.cpp
 
-Status: planned — S070
+Status: closed — S070, 2026-08-16; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S070.
 
 **Evidence.** `2026-08-14_test_review-F02` recorded `7k/5Q1K/8/8/8/8/8/8 b - - 0
 1` as a position where the only attacker of the mated king is the enemy king, and
@@ -447,7 +447,7 @@ to "partially fixed".
 
 ### 2026-08-16_plan_review-F07  low  S021 is the next play-altering step after S068 and is the only search step with no mate clause, while DEC-060 records that reverse futility's exposure is a function of beta
 
-Status: planned — S074
+Status: closed — S074, 2026-08-17; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S074.
 
 **Evidence, and what it is not.** S021 (list entry 46) narrows the root window.
 Its whole gate is `S021_aspiration_windows.md:3`:
@@ -538,7 +538,7 @@ that decide what to try and never what to conclude, per DEC-019.
 
 ### 2026-08-16_plan_review-F09  info  S060's and S061's supporting evidence predates S033, which added the test S060 says does not exist
 
-Status: planned — S078
+Status: closed — S078, 2026-08-17; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S078.
 
 **Evidence.** `S060_s026_mate_test_in_gate.md:19-24`:
 
@@ -575,7 +575,7 @@ and re-point S061's range. Both are inside S063's stated intent and outside its
 
 ### 2026-08-16_plan_review-F10  info  plan.md and testing.md cite bin/moltke.py, which is not in this repository
 
-Status: planned — S071
+Status: closed — S071, 2026-08-16; re-run by 2026-09-04_plan_review, which reports it closed; moved by S328, 2026-11-03. Previously: planned — S071.
 
 **Evidence.** `adocs/plan.md:130-131` and `adocs/testing.md:13`:
 

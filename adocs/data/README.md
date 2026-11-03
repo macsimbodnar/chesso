@@ -1602,3 +1602,12 @@ On `ba1cad6`, counts and instructions only, no fit, no match, no timing: S122's 
 | `S122_research_prototype.patch` | the forced-weight sink, the search census, the real margin and the scored probe behind macros, over `ba1cad6`, never committed to `src/`; the probe moves S262's group inside the clamp and gives `exact_parts()` the integer finalizer, and leaves `gradient()` alone, no fit reading it |
 | `S122_identity_plants.patch` | one more patch over the prototype, a runtime switch: five defects, so that one build reads what `truncation_scan` and `eval_spread` each catch; never committed to `src/` |
 | `S122_cmp_units.cpp` | the census's units against the prototype's loop on that build |
+
+### S328, audit `Status:` lines moved after their steps (DEC-171)
+
+On `1bb3080`, no build and no run: S328's step file, "2026-11-03: the census, the rule, and the lines moved".
+
+| file | what it holds |
+|---|---|
+| `S328_planned_done.py` | the census: every finding of `adocs/audit/*.md` with its first `Status:` line, every step's `closes:` across the three plan directories, each finding with no `Status:` line with the steps naming it, each `planned` finding classed by whether every step naming it is in `plan_done/`, each `open` one with the steps naming it, and `closes:` ids that name no finding. `--rev` reads a commit through `git archive`; `--against-rev` proves the reports differ from a commit's only as DEC-346 admits, changed `Status:` lines and a `Status:` line with an empty line inserted under a finding that had none in `2026-09-10_adversarial.md` alone, each refusal printed with its reason, `S328-REPORTS-STATUS-ONLY` or exit 1; `--tree` reads a planted copy; `--dotless-ids` is the id grammar that reproduces the step file's 60, the right one reading 63. Reads and prints, edits nothing |
+| `S328_evidence.txt` | its readings: on `1bb3080`, 72 `planned`, 63 with every step done, 9 with none; the dotless reading's 60 and the three ids it orphans; after S328's edits, 3 `planned`, 158 `closed`, 7 `accepted`, 0 `open` and 0 without a line, 73 `Status:` lines changed and 18 inserted with refusals 0 in all seventeen reports, eight planted copies each refused with its reason, and `git diff -U0`'s counts: 0 changed lines neither `Status:` nor empty, 18 added empty lines |

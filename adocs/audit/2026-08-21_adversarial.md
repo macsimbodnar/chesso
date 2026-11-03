@@ -345,7 +345,7 @@ number is banked.
 
 ### 2026-08-21_adversarial-F04 — medium — no absolute-strength checkpoint exists between the 2559 anchor and plan position 62
 
-Status: open
+Status: planned — S152, in plan_todo/, whose `closes:` names this finding; DEC-108, 2026-08-23, names neither the audit nor the finding and moved S152 to near the goal, "Deferred is not retired"; 2026-09-03_adversarial and 2026-09-04_adversarial agree on accepted (DEC-108), 2026-09-04_plan_review files it planned under "recorded, not moved", and 2026-09-12_plan_adversarial_review reads it "explicitly deferred by DEC-108/DEC-179"; moved by S328, 2026-11-03. Previously: open.
 
 **Evidence.** The anchor: S088, 2026-08-18, "chesso ≈ 2559 CCRL Blitz, 95 %
 ±25, SOFT: 3340 rated games at 10+0.2 over five engines and three families,
