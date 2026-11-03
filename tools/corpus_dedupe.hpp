@@ -37,10 +37,26 @@
 // position; `--verify` holds the four hashed fields per key and counts
 // key-equal rows that disagree on them, so the exposure is measured on the real
 // corpus instead of being argued from the bound. DEC-065.
+//
+// Until S327 the fields it held were the row's own text, and from S042 on that
+// was no longer what the key reads: the key takes the en passant field as
+// load_FEN() keeps it, so a row whose square no pawn of the side to move
+// attacks keys with the same position written without one, and the text
+// comparison counted each such merged row as a collision -- a row repeating an
+// earlier merged row's en passant field too, though that one is a duplicate
+// `a3e84e1` drops as well. None of them is one. On F08's three rows at
+// `1bb3080` it counted 2 (`adocs/data/S325_ep_key.txt`); on `selfplay_v2.tsv`,
+// a corpus written before S042, it counted 0 at S042's parent `a3e84e1`, as at
+// S076, and 503 at S327's base, where the pass drops 492 more rows than
+// `a3e84e1`: the other 11 are such repeats (`adocs/data/S327_verify.txt`,
+// `adocs/data/S327_gap.cpp`). Since S327 the fields come from the board
+// the key was taken from, by hashed_fields() below, so a field load_FEN()
+// clears reads cleared on both sides and two rows disagree only when their
+// keys collided: 0 on that corpus, whose kept rows are the same before and
+// after S327.
 #include <cstdint>
 #include <istream>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include "bitboard.hpp"
@@ -92,19 +108,38 @@ inline bool row_fen(const std::string& line, std::string* fen)
 }
 
 
-// The four FEN fields the zobrist key covers, normalised to single spaces:
-// placement, side to move, castling rights, en passant square. Two rows whose
-// keys are equal and whose fields here are not have collided. `--verify` only.
-inline bool hashed_fields(const std::string& fen, std::string* out)
+// The four FEN fields the zobrist key covers, as the key sees them: placement,
+// side to move, castling rights, en passant square, written by generate_FEN()
+// from a board load_FEN() filled. That board is the one compute_full_hash()
+// keys, so a field load_FEN() clears reads cleared here too -- an en passant
+// square no pawn of the side to move attacks, by en_passant_is_capturable(),
+// reads "-". Two rows whose keys are equal and whose fields here are not have
+// collided. `--verify` only.
+inline std::string hashed_fields(const board_t* board)
 {
-  std::istringstream fields(fen);
-  std::string field[4];
+  // generate_FEN() writes its six fields one space apart, so the four the key
+  // covers end at the fourth space.
+  const std::string fen = generate_FEN(board);
+  size_t end = 0;
 
-  for (size_t i = 0; i < 4; ++i) {
-    if (!(fields >> field[i])) { return false; }
+  for (size_t field = 0; field < 4; ++field) {
+    end = fen.find(' ', end + 1);
   }
 
-  *out = field[0] + " " + field[1] + " " + field[2] + " " + field[3];
+  return fen.substr(0, end);
+}
+
+
+// The same, from a FEN, for a caller that holds no loaded board. False when the
+// FEN does not load.
+inline bool hashed_fields(const std::string& fen, std::string* out)
+{
+  game_t game;
+  initialize_game_const_data(&game);
+
+  if (!load_FEN(fen, &game)) { return false; }
+
+  *out = hashed_fields(&game.board);
   return true;
 }
 
@@ -170,10 +205,9 @@ inline bool run(std::istream& in,
       return false;
     }
 
-    if (verify && !hashed_fields(fen, &fields)) {
-      *error = "row does not carry four FEN fields: " + line;
-      return false;
-    }
+    // From the board position_key() just loaded, the one the key was taken
+    // from. It cannot fail: a FEN that loads carried every field.
+    if (verify) { fields = hashed_fields(&game.board); }
 
     const uint32_t count = ++seen[key];
 

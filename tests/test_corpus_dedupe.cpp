@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
+#include <bitset>
 #include <cstdint>
 #include <sstream>
 #include <string>
@@ -30,6 +31,13 @@
 //      key covers and is equal across a clock-only difference
 //  10. `--verify` changes no output and reports no collision on a corpus that
 //      has none
+//  11. `--verify` reads an en passant square no pawn can take as the key does:
+//      rows S042's key merges are not counted as collisions (S327)
+//  12. hashed_fields() still reads an en passant square a pawn can take, so a
+//      comparison that dropped every square would not pass case 11
+//  13. `--verify` counts a real 64-bit collision, built from the engine's own
+//      randoms -- the precondition without which cases 10 and 11 would pass
+//      against a counter that never counts
 //
 // Case 1 is the non-vacuity guard, and case 3 is the other half of it: a tool
 // that collapsed *everything* would pass case 2 and fail case 3.
@@ -403,4 +411,313 @@ TEST_CASE("--verify changes no output and reports no collision")
   CHECK(plain_out == verified_out);
   CHECK(verified_stats.rows_dropped == 1);
   CHECK(verified_stats.collisions == 0);
+}
+
+
+namespace
+{
+
+// 2026-08-13_adversarial-F08's form: one position under three FENs that differ
+// only in the en passant field. The first two are the FENs F08 printed for
+// 1.d4 d5 2.c4 and 1.c4 d5 2.d4, which make_move wrote before S042 with the
+// square of whichever pawn pushed last; the third carries none. No square here
+// is one a black pawn can take on, confirmed with python-chess 1.11.2, re-run
+// for S327: `has_pseudo_legal_en_passant()` is False for all three and
+// `fen(en_passant="xfen")` prints "-" for each, as S325 recorded in
+// `adocs/data/S325_ep_key.txt`. So since S042 the three key identically, and
+// before S327 `--verify` compared their raw text and counted two collisions --
+// which is what that file read on `1bb3080`.
+const std::string F08_C3 =
+    "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2";
+const std::string F08_D3 =
+    "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 0 2";
+const std::string F08_NO_EP =
+    "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2";
+
+
+// The placement field of a FEN for a board indexed from a8, as the engine's
+// is: square 0 is a8, 7 is h8, 56 is a1.
+std::string placement(const piece_t squares[64])
+{
+  static const char names[] = "PNBRQKpnbrqk";
+  std::string text;
+
+  for (int row = 0; row < 8; ++row) {
+    int empty = 0;
+
+    for (int file = 0; file < 8; ++file) {
+      const piece_t piece = squares[row * 8 + file];
+
+      if (piece == EMPTY) {
+        ++empty;
+        continue;
+      }
+
+      if (empty > 0) { text += static_cast<char>('0' + empty); }
+
+      empty = 0;
+      text += names[piece];
+    }
+
+    if (empty > 0) { text += static_cast<char>('0' + empty); }
+
+    if (row < 7) { text += '/'; }
+  }
+
+  return text;
+}
+
+
+struct collision_t
+{
+  std::string left;
+  std::string right;
+};
+
+
+// Two FENs load_FEN accepts whose keys are equal and whose placements are not:
+// a real 64-bit collision, for the path of run() only a collision reaches,
+// which no real corpus can be relied on to carry. Built rather than searched
+// for. A key is the xor of the randoms of what a position holds, so two
+// positions share one exactly when the randoms of the pieces they do not share
+// xor to zero, and among any 65 values of 64 bits some subset does; Gaussian
+// elimination over GF(2) finds one. The randoms are the engine's own, from a
+// game initialize_game_const_data() filled as run() fills its own, so nothing
+// in the tool is touched.
+//
+// The pool keeps every split of the subset loadable. White is to move, the
+// kings stand on a1 and h8 in both, and everything else is a knight: black ones
+// anywhere, because a black piece cannot check the black king, and white ones
+// off f7 and g6, the two squares a knight attacks h8 from. Of the attack
+// questions load_FEN asks only whether the side not to move is in check, so a
+// black knight checking the white king is allowed. What can still refuse a
+// split is a 17th piece of one colour, and that is checked here and asserted by
+// the caller through load_FEN itself.
+bool plant_collision(collision_t* planted)
+{
+  struct candidate_t
+  {
+    piece_t piece;
+    index_t square;
+  };
+
+  std::vector<candidate_t> pool;
+
+  for (index_t square = a8; square <= h1; ++square) {
+    if (square == a1 || square == h8) { continue; }
+
+    pool.push_back({B_KNIGHT, square});
+
+    if (square != f7 && square != g6) { pool.push_back({W_KNIGHT, square}); }
+  }
+
+  // 122 candidates, and the masks below have room for 128.
+  if (pool.size() > 128) { return false; }
+
+  game_t game;
+  initialize_game_const_data(&game);
+
+  uint64_t basis[64] = {};
+  std::bitset<128> made_of[64];
+  std::bitset<128> subset;
+
+  for (size_t i = 0; i < pool.size() && subset.none(); ++i) {
+    uint64_t value =
+        game.hash_randoms.piece_randoms[pool[i].piece][pool[i].square];
+    std::bitset<128> combination;
+    combination.set(i);
+
+    bool independent = false;
+
+    for (int bit = 63; bit >= 0; --bit) {
+      if (((value >> bit) & 1ULL) == 0) { continue; }
+
+      if (basis[bit] == 0) {
+        basis[bit] = value;
+        made_of[bit] = combination;
+        independent = true;
+        break;
+      }
+
+      value ^= basis[bit];
+      combination ^= made_of[bit];
+    }
+
+    // Reduced to zero: this candidate and the ones `combination` names xor to
+    // zero, which is the subset.
+    if (!independent) { subset = combination; }
+  }
+
+  if (subset.none()) { return false; }
+
+  // Split the subset between the two placements, each colour as evenly as it
+  // goes. A square holds at most two candidates, one of each colour, so when
+  // the subset takes both the second goes to the side the first did not.
+  piece_t left[64];
+  piece_t right[64];
+  size_t left_count[2] = {0, 0};
+  size_t right_count[2] = {0, 0};
+
+  for (index_t square = a8; square <= h1; ++square) {
+    left[square] = EMPTY;
+    right[square] = EMPTY;
+  }
+
+  for (size_t i = 0; i < pool.size(); ++i) {
+    if (!subset.test(i)) { continue; }
+
+    const index_t square = pool[i].square;
+    const int colour = (pool[i].piece == W_KNIGHT) ? WHITE : BLACK;
+
+    bool to_left = left_count[colour] <= right_count[colour];
+
+    if (to_left && left[square] != EMPTY) { to_left = false; }
+    if (!to_left && right[square] != EMPTY) { to_left = true; }
+
+    if (to_left) {
+      left[square] = pool[i].piece;
+      left_count[colour]++;
+    } else {
+      right[square] = pool[i].piece;
+      right_count[colour]++;
+    }
+  }
+
+  // Sixteen a colour with its king, which load_FEN refuses past.
+  for (const int colour : {WHITE, BLACK}) {
+    if (left_count[colour] > 15 || right_count[colour] > 15) { return false; }
+  }
+
+  left[a1] = W_KING;
+  right[a1] = W_KING;
+  left[h8] = B_KING;
+  right[h8] = B_KING;
+
+  planted->left = placement(left) + " w - - 0 1";
+  planted->right = placement(right) + " w - - 0 1";
+  return true;
+}
+
+}  // namespace
+
+
+TEST_CASE(
+    "--verify reads an en passant square no pawn can take as the key does")
+{
+  // The two preconditions, established rather than assumed: the rows disagree
+  // as text in the en passant field, which is what a raw comparison counts,
+  // and the engine gives them one key, which is what puts them in one bucket.
+  CHECK(F08_C3 != F08_D3);
+  CHECK(F08_C3 != F08_NO_EP);
+  CHECK(F08_D3 != F08_NO_EP);
+
+  game_t game;
+  initialize_game_const_data(&game);
+
+  uint64_t c3_key = 0;
+  uint64_t d3_key = 0;
+  uint64_t none_key = 0;
+
+  REQUIRE(corpus_dedupe::position_key(F08_C3, &game, &c3_key));
+  REQUIRE(corpus_dedupe::position_key(F08_D3, &game, &d3_key));
+  REQUIRE(corpus_dedupe::position_key(F08_NO_EP, &game, &none_key));
+  REQUIRE(c3_key == d3_key);
+  REQUIRE(c3_key == none_key);
+
+  // What --verify compares, read as the key reads it: the square load_FEN
+  // keeps, which is none.
+  std::string c3_fields;
+  std::string d3_fields;
+  std::string none_fields;
+
+  REQUIRE(corpus_dedupe::hashed_fields(F08_C3, &c3_fields));
+  REQUIRE(corpus_dedupe::hashed_fields(F08_D3, &d3_fields));
+  REQUIRE(corpus_dedupe::hashed_fields(F08_NO_EP, &none_fields));
+
+  CHECK(c3_fields ==
+        "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq -");
+  CHECK(d3_fields == c3_fields);
+  CHECK(none_fields == c3_fields);
+
+  const std::vector<std::string> rows = {
+      row(F08_C3, "0.5", "10", "24"),
+      row(F08_D3, "0.5", "10", "24"),
+      row(F08_NO_EP, "0.5", "10", "24"),
+  };
+
+  std::string out;
+  std::string error;
+  corpus_dedupe::stats_t stats;
+
+  REQUIRE(dedupe(corpus(rows), true, &out, &stats, &error));
+
+  CHECK(stats.rows_written == 1);
+  CHECK(stats.rows_dropped == 2);
+  CHECK(stats.collisions == 0);
+  CHECK(out == rows[0] + "\n");
+}
+
+
+TEST_CASE("hashed_fields keeps an en passant square a pawn can take")
+{
+  // AFTER_D5_EP's d6 is one White's e5 pawn can take (python-chess, above), so
+  // the key keeps it and the fields must too: a hashed_fields() that wrote "-"
+  // for every square would pass the case above and fail this one.
+  std::string with_square;
+  std::string without_square;
+
+  REQUIRE(corpus_dedupe::hashed_fields(AFTER_D5_EP, &with_square));
+  REQUIRE(corpus_dedupe::hashed_fields(AFTER_D5_NO_EP, &without_square));
+
+  CHECK(with_square ==
+        "rnbqkbnr/ppp2ppp/4p3/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6");
+  CHECK(with_square != without_square);
+}
+
+
+TEST_CASE("--verify counts a real 64-bit collision")
+{
+  collision_t planted;
+  REQUIRE(plant_collision(&planted));
+
+  // The collision is the engine's, not this file's arithmetic: both FENs load,
+  // load_FEN's key is the same for the two, and the placements differ.
+  game_t game;
+  initialize_game_const_data(&game);
+
+  uint64_t left_key = 0;
+  uint64_t right_key = 0;
+
+  REQUIRE(corpus_dedupe::position_key(planted.left, &game, &left_key));
+  REQUIRE(corpus_dedupe::position_key(planted.right, &game, &right_key));
+  REQUIRE(left_key == right_key);
+
+  std::string left_fields;
+  std::string right_fields;
+
+  REQUIRE(corpus_dedupe::hashed_fields(planted.left, &left_fields));
+  REQUIRE(corpus_dedupe::hashed_fields(planted.right, &right_fields));
+  REQUIRE(left_fields != right_fields);
+
+  const std::string first = row(planted.left, "1.0", "31", "24");
+  const std::string second = row(planted.right, "0.0", "-58", "24");
+
+  std::string plain_out;
+  std::string verified_out;
+  std::string error;
+  corpus_dedupe::stats_t plain_stats;
+  corpus_dedupe::stats_t verified_stats;
+
+  REQUIRE(
+      dedupe(corpus({first, second}), false, &plain_out, &plain_stats, &error));
+  REQUIRE(dedupe(corpus({first, second}), true, &verified_out, &verified_stats,
+                 &error));
+
+  // The cost the header names: a collision drops one distinct position, with
+  // or without --verify, and only --verify says so.
+  CHECK(plain_out == first + "\n");
+  CHECK(verified_out == plain_out);
+  CHECK(plain_stats.collisions == 0);
+  CHECK(verified_stats.rows_dropped == 1);
+  CHECK(verified_stats.collisions == 1);
 }

@@ -5720,9 +5720,28 @@ rather than as a better one folded in here. So the output is still exactly what
 
 `--verify` additionally holds the four hashed fields per key and counts
 key-equal rows that disagree on them, which is what a 64-bit collision looks
-like. It roughly doubles memory, 1.9 GB on this corpus, and reported **0** of
-the 207998. Two runs over the same input are byte identical:
+like. It roughly doubles memory, 1.9 GB on this corpus, and at S076 reported
+**0** of the 207998. Two runs over the same input were byte identical:
 `0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f`.
+
+**Since S327 the fields are the ones the key reads**: the first four fields
+`generate_FEN` writes for the board `load_FEN` filled, not the row's text.
+Until then they were the text, and from S042 on the key no longer read the text
+as written: it takes an en passant square no pawn of the side to move attacks
+as no square. So on a corpus written before S042 the text comparison counted
+each row S042's key merged as a collision, a row that repeats an earlier merged
+row's en passant field included, though `a3e84e1` drops that one too as a plain
+duplicate. On `selfplay_v2.tsv` (sha256
+`ad8c5dfe1a236af8cbf946a67692e5fbfe533c7d38b6c7468c8a8ec202d14e05`) it counted
+0 at S042's parent `a3e84e1` and **503** at S327's base: 11 more than the 492
+extra rows the pass has dropped since S042, and those 11 are such repeats
+(`adocs/data/S327_gap.cpp`). S327 counts **0**. The kept rows are
+byte-identical with and without the flag, and before and after S327. They are
+no longer S076's file: since S042 the pass drops 208490 rows and writes
+10795203, sha256
+`cdb43ba23a090e687957015639ff211c78a582675c2c44e5a094a0f31661a5a0`, where
+`a3e84e1` still drops S076's 207998 and writes `0a6b59b6…`
+(`adocs/data/S327_verify.txt`).
 
 A row that cannot be read — fewer than four fields, or a FEN that does not load
 — refuses the whole pass and removes the partial output. A filter that silently

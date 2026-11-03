@@ -378,31 +378,30 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S327  **`corpus_dedupe --verify` counts real 64-bit collisions only** -- `hashed_fields()` returns the four fields `generate_FEN()` writes for the board `load_FEN()` filled, exactly what the key hashes, so S042's en passant merges are no longer counted; F08's rows red first then green, a capturable square kept, and a planted real collision solved from the engine's hash randoms, the first test to reach the counter; on `selfplay_v2.tsv` the count 503 -> 0, kept rows byte-identical (the 503 against S042's 492 extra drops reconciled, 11); restarted once after a shutdown, the partial work verified; filler (DEC-171), no `src/`
 - S326  **`S135_gradient_rows` checks that it reproduces S135's pair, and refuses where the rule's target no longer exists** -- the base is the 40 rows before the pair's marker, checked against the header; at `18c2d9a` the pick is candidate 47, the landed pair, exit 0, output byte-equal; at HEAD the layout has no single `mobility_mg[1]` (a 66-cell table since S121), so it picks nothing and exits non-zero; DEC-347 rules the pair a coverage row since S121, as S083's four are; site and case comments made true, objects 340 of 340 byte-equal (`adocs/data/S326_identity.txt`); one fast check, three small fixes; filler (DEC-171)
 - S328  **every audit finding's `Status:` line says what the record shows** -- a stated script (`adocs/data/S328_planned_done.py`) found 72 `planned` and 2 `open` that done steps, a re-run or a decision had settled; 73 lines moved to `closed`, `accepted` or `planned`, each keeping its old text as `Previously:`; Part E of `2026-09-10_adversarial` gave 18 findings no line, and they take one in S134's form (DEC-346, overruling DEC-197's rejected option); counts after: planned 3, closed 158, accepted 7, open 0; no other byte of any report changed, the proof refusing eight planted edits; two clean readers, every finding fixed; filler (DEC-171)
 - S325  **the developer documents cite code by symbol, and `corpus_dedupe.hpp` says S042 closed the en passant defect** -- four `DEV_MANUAL.md` line citations read at the commit that wrote them and at HEAD, each now a symbol or phrase; a quoted compiler error dated to the uncommitted tree it came from; S187's line-674 sentence corrected (all three citations right when written, drifted by `124e557`); the dedupe header's S042 sentence in the past tense, F08's rows 3 keys on `a3e84e1` and 1 on HEAD (`adocs/data/S325_ep_key.txt`); comments only, identity by `adocs/data/S325_identity.txt`; S327 to S329 hold what it found beyond; filler (DEC-171)
 - S324  **the six golden re-derivers read their fixtures from the source tree, and the build's copy of `tests/assets/` is gone** -- each of `S101_coverage_rows`, `S101_gradient_rows`, `S121_coverage_rows`, `S123_coverage_rows`, `S125_coverage_rows` and `S135_gradient_rows` takes `CHESSO_SOURCE_DIR` on its g++ line and refuses to compile without it; 18 of 18 outputs byte-equal from the root, `build/tests` and a third directory against the parent's from `build/tests`, every golden unchanged; S322's reader search re-run, empty, so `file(COPY ... assets)` removed; `S135_gradient_rows` found re-deriving nothing (S326); green at the coordinator's gate with no `build*/tests/assets`; filler (DEC-171)
-- S323  **the line-number citations in code comments point at what they name or cite it by a phrase, and the test list's clamp count says what the case reads** -- ten code pointers under `src/`, `tools/` and `tests/` read against `b3739e9`, nine pointing elsewhere and one a line off, each now a symbol or a phrase (`compute_full_hash()`, `CHESSO_PROJECT_SEED`, `make_move_impl()`, `negamax_at()`, INV-1 and others); the S262 comment agrees with `DEV_MANUAL.md`'s clamp sentence, 492 of the 2696 at S321, 246 each way, re-read on `b3739e9` (`adocs/data/S323_clamp_split.txt`); `tools/mutants/time.py`'s quoted compiler message kept word for word and dated to `0abe648`; the search three patterns over 179 files, 30, 18 and 6 hits, every one placed; a clean reader found nothing; code identical by `adocs/data/S323_identity.txt`, bench 5482277; S325 holds what it found beyond the rows; filler (DEC-171), comments only
 
 ## Open
 
 1. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-2. S327  `corpus_dedupe --verify` counts 64-bit collisions only, not two FENs whose en passant fields S042's key merges
-3. S329  three statements in `DEV_MANUAL.md` that S325 and S327 found stale say what is true, history kept
-4. S330  the recipe that rebuilds `selfplay_v2_dedup.tsv` from the archived corpus names the tree that rebuilds it byte for byte
-5. S331  a self-play game in `datagen` ends on a repetition only where the laws and the match harness end it, and the share of games and rows the two-fold rule relabelled since S207 is measured
-6. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-7. S102  outpost and space terms in the evaluation, one family
-8. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-9. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-10. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-11. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-12. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-13. S030  move_t drops the moving piece and becomes 16 bits
-14. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-15. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-16. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-17. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
-18. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
-19. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-20. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+2. S329  three statements in `DEV_MANUAL.md` that S325 and S327 found stale say what is true, history kept
+3. S330  the recipe that rebuilds `selfplay_v2_dedup.tsv` from the archived corpus names the tree that rebuilds it byte for byte
+4. S331  a self-play game in `datagen` ends on a repetition only where the laws and the match harness end it, and the share of games and rows the two-fold rule relabelled since S207 is measured
+5. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+6. S102  outpost and space terms in the evaluation, one family
+7. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+8. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+9. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+10. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+11. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+12. S030  move_t drops the moving piece and becomes 16 bits
+13. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+14. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+15. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+16. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+17. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+18. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+19. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included

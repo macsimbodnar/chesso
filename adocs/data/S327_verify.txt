@@ -1,0 +1,207 @@
+# S327: tools/corpus_dedupe with and without --verify over a whole corpus, on three trees, and
+# tests/test_corpus_dedupe on the step's base and after the fix. 2026-11-03, i7-8700K (12 threads), g++ 13.3,
+# Release. Re-run whole by the step's second implementer after a shutdown stopped the first; every reading below is
+# this run's, and agrees with the first implementer's record, which this file replaces.
+#
+# The corpus: .tuning/selfplay_v2.tsv, 11003693 rows, written before S042 (DEC-183's archive, 2026-09-11), read in
+# place, sha256 ad8c5dfe1a236af8cbf946a67692e5fbfe533c7d38b6c7468c8a8ec202d14e05. Kept rows went to /dev/stdout and
+# straight into sha256sum; no copy of the corpus or its output was written.
+# The trees, each binary named by the first 16 hex digits of its sha256:
+#   a3e84e1  S042's parent, 50b1ff9's, the last before the key dropped an en passant square no pawn attacks:
+#            `git archive a3e84e1` into a scratch folder, tests/doctest copied in, Release, target corpus_dedupe only.
+#   base     S327's base, tree 7bb327d4 (1bb3080 with S324, S325 and S326 staged): --verify compares the row's text.
+#            Built in the worktree's build/ with the base's tools/corpus_dedupe.hpp put back, then restored.
+#   s327     the base with this step: --verify compares hashed_fields(&board), generate_FEN's first four fields over
+#            the board load_FEN left.
+#            Built in build/. Rebuilt after this run's comment-only edits to the header, it hashes the same, 70126551...
+# Each run under nice -n 10 while S122's screen held the machine, the one-minute load read 9.7 to 11.4 on 12 threads:
+# the wall times are one run each and are not timings. max rss is /usr/bin/time's.
+
+## the corpus
+
+== a3e84e1: 1190fa03a2f289cb... corpus_dedupe
+-- corpus_dedupe --in .tuning/selfplay_v2.tsv --out /dev/stdout  | sha256sum
+11003693 rows read, 10795695 distinct positions written, 207998 dropped (1.8903%)
+repeats: 10733523 keys once, 35124 twice, 9585 three times, 10547 4-7, 4284 8-15, 2632 16 or more; most repeated 120
+wall 32.67 s, max rss 437456 kB
+kept rows sha256: 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f  -
+-- corpus_dedupe --in .tuning/selfplay_v2.tsv --out /dev/stdout --verify | sha256sum
+11003693 rows read, 10795695 distinct positions written, 207998 dropped (1.8903%)
+repeats: 10733523 keys once, 35124 twice, 9585 three times, 10547 4-7, 4284 8-15, 2632 16 or more; most repeated 120
+verify: 0 key-equal row(s) disagreed on the four hashed FEN fields
+wall 47.27 s, max rss 1900728 kB
+kept rows sha256: 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f  -
+
+== base: 587626d1ccddc3d5... corpus_dedupe
+-- corpus_dedupe --in .tuning/selfplay_v2.tsv --out /dev/stdout  | sha256sum
+11003693 rows read, 10795203 distinct positions written, 208490 dropped (1.8947%)
+repeats: 10732552 keys once, 35598 twice, 9586 three times, 10550 4-7, 4285 8-15, 2632 16 or more; most repeated 120
+wall 32.05 s, max rss 437336 kB
+kept rows sha256: cdb43ba23a090e687957015639ff211c78a582675c2c44e5a094a0f31661a5a0  -
+-- corpus_dedupe --in .tuning/selfplay_v2.tsv --out /dev/stdout --verify | sha256sum
+11003693 rows read, 10795203 distinct positions written, 208490 dropped (1.8947%)
+repeats: 10732552 keys once, 35598 twice, 9586 three times, 10550 4-7, 4285 8-15, 2632 16 or more; most repeated 120
+verify: 503 key-equal row(s) disagreed on the four hashed FEN fields
+wall 46.36 s, max rss 1900544 kB
+kept rows sha256: cdb43ba23a090e687957015639ff211c78a582675c2c44e5a094a0f31661a5a0  -
+
+== s327: 7012655156edd81d... corpus_dedupe
+-- corpus_dedupe --in .tuning/selfplay_v2.tsv --out /dev/stdout  | sha256sum
+11003693 rows read, 10795203 distinct positions written, 208490 dropped (1.8947%)
+repeats: 10732552 keys once, 35598 twice, 9586 three times, 10550 4-7, 4285 8-15, 2632 16 or more; most repeated 120
+wall 32.71 s, max rss 437356 kB
+kept rows sha256: cdb43ba23a090e687957015639ff211c78a582675c2c44e5a094a0f31661a5a0  -
+-- corpus_dedupe --in .tuning/selfplay_v2.tsv --out /dev/stdout --verify | sha256sum
+11003693 rows read, 10795203 distinct positions written, 208490 dropped (1.8947%)
+repeats: 10732552 keys once, 35598 twice, 9586 three times, 10550 4-7, 4285 8-15, 2632 16 or more; most repeated 120
+verify: 0 key-equal row(s) disagreed on the four hashed FEN fields
+wall 61.25 s, max rss 1900352 kB
+kept rows sha256: cdb43ba23a090e687957015639ff211c78a582675c2c44e5a094a0f31661a5a0  -
+
+Read: a3e84e1 reproduces S076's figures exactly (207998 dropped, 0a6b59b6..., verify 0; .tuning/dedupe_v2.log, and
+.tuning/selfplay_v2_dedup.tsv still hashes 0a6b59b6...). The base and s327 write the same kept rows as each other,
+with and without --verify, and both drop 492 more rows than a3e84e1: the positions S042's key merges. The base's text
+comparison counts 503 key-equal rows as disagreeing where a3e84e1's, the same code (`git diff a3e84e1` on the header
+changes comments only), counted 0. 503 is not 492: at the base each key's rows are a union of row groups a3e84e1 kept
+apart, and the text comparison counts every row outside the first row's group, so a row repeating an earlier row of
+its own group, a duplicate a3e84e1 dropped too, counts as well. Rows `-`, `c3`, `c3` drop one more row than a3e84e1
+and count 2. Here that is 11 rows, read in the next section. a3e84e1's load_FEN already cleared every field S161's
+sanitiser clears (S161 is ecd735e, 2026-08-22), and the only clearing load_FEN gained between a3e84e1 and 1bb3080 is
+S042's en_passant_is_capturable() term; its other additions there refuse a FEN, and no row here is refused. So the
+503 are rows whose text differs from their key-mate's only in an en passant square S042 clears, and s327, reading
+the fields from the board, counts 0: none of them, and no other pair on this corpus, is a 64-bit collision.
+
+## the 503 against the 492, by adocs/data/S327_gap.cpp
+
+Added at the coordinator's fast check. The program groups rows by the engine's key, as corpus_dedupe does, and splits
+each key's rows by their raw four-field text, as the base's --verify did. Built from the tree copy as its header says,
+against build/src/libchesso_engine.a (src/ is the base's), and run over the same corpus in place:
+
+  rows 11003693
+  distinct keys 10795203
+  rows whose text differs from their key's witness 503
+    of them differing only in the en passant field 503
+  distinct (key, text) groups after the witness's 492
+  rows already duplicates inside such a group 11
+  distinct keys + those groups 10795695
+
+All 503 differ from their key's first row in the en passant field alone. They fall into 492 groups of one key and one
+text. The first row of each group is one of a3e84e1's extra kept rows: 10795203 keys and 492 groups make a3e84e1's
+10795695 written. The other 11 rows each repeat an earlier row of their own group.
+
+## the fast check's header edit is comments only
+
+tools/corpus_dedupe.hpp as staged before the fast check (242 lines) and after it (245 lines), each through
+`g++ -fpreprocessed -dD -E -P -x c++`: byte-equal, sha256 604c25befba27ac4... both. Then corpus_dedupe.cpp.o and
+test_corpus_dedupe.cpp.o, the two objects that include it, recompiled in build/ and build-tune/ with CCACHE_DISABLE=1
+and compared with cmp against the objects built before the edit: all four byte-equal. build/tools/corpus_dedupe still
+hashes 7012655156edd81d..., the s327 binary above.
+
+## the tests' two row sets, through the binaries above
+
+F08's three rows (adocs/data/S325_ep_key.txt) and case 13's planted pair, each a file of `fen result score phase`
+rows, run with --verify; kept rows to stdout, indented:
+
+== base, f08
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2	0.5	10	24
+  3 rows read, 1 distinct positions written, 2 dropped (66.6667%)
+  repeats: 0 keys once, 0 twice, 1 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 3
+  verify: 2 key-equal row(s) disagreed on the four hashed FEN fields
+== base, planted
+  nN2nN1k/n1Nn2n1/1n1nN1nN/5n2/Nn6/8/8/K7 w - - 0 1	1.0	31	24
+  2 rows read, 1 distinct positions written, 1 dropped (50.0000%)
+  repeats: 0 keys once, 1 twice, 0 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 2
+  verify: 1 key-equal row(s) disagreed on the four hashed FEN fields
+== s327, f08
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2	0.5	10	24
+  3 rows read, 1 distinct positions written, 2 dropped (66.6667%)
+  repeats: 0 keys once, 0 twice, 1 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 3
+  verify: 0 key-equal row(s) disagreed on the four hashed FEN fields
+== s327, planted
+  nN2nN1k/n1Nn2n1/1n1nN1nN/5n2/Nn6/8/8/K7 w - - 0 1	1.0	31	24
+  2 rows read, 1 distinct positions written, 1 dropped (50.0000%)
+  repeats: 0 keys once, 1 twice, 0 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 2
+  verify: 1 key-equal row(s) disagreed on the four hashed FEN fields
+
+The base counts F08's merges as 2 collisions, S325's reading, and s327 counts 0. Both count the planted pair, a real
+collision, as 1.
+
+## python-chess 1.11.2 (~/.venv/chess/bin/python -I), the oracle for which en passant square a pawn can take
+
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2  xfen rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2  has_pseudo_legal_en_passant False
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 0 2  xfen rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2  has_pseudo_legal_en_passant False
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2   xfen rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2  has_pseudo_legal_en_passant False
+  rnbqkbnr/ppp2ppp/4p3/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3  xfen rnbqkbnr/ppp2ppp/4p3/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 3  has_pseudo_legal_en_passant True
+
+F08's three rows, case 11: no square. AFTER_D5_EP, case 12: d6, a square a pawn can take.
+
+## tests/test_corpus_dedupe on the base, cases 11 to 13 added, corpus_dedupe.hpp as the base has it
+
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+tests/test_corpus_dedupe.cpp:604:
+TEST CASE:  --verify reads an en passant square no pawn can take as the key does
+
+tests/test_corpus_dedupe.cpp:637: ERROR: CHECK( c3_fields == "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq -" ) is NOT correct!
+  values: CHECK( rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 == rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - )
+
+tests/test_corpus_dedupe.cpp:639: ERROR: CHECK( d3_fields == c3_fields ) is NOT correct!
+  values: CHECK( rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 == rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 )
+
+tests/test_corpus_dedupe.cpp:640: ERROR: CHECK( none_fields == c3_fields ) is NOT correct!
+  values: CHECK( rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - == rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 )
+
+tests/test_corpus_dedupe.cpp:656: ERROR: CHECK( stats.collisions == 0 ) is NOT correct!
+  values: CHECK( 2 == 0 )
+
+===============================================================================
+[doctest] test cases:  15 |  14 passed | 1 failed | 0 skipped
+[doctest] assertions: 107 | 103 passed | 4 failed |
+[doctest] Status: FAILURE!
+exit 1
+
+## the same, after the fix
+
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+[doctest] test cases:  15 |  15 passed | 0 failed | 0 skipped
+[doctest] assertions: 107 | 107 passed | 0 failed |
+[doctest] Status: SUCCESS!
+exit 0
+
+## the counting path, by hand mutant
+
+`if (verify && witness[key] != fields) { stats->collisions++; }` in run() edited by sed to
+`if (verify && witness[key] != fields) {}`, the test rebuilt and run, the header restored from the index and the test
+rebuilt green:
+
+[doctest] doctest version is "2.4.11"
+[doctest] run with "--help" for options
+===============================================================================
+tests/test_corpus_dedupe.cpp:678:
+TEST CASE:  --verify counts a real 64-bit collision
+
+tests/test_corpus_dedupe.cpp:722: ERROR: CHECK( verified_stats.collisions == 1 ) is NOT correct!
+  values: CHECK( 0 == 1 )
+
+===============================================================================
+[doctest] test cases:  15 |  14 passed | 1 failed | 0 skipped
+[doctest] assertions: 107 | 106 passed | 1 failed |
+[doctest] Status: FAILURE!
+exit 1
+
+Killed by case 13 alone: every other test case, the base's twelve and cases 11 and 12, passes against a counter that
+never counts. The base has one --verify case, case 10, and it asserts 0, so before S327 no test reached the
+increment.
+
+Case 13's planted pair, from `test_corpus_dedupe -s -tc="--verify counts a real 64-bit collision"`:
+
+tests/test_corpus_dedupe.cpp:693: SUCCESS: REQUIRE( left_key == right_key ) is correct!
+  values: REQUIRE( 15911397024038511196 == 15911397024038511196 )
+--
+tests/test_corpus_dedupe.cpp:700: SUCCESS: REQUIRE( left_fields != right_fields ) is correct!
+  values: REQUIRE( nN2nN1k/n1Nn2n1/1n1nN1nN/5n2/Nn6/8/8/K7 w - - != N2n1nNk/1n2n3/n1nNn2n/1N1N1N1n/8/8/8/K7 w - - )
+
+S327-VERIFY-DONE
