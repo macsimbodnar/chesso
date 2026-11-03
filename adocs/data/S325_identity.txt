@@ -1,0 +1,68 @@
+# S325 identity: what the comment edit leaves of tools/corpus_dedupe.hpp, old (1bb3080) against the worktree. S321_identity.txt's form.
+# Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show 1bb3080:<file>` and over the new
+#      file, compared whole; the bytes and hash below are the stripped output. Machine: i7-8700K, g++ 13.3, 2026-11-03.
+# Every other path the worktree changes is a document or step file no build compiles; listed and classed below.
+base 1bb3080; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+
+C++: g++ -fpreprocessed -dD -E -P, old against new; line counts old and new
+  SAME  tools/corpus_dedupe.hpp  2922 bytes  sha256 03a343a50fbdc8d5  lines 206 -> 211
+
+Every path the worktree changes against 1bb3080, tracked and untracked, and what it is
+  document, compiled by no build    DEV_MANUAL.md
+  document, compiled by no build    adocs/data/README.md
+  data file, compiled by no build   adocs/data/S325_ep_key.txt
+  data file, compiled by no build   adocs/data/S325_identity.txt
+  document, compiled by no build    adocs/plan_todo/S325_stale_statements_beyond_s323.md
+  C++, compared above               tools/corpus_dedupe.hpp
+
+S325-IDENTITY-SOURCES HOLD
+
+Objects: every .o and .a of build/ and build-tune/, and their generated chesso_build_info.hpp, CTestTestfile.cmake,
+  flags.make, link.txt and compile_commands.json, snapshotted at 1bb3080 before any edit (stamps "1bb3080"), against
+  the edited tree rebuilt with CCACHE_DISABLE=1, so every recompile is a real one. cmp, byte for byte.
+    DIFFER  build/generated/chesso_build_info.hpp
+    DIFFER  build/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o
+    DIFFER  build/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o
+    DIFFER  build/src/libchesso_engine.a
+    DIFFER  build/src/libchesso_engine_trace.a
+    DIFFER  build/tools/CMakeFiles/tuner.dir/tuner.cpp.o
+    DIFFER  build-tune/generated/chesso_build_info.hpp
+    DIFFER  build-tune/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o
+    DIFFER  build-tune/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o
+    DIFFER  build-tune/src/libchesso_engine.a
+    DIFFER  build-tune/src/libchesso_engine_trace.a
+    DIFFER  build-tune/tools/CMakeFiles/tuner.dir/tuner.cpp.o
+  compared: 340; byte-equal 328; differ 12
+
+  Every object whose gcc dependency file names the edited header was recompiled after the edit:
+  build: 2 objects depend on an edited source; 2 recompiled after the edit
+  build-tune: 2 objects depend on an edited source; 2 recompiled after the edit
+  Those objects, by name, for build (build-tune's are the same paths):
+    build/tests/CMakeFiles/test_corpus_dedupe.dir/test_corpus_dedupe.cpp.o
+    build/tools/CMakeFiles/corpus_dedupe.dir/corpus_dedupe.cpp.o
+
+  The generated header differs by the stamp alone, "1bb3080" -> "1bb3080-dirty":
+    STAMP ONLY  build/generated/chesso_build_info.hpp
+    STAMP ONLY  build-tune/generated/chesso_build_info.hpp
+  The six stamped objects, each recompiled by its own command from its unchanged source against the base header:
+    BYTE-EQUAL  build/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since 1bb3080) against the base header, by its own command
+    BYTE-EQUAL  build/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since 1bb3080) against the base header, by its own command
+    BYTE-EQUAL  build/tools/CMakeFiles/tuner.dir/tuner.cpp.o recompiled from tools/tuner.cpp (unchanged since 1bb3080) against the base header, by its own command
+  build: STAMPED OBJECTS EXPLAINED
+    BYTE-EQUAL  build-tune/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since 1bb3080) against the base header, by its own command
+    BYTE-EQUAL  build-tune/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since 1bb3080) against the base header, by its own command
+    BYTE-EQUAL  build-tune/tools/CMakeFiles/tuner.dir/tuner.cpp.o recompiled from tools/tuner.cpp (unchanged since 1bb3080) against the base header, by its own command
+  build-tune: STAMPED OBJECTS EXPLAINED
+  The archives, by ar x and cmp member by member:
+    build/src/libchesso_engine.a: 10 members, same member list, differing: chesso.cpp.o
+    build/src/libchesso_engine_trace.a: 10 members, same member list, differing: chesso.cpp.o
+    build-tune/src/libchesso_engine.a: 10 members, same member list, differing: chesso.cpp.o
+    build-tune/src/libchesso_engine_trace.a: 10 members, same member list, differing: chesso.cpp.o
+  Those twelve are the only files that differ, and each is accounted for above.
+  Bench 5482277 in build and 5482277 in build-tune, the parent's 5482277.
+
+S325-IDENTITY HOLDS

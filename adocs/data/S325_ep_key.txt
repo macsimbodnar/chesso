@@ -1,0 +1,49 @@
+# S325: tools/corpus_dedupe on three rows of one position that differ only in the en passant field, on the tree
+# before S042 and on the step's base. 2026-11-03, i7-8700K, g++ 13.3, Release.
+# The rows: the two FENs 2026-08-13_adversarial-F08 printed for 1.d4 d5 2.c4 and 1.c4 d5 2.d4, and the same
+# position with no square. Which square a pawn can take on is read from python-chess, X-FEN, the oracle S042 used,
+# not from this file: below, each row's X-FEN and has_pseudo_legal_en_passant().
+# a3e84e1 is 50b1ff9's parent, the last tree before S042's fix: `git archive a3e84e1`, the doctest submodule copied
+# in, configured Release and built for the one target corpus_dedupe. 1bb3080 is this step's base, its build/.
+
+rows (fen, result, score, phase):
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2	0.5	10	24
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 0 2	0.5	10	24
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2	0.5	10	24
+
+python-chess 1.11.2, each row's FEN as X-FEN writes it:
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2  has_pseudo_legal_en_passant False
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2  has_pseudo_legal_en_passant False
+  rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2  has_pseudo_legal_en_passant False
+
+a3e84e1: corpus_dedupe --in rows --out out 
+  3 rows read, 3 distinct positions written, 0 dropped (0.0000%)
+  repeats: 3 keys once, 0 twice, 0 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 1
+  rows written:
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 0 2
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2
+
+a3e84e1: corpus_dedupe --in rows --out out --verify
+  3 rows read, 3 distinct positions written, 0 dropped (0.0000%)
+  repeats: 3 keys once, 0 twice, 0 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 1
+  verify: 0 key-equal row(s) disagreed on the four hashed FEN fields
+  rows written:
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 0 2
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq - 0 2
+
+1bb3080: corpus_dedupe --in rows --out out 
+  3 rows read, 1 distinct positions written, 2 dropped (66.6667%)
+  repeats: 0 keys once, 0 twice, 1 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 3
+  rows written:
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2
+
+1bb3080: corpus_dedupe --in rows --out out --verify
+  3 rows read, 1 distinct positions written, 2 dropped (66.6667%)
+  repeats: 0 keys once, 0 twice, 1 three times, 0 4-7, 0 8-15, 0 16 or more; most repeated 3
+  verify: 2 key-equal row(s) disagreed on the four hashed FEN fields
+  rows written:
+    rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR b KQkq c3 0 2
+
+S325-EP-KEY-DONE

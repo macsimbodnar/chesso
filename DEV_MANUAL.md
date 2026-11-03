@@ -1092,6 +1092,10 @@ tests/test_engine.cpp:1628:19: error: static assertion expression is not an
   constant expression
 ```
 
+The line and column are that working tree's and were never committed:
+`04bcc43` landed the guard as a `REQUIRE` instead, so they are part of the
+observation and not a pointer into this tree.
+
 The old gate went green on that tree. `build-tune` is not a convenience: it is
 the binary every tuning run plays -- S085's SPSA drove it for 60000 games, S127
 will drive it again -- so a break in it surfaces whenever someone next tries to
@@ -1639,7 +1643,12 @@ generator beside it. S187's records six citations that were wrong at the moment
 they were written, a class no checker could see because its baseline was the
 commit that wrote them: `src/chesso.cpp:674` was cited by three steps for where
 the per-`go` `search_state_t` is built and had fallen into the book-move helper
-at all three baselines. DEC-119.
+at all three baselines. By S187's own mapping the helper held it at two of the
+three baselines, S132's at `7504c3d` and S159's at `192a5a3`, each a later edit
+of its step file. None of the three was wrong when written: S169 wrote S132's
+and S159's at `fe25f46` (`adocs/data/S169_recitations.tsv`) and S144 wrote
+S099's at `7862f41`, where the cited line was that construction in both trees,
+and all three had drifted into the helper by `124e557`. DEC-119.
 
 **`--touches`.** A step whose `goal:` names a code symbol that no file its
 `touches:` allows it to edit carries in code. `touches:` is the scope contract a
@@ -5776,10 +5785,11 @@ contention rather than the freeze.
 **The second fit's constants are the ones in `eval_tables.hpp`, re-anchored.**
 The first paste fired three guards and was reverted; the second fired one,
 `POSITIONAL_ROOM`, and DEC-059 answered it by spending the degeneracy
-`tools/tuner.cpp:26-30` documents rather than by widening the guard: 432 off
-`#define QUEEN` and 432 onto all 128 of her squares, which moves the evaluation
-by one centipawn on one of seven pinned positions and by nothing on the other
-six. `adocs/plan_done/S065_corpus_regen_loosened_filter.md` records the
+`tools/tuner.cpp` documents in its header, "degenerate on purpose", rather than
+by widening the guard: 432 off `#define QUEEN` and 432 onto all 128 of her
+squares, which moves the evaluation by one centipawn on one of seven pinned
+positions and by nothing on the other six.
+`adocs/plan_done/S065_corpus_regen_loosened_filter.md` records the
 transformation and both fits' guard outcomes.
 
 **A fitted material value only means anything together with its own tables.**
@@ -6063,10 +6073,10 @@ Plant one group, free exactly that group. `all` is for the joint fit.
 What S100's four runs found: the joint fit reached **train error 0.000000** and
 returned 18 of the 22 identified term parameters exactly, with every deviation
 inside a documented null direction — the two seventh-rank ones above, plus the
-material-against-table one `tools/tuner.cpp:37-45` names, which showed up as the
-pawn table uniformly 5 low against `PAWN` 5 high. `--only passed_pawns` recovers
-all twelve exactly, bucket 5 included, because holding the table resolves the
-degeneracy.
+material-against-table one the header of `tools/tuner.cpp` names in its
+"degenerate on purpose" paragraph, which showed up as the pawn table uniformly 5
+low against `PAWN` 5 high. `--only passed_pawns` recovers all twelve exactly,
+bucket 5 included, because holding the table resolves the degeneracy.
 
 **Two parameters could not be fitted jointly and read as values, and S134
 deleted both.** Only the sums `psqt[rook][8..15] + placement[seventh]` and
@@ -6202,9 +6212,10 @@ it"). What follows is the four-column reading, every corpus before S082.
 
 The corpus carries no game id, so the boundary is reconstructed from the FEN. The
 ply, `2 * (fullmove - 1) + (black to move)`, only ever advances inside a game
-(`src/bitboard.cpp:883`), so a row whose ply does not advance on its predecessor
-cannot belong to the same game. The predicate is one-sided and the direction is
-what makes the result exact:
+(`make_move_impl()` in `src/bitboard.cpp` increments the full-move counter after
+Black moves), so a row whose ply does not advance on its predecessor cannot
+belong to the same game. The predicate is one-sided and the direction is what
+makes the result exact:
 
 - it **never cuts a game in half**, because it only fires where a within-game
   invariant is violated, so **zero games straddle the split by construction**
@@ -6250,9 +6261,10 @@ dataset every epoch and blocks walk it in near-file order.
 
 **This makes `datagen`'s row order load-bearing.** A game's rows are contiguous
 because the whole `samples` loop runs inside one `lock_guard` on `output_lock`,
-`tools/datagen.cpp:334-343`. A change that interleaved two games' rows would
-leave the reconstruction silently wrong and `tests/test_tuner_split.cpp` could
-not see it: it holds the splitter, not the writer.
+in `play_games()` in `tools/datagen.cpp`. A change that interleaved two games'
+rows would leave the reconstruction silently wrong and
+`tests/test_tuner_split.cpp` could not see it: it holds the splitter, not the
+writer.
 
 **Paste target is two files, and this is every definition a fit writes.** In
 emitted order:

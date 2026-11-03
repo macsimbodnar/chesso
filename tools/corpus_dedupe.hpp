@@ -20,12 +20,17 @@
 // `compute_full_hash()` in `src/bitboard.cpp` covers exactly the four
 // FEN fields that decide one: placement, side to move, castling rights and the
 // en passant square. Keying on the text would treat a clock as a position, and
-// it would inherit the defect S042 is open on -- `make_move` writes an en
-// passant square whether or not a capture is available
-// (`2026-08-13_adversarial-F08`), so two transposing move orders reach one
-// position under two FENs. That defect is in the key here too, and it is the
-// project's own definition of a position rather than a second one invented for
-// this tool.
+// when this pass was written it would have inherited the defect S042 was then
+// open on -- `make_move` wrote an en passant square whether or not a capture
+// was available (`2026-08-13_adversarial-F08`), so two transposing move orders
+// reached one position under two FENs. That defect was in the key here too,
+// and it is the project's own definition of a position rather than a second
+// one invented for this tool. S042 closed it in `50b1ff9`, 2026-09-12, in both
+// places that decide the square: make_move_impl() sets it only when a pawn of
+// the side to move attacks it, and load_FEN() drops one no such pawn attacks.
+// So a key taken since then is the same for both move orders, a row written
+// before S042 included. A corpus deduped before S042 was keyed the old way and
+// keeps one row of such a position per en passant field its rows carry.
 //
 // The identity test is 64-bit equality and nothing else. Over 11.0 M rows the
 // birthday exposure is about 3e-06 and a collision would drop one distinct
