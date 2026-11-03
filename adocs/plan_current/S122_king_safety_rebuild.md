@@ -874,6 +874,154 @@ cap: about 2 h 10 m. **Typical** -- one margin round, P1 to P4 at patience, P5 t
 **Worst** -- three margin rounds, every part on the cap, P5 escalated and kept and P6 and P7 then at 80000: **about 110
 h**. `side` about 2 h; `part` up to 2 h 10 m; `sample` about 75 min of datagen and minutes of guard.
 
+### 2026-11-03: the corpus cut for a shutdown, and its top-up
+
+Written in the worktree `/home/max/ws/chesso-s122m` (branch `s122m` at `825e713`) while the top-up held every core. The
+real pool and the top-up were only read; everything that ran, ran on scratch under
+`.tuning/s122/phase1/merge_smoke/`. **A pre-registration change, allowed because `filter` has not run on the pool**
+(Pre-registered, above; `adocs/data/S122_corpus.sh`'s header). Every cell, seed and reading rule stands: the corpus is
+still 150000 games of the corpus's frozen datagen at its one command but games and seed, and the fixed set, the sample,
+K and the screen read it as before. DEC-296's form, as S082's pool was completed (its step file's section of 2026-10-20).
+**The decisions it rests on**: DEC-296, the top-up's form, and DEC-345 (5), "A corpus top-up (DEC-296) takes worker
+seeds meeting neither". **The coordinator's ruling, 2026-11-03: no new decision entry is needed.**
+
+#### What happened
+
+- **The cut.** The coordinator stopped the corpus on purpose for the owner's shutdown, 2026-11-02 18:45: SIGTERM to
+  datagen. `.tuning/s122/corpus/generate.log` ends `Terminated`, `ended 2026-11-02T18:45:22+01:00, exit 143`,
+  `S122-CORPUS-FAILED`, and datagen printed no closing line. The three files end on a newline with no NUL tail.
+  `S082_pool_merge.py part1`, read only, cuts it clean: **102412 games kept** (root 9470372 rows, qs 9467560, pv
+  9229963), **game 102522 dropped** as cut, a part 2 taking the **game-id offset 1000000**. The coordinator's reading,
+  quoted from `adocs/status.md`; not re-run here.
+- **The top-up**, 2026-11-03 00:24, `.tuning/s122/topup/run.sh`: the corpus's frozen datagen
+  (`.tuning/s122/corpus/datagen`, sha256 `a6194102...`, the corpus log's), the corpus's command but games and seed,
+  `datagen --out pool.tsv --leaf root,qs,pv --games 47588 --nodes 100000 --threads 12 --seed 2026300203
+  --quiet-limit 30000`. Its log `topup.log` ends `exit N` and `S122-TOPUP-DONE` or `-FAILED`; about 4.8 h at about
+  9900 games an hour. 102412 + 47588 = 150000.
+- **The seed ranges**, games-wide and per worker (datagen seeds worker w from seed + w): the corpus [2026110203,
+  2026260203) and [2026110203, 2026110215); the top-up [2026300203, 2026347791) and [2026300203, 2026300215); the side
+  sample [2026260203, 2026272203) and [2026260203, 2026260215). No two meet.
+
+#### The merge: `adocs/data/S122_corpus.sh merge`
+
+S082_recipe.sh's `merge` for this pool, printing `S122-CORPUS-MERGE-DONE` or `-FAILED` last.
+
+- **Refused before anything moves** unless: the top-up's log has one `exit` line, `exit 0`, and ends `S122-TOPUP-DONE`;
+  its command line's seed is `TOPUP_SEED` 2026300203; its seeds (games-wide, and its workers' where threads exceed
+  games) meet neither the corpus's [`CORPUS_SEED`, `CORPUS_SEED` + `GAMES`) nor the side sample's [2026260203,
+  2026272203); the corpus's log is its own (first line `S122 corpus`) and ends `S122-CORPUS-FAILED`;
+  `S082_pool_merge.py part1` cuts part 1 clean; and `S082_pool_merge.py check` finds that the top-up's rows give every
+  figure its log prints. Then `S082_pool_merge.py merge --games 150000 --seed 2026110203 --topup-seed 2026300203
+  --nodes 100000`, which checks both logs again (one datagen sha256, the same settings but games and seed, the worker
+  seeds apart, part 2 exited 0), cuts part 1, shifts part 2's ids by the offset, writes `.merging` files and reads them
+  back.
+- **Part 1 is moved, S082's choice and for S082's reason.** Every later stage reads `$POOL/pool.tsv.*` and
+  `$POOL/generate.log`, and `S122_screen.sh sample` reads `$CORPUS_POOL/generate.log` and `$CORPUS_POOL/datagen`; moving
+  part 1 aside changes no stage's path. Its four files (`generate.log`, `pool.tsv.root`, `.qs`, `.pv`) move once to
+  `.tuning/s122/corpus/part1/`, by `mv` on one filesystem (checked), their sha256 written first to
+  `part1/originals.sha256` and checked on every run; nothing opens them for writing. `datagen`, `run.sh` and `pid` stay.
+- **The merged log** is composed as `generate.log.merging` and renamed last, so a `generate.log` that exists is a merge
+  that passed. Its first line is `MERGED_HEADER`, "S122 corpus, merged from two datagen runs (DEC-296); not one run's
+  log"; then the merger's and the stage's sha256, part 1's log verbatim and indented four spaces, the originals' sha256,
+  the `part1` reading, the top-up's log verbatim and indented, the `check` reading, the merger's own lines (both runs'
+  settings, the cut, the figures side by side, the offset, the read-back, one `merged <view>:` line a view with its rows,
+  150000 games and sha256), the merged files held to those lines (`check_merged`: rows, newline, sha256), `finished`, and
+  `S122-CORPUS-DONE` last. Both runs are named verbatim; the indent keeps part 1's `S122-CORPUS-FAILED` and the top-up's
+  marker from reading as the merged log's.
+- **`verify` on a merged log** (its first line `MERGED_HEADER`) also runs `check_merged` before anything else is
+  written, so a merged file changed since the merge is refused, and `verify.txt` records both runs' `engine`, `datagen`
+  and `command` lines and the `merged` lines. A single run's log reads as before (`verify.txt` byte-identical but its
+  date line against HEAD's script on the same pool, seen).
+- **`verify.txt` only when `verify` passed** (finding F1 of this section's implementer, fixed here by the coordinator's ruling). `filter` takes
+  `verify.txt`'s presence as verify's pass, and HEAD's `verify` wrote it before its view checks: seen on the smoke, a
+  `verify` refused in its view loop (`root names 14 games, more than the 10 played`) left `verify.txt`, and the `filter`
+  after it ran, `S122-CORPUS-FILTER-DONE`. Now `verify` removes an old `verify.txt` first, writes `verify.txt.tmp` and
+  renames it after its last check; `filter` refuses without `verify.txt`, as before. Seen: a passing `verify`, then
+  one refused in its view loop, left only `verify.txt.tmp` (never read; the next `verify` removes it) and the `filter`
+  after it refused, `run verify first`; a merged pool changed after the merge, refused by `check_merged`, left
+  nothing and `filter` refused; `all` on `final/`'s pool into a fresh directory passed, its `verify.txt` the same but
+  its date line and its `corpus.tsv` identical (`verify_f1/`).
+- **`S122_screen.sh`'s header** (finding F2, the same) names the side sample `.tuning/s122/sample/qs_inside.tsv` (DEC-345 (5)),
+  and the first sample, `.tuning/s122/smoke/qs_inside.tsv`, as refused.
+- **Re-runnable.** A refusal after the move leaves part 1 in `part1/` and no merged pool -- the files the run made
+  removed, its log kept as `merge.failed.log` -- so the next run starts where it did; a merged pool is never
+  overwritten. **A run interrupted** after renaming the merged `pool.tsv.*` and before renaming `generate.log.merging`
+  (the fast check's finding) leaves `pool.tsv.*` and `generate.log.merging` and no `generate.log`. The next run names
+  that state an interrupted merge and refuses, deleting nothing: part 1 is intact in `part1/`, checked against
+  `originals.sha256` first, so the recovery is by hand -- remove `pool.tsv.*` and `generate.log.merging`, then re-run.
+  Seen on scratch copies of `final/` (`interrupted/`): the state after the three renames, and the state inside the
+  rename loop (root renamed, qs and pv still `.merging`), each refused so, nothing removed. On the second, the script
+  as it stood before this fix refused `pool.tsv.root exists: a merged pool is never overwritten`. After the recovery
+  by hand, the first re-ran to `S122-CORPUS-MERGE-DONE`, its merged files byte-identical to `final/`'s.
+- **`S082_pool_merge.py` takes this pool unchanged** (sha256 `93101287...`, S082's): part 1's `Terminated`, `ended ...,
+  exit 143` and marker are none of datagen's closing lines; the top-up's `exit 0` is its exit-line form; datagen's
+  `written to pool.tsv.root`, relative, is parsed and not compared; `--quiet-limit 30000` is equal in both runs, as it
+  requires; `--leaf root,qs,pv` is its one form, and the qs and pv leaves are cut and checked as root's. Seen on the
+  smoke, below.
+- **Machine and disk**, inferred: S082's merge of a 3 GB pool took 2 min (its log's `merged` and `finished` lines);
+  this one adds a read of each part before the move (`part1`, `check`), so about 5 min on an idle machine. The merged
+  files are about 3.2 GB beside part 1's 2.15 GB (part 1's sizes, and the top-up at 47588 / 102412 of them); 26 GB was
+  free on 2026-11-03.
+
+#### The game ids: every reader of the game column, on the merged pool
+
+Part 2's ids become 1000000 to 1047587; part 1's are all below 1000000, the offset being the smallest power of ten above
+every id in part 1's files. No reader is changed.
+
+| reader | how it reads the game column | result on the merged pool |
+|---|---|---|
+| `S122_corpus.sh verify`, `record` | distinct ids, at most `GAMES` | at most 150000, a game without a row in a view absent from it. Smoke: 48 in each view |
+| `filter` | not at all: rows kept in order | each game's rows stay contiguous |
+| the by-game split and the fixed set's draw, `corpus_split.py split --seed 20261102` | ids indexed in file order, a non-contiguous id refused; the sorted distinct ids shuffled under the seed, the first 12000 held | any integers; an id above 1000000 is drawn like any other. Smoke: 10 held of 48, 6 of part 1's ids and 4 of part 2's |
+| `S083_corpus.py capacity`, `corpus_split.py sample` (the corpus, the screen's quarter samples) | keyed by id, a non-contiguous id refused | every id once, so each game its own. Smoke: 38 training games, 28 and 10 |
+| K (`tuner --holdout --epochs 0`) and the tuner's split (`tools/tuner_split.hpp`) | never: games are found where the ply column does not rise (`game_starts`); under `--holdout` nothing of the corpus is held out and the blocks only count for the header | unchanged by the ids. Smoke: `1668 positions, 38 games`, K 0.6357 |
+| `margin_census --games` | a game is a run of one id at a rising ply, the id as `int64_t` | S122 runs it on the side sample only (`side`, one run, ids 0 to 11999), never on this pool. On the merged pool a run cannot cross the parts, every part 1 id being below every part 2 id. Smoke, the worktree's `build/tools/margin_census` on `final/`: the merged qs view 48 games, the corpus 38, the set 10, each its count of distinct ids, part 2's 14, 10 and 4 among them |
+| `sample-prep`'s exclusion and repeat check | exclusion by position (the FEN's first four fields), never by id; games delimited as `margin_census` delimits them | unchanged by the ids. Smoke: the merged qs view as a sample, 48 games and 0 repeats; the merged corpus forged as a sample, refused, 38 of 38 games over half excluded; the qs view twice over, refused, 48 of 96 games repeated |
+
+#### The sample's overlap check: every run of the pool
+
+`S122_screen.sh sample` reads the runs from the corpus log: a log whose first line is `MERGED_HEADER` (repeated in the
+script as `CORPUS_MERGED_HEADER`) must hold exactly two indented `command` lines and two indented `datagen sha256` lines,
+its two runs' verbatim logs; any other log is read as before, its first `command` and `datagen sha256` line, one run. For
+**each** run it refuses a sample whose games-wide range [2026260203, 2026260203 + `SAMPLE_GAMES`) meets the run's
+[seed, seed + games), and whose worker range [2026260203, 2026260215) meets the run's [seed, seed + threads). Every run's
+datagen sha256 must be one and the same, and `$CORPUS_POOL/datagen`'s. The sample's `generate.log` names each run's range
+on its own `corpus` line, the single-run line unchanged.
+
+#### The smoke, end to end on scratch
+
+`.tuning/s122/phase1/merge_smoke/`, the corpus's frozen datagen copied (sha256 `a6194102...`), scratch seeds 990110203
+and 990300203; the stages run with the overrides they have (`POOL`, `TOPUP`, `OUT`, `TUNING`, `GAMES`,
+`VALIDATION_GAMES`, `CORPUS_SEED`, `TOPUP_SEED`; `CORPUS_POOL`, `PREPARED`, `SAMPLE_DIR`, `SAMPLE_GAMES`). Nothing else.
+The pre-merge part 1 and top-up are kept in `pristine/` with their sha256; `final_run.sh` runs merge, `all` and `sample`
+from copies of them at the final scripts (`final/`, its merged files' sha256 the first run's, the merge being
+deterministic), and `refusals_run.sh` the merge's refusals (`merge_refusals/`).
+
+- **Part 1**, `pool/run.sh`, the corpus's `run.sh` but `--games 48 --seed 990110203`, SIGTERM to datagen 30 s in, as the
+  coordinator did: the log ends `Terminated`, `exit 143`, `S122-CORPUS-FAILED`; 35 games in each file, each ending on a
+  newline. `part1` keeps 34 (game 43 dropped), offset 100.
+- **The top-up**, `topup/run.sh`, the real top-up's form, `--games 14 --seed 990300203`: `exit 0`, `S122-TOPUP-DONE`;
+  `check` passes.
+- **`merge`**: `S122-CORPUS-MERGE-DONE`; 48 games, root 4472 rows, qs 4471, pv 4389; part 1's four files moved,
+  their sha256 equal to a copy taken before. **`verify` then `all`** (`VALIDATION_GAMES=10 GAMES=48`, the worktree's
+  tuner): `S122-CORPUS-ALL-DONE`, the fixed set 10 games, 1668 corpus rows from 38 games, K 0.6357, `S122-PREPARED`.
+- **`sample`** on the merged pool (`SAMPLE_GAMES=24`): 24 games, 2382 rows, 2127 inside, the guard passed,
+  `S122-SAMPLE-DONE`; its log names both runs' ranges. A single run's log at seeds apart, the same sample directory:
+  `sampled before`, `S122-SAMPLE-DONE`.
+- **The sample's refusals**, each on a copy of the merged log with one line edited, none reaching datagen: part 1's
+  games-wide range meeting the sample's (seed 2026260190); part 2's (seed 2026260220); part 2's worker range alone (seed
+  2026260210, `SAMPLE_GAMES=5`, so that the games-wide ranges do not meet); part 1's worker range alone (the same at part
+  1); part 2's datagen sha256 changed; part 2's command line removed (`names 1 runs' command lines, not 2`); the frozen
+  datagen not the logs' (`/bin/true` in its place); and a single run's log meeting the sample's range, refused as before.
+- **The merge's refusals**, each on a copy of the pre-merge smoke, the eighth on a copy of the merged one, none moving
+  anything: a top-up log with no `exit` line (still running); `exit 143` and `S122-TOPUP-FAILED`; `exit 0` without `S122-TOPUP-DONE`; two `exit`
+  lines; a top-up seed meeting the sample's range; one meeting the corpus's (`CORPUS_SEED=990300200`); a `TOPUP_SEED`
+  not the log's; and the merged smoke pool merged again (`never overwritten`). **Part 1's bytes changed**: a run at
+  `GAMES=50` refused by the merger after the move (`34 + 14, not 50`), part 1 in `part1/` and `merge.failed.log` kept;
+  one byte of `part1/pool.tsv.qs` changed, the re-run refused (`not the ones whose sha256 was written before the move`);
+  the byte restored, the re-run passed, its three merged files byte-identical to `final/`'s. `verify` on a
+  merged pool with one byte of `pool.tsv.pv` changed after the merge: refused, no `verify.txt` written.
+
 ### Open, and what phase 2 moves
 
 - The side reading's sample is ruled (DEC-345 (5)): a fresh one, `S122_screen.sh sample`, generated once the corpus's log
@@ -908,10 +1056,14 @@ runs** (a commit mid-run voids it: the stages freeze their tools at HEAD).
    `ctest --test-dir build -R plants_king_curve` (slow: 265 s under the corpus's load).
 2. Nothing waits on a ruling: the epoch budget, P6's mask and the sample are DEC-345's, in the scripts. Steps 3 to 6 run in
    this order and one at a time.
-3. When `.tuning/s122/corpus/generate.log` ends `S122-CORPUS-DONE`:
+3. **Amended 2026-11-03** ("the corpus cut for a shutdown, and its top-up", above; allowed because `filter` has not run
+   on the pool): the pool did not finish, so S082's merge (DEC-296) comes before `all`. When
+   `.tuning/s122/topup/topup.log` ends `S122-TOPUP-DONE`, with that section's scripts committed:
+   `nohup adocs/data/S122_corpus.sh merge > .tuning/s122_merge.console 2>&1 &`, about 5 min, ceiling 1 h,
+   `S122-CORPUS-MERGE-DONE|FAILED`, after which `.tuning/s122/corpus/generate.log` ends `S122-CORPUS-DONE`. A refusal is
+   the coordinator's; the stage is re-runnable once its cause is fixed. Then
    `nohup adocs/data/S122_corpus.sh all > .tuning/s122_corpus.console 2>&1 &`, about 30 min, ceiling 2 h,
-   `S122-CORPUS-ALL-DONE|FAILED`. A pool that did not finish is refused: S082's merge first (DEC-296), on a seed range
-   meeting neither the corpus's nor the sample's.
+   `S122-CORPUS-ALL-DONE|FAILED`.
 4. `nohup adocs/data/S122_screen.sh sample > .tuning/s122_sample.console 2>&1 &`: 12000 games, about 75 min, then
    `sample-prep`'s guard against the prepared corpus, minutes; ceiling 3 h, `S122-SAMPLE-DONE|FAILED`. A refusal by the
    guard is the coordinator's before step 5.

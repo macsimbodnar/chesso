@@ -146,8 +146,10 @@
 #       fixed set holds) and read on the new fixed set at M, beside the candidate's own
 #       best there: the corpus change's price, for S126. Deciding nothing.
 #   (b) P0, every part's decided full fit and the candidate read on the 12000-game
-#       sample, .tuning/s122/smoke/qs_inside.tsv, less its rows on a position the
-#       corpus or the fixed set holds, at the sample's own K (shipped constants, M):
+#       sample, .tuning/s122/sample/qs_inside.tsv (DEC-345 (5); the first sample,
+#       .tuning/s122/smoke/qs_inside.tsv, is refused, below), less its rows on a
+#       position the corpus or the fixed set holds, at the sample's own K (shipped
+#       constants, M):
 #       P0 the shipped constants at 184 against them at M, beside d0; each part's
 #       decided fit against the fit it was decided against (its start: P0 at M), by
 #       the census of the tree it was fitted on (P6's counts are its own build's).
@@ -212,6 +214,8 @@ S083_SHA=2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53
 # corpus's does not meet; SAMPLE is its inside file unless a smoke names another.
 SAMPLE_DIR="${SAMPLE_DIR:-$root/.tuning/s122/sample}"
 CORPUS_POOL="${CORPUS_POOL:-$root/.tuning/s122/corpus}"
+# A merged pool's log starts so (adocs/data/S122_corpus.sh's MERGED_HEADER, DEC-296).
+CORPUS_MERGED_HEADER="S122 corpus, merged from two datagen runs (DEC-296); not one run's log"
 SAMPLE_SEED=2026260203
 SAMPLE_GAMES="${SAMPLE_GAMES:-12000}"  # overridable for a smoke and nothing else
 SAMPLE="${SAMPLE:-$SAMPLE_DIR/qs_inside.tsv}"
@@ -780,15 +784,19 @@ all() {
 # --seed 2026260203 --quiet-limit 30000`, split at |column 3| < 1000 into the
 # inside file exactly as S122_census.sh's stage_sample split the first sample.
 # Refused unless the corpus log ends S122-CORPUS-DONE, so it never contends with
-# the corpus, and refused if [seed, seed + games) meets the corpus's own, read from
-# its log's command line. datagen seeds worker w from seed + w (tools/datagen.cpp,
+# the corpus, and refused if [seed, seed + games) meets any run's of the corpus's
+# pool, each read from its run's command line: a single run's log names it on its
+# command line, and a merged pool's (S122_corpus.sh merge, DEC-296, its log's first
+# line CORPUS_MERGED_HEADER) holds each of its two runs' logs verbatim, indented four
+# spaces, each with its command line and its datagen's sha256, which must be the
+# frozen datagen's for every run. datagen seeds worker w from seed + w (tools/datagen.cpp,
 # play_games()), so a run's streams are [seed, seed + threads): the games range is
 # the coordinator's rule and the stricter of the two, and both are checked. Its last
 # act is sample-prep's guard against the prepared corpus and the fixed set, so a
 # sample the guard refuses is known before the screen starts and not after it.
 side_sample() {
   local log="$CORPUS_POOL/generate.log" command cseed cgames cthreads want rc corpus
-  local dg="$CORPUS_POOL/datagen" dir="$SAMPLE_DIR"
+  local dg="$CORPUS_POOL/datagen" dir="$SAMPLE_DIR" commands shas sha expect run=0 ranges=""
   check_views || return 1
   corpus=$(record_field corpus)
   [[ -n "$corpus" && "$(sha256sum "$corpus" | cut -d' ' -f1)" == "$(record_field sha256)" ]] ||
@@ -796,22 +804,43 @@ side_sample() {
   [[ -f "$log" ]] || { say "refused: no $log"; return 1; }
   [[ "$(tail -n 1 "$log")" == S122-CORPUS-DONE ]] ||
     { say "refused: $log does not end S122-CORPUS-DONE: the corpus still holds the machine, or failed"; return 1; }
-  command=" $(sed -n 's/^command *//p' "$log" | head -n 1) "
-  cseed=$(sed -n 's/.* --seed \([0-9][0-9]*\) .*/\1/p' <<< "$command")
-  cgames=$(sed -n 's/.* --games \([0-9][0-9]*\) .*/\1/p' <<< "$command")
-  cthreads=$(sed -n 's/.* --threads \([0-9][0-9]*\) .*/\1/p' <<< "$command")
-  [[ -n "$cseed" && -n "$cgames" && -n "$cthreads" ]] ||
-    { say "refused: $log's command line names no --seed, --games and --threads"; return 1; }
-  if (( SAMPLE_SEED < cseed + cgames && cseed < SAMPLE_SEED + SAMPLE_GAMES )); then
-    say "refused: the sample's seeds [$SAMPLE_SEED, $(( SAMPLE_SEED + SAMPLE_GAMES ))) meet the corpus's [$cseed, $(( cseed + cgames )))"
-    return 1
+  # The runs the pool is made of: one a single run's log (its first command line,
+  # as before the merge), two a merged pool's, from their verbatim logs.
+  if [[ "$(head -n 1 "$log")" == "$CORPUS_MERGED_HEADER" ]]; then
+    commands=$(sed -n 's/^    command  *//p' "$log")
+    shas=$(sed -n 's/^    datagen  *sha256 \([0-9a-f]\{64\}\) .*/\1/p' "$log")
+    expect=2
+  else
+    commands=$(sed -n 's/^command *//p' "$log" | head -n 1)
+    shas=$(sed -n 's/^datagen *sha256 \([0-9a-f]\{64\}\) .*/\1/p' "$log" | head -n 1)
+    expect=1
   fi
-  if (( SAMPLE_SEED < cseed + cthreads && cseed < SAMPLE_SEED + THREADS )); then
-    say "refused: the sample's worker seeds meet the corpus's"
-    return 1
-  fi
-  want=$(sed -n 's/^datagen *sha256 \([0-9a-f]\{64\}\) .*/\1/p' "$log" | head -n 1)
-  [[ -n "$want" ]] || { say "refused: $log records no datagen sha256"; return 1; }
+  [[ "$(grep -c . <<< "$commands")" == "$expect" ]] ||
+    { say "refused: $log names $(grep -c . <<< "$commands") runs' command lines, not $expect"; return 1; }
+  [[ "$(grep -c . <<< "$shas")" == "$expect" ]] ||
+    { say "refused: $log records $(grep -c . <<< "$shas") runs' datagen sha256, not $expect"; return 1; }
+  while read -r command; do
+    run=$(( run + 1 ))
+    command=" $command "
+    cseed=$(sed -n 's/.* --seed \([0-9][0-9]*\) .*/\1/p' <<< "$command")
+    cgames=$(sed -n 's/.* --games \([0-9][0-9]*\) .*/\1/p' <<< "$command")
+    cthreads=$(sed -n 's/.* --threads \([0-9][0-9]*\) .*/\1/p' <<< "$command")
+    [[ -n "$cseed" && -n "$cgames" && -n "$cthreads" ]] ||
+      { say "refused: $log's command line of run $run names no --seed, --games and --threads"; return 1; }
+    if (( SAMPLE_SEED < cseed + cgames && cseed < SAMPLE_SEED + SAMPLE_GAMES )); then
+      say "refused: the sample's seeds [$SAMPLE_SEED, $(( SAMPLE_SEED + SAMPLE_GAMES ))) meet run $run's of the corpus, [$cseed, $(( cseed + cgames )))"
+      return 1
+    fi
+    if (( SAMPLE_SEED < cseed + cthreads && cseed < SAMPLE_SEED + THREADS )); then
+      say "refused: the sample's worker seeds [$SAMPLE_SEED, $(( SAMPLE_SEED + THREADS ))) meet run $run's of the corpus, [$cseed, $(( cseed + cthreads )))"
+      return 1
+    fi
+    ranges+="corpus    seeds [$cseed, $(( cseed + cgames ))), $cthreads threads, from $log"$'\n'
+  done <<< "$commands"
+  want=$(head -n 1 <<< "$shas")
+  while read -r sha; do
+    [[ "$sha" == "$want" ]] || { say "refused: $log's runs record two datagen sha256, $want and $sha"; return 1; }
+  done <<< "$shas"
   [[ -x "$dg" && "$(sha256sum "$dg" | cut -d' ' -f1)" == "$want" ]] ||
     { say "refused: $dg is not the datagen $log records, $want"; return 1; }
   mkdir -p "$dir" || return 1
@@ -821,7 +850,7 @@ side_sample() {
     say "sampled before"
     cat "$dir/sample.txt"
   else
-    sample_run "$dir" "$dg" "$want" "$cseed" "$cgames" "$cthreads" || return 1
+    sample_run "$dir" "$dg" "$want" "$ranges" || return 1
   fi
   if ! grep -qs '^guard: pass' "$dir/guard.txt"; then
     python3 "$helper" sample-prep "$dir/qs_inside.tsv" --exclude "$corpus" --exclude "${VIEWS[0]}" \
@@ -832,8 +861,9 @@ side_sample() {
   fi
 }
 
+# RANGES: one `corpus    seeds [a, b), T threads, from LOG` line a run of the corpus.
 sample_run() {
-  local dir="$1" dg="$2" want="$3" cseed="$4" cgames="$5" cthreads="$6" rc
+  local dir="$1" dg="$2" want="$3" ranges="$4" rc
   if [[ -e "$dir/generate.log" ]]; then
     grep -q '^S122-SAMPLE-RUN-DONE$' "$dir/generate.log" ||
       { say "refused: $dir/generate.log is a run that did not finish; the coordinator's, never resumed"; return 1; }
@@ -842,7 +872,7 @@ sample_run() {
       echo "S122 sample, DEC-345 (5)"
       echo "started   $(date -Is)"
       echo "datagen   sha256 $want  $dg"
-      echo "corpus    seeds [$cseed, $(( cseed + cgames ))), $cthreads threads, from $CORPUS_POOL/generate.log"
+      printf '%s' "$ranges"
       echo "command   datagen --out pool.tsv --leaf qs --games $SAMPLE_GAMES --nodes 100000 --threads $THREADS --seed $SAMPLE_SEED --quiet-limit 30000"
       ( cd "$dir" && "$dg" --out pool.tsv --leaf qs --games "$SAMPLE_GAMES" --nodes 100000 \
           --threads "$THREADS" --seed "$SAMPLE_SEED" --quiet-limit 30000 )

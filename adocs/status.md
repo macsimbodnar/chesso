@@ -7,7 +7,31 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-02, by hand.
 
-## 2026-11-02 18:45: shutdown by the owner; S122's corpus stopped at 102412 games, a top-up owed (handover)
+## 2026-11-03: resumed; the top-up running, the merge stage being written
+
+**Running: the top-up**, `.tuning/s122/topup/run.sh`, run.sh pid in `pid`. It started 2026-11-03 00:24: 47588 games, seed
+2026300203, the frozen datagen (sha a6194102...), about 4.8 h. Marker `S122-TOPUP-DONE|FAILED` in `topup.log`, which also prints an
+`exit N` line.
+
+**S122's merge stage committed.** `S122_corpus.sh merge` follows S082's form:
+- part 1 moves to `corpus/part1/`, its originals' sha256 recorded first;
+- `S082_pool_merge.py` joins the parts, unchanged;
+- the merged log ends `S122-CORPUS-DONE` only on a pass;
+- an interrupted merge is named, with its recovery by hand.
+
+`verify` now writes `verify.txt` only after every check, a pre-existing defect seen and fixed. The sample stage checks the sample
+against every run of a merged pool. The coordinator ruled that no new DEC is needed: DEC-296 and DEC-345 (5) cover it. Two fast
+checks: the first found two low findings, fixed.
+
+**After `S122-TOPUP-DONE`**, the step file's Commands:
+1. `S122_corpus.sh merge` (about 5 min).
+2. `S122_corpus.sh all` (about 30 min).
+3. `S122_screen.sh sample` (about 75 min).
+4. `S122_screen.sh all`.
+
+**S322 in progress** (filler, restarted in `../chesso-s322`).
+
+## 2026-11-02 18:45: shutdown by the owner; S122's corpus stopped at 102412 games, a top-up owed
 
 **S122's corpus was stopped on purpose for the shutdown** (SIGTERM to datagen, 18:45). `generate.log` ends `exit 143`, `S122-CORPUS-FAILED`.
 The three files end on a newline, with no NUL tail. Read-only, `python3 adocs/data/S082_pool_merge.py part1 .tuning/s122/corpus/pool.tsv
