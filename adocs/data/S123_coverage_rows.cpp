@@ -25,8 +25,8 @@
 // forty-two before S121's and S121's thirty-eight -- and not the landed list:
 // the count is asserted against the block's marker comment in
 // tests/test_eval_positions.hpp ("S123's passed pawn family, added at S123's"),
-// read from S123_POSITIONS_HPP (default ../../tests/test_eval_positions.hpp,
-// from build/tests). Every row of the landed block is held to `eligible`
+// read from S123_POSITIONS_HPP (default the source tree's, under
+// CHESSO_SOURCE_DIR, since S324). Every row of the landed block is held to `eligible`
 // again, each pair as the position and its mirror; and the picks made from the
 // base must be the landed block, pair for pair and in order, or the program
 // exits 1. The checks then read the base with the picks, which is the landed
@@ -80,15 +80,18 @@
 //
 // Built from the repository root after `cmake --build build`, in one line:
 //
-//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -I src -I tools
-//       -I tests -isystem tests/doctest/doctest -isystem
+//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -DCHESSO_SOURCE_DIR=\"$PWD\"
+//       -I src -I tools -I tests -isystem tests/doctest/doctest -isystem
 //       tests/third_party/nlohmann adocs/data/S123_coverage_rows.cpp
 //       build/src/libchesso_engine_trace.a -lpthread
 //       -o build/S123_coverage_rows
 //
-// and run from build/tests, where the JSON suites' relative paths resolve:
+// CHESSO_SOURCE_DIR, the root it is built from, is where it reads the JSON
+// suites (load_json) and tests/test_eval_positions.hpp from, so it runs from any
+// directory (S324; until then from build/tests, on the copy of tests/assets/ the
+// build made there):
 //
-//   (cd build/tests && S123_COVERAGE_DATA=<corpus> ../S123_coverage_rows)
+//   S123_COVERAGE_DATA=<corpus> build/S123_coverage_rows
 //
 // It prints the open needs, each pick with the needs it closes, the checks,
 // and the picks as C++ lines for tests/test_eval_positions.hpp.
@@ -106,6 +109,12 @@
 // landed block ends at S125's block marker when the header has one. Its rule,
 // its picks and its block are unchanged, and it must still reproduce the
 // block. S125's program checks S125's features, span, terms and block.
+//
+// Without the build line's CHESSO_SOURCE_DIR load_json reads the JSON suites
+// relative to the working directory, and since S324 the build makes no copy of them.
+#ifndef CHESSO_SOURCE_DIR
+#error "build with -DCHESSO_SOURCE_DIR=\"<repository root>\", as the header says"
+#endif
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cmath>
@@ -425,7 +434,8 @@ TEST_CASE("S123: the fixture rows that move every passed pawn family column")
   size_t block_end = 0;  // one past S123's block: S125's marker, or the end
   {
     const char* path = std::getenv("S123_POSITIONS_HPP");
-    std::ifstream header(path ? path : "../../tests/test_eval_positions.hpp");
+    std::ifstream header(path ? path
+                              : CHESSO_SOURCE_DIR "/tests/test_eval_positions.hpp");
     REQUIRE_MESSAGE(header.good(), "tests/test_eval_positions.hpp");
     std::string line;
     size_t fens = 0;

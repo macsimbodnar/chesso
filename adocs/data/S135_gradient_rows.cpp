@@ -32,18 +32,26 @@
 //
 // Built from the repository root after `cmake --build build`, in one line:
 //
-//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -I src -I tools
-//       -I tests -isystem tests/doctest/doctest -isystem
+//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -DCHESSO_SOURCE_DIR=\"$PWD\"
+//       -I src -I tools -I tests -isystem tests/doctest/doctest -isystem
 //       tests/third_party/nlohmann adocs/data/S135_gradient_rows.cpp
 //       build/src/libchesso_engine_trace.a -lpthread
 //       -o build/S135_gradient_rows
 //
-// and run from build/tests, where the JSON suites' relative paths resolve:
+// CHESSO_SOURCE_DIR, the root it is built from, is where it reads the JSON
+// suites from (load_json), so it runs from any directory (S324; until then from
+// build/tests, on the copy of tests/assets/ the build made there):
 //
-//   (cd build/tests && ../S135_gradient_rows)
+//   build/S135_gradient_rows
 //
 // It prints the base fixture's mobility gradients, every candidate it tried
 // until the pick, and the pick as two C++ lines for tests/test_eval_positions.hpp.
+//
+// Without the build line's CHESSO_SOURCE_DIR load_json reads the JSON suites
+// relative to the working directory, and since S324 the build makes no copy of them.
+#ifndef CHESSO_SOURCE_DIR
+#error "build with -DCHESSO_SOURCE_DIR=\"<repository root>\", as the header says"
+#endif
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cmath>

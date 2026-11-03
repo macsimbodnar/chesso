@@ -1,15 +1,3 @@
-# No ctest entry reads this copy since S320, and since S322 by construction:
-# every doctest binary and test_perft read the source tree
-# (add_doctest_target_linking, below). It stays for six programs under
-# adocs/data/ that re-derive tests/test_eval_positions.hpp's rows, goldens by
-# DEC-142: S101_coverage_rows.cpp, S101_gradient_rows.cpp,
-# S121_coverage_rows.cpp, S123_coverage_rows.cpp, S125_coverage_rows.cpp and
-# S135_gradient_rows.cpp. Each header builds its program without
-# CHESSO_SOURCE_DIR and runs it from build/tests, where load_json's relative
-# paths land on this copy.
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
 # Measured on the DEC-049 machine, 2026-08-14: the whole "fast" label is 18 s
 # in Release and the two slowest binaries are 165 s and 216 s in Debug, so the
 # Debug budget is a little over twice the slowest of those and the Release one
@@ -45,7 +33,7 @@ function(add_doctest_target_linking name library)
      # fixtures from there, and the tally ctest reads from any directory,
      # without a line of its own (S322). Until S322 each binary took its own
      # line, and one without it passed under ctest, run from build/tests on the
-     # copy of tests/assets/ the top of this file makes, and failed from anywhere
+     # copy of tests/assets/ this file made until S324, and failed from anywhere
      # else. What reads through it: the JSON suites and the perft assets, by
      # test_helpers.hpp's load_json (S310) and test_chesso's own loader (S320);
      # adocs/data/S165_defender_set.tsv, the 104 proved defender nodes S165 built
@@ -349,9 +337,9 @@ add_doctest_target(test_search_params)
 # loader -- read them out of the source tree, so each reads the same tally from
 # the repository root, from build/tests and from anywhere else. Their entries
 # run from the root, as test_tuner_gradient's main entry does, because
-# build/tests holds a copy of the assets that a relative read passes on: from
-# the root each of these read 1 to 20 cases red until this. The definition
-# that makes them read the source tree, CHESSO_SOURCE_DIR, comes from
+# build/tests held a copy of the assets until S324 that a relative read passed
+# on: from the root each of these read 1 to 20 cases red until this. The
+# definition that makes them read the source tree, CHESSO_SOURCE_DIR, comes from
 # add_doctest_target_linking since S322, as for every doctest binary.
 foreach(name IN ITEMS test_chesso test_movegen test_evaluation test_eval_model
                       test_leaf_walk test_eval_trace test_invariants)

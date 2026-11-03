@@ -44,26 +44,36 @@
 //
 // IT RE-DERIVES ITS OWN BLOCK (DEC-142). The base is the fixture's first BASE_ROWS =
 // 104 rows, every row before this pair, asserted against the pair's marker comment in
-// tests/test_eval_positions.hpp when the marker is there; with the pair landed, the
-// pick must be the landed pair or the program exits 1.
+// tests/test_eval_positions.hpp when the marker is there, read from S101_POSITIONS_HPP
+// (default the source tree's, under CHESSO_SOURCE_DIR, since S324); with the pair
+// landed, the pick must be the landed pair or the program exits 1.
 //
 // Built from the repository root after `cmake --build build`, in one line:
 //
-//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -I src -I tools
-//       -I tests -isystem tests/doctest/doctest -isystem
+//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -DCHESSO_SOURCE_DIR=\"$PWD\"
+//       -I src -I tools -I tests -isystem tests/doctest/doctest -isystem
 //       tests/third_party/nlohmann adocs/data/S101_gradient_rows.cpp
 //       build/src/libchesso_engine_trace.a -lpthread
 //       -o build/S101_gradient_rows
 //
-// and run from build/tests, where the JSON suites' relative paths resolve:
+// CHESSO_SOURCE_DIR, the root it is built from, is where it reads the JSON
+// suites (load_json) and tests/test_eval_positions.hpp from, so it runs from any
+// directory (S324; until then from build/tests, on the copy of tests/assets/ the
+// build made there):
 //
-//   (cd build/tests && ../S101_gradient_rows)
+//   build/S101_gradient_rows
 //
 // It prints the base's reading, every eligible candidate it tried until the pick, the
 // pick as two C++ lines for tests/test_eval_positions.hpp, and, after the pick and no
 // part of the rule, the case's relative error at TARGET before and after the pair. The
 // law is the estimate the multiple is set by, at a fixed third derivative, and rows
 // move that too: the pair's |g| 6.16e-4 gives 2.5e-7 by the law and it reads 1.11e-7.
+//
+// Without the build line's CHESSO_SOURCE_DIR load_json reads the JSON suites
+// relative to the working directory, and since S324 the build makes no copy of them.
+#ifndef CHESSO_SOURCE_DIR
+#error "build with -DCHESSO_SOURCE_DIR=\"<repository root>\", as the header says"
+#endif
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <algorithm>
@@ -289,8 +299,9 @@ TEST_CASE("S101: pick the fixture rows DEC-316 owes passed_king_own_mg[5]")
   // The base, asserted against the pair's marker comment where it stands.
   {
     const char* header_path = std::getenv("S101_POSITIONS_HPP");
-    std::ifstream header(header_path ? header_path
-                                     : "../../tests/test_eval_positions.hpp");
+    std::ifstream header(header_path
+                             ? header_path
+                             : CHESSO_SOURCE_DIR "/tests/test_eval_positions.hpp");
     REQUIRE_MESSAGE(header.good(), "tests/test_eval_positions.hpp");
     std::string line;
     size_t fens = 0;

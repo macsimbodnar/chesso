@@ -23,8 +23,8 @@
 // first BASE_ROWS = 92 rows, every row before S101's block, and not the landed
 // list: the count is asserted against the block's marker comment in
 // tests/test_eval_positions.hpp ("S101's threat family, added at S101's"), read
-// from S101_POSITIONS_HPP (default ../../tests/test_eval_positions.hpp, from
-// build/tests). Every row of the landed block is held to `eligible` again, each
+// from S101_POSITIONS_HPP (default the source tree's, under CHESSO_SOURCE_DIR,
+// since S324). Every row of the landed block is held to `eligible` again, each
 // pair as the position and its mirror; and the picks made from the base must be
 // the landed block, pair for pair and in order, or the program exits 1. The checks
 // then read the base with the picks: the list through this block, 104 rows of the
@@ -74,15 +74,18 @@
 //
 // Built from the repository root after `cmake --build build`, in one line:
 //
-//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -I src -I tools
-//       -I tests -isystem tests/doctest/doctest -isystem
+//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -DCHESSO_SOURCE_DIR=\"$PWD\"
+//       -I src -I tools -I tests -isystem tests/doctest/doctest -isystem
 //       tests/third_party/nlohmann adocs/data/S101_coverage_rows.cpp
 //       build/src/libchesso_engine_trace.a -lpthread
 //       -o build/S101_coverage_rows
 //
-// and run from build/tests, where the JSON suites' relative paths resolve:
+// CHESSO_SOURCE_DIR, the root it is built from, is where it reads the JSON
+// suites (load_json) and tests/test_eval_positions.hpp from, so it runs from any
+// directory (S324; until then from build/tests, on the copy of tests/assets/ the
+// build made there):
 //
-//   (cd build/tests && S101_COVERAGE_DATA=<corpus> ../S101_coverage_rows)
+//   S101_COVERAGE_DATA=<corpus> build/S101_coverage_rows
 //
 // It prints the open needs, each pick with the needs it closes, the checks, and
 // the picks as C++ lines for tests/test_eval_positions.hpp.
@@ -91,6 +94,12 @@
 // this block, picked by adocs/data/S101_gradient_rows.cpp. So the landed block ends
 // at that pair's marker when the header has one. This program's rule, picks and block
 // are unchanged, and it reproduces its own block.
+//
+// Without the build line's CHESSO_SOURCE_DIR load_json reads the JSON suites
+// relative to the working directory, and since S324 the build makes no copy of them.
+#ifndef CHESSO_SOURCE_DIR
+#error "build with -DCHESSO_SOURCE_DIR=\"<repository root>\", as the header says"
+#endif
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest.h>
 #include <cmath>
@@ -411,7 +420,8 @@ TEST_CASE("S101: the fixture rows that move every threat family column")
   size_t block_end = 0;  // one past S101's block: the next marker, or the end
   {
     const char* path = std::getenv("S101_POSITIONS_HPP");
-    std::ifstream header(path ? path : "../../tests/test_eval_positions.hpp");
+    std::ifstream header(path ? path
+                              : CHESSO_SOURCE_DIR "/tests/test_eval_positions.hpp");
     REQUIRE_MESSAGE(header.good(), "tests/test_eval_positions.hpp");
     std::string line;
     size_t fens = 0;

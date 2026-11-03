@@ -5,29 +5,142 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-03, by hand.
+Updated: 2026-11-03 18:55, by hand.
 
-## 2026-11-03: resumed; the top-up running; S322 and S323 done
+## 2026-11-03 18:51: resumed; S122's screen running again at P6; S327, S329 and S330 ready, P6 escalated; S124's research found datagen's two-fold defect, S331 in progress
 
-**Running: the top-up**, `.tuning/s122/topup/run.sh`, run.sh pid in `pid`. It started 2026-11-03 00:24: 47588 games, seed
-2026300203, the frozen datagen (sha a6194102...), about 4.8 h. Marker `S122-TOPUP-DONE|FAILED` in `topup.log`, which also prints an
-`exit N` line.
+**The screen resumed at 18:51 at HEAD `1bb3080`**, pid in `.tuning/s122_screen_all.pid`, console
+`.tuning/s122_screen_all_2.console`. It reused every finished stage, so the readings so far are:
+- P1 kept, P2 kept, P3 dropped, P4 dropped, P5 kept;
+- P6 refitting; then P7 only if P5 survives, which it does.
 
-**S122's merge stage committed.** `S122_corpus.sh merge` follows S082's form:
-- part 1 moves to `corpus/part1/`, its originals' sha256 recorded first;
-- `S082_pool_merge.py` joins the parts, unchanged;
-- the merged log ends `S122-CORPUS-DONE` only on a pass;
-- an interrupted merge is named, with its recovery by hand.
+About 15 h left, typical. **Still no commit on `achesso` until `S122-ALL-DONE|FAILED`.** A watcher is armed with a 32 h
+ceiling.
 
-`verify` now writes `verify.txt` only after every check, a pre-existing defect seen and fixed. The sample stage checks the sample
-against every run of a merged pool. The coordinator ruled that no new DEC is needed: DEC-296 and DEC-345 (5) cover it. Two fast
-checks: the first found two low findings, fixed.
+**S327 ready**, `.tuning/coord/S327/S327.diff` (sha256 `fab1555a...`): the fix, three new tests seen red then green, the
+`--verify` count 503 -> 0 on `selfplay_v2.tsv`, kept rows identical. One fast check, one prose fix made.
 
-**After `S122-TOPUP-DONE`**, the step file's Commands:
-1. `S122_corpus.sh merge` (about 5 min).
-2. `S122_corpus.sh all` (about 30 min).
-3. `S122_screen.sh sample` (about 75 min).
-4. `S122_screen.sh all`.
+**Landing order, tested in scratch 2026-11-03 19:40** (all apply cleanly): S324, S325, S328, S326, S327, then S329, then
+S330. Before the steps, commit the step files of S326, S327, S329 and S330 with S324 (sha256 in
+`.tuning/coord/S329/stepfiles.sha256`). S328's file is not committed with them: its diff adds it, so move the main tree's
+untracked copy aside before S324's gate and apply S328's diff in its place.
+
+**Decisions recorded 2026-11-03, uncommitted:**
+- DEC-346: a `Status:` line is inserted when a header-set status moves (lands with S328);
+- DEC-347: S135's pair is a coverage row since S121 (lands with S326);
+- DEC-348: a corrected statement keeps its history, the rule S323 to S329 cited DEC-342 for (lands with S324).
+
+**S329 ready**, `.tuning/coord/S329/S329.diff` (sha256 `18558cbd...`), against `4d1bd4f8...` (the stack through S327):
+six stale statements in `DEV_MANUAL.md` and `MANUAL.md` made true. Two fast checks found three more stale sentences and
+one false one; all were fixed.
+
+**S330 ready**, `.tuning/coord/S330/S330.diff` (sha256 `e9a77a7d...`), against `84e66058...` (the stack through S329).
+It re-derived both dedup digests, from `a3e84e1` and from the stack. It adds the pinned recipe to `DEV_MANUAL.md` and corrects the
+`corpus_dedupe.cpp` usage comment (identity holds). One fast check, three small fixes made. **At its landing, the
+coordinator places two prepared files in `/home/max/Synckeeper/Chesso Archive/`, building them in `.tuning/` and `mv`-ing them
+in (`.moltke.local.md`):**
+- the corrected README beside the archive, a new file;
+- the corrected archive sidecar, which names the file bare. It replaces the old one, whose exact content S330's step file
+  records. Both are in `.tuning/coord/S330/archive/`.
+
+**The landing order is now** S324, S325, S328, S326, S327, S329, S330, each with its own gate.
+
+**S122's P6 escalated** (`PART-OUTCOME escalate`). One fit of the pair, q2, stopped on the 20000 cap, so DEC-345 re-runs the
+P5/P6 pair at 80000 (`fits/125_e80000`, `1256_e80000`). This adds up to 39 h; the watcher's 32 h ceiling, from 18:51, may need
+re-arming.
+
+**S124's research pass is delivered**, `.tuning/coord/S124/S124_phase0.diff` (`db9670d8...`), against `88c6c7a0...`. Its draft
+is in `.tuning/coord/S124/decision_draft.md`. One fast check, six fixes made: tablebase wins are read at the row's own clock, and
+games by their root rows. **The ruling on its picks (9) and F2 waits on S331.** S331's base `bafb5da8...` holds the first
+version of this diff; at landing, apply S124's final diff, then S331's with `--3way` if the README rows conflict. It found that
+`datagen` ends a game on any two-fold, while since DEC-173 the search does not. Under the laws' clock, 915 of the 2315 games that reached
+KRvK on the board drew from a won root row, and 249 of 1700 KQvK games did.
+
+**S331 in progress** (planned 2026-11-03, before S124 in Open), agent in `../chesso-s331`, on `bafb5da8...`, the stack plus
+S124's research and S331's file. Its parts:
+- a test seen red, then the fix: a game ends on the third occurrence;
+- summary lines counting the games the old rule would have cut;
+- a measurement script **the coordinator runs with the screen paused** (`kill -STOP`, then `-CONT`; the screen keeps its
+  state): 2400 games at the corpus's settings.
+
+**The measurement decides S122.** If the old rule relabels a material share of rows, S122's corpus, and the screen fitted
+on it, are redone on a corrected corpus (about 15 h of generation plus the screen) before any SPRT. If not, S122 goes on, and
+its pre-registration names the defect (DEC-171).
+
+## 2026-11-03 11:05: shutdown by the owner; S122's screen stopped at P6, resumable at HEAD `1bb3080` only
+
+**HEAD must stay `1bb3080` until the screen ends.** The screen froze its tools with stamp `1bb3080`
+(`.tuning/s122/screen/bin/stamp`) and refuses to resume at any other HEAD ("take a fresh OUT"), which would throw away
+3.75 h of fits. So nothing was committed on `achesso`. Everything below is on disk in the working tree, uncommitted, and
+snapshotted on the side branch `handover-2026-11-03` (one commit, made with a temporary index; HEAD, the index and the
+working tree untouched). That branch is a record, not for merging: delete it once these land.
+
+**The screen, stopped on purpose** (SIGTERM to its process group, 11:03; the console ends without a marker). Done and
+reused on resume:
+- landing check, locate, audit;
+- the margin: two rounds, fixed point 300 (`margin/M.txt`);
+- P0;
+- P1 to P5 (`fits/1`, `12`, `123`, `124`, `125`, each 7 logs with `best:`).
+
+In flight and redone on resume: P6 (`fits/1256_e20000`). Its `probe` is done; its `full` fit has no `best:` line and was
+11 min old, the only compute lost. P6's variant tree `variant_p6_1bb3080` is built and kept.
+
+**To resume, in order:**
+1. Confirm `git rev-parse --short HEAD` is `1bb3080`. Confirm `git diff --quiet HEAD -- src tools` passes and that nothing
+   is untracked under `src/` or `tools/`: the working tree's uncommitted files are all under `adocs/`.
+2. Run `nohup adocs/data/S122_screen.sh all > .tuning/s122_screen_all_2.console 2>&1 &`. It prints "fitted before" for
+   each reused fit. Arm a watcher on `S122-ALL-(DONE|FAILED)`, `MARGIN-STOP`, `STOP` and a refusal, plus the process's
+   death, with a ceiling of 2 x the remaining figure: about 15 h typical, so 32 h.
+3. After `S122-ALL-DONE`, follow the section below: `side`, the cost run, apply, phase 2, the SPRT.
+
+**S327 was stopped mid-step** (its agent killed; it had just rebuilt both builds and was re-running its suites). Its
+worktree `../chesso-s327` holds unverified work, staged by the coordinator. The diff against its base tree
+`7bb327d4...` is saved as `.tuning/coord/S327/partial_unverified.diff` (sha256 `a879b1b2...`): `tools/corpus_dedupe.hpp`,
+`tests/test_corpus_dedupe.cpp`, `DEV_MANUAL.md`, `adocs/data/S327_verify.txt`, a README row, and the step file. A fresh
+agent resumes from it with the same brief (`.tuning/coord/S327/brief.md`): read it, keep what it can verify, discard what
+it cannot, and say which.
+
+**Land after the screen**, unchanged from the section below: S324, S325, S328, S326, then S327 and S329. Worktrees
+`../chesso-s324`, `-s325`, `-s326`, `-s327` and `-s328` are kept for the blob checks at landing.
+
+## 2026-11-03 07:11: S122's screen running; S322 and S323 done, S324, S325, S328 and S326 ready, S327 in progress
+
+**Running: S122's screen**, `S122_screen.sh all`, started 07:11 on HEAD `1bb3080`, pid in `.tuning/s122_screen_all.pid`, console
+`.tuning/s122_screen_all.console`. About 19 h typical, up to 39 h more per escalation. Marker `S122-ALL-DONE|FAILED`; a
+`MARGIN-STOP`, a `STOP` or an identity refusal stops for the coordinator. **No commit until it ends**: it froze its binaries at HEAD.
+
+**Done before it, all passed:**
+- top-up: 47588 games, seed 2026300203, ended 05:46, `exit 0`;
+- merge: 150000 games, 13872177 root rows, every check equal;
+- preparation: 6230857 rows from 137994 games, K 0.7433, 0 rows differ from `evaluate()`, corpus sha256 `cd50f961...`;
+- sample: 12000 games, seed 2026260203, 1027205 rows kept; 3 games more than half excluded, 0 repeats; the guard passed.
+
+**After `S122-ALL-DONE`**, the step file's Commands 6 to 10: `side` (about 2 h), `S122_cost.sh check` and `run` with the
+machine idle, `apply`, phase 2 by a fresh agent, the SPRT at night.
+
+**Waiting to land after the screen, in order, each with its own gate:**
+- S324, `.tuning/coord/S324/S324.diff` (sha256 `26609207...`). Fast check done, two fixes made. Before its gate, run
+  `rm -r build*/tests/assets`: an old build directory keeps its copy.
+- S325, `.tuning/coord/S325/S325.diff` (sha256 `9b9501b2...`). Fast check done, one fix made. It applies after S324.
+- S328, `.tuning/coord/S328/S328.diff` (sha256 `5dce4224...`), after S325. Two clean readers; every finding fixed. It moves 73
+  audit `Status:` lines and inserts 18 under Part E of `2026-09-10_adversarial` (DEC-346). Its diff adds its own step file, so
+  delete the main tree's untracked copy before applying it. DEC-346 is in the working tree's `decisions.md`, landed with S328.
+
+**At S122's close:** its `closes:` is empty, but `2026-09-10_adversarial-F16` (the clamp's own cost, never measured)
+hands itself to S122. Name F16 in `closes:` and move its line, or say why not (found by S328).
+
+**Planned 2026-11-03, uncommitted until the screen ends:** S326 to S329, in `plan_todo/` and plan.md's Open list. They are
+the findings of S324 and S325, plus the 60 audit findings still `planned` whose closing steps are all done (S328). Land the
+files of S326, S327 and S329 with S324's commit, **unchanged**: their sha256 is in `.tuning/coord/S326/stepfiles.sha256`,
+and the stacked base below includes them.
+
+- S326, `.tuning/coord/S326/S326.diff` (sha256 `014977e9...`), after S328. One fast check, three small fixes made. Its diff is
+  against the stacked tree `f27a03c6...` (`.tuning/coord/S326/base_tree`): `1bb3080` plus S324, S325 and those three step
+  files. DEC-347 (S135's pair is a coverage row since S121, re-derived at `18c2d9a`) is in the working tree's
+  `decisions.md`, landed with S326.
+
+**S327 in progress**, agent in `../chesso-s327`, on the stacked tree `7bb327d4...` (`.tuning/coord/S327/base_tree`), which is
+the one above plus S326. S329 follows on the same stack.
 
 **S322 done** (filler, no `src/` or `tools/`): `CHESSO_SOURCE_DIR` is defined once in `add_doctest_target_linking`. A planted binary
 reads red from the root on the parent and green from every directory after. The tallies of all 27 binaries are unchanged. The build's
@@ -36,8 +149,7 @@ assets copy stays, because six golden re-derivers under `adocs/data/` read it; S
 **S323 done** (filler, comments only): ten stale line-number citations in comments under `src/`, `tools/` and `tests/` now cite a
 symbol or a phrase. The S262 comment's clamp count agrees with `DEV_MANUAL.md` (492 of 2696 at S321). Code identical by
 `adocs/data/S323_identity.txt`, bench 5482277. A clean reader found nothing. Beyond its rows it found four stale citations in
-`DEV_MANUAL.md` and `corpus_dedupe.hpp`'s sentence that S042 is open; S325 holds them. Next filler: S324, then S325, landed before
-the screen or after it.
+`DEV_MANUAL.md` and `corpus_dedupe.hpp`'s sentence that S042 is open; S325 holds them. Next filler after S324: S325.
 
 ## 2026-11-02 18:45: shutdown by the owner; S122's corpus stopped at 102412 games, a top-up owed
 
