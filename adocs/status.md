@@ -5,7 +5,29 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-03 23:55, by hand.
+Updated: 2026-11-04 00:40, by hand.
+
+## 2026-11-04 00:40: S122's corpus generating again (DEC-349); S124 ruled (DEC-350)
+
+**Running: S122's corpus**, generated again by `adocs/data/S122_generate.sh corpus`, started 00:33 on HEAD `7fe9f89`:
+- 150000 games, seed 2026500349;
+- the frozen S331 `datagen`, sha256 `730f827a...`, bench 5482277;
+- about 20 h, so it ends around 20:45.
+
+Wrapper PID in `.tuning/s122_generate.pid`, datagen's own in `.tuning/s122/corpus/datagen.pid`. Console
+`.tuning/s122_generate.console`, marker `S122-GENERATE-CORPUS-(DONE|FAILED)`; a watcher is armed with a 40 h ceiling.
+
+The void outputs are in `.tuning/s122/void_twofold/` and `screen_void_twofold/`. For a shutdown, Command 5 of the step
+file's 2026-11-04 section: SIGTERM to datagen alone, then `topup`, then `merge`. Commits during the run pause datagen
+(`kill -STOP` and `-CONT`) for their gates. After `S122-GENERATE-CORPUS-DONE`, Commands 6 to 8 follow:
+- `all`, which needs 14 GB free;
+- `sample`;
+- `screen all`.
+
+**S124 is ruled, DEC-350.**
+- The draft's design is taken.
+- The parts are read on S122's regenerated corpus and its held-out games, and the labels are the laws'.
+- Phase 1, the implementation at the identity, is built meanwhile and lands after S122's screen.
 
 ## 2026-11-03 23:55: S324 to S331 landed; S122's screen void (DEC-349), its corpus to be generated again
 

@@ -606,3 +606,24 @@ outside a factor toward a draw, and unguarded by any tablebase.
 flat per cell, at the corpus's own K; held-out loss is the screen's. The tablebase reading covers five men or fewer.
 The two-fold count is an indication, not a bound. The cost rows are a sink's instructions; the shipped form's are the cost
 run's. No part's Elo, no nps.
+
+## 2026-11-04: the ruling, DEC-350
+
+The research pass's eleven items are ruled in DEC-350. Taken as written:
+- the factor on E1, f in [0, 128], seeded at the identity;
+- the thirteen cells;
+- mop-up's three linear pairs, seeded at zero and fitted by SPSA on conversion;
+- the tuner's product in full, with both candidate cells traced;
+- the identity plan and its plants;
+- the one `{0, 5}` SPRT and its bisection;
+- the widened `touches:`.
+
+Two items changed with DEC-349, which voids S122's corpus because `datagen` drew games at any two-fold until S331:
+- The parts are read on S122's regenerated prepared corpus and its own held-out games, not on S082's fixed view.
+- The labels are the games' results under the laws, written by S331's `datagen`. F2 is screened like F1 and F3, and no
+  label is replaced by a tablebase's.
+
+The tablebase guard and P0's conversion test stay, the guard at each row's own clock.
+
+**Order.** Phase 1 is built while S122's corpus and screen run, and lands after S122's screen has ended. S124's fits wait
+for S122's landing. The research pass's corpus counts are the void corpus's, and are re-read on the regenerated one.

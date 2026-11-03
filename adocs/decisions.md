@@ -17326,3 +17326,23 @@ Decision:     By the coordinator under the owner's standing instruction (correct
 Why:          A fit and a screen decide by held-out loss on these labels. A fifth of the rows wrong in a direction that mostly agrees with the row's own score is a bias, not noise. A part kept or dropped against it, and the constants it ships, are fitted to the old rule and not to chess.
 Rejected:     Finishing S122's screen on the old corpus and letting the SPRT decide. The SPRT would judge only what the biased fit produced, and the keep/drop decisions of P1 to P7 would stand on wrong labels. Correcting the labels in place: a game the old rule ended did not play on, so its later rows and its true result do not exist. A partial top-up: a pool mixing the two rules has no single meaning. Regenerating S083's corpus and refitting the landed families now: their SPRTs stand, and S126 is the refit.
 Consequences: S122 needs an amendment, written by an agent, before generation: fresh seeds for the corpus and the sample, the void outputs moved aside, and the commands. Machine time is about 26 h for 150000 games, the new rule's games costing about 1.5 times the nodes (S331's smoke), then about 2 h for the sample and about 20 h or more for the screen. S331's `repetition:` line reads any later run's exposure to the old rule. S124 waits for S122's landing as before.
+
+## DEC-350  2026-11-04  S124's endgame family: a factor on stage one's endgame half with the material in it, thirteen cells, mop-up fitted on conversion, read on S122's regenerated corpus
+Tags:         evaluation, endgame, scale-factor, mop-up, s124, s122, s331, s266, s126, s262, dec-349, dec-259, dec-258, dec-134, dec-105, dec-084, dec-143
+Context:      S124's research pass (`23b8cf2`, the step file's 2026-11-03 section; draft in `.tuning/coord/S124/decision_draft.md`). It was read on S122's void corpus, and one fast check corrected it six ways. It proposed eleven items. It left two to S331's measurement: which labels the factor is fitted on, and F2's place in the screen. S331 measured the old two-fold rule at 19.74 % of root rows mislabelled, and DEC-349 generates S122's corpus again. That generation started 2026-11-04 00:33 at seed 2026500349.
+Decision:     By the coordinator under the owner's standing instruction. The draft's items (1) to (6), (8), (10) and (11) are taken as written:
+              - (1) the factor multiplies E1, stage one's endgame half with the material in it, f in [0, 128], with the truncation bound's move stated;
+              - (2) the thirteen cells;
+              - (3) seeded at the identity, landing `No functional change`;
+              - (4) mop-up's domain and three linear pairs, seeded at zero, fitted by SPSA on conversion;
+              - (5) the tuner's product in full, with both candidate cells traced;
+              - (6) the identity plan and its plants;
+              - (8) one `{0, 5}` SPRT, with its bisection;
+              - (10) S331, now landed;
+              - (11) `touches:` widened.
+              (7) The parts are read on S122's regenerated prepared corpus and its own held-out games, not on S082's fixed view, which DEC-349 (6) makes history. P0, P1 and the tablebase guard stay as drafted; the guard reads each row's own clock.
+              (9) The labels are the games' results under the laws, written by S331's datagen (DEC-349 (5)). F2 is screened like F1 and F3. No fit replaces a label by a tablebase's, so the owner question the draft named does not arise.
+              Order: phase 1 is built in a worktree while S122's corpus and screen run, and lands only after S122's screen has ended, so the screen's HEAD and frozen tools stay one tree. S124's fits wait for S122's landing.
+Why:          The draft's design stands on what the engine computes and on counts. Its only label-dependent picks are answered once the labels are the laws'. Reading the parts on a set written by the old rule would measure against the defect S331 removed.
+Rejected:     Fitting on tablebase labels: an owner question, and unneeded once the labels are the laws'. Landing phase 1 before S122's screen: the screen would freeze a tuner carrying S124's product. Reading on S082's view: written by the old rule.
+Consequences: S124's step file records this ruling. Phase 1 is the next agent task. Its counts are re-read on the regenerated corpus when it exists, because the research pass's figures are the void corpus's.
