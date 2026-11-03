@@ -1614,3 +1614,14 @@ On `1bb3080`, no build and no run: S328's step file, "2026-11-03: the census, th
 |---|---|
 | `S328_planned_done.py` | the census: every finding of `adocs/audit/*.md` with its first `Status:` line, every step's `closes:` across the three plan directories, each finding with no `Status:` line with the steps naming it, each `planned` finding classed by whether every step naming it is in `plan_done/`, each `open` one with the steps naming it, and `closes:` ids that name no finding. `--rev` reads a commit through `git archive`; `--against-rev` proves the reports differ from a commit's only as DEC-346 admits, changed `Status:` lines and a `Status:` line with an empty line inserted under a finding that had none in `2026-09-10_adversarial.md` alone, each refusal printed with its reason, `S328-REPORTS-STATUS-ONLY` or exit 1; `--tree` reads a planted copy; `--dotless-ids` is the id grammar that reproduces the step file's 60, the right one reading 63. Reads and prints, edits nothing |
 | `S328_evidence.txt` | its readings: on `1bb3080`, 72 `planned`, 63 with every step done, 9 with none; the dotless reading's 60 and the three ids it orphans; after S328's edits, 3 `planned`, 158 `closed`, 7 `accepted`, 0 `open` and 0 without a line, 73 `Status:` lines changed and 18 inserted with refusals 0 in all seventeen reports, eight planted copies each refused with its reason, and `git diff -U0`'s counts: 0 changed lines neither `Status:` nor empty, 18 added empty lines |
+
+### S329, six stale statements in the manuals made true (DEC-171, DEC-348)
+
+On `1bb3080` with S324 to S328 staged, git history only, no build and no run: S329's step file, "2026-11-03: the six statements, read against their sources".
+
+| file | what it holds |
+|---|---|
+| `S329_eval_tables_consts.py` | reads `src/eval_tables.hpp` by `git show` at `33aa3b4`, at each commit `git log 33aa3b4.. -- src/eval_tables.hpp` names and at `1bb3080`, and compares each with the one before: the five piece-value defines, `piece_value`, `phase_value`, and how many of `psqt_mg`'s and `psqt_eg`'s 384 entries differ. Row 1's reading, and row 5's `QUEEN` |
+| `S329_eval_tables_consts.txt` | its output, 2026-11-03: of the six commits, `77d7450` (S076) and `01222f3` (S083) moved the defines and most of both tables, `0d9faba` (S134's fold) 8 entries of each, and `1ec6e89`, `2900cfe` and `bee84d8` no constant; `1bb3080` equals `01222f3` |
+| `S329_s187_lines.sh` | the twelve citations S187's stamp and its generator's first six `HAND_CHOICES` entries name, each read at the commit that wrote its line number, at the baseline `S187_symbols.tsv` records, and at `124e557`; where the named code was in each writing tree; and the `git log -S` that found each writer. Row 2's reading |
+| `S329_s187_lines.txt` | its output, 2026-11-03: S024's array and countermove write wrong in `7b54f18`, the tree that wrote them, the other ten right in theirs, all twelve drifted by `124e557` |

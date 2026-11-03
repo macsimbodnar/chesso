@@ -1642,7 +1642,7 @@ relevance: `src/search.cpp` `state` passes because `state` occurs in the file.
 What proves a citation means what it says is the mapping the conversion was
 made through, and never a green run — `adocs/data/S144_pathings.tsv`,
 `adocs/data/S169_recitations.tsv`, `adocs/data/S187_symbols.tsv`, each with its
-generator beside it. S187's records six citations that were wrong at the moment
+generator beside it. S187's records six citations as wrong at the moment
 they were written, a class no checker could see because its baseline was the
 commit that wrote them: `src/chesso.cpp:674` was cited by three steps for where
 the per-`go` `search_state_t` is built and had fallen into the book-move helper
@@ -1651,7 +1651,22 @@ three baselines, S132's at `7504c3d` and S159's at `192a5a3`, each a later edit
 of its step file. None of the three was wrong when written: S169 wrote S132's
 and S159's at `fe25f46` (`adocs/data/S169_recitations.tsv`) and S144 wrote
 S099's at `7862f41`, where the cited line was that construction in both trees,
-and all three had drifted into the helper by `124e557`. DEC-119.
+and all three had drifted into the helper by `124e557`. **Six is S187's count;
+read in the trees that wrote them, two of the citations it names were wrong.**
+S187's stamp, left as written, says six and lists eight citations: the three
+above, S132's node counter and per-iteration reset, S115's two for the
+test-only aspiration counter and S024's countermove write. Its generator,
+`adocs/data/S187_symbolise.py`, gives that class as the first six entries of
+`HAND_CHOICES`, seven citations: S024's two, S091's two and S109's one for
+`see_value`, and S115's two. Of the twelve the two lists name, S024's two were
+wrong when written. They were first written right at `c167d05`, and S138
+re-anchored them at `7b54f18` to a line holding `bool mate_found;` in
+`search_t` and to one in a comment in `negamax`, the `counter_moves` array and
+its write lying further down. The other ten held what they name in the tree
+that wrote them, S132's two at `fe25f46` (S169), S115's two at `7862f41`
+(S144) and the three for `see_value` at `c0954ec`, two of them given their
+path by S144 at `7862f41` on the same line, and all ten had drifted by
+`124e557`. DEC-119.
 
 **`--touches`.** A step whose `goal:` names a code symbol that no file its
 `touches:` allows it to edit carries in code. `touches:` is the scope contract a
@@ -5701,11 +5716,16 @@ build/tools/corpus_dedupe --in .tuning/selfplay_v2.tsv \
     --out .tuning/selfplay_v2_dedup.tsv
 ```
 
-**Measured on `selfplay_v2.tsv`:** 11003693 rows in, 10795695 distinct
-positions out, **207998 dropped, 1.8903 %**, in 19 s and 1.0 GB resident. The
-repeats are concentrated rather than spread: 10733523 positions occur once,
-35124 twice, 9585 three times, 10547 four to seven times, 4284 eight to fifteen,
-2632 sixteen or more, and one position appears **120** times.
+**Measured on `selfplay_v2.tsv` at S076, 2026-08-17:** 11003693 rows in,
+10795695 distinct positions out, **207998 dropped, 1.8903 %**, in 19 s and
+1.0 GB resident. The repeats were concentrated rather than spread: 10733523
+positions occurred once, 35124 twice, 9585 three times, 10547 four to seven
+times, 4284 eight to fifteen, 2632 sixteen or more, and one position appeared
+**120** times. **A current `corpus_dedupe` drops 208490 of the same rows,
+1.8947 %, and writes 10795203** (S327's run, 2026-11-03,
+`adocs/data/S327_verify.txt`): 10732552 positions once, 35598 twice, 9586 three
+times, 10550 four to seven times, 4285 eight to fifteen, 2632 sixteen or more,
+and one still at 120. The 492 more are rows S042's key merges, below.
 
 The key is the engine's own zobrist — `load_FEN` then `board.hash` — so the four
 FEN fields it covers decide identity (placement, side to move, castling rights,
@@ -5804,7 +5824,8 @@ S065's **second** fit over the same corpus, with `--freeze tempo,piece_placement
 and corpus scans for its first quarter, so the 247 s over the first fit is
 contention rather than the freeze.
 
-**The second fit's constants are the ones in `eval_tables.hpp`, re-anchored.**
+**The second fit's constants were the ones in `eval_tables.hpp`, re-anchored,
+from `33aa3b4`, 2026-08-15, until S076's paste two days later.**
 The first paste fired three guards and was reverted; the second fired one,
 `POSITIONAL_ROOM`, and DEC-059 answered it by spending the degeneracy
 `tools/tuner.cpp` documents in its header, "degenerate on purpose", rather than
@@ -5812,11 +5833,20 @@ by widening the guard: 432 off `#define QUEEN` and 432 onto all 128 of her
 squares, which moves the evaluation by one centipawn on one of seven pinned
 positions and by nothing on the other six.
 `adocs/plan_done/S065_corpus_regen_loosened_filter.md` records the
-transformation and both fits' guard outcomes.
+transformation and both fits' guard outcomes. Six commits have changed
+`src/eval_tables.hpp` since `33aa3b4`, and three of them moved a constant:
+S076's refit (`77d7450`, 2026-08-17, below), S134's fold of passer bucket 5
+into the pawn tables' seventh rank, the evaluation identical (`0d9faba`,
+2026-10-12), and S083's refit (`01222f3`, 2026-10-25), whose constants the file
+still holds on 2026-11-03. S253's, S117's and S262's (`1ec6e89`, `2900cfe`,
+`bee84d8`) changed its code and comments, not a constant.
 
 **A fitted material value only means anything together with its own tables.**
-`QUEEN` reads 716 here against the 1067 that shipped before the fit and the 1148
-the fit itself produced, and none of the three is comparable with the others.
+`QUEEN` read 716 in the second fit's constants, re-anchored, against the 1067
+that shipped before the fit and the 1148 the fit itself produced, and none of
+the three is comparable with the others. S076's paste kept 716. Since S083's
+paste (`01222f3`, 2026-10-25) the file reads 983: S083's fit gave 710, and its
+re-anchoring moved 273 onto it (DEC-307).
 Since S275 a fit with material and psqt both free holds, per piece, the sum of
 its `psqt_mg` and `psqt_eg` squares together where it started, and the define
 carries any change in what the piece is worth, so a define fitted that way does
@@ -5829,7 +5859,9 @@ games in 02:30:12**, candidate against `a2f0065` at 10+0.2 on 12 cores. The
 constants are kept. The held-out error ranked nothing and this is the figure
 that decided it.
 
-**S076 refitted the same corpus deduplicated and those constants ship now.**
+**S076 refitted the same corpus deduplicated, and those constants shipped from
+`77d7450`, 2026-08-17, until S083's refit replaced them at `01222f3`,
+2026-10-25.** S134's fold changed their form in between, not the evaluation.
 Same settings, same seed, same freeze, `--lambda 0`; the only difference is
 1.8903 % fewer rows. 1378 s, best at epoch 1600, held-out error against the game
 result **0.119608 → 0.119458** over the deduplicated corpus's own held-out rows

@@ -1,0 +1,39 @@
+33aa3b4 2026-08-15 Land S065's fit with the queen re-anchored, DEC-059
+    defines: PAWN 95, KNIGHT 327, BISHOP 306, ROOK 487, QUEEN 716
+    the reference: nothing to compare
+77d7450 2026-08-17 Paste S076's deduplicated-corpus fit and re-derive the anchors
+    defines: PAWN 94, KNIGHT 327, BISHOP 308, ROOK 487, QUEEN 716
+    moved: defines, psqt_mg, psqt_eg
+    psqt_mg: 368 of 384 entries differ
+    psqt_eg: 368 of 384 entries differ
+1ec6e89 2026-10-05 Inline the accumulator hooks in a branch-free Side form (S253)
+    defines: PAWN 94, KNIGHT 327, BISHOP 308, ROOK 487, QUEEN 716
+    moved: no constant
+    psqt_mg: 0 of 384 entries differ
+    psqt_eg: 0 of 384 entries differ
+2900cfe 2026-10-05 Pack each evaluation mg/eg pair into one score_t (S117)
+    defines: PAWN 94, KNIGHT 327, BISHOP 308, ROOK 487, QUEEN 716
+    moved: no constant
+    psqt_mg: 0 of 384 entries differ
+    psqt_eg: 0 of 384 entries differ
+0d9faba 2026-10-12 Fold passer bucket 5 and rook seventh into the tables (S134)
+    defines: PAWN 94, KNIGHT 327, BISHOP 308, ROOK 487, QUEEN 716
+    moved: psqt_mg, psqt_eg
+    psqt_mg: 8 of 384 entries differ
+    psqt_eg: 8 of 384 entries differ
+bee84d8 2026-10-12 Fit evaluate()'s own trace in the tuner (S262)
+    defines: PAWN 94, KNIGHT 327, BISHOP 308, ROOK 487, QUEEN 716
+    moved: no constant
+    psqt_mg: 0 of 384 entries differ
+    psqt_eg: 0 of 384 entries differ
+01222f3 2026-10-25 Record S083's H1 for the evaluation refit at 46 rows a game
+    defines: PAWN 84, KNIGHT 371, BISHOP 352, ROOK 519, QUEEN 983
+    moved: defines, psqt_mg, psqt_eg
+    psqt_mg: 366 of 384 entries differ
+    psqt_eg: 365 of 384 entries differ
+1bb3080 2026-11-03 Point code comments' line citations at what they name (S323)
+    defines: PAWN 84, KNIGHT 371, BISHOP 352, ROOK 519, QUEEN 983
+    moved: no constant
+    psqt_mg: 0 of 384 entries differ
+    psqt_eg: 0 of 384 entries differ
+S329-EVAL-TABLES-DONE

@@ -1,0 +1,86 @@
+== S099 state construction  src/chesso.cpp 674-675
+      7862f41   674:   search_state_t state = {};
+      7862f41   675:   state.tt = &tt;
+      7862f41   674:   search_state_t state = {};
+      7862f41   675:   state.tt = &tt;
+      124e557   674:   move_t legal_moves[MAX_MOVES];
+      124e557   675:   uint16_t legal_weights[MAX_MOVES];
+== S132 state construction  src/chesso.cpp 674-674
+      fe25f46   674:   search_state_t state = {};
+      7504c3d   674:   move_t legal_moves[MAX_MOVES];
+      124e557   674:   move_t legal_moves[MAX_MOVES];
+== S159 state construction  src/chesso.cpp 674-674
+      fe25f46   674:   search_state_t state = {};
+      192a5a3   674:   move_t legal_moves[MAX_MOVES];
+      124e557   674:   move_t legal_moves[MAX_MOVES];
+== S132 node counter  src/data_structures.hpp 453-453
+      fe25f46   453:   uint64_t explored_nodes;
+      7504c3d   453: {
+      124e557   453: {
+== S132 per-iteration reset  src/chesso.cpp 726-726
+      fe25f46   726:     state.explored_nodes = 0;
+      7504c3d   726:           break;
+      124e557   726:           break;
+== S115 test-only counter  src/chesso.cpp 60-64
+      7862f41    60: // aspiration window and repeat an iteration. Nothing in the engine reads it:
+      7862f41    61: // it exists so a test can assert that the window schedule was actually in
+      7862f41    62: // force, which a mate case driven through this function otherwise cannot tell
+      7862f41    63: // from a search that never narrowed anything. S021.
+      7862f41    64: static int last_aspiration_failures = 0;
+      192a5a3    60:
+      192a5a3    61: static std::thread search_thread;
+      192a5a3    62: static std::mutex output_mutex;
+      192a5a3    63:
+      192a5a3    64: static std::random_device rd;
+      124e557    60:
+      124e557    61: static std::thread search_thread;
+      124e557    62: static std::mutex output_mutex;
+      124e557    63:
+      124e557    64: static std::random_device rd;
+== S115 test-only counter  src/chesso.cpp 88-89
+      7862f41    88: int uci_last_aspiration_failures()
+      7862f41    89: { return last_aspiration_failures; }
+      192a5a3    88: typedef bool (*process_func)(std::queue<std::string>&);
+      192a5a3    89:
+      124e557    88: typedef bool (*process_func)(std::queue<std::string>&);
+      124e557    89:
+== S024 countermove write  src/search.cpp 517-517
+      7b54f18   517:   // than ply 3 can still be missed for an iteration, and no test covers that.
+      192a5a3   517:     unmake_move(game);
+      124e557   517:     unmake_move(game);
+== S024 countermove array  src/data_structures.hpp 436-436
+      7b54f18   436:   bool mate_found;
+      192a5a3   436:   // of content in 24, so this lands in padding that was already being paid
+      124e557   436:   // of content in 24, so this lands in padding that was already being paid
+== S091 see_value (two rows)  src/bitboard.cpp 1096-1096
+      c0954ec  1096: static constexpr int see_value[6] = {100, 300, 300, 500, 900, 10000};
+      7862f41  1096: static constexpr int see_value[6] = {100, 300, 300, 500, 900, 10000};
+      124e557  1096:
+== S109 see_value  src/bitboard.cpp 1096-1096
+      c0954ec  1096: static constexpr int see_value[6] = {100, 300, 300, 500, 900, 10000};
+      7504c3d  1096:
+      124e557  1096:
+== where the named lines were, in each writer's tree
+  7b54f18 counter_moves decl / write:
+    459:  move_t counter_moves[12][64];
+    771:          state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =
+  7b54f18 search_t / search_state_t / negamax:
+    430:struct search_t
+    441:struct search_state_t
+    411:int negamax(int alpha0,
+  c167d05, the first writer of S024's two:
+      c167d05   434:   move_t counter_moves[12][64];
+      c167d05   507:           state->counter_moves[MOVE_PIECE(prev_move)][MOVE_TO(prev_move)] =
+  fe25f46 search_state_t / iterative_deepening_search:
+    447:struct search_state_t
+    666:uci_search_result_t iterative_deepening_search(const uci_search_options_t& conf)
+== the commits that wrote each line number, git log -S over the step file
+  S024_continuation_history.md src/search.cpp:517: 06bc264 a433433 e424032 7b54f18
+  S024_continuation_history.md src/data_structures.hpp:436: 06bc264 a433433 e424032 7b54f18
+  S115_aspiration_refinements.md src/chesso.cpp:60-64: 06bc264 7862f41
+  S115_aspiration_refinements.md src/chesso.cpp:88-89: 06bc264 7862f41
+  S132_time_management_node_fraction.md data_structures.hpp:453: 06bc264 fe25f46
+  S132_time_management_node_fraction.md chesso.cpp:726: 06bc264 fe25f46
+  S091_see_pruning_main_search.md :1096: 06bc264 c0954ec
+  S109_shallow_depth_pruning_block.md :1096: 06bc264 70b9b10 c0954ec
+S329-S187-LINES-DONE
