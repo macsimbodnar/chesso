@@ -2,13 +2,13 @@
 //
 //   build/tools/corpus_dedupe --in .tuning/selfplay_v2.tsv
 //                             --out .tuning/selfplay_v2_dedup.tsv
+// Since S042 this writes cdb43ba2... over the 0a6b59b6... the records name;
+// DEV_MANUAL.md, "Deduplicate a corpus by position", rebuilds that (S330).
 //
 // The pass, the key it uses and why the first row survives are all in
 // tools/corpus_dedupe.hpp beside the code. This file is the command line and
-// the report.
-//
-// Nothing here replays a game or asks the search anything: it reads the FEN
-// each row already carries and hashes it with the engine's own zobrist
+// the report. Nothing here replays a game or asks the search anything: it reads
+// the FEN each row already carries and hashes it with the engine's own zobrist
 // randoms, which is one load_FEN per row.
 #include "corpus_dedupe.hpp"
 #include <cinttypes>

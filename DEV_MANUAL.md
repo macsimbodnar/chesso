@@ -5716,6 +5716,38 @@ build/tools/corpus_dedupe --in .tuning/selfplay_v2.tsv \
     --out .tuning/selfplay_v2_dedup.tsv
 ```
 
+**With a `corpus_dedupe` built at S042 or later, that command no longer
+rebuilds the file at its `--out`** (S330, 2026-11-03).
+`.tuning/selfplay_v2_dedup.tsv` is the file S076's refit was taken on, and the
+one the step records in `adocs/plan_done/` name by path or digest: sha256
+`0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f`, 10795695
+rows. A tool built at S042 (`50b1ff9`, 2026-09-12) or later writes
+`cdb43ba2…`, 10795203 rows, from the same `selfplay_v2.tsv` (below), and it
+truncates its `--out` path, so that command replaces the recorded file. The
+tool at `a3e84e1`, S042's parent, rebuilds the recorded file byte for byte. Its
+build needs no doctest, which `git archive` leaves out:
+
+```bash
+mkdir /tmp/chesso-a3e84e1
+git archive a3e84e1 | tar -x -C /tmp/chesso-a3e84e1
+cmake -S /tmp/chesso-a3e84e1 -B /tmp/chesso-a3e84e1/build -DCMAKE_BUILD_TYPE=Release
+cmake --build /tmp/chesso-a3e84e1/build -j12 --target corpus_dedupe
+/tmp/chesso-a3e84e1/build/tools/corpus_dedupe --in .tuning/selfplay_v2.tsv \
+    --out .tuning/selfplay_v2_dedup.tsv
+```
+
+`adocs/data/S330_dedup_digests.sh` builds the tool by `git archive` at
+`a3e84e1` and at S330's base, then at `a3e84e1` again by these commands, its
+folder in a scratch directory and its kept rows to stdout, and runs each over
+`selfplay_v2.tsv` read in place (sha256 `ad8c5dfe…`), the kept rows hashed as
+they stream: `0a6b59b6…` from both `a3e84e1` builds, whose binaries are
+byte-identical, and `cdb43ba2…` from the base
+(`adocs/data/S330_dedup_digests.txt`). The archive's `CORPUS_README.md`
+(DEC-183) gives the first command, with `0a6b59b6…` expected; it was written on
+2026-09-11, the day before S042, when that held. The archive is not rewritten:
+S330 prepared a corrected copy of the README, dated, to sit beside it as its
+own file.
+
 **Measured on `selfplay_v2.tsv` at S076, 2026-08-17:** 11003693 rows in,
 10795695 distinct positions out, **207998 dropped, 1.8903 %**, in 19 s and
 1.0 GB resident. The repeats were concentrated rather than spread: 10733523

@@ -1625,3 +1625,13 @@ On `1bb3080` with S324 to S328 staged, git history only, no build and no run: S3
 | `S329_eval_tables_consts.txt` | its output, 2026-11-03: of the six commits, `77d7450` (S076) and `01222f3` (S083) moved the defines and most of both tables, `0d9faba` (S134's fold) 8 entries of each, and `1ec6e89`, `2900cfe` and `bee84d8` no constant; `1bb3080` equals `01222f3` |
 | `S329_s187_lines.sh` | the twelve citations S187's stamp and its generator's first six `HAND_CHOICES` entries name, each read at the commit that wrote its line number, at the baseline `S187_symbols.tsv` records, and at `124e557`; where the named code was in each writing tree; and the `git log -S` that found each writer. Row 2's reading |
 | `S329_s187_lines.txt` | its output, 2026-11-03: S024's array and countermove write wrong in `7b54f18`, the tree that wrote them, the other ten right in theirs, all twelve drifted by `124e557` |
+
+### S330, the dedup recipe names the tree that rebuilds it (DEC-183, DEC-171, DEC-348)
+
+On `1bb3080` with S324 to S329 staged, three builds of `corpus_dedupe` and one pass each over the corpus, no fit, then the comment edit's identity: S330's step file, "2026-11-03: the recipe names `a3e84e1`".
+
+| file | what it holds |
+|---|---|
+| `S330_dedup_digests.sh` | `.tuning/selfplay_v2.tsv` checked at `ad8c5dfe…` and read in place, then `corpus_dedupe` built by `git archive`, Release, that target only, at `a3e84e1` and at the step's base with doctest supplied, and at `a3e84e1` again by `DEV_MANUAL.md`'s recipe with no doctest and no ccache; each binary's kept rows counted and hashed off stdout as they stream, nothing of the pass written. Ends `S330-DIGESTS-DONE` or `-FAILED` |
+| `S330_dedup_digests.txt` | its output, 2026-11-03, under S122's load: `a3e84e1`, binary `1190fa03…`, 10795695 rows, 207998 dropped, `0a6b59b6…`, the file DEC-183 names; the base, binary `70126551…`, 10795203 rows, 208490 dropped, `cdb43ba2…`; the recipe build, the same binary as the first and the same `0a6b59b6…` |
+| `S330_identity.txt` | `tools/corpus_dedupe.cpp`'s comment edit, the base tree `84e66058` against the worktree, `S321_identity.txt`'s form: the control, the file byte-equal under `g++ -fpreprocessed -dD -E -P` with its 154 lines unmoved, and `corpus_dedupe.cpp.o` deleted and recompiled with ccache off in `build/` and `build-tune/` before and after, each recompile read in the build log, byte-equal, as are the two `corpus_dedupe` binaries, `70126551…`. `S330-IDENTITY HOLDS` |

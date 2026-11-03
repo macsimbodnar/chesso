@@ -1,0 +1,41 @@
+# S330 identity: tools/corpus_dedupe.cpp's comment edit, the base tree 84e66058 (1bb3080 with S324 to S329 staged) against
+# the worktree, S321_identity.txt's form. Comments only is the claim. The bytes of `g++ -fpreprocessed -dD -E -P -x c++ -`
+# over the file before and after, compared whole; then corpus_dedupe.cpp.o, the one object built from it, deleted and
+# recompiled with CCACHE_DISABLE=1 in build/ and build-tune/ (Release; build-tune -DCHESSO_TUNE=ON) before and after, and
+# the build log read for the recompile; then the linked binaries. cmp, byte for byte. i7-8700K, g++ 13.3, 2026-11-03,
+# under nice -n 10 while S122's screen held the machine. Every sha256 is its first 16 hex digits.
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment, a trailing comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+
+== before: tools/corpus_dedupe.cpp, 154 lines, sha256 93312ef7dedeee72
+   g++ -fpreprocessed -dD -E -P: 3291 bytes, sha256 9e413eaaef97280f
+   build: corpus_dedupe.cpp.o recompiled with CCACHE_DISABLE=1, sha256 e8347d980277e23d; binary sha256 7012655156edd81d
+   build-tune: corpus_dedupe.cpp.o recompiled with CCACHE_DISABLE=1, sha256 e8347d980277e23d; binary sha256 7012655156edd81d
+
+== after: tools/corpus_dedupe.cpp, 154 lines, sha256 21c8384e13fa72ab
+   g++ -fpreprocessed -dD -E -P: 3291 bytes, sha256 9e413eaaef97280f
+   build: corpus_dedupe.cpp.o recompiled with CCACHE_DISABLE=1, sha256 e8347d980277e23d; binary sha256 7012655156edd81d
+   build-tune: corpus_dedupe.cpp.o recompiled with CCACHE_DISABLE=1, sha256 e8347d980277e23d; binary sha256 7012655156edd81d
+
+cmp, before against after
+  BYTE-EQUAL  preprocessed.cpp
+  BYTE-EQUAL  build.corpus_dedupe.cpp.o
+  BYTE-EQUAL  build-tune.corpus_dedupe.cpp.o
+  BYTE-EQUAL  build.corpus_dedupe
+  BYTE-EQUAL  build-tune.corpus_dedupe
+
+git diff -U0 84e66058 -- tools/corpus_dedupe.cpp: 154 lines before and after, so no line below the edit moves
+  @@ -4,0 +5,2 @@
+  +// Since S042 this writes cdb43ba2... over the 0a6b59b6... the records name;
+  +// DEV_MANUAL.md, "Deduplicate a corpus by position", rebuilds that (S330).
+  @@ -8,4 +10,2 @@
+  -// the report.
+  -//
+  -// Nothing here replays a game or asks the search anything: it reads the FEN
+  -// each row already carries and hashes it with the engine's own zobrist
+  +// the report. Nothing here replays a game or asks the search anything: it reads
+  +// the FEN each row already carries and hashes it with the engine's own zobrist
+
+S330-IDENTITY HOLDS

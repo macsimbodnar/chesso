@@ -1,0 +1,40 @@
+# S330, 2026-11-03T19:17:36Z, Linux x86_64, g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, cmake version 3.28.3
+# load at start: 9.49 10.49 10.96 14/1236 2243387
+== CORPUS: selfplay_v2.tsv, 11003693 rows
+   sha256 ad8c5dfe1a236af8cbf946a67692e5fbfe533c7d38b6c7468c8a8ec202d14e05
+
+== a3e84e1: a3e84e1, tree eeed8d7c1ebc559c69db7c8dcd833b3801ba0cfe
+   tests/doctest files: 264; ccache: yes
+-- cmake -S <dir> -B <dir>/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+-- cmake --build <dir>/build -j12 --target corpus_dedupe
+   binary sha256 1190fa03a2f289cb...
+-- <dir>/build/tools/corpus_dedupe --in CORPUS --out /dev/stdout | (count and sha256)
+kept rows 10795695, sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f
+   11003693 rows read, 10795695 distinct positions written, 207998 dropped (1.8903%)
+   repeats: 10733523 keys once, 35124 twice, 9585 three times, 10547 4-7, 4284 8-15, 2632 16 or more; most repeated 120
+   wall 31.35 s, max rss 437176 kB
+
+== base: 84e66058519e566466a26774eb71b89c6e15c67c, tree 84e66058519e566466a26774eb71b89c6e15c67c
+   tests/doctest files: 264; ccache: yes
+-- cmake -S <dir> -B <dir>/build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+-- cmake --build <dir>/build -j12 --target corpus_dedupe
+   binary sha256 7012655156edd81d...
+-- <dir>/build/tools/corpus_dedupe --in CORPUS --out /dev/stdout | (count and sha256)
+kept rows 10795203, sha256 cdb43ba23a090e687957015639ff211c78a582675c2c44e5a094a0f31661a5a0
+   11003693 rows read, 10795203 distinct positions written, 208490 dropped (1.8947%)
+   repeats: 10732552 keys once, 35598 twice, 9586 three times, 10550 4-7, 4285 8-15, 2632 16 or more; most repeated 120
+   wall 30.83 s, max rss 437304 kB
+
+== a3e84e1-recipe: a3e84e1, tree eeed8d7c1ebc559c69db7c8dcd833b3801ba0cfe
+   tests/doctest files: 0; ccache: no
+-- cmake -S <dir> -B <dir>/build -DCMAKE_BUILD_TYPE=Release
+-- cmake --build <dir>/build -j12 --target corpus_dedupe
+   binary sha256 1190fa03a2f289cb...
+-- <dir>/build/tools/corpus_dedupe --in CORPUS --out /dev/stdout | (count and sha256)
+kept rows 10795695, sha256 0a6b59b6af9f50c4360cac7c87c33250318e712250f2653eb09bcb9f0b64b69f
+   11003693 rows read, 10795695 distinct positions written, 207998 dropped (1.8903%)
+   repeats: 10733523 keys once, 35124 twice, 9585 three times, 10547 4-7, 4284 8-15, 2632 16 or more; most repeated 120
+   wall 31.22 s, max rss 437196 kB
+
+# load at end: 10.22 10.62 10.96 3/1225 2259273
+S330-DIGESTS-DONE
