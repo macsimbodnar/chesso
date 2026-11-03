@@ -378,30 +378,29 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S322  **every doctest binary reads its fixtures from the source tree by construction** -- `CHESSO_SOURCE_DIR` defined once in `add_doctest_target_linking`, on all 26 doctest targets once and `test_perft` by its own line, none on the bench and debug executables, the per-target lines gone; a planted binary registered by `add_doctest_target` alone red from the root on `d3541c6` (0 of 3) and 3 of 3 from every directory after; all 27 binaries read S320's tallies from the root, `build/tests` and a third directory in both builds; fast suites with the build's assets copy moved aside, no read of it; the copy stays, six golden re-derivers under `adocs/data/` read it, S324 moves them; green at the coordinator's gate with datagen paused; filler (DEC-171), no `src/` or `tools/`
 - S321  **the stale statements S319 and S320 found beyond their rows say what the tree does, and `depth_1_floor_ms` is re-derived by a script** -- five rows false at `d0220d1` and changed: `DEV_MANUAL.md`'s clamp count (492 of the JSON rows at S321, the 478 having been of 2764 at `f57b92f`), the history band in S222's past tense, `spsa_driver.py`'s citation by phrase, `S136_screen.sh`'s `cd` reason, the floor's site and row; `adocs/data/S321_depth1_floor.py` reads both ends from the shipped binaries, idle band 1 to 9 ms with 3 inside at 3 times, the p99 send 93 us against 1500, the finding closed in DEC-116's form (the coordinator's ruling); a clean reader found a false `cd` sentence and three failure paths without a marker, all fixed; code identical by `adocs/data/S321_identity.txt`, bench 5482277; S323 holds what it found beyond the rows; filler (DEC-171), comments only
 - S320  **every test binary reads its fixtures from the source tree, so its tally does not depend on its directory** -- eight binaries, the step's six and `test_chesso` and `test_perft` with their own loaders, take `CHESSO_SOURCE_DIR` and run under ctest from the repository root, so a binary without the macro reads red; all 27 read one tally from the root, `build/tests` and a third directory in both builds, each equal to its `build/tests` tally before (e.g. `test_evaluation` 35 of 55 -> 55 of 55 from the root); no case, bound or assertion moved; the hold case's `CAPTURE` prints `adam` and `adagrad` where it printed an address, seen on a provoked failure; the fast check found two comments calling `test_perft` the slow label's one entry, both fixed; S322 holds the guard by construction and the unread assets copy; filler (DEC-171), no `src/` or `tools/`
 - S319  **S308's remaining comments say what the code does, and `depth_1_floor_ms` takes DEC-142's form** -- all eight rows read false or incomplete at `046c3dd` and changed, a dated ninth read true and stayed; `inline` on `king_shelter_features` read zero by DEC-266, unresolved and not a proof of no cost, and stays; the history band's 16384 stated against the 8192 it was set on and the 8831 shipping at S319; a clean reader found five errors in the rewrites, all fixed; code identical by `adocs/data/S319_identity.txt`, objects byte-equal, bench 5482277, 264 mutants pass `validate`; S321 holds what it found beyond the rows; filler (DEC-171), comments only
 - S310  **the gradient case's clamp block is derived from the trace, its AdaGrad step from a rule, and it runs from any directory** -- block from `clamped_site`, every row bound alone on each side: planted gradients red 12 of 198 -> 198 of 198, S101's cells 2 of 48 -> 48 of 48, the two bound rows having hidden the rest; AdaGrad step 10 -> 2, half the onset over 98 starts, `apart` 2.84e-12 against the unmoved 1e-6, a broken hold seen red at a stated threshold cost of 7.49x and 5.83x; `load_json` from the source tree, 10 of 15 -> 15 of 15 from the root, the main entry now runs there; two goldens listed and read by their scripts; largest entry 20.85 s of a bar of 30; filler (DEC-171), no `src/` or `tools/`
-- S309  **each family's planted recoveries has its own ctest entry, and every entry declares the threads `fit()` runs** -- `test_tuner_gradient` and `_plants_` `base`, `pawns`, `threats`, 15 cases, none in two entries; `PROCESSORS 4`, found by the fast check, the split alone reading 29.59 s of contention; the largest entry 18.37 to 19.57 s at `-j12` against a bar of 30, 11.20 s serial, 49.62 s of Debug's 600, against 35.34 s, 22.80 s and 100.40 s for one entry; suite 53, no bound, budget, plant or clock moved, a plant seen red; filler (DEC-171), no `src/`
 
 ## Open
 
 1. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
-2. S322  every doctest binary reads its fixtures from the source tree by construction, and the build's unread copy of `tests/assets/` goes
-3. S323  the line-number citations in code comments point at what they name or cite it by a phrase, and the test list's clamp count says what the case reads
-4. S324  the six golden re-derivers that read `test_eval_positions.hpp`'s fixtures run from any directory, and the build's copy of `tests/assets/` goes once nothing reads it
-5. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-6. S102  outpost and space terms in the evaluation, one family
-7. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
-8. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-9. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-10. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-11. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-12. S030  move_t drops the moving piece and becomes 16 bits
-13. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-14. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-15. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-16. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
-17. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
-18. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-19. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+2. S323  the line-number citations in code comments point at what they name or cite it by a phrase, and the test list's clamp count says what the case reads
+3. S324  the six golden re-derivers that read `test_eval_positions.hpp`'s fixtures run from any directory, and the build's copy of `tests/assets/` goes once nothing reads it
+4. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
+5. S102  outpost and space terms in the evaluation, one family
+6. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+7. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+8. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+9. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+10. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+11. S030  move_t drops the moving piece and becomes 16 bits
+12. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+13. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+14. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+15. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+16. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+17. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+18. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included

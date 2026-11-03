@@ -1119,12 +1119,14 @@ hand. DEC-025.
 **Test binaries run from any directory.** Every one that reads a fixture -- the
 JSON suites, the perft assets, a set under `adocs/data/`, `MANUAL.md` -- reads it
 out of the source tree through the `CHESSO_SOURCE_DIR` compile definition, so a
-binary run by hand reads the tally ctest does. Until S320 eight of them read
-`tests/assets/` relative to the working directory, and from the repository root
-seven failed 1 to 20 cases each and `test_perft` exited 2, while all eight passed
-in `build/tests`, which holds a copy; their entries and `test_tuner_gradient`'s
-main one now run from the root, where a relative read fails, so the suite holds
-it:
+binary run by hand reads the tally ctest does. `add_doctest_target_linking` in
+`tests/CMakeLists.txt` gives the definition to every doctest binary, so a new
+one has it without a line of its own (S322); `test_perft`, not a doctest binary,
+takes its own. Until S320 eight of them read `tests/assets/` relative to the
+working directory, and from the repository root seven failed 1 to 20 cases each
+and `test_perft` exited 2, while all eight passed in `build/tests`, which holds a
+copy; their entries and `test_tuner_gradient`'s main one now run from the root,
+where a relative read fails, so the suite holds it:
 
 ```bash
 ./build-debug/tests/test_movegen
@@ -1135,6 +1137,14 @@ Or through ctest, which since S067 no longer times the debug build out:
 ```bash
 cmake --build build-debug -j12 && ctest --test-dir build-debug -L fast
 ```
+
+No ctest entry reads the copy of `tests/assets/` in `build/tests` since S320,
+and since S322 by construction. It stays for the six programs under
+`adocs/data/` that re-derive `tests/test_eval_positions.hpp`'s rows, goldens by
+DEC-142: `S101_coverage_rows`, `S101_gradient_rows`, `S121_coverage_rows`,
+`S123_coverage_rows`, `S125_coverage_rows` and `S135_gradient_rows`. Each header
+builds its program without `CHESSO_SOURCE_DIR` and runs it from `build/tests`,
+where `load_json`'s relative paths land on the copy.
 
 `test_invariants` is INV-2 and INV-4 in the gate, since S190. It walks every
 test FEN two plies deep plus the five positions `test_engine`'s hash oracle

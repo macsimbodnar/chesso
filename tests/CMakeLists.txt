@@ -1,3 +1,12 @@
+# No ctest entry reads this copy since S320, and since S322 by construction:
+# every doctest binary and test_perft read the source tree
+# (add_doctest_target_linking, below). It stays for six programs under
+# adocs/data/ that re-derive tests/test_eval_positions.hpp's rows, goldens by
+# DEC-142: S101_coverage_rows.cpp, S101_gradient_rows.cpp,
+# S121_coverage_rows.cpp, S123_coverage_rows.cpp, S125_coverage_rows.cpp and
+# S135_gradient_rows.cpp. Each header builds its program without
+# CHESSO_SOURCE_DIR and runs it from build/tests, where load_json's relative
+# paths land on this copy.
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/assets
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -31,6 +40,23 @@ function(add_doctest_target_linking name library)
      target_include_directories(${name} PRIVATE ../src)
 
      target_link_libraries(${name} PRIVATE ${library})
+
+     # The source tree, for every doctest binary, so a new one reads its
+     # fixtures from there, and the tally ctest reads from any directory,
+     # without a line of its own (S322). Until S322 each binary took its own
+     # line, and one without it passed under ctest, run from build/tests on the
+     # copy of tests/assets/ the top of this file makes, and failed from anywhere
+     # else. What reads through it: the JSON suites and the perft assets, by
+     # test_helpers.hpp's load_json (S310) and test_chesso's own loader (S320);
+     # adocs/data/S165_defender_set.tsv, the 104 proved defender nodes S165 built
+     # to measure the mate-band guard, by test_search's pruning and reduction
+     # guards (S191) and test_engine's mate-safety defender root (S289, and S292
+     # after S289's guard was reverted); adocs/data/S024_census_positions.txt by
+     # test_search's re-search site cases; S145's sets by test_mate_breadth
+     # (S156) and test_mate_pv (S147); S170's cases by test_mate_carry; and
+     # MANUAL.md by test_uci_surface.
+     target_compile_definitions(${name}
+          PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
      # Anything past the two named arguments goes to the binary: a doctest filter,
      # where one binary is split over several entries.
@@ -66,12 +92,6 @@ add_doctest_target(test_movegen)
 add_doctest_target(test_evaluation)
 add_doctest_target(test_search)
 add_doctest_target(test_engine)
-
-# S289, and S292 after S289's guard was reverted: the mate-safety suite's
-# defender-root case reads adocs/data/S165_defender_set.tsv out of the source
-# tree, so it needs the same definition test_search does.
-target_compile_definitions(test_engine
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 # S028 wrote this as the check on the tuner's hand-written model of evaluate(),
 # tools/eval_model.hpp: a model that drifts from the engine tunes the wrong
@@ -179,8 +199,6 @@ target_include_directories(test_tuner_gradient PRIVATE ../tools)
 # The JSON suites come from the source tree, so the binary reads the same tally
 # from any directory. The main entry runs from the repository root and the plant
 # entries from the binary's own directory, so the suite keeps both true.
-target_compile_definitions(test_tuner_gradient
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 set_tests_properties(test_tuner_gradient PROPERTIES
                      PROCESSORS ${CHESSO_FIT_THREADS}
                      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -324,37 +342,26 @@ add_doctest_target(test_invariants)
 # builds are compared member by member from inside one binary.
 add_doctest_target(test_search_params)
 
-# S191: the pruning and reduction guard suite reads
-# adocs/data/S165_defender_set.tsv -- the 104 proved defender nodes S165 built
-# to measure the mate-band guard -- out of the source tree, so it needs the
-# same definition test_uci_surface does.
-target_compile_definitions(test_search
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
-
 # S320: the binaries that read tests/assets/ -- the JSON suites and the perft
 # assets through test_helpers.hpp's load_json, and test_chesso through its own
 # loader -- read them out of the source tree, so each reads the same tally from
 # the repository root, from build/tests and from anywhere else. Their entries
 # run from the root, as test_tuner_gradient's main entry does, because
 # build/tests holds a copy of the assets that a relative read passes on: from
-# the root each of these read 1 to 20 cases red until this.
+# the root each of these read 1 to 20 cases red until this. The definition
+# that makes them read the source tree, CHESSO_SOURCE_DIR, comes from
+# add_doctest_target_linking since S322, as for every doctest binary.
 foreach(name IN ITEMS test_chesso test_movegen test_evaluation test_eval_model
                       test_leaf_walk test_eval_trace test_invariants)
-     target_compile_definitions(${name}
-          PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
      set_tests_properties(${name} PROPERTIES
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endforeach()
 
-# The surface guard reads MANUAL.md out of the source tree, so it needs to know
-# where that tree is.
+# The surface guard reads MANUAL.md out of the source tree.
 add_doctest_target(test_uci_surface)
-target_compile_definitions(test_uci_surface
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 # S156: the mined breadth set, scored as a count with a floor. It reads
-# adocs/data/S145_mined_set.tsv out of the source tree, so it needs the same
-# definition test_uci_surface does.
+# adocs/data/S145_mined_set.tsv out of the source tree.
 #
 # Its own binary and not another case inside test_engine, for one measured
 # reason: 318 positions at depth 10 cost 18.28 s in Release on the machine
@@ -370,8 +377,6 @@ target_compile_definitions(test_uci_surface
 # rule the timeout block at the top of this file states, and 120 s is over six
 # times the Release one.
 add_doctest_target(test_mate_breadth)
-target_compile_definitions(test_mate_breadth
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
      set(CHESSO_MATE_BREADTH_TIMEOUT 120)
@@ -382,8 +387,7 @@ set_tests_properties(test_mate_breadth
      PROPERTIES LABELS "fast" TIMEOUT ${CHESSO_MATE_BREADTH_TIMEOUT})
 
 # S147: every info line claiming a mate carries a line that reaches it. Reads
-# both S145 sets out of the source tree, so it needs the same definition
-# test_mate_breadth does.
+# both S145 sets out of the source tree.
 #
 # Its own binary for the same reason and at a fraction of the cost: 400
 # positions at depth 8, which is enough for both sets to report mates and does
@@ -391,8 +395,6 @@ set_tests_properties(test_mate_breadth
 # test_mate_breadth measured (38x) is what sets the second timeout; neither is
 # tight.
 add_doctest_target(test_mate_pv)
-target_compile_definitions(test_mate_pv
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
      set(CHESSO_MATE_PV_TIMEOUT 120)
@@ -404,8 +406,7 @@ set_tests_properties(test_mate_pv
 
 # S170: a mate score a search inherited -- from an entry an earlier move's
 # search wrote, or from a proof this search then overwrote -- still carries a
-# line that reaches it. Reads adocs/data/S170_cases.tsv out of the source tree,
-# so it needs the same definition test_mate_pv does.
+# line that reaches it. Reads adocs/data/S170_cases.tsv out of the source tree.
 #
 # Its own binary because it is the only test here that replays whole games
 # through one process without a `ucinewgame` between the plies, which is the
@@ -415,8 +416,6 @@ set_tests_properties(test_mate_pv
 # test_mate_breadth measured (38x) is what sets the second timeout; neither is
 # tight.
 add_doctest_target(test_mate_carry)
-target_compile_definitions(test_mate_carry
-     PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
      set(CHESSO_MATE_CARRY_TIMEOUT 120)
@@ -782,7 +781,9 @@ target_include_directories(test_perft SYSTEM PRIVATE third_party/nlohmann)
 target_include_directories(test_perft PRIVATE ../src)
 target_link_libraries(test_perft PRIVATE chesso_engine)
 # S320: its assets from the source tree and its entry from the root, for the
-# reason the S320 block after test_search's definition gives.
+# reason the S320 block after test_search_params gives. Not a doctest target, so
+# add_doctest_target_linking does not give it the definition and it takes its
+# own.
 target_compile_definitions(test_perft
      PRIVATE CHESSO_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 add_test(NAME test_perft COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_perft)

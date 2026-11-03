@@ -29,7 +29,10 @@ checks: the first found two low findings, fixed.
 3. `S122_screen.sh sample` (about 75 min).
 4. `S122_screen.sh all`.
 
-**S322 in progress** (filler, restarted in `../chesso-s322`).
+**S322 done** (filler, no `src/` or `tools/`): `CHESSO_SOURCE_DIR` is defined once in `add_doctest_target_linking`. A planted binary
+reads red from the root on the parent and green from every directory after. The tallies of all 27 binaries are unchanged. The build's
+assets copy stays, because six golden re-derivers under `adocs/data/` read it; S324 moves them. Next filler: S323, then S324, landed
+before the screen or after it.
 
 ## 2026-11-02 18:45: shutdown by the owner; S122's corpus stopped at 102412 games, a top-up owed
 
