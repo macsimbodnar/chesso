@@ -28,7 +28,10 @@ DEC-173, plays on. On 2400 games the old rule drew 22.79 % +/- 0.86 of games the
 - S082's views are history.
 
 **Next, in order:**
-1. An agent amends S122's scripts and Commands for the new run (`.tuning/coord/S122/brief_regen.md`).
+1. S122's amendment for the new run, committed: `S122_generate.sh`, fresh seeds (corpus 2026500349, top-up 2026800349,
+   sample 2026700349), Commands in the step file's "2026-11-04: the corpus generated again (DEC-349)". One fast check, four
+   fixes. The void `prepared/` (6.2 GB, derived) was deleted for disk, its records kept in `.tuning/coord/S122/void_prepared_*`;
+   the session scratchpad's landed trees (4.4 GB) too. 21 GB free.
 2. The coordinator moves the void outputs aside and generates 150000 games, about 20 h at S331's measured 2.07 games/s.
 3. `S122_corpus.sh all`, then the sample, then the screen (about 20 h or more).
 4. Phase 2 and the SPRT.

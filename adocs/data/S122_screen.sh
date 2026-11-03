@@ -36,6 +36,8 @@
 # before the corpus finished generating. Nothing below the line changes once
 # `margin` has started; a change is a dated section in the step file and a
 # decision. DEC-344 is the coordinator's ruling it carries.
+# Amended 2026-11-04 (DEC-349): the screen runs again on a corpus generated again;
+# "AMENDED", below.
 # ============================================================================
 #
 # THE CORPUS: head's own games, DEC-344 (1), prepared by adocs/data/S122_corpus.sh
@@ -200,6 +202,24 @@
 #
 # DISK. The five quarter samples, about 140 MB each, the variant worktrees with their
 # build-tune about 300 MB each. A stage refuses to start under 4 GB free.
+#
+# AMENDED 2026-11-04, DEC-349 -- before `margin` started on the new corpus; the step
+# file's section "2026-11-04: the corpus generated again (DEC-349)". The screen run
+# under this pre-registration from 2026-11-03 (P1 kept, P2 kept, P3 dropped, P4
+# dropped, P5 kept, P6 escalated) read labels written by datagen's two-fold rule,
+# which S331 found and measured: on 2400 games at the corpus's settings 22.79 % of
+# games and 19.74 % of root rows carried a draw the laws would not give
+# (adocs/data/S331_reading.txt). DEC-349 voids it, its outputs moved to
+# .tuning/s122/screen_void_twofold/, and the screen runs again from the margin on the
+# corpus generated again by S331's datagen (adocs/data/S122_corpus.sh's amendment of
+# this date), its held-out set drawn from that corpus as before. What changed, and
+# nothing else: side (b)'s sample is drawn again by the new corpus's frozen datagen
+# at SAMPLE_SEED 2026700349, was 2026260203, its range [2026700349, 2026712349) and
+# its workers' [2026700349, 2026700361) meeting no run a log names
+# (adocs/data/S122_corpus.sh seeds) and, as before, no run of the corpus's pool; and
+# the sample's command gains `--games-out games.tsv`, recording only, which a datagen
+# before S331 refuses as an unknown option. Every part, rule, cap, margin and reading
+# above stands.
 # ============================================================================
 
 set -uo pipefail
@@ -216,7 +236,9 @@ SAMPLE_DIR="${SAMPLE_DIR:-$root/.tuning/s122/sample}"
 CORPUS_POOL="${CORPUS_POOL:-$root/.tuning/s122/corpus}"
 # A merged pool's log starts so (adocs/data/S122_corpus.sh's MERGED_HEADER, DEC-296).
 CORPUS_MERGED_HEADER="S122 corpus, merged from two datagen runs (DEC-296); not one run's log"
-SAMPLE_SEED=2026260203
+# DEC-349's fresh seed, the void sample's having been 2026260203; S122_corpus.sh seeds
+# holds its range apart from every logged run and refuses a SAMPLE_SEED it does not share.
+SAMPLE_SEED=2026700349
 SAMPLE_GAMES="${SAMPLE_GAMES:-12000}"  # overridable for a smoke and nothing else
 SAMPLE="${SAMPLE:-$SAMPLE_DIR/qs_inside.tsv}"
 THREADS=12
@@ -781,7 +803,9 @@ all() {
 
 # DEC-345 (5): the sample side (b) reads. The corpus's own frozen datagen, its
 # sha256 the corpus log's, `--leaf qs --games 12000 --nodes 100000 --threads 12
-# --seed 2026260203 --quiet-limit 30000`, split at |column 3| < 1000 into the
+# --seed SAMPLE_SEED --quiet-limit 30000 --games-out games.tsv` (SAMPLE_SEED 2026700349
+# and the games file since DEC-349; 2026260203 and none before), split at
+# |column 3| < 1000 into the
 # inside file exactly as S122_census.sh's stage_sample split the first sample.
 # Refused unless the corpus log ends S122-CORPUS-DONE, so it never contends with
 # the corpus, and refused if [seed, seed + games) meets any run's of the corpus's
@@ -844,6 +868,18 @@ side_sample() {
   [[ -x "$dg" && "$(sha256sum "$dg" | cut -d' ' -f1)" == "$want" ]] ||
     { say "refused: $dg is not the datagen $log records, $want"; return 1; }
   mkdir -p "$dir" || return 1
+  # A sample on record is reused only if its own log names this seed, these games and
+  # the frozen datagen: before this check, a sample of another seed -- the void one,
+  # 2026260203, by the datagen before S331 -- left in SAMPLE_DIR read "sampled before"
+  # (the coordinator's fast check of 2026-11-04, DEC-349).
+  if [[ -e "$dir/generate.log" || -e "$dir/qs_inside.tsv.done" ]]; then
+    [[ -f "$dir/generate.log" ]] ||
+      { say "refused: $dir holds a sample without its generate.log, so its seed is unknown"; return 1; }
+    grep -qE "^command .* --games $SAMPLE_GAMES .* --seed $SAMPLE_SEED " "$dir/generate.log" ||
+      { say "refused: $dir/generate.log's run is not $SAMPLE_GAMES games at seed $SAMPLE_SEED: $(sed -n 's/^command *//p' "$dir/generate.log" | head -n 1)"; return 1; }
+    [[ "$(sed -n 's/^datagen *sha256 \([0-9a-f]\{64\}\) .*/\1/p' "$dir/generate.log" | head -n 1)" == "$want" ]] ||
+      { say "refused: $dir/generate.log's datagen is not the corpus's frozen one, $want"; return 1; }
+  fi
   if [[ -f "$dir/qs_inside.tsv.done" ]]; then
     [[ "$(sha256sum "$dir/qs_inside.tsv" | cut -d' ' -f1)" == "$(cat "$dir/qs_inside.tsv.done")" ]] ||
       { say "refused: $dir/qs_inside.tsv is not the file the sample stage wrote"; return 1; }
@@ -873,9 +909,9 @@ sample_run() {
       echo "started   $(date -Is)"
       echo "datagen   sha256 $want  $dg"
       printf '%s' "$ranges"
-      echo "command   datagen --out pool.tsv --leaf qs --games $SAMPLE_GAMES --nodes 100000 --threads $THREADS --seed $SAMPLE_SEED --quiet-limit 30000"
+      echo "command   datagen --out pool.tsv --leaf qs --games $SAMPLE_GAMES --nodes 100000 --threads $THREADS --seed $SAMPLE_SEED --quiet-limit 30000 --games-out games.tsv"
       ( cd "$dir" && "$dg" --out pool.tsv --leaf qs --games "$SAMPLE_GAMES" --nodes 100000 \
-          --threads "$THREADS" --seed "$SAMPLE_SEED" --quiet-limit 30000 )
+          --threads "$THREADS" --seed "$SAMPLE_SEED" --quiet-limit 30000 --games-out games.tsv )
       rc=$?
       echo "ended     $(date -Is), exit $rc"
       (( rc == 0 )) && echo "S122-SAMPLE-RUN-DONE"

@@ -4,6 +4,7 @@
 # S083's recipe into the training corpus and the fixed held-out set
 # adocs/data/S122_screen.sh fits and reads.
 #
+#   adocs/data/S122_corpus.sh seeds      # DEC-349's seeds against every logged run
 #   adocs/data/S122_corpus.sh merge      # a stopped pool and its top-up joined (DEC-296)
 #   adocs/data/S122_corpus.sh verify     # the pool against its own log
 #   adocs/data/S122_corpus.sh filter     # the recipe's band, offline
@@ -16,7 +17,8 @@
 #
 # Each stage prints S122-CORPUS-<STAGE>-DONE or -FAILED as its last line. POOL
 # defaults to .tuning/s122/corpus, OUT to .tuning/s122/prepared (DEC-235). Only
-# `merge` writes into POOL: it moves part 1's generate.log and pool.tsv.* into
+# `merge` writes into POOL: it moves part 1's generate.log and pool.tsv.* (and its
+# games.tsv, since DEC-349) into
 # POOL/part1/ beside their originals.sha256, writes the merged pool.tsv.* and
 # generate.log by way of .merging files, and keeps a refused run's log as
 # merge.failed.log. No other stage writes there.
@@ -25,6 +27,7 @@
 # PRE-REGISTRATION -- written 2026-11-02 in S122's phase 1, while the pool was
 # still generating, before any of it ran on the pool. Nothing below changes once
 # `filter` has run on it; a change is a dated section in the step file.
+# Amended 2026-11-04 (DEC-349): the pool is generated again; "AMENDED", below.
 # ============================================================================
 #
 # S083'S RECIPE, AND EACH DEPARTURE FROM IT, STATED:
@@ -68,6 +71,33 @@
 # and filter about 10 min (three 13 M-row views read twice), split about 10 min, sample
 # about 5 min, K one zero-epoch load, about 3 min at 12 threads. About 30 min; it
 # shares the machine with nothing heavier than reads.
+#
+# AMENDED 2026-11-04, DEC-349 -- before the new pool exists, so before `filter` ran
+# on it; the step file's section "2026-11-04: the corpus generated again (DEC-349)".
+# S331 found that datagen, from S207 (DEC-173) to S331, ended a game as a draw at any
+# two-fold repetition while the search played on: on 2400 games at these settings
+# 22.79 % of games and 19.74 % of root rows carried a draw the laws would not give
+# (adocs/data/S331_reading.txt). The pool generated under this pre-registration, its
+# top-up, its preparation and the side sample were written so. DEC-349 voids them,
+# moved aside to .tuning/s122/void_twofold/, and generates the corpus again. What
+# changed, and nothing else:
+#   - datagen: S331's, a game ending on a repetition only at a third occurrence,
+#     built at a HEAD that holds S331 and frozen in POOL by adocs/data/S122_generate.sh
+#     freeze, its sha256 in the log as before. That script is the run.
+#   - the seeds: CORPUS_SEED 2026500349, was 2026110203; TOPUP_SEED 2026800349 for a
+#     top-up if the run is stopped, was 2026300203; the side sample's 2026700349, was
+#     2026260203. `seeds` holds each range, games-wide and per worker, apart from
+#     every run a log names and from each other.
+#   - `--games-out games.tsv` on the command line, recording only: one line a game in
+#     a file of its own (tools/datagen.cpp), so the log's `repetition:` line can be
+#     checked against the files. The rows are written as before.
+#   - `merge` refuses a part whose datagen predates S331: the top-up's log must hold
+#     datagen's closing `repetition:` line, and part 1's datagen, stopped before its
+#     closing lines, must be the top-up's by sha256. It moves part 1's games.tsv with
+#     part 1's other files.
+# The size, 150000 games, the settings, S083's recipe and its departures, the fixed
+# set's split seed 20261102, 46 qs rows a game and K stand as DEC-344 and DEC-345 have
+# them.
 # ============================================================================
 
 set -uo pipefail
@@ -93,14 +123,19 @@ merger="$root/adocs/data/S082_pool_merge.py"
 
 # The merge's runs (DEC-296's form). CORPUS_SEED and TOPUP_SEED are overridable for
 # a smoke and nothing else; the merger refuses a log whose seed is not the one given.
-CORPUS_SEED="${CORPUS_SEED:-2026110203}"
-TOPUP_SEED="${TOPUP_SEED:-2026300203}"
+# DEC-349's fresh seeds, the void pool's having been 2026110203 and 2026300203;
+# adocs/data/S122_generate.sh reads these lines, so the runs play the numbers checked
+# here.
+CORPUS_SEED="${CORPUS_SEED:-2026500349}"
+TOPUP_SEED="${TOPUP_SEED:-2026800349}"
 NODES=100000
 TOPUP="${TOPUP:-$TUNING/s122/topup}"
 # adocs/data/S122_screen.sh's side sample, DEC-345 (5): a top-up's seeds meet neither
-# it nor the corpus's.
-SAMPLE_SEED=2026260203
+# it nor the corpus's. DEC-349's fresh seed, the void sample's having been 2026260203;
+# `seeds` refuses one S122_screen.sh does not share.
+SAMPLE_SEED=2026700349
 SAMPLE_GAMES=12000
+SAMPLE_DIR="${SAMPLE_DIR:-$TUNING/s122/sample}"
 # The first line of a merged pool's log. Such a log holds each run's own log
 # verbatim, indented four spaces; S122_screen.sh sample reads its runs from it.
 MERGED_HEADER="S122 corpus, merged from two datagen runs (DEC-296); not one run's log"
@@ -139,6 +174,59 @@ check_merged() {
     [[ "$counted" -eq "$rows" ]] || { say "check: $file holds $counted rows, the merge's line $rows"; failed=1; }
     say "check: merged $v, $counted rows of $rows, $played games of $GAMES, sha256 $same"
   done
+  return "$failed"
+}
+
+# DEC-349's seeds against every datagen run a log names: S331_measure.sh's
+# check_seeds, read over every text file under 20 MB and not only *.log. A run is
+# named by datagen's own settings line, `datagen: G games, N nodes per move, T
+# threads, seed S, ...`, anywhere under SEED_LOGS, by default TUNING and adocs/data.
+# Each of this pool's three runs -- the corpus, CORPUS_SEED and GAMES; a top-up,
+# TOPUP_SEED and at most GAMES, its games unknown before a stop; the side sample,
+# SAMPLE_SEED and SAMPLE_GAMES -- meets none of them, nor the other two, games-wide,
+# [seed, seed + games), nor per worker, [seed, seed + threads): datagen seeds worker w
+# from seed + w (play_games()). The three runs' own directories, POOL, TOPUP and
+# SAMPLE_DIR, are left out of the search, so the check reads the same after their
+# runs have started; the void runs' logs, in .tuning/s122/void_twofold/, are in it,
+# more ranges to avoid. Refused when no run is read at all. Writes nothing.
+seeds() {
+  local dirs logged n failed=0 ours name seed games threads met oname oseed ogames othreads screen_seed
+  read -ra dirs <<< "${SEED_LOGS:-$TUNING $root/adocs/data}"
+  logged=$(find "${dirs[@]}" \( -path "$POOL" -o -path "$TOPUP" -o -path "$SAMPLE_DIR" \) -prune \
+             -o -type f -size -20M ! -name '*.tsv*' -print0 2>/dev/null |
+           xargs -0 -r grep -IhoE 'datagen: [0-9]+ games, [0-9]+ nodes per move, [0-9]+ threads, seed [0-9]+' |
+           sed -E 's/^datagen: ([0-9]+) games, [0-9]+ nodes per move, ([0-9]+) threads, seed ([0-9]+)$/\3 \1 \2/' |
+           sort -u -k1,1n -k2,2n -k3,3n)
+  n=$(grep -c . <<< "$logged")
+  (( n > 0 )) || { say "refused: no datagen settings line under ${dirs[*]}, so no range was checked"; return 1; }
+  say "seeds     $n runs named by datagen's settings line under ${dirs[*]}, $POOL, $TOPUP and $SAMPLE_DIR left out:"
+  while read -r oseed ogames othreads; do
+    say "seeds       seed $oseed, $ogames games, $othreads threads: [$oseed, $(( oseed + ogames ))), workers [$oseed, $(( oseed + othreads )))"
+  done <<< "$logged"
+  ours="corpus $CORPUS_SEED $GAMES $THREADS"$'\n'"top-up $TOPUP_SEED $GAMES $THREADS"$'\n'"sample $SAMPLE_SEED $SAMPLE_GAMES $THREADS"
+  while read -r name seed games threads; do
+    met=""
+    while read -r oseed ogames othreads; do
+      (( seed < oseed + ogames && oseed < seed + games )) && met+=" [$oseed, $(( oseed + ogames )))"
+      (( seed < oseed + othreads && oseed < seed + threads )) && met+=" workers [$oseed, $(( oseed + othreads )))"
+    done <<< "$logged"
+    while read -r oname oseed ogames othreads; do
+      [[ "$oname" == "$name" ]] && continue
+      (( seed < oseed + ogames && oseed < seed + games )) && met+=" the $oname's [$oseed, $(( oseed + ogames )))"
+      (( seed < oseed + othreads && oseed < seed + threads )) && met+=" the $oname's workers"
+    done <<< "$ours"
+    if [[ -n "$met" ]]; then
+      say "seeds     refused: the $name's [$seed, $(( seed + games ))) or its workers [$seed, $(( seed + threads ))) meet$met"
+      failed=1
+    else
+      say "seeds     $name [$seed, $(( seed + games ))), workers [$seed, $(( seed + threads ))): meets none of the $n, nor the other two"
+    fi
+  done <<< "$ours"
+  screen_seed=$(sed -n 's/^SAMPLE_SEED=\([0-9][0-9]*\)$/\1/p' "$root/adocs/data/S122_screen.sh")
+  if [[ "$screen_seed" != "$SAMPLE_SEED" ]]; then
+    say "seeds     refused: adocs/data/S122_screen.sh's SAMPLE_SEED is '$screen_seed', this script's $SAMPLE_SEED"
+    failed=1
+  fi
   return "$failed"
 }
 
@@ -271,10 +359,14 @@ record() {
 # at the names it reads: POOL/pool.tsv.* and POOL/generate.log. Part 1's four files
 # move once to POOL/part1/, by mv on one filesystem, their sha256 written first to
 # POOL/part1/originals.sha256 and checked on every run; nothing here writes into them.
+# Since DEC-349 part 1's games.tsv, where its run wrote one, moves with them; no
+# merged games file is written, and the top-up's stays in TOPUP.
 # datagen, run.sh and pid stay in POOL, where S122_screen.sh sample reads the datagen.
 #
 # Refused before anything moves unless the top-up's log has one `exit` line, `exit 0`,
-# and ends S122-TOPUP-DONE; its seed is TOPUP_SEED and its seeds, games-wide and per
+# and ends S122-TOPUP-DONE; it holds datagen's `repetition:` line and part 1's log
+# names the same datagen sha256 (DEC-349: no part by a datagen before S331); its
+# seed is TOPUP_SEED and its seeds, games-wide and per
 # worker, meet neither the corpus's [CORPUS_SEED, CORPUS_SEED + GAMES) nor the side
 # sample's (DEC-345 (5)); the corpus's own log (first line `S122 corpus`) ends
 # S122-CORPUS-FAILED; S082_pool_merge.py part1 cuts part 1 clean; and its check finds
@@ -296,7 +388,7 @@ record() {
 merge() {
   local part1="$POOL/part1" log="$POOL/generate.log" topup_log="$TOPUP/topup.log"
   local originals="generate.log pool.tsv.root pool.tsv.qs pool.tsv.pv"
-  local from name v command tseed tgames tthreads span reading checked report rc
+  local from name v command tseed tgames tthreads span reading checked report rc p1sha tsha
 
   [[ -r "$merger" ]] || { say "no merger at $merger"; return 1; }
   [[ -r "$topup_log" ]] || { say "refused: no top-up log at $topup_log"; return 1; }
@@ -306,6 +398,12 @@ merge() {
   fi
   [[ "$(tail -n 1 "$topup_log")" == S122-TOPUP-DONE ]] ||
     { say "refused: $topup_log does not end S122-TOPUP-DONE"; return 1; }
+  # DEC-349: no part by a datagen before S331, which drew a game at any two-fold. The
+  # top-up finished, so its log holds datagen's closing `repetition:` line, which only
+  # S331's datagen prints; part 1, stopped before datagen's closing lines, is held to
+  # the top-up's datagen by sha256 below, once it is found.
+  grep -q '^repetition: ' "$topup_log" ||
+    { say "refused: $topup_log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids"; return 1; }
 
   command=" $(sed -n 's/^command *//p' "$topup_log" | head -n 1) "
   tseed=$(sed -n 's/.* --seed \([0-9][0-9]*\) .*/\1/p' <<< "$command")
@@ -348,12 +446,19 @@ merge() {
     for name in $originals; do
       [[ -f "$POOL/$name" ]] || { say "refused: no $POOL/$name to move"; return 1; }
     done
+    # Part 1's games file (`--games-out`, DEC-349) is part 1's alone: no merged one is
+    # written, so it goes with the files it describes.
+    [[ -f "$POOL/games.tsv" ]] && originals+=" games.tsv"
     [[ "$(head -n 1 "$log")" == "S122 corpus" ]] ||
       { say "refused: $log is not the corpus's own log: no part 1 to move"; return 1; }
     [[ "$(tail -n 1 "$log")" == S122-CORPUS-FAILED ]] ||
       { say "refused: $log does not end S122-CORPUS-FAILED: a pool that finished needs no top-up"; return 1; }
     from="$POOL"
   fi
+  p1sha=$(sed -n 's/^datagen *sha256 \([0-9a-f]\{64\}\) .*/\1/p' "$from/generate.log" | head -n 1)
+  tsha=$(sed -n 's/^datagen *sha256 \([0-9a-f]\{64\}\) .*/\1/p' "$topup_log" | head -n 1)
+  [[ -n "$p1sha" && "$p1sha" == "$tsha" ]] ||
+    { say "refused: part 1's datagen sha256 '${p1sha:-none}' is not the top-up's '${tsha:-none}', the one its 'repetition:' line shows to be S331's (DEC-349)"; return 1; }
 
   # Read only, before anything moves: the cut, and part 2 against its own log.
   reading=$(python3 "$merger" part1 "$from/pool.tsv" "$from/generate.log")
@@ -460,9 +565,11 @@ smoke() {
   all_stages
 }
 
-mkdir -p "$OUT" || { echo "cannot create $OUT"; echo "S122-CORPUS-FAILED"; exit 1; }
+# `seeds` writes nothing, and runs before the void outputs are moved and after.
+[[ "$stage" == seeds ]] || mkdir -p "$OUT" || { echo "cannot create $OUT"; echo "S122-CORPUS-FAILED"; exit 1; }
 
 case "$stage" in
+  seeds) if seeds; then echo "S122-CORPUS-SEEDS-DONE"; else echo "S122-CORPUS-SEEDS-FAILED"; exit 1; fi ;;
   merge) if merge; then echo "S122-CORPUS-MERGE-DONE"; else echo "S122-CORPUS-MERGE-FAILED"; exit 1; fi ;;
   verify) if verify; then echo "S122-CORPUS-VERIFY-DONE"; else echo "S122-CORPUS-VERIFY-FAILED"; exit 1; fi ;;
   filter) if filter; then echo "S122-CORPUS-FILTER-DONE"; else echo "S122-CORPUS-FILTER-FAILED"; exit 1; fi ;;
@@ -472,5 +579,5 @@ case "$stage" in
   record) if record; then echo "S122-CORPUS-RECORD-DONE"; else echo "S122-CORPUS-RECORD-FAILED"; exit 1; fi ;;
   all) if all_stages; then echo "S122-CORPUS-ALL-DONE"; else echo "S122-CORPUS-ALL-FAILED"; exit 1; fi ;;
   smoke) if smoke; then echo "S122-CORPUS-SMOKE-DONE"; else echo "S122-CORPUS-SMOKE-FAILED"; exit 1; fi ;;
-  *) echo "usage: $0 merge | verify | filter | split | sample | k | record | all | smoke" >&2; exit 2 ;;
+  *) echo "usage: $0 seeds | merge | verify | filter | split | sample | k | record | all | smoke" >&2; exit 2 ;;
 esac

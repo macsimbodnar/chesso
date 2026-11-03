@@ -1046,6 +1046,10 @@ deterministic), and `refusals_run.sh` the merge's refusals (`merge_refusals/`).
 
 ### Commands for the coordinator, in order
 
+**Superseded 2026-11-04 by "Commands for the coordinator, in order (DEC-349)" in the section "2026-11-04: the corpus
+generated again (DEC-349)", below.** The list here is kept as history (DEC-348): steps 3 to 5 ran on the void pool;
+steps 6 to 10 are that list's steps 9 to 13, unchanged.
+
 Run from the main checkout (`/home/max/ws/chesso`) unless a step says otherwise; every stage prints its terminal
 marker last, so each goes detached under a four-exit watcher (WATCHERS). **No commit while a screen, the margin or `side`
 runs** (a commit mid-run voids it: the stages freeze their tools at HEAD).
@@ -1086,3 +1090,323 @@ runs** (a commit mid-run voids it: the stages freeze their tools at HEAD).
    adocs/data/S122_cost.sh check`, then `run`, about 25 min.
 10. The one `{0, 5}` SPRT at night (phase 2's script): up to 41900 games, 19.86 h; ceiling 40 h; on H0 or no verdict,
    DEC-344 (6)'s partition, `S122_screen.sh part A|B|C` for each refit.
+
+## 2026-11-04: the corpus generated again (DEC-349)
+
+One Opus 5.5 subagent, briefed by the coordinator; worktree `../chesso-s122r`, branch `s122r` at `402e80c`, which
+holds S331. S331 found that `datagen`, from S207 (DEC-173) to S331, ended a game as a draw at any two-fold repetition
+while the search played on: on 2400 games at the corpus's settings 22.79 % of games and 19.74 % of root rows carried a
+draw the laws would not give (`adocs/data/S331_reading.txt`). DEC-349 voids this step's screen, and orders the corpus
+and the side sample generated again with S331's `datagen`, at DEC-344's and DEC-345's size and recipe, with fresh
+seeds, and the screen run again from the margin. This section is that amendment. Nothing here ran on the real pool or
+on `.tuning/s122/`, which was only read. Every run was a smoke on scratch, under the worktree's own `.tuning`.
+
+### What changed, and nothing else
+
+- **The binary.** S331's `datagen`, built at a HEAD that holds S331 and frozen in the pool directory, as before, its
+  sha256 in the log. Built at `402e80c` in the worktree, it hashes `730f827ae9f8d702...`, the binary S331's measurement
+  ran (`730f827a…` in S331's step file). The frozen datagen refuses a datagen before S331, which rejects
+  `--games-out` as an unknown option.
+- **The seeds**, DEC-349's fresh ones. Each range is checked games-wide and per worker, because `datagen` seeds
+  worker w from seed + w (`tools/datagen.cpp` `play_games()`):
+
+  | run | seed | games-wide | workers | the void run's seed |
+  |---|---|---|---|---|
+  | corpus, `CORPUS_SEED` | 2026500349 | [2026500349, 2026650349) | [2026500349, 2026500361) | 2026110203 |
+  | top-up, only if the run is stopped, `TOPUP_SEED` | 2026800349 | at most [2026800349, 2026950349) | [2026800349, 2026800361) | 2026300203 |
+  | side sample, `SAMPLE_SEED` | 2026700349 | [2026700349, 2026712349) | [2026700349, 2026700361) | 2026260203 |
+
+- **The settings**, as before: `--leaf root,qs,pv --nodes 100000 --threads 12 --quiet-limit 30000`, 150000 games.
+  `--games-out games.tsv` is added. It only records: one line a game in a file of its own, so the log's `repetition:`
+  line can be checked against the files. **The side sample's command gains it too.** That is this amendment's choice,
+  since the brief names it for the corpus only. It costs nothing and makes a datagen before S331 refuse the sample.
+- **Unchanged**: S083's recipe and its departures, the fixed set's split seed 20261102 and its 12000 games, 46 qs rows
+  a game, K, and every part, rule, cap, margin and reading of the screen. The held-out games come from the new corpus,
+  as DEC-344 has them.
+
+### The scripts
+
+- **`adocs/data/S122_generate.sh`, new: the run.** It writes the same frame and marker as the void pool's `run.sh`,
+  and it has three stages:
+  - `freeze` builds `build/`'s `datagen` and `chesso`. It refuses unless HEAD holds `402e80c`, `src/`, `tools/` and
+    the build files are HEAD's, and `build/` is configured Release. It runs `chesso bench` and copies `datagen` into
+    `POOL` with `datagen.sha256` and `datagen.built` (`<HEAD>, bench <N>`, the log's `engine` line). A frozen datagen
+    is never replaced.
+  - `corpus` plays the pool into `POOL/generate.log`. The log's first line is `S122 corpus`, its datagen line is
+    `datagen   sha256 ...`, the output of `S122_corpus.sh seeds` follows, then the `command` line and datagen's
+    output. It closes with `ended ..., exit N` and then `S122-CORPUS-DONE` or `-FAILED`.
+  - `topup` plays the rest of a stopped pool into `TOPUP/topup.log`, in the void top-up's form (`exit N`, then
+    `S122-TOPUP-DONE` or `-FAILED`). Its games are `GAMES` less the games `S082_pool_merge.py part1` keeps.
+
+  Games, seeds and settings are read from `S122_corpus.sh`'s own assignment lines, so `merge`, `verify` and `sample`
+  check the numbers the run played. `corpus` and `topup` refuse when:
+  - any output is already present (a pool is never overwritten);
+  - the frozen datagen is not the one recorded, or has no `--games-out`;
+  - under 6 GB is free;
+  - `seeds` refuses.
+
+  datagen's PID goes in `datagen.pid`, so a run is stopped by SIGTERM to datagen alone, as the void pool was, and its
+  log still closes on `exit 143`, `S122-CORPUS-FAILED`. The script copies itself into the pool directory as `run.sh`,
+  its sha256 in the log. Its body is one brace group, so an edit made during the run cannot reach it (S331's lesson).
+- **`adocs/data/S122_corpus.sh`.**
+  - The dated pre-registration amendment, "AMENDED 2026-11-04, DEC-349".
+  - `CORPUS_SEED`, `TOPUP_SEED` and `SAMPLE_SEED` take the new seeds, and `SAMPLE_DIR` is added.
+  - **`seeds`, new.** It is S331_measure.sh's `check_seeds` read over every text file under 20 MB and not only
+    `*.log`, under `TUNING` and `adocs/data`.
+    - It holds each of the three ranges apart, games-wide and per worker, from every run a datagen settings line
+      names, and from each other.
+    - It leaves out `POOL`, `TOPUP` and `SAMPLE_DIR`, so it reads the same before their runs and after.
+    - It refuses a `SAMPLE_SEED` that `S122_screen.sh` does not share, and refuses when it reads no run.
+    - It writes nothing, not even `OUT`.
+    - It also had a fault, fixed before it was used: `sort -n -u` kept one run per seed and dropped S082's 600-game
+      run and the phase 1 sample smoke's 24 games.
+  - **`merge` refuses a part whose datagen predates S331.** The top-up's log must hold datagen's closing
+    `repetition:` line. Part 1 was stopped before datagen's closing lines, so it cannot hold one. Its log's datagen
+    sha256 must instead be the top-up's, and is checked before anything moves (`S082_pool_merge.py merge` checks
+    the same pair again). Part 1's `games.tsv` moves to `part1/` with its other files, under `originals.sha256`. No
+    merged games file is written, and the top-up's games file stays in `TOPUP`.
+- **`adocs/data/S122_screen.sh`.**
+  - The dated pre-registration amendment, "AMENDED 2026-11-04, DEC-349".
+  - `SAMPLE_SEED` 2026700349.
+  - `--games-out games.tsv` on the sample's command.
+  - The stale seed in `side_sample`'s comment is corrected, with its history kept (DEC-348).
+  - The sample's guard reads `CORPUS_POOL/generate.log` as before. After the move, that log is the new pool's: a
+    single run's or a merged one's. The smoke shows both.
+  - A sample on record in `SAMPLE_DIR` is reused only if its own `generate.log` names `SAMPLE_GAMES` games at
+    `SAMPLE_SEED` and the corpus's frozen datagen; otherwise `side_sample` refuses (the coordinator's fast check,
+    below).
+
+**The void runs' logs, moved aside, confuse no guard.** `seeds` reads every log under `.tuning`, so the void runs'
+ranges are more ranges to avoid. Run before the move, from the worktree with the void outputs in place and nothing
+left out (`POOL`, `TOPUP` and `SAMPLE_DIR` pointed at scratch paths that do not exist), it read:
+
+```
+seeds     16 runs named by datagen's settings line under /home/max/ws/chesso/.tuning /home/max/ws/chesso-s122r/adocs/data, ... left out:
+seeds       seed 3, 1 games, 1 threads: [3, 4), workers [3, 4)
+seeds       seed 5, 10 games, 1 threads: [5, 15), workers [5, 6)
+seeds       seed 20260814, 120000 games, 12 threads: [20260814, 20380814), workers [20260814, 20260826)
+seeds       seed 20261013, 600 games, 12 threads: [20261013, 20261613), workers [20261013, 20261025)
+seeds       seed 20261013, 150000 games, 12 threads: [20261013, 20411013), workers [20261013, 20261025)
+seeds       seed 990110203, 48 games, 12 threads: [990110203, 990110251), workers [990110203, 990110215)
+seeds       seed 990300203, 14 games, 12 threads: [990300203, 990300217), workers [990300203, 990300215)
+seeds       seed 2026102000, 27252 games, 12 threads: [2026102000, 2026129252), workers [2026102000, 2026102012)
+seeds       seed 2026102100, 600 games, 12 threads: [2026102100, 2026102700), workers [2026102100, 2026102112)
+seeds       seed 2026110201, 3000 games, 12 threads: [2026110201, 2026113201), workers [2026110201, 2026110213)
+seeds       seed 2026110202, 9000 games, 12 threads: [2026110202, 2026119202), workers [2026110202, 2026110214)
+seeds       seed 2026110203, 150000 games, 12 threads: [2026110203, 2026260203), workers [2026110203, 2026110215)
+seeds       seed 2026260203, 24 games, 12 threads: [2026260203, 2026260227), workers [2026260203, 2026260215)
+seeds       seed 2026260203, 12000 games, 12 threads: [2026260203, 2026272203), workers [2026260203, 2026260215)
+seeds       seed 2026300203, 47588 games, 12 threads: [2026300203, 2026347791), workers [2026300203, 2026300215)
+seeds       seed 2026400331, 2400 games, 12 threads: [2026400331, 2026402731), workers [2026400331, 2026400343)
+seeds     corpus [2026500349, 2026650349), workers [2026500349, 2026500361): meets none of the 16, nor the other two
+seeds     top-up [2026800349, 2026950349), workers [2026800349, 2026800361): meets none of the 16, nor the other two
+seeds     sample [2026700349, 2026712349), workers [2026700349, 2026700361): meets none of the 16, nor the other two
+S122-CORPUS-SEEDS-DONE
+```
+
+The void corpus, its top-up, both samples and S331's measurement are among the 16. S331's premise smoke, seed
+2026410331 and 24 games, ran outside this tree's `.tuning`. Its range ends 89994 seeds below the corpus's.
+
+**Each guard seen red:**
+- `seeds`, each time naming what it meets:
+  - `CORPUS_SEED=2026400335` (S331's measurement);
+  - `CORPUS_SEED=2026110200` (four void and pre-S122 runs);
+  - `TOPUP_SEED=2026650000` (the corpus and the sample);
+  - and, before `S122_screen.sh` was edited, its `SAMPLE_SEED` 2026260203.
+- `merge`, below.
+- `S122_generate.sh`: `freeze` run twice ("never replaced"); `corpus` on a pool that has a log ("never
+  overwritten"); `topup` on a finished pool ("a top-up completes a stopped pool only").
+
+**What still guards only by the move: a finding, not fixed.** `verify`, `filter` and `all` take a single-run pool
+whose datagen predates S331, and `filter`'s and `split`'s `.done` markers do not bind `prepared/` to the pool they
+were made from. If the void `prepared/` stayed where it is, `all` would read "filtered before" and prepare a new pool
+from the void's files. Command 1 below is therefore load-bearing. `S122_generate.sh` refuses to write into a pool
+that holds any output, so the new run cannot land on the void pool. The coordinator has since deleted the void
+`prepared/` (Command 1).
+
+### The smoke, end to end on scratch
+
+`.tuning/s122r_smoke/` in the worktree, run on 2026-11-04 at 00:06 with the machine otherwise idle. The scratch seeds
+were 991500349, 991800349, 991600349 and 991900349. Each stage used only the overrides it already has (`TUNING`,
+`POOL`, `TOPUP`, `GAMES`, `VALIDATION_GAMES`, the seeds, `SEED_LOGS`; `OUT`, `PREPARED`, `SAMPLE_DIR`,
+`CORPUS_POOL`, `SAMPLE_GAMES`). `SEED_LOGS` was the main checkout's `.tuning` and `adocs/data`, so every `seeds`
+call read the real logs. Every stage passed:
+
+- **A stopped pool, its top-up, the merge, `all`, the sample.**
+  - `freeze`: datagen sha256 `730f827a...`, built at `402e80c`, bench 5482277.
+  - `corpus` at `GAMES=36`, with SIGTERM to datagen by `datagen.pid` after 10 s: the log ended `exit 143`,
+    `S122-CORPUS-FAILED`.
+  - `topup` read 19 games kept and played 17: `exit 0`, `S122-TOPUP-DONE`, and its `repetition:` line.
+  - `merge` moved `games.tsv` with part 1's four files: `S122-CORPUS-MERGE-DONE`, 36 games, root 4023 rows.
+  - `all` with `VALIDATION_GAMES=6`: K 1.9314, `S122-CORPUS-ALL-DONE`.
+  - `S122_screen.sh sample` with `SAMPLE_GAMES=24` at the real `SAMPLE_SEED`: guard passed, `S122-SAMPLE-DONE`.
+    Its log names the merged pool's two runs, `[991500349, 991500385)` and `[991800349, 991800366)`.
+- **A pool that finished, single-run.**
+  - `corpus` at `GAMES=24`: `S122-CORPUS-DONE`.
+  - `adocs/data/S331_measure.py` `read_command` on it: "the repetition: line equal to the files, [15, 6, 4, 2, 2159,
+    1206, 0]".
+  - `all`: its `verify.txt` carries the new log's `engine`, `datagen` and `command` lines.
+  - `sample` at `SAMPLE_GAMES=12`: its log names the one run, `[991600349, 991600373)`, read from the new single
+    run's log.
+- **`merge`'s DEC-349 refusals**, each on a copy, none of them moving a file:
+  - phase 1's pristine pre-S331 pair (`.tuning/s122/phase1/merge_smoke/pristine/`, copied): refused, "topup.log has
+    no 'repetition:' line";
+  - the S331 pair with part 1's datagen sha256 changed: refused, "part 1's datagen sha256 ... is not the top-up's";
+  - the S331 pair with the top-up's `repetition:` line deleted: refused.
+- **`S122_corpus.sh smoke`, the existing path**, its source `.tuning/s122/smoke/` read through a link:
+  `S122-CORPUS-SMOKE-DONE`, 8333 rows, K 0.8306, as phase 1 recorded.
+
+`bash -n` passes on all three scripts.
+
+### 2026-11-04: the coordinator's fast check, four fixes
+
+The fast check found the normal run, the seeds, the recipe, `freeze` and the log frame sound, and asked for four fixes:
+
+1. **A stopped corpus refused its own top-up.** `corpus()` printed the log's last three lines to the console. On a
+   stopped run those lines include datagen's settings line, and `.tuning/s122_generate.console` lies outside the
+   directories `seeds` leaves out. So Command 5's `topup` would read the corpus's own range from the console and
+   refuse: the corpus meets itself. The first smoke missed it because its `SEED_LOGS` did not hold its consoles.
+   `S122_generate.sh` `last_lines` now prints a run's last lines without the settings line, for `corpus` and `topup`
+   both. The stopped-run smoke was run again with the smoke's own `.tuning` in `SEED_LOGS`, under
+   `.tuning/s122r_smoke2/` in the worktree. Results below.
+2. **Command 1, the disk notes, Command 2's directory, and the void sample.**
+   - The coordinator deleted the void `prepared/` for disk, so Command 1 no longer names it.
+   - The disk notes state the space after the deletion.
+   - Command 2 starts with its own `cd`.
+   - `side_sample` reused any `qs_inside.tsv.done` without reading its seed, so before this fix only Command 1 kept
+     the void `.tuning/s122/sample/` from being read as "sampled before". Now a sample on record is reused only if its
+     `generate.log` names `--games SAMPLE_GAMES` and `--seed SAMPLE_SEED` on its command line and the corpus's frozen
+     datagen sha256. A `.done` without its log is refused too.
+3. **Command 6's free-disk floor** is now 14 GB, not 10. The preparation writes about 8.5 GB, and `S122_screen.sh`
+   refuses every stage under 4 GB.
+4. **Commands 5 to 8** each save `$!` to `.tuning/s122_<name>.pid`, so a watcher's process-death exit has a PID.
+
+**The smoke again** (the stopped-run path, scratch seeds 992500349 and 992800349 for the red run, 991500349 and
+991800349 for the green, `SEED_LOGS` the smoke's `.tuning`, the main checkout's `.tuning` and `adocs/data`):
+
+- **Red, on the delivered script** (the staged copy, run as a temporary file beside it and removed after). The stopped
+  corpus's console held datagen's settings line, and `topup` refused at its seeds: "the corpus's [992500349,
+  992500385) ... meet [992500349, 992500385)".
+- **Green, on the fixed script.** The console held no settings line. `topup` played its games to `S122-TOPUP-DONE`.
+  Then `merge` gave `S122-CORPUS-MERGE-DONE`, `all` gave `S122-CORPUS-ALL-DONE` and `sample` gave `S122-SAMPLE-DONE`.
+  `sample` run again read "sampled before".
+- **The sample's reuse refusals**, each seen:
+  - the void sample's `generate.log` and `.done` copied into a scratch `SAMPLE_DIR` ("not 24 games at seed
+    2026700349");
+  - this sample's log with its datagen sha256 changed;
+  - this sample's `.done` without its log.
+
+### Machine time and disk
+
+- **The generation: about 20 h 10 m.** S331's run of S331's datagen at these settings took 1160 s for 2400 games on
+  12 threads with the machine to itself: 7448 games an hour. DEC-349's "about 26 h" was the estimate made before that
+  run, from S122's old rate (about 9000 games an hour) times the smoke's 1.54 nodes a game. A top-up of G games takes
+  about G / 7448 h.
+- **`all`: about 10 min.** The void pool's took 6 min (`.tuning/s122_corpus.console`: the merge ended 05:50 and the
+  preparation 05:55). The new pool's rows are about 1.35 times as many: S331's games wrote 125.3 root rows a game,
+  the void pool 92.5.
+- **The sample: about 1 h 30 m.** The void sample took 73 min, at 9836 games an hour. The new rule's games read
+  7448 / 9000 = 0.83 of the old rate.
+- **The screen**, as pre-registered: about 19 h typical, up to 39 h more for an escalation, about 110 h at worst.
+  These figures are inferred. Measured on the void corpus: `landing-check` to P5's reading took 3 h 36 m (07:11 to
+  10:47, the margin's two rounds 45 min of it), and P6's 20000 pair about 1 h 50 m. That is a reading, not a plan.
+- **Disk: as first read, the new run did not fit beside the void one; since the void `prepared/` was deleted, it
+  does.**
+  - On 2026-11-04 at 00:06, 11 GB was free on `/`. After the coordinator deleted the void `prepared/`, 21 GB is free.
+  - The new pool needs about 4.3 GB (1.35 x the void's 3.18 GB). The preparation needs about 8.5 GB more (1.35 x the
+    void's 6.2 GB). The sample needs about 0.2 GB, the screen about 1 GB, and every screen stage refuses to start
+    under 4 GB free.
+  - The void outputs DEC-349 (1) moves aside hold about 12.3 GB: `corpus/` 5.0 GB, `prepared/` 6.2 GB, `topup/`
+    0.95 GB and `sample/` 0.16 GB.
+  - At 11 GB, the generation fit and `all` did not unless about 7 GB left the disk first. The coordinator deleted
+    the void `prepared/`, 6.2 GB. It is derived, rebuildable from the void pool by the scripts at `93db27a`, and its
+    `.txt` records are kept as `.tuning/coord/S122/void_prepared_*.txt`.
+  - At 21 GB: the pool takes about 4.3 GB and the preparation about 8.5 GB, leaving about 8 GB for the sample and
+    the screen, above the screen's 4 GB floor. Command 6 checks for 14 GB before `all`.
+
+### Commands for the coordinator, in order (DEC-349)
+
+Run them from the main checkout, in this order and one at a time. Every long stage prints its terminal marker as its
+last line, so each runs detached under a four-exit watcher (WATCHERS), its ceiling counting only while the machine is
+awake. **No commit while a screen, the margin or `side` runs**, since the screen freezes its tools at HEAD. A commit
+during the generation does not reach it: its datagen is frozen and its script is read whole before it runs.
+
+1. **Move the void outputs aside**, seconds, foreground. All of them are on one filesystem, so every `mv` is a rename.
+   - The void `prepared/` is not among them. The coordinator deleted it for disk: it is derived, rebuildable from the
+     void pool by the scripts at `93db27a`, and its `.txt` records are kept as
+     `.tuning/coord/S122/void_prepared_*.txt`.
+   - `screen_void_twofold/` stays where it is: it holds a registered git worktree, `variant_p6_1bb3080/tree`.
+   - `.tuning/s122/smoke/` stays too: it is the research pass's refused first sample, which `S122_corpus.sh smoke`
+     reads for the pipeline's shape and nothing else reads.
+   - Moving `s122/sample` is what keeps step 7 off the void sample. Since the fast check, `side_sample` also refuses
+     a sample on record whose log is not `SAMPLE_GAMES` games at `SAMPLE_SEED` by the frozen datagen.
+   ```
+   cd /home/max/ws/chesso/.tuning
+   test ! -e s122/void_twofold && mkdir s122/void_twofold
+   mv s122/corpus s122/topup s122/sample s122/void_twofold/
+   mv s122_merge.console s122_merge.pid s122_corpus.console s122_corpus_all.pid s122_sample.console \
+      s122_sample.pid s122_screen_all.console s122_screen_all_2.console s122_screen_all.pid s122/void_twofold/
+   ls s122    # no corpus, topup, prepared or sample
+   ```
+2. **Build and freeze**, about 2 min, foreground. This amendment must be committed first; it changes no file under
+   `src/` or `tools/`.
+   ```
+   cd /home/max/ws/chesso
+   cmake --build build -j12 && cmake --build build-tune -j12
+   adocs/data/S122_generate.sh freeze    # S122-GENERATE-FREEZE-DONE
+   ```
+   It prints the datagen sha256, expected `730f827ae9f8d702...` if `tools/` is still S331's, and bench 5482277.
+3. **`adocs/data/S122_corpus.sh seeds`**, about 20 s, foreground: `S122-CORPUS-SEEDS-DONE`, and the void runs' logs,
+   now under `s122/void_twofold/`, among the runs read. `corpus` runs this check again before it plays.
+4. **The generation.** About 20 h 10 m, so DEC-155's night unless nothing better needs the machine. Ceiling 40 h.
+   ```
+   nohup adocs/data/S122_generate.sh corpus > .tuning/s122_generate.console 2>&1 &
+   echo $! > .tuning/s122_generate.pid
+   ```
+   - Watch the console for `S122-GENERATE-CORPUS-(DONE|FAILED)`, with that PID, and a 144000 s ceiling.
+   - `.tuning/s122/corpus/generate.log` ends `S122-CORPUS-DONE` or `-FAILED`.
+   - It refuses to start under 6 GB free.
+5. **Only if the run must stop** (a shutdown), DEC-296's form, as the void pool was stopped and completed:
+   - `kill -TERM "$(cat .tuning/s122/corpus/datagen.pid)"`. Never the wrapper. The log then ends `exit 143`,
+     `S122-CORPUS-FAILED`.
+   - On resume: `nohup adocs/data/S122_generate.sh topup > .tuning/s122_topup.console 2>&1 &`, then
+     `echo $! > .tuning/s122_topup.pid`. It reads part 1's cut first (minutes), then plays `150000 - kept` games
+     under `TOPUP_SEED` 2026800349: about (150000 - kept) / 7448 h, ceiling twice that,
+     `S122-GENERATE-TOPUP-(DONE|FAILED)`.
+   - Then `nohup adocs/data/S122_corpus.sh merge > .tuning/s122_merge.console 2>&1 &` and
+     `echo $! > .tuning/s122_merge.pid`: about 5 min, ceiling 1 h, `S122-CORPUS-MERGE-DONE|FAILED`, as in the
+     superseded list's step 3.
+6. **`adocs/data/S122_corpus.sh all`**, about 10 min, ceiling 1 h. First `df -BG --output=avail /home/max/ws/chesso`
+   must read at least 14 GB: the preparation writes about 8.5 GB, and `S122_screen.sh` refuses every stage under
+   4 GB ("Machine time and disk", above). Then
+   `nohup adocs/data/S122_corpus.sh all > .tuning/s122_corpus.console 2>&1 &` and
+   `echo $! > .tuning/s122_corpus_all.pid`, marker `S122-CORPUS-ALL-DONE|FAILED`.
+7. **`nohup adocs/data/S122_screen.sh sample > .tuning/s122_sample.console 2>&1 &`, then
+   `echo $! > .tuning/s122_sample.pid`.** 12000 games at seed 2026700349, about 1 h 30 m, then `sample-prep`'s guard,
+   minutes. Ceiling 4 h, `S122-SAMPLE-DONE|FAILED`. A refusal by the guard is the coordinator's before step 8.
+8. **`nohup adocs/data/S122_screen.sh all > .tuning/s122_screen_all.console 2>&1 &`, then
+   `echo $! > .tuning/s122_screen_all.pid`**, on `build/` and `build-tune/` at HEAD, from the margin, under
+   DEC-345's caps. About 19 h typical, up to 39 h more for an escalation, about 110 h
+   at worst (inferred). The void corpus's own reading was 3 h 36 m to P5's reading. Ceiling twice the figure the run
+   is planned at, `S122-ALL-DONE|FAILED`. `MARGIN-STOP`, an identity refusal or a `STOP` stops for the coordinator.
+9. to 13. **The superseded list's steps 6 to 10, unchanged**: `side`, about 2 h, ceiling 4 h, on step 7's sample;
+   `S122_cost.sh` check and run; `apply` and phase 2; the candidate's cost; the one `{0, 5}` SPRT.
+
+Optional, deciding nothing: on a pool that finished in one run, `adocs/data/S331_measure.py` `read_command` checks the
+`repetition:` line against the files and reads the run's exposure. It holds every row of the three views in memory:
+about 56 M rows at 150000 games, inferred at well over the machine's 15 GB. So it is not run on the full pool as the
+script stands (finding below).
+
+### Findings beyond the task, not fixed
+
+- **Disk** (above): 11 GB free against about 14 GB for the pool, its preparation and the screen; `all` would have
+  failed short. Settled since by the coordinator, who deleted the void `prepared/`: 21 GB is free.
+- **`S331_measure.py read` cannot read a full pool.** `read_rows()` keeps every row of every view. On 150000 games
+  that is about 56 M tuples with their FENs, inferred at well over 15 GB. A streaming reader, or a `repetition:` check
+  over `games.tsv` and the root view alone, would make the check on the corpus that `--games-out` is there for.
+- **The preparation is guarded against the void pool only by the move.** `verify` takes a pool whose datagen predates
+  S331, and `prepared/`'s `.done` markers do not name the pool they came from (above, "What still guards only by the
+  move").
+- **`merge` writes no merged games file.** After a stop, the corpus's `games.tsv` is part 1's (in `part1/`) and the
+  top-up's (in `TOPUP`). A `repetition:` check on a merged pool would read the two parts apart, with part 1's closing
+  lines lost, as DEC-296 records for S082.
