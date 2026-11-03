@@ -1198,7 +1198,7 @@ TEST_SUITE("search: move ordering state")
   // Lynx's other published bug in this list does not exist here and is
   // deliberately not asserted. It charged the malus to moves whose make_move
   // had failed (PR #610), which needs a pseudo-legal generator; chesso's
-  // generate_moves() emits legal moves only (src/bitboard.cpp:885) and
+  // generate_moves() emits legal moves only (INV-1) and
   // make_move refuses only on a full game-history stack, which the search
   // cannot reach. Building the span after a successful make_move is still the
   // right shape and costs nothing, but a case asserting that no illegal move
@@ -5548,10 +5548,10 @@ TEST_SUITE("search: draws")
       // answer. Measured, not reasoned about: `python-chess`
       // `Board.is_insufficient_material()` over these three FENs returns
       // **True**, False, False, and its bishops are b1 and g2, both light.
-      // src/search.cpp:264 returns DRAW_SCORE off this function at every node
-      // above the root, so agreeing with the rule would change what the search
-      // scores and is an SPRT, not a test edit. S067 pins the disagreement
-      // rather than resolving it. 2026-08-14_test_review-F05.
+      // negamax_at() in src/search.cpp returns DRAW_SCORE off this function
+      // at every node above the root, so agreeing with the rule would change
+      // what the search scores and is an SPRT, not a test edit. S067 pins the
+      // disagreement rather than resolving it. 2026-08-14_test_review-F05.
       {"7k/8/8/8/8/8/6b1/KB6 w - - 0 1",     false, "two bishops, same square colour: chesso says a mate is still possible, python-chess says dead"},
       {"7k/8/8/8/8/8/7b/KB6 w - - 0 1",      false, "two bishops, opposite square colours"},
       {"6nk/8/8/8/8/8/8/KB6 w - - 0 1",      false, "a bishop against a knight"},

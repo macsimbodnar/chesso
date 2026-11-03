@@ -1,0 +1,90 @@
+# S323 identity: what the comment edits leave of each file, old (b3739e9) against the worktree. S321_identity.txt's form.
+# Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show b3739e9:<file>` and over the new
+#      file, compared whole; the bytes and hash below are the stripped output. Machine: i7-8700K, g++ 13.3, 2026-11-03.
+# Python, S306's form: `ast.dump` with every module, class and function docstring removed, compared whole, and the `tokenize`
+#      stream with comments dropped and every docstring's lines skipped; then which docstrings changed.
+# CMake: `git diff -U0 b3739e9 -- <file>`, every changed line a `#` comment by script, printed and read by eye; the generated
+#      build files compared below, with the objects.
+base b3739e9; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+  DIFFER  python, return 1 / return 2, ast and tokens
+  SAME    python, a one-line docstring made two lines and a comment added, ast and tokens
+
+C++: g++ -fpreprocessed -dD -E -P, old against new; line counts old and new
+  SAME  tools/corpus_dedupe.hpp  2922 bytes  sha256 03a343a50fbdc8d5  lines 206 -> 206
+  SAME  tools/tuner_split.hpp  4865 bytes  sha256 3529b106a0b764a3  lines 344 -> 344
+  SAME  tests/test_audit_fen_semantics.cpp  11078 bytes  sha256 e6fbdad0f6436c95  lines 586 -> 586
+  SAME  tests/test_helpers.hpp  10429 bytes  sha256 65f6a72e487ecfc0  lines 481 -> 481
+  SAME  tests/test_search.cpp  272499 bytes  sha256 060220bbe796a841  lines 15598 -> 15598
+  SAME  tests/test_evaluation.cpp  80582 bytes  sha256 182c31fbec6064a4  lines 3163 -> 3163
+
+Python: ast without docstrings; tokens with comments and docstrings out
+  SAME ast  SAME tokens  tools/mutants/time.py  1 docstrings, 0 changed
+
+CMake: changed lines of git diff -U0, each a comment by this script's test (optional space, then #)
+  ONLY COMMENTS  tests/CMakeLists.txt
+    -# round and the 2696 positions of the JSON suites, the clamp binding on 478 of
+    -# them -- and every coefficient is the count its index names, against
+    -# counts the trace did not take. Since S276 it also holds the four positions
+    -# pinned for the truncation bound, moved from test_eval_model with the mirror.
+    -# No dataset, so it is a fast test like the rest.
+    +# round and the 2696 positions of the JSON suites, the clamp binding on 492 of
+    +# them at S321 on `d0220d1`, 246 each way, where no curated row does (478 of
+    +# the 2764 positions the list held at `f57b92f` bound it) -- and every
+    +# coefficient is the count its index names, against counts the trace did not
+    +# take. Since S276 it also holds the four positions pinned for the truncation
+    +# bound, moved from test_eval_model with the mirror. No dataset, so it is a
+    +# fast test like the rest.
+
+S323-IDENTITY-SOURCES HOLD
+
+Objects: every .o and .a of build/ and build-tune/, and their generated chesso_build_info.hpp, CTestTestfile.cmake,
+  flags.make, link.txt and compile_commands.json, snapshotted at b3739e9 before any edit (stamps "b3739e9"), against
+  the edited tree rebuilt with CCACHE_DISABLE=1, so every recompile is a real one. cmp, byte for byte.
+    DIFFER  build/generated/chesso_build_info.hpp
+    DIFFER  build/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o
+    DIFFER  build/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o
+    DIFFER  build/src/libchesso_engine.a
+    DIFFER  build/src/libchesso_engine_trace.a
+    DIFFER  build/tests/CTestTestfile.cmake
+    DIFFER  build/tools/CMakeFiles/tuner.dir/tuner.cpp.o
+    DIFFER  build-tune/generated/chesso_build_info.hpp
+    DIFFER  build-tune/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o
+    DIFFER  build-tune/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o
+    DIFFER  build-tune/src/libchesso_engine.a
+    DIFFER  build-tune/src/libchesso_engine_trace.a
+    DIFFER  build-tune/tests/CTestTestfile.cmake
+    DIFFER  build-tune/tools/CMakeFiles/tuner.dir/tuner.cpp.o
+  compared: 340; byte-equal 326; differ 14
+
+  Every object whose gcc dependency file names an edited C++ source was recompiled after the edit:
+  build: 24 objects depend on an edited source; 24 recompiled after the edit
+  build-tune: 24 objects depend on an edited source; 24 recompiled after the edit
+
+  The generated header differs by the stamp alone, "b3739e9" -> "b3739e9-dirty":
+    STAMP ONLY  build/generated/chesso_build_info.hpp
+    STAMP ONLY  build-tune/generated/chesso_build_info.hpp
+  The six stamped objects, each recompiled by its own command from its unchanged source against the base header:
+    BYTE-EQUAL  build/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since b3739e9) against the base header, by its own command
+    BYTE-EQUAL  build/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since b3739e9) against the base header, by its own command
+    BYTE-EQUAL  build/tools/CMakeFiles/tuner.dir/tuner.cpp.o recompiled from tools/tuner.cpp (unchanged since b3739e9) against the base header, by its own command
+  build: STAMPED OBJECTS EXPLAINED
+    BYTE-EQUAL  build-tune/src/CMakeFiles/chesso_engine.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since b3739e9) against the base header, by its own command
+    BYTE-EQUAL  build-tune/src/CMakeFiles/chesso_engine_trace.dir/chesso.cpp.o recompiled from src/chesso.cpp (unchanged since b3739e9) against the base header, by its own command
+    BYTE-EQUAL  build-tune/tools/CMakeFiles/tuner.dir/tuner.cpp.o recompiled from tools/tuner.cpp (unchanged since b3739e9) against the base header, by its own command
+  build-tune: STAMPED OBJECTS EXPLAINED
+  The archives, by ar x and cmp member by member:
+    build/src/libchesso_engine.a: 10 members, same member list, differing: chesso.cpp.o
+    build/src/libchesso_engine_trace.a: 10 members, same member list, differing: chesso.cpp.o
+    build-tune/src/libchesso_engine.a: 10 members, same member list, differing: chesso.cpp.o
+    build-tune/src/libchesso_engine_trace.a: 10 members, same member list, differing: chesso.cpp.o
+  The CTest file records each test's tests/CMakeLists.txt call lines, CMake's __LINE__; the S262 comment grew two:
+    BYTE-EQUAL  build/tests/CTestTestfile.cmake: the base's with each tests/CMakeLists.txt line past 235 read two more (40 of 168 line fields moved, 128 before the comment kept)
+    BYTE-EQUAL  build-tune/tests/CTestTestfile.cmake: the base's with each tests/CMakeLists.txt line past 235 read two more (40 of 168 line fields moved, 128 before the comment kept)
+  Those fourteen are the only files that differ, and each is accounted for above.
+  Bench 5482277 in build and 5482277 in build-tune, the parent's 5482277.
+
+S323-IDENTITY HOLDS

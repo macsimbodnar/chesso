@@ -45,6 +45,8 @@ m("M33_soft_limit_unbounded", C, "time",
 # `previous_score` and `previous_score_ready` are set but never read, so the
 # mutant is stillborn instead of measured. Observed: the first form failed to
 # compile at src/chesso.cpp:823, `variable 'previous_score' set but not used`.
+# The line number is `0abe648`'s, where line 823 declares `previous_score`:
+# it is part of the observation, not a pointer into this tree.
 m("M34_score_drop_always_zero", C, "time",
   'the loop passes a constant zero fall to the time manager',
   ('      const int score_drop =\n          previous_score_ready\n              ? std::max(0, previous_score - search_result.score)\n              : 0;',

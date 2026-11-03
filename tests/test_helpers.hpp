@@ -109,8 +109,8 @@ inline bool position_is_reachable(game_t* game)
 
 // generate_moves() is legal-only (INV-1), so there is nothing here to filter:
 // every move it produces survives make_move(), and make_move() has exactly one
-// way to refuse - the history stack overflow guard at src/bitboard.cpp:754,
-// which no test position can reach.
+// way to refuse - the history stack overflow guard in src/bitboard.cpp's
+// make_move_impl(), which no test position can reach.
 //
 // The comment above this said the opposite until S067, and the body read as a
 // filter at all of its call sites. It asserts the property instead: a

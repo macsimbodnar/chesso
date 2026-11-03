@@ -11,17 +11,17 @@
 // corrupt the board in a Release build:
 //
 //   1. castling rights with the king or rook not on its castling square. The
-//      generator's castling block (src/bitboard.cpp:395-435) tests the rights
-//      bits, the empty squares and the attacked squares, and never that the
-//      king stands on e1/e8 or the rook on its corner. make_move() then moves
-//      a rook — castling_rook() answers from the target square, not from the
-//      board (src/bitboard.cpp:645-659) — and move_piece()'s xors *create*
-//      pieces on squares that were empty.
+//      generator's castling block (generate_moves_body()'s CASTLING section
+//      in src/bitboard.cpp) tests the rights bits, the empty squares and the
+//      attacked squares, and never that the king stands on e1/e8 or the rook
+//      on its corner. make_move() then moves a rook — castling_rook() answers
+//      from the target square, not from the board (src/bitboard.cpp) — and
+//      move_piece()'s xors *create* pieces on squares that were empty.
 //
 //   2. an en-passant square on any rank. load_FEN() checks only that the
-//      square parses (src/bitboard.cpp:1755-1765); an ep square whose victim
-//      square holds no enemy pawn licenses an en-passant capture whose
-//      remove_piece() xor *adds* the missing pawn.
+//      square parses (its "3. En passant target square" in src/bitboard.cpp);
+//      an ep square whose victim square holds no enemy pawn licenses an
+//      en-passant capture whose remove_piece() xor *adds* the missing pawn.
 //
 // The assertions below state the correct behaviour — no castling move and no
 // en-passant capture may be generated from these positions — so they are

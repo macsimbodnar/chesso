@@ -229,11 +229,13 @@ endforeach()
 
 # S262: the trace build's contract. The trace, scored the engine's way, is
 # evaluate() exactly on every position here -- the curated list both ways
-# round and the 2696 positions of the JSON suites, the clamp binding on 478 of
-# them -- and every coefficient is the count its index names, against
-# counts the trace did not take. Since S276 it also holds the four positions
-# pinned for the truncation bound, moved from test_eval_model with the mirror.
-# No dataset, so it is a fast test like the rest.
+# round and the 2696 positions of the JSON suites, the clamp binding on 492 of
+# them at S321 on `d0220d1`, 246 each way, where no curated row does (478 of
+# the 2764 positions the list held at `f57b92f` bound it) -- and every
+# coefficient is the count its index names, against counts the trace did not
+# take. Since S276 it also holds the four positions pinned for the truncation
+# bound, moved from test_eval_model with the mirror. No dataset, so it is a
+# fast test like the rest.
 add_trace_doctest_target(test_eval_trace)
 target_include_directories(test_eval_trace PRIVATE ../tools)
 

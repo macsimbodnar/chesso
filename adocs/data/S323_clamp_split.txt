@@ -1,0 +1,85 @@
+# S323: the clamp case's two counters split by the three parts of its list, re-read on b3739e9's code, 2026-11-03,
+# the i7-8700K beside the coordinator's 12-thread datagen (the counts are integers and do not move with load).
+# What tests/CMakeLists.txt's S262 comment now says, and DEV_MANUAL.md's sentence S321 corrected: the 2696 JSON
+# rows bind the clamp 246 high and 246 low, no curated row binds it. S321 read the same on d0220d1.
+#
+# Method, S321's (adocs/plan_done/S321_false_comment_tail.md, row 1): a scratch copy of tests/test_eval_trace.cpp
+# with the case below appended, never committed, compiled by test_eval_trace's own command from
+# build/compile_commands.json and linked to build/src/libchesso_engine_trace.a by its link.txt. Its order is
+# positions_with_truncation_rows()'s: the curated rows both ways round, all_test_fens(), the pinned truncation rows
+# both ways round. Control: the shipped case, "the trace reconstructs evaluate() exactly, clamp included", run from
+# build/ and from the scratch binary under --success, logs the totals the split sums to.
+#
+# The appended case:
+#
+#
+#   // S323's scratch addition, appended to a copy of tests/test_eval_trace.cpp and
+#   // never committed: the shipped clamp case's two counters, split by the three
+#   // parts positions_with_truncation_rows() concatenates in order -- the curated
+#   // rows both ways round, all_test_fens(), the pinned truncation rows both ways
+#   // round. Same weights, margin and parts as the shipped case.
+#   TEST_CASE_FIXTURE(trace_fixture_t, "S323 scratch: the clamp counters by part")
+#   {
+#     const std::vector<int64_t> weights = tuner_trace::engine_weights();
+#     const int64_t margin = LAZY_EVAL_MARGIN;
+#     const std::vector<std::string> fens = positions_with_truncation_rows();
+#     const size_t curated = 2 * test_eval_positions::positions.size();
+#     const size_t json = all_test_fens().size();
+#     const size_t pinned = 2 * truncation_positions.size();
+#     REQUIRE(fens.size() == curated + json + pinned);
+#
+#     size_t rows[3] = {0, 0, 0};
+#     size_t high[3] = {0, 0, 0};
+#     size_t low[3] = {0, 0, 0};
+#
+#     for (size_t i = 0; i < fens.size(); ++i) {
+#       const size_t part = (i < curated) ? 0 : (i < curated + json) ? 1 : 2;
+#       row_trace_t trace;
+#       const dataset_t data = trace_of(fens[i], &trace);
+#       const tuner_trace::exact_parts_t parts =
+#           tuner_trace::exact_parts(data, 0, weights.data());
+#       const int64_t two = parts.mobility + parts.safety;
+#       rows[part]++;
+#       if (two > margin) { high[part]++; }
+#       if (two < -margin) { low[part]++; }
+#     }
+#
+#     const char* names[3] = {"curated", "json", "pinned"};
+#     for (int part = 0; part < 3; ++part) {
+#       const std::string line = std::string("S323-SPLIT ") + names[part] +
+#                                " rows " + std::to_string(rows[part]) +
+#                                " high " + std::to_string(high[part]) +
+#                                " low " + std::to_string(low[part]);
+#       MESSAGE(line);
+#     }
+#     const std::string total = std::string("S323-SPLIT total rows ") +
+#             std::to_string(rows[0] + rows[1] + rows[2]) + " high " +
+#             std::to_string(high[0] + high[1] + high[2]) + " low " +
+#             std::to_string(low[0] + low[1] + low[2]) + " margin " +
+#             std::to_string(margin);
+#     MESSAGE(total);
+#   }
+
+the split, scratch binary, --test-case='S323 scratch: the clamp counters by part'
+  S323-SPLIT curated rows 212 high 0 low 0
+  S323-SPLIT json rows 2696 high 246 low 246
+  S323-SPLIT pinned rows 8 high 0 low 0
+  S323-SPLIT total rows 2916 high 246 low 246 margin 184
+  [doctest] test cases:    1 |    1 passed | 0 failed | 12 skipped
+  [doctest] assertions: 5951 | 5951 passed | 0 failed |
+
+the control, the shipped case under --success, its logged counters (each printed three times, once per context)
+  build/tests/test_eval_trace:
+    clamped_high := 246
+    clamped_low := 246
+    logged: checked := 2916
+    [doctest] test cases:     1 |     1 passed | 0 failed | 11 skipped
+    [doctest] assertions: 11785 | 11785 passed | 0 failed |
+  scratch:
+    clamped_high := 246
+    clamped_low := 246
+    logged: checked := 2916
+    [doctest] test cases:     1 |     1 passed | 0 failed | 12 skipped
+    [doctest] assertions: 11785 | 11785 passed | 0 failed |
+
+S323-SPLIT READ

@@ -17,7 +17,7 @@
 //
 // **The key is the engine's, not the FEN text.** Two FENs that differ only in
 // halfmove clock or fullmove number are the same position to `evaluate()`, and
-// `compute_full_hash()` at `src/bitboard.cpp:1518-1545` covers exactly the four
+// `compute_full_hash()` in `src/bitboard.cpp` covers exactly the four
 // FEN fields that decide one: placement, side to move, castling rights and the
 // en passant square. Keying on the text would treat a clock as a position, and
 // it would inherit the defect S042 is open on -- `make_move` writes an en
@@ -124,7 +124,7 @@ inline bool position_key(const std::string& fen, game_t* game, uint64_t* key)
 // Deterministic by construction: single threaded, one pass, output in input
 // order, and the decision to write depends only on the keys of the rows before
 // it. The key itself is stable across processes because init_zobrist() is
-// fixed-seed (`src/bitboard.cpp:2597`).
+// fixed-seed (`CHESSO_PROJECT_SEED` in `src/bitboard.cpp`).
 inline bool run(std::istream& in,
                 std::ostream& out,
                 bool verify,

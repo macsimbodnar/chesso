@@ -5,9 +5,9 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-02, by hand.
+Updated: 2026-11-03, by hand.
 
-## 2026-11-03: resumed; the top-up running, the merge stage being written
+## 2026-11-03: resumed; the top-up running; S322 and S323 done
 
 **Running: the top-up**, `.tuning/s122/topup/run.sh`, run.sh pid in `pid`. It started 2026-11-03 00:24: 47588 games, seed
 2026300203, the frozen datagen (sha a6194102...), about 4.8 h. Marker `S122-TOPUP-DONE|FAILED` in `topup.log`, which also prints an
@@ -31,8 +31,13 @@ checks: the first found two low findings, fixed.
 
 **S322 done** (filler, no `src/` or `tools/`): `CHESSO_SOURCE_DIR` is defined once in `add_doctest_target_linking`. A planted binary
 reads red from the root on the parent and green from every directory after. The tallies of all 27 binaries are unchanged. The build's
-assets copy stays, because six golden re-derivers under `adocs/data/` read it; S324 moves them. Next filler: S323, then S324, landed
-before the screen or after it.
+assets copy stays, because six golden re-derivers under `adocs/data/` read it; S324 moves them.
+
+**S323 done** (filler, comments only): ten stale line-number citations in comments under `src/`, `tools/` and `tests/` now cite a
+symbol or a phrase. The S262 comment's clamp count agrees with `DEV_MANUAL.md` (492 of 2696 at S321). Code identical by
+`adocs/data/S323_identity.txt`, bench 5482277. A clean reader found nothing. Beyond its rows it found four stale citations in
+`DEV_MANUAL.md` and `corpus_dedupe.hpp`'s sentence that S042 is open; S325 holds them. Next filler: S324, then S325, landed before
+the screen or after it.
 
 ## 2026-11-02 18:45: shutdown by the owner; S122's corpus stopped at 102412 games, a top-up owed
 

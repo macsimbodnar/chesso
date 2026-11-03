@@ -91,9 +91,9 @@ namespace tuner_split
 
 // The half-move a position stands at, counted from the start of the game. What
 // makes it usable as a boundary detector is that make_move() only ever advances
-// it: `src/bitboard.cpp:883` increments the full-move counter after Black
-// moves, and the side to move alternates, so this is strictly increasing over a
-// game's positions whatever the search does in between.
+// it: make_move_impl() in `src/bitboard.cpp` increments the full-move counter
+// after Black moves, and the side to move alternates, so this is strictly
+// increasing over a game's positions whatever the search does in between.
 inline uint32_t ply_index(uint32_t fullmove, bool black_to_move)
 { return 2 * (fullmove - 1) + (black_to_move ? 1 : 0); }
 

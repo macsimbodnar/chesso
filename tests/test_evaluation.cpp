@@ -347,10 +347,10 @@ TEST_SUITE("evaluation: score")
   // constants does. The queen is the one to read carefully: 1101 to 715 is not
   // a claim that she lost 386 centipawns of value. DEC-059 re-anchored her,
   // subtracting 432 from QUEEN and adding it back to all 128 of her squares,
-  // which tuner.cpp:26-30 documents as the same evaluation -- six of these
-  // seven positions came out identical either way and this one moved by one
-  // centipawn, 716 to 715, on a truncation that crosses zero. A fitted material
-  // value only means anything together with its own tables.
+  // which tuner.cpp documents as the same evaluation ("degenerate on purpose")
+  // -- six of these seven positions came out identical either way and this one
+  // moved by one centipawn, 716 to 715, on a truncation that crosses zero. A
+  // fitted material value only means anything together with its own tables.
   //
   // S076's refit on the deduplicated corpus moved five of the six again -- 125,
   // 211, 279, 509, 715 to 135, 244, 325, 563, 787, the bare kings still
