@@ -1,0 +1,1665 @@
+# S124's research pass, 2026-11-03: adocs/data/S124_census.sh's stages, verbatim.
+# Counts, labels at K 0.7433 on the training corpus only, and Syzygy probes on training rows.
+
+################ c_corpus
+S124 census of .tuning/s122/prepared/corpus.tsv
+rows 6230857 games 137994 traced 6230857 identity_mismatches 0 smooth_mismatches 0
+labels: result column read at K 0.7433
+
+men on the board (kings included): rows
+  men  3 8352
+  men  4 21474
+  men  5 50324
+  men  6 73990
+  men  7 99189
+  men  8 120277
+  men  9 140672
+  men 10 158087
+  men 11 174823
+  men 12 188156
+  men 13 198877
+  men 14 207529
+  men 15 212866
+  men 16 220881
+  men 17 220523
+  men 18 231027
+  men 19 226886
+  men 20 240856
+  men 21 228456
+  men 22 256014
+  men 23 236496
+  men 24 278446
+  men 25 240805
+  men 26 310535
+  men 27 241480
+  men 28 357817
+  men 29 239385
+  men 30 415439
+  men 31 219418
+  men 32 411777
+
+cases, first that holds (of all rows):
+  DEAD                   rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  LONE                   rows     13274    0.213 %  games    3500  eg_mass    12337.2  |E1|w   564.6  |E2|w   16.7  split 20
+  OCB_PURE               rows     28600    0.459 %  games    2624  eg_mass    26216.7  |E1|w   202.6  |E2|w   19.6  split 852
+  OCB_ROOK               rows     57432    0.922 %  games    5228  eg_mass    43074.0  |E1|w   148.0  |E2|w   21.9  split 2971
+  OCB_OTHER              rows    289610    4.648 %  games   28012  eg_mass   134160.2  |E1|w   120.2  |E2|w   17.6  split 18700
+  PAWNS                  rows   5827957   93.534 %  games  137979  eg_mass  2037827.0  |E1|w    85.2  |E2|w   13.6  split 608027
+  NONE                   rows     13984    0.224 %  games   11698  eg_mass     3572.3  |E1|w     0.0  |E2|w    9.5  split 0
+
+PAWNS by P (the strong side's pawns) and d (its men's phase units less the other's):
+  P=0 d<=-1              rows        88    0.001 %  games      30  eg_mass       60.1  |E1|w    62.6  |E2|w   57.6  split 42
+  P=0 d=0                rows      8645    0.139 %  games    1932  eg_mass     7085.2  |E1|w    35.7  |E2|w   22.1  split 1668
+  P=0 d=1                rows     24090    0.387 %  games    3176  eg_mass    19680.3  |E1|w   201.3  |E2|w   25.8  split 208
+  P=0 d=2                rows     11566    0.186 %  games    2062  eg_mass     9333.7  |E1|w   347.6  |E2|w   30.9  split 15
+  P=0 d>=3               rows      3001    0.048 %  games     851  eg_mass     2312.1  |E1|w   410.1  |E2|w   58.7  split 0
+  P=1 d<=-1              rows      1620    0.026 %  games     615  eg_mass     1268.3  |E1|w    58.7  |E2|w   38.9  split 556
+  P=1 d=0                rows     56713    0.910 %  games   10130  eg_mass    45678.8  |E1|w   128.5  |E2|w   23.1  split 3426
+  P=1 d=1                rows     54954    0.882 %  games    9253  eg_mass    43036.9  |E1|w   264.3  |E2|w   25.7  split 412
+  P=1 d=2                rows     17999    0.289 %  games    3901  eg_mass    13818.2  |E1|w   389.9  |E2|w   32.3  split 21
+  P=1 d>=3               rows      2725    0.044 %  games     878  eg_mass     1974.2  |E1|w   388.9  |E2|w   56.9  split 0
+  P=2 d<=-1              rows      6841    0.110 %  games    2072  eg_mass     5262.1  |E1|w    99.9  |E2|w   36.7  split 1497
+  P=2 d=0                rows    133016    2.135 %  games   23413  eg_mass   103296.2  |E1|w   159.8  |E2|w   25.3  split 7712
+  P=2 d=1                rows    102488    1.645 %  games   18196  eg_mass    75441.6  |E1|w   268.3  |E2|w   25.8  split 1218
+  P=2 d=2                rows     25738    0.413 %  games    5667  eg_mass    18087.1  |E1|w   366.5  |E2|w   31.3  split 59
+  P=2 d>=3               rows      3129    0.050 %  games     989  eg_mass     2070.8  |E1|w   368.1  |E2|w   51.2  split 0
+  P=3 d<=-1              rows     14685    0.236 %  games    4119  eg_mass    10666.1  |E1|w   111.5  |E2|w   35.8  split 2871
+  P=3 d=0                rows    235847    3.785 %  games   41004  eg_mass   167570.2  |E1|w   145.5  |E2|w   24.4  split 15706
+  P=3 d=1                rows    163500    2.624 %  games   28637  eg_mass   107852.7  |E1|w   242.1  |E2|w   24.2  split 3070
+  P=3 d=2                rows     33140    0.532 %  games    7260  eg_mass    21071.2  |E1|w   338.2  |E2|w   30.4  split 140
+  P=3 d>=3               rows      3480    0.056 %  games    1081  eg_mass     2067.9  |E1|w   344.2  |E2|w   46.5  split 0
+  P=4 d<=-1              rows     23577    0.378 %  games    6675  eg_mass    15070.3  |E1|w   101.3  |E2|w   31.4  split 4261
+  P=4 d=0                rows    397564    6.381 %  games   62732  eg_mass   236072.4  |E1|w   112.2  |E2|w   21.3  split 30836
+  P=4 d=1                rows    216466    3.474 %  games   37122  eg_mass   121036.6  |E1|w   206.4  |E2|w   21.3  split 5405
+  P=4 d=2                rows     34470    0.553 %  games    7252  eg_mass    19249.0  |E1|w   309.1  |E2|w   27.3  split 107
+  P=4 d>=3               rows      2923    0.047 %  games     958  eg_mass     1544.5  |E1|w   324.0  |E2|w   42.4  split 0
+  P=5 d<=-1              rows     33729    0.541 %  games    9057  eg_mass    18351.0  |E1|w    84.7  |E2|w   26.6  split 5264
+  P=5 d=0                rows    641467   10.295 %  games   86475  eg_mass   282103.3  |E1|w    75.4  |E2|w   16.5  split 60279
+  P=5 d=1                rows    240173    3.855 %  games   38109  eg_mass   107308.1  |E1|w   165.7  |E2|w   17.8  split 6750
+  P=5 d=2                rows     25472    0.409 %  games    5376  eg_mass    12292.5  |E1|w   273.7  |E2|w   25.1  split 61
+  P=5 d>=3               rows      1887    0.030 %  games     606  eg_mass      879.0  |E1|w   307.1  |E2|w   34.9  split 0
+  P=6 d<=-1              rows     36283    0.582 %  games    8822  eg_mass    15958.4  |E1|w    65.9  |E2|w   21.0  split 4830
+  P=6 d=0                rows    921609   14.791 %  games  106684  eg_mass   256805.3  |E1|w    42.5  |E2|w   11.2  split 110822
+  P=6 d=1                rows    206804    3.319 %  games   29989  eg_mass    65314.4  |E1|w   117.4  |E2|w   13.6  split 5683
+  P=6 d=2                rows     14137    0.227 %  games    2764  eg_mass     5430.6  |E1|w   224.1  |E2|w   20.3  split 47
+  P=6 d>=3               rows       727    0.012 %  games     261  eg_mass      281.7  |E1|w   251.1  |E2|w   33.3  split 0
+  P=7 d<=-1              rows     22381    0.359 %  games    5423  eg_mass     7324.9  |E1|w    47.8  |E2|w   16.1  split 2940
+  P=7 d=0                rows   1044859   16.769 %  games  117847  eg_mass   144860.0  |E1|w    18.2  |E2|w    6.1  split 165299
+  P=7 d=1                rows    150942    2.422 %  games   20118  eg_mass    26812.6  |E1|w    64.2  |E2|w    8.6  split 2971
+  P=7 d=2                rows      5833    0.094 %  games    1133  eg_mass     1545.0  |E1|w   154.1  |E2|w   15.9  split 9
+  P=7 d>=3               rows       204    0.003 %  games      83  eg_mass       70.3  |E1|w   237.8  |E2|w   26.0  split 0
+  P=8 d<=-1              rows      6531    0.105 %  games    1814  eg_mass     1278.3  |E1|w    24.5  |E2|w   10.9  split 1136
+  P=8 d=0                rows    825421   13.247 %  games  115414  eg_mass    33483.2  |E1|w     4.6  |E2|w    2.0  split 162446
+  P=8 d=1                rows     68795    1.104 %  games   10126  eg_mass     6743.6  |E1|w    35.2  |E2|w    5.3  split 260
+  P=8 d=2                rows      2346    0.038 %  games     512  eg_mass      348.0  |E1|w    87.2  |E2|w   11.4  split 0
+  P=8 d>=3               rows        92    0.001 %  games      22  eg_mass       30.5  |E1|w   231.7  |E2|w   18.6  split 0
+
+OCB_PURE by P:
+  P=0                    rows       231    0.004 %  games      46  eg_mass      211.7  |E1|w    30.6  |E2|w   10.0  split 13
+  P=1                    rows      2367    0.038 %  games     329  eg_mass     2169.8  |E1|w   130.4  |E2|w   15.2  split 124
+  P=2                    rows      5803    0.093 %  games     862  eg_mass     5319.4  |E1|w   192.5  |E2|w   19.0  split 154
+  P=3                    rows      7685    0.123 %  games    1227  eg_mass     7044.6  |E1|w   216.9  |E2|w   20.3  split 216
+  P=4                    rows      6540    0.105 %  games    1089  eg_mass     5995.0  |E1|w   222.9  |E2|w   20.2  split 191
+  P=5                    rows      3965    0.064 %  games     715  eg_mass     3634.6  |E1|w   208.1  |E2|w   20.0  split 99
+  P=6                    rows      1630    0.026 %  games     282  eg_mass     1494.2  |E1|w   212.2  |E2|w   22.1  split 48
+  P=7                    rows       291    0.005 %  games      53  eg_mass      266.7  |E1|w   195.3  |E2|w   19.4  split 7
+  P=8                    rows        21    0.000 %  games       3  eg_mass       19.2  |E1|w   412.8  |E2|w   34.4  split 0
+
+the proposal's cells:
+  P=0 d<=0               rows      8733    0.140 %  games    1957  eg_mass     7145.3  |E1|w    35.9  |E2|w   22.4  split 1710
+  P=0 d=1                rows     24090    0.387 %  games    3176  eg_mass    19680.3  |E1|w   201.3  |E2|w   25.8  split 208
+  P=0 d>=2               rows     14567    0.234 %  games    2840  eg_mass    11645.8  |E1|w   360.5  |E2|w   36.7  split 15
+  P=1 d<=0               rows     58333    0.936 %  games   10568  eg_mass    46947.0  |E1|w   126.5  |E2|w   23.5  split 3982
+  P=1 d=1                rows     54954    0.882 %  games    9253  eg_mass    43036.9  |E1|w   264.3  |E2|w   25.7  split 412
+  P=1 d>=2               rows     20724    0.333 %  games    4649  eg_mass    15792.4  |E1|w   389.7  |E2|w   35.5  split 21
+  P=2 d<=0               rows    139857    2.245 %  games   24868  eg_mass   108558.4  |E1|w   156.8  |E2|w   25.9  split 9209
+  P=2 d=1                rows    102488    1.645 %  games   18196  eg_mass    75441.6  |E1|w   268.3  |E2|w   25.8  split 1218
+  P=2 d>=2               rows     28867    0.463 %  games    6400  eg_mass    20157.9  |E1|w   366.7  |E2|w   33.5  split 59
+  OCB_PURE P<=2          rows      8401    0.135 %  games    1047  eg_mass     7700.9  |E1|w   170.6  |E2|w   17.7  split 291
+  OCB_PURE P=3-4         rows     14225    0.228 %  games    1747  eg_mass    13039.6  |E1|w   219.6  |E2|w   20.3  split 407
+  OCB_PURE P>=5          rows      5907    0.095 %  games     840  eg_mass     5414.8  |E1|w   209.3  |E2|w   20.6  split 154
+  OCB_ROOK               rows     57308    0.920 %  games    5223  eg_mass    42981.0  |E1|w   148.3  |E2|w   21.9  split 2971
+  MOPUP                  rows      9742    0.156 %  games    2087  eg_mass     8929.6  |E1|w   597.4  |E2|w   17.0  split 0
+  MOPUP of it KBN        rows      1954    0.031 %  games     212  eg_mass     1791.2  |E1|w   682.6  |E2|w   18.1  split 0
+  LONE other             rows      3532    0.057 %  games    1490  eg_mass     3407.6  |E1|w   474.2  |E2|w   15.7  split 20
+
+LONE by signature:
+  KRvK                     rows     7355 games    1802
+  KBNvK                    rows     1954 games     212
+  KBP1vK                   rows     1016 games     225
+  KP1vK                    rows      996 games     510
+  KRP1vK                   rows      448 games     230
+  KBBvK                    rows      420 games      69
+  KP2vK                    rows      256 games     189
+  KNNvK                    rows      245 games      28
+  KNP1vK                   rows      170 games      92
+  KBP2vK                   rows      129 games      51
+  KNP2vK                   rows       82 games      56
+  KP3vK                    rows       77 games      57
+  KRP2vK                   rows       38 games      29
+  KBNP1vK                  rows       38 games      18
+  KBP3vK                   rows       12 games      10
+  KRNvK                    rows       10 games       7
+  KNP3vK                   rows       10 games       9
+  KP4vK                    rows        4 games       4
+  KRP3vK                   rows        2 games       1
+  KRBvK                    rows        2 games       1
+  KQP1vK                   rows        2 games       2
+  KNNP1vK                  rows        2 games       2
+  KBP4vK                   rows        2 games       2
+  KQvK                     rows        1 games       1
+  KQP3vK                   rows        1 games       1
+  KQP2vK                   rows        1 games       1
+  KBBP1vK                  rows        1 games       1
+
+signatures at phase <= 6, top 60 by rows:
+  KRP2vKRP1                    rows    21359 games    5060
+  KRP3vKRP2                    rows    21311 games    5735
+  KRP1vKR                      rows    17158 games    3243
+  KRP4vKRP3                    rows    16779 games    4724
+  KRP2vKR                      rows    15776 games    2838
+  KRP3vKRP1                    rows    13104 games    3464
+  KRP3vKRP3                    rows    12334 games    3277
+  KRP2vKRP2                    rows    12267 games    3196
+  KRP5vKRP4                    rows    10264 games    3004
+  KRP4vKRP2                    rows    10183 games    2945
+  KRP4vKRP4                    rows     9162 games    2527
+  KRP1vKRP1                    rows     8982 games    2214
+  KRNP4vKRNP3                  rows     8052 games    2198
+  KRNP4vKRBP3                  rows     7948 games    2217
+  KRBP4vKRNP3                  rows     7658 games    2170
+  KRNP5vKRBP4                  rows     7495 games    2037
+  KRvK                         rows     7355 games    1802
+  KRBP5vKRNP4                  rows     7139 games    1898
+  KRNP5vKRNP4                  rows     7081 games    1890
+  KRP3vKR                      rows     6977 games    1501
+  KRP5vKRP3                    rows     6603 games    1941
+  KRBP4vKRBP3 (scb)            rows     6472 games    1754
+  KRBP5vKRBP4 (scb)            rows     6440 games    1666
+  KRBP4vKRBP3 (ocb)            rows     6069 games    1442
+  KRNP3vKRNP2                  rows     6017 games    1636
+  KRNP3vKRBP2                  rows     6000 games    1657
+  KRBP3vKRNP2                  rows     5960 games    1591
+  KRBP4vKRNP4                  rows     5533 games    1487
+  KRNP4vKRNP4                  rows     5477 games    1457
+  KRP5vKRP5                    rows     5401 games    1451
+  KRBP5vKRBP4 (ocb)            rows     5269 games    1269
+  KRNP4vKRBP4                  rows     5227 games    1378
+  KRP4vKRP1                    rows     5168 games    1441
+  KRBP3vKRBP2 (ocb)            rows     5119 games    1196
+  KRBP2vKRP1                   rows     4949 games    1230
+  KRBP4vKRBP4 (scb)            rows     4913 games    1272
+  KRNP3vKRNP3                  rows     4718 games    1294
+  KRBP1vKR                     rows     4627 games     889
+  KRvKR                        rows     4578 games     980
+  KRBP3vKRP2                   rows     4574 games    1263
+  KRBP2vKRP2                   rows     4565 games    1243
+  KRBP3vKRNP3                  rows     4548 games    1296
+  KRBP5vKRNP5                  rows     4433 games    1161
+  KRNP5vKRNP5                  rows     4364 games    1065
+  KRBP3vKRP3                   rows     4354 games    1245
+  KRNP6vKRBP5                  rows     4348 games    1105
+  KRBP3vKRBP2 (scb)            rows     4328 games    1194
+  KRNP5vKRBP5                  rows     4282 games    1062
+  KRNP3vKRBP3                  rows     4179 games    1142
+  KRP6vKRP5                    rows     4150 games    1140
+  KRBP4vKRBP4 (ocb)            rows     4122 games     949
+  KRBP5vKRBP5 (scb)            rows     4073 games    1041
+  KRBP1vKRP1                   rows     3983 games     968
+  KRBP6vKRNP5                  rows     3924 games     997
+  KRBP4vKRP3                   rows     3898 games    1050
+  KRNP1vKR                     rows     3879 games     731
+  KRBP4vKRNP2                  rows     3855 games    1100
+  KRNP2vKRP1                   rows     3849 games    1011
+  KRBP6vKRBP5 (scb)            rows     3836 games     980
+  KRBP3vKRBP3 (scb)            rows     3832 games     985
+  signatures at phase <= 6: 4290
+
+labels, in sample, a flat f per cell, dMSE against f = 1 in 1e-6 with whole-game errors;
+gap = mean label less mean prediction, the strong side's view, in points of 1e-3:
+  cell                        rows   games    label     pred          gap     f_A           dMSE_A     f_B           dMSE_B
+  LONE                       13274    3500   0.6752   0.9176 -242.4 +/-  5.4   0.188 -59876.83 +/- 2802.18   0.188 -61251.77 +/- 2828.56
+  OCB_PURE                   28600    2624   0.5921   0.6833  -91.3 +/-  3.8   0.500 -9421.09 +/- 899.54   0.469 -9604.38 +/- 915.12
+  OCB_ROOK                   57432    5228   0.6180   0.6596  -41.7 +/-  2.9   0.719 -1673.26 +/- 266.04   0.688 -1731.77 +/- 283.86
+  OCB_OTHER                 289610   28012   0.6674   0.6725   -5.1 +/-  1.5   0.906   -46.09 +/- 28.27   0.938   -40.17 +/- 18.79
+  PAWNS                    5827957  137979   0.6340   0.6324    1.5 +/-  0.4   1.000     0.00 +/-  0.00   1.000     0.00 +/-  0.00
+  NONE                       13984   11698   0.5227   0.5207    2.0 +/-  2.6   1.000     0.00 +/-  0.00   0.812   -10.48 +/- 14.34
+  PAWNS P=0 d<=-1               88      30   0.4091   0.3494   59.7 +/- 30.5   1.250 -1828.68 +/- 640.22   1.188   -40.81 +/- 455.77
+  PAWNS P=0 d=0               8645    1932   0.4973   0.5222  -25.0 +/-  1.3   0.281 -1333.80 +/- 189.16   0.219 -1728.39 +/- 172.74
+  PAWNS P=0 d=1              24090    3176   0.5100   0.7461 -236.1 +/-  2.2   0.000 -58694.06 +/- 922.61   0.000 -59892.13 +/- 923.27
+  PAWNS P=0 d=2              11566    2062   0.6803   0.8690 -188.7 +/-  7.2   0.188 -31226.42 +/- 2603.59   0.219 -32024.28 +/- 2595.50
+  PAWNS P=0 d>=3              3001     851   0.7827   0.9391 -156.4 +/- 11.6   0.188 -18572.14 +/- 3143.00   0.250 -20647.60 +/- 3321.49
+  PAWNS P=1 d<=-1             1620     615   0.4753   0.4564   18.9 +/-  6.6   0.781  -333.35 +/- 268.95   0.312 -2243.93 +/- 591.09
+  PAWNS P=1 d=0              56713   10130   0.5331   0.6333 -100.2 +/-  1.6   0.219 -13787.91 +/- 455.19   0.188 -13819.53 +/- 467.54
+  PAWNS P=1 d=1              54954    9253   0.7022   0.7866  -84.4 +/-  3.1   0.531 -7082.41 +/- 557.38   0.531 -7202.96 +/- 563.66
+  PAWNS P=1 d=2              17999    3901   0.8705   0.8913  -20.8 +/-  4.3   0.906  -186.76 +/- 104.48   0.906  -217.15 +/- 113.69
+  PAWNS P=1 d>=3              2725     878   0.9064   0.9368  -30.3 +/-  8.4   0.875  -161.52 +/- 182.15   0.844  -309.79 +/- 288.05
+  PAWNS P=2 d<=-1             6841    2072   0.5195   0.5302  -10.7 +/-  5.3   0.781  -711.86 +/- 334.78   0.688 -1092.94 +/- 423.83
+  PAWNS P=2 d=0             133016   23413   0.6185   0.6576  -39.1 +/-  1.5   0.750 -1607.09 +/- 136.05   0.719 -1629.14 +/- 145.47
+  PAWNS P=2 d=1             102488   18196   0.7864   0.7904   -4.0 +/-  2.1   1.000     0.00 +/-  0.00   1.000     0.00 +/-  0.00
+  PAWNS P=2 d=2              25738    5667   0.8891   0.8934   -4.3 +/-  3.5   1.000     0.00 +/-  0.00   1.000     0.00 +/-  0.00
+  PAWNS P=2 d>=3              3129     989   0.9121   0.9395  -27.4 +/-  8.1   0.844  -156.40 +/- 217.41   0.844  -218.34 +/- 258.05
+  PAWNS P=3 d<=-1            14685    4119   0.5329   0.5454  -12.5 +/-  4.4   0.844  -396.83 +/- 198.13   0.812  -466.60 +/- 207.97
+  PAWNS P=3 d=0             235847   41004   0.6407   0.6488   -8.1 +/-  1.2   0.969   -13.97 +/- 10.67   0.969   -19.72 +/- 10.14
+  PAWNS P=3 d=1             163500   28637   0.7939   0.7824   11.5 +/-  1.7   1.125  -239.80 +/- 50.10   1.125  -235.71 +/- 51.37
+  PAWNS P=3 d=2              33140    7260   0.8916   0.8956   -4.0 +/-  3.1   1.031    -5.66 +/- 19.70   1.031    -0.71 +/- 21.08
+  PAWNS P=3 d>=3              3480    1081   0.9131   0.9441  -31.0 +/-  7.3   0.812  -257.14 +/- 213.84   0.812  -305.52 +/- 251.55
+  PAWNS P=4 d<=-1            23577    6675   0.5476   0.5464    1.2 +/-  3.8   1.000     0.00 +/-  0.00   1.000     0.00 +/-  0.00
+  PAWNS P=4 d=0             397564   62732   0.6336   0.6280    5.6 +/-  1.0   1.094   -87.03 +/- 20.88   1.094   -76.21 +/- 20.17
+  PAWNS P=4 d=1             216466   37122   0.7955   0.7758   19.7 +/-  1.5   1.219  -552.53 +/- 66.77   1.219  -553.77 +/- 68.08
+  PAWNS P=4 d=2              34470    7252   0.8926   0.8980   -5.4 +/-  3.1   1.031    -1.99 +/- 17.70   1.000     0.00 +/-  0.00
+  PAWNS P=4 d>=3              2923     958   0.8957   0.9527  -57.0 +/-  8.7   0.562 -1314.85 +/- 647.74   0.562 -1653.93 +/- 746.54
+  PAWNS P=5 d<=-1            33729    9057   0.5513   0.5486    2.7 +/-  3.5   1.000     0.00 +/-  0.00   1.031    -0.56 +/- 19.18
+  PAWNS P=5 d=0             641467   86475   0.6125   0.6034    9.0 +/-  0.9   1.156  -156.33 +/- 22.98   1.156  -155.79 +/- 22.45
+  PAWNS P=5 d=1             240173   38109   0.7883   0.7704   17.9 +/-  1.6   1.250  -471.07 +/- 67.14   1.250  -485.30 +/- 67.79
+  PAWNS P=5 d=2              25472    5376   0.8870   0.8989  -12.0 +/-  3.7   0.938   -44.11 +/- 40.80   0.938   -41.44 +/- 41.06
+  PAWNS P=5 d>=3              1887     606   0.8778   0.9546  -76.8 +/- 12.5   0.594 -1099.54 +/- 609.83   0.562 -1269.78 +/- 706.21
+  PAWNS P=6 d<=-1            36283    8822   0.5673   0.5477   19.5 +/-  3.8   1.156  -130.49 +/- 89.54   1.219  -239.31 +/- 114.01
+  PAWNS P=6 d=0             921609  106684   0.5871   0.5786    8.6 +/-  0.8   1.188  -112.50 +/- 17.26   1.188  -107.17 +/- 17.13
+  PAWNS P=6 d=1             206804   29989   0.7889   0.7722   16.7 +/-  1.9   1.219  -263.28 +/- 57.77   1.219  -268.54 +/- 57.73
+  PAWNS P=6 d=2              14137    2764   0.8708   0.8919  -21.1 +/-  5.8   0.844  -203.55 +/- 143.20   0.812  -209.02 +/- 171.68
+  PAWNS P=6 d>=3               727     261   0.8391   0.9612 -122.2 +/- 20.1   0.281 -3201.51 +/- 1610.48   0.281 -3766.71 +/- 1804.25
+  PAWNS P=7 d<=-1            22381    5423   0.5432   0.5293   13.9 +/-  5.4   1.188  -112.08 +/- 123.22   1.188  -126.40 +/- 116.30
+  PAWNS P=7 d=0            1044859  117847   0.5634   0.5578    5.7 +/-  0.8   1.219   -45.31 +/- 11.67   1.188   -32.00 +/- 10.11
+  PAWNS P=7 d=1             150942   20118   0.7914   0.7760   15.5 +/-  2.4   1.188  -100.35 +/- 45.47   1.188   -82.07 +/- 44.98
+  PAWNS P=7 d=2               5833    1133   0.8490   0.8700  -21.0 +/- 10.0   0.781  -195.73 +/- 273.68   0.781  -225.45 +/- 259.88
+  PAWNS P=7 d>=3               204      83   0.8137   0.9740 -160.2 +/- 43.5   0.281 -3850.75 +/- 3088.80   0.219 -4723.06 +/- 3819.73
+  PAWNS P=8 d<=-1             6531    1814   0.4918   0.4870    4.8 +/-  9.8   0.969    -1.29 +/- 23.97   0.969    -0.21 +/- 22.24
+  PAWNS P=8 d=0             825421  115414   0.5415   0.5447   -3.1 +/-  0.8   1.094    -1.75 +/-  2.40   0.969    -0.05 +/-  0.82
+  PAWNS P=8 d=1              68795   10126   0.8116   0.7936   18.0 +/-  3.6   1.094    -5.63 +/- 25.38   1.031    -0.16 +/-  8.45
+  PAWNS P=8 d=2               2346     512   0.8086   0.8479  -39.3 +/- 18.7   0.500  -754.94 +/- 1107.64   0.438  -886.96 +/- 1164.73
+  PAWNS P=8 d>=3                92      22   0.9565   0.9759  -19.4 +/- 25.1   1.250   -91.26 +/- 92.29   1.250   -84.74 +/- 97.42
+  OCB_PURE P=0                 231      46   0.5000   0.5265  -26.5 +/-  2.4   0.188 -1160.90 +/- 236.70   0.219 -1243.10 +/- 241.13
+  OCB_PURE P=1                2367     329   0.5000   0.6267 -126.7 +/-  6.5   0.000 -25154.77 +/- 2106.19   0.000 -25362.49 +/- 2104.67
+  OCB_PURE P=2                5803     862   0.5510   0.6776 -126.6 +/-  5.9   0.312 -19856.86 +/- 2136.06   0.281 -19691.12 +/- 2157.74
+  OCB_PURE P=3                7685    1227   0.5954   0.6942  -98.8 +/-  6.2   0.469 -11030.67 +/- 1610.27   0.438 -11256.20 +/- 1631.89
+  OCB_PURE P=4                6540    1089   0.6309   0.6987  -67.8 +/-  7.1   0.656 -4420.01 +/- 1076.88   0.625 -4599.38 +/- 1131.43
+  OCB_PURE P=5                3965     715   0.6169   0.6879  -71.0 +/-  8.3   0.594 -5368.34 +/- 1523.35   0.594 -5479.48 +/- 1432.38
+  OCB_PURE P=6                1630     282   0.6485   0.6906  -42.1 +/- 14.6   0.750 -1930.32 +/- 1429.31   0.719 -2144.82 +/- 1519.11
+  OCB_PURE P=7                 291      53   0.6203   0.6809  -60.7 +/- 28.6   0.719 -2894.60 +/- 3274.39   0.688 -3398.72 +/- 3485.32
+  OCB_PURE P=8                  21       3   0.8571   0.8520    5.1 +/- 115.7   1.062   -92.10 +/- 2853.61   0.969   -19.63 +/- 1470.51
+  prop P=0 d<=0               8733    1957   0.4964   0.5205  -24.1 +/-  1.4   0.312 -1231.46 +/- 183.42   0.250 -1689.18 +/- 167.32
+  prop P=0 d=1               24090    3176   0.5100   0.7461 -236.1 +/-  2.2   0.000 -58694.06 +/- 922.61   0.000 -59892.13 +/- 923.27
+  prop P=0 d>=2              14567    2840   0.7014   0.8834 -182.0 +/-  6.2   0.188 -28619.46 +/- 2175.33   0.219 -29676.23 +/- 2195.51
+  prop P=1 d<=0              58333   10568   0.5315   0.6284  -96.9 +/-  1.6   0.219 -13355.62 +/- 444.15   0.188 -13495.94 +/- 455.52
+  prop P=1 d=1               54954    9253   0.7022   0.7866  -84.4 +/-  3.1   0.531 -7082.41 +/- 557.38   0.531 -7202.96 +/- 563.66
+  prop P=1 d>=2              20724    4649   0.8753   0.8973  -22.1 +/-  4.0   0.906  -181.46 +/- 92.72   0.875  -227.09 +/- 138.01
+  prop P=2 d<=0             139857   24868   0.6136   0.6513  -37.7 +/-  1.5   0.750 -1562.73 +/- 131.25   0.719 -1602.39 +/- 140.03
+  prop P=2 d=1              102488   18196   0.7864   0.7904   -4.0 +/-  2.1   1.000     0.00 +/-  0.00   1.000     0.00 +/-  0.00
+  prop P=2 d>=2              28867    6400   0.8916   0.8984   -6.8 +/-  3.2   1.000     0.00 +/-  0.00   1.000     0.00 +/-  0.00
+  prop OCB_PURE P<=2          8401    1047   0.5352   0.6591 -123.8 +/-  4.6   0.250 -20192.26 +/- 1738.13   0.219 -20146.84 +/- 1752.79
+  prop OCB_PURE P=3-4        14225    1747   0.6117   0.6963  -84.5 +/-  5.2   0.562 -7591.86 +/- 1050.26   0.531 -7805.30 +/- 1079.31
+  prop OCB_PURE P>=5          5907     840   0.6266   0.6889  -62.3 +/-  7.9   0.656 -4104.93 +/- 1166.37   0.625 -4292.20 +/- 1209.86
+  prop OCB_ROOK              57308    5223   0.6182   0.6600  -41.7 +/-  2.9   0.719 -1676.88 +/- 266.61   0.688 -1734.86 +/- 284.46
+  prop MOPUP                  9742    2087   0.6663   0.9426 -276.3 +/-  6.2   0.156 -74599.62 +/- 3435.25   0.156 -75916.15 +/- 3493.92
+  prop MOPUP of it KBN        1954     212   0.5184   0.9631 -444.6 +/-  6.2   0.000 -192578.79 +/- 4658.99   0.000 -194637.48 +/- 4791.27
+  prop LONE other             3532    1490   0.6999   0.8489 -149.0 +/- 11.5   0.344 -25541.31 +/- 4270.85   0.344 -26073.06 +/- 4221.33
+
+the same cells' dMSE over the whole corpus's rows, 1e-6 (a cell's sum / all rows):
+  cell  1 rows     13274  A at f 0.188: -127.560  at f 0.5: -89.698
+  cell  2 rows     28600  A at f 0.500: -43.243  at f 0.5: -43.243
+  cell  3 rows     57432  A at f 0.719: -15.423  at f 0.5: -5.637
+  cell  4 rows    289610  A at f 0.906: -2.142  at f 0.5: 91.203
+  cell  5 rows   5827957  A at f 1.000: 0.000  at f 0.5: 2089.446
+  cell  6 rows     13984  A at f 1.000: 0.000  at f 0.5: 0.000
+  cell  7 rows        88  A at f 1.250: -0.026  at f 0.5: 0.080
+  cell  8 rows      8645  A at f 0.281: -1.851  at f 0.5: -1.663
+  cell  9 rows     24090  A at f 0.000: -226.925  at f 0.5: -136.804
+  cell 10 rows     11566  A at f 0.188: -57.964  at f 0.5: -43.061
+  cell 11 rows      3001  A at f 0.188: -8.945  at f 0.5: -6.512
+  cell 12 rows      1620  A at f 0.781: -0.087  at f 0.5: 0.044
+  cell 13 rows     56713  A at f 0.219: -125.497  at f 0.5: -105.288
+  cell 14 rows     54954  A at f 0.531: -62.464  at f 0.5: -61.720
+  cell 15 rows     17999  A at f 0.906: -0.539  at f 0.5: 14.872
+  cell 16 rows      2725  A at f 0.875: -0.071  at f 0.5: 1.133
+  cell 17 rows      6841  A at f 0.781: -0.782  at f 0.5: 0.638
+  cell 18 rows    133016  A at f 0.750: -34.308  at f 0.5: 2.871
+  cell 19 rows    102488  A at f 1.000: 0.000  at f 0.5: 132.071
+  cell 20 rows     25738  A at f 1.000: 0.000  at f 0.5: 26.086
+  cell 21 rows      3129  A at f 0.844: -0.079  at f 0.5: 0.964
+  cell 22 rows     14685  A at f 0.844: -0.935  at f 0.5: 4.353
+  cell 23 rows    235847  A at f 0.969: -0.529  at f 0.5: 192.500
+  cell 24 rows    163500  A at f 1.125: -6.293  at f 0.5: 238.760
+  cell 25 rows     33140  A at f 1.031: -0.030  at f 0.5: 29.732
+  cell 26 rows      3480  A at f 0.812: -0.144  at f 0.5: 0.574
+  cell 27 rows     23577  A at f 1.000: 0.000  at f 0.5: 14.865
+  cell 28 rows    397564  A at f 1.094: -5.553  at f 0.5: 316.149
+  cell 29 rows    216466  A at f 1.219: -19.195  at f 0.5: 290.535
+  cell 30 rows     34470  A at f 1.031: -0.011  at f 0.5: 24.791
+  cell 31 rows      2923  A at f 0.562: -0.617  at f 0.5: -0.583
+  cell 32 rows     33729  A at f 1.000: 0.000  at f 0.5: 15.998
+  cell 33 rows    641467  A at f 1.156: -16.094  at f 0.5: 347.305
+  cell 34 rows    240173  A at f 1.250: -18.158  at f 0.5: 239.094
+  cell 35 rows     25472  A at f 0.938: -0.180  at f 0.5: 10.667
+  cell 36 rows      1887  A at f 0.594: -0.333  at f 0.5: -0.307
+  cell 37 rows     36283  A at f 1.156: -0.760  at f 0.5: 17.600
+  cell 38 rows    921609  A at f 1.188: -16.639  at f 0.5: 245.192
+  cell 39 rows    206804  A at f 1.219: -8.738  at f 0.5: 124.619
+  cell 40 rows     14137  A at f 0.844: -0.462  at f 0.5: 2.510
+  cell 41 rows       727  A at f 0.281: -0.374  at f 0.5: -0.316
+  cell 42 rows     22381  A at f 1.188: -0.403  at f 0.5: 6.680
+  cell 43 rows   1044859  A at f 1.219: -7.598  at f 0.5: 92.687
+  cell 44 rows    150942  A at f 1.188: -2.431  at f 0.5: 38.208
+  cell 45 rows      5833  A at f 0.781: -0.183  at f 0.5: 0.381
+  cell 46 rows       204  A at f 0.281: -0.126  at f 0.5: -0.105
+  cell 47 rows      6531  A at f 0.969: -0.001  at f 0.5: 0.369
+  cell 48 rows    825421  A at f 1.094: -0.231  at f 0.5: 9.387
+  cell 49 rows     68795  A at f 1.094: -0.062  at f 0.5: 4.353
+  cell 50 rows      2346  A at f 0.500: -0.284  at f 0.5: -0.284
+  cell 51 rows        92  A at f 1.250: -0.001  at f 0.5: 0.022
+  cell 52 rows       231  A at f 0.188: -0.043  at f 0.5: -0.037
+  cell 53 rows      2367  A at f 0.000: -9.556  at f 0.5: -6.799
+  cell 54 rows      5803  A at f 0.312: -18.493  at f 0.5: -16.509
+  cell 55 rows      7685  A at f 0.469: -13.605  at f 0.5: -13.550
+  cell 56 rows      6540  A at f 0.656: -4.639  at f 0.5: -3.471
+  cell 57 rows      3965  A at f 0.594: -3.416  at f 0.5: -3.042
+  cell 58 rows      1630  A at f 0.750: -0.505  at f 0.5: 0.128
+  cell 59 rows       291  A at f 0.719: -0.135  at f 0.5: -0.043
+  cell 60 rows        21  A at f 1.062: -0.000  at f 0.5: 0.079
+  cell 61 rows      8733  A at f 0.312: -1.726  at f 0.5: -1.583
+  cell 62 rows     24090  A at f 0.000: -226.925  at f 0.5: -136.804
+  cell 63 rows     14567  A at f 0.188: -66.909  at f 0.5: -49.573
+  cell 64 rows     58333  A at f 0.219: -125.035  at f 0.5: -105.244
+  cell 65 rows     54954  A at f 0.531: -62.464  at f 0.5: -61.720
+  cell 66 rows     20724  A at f 0.906: -0.604  at f 0.5: 16.005
+  cell 67 rows    139857  A at f 0.750: -35.077  at f 0.5: 3.509
+  cell 68 rows    102488  A at f 1.000: 0.000  at f 0.5: 132.071
+  cell 69 rows     28867  A at f 1.000: 0.000  at f 0.5: 27.050
+  cell 70 rows      8401  A at f 0.250: -27.225  at f 0.5: -23.345
+  cell 71 rows     14225  A at f 0.562: -17.332  at f 0.5: -17.021
+  cell 72 rows      5907  A at f 0.656: -3.892  at f 0.5: -2.878
+  cell 73 rows     57308  A at f 0.719: -15.423  at f 0.5: -5.637
+  cell 74 rows      9742  A at f 0.156: -116.637  at f 0.5: -76.860
+  cell 75 rows      1954  A at f 0.000: -60.393  at f 0.5: -25.408
+  cell 76 rows      3532  A at f 0.344: -14.478  at f 0.5: -12.838
+S124-CENSUS-OK
+
+################ c_view_qs
+S124 census of .tuning/s122/prepared/pool.tsv.qs.validation
+rows 1028158 games 12000 traced 1028158 identity_mismatches 0 smooth_mismatches 0
+
+men on the board (kings included): rows
+  men  3 2799
+  men  4 5363
+  men  5 12590
+  men  6 16974
+  men  7 22566
+  men  8 24768
+  men  9 28473
+  men 10 31126
+  men 11 33630
+  men 12 34833
+  men 13 36456
+  men 14 36522
+  men 15 37430
+  men 16 37744
+  men 17 36542
+  men 18 36630
+  men 19 36182
+  men 20 38052
+  men 21 36314
+  men 22 39560
+  men 23 36182
+  men 24 42146
+  men 25 35707
+  men 26 48091
+  men 27 35884
+  men 28 54166
+  men 29 34388
+  men 30 62975
+  men 31 31096
+  men 32 62969
+
+cases, first that holds (of all rows):
+  DEAD                   rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  LONE                   rows      4159    0.405 %  games     424  eg_mass     3858.9  |E1|w   565.4  |E2|w   17.2  split 6
+  OCB_PURE               rows      5655    0.550 %  games     255  eg_mass     5183.8  |E1|w   215.6  |E2|w   19.0  split 159
+  OCB_ROOK               rows     12085    1.175 %  games     517  eg_mass     9063.8  |E1|w   153.0  |E2|w   21.9  split 553
+  OCB_OTHER              rows     51018    4.962 %  games    2767  eg_mass    24255.2  |E1|w   123.3  |E2|w   17.9  split 3343
+  PAWNS                  rows    952957   92.686 %  games   11999  eg_mass   363455.2  |E1|w    93.6  |E2|w   14.5  split 95221
+  NONE                   rows      2284    0.222 %  games    1677  eg_mass      620.5  |E1|w     0.0  |E2|w   10.2  split 0
+
+PAWNS by P (the strong side's pawns) and d (its men's phase units less the other's):
+  P=0 d<=-1              rows        44    0.004 %  games       4  eg_mass       31.2  |E1|w    84.6  |E2|w   56.7  split 17
+  P=0 d=0                rows      2050    0.199 %  games     187  eg_mass     1673.2  |E1|w    37.9  |E2|w   22.5  split 432
+  P=0 d=1                rows      6889    0.670 %  games     335  eg_mass     5581.2  |E1|w   212.0  |E2|w   24.7  split 55
+  P=0 d=2                rows      2840    0.276 %  games     215  eg_mass     2250.0  |E1|w   333.5  |E2|w   30.1  split 6
+  P=0 d>=3               rows       720    0.070 %  games     100  eg_mass      562.5  |E1|w   389.2  |E2|w   63.4  split 0
+  P=1 d<=-1              rows       422    0.041 %  games      76  eg_mass      326.7  |E1|w    68.5  |E2|w   43.8  split 161
+  P=1 d=0                rows     12915    1.256 %  games    1053  eg_mass    10449.8  |E1|w   133.9  |E2|w   22.5  split 671
+  P=1 d=1                rows     12879    1.253 %  games     945  eg_mass    10116.8  |E1|w   268.3  |E2|w   25.6  split 106
+  P=1 d=2                rows      3664    0.356 %  games     415  eg_mass     2822.8  |E1|w   381.7  |E2|w   31.6  split 5
+  P=1 d>=3               rows       556    0.054 %  games     101  eg_mass      408.5  |E1|w   426.4  |E2|w   52.1  split 0
+  P=2 d<=-1              rows      1450    0.141 %  games     256  eg_mass     1119.3  |E1|w    91.2  |E2|w   37.3  split 329
+  P=2 d=0                rows     28677    2.789 %  games    2380  eg_mass    22336.7  |E1|w   166.7  |E2|w   25.3  split 1485
+  P=2 d=1                rows     22006    2.140 %  games    1844  eg_mass    16255.5  |E1|w   265.5  |E2|w   25.7  split 240
+  P=2 d=2                rows      4572    0.445 %  games     601  eg_mass     3300.2  |E1|w   368.1  |E2|w   30.0  split 19
+  P=2 d>=3               rows       514    0.050 %  games     111  eg_mass      350.7  |E1|w   385.2  |E2|w   51.2  split 0
+  P=3 d<=-1              rows      3014    0.293 %  games     474  eg_mass     2221.3  |E1|w   110.2  |E2|w   32.8  split 554
+  P=3 d=0                rows     46798    4.552 %  games    3928  eg_mass    33651.1  |E1|w   154.5  |E2|w   24.8  split 2792
+  P=3 d=1                rows     29529    2.872 %  games    2860  eg_mass    19365.8  |E1|w   236.2  |E2|w   24.1  split 564
+  P=3 d=2                rows      5325    0.518 %  games     717  eg_mass     3513.5  |E1|w   358.6  |E2|w   28.1  split 15
+  P=3 d>=3               rows       438    0.043 %  games     119  eg_mass      265.8  |E1|w   372.9  |E2|w   51.7  split 1
+  P=4 d<=-1              rows      4631    0.450 %  games     766  eg_mass     3018.3  |E1|w   104.1  |E2|w   30.9  split 793
+  P=4 d=0                rows     70454    6.852 %  games    5911  eg_mass    42625.8  |E1|w   118.6  |E2|w   21.6  split 5081
+  P=4 d=1                rows     36529    3.553 %  games    3596  eg_mass    20702.8  |E1|w   206.0  |E2|w   21.4  split 804
+  P=4 d=2                rows      4545    0.442 %  games     720  eg_mass     2683.4  |E1|w   317.8  |E2|w   29.1  split 16
+  P=4 d>=3               rows       512    0.050 %  games     124  eg_mass      273.7  |E1|w   348.4  |E2|w   33.6  split 0
+  P=5 d<=-1              rows      6017    0.585 %  games     955  eg_mass     3340.1  |E1|w    85.7  |E2|w   25.4  split 945
+  P=5 d=0                rows    103229   10.040 %  games    7894  eg_mass    46681.9  |E1|w    79.5  |E2|w   17.0  split 9396
+  P=5 d=1                rows     37091    3.608 %  games    3682  eg_mass    17215.9  |E1|w   170.3  |E2|w   18.7  split 1196
+  P=5 d=2                rows      3656    0.356 %  games     567  eg_mass     1822.2  |E1|w   281.9  |E2|w   26.9  split 17
+  P=5 d>=3               rows       257    0.025 %  games      78  eg_mass      113.5  |E1|w   272.8  |E2|w   34.9  split 0
+  P=6 d<=-1              rows      5697    0.554 %  games     921  eg_mass     2524.6  |E1|w    62.9  |E2|w   20.4  split 830
+  P=6 d=0                rows    144351   14.040 %  games    9640  eg_mass    41253.0  |E1|w    44.0  |E2|w   11.4  split 17109
+  P=6 d=1                rows     31002    3.015 %  games    2916  eg_mass    10039.2  |E1|w   113.4  |E2|w   13.8  split 890
+  P=6 d=2                rows      2033    0.198 %  games     289  eg_mass      789.8  |E1|w   219.6  |E2|w   21.5  split 11
+  P=6 d>=3               rows       176    0.017 %  games      42  eg_mass       71.5  |E1|w   258.9  |E2|w   30.0  split 0
+  P=7 d<=-1              rows      3518    0.342 %  games     558  eg_mass     1178.8  |E1|w    51.4  |E2|w   16.2  split 433
+  P=7 d=0                rows    157726   15.341 %  games   10512  eg_mass    22151.7  |E1|w    18.6  |E2|w    6.1  split 25232
+  P=7 d=1                rows     21323    2.074 %  games    1946  eg_mass     4046.6  |E1|w    66.6  |E2|w    9.0  split 492
+  P=7 d=2                rows       641    0.062 %  games      99  eg_mass      169.8  |E1|w   139.8  |E2|w   16.5  split 3
+  P=7 d>=3               rows        33    0.003 %  games      10  eg_mass       11.1  |E1|w   193.1  |E2|w   22.9  split 0
+  P=8 d<=-1              rows       859    0.084 %  games     192  eg_mass      156.2  |E1|w    20.8  |E2|w    9.8  split 140
+  P=8 d=0                rows    124335   12.093 %  games   10559  eg_mass     5049.5  |E1|w     4.4  |E2|w    1.9  split 24344
+  P=8 d=1                rows      8795    0.855 %  games     935  eg_mass      901.9  |E1|w    35.0  |E2|w    5.7  split 37
+  P=8 d=2                rows       244    0.024 %  games      44  eg_mass       31.2  |E1|w    70.3  |E2|w   11.2  split 0
+  P=8 d>=3               rows         1    0.000 %  games       1  eg_mass        0.2  |E1|w   176.0  |E2|w   11.7  split 0
+
+OCB_PURE by P:
+  P=0                    rows         6    0.001 %  games       1  eg_mass        5.5  |E1|w    16.7  |E2|w    6.4  split 0
+  P=1                    rows       441    0.043 %  games      27  eg_mass      404.3  |E1|w   143.2  |E2|w   13.4  split 14
+  P=2                    rows      1189    0.116 %  games      75  eg_mass     1089.9  |E1|w   222.9  |E2|w   16.9  split 29
+  P=3                    rows      1467    0.143 %  games     114  eg_mass     1344.8  |E1|w   219.2  |E2|w   20.1  split 39
+  P=4                    rows      1108    0.108 %  games     107  eg_mass     1015.7  |E1|w   210.6  |E2|w   19.4  split 47
+  P=5                    rows      1080    0.105 %  games      83  eg_mass      990.0  |E1|w   239.3  |E2|w   19.7  split 15
+  P=6                    rows       316    0.031 %  games      30  eg_mass      289.7  |E1|w   213.0  |E2|w   23.1  split 15
+  P=7                    rows        35    0.003 %  games       6  eg_mass       32.1  |E1|w   296.9  |E2|w   36.7  split 0
+
+the proposal's cells:
+  P=0 d<=0               rows      2094    0.204 %  games     191  eg_mass     1704.3  |E1|w    38.9  |E2|w   23.2  split 449
+  P=0 d=1                rows      6889    0.670 %  games     335  eg_mass     5581.2  |E1|w   212.0  |E2|w   24.7  split 55
+  P=0 d>=2               rows      3560    0.346 %  games     304  eg_mass     2812.5  |E1|w   344.8  |E2|w   36.8  split 6
+  P=1 d<=0               rows     13337    1.297 %  games    1105  eg_mass    10776.5  |E1|w   131.8  |E2|w   23.2  split 832
+  P=1 d=1                rows     12879    1.253 %  games     945  eg_mass    10116.8  |E1|w   268.3  |E2|w   25.6  split 106
+  P=1 d>=2               rows      4220    0.410 %  games     496  eg_mass     3231.3  |E1|w   387.6  |E2|w   34.3  split 5
+  P=2 d<=0               rows     30127    2.930 %  games    2538  eg_mass    23456.0  |E1|w   163.0  |E2|w   25.9  split 1814
+  P=2 d=1                rows     22006    2.140 %  games    1844  eg_mass    16255.5  |E1|w   265.5  |E2|w   25.7  split 240
+  P=2 d>=2               rows      5086    0.495 %  games     673  eg_mass     3650.9  |E1|w   369.9  |E2|w   32.1  split 19
+  OCB_PURE P<=2          rows      1636    0.159 %  games      93  eg_mass     1499.7  |E1|w   200.7  |E2|w   16.0  split 43
+  OCB_PURE P=3-4         rows      2575    0.250 %  games     162  eg_mass     2360.4  |E1|w   215.5  |E2|w   19.8  split 86
+  OCB_PURE P>=5          rows      1431    0.139 %  games     101  eg_mass     1311.8  |E1|w   234.9  |E2|w   20.9  split 30
+  OCB_ROOK               rows     12063    1.173 %  games     516  eg_mass     9047.2  |E1|w   153.3  |E2|w   21.9  split 553
+  MOPUP                  rows      3202    0.311 %  games     199  eg_mass     2935.2  |E1|w   595.9  |E2|w   17.8  split 0
+  MOPUP of it KBN        rows       510    0.050 %  games      16  eg_mass      467.5  |E1|w   679.5  |E2|w   16.8  split 0
+  LONE other             rows       957    0.093 %  games     249  eg_mass      923.8  |E1|w   463.4  |E2|w   15.4  split 6
+
+LONE by signature:
+  KRvK                     rows     2544 games     176
+  KBNvK                    rows      510 games      16
+  KBP1vK                   rows      298 games      30
+  KP1vK                    rows      255 games      90
+  KBBvK                    rows      148 games       7
+  KNNvK                    rows      106 games       3
+  KP2vK                    rows       87 games      40
+  KRP1vK                   rows       69 games      25
+  KNP1vK                   rows       61 games      29
+  KNP2vK                   rows       31 games      13
+  KBP2vK                   rows       16 games       6
+  KRP2vK                   rows       10 games       5
+  KP3vK                    rows       10 games       8
+  KBNP1vK                  rows        9 games       4
+  KNP3vK                   rows        4 games       2
+  KP4vK                    rows        1 games       1
+
+signatures at phase <= 6, top 60 by rows:
+  KRP2vKRP1                    rows     4244 games     515
+  KRP1vKR                      rows     4115 games     345
+  KRP3vKRP2                    rows     4074 games     571
+  KRP2vKR                      rows     3467 games     286
+  KRP4vKRP3                    rows     2959 games     456
+  KRP3vKRP1                    rows     2741 games     375
+  KRvK                         rows     2544 games     176
+  KRP2vKRP2                    rows     2166 games     309
+  KRP3vKRP3                    rows     2139 games     321
+  KRP4vKRP2                    rows     2057 games     310
+  KRP1vKRP1                    rows     1787 games     216
+  KRBP4vKRNP3                  rows     1630 games     238
+  KRP5vKRP4                    rows     1611 games     263
+  KRP3vKR                      rows     1588 games     165
+  KRNvKR                       rows     1566 games      45
+  KRP4vKRP4                    rows     1542 games     273
+  KRNP4vKRNP3                  rows     1454 games     221
+  KRNP5vKRNP4                  rows     1436 games     193
+  KRNP3vKRBP2                  rows     1411 games     193
+  KRBP3vKRNP2                  rows     1378 games     183
+  KRNP4vKRBP3                  rows     1367 games     247
+  KRBP4vKRBP3 (scb)            rows     1350 games     187
+  KRNP5vKRBP4                  rows     1290 games     204
+  KRNP3vKRNP2                  rows     1234 games     194
+  KRBP1vKR                     rows     1228 games      88
+  KRBvKR                       rows     1178 games      49
+  KRBP5vKRBP4 (scb)            rows     1169 games     163
+  KRBP5vKRNP4                  rows     1163 games     191
+  KRBP5vKRBP4 (ocb)            rows     1125 games     143
+  KRBP3vKRBP2 (scb)            rows     1095 games     148
+  KRNP4vKRBP4                  rows     1083 games     166
+  KRP4vKRP1                    rows     1065 games     155
+  KRBP2vKRP1                   rows     1043 games     135
+  KRBP4vKRBP3 (ocb)            rows     1030 games     149
+  KRP5vKRP3                    rows     1014 games     169
+  KRBP4vKRNP4                  rows     1004 games     162
+  KRBP2vKRP2                   rows      987 games     141
+  KRNP4vKRNP4                  rows      955 games     139
+  KRvKR                        rows      936 games      87
+  KRBP3vKRP2                   rows      926 games     137
+  KRBP3vKRBP2 (ocb)            rows      915 games     123
+  KRBP4vKRNP2                  rows      893 games     137
+  KRP5vKRP5                    rows      872 games     144
+  KRNP4vKRNP2                  rows      864 games     124
+  KRNP3vKRBP3                  rows      861 games     120
+  KRNP1vKR                     rows      858 games      81
+  KRNP2vKRP1                   rows      845 games     105
+  KRBP2vKRNP1                  rows      843 games     110
+  KRBP2vKRP3                   rows      830 games     112
+  KRNP5vKRBP5                  rows      825 games     118
+  KRBP3vKRNP3                  rows      822 games     119
+  KRNP5vKRNP5                  rows      821 games     110
+  KRNP2vKR                     rows      818 games      78
+  KRNP3vKRNP3                  rows      817 games     134
+  KRBP3vKRP3                   rows      816 games     121
+  KRBP3vKRBP3 (ocb)            rows      814 games     101
+  KRBP2vKR                     rows      814 games      95
+  KRNP1vKRP1                   rows      808 games      86
+  KRBP1vKRP1                   rows      807 games      92
+  KRNP3vKRBP1                  rows      794 games      92
+  signatures at phase <= 6: 2510
+S124-CENSUS-OK
+
+################ c_view_root
+S124 census of .tuning/s122/prepared/pool.tsv.root.validation
+rows 1028463 games 12000 traced 1028463 identity_mismatches 0 smooth_mismatches 0
+
+men on the board (kings included): rows
+  men  3 2440
+  men  4 4859
+  men  5 11454
+  men  6 15633
+  men  7 20891
+  men  8 23046
+  men  9 26576
+  men 10 29473
+  men 11 31746
+  men 12 33114
+  men 13 34703
+  men 14 34866
+  men 15 36019
+  men 16 36443
+  men 17 35393
+  men 18 35343
+  men 19 35650
+  men 20 37195
+  men 21 36130
+  men 22 38720
+  men 23 36313
+  men 24 41412
+  men 25 36336
+  men 26 46471
+  men 27 37582
+  men 28 52556
+  men 29 38073
+  men 30 62781
+  men 31 40126
+  men 32 77119
+
+cases, first that holds (of all rows):
+  DEAD                   rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  LONE                   rows      3586    0.349 %  games     348  eg_mass     3318.0  |E1|w   575.4  |E2|w   17.7  split 1
+  OCB_PURE               rows      5244    0.510 %  games     206  eg_mass     4807.0  |E1|w   218.0  |E2|w   19.3  split 145
+  OCB_ROOK               rows     11538    1.122 %  games     480  eg_mass     8653.5  |E1|w   156.4  |E2|w   22.4  split 532
+  OCB_OTHER              rows     50361    4.897 %  games    2855  eg_mass    23969.0  |E1|w   132.4  |E2|w   18.4  split 3104
+  PAWNS                  rows    955534   92.909 %  games   12000  eg_mass   350362.3  |E1|w    94.7  |E2|w   14.3  split 93987
+  NONE                   rows      2200    0.214 %  games    1868  eg_mass      570.6  |E1|w     0.0  |E2|w    9.6  split 0
+
+PAWNS by P (the strong side's pawns) and d (its men's phase units less the other's):
+  P=0 d<=-1              rows        43    0.004 %  games       4  eg_mass       30.6  |E1|w    87.2  |E2|w   53.8  split 15
+  P=0 d=0                rows      1909    0.186 %  games     249  eg_mass     1559.2  |E1|w    37.8  |E2|w   23.1  split 419
+  P=0 d=1                rows      6449    0.627 %  games     385  eg_mass     5225.8  |E1|w   213.9  |E2|w   25.0  split 49
+  P=0 d=2                rows      2694    0.262 %  games     243  eg_mass     2138.5  |E1|w   331.6  |E2|w   30.6  split 7
+  P=0 d>=3               rows       792    0.077 %  games     272  eg_mass      592.8  |E1|w   396.1  |E2|w   64.2  split 0
+  P=1 d<=-1              rows       381    0.037 %  games      78  eg_mass      296.2  |E1|w    66.9  |E2|w   43.7  split 148
+  P=1 d=0                rows     11802    1.148 %  games     961  eg_mass     9562.8  |E1|w   135.8  |E2|w   22.8  split 615
+  P=1 d=1                rows     11989    1.166 %  games     964  eg_mass     9445.3  |E1|w   269.1  |E2|w   25.9  split 100
+  P=1 d=2                rows      3336    0.324 %  games     532  eg_mass     2558.8  |E1|w   372.8  |E2|w   32.4  split 3
+  P=1 d>=3               rows       679    0.066 %  games     286  eg_mass      480.2  |E1|w   428.2  |E2|w   54.4  split 0
+  P=2 d<=-1              rows      1368    0.133 %  games     246  eg_mass     1061.6  |E1|w    89.5  |E2|w   38.8  split 343
+  P=2 d=0                rows     26352    2.562 %  games    2155  eg_mass    20631.0  |E1|w   171.3  |E2|w   25.8  split 1304
+  P=2 d=1                rows     20498    1.993 %  games    1959  eg_mass    15228.3  |E1|w   266.8  |E2|w   26.0  split 213
+  P=2 d=2                rows      4339    0.422 %  games     851  eg_mass     3103.8  |E1|w   358.0  |E2|w   29.9  split 13
+  P=2 d>=3               rows       815    0.079 %  games     436  eg_mass      522.0  |E1|w   412.3  |E2|w   53.3  split 0
+  P=3 d<=-1              rows      2871    0.279 %  games     499  eg_mass     2135.5  |E1|w   111.8  |E2|w   33.5  split 529
+  P=3 d=0                rows     42811    4.163 %  games    3638  eg_mass    31149.3  |E1|w   159.7  |E2|w   25.0  split 2452
+  P=3 d=1                rows     27723    2.696 %  games    3263  eg_mass    18259.5  |E1|w   237.1  |E2|w   24.2  split 498
+  P=3 d=2                rows      5657    0.550 %  games    1438  eg_mass     3618.8  |E1|w   342.1  |E2|w   28.0  split 17
+  P=3 d>=3               rows      1215    0.118 %  games     866  eg_mass      662.9  |E1|w   395.6  |E2|w   50.4  split 1
+  P=4 d<=-1              rows      4322    0.420 %  games     782  eg_mass     2858.9  |E1|w   106.1  |E2|w   31.3  split 751
+  P=4 d=0                rows     63611    6.185 %  games    5503  eg_mass    39213.1  |E1|w   124.4  |E2|w   22.1  split 4437
+  P=4 d=1                rows     36172    3.517 %  games    4869  eg_mass    20325.3  |E1|w   203.1  |E2|w   21.5  split 827
+  P=4 d=2                rows      5686    0.553 %  games    2015  eg_mass     3177.2  |E1|w   305.4  |E2|w   27.2  split 28
+  P=4 d>=3               rows      1818    0.177 %  games    1367  eg_mass      879.4  |E1|w   384.8  |E2|w   43.0  split 1
+  P=5 d<=-1              rows      5661    0.550 %  games    1005  eg_mass     3204.6  |E1|w    89.2  |E2|w   26.3  split 904
+  P=5 d=0                rows     93362    9.078 %  games    7586  eg_mass    43183.4  |E1|w    83.6  |E2|w   17.4  split 8333
+  P=5 d=1                rows     38800    3.773 %  games    6175  eg_mass    17471.8  |E1|w   165.8  |E2|w   18.2  split 1112
+  P=5 d=2                rows      5729    0.557 %  games    2417  eg_mass     2616.5  |E1|w   266.5  |E2|w   22.9  split 14
+  P=5 d>=3               rows      2004    0.195 %  games    1714  eg_mass      846.5  |E1|w   361.8  |E2|w   40.9  split 0
+  P=6 d<=-1              rows      5382    0.523 %  games     959  eg_mass     2407.1  |E1|w    64.8  |E2|w   21.0  split 834
+  P=6 d=0                rows    132941   12.926 %  games    9549  eg_mass    38638.4  |E1|w    45.8  |E2|w   11.5  split 15327
+  P=6 d=1                rows     35809    3.482 %  games    6725  eg_mass    10985.4  |E1|w   110.0  |E2|w   13.1  split 793
+  P=6 d=2                rows      4032    0.392 %  games    2116  eg_mass     1428.0  |E1|w   214.5  |E2|w   17.9  split 14
+  P=6 d>=3               rows      1779    0.173 %  games    1569  eg_mass      644.3  |E1|w   321.6  |E2|w   34.8  split 0
+  P=7 d<=-1              rows      3455    0.336 %  games     607  eg_mass     1152.0  |E1|w    52.9  |E2|w   16.7  split 465
+  P=7 d=0                rows    151701   14.750 %  games   10695  eg_mass    21153.4  |E1|w    19.0  |E2|w    6.0  split 23780
+  P=7 d=1                rows     26709    2.597 %  games    5786  eg_mass     4709.4  |E1|w    63.8  |E2|w    8.3  split 446
+  P=7 d=2                rows      1722    0.167 %  games    1038  eg_mass      433.2  |E1|w   155.6  |E2|w   13.4  split 3
+  P=7 d>=3               rows       869    0.084 %  games     821  eg_mass      254.1  |E1|w   266.4  |E2|w   29.2  split 0
+  P=8 d<=-1              rows       863    0.084 %  games     234  eg_mass      151.3  |E1|w    19.6  |E2|w    9.2  split 139
+  P=8 d=0                rows    146175   14.213 %  games   11791  eg_mass     5103.1  |E1|w     4.0  |E2|w    1.7  split 29009
+  P=8 d=1                rows     12514    1.217 %  games    3401  eg_mass     1147.5  |E1|w    32.5  |E2|w    5.0  split 44
+  P=8 d=2                rows       516    0.050 %  games     257  eg_mass       69.4  |E1|w    82.8  |E2|w    9.7  split 0
+  P=8 d>=3               rows       179    0.017 %  games     179  eg_mass       45.9  |E1|w   245.1  |E2|w   24.4  split 0
+
+OCB_PURE by P:
+  P=0                    rows         4    0.000 %  games       1  eg_mass        3.7  |E1|w    21.8  |E2|w    3.7  split 0
+  P=1                    rows       406    0.039 %  games      24  eg_mass      372.2  |E1|w   143.3  |E2|w   13.6  split 11
+  P=2                    rows      1093    0.106 %  games      65  eg_mass     1001.9  |E1|w   224.4  |E2|w   17.5  split 24
+  P=3                    rows      1374    0.134 %  games     101  eg_mass     1259.5  |E1|w   224.6  |E2|w   20.5  split 34
+  P=4                    rows      1041    0.101 %  games      93  eg_mass      954.2  |E1|w   209.4  |E2|w   19.5  split 50
+  P=5                    rows      1006    0.098 %  games      69  eg_mass      922.2  |E1|w   242.6  |E2|w   19.9  split 14
+  P=6                    rows       283    0.028 %  games      24  eg_mass      259.4  |E1|w   214.5  |E2|w   23.0  split 12
+  P=7                    rows        25    0.002 %  games       4  eg_mass       22.9  |E1|w   325.0  |E2|w   47.6  split 0
+
+the proposal's cells:
+  P=0 d<=0               rows      1952    0.190 %  games     253  eg_mass     1589.8  |E1|w    38.9  |E2|w   23.7  split 434
+  P=0 d=1                rows      6449    0.627 %  games     385  eg_mass     5225.8  |E1|w   213.9  |E2|w   25.0  split 49
+  P=0 d>=2               rows      3486    0.339 %  games     468  eg_mass     2731.3  |E1|w   346.3  |E2|w   38.3  split 7
+  P=1 d<=0               rows     12183    1.185 %  games    1013  eg_mass     9859.1  |E1|w   133.6  |E2|w   23.5  split 763
+  P=1 d=1                rows     11989    1.166 %  games     964  eg_mass     9445.3  |E1|w   269.1  |E2|w   25.9  split 100
+  P=1 d>=2               rows      4015    0.390 %  games     711  eg_mass     3039.0  |E1|w   382.2  |E2|w   36.1  split 3
+  P=2 d<=0               rows     27720    2.695 %  games    2295  eg_mass    21692.6  |E1|w   167.3  |E2|w   26.4  split 1647
+  P=2 d=1                rows     20498    1.993 %  games    1959  eg_mass    15228.3  |E1|w   266.8  |E2|w   26.0  split 213
+  P=2 d>=2               rows      5154    0.501 %  games    1120  eg_mass     3625.8  |E1|w   366.6  |E2|w   33.6  split 13
+  OCB_PURE P<=2          rows      1503    0.146 %  games      77  eg_mass     1377.8  |E1|w   201.9  |E2|w   16.4  split 35
+  OCB_PURE P=3-4         rows      2415    0.235 %  games     133  eg_mass     2213.8  |E1|w   218.0  |E2|w   20.1  split 84
+  OCB_PURE P>=5          rows      1314    0.128 %  games      80  eg_mass     1204.5  |E1|w   238.1  |E2|w   21.1  split 26
+  OCB_ROOK               rows     11519    1.120 %  games     480  eg_mass     8639.2  |E1|w   156.6  |E2|w   22.4  split 532
+  MOPUP                  rows      2893    0.281 %  games     233  eg_mass     2651.7  |E1|w   599.2  |E2|w   17.6  split 0
+  MOPUP of it KBN        rows       488    0.047 %  games      16  eg_mass      447.3  |E1|w   680.9  |E2|w   16.9  split 0
+  LONE other             rows       693    0.067 %  games     125  eg_mass      666.3  |E1|w   476.4  |E2|w   17.9  split 1
+
+LONE by signature:
+  KRvK                     rows     2264 games     208
+  KBNvK                    rows      488 games      16
+  KBP1vK                   rows      262 games      21
+  KP1vK                    rows      176 games      46
+  KBBvK                    rows      135 games       7
+  KNNvK                    rows      104 games       2
+  KRP1vK                   rows       47 games      19
+  KP2vK                    rows       37 games      15
+  KNP1vK                   rows       33 games      16
+  KNP2vK                   rows       17 games       3
+  KBP2vK                   rows        8 games       1
+  KBNP1vK                  rows        7 games       4
+  KRNvK                    rows        3 games       3
+  KRBvK                    rows        3 games       3
+  KRP2vK                   rows        2 games       1
+
+signatures at phase <= 6, top 60 by rows:
+  KRP2vKRP1                    rows     3976 games     537
+  KRP3vKRP2                    rows     3772 games     634
+  KRP1vKR                      rows     3707 games     320
+  KRP2vKR                      rows     3250 games     289
+  KRP4vKRP3                    rows     2802 games     538
+  KRP3vKRP1                    rows     2610 games     405
+  KRvK                         rows     2264 games     208
+  KRP4vKRP2                    rows     2033 games     350
+  KRP2vKRP2                    rows     1995 games     354
+  KRP3vKRP3                    rows     1989 games     363
+  KRP1vKRP1                    rows     1659 games     250
+  KRNvKR                       rows     1509 games      48
+  KRBP4vKRNP3                  rows     1492 games     251
+  KRP5vKRP4                    rows     1491 games     311
+  KRP3vKR                      rows     1483 games     175
+  KRP4vKRP4                    rows     1433 games     278
+  KRNP5vKRNP4                  rows     1350 games     205
+  KRNP4vKRNP3                  rows     1340 games     243
+  KRBP3vKRNP2                  rows     1340 games     191
+  KRNP3vKRBP2                  rows     1317 games     194
+  KRNP4vKRBP3                  rows     1275 games     262
+  KRBP4vKRBP3 (scb)            rows     1248 games     198
+  KRNP5vKRBP4                  rows     1228 games     216
+  KRNP3vKRNP2                  rows     1144 games     196
+  KRBP5vKRBP4 (scb)            rows     1126 games     180
+  KRBP1vKR                     rows     1123 games      87
+  KRBP5vKRNP4                  rows     1104 games     207
+  KRBvKR                       rows     1103 games      54
+  KRBP5vKRBP4 (ocb)            rows     1061 games     150
+  KRP4vKRP1                    rows     1006 games     181
+  KRBP3vKRBP2 (scb)            rows     1002 games     160
+  KRNP4vKRBP4                  rows      993 games     179
+  KRBP4vKRBP3 (ocb)            rows      993 games     164
+  KRBP2vKRP1                   rows      993 games     153
+  KRP5vKRP3                    rows      988 games     206
+  KRBP2vKRP2                   rows      958 games     179
+  KRBP3vKRP2                   rows      917 games     182
+  KRBP4vKRNP4                  rows      912 games     150
+  KRNP4vKRNP4                  rows      888 games     140
+  KRvKR                        rows      877 games     128
+  KRNP4vKRNP2                  rows      859 games     140
+  KRBP3vKRBP2 (ocb)            rows      859 games     134
+  KRBP2vKRP3                   rows      838 games     150
+  KRBP4vKRNP2                  rows      828 games     137
+  KRNP3vKRBP3                  rows      825 games     136
+  KRNP2vKRP1                   rows      819 games     119
+  KRBP3vKRP3                   rows      814 games     177
+  KRBP3vKRNP3                  rows      804 games     134
+  KRBP6vKRBP5 (scb)            rows      800 games     120
+  KRP5vKRP5                    rows      792 games     152
+  KRBP1vKRP1                   rows      785 games     108
+  KRBP2vKRNP1                  rows      776 games     103
+  KRNP5vKRNP5                  rows      774 games     110
+  KRNP3vKRBP1                  rows      774 games     102
+  KRNP5vKRBP5                  rows      770 games     117
+  KRNP1vKR                     rows      769 games      79
+  KRNP1vKRP1                   rows      767 games      98
+  KRNP3vKRNP3                  rows      762 games     133
+  KRBP3vKRBP3 (ocb)            rows      758 games     107
+  KRNP4vKRBP2                  rows      751 games     136
+  signatures at phase <= 6: 3021
+S124-CENSUS-OK
+
+################ c_view_pv
+S124 census of .tuning/s122/prepared/pool.tsv.pv.validation
+rows 1000566 games 12000 traced 1000566 identity_mismatches 0 smooth_mismatches 0
+
+men on the board (kings included): rows
+  men  3 5925
+  men  4 12041
+  men  5 22763
+  men  6 27399
+  men  7 34408
+  men  8 35543
+  men  9 38596
+  men 10 39915
+  men 11 41579
+  men 12 41759
+  men 13 42722
+  men 14 42410
+  men 15 42472
+  men 16 41077
+  men 17 39857
+  men 18 40023
+  men 19 38041
+  men 20 39849
+  men 21 36814
+  men 22 41390
+  men 23 35971
+  men 24 44136
+  men 25 34303
+  men 26 46948
+  men 27 29479
+  men 28 44609
+  men 29 17683
+  men 30 29086
+  men 31 4782
+  men 32 8986
+
+cases, first that holds (of all rows):
+  DEAD                   rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  LONE                   rows     13540    1.353 %  games    2584  eg_mass    12710.2  |E1|w   619.0  |E2|w   18.0  split 2
+  OCB_PURE               rows      7908    0.790 %  games     792  eg_mass     7249.0  |E1|w   233.7  |E2|w   20.0  split 192
+  OCB_ROOK               rows     14444    1.444 %  games    1459  eg_mass    10833.0  |E1|w   149.5  |E2|w   22.5  split 628
+  OCB_OTHER              rows     57131    5.710 %  games    6873  eg_mass    27791.4  |E1|w   129.9  |E2|w   18.4  split 3924
+  PAWNS                  rows    905646   90.513 %  games   12000  eg_mass   433610.2  |E1|w   128.4  |E2|w   18.3  split 73675
+  NONE                   rows      1897    0.190 %  games    1654  eg_mass      691.6  |E1|w     0.0  |E2|w   13.0  split 0
+
+PAWNS by P (the strong side's pawns) and d (its men's phase units less the other's):
+  P=0 d<=-1              rows        52    0.005 %  games       7  eg_mass       36.0  |E1|w    53.7  |E2|w   54.1  split 28
+  P=0 d=0                rows      2819    0.282 %  games     459  eg_mass     2314.1  |E1|w    39.7  |E2|w   22.4  split 511
+  P=0 d=1                rows      9731    0.973 %  games     801  eg_mass     7937.9  |E1|w   211.0  |E2|w   25.6  split 42
+  P=0 d=2                rows      3731    0.373 %  games     525  eg_mass     2927.3  |E1|w   333.2  |E2|w   35.4  split 2
+  P=0 d>=3               rows      1801    0.180 %  games     377  eg_mass     1428.9  |E1|w   481.2  |E2|w   63.3  split 0
+  P=1 d<=-1              rows       501    0.050 %  games     146  eg_mass      392.0  |E1|w    64.2  |E2|w   44.7  split 222
+  P=1 d=0                rows     19335    1.932 %  games    2160  eg_mass    15727.5  |E1|w   143.2  |E2|w   22.8  split 787
+  P=1 d=1                rows     17813    1.780 %  games    2023  eg_mass    14064.6  |E1|w   285.5  |E2|w   25.7  split 90
+  P=1 d=2                rows      5981    0.598 %  games    1144  eg_mass     4635.0  |E1|w   439.3  |E2|w   33.8  split 8
+  P=1 d>=3               rows      1499    0.150 %  games     474  eg_mass     1161.3  |E1|w   539.1  |E2|w   56.1  split 0
+  P=2 d<=-1              rows      1926    0.192 %  games     538  eg_mass     1506.8  |E1|w   103.6  |E2|w   36.5  split 441
+  P=2 d=0                rows     38046    3.802 %  games    4190  eg_mass    29857.4  |E1|w   183.0  |E2|w   26.0  split 1792
+  P=2 d=1                rows     29235    2.922 %  games    3681  eg_mass    21891.4  |E1|w   302.0  |E2|w   26.3  split 313
+  P=2 d=2                rows      7314    0.731 %  games    1563  eg_mass     5432.7  |E1|w   457.8  |E2|w   30.8  split 15
+  P=2 d>=3               rows      1143    0.114 %  games     430  eg_mass      831.4  |E1|w   502.5  |E2|w   56.2  split 0
+  P=3 d<=-1              rows      3838    0.384 %  games    1013  eg_mass     2869.9  |E1|w   128.1  |E2|w   34.4  split 660
+  P=3 d=0                rows     58875    5.884 %  games    6394  eg_mass    42400.8  |E1|w   163.3  |E2|w   25.4  split 3632
+  P=3 d=1                rows     37283    3.726 %  games    5207  eg_mass    25266.0  |E1|w   275.1  |E2|w   25.1  split 613
+  P=3 d=2                rows      7690    0.769 %  games    1647  eg_mass     5313.1  |E1|w   441.9  |E2|w   29.9  split 17
+  P=3 d>=3               rows      1004    0.100 %  games     339  eg_mass      681.8  |E1|w   472.7  |E2|w   54.2  split 0
+  P=4 d<=-1              rows      5463    0.546 %  games    1676  eg_mass     3588.6  |E1|w   112.7  |E2|w   31.6  split 908
+  P=4 d=0                rows     81419    8.137 %  games    8635  eg_mass    49645.8  |E1|w   122.5  |E2|w   22.4  split 6177
+  P=4 d=1                rows     41864    4.184 %  games    6038  eg_mass    24884.5  |E1|w   237.5  |E2|w   22.7  split 912
+  P=4 d=2                rows      5800    0.580 %  games    1402  eg_mass     3632.3  |E1|w   389.7  |E2|w   30.2  split 14
+  P=4 d>=3               rows       581    0.058 %  games     212  eg_mass      361.6  |E1|w   443.5  |E2|w   47.2  split 0
+  P=5 d<=-1              rows      6709    0.671 %  games    2257  eg_mass     3714.8  |E1|w    87.2  |E2|w   26.3  split 1018
+  P=5 d=0                rows    112865   11.280 %  games   10240  eg_mass    51941.7  |E1|w    78.7  |E2|w   17.5  split 10838
+  P=5 d=1                rows     37437    3.742 %  games    5844  eg_mass    18312.5  |E1|w   186.5  |E2|w   19.2  split 1024
+  P=5 d=2                rows      3689    0.369 %  games     873  eg_mass     2018.8  |E1|w   340.1  |E2|w   28.4  split 12
+  P=5 d>=3               rows       289    0.029 %  games     103  eg_mass      149.0  |E1|w   351.6  |E2|w   39.2  split 0
+  P=6 d<=-1              rows      6078    0.607 %  games    2292  eg_mass     2777.8  |E1|w    65.9  |E2|w   21.7  split 882
+  P=6 d=0                rows    143427   14.335 %  games   10942  eg_mass    43508.3  |E1|w    44.4  |E2|w   12.0  split 17255
+  P=6 d=1                rows     27608    2.759 %  games    4377  eg_mass     9819.6  |E1|w   127.6  |E2|w   14.8  split 639
+  P=6 d=2                rows      1548    0.155 %  games     367  eg_mass      710.6  |E1|w   280.9  |E2|w   26.2  split 4
+  P=6 d>=3               rows        93    0.009 %  games      27  eg_mass       47.0  |E1|w   353.4  |E2|w   35.2  split 0
+  P=7 d<=-1              rows      3435    0.343 %  games    1449  eg_mass     1223.3  |E1|w    54.2  |E2|w   17.2  split 432
+  P=7 d=0                rows    120668   12.060 %  games   10644  eg_mass    22175.3  |E1|w    23.1  |E2|w    7.7  split 17745
+  P=7 d=1                rows     14013    1.401 %  games    2277  eg_mass     3465.5  |E1|w    87.1  |E2|w   10.5  split 200
+  P=7 d=2                rows       329    0.033 %  games     102  eg_mass      113.2  |E1|w   192.6  |E2|w   22.5  split 0
+  P=7 d>=3               rows         8    0.001 %  games       3  eg_mass        2.7  |E1|w   170.2  |E2|w   17.5  split 0
+  P=8 d<=-1              rows       636    0.064 %  games     352  eg_mass      145.2  |E1|w    28.0  |E2|w   11.4  split 60
+  P=8 d=0                rows     39181    3.916 %  games    7040  eg_mass     4206.8  |E1|w    11.7  |E2|w    4.7  split 6369
+  P=8 d=1                rows      2830    0.283 %  games     683  eg_mass      478.1  |E1|w    57.8  |E2|w    7.3  split 13
+  P=8 d=2                rows        59    0.006 %  games      18  eg_mass       11.6  |E1|w   110.9  |E2|w   12.8  split 0
+
+OCB_PURE by P:
+  P=0                    rows        32    0.003 %  games      11  eg_mass       29.3  |E1|w    26.0  |E2|w   10.0  split 5
+  P=1                    rows       665    0.066 %  games     110  eg_mass      609.6  |E1|w   158.4  |E2|w   15.5  split 18
+  P=2                    rows      1880    0.188 %  games     254  eg_mass     1723.3  |E1|w   224.0  |E2|w   18.1  split 33
+  P=3                    rows      1984    0.198 %  games     357  eg_mass     1818.7  |E1|w   247.5  |E2|w   22.0  split 42
+  P=4                    rows      1533    0.153 %  games     358  eg_mass     1405.3  |E1|w   248.8  |E2|w   21.0  split 50
+  P=5                    rows      1349    0.135 %  games     276  eg_mass     1236.6  |E1|w   262.9  |E2|w   20.1  split 33
+  P=6                    rows       392    0.039 %  games     125  eg_mass      359.3  |E1|w   205.5  |E2|w   22.6  split 9
+  P=7                    rows        57    0.006 %  games      25  eg_mass       52.2  |E1|w   228.9  |E2|w   20.3  split 2
+
+the proposal's cells:
+  P=0 d<=0               rows      2871    0.287 %  games     465  eg_mass     2350.1  |E1|w    39.9  |E2|w   22.9  split 539
+  P=0 d=1                rows      9731    0.973 %  games     801  eg_mass     7937.9  |E1|w   211.0  |E2|w   25.6  split 42
+  P=0 d>=2               rows      5532    0.553 %  games     816  eg_mass     4356.2  |E1|w   381.4  |E2|w   44.5  split 2
+  P=1 d<=0               rows     19836    1.982 %  games    2226  eg_mass    16119.5  |E1|w   141.2  |E2|w   23.3  split 1009
+  P=1 d=1                rows     17813    1.780 %  games    2023  eg_mass    14064.6  |E1|w   285.5  |E2|w   25.7  split 90
+  P=1 d>=2               rows      7480    0.748 %  games    1443  eg_mass     5796.2  |E1|w   459.3  |E2|w   38.3  split 8
+  P=2 d<=0               rows     39972    3.995 %  games    4394  eg_mass    31364.2  |E1|w   179.1  |E2|w   26.5  split 2233
+  P=2 d=1                rows     29235    2.922 %  games    3681  eg_mass    21891.4  |E1|w   302.0  |E2|w   26.3  split 313
+  P=2 d>=2               rows      8457    0.845 %  games    1802  eg_mass     6264.0  |E1|w   463.8  |E2|w   34.2  split 15
+  OCB_PURE P<=2          rows      2577    0.258 %  games     285  eg_mass     2362.3  |E1|w   204.6  |E2|w   17.4  split 56
+  OCB_PURE P=3-4         rows      3517    0.352 %  games     533  eg_mass     3223.9  |E1|w   248.1  |E2|w   21.6  split 92
+  OCB_PURE P>=5          rows      1798    0.180 %  games     350  eg_mass     1648.2  |E1|w   249.3  |E2|w   20.6  split 44
+  OCB_ROOK               rows     14418    1.441 %  games    1457  eg_mass    10813.5  |E1|w   149.8  |E2|w   22.5  split 628
+  MOPUP                  rows      5967    0.596 %  games     590  eg_mass     5458.5  |E1|w   616.6  |E2|w   17.5  split 0
+  MOPUP of it KBN        rows       682    0.068 %  games      30  eg_mass      625.2  |E1|w   696.9  |E2|w   18.0  split 0
+  LONE other             rows      7573    0.757 %  games    2289  eg_mass     7251.7  |E1|w   620.9  |E2|w   18.4  split 2
+
+LONE by signature:
+  KRvK                     rows     4821 games     432
+  KRP1vK                   rows     1450 games     500
+  KP1vK                    rows     1071 games     500
+  KBP1vK                   rows     1010 games     252
+  KP2vK                    rows      841 games     381
+  KBNvK                    rows      682 games      30
+  KNP1vK                   rows      677 games     215
+  KRP2vK                   rows      550 games     256
+  KNP2vK                   rows      437 games     188
+  KBP2vK                   rows      388 games     187
+  KP3vK                    rows      283 games     174
+  KBBvK                    rows      228 games      11
+  KNP3vK                   rows      146 games      78
+  KBP3vK                   rows      146 games      85
+  KNNvK                    rows      138 games       7
+  KBNP1vK                  rows      134 games      40
+  KRNvK                    rows      132 games      57
+  KP4vK                    rows       83 games      55
+  KRP3vK                   rows       74 games      63
+  KRBvK                    rows       71 games      48
+  KQvK                     rows       33 games      30
+  KNP4vK                   rows       28 games      17
+  KBP4vK                   rows       26 games      17
+  KBBP1vK                  rows       23 games      10
+  KBNP2vK                  rows       18 games      14
+  KNNP1vK                  rows       17 games       8
+  KP5vK                    rows       15 games       9
+  KRBP1vK                  rows        6 games       6
+  KRP4vK                   rows        4 games       3
+  KNNP2vK                  rows        4 games       4
+  KRNP1vK                  rows        3 games       3
+  KBBP2vK                  rows        1 games       1
+
+signatures at phase <= 6, top 60 by rows:
+  KRP1vKR                      rows     6625 games     821
+  KRP2vKRP1                    rows     5694 games    1343
+  KRP3vKRP2                    rows     5276 games    1509
+  KRP2vKR                      rows     4904 games     705
+  KRvK                         rows     4821 games     432
+  KRP4vKRP3                    rows     3449 games    1261
+  KRP3vKRP1                    rows     3414 games     898
+  KRP2vKRP2                    rows     2964 games     899
+  KRP3vKRP3                    rows     2774 games     951
+  KRP1vKRP1                    rows     2484 games     651
+  KRP3vKR                      rows     2328 games     419
+  KRP4vKRP2                    rows     2303 games     767
+  KRP5vKRP4                    rows     2013 games     861
+  KRNvKR                       rows     1974 games      99
+  KRP4vKRP4                    rows     1866 games     815
+  KRBP1vKR                     rows     1827 games     213
+  KRNP4vKRNP3                  rows     1807 games     614
+  KRBP4vKRNP3                  rows     1729 games     613
+  KRNP4vKRBP3                  rows     1670 games     644
+  KRNP3vKRBP2                  rows     1622 games     478
+  KRBP2vKR                     rows     1596 games     244
+  KRNP5vKRBP4                  rows     1575 games     643
+  KRBvKR                       rows     1564 games     100
+  KRNP3vKRNP2                  rows     1561 games     485
+  KRNP5vKRNP4                  rows     1548 games     574
+  KRBP3vKRNP2                  rows     1543 games     455
+  KRP1vK                       rows     1450 games     500
+  KRBP4vKRBP3 (scb)            rows     1445 games     501
+  KRBP4vKRBP3 (ocb)            rows     1441 games     427
+  KRNP2vKR                     rows     1419 games     204
+  KRNP1vKR                     rows     1401 games     179
+  KRvKR                        rows     1349 games     247
+  KRBP5vKRBP4 (scb)            rows     1347 games     517
+  KRBP2vKRP1                   rows     1338 games     328
+  KRBP5vKRBP4 (ocb)            rows     1336 games     395
+  KRBP5vKRNP4                  rows     1317 games     557
+  KRBP3vKRBP2 (ocb)            rows     1242 games     302
+  KRBP2vKRP2                   rows     1205 games     325
+  KRBP4vKRNP4                  rows     1201 games     469
+  KRNP4vKRBP4                  rows     1194 games     465
+  KRBP3vKRBP2 (scb)            rows     1184 games     343
+  KRNP4vKRNP4                  rows     1173 games     442
+  KRP5vKRP3                    rows     1141 games     508
+  KRP4vKRP1                    rows     1138 games     366
+  KRP5vKRP5                    rows     1133 games     471
+  KRNP2vKRP1                   rows     1121 games     243
+  KRBP1vKRP1                   rows     1119 games     223
+  KP1vK                        rows     1071 games     500
+  KRBP3vKRP2                   rows     1038 games     327
+  KRNP3vKRBP3                  rows     1013 games     356
+  KBP1vK                       rows     1010 games     252
+  KRBP3vKRNP3                  rows     1005 games     374
+  KRNP3vKRNP3                  rows      999 games     377
+  KRNP2vKRNP1                  rows      997 games     257
+  KRBP2vKRNP1                  rows      992 games     257
+  KRBP3vKRP1                   rows      970 games     283
+  KBP2vKBP1 (ocb)              rows      968 games     149
+  KRNP1vKRP1                   rows      956 games     215
+  KRBP2vKRBP1 (ocb)            rows      952 games     156
+  KRP1vKN                      rows      940 games     128
+  signatures at phase <= 6: 3558
+S124-CENSUS-OK
+
+################ c_s083
+S124 census of .tuning/s083/curve/s0/cand_6226944_s1.tsv
+rows 6226944 games 137994 traced 6226944 identity_mismatches 0 smooth_mismatches 0
+
+men on the board (kings included): rows
+  men  3 6382
+  men  4 18628
+  men  5 47738
+  men  6 77084
+  men  7 104415
+  men  8 123888
+  men  9 147999
+  men 10 163795
+  men 11 180119
+  men 12 190386
+  men 13 200471
+  men 14 208515
+  men 15 210930
+  men 16 220883
+  men 17 218418
+  men 18 229400
+  men 19 226017
+  men 20 239854
+  men 21 232637
+  men 22 256005
+  men 23 239446
+  men 24 276705
+  men 25 249075
+  men 26 304127
+  men 27 250327
+  men 28 340512
+  men 29 250832
+  men 30 392104
+  men 31 233168
+  men 32 387084
+
+cases, first that holds (of all rows):
+  DEAD                   rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  LONE                   rows     11782    0.189 %  games    3857  eg_mass    11020.5  |E1|w   547.7  |E2|w   16.9  split 8
+  OCB_PURE               rows     27451    0.441 %  games    2466  eg_mass    25163.4  |E1|w   198.6  |E2|w   19.4  split 808
+  OCB_ROOK               rows     58874    0.945 %  games    5521  eg_mass    44155.5  |E1|w   143.1  |E2|w   22.5  split 3298
+  OCB_OTHER              rows    309381    4.968 %  games   30514  eg_mass   144012.3  |E1|w   124.6  |E2|w   18.3  split 19982
+  PAWNS                  rows   5806576   93.249 %  games  137986  eg_mass  2064468.8  |E1|w    90.4  |E2|w   14.1  split 575961
+  NONE                   rows     12880    0.207 %  games   10812  eg_mass     3307.5  |E1|w     0.0  |E2|w   10.0  split 0
+
+PAWNS by P (the strong side's pawns) and d (its men's phase units less the other's):
+  P=0 d<=-1              rows       101    0.002 %  games      32  eg_mass       71.1  |E1|w    47.5  |E2|w   54.3  split 51
+  P=0 d=0                rows      6824    0.110 %  games    1642  eg_mass     5536.4  |E1|w    38.7  |E2|w   20.4  split 1169
+  P=0 d=1                rows     23751    0.381 %  games    3299  eg_mass    19193.5  |E1|w   195.5  |E2|w   26.3  split 214
+  P=0 d=2                rows     11120    0.179 %  games    2033  eg_mass     8938.7  |E1|w   349.0  |E2|w   30.0  split 10
+  P=0 d>=3               rows      3665    0.059 %  games    1129  eg_mass     2842.9  |E1|w   427.2  |E2|w   58.1  split 0
+  P=1 d<=-1              rows      1324    0.021 %  games     548  eg_mass     1035.4  |E1|w    55.8  |E2|w   37.9  split 435
+  P=1 d=0                rows     49818    0.800 %  games    8913  eg_mass    40288.6  |E1|w   123.8  |E2|w   22.9  split 3140
+  P=1 d=1                rows     63076    1.013 %  games   10175  eg_mass    49513.4  |E1|w   259.2  |E2|w   25.9  split 525
+  P=1 d=2                rows     21942    0.352 %  games    4480  eg_mass    16749.3  |E1|w   387.5  |E2|w   30.0  split 42
+  P=1 d>=3               rows      4973    0.080 %  games    1512  eg_mass     3608.7  |E1|w   414.1  |E2|w   57.4  split 0
+  P=2 d<=-1              rows      7440    0.119 %  games    2152  eg_mass     5804.1  |E1|w    96.0  |E2|w   34.3  split 1507
+  P=2 d=0                rows    122854    1.973 %  games   21405  eg_mass    96125.2  |E1|w   157.2  |E2|w   25.3  split 7213
+  P=2 d=1                rows    123510    1.983 %  games   20718  eg_mass    91427.1  |E1|w   267.1  |E2|w   25.8  split 1455
+  P=2 d=2                rows     33780    0.542 %  games    6800  eg_mass    23805.7  |E1|w   365.3  |E2|w   30.6  split 91
+  P=2 d>=3               rows      5794    0.093 %  games    1665  eg_mass     3843.5  |E1|w   396.9  |E2|w   52.4  split 1
+  P=3 d<=-1              rows     15407    0.247 %  games    4302  eg_mass    11286.4  |E1|w   110.1  |E2|w   34.7  split 2906
+  P=3 d=0                rows    216278    3.473 %  games   37441  eg_mass   154886.3  |E1|w   143.6  |E2|w   24.8  split 14634
+  P=3 d=1                rows    189479    3.043 %  games   32631  eg_mass   125788.5  |E1|w   240.8  |E2|w   24.3  split 3346
+  P=3 d=2                rows     43509    0.699 %  games    9162  eg_mass    27623.9  |E1|w   339.7  |E2|w   29.0  split 187
+  P=3 d>=3               rows      6117    0.098 %  games    1696  eg_mass     3638.0  |E1|w   366.7  |E2|w   47.6  split 1
+  P=4 d<=-1              rows     25218    0.405 %  games    7111  eg_mass    16416.7  |E1|w    97.0  |E2|w   31.6  split 4564
+  P=4 d=0                rows    355595    5.711 %  games   57604  eg_mass   213527.8  |E1|w   111.8  |E2|w   21.7  split 28041
+  P=4 d=1                rows    247811    3.980 %  games   41699  eg_mass   138547.6  |E1|w   200.1  |E2|w   21.5  split 6140
+  P=4 d=2                rows     45528    0.731 %  games    9110  eg_mass    25121.4  |E1|w   304.1  |E2|w   27.2  split 174
+  P=4 d>=3               rows      4535    0.073 %  games    1351  eg_mass     2343.8  |E1|w   338.7  |E2|w   38.6  split 4
+  P=5 d<=-1              rows     36384    0.584 %  games    9743  eg_mass    20005.8  |E1|w    81.6  |E2|w   26.5  split 5890
+  P=5 d=0                rows    573957    9.217 %  games   80935  eg_mass   253216.0  |E1|w    75.2  |E2|w   16.9  split 54682
+  P=5 d=1                rows    265604    4.265 %  games   42732  eg_mass   117390.1  |E1|w   160.3  |E2|w   17.8  split 7920
+  P=5 d=2                rows     35706    0.573 %  games    7086  eg_mass    16579.3  |E1|w   266.3  |E2|w   23.2  split 83
+  P=5 d>=3               rows      2935    0.047 %  games     897  eg_mass     1293.8  |E1|w   302.5  |E2|w   34.2  split 3
+  P=6 d<=-1              rows     39943    0.641 %  games    9900  eg_mass    17753.5  |E1|w    63.3  |E2|w   21.0  split 5794
+  P=6 d=0                rows    844970   13.570 %  games  102242  eg_mass   236332.5  |E1|w    42.4  |E2|w   11.6  split 101436
+  P=6 d=1                rows    233364    3.748 %  games   34607  eg_mass    72830.5  |E1|w   115.9  |E2|w   13.5  split 6839
+  P=6 d=2                rows     21435    0.344 %  games    3915  eg_mass     7965.7  |E1|w   221.3  |E2|w   19.6  split 21
+  P=6 d>=3               rows      1570    0.025 %  games     412  eg_mass      594.4  |E1|w   278.5  |E2|w   26.1  split 0
+  P=7 d<=-1              rows     28326    0.455 %  games    6812  eg_mass     9105.9  |E1|w    42.5  |E2|w   15.6  split 3920
+  P=7 d=0                rows    990549   15.907 %  games  115122  eg_mass   141338.6  |E1|w    19.2  |E2|w    6.5  split 152506
+  P=7 d=1                rows    175566    2.819 %  games   23741  eg_mass    31664.4  |E1|w    66.3  |E2|w    8.8  split 3288
+  P=7 d=2                rows     10524    0.169 %  games    1843  eg_mass     2534.2  |E1|w   143.7  |E2|w   13.5  split 11
+  P=7 d>=3               rows       432    0.007 %  games     116  eg_mass      132.9  |E1|w   198.2  |E2|w   23.6  split 0
+  P=8 d<=-1              rows      9251    0.149 %  games    2501  eg_mass     1770.4  |E1|w    24.0  |E2|w   10.5  split 1395
+  P=8 d=0                rows    815663   13.099 %  games  114607  eg_mass    37148.8  |E1|w     5.3  |E2|w    2.3  split 156057
+  P=8 d=1                rows     85997    1.381 %  games   12518  eg_mass     8186.8  |E1|w    34.7  |E2|w    5.4  split 266
+  P=8 d=2                rows      4872    0.078 %  games     850  eg_mass      638.5  |E1|w    77.9  |E2|w    9.6  split 0
+  P=8 d>=3               rows        79    0.001 %  games      21  eg_mass       22.5  |E1|w   180.0  |E2|w   26.1  split 0
+
+OCB_PURE by P:
+  P=0                    rows        88    0.001 %  games      29  eg_mass       80.7  |E1|w    33.4  |E2|w   14.5  split 2
+  P=1                    rows      1938    0.031 %  games     276  eg_mass     1776.5  |E1|w   118.7  |E2|w   15.1  split 74
+  P=2                    rows      5372    0.086 %  games     768  eg_mass     4924.3  |E1|w   190.1  |E2|w   18.6  split 122
+  P=3                    rows      7378    0.118 %  games    1143  eg_mass     6763.2  |E1|w   204.9  |E2|w   19.6  split 241
+  P=4                    rows      6633    0.107 %  games    1049  eg_mass     6080.3  |E1|w   218.0  |E2|w   20.2  split 160
+  P=5                    rows      4041    0.065 %  games     667  eg_mass     3704.2  |E1|w   200.8  |E2|w   20.4  split 143
+  P=6                    rows      1625    0.026 %  games     277  eg_mass     1489.6  |E1|w   217.7  |E2|w   20.9  split 64
+  P=7                    rows       295    0.005 %  games      53  eg_mass      270.4  |E1|w   242.5  |E2|w   17.3  split 2
+  P=8                    rows        36    0.001 %  games       5  eg_mass       33.0  |E1|w   105.6  |E2|w   12.1  split 0
+
+the proposal's cells:
+  P=0 d<=0               rows      6925    0.111 %  games    1669  eg_mass     5607.5  |E1|w    38.9  |E2|w   20.9  split 1220
+  P=0 d=1                rows     23751    0.381 %  games    3299  eg_mass    19193.5  |E1|w   195.5  |E2|w   26.3  split 214
+  P=0 d>=2               rows     14785    0.237 %  games    3072  eg_mass    11781.7  |E1|w   368.4  |E2|w   36.9  split 10
+  P=1 d<=0               rows     51142    0.821 %  games    9353  eg_mass    41324.0  |E1|w   122.0  |E2|w   23.3  split 3575
+  P=1 d=1                rows     63076    1.013 %  games   10175  eg_mass    49513.4  |E1|w   259.2  |E2|w   25.9  split 525
+  P=1 d>=2               rows     26915    0.432 %  games    5780  eg_mass    20358.0  |E1|w   392.4  |E2|w   35.1  split 42
+  P=2 d<=0               rows    130294    2.092 %  games   23020  eg_mass   101929.4  |E1|w   153.7  |E2|w   25.8  split 8720
+  P=2 d=1                rows    123510    1.983 %  games   20718  eg_mass    91427.1  |E1|w   267.1  |E2|w   25.8  split 1455
+  P=2 d>=2               rows     39574    0.636 %  games    8090  eg_mass    27649.2  |E1|w   370.0  |E2|w   33.8  split 92
+  OCB_PURE P<=2          rows      7398    0.119 %  games     905  eg_mass     6781.5  |E1|w   169.6  |E2|w   17.7  split 198
+  OCB_PURE P=3-4         rows     14011    0.225 %  games    1657  eg_mass    12843.4  |E1|w   211.1  |E2|w   19.9  split 401
+  OCB_PURE P>=5          rows      5997    0.096 %  games     798  eg_mass     5497.3  |E1|w   206.8  |E2|w   20.3  split 209
+  OCB_ROOK               rows     58776    0.944 %  games    5520  eg_mass    44082.0  |E1|w   143.4  |E2|w   22.5  split 3298
+  MOPUP                  rows      6997    0.112 %  games    1837  eg_mass     6409.9  |E1|w   600.6  |E2|w   17.1  split 0
+  MOPUP of it KBN        rows      1380    0.022 %  games     196  eg_mass     1265.0  |E1|w   681.8  |E2|w   16.2  split 0
+  LONE other             rows      4785    0.077 %  games    2091  eg_mass     4610.5  |E1|w   470.4  |E2|w   16.7  split 8
+
+LONE by signature:
+  KRvK                     rows     5149 games    1525
+  KBNvK                    rows     1380 games     196
+  KP1vK                    rows     1193 games     576
+  KBP1vK                   rows      916 games     268
+  KRP1vK                   rows      706 games     360
+  KNP1vK                   rows      532 games     235
+  KP2vK                    rows      477 games     318
+  KNNvK                    rows      416 games      42
+  KBBvK                    rows      412 games      79
+  KNP2vK                   rows      183 games     101
+  KBP2vK                   rows      133 games      77
+  KP3vK                    rows       98 games      74
+  KQvK                     rows       40 games      27
+  KRP2vK                   rows       31 games      22
+  KP4vK                    rows       24 games      16
+  KBNP1vK                  rows       23 games      17
+  KNP3vK                   rows       22 games      19
+  KBP3vK                   rows       17 games      11
+  KRNvK                    rows       13 games      10
+  KRBvK                    rows        3 games       3
+  KNNP1vK                  rows        3 games       3
+  KRP3vK                   rows        2 games       2
+  KQP1vK                   rows        2 games       1
+  KBP4vK                   rows        2 games       2
+  KBNP4vK                  rows        2 games       1
+  KRBBP1vK                 rows        1 games       1
+  KBBP2vK                  rows        1 games       1
+  KBBP1vK                  rows        1 games       1
+
+signatures at phase <= 6, top 60 by rows:
+  KRP3vKRP2                    rows    21762 games    5483
+  KRP2vKRP1                    rows    21192 games    4763
+  KRP4vKRP3                    rows    17114 games    4641
+  KRP1vKR                      rows    15391 games    2753
+  KRP2vKR                      rows    14918 games    2585
+  KRP3vKRP1                    rows    12927 games    3124
+  KRP3vKRP3                    rows    12085 games    3172
+  KRP2vKRP2                    rows    11772 games    2995
+  KRP5vKRP4                    rows    10192 games    2823
+  KRP4vKRP2                    rows     9937 games    2713
+  KRP4vKRP4                    rows     9031 games    2462
+  KRP1vKRP1                    rows     8516 games    2024
+  KRNP4vKRBP3                  rows     7218 games    2001
+  KRBP4vKRNP3                  rows     7000 games    1897
+  KRNP4vKRNP3                  rows     6622 games    1848
+  KRNP5vKRBP4                  rows     6617 games    1823
+  KRBP2vKRP1                   rows     6540 games    1592
+  KRP3vKR                      rows     6469 games    1248
+  KRBP2vKRP2                   rows     6302 games    1593
+  KRBP4vKRBP3 (ocb)            rows     6224 games    1502
+  KRBP5vKRNP4                  rows     6139 games    1737
+  KRP5vKRP3                    rows     6132 games    1781
+  KRNP5vKRNP4                  rows     6060 games    1588
+  KRBP3vKRP2                   rows     6058 games    1668
+  KRBP3vKRP3                   rows     5863 games    1621
+  KRBP4vKRBP3 (scb)            rows     5788 games    1590
+  KRBP5vKRBP4 (scb)            rows     5735 games    1585
+  KRNP3vKRBP2                  rows     5452 games    1395
+  KRBP1vKR                     rows     5451 games     998
+  KRBP5vKRBP4 (ocb)            rows     5416 games    1282
+  KRBP3vKRBP2 (ocb)            rows     5414 games    1230
+  KRBP3vKRNP2                  rows     5170 games    1390
+  KRP5vKRP5                    rows     5161 games    1385
+  KRvK                         rows     5149 games    1525
+  KRNP1vKR                     rows     5052 games     832
+  KRNP3vKRNP2                  rows     5010 games    1351
+  KRNP2vKRP1                   rows     4925 games    1176
+  KRBP2vKR                     rows     4918 games    1057
+  KRBP1vKRP1                   rows     4898 games    1128
+  KRNP2vKRP2                   rows     4839 games    1262
+  KRBP4vKRNP4                  rows     4790 games    1248
+  KRBP4vKRP3                   rows     4775 games    1345
+  KRP4vKRP1                    rows     4737 games    1218
+  KRBP3vKRP1                   rows     4669 games    1232
+  KRNP4vKRNP4                  rows     4592 games    1220
+  KRNP3vKRP2                   rows     4552 games    1242
+  KRNP4vKRBP4                  rows     4543 games    1250
+  KRBP4vKRP4                   rows     4379 games    1214
+  KRBP4vKRBP4 (scb)            rows     4376 games    1172
+  KRBP3vKRNP3                  rows     4295 games    1110
+  KRBP4vKRBP4 (ocb)            rows     4245 games    1020
+  KRNP3vKRP3                   rows     4234 games    1207
+  KRBP2vKRP3                   rows     4231 games    1230
+  KRBP3vKRBP2 (scb)            rows     4046 games    1056
+  KRNP3vKRBP3                  rows     3944 games    1068
+  KRNP5vKRBP5                  rows     3920 games    1050
+  KRNP3vKRNP3                  rows     3904 games    1093
+  KRNP2vKR                     rows     3883 games     777
+  KRNP6vKRBP5                  rows     3865 games    1032
+  KRvKR                        rows     3848 games     871
+  signatures at phase <= 6: 4418
+S124-CENSUS-OK
+
+################ c_pool
+S124 census of .tuning/s122/corpus/pool.tsv.qs
+rows 13867961 games 150000 traced 1153847 identity_mismatches 0 smooth_mismatches 0
+labels: result column written to the dump for games outside .tuning/s124/heldout_games.txt, no table
+pool: past the filter (|column 3| >= 1000) 1033134; lone-king rows 227476, of them past 175227; rows of five men or fewer 434320, of them past 178002
+
+men on the board (kings included): rows
+  men  3 57601
+  men  4 143453
+  men  5 233266
+  men  6 321039
+  men  7 398488
+  men  8 436560
+  men  9 461847
+  men 10 471892
+  men 11 486194
+  men 12 485921
+  men 13 491861
+  men 14 488563
+  men 15 486672
+  men 16 484893
+  men 17 475220
+  men 18 480022
+  men 19 464367
+  men 20 484128
+  men 21 453480
+  men 22 500705
+  men 23 455636
+  men 24 534863
+  men 25 454783
+  men 26 588969
+  men 27 451501
+  men 28 672647
+  men 29 441675
+  men 30 778692
+  men 31 401791
+  men 32 781232
+
+cases, first that holds (of traced rows):
+  DEAD                   rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  LONE                   rows    227476    1.640 %  games   27756  eg_mass   203383.6  |E1|w   814.9  |E2|w   29.2  split 59
+  OCB_PURE               rows     21625    0.156 %  games    1179  eg_mass    19822.9  |E1|w   258.2  |E2|w   19.1  split 396
+  OCB_ROOK               rows      4731    0.034 %  games     280  eg_mass     3548.2  |E1|w   130.4  |E2|w   20.3  split 182
+  OCB_OTHER              rows     16916    0.122 %  games    1176  eg_mass    14012.3  |E1|w   575.0  |E2|w   25.7  split 48
+  PAWNS                  rows    882414    6.363 %  games   53560  eg_mass   733859.7  |E1|w   387.7  |E2|w   30.5  split 16391
+  NONE                   rows       685    0.005 %  games     553  eg_mass      583.1  |E1|w     0.0  |E2|w   22.1  split 0
+
+PAWNS by P (the strong side's pawns) and d (its men's phase units less the other's):
+  P=0 d<=-1              rows       246    0.002 %  games      54  eg_mass      171.0  |E1|w    71.1  |E2|w   56.2  split 99
+  P=0 d=0                rows     24650    0.178 %  games    2436  eg_mass    20313.7  |E1|w    35.7  |E2|w   22.4  split 4932
+  P=0 d=1                rows     75126    0.542 %  games    3851  eg_mass    61814.2  |E1|w   214.5  |E2|w   25.3  split 466
+  P=0 d=2                rows     34856    0.251 %  games    2663  eg_mass    28379.2  |E1|w   367.4  |E2|w   30.9  split 31
+  P=0 d>=3               rows     28837    0.208 %  games    5014  eg_mass    22201.6  |E1|w   601.7  |E2|w   64.9  split 0
+  P=1 d<=-1              rows      4093    0.030 %  games     842  eg_mass     3295.0  |E1|w    60.8  |E2|w   39.1  split 1393
+  P=1 d=0                rows    134784    0.972 %  games   10887  eg_mass   111678.9  |E1|w   149.8  |E2|w   22.5  split 5360
+  P=1 d=1                rows    111003    0.800 %  games    8150  eg_mass    91917.1  |E1|w   368.5  |E2|w   24.4  split 158
+  P=1 d=2                rows     46320    0.334 %  games    4800  eg_mass    37782.9  |E1|w   541.5  |E2|w   30.2  split 8
+  P=1 d>=3               rows     42151    0.304 %  games    8317  eg_mass    32584.8  |E1|w   760.4  |E2|w   65.1  split 0
+  P=2 d<=-1              rows     10473    0.076 %  games    1716  eg_mass     8891.8  |E1|w   123.2  |E2|w   33.1  split 1787
+  P=2 d=0                rows    157098    1.133 %  games   13815  eg_mass   133812.5  |E1|w   266.3  |E2|w   25.3  split 1732
+  P=2 d=1                rows     75745    0.546 %  games    7131  eg_mass    64193.0  |E1|w   559.2  |E2|w   25.4  split 5
+  P=2 d=2                rows     32319    0.233 %  games    4269  eg_mass    26854.1  |E1|w   698.6  |E2|w   30.3  split 0
+  P=2 d>=3               rows     25241    0.182 %  games    5561  eg_mass    20142.5  |E1|w   872.3  |E2|w   63.5  split 0
+  P=3 d<=-1              rows      4669    0.034 %  games     736  eg_mass     4256.0  |E1|w   251.3  |E2|w   35.3  split 371
+  P=3 d=0                rows     46177    0.333 %  games    4927  eg_mass    40275.0  |E1|w   504.6  |E2|w   30.1  split 40
+  P=3 d=1                rows     13783    0.099 %  games    1959  eg_mass    12534.9  |E1|w   740.4  |E2|w   26.5  split 0
+  P=3 d=2                rows      7333    0.053 %  games    1354  eg_mass     6229.9  |E1|w   778.1  |E2|w   33.4  split 0
+  P=3 d>=3               rows      5164    0.037 %  games    1230  eg_mass     4218.5  |E1|w   915.7  |E2|w   70.7  split 0
+  P=4 d<=-1              rows       621    0.004 %  games     101  eg_mass      588.0  |E1|w   437.2  |E2|w   41.7  split 9
+  P=4 d=0                rows      1725    0.012 %  games     405  eg_mass     1725.0  |E1|w   578.0  |E2|w   23.3  split 0
+
+OCB_PURE by P:
+  P=0                    rows       642    0.005 %  games      58  eg_mass      588.5  |E1|w    30.1  |E2|w    9.6  split 43
+  P=1                    rows      6929    0.050 %  games     404  eg_mass     6351.6  |E1|w   138.4  |E2|w   15.5  split 305
+  P=2                    rows     11689    0.084 %  games     764  eg_mass    10714.9  |E1|w   269.2  |E2|w   20.0  split 48
+  P=3                    rows      2307    0.017 %  games     199  eg_mass     2114.8  |E1|w   632.1  |E2|w   28.1  split 0
+
+the proposal's cells:
+  P=0 d<=0               rows     24896    0.180 %  games    2486  eg_mass    20484.7  |E1|w    36.0  |E2|w   22.7  split 5031
+  P=0 d=1                rows     75126    0.542 %  games    3851  eg_mass    61814.2  |E1|w   214.5  |E2|w   25.3  split 466
+  P=0 d>=2               rows     63693    0.459 %  games    7397  eg_mass    50580.8  |E1|w   473.5  |E2|w   46.2  split 31
+  P=1 d<=0               rows    138877    1.001 %  games   11527  eg_mass   114974.0  |E1|w   147.1  |E2|w   22.9  split 6753
+  P=1 d=1                rows    111003    0.800 %  games    8150  eg_mass    91917.1  |E1|w   368.5  |E2|w   24.4  split 158
+  P=1 d>=2               rows     88471    0.638 %  games   12658  eg_mass    70367.7  |E1|w   645.8  |E2|w   46.8  split 8
+  P=2 d<=0               rows    167571    1.208 %  games   15224  eg_mass   142704.3  |E1|w   257.4  |E2|w   25.8  split 3519
+  P=2 d=1                rows     75745    0.546 %  games    7131  eg_mass    64193.0  |E1|w   559.2  |E2|w   25.4  split 5
+  P=2 d>=2               rows     57560    0.415 %  games    9589  eg_mass    46996.5  |E1|w   774.8  |E2|w   44.9  split 0
+  OCB_PURE P<=2          rows     19260    0.139 %  games    1050  eg_mass    17655.0  |E1|w   214.2  |E2|w   18.1  split 396
+  OCB_PURE P=3-4         rows      2307    0.017 %  games     199  eg_mass     2114.8  |E1|w   632.1  |E2|w   28.1  split 0
+  OCB_PURE P>=5          rows         0    0.000 %  games       0  eg_mass        0.0  |E1|w     0.0  |E2|w    0.0  split 0
+  OCB_ROOK               rows      4725    0.034 %  games     280  eg_mass     3543.8  |E1|w   130.6  |E2|w   20.2  split 182
+  MOPUP                  rows     96030    0.692 %  games    9596  eg_mass    84088.8  |E1|w   747.3  |E2|w   29.2  split 0
+  MOPUP of it KBN        rows      7740    0.056 %  games     249  eg_mass     7095.0  |E1|w   681.6  |E2|w   17.7  split 0
+  LONE other             rows    131446    0.948 %  games   21590  eg_mass   119294.8  |E1|w   864.3  |E2|w   29.1  split 59
+
+LONE by signature:
+  KRvK                     rows    31971 games    2319
+  KQvK                     rows    19632 games    2395
+  KRP1vK                   rows    16309 games    2257
+  KRBvK                    rows    13327 games     982
+  KRNvK                    rows    11455 games     805
+  KBP1vK                   rows    10683 games    1040
+  KRP2vK                   rows    10137 games    1713
+  KBNvK                    rows     7740 games     249
+  KQP1vK                   rows     7596 games    1806
+  KRBP1vK                  rows     6735 games    1060
+  KP1vK                    rows     5998 games    1546
+  KRP3vK                   rows     4989 games     924
+  KNP1vK                   rows     4791 games     724
+  KBP2vK                   rows     4675 games     743
+  KP2vK                    rows     4237 games    1013
+  KQP2vK                   rows     4226 games    1298
+  KNP2vK                   rows     3868 games     587
+  KRBP2vK                  rows     3701 games     815
+  KRNP1vK                  rows     3608 games     658
+  KQNvK                    rows     3312 games     759
+  KQBvK                    rows     3066 games     941
+  KBNP1vK                  rows     2662 games     298
+  KRNP2vK                  rows     2589 games     574
+  KBP3vK                   rows     2520 games     458
+  KQP3vK                   rows     2363 games     786
+  KQBP1vK                  rows     2260 games     725
+  KNP3vK                   rows     2054 games     341
+  KRBP3vK                  rows     2003 games     513
+  KP3vK                    rows     1892 games     480
+  KQNP1vK                  rows     1865 games     595
+  KRP4vK                   rows     1724 games     365
+  KBNP2vK                  rows     1697 games     256
+  KBBvK                    rows     1579 games      89
+  KQRvK                    rows     1361 games     843
+  KQRP1vK                  rows     1272 games     720
+  KRNP3vK                  rows     1180 games     318
+  KQBP2vK                  rows     1108 games     443
+  KQP4vK                   rows     1080 games     344
+  KNNvK                    rows     1012 games      35
+  KBP4vK                   rows      881 games     180
+  KQNP2vK                  rows      839 games     335
+  KRRP1vK                  rows      831 games     248
+  KBBP1vK                  rows      759 games     103
+  KBNP3vK                  rows      731 games     146
+  KNP4vK                   rows      686 games     128
+  KRRvK                    rows      652 games     220
+  KRBNvK                   rows      647 games      95
+  KRRP2vK                  rows      594 games     201
+  KP4vK                    rows      548 games     148
+  KNNP1vK                  rows      468 games      51
+  KRBNP2vK                 rows      444 games     125
+  KBBP2vK                  rows      432 games      81
+  KRBNP1vK                 rows      387 games      99
+  KQBP3vK                  rows      357 games     177
+  KBBNvK                   rows      337 games      12
+  KQNP3vK                  rows      312 games     138
+  KQRP2vK                  rows      305 games     205
+  KQBNvK                   rows      289 games     115
+  KNNP2vK                  rows      263 games      36
+  KBBP3vK                  rows      218 games      49
+  KRRP3vK                  rows      206 games      98
+  KP5vK                    rows      174 games      38
+  KRNNvK                   rows      155 games      25
+  KBNNvK                   rows      145 games       5
+  KNNP3vK                  rows      110 games      23
+  KRBBP2vK                 rows      108 games      39
+  KBBNP1vK                 rows      108 games      20
+  KRBBP1vK                 rows      105 games      28
+  KQBNP1vK                 rows       89 games      60
+  KRNNP1vK                 rows       88 games      21
+  KRRBP2vK                 rows       79 games      34
+  KRBBvK                   rows       78 games      18
+  KRNNP2vK                 rows       75 games      23
+  KQNNvK                   rows       61 games      21
+  KBNNP1vK                 rows       55 games       6
+  KRRBvK                   rows       54 games      20
+  KQRBvK                   rows       50 games      43
+  KRRBP1vK                 rows       49 games      19
+  KQRNvK                   rows       46 games      37
+  KBBNP2vK                 rows       39 games      11
+  KQRP3vK                  rows       36 games      30
+  KRRNP1vK                 rows       34 games      17
+  KRRNvK                   rows       29 games      13
+  KQRNP1vK                 rows       28 games      21
+  KQRBP1vK                 rows       28 games      27
+  KQBNP2vK                 rows       28 games      19
+  KRRNP2vK                 rows       27 games      10
+  KQNNP1vK                 rows       18 games      11
+  KQBBvK                   rows       17 games      16
+  KQQvK                    rows       16 games      15
+  KQQP1vK                  rows       11 games      11
+  KBNNP2vK                 rows       10 games       3
+  KQRNP2vK                 rows        8 games       6
+  KQRBP2vK                 rows        7 games       6
+  KQBBP1vK                 rows        7 games       7
+  KQRRP1vK                 rows        6 games       6
+  KRBBNP1vK                rows        5 games       3
+  KQBBP2vK                 rows        4 games       4
+  KQRRvK                   rows        3 games       3
+  KNNNP1vK                 rows        3 games       1
+  KBBNNP1vK                rows        3 games       1
+  KQQRvK                   rows        2 games       2
+  KQQP2vK                  rows        2 games       2
+  KQQBvK                   rows        2 games       2
+  KQNNP2vK                 rows        2 games       1
+  KQBBNP1vK                rows        2 games       1
+  KRBBNvK                  rows        1 games       1
+  KQRRP2vK                 rows        1 games       1
+  KQQRP1vK                 rows        1 games       1
+  KQQRBvK                  rows        1 games       1
+  KQQNP2vK                 rows        1 games       1
+  KQBNNvK                  rows        1 games       1
+  KBBNNvK                  rows        1 games       1
+S124-CENSUS-OK
+
+################ tb_corpus
+S124 tablebase probe under the fifty-move rule: 80150 rows, 75163 distinct positions, 0 unprobed
+strong side's view at the row's clock: WON EDGE SPOILED DRAWN LOST, none = no strong side; raw 2 = probe_wdl's 2 at a zeroed clock
+
+by case: rows probed, the verdicts, raw 2
+  LONE          13243  WON   11250 EDGE       0 SPOILED     192 DRAWN    1800 LOST       0 none       1  raw2   11442  unprobed 0
+  NONE            103  WON       0 EDGE       0 SPOILED       0 DRAWN       0 LOST       0 none     103  raw2       0  unprobed 0
+  OCB_OTHER       538  WON     367 EDGE       0 SPOILED       3 DRAWN     168 LOST       0 none       0  raw2     370  unprobed 0
+  OCB_PURE       1547  WON       3 EDGE       0 SPOILED       0 DRAWN    1539 LOST       0 none       5  raw2       3  unprobed 0
+  PAWNS         64719  WON   24132 EDGE       5 SPOILED      56 DRAWN   40151 LOST     375 none       0  raw2   24193  unprobed 0
+
+by case and signature, 60 largest: rows, games, WON EDGE SPOILED DRAWN LOST none, raw 2, mean |E1|; labelled rows, their strong-side results 1 / 0.5 / 0; WON with the game drawn (rows, games); DRAWN or SPOILED with the game decided
+  PAWNS     KRP1vKR                  17155   3243    7198      0      0   9921     36      0  raw2   7198  |E1|    223  lab  17155    1805  15348      2  won-drawn  5514 1158  drawn-decided   120
+  LONE      KRvK                      7355   1802    7350      0      5      0      0      0  raw2   7355  |E1|    620  lab   7355    3023   4332      0  won-drawn  4327  925  drawn-decided     0
+  PAWNS     KRvKR                     4532    978      37      0      0   4465     30      0  raw2     37  |E1|     36  lab   4532       7   4524      1  won-drawn    31   28  drawn-decided     1
+  PAWNS     KRNvKR                    3653    433      29      0      0   3624      0      0  raw2     29  |E1|    383  lab   3653      39   3614      0  won-drawn    14   13  drawn-decided    24
+  PAWNS     KRBvKR                    3631    422      36      0      5   3589      1      0  raw2     41  |E1|    360  lab   3631      42   3589      0  won-drawn    24   15  drawn-decided    30
+  PAWNS     KRP1vKB                   1994    399    1861      0      0    133      0      0  raw2   1861  |E1|    520  lab   1994    1110    884      0  won-drawn   759  150  drawn-decided     8
+  LONE      KBNvK                     1954    212    1775      0    175      4      0      0  raw2   1950  |E1|    745  lab   1954      72   1882      0  won-drawn  1704  196  drawn-decided     1
+  PAWNS     KRP1vKN                   1761    376    1651      0      0    110      0      0  raw2   1651  |E1|    465  lab   1761    1177    584      0  won-drawn   486   99  drawn-decided    12
+  PAWNS     KRvKP1                    1693    562    1181      0      0    509      3      0  raw2   1181  |E1|    410  lab   1693     843    850      0  won-drawn   344  119  drawn-decided     6
+  PAWNS     KNP1vKB                   1574    259      76      0      0   1498      0      0  raw2     76  |E1|    208  lab   1574      50   1524      0  won-drawn    37   12  drawn-decided    11
+  PAWNS     KRvKN                     1529    221     165      0      0   1364      0      0  raw2    165  |E1|    272  lab   1529     102   1427      0  won-drawn   108   33  drawn-decided    45
+  PAWNS     KNP1vKN                   1476    346     202      0      0   1274      0      0  raw2    202  |E1|    194  lab   1476      68   1408      0  won-drawn   146   40  drawn-decided    12
+  PAWNS     KRvKB                     1418    172      40      0      0   1378      0      0  raw2     40  |E1|    292  lab   1418      23   1395      0  won-drawn    24   12  drawn-decided     7
+  PAWNS     KQP1vKQ                   1326    269     498      0      0    818     10      0  raw2    498  |E1|    251  lab   1326     179   1139      8  won-drawn   358   75  drawn-decided    40
+  OCB_PURE  KBP1vKB (ocb)             1316    172       3      0      0   1312      0      1  raw2      3  |E1|    210  lab   1315       2   1313      0  won-drawn     2    2  drawn-decided     1
+  PAWNS     KNvKP1                    1316    271      20      0      0   1266     30      0  raw2     20  |E1|    149  lab   1316       5   1307      4  won-drawn    15   11  drawn-decided     0
+  PAWNS     KQvKR                     1289    268    1271      0      5      8      5      0  raw2   1276  |E1|    294  lab   1289     144   1145      0  won-drawn  1128  216  drawn-decided     1
+  PAWNS     KRP1vKP1                  1175    496    1167      0      0      4      4      0  raw2   1167  |E1|    584  lab   1175    1010    165      0  won-drawn   159   70  drawn-decided     0
+  PAWNS     KP2vKP1                   1174    543     713      0      0    398     63      0  raw2    713  |E1|    165  lab   1174     530    622     22  won-drawn   210  140  drawn-decided    24
+  PAWNS     KRRvKR                    1128    215    1127      0      0      1      0      0  raw2   1127  |E1|    644  lab   1128     491    637      0  won-drawn   637  108  drawn-decided     1
+  PAWNS     KBvKP1                    1121    256      12      0      0   1103      6      0  raw2     12  |E1|    137  lab   1121       9   1112      0  won-drawn     6    6  drawn-decided     3
+  LONE      KBP1vK                    1016    225     243      0      0    773      0      0  raw2    243  |E1|    610  lab   1016     212    804      0  won-drawn    56   35  drawn-decided    25
+  LONE      KP1vK                      996    510     327      0      0    668      0      1  raw2    327  |E1|    183  lab    995     168    827      0  won-drawn   162  139  drawn-decided     3
+  PAWNS     KBP1vKP1                   976    335     685      0      0    275     16      0  raw2    685  |E1|    351  lab    976     571    402      3  won-drawn   169   73  drawn-decided    55
+  PAWNS     KRvKP2                     940    271     503      0      0    394     43      0  raw2    503  |E1|    194  lab    940     323    604     13  won-drawn   181   68  drawn-decided     1
+  PAWNS     KRvKBP1                    917    158       5      0      0    904      8      0  raw2      5  |E1|    114  lab    917       4    909      4  won-drawn     1    1  drawn-decided     0
+  PAWNS     KP1vKP1                    906    395     141      0      0    738     27      0  raw2    141  |E1|     61  lab    906      62    829     15  won-drawn    80   59  drawn-decided     3
+  PAWNS     KRvKNP1                    801    177      17      0      0    780      4      0  raw2     17  |E1|    107  lab    801      20    778      3  won-drawn    12    9  drawn-decided    16
+  PAWNS     KQP1vKR                    776    256     769      0      0      5      2      0  raw2    769  |E1|    498  lab    776     591    185      0  won-drawn   180   50  drawn-decided     1
+  PAWNS     KBP1vKN                    747    179      57      0      0    690      0      0  raw2     57  |E1|    185  lab    747      40    707      0  won-drawn    27   14  drawn-decided    10
+  PAWNS     KBP1vKB (scb)              728    110      94      0      0    634      0      0  raw2     94  |E1|    210  lab    728      92    636      0  won-drawn    15    4  drawn-decided    13
+  PAWNS     KNvKB                      647    102       0      0      0    647      0      0  raw2      0  |E1|     38  lab    647       0    647      0  won-drawn     0    0  drawn-decided     0
+  PAWNS     KRNvKN                     590     87     581      0      6      3      0      0  raw2    587  |E1|    643  lab    590     135    455      0  won-drawn   446   54  drawn-decided     0
+  PAWNS     KQvKRP1                    588    131     306      0      2    219     61      0  raw2    308  |E1|    115  lab    588      73    512      3  won-drawn   233   69  drawn-decided     0
+  PAWNS     KNP1vKP1                   560    235     401      0      0    146     13      0  raw2    401  |E1|    328  lab    560     334    225      1  won-drawn    78   35  drawn-decided     9
+  PAWNS     KBvKN                      499     95       0      0      0    499      0      0  raw2      0  |E1|     35  lab    499       0    499      0  won-drawn     0    0  drawn-decided     0
+  PAWNS     KQvKN                      498     94     498      0      0      0      0      0  raw2    498  |E1|    545  lab    498      95    403      0  won-drawn   403   62  drawn-decided     0
+  PAWNS     KRNvKB                     471     57     449      1     21      0      0      0  raw2    471  |E1|    659  lab    471      80    391      0  won-drawn   369   36  drawn-decided     0
+  LONE      KRP1vK                     448    230     448      0      0      0      0      0  raw2    448  |E1|    732  lab    448     416     32      0  won-drawn    32   19  drawn-decided     0
+  PAWNS     KRBvKN                     445     70     432      1     10      2      0      0  raw2    443  |E1|    621  lab    445     127    318      0  won-drawn   305   41  drawn-decided     0
+  PAWNS     KNvKN                      444    161       0      0      0    444      0      0  raw2      0  |E1|     41  lab    444       0    444      0  won-drawn     0    0  drawn-decided     0
+  LONE      KBBvK                      420     69     414      0      6      0      0      0  raw2    420  |E1|    759  lab    420     140    280      0  won-drawn   274   40  drawn-decided     0
+  OCB_OTHER KRBvKB (ocb)               371     46     367      0      3      1      0      0  raw2    370  |E1|    653  lab    371      82    289      0  won-drawn   285   32  drawn-decided     0
+  PAWNS     KBvKP2                     370    118      65      0      0    303      2      0  raw2     65  |E1|     97  lab    370      52    317      1  won-drawn    14    9  drawn-decided     1
+  PAWNS     KNvKP2                     363    128      84      0      0    276      3      0  raw2     84  |E1|    113  lab    363      55    308      0  won-drawn    33   15  drawn-decided     4
+  PAWNS     KBNvKN                     327     33       1      0      0    326      0      0  raw2      1  |E1|    358  lab    327       0    327      0  won-drawn     1    1  drawn-decided     0
+  PAWNS     KRBvKB (scb)               287     40     287      0      0      0      0      0  raw2    287  |E1|    630  lab    287      94    193      0  won-drawn   193   21  drawn-decided     0
+  PAWNS     KQvKQ                      280    111       6      0      0    273      1      0  raw2      6  |E1|     57  lab    280       0    280      0  won-drawn     6    3  drawn-decided     0
+  LONE      KP2vK                      256    189     236      0      0     20      0      0  raw2    236  |E1|    339  lab    256     191     65      0  won-drawn    47   38  drawn-decided     2
+  LONE      KNNvK                      245     28       0      0      0    245      0      0  raw2      0  |E1|    749  lab    245       2    243      0  won-drawn     0    0  drawn-decided     2
+  OCB_PURE  KBvKB (ocb)                231     44       0      0      0    227      0      4  raw2      0  |E1|     33  lab    227       0    227      0  won-drawn     0    0  drawn-decided     0
+  PAWNS     KQvKP1                     228     69     184      0      0     44      0      0  raw2    184  |E1|    599  lab    228     109    119      0  won-drawn    75   20  drawn-decided     0
+  PAWNS     KBNvKB (scb)               212     19       2      0      0    210      0      0  raw2      2  |E1|    375  lab    212       1    211      0  won-drawn     2    2  drawn-decided     1
+  PAWNS     KBNvKP1                    208     62     204      0      0      3      1      0  raw2    204  |E1|    532  lab    208      18    190      0  won-drawn   186   55  drawn-decided     0
+  LONE      KNP1vK                     170     92     144      0      0     26      0      0  raw2    144  |E1|    499  lab    170     116     54      0  won-drawn    30   20  drawn-decided     2
+  OCB_OTHER KBNvKB (ocb)               167     15       0      0      0    167      0      0  raw2      0  |E1|    404  lab    167       0    167      0  won-drawn     0    0  drawn-decided     0
+  PAWNS     KBBvKB                     166     19       0      0      0    166      0      0  raw2      0  |E1|    403  lab    166       0    166      0  won-drawn     0    0  drawn-decided     0
+  PAWNS     KQvKP2                     147     64     130      0      0     16      1      0  raw2    130  |E1|    415  lab    147      73     73      1  won-drawn    57   22  drawn-decided     0
+  PAWNS     KQvKB                      140     42     139      0      0      1      0      0  raw2    139  |E1|    550  lab    140      70     70      0  won-drawn    69   16  drawn-decided     0
+  PAWNS     KNNvKN                     139     18       0      0      0    139      0      0  raw2      0  |E1|    370  lab    139       1    138      0  won-drawn     0    0  drawn-decided     1
+
+label cells over these rows at K 0.7433, reading A, in sample, EDGE rows left out: rows, games, EDGE rows, the strong side's mean game label and law label, then the best flat f and its dMSE against f = 1 (1e-6 of the cell's rows) under each label
+  LONE                   13243   3475  edge    0  game 0.675 law 0.925   f_game 0.188   -60245.3   f_law 1.125     -172.2   WON 11250 EDGE 0 SPOILED 192 DRAWN 1800 LOST 0
+  OCB_PURE                   5      5  edge    0  game 0.500 law 0.500   f_game 0.000        0.0   f_law 0.000        0.0   WON 0 EDGE 0 SPOILED 0 DRAWN 0 LOST 0
+  OCB_OTHER                538     61  edge    0  game 0.576 law 0.841   f_game 0.000  -109206.1   f_law 0.625    -8445.9   WON 367 EDGE 0 SPOILED 3 DRAWN 168 LOST 0
+  NONE                     103     92  edge    0  game 0.490 law 0.500   f_game 0.000        0.0   f_law 0.000        0.0   WON 0 EDGE 0 SPOILED 0 DRAWN 0 LOST 0
+  PAWNS P=0 d<=-1           44     15  edge    0  game 0.489 law 0.455   f_game 1.250    -2407.4   f_law 1.250    -2345.4   WON 1 EDGE 0 SPOILED 0 DRAWN 38 LOST 5
+  PAWNS P=0 d=0           6805   1590  edge    0  game 0.500 law 0.500   f_game 0.250    -1157.6   f_law 0.250    -1152.3   WON 46 EDGE 0 SPOILED 0 DRAWN 6718 LOST 41
+  PAWNS P=0 d=1          15252   2103  edge    3  game 0.507 law 0.508   f_game 0.000   -73903.8   f_law 0.000   -72736.8   WON 313 EDGE 3 SPOILED 12 DRAWN 14873 LOST 54
+  PAWNS P=0 d=2           7481   1597  edge    2  game 0.657 law 0.922   f_game 0.156   -40263.7   f_law 1.250    -1198.3   WON 6359 EDGE 2 SPOILED 44 DRAWN 1031 LOST 47
+  PAWNS P=0 d>=3          1599    476  edge    0  game 0.730 law 0.977   f_game 0.000   -42687.6   f_law 1.250     -600.8   WON 1526 EDGE 0 SPOILED 0 DRAWN 73 LOST 0
+  PAWNS P=1 d<=-1          650    300  edge    0  game 0.507 law 0.481   f_game 0.906      -47.9   f_law 0.812     -155.6   WON 39 EDGE 0 SPOILED 0 DRAWN 547 LOST 64
+  PAWNS P=1 d=0          23819   4746  edge    0  game 0.548 law 0.672   f_game 0.188   -22036.0   f_law 0.938     -143.5   WON 8284 EDGE 0 SPOILED 0 DRAWN 15462 LOST 73
+  PAWNS P=1 d=1           5285   1338  edge    0  game 0.802 law 0.933   f_game 0.750    -2937.8   f_law 1.250    -4962.2   WON 4598 EDGE 0 SPOILED 0 DRAWN 661 LOST 26
+  PAWNS P=1 d=2           1951    749  edge    0  game 0.910 law 0.995   f_game 0.938      -87.9   f_law 1.250    -2703.2   WON 1936 EDGE 0 SPOILED 0 DRAWN 9 LOST 6
+  PAWNS P=1 d>=3            84     44  edge    0  game 0.964 law 0.988   f_game 0.938      -22.4   f_law 1.250     -385.8   WON 82 EDGE 0 SPOILED 0 DRAWN 2 LOST 0
+  PAWNS P=2 d<=-1          626    260  edge    0  game 0.614 law 0.699   f_game 1.250     -961.6   f_law 1.250    -6646.1   WON 255 EDGE 0 SPOILED 0 DRAWN 365 LOST 6
+  PAWNS P=2 d=0           1118    520  edge    0  game 0.729 law 0.786   f_game 1.250    -1943.8   f_law 1.250    -6799.7   WON 693 EDGE 0 SPOILED 0 DRAWN 372 LOST 53
+  OCB_PURE P=0             231     46  edge    0  game 0.500 law 0.500   f_game 0.188    -1160.9   f_law 0.188    -1160.9   WON 0 EDGE 0 SPOILED 0 DRAWN 231 LOST 0
+  OCB_PURE P=1            1311    172  edge    0  game 0.501 law 0.501   f_game 0.000   -41652.8   f_law 0.000   -41367.2   WON 3 EDGE 0 SPOILED 0 DRAWN 1308 LOST 0
+  prop P=0 d<=0           6849   1605  edge    0  game 0.500 law 0.500   f_game 0.281    -1066.9   f_law 0.281    -1063.4   WON 47 EDGE 0 SPOILED 0 DRAWN 6756 LOST 46
+  prop P=0 d=1           15252   2103  edge    3  game 0.507 law 0.508   f_game 0.000   -73903.8   f_law 0.000   -72736.8   WON 313 EDGE 3 SPOILED 12 DRAWN 14873 LOST 54
+  prop P=0 d>=2           9080   2065  edge    2  game 0.670 law 0.932   f_game 0.125   -40228.9   f_law 1.250    -1093.1   WON 7885 EDGE 2 SPOILED 44 DRAWN 1104 LOST 47
+  prop P=1 d<=0          24469   5026  edge    0  game 0.547 law 0.667   f_game 0.188   -21390.4   f_law 0.938     -142.0   WON 8323 EDGE 0 SPOILED 0 DRAWN 16009 LOST 137
+  prop P=1 d=1            5285   1338  edge    0  game 0.802 law 0.933   f_game 0.750    -2937.8   f_law 1.250    -4962.2   WON 4598 EDGE 0 SPOILED 0 DRAWN 661 LOST 26
+  prop P=1 d>=2           2035    792  edge    0  game 0.913 law 0.994   f_game 0.938      -85.2   f_law 1.250    -2607.6   WON 2018 EDGE 0 SPOILED 0 DRAWN 11 LOST 6
+  prop P=2 d<=0           1744    773  edge    0  game 0.688 law 0.755   f_game 1.250    -1591.2   f_law 1.250    -6744.5   WON 948 EDGE 0 SPOILED 0 DRAWN 737 LOST 59
+  prop OCB_PURE P<=2      1542    208  edge    0  game 0.501 law 0.501   f_game 0.000   -35577.6   f_law 0.000   -35334.8   WON 3 EDGE 0 SPOILED 0 DRAWN 1539 LOST 0
+  prop MOPUP              9742   2087  edge    0  game 0.666 law 0.990   f_game 0.156   -74599.6   f_law 1.250    -2031.9   WON 9546 EDGE 0 SPOILED 192 DRAWN 4 LOST 0
+  prop MOPUP of it KBN    1954    212  edge    0  game 0.518 law 0.954   f_game 0.000  -192578.8   f_law 0.938      -74.7   WON 1775 EDGE 0 SPOILED 175 DRAWN 4 LOST 0
+  prop LONE other         3501   1465  edge    0  game 0.698 law 0.743   f_game 0.344   -26194.7   f_law 0.438   -12755.3   WON 1704 EDGE 0 SPOILED 0 DRAWN 1796 LOST 0
+S124-TB-OK
+
+################ tb_pool
+S124 tablebase probe under the fifty-move rule: 434320 rows, 365764 distinct positions, 0 unprobed
+strong side's view at the row's clock: WON EDGE SPOILED DRAWN LOST, none = no strong side; raw 2 = probe_wdl's 2 at a zeroed clock
+
+by case: rows probed, the verdicts, raw 2
+  LONE         191921  WON  183917 EDGE       7 SPOILED     908 DRAWN    7088 LOST       0 none       1  raw2  184832  unprobed 0
+  NONE            319  WON       0 EDGE       0 SPOILED       0 DRAWN       0 LOST       0 none     319  raw2       0  unprobed 0
+  OCB_OTHER      2110  WON    1494 EDGE       2 SPOILED      25 DRAWN     589 LOST       0 none       0  raw2    1521  unprobed 0
+  OCB_PURE       4720  WON      33 EDGE       0 SPOILED       0 DRAWN    4664 LOST       0 none      23  raw2      33  unprobed 0
+  PAWNS        235250  WON  110995 EDGE      26 SPOILED     254 DRAWN  122943 LOST    1032 none       0  raw2  111275  unprobed 0
+
+by case and signature, 60 largest: rows, games, WON EDGE SPOILED DRAWN LOST none, raw 2, mean |E1|; labelled rows, their strong-side results 1 / 0.5 / 0; WON with the game drawn (rows, games); DRAWN or SPOILED with the game decided
+  PAWNS     KRP1vKR                  50992   4202   22688      0      0  28207     97      0  raw2  22688  |E1|    228  lab  46852    5378  41471      3  won-drawn 15877 1386  drawn-decided   349
+  LONE      KRvK                     31971   2319   31946      3     22      0      0      0  raw2  31971  |E1|    628  lab  29395    9526  19869      0  won-drawn 19844  999  drawn-decided     0
+  LONE      KQvK                     19632   2395   19632      0      0      0      0      0  raw2  19632  |E1|    904  lab  17801   14134   3667      0  won-drawn  3667  268  drawn-decided     0
+  LONE      KRP1vK                   16309   2257   16309      0      0      0      0      0  raw2  16309  |E1|    840  lab  15110   14387    723      0  won-drawn   723   95  drawn-decided     0
+  LONE      KRBvK                    13327    982   13316      2      9      0      0      0  raw2  13327  |E1|    984  lab  12244    5888   6356      0  won-drawn  6345  293  drawn-decided     0
+  PAWNS     KRNvKR                   13311    562     124      0      0  13186      1      0  raw2    124  |E1|    384  lab  11743     154  11589      0  won-drawn    36   28  drawn-decided    71
+  PAWNS     KRBvKR                   13034    575     167      0     14  12850      3      0  raw2    181  |E1|    359  lab  11856     161  11695      0  won-drawn    69   39  drawn-decided    77
+  PAWNS     KRvKR                    12850   1229     124      0      0  12654     72      0  raw2    124  |E1|     37  lab  11929      27  11895      7  won-drawn    97   79  drawn-decided     8
+  LONE      KRNvK                    11455    805   11443      2     10      0      0      0  raw2  11455  |E1|   1007  lab  10388    5107   5281      0  won-drawn  5269  240  drawn-decided     0
+  LONE      KBP1vK                   10683   1040    6974      0      0   3709      0      0  raw2   6974  |E1|    619  lab   9769    5911   3858      0  won-drawn   555  114  drawn-decided   111
+  LONE      KRP2vK                   10137   1713   10137      0      0      0      0      0  raw2  10137  |E1|    997  lab   9174    8923    251      0  won-drawn   251   45  drawn-decided     0
+  LONE      KBNvK                     7740    249    6891      0    840      9      0      0  raw2   7731  |E1|    744  lab   7228     267   6961      0  won-drawn  6173  199  drawn-decided     1
+  LONE      KQP1vK                    7596   1806    7596      0      0      0      0      0  raw2   7596  |E1|   1079  lab   6977    6828    149      0  won-drawn   149   22  drawn-decided     0
+  PAWNS     KRP1vKB                   6856    538    6365      0      0    491      0      0  raw2   6365  |E1|    531  lab   6259    3578   2681      0  won-drawn  2283  164  drawn-decided    45
+  LONE      KRBP1vK                   6735   1060    6735      0      0      0      0      0  raw2   6735  |E1|   1145  lab   6217    5969    248      0  won-drawn   248   30  drawn-decided     0
+  PAWNS     KRP1vKP1                  6626   1187    6612      0      0      9      5      0  raw2   6612  |E1|    621  lab   6083    5441    642      0  won-drawn   633  116  drawn-decided     2
+  PAWNS     KRP1vKN                   6502    561    6179      0      0    323      0      0  raw2   6179  |E1|    496  lab   5771    4153   1618      0  won-drawn  1368  117  drawn-decided    35
+  LONE      KP1vK                     5998   1546    4034      0      0   1963      0      1  raw2   4034  |E1|    258  lab   5457    2713   2744      0  won-drawn   968  409  drawn-decided    17
+  PAWNS     KRvKB                     5044    210     114      0      0   4930      0      0  raw2    114  |E1|    289  lab   4630      75   4555      0  won-drawn    62   22  drawn-decided    24
+  PAWNS     KRvKN                     5035    281     578      0      0   4457      0      0  raw2    578  |E1|    271  lab   4586     311   4275      0  won-drawn   350   47  drawn-decided   148
+  PAWNS     KRvKP1                    4967    762    3483      0      0   1478      6      0  raw2   3483  |E1|    408  lab   4582    2283   2299      0  won-drawn   926  155  drawn-decided    17
+  PAWNS     KNP1vKB                   4841    367     414      0      0   4427      0      0  raw2    414  |E1|    217  lab   4455     215   4240      0  won-drawn   133   25  drawn-decided    20
+  PAWNS     KQP1vKP1                  4825   1046    4825      0      0      0      0      0  raw2   4825  |E1|    878  lab   4521    4246    275      0  won-drawn   275   38  drawn-decided     0
+  PAWNS     KQP1vKR                   4798    562    4784      0      0      8      6      0  raw2   4784  |E1|    560  lab   4404    3667    735      2  won-drawn   727   91  drawn-decided     1
+  LONE      KNP1vK                    4791    724    4696      0      0     95      0      0  raw2   4696  |E1|    612  lab   4308    3917    391      0  won-drawn   316   73  drawn-decided    11
+  PAWNS     KQvKR                     4789    423    4715      3     23     30     18      0  raw2   4741  |E1|    298  lab   4382     682   3699      1  won-drawn  3636  245  drawn-decided     3
+  PAWNS     KP2vKP1                   4706   1211    3498      0      0   1039    169      0  raw2   3498  |E1|    211  lab   4339    2597   1679     63  won-drawn   676  282  drawn-decided    52
+  LONE      KBP2vK                    4675    743    4426      0      0    249      0      0  raw2   4426  |E1|    776  lab   4341    3984    357      0  won-drawn   112   25  drawn-decided     4
+  PAWNS     KBP1vKP1                  4370    639    3426      0      0    900     44      0  raw2   3426  |E1|    373  lab   4068    2706   1348     14  won-drawn   584  112  drawn-decided   122
+  PAWNS     KNP1vKN                   4337    496     755      0      0   3582      0      0  raw2    755  |E1|    209  lab   3921     290   3631      0  won-drawn   399   58  drawn-decided    33
+  LONE      KP2vK                     4237   1013    4186      0      0     51      0      0  raw2   4186  |E1|    451  lab   3821    3477    344      0  won-drawn   298  114  drawn-decided     5
+  LONE      KQP2vK                    4226   1298    4226      0      0      0      0      0  raw2   4226  |E1|   1198  lab   3894    3879     15      0  won-drawn    15    8  drawn-decided     0
+  OCB_PURE  KBP1vKB (ocb)             4067    218      33      0      0   4033      0      1  raw2     33  |E1|    215  lab   3842      29   3813      0  won-drawn     5    4  drawn-decided     3
+  PAWNS     KQP1vKQ                   3894    348    1627      0      3   2233     31      0  raw2   1630  |E1|    267  lab   3669     622   3028     19  won-drawn  1035   93  drawn-decided   108
+  LONE      KNP2vK                    3868    587    3868      0      0      0      0      0  raw2   3868  |E1|    774  lab   3586    3523     63      0  won-drawn    63   15  drawn-decided     0
+  PAWNS     KNvKP1                    3834    364      50      0      0   3714     70      0  raw2     50  |E1|    151  lab   3593       9   3576      8  won-drawn    37   15  drawn-decided     0
+  PAWNS     KQvKP1                    3767    628    3639      0      0    128      0      0  raw2   3639  |E1|    685  lab   3343    2631    712      0  won-drawn   605   87  drawn-decided     1
+  PAWNS     KRRvKR                    3720    288    3707      0      0     11      2      0  raw2   3707  |E1|    644  lab   3406    1464   1942      0  won-drawn  1937  115  drawn-decided     7
+  LONE      KRNP1vK                   3608    658    3608      0      0      0      0      0  raw2   3608  |E1|   1167  lab   3230    3170     60      0  won-drawn    60   14  drawn-decided     0
+  PAWNS     KBvKP1                    3415    345      31      0      0   3359     25      0  raw2     31  |E1|    141  lab   3154      19   3133      2  won-drawn    15   10  drawn-decided     8
+  LONE      KQNvK                     3312    759    3312      0      0      0      0      0  raw2   3312  |E1|   1252  lab   3035    2955     80      0  won-drawn    80   13  drawn-decided     0
+  LONE      KQBvK                     3066    941    3066      0      0      0      0      0  raw2   3066  |E1|   1238  lab   2724    2678     46      0  won-drawn    46    8  drawn-decided     0
+  PAWNS     KRvKP2                    2847    386    1577      0      0   1152    118      0  raw2   1577  |E1|    194  lab   2579     886   1668     25  won-drawn   549   93  drawn-decided     6
+  PAWNS     KP1vKP1                   2814    687     730      0      0   1992     92      0  raw2    730  |E1|     76  lab   2571     426   2101     44  won-drawn   258  121  drawn-decided    13
+  PAWNS     KRvKBP1                   2734    205      35      0      0   2683     16      0  raw2     35  |E1|    113  lab   2554      22   2527      5  won-drawn    12    7  drawn-decided     1
+  LONE      KBNP1vK                   2662    298    2662      0      0      0      0      0  raw2   2662  |E1|    933  lab   2402    2255    147      0  won-drawn   147   12  drawn-decided     0
+  PAWNS     KBP1vKN                   2499    286     371      0      0   2128      0      0  raw2    371  |E1|    207  lab   2284     261   2023      0  won-drawn    89   25  drawn-decided    27
+  PAWNS     KBP1vKB (scb)             2314    158     390      0      0   1924      0      0  raw2    390  |E1|    217  lab   2226     345   1881      0  won-drawn    65    7  drawn-decided    47
+  PAWNS     KNP1vKP1                  2283    451    1862      0      0    389     32      0  raw2   1862  |E1|    371  lab   2095    1440    654      1  won-drawn   300   66  drawn-decided    17
+  LONE      KQBP1vK                   2260    725    2260      0      0      0      0      0  raw2   2260  |E1|   1385  lab   2064    2049     15      0  won-drawn    15    3  drawn-decided     0
+  PAWNS     KRvKNP1                   2175    250      55      0      0   2108     12      0  raw2     55  |E1|    109  lab   2051      74   1971      6  won-drawn    23   14  drawn-decided    46
+  PAWNS     KQvKN                     2156    205    2147      2      0      7      0      0  raw2   2149  |E1|    560  lab   1961     667   1294      0  won-drawn  1291   68  drawn-decided     5
+  PAWNS     KRNvKN                    2123    110    2065      2     49      7      0      0  raw2   2116  |E1|    645  lab   1973     476   1497      0  won-drawn  1441   57  drawn-decided     1
+  PAWNS     KNvKB                     1963    120       0      0      0   1963      0      0  raw2      0  |E1|     38  lab   1888       0   1888      0  won-drawn     0    0  drawn-decided     0
+  LONE      KP3vK                     1892    480    1892      0      0      0      0      0  raw2   1892  |E1|    620  lab   1776    1751     25      0  won-drawn    25   19  drawn-decided     0
+  PAWNS     KQP1vKN                   1888    306    1880      0      0      8      0      0  raw2   1880  |E1|    781  lab   1726    1655     71      0  won-drawn    69   13  drawn-decided     6
+  LONE      KQNP1vK                   1865    595    1865      0      0      0      0      0  raw2   1865  |E1|   1407  lab   1688    1687      1      0  won-drawn     1    1  drawn-decided     0
+  PAWNS     KRNvKB                    1847     78    1737      5    102      3      0      0  raw2   1844  |E1|    657  lab   1761     294   1467      0  won-drawn  1358   40  drawn-decided     1
+  PAWNS     KQvKRP1                   1733    177     914      4      6    648    161      0  raw2    924  |E1|    120  lab   1604     219   1373     12  won-drawn   619   82  drawn-decided     0
+  PAWNS     KBvKN                     1722    117       0      0      0   1722      0      0  raw2      0  |E1|     35  lab   1493       0   1493      0  won-drawn     0    0  drawn-decided     0
+
+label cells over these rows at K 0.7433, reading A, in sample, EDGE rows left out: rows, games, EDGE rows, the strong side's mean game label and law label, then the best flat f and its dMSE against f = 1 (1e-6 of the cell's rows) under each label
+  LONE                  175689  19168  edge    7  game 0.847 law 0.979   f_game 0.406   -13642.2   f_law 1.250     -768.5   WON 168332 EDGE 7 SPOILED 849 DRAWN 6507 LOST 0
+  OCB_PURE                  22     13  edge    0  game 0.500 law 0.500   f_game 0.000        0.0   f_law 0.000        0.0   WON 0 EDGE 0 SPOILED 0 DRAWN 0 LOST 0
+  OCB_OTHER               1928    106  edge    0  game 0.627 law 0.861   f_game 0.031   -90715.5   f_law 0.625    -7086.1   WON 1392 EDGE 0 SPOILED 25 DRAWN 511 LOST 0
+  NONE                     291    235  edge    0  game 0.495 law 0.498   f_game 0.000        0.0   f_law 0.000        0.0   WON 0 EDGE 0 SPOILED 0 DRAWN 0 LOST 0
+  PAWNS P=0 d<=-1          123     29  edge    0  game 0.492 law 0.455   f_game 1.250    -2618.1   f_law 1.250    -2761.2   WON 6 EDGE 0 SPOILED 0 DRAWN 100 LOST 17
+  PAWNS P=0 d=0          18120   1893  edge    0  game 0.500 law 0.501   f_game 0.250    -1133.0   f_law 0.281    -1065.7   WON 145 EDGE 0 SPOILED 0 DRAWN 17878 LOST 97
+  PAWNS P=0 d=1          47010   2503  edge    9  game 0.508 law 0.509   f_game 0.000   -75684.4   f_law 0.000   -74540.6   WON 1020 EDGE 9 SPOILED 41 DRAWN 45814 LOST 135
+  PAWNS P=0 d=2          23083   1995  edge   11  game 0.658 law 0.929   f_game 0.125   -42992.4   f_law 1.250    -1318.5   WON 19941 EDGE 11 SPOILED 210 DRAWN 2809 LOST 123
+  PAWNS P=0 d>=3         17872   3324  edge    2  game 0.878 law 0.993   f_game 0.281   -11031.3   f_law 1.250     -423.8   WON 17628 EDGE 2 SPOILED 0 DRAWN 242 LOST 2
+  PAWNS P=1 d<=-1         1722    444  edge    0  game 0.510 law 0.485   f_game 1.094      -34.6   f_law 1.000        0.0   WON 120 EDGE 0 SPOILED 0 DRAWN 1431 LOST 171
+  PAWNS P=1 d=0          65758   5855  edge    0  game 0.557 law 0.687   f_game 0.250   -20655.4   f_law 0.969       -8.6   WON 24851 EDGE 0 SPOILED 3 DRAWN 40710 LOST 194
+  PAWNS P=1 d=1          18174   1995  edge    0  game 0.827 law 0.944   f_game 0.812    -1492.8   f_law 1.250    -5133.1   WON 16188 EDGE 0 SPOILED 0 DRAWN 1929 LOST 57
+  PAWNS P=1 d=2          10487   1607  edge    0  game 0.934 law 0.998   f_game 1.000        0.0   f_law 1.250    -2305.9   WON 10460 EDGE 0 SPOILED 0 DRAWN 17 LOST 10
+  PAWNS P=1 d>=3          7644   1457  edge    0  game 0.972 law 0.999   f_game 0.750     -212.7   f_law 1.250     -182.7   WON 7636 EDGE 0 SPOILED 0 DRAWN 8 LOST 0
+  PAWNS P=2 d<=-1         1781    404  edge    0  game 0.642 law 0.733   f_game 1.250    -1591.9   f_law 1.250    -7585.6   WON 848 EDGE 0 SPOILED 0 DRAWN 914 LOST 19
+  PAWNS P=2 d=0           4192   1081  edge    0  game 0.803 law 0.860   f_game 1.250    -5781.0   f_law 1.250   -10931.2   WON 3152 EDGE 0 SPOILED 0 DRAWN 909 LOST 131
+  OCB_PURE P=0             636     57  edge    0  game 0.500 law 0.500   f_game 0.188    -1182.1   f_law 0.188    -1182.1   WON 0 EDGE 0 SPOILED 0 DRAWN 636 LOST 0
+  OCB_PURE P=1            3831    205  edge    0  game 0.504 law 0.504   f_game 0.031   -40281.6   f_law 0.031   -40113.8   WON 31 EDGE 0 SPOILED 0 DRAWN 3800 LOST 0
+  prop P=0 d<=0          18243   1922  edge    0  game 0.500 law 0.501   f_game 0.281    -1031.0   f_law 0.312     -966.0   WON 151 EDGE 0 SPOILED 0 DRAWN 17978 LOST 114
+  prop P=0 d=1           47010   2503  edge    9  game 0.508 law 0.509   f_game 0.000   -75684.4   f_law 0.000   -74540.6   WON 1020 EDGE 9 SPOILED 41 DRAWN 45814 LOST 135
+  prop P=0 d>=2          40955   5207  edge   13  game 0.754 law 0.957   f_game 0.188   -28410.5   f_law 1.250     -928.1   WON 37569 EDGE 13 SPOILED 210 DRAWN 3051 LOST 125
+  prop P=1 d<=0          67480   6267  edge    0  game 0.556 law 0.682   f_game 0.250   -20046.1   f_law 0.969       -8.2   WON 24971 EDGE 0 SPOILED 3 DRAWN 42141 LOST 365
+  prop P=1 d=1           18174   1995  edge    0  game 0.827 law 0.944   f_game 0.812    -1492.8   f_law 1.250    -5133.1   WON 16188 EDGE 0 SPOILED 0 DRAWN 1929 LOST 57
+  prop P=1 d>=2          18131   3031  edge    0  game 0.950 law 0.999   f_game 0.969       -3.2   f_law 1.250    -1410.8   WON 18096 EDGE 0 SPOILED 0 DRAWN 25 LOST 10
+  prop P=2 d<=0           5973   1468  edge    0  game 0.755 law 0.822   f_game 1.250    -4531.9   f_law 1.250    -9933.6   WON 4000 EDGE 0 SPOILED 0 DRAWN 1823 LOST 150
+  prop OCB_PURE P<=2      4467    248  edge    0  game 0.503 law 0.503   f_game 0.031   -34709.9   f_law 0.031   -34565.9   WON 31 EDGE 0 SPOILED 0 DRAWN 4436 LOST 0
+  prop MOPUP             87812   8782  edge    7  game 0.753 law 0.995   f_game 0.125   -56326.6   f_law 1.250     -894.2   WON 86955 EDGE 7 SPOILED 849 DRAWN 8 LOST 0
+  prop MOPUP of it KBN    7228    232  edge    0  game 0.518 law 0.945   f_game 0.000  -192370.5   f_law 0.875     -293.4   WON 6439 EDGE 0 SPOILED 781 DRAWN 8 LOST 0
+  prop LONE other        87877  13480  edge    0  game 0.941 law 0.963   f_game 0.938      -25.8   f_law 1.250     -642.8   WON 81377 EDGE 0 SPOILED 0 DRAWN 6499 LOST 0
+S124-TB-OK
+
+################ conversion
+signature: training games with a root row in it; their results from the side with men; drawn games with a root row WON under the rule; drawn games whose last root row stands in it, and of those the ones WON there, by that row's clock
+  KRvK   games  2315  won   894  drawn  1421  lost    0   drawn with a WON root row   915   drawn ending in it  1421, WON at that last row   914 (clock <40 859, 40-89 55, >=90 0)
+         drawn ending in it, not WON at that last row: drawn, lone king to move, clock 0             506
+         drawn ending in it, not WON at that last row: won past the rule, side with men to move, clock >0 1
+  KQvK   games  1700  won  1451  drawn   249  lost    0   drawn with a WON root row   249   drawn ending in it   249, WON at that last row   249 (clock <40 244, 40-89 5, >=90 0)
+  KBNvK  games   212  won    14  drawn   198  lost    0   drawn with a WON root row   195   drawn ending in it   198, WON at that last row   155 (clock <40 129, 40-89 26, >=90 0)
+         drawn ending in it, not WON at that last row: drawn, lone king to move, clock 0             2
+         drawn ending in it, not WON at that last row: drawn, lone king to move, clock >0            1
+         drawn ending in it, not WON at that last row: won past the rule, lone king to move, clock >0 5
+         drawn ending in it, not WON at that last row: won past the rule, side with men to move, clock >0 35
+  KRBvK  games   739  won   448  drawn   291  lost    0   drawn with a WON root row   290   drawn ending in it   286, WON at that last row   284 (clock <40 253, 40-89 31, >=90 0)
+         drawn ending in it, not WON at that last row: drawn, lone king to move, clock 0             1
+         drawn ending in it, not WON at that last row: won past the rule, side with men to move, clock >0 1
+  KRNvK  games   623  won   379  drawn   244  lost    0   drawn with a WON root row   242   drawn ending in it   233, WON at that last row   230 (clock <40 209, 40-89 21, >=90 0)
+         drawn ending in it, not WON at that last row: drawn, lone king to move, clock 0             2
+         drawn ending in it, not WON at that last row: won past the rule, side with men to move, clock >0 1
+  KBBvK  games    68  won    30  drawn    38  lost    0   drawn with a WON root row    38   drawn ending in it    38, WON at that last row    37 (clock <40 31, 40-89 6, >=90 0)
+         drawn ending in it, not WON at that last row: won past the rule, side with men to move, clock >0 1
+training games read 138000; distinct positions probed 54801
+S124-CONVERSION-OK
+
+################ twofold
+  KRvK   drawn games ending WON in it 914
+    no repeat in two plies                   674
+    two-fold of a recorded root position     240
+  KQvK   drawn games ending WON in it 249
+    no repeat in two plies                   185
+    two-fold of a recorded root position     64
+  KBNvK  drawn games ending WON in it 155
+    no repeat in two plies                   114
+    two-fold of a recorded root position     41
+S124-TWOFOLD-OK

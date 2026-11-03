@@ -1,0 +1,125 @@
+# S124 research pass, 2026-11-03: a cost-only sink, never a candidate. adocs/data/S124_cost.sh applies it
+# to a scratch extract and builds it with -DS124_SINK (and -DS124_GATE); the forced cells and the mop-up
+# multipliers 3, 5 and 7 are arbitrary non-zero values chosen so nothing folds, not seeds and not proposals.
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1909,6 +1909,80 @@
+ // comes through here, which is what makes them one score (DEC-332 (6)). The
+ // entry's sum and the outside terms' are the one integer pawn_pass() and
+ // outside_pawn_terms() would add in any order, bounded by stage_one_half().
++#ifdef S124_SINK
++// S124's research pass, a cost-only sink: the case, its cell and the scaled stage-one
++// taper at forced non-identity cells, and on a lone king the three mop-up distances, all
++// into an asm barrier while the score stays the landing's, so the search is node for node
++// the shipping one's (DEC-047's forced-weight method). Never a candidate.
++namespace s124
++{
++constexpr int F = 128;
++// The thirteen cells: PAWNS P 0..2 by d <= 0, 1, >= 2; OCB_PURE by P <= 2, 3-4, >= 5;
++// OCB_ROOK. Forced off the identity so nothing folds.
++constexpr int cells[13] = {64, 1, 24, 28, 68, 116, 96, 128, 120, 4, 40, 76, 92};
++
++static inline int chebyshev_sq(int a, int b)
++{
++  const int fa = a & 7, ra = a >> 3, fb = b & 7, rb = b >> 3;
++  return std::max(std::abs(fa - fb), std::abs(ra - rb));
++}
++
++static inline int manhattan_sq(int a, int b)
++{
++  return std::abs((a & 7) - (b & 7)) + std::abs((a >> 3) - (b >> 3));
++}
++
++static inline int centre_manhattan(int sq)
++{
++  const int f = sq & 7, r = sq >> 3;
++  return ((f < 4) ? 3 - f : f - 4) + ((r < 4) ? 3 - r : r - 4);
++}
++
++// -1 for no cell; 100 for a lone king (mop-up's domain).
++static inline int cell_of(const board_t* b, int e1)
++{
++  const bb_t* bb = b->bitboards;
++#ifdef S124_GATE
++  // Both sides past two pawns: no PAWNS cell fires whichever side is strong, and an
++  // OCB cell needs no knight and no queen and one bishop a side.
++  if (count_bits(bb[W_PAWN]) > 2 && count_bits(bb[B_PAWN]) > 2 &&
++      ((bb[W_KNIGHT] | bb[B_KNIGHT] | bb[W_QUEEN] | bb[B_QUEEN]) != 0 ||
++       count_bits(bb[W_BISHOP]) != 1 || count_bits(bb[B_BISHOP]) != 1)) {
++    return -1;
++  }
++#endif
++  int pawns[2], minors[2], npm[2], bishops[2], knights[2], rooks[2], queens[2];
++  for (int s = 0; s < 2; ++s) {
++    const int o = s ? B_PAWN : W_PAWN;
++    pawns[s] = count_bits(bb[o + W_PAWN]);
++    knights[s] = count_bits(bb[o + W_KNIGHT]);
++    bishops[s] = count_bits(bb[o + W_BISHOP]);
++    rooks[s] = count_bits(bb[o + W_ROOK]);
++    queens[s] = count_bits(bb[o + W_QUEEN]);
++    minors[s] = knights[s] + bishops[s];
++    npm[s] = minors[s] + 2 * rooks[s] + 4 * queens[s];
++  }
++  const bool heavy_or_pawn = (pawns[0] | pawns[1] | rooks[0] | rooks[1] | queens[0] | queens[1]) != 0;
++  if (!heavy_or_pawn && minors[0] + minors[1] <= 1) { return -1; }  // the detector's
++  if (pawns[0] + npm[0] == 0 || pawns[1] + npm[1] == 0) { return 100; }
++  if (e1 == 0) { return -1; }
++  const int strong = (e1 > 0) ? 0 : 1;
++  const int p = pawns[strong];
++  if (bishops[0] == 1 && bishops[1] == 1 &&
++      ((bb[W_BISHOP] & one_colour) != 0) != ((bb[B_BISHOP] & one_colour) != 0)) {
++    const int others = knights[0] + knights[1] + rooks[0] + rooks[1] + queens[0] + queens[1];
++    if (others == 0) { return 9 + ((p <= 2) ? 0 : (p <= 4 ? 1 : 2)); }
++    if (rooks[0] == 1 && rooks[1] == 1 && others == 2) { return 12; }
++    return -1;
++  }
++  if (p > 2) { return -1; }
++  const int d = npm[strong] - npm[1 - strong];
++  return p * 3 + ((d <= 0) ? 0 : (d == 1 ? 1 : 2));
++}
++}  // namespace s124
++#endif
++
++
+ static inline int cheap_score(const board_t* board, const pawn_entry_t* entry)
+ {
+   // Interpolate the two tables on how much material is left, so a term slides
+@@ -1931,6 +2005,38 @@
+ 
+   const int score = board->material + positional;
+ 
++#ifdef S124_SINK
++  {
++    const score_t pair = board->psqt + pawns;
++    const int e1 = board->material + eg_value(pair);
++    const int cell = s124::cell_of(board, e1);
++    int sink = positional;
++    if (cell >= 0 && cell < 13) {
++      const int x = mg_value(pair) * phase + eg_value(pair) * (GAME_PHASE_MAX - phase);
++      sink = (s124::F * x + (s124::cells[cell] - s124::F) * e1 * (GAME_PHASE_MAX - phase)) /
++             (GAME_PHASE_MAX * s124::F);
++    } else if (cell == 100) {
++      const int wk = get_lsb_index(board->bitboards[W_KING]);
++      const int bk = get_lsb_index(board->bitboards[B_KING]);
++      const bool white_lone = (board->bitboards[W_PAWN] | board->bitboards[W_KNIGHT] |
++                               board->bitboards[W_BISHOP] | board->bitboards[W_ROOK] |
++                               board->bitboards[W_QUEEN]) == 0;
++      const int lone = white_lone ? wk : bk;
++      int corner = 0;
++      const bb_t bishops = board->bitboards[white_lone ? B_BISHOP : W_BISHOP];
++      if (count_bits(bishops) == 1) {
++        const bool light = (bishops & one_colour) != 0;
++        // a8 and h1 are on one_colour; h8 and a1 on the other
++        corner = light ? std::min(s124::chebyshev_sq(lone, 0), s124::chebyshev_sq(lone, 63))
++                       : std::min(s124::chebyshev_sq(lone, 7), s124::chebyshev_sq(lone, 56));
++      }
++      sink += 3 * s124::centre_manhattan(lone) + 5 * (14 - s124::manhattan_sq(wk, bk)) +
++              7 * (7 - corner);
++    }
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++
+   // Tapered on its own rather than summed into the pair above, and that is not
+   // a stylistic choice: everything above is White relative and is negated below
+   // for Black, and a bonus for having the move must survive that negation

@@ -1,0 +1,10 @@
+base bench 5482277 bench16 14931387
+eager bench 5482277 bench16 14931387
+gated bench 5482277 bench16 14931387
+bench: base 11649464268 (spread 161)
+  eager  11946942867 (spread 206)  +2.554 %
+  gated  11802759134 (spread 179)  +1.316 %
+bench 16: base 34487388808 (spread 314)
+  eager  35369389663 (spread 271)  +2.557 %
+  gated  34923228495 (spread 212)  +1.264 %
+S124-COST-DONE
