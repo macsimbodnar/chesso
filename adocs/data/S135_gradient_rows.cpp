@@ -30,6 +30,30 @@
 // finite-difference check enters the rule: it reads the analytic gradient
 // alone, so the pick is not chosen by the case passing.
 //
+// IT RE-DERIVES ITS OWN PAIR (DEC-142), since S326, in S101_gradient_rows.cpp's
+// shape. "The list" above is the fixture as the rule ran on it: its first
+// BASE_ROWS = 40 rows, every row before the pair, asserted against the pair's
+// marker comment in tests/test_eval_positions.hpp, read under CHESSO_SOURCE_DIR.
+// Until S326 the program took the whole landed list as the list, so its own pair
+// counted as known and it picked a row the fixture does not hold, and nothing
+// said so. With the pair landed, rows 41 and 42, the pick must be that pair or the
+// program exits 1.
+//
+// WHERE IT REPRODUCES, AND WHERE IT REFUSES (DEC-347). At S135's landing commit,
+// 18c2d9a, it picks candidate 47, the landed pair, as S135 recorded
+// (adocs/data/S135_goldens.txt, section 10). TARGET and the window threshold_of()
+// reads are offsets from MOB_MG_BASE. At S135's layout, four weights a half, they
+// were mobility_mg[1] and the four middlegame and four endgame weights. Since S121
+// (12cab3c) mobility is a table, 66 cells a half, and the same offsets name the
+// knight's middlegame cells 1 and 0 to 7. Run anyway at 1bb3080, the rule picked
+// candidate 1, a row the fixture does not hold: cell 7's gradient over the 40
+// rows is exactly 0, so the threshold was 0 (S326). That answers a question the
+// rule was not written for, so DEC-347 rules that the pair is re-derived at
+// 18c2d9a and is a coverage row since S121, as S083's four are. The
+// program reads the layout itself: where tuner_layout::MOBILITY_COUNT is not 4,
+// one weight a piece type, there is no single weight for the bishop's middlegame
+// mobility, 14 cells since S121, and it picks nothing, says why and exits 1.
+//
 // Built from the repository root after `cmake --build build`, in one line:
 //
 //   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -DCHESSO_SOURCE_DIR=\"$PWD\"
@@ -39,13 +63,23 @@
 //       -o build/S135_gradient_rows
 //
 // CHESSO_SOURCE_DIR, the root it is built from, is where it reads the JSON
-// suites from (load_json), so it runs from any directory (S324; until then from
-// build/tests, on the copy of tests/assets/ the build made there):
+// suites (load_json) and tests/test_eval_positions.hpp from, so it runs from any
+// directory (S324; until then from build/tests, on the copy of tests/assets/ the
+// build made there):
 //
 //   build/S135_gradient_rows
 //
-// It prints the base fixture's mobility gradients, every candidate it tried
-// until the pick, and the pick as two C++ lines for tests/test_eval_positions.hpp.
+// At an older tree, 18c2d9a's for one, it is built the same way from that tree's
+// root, out of `git archive` and against its own trace library. `git archive`
+// leaves out the tests/doctest submodule, so supply it, a copy of the main
+// tree's for one. load_json reads CHESSO_SOURCE_DIR only since S310, so there it
+// runs from that tree's tests/.
+//
+// It prints the header's row count and the rows before the marker, the base
+// fixture's mobility gradients, every candidate it tried until the pick, the pick
+// as two C++ lines for tests/test_eval_positions.hpp, and whether it is the
+// landed pair; at a layout without TARGET, the header's line and why it picks
+// nothing.
 //
 // Without the build line's CHESSO_SOURCE_DIR load_json reads the JSON suites
 // relative to the working directory, and since S324 the build makes no copy of them.
@@ -74,7 +108,13 @@ using tuner_layout::MOB_MG_BASE;
 using tuner_layout::PARAM_COUNT;
 using tuner_trace::dataset_t;
 
-constexpr size_t TARGET = MOB_MG_BASE + 1;  // mobility_mg[1], parameter 774
+// Parameter 774, mobility_mg[1], the bishop's: so while the layout holds one
+// mobility weight a piece type a half, knight, bishop, rook, queen, the four
+// tuner_layout.hpp held until S121. HAS_TARGET is that test (DEC-347).
+constexpr size_t TARGET = MOB_MG_BASE + 1;
+constexpr bool HAS_TARGET = tuner_layout::MOBILITY_COUNT == 4;
+constexpr size_t BASE_ROWS = 40;
+const char* const BLOCK_MARKER = "added at S135 (DEC-316)";
 
 int engine_phase(const std::string& fen)
 {
@@ -200,10 +240,59 @@ double threshold_of(const std::vector<double>& g)
 
 TEST_CASE("S135: pick the fixture rows that move mobility_mg[1] off zero")
 {
+  const std::vector<std::string>& landed = test_eval_positions::positions;
+  REQUIRE(landed.size() >= BASE_ROWS);
+  const std::vector<std::string> base(landed.begin(), landed.begin() + BASE_ROWS);
+
+  // The base, asserted against the pair's marker comment. Absent only while the
+  // list is the base alone, as it was when the rule ran. Run at every layout, so
+  // the refusal below names rows this check found.
+  size_t before_marker = 0;
+  bool marker = false;
+  {
+    std::ifstream header(CHESSO_SOURCE_DIR "/tests/test_eval_positions.hpp");
+    REQUIRE_MESSAGE(header.good(), "tests/test_eval_positions.hpp");
+    std::string line;
+    size_t fens = 0;
+    while (std::getline(header, line)) {
+      if (line.find(BLOCK_MARKER) != std::string::npos) {
+        REQUIRE_MESSAGE(!marker, "the pair's marker twice");
+        marker = true;
+        before_marker = fens;
+      }
+      const size_t open_quote = line.find_first_not_of(' ');
+      if (open_quote != std::string::npos && line[open_quote] == '"' &&
+          line.size() >= 2 && line.compare(line.size() - 2, 2, "\",") == 0) {
+        fens++;
+      }
+    }
+    printf("tests/test_eval_positions.hpp: %zu rows, marker %s", fens,
+           marker ? "found" : "absent");
+    if (marker) { printf(", %zu rows before it", before_marker); }
+    printf("\n");
+    REQUIRE(fens == landed.size());
+    if (landed.size() > BASE_ROWS) {
+      REQUIRE_MESSAGE(marker, "rows past the base and no marker to count them by");
+    }
+    if (marker) { REQUIRE(before_marker == BASE_ROWS); }
+  }
+
+  if (!HAS_TARGET) {
+    REQUIRE_MESSAGE(marker, "no pair to name at a layout without TARGET");
+    printf("DEC-316's rule targets mobility_mg[1], the bishop's middlegame\n"
+           "mobility weight, one of four a half at S135's layout. This layout\n"
+           "has %zu a half, a table since S121 (12cab3c): the bishop's\n"
+           "middlegame mobility is 14 cells there, with no single weight to\n"
+           "target. The pair, rows %zu and %zu of tests/test_eval_positions.hpp,\n"
+           "is re-derived at 18c2d9a, S135's landing tree, and is a coverage\n"
+           "row since S121 (DEC-347). Nothing is picked.\n",
+           tuner_layout::MOBILITY_COUNT, before_marker + 1, before_marker + 2);
+    FAIL("no mobility_mg[1] at this layout; the pair is re-derived at 18c2d9a");
+  }
+
   const std::string path =
       (std::filesystem::temp_directory_path() / "chesso_S135_gradient_rows.tsv")
           .string();
-  const std::vector<std::string>& base = test_eval_positions::positions;
 
   std::vector<double> g;
   bool clear = false;
@@ -240,6 +329,13 @@ TEST_CASE("S135: pick the fixture rows that move mobility_mg[1] off zero")
     if (picked) {
       printf("pick, for tests/test_eval_positions.hpp:\n    \"%s\",\n    \"%s\",\n",
              fen.c_str(), mirror.c_str());
+      if (landed.size() > BASE_ROWS) {
+        const bool same = landed.size() >= BASE_ROWS + 2 &&
+                          landed[BASE_ROWS] == fen &&
+                          landed[BASE_ROWS + 1] == mirror;
+        printf("reproduces the landed pair: %s\n", same ? "yes" : "NO");
+        CHECK(same);
+      }
       std::filesystem::remove(path);
       return;
     }

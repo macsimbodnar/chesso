@@ -195,6 +195,11 @@ inline const std::vector<std::string> positions = {
     // stays clear of the clamp and puts that gradient at or above a tenth of
     // the smallest of the other seven. It is castling.json's, candidate 47,
     // and reads 1.87e-5 there. python-chess reports both Status.VALID.
+    // **Since S121 this pair is a coverage row, no longer the rule's**
+    // (DEC-347): S121 made mobility a table, the bishop's middlegame
+    // mobility 14 cells with no single weight for the rule to ask about, so
+    // adocs/data/S135_gradient_rows.cpp re-derives the pair at S135's
+    // landing tree, 18c2d9a, and at a later layout picks nothing.
     "1r1Nk2r/ppp1n1pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQk - 2 9",
     "r3k2r/pp2bppp/2p5/8/2B5/8/PPP1N1PP/1R1nK2R b Kkq - 2 9",
     // S121's mobility table, added at S121's phase 1b and re-derived at its

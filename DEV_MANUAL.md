@@ -1147,7 +1147,10 @@ reads such a copy now: no ctest entry since S320, by construction since S322,
 and since S324 not the six programs under `adocs/data/` that re-derive
 `tests/test_eval_positions.hpp`'s rows, goldens by DEC-142 (`S101_coverage_rows`,
 `S101_gradient_rows`, `S121_coverage_rows`, `S123_coverage_rows`,
-`S125_coverage_rows` and `S135_gradient_rows`). Their headers' build lines pass
+`S125_coverage_rows` and `S135_gradient_rows`). `S135_gradient_rows` re-derives
+its pair at S135's landing tree, `18c2d9a`: since S121 the pair is a coverage
+row, and at a later layout the program picks nothing, says why and exits 1
+(DEC-347). The six headers' build lines pass
 `CHESSO_SOURCE_DIR`, as `adocs/data/S122_curve_probe.cpp`'s does, and each
 refuses to compile without it, so each runs from any directory. A build
 directory configured before S324 keeps its old copy until it is deleted

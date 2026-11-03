@@ -1,0 +1,45 @@
+# S326 identity: what the comment edits leave of two test sources, old (tree f27a03c6, 1bb3080 with S324 and S325 staged) against the worktree.
+# S321_identity.txt's form. Comments only is the claim. C++: the bytes of `g++ -fpreprocessed -dD -E -P -x c++ -` over `git show f27a03c6:<file>`
+#      and over the new file, compared whole; the bytes and hash below are the stripped output. Machine: i7-8700K, g++ 13.3, 2026-11-03.
+# Every other path the worktree changes is a document, a data file or a program no build compiles; listed and classed below.
+base f27a03c6; g++ 13
+
+the control
+  DIFFER  int a = 1; / int a = 2;  f9d474b81d62f2db 340e1fb2fca7e279
+  SAME    int a = 1; with a line comment and a two-line block comment added  f9d474b81d62f2db f9d474b81d62f2db
+
+C++: g++ -fpreprocessed -dD -E -P, old against new; line counts old and new
+  SAME  tests/test_eval_positions.hpp  6018 bytes  sha256 80e93f48fa89a27a  lines 400 -> 405
+  SAME  tests/test_tuner_gradient.cpp  45049 bytes  sha256 0f72195c89dd78cd  lines 2053 -> 2053
+
+Every path the worktree changes against f27a03c6, tracked and untracked, and what it is
+  document, compiled by no build      DEV_MANUAL.md
+  document, compiled by no build      adocs/data/README.md
+  program, built by its own g++ line  adocs/data/S135_gradient_rows.cpp
+  data file, compiled by no build     adocs/data/S326_identity.txt
+  document, compiled by no build      adocs/plan_todo/S326_s135_gradient_rows_reproduces.md
+  C++, compared above                 tests/test_eval_positions.hpp
+  C++, compared above                 tests/test_tuner_gradient.cpp
+
+S326-IDENTITY-SOURCES HOLD
+
+Objects: every .o and .a of build/ and build-tune/, and their generated chesso_build_info.hpp, CTestTestfile.cmake,
+  flags.make, link.txt and compile_commands.json, snapshotted on the base tree before any edit to a compiled file
+  (stamps "1bb3080-dirty", the staged base), against the edited tree rebuilt with CCACHE_DISABLE=1, so every
+  recompile is a real one. cmp, byte for byte.
+  compared: 340; byte-equal 340; differ 0
+
+  Every object whose gcc dependency file names an edited source was recompiled after the edit, so its
+  byte-equality above is a fresh compile's, not a stale object's:
+  build: 3 objects depend on an edited source; 3 recompiled after the edit
+    build/tests/CMakeFiles/test_eval_model.dir/test_eval_model.cpp.o
+    build/tests/CMakeFiles/test_eval_trace.dir/test_eval_trace.cpp.o
+    build/tests/CMakeFiles/test_tuner_gradient.dir/test_tuner_gradient.cpp.o
+  build-tune: 3 objects depend on an edited source; 3 recompiled after the edit
+    build-tune/tests/CMakeFiles/test_eval_model.dir/test_eval_model.cpp.o
+    build-tune/tests/CMakeFiles/test_eval_trace.dir/test_eval_trace.cpp.o
+    build-tune/tests/CMakeFiles/test_tuner_gradient.dir/test_tuner_gradient.cpp.o
+  No file differs: both edits leave every object, archive and generated build file byte-equal.
+  Bench 5482277 in build and 5482277 in build-tune, the parent's 5482277.
+
+S326-IDENTITY HOLDS

@@ -562,11 +562,11 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // truncation term over almost nothing -- 2.91e-6 at h = 0.01, and 7.3e-5,
 // 1.2e-5, 7.3e-7 and 9.6e-8 at h 0.05, 0.02, 0.005 and 0.002. The gradient was
 // right and the fixture had stopped asking about that weight, S100's gap in
-// another form. tests/test_eval_positions.hpp's last pair is the fix, picked
-// by adocs/data/S135_gradient_rows.cpp's stated rule and not by this case
-// passing; h, the metric and the 1e-6 are unchanged. With it the gradient
-// there is 1.87e-5 and the worst 2.00e-07, still at 774; at the parent's
-// zero placement weights the same rows read 5.01e-07 there. S121 made
+// another form. The pair at rows 41 and 42 of tests/test_eval_positions.hpp is
+// the fix, picked by adocs/data/S135_gradient_rows.cpp's stated rule and not by
+// this case passing; h, the metric and the 1e-6 are unchanged. With it the
+// gradient there is 1.87e-5 and the worst 2.00e-07, still at 774; at the
+// parent's zero placement weights the same rows read 5.01e-07 there. S121 made
 // mobility a table (955 parameters) and added 38 rows so every cell has a
 // gradient here (tests/test_eval_positions.hpp says by what rule): at the
 // identity table the worst is 5.46e-08, at parameter 141, psqt_mg[bishop][a7].
