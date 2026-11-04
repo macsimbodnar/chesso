@@ -5,7 +5,52 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-04 00:40, by hand.
+Updated: 2026-11-04 20:40, by hand.
+
+## 2026-11-04 20:40: S122's corpus generated; S124 phase 1 delivered, one question for the owner
+
+**S122's corpus is generated.** It ended at 20:30, exit 0, after 19 h 57 m: 150000 games at seed 2026500349.
+Its `repetition:` line reads:
+- 81702 games reached a recurrence;
+- 34164 of them ended other than drawn, 20646 won by White and 13518 lost.
+
+**Running: Command 6,** `S122_corpus.sh all`. Its PID is in `.tuning/s122_corpus_all.pid` and its console is
+`.tuning/s122_corpus.console`. Commands 7 (the sample, about 1 h 30 m) and 8 (the screen, about 19 h or more) follow.
+**No commit on `achesso` from Command 7 until the screen ends:** both freeze their tools at HEAD.
+
+**S124 phase 1 is delivered, not landed.**
+- **Delivery:**
+  - diff `.tuning/coord/S124/S124_phase1.diff`, sha256 `c3c8f2d2...dfc37`, base `d83d6c0`;
+  - worktree `../chesso-s124p1`.
+- **Identity:** bench 5482277, `search_bench` identical, the objdiff identical but for one new accessor.
+- **Cost on sink builds:** +1.2 % instructions for the factor, +1.0 % for mop-up, +1.9 % for both.
+- **Fast check:** six findings, all fixed, each new guard seen red on a plant:
+  - one cell pick shared by both libraries, with a row-by-row engine-against-trace guard;
+  - a ctest over the box's call site, `test_tuner_box`;
+  - a refusal of a scaled tie on a boxed row;
+  - DEC-350 (1)'s conditional truncation bound;
+  - two false sentences corrected.
+- **Golden:** `ADAGRAD_HOLD_STEP` 2 -> 3, by its script. Its member now selects DEC-316's pair by identity.
+- **One red, for the owner:** `test_tuner_gradient`'s clamp case.
+  - `CLAMP_PUSH`'s rule answers no push on the 124 rows. +30 has the KBN pair 0.75 cp from the kink; +40 reads
+    3.40e-7 against the rule's 2e-7.
+  - It is the finite difference's step error, not DEC-316's stationary-weight class. DEC-316's rows were tried, and
+    the worst moved to another weight.
+  - Options put to the owner: (A, recommended) the rule's margin to 4e-7, which answers +40; (B) h to 0.0025;
+    (C) the normwise metric. Readings: `.tuning/coord/S124/clamp_reading.txt`.
+- **Landing:** after S122's `apply` commit, not merely its screen, and rebased on it. `S122_screen.py` pins
+  `PARAMS = 1171` and `EXPECTED_RANK = 1100`, and `.tuning/verify_fit.py` reads 1171; phase 1 makes 1190.
+- **At landing:**
+  - the clamp DEC, with its reading copied into `adocs/data/`;
+  - `touches:` widened by the eleven paths the step file lists;
+  - `specs.md` from the step file's draft wording;
+  - a fresh fast check over the rebased delta;
+  - the gate on an idle machine.
+- **Phase 2's:**
+  - mop-up's SPSA instrument, a UCI-surface change;
+  - the KBN corner pair fitted as one number (only 2 mg + 22 eg is seen);
+  - P0's conversion script and `S124_screen.sh`;
+  - OCB_PURE with P <= 2 (905 games on S083's corpus, under 1000), re-read on the regenerated corpus.
 
 ## 2026-11-04 00:40: S122's corpus generating again (DEC-349); S124 ruled (DEC-350)
 
