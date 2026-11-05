@@ -1,0 +1,87 @@
+# S332's readings, 2026-11-05, `adocs/data/S331_measure.py` at sha256
+# a58bd9f534254de5a6938464a4f4d9f0a5d8c006b68077ce328170693293dc7d (the streaming reader, after the fast check's
+# power-loss fix, which touched the merged-pool paths only), HEAD's at bcc41f3 copied aside for the comparisons. Three
+# readings, each with the command that made it and /usr/bin/time -v's lines. The first two passes, at sha256 b3cf1c2c...
+# before the fix, the machine to this step alone: the pool in 62 s at 108016 kB, S331's run byte-equal at 17848 kB.
+# Re-run at the final reader beside S124's rebase build: the same bytes, figures below.
+#
+# 1. HEAD's reader on S122's regenerated pool, `.tuning/s122/corpus/` read in place, under a 2 GiB address-space
+#    cap (`ulimit -v 2097152`), the observed red: it holds every row of the three views and stops in read_rows()
+#    on the root view with MemoryError after 6 s, at 2052676 kB resident. Without the cap it would have kept going
+#    past the machine's 15 GB, the finding's inference; it was not run so.
+# 2. The streaming reader on the same pool, uncapped: 75 s, peak resident 107628 kB (105 MiB), every row of the
+#    three views streamed and checked against games.tsv, and the `repetition:` line recomputed from the files
+#    equal to the one datagen printed in the pool's log, all seven figures. Its output follows verbatim.
+# 3. The streaming reader on S331's 2400-game run, `.tuning/s331/measure/`, the run S331_reading.txt records:
+#    byte-equal to that run's reading.txt and to S331_reading.txt's copy of it, both sha256 27ec3b79...;
+#    peak resident 17856 kB against HEAD's reader's 294084 kB on the same run, whose output is the same bytes.
+#
+# The pool's files, read and never written: games.tsv sha256 53470ee1fb21c471048e035d6d500872d16e825df50de1cadfd19d5f8443d985,
+# generate.log sha256 899cab6db82c99e613302b907b1b60828f8a02fbbabdd581eb1905992a6c802a.
+
+== 1. HEAD's reader, capped
+command   (ulimit -v 2097152; /usr/bin/time -v nice -n 10 python3 .tuning/s332/S331_measure_head.py read /home/max/ws/chesso/.tuning/s122/corpus)
+stderr    Traceback (most recent call last):
+stderr      File "/home/max/ws/chesso-s332/.tuning/s332/S331_measure_head.py", line 291, in <module>
+stderr        sys.exit(main(sys.argv))
+stderr      File "/home/max/ws/chesso-s332/.tuning/s332/S331_measure_head.py", line 278, in main
+stderr        read_command(argv[2])
+stderr      File "/home/max/ws/chesso-s332/.tuning/s332/S331_measure_head.py", line 143, in read_command
+stderr        (booked, nodes, threads, seed, quiet, leaves), line, games, rows = check_run(out)
+stderr      File "/home/max/ws/chesso-s332/.tuning/s332/S331_measure_head.py", line 133, in check_run
+stderr        rows[leaf] = read_rows(f"{out}/pool.tsv.{leaf}")
+stderr      File "/home/max/ws/chesso-s332/.tuning/s332/S331_measure_head.py", line 78, in read_rows
+stderr        for number, line in enumerate(open(path, encoding="utf-8"), 1):
+stderr    MemoryError
+stderr    (then `Error in sys.excepthook`: apport's hook, importing, ran out the same way; the original exception again)
+time      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:06.36
+time      Maximum resident set size (kbytes): 2052676
+time      Exit status: 1
+
+== 2. the streaming reader, the full pool
+command   /usr/bin/time -v nice -n 10 python3 adocs/data/S331_measure.py read /home/max/ws/chesso/.tuning/s122/corpus
+load      1.12 1.58 1.39 3/1223 193594
+started   2026-11-05T14:20:11+01:00
+ended     2026-11-05T14:21:26+01:00, exit 0
+time      User time (seconds): 74.45
+time      Elapsed (wall clock) time (h:mm:ss or m:ss): 1:15.04
+time      Maximum resident set size (kbytes): 107628
+time      Exit status: 0
+the log's own line, .tuning/s122/corpus/generate.log:
+repetition: 81702 games reached a position that had occurred before, which drew a game until S331; 34164 of them ended other than drawn, 20646 won by White and 13518 lost; 11707733 positions passed in them, a root row each, 6798228 before the first recurrence; 25 openings ended on one, discarded until S331
+the reading, verbatim:
+S331 reading of /home/max/ws/chesso/.tuning/s122/corpus: datagen 150000 games, 100000 nodes a move, 12 threads, seed 2026500349, quiet-limit 30000, leaf root,qs,pv
+files     games.tsv 150000 games; pool.tsv.root 18786043 rows; every row's result its game's; the repetition: line equal to the files, [81702, 34164, 20646, 13518, 11707733, 6798228, 25]
+
+GAMES. Recurred: a position on the board had occurred before, after the opening; the old rule drew the game there.
+  games 150000; recurred 81702 (54.47 % +/- 0.13 of all); openings ended on a recurrence 25, outside both sides
+  of the recurred, ended other than drawn 34164 (41.82 % +/- 0.17): won by White 20646 (25.27 % +/- 0.15), lost 13518 (16.55 % +/- 0.13)
+  of all games, relabelled from a draw 22.78 % +/- 0.11
+  draws, of the 149975 games both rules play: old rule 84159 (56.12 % +/- 0.13), new 49995 (33.34 % +/- 0.12)
+
+ROOT ROWS. Old: the rows the old rule wrote, every row of a game with no recurrence and the rows before the first recurrence of a recurred game. Differs: an old row whose game ended 1 or 0, labelled 0.5 by the old rule. Errors clustered by game.
+  all phases      old 13872879  differs 2719306   19.602 % +/- 0.103   to win 1623562   11.703 % +/- 0.083   to loss 1095744    7.898 % +/- 0.070
+  phase 0 to 4    old  1895714  differs  239994   12.660 % +/- 0.155   to win  139696    7.369 % +/- 0.121   to loss  100298    5.291 % +/- 0.104
+  phase 5 to 9    old  3096065  differs  534033   17.249 % +/- 0.138   to win  320336   10.347 % +/- 0.110   to loss  213697    6.902 % +/- 0.093
+  phase 10 to 14  old  2055319  differs  424772   20.667 % +/- 0.150   to win  254282   12.372 % +/- 0.122   to loss  170490    8.295 % +/- 0.103
+  phase 15 to 19  old  1581910  differs  336998   21.303 % +/- 0.156   to win  206786   13.072 % +/- 0.129   to loss  130212    8.231 % +/- 0.104
+  phase 20 to 24  old  5243871  differs 1183509   22.569 % +/- 0.116   to win  702462   13.396 % +/- 0.094   to loss  481047    9.174 % +/- 0.081
+  phase <= 6      old  3561933  differs  505768   14.199 % +/- 0.130   to win  296850    8.334 % +/- 0.102   to loss  208918    5.865 % +/- 0.088
+  phase > 6       old 10310946  differs 2213538   21.468 % +/- 0.109   to win 1326712   12.867 % +/- 0.088   to loss  886826    8.601 % +/- 0.075
+  of the 2719306 that differ, the new label goes the way of the row's own score in 2270392, against it in 416659, score 0 in 32255
+  new rows the old rule never wrote: 4909505 after a first recurrence and 3659 from the openings, 26.153 % +/- 0.083 of the 18786043 root rows
+
+== 3. the streaming reader, S331's 2400-game run
+command   /usr/bin/time -v python3 adocs/data/S331_measure.py read /home/max/ws/chesso/.tuning/s331/measure | cmp - .tuning/s331/measure/reading.txt
+          and again, untimed, into .tuning/s332/s331_reread.txt for the two comparisons below
+time      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.24
+time      Maximum resident set size (kbytes): 17856
+time      Exit status: 0
+cmp       .tuning/s332/s331_reread.txt against .tuning/s331/measure/reading.txt: byte-equal
+cmp       against S331_reading.txt from its line 'S331 reading of' to its end: byte-equal
+sha256    27ec3b79fb637a085685be7c811552d1cdc4a6f2453df9e81d37cfa4509fb2b1  .tuning/s332/s331_reread.txt
+sha256    27ec3b79fb637a085685be7c811552d1cdc4a6f2453df9e81d37cfa4509fb2b1  /home/max/ws/chesso/.tuning/s331/measure/reading.txt
+command   /usr/bin/time -v python3 .tuning/s332/S331_measure_head.py read /home/max/ws/chesso/.tuning/s331/measure, HEAD's reader, for its memory: the same bytes
+time      Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.42
+time      Maximum resident set size (kbytes): 294084
+time      Exit status: 0

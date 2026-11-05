@@ -1,0 +1,155 @@
+# S332's merge smoke, 2026-11-05, the machine to this step alone: adocs/data/S332_merge_smoke.sh's three stages,
+# their consoles verbatim. The datagen is the worktree's build/tools/datagen at bcc41f3 (S331's, with --games-out),
+# sha256 3aff10013eae6b65..., Release; the files under .tuning/s332/smoke/ (gitignored).
+# `runs` and the red `merge` ran under the script's first revision, whose `runs` and `merge` stages are the
+# final one's; the final adds the cases' S122_corpus.sh-level half and an EXIT trap for the marker, and the
+# step-script `merge`, the red case C and the last `cases` below are its runs, the last two after the fast check.
+#
+#   runs    part 1, 60 games booked under seed 990332000, SIGTERM to datagen 15 s in: 22 games in its files and
+#           games.tsv, S082_pool_merge.py part1 keeps 21 and drops game 14, whose games line was written; the
+#           top-up, 39 games under seed 990332100, exit 0.
+#   merge   at HEAD's scripts first, the observed red: S122_corpus.sh merge passes, writes the three merged views
+#           and no games file, and HEAD's reader refuses the merged pool (no datagen settings line, its log the
+#           merge's). Then at the step's scripts, on a fresh copy of the same runs: the merged views are the same
+#           bytes as HEAD's merge wrote (sha256 3b3c8a82..., 7f946966..., 01244c40...), the games file has 60
+#           lines, the one `repetition:` line is part 1's 16 recurred games recomputed plus the top-up's 23 from its
+#           log, and S331_measure.py read accepts the merged pool, its line equal to the files.
+#   cases   S331_measure.py merge on edited copies (accepted as merged, byte-equal; a NUL tail; a part 1 game with
+#           no row kept and counted apart; refused: a kept game's line missing, a partial last line, a result that
+#           differs, the top-up one line short, the top-up's line off, a kept id at the offset), then
+#           S122_corpus.sh on edited copies (a full merge with a no-row game, 61 lines, read accepting it; a merge
+#           refused, nothing moved, for each part without games.tsv; verify refused on one byte of the merged
+#           games file, and passing on the merged pool as written).
+#   case C  the coordinator's fast check, 2026-11-05: a power loss keeps in each file what the OS had flushed, so
+#           part 1's games.tsv can end before games the merger keeps. On a copy of the runs, game 14's line (the
+#           dropped game's) and game 17's (the last kept) removed: red at the scripts as first delivered, the merge
+#           refused (`merged root: game 17 has no games line in part 1's file`), HEAD's merge having accepted such a
+#           pool; green after the fix, the merge passes with the views byte-equal to the merge's without the loss,
+#           59 games lines, a `repetition incomplete:` line in place of the combined one, and `read` refusing the
+#           pool's check as partial. `kept_game_missing`, a line gone from the middle of the file, a shape no loss
+#           of a file's end makes, is still refused, its reason now saying so.
+
+== runs
+$ adocs/data/S332_merge_smoke.sh runs
+part 1    60 games, seed 990332000, SIGTERM to datagen 15 s in
+datagen: 60 games, 100000 nodes per move, 12 threads, seed 990332000, quiet-limit 30000, leaf root,qs,pv
+ended     2026-11-05T13:45:05+01:00, exit 143
+S122-CORPUS-FAILED
+part 1    cut: the 21 games before game 14 in root's order are kept; game 14 (root 196 rows, qs 196 rows, pv 184 rows) is dropped with everything after it (root 1 game(s), 196 rows, qs 1 game(s), 196 rows, pv 1 game(s), 184 rows) and the NUL tails
+top-up    39 games, seed 990332100
+datagen: 39 games, 100000 nodes per move, 12 threads, seed 990332100, quiet-limit 30000, leaf root,qs,pv
+repetition: 23 games reached a position that had occurred before, which drew a game until S331; 12 of them ended other than drawn, 4 won by White and 8 lost; 3624 positions passed in them, a root row each, 1961 before the first recurrence; 0 openings ended on one, discarded until S331
+exit 0
+S122-TOPUP-DONE
+pristine  13 files, sha256 in /home/max/ws/chesso-s332/.tuning/s332/smoke/pristine.sha256
+S332-SMOKE-RUNS-DONE
+
+== merge at HEAD's scripts (bcc41f3's S122_corpus.sh, then HEAD's S331_measure.py read on the merged pool)
+$ adocs/data/S332_merge_smoke.sh merge
+merge     S122_corpus.sh merge, exit 0, its last line S122-CORPUS-MERGE-DONE
+merged    2026-11-05T13:45:56+01:00
+merged root: 7909 rows from 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/pool.tsv.root, sha256 3b3c8a823650eb6d6db185c53d4456dcc56d7ef17ea944c9198a36d080e009d3; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a root row
+merged qs: 7893 rows from 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/pool.tsv.qs, sha256 7f9469665c3bfea7204e5670d2320402eb3f72b33a4533513d5798938457e549; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a qs row
+merged pv: 7540 rows from 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/pool.tsv.pv, sha256 01244c404dddb38ab5f92252d286508bdfe8aeb15152ff53908a1ef20f266a10; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a pv row
+check: merged root, 7909 rows of 7909, 60 games of 60, sha256 the merge's
+check: merged qs, 7893 rows of 7893, 60 games of 60, sha256 the merge's
+check: merged pv, 7540 rows of 7540, 60 games of 60, sha256 the merge's
+refused: the merge wrote no /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/games.tsv
+S332-SMOKE-MERGE-FAILED
+$ python3 .tuning/s332/S331_measure_head.py read .tuning/s332/smoke/merge/pool
+refused: .tuning/s332/smoke/merge/pool/generate.log: 0 datagen settings lines, not one
+rc=1
+
+== merge at the step's scripts, after the fast check's fix
+$ adocs/data/S332_merge_smoke.sh merge
+merge     S122_corpus.sh merge, exit 0, its last line S122-CORPUS-MERGE-DONE
+merged    2026-11-05T14:18:50+01:00
+merged root: 7909 rows from 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/pool.tsv.root, sha256 3b3c8a823650eb6d6db185c53d4456dcc56d7ef17ea944c9198a36d080e009d3; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a root row
+merged qs: 7893 rows from 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/pool.tsv.qs, sha256 7f9469665c3bfea7204e5670d2320402eb3f72b33a4533513d5798938457e549; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a qs row
+merged pv: 7540 rows from 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/pool.tsv.pv, sha256 01244c404dddb38ab5f92252d286508bdfe8aeb15152ff53908a1ef20f266a10; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a pv row
+part 1    games: /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/part1/games.tsv, 22 lines; the 21 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 0 with none; 1 dropped
+part 1    repetition, recomputed from its kept games lines and root rows, its datagen stopped before its closing lines: 16 games reached a position that had occurred before, which drew a game until S331; 7 of them ended other than drawn, 4 won by White and 3 lost; 2014 positions passed in them, a root row each, 1326 before the first recurrence; 0 openings ended on one, discarded until S331
+part 2    games: /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/topup/games.tsv, 39 lines, the games its log books, each id plus 100
+part 2    repetition, its log's line, which its games lines and root rows give: 23 games reached a position that had occurred before, which drew a game until S331; 12 of them ended other than drawn, 4 won by White and 8 lost; 3624 positions passed in them, a root row each, 1961 before the first recurrence; 0 openings ended on one, discarded until S331
+merged games: 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/games.tsv, sha256 8e5f7979d0ba332f41a1c18b91bdcf98866172262a92518c2b0f7057510b5c0f; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+repetition: 39 games reached a position that had occurred before, which drew a game until S331; 19 of them ended other than drawn, 8 won by White and 11 lost; 5638 positions passed in them, a root row each, 3287 before the first recurrence; 0 openings ended on one, discarded until S331
+check: merged root, 7909 rows of 7909, 60 games of 60, sha256 the merge's
+check: merged qs, 7893 rows of 7893, 60 games of 60, sha256 the merge's
+check: merged pv, 7540 rows of 7540, 60 games of 60, sha256 the merge's
+check: merged games, 60 lines of 60, sha256 the merge's
+read      files     games.tsv 60 games; pool.tsv.root 7909 rows; every row's result its game's; the repetition: line equal to the files, [39, 19, 8, 11, 5638, 3287, 0]
+games     /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/games.tsv, 60 lines
+S331 reading of /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool: merged from two datagen runs (DEC-296), 60 games, 100000 nodes a move, 12 threads, seeds 990332000 and 990332100, quiet-limit 30000, leaf root,qs,pv
+files     games.tsv 60 games; pool.tsv.root 7909 rows; every row's result its game's; the repetition: line equal to the files, [39, 19, 8, 11, 5638, 3287, 0]
+
+GAMES. Recurred: a position on the board had occurred before, after the opening; the old rule drew the game there.
+  games 60; recurred 39 (65.00 % +/- 6.16 of all); openings ended on a recurrence 0, outside both sides
+  of the recurred, ended other than drawn 19 (48.72 % +/- 8.00): won by White 8 (20.51 % +/- 6.47), lost 11 (28.21 % +/- 7.21)
+  of all games, relabelled from a draw 31.67 % +/- 6.01
+  draws, of the 60 games both rules play: old rule 39 (65.00 % +/- 6.16), new 20 (33.33 % +/- 6.09)
+
+ROOT ROWS. Old: the rows the old rule wrote, every row of a game with no recurrence and the rows before the first recurrence of a recurred game. Differs: an old row whose game ended 1 or 0, labelled 0.5 by the old rule. Errors clustered by game.
+  all phases      old     5558  differs    1645   29.597 % +/- 6.141   to win     751   13.512 % +/- 4.581   to loss     894   16.085 % +/- 4.921
+  phase 0 to 4    old      810  differs     180   22.222 % +/- 9.993   to win      29    3.580 % +/- 3.576   to loss     151   18.642 % +/- 9.659
+  phase 5 to 9    old     1203  differs     318   26.434 % +/- 7.903   to win     183   15.212 % +/- 6.940   to loss     135   11.222 % +/- 4.822
+  phase 10 to 14  old     1004  differs     408   40.637 % +/- 8.622   to win     229   22.809 % +/- 7.547   to loss     179   17.829 % +/- 6.998
+  phase 15 to 19  old      542  differs     101   18.635 % +/- 6.821   to win      22    4.059 % +/- 2.200   to loss      79   14.576 % +/- 6.504
+  phase 20 to 24  old     1999  differs     638   31.916 % +/- 6.678   to win     288   14.407 % +/- 5.228   to loss     350   17.509 % +/- 5.248
+  phase <= 6      old     1399  differs     286   20.443 % +/- 7.350   to win     102    7.291 % +/- 4.571   to loss     184   13.152 % +/- 6.180
+  phase > 6       old     4159  differs    1359   32.676 % +/- 6.417   to win     649   15.605 % +/- 5.196   to loss     710   17.071 % +/- 5.022
+  of the 1645 that differ, the new label goes the way of the row's own score in 1255, against it in 356, score 0 in 34
+  new rows the old rule never wrote: 2351 after a first recurrence and 0 from the openings, 29.726 % +/- 3.558 of the 7909 root rows
+pristine  unchanged, every file against /home/max/ws/chesso-s332/.tuning/s332/smoke/pristine.sha256
+S332-SMOKE-MERGE-DONE
+
+== cases with case C, at the scripts before the fast check's fix: red
+$ adocs/data/S332_merge_smoke.sh cases
+case as_merged: accepted, merged games: 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/cases/as_merged/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+part 1    games: part1/games.tsv, 22 lines; the 21 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 0 with none; 1 dropped
+case as_merged: its games file byte-equal to the merge's, /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/games.tsv
+case nul_tail: accepted, merged games: 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/cases/nul_tail/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+part 1    games: part1/games.tsv, 22 lines and a tail of 4 NUL bytes; the 21 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 0 with none; 1 dropped
+case no_row_game_kept: accepted, merged games: 61 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/cases/no_row_game_kept/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+part 1    games: part1/games.tsv, 23 lines; the 22 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 1 with none; 1 dropped
+case kept_game_missing: refused, refused: merged root: game 3 has no games line in part 1's file
+case partial_line: refused, refused: part1/games.tsv: the bytes after its last newline are neither a line nor, where a power loss is allowed for, a tail of NUL bytes
+case result_differs: refused, refused: merged root: a row of game 3 carries 0.5, not its games line's 1.0
+case part2_short: refused, refused: part 2: 38 games lines, its log books 39
+case part2_line_off: refused, refused: part 2's files give [23, 12, 4, 8, 3624, 1961, 0], its log's repetition: line [923, 12, 4, 8, 3624, 1961, 0]
+case id_at_offset: refused, refused: part 1: game 100000000's games line is kept and its id is at or above the offset, 100
+case merge_no_row_game: merge passed, check: merged games, 61 lines of 61, sha256 the merge's, S122-CORPUS-MERGE-DONE
+case topup_no_games: merge refused, refused: no topup/games.tsv: the top-up ran without --games-out, and the merged pool would have no games file
+case part1_no_games: merge refused, refused: no pool/games.tsv: part 1 ran without --games-out, and the merged pool would have no games file
+case verify_games_changed: verify refused, check: pool/games.tsv's sha256 is not the one its merge wrote
+case verify_as_merged: verify passed, check: merged games, 60 lines of 60, sha256 the merge's, S122-CORPUS-VERIFY-DONE
+case power_loss: part 1's games.tsv without game 14's line, the dropped game's, and game 17's, the last kept
+case power_loss: FAILED, the merge did not pass: refused: merged root: game 17 has no games line in part 1's file
+S332-SMOKE-CASES-FAILED
+
+== cases, after the fix
+$ adocs/data/S332_merge_smoke.sh cases
+case as_merged: accepted, merged games: 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/cases/as_merged/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+part 1    games: part1/games.tsv, 22 lines; the 21 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 0 with none; 1 dropped
+case as_merged: its games file byte-equal to the merge's, /home/max/ws/chesso-s332/.tuning/s332/smoke/merge/pool/games.tsv
+case nul_tail: accepted, merged games: 60 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/cases/nul_tail/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+part 1    games: part1/games.tsv, 22 lines and a tail of 4 NUL bytes; the 21 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 0 with none; 1 dropped
+case no_row_game_kept: accepted, merged games: 61 games written to /home/max/ws/chesso-s332/.tuning/s332/smoke/cases/no_row_game_kept/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+part 1    games: part1/games.tsv, 23 lines; the 22 lines before game 14's, the first naming a game its root rows hold and the merge dropped, kept: its 21 games with a kept root row, in their order, and 1 with none; 1 dropped
+case kept_game_missing: refused, refused: part 1: game 3 of its kept root rows has no games line and a later kept game has one: not a games file cut short, as a power loss cuts it
+case partial_line: refused, refused: part1/games.tsv: the bytes after its last newline are neither a line nor, where a power loss is allowed for, a tail of NUL bytes
+case result_differs: refused, refused: merged root: a row of game 3 carries 0.5, not its games line's 1.0
+case part2_short: refused, refused: part 2: 38 games lines, its log books 39
+case part2_line_off: refused, refused: part 2's files give [23, 12, 4, 8, 3624, 1961, 0], its log's repetition: line [923, 12, 4, 8, 3624, 1961, 0]
+case id_at_offset: refused, refused: part 1: game 100000000's games line is kept and its id is at or above the offset, 100
+case merge_no_row_game: merge passed, check: merged games, 61 lines of 61, sha256 the merge's, S122-CORPUS-MERGE-DONE
+case topup_no_games: merge refused, refused: no topup/games.tsv: the top-up ran without --games-out, and the merged pool would have no games file
+case part1_no_games: merge refused, refused: no pool/games.tsv: part 1 ran without --games-out, and the merged pool would have no games file
+case verify_games_changed: verify refused, check: pool/games.tsv's sha256 is not the one its merge wrote
+case verify_as_merged: verify passed, check: merged games, 60 lines of 60, sha256 the merge's, S122-CORPUS-VERIFY-DONE
+case power_loss: part 1's games.tsv without game 14's line, the dropped game's, and game 17's, the last kept
+case power_loss: merge passed, the three views byte-equal to the merge's without the loss, games.tsv 59 lines
+merged games: 59 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 0 without, 1 of the first with no games line, and part 2's 39 games played
+repetition incomplete: 1 of part 1's 21 kept games have no games line, its file ending before them as a power loss leaves it; no combined repetition: line is given and the merged pool's check is partial, its views merged as the merger wrote them
+read      not run: part 1's games file ends before kept games (the line above), so no combined repetition: line exists to read; the views and the games file are held to the merge's lines above
+case power_loss: read refused, refused: pool/generate.log: the merged pool's repetition: check is partial and is not reported as complete: repetition incomplete: 1 of part 1's 21 kept games have no games line, its file ending before them as a power loss leaves it; no combined repetition: line is given and the merged pool's check is partial, its views merged as the merger wrote them
+S332-SMOKE-CASES-DONE

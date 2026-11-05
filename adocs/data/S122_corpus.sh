@@ -19,8 +19,8 @@
 # defaults to .tuning/s122/corpus, OUT to .tuning/s122/prepared (DEC-235). Only
 # `merge` writes into POOL: it moves part 1's generate.log and pool.tsv.* (and its
 # games.tsv, since DEC-349) into
-# POOL/part1/ beside their originals.sha256, writes the merged pool.tsv.* and
-# generate.log by way of .merging files, and keeps a refused run's log as
+# POOL/part1/ beside their originals.sha256, writes the merged pool.tsv.*, games.tsv
+# (S332) and generate.log by way of .merging files, and keeps a refused run's log as
 # merge.failed.log. No other stage writes there.
 #
 # ============================================================================
@@ -120,6 +120,8 @@ split="$root/tools/corpus_split.py"
 capacity_helper="$root/adocs/data/S083_corpus.py"
 tuner="${TUNER:-$root/build/tools/tuner}"
 merger="$root/adocs/data/S082_pool_merge.py"
+# The merged pool's games file and its `repetition:` line, and the read of both (S332).
+reader="$root/adocs/data/S331_measure.py"
 
 # The merge's runs (DEC-296's form). CORPUS_SEED and TOPUP_SEED are overridable for
 # a smoke and nothing else; the merger refuses a log whose seed is not the one given.
@@ -149,7 +151,8 @@ binary_line() {
 # A merged pool against the merge's own `merged <view>:` lines in LOG: each plays
 # GAMES and names POOL's file, and the file holds the rows the line counts, ends on
 # a newline and has the sha256 the merge wrote. One line a view; non-zero on any
-# finding.
+# finding. Since S332 POOL/games.tsv too, against the `merged games:` line: a merged
+# pool without one, merged before S332, is a finding.
 check_merged() {
   local log="$1" v line rows played sha same file counted failed=0
   for v in $VIEWS_ALL; do
@@ -174,6 +177,27 @@ check_merged() {
     [[ "$counted" -eq "$rows" ]] || { say "check: $file holds $counted rows, the merge's line $rows"; failed=1; }
     say "check: merged $v, $counted rows of $rows, $played games of $GAMES, sha256 $same"
   done
+  file="$POOL/games.tsv"
+  line=$(grep -E "^merged games: [0-9]+ games written to " "$log" | tail -n 1)
+  if [[ -z "$line" ]]; then
+    say "check: $log has no 'merged games:' line: merged before S332, the pool has no one games file"
+    return 1
+  fi
+  rows=$(sed -E 's/^merged games: ([0-9]+) games .*/\1/' <<< "$line")
+  sha=$(sed -nE 's/.*, sha256 ([0-9a-f]{64});.*/\1/p' <<< "$line")
+  [[ "$line" == *"written to $file, "* ]] || { say "check: the merge's games line does not name $file"; failed=1; }
+  [[ -f "$file" && -s "$file" ]] || { say "check: $file is missing or empty"; return 1; }
+  if [[ -n "$sha" && "$(sha256sum "$file" | cut -d' ' -f1)" == "$sha" ]]; then
+    same="the merge's"
+  else
+    same="not the merge's"
+    say "check: $file's sha256 is not the one its merge wrote"
+    failed=1
+  fi
+  [[ "$(tail -c 1 "$file" | wc -l)" -eq 1 ]] || { say "check: $file does not end on a newline"; failed=1; }
+  counted=$(wc -l < "$file")
+  [[ "$counted" -eq "$rows" ]] || { say "check: $file holds $counted games, the merge's line $rows"; failed=1; }
+  say "check: merged games, $counted lines of $rows, sha256 $same"
   return "$failed"
 }
 
@@ -359,38 +383,51 @@ record() {
 # at the names it reads: POOL/pool.tsv.* and POOL/generate.log. Part 1's four files
 # move once to POOL/part1/, by mv on one filesystem, their sha256 written first to
 # POOL/part1/originals.sha256 and checked on every run; nothing here writes into them.
-# Since DEC-349 part 1's games.tsv, where its run wrote one, moves with them; no
-# merged games file is written, and the top-up's stays in TOPUP.
-# datagen, run.sh and pid stay in POOL, where S122_screen.sh sample reads the datagen.
+# Since DEC-349 part 1's games.tsv moves with them. Since S332 the merged pool has one
+# games file, POOL/games.tsv: part 1's games lines cut where its rows were, then the
+# top-up's with its ids moved as its rows' are, written by S331_measure.py merge, which
+# also gives the merged log one combined `repetition:` line, part 1's figures recomputed
+# from its kept lines and rows beside part 2's from its log. The top-up's own games.tsv
+# stays in TOPUP. datagen, run.sh and pid stay in POOL, where S122_screen.sh sample
+# reads the datagen.
 #
 # Refused before anything moves unless the top-up's log has one `exit` line, `exit 0`,
 # and ends S122-TOPUP-DONE; it holds datagen's `repetition:` line and part 1's log
-# names the same datagen sha256 (DEC-349: no part by a datagen before S331); its
+# names the same datagen sha256 (DEC-349: no part by a datagen before S331); both
+# parts have a games.tsv (S332); its
 # seed is TOPUP_SEED and its seeds, games-wide and per
 # worker, meet neither the corpus's [CORPUS_SEED, CORPUS_SEED + GAMES) nor the side
 # sample's (DEC-345 (5)); the corpus's own log (first line `S122 corpus`) ends
 # S122-CORPUS-FAILED; S082_pool_merge.py part1 cuts part 1 clean; and its check finds
 # that part 2's rows give every figure part 2's log prints. Then its merge: the
 # cut, part 2's game ids moved up by the smallest power of ten above part 1's, the
-# files written under .merging names and read back. The merged files are then held to
-# the merge's own lines (check_merged). The log is composed as generate.log.merging --
-# MERGED_HEADER, both runs' logs verbatim and indented, the readings -- and renamed
-# last, ending S122-CORPUS-DONE, so a merged generate.log that exists is a merge that
-# passed.
+# files written under .merging names and read back; then the games file, from the
+# merged root view. The merged files are then held to the merge's own lines
+# (check_merged), and S331_measure.py read reads the merged pool against the log being
+# composed, its `repetition:` line recomputed from the merged files (S332). A power loss,
+# DEC-296's own case, can leave part 1's games.tsv ending before games the merger keeps:
+# the merge then passes with the views as ever and the games file holding what part 1's
+# has, and the log gives a `repetition incomplete:` line in place of the combined one,
+# so the check is partial and `read` is not run. The log is
+# composed as generate.log.merging -- MERGED_HEADER, both runs' logs verbatim and
+# indented, the readings -- and renamed last, ending S122-CORPUS-DONE, so a merged
+# generate.log that exists is a merge that passed.
 #
 # Re-runnable: a refusal after the move leaves part 1 in POOL/part1/ and no merged
 # pool; the files this run made are removed and its log kept as POOL/merge.failed.log,
 # so the next run starts where it did. A merged pool is never overwritten. A run
 # interrupted after renaming the merged files and before renaming its log leaves
-# pool.tsv.* and generate.log.merging with no generate.log: the next run names that
-# state and refuses, deleting nothing; part 1 is intact in POOL/part1/, so the
-# recovery is by hand, removing pool.tsv.* and generate.log.merging and re-running.
+# pool.tsv.*, games.tsv and generate.log.merging with no generate.log: the next run
+# names that state and refuses, deleting nothing; part 1 is intact in POOL/part1/, so
+# the recovery is by hand, removing pool.tsv.*, games.tsv and generate.log.merging and
+# re-running.
 merge() {
   local part1="$POOL/part1" log="$POOL/generate.log" topup_log="$TOPUP/topup.log"
   local originals="generate.log pool.tsv.root pool.tsv.qs pool.tsv.pv"
-  local from name v command tseed tgames tthreads span reading checked report rc p1sha tsha
+  local from name v command tseed tgames tthreads span reading checked report rc p1sha tsha offset
 
   [[ -r "$merger" ]] || { say "no merger at $merger"; return 1; }
+  [[ -r "$reader" ]] || { say "no reader at $reader"; return 1; }
   [[ -r "$topup_log" ]] || { say "refused: no top-up log at $topup_log"; return 1; }
   if [[ "$(grep -cE '^exit +[0-9]+$' "$topup_log")" != 1 ]] || ! grep -qxE 'exit +0' "$topup_log"; then
     say "refused: $topup_log has no one 'exit 0' line: the top-up has not finished, or failed"
@@ -404,6 +441,9 @@ merge() {
   # the top-up's datagen by sha256 below, once it is found.
   grep -q '^repetition: ' "$topup_log" ||
     { say "refused: $topup_log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids"; return 1; }
+  # S332: the merged pool's games file is made of both parts' (`--games-out`).
+  [[ -f "$TOPUP/games.tsv" ]] ||
+    { say "refused: no $TOPUP/games.tsv: the top-up ran without --games-out, and the merged pool would have no games file"; return 1; }
 
   command=" $(sed -n 's/^command *//p' "$topup_log" | head -n 1) "
   tseed=$(sed -n 's/.* --seed \([0-9][0-9]*\) .*/\1/p' <<< "$command")
@@ -431,24 +471,29 @@ merge() {
     (cd "$part1" && sha256sum --quiet -c originals.sha256) ||
       { say "refused: part 1's files in $part1 are not the ones whose sha256 was written before the move"; return 1; }
     if [[ ! -e "$log" && -e "$log.merging" ]] &&
-       compgen -G "$POOL/pool.tsv.*" > /dev/null; then
-      say "refused: an interrupted merge: $POOL/pool.tsv.* and $log.merging exist and $log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in $part1 (checked against originals.sha256 just now). By hand: remove $POOL/pool.tsv.* and $log.merging, then re-run"
+       { compgen -G "$POOL/pool.tsv.*" > /dev/null || [[ -e "$POOL/games.tsv" ]]; }; then
+      say "refused: an interrupted merge: $POOL/pool.tsv.* or $POOL/games.tsv, and $log.merging, exist and $log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in $part1 (checked against originals.sha256 just now). By hand: remove $POOL/pool.tsv.*, $POOL/games.tsv and $log.merging, then re-run"
       return 1
     fi
     for v in $VIEWS_ALL; do
       [[ ! -e "$POOL/pool.tsv.$v" ]] ||
         { say "refused: $POOL/pool.tsv.$v exists: a merged pool is never overwritten"; return 1; }
     done
+    [[ ! -e "$POOL/games.tsv" ]] || { say "refused: $POOL/games.tsv exists: a merged pool is never overwritten"; return 1; }
     [[ ! -e "$log" ]] || { say "refused: $log exists: a merged pool is never overwritten"; return 1; }
+    grep -qE '^[0-9a-f]{64}  games\.tsv$' "$part1/originals.sha256" ||
+      { say "refused: $part1/originals.sha256 names no games.tsv: part 1 was moved without its games file, so the merged pool would have none (S332)"; return 1; }
   else
     [[ ! -e "$part1" ]] ||
       { say "refused: $part1 exists without originals.sha256: a move was interrupted; resolve it by hand"; return 1; }
     for name in $originals; do
       [[ -f "$POOL/$name" ]] || { say "refused: no $POOL/$name to move"; return 1; }
     done
-    # Part 1's games file (`--games-out`, DEC-349) is part 1's alone: no merged one is
-    # written, so it goes with the files it describes.
-    [[ -f "$POOL/games.tsv" ]] && originals+=" games.tsv"
+    # Part 1's games file (`--games-out`, DEC-349) goes with the files it describes; the
+    # merged one is cut from it (S332).
+    [[ -f "$POOL/games.tsv" ]] ||
+      { say "refused: no $POOL/games.tsv: part 1 ran without --games-out, and the merged pool would have no games file"; return 1; }
+    originals+=" games.tsv"
     [[ "$(head -n 1 "$log")" == "S122 corpus" ]] ||
       { say "refused: $log is not the corpus's own log: no part 1 to move"; return 1; }
     [[ "$(tail -n 1 "$log")" == S122-CORPUS-FAILED ]] ||
@@ -492,12 +537,13 @@ merge() {
       { say "refused: part 1's files in $part1 are not the ones whose sha256 was written before the move"; return 1; }
   fi
   for v in $VIEWS_ALL; do rm -f "$POOL/pool.tsv.$v.merging"; done
-  rm -f "$log.merging"
+  rm -f "$POOL/games.tsv.merging" "$log.merging"
 
   {
     echo "$MERGED_HEADER"
     echo "merged    $(date -Iseconds)"
     binary_line merger "$merger"
+    binary_line reader "$reader"
     binary_line stage "$root/adocs/data/S122_corpus.sh"
     echo "python    $(python3 --version 2>&1)"
     echo "part 1    $part1/generate.log, the corpus's own log, moved there unchanged; verbatim:"
@@ -523,15 +569,43 @@ merge() {
     return 1
   fi
 
+  # The games file, from the merged root view and both parts' games files, and the one
+  # `repetition:` line; the offset is the merger's own line's.
+  offset=$(sed -n "s/^offset    part 2's game ids plus \([0-9][0-9]*\),.*/\1/p" "$log.merging" | tail -n 1)
+  python3 "$reader" merge "${offset:-none}" "$part1" "$TOPUP" "$topup_log" \
+      "$POOL/pool.tsv.root.merging" "$POOL/games.tsv" | tee -a "$log.merging"
+  rc=${PIPESTATUS[0]}
+  if (( rc != 0 )); then
+    # The merger's files of this run, and the games file it may have left.
+    for v in $VIEWS_ALL; do rm -f "$POOL/pool.tsv.$v.merging"; done
+    rm -f "$POOL/games.tsv.merging"
+    mv "$log.merging" "$POOL/merge.failed.log"
+    say "refused: S331_measure.py merge refused the games files; its log is $POOL/merge.failed.log"
+    return 1
+  fi
+
   for v in $VIEWS_ALL; do
     mv "$POOL/pool.tsv.$v.merging" "$POOL/pool.tsv.$v" || return 1
   done
+  mv "$POOL/games.tsv.merging" "$POOL/games.tsv" || return 1
   report=$(check_merged "$log.merging")
   rc=$?
   echo "$report" | tee -a "$log.merging"
+  if (( rc == 0 )) && grep -q '^repetition incomplete: ' "$log.merging"; then
+    # Part 1's games file cut short by a power loss: the pool stands, its check is partial.
+    echo "read      not run: part 1's games file ends before kept games (the line above), so no combined repetition: line exists to read; the views and the games file are held to the merge's lines above" |
+      tee -a "$log.merging"
+  elif (( rc == 0 )); then
+    echo "read      S331_measure.py read $POOL against this log, its views and games file and the repetition: line above:" |
+      tee -a "$log.merging"
+    report=$(python3 "$reader" read "$POOL" "$log.merging")
+    rc=$?
+    sed -E 's/^/read      /; s/ +$//' <<< "$report" | tee -a "$log.merging"
+  fi
   if (( rc != 0 )); then
     # This run's own files: they did not exist when it started.
     for v in $VIEWS_ALL; do rm -f "$POOL/pool.tsv.$v"; done
+    rm -f "$POOL/games.tsv"
     mv "$log.merging" "$POOL/merge.failed.log"
     say "refused: the merged pool fails its checks: removed, its log kept as $POOL/merge.failed.log"
     return 1

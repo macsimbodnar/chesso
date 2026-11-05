@@ -5,7 +5,30 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-05 13:20, by hand.
+Updated: 2026-11-05 14:24, by hand.
+
+## 2026-11-05 14:24: S332 done; S124 phase 1 rebasing onto S122
+
+**S332 is done (`plan_done/`), this commit.**
+- `S331_measure.py read` streams the views. On S122's pool: 75 s, 107628 kB peak, equal to the log's line.
+- The merge writes one games file and one combined line, or `repetition incomplete:` after a power loss.
+- One fast check found a regression, a power-loss refusal, and it is fixed; red seen first.
+- Its three low findings are filed as S335, filler.
+
+**Running: S124 phase 1's rebase onto `bcc41f3`**, a fresh agent in `../chesso-s124p1b` (branch `s124p1b`), from
+`.tuning/coord/S124/S124_phase1.diff`. It re-derives every golden S122 moved.
+- The owner's stops are the gradient case past 1e-6 and `CLAMP_PUSH` answering no push. On either it stops and the
+  options are read.
+- Deliverable: `.tuning/coord/S124/S124_phase1_rebased.diff`. `../chesso-s124p1` stays, read-only, until S124 phase 1
+  lands.
+
+**Removed:** `../chesso-s122p2` and `../chesso-s122`, their blobs verified in history.
+
+**Next:**
+1. S333, after this commit, since it touches `S122_corpus.sh`.
+2. S124 phase 1 landing: a fast check over the rebased diff, `touches:`, specs.md, gate.
+3. S124 phase 2's screen, which holds the machine; S334 and S335 run behind it as filler.
+
 
 ## 2026-11-05 13:20: S122 done, H1, its family ships; next S332, S333, then S124 phase 1's rebase
 

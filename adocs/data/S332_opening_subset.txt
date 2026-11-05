@@ -1,0 +1,31 @@
+$ POOL=/home/max/ws/chesso/.tuning/s122/corpus nice -n 10 adocs/data/S332_opening_subset.sh   # 2026-11-05, 4 s, beside S124's rebase build
+pool      /home/max/ws/chesso/.tuning/s122/corpus, read in place: games.tsv sha256 53470ee1fb21c471048e035d6d500872d16e825df50de1cadfd19d5f8443d985
+readers   HEAD's, bcc41f3:adocs/data/S331_measure.py, sha256 f201e44095cae87cd88d7127d3b30753637bf13d1077e432ee709a67958f900f
+          the worktree's, sha256 a58bd9f534254de5a6938464a4f4d9f0a5d8c006b68077ce328170693293dc7d
+subset    324 games, every one whose opening ended on a recurrence (25) and every 500th other; 42514 root rows
+awk       repetition: 163 games reached a position that had occurred before, which drew a game until S331; 56 of them ended other than drawn, 32 won by White and 24 lost; 25007 positions passed in them, a root row each, 13889 before the first recurrence; 25 openings ended on one, discarded until S331
+(a)       in file order: both exit 0, byte-equal, sha256 11622cd99b976590963d586cad4d1b28aa6d55d9b662fd684a4c33a91ae785bb
+(b)       games.tsv and root rows shuffled: both exit 0, byte-equal, sha256 19deec1b0c61cc1e2026ba975c47f3dc2d8fbb75af47b5b639d04d5b10c55ddb
+(a), (b)  not the same bytes: the shuffle reorders the games and so the sums behind the clustered errors
+reading   (a), the worktree's, verbatim, its directory removed at the end:
+S331 reading of /home/max/ws/chesso-s332/.tuning/s332/opening_subset/a: datagen 324 games, 100000 nodes a move, 12 threads, seed 2026500349, quiet-limit 30000, leaf root
+files     games.tsv 324 games; pool.tsv.root 42514 rows; every row's result its game's; the repetition: line equal to the files, [163, 56, 32, 24, 25007, 13889, 25]
+
+GAMES. Recurred: a position on the board had occurred before, after the opening; the old rule drew the game there.
+  games 324; recurred 163 (50.31 % +/- 2.78 of all); openings ended on a recurrence 25, outside both sides
+  of the recurred, ended other than drawn 56 (34.36 % +/- 3.72): won by White 32 (19.63 % +/- 3.11), lost 24 (14.72 % +/- 2.78)
+  of all games, relabelled from a draw 17.28 % +/- 2.10
+  draws, of the 299 games both rules play: old rule 166 (55.52 % +/- 2.87), new 110 (36.79 % +/- 2.79)
+
+ROOT ROWS. Old: the rows the old rule wrote, every row of a game with no recurrence and the rows before the first recurrence of a recurred game. Differs: an old row whose game ended 1 or 0, labelled 0.5 by the old rule. Errors clustered by game.
+  all phases      old    27737  differs    4621   16.660 % +/- 2.192   to win    2542    9.165 % +/- 1.669   to loss    2079    7.495 % +/- 1.563
+  phase 0 to 4    old     4106  differs     497   12.104 % +/- 3.350   to win     362    8.816 % +/- 3.015   to loss     135    3.288 % +/- 1.655
+  phase 5 to 9    old     6088  differs     865   14.208 % +/- 2.774   to win     429    7.047 % +/- 1.982   to loss     436    7.162 % +/- 2.049
+  phase 10 to 14  old     3847  differs     662   17.208 % +/- 3.153   to win     307    7.980 % +/- 2.309   to loss     355    9.228 % +/- 2.380
+  phase 15 to 19  old     3138  differs     534   17.017 % +/- 3.071   to win     304    9.688 % +/- 2.441   to loss     230    7.330 % +/- 2.054
+  phase 20 to 24  old    10558  differs    2063   19.540 % +/- 2.516   to win    1140   10.797 % +/- 1.948   to loss     923    8.742 % +/- 1.835
+  phase <= 6      old     7315  differs     894   12.221 % +/- 2.579   to win     574    7.847 % +/- 2.223   to loss     320    4.375 % +/- 1.424
+  phase > 6       old    20422  differs    3727   18.250 % +/- 2.337   to win    1968    9.637 % +/- 1.704   to loss    1759    8.613 % +/- 1.779
+  of the 4621 that differ, the new label goes the way of the row's own score in 3594, against it in 951, score 0 in 76
+  new rows the old rule never wrote: 11118 after a first recurrence and 3659 from the openings, 34.758 % +/- 2.051 of the 42514 root rows
+S332-OPENING-SUBSET-DONE
