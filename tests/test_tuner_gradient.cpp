@@ -603,7 +603,11 @@ TEST_CASE("the fixture sits clear of the clamp at the shipped constants")
 // passed_king_own_eg[0], a factor of 3.7, and 984 reads 1.11e-07, under the
 // 2.5e-07 the 1/|gradient| law gives because the pair moves the truncation term
 // as well (adocs/data/S101_gradient_rows.cpp prints it,
-// adocs/data/S101_goldens.txt).
+// adocs/data/S101_goldens.txt). S122's king safety family, DEC-353's 1245 fit,
+// read 3.53e-07 at 985 with S101's pair and 2.95e-06 at 984 on the 104 rows
+// alone; the same rule then re-picked the pair at that candidate (DEC-354),
+// and with it the case reads 8.61e-07 at 984, under the bound by 1.16
+// (adocs/data/S122_goldens.txt, adocs/data/S122_gradient_options.txt).
 TEST_CASE("gradient() is the derivative of the error it descends")
 {
   const std::string path = fixture_path();
@@ -652,10 +656,20 @@ TEST_CASE("gradient() is the derivative of the error it descends")
   // a term and takes the same term away again, into a total other rows have
   // already moved, which read -7.8e-23 and -1.3e-22 at the seed -- so it is
   // asserted under 1e-15, three orders below the floor every other parameter
-  // clears, and a seed that stopped being one shows here.
+  // clears, and a seed that stopped being one shows here. Off the seed the
+  // kings' x differ and the constant is heard like any weight: at S122's
+  // candidate, DEC-353's 1245 fit, it reads 7.74e-06 and 3.84e-07 here, so
+  // there it clears the same 1e-12 as the rest (adocs/data/S122_goldens.txt).
+  const bool curve_seed =
+      std::all_of(ks_curve_mg + KSC_KNIGHT_ATTACKERS,
+                  ks_curve_mg + KS_CURVE_INPUTS,
+                  [](int w) { return w == 0; }) &&
+      std::all_of(ks_curve_eg + KSC_KNIGHT_ATTACKERS,
+                  ks_curve_eg + KS_CURVE_INPUTS, [](int w) { return w == 0; });
   for (size_t p = MOB_MG_BASE; p < PARAM_COUNT; ++p) {
     CAPTURE(p);
-    if (p == KSC_MG_BASE + KSC_CONSTANT || p == KSC_EG_BASE + KSC_CONSTANT) {
+    if (curve_seed &&
+        (p == KSC_MG_BASE + KSC_CONSTANT || p == KSC_EG_BASE + KSC_CONSTANT)) {
       CHECK(std::fabs(analytic[p]) < 1e-15);
       continue;
     }
@@ -757,11 +771,17 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // candidate, the screen's 1234567 fit with DEC-316's pair (106), it answers
   // +30 again: two rows bound, the farthest at 198.7, the nearest other at
   // 158.8, every row 14.67 from the kink, finite differences 1.52e-7; on the
-  // 104 rows it answered +50 (adocs/data/S101_goldens.txt). Re-run it whenever
-  // the constants or the fixture move; the precondition below re-establishes
-  // the binding either way. A much larger push saturates the sigmoid
-  // everywhere, which makes the finite difference itself unreliable.
-  constexpr double CLAMP_PUSH = 30.0;
+  // 104 rows it answered +50 (adocs/data/S101_goldens.txt). At S122's
+  // candidate, DEC-353's 1245 fit with LAZY_EVAL_MARGIN 275, +30 bound no row,
+  // and on S101's pair no push met the rule
+  // (adocs/data/S122_clamp_reading.txt); with DEC-316's pair re-derived there
+  // (DEC-354) it answers +50: four rows bound, the farthest at 360.4, the
+  // nearest other at 225.4, every row 49.64 from the kink, finite
+  // differences 1.03e-7 (adocs/data/S122_goldens.txt). Re-run it whenever the
+  // constants or the fixture move; the precondition below re-establishes the
+  // binding either way. A much larger push saturates the sigmoid everywhere,
+  // which makes the finite difference itself unreliable.
+  constexpr double CLAMP_PUSH = 50.0;
 
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
     params[KS_MG_BASE + t] += CLAMP_PUSH;
@@ -1263,14 +1283,20 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
   //
   // GOLDEN (DEC-142): ADAGRAD_HOLD_STEP, the largest step on a ladder at most
   // half the smallest one at which any of 98 nearby starts passes 1e-9 by four
-  // times these epochs, not a step this case happened to pass at. Today that
-  // smallest one is 5, `apart` here reads 2.84e-12 and never passes 6.68e-11 by
-  // then, and the shipped constants themselves go chaotic at 10
-  // (adocs/data/S310_adagrad_step.txt). Re-derived by
+  // times these epochs, not a step this case happened to pass at. At S310
+  // that smallest one was 5, `apart` here read 2.84e-12 and never passed
+  // 6.68e-11 by then, and the shipped constants themselves went chaotic at 10
+  // (adocs/data/S310_adagrad_step.txt); since S122 (2026-11-05) it is 5 again,
+  // with the readings below. Re-derived by
   // adocs/data/S310_adagrad_step.cpp, whose header states the rule and which
   // exits 2 until this follows it, whenever the constants or the fixture move.
   // The bound below does not follow it. A smaller step shows a small error in
   // the hold less than a larger one does; S310's step file has what that costs.
+  // S122's candidate, DEC-353's 1245 fit, on S101's pair moved the onset
+  // 5 -> 7 and the rule answered 3. With DEC-316's pair re-derived there
+  // (DEC-354) the onset is 5 again and it answers 2: `apart` reads 1.02e-12
+  // at epoch 300, every read of the 98 starts at most 4.68e-11, the smallest
+  // plain walk 0.3832 (adocs/data/S122_goldens.txt).
   constexpr double ADAGRAD_HOLD_STEP = 2.0;
   const double k = 1.0;
   const int epochs = 300;
@@ -1354,7 +1380,11 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // hold at most 1.13e-14 (`adocs/data/S101_goldens.txt`). Those AdaGrad
     // figures are at the step of 10 the case ran then; at ADAGRAD_HOLD_STEP on
     // the same constants the smallest is 0.7369, psqt_eg[king]'s, every hold at
-    // most 6.66e-15 (`adocs/data/S310_adagrad_step.txt`). The 0.1 of before
+    // most 6.66e-15 (`adocs/data/S310_adagrad_step.txt`). At S122's candidate,
+    // DEC-353's 1245 fit with DEC-316's pair re-derived there (DEC-354), the
+    // smallest is 1.2516 under Adam, the bishop's, and 0.3832 under AdaGrad at
+    // the step of 2, psqt_eg[king]'s, apart 4.77e-12 and 1.02e-12
+    // (`adocs/data/S122_goldens.txt`). The 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
     // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits
@@ -1431,6 +1461,9 @@ struct plant_t
   const char* group;
   std::vector<std::pair<size_t, double>> values;
   int epochs = 6000;
+  // Where the free group starts when that is not what ships: S122's curve is
+  // recovered from its seed, which shipped until S122's fit and no longer does.
+  std::vector<std::pair<size_t, double>> start = {};
 };
 
 void check_recovery(const std::vector<plant_t>& plants)
@@ -1473,6 +1506,9 @@ void check_recovery(const std::vector<plant_t>& plants)
     // (15)): this case reads the recovery within the half centipawn below, and
     // a budget too small goes red, as 6000 does.
     std::vector<double> fitted = shipped;
+    for (const auto& [param, value] : plant.start) {
+      fitted[param] = value;
+    }
     fit(model, data, target, mask, k, 1.0, plant.epochs, &fitted);
 
     // Within half a centipawn is what the emitted integer needs to be the
@@ -1724,8 +1760,21 @@ TEST_CASE("a planted vector comes back: king_safety")
 // are 32000 and 80000, budgets and not goldens, and the case runs in its own
 // entry under the `slow` label: it cannot meet S309's bar of 30 s at -j12, and
 // tests/CMakeLists.txt says so beside it.
+//
+// **From the seed, said since S122's fit ships.** Until then the shipped curve
+// was the seed and the fit started there by default; DEC-353's 1245 curve
+// ships now, its weights tens of centipawns from either plant, and from there
+// the 32000 and 80000 epochs read 2.87 and 1.01 off. The question this case
+// asks is the seed's, so both plants start there: the constant 45 in each
+// half and every other input 0 (adocs/data/S122_goldens.txt).
 TEST_CASE("a planted vector comes back: king_curve")
 {
+  std::vector<std::pair<size_t, double>> seed;
+  for (size_t input = 0; input < KS_CURVE_INPUTS; ++input) {
+    seed.push_back({KSC_MG_BASE + input, input == 0 ? 45.0 : 0.0});
+    seed.push_back({KSC_EG_BASE + input, input == 0 ? 45.0 : 0.0});
+  }
+
   const std::vector<plant_t> plants = {
       {"ks_curve",
        {{KSC_MG_BASE + 0, 30}, {KSC_MG_BASE + 1, 14},  {KSC_MG_BASE + 2, 11},
@@ -1736,7 +1785,8 @@ TEST_CASE("a planted vector comes back: king_curve")
         {KSC_EG_BASE + 3, 5},  {KSC_EG_BASE + 4, 12},  {KSC_EG_BASE + 5, 4},
         {KSC_EG_BASE + 6, 9},  {KSC_EG_BASE + 7, 7},   {KSC_EG_BASE + 8, 8},
         {KSC_EG_BASE + 9, 10}, {KSC_EG_BASE + 10, 6},  {KSC_EG_BASE + 11, -5}},
-       32000},
+       32000,
+       seed},
       {"ks_curve",
        {{KSC_MG_BASE + 0, 0},  {KSC_MG_BASE + 1, 14},  {KSC_MG_BASE + 2, 11},
         {KSC_MG_BASE + 3, 9},  {KSC_MG_BASE + 4, 22},  {KSC_MG_BASE + 5, 7},
@@ -1746,7 +1796,8 @@ TEST_CASE("a planted vector comes back: king_curve")
         {KSC_EG_BASE + 3, 5},  {KSC_EG_BASE + 4, 12},  {KSC_EG_BASE + 5, 4},
         {KSC_EG_BASE + 6, 9},  {KSC_EG_BASE + 7, 7},   {KSC_EG_BASE + 8, 8},
         {KSC_EG_BASE + 9, 10}, {KSC_EG_BASE + 10, 6},  {KSC_EG_BASE + 11, -5}},
-       80000},
+       80000,
+       seed},
   };
 
   check_recovery(plants);

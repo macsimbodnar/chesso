@@ -1093,7 +1093,7 @@
      to apply. src/evaluation.hpp carries what the number means and what it    \
      was measured from; S039 read H0 and kept it (record ca578de, revert       \
      74d0adf). */                                                              \
-  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  184,    0, 2000)                     \
+  X(LAZY_EVAL_MARGIN,  "LazyEvalMargin",  275,    0, 2000)                     \
                                                                                \
   /* Aspiration windows. The root of an iteration is searched in a band around \
      the previous iteration's score instead of from -inf to +inf, and the band \

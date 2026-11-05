@@ -401,7 +401,9 @@ static bool line_ends_in_mate(const std::string& fen,
 // grid re-derived the budgets in adocs/data/S170_cases.tsv, A, C, E and F.
 // S125's pawn structure family moved none; its grid re-derived A, C and F.
 // S101's threat family moves E 2 -> 3, DEC-299's +2 held for the owner's floor
-// ruling and landing with it, DEC-343; its grid re-derived A, D and F.)
+// ruling and landing with it, DEC-343; its grid re-derived A, D and F. S122's
+// king safety family moves none; its grid re-derived A, C and F, and D reports
+// no mate line at its stride anywhere in it.)
 // Re-derive: adocs/data/S203_case_sweep.sh --ceilings
 // adocs/data/S202_sweep_s170.txt adocs/data/S261_sweep_s170.txt
 // adocs/data/S286_sweep_s170.txt adocs/data/S292_sweep_s170.txt
@@ -409,6 +411,7 @@ static bool line_ends_in_mate(const std::string& fen,
 // adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
 // adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
 // adocs/data/S125_sweep_s170.txt adocs/data/S101_sweep_s170.txt
+// adocs/data/S122_sweep_s170.txt
 // (the rule, the grid list and the worst cells are tabled below).
 // Moves legitimately on: a
 // re-sweep of the budgets, which is a Zobrist redraw (DEC-154); a change to
@@ -442,6 +445,7 @@ static bool line_ends_in_mate(const std::string& fen,
 //       adocs/data/S135_sweep_s170.txt adocs/data/S296_sweep_s170.txt
 //       adocs/data/S121_sweep_s170.txt adocs/data/S123_sweep_s170.txt
 //       adocs/data/S125_sweep_s170.txt adocs/data/S101_sweep_s170.txt
+//       adocs/data/S122_sweep_s170.txt
 //
 // which is the script DEC-142 requires beside a golden. Never read one off a
 // failing run.
@@ -499,7 +503,13 @@ static bool line_ends_in_mate(const std::string& fen,
 // eleventh** (`adocs/data/S101_sweep_s170.txt`, S101's threat family at the
 // screen's 1234567 fit, uncommitted on `c2f2025`, 108 cells, 1441 mate lines
 // and 22 short): it moves E, below, and the budgets it re-derived, A, D and F,
-// are in the TSV's header.
+// are in the TSV's header. **S122's is the twelfth**
+// (`adocs/data/S122_sweep_s170.txt`, S122's king safety family at DEC-353's
+// 1245 fit with LAZY_EVAL_MARGIN 275, uncommitted on `65606a9`, 108 cells, 1504
+// mate lines and 14 short): it moves no ceiling, and the budgets it re-derived,
+// A, C and F, are in the TSV's header. D reports no mate line at stride 1 in
+// any of its cells, so its row keeps `nodes 1000000` and it is silent there;
+// the majority, 5 of 6, holds.
 //
 //   case                       ceiling  worst cell, at the case's own stride
 //   A_mate8_shallow                  2  1000000 on the S286 grid, 2 of 6;

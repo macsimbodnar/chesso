@@ -1,0 +1,1563 @@
+# S122's candidate: every golden the paste moves, each by its script (DEC-142), and the unmoved ones read. 2026-11-05,
+# worktree chesso-s122p2 at 65606a9 plus `adocs/data/S122_screen.sh apply ... --ruled DEC-353` (the fit
+# .tuning/s122/screen/fits/1245_e20000/full.hpp, sha256 50bd33bd...; ks_checks, ks_weak, ks_storm, ks_curve in
+# src/evaluation.cpp, LAZY_EVAL_MARGIN 184 -> 275 in src/search_params.hpp), uncommitted. Bench 5482277 -> 4707943 in both
+# builds. Candidate binaries frozen before the readings, sha256 first 16: chesso c27d5ddd72702399, tune chesso
+# 2b3d76471521f423, libchesso_engine.a 8c00d7c05cd966ce; the parent the main checkout's builds at 65606a9 (bench 5482277).
+# The floors sweep the candidate through adocs/data/S136_overlay_run.py with the paste's two files. Throwaway trees of the
+# candidate (65606a9 plus the two files) for the S091 mutants, B04, MW02 and S149's guard, removed after. No fit, match,
+# SPRT, datagen or timing; the K re-read is adocs/data/S122_kcheck.txt.
+#
+# THE OWNER'S STOPS (DEC-344 (9)), read first. EXACT_FLOOR 157 holds (166 shipping, 156 weakened);
+# MATE_IN_THREE_FLOOR 11 holds (12 shipping, 11 weakened, S083's shape: the gate at RfpMinPly 1 fails on mate-in-two
+# exactness alone, EXACT_FLOOR carrying the separation); no mate-carry ceiling moves (2, 13, 4, 1, 3, 3). The gradient
+# case's worst is 3.53e-07 at 985, under its 1e-6 with DEC-316's pair, and 2.95e-06 at 984 on the base rows without it.
+#
+# TWO GOLDENS NOT RE-DERIVED, PUT TO THE OWNER (DEC-344 (9), 2026-11-05) as one recurrence on DEC-343's parameter,
+# the third on test_tuner_gradient's bound, by the coordinator's reading after the fast check of this phase:
+# CLAMP_PUSH (section 7), whose script's rule answers no push from +10 to +200 at the candidate, the case red at +30,
+# binding no row at margin 275, each option's pick in adocs/data/S122_clamp_reading.txt; and DEC-316's pair (section 11),
+# which adocs/data/S101_gradient_rows.cpp no longer reproduces, its pick at the candidate candidate 5, 8.6e-7. Both kept
+# pending the owner's ruling.
+# RESOLVED BY DEC-354, the coordinator's ruling (DEC-142 applied as written; section 17): the pair re-derived by its
+# script, candidate 5; CLAMP_PUSH then +50 by its own; the gradient case 8.61e-07 at 984 under 1e-6, so the recurrence
+# does not fire and nothing goes to the owner. ADAGRAD_HOLD_STEP is back at 2 on the new fixture.
+
+== 1. The floors
+== S156 candidate
+318 positions, depth 10, ref HEAD
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s122p2
+  overlaid src/search_params.hpp from /home/max/ws/chesso-s122p2
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     166          170            0   19.1s
+          2     166          172            0   19.1s
+          1     156          160            0   18.4s
+          0     156          160            0   18.3s
+
+  floor 157, asserted by tests/test_mate_breadth.cpp
+    shipping value 166, weakened-guard value 156, gap 10
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_tzfb_pcl/tests/test_mate_breadth.cpp:364: MESSAGE: mined set at depth 10: 156 exact, 160 right sign, 0 wrong sign
+    logged: the mined set reads 156 exact at depth 10, under the 157 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+rc 0
+
+== S154 floor candidate
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s122p2
+  overlaid src/search_params.hpp from /home/max/ws/chesso-s122p2
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d5  m4  2/16 d4  m5  1/16 d8  short 0  sign 0
+                         m3 #######.##.###.######..#  churn -  14121373 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  2/16 d4  m5  1/16 d8  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 0  13910081 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d7  m4  3/16 d6  m5  1/16 d5  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  11011586 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 12/24 d6  m4  3/16 d7  m5  1/16 d4  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  10931532 nodes
+  RfpMinPly=1            m2 21/26 on-time 16 d6  m3 11/24 d6  m4  1/16 d5  m5  2/16 d8  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 1  11782828 nodes
+  RfpMinPly=0            m2 21/26 on-time 16 d6  m3 11/24 d6  m4  1/16 d5  m5  2/16 d8  short 0  sign 0
+                         m3 .#.##...#....#.####.#..#  churn 0  11782828 nodes
+
+  floor, 18.2s
+rc 0
+
+== S154 red candidate
+  overlaid src/evaluation.cpp from /home/max/ws/chesso-s122p2
+  overlaid src/search_params.hpp from /home/max/ws/chesso-s122p2
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S154_sweep_7pf050l6/tests/test_engine.cpp:5949: ERROR: CHECK( exact_by_distance[2] == total_by_distance[2] ) is NOT correct!
+    [doctest] assertions: 3590 | 3569 passed | 21 failed |
+
+  red, 24.7s
+rc 0
+
+== S156 parent
+318 positions, depth 10, ref HEAD
+
+  RfpMinPly   exact   right sign   wrong sign   wall
+          3     158          162            0   18.5s
+          2     159          161            0   18.2s
+          1     154          158            0   18.3s
+          0     154          158            0   18.4s
+
+  floor 157, asserted by tests/test_mate_breadth.cpp
+    shipping value 158, weakened-guard value 154, gap 4
+
+  the gate built with RfpMinPly defaulting to 1: RED, as it must be
+    /tmp/S156_sweep_aaymcuot/tests/test_mate_breadth.cpp:364: MESSAGE: mined set at depth 10: 154 exact, 158 right sign, 0 wrong sign
+    logged: the mined set reads 154 exact at depth 10, under the 157 this engine held when the floor was placed. Mate finding has cost something. adocs/data/S156_mined_floor_sweep.py re-measures the separation; the floor moves only with a reason written down
+rc 0
+== S154 floor parent
+RfpMinPly swept at HEAD, RfpMaxDepth held at its shipping value.
+The declared minimum is relaxed to 0 in a throwaway worktree: S251 made it 3,
+so a shipping binary refuses 2, 1 and 0 and answers with its default instead.
+82 positions, depth 2m-1+8, per distance m2 26, m3 24, m4 16, m5 16
+
+  RfpMinPly=5            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  5/16 d8  m5  1/16 d6  short 0  sign 0
+                         m3 #######.##.###.######..#  churn -  13940205 nodes
+  RfpMinPly=4            m2 26/26 on-time 26 d0  m3 19/24 d6  m4  1/16 d5  m5  2/16 d8  short 0  sign 0
+                         m3 #######.##.###.######..#  churn 0  15044805 nodes
+  RfpMinPly=3            m2 26/26 on-time 26 d0  m3 12/24 d5  m4  0/16 d-  m5  0/16 d-  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 7  9514006 nodes
+  RfpMinPly=2            m2 26/26 on-time 17 d1  m3 12/24 d5  m4  0/16 d-  m5  1/16 d7  short 0  sign 0
+                         m3 ##.##...#....#.####.#..#  churn 0  11697679 nodes
+  RfpMinPly=1            m2 20/26 on-time 13 d6  m3 10/24 d7  m4  0/16 d-  m5  1/16 d8  short 0  sign 0
+                         m3 ...##...#....#.####.#..#  churn 2  10622852 nodes
+  RfpMinPly=0            m2 20/26 on-time 13 d6  m3 10/24 d7  m4  0/16 d-  m5  1/16 d8  short 0  sign 0
+                         m3 ...##...#....#.####.#..#  churn 0  10622852 nodes
+
+  floor, 18.7s
+rc 0
+
+== 2. The S170 grid (adocs/data/S122_sweep_s170.txt): ceilings and budgets
+== --ceilings, the twelve grids tests/test_mate_carry.cpp names
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                  13
+C_mate7_depth11                   4
+D_mate_minus6_depth10             1
+E_mate_minus9                     3
+F_mate6_inherited_no_line         3
+rc 0
+== --ceilings, the twelve plus S122's
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   2
+B_mate6_shallow                  13
+C_mate7_depth11                   4
+D_mate_minus6_depth10             1
+E_mate_minus9                     3
+F_mate6_inherited_no_line         3
+rc 0
+== --ceilings S122's alone
+The short-line ceiling per case: the worst cell of the recorded grid at
+the stride the case itself carries. tests/test_mate_carry.cpp holds these.
+case                        ceiling
+A_mate8_shallow                   1
+B_mate6_shallow                   3
+C_mate7_depth11                   1
+D_mate_minus6_depth10             0
+E_mate_minus9                     3
+F_mate6_inherited_no_line         1
+rc 0
+== adocs/data/S170_pick_budgets.sh adocs/data/S170_cases.tsv adocs/data/S122_sweep_s170.txt (stderr), applied (DEC-299: both floors hold, no ceiling rises)
+A_mate8_shallow            stride 1  nodes 100000   -> nodes 300000   (1 lines, 0 short)
+B_mate6_shallow            stride 1  nodes 100000   -> nodes 100000   (9 lines, 0 short)
+C_mate7_depth11            stride 1  nodes 1000000  -> nodes 100000   (3 lines, 0 short)
+no cell with a mate line for D_mate_minus6_depth10 at stride 1
+E_mate_minus9              stride 1  nodes 300000   -> nodes 300000   (12 lines, 3 short)
+F_mate6_inherited_no_line  stride 2  nodes 100000   -> nodes 300000   (3 lines, 0 short)
+   -> rc 1 for D alone, which reports no mate line at stride 1 in any cell; its row keeps nodes 1000000. test_mate_carry green at the new budgets, 58 of 58, 5 of 6 guarded cases reporting.
+
+== 3. python3 adocs/data/S192_anchors.py, before S122's family was modelled (the landing's counts only) and after
+weights from src/eval_tables.hpp + src/evaluation.cpp
+stage two clamped at +/-275, LAZY_EVAL_MARGIN in src/search_params.hpp
+pawn on e2             evaluate 107 vs 107 OK             positional    50 tempo    0 mobility    0 safety   -27
+knight on b1           evaluate 283 vs 283 OK             positional   -95 tempo    0 mobility    7 safety     0
+bishop on c1           evaluate 353 vs 353 OK             positional   -32 tempo    0 mobility   33 safety     0
+rook on d1             evaluate 590 vs 590 OK, cheap 578 vs 578 OK positional    59 tempo    0 mobility   32 safety   -20
+queen on d1            evaluate 1021 vs 1021 OK           positional   -91 tempo    0 mobility   99 safety    30
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0
+black in check, Re8    evaluate 199 vs 199 OK             positional   -53 tempo    0 mobility   40 safety    11
+black a rook down, Kh7 evaluate -603 vs -603 OK           positional    46 tempo    0 mobility   38 safety     0
+
+  after Ke1-d1           evaluate   572  -> root  -572
+  after Ke1-d2           evaluate   541  -> root  -541
+  after Ke1-f1           evaluate   590  -> root  -590
+  after Ke1-f2           evaluate   551  -> root  -551
+white in check, Re8    quiesce -541 vs -541 OK
+
+10 of 10 reproduced
+-- after:
+weights from src/eval_tables.hpp + src/evaluation.cpp
+stage two clamped at +/-275, LAZY_EVAL_MARGIN in src/search_params.hpp
+pawn on e2             evaluate 107 vs 107 OK             positional    50 tempo    0 mobility    0 safety   -27
+knight on b1           evaluate 283 vs 283 OK             positional   -95 tempo    0 mobility    7 safety     0
+bishop on c1           evaluate 353 vs 353 OK             positional   -32 tempo    0 mobility   33 safety     0
+rook on d1             evaluate 585 vs 585 OK, cheap 578 vs 578 OK positional    59 tempo    0 mobility   32 safety   -25
+queen on d1            evaluate 1023 vs 1023 OK           positional   -91 tempo    0 mobility   99 safety    32
+bare kings cancel      evaluate 0 vs 0 OK                 positional     0 tempo    0 mobility    0 safety     0
+black in check, Re8    evaluate 247 vs 247 OK             positional   -53 tempo    0 mobility   40 safety   -37
+black a rook down, Kh7 evaluate -573 vs -573 OK           positional    46 tempo    0 mobility   38 safety   -30
+
+  after Ke1-d1           evaluate   552  -> root  -552
+  after Ke1-d2           evaluate   521  -> root  -521
+  after Ke1-f1           evaluate   585  -> root  -585
+  after Ke1-f2           evaluate   545  -> root  -545
+white in check, Re8    quiesce -521 vs -521 OK
+
+10 of 10 reproduced
+
+== 4. capture_mates: S230_mine_r01_row.py depths over adocs/data/S230_table_fens.txt, shipped and the six S091 mutants (.tuning/s122p2/p2/capmates/drive.py)
+== shipped rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C02 rc 0
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - 5 5 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C05 rc 0
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - 5 5 - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C06 rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== C07 rc 0
+- - - - - - 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 4 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - - 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== R01 rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - - 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - 4 - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - - 5 5 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+== R02 rc 0
+- - - - - 5 5 5 5 5 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+- - - - 5 5 5 5 5 5 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+- - - - - - - - - 4 	3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33
+- - - - - - - 5 5 - 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+CAPMATES-DONE
+
+== 5. the killer slots of 'a search fills the ordering tables', adocs/data/S122_killer_slots.cpp: candidate, parent, S149's guard
+-- candidate
+depth  5 best 1 killers_0 1 killers_1 0 duplicated 0
+depth  6 best 1 killers_0 3 killers_1 2 duplicated 1
+depth  7 best 1 killers_0 4 killers_1 3 duplicated 1
+depth  8 best 1 killers_0 5 killers_1 4 duplicated 0
+depth  9 best 1 killers_0 7 killers_1 6 duplicated 4
+depth 10 best 1 killers_0 9 killers_1 8 duplicated 5
+depth 11 best 1 killers_0 11 killers_1 9 duplicated 4
+depth 12 best 1 killers_0 13 killers_1 12 duplicated 8
+-- parent
+depth  5 best 1 killers_0 1 killers_1 1 duplicated 1
+depth  6 best 1 killers_0 3 killers_1 2 duplicated 1
+depth  7 best 1 killers_0 4 killers_1 4 duplicated 2
+depth  8 best 1 killers_0 5 killers_1 4 duplicated 1
+depth  9 best 1 killers_0 7 killers_1 6 duplicated 3
+depth 10 best 1 killers_0 9 killers_1 8 duplicated 4
+depth 11 best 1 killers_0 11 killers_1 11 duplicated 6
+depth 12 best 1 killers_0 12 killers_1 11 duplicated 6
+-- S149's guard on the shift, the candidate's library
+depth  6 best 1 killers_0 3 killers_1 2 duplicated 0
+depth  7 best 1 killers_0 4 killers_1 3 duplicated 0
+depth  8 best 1 killers_0 5 killers_1 4 duplicated 0
+depth  9 best 1 killers_0 7 killers_1 6 duplicated 0
+depth 10 best 1 killers_0 9 killers_1 8 duplicated 0
+depth 11 best 1 killers_0 10 killers_1 9 duplicated 0
+depth 12 best 1 killers_0 16 killers_1 14 duplicated 0
+
+== 6. truncation_scan --data .tuning/s083/curve/s0/cand_6226944_s1.tsv --min 2.8 (stderr), and S083_truncation_pick.py with its 2026-11-05 amendment
+6226944 rows scanned, 217437 past 2.0, 10411 past 2.8000, worst 3.690165
+rc 0
+10411 hits, 3131 distinct FENs past 3.0, the maximum 3.690165, phases 1..23, targets 1.00, 8.33, 15.67, 23.00
+3.005514	phase  1	b	8/8/2k5/4pBK1/4P3/5P2/8/8 b - - 8 66
+3.157471	phase  9	w	1r5b/p4k2/2b1p1p1/1p3n2/3P1P2/2PN2p1/PP2K3/R1B5 w - - 4 27
+3.166870	phase 15	b	b1k4r/2q2p2/3R1p2/1B6/1Q5N/2P4P/5PP1/7K b - - 0 27
+3.672323	phase 23	w	rnb1k2r/npp1q1p1/p3pp2/7p/2PQ4/1P3N1N/PB3PBP/R4RK1 w kq - 0 17
+    "8/8/2k5/4pBK1/4P3/5P2/8/8 b - - 8 66",
+    "1r5b/p4k2/2b1p1p1/1p3n2/3P1P2/2PN2p1/PP2K3/R1B5 w - - 4 27",
+    "b1k4r/2q2p2/3R1p2/1B6/1Q5N/2P4P/5PP1/7K b - - 0 27",
+    "rnb1k2r/npp1q1p1/p3pp2/7p/2PQ4/1P3N1N/PB3PBP/R4RK1 w kq - 0 17",
+-- S101's four on the scan
+ 8/1B3r2/pK6/4RP2/8/2k5/8/8 b - - 4 56
+ 2r5/3p4/3k2n1/1Pn4N/1Bp1P1p1/P3Rb2/1KP2P1P/R7 w - - 1 31
+3.251668 2qr2k1/p4pp1/4P3/6P1/5Q1P/P1r2N2/4R2K/4R3 b - - 0 31
+ 1R6/3b1q1p/5k2/P2p4/1Q4p1/4P1P1/2r2r2/4K2R w - - 14 48
+   (an empty difference: under 2.8, the scan's floor; the test read 1.891 and 0.905 for the first and last)
+
+== 7. adocs/data/S083_tuner_preconditions.cpp, its stage_two() given S122's curve and its clamped block the curve group (a defect of the tool, fixed: the copy stopped at the feature table)
+-- before the fix
+clamp: 106 fixture rows, LAZY_EVAL_MARGIN 275; at the built constants the largest |stage two| is 125.7 (the case "sits clear" needs < 274.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       95.0      180.00   2.99e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      141.7      133.33   1.03e-07         -1         -1  binds on none or all; 
+  +30      0        0.0      221.7       53.33    1.6e-07         -1         -1  binds on none or all; 
+  +40      2      301.7      189.8       26.67   4.44e-07          0   0.000409  fd past 2e-7; 
+  +50      2      381.7      239.8       35.25   1.81e-06          0   0.000409  fd past 2e-7; 
+  +60      4      461.7      253.6       14.75   3.68e-07          0    0.00166  fd past 2e-7; 
+  +70      6      541.7      261.7       13.29   5.23e-07          0    0.00111  fd past 2e-7; 
+  +80     14      621.7      241.8       13.25   1.19e-06   0.000225   0.000476  fd past 2e-7; bound rows not silent; 
+  +90     16      701.7      263.8        6.83    3.5e-05    0.00021   0.000664  fd past 2e-7; bound rows not silent; 
+ +100     20      781.7      274.3        0.25   2.63e-06   5.14e-05    0.00121  a row within 1 cp of the kink; fd past 2e-7; bound rows not silent; 
+ +110     26      861.7      274.4        0.62    2.5e-06          0   0.000931  a row within 1 cp of the kink; fd past 2e-7; 
+ +120     29      941.7      257.0       18.00   3.77e-06   3.46e-05   0.000835  fd past 2e-7; bound rows not silent; 
+ +130     32     1021.7      272.9        1.38    6.2e-05   9.28e-05   0.000757  fd past 2e-7; bound rows not silent; 
+ +140     34     1101.7      261.0       14.00   2.54e-06   2.13e-05    0.00099  fd past 2e-7; bound rows not silent; 
+ +150     35     1181.7      257.0        6.00   1.14e-06          0   0.000961  fd past 2e-7; 
+ +160     36     1261.7      265.5        1.96   6.67e-07          0   0.000935  fd past 2e-7; 
+ +170     39     1341.7      268.7        6.33   1.12e-06          0   0.000863  fd past 2e-7; 
+ +180     42     1421.7      265.0        8.33   3.92e-07          0    0.00136  fd past 2e-7; 
+ +190     42     1501.7      275.0        0.00   3.95e-07          0    0.00136  a row within 1 cp of the kink; fd past 2e-7; 
+ +200     44     1581.7      272.7        2.33   3.96e-07          0     0.0013  fd past 2e-7; 
+clamp: no push from +10 to +200 satisfies the rule
+walk: 110 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   -3.3379  held  +2.59e-15  
+    material/table knight  plain   -1.4570  held  -1.28e-15  
+    material/table bishop  plain   -1.2622  held  +3.05e-16  
+    material/table rook    plain   -3.6770  held  +2.44e-15  
+    material/table queen   plain   -2.9956  held  -6.66e-16  
+    psqt_mg[king]          plain   +0.8295  held  -6.66e-16  
+    psqt_eg[king]          plain   +1.4124  held  -6.11e-16  
+    smallest plain walk 0.8295 (psqt_mg[king]); runs apart 3.35e-12; plain travelled 1867.2
+  adagrad at lr 2
+    material/table pawn    plain   -2.1103  held   -3.7e-16  
+    material/table knight  plain   -2.2811  held  +6.66e-16  
+    material/table bishop  plain   -1.2328  held  +1.19e-15  
+    material/table rook    plain   -1.9822  held  -4.55e-15  
+    material/table queen   plain   -1.7335  held  +3.33e-15  
+    psqt_mg[king]          plain   +1.1469  held  +2.78e-15  
+    psqt_eg[king]          plain   +0.6542  held  -1.78e-15  
+    smallest plain walk 0.6542 (psqt_eg[king]); runs apart 3.41e-12; plain travelled 1479.0
+walk: every plain shift clears the case's floor 0.01
+rc 2
+-- after the fix, clamp
+clamp: 106 fixture rows, LAZY_EVAL_MARGIN 275; at the built constants the largest |stage two| is 174.4 (the case "sits clear" needs < 274.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      144.4      130.59   2.99e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      120.4      154.64   1.03e-07         -1         -1  binds on none or all; 
+  +30      0        0.0      200.4       74.64    1.6e-07         -1         -1  binds on none or all; 
+  +40      2      280.4      175.4        5.36   4.44e-07          0   0.000409  fd past 2e-7; 
+  +50      2      360.4      225.4       49.64   1.81e-06          0   0.000409  fd past 2e-7; 
+  +60      4      440.4      239.0        0.36   3.68e-07          0    0.00166  a row within 1 cp of the kink; fd past 2e-7; 
+  +70      6      520.4      258.2       13.98   5.23e-07          0    0.00111  fd past 2e-7; 
+  +80     10      600.4      268.1        6.79   1.19e-06          0   0.000666  fd past 2e-7; 
+  +90     14      680.4      269.0        6.03    3.5e-05          0   0.000476  fd past 2e-7; 
+ +100     18      760.4      263.2       11.76   2.63e-06          0    0.00135  fd past 2e-7; 
+ +110     26      840.4      267.4        5.55    2.5e-06          0   0.000931  fd past 2e-7; 
+ +120     29      920.4      267.7        7.28   3.77e-06          0    0.00116  fd past 2e-7; 
+ +130     30     1000.4      257.4       12.72    6.2e-05          0    0.00112  fd past 2e-7; 
+ +140     32     1080.4      258.5        2.42   2.54e-06          0    0.00105  fd past 2e-7; 
+ +150     35     1160.4      262.3        0.59   1.14e-06          0   0.000961  a row within 1 cp of the kink; fd past 2e-7; 
+ +160     36     1240.4      264.5        7.27   6.67e-07          0   0.000935  fd past 2e-7; 
+ +170     39     1320.4      268.7        6.33   1.12e-06          0   0.000863  fd past 2e-7; 
+ +180     42     1400.4      269.5        4.18   3.92e-07          0    0.00136  fd past 2e-7; 
+ +190     44     1480.4      274.0        0.95   3.95e-07          0     0.0013  a row within 1 cp of the kink; fd past 2e-7; 
+ +200     50     1560.4      264.8        4.32   3.96e-07          0    0.00114  fd past 2e-7; 
+clamp: no push from +10 to +200 satisfies the rule
+rc 2
+-- diagnosis, a scratch copy printing each push's worst parameter at h 0.005, 0.01 and 0.0025
+DIAG push 10 h0.005 worst 2.99e-07 at 1090 (analytic 1.1e-08) | h0.01 4.21e-07 at 778 | h0.0025 7.07e-07 at 1090
+DIAG push 20 h0.005 worst 1.03e-07 at 141 (analytic 2.57e-08) | h0.01 3.31e-07 at 985 | h0.0025 3.19e-07 at 141
+DIAG push 30 h0.005 worst 1.6e-07 at 996 (analytic -0.000115) | h0.01 6.38e-07 at 996 | h0.0025 3.19e-07 at 141
+DIAG push 40 h0.005 worst 4.44e-07 at 996 (analytic -4.82e-05) | h0.01 1.77e-06 at 996 | h0.0025 3.19e-07 at 141
+DIAG push 50 h0.005 worst 1.81e-06 at 996 (analytic 1.3e-05) | h0.01 7.25e-06 at 996 | h0.0025 4.54e-07 at 996
+DIAG push 60 h0.005 worst 3.68e-07 at 996 (analytic 6.78e-05) | h0.01 1.47e-06 at 996 | h0.0025 3.19e-07 at 141
+DIAG push 70 h0.005 worst 5.23e-07 at 984 (analytic -9.15e-05) | h0.01 2.09e-06 at 984 | h0.0025 3.19e-07 at 141
+DIAG push 80 h0.005 worst 1.19e-06 at 984 (analytic -3.94e-05) | h0.01 4.75e-06 at 984 | h0.0025 7.32e-07 at 546
+DIAG push 90 h0.005 worst 3.5e-05 at 984 (analytic 1.29e-06) | h0.01 0.00014 at 984 | h0.0025 8.77e-06 at 984
+DIAG push 100 h0.005 worst 2.63e-06 at 984 (analytic 1.72e-05) | h0.01 1.05e-05 at 984 | h0.0025 6.58e-07 at 984
+DIAG push 110 h0.005 worst 2.5e-06 at 984 (analytic 1.84e-05) | h0.01 1e-05 at 984 | h0.0025 7.32e-07 at 546
+DIAG push 120 h0.005 worst 3.77e-06 at 984 (analytic 1.22e-05) | h0.01 1.51e-05 at 984 | h0.0025 9.41e-07 at 984
+DIAG push 130 h0.005 worst 6.2e-05 at 984 (analytic -7.38e-07) | h0.01 0.000248 at 984 | h0.0025 1.55e-05 at 984
+DIAG push 140 h0.005 worst 2.54e-06 at 984 (analytic -1.76e-05) | h0.01 1.02e-05 at 984 | h0.0025 7.24e-07 at 1170
+DIAG push 150 h0.005 worst 1.14e-06 at 984 (analytic -3.81e-05) | h0.01 4.54e-06 at 984 | h0.0025 7.32e-07 at 546
+DIAG push 160 h0.005 worst 6.67e-07 at 984 (analytic -6.18e-05) | h0.01 2.67e-06 at 984 | h0.0025 7.32e-07 at 546
+DIAG push 170 h0.005 worst 1.12e-06 at 629 (analytic -3.83e-09) | h0.01 1.76e-06 at 984 | h0.0025 1.77e-06 at 629
+DIAG push 180 h0.005 worst 3.92e-07 at 984 (analytic -9.66e-05) | h0.01 1.57e-06 at 984 | h0.0025 7.32e-07 at 546
+DIAG push 190 h0.005 worst 3.95e-07 at 984 (analytic -9.6e-05) | h0.01 1.58e-06 at 984 | h0.0025 7.32e-07 at 546
+DIAG push 200 h0.005 worst 3.96e-07 at 984 (analytic -9.58e-05) | h0.01 1.58e-06 at 984 | h0.0025 8.28e-07 at 1155
+   -> no push meets the rule's (3), fd at most 2e-7: the binding pushes read 3.68e-07 (+60) to 6.2e-05; the worst is the O(h^2) term on passed-king weights (984, 996), four times larger at h 0.01 and smaller at 0.0025, the class of DEC-316's pair. CLAMP_PUSH is left at +30, red: a finding, not a hand edit. The fixture sits clear of the clamp, 174.4 against 274.0 (125.7 by the tool before its fix). The walk clears the case's floor: Adam 0.8295, AdaGrad 0.6542 at the step 2, apart 3.35e-12 and 3.41e-12.
+
+== 8. test_tuner_gradient, the paste's run (.tuning/s122/screen/apply_1245_e20000/fast.log): the gradient case's worst and the curve constants' gradients
+/home/max/ws/chesso-s122p2/tests/test_tuner_gradient.cpp:607:
+TEST CASE:  gradient() is the derivative of the error it descends
+
+/home/max/ws/chesso-s122p2/tests/test_tuner_gradient.cpp:639: MESSAGE: worst relative error 3.53207e-07 at parameter 985
+  logged: check.worst := 3.53207e-07
+          check.worst_param := 985
+
+/home/max/ws/chesso-s122p2/tests/test_tuner_gradient.cpp:659: ERROR: CHECK( std::fabs(analytic[p]) < 1e-15 ) is NOT correct!
+  values: CHECK( 7.73861e-06 <  1e-15 )
+  logged: check.worst := 3.53207e-07
+          check.worst_param := 985
+          p := 1147
+
+/home/max/ws/chesso-s122p2/tests/test_tuner_gradient.cpp:659: ERROR: CHECK( std::fabs(analytic[p]) < 1e-15 ) is NOT correct!
+  values: CHECK( 3.83997e-07 <  1e-15 )
+  logged: check.worst := 3.53207e-07
+          check.worst_param := 985
+          p := 1159
+
+   -> worst 3.53207e-07 at 985 under 1e-6; the constants (1147, 1159) read 7.73861e-06 and 3.83997e-07, off the seed, so the seed's < 1e-15 clause now applies only at the seed and they clear 1e-12 like every other parameter
+
+== 9. 'a planted vector comes back: king_curve', both plants started from the seed (45, then zeros), build/tests/test_tuner_gradient -tc=...
+[doctest] test cases:    1 |    1 passed | 0 failed | 16 skipped
+[doctest] assertions: 8274 | 8274 passed | 0 failed |
+[doctest] Status: SUCCESS!
+rc 0
+   (started from the shipped 1245 curve the 32000 and 80000 epochs read 2.87 and 1.01 off a plant, and that start is not the case's question)
+
+== 10. test_mate_pv's aborted-line cell: adocs/data/S294_fallback_cell.py's four stages, MW02 by its apply on a throwaway tree of the candidate (.tuning/s122p2/p2/s294/run.sh)
+ M src/search_params.hpp
+separates    1 budgets  20000..20000  2r2k2/6RR/4P1p1/p4p2/3K1P2/P5r1/8/8 w - - 3 48
+separates    4 budgets  30000..60000  4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+separates    5 budgets  130000..170000  2k5/5K2/3R4/8/8/8/8/8 w - - 3 104
+3 of 318 positions separate
+pick  2k5/5K2/3R4/8/8/8/8/8 w - - 3 104  go nodes 150000  (run 130000..170000, 5 budgets, margin 20000 nodes below and 20000 above)
+pick rc 0
+worktree removed
+S294-DONE
+== the new cell: line 244 of adocs/data/S145_mined_set.tsv (game 4411, label 7); python-chess and the oracle (stockfish, SimpleEngine, Limit(nodes=5000000))
+is_valid True is_check False legal 22 captures 0 promotions 0
+stockfish 5000000 nodes: #+7 depth 125 nodes 5000234 pv f7e7 c8c7 d6e6 c7b8 e7d8 b8b7 d8d7 b7a8 d7c7 a8a7 e6c6 a7a8 c6a6
+pv ends in checkmate (python-chess): True after 13 plies
+   -> line 162's cell at 190000 left: on the candidate its iteration ends with no line. The case green at 150000; not re-run under MW02 (the script's separation is the MW02 build's)
+
+== 11. The other goldens a search-visible change can move (.tuning/s122p2/p2/chain/chain.sh)
+== first-mate, candidate: S188_repair_goldens.py first-mate --engine build/src/chesso
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp941  d2:cp941  d3:cp1177  d4:cp1170  d5:cp1210  d6:cp1260  d7:cp1281  d8:cp1288  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1213  d2:cp1213  d3:cp1238  d4:cp1236  d5:cp1270  d6:cp1270  d7:cp1294  d8:cp1289  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+rc 0
+== first-mate, parent
+r3r1k1/pp3pbp/1qp1b1p1/1BB5/3P4/Q1n2N2/P4PPP/3R1K1R b - - 5 18
+  d1:cp925  d2:cp925  d3:cp1145  d4:cp1145  d5:cp1179  d6:cp1218  d7:cp1249  d8:cp1301  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+r4k2/R7/8/8/8/8/4K3/1R6 w - - 1 2
+  d1:cp1227  d2:cp1227  d3:cp1253  d4:cp1253  d5:cp1282  d6:cp1282  d7:cp1317  d8:cp1308  d9:mate5  d10:mate5
+  first_mate_depth: 9
+  precondition 2, the iteration below scores cp: True (['cp'])
+  mate distances from there on: [5]
+rc 0
+== s207, candidate: S188_repair_goldens.py s207 --lib build/src/libchesso_engine.a
+depth	root_recurrence	in_tree(d+1)	pre_root
+2	-971	-942	-971
+3	-942	-954	-942
+4	-954	0	0
+5	0	0	0
+6	0	0	0
+7	0	0	0
+8	0	0	0
+# lib: build/src/libchesso_engine.a
+# separating depth: 4  (the case drives 4, 5 and 4)
+rc 0
+== node budget: S192_node_budget.py build/tests/test_search
+binary        /home/max/ws/chesso-s122p2/build/tests/test_search
+count         11588 nodes, depth 5 on KIWIPETE_POS, cold table
+budget        46352  (4x the count)
+floor         2317  (the count over 5)
+shipping      budget 65024, floor 3251
+the count is  3.56x the shipping floor and 0.18 of the shipping budget
+derived from  c = 16256  (the shipping budget over 4; the floor agrees)
+the count is  0.71 of c
+middle half   [7270, 32512]: the count is inside it
+              [c / sqrt 5, c x sqrt 4], half of the factor from c to either end
+rc 0
+== ply 2, candidate: S083s_rfp_ply2.py build/src/chesso
+  depth  1  cp 1102
+  depth  2  cp 1060
+  depth  3  cp 915
+  depth  4  cp 915
+  depth  5  cp 934
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 3820
+first_exact 6
+mate -2 at the last iteration: yes
+rc 0
+== ply 2, parent
+  depth  1  cp 1099
+  depth  2  cp 1055
+  depth  3  cp 915
+  depth  4  cp 915
+  depth  5  cp 934
+  depth  6  mate -2
+  depth  7  mate -2
+  depth  8  mate -2
+iterations 8, nodes 3895
+first_exact 6
+mate -2 at the last iteration: yes
+rc 0
+== S230 depths on mate_the_extra_ply_hides, candidate
+k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+- - - - 4 4 4 4 4 4 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+swept 3..12 -> /home/max/ws/chesso/.tuning/s122p2/p2/chain/extra_cand.txt
+rc 0
+== S261 sweep, candidate, LATE_CAPTURE_POS alone
+1 LQ02 cells, 9 LQ03 cells -> /home/max/ws/chesso/.tuning/s122p2/p2/chain/late_cells.tsv
+rc 0
+== S261 pick
+one position for both:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 10035  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 1399  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+each on its own:
+  LQ02: depth 7 b4e4 ♖ capture loss 100 index 9 ahead - lmr_depth 2 flag 10 nodes 10035  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+  LQ03: depth 3 b4a4 ♖ capture loss 400 index - ahead 9 lmr_depth 0 flag 10 nodes 1399  4k2r/1p3pb1/B6B/2p1pn1p/Pr2PP2/1PN3P1/n1b3N1/R5K1 b - - 0 35
+rc 0
+== S165 defender: parent and candidate tune builds
+104 defender nodes, depth 2k+8, RfpMinPly held at 3, RfpMaxDepth held at 15
+  per proved distance: m1 50  m2 31  m3 15  m4 8
+  /home/max/ws/chesso/build-tune/src/chesso exact  83/104  m1 50/50 d0  m2 31/31 d5  m3 1/15 d7  m4 1/8 d6  short 0  sign 0
+  build-tune/src/chesso      exact  88/104  m1 50/50 d0  m2 31/31 d4  m3 5/15 d8  m4 2/8 d6  short 0  sign 0
+S165-SWEEP-DONE
+rc 0
+== mate_pv readings, candidate: build/tests/test_mate_pv -s
+/home/max/ws/chesso-s122p2/tests/test_mate_pv.cpp:281: MESSAGE: S145_mate_set.tsv at depth 8: 177 mate lines, 0 incomplete
+/home/max/ws/chesso-s122p2/tests/test_mate_pv.cpp:281: MESSAGE: S145_mined_set.tsv at depth 8: 522 mate lines, 0 incomplete
+rc 1
+   (rc 1: this binary predates section 10's cell, red there at 190000; the readings are the two MESSAGE lines, 177 and 522 mate lines against S101's 179 and 520, 0 incomplete)
+== S121_coverage_rows, candidate, S121_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 42 before S121's block (marker found), the block ends at row 80
+landed block: 19 pairs, 0 not eligible
+the list, 42 rows: 55 of 132 needs open
+  open mobility_knight_mg[7]
+  open mobility_bishop_mg[9]
+  open mobility_bishop_mg[11]
+  open mobility_bishop_mg[12]
+  open mobility_bishop_mg[13]
+  open mobility_rook_mg[6]
+  open mobility_rook_mg[13]
+  open mobility_rook_mg[14]
+  open mobility_queen_mg[0]
+  open mobility_queen_mg[2]
+  open mobility_queen_mg[3]
+  open mobility_queen_mg[10]
+  open mobility_queen_mg[13]
+  open mobility_queen_mg[14]
+  open mobility_queen_mg[15]
+  open mobility_queen_mg[16]
+  open mobility_queen_mg[18]
+  open mobility_queen_mg[19]
+  open mobility_queen_mg[20]
+  open mobility_queen_mg[21]
+  open mobility_queen_mg[22]
+  open mobility_queen_mg[23]
+  open mobility_queen_mg[24]
+  open mobility_queen_mg[25]
+  open mobility_queen_mg[26]
+  open mobility_queen_mg[27]
+  open mobility_knight_eg[7]
+  open mobility_bishop_eg[9]
+  open mobility_bishop_eg[11]
+  open mobility_bishop_eg[12]
+  open mobility_bishop_eg[13]
+  open mobility_rook_eg[6]
+  open mobility_rook_eg[13]
+  open mobility_rook_eg[14]
+  open mobility_queen_eg[0]
+  open mobility_queen_eg[1]
+  open mobility_queen_eg[2]
+  open mobility_queen_eg[3]
+  open mobility_queen_eg[4]
+  open mobility_queen_eg[5]
+  open mobility_queen_eg[10]
+  open mobility_queen_eg[13]
+  open mobility_queen_eg[14]
+  open mobility_queen_eg[15]
+  open mobility_queen_eg[16]
+  open mobility_queen_eg[18]
+  open mobility_queen_eg[19]
+  open mobility_queen_eg[20]
+  open mobility_queen_eg[21]
+  open mobility_queen_eg[22]
+  open mobility_queen_eg[23]
+  open mobility_queen_eg[24]
+  open mobility_queen_eg[25]
+  open mobility_queen_eg[26]
+  open mobility_queen_eg[27]
+all_test_fens(): 313 eligible candidates close an open need
+pick, phase 6, closes 4: mobility_bishop_mg[13] mobility_bishop_eg[13] mobility_rook_mg[14] mobility_rook_eg[14]
+  4k2r/8/8/8/3BB3/4K3/8/r7 w k - 1 2
+pick, phase 17, closes 4: mobility_rook_mg[6] mobility_rook_eg[6] mobility_queen_mg[10] mobility_queen_eg[10]
+  4r1k1/pp4pp/4p3/2R3Q1/3n4/2q4r/P1P2PPP/5RK1 w - - 1 2
+pick, phase 17, closes 4: mobility_knight_mg[7] mobility_knight_eg[7] mobility_queen_mg[13] mobility_queen_eg[13]
+  5rk1/pp4pp/2n1p3/2R3Q1/8/2q4r/P1P2PPP/5RK1 w - - 1 2
+pick, phase 22, closes 4: mobility_bishop_mg[9] mobility_bishop_eg[9] mobility_queen_eg[4] mobility_queen_eg[5]
+  rn1qk2N/ppp1n1pp/4b3/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+pick, phase 8, closes 2: mobility_rook_mg[13] mobility_rook_eg[13]
+  1r2k2r/R6R/8/8/8/8/4K3/8 w - - 1 2
+pick, phase 18, closes 2: mobility_queen_mg[3] mobility_queen_eg[3]
+  3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR w - - 0 2
+pick, phase 6, closes 2: mobility_queen_mg[25] mobility_queen_eg[25]
+  4k3/r7/8/5Q2/8/8/4K3/8 w - - 0 2
+pick, phase 17, closes 2: mobility_queen_mg[15] mobility_queen_eg[15]
+  5rk1/pp4pp/4p3/2R3Q1/3n4/5q1r/P1P2PPP/5RK1 w - - 1 2
+pick, phase 17, closes 2: mobility_queen_mg[16] mobility_queen_eg[16]
+  5rk1/pp4pp/4p3/2R3Q1/3n4/7r/P1q2PPP/5RK1 w - - 0 2
+pick, phase 22, closes 2: mobility_queen_mg[0] mobility_queen_eg[0]
+  r1bqk2N/pppnn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+pick, phase 23, closes 2: mobility_queen_mg[2] mobility_queen_eg[2]
+  rnRq1k1r/pp2bppp/2p5/8/2B5/8/PPP1N1PP/RNBQK2n b Q - 0 8
+pick, phase 22, closes 2: mobility_queen_mg[14] mobility_queen_eg[14]
+  rnb1k2N/ppp1n1pp/3q4/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+pick, phase 22, closes 1: mobility_queen_eg[1]
+  rn1qk2N/pppbn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 rows read, 658 candidates kept
+pick, phase 8, closes 4: mobility_queen_mg[18] mobility_queen_eg[18] mobility_queen_mg[19] mobility_queen_eg[19]
+  1Q6/5p2/8/3k1K2/7p/P7/6PP/4q3 w - - 0 43
+pick, phase 17, closes 4: mobility_bishop_mg[12] mobility_bishop_eg[12] mobility_queen_mg[23] mobility_queen_eg[23]
+  1r3k1r/p5p1/3b4/Q2B2B1/7P/P7/2q4P/4R2K w - - 0 35
+pick, phase 8, closes 4: mobility_queen_mg[21] mobility_queen_eg[21] mobility_queen_mg[22] mobility_queen_eg[22]
+  8/4Q3/7p/1k3K1P/8/8/8/q7 w - - 4 68
+pick, phase 22, closes 4: mobility_bishop_mg[11] mobility_bishop_eg[11] mobility_queen_mg[20] mobility_queen_eg[20]
+  r1b1k1nr/3p2pp/5q2/p1bQ4/4B3/1P3P2/R1P3PP/2B1K1NR b Kk - 0 17
+pick, phase 8, closes 4: mobility_queen_mg[24] mobility_queen_eg[24] mobility_queen_mg[26] mobility_queen_eg[26]
+  8/8/8/4q2p/7K/5Q2/8/2k5 b - - 5 72
+pick, phase 6, closes 2: mobility_queen_mg[27] mobility_queen_eg[27]
+  5k2/8/p7/4q3/7p/1P1R4/3K4/8 b - - 5 70
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| over the mobility span 6.063e-08
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+38 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S121 coverage, closes mobility_bishop_mg[13] mobility_bishop_eg[13] mobility_rook_mg[14] mobility_rook_eg[14]
+    "4k2r/8/8/8/3BB3/4K3/8/r7 w k - 1 2",
+    "R7/8/4k3/3bb3/8/8/8/4K2R b K - 1 2",
+    // S121 coverage, closes mobility_rook_mg[6] mobility_rook_eg[6] mobility_queen_mg[10] mobility_queen_eg[10]
+    "4r1k1/pp4pp/4p3/2R3Q1/3n4/2q4r/P1P2PPP/5RK1 w - - 1 2",
+    "5rk1/p1p2ppp/2Q4R/3N4/2r3q1/4P3/PP4PP/4R1K1 b - - 1 2",
+    // S121 coverage, closes mobility_knight_mg[7] mobility_knight_eg[7] mobility_queen_mg[13] mobility_queen_eg[13]
+    "5rk1/pp4pp/2n1p3/2R3Q1/8/2q4r/P1P2PPP/5RK1 w - - 1 2",
+    "5rk1/p1p2ppp/2Q4R/8/2r3q1/2N1P3/PP4PP/5RK1 b - - 1 2",
+    // S121 coverage, closes mobility_bishop_mg[9] mobility_bishop_eg[9] mobility_queen_eg[4] mobility_queen_eg[5]
+    "rn1qk2N/ppp1n1pp/4b3/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/4B3/PPP1N1PP/RN1QK2n b Q - 2 9",
+    // S121 coverage, closes mobility_rook_mg[13] mobility_rook_eg[13]
+    "1r2k2r/R6R/8/8/8/8/4K3/8 w - - 1 2",
+    "8/4k3/8/8/8/8/r6r/1R2K2R b - - 1 2",
+    // S121 coverage, closes mobility_queen_mg[3] mobility_queen_eg[3]
+    "3k4/8/1K6/8/8/8/1ppppppp/RqRRRRRR w - - 0 2",
+    "rQrrrrrr/1PPPPPPP/8/8/8/1k6/8/3K4 b - - 0 2",
+    // S121 coverage, closes mobility_queen_mg[25] mobility_queen_eg[25]
+    "4k3/r7/8/5Q2/8/8/4K3/8 w - - 0 2",
+    "8/4k3/8/8/5q2/8/R7/4K3 b - - 0 2",
+    // S121 coverage, closes mobility_queen_mg[15] mobility_queen_eg[15]
+    "5rk1/pp4pp/4p3/2R3Q1/3n4/5q1r/P1P2PPP/5RK1 w - - 1 2",
+    "5rk1/p1p2ppp/5Q1R/3N4/2r3q1/4P3/PP4PP/5RK1 b - - 1 2",
+    // S121 coverage, closes mobility_queen_mg[16] mobility_queen_eg[16]
+    "5rk1/pp4pp/4p3/2R3Q1/3n4/7r/P1q2PPP/5RK1 w - - 0 2",
+    "5rk1/p1Q2ppp/7R/3N4/2r3q1/4P3/PP4PP/5RK1 b - - 0 2",
+    // S121 coverage, closes mobility_queen_mg[0] mobility_queen_eg[0]
+    "r1bqk2N/pppnn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPNN1PP/R1BQK2n b Q - 2 9",
+    // S121 coverage, closes mobility_queen_mg[2] mobility_queen_eg[2]
+    "rnRq1k1r/pp2bppp/2p5/8/2B5/8/PPP1N1PP/RNBQK2n b Q - 0 8",
+    "rnbqk2N/ppp1n1pp/8/2b5/8/2P5/PP2BPPP/RNrQ1K1R w q - 0 8",
+    // S121 coverage, closes mobility_queen_mg[14] mobility_queen_eg[14]
+    "rnb1k2N/ppp1n1pp/3q4/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/3Q4/PPP1N1PP/RNB1K2n b Q - 2 9",
+    // S121 coverage, closes mobility_queen_eg[1]
+    "rn1qk2N/pppbn1pp/8/2b5/8/2P5/PP1pBPPP/RNBQ1K1R w q - 2 9",
+    "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPPBN1PP/RN1QK2n b Q - 2 9",
+    // S121 coverage, closes mobility_queen_mg[18] mobility_queen_eg[18] mobility_queen_mg[19] mobility_queen_eg[19]
+    "1Q6/5p2/8/3k1K2/7p/P7/6PP/4q3 w - - 0 43",
+    "4Q3/6pp/p7/7P/3K1k2/8/5P2/1q6 b - - 0 43",
+    // S121 coverage, closes mobility_bishop_mg[12] mobility_bishop_eg[12] mobility_queen_mg[23] mobility_queen_eg[23]
+    "1r3k1r/p5p1/3b4/Q2B2B1/7P/P7/2q4P/4R2K w - - 0 35",
+    "4r2k/2Q4p/p7/7p/q2b2b1/3B4/P5P1/1R3K1R b - - 0 35",
+    // S121 coverage, closes mobility_queen_mg[21] mobility_queen_eg[21] mobility_queen_mg[22] mobility_queen_eg[22]
+    "8/4Q3/7p/1k3K1P/8/8/8/q7 w - - 4 68",
+    "Q7/8/8/8/1K3k1p/7P/4q3/8 b - - 4 68",
+    // S121 coverage, closes mobility_bishop_mg[11] mobility_bishop_eg[11] mobility_queen_mg[20] mobility_queen_eg[20]
+    "r1b1k1nr/3p2pp/5q2/p1bQ4/4B3/1P3P2/R1P3PP/2B1K1NR b Kk - 0 17",
+    "2b1k1nr/r1p3pp/1p3p2/4b3/P1Bq4/5Q2/3P2PP/R1B1K1NR w Kk - 0 17",
+    // S121 coverage, closes mobility_queen_mg[24] mobility_queen_eg[24] mobility_queen_mg[26] mobility_queen_eg[26]
+    "8/8/8/4q2p/7K/5Q2/8/2k5 b - - 5 72",
+    "2K5/8/5q2/7k/4Q2P/8/8/8 w - - 5 72",
+    // S121 coverage, closes mobility_queen_mg[27] mobility_queen_eg[27]
+    "5k2/8/p7/4q3/7p/1P1R4/3K4/8 b - - 5 70",
+    "8/3k4/1p1r4/7P/4Q3/P7/8/5K2 w - - 5 70",
+rc 0
+== S123_coverage_rows, candidate, S123_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 80 before S123's block (marker found), the block ends at row 88
+landed block: 4 pairs, 0 not eligible
+the list, 80 rows: 11 of 58 needs open
+  open passed_safe_mg[3]
+  open passed_safe_mg[5]
+  open candidate_passer_mg[0]
+  open candidate_passer_mg[1]
+  open candidate_passer_mg[2]
+  open candidate_passer_mg[4]
+  open passed_safe_eg[5]
+  open candidate_passer_eg[0]
+  open candidate_passer_eg[1]
+  open candidate_passer_eg[2]
+  open candidate_passer_eg[4]
+all_test_fens(): 63 eligible candidates close an open need
+pick, phase 3, closes 2: passed_safe_mg[5] passed_safe_eg[5]
+  3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1
+pick, phase 22, closes 2: candidate_passer_mg[1] candidate_passer_eg[1]
+  r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18
+pick, phase 2, closes 1: passed_safe_mg[3]
+  2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 187 candidates kept
+pick, phase 20, closes 6: candidate_passer_mg[0] candidate_passer_eg[0] candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4] candidate_passer_eg[4]
+  5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.512e-08, over S123's family 1.261e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+8 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S123 coverage, closes passed_safe_mg[5] passed_safe_eg[5]
+    "3KB2r/2PP4/8/2k5/8/8/8/8 b - - 0 1",
+    "8/8/8/8/2K5/8/2pp4/3kb2R w - - 0 1",
+    // S123 coverage, closes candidate_passer_mg[1] candidate_passer_eg[1]
+    "r3r1k1/pp3pbp/1qp1b1p1/2BP4/2B5/Q1n2N2/P4PPP/3R1K1R b - - 0 18",
+    "3r1k1r/p4ppp/q1N2n2/2b5/2bp4/1QP1B1P1/PP3PBP/R3R1K1 w - - 0 18",
+    // S123 coverage, closes passed_safe_mg[3]
+    "2k5/6p1/6Pp/pr1pP2P/P4K2/8/8/8 b - - 1 1",
+    "8/8/8/p4k2/PR1Pp2p/6pP/6P1/2K5 w - - 1 1",
+    // S123 coverage, closes candidate_passer_mg[0] candidate_passer_eg[0] candidate_passer_mg[2] candidate_passer_eg[2] candidate_passer_mg[4] candidate_passer_eg[4]
+    "5rkr/pp1b2qp/3P3p/3P4/N1PbR3/Q5p1/P1B2P1P/6KR w - - 0 30",
+    "6kr/p1b2p1p/q5P1/n1pBr3/3p4/3p3P/PP1B2QP/5RKR b - - 0 30",
+rc 0
+== S125_coverage_rows, candidate, S125_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 88 before S125's block (marker found), the block ends at row 92
+landed block: 2 pairs, 0 not eligible
+the list, 88 rows: 15 of 60 needs open
+  open doubled_file_mg[0]
+  open doubled_file_mg[1]
+  open doubled_file_mg[3]
+  open doubled_file_mg[5]
+  open backward_rank_mg[1]
+  open phalanx_mg[2]
+  open phalanx_mg[4]
+  open supported_mg[4]
+  open doubled_file_eg[0]
+  open doubled_file_eg[1]
+  open doubled_file_eg[3]
+  open doubled_file_eg[5]
+  open backward_rank_eg[1]
+  open phalanx_eg[2]
+  open phalanx_eg[4]
+all_test_fens(): 0 eligible candidates close an open need
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 6226944 read, 478 candidates kept
+pick, phase 9, closes 9: doubled_file_mg[0] doubled_file_eg[0] doubled_file_mg[1] doubled_file_eg[1] phalanx_mg[2] phalanx_eg[2] phalanx_mg[4] phalanx_eg[4] supported_mg[4]
+  6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42
+pick, phase 4, closes 6: doubled_file_mg[3] doubled_file_eg[3] doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1] backward_rank_eg[1]
+  6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.272e-08, over S125's family 8.158e-08
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (4 picked rows, 4 landed)
+4 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S125 coverage, closes doubled_file_mg[0] doubled_file_eg[0] doubled_file_mg[1] doubled_file_eg[1] phalanx_mg[2] phalanx_eg[2] phalanx_mg[4] phalanx_eg[4] supported_mg[4]
+    "6k1/1p1B1pp1/r2p3p/2rP3P/4PP2/PppP2P1/2p2RK1/2R5 w - - 0 42",
+    "2r5/2P2rk1/pPPp2p1/4pp2/2Rp3p/R2P3P/1P1b1PP1/6K1 b - - 0 42",
+    // S125 coverage, closes doubled_file_mg[3] doubled_file_eg[3] doubled_file_mg[5] doubled_file_eg[5] backward_rank_mg[1] backward_rank_eg[1]
+    "6r1/kp4P1/p1p3Rp/3pP2P/1P2p1P1/4P3/1PPK4/8 w - - 1 35",
+    "8/1ppk4/4p3/1p2P1p1/3Pp2p/P1P3rP/KP4p1/6R1 b - - 1 35",
+rc 0
+== S101_coverage_rows, candidate, S101_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 92 before S101's block (marker found), the block ends at row 104
+landed block: 6 pairs, 0 not eligible
+the list, 92 rows: 14 of 48 needs open
+  open threat_pawn_mg[0]
+  open threat_minor_mg[0]
+  open hanging_piece_mg[3]
+  open threat_king_mg[0]
+  open threat_king_mg[1]
+  open threat_king_mg[2]
+  open threat_king_mg[3]
+  open threat_pawn_eg[0]
+  open threat_minor_eg[0]
+  open hanging_piece_eg[3]
+  open threat_king_eg[0]
+  open threat_king_eg[1]
+  open threat_king_eg[2]
+  open threat_king_eg[3]
+all_test_fens(): 122 eligible candidates close an open need
+pick, phase 17, closes 4: hanging_piece_mg[3] hanging_piece_eg[3] threat_king_mg[3] threat_king_eg[3]
+  5rk1/pp4pp/4p3/2R3Q1/3n4/2q5/P1P2PPr/5RK1 w - - 0 2
+pick, phase 8, closes 2: threat_pawn_mg[0] threat_pawn_eg[0]
+  1k5K/8/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2
+pick, phase 2, closes 2: threat_king_mg[0] threat_king_eg[0]
+  4k3/8/1K6/p3Pp1r/Pp5p/6pP/6P1/8 b - - 1 1
+pick, phase 12, closes 2: threat_minor_mg[0] threat_minor_eg[0]
+  r1N1k2r/ppp1n1pp/1b6/8/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9
+pick, phase 12, closes 2: threat_king_mg[1] threat_king_eg[1]
+  r1nNk2r/ppp3pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9
+pick, phase 22, closes 2: threat_king_mg[2] threat_king_eg[2]
+  rnbq1k1r/pp1PbBpp/2p5/8/8/8/PPP1N1PP/RNBQK2n b Q - 0 8
+check gradient: 104 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 4.664e-08, over S101's family 1.098e-07
+check both ways: 2904 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (12 picked rows, 12 landed)
+12 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S101 coverage, closes hanging_piece_mg[3] hanging_piece_eg[3] threat_king_mg[3] threat_king_eg[3]
+    "5rk1/pp4pp/4p3/2R3Q1/3n4/2q5/P1P2PPr/5RK1 w - - 0 2",
+    "5rk1/p1p2ppR/2Q5/3N4/2r3q1/4P3/PP4PP/5RK1 b - - 0 2",
+    // S101 coverage, closes threat_pawn_mg[0] threat_pawn_eg[0]
+    "1k5K/8/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2",
+    "nnnnnnnn/PPPPPPPP/8/8/8/8/8/1K5k b - - 1 2",
+    // S101 coverage, closes threat_king_mg[0] threat_king_eg[0]
+    "4k3/8/1K6/p3Pp1r/Pp5p/6pP/6P1/8 b - - 1 1",
+    "8/6p1/6Pp/pP5P/P3pP1R/1k6/8/4K3 w - - 1 1",
+    // S101 coverage, closes threat_minor_mg[0] threat_minor_eg[0]
+    "r1N1k2r/ppp1n1pp/1b6/8/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9",
+    "r3k2r/pp2bppp/2p5/8/8/1B6/PPP1N1PP/R1n1K2R b KQkq - 2 9",
+    // S101 coverage, closes threat_king_mg[1] threat_king_eg[1]
+    "r1nNk2r/ppp3pp/8/2b5/8/2P5/PP2BPPP/R3K2R w KQkq - 2 9",
+    "r3k2r/pp2bppp/2p5/8/2B5/8/PPP3PP/R1NnK2R b KQkq - 2 9",
+    // S101 coverage, closes threat_king_mg[2] threat_king_eg[2]
+    "rnbq1k1r/pp1PbBpp/2p5/8/8/8/PPP1N1PP/RNBQK2n b Q - 0 8",
+    "rnbqk2N/ppp1n1pp/8/8/8/2P5/PP1pBbPP/RNBQ1K1R w q - 0 8",
+rc 0
+== S101_gradient_rows, candidate
+tests/test_eval_positions.hpp: 106 rows, marker found, 104 rows before it
+base, 104 rows: parameter 984 analytic +2.824164e-05, the rule wants at least 8.472493e-05
+candidate 1  |g| 2.771e-05  -  1k3B2/8/8/8/8/8/8/4K3 b - - 0 1
+candidate 2  |g| 2.771e-05  -  1k3N2/8/8/8/8/8/8/4K3 b - - 0 1
+candidate 3  |g| 2.827e-05  -  1r2k2r/2P3P1/8/8/8/4K3/8/8 w k - 1 2
+candidate 4  |g| 2.771e-05  -  1r2k2r/8/8/8/3BB3/4K3/8/8 w k - 1 2
+candidate 5  |g| 9.488e-05  PICK  1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2
+5 eligible pairs tried
+pick, for tests/test_eval_positions.hpp:
+    "1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2",
+    "4k3/8/8/8/8/8/r3p2r/1R2K2R b K - 1 2",
+the case's relative error at parameter 984, h 0.01, no part of the rule:
+  base: 2.94971e-06, analytic +2.824164e-05, numeric +2.824173e-05, difference 8.330e-11
+  with the pair: 8.60564e-07, analytic +9.488194e-05, numeric +9.488202e-05, difference 8.165e-11
+reproduces the landed pair: NO
+adocs/data/S101_gradient_rows.cpp:288:
+TEST CASE:  S101: pick the fixture rows DEC-316 owes passed_king_own_mg[5]
+adocs/data/S101_gradient_rows.cpp:381: ERROR: CHECK( same ) is NOT correct!
+  values: CHECK( false )
+rc 1
+   -> not re-derived at first: the landed pair kept pending the owner's ruling (DEC-344 (9), put 2026-11-05); the rule's
+      pick at the candidate is candidate 5, 8.6e-7, and the program exits 1. The base rows alone read 2.95e-06 at 984.
+      Re-derived by DEC-354: section 17.
+== S310_adagrad_step, candidate
+S310: the case's fixture 110 rows, less its last pair 108; 1171 parameters; bound 1e-06, QUIET 1e-09
+== the shipped constants, the case's fixture, 110 rows: apart by epoch
+  step      25      50     100     150     200     250     300     400     500     600     700     800     900    1000    1100    1200
+adam 1   7e-13   2e-12   2e-12   1e-12   9e-13   3e-12   3e-12   9e-13   1e-12   1e-12   2e-12   1e-12   2e-12   9e-13   1e-12   2e-12
+== the shipped constants, the fixture less its last pair, 108 rows: apart by epoch
+  step      25      50     100     150     200     250     300     400     500     600     700     800     900    1000    1100    1200
+adam 1   2e-12   2e-12   9e-13   1e-12   2e-12   9e-13   2e-12   7e-13   2e-12   2e-12   2e-12   1e-12   8e-13   7e-13   1e-12   9e-13
+== the family, worst apart at any read through epoch 1200; a, the case's fixture; b, less its last pair
+  step   a ship    a +-1    a +-3   a +-10   b ship    b +-1    b +-3   b +-10     worst    >Q |   at 300     walk   travel      hold  min walk
+first step past QUIET, by member:        15 9 8 9 9 7 7 7
+onset 7; half 3.5; the rule picks 3, the case carries 2
+at 3 on the case's fixture: apart 6.82e-13 at epoch 300, worst 1.25e-11 through 1200; every read of the family at most 2.98e-11, 4.5 decades under the bound; smallest plain walk 0.5236, 52 times its floor; travelled 1583.4; holds at most 6e-15
+rc 2
+== S121_alpha_window, candidate and parent
+golden -2108: shape yes, value -2108, searched 9, loop best -48993, pruned b2b3 g2g3 g2g4 a1b1 a1f1 g1h1
+6rk/5rqp/p7/2P1p3/P7/8/1P1n2P1/R5K1 w - - 0 35 at ply 5, depth 3, window [alpha, alpha + 1], non-PV, a wiped table; every alpha from -47999 to 0
+run -2182 .. -2001 (182 alphas)  <- holds the golden
+margin: 74 below, 107 above
+run -1857 .. -1819 (39 alphas)
+shape with a value other than alpha (the rule not firing): 0
+S121-ALPHA-DONE: the golden is inside a run
+rc 0
+golden -2108: shape yes, value -2108, searched 9, loop best -48993, pruned b2b3 g2g3 g2g4 a1b1 a1f1 g1h1
+6rk/5rqp/p7/2P1p3/P7/8/1P1n2P1/R5K1 w - - 0 35 at ply 5, depth 3, window [alpha, alpha + 1], non-PV, a wiped table; every alpha from -47999 to 0
+run -2165 .. -1935 (231 alphas)  <- holds the golden
+margin: 57 below, 173 above
+run -1840 .. -1802 (39 alphas)
+shape with a value other than alpha (the rule not firing): 0
+S121-ALPHA-DONE: the golden is inside a run
+rc 0
+CHAIN-DONE
+
+== 12. mate_probcut_hides: adocs/data/S277_mine_mate_row.py's six stages, guard mode (DEC-238); B04 of tools/mutants/S113_probcut.py on the throwaway tree, its release and tune libraries (.tuning/s122p2/p2/probcut/run.py)
+-- Arch native (-march=native) -- THIS MACHINE ONLY, never distributed
+-- Branch padding on (-Wa,-mbranches-within-32B-boundaries)
+-- Sanitizer OFF
+-- Tune build ON: the search parameters are UCI options. NOT the release binary
+-- PGO off
+-- Test timeout 60s (build type Release)
+B04 libraries built, search.cpp restored
+269 candidates -> /home/max/ws/chesso/.tuning/s122p2/p2/probcut/candidates.fen
+rc 0
+m2:18749:3 m2:26309:4 m2:54322:7 m2:90163:15 	1Rb2bkr/8/4NpPp/3p4/p7/6B1/6PK/8 w - - 4 44
+m2:77888:11 m2:99317:19 m2:247812:38 m2:530815:84 	1k1r3r/RPn1ppb1/Qn4pp/1Np1P3/2p5/5B2/1P3PPP/2B1K2R w K - 3 21
+m2:20661:3 m2:33179:7 m2:59012:10 m2:129487:27 	1k2r3/pp4Q1/2b1P3/2p2P2/6P1/2N5/P6K/4qR2 b - - 0 34
+m2:73312:10 m2:115261:22 m2:235793:41 m2:381548:75 	1n4r1/q4pBk/r2R4/p3n3/1p1P2Q1/P7/P5PP/2R3K1 w - - 4 30
+m2:16189:2 m2:23947:4 m2:53330:8 m2:78586:14 	1qr5/7k/b2p2pB/3p2P1/2p1P3/2P5/5QPP/1r3RK1 w - - 0 38
+m2:17359:2 m2:24772:4 m2:45908:7 m2:94848:18 	2Q5/R3Np1k/5P2/6p1/N7/4n1r1/P3b3/7K b - - 0 34
+m2:40200:5 m2:72124:13 m2:164640:23 m2:264871:50 	2R5/p4p1p/5pk1/5N2/4n3/4P1P1/r6P/5RK1 w - - 3 39
+m2:93727:10 m2:137099:22 m2:392514:43 m2:488389:79 	2b3k1/1p5p/6pb/3Pp3/P3P2P/6N1/1P3q2/7K b - - 0 41
+m2:77632:10 m2:95588:16 m2:248883:31 m2:353571:60 	2r2q1r/pp1k1B2/3p1p1p/5P2/2Q3b1/P5Pp/1P5P/2R1R1K1 w - - 3 27
+m2:253347:28 m2:374181:68 m2:1114630:139 m2:1799390:330 	2rqrk2/3nb3/p4nQ1/2p3N1/Ppb1RB2/8/1P1N1PPP/R5K1 w - - 9 27
+m2:36909:5 m2:59660:10 m2:121150:16 m2:216882:38 	3r1k2/4N1p1/6Q1/p1b5/5Pb1/6P1/3rR1KP/8 b - - 2 38
+m2:90078:10 m2:118956:21 m2:316455:42 m2:475230:88 	3r1r1k/1p4pn/pN1p3p/P2Pp2q/1pB1Pb2/3Q1P2/1PP2P2/RN1R1bK1 b - - 7 28
+m2:13798:1 m2:18945:3 m2:73781:7 m2:102675:17 	4k3/R5P1/p4p2/1p3PK1/2n5/8/6B1/2r5 w - - 0 43
+m2:102371:11 m2:133871:22 m2:333583:42 m2:533091:90 	4r1k1/1p2R3/pqpp3p/2n2Q2/8/P1N4P/1P3PP1/6K1 w - - 1 25
+m2:60096:6 m2:89379:14 m2:233960:27 m2:325519:56 	4r1k1/p4p1p/2p2p2/2N5/1PB5/5q1P/1PPr1P1K/RQ2R3 b - - 0 25
+m2:2546:0 m2:4846:0 m2:10323:1 m2:14788:2 	5rk1/pp3p1p/2p2PpQ/8/n7/P6P/1PP3Pq/5B1K w - - 1 27
+m2:76505:10 m2:111559:20 m2:268770:41 m2:428159:84 	6k1/1R3p2/7p/2b1B1nP/Q1P1P2K/P4P2/1P6/6q1 b - - 3 39
+m2:120345:15 m2:136477:24 m2:605941:75 m2:795850:143 	6k1/4n1p1/p6p/4P3/PpP1P1P1/1P1q4/3r3P/2R4K b - - 0 43
+m2:18495:2 m2:29582:4 m2:78987:10 m2:96567:15 	6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43
+m2:20998:4 m2:38742:8 m2:88341:16 m2:134779:28 	7k/2p3pp/8/p3P3/4PP2/P6b/4qQ1P/2B3K1 b - - 0 40
+m2:46899:5 m2:52166:8 m2:159102:19 m2:230505:39 	7k/pp6/4P1p1/7p/7P/6bK/P1B3P1/4q3 b - - 0 39
+m2:183611:20 m2:281518:46 m2:778239:90 m2:1002245:176 	7r/2N2Qpp/p4p1k/8/1b1R4/5PB1/5P1P/6K1 w - - 0 31
+m2:80044:12 m2:124036:17 m2:189221:25 m2:238128:39 	7r/p4kp1/1p1Ppn2/4PppB/8/2P1q3/PP3RPr/1R4K1 b - - 1 23
+m2:32137:5 m2:38097:6 m2:70522:10 m2:219422:37 	8/1kp5/1p2P3/3p1p2/3P3P/2P5/r6P/5qQK b - - 1 52
+m2:43173:6 m2:92633:15 m2:193129:28 m2:284021:50 	8/1p1r2k1/2p4p/3p3r/1Q1P1Rp1/P3P3/1P2BK2/2R4q b - - 4 39
+m2:16932:2 m2:25559:4 m2:78708:11 m2:138709:23 	8/2R5/p4pP1/1b1p4/1P4P1/6k1/1r6/6K1 b - - 4 52
+m2:22992:3 m2:43296:6 m2:82705:12 m2:116891:20 	8/3Q2pr/p7/8/2Nb3q/7R/P6K/4k3 b - - 1 43
+m2:3250:0 m2:5383:0 m2:10135:1 m2:15093:2 	8/8/5kp1/p1pPP3/2P5/P3b1Pp/7P/3b3K b - - 0 39
+m2:11624:1 m2:25925:5 m2:39496:6 m2:81689:15 	8/R2B4/7p/p1r3kP/P2r1p2/6pK/6P1/8 b - - 1 54
+m2:111739:11 m2:160291:25 m2:438095:49 m2:640279:102 	r1q1k3/pb1p1pQ1/1p1P2nB/n6p/1P4pP/2N5/P1B2PP1/R5K1 w - - 1 25
+m2:20703:3 m2:71513:11 m2:215363:28 m2:251050:43 	r2n4/1p2Q3/p1p4p/3P1kp1/2b2P2/P1P3PP/1P3K2/8 w - - 0 35
+m2:81755:10 m2:132337:21 m2:244745:30 m2:482134:80 	r2r3k/1q5p/1pp1pp1Q/3P4/5R2/2P3RP/P4PP1/6K1 w - - 0 28
+m2:266227:31 m2:334440:60 m2:1174054:146 m2:1771242:318 	r4rk1/1b6/1P1p3p/p2Nb3/2P5/P4q2/2BB4/1RQ3K1 b - - 1 27
+m3:28446:3 m3:48029:6 m3:102626:12 m3:147857:24 	1Q6/pp3pk1/5b2/2P3p1/8/P5Pb/2p2P1P/5NK1 b - - 0 35
+-:24575:4 -:35208:7 -:131187:21 m5:1537536:243 	1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+m3:13747:1 m3:20934:3 m3:71936:8 m3:114816:19 	2r4k/3R1Q2/7p/p1p3p1/4P3/P3N1PP/1q3PK1/5b2 w - - 1 39
+m3:22605:3 m3:46191:7 m3:70642:11 m3:412167:64 	3k3r/6R1/3K4/3B4/3N4/pp6/8/8 w - - 0 62
+m3:145750:17 m3:327873:44 m3:456225:57 m3:663090:107 	3r2k1/1bp4p/1p4rQ/p2pNp2/3P4/PqP3R1/1P3PPP/4R1K1 w - - 1 32
+m3:41514:4 m3:60534:10 m3:159100:19 m3:228400:37 	3r2k1/p3Q1p1/2p1p1rp/8/3P1P2/5P2/PP1K3P/R2R2q1 b - - 8 31
+m3:83799:10 m3:121339:21 m3:348612:42 m3:519530:89 	4Q3/1R4pk/4Pp1p/8/8/2B3P1/r4b1P/5K2 w - - 1 45
+m3:253771:33 m3:381345:62 m3:864834:108 m3:1477116:243 	4r2k/1p4rp/p1p3q1/P3b3/4p3/1QPnB2P/1P2n1B1/R5RK b - - 1 31
+-:5251:1 -:9584:1 -:20835:3 -:38228:6 	5K2/5P1B/3k4/8/1p6/5P2/8/q7 b - - 1 59
+m3:122571:12 m3:176144:28 m3:506083:57 m3:746555:123 	5b1r/pp2pppp/k4n2/2Q5/q7/4B2P/PPP2PP1/3R2K1 w - - 1 20
+m3:9566:1 m3:14246:2 m3:46135:6 m3:44378:7 	5k2/R4ppQ/5b1p/1pp5/5p2/2PB3P/5PP1/4r1K1 w - - 1 35
+m3:106434:11 m3:138472:20 m3:465292:50 m3:638195:95 	5r2/1p4Nk/pqp2P2/3p4/1Pn3Q1/2P1p3/P3P3/2K2R2 w - - 3 40
+m3:299381:39 m3:472873:85 m3:1328279:178 m3:2185028:383 	5rk1/5p1p/3p2p1/1P2b3/6q1/1P4N1/r5PP/2KRQ2R b - - 5 27
+m3:35590:3 m3:53770:9 m3:276216:32 m3:395833:71 	6k1/1p1b3R/p1n1p2Q/3p3p/3P3P/P1B2rK1/1PB2n2/8 w - - 0 33
+m3:19844:3 m3:29685:5 m3:57534:9 m3:99530:18 	6k1/4Q3/2P2K2/p7/P3p1P1/8/1q6/8 w - - 9 72
+m3:133818:15 m3:209680:33 m3:531140:63 m3:831145:129 	6kr/2b1R2p/7p/3p1N2/8/1B4P1/3r1PP1/2R3K1 w - - 1 41
+m3:40581:6 m3:66418:10 m3:165749:20 m3:261066:42 	7k/5r2/p1p5/8/P3Q1R1/5pPK/7P/8 w - - 3 49
+m3:11870:2 m3:16401:3 m3:54345:8 m3:77536:14 	8/1R3k1p/5p2/8/8/2P5/PPrr4/6K1 b - - 3 38
+m3:24533:3 m3:41281:6 m3:93425:11 m3:140208:20 	8/1p3pk1/p4Qp1/2q5/8/P2p1P1b/1Pr1n1PP/3RRK2 b - - 4 37
+m3:26783:4 m3:34361:6 m3:108657:17 m3:279839:53 	8/3R4/2k5/5Q2/K7/8/8/1r5q w - - 16 83
+m3:65214:8 m3:95454:15 m3:277995:35 m3:373231:62 	8/6kp/p3P1p1/3pP3/7K/3n1qN1/7P/8 b - - 1 43
+m3:37650:4 m3:42255:7 m3:178247:23 m3:301187:50 	8/6p1/P1p1pPk1/P2p4/7Q/2P2R2/qr4PK/8 w - - 1 38
+m3:24699:3 m3:30846:7 m3:118950:21 m3:161865:28 	8/8/3p2R1/1p4p1/4PkPP/4n3/2r5/6K1 b - - 0 73
+m3:15792:2 m3:21587:3 m3:47187:5 m3:65188:10 	8/k1p5/p5p1/n1q5/1R1Q4/7P/5PK1/8 w - - 4 59
+m3:14212:1 m3:20502:3 m3:70311:8 m3:83219:15 	Qr4kr/5ppB/3b1n2/8/3P4/4Pp1q/PP3P2/R1B2RK1 b - - 0 23
+m3:125052:17 m3:204564:34 m3:499074:61 m3:789174:128 	k2r4/Pq4p1/4p3/Q1ppP2r/3P3p/1R3b1P/5BP1/1R4K1 w - - 1 37
+m3:39817:5 m3:40229:7 m3:93097:12 m3:154892:27 	n7/7r/2pP1R1p/3p1B2/5p1k/1p2P2P/6PK/8 w - - 0 50
+m3:13210:1 m3:28344:4 m3:66417:8 m3:137716:20 	r1b1N1kr/1p2Q2p/6pB/p2p1p2/2q5/5N2/PPP2bPP/R3R1K1 w - - 0 21
+m3:17106:2 m3:42634:6 m3:122174:13 m3:179120:29 	r2r1n1k/2q2p1N/p3pNpQ/2p1P3/PpR5/7P/1P3Bb1/R6K w - - 0 29
+m3:245658:25 m3:342628:57 m3:1259506:133 m3:2055335:330 	r4k2/p1n2Np1/2p1P1Q1/1p1p2p1/1P1N4/P7/2P2RP1/6K1 w - - 1 33
+m3:12672:1 m3:21299:3 m3:52290:6 m3:84098:13 	r4r2/pp3pk1/2p3pp/4P2N/P1B5/5b1q/1P1Q1P2/R3R1K1 b - - 9 28
+m3:107573:13 m3:160608:29 m3:330980:45 m3:667528:121 	r4rk1/7p/p1Nppp1B/1p6/2p1P1b1/P5Q1/1P3PP1/3R2K1 w - - 2 30
+-:60350:10 -:71704:17 -:204637:39 -:463433:98 	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+m3:273994:31 m3:409414:67 m3:1119048:131 m3:1872077:310 	r5kr/1p1b4/p2QpBB1/8/3P3P/2P5/6K1/1R6 w - - 3 38
+m3:69667:7 m3:156841:23 m3:192273:23 m3:302304:44 	r5rk/1pB4p/p3BRpP/2P5/3p4/8/P5PK/5R2 w - - 1 31
+m3:135716:16 m3:204593:34 m3:785674:96 m3:1217369:199 	rr5k/2n3Rp/8/p5N1/P7/1pQ2p2/5PKP/4R3 w - - 0 32
+m4:109540:13 m4:101735:19 m4:328114:50 m4:600342:116 	1Q2R3/6k1/2pp1p1p/6p1/1p6/3K3P/1PP2q2/r7 b - - 7 49
+m4:33494:4 m4:41274:7 m4:105890:13 m4:147933:25 	1Q3b1k/5R1p/1p1q4/1P1Bp1p1/8/6P1/6KP/8 w - - 3 36
+m4:57467:7 m4:83033:14 m4:239632:30 m4:322577:55 	1R3r2/4Q3/6kp/6p1/4P3/2p2P1P/6PK/2q5 w - - 3 49
+m4:2589:0 m4:4535:0 m4:5426:0 m4:10804:1 	1R4k1/5pp1/8/3P4/4p2P/5pP1/4rP2/r3NK2 b - - 2 45
+m4:34961:6 m4:49881:10 m4:76383:13 m4:138624:27 	1R6/p5kp/6p1/3p1q2/N3p3/P3n1P1/1P5P/R5K1 b - - 2 31
+m4:6347:0 m4:9615:1 m4:33456:3 m4:46970:7 	1kn5/2Q5/1p4p1/1P6/4r1P1/1P3p1q/P4P2/3R2K1 b - - 0 51
+-:12939:2 -:21717:3 -:71916:12 -:100896:18 	2r1r1k1/6q1/1pbBp1R1/p2pP3/P1pP3Q/7P/5P2/1R4K1 w - - 1 48
+m4:148169:19 -:33313:6 m4:85393:15 -:119533:23 	2r2k2/1p3p1b/p2P1Q1p/6p1/3B1p2/P1N2R1P/6PK/2q5 w - - 3 37
+m4:11323:1 m4:37795:6 m4:99737:14 m4:134574:24 	2r2k2/6RR/4P1p1/p4p2/3K1P2/P5r1/8/8 w - - 3 48
+m4:15947:1 m4:30441:4 m4:82083:9 -:78543:12 	3r1rk1/1p4p1/p2p1pP1/3Rp2Q/8/6P1/PPq2PB1/1K5R w - - 0 25
+-:9330:1 -:15248:3 -:42366:6 -:68770:12 	3r2nr/Nn1kb3/4pp2/1B1p3q/3B2p1/6p1/P1P5/3Q1RK1 b - - 1 24
+m4:107016:11 m4:141188:26 m4:429997:50 m4:619966:113 	3r2r1/1p1B1p2/3Rp3/2k1B1p1/4P2p/5P2/6P1/R5K1 w - - 3 37
+-:6552:1 -:6463:1 -:31996:4 -:52693:7 	3r4/p1p4k/6p1/8/2N3B1/1P1Q2qP/P7/7K b - - 0 31
+m4:94062:13 m4:186038:28 m4:309119:44 m4:445099:75 	4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+-:20684:4 m4:227312:40 m4:702678:91 m4:982859:172 	4rk2/7Q/1pq5/2pR1p2/2P5/3B4/r1P3K1/3R4 w - - 4 48
+m4:8870:1 m4:11748:2 m4:27383:3 m4:49808:8 	5k2/2R3R1/4P3/4rK1p/p4p2/6b1/2P5/8 w - - 3 40
+m4:50543:8 m4:94977:19 -:113964:21 m4:304503:52 	6k1/1p3rP1/2p2PQ1/4p3/3P4/4PRK1/q7/8 w - - 1 42
+-:5522:1 -:9704:2 -:22792:4 -:40644:8 	6k1/5p1p/2R5/p7/5p2/P5qP/1PP3P1/4r1QK b - - 6 33
+m4:67389:7 m4:113623:18 m4:316476:37 m4:488304:79 	6k1/7p/p6Q/4p3/1Pp3r1/5P2/1qB4K/5RR1 w - - 3 35
+m4:234604:26 m4:349797:58 m4:992653:120 m4:1619618:252 	6k1/Q2b1pp1/4qb1p/3p1p2/6P1/5P1P/1r4B1/K1R4R b - - 1 34
+m4:26685:3 -:36082:4 m4:124853:14 m4:194333:31 	6k1/p2R1p2/6p1/1p1Q4/8/n3P1P1/5qKP/8 w - - 0 37
+-:8955:1 m4:149375:24 m4:396321:45 -:90541:14 	7r/1p3p2/4k2p/3n3P/4p1p1/rPbR4/5PPN/1K5R b - - 0 28
+m4:32816:5 m4:138093:26 m4:201745:27 m4:769026:130 	8/4Ppk1/1pQ5/2pp4/p2P1K2/r1P2P1P/8/8 w - - 1 50
+m4:69169:8 m4:122740:18 m4:287114:37 m4:541362:82 	8/5Qp1/kpp1p1p1/p5P1/P2PR3/7r/1PPbK3/R6q b - - 5 35
+-:7217:1 -:9458:1 -:19868:3 -:28635:5 	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+m4:41617:5 m4:65289:12 m4:180121:25 m4:282997:52 	8/8/2R1Q3/5p2/2pp4/3k3P/5KP1/rq6 w - - 1 48
+-:14479:2 -:31664:6 -:40806:8 -:103916:20 	8/8/2p2p1k/p3p3/4P1Q1/2PR4/1r3KP1/8 w - - 1 45
+m4:28444:3 m4:43087:7 m4:132609:15 m4:165180:26 	8/8/6B1/6PP/4p3/4kr2/2p3K1/8 b - - 1 80
+m4:26693:3 m4:70622:11 m4:97285:16 m4:173601:32 	8/Q7/5pkp/1p3P1p/1P6/P3p1P1/3r1q2/R6K b - - 0 44
+-:7233:1 -:10282:2 m5:113826:15 m5:168136:28 	8/p3Q2p/p3pn1k/4N3/8/1P5P/q5PK/8 w - - 2 35
+m4:43442:5 m4:63349:10 m4:163644:19 m4:239881:49 	R1q2Q2/1p4pk/1p2p1p1/1n1pP2p/3P3P/2P1B1P1/5PK1/4r3 w - - 6 38
+-:7299:0 -:10028:1 m4:52330:5 m4:76936:12 	R6k/1b2p2p/2p3p1/2N1Nn2/5P2/7P/6PK/2rr4 b - - 1 35
+m4:101966:19 m4:157550:31 m4:439791:69 m4:711399:152 	r2b1R2/pp1N2pk/4p3/1Q1p4/1P6/P7/1q4PP/7K w - - 2 40
+m4:66571:9 m4:96942:18 m4:280741:37 m4:410891:75 	r3r2k/6pp/R2p4/1P1P1pb1/2P5/4Qp2/5PqP/2R1K3 b - - 3 30
+-:17409:3 m4:319587:63 m4:1246105:159 m4:1783020:359 	r4rk1/p3np2/7B/7Q/6b1/P1K1p3/4B1RP/1R6 w - - 1 27
+m4:57264:7 m4:91982:14 m4:242188:28 m4:329705:54 	r5k1/2R2p2/4p3/2n1P1NQ/4q3/6P1/5PK1/8 w - - 2 52
+-:9831:2 -:18853:5 -:30698:7 -:72726:17 	r5k1/pp1Q3p/6p1/2n2p2/2pP4/B3R3/6PP/3R2K1 w - - 1 33
+-:33661:5 -:90205:16 m4:678072:94 m4:1449242:247 	r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34
+-:17393:3 -:45847:10 -:54891:12 -:69723:13 	r7/pp4k1/5rp1/1nPp1Q1R/8/1P6/2P2P2/2K3R1 w - - 0 33
+-:24095:6 m4:131445:26 m4:396221:62 m4:575665:115 	rn3r2/pp4k1/2p5/7Q/8/7P/P1qN1P2/4R1K1 w - - 0 27
+-:6870:1 m4:141773:24 m5:244516:38 m4:489077:97 	rn4k1/p4q2/2p1B3/1pbp1p2/7R/2N3P1/PPP1Q2P/7K w - - 0 25
+m4:54695:9 -:126480:21 m4:1366566:166 m4:5606041:880 	rqb2k2/1pr5/4p1Q1/1P2N1pp/2R2n2/P3P3/KB5P/5R2 w - - 10 34
+-:7713:1 -:7413:1 m5:64958:8 m5:93506:15 	1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41
+-:15644:2 -:22914:3 -:94474:14 m5:381361:64 	1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52
+-:68452:11 m5:464405:80 m5:820092:122 m5:1642613:279 	1r5k/2p3pp/3pQ3/1P1P4/2q5/4K3/r4P1P/3R1R2 b - - 7 36
+-:39709:5 m5:299177:42 m5:302708:43 m5:775355:115 	1rr3k1/5p1Q/p7/q2ppbPp/3P4/P3RP2/2P4P/2K3NR b - - 0 25
+-:24054:5 -:41068:9 m5:229905:43 m5:467814:84 	2Q5/1p3k2/p3pp2/3p4/6r1/1N3NP1/PP2qnKP/2R5 w - - 1 35
+-:7891:1 -:29215:5 -:49054:8 -:156985:24 	2b3k1/r2R4/p3p1B1/1p2p3/1Pq2p1b/P1P4Q/5PPP/3R2K1 w - - 3 42
+-:6992:1 -:10205:2 -:26908:5 m5:671533:107 	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+-:60879:11 m5:326675:66 m5:1004299:144 m5:1657253:318 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+-:61938:8 -:115228:18 m5:732159:93 m5:896401:138 	2r4k/1p5B/p3pQ1p/P2pb3/1P3q1P/5P2/4bP2/1N4K1 b - - 1 26
+-:8813:1 -:23150:3 -:46173:6 m5:232898:36 	2r5/1p3R2/p5pk/3PQ3/1P5K/P7/6q1/8 b - - 0 65
+-:19952:4 -:64930:14 -:143101:33 m5:854477:168 	3R4/1p3k2/pB6/6p1/2PK4/2R5/P5qP/4r3 b - - 9 45
+-:15158:2 -:20259:4 -:53780:9 -:105168:21 	3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62
+-:9037:2 m5:413518:71 m5:1189168:155 m5:1832657:319 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+-:14524:2 -:45337:9 -:78320:14 -:136039:26 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+m5:53682:8 m5:108460:25 m5:190860:32 m5:242369:45 	4bq2/7k/4P1p1/p5Q1/P1pB1P1p/7P/6P1/6K1 w - - 3 46
+-:33829:5 -:80931:14 -:92478:15 m5:1045112:169 	4k3/pp3qb1/2p5/2Q1p3/1P6/P1PrBb1p/6RP/6K1 b - - 1 37
+-:17770:2 m5:55004:10 m5:134948:24 m5:240474:39 	5Q2/7p/1R3pk1/6p1/2p1P1P1/K1P3b1/5r2/6n1 w - - 21 63
+-:12608:1 -:12011:2 -:27871:4 -:40876:7 	5Qk1/6r1/p2p1p2/3PpP2/4B2P/5P1P/3r1q2/1R5K b - - 0 63
+-:12853:2 m5:54939:8 m5:116207:15 m5:192568:35 	5k2/3R3p/p7/5N1R/1P2K3/5r1P/5r2/8 w - - 7 49
+-:4255:0 m5:44750:8 m5:93065:12 m5:135007:23 	5k2/4R1R1/p7/2n4p/3B4/7P/2n2P1K/4r3 w - - 5 47
+-:32186:6 -:63447:12 -:56505:10 m5:816920:134 	5r1k/8/pQ6/1p2R1B1/6P1/2P4P/1P3P1K/1q6 w - - 1 39
+-:25041:3 -:39310:6 m5:142013:18 m5:217132:32 	5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44
+-:16088:2 -:25182:4 -:16969:3 -:27399:5 	6k1/3R4/P6p/5pp1/3p2P1/3K1P2/8/4b3 w - - 3 48
+-:12583:2 -:12262:3 -:88845:13 -:323023:60 	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+-:8698:1 -:17057:2 -:31348:3 m5:99627:16 	6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+-:26586:4 -:42569:8 m5:274099:38 m5:485083:80 	6k1/p6r/Q1p1q1p1/2P5/P2pN3/3PbKP1/8/4R3 b - - 6 40
+-:16416:2 -:31151:4 m5:68142:10 m5:88637:13 	6r1/2RR2pk/5P1p/p3N3/8/4b1PK/7r/8 w - - 0 41
+-:20626:4 -:42962:8 m5:202228:30 m5:420248:79 	6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32
+-:11794:1 -:16313:3 m5:36294:6 -:33285:6 	7k/5R2/6K1/3R3p/6r1/8/8/8 w - - 3 86
+-:1743:0 -:5954:1 -:10022:1 -:18237:2 	7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54
+-:15433:2 -:26344:5 m5:102278:17 m5:228037:41 	8/1p3Q1p/4Np2/8/Pbp1P2k/8/K7/5q2 b - - 15 54
+-:4509:0 m5:9080:1 m5:19674:3 m5:32925:6 	8/1pp2R1P/p5k1/6N1/5P2/7K/3n2P1/7r w - - 1 53
+-:18457:2 -:20973:3 -:66286:8 -:183326:25 	8/2P3pk/4Bp1p/p1K5/1p6/5P2/7P/8 w - - 0 50
+-:19262:3 -:35919:7 -:64890:11 m5:240750:46 	8/2Q5/6kp/2pP1bp1/2P2P2/3p3P/5PK1/4q3 b - - 2 38
+-:11056:2 -:19037:4 -:37453:5 -:181085:27 	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+-:14372:2 -:11887:2 m5:82852:12 m5:104394:17 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+-:27492:4 -:62383:12 -:165687:23 m5:927957:153 	8/5p1k/3R2p1/pP6/r1q5/4K3/8/8 b - - 1 57
+m5:17072:2 m5:28646:4 m5:74355:8 m5:122613:19 	Q7/5pk1/4N3/1p2P1pp/1P1P3b/7K/5q1P/8 b - - 0 42
+-:36825:6 -:60057:8 m5:187117:26 -:113523:20 	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+-:29340:4 -:47249:9 m5:701954:93 m5:847424:140 	r1b5/1p3kpp/8/p1PPBpQ1/1n6/6q1/P4RBP/4R1K1 w - - 0 28
+-:7456:1 m5:196699:32 -:17470:4 m5:1371904:206 	r1k3r1/pR3p2/Bp6/4q3/7Q/P5P1/1P4KP/8 w - - 4 36
+-:14651:3 m5:157394:30 m5:314046:47 m5:527597:105 	r3bk2/1p4pQ/2p1p2p/2q1P3/2p3P1/8/2B3KP/3RR3 w - - 6 33
+m5:109797:16 m5:179471:35 m5:404477:60 m5:711707:134 	r4rk1/pq2b3/4p2Q/2n1p2P/1pP5/4B3/PP6/2KR3R w - - 4 28
+-:3117:0 -:16124:2 -:49756:6 -:81614:12 	r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36
+-:22756:3 -:32387:6 -:113653:16 m5:238269:43 	r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35
+-:11847:1 -:27777:5 -:75222:12 -:146293:24 	1Q6/8/P3R3/8/k7/6K1/r7/3q4 w - - 2 74
+-:4114:1 -:14268:3 -:18394:4 -:50458:11 	1k2r3/pp6/2pP2p1/2Q5/4PPK1/P3B2r/4R3/3R3q b - - 6 36
+-:4278:0 -:8810:1 -:17331:2 -:43779:7 	1k6/8/2K5/6R1/1P6/8/8/5b2 w - - 1 72
+-:34724:6 -:46466:10 -:117246:21 m6:612077:108 	1n3rk1/1QN4p/2p5/1pP1P3/8/P3q2P/8/1R5K b - - 1 38
+-:15021:3 -:13379:3 -:47992:9 -:34640:8 	1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31
+-:11744:2 -:16240:3 m6:60455:8 m6:113277:20 	1r1rN1k1/3R1p1p/5Qp1/2p1P3/P4P2/2p3nP/5qP1/5RK1 w - - 6 33
+-:4694:1 -:12320:2 -:34762:6 -:63444:13 	2kr4/Qp1rR3/p5p1/P7/4P2p/3PB2P/1P4PK/3q4 w - - 7 42
+-:3116:0 -:3244:0 -:5560:1 -:10823:2 	2r2rk1/pp5p/3p2p1/3P2P1/5p2/P1b2P2/1qN1K2Q/3R3R b - - 1 28
+-:15509:2 -:20899:3 -:150669:22 -:22971:5 	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+-:15381:3 -:22258:5 -:80581:15 m7:1746746:259 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+-:3675:0 -:6288:1 -:22666:2 -:32992:5 	3RR1nk/6b1/6p1/p5Np/P4P2/7P/8/1r1K4 w - - 11 46
+-:16779:3 -:26152:5 -:54860:10 -:148875:28 	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+-:32804:5 -:60843:9 -:215000:35 -:358009:58 	4r1B1/7k/2b3p1/6Bp/3p1b1P/P1P4q/5Q2/1R4K1 b - - 3 36
+-:9804:2 -:24212:4 -:51388:10 -:99962:21 	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+-:10695:2 -:30786:6 -:55434:11 -:115450:24 	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+-:100771:18 -:161230:28 m6:462675:72 m6:557909:98 	5qr1/7k/4R2b/p3QppP/1nP5/1PB2NP1/6K1/8 w - - 1 36
+-:13815:3 -:9469:2 -:41429:8 -:90337:18 	5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58
+-:11570:2 -:30587:5 -:42105:6 m6:120315:19 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+-:3052:0 -:4474:0 -:16035:1 -:39809:5 	8/2N1Pkp1/1p1P3p/2p2p2/5p2/1P3P2/6PP/b4K2 w - - 3 41
+-:1805:0 -:2106:0 -:6931:1 -:25924:5 	8/2r2qkp/4QNp1/3P4/8/7P/1p4PK/4r3 b - - 1 45
+-:3353:0 -:5400:1 -:11249:1 -:13279:3 	8/6qk/4Q3/r2B1p2/p6p/P7/3p1P1P/4R2K w - - 0 34
+-:40060:7 -:70726:14 -:182026:34 -:281094:67 	8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44
+-:38470:5 -:38146:8 -:134501:21 -:222735:43 	r5rk/1pp4p/5b1q/3P1pN1/8/PQ2P2b/1PBN4/R5K1 b - - 0 31
+m2:4396:0 m2:7422:1 m2:18484:2 m2:27709:4 	1krbrb2/2p1p1p1/K1P1P1P1/8/8/2Q5/8/8 w - - 0 1
+-:4198:0 -:10613:2 -:18750:3 -:26731:5 	1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+m2:8480:1 m2:14680:2 m2:42879:5 m2:66905:10 	2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/Q7 w - - 0 1
+m2:22495:3 m2:29863:4 m2:65018:8 m2:75532:13 	2brbr2/1p1p1p2/1P1P1P2/8/2Q5/5K1k/8/8 w - - 0 1
+m2:6498:0 m2:13483:1 m2:20624:2 m2:33578:4 	2k1brbr/3p1p1p/3P1P1P/8/8/8/5QK1/8 w - - 0 1
+m2:10269:1 m2:17696:2 m2:22276:3 m2:47815:7 	2k5/8/8/8/3q4/2p1p1p1/2P1P1P1/2RBRBK1 b - - 0 1
+m2:7138:1 m2:16442:2 m2:26102:3 m2:38891:6 	2rbrbk1/2p1p1p1/2P1P1P1/8/2Q5/8/8/2K5 w - - 0 1
+-:7061:1 -:12060:1 -:8233:1 -:14171:2 	3k4/8/K7/5q2/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+m2:15064:1 m2:23650:3 m2:61394:7 m2:57526:8 	4K3/8/8/4k3/5q2/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+m2:20232:2 m2:12022:1 m2:23176:3 m2:72951:11 	4brbr/3p1p1p/3P1P1P/8/8/8/2Q1K3/6k1 w - - 0 1
+m2:3507:0 m2:4411:0 m2:13157:1 m2:16471:2 	4brbr/p2p1p1p/P2P1P1P/2R5/8/8/4K3/7k w - - 0 1
+-:3829:0 m2:12664:2 -:15099:2 -:13159:2 	4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+m2:12981:1 m2:23370:3 m2:38711:5 m2:77004:11 	4k3/8/3q4/8/8/1p1p1p2/1P1P1P2/2BRBR1K b - - 0 1
+m2:10211:1 m2:9021:1 m2:20297:2 m2:38512:4 	7q/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR b - - 0 1
+m2:13843:2 m2:23956:4 m2:37606:5 m2:49402:8 	8/3k4/8/7q/8/1p1p1p2/1P1P1P2/1KBRBR2 b - - 0 1
+-:2278:0 -:2819:0 -:7385:1 -:8754:1 	8/4k3/1r6/8/8/p1p1p2p/P1P1P2P/RBRB2K1 b - - 0 1
+m2:4727:0 m2:5409:0 m2:10019:1 -:220:0 	8/7r/1k6/8/8/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+m2:1341:0 m2:2672:0 m2:4068:0 m2:13445:2 	8/8/2n5/8/8/p1np1p1p/P2P1P1P/K1k1BRBR b - - 0 1
+m2:4722:0 m2:5872:1 m2:15108:2 m2:20704:3 	8/8/3n4/8/8/pn1p1p1p/P2P1P1P/1k1KBRBR b - - 0 1
+m2:4450:0 m2:4521:0 -:439:0 -:219:0 	8/8/8/3r4/6k1/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+m2:16273:2 m2:15840:2 m2:37930:4 m2:43715:6 	8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1
+m2:9707:1 m2:10821:1 m2:39559:5 m2:40207:6 	8/8/8/7q/8/2p1p1p1/2P1PkP1/K1RBRB2 b - - 0 1
+-:4510:0 -:8035:1 -:2080:0 -:8872:1 	rbrb1K2/p1p1p3/P1P1P2k/Q7/8/8/8/8 w - - 0 1
+-:2911:0 -:4728:0 -:5532:1 -:11638:2 	rbrb1k2/p1p1p1Rp/P1P1P2P/8/8/2K5/8/8 w - - 0 1
+-:1802:0 -:2510:0 -:5080:0 -:8520:1 	rbrb4/p1p1p2p/P1P1P2P/2K5/8/k7/2R5/8 w - - 0 1
+m2:11332:1 m2:12699:2 m2:36409:4 m2:51350:7 	rbrb4/p1p1p3/P1P1P3/k7/2K5/7Q/8/8 w - - 0 1
+-:3111:0 -:9302:1 -:10609:1 m3:44105:7 	1krbrb1Q/2p1p1p1/2P1P1P1/2K5/8/8/8/8 w - - 0 1
+-:889:0 -:6255:1 -:14152:2 m3:28036:4 	1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+-:369:0 -:141:0 -:156:0 -:176:0 	3kbrbr/p2p1p1p/P2P1P1P/8/8/8/8/2KR4 w - - 0 1
+-:6691:1 -:7227:1 -:14713:2 -:18339:3 	4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+-:3725:0 -:3188:0 m3:69158:7 -:9547:1 	4brbr/3p1p1p/3P1P1P/8/1K6/2Q5/8/1k6 w - - 0 1
+m3:12249:1 m3:16620:2 m3:30245:4 m3:61905:8 	7K/8/3qk3/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+-:295:0 -:125:0 -:129:0 -:131:0 	8/2k5/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR b - - 0 1
+-:9424:1 -:7013:1 -:18602:2 -:21389:3 	8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+-:1747:0 -:2073:0 -:2731:0 -:3843:0 	8/5k2/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR b - - 0 1
+m3:12525:1 -:13428:2 -:19286:2 m3:68498:10 	8/8/2k3q1/8/8/2p1p1p1/2P1P1P1/1KRBRB2 b - - 0 1
+-:3552:0 -:4600:0 -:8591:1 -:2107:0 	8/8/3q4/8/8/p1p1p3/P1P1P3/RBRBk2K b - - 0 1
+-:3694:0 -:5383:1 m3:21237:3 m3:45108:7 	8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1
+-:943:0 -:154:0 -:301:0 -:462:0 	8/8/8/2r3k1/8/p1p1p2p/P1P1P2P/RBRB3K b - - 0 1
+-:6320:1 -:7499:1 -:11816:2 m3:28022:4 	8/8/8/5k2/8/2p1p1pq/2P1P1P1/1KRBRB2 b - - 0 1
+-:3441:0 -:6173:1 -:21936:3 m3:45756:6 	Q1brbrk1/1p1p1p2/1P1P1P2/8/8/5K2/8/8 w - - 0 1
+-:227:0 -:176:0 -:227:0 -:237:0 	k3brbr/p2p1p1p/P2P1P1P/8/4K3/8/8/R7 w - - 0 1
+-:5107:0 -:6247:1 -:8383:1 -:14781:3 	rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1
+-:3772:0 -:13460:2 -:7039:1 -:18472:3 	rbrb4/p1p1p3/P1P1P3/8/8/8/5k1K/1Q6 w - - 0 1
+-:673:0 -:85:0 -:86:0 -:86:0 	rbrbk3/p1p1p2p/P1P1P2P/6K1/8/7R/8/8 w - - 0 1
+-:1769:0 -:2155:0 -:2519:0 -:4085:0 	rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1
+-:1076:0 -:2041:0 -:7430:1 -:9048:1 	1K6/2r5/8/3k4/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+-:545:0 -:874:0 -:480:0 -:1049:0 	1k2brbr/p2pKpRp/P2P1P1P/8/8/8/8/8 w - - 0 1
+-:10637:1 -:4807:0 -:25094:4 -:17665:3 	4brbr/3p1p1p/3P1P1P/3K4/2Q5/8/1k6/8 w - - 0 1
+-:1176:0 -:3455:0 -:5986:1 -:7535:1 	4brbr/p2p1p1p/P2P1P1P/8/1K6/2R5/k7/8 w - - 0 1
+m4:4621:0 -:5111:0 -:6408:1 -:9265:1 	7K/4k3/8/8/8/p1p1p2p/P1P1P2P/RBRB3r b - - 0 1
+-:9431:1 -:11436:2 -:14707:2 -:35974:6 	7K/8/3k4/8/q7/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+-:4877:0 -:10024:1 -:7389:1 -:19469:3 	k1K5/8/8/4q3/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+-:911:0 -:1100:0 -:2416:0 -:2760:0 	k3brbr/3p1p1p/3P1P1P/8/K7/8/8/5Q2 w - - 0 1
+-:1073:0 -:2299:0 -:5140:0 -:5044:0 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/7R/1k1K4 w - - 0 1
+-:2343:0 -:6413:1 -:16331:2 m4:64085:8 	rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1
+-:3686:0 -:2607:0 -:14927:2 -:10847:2 	rbrb4/p1p1p3/P1P1P3/k3K3/2Q5/8/8/8 w - - 0 1
+-:1199:0 -:2386:0 -:8906:1 -:12488:2 	4brbr/3p1p1p/1k1P1P1P/8/K1Q5/8/8/8 w - - 0 1
+-:1505:0 -:3896:0 -:5107:1 -:8564:1 	7K/6r1/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+-:2397:0 -:3105:0 -:6608:1 -:12164:2 	8/1q6/8/4k3/8/3p1p1p/3P1P1P/K3BRBR b - - 0 1
+-:2603:0 -:4838:0 -:11027:1 -:9766:1 	8/8/K7/5r2/k7/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+-:4259:0 -:6440:1 -:10290:1 -:15051:2 	rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1
+-:3663:0 -:3196:0 -:7307:1 -:7143:1 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/1k1K4/2R5 w - - 0 1
+-:8008:1 -:6041:1 -:6178:1 -:9245:1 	rbrb4/p1p1p3/P1P1P3/6Q1/8/1K5k/8/8 w - - 0 1
+-:10408:1 -:4978:1 -:11702:2 -:14643:2 	rbrb4/p1p1p3/P1P1P3/8/1k6/8/2QK4/8 w - - 0 1
+m4:21010:3 m4:32801:6 m4:106859:12 m4:151957:23 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+-:3220:0 m3:20186:3 m3:49840:5 m3:56767:8 	k7/6Q1/2K5/pp6/1P6/2rp4/8/8 w - - 4 81
+-:58794:10 -:91447:16 -:337311:55 -:472044:86 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+m4:178153:20 -:23046:4 m4:556458:67 m4:773257:128 	1r5k/2p1n1pp/3Q1r2/p2n1p2/2BPp3/2B1P2q/1P3P1P/2R1R1K1 b - - 3 23
+m3:150639:17 m3:204893:35 m3:490011:64 m3:971487:157 	1r5k/2p1n1pp/3r4/p2n1p2/3Pp3/2B1P2q/1P2BP1P/2R1R1K1 b - - 1 24
+m2:159195:20 m2:239275:41 m2:572372:84 m2:842578:151 	1r5k/2p1n1pp/6r1/p2n1p2/3Pp1B1/2B1P2q/1P3P1P/2R1R1K1 b - - 3 25
+-:10366:2 -:36220:7 -:68338:12 -:246042:40 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/3r1P1P/5QK1 b - - 7 41
+-:16783:3 -:50283:10 -:199130:31 m5:1423148:239 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/5r1P/3Q2K1 b - - 1 42
+-:12590:2 -:19846:4 -:57497:10 -:69189:14 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+-:4094:0 -:4361:0 -:10637:1 -:28482:4 	r5k1/5p2/8/2P5/4pp2/3n1PPp/1Q5P/7K b - - 0 49
+-:9101:1 -:9817:1 -:36268:5 -:55169:9 	1R6/8/2p3p1/P5P1/1p2b2P/4kpK1/6B1/8 b - - 0 53
+-:6395:1 -:16360:3 m5:37231:6 m5:64536:12 	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+m4:1076:0 m4:1430:0 m4:3792:0 m4:17553:3 	5R2/8/2p3p1/P5P1/1p2b2P/8/5kpK/8 b - - 3 55
+-:8921:1 m5:66140:10 m5:117229:16 m5:165901:29 	6rr/1p3k2/pPp1p3/2Pp1p1q/P2P1P1b/4PB2/1B4Q1/2R3KR b - - 0 59
+m4:98045:11 m4:146559:23 m4:413813:47 m4:573437:93 	6rr/1p3k2/pPp1p3/2Pp1p2/P2P1P1b/4Pq2/1B4QR/2R3K1 b - - 1 60
+-:27448:6 -:70419:17 -:102231:26 -:158166:38 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+m3:49418:7 m3:90908:16 m3:200936:33 m3:328199:61 	1r2r2k/5R2/p2pp1Q1/8/1PppP3/P3q2P/6P1/1R4K1 w - - 2 36
+m2:9490:1 m2:14572:2 m2:47752:5 m2:67023:11 	1r2r2k/5R2/p2pp1Q1/8/1PppP3/P6q/6P1/1R5K w - - 0 37
+-:74244:12 -:134293:22 m5:518786:72 -:407285:71 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+m4:204232:26 m4:332093:54 m4:822677:109 m4:1147275:200 	6k1/5pp1/7p/1PP1p3/1Q1BPnP1/3r1q1P/3R4/6K1 b - - 2 43
+-:8854:2 -:41971:7 -:78875:17 m5:2112258:325 	4R3/1p3Q2/p1n1p1p1/3P2k1/8/1b5P/5PPK/2q5 w - - 2 35
+-:19718:3 -:64168:14 -:111062:22 m6:2967499:462 	r2r2k1/2p2pbp/p1P3p1/6q1/1P1P1n2/2PBNb1P/1BQ2Pp1/R3R1K1 b - - 2 24
+-:6461:1 -:28840:4 m5:2439665:320 m5:6571545:972 	r2r2k1/2p2pbp/p1P3p1/6q1/1P1P4/2PBNb1n/1BQ2PpK/R3R3 b - - 1 25
+m4:582098:79 m4:1328511:189 m4:1804334:257 m4:2561415:367 	r2r2k1/2p2pbp/p1P3p1/6q1/1P1P4/2PBNb1n/1BQ2P1K/R5R1 b - - 0 26
+m3:495441:64 m3:1088834:151 m3:1922082:251 m3:3320222:498 	r2r2k1/2p2pbp/p1P3p1/5Bq1/1P1P4/2P1Nb2/1BQ2P1K/R5n1 b - - 1 27
+swept 7..10 at SeMultiCut 1 -> /home/max/ws/chesso/.tuning/s122p2/p2/probcut/shipped.txt
+rc 0
+m2:9473:2 m2:14702:2 m2:30939:4 m2:49651:9 	1Rb2bkr/8/4NpPp/3p4/p7/6B1/6PK/8 w - - 4 44
+m2:56583:9 m2:71422:15 m2:230333:39 m2:496766:84 	1k1r3r/RPn1ppb1/Qn4pp/1Np1P3/2p5/5B2/1P3PPP/2B1K2R w K - 3 21
+m2:16322:2 m2:28233:6 m2:47057:9 m2:109455:24 	1k2r3/pp4Q1/2b1P3/2p2P2/6P1/2N5/P6K/4qR2 b - - 0 34
+m2:47983:7 m2:79932:16 m2:169732:33 m2:269310:60 	1n4r1/q4pBk/r2R4/p3n3/1p1P2Q1/P7/P5PP/2R3K1 w - - 4 30
+m2:8328:1 m2:14436:2 m2:32733:5 m2:65657:13 	1qr5/7k/b2p2pB/3p2P1/2p1P3/2P5/5QPP/1r3RK1 w - - 0 38
+m2:17359:2 m2:23614:4 m2:42006:7 m2:80083:15 	2Q5/R3Np1k/5P2/6p1/N7/4n1r1/P3b3/7K b - - 0 34
+m2:31470:4 m2:61647:11 m2:127739:19 m2:216374:44 	2R5/p4p1p/5pk1/5N2/4n3/4P1P1/r6P/5RK1 w - - 3 39
+m2:81852:9 m2:121770:20 m2:364132:42 m2:478842:81 	2b3k1/1p5p/6pb/3Pp3/P3P2P/6N1/1P3q2/7K b - - 0 41
+m2:45323:5 m2:57641:9 m2:159475:21 m2:236660:40 	2r2q1r/pp1k1B2/3p1p1p/5P2/2Q3b1/P5Pp/1P5P/2R1R1K1 w - - 3 27
+m2:264099:32 m2:393715:76 m2:1079970:146 m2:1730985:325 	2rqrk2/3nb3/p4nQ1/2p3N1/Ppb1RB2/8/1P1N1PPP/R5K1 w - - 9 27
+m2:21833:3 m2:36902:6 m2:64795:10 m2:138711:26 	3r1k2/4N1p1/6Q1/p1b5/5Pb1/6P1/3rR1KP/8 b - - 2 38
+m2:36692:4 m2:55532:10 m2:146431:21 m2:243662:45 	3r1r1k/1p4pn/pN1p3p/P2Pp2q/1pB1Pb2/3Q1P2/1PP2P2/RN1R1bK1 b - - 7 28
+m2:13798:1 m2:18945:3 m2:73781:8 m2:101549:18 	4k3/R5P1/p4p2/1p3PK1/2n5/8/6B1/2r5 w - - 0 43
+m2:49833:5 m2:65230:11 m2:159412:20 m2:274305:48 	4r1k1/1p2R3/pqpp3p/2n2Q2/8/P1N4P/1P3PP1/6K1 w - - 1 25
+m2:41523:5 m2:63777:11 m2:157845:19 m2:230268:40 	4r1k1/p4p1p/2p2p2/2N5/1PB5/5q1P/1PPr1P1K/RQ2R3 b - - 0 25
+m2:2546:0 m2:4846:0 m2:10323:1 m2:14788:2 	5rk1/pp3p1p/2p2PpQ/8/n7/P6P/1PP3Pq/5B1K w - - 1 27
+m2:66169:10 m2:95466:18 m2:237804:38 m2:359847:73 	6k1/1R3p2/7p/2b1B1nP/Q1P1P2K/P4P2/1P6/6q1 b - - 3 39
+m2:115299:16 m2:131560:27 m2:593022:77 m2:772165:146 	6k1/4n1p1/p6p/4P3/PpP1P1P1/1P1q4/3r3P/2R4K b - - 0 43
+m2:11767:1 m2:16044:2 m2:56579:8 m2:56122:10 	6qk/7p/2p2p1B/4R2P/4P1Q1/1p4P1/5P2/6K1 w - - 1 43
+m2:16841:3 m2:33522:7 m2:78544:15 m2:137834:29 	7k/2p3pp/8/p3P3/4PP2/P6b/4qQ1P/2B3K1 b - - 0 40
+m2:36858:4 m2:50084:8 m2:119042:16 m2:263956:43 	7k/pp6/4P1p1/7p/7P/6bK/P1B3P1/4q3 b - - 0 39
+m2:187329:22 m2:273507:47 m2:786352:96 m2:1013573:179 	7r/2N2Qpp/p4p1k/8/1b1R4/5PB1/5P1P/6K1 w - - 0 31
+m2:78287:12 m2:120875:17 m2:202334:28 m2:262568:45 	7r/p4kp1/1p1Ppn2/4PppB/8/2P1q3/PP3RPr/1R4K1 b - - 1 23
+m2:28151:4 m2:29046:5 m2:57246:8 m2:193617:35 	8/1kp5/1p2P3/3p1p2/3P3P/2P5/r6P/5qQK b - - 1 52
+m2:30064:4 m2:66433:12 m2:135445:22 m2:210696:39 	8/1p1r2k1/2p4p/3p3r/1Q1P1Rp1/P3P3/1P2BK2/2R4q b - - 4 39
+m2:16713:2 m2:25051:4 m2:70251:10 m2:133995:24 	8/2R5/p4pP1/1b1p4/1P4P1/6k1/1r6/6K1 b - - 4 52
+m2:16047:2 m2:33826:5 m2:55684:8 m2:73308:14 	8/3Q2pr/p7/8/2Nb3q/7R/P6K/4k3 b - - 1 43
+m2:3250:0 m2:5383:0 m2:10135:1 m2:15093:2 	8/8/5kp1/p1pPP3/2P5/P3b1Pp/7P/3b3K b - - 0 39
+m2:9605:1 m2:23771:4 m2:31591:5 m2:72794:14 	8/R2B4/7p/p1r3kP/P2r1p2/6pK/6P1/8 b - - 1 54
+m2:122796:13 m2:182294:31 m2:522800:64 m2:791202:132 	r1q1k3/pb1p1pQ1/1p1P2nB/n6p/1P4pP/2N5/P1B2PP1/R5K1 w - - 1 25
+m2:15977:3 m2:34208:6 m2:106444:17 m2:102686:17 	r2n4/1p2Q3/p1p4p/3P1kp1/2b2P2/P1P3PP/1P3K2/8 w - - 0 35
+m2:72507:9 m2:120257:20 m2:206304:25 m2:419923:72 	r2r3k/1q5p/1pp1pp1Q/3P4/5R2/2P3RP/P4PP1/6K1 w - - 0 28
+m2:190422:23 m2:244473:45 m2:853523:114 m2:1450607:261 	r4rk1/1b6/1P1p3p/p2Nb3/2P5/P4q2/2BB4/1RQ3K1 b - - 1 27
+m3:16698:2 m3:38606:5 m3:81654:10 m3:123284:20 	1Q6/pp3pk1/5b2/2P3p1/8/P5Pb/2p2P1P/5NK1 b - - 0 35
+-:24575:4 -:35208:8 -:130772:24 m5:763406:127 	1r6/5pk1/p2pp1p1/Q2B2n1/8/2P1P1q1/1PR3Pr/R5K1 b - - 4 31
+m3:12224:1 m3:18616:3 m3:65504:8 m3:108490:18 	2r4k/3R1Q2/7p/p1p3p1/4P3/P3N1PP/1q3PK1/5b2 w - - 1 39
+m3:22605:3 m3:46997:7 m3:75453:11 m3:397039:64 	3k3r/6R1/3K4/3B4/3N4/pp6/8/8 w - - 0 62
+m3:90762:11 m3:252453:34 m3:244196:32 m3:381771:61 	3r2k1/1bp4p/1p4rQ/p2pNp2/3P4/PqP3R1/1P3PPP/4R1K1 w - - 1 32
+m3:30801:3 m3:46135:7 m3:128454:15 m3:196152:32 	3r2k1/p3Q1p1/2p1p1rp/8/3P1P2/5P2/PP1K3P/R2R2q1 b - - 8 31
+m3:75037:9 m3:114463:20 m3:291840:37 m3:475849:81 	4Q3/1R4pk/4Pp1p/8/8/2B3P1/r4b1P/5K2 w - - 1 45
+m3:205397:28 m3:304347:51 m3:579182:79 m3:1062536:183 	4r2k/1p4rp/p1p3q1/P3b3/4p3/1QPnB2P/1P2n1B1/R5RK b - - 1 31
+-:5251:1 -:9584:1 -:20835:4 m3:94085:15 	5K2/5P1B/3k4/8/1p6/5P2/8/q7 b - - 1 59
+m3:52342:5 m3:73291:11 m3:370858:43 m3:593470:102 	5b1r/pp2pppp/k4n2/2Q5/q7/4B2P/PPP2PP1/3R2K1 w - - 1 20
+m3:9108:1 m3:12614:2 m3:48160:6 m3:43235:7 	5k2/R4ppQ/5b1p/1pp5/5p2/2PB3P/5PP1/4r1K1 w - - 1 35
+m3:96016:10 m3:125606:19 m3:435810:50 m3:581658:94 	5r2/1p4Nk/pqp2P2/3p4/1Pn3Q1/2P1p3/P3P3/2K2R2 w - - 3 40
+m3:247415:35 m3:394142:76 m3:1127588:159 m3:1742196:336 	5rk1/5p1p/3p2p1/1P2b3/6q1/1P4N1/r5PP/2KRQ2R b - - 5 27
+m3:35590:4 m3:53770:10 m3:266463:34 m3:392874:76 	6k1/1p1b3R/p1n1p2Q/3p3p/3P3P/P1B2rK1/1PB2n2/8 w - - 0 33
+m3:19844:3 m3:29685:6 m3:56229:10 m3:97160:19 	6k1/4Q3/2P2K2/p7/P3p1P1/8/1q6/8 w - - 9 72
+m3:110926:14 m3:176680:29 m3:449815:55 m3:703154:121 	6kr/2b1R2p/7p/3p1N2/8/1B4P1/3r1PP1/2R3K1 w - - 1 41
+m3:37215:5 m3:62797:10 m3:140371:19 m3:228708:40 	7k/5r2/p1p5/8/P3Q1R1/5pPK/7P/8 w - - 3 49
+m3:11870:2 m3:16401:3 m3:49681:8 m3:66736:13 	8/1R3k1p/5p2/8/8/2P5/PPrr4/6K1 b - - 3 38
+m3:22332:2 m3:39215:6 m3:92850:12 m3:146539:22 	8/1p3pk1/p4Qp1/2q5/8/P2p1P1b/1Pr1n1PP/3RRK2 b - - 4 37
+m3:25365:4 m3:33976:6 m3:154751:24 m3:264182:52 	8/3R4/2k5/5Q2/K7/8/8/1r5q w - - 16 83
+m3:63979:8 m3:93729:16 m3:271051:38 m3:360979:64 	8/6kp/p3P1p1/3pP3/7K/3n1qN1/7P/8 b - - 1 43
+m3:19213:2 m3:30898:5 m3:87107:13 m3:128021:22 	8/6p1/P1p1pPk1/P2p4/7Q/2P2R2/qr4PK/8 w - - 1 38
+m3:13245:2 m3:17655:3 m3:81638:15 m3:115798:21 	8/8/3p2R1/1p4p1/4PkPP/4n3/2r5/6K1 b - - 0 73
+m3:11206:1 m3:15145:2 m3:37253:4 m3:50414:8 	8/k1p5/p5p1/n1q5/1R1Q4/7P/5PK1/8 w - - 4 59
+m3:15370:2 m3:19739:3 m3:66931:10 m3:81916:17 	Qr4kr/5ppB/3b1n2/8/3P4/4Pp1q/PP3P2/R1B2RK1 b - - 0 23
+m3:77865:10 m3:127438:22 m3:317626:42 m3:541142:95 	k2r4/Pq4p1/4p3/Q1ppP2r/3P3p/1R3b1P/5BP1/1R4K1 w - - 1 37
+m3:30389:4 m3:33080:6 m3:79477:12 m3:173800:31 	n7/7r/2pP1R1p/3p1B2/5p1k/1p2P2P/6PK/8 w - - 0 50
+m3:13210:1 m3:28344:4 m3:64385:7 m3:148129:20 	r1b1N1kr/1p2Q2p/6pB/p2p1p2/2q5/5N2/PPP2bPP/R3R1K1 w - - 0 21
+m3:17106:2 m3:27240:4 m3:69069:8 m3:100689:15 	r2r1n1k/2q2p1N/p3pNpQ/2p1P3/PpR5/7P/1P3Bb1/R6K w - - 0 29
+m3:214857:22 m3:310519:50 m3:1301122:140 m3:2186794:359 	r4k2/p1n2Np1/2p1P1Q1/1p1p2p1/1P1N4/P7/2P2RP1/6K1 w - - 1 33
+m3:11161:1 m3:19271:3 m3:45688:5 m3:72157:11 	r4r2/pp3pk1/2p3pp/4P2N/P1B5/5b1q/1P1Q1P2/R3R1K1 b - - 9 28
+m3:75680:9 m3:111719:21 m3:262922:34 m3:619203:112 	r4rk1/7p/p1Nppp1B/1p6/2p1P1b1/P5Q1/1P3PP1/3R2K1 w - - 2 30
+-:60350:11 -:71704:17 -:204637:38 -:463433:100 	r4rk1/pp3p2/3bn2R/3p1QpN/4p3/P7/2BN2PK/R7 w - - 1 28
+m3:247509:29 m3:375801:63 m3:1035139:121 m3:1726028:286 	r5kr/1p1b4/p2QpBB1/8/3P3P/2P5/6K1/1R6 w - - 3 38
+m3:67365:7 m3:149164:22 m3:180146:21 m3:288783:41 	r5rk/1pB4p/p3BRpP/2P5/3p4/8/P5PK/5R2 w - - 1 31
+m3:135716:16 m3:204593:35 m3:743763:91 m3:1180854:193 	rr5k/2n3Rp/8/p5N1/P7/1pQ2p2/5PKP/4R3 w - - 0 32
+m4:61494:8 m4:65924:13 m4:178176:32 m4:460568:88 	1Q2R3/6k1/2pp1p1p/6p1/1p6/3K3P/1PP2q2/r7 b - - 7 49
+m4:19032:2 m4:23768:3 m4:63562:7 m4:86034:16 	1Q3b1k/5R1p/1p1q4/1P1Bp1p1/8/6P1/6KP/8 w - - 3 36
+m4:42969:6 m4:57657:11 m4:188121:27 m4:248776:48 	1R3r2/4Q3/6kp/6p1/4P3/2p2P1P/6PK/2q5 w - - 3 49
+m4:2589:0 m4:4535:0 m4:5426:0 m4:10804:1 	1R4k1/5pp1/8/3P4/4p2P/5pP1/4rP2/r3NK2 b - - 2 45
+m4:34961:6 m4:49882:10 m4:70245:13 m4:135883:28 	1R6/p5kp/6p1/3p1q2/N3p3/P3n1P1/1P5P/R5K1 b - - 2 31
+m4:6041:0 m4:9078:1 m4:31941:3 m4:45615:7 	1kn5/2Q5/1p4p1/1P6/4r1P1/1P3p1q/P4P2/3R2K1 b - - 0 51
+-:12939:2 -:21717:4 -:66211:11 -:99090:18 	2r1r1k1/6q1/1pbBp1R1/p2pP3/P1pP3Q/7P/5P2/1R4K1 w - - 1 48
+m4:87464:12 -:33313:6 m4:85393:15 -:105098:20 	2r2k2/1p3p1b/p2P1Q1p/6p1/3B1p2/P1N2R1P/6PK/2q5 w - - 3 37
+m4:11323:1 m4:37421:6 m4:82789:12 m4:112889:20 	2r2k2/6RR/4P1p1/p4p2/3K1P2/P5r1/8/8 w - - 3 48
+m4:16060:1 m4:30599:5 m4:77105:8 -:75326:12 	3r1rk1/1p4p1/p2p1pP1/3Rp2Q/8/6P1/PPq2PB1/1K5R w - - 0 25
+-:9330:1 -:15248:3 -:42259:6 -:65266:12 	3r2nr/Nn1kb3/4pp2/1B1p3q/3B2p1/6p1/P1P5/3Q1RK1 b - - 1 24
+m4:77583:9 m4:98910:17 m4:276259:34 m4:421922:77 	3r2r1/1p1B1p2/3Rp3/2k1B1p1/4P2p/5P2/6P1/R5K1 w - - 3 37
+-:6552:1 -:6463:1 -:31996:5 -:51777:7 	3r4/p1p4k/6p1/8/2N3B1/1P1Q2qP/P7/7K b - - 0 31
+m4:68263:11 m4:109618:18 m4:195767:30 m4:349369:58 	4r1k1/R2b3p/1B1p2p1/P2PpP2/7Q/3q1PP1/6PK/8 w - - 2 36
+-:20684:4 m4:199496:37 m4:567097:78 m4:790018:150 	4rk2/7Q/1pq5/2pR1p2/2P5/3B4/r1P3K1/3R4 w - - 4 48
+m4:8233:1 m4:10514:2 m4:23808:3 m4:44634:7 	5k2/2R3R1/4P3/4rK1p/p4p2/6b1/2P5/8 w - - 3 40
+m4:38364:7 m4:78720:17 m4:159840:29 m4:282114:50 	6k1/1p3rP1/2p2PQ1/4p3/3P4/4PRK1/q7/8 w - - 1 42
+-:5522:1 -:9704:2 -:22792:4 -:40644:8 	6k1/5p1p/2R5/p7/5p2/P5qP/1PP3P1/4r1QK b - - 6 33
+m4:30701:3 m4:58362:9 m4:144392:18 m4:240675:41 	6k1/7p/p6Q/4p3/1Pp3r1/5P2/1qB4K/5RR1 w - - 3 35
+m4:101324:13 m4:163078:29 m4:500810:68 m4:818256:139 	6k1/Q2b1pp1/4qb1p/3p1p2/6P1/5P1P/1r4B1/K1R4R b - - 1 34
+m4:24358:3 -:36082:5 m4:119516:15 m4:178138:31 	6k1/p2R1p2/6p1/1p1Q4/8/n3P1P1/5qKP/8 w - - 0 37
+-:8955:1 m4:66853:10 m4:182968:21 -:88095:15 	7r/1p3p2/4k2p/3n3P/4p1p1/rPbR4/5PPN/1K5R b - - 0 28
+m4:18705:3 m4:95355:18 m4:97617:14 m4:625283:105 	8/4Ppk1/1pQ5/2pp4/p2P1K2/r1P2P1P/8/8 w - - 1 50
+m4:47796:6 m4:91844:14 m4:215846:30 m4:353009:56 	8/5Qp1/kpp1p1p1/p5P1/P2PR3/7r/1PPbK3/R6q b - - 5 35
+-:7217:1 -:9458:1 -:13399:2 m4:70215:11 	8/8/1P6/P7/5k2/4p2P/2r5/6K1 b - - 0 60
+m4:39355:5 m4:62527:12 m4:166808:24 m4:263494:51 	8/8/2R1Q3/5p2/2pp4/3k3P/5KP1/rq6 w - - 1 48
+-:14479:3 -:31664:6 -:40806:8 -:103916:21 	8/8/2p2p1k/p3p3/4P1Q1/2PR4/1r3KP1/8 w - - 1 45
+m4:24496:3 m4:38757:6 m4:109220:13 m4:137639:22 	8/8/6B1/6PP/4p3/4kr2/2p3K1/8 b - - 1 80
+m4:26693:4 m4:65400:10 m4:95675:14 m4:169522:31 	8/Q7/5pkp/1p3P1p/1P6/P3p1P1/3r1q2/R6K b - - 0 44
+-:7233:1 -:10282:2 m5:88536:12 m5:125052:22 	8/p3Q2p/p3pn1k/4N3/8/1P5P/q5PK/8 w - - 2 35
+m4:25303:3 m4:36916:6 m4:105829:12 m4:157294:27 	R1q2Q2/1p4pk/1p2p1p1/1n1pP2p/3P3P/2P1B1P1/5PK1/4r3 w - - 6 38
+-:7299:0 -:10028:1 m4:45027:5 m4:66771:11 	R6k/1b2p2p/2p3p1/2N1Nn2/5P2/7P/6PK/2rr4 b - - 1 35
+m4:82828:18 m4:90533:18 m4:251220:50 m4:462278:101 	r2b1R2/pp1N2pk/4p3/1Q1p4/1P6/P7/1q4PP/7K w - - 2 40
+m4:40136:5 m4:57185:10 m4:220515:29 m4:309688:58 	r3r2k/6pp/R2p4/1P1P1pb1/2P5/4Qp2/5PqP/2R1K3 b - - 3 30
+-:17409:3 m4:287874:58 m4:1059373:141 m4:1462905:304 	r4rk1/p3np2/7B/7Q/6b1/P1K1p3/4B1RP/1R6 w - - 1 27
+m4:47514:6 m4:71010:12 m4:198051:23 m4:278598:47 	r5k1/2R2p2/4p3/2n1P1NQ/4q3/6P1/5PK1/8 w - - 2 52
+-:9831:2 -:18853:5 -:30698:7 -:72726:19 	r5k1/pp1Q3p/6p1/2n2p2/2pP4/B3R3/6PP/3R2K1 w - - 1 33
+-:33661:5 -:90205:17 m5:647627:94 m4:1187017:212 	r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34
+-:17393:3 -:45847:10 -:54891:12 -:69723:14 	r7/pp4k1/5rp1/1nPp1Q1R/8/1P6/2P2P2/2K3R1 w - - 0 33
+-:24095:6 m4:86372:19 m4:225984:41 m4:357987:78 	rn3r2/pp4k1/2p5/7Q/8/7P/P1qN1P2/4R1K1 w - - 0 27
+-:6870:1 m4:116064:20 m5:206854:33 m4:391576:74 	rn4k1/p4q2/2p1B3/1pbp1p2/7R/2N3P1/PPP1Q2P/7K w - - 0 25
+m4:54695:9 -:126480:23 m4:1077799:148 m4:4066328:691 	rqb2k2/1pr5/4p1Q1/1P2N1pp/2R2n2/P3P3/KB5P/5R2 w - - 10 34
+-:7713:1 -:7413:1 m5:36929:5 m5:54332:8 	1R6/5k2/4p2p/1p2P3/1P3np1/3r1P2/1P3P1P/4K3 b - - 0 41
+-:15644:2 -:22914:3 -:103365:15 m5:253639:44 	1r3k2/3Q4/p2N1p2/2pqp3/2P4P/1P4PK/8/1R6 w - - 0 52
+-:68452:12 m5:283852:57 m5:1233632:176 m5:1809384:346 	1r5k/2p3pp/3pQ3/1P1P4/2q5/4K3/r4P1P/3R1R2 b - - 7 36
+-:39709:5 m6:276002:42 m5:207925:31 m5:643080:100 	1rr3k1/5p1Q/p7/q2ppbPp/3P4/P3RP2/2P4P/2K3NR b - - 0 25
+-:24054:5 -:41068:9 m5:187850:33 m5:314062:63 	2Q5/1p3k2/p3pp2/3p4/6r1/1N3NP1/PP2qnKP/2R5 w - - 1 35
+-:7891:2 -:29215:5 -:49054:8 -:156837:23 	2b3k1/r2R4/p3p1B1/1p2p3/1Pq2p1b/P1P4Q/5PPP/3R2K1 w - - 3 42
+-:6992:1 -:10205:2 -:26908:6 m7:774093:122 	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+-:60879:12 m5:172569:38 m5:482782:82 m5:812053:177 	2b5/4k2P/2Bp1r2/Q3p3/ppp4q/P1P5/1P4P1/3R2K1 w - - 2 55
+-:61938:9 -:115228:20 m5:698379:94 m5:919839:152 	2r4k/1p5B/p3pQ1p/P2pb3/1P3q1P/5P2/4bP2/1N4K1 b - - 1 26
+-:8813:1 m5:35717:5 -:44012:6 m5:159734:24 	2r5/1p3R2/p5pk/3PQ3/1P5K/P7/6q1/8 b - - 0 65
+-:19952:4 -:64930:15 -:143101:35 m5:784611:167 	3R4/1p3k2/pB6/6p1/2PK4/2R5/P5qP/4r3 b - - 9 45
+-:15158:2 -:20259:4 -:53780:9 -:105053:22 	3R4/8/7p/6k1/3PP1P1/2r5/4K3/r7 b - - 14 62
+-:9037:2 m5:213333:39 m5:487800:70 m5:967944:181 	3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18
+-:14524:3 -:45337:10 -:68447:13 -:130562:25 	4N3/8/3P1ppk/4p2p/4P2P/1n1P2P1/Q4PK1/3q4 w - - 5 46
+m5:29857:5 m5:67149:14 m5:142639:27 m5:181809:39 	4bq2/7k/4P1p1/p5Q1/P1pB1P1p/7P/6P1/6K1 w - - 3 46
+-:33829:5 -:80578:15 -:85182:15 m5:626776:120 	4k3/pp3qb1/2p5/2Q1p3/1P6/P1PrBb1p/6RP/6K1 b - - 1 37
+-:17770:3 m5:53508:11 m5:128890:24 m5:220181:36 	5Q2/7p/1R3pk1/6p1/2p1P1P1/K1P3b1/5r2/6n1 w - - 21 63
+-:12608:1 -:12011:2 -:27086:4 -:40268:7 	5Qk1/6r1/p2p1p2/3PpP2/4B2P/5P1P/3r1q2/1R5K b - - 0 63
+-:12853:2 m5:44743:7 m5:95176:12 m5:162737:30 	5k2/3R3p/p7/5N1R/1P2K3/5r1P/5r2/8 w - - 7 49
+-:4255:0 m5:25231:4 m5:54232:7 m5:75691:13 	5k2/4R1R1/p7/2n4p/3B4/7P/2n2P1K/4r3 w - - 5 47
+-:32186:6 -:54407:11 -:53091:9 m5:443519:74 	5r1k/8/pQ6/1p2R1B1/6P1/2P4P/1P3P1K/1q6 w - - 1 39
+-:25041:3 -:38924:6 m5:118391:15 m5:209074:31 	5r2/2Q3k1/3p2p1/7p/p6P/P1P2q1b/5B1K/8 b - - 0 44
+-:16088:2 -:25182:4 -:16969:3 -:27399:5 	6k1/3R4/P6p/5pp1/3p2P1/3K1P2/8/4b3 w - - 3 48
+-:12583:2 -:12262:3 -:88845:13 -:189858:34 	6k1/3r2b1/4p3/2P5/2P5/P5KP/3p1PP1/8 b - - 1 39
+-:8698:1 -:17057:2 -:31348:3 m5:103283:16 	6k1/4rp2/8/p1Q3K1/7P/8/8/8 w - - 7 53
+-:26586:4 -:42569:8 m5:189501:28 m5:318621:56 	6k1/p6r/Q1p1q1p1/2P5/P2pN3/3PbKP1/8/4R3 b - - 6 40
+-:16416:2 -:29964:4 m5:64220:9 m5:86384:13 	6r1/2RR2pk/5P1p/p3N3/8/4b1PK/7r/8 w - - 0 41
+-:20626:4 -:42962:8 m5:120590:19 m5:315503:62 	6rk/5rqp/p7/2P1p3/P3Q3/7n/1P4P1/R2R3K b - - 1 32
+-:11794:1 -:16313:3 m5:35234:6 -:33285:6 	7k/5R2/6K1/3R3p/6r1/8/8/8 w - - 3 86
+-:1743:0 -:5954:1 -:10025:1 -:17557:2 	7k/pR3K1p/6p1/4bp1r/5P2/1B4P1/8/8 w - - 6 54
+-:15433:2 -:26344:5 m5:76645:14 m5:187846:35 	8/1p3Q1p/4Np2/8/Pbp1P2k/8/K7/5q2 b - - 15 54
+-:4509:0 m5:9080:1 m5:19693:3 m5:32386:6 	8/1pp2R1P/p5k1/6N1/5P2/7K/3n2P1/7r w - - 1 53
+-:18457:2 -:20973:3 -:66286:8 -:181931:26 	8/2P3pk/4Bp1p/p1K5/1p6/5P2/7P/8 w - - 0 50
+-:19262:3 -:35919:7 -:64890:11 m5:122492:24 	8/2Q5/6kp/2pP1bp1/2P2P2/3p3P/5PK1/4q3 b - - 2 38
+-:11056:2 -:19037:4 -:37453:5 m6:1066318:164 	8/2k2P2/2b5/p2p4/1p3K2/8/P5Q1/8 w - - 0 52
+-:14372:2 -:11887:2 m5:71316:11 m5:90647:15 	8/5Qk1/p2p4/2pP2q1/2P5/p4p2/6N1/1r2R1K1 b - - 0 61
+-:27492:4 -:62383:12 -:165687:23 m5:885434:147 	8/5p1k/3R2p1/pP6/r1q5/4K3/8/8 b - - 1 57
+m5:17072:2 m5:28520:4 m5:68567:8 m5:100141:16 	Q7/5pk1/4N3/1p2P1pp/1P1P3b/7K/5q1P/8 b - - 0 42
+-:36825:6 -:53488:7 m5:171964:24 -:107963:20 	R2Q1bk1/5q2/4bP1p/2p1P3/3pB3/7P/2P3PK/8 w - - 3 50
+-:29340:4 -:47249:9 m5:609384:81 m5:684708:110 	r1b5/1p3kpp/8/p1PPBpQ1/1n6/6q1/P4RBP/4R1K1 w - - 0 28
+-:7456:1 m5:129263:20 -:17470:4 m5:862516:123 	r1k3r1/pR3p2/Bp6/4q3/7Q/P5P1/1P4KP/8 w - - 4 36
+-:14651:3 m5:122222:26 m5:230043:36 m5:416855:92 	r3bk2/1p4pQ/2p1p2p/2q1P3/2p3P1/8/2B3KP/3RR3 w - - 6 33
+m5:81637:12 m5:131110:26 m5:313257:49 m5:515168:103 	r4rk1/pq2b3/4p2Q/2n1p2P/1pP5/4B3/PP6/2KR3R w - - 4 28
+-:3117:1 -:16124:3 -:49758:9 -:81616:13 	r6k/3b1pqp/p2p1p2/2pP1P2/4P2Q/P1P3RP/2P4K/R7 w - - 3 36
+-:22756:3 -:32387:6 -:103909:14 m5:205192:37 	r7/p5Rk/2p1p2p/2B1PP2/3P3n/P1P4q/1r3P2/2RQ2K1 b - - 0 35
+-:11847:1 -:27777:5 -:74872:12 -:143330:28 	1Q6/8/P3R3/8/k7/6K1/r7/3q4 w - - 2 74
+-:4114:1 -:14268:3 -:18394:4 -:50458:11 	1k2r3/pp6/2pP2p1/2Q5/4PPK1/P3B2r/4R3/3R3q b - - 6 36
+-:4278:0 -:8810:1 -:17331:2 -:43744:7 	1k6/8/2K5/6R1/1P6/8/8/5b2 w - - 1 72
+-:34724:6 -:46466:10 -:117246:21 m6:340368:62 	1n3rk1/1QN4p/2p5/1pP1P3/8/P3q2P/8/1R5K b - - 1 38
+-:15021:3 -:13379:3 -:47992:9 -:34640:8 	1q1k1r2/4p2p/p3p2b/6p1/3P4/4PB2/PPr5/R1B1K1R1 b - - 1 31
+-:11744:2 -:16240:3 m6:36578:5 m6:71983:13 	1r1rN1k1/3R1p1p/5Qp1/2p1P3/P4P2/2p3nP/5qP1/5RK1 w - - 6 33
+-:4694:1 -:12320:2 -:34762:6 -:63444:13 	2kr4/Qp1rR3/p5p1/P7/4P2p/3PB2P/1P4PK/3q4 w - - 7 42
+-:3116:0 -:3244:0 -:5560:1 -:10247:2 	2r2rk1/pp5p/3p2p1/3P2P1/5p2/P1b2P2/1qN1K2Q/3R3R b - - 1 28
+-:15509:2 -:20899:3 -:100368:15 -:22971:5 	2r3k1/1b1p1p2/3PpPp1/4P2p/P4B2/1P5P/4q1P1/6QK b - - 0 48
+-:15381:3 -:22258:5 -:93428:17 m7:994757:142 	2r4r/kq3pb1/N3p1p1/QPp1Pn1p/2PPRP2/7P/5BP1/R5K1 w - - 1 31
+-:3675:0 -:6288:1 -:21892:2 -:31819:4 	3RR1nk/6b1/6p1/p5Np/P4P2/7P/8/1r1K4 w - - 11 46
+-:16779:3 -:26152:5 -:54860:10 -:145787:27 	4Q3/p7/2p2p2/P3n2k/7P/2P3P1/5q2/7K b - - 4 42
+-:32804:5 -:57437:9 -:188586:29 -:344740:55 	4r1B1/7k/2b3p1/6Bp/3p1b1P/P1P4q/5Q2/1R4K1 b - - 3 36
+-:9804:2 -:24212:4 -:51388:10 -:99962:21 	4rk2/1R6/6PP/2pR4/3n4/1p4K1/8/8 w - - 3 73
+-:10695:2 -:30786:6 -:55434:11 -:137369:29 	5R2/2p2R1p/7k/n7/8/1p1B4/3q2PP/7K w - - 6 42
+-:100771:18 -:160635:28 m6:426229:67 m6:616207:104 	5qr1/7k/4R2b/p3QppP/1nP5/1PB2NP1/6K1/8 w - - 1 36
+-:13815:3 -:9469:2 -:41430:8 -:221110:39 	5r2/1R6/p2p4/P1pPk2p/B1P1p1pP/8/1P2r3/6K1 b - - 0 58
+-:11570:2 -:30587:5 -:31785:5 -:82257:14 	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+-:3052:0 -:4474:0 -:16035:1 -:39809:5 	8/2N1Pkp1/1p1P3p/2p2p2/5p2/1P3P2/6PP/b4K2 w - - 3 41
+-:1805:0 -:2106:0 -:6931:1 -:25924:5 	8/2r2qkp/4QNp1/3P4/8/7P/1p4PK/4r3 b - - 1 45
+-:3353:0 -:5400:1 -:11249:1 -:13279:3 	8/6qk/4Q3/r2B1p2/p6p/P7/3p1P1P/4R2K w - - 0 34
+-:40060:7 -:70726:14 -:168708:32 -:281001:61 	8/pQ3b2/2p2k2/2N1b3/2n5/P5P1/3q2BK/8 b - - 6 44
+-:38470:5 -:38146:8 -:127367:19 -:175141:35 	r5rk/1pp4p/5b1q/3P1pN1/8/PQ2P2b/1PBN4/R5K1 b - - 0 31
+m2:4323:0 m2:7381:1 m2:18321:2 m2:27534:4 	1krbrb2/2p1p1p1/K1P1P1P1/8/8/2Q5/8/8 w - - 0 1
+-:4198:0 -:10613:1 -:18750:3 -:26731:5 	1r6/7K/4k3/8/8/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+m2:8480:1 m2:14680:2 m2:42654:5 m2:66337:10 	2brbr1k/1p1p1p2/1P1P1P2/8/5K2/8/8/Q7 w - - 0 1
+m2:22495:3 m2:29644:4 m2:62371:8 m2:74989:13 	2brbr2/1p1p1p2/1P1P1P2/8/2Q5/5K1k/8/8 w - - 0 1
+m2:6498:0 m2:13483:1 m2:20274:2 m2:33028:3 	2k1brbr/3p1p1p/3P1P1P/8/8/8/5QK1/8 w - - 0 1
+m2:10147:1 m2:17589:2 m2:21915:3 m2:47468:7 	2k5/8/8/8/3q4/2p1p1p1/2P1P1P1/2RBRBK1 b - - 0 1
+m2:7138:1 m2:16442:2 m2:25949:3 m2:38520:6 	2rbrbk1/2p1p1p1/2P1P1P1/8/2Q5/8/8/2K5 w - - 0 1
+-:7061:1 -:12060:1 -:8233:1 -:14171:2 	3k4/8/K7/5q2/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+m2:15064:1 m2:23650:3 m2:63655:7 m2:57526:8 	4K3/8/8/4k3/5q2/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+m2:20232:2 m2:12022:1 m2:23136:3 m2:72867:9 	4brbr/3p1p1p/3P1P1P/8/8/8/2Q1K3/6k1 w - - 0 1
+m2:3507:0 m2:4411:0 m2:13067:1 m2:16237:2 	4brbr/p2p1p1p/P2P1P1P/2R5/8/8/4K3/7k w - - 0 1
+-:3829:0 m2:12664:2 -:14979:2 -:13068:2 	4brbr/p2p1p1p/P2P1P1P/6R1/8/K7/8/1k6 w - - 0 1
+m2:12788:1 m2:23225:3 m2:37842:5 m2:74631:11 	4k3/8/3q4/8/8/1p1p1p2/1P1P1P2/2BRBR1K b - - 0 1
+m2:10211:1 m2:9021:1 m2:24476:2 m2:38316:4 	7q/8/5k2/8/8/3p1p1p/3P1P1P/3KBRBR b - - 0 1
+m2:13535:2 m2:23880:4 m2:36810:5 m2:49004:7 	8/3k4/8/7q/8/1p1p1p2/1P1P1P2/1KBRBR2 b - - 0 1
+-:2278:0 -:2819:0 -:7385:1 -:8754:1 	8/4k3/1r6/8/8/p1p1p2p/P1P1P2P/RBRB2K1 b - - 0 1
+m2:4727:0 m2:5409:0 m2:9995:1 -:220:0 	8/7r/1k6/8/8/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+m2:1155:0 m2:2381:0 m2:3435:0 m2:11482:2 	8/8/2n5/8/8/p1np1p1p/P2P1P1P/K1k1BRBR b - - 0 1
+m2:3320:0 m2:7084:1 m2:15442:2 m2:20870:3 	8/8/3n4/8/8/pn1p1p1p/P2P1P1P/1k1KBRBR b - - 0 1
+m2:4450:0 m2:4521:0 -:439:0 -:219:0 	8/8/8/3r4/6k1/p2p1p1p/P2P1P1P/1K2BRBR b - - 0 1
+m2:16273:1 m2:15840:2 m2:37793:4 m2:43446:6 	8/8/8/4k3/6q1/p1p1p3/P1P1P3/RBRB1K2 b - - 0 1
+m2:9651:1 m2:10713:1 m2:39243:4 m2:39485:6 	8/8/8/7q/8/2p1p1p1/2P1PkP1/K1RBRB2 b - - 0 1
+-:4510:0 -:8035:1 -:2080:0 -:8872:1 	rbrb1K2/p1p1p3/P1P1P2k/Q7/8/8/8/8 w - - 0 1
+-:2911:0 -:4728:0 -:5532:1 -:11638:2 	rbrb1k2/p1p1p1Rp/P1P1P2P/8/8/2K5/8/8 w - - 0 1
+-:1802:0 -:2510:0 -:5080:0 -:8520:1 	rbrb4/p1p1p2p/P1P1P2P/2K5/8/k7/2R5/8 w - - 0 1
+m2:9344:1 m2:12519:1 m2:36776:4 m2:44953:6 	rbrb4/p1p1p3/P1P1P3/k7/2K5/7Q/8/8 w - - 0 1
+-:3111:0 -:9302:1 -:10609:1 m3:43645:7 	1krbrb1Q/2p1p1p1/2P1P1P1/2K5/8/8/8/8 w - - 0 1
+-:889:0 -:6255:1 -:14152:2 m3:27792:4 	1krbrb1Q/2p1p1p1/K1P1P1P1/8/8/8/8/8 w - - 0 1
+-:369:0 -:141:0 -:156:0 -:176:0 	3kbrbr/p2p1p1p/P2P1P1P/8/8/8/8/2KR4 w - - 0 1
+-:6691:1 -:7227:1 -:14713:2 -:18339:3 	4K3/1q5k/8/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+-:3725:0 -:3188:0 m3:68178:7 -:9547:1 	4brbr/3p1p1p/3P1P1P/8/1K6/2Q5/8/1k6 w - - 0 1
+m3:12249:1 m3:16620:2 m3:30093:4 m3:61090:9 	7K/8/3qk3/8/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+-:295:0 -:125:0 -:129:0 -:131:0 	8/2k5/8/8/r7/p2p1p1p/P2P1P1P/K3BRBR b - - 0 1
+-:9424:1 -:7013:1 -:18602:3 -:21389:4 	8/4q3/6K1/8/7k/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+-:1747:0 -:2073:0 -:2731:0 -:3843:0 	8/5k2/8/8/4r3/p2p1p1p/P2P1P1P/3KBRBR b - - 0 1
+m3:12369:1 -:13428:2 -:19286:3 m3:67945:11 	8/8/2k3q1/8/8/2p1p1p1/2P1P1P1/1KRBRB2 b - - 0 1
+-:3552:0 -:4600:0 -:8591:1 -:2107:0 	8/8/3q4/8/8/p1p1p3/P1P1P3/RBRBk2K b - - 0 1
+-:3694:0 -:5383:1 m3:20489:3 m3:44636:8 	8/8/7k/8/8/1p1p1p2/1P1P1P2/q1BRBRK1 b - - 0 1
+-:943:0 -:154:0 -:301:0 -:462:0 	8/8/8/2r3k1/8/p1p1p2p/P1P1P2P/RBRB3K b - - 0 1
+-:6320:1 -:7499:1 -:11816:2 m3:27318:4 	8/8/8/5k2/8/2p1p1pq/2P1P1P1/1KRBRB2 b - - 0 1
+-:3441:0 -:6173:1 -:21838:3 m3:44966:6 	Q1brbrk1/1p1p1p2/1P1P1P2/8/8/5K2/8/8 w - - 0 1
+-:227:0 -:176:0 -:227:0 -:237:0 	k3brbr/p2p1p1p/P2P1P1P/8/4K3/8/8/R7 w - - 0 1
+-:5107:0 -:6247:1 -:8383:1 -:14781:2 	rbrb4/p1p1p1k1/P1P1P3/6K1/8/3Q4/8/8 w - - 0 1
+-:3772:0 -:13460:2 -:7039:1 -:18472:3 	rbrb4/p1p1p3/P1P1P3/8/8/8/5k1K/1Q6 w - - 0 1
+-:673:0 -:85:0 -:86:0 -:86:0 	rbrbk3/p1p1p2p/P1P1P2P/6K1/8/7R/8/8 w - - 0 1
+-:1769:0 -:2155:0 -:2519:0 -:4085:0 	rbrbk3/p1p1p2p/P1P1P2P/8/1R2K3/8/8/8 w - - 0 1
+-:1076:0 -:2041:0 -:7430:1 -:9048:1 	1K6/2r5/8/3k4/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+-:545:0 -:874:0 -:480:0 -:1049:0 	1k2brbr/p2pKpRp/P2P1P1P/8/8/8/8/8 w - - 0 1
+-:10637:1 -:4807:0 -:25094:4 -:17665:3 	4brbr/3p1p1p/3P1P1P/3K4/2Q5/8/1k6/8 w - - 0 1
+-:1176:0 -:3455:0 -:5986:1 -:7535:1 	4brbr/p2p1p1p/P2P1P1P/8/1K6/2R5/k7/8 w - - 0 1
+m4:4621:0 -:5111:0 -:6408:1 -:9265:1 	7K/4k3/8/8/8/p1p1p2p/P1P1P2P/RBRB3r b - - 0 1
+-:9431:1 -:11436:2 -:14707:2 -:35974:6 	7K/8/3k4/8/q7/p1p1p3/P1P1P3/RBRB4 b - - 0 1
+-:4877:0 -:9614:1 -:7389:1 -:19469:3 	k1K5/8/8/4q3/8/3p1p1p/3P1P1P/4BRBR b - - 0 1
+-:911:0 -:1100:0 -:2416:0 -:2760:0 	k3brbr/3p1p1p/3P1P1P/8/K7/8/8/5Q2 w - - 0 1
+-:1073:0 -:2299:0 -:5140:0 -:5044:1 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/7R/1k1K4 w - - 0 1
+-:2343:0 -:6413:1 -:16331:3 m4:63480:9 	rbrb4/p1p1p3/P1P1P3/8/1k1K4/6Q1/8/8 w - - 0 1
+-:3686:0 -:2607:0 -:14927:2 -:10847:2 	rbrb4/p1p1p3/P1P1P3/k3K3/2Q5/8/8/8 w - - 0 1
+-:1199:0 -:2386:0 -:8906:1 -:12488:2 	4brbr/3p1p1p/1k1P1P1P/8/K1Q5/8/8/8 w - - 0 1
+-:1505:0 -:3896:0 -:5107:1 -:8564:1 	7K/6r1/3k4/8/8/p2p1p1p/P2P1P1P/4BRBR b - - 0 1
+-:2397:0 -:3105:0 -:6608:1 -:12164:2 	8/1q6/8/4k3/8/3p1p1p/3P1P1P/K3BRBR b - - 0 1
+-:2603:0 -:4838:0 -:11027:1 -:9766:1 	8/8/K7/5r2/k7/p1p1p2p/P1P1P2P/RBRB4 b - - 0 1
+-:4259:0 -:6440:1 -:10290:1 -:15051:2 	rbrb4/p1p1p2p/P1P1P2P/8/1R6/8/8/3K3k w - - 0 1
+-:3663:0 -:3196:0 -:7307:1 -:7143:1 	rbrb4/p1p1p2p/P1P1P2P/8/8/8/1k1K4/2R5 w - - 0 1
+-:8008:1 -:6041:1 -:6178:1 -:9245:1 	rbrb4/p1p1p3/P1P1P3/6Q1/8/1K5k/8/8 w - - 0 1
+-:10408:1 -:4978:1 -:11702:2 -:14643:2 	rbrb4/p1p1p3/P1P1P3/8/1k6/8/2QK4/8 w - - 0 1
+m4:20435:3 m4:28662:5 m4:75360:9 m4:96501:15 	k7/6Q1/3K4/pp6/1P6/r2p4/8/8 w - - 2 80
+-:3220:0 m3:15683:2 m3:34889:3 m3:44098:6 	k7/6Q1/2K5/pp6/1P6/2rp4/8/8 w - - 4 81
+-:58794:10 -:86081:15 -:322699:55 -:440077:83 	1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22
+m4:80377:9 -:23046:4 m4:261500:29 m4:423224:66 	1r5k/2p1n1pp/3Q1r2/p2n1p2/2BPp3/2B1P2q/1P3P1P/2R1R1K1 b - - 3 23
+m3:82495:9 m3:116136:20 m3:528853:69 m3:983000:156 	1r5k/2p1n1pp/3r4/p2n1p2/3Pp3/2B1P2q/1P2BP1P/2R1R1K1 b - - 1 24
+m2:157390:19 m2:234332:40 m2:582254:78 m2:1027400:166 	1r5k/2p1n1pp/6r1/p2n1p2/3Pp1B1/2B1P2q/1P3P1P/2R1R1K1 b - - 3 25
+-:10366:2 -:36220:7 -:58771:11 -:193207:33 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/3r1P1P/5QK1 b - - 7 41
+-:16783:3 -:50283:10 -:198424:31 m5:803002:131 	6k1/1b5p/pP3B2/2R5/2P1qb1p/1P3pP1/5r1P/3Q2K1 b - - 1 42
+-:12590:2 -:19846:4 -:57196:11 -:69189:15 	r5k1/5p2/8/2P5/4pp2/1p1n1PPp/7P/1Q5K b - - 0 48
+-:4094:0 -:4361:0 m4:31331:4 m4:48743:7 	r5k1/5p2/8/2P5/4pp2/3n1PPp/1Q5P/7K b - - 0 49
+-:9101:1 -:9260:1 -:24416:3 -:44181:7 	1R6/8/2p3p1/P5P1/1p2b2P/4kpK1/6B1/8 b - - 0 53
+-:6395:1 -:16360:3 m5:22476:4 m5:53591:10 	1R6/8/2p3p1/P5P1/1p2b2P/4k3/6pK/8 b - - 1 54
+m4:1076:0 m4:1430:0 m4:3368:0 m4:12965:2 	5R2/8/2p3p1/P5P1/1p2b2P/8/5kpK/8 b - - 3 55
+-:8921:1 m5:50420:8 m5:86009:12 m5:125873:22 	6rr/1p3k2/pPp1p3/2Pp1p1q/P2P1P1b/4PB2/1B4Q1/2R3KR b - - 0 59
+m4:83298:9 m4:124297:19 m4:315811:37 m4:460892:74 	6rr/1p3k2/pPp1p3/2Pp1p2/P2P1P1b/4Pq2/1B4QR/2R3K1 b - - 1 60
+-:27448:6 -:70419:17 -:102231:25 -:347916:81 	1r2r2k/8/p2pp1Q1/8/1PppP3/P2q3P/6P1/1R3RK1 w - - 0 35
+m3:49134:8 m3:90608:16 m3:197552:33 m3:317997:59 	1r2r2k/5R2/p2pp1Q1/8/1PppP3/P3q2P/6P1/1R4K1 w - - 2 36
+m2:9555:1 m2:14664:2 m2:43485:5 m2:60854:10 	1r2r2k/5R2/p2pp1Q1/8/1PppP3/P6q/6P1/1R5K w - - 0 37
+-:74244:12 -:131075:22 m5:389242:54 -:350911:60 	6k1/5pp1/6np/1PP1p3/1Q2P1P1/3r1q1P/1B1R4/6K1 b - - 0 42
+m4:144473:20 m4:259496:43 m4:545727:77 m4:901408:150 	6k1/5pp1/7p/1PP1p3/1Q1BPnP1/3r1q1P/3R4/6K1 b - - 2 43
+-:8854:2 -:41973:7 -:78875:17 m5:1840048:286 	4R3/1p3Q2/p1n1p1p1/3P2k1/8/1b5P/5PPK/2q5 w - - 2 35
+-:19718:3 -:64168:14 -:98143:20 m6:1102454:178 	r2r2k1/2p2pbp/p1P3p1/6q1/1P1P1n2/2PBNb1P/1BQ2Pp1/R3R1K1 b - - 2 24
+-:6461:1 -:28840:4 m5:1115517:149 m5:2191866:319 	r2r2k1/2p2pbp/p1P3p1/6q1/1P1P4/2PBNb1n/1BQ2PpK/R3R3 b - - 1 25
+m4:523043:68 m4:1003750:142 m4:1077406:143 m4:1820889:246 	r2r2k1/2p2pbp/p1P3p1/6q1/1P1P4/2PBNb1n/1BQ2P1K/R5R1 b - - 0 26
+m3:329335:43 m3:596469:82 m3:1112037:140 m3:1330360:191 	r2r2k1/2p2pbp/p1P3p1/5Bq1/1P1P4/2P1Nb2/1BQ2P1K/R5n1 b - - 1 27
+swept 7..10 at SeMultiCut 1 -> /home/max/ws/chesso/.tuning/s122p2/p2/probcut/open.txt
+rc 0
+4 of 269 candidates separate the two sweeps -> /home/max/ws/chesso/.tuning/s122p2/p2/probcut/separators.fen
+rc 0
+guard mode (DEC-238): the mutant's multicut changes the tree on 4 of 4 positions in 1 s -> /home/max/ws/chesso/.tuning/s122p2/p2/probcut/fires_guard.txt, /home/max/ws/chesso/.tuning/s122p2/p2/probcut/fires_guard.fen
+rc 0
+  distance moved, not taken by the rule: d9 #4 -> #5	r7/3p2kp/4p1p1/2p5/p1N1PQ2/P7/B1P3K1/5R2 w - - 0 34
+  distance moved, not taken by the rule: d8 #5 -> #6	1rr3k1/5p1Q/p7/q2ppbPp/3P4/P3RP2/2P4P/2K3NR b - - 0 25
+  distance moved, not taken by the rule: d10 #5 -> #7	2b3nQ/5kP1/p1p1p3/2bpB3/4p1p1/1P6/2P2PP1/1K1R4 w - - 0 27
+  d10	#6	run 1	120315 nodes	19 ms	shipped [d10]	open [none]	mutant fires [d7 d8 d9 d10]	7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+take: 7k/5p1p/p2p1N2/2p2P2/4P3/1r3n1P/3K2R1/6R1 w - - 2 42
+  depth 10, mate in 6, shipped [d10], guard dropped [none], 120315 nodes, 19 ms
+  witness: guard mode (DEC-238), the rule firing on the mutant's build at [d7 d8 d9 d10]
+rc 0
+PROBCUT-DONE
+   -> the pick is the site's row: depth 10, mate in 6, shipped [d10], B04 [none], firing at d7 to d10. Unmoved.
+
+== 13. DEC-352's K re-read: adocs/data/S122_kcheck.txt (adocs/data/S122_kcheck.sh). K 1.2298 at the landing, reproduced; 1.2171 at the candidate; no STOP.
+
+== 14. Unmoved by construction: the option count, the census floors (the generator), the book -- no UCI option, generator, corpus or book moved. golden_defaults moved by the margin, 184 -> 275, edited with it.
+
+== 15. tools/search_bench.py, depths 9 and 12, the candidate's frozen binary and the parent's (the main checkout's build at 65606a9): streams recorded, not identical, the paste moving play (nps here is no timing)
+== candidate depth 9
+  midgame      0.015s        25473 nodes      1715 knps  best c3d5
+  kiwipete     0.073s       127664 nodes      1752 knps  best e2a6
+  tactical     0.019s        34197 nodes      1778 knps  best d7c8q
+  total        0.107s
+== candidate depth 12
+  midgame      0.057s        94541 nodes      1661 knps  best c3d5
+  kiwipete     0.208s       353715 nodes      1698 knps  best e2a6
+  tactical     0.245s       409231 nodes      1669 knps  best d7c8r
+  total        0.511s
+== parent depth 9
+  midgame      0.021s        39080 nodes      1879 knps  best c3d5
+  kiwipete     0.061s       110485 nodes      1816 knps  best d5e6
+  tactical     0.024s        44098 nodes      1810 knps  best d7c8q
+  total        0.106s
+== parent depth 12
+  midgame      0.125s       219796 nodes      1760 knps  best c3d5
+  kiwipete     0.167s       307606 nodes      1847 knps  best e2a6
+  tactical     0.140s       256487 nodes      1828 knps  best d7c8q
+  total        0.432s
+   -> the parent's six node counts and moves are phase 1's INV-6 streams exactly
+
+== 16. S310_adagrad_step.cpp, after ADAGRAD_HOLD_STEP 2 -> 3 (its last three lines; it exits 0 now)
+
+onset 7; half 3.5; the rule picks 3, the case carries 3
+at 3 on the case's fixture: apart 6.82e-13 at epoch 300, worst 1.25e-11 through 1200; every read of the family at most 2.98e-11, 4.5 decades under the bound; smallest plain walk 0.5236, 52 times its floor; travelled 1583.4; holds at most 6e-15
+
+== 17. DEC-354, 2026-11-05: DEC-316's pair re-derived by its script, then every golden that reads the fixture by its own
+-- each eligibility tool's stage_two() given S122's curve first (S101_gradient_rows.cpp and the four coverage tools), as S083_tuner_preconditions.cpp's was; S135_gradient_rows.cpp is left as it is, since it re-derives only at 18c2d9a (DEC-347), whose headers have no curve
+-- S101_gradient_rows, on S101's pair (before the fixture moved), the stage two fixed:
+base, 104 rows: parameter 984 analytic +2.824164e-05, the rule wants at least 8.472493e-05; candidate 5 |g| 9.488e-05 PICK, 5 eligible pairs tried; reproduces the landed pair: NO
+-- tests/test_eval_positions.hpp: S101's pair replaced by candidate 5's (1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2, 4k3/8/8/8/8/8/r3p2r/1R2K2R b K - 1 2)
+-- S101_gradient_rows, after:
+tests/test_eval_positions.hpp: 106 rows, marker found, 104 rows before it; reproduces the landed pair: yes; rc 0
+-- S083_tuner_preconditions.cpp both, on the re-derived fixture, CLAMP_PUSH +50 and ADAGRAD_HOLD_STEP 2 carried
+clamp: 106 fixture rows, LAZY_EVAL_MARGIN 275; at the built constants the largest |stage two| is 174.4 (the case "sits clear" needs < 274.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      144.4      130.59   1.05e-07         -1         -1  binds on none or all; 
+  +20      0        0.0      137.2      137.82   1.03e-07         -1         -1  binds on none or all; 
+  +30      0        0.0      207.2       67.82   1.12e-07         -1         -1  binds on none or all; 
+  +40      4      280.4      175.4        2.18   1.12e-07          0    0.00278  ok
+  +50      4      360.4      225.4       49.64   1.03e-07          0    0.00278  ok  <- CHOSEN
+  +60      6      440.4      239.0        0.36   1.03e-07          0    0.00186  a row within 1 cp of the kink; 
+  +70      8      520.4      258.2       13.98   1.12e-07          0    0.00139  ok
+  +80     12      600.4      268.1        6.79   3.24e-07          0   0.000785  fd past 2e-7; 
+  +90     16      680.4      269.0        6.03   2.04e-07          0   0.000589  fd past 2e-7; 
+ +100     18      760.4      263.2       11.76   2.04e-07          0    0.00058  fd past 2e-7; 
+ +110     26      840.4      267.4        5.55   3.24e-07          0   0.000755  fd past 2e-7; 
+ +120     29      920.4      267.7        7.28   3.24e-07          0   0.000648  fd past 2e-7; 
+ +130     30     1000.4      257.4       12.72   3.77e-06          0   0.000626  fd past 2e-7; 
+ +140     32     1080.4      258.5        2.42   7.87e-07          0   0.000587  fd past 2e-7; 
+ +150     35     1160.4      262.3        0.59   3.24e-07          0   0.000537  a row within 1 cp of the kink; fd past 2e-7; 
+ +160     36     1240.4      264.5        7.27   2.04e-07          0   0.000522  fd past 2e-7; 
+ +170     39     1320.4      268.7        6.33   1.12e-06          0   0.000482  fd past 2e-7; 
+ +180     42     1400.4      269.5        4.18   3.24e-07          0    0.00178  fd past 2e-7; 
+ +190     44     1480.4      274.0        0.95   3.43e-07          0     0.0017  a row within 1 cp of the kink; fd past 2e-7; 
+ +200     50     1560.4      264.8        4.32   3.24e-07          0    0.00149  fd past 2e-7; 
+clamp: the rule picks +50, every row 49.64 from the kink; the case carries +50
+walk: 110 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   -4.1899  held  -1.26e-15  
+    material/table knight  plain   -1.5065  held  -1.05e-15  
+    material/table bishop  plain   -1.2516  held  -1.97e-15  
+    material/table rook    plain   -2.0846  held  -8.66e-15  
+    material/table queen   plain   -3.4420  held  -1.17e-14  
+    psqt_mg[king]          plain   +1.6185  held  +1.89e-15  
+    psqt_eg[king]          plain   +2.4005  held  -1.11e-16  
+    smallest plain walk 1.2516 (material/table bishop); runs apart 4.77e-12; plain travelled 2004.3
+  adagrad at lr 2
+    material/table pawn    plain   -2.5132  held  +1.74e-15  
+    material/table knight  plain   -3.7064  held  -3.39e-15  
+    material/table bishop  plain   -1.2315  held  -1.08e-15  
+    material/table rook    plain   -1.3444  held  -2.22e-16  
+    material/table queen   plain   -2.0118  held  +6.88e-15  
+    psqt_mg[king]          plain   +1.3167  held  +1.67e-16  
+    psqt_eg[king]          plain   +0.3832  held         +0  
+    smallest plain walk 0.3832 (psqt_eg[king]); runs apart 1.02e-12; plain travelled 1524.3
+walk: every plain shift clears the case's floor 0.01
+-- S310_adagrad_step.cpp, the last lines
+
+onset 5; half 2.5; the rule picks 2, the case carries 2
+at 2 on the case's fixture: apart 1.02e-12 at epoch 300, worst 1.18e-11 through 1200; every read of the family at most 4.68e-11, 4.3 decades under the bound; smallest plain walk 0.3832, 38 times its floor; travelled 1524.3; holds at most 6.88e-15
+-- S121_coverage_rows, S121_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 42 before S121's block (marker found), the block ends at row 80
+landed block: 19 pairs, 0 not eligible
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| over the mobility span 6.063e-08
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+rc 0
+-- S123_coverage_rows, S123_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 80 before S123's block (marker found), the block ends at row 88
+landed block: 4 pairs, 0 not eligible
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.512e-08, over S123's family 1.261e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+rc 0
+-- S125_coverage_rows, S125_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 88 before S125's block (marker found), the block ends at row 92
+landed block: 2 pairs, 0 not eligible
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.272e-08, over S125's family 8.158e-08
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (4 picked rows, 4 landed)
+rc 0
+-- S101_coverage_rows, S101_COVERAGE_DATA = S083's corpus
+tests/test_eval_positions.hpp: 106 rows, 92 before S101's block (marker found), the block ends at row 104
+landed block: 6 pairs, 0 not eligible
+check gradient: 104 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 4.664e-08, over S101's family 1.098e-07
+check both ways: 2904 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (12 picked rows, 12 landed)
+rc 0
+-- S135_gradient_rows refuses by design at this layout (DEC-347), its pair a coverage row since S121:
+mobility weight, one of four a half at S135's layout. This layout
+adocs/data/S135_gradient_rows.cpp:306: FATAL ERROR: no mobility_mg[1] at this layout; the pair is re-derived at 18c2d9a
+rc 1
+   -> the gradient case on the re-derived fixture: 8.61e-07 at 984 (adocs/data/S122_gradient_options.txt, (ii)); both fast suites 57 of 57 (S122's step file, Gates)

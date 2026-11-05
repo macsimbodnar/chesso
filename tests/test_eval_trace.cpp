@@ -169,7 +169,18 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // of S125's four, three still read 2.875 and phase 23's 1.958, under 2.0, and
 // the pick took four new rows at phases 5, 11, 17 and 17, the top target 23's
 // White row at phase 17 because no White row at the maximum stands higher
-// (adocs/data/S101_goldens.txt).
+// (adocs/data/S101_goldens.txt). Re-derived at S122 on the same corpus at
+// its king safety family's fit, DEC-353's 1245 with LAZY_EVAL_MARGIN 275:
+// 10411 rows past 2.8, the worst 3.690, past 69/24. The curve's four
+// truncating divisions, T per king and per half, lose under one unit between
+// them in each half and come off the 1/24 lattice, so the bound is 69/24 + 1
+// = 3.875 while the curve is live (curve_is_live(), below) and the scan's
+// maximum is one row; S083_truncation_pick.py's dated amendment, written
+// before it ran, then picks from the 3131 distinct positions past 72/24 = 3.0,
+// a residual two taperings and the curve cannot reach. Of S101's four, one
+// reads 3.252 and the others 1.891, 0.905 and under 2.8, and the pick took
+// four new rows at phases 1, 9, 15 and 23, from 3.006 to 3.672
+// (adocs/data/S122_goldens.txt).
 // Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
 // score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
 // that margin, so while the clamp binds the two agree exactly and the residual
@@ -178,18 +189,34 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // what S206 bisected. Margin: each of the four is asserted past 2.0 and the
 // worst of them past 2.8, against a maximum of 2.875 -- so the tightest of the
 // two clauses has 0.075 of room, which is the point, and re-choosing four from
-// a fresh scan is the re-derivation.
+// a fresh scan is the re-derivation. While S122's curve is live the clauses
+// are 3.0 and 3.6 against 3.875: the four were picked past 3.0, and the worst
+// of them, 3.672, has 0.072 of room over 3.6.
 // Property beside it: "the smooth score is within the truncation bound of the
 // exact one", which holds over every position here rather than over four
 // chosen rows -- but not at any weights: its bound is a function of how many
 // taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
 // 4 x 23/24 = 3.833, which this case's precondition reports.
 const std::vector<std::string> truncation_positions = {
-    "8/1B3r2/pK6/4RP2/8/2k5/8/8 b - - 4 56",
-    "2r5/3p4/3k2n1/1Pn4N/1Bp1P1p1/P3Rb2/1KP2P1P/R7 w - - 1 31",
-    "2qr2k1/p4pp1/4P3/6P1/5Q1P/P1r2N2/4R2K/4R3 b - - 0 31",
-    "1R6/3b1q1p/5k2/P2p4/1Q4p1/4P1P1/2r2r2/4K2R w - - 14 48",
+    "8/8/2k5/4pBK1/4P3/5P2/8/8 b - - 8 66",
+    "1r5b/p4k2/2b1p1p1/1p3n2/3P1P2/2PN2p1/PP2K3/R1B5 w - - 4 27",
+    "b1k4r/2q2p2/3R1p2/1B6/1Q5N/2P4P/5PP1/7K b - - 0 27",
+    "rnb1k2r/npp1q1p1/p3pp2/7p/2PQ4/1P3N1N/PB3PBP/R4RK1 w kq - 0 17",
 };
+
+
+// Whether S122's curve reads anything but its constant, the engine's
+// ks_curve_live. While it does, each king's T(x) truncates in each half
+// before king safety's taper, and the two kings' losses in one half differ
+// by under one unit, so the residual gains under 1 past the taperings' bound.
+// At the seed both kings' x is the constant and the two T are equal.
+bool curve_is_live()
+{
+  for (int input = KSC_KNIGHT_ATTACKERS; input <= KSC_DEFENDERS; ++input) {
+    if (ks_curve_mg[input] != 0 || ks_curve_eg[input] != 0) { return true; }
+  }
+  return false;
+}
 
 
 // all_positions() and the four pinned rows, each mirrored as that list's rows
@@ -789,7 +816,10 @@ TEST_CASE_FIXTURE(trace_fixture_t, "the positions reach every curve input")
 // drops the four truncating divisions, each of which loses under one
 // centipawn, so the two can part by at most 23/24 per division that rounds:
 // three while tempo ships at zero, whose division then truncates 0 / 24
-// exactly. Clamping is 1-Lipschitz and only narrows the gap. The bound is the
+// exactly. Clamping is 1-Lipschitz and only narrows the gap. S122's curve, when
+// live, adds under 1 more: each king's T truncates in each half, and the two
+// kings' losses in one half, one taken off and one added, differ by under one
+// unit before the taper. The bound is the
 // one tests/test_eval_model.cpp held the mirror to until S276 (DEC-053), which
 // is the point: the trace's smooth score is the function the mirror computed.
 TEST_CASE_FIXTURE(trace_fixture_t,
@@ -797,7 +827,8 @@ TEST_CASE_FIXTURE(trace_fixture_t,
                   "exact one")
 {
   const bool tempo_unfitted = (tempo_mg == 0) && (tempo_eg == 0);
-  const double bound = (tempo_unfitted ? 3.0 : 4.0) * 23.0 / 24.0;
+  const double bound = (tempo_unfitted ? 3.0 : 4.0) * 23.0 / 24.0 +
+                       (curve_is_live() ? 1.0 : 0.0);
 
   std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
   tuner_layout::starting_params(params.data());
@@ -840,9 +871,10 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   // same re-derivation -- build/tools/truncation_scan --data <corpus> --min
   // 2.8, after a refit or a move of LAZY_EVAL_MARGIN; the scan has read this
   // smooth score from the trace since S276, the mirror's before, and the two
-  // are the same function. Margin: 2.8 against the maximum 2.875.
+  // are the same function. Margin: 2.8 against the maximum 2.875, and 3.6
+  // against 3.875 while S122's curve is live.
   CAPTURE(worst);
-  CHECK(worst > 2.8);
+  CHECK(worst > (curve_is_live() ? 3.6 : 2.8));
 }
 
 
@@ -866,6 +898,14 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 // the fourth division starts rounding too, the bound becomes 4 x 23/24 =
 // 3.833, and the four pinned here have to be re-derived against it. S038; in
 // tests/test_eval_model.cpp against the mirror's score until S276.
+//
+// **S122's curve moves both numbers by 1.** While it is live (curve_is_live())
+// its four truncations add under 1 to the residual, so two taperings and the
+// curve reach at most 46/24 + 1 = 70/24, and the proof that all three
+// taperings truncated is a residual past 72/24 = 3.0; the bound is 69/24 + 1 =
+// 3.875 and the top clause 3.6, the four picked past 3.0 by
+// adocs/data/S083_truncation_pick.py's amendment and the worst at 3.672. With
+// the curve at its seed the numbers are 2.0, 2.8 and 2.875 as written above.
 TEST_CASE_FIXTURE(trace_fixture_t,
                   "the pinned positions reach the truncation bound")
 {
@@ -882,6 +922,10 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   tuner_layout::starting_params(params.data());
   const std::vector<int64_t> weights = tuner_trace::engine_weights();
 
+  const bool curve = curve_is_live();
+  const double past = curve ? 3.0 : 2.0;
+  const double top = curve ? 3.6 : 2.8;
+
   double worst = 0.0;
 
   for (const std::string& fen : truncation_positions) {
@@ -897,16 +941,17 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 
     worst = std::max(worst, difference);
 
-    CHECK_MESSAGE(difference > 2.0,
+    CHECK_MESSAGE(difference > past,
                   (fen + ": difference " + std::to_string(difference) +
-                   ", no longer past 2.0"));
+                   ", no longer past " + std::to_string(past)));
   }
 
   // And one of them has to sit at the top of the range, not merely past 2.0,
   // so the bound is pinned against the arithmetic it claims rather than
   // against whatever the mildest of these four happens to be.
-  CHECK_MESSAGE(worst > 2.8, ("worst pinned difference " +
-                              std::to_string(worst) + ", short of 2.875"));
+  CHECK_MESSAGE(worst > top,
+                ("worst pinned difference " + std::to_string(worst) +
+                 ", short of " + std::to_string(top)));
 }
 
 

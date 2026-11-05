@@ -1,0 +1,15 @@
+S122 kcheck, 2026-11-05T07:28:57+01:00, tree /home/max/ws/chesso-s122p2 at 65606a9
+1171 parameters compared, 1171 identical to the emitted header
+K at the landing's constants (the screen's): 1.2298, reproduced by the screen's tuner
+K refit at the candidate's constants (1245 at 275): 1.2171, one round (constants fixed)
+corpus /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv, 40-step ternary search on its training rows; read on /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation
+
+part outcome  m          screen d    d at K scr   d at K cand  rows         
+P1   kept     0.000015   +0.0002140  +0.0002169   +0.0002187   1384182      
+P2   kept     0.000006   +0.0000080  +0.0000140   +0.0000147   1384182      
+P3   dropped  0.000002   +0.0000010  +0.0000003   +0.0000004   1384182      (a reading)
+P4   kept     0.000010   +0.0000230  +0.0000182   +0.0000191   1384182      
+P5   kept     0.000017   +0.0000780  +0.0000895   +0.0000899   1384182      
+P6   dropped  0.000016   +0.0000070  +0.0000004   +0.0000021   1384182      (a reading)
+P7   dropped  0.000009   +0.0000080  -0.0000052   -0.0000058   1384182      (a reading)
+S122-KCHECK-DONE

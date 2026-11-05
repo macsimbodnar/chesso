@@ -1,14 +1,14 @@
 id:         S122
 goal:       king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
 accepts:    an SPRT verdict, recorded whatever it is; the term is clamped with mobility at a `LAZY_EVAL_MARGIN` re-derived from its own fitted spread (`tools/eval_spread` at the fitted weights and a fresh `truncation_scan`), binding on at most a pre-registered share of rows, the margin its own part in the family's H0 partition, and the step states how the fit and the margin are made consistent (S039 read H0; DEC-324, the owner's amendment DEC-258 names); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); the shelter comes from the pawn table's slot (S118, `pawn_shelter_t`, raw before the clamp and the taper) and storm, which nothing computes yet, is added here, in that slot's score or its spare bytes (DEC-332 (5)); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
-touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, src/data_structures.hpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_trace.hpp, src/search_params.hpp, src/data_structures.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tools/tuner_layout.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tools/margin_census.cpp, tools/eval_spread.cpp, tools/eval_spread_margins.hpp, tools/CMakeLists.txt, tests/CMakeLists.txt, tests/test_eval_model.cpp, tests/test_eval_positions.hpp, tests/test_eval_spread.cpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, tests/test_mate_carry.cpp, tests/test_mate_pv.cpp, tests/test_search.cpp, tests/test_search_params.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_walked_counts.hpp, .tuning/verify_fit.py, DEV_MANUAL.md, MANUAL.md
 excludes:   mobility, which shares the loop but is S121; retiring the clamp and the lazy shortcut (S039 read H0, DEC-324)
-decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259, DEC-324, DEC-344, DEC-345, DEC-349, DEC-353
-closes:
+decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259, DEC-324, DEC-344, DEC-345, DEC-349, DEC-352, DEC-353, DEC-354
+closes:     2026-09-10_adversarial-F16
 blocks:
 paused_by:
 author:     coordinator (Claude Opus 5.5); implementers: Opus 5.5 subagents, one per phase. Research pass done 2026-11-02, ruled by DEC-344
-done:
+done:       2026-11-05, this commit: the one `{0, 5}` SPRT read H1 (the block in "2026-11-05: the verdict", `adocs/data/S122_sprt.log`), the tree committed is the tree played by blob (`adocs/data/S122_close_identity.txt`), both fast suites 57 of 57 and bench 4707943 in both builds, `tools/gate_extra.sh` 6 of 6, and the Debug self-play 8 games, 0 `Assertion`, 0 disconnect (DEC-141)
 
 ## Noted 2026-11-02, S310's fast check: the clamp case does not reach the finalizer
 
@@ -52,7 +52,8 @@ owner's amendment of that outcome binds here.
 ## The clamp is the whole problem
 
 `evaluate_expensive()` clamps mobility **plus** king safety to
-`LAZY_EVAL_MARGIN`, 184 as shipped since S085's SPSA run raised it from 150, for
+`LAZY_EVAL_MARGIN` -- then 184, which S085's SPSA run raised from 150, and 275
+since this step's phase 2 (DEC-353) -- for
 both together -- and `evaluate()` is `evaluate_cheap() + evaluate_expensive()`,
 so the clamp is on the real score and not only on the shortcut's. **The
 architecture forbids a king-safety term strong enough to matter.** A mating
@@ -1584,3 +1585,257 @@ script. All three runs read the same:
 **Checks:** `bash -n adocs/data/S122_screen.sh`; `python3 -m py_compile adocs/data/S122_screen.py`;
 `tools/plan_prose_check.py` `--touches`, `--params`, `--citations`, `--gate` and `--prose`, each exit 0;
 `ctest -R test_plan` with `CLANG_FORMAT_MAJOR=22`, 5 of 5.
+
+## 2026-11-05: phase 2
+
+One Opus 5.5 subagent, briefed by the coordinator; worktree `../chesso-s122p2`, branch `s122p2` on `65606a9`, on the
+coordinator's paste (`adocs/data/S122_screen.sh apply ... --ruled DEC-353 .tuning/s122/screen/fits/1245_e20000/full.hpp`).
+Every reading with its command is in `adocs/data/S122_goldens.txt`, the K re-read in `adocs/data/S122_kcheck.txt`. No fit,
+match, SPRT, datagen or timing ran. Throwaway trees of the candidate (`65606a9` plus the two pasted files) carried the
+S091 mutants, B04, MW02 and S149's guard, each removed after.
+
+### The paste, checked
+
+- `verify_fit.py`: 1171 of 1171 parameters the fit's. Moved: `ks_checks`, `ks_weak`, `ks_storm`, `ks_curve`, each mg and
+  eg; `ks_defenders` stays 0 (P3); the shipped linear five unchanged (`only-family`, without `--allow-five`); P6's patch
+  absent (`src/` differs from HEAD in `src/evaluation.cpp`'s arrays and comments, `src/evaluation.hpp`'s comment and the
+  margin row only).
+- `LAZY_EVAL_MARGIN` 184 -> 275 in `src/search_params.hpp`. The clamp binds on 0.153 % of S122's corpus at 275, under
+  DEC-333 (6)'s 1.0 %: no STOP. Bench 5482277 -> **4707943** in both builds.
+
+### The owner's stops (DEC-344 (9)), read first: none fires, by DEC-354
+
+**Amended 2026-11-05 after the coordinator's fast check of this phase.** The table below first read the
+`test_tuner_gradient` stop as clear. The fast check read the clamp case's red, the O(h^2) term on 984 and 996, and
+DEC-316's pair, which its script no longer reproduces at the candidate, as one recurrence on DEC-343's parameter.
+Both are therefore DEC-344 (9)'s third recurrence, put to the owner on 2026-11-05. The SPRT plays the staged tree in
+DEC-334's form, and the owner rules only on H1. Neither the pair nor either rule is changed.
+
+**Amended again 2026-11-05, DEC-354 (the coordinator's ruling): DEC-142 applied as written.**
+`adocs/data/S122_gradient_options.txt` read both cases under each option. With both rules as written, the pair's
+re-pick then the clamp rule on the new fixture, the tree is green. So DEC-316's pair is re-derived by its script at
+the candidate, candidate 5. Every golden that reads the fixture is then re-derived by its own, CLAMP_PUSH +50
+included. The bound holds, 8.61e-7 at 984 (x1.16), the third recurrence does not fire, and nothing goes to the owner.
+No metric, h, bound or rule changed.
+
+| stop | reading | |
+|---|---|---|
+| `EXACT_FLOOR` under 157 | `S156_mined_floor_sweep.py --floor 157` via `S136_overlay_run.py`: **166** shipping, **156** weakened (the parent 158 and 154); the gate at `RfpMinPly` 1 red at 156 | holds, separating, gap 10 |
+| `MATE_IN_THREE_FLOOR` under 11 | `S154_floor_margin_sweep.py floor`: **12** of 24 shipping, **11** weakened (the parent 12 and 10); `red` fails on mate-in-two exactness alone | holds; S083's shape, `EXACT_FLOOR` carrying the separation |
+| a mate-carry ceiling rising by more than 2 | `S203_case_sweep.sh --ceilings` over the twelve grids and S122's: 2, 13, 4, 1, 3, 3 | none moves |
+| a third recurrence on `test_tuner_gradient`'s bound | the gradient case's worst **3.53e-07** at 985, `passed_king_own_eg[0]`, under 1e-6 with DEC-316's pair; without it the base rows read **2.95e-06** at 984. `S101_gradient_rows.cpp` no longer reproduces the pair: its pick at the candidate is candidate 5, 8.6e-7. The clamp case is red on the O(h^2) term at 984 and 996 | first put to the owner (DEC-344 (9), 2026-11-05) as one recurrence on DEC-343's parameter; **by DEC-354 the pair is re-derived, candidate 5, and the case reads 8.61e-7 at 984, under 1e-6 (x1.16): it does not fire** |
+
+DEC-299's guard is met (both floors hold, no ceiling rises), so the S170 budgets the script answered are applied.
+
+### Every golden, each by its script
+
+| golden | before | now | script |
+|---|---|---|---|
+| piece anchors, `QUIET_ROOK_EVAL` and `_CHEAP`, the lazy bound, `black_static`, quiet evasion, repetition | 107, 283, 353, 590, 1021, 0; 590, 578; 394; 199; -541; -603 | **107, 283, 353, 585, 1023, 0; 585, 578; 303; 247; -521; -573** | `S192_anchors.py`, **extended with S122's family**: each case's checks, weak squares, defenders and storm per king derived by hand from `src/evaluation.hpp`'s definitions, the curve read with the case's attackers; it reproduced all ten at the landing first, and every engine value the paste's reds showed |
+| `truncation_positions` | S101's, phases 5, 11, 17, 17 | **re-picked**: phases 1, 9, 15, 23, 3.006 to 3.672 | `truncation_scan --data <S083's corpus> --min 2.8` (10411 past 2.8, worst 3.690) and `S083_truncation_pick.py`, **amended** (below) |
+| both truncation cases | bound 2.875; each pinned past 2.0, worst past 2.8 | **bound 3.875 while the curve is live** (`curve_is_live()`); each pinned past 3.0, the worst past 3.6 | the pre-registered 3 x 23/24 -> + 1 |
+| coverage blocks | 19, 4, 2, 6 pairs | **unmoved**: all four reproduce, on S101's pair and on the re-derived one, their eligibility's stage two given the curve (below); S135's tool refuses by design at this layout (DEC-347) | `S121_`, `S123_`, `S125_`, `S101_coverage_rows.cpp` |
+| the curve constants' zero-gradient clause | < 1e-15 at 1147, 1159 | **the seed's clause only at the seed**; off it the constants read 7.74e-06 and 3.84e-07 and clear 1e-12 like the rest | -- |
+| DEC-316's pair | S101's, `3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w` and its mirror | **re-derived (DEC-354): candidate 5, `1r2k2r/R3P2R/8/8/8/8/8/4K3 w k` and its mirror**; the program reproduces it, exit 0, its eligibility's stage two given the curve first (below), the pick unchanged by that. The case reads 8.61e-7 at 984 with it. First not re-derived: kept pending the owner's ruling, the rule's pick then read in `adocs/data/S122_gradient_options.txt` | `S101_gradient_rows.cpp` |
+| `CLAMP_PUSH` | +30 | **+50 (DEC-354)**: on the re-derived fixture four rows bind, the farthest at 360.4, the nearest other at 225.4, every row 49.64 from the kink, finite differences 1.03e-7. First not re-derived: on S101's pair no push met the rule (`adocs/data/S122_clamp_reading.txt`) | `S083_tuner_preconditions.cpp clamp`, **fixed** (below) |
+| fixture clear of the clamp | 113.3 against 183 | **174.4** against 274, on either pair | the same |
+| gauge walk, `apart` | 0.7951 / 0.6157; 1.36e-12 / 7.39e-12 | **1.2516 (Adam) / 0.3832 (AdaGrad at 2)**; apart 4.77e-12 / 1.02e-12, on the re-derived fixture (on S101's pair 0.8295 / 0.6542 at 2, and apart 6.82e-13 at 3) | `S083_tuner_preconditions.cpp walk` |
+| `ADAGRAD_HOLD_STEP` | 2 | **2, unmoved (DEC-354)**: on the re-derived fixture the onset is 5 and the rule answers 2, apart 1.02e-12 at epoch 300; on S101's pair the onset read 7 and the rule 3, which this phase carried until the re-pick | `S310_adagrad_step.cpp` |
+| the curve's planted recovery (slow) | from the shipped curve, the seed until now | **from the seed, said**: green, 8274 assertions; from the shipped 1245 curve it read 2.87 and 1.01 off a plant | -- |
+| `EXACT_FLOOR` 157; `MATE_IN_THREE_FLOOR` 11 | 158 / 154; 12 / 10 | **held**: 166 / 156; 12 / 11 | above |
+| `short_line_ceiling` | 2, 13, 4, 1, 3, 3 | **unmoved**; S122's grid added to the command | `S203_case_sweep.sh --ceilings` |
+| S170 budgets | A 100000, C 1000000, F 100000 | **A 300000, C 100000, F 300000**, applied (DEC-299); D reports no mate line at stride 1 in any cell, so its 1000000 stays and it is silent, 5 of 6 reporting | `S170_pick_budgets.sh` over `S122_sweep_s170.txt` (108 cells, 1504 lines, 14 short) |
+| `capture_mates` | 9, 8, 11, 12; no mutant, no mutant, C02 C05 R02, no mutant | **8, 8, 10, 12; C02 C05 C07, none, R02, R02**; no distance moved | `S230_mine_r01_row.py depths`, shipped and the six S091 mutants |
+| the killer fence's depth | 8, no script | **9**, a golden now: depth 8 duplicates no second slot at the candidate (1 at the parent), depth 9 duplicates 4 of 6 and S149's guard none at 6 to 12 | `S122_killer_slots.cpp`, new |
+| `mate_probcut_hides` | depth 10, mate in 6 | **unmoved**: the six stages pick the site's row, B04 firing at d7 to d10 | `S277_mine_mate_row.py`, guard mode |
+| aborted-line cell | line 162 (game 4593) at 190000, margin 50000 | **line 244 (game 4411) at 150000**, run 130000..170000, margin 20000; 3 of 318 separate; the oracle reads #+7, its line ending in mate | `S294_fallback_cell.py`, four stages, MW02 on a throwaway tree |
+| node budget | 65024 / 3251 | **unmoved**: 11588, 0.71 of c, inside [7270, 32512] | `S192_node_budget.py` |
+| first-mate; `DRIVE_DEPTH`; ply-2 | 9, 9; 4; 6 | **unmoved** | `S188_repair_goldens.py`; `S083s_rfp_ply2.py` |
+| the extra ply's row | mate in 4 at 8 | **unmoved**: d7 to d12 | `S230_mine_r01_row.py depths` |
+| `LATE_CAPTURE_*` | LQ02 at 7, LQ03 at 3 | **unmoved** | `S261_mine_late_capture.py sweep`, `pick` |
+| `ALPHA` | -2108 | **kept**: inside the candidate's run -2182..-2001, 74 below and 107 above | `S121_alpha_window.cpp` |
+| `golden_defaults` | `LazyEvalMargin` 184 | **275** | `src/search_params.hpp`, the derivation |
+| `tests/test_eval_spread.cpp`'s shipped-margin cases | 184 | **green at 275**, the shipped value now one of the eight fixed points | -- |
+| readings, none asserted | 699 mate_pv lines; defender 83/104 | **699** (177 and 522); **88/104** | `test_mate_pv -s`; `S165_nmp_defender_sweep.py` |
+| `chesso bench` | 5482277 | **4707943** | -- |
+
+### What the scripts needed, fixed in scope
+
+- `S192_anchors.py` modelled no S122 term, so it reproduced the old anchors at the paste. It now carries each case's
+  S122 counts, derived by hand and commented case by case, and scores them as `src/evaluation.hpp` defines them. Its
+  computed values agree with every engine value the paste's red run printed (585, 247, -573, -521), and with the
+  queen's 1023 that the suite then confirmed.
+- `S083_tuner_preconditions.cpp`'s `stage_two()`, "the case file's", stopped at the feature table; phase 1 had given the
+  case's copy the curve and not the tool's. At the seed the two read the same. With the curve live the tool miscounted
+  the bound rows, and its "bound rows not silent" flags were that. It now adds the curve, and marks the curve group as
+  clamped, as the case does.
+- The same stale copy of `stage_two()` stood in `S101_gradient_rows.cpp` and the four
+  coverage tools' eligibility, "more than a centipawn inside the clamp at the shipped constants". Each now adds the
+  curve (DEC-354). The picks are unchanged by it: DEC-316's is still candidate 5, and the four blocks still reproduce.
+  `S135_gradient_rows.cpp`'s copy is left as it is: it re-derives only at `18c2d9a` (DEC-347), whose headers carry
+  no curve.
+- `S083_truncation_pick.py`'s rule assumed a lattice maximum. A dated amendment, written before it ran, keeps the hits
+  past 72/24 = 3.0 when any passes, and breaks a phase tie by the larger difference. Unchanged while the curve is not
+  live.
+- `tests/test_tuner_gradient.cpp`'s planted recovery "from its seed" started where the shipped constants were, which
+  was the seed until this paste; each plant now names its start.
+
+### The finding: `CLAMP_PUSH` cannot be re-derived by its script
+
+At margin 275, +30 binds no fixture row, so the case reads red at its precondition. The rule needs all four of these:
+the clamp binding on some rows and not all, every row more than 1 from the kink, the finite-difference worst at most
+2e-7, and the bound rows silent. No push from +10 to +200 meets all four.
+- With the tool fixed, every binding push is silent, and some are clear of the kink.
+- The finite-difference worst is 4.44e-07 at +40, 3.68e-07 at +60, 3.92e-07 at +180, and more elsewhere.
+- That worst is the O(h²) term on passed-king weights (996, 984). It grows four-fold from h 0.005 to 0.01 and falls
+  at 0.0025: the class of DEC-316's pair, not a wrong derivative.
+
+The brief's rule makes this a finding, not a hand edit, so +30 stays and the case is red. As first written, the
+ruling was the coordinator's, with two options in my reading:
+- Relax criterion (3) to the case's own 1e-6. The rule then picks +70: 6 rows bound, every row 13.98 from the kink,
+  finite difference 5.23e-07, a factor of 1.9 under the bound where S262 kept 5.
+- Keep 2e-7 and add DEC-316 rows that lift those weights' gradients at the push.
+
+**Amended 2026-11-05, after the fast check: put to the owner as DEC-344 (9)'s third recurrence**, together with
+DEC-316's pair (above). The coordinator's readings for the ruling are in `adocs/data/S122_clamp_reading.txt`, at
+steps of 5, with each option's pick. The first option picks +55 there, not +70: the +70 above came from the
+steps-of-10 grid. DEC-316's rule finds no pair: 984's gradient at the shipped constants is already 6.62e-4. A
+Richardson extrapolation takes 984's and 996's errors to the rounding floor, so the O(h^2) term is the whole story
+for them.
+
+**Resolved 2026-11-05 by DEC-354, the coordinator's ruling: DEC-142 applied as written.**
+`adocs/data/S122_gradient_options.txt` read both cases under each option, with the landed pair, the re-pick and no
+pair. Two things were found there:
+- DEC-316's rule, run on the base rows at the candidate, re-picks candidate 5.
+- On that fixture the clamp rule as written picks +50, where on S101's pair it picked none.
+
+So the pair is re-derived by its script, and CLAMP_PUSH +50 follows by its own. The case reads 8.61e-7 at 984, so
+the recurrence does not fire. The gauge walk and `ADAGRAD_HOLD_STEP` are re-read on the new fixture; the step is
+back to 2, unmoved overall.
+
+### DEC-352's re-read (`adocs/data/S122_kcheck.sh`)
+
+- K was refit at the candidate's constants by this tree's build-tune tuner, with the screen's own command (zero epochs,
+  `--margin 275`, the full corpus, every row training, the fixed set held out).
+- The tuner's `fit_k()` is a 40-step ternary search at fixed constants. Nothing is refit (DEC-353), so one round is the
+  fixed point.
+- The screen's frozen tuner reproduces the screen's K first.
+- **K 1.2298** at the landing's constants (the screen's), **1.2171** at the candidate's.
+- Each part's decided pair is read on the fixed set's qs view by the census of its own tree, at 275.
+
+| part | outcome | m | screen d | d at K 1.2298 | d at K 1.2171 | |
+|---|---|---|---|---|---|---|
+| P1 | kept | 0.000015 | +0.0002140 | +0.0002169 | +0.0002187 | |
+| P2 | kept | 0.000006 | +0.0000080 | +0.0000140 | +0.0000147 | |
+| P3 | dropped | 0.000002 | +0.0000010 | +0.0000003 | +0.0000004 | a reading |
+| P4 | kept | 0.000010 | +0.0000230 | +0.0000182 | +0.0000191 | |
+| P5 | kept | 0.000017 | +0.0000780 | +0.0000895 | +0.0000899 | |
+| P6 | dropped | 0.000016 | +0.0000070 | +0.0000004 | +0.0000021 | a reading |
+| P7 | dropped (DEC-353) | 0.000009 | +0.0000080 | -0.0000052 | -0.0000058 | a reading |
+
+**No STOP**: every kept part reads above its m at the refit K, with its screen sign. The census reads the engine's
+exact score where the screen read the tuner's smooth one, so its d at the screen's K is not the screen's d. P7 reads
+negative there too, the side reading's sign.
+
+### The SPRT, pre-registered (`adocs/data/S122_sprt.sh`)
+
+- One `{0, 5}` nElo at 8+0.08, Hash 16, `books/noob_3moves.epd`, concurrency 12: the survivors at 275 against REF.
+- S101_sprt.sh's working-tree form, re-pinned. It was written while the tree was not green (`CLAMP_PUSH`), to play
+  in DEC-334's form with the recurrence then with the owner. Since DEC-354 the tree is green and nothing is with the
+  owner; the working-tree form plays the staged tree as before.
+- REF `65606a9`, screened `2bf3ad4` (the screen's stamp).
+- The guards allow the family's four arrays, read across clang-format's wrap, and the one margin row.
+- 41861 games expected at the midpoint, 19.84 h at 2110 an hour; 25591 on a bound, 12.13 h; cap 20950 rounds, 41900
+  games, 19.86 h; watcher ceiling 40 h. Checked against `adocs/testing_strategy.md` section 1.1: 1046535 / 25 and
+  639770 / 25.
+- S101's abort rule; the A/A first if the harness moved (DEC-143).
+- DEC-353's bisection on H0: M 275 alone at `{-5, 0}` (a part of its own), then A, B, C.
+- `bash -n` clean; not run. The coordinator's bracketed line holds it until pinned.
+
+### Gates
+
+- Both builds: no warning or error. Bench 4707943 in both.
+- `ctest -L fast`, sequential: **56 of 57** in `build/` and in `build-tune/` before DEC-354; the one red in both was
+  `test_tuner_gradient`, `REQUIRE( !binding.empty() )`, the finding above. **Since DEC-354's re-derivations: 57 of
+  57 in each** (`-j8`), bench 4707943 in both builds, no warning.
+- `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` clean after the formatter.
+- `tools/plan_prose_check.py`'s five modes, each exit 0.
+- `tools/search_bench.py` streams recorded, not identical: depth 9 c3d5 25473 / e2a6 127664 / d7c8q 34197; depth 12
+  c3d5 94541 / e2a6 353715 / d7c8r 409231. The parent's are phase 1's INV-6 streams.
+- DEC-141's second tier binds through `LAZY_EVAL_MARGIN`, a search constant. `tools/gate_extra.sh` on the staged
+  tree: `GATE-EXTRA-FAILED: sanitize clang`. Prose, citations, debug (420 s) and perft (83 s) green. Sanitize (896 s)
+  and both clang builds (402 s) read 56 of 57, the one red in each `test_tuner_gradient`, the finding above, with no
+  sanitizer report and no compile error. That run was taken before DEC-354, and that red is the one DEC-354
+  resolved; `gate_extra` was not re-run after it. No new pruning, reduction or extension rule, so no mutation check
+  applies.
+  The Debug self-play is the coordinator's match and is owed, on this tree's `build-debug/src/chesso`.
+
+### Leads, for the owner if the case recurs
+
+- Under Richardson's difference (F) DEC-316's rule asks for no pair at all, and the normwise metric (C) is blind to
+  S100's class (`adocs/data/S122_gradient_options.txt`).
+
+### Documents
+
+- `DEV_MANUAL.md`: the DEC-142 table's rows, a row for the killer depth, the `test_mate_pv` line count.
+- `MANUAL.md`: the `LazyEvalMargin` row, 275.
+- `adocs/specs.md`: drafted for the coordinator, not edited.
+- `adocs/data/README.md`: the rows for S122's earlier files and this phase's.
+
+## 2026-11-05: the verdict
+
+The one `{0, 5}` SPRT, `adocs/data/S122_sprt.sh` as the coordinator pinned it, the staged tree of `../chesso-s122p2`
+against REF `65606a9`, 11:50 to 13:13:
+
+```
+SPRT | cand 65606a9+ab5ac20d7534 vs ref 65606a9, 8+0.08, Hash=16, noob_3moves.epd, {0, 5} nElo
+Elo | 19.44 +/- 9.07, nElo 27.11 +/- 12.61
+LLR | 2.95 (-2.94, 2.94) -> H1
+Games | N: 2916 W: 861 L: 698 D: 1357, Ptnml [79, 318, 543, 397, 121]
+Wall | 1 h 22 m, 2120 games/h, forfeits 0
+Log | adocs/data/S122_sprt.log
+```
+
+- **H1, by the pre-registered row: the family ships, and there is no bisection.** DEC-353's candidate `1245` ships
+  at margin 275: P1's safe checks, P2's weak squares, P4's storm and P5's curve.
+- The stopping run's Elo is upward-biased (DEC-063) and is not the effect size.
+- The PGN holds 2919 games, three of them unfinished at the stop; 1884 were adjudicated.
+- The candidate's diff is `adocs/data/S122_candidate.diff`, blob `ab5ac20d7534...`, the token's hex (DEC-254).
+- The tree committed equals the played one by blob, 33 of 33 files, `src/` and the build files among them
+  (`adocs/data/S122_close_identity.txt`).
+
+**The cost**, deciding nothing (`adocs/data/S122_cost_reading.txt`, the two cost consoles named there):
+- All five parts forced, +5.57 %. The candidate's mask 27, P1 + P2 + P4 + P5, +5.28 %.
+- Single parts: p1 +2.07 %, p4 +1.63 %, p5 +0.82 %; p2, p3 and the parent zero.
+- The coordinator's nps, five interleaved `bench` pairs, the machine idle: cand 3789756 against zero 3980783,
+  -4.80 %.
+- Every cost build is the landing at 184's margin. The margin's effect on how often the shortcut fires is priced
+  by this SPRT alone.
+
+**Gates before the run**: `tools/gate_extra.sh` 6 of 6 on the staged tree after DEC-354, the coordinator's. The
+Debug self-play played 8 games, with 0 `Assertion` and 0 disconnect (DEC-141).
+
+**What does not ship**, each recorded with its figures:
+- **P3, the defenders by square, stays at zero.** Screen d +0.000001 against m 0.000002. The side reading read
+  +0.0000019 +/- 0.0000026, and K refit at the candidate +0.0000004.
+- **P6, the wide zone, leaves its patch unapplied.** Screen d +0.000007 against m 0.000016. The side reading read
+  +0.0000019 +/- 0.0000134, and K refit +0.0000021.
+- **P7, the linear five retired, is not taken (DEC-353).** The screen read d +0.000008, kept by d >= -m. The side
+  reading read -0.0000287 +/- 0.0000107, the other sign, 2.68 errors out, the STOP. K refit reads -0.0000058. The
+  shipped linear five keep their values.
+
+**Leads, none built.** Each becomes a step of its own if taken:
+- the check cells doubled by side to move;
+- shelter inside x;
+- the linear five retired, read on S126's own sets (DEC-353);
+- for the owner if the gradient case recurs: under Richardson's difference DEC-316's rule asks for no pair at all,
+  and the normwise metric is blind to S100's class (`adocs/data/S122_gradient_options.txt`).
+
+**It closes `2026-09-10_adversarial-F16`.** The finding's suggested resolution was that the margin be sized beside
+S122, on the weights S122 ships.
+- S122 did that: `LAZY_EVAL_MARGIN` 275 from its own fitted spread (DEC-324, DEC-344 (4)), binding on 0.153 % of
+  its corpus at the candidate against the 0.364 % F16 read.
+- The Elo price of the shortcut and the clamp together is S039's H0.
+- The clamp's cost apart from the shortcut cannot be separated, because the shortcut's bound is the clamp
+  (DEC-324).
+

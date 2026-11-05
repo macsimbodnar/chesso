@@ -1,0 +1,96 @@
+# S122's cost reading: CAND_SHA=b62becb PARENT_SHA=1b2539a adocs/data/S122_cost.sh run, 2026-11-05 08:32 to 10:18, S122-COST-DONE, the
+# coordinator's run (console .tuning/s122_cost.console), rows aa, parent, p1 to p5 and all; then the cand row, CAND_SHA=b62becb
+# PARENT_SHA=1b2539a ROWS=cand CAND_MASK=27 OUT=.tuning/s122/cost_cand, 10:18 to 10:45, S122-COST-DONE (console
+# .tuning/s122_cost_cand.console). .tuning/s122/cost/reading.txt (sha256 a5f9345976c32fe3...) and .tuning/s122/cost_cand/reading.txt
+# (sha256 051d5d1bdec6b57a...) verbatim, then the coordinator's nps reading, .tuning/coord/S122/nps.txt (sha256 8413eda98885fcba...)
+# verbatim. It decides nothing (the script's pre-registration); the SPRT priced the fitted family with its cost. The cand row is
+# mask 27, P1 + P2 + P4 + P5, DEC-353's survivors (P7 was never a mask bit). Every build is the landing b62becb with the cost-only
+# patch's forced weights, at the landing's LAZY_EVAL_MARGIN 184: the margin's effect on how often the lazy shortcut fires is
+# priced by the SPRT alone.
+
+== .tuning/s122/cost/reading.txt
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       +0.035 %  CI -0.240 .. +0.311 %
+  pos11   instructions -0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.034 %  CI -0.158 .. +0.227 %
+  pos11   wall         +0.068 %  CI -0.091 .. +0.229 %  (cand time over base, + is slower)
+all: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +7.045 %  CI +7.045 .. +7.045 %
+  bench16 cycles       +5.381 %  CI +5.221 .. +5.540 %
+  pos11   instructions +7.354 %  CI +7.354 .. +7.354 %
+  pos11   cycles       +5.788 %  CI +5.679 .. +5.898 %
+  pos11   wall         +5.543 %  CI +5.446 .. +5.640 %  (cand time over base, + is slower)
+p1: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +3.140 %  CI +3.140 .. +3.140 %
+  bench16 cycles       +2.065 %  CI +1.898 .. +2.232 %
+  pos11   instructions +3.259 %  CI +3.259 .. +3.259 %
+  pos11   cycles       +2.142 %  CI +2.079 .. +2.205 %
+  pos11   wall         +2.000 %  CI +1.900 .. +2.099 %  (cand time over base, + is slower)
+p2: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.166 %  CI +0.166 .. +0.166 %
+  bench16 cycles       +0.156 %  CI +0.004 .. +0.308 %
+  pos11   instructions +0.188 %  CI +0.188 .. +0.188 %
+  pos11   cycles       +0.147 %  CI +0.043 .. +0.251 %
+  pos11   wall         +0.228 %  CI +0.071 .. +0.385 %  (cand time over base, + is slower)
+p3: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.305 %  CI +0.305 .. +0.305 %
+  bench16 cycles       +0.137 %  CI -0.029 .. +0.303 %
+  pos11   instructions +0.311 %  CI +0.311 .. +0.311 %
+  pos11   cycles       +0.205 %  CI +0.090 .. +0.320 %
+  pos11   wall         +0.187 %  CI +0.070 .. +0.305 %  (cand time over base, + is slower)
+p4: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +0.878 %  CI +0.878 .. +0.878 %
+  bench16 cycles       +1.540 %  CI +1.344 .. +1.736 %
+  pos11   instructions +0.966 %  CI +0.966 .. +0.966 %
+  pos11   cycles       +1.650 %  CI +1.546 .. +1.755 %
+  pos11   wall         +1.713 %  CI +1.554 .. +1.873 %  (cand time over base, + is slower)
+p5: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +1.618 %  CI +1.618 .. +1.618 %
+  bench16 cycles       +0.843 %  CI +0.706 .. +0.981 %
+  pos11   instructions +1.445 %  CI +1.445 .. +1.445 %
+  pos11   cycles       +0.790 %  CI +0.734 .. +0.847 %
+  pos11   wall         +0.817 %  CI +0.703 .. +0.931 %  (cand time over base, + is slower)
+parent: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.005 %  CI -0.005 .. -0.005 %
+  bench16 cycles       +0.056 %  CI -0.077 .. +0.190 %
+  pos11   instructions -0.006 %  CI -0.006 .. -0.006 %
+  pos11   cycles       +0.024 %  CI -0.076 .. +0.125 %
+  pos11   wall         +0.045 %  CI -0.127 .. +0.218 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.311 %, pos11 cycles 0.227 %, wall 0.229 %
+forced bench16: A/A instruction floor 1.1 ppb; p1 +3.1403 .. +3.1403 %, p2 +0.1660 .. +0.1660 %, p3 +0.3047 .. +0.3047 %, p4 +0.8781 .. +0.8781 %, p5 +1.6183 .. +1.6183 %, all +7.0452 .. +7.0452 %
+forced bench16: p1 + p2 + p3 + p4 + p5 +6.107 % against all +7.045 % (printed, not gated)
+forced pos11: A/A instruction floor 19.9 ppb; p1 +3.2593 .. +3.2593 %, p2 +0.1877 .. +0.1877 %, p3 +0.3108 .. +0.3108 %, p4 +0.9656 .. +0.9656 %, p5 +1.4450 .. +1.4450 %, all +7.3538 .. +7.3538 %
+forced pos11: p1 + p2 + p3 + p4 + p5 +6.168 % against all +7.354 % (printed, not gated)
+all: COST +5.57 % (cycles and wall beyond the floor, instructions the same way)
+p1: COST +2.07 % (cycles and wall beyond the floor, instructions the same way)
+p2: zero (inside the A/A's floor)
+p3: zero (inside the A/A's floor)
+p4: COST +1.63 % (cycles and wall beyond the floor, instructions the same way)
+p5: COST +0.82 % (cycles and wall beyond the floor, instructions the same way)
+parent: zero (inside the A/A's floor)
+
+== .tuning/s122/cost_cand/reading.txt
+aa: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions -0.000 %  CI -0.000 .. +0.000 %
+  bench16 cycles       -0.004 %  CI -0.170 .. +0.162 %
+  pos11   instructions +0.000 %  CI -0.000 .. +0.000 %
+  pos11   cycles       +0.022 %  CI -0.079 .. +0.122 %
+  pos11   wall         +0.038 %  CI -0.129 .. +0.206 %  (cand time over base, + is slower)
+cand: 16 / 16 counter pairs, 16 wall pairs
+  bench16 instructions +6.671 %  CI +6.671 .. +6.671 %
+  bench16 cycles       +4.974 %  CI +4.855 .. +5.093 %
+  pos11   instructions +6.957 %  CI +6.957 .. +6.957 %
+  pos11   cycles       +5.428 %  CI +5.346 .. +5.510 %
+  pos11   wall         +5.437 %  CI +5.288 .. +5.587 %  (cand time over base, + is slower)
+A/A floor: bench16 cycles 0.170 %, pos11 cycles 0.122 %, wall 0.206 %
+forced bench16: A/A instruction floor 1.3 ppb; cand +6.6714 .. +6.6714 %
+forced pos11: A/A instruction floor 17.8 ppb; cand +6.9573 .. +6.9573 %
+cand: COST +5.28 % (cycles and wall beyond the floor, instructions the same way)
+
+== .tuning/coord/S122/nps.txt
+S122 cost, coordinator nps reading, 2026-11-05 10:47, machine idle (load 0.61), bench (5482277 nodes), interleaved 5 pairs
+zero  4000566 3939696 3970012 3995205 3998434  mean 3980783
+cand  3819116 3811700 3731752 3780103 3806108  mean 3789756  (S122_COST=27)
+cand/zero nps -4.80 %
+cost run: all +5.57 %, p1 +2.07, p2 zero, p3 zero, p4 +1.63, p5 +0.82, parent zero; cand (mask 27) +5.28 %

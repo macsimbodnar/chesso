@@ -729,7 +729,7 @@ with a reason, or a reserve step. Either makes it a choice on the record.
 
 ### 2026-09-10_adversarial-F16  medium  The whole non-material part of the evaluation is clamped to +/-184 centipawns, and what that costs has never been measured
 
-Status: planned -- S122, 2026-10-21: S039 measured retiring the lazy shortcut and the clamp together and read H0 at {-5, 0}, nElo -16.46 +/- 9.52 (record `ca578de`), so both are kept; the clamp's own cost is still unmeasured apart from the shortcut, and S122's design (an unclamped king safety) is where it is removed or kept. Previously: planned -- S039 amended and moved before S122 (DEC-170, DEC-172). VERIFIED.
+Status: closed -- S122, 2026-11-05: the margin is sized beside S122 on the weights S122 ships, as the suggested resolution asked: 275 from its own fitted spread (DEC-324, DEC-344 (4)), binding on 0.153 % of S122's corpus against 0.364 % when written; the clamp and the shortcut are priced as one by S039's H0, and the clamp apart from the shortcut is not separable, the shortcut's bound being the clamp; no audit has re-run it. Previously: planned -- S122, 2026-10-21: S039 measured retiring the lazy shortcut and the clamp together and read H0 at {-5, 0}, nElo -16.46 +/- 9.52 (record `ca578de`), so both are kept; the clamp's own cost is still unmeasured apart from the shortcut, and S122's design (an unclamped king safety) is where it is removed or kept. Previously: planned -- S039 amended and moved before S122 (DEC-170, DEC-172). VERIFIED.
 
 Evidence. `src/evaluation.cpp:1042-1048` `evaluate_expensive()` clamps
 mobility-plus-king-safety to `+/-LAZY_EVAL_MARGIN` **before** the side-to-move

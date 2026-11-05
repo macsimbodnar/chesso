@@ -108,7 +108,9 @@
 // detector rather than a measurement -- there is no script and none is owed,
 // because src/search_params.hpp is the derivation and a diff of the two is the
 // re-derivation. A step that moves a default edits both in the same commit.
-// Moves legitimately on: a step that moves a default or a bound.
+// Moves legitimately on: a step that moves a default or a bound. S122 moved
+// LazyEvalMargin 184 -> 275, the margin its king safety family's screen
+// re-derived (DEC-324, DEC-344 (4), DEC-353).
 // Margin: exact, on every one of the three columns.
 // Property beside it: "the table is populated and every name is distinct" and
 // "both builds start from the same defaults, member by member", which hold
@@ -175,7 +177,7 @@ static const std::vector<golden_param_t> golden_defaults = {
   {"ProbCutMargin",            87,     0,    2000},
   {"ProbCutDepthOffset",        3,     2,       8},
   {"ProbCutMinDepth",           6,     3,      10},
-  {"LazyEvalMargin",          184,     0,    2000},
+  {"LazyEvalMargin",          275,     0,    2000},
   {"AspirationMinDepth",        2,     2,      64},
   {"AspirationDelta",          21,     1,    2000},
   {"AspirationMaxDelta",      437,     1,   48000},

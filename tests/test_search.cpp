@@ -40,7 +40,7 @@ static pawn_correction_t reference_table;
 // "4k3/8/8/8/8/8/8/3RK3 w - - 0 1", White to move, at the shipped weights. Nine
 // cases in this file assert one or both, so they are named once here and a
 // refit edits these two lines rather than eleven. A third line moves with them:
-// the written-out 394 of "a stand pat that is itself a bound is still capped",
+// the written-out 303 of "a stand pat that is itself a bound is still capped",
 // which is this pair's cheap score less LAZY_EVAL_MARGIN (S192).
 // Re-derive: python3 adocs/data/S192_anchors.py, case "rook on d1", which
 // computes both from src/evaluation.cpp's specification rather than from the
@@ -50,8 +50,11 @@ static pawn_correction_t reference_table;
 // tests/test_evaluation.cpp, which holds over the whole corpus and does not
 // move with a fit. S121's mobility table moved the first, 583 to 590, and not
 // the second: mobility is stage two, so the cheap score and the 394 hold
-// (adocs/data/S121_goldens.txt).
-static constexpr int QUIET_ROOK_EVAL = 590;
+// (adocs/data/S121_goldens.txt). S122's king safety family moved the first
+// again, 590 to 585, and LAZY_EVAL_MARGIN 184 to 275 the third, 394 to 303;
+// king safety is stage two too, so the cheap score holds
+// (adocs/data/S122_goldens.txt).
+static constexpr int QUIET_ROOK_EVAL = 585;
 static constexpr int QUIET_ROOK_EVAL_CHEAP = 578;
 
 
@@ -815,7 +818,18 @@ TEST_SUITE("search: move ordering state")
     // assertion below is only as good as the number of second slots the search
     // fills: depth 6 fills 3 and duplicates 1 of them, depth 8 fills 5 and
     // duplicates 3, and it still costs 53 ms.
-    const search_t result = search(8, &game, &state);
+    //
+    // Depth 9 since S122. By S122's parent depth 8 filled 4 and duplicated 1,
+    // and on S122's king safety family at DEC-353's fit it fills 4 and
+    // duplicates none, so the assertion went red with the shift as unguarded as
+    // ever. Depth 9 fills 6 and duplicates 4 there (3 of 6 at the parent), and
+    // S149's guard on the shift duplicates none at any depth from 6 to 12, so
+    // depth 9 still tells the two apart. The rule: the lowest depth from 8 at
+    // which the shipped library duplicates a second slot and the guard none;
+    // re-derive by adocs/data/S122_killer_slots.cpp, built per its header,
+    // after any change that moves the search tree here
+    // (adocs/data/S122_goldens.txt).
+    const search_t result = search(9, &game, &state);
     REQUIRE(result.best_move != 0);
 
     size_t killers_0 = 0;
@@ -1473,8 +1487,9 @@ TEST_SUITE("search: quiescence")
     // S076's refit on the deduplicated corpus moved both: 509 to 563 and 524 to
     // 567; S083's refit on S082's pool to 585 and 580; S135's piece placement
     // fit to 583 and 578, the rook on the open d file; S121's mobility table
-    // the first to 590, the rook's own cell. Both are the file-scope goldens
-    // above.
+    // the first to 590, the rook's own cell; S122's king safety family the
+    // first to 585, the two weak squares the rook makes of d7 and d8. Both are
+    // the file-scope goldens above.
     REQUIRE_EQ(static_score, QUIET_ROOK_EVAL);
     REQUIRE_EQ(cheap_score, QUIET_ROOK_EVAL_CHEAP);
 
@@ -1512,12 +1527,14 @@ TEST_SUITE("search: quiescence")
   // The one case where standing pat is not on offer: the side to move is in
   // check and has to reply, so every evasion is searched instead.
   //
-  // GOLDEN (DEC-142): 199, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
+  // GOLDEN (DEC-142): 247, evaluate() of "4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0
   // 1" with Black to move and in check -- the number the case needs a stand pat
-  // to be compared against. Re-derive: python3 adocs/data/S192_anchors.py, case
-  // "black in check, Re8". Moves legitimately on: a refit. Margin: exact -- the
-  // assertions that carry the property are the two inequalities below it, which
-  // have the whole gap between 199 and a mate score of slack. Property beside
+  // to be compared against (199 until S122's king safety family, re-derived by
+  // the same script, adocs/data/S122_goldens.txt). Re-derive: python3
+  // adocs/data/S192_anchors.py, case "black in check, Re8". Moves legitimately
+  // on: a refit. Margin: exact -- the assertions that carry the property are
+  // the two inequalities below it, which have the whole gap between 247 and a
+  // mate score of slack. Property beside
   // it: "a quiet evasion is a legal answer to a check".
   TEST_CASE_FIXTURE(search_fixture_t, "a side in check may not stand pat")
   {
@@ -1549,9 +1566,12 @@ TEST_SUITE("search: quiescence")
     // each push square and White's five (adocs/data/S123_goldens.txt); and
     // S125's pawn structure family, the screen's 02567 fit, to 199: Black's f7,
     // g7 and h7, three phalanx pawns on its own second rank
-    // (adocs/data/S125_goldens.txt).
+    // (adocs/data/S125_goldens.txt); and S122's king safety family, DEC-353's
+    // 1245 fit, to 247: White's king on g1 faces three safe queen checks, d4,
+    // g4 and a7, and Black's has two weak squares, f8 and g8, under the
+    // rook (adocs/data/S122_goldens.txt).
     const int black_static = evaluate(&game.board);
-    REQUIRE_EQ(black_static, 199);
+    REQUIRE_EQ(black_static, 247);
 
     const int score = quiesce(fen, -10000000, 10000000);
 
@@ -1567,7 +1587,7 @@ TEST_SUITE("search: quiescence")
   // a capture. A quiescence that only ever looks at captures finds no move
   // here and calls a perfectly ordinary position a mate.
   //
-  // GOLDEN (DEC-142): -541, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
+  // GOLDEN (DEC-142): -521, quiescence() of "4rk2/8/8/8/8/8/8/4K3 w - - 0 1" in
   // check -- a one-ply negamax, the best of four leaves' -evaluate(), not an
   // evaluation call.
   // Re-derive: python3 adocs/data/S192_anchors.py, LEAVES and QUIESCE_IN_CHECK.
@@ -1610,7 +1630,12 @@ TEST_SUITE("search: quiescence")
     // time. Ke1-d2 is still the evasion that survives: the four leaves are
     // -572, -541, -590 and -551 from the root's side, so it is the best by 10
     // (by 10 at S135's weights, by 11 at S083's, by 17 at S076's, by 1 before).
-    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -541);
+    // S122's king safety family, DEC-353's 1245 fit, moved it to -521: each
+    // leaf's White king has the rook's e-file squares in its zone as weak
+    // squares, and from d1 and d2 a safe rook check on d8. The leaves are now
+    // -552, -521, -585 and -545, Ke1-d2 the best by 24, each still the king
+    // move standing pat (adocs/data/S122_goldens.txt).
+    REQUIRE_EQ(quiesce(fen, -10000000, 10000000), -521);
   }
 
   // No legal reply to a check is mate, and quiescence has to say so on its
@@ -2772,9 +2797,9 @@ TEST_SUITE("search: quiescence transposition entries")
 
     // Now an entry for this position carrying a static evaluation that is not
     // this position's. The stored *score* is different again and has to be
-    // inert twice over, so that anything but 590 coming back has to have come
+    // inert twice over, so that anything but 585 coming back has to have come
     // from the eval field: a lower bound of -9999 does not answer the node
-    // against a beta of 10000, and it may not raise a stand pat of 590 either.
+    // against a beta of 10000, and it may not raise a stand pat of 585 either.
     //
     // It was an upper bound of -9999 until S130, which is inert on the first
     // count and not on the second: an upper bound below the static score is
@@ -3064,7 +3089,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
 
   // Every case above searches a window wide enough that the lazy shortcut
-  // cannot fire, so `static_eval` is the exact 590 in all of them and the
+  // cannot fire, so `static_eval` is the exact 585 in all of them and the
   // substitution is only ever measured against a static score. It is not
   // always one: where the probe carries no eval and the cheap score is already
   // a margin clear of the window, evaluate_lazy() returns `cheap +/-
@@ -3083,7 +3108,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     static std::atomic_bool never_stop = false;
 
-    // Narrow, and on the beta side: cheap is 578, so 578 - 184 = 394 is
+    // Narrow, and on the beta side: cheap is 578, so 578 - 275 = 303 is
     // already clear of a beta of 100 and the shortcut fires with a lower
     // bound. That is the whole point of the window -- every case above uses
     // (-10000, 10000), where neither test in evaluate_lazy() can pass.
@@ -3118,10 +3143,11 @@ TEST_SUITE("search: quiescence transposition entries")
     REQUIRE_EQ(evaluate_cheap(&game.board), QUIET_ROOK_EVAL_CHEAP);
     REQUIRE_EQ(lazy, QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN);
 
-    // GOLDEN (DEC-142): 394, the same number written out, so the line above
+    // GOLDEN (DEC-142): 303, the same number written out, so the line above
     // cannot pass by both sides moving together -- an assertion spelled only in
     // the symbols it is about asserts nothing (S028).
-    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 578 - 184;
+    // Re-derive: QUIET_ROOK_EVAL_CHEAP - LAZY_EVAL_MARGIN, today 578 - 275
+    // (394, 578 - 184, until S122's margin moved it);
     // the first from python3 adocs/data/S192_anchors.py, case "rook on d1", the
     // second from src/search_params.hpp.
     // Moves legitimately on: a refit, and **also** an SPSA run or any step that
@@ -3130,20 +3156,20 @@ TEST_SUITE("search: quiescence transposition entries")
     // stays.
     // Margin: exact. Property beside it: the REQUIRE_FALSE(exact) above, which
     // says the shortcut fired at all and carries no number.
-    REQUIRE_EQ(lazy, 394);
+    REQUIRE_EQ(lazy, 303);
     REQUIRE_NE(lazy, evaluate(&game.board));
     REQUIRE(PLANTED > ALPHA);
     REQUIRE(PLANTED < lazy);
     REQUIRE(PLANTED >= BETA);
 
     // Precondition: with nothing planted the node stands pat on the bound
-    // itself, so anything other than 394 below came from the entry.
+    // itself, so anything other than 303 below came from the entry.
     tt_reset(&tt);
     tt_new_search(&tt);
     REQUIRE_EQ(run(), lazy);
 
     // An upper bound of 200 says the value is at most 200, which is less than
-    // the 394 the shortcut established as a lower bound on the static score --
+    // the 303 the shortcut established as a lower bound on the static score --
     // the two claims are about different things and both hold, the entry's
     // being the tighter one. So the cap applies to a stand pat that is itself
     // a bound, exactly as it applies to a static score.
@@ -3161,7 +3187,7 @@ TEST_SUITE("search: quiescence transposition entries")
     // 200 is still at or above beta, so the node fails high and stores a lower
     // bound. It is sound on this path for the same reason as on the static
     // one, and the reason is worth stating because `static_eval` is not exact
-    // here: the shortcut certified `value >= 394`, the cap only lowered the
+    // here: the shortcut certified `value >= 303`, the cap only lowered the
     // number to 200, and `value >= 200` follows. The eval field stays empty --
     // no exact static score was ever computed at this node, and S094's
     // semantics say only an exact one may be stored.
@@ -3225,7 +3251,7 @@ TEST_SUITE("search: quiescence transposition entries")
 
     // Now an entry for this position carrying a static evaluation that is not
     // this position's. Stored at TT_DEPTH_QS, which a depth 1 node may not cut
-    // on, so anything but 590 - margin coming back has to have come from the
+    // on, so anything but 585 - margin coming back has to have come from the
     // eval field.
     //
     // **S234 made the entry's score load-bearing here and the plant moved with
@@ -5400,6 +5426,26 @@ TEST_SUITE("search: draws")
     // `{row 3, 10, 4, "C02, C05, R02, since S116"}`,
     // `{row 4, 10, 5, "no S091 mutant, since S116"}`.
     //
+    // **Re-derived at S122, the seven sweeps taken once more (DEC-142).**
+    // S122's king safety family at DEC-353's 1245 fit, with LAZY_EVAL_MARGIN
+    // 184 -> 275, moves every static score near a king and the lazy bound, so
+    // the tree under every row moved, and row 3 at depth 11 is the row this
+    // case went red on. The whole pass was re-taken: shipped plus all six
+    // S091 mutants, depths 3 to 12, over `adocs/data/S230_table_fens.txt` by
+    // `adocs/data/S230_mine_r01_row.py depths`, each mutant applied to
+    // src/search.cpp of a throwaway worktree of the candidate and its library
+    // rebuilt (adocs/data/S122_goldens.txt has the seven profiles). Shipped:
+    // `d8 d9 d10 d11 d12`, `d8 d9 d10 d11 d12`, `d10 d12`, `d12`. **Three of
+    // the four moved, no mate distance did.** Row 1 goes to 8, which C02, C05
+    // and C07 lose; row 2 stays at 8, which every mutant reports; row 3 goes
+    // to 10, which R02 alone loses (no longer C02 or C05, which now read
+    // `d10 d11 d12` and `d10 d12`); row 4 stays at 12, which R02 now loses,
+    // reading `d10 d11`. C06 and R01 are separated by no row at any depth.
+    // The rows as S261 left them, which a revert of S122's paste restores
+    // byte for byte: `{row 1, 9, 5, "no S091 mutant, since S116"}`,
+    // `{row 3, 11, 4, "C02, C05, R02, since S116"}`,
+    // `{row 4, 12, 5, "no S091 mutant, since S116"}`.
+    //
     // A row's label is an incidental second kill measured in a tree that moves
     // under every ordering change; the direct guards are what the rules rest
     // on, and all six S091 mutants were run through the **whole fast suite**
@@ -5408,8 +5454,8 @@ TEST_SUITE("search: draws")
         // #+5 in 17073 nodes, pv a4a5 d8d7 a5b5 d7d8 b5b6 d8d7 b6b7 d7e6 e2d4
         // -- `Qxb7+` is the capture on the line. python-chess: is_valid True,
         // is_check False, 49 legal moves, 4 captures, no promotion.
-        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 9, 5,
-         "no S091 mutant, since S116"},
+        {"3krb1r/Np2pppp/3q1n2/8/Q4Bb1/2P3P1/P3NPBP/3RR1K1 w - - 3 18", 8, 5,
+         "C02, C05, C07, since S122"},
         // #+5 in 7205 nodes, pv a5c7 c8d7 c7d7 e7f8 d7e8 f8g7 e8g8 g7h6 h7h8q
         // -- `Qxd7+` is the capture. python-chess: is_valid True, is_check
         // False, 40 legal moves, 7 captures, 4 promotions.
@@ -5419,8 +5465,8 @@ TEST_SUITE("search: draws")
         // `Bxb2` and `Qxd6` are both captures. python-chess: is_valid True,
         // is_check **True** -- an evasion node, where the block is off at the
         // root and live in every child. 3 legal moves, 1 capture.
-        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 11, 4,
-         "C02, C05, R02, since S116"},
+        {"3N1bk1/3Q3p/6p1/p3Bp1n/1p6/3P1P1P/1q5K/8 w - - 0 33", 10, 4,
+         "R02, since S122"},
         // S230's row, and the only one here not from the two S145 sets: ply 37
         // of game 64 of adocs/data/S219_aa_calibration.pgn, this engine
         // playing itself. #+5 in 16769 nodes, pv f8f6 a3d6 f6d6 g1h1 d6g6
@@ -5462,7 +5508,7 @@ TEST_SUITE("search: draws")
         // and its reading put the label back with the gate's removal -- the
         // paragraph above has both.
         {"1r3r1k/2p1n1pp/8/p2n1p2/2BPp3/Q1B1P2q/1P3P1P/2R1R1K1 b - - 1 22", 12,
-         5, "no S091 mutant, since S116"},
+         5, "R02, since S122"},
     };
 
     for (const capture_mate_t& row : capture_mates) {
@@ -5648,9 +5694,11 @@ TEST_SUITE("search: draws")
     // kings and the rook. S065's fit, DEC-059: -491 to -537, S076's refit on
     // the deduplicated corpus to -569, S083's refit on S082's pool to -599, and
     // S135's piece placement fit to -597 (White's rook on the open a file), and
-    // S121's mobility table to -603 (the rook's cell).
+    // S121's mobility table to -603 (the rook's cell), and S122's king safety
+    // family, DEC-353's 1245 fit, to -573: a2 gives two safe rook checks on h7,
+    // from a7 and h2 (adocs/data/S122_goldens.txt).
     //
-    // GOLDEN (DEC-142): -603, evaluate() with Black to move a rook down, after
+    // GOLDEN (DEC-142): -573, evaluate() with Black to move a rook down, after
     // the three moves above. It is the precondition, not the property: what the
     // case asserts is that a draw score beats it.
     // Re-derive: python3 adocs/data/S192_anchors.py, case
@@ -5659,7 +5707,7 @@ TEST_SUITE("search: draws")
     // below zero, so a refit that moves it changes nothing else here.
     // Property beside it: the repetition assertion below, which compares
     // against 0 and not against this value.
-    REQUIRE_EQ(evaluate(&game.board), -603);
+    REQUIRE_EQ(evaluate(&game.board), -573);
 
     static std::atomic_bool never_stop = false;
     never_stop = false;

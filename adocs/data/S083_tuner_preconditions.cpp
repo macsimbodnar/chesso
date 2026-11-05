@@ -243,7 +243,10 @@ difference_check_t check_differences(const dataset_t& data,
   return out;
 }
 
-// The case file's stage_two().
+// The case file's stage_two(), S122's curve included: each king's x per half,
+// and max(0, x)^2 / 2048 taken off its side. Until S122's phase 2 this copy
+// stopped at the feature table, which read the same while the curve sat at its
+// seed (both kings' T equal) and miscounted the bound rows once it was live.
 double stage_two(const dataset_t& data, size_t row, const double* p)
 {
   const std::vector<tuner_trace::feature_t>& features =
@@ -258,6 +261,21 @@ double stage_two(const dataset_t& data, size_t row, const double* p)
     const tuner_trace::feature_t& f = features[e.feature];
     if (!tuner_trace::clamped_site(f.site)) { continue; }
     sum += e.coef * (p[f.mg] * mg_weight + p[f.eg] * eg_weight);
+  }
+
+  double x[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1];
+       ++j) {
+    const tuner_trace::side_entry_t e = data.side_entries[j];
+    if (e.group != 0) { continue; }
+    x[e.side][0] += e.coef * p[tuner_layout::KSC_MG_BASE + e.input];
+    x[e.side][1] += e.coef * p[tuner_layout::KSC_EG_BASE + e.input];
+  }
+  for (int side = 0; side < 2; ++side) {
+    const double own = (side == 0) ? -1.0 : 1.0;
+    const double m = std::max(x[side][0], 0.0);
+    const double n = std::max(x[side][1], 0.0);
+    sum += own * (m * m * mg_weight + n * n * eg_weight) / KS_CURVE_DIVISOR;
   }
   return sum;
 }
@@ -336,6 +354,12 @@ int clamp_sweep(const std::string& dir)
           clamped[f.mg] = 1;
           clamped[f.eg] = 1;
         }
+      }
+      // S122's curve is inside the clamp too, a group and not a feature: the
+      // case marks its inputs the same way.
+      for (const auto& [mg, eg] : tuner_trace::engine_model().groups[0].inputs) {
+        clamped[mg] = 1;
+        clamped[eg] = 1;
       }
 
       clamped_block = 0.0;

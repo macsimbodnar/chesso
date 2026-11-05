@@ -205,6 +205,23 @@ double stage_two(const tuner_trace::row_trace_t& trace, const double* p)
     sum += e.coef * (p[f.mg] * mg_weight + p[f.eg] * eg_weight);
   }
 
+  // S122's curve, inside the clamp as the case's stage_two() has it since S122's
+  // phase 1: each king's x per half, max(0, x)^2 / 2048 taken off its side. Until
+  // S122's phase 2 this copy stopped above, which read the same while the curve
+  // sat at its seed (DEC-354).
+  double x[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  for (const tuner_trace::side_entry_t& e : trace.side_entries) {
+    if (e.group != 0) { continue; }
+    x[e.side][0] += e.coef * p[tuner_layout::KSC_MG_BASE + e.input];
+    x[e.side][1] += e.coef * p[tuner_layout::KSC_EG_BASE + e.input];
+  }
+  for (int side = 0; side < 2; ++side) {
+    const double own = (side == 0) ? -1.0 : 1.0;
+    const double m = std::max(x[side][0], 0.0);
+    const double n = std::max(x[side][1], 0.0);
+    sum += own * (m * m * mg_weight + n * n * eg_weight) / KS_CURVE_DIVISOR;
+  }
+
   return sum;
 }
 

@@ -848,6 +848,14 @@ void evaluate_expensive_terms(const board_t* board,
 // load report counts the same share ("the clamp binds on"), which at S262
 // read 36503 of the 10795695 rows of selfplay_v2_dedup.tsv, 0.338 %.
 //
+// 275 since S122's phase 2, re-derived from the king safety family's own
+// fitted spread under the kept clamp (DEC-324, DEC-344 (4)): the screen fitted
+// every part at 184, read 275 as the smallest multiple of 25 at which at most
+// 0.5 % of rows bind and the graded set's bound rows hold at most 10 % of its
+// gradient mass, refitted at 275 and passed there, 0.138 % bound; at DEC-353's
+// candidate the clamp binds on 0.153 % of S122's corpus. The paragraphs above
+// are 184's, kept as they were measured.
+//
 // The value itself moved to src/search_params.hpp at S073, where it is one of
 // the parameters the tune build exposes over UCI. What it means stays here,
 // because it is a claim about the evaluation rather than about the search.

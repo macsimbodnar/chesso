@@ -17463,3 +17463,33 @@ Rejected:     Keeping `12457` because the screen's own rule passed it: the STOP 
 Consequences: The linear five stay live beside the curve. Retiring them is a lead for S126's refit, read there on
               its own sets. P7's variant tree (`variant_p7_2bf3ad4`) is not pasted. S122's step file records the
               side readings and this ruling.
+
+## DEC-354  2026-11-05  S122's gradient fixture: DEC-316's pair re-picked by its rule, CLAMP_PUSH re-derived on it, no third recurrence
+Tags:         tuner, tests, gradient-check, fixture, goldens, s122, s124, s101, dec-142, dec-316, dec-343, dec-344
+Context:      At S122's candidate (`1245` at margin 275, DEC-353) `test_tuner_gradient`'s clamp case went red: its rule
+              finds no push from +10 to +200 under 2e-7 on the landed fixture, from the O(h^2) term on the passed-king
+              weights 984 and 996 (a Richardson difference takes them to 1e-10, so the derivative is right). The fast
+              check also found DEC-316's pair at S101's candidate to be a golden its script no longer reproduces: at the
+              candidate `S101_gradient_rows.cpp` picks candidate 5, and the base rows alone read 2.95e-6 at 984. The
+              readings (`adocs/data/S122_clamp_reading.txt`, `adocs/data/S122_gradient_options.txt`): with both rules
+              as written -- the pair re-picked, then the clamp rule re-run on that fixture -- the gradient case reads
+              8.61e-7 at 984 (x1.16 under 1e-6) and CLAMP_PUSH +50 (x1.94 under 2e-7). The pending S124 clamp question
+              (A margin 4e-7, B h 0.0025, C normwise) reads at S122: A +65 at x1.02, B +55 at x1.36, C +50 at x2.24.
+Decision:     By the coordinator under the owner's standing instruction. DEC-142 as written: the pair is re-derived by
+              its rule at the candidate (candidate 5 replaces S101's pair), and every golden that reads the fixture is
+              re-derived by its own script, CLAMP_PUSH included. No metric, h, bound or rule moves. With the bound held,
+              DEC-344 (9)'s third recurrence on the case's bound has not fired, so nothing is the owner's. S124's
+              pending clamp question is withdrawn: S124 rebases on this fixture and re-derives there, and asks again
+              only if its rules then answer nothing.
+Why:          The site comment and the program both say the pair is picked by the rule, not kept because the case
+              passes; applied as written, both rules answer and the tree is green.
+Rejected:     Keeping S101's pair in DEC-347's form (x2.83): DEC-347 covers a rule whose question no longer exists at
+              the layout, and here the question exists and answers differently. Relaxing the clamp rule's limit to
+              4e-7 or 1e-6, halving h, the normwise metric: each changes a test's rule while the rules as written
+              answer, and the normwise metric would have caught neither earlier case (S101's 2.07e-6 reads 2.63e-7
+              normwise) and is blind to a modest relative error on a small-gradient weight, S100's class.
+Consequences: The gradient case stands at x1.16, so the next refit (S124, then S126) may well recur: that recurrence is
+              the owner's (DEC-343, DEC-344 (9)), and the readings put Richardson's difference beside the floored
+              metric. Under it, DEC-316's rule asks for no pair, its worst is a rounding-floor weight (141 or 181,
+              about 1.4e-7 to 1.9e-7), and the test costs about 0.15 s more. The fixture's other goldens move with
+              the re-pick, each by its script, recorded in S122's step file.

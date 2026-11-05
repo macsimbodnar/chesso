@@ -2275,20 +2275,31 @@ constexpr std::array<score_t, KS_FEATURE_COUNT> king_safety_score =
 
 // S122's family (DEC-344; src/evaluation.hpp defines every count), landed at
 // its seed so that DEC-259's screen reads each part from the shipped engine
-// (INV-6). The four linear groups at zero; the curve at its one seed, the
+// (INV-6): the four linear groups at zero; the curve at its one seed, the
 // constant at 45 in both halves and every other input at zero, which scores
 // exactly nothing (src/evaluation.hpp says why). Nothing here was taken from
 // any engine or page: 45 is floor(sqrt(2048)), DEC-344 (2).
-constexpr int ks_checks_mg[4] = {0, 0, 0, 0};
-constexpr int ks_checks_eg[4] = {0, 0, 0, 0};
-constexpr int ks_weak_mg[1] = {0};
-constexpr int ks_weak_eg[1] = {0};
+//
+// What ships since S122's phase 2 is DEC-353's candidate, `1245`: the screen's
+// decided fit for P5, by tools/tuner over S122's corpus at LAZY_EVAL_MARGIN
+// 275 and 20000 epochs, P1's checks, P2's weak squares, P4's storm and P5's
+// curve free, every other constant frozen. P3's defenders stay at zero (the
+// screen dropped them), and the shipped linear five above keep their values
+// (DEC-353 dropped P7). A sign here is no chess statement either: the curve's
+// inputs overlap the linear cells they duplicate, and what is fitted is the
+// sum.
+constexpr int ks_checks_mg[4] = {-56, -11, -84, -14};
+constexpr int ks_checks_eg[4] = {4, -14, 24, -4};
+constexpr int ks_weak_mg[1] = {3};
+constexpr int ks_weak_eg[1] = {4};
 constexpr int ks_defenders_mg[1] = {0};
 constexpr int ks_defenders_eg[1] = {0};
-constexpr int ks_storm_mg[7] = {0, 0, 0, 0, 0, 0, 0};
-constexpr int ks_storm_eg[7] = {0, 0, 0, 0, 0, 0, 0};
-constexpr int ks_curve_mg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-constexpr int ks_curve_eg[12] = {45, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+constexpr int ks_storm_mg[7] = {44, -15, -6, -1, -7, 5, -7};
+constexpr int ks_storm_eg[7] = {7, 3, -1, -2, -11, -7, -2};
+constexpr int ks_curve_mg[12] = {-96, 132, 111, 123, 175, -17,
+                                 55,  55,  30,  73,  73,  0};
+constexpr int ks_curve_eg[12] = {229, -34, -13, -9, -512, 15,
+                                 -39, -25, -1,  39, -5,   0};
 constexpr std::array<score_t, 4> ks_checks_score =
     pack_scores(ks_checks_mg, ks_checks_eg);
 constexpr std::array<score_t, 1> ks_weak_score =

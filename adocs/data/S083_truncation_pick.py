@@ -21,6 +21,20 @@ so the choice is re-derived and not re-read:
 
 Usage: S083_truncation_pick.py SCAN.txt   (truncation_scan's stdout)
 Prints the four as `difference  phase  side  fen` and then as C++ lines.
+
+AMENDED 2026-11-05, S122, written before it ran on S122's scan. S122's curve
+(src/evaluation.hpp) adds four truncating divisions, T per king and per half,
+before king safety's taper: each half's two lose under one unit between them,
+White's T taken off and Black's added, so the curve's share of the residual is
+under 1 and off the 1/24 lattice. The bound becomes 69/24 + 1 = 3.875 while the
+curve is live, the scan's largest difference is one row, and step 1 keeps one
+FEN. So, when any hit passes 72/24 = 3.0, step 1 keeps the hits past 3.0
+instead, each FEN once: two taperings and the curve reach at most 46/24 + 1 =
+70/24, so on each of them all three taperings truncated and the curve lost a
+part of its unit. Step 4 then breaks a tie on phase by the larger difference
+before the lower phase and the scan's order, so each target's row stands as
+near the bound as its phase allows. With the curve not live no hit passes
+69/24, and the rule is S083's as written above.
 """
 import sys
 
@@ -39,9 +53,10 @@ def main():
         sys.exit("no hits in %s" % sys.argv[1])
 
     top = max(h[0] for h in hits)
+    curve = top > 3.0  # S122's amendment: past 72/24, the curve is live
     seen, at_top = set(), []
     for h in hits:
-        if h[0] == top and h[3] not in seen:
+        if (h[0] > 3.0 if curve else h[0] == top) and h[3] not in seen:
             seen.add(h[3])
             at_top.append(h)
 
@@ -49,17 +64,17 @@ def main():
     hi = max(h[1] for h in at_top)
     targets = [lo, lo + (hi - lo) / 3.0, lo + 2.0 * (hi - lo) / 3.0, hi]
     sides = ["b", "w", "b", "w"]
-    print("%d hits, %d distinct FENs at the maximum %.6f, phases %d..%d, targets %s"
-          % (len(hits), len(at_top), top, lo, hi,
-             ", ".join("%.2f" % t for t in targets)))
+    print("%d hits, %d distinct FENs %s %.6f, phases %d..%d, targets %s"
+          % (len(hits), len(at_top), "past 3.0, the maximum" if curve else "at the maximum",
+             top, lo, hi, ", ".join("%.2f" % t for t in targets)))
 
     picked = []
     for target, side in zip(targets, sides):
-        candidates = [(abs(h[1] - target), h[1], i, h) for i, h in enumerate(at_top)
-                      if h[2] == side and h not in picked]
+        candidates = [(abs(h[1] - target), -h[0] if curve else 0, h[1], i, h)
+                      for i, h in enumerate(at_top) if h[2] == side and h not in picked]
         if not candidates:
             sys.exit("no hit with %s to move for the target phase %.2f" % (side, target))
-        picked.append(min(candidates)[3])
+        picked.append(min(candidates)[-1])
 
     for h in picked:
         print("%.6f\tphase %2d\t%s\t%s" % h)

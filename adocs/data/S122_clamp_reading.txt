@@ -1,0 +1,648 @@
+S122 phase 2, 2026-11-05: the clamp case's reading for the ruling, on the staged tree (worktree ../chesso-s122p2 on
+65606a9, the diff 00c58dfa... staged), read-only. A scratch copy of adocs/data/S083_tuner_preconditions.cpp's `clamp`
+sweep as S122's phase 2 fixed it (stage_two() with the curve, the curve group marked clamped) -- its fixture
+(tests/test_eval_positions.hpp's 106 rows, labels cycling 1/0.5/0, the case's write_fixture()), K 1, check_differences()'s
+relative error, and the four criteria (binds on some and not all; every row > 1 cp from the kink; the metric at or under
+its limit; bound rows' clamped block exactly 0 and the rest > 1e-9) unchanged but for the metric and limit each option
+names -- run at steps of 5, the pick by the rule's own tie (the farthest nearest row from the kink, ties to the smaller
+push). Options:
+  rule  relative error at h 0.005 <= 2e-7, as written;
+  (A)   the same, <= 4e-7;
+  (B)   relative error at h 0.0025 <= 2e-7;
+  (C)   normwise, max_p |num - ana| / max_p |ana| at h 0.005, <= 2e-7;
+  (D)   relative error at h 0.005 <= 1e-6, the case's own bound;
+  (E)   DEC-316's rows by adocs/data/S101_gradient_rows.cpp's rule (all_test_fens() in order, S121's eligibility with the
+        fixed stage two, the pair appended after the 106 rows, the gradient at the shipped constants, the first pair that
+        puts |dE/dp| at or above 3 times the fixture's), for 984, then 996, then the weight worst at the push nearest
+        passing, at most three pairs, the rule's 2e-7 at h 0.005;
+  (F)   Richardson, (4 D(h/2) - D(h)) / 3 at h 0.005, relative error <= 2e-7.
+Built against the staged tree's build/src/libchesso_engine_trace.a at nice 10, one thread; the scratch copy (source
+below) was deleted afterwards. The +10..+200 by 10 rows reproduce the fixed tool's table in adocs/data/S122_goldens.txt
+section 7 (4.44e-07 at +40 with kink 5.36, 3.68e-07 at +60, 5.23e-07 at +70).
+
+clamp reading: 106 fixture rows, LAZY_EVAL_MARGIN 275, K 1; pushes +10 to +200 by 5
+the fixture as staged: 106 rows; the gradient case's worst 3.532e-07 at 985 passed_king_own_eg[0]; the fixture's largest |stage two| 174.4
+ push bound  bound at     next  kink dist  rel h.005 (param)   rel h.0025  normwise  Richardson (param)  clamped     rest
+  +10     0       0.0    144.4     130.59   2.99e-07 (1090)     7.07e-07  3.16e-08   1.04e-06 (1090)       -1       -1  binds none/all
+  +15     0       0.0    129.4     145.59   1.12e-07 ( 141)     1.25e-07  4.76e-08   1.65e-07 (1163)       -1       -1  binds none/all
+  +20     0       0.0    120.4     154.64   1.03e-07 ( 141)     3.19e-07  5.85e-08   3.91e-07 ( 141)       -1       -1  binds none/all
+  +25     0       0.0    160.4     114.64   1.12e-07 ( 141)     1.92e-07  6.41e-08   2.65e-07 ( 844)       -1       -1  binds none/all
+  +30     0       0.0    200.4      74.64    1.6e-07 ( 996)     3.19e-07  6.78e-08   3.91e-07 ( 141)       -1       -1  binds none/all
+  +35     0       0.0    240.4      34.64   2.47e-07 ( 996)     5.63e-07  6.99e-08   6.78e-07 ( 945)       -1       -1  binds none/all
+  +40     2     280.4    175.4       5.36   4.44e-07 ( 996)     3.19e-07  7.35e-08   4.63e-07 ( 141)        0 0.000409
+  +45     2     320.4    200.4      45.36   1.34e-06 ( 996)     5.88e-07  8.15e-08   7.66e-07 ( 823)        0 0.000409
+  +50     2     360.4    225.4      49.64   1.81e-06 ( 996)     4.54e-07  8.94e-08   1.91e-07 (1163)        0 0.000409
+  +55     2     400.4    250.4      24.64    5.9e-07 ( 996)     1.47e-07  9.71e-08   1.84e-07 ( 141)        0 0.000409
+  +60     4     440.4    239.0       0.36   3.68e-07 ( 996)     3.19e-07  1.04e-07   3.91e-07 ( 141)        0  0.00166  kink<=1
+  +65     4     480.4    264.0      11.02   3.94e-07 ( 984)     1.12e-07   1.1e-07   1.84e-07 ( 141)        0  0.00166
+  +70     6     520.4    258.2      13.98   5.23e-07 ( 984)     3.19e-07  1.16e-07   3.91e-07 ( 141)        0  0.00111
+  +75     7     560.4    273.2       1.81   7.53e-07 ( 984)     3.19e-07  1.22e-07   3.91e-07 ( 141)        0 0.000951
+  +80    10     600.4    268.1       6.79   1.19e-06 ( 984)     7.32e-07  1.27e-07   9.07e-07 ( 546)        0 0.000666
+  +85    12     640.4    262.1      12.92   2.54e-06 ( 984)     6.35e-07  1.32e-07   6.58e-07 ( 253)        0 0.000555
+  +90    14     680.4    269.0       6.03    3.5e-05 ( 984)     8.77e-06  1.36e-07   9.07e-07 ( 546)        0 0.000476
+  +95    18     720.4    253.2       3.75   2.93e-06 ( 984)     7.33e-07  1.41e-07   6.87e-07 ( 644)        0  0.00135
+ +100    18     760.4    263.2      11.76   2.63e-06 ( 984)     6.58e-07  1.45e-07      5e-07 (1058)        0  0.00135
+ +105    20     800.4    273.2       0.33    2.5e-06 ( 984)     7.32e-07  1.48e-07   9.07e-07 ( 546)        0  0.00121  kink<=1
+ +110    26     840.4    267.4       5.55    2.5e-06 ( 984)     7.32e-07  1.51e-07   9.07e-07 ( 546)        0 0.000931
+ +115    29     880.4    257.7       0.83   2.67e-06 ( 984)     7.32e-07  1.54e-07   9.07e-07 ( 546)        0  0.00116  kink<=1
+ +120    29     920.4    267.7       7.28   3.77e-06 ( 984)     9.41e-07  1.56e-07   9.07e-07 ( 546)        0  0.00116
+ +125    30     960.4    247.4       2.72   7.36e-06 ( 984)     1.84e-06  1.56e-07   4.12e-07 (1058)        0  0.00112
+ +130    30    1000.4    257.4      12.72    6.2e-05 ( 984)     1.55e-05  1.56e-07   1.71e-05 ( 886)        0  0.00112
+ +135    30    1040.4    267.4       7.58   5.21e-06 ( 984)      1.3e-06  1.55e-07   8.13e-07 ( 886)        0  0.00112
+ +140    32    1080.4    258.5       2.42   2.54e-06 ( 984)     7.24e-07  1.52e-07    1.1e-06 (1154)        0  0.00105
+ +145    32    1120.4    268.5       6.46   1.61e-06 ( 984)        5e-07  1.48e-07   6.91e-07 (1170)        0  0.00105
+ +150    35    1160.4    262.3       0.59   1.14e-06 ( 984)     7.32e-07  1.43e-07   9.07e-07 ( 546)        0 0.000961  kink<=1
+ +155    35    1200.4    272.3       2.73   8.53e-07 ( 984)     7.32e-07  1.36e-07   9.07e-07 ( 546)        0 0.000961
+ +160    36    1240.4    264.5       7.27   6.67e-07 ( 984)     7.32e-07  1.28e-07   9.07e-07 ( 546)        0 0.000935
+ +165    36    1280.4    274.5       0.51   5.36e-07 ( 984)     3.24e-07  1.18e-07      5e-07 ( 546)        0 0.000935  kink<=1
+ +170    39    1320.4    268.7       6.33   1.12e-06 ( 629)     1.77e-06  1.07e-07   2.74e-06 ( 629)        0 0.000863
+ +175    41    1360.4    269.2       3.67   3.91e-07 ( 984)     7.32e-07  9.84e-08   9.07e-07 ( 546)        0   0.0014
+ +180    42    1400.4    269.5       4.18   3.92e-07 ( 984)     7.32e-07  9.84e-08   9.07e-07 ( 546)        0  0.00136
+ +185    42    1440.4    274.5       0.46   3.94e-07 ( 984)     3.95e-07  9.85e-08   5.19e-07 (1155)        0  0.00136  kink<=1
+ +190    44    1480.4    274.0       0.95   3.95e-07 ( 984)     7.32e-07  9.86e-08   9.07e-07 ( 546)        0   0.0013  kink<=1
+ +195    48    1520.4    274.3       0.68   3.96e-07 ( 984)     8.54e-07  9.86e-08   1.23e-06 (1155)        0  0.00119  kink<=1
+ +200    50    1560.4    264.8       4.32   3.96e-07 ( 984)     8.28e-07  9.87e-08   1.08e-06 (1155)        0  0.00114
+
+== the rule's pick by option
+rule as written (rel h.005 <= 2e-7)              none
+(A) rel h.005 <= 4e-7                            +65: 4 rows bound, kink 11.02, metric 3.94e-07 (rel h.005 3.94e-07 at 984 passed_king_own_mg[5]), limit 4.0e-07, margin x1.02
+(B) rel h.0025 <= 2e-7                           +55: 2 rows bound, kink 24.64, metric 1.47e-07 (rel h.005 5.9e-07 at 996 passed_king_enemy_mg[5]), limit 2.0e-07, margin x1.36
+(C) normwise h.005 <= 2e-7                       +50: 2 rows bound, kink 49.64, metric 8.94e-08 (rel h.005 1.81e-06 at 996 passed_king_enemy_mg[5]), limit 2.0e-07, margin x2.24
+(D) rel h.005 <= 1e-6                            +55: 2 rows bound, kink 24.64, metric 5.9e-07 (rel h.005 5.9e-07 at 996 passed_king_enemy_mg[5]), limit 1.0e-06, margin x1.70
+(F) Richardson from h.005 <= 2e-7                +50: 2 rows bound, kink 49.64, metric 1.91e-07 (rel h.005 1.81e-06 at 996 passed_king_enemy_mg[5]), limit 2.0e-07, margin x1.05
+== (A) rel h.005 <= 4e-7, push +65: the five worst parameters by relative error at h 0.005
+  param name                       relative        analytic   numeric h.005  |num - ana|  rel h.0025  Richardson
+    984 passed_king_own_mg[5]    3.939e-07 -1.22025696e-04 -1.22025744e-04   4.807e-11   9.843e-08   7.597e-11
+    996 passed_king_enemy_mg[5]  2.749e-07 +9.26185901e-05 +9.26185647e-05   2.546e-11   6.887e-08   1.822e-10
+    990 passed_king_own_eg[5]    1.101e-07 +7.38056370e-04 +7.38056289e-04   8.123e-11   2.751e-08   5.106e-12
+   1002 passed_king_enemy_eg[5]  1.091e-07 +7.26899479e-04 +7.26899399e-04   7.932e-11   2.730e-08   1.982e-11
+    141 psqt_mg[136]             1.032e-07 +2.57482620e-08 +2.57482646e-08   2.657e-15   1.124e-07   1.843e-07
+== (D) rel h.005 <= 1e-6, push +55: the five worst parameters by relative error at h 0.005
+  param name                       relative        analytic   numeric h.005  |num - ana|  rel h.0025  Richardson
+    996 passed_king_enemy_mg[5]  5.898e-07 +4.11937597e-05 +4.11937354e-05   2.430e-11   1.473e-07   2.108e-10
+    984 passed_king_own_mg[5]    2.525e-07 -1.88979407e-04 -1.88979455e-04   4.772e-11   6.319e-08   7.457e-11
+    141 psqt_mg[136]             1.032e-07 +2.57482620e-08 +2.57482646e-08   2.657e-15   1.124e-07   1.843e-07
+    990 passed_king_own_eg[5]    9.714e-08 +6.90097397e-04 +6.90097330e-04   6.704e-11   2.425e-08   4.310e-11
+   1002 passed_king_enemy_eg[5]  9.408e-08 +6.90699827e-04 +6.90699762e-04   6.498e-11   2.353e-08   9.530e-12
+
+== (E) DEC-316's rows, S101_gradient_rows.cpp's rule, rel h.005 <= 2e-7
+pair for 984 passed_king_own_mg[5]: base |g| 6.623649e-04 over 106 rows, the rule wants 1.987095e-03
+  none of 786 eligible pairs triples it
+
+== READING
+  rule as written: no push passes (as the goldens record said).
+  (A) +65, 4 rows bound, kink 11.02, 3.94e-07 at 984 passed_king_own_mg[5], a margin of x1.02 to 4e-7.
+  (B) +55, 2 rows bound, kink 24.64, 1.47e-07 at h 0.0025 (5.90e-07 at h 0.005, 996), x1.36.
+  (C) +50, 2 rows bound, kink 49.64, normwise 8.94e-08 (the relative error there 1.81e-06 at 996), x2.24.
+  (D) +55, the same push as (B): 2 rows bound, kink 24.64, 5.90e-07 at 996, x1.70. No criterion stops +40 under (D): it
+      binds 2 rows of 106, its nearest row is 5.36 from the kink (> 1), its 4.44e-07 is under 1e-6 and its bound rows are
+      silent. It is outranked by the rule's tie, +55's nearest row standing at 24.64 against +40's 5.36. (The +70 phase
+      2's report named was the pick on the steps-of-10 grid, where +55 is not read and +50 fails at 1.81e-06.)
+  (E) no rows: at the shipped constants 984's |gradient| over the 106 rows is already 6.62e-04, and none of the 786
+      eligible pairs of all_test_fens() triples it, so the rule picks no first pair and stops; 996 and a third were not
+      reached. No row added, so the gradient case's worst (3.53e-07 at 985) and the fixture-clear reading (174.4) do
+      not move. The rule reads the shipped constants, where these weights are not small; the large truncation term
+      appears only at the pushes.
+  (F) +50, 2 rows bound, kink 49.64, 1.91e-07, x1.05; that worst is not 984 or 996 but parameter 141 (psqt_mg[136])
+      at the cancellation floor. Extrapolation takes 984 and 996 from 3.94e-07 and 2.75e-07 to 7.6e-11 and 1.8e-10 at
+      +65 (the five-worst tables above): the O(h^2) term is the whole story for them, and what remains is rounding,
+      which the extrapolation amplifies on the smallest gradients (141 is 2.6e-08).
+
+== the scratch program, as run (clampread.cpp)
+// Scratch, for the coordinator's clamp reading (2026-11-05, S122 phase 2): the clamp sweep of
+// adocs/data/S083_tuner_preconditions.cpp as S122's phase 2 left it (stage_two() with the
+// curve, the curve group marked clamped), the fixture tests/test_eval_positions.hpp's rows
+// with the case's cycling labels, K 1, the four criteria unchanged but for the metric and
+// limit each option names. Option E adds pairs by adocs/data/S101_gradient_rows.cpp's rule
+// (all_test_fens() in order, S121's eligibility, the pair appended, the gradient at the
+// shipped constants, the first pair that triples |g| of the target). Never committed.
+//
+//   clampread START END STEP
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <functional>
+#include <string>
+#include <vector>
+#include "bitboard.hpp"
+#include "search_params.hpp"
+#include "test_eval_positions.hpp"
+#include "test_helpers.hpp"
+#include "tuner_layout.hpp"
+#include "tuner_trace.hpp"
+
+namespace
+{
+using namespace tuner_layout;
+using tuner_trace::dataset_t;
+
+game_t game;
+
+std::string param_name(size_t p)
+{
+  struct block_t { size_t base; size_t count; const char* name; };
+  static const block_t blocks[] = {
+      {0, MATERIAL_COUNT, "material"}, {MG_BASE, SQUARE_COUNT, "psqt_mg"},
+      {EG_BASE, SQUARE_COUNT, "psqt_eg"}, {MOB_MG_BASE, MOBILITY_COUNT, "mobility_mg"},
+      {MOB_EG_BASE, MOBILITY_COUNT, "mobility_eg"}, {KS_MG_BASE, KING_SAFETY_COUNT, "king_safety_mg"},
+      {KS_EG_BASE, KING_SAFETY_COUNT, "king_safety_eg"}, {PP_MG_BASE, PASSED_PAWN_COUNT, "passed_pawn_mg"},
+      {PP_EG_BASE, PASSED_PAWN_COUNT, "passed_pawn_eg"}, {PS_MG_BASE, PAWN_STRUCTURE_COUNT, "pawn_structure_mg"},
+      {PS_EG_BASE, PAWN_STRUCTURE_COUNT, "pawn_structure_eg"}, {PL_MG_BASE, PIECE_PLACEMENT_COUNT, "piece_placement_mg"},
+      {PL_EG_BASE, PIECE_PLACEMENT_COUNT, "piece_placement_eg"}, {TEMPO_MG_BASE, 1, "tempo_mg"},
+      {TEMPO_EG_BASE, 1, "tempo_eg"}, {PF_MG_BASE, PASSED_FREE_COUNT, "passed_free_mg"},
+      {PF_EG_BASE, PASSED_FREE_COUNT, "passed_free_eg"}, {PSF_MG_BASE, PASSED_SAFE_COUNT, "passed_safe_mg"},
+      {PSF_EG_BASE, PASSED_SAFE_COUNT, "passed_safe_eg"}, {PKO_MG_BASE, PASSED_KING_COUNT, "passed_king_own_mg"},
+      {PKO_EG_BASE, PASSED_KING_COUNT, "passed_king_own_eg"}, {PKE_MG_BASE, PASSED_KING_COUNT, "passed_king_enemy_mg"},
+      {PKE_EG_BASE, PASSED_KING_COUNT, "passed_king_enemy_eg"}, {CP_MG_BASE, CANDIDATE_PASSER_COUNT, "candidate_passer_mg"},
+      {CP_EG_BASE, CANDIDATE_PASSER_COUNT, "candidate_passer_eg"}, {KSK_MG_BASE, KS_CHECKS_COUNT, "ks_checks_mg"},
+      {KSK_EG_BASE, KS_CHECKS_COUNT, "ks_checks_eg"}, {KSW_MG_BASE, KS_WEAK_COUNT, "ks_weak_mg"},
+      {KSW_EG_BASE, KS_WEAK_COUNT, "ks_weak_eg"}, {KSD_MG_BASE, KS_DEFENDERS_COUNT, "ks_defenders_mg"},
+      {KSD_EG_BASE, KS_DEFENDERS_COUNT, "ks_defenders_eg"}, {KSS_MG_BASE, KS_STORM_COUNT, "ks_storm_mg"},
+      {KSS_EG_BASE, KS_STORM_COUNT, "ks_storm_eg"}, {KSC_MG_BASE, KS_CURVE_COUNT, "ks_curve_mg"},
+      {KSC_EG_BASE, KS_CURVE_COUNT, "ks_curve_eg"}};
+  for (const block_t& b : blocks) {
+    if (p >= b.base && p < b.base + b.count) {
+      return std::string(b.name) + "[" + std::to_string(p - b.base) + "]";
+    }
+  }
+  return "param";
+}
+
+int engine_phase(const std::string& fen)
+{
+  initialize_game_const_data(&game);
+  if (!load_FEN(fen, &game)) { return -1; }
+  return game_phase(&game.board);
+}
+
+// S101_gradient_rows.cpp's write_rows(), which is the case's write_fixture() over any list.
+bool write_rows(const std::string& path, const std::vector<std::string>& fens)
+{
+  std::ofstream out(path);
+  if (!out) { return false; }
+  static const double results[3] = {1.0, 0.5, 0.0};
+  int score = -280;
+  for (size_t i = 0; i < fens.size(); ++i) {
+    const int phase = engine_phase(fens[i]);
+    if (phase < 0) { return false; }
+    out << fens[i] << '\t' << results[i % 3] << '\t' << score << '\t'
+        << phase % (GAME_PHASE_MAX + 1) << '\n';
+    score += 41;
+    if (score > 300) { score -= 600; }
+  }
+  return out.good();
+}
+
+bool load_rows(const std::vector<std::string>& fens, dataset_t* data)
+{
+  const std::string path =
+      (std::filesystem::temp_directory_path() / "chesso_S122_clampread.tsv").string();
+  if (!write_rows(path, fens)) { return false; }
+  tuner_trace::load_report_t report;
+  std::string error;
+  const bool ok = tuner_trace::load(path, data, &report, &error, 1) && report.mismatches == 0;
+  std::remove(path.c_str());
+  return ok;
+}
+
+// S083_tuner_preconditions.cpp's stage_two() as S122's phase 2 fixed it: the curve included.
+double stage_two(const dataset_t& data, size_t row, const double* p)
+{
+  const std::vector<tuner_trace::feature_t>& features = tuner_trace::feature_table().features;
+  const double mg_weight = data.phase[row] / static_cast<double>(GAME_PHASE_MAX);
+  const double eg_weight = 1.0 - mg_weight;
+  double sum = 0.0;
+  for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+    const tuner_trace::entry_t e = data.entries[j];
+    const tuner_trace::feature_t& f = features[e.feature];
+    if (!tuner_trace::clamped_site(f.site)) { continue; }
+    sum += e.coef * (p[f.mg] * mg_weight + p[f.eg] * eg_weight);
+  }
+  double x[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1]; ++j) {
+    const tuner_trace::side_entry_t e = data.side_entries[j];
+    if (e.group != 0) { continue; }
+    x[e.side][0] += e.coef * p[KSC_MG_BASE + e.input];
+    x[e.side][1] += e.coef * p[KSC_EG_BASE + e.input];
+  }
+  for (int side = 0; side < 2; ++side) {
+    const double own = (side == 0) ? -1.0 : 1.0;
+    const double m = std::max(x[side][0], 0.0);
+    const double n = std::max(x[side][1], 0.0);
+    sum += own * (m * m * mg_weight + n * n * eg_weight) / KS_CURVE_DIVISOR;
+  }
+  return sum;
+}
+
+struct eval_t
+{
+  std::vector<uint32_t> index;
+  std::vector<double> target;
+};
+
+eval_t every(const dataset_t& data)
+{
+  eval_t e;
+  for (size_t i = 0; i < data.size(); ++i) {
+    e.index.push_back(static_cast<uint32_t>(i));
+    e.target.push_back(data.result[i]);
+  }
+  return e;
+}
+
+std::vector<double> analytic_of(const dataset_t& data, const std::vector<double>& params,
+                                const std::vector<uint32_t>& index, const std::vector<double>& target)
+{
+  std::vector<double> g;
+  tuner_trace::gradient(data, params.data(), 1.0, index, 0, index.size(), 1, target, &g);
+  return g;
+}
+
+std::vector<double> numeric_of(const dataset_t& data, std::vector<double> params, double h,
+                               const eval_t& e)
+{
+  const tuner_trace::model_t& model = tuner_trace::engine_model();
+  std::vector<double> d(model.param_count, 0.0);
+  for (size_t p = 0; p < model.param_count; ++p) {
+    const double saved = params[p];
+    params[p] = saved + h;
+    const double up = tuner_trace::error_range(model, data, params.data(), 1.0, e.index, 0,
+                                               e.index.size(), 1, e.target);
+    params[p] = saved - h;
+    const double down = tuner_trace::error_range(model, data, params.data(), 1.0, e.index, 0,
+                                                 e.index.size(), 1, e.target);
+    params[p] = saved;
+    d[p] = (up - down) / (2.0 * h);
+  }
+  return d;
+}
+
+double rel(double num, double ana)
+{
+  const double scale = std::max(std::fabs(num), std::fabs(ana));
+  const double diff = std::fabs(num - ana);
+  return (scale > 1e-12) ? diff / scale : diff;
+}
+
+struct worst_t { double value = 0.0; size_t param = 0; };
+
+worst_t worst_rel(const std::vector<double>& num, const std::vector<double>& ana)
+{
+  worst_t w;
+  for (size_t p = 0; p < num.size(); ++p) {
+    const double r = rel(num[p], ana[p]);
+    if (r > w.value) { w = {r, p}; }
+  }
+  return w;
+}
+
+double normwise(const std::vector<double>& num, const std::vector<double>& ana)
+{
+  double diff = 0.0, top = 0.0;
+  for (size_t p = 0; p < num.size(); ++p) {
+    diff = std::max(diff, std::fabs(num[p] - ana[p]));
+    top = std::max(top, std::fabs(ana[p]));
+  }
+  return diff / top;
+}
+
+std::vector<double> pushed(const std::vector<double>& start, int push)
+{
+  std::vector<double> params = start;
+  for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
+    params[KS_MG_BASE + t] += push;
+    params[KS_EG_BASE + t] += push;
+  }
+  return params;
+}
+
+struct row_t
+{
+  int push = 0;
+  size_t bound = 0;
+  double bound_at = 0.0, next = 0.0, kink = 1e300;
+  double clamped = -1.0, rest = -1.0;
+  bool binds = false, clear = false, silent = false;
+  worst_t r005, r0025, rich;
+  double norm005 = 0.0;
+  std::vector<double> ana, d005, d0025;
+};
+
+row_t read_push(const dataset_t& data, const std::vector<double>& start, int push)
+{
+  const double margin = static_cast<double>(LAZY_EVAL_MARGIN);
+  row_t r;
+  r.push = push;
+  const std::vector<double> params = pushed(start, push);
+  std::vector<uint32_t> binding;
+  for (size_t row = 0; row < data.size(); ++row) {
+    const double two = std::fabs(stage_two(data, row, params.data()));
+    r.kink = std::min(r.kink, std::fabs(two - margin));
+    if (two > margin) {
+      binding.push_back(static_cast<uint32_t>(row));
+      r.bound_at = std::max(r.bound_at, two);
+    } else {
+      r.next = std::max(r.next, two);
+    }
+  }
+  r.bound = binding.size();
+  const eval_t e = every(data);
+  r.ana = analytic_of(data, params, e.index, e.target);
+  r.d005 = numeric_of(data, params, 0.005, e);
+  r.d0025 = numeric_of(data, params, 0.0025, e);
+  std::vector<double> rich(r.d005.size());
+  for (size_t p = 0; p < rich.size(); ++p) { rich[p] = (4.0 * r.d0025[p] - r.d005[p]) / 3.0; }
+  r.r005 = worst_rel(r.d005, r.ana);
+  r.r0025 = worst_rel(r.d0025, r.ana);
+  r.rich = worst_rel(rich, r.ana);
+  r.norm005 = normwise(r.d005, r.ana);
+  if (!binding.empty()) {
+    std::vector<double> target(data.size());
+    for (size_t i = 0; i < data.size(); ++i) { target[i] = data.result[i]; }
+    std::vector<double> on;
+    tuner_trace::gradient(data, params.data(), 1.0, binding, 0, binding.size(), 1, target, &on);
+    std::vector<uint8_t> clamped(PARAM_COUNT, 0);
+    for (const tuner_trace::feature_t& f : tuner_trace::feature_table().features) {
+      if (tuner_trace::clamped_site(f.site)) { clamped[f.mg] = 1; clamped[f.eg] = 1; }
+    }
+    for (const auto& [mg, eg] : tuner_trace::engine_model().groups[0].inputs) {
+      clamped[mg] = 1;
+      clamped[eg] = 1;
+    }
+    r.clamped = 0.0;
+    r.rest = 0.0;
+    for (size_t p = 0; p < PARAM_COUNT; ++p) {
+      if (clamped[p]) { r.clamped = std::max(r.clamped, std::fabs(on[p])); }
+      else { r.rest = std::max(r.rest, std::fabs(on[p])); }
+    }
+  }
+  r.binds = !binding.empty() && binding.size() < data.size();
+  r.clear = r.kink > 1.0;
+  r.silent = r.binds && r.clamped == 0.0 && r.rest > 1e-9;
+  return r;
+}
+
+struct option_t
+{
+  const char* name;
+  std::function<double(const row_t&)> metric;
+  double limit;
+};
+
+// The rule: of the pushes meeting all four criteria, the farthest nearest row from the kink,
+// ties to the smaller push. -1 when none.
+int pick(const std::vector<row_t>& rows, const option_t& o)
+{
+  int chosen = -1;
+  double best = -1.0;
+  for (const row_t& r : rows) {
+    if (r.binds && r.clear && r.silent && o.metric(r) <= o.limit && r.kink > best) {
+      chosen = static_cast<int>(&r - rows.data());
+      best = r.kink;
+    }
+  }
+  return chosen;
+}
+
+void print_table(const std::vector<row_t>& rows)
+{
+  printf(" push bound  bound at     next  kink dist  rel h.005 (param)   rel h.0025  normwise  Richardson (param)  clamped     rest\n");
+  for (const row_t& r : rows) {
+    printf("%+5d %5zu %9.1f %8.1f %10.2f %10.3g (%4zu) %12.3g %9.3g %10.3g (%4zu) %8.3g %8.3g%s%s%s\n", r.push, r.bound,
+           r.bound_at, r.next, r.kink, r.r005.value, r.r005.param, r.r0025.value, r.norm005, r.rich.value,
+           r.rich.param, r.clamped, r.rest, r.binds ? "" : "  binds none/all", r.clear ? "" : "  kink<=1",
+           (r.binds && !r.silent) ? "  not silent" : "");
+  }
+}
+
+void five_worst(const row_t& r, const char* label)
+{
+  std::vector<size_t> order(r.ana.size());
+  for (size_t p = 0; p < order.size(); ++p) { order[p] = p; }
+  std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+    return rel(r.d005[a], r.ana[a]) > rel(r.d005[b], r.ana[b]);
+  });
+  printf("== %s, push %+d: the five worst parameters by relative error at h 0.005\n", label, r.push);
+  printf("  param name                       relative        analytic   numeric h.005  |num - ana|  rel h.0025  Richardson\n");
+  for (size_t i = 0; i < 5; ++i) {
+    const size_t p = order[i];
+    const double richardson = (4.0 * r.d0025[p] - r.d005[p]) / 3.0;
+    printf("  %5zu %-24s %9.3e %+15.8e %+15.8e %11.3e %11.3e %11.3e\n", p, param_name(p).c_str(),
+           rel(r.d005[p], r.ana[p]), r.ana[p], r.d005[p], std::fabs(r.d005[p] - r.ana[p]),
+           rel(r.d0025[p], r.ana[p]), rel(richardson, r.ana[p]));
+  }
+}
+
+void report_options(const std::vector<row_t>& rows, const std::vector<option_t>& options)
+{
+  for (const option_t& o : options) {
+    const int i = pick(rows, o);
+    if (i < 0) {
+      printf("%-48s none\n", o.name);
+      continue;
+    }
+    const row_t& r = rows[i];
+    const double m = o.metric(r);
+    printf("%-48s %+d: %zu rows bound, kink %.2f, metric %.3g (rel h.005 %.3g at %zu %s), limit %.1e, margin x%.2f\n",
+           o.name, r.push, r.bound, r.kink, m, r.r005.value, r.r005.param, param_name(r.r005.param).c_str(),
+           o.limit, o.limit / m);
+  }
+}
+
+// The fixture-level readings DEC-316's rows can move: the gradient case's worst (shipped
+// constants, h 0.01, every parameter) and the largest |stage two| at the shipped constants.
+void fixture_readings(const dataset_t& data, const std::vector<double>& start, const char* label)
+{
+  const eval_t e = every(data);
+  const std::vector<double> ana = analytic_of(data, start, e.index, e.target);
+  const worst_t w = worst_rel(numeric_of(data, start, 0.01, e), ana);
+  double clear = 0.0;
+  for (size_t row = 0; row < data.size(); ++row) {
+    clear = std::max(clear, std::fabs(stage_two(data, row, start.data())));
+  }
+  printf("%s: %zu rows; the gradient case's worst %.3e at %zu %s; the fixture's largest |stage two| %.1f\n", label,
+         data.size(), w.value, w.param, param_name(w.param).c_str(), clear);
+}
+
+double stage_two_of(const std::string& fen, const std::vector<double>& start, int* engine_white, int* phase)
+{
+  if (!load_FEN(fen, &game)) { return 1e300; }
+  tuner_trace::row_trace_t trace;
+  std::string error;
+  if (!tuner_trace::trace_board(&game.board, &trace, &error)) { return 1e300; }
+  *engine_white = trace.engine_white;
+  *phase = trace.phase;
+  dataset_t one;
+  if (!load_rows({fen}, &one)) { return 1e300; }
+  return stage_two(one, 0, start.data());
+}
+
+std::string with_side_to_move(const std::string& fen, char side)
+{
+  std::string flipped = fen;
+  flipped[fen.find(' ') + 1] = side;
+  return flipped;
+}
+
+bool loads_either_side(const std::string& fen)
+{
+  return load_FEN(with_side_to_move(fen, 'w'), &game) && load_FEN(with_side_to_move(fen, 'b'), &game);
+}
+
+std::string canonical_castling(const std::string& fen)
+{
+  std::vector<std::string> parts = split_string(fen);
+  if (parts.size() != 6 || parts[2] == "-") { return fen; }
+  std::string rights;
+  for (const char c : std::string("KQkq")) {
+    if (parts[2].find(c) != std::string::npos) { rights += c; }
+  }
+  parts[2] = rights;
+  std::string out;
+  for (size_t i = 0; i < parts.size(); ++i) { out += (i ? " " : "") + parts[i]; }
+  return out;
+}
+
+bool eligible(const std::string& fen, const std::string& mirror, const std::vector<double>& start)
+{
+  int ew = 0, em = 0, pw = 0, pm = 0;
+  const double a = stage_two_of(fen, start, &ew, &pw);
+  const double b = stage_two_of(mirror, start, &em, &pm);
+  const double margin = static_cast<double>(LAZY_EVAL_MARGIN);
+  return a < 1e299 && b < 1e299 && pw >= 1 && pw <= GAME_PHASE_MAX - 1 && std::fabs(a) < margin - 1.0 &&
+         std::fabs(b) < margin - 1.0 && std::abs(ew) <= 800 && std::abs(em) <= 800 && loads_either_side(fen) &&
+         loads_either_side(mirror);
+}
+
+// S101_gradient_rows.cpp's rule for TARGET over ROWS: the first eligible pair of all_test_fens()
+// that puts |dE/d TARGET| at the shipped constants at or above 3 times the list's.
+bool pick_pair(const std::vector<std::string>& rows, size_t target, const std::vector<double>& start,
+               std::string* fen_out, std::string* mirror_out)
+{
+  dataset_t base;
+  if (!load_rows(rows, &base)) { return false; }
+  const eval_t eb = every(base);
+  const double g0 = std::fabs(analytic_of(base, start, eb.index, eb.target)[target]);
+  printf("pair for %zu %s: base |g| %.6e over %zu rows, the rule wants %.6e\n", target, param_name(target).c_str(), g0,
+         rows.size(), 3.0 * g0);
+  size_t tried = 0;
+  for (const std::string& fen : all_test_fens()) {
+    const std::string mirror = canonical_castling(mirror_fen(fen));
+    bool known = false;
+    for (const std::string& row : rows) {
+      if (row == fen || row == mirror) { known = true; }
+    }
+    if (known || !eligible(fen, mirror, start)) { continue; }
+    std::vector<std::string> with = rows;
+    with.push_back(fen);
+    with.push_back(mirror);
+    dataset_t data;
+    if (!load_rows(with, &data)) {
+      printf("  an eligible pair failed to load: %s\n", fen.c_str());
+      return false;
+    }
+    tried++;
+    const eval_t e = every(data);
+    const double g = std::fabs(analytic_of(data, start, e.index, e.target)[target]);
+    if (g >= 3.0 * g0) {
+      printf("  pick after %zu eligible pairs: |g| %.6e\n    \"%s\",\n    \"%s\",\n", tried, g, fen.c_str(),
+             mirror.c_str());
+      *fen_out = fen;
+      *mirror_out = mirror;
+      return true;
+    }
+  }
+  printf("  none of %zu eligible pairs triples it\n", tried);
+  return false;
+}
+
+std::vector<row_t> sweep(const dataset_t& data, const std::vector<double>& start, int lo, int hi, int step)
+{
+  std::vector<row_t> rows;
+  for (int push = lo; push <= hi; push += step) { rows.push_back(read_push(data, start, push)); }
+  return rows;
+}
+
+}  // namespace
+
+TEST_CASE("S122 clamp reading")
+{
+  initialize_game_const_data(&game);
+  std::vector<double> start(PARAM_COUNT, 0.0);
+  starting_params(start.data());
+
+  const std::vector<option_t> options = {
+      {"rule as written (rel h.005 <= 2e-7)", [](const row_t& r) { return r.r005.value; }, 2e-7},
+      {"(A) rel h.005 <= 4e-7", [](const row_t& r) { return r.r005.value; }, 4e-7},
+      {"(B) rel h.0025 <= 2e-7", [](const row_t& r) { return r.r0025.value; }, 2e-7},
+      {"(C) normwise h.005 <= 2e-7", [](const row_t& r) { return r.norm005; }, 2e-7},
+      {"(D) rel h.005 <= 1e-6", [](const row_t& r) { return r.r005.value; }, 1e-6},
+      {"(F) Richardson from h.005 <= 2e-7", [](const row_t& r) { return r.rich.value; }, 2e-7},
+  };
+
+  std::vector<std::string> rows = test_eval_positions::positions;
+  dataset_t data;
+  REQUIRE(load_rows(rows, &data));
+  printf("clamp reading: %zu fixture rows, LAZY_EVAL_MARGIN %d, K 1; pushes +10 to +200 by 5\n", data.size(),
+         static_cast<int>(LAZY_EVAL_MARGIN));
+  fixture_readings(data, start, "the fixture as staged");
+  const std::vector<row_t> table = sweep(data, start, 10, 200, 5);
+  print_table(table);
+  printf("\n== the rule's pick by option\n");
+  report_options(table, options);
+  for (const char* which : {"(A) rel h.005 <= 4e-7", "(D) rel h.005 <= 1e-6"}) {
+    for (const option_t& o : options) {
+      if (std::string(o.name) != which) { continue; }
+      const int i = pick(table, o);
+      if (i >= 0) { five_worst(table[i], which); }
+    }
+  }
+
+  // (E): DEC-316's rows for 984 and 996, then for whatever is worst, at most three pairs.
+  printf("\n== (E) DEC-316's rows, S101_gradient_rows.cpp's rule, rel h.005 <= 2e-7\n");
+  const option_t e_option = options[0];
+  std::vector<size_t> targets = {PKO_MG_BASE + 5, PKE_MG_BASE + 5};
+  std::vector<row_t> e_table;
+  for (int pair = 0; pair < 3; ++pair) {
+    size_t target;
+    if (pair < 2) {
+      target = targets[pair];
+    } else {
+      // The weight worst at the push nearest passing: binding, clear of the kink, silent,
+      // the smallest rel h.005.
+      const row_t* best = nullptr;
+      for (const row_t& r : e_table) {
+        if (r.binds && r.clear && r.silent && (!best || r.r005.value < best->r005.value)) { best = &r; }
+      }
+      if (!best) { printf("no push binds clear and silent; stop\n"); break; }
+      target = best->r005.param;
+      printf("third target: %zu %s, worst at %+d (%.3g)\n", target, param_name(target).c_str(), best->push,
+             best->r005.value);
+    }
+    std::string fen, mirror;
+    if (!pick_pair(rows, target, start, &fen, &mirror)) { break; }
+    rows.push_back(fen);
+    rows.push_back(mirror);
+    dataset_t with;
+    REQUIRE(load_rows(rows, &with));
+    char label[64];
+    snprintf(label, sizeof label, "with %d pair(s)", pair + 1);
+    fixture_readings(with, start, label);
+    e_table = sweep(with, start, 10, 200, 5);
+    print_table(e_table);
+    const int i = pick(e_table, e_option);
+    if (i >= 0) {
+      printf("(E) with %d pair(s): +%d passes, %zu rows bound, kink %.2f, rel h.005 %.3g at %zu %s, margin x%.2f\n",
+             pair + 1, e_table[i].push, e_table[i].bound, e_table[i].kink, e_table[i].r005.value,
+             e_table[i].r005.param, param_name(e_table[i].r005.param).c_str(), 2e-7 / e_table[i].r005.value);
+      five_worst(e_table[i], "(E)");
+      break;
+    }
+    printf("(E) with %d pair(s): no push passes\n", pair + 1);
+  }
+}

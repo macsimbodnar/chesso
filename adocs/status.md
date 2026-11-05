@@ -5,7 +5,130 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-05 05:45, by hand.
+Updated: 2026-11-05 13:20, by hand.
+
+## 2026-11-05 13:20: S122 done, H1, its family ships; next S332, S333, then S124 phase 1's rebase
+
+**S122 is done (`plan_done/`), this commit.**
+- Its `{0, 5}` SPRT read **H1**: `cand 65606a9+ab5ac20d7534` against `65606a9`, Elo +19.44 +/- 9.07, nElo +27.11 +/- 12.61,
+  2916 games in 1 h 22 m, 0 forfeits. An early stop, upward-biased (DEC-063).
+- What ships: DEC-353's `1245`, safe checks, weak squares, the storm and the curve, fitted on S122's own corpus, the
+  defenders at zero; `LAZY_EVAL_MARGIN` 184 -> 275, the clamp binding 0.153 %; bench 5482277 -> 4707943.
+- Cost: +5.28 % at mask 27, nps -4.80 % (`adocs/data/S122_cost_reading.txt`).
+- DEC-354 is the coordinator's. DEC-316's pair is re-picked by its rule and `CLAMP_PUSH` goes +30 -> +50. The gradient
+  case stands at x1.16, so a recurrence at the next refit is the owner's.
+- F16 is closed by S122, its Status line moved.
+- The run is archived: `chesso_S122_sprt_2026-11-05.tar.xz`, verified in place.
+- `gate_extra` 6 of 6 on the tree played, 2026-11-05 11:45.
+
+**Withdrawn:** S124's clamp question (DEC-354). S124 re-derives its fixture goldens after its rebase.
+
+**Next, in Open order:**
+1. S332 and S333, filler, agent-only, one at a time.
+2. S124 phase 1. Rebase `.tuning/coord/S124/S124_phase1.diff` (worktree `../chesso-s124p1`, base `d83d6c0`) onto this
+   commit, re-derive its goldens on S122's constants and fixture, run a fresh fast check, widen `touches:`, write
+   `specs.md`, gate.
+3. S124 phase 2's screen reads at K refit (DEC-352).
+
+**Waiting on the owner:** the disk question (2026-11-05 11:55, in the conversation). 1.7 GB are free; removing
+old `.ref-builds/`, `.tuning/s121/variants`, the void screen and S122's cost trees frees about 6.7 GB.
+
+**Worktrees:** `../chesso-s122p2` and `../chesso-s122` are S122's own and go now that it is closed, blobs verified.
+`../chesso-s124p1` stays.
+
+## 2026-11-05 11:55: S122's `{0, 5}` SPRT running; DEC-354 re-picked the gradient fixture, nothing for the owner
+
+**Running: S122's SPRT**, started 11:50 from `../chesso-s122p2`.
+- `cand 65606a9+ab5ac20d7534` against `ref 65606a9`, 8+0.08, Hash 16, `noob_3moves.epd`, `{0, 5}`, cap 41900 games.
+- Processes: `fastchess.sh` PID 4018639, fastchess 4019043.
+- Console `.tuning/s122_sprt.console`, output `.tuning/sprt_s122_20261105_115036/`.
+- About 20 h at the midpoint, about 12 h on a bound; the watcher ceiling is 40 h.
+- The pin is an unstaged edit of `adocs/data/S122_sprt.sh` in that tree. The staged diff is
+  `.tuning/coord/S122/S122_phase2.diff`, sha256 `f93eded8...`, 33 files.
+- No commit on `achesso` and no build on this machine until the verdict.
+
+**DEC-354 (the coordinator's, written in this working tree, lands with the verdict's commit).**
+- DEC-142 as written: DEC-316's pair is re-picked by its rule (candidate 5), and every fixture golden is re-derived by
+  its script.
+  - `CLAMP_PUSH` +30 -> +50 (x1.94).
+  - `ADAGRAD_HOLD_STEP` back to 2.
+  - The gradient case reads 8.61e-7 at 984 (x1.16).
+- The bound holds, so DEC-344 (9)'s third recurrence did not fire. S124's pending clamp question is **withdrawn**:
+  S124 re-derives after its rebase.
+- Readings: `adocs/data/S122_clamp_reading.txt` and `S122_gradient_options.txt`. Richardson's difference is the
+  recorded alternative if the case recurs.
+
+**Before the run, all green on the staged tree:**
+- both fast suites 57 of 57;
+- `gate_extra` 6 of 6, 1669 s;
+- the Debug self-play: 8 games, 0 `Assertion`;
+- two fast checks, every finding fixed;
+- cost: all +5.57 %, cand at mask 27 +5.28 %, nps -4.80 %;
+- no A/A owed.
+
+**On the verdict.**
+- **H1:** apply the diff to the main index, add this file and DEC-354, write the specs.md rows from the step file's
+  draft, gate, and commit with the result block.
+- **H0 or none:** the record commit, then DEC-353's bisection, M first at `{-5, 0}`.
+- The fast check's six-tool `stage_two()` curve fix ships with the phase. `S135_gradient_rows.cpp` is left as it is
+  (DEC-347).
+
+## 2026-11-05 08:37: S122 phase 2 delivered and fast-checked; the cost running; one question for the owner
+
+**HEAD stays at `65606a9`.** Phase 2 is staged in `../chesso-s122p2`: diff
+`.tuning/coord/S122/S122_phase2.diff`, sha256 `bf425d10...ef97bf`, 26 files, not committed.
+- Paste checked: `verify_fit` 1171 of 1171, bench 4707943 in both builds.
+- The owner's floors hold: `EXACT_FLOOR` 166 shipping against 156 weakened, `MATE_IN_THREE_FLOOR` 12 against 11,
+  mate-carry ceilings unmoved.
+- DEC-352's re-read: K 1.2298 -> 1.2171 at the candidate; every kept part stays above its m with its sign, no STOP.
+- Goldens re-derived by their scripts, except two, below.
+- Red in both builds: `test_tuner_gradient` only.
+
+**The fast check:** one real finding, two trivial ones, both trivial fixed.
+- Fixed: `test_search.cpp`'s stale 199 header; `S122_sprt.sh` made executable.
+- Real: DEC-316's S101 pair is a golden its script no longer reproduces. The rule picks candidate 5, which reads
+  8.6e-7 (x1.16); the base rows alone read 2.95e-6 at 984.
+
+**For the owner, DEC-344 (9)'s third recurrence on `test_tuner_gradient`:**
+- The clamp case's `CLAMP_PUSH` rule answers no push.
+- Its cause is the O(h^2) term on passed-king weights 984 and 996. Richardson extrapolation takes them to 1e-10, so
+  the derivative is right.
+- DEC-316's pair is the same weight. This supersedes S124's pending A/B/C question.
+- Readings: `adocs/data/S122_clamp_reading.txt` (staged). The question goes out once the gradient case's readings
+  under each option are taken, after the cost.
+- In DEC-334's form the SPRT plays the staged tree, and the owner rules only on H1, before the commit.
+
+**Running:** `S122_cost.sh run`, started 08:32, PID 2825835, console `.tuning/s122_cost.console`, about 1 h 40 m,
+ceiling 3 h 30 m, then the cand row at mask 27, about 25 min.
+
+**Then:**
+1. the gradient case's option readings;
+2. the prose checks on the last edits;
+3. the Debug self-play from `../chesso-s122p2/build-debug`, with the book copied in;
+4. the pin in `S122_sprt.sh`;
+5. the `{0, 5}` SPRT, about 20 h, ceiling 40 h.
+
+`../chesso-s122a` is removed, its tree equal to HEAD. Disk is at 4.8 GB free.
+
+## 2026-11-05 06:40: S122 phase 2 part 1 landed (`65606a9`), the paste done, part 2 running
+
+**HEAD stays at `65606a9` until phase 2 lands.** It is part 2's base and the SPRT's REF. This file is edited in the
+working tree only, and goes in with phase 2's commit.
+
+**Landed:** `7d80fd0` filed S332 and S333. `65606a9` made `apply --ruled DEC FIT` and `part NAME --ruled DEC`. Both
+take the one decided fit that DEC's `Decision:` field names, read from HEAD's `decisions.md`. Bare `apply` and unruled
+`part` refuse. One fast check: no live defect, six findings, all fixed before landing, each refusal seen red on a
+plant.
+
+**The paste**, `apply ../chesso-s122p2 --ruled DEC-353 .../1245_e20000/full.hpp`, `S122-APPLY-DONE`:
+- bench 4707943;
+- the clamp binds on 0.153 % of rows at 275, against 1.0 %;
+- `truncation_scan` worst 3.691793;
+- 8 tests red in each build, the goldens part 2 re-derives.
+
+**Running: S122 phase 2 part 2**, by the same agent in `../chesso-s122p2`: the goldens, the owner's floors, DEC-352's
+K re-read, `S122_sprt.sh`. Then the coordinator's fast check, the cost (`S122_cost.sh run` and the cand row at mask
+27), the Debug self-play, and the one `{0, 5}` SPRT on the staged tree.
 
 ## 2026-11-05 05:45: S122's side STOP ruled, DEC-353: the candidate is `1245`; S102's and S266's passes committed
 

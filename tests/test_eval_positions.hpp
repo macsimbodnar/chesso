@@ -398,8 +398,15 @@ inline const std::vector<std::string> positions = {
     // first eligible pair of all_test_fens() that triples that gradient.
     // Re-derive by its header whenever the shipped constants or the rows above
     // move what it reads.
-    "3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2",
-    "rrQrrrrr/P1PPPPPP/8/8/8/1k6/8/3K4 b - - 0 2",
+    // **Re-derived at S122's candidate (DEC-354)**, DEC-353's 1245 fit: the
+    // 104 rows read 2.95e-6 at the same weight there, and the rule's first
+    // pair is candidate 5, below, its gradient 9.49e-5 against the 8.47e-5 the
+    // rule wants; the case reads 8.61e-7 at 984 with it. S101's pair until
+    // then, which a revert of S122's paste puts back:
+    // "3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2" and its mirror
+    // (adocs/data/S122_goldens.txt, adocs/data/S122_gradient_options.txt).
+    "1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2",
+    "4k3/8/8/8/8/8/r3p2r/1R2K2R b K - 1 2",
 };
 
 }  // namespace test_eval_positions

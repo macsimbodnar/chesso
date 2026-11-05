@@ -96,7 +96,8 @@ TEST_SUITE("eval_spread margins")
     CHECK(moved.size() == FIXED.size() + 1);
 
     // A set onto a fixed point exercises the deduplication, which the shipped
-    // value does not reach unless a refit lands on one of the eight.
+    // value does not reach unless a refit lands on one of the eight. S122's
+    // 275 is one of them, so the first case reaches it too while it ships.
     REQUIRE(search_param_set("LazyEvalMargin", 200));
 
     const std::vector<int> landed = eval_spread::candidate_margins();

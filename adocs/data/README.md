@@ -1606,6 +1606,34 @@ On `ba1cad6`, counts and instructions only, no fit, no match, no timing: S122's 
 | `S122_identity_plants.patch` | one more patch over the prototype, a runtime switch: five defects, so that one build reads what `truncation_scan` and `eval_spread` each catch; never committed to `src/` |
 | `S122_cmp_units.cpp` | the census's units against the prototype's loop on that build |
 
+### S122, phases 1 and 2: the family, the screen, the ruling and the paste (DEC-344, DEC-345, DEC-349, DEC-353)
+
+Phase 1, 2026-11-02, on `1b2539a`: the family landed at its seed, `No functional change`, with the screen, the cost and the SPRT pre-registered. The corpus generated again under DEC-349, 2026-11-04. The screen, its side readings and DEC-353's ruling, 2026-11-05. Phase 2, the same day, on `65606a9`: DEC-353's candidate pasted, its goldens re-derived, the K re-read and the SPRT script. S122's step file has each section; the rows for the phase 1 and corpus files were added at phase 2, S122's part 1 finding.
+
+| file | what it is |
+|---|---|
+| `S122_screen.sh` | the screen's stages, each ending `S122-<STAGE>-DONE` or `-FAILED`: `locate`, `audit`, `landing-check`, `margin`, `p0`, `screen PART`, `read PART`, `all`, `sample`, `side`, `part NAME --ruled DEC`, and `apply TREE --ruled DEC FIT`, which pastes the fit a decision names (DEC-353); its header is the pre-registration, with its dated amendments |
+| `S122_screen.py` | the screen's helpers, standard library only: plan, the identity and tie rules, the margin's step, P0, the reading, the paste checks, `ruled` and the ruled bisection part, the side readings, the clamp |
+| `S122_corpus.sh` | the corpus prepared from the pool by S083's recipe, its stages and refusals (DEC-344 (1), DEC-345 (5), DEC-349) |
+| `S122_generate.sh` | the pool generated again by S331's datagen, frozen in the pool directory, its seeds and top-up (DEC-349) |
+| `S122_p6_wide_zone.patch` | P6's variant, the curve's attacker and incidence inputs over the zone and its forward rank, never committed to src/ (DEC-345 (3)) |
+| `S122_cost.sh`, `S122_cost.py`, `S122_cost_only.patch`, `S122_cost_masks.sh` | the parts' speed cost by mask on identical trees, its reading, the never-committed patch, and phase 1's build of it at each mask |
+| `S122_curve_probe.cpp` | the curve's planted recovery at a given budget and step, phase 1's measurement behind the slow case's 32000 and 80000 |
+| `S122_preconditions.txt` | phase 1's preconditions and the curve's planted recovery, each figure with the command that printed it |
+| `S122_inv6.txt`, `S122_objdiff.py` | phase 1's INV-6: the search streams against `1b2539a`, and the object code compared function by function |
+| `S122_phase1_plants.patch`, `S122_phase1_plants.sh`, `S122_phase1_guards.txt` | phase 1's guards, each against the plant it exists for, the run and its tally |
+| `S122_sweep_s170.txt` | phase 2's S170 grid on the candidate, 108 cells, 1504 mate lines, 14 short; the budgets it re-derived are in `S170_cases.tsv`'s header |
+| `S122_killer_slots.cpp` | the killer slots of test_search "a search fills the ordering tables" by depth, the rule that picks its depth, 9 since S122 |
+| `S122_kcheck.sh`, `S122_kcheck.txt` | DEC-352's re-read: each part's decided pair on the fixed set at K refit at the candidate, 1.2171, beside the screen's 1.2298; no STOP |
+| `S122_goldens.txt` | phase 2's readings: every golden the paste moved or might have, each with its command, before and after |
+| `S122_gradient_options.txt` | test_tuner_gradient's two cases under each option for the owner's question (as written, h halved, normwise, Richardson, the clamp limit at 1e-6), the gradient case with the landed pair, the rule's re-pick and none; whether normwise would have seen S101's and S135's originals; the test's time; its scratch program's source at the bottom |
+| `S122_clamp_reading.txt` | the clamp case's reading for the owner's ruling on DEC-344 (9)'s third recurrence: the fixed sweep at steps of 5, each option's pick (the limit 4e-7, h 0.0025, normwise, 1e-6, DEC-316's rows, Richardson) and the five worst parameters, its scratch program's source at the bottom |
+| `S122_sprt.sh` | the one `{0, 5}` SPRT of `1245` at 275, the working tree against REF, and DEC-353's bisection, pre-registered, the coordinator's pin in it; it ran and read H1 |
+| `S122_sprt.log` | that run's console through `tools/trim_console.py --summary`, its `Results of cand-65606a9+ab5ac20d7534 vs ref-65606a9` lines the gate's block check reads: H1, 2916 games, Elo 19.44 +/- 9.07 |
+| `S122_candidate.diff` | the run's candidate.diff, the played tree's diff against REF `65606a9`, blob `ab5ac20d7534...`, the cand token's hex (DEC-254) |
+| `S122_close_identity.txt` | the tree committed against the tree played, by blob: 33 of 33 files the same, `src/` and the build files included |
+| `S122_cost_reading.txt` | the cost run's and the cand row's readings verbatim and the coordinator's nps: all +5.57 %, cand at mask 27 +5.28 %, nps -4.80 % |
+
 ### S328, audit `Status:` lines moved after their steps (DEC-171)
 
 On `1bb3080`, no build and no run: S328's step file, "2026-11-03: the census, the rule, and the lines moved".

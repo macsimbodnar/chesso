@@ -397,6 +397,16 @@ TEST_SUITE("evaluation: score")
   // unopposed. Re-derived by the script on the pasted header after it
   // reproduced all ten at the landing (adocs/data/S125_goldens.txt).
   //
+  // S122's king safety family, DEC-353's 1245 fit pasted over arrays that
+  // landed at zero and a curve at its seed, moved two: the rook on d1, 590 to
+  // 585, and the queen on d1, 1021 to 1023. Each white piece bears on e8's
+  // zone, d7 and d8, which no black man defends, so Black's king has two weak
+  // squares and its curve reads the attacker and the incidences; the queen
+  // also has three safe checks, a4, h5 and e2. The other four positions give
+  // both kings the same curve input, the constant alone, so the two T cancel.
+  // Re-derived by the script on the pasted header after it reproduced all ten
+  // at the landing (adocs/data/S122_goldens.txt).
+  //
   // Symmetry and ordering say nothing about what a piece is actually worth:
   // every one of these values can be changed without moving any other
   // assertion in this file, and a wrong one costs games rather than crashes.
@@ -423,8 +433,8 @@ TEST_SUITE("evaluation: score")
       {"4k3/8/8/8/8/8/4P3/4K3 w - - 0 1", 107, "pawn on e2"},
       {"4k3/8/8/8/8/8/8/1N2K3 w - - 0 1", 283, "knight on b1"},
       {"4k3/8/8/8/8/8/8/2B1K3 w - - 0 1", 353, "bishop on c1"},
-      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 590, "rook on d1"},
-      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1021, "queen on d1"},
+      {"4k3/8/8/8/8/8/8/3RK3 w - - 0 1", 585, "rook on d1"},
+      {"4k3/8/8/8/8/8/8/3QK3 w - - 0 1", 1023, "queen on d1"},
       {"4k3/8/8/8/8/8/8/4K3 w - - 0 1",     0, "bare kings cancel"},
     };
     // clang-format on

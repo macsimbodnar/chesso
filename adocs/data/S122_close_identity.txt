@@ -1,0 +1,24 @@
+# S122's close identity: the tree to be committed against the tree played, S101_close_identity.txt's form, by blob.
+# The played tree: REF 65606a9 plus the run's candidate.diff (.tuning/sprt_s122_20261105_115036/candidate.diff, copied as
+# adocs/data/S122_candidate.diff, blob ab5ac20d753463eb57066371e425ebd557bd4177, the cand token's +ab5ac20d7534, DEC-254).
+# The tree to be committed: ../chesso-s122p2 at 65606a9, the staged diff plus the coordinator's unstaged pin of
+# adocs/data/S122_sprt.sh, the run's own data files aside (S122_sprt.log, S122_candidate.diff, this file, the step file's
+# close section and README rows, written after the run). No binary was rebuilt: the claim is byte identity of every
+# source the diff names, which makes the binary the one played; the coordinator's gate builds and benches it.
+# Method: each `diff --git` block's `index A..B` post-image blob against `git hash-object` of the file in the tree.
+base 65606a9 plus candidate.diff
+
+the files: candidate.diff against `git diff HEAD --name-only` (staged plus unstaged), before the close's files were added
+  candidate.diff 33 files; the tree 33 files; the same 33 paths
+
+every post-image against the tree's file
+  33 of 33 the same blob
+  src/ and the build files:
+    SAME  src/evaluation.cpp     af664e4172566ad309ff106f04a156321ce97dde
+    SAME  src/evaluation.hpp     a8104fc773fdf27a197cae126cf62339c7f4120e
+    SAME  src/search_params.hpp  90a65de072744129a8de1b31458c172b795ae74c
+  no other path under src/, cmake/ or a CMakeLists.txt in either diff: both are REF's there
+  adocs/data/S122_sprt.sh, the pin unstaged then: the same blob as played
+
+the binary: not rebuilt here (the close builds nothing); played bench 4707943 in both builds at the delivery the run
+played, recorded in S122's step file, phase 2

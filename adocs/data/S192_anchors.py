@@ -100,6 +100,21 @@ KS = {  # king_safety_feature_t's order
 #             no longer multiplied by anything
 #  attackers  (type, zone-attack incidences, sign of the *defender*)
 #  shelter    per colour: the shield and file counts of that king
+#  danger     S122's king safety family (src/evaluation.hpp), per colour, each
+#             count that king's own and positive, the attacker the other side:
+#             checks by knight, bishop, rook and queen on empty targets, weak
+#             zone squares, zone squares its knights and bishops attack, and
+#             the storm's cells. The linear groups score White's king's count
+#             less Black's; the curve reads each king's counts with the
+#             attackers and incidences above, and T(x) = max(0, x)^2 / 2048,
+#             truncating, of White's king comes off White's score, Black's
+#             onto it, in each half before the one taper. Every case states
+#             it; at S122's landing every weight but the curve's constant was
+#             zero and both kings' x the constant, so no anchor moved; at
+#             DEC-353's 1245 fit the cases with a piece bearing on a king move:
+#             the rook on d1 590 -> 585, the queen 1021 -> 1023, Re8 199 -> 247,
+#             Kh7 -603 -> -573 and the quiet evasion -541 -> -521
+#             (adocs/data/S122_goldens.txt)
 CASES = [
     dict(
         title="pawn on e2",
@@ -127,6 +142,10 @@ CASES = [
         # Black the same file holds an enemy pawn, so it is half open
         shelter={"w": {"SHIELD_NEAR": 1, "OPEN_FILE": 2},
                  "b": {"OPEN_FILE": 2, "HALF_OPEN_FILE": 1}},
+        # S122: no piece of either side, so no check and no defender; White's
+        # pawn attacks d3 and f3, outside e8's zone; no black pawn, and e2 is
+        # six ranks from e8, past the storm's four
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     dict(
         title="knight on b1",
@@ -145,6 +164,9 @@ CASES = [
         mobility=[(KNIGHT - 1, 3, 1)],  # a3, c3, d2
         attackers=[],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},  # no pawns
+        # S122: b1 attacks a3, c3 and d2. None is a knight check on e8 (c7,
+        # d6, f6, g7) or in its zone; d2 is in e1's zone, one defender
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=1, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     dict(
         title="bishop on c1",
@@ -163,11 +185,15 @@ CASES = [
         mobility=[(BISHOP - 1, 7, 1)],  # d2 e3 f4 g5 h6, b2 a3
         attackers=[],  # the long ray stops at h6, clear of Black's king zone
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: c1 attacks b2, a3, d2, e3, f4, g5, h6. None is on e8's
+        # diagonals (d7 c6 b5 a4, f7 g6 h5) or in its zone; d2 is in e1's
+        # zone, one defender
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=1, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     dict(
         title="rook on d1",
         fen="4k3/8/8/8/8/8/8/3RK3 w - - 0 1",
-        anchors={"evaluate": 590, "cheap": 578},   # test_evaluation.cpp "each piece is worth what the tables say";
+        anchors={"evaluate": 585, "cheap": 578},   # test_evaluation.cpp "each piece is worth what the tables say";
         # test_search.cpp "a quiet position stands pat" and eight more sites
         stm="w",
         phase=2,
@@ -183,11 +209,16 @@ CASES = [
         mobility=[(ROOK - 1, 10, 1)],
         attackers=[(ROOK - 1, 2, -1)],  # d7 and d8 are in Black's king zone
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: the rook attacks d2 to d8, c1 b1 a1 and e1. Of e8's rook
+        # check squares it reaches d8, in the king's ring with no other
+        # white class on it, and e1, White's own: no safe check. d7 and d8,
+        # in e8's zone, no black man defends: two weak squares
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=2, defenders=0, storm={})},
     ),
     dict(
         title="queen on d1",
         fen="4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
-        anchors={"evaluate": 1021},  # test_evaluation.cpp "each piece is worth what the tables say"
+        anchors={"evaluate": 1023},  # test_evaluation.cpp "each piece is worth what the tables say"
         stm="w",
         phase=4,
         material=[("QUEEN", 1)],
@@ -202,6 +233,12 @@ CASES = [
         mobility=[(QUEEN - 1, 17, 1)],
         attackers=[(QUEEN - 1, 2, -1)],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: the queen attacks d2 to d8, c1 b1 a1 e1, c2 b3 a4 and e2 f3
+        # g4 h5. Of e8's queen check squares it reaches d7 and d8, in the
+        # ring with no other white class on them, e1, White's own, and a4,
+        # h5 and e2, empty, outside the ring and unguarded: three safe queen
+        # checks. d7 and d8 are weak, as for the rook
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 3], weak=2, defenders=0, storm={})},
     ),
     dict(
         title="bare kings cancel",
@@ -220,13 +257,15 @@ CASES = [
         mobility=[],
         attackers=[],
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: nothing but the kings
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     # test_search, "a side in check may not stand pat". White Re8 Re1 Kg1,
     # Black Kg8 Qa4 pawns f7 g7 h7, Black to move.
     dict(
         title="black in check, Re8",
         fen="4R1k1/5ppp/8/8/q7/8/8/4R1K1 b - - 0 1",
-        anchors={"evaluate": 199},   # test_search.cpp "a side in check may not stand pat"
+        anchors={"evaluate": 247},   # test_search.cpp "a side in check may not stand pat"
         stm="b",
         phase=8,  # two white rooks and one black queen
         material=[("ROOK", 2), ("QUEEN", -1), ("PAWN", -3)],
@@ -263,13 +302,24 @@ CASES = [
         attackers=[(ROOK - 1, 2, -1)],  # Re8 bears on f8 and g8
         shelter={"w": {"HALF_OPEN_FILE": 3},  # f g h each hold a black pawn only
                  "b": {"SHIELD_NEAR": 3}},  # f7 g7 h7 in front of the king
+        # S122: on g8 Black's rook check squares are f8, e8 and h8 along the
+        # rank and g7, his own pawn. White reaches f8, in the ring with no
+        # other white class, and e8, his own rook: no safe check. f8 and
+        # g8, the zone squares Re8 attacks, no black man defends: two weak.
+        # On g1 the queen's check squares are f2 e3 d4 c5 b6 a7, h2, f1 e1
+        # h1 and g2 to g7; a4 attacks d4, g4 and a7, each empty, outside
+        # the ring and unguarded by the rooks: three safe queen checks.
+        # Nothing black attacks g1's zone. No pawn within four ranks of
+        # either king on its files
+        danger={"w": dict(checks=[0, 0, 0, 3], weak=0, defenders=0, storm={}),
+                "b": dict(checks=[0, 0, 0, 0], weak=2, defenders=0, storm={})},
     ),
     # test_search, "the losing side takes an available repetition", after
     # Ra2-b2 Kh8-h7 Rb2-a2. White Ra2 Ka1, Black Kh7, Black to move.
     dict(
         title="black a rook down, Kh7",
         fen="8/7k/8/8/8/8/R7/K7 b - - 3 2",
-        anchors={"evaluate": -603},  # test_search.cpp "the losing side takes an available repetition"
+        anchors={"evaluate": -573},  # test_search.cpp "the losing side takes an available repetition"
         stm="b",
         phase=2,
         material=[("ROOK", 1)],
@@ -285,6 +335,10 @@ CASES = [
         attackers=[],  # the a file and the second rank miss h7's zone entirely
         # a1 sees files a and b, h7 sees g and h: the edge clips both to two
         shelter={"w": {"OPEN_FILE": 2}, "b": {"OPEN_FILE": 2}},
+        # S122: from h7 a rook checks along the seventh rank and the h file;
+        # a2 attacks a7 and h2, both empty, outside the ring, and Black has
+        # no man: two safe rook checks. Nothing of Black's reaches a1
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={}), "b": dict(checks=[0, 0, 2, 0], weak=0, defenders=0, storm={})},
     ),
 ]
 
@@ -319,6 +373,11 @@ LEAVES = [
         mobility=[(ROOK - 1, 11, -1)],
         attackers=[(ROOK - 1, 2, 1)],  # d1's zone holds e1 and e2
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: e8 attacks e7 to e1 and the eighth rank to a8 and f8. Of
+        # d1's rook check squares it reaches e1, in the ring with no other
+        # black class, and d8, empty and outside it: one safe rook check;
+        # e1 and e2 are weak. White has no man, so nothing for f8
+        danger={"w": dict(checks=[0, 0, 1, 0], weak=2, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     dict(
         title="after Ke1-d2",
@@ -337,6 +396,10 @@ LEAVES = [
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
         attackers=[(ROOK - 1, 3, 1)],  # d2's zone holds e1, e2 and e3
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: of d2's rook check squares e8 reaches e2, in the ring, and
+        # d8, empty and outside it: one safe rook check; e1, e2 and e3 are
+        # weak
+        danger={"w": dict(checks=[0, 0, 1, 0], weak=3, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     dict(
         title="after Ke1-f1",
@@ -355,6 +418,9 @@ LEAVES = [
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
         attackers=[(ROOK - 1, 2, 1)],  # f1's zone holds e1 and e2
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: of f1's rook check squares e8 reaches e1, in the ring, and
+        # f8, its own king: no safe check; e1 and e2 are weak
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=2, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
     dict(
         title="after Ke1-f2",
@@ -373,10 +439,13 @@ LEAVES = [
         mobility=[(ROOK - 1, 11, -1)],  # as d1's
         attackers=[(ROOK - 1, 3, 1)],  # f2's zone holds e1, e2 and e3
         shelter={"w": {"OPEN_FILE": 3}, "b": {"OPEN_FILE": 3}},
+        # S122: of f2's rook check squares e8 reaches e2, in the ring, and
+        # f8, its own king: no safe check; e1, e2 and e3 are weak
+        danger={"w": dict(checks=[0, 0, 0, 0], weak=3, defenders=0, storm={}), "b": dict(checks=[0, 0, 0, 0], weak=0, defenders=0, storm={})},
     ),
 ]
 
-QUIESCE_IN_CHECK = -541  # test_search.cpp
+QUIESCE_IN_CHECK = -521  # test_search.cpp
 # "a quiet evasion is a legal answer to a check", on the shipped weights
 
 
@@ -498,6 +567,41 @@ def score(case, w, margin):
         for name, count in case["shelter"][colour].items():
             ks_mg += sign * count * w["king_safety_mg"][KS[name]]
             ks_eg += sign * count * w["king_safety_eg"][KS[name]]
+
+    # S122: the four linear groups, White's king's counts less Black's, in
+    # king safety's pair; the storm rides in the shelter's slot, the same sign
+    for colour, sign in (("w", 1), ("b", -1)):
+        d = case["danger"][colour]
+        for t, count in enumerate(d["checks"]):
+            ks_mg += sign * count * w["ks_checks_mg"][t]
+            ks_eg += sign * count * w["ks_checks_eg"][t]
+        ks_mg += sign * (d["weak"] * w["ks_weak_mg"][0] + d["defenders"] * w["ks_defenders_mg"][0])
+        ks_eg += sign * (d["weak"] * w["ks_weak_eg"][0] + d["defenders"] * w["ks_defenders_eg"][0])
+        for cell, count in d["storm"].items():
+            ks_mg += sign * count * w["ks_storm_mg"][cell]
+            ks_eg += sign * count * w["ks_storm_eg"][cell]
+
+    # S122's curve: each king's twelve inputs, ks_curve_input_t's order, the
+    # attackers and incidences being the pieces bearing on that king's zone
+    # (`attackers`, the defender's sign telling whose); White's king's T comes
+    # off White's score, in each half, before the taper
+    for colour, sign in (("w", -1), ("b", 1)):
+        d = case["danger"][colour]
+        defender = 1 if colour == "w" else -1
+        attackers = [0, 0, 0, 0]
+        incidences = 0
+        for t, count, side in case["attackers"]:
+            if side == defender:
+                attackers[t] += 1
+                incidences += count
+        inputs = [1] + attackers + [incidences] + list(d["checks"]) + [d["weak"], d["defenders"]]
+        for half in ("mg", "eg"):
+            x = sum(i * c for i, c in zip(inputs, w["ks_curve_" + half]))
+            t = max(x, 0) * max(x, 0) // 2048
+            if half == "mg":
+                ks_mg += sign * t
+            else:
+                ks_eg += sign * t
 
     mobility = trunc_div(mob_mg * phase + mob_eg * endgame, MAX)
     safety = trunc_div(ks_mg * phase + ks_eg * endgame, MAX)
