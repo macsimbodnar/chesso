@@ -5,7 +5,78 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-05 14:24, by hand.
+Updated: 2026-11-05 15:00, by hand.
+
+## 2026-11-05 15:00: HANDOVER for a fresh session (the owner shuts the machine down)
+
+Nothing runs. No match, fit, screen or agent is alive. HEAD is the commit that carries this file. Everything below is
+on disk and survives a shutdown; nothing lives only in the conversation.
+
+**Done today, committed:**
+- S122, H1 (`1ffc96e`). Ledger regenerated (`bcc41f3`).
+- S332 (`65463ae`).
+- Filed: S334 (`ledger.py` label override for `1ffc96e`), S335 (S332's three low findings).
+
+**In flight: S124 phase 1, rebased onto S122, staged, NOT landable.**
+- Worktree `../chesso-s124p1b`, branch `s124p1b`, base `bcc41f3`. Its `build` and `build-tune` are current.
+- Diff `.tuning/coord/S124/S124_phase1_rebased.diff`, sha256 `4980462b...`, 43 files, sidecar beside it.
+  - It applies on `bcc41f3`.
+  - On HEAD it conflicts only in `adocs/data/README.md`, which S332 also edited: land with `git apply --3way --index`.
+- The old delivery, `../chesso-s124p1` (base `d83d6c0`), stays read-only until S124 phase 1 lands.
+- The step file's "2026-11-05: phase 1 rebased onto S122" section and `adocs/data/S124_rebase_goldens.txt` hold
+  everything. That record covers:
+  - the conflicts;
+  - the identity: bench 4707943, INV-6 equal to `bcc41f3`, 0 of 6226944 rows differ engine against trace;
+  - each golden old -> new;
+  - `CLAMP_PUSH` +40 and `ADAGRAD_HOLD_STEP` 3.
+- Fast suites: 57 of 59 in each build. Two reds:
+  - **Red 2, the coordinator's, ruled DEC-355.** The forced-cell truncation case (and S122's bound at F) takes the curve's
+    exact per-row residual, under conditions: it holds on every row, plants 9 and 10 read red, and the pick rules get
+    dated amendments. If any condition fails, it comes back before option (ii). **Next agent task**: implement DEC-355 in
+    `../chesso-s124p1b`, then land.
+  - **Red 1, the owner's, a question pending (below).** The endgame factor's gradient case reads 3.4757e-6 at
+    parameter 726 `psqt_eg[king][b6]`, against 1e-6.
+    - The derivative is right: rounding on a near-stationary weight, DEC-316's class.
+    - Smaller h and Richardson stay red. This is the third recurrence of the class on `test_tuner_gradient`'s bound
+      (DEC-316, DEC-343), which DEC-343 and DEC-344 (9) reserve to the owner.
+    - Readings in `adocs/data/S124_factor_gradient_options.txt`, staged in `../chesso-s124p1b`.
+- Phase 2 needs `feature_audit` fixed first, a finding in the step file:
+  - The tool refuses the identity rank while S122's curve is off its seed.
+  - What is missing: the curve's columns linearised at the shipped x, per row and half, times the taper. They are exact
+    integers at scale 1024.
+  - That reads a local rank, so S124's pre-registered identity rule must be restated.
+  - S126 will hit the same refusal.
+
+**Questions for the owner, pending:**
+1. **Red 1 (S124's endgame factor gradient case, DEC-265 form):**
+   - **(A, recommended)** DEC-316's answer, rows: one pair picked by a rule written before it ran, `8/8/8/3r4/8/1k6/8/K3R3 w`
+     and its mirror. It raises 726's gradient 65-fold. The case then reads 6.27e-7 at 739 (x1.59), and no other golden
+     moves. It keeps the relative check; x1.59 means a later refit may ask again.
+   - **(B)** The normwise metric: it reads 5.63e-9 here. It would have flagged neither S101's nor S135's case, and it is
+     blind to a modest relative error on a small-gradient weight (S100's class).
+   - Either becomes a DEC.
+2. **Disk (asked 2026-11-05 11:55):** 3.1 GB free.
+   - (1, recommended) Remove the main tree's 9 `.ref-builds/`, 2.2 GB; `.tuning/s121/variants`, 1.0 GB; the void
+     `.tuning/s122/screen_void_twofold`, 0.86 GB; and S122's cost trees `.tuning/s122/cost` and `cost_cand`, 2.6 GB. Their
+     reading is already in `adocs/data/S122_cost_reading.txt`.
+   - (2) Only the `.ref-builds/` and the void screen.
+   - (3) Nothing.
+   - Removing those trees is the owner's call (memory rule).
+
+**Next, in order, for the coordinator:**
+1. If the owner answered Red 1: record the DEC and apply it in `../chesso-s124p1b`.
+2. Implement DEC-355 there; a fresh fast check over the rebased delta; `specs.md` from the step file's draft wording
+   (its "Draft wording for specs.md, the coordinator's"); gate; land S124 phase 1 as `No functional change`, bench
+   4707943.
+3. Then S333, filler: it touches `S122_corpus.sh`, already changed by S332. Then S334 and S335.
+4. Then S124 phase 2 (the `feature_audit` fix first), its screen reading at K refit (DEC-352). S334 and S335 can run
+   behind the screen as filler.
+
+**Machine notes:**
+- `.moltke.local.md` has the archive path, the idle-priority note (`nohup setsid nice -n 10`) and the watcher form.
+- A worktree with the doctest submodule is removed by `rm -rf` plus `git worktree prune`, after its blobs are verified
+  in history.
+
 
 ## 2026-11-05 14:24: S332 done; S124 phase 1 rebasing onto S122
 

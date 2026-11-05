@@ -17493,3 +17493,28 @@ Consequences: The gradient case stands at x1.16, so the next refit (S124, then S
               metric. Under it, DEC-316's rule asks for no pair, its worst is a rounding-floor weight (141 or 181,
               about 1.4e-7 to 1.9e-7), and the test costs about 0.15 s more. The fixture's other goldens move with
               the re-pick, each by its script, recorded in S122's step file.
+
+## DEC-355  2026-11-05  S124's forced-cell truncation case and S122's bound at F take the curve's own residual per row
+Tags:         testing, truncation, tuner, trace, s124, s122, dec-142, dec-344, dec-350
+Context:      Rebasing S124 phase 1 onto S122's landing (`bcc41f3`), its forced-cell case's precondition reads 3.019
+              against the bound 3.875, the bound S122's live curve sets (2.875 plus 1 for the curve's truncations), so
+              `cell_truncation_positions` cannot be re-derived and plants 9 and 10 read green: the guards are blind.
+              The coordinator first ruled a per-row +1 only where the curve is non-zero; it is moot, because the
+              shipped endgame constant 229 makes some king's x positive on all 6226944 rows of S083's corpus. The
+              implementer proposed the curve's exact residual instead: each row is allowed |d_mg * phase + d_eg *
+              (24 - phase)| / 24 beyond the three taperings' bound, d_h the difference of the two kings' rounding
+              losses in T(x) for half h. It holds on every row and is reached exactly; one forced cell row then
+              clears a row-at-F bound by 0.0078, and 13 rows (16 at the shipped constants) sit within 0.03 of their
+              bound. S122's bound case at F has 0.185 of slack under the flat +1.
+Decision:     By the coordinator under the owner's standing instruction, conditionally: `truncation_bound()` takes the
+              per-row residual form wherever the bound is read, S124's forced-cell case and S122's bound case at F,
+              provided that, on the tree, it holds on every corpus row the cases' scripts read, plants 9 and 10 read
+              red, and `cell_truncation_positions` (and S122's `truncation_positions`, if its rule then picks
+              differently) is re-derived by its script, each pick rule amended by a dated entry written before it
+              runs. If any of those fails, the case goes back to the coordinator before option (ii) (the case holds
+              the curve at its seed) is tried. Option (iii), reading the precondition only at the seed, is rejected.
+Why:          The tightest bound that holds is the one that keeps a truncation guard able to fail; the flat +1 is
+              looser than the error it bounds on every row.
+Rejected:     The flat +1 (blind, above). A per-row +1 where the curve fires (moot on this corpus). (iii), a weakening.
+Consequences: S122's landed bound case at F gets tighter, a strengthening of a landed test. The work is S124 phase 1's
+              rebase, in `../chesso-s124p1b`.
