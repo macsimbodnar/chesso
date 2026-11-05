@@ -24,7 +24,8 @@ Updated: 2026-11-05 13:20, by hand.
 **Withdrawn:** S124's clamp question (DEC-354). S124 re-derives its fixture goldens after its rebase.
 
 **Next, in Open order:**
-1. S332 and S333, filler, agent-only, one at a time.
+1. S332, S333 and S334, filler, agent-only, one at a time. S334 is filed by this commit: `1ffc96e`'s subject broke
+   `ledger.py`'s rule, so the ledger's S122 row reads "Ship 's fitted king safety family..." until it lands.
 2. S124 phase 1. Rebase `.tuning/coord/S124/S124_phase1.diff` (worktree `../chesso-s124p1`, base `d83d6c0`) onto this
    commit, re-derive its goldens on S122's constants and fixture, run a fresh fast check, widen `touches:`, write
    `specs.md`, gate.
