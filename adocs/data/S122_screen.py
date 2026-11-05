@@ -18,7 +18,8 @@ parsed them.
     S122_screen.py only-family TREE [--allow-five]
     S122_screen.py landing-check --tree TREE [--commit SHA]
     S122_screen.py zero-five TREE
-    S122_screen.py part NAME --out OUT [--margin M]
+    S122_screen.py part NAME --out OUT --ruled DEC-nnn --base DIR [--margin M]
+    S122_screen.py ruled FIT --dec DEC-nnn --out OUT --base DIR
     S122_screen.py sample-prep SAMPLE --exclude FILE [--exclude FILE ...] --out FILE
     S122_screen.py side-read GAMES_PRED GAMES_PART --label TEXT --full-d D
     S122_screen.py clamp CENSUS --margin M
@@ -43,7 +44,14 @@ is src/evaluation.cpp's two asserts for a header's weights: king safety's packed
 and the curve's x, P6's wider bound with --wide. ONLY-FAMILY refuses a paste that moved any weight but S122's.
 LANDING-CHECK refuses a TREE whose HEAD is not the landing: the four linear arrays
 at zero and the curve at its seed. ZERO-FIVE writes P7's variant, the shipped linear
-five at zero, into TREE's sources. PART prints a bisection part's free set.
+five at zero, into TREE's sources. PART prints a bisection part's free set,
+drawn since 2026-11-05 (DEC-353) from the survivors of the one decided fit the
+ruling given names, and refuses without a ruling. RULED (DEC-353) accepts a fit
+for `apply` only if a part's DECIDED line names it and it is the one decided fit
+the decision given names, and prints that part's tree. Both read the decision's
+`Decision:` field as committed at BASE's HEAD, and both refuse unless every P1
+to P7 reading exists and is decided. `--decisions FILE` reads FILE in its place,
+for a plant only; S122_screen.sh never passes it.
 SAMPLE-PREP drops from the 12000-game sample every row on a position a training or
 validation file holds, and refuses a sample that holds the corpus's own games or one
 game twice. SIDE-READ pairs two vectors' per-game losses on one set and
@@ -153,6 +161,12 @@ CENSUS_ROW = re.compile(r"^\s*(\d+)\s+(\d+)\s+([0-9.]+)\s+(\d+)\s+([0-9.]+)\s+"
 CENSUS_PICK = re.compile(r"^pick (\d+|none)")
 CENSUS_X = re.compile(r"^\s*x > 0\s+kings ([0-9.]+) % mg, ([0-9.]+) % eg")
 VALIDATION_START = re.compile(r"^start: train ([0-9.]+)\s+validation ([0-9.]+)")
+# A reading's decided fit and the tree its part was fitted on, as `read` writes
+# them, and a backticked token of a decision's entry: DEC-353's form, `ruled`.
+DECIDED = re.compile(r"^DECIDED fit (\S+) pred \S+ d \S+ cap \d+$", re.M)
+READ_FREE = re.compile(r"^free .*, tree ([^,\s]+), fit [^,\s]+, against ",
+                       re.M)
+BACKTICKED = re.compile(r"`([^`\n]+)`")
 
 
 # ------------------------------------------------------------------- plan
@@ -895,7 +909,19 @@ def zero_five(args):
 def part(args):
     if args.name not in BISECTION:
         raise Refused(f"unknown part {args.name}; parts are A, B, C")
-    survivors = survivors_of(args.out)
+    # 2026-11-05, DEC-353: the screen's own survivor list reads P7 as kept, and
+    # the ruling drops it, so a part is drawn only from the survivors of the
+    # decided fit a ruling names.
+    if not args.ruled:
+        raise Refused("the screen's survivor list is overruled by DEC-353; a "
+                      "bisection part's survivors are those of the decided "
+                      "fit a ruling names: part NAME --ruled DEC")
+    if not args.base:
+        raise Refused("--ruled needs --base, the main checkout")
+    survivors, token = ruled_survivors(args.out, args.ruled, args.base,
+                                       args.decisions)
+    print(f"ruled {args.ruled} names `{token}`: survivors "
+          f"{','.join(survivors)}")
     parts = dict(bisection_parts(survivors)).get(args.name)
     if not parts:
         raise Refused(f"part {args.name} holds no survivor of the screen")
@@ -917,6 +943,124 @@ def part(args):
     print(f"margin {margin}")
     print(f"fit part_{args.name}_m{margin}_e{FIT_EPOCHS}")
     print(f"ties {ties_of(parts)}")
+    return 0
+
+
+def decided_fits(out):
+    """Every DECIDED line under OUT/read, in part order: the part, its
+    reading's text, the line, and the fit's full.hpp by resolved path. Every
+    P1 to P7 reading must exist and be decided first, as `outcome_of` has it:
+    none missing, `unreadable` or `escalate`."""
+    for p in PARTS:
+        outcome_of(out, p)
+    fits = []
+    for p in PARTS:
+        text = open(os.path.join(out, "read", f"{p}.txt")).read()
+        for m in DECIDED.finditer(text):
+            fits.append((p, text, m, os.path.realpath(
+                os.path.join(m.group(1), "full.hpp"))))
+    return fits
+
+
+def decisions_text(base, plant):
+    """adocs/decisions.md as committed at BASE's HEAD, so an uncommitted entry
+    authorizes nothing; PLANT, a file, only for a plant (`--decisions`, which
+    S122_screen.sh never passes)."""
+    if plant:
+        print(f"decisions: {plant}, a plant, not HEAD's")
+        return open(plant, encoding="utf-8").read(), plant
+    text = subprocess.run(["git", "-C", base, "show",
+                           "HEAD:adocs/decisions.md"], check=True,
+                          capture_output=True, text=True).stdout
+    return text, f"HEAD:adocs/decisions.md in {base}"
+
+
+def decision_names(dec, base, plant):
+    """The files DEC's `Decision:` field names by a backticked path read from
+    BASE, the main checkout: {resolved path: the path as written}. Context,
+    Rejected and the other fields name nothing: they may cite a fit the
+    decision turns down."""
+    if not re.match(r"^DEC-\d+$", dec):
+        raise Refused(f"{dec} is not a decision id, DEC-nnn")
+    text, source = decisions_text(base, plant)
+    heading = re.compile(rf"^## {re.escape(dec)}\b")
+    seen = inside = on = False
+    field = []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            inside = bool(heading.match(line))
+            seen = seen or inside
+            on = False
+            continue
+        if not inside:
+            continue
+        # A field starts at column 0; its continuation lines are indented.
+        if line[:1] not in ("", " ", "\t"):
+            on = line.startswith("Decision:")
+        if on:
+            field.append(line)
+    if not seen:
+        raise Refused(f"{source} holds no {dec}")
+    if not field:
+        raise Refused(f"{dec} in {source} has no Decision: field")
+    names = {}
+    for token in BACKTICKED.findall("\n".join(field)):
+        names.setdefault(os.path.realpath(os.path.join(base, token)), token)
+    return names
+
+
+def ruled_fit(out, dec, base, plant):
+    """The one decided fit DEC's Decision field names, as decided_fits gives
+    it, and the path DEC writes it by. None, or more than one, is refused."""
+    names = decision_names(dec, base, plant)
+    named = [f for f in decided_fits(out) if f[3] in names]
+    if not named:
+        raise Refused(f"{dec} names no part's decided fit under {out}/read")
+    if len(named) > 1:
+        raise Refused(f"{dec} names {len(named)} decided fits; a ruling names "
+                      "one")
+    return named[0], names[named[0][3]]
+
+
+def ruled_survivors(out, dec, base, plant):
+    """DEC-353's survivors: the parts of the one decided fit DEC names, read
+    from its fit set's directory, NAME_eCAP (`1245_e20000` is P1, P2, P4, P5)."""
+    (_p, _text, _m, fit), token = ruled_fit(out, dec, base, plant)
+    m = re.match(r"^([1-7]+)_e\d+$", os.path.basename(os.path.dirname(fit)))
+    if not m:
+        raise Refused(f"{fit} is not in a fit set's directory, NAME_eCAP")
+    return [f"P{d}" for d in m.group(1)], token
+
+
+def ruled(args):
+    """DEC-353's form: the fit a decision names, in place of the screen's
+    CANDIDATE line. FIT must be the full.hpp of a fit some part's DECIDED line
+    names, and the one decided fit DEC's Decision field names, by a backticked
+    path read from BASE, the main checkout. Files are compared by resolved
+    path, so a link to the screen's records names the records themselves.
+    Prints the tree that part's reading names; `apply` holds FIT's tree.txt to
+    it."""
+    fit = os.path.realpath(args.fit)
+    if not os.path.isfile(fit):
+        raise Refused(f"no fit {args.fit}")
+    found = [f for f in decided_fits(args.out) if f[3] == fit]
+    if not found:
+        raise Refused(f"{args.fit} is no part's decided fit: no DECIDED line "
+                      f"under {args.out}/read names it")
+    (p, text, decided, ruled_one), token = ruled_fit(args.out, args.dec,
+                                                     args.base, args.decisions)
+    if ruled_one != fit:
+        raise Refused(f"{args.dec} names {ruled_one}, not {fit}: a ruled paste "
+                      "is the one fit its decision names")
+    free = READ_FREE.search(text)
+    if free is None:
+        raise Refused(f"{p}'s reading names no tree")
+    print(f"ruled {args.dec} names `{token}`")
+    print(f"decided {p}: {decided.group(0)}")
+    print(f"part {p}")
+    print(f"name {os.path.basename(os.path.dirname(fit))}")
+    print(f"tree {free.group(1)}")
+    print(f"fit {fit}")
     return 0
 
 
@@ -1105,6 +1249,18 @@ def main(argv):
     c.add_argument("name")
     c.add_argument("--out", required=True)
     c.add_argument("--margin", type=int, default=None)
+    c.add_argument("--ruled", default="")
+    c.add_argument("--base", default="")
+    c.add_argument("--decisions", default="",
+                   help="a plant only: FILE in place of HEAD's decisions.md")
+
+    c = commands.add_parser("ruled")
+    c.add_argument("fit")
+    c.add_argument("--dec", required=True)
+    c.add_argument("--out", required=True)
+    c.add_argument("--base", required=True)
+    c.add_argument("--decisions", default="",
+                   help="a plant only: FILE in place of HEAD's decisions.md")
 
     c = commands.add_parser("sample-prep")
     c.add_argument("sample")
@@ -1126,7 +1282,7 @@ def main(argv):
                 "margin-read": margin_read, "p0-read": p0_read, "read": read,
                 "start-check": start_check, "headroom": headroom,
                 "only-family": only_family, "landing-check": landing_check,
-                "zero-five": zero_five, "part": part,
+                "zero-five": zero_five, "part": part, "ruled": ruled,
                 "sample-prep": sample_prep, "side-read": side_read,
                 "clamp": clamp}
     try:

@@ -18,9 +18,12 @@
 #   adocs/data/S122_screen.sh all             # locate, audit, margin, p0, P1 to P7
 #   adocs/data/S122_screen.sh sample          # side (b)'s sample, after the corpus
 #   adocs/data/S122_screen.sh side            # the two side readings
-#   adocs/data/S122_screen.sh part NAME       # a bisection part's fit, on H0, at M
-#   adocs/data/S122_screen.sh part NAME --margin 184 # the same refit at 184
-#   adocs/data/S122_screen.sh apply TREE [FIT] # the candidate (or a part) into TREE
+#   adocs/data/S122_screen.sh part NAME --ruled DEC # a bisection part's fit, on H0, at M
+#   adocs/data/S122_screen.sh part NAME --ruled DEC --margin 184 # the same refit at 184
+#   (`part NAME` without a ruling refuses since DEC-353, 2026-11-05)
+#   adocs/data/S122_screen.sh apply TREE --ruled DEC FIT # the candidate DEC names
+#   adocs/data/S122_screen.sh apply TREE FIT  # a bisection part into TREE
+#   (`apply TREE`, the screen's own candidate, refuses since DEC-353, 2026-11-05)
 #
 # PART is P1 to P7, NAME A, B or C. Run from the main checkout with S122's phase 1
 # committed (the family at its seed, `No functional change`) and both build/ and
@@ -38,6 +41,8 @@
 # decision. DEC-344 is the coordinator's ruling it carries.
 # Amended 2026-11-04 (DEC-349): the screen runs again on a corpus generated again;
 # "AMENDED", below.
+# Amended 2026-11-05 (DEC-353): `apply` pastes the candidate a decision names,
+# and `part` draws on that candidate's survivors; "AMENDED 2026-11-05", below.
 # ============================================================================
 #
 # THE CORPUS: head's own games, DEC-344 (1), prepared by adocs/data/S122_corpus.sh
@@ -220,6 +225,34 @@
 # the sample's command gains `--games-out games.tsv`, recording only, which a datagen
 # before S331 refuses as an unknown option. Every part, rule, cap, margin and reading
 # above stands.
+#
+# AMENDED 2026-11-05, DEC-353 -- after the screen and the side readings, before any
+# paste; the step file's section "2026-11-05: the screen, the side readings, and the
+# ruling, DEC-353". The screen named 12457 on tree p7 at 275. Side (b) then read P7
+# at d -0.0000287 +/- 0.0000107 by game against the screen's +0.0000080, the other
+# sign and 2.68 errors out, and printed STOP. DEC-353, the coordinator's ruling on
+# it, drops P7 and makes the candidate 1245, P5's decided fit, nothing refit:
+# `.tuning/s122/screen/fits/1245_e20000/full.hpp`, the landing's tree, margin 275,
+# 20000 epochs. What changed, and nothing else: `apply TREE`, which pasted
+# read/P7.txt's CANDIDATE line, now refuses, because that line is the screen's and
+# the ruling overrules it. `apply TREE --ruled DEC FIT` pastes the fit a decision
+# names. It refuses unless every P1 to P7 reading exists and is decided, FIT is the
+# full.hpp that some part's DECIDED line under OUT/read names, it is the one decided
+# fit DEC's Decision: field names by a backticked path read from the main checkout,
+# in adocs/decisions.md as committed at that checkout's HEAD, and FIT's tree.txt is
+# the tree that part's reading names. An uncommitted entry, and a fit a decision
+# cites anywhere but its Decision: field, authorize nothing. Every check after the
+# choice of fit stands as it was, and so does `apply TREE FIT` for a bisection
+# part, which now reads the ruling the part was fitted under. The bisection is
+# DEC-353's: M 275 alone at {-5, 0}, then A = P1, B = P2 + P4, C = P5. `part NAME
+# --ruled DEC` draws its parts from the survivors of the same one decided fit,
+# read from that fit's directory (1245_e20000: P1, P2, P4, P5, on the landing's
+# tree), so C frees P5's curve terms on the landing. `part NAME` without a ruling
+# refuses: the screen's own list reads P7 as kept and would put C on tree p7. A
+# part's directory records its ruling in
+# ruling.txt, and its K file the ruling and tree it was probed under; a fit or a K
+# there under another, or under none, is refused. THE CANDIDATE and THE BISECTION
+# above are the screen's rule as written.
 # ============================================================================
 
 set -uo pipefail
@@ -1065,7 +1098,10 @@ side() {
 
 part() {
   local name="$1" spec groups fit tiefiles tree wide base fdir info corpus rows f tuner five="" w=""
-  local asked="" kf
+  local asked="" kf ruling="" main rule=()
+  # 2026-11-05, DEC-353: `part NAME --ruled DEC [--margin 184]`. The helper
+  # refuses a part without a ruling (the screen's own list reads P7 as kept).
+  if [[ "${2:-}" == --ruled ]]; then ruling="${3:-}"; set -- "$1" "${@:4}"; fi
   [[ "${2:-}" == --margin ]] && asked="${3:-}"
   enough_disk || return 1
   check_views || return 1
@@ -1077,7 +1113,12 @@ part() {
       { say "refused: --margin $asked is neither the screen's M $M nor $SHIPPED_MARGIN"; return 1; }
     M="$asked"
   fi
-  spec=$(python3 "$helper" part "$name" --out "$OUT" --margin "$M") || { echo "$spec"; return 1; }
+  if [[ -n "$ruling" ]]; then
+    main=$(main_checkout) || { say "refused: no main checkout above $root"; return 1; }
+    rule=(--ruled "$ruling" --base "$main")
+  fi
+  spec=$(python3 "$helper" part "$name" --out "$OUT" --margin "$M" "${rule[@]}") ||
+    { echo "$spec"; return 1; }
   echo "$spec"
   groups=$(sed -n 's/^groups //p' <<< "$spec")
   fit=$(sed -n 's/^fit //p' <<< "$spec")
@@ -1100,6 +1141,22 @@ part() {
     [[ "$(cat "$fdir/margin.txt")" == "$M" ]] ||
       { say "refused: $fdir was fitted at margin $(cat "$fdir/margin.txt"), not $M"; return 1; }
   fi
+  # The ruling a part was fitted under, beside it, so a fit is never reused or
+  # pasted under another, nor under none (DEC-353).
+  if [[ -f "$fdir/ruling.txt" ]]; then
+    [[ "$(cat "$fdir/ruling.txt")" == "$ruling" ]] ||
+      { say "refused: $fdir was fitted under $(cat "$fdir/ruling.txt"), not $ruling"; return 1; }
+  elif [[ -f "$fdir/full.log" ]]; then
+    say "refused: $fdir holds a fit with no ruling.txt, made before DEC-353; move that directory aside"
+    return 1
+  fi
+  # K is probed on the part's tree with its tuner, which the ruling decides, so
+  # the ruling and tree it was probed under sit beside it and no other reads it.
+  kf="$base/k/full_m$M"
+  if [[ -s "$kf.k" && "$(cat "$kf.ruled" 2>/dev/null)" != "$ruling $tree" ]]; then
+    say "refused: $kf.k was probed under '$(cat "$kf.ruled" 2>/dev/null)', not '$ruling $tree'; move $kf.* aside"
+    return 1
+  fi
   audit_once "$base" || return 1
   # The tools frozen at what has landed; an audit read before froze none this run.
   tools "$base" || return 1
@@ -1107,12 +1164,12 @@ part() {
   read -r corpus rows <<< "$info"
   tuner="$base/bin/tuner"
   [[ "$tree" != landing ]] && { tuner=$(tuner_for "$tree") || { echo "$tuner"; return 1; }; }
-  kf="$base/k/full_m$M"
   if [[ ! -s "$kf.k" ]]; then
     "$tuner" --data "$corpus" --holdout "$HOLDOUT" --margin "$M" \
         --out "$kf.hpp" --epochs 0 --only "$groups" --threads "$THREADS" \
         > "$kf.log" 2>&1 || { say "the K probe failed"; return 1; }
     sed -n 's/^fitted K = \([0-9.]*\)$/\1/p' "$kf.log" > "$kf.k"
+    echo "$ruling $tree" > "$kf.ruled"
   fi
   k_check "$kf.k" || return 1
   : > "$fdir/ties.new" || return 1
@@ -1129,6 +1186,7 @@ part() {
   echo "$tree" > "$fdir/tree.txt"
   echo "$FIT_EPOCHS" > "$fdir/cap.txt"
   echo "$M" > "$fdir/margin.txt"
+  echo "$ruling" > "$fdir/ruling.txt"
   probe_tuner "$tuner" "$corpus" "$fdir" "$five" || return 1
   fit_one "$tuner" "$corpus" "$fdir/full.log" "$(cat "$kf.k")" "$fdir/ties.txt" \
       "$groups" "$five" "$FIT_EPOCHS" || return 1
@@ -1142,15 +1200,37 @@ part() {
   say "part $name: $fdir/full.hpp, tree $tree, margin $M, sha256 $(sha256sum "$fdir/full.hpp" | cut -d' ' -f1)"
 }
 
+# The main checkout, which holds .tuning/: a decision names the screen's records
+# by a path from there, as the step files do, whichever worktree runs this.
+main_checkout() {
+  local common
+  common=$(git -C "$root" rev-parse --path-format=absolute --git-common-dir) || return 1
+  dirname "$common"
+}
+
 # The candidate into TREE: the variant's source change if its parts name one, the
 # paste, the checks, the margin into src/search_params.hpp if it moved, the
 # formatter, both builds, bench and both fast suites -- their reds recorded, never
-# answered here -- then the clamp's reading and a fresh truncation_scan.
+# answered here -- then the clamp's reading and a fresh truncation_scan. The
+# candidate is the fit a decision names, `apply TREE --ruled DEC FIT` (2026-11-05,
+# DEC-353), or a bisection part's, `apply TREE FIT`.
 apply() {
-  local tree="$1" line name fit dir info corpus rows ctree five="" kfile
+  local tree="$1" name fit dir info corpus rows ctree five="" kfile ruling="" main
   margin_of || return 1
   local want spec
-  if [[ -n "${2:-}" ]]; then
+  if [[ "${2:-}" == --ruled ]]; then
+    # DEC-353: a part's DECIDED fit that the decision names too; the tree that
+    # part's reading names, which the fit's tree.txt must say (below).
+    ruling="$3"
+    main=$(main_checkout) || { say "refused: no main checkout above $root"; return 1; }
+    spec=$(python3 "$helper" ruled "$4" --dec "$ruling" --out "$OUT" --base "$main") ||
+      { echo "$spec"; return 1; }
+    echo "$spec"
+    name=$(sed -n 's/^name //p' <<< "$spec")
+    want=$(sed -n 's/^tree //p' <<< "$spec")
+    fit=$(sed -n 's/^fit //p' <<< "$spec")
+    kfile="$OUT/k/full.k"
+  elif [[ -n "${2:-}" ]]; then
     fit="$2"
     # A bisection part's fit, OUT/bisect/NAME/fits/part_NAME_mM_eCAP/full.hpp: the
     # tree the part names now, which the fit's own tree.txt must say, pasted at
@@ -1164,20 +1244,22 @@ apply() {
     [[ "$pm" == "$M" || "$pm" == "$SHIPPED_MARGIN" ]] ||
       { say "refused: $fit names margin $pm, neither M $M nor $SHIPPED_MARGIN"; return 1; }
     M="$pm"
+    # The ruling the part was fitted under, which names its survivors (DEC-353).
+    ruling=$(cat "$(dirname "$fit")/ruling.txt" 2>/dev/null) && [[ -n "$ruling" ]] ||
+      { say "refused: $(dirname "$fit") has no ruling.txt; a bisection part is fitted under a ruling (DEC-353)"; return 1; }
+    main=$(main_checkout) || { say "refused: no main checkout above $root"; return 1; }
     name="part_${pname}_m$M"
     kfile="$OUT/bisect/$pname/k/full_m$M.k"
-    spec=$(python3 "$helper" part "$pname" --out "$OUT" --margin "$M") || { echo "$spec"; return 1; }
+    spec=$(python3 "$helper" part "$pname" --out "$OUT" --margin "$M" --ruled "$ruling" \
+             --base "$main") || { echo "$spec"; return 1; }
     want=$(sed -n 's/^tree //p' <<< "$spec")
     [[ "$(sed -n 's/^fit //p' <<< "$spec")" == "$(basename "$(dirname "$fit")")" ]] ||
       { say "refused: $fit is not the fit part $pname names at margin $M"; return 1; }
   else
-    line=$(grep '^CANDIDATE ' "$OUT/read/P7.txt" 2>/dev/null) ||
-      { say "refused: $OUT/read/P7.txt names no candidate"; return 1; }
-    [[ "$line" == "CANDIDATE none" ]] && { say "refused: the screen chose no candidate"; return 1; }
-    name=$(awk '{print $2}' <<< "$line")
-    want=$(sed -n 's/.* tree \([^ ]*\) margin.*/\1/p' <<< "$line")
-    fit="$(sed -n 's/.* dir \([^ ]*\)$/\1/p' <<< "$line")/full.hpp"
-    kfile="$OUT/k/full.k"
+    # Until 2026-11-05 this pasted read/P7.txt's CANDIDATE line. DEC-353 overrules
+    # that line, so the screen's own candidate is never pasted.
+    say "refused: the screen's CANDIDATE line is overruled by DEC-353; paste the candidate a decision names, apply TREE --ruled DEC FIT"
+    return 1
   fi
   [[ -f "$fit" ]] || { say "refused: no $fit"; return 1; }
   [[ "$(margin_of_header "$fit")" == "$M" ]] ||
@@ -1197,7 +1279,8 @@ apply() {
   read -r corpus rows <<< "$info"
   dir="$OUT/apply_$name"
   mkdir -p "$dir" || return 1
-  say "S122 apply: $fit into $tree at $(git -C "$tree" rev-parse --short HEAD), tree $ctree, margin $M"
+  if [[ -n "$ruling" ]]; then echo "$spec" > "$dir/ruled.txt" || return 1; fi
+  say "S122 apply: $fit into $tree at $(git -C "$tree" rev-parse --short HEAD), tree $ctree, margin $M${ruling:+, ruled by $ruling}"
   sha256sum "$fit" | tee "$dir/fit.sha256"
   [[ "$ctree" == *p7* ]] && five="--allow-five"
   python3 "$helper" start-check "$fit" --tree "$tree" --free "$EVERY_GROUP" $five || return 1
@@ -1303,10 +1386,13 @@ case "$stage" in
   sample)
     if [[ $# -eq 1 ]] && side_sample; then echo "S122-SAMPLE-DONE"; else echo "S122-SAMPLE-FAILED"; exit 1; fi ;;
   part)
-    if [[ $# -eq 2 || ( $# -eq 4 && "$3" == --margin ) ]] && part "${@:2}"; then echo "S122-PART-DONE"; else echo "S122-PART-FAILED"; exit 1; fi ;;
+    if [[ $# -eq 2 || ( $# -eq 4 && ( "$3" == --margin || "$3" == --ruled ) ) ||
+          ( $# -eq 6 && "$3" == --ruled && "$5" == --margin ) ]] &&
+       part "${@:2}"; then echo "S122-PART-DONE"; else echo "S122-PART-FAILED"; exit 1; fi ;;
   apply)
-    if [[ $# -eq 2 || $# -eq 3 ]] && check_views && apply "$2" "${3:-}"; then echo "S122-APPLY-DONE"; else echo "S122-APPLY-FAILED"; exit 1; fi ;;
+    if [[ $# -eq 2 || ( $# -eq 3 && "$3" != --ruled ) || ( $# -eq 5 && "$3" == --ruled ) ]] &&
+       check_views && apply "${@:2}"; then echo "S122-APPLY-DONE"; else echo "S122-APPLY-FAILED"; exit 1; fi ;;
   *)
-    echo "usage: $0 locate | audit | landing-check | margin | p0 | screen PART | read PART [--cap 80000] | all | sample | side | part NAME [--margin 184] | apply TREE [FIT]" >&2
+    echo "usage: $0 locate | audit | landing-check | margin | p0 | screen PART | read PART [--cap 80000] | all | sample | side | part NAME --ruled DEC [--margin 184] | apply TREE FIT | apply TREE --ruled DEC FIT" >&2
     exit 2 ;;
 esac

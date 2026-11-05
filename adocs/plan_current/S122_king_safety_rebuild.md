@@ -1392,6 +1392,32 @@ during the generation does not reach it: its datagen is frozen and its script is
 9. to 13. **The superseded list's steps 6 to 10, unchanged**: `side`, about 2 h, ceiling 4 h, on step 7's sample;
    `S122_cost.sh` check and run; `apply` and phase 2; the candidate's cost; the one `{0, 5}` SPRT.
 
+   **Amended 2026-11-05 (DEC-353): steps 9 to 13 in the ruled form.** Step 9 has run; the other four take the candidate
+   DEC-353 names, `1245` at 275, in place of the screen's `12457`. The text above is kept as written (DEC-348).
+   9. `side` ran, 04:55 to 05:06, and ended `S122-SIDE-FAILED` on P7's STOP (the section "2026-11-05: the screen, the
+      side readings, and the ruling, DEC-353", below).
+   10. `CAND_SHA=<the landing> PARENT_SHA=1b2539a adocs/data/S122_cost.sh check`, then `run` with the machine idle:
+       about 1 h 40 m, ceiling 3 h 30 m, `S122-COST-DONE|FAILED`, as in the superseded step 7.
+   11. `adocs/data/S122_screen.sh apply <a clean worktree at HEAD> --ruled DEC-353
+       .tuning/s122/screen/fits/1245_e20000/full.hpp`, about 15 min, from the main checkout. It pastes P5's decided fit
+       only if a DECIDED line names it, DEC-353 names it, and its `tree.txt` is the tree P5's reading names
+       (`landing`). Then come the margin row, both builds, bench, both fast suites, the census's clamp at 275 (over
+       1.0 % prints STOP) and a fresh `truncation_scan`, as before; the records go to
+       `.tuning/s122/screen/apply_1245_e20000/`. `apply <tree>` alone now refuses: it pasted `read/P7.txt`'s
+       CANDIDATE line, `12457` on tree `p7`, which DEC-353 overrules. Then phase 2 (an agent), as before.
+   12. The candidate's cost: `CAND_SHA=<the landing> PARENT_SHA=1b2539a ROWS=cand CAND_MASK=27
+       OUT=.tuning/s122/cost_cand adocs/data/S122_cost.sh check`, then `run`, about 25 min. 27 is P1 + P2 + P4 + P5;
+       P7 was never a mask bit (DEC-353).
+   13. The one `{0, 5}` SPRT of `1245` at 275 (phase 2's script), up to 41900 games, 19.86 h, ceiling 40 h. On H0 or no
+       verdict, DEC-353's bisection, each part stopping for the coordinator: M 275 alone at `{-5, 0}`, then each refit
+       by `adocs/data/S122_screen.sh part A|B|C --ruled DEC-353`, or `part A|B|C --ruled DEC-353 --margin 184` when M
+       alone's answer says the rest refit at 184. Under DEC-353 the survivors are 1245's, P1, P2, P4 and P5, all on
+       the landing: A = P1 frees `ks_checks`, B = P2 + P4 frees `ks_weak,ks_storm`, and C = P5 frees
+       `ks_curve.core,ks_curve.checks,ks_curve.weak`. `part` without a ruling refuses, because the screen's own list
+       reads P7 as kept and would put C on tree `p7`. Each part is pasted by `apply <tree> <its full.hpp>`, under the
+       ruling its directory's `ruling.txt` records. The `full.hpp` is given by its absolute path, because the
+       bisection branch compares that path's directories with `$OUT/bisect` as strings.
+
 Optional, deciding nothing: on a pool that finished in one run, `adocs/data/S331_measure.py` `read_command` checks the
 `repetition:` line against the files and reads the run's exposure. It holds every row of the three views in memory:
 about 56 M rows at 150000 games, inferred at well over the machine's 15 GB. So it is not run on the full pool as the
@@ -1461,3 +1487,100 @@ on the landing's tree, the shipped linear five kept at their shipped values. Not
 - The bisection on H0 or no verdict: M 275 alone at `{-5, 0}`, then A = P1, B = P2 + P4, C = P5.
 - The cost's candidate mask stays 27.
 - Retiring the linear five is a lead for S126.
+
+### 2026-11-05: `apply` and `part` take the ruling (phase 2, part 1)
+
+One Opus 5.5 subagent, briefed by the coordinator; worktree `../chesso-s122a`, branch `s122a` at `7d80fd0`. Only
+`adocs/data/S122_screen.sh` (`apply`, `part`), `adocs/data/S122_screen.py` (`ruled`, `part`) and this file changed.
+Nothing under `src/`, `tools/` or `tests/` changed, and nothing under `.tuning/s122/` was written.
+
+- **The ruling, read one way on both paths.** `S122_screen.py` `ruled_fit` reads DEC's `Decision:` field alone, in
+  `adocs/decisions.md` as committed at the main checkout's HEAD (`git show HEAD:`). The main checkout is git's
+  common directory. Context, Rejected and the other fields may cite a fit the decision turns down, so they name
+  nothing, and an uncommitted entry authorizes nothing. The field must name exactly one decided fit by a backticked
+  path, or the ruling is refused. Files are compared by their resolved paths, so a link to the screen's records names
+  the records themselves. Both paths first refuse unless every P1 to P7 reading exists and is decided, as
+  `outcome_of` has it: none missing, `unreadable` or `escalate`. `--decisions FILE` reads FILE in place of HEAD's
+  file, for a plant only; `S122_screen.sh` never passes it.
+- **The candidate: `apply TREE --ruled DEC FIT`.** `ruled` accepts FIT only if a part's `DECIDED` line names it (FIT
+  is that line's directory's `full.hpp`) and FIT is the one fit DEC's ruling names. It then prints the tree that
+  part's reading names, and `apply`'s own check holds the fit's `tree.txt` to it. Everything after the choice of fit
+  is as it was. The records go to `OUT/apply_<the fit's directory>/`, with `ruled.txt` (`ruled`'s output) beside
+  them. `apply TREE`, which pasted `read/P7.txt`'s CANDIDATE line, now refuses.
+- **The bisection: `part NAME --ruled DEC [--margin 184]`.** The coordinator asked for this on reading the first
+  delivery. Without a ruling, `part` refuses: `S122_screen.py` `survivors_of` reads P7's outcome as the screen wrote
+  it, `kept`, and so put C = P5 + P7 on tree `p7`. With one, `ruled_survivors` takes the same one fit and reads its
+  parts from the fit set's directory: `1245_e20000` is P1, P2, P4 and P5. The bisection is then DEC-353's, all on
+  the landing. A part's directory records its ruling, the bare DEC id, in `ruling.txt`; a fit there under another
+  ruling, or a fit with none, is refused. Its K file `bisect/NAME/k/full_mM.k` has the ruling and the tree it was
+  probed under beside it (`.ruled`), and a K under another, or with none, is refused before the audit. `apply TREE
+  FIT` pastes a part only under the ruling its `ruling.txt` names, read through the same `part`.
+- The script's pre-registration has the dated amendment, and "Commands for the coordinator, in order (DEC-349)" has
+  steps 9 to 13 in the ruled form, both with the earlier text kept (DEC-348).
+- The coordinator's reviewer then fast-checked the delivery. It found no live defect: on the real records both
+  paths chose DEC-353's fit. Its six findings are fixed above: the one-fit rule and the `Decision:` field for
+  `ruled`, the readings' readiness, the K guard, the advice "move that directory aside", HEAD's file, and the
+  wording.
+
+**`part A|B|C --ruled DEC-353` on the screen's records**, `S122_screen.py part` read-only over `.tuning/s122/screen`
+at 275 with HEAD's DEC-353, each first printing ``ruled DEC-353 names `.tuning/s122/screen/fits/1245_e20000/full.hpp`:
+survivors P1,P2,P4,P5``:
+
+| part | groups | tree | ties |
+|---|---|---|---|
+| A | `ks_checks` | landing | `ties_P1.txt` |
+| B | `ks_weak,ks_storm` | landing | `ties_P2.txt ties_P4.txt` |
+| C | `ks_curve.core,ks_curve.checks,ks_curve.weak` | landing | none |
+
+P5's free set, its reading and its `groups.txt`, is `ks_checks,ks_weak,ks_storm,ks_curve.core,ks_curve.checks,ks_curve.weak`.
+So C frees exactly P5's curve terms, and A, B and C together free exactly P5's set.
+
+**Each refusal red on a plant, then green.** Every plant is a scratch copy under `.tuning/s122p2/p1/`: `read/`,
+`margin/M.txt`, `k/full.k` and `corpus.txt` are copied, and `fits/` is a link to the screen's. The tree is a scratch
+worktree at `7d80fd0`, removed after. FIT paths are relative to `fits/` unless the row says otherwise. Every row was
+run again on the final code, each reading as below.
+
+| refusal | plant | read |
+|---|---|---|
+| `apply`, the bare form | `apply TREE` | red: the CANDIDATE line is overruled by DEC-353 |
+| `apply`, the bisection form | `apply TREE 12457_e20000/full.hpp`, the screen's candidate | red: not a bisection part's fit |
+| no `DECIDED` line names the fit | `--ruled DEC-353 1245_e20000/q1.hpp`, a quarter fit | red: no part's decided fit |
+| | `--ruled DEC-353` with the screen's own `margin/r2_m275_e20000/full.hpp`, the margin's fit | red: the same |
+| the ruling names no decided fit | `--ruled DEC-352 1245_e20000/full.hpp` | red: DEC-352 names no part's decided fit |
+| | `--ruled DEC-999 1245_e20000/full.hpp` | red: HEAD's `decisions.md` holds no DEC-999 |
+| the ruling names another fit | `--ruled DEC-353 12457_e20000/full.hpp`, the screen's candidate | red: DEC-353 names 1245, not 12457 |
+| | the reviewer's plant: DEC-902 with 1245 in `Decision:` and 12457 in `Rejected:`, `ruled 12457_e20000/full.hpp` | red: DEC-902 names 1245, not 12457 (it returned 0 on `p7` before the fix); `ruled 1245_e20000/full.hpp` green on the landing |
+| the ruling names two | a plant DEC-900 with 1245 and 12457 in `Decision:`, by `ruled` and by `part C` | red: names 2 decided fits |
+| an uncommitted ruling | a scratch repository whose committed `decisions.md` lacks DEC-904 and whose working copy names 12457 in it, as `--base` | red: HEAD's `decisions.md` holds no DEC-904; the same file read as a plant (`--decisions`) passes, as it must |
+| a reading not decided | P3's reading `unreadable`, P6's missing, P7's `escalate`, by `apply --ruled`, the helper's `part C` and the stage | red, each by `outcome_of`'s own words |
+| the fit's `tree.txt` is not the part's tree | P5's reading copied with `tree p7` in its `free` line | red: fitted on tree landing, and its reading names p7 |
+| all of these | `--ruled DEC-353 1245_e20000/full.hpp` | green: `S122-APPLY-DONE`, about 6 min on the final code (7 m 40 s and about 6 min on the two earlier forms) |
+| `part`, the screen's own list | `part C`, and `part C --margin 184`, the stage | red: overruled by DEC-353, before any write |
+| | the helper's `part C` on the screen's records | red: the same |
+| `part`, a ruling that names no decided fit | `part C --ruled DEC-352` | red |
+| | `part C --ruled DEC-999` | red: no such entry at HEAD |
+| `part`, the survivors follow the ruling | a plant DEC-901 naming 12457 in `Decision:` | C = `ks_curve.core,ks_curve.checks,ks_curve.weak` on `p7`, survivors P1,P2,P4,P5,P7: what the unruled list read |
+| | the reviewer's DEC-902 | C on the landing, survivors P1,P2,P4,P5: `Rejected:` names nothing |
+| `part`, a directory under another ruling | `bisect/C/fits/part_C_m275_e20000/ruling.txt` reading DEC-352, then `part C --ruled DEC-353` | red: fitted under DEC-352, not DEC-353 |
+| `part`, a directory fitted before any ruling | the same directory with a `full.log` and no `ruling.txt` | red: made before DEC-353; move that directory aside |
+| `part`, a K under another ruling or tree | `bisect/C/k/full_m275.k` with `full_m275.ruled` reading `DEC-353 p7` | red: probed under 'DEC-353 p7', not 'DEC-353 landing' |
+| | the same K with no `.ruled` | red: probed under '', not 'DEC-353 landing' |
+| `apply`'s bisection path, no ruling | a planted part C fit (1245's header, margin 275, landing) with no `ruling.txt` | red: has no ruling.txt |
+| | the same under DEC-352 | red: DEC-352 names no decided fit |
+| | under DEC-353 on tree p7 by its `tree.txt`, the old reading's fit | red: fitted on tree p7, and its reading names landing |
+| | under DEC-353 on the landing | every selection check passes; then refused by the tree's own changes, as planned (no bisection fit exists to paste) |
+
+The green runs' readings are scratch readings. They are not goldens, and phase 2 re-derives every golden by its
+script. All three runs read the same:
+- the paste moved only S122's `ks_checks`, `ks_weak`, `ks_storm` and `ks_curve`, the shipped linear five unchanged;
+  `verify_fit.py` found 1171 of 1171 parameters identical to the header;
+- `LAZY_EVAL_MARGIN` 184 -> 275; bench 4707943;
+- each build's fast suite 49 of 57, the same eight red in both (`test_evaluation`, `test_search`,
+  `test_tuner_gradient`, `test_eval_trace`, `test_search_params`, `test_mate_pv`, `test_mate_carry`,
+  `test_plan_params`), none timed out;
+- the clamp binds on 0.153 % of rows at 275, against 1.0 %, so no STOP;
+- `truncation_scan --min 2.8`: 6307294 rows, the identity holding, 8724 past 2.8, worst 3.691793.
+
+**Checks:** `bash -n adocs/data/S122_screen.sh`; `python3 -m py_compile adocs/data/S122_screen.py`;
+`tools/plan_prose_check.py` `--touches`, `--params`, `--citations`, `--gate` and `--prose`, each exit 0;
+`ctest -R test_plan` with `CLANG_FORMAT_MAJOR=22`, 5 of 5.
