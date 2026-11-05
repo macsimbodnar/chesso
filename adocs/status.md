@@ -55,13 +55,14 @@ on disk and survives a shutdown; nothing lives only in the conversation.
    - **(B)** The normwise metric: it reads 5.63e-9 here. It would have flagged neither S101's nor S135's case, and it is
      blind to a modest relative error on a small-gradient weight (S100's class).
    - Either becomes a DEC.
-2. **Disk (asked 2026-11-05 11:55):** 3.1 GB free.
-   - (1, recommended) Remove the main tree's 9 `.ref-builds/`, 2.2 GB; `.tuning/s121/variants`, 1.0 GB; the void
-     `.tuning/s122/screen_void_twofold`, 0.86 GB; and S122's cost trees `.tuning/s122/cost` and `cost_cand`, 2.6 GB. Their
-     reading is already in `adocs/data/S122_cost_reading.txt`.
-   - (2) Only the `.ref-builds/` and the void screen.
-   - (3) Nothing.
-   - Removing those trees is the owner's call (memory rule).
+2. **Disk: answered by the owner, 2026-11-05 ("Cleanup the disk", option 1); done.** Each target was inspected first:
+   - the main tree's 9 `.ref-builds/` were clean checkouts;
+   - S121's 4 variant trees equalled `12cab3c` plus `adocs/data/S121_parts.patch`;
+   - the void screen's p6 tree equalled `1bb3080` plus `S122_p6_wide_zone.patch`;
+   - S122's 10 cost trees equalled `b62becb`, or `1b2539a`, plus `S122_cost_only.patch`.
+   All four are removed, with the void screen's samples and every binary. Each run's logs, pairs and `reading.txt` are
+   kept (about 13 MB). Free: 3.1 -> 9.6 GB. Kept: `.tuning/s122/screen/variant_p6_2bf3ad4` and `variant_p7_2bf3ad4`,
+   outside the option.
 
 **Next, in order, for the coordinator:**
 1. If the owner answered Red 1: record the DEC and apply it in `../chesso-s124p1b`.
