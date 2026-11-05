@@ -17391,3 +17391,44 @@ Rejected:     Outposts in stage two (Q5 (b)): about 2.5 points cheaper, but unde
 Consequences: S102 is in `plan_current/`, and its phase 1 waits for S124's landing. The pass's readings are re-read on
               the landed tree. The pawn entry's zero-slot rule binds every later field. The family's cost, +6.74 %
               instructions, is the SPRT's to price; on H0 the bisection reads outposts and space apart.
+
+## DEC-352  2026-11-05  S266's complexity term: the paper's form on E1, before S124's factor, four weights seeded at zero, one part, read at K refit at S124's cells
+Tags:         evaluation, complexity, endgame, screen, k, s266, s124, s102, s122, s126, dec-014, dec-105, dec-134, dec-143, dec-221, dec-258, dec-259, dec-321, dec-324, dec-349, dec-350, dec-351
+Context:      S266's research pass (the step file's 2026-11-05 section), revised after one fast check. The check found that
+              the pass's headline, "the shipped endgame half is under-scaled by about 1.23", was mostly K held at the
+              identity: K 1.2302 is the shipped constants' optimum, and refit at S124's twelve cells it converges to
+              1.3578 in four rounds, where about 1.10 survives. At that K the term over S124's cells reads
+              -120.84 +/- 7.23 (1e-6, across halves, training corpus only; -246.90 at K 1.2302), and about -86 of it
+              survives a per-phase recalibration. The free form leads min(C, 0) by 73.22 +/- 6.38. The paper's printed
+              derivative (Grant 2020, section 3.7) is wrong where sign(Γ) differs from sign(E); no code implements any
+              complexity derivative. Cost +1.33 % instructions on a sink build. The pass's eight questions were the
+              coordinator's.
+Decision:     By the coordinator under the owner's standing instruction. The draft's items (1) to (13) are taken as
+              written, and its recommended answer to every question:
+              - the term on E1, stage one's endgame half with the material in it, inside S124's one division, outside
+                the clamp: adj(E1, C) = E1 + sign(E1) max(-|E1|, C), C = c0 + cP P + cF flank + cE pe, four integer
+                endgame weights seeded at zero, landing `No functional change`;
+              - the paper's form, C free in sign, and the paper's order, complexity before S124's factor;
+              - no adjustment where either king stands alone, mop-up's domain;
+              - the tuner's chain rule in full at phase 1, with the identity plan and its plants;
+              - one part on S122's regenerated corpus's own held-out qs view, at the landed tree's K; S124's tablebase
+                guard a refusal and its conversion test a stop;
+              - one `{0, 5}` SPRT, and on H0 no bisection (DEC-321 (4));
+              - the step's goal, accepts (1) and (4), `touches:` and `decisions:` amended; phase 1 built on S102's
+                landed tree.
+              And as a rule for every later screen: a family's readings are taken at K refit at the tree the screen
+              will run on, with K at the identity beside it. S124's phase 2 reads each part at K refit at its fit,
+              iterated; S122's phase 2 re-reads its kept parts at a K refit at the candidate.
+Why:          The form, the order and the features are the published description's, each departure measured and
+              stated. E1 keeps the term out of the clamp and inside S124's arithmetic. K held at the identity
+              credits a partial fit with K's own recalibration, which is how the 1.23 arose.
+Rejected:     min(C, 0): 73.22 less over the cells at K 1.3578, and not the paper's formula. The term on E1 + E2: it
+              reads 143.09 +/- 5.77 better over the cells, but sits in stage two, inside the clamp and unseen at
+              shortcut nodes, with DEC-324's margin to re-derive. It is recorded as a lead, read again after S266's
+              SPRT. The other order: worse by 18.45 +/- 2.46 where the cells are held, as the screen holds them. A lone
+              king's rows: the term would learn the draws mop-up exists to convert. A bisection on H0: about 20 h for a
+              split no reading asks for. Any constant from the paper or an engine: DEC-105, DEC-134.
+Consequences: S266 is in `plan_current/`, and its phase 1 waits for S102's landing. Every reading is re-read there.
+              Figures taken at K 1.2302 by S102's and S124's passes can be expected to move once S124's cells land. With a
+              cell off F or C non-zero no mobility-level hold is null, so S126 must freeze one side
+              (`mobility_levels_held`'s comment goes stale then).

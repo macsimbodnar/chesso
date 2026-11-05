@@ -389,7 +389,7 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 1. S122  king safety becomes a fitted linear accumulator with a quadratic finalizer, counting safe checks, weak squares and the king zone's defenders, clamped at a margin re-derived from its own fitted spread (DEC-324)
 2. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
 3. S102  outpost and space terms in the evaluation, one family
-4. S266  a complexity term moves the endgame score toward zero where the stronger side is unlikely to convert, never flipping its sign
+4. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
 5. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
 6. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
 7. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving

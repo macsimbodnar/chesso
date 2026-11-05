@@ -1,0 +1,65 @@
+# S266 research pass, 2026-11-05: a cost-only sink, never a candidate. adocs/data/S266_cost.sh applies it
+# to a scratch extract and builds it with -DS266_SINK=<bits>; the bits are listed in the namespace's
+# comment below (the complexity term on E1 at every stage-one call, the same skipped at phase 24, and C
+# as min(C, 0)). The forced weights are arbitrary non-zero values chosen so nothing folds, not seeds and
+# not proposals.
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1864,6 +1864,43 @@
+ #endif
+ 
+ 
++#ifdef S266_SINK
++// S266's research pass, a cost-only sink, never a candidate. Bits of S266_SINK:
++//   1    the complexity term on E1 at every stage-one call: the pawns on the board (one popcount
++//        of the two pawn bitboards), pawns on both flanks (the entry's two file bytes), the pawn
++//        ending (board->phase is 0), C, adj(E1, C) = E1 + sign(E1) max(-|E1|, C), and its share of
++//        the positional taper's numerator, (adj - E1)(24 - phase)
++//   2    the same skipped at phase 24, where the share is 0 whatever C is
++//   4    C replaced by min(C, 0)
++// At forced non-zero weights into an asm barrier while the score stays the landing's, so the
++// search is node for node the shipping one's (DEC-047's forced-weight method). The weights -37,
++// 5, 11 and 13 are arbitrary non-zero values chosen so nothing folds: not seeds and not proposals.
++namespace s266
++{
++static inline int complexity_share(const board_t* board, const pawn_entry_t* entry, score_t pair,
++                                   int phase)
++{
++#if (S266_SINK & 2)
++  if (phase >= GAME_PHASE_MAX) { return 0; }
++#endif
++  const int pawns = count_bits(board->bitboards[W_PAWN] | board->bitboards[B_PAWN]);
++  const unsigned files = entry->white_files | entry->black_files;
++  const int flanks = ((files & 0x0Fu) != 0) & ((files & 0xF0u) != 0);
++  const int ending = board->phase == 0;
++  int c = -37 + 5 * pawns + 11 * flanks + 13 * ending;
++#if (S266_SINK & 4)
++  c = std::min(c, 0);
++#endif
++  const int e1 = board->material + eg_value(pair);
++  const int magnitude = (e1 < 0) ? -e1 : e1;
++  const int shift = std::max(-magnitude, c);
++  const int adjusted = e1 + ((e1 > 0) ? shift : ((e1 < 0) ? -shift : 0));
++  return (adjusted - e1) * (GAME_PHASE_MAX - phase);
++}
++}  // namespace s266
++#endif
++
++
+ // Stage one: what is cheap enough to pay at every node, including the nodes
+ // evaluate_lazy() takes the shortcut on.
+ //
+@@ -1929,6 +1966,13 @@
+   // takes the halves apart after it.
+   const int positional = taper(board->psqt + pawns, phase);
+ 
++#ifdef S266_SINK
++  {
++    const int sink = s266::complexity_share(board, entry, board->psqt + pawns, phase);
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++
+   const int score = board->material + positional;
+ 
+   // Tapered on its own rather than summed into the pair above, and that is not

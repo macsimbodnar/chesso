@@ -5,7 +5,82 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-04 20:40, by hand.
+Updated: 2026-11-05 05:15, by hand.
+
+## 2026-11-05 05:15: S122's screen done, five parts kept; `side` stopped on P7
+
+**S122's screen ended 04:51, `S122-ALL-DONE`, on HEAD `2bf3ad4`.** The margin moved from 184 to 275. Each part's d is
+against its m, kept iff d > m (P7: iff d >= -m, as registered):
+
+| part | d | m | |
+|---|---|---|---|
+| P1 | +0.000214 | 0.000015 | kept |
+| P2 | +0.000008 | 0.000006 | kept |
+| P3 | +0.000001 | 0.000002 | dropped |
+| P4 | +0.000023 | 0.000010 | kept |
+| P5 | +0.000078 | 0.000017 | kept |
+| P6 | +0.000007 | 0.000016 | dropped |
+| P7 | +0.000008 | 0.000009 | kept |
+
+- The candidate is `12457` at margin 275, 20000 epochs: `.tuning/s122/screen/fits/12457_e20000/full.hpp`.
+- The bisection on H0 or no verdict, in order: M 275 alone at `{-5, 0}`, then A = P1, B = P2 + P4, C = P5 + P7.
+
+**Command 9, `side`, ended 05:06 on a STOP,** `S122-SIDE-FAILED`, console `.tuning/s122_side.console`. P0 to P6 agree
+with the screen within their error. P7 reads the other way on the sample: d -0.0000287 +/- 0.0000107 by game, against
+the screen's +0.0000080. The ruling is the coordinator's (DEC-344 (1)) and lands in the next commit: P7 dropped, the
+candidate `1245` at 275.
+
+**The order below corrects the 23:45 section's list:** `side` calls `tools "$OUT"`, which refuses any HEAD but the
+screen's bin stamp, `2bf3ad4`. So no commit, docs included, until `side` ends. Then, in order:
+1. S102's and S266's passes, from the staged index, two commits if the gate allows. The messages are in
+   `.tuning/coord/S102/` and `S266/`. Then `../chesso-s102` and `../chesso-s266` go, their blobs verified.
+2. Commands 10 to 13: `S122_cost.sh` check and run; `apply` and phase 2; the candidate's cost; the one `{0, 5}` SPRT.
+   `apply` checks only that its tree is at the main checkout's HEAD, so the docs commits do not block it.
+
+## 2026-11-04 23:45: S122's screen running; S102's research pass ruled (DEC-351), committed after the screen
+
+**Running: S122's screen,** Command 8, started 22:19 on HEAD `2bf3ad4`:
+- PID in `.tuning/s122_screen_all.pid`, console `.tuning/s122_screen_all.console`;
+- marker `S122-ALL-(DONE|FAILED)`; a watcher is armed with a 116 h ceiling.
+
+The sample (Command 7) passed its guard: 12000 games and 1345789 rows kept. One sample game repeats another row for
+row. **No commit on `achesso` until the screen ends.**
+
+**S102's research pass is ruled, DEC-351,** and staged in the main tree's index, uncommitted:
+- the pass's diff, plus the step moved to `plan_current/`;
+- the header amended, the ruling section, and DEC-351 itself.
+
+It commits with its gate once the screen has ended; then `../chesso-s102` goes. The design:
+- outposts in stage one in the page's region, P1 to P6 (bishops and reach included by the scope amendment);
+- space P7 to P9;
+- twenty-four parameters seeded at zero;
+- the space count stored in the pawn entry as 12 less it, so that a zeroed slot is exact.
+
+The pass's fast check found seven things, all fixed before the ruling. The family costs +6.74 % instructions, for the
+SPRT to price. Phase 1 waits for S124's landing.
+
+**Still open for the owner:** S124 phase 1's clamp case (A, B or C below; A recommended).
+
+**K at the identity confounds a partial fit, from S266's fast check (2026-11-05).** K 1.2302 is the identity's optimum on
+the regenerated corpus. Refit at S124's twelve cells, it reads 1.357 after two rounds, and S124's cells shrink less at
+the old K: P=1 d>=2 0.965 against 0.845 at the refit K. Owed by the later phases' briefs:
+- S124's phase 2 screen reads each part at K refit at its fit, iterated, beside K0;
+- S122's phase 2 re-reads each kept part's held-out gain at a K refit at the candidate, as a check. A part that widens
+  with the score's sign could take K's credit (plausible, not measured).
+
+**S266's research pass is ruled, DEC-352,** and staged with S102's, uncommitted; `../chesso-s266` goes at its commit.
+- Its fast check found eight things, fixed before the ruling. The worst: the "endgame half under-scaled by 1.23" was
+  mostly K held at the identity; about 1.10 survives.
+- Nothing in `src/` or `tools/` implements Grant 2020's misprinted derivative, and S124 phase 1 is not wrong.
+- The term goes on E1 before S124's factor, C free in sign. The whole endgame half (E1 + E2) reads 143 better but sits
+  under the clamp: a lead, read again after S266's SPRT.
+
+**S122's screen at 01:16:** P1 kept (+0.000214 against m 0.000015), P2 kept (+0.000008 against m 0.000006), P3 running.
+
+**After the screen ends, in order** (superseded at 05:05, above: `side` comes first):
+1. One commit for S102's and S266's passes, from the staged index. The messages are in `.tuning/coord/S102/` and
+   `S266/`; the gate runs on the idle machine. Split them into two commits if the gate allows.
+2. Then S122's Commands 9 to 13: side, cost, `apply` and phase 2, the SPRT.
 
 ## 2026-11-04 20:40: S122's corpus generated; S124 phase 1 delivered, one question for the owner
 

@@ -1,0 +1,1048 @@
+# S266 research pass, 2026-11-05: adocs/data/S266_census.sh read, at 2bf3ad4
+# corpus /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv sha256 04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509, labels at K 1.2302; views and S083 counts only
+# definitions: adocs/data/S266_census.cpp header
+
+## S122's regenerated prepared corpus
+S266 census of /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv
+rows 6307294 games 137991
+walk: 0 rows differ from the bitboard form (P, flank, pe; every row)
+identity: 0 traced rows differ from evaluate()
+E1 = 0 on 13595 rows (0.216%)
+
+by phase band: rows %, then within the band
+phase     rows%   meanP  flank%     pe%    E1=0% |E1|<=10     <=25     <=50    <=100    <=200   split%
+0-4      16.191    4.26   57.63   2.364    0.171    3.416    8.128   15.272   27.129   47.199    4.120
+5-8      19.902    6.12   78.99   0.000    0.136    2.762    6.703   13.014   24.493   43.250    4.694
+9-12     12.224    8.85   95.52   0.000    0.177    3.686    8.885   17.291   32.425   55.256    6.714
+13-16     9.306    9.99   98.75   0.000    0.197    4.016    9.684   18.872   35.393   59.723    8.236
+17-20    13.651   11.22   99.73   0.000    0.223    4.518   10.894   21.135   39.268   65.665   10.014
+21-23    13.673   13.02   99.97   0.000    0.237    4.989   12.113   23.309   41.952   66.951   12.140
+24       15.054   14.28  100.00   0.000    0.386    8.173   19.429   36.907   64.214   90.606   20.544
+all     100.000    9.38   88.26   0.383    0.216    4.456   10.705   20.561   37.287   60.319    9.308
+games: flank 137991, pe 6460, |E1| <= 25 below phase 24 98040, a cell picked 73659
+pe rows: 24137 (0.383%), in a PAWNS cell 6592, in an OCB cell 0, in no cell 17545
+
+P, the pawns on the board, rows % by band:
+P          0-4     5-8    9-12   13-16   17-20   21-23      24     all
+0        9.477   4.540   0.265   0.011   0.000   0.000   0.000   2.472
+1       13.009   4.928   0.546   0.026   0.003   0.000   0.000   3.157
+2       11.381   6.203   1.126   0.120   0.011   0.001   0.000   3.228
+3       12.152   7.574   2.045   0.396   0.042   0.005   0.000   3.768
+4       10.936   9.046   3.553   1.111   0.192   0.017   0.001   4.137
+5       10.236  10.111   5.415   2.603   0.629   0.061   0.006   4.669
+6        9.142  11.110   7.806   4.990   1.615   0.213   0.022   5.363
+7        7.467  10.899  10.160   7.780   3.504   0.616   0.084   5.919
+8        6.037  10.536  12.228  11.120   6.368   1.596   0.289   6.735
+9        4.093   8.755  13.338  13.403  10.096   3.385   0.813   7.246
+10       2.896   7.045  13.519  15.061  14.152   6.537   2.060   8.061
+11       1.604   4.543  11.223  13.873  15.795  10.008   3.937   7.944
+12       1.002   2.943   9.432  12.931  18.078  15.812   8.881   9.071
+13       0.346   1.123   4.892   7.800  12.032  15.372  11.111   7.020
+14       0.198   0.566   3.472   6.426  11.896  21.626  23.245   9.247
+15       0.019   0.047   0.606   1.430   2.827  10.841  15.333   4.396
+16       0.004   0.031   0.374   0.920   2.759  13.907  34.217   7.567
+
+rows a C would take to zero: 0 < |E1| <= -C, phase under 24, rows % by band, then all and games
+C          0-4     5-8    9-12   13-16   17-20   21-23     all%    games
+-10      3.246   2.626   3.509   3.819   4.296   4.752    3.069    73121
+-25      7.957   6.567   8.708   9.487  10.672  11.876    7.623    97663
+-50     15.102  12.878  17.114  18.676  20.913  23.072   14.847   111660
+-100    26.958  24.357  32.248  35.196  39.046  41.715   27.463   122858
+-200    47.029  43.114  55.079  59.526  65.443  66.714   46.522   132651
+
+S124's cells, picked by E1's sign: rows %, and within the cell pe %, flank %, mean P
+P=0 d<=0           0.702    0.00    0.12   0.04
+P=0 d=1            1.453    0.00    1.74   0.45
+P=0 d>=2           0.615    0.00    4.84   0.68
+P=1 d<=0           2.424    1.55   17.39   1.41
+P=1 d=1            1.382    0.00   34.13   2.14
+P=1 d>=2           0.484    0.00   43.66   2.63
+P=2 d<=0           3.711    1.80   55.66   3.11
+P=2 d=1            2.119    0.00   67.47   3.90
+P=2 d>=2           0.591    0.00   71.61   4.49
+OCB_PURE P<=2      0.614    0.00   41.73   2.35
+OCB_PURE P=3-4     0.497    0.00   89.38   5.73
+OCB_PURE P>=5      0.141    0.00   99.52   9.28
+OCB_ROOK           1.095    0.00   83.64   6.15
+any cell 15.827% of rows
+
+collinearity: 157683 rows, every 40-th. Each target column regressed on a design with an intercept; R^2, 1 is spanned.
+  the complexity columns at the seed C = 0, reading A: sign(E1) x_i w_eg, the score's derivative in each weight; the existing design: every parameter's tapered column (material untapered, the rest c w_mg and c w_eg); S124's cells at F: E1 w_eg on the rows whose E1 picks the cell
+  live columns: existing 1101 of 1172, intercept included
+column  R2 existing  R2 + S124 cells R2 + cells + the other three
+c0         0.621392         0.647989               0.917555
+cP         0.431468         0.458012               0.887463
+cF         0.459419         0.487616               0.866409
+cE         0.032846         0.034381               0.053154
+  S124's cells on the existing design plus the four complexity columns:
+  P=0 d<=0        existing 0.055768, + complexity 0.101636
+  P=0 d=1         existing 0.121138, + complexity 0.195737
+  P=0 d>=2        existing 0.179185, + complexity 0.191595
+  P=1 d<=0        existing 0.154454, + complexity 0.243265
+  P=1 d=1         existing 0.074925, + complexity 0.095049
+  P=1 d>=2        existing 0.075091, + complexity 0.078859
+  P=2 d<=0        existing 0.180673, + complexity 0.208928
+  P=2 d=1         existing 0.093963, + complexity 0.100397
+  P=2 d>=2        existing 0.071788, + complexity 0.075154
+  OCB_PURE P<=2   existing 0.121883, + complexity 0.131993
+  OCB_PURE P=3-4  existing 0.084186, + complexity 0.087109
+  OCB_PURE P>=5   existing 0.027876, + complexity 0.030201
+  OCB_ROOK        existing 0.052418, + complexity 0.053843
+  live columns, existing + cells + complexity: 1118 of 1189
+
+label readings: 6307294 rows, K 1.2302, in-sample MSE at the shipped constants 0.084230
+  each model fitted by damped Gauss-Newton (starts below) on the squared error, every engine weight shipped; dMSE in 1e-6 against s0 with whole-game errors: in sample, at the fit rounded (cells to 128ths, weights to integers), and across halves (the even games' fit read on the odd and the odd games' on the even, summed over all rows). A reading and never a fit of the engine.
+C4             in sample  -2111.35 +/-  37.53  rounded  -2109.39  across halves  -2108.68 +/-  37.52  (11, 12, 10 iterations)
+                 fit: c0 -228.72 cP 11.61 cF 149.45 cE 65.13
+                 even: c0 -232.26 cP 11.42 cF 153.50 cE 65.04
+                 odd: c0 -225.09 cP 11.79 cF 145.43 cE 64.02
+C1 c0 alone    in sample    -53.99 +/-   5.96  rounded    -53.94  across halves    -52.99 +/-   5.98  (4, 4, 4 iterations)
+                 fit: c0 -12.36
+                 even: c0 -13.36
+                 odd: c0 -11.38
+C4 less cP     in sample  -1758.82 +/-  34.50  rounded  -1758.76  across halves  -1756.58 +/-  34.49  (11, 10, 11 iterations)
+                 fit: c0 -209.96 cF 224.42 cE 42.46
+                 even: c0 -213.95 cF 227.48 cE 43.24
+                 odd: c0 -205.72 cF 221.12 cE 42.04
+C4 less cF     in sample  -1587.98 +/-  32.03  rounded  -1586.23  across halves  -1586.49 +/-  32.02  (9, 9, 8 iterations)
+                 fit: c0 -162.60 cP 20.25 cE 70.43
+                 even: c0 -163.41 cP 20.19 cE 69.75
+                 odd: c0 -161.72 cP 20.30 cE 71.43
+C4 less cE     in sample  -2095.25 +/-  37.49  rounded  -2090.98  across halves  -2092.31 +/-  37.51  (11, 12, 10 iterations)
+                 fit: c0 -228.79 cP 11.42 cF 152.09
+                 even: c0 -232.92 cP 11.23 cF 156.69
+                 odd: c0 -224.91 cP 11.59 cF 147.86
+W4 whole half  in sample  -2243.99 +/-  38.98  rounded  -2240.15  across halves  -2241.23 +/-  38.99  (11, 11, 11 iterations)
+                 fit: c0 -241.96 cP 11.54 cF 162.26 cE 63.98
+                 even: c0 -246.13 cP 11.40 cF 166.51 cE 63.28
+                 odd: c0 -237.92 cP 11.67 cF 158.24 cE 63.67
+R4 min(C, 0)   in sample  -2935.67 +/-  41.20  rounded  -2935.64  across halves  -2935.47 +/-  41.20  (12, 12, 11 iterations)
+                 fit: c0 -452.79 cP 131.23 cF 23.00 cE 142.33
+                 even: c0 -454.81 cP 132.25 cF 23.24 cE 136.85
+                 odd: c0 -450.85 cP 130.23 cF 22.89 cE 145.64
+F12            in sample  -2935.90 +/-  39.10  rounded  -2935.88  across halves  -2932.26 +/-  39.10  (6, 6, 6 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887;
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861;
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915;
+F12+C4         in sample  -3214.76 +/-  39.57  rounded  -3214.03  across halves  -3210.11 +/-  39.57  (9, 10, 9 iterations)
+                 fit:r: 0.565 0.000 0.095 0.319 0.792 1.000 0.800 1.000 1.000 0.282 0.399 0.282 0.871; c0 -71.31 cP 4.80 cF 55.50 cE 32.03
+                 even:r: 0.522 0.000 0.091 0.329 0.763 0.982 0.812 1.000 1.000 0.304 0.402 0.304 0.855; c0 -73.45 cP 4.70 cF 57.41 cE 33.18
+                 odd:r: 0.610 0.000 0.100 0.308 0.822 1.000 0.788 1.000 1.000 0.261 0.395 0.261 0.888; c0 -69.27 cP 4.90 cF 53.66 cE 30.90
+F12+C4'        in sample  -3234.59 +/-  39.58  rounded  -3233.90  across halves  -3229.99 +/-  39.59  (13, 14, 12 iterations)
+                 fit:r: 0.779 0.000 0.225 0.455 0.813 1.000 0.824 1.000 1.000 0.305 0.398 0.305 0.854; c0 -67.38 cP 5.24 cF 46.69 cE 30.06
+                 even:r: 0.721 0.000 0.225 0.467 0.788 0.973 0.837 1.000 1.000 0.325 0.403 0.325 0.836; c0 -69.24 cP 5.15 cF 48.28 cE 30.51
+                 odd:r: 0.827 0.000 0.224 0.443 0.840 1.000 0.812 1.000 0.996 0.286 0.393 0.286 0.873; c0 -65.71 cP 5.34 cF 45.24 cE 29.63
+F12+R4         in sample  -3186.21 +/-  42.53  rounded  -3186.20  across halves  -3172.83 +/-  42.34  (18, 21, 20 iterations)
+                 fit:r: 1.000 0.000 0.518 0.799 1.000 1.000 0.829 1.000 1.000 0.343 0.407 0.343 0.997; c0 -449.79 cP 144.98 cF 105.74 cE 128.03
+                 even:r: 1.000 0.000 0.429 1.000 1.000 1.000 0.916 1.000 1.000 0.391 0.409 0.391 0.999; c0 -411.00 cP 122.21 cF 29.27 cE 109.30
+                 odd:r: 1.000 0.021 0.535 0.741 1.000 1.000 0.821 1.000 1.000 0.320 0.405 0.320 1.000; c0 -448.46 cP 145.02 cF 109.76 cE 129.06
+C4 | F12       in sample  -3197.46 +/-  40.28  rounded  -3196.16  across halves  -3192.75 +/-  40.28  (6, 7, 6 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; c0 -54.11 cP 3.76 cF 48.15 cE 28.50
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; c0 -55.26 cP 3.59 cF 49.76 cE 29.78
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; c0 -53.09 cP 3.92 cF 46.72 cE 27.37
+R4 | F12       in sample  -3321.21 +/-  44.49  rounded  -3321.32  across halves  -3317.21 +/-  44.47  (11, 14, 18 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; c0 -568.69 cP 487.46 cF 153.47 cE -84.86
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; c0 -569.82 cP 484.23 cF 154.25 cE -50.54
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; c0 -566.95 cP 491.20 cF 139.89 cE -98.48
+G1             in sample    -81.27 +/-   8.50  rounded    -81.24  across halves    -78.98 +/-   8.52  (4, 4, 4 iterations)
+                 fit:r all: 0.905;
+                 even:r all: 0.896;
+                 odd:r all: 0.914;
+G6             in sample   -593.22 +/-  18.64  rounded   -593.19  across halves   -587.60 +/-  18.71  (5, 5, 5 iterations)
+                 fit:r by band: 0.694 0.979 1.202 1.216 1.256 1.870;
+                 even:r by band: 0.692 0.974 1.180 1.181 1.227 1.782;
+                 odd:r by band: 0.697 0.983 1.225 1.251 1.284 1.959;
+C4 | G6        in sample  -1746.82 +/-  39.85  rounded  -1743.79  across halves  -1740.37 +/-  39.90  (10, 8, 8 iterations)
+                 fit:r by band: 0.694 0.979 1.202 1.216 1.256 1.870; c0 -185.41 cP 5.39 cF 158.09 cE 123.36
+                 even:r by band: 0.692 0.974 1.180 1.181 1.227 1.782; c0 -189.50 cP 5.45 cF 162.57 cE 125.49
+                 odd:r by band: 0.697 0.983 1.225 1.251 1.284 1.959; c0 -181.71 cP 5.32 cF 154.03 cE 121.54
+R4 | G6        in sample  -2748.27 +/-  44.75  rounded  -2748.27  across halves  -2794.77 +/-  44.67  (9, 10, 8 iterations)
+                 fit:r by band: 0.694 0.979 1.202 1.216 1.256 1.870; c0 -443.11 cP 147.37 cF 98.28 cE 196.72
+                 even:r by band: 0.692 0.974 1.180 1.181 1.227 1.782; c0 -524.41 cP 247.98 cF -21.87 cE 193.23
+                 odd:r by band: 0.697 0.983 1.225 1.251 1.284 1.959; c0 -443.21 cP 146.93 cF 99.50 cE 180.77
+F12G6          in sample  -3263.44 +/-  39.23  rounded  -3263.40  across halves  -3254.32 +/-  39.26  (6, 6, 6 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; by band: 1.221 1.259 1.231 1.227 1.260 1.874;
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; by band: 1.215 1.255 1.210 1.190 1.231 1.787;
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; by band: 1.226 1.264 1.254 1.264 1.289 1.961;
+C4x | F12      in sample  -3183.88 +/-  39.94  rounded  -3180.53  across halves  -3179.16 +/-  39.94  (5, 5, 6 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; c0 -46.32 cP 3.46 cF 42.71 cE 39.44
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; c0 -47.32 cP 3.29 cF 44.16 cE 39.13
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; c0 -45.34 cP 3.63 cF 41.22 cE 39.87
+R4x | F12      in sample  -2971.76 +/-  40.53  rounded  -2971.75  across halves  -2968.09 +/-  40.52  (8, 6, 7 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; c0 -59.51 cP 6.55 cF 73.18 cE 97.51
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; c0 -59.74 cP 6.21 cF 67.33 cE 69.26
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; c0 -58.74 cP 6.78 cF 67.39 cE 43.16
+C4x | F12G6    in sample  -3345.85 +/-  41.23  rounded  -3344.65  across halves  -3337.15 +/-  41.25  (6, 6, 6 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; by band: 1.221 1.259 1.231 1.227 1.260 1.874; c0 -53.28 cP 2.25 cF 34.51 cE 38.67
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; by band: 1.215 1.255 1.210 1.190 1.231 1.787; c0 -54.72 cP 2.27 cF 36.12 cE 37.84
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; by band: 1.226 1.264 1.254 1.264 1.289 1.961; c0 -51.77 cP 2.22 cF 32.81 cE 39.62
+R4x | F12G6    in sample  -3334.71 +/-  40.87  rounded  -3330.66  across halves  -3325.66 +/-  40.88  (18, 22, 16 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; by band: 1.221 1.259 1.231 1.227 1.260 1.874; c0 -55.13 cP 2.40 cF 33.53 cE 78.67
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; by band: 1.215 1.255 1.210 1.190 1.231 1.787; c0 -56.25 cP 2.30 cF 35.52 cE 67.71
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; by band: 1.226 1.264 1.254 1.264 1.289 1.961; c0 -53.26 cP 2.25 cF 32.98 cE 141.32
+W4x | F12      in sample  -3291.34 +/-  40.65  rounded  -3290.36  across halves  -3286.88 +/-  40.65  (5, 5, 4 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; c0 -57.69 cP 3.74 cF 50.48 cE 43.63
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; c0 -58.91 cP 3.59 cF 52.13 cE 43.37
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; c0 -56.50 cP 3.90 cF 48.84 cE 43.99
+C4x' | F12     in sample  -3171.29 +/-  39.88  rounded  -3171.10  across halves  -3166.64 +/-  39.88  (7, 8, 5 iterations)
+                 fit:r: 0.364 0.000 0.071 0.240 0.682 0.965 0.712 1.000 1.000 0.243 0.406 0.243 0.887; c0 -25.52 cP 3.11 cF 23.74 cE 29.77
+                 even:r: 0.346 0.000 0.068 0.244 0.654 0.906 0.719 1.000 1.000 0.261 0.408 0.261 0.861; c0 -25.82 cP 2.94 cF 24.53 cE 28.99
+                 odd:r: 0.381 0.000 0.075 0.235 0.712 1.000 0.704 1.000 1.000 0.226 0.405 0.226 0.915; c0 -25.30 cP 3.28 cF 22.97 cE 30.68
+
+paired increments across halves, 1e-6, whole-game errors:
+  C4             over C1 c0 alone     -2055.68 +/-  36.06
+  C4             over C4 less cP       -352.10 +/-  12.43
+  C4             over C4 less cF       -522.18 +/-  15.72
+  C4             over C4 less cE        -16.36 +/-   2.28
+  W4 whole half  over C4               -132.55 +/-   7.37
+  R4 min(C, 0)   over C4               -826.79 +/-  23.90
+  F12+C4         over F12              -277.85 +/-  11.83
+  F12+C4'        over F12              -297.73 +/-  11.98
+  F12+C4         over F12+C4'            19.89 +/-   1.86
+  F12+R4         over F12              -240.57 +/-  12.68
+  C4 | F12       over F12              -260.49 +/-  11.23
+  R4 | F12       over F12              -384.95 +/-  15.41
+  R4 | F12       over C4 | F12         -124.47 +/-  18.88
+  F12+C4         over C4              -1101.43 +/-  20.95
+  F12+R4         over R4 min(C, 0)     -237.36 +/-  11.61
+  F12            over C4               -823.58 +/-  26.96
+  F12            over R4 min(C, 0)        3.21 +/-  18.86
+  G6             over G1               -508.62 +/-  17.33
+  C4             over G6              -1521.08 +/-  30.71
+  C4 | G6        over G6              -1152.78 +/-  27.10
+  R4 | G6        over G6              -2207.17 +/-  34.18
+  F12            over G6              -2344.66 +/-  33.96
+  C4x | F12      over F12              -246.90 +/-  10.99
+  R4x | F12      over F12               -35.83 +/-   3.61
+  R4x | F12      over C4x | F12         211.07 +/-  10.94
+  C4x | F12      over C4 | F12           13.59 +/-   0.98
+  F12G6          over F12              -322.06 +/-  14.83
+  C4x | F12G6    over F12G6             -82.82 +/-   5.65
+  R4x | F12G6    over F12G6             -71.34 +/-   5.47
+  R4x | F12G6    over C4x | F12G6        11.48 +/-   2.79
+  R4 | F12       over R4x | F12        -349.12 +/-  14.96
+  W4x | F12      over C4x | F12        -107.72 +/-   6.01
+  C4x' | F12     over C4x | F12          12.52 +/-   2.31
+
+where C4's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -101.51 +/-   2.81  label 0.698  before 0.973  after 0.929
+  PAWNS cells 0-8      rows   850227 (13.480%)   -1822.58 +/-  31.06  label 0.703  before 0.792  after 0.705
+  OCB cells            rows   148023 ( 2.347%)    -270.60 +/-   9.77  label 0.642  before 0.734  after 0.692
+  pe, no cell          rows    14346 ( 0.227%)       3.37 +/-   2.84  label 0.794  before 0.711  after 0.782
+  no cell, phase 0-8   rows  1297566 (20.572%)     121.85 +/-  11.71  label 0.816  before 0.790  after 0.791
+  no cell, 9-16        rows  1288791 (20.433%)      -7.89 +/-   8.45  label 0.742  before 0.720  after 0.738
+  no cell, 17-23       rows  1718363 (27.244%)     -33.99 +/-   5.39  label 0.672  before 0.656  after 0.667
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where R4 min(C, 0)'s in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -294.67 +/-   9.13  label 0.698  before 0.973  after 0.833
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2336.69 +/-  37.36  label 0.703  before 0.792  after 0.701
+  OCB cells            rows   148023 ( 2.347%)    -242.78 +/-   9.01  label 0.642  before 0.734  after 0.696
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.711  after 0.711
+  no cell, phase 0-8   rows  1297566 (20.572%)     -61.82 +/-   5.51  label 0.816  before 0.790  after 0.789
+  no cell, 9-16        rows  1288791 (20.433%)       0.26 +/-   0.64  label 0.742  before 0.720  after 0.720
+  no cell, 17-23       rows  1718363 (27.244%)       0.02 +/-   0.03  label 0.672  before 0.656  after 0.656
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.973  after 0.973
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2555.66 +/-  35.77  label 0.703  before 0.792  after 0.714
+  OCB cells            rows   148023 ( 2.347%)    -380.25 +/-  15.82  label 0.642  before 0.734  after 0.651
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.711  after 0.711
+  no cell, phase 0-8   rows  1297566 (20.572%)       0.00 +/-   0.00  label 0.816  before 0.790  after 0.790
+  no cell, 9-16        rows  1288791 (20.433%)       0.00 +/-   0.00  label 0.742  before 0.720  after 0.720
+  no cell, 17-23       rows  1718363 (27.244%)       0.00 +/-   0.00  label 0.672  before 0.656  after 0.656
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where C4 | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)     -15.69 +/-   0.39  label 0.698  before 0.973  after 0.967
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2567.15 +/-  36.84  label 0.703  before 0.792  after 0.707
+  OCB cells            rows   148023 ( 2.347%)    -399.46 +/-  15.79  label 0.642  before 0.734  after 0.655
+  pe, no cell          rows    14346 ( 0.227%)     -10.07 +/-   1.71  label 0.794  before 0.711  after 0.768
+  no cell, phase 0-8   rows  1297566 (20.572%)    -108.73 +/-   6.26  label 0.816  before 0.790  after 0.804
+  no cell, 9-16        rows  1288791 (20.433%)     -63.31 +/-   5.90  label 0.742  before 0.720  after 0.736
+  no cell, 17-23       rows  1718363 (27.244%)     -33.05 +/-   3.42  label 0.672  before 0.656  after 0.663
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where R4 | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -318.37 +/-  14.01  label 0.698  before 0.973  after 0.753
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2553.32 +/-  36.81  label 0.703  before 0.792  after 0.708
+  OCB cells            rows   148023 ( 2.347%)    -397.77 +/-  16.09  label 0.642  before 0.734  after 0.647
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.711  after 0.711
+  no cell, phase 0-8   rows  1297566 (20.572%)     -51.41 +/-   4.97  label 0.816  before 0.790  after 0.790
+  no cell, 9-16        rows  1288791 (20.433%)      -0.33 +/-   0.17  label 0.742  before 0.720  after 0.720
+  no cell, 17-23       rows  1718363 (27.244%)      -0.00 +/-   0.00  label 0.672  before 0.656  after 0.656
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)     -79.78 +/-   2.01  label 0.698  before 0.973  after 0.945
+  PAWNS cells 0-8      rows   850227 (13.480%)    -634.25 +/-  10.77  label 0.703  before 0.792  after 0.767
+  OCB cells            rows   148023 ( 2.347%)    -213.86 +/-   6.55  label 0.642  before 0.734  after 0.705
+  pe, no cell          rows    14346 ( 0.227%)      33.11 +/-   1.49  label 0.794  before 0.711  after 0.657
+  no cell, phase 0-8   rows  1297566 (20.572%)     444.79 +/-   8.42  label 0.816  before 0.790  after 0.772
+  no cell, 9-16        rows  1288791 (20.433%)     -88.78 +/-   5.95  label 0.742  before 0.720  after 0.735
+  no cell, 17-23       rows  1718363 (27.244%)     -54.45 +/-   6.63  label 0.672  before 0.656  after 0.667
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where C4 | G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -187.59 +/-   5.04  label 0.698  before 0.973  after 0.903
+  PAWNS cells 0-8      rows   850227 (13.480%)   -1642.42 +/-  30.08  label 0.703  before 0.792  after 0.708
+  OCB cells            rows   148023 ( 2.347%)    -355.25 +/-  11.21  label 0.642  before 0.734  after 0.681
+  pe, no cell          rows    14346 ( 0.227%)       3.26 +/-   2.30  label 0.794  before 0.711  after 0.769
+  no cell, phase 0-8   rows  1297566 (20.572%)     498.71 +/-  12.64  label 0.816  before 0.790  after 0.775
+  no cell, 9-16        rows  1288791 (20.433%)     -28.79 +/-  11.42  label 0.742  before 0.720  after 0.750
+  no cell, 17-23       rows  1718363 (27.244%)     -34.74 +/-  10.65  label 0.672  before 0.656  after 0.676
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where F12G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.973  after 0.973
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2555.66 +/-  35.77  label 0.703  before 0.792  after 0.714
+  OCB cells            rows   148023 ( 2.347%)    -380.25 +/-  15.82  label 0.642  before 0.734  after 0.651
+  pe, no cell          rows    14346 ( 0.227%)     -12.22 +/-   0.80  label 0.794  before 0.711  after 0.741
+  no cell, phase 0-8   rows  1297566 (20.572%)    -171.10 +/-   8.33  label 0.816  before 0.790  after 0.815
+  no cell, 9-16        rows  1288791 (20.433%)     -89.76 +/-   6.58  label 0.742  before 0.720  after 0.736
+  no cell, 17-23       rows  1718363 (27.244%)     -54.46 +/-   6.70  label 0.672  before 0.656  after 0.667
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where C4x | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.973  after 0.973
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2570.55 +/-  36.60  label 0.703  before 0.792  after 0.708
+  OCB cells            rows   148023 ( 2.347%)    -396.81 +/-  15.72  label 0.642  before 0.734  after 0.656
+  pe, no cell          rows    14346 ( 0.227%)     -10.91 +/-   2.01  label 0.794  before 0.711  after 0.781
+  no cell, phase 0-8   rows  1297566 (20.572%)    -108.96 +/-   6.11  label 0.816  before 0.790  after 0.805
+  no cell, 9-16        rows  1288791 (20.433%)     -64.10 +/-   5.75  label 0.742  before 0.720  after 0.736
+  no cell, 17-23       rows  1718363 (27.244%)     -32.54 +/-   3.31  label 0.672  before 0.656  after 0.663
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where R4x | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.973  after 0.973
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2560.08 +/-  36.97  label 0.703  before 0.792  after 0.705
+  OCB cells            rows   148023 ( 2.347%)    -398.24 +/-  16.18  label 0.642  before 0.734  after 0.646
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.711  after 0.711
+  no cell, phase 0-8   rows  1297566 (20.572%)     -13.66 +/-   1.66  label 0.816  before 0.790  after 0.789
+  no cell, 9-16        rows  1288791 (20.433%)       0.20 +/-   0.34  label 0.742  before 0.720  after 0.720
+  no cell, 17-23       rows  1718363 (27.244%)       0.01 +/-   0.05  label 0.672  before 0.656  after 0.656
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where C4x | F12G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.973  after 0.973
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2551.34 +/-  37.31  label 0.703  before 0.792  after 0.702
+  OCB cells            rows   148023 ( 2.347%)    -400.72 +/-  16.35  label 0.642  before 0.734  after 0.643
+  pe, no cell          rows    14346 ( 0.227%)     -15.52 +/-   2.08  label 0.794  before 0.711  after 0.787
+  no cell, phase 0-8   rows  1297566 (20.572%)    -223.81 +/-   7.86  label 0.816  before 0.790  after 0.812
+  no cell, 9-16        rows  1288791 (20.433%)     -97.54 +/-   7.29  label 0.742  before 0.720  after 0.738
+  no cell, 17-23       rows  1718363 (27.244%)     -56.93 +/-   7.52  label 0.672  before 0.656  after 0.669
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+where R4x | F12G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.973  after 0.973
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2547.23 +/-  37.41  label 0.703  before 0.792  after 0.701
+  OCB cells            rows   148023 ( 2.347%)    -400.59 +/-  16.43  label 0.642  before 0.734  after 0.642
+  pe, no cell          rows    14346 ( 0.227%)     -12.22 +/-   0.80  label 0.794  before 0.711  after 0.741
+  no cell, phase 0-8   rows  1297566 (20.572%)    -224.85 +/-   7.10  label 0.816  before 0.790  after 0.809
+  no cell, 9-16        rows  1288791 (20.433%)     -94.91 +/-   6.29  label 0.742  before 0.720  after 0.735
+  no cell, 17-23       rows  1718363 (27.244%)     -54.92 +/-   6.66  label 0.672  before 0.656  after 0.667
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.557  after 0.557
+
+at C4's fit, rows with E1 != 0 below phase 24, C from -228.72 to 148.45: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound  22.108  widened  23.650  damped  54.071
+  5-8    rows  1253558  bound   8.129  widened  45.724  damped  46.011
+  9-12   rows   769625  bound   2.226  widened  78.614  damped  18.983
+  13-16  rows   585818  bound   0.800  widened  90.272  damped   8.731
+  17-20  rows   859096  bound   0.209  widened  97.197  damped   2.372
+  21-23  rows   860331  bound   0.026  widened  99.448  damped   0.289
+  all    bound 351690 (5.576%), widened 3645935 (57.805%), damped 1350269 (21.408%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, 373961 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 20.5, p90 67.6, max 296.9 cp
+
+at R4 min(C, 0)'s fit, rows with E1 != 0 below phase 24, C from -452.79 to 0.00: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound  20.082  widened   0.000  damped  25.618
+  5-8    rows  1253558  bound   8.508  widened   0.000  damped  14.717
+  9-12   rows   769625  bound   0.902  widened   0.000  damped   3.079
+  13-16  rows   585818  bound   0.091  widened   0.000  damped   0.462
+  17-20  rows   859096  bound   0.007  widened   0.000  damped   0.048
+  21-23  rows   860331  bound   0.001  widened   0.000  damped   0.005
+  all    bound 319444 (5.065%), widened 0 (0.000%), damped 473249 (7.503%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, none with C > 0: no jump
+
+at C4 | F12's fit, rows with E1 != 0 below phase 24, C from -54.11 to 75.12: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound   6.140  widened  57.571  damped  36.118
+  5-8    rows  1253558  bound   1.659  widened  78.881  damped  19.324
+  9-12   rows   769625  bound   0.355  widened  95.351  damped   4.117
+  13-16  rows   585818  bound   0.110  widened  98.554  damped   1.139
+  17-20  rows   859096  bound   0.027  widened  99.512  damped   0.238
+  21-23  rows   860331  bound   0.003  widened  99.730  damped   0.030
+  all    bound 87175 (1.382%), widened 4608575 (73.067%), damped 652144 (10.340%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, 428482 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 19.2, p90 45.6, max 150.2 cp
+
+at R4 | F12's fit, rows with E1 != 0 below phase 24, C from -568.69 to 0.00: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound   7.597  widened   0.000  damped  14.846
+  5-8    rows  1253558  bound   4.671  widened   0.000  damped   4.790
+  9-12   rows   769625  bound   0.285  widened   0.000  damped   0.526
+  13-16  rows   585818  bound   0.012  widened   0.000  damped   0.025
+  17-20  rows   859096  bound   0.000  widened   0.000  damped   0.002
+  21-23  rows   860331  bound   0.000  widened   0.000  damped   0.000
+  all    bound 138483 (2.196%), widened 0 (0.000%), damped 215962 (3.424%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, none with C > 0: no jump
+
+at C4 | G6's fit, rows with E1 != 0 below phase 24, C from -185.41 to 171.45: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound  17.599  widened  31.318  damped  50.912
+  5-8    rows  1253558  bound   5.971  widened  55.758  damped  38.134
+  9-12   rows   769625  bound   1.481  widened  85.858  damped  12.484
+  13-16  rows   585818  bound   0.494  widened  94.983  damped   4.326
+  17-20  rows   859096  bound   0.124  widened  98.737  damped   0.916
+  21-23  rows   860331  bound   0.015  widened  99.655  damped   0.093
+  all    bound 270186 (4.284%), widened 3948769 (62.606%), damped 1128939 (17.899%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, 396979 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 16.0, p90 42.6, max 342.9 cp
+
+at C4x | F12's fit, rows with E1 != 0 below phase 24, C from -46.32 to 84.23: bound to 0, widened, damped, rows % of the band
+  0-4    rows   978960  bound   5.276  widened  58.004  damped  32.582
+  5-8    rows  1253558  bound   1.390  widened  78.881  damped  19.593
+  9-12   rows   769625  bound   0.294  widened  95.351  damped   4.178
+  13-16  rows   585818  bound   0.088  widened  98.554  damped   1.161
+  17-20  rows   859096  bound   0.021  widened  99.512  damped   0.244
+  21-23  rows   860331  bound   0.002  widened  99.730  damped   0.031
+  all    bound 74321 (1.178%), widened 4612998 (73.138%), damped 620069 (9.831%)
+  0 < |E1| <= 25 below phase 24: 480757 rows, 429614 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 18.9, p90 44.2, max 168.5 cp
+
+at R4x | F12's fit, rows with E1 != 0 below phase 24, C from -59.51 to 0.00: bound to 0, widened, damped, rows % of the band
+  0-4    rows   978960  bound   5.960  widened   0.000  damped  31.898
+  5-8    rows  1253558  bound   1.531  widened   0.000  damped  19.452
+  9-12   rows   769625  bound   0.287  widened   0.000  damped   4.185
+  13-16  rows   585818  bound   0.075  widened   0.000  damped   1.173
+  17-20  rows   859096  bound   0.018  widened   0.000  damped   0.247
+  21-23  rows   860331  bound   0.001  widened   0.000  damped   0.032
+  all    bound 82900 (1.314%), widened 0 (0.000%), damped 611484 (9.695%)
+  0 < |E1| <= 25 below phase 24: 480757 rows, none with C > 0: no jump
+
+at C4x | F12G6's fit, rows with E1 != 0 below phase 24, C from -53.28 to 51.33: bound to 0, widened, damped, rows % of the band
+  0-4    rows   978960  bound   7.104  widened  11.275  damped  77.483
+  5-8    rows  1253558  bound   2.369  widened  24.994  damped  72.501
+  9-12   rows   769625  bound   0.730  widened  56.729  damped  42.365
+  13-16  rows   585818  bound   0.307  widened  71.673  damped  27.824
+  17-20  rows   859096  bound   0.097  widened  87.432  damped  12.248
+  21-23  rows   860331  bound   0.015  widened  97.258  damped   2.490
+  all    bound 110680 (1.755%), widened 2878481 (45.637%), damped 2318227 (36.755%)
+  0 < |E1| <= 25 below phase 24: 480757 rows, 318190 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 2.9, p90 9.5, max 102.7 cp
+
+K refit: at the shipped constants the in-sample optimum is 1.2302 (the corpus's 1.2302)
+  round 1: F12 fitted at K 1.2302, K refitted at it 1.3474, MSE 0.08110574
+  round 2: F12 fitted at K 1.3474, K refitted at it 1.3570, MSE 0.08108976
+  round 3: F12 fitted at K 1.3570, K refitted at it 1.3578, MSE 0.08108967
+  round 4: F12 fitted at K 1.3578, K refitted at it 1.3578, MSE 0.08108967
+K refit converged after 4 rounds at 1.3578
+
+label readings: 6307294 rows, K 1.3578, in-sample MSE at the shipped constants 0.084446
+  each model fitted by damped Gauss-Newton (starts below) on the squared error, every engine weight shipped; dMSE in 1e-6 against s0 with whole-game errors: in sample, at the fit rounded (cells to 128ths, weights to integers), and across halves (the even games' fit read on the odd and the odd games' on the even, summed over all rows). A reading and never a fit of the engine.
+C4             in sample  -2372.91 +/-  41.82  rounded  -2372.89  across halves  -2370.01 +/-  41.86  (11, 13, 11 iterations)
+                 fit: c0 -243.73 cP 11.00 cF 154.95 cE 61.90
+                 even: c0 -247.96 cP 10.85 cF 159.30 cE 62.04
+                 odd: c0 -240.10 cP 11.14 cF 151.17 cE 61.15
+C1 c0 alone    in sample   -228.58 +/-  12.79  rounded   -228.57  across halves   -227.26 +/-  12.78  (6, 6, 5 iterations)
+                 fit: c0 -25.22
+                 even: c0 -26.32
+                 odd: c0 -24.00
+C4 less cP     in sample  -2026.73 +/-  39.38  rounded  -2026.69  across halves  -2024.49 +/-  39.38  (12, 12, 12 iterations)
+                 fit: c0 -227.82 cF 229.16 cE 40.32
+                 even: c0 -231.96 cF 232.45 cE 39.12
+                 odd: c0 -223.79 cF 226.00 cE 40.30
+C4 less cF     in sample  -1805.94 +/-  35.78  rounded  -1804.31  across halves  -1804.47 +/-  35.78  (9, 9, 9 iterations)
+                 fit: c0 -173.65 cP 19.69 cE 73.67
+                 even: c0 -174.54 cP 19.65 cE 72.45
+                 odd: c0 -172.73 cP 19.73 cE 74.74
+C4 less cE     in sample  -2355.33 +/-  41.80  rounded  -2354.17  across halves  -2352.23 +/-  41.83  (14, 11, 14 iterations)
+                 fit: c0 -244.00 cP 10.78 cF 158.00
+                 even: c0 -248.41 cP 10.64 cF 162.53
+                 odd: c0 -240.01 cP 10.92 cF 153.83
+W4 whole half  in sample  -2549.77 +/-  43.77  rounded  -2549.24  across halves  -2546.96 +/-  43.75  (13, 12, 12 iterations)
+                 fit: c0 -259.80 cP 10.81 cF 171.19 cE 60.12
+                 even: c0 -264.00 cP 10.69 cF 175.46 cE 59.04
+                 odd: c0 -255.34 cP 10.95 cF 166.52 cE 60.54
+R4 min(C, 0)   in sample  -3311.22 +/-  44.59  rounded  -3311.11  across halves  -3310.87 +/-  44.60  (15, 16, 14 iterations)
+                 fit: c0 -471.38 cP 132.61 cF 21.68 cE 144.88
+                 even: c0 -474.61 cP 134.12 cF 21.68 cE 136.86
+                 odd: c0 -468.83 cP 131.31 cF 21.72 cE 153.76
+F12            in sample  -3356.34 +/-  42.81  rounded  -3356.30  across halves  -3352.45 +/-  42.80  (6, 6, 6 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798;
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774;
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823;
+F12+C4         in sample  -3517.76 +/-  43.27  rounded  -3514.66  across halves  -3512.66 +/-  43.26  (8, 8, 9 iterations)
+                 fit:r: 0.568 0.000 0.070 0.299 0.729 0.946 0.766 1.000 0.955 0.268 0.381 0.268 0.840; c0 -79.55 cP 4.33 cF 53.78 cE 33.15
+                 even:r: 0.524 0.000 0.064 0.310 0.701 0.890 0.778 1.000 1.000 0.289 0.384 0.289 0.823; c0 -81.66 cP 4.24 cF 55.61 cE 34.23
+                 odd:r: 0.615 0.000 0.076 0.289 0.759 1.000 0.755 1.000 0.911 0.248 0.378 0.248 0.857; c0 -77.54 cP 4.41 cF 52.05 cE 32.18
+F12+C4'        in sample  -3539.70 +/-  43.20  rounded  -3535.13  across halves  -3534.56 +/-  43.20  (11, 10, 10 iterations)
+                 fit:r: 0.790 0.000 0.219 0.449 0.758 0.931 0.794 1.000 0.951 0.310 0.395 0.310 0.819; c0 -72.13 cP 4.49 cF 44.53 cE 30.47
+                 even:r: 0.728 0.000 0.218 0.460 0.735 0.887 0.806 1.000 1.000 0.328 0.400 0.328 0.801; c0 -73.82 cP 4.42 cF 45.82 cE 30.79
+                 odd:r: 0.851 0.000 0.220 0.438 0.783 0.986 0.781 1.000 0.905 0.292 0.391 0.292 0.837; c0 -70.32 cP 4.56 cF 43.08 cE 30.21
+F12+R4         in sample  -3579.01 +/-  45.96  rounded  -3578.98  across halves  -3576.72 +/-  45.95  (15, 16, 18 iterations)
+                 fit:r: 1.000 0.000 0.410 1.000 1.000 1.000 0.860 1.000 0.924 0.342 0.371 0.342 0.927; c0 -435.63 cP 127.97 cF 27.48 cE 114.17
+                 even:r: 1.000 0.000 0.392 1.000 1.000 0.956 0.863 1.000 0.965 0.366 0.372 0.366 0.907; c0 -438.47 cP 128.90 cF 28.58 cE 107.00
+                 odd:r: 1.000 0.000 0.424 0.931 1.000 1.000 0.854 1.000 0.886 0.318 0.369 0.318 0.945; c0 -429.77 cP 126.05 cF 27.03 cE 123.72
+C4 | F12       in sample  -3490.11 +/-  44.30  rounded  -3490.53  across halves  -3485.33 +/-  44.29  (7, 7, 7 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; c0 -57.30 cP 3.03 cF 44.12 cE 28.68
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; c0 -58.37 cP 2.89 cF 45.42 cE 29.81
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; c0 -56.13 cP 3.17 cF 42.65 cE 27.50
+R4 | F12       in sample  -3739.53 +/-  47.96  rounded  -3739.69  across halves  -3735.50 +/-  47.95  (11, 12, 13 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; c0 -582.76 cP 500.53 cF 160.41 cE -95.41
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; c0 -582.48 cP 495.67 cF 160.07 cE -77.82
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; c0 -583.16 cP 506.60 cF 159.60 cE -107.21
+G1             in sample   -353.95 +/-  17.84  rounded   -353.85  across halves   -351.80 +/-  17.84  (4, 4, 2 iterations)
+                 fit:r all: 0.810;
+                 even:r all: 0.802;
+                 odd:r all: 0.817;
+G6             in sample   -809.18 +/-  22.89  rounded   -809.08  across halves   -803.59 +/-  22.93  (5, 5, 5 iterations)
+                 fit:r by band: 0.628 0.884 1.087 1.088 1.087 1.424;
+                 even:r by band: 0.626 0.879 1.066 1.054 1.062 1.342;
+                 odd:r by band: 0.631 0.888 1.108 1.122 1.113 1.506;
+C4 | G6        in sample  -1953.57 +/-  43.60  rounded  -1942.51  across halves  -1947.02 +/-  43.63  (10, 11, 10 iterations)
+                 fit:r by band: 0.628 0.884 1.087 1.088 1.087 1.424; c0 -188.34 cP 5.60 cF 160.08 cE 125.56
+                 even:r by band: 0.626 0.879 1.066 1.054 1.062 1.342; c0 -192.65 cP 5.69 cF 164.62 cE 127.68
+                 odd:r by band: 0.631 0.888 1.108 1.122 1.113 1.506; c0 -184.27 cP 5.51 cF 155.79 cE 123.60
+R4 | G6        in sample  -2940.16 +/-  49.66  rounded  -2930.02  across halves  -2916.06 +/-  49.86  (9, 9, 9 iterations)
+                 fit:r by band: 0.628 0.884 1.087 1.088 1.087 1.424; c0 -449.69 cP 149.32 cF 100.79 cE 204.30
+                 even:r by band: 0.626 0.879 1.066 1.054 1.062 1.342; c0 -450.03 cP 149.92 cF 99.51 cE 219.65
+                 odd:r by band: 0.631 0.888 1.108 1.122 1.113 1.506; c0 -428.32 cP 136.44 cF 18.25 cE 179.73
+F12G6          in sample  -3441.83 +/-  42.05  rounded  -3441.74  across halves  -3432.51 +/-  42.07  (6, 6, 6 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; by band: 1.106 1.136 1.113 1.098 1.091 1.428;
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; by band: 1.101 1.132 1.093 1.062 1.065 1.348;
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; by band: 1.111 1.140 1.134 1.134 1.117 1.508;
+C4x | F12      in sample  -3478.14 +/-  43.99  rounded  -3478.05  across halves  -3473.30 +/-  43.99  (6, 6, 6 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; c0 -50.69 cP 2.80 cF 39.26 cE 39.93
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; c0 -51.86 cP 2.66 cF 40.71 cE 39.69
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; c0 -49.52 cP 2.95 cF 37.75 cE 40.35
+R4x | F12      in sample  -3403.97 +/-  44.47  rounded  -3404.21  across halves  -3400.08 +/-  44.44  (8, 8, 7 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; c0 -54.09 cP 3.39 cF 40.54 cE 128.16
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; c0 -53.80 cP 2.92 cF 42.13 cE 80.32
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; c0 -52.60 cP 3.52 cF 38.52 cE 71.12
+C4x | F12G6    in sample  -3527.04 +/-  44.24  rounded  -3523.06  across halves  -3518.21 +/-  44.25  (7, 7, 6 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; by band: 1.106 1.136 1.113 1.098 1.091 1.428; c0 -55.17 cP 2.37 cF 35.21 cE 39.65
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; by band: 1.101 1.132 1.093 1.062 1.065 1.348; c0 -56.71 cP 2.42 cF 36.72 cE 38.80
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; by band: 1.111 1.140 1.134 1.134 1.117 1.508; c0 -53.54 cP 2.33 cF 33.56 cE 40.62
+R4x | F12G6    in sample  -3516.26 +/-  44.25  rounded  -3515.27  across halves  -3507.28 +/-  44.25  (17, 23, 29 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; by band: 1.106 1.136 1.113 1.098 1.091 1.428; c0 -56.83 cP 2.53 cF 34.05 cE 80.65
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; by band: 1.101 1.132 1.093 1.062 1.065 1.348; c0 -57.30 cP 2.36 cF 36.05 cE 60.90
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; by band: 1.111 1.140 1.134 1.134 1.117 1.508; c0 -55.79 cP 2.59 cF 32.45 cE 49.05
+W4x | F12      in sample  -3621.10 +/-  44.89  rounded  -3621.12  across halves  -3616.39 +/-  44.88  (5, 6, 6 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; c0 -63.66 cP 3.03 cF 48.78 cE 44.16
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; c0 -65.12 cP 2.91 cF 50.48 cE 43.82
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; c0 -62.14 cP 3.17 cF 46.91 cE 44.50
+C4x' | F12     in sample  -3459.66 +/-  43.96  rounded  -3460.48  across halves  -3454.85 +/-  43.92  (10, 8, 11 iterations)
+                 fit:r: 0.359 0.000 0.048 0.215 0.603 0.844 0.647 1.000 0.921 0.221 0.369 0.221 0.798; c0 -25.35 cP 2.00 cF 20.75 cE 29.59
+                 even:r: 0.343 0.000 0.044 0.219 0.577 0.792 0.655 1.000 0.963 0.237 0.370 0.237 0.774; c0 -26.50 cP 1.87 cF 22.12 cE 29.07
+                 odd:r: 0.376 0.000 0.052 0.211 0.630 0.909 0.640 1.000 0.881 0.206 0.368 0.206 0.823; c0 -23.53 cP 2.10 cF 18.88 cE 30.00
+
+paired increments across halves, 1e-6, whole-game errors:
+  C4             over C1 c0 alone     -2142.76 +/-  37.77
+  C4             over C4 less cP       -345.52 +/-  12.46
+  C4             over C4 less cF       -565.54 +/-  17.03
+  C4             over C4 less cE        -17.78 +/-   2.34
+  W4 whole half  over C4               -176.95 +/-   7.18
+  R4 min(C, 0)   over C4               -940.86 +/-  23.35
+  F12+C4         over F12              -160.20 +/-   8.57
+  F12+C4'        over F12              -182.10 +/-   8.81
+  F12+C4         over F12+C4'            21.90 +/-   1.98
+  F12+R4         over F12              -224.27 +/-  12.67
+  C4 | F12       over F12              -132.87 +/-   7.62
+  R4 | F12       over F12              -383.04 +/-  15.50
+  R4 | F12       over C4 | F12         -250.17 +/-  16.54
+  F12+C4         over C4              -1142.65 +/-  21.82
+  F12+R4         over R4 min(C, 0)     -265.85 +/-  12.61
+  F12            over C4               -982.44 +/-  26.85
+  F12            over R4 min(C, 0)      -41.58 +/-  19.99
+  G6             over G1               -451.78 +/-  16.02
+  C4             over G6              -1566.42 +/-  30.58
+  C4 | G6        over G6              -1143.43 +/-  27.07
+  R4 | G6        over G6              -2112.47 +/-  33.87
+  F12            over G6              -2548.87 +/-  32.58
+  C4x | F12      over F12              -120.84 +/-   7.23
+  R4x | F12      over F12               -47.63 +/-   4.23
+  R4x | F12      over C4x | F12          73.22 +/-   6.38
+  C4x | F12      over C4 | F12           12.03 +/-   0.89
+  F12G6          over F12               -80.06 +/-   7.53
+  C4x | F12G6    over F12G6             -85.70 +/-   5.78
+  R4x | F12G6    over F12G6             -74.76 +/-   5.59
+  R4x | F12G6    over C4x | F12G6        10.94 +/-   2.80
+  R4 | F12       over R4x | F12        -335.42 +/-  15.18
+  W4x | F12      over C4x | F12        -143.09 +/-   5.77
+  C4x' | F12     over C4x | F12          18.45 +/-   2.46
+
+where C4's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)     -94.47 +/-   2.70  label 0.698  before 0.978  after 0.935
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2150.40 +/-  34.91  label 0.703  before 0.804  after 0.708
+  OCB cells            rows   148023 ( 2.347%)    -347.04 +/-  11.41  label 0.642  before 0.748  after 0.692
+  pe, no cell          rows    14346 ( 0.227%)       9.29 +/-   2.61  label 0.794  before 0.725  after 0.780
+  no cell, phase 0-8   rows  1297566 (20.572%)     185.11 +/-  12.53  label 0.816  before 0.803  after 0.793
+  no cell, 9-16        rows  1288791 (20.433%)      31.02 +/-   6.78  label 0.742  before 0.730  after 0.741
+  no cell, 17-23       rows  1718363 (27.244%)      -6.42 +/-   4.32  label 0.672  before 0.665  after 0.672
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where R4 min(C, 0)'s in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -295.34 +/-   9.12  label 0.698  before 0.978  after 0.837
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2658.01 +/-  40.55  label 0.703  before 0.804  after 0.706
+  OCB cells            rows   148023 ( 2.347%)    -290.51 +/-  10.31  label 0.642  before 0.748  after 0.705
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.725  after 0.725
+  no cell, phase 0-8   rows  1297566 (20.572%)     -67.49 +/-   5.89  label 0.816  before 0.803  after 0.801
+  no cell, 9-16        rows  1288791 (20.433%)       0.11 +/-   0.75  label 0.742  before 0.730  after 0.730
+  no cell, 17-23       rows  1718363 (27.244%)       0.02 +/-   0.03  label 0.672  before 0.665  after 0.665
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.978  after 0.978
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2897.18 +/-  38.91  label 0.703  before 0.804  after 0.718
+  OCB cells            rows   148023 ( 2.347%)    -459.16 +/-  17.86  label 0.642  before 0.748  after 0.651
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.725  after 0.725
+  no cell, phase 0-8   rows  1297566 (20.572%)      -0.00 +/-   0.00  label 0.816  before 0.803  after 0.803
+  no cell, 9-16        rows  1288791 (20.433%)       0.00 +/-   0.00  label 0.742  before 0.730  after 0.730
+  no cell, 17-23       rows  1718363 (27.244%)      -0.00 +/-   0.00  label 0.672  before 0.665  after 0.665
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where C4 | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)     -13.81 +/-   0.36  label 0.698  before 0.978  after 0.972
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2902.57 +/-  40.35  label 0.703  before 0.804  after 0.707
+  OCB cells            rows   148023 ( 2.347%)    -481.10 +/-  18.15  label 0.642  before 0.748  after 0.649
+  pe, no cell          rows    14346 ( 0.227%)      -6.20 +/-   1.39  label 0.794  before 0.725  after 0.770
+  no cell, phase 0-8   rows  1297566 (20.572%)     -54.96 +/-   4.08  label 0.816  before 0.803  after 0.808
+  no cell, 9-16        rows  1288791 (20.433%)     -21.08 +/-   3.62  label 0.742  before 0.730  after 0.739
+  no cell, 17-23       rows  1718363 (27.244%)     -10.39 +/-   2.19  label 0.672  before 0.665  after 0.669
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where R4 | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -319.02 +/-  14.09  label 0.698  before 0.978  after 0.755
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2890.49 +/-  39.81  label 0.703  before 0.804  after 0.712
+  OCB cells            rows   148023 ( 2.347%)    -476.60 +/-  18.14  label 0.642  before 0.748  after 0.648
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.725  after 0.725
+  no cell, phase 0-8   rows  1297566 (20.572%)     -53.05 +/-   5.10  label 0.816  before 0.803  after 0.802
+  no cell, 9-16        rows  1288791 (20.433%)      -0.37 +/-   0.19  label 0.742  before 0.730  after 0.730
+  no cell, 17-23       rows  1718363 (27.244%)      -0.00 +/-   0.00  label 0.672  before 0.665  after 0.665
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)     -90.47 +/-   2.26  label 0.698  before 0.978  after 0.946
+  PAWNS cells 0-8      rows   850227 (13.480%)    -992.77 +/-  14.30  label 0.703  before 0.804  after 0.769
+  OCB cells            rows   148023 ( 2.347%)    -294.50 +/-   8.75  label 0.642  before 0.748  after 0.705
+  pe, no cell          rows    14346 ( 0.227%)      40.47 +/-   1.90  label 0.794  before 0.725  after 0.656
+  no cell, phase 0-8   rows  1297566 (20.572%)     560.88 +/-  11.56  label 0.816  before 0.803  after 0.774
+  no cell, 9-16        rows  1288791 (20.433%)     -21.08 +/-   2.66  label 0.742  before 0.730  after 0.737
+  no cell, 17-23       rows  1718363 (27.244%)     -11.70 +/-   3.04  label 0.672  before 0.665  after 0.669
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where C4 | G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)    -197.17 +/-   5.25  label 0.698  before 0.978  after 0.904
+  PAWNS cells 0-8      rows   850227 (13.480%)   -1990.34 +/-  33.83  label 0.703  before 0.804  after 0.710
+  OCB cells            rows   148023 ( 2.347%)    -435.17 +/-  13.29  label 0.642  before 0.748  after 0.681
+  pe, no cell          rows    14346 ( 0.227%)       9.92 +/-   2.14  label 0.794  before 0.725  after 0.770
+  no cell, phase 0-8   rows  1297566 (20.572%)     613.80 +/-  14.76  label 0.816  before 0.803  after 0.777
+  no cell, 9-16        rows  1288791 (20.433%)      41.47 +/-   8.70  label 0.742  before 0.730  after 0.752
+  no cell, 17-23       rows  1718363 (27.244%)       3.92 +/-   6.89  label 0.672  before 0.665  after 0.678
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where F12G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.978  after 0.978
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2897.18 +/-  38.91  label 0.703  before 0.804  after 0.718
+  OCB cells            rows   148023 ( 2.347%)    -459.16 +/-  17.86  label 0.642  before 0.748  after 0.651
+  pe, no cell          rows    14346 ( 0.227%)      -5.68 +/-   0.41  label 0.794  before 0.725  after 0.741
+  no cell, phase 0-8   rows  1297566 (20.572%)     -46.12 +/-   4.46  label 0.816  before 0.803  after 0.815
+  no cell, 9-16        rows  1288791 (20.433%)     -21.99 +/-   3.28  label 0.742  before 0.730  after 0.738
+  no cell, 17-23       rows  1718363 (27.244%)     -11.71 +/-   3.10  label 0.672  before 0.665  after 0.669
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where C4x | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.978  after 0.978
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2906.38 +/-  40.15  label 0.703  before 0.804  after 0.709
+  OCB cells            rows   148023 ( 2.347%)    -479.02 +/-  18.08  label 0.642  before 0.748  after 0.649
+  pe, no cell          rows    14346 ( 0.227%)      -6.92 +/-   1.73  label 0.794  before 0.725  after 0.784
+  no cell, phase 0-8   rows  1297566 (20.572%)     -54.10 +/-   3.83  label 0.816  before 0.803  after 0.808
+  no cell, 9-16        rows  1288791 (20.433%)     -21.49 +/-   3.48  label 0.742  before 0.730  after 0.739
+  no cell, 17-23       rows  1718363 (27.244%)     -10.22 +/-   2.09  label 0.672  before 0.665  after 0.669
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where R4x | F12's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.978  after 0.978
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2903.36 +/-  40.24  label 0.703  before 0.804  after 0.708
+  OCB cells            rows   148023 ( 2.347%)    -477.44 +/-  18.27  label 0.642  before 0.748  after 0.645
+  pe, no cell          rows    14346 ( 0.227%)       0.00 +/-   0.00  label 0.794  before 0.725  after 0.725
+  no cell, phase 0-8   rows  1297566 (20.572%)     -22.81 +/-   2.32  label 0.816  before 0.803  after 0.800
+  no cell, 9-16        rows  1288791 (20.433%)      -0.34 +/-   0.52  label 0.742  before 0.730  after 0.730
+  no cell, 17-23       rows  1718363 (27.244%)      -0.02 +/-   0.09  label 0.672  before 0.665  after 0.665
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where C4x | F12G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.978  after 0.978
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2896.06 +/-  40.54  label 0.703  before 0.804  after 0.706
+  OCB cells            rows   148023 ( 2.347%)    -479.83 +/-  18.44  label 0.642  before 0.748  after 0.643
+  pe, no cell          rows    14346 ( 0.227%)      -9.06 +/-   1.76  label 0.794  before 0.725  after 0.788
+  no cell, phase 0-8   rows  1297566 (20.572%)     -98.44 +/-   4.52  label 0.816  before 0.803  after 0.812
+  no cell, 9-16        rows  1288791 (20.433%)     -29.47 +/-   4.11  label 0.742  before 0.730  after 0.740
+  no cell, 17-23       rows  1718363 (27.244%)     -14.17 +/-   3.87  label 0.672  before 0.665  after 0.671
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+where R4x | F12G6's in-sample gain sits: dMSE over all rows, label, prediction before and after, strong side's view
+  LONE (no cell)       rows    40506 ( 0.642%)      -0.00 +/-   0.00  label 0.698  before 0.978  after 0.978
+  PAWNS cells 0-8      rows   850227 (13.480%)   -2892.58 +/-  40.64  label 0.703  before 0.804  after 0.705
+  OCB cells            rows   148023 ( 2.347%)    -479.61 +/-  18.51  label 0.642  before 0.748  after 0.642
+  pe, no cell          rows    14346 ( 0.227%)      -5.68 +/-   0.41  label 0.794  before 0.725  after 0.741
+  no cell, phase 0-8   rows  1297566 (20.572%)     -99.26 +/-   3.81  label 0.816  before 0.803  after 0.810
+  no cell, 9-16        rows  1288791 (20.433%)     -27.03 +/-   3.04  label 0.742  before 0.730  after 0.737
+  no cell, 17-23       rows  1718363 (27.244%)     -12.10 +/-   3.07  label 0.672  before 0.665  after 0.669
+  phase 24             rows   949472 (15.054%)       0.00 +/-   0.00  label 0.561  before 0.562  after 0.562
+
+at C4's fit, rows with E1 != 0 below phase 24, C from -243.73 to 127.06: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound  24.423  widened  11.188  damped  64.218
+  5-8    rows  1253558  bound   9.656  widened  24.994  damped  65.214
+  9-12   rows   769625  bound   3.042  widened  56.729  damped  40.053
+  13-16  rows   585818  bound   1.288  widened  71.673  damped  26.843
+  17-20  rows   859096  bound   0.387  widened  87.432  damped  11.958
+  21-23  rows   860331  bound   0.054  widened  97.258  damped   2.451
+  all    bound 405431 (6.428%), widened 2877584 (45.623%), damped 2064879 (32.738%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, 317983 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 16.1, p90 50.4, max 254.1 cp
+
+at R4 min(C, 0)'s fit, rows with E1 != 0 below phase 24, C from -471.38 to 0.00: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound  20.915  widened   0.000  damped  24.785
+  5-8    rows  1253558  bound   8.988  widened   0.000  damped  14.237
+  9-12   rows   769625  bound   0.991  widened   0.000  damped   2.990
+  13-16  rows   585818  bound   0.105  widened   0.000  damped   0.448
+  17-20  rows   859096  bound   0.009  widened   0.000  damped   0.047
+  21-23  rows   860331  bound   0.002  widened   0.000  damped   0.005
+  all    bound 334757 (5.307%), widened 0 (0.000%), damped 457936 (7.260%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, none with C > 0: no jump
+
+at C4 | F12's fit, rows with E1 != 0 below phase 24, C from -57.30 to 57.89: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound   6.816  widened  39.288  damped  53.725
+  5-8    rows  1253558  bound   1.941  widened  64.396  damped  33.527
+  9-12   rows   769625  bound   0.437  widened  90.648  damped   8.737
+  13-16  rows   585818  bound   0.138  widened  97.322  damped   2.343
+  17-20  rows   859096  bound   0.035  widened  99.316  damped   0.426
+  21-23  rows   860331  bound   0.004  widened  99.713  damped   0.046
+  all    bound 98480 (1.561%), widened 4194724 (66.506%), damped 1054690 (16.722%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, 406933 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 9.7, p90 25.6, max 115.8 cp
+
+at R4 | F12's fit, rows with E1 != 0 below phase 24, C from -582.76 to 0.00: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound   7.832  widened   0.000  damped  14.611
+  5-8    rows  1253558  bound   4.713  widened   0.000  damped   4.748
+  9-12   rows   769625  bound   0.289  widened   0.000  damped   0.522
+  13-16  rows   585818  bound   0.013  widened   0.000  damped   0.025
+  17-20  rows   859096  bound   0.000  widened   0.000  damped   0.002
+  21-23  rows   860331  bound   0.000  widened   0.000  damped   0.000
+  all    bound 141444 (2.243%), widened 0 (0.000%), damped 213001 (3.377%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, none with C > 0: no jump
+
+at C4 | G6's fit, rows with E1 != 0 below phase 24, C from -188.34 to 175.69: bound to 0, widened, damped, rows % of the band
+  0-4    rows  1019466  bound  17.774  widened  31.318  damped  50.737
+  5-8    rows  1253558  bound   6.040  widened  55.758  damped  38.065
+  9-12   rows   769625  bound   1.496  widened  85.858  damped  12.469
+  13-16  rows   585818  bound   0.497  widened  94.983  damped   4.323
+  17-20  rows   859096  bound   0.125  widened  98.737  damped   0.915
+  21-23  rows   860331  bound   0.015  widened  99.655  damped   0.093
+  all    bound 272987 (4.328%), widened 3948769 (62.606%), damped 1126138 (17.855%)
+  0 < |E1| <= 25 below phase 24: 480819 rows, 396979 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 16.7, p90 44.4, max 351.4 cp
+
+at C4x | F12's fit, rows with E1 != 0 below phase 24, C from -50.69 to 67.72: bound to 0, widened, damped, rows % of the band
+  0-4    rows   978960  bound   6.008  widened  39.476  damped  50.379
+  5-8    rows  1253558  bound   1.682  widened  64.396  damped  33.786
+  9-12   rows   769625  bound   0.371  widened  90.648  damped   8.804
+  13-16  rows   585818  bound   0.116  widened  97.322  damped   2.365
+  17-20  rows   859096  bound   0.030  widened  99.316  damped   0.431
+  21-23  rows   860331  bound   0.003  widened  99.713  damped   0.047
+  all    bound 86291 (1.368%), widened 4196644 (66.536%), damped 1024453 (16.242%)
+  0 < |E1| <= 25 below phase 24: 480757 rows, 407453 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 9.3, p90 24.9, max 135.4 cp
+
+at R4x | F12's fit, rows with E1 != 0 below phase 24, C from -54.09 to 0.00: bound to 0, widened, damped, rows % of the band
+  0-4    rows   978960  bound   6.256  widened   0.000  damped  49.854
+  5-8    rows  1253558  bound   1.747  widened   0.000  damped  33.721
+  9-12   rows   769625  bound   0.381  widened   0.000  damped   8.794
+  13-16  rows   585818  bound   0.116  widened   0.000  damped   2.365
+  17-20  rows   859096  bound   0.030  widened   0.000  damped   0.431
+  21-23  rows   860331  bound   0.003  widened   0.000  damped   0.047
+  all    bound 89718 (1.422%), widened 0 (0.000%), damped 1018199 (16.143%)
+  0 < |E1| <= 25 below phase 24: 480757 rows, none with C > 0: no jump
+
+at C4x | F12G6's fit, rows with E1 != 0 below phase 24, C from -55.17 to 52.92: bound to 0, widened, damped, rows % of the band
+  0-4    rows   978960  bound   7.315  widened  11.275  damped  77.272
+  5-8    rows  1253558  bound   2.448  widened  24.994  damped  72.422
+  9-12   rows   769625  bound   0.755  widened  56.729  damped  42.340
+  13-16  rows   585818  bound   0.317  widened  71.673  damped  27.814
+  17-20  rows   859096  bound   0.099  widened  87.432  damped  12.246
+  21-23  rows   860331  bound   0.015  widened  97.258  damped   2.490
+  all    bound 114102 (1.809%), widened 2878481 (45.637%), damped 2314805 (36.700%)
+  0 < |E1| <= 25 below phase 24: 480757 rows, 318190 with C > 0, whose sign change of E1 jumps the score 2 C w_eg: p50 3.0, p90 9.9, max 105.8 cp
+S266-CENSUS-OK
+
+## held-out view qs, counts only; --c is the corpus's C4x | F12 fit, -46.32,3.46,42.71,39.44
+S266 census of /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation
+rows 1384182 games 12000
+walk: 0 rows differ from the bitboard form (P, flank, pe; every row)
+identity: 0 traced rows differ from evaluate()
+E1 = 0 on 3021 rows (0.218%)
+
+by phase band: rows %, then within the band
+phase     rows%   meanP  flank%     pe%    E1=0% |E1|<=10     <=25     <=50    <=100    <=200   split%
+0-4      22.388    3.61   48.14   1.678    0.177    3.310    7.825   14.740   26.712   47.743    3.961
+5-8      22.217    5.64   73.05   0.000    0.128    2.774    6.636   13.006   24.897   45.064    4.805
+9-12     11.540    8.85   94.45   0.000    0.213    3.905    9.623   18.837   35.143   58.453    7.104
+13-16     8.117   10.04   98.70   0.000    0.214    4.236   10.267   19.934   37.218   62.766    8.653
+17-20    11.709   11.36   99.76   0.000    0.234    4.741   11.506   22.383   41.417   68.700   10.592
+21-23    11.189   13.10   99.97   0.000    0.242    5.423   13.218   25.415   45.119   70.204   12.926
+24       12.839   14.34  100.00   0.000    0.418    8.443   19.982   37.866   65.542   90.943   20.694
+all     100.000    8.53   81.62   0.376    0.218    4.398   10.562   20.308   36.901   60.117    8.820
+games: flank 12000, pe 904, |E1| <= 25 below phase 24 9409, a cell picked 6688
+pe rows: 5199 (0.376%), in a PAWNS cell 1380, in an OCB cell 0, in no cell 3819
+
+P, the pawns on the board, rows % by band:
+P          0-4     5-8    9-12   13-16   17-20   21-23      24     all
+0       15.230   7.602   0.577   0.018   0.001   0.000   0.000   5.167
+1       17.492   7.072   0.744   0.040   0.000   0.000   0.000   5.576
+2       10.591   6.722   1.079   0.102   0.010   0.000   0.000   3.999
+3       12.073   8.170   2.325   0.335   0.038   0.001   0.000   4.818
+4        9.507   8.926   3.652   1.126   0.230   0.014   0.000   4.653
+5        9.116   9.769   5.678   2.359   0.644   0.074   0.002   5.142
+6        7.481   9.997   7.683   4.927   1.567   0.173   0.016   5.388
+7        6.028  10.081   9.907   7.840   3.140   0.585   0.073   5.812
+8        5.017   9.386  11.669  10.789   6.012   1.466   0.299   6.337
+9        3.066   7.855  12.454  13.012   9.405   3.097   0.665   6.458
+10       2.217   6.291  13.123  14.859  13.127   6.277   1.811   7.086
+11       1.216   4.129  10.814  13.966  15.444   9.584   3.631   6.918
+12       0.691   2.602  10.165  13.982  18.265  15.561   8.561   8.020
+13       0.184   0.949   4.859   7.571  12.507  14.974  10.689   5.939
+14       0.087   0.405   3.987   6.725  12.887  22.527  24.189   8.251
+15       0.003   0.040   0.722   1.521   3.062  11.041  14.418   3.661
+16       0.002   0.004   0.564   0.828   3.663  14.628  35.647   6.776
+
+rows a C would take to zero: 0 < |E1| <= -C, phase under 24, rows % by band, then all and games
+C          0-4     5-8    9-12   13-16   17-20   21-23     all%    games
+-10      3.133   2.646   3.691   4.022   4.507   5.181    3.149     7855
+-25      7.648   6.508   9.409  10.053  11.271  12.976    7.832     9388
+-50     14.563  12.878  18.624  19.720  22.149  25.173   15.281    10241
+-100    26.535  24.769  34.929  37.003  41.183  44.877   28.322    10977
+-200    47.566  44.936  58.239  62.552  68.465  69.962   48.276    11669
+
+at the given C (-46.32 3.46 42.71 39.44), rows with E1 != 0 below phase 24 and no king alone: bound to 0, widened (C > 0), damped (C < 0, not bound), rows % by band
+             0-4     5-8    9-12   13-16   17-20   21-23     all%
+bound      6.093   1.692   0.324   0.117   0.025   0.003    1.790
+widened   48.388  72.943  94.239  98.482  99.530  99.731   68.721
+damped    36.886  25.237   5.224   1.187   0.210   0.024   14.592
+
+S124's cells, picked by E1's sign: rows %, and within the cell pe %, flank %, mean P
+P=0 d<=0           1.158    0.00    0.00   0.03
+P=0 d=1            2.792    0.00    1.52   0.44
+P=0 d>=2           1.053    0.00    3.49   0.58
+P=1 d<=0           3.643    1.02   14.90   1.32
+P=1 d=1            1.979    0.00   32.96   2.19
+P=1 d>=2           0.485    0.00   43.63   2.70
+P=2 d<=0           4.471    1.40   54.12   3.09
+P=2 d=1            2.302    0.00   68.96   3.96
+P=2 d>=2           0.522    0.00   71.76   4.48
+OCB_PURE P<=2      1.475    0.00   38.01   2.21
+OCB_PURE P=3-4     0.933    0.00   89.89   5.72
+OCB_PURE P>=5      0.226    0.00   99.87   9.81
+OCB_ROOK           1.567    0.00   78.35   6.11
+any cell 22.607% of rows
+S266-CENSUS-OK
+
+## held-out view root, counts only; --c is the corpus's C4x | F12 fit, -46.32,3.46,42.71,39.44
+S266 census of /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.validation
+rows 1385493 games 12000
+walk: 0 rows differ from the bitboard form (P, flank, pe; every row)
+identity: 0 traced rows differ from evaluate()
+E1 = 0 on 2889 rows (0.209%)
+
+by phase band: rows %, then within the band
+phase     rows%   meanP  flank%     pe%    E1=0% |E1|<=10     <=25     <=50    <=100    <=200   split%
+0-4      21.649    3.61   48.02   1.350    0.176    3.279    7.761   14.628   26.495   47.475    4.000
+5-8      21.774    5.68   73.30   0.000    0.123    2.699    6.411   12.517   24.087   43.889    4.670
+9-12     11.346    8.94   94.69   0.000    0.181    3.698    9.016   17.688   33.105   55.481    6.680
+13-16     8.012   10.18   98.91   0.000    0.186    3.852    9.319   18.165   34.220   58.156    7.897
+17-20    11.335   11.46   99.83   0.000    0.207    4.419   10.778   20.777   38.684   64.682    9.785
+21-23    11.813   13.21   99.98   0.000    0.236    4.900   11.834   22.803   40.643   64.000   11.529
+24       14.070   14.52  100.00   0.000    0.404    8.540   20.216   38.230   66.105   91.010   20.969
+all     100.000    8.75   82.22   0.292    0.209    4.307   10.310   19.782   35.966   58.486    8.695
+games: flank 12000, pe 371, |E1| <= 25 below phase 24 9741, a cell picked 6294
+pe rows: 4048 (0.292%), in a PAWNS cell 1069, in an OCB cell 0, in no cell 2979
+
+P, the pawns on the board, rows % by band:
+P          0-4     5-8    9-12   13-16   17-20   21-23      24     all
+0       15.377   7.638   0.580   0.012   0.001   0.000   0.000   5.059
+1       17.502   6.934   0.731   0.029   0.000   0.000   0.000   5.384
+2       10.465   6.573   0.997   0.077   0.003   0.000   0.000   3.817
+3       11.967   7.994   2.197   0.254   0.025   0.000   0.000   4.604
+4        9.481   8.889   3.445   0.920   0.175   0.010   0.000   4.474
+5        9.164   9.643   5.239   1.980   0.520   0.054   0.002   4.902
+6        7.481  10.011   7.338   4.423   1.320   0.133   0.008   5.153
+7        6.041  10.195   9.607   7.176   2.765   0.478   0.046   5.569
+8        4.999   9.450  11.619  10.524   5.615   1.272   0.260   6.125
+9        3.110   7.966  12.729  12.844   9.005   2.754   0.489   6.296
+10       2.221   6.383  13.381  15.080  13.009   5.742   1.436   6.952
+11       1.231   4.235  11.282  14.552  15.578   9.103   3.062   6.906
+12       0.684   2.650  10.414  14.631  18.639  15.004   7.329   7.995
+13       0.185   0.977   5.035   8.088  13.185  15.284   9.792   6.150
+14       0.087   0.412   4.083   6.847  13.074  22.511  21.274   8.255
+15       0.003   0.045   0.760   1.688   3.375  11.952  16.468   4.343
+16       0.002   0.005   0.562   0.875   3.710  15.703  39.834   8.016
+
+rows a C would take to zero: 0 < |E1| <= -C, phase under 24, rows % by band, then all and games
+C          0-4     5-8    9-12   13-16   17-20   21-23     all%    games
+-10      3.103   2.576   3.517   3.666   4.212   4.664    2.954     8214
+-25      7.585   6.288   8.836   9.134  10.571  11.598    7.314     9724
+-50     14.452  12.394  17.508  17.980  20.570  22.567   14.252    10676
+-100    26.319  23.964  32.925  34.034  38.477  40.407   26.513    11441
+-200    47.299  43.766  55.301  57.971  64.475  63.764   45.529    11857
+
+at the given C (-46.32 3.46 42.71 39.44), rows with E1 != 0 below phase 24 and no king alone: bound to 0, widened (C > 0), damped (C < 0, not bound), rows % by band
+             0-4     5-8    9-12   13-16   17-20   21-23     all%
+bound      6.159   1.665   0.295   0.101   0.014   0.003    1.739
+widened   48.229  73.195  94.512  98.724  99.623  99.742   68.087
+damped    37.091  25.017   5.012   0.990   0.156   0.020   14.145
+
+S124's cells, picked by E1's sign: rows %, and within the cell pe %, flank %, mean P
+P=0 d<=0           1.126    0.00    0.01   0.03
+P=0 d=1            2.734    0.00    1.50   0.44
+P=0 d>=2           1.044    0.00    3.69   0.58
+P=1 d<=0           3.516    0.77   14.54   1.31
+P=1 d=1            1.902    0.00   32.87   2.20
+P=1 d>=2           0.471    0.00   44.93   2.77
+P=2 d<=0           4.280    1.17   53.60   3.08
+P=2 d=1            2.175    0.00   68.73   3.98
+P=2 d>=2           0.541    0.00   73.93   4.61
+OCB_PURE P<=2      1.450    0.00   37.98   2.22
+OCB_PURE P=3-4     0.922    0.00   89.83   5.72
+OCB_PURE P>=5      0.222    0.00  100.00   9.82
+OCB_ROOK           1.531    0.00   78.44   6.12
+any cell 21.915% of rows
+S266-CENSUS-OK
+
+## held-out view pv, counts only; --c is the corpus's C4x | F12 fit, -46.32,3.46,42.71,39.44
+S266 census of /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.validation
+rows 1316166 games 12000
+walk: 0 rows differ from the bitboard form (P, flank, pe; every row)
+identity: 0 traced rows differ from evaluate()
+E1 = 0 on 2406 rows (0.183%)
+
+by phase band: rows %, then within the band
+phase     rows%   meanP  flank%     pe%    E1=0% |E1|<=10     <=25     <=50    <=100    <=200   split%
+0-4      27.053    3.48   47.64   3.693    0.128    2.560    6.141   11.890   22.611   42.473    3.207
+5-8      25.196    5.49   72.15   0.000    0.119    2.589    6.279   12.325   23.884   43.412    4.575
+9-12     12.747    8.65   93.76   0.000    0.188    4.048    9.931   19.340   35.615   59.199    7.524
+13-16     8.654    9.74   98.32   0.000    0.209    4.446   10.680   20.793   38.411   63.836    9.133
+17-20    12.462   11.31   99.67   0.000    0.275    4.987   12.193   23.747   43.879   71.514   11.387
+21-23     9.101   12.67   99.96   0.000    0.260    6.136   14.545   27.993   49.293   75.181   13.964
+24        4.786   13.22   99.99   0.000    0.376    8.268   19.869   37.503   63.984   89.687   18.784
+all     100.000    7.46   77.83   0.999    0.183    3.821    9.228   17.889   33.016   55.546    7.359
+games: flank 12000, pe 3543, |E1| <= 25 below phase 24 10619, a cell picked 9424
+pe rows: 13149 (0.999%), in a PAWNS cell 2838, in an OCB cell 0, in no cell 10311
+
+P, the pawns on the board, rows % by band:
+P          0-4     5-8    9-12   13-16   17-20   21-23      24     all
+0       14.499   7.365   0.692   0.055   0.003   0.000   0.000   5.872
+1       18.297   7.610   0.938   0.077   0.005   0.000   0.000   6.994
+2       11.874   7.631   1.511   0.174   0.016   0.000   0.000   5.345
+3       12.837   8.921   2.676   0.560   0.082   0.006   0.000   6.121
+4        9.962   9.258   4.194   1.559   0.238   0.031   0.002   5.730
+5        8.983  10.042   6.172   3.117   0.715   0.093   0.011   6.115
+6        6.939   9.947   8.411   5.751   1.738   0.285   0.068   6.199
+7        5.659   9.769  10.137   8.892   3.505   0.735   0.235   6.569
+8        4.387   8.651  11.580  11.501   6.224   1.764   0.732   6.809
+9        2.737   7.334  11.902  12.944   9.474   3.905   1.805   6.848
+10       1.875   5.677  12.256  14.902  13.480   7.710   5.106   7.416
+11       1.083   3.842  10.103  13.262  15.020  11.410   8.236   7.001
+12       0.614   2.482   9.525  13.098  18.035  19.272  18.832   8.042
+13       0.163   0.988   4.616   6.504  11.743  15.719  14.812   5.047
+14       0.083   0.437   3.946   5.959  13.019  23.287  29.497   6.305
+15       0.006   0.035   0.775   1.062   2.892   6.438   6.241   1.446
+16       0.001   0.010   0.569   0.581   3.810   9.348  14.423   2.142
+
+rows a C would take to zero: 0 < |E1| <= -C, phase under 24, rows % by band, then all and games
+C          0-4     5-8    9-12   13-16   17-20   21-23     all%    games
+-10      2.432   2.470   3.860   4.237   4.712   5.876    3.261     9379
+-25      6.012   6.160   9.743  10.471  11.918  14.284    8.112    10598
+-50     11.762  12.206  19.152  20.584  23.472  27.732   15.929    11066
+-100    22.482  23.765  35.427  38.202  43.604  49.032   29.789    11460
+-200    42.344  43.293  59.011  63.627  71.239  74.920   51.089    11843
+
+at the given C (-46.32 3.46 42.71 39.44), rows with E1 != 0 below phase 24 and no king alone: bound to 0, widened (C > 0), damped (C < 0, not bound), rows % by band
+             0-4     5-8    9-12   13-16   17-20   21-23     all%
+bound      4.749   1.550   0.412   0.136   0.032   0.003    1.744
+widened   47.631  72.048  93.578  98.107  99.397  99.703   72.919
+damped    36.094  26.283   5.821   1.548   0.296   0.033   17.303
+
+S124's cells, picked by E1's sign: rows %, and within the cell pe %, flank %, mean P
+P=0 d<=0           1.210    0.00    0.01   0.02
+P=0 d=1            3.057    0.00    1.45   0.45
+P=0 d>=2           1.284    0.00    2.90   0.56
+P=1 d<=0           4.075    1.54   14.72   1.32
+P=1 d=1            2.448    0.00   31.99   2.09
+P=1 d>=2           0.829    0.00   39.21   2.33
+P=2 d<=0           5.161    2.96   54.39   3.05
+P=2 d=1            3.039    0.00   67.04   3.76
+P=2 d>=2           0.877    0.00   67.66   3.98
+OCB_PURE P<=2      1.545    0.00   38.76   2.22
+OCB_PURE P=3-4     0.980    0.00   89.90   5.69
+OCB_PURE P>=5      0.235    0.00   99.77   9.70
+OCB_ROOK           1.687    0.00   79.27   6.13
+any cell 26.426% of rows
+S266-CENSUS-OK
+
+## S083's corpus, counts only (old two-fold rule, DEC-349)
+S266 census of /home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv
+rows 6226944 games 137994
+walk: 0 rows differ from the bitboard form (P, flank, pe; every row)
+identity: 0 traced rows differ from evaluate()
+E1 = 0 on 13496 rows (0.217%)
+
+by phase band: rows %, then within the band
+phase     rows%   meanP  flank%     pe%    E1=0% |E1|<=10     <=25     <=50    <=100    <=200   split%
+0-4       9.622    5.28   73.15   2.789    0.133    2.745    6.677   12.912   24.220   44.178    3.565
+5-8      17.165    6.77   86.02   0.000    0.135    2.783    6.716   13.105   24.968   44.554    4.700
+9-12     13.146    9.29   97.04   0.000    0.185    3.905    9.401   18.208   34.115   57.775    7.017
+13-16     9.993   10.26   98.88   0.000    0.192    4.172   10.080   19.410   36.056   60.004    8.539
+17-20    15.342   11.33   99.73   0.000    0.210    4.385   10.567   20.475   38.386   64.387   10.007
+21-23    17.017   13.12   99.98   0.000    0.224    4.707   11.390   21.976   39.995   64.247   11.694
+24       17.716   14.35  100.00   0.000    0.378    7.956   19.043   36.288   63.313   90.165   20.247
+all     100.000   10.43   94.47   0.268    0.217    4.555   10.971   21.135   38.615   62.274   10.038
+games: flank 137994, pe 3915, |E1| <= 25 below phase 24 94370, a cell picked 55001
+pe rows: 16709 (0.268%), in a PAWNS cell 3788, in an OCB cell 0, in no cell 12921
+
+P, the pawns on the board, rows % by band:
+P          0-4     5-8    9-12   13-16   17-20   21-23      24     all
+0        2.844   1.239   0.054   0.003   0.000   0.000   0.000   0.494
+1        6.520   2.895   0.241   0.016   0.001   0.000   0.000   1.158
+2        9.392   4.675   0.620   0.080   0.007   0.001   0.000   1.797
+3       11.545   6.670   1.343   0.334   0.043   0.002   0.000   2.473
+4       12.119   8.666   2.594   0.866   0.184   0.013   0.000   3.111
+5       12.573  10.376   4.415   2.182   0.570   0.058   0.004   3.887
+6       11.620  11.688   6.874   4.321   1.463   0.190   0.015   4.719
+7       10.414  12.128   9.576   7.123   3.169   0.546   0.072   5.646
+8        8.350  11.792  11.881  10.225   6.049   1.425   0.244   6.625
+9        6.123  10.301  13.555  12.707   9.662   3.145   0.722   7.554
+10       4.161   8.330  13.942  14.679  13.679   6.063   1.871   8.592
+11       2.313   5.531  12.330  13.915  15.756   9.678   3.730   8.908
+12       1.317   3.468  10.770  13.508  17.747  15.168   8.238  10.251
+13       0.452   1.457   5.971   8.999  13.059  15.598  11.126   8.607
+14       0.224   0.672   4.230   7.514  11.921  21.199  22.437  10.855
+15       0.031   0.086   0.953   2.080   3.473  12.016  16.452   5.843
+16       0.002   0.027   0.650   1.450   3.217  14.898  35.089   9.480
+
+rows a C would take to zero: 0 < |E1| <= -C, phase under 24, rows % by band, then all and games
+C          0-4     5-8    9-12   13-16   17-20   21-23     all%    games
+-10      2.612   2.647   3.720   3.980   4.175   4.483    2.996    69882
+-25      6.544   6.581   9.216   9.888  10.357  11.166    7.448    94000
+-50     12.780  12.970  18.023  19.219  20.265  21.752   14.556   107962
+-100    24.087  24.833  33.930  35.864  38.176  39.771   27.249   119715
+-200    44.045  44.419  57.590  59.812  64.177  64.023   46.151   130482
+
+S124's cells, picked by E1's sign: rows %, and within the cell pe %, flank %, mean P
+P=0 d<=0           0.111    0.00    0.71   0.11
+P=0 d=1            0.381    0.00    5.31   0.69
+P=0 d>=2           0.237    0.00    9.28   1.08
+P=1 d<=0           0.821    2.20   25.69   1.56
+P=1 d=1            1.013    0.00   40.41   2.28
+P=1 d>=2           0.432    0.00   51.11   2.79
+P=2 d<=0           2.092    2.05   60.95   3.21
+P=2 d=1            1.983    0.00   71.33   4.04
+P=2 d>=2           0.636    0.00   77.04   4.66
+OCB_PURE P<=2      0.119    0.00   56.96   2.68
+OCB_PURE P=3-4     0.225    0.00   91.79   5.79
+OCB_PURE P>=5      0.096    0.00   99.47   9.35
+OCB_ROOK           0.944    0.00   89.75   6.85
+any cell 9.092% of rows
+S266-CENSUS-OK
+
+## the plant: file d counted on neither flank, 20000 corpus rows; the walk must differ
+walk: 534 rows differ from the bitboard form (P, flank, pe; every row)

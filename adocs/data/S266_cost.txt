@@ -1,0 +1,13 @@
+base bench 5482277 bench16 14931387
+c1 bench 5482277 bench16 14931387
+c3 bench 5482277 bench16 14931387
+c5 bench 5482277 bench16 14931387
+bench: base 11649463448 (spread 59)
+  c1    11803763752 (spread 93)  +1.325 %
+  c3    11793990858 (spread 61)  +1.241 %
+  c5    11814308473 (spread 155)  +1.415 %
+bench 16: base 34487388068 (spread 137)
+  c1    34952431026 (spread 199)  +1.348 %
+  c3    34937616890 (spread 125)  +1.305 %
+  c5    34982737683 (spread 141)  +1.436 %
+S266-COST-DONE
