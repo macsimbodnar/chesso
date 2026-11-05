@@ -5,7 +5,26 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-05 05:15, by hand.
+Updated: 2026-11-05 05:45, by hand.
+
+## 2026-11-05 05:45: S122's side STOP ruled, DEC-353: the candidate is `1245`; S102's and S266's passes committed
+
+**DEC-353, the coordinator's (DEC-344 (1)):** P7 is dropped, and the candidate is `1245`.
+- That is P5's decided fit, `.tuning/s122/screen/fits/1245_e20000/full.hpp`: P1, P2, P4 and P5 at margin 275, on
+  the landing's tree, the shipped linear five kept. Nothing is refit.
+- The bisection on H0: M 275 alone at `{-5, 0}`, then A = P1, B = P2 + P4, C = P5.
+- Retiring the linear five is a lead for S126.
+
+**Committed:** S102's pass `31a44c3`, S266's `260edde`. Both gates passed 57/57, and `../chesso-s102` and
+`../chesso-s266` are gone, their blobs verified.
+
+**Next, in order, no run holding the machine until then:**
+1. S122 phase 2 by one agent, brief `.tuning/coord/S122/brief_phase2.md`. Part 1 amends `apply` to paste DEC-353's
+   candidate, and the coordinator lands it. Then the coordinator runs `apply` into `../chesso-s122p2` from the main
+   checkout. Part 2 covers the goldens, the owner's floors, DEC-352's K re-read, and `S122_sprt.sh`.
+2. The cost: `CAND_SHA=b62becb PARENT_SHA=1b2539a adocs/data/S122_cost.sh run`, then the cand row at mask 27, on
+   the idle machine. The check passed at 05:00.
+3. The Debug self-play (DEC-141), then the one `{0, 5}` SPRT.
 
 ## 2026-11-05 05:15: S122's screen done, five parts kept; `side` stopped on P7
 

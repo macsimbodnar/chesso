@@ -3,7 +3,7 @@ goal:       king safety becomes a fitted linear accumulator with a quadratic fin
 accepts:    an SPRT verdict, recorded whatever it is; the term is clamped with mobility at a `LAZY_EVAL_MARGIN` re-derived from its own fitted spread (`tools/eval_spread` at the fitted weights and a fresh `truncation_scan`), binding on at most a pre-registered share of rows, the margin its own part in the family's H0 partition, and the step states how the fit and the margin are made consistent (S039 read H0; DEC-324, the owner's amendment DEC-258 names); everything feeding the accumulator is a fitted weight and only the finalizer is non-linear, fitted through S262's per-side nonlinear group -- both sides' sums traced, the gradient checked against finite differences, and the finalizer seeded off zero, because `max(0, x)^2` has no gradient at x = 0 (DEC-134 form b); safe checks per piece type, weak squares in the king zone and the defenders of the king zone are counted, each screened before the one SPRT (DEC-259); the shelter comes from the pawn table's slot (S118, `pawn_shelter_t`, raw before the clamp and the taper) and storm, which nothing computes yet, is added here, in that slot's score or its spare bytes (DEC-332 (5)); the corpus this is fitted on **contains attacking positions**, and the step says how that was ensured; **the move-ordering band clearance is re-checked**, because this term's magnitudes are about to grow by an order of magnitude
 touches:    src/evaluation.cpp, src/evaluation.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_eval_trace.cpp, tests/test_evaluation.cpp, src/data_structures.hpp
 excludes:   mobility, which shares the loop but is S121; retiring the clamp and the lazy shortcut (S039 read H0, DEC-324)
-decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259, DEC-324, DEC-344
+decisions:  DEC-071, DEC-084, DEC-039, DEC-258, DEC-259, DEC-324, DEC-344, DEC-345, DEC-349, DEC-353
 closes:
 blocks:
 paused_by:
@@ -1410,3 +1410,54 @@ script stands (finding below).
 - **`merge` writes no merged games file.** After a stop, the corpus's `games.tsv` is part 1's (in `part1/`) and the
   top-up's (in `TOPUP`). A `repetition:` check on a merged pool would read the two parts apart, with part 1's closing
   lines lost, as DEC-296 records for S082.
+
+## 2026-11-05: the screen, the side readings, and the ruling, DEC-353
+
+**The screen** (Command 8) ran from HEAD `2bf3ad4`, 2026-11-04 22:19 to 2026-11-05 04:51, `S122-ALL-DONE`, console
+`.tuning/s122_screen_all.console`. No part escalated. Every part was decided at the 20000 cap. One quarter fit, `12`'s
+q3, stopped on the cap; P2's, P3's and P4's pairs read it, and DEC-345's escalation covers only P5 to P7. The margin
+took two rounds. The fit at 184 failed there and picked 275; the refit at 275 passed (8735 rows bound, 0.138 %), a
+fixed point. P0's d0 at 275 is +0.000007; K at 275 is 1.2298. Each part's d, against its m = max(1.645 s, 2e-6),
+s the stdev of its five quarter fits' gains:
+
+| part | pair | d | s | m | rule | |
+|---|---|---|---|---|---|---|
+| P1 ks_checks | 1 against the start | +0.000214 | 0.000009 | 0.000015 | d > m | kept |
+| P2 ks_weak | 12 against 1 | +0.000008 | 0.000004 | 0.000006 | d > m | kept |
+| P3 ks_defenders | 123 against 12 | +0.000001 | 0.000001 | 0.000002 | d > m | dropped |
+| P4 ks_storm | 124 against 12 | +0.000023 | 0.000006 | 0.000010 | d > m | kept |
+| P5 the curve | 1245 against 124 | +0.000078 | 0.000010 | 0.000017 | d > m | kept |
+| P6 the wide zone | 12456 against 1245 | +0.000007 | 0.000010 | 0.000016 | d > m | dropped |
+| P7 the linear five at zero | 12457 against 1245 | +0.000008 | 0.000006 | 0.000009 | d >= -m | kept |
+
+The x > 0 share at the decided fit's end, a reading: P5 49.66 % mg and 88.09 % eg of kings, P6 54.62 % and 47.59 %,
+P7 100.00 % and 99.79 %. The screen's candidate: `12457` on tree `p7` at 275.
+
+**The side readings** (Command 9), `S122_screen.sh side`, 04:55 to 05:06, `S122-SIDE-FAILED` on a STOP, console
+`.tuning/s122_side.console`, records under `.tuning/s122/screen/side/`.
+- `sample-prep`: 12000 games, 1345789 rows kept, 29571 on an excluded position; 16 games more than half excluded, 1
+  game another repeats row for row.
+- Side (b), each part's decided pair on the sample at the sample's own K at 275, the jackknife by game:
+
+  | part | sample d | screen d | |
+  |---|---|---|---|
+  | P0 (184 against 275) | +0.0000087 +/- 0.0000017 | +0.0000070 | agrees |
+  | P1 | +0.0001878 +/- 0.0000261 | +0.0002140 | agrees |
+  | P2 | +0.0000173 +/- 0.0000065 | +0.0000080 | agrees |
+  | P3 | +0.0000019 +/- 0.0000026 | +0.0000010 | agrees |
+  | P4 | +0.0000053 +/- 0.0000123 | +0.0000230 | agrees |
+  | P5 | +0.0000743 +/- 0.0000137 | +0.0000780 | agrees |
+  | P6 | +0.0000019 +/- 0.0000134 | +0.0000070 | agrees |
+  | P7 | -0.0000287 +/- 0.0000107 | +0.0000080 | **STOP**: the other sign, 2.68 errors out |
+
+- Side (a), deciding nothing, the price of the corpus change for S126: the candidate's free set fitted on S083's corpus
+  (less its rows on the new set's positions) reads validation 0.085762 on the new fixed set, against 0.084895 for the
+  new corpus's own fit.
+
+**The ruling, DEC-353** (the coordinator's, DEC-344 (1)): P7 is dropped, and the candidate is `1245`. That is P5's
+decided fit, `.tuning/s122/screen/fits/1245_e20000/full.hpp`: P1, P2, P4 and P5 free, at margin 275 and 20000 epochs,
+on the landing's tree, the shipped linear five kept at their shipped values. Nothing is refit.
+- `apply` gains a dated amendment that pastes the candidate DEC-353 names, written by phase 2's agent.
+- The bisection on H0 or no verdict: M 275 alone at `{-5, 0}`, then A = P1, B = P2 + P4, C = P5.
+- The cost's candidate mask stays 27.
+- Retiring the linear five is a lead for S126.

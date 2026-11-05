@@ -17432,3 +17432,34 @@ Consequences: S266 is in `plan_current/`, and its phase 1 waits for S102's landi
               Figures taken at K 1.2302 by S102's and S124's passes can be expected to move once S124's cells land. With a
               cell off F or C non-zero no mobility-level hold is null, so S126 must freeze one side
               (`mobility_levels_held`'s comment goes stale then).
+
+## DEC-353  2026-11-05  S122's side reading stops P7: the candidate is 1245 at margin 275, the shipped linear five kept
+Tags:         evaluation, king-safety, screen, side-reading, sample, s122, s126, dec-344, dec-345, dec-349, dec-352
+Context:      S122's screen ended `S122-ALL-DONE` on HEAD `2bf3ad4` (2026-11-05 04:51): margin 184 -> 275, P1, P2, P4,
+              P5 and P7 kept, P3 and P6 dropped, candidate `12457` on P7's tree. P7 retires the shipped linear five
+              (king_safety's attackers N B R Q and incidences) to zero and refits every survivor; it is kept iff
+              d >= -m, and read d +0.0000080 against m 0.0000090. `S122_screen.sh side` then read DEC-344 (1)'s side
+              (b) on the fresh 12000-game sample (1345789 rows, `sample-prep`'s guard passed): P0 to P6 each agree
+              with the screen within their error, and P7 reads d -0.0000287 +/- 0.0000107 by game, the other sign,
+              2.68 errors out. The script printed STOP, the coordinator's before any SPRT. Side (a), deciding
+              nothing: the candidate's free set fitted on S083's corpus reads 0.085762 on the new fixed set, against
+              0.084895 for the new corpus's own fit.
+Decision:     By the coordinator under the owner's standing instruction (DEC-344 (1) makes the STOP the
+              coordinator's). P7 is dropped. The candidate is `1245`, the screen's decided fit for P5:
+              `.tuning/s122/screen/fits/1245_e20000/full.hpp`, P1, P2, P4 and P5 free, at margin 275 and 20000
+              epochs, on the landing's tree, the shipped linear five at their shipped values. Nothing is refit.
+              `S122_screen.sh apply` gains a dated amendment that pastes the candidate this decision names and no
+              other, by phase 2's agent. The SPRT plays `1245` at 275. The bisection on H0 or no verdict is DEC-344
+              (6)'s, survivors only: M 275 alone at `{-5, 0}`, then A = P1, B = P2 + P4, C = P5. The cost's
+              candidate mask is unchanged, 27 (P7 was never a mask bit). DEC-352's re-read at K refit at the
+              candidate reads every part's pair, P7's included, as a reading.
+Why:          A retirement is kept only where it does not hurt, and an independent sample of the same datagen reads
+              it hurting by 2.68 errors. `1245` is a fit the screen itself decided and both sets read alike.
+Rejected:     Keeping `12457` because the screen's own rule passed it: the STOP exists for exactly this disagreement,
+              and pooling the two sets after seeing it would be a rule nobody registered. (The screen's s is the
+              spread of its quarter fits, not a by-game error, so the two errors do not pool as they stand.) A
+              third sample to break the tie: a reading chosen after two, about 1 h 30 m, and the removal would still
+              rest on one set against one.
+Consequences: The linear five stay live beside the curve. Retiring them is a lead for S126's refit, read there on
+              its own sets. P7's variant tree (`variant_p7_2bf3ad4`) is not pasted. S122's step file records the
+              side readings and this ruling.
