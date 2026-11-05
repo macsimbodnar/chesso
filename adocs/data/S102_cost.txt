@@ -1,0 +1,37 @@
+base bench 5482277 bench16 14931387
+o1 bench 5482277 bench16 14931387
+o3 bench 5482277 bench16 14931387
+o3w bench 5482277 bench16 14931387
+oX bench 5482277 bench16 14931387
+oXB bench 5482277 bench16 14931387
+oXBl bench 5482277 bench16 14931387
+oXBs bench 5482277 bench16 14931387
+oXBsF bench 5482277 bench16 14931387
+o2s bench 5482277 bench16 14931387
+s4 bench 5482277 bench16 14931387
+all bench 5482277 bench16 14931387
+bench: base 11649463686 (spread 210)
+  o1    11991781919 (spread 238)  +2.938 %
+  o3    11843126241 (spread 195)  +1.662 %
+  o3w   12009278481 (spread 331)  +3.089 %
+  oX    12047353026 (spread 101)  +3.416 %
+  oXB   12088381111 (spread 213)  +3.768 %
+  oXBl  12231501163 (spread 188)  +4.996 %
+  oXBs  12290433833 (spread 179)  +5.502 %
+  oXBsF 12340730159 (spread 187)  +5.934 %
+  o2s   12053479647 (spread 263)  +3.468 %
+  s4    11788333631 (spread 274)  +1.192 %
+  all   12434315511 (spread 340)  +6.737 %
+bench 16: base 34487388295 (spread 135)
+  o1    35512049478 (spread 163)  +2.971 %
+  o3    35101657030 (spread 319)  +1.781 %
+  o3w   35582003447 (spread 335)  +3.174 %
+  oX    35700724029 (spread 176)  +3.518 %
+  oXB   35825408364 (spread 190)  +3.880 %
+  oXBl  36257455473 (spread 270)  +5.133 %
+  oXBs  36445001472 (spread 346)  +5.676 %
+  oXBsF 36599805905 (spread 203)  +6.125 %
+  o2s   35753158137 (spread 181)  +3.670 %
+  s4    34906710336 (spread 68)  +1.216 %
+  all   36885985233 (spread 371)  +6.955 %
+S102-COST-DONE

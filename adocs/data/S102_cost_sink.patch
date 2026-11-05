@@ -1,0 +1,198 @@
+# S102 research pass, 2026-11-04, revised after the coordinator's fast check: a cost-only sink, never a
+# candidate. adocs/data/S102_cost.sh applies it to a scratch extract and builds it with -DS102_SINK=<bits>;
+# the bits are listed in the namespace's comment below (outposts in stage one, the narrow and the wide
+# gate, the no-exchange cell, bishops, reach by loop and set-wise, the rank-4 flank cell, the stage-two
+# placement, and space through the entry's spare bytes in the complement encoding). The squares are the
+# page's region. The forced weights
+# are arbitrary non-zero values chosen so nothing folds, not seeds and not proposals.
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1107,6 +1107,122 @@
+ { return (colour == WHITE) ? 8 - (square >> 3) : (square >> 3) + 1; }
+ 
+ 
++#ifdef S102_SINK
++// S102's research pass, a cost-only sink, never a candidate. Bits of S102_SINK:
++//   1    outposts in stage one at every call: knights on an outpost by cell, knights on a hole
++//   2    their gate: nothing read unless a knight stands in either side's region
++//   256  the gate widened: unless a knight stands anywhere or a bishop in its side's region
++//   32   the no-exchange cell          16   bishops on an outpost
++//   64   reach, a loop over the knights with a table lookup each
++//   128  reach set-wise, own knights in the knight moves of the open outpost squares
++//   512  knights on an outpost on own rank 4 off files d and e, the flank cell
++//   8    the outpost counts in stage two instead of stage one, no gate
++//   4    space: the pass writes 12 less each side's count to the entry's spare bytes on a miss and
++//        sinks the count and its open-files product there; every stage-one call decodes the bytes
++//        and sinks the pieces product
++// Each at forced non-zero weights into an asm barrier while the score stays the landing's, so the
++// search is node for node the shipping one's (DEC-047's forced-weight method). The weights 3, 5,
++// 7, 9, 11, 13, 17, 19, 23, 29, 31 and 37 are arbitrary non-zero values chosen so nothing folds: not
++// seeds and not proposals. The squares are adocs/data/S102_census.cpp's page region.
++namespace s102
++{
++// The page's region, own rank 4 on files d and e and own ranks 5 to 8 (index 0 is a8).
++constexpr bb_t region_w = 0x00000018FFFFFFFFULL;
++constexpr bb_t region_b = 0xFFFFFFFF18000000ULL;
++constexpr bb_t cell_w[4] = {0x0000001800000000ULL, 0x00000000FF000000ULL,
++                            0x0000000000FF0000ULL, 0x000000000000FFFFULL};
++constexpr bb_t cell_b[4] = {0x0000000018000000ULL, 0x000000FF00000000ULL,
++                            0x0000FF0000000000ULL, 0xFFFF000000000000ULL};
++constexpr int cell_weight[4] = {3, 5, 7, 9};
++// Own rank 4 off files d and e: the flank cell's squares.
++constexpr bb_t flank_w = 0x000000E700000000ULL;
++constexpr bb_t flank_b = 0x00000000E7000000ULL;
++// Files c to f on own ranks 2 to 4: White's rows 4 to 6, Black's rows 1 to 3.
++constexpr bb_t space_w = 0x003C3C3C00000000ULL;
++constexpr bb_t space_b = 0x000000003C3C3C00ULL;
++constexpr bb_t file_a = 0x0101010101010101ULL;
++
++static inline bb_t knight_moves(bb_t s)
++{
++  constexpr bb_t not_a = ~file_a, not_h = ~(file_a << 7);
++  constexpr bb_t not_ab = ~(file_a | (file_a << 1)), not_gh = ~((file_a << 6) | (file_a << 7));
++  return ((s << 17) & not_a) | ((s << 15) & not_h) | ((s << 10) & not_ab) |
++         ((s << 6) & not_gh) | ((s >> 17) & not_h) | ((s >> 15) & not_a) |
++         ((s >> 10) & not_gh) | ((s >> 6) & not_ab);
++}
++
++[[maybe_unused]] static inline int reach_loop(const bb_tables_t* tables, bb_t knights, bb_t targets)
++{
++  int count = 0;
++  for (; knights; knights &= knights - 1) {
++    count += (tables->knight_attacks[get_lsb_index(knights)] & targets) != 0;
++  }
++  return count;
++}
++
++[[maybe_unused]] static inline int outposts(const board_t* board)
++{
++  const bb_t wp = board->bitboards[W_PAWN];
++  const bb_t bp = board->bitboards[B_PAWN];
++  const bb_t wn = board->bitboards[W_KNIGHT];
++  const bb_t bn = board->bitboards[B_KNIGHT];
++  [[maybe_unused]] const bb_t wb = board->bitboards[W_BISHOP];
++  [[maybe_unused]] const bb_t bb = board->bitboards[B_BISHOP];
++#if (S102_SINK & 2)
++#if (S102_SINK & 256)
++  if ((wn | bn | (wb & region_w) | (bb & region_b)) == 0) { return 0; }
++#else
++  if (((wn & region_w) | (bn & region_b)) == 0) { return 0; }
++#endif
++#endif
++  const bb_t w_span = neighbour_files(fill_toward_rank8(wp) >> 8);
++  const bb_t b_span = neighbour_files(fill_toward_rank1(bp) << 8);
++  const bb_t w_att = neighbour_files(wp) >> 8;
++  const bb_t b_att = neighbour_files(bp) << 8;
++  const bb_t w_hole = region_w & ~b_span;
++  const bb_t b_hole = region_b & ~w_span;
++  const bb_t w_posts = w_hole & w_att;
++  const bb_t b_posts = b_hole & b_att;
++  int sum = 0;
++  for (int c = 0; c < 4; ++c) {
++    sum += cell_weight[c] *
++           (count_bits(wn & w_posts & cell_w[c]) - count_bits(bn & b_posts & cell_b[c]));
++  }
++  sum += 11 * (count_bits(wn & w_hole & ~w_att) - count_bits(bn & b_hole & ~b_att));
++#if (S102_SINK & 512)
++  sum += 37 * (count_bits(wn & flank_w & ~b_span & w_att) -
++               count_bits(bn & flank_b & ~w_span & b_att));
++#endif
++#if (S102_SINK & 32)
++  {
++    // One colour of squares, a8's; squares the enemy has no minor to exchange on.
++    constexpr bb_t light = 0xAA55AA55AA55AA55ULL;
++    const auto unexchangeable = [](bb_t enemy_knights, bb_t enemy_bishops) -> bb_t {
++      if (enemy_knights != 0) { return 0; }
++      return (((enemy_bishops & light) == 0) ? light : 0) |
++             (((enemy_bishops & ~light) == 0) ? ~light : 0);
++    };
++    sum += 17 * (count_bits(wn & w_posts & unexchangeable(bn, bb)) -
++                 count_bits(bn & b_posts & unexchangeable(wn, wb)));
++  }
++#endif
++#if (S102_SINK & 16)
++  sum += 13 * (count_bits(wb & w_posts) - count_bits(bb & b_posts));
++#endif
++#if (S102_SINK & 64)
++  sum += 19 * (reach_loop(game_tables(), wn, w_posts & ~board->occupancies[WHITE]) -
++               reach_loop(game_tables(), bn, b_posts & ~board->occupancies[BLACK]));
++#endif
++#if (S102_SINK & 128)
++  sum += 23 * (count_bits(wn & knight_moves(w_posts & ~board->occupancies[WHITE])) -
++               count_bits(bn & knight_moves(b_posts & ~board->occupancies[BLACK])));
++#endif
++  return sum;
++}
++}  // namespace s102
++#endif
++
++
+ // Each pawn of `pawns` into one of S125's tables: `cell` maps the pawn's
+ // square to its cell, or to -1 for the baseline cell no parameter holds, and
+ // `record` takes the cell once per pawn.
+@@ -1595,6 +1711,24 @@
+   entry->passers = white_passers | black_passers;
+   entry->score = sum;
+ 
++#if defined(S102_SINK) && (S102_SINK & 4)
++  {
++    // Space's count a side: safe area squares, those on an own pawn's rearspan twice. 12 less it
++    // is stored, so that a zeroed slot, the pawnless board's, reads the pawnless count 12.
++    const bb_t w_safe = s102::space_w & ~white_pawns & ~black_attacks;
++    const bb_t b_safe = s102::space_b & ~black_pawns & ~white_attacks;
++    const bb_t w_rear = white_behind << 8;
++    const bb_t b_rear = black_behind >> 8;
++    const int w = count_bits(w_safe) + count_bits(w_safe & w_rear);
++    const int b = count_bits(b_safe) + count_bits(b_safe & b_rear);
++    entry->spare = static_cast<uint16_t>(static_cast<uint8_t>(12 - w) |
++                                         (static_cast<uint8_t>(12 - b) << 8));
++    const int open = 8 - count_bits((white_pawn_files | black_pawn_files) & 0xFFULL);
++    const int sink = 29 * (w - b) + 31 * (w - b) * open;
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++
+   // One rank of each whole-file set: every rank of it is the same eight bits.
+   entry->white_files = static_cast<uint8_t>(white_pawn_files);
+   entry->black_files = static_cast<uint8_t>(black_pawn_files);
+@@ -1931,6 +2065,26 @@
+ 
+   const int score = board->material + positional;
+ 
++#ifdef S102_SINK
++#if (S102_SINK & 1)
++  {
++    const int sink = s102::outposts(board);
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++#if (S102_SINK & 4)
++  {
++    const int w = 12 - static_cast<int8_t>(entry->spare & 0xFF);
++    const int b = 12 - static_cast<int8_t>(entry->spare >> 8);
++    const bb_t* bbs = board->bitboards;
++    const int wpcs = count_bits(bbs[W_KNIGHT] | bbs[W_BISHOP] | bbs[W_ROOK] | bbs[W_QUEEN]);
++    const int bpcs = count_bits(bbs[B_KNIGHT] | bbs[B_BISHOP] | bbs[B_ROOK] | bbs[B_QUEEN]);
++    const int sink = 17 * (w * wpcs - b * bpcs);
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++#endif
++
+   // Tapered on its own rather than summed into the pair above, and that is not
+   // a stylistic choice: everything above is White relative and is negated below
+   // for Black, and a bonus for having the move must survive that negation
+@@ -3283,6 +3437,13 @@
+     if (threats_out != nullptr) { *threats_out = mobility - mobility_alone; }
+   }
+ 
++#if defined(S102_SINK) && (S102_SINK & 8)
++  {
++    const int sink = s102::outposts(board);
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++
+   return mobility + safety;
+ }
+ 

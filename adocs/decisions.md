@@ -17346,3 +17346,48 @@ Decision:     By the coordinator under the owner's standing instruction. The dra
 Why:          The draft's design stands on what the engine computes and on counts. Its only label-dependent picks are answered once the labels are the laws'. Reading the parts on a set written by the old rule would measure against the defect S331 removed.
 Rejected:     Fitting on tablebase labels: an owner question, and unneeded once the labels are the laws'. Landing phase 1 before S122's screen: the screen would freeze a tuner carrying S124's product. Reading on S082's view: written by the old rule.
 Consequences: S124's step file records this ruling. Phase 1 is the next agent task. Its counts are re-read on the regenerated corpus when it exists, because the research pass's figures are the void corpus's.
+
+## DEC-351  2026-11-04  S102's outposts and space: twelve linear cells in stage one's positional pair, inside E1, in the region the page describes, nine parts screened in order
+Tags:         evaluation, outposts, space, pawn-table, screen, s102, s122, s124, s118, s133, s126, dec-014, dec-084, dec-134, dec-143, dec-221, dec-259, dec-324, dec-332, dec-348, dec-350
+Context:      S102's research pass (the step file's 2026-11-04 section), revised after one fast check that found seven
+              things. The worst: storing the space count in the pawn entry's spare bytes, as first drafted, would have
+              scored every pawnless board with unequal pieces wrongly in Release, and no guard sees it. The pass read
+              counts on S122's regenerated corpus, one Gauss-Newton step per set at K 1.2302, in sample and across
+              halves, and the held-out views' labels unread. The family reads -338.49 +/- 14.63 (1e-6) across halves;
+              every outpost part costs +5.93 % instructions in stage one, space +1.19 %, everything +6.74 %, on sink
+              builds with node counts equal. Its seven questions were the coordinator's.
+Decision:     By the coordinator under the owner's standing instruction. The draft's items (1) to (13) are taken as
+              written, and its recommended answers to Q1 to Q7:
+              - (1) both terms in stage one's positional pair, before its one taper: no new division, no clamp, inside
+                S124's E1;
+              - (2) outposts from CPW *Outposts* and *Center*, the region the page's "in the center or on the
+                opponent's half", own rank 4 on d and e and own ranks 5 to 8. The parts, in order: P1 knights on an
+                outpost by four cells; P2 no minor to exchange; P3 knights on a hole; P4 knights on an outpost on own
+                rank 4 off d and e (a departure, Q7); P5 bishops on an outpost (Q1); P6 own knights in the knight
+                moves of the outpost squares no own man holds, set-wise (Q2);
+              - (3) space from CPW *Space*: P7 the count, P8 the count times open files, P9 the count times own
+                knights to queens, the page's weight with its factors apart (Q3);
+              - (4) and (5) the count stored in the entry's spare bytes as 12 less it, and from here on every field of
+                `pawn_entry_t` reads correctly from a zero slot under a pawnless key; phase 1 builds the pawnless table
+                test, red on a planted plain count, before anything stores there;
+              - (6) seeds at zero, the landing `No functional change`; the fit ships signed integers and each part's
+                gain is read again at them (Q6);
+              - (7) to (10) the tuner's groups, the identity plan with its plants, the screen in the page's order
+                first (Q4) on S122's regenerated corpus and its own held-out qs view, and one `{0, 5}` SPRT bisected
+                on H0 into outposts, then space;
+              - (11) the scope amendment: bishops and reach are the page's "diagonal outpost" and "about to be
+                occupied by a knight", within DEC-014's phase one; a fixed sequence of shifts and masks over sets the
+                term already builds is not a new pass over the board;
+              - (12) `touches:` widened; (13) phase 1 is built on S124's landed tree, the screen after S124's fits.
+Why:          Each part is grounded in a quoted published description, and each departure is screened after the page's
+              own form and must earn over it. The complement makes a zero slot exact, which S118's "a hit is exact"
+              needs. Stage one keeps the clamp and DEC-324's re-derivation out of the family.
+Rejected:     Outposts in stage two (Q5 (b)): about 2.5 points cheaper, but under the clamp and unseen at shortcut
+              nodes. A plain stored count: wrong on every pawnless board with unequal pieces. The first draft's own
+              ranks 4 to 6: derived from no description. The page's single weight over every man: it keeps 63 % of its
+              gain at integers. A larger pawn entry for the outpost squares: past DEC-332 (3)'s 32 bytes. Two pawns
+              defending, and ranks 7 and 8 as cells of their own: they read worse than nothing. Any engine's constant
+              or mask: DEC-105, DEC-134, DEC-221.
+Consequences: S102 is in `plan_current/`, and its phase 1 waits for S124's landing. The pass's readings are re-read on
+              the landed tree. The pawn entry's zero-slot rule binds every later field. The family's cost, +6.74 %
+              instructions, is the SPRT's to price; on H0 the bisection reads outposts and space apart.
