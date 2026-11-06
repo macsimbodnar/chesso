@@ -17559,3 +17559,24 @@ Rejected:     Each vector at its own K (the defect). K refit on the guard rows p
               guard reads, and adds a fit per part to the guard). Refusing if either K refuses (doubles the guard's error
               rate with no ruling asking for it).
 Consequences: The screen's smoke must show an inert part passing the guard.
+
+## DEC-358  2026-11-06  S124's P1 keeps mop-up on exact one-sided McNemar tests, overall and per class, not on raw per-class counts
+Tags:         screen, spsa, mop-up, statistics, s124, dec-350
+Context:      S124's P1 pre-registration (the 2026-11-04 draft, kept by the instrument) keeps the SPSA candidate iff McNemar's
+              one-sided z > 1.645 over head on fresh starts and "no class converts fewer". A fast check over the instrument:
+              self-play is deterministic, so in a class where the candidate's true effect is about zero (KQvK at head
+              200/200, KRBvK and KRNvK at 91 to 95 %) its count falls below head's with probability about 40 %, and over two
+              or three such classes P(no class fewer) is about 0.2 to 0.35. A candidate that fixes KBNvK (head 21/200) would
+              then mostly read NOT-KEPT. And the uncorrected asymptotic z keeps b = 0, c = 3 (z 1.73, exact one-sided p
+              0.125).
+Decision:     By the coordinator under the owner's standing instruction, before P1's iteration 0, as a dated amendment of
+              its pre-registration. Kept iff the exact one-sided McNemar test over all fresh starts (binomial on the
+              discordant pairs, the candidate converting more) reads p < 0.05, and no class reads the exact one-sided test
+              the other way, the candidate converting fewer, at p < 0.05. KBBvK, played in-sample on its 126 training starts,
+              is held to the same per-class refusal. The SPSA, its objective and the fresh starts are unchanged.
+Why:          The guard was meant to refuse a class made worse, not a class that moved by chaos; a raw count comparison
+              refuses on noise in every class the candidate does not touch.
+Rejected:     Raw counts (above). A per-class guard with a family-wise correction (it loosens a guard on five classes
+              further, with nothing asking for it). Dropping the per-class guard (a real loss in a converted class would go
+              unseen behind a KBNvK gain).
+Consequences: P1's verdict is exact-test based. The SPRT that follows still decides what ships.
