@@ -238,8 +238,8 @@ occupancy_t occupancy_of_type(const dataset_t& data,
 
 
 // Whether row `row` of `data` is exactly `trace`: the same entries in the same
-// order, the same per-side entries, the same phase and side to move. The
-// columns report's comparison.
+// order, the same per-side entries, the same candidate cells, the same phase
+// and side to move. The columns report's comparison.
 bool row_is(const dataset_t& data,
             size_t row,
             const tuner_trace::row_trace_t& trace)
@@ -269,6 +269,12 @@ bool row_is(const dataset_t& data,
         a.coef != b.coef) {
       return false;
     }
+  }
+
+  // S124's two candidate cells, which no entry carries.
+  if (data.cells[2 * row] != trace.cells[0] ||
+      data.cells[2 * row + 1] != trace.cells[1]) {
+    return false;
   }
 
   return data.phase[row] == trace.phase && data.stm[row] == trace.stm;
@@ -457,21 +463,63 @@ group_slopes_t group_slopes(const dataset_t& data, const double* params)
 }
 
 
+// S124: whether every scale factor is at F in `params`. There the factor's
+// chain rule leaves every material and positional column as it was, and a
+// cell's own column is d(score)/d(f_c) = E1 w_eg / F: times 24, and the 1 / F
+// dropped as a factor common to the column, the integer E1 (24 - phase) on
+// the rows whose E1 picks that cell (E1 an integer at integer weights). Off F
+// the material and positional endgame columns carry f / F row by row, and
+// this design has no exact integer row for them.
+bool scales_at_identity(const double* params)
+{
+  for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+    if (params[tuner_layout::EGS_BASE + c] != ENDGAME_SCALE_ONE) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 class design_builder_t
 {
 public:
   design_builder_t() : dense_(PARAM_COUNT, 0), marked_(PARAM_COUNT, 0) {}
 
+  // `params`, when given, is where the cells' columns are read: E1 and the
+  // pick (scales_at_identity() above). Without it the cells have no column.
   void build(const dataset_t& data,
              size_t row,
              design_row_t* out,
-             const group_slopes_t& slopes = group_slopes_t{})
+             const group_slopes_t& slopes = group_slopes_t{},
+             const double* params = nullptr)
   {
     const std::vector<tuner_trace::feature_t>& features =
         tuner_trace::feature_table().features;
 
     const int64_t mg = data.phase[row];
     const int64_t eg = GAME_PHASE_MAX - mg;
+
+    if (params != nullptr) {
+      double e1 = 0.0;
+
+      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+        const tuner_trace::entry_t e = data.entries[j];
+        const tuner_trace::feature_t& f = features[e.feature];
+
+        if (f.site == tuner_trace::SITE_MATERIAL) {
+          e1 += e.coef * params[f.mg];
+        } else if (f.site == tuner_trace::SITE_POSITIONAL) {
+          e1 += e.coef * params[f.eg];
+        }
+      }
+
+      const uint8_t cell = tuner_trace::picked_cell(data, row, e1);
+
+      if (cell != eval_trace::NO_CELL) {
+        add(tuner_layout::EGS_BASE + cell, std::llround(e1) * eg);
+      }
+    }
 
     // The groups' integer columns, at the slope every side shares.
     if (slopes.shared) {
@@ -670,7 +718,14 @@ std::string column_name(size_t i)
        tuner_layout::KS_STORM_COUNT},
       {"ks_curve", tuner_layout::KSC_MG_BASE, tuner_layout::KSC_EG_BASE,
        tuner_layout::KS_CURVE_COUNT},
+      {"mopup", tuner_layout::MOP_MG_BASE, tuner_layout::MOP_EG_BASE,
+       tuner_layout::MOPUP_COUNT},
   };
+
+  // S124's factors, one half each, by endgame_cell_t.
+  if (i >= tuner_layout::EGS_BASE && i < tuner_layout::ENDGAME_SCALE_END) {
+    return "endgame_scale[" + std::to_string(i - tuner_layout::EGS_BASE) + "]";
+  }
 
   for (const family_block_t& f : family) {
     if (i >= f.mg_base && i < f.mg_base + f.width) {
@@ -916,6 +971,19 @@ void report_identities(const dataset_t& data,
     return;
   }
 
+  if (!scales_at_identity(params.data())) {
+    printf(
+        "identities: not computed: S124's scale factors are off F at these "
+        "weights, so the factor's chain rule moves every material and "
+        "positional endgame column row by row and the design has no integer "
+        "row\n");
+    return;
+  }
+
+  printf(
+      "identities: S124's factor columns at F: each cell's the integer E1 "
+      "(24 - phase) on the rows whose E1 picks it, the 1/F a common factor\n");
+
   if (!data.side_entries.empty()) {
     printf(
         "identities: the curve's columns at its shared x, mg %.0f and eg "
@@ -956,6 +1024,12 @@ void report_identities(const dataset_t& data,
     }
   }
 
+  // And S124's cells, the same way: at F the factor's term is zero, while
+  // its column times F would add E1 w_eg to the sum.
+  for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+    group_param[tuner_layout::EGS_BASE + c] = 1;
+  }
+
   for (unsigned t = 0; t < threads; ++t) {
     workers.emplace_back([&, t]() {
       std::vector<int64_t>& gram = partial[t];
@@ -964,7 +1038,7 @@ void report_identities(const dataset_t& data,
       design_row_t x;
 
       for (size_t row = t; row < data.size(); row += threads) {
-        builder.build(data, row, &x, slopes);
+        builder.build(data, row, &x, slopes, params.data());
 
         const size_t n = x.index.size();
         for (size_t a = 0; a < n; ++a) {
@@ -1214,6 +1288,25 @@ void report_identities(const dataset_t& data,
     }
   }
 
+  // S124's: mop-up's corner count is non-zero on king, bishop and knight
+  // against a king alone, whose phase is always 2, so on every row its
+  // middlegame column is 2 times the count and its endgame column 22 times
+  // it: 11 times the one less the other is zero. The score sees 2 mg + 22 eg
+  // of the pair and no other combination.
+  {
+    const size_t mg = tuner_layout::MOP_MG_BASE + MOPUP_CORNER;
+    const size_t eg = tuner_layout::MOP_EG_BASE + MOPUP_CORNER;
+
+    if (!dropped[mg] && !dropped[eg]) {
+      known_t k;
+      k.what = "11 " + column_name(mg) + " - " + column_name(eg) +
+               " = 0, king, bishop and knight alone always at phase 2 (S124)";
+      k.vector = {{mg, 11}, {eg, -1}};
+      k.drop = mg;
+      known.push_back(k);
+    }
+  }
+
   size_t known_held = 0;
 
   for (const known_t& k : known) {
@@ -1430,24 +1523,53 @@ void report_identities(const dataset_t& data,
     (both_free ? seed_only : seed_frozen)++;
   }
 
+  // S124's corner pair: held when the audited free set freezes either half,
+  // and otherwise a direction nothing holds, which fails the span below as a
+  // mobility level free on both sides does. DEC-350 (4) fits mop-up by SPSA,
+  // whose search sees the same one combination.
+  size_t corner_frozen = 0;
+
+  for (const known_t& k : known) {
+    if (k.what.find("(S124)") == std::string::npos) { continue; }
+    if (quadratic_form(gram, k.vector) != 0) { continue; }
+
+    if (mask[k.vector[0].first] && mask[k.vector[1].first]) {
+      printf(
+          "identities: mop-up corner, %s: free on both halves under --free "
+          "%s, and nothing holds it; a fit freeing both must tie or freeze "
+          "one half\n",
+          k.what.c_str(), free_name.c_str());
+      continue;
+    }
+
+    printf(
+        "identities: mop-up corner, %s: held by the freeze under --free %s\n",
+        k.what.c_str(), free_name.c_str());
+    pinned.push_back(k.vector);
+    corner_frozen++;
+  }
+
   const size_t spanned = rank_of_vectors(pinned);
   const size_t nullity_bound = PARAM_COUNT - full_rank;
 
   printf(
       "identities: %zu zero columns, %zu held gauges, %zu frozen mobility "
-      "levels and %zu curve duplicates (%zu held by the freeze, %zu null at "
-      "the seed only) span %zu of at most %zu null dimensions: %s\n",
+      "levels, %zu curve duplicates (%zu held by the freeze, %zu null at "
+      "the seed only) and %zu frozen mop-up corner pair span %zu of at most "
+      "%zu null dimensions: %s\n",
       zero_count, gauges_null, levels_frozen, seed_frozen + seed_only,
-      seed_frozen, seed_only, spanned, nullity_bound,
+      seed_frozen, seed_only, corner_frozen, spanned, nullity_bound,
       (spanned != nullity_bound)
           ? "a null direction the tuner does not hold, pin it or measure it "
             "before a fit"
-      : (levels_frozen == 0 && seed_frozen + seed_only == 0)
+      : (levels_frozen == 0 && seed_frozen + seed_only == 0 &&
+         corner_frozen == 0)
           ? "every null direction is one Adam never moves or one the tuner "
             "holds"
           : "every null direction is one Adam never moves, one the tuner "
-            "holds, a mobility level the run's frozen columns hold, or a "
-            "curve duplicate the freeze or the curve's curvature holds");
+            "holds, a mobility level the run's frozen columns hold, a curve "
+            "duplicate the freeze or the curve's curvature holds, or the "
+            "mop-up corner pair the freeze holds");
 }
 
 
@@ -1810,8 +1932,80 @@ int main(int argc, char** argv)
               tuner_trace::feature_table().base[eval_trace::TERM_KS_CHECKS],
               "threat family (S101)");
       support(tuner_trace::feature_table().base[eval_trace::TERM_KS_CHECKS],
-              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+              tuner_trace::feature_table().base[eval_trace::TERM_MOPUP],
               "king safety family (S122)");
+      support(tuner_trace::feature_table().base[eval_trace::TERM_MOPUP],
+              tuner_trace::feature_table().base[eval_trace::TERM_COUNT],
+              "mop-up (S124)");
+
+      // S124's cells have no feature: a cell's support is the rows whose E1
+      // at the shipped weights picks it, at a phase below 24 (its column is
+      // E1 w_eg), and a row whose E1 is zero has none; beside them, the rows
+      // where either candidate is the cell, which a refit that moved the
+      // sign could reach. One line a cell, `support endgame_scale[c] rows N
+      // games G candidate_rows M`.
+      {
+        std::vector<double> shipped(PARAM_COUNT, 0.0);
+        tuner_layout::starting_params(shipped.data());
+
+        const size_t width = tuner_layout::ENDGAME_SCALE_COUNT;
+        std::vector<uint64_t> rows(width, 0);
+        std::vector<uint64_t> games(width, 0);
+        std::vector<uint64_t> candidates(width, 0);
+        std::vector<int64_t> seen(width, -1);
+        const std::vector<tuner_trace::feature_t>& features =
+            tuner_trace::feature_table().features;
+        size_t game = 0;
+
+        for (size_t row = 0; row < data.size(); ++row) {
+          while (game + 1 < starts.size() && starts[game + 1] <= row) {
+            game++;
+          }
+
+          const uint8_t white = data.cells[2 * row];
+          const uint8_t black = data.cells[2 * row + 1];
+          if (white != eval_trace::NO_CELL) { candidates[white]++; }
+          if (black != eval_trace::NO_CELL && black != white) {
+            candidates[black]++;
+          }
+
+          if (data.phase[row] >= GAME_PHASE_MAX) { continue; }
+
+          double e1 = 0.0;
+          for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+            const tuner_trace::entry_t e = data.entries[j];
+            const tuner_trace::feature_t& f = features[e.feature];
+            if (f.site == tuner_trace::SITE_MATERIAL) {
+              e1 += e.coef * shipped[f.mg];
+            } else if (f.site == tuner_trace::SITE_POSITIONAL) {
+              e1 += e.coef * shipped[f.eg];
+            }
+          }
+
+          const uint8_t cell = tuner_trace::picked_cell(data, row, e1);
+          if (cell == eval_trace::NO_CELL) { continue; }
+
+          rows[cell]++;
+          if (seen[cell] != static_cast<int64_t>(game)) {
+            seen[cell] = static_cast<int64_t>(game);
+            games[cell]++;
+          }
+        }
+
+        printf(
+            "\nendgame scale (S124) support: rows whose E1 at the shipped "
+            "weights picks the cell at a phase below 24, the games they come "
+            "from, %zu games in all, and the rows where either candidate is "
+            "the cell\n",
+            starts.size());
+
+        for (size_t c = 0; c < width; ++c) {
+          printf("support %s rows %" PRIu64 " games %" PRIu64
+                 " candidate_rows %" PRIu64 "\n",
+                 column_name(tuner_layout::EGS_BASE + c).c_str(), rows[c],
+                 games[c], candidates[c]);
+        }
+      }
 
       // S122's curve has no feature: its inputs are each side's own, so its
       // support is a side's non-zero input at a phase giving the half a

@@ -1864,6 +1864,277 @@ static void trace_accumulators(const board_t* board)
 #endif
 
 
+// S124's endgame family (DEC-350; src/evaluation.hpp defines every count and
+// the factor's arithmetic), landed at its identity so that DEC-259's screen
+// reads each part from the shipped engine and the landing scores every
+// position as its parent did (INV-6): every cell's factor at F, which is
+// taper()'s integer exactly, and mop-up's three pairs at zero. F = 128 is
+// DEC-134 form (b), from chesso's own scale; nothing here was taken from any
+// engine or page, and the cells and mop-up are fitted afterwards, the cells by
+// the screen and mop-up by SPSA on conversion (DEC-084, DEC-350 (4)).
+// The factors are written as tools/tuner emits them, ENDGAME_SCALE_ONE's 128
+// each, cell by endgame_cell_t.
+constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {
+    128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128};
+constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
+constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
+constexpr std::array<score_t, MOPUP_FEATURE_COUNT> mopup_score =
+    pack_scores(mopup_mg, mopup_eg);
+
+// S101's form: a part is computed where it can move a score, in the trace
+// build and when collecting, and nowhere else. The factor is live once a cell
+// leaves F, mop-up once a weight leaves zero; at the identity neither is in
+// the search's evaluate_cheap(), so the landing costs nothing.
+static constexpr bool endgame_scale_live = [] {
+  for (const int f : endgame_scale) {
+    if (f != ENDGAME_SCALE_ONE) { return true; }
+  }
+  return false;
+}();
+static constexpr bool mopup_live = any_weight(mopup_score);
+
+static_assert(
+    [] {
+      for (const int f : endgame_scale) {
+        if (f < 0 || f > ENDGAME_SCALE_ONE) { return false; }
+      }
+      return true;
+    }(),
+    "a scale factor outside [0, F]: f < 0 would flip E1's sign, f > F is "
+    "no factor toward a draw (DEC-350 (1))");
+
+// Mop-up's counts are added to stage one's packed pair, so its reach joins
+// the bound stage_one_bound proves for that pair: one side's counts at most,
+// 6, 12 and 7.
+static constexpr int mopup_half(const int (&weights)[MOPUP_FEATURE_COUNT])
+{
+  constexpr int reach[MOPUP_FEATURE_COUNT] = {6, 12, 7};
+  int bound = 0;
+  for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+    bound += reach[i] * ((weights[i] < 0) ? -weights[i] : weights[i]);
+  }
+  return bound;
+}
+
+static constexpr int stage_one_with_mopup =
+    stage_one_bound + std::max(mopup_half(mopup_mg), mopup_half(mopup_eg));
+static_assert(stage_one_with_mopup <= 32767,
+              "stage one's packed sum with mop-up can overflow a 16-bit half");
+
+// The factor's numerator, F X + (f - F) E1 (24 - phase), in int32: |X| is at
+// most 24 times a half's bound and |E1| at most fifteen of the dearest piece
+// and a half, the most a side beside its king can hold and the pair, so the
+// sum stays under 2^31 with room to spare at any weights the asserts above
+// admit.
+static_assert(
+    int64_t{ENDGAME_SCALE_ONE} * GAME_PHASE_MAX *
+            (int64_t{stage_one_with_mopup} +
+             (15 * int64_t{std::max({PAWN, KNIGHT, BISHOP, ROOK, QUEEN})} +
+              stage_one_with_mopup)) <
+        int64_t{INT32_MAX},
+    "the endgame factor's numerator can overflow an int");
+
+
+// A set holding exactly one square.
+static inline bool one_square(bb_t squares)
+{ return squares != 0 && (squares & (squares - 1)) == 0; }
+
+
+// A side's men in phase units, phase_value's: knight 1, bishop 1, rook 2,
+// queen 4. `base` is the side's W_PAWN or B_PAWN.
+static inline int men_in_phase_units(const bb_t* bitboards, int base)
+{
+  return count_bits(bitboards[base + W_KNIGHT]) +
+         count_bits(bitboards[base + W_BISHOP]) +
+         2 * count_bits(bitboards[base + W_ROOK]) +
+         4 * count_bits(bitboards[base + W_QUEEN]);
+}
+
+
+// The cell `strong` being the strong side selects, ENDGAME_CELL_NONE for none:
+// src/evaluation.hpp's cases in its order, read off popcounts and two
+// colour masks of the bitboards make_move keeps, no piece walked and no
+// accumulator rebuilt (INV-4). The first test is a gate in the form the
+// research pass priced (adocs/data/S124_cost.txt), on the strong side's pawns
+// where that one read both sides': past two of them only an OCB cell can hold,
+// and both of those need one bishop a side and no knight or queen, so nothing
+// more is read.
+static inline int endgame_cell(const board_t* board, int strong)
+{
+  const bb_t* bitboards = board->bitboards;
+  const int own = (strong == WHITE) ? W_PAWN : B_PAWN;
+  const int other = (strong == WHITE) ? B_PAWN : W_PAWN;
+  const int pawns = count_bits(bitboards[own]);
+  const bb_t white_bishops = bitboards[W_BISHOP];
+  const bb_t black_bishops = bitboards[B_BISHOP];
+  const bool bishop_each =
+      one_square(white_bishops) && one_square(black_bishops);
+  const bb_t knights_queens = bitboards[W_KNIGHT] | bitboards[B_KNIGHT] |
+                              bitboards[W_QUEEN] | bitboards[B_QUEEN];
+
+  if (pawns > 2 && (!bishop_each || knights_queens != 0)) {
+    return ENDGAME_CELL_NONE;
+  }
+
+  // LONE, every dead position among them: mop-up's, or the detector's.
+  if (board->occupancies[WHITE] == bitboards[W_KING] ||
+      board->occupancies[BLACK] == bitboards[B_KING]) {
+    return ENDGAME_CELL_NONE;
+  }
+
+  if (bishop_each && ((white_bishops & one_colour) != 0) !=
+                         ((black_bishops & one_colour) != 0)) {
+    const bb_t white_rooks = bitboards[W_ROOK];
+    const bb_t black_rooks = bitboards[B_ROOK];
+
+    if (knights_queens != 0) { return ENDGAME_CELL_NONE; }
+
+    if ((white_rooks | black_rooks) == 0) {
+      return (pawns <= 2)   ? ENDGAME_CELL_OCB_LOW
+             : (pawns <= 4) ? ENDGAME_CELL_OCB_MID
+                            : ENDGAME_CELL_OCB_HIGH;
+    }
+
+    return (one_square(white_rooks) && one_square(black_rooks))
+               ? ENDGAME_CELL_OCB_ROOK
+               : ENDGAME_CELL_NONE;
+  }
+
+  if (pawns > 2) { return ENDGAME_CELL_NONE; }
+
+  const int d =
+      men_in_phase_units(bitboards, own) - men_in_phase_units(bitboards, other);
+  const int column = (d <= 0) ? 0 : ((d == 1) ? 1 : 2);
+
+  return ENDGAME_CELL_P0_D0 + 3 * pawns + column;
+}
+
+
+// A square's Manhattan distance to the four centre squares, 0 to 6.
+static inline int centre_distance(int square)
+{
+  const int file = square & 7;
+  const int row = square >> 3;
+  return ((file < 4) ? 3 - file : file - 4) + ((row < 4) ? 3 - row : row - 4);
+}
+
+
+static inline int manhattan(int a, int b)
+{
+  const int rows = (a >> 3) - (b >> 3);
+  const int files = (a & 7) - (b & 7);
+  return ((rows < 0) ? -rows : rows) + ((files < 0) ? -files : files);
+}
+
+
+// Mop-up's three counts for the side with men, which it returns, or -1 outside
+// the domain with `counts` untouched. A lone king is a side whose occupancy
+// is its king's square: two compares, so the common case reads nothing more.
+static inline int mopup_counts(const board_t* board,
+                               int counts[MOPUP_FEATURE_COUNT])
+{
+  const bb_t* bitboards = board->bitboards;
+  const bool white_lone = board->occupancies[WHITE] == bitboards[W_KING];
+  const bool black_lone = board->occupancies[BLACK] == bitboards[B_KING];
+
+  if (white_lone == black_lone) { return -1; }
+
+  const int side = white_lone ? BLACK : WHITE;
+  const int base = (side == WHITE) ? W_PAWN : B_PAWN;
+
+  if (bitboards[base + W_PAWN] != 0) { return -1; }
+
+  const int knights = count_bits(bitboards[base + W_KNIGHT]);
+  const int units = men_in_phase_units(bitboards, base);
+
+  if (units < 2 || units == knights) { return -1; }
+
+  const int lone = get_lsb_index(bitboards[white_lone ? W_KING : B_KING]);
+  const int own = get_lsb_index(bitboards[base + W_KING]);
+
+  counts[MOPUP_CENTRE] = centre_distance(lone);
+  counts[MOPUP_KINGS] = 14 - manhattan(lone, own);
+  counts[MOPUP_CORNER] = 0;
+
+  // King, bishop and knight alone: a8 and h1 are on one_colour, h8 and a1
+  // are not.
+  const bb_t bishop = bitboards[base + W_BISHOP];
+  if (knights == 1 && units == 2 && one_square(bishop)) {
+    const bool on_one = (bishop & one_colour) != 0;
+    const int nearer = on_one
+                           ? std::min(chebyshev(lone, a8), chebyshev(lone, h1))
+                           : std::min(chebyshev(lone, h8), chebyshev(lone, a1));
+    counts[MOPUP_CORNER] = 7 - nearer;
+  }
+
+  return side;
+}
+
+
+// Mop-up's share of stage one's pair, and its trace entries, White's count
+// less Black's as every linear term records it.
+static inline void mopup_terms(const board_t* board, score_t* sum)
+{
+  int counts[MOPUP_FEATURE_COUNT];
+  const int side = mopup_counts(board, counts);
+
+  if (side < 0) { return; }
+
+  const int sign = (side == WHITE) ? 1 : -1;
+
+  for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+    *sum += sign * counts[i] * mopup_score[static_cast<size_t>(i)];
+    EVAL_TRACE(TERM_MOPUP, i, sign * counts[i]);
+  }
+}
+
+
+// Stage one's positional integer with the factor: taper()'s numerator X and
+// E1's share, one division by 24 F, as src/evaluation.hpp writes it. The pick
+// is one expression for both libraries, so the line the trace build's identity
+// checks is the line the shipped engine runs; the trace build only records both
+// candidates beside it.
+static inline int scaled_taper(const board_t* board, score_t pair, int phase)
+{
+  const int e1 = board->material + eg_value(pair);
+  const int cell = (e1 == 0) ? ENDGAME_CELL_NONE
+                             : endgame_cell(board, (e1 > 0) ? WHITE : BLACK);
+
+#ifdef CHESSO_TRACE
+  const int white = endgame_cell(board, WHITE);
+  const int black = endgame_cell(board, BLACK);
+  EVAL_TRACE_CELLS((white == ENDGAME_CELL_NONE) ? -1 : white,
+                   (black == ENDGAME_CELL_NONE) ? -1 : black);
+#endif
+
+  if (cell == ENDGAME_CELL_NONE) { return taper(pair, phase); }
+
+  const int x =
+      mg_value(pair) * phase + eg_value(pair) * (GAME_PHASE_MAX - phase);
+
+  return (ENDGAME_SCALE_ONE * x + (endgame_scale[cell] - ENDGAME_SCALE_ONE) *
+                                      e1 * (GAME_PHASE_MAX - phase)) /
+         (GAME_PHASE_MAX * ENDGAME_SCALE_ONE);
+}
+
+
+void endgame_family_counts(const board_t* board, endgame_family_t* out)
+{
+  *out = endgame_family_t{};
+  out->cell[WHITE] = endgame_cell(board, WHITE);
+  out->cell[BLACK] = endgame_cell(board, BLACK);
+
+  int counts[MOPUP_FEATURE_COUNT];
+  const int side = mopup_counts(board, counts);
+
+  if (side < 0) { return; }
+
+  for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+    out->mopup[side][i] = counts[i];
+  }
+}
+
+
 // Stage one: what is cheap enough to pay at every node, including the nodes
 // evaluate_lazy() takes the shortcut on.
 //
@@ -1927,7 +2198,21 @@ static inline int cheap_score(const board_t* board, const pawn_entry_t* entry)
   // which keeps one more 23/24 out of the bound test_eval_trace holds the
   // tuner's smooth score to. Both are packed, so the sum is one add and taper()
   // takes the halves apart after it.
-  const int positional = taper(board->psqt + pawns, phase);
+  //
+  // S124's mop-up joins the pair, and its factor scales E1 inside the same one
+  // division (scaled_taper() above); at the identity neither is compiled in
+  // and this is taper(board->psqt + pawns, phase), the parent's integer.
+  score_t pair = board->psqt + pawns;
+
+  if constexpr (mopup_live || trace_build) { mopup_terms(board, &pair); }
+
+  int positional;
+
+  if constexpr (endgame_scale_live || trace_build) {
+    positional = scaled_taper(board, pair, phase);
+  } else {
+    positional = taper(pair, phase);
+  }
 
   const int score = board->material + positional;
 

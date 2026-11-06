@@ -2,8 +2,9 @@
 // The evaluation's counts walked by hand from a FEN's placement -- mobility,
 // king safety, passed pawns, pawn structure, piece placement, since S123 the
 // passed pawn family, since S125 the pawn structure family, since S101 the
-// threat family and since S122 the king safety family -- a second
-// implementation the engine's own counts are checked against. S276.
+// threat family, since S122 the king safety family and since S124 the endgame
+// family's cells and mop-up -- a second implementation the engine's own
+// counts are checked against. S276.
 //
 // These walks are the feature half of tools/eval_model.hpp, the hand-written
 // mirror of evaluate() the tuner fitted from S028 to S262 and
@@ -1751,6 +1752,161 @@ inline bool king_danger_features(const std::string& placement,
         }
         break;
       }
+    }
+  }
+
+  return true;
+}
+
+
+// S124's endgame family, src/evaluation.hpp's definitions walked square by
+// square from the placement, sharing no code with the engine: the men counted
+// by walking the placement, a bishop's square colour from its rank and file,
+// each distance from the squares themselves -- the centre's as the nearest of
+// its four squares, a corner's as the nearer of the two of the bishop's
+// colour, found by asking all four. `cell` is the candidate pair, WHITE's
+// being strong first, ENDGAME_CELL_NONE for none; `mopup` per side, WHITE
+// first, the side with men's counts and the other's zero.
+struct endgame_family_walk_t
+{
+  int cell[2];
+  int mopup[2][MOPUP_FEATURE_COUNT];
+};
+
+
+inline bool endgame_family_features(const std::string& placement,
+                                    endgame_family_walk_t* out)
+{
+  // Per side: pawns, knights, bishops, rooks, queens; a bishop's square
+  // colour, the last one seen; the king's square.
+  int men[2][5] = {};
+  int bishop_parity[2] = {-1, -1};
+  int king_square[2] = {-1, -1};
+
+  int square = 0;
+  for (const char c : placement) {
+    if (c == '/') { continue; }
+
+    if (c >= '1' && c <= '8') {
+      square += c - '0';
+      continue;
+    }
+
+    bool black = false;
+    const int kind = piece_from_char(c, &black);
+    if (kind < 0 || square > 63) { return false; }
+
+    const int side = black ? 1 : 0;
+
+    if (kind == 5) {
+      king_square[side] = square;
+    } else {
+      men[side][kind]++;
+      if (kind == 2) {
+        bishop_parity[side] = ((square / 8) + (square % 8)) % 2;
+      }
+    }
+
+    square++;
+  }
+
+  if (square != 64 || king_square[0] < 0 || king_square[1] < 0) {
+    return false;
+  }
+
+  *out = endgame_family_walk_t{};
+
+  int units[2];
+  int all_men[2];
+  for (int side = 0; side < 2; ++side) {
+    units[side] =
+        men[side][1] + men[side][2] + 2 * men[side][3] + 4 * men[side][4];
+    all_men[side] = men[side][0] + men[side][1] + men[side][2] + men[side][3] +
+                    men[side][4];
+  }
+
+  const bool lone[2] = {all_men[0] == 0, all_men[1] == 0};
+  const bool dead =
+      men[0][0] + men[1][0] + men[0][3] + men[1][3] + men[0][4] + men[1][4] ==
+          0 &&
+      men[0][1] + men[0][2] + men[1][1] + men[1][2] <= 1;
+  const bool ocb =
+      men[0][2] == 1 && men[1][2] == 1 && bishop_parity[0] != bishop_parity[1];
+
+  for (int strong = 0; strong < 2; ++strong) {
+    const int weak = 1 - strong;
+    const int p = men[strong][0];
+    int cell = ENDGAME_CELL_NONE;
+
+    if (dead || lone[0] || lone[1]) {
+      cell = ENDGAME_CELL_NONE;
+    } else if (ocb) {
+      const int knights = men[0][1] + men[1][1];
+      const int queens = men[0][4] + men[1][4];
+      const int rooks = men[0][3] + men[1][3];
+
+      if (knights == 0 && queens == 0 && rooks == 0) {
+        cell = (p <= 2)   ? ENDGAME_CELL_OCB_LOW
+               : (p <= 4) ? ENDGAME_CELL_OCB_MID
+                          : ENDGAME_CELL_OCB_HIGH;
+      } else if (knights == 0 && queens == 0 && men[0][3] == 1 &&
+                 men[1][3] == 1) {
+        cell = ENDGAME_CELL_OCB_ROOK;
+      }
+    } else if (p <= 2) {
+      const int d = units[strong] - units[weak];
+      cell = 3 * p + ((d <= 0) ? 0 : ((d == 1) ? 1 : 2));
+    }
+
+    out->cell[strong] = cell;
+  }
+
+  // Mop-up: exactly one side lone, the other with no pawn, two phase units
+  // or more, and not knights alone.
+  if (lone[0] != lone[1]) {
+    const int side = lone[0] ? 1 : 0;
+    const int other = 1 - side;
+
+    if (men[side][0] == 0 && units[side] >= 2 && units[side] != men[side][1]) {
+      const int lone_square = king_square[other];
+      const int row = lone_square / 8;
+      const int file = lone_square % 8;
+
+      const auto distance = [](int a_row, int a_file, int b_row, int b_file,
+                               bool chebyshev) {
+        const int rows = (a_row > b_row) ? a_row - b_row : b_row - a_row;
+        const int files = (a_file > b_file) ? a_file - b_file : b_file - a_file;
+        return chebyshev ? ((rows > files) ? rows : files) : rows + files;
+      };
+
+      int centre = 99;
+      for (const int r : {3, 4}) {
+        for (const int f : {3, 4}) {
+          const int dist = distance(row, file, r, f, false);
+          if (dist < centre) { centre = dist; }
+        }
+      }
+
+      const int own = king_square[side];
+      int corner = 0;
+
+      if (men[side][1] == 1 && men[side][2] == 1 && men[side][3] == 0 &&
+          men[side][4] == 0) {
+        int nearest = 99;
+        for (const int r : {0, 7}) {
+          for (const int f : {0, 7}) {
+            if ((r + f) % 2 != bishop_parity[side]) { continue; }
+            const int dist = distance(row, file, r, f, true);
+            if (dist < nearest) { nearest = dist; }
+          }
+        }
+        corner = 7 - nearest;
+      }
+
+      out->mopup[side][MOPUP_CENTRE] = centre;
+      out->mopup[side][MOPUP_KINGS] =
+          14 - distance(row, file, own / 8, own % 8, false);
+      out->mopup[side][MOPUP_CORNER] = corner;
     }
   }
 

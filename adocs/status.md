@@ -7,15 +7,20 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
-## 2026-11-06: resumed after the shutdown; RED 1 ruled by the owner (DEC-356); DEC-355 being implemented
+## 2026-11-06: S124 phase 1 landed at the identity; next S333
 
-- **The owner answered RED 1: option A, DEC-356.** S124's factor gradient case keeps its relative metric and takes the
-  one pair DEC-316's rule picks, `8/8/8/3r4/8/1k6/8/K3R3 w` and its mirror; expected 6.27485e-7 at 739.
-- **Running: one Opus 5.5 agent in `../chesso-s124p1b`** implementing DEC-355 (the per-row curve residual in
-  `truncation_bound()`, both cases; plants 9 and 10 red; `cell_truncation_positions` re-derived by its script, rules
-  amended first), then DEC-356. Nothing is committed there. Deliverable `.tuning/coord/S124/S124_phase1_dec355.diff`.
-- Then: fast check over the delta, `specs.md` from the step file's draft, gate, land S124 phase 1 as `No functional
-  change`, bench 4707943. Then S333, S334, S335, S124 phase 2.
+**S124 phase 1 is in the tree** (this commit), `No functional change`, bench 4707943 in both builds.
+- The owner ruled RED 1: option A, DEC-356. The factor gradient case takes DEC-316's pair, 6.27485e-7 at 739 (x1.59).
+- DEC-355 is implemented in the tighter signed form the fast check asked for: each row's taperings' loss
+  |smooth - exact - C|, C the curve's signed residual, against the taperings' bound alone. 0 rows past it on 6226944,
+  shipped and forced; plants 9 and 10 red; a 1e-6 margin over 69/24 (`LATTICE_MARGIN`).
+- Goldens re-derived under dated rule amendments: `cell_truncation_positions` (one hit, 2.906576) and
+  `truncation_positions` (phases 5, 11, 17, 23 at 2.875).
+- Gate: 59 of 59 in `build/` and `build-tune/`, format clean.
+- S124 stays in `plan_current/`. Phase 2 needs `feature_audit`'s local rank first, then the screen at K refit (DEC-352).
+- `../chesso-s124p1` and `../chesso-s124p1b` are S124's own. They go once their blobs are verified in history.
+
+**Next, in Open order:** S333, S334, S335 (filler, agent-only, one at a time), then S124 phase 2.
 
 ## 2026-11-05 15:00: HANDOVER for a fresh session (the owner shuts the machine down)
 

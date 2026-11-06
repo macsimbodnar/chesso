@@ -8,6 +8,7 @@
 #include "bitboard.hpp"
 #include "data_structures.hpp"
 #include "evaluation.hpp"
+#include "test_endgame_positions.hpp"
 #include "test_eval_positions.hpp"
 #include "test_helpers.hpp"
 #include "test_walked_counts.hpp"
@@ -2647,6 +2648,210 @@ TEST_SUITE("eval counts: S122's king safety family")
     for (int cell = KST_D2_FREE; cell < KST_CELL_COUNT; ++cell) {
       CAPTURE(cell);
       CHECK(engine.storm[WHITE][cell] == 0);
+    }
+  }
+}
+
+
+// S124's endgame family against the walk and by hand (DEC-350 (6)): the trace
+// reads the engine's own cells and counts, so truncation_scan cannot see one
+// read from the wrong side -- P from the weak side, a bishop's colour from the
+// other bishop -- and the walk is the one implementation that shares no code
+// with it. Both candidate cells and every mop-up count, per side, over S101's
+// population and S124's endgame one, whose signatures reach every cell and
+// mop-up's whole domain for each colour.
+namespace
+{
+
+void check_endgame_family(const std::string& fen, endgame_family_t* engine_out)
+{
+  CAPTURE(fen);
+  REQUIRE(load_FEN(fen, &game));
+
+  endgame_family_t engine;
+  endgame_family_counts(&game.board, &engine);
+
+  walked_counts::endgame_family_walk_t walk;
+  REQUIRE(walked_counts::endgame_family_features(fen.substr(0, fen.find(' ')),
+                                                 &walk));
+
+  for (int side = 0; side < 2; ++side) {
+    CAPTURE(side);
+    CHECK(engine.cell[side] == walk.cell[side]);
+
+    for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+      CAPTURE(i);
+      CHECK(engine.mopup[side][i] == walk.mopup[side][i]);
+    }
+  }
+
+  *engine_out = engine;
+}
+
+
+struct endgame_case_t
+{
+  const char* fen;
+  const char* what;
+  int cell[2];
+  int mopup[2][MOPUP_FEATURE_COUNT];
+};
+
+constexpr int NONE = ENDGAME_CELL_NONE;
+
+// Each placement's counts written from src/evaluation.hpp's definitions:
+// the men, P and d per side, the bishops' square colours, and the squares'
+// distances. Rows are a8 = 0; a square's colour is its row plus file, odd or
+// even.
+const endgame_case_t endgame_cases[] = {
+    {"8/8/4k3/8/8/3K4/4P3/8 w - - 0 1",
+     "a lone king against a pawn: LONE, and no mop-up with a pawn",
+     {NONE, NONE},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"8/8/4k3/8/8/3K4/8/R7 w - - 0 1",
+     "KRvK, the king on e6: centre 1, the kings 3 + 1 apart",
+     {NONE, NONE},
+     {{1, 10, 0}, {0, 0, 0}}},
+    {"8/8/8/8/8/4K3/6k1/2NB4 w - - 0 1",
+     "KBNvK, the bishop on d1, even: h1 is its corner, one from g2",
+     {NONE, NONE},
+     {{4, 11, 6}, {0, 0, 0}}},
+    {"8/8/8/8/8/4K3/6k1/2BN4 w - - 0 1",
+     "KBNvK, the bishop on c1, odd: h8 and a1, six from g2 each",
+     {NONE, NONE},
+     {{4, 11, 1}, {0, 0, 0}}},
+    {"8/8/8/8/8/4K3/6k1/2BB4 w - - 0 1",
+     "KBBvK: mop-up's domain, no corner count",
+     {NONE, NONE},
+     {{4, 11, 0}, {0, 0, 0}}},
+    {"8/8/8/8/8/4K3/6k1/2NN4 w - - 0 1",
+     "KNNvK: knights alone, outside the domain",
+     {NONE, NONE},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"8/8/8/8/8/4K3/6k1/3B4 w - - 0 1",
+     "KBvK: dead, and one phase unit",
+     {NONE, NONE},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"4k3/8/8/8/3b4/8/4P3/R3K3 w - - 0 1",
+     "KRPvKB: P 1 d 1 for White, P 0 d -1 for Black",
+     {ENDGAME_CELL_P1_D1, ENDGAME_CELL_P0_D0},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"4k2r/8/8/8/8/8/8/Q3K3 w - - 0 1",
+     "KQvKR: P 0 d 2 for White, d -2 for Black",
+     {ENDGAME_CELL_P0_D2, ENDGAME_CELL_P0_D0},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"2b1k3/8/8/8/8/8/3PP3/2B1K3 w - - 0 1",
+     "opposite bishops, c1 odd and c8 even, nothing else: PURE, P 2 and 0",
+     {ENDGAME_CELL_OCB_LOW, ENDGAME_CELL_OCB_LOW},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"2b1k3/8/8/8/8/8/2PPP3/2B1K3 w - - 0 1",
+     "the same with three pawns: PURE, P 3 for White",
+     {ENDGAME_CELL_OCB_MID, ENDGAME_CELL_OCB_LOW},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"2b1k3/pp6/8/8/8/8/PPPPP3/2B1K3 w - - 0 1",
+     "PURE with five pawns and two: past four, and under three",
+     {ENDGAME_CELL_OCB_HIGH, ENDGAME_CELL_OCB_LOW},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"5b2/4k3/8/8/8/8/3PP3/2B1K3 w - - 0 1",
+     "bishops c1 and f8, both odd: no OCB, the pawn cells",
+     {ENDGAME_CELL_P2_D0, ENDGAME_CELL_P0_D0},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"2b1k2r/8/8/8/8/8/4P3/2B1K2R w - - 0 1",
+     "opposite bishops and a rook each: ROOK",
+     {ENDGAME_CELL_OCB_ROOK, ENDGAME_CELL_OCB_ROOK},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"2b1k3/8/8/8/8/8/4P3/2BNK3 w - - 0 1",
+     "opposite bishops and a knight: OCB's other, no cell",
+     {NONE, NONE},
+     {{0, 0, 0}, {0, 0, 0}}},
+    {"4k2r/pppp4/8/8/8/8/PPPP4/R3K3 w - - 0 1",
+     "four pawns a side and a rook each: past two pawns, no cell",
+     {NONE, NONE},
+     {{0, 0, 0}, {0, 0, 0}}},
+};
+
+}  // namespace
+
+
+TEST_SUITE("eval counts: S124's endgame family")
+{
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the engine counts the endgame family the walk counts")
+  {
+    // Every cell a candidate for each side, NONE too, and every mop-up count
+    // non-zero for each side, so the comparison is not vacuous.
+    int cells[2][ENDGAME_CELL_COUNT + 1] = {};
+    int mopup[2][MOPUP_FEATURE_COUNT] = {};
+    size_t checked = 0;
+
+    std::vector<std::string> fens = threat_population();
+    for (const std::string& fen : test_endgame_positions::population()) {
+      fens.push_back(fen);
+    }
+
+    for (const std::string& fen : fens) {
+      endgame_family_t engine;
+      check_endgame_family(fen, &engine);
+
+      for (int side = 0; side < 2; ++side) {
+        cells[side][engine.cell[side]]++;
+        for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+          mopup[side][i] += (engine.mopup[side][i] != 0);
+        }
+      }
+
+      checked++;
+    }
+
+    // Preconditions, not goldens: at the landing 17794 positions, the rarest
+    // White OCB_PURE P >= 5, 47.
+    CHECK(checked > 15000);
+
+    int fewest = INT32_MAX;
+    for (int side = 0; side < 2; ++side) {
+      for (int c = 0; c <= ENDGAME_CELL_COUNT; ++c) {
+        CAPTURE(side);
+        CAPTURE(c);
+        CHECK(cells[side][c] > 20);
+        fewest = std::min(fewest, cells[side][c]);
+      }
+      for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+        CAPTURE(side);
+        CAPTURE(i);
+        CHECK(mopup[side][i] > 20);
+        fewest = std::min(fewest, mopup[side][i]);
+      }
+    }
+    MESSAGE("endgame family walk: " << checked << " positions; the rarest "
+                                    << "cell or count is non-zero on "
+                                    << fewest);
+  }
+
+  // Each hand case as written and as its colour mirror, where White's cell
+  // and counts are Black's.
+  TEST_CASE_FIXTURE(counts_fixture_t,
+                    "the walk and the engine count the endgame family by hand")
+  {
+    for (const endgame_case_t& item : endgame_cases) {
+      for (const bool mirror : {false, true}) {
+        const std::string fen = mirror ? mirror_fen(item.fen) : item.fen;
+        CAPTURE(item.what);
+        CAPTURE(mirror);
+
+        endgame_family_t engine;
+        check_endgame_family(fen, &engine);
+
+        for (int side = 0; side < 2; ++side) {
+          const int from = mirror ? 1 - side : side;
+          CAPTURE(side);
+          CHECK(engine.cell[side] == item.cell[from]);
+
+          for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
+            CAPTURE(i);
+            CHECK(engine.mopup[side][i] == item.mopup[from][i]);
+          }
+        }
+      }
     }
   }
 }

@@ -19,11 +19,15 @@
 //   Ladder: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 30. AdaGrad's default, 30,
 //   is the top.
 //
-//   Family: two fixtures, the case's gauge fixture and the same less the last
-//   pair of tests/test_eval_positions.hpp, the rows S101's fit went chaotic
-//   without. On each, the shipped constants, and SEEDS draws of every parameter
-//   moved uniformly by up to each of 1, 3 and 10 centipawns: 98 starts, standing
-//   in for the fit that has not happened yet.
+//   Family: two fixtures, the case's gauge fixture and the same less DEC-316's
+//   pair at S101's candidate, the rows S101's fit went chaotic without; since
+//   DEC-354 the pair after that marker is the one re-derived at S122's candidate.
+//   Since S124 the pair is found by identity -- the two rows after its marker
+//   comment in tests/test_eval_positions.hpp -- and not as the list's last pair,
+//   which it stopped being when S124's rows were appended after it. On each,
+//   the shipped constants, and SEEDS draws of every parameter moved uniformly
+//   by up to each of 1, 3 and 10 centipawns: 98 starts, standing in for the fit
+//   that has not happened yet.
 //
 //   Reading: `apart` every 25 epochs through 1200, four times the case's 300, at
 //   every step and start. worst(step) is the largest of them.
@@ -63,6 +67,7 @@
 #include <cstdio>
 #include <fstream>
 #include <random>
+#include <set>
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
@@ -128,9 +133,49 @@ int engine_phase(const std::string& fen)
   return game_phase(&game.board);
 }
 
-// tests/test_tuner_gradient.cpp's write_gauge_fixture(), less the last `drop`
-// rows of the curated list.
-bool write_gauge_fixture(const std::string& path, size_t drop)
+// DEC-316's pair, by identity: the two FEN lines after its marker comment ("at
+// S101's candidate", its first line; the pair re-derived at S122's candidate
+// since DEC-354) in tests/test_eval_positions.hpp, read from the repository root
+// as the case's constants are. Exits 2 if the marker or its two rows are not
+// there, or are not rows of the compiled list.
+std::set<std::string> dec316_pair()
+{
+  const std::string path = "tests/test_eval_positions.hpp";
+  const std::string marker = "DEC-316's pair at S101's candidate";
+  std::ifstream in(path);
+  std::string line;
+  bool after = false;
+  std::set<std::string> out;
+
+  while (std::getline(in, line) && out.size() < 2) {
+    if (line.find(marker) != std::string::npos) { after = true; }
+    if (!after) { continue; }
+
+    const size_t open = line.find_first_not_of(' ');
+    if (open == std::string::npos || line[open] != '"') { continue; }
+    const size_t close = line.find('"', open + 1);
+    if (close == std::string::npos) { continue; }
+    out.insert(line.substr(open + 1, close - open - 1));
+  }
+
+  size_t held = 0;
+  for (const std::string& fen : positions) {
+    held += out.count(fen);
+  }
+
+  if (out.size() != 2 || held != 2) {
+    fprintf(stderr, "no DEC-316 pair after its marker in %s: run from the "
+            "repository root\n", path.c_str());
+    exit(2);
+  }
+  return out;
+}
+
+// tests/test_tuner_gradient.cpp's write_gauge_fixture(), less the rows of the
+// curated list named in `drop`: every kept row carries the label and score the
+// case's fixture gives it, so the member is that fixture with two rows taken out.
+bool write_gauge_fixture(const std::string& path,
+                         const std::set<std::string>& drop)
 {
   std::ofstream out(path);
   if (!out) { return false; }
@@ -138,10 +183,12 @@ bool write_gauge_fixture(const std::string& path, size_t drop)
   static const double results[3] = {1.0, 0.5, 0.0};
   int score = -280;
 
-  for (size_t i = 0; i + drop < positions.size(); ++i) {
+  for (size_t i = 0; i < positions.size(); ++i) {
     const std::string& fen = positions[i];
-    out << fen << '\t' << results[i % 3] << '\t' << score << '\t'
-        << engine_phase(fen) % (GAME_PHASE_MAX + 1) << '\n';
+    if (drop.count(fen) == 0) {
+      out << fen << '\t' << results[i % 3] << '\t' << score << '\t'
+          << engine_phase(fen) % (GAME_PHASE_MAX + 1) << '\n';
+    }
     score += 41;
     if (score > 300) { score -= 600; }
   }
@@ -332,7 +379,8 @@ int main(int argc, char** argv)
 
   const std::string gauge = std::string(argv[1]) + "/S310_gauge.tsv";
   const std::string less = std::string(argv[1]) + "/S310_gauge_less.tsv";
-  if (!write_gauge_fixture(gauge, 0) || !write_gauge_fixture(less, 2)) {
+  if (!write_gauge_fixture(gauge, {}) ||
+      !write_gauge_fixture(less, dec316_pair())) {
     return 1;
   }
 
@@ -345,17 +393,17 @@ int main(int argc, char** argv)
   std::vector<double> shipped(PARAM_COUNT, 0.0);
   tuner_layout::starting_params(shipped.data());
 
-  printf("S310: the case's fixture %zu rows, less its last pair %zu; %zu "
+  printf("S310: the case's fixture %zu rows, less DEC-316's pair %zu; %zu "
          "parameters; bound %g, QUIET %g\n",
          full.size(), short_of_pair.size(), static_cast<size_t>(PARAM_COUNT),
          CASE_BOUND, QUIET);
 
   print_table("the shipped constants, the case's fixture", full, shipped);
-  print_table("the shipped constants, the fixture less its last pair",
+  print_table("the shipped constants, the fixture less DEC-316's pair",
               short_of_pair, shipped);
 
   printf("\n== the family, worst apart at any read through epoch %d; a, the "
-         "case's fixture; b, less its last pair\n",
+         "case's fixture; b, less DEC-316's pair\n",
          EPOCHS);
   printf("%6s %8s %8s %8s %8s %8s %8s %8s %8s %9s %5s | %8s %8s %8s %9s %9s\n",
          "step", "a ship", "a +-1", "a +-3", "a +-10", "b ship", "b +-1",

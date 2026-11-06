@@ -1,0 +1,87 @@
+# S124's phase 1, 2026-11-04: the cost sink adocs/data/S124_phase1_cost.sh applies to a scratch copy of the tree
+# under -DS124_SINK=<mask>, 1 the factor and 2 mop-up; the forced cells and weights are arbitrary non-zero
+# values, not seeds; never committed to src/.
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -2118,6 +2118,60 @@
+ }
+ 
+ 
++#ifdef S124_SINK
++// S124 phase 1's cost sink (adocs/data/S124_phase1_cost.sh), never a
++// candidate: the shipped mop-up and factor, their bodies copied with forced
++// weights so nothing folds -- arbitrary non-zero values, not seeds -- and
++// their result into an asm barrier while the score stays the landing's, so
++// the search is node for node the shipping one's (DEC-047's form). S124_SINK
++// is a mask: 1 the factor, 2 mop-up.
++constexpr int sink_endgame_scale[ENDGAME_CELL_COUNT] = {
++    64, 1, 24, 28, 68, 116, 96, 127, 120, 4, 40, 76, 92};
++constexpr int sink_mopup_mg[MOPUP_FEATURE_COUNT] = {3, 5, 7};
++constexpr int sink_mopup_eg[MOPUP_FEATURE_COUNT] = {7, 3, 5};
++constexpr std::array<score_t, MOPUP_FEATURE_COUNT> sink_mopup_score =
++    pack_scores(sink_mopup_mg, sink_mopup_eg);
++
++static inline void sink_mopup_terms(const board_t* board, score_t* sum)
++{
++  int counts[MOPUP_FEATURE_COUNT];
++  const int side = mopup_counts(board, counts);
++
++  if (side < 0) { return; }
++
++  const int sign = (side == WHITE) ? 1 : -1;
++
++  for (int i = 0; i < MOPUP_FEATURE_COUNT; ++i) {
++    *sum += sign * counts[i] * sink_mopup_score[static_cast<size_t>(i)];
++    EVAL_TRACE(TERM_MOPUP, i, sign * counts[i]);
++  }
++}
++
++static inline int sink_scaled_taper(const board_t* board, score_t pair, int phase)
++{
++  const int e1 = board->material + eg_value(pair);
++  const int cell = (e1 == 0) ? ENDGAME_CELL_NONE
++                             : endgame_cell(board, (e1 > 0) ? WHITE : BLACK);
++
++#ifdef CHESSO_TRACE
++  const int white = endgame_cell(board, WHITE);
++  const int black = endgame_cell(board, BLACK);
++  EVAL_TRACE_CELLS((white == ENDGAME_CELL_NONE) ? -1 : white,
++                   (black == ENDGAME_CELL_NONE) ? -1 : black);
++#endif
++
++  if (cell == ENDGAME_CELL_NONE) { return taper(pair, phase); }
++
++  const int x =
++      mg_value(pair) * phase + eg_value(pair) * (GAME_PHASE_MAX - phase);
++
++  return (ENDGAME_SCALE_ONE * x + (sink_endgame_scale[cell] - ENDGAME_SCALE_ONE) *
++                                      e1 * (GAME_PHASE_MAX - phase)) /
++         (GAME_PHASE_MAX * ENDGAME_SCALE_ONE);
++}
++#endif
++
++
+ void endgame_family_counts(const board_t* board, endgame_family_t* out)
+ {
+   *out = endgame_family_t{};
+@@ -2206,6 +2260,20 @@
+ 
+   if constexpr (mopup_live || trace_build) { mopup_terms(board, &pair); }
+ 
++#ifdef S124_SINK
++  {
++    score_t sink_pair = pair;
++    if constexpr ((S124_SINK & 2) != 0) {
++      sink_mopup_terms(board, &sink_pair);
++    }
++    int sink = sink_pair;
++    if constexpr ((S124_SINK & 1) != 0) {
++      sink = sink_scaled_taper(board, sink_pair, phase);
++    }
++    asm volatile("" : : "r"(sink));
++  }
++#endif
++
+   int positional;
+ 
+   if constexpr (endgame_scale_live || trace_build) {

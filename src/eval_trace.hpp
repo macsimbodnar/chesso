@@ -54,7 +54,8 @@ namespace eval_trace
 // (src/evaluation.hpp), and S122's five after S101's, the same way: the
 // curve's index is its input, ks_curve_input_t, and it is the one term
 // recorded per side (EVAL_TRACE_SIDE), its group declared in
-// tools/tuner_trace.hpp.
+// tools/tuner_trace.hpp. S124's mop-up comes after S122's, indexed by
+// mopup_feature_t.
 enum term_t : uint8_t
 {
   TERM_MATERIAL,
@@ -89,8 +90,17 @@ enum term_t : uint8_t
   TERM_KS_DEFENDERS,
   TERM_KS_STORM,
   TERM_KS_CURVE,
+  TERM_MOPUP,
   TERM_COUNT
 };
+
+// S124's endgame scale factor (DEC-350 (5)) is not a coefficient: it
+// multiplies E1, a sum of other terms' weighted coefficients, so the record
+// carries the row's two candidate cells instead, the one White's being the
+// strong side selects and Black's (src/evaluation.hpp), and the tuner picks
+// by the sign of E1 at the weights it holds. NO_CELL is f = F, the
+// identity; any other value is an endgame_cell_t.
+constexpr uint8_t NO_CELL = 0xFF;
 
 // Whose coefficient it is. BOTH is White's minus Black's, the form every
 // linear term records; WHITE and BLACK are one side's own, for a per-side
@@ -123,6 +133,7 @@ struct record_t
   int phase = -1;
   size_t count = 0;
   bool overflow = false;
+  uint8_t cells[2] = {NO_CELL, NO_CELL};
   entry_t entries[CAPACITY];
 
   void clear()
@@ -130,6 +141,8 @@ struct record_t
     phase = -1;
     count = 0;
     overflow = false;
+    cells[0] = NO_CELL;
+    cells[1] = NO_CELL;
   }
 };
 
@@ -168,6 +181,16 @@ inline void set_phase(int phase)
   if (sink != nullptr) { sink->phase = phase; }
 }
 
+// The two candidate cells, a NO_CELL for none: the cell if White is the
+// strong side, then if Black is.
+inline void set_cells(int white, int black)
+{
+  if (sink == nullptr) { return; }
+
+  sink->cells[0] = (white < 0) ? NO_CELL : static_cast<uint8_t>(white);
+  sink->cells[1] = (black < 0) ? NO_CELL : static_cast<uint8_t>(black);
+}
+
 }  // namespace eval_trace
 
 #define EVAL_TRACE(term, index, coef)                                     \
@@ -176,11 +199,13 @@ inline void set_phase(int phase)
 #define EVAL_TRACE_SIDE(term, side, index, coef) \
   ::eval_trace::add(::eval_trace::term, (side), (index), (coef))
 #define EVAL_TRACE_PHASE(phase) ::eval_trace::set_phase(phase)
+#define EVAL_TRACE_CELLS(white, black) ::eval_trace::set_cells((white), (black))
 
 #else
 
 #define EVAL_TRACE(term, index, coef) ((void)0)
 #define EVAL_TRACE_SIDE(term, side, index, coef) ((void)0)
 #define EVAL_TRACE_PHASE(phase) ((void)0)
+#define EVAL_TRACE_CELLS(white, black) ((void)0)
 
 #endif

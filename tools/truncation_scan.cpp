@@ -25,6 +25,38 @@
 // hand-written mirror the tuner fitted before S262, computing the same function
 // with its own sum and its own feature walks, and the exact side was
 // evaluate() itself; the four pins sat in tests/test_eval_model.cpp.
+//
+// **It is S124's factor check too** (DEC-350 (6)): exact_score() carries the
+// factor's integer form, so on a build whose cells are off F a row on which
+// the trace's factor and the engine's disagree -- a candidate cell recorded
+// wrong, the material left out of E1, the wrong divisor, the strong side
+// read from anything but E1 -- is refused here. On such a build the
+// positional division is by 24 F = 3072 on every row in a cell, losing up to
+// 3071/3072 where 24 lost 23/24, so the maximum on those rows is 2 x 23/24 +
+// 3071/3072 = 2.916 while tempo is zero; at F, every build that ships at its
+// identity, the factor is taper()'s integer and the maximum stays 2.875. A
+// stale pick is invisible here -- the scan reads at the engine's own weights,
+// where the stored and the current signs agree -- and the tuner's tests hold
+// that (tests/test_tuner_gradient.cpp).
+//
+// **Each row is read off its own share of S122's curve since DEC-355
+// (2026-11-06).** The curve's four truncations, T per king and per half, put
+// that row's tuner_trace::curve_residual() C into smooth - exact, under 1 in
+// size and zero at the curve's seed, so the number printed, counted past 2.0
+// and against --min, and reported as the worst, is |smooth - exact - C|,
+// tuner_trace::taperings_loss(): exactly what the taperings lost, on the 1/24
+// lattice, wherever stage two's clamp does not bind, and bounded by the same
+// where it does, against 2.875 at F and 2.916 off F -- the reading and the
+// bounds tests/test_eval_trace.cpp holds rows to. A row counts past 2.0 or
+// past --min only by more than tuner_trace::LATTICE_MARGIN, so a row exactly
+// on a lattice value is not counted past it by an ulp. From S122's landing to
+// 2026-11-06 the scan printed the difference itself, whose maximum sat under a
+// flat 3.875 while the curve was live, and for a few hours of that day
+// |smooth - exact| - |C|, only a lower bound on the taperings' loss; the
+// summary still reports the largest raw difference beside the rest. And every
+// row is held to its own bound, tuner_trace::truncation_bound(), the
+// definition the tests read: a row past it is counted, the first named, and
+// the scan exits 1.
 #include <algorithm>
 #include <cinttypes>
 #include <cmath>
@@ -76,8 +108,11 @@ void usage()
           "truncation_scan --data FILE [options]\n"
           "  --data FILE   a `fen result score phase` corpus, or one FEN per\n"
           "                line\n"
-          "  --min VALUE   print positions disagreeing by more than this\n"
-          "                (default 2.8; the maximum is 69/24 = 2.875)\n"
+          "  --min VALUE   print positions whose taperings' loss, the\n"
+          "                difference less the row's signed curve residual,\n"
+          "                passes this by more than 1e-6 (default 2.8; the\n"
+          "                maximum is 69/24 = 2.875, or 2.916 on a row whose\n"
+          "                scale factor is off F)\n"
           "  --limit N     stop after N rows (default 0, everything)\n"
           "  --report N    print at most N hits (default 0, all of them)\n");
 }
@@ -144,7 +179,9 @@ int main(int argc, char** argv)
   uint64_t past_two = 0;
   uint64_t past_min = 0;
   uint64_t printed = 0;
+  uint64_t past_bound = 0;
   double worst = 0.0;
+  double worst_raw = 0.0;
 
   while (std::getline(in, line)) {
     if (line.empty()) { continue; }
@@ -180,14 +217,28 @@ int main(int argc, char** argv)
     }
 
     const double smooth = tuner_trace::score(row, 0, params.data());
-    const double difference = std::abs(smooth - static_cast<double>(exact));
+    const double signed_raw = smooth - static_cast<double>(exact);
+    const double raw = std::abs(signed_raw);
+    const double difference =
+        tuner_trace::taperings_loss(row, 0, weights.data(), signed_raw);
+
+    // The same 1e-9 tests/test_eval_trace.cpp allows the floating-point sum.
+    if (difference >
+        tuner_trace::truncation_bound(row, 0, weights.data()) + 1e-9) {
+      if (past_bound == 0) {
+        fprintf(stderr, "past its own truncation bound, %.6f: %s\n", difference,
+                fen.c_str());
+      }
+      past_bound++;
+    }
 
     scanned++;
     worst = std::max(worst, difference);
+    worst_raw = std::max(worst_raw, raw);
 
-    if (difference > 2.0) { past_two++; }
+    if (difference > 2.0 + tuner_trace::LATTICE_MARGIN) { past_two++; }
 
-    if (difference > opts.min) {
+    if (difference > opts.min + tuner_trace::LATTICE_MARGIN) {
       past_min++;
 
       if (opts.report == 0 || printed < opts.report) {
@@ -200,8 +251,9 @@ int main(int argc, char** argv)
 
   fprintf(stderr,
           "%" PRIu64 " rows scanned, %" PRIu64 " past 2.0, %" PRIu64
-          " past %.4f, worst %.6f\n",
-          scanned, past_two, past_min, opts.min, worst);
+          " past %.4f, worst %.6f, each row's taperings' loss; the "
+          "largest difference %.6f, %" PRIu64 " past their own bound\n",
+          scanned, past_two, past_min, opts.min, worst, worst_raw, past_bound);
 
-  return 0;
+  return (past_bound == 0) ? 0 : 1;
 }

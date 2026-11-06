@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include "bitboard.hpp"
+#include "test_endgame_positions.hpp"
 #include "test_eval_positions.hpp"
 #include "test_helpers.hpp"
 #include "test_temp_file.hpp"
@@ -47,6 +48,8 @@ namespace
 using tuner_layout::BKR_EG_BASE;
 using tuner_layout::BKR_MG_BASE;
 using tuner_layout::EG_BASE;
+using tuner_layout::EGS_BASE;
+using tuner_layout::ENDGAME_SCALE_COUNT;
 using tuner_layout::HGP_EG_BASE;
 using tuner_layout::HGP_MG_BASE;
 using tuner_layout::HGW_EG_BASE;
@@ -74,6 +77,9 @@ using tuner_layout::MG_BASE;
 using tuner_layout::MOB_EG_BASE;
 using tuner_layout::MOB_MG_BASE;
 using tuner_layout::MOBILITY_COUNT;
+using tuner_layout::MOP_EG_BASE;
+using tuner_layout::MOP_MG_BASE;
+using tuner_layout::MOPUP_COUNT;
 using tuner_layout::PARAM_COUNT;
 using tuner_layout::PASSED_PAWN_COUNT;
 using tuner_layout::PIECE_PLACEMENT_COUNT;
@@ -324,6 +330,61 @@ dataset_t trace_positions()
   }
 
   return data;
+}
+
+
+// S124's rows: tests/test_endgame_positions.hpp's population traced, a
+// neutral label, every cell and mop-up count among them for each colour.
+// `drop_level` drops the rows whose E1 is zero at the shipped weights, the
+// one place the factor's derivative does not exist: the pick switches there
+// between two cells, and the score's slope in a piece value with it.
+dataset_t endgame_rows(bool drop_level)
+{
+  game_t game;
+  initialize_game_const_data(&game);
+
+  std::vector<double> shipped(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(shipped.data());
+
+  dataset_t data;
+
+  for (const std::string& fen : test_endgame_positions::population()) {
+    REQUIRE(load_FEN(fen, &game));
+
+    tuner_trace::row_trace_t trace;
+    std::string error;
+    REQUIRE(tuner_trace::trace_board(&game.board, &trace, &error));
+
+    dataset_t one;
+    tuner_trace::append_row(trace, 0.5f, 0, 0, &one);
+    if (drop_level &&
+        tuner_trace::smooth(tuner_trace::engine_model(), one, 0, shipped.data())
+                .e1 == 0.0) {
+      continue;
+    }
+
+    tuner_trace::append_row(trace, 0.5f, 0, 0, &data);
+  }
+
+  return data;
+}
+
+
+// Every cell off F and no two alike, 0 among them, and mop-up's six off zero:
+// written here and derived from nothing outside this file.
+void force_endgame_family(std::vector<double>* params)
+{
+  static const double cells[ENDGAME_SCALE_COUNT] = {
+      64, 0, 24, 28, 68, 116, 96, 127, 120, 4, 40, 76, 92};
+  static const double mopup[2][MOPUP_COUNT] = {{7, 11, 5}, {13, 9, 17}};
+
+  for (size_t c = 0; c < ENDGAME_SCALE_COUNT; ++c) {
+    (*params)[EGS_BASE + c] = cells[c];
+  }
+  for (size_t i = 0; i < MOPUP_COUNT; ++i) {
+    (*params)[MOP_MG_BASE + i] = mopup[0][i];
+    (*params)[MOP_EG_BASE + i] = mopup[1][i];
+  }
 }
 
 
@@ -698,6 +759,222 @@ TEST_CASE("gradient() is the derivative of the error it descends")
 }
 
 
+// S124's product, DEC-350 (5): the factor f_c times E1, its derivative in the
+// cell and its chain rule into every piece value and every positional
+// endgame weight, checked against central differences at cells that move
+// it -- every cell off F, where the chain rule's terms are not zero -- and
+// mop-up's weights off zero. The case above reads the same derivative at F,
+// where the factor's term and its chain rule are zero, and every other
+// parameter's on the fixture. The rows are S124's population with E1 non-zero
+// (endgame_rows()), DEC-356's pair among them since 2026-11-06.
+//
+// Read over the parameters the product reaches: the five piece values, every
+// positional endgame weight -- the tables', the pawn families', placement's
+// and mop-up's -- the thirteen cells and mop-up's middlegame half. A
+// middlegame or stage-two weight is untouched by the factor, and over these
+// endgame rows its gradient can cancel to 1e-11, where a central difference
+// reads the summation's rounding and not the derivative: at the landing the
+// worst over all 1190 was 2.4e-5 at backward_rank_mg[0], an
+// analytic 8.39669e-11 against 8.39689e-11, and over the product's
+// parameters 3.0e-7 at h 0.01 (the S124 step file). Every cell and mop-up
+// weight has a gradient here. At S122's constants the case read 3.4757e-6 at
+// 726, psqt_eg[king][b6], a weight nearly stationary on the generator's rows
+// (DEC-316's class); the owner ruled DEC-316's answer (DEC-356), the pair
+// tests/test_endgame_positions.hpp's factor_gradient_rows appends to the
+// population, and with it the case reads 6.27485e-7 at 739,
+// psqt_eg[king][g5], over 5717 rows, a factor of 1.59 under its 1e-6.
+TEST_CASE("the endgame factor's gradient is the derivative, chain rule in")
+{
+  const dataset_t data = endgame_rows(true);
+  const std::vector<uint32_t> index = every_row(data);
+
+  std::vector<double> params(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  force_endgame_family(&params);
+
+  std::vector<double> target(data.size());
+  for (size_t i = 0; i < data.size(); ++i) {
+    target[i] = (i % 3 == 0) ? 1.0 : ((i % 3 == 1) ? 0.5 : 0.0);
+  }
+
+  // The precondition: every cell is picked on rows that weigh it, and some
+  // rows sit in no cell.
+  size_t per_cell[ENDGAME_SCALE_COUNT + 1] = {};
+  for (size_t row = 0; row < data.size(); ++row) {
+    const tuner_trace::smooth_t s = tuner_trace::smooth(
+        tuner_trace::engine_model(), data, row, params.data());
+    const size_t slot =
+        (s.cell == eval_trace::NO_CELL) ? ENDGAME_SCALE_COUNT : s.cell;
+    if (data.phase[row] < GAME_PHASE_MAX) { per_cell[slot]++; }
+  }
+  for (size_t c = 0; c <= ENDGAME_SCALE_COUNT; ++c) {
+    CAPTURE(c);
+    CHECK(per_cell[c] > 20);
+  }
+
+  const double k = 1.0;
+  std::vector<double> analytic;
+  tuner_trace::gradient(data, params.data(), k, index, 0, data.size(), 1,
+                        target, &analytic);
+  REQUIRE(analytic.size() == PARAM_COUNT);
+
+  // The product's parameters, as the layout and the feature table say.
+  std::vector<uint8_t> reached(PARAM_COUNT, 0);
+  for (size_t p = 0; p < MATERIAL_COUNT; ++p) {
+    reached[p] = 1;
+  }
+  for (const tuner_trace::feature_t& f :
+       tuner_trace::feature_table().features) {
+    if (f.site == tuner_trace::SITE_POSITIONAL) { reached[f.eg] = 1; }
+  }
+  for (size_t p = MOP_MG_BASE; p < PARAM_COUNT; ++p) {
+    reached[p] = 1;
+  }
+
+  difference_check_t check;
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    if (!reached[p]) { continue; }
+
+    const difference_check_t one =
+        check_differences(tuner_trace::engine_model(), data, params, k, index,
+                          target, analytic, 0.01, p, p + 1);
+    if (one.worst > check.worst) {
+      check.worst = one.worst;
+      check.worst_param = p;
+    }
+    check.checked += one.checked;
+  }
+
+  CAPTURE(check.worst);
+  CAPTURE(check.worst_param);
+  MESSAGE("endgame factor: worst relative error "
+          << check.worst << " at parameter " << check.worst_param << " of "
+          << check.checked << ", over " << data.size() << " rows");
+  CHECK(check.checked > 400);
+  CHECK(check.worst < 1e-6);
+
+  for (size_t p = 0; p < MATERIAL_COUNT; ++p) {
+    CAPTURE(p);
+    CHECK(std::fabs(analytic[p]) > 1e-12);
+  }
+  for (size_t p = MOP_MG_BASE; p < PARAM_COUNT; ++p) {
+    CAPTURE(p);
+    CHECK(std::fabs(analytic[p]) > 1e-12);
+  }
+}
+
+
+// DEC-350 (6): a stale pick is invisible to tools/truncation_scan, which reads
+// at the engine's own weights, where the shipped and the current sign of E1
+// agree. Here one piece value moves until a row's E1 changes sign, and the
+// cell exact_parts() and smooth() pick -- the gradient's is smooth()'s -- is
+// held to the candidate the recomputed sign selects, with the factor's
+// arithmetic at that cell. The position is KRP against KB: White's candidate
+// is P 1 d 1 and Black's P 0 d <= 0 (tests/test_eval_model.cpp, by hand).
+TEST_CASE("the factor's cell follows E1's sign when a fit moves it")
+{
+  game_t game;
+  initialize_game_const_data(&game);
+  REQUIRE(load_FEN("4k3/8/8/8/3b4/8/4P3/R3K3 w - - 0 1", &game));
+
+  tuner_trace::row_trace_t trace;
+  std::string error;
+  REQUIRE(tuner_trace::trace_board(&game.board, &trace, &error));
+  dataset_t data;
+  tuner_trace::append_row(trace, 0.5f, 0, 0, &data);
+
+  REQUIRE(data.cells[0] == ENDGAME_CELL_P1_D1);
+  REQUIRE(data.cells[1] == ENDGAME_CELL_P0_D0);
+
+  std::vector<double> params(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  force_endgame_family(&params);
+
+  std::vector<int64_t> weights(PARAM_COUNT);
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    weights[p] = std::llround(params[p]);
+  }
+
+  // At the shipped values E1 is positive: White's candidate.
+  const tuner_trace::exact_parts_t before =
+      tuner_trace::exact_parts(data, 0, weights.data());
+  REQUIRE(before.e1 > 0);
+  CHECK(before.cell == data.cells[0]);
+
+  // The rook's value, the row's one White rook, lowered until E1 is -1.
+  constexpr size_t rook = 3;
+  weights[rook] -= before.e1 + 1;
+  params[rook] = static_cast<double>(weights[rook]);
+
+  const tuner_trace::exact_parts_t after =
+      tuner_trace::exact_parts(data, 0, weights.data());
+  REQUIRE(after.e1 == -1);
+  CHECK(after.cell == data.cells[1]);
+
+  const tuner_trace::smooth_t s =
+      tuner_trace::smooth(tuner_trace::engine_model(), data, 0, params.data());
+  CHECK(s.e1 == -1.0);
+  CHECK(s.cell == data.cells[1]);
+
+  // And the arithmetic at that cell: the factor's share is Black's cell's.
+  const int phase = data.phase[0];
+  const double eg_weight =
+      (GAME_PHASE_MAX - phase) / static_cast<double>(GAME_PHASE_MAX);
+  const double f = params[EGS_BASE + data.cells[1]];
+  std::vector<double> unscaled = params;
+  unscaled[EGS_BASE + data.cells[1]] = ENDGAME_SCALE_ONE;
+  const double plain =
+      tuner_trace::score(tuner_trace::engine_model(), data, 0, unscaled.data());
+  CHECK(s.score - plain ==
+        doctest::Approx((f / ENDGAME_SCALE_ONE - 1.0) * -1.0 * eg_weight));
+}
+
+
+// DEC-350 (5)'s box, as tools/tuner.cpp applies it after each step: a step
+// that carried a factor past F or below zero leaves it at the edge, and one
+// inside the box, every frozen one among them, is not touched.
+TEST_CASE("a step boxes the scale factors to [0, F]")
+{
+  std::vector<double> params(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  const std::vector<double> start = params;
+
+  std::vector<uint8_t> mask;
+  REQUIRE(tuner_groups::free_mask("endgame_scale", &mask));
+
+  // Adam's first step is the learning rate itself, against the gradient's
+  // sign: cell 0 pushed up from F, cell 1 down by more than F, the rest not.
+  std::vector<double> grad(PARAM_COUNT, 0.0);
+  grad[EGS_BASE + 0] = -1.0;
+  grad[EGS_BASE + 1] = 1.0;
+
+  tuner_optimiser::state_t state(PARAM_COUNT);
+  tuner_optimiser::descend(grad, mask, start.data(), 200.0, &state,
+                           params.data());
+
+  // The precondition: the step left the box both ways.
+  REQUIRE(params[EGS_BASE + 0] > ENDGAME_SCALE_ONE);
+  REQUIRE(params[EGS_BASE + 1] < 0.0);
+
+  tuner_groups::box_scales(params.data());
+
+  CHECK(params[EGS_BASE + 0] == ENDGAME_SCALE_ONE);
+  CHECK(params[EGS_BASE + 1] == 0.0);
+  for (size_t c = 2; c < ENDGAME_SCALE_COUNT; ++c) {
+    CAPTURE(c);
+    CHECK(params[EGS_BASE + c] == start[EGS_BASE + c]);
+  }
+  for (size_t p = 0; p < EGS_BASE; ++p) {
+    CHECK(params[p] == start[p]);
+  }
+
+  // A factor inside the box comes out bit-identical.
+  params[EGS_BASE + 2] = 63.25;
+  tuner_groups::box_scales(params.data());
+  CHECK(params[EGS_BASE + 2] == 63.25);
+}
+
+
 // The clamp, where the trace path and the mirror's differ on purpose. The
 // mirror's gradient ignored the clamp and pushed the mobility and king safety
 // weights on rows where they could not move the score; S100 pinned that as
@@ -777,11 +1054,17 @@ TEST_CASE("the clamp's derivative is exact where it binds")
   // (adocs/data/S122_clamp_reading.txt); with DEC-316's pair re-derived there
   // (DEC-354) it answers +50: four rows bound, the farthest at 360.4, the
   // nearest other at 225.4, every row 49.64 from the kink, finite
-  // differences 1.03e-7 (adocs/data/S122_goldens.txt). Re-run it whenever the
+  // differences 1.03e-7 (adocs/data/S122_goldens.txt). With S124's nine
+  // coverage pairs (124) at its identity, on S122's landing, it answers +40:
+  // four rows bound, the farthest at 280.4, the nearest other at 253.3, every
+  // row 2.18 from the kink, finite differences 1.12e-7; +50 there reads
+  // 2.05e-7, past the rule's 2e-7 (adocs/data/S124_rebase_goldens.txt). On
+  // d83d6c0, before S122 landed, the same rows had left no push meeting the
+  // rule (the S124 step file). Re-run it whenever the
   // constants or the fixture move; the precondition below re-establishes the
   // binding either way. A much larger push saturates the sigmoid everywhere,
   // which makes the finite difference itself unreliable.
-  constexpr double CLAMP_PUSH = 50.0;
+  constexpr double CLAMP_PUSH = 40.0;
 
   for (size_t t = 0; t < KING_SAFETY_COUNT; ++t) {
     params[KS_MG_BASE + t] += CLAMP_PUSH;
@@ -1287,7 +1570,7 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
   // that smallest one was 5, `apart` here read 2.84e-12 and never passed
   // 6.68e-11 by then, and the shipped constants themselves went chaotic at 10
   // (adocs/data/S310_adagrad_step.txt); since S122 (2026-11-05) it is 5 again,
-  // with the readings below. Re-derived by
+  // and since S124's coverage rows 6, with the readings below. Re-derived by
   // adocs/data/S310_adagrad_step.cpp, whose header states the rule and which
   // exits 2 until this follows it, whenever the constants or the fixture move.
   // The bound below does not follow it. A smaller step shows a small error in
@@ -1296,8 +1579,16 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
   // 5 -> 7 and the rule answered 3. With DEC-316's pair re-derived there
   // (DEC-354) the onset is 5 again and it answers 2: `apart` reads 1.02e-12
   // at epoch 300, every read of the 98 starts at most 4.68e-11, the smallest
-  // plain walk 0.3832 (adocs/data/S122_goldens.txt).
-  constexpr double ADAGRAD_HOLD_STEP = 2.0;
+  // plain walk 0.3832 (adocs/data/S122_goldens.txt). S124's nine coverage
+  // pairs on that landing (124 rows, 128 with the gauge rows), the script's
+  // second member found by identity since S124 -- the fixture less DEC-316's
+  // pair, no longer its last -- move the onset 5 -> 6, four members' at 6, and
+  // the rule answers 3: `apart` reads 5.68e-13 at epoch 300 and at most
+  // 2.96e-12 through 1200 on the case's fixture, every read of the 98 starts at
+  // most 7.5e-12, the smallest plain walk 1.3259
+  // (adocs/data/S124_rebase_goldens.txt). Built on d83d6c0, before S122
+  // landed, the same rows had moved the onset to 6 and the rule to 3 as well.
+  constexpr double ADAGRAD_HOLD_STEP = 3.0;
   const double k = 1.0;
   const int epochs = 300;
 
@@ -1384,7 +1675,11 @@ TEST_CASE("the fit holds every gauge still and no score sees the hold")
     // DEC-353's 1245 fit with DEC-316's pair re-derived there (DEC-354), the
     // smallest is 1.2516 under Adam, the bishop's, and 0.3832 under AdaGrad at
     // the step of 2, psqt_eg[king]'s, apart 4.77e-12 and 1.02e-12
-    // (`adocs/data/S122_goldens.txt`). The 0.1 of before
+    // (`adocs/data/S122_goldens.txt`). With S124's nine coverage pairs (128
+    // with the gauge rows) at its identity on that landing the smallest is
+    // 0.6927 under Adam and 1.3259 under AdaGrad at its step of 3, both the
+    // rook's, every hold at most 1.04e-14 (built on d83d6c0, 2.3017 and
+    // 1.7570; `adocs/data/S124_rebase_goldens.txt`). The 0.1 of before
     // was set at f57b92f's constants, where the smallest walk was 0.32 and
     // 0.20, both the rook's (S275 read 0.22 on the mirror's path, which
     // ignored the clamp), and S083's AdaGrad walk falls under it. 0.01 sits
@@ -1466,9 +1761,9 @@ struct plant_t
   std::vector<std::pair<size_t, double>> start = {};
 };
 
-void check_recovery(const std::vector<plant_t>& plants)
+void check_recovery(const std::vector<plant_t>& plants,
+                    const dataset_t& data = trace_positions())
 {
-  const dataset_t data = trace_positions();
   const tuner_trace::model_t& model = tuner_trace::engine_model();
 
   std::vector<double> shipped(PARAM_COUNT, 0.0);
@@ -1738,6 +2033,139 @@ TEST_CASE("a planted vector comes back: king_safety")
   };
 
   check_recovery(plants);
+}
+
+
+// S124's family (DEC-350), on its own rows, S124's population: the cells from
+// F and mop-up from zero, each fitted alone against labels its plant wrote.
+// With every other constant frozen both are linear in their parameters, the
+// factor in f_c because E1 is then fixed, so this is the screen's frozen fit
+// in miniature; S126's joint refit is the chain rule's, which the gradient
+// case above checks. Numbers written here and derived from nothing outside
+// this file; the cells' inside [0, F], the box's. Each fit reads only the rows
+// its parameters move -- a row in some cell, a row in mop-up's domain -- the
+// rest giving those parameters nothing.
+//
+// **Mop-up's corner pair is one direction, not two.** The corner count is
+// non-zero on king, bishop and knight against a king alone, whose phase is
+// always 2, so its middlegame and endgame columns are 2 and 22 times one count
+// on every row: the score sees 2 mg + 22 eg and nothing else (feature_audit
+// lists the dependency). The fit returns that sum and an arbitrary split --
+// 12.348 and 14.696 against the 9 and 15 planted, 348.0 either way -- so the
+// pair is held to its sum here and each of the other four halves to its
+// plant. The middlegame halves come back slowly, phases of 2 to 6 giving them
+// a twelfth of the endgame halves' weight: 6.715 against 6 at 12000 epochs,
+// 6.124 at 24000, 6.038 at 32000 (the S124 step file), so mop-up runs 32000.
+// A budget, not a golden.
+TEST_CASE("a planted vector comes back: endgame")
+{
+  const dataset_t population = endgame_rows(false);
+
+  const auto rows_where = [&](const auto& keep) {
+    dataset_t out;
+    for (size_t row = 0; row < population.size(); ++row) {
+      if (!keep(row)) { continue; }
+      tuner_trace::row_trace_t trace;
+      trace.entries.assign(
+          population.entries.begin() + population.offsets[row],
+          population.entries.begin() + population.offsets[row + 1]);
+      trace.side_entries.assign(
+          population.side_entries.begin() + population.side_offsets[row],
+          population.side_entries.begin() + population.side_offsets[row + 1]);
+      trace.cells[0] = population.cells[2 * row];
+      trace.cells[1] = population.cells[2 * row + 1];
+      trace.phase = population.phase[row];
+      trace.stm = population.stm[row];
+      tuner_trace::append_row(trace, population.result[row],
+                              population.score[row], population.ply[row], &out);
+    }
+    return out;
+  };
+
+  const dataset_t in_cells = rows_where([&](size_t row) {
+    return population.cells[2 * row] != eval_trace::NO_CELL ||
+           population.cells[2 * row + 1] != eval_trace::NO_CELL;
+  });
+  const uint32_t mopup_first =
+      tuner_trace::feature_table().base[eval_trace::TERM_MOPUP];
+  const uint32_t mopup_last =
+      tuner_trace::feature_table().base[eval_trace::TERM_MOPUP + 1];
+  const dataset_t in_domain = rows_where([&](size_t row) {
+    for (uint32_t j = population.offsets[row]; j < population.offsets[row + 1];
+         ++j) {
+      const uint16_t f = population.entries[j].feature;
+      if (f >= mopup_first && f < mopup_last) { return true; }
+    }
+    return false;
+  });
+
+  CAPTURE(in_cells.size());
+  CAPTURE(in_domain.size());
+  REQUIRE(in_cells.size() > 1000);
+  REQUIRE(in_domain.size() > 500);
+
+  check_recovery({{"endgame_scale",
+                   {{EGS_BASE + 0, 40},
+                    {EGS_BASE + 1, 9},
+                    {EGS_BASE + 2, 33},
+                    {EGS_BASE + 3, 51},
+                    {EGS_BASE + 4, 77},
+                    {EGS_BASE + 5, 110},
+                    {EGS_BASE + 6, 90},
+                    {EGS_BASE + 7, 120},
+                    {EGS_BASE + 8, 125},
+                    {EGS_BASE + 9, 30},
+                    {EGS_BASE + 10, 70},
+                    {EGS_BASE + 11, 85},
+                    {EGS_BASE + 12, 100}}}},
+                 in_cells);
+
+  // Mop-up, fitted as check_recovery() fits, its corner pair read as its sum.
+  const tuner_trace::model_t& model = tuner_trace::engine_model();
+  std::vector<double> shipped(PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(shipped.data());
+
+  std::vector<double> planted = shipped;
+  const double plant[2][MOPUP_COUNT] = {{6, 4, 9}, {12, 7, 15}};
+  for (size_t i = 0; i < MOPUP_COUNT; ++i) {
+    planted[MOP_MG_BASE + i] = plant[0][i];
+    planted[MOP_EG_BASE + i] = plant[1][i];
+  }
+
+  const double k = 1.0;
+  std::vector<double> target(in_domain.size());
+  for (size_t row = 0; row < in_domain.size(); ++row) {
+    target[row] = tuner_target::sigmoid(
+        tuner_trace::score(model, in_domain, row, planted.data()), k);
+  }
+
+  std::vector<uint8_t> mask;
+  REQUIRE(tuner_groups::free_mask("mopup", &mask));
+
+  std::vector<double> fitted = shipped;
+  fit(model, in_domain, target, mask, k, 1.0, 32000, &fitted);
+
+  for (const size_t i : {MOPUP_CENTRE, MOPUP_KINGS}) {
+    CAPTURE(i);
+    CAPTURE(fitted[MOP_MG_BASE + i]);
+    CAPTURE(fitted[MOP_EG_BASE + i]);
+    CHECK(std::fabs(fitted[MOP_MG_BASE + i] - plant[0][i]) < 0.5);
+    CHECK(std::fabs(fitted[MOP_EG_BASE + i] - plant[1][i]) < 0.5);
+  }
+
+  // The corner at phase 2: 2 mg + 22 eg, over 24 so it is in centipawns.
+  const double corner_planted =
+      (2.0 * plant[0][MOPUP_CORNER] + 22.0 * plant[1][MOPUP_CORNER]) / 24.0;
+  const double corner_fitted = (2.0 * fitted[MOP_MG_BASE + MOPUP_CORNER] +
+                                22.0 * fitted[MOP_EG_BASE + MOPUP_CORNER]) /
+                               24.0;
+  CAPTURE(fitted[MOP_MG_BASE + MOPUP_CORNER]);
+  CAPTURE(fitted[MOP_EG_BASE + MOPUP_CORNER]);
+  CHECK(std::fabs(corner_fitted - corner_planted) < 0.5);
+
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    if (!mask[p]) { CHECK(fitted[p] == shipped[p]); }
+  }
 }
 
 

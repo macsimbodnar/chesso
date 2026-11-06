@@ -160,7 +160,11 @@ inline void update(const std::vector<double>& grad,
 // back at the level `start` had. The hold moves only along null directions, so
 // the evaluation of every row -- and with it every gradient and every reported
 // error after this step -- is what the optimiser alone would have produced, to
-// the last bits of rounding. S275.
+// the last bits of rounding. S275. S124's box over the scale factors is the
+// tuner's, after this and the ties (tools/tuner.cpp,
+// tuner_groups::box_scales()), and not this function's: it is no null
+// direction, so a descent compared with the optimiser alone would read the box
+// and not the hold.
 inline void descend(const std::vector<double>& grad,
                     const std::vector<uint8_t>& mask,
                     const double* start,

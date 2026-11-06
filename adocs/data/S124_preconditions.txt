@@ -1,0 +1,479 @@
+S124 phase 1, 2026-11-04: the readings S124's coverage rows and its new cases move, on the landing, and again after the
+coordinator's rulings where they moved
+(worktree ../chesso-s124p1 on d83d6c0, the phase 1 diff staged), under S122's corpus load, every run at nice 10.
+
+== adocs/data/S124_coverage_rows.cpp, S124_COVERAGE_DATA = S083's corpus (sha256 2e0e3de9...), the landed block re-checked
+tests/test_eval_positions.hpp: 124 rows, 106 before S124's block (marker found), the block ends at row 124
+landed block: 9 pairs, 0 not eligible
+the list, 106 rows: 13 of 19 needs open
+  open mopup_mg[0]
+  open mopup_mg[1]
+  open mopup_mg[2]
+  open mopup_eg[0]
+  open mopup_eg[1]
+  open mopup_eg[2]
+  open endgame_scale[1]
+  open endgame_scale[4]
+  open endgame_scale[5]
+  open endgame_scale[9]
+  open endgame_scale[10]
+  open endgame_scale[11]
+  open endgame_scale[12]
+all_test_fens(): 36 eligible candidates close an open need
+pick, phase 2, closes 4: mopup_mg[0] mopup_eg[0] mopup_mg[1] mopup_eg[1]
+  4k3/r7/8/8/8/8/4K3/8 w - - 0 2
+pick, phase 3, closes 1: endgame_scale[1]
+  1r2k3/N7/8/8/8/8/4K3/8 w - - 1 2
+.tuning/s083/curve/s0/cand_6226944_s1.tsv: 359421 read, 448 candidates kept
+pick, phase 2, closes 2: mopup_mg[2] mopup_eg[2]
+  8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55
+pick, phase 2, closes 1: endgame_scale[5]
+  8/2p5/8/2P3K1/3P4/7r/8/5k2 w - - 0 70
+pick, phase 2, closes 1: endgame_scale[11]
+  6k1/5p1p/pB4pP/4Pp2/PP6/8/2b2KP1/8 w - - 0 34
+pick, phase 1, closes 1: endgame_scale[4]
+  8/2k5/5K2/4N3/8/2p5/2P5/8 b - - 0 68
+pick, phase 2, closes 1: endgame_scale[9]
+  5b2/8/2P5/3BK2k/8/8/8/8 b - - 0 49
+pick, phase 6, closes 1: endgame_scale[12]
+  8/4R1pk/8/4P3/5Bbp/P1K5/4r3/8 b - - 0 64
+pick, phase 2, closes 1: endgame_scale[10]
+  8/5pk1/B3p3/3pb1p1/1P6/6P1/5P2/6K1 w - - 0 50
+check gradient: 124 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 3.064e-08, over S124's family 9.733e-07
+check both ways: 2944 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (18 picked rows, 18 landed)
+18 rows the rule picks, for tests/test_eval_positions.hpp:
+    // S124 coverage, closes mopup_mg[0] mopup_eg[0] mopup_mg[1] mopup_eg[1]
+    "4k3/r7/8/8/8/8/4K3/8 w - - 0 2",
+    "8/4k3/8/8/8/8/R7/4K3 b - - 0 2",
+    // S124 coverage, closes endgame_scale[1]
+    "1r2k3/N7/8/8/8/8/4K3/8 w - - 1 2",
+    "8/4k3/8/8/8/8/n7/1R2K3 b - - 1 2",
+    // S124 coverage, closes mopup_mg[2] mopup_eg[2]
+    "8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55",
+    "8/8/4K3/2b5/2n1k3/8/8/8 w - - 6 55",
+    // S124 coverage, closes endgame_scale[5]
+    "8/2p5/8/2P3K1/3P4/7r/8/5k2 w - - 0 70",
+    "5K2/8/7R/3p4/2p3k1/8/2P5/8 b - - 0 70",
+    // S124 coverage, closes endgame_scale[11]
+    "6k1/5p1p/pB4pP/4Pp2/PP6/8/2b2KP1/8 w - - 0 34",
+    "8/2B2kp1/8/pp6/4pP2/Pb4Pp/5P1P/6K1 b - - 0 34",
+    // S124 coverage, closes endgame_scale[4]
+    "8/2k5/5K2/4N3/8/2p5/2P5/8 b - - 0 68",
+    "8/2p5/2P5/8/4n3/5k2/2K5/8 w - - 0 68",
+    // S124 coverage, closes endgame_scale[9]
+    "5b2/8/2P5/3BK2k/8/8/8/8 b - - 0 49",
+    "8/8/8/8/3bk2K/2p5/8/5B2 w - - 0 49",
+    // S124 coverage, closes endgame_scale[12]
+    "8/4R1pk/8/4P3/5Bbp/P1K5/4r3/8 b - - 0 64",
+    "8/4R3/p1k5/5bBP/4p3/8/4r1PK/8 w - - 0 64",
+    // S124 coverage, closes endgame_scale[10]
+    "8/5pk1/B3p3/3pb1p1/1P6/6P1/5P2/6K1 w - - 0 50",
+    "6k1/5p2/6p1/1p6/3PB1P1/b3P3/5PK1/8 b - - 0 50",
+
+== adocs/data/S101_coverage_rows.cpp on the same list: S101's block still reproduces
+tests/test_eval_positions.hpp: 124 rows, 92 before S101's block (marker found), the block ends at row 104
+landed block: 6 pairs, 0 not eligible
+check gradient: 104 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 3.653e-08, over S101's family 2.004e-07
+check both ways: 2904 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (12 picked rows, 12 landed)
+
+== adocs/data/S083_tuner_preconditions.cpp clamp over the 124 rows (exit 2: the clamp rule answers nothing), then walk at the case's step, 3
+clamp: 124 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 113.3 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       83.9      100.08   1.37e-06         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      124.8       59.25   7.34e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +30      4      198.7      158.8        0.75   1.25e-07          0    0.00256  a row within 1 cp of the kink; 
+  +40      6      278.7      171.0       13.00    3.4e-07          0    0.00171  fd past 2e-7; 
+  +50     14      358.7      163.7       12.42   6.31e-06          0   0.000732  fd past 2e-7; 
+  +60     20      438.7      173.8        2.67   4.63e-07          0   0.000512  fd past 2e-7; 
+  +70     30      518.7      178.0        6.00    3.3e-07          0    0.00128  fd past 2e-7; 
+  +80     36      598.7      182.8        1.25   1.03e-06          0    0.00106  fd past 2e-7; 
+  +90     42      678.7      166.1        9.08   8.25e-07          0   0.000913  fd past 2e-7; 
+ +100     44      758.7      180.3        2.08   3.93e-07          0   0.000871  fd past 2e-7; 
+ +110     48      838.7      176.7        2.88   3.82e-07          0    0.00106  fd past 2e-7; 
+ +120     52      918.7      184.0        0.00      0.985          0    0.00098  a row within 1 cp of the kink; fd past 2e-7; 
+ +130     60      998.7      159.3        4.67   4.53e-07          0    0.00113  fd past 2e-7; 
+ +140     60     1078.7      169.3       14.67   4.59e-07          0    0.00113  fd past 2e-7; 
+ +150     60     1158.7      179.3        4.67   4.65e-07          0    0.00113  fd past 2e-7; 
+ +160     64     1238.7      179.5        4.25    4.7e-07          0    0.00106  fd past 2e-7; 
+ +170     72     1318.7      179.0        2.67   4.75e-07          0   0.000948  fd past 2e-7; 
+ +180     74     1398.7      181.3        2.67    4.8e-07          0    0.00092  fd past 2e-7; 
+ +190     79     1478.7      181.6        2.00   4.84e-07          0   0.000861  fd past 2e-7; 
+ +200     81     1558.7      180.1        3.88   4.88e-07          0    0.00084  fd past 2e-7; 
+clamp: no push from +10 to +200 satisfies the rule
+walk: 128 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   -4.8952  held  +1.92e-15  
+    material/table knight  plain   -3.0350  held   +1.8e-15  
+    material/table bishop  plain   -2.3017  held  -7.08e-16  
+    material/table rook    plain   -4.1800  held  -4.44e-16  
+    material/table queen   plain   -2.4929  held  -7.77e-15  
+    psqt_mg[king]          plain   +3.4330  held  +1.11e-15  
+    psqt_eg[king]          plain   +2.9601  held  -3.94e-15  
+    smallest plain walk 2.3017 (material/table bishop); runs apart 7.96e-13; plain travelled 1653.5
+  adagrad at lr 3
+    material/table pawn    plain   -3.5195  held  -1.33e-15  
+    material/table knight  plain   -3.7485  held  -1.11e-15  
+    material/table bishop  plain   -3.0395  held   -1.1e-15  
+    material/table rook    plain   -3.2568  held  -1.15e-14  
+    material/table queen   plain   -2.8309  held  -8.88e-16  
+    psqt_mg[king]          plain   +3.0184  held  +6.66e-16  
+    psqt_eg[king]          plain   +1.7570  held  -1.89e-15  
+    smallest plain walk 1.7570 (psqt_eg[king]); runs apart 1.14e-12; plain travelled 1428.1
+walk: every plain shift clears the case's floor 0.01
+
+== the same clamp table over the base 106 rows (the tool built against d83d6c0's tests/test_eval_positions.hpp), for comparison; per push the worst finite difference's parameter
+push 10 worst param 857 3.150e-06
+push 20 worst param 1167 3.721e-07
+push 30 worst param 141 1.524e-07
+push 40 worst param 996 3.399e-07
+push 50 worst param 996 6.306e-06
+push 60 worst param 996 4.196e-07
+push 70 worst param 984 3.302e-07
+push 80 worst param 871 1.075e-06
+push 90 worst param 984 3.796e-07
+push 100 worst param 984 3.933e-07
+push 110 worst param 984 3.817e-07
+push 120 worst param 785 9.852e-01
+push 130 worst param 996 4.531e-07
+push 140 worst param 996 4.592e-07
+push 150 worst param 937 7.437e-07
+push 160 worst param 996 4.701e-07
+push 170 worst param 996 4.748e-07
+push 180 worst param 996 4.794e-07
+push 190 worst param 935 9.002e-07
+push 200 worst param 996 4.885e-07
+clamp: 106 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 113.3 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       83.9      100.08   3.15e-06         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      118.7       65.33   3.72e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +30      2      198.7      158.8       14.67   1.52e-07          0    0.00083  ok  <- CHOSEN
+  +40      4      278.7      171.0       13.00    3.4e-07          0    0.00123  fd past 2e-7; 
+  +50     10      358.7      163.7       16.50   6.31e-06          0   0.000551  fd past 2e-7; 
+  +60     16      438.7      173.8        2.67    4.2e-07          0   0.000327  fd past 2e-7; 
+  +70     24      518.7      178.0        6.00    3.3e-07          0     0.0016  fd past 2e-7; 
+  +80     28      598.7      177.0        7.00   1.08e-06          0    0.00137  fd past 2e-7; 
+  +90     32      678.7      160.3        9.08    3.8e-07          0     0.0012  fd past 2e-7; 
+ +100     32      758.7      180.3        3.67   3.93e-07          0     0.0012  fd past 2e-7; 
+ +110     36      838.7      176.7        2.88   3.82e-07          0    0.00141  fd past 2e-7; 
+ +120     40      918.7      184.0        0.00      0.985          0    0.00127  a row within 1 cp of the kink; fd past 2e-7; 
+ +130     48      998.7      159.3        4.67   4.53e-07          0    0.00142  fd past 2e-7; 
+ +140     48     1078.7      169.3       14.67   4.59e-07          0    0.00142  fd past 2e-7; 
+ +150     48     1158.7      179.3        4.67   7.44e-07          0    0.00142  fd past 2e-7; 
+ +160     52     1238.7      179.5        4.25    4.7e-07          0    0.00131  fd past 2e-7; 
+ +170     60     1318.7      179.0        2.67   4.75e-07          0    0.00114  fd past 2e-7; 
+ +180     62     1398.7      181.3        2.67   4.79e-07          0     0.0011  fd past 2e-7; 
+ +190     67     1478.7      170.1        2.00      9e-07          0    0.00102  fd past 2e-7; 
+ +200     67     1558.7      180.1        3.88   4.89e-07          0    0.00102  fd past 2e-7; 
+clamp: the rule picks +30, every row 14.67 from the kink; the case carries +30
+
+== tried and reverted: S121's eligibility with a clause keeping a pick a centipawn from the kink at CLAMP_PUSH
+the corner pair picked instead: 8/1b6/3n4/K7/3k4/8/8/8 b - - 1 103 and its mirror; then:
+clamp: 124 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 113.3 (the case "sits clear" needs < 183.0)
+  +30      2      198.7      158.8       14.67   3.22e-07          0    0.00083  fd past 2e-7; 
+  +40      4      278.7      171.0       13.00    5.8e-07          0    0.00123  fd past 2e-7; 
+clamp: no push from +10 to +200 satisfies the rule
+push 30 worst param 141 3.223e-07
+push 40 worst param 112 5.801e-07
+/home/max/ws/chesso-s124p1/tests/test_tuner_gradient.cpp:700: MESSAGE: worst relative error 1.01337e-06 at parameter 112
+  logged: check.worst := 1.01337e-06
+          check.worst_param := 112
+
+== the coordinator's ruling (a): adocs/data/S124_gradient_rows.cpp, DEC-316's one pair at the clamp case's setting, on the delivered tree (no pair landed)
+tests/test_eval_positions.hpp: 124 rows, marker absent
+base, 124 rows, +40 on the king safety weights: parameter 996 analytic -4.759219e-05, the rule wants at least 1.427766e-04
+153 eligible pairs tried
+pick, for tests/test_eval_positions.hpp:
+    "7K/1k6/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2",
+    "nnnnnnnn/PPPPPPPP/8/8/8/8/1K6/7k b - - 1 2",
+the clamp rule's relative error at parameter 996, +40, h 0.005, no part of the rule:
+  base: 3.39952e-07, analytic -4.759219e-05, numeric -4.759221e-05, difference 1.618e-11
+  with the pair: 9.90225e-08, analytic +1.454400e-04, numeric +1.454400e-04, difference 1.440e-11
+
+== the same with its pair landed, a scratch state since reverted (126 rows): the program re-derives it, then the clamp rule and the cases
+tests/test_eval_positions.hpp: 126 rows, marker found, 124 rows before it
+base, 124 rows, +40 on the king safety weights: parameter 996 analytic -4.759219e-05, the rule wants at least 1.427766e-04
+153 eligible pairs tried
+pick, for tests/test_eval_positions.hpp:
+    "7K/1k6/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2",
+    "nnnnnnnn/PPPPPPPP/8/8/8/8/1K6/7k b - - 1 2",
+the clamp rule's relative error at parameter 996, +40, h 0.005, no part of the rule:
+  base: 3.39952e-07, analytic -4.759219e-05, numeric -4.759221e-05, difference 1.618e-11
+  with the pair: 9.90225e-08, analytic +1.454400e-04, numeric +1.454400e-04, difference 1.440e-11
+reproduces the landed pair: yes
+S083_tuner_preconditions.cpp clamp, 126 rows:
+clamp: 126 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 113.3 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       83.9      100.08   2.88e-06         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      124.8       59.25      1e-06         -1         -1  binds on none or all; fd past 2e-7; 
+  +30      4      198.7      158.8        0.75   1.44e-07          0    0.00256  a row within 1 cp of the kink; 
+  +40      6      278.7      171.0       13.00   3.39e-07          0    0.00171  fd past 2e-7; 
+  +50     14      358.7      163.7       12.42   1.98e-06          0   0.000732  fd past 2e-7; 
+  +60     20      438.7      173.8        2.67   1.18e-06          0   0.000512  fd past 2e-7; 
+  +70     30      518.7      178.0        6.00   4.67e-07          0    0.00128  fd past 2e-7; 
+  +80     36      598.7      182.8        1.25   1.18e-06          0    0.00106  fd past 2e-7; 
+  +90     42      678.7      166.1        9.08   3.82e-07          0   0.000913  fd past 2e-7; 
+ +100     44      758.7      180.3        2.08   3.49e-07          0   0.000871  fd past 2e-7; 
+ +110     48      838.7      176.7        2.88   3.46e-07          0    0.00106  fd past 2e-7; 
+ +120     52      918.7      184.0        0.00      0.985          0    0.00098  a row within 1 cp of the kink; fd past 2e-7; 
+ +130     62      998.7      159.3        4.67   3.68e-07          0    0.00234  fd past 2e-7; 
+ +140     62     1078.7      169.3       14.67   3.72e-07          0    0.00234  fd past 2e-7; 
+ +150     62     1158.7      179.3        4.67   3.76e-07          0    0.00234  fd past 2e-7; 
+ +160     66     1238.7      179.5        4.25   3.79e-07          0     0.0022  fd past 2e-7; 
+ +170     74     1318.7      179.0        2.67   3.82e-07          0    0.00197  fd past 2e-7; 
+ +180     76     1398.7      181.3        2.67   3.85e-07          0    0.00192  fd past 2e-7; 
+ +190     81     1478.7      181.6        2.00   3.88e-07          0     0.0018  fd past 2e-7; 
+ +200     83     1558.7      180.1        3.88    3.9e-07          0    0.00175  fd past 2e-7; 
+clamp: no push from +10 to +200 satisfies the rule
+per push, the worst finite difference's parameter (984 passed_king_own_mg[5]):
+push 10 worst param 857 2.881e-06
+push 20 worst param 996 1.002e-06
+push 30 worst param 984 1.437e-07
+push 40 worst param 984 3.392e-07
+push 50 worst param 984 1.980e-06
+push 60 worst param 1155 1.183e-06
+push 70 worst param 984 4.669e-07
+push 80 worst param 120 1.184e-06
+push 90 worst param 1166 3.820e-07
+push 100 worst param 984 3.494e-07
+push 110 worst param 984 3.464e-07
+push 120 worst param 785 9.852e-01
+push 130 worst param 984 3.677e-07
+push 140 worst param 984 3.723e-07
+push 150 worst param 984 3.762e-07
+push 160 worst param 984 3.794e-07
+push 170 worst param 984 3.822e-07
+push 180 worst param 984 3.849e-07
+push 190 worst param 984 3.876e-07
+push 200 worst param 984 3.902e-07
+clamp: 126 fixture rows, LAZY_EVAL_MARGIN 184; at the built constants the largest |stage two| is 113.3 (the case "sits clear" needs < 183.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0       83.9      100.08   2.88e-06         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      124.8       59.25      1e-06         -1         -1  binds on none or all; fd past 2e-7; 
+  +30      4      198.7      158.8        0.75   1.44e-07          0    0.00256  a row within 1 cp of the kink; 
+  +40      6      278.7      171.0       13.00   3.39e-07          0    0.00171  fd past 2e-7; 
+  +50     14      358.7      163.7       12.42   1.98e-06          0   0.000732  fd past 2e-7; 
+  +60     20      438.7      173.8        2.67   1.18e-06          0   0.000512  fd past 2e-7; 
+  +70     30      518.7      178.0        6.00   4.67e-07          0    0.00128  fd past 2e-7; 
+  +80     36      598.7      182.8        1.25   1.18e-06          0    0.00106  fd past 2e-7; 
+  +90     42      678.7      166.1        9.08   3.82e-07          0   0.000913  fd past 2e-7; 
+ +100     44      758.7      180.3        2.08   3.49e-07          0   0.000871  fd past 2e-7; 
+ +110     48      838.7      176.7        2.88   3.46e-07          0    0.00106  fd past 2e-7; 
+ +120     52      918.7      184.0        0.00      0.985          0    0.00098  a row within 1 cp of the kink; fd past 2e-7; 
+ +130     62      998.7      159.3        4.67   3.68e-07          0    0.00234  fd past 2e-7; 
+ +140     62     1078.7      169.3       14.67   3.72e-07          0    0.00234  fd past 2e-7; 
+ +150     62     1158.7      179.3        4.67   3.76e-07          0    0.00234  fd past 2e-7; 
+ +160     66     1238.7      179.5        4.25   3.79e-07          0     0.0022  fd past 2e-7; 
+ +170     74     1318.7      179.0        2.67   3.82e-07          0    0.00197  fd past 2e-7; 
+ +180     76     1398.7      181.3        2.67   3.85e-07          0    0.00192  fd past 2e-7; 
+ +190     81     1478.7      181.6        2.00   3.88e-07          0     0.0018  fd past 2e-7; 
+ +200     83     1558.7      180.1        3.88    3.9e-07          0    0.00175  fd past 2e-7; 
+clamp: no push from +10 to +200 satisfies the rule
+test_tuner_gradient -s, the readings and the clamp case's two failures:
+tests/test_tuner_gradient.cpp:700: MESSAGE: worst relative error 4.91667e-07 at parameter 992
+tests/test_tuner_gradient.cpp:831: MESSAGE: endgame factor: worst relative error 3.01789e-07 at parameter 726 of 482, over 5715 rows
+tests/test_tuner_gradient.cpp:1048: ERROR: CHECK( std::fabs(two - LAZY_EVAL_MARGIN) > 1.0 ) is NOT correct!
+  values: CHECK( 0.75 >  1 )
+  logged: positions[row] := 8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55
+          two := 184.75
+tests/test_tuner_gradient.cpp:1048: ERROR: CHECK( std::fabs(two - LAZY_EVAL_MARGIN) > 1.0 ) is NOT correct!
+  values: CHECK( 0.75 >  1 )
+  logged: positions[row] := 8/8/4K3/2b5/2n1k3/8/8/8 w - - 6 55
+          two := 184.75
+tests/test_tuner_gradient.cpp:1078: MESSAGE: clamp case: worst relative error 1.43678e-07 at parameter 984
+tests/test_tuner_gradient.cpp:1672: MESSAGE: adam hold: runs apart 1.02318e-12, travelled 1654.36
+tests/test_tuner_gradient.cpp:1672: MESSAGE: adagrad hold: runs apart 4.54747e-13, travelled 1515.31
+
+== adocs/data/S101_gradient_rows.cpp on the 124 rows, its size check scoped to at least its base and pair
+tests/test_eval_positions.hpp: 124 rows, marker found, 104 rows before it
+base, 104 rows: parameter 984 analytic +7.507203e-05, the rule wants at least 2.252161e-04
+55 eligible pairs tried
+pick, for tests/test_eval_positions.hpp:
+    "3k4/8/1K6/8/8/8/p1pppppp/RRqRRRRR w - - 0 2",
+    "rrQrrrrr/P1PPPPPP/8/8/8/1k6/8/3K4 b - - 0 2",
+the case's relative error at parameter 984, h 0.01, no part of the rule:
+  base: 2.06605e-06, analytic +7.507203e-05, numeric +7.507218e-05, difference 1.551e-10
+  with the pair: 1.11153e-07, analytic -6.164181e-04, numeric -6.164180e-04, difference 6.852e-11
+reproduces the landed pair: yes
+
+== test_tuner_gradient readings on the delivered tree (-s, the ctest entry's exclusions), build/, AdaGrad at 3
+tests/test_tuner_gradient.cpp:700: MESSAGE: worst relative error 4.63222e-07 at parameter 992
+tests/test_tuner_gradient.cpp:831: MESSAGE: endgame factor: worst relative error 3.01789e-07 at parameter 726 of 482, over 5715 rows
+tests/test_tuner_gradient.cpp:1078: MESSAGE: clamp case: worst relative error 1.24872e-07 at parameter 996
+tests/test_tuner_gradient.cpp:1673: MESSAGE: adam hold: runs apart 7.95808e-13, travelled 1653.48
+tests/test_tuner_gradient.cpp:1673: MESSAGE: adagrad hold: runs apart 1.13687e-12, travelled 1428.09
+tests/test_tuner_gradient.cpp:2316: MESSAGE: group: worst relative error 3.48045e-07 at parameter 1193
+tests/test_tuner_gradient.cpp:1048: ERROR: CHECK( std::fabs(two - LAZY_EVAL_MARGIN) > 1.0 ) is NOT correct!
+  values: CHECK( 0.75 >  1 )
+  logged: positions[row] := 8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55
+          two := 184.75
+tests/test_tuner_gradient.cpp:1048: ERROR: CHECK( std::fabs(two - LAZY_EVAL_MARGIN) > 1.0 ) is NOT correct!
+  values: CHECK( 0.75 >  1 )
+  logged: positions[row] := 8/8/4K3/2b5/2n1k3/8/8/8 w - - 6 55
+          two := 184.75
+[doctest] test cases:    15 |    14 passed | 1 failed | 6 skipped
+[doctest] assertions: 61092 | 61090 passed | 2 failed |
+
+== the factor's case over all 1190 parameters, a scratch probe (the case reads the product's 482), h 0.01: the 25 worst
+rows 5715 h 0.01
+1043 err 2.435e-05 analytic 8.396690e-11 numeric 8.396894e-11
+73 err 2.968e-06 analytic -3.606037e-09 numeric -3.606027e-09
+134 err 2.368e-06 analytic -1.664653e-09 numeric -1.664657e-09
+355 err 1.885e-06 analytic -4.495812e-09 numeric -4.495804e-09
+221 err 1.657e-06 analytic -3.878405e-09 numeric -3.878411e-09
+1035 err 1.221e-06 analytic 6.794679e-09 numeric 6.794687e-09
+1148 err 1.160e-06 analytic -1.358421e-08 numeric -1.358419e-08
+348 err 9.936e-07 analytic 9.128580e-09 numeric 9.128590e-09
+145 err 9.344e-07 analytic 5.381892e-09 numeric 5.381887e-09
+165 err 7.601e-07 analytic -5.033720e-09 numeric -5.033723e-09
+88 err 7.501e-07 analytic -3.128234e-09 numeric -3.128237e-09
+812 err 6.425e-07 analytic 5.441487e-09 numeric 5.441483e-09
+114 err 6.117e-07 analytic 6.585792e-09 numeric 6.585796e-09
+266 err 6.095e-07 analytic -4.420622e-09 numeric -4.420625e-09
+363 err 4.892e-07 analytic -1.169689e-08 numeric -1.169688e-08
+1149 err 4.744e-07 analytic 4.786959e-08 numeric 4.786956e-08
+813 err 4.692e-07 analytic 2.719495e-09 numeric 2.719494e-09
+1160 err 4.452e-07 analytic 1.039256e-08 numeric 1.039257e-08
+332 err 3.978e-07 analytic 2.386656e-08 numeric 2.386655e-08
+203 err 3.864e-07 analytic -1.218049e-08 numeric -1.218048e-08
+1079 err 3.672e-07 analytic -1.267239e-08 numeric -1.267239e-08
+125 err 3.468e-07 analytic 2.008336e-08 numeric 2.008337e-08
+116 err 3.199e-07 analytic -1.854509e-08 numeric -1.854508e-08
+213 err 3.083e-07 analytic -3.601096e-08 numeric -3.601095e-08
+775 err 3.019e-07 analytic 4.119484e-08 numeric 4.119485e-08
+factor set worst 3.018e-07 at 726
+largest |gradient| 1.798e-04
+
+== the planted mop-up's recovery, a scratch probe over the population's 853 domain rows, Adam lr 1 (the case's step)
+rows 853
+epoch 1000 worst 3.8299  mg 9.830 5.271 12.351 eg 11.649 6.881 14.704  (5 s)
+epoch 6000 worst 3.3485  mg 7.683 3.569 12.348 eg 11.845 7.040 14.696  (22 s)
+epoch 12000 worst 3.3485  mg 6.715 3.818 12.348 eg 11.934 7.017 14.696  (55 s)
+epoch 16000 worst 3.3485  mg 6.399 3.899 12.348 eg 11.963 7.009 14.696  (72 s)
+epoch 24000 worst 3.3485  mg 6.124 3.969 12.348 eg 11.989 7.003 14.696  (104 s)
+epoch 32000 worst 3.3485  mg 6.038 3.990 12.348 eg 11.996 7.001 14.696  (140 s)
+epoch 48000 worst 3.3485  mg 6.004 3.999 12.348 eg 12.000 7.000 14.696  (225 s)
+epoch 64000 worst 3.3485  mg 6.000 4.000 12.348 eg 12.000 7.000 14.696  (329 s)
+(the probe ran to 32000; the case runs 32000 and holds the corner pair to 2 mg + 22 eg)
+
+== tests/test_tuner_gradient.cpp unclocked, build/: the endgame family's recovery entry
+test_tuner_gradient_plants_endgame: exit 0, 185 s; [doctest] test cases:     1 |     1 passed | 0 failed | 20 skipped / [doctest] assertions: 13821 | 13821 passed | 0 failed |
+elapsed 201.15 s cpu 17.36 s
+on the delivered tree, again: test_tuner_gradient_plants_endgame: exit 0, 138 s; [doctest] test cases:     1 |     1 passed | 0 failed | 20 skipped / [doctest] assertions: 13821 | 13821 passed | 0 failed |
+
+== adocs/data/S310_adagrad_step.cpp on the 124 rows, its second member by identity since ruling 2 (exit 0: the case carries the 3 it picks; a first run, the case at 4, was stopped once step 6 had set the onset, the draws being seeded)
+S310: the case's fixture 128 rows, less DEC-316's pair 126; 1190 parameters; bound 1e-06, QUIET 1e-09
+
+== the shipped constants, the case's fixture, 128 rows: apart by epoch
+  step      25      50     100     150     200     250     300     400     500     600     700     800     900    1000    1100    1200
+     1   9e-13   5e-13   2e-12   6e-13   1e-12   6e-13   7e-13   1e-12   1e-12   1e-12   2e-12   2e-12   2e-12   3e-12   3e-12   2e-12
+     2   2e-12   8e-13   1e-12   9e-13   2e-12   3e-12   3e-12   7e-13   9e-13   9e-13   9e-13   1e-12   2e-12   1e-12   1e-12   9e-13
+     3   2e-12   2e-12   1e-12   1e-12   1e-12   6e-13   1e-12   5e-13   7e-13   1e-12   8e-13   1e-12   9e-13   8e-13   2e-12   2e-12
+     4   3e-12   2e-12   2e-12   8e-13   7e-13   7e-13   8e-13   1e-12   7e-13   7e-13   9e-13   9e-13   1e-12   1e-12   1e-12   2e-12
+     5   1e-12   7e-13   1e-12   7e-13   5e-13   8e-13   1e-12   1e-12   8e-13   1e-12   9e-13   1e-12   1e-12   1e-12   1e-12   1e-12
+     6   1e-12   1e-12   9e-13   9e-13   7e-13   1e-12   6e-13   9e-13   1e-12   1e-12   9e-13   1e-12   2e-12   2e-12   1e-12   2e-12
+     7   4e-12   6e-13   7e-13   1e-12   1e-12   8e-13   1e-12   2e-12   6e-13   1e-12   2e-12   2e-12   4e-12   2e-12   2e-12   2e-12
+     8   6e-12   2e-12   1e-12   9e-13   9e-13   8e-13   2e-12   8e-13   2e-12   1e-12   3e-12   2e-12   3e-12   2e-12   2e-12   2e-12
+     9   3e-11   2e-12   3e-12   1e-12   2e-12   2e-12   2e-12   2e-12   3e-12   4e-12   3e-12   3e-12   3e-12   3e-12   3e-12   4e-12
+    10   2e-12   2e-12   3e-12   3e-12   7e-12   1e-10   2e-12   9e-13   9e-13   1e-12   1e-12   2e-12   2e-12   2e-12   3e-12   4e-12
+    12   2e-10   3e-07   4e-09   3e-09   1e-06   8e-07   3e-07   6e-08   3e-08   3e-08   4e-08   5e-08   5e-08   5e-08   4e-08   1e-08
+    15   3e-10   5e-10   9e-10   3e-06   9e-08   9e-08   9e-08   1e-07   1e-07   1e-07   1e-07   1e-07   1e-07   1e-07   1e-07   1e-07
+    20   6e-08   4e-05   6e-05   5e-05   3e-05   2e-05   1e-05   3e-06   2e-05   8e-04   3e-04   3e-04   3e-03   1e-03   5e-04   7e-03
+    30   7e-11   2e-11   4e-02   1e+02   6e+01   5e+01   8e+01   2e+02   1e+02   9e+01   7e+01   6e+01   5e+01   4e+01   4e+01   4e+01
+adam 1   7e-13   8e-13   6e-13   9e-13   1e-12   7e-13   8e-13   8e-13   1e-12   9e-13   1e-12   1e-12   2e-12   2e-12   3e-12   2e-12
+
+== the shipped constants, the fixture less DEC-316's pair, 126 rows: apart by epoch
+  step      25      50     100     150     200     250     300     400     500     600     700     800     900    1000    1100    1200
+     1   7e-13   5e-13   1e-12   5e-13   5e-13   9e-13   1e-12   1e-12   9e-13   1e-12   1e-12   3e-12   6e-12   5e-12   3e-12   2e-12
+     2   7e-13   6e-13   9e-13   1e-12   2e-12   5e-12   2e-12   8e-13   9e-13   1e-12   1e-12   8e-13   1e-12   2e-12   2e-12   1e-12
+     3   4e-13   3e-13   5e-13   5e-13   7e-13   6e-13   5e-13   7e-13   1e-12   2e-12   1e-12   1e-12   2e-12   1e-12   2e-12   2e-12
+     4   7e-13   1e-12   5e-13   8e-13   8e-13   7e-13   9e-13   6e-13   1e-12   7e-13   1e-12   6e-13   8e-13   8e-13   1e-12   9e-13
+     5   1e-12   2e-12   6e-13   9e-13   9e-13   7e-13   5e-13   7e-13   9e-13   7e-13   8e-13   1e-12   1e-12   1e-12   2e-12   2e-12
+     6   2e-12   3e-13   1e-12   6e-13   7e-13   4e-12   1e-12   1e-12   2e-12   2e-12   2e-12   2e-12   1e-12   1e-12   1e-12   2e-12
+     7   1e-12   2e-12   1e-11   1e-12   4e-12   3e-12   4e-12   1e-12   1e-12   5e-12   4e-12   3e-12   2e-12   3e-12   3e-12   5e-12
+     8   2e-12   2e-12   9e-13   6e-13   4e-12   2e-12   1e-12   9e-13   7e-13   1e-12   3e-12   2e-12   1e-11   2e-11   4e-10   7e-11
+     9   7e-13   4e-12   1e-11   2e-12   1e-12   1e-12   6e-12   1e-11   4e-11   1e-11   5e-12   4e-12   6e-12   3e-12   2e-11   1e-11
+    10   4e-08   5e-09   1e-09   5e-09   4e-10   5e-10   2e-10   1e-10   9e-11   9e-11   8e-11   8e-11   8e-11   8e-11   8e-11   7e-11
+    12   6e-10   3e-12   1e-12   7e-12   4e-12   2e-12   3e-12   2e-12   2e-12   3e-12   2e-12   2e-12   2e-12   1e-12   4e-12   3e-12
+    15   2e-08   1e-04   9e-05   7e-05   4e-05   5e-05   1e-04   4e-05   4e-05   4e-05   3e-05   3e-05   3e-05   3e-05   5e-05   3e-05
+    20   6e-11   2e-10   9e-02   5e+01   6e+01   2e+01   1e+00   8e-01   8e-01   8e-01   8e-01   8e-01   8e-01   8e-01   8e-01   9e-01
+    30   1e-10   1e-08   7e-10   4e-08   7e-08   2e-07   1e-04   1e+02   2e+02   2e+02   1e+02   2e+02   1e+02   7e+01   5e+01   4e+01
+adam 1   3e-12   6e-12   1e-12   6e-13   9e-13   5e-13   7e-13   9e-13   1e-12   1e-12   1e-12   1e-12   2e-12   2e-12   1e-12   1e-12
+
+== the family, worst apart at any read through epoch 1200; a, the case's fixture; b, less DEC-316's pair
+  step   a ship    a +-1    a +-3   a +-10   b ship    b +-1    b +-3   b +-10     worst    >Q |   at 300     walk   travel      hold  min walk
+     1  3.1e-12  1.1e-11  1.4e-11  1.9e-11  5.8e-12  6.1e-12  1.1e-11  1.3e-11  1.86e-11     0 | 7.39e-13   1.0153   1111.9  5.55e-15    0.1021
+     2  4.2e-12  6.3e-12  6.6e-12  5.5e-12  5.3e-12  4.6e-12  3.6e-12  6.1e-12  6.59e-12     0 | 3.50e-12   1.9940   1325.9  3.55e-15    0.8504
+     3  2.2e-12  4.7e-12  5.2e-11  5.2e-12  2.3e-12  4.7e-12  5.2e-12  3.5e-12  5.24e-11     0 | 1.14e-12   1.7570   1428.1  1.15e-14    1.0398
+     4  3.1e-12  9.3e-12  5.2e-12  6.0e-12  1.6e-12  3.4e-12  6.2e-12  4.6e-12  9.28e-12     0 | 7.96e-13   1.8030   1515.4  3.55e-15    1.2562
+     5  1.8e-12  9.3e-12  3.2e-12  1.8e-10  2.0e-12  4.7e-12  1.5e-10  5.2e-11  1.82e-10     0 | 9.66e-13   2.2168   1567.8  4.66e-15    1.4173
+     6  2.0e-12  5.0e-12  3.6e-12  3.3e-12  4.1e-12  4.7e-09  6.3e-11  5.5e-11  4.70e-09     1 | 5.68e-13   2.4747   1602.2  5.77e-15    1.6370
+     7  3.6e-12  1.3e-10  1.4e-11  3.1e-11  1.3e-11  1.8e-10  1.4e-08  5.8e+00  5.81e+00     5 | 1.39e-12   2.2941   1629.0  7.66e-15    1.6221
+     8  6.4e-12  1.5e-10  1.8e-09  2.1e-10  3.6e-10  1.1e+01  3.9e+00  8.4e+00  1.06e+01    28 | 1.93e-12   2.3282   1650.7  6.55e-15    1.5402
+     9  3.3e-11  5.7e-10  6.6e-10  8.1e-10  4.3e-11  4.9e-08  5.5e-06  4.6e-04  4.61e-04    15 | 1.59e-12   2.1846   1670.4  1.25e-14    1.6022
+    10  1.0e-10  1.2e-07  8.0e+00  3.1e-07  3.7e-08  1.2e-07  1.2e-09  2.9e-05  8.03e+00    25 | 1.71e-12   1.9919   1676.6  1.02e-14    1.3848
+    12  1.3e-06  6.1e+00  7.9e+00  3.6e+00  6.4e-10  4.8e-01  1.1e-05  6.9e-02  7.91e+00    59 | 3.34e-07   1.2854   1727.8  9.77e-15    0.6694
+    15  3.8e-06  6.9e-04  3.5e-04  2.0e+00  3.5e-03  2.4e+02  2.2e+02  3.1e+01  2.43e+02    94 | 9.05e-08   0.4959   1758.0  8.22e-15    0.0040
+    20  2.1e-02  7.9e+02  3.5e+02  3.7e+02  6.4e+01  3.1e+02  7.8e+02  3.6e+02  7.86e+02    98 | 9.65e-06   0.2751   1904.4  3.55e-15    0.0109
+    30  2.7e+02  6.4e+02  1.3e+03  1.9e+03  5.5e+02  1.3e+03  1.3e+03  1.0e+03  1.92e+03    98 | 7.95e+01   2.0988   3047.8  8.22e-15    0.0026
+first step past QUIET, by member:        12 10 8 10 10 6 7 7
+
+onset 6; half 3; the rule picks 3, the case carries 3
+at 3 on the case's fixture: apart 1.14e-12 at epoch 300, worst 2.16e-12 through 1200; every read of the family at most 5.24e-11, 4.3 decades under the bound; smallest plain walk 1.7570, 176 times its floor; travelled 1428.1; holds at most 1.15e-14
+
+== tools/feature_audit --data S083's corpus --free endgame_scale --no-columns --no-collinearity, read in place: the identity and support lines
+trace: 6226944 rows, 247874746 entries; 0 differ from evaluate(), the clamp binds on 24897
+identities: S124's factor columns at F: each cell's the integer E1 (24 - phase) on the rows whose E1 picks it, the 1/F a common factor
+identities: design check: x.params/24 against the trace's smooth score on 200034 rows where the clamp does not bind, worst |difference| 1.36e-12
+identities: by construction, 11 mopup_mg[2] - mopup_eg[2] = 0, king, bishop and knight alone always at phase 2 (S124): holds on every row
+identities: rank modulo 2^61-1: 1118 of 1190, nullity 72; 34 zero columns and 38 dependencies by construction account for 72 of it
+identities: the 1118 columns left once each of those drops one: rank 1118, 0 further exact dependencies
+identities: no exact dependency beyond the ones listed above
+identities: upper bound: 72 null vectors hold exactly on every row (34 zero columns, 38 by construction, 0 found); their supports are not disjoint and 72 of them are linearly independent, so the rank over the rationals is at most 1190 - 72 = 1118
+identities: lower bound: the rank modulo 2^61-1 is 1118, and reducing an integer matrix modulo a prime cannot raise its rank, so the rank over the rationals is at least 1118
+identities: rank over the rationals exactly 1118 of 1190, nullity 72, every null direction listed above
+identities: mop-up corner, 11 mopup_mg[2] - mopup_eg[2] = 0, king, bishop and knight alone always at phase 2 (S124): held by the freeze under --free endgame_scale
+identities: 34 zero columns, 7 held gauges, 8 frozen mobility levels, 22 curve duplicates (22 held by the freeze, 0 null at the seed only) and 1 frozen mop-up corner pair span 72 of at most 72 null dimensions: every null direction is one Adam never moves, one the tuner holds, a mobility level the run's frozen columns hold, a curve duplicate the freeze or the curve's curvature holds, or the mop-up 
+mop-up (S124) support: rows with a non-zero cell coefficient and a non-zero taper weight for the half, and the games they come from, 137978 games in all
+support mopup_mg[0] rows 5973 games 1789
+support mopup_mg[1] rows 6997 games 1837
+support mopup_mg[2] rows 1315 games 196
+support mopup_eg[0] rows 5973 games 1789
+support mopup_eg[1] rows 6997 games 1837
+support mopup_eg[2] rows 1315 games 196
+endgame scale (S124) support: rows whose E1 at the shipped weights picks the cell at a phase below 24, the games they come from, 137978 games in all, and the rows where either candidate is the cell
+support endgame_scale[0] rows 6925 games 1669 candidate_rows 148371
+support endgame_scale[1] rows 23751 games 3299 candidate_rows 34273
+support endgame_scale[2] rows 14785 games 3072 candidate_rows 15930
+support endgame_scale[3] rows 51142 games 9353 candidate_rows 280658
+support endgame_scale[4] rows 63076 games 10175 candidate_rows 82090
+support endgame_scale[5] rows 26915 games 5780 candidate_rows 28089
+support endgame_scale[6] rows 130290 games 23018 candidate_rows 462097
+support endgame_scale[7] rows 123510 games 20718 candidate_rows 152179
+support endgame_scale[8] rows 39574 games 8090 candidate_rows 40805
+support endgame_scale[9] rows 7398 games 905 candidate_rows 15814
+support endgame_scale[10] rows 14011 games 1657 candidate_rows 17356
+support endgame_scale[11] rows 5997 games 798 candidate_rows 6080
+support endgame_scale[12] rows 58776 games 5520 candidate_rows 58874
+
+== tools/tuner smoke on the population written as a corpus (scratch, 5719 rows, random labels): --only endgame_scale --tie 'endgame_scale 11 10' --epochs 300
+ties: smoke/ties.txt, sha256 6d8247b64fe99b6415e5b8433220df9b4a72c9a5268e3d3e6f39abab07277fcf, 1 cells tied
+engine d83d6c0-dirty, corpus sha256 be85687d418b85f39418efda1c64bba21954b148fa2b6e5b43aa7da910313048, 5719 rows, 248355 bytes
+trace: 5719 rows, 131733 entries (23.03 a row), 0.3 s; 0 differ from evaluate(), the clamp binds on 0
+5719 positions, 715 games, 5143 train, 576 validation (10.0717%), 1190 parameters, group endgame_scale, freeze (nothing), 12 free
+gauges held: 0 of 7
+fitted K = 0.1000
+start: train 0.173979  validation 0.173341
+epoch     50  train 0.172639  validation 0.171969  *
+epoch    100  train 0.171894  validation 0.171216  *
+epoch    150  train 0.171552  validation 0.170895  *
+epoch    200  train 0.171485  validation 0.170816  *
+epoch    250  train 0.171484  validation 0.170794  *
+epoch    300  train 0.171483  validation 0.170792  *
+best: train 0.171483  validation 0.170792  (start 0.173979 / 0.173341)
+constants written to smoke/fit.hpp
+vector written to smoke/fit.vec
+constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {0, 0, 0};  // centre, kings, corner
+constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {0, 0, 0};  // centre, kings, corner
+constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {128, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 0};  // P0 d<=0 d1 d>=2, P1 .., P2 .., OCB pure P<=2 3-4 >=5, OCB rook

@@ -392,7 +392,7 @@ TEST_CASE("S101: pick the fixture rows DEC-316 owes passed_king_own_mg[5]")
                r->numeric, std::fabs(r->numeric - r->analytic));
       }
       if (landed.size() > BASE_ROWS) {
-        const bool same = landed.size() == BASE_ROWS + 2 &&
+        const bool same = landed.size() >= BASE_ROWS + 2 &&
                           landed[BASE_ROWS] == fen && landed[BASE_ROWS + 1] == mirror;
         printf("reproduces the landed pair: %s\n", same ? "yes" : "NO");
         CHECK(same);

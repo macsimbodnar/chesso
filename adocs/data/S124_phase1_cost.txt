@@ -1,0 +1,15 @@
+# S124 phase 1, 2026-11-04: adocs/data/S124_phase1_cost.sh on the landing (a scratch copy of the working tree,
+# adocs/data/S124_phase1_cost.patch), under S122's corpus load at nice 10; instructions only, which the load does not move.
+base bench 5482277 bench16 14931387
+factor bench 5482277 bench16 14931387
+mopup bench 5482277 bench16 14931387
+both bench 5482277 bench16 14931387
+bench: base 11649464802 (spread 596)
+  factor 11789894306 (spread 308)  +1.205 %
+  mopup  11770289516 (spread 529)  +1.037 %
+  both   11871519748 (spread 343)  +1.906 %
+bench 16: base 34487391097 (spread 799)
+  factor 34905258643 (spread 366)  +1.212 %
+  mopup  34829847224 (spread 921)  +0.993 %
+  both   35129150315 (spread 460)  +1.861 %
+S124-COST1-DONE

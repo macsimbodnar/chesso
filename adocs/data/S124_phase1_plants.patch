@@ -1,0 +1,236 @@
+# S124's phase 1, 2026-11-04: the guards' plants and the forced build's cells, adocs/data/S124_phase1_plants.sh's;
+# applied to a scratch copy of the tree, never to a delivered one. S124_PLANT picks a plant at run time,
+# -DS124_FORCED forces every scale factor off F (tests/test_eval_trace.cpp's forced values).
+--- a/src/evaluation.cpp
++++ b/src/evaluation.cpp
+@@ -1,6 +1,7 @@
+ #include "evaluation.hpp"
+ #include <algorithm>
+ #include <cassert>
++#include <cstdlib>
+ #include <iostream>
+ #ifdef CHESSO_TUNE
+ #include <atomic>
+@@ -1874,8 +1875,15 @@
+ // the screen and mop-up by SPSA on conversion (DEC-084, DEC-350 (4)).
+ // The factors are written as tools/tuner emits them, ENDGAME_SCALE_ONE's 128
+ // each, cell by endgame_cell_t.
++#ifdef S124_FORCED
++// Every cell off F, the values tests/test_eval_trace.cpp forces: a scratch
++// build's, never a candidate's.
++constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {
++    64, 0, 24, 28, 68, 116, 96, 127, 120, 4, 40, 76, 92};
++#else
+ constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {
+     128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128};
++#endif
+ constexpr int mopup_mg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
+ constexpr int mopup_eg[MOPUP_FEATURE_COUNT] = {0, 0, 0};
+ constexpr std::array<score_t, MOPUP_FEATURE_COUNT> mopup_score =
+@@ -1935,6 +1943,19 @@
+     "the endgame factor's numerator can overflow an int");
+ 
+ 
++
++// S124 phase 1's plants (adocs/data/S124_phase1_plants.patch): S124_PLANT
++// picks one, 0 or unset for none. A scratch build's, never a candidate's.
++inline int s124_plant()
++{
++  static const int plant = [] {
++    const char* v = std::getenv("S124_PLANT");
++    return (v == nullptr) ? 0 : std::atoi(v);
++  }();
++  return plant;
++}
++
++
+ // A set holding exactly one square.
+ static inline bool one_square(bb_t squares)
+ { return squares != 0 && (squares & (squares - 1)) == 0; }
+@@ -1964,7 +1985,7 @@
+   const bb_t* bitboards = board->bitboards;
+   const int own = (strong == WHITE) ? W_PAWN : B_PAWN;
+   const int other = (strong == WHITE) ? B_PAWN : W_PAWN;
+-  const int pawns = count_bits(bitboards[own]);
++  const int pawns = count_bits(bitboards[(s124_plant() == 6) ? other : own]);
+   const bb_t white_bishops = bitboards[W_BISHOP];
+   const bb_t black_bishops = bitboards[B_BISHOP];
+   const bool bishop_each =
+@@ -2097,13 +2118,23 @@
+ static inline int scaled_taper(const board_t* board, score_t pair, int phase)
+ {
+   const int e1 = board->material + eg_value(pair);
+-  const int cell = (e1 == 0) ? ENDGAME_CELL_NONE
+-                             : endgame_cell(board, (e1 > 0) ? WHITE : BLACK);
++  int cell = (e1 == 0) ? ENDGAME_CELL_NONE
++                       : endgame_cell(board, ((e1 > 0) != (s124_plant() == 11))
++                                                 ? WHITE
++                                                 : BLACK);
++#ifndef CHESSO_TRACE
++  if (s124_plant() == 12 && e1 != 0) {
++    cell = endgame_cell(board, (e1 > 0) ? BLACK : WHITE);
++  }
++#endif
+ 
+ #ifdef CHESSO_TRACE
+   const int white = endgame_cell(board, WHITE);
+   const int black = endgame_cell(board, BLACK);
+-  EVAL_TRACE_CELLS((white == ENDGAME_CELL_NONE) ? -1 : white,
++  EVAL_TRACE_CELLS((white == ENDGAME_CELL_NONE)
++                       ? -1
++                       : ((s124_plant() == 1) ? (white + 1) % ENDGAME_CELL_COUNT
++                                              : white),
+                    (black == ENDGAME_CELL_NONE) ? -1 : black);
+ #endif
+ 
+--- a/tools/tuner_trace.hpp
++++ b/tools/tuner_trace.hpp
+@@ -79,6 +79,19 @@
+ namespace tuner_trace
+ {
+ 
++// S124 phase 1's plants (adocs/data/S124_phase1_plants.patch): S124_PLANT
++// picks one, 0 or unset for none. A scratch build's, never a candidate's.
++inline int s124_plant()
++{
++  static const int plant = [] {
++    const char* v = std::getenv("S124_PLANT");
++    return (v == nullptr) ? 0 : std::atoi(v);
++  }();
++  return plant;
++}
++
++inline std::vector<int64_t> engine_weights();
++
+ using eval_trace::term_t;
+ using tuner_target::LN10_OVER_400;
+ using tuner_target::sigmoid;
+@@ -661,8 +674,26 @@
+   // material and the positional endgame sum, its sign picks the cell, and
+   // the factor's share joins taper()'s numerator before the one division by
+   // 24 F. Exactly taper()'s integer at f = F.
+-  parts.e1 = parts.material + eg[SITE_POSITIONAL];
++  parts.e1 = (s124_plant() == 2) ? eg[SITE_POSITIONAL]
++                                  : parts.material + eg[SITE_POSITIONAL];
+   parts.cell = picked_cell(data, row, static_cast<double>(parts.e1));
++  if (s124_plant() == 4) {
++    parts.cell = picked_cell(
++        data, row,
++        static_cast<double>(parts.e1 + eg[SITE_MOBILITY] +
++                            eg[SITE_KING_SAFETY]));
++  }
++  if (s124_plant() == 5 && w != nullptr) {
++    static const std::vector<int64_t> shipped = engine_weights();
++    int64_t e1_shipped = 0;
++    for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
++      const entry_t e = data.entries[j];
++      const feature_t& f = features[e.feature];
++      if (f.site == SITE_MATERIAL) { e1_shipped += e.coef * shipped[f.mg]; }
++      if (f.site == SITE_POSITIONAL) { e1_shipped += e.coef * shipped[f.eg]; }
++    }
++    parts.cell = picked_cell(data, row, static_cast<double>(e1_shipped));
++  }
+ 
+   if (parts.cell != eval_trace::NO_CELL) {
+     const int64_t one = ENDGAME_SCALE_ONE;
+@@ -672,7 +703,7 @@
+ 
+     parts.positional =
+         (one * x + (f - one) * parts.e1 * (GAME_PHASE_MAX - phase)) /
+-        (GAME_PHASE_MAX * one);
++        ((s124_plant() == 3) ? GAME_PHASE_MAX : GAME_PHASE_MAX * one);
+   }
+ 
+   parts.tempo = exact_taper(mg[SITE_TEMPO], eg[SITE_TEMPO], phase);
+@@ -800,7 +831,7 @@
+                               (w[tuner_layout::TEMPO_EG_BASE] == 0);
+   const double tempo = tempo_unfitted ? 0.0 : 23.0 / 24.0;
+   const bool off_f =
+-      parts.cell != eval_trace::NO_CELL &&
++      s124_plant() != 9 && parts.cell != eval_trace::NO_CELL &&
+       w[tuner_layout::EGS_BASE + parts.cell] != ENDGAME_SCALE_ONE;
+ 
+   return (off_f ? 2.0 * 23.0 / 24.0 + 3071.0 / 3072.0 : 3.0 * 23.0 / 24.0) +
+@@ -1151,11 +1182,27 @@
+   // 0, where the pick switches, so the score is continuous across it.
+   out.e1 = material + eg[SITE_POSITIONAL];
+   out.cell = picked_cell(data, row, out.e1);
++  if (s124_plant() == 5) {
++    static const std::vector<int64_t> shipped = engine_weights();
++    double e1_shipped = 0.0;
++    for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
++      const entry_t e = data.entries[j];
++      const feature_t& f = features[e.feature];
++      if (f.site == SITE_MATERIAL) { e1_shipped += e.coef * shipped[f.mg]; }
++      if (f.site == SITE_POSITIONAL) { e1_shipped += e.coef * shipped[f.eg]; }
++    }
++    out.cell = picked_cell(data, row, e1_shipped);
++  }
+ 
+   if (out.cell != eval_trace::NO_CELL) {
+     const double f = p[tuner_layout::EGS_BASE + out.cell];
+     out.score += (f / ENDGAME_SCALE_ONE - 1.0) * out.e1 * eg_weight;
+   }
++  if (s124_plant() == 10 &&
++      (out.cell == eval_trace::NO_CELL ||
++       p[tuner_layout::EGS_BASE + out.cell] == ENDGAME_SCALE_ONE)) {
++    out.score += 0.03;
++  }
+ 
+   for (size_t g = 0; g < model.groups.size(); ++g) {
+     if (!model.groups[g].clamped) { out.score += group_score(g); }
+@@ -1312,7 +1359,8 @@
+           grad[cell] += outer * s.e1 * eg_weight / ENDGAME_SCALE_ONE;
+         }
+ 
+-        const double material_weight = 1.0 + (ratio - 1.0) * eg_weight;
++        const double material_weight =
++            (s124_plant() == 7) ? 1.0 : 1.0 + (ratio - 1.0) * eg_weight;
+ 
+         for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
+           const entry_t e = data.entries[j];
+@@ -1327,8 +1375,10 @@
+           if (s.clamp_binds && clamped_site(f.site)) { continue; }
+ 
+           grad[f.mg] += c * mg_weight;
+-          grad[f.eg] +=
+-              c * eg_weight * ((f.site == SITE_POSITIONAL) ? ratio : 1.0);
++          grad[f.eg] += c * eg_weight *
++                        ((f.site == SITE_POSITIONAL && s124_plant() != 7)
++                             ? ratio
++                             : 1.0);
+         }
+ 
+         for (size_t g = 0; g < model.groups.size(); ++g) {
+--- a/tools/tuner_groups.hpp
++++ b/tools/tuner_groups.hpp
+@@ -626,6 +626,10 @@
+ // is left bit-identical.
+ inline void box_scales(double* params)
+ {
++  if (const char* v = std::getenv("S124_PLANT"); v && std::atoi(v) == 8) {
++    return;
++  }
++
+   for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+     double& f = params[tuner_layout::EGS_BASE + c];
+     f = std::clamp(f, 0.0, static_cast<double>(ENDGAME_SCALE_ONE));
+--- a/tools/tuner.cpp
++++ b/tools/tuner.cpp
+@@ -1262,12 +1262,15 @@
+              train_target, &grad);
+ 
+     tuner_groups::fold_ties(ties, &grad);
++    if (tuner_trace::s124_plant() == 14) { tuner_groups::box_scales(params.data()); }
+     descend(grad, mask, start.data(), opts.lr, &optimiser, params.data());
+     tuner_groups::copy_ties(ties, params.data());
+     // S124's box, after the step and its ties (DEC-350 (5)): every scale
+     // factor back into [0, F] where the step carried it out; a tie there takes
+     // scale 1 (parse_ties()), so a copied value is its anchor's, boxed already.
+-    tuner_groups::box_scales(params.data());
++    if (tuner_trace::s124_plant() != 13 && tuner_trace::s124_plant() != 14) {
++      tuner_groups::box_scales(params.data());
++    }
+ 
+     if (epoch % opts.report != 0) { continue; }
+ 

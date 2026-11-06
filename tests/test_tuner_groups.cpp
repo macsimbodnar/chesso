@@ -108,20 +108,21 @@ TEST_CASE("the group list and the parameter vector are what the code says")
   // appended block looks like. S125 appended its family after S123's and named
   // its last block, weak unopposed pawns, here; S101 its family after S125's
   // and named its last block, push threats, here; S122 its family after
-  // S101's and named its last block, the curve's inputs, here.
+  // S101's and named its last block, the curve's inputs, here; S124 its
+  // family after S122's and named its last block, the scale factors, here.
   //
   // The message is the whole value of this assertion (DEC-184 item 4): without
   // it a failure reads as two constants disagreeing, which is the symptom and
   // not the event, and the reader has to re-derive the event from the comment
   // above.
   REQUIRE_MESSAGE(
-      tuner_layout::KSC_EG_BASE + tuner_layout::KS_CURVE_COUNT ==
+      tuner_layout::EGS_BASE + tuner_layout::ENDGAME_SCALE_COUNT ==
           tuner_layout::PARAM_COUNT,
-      "a parameter block was appended after S122's curve, the last "
-      "block, and given no group of its own: KSC_EG_BASE "
-          << tuner_layout::KSC_EG_BASE << " + KS_CURVE_COUNT "
-          << tuner_layout::KS_CURVE_COUNT << " = "
-          << (tuner_layout::KSC_EG_BASE + tuner_layout::KS_CURVE_COUNT)
+      "a parameter block was appended after S124's scale factors, the last "
+      "block, and given no group of its own: EGS_BASE "
+          << tuner_layout::EGS_BASE << " + ENDGAME_SCALE_COUNT "
+          << tuner_layout::ENDGAME_SCALE_COUNT << " = "
+          << (tuner_layout::EGS_BASE + tuner_layout::ENDGAME_SCALE_COUNT)
           << " against PARAM_COUNT " << tuner_layout::PARAM_COUNT
           << ". Give it an end constant and a group, and name it here and in "
              "\"every group frees exactly its own block\".");
@@ -284,6 +285,8 @@ TEST_CASE("every group frees exactly its own block")
       {"ks_defenders", KSD_MG_BASE, KSD_EG_BASE + KS_DEFENDERS_COUNT},
       {"ks_storm", KSS_MG_BASE, KSS_EG_BASE + KS_STORM_COUNT},
       {"ks_curve", KSC_MG_BASE, KSC_EG_BASE + KS_CURVE_COUNT},
+      {"mopup", MOP_MG_BASE, MOP_EG_BASE + MOPUP_COUNT},
+      {"endgame_scale", EGS_BASE, EGS_BASE + ENDGAME_SCALE_COUNT},
   };
 
   size_t next = 0;
@@ -815,6 +818,65 @@ TEST_CASE("the curve's terms partition the curve's group")
 }
 
 
+// S124. The scale factor's three parts, the same three properties over the
+// endgame_scale group, each by the cells DEC-350 (7) names: F1 P 0 d <= 0,
+// P 0 d 1 and OCB_PURE P <= 2; F2 P 0 d >= 2 and every P 1 and P 2 cell; F3
+// the other three opposite-bishop cells.
+TEST_CASE("the scale factor's parts partition its group")
+{
+  const std::vector<std::string> terms =
+      parse_group_list(tuner_groups::SCALE_TERM_LIST);
+
+  REQUIRE(terms.size() == tuner_groups::SCALE_TERM_COUNT);
+  for (size_t t = 0; t < terms.size(); ++t) {
+    CHECK(terms[t] == tuner_groups::SCALE_TERMS[t].name);
+  }
+
+  std::vector<uint8_t> group;
+  REQUIRE(tuner_groups::free_mask("endgame_scale", &group));
+  REQUIRE(
+      static_cast<size_t>(std::count(group.begin(), group.end(), uint8_t{1})) ==
+      tuner_layout::ENDGAME_SCALE_COUNT);
+
+  const std::vector<std::vector<int>> cells = {
+      {ENDGAME_CELL_P0_D0, ENDGAME_CELL_P0_D1, ENDGAME_CELL_OCB_LOW},
+      {ENDGAME_CELL_P0_D2, ENDGAME_CELL_P1_D0, ENDGAME_CELL_P1_D1,
+       ENDGAME_CELL_P1_D2, ENDGAME_CELL_P2_D0, ENDGAME_CELL_P2_D1,
+       ENDGAME_CELL_P2_D2},
+      {ENDGAME_CELL_OCB_MID, ENDGAME_CELL_OCB_HIGH, ENDGAME_CELL_OCB_ROOK},
+  };
+  REQUIRE(cells.size() == terms.size());
+
+  std::vector<size_t> claims(tuner_layout::PARAM_COUNT, 0);
+
+  for (size_t t = 0; t < terms.size(); ++t) {
+    CAPTURE(terms[t]);
+
+    std::vector<uint8_t> mask;
+    REQUIRE(tuner_groups::free_mask(terms[t], &mask));
+    REQUIRE(mask.size() == tuner_layout::PARAM_COUNT);
+
+    for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+      CAPTURE(i);
+
+      bool expected = false;
+      for (const int c : cells[t]) {
+        expected =
+            expected || i == tuner_layout::EGS_BASE + static_cast<size_t>(c);
+      }
+
+      CHECK((mask[i] != 0) == expected);
+      if (mask[i] != 0) { claims[i]++; }
+    }
+  }
+
+  for (size_t i = 0; i < tuner_layout::PARAM_COUNT; ++i) {
+    CAPTURE(i);
+    CHECK(claims[i] == (group[i] != 0 ? 1u : 0u));
+  }
+}
+
+
 // The candidate fit's shape: the group free but for the terms that failed the
 // screen. `--freeze` with a term inside `--only piece_placement` has to clear
 // exactly that term's columns, and a list of terms all of theirs; a term
@@ -1122,6 +1184,44 @@ TEST_CASE("a tie names S122's linear cells by array and half, never the curve")
            "ks_weak_eg 1 0\n",    // a count has one cell
            "ks_storm_mg 7 6\n",   // past distance 4 blocked
            "ks_curve_mg 2 1\n",   // the curve is no row
+       }) {
+    CAPTURE(bad);
+    std::vector<tuner_groups::tie_t> refused;
+    std::string why;
+    CHECK_FALSE(tuner_groups::parse_ties(bad, &refused, &why));
+    CHECK(!why.empty());
+  }
+}
+
+
+// S124's factors, one half and so no suffix: DEC-350 (2)'s tie of OCB_PURE
+// P >= 5 to P 3 to 4 at scale 1, and nothing past the thirteen.
+TEST_CASE("a tie names S124's factors by cell, one half and no suffix")
+{
+  std::vector<tuner_groups::tie_t> ties;
+  std::string error;
+
+  REQUIRE(tuner_groups::parse_ties("endgame_scale 11 10\n", &ties, &error));
+  std::vector<tuner_groups::tie_t> explicit_one;
+  REQUIRE(tuner_groups::parse_ties("endgame_scale 11 10 1\n", &explicit_one,
+                                   &error));
+  REQUIRE(ties.size() == 1);
+  CHECK(ties[0].tied == tuner_layout::EGS_BASE + ENDGAME_CELL_OCB_HIGH);
+  CHECK(ties[0].anchor == tuner_layout::EGS_BASE + ENDGAME_CELL_OCB_MID);
+  CHECK(ties[0].scale == 1.0);
+
+  // The fast check's case: the tuner boxes every factor to [0, F] after the
+  // ties are copied, so a tie scaled by anything but 1 would be broken by the
+  // box wherever its anchor's value times the scale left [0, F] -- silently,
+  // the tied cell no longer its anchor times the scale. Refused instead.
+  for (const char* bad : {
+           "endgame_scale 13 12\n",     // past OCB_ROOK
+           "endgame_scale_mg 11 10\n",  // one half, no suffix
+           "endgame_scale_eg 11 10\n",
+           "mopup_mg 1 0\n",             // SPSA's, no tie row
+           "endgame_scale 11 10 0.5\n",  // a boxed row takes scale 1 alone
+           "endgame_scale 11 10 2\n",
+           "endgame_scale 11 10 -1\n",
        }) {
     CAPTURE(bad);
     std::vector<tuner_groups::tie_t> refused;

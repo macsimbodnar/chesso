@@ -35,6 +35,27 @@ part of its unit. Step 4 then breaks a tie on phase by the larger difference
 before the lower phase and the scan's order, so each target's row stands as
 near the bound as its phase allows. With the curve not live no hit passes
 69/24, and the rule is S083's as written above.
+
+AMENDED 2026-11-06, S124, DEC-355, written before it ran on S124's rebased
+tree. truncation_scan prints each row's difference less its own share of
+S122's curve since DEC-355 (tuner_trace::curve_residual(): the two kings'
+rounding losses in T(x), through king safety's taper, under 1 and zero at the
+curve's seed). That column, a lower bound on what the three taperings lost
+(the next amendment says why), has its maximum at 69/24, which no row at F
+passes by more than an ulp. So step 1 keeps the
+hits at the scan's largest reading, each FEN once, as S083's rule wrote it;
+S122's branch past 3.0 cannot fire, no reading passing 2.9163, and the code
+is unchanged. The command is unchanged too: truncation_scan --min 2.8 on
+build/, this script on its stdout.
+
+AMENDED again 2026-11-06, S124, the fast check's findings 1 and 2, written
+before it ran. The residual is signed since: the scan's first column is
+|smooth - exact - C|, C the curve's share of smooth - exact with its sign,
+which is exactly what the three taperings lost, on the 1/24 lattice, wherever
+stage two's clamp does not bind, and is bounded by the same, off the lattice,
+where it does. The abs form before it, |smooth - exact| - |C|, was only a
+lower bound on that loss. Step 1 keeps the hits at the scan's largest
+reading as above; the code and the command are unchanged.
 """
 import sys
 

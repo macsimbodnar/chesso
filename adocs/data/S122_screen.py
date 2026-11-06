@@ -115,6 +115,7 @@ SPREAD_UNREADABLE = S135_screen.SPREAD_UNREADABLE
 TIE_GAMES = 1000
 EXPECTED_RANK = 1100        # of 1171, DEC-344 (3)
 PARAMS = 1171
+# S122 closed: the two pins stay its layout's, a tool re-derived at its own tree (DEC-347's form).
 DEAD_PAWN_COLUMNS = 32
 CURVE_CONSTANT_COLUMNS = ["ks_curve_mg[0]", "ks_curve_eg[0]"]
 BY_CONSTRUCTION_COUNT = 37  # S134's 7, S121's 8, S122's 22

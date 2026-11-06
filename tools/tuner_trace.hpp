@@ -37,6 +37,12 @@
 // -- gradient() below has why, and that it reverses the treatment the tuner
 // had before S262.
 //
+// S124's endgame scale factor (DEC-350 (5)) is a product, f_c times E1, and
+// carried here in full: the row's two candidate cells, a byte each, picked by
+// the sign of E1 at the weights being read; the factor inside exact_parts()'s
+// one positional division, smooth()'s (f_c / F - 1) E1 w_eg, and gradient()'s
+// chain rule into the cells, the material and the positional endgame weights.
+//
 // Nonlinear groups -- a per-side transform of a weighted sum, the shape a
 // king-safety curve takes -- are carried by the same records: each side's
 // coefficients, not their difference, and a model_t that names the group's
@@ -89,6 +95,8 @@ using tuner_target::sigmoid;
 //   MATERIAL    board->material, added untapered in evaluate_cheap()
 //   POSITIONAL  board->psqt plus the pawn terms (S123's and S125's families
 //               among them), one taper
+//               and S124's mop-up, and S124's factor scales E1 -- the
+//               material and this site's endgame sum -- inside that taper
 //   TEMPO       its own taper, added after the side-to-move sign
 //   MOBILITY    its own taper, in evaluate_expensive(); S101's threat family
 //               is summed into its pair, so it shares that one taper
@@ -202,6 +210,9 @@ inline term_layout_t term_layout(term_t term)
       return {KS_STORM_COUNT, KSS_MG_BASE, KSS_EG_BASE, SITE_KING_SAFETY};
     case eval_trace::TERM_KS_CURVE:
       return {KS_CURVE_COUNT, KSC_MG_BASE, KSC_EG_BASE, SITE_KING_SAFETY};
+    // S124's mop-up, summed into stage one's pair, so the positional taper.
+    case eval_trace::TERM_MOPUP:
+      return {MOPUP_COUNT, MOP_MG_BASE, MOP_EG_BASE, SITE_POSITIONAL};
     case eval_trace::TERM_COUNT:
       break;
   }
@@ -384,8 +395,23 @@ struct dataset_t
   // The ply each row stands at; the S066 split reads it and nothing else.
   std::vector<uint32_t> ply;
 
+  // S124: the row's two candidate cells, 2 * row the cell if White is the
+  // strong side and 2 * row + 1 if Black is, eval_trace::NO_CELL for none.
+  // Both, because which side is strong is E1's sign and moves with a fit.
+  std::vector<uint8_t> cells;
+
   size_t size() const { return phase.size(); }
 };
+
+
+// The candidate E1's sign picks: White's for E1 > 0, Black's for E1 < 0, and
+// none at 0, where the factor's term is zero whichever cell it were.
+inline uint8_t picked_cell(const dataset_t& data, size_t row, double e1)
+{
+  if (e1 > 0.0) { return data.cells[2 * row]; }
+  if (e1 < 0.0) { return data.cells[2 * row + 1]; }
+  return eval_trace::NO_CELL;
+}
 
 
 // One position's trace, summed per feature. `engine_white` is what evaluate()
@@ -394,6 +420,7 @@ struct row_trace_t
 {
   std::vector<entry_t> entries;
   std::vector<side_entry_t> side_entries;
+  uint8_t cells[2] = {eval_trace::NO_CELL, eval_trace::NO_CELL};
   int phase = 0;
   int stm = 1;
   int engine_white = 0;
@@ -431,6 +458,12 @@ inline bool sum_record(const eval_trace::record_t& record,
 
   if (record.phase < 0 || record.phase > GAME_PHASE_MAX) {
     return refuse("the trace recorded no usable phase");
+  }
+
+  for (const uint8_t cell : record.cells) {
+    if (cell != eval_trace::NO_CELL && cell >= ENDGAME_CELL_COUNT) {
+      return refuse("a candidate cell outside the factor's thirteen");
+    }
   }
 
   out->entries.clear();
@@ -483,6 +516,8 @@ inline bool sum_record(const eval_trace::record_t& record,
   }
 
   out->phase = record.phase;
+  out->cells[0] = record.cells[0];
+  out->cells[1] = record.cells[1];
   return true;
 }
 
@@ -528,6 +563,8 @@ inline void append_row(const row_trace_t& trace,
   data->result.push_back(result);
   data->score.push_back(score);
   data->ply.push_back(ply);
+  data->cells.push_back(trace.cells[0]);
+  data->cells.push_back(trace.cells[1]);
 }
 
 
@@ -543,7 +580,9 @@ inline int64_t exact_taper(int64_t mg, int64_t eg, int phase)
 
 
 // The four tapered sums and the material a row's exact score is built from,
-// before the clamp, so a caller can ask whether it binds.
+// before the clamp, so a caller can ask whether it binds. `e1` and `cell` are
+// S124's: E1 at these weights and the cell its sign picked, whose factor is
+// inside `positional`.
 struct exact_parts_t
 {
   int64_t material = 0;
@@ -551,6 +590,8 @@ struct exact_parts_t
   int64_t tempo = 0;
   int64_t mobility = 0;
   int64_t safety = 0;
+  int64_t e1 = 0;
+  uint8_t cell = eval_trace::NO_CELL;
 };
 
 inline exact_parts_t exact_parts(const dataset_t& data,
@@ -615,6 +656,25 @@ inline exact_parts_t exact_parts(const dataset_t& data,
 
   parts.positional =
       exact_taper(mg[SITE_POSITIONAL], eg[SITE_POSITIONAL], phase);
+
+  // S124's factor, the engine's integer form (src/evaluation.hpp): E1 is the
+  // material and the positional endgame sum, its sign picks the cell, and
+  // the factor's share joins taper()'s numerator before the one division by
+  // 24 F. Exactly taper()'s integer at f = F.
+  parts.e1 = parts.material + eg[SITE_POSITIONAL];
+  parts.cell = picked_cell(data, row, static_cast<double>(parts.e1));
+
+  if (parts.cell != eval_trace::NO_CELL) {
+    const int64_t one = ENDGAME_SCALE_ONE;
+    const int64_t f = w[tuner_layout::EGS_BASE + parts.cell];
+    const int64_t x = mg[SITE_POSITIONAL] * phase +
+                      eg[SITE_POSITIONAL] * (GAME_PHASE_MAX - phase);
+
+    parts.positional =
+        (one * x + (f - one) * parts.e1 * (GAME_PHASE_MAX - phase)) /
+        (GAME_PHASE_MAX * one);
+  }
+
   parts.tempo = exact_taper(mg[SITE_TEMPO], eg[SITE_TEMPO], phase);
   parts.mobility = exact_taper(mg[SITE_MOBILITY], eg[SITE_MOBILITY], phase);
   parts.safety = exact_taper(mg[SITE_KING_SAFETY], eg[SITE_KING_SAFETY], phase);
@@ -639,6 +699,112 @@ inline int64_t exact_score(const dataset_t& data, size_t row, const int64_t* w)
 
   return parts.material + parts.positional + parts.tempo +
          std::clamp(parts.mobility + parts.safety, -margin, margin);
+}
+
+
+// S122's curve's share of a row's smooth score less its exact one, at integer
+// weights `w`, exactly and with its sign (DEC-355; signed since the fast
+// check's finding 2, 2026-11-06, |C| before). Each king's T truncates
+// (x^2 mod divisor) / divisor in each half where the smooth score keeps it, so
+// a half's two kings, one taken off and one added, leave d_h = the group's
+// signed difference of the two remainders over the divisor, and king safety's
+// taper turns them into C = (d_mg phase + d_eg (24 - phase)) / 24, under 1 in
+// size. Zero at the curve's seed, where both kings' x is the constant. Read
+// from the same side entries and the same x as exact_parts().
+inline double curve_residual(const dataset_t& data,
+                             size_t row,
+                             const int64_t* w)
+{
+  const std::vector<group_t>& groups = engine_model().groups;
+  const int phase = data.phase[row];
+  double residual = 0.0;
+
+  for (size_t g = 0; g < groups.size(); ++g) {
+    const group_t& group = groups[g];
+    int64_t x_mg[2] = {0, 0};
+    int64_t x_eg[2] = {0, 0};
+
+    for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1];
+         ++j) {
+      const side_entry_t e = data.side_entries[j];
+
+      if (e.group != g) { continue; }
+
+      x_mg[e.side] += e.coef * w[group.inputs[e.input].first];
+      x_eg[e.side] += e.coef * w[group.inputs[e.input].second];
+    }
+
+    const int64_t divisor = static_cast<int64_t>(group.divisor);
+    const int64_t sign = static_cast<int64_t>(group.sign);
+    int64_t lost_mg = 0;
+    int64_t lost_eg = 0;
+
+    for (int side = 0; side < 2; ++side) {
+      const int64_t side_sign = (side == 0) ? sign : -sign;
+      const int64_t m = std::max<int64_t>(x_mg[side], 0);
+      const int64_t n = std::max<int64_t>(x_eg[side], 0);
+
+      lost_mg += side_sign * (m * m % divisor);
+      lost_eg += side_sign * (n * n % divisor);
+    }
+
+    // One division, of an integer numerator: the residual is exact but for
+    // that division's rounding.
+    residual += static_cast<double>(lost_mg * phase +
+                                    lost_eg * (GAME_PHASE_MAX - phase)) /
+                static_cast<double>(GAME_PHASE_MAX * divisor);
+  }
+
+  return residual;
+}
+
+
+// What a row's taperings lost: |smooth - exact - C|, `smooth_less_exact` the
+// row's smooth score less its exact one and C its curve_residual(). Wherever
+// stage two's clamp does not bind it is exactly the taperings' loss, on the
+// 1/24 lattice at F; where the clamp binds it is bounded by the same
+// (truncation_bound(), below) and off the lattice. The reading
+// tests/test_eval_trace.cpp and tools/truncation_scan hold to that bound.
+inline double taperings_loss(const dataset_t& data,
+                             size_t row,
+                             const int64_t* w,
+                             double smooth_less_exact)
+{ return std::fabs(smooth_less_exact - curve_residual(data, row, w)); }
+
+
+// A reading past a value on the 1/24 lattice by no more than this is on it:
+// a row exactly at 69/24 reads past 2.875 by an ulp (the fast check's finding
+// 1, 2026-11-06), so a pick or a precondition that needs a row past a lattice
+// bound asks for this much more. adocs/data/S136_screen.py's margin.
+inline constexpr double LATTICE_MARGIN = 1e-6;
+
+
+// The most taperings_loss() can read on a row at integer weights `w`:
+// tests/test_eval_trace.cpp holds every row it reads to it and
+// tools/truncation_scan every corpus row, the one definition both read
+// (DEC-355). Each truncating taper loses under one unit, at most 23/24: three
+// while tempo's weights are zero, whose division then truncates 0 / 24
+// exactly, four once they are not (DEC-053). A row whose S124 cell is off F at
+// `w` divides stage one once by 24 F = 3072 and loses up to 3071/3072 there
+// in place of 23/24 (DEC-350 (1)). S122's curve is read off the difference
+// with its sign, not added to the bound. Where the clamp binds on both sides
+// the reading is |t_pos - C|, and on one side the clamp's integer step lies
+// between 0 and the clamped sum's own difference t + C, so the reading less
+// t_pos lies between -C and t: neither passes 23/24 + 46/24.
+inline double truncation_bound(const dataset_t& data,
+                               size_t row,
+                               const int64_t* w)
+{
+  const exact_parts_t parts = exact_parts(data, row, w);
+  const bool tempo_unfitted = (w[tuner_layout::TEMPO_MG_BASE] == 0) &&
+                              (w[tuner_layout::TEMPO_EG_BASE] == 0);
+  const double tempo = tempo_unfitted ? 0.0 : 23.0 / 24.0;
+  const bool off_f =
+      parts.cell != eval_trace::NO_CELL &&
+      w[tuner_layout::EGS_BASE + parts.cell] != ENDGAME_SCALE_ONE;
+
+  return (off_f ? 2.0 * 23.0 / 24.0 + 3071.0 / 3072.0 : 3.0 * 23.0 / 24.0) +
+         tempo;
 }
 
 
@@ -907,8 +1073,10 @@ inline group_sums_t group_sums(const group_t& group,
 
 struct smooth_t
 {
-  double score = 0.0;        // White relative
-  bool clamp_binds = false;  // stage two lies beyond the margin
+  double score = 0.0;                  // White relative
+  bool clamp_binds = false;            // stage two lies beyond the margin
+  double e1 = 0.0;                     // S124's E1 at these weights
+  uint8_t cell = eval_trace::NO_CELL;  // the cell its sign picked
 };
 
 
@@ -978,6 +1146,16 @@ inline smooth_t smooth(const model_t& model,
 
   out.score = material + (mg[SITE_POSITIONAL] + mg[SITE_TEMPO]) * mg_weight +
               (eg[SITE_POSITIONAL] + eg[SITE_TEMPO]) * eg_weight + stage_two;
+
+  // S124's factor, exact: (f_c / F - 1) E1 w_eg, zero at f_c = F and at E1 =
+  // 0, where the pick switches, so the score is continuous across it.
+  out.e1 = material + eg[SITE_POSITIONAL];
+  out.cell = picked_cell(data, row, out.e1);
+
+  if (out.cell != eval_trace::NO_CELL) {
+    const double f = p[tuner_layout::EGS_BASE + out.cell];
+    out.score += (f / ENDGAME_SCALE_ONE - 1.0) * out.e1 * eg_weight;
+  }
 
   for (size_t g = 0; g < model.groups.size(); ++g) {
     if (!model.groups[g].clamped) { out.score += group_score(g); }
@@ -1120,20 +1298,37 @@ inline void gradient(const model_t& model,
         const double outer =
             -2.0 * (target[row] - sig) * sig * (1.0 - sig) * k * LN10_OVER_400;
 
+        // S124's factor and its chain rule. With r = f_c / F the score holds
+        // (r - 1) E1 w_eg, E1 the material and the positional endgame sum:
+        // so d/df_c = E1 w_eg / F, a piece value's coefficient gains (r - 1)
+        // w_eg, and a positional endgame weight's taper weight w_eg becomes
+        // r w_eg. With the old constants frozen only the first is read; S126
+        // refits everything and reads the rest. r = 1 on a row with no cell.
+        double ratio = 1.0;
+
+        if (s.cell != eval_trace::NO_CELL) {
+          const size_t cell = tuner_layout::EGS_BASE + s.cell;
+          ratio = params[cell] / ENDGAME_SCALE_ONE;
+          grad[cell] += outer * s.e1 * eg_weight / ENDGAME_SCALE_ONE;
+        }
+
+        const double material_weight = 1.0 + (ratio - 1.0) * eg_weight;
+
         for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
           const entry_t e = data.entries[j];
           const feature_t& f = features[e.feature];
           const double c = outer * e.coef;
 
           if (f.site == SITE_MATERIAL) {
-            grad[f.mg] += c;
+            grad[f.mg] += c * material_weight;
             continue;
           }
 
           if (s.clamp_binds && clamped_site(f.site)) { continue; }
 
           grad[f.mg] += c * mg_weight;
-          grad[f.eg] += c * eg_weight;
+          grad[f.eg] +=
+              c * eg_weight * ((f.site == SITE_POSITIONAL) ? ratio : 1.0);
         }
 
         for (size_t g = 0; g < model.groups.size(); ++g) {

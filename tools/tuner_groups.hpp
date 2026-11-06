@@ -18,6 +18,7 @@
 //
 // Since S275 it also holds the seven gauges, the null directions a fit keeps
 // still, because whether one is held depends on the same mask.
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -49,7 +50,8 @@ inline constexpr const char* GROUP_LIST =
     "candidate_passers, isolated_backward, isolated_files, doubled_files, "
     "backward_ranks, phalanx, supported, weak_unopposed, threat_pawn, "
     "threat_piece, threat_minor, hanging_piece, hanging_pawn, threat_king, "
-    "threat_push, ks_checks, ks_weak, ks_defenders, ks_storm, ks_curve";
+    "threat_push, ks_checks, ks_weak, ks_defenders, ks_storm, ks_curve, mopup, "
+    "endgame_scale";
 
 
 // The piece placement group's terms, S135, each a name `--only` and `--freeze`
@@ -124,6 +126,49 @@ inline constexpr const char* CURVE_TERM_LIST =
     "ks_curve.core, ks_curve.checks, ks_curve.weak, ks_curve.defenders";
 
 
+// S124's scale factor parts, the screen's three (DEC-350 (7), the research
+// pass's order): F1 the classes the tables and the games both read drawn, F2
+// the pawn cells the tables read won, F3 the opposite-bishop cells no five-man
+// row reaches. Not adjacent columns, so each names its cells by
+// endgame_cell_t, a bit each; together they are the endgame_scale group.
+struct scale_term_t
+{
+  const char* name;
+  uint32_t cells;  // bit c for cell c
+};
+
+inline constexpr uint32_t cell_bit(endgame_cell_t cell)
+{ return uint32_t{1} << static_cast<int>(cell); }
+
+inline constexpr scale_term_t SCALE_TERMS[] = {
+    {"endgame_scale.f1", cell_bit(ENDGAME_CELL_P0_D0) |
+                             cell_bit(ENDGAME_CELL_P0_D1) |
+                             cell_bit(ENDGAME_CELL_OCB_LOW)},
+    {"endgame_scale.f2",
+     cell_bit(ENDGAME_CELL_P0_D2) | cell_bit(ENDGAME_CELL_P1_D0) |
+         cell_bit(ENDGAME_CELL_P1_D1) | cell_bit(ENDGAME_CELL_P1_D2) |
+         cell_bit(ENDGAME_CELL_P2_D0) | cell_bit(ENDGAME_CELL_P2_D1) |
+         cell_bit(ENDGAME_CELL_P2_D2)},
+    {"endgame_scale.f3", cell_bit(ENDGAME_CELL_OCB_MID) |
+                             cell_bit(ENDGAME_CELL_OCB_HIGH) |
+                             cell_bit(ENDGAME_CELL_OCB_ROOK)},
+};
+
+inline constexpr size_t SCALE_TERM_COUNT =
+    sizeof(SCALE_TERMS) / sizeof(SCALE_TERMS[0]);
+
+static_assert((SCALE_TERMS[0].cells | SCALE_TERMS[1].cells |
+               SCALE_TERMS[2].cells) ==
+                      (uint32_t{1} << ENDGAME_CELL_COUNT) - 1 &&
+                  (SCALE_TERMS[0].cells & SCALE_TERMS[1].cells) == 0 &&
+                  (SCALE_TERMS[0].cells & SCALE_TERMS[2].cells) == 0 &&
+                  (SCALE_TERMS[1].cells & SCALE_TERMS[2].cells) == 0,
+              "the three parts are the thirteen cells, each once");
+
+inline constexpr const char* SCALE_TERM_LIST =
+    "endgame_scale.f1, endgame_scale.f2, endgame_scale.f3";
+
+
 // Marks the parameters a --only group leaves free; the rest keep the value the
 // engine ships and come out of the run unchanged.
 //
@@ -161,6 +206,19 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     for (size_t i = 0; i < term.width; ++i) {
       (*mask)[tuner_layout::KSC_MG_BASE + term.first + i] = 1;
       (*mask)[tuner_layout::KSC_EG_BASE + term.first + i] = 1;
+    }
+
+    return true;
+  }
+
+  // A scale factor part, S124, its cells of the one-half block.
+  for (const scale_term_t& term : SCALE_TERMS) {
+    if (group != term.name) { continue; }
+
+    mask->assign(PARAM_COUNT, 0);
+
+    for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+      if ((term.cells >> c) & 1) { (*mask)[tuner_layout::EGS_BASE + c] = 1; }
     }
 
     return true;
@@ -305,6 +363,16 @@ inline bool free_mask(const std::string& group, std::vector<uint8_t>* mask)
     // parameters (tools/tuner_trace.hpp, engine_model()).
     first = tuner_layout::KSC_MG_BASE;
     last = tuner_layout::KS_CURVE_END;
+  } else if (group == "mopup") {
+    // S124's mop-up, its three pairs (DEC-350 (4)): fitted by SPSA on a
+    // conversion objective, not by the loss, so a loss fit frees it only
+    // to read what the loss does with it.
+    first = tuner_layout::MOP_MG_BASE;
+    last = tuner_layout::MOPUP_END;
+  } else if (group == "endgame_scale") {
+    // S124's thirteen factors, one half each; the parts above split it.
+    first = tuner_layout::EGS_BASE;
+    last = tuner_layout::ENDGAME_SCALE_END;
   } else {
     return false;
   }
@@ -551,6 +619,20 @@ inline void hold_gauges(const std::vector<gauge_t>& held,
 }
 
 
+// S124's box (DEC-350 (5)): each scale factor back into [0, F] after a step,
+// as the gauges are held after one; tools/tuner.cpp calls it after each step
+// and its ties. Below 0 the factor would flip E1's sign, above F it is no
+// factor toward a draw; a factor inside the box, every frozen one among them,
+// is left bit-identical.
+inline void box_scales(double* params)
+{
+  for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+    double& f = params[tuner_layout::EGS_BASE + c];
+    f = std::clamp(f, 0.0, static_cast<double>(ENDGAME_SCALE_ONE));
+  }
+}
+
+
 // Tied mobility cells, S121. A cell the corpus barely reaches is not fitted
 // on its own -- AdaGrad and Adam step a coordinate at the learning rate however
 // few rows its gradient comes from, so a cell a handful of rows reach walks to
@@ -579,8 +661,9 @@ inline void hold_gauges(const std::vector<gauge_t>& held,
 // phalanx, supported or weak_unopposed, followed by _<half>, whose cells are
 // its weights' (src/evaluation.hpp; DEC-331 (6): the nearest supported cell of
 // the same array and half), or S101's seven arrays and S122's four linear
-// ones the same way, never the curve; half mg or eg; scale 1 when absent. A
-// cell is tied
+// ones the same way, never the curve; half mg or eg; or since S124
+// endgame_scale, its thirteen factors, one half and so no suffix; scale 1
+// when absent. A cell is tied
 // once at most, never to itself, and an anchor is never tied, so no tie reads a
 // value another tie has yet to write.
 struct tie_t
@@ -678,6 +761,14 @@ inline bool tie_row(const std::string& name, size_t* base, size_t* width)
     }
   }
 
+  // S124's factors, one half and so no suffix: OCB_PURE P>=5 is tied to P 3
+  // to 4 at scale 1 before any fit (DEC-350 (2)), `endgame_scale 11 10`.
+  if (name == "endgame_scale") {
+    *base = tuner_layout::EGS_BASE;
+    *width = tuner_layout::ENDGAME_SCALE_COUNT;
+    return true;
+  }
+
   return false;
 }
 
@@ -758,6 +849,16 @@ inline bool parse_ties(const std::string& text,
       if (rest == words[3].c_str() || *rest != '\0' || !std::isfinite(scale)) {
         return refuse("an unreadable scale " + words[3]);
       }
+    }
+
+    // S124's factors are boxed to [0, F] after the ties are copied, so a tie
+    // there scaled by anything but 1 would be broken by the box wherever its
+    // anchor times the scale left [0, F], the tied cell then not the anchor
+    // times the scale; a boxed row takes scale 1 alone.
+    if (base == tuner_layout::EGS_BASE && scale != 1.0) {
+      return refuse(
+          "a tie on endgame_scale takes scale 1: the box after the "
+          "ties would break any other");
     }
 
     const tie_t tie{base + cell, base + anchor, scale};

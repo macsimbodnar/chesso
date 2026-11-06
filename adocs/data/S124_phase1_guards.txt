@@ -1,0 +1,62 @@
+# S124 phase 1, 2026-11-04: adocs/data/S124_phase1_plants.sh's tally on the landing (its scratch copy of the working tree,
+# adocs/data/S124_phase1_plants.patch applied; builds plants and forced, -DS124_FORCED). Each run's doctest line and its first
+# failing check, the box script's last line, the two libraries' comparison, or the scan's summary. Read again after the
+# coordinator's rulings and the fast check: plants 9 to 14 and the engine's own library new, the counts this run's; one pass
+# of the script, nice 10, under S122's corpus load. CORPUS: S083's corpus, read in place. Paths relative to the scratch copy.
+
+plants test_eval_model plant 0 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 0, [doctest] assertions: 179059 | 179059 passed | 0 failed |
+plants test_eval_model plant 6 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 1, [doctest] assertions: 179059 | 162981 passed | 16078 failed |
+    first: tests/test_eval_model.cpp:2680: ERROR: CHECK( engine.cell[side] == walk.cell[side] ) is NOT correct!
+plants test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 0, [doctest] assertions: 55459 | 55459 passed | 0 failed |
+plants test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 53435 passed | 2024 failed |
+    first: tests/test_eval_trace.cpp:572: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+plants test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 40248 passed | 15211 failed |
+    first: tests/test_eval_trace.cpp:573: ERROR: CHECK( parts.e1 == e1 ) is NOT correct!
+plants test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 45213 passed | 10246 failed |
+    first: tests/test_eval_trace.cpp:347: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 55362 passed | 97 failed |
+    first: tests/test_eval_trace.cpp:572: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+forced test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+forced test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20572 passed | 367 failed |
+    first: tests/test_eval_trace.cpp:347: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 19645 passed | 1294 failed |
+    first: tests/test_eval_trace.cpp:347: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 18573 passed | 2366 failed |
+    first: tests/test_eval_trace.cpp:347: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+plants test_tuner_gradient plant 0 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 0, [doctest] assertions: 12684 | 12684 passed | 0 failed |
+plants test_tuner_gradient plant 5 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12681 passed | 3 failed |
+    first: tests/test_tuner_gradient.cpp:893: ERROR: CHECK( after.cell == data.cells[1] ) is NOT correct!
+plants test_tuner_gradient plant 7 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12683 passed | 1 failed |
+    first: tests/test_tuner_gradient.cpp:835: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 8 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12682 passed | 2 failed |
+    first: tests/test_tuner_gradient.cpp:942: ERROR: CHECK( params[EGS_BASE + 0] == ENDGAME_SCALE_ONE ) is NOT correct!
+plants test_eval_trace plant 0 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 10 [the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 9000 | 8996 passed | 4 failed |
+    first: tests/test_eval_trace.cpp:1022: ERROR: CHECK( gap <= truncation_bound(tuner_trace::exact_parts(data, 0, weights.data()), weights) + 1e-9 ) is NOT correct!
+plants test_eval_trace plant 9 [the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 43520 | 43518 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:580: ERROR: CHECK( gap <= truncation_bound(parts, weights) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 9 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20937 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:1022: ERROR: CHECK( gap <= truncation_bound(tuner_trace::exact_parts(data, 0, weights.data()), weights) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 11 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20143 passed | 796 failed |
+    first: tests/test_eval_trace.cpp:347: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_tuner_box.sh plant 0: exit 0, ok: every factor in [0, 128], cells 4 and 2 at 0 and 128: 128 128 128 128 0 128 128 128 128 128 128 128 128
+plants test_tuner_box.sh plant 13: exit 1, FAIL: header factor 2 is 422, outside [0, 128]
+plants test_tuner_box.sh plant 14: exit 1, FAIL: header factor 2 is 132, outside [0, 128]
+forced chesso_engine against chesso_engine_trace plant 0: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 11: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 12: 840136 rows of 6226944 differ
+forced truncation_scan plant 0: exit 0, 6226944 rows scanned, 102066 past 2.0, 7 past 2.8750, worst 2.891927
+forced truncation_scan plant 1: exit 1, the trace disagrees with evaluate(): 108 against 85: 8/8/8/5p2/1k5K/8/6PP/8 b - - 0 49
+forced truncation_scan plant 2: exit 1, the trace disagrees with evaluate(): 88 against 74: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 3: exit 1, the trace disagrees with evaluate(): -5302 against 74: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 4: exit 1, the trace disagrees with evaluate(): -112 against -119: 6R1/6pp/4p3/4qpk1/8/R6P/6P1/6K1 w - - 0 49
+
+== the unplanted forced scan's hits past 2.875 (--min 2.875): six at 2.875 exactly, one cell row past it
+2.875000	phase 17	w	1R6/3b1q1p/5k2/P2p4/1Q4p1/4P1P1/2r2r2/4K2R w - - 14 48
+2.875000	phase  7	w	6R1/p4k2/1p4n1/8/3P1bp1/1N1N1b2/p1P2P2/4K3 w - - 7 45
+2.875000	phase 23	b	r1bqr1k1/pp3pp1/n1pb1B1p/3p4/3P3Q/3B1N2/PPP2PPP/RN3K1R b - - 0 14
+2.875000	phase 17	w	3r2k1/2n2pp1/2P1r1qp/2R5/Q2Bp3/4P1N1/5PPP/6K1 w - - 3 37
+2.875000	phase 17	b	2r1r2k/4q1bp/1Rp5/P1P1p2p/2Q2p2/3P1N1P/2B2PP1/6K1 b - - 0 39
+2.875000	phase 23	b	2rq1r1k/1b1n3n/pp4Q1/3p2Pp/Pb1P3P/BP3N2/3N1P2/R3R1K1 b - - 2 21
+2.891927	phase  5	b	8/5k2/8/5K2/5NRP/8/8/5r2 b - - 6 68

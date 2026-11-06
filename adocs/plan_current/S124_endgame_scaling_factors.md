@@ -1,7 +1,7 @@
 id:         S124
 goal:       the endgame half of the score is scaled toward a draw by what is actually on the board, and won lone-king and specialised endgames are scored so the stronger side converts them
 accepts:    an SPRT verdict, recorded whatever it is; the factor scales **only the endgame half** of the tapered score and not the whole score; each case -- strong-side pawn count, opposite-coloured bishops, and the mop-up and specialised-endgame cases this family gains (DEC-258) -- is screened separately before the family's one SPRT (DEC-259), and a case the corpus barely holds is screened on a tool-labelled position set instead (tablebase WDL or Stockfish through python-chess, never the agent's reading, CHESS rule), because the surveyed record shows several such cases measuring zero and being removed again; mop-up is shown to convert: won lone-king positions, labelled won by a tablebase, are mated by the engine in self-play at a fixed node budget within a move bound stated before the run; every constant is fitted (DEC-084); the existing insufficient-material draw detection is not duplicated by this and the step says how the two divide
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tests/test_evaluation.cpp, tests/test_eval_positions.hpp
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, src/eval_trace.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tools/tuner_layout.hpp, tools/tuner_optimiser.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tools/truncation_scan.cpp, tools/eval_spread.cpp, tests/CMakeLists.txt, tests/test_evaluation.cpp, tests/test_eval_positions.hpp, tests/test_endgame_positions.hpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_tuner_box.sh, tests/test_walked_counts.hpp, adocs/data/S101_gradient_rows.cpp, adocs/data/S310_adagrad_step.cpp, adocs/data/S122_screen.py, adocs/data/S083_truncation_pick.py, DEV_MANUAL.md
 excludes:   tablebases, which are S129; the 50-move decay, which is a separate small term in the reserve; the complexity term, which is S266
 decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
@@ -627,3 +627,808 @@ The tablebase guard and P0's conversion test stay, the guard at each row's own c
 
 **Order.** Phase 1 is built while S122's corpus and screen run, and lands after S122's screen has ended. S124's fits wait
 for S122's landing. The research pass's corpus counts are the void corpus's, and are re-read on the regenerated one.
+
+## 2026-11-04: phase 1
+
+One Opus 5.5 subagent, coordinated; worktree `../chesso-s124p1`, branch `s124p1` on `d83d6c0`, the diff staged and not
+committed. DEC-350's items (1) to (6) built at the identity -- every cell's factor at F = 128, mop-up's three pairs at
+zero -- so the landing is `No functional change`; nothing fitted on real data, timed or played, and no game generated.
+Every definition is chesso's own and stated in src/evaluation.hpp (DEC-221); mop-up's first two counts are CPW *Mop-up
+Evaluation*'s features, its constants a program's and no seed (DEC-105); no engine's source was read. F is DEC-134 form
+(b); every forced value in a test, a plant or a sink is written where it is used and derived from nothing.
+
+### The design as built, DEC-350
+
+- **The factor, reading A** (`scaled_taper()`, src/evaluation.cpp): stage one's integer is `material + (128 X + (f_c -
+  128) E1 (24 - phase)) / 3072`, X `taper()`'s numerator, one truncating division, so at f = 128 it is `taper()`'s
+  integer exactly. E1 = `board->material + eg_value(pair)`, the pair being the psqt sum, the pawn families, placement
+  and mop-up; mop-up's share of E1 never reaches a factor, mop-up firing only on LONE, which has no cell. The strong
+  side is E1's sign; at E1 = 0 no cell. Stage two, its clamp and S122's margin are untouched. An int32 headroom
+  `static_assert` covers the numerator at any weights the stage-one bound admits; a second keeps every cell in [0, F].
+  **f = 0 removes E1's share and no more**: stage one keeps (material + the pair's middlegame half) phase / 24, a draw
+  at phase 0 and elsewhere only where the two cancel. The research pass's "0 a draw" (above, "The scale factor") holds
+  at phase 0 alone; the fast check's finding (6), corrected in src/evaluation.hpp's comment too.
+- **The cells** (`endgame_cell(board, strong)`): LONE (a side's king alone) first, which holds every position
+  `is_insufficient_material()` calls dead, so the detector and the factor divide without the detector being called
+  here: the search draws those before `evaluate()`, LONE gives f = F, and mop-up's two phase units exclude them. Then
+  OCB (one bishop a side, `one_colour` apart): PURE by P <= 2, 3-4, >= 5; ROOK, one rook a side and no knight or
+  queen; any other no cell. Then PAWNS, P 0 to 2 by d <= 0, 1, >= 2. Numbered `endgame_cell_t`, PAWNS 3 P + column
+  first, then the four OCB cells.
+- **The gate**, the cells' first test: past two pawns of the strong side, with a knight or queen on the board or not
+  one bishop a side, no cell can hold and nothing more is read. Tighter than the research pass's (both sides past two),
+  the strong side being known; sound by the definitions, and the walk and the census below hold it so.
+- **Mop-up** (`mopup_counts()`, `mopup_terms()`): the domain is one side lone (its occupancy its king's square, two
+  compares) against a side with no pawn, two phase units or more, not knights alone; the three counts, the side with
+  men's own, signed White's less Black's into stage one's pair, `TERM_MOPUP` in the trace. The stage-one 16-bit bound
+  gains mop-up's reach (6, 12, 7 a weight) in `stage_one_with_mopup`.
+- **Liveness, S101's form**: `endgame_scale_live` (a cell off F) and `mopup_live` (a weight off zero) gate both out of
+  the search's `evaluate_cheap()`; the trace build computes both whatever their weights.
+- **INV-4, what each reads**: the cells, popcounts of `board->bitboards` (pawns, knights, bishops, rooks, queens per
+  side), the two side occupancies against the king bitboards, the bishops against `one_colour`, `board->material` and
+  `eg_value(pair)`; mop-up, the same occupancies, one popcount pass over a side's men and two `get_lsb_index` for the
+  kings. No accumulator rebuilt, no piece walked.
+- **19 parameters, `PARAM_COUNT` 1171 -> 1190**: `MOP_` (3 a half) then `EGS_` (13, one half each, as a piece value),
+  `ENDGAME_SCALE_END == PARAM_COUNT` asserted, no earlier index moved; groups `mopup` and `endgame_scale`; parts
+  `endgame_scale.f1`, `.f2`, `.f3` (DEC-350 (7)'s F1 to F3, each by its cells); the tie row `endgame_scale`, one half
+  and no suffix, so `endgame_scale 11 10` is DEC-350 (2)'s tie; the header emits `mopup_mg`, `mopup_eg` and
+  `endgame_scale` in the engine's own form.
+- **The trace** carries the two candidate cells in `record_t::cells`, set by `EVAL_TRACE_CELLS`, a byte each in
+  `dataset_t::cells`; `sum_record()` refuses a cell past the thirteen (a new refusal case in `test_eval_trace`).
+
+### The tuner's product, DEC-350 (5)
+
+- `exact_parts()`: E1 the material and the positional endgame sum at the weights read, its sign's candidate, the
+  factor inside the one positional division; `exact_parts_t` gains `e1` and `cell`. `smooth()`: `(f_c / F - 1) E1
+  w_eg`, zero at F and at E1 = 0, so the score is continuous where the pick switches. `gradient()`: `d/df_c = E1 w_eg /
+  F`; a piece value's coefficient `1 + (f_c / F - 1) w_eg`; a positional endgame weight's taper weight `w_eg f_c / F`.
+- **The box** `tuner_groups::box_scales()` after each step and its ties, in tools/tuner.cpp. Not inside `descend()`:
+  the box is no null direction, and "the fit holds every gauge still and no score sees the hold" compares `descend()`
+  with the optimiser alone, so a box there read 348.6 and 130.2 apart (Adam, AdaGrad) on the cells it boxed, the box
+  and not the hold. Out of `descend()` the case reads 7.96e-13 apart under Adam, and 3.50e-12 under AdaGrad at its old
+  step of 2, 1.14e-12 at the 3 its golden now carries (below); its form unchanged.
+- `tools/feature_audit`: the cells' columns while every cell is at F, the integer E1 (24 - phase) on the rows whose E1
+  picks the cell (the 1/F a common factor); off F the identity report says `not computed`. The design check leaves the
+  cells out of its sum, as it leaves the curve's inputs. `support endgame_scale[c] rows N games G candidate_rows M` and
+  `mop-up (S124) support:` lines for the screen's ties. And one dependency by construction, found by the recovery
+  below: **mop-up's corner pair is one direction** -- the count is non-zero on KBN against a king alone, always phase
+  2, so `11 mopup_mg[2] - mopup_eg[2] = 0` on every row; held when the free set freezes a half, otherwise reported as a
+  direction nothing holds (S121's mobility levels' form).
+- `tools/truncation_scan`'s and `tools/eval_spread`'s headers say what each sees of the factor (DEC-350 (6)).
+
+### The walk and the census
+
+`walked_counts::endgame_family_features()` (tests/test_walked_counts.hpp): the men counted by walking the placement, a
+bishop's colour from rank and file, the centre distance as the nearest of its four squares, the corner as the nearer
+of the two of the bishop's colour found by asking all four; DEAD written out though LONE holds it. `test_eval_model`
+"eval counts: S124's endgame family": S101's population and S124's (`tests/test_endgame_positions.hpp`, 49 signatures
+each way round, seeded 20261104, 5719 positions), 17794 in all, both candidates and every mop-up count per side; the
+rarest cell or count non-zero on 47 (White's OCB_PURE P >= 5); and 16 hand cases from the definitions, each as
+written and mirrored. Green on first run; the plant is what says it can fail.
+
+**The census as a check** (adocs/data/S124_cell_check.cpp, adocs/data/S124_cells_check.txt): over S083's corpus
+(sha256 2e0e3de9...) and S082's three fixed views, read in place, FEN column only, the engine's candidates and counts
+against the walk and against the trace's record: **0 rows differ** in 6226944 + 1015332 + 1015607 + 988086. On S083's
+corpus the cells E1 picks read the research pass's `S083 %` column to the third decimal (P=0 d<=0 0.111 to P=2 d>=2
+0.636, OCB_PURE 0.119 / 0.225 / 0.096, mop-up's domain 0.112 and KBN 0.022); OCB_ROOK 0.944 against 0.945, the 0.001
+being the case's rows at E1 = 0, which pick no cell. S122's regenerated corpus does not exist yet.
+
+### INV-6
+
+`chesso bench` 5482277 in `build` and in `build-tune`. `tools/search_bench.py` against `d83d6c0`'s
+binary (a clean `git archive` build, sha256 097eddc2...): depth 9 c3d5 39080 / d5e6 110485 / d7c8q 44098, depth 12
+c3d5 219796 / e2a6 307606 / d7c8q 256487, node counts and best moves identical. `adocs/data/S124_objdiff.py` over the
+two `evaluation.cpp.o`: every function identical once the padding is dropped, `endgame_family_counts()` the one new
+(`adocs/data/S124_inv6.txt`).
+
+### The cost, INV-4
+
+`adocs/data/S124_phase1_cost.sh` (`S124_phase1_cost.patch`): the landed `mopup_terms()` and `scaled_taper()` copied
+with forced non-zero weights into an asm barrier, the score the landing's, node counts checked equal first; five
+interleaved `tools/perf_counters` runs, instructions only (`adocs/data/S124_phase1_cost.txt`):
+
+| sink build, instructions | `bench` | `bench 16` |
+|---|---|---|
+| the factor alone (`S124_SINK=1`): the cell, its gate, the scaled taper | +1.205 % | +1.212 % |
+| mop-up alone (`=2`): the domain's two compares, its counts where it holds | +1.037 % | +0.993 % |
+| both (`=3`) | +1.906 % | +1.861 % |
+
+Node counts 5482277 and 14931387 on all four builds before any count; spreads 308 to 921 instructions over five runs.
+The factor sits under the research pass's gated +1.316 % / +1.264 %, its gate reading the strong side's pawns; mop-up's
++1 % is, inferred and not split, the domain test at every stage-one call, its counts running only in the domain. No cycle,
+wall or nps was read: the verdict carries the cost (DEC-350's screen, "The cost").
+
+### Guards, each seen red on a plant
+
+`adocs/data/S124_phase1_plants.sh` on a scratch copy of the working tree with `adocs/data/S124_phase1_plants.patch`: a
+`plants` build (the plant picked by `S124_PLANT`) and a `forced` one (`-DS124_FORCED`, every cell off F, the values
+`test_eval_trace` forces); `adocs/data/S124_phase1_guards.txt` has every run's tally. Read again after the rulings,
+plants 9 to 14 and the engine's own library new; the counts below are that run's.
+
+| guard | plant (`S124_PLANT`) | read |
+|---|---|---|
+| walk, `test_eval_model` "eval counts: S124's endgame family" | none | green, 179059 assertions |
+| | 6 the engine reads P from the weak side | red: 16078 checks, the first `engine.cell[side] == walk.cell[side]` |
+| identity and forced cells, `plants` build, `test_eval_trace` "the trace reconstructs evaluate() exactly" and "the factor's integer arithmetic is reconstructed at cells that move it" | none | green, 55459 assertions |
+| | 1 the trace's White candidate one off | red: 2024 checks, the forced-cell case's positional part; the identity at F blind, as DEC-350 (6) says |
+| | 2 E1 without the material | red: 15211 checks, the forced-cell case (`parts.e1`); the identity at F blind |
+| | 3 the divisor 24 for 24 F | red: 10246 checks, the identity at F as well, the numerator being 128 times taper()'s |
+| | 4 the strong side from E1 + E2 | red: 97 checks, the forced-cell case, on the rows where the two signs part and the candidates differ |
+| identity on the `forced` build, `test_eval_trace` "the trace reconstructs evaluate() exactly" and "the smooth score is within the truncation bound" | none | green, 20939 assertions; the worst gap 2.89193, the cell row (below) |
+| | 1 | red: 367 checks, `exact_score() == evaluate()` |
+| | 2 | red: 1294 checks, the same |
+| | 3 | red: 2366 checks, the same |
+| | 4 | **green**: no position of the identity case's list is a split row -- E1 and E1 + E2 apart in sign with candidates that differ; the forced-cell case, S124's population among its rows, reads it (above), and so does `truncation_scan` (below) |
+| the tuner, `test_tuner_gradient` "the endgame factor's gradient is the derivative, chain rule in", "the factor's cell follows E1's sign when a fit moves it", "a step boxes the scale factors to [0, F]" | none | green, 12684 assertions |
+| | 5 the pick by the shipped sign, the stale pick | red: 3 checks, `after.cell` and `s.cell` (4 against Black's 0) and the factor's share there |
+| | 7 the chain rule dropped | red: the finite-difference worst 1.99 at parameter 476, `psqt_eg[knight][h6]` |
+| | 8 the box left out | red: 2 checks, the factors left at 328 and -72 |
+| the per-row truncation bound, `plants` build (every cell at F), "the smooth score is within the truncation bound" | none | green, 9000 assertions |
+| | 10 the smooth score moved 0.03 on every row at F | red: 4 checks, `gap <= truncation_bound(...)`: a row at F keeps 3 x 23/24 |
+| the forced-cell case, `plants` build | 9 `truncation_bound()` the old 3 x 23/24 on every row | red: 2 checks, the 2.89193 row and its mirror |
+| identity and bound on the `forced` build | 9 | red: 2 checks, the same two rows |
+| | 11 the engine's one pick reversed, both libraries | red: 796 checks, `exact_score() == evaluate()` |
+| `tests/test_tuner_box.sh` on the `plants` build's tuner | none | green: `128 128 128 128 0 128 128 128 128 128 128 128 128` |
+| | 13 the in-loop box call left out | red: `header factor 2 is 422, outside [0, 128]` |
+| | 14 that call moved before the step | red: `header factor 2 is 132` |
+| `adocs/data/S124_engine_eval.cpp`, `chesso_engine` against `chesso_engine_trace` on the `forced` build over S083's corpus | none | green: 0 rows of 6226944 differ |
+| | 11 the pick reversed in both | green, 0 rows differ: the libraries agree, and the identity reads it red (above, 796 checks) |
+| | 12 the pick reversed in `chesso_engine` alone | red: 840136 rows of 6226944 differ |
+| `test_tuner_groups` "a tie names S124's factors by cell", the refusal of a scaled tie on a boxed row | the fix absent | red: 6 of its 20 assertions; green with it |
+| `truncation_scan` on the `forced` build over S083's corpus, read in place | none | green: every row's identity holds, 6226944 rows; 102066 past 2.0, one past 2.875 (below) |
+| | 1 | red: refused at its first disagreement, 108 against 85, `8/8/8/5p2/1k5K/8/6PP/8 b` |
+| | 2 | red: 88 against 74, `8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w` |
+| | 3 | red: -5302 against 74, the same row |
+| | 4 | red: -112 against -119, `6R1/6pp/4p3/4qpk1/8/R6P/6P1/6K1 w`, a split row the test positions lack |
+
+### The planted recoveries
+
+`test_tuner_gradient` "a planted vector comes back: endgame", a new `fast` entry: the thirteen cells from F to a plant
+inside the box over the population's rows in a cell, 6000 epochs; mop-up from zero over its domain's rows, 32000
+epochs. Green; 201 s wall and 17.4 s of CPU under the corpus's load (base's entry 115 s and 22.3 s), so S309's 30 s at
+-j12 is unread and the coordinator's with the machine idle. **The corner pair is one direction** (above): the fit
+returns 12.348 and 14.696 against 9 and 15 planted, 2 mg + 22 eg = 348.0 either way, so the case holds the pair to that
+sum and the other four halves to their plants. The middlegame halves are slow, the domain's phases 2 to 6 giving them
+a twelfth of the weight: the centre's 6.715 against 6 at 12000 epochs, 6.124 at 24000, 6.038 at 32000.
+
+### Coverage and the preconditions
+
+- **Coverage rows** (DEC-142), `adocs/data/S124_coverage_rows.cpp`, S121's rule over the family's 19: from the base 106
+  rows 13 needs open (mop-up's six, seven cells); `all_test_fens()` closes six, S083's corpus the rest after 359421
+  rows, 9 pairs, every row VALID by python-chess; the program reproduces its block; the gradient case's non-vacuity
+  and the trace's both-ways case pass over the 124 (the smallest gradient from `MOB_MG_BASE` 3.06e-8, over S124's
+  family 9.73e-7).
+- The gradient case: **4.63e-7 at parameter 992, `passed_king_enemy_mg[1]`**, over the 124 (S122's 2.68e-7 at 985 on
+  106). The factor's case: **3.02e-7 at parameter 726, `psqt_eg[king][b6]`, over the 482 parameters the product
+  reaches**, 5715 rows; over all 1190 the worst is 2.4e-5 at `backward_rank_mg[0]`, an analytic 8.39669e-11 against
+  8.39689e-11, the summation's rounding over a gradient that cancels on endgame rows, which is why the case reads the
+  product's parameters and says so.
+- `tools/feature_audit --free endgame_scale` over S083's corpus, read in place: the trace's identity on all 6226944 rows
+  (0 differ); rank exactly 1118 of 1190, nullity 72, the 34 zero columns and 38 dependencies by construction (S122's
+  37 and the corner pair), 0 further; the span `72 of at most 72`, the corner pair held by the freeze; the design check
+  1.36e-12 over 200034 rows; every cell's column non-zero. Its support: the cells picked on 798 to 23018 games,
+  OCB_PURE P<=2 905, P=3-4 1657, P>=5 798, so two of the three under DEC-326 (5)'s 1000 on this corpus; mop-up's
+  centre and kings on 1789 and 1837 games, the corner on 196 (`adocs/data/S124_preconditions.txt`).
+- A tuner smoke on the population written as a corpus (5719 rows, scratch): `--only endgame_scale --tie` with
+  `endgame_scale 11 10`, 300 epochs: the load's identity 0 differ, 12 free, the tie and the box held (the fit drove
+  nine cells to 0 against random labels), the header emitting the three new arrays. A smoke and no reading.
+- The gauge walk (`S083_tuner_preconditions.cpp walk`): smallest plain shift 2.30 under Adam, the bishop's, and 1.76
+  under AdaGrad at its step of 3, `psqt_eg[king]`'s, every hold at most 1.2e-14. `S310_adagrad_step.cpp`, the AdaGrad
+  step golden, its second member found by identity since ruling 2 (below): the family's onset moves from 5 to 6 with
+  the nine pairs, so its rule answers **3** where the case carried 2, and `ADAGRAD_HOLD_STEP` follows it (DEC-142); at
+  3 `apart` 1.14e-12 at epoch 300, at most 5.24e-11 over the family through 1200, every hold at most 1.2e-14. The
+  first report's 4 was the script's answer with its member dropping the list's last pair, one of S124's.
+- **RED, and not mine to settle: the clamp case's `CLAMP_PUSH` golden has no re-derivation.** At +30 the KBN coverage
+  pair (`8/8/8/2N1K3/2B5/4k3/8/8 b`, its mirror) reads 184.75, 0.75 from the kink, so "the clamp's derivative is exact
+  where it binds" fails its precondition on two rows, and `S083_tuner_preconditions.cpp clamp` answers **no push from
+  +10 to +200**: on the base 106 rows +30 was already the only push its rule took (every other binding push's finite
+  difference past 2e-7, 3.4e-7 at +40, at `passed_king_enemy_mg[5]`), and the pair takes that one away. Tried and
+  reverted: S121's eligibility with a clause keeping a pick a centipawn from the kink at CLAMP_PUSH picks another KBN
+  pair (`8/1b6/3n4/K7/3k4/8/8/8 b`), and then the gradient case reads 1.01e-6 at parameter 112, red, and the clamp
+  rule's +30 3.22e-7 at 141, so it trades one red for two. DEC-316's class; ruling (a), one DEC-316 pair, tried
+  and taken out again, did not settle it (below, "The rulings on phase 1").
+
+### Gates
+
+Both builds without a warning (`-Werror`). `ctest -L fast -j12` under the corpus's load, the delivered tree after the
+rulings, 59 entries with `test_tuner_box`: **`build` 45 pass at their clock, `build-tune` 46; every other entry but one
+times out at its clock and passes run alone and unclocked** -- `build`'s 13: `test_movegen` 125 s, `test_search` 113,
+`test_engine` 64, `test_leaf_walk` 129, the plant entries base 142, pawns 312, threats 415, king_safety 121 and
+endgame 138, `test_mate_breadth` 328, `test_mate_carry` 279, `test_fastchess_script` 79, `test_plan_params` 37;
+`build-tune`'s 12, the same less `test_plan_params`, 45 to 290 s -- **and `test_tuner_gradient` fails 2 of 61092
+assertions, the clamp case's precondition above, in both builds** (`build`'s timed out at its clock and was run alone,
+`build-tune`'s failed within it). `test_tuner_box` passes in both, 0.9 and 1.0 s.
+`test_clang_format_script` with `CLANG_FORMAT_MAJOR=22`. `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` clean.
+`tools/plan_prose_check.py`, each mode alone, exit 0: `--touches` 0 flagged, `--params`, `--citations` 0 flagged,
+`--gate` agrees, `--prose` 0 flagged. `chesso bench` 5482277 in both builds. **Tier 2 (DEC-141) does not bind**: no
+`make_move`, `unmake_move`, generator or search change and no pruning, reduction or extension rule; under `src/` only
+`evaluation.cpp`, `evaluation.hpp` and `eval_trace.hpp`. `tools/gate_extra.sh` was not run. DEV_MANUAL.md updated (the
+gradient check's counts and the factor's case, `eval_spread`'s and `truncation_scan`'s view of the factor, the groups,
+parts, tie row and box, `feature_audit`'s cell columns, support lines and the corner dependency, the coverage blocks and
+the two goldens' rows; since the rulings the 482-parameter count, the tie refusal, `test_tuner_box` and both goldens'
+rows again); MANUAL.md read and unchanged: no option, command or output of the engine moves.
+
+**The truncation bound, DEC-350 (1): the conditional form, by the coordinator's ruling on the fast check.** First
+built unwidened: on the `forced` build the case was green at 3 x 23/24 over its positions, none of which is a cell row
+past 2.875. `truncation_scan` on that build over S083's corpus then found **one** row past it, `8/5k2/8/5K2/5NRP/8/8/5r2
+b`, a row in a cell, at 2.891927, under 2 x 23/24 + 3071/3072 = 2.9163 (six more at 2.875 exactly), and the ruling took
+that as the evidence the brief asked for. So the case's bound is now per row (`truncation_bound()`, DEC-350 (1) cited
+there): a row whose cell is off F gets 2 x 23/24 + 3071/3072, every other row keeps 3 x 23/24, unchanged at the
+identity. That row and its mirror are `cell_truncation_positions`, in the case and in the forced-cell case, whose
+precondition now asserts a cell row past 3 x 23/24 (2.89193). Readings below, "The rulings on phase 1".
+
+### The rulings on phase 1
+
+The coordinator's two messages of 2026-11-04: rulings on the first report, then the fast check's six findings. Every
+new guard below was seen red on its plant before it was read green; the readings are `adocs/data/S124_phase1_guards.txt`'s
+and `adocs/data/S124_preconditions.txt`'s.
+
+**Ruling 1, the clamp case: (a), DEC-316's form as DEC-343 applied it. Tried; it does not land, and I stopped as the
+ruling says.** `adocs/data/S124_gradient_rows.cpp` (new) is `S101_gradient_rows.cpp`'s rule in a mode for the clamp
+case's setting: the gradient read at the shipped constants with +40 on the eighteen king safety weights, the case's
+labels, K 1; S121's eligibility and the case's own clause, each row of the pair more than a centipawn from the kink at
++40; TARGET `passed_king_enemy_mg[5]` (996), MULTIPLE 3; one pair. Over the 124 rows the base reads -4.759e-5 at 996;
+153 eligible pairs tried, the pick `7K/1k6/8/8/8/8/pppppppp/NNNNNNNN w - - 1 2` and its mirror, which takes 996's
+relative error at +40 from 3.40e-7 to 9.90e-8. `S083_tuner_preconditions.cpp clamp` over the 126 rows then still
+answers no push from +10 to +200: +30 keeps the KBN coverage pair 0.75 cp from the kink, which no added row moves, and
++40's worst moves to 984, `passed_king_own_mg[5]` -- S101's own DEC-316 target -- at 3.39e-7, past 2e-7. The main
+gradient case read 4.92e-7 at 992 with the pair, green; the clamp case red on the same two checks. The pair is out
+again (tests/test_eval_positions.hpp at its 124 rows); the program stays as the reading, its header saying it did not
+land, and on the delivered tree it prints its pick and reads the marker absent. (b), (c) and a second pair were not
+tried.
+
+Draft lines for the coordinator's decision:
+
+- *Context:* S124's coverage block puts its KBN pair 0.75 cp from the clamp's kink at `CLAMP_PUSH` +30, and
+  `S083_tuner_preconditions.cpp clamp` answers no push from +10 to +200 over the 124 rows. DEC-316's one pair, picked
+  by `S101_gradient_rows.cpp`'s rule at the clamp case's setting (`adocs/data/S124_gradient_rows.cpp`), takes +40's
+  failing parameter, `passed_king_enemy_mg[5]`, from 3.40e-7 to 9.90e-8, and the next, `passed_king_own_mg[5]`, then
+  reads 3.39e-7: one pair does not settle it.
+- *Decision:* the coordinator's, among (b) the rule's margin from 2e-7 to 4e-7, which answers +40 on the 124 rows and
+  still +30 on the base 106; (c) the coverage rule's kink clause, which trades this red for two (above, "Coverage and
+  the preconditions"); or more than one pair, which ruling 1 excluded.
+
+**Ruling 2, S310's positional member: by identity.** S310's step file and the script's header both name the member as
+the fixture less DEC-316's pair at S101's candidate, "the rows S101's fit went chaotic without"; "less its last pair"
+was how S310 found it, the pair being last then, and S124's block made it stale. So `dec316_pair()` finds the pair by
+its marker comment in tests/test_eval_positions.hpp (exit 2 if absent or not in the compiled list), and
+`write_gauge_fixture()` drops it by identity, every other row keeping its own label and score. **Re-derived: the rule answers 3, not the
+first report's 4.** The identity member is the harsher one: its four starts (shipped, 1, 3, 10 cp) first pass 1e-9 at
+10, 6, 7, 7, where the positional member's, which had dropped S124's last pair, did at 12, 9, 9, 9 and the family's
+onset was 8 (the case's own fixture, 12, 10, 8, 10, unchanged). Onset 6, half 3, and the shipped constants at 3 walk
+1.7570 (176 times the floor) and travel 1428.1. `ADAGRAD_HOLD_STEP` is 3 and the script, run again with it, exits 0:
+at 3 `apart` 1.14e-12 at epoch 300, at most 2.16e-12 through 1200 on the case's fixture and 5.24e-11 over the family,
+4.3 decades under the bound, every hold at most 1.15e-14.
+
+**Fixed on the way:** `adocs/data/S101_gradient_rows.cpp` asserted the fixture held exactly its base rows and its pair,
+true until S124's block was appended; now at least that. It reproduces its pair (`yes`; 2.07e-6 to 1.11e-7 at 984).
+
+**The fast check's six findings.**
+
+1. *One pick, both libraries.* `scaled_taper()` computes the cell once, `endgame_cell(board, E1's sign)`, in both
+   builds; the trace build alone also computes both candidates and records them, and nothing it records reaches the
+   score. INV-6 re-read: `S124_objdiff.py` exit 0, every function identical, `endgame_family_counts()` the one new;
+   `chesso bench` 5482277 in both builds. The guard over the non-trace library with cells off F:
+   `adocs/data/S124_engine_eval.cpp` (new), built against the forced build's `libchesso_engine.a` and
+   `libchesso_engine_trace.a`, prints `evaluate()` for every row of S083's corpus, compared line for line; the trace
+   library is in turn held to `exact_score()` by the identity case and `truncation_scan`. Unplanted, 0 rows of 6226944
+   differ; plant 12, the pick reversed in `chesso_engine` alone, 840136 differ; plant 11, reversed in both, 0 differ,
+   and the forced identity case reads that one red, 796 checks. A plants-script guard, not a ctest entry: it needs the
+   forced build.
+2. *The box's call sites.* `tests/test_tuner_box.sh` (new, `test_tuner_box`, fast): 48 rows, KRP against KB labelled 0
+   (cell 4, P=1 d=1) and KQ against KR labelled 1 (cell 2, P=0 d>=2), two of each a game; `--only endgame_scale --lr
+   4 --epochs 200 --report 1`, so every epoch can be the emitted one; the header's and `--vector`'s factors in [0, 128]
+   and equal, and the precondition that cells 4 and 2 sit at 0 and 128. Green, `128 128 128 128 0 128 128 128 128 128 128 128
+   128`; red with the in-loop call left out (plant 13, `header factor 2 is 422`) and moved before the step (plant 14,
+   `132`). The call before the loop is not
+   guarded: it boxes the shipped constants, in [0, F] by a `static_assert`, after ties of scale 1, so no fit sees it.
+3. *Ties on boxed rows.* `parse_ties()` refuses an `endgame_scale` tie of any scale but 1, "a tie on endgame_scale
+   takes scale 1: the box after the ties would break any other". `test_tuner_groups` "a tie names S124's factors by
+   cell, one half and no suffix" gained 0.5, 2 and -1 refused and an explicit 1 accepted: red before the fix, 6 of its
+   20 assertions failed (the three refusals' two checks each); green after, 29042 assertions in the binary.
+   DEV_MANUAL.md's sentence says so.
+4. *DEV_MANUAL.md's count.* "all 1190" is now the 482 parameters the product reaches, with the reason: over all 1190
+   the worst is 2.4e-5 at `backward_rank_mg[0]`, rounding over a gradient that cancels on endgame rows.
+5. *The truncation bound, conditional* (above, "Gates"): `truncation_bound()` in tests/test_eval_trace.cpp, DEC-350
+   (1) cited there; `cell_truncation_positions`, the scan's 2.89193 row and its mirror, in both cases. With every cell
+   at F the case is green over 9000 assertions and red on plant 10, the smooth score moved 0.03 on every row at F (4
+   checks), so a row at F keeps 3 x 23/24. With plant 9, the old bound on every row, the forced-cell case is red on the
+   two rows (2 checks), and so is the forced build's bound case; unplanted both green, the forced build's worst gap
+   2.89193.
+6. *"0 is a draw"* corrected in src/evaluation.hpp's comment, in "The design as built" above and in the specs draft.
+
+### Draft wording for specs.md, the coordinator's
+
+- The `evaluation` row, after S122's sentence on its landing: "**S124's endgame family sits in the cheap stage at its
+  identity** (2026-11-04, DEC-350): a scale factor f_c in [0, 128] per cell multiplies E1 -- `board->material` plus
+  stage one's positional pair's endgame value -- inside stage one's one taper, `material + (128 X + (f_c - 128) E1 (24
+  - phase)) / 3072` with X `taper()`'s numerator, so at 128 it is `taper()`'s integer; thirteen cells by counts, the
+  first that holds: a lone king (every dead position among them) none; one bishop a side on opposite colours, by the
+  strong side's pawns P <= 2, 3 to 4, >= 5 with nothing but pawns, one cell with a rook a side, none otherwise; and P 0
+  to 2 by d, the strong side's men in phase units less the other's, <= 0, 1, >= 2; the strong side E1's sign; at 0
+  stage one keeps (material + the pair's middlegame half) phase / 24, E1's share alone removed. Mop-up's
+  three linear pairs sit in the same pair in its domain, a lone king against a side with no pawn and two phase units or
+  more, knights alone excepted: the lone king's centre Manhattan distance, 14 less the kings' Manhattan distance, and
+  for K+B+N 7 less the lone king's Chebyshev distance to the nearer corner of the bishop's colour. At 128 and zero both
+  are in no expression of the search's evaluation (INV-6, `adocs/data/S124_inv6.txt`); stage two and its clamp are
+  untouched. The trace records both candidate cells and the tuner picks by E1's sign at the weights it holds."
+- The `absent, evaluation` row: "the tuner carries ..., S122's 50 ... and, since S124's landing, S124's 19 -- the
+  thirteen factors at 128 and mop-up's six at zero, in no expression -- making 1190 fitted and 1095 shipped (1171 and
+  1095 before S124's landing; ...)".
+- The `absent, evaluation model` row: "endgame scaling factors" leaves the absent list for "endgame scale factors and
+  mop-up, present in the code since S124's landing at the identity and in no expression (row above)".
+
+### Pre-registered: the screen, a draft (DEC-350's parts and order, S122's form)
+
+Every corpus figure below is the research pass's, on the void corpus, **to be re-read on S122's regenerated corpus**.
+Nothing here is fixed until the coordinator writes the screen's script and this becomes its header; a change after
+the first fit is a dated section here and a decision.
+
+- **The corpus**: S122's regenerated prepared corpus (DEC-349) and its own held-out games, at the landed tree's K; the
+  labels the games' results under the laws (DEC-349 (5), DEC-350 (9)). The identity rule before any fit:
+  `feature_audit --free endgame_scale` on it -- at the landing, on S083's corpus, rank exactly 1118 of 1190, nullity
+  72: S122's 71 (its 34 zero columns and 37 dependencies by construction) and the corner pair, 0 further; to be
+  re-read -- every cell's column non-zero, and the corner pair held by the freeze.
+- **P0, a reading: head's conversion test.** Starts: distinct training-side root positions of mop-up's domain, one a
+  game, 200 each of KRvK, KQvK, KRBvK, KRNvK, KBNvK and every KBBvK game's; each start's clock zeroed and kept only
+  where Syzygy reads 2 there; self-play at 100000 nodes a move under the laws, no adjudication; converted = mated within
+  50 moves. About 10 min. If head converts every start, mop-up is recorded zero and P1 is not run.
+- **P1, mop-up's SPSA** over its pairs on P0's objective (plies to mate, the bound for a failure), about 3 h, **the
+  corner as one parameter** -- its middlegame half tied or frozen, the pair being one direction (above) -- then the
+  conversion test on fresh starts; kept iff McNemar's one-sided z > 1.645 over head and no signature converts fewer.
+  The SPSA instrument is not built (below).
+- **F1, F2, F3**, `--only endgame_scale.f1`, `.f2`, `.f3`, in that order, the old constants frozen, earlier survivors
+  live, each paired against the landed tree on the regenerated corpus's own held-out games, kept iff d > max(1.645
+  sd(d_s), 2e-6) over five quarter samples, every fit `--epochs 20000 --report 100 --patience 20` (DEC-345 (1)); F3
+  with `--tie` holding OCB_PURE P >= 5 to P 3-4 at scale 1 (`endgame_scale 11 10`) unless that cell's support reads
+  1000 games or more (DEC-326 (5)). OCB_PURE P <= 2 stood on 1047 games on the void corpus and stands on 905 on
+  S083's: if under 1000 on the regenerated one it has no supported neighbour in F1, and that stops for the
+  coordinator before F1 is fitted. Research figures, void corpus: F1 -256 in sample, F2 -290, F3 -37 (1e-6, all rows).
+- **The tablebase guard**, every part: the training side's rows of five men or fewer labelled by the tables at each
+  row's own clock (WON 1, DRAWN and SPOILED 0.5, LOST 0, EDGE left out); a part raising that loss by more than 1.645
+  whole-game errors is refused whatever its held-out d. F3 has no such row and is screened on the loss alone, and its
+  stamp says so; F1's OCB_PURE cell is guarded on its P=0 and P=1 rows alone.
+- **The cost**, `S124_phase1_cost.sh`'s sink at the candidate's masks; it decides nothing, the verdict carries it.
+- **The SPRT**: one `{0, 5}` nElo of the survivors, 8+0.08, Hash 16, `books/noob_3moves.epd`, concurrency 12, against
+  the landed tree; 41861 games and 19.84 h at the midpoint, 25591 and 12.13 h on a bound; cap 20950 rounds, 41900 games,
+  19.86 h; S101's abort rule; an A/A of 1000 games first if the harness moved. The two-sided resign at 400 cp hides most
+  of mop-up's conversions from the verdict, and this pre-registration says so.
+- **On H0 or no verdict**, in order, each `{0, 5}` against what has landed, survivors only: A = mop-up, B = F1, C = F2
+  and F3's survivors.
+- **Machine hours, inferred**: P0 10 min; P1 about 3 h 10 m; a part's six fits about 36 min at patience to 4 h 50 m at
+  the cap; the guard minutes; the cost about 1 h; the SPRT 12.1 to 19.9 h.
+
+### Open, and what phase 2 builds
+
+- **The clamp case's golden**: red, and ruling (a) did not settle it (above, "The rulings on phase 1"). What is left
+  is the coordinator's: (b), the rule's margin, which answers +40 on these 124 rows by the table above, or more than
+  one pair, which the ruling did not allow.
+- **Mop-up's SPSA instrument**: not built. DEC-350 (4) fits mop-up by SPSA on conversion; the tune build exposes no
+  evaluation weight over UCI, so the six would need tune-build options -- a UCI surface change (`test_uci_surface`,
+  MANUAL.md, specs.md) -- or a driver that rebuilds per point; and `tools/spsa_driver.py` plays matches, not conversion
+  starts. Phase 2's, with P0's conversion script.
+- The screen's script, `S124_screen.sh`, is not written; the draft above is its header.
+
+### Findings beyond the step, not fixed
+
+- (a) **Mop-up's corner pair is one degree of freedom**, DEC-350 (4)'s "three linear pairs" notwithstanding: KBN
+  against a king alone is always at phase 2, so the engine, the loss and an SPSA all see 2 mg + 22 eg of it and nothing
+  else. P1 should fit it as one number (above). Not changed here: the ruling names three pairs.
+- (b) `adocs/data/S310_adagrad_step.cpp`'s positional member: fixed by identity, the coordinator's ruling 2 (above,
+  "The rulings on phase 1"); its rule then answers 3.
+- (c) S122's screen pins the layout: `adocs/data/S122_screen.py` `PARAMS = 1171`, `EXPECTED_RANK = 1100`, and
+  `.tuning/verify_fit.py` reads 1171 (S122's record). On a tree with this phase the audit reads rank 1118 of 1190, so
+  an S122 `audit-check`, `apply` or `verify_fit` run there refuses; and `tools/tuner`'s header now emits `mopup_mg`,
+  `mopup_eg` and `endgame_scale`, which `.tuning/apply_fit.py` (not read) would meet. Harmless while S122's screen
+  runs on its frozen tools; the coordinator's order to settle.
+- (d) The step's `touches:` (DEC-350 (11)) lacks what this phase also touches: `tests/test_eval_model.cpp`,
+  `tests/test_eval_positions.hpp`, `tests/test_endgame_positions.hpp` (new), `tests/test_tuner_groups.cpp`,
+  `tests/test_evaluation.cpp`, `tests/CMakeLists.txt`, `tools/tuner_groups.hpp`, `tools/tuner_optimiser.hpp`,
+  `tools/truncation_scan.cpp`, `tools/eval_spread.cpp`, `DEV_MANUAL.md`. The header is the coordinator's.
+- (e) Environment, not code: a command this harness moves to the background runs its later children at `SCHED_IDLE`
+  (or nice 19 under `nice -n 10`), starved by the corpus's nice-0 threads; long runs here went through `nohup setsid
+  nice -n 10`, which keeps them at nice 10. `.moltke.local.md`'s watcher section may want the note.
+
+## 2026-11-05: phase 1 rebased onto S122
+
+One Opus 5.5 subagent, coordinated; worktree `../chesso-s124p1b`, branch `s124p1b` at `bcc41f3`, S122's landing. Phase
+1's diff (`c3c8f2d2...`, 40 files on `d83d6c0`) applied with `git apply --3way --index`, staged and not committed. No new
+design; nothing fitted, timed or played. Every reading with its command is in `adocs/data/S124_rebase_goldens.txt`;
+INV-6's is the second section of `adocs/data/S124_inv6.txt`. The sections above are phase 1's on `d83d6c0`, kept as
+history. **Two reds remain that neither of the brief's stops names, and the diff does not land until they are ruled**
+(below, "Two reds").
+
+### The conflicts, each resolved by intent
+
+Four of the nine overlapping paths conflicted. The other five (`adocs/data/README.md`, `adocs/data/S101_gradient_rows.cpp`,
+`src/evaluation.cpp`, `src/evaluation.hpp`, `tests/test_evaluation.cpp`) merged cleanly and were read after.
+- `tests/test_eval_positions.hpp`: S122's re-picked DEC-316 pair (candidate 5, with its DEC-354 comment) is kept. S124's
+  block follows it, and the S101 pair that phase 1's side still carried is dropped. The block then re-derives unchanged
+  (below).
+- `tests/test_eval_trace.cpp`: S122 made the bound case's bound a local, `3 x 23/24 + 1` while its curve is live. S124
+  made it per row, `truncation_bound()`. The curve's `+ 1` moves into `truncation_bound()` and into the forced-cell case's
+  `plain_bound`, so that a row at F has one bound in both cases. The curve's truncations are in stage two and the factor's
+  division is in stage one, so the two add. This is the merge that turns the forced-cell precondition red (RED 2).
+- `tests/test_tuner_gradient.cpp`: `ADAGRAD_HOLD_STEP`'s and the walk floor's comments keep both histories, with the values
+  re-derived. Phase 1 had put its endgame recovery case between S122's curve-recovery comment and that comment's own
+  case, leaving the comment over the wrong case. The endgame case now sits before the comment, and S122's new paragraph
+  ends it. A trivial misplacement, fixed in scope.
+- `DEV_MANUAL.md`, three conflicts: S122's text is kept and S124's additions are laid on it with the rebased readings. They
+  are the gradient check's paragraph and the rows for the coverage blocks, `CLAMP_PUSH` and `ADAGRAD_HOLD_STEP`.
+- Beyond the text: `adocs/data/S124_coverage_rows.cpp` and `adocs/data/S124_gradient_rows.cpp` each carried a copy of
+  `stage_two()` without S122's curve. S122's phase 2 fixed that copy in the other tools (DEC-354). Each now adds the curve
+  in the same form; the coverage block's picks are unchanged by it.
+- `adocs/data/S310_adagrad_step.cpp` finds DEC-316's pair by its marker, whose first line still reads "at S101's
+  candidate". The two rows after it are now S122's re-pick, so the script's header, the function's comment and its
+  error message say so. The identity pick drops S122's pair, and the logic is unchanged.
+
+### Where the factor sits against S122's terms
+
+The factor multiplies E1, `board->material + eg_value(pair)`, the pair being the psqt sum, the pawn families, placement
+and mop-up, inside stage one's one taper in `cheap_score()`. S122's terms are in stage two: the checks, weak squares,
+storm and curve, beside the linear five, in `evaluate_expensive()`'s mobility and king safety sum. That sum has its own
+taper and is clamped at `LAZY_EVAL_MARGIN` 275. So the factor never scales a king safety term, and the clamp never sees
+the factor. The two meet only in the residual between the smooth and the exact score, where each adds its own
+truncation. **The identity holds at the new base:** with every factor at 128 and mop-up at zero, nothing scores
+differently from `bcc41f3`.
+- `chesso bench` reads 4707943 in both builds, `bcc41f3`'s.
+- `tools/search_bench.py` against `bcc41f3`'s own binary gives node counts and best moves identical at depth 9 (c3d5
+  25473, e2a6 127664, d7c8q 34197) and at depth 12 (c3d5 94541, e2a6 353715, d7c8r 409231). These are S122's phase 2
+  streams.
+- `adocs/data/S124_objdiff.py`: every function identical, `endgame_family_counts()` the one new.
+- The cell census, `S124_cell_check` over S083's corpus and S082's three views, reads `adocs/data/S124_cells_check.txt`
+  line for line, every block with 0 rows differing.
+- The engine-against-trace guard, `S124_engine_eval.cpp` on a forced build, reads 0 rows of 6226944 differing. Plant 11
+  reads 0 and plant 12 reads 840136, as on `d83d6c0`.
+
+### Every golden, each by its script
+
+| golden | phase 1 on `d83d6c0` | S122's landing | rebased | script |
+|---|---|---|---|---|
+| DEC-316's pair | S101's | candidate 5 | **candidate 5, reproduced** | `S101_gradient_rows` |
+| S124's coverage block | 9 pairs; smallest gradients 3.06e-8, family 9.73e-7 | -- | **the same 9 pairs, reproduced**; 3.117e-8, family 1.020e-6 | `S124_coverage_rows`, S083's corpus |
+| S121's, S123's, S125's, S101's blocks | reproduce | reproduce | **reproduce** | their four tools |
+| the gradient case's worst | 4.63e-7 at 992 | 8.61e-7 at 984 | **8.60521e-7 at 984**, x1.16 | `test_tuner_gradient` |
+| `CLAMP_PUSH` | no push, +30 red | +50 | **+40**: 4 rows bound, the farthest at 280.4, the nearest other at 253.3, every row 2.18 from the kink, finite differences 1.12e-7; +50 reads 2.05e-7 | `S083_tuner_preconditions clamp` |
+| the fixture clear of the clamp | 113.3 against 183 | 174.4 against 274 | **174.4 against 274** | the same |
+| `ADAGRAD_HOLD_STEP` | 3, onset 6 | 2, onset 5 | **3, onset 6**; apart 5.68e-13 at 300, the family at most 7.5e-12 | `S310_adagrad_step` |
+| gauge walk, Adam / AdaGrad | 2.3017 / 1.7570 at 3 | 1.2516 / 0.3832 at 2 | **0.6927 / 1.3259 at 3**, both the rook's; apart 1.14e-12 / 5.68e-13, holds at most 1.04e-14 | `S083_tuner_preconditions walk` |
+| the walked counts | 179059 assertions, 17794 positions | -- | **unchanged**; the counts read no weight | `test_eval_model` |
+| the factor's gradient case | 3.02e-7 at 726 | -- | **3.4757e-6 at 726, red (RED 1)** | `test_tuner_gradient` |
+| `cell_truncation_positions`, the forced-cell precondition | 2.891927 past 2.875 | -- | **no re-derivation; red (RED 2)** | `truncation_scan --min` on a forced build |
+| forced `truncation_scan` | 7 past 2.875, worst 2.891927 | -- | 7030 past 2.875, worst 3.690165, every row's identity holding | the same |
+| `feature_audit --free endgame_scale` | rank exactly 1118 of 1190, nullity 72 | -- | **not computed**: the tool's own refusal while S122's curve is off its seed; every support line unchanged | `tools/feature_audit` |
+| ruling (a)'s pair | did not land | -- | moot: no pair among 784, exit 1 by its own clause | `S124_gradient_rows` |
+
+Truncation and spread: S122's four `truncation_positions` and its bound case are green with S124's rows (worst 3.67232
+past 3.6). Phase 1 changed no spread case. The plants, run again on scratch builds (the record's last section): every
+plant red on `d83d6c0` is red again by its own check, except plants 9 and 10 (below, RED 2).
+
+### The brief's two stops: neither fires
+
+- (a) The gradient case's worst is 8.60521e-7 at 984, its rows as the rules pick them, under 1e-6. Not DEC-344 (9)'s third
+  recurrence.
+- (b) `CLAMP_PUSH`'s rule answers +40 on the rebased fixture. So `adocs/data/S124_clamp_options.txt` was not written.
+
+### Two reds, not settled here: the coordinator's
+
+Neither stop names these, and neither can be made green without changing a test, so both are left as they read. Each is
+red in both builds; `ctest -L fast` reads 57 of 59 in `build/` and in `build-tune/`.
+
+**RED 1, "the endgame factor's gradient is the derivative, chain rule in": 3.4757e-6 at parameter 726,
+`psqt_eg[king][b6]`, against 1e-6.** Phase 1 read 3.02e-7 at the same parameter. The case's rows are S124's population,
+which no rule picks and no weight moves, so S122's constants moved the error and not the rows.
+- 726's analytic gradient, -1.98e-9, is 1.1e-5 of the largest the case reads.
+- Numeric and analytic agree to about 6e-15 at every h. The relative error reads 2.1e-6 to 4.9e-6 from h 0.04 to 0.0025,
+  flat in h, and Richardson's difference reads 3.99e-6. This is the summation's rounding floor over a weight nearly
+  stationary on these rows, DEC-316's class, and the derivative is right.
+- 1 of the 482 parameters is past 1e-6; the next, 739, reads 5.9e-7. The normwise reading is 5.63e-9.
+- In DEC-354's names: B (smaller h) is red, F (Richardson) is red, C (normwise) is green, and D (rows) has no rule that
+  picks rows for this case.
+
+So only a metric change or a new row rule answers it, and either is a ruling. The case uses the same file and the same
+1e-6 bound as DEC-344 (9)'s case. Whether it counts as that recurrence is the coordinator's to say; by the brief's words
+it does not.
+
+**RED 2, the forced-cell case's precondition, `worst_scaled > plain_bound`: 3.01941 against 3.875; and its golden
+`cell_truncation_positions` has no re-derivation.** With S122's curve live, a row at F is bounded by 3.875 and a row in a
+cell off F by 3.9163. The precondition needs a cell row past 3.875, and S083's corpus has none at the forced cells:
+- The scan's worst cell row reads 3.544352, and the worst row of all 3.690165.
+- With the curve held at its seed (a scratch probe over the whole corpus), the worst cell row reads 2.864258, and none
+  passes 2.875.
+- The golden's row itself reads 2.338053 with the curve live and 2.058594 with it at its seed. S122's linear weights
+  moved it.
+
+Two guards are blind at the new base for the same reason:
+- **Plant 9**, the old bound on every row, now reads green on the forced build, and in the forced-cell case only the
+  precondition fails.
+- **Plant 10**, the smooth score moved 0.03 on every row at F, reads green in the bound case. The bound at F is 3.875
+  and the worst row is 3.67232.
+
+Options, each the coordinator's:
+- (i) A per-row curve allowance, `+ 1` only where the two kings' T can differ. This is new design for both cases.
+- (ii) The forced-cell case holds the curve at its seed, as it forces the cells. Even then S083's corpus has no evidence
+  row, so it needs another corpus, S122's prepared one, or a constructed row.
+- (iii) The precondition and plant 9's guard read only while the curve is at its seed, in S122's own form for its
+  curve-constant clause. This is a recorded weakening while the curve is live.
+
+### S122's pinned tools, finding (c) above: the coordinator's ruling
+
+S122 is closed. `adocs/data/S122_screen.py`'s `PARAMS = 1171` and `EXPECTED_RANK = 1100` stay as they are, a tool
+re-derived at its own tree in DEC-347's form, and one comment line beside the pins says so. The scripts under `.tuning/`
+are gitignored and were not touched.
+
+### Finding (d) above: `touches:` widened
+
+The header now names every path phase 1 touched outside its own new data files, and the three other steps' tools it
+edits.
+
+### The pre-registration draft, what moved
+
+- "The identity rule before any fit", `feature_audit --free endgame_scale`, no longer reads a rank at the landing. Its
+  identity report is "not computed" while S122's curve is off its seed, so the screen's header needs another form for
+  that rule.
+- The supports are unchanged: OCB_PURE P<=2 on 905 games, P=3-4 on 1657, P>=5 on 798. Mop-up's corner is on 196 games.
+
+### Gates
+
+- Both builds: no warning. `chesso bench` 4707943 in both.
+- `ctest -L fast -j10` in `build/` and `build-tune/`: 57 of 59 each. The two reds are RED 1 (`test_tuner_gradient`) and
+  RED 2 (`test_eval_trace`). Every other entry is green within its clock, the machine idle but for this work.
+- `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` is clean.
+- `tools/plan_prose_check.py`, each of the five modes exit 0: `--touches` and `--citations` 0 flagged, `--params`,
+  `--gate` agrees, `--prose` 0 flagged.
+- Tier 2 (DEC-141) does not bind: the rebase adds no `src/` change beyond phase 1's.
+- The cost was not run again, as the brief says.
+- `DEV_MANUAL.md` takes the rebased readings and the curve's allowance in the truncation scan's paragraph. `MANUAL.md`
+  was read and is unchanged.
+- `tools/truncation_scan.cpp`'s S124 header and usage lines gain the curve's allowance.
+- `adocs/data/S124_phase1_plants.patch` is regenerated so that it applies without fuzz: one hunk's context moved with
+  `truncation_bound()`'s curve term.
+
+### Findings beyond the rebase, not fixed
+
+- `feature_audit`'s identity report is not computed at S122's shipped constants (above). Every later family's
+  rank-before-fit rule, S126's included, meets the same refusal.
+- S122's own truncation bound at F, 3.875, sits 0.185 above the corpus maximum of 3.690. So `test_eval_trace`'s bound
+  case cannot see a residual error under that, which is plant 10's blindness, S122's form and not S124's.
+- `DEV_MANUAL.md`'s DEC-142 table has no row for phase 1's golden `cell_truncation_positions`. That was phase 1's
+  omission, left until RED 2 is ruled.
+- `adocs/data/S124_gradient_rows.cpp` answers a question DEC-354 withdrew. Its header now says it is moot, and it stays as
+  the record of the reading on `d83d6c0`.
+
+### 2026-11-05: the coordinator's rulings on the two reds, read
+
+**RED 2, option (i) as ruled: it cannot work, so it was stopped before any change and (ii) was not tried.** The rule
+gives a row its +1 only where S122's curve is non-zero there at the constants under test: either king, either half, x >
+0. The shipped curve's endgame constant is 229, and over S083's corpus that rule fires on every row, 6226944 of
+6226944, both at the shipped constants and at the case's forced cells (`adocs/data/S124_rebase_goldens.txt`, its last
+section). So every bound keeps its +1:
+- the precondition stays 3.01941 against 3.875;
+- plants 9 and 10 stay green;
+- S122's bound case at F keeps its 0.185 of slack.
+
+Nothing of (i) is in the tree. For the ruling, the same probe also read the tightest per-row form, the curve's own
+residual. That is `|d_mg phase + d_eg (24 - phase)| / 24`, where d_h is the two kings' fractions of T(x) in a half,
+White's taken off.
+- It holds on every row and is reached exactly.
+- On the forced build one cell row passes a row at F's bound by 0.0078, `1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w`.
+- 13 rows (16 at the shipped constants) sit within 0.03 of their bound.
+
+So that form would let `cell_truncation_positions` be re-derived and plants 9 and 10 read red, but it is not the rule
+as ruled. `DEV_MANUAL.md`'s golden table gains the `cell_truncation_positions` row, which states that the golden is
+pending.
+
+**RED 1, the owner's: options A and B read, nothing applied** (`adocs/data/S124_factor_gradient_options.txt`).
+- **A**: DEC-316's rule, written before it ran. The candidates are the population's own generator at twice the
+  placements, with S101_gradient_rows.cpp's eligibility plus the case's E1 filter. It picks one pair after 157 eligible
+  ones, `8/8/8/3r4/8/1k6/8/K3R3 w` and its mirror, which takes 726's gradient x65. The case then reads 6.27485e-7 at 739,
+  `psqt_eg[king][g5]`, x1.59 under its bound, so the rule stops after one pair. With the pair appended to `population()`,
+  every reader stays green and moves no golden. The only red left is RED 2's precondition, unchanged.
+- **B**: normwise reads 5.632e-9 here. On the two earlier recurrences it reads S101's 2.63e-7 and at most 8e-9 for
+  S135's, so it would have caught none of the three.
+
+**`feature_audit`'s refusal, a finding for phase 2, not built.**
+- The identity report has a column for S122's curve only where every side of every row shares one x per half. That
+  holds at the seed, where x is the constant on every side. There each half's column is one slope times the integer
+  `n_W,i - n_B,i` (`group_slopes()`).
+- S122's own rank, 1100 of 1171 with nullity 71, was read there: phase 1 at the seed, where the constant's two columns
+  are zero and the curve's other inputs' 22 columns duplicate the linear cells.
+- At the shipped 1245 curve each king has its own x, so the tool refuses.
+- What it lacks is the curve's columns linearised at the shipped x, row by row:
+  `sign (max(x_W,h, 0) n_W,i - max(x_B,h, 0) n_B,i)` per half, times the half's taper weight.
+- At integer weights x is an integer, so T'(x) = 2 max(x, 0) / 2048 is that integer over 1024. The common factor 1024
+  changes no rank, and the column stays exact for the modular rank.
+- The rank read then is the design's local rank at the shipped point. The curve's columns no longer duplicate the
+  linear five there, so the by-construction count is not S122's 22. The pre-registration's identity rule must be
+  restated for it.
+
+### 2026-11-06: DEC-355 implemented
+
+One Opus 5.5 subagent, coordinated, in `../chesso-s124p1b`, staged on the rebase and not committed. Nothing fitted,
+timed or played. Every reading with its command is in `adocs/data/S124_rebase_goldens.txt`, its section "DEC-355
+implemented".
+
+**The two pick rules, amended before either script ran** (2026-11-06, each also at its golden's site and, for
+`truncation_positions`, in `adocs/data/S083_truncation_pick.py`'s docstring):
+
+- **`cell_truncation_positions`.** `truncation_scan` reads each row less its own curve residual since DEC-355, so
+  `truncation_scan --data <corpus> --min 2.875` on the `-DS124_FORCED` build prints the rows past the bound a row at
+  F would have in their place, which only a row whose cell is off F can pass. The golden is the hit with the largest
+  reading, ties to the scan's first, and the cases add its mirror. With no hit there is no golden and the forced-cell
+  precondition is red.
+- **`truncation_positions`.** The scan's first column is the difference less the row's curve residual since DEC-355:
+  on the 1/24 lattice again, its maximum 69/24, and past 69/24 on no row at F. So `S083_truncation_pick.py` keeps the
+  hits at the scan's largest reading, each FEN once, as S083's rule wrote it, and S122's branch past 3.0 cannot fire.
+  The command is unchanged: `truncation_scan --data <corpus> --min 2.8` on `build/`, then the script on its stdout.
+  "The pinned positions reach the truncation bound" and the bound case's top clause read the same per-row quantity,
+  past 2.0 each and the worst past 2.8.
+
+**What changed.** `tools/tuner_trace.hpp` gains `curve_residual()`, the curve's exact share of a row's residual at the
+integer weights read, `|d_mg phase + d_eg (24 - phase)| / 24` from each king's `(max(x, 0)^2 mod 2048) / 2048`, and
+`truncation_bound()`, the taperings' per-row bound plus that residual. `tests/test_eval_trace.cpp`'s own
+`truncation_bound()` and `curve_is_live()` are gone: the forced-cell case and the bound case call the shared one, and
+`tools/truncation_scan` holds every corpus row to it (a row past it is counted, the first named, exit 1). Where a case or
+the scan reads how near a row comes to its bound, it reads the difference less the row's residual against the
+taperings' part: the forced-cell precondition, the bound case's top clause, the pinned case's two clauses, and the
+scan's printed column, past-2.0 count, `--min` and worst. At the curve's seed the residual is zero and nothing reads
+differently. Tempo's term in the shared bound reads the weights' tempo, which is the engine's at every weights the cases
+use.
+
+**Red first.** Under the per-row form, before either script ran, three cases read red on the stale goldens: the
+forced-cell precondition 2.57812 against 2.875, and the bound case's and pinned case's top clauses 2.75 against 2.8.
+No row any case reads was past its own bound. S122's four read 2.667, 2.625, 2.625 and 2.750 so.
+
+**Condition 1, the bound on every corpus row: holds.** `truncation_scan` over S083's 6226944 rows reads 0 past their
+own bound at the shipped constants (`build/`, `--min 2.8`: 88743 past 2.0, 66 past 2.8, the worst 2.875, the largest raw
+difference 3.690165) and at the forced cells (a `-DS124_FORCED` build, `--min 2.875`: 90088 past 2.0, 5 past 2.875, the
+worst 2.882772). 16 distinct positions sit exactly on their bound at the shipped constants.
+
+**Condition 3, the goldens re-derived by their scripts after the amendments above.**
+- `cell_truncation_positions`: `8/5k2/8/5K2/5NRP/8/8/5r2 b - - 6 68` -> `1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32`,
+  the largest of the forced scan's 5 hits. The other four sit at 69/24 and pass 2.875 by an ulp. The row reads 2.882772:
+  raw 2.894674 less its residual 0.011902, 0.0078 past a row at F's 2.875 and 0.0336 under its own bound. It reads
+  2.1845 at F.
+- The precondition `worst_scaled > plain_bound` now reads **2.88277 > 2.875**, green on that row: checked 8673, moved
+  4082, worst 3.29171.
+- `truncation_positions`: S122's four (phases 1, 9, 15, 23) -> `8/8/3K2k1/p2B2r1/5RP1/8/8/8 b - - 1 69`,
+  `8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38`, `r4k1r/6p1/p1nN3p/5b1n/1P5P/PP4P1/4N3/R4RK1 b - - 0 25` and
+  `r1bqkb1r/ppp1pp1p/n5p1/3p4/6P1/P1N2N2/1PPPPPP1/R1BQKB1R w KQkq - 0 6`. These are phases 5, 11, 13 and 23, each at
+  2.875, from 16 distinct positions at the maximum, by `S083_truncation_pick.py` on the `--min 2.8` scan.
+- The bound case's top clause and the pinned case's each read 2.875 against 2.8, and every pinned row is past 2.0.
+- The bound case's `worst > 3.6` -> `worst > 2.8`, and the pinned case's `3.0`/`3.6` -> `2.0`/`2.8`. Each is read on
+  the per-row quantity, the clauses S122's landing had replaced.
+
+**Condition 2, plants 9 and 10: red by their own checks.** The plants patch is regenerated: plant 9's hunk moved with
+`truncation_bound()` into `tools/tuner_trace.hpp`, and the patch applies with no offset or fuzz. Plant 9 joins the forced
+scan's runs.
+- Plant 10 (the smooth score +0.03 at F) is red in the bound case on 4 checks: the four pinned rows, one of each mirror
+  pair.
+- Plant 9 (the old bound for every row) is red by `gap <= truncation_bound` in three places: the forced-cell case
+  (2 checks, the golden's row and its mirror), the forced build's bound case (2), and the forced scan (exit 1, 1 corpus
+  row past its own bound).
+- Plant 0 is green in every run. Every other plant is red by its own check.
+
+**Not touched:** RED 1 stayed as it read until DEC-356 below. Neither `src/` nor `feature_audit` was touched.
+
+### 2026-11-06: DEC-356 implemented, the owner's option A
+
+The pair DEC-356 names is appended to `population()` after the generator's rows. To keep the pick re-derivable, the
+generator is now `placements()` (the same loop, seed and order), and `population()` is `placements()` followed by
+`factor_gradient_rows`, the pair, named at its site as a DEC-142 golden with DEC-356 and its script.
+
+- `adocs/data/S124_factor_gradient_rows.cpp`: the options file's scratch program promoted, in `S101_gradient_rows.cpp`'s
+  form. The rule is in its header, as written before it first ran, and so is its build line. Its base is `placements()`
+  and its candidates `placements(80)`. It exits 1 unless the pick is `factor_gradient_rows` and `population()` is the
+  generator followed by them.
+- Run, it reproduces the options file's output line for line: base 5715 rows, 3.4757e-6 at 726; the pick after 157
+  eligible pairs (candidate 233 of 11339), |g| x65; the case with 5717 rows at 6.27485e-7 at 739. It ends "reproduces
+  the landed pair: yes", exit 0.
+- Its check, planted with the pair's rows swapped in a scratch header, reads NO and exits 1.
+- The readers of `population()`:
+  - the factor case reads **6.27485e-7 at 739** over 5717 rows, green (RED 1 closed);
+  - the walk's two S124 cases read 179059 -> 179079 assertions;
+  - the forced-cell case reads checked 8673 -> 8675 and moved 4082 -> 4084, its worsts 3.29171 and 2.88277 unchanged.
+  No other golden script reads `population()`.
+- The plants on the final tree (`.tuning/s124/plants_dec356`): every plant is red by its own check and plant 0 is green
+  in every run. Plants 5, 7 and 8 are now red alone on their own cases, where RED 1's failure used to sit beside them.
+
+### Gates, both rulings in
+
+- Both builds: no warning; `ctest -L fast -j10` reads **59 of 59** in `build/` and in `build-tune/`, with
+  `CLANG_FORMAT_MAJOR=22`.
+- `chesso bench` reads 4707943 in both. No `src/` change.
+- `clang-format.sh --check` is clean, and `tools/plan_prose_check.py` exits 0 in all five modes.
+- `DEV_MANUAL.md` takes three things:
+  - the golden rows for `cell_truncation_positions`, `truncation_positions`, the bound case and the new pair;
+  - the truncation scan's per-row paragraph;
+  - the factor case's DEC-356 reading.
+- `MANUAL.md` was read: it says nothing about the truncation bound, the scan or the tuner's fixtures, so it does not
+  change.
+
+**Beyond the task, not fixed:**
+- `adocs/data/S136_screen.py` (S136, in `plan_todo/`) reads `truncation_scan`'s first column. Since the fast check's
+  finding 2 that column is |smooth - exact - C|, on the 1/24 lattice its tempo arithmetic assumes wherever stage two's
+  clamp does not bind (until then `raw - |C|`, which is not, the claim this note first made). Its rules were written
+  before S122's curve and should be re-read when S136 starts.
+  - *The coordinator, 2026-11-06:* S136 is in `plan_done/` (tempo's H0, 2026-10-28), not `plan_todo/`. Its screen is a
+    tool of a closed step, read at its own tree in DEC-347's form, so nothing is re-read; a later tempo step re-reads it.
+- `adocs/data/S083_truncation_pick.py` (its docstring) and `adocs/data/S124_phase1_plants.sh` are touched and are not in
+  the header's `touches:`; the header is the coordinator's.
+  - *The coordinator, 2026-11-06:* `S083_truncation_pick.py` is added to `touches:`. `S124_phase1_plants.sh` is this
+    step's own data file, which the header does not list.
+
+### 2026-11-06: phase 1 lands, the coordinator
+
+DEC-355 and DEC-356 hold as read above. The staged tree (`7c02c575` on `bcc41f3`, diff sha256 `24eb9284...`,
+`.tuning/coord/S124/S124_phase1_dec355.diff`) is applied to HEAD with `git apply --3way --index`; `adocs/data/README.md`
+merged with S332's rows kept. `specs.md` takes the draft wording above, its counts read on S122's H1 (1190 fitted, 1143
+shipped; the draft's 1095 predates that H1). Phase 1 lands at the identity, `No functional change`, bench 4707943.
+Phase 2 next: `feature_audit`'s local rank first (above), then the screen at K refit (DEC-352).
+
+### 2026-11-06: the fast check's three findings
+
+The coordinator's fast check over the DEC-355 and DEC-356 delta found the arithmetic exact and nothing weakened. It
+raised three findings, and all three are fixed here, staged.
+
+1. **Ulp rows.** A row exactly at 69/24 passes 2.875 by an ulp: four of the forced scan's five hits were such rows.
+   So "only a row whose cell is off F can pass" and "one hit" were false. After a refit the rule could pick an ulp row,
+   the precondition would then pass by about 1e-16, and plant 9 would go blind under its 1e-9 slack.
+2. **The abs form is a lower bound only.** `curve_residual()` returned |C|, so `raw - |C|` is the taperings' loss
+   only where the loss and C share a sign. Elsewhere it is less, and the claims "on the 1/24 lattice" and "what the
+   taperings lost" were false; the bound carried 2|C| of unused slack on those rows.
+3. **A stale comment.** The factor case's comment in `tests/test_tuner_gradient.cpp` still read 3.0e-7 and did not
+   name DEC-356's pair.
+
+**The signed form, proved before adoption** (a scratch probe over S083's 6226944 rows, C computed from the side
+entries apart from `tuner_trace`'s, read against the taperings' bound alone; `adocs/data/S124_rebase_goldens.txt`):
+- At the shipped constants and at the forced cells, 0 rows are past the bound and the worst sits exactly on it.
+- Stage two's clamp binds on 9539 rows, and none of them is past: the worst reads 1.9598, 0.915 under its bound.
+- At F every row off the 1/24 lattice is a row where the clamp binds: 9467 at the shipped constants, 9098 at the
+  forced cells, and none elsewhere.
+- At the forced cells exactly one row passes 69/24 + 1e-6: the cell golden's, at 2.906576.
+
+The arithmetic for the clamp: the clamped sum's two sides differ by t + C, the two taperings' losses and the curve's
+share. Where both sides bind, the reading is |t_pos - C|. Where one binds, the clamp's step is an integer between 0 and
+t + C, so the reading less t_pos lies between -C and t. Neither reaches past 23/24 + max(46/24, |C|) = 69/24.
+
+**The two pick rules, amended again before either script ran** (2026-11-06, the fast check's findings 1 and 2; each
+also at its golden's site and, for `truncation_positions`, in `adocs/data/S083_truncation_pick.py`'s docstring):
+
+- **`cell_truncation_positions`.** The scan reads each row as |smooth - exact - C|, C the curve's signed residual, and
+  prints a row only where that passes `--min` by more than 1e-6. So a row exactly at 69/24 is not printed. The rule:
+  - `truncation_scan --data <corpus> --min 2.875` on the `-DS124_FORCED` build prints only rows whose cell is off F,
+    since every row at F is bounded by 69/24;
+  - the golden is the hit with the largest reading, ties to the scan's first, and the cases add its mirror;
+  - with no hit there is no golden, and the forced-cell precondition, read past 2.875 + 1e-6, is red.
+- **`truncation_positions`.** The scan's first column is |smooth - exact - C|:
+  - wherever stage two's clamp does not bind, exactly what the three taperings lost, on the 1/24 lattice with its
+    maximum 69/24;
+  - where the clamp binds, bounded by the same and off the lattice.
+
+  `S083_truncation_pick.py` keeps the hits at the scan's largest reading, each FEN once, as S083's rule wrote it. Its
+  code is unchanged, and so is the command: `truncation_scan --data <corpus> --min 2.8` on `build/`, then the script
+  on its stdout.
+
+**What changed, and what it read** (every line with its command in `adocs/data/S124_rebase_goldens.txt`, its section
+"The fast check's three findings"):
+- `curve_residual()` returns C with its sign. The new `taperings_loss()` reads |smooth - exact - C|, and
+  `truncation_bound()` is now the taperings' bound alone. `LATTICE_MARGIN` = 1e-6 is shared: the scan's `--min` and
+  past-2.0 counts and the forced-cell precondition (`worst_scaled > plain_bound + LATTICE_MARGIN`) use it. The test's
+  `past_curve()` became `taperings_loss()`, and every comment, `DEV_MANUAL.md` line, docstring and note that said "on
+  the 1/24 lattice" or "what the taperings lost" now says it of the signed reading, wherever the clamp does not bind.
+- `cell_truncation_positions` stands: the forced scan's only hit, `1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w`, at
+  2.906576. That is 0.0316 past 2.875 and 0.0098 under its own bound, and the precondition reads 2.90658 against
+  2.875 + 1e-6.
+- `truncation_positions` -> `5k2/pp3p2/5P2/7p/P6P/3Bb1P1/2PrN3/4K3 b - - 0 32`,
+  `8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38`, `2r4k/4np1p/3q1n2/pB1p1P2/P2P4/5Q2/6PP/R4RK1 b - - 0 25` and
+  `r1b2rk1/ppp1ppbp/2nq2p1/8/N1B1P3/5N2/PPP2PPP/R1BQ1RK1 w - - 0 10`, phases 5, 11, 17 and 23, each at 2.875.
+  - The shipped scan reads 105 past 2.8, 28 distinct positions at the maximum, and 0 rows past their own bound.
+  - The pick of earlier that day, phases 5, 11, 13 and 23, still reads 2.875 each, but the rule now finds a phase 17
+    row and takes the scan's first row nearest each target.
+- The bound case's and the pinned case's top clauses read 2.875 against 2.8.
+- Plants 9 and 10 are red by their own checks again, every other plant is red by its own, and plant 0 is green. The
+  plants patch is regenerated; only its hunk headers moved.
+- Finding 3: the factor case's comment now names DEC-356's pair and reads 6.27485e-7 at 739 over 5717 rows, x1.59
+  under 1e-6. `S124_factor_gradient_rows` still reproduces the pair.
+- Gates: both builds 59 of 59 with no warning, bench 4707943 in both, the format check clean, and `plan_prose_check.py`
+  exits 0 in all five modes.

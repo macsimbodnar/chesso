@@ -12,7 +12,8 @@
 // S121 made mobility a table, 66 cells a half where it had four, 955; S123
 // appended its passed pawn family after tempo, 1013; S125 its pawn structure
 // family after S123's, 1073; S101 its threat family after S125's, 1121; S122
-// its king safety family after S101's, 1171.
+// its king safety family after S101's, 1171; S124 its endgame family after
+// S122's, 1190.
 #include <cstddef>
 #include <cstdint>
 #include "eval_tables.hpp"
@@ -214,6 +215,31 @@ static_assert(KS_CURVE_COUNT == static_cast<size_t>(KS_CURVE_INPUTS) &&
                   KS_STORM_COUNT == static_cast<size_t>(KST_CELL_COUNT),
               "S122's arrays are the engine's inputs and cells");
 
+// S124's endgame family (DEC-350), appended after S122's for the same reason
+// (src/evaluation.hpp defines the counts, the cells and the factor):
+//
+//   mopup          the side with men's centre, kings and corner counts in
+//                  mop-up's domain, a middlegame and an endgame half each, 3:
+//                  a linear term of stage one's positional pair.
+//   endgame_scale  the factor f_c of each of the thirteen cells, one half
+//                  each, as a piece value is: not a linear term. Each
+//                  multiplies E1, a sum of other parameters' terms, so no
+//                  trace feature reaches it and tools/tuner_trace.hpp carries
+//                  the product -- picked by E1's sign, differentiated by the
+//                  chain rule into material and the positional endgame
+//                  weights, boxed to [0, ENDGAME_SCALE_ONE] after each step.
+//
+// 19 parameters, each block a group of its own in tools/tuner_groups.hpp.
+// Widths from the engine's own arrays, as above.
+constexpr size_t MOPUP_COUNT = sizeof(mopup_mg) / sizeof(mopup_mg[0]);
+constexpr size_t ENDGAME_SCALE_COUNT =
+    sizeof(endgame_scale) / sizeof(endgame_scale[0]);
+
+static_assert(MOPUP_COUNT == static_cast<size_t>(MOPUP_FEATURE_COUNT) &&
+                  ENDGAME_SCALE_COUNT ==
+                      static_cast<size_t>(ENDGAME_CELL_COUNT),
+              "S124's arrays are the engine's counts and cells");
+
 constexpr size_t MG_BASE = MATERIAL_COUNT;
 constexpr size_t EG_BASE = MATERIAL_COUNT + SQUARE_COUNT;
 constexpr size_t MOB_MG_BASE = EG_BASE + SQUARE_COUNT;
@@ -276,6 +302,9 @@ constexpr size_t KSS_MG_BASE = KSD_EG_BASE + KS_DEFENDERS_COUNT;
 constexpr size_t KSS_EG_BASE = KSS_MG_BASE + KS_STORM_COUNT;
 constexpr size_t KSC_MG_BASE = KSS_EG_BASE + KS_STORM_COUNT;
 constexpr size_t KSC_EG_BASE = KSC_MG_BASE + KS_CURVE_COUNT;
+constexpr size_t MOP_MG_BASE = KSC_EG_BASE + KS_CURVE_COUNT;
+constexpr size_t MOP_EG_BASE = MOP_MG_BASE + MOPUP_COUNT;
+constexpr size_t EGS_BASE = MOP_EG_BASE + MOPUP_COUNT;
 
 // Where each block ends, so that no group has to run to PARAM_COUNT: every
 // `--only` group in tools/tuner_groups.hpp ends at its own block's end, and
@@ -303,6 +332,8 @@ constexpr size_t KS_WEAK_END = KSW_EG_BASE + KS_WEAK_COUNT;
 constexpr size_t KS_DEFENDERS_END = KSD_EG_BASE + KS_DEFENDERS_COUNT;
 constexpr size_t KS_STORM_END = KSS_EG_BASE + KS_STORM_COUNT;
 constexpr size_t KS_CURVE_END = KSC_EG_BASE + KS_CURVE_COUNT;
+constexpr size_t MOPUP_END = MOP_EG_BASE + MOPUP_COUNT;
+constexpr size_t ENDGAME_SCALE_END = EGS_BASE + ENDGAME_SCALE_COUNT;
 
 constexpr size_t PARAM_COUNT =
     MATERIAL_COUNT + 2 * SQUARE_COUNT + 2 * MOBILITY_COUNT +
@@ -315,11 +346,12 @@ constexpr size_t PARAM_COUNT =
     2 * THREAT_PIECE_COUNT + 2 * THREAT_MINOR_COUNT + 2 * HANGING_PIECE_COUNT +
     2 * HANGING_PAWN_COUNT + 2 * THREAT_KING_COUNT + 2 * THREAT_PUSH_COUNT +
     2 * KS_CHECKS_COUNT + 2 * KS_WEAK_COUNT + 2 * KS_DEFENDERS_COUNT +
-    2 * KS_STORM_COUNT + 2 * KS_CURVE_COUNT;
+    2 * KS_STORM_COUNT + 2 * KS_CURVE_COUNT + 2 * MOPUP_COUNT +
+    ENDGAME_SCALE_COUNT;
 
-static_assert(KS_CURVE_END == PARAM_COUNT,
-              "a block was appended after S122's curve: give it an end "
-              "constant and a group of its own");
+static_assert(ENDGAME_SCALE_END == PARAM_COUNT,
+              "a block was appended after S124's scale factors: give it an "
+              "end constant and a group of its own");
 
 
 // The constants the engine currently ships, as the parameter vector. This is
@@ -440,5 +472,12 @@ inline void starting_params(double* params)
         ks_defenders_eg);
   block(KSS_MG_BASE, KSS_EG_BASE, KS_STORM_COUNT, ks_storm_mg, ks_storm_eg);
   block(KSC_MG_BASE, KSC_EG_BASE, KS_CURVE_COUNT, ks_curve_mg, ks_curve_eg);
+
+  // S124's family: mop-up's pairs, and each cell's factor, its one half.
+  block(MOP_MG_BASE, MOP_EG_BASE, MOPUP_COUNT, mopup_mg, mopup_eg);
+
+  for (size_t c = 0; c < ENDGAME_SCALE_COUNT; ++c) {
+    params[EGS_BASE + c] = endgame_scale[c];
+  }
 }
 }  // namespace tuner_layout

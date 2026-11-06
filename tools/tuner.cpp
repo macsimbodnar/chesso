@@ -320,8 +320,9 @@ void write_tables(const std::string& path,
       "// two tables live in src/eval_tables.hpp; the mobility, king safety,\n"
       "// passed pawn, pawn structure, piece placement, tempo, S123's\n"
       "// passed pawn family, S125's pawn structure family, S101's threat\n"
-      "// family and S122's king safety family weights at the end live in\n"
-      "// src/evaluation.cpp, a different file and easy to miss.\n"
+      "// family, S122's king safety family and S124's endgame family\n"
+      "// weights at the end live in src/evaluation.cpp, a different file\n"
+      "// and easy to miss.\n"
       "// S027, S028, S034 and S035, DEC-015: measured by SPRT before any of\n"
       "// it is kept.\n\n",
       positions, CHESSO_BUILD_COMMIT, opts.data.c_str(), corpus.sha256.c_str(),
@@ -631,6 +632,38 @@ void write_tables(const std::string& path,
     }
   }
 
+  // S124's family: mop-up's three pairs, and the thirteen factors, one half,
+  // each boxed to [0, F] by the fit and rounded as every weight is.
+  fprintf(out,
+          "\n// S124's endgame family: mop-up's counts and the factor's "
+          "cells, as src/evaluation.hpp names them.\n");
+
+  for (int table = 0; table < 2; ++table) {
+    const size_t base =
+        (table == 0) ? tuner_layout::MOP_MG_BASE : tuner_layout::MOP_EG_BASE;
+
+    fprintf(out, "constexpr int mopup_%s[MOPUP_FEATURE_COUNT] = {",
+            (table == 0) ? "mg" : "eg");
+
+    for (size_t i = 0; i < tuner_layout::MOPUP_COUNT; ++i) {
+      fprintf(out, "%s%d", (i == 0) ? "" : ", ",
+              static_cast<int>(std::lround(params[base + i])));
+    }
+
+    fprintf(out, "};  // centre, kings, corner\n");
+  }
+
+  fprintf(out, "constexpr int endgame_scale[ENDGAME_CELL_COUNT] = {");
+
+  for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+    fprintf(out, "%s%d", (c == 0) ? "" : ", ",
+            static_cast<int>(std::lround(params[tuner_layout::EGS_BASE + c])));
+  }
+
+  fprintf(out,
+          "};  // P0 d<=0 d1 d>=2, P1 .., P2 .., OCB pure P<=2 3-4 >=5, OCB "
+          "rook\n");
+
   fclose(out);
   fprintf(stderr, "constants written to %s\n", path.c_str());
 }
@@ -680,6 +713,7 @@ void usage()
       "                   the engine ships: %s\n"
       "                   or one piece placement term (S135): %s\n"
       "                   or one king safety curve term (S122): %s\n"
+      "                   or one endgame scale part (S124): %s\n"
       "                   or a comma-separated list of them, their union\n"
       "                   (S123)\n"
       "  --freeze LIST    hold these groups or terms instead, comma\n"
@@ -698,7 +732,9 @@ void usage()
       "                   hanging_piece|hanging_pawn|threat_king|threat_push>\n"
       "                   _<half> ...` (S101), or since S122 a linear king\n"
       "                   safety cell, `<ks_checks|ks_weak|ks_defenders|\n"
-      "                   ks_storm>_<half> ...`; both ends must be free\n"
+      "                   ks_storm>_<half> ...`, or since S124 a scale\n"
+      "                   factor, `endgame_scale <cell> <anchor> [scale]`;\n"
+      "                   both ends must be free\n"
       "  --k VALUE        sigmoid scale; 0 fits it from the data, against\n"
       "                   the game result whatever --lambda says\n"
       "  --lambda F       fit against F * sigma(K * score) + (1 - F) *\n"
@@ -726,7 +762,8 @@ void usage()
       "                   the fit and the header; the default build refuses\n"
       "                   it\n",
       GROUP_LIST, tuner_groups::PLACEMENT_TERM_LIST,
-      tuner_groups::CURVE_TERM_LIST, tuner_optimiser::ADAGRAD_DEFAULT_LR);
+      tuner_groups::CURVE_TERM_LIST, tuner_groups::SCALE_TERM_LIST,
+      tuner_optimiser::ADAGRAD_DEFAULT_LR);
 }
 
 }  // namespace
@@ -1218,6 +1255,7 @@ int main(int argc, char** argv)
   // against what ships (DEC-315) -- and before the first gradient, so every
   // step is taken on the tied parameterisation.
   tuner_groups::copy_ties(ties, params.data());
+  tuner_groups::box_scales(params.data());
 
   for (int epoch = 1; epoch <= opts.epochs; ++epoch) {
     gradient(data, params.data(), opts.k, index, 0, train_count, opts.threads,
@@ -1226,6 +1264,10 @@ int main(int argc, char** argv)
     tuner_groups::fold_ties(ties, &grad);
     descend(grad, mask, start.data(), opts.lr, &optimiser, params.data());
     tuner_groups::copy_ties(ties, params.data());
+    // S124's box, after the step and its ties (DEC-350 (5)): every scale
+    // factor back into [0, F] where the step carried it out; a tie there takes
+    // scale 1 (parse_ties()), so a copied value is its anchor's, boxed already.
+    tuner_groups::box_scales(params.data());
 
     if (epoch % opts.report != 0) { continue; }
 

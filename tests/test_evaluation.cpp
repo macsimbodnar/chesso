@@ -2110,6 +2110,10 @@ TEST_SUITE("evaluation: packed score")
     halves_match("weak_unopposed", weak_unopposed_score.data(),
                  weak_unopposed_mg, weak_unopposed_eg,
                  static_cast<int>(weak_unopposed_score.size()));
+    // S124's mop-up, at zero since its landing, where no bench sees a pair
+    // packed the wrong way round.
+    halves_match("mopup", mopup_score.data(), mopup_mg, mopup_eg,
+                 static_cast<int>(mopup_score.size()));
   }
 
   TEST_CASE("taper truncates exactly as the unpacked formula does")

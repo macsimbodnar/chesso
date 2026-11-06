@@ -407,6 +407,52 @@ inline const std::vector<std::string> positions = {
     // (adocs/data/S122_goldens.txt, adocs/data/S122_gradient_options.txt).
     "1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2",
     "4k3/8/8/8/8/8/r3p2r/1R2K2R b K - 1 2",
+    // S124's endgame family, added at S124's phase 1: each position, then
+    // its colour-mirror, picked by adocs/data/S124_coverage_rows.cpp's rule
+    // and not by hand. The 106 rows above leave 13 of the family's 19
+    // parameters with no gradient -- mop-up's three counts in either half
+    // and seven of the thirteen scale factor cells -- and on them the
+    // gradient case's non-vacuity (test_tuner_gradient) reads red, and "the
+    // positions move every term both ways" (test_eval_trace) on mop-up's
+    // corner count. The rule is S121's, as the blocks above have it: greedy
+    // over all_test_fens(), which closes six, then S083's corpus, which
+    // closes the rest, so the constructive fallback is not read; each pick
+    // and its mirror at a phase from 1 to 23, a centipawn clear of the lazy
+    // clamp, within 800 cp of level and loadable with either side to move. A
+    // cell's need is a row whose E1 at the shipped weights picks it. Each
+    // comment names the parameters its pair closes. Every position is VALID
+    // by python-chess. The program starts from the 106 rows above this
+    // comment (its BASE_ROWS, asserted against this comment's first line),
+    // re-checks every row below, and must pick exactly these pairs in this
+    // order. Re-derive by its header whenever the counts or the shipped
+    // constants move what it reads (DEC-142).
+    // S124 coverage, closes mopup_mg[0] mopup_eg[0] mopup_mg[1] mopup_eg[1]
+    "4k3/r7/8/8/8/8/4K3/8 w - - 0 2",
+    "8/4k3/8/8/8/8/R7/4K3 b - - 0 2",
+    // S124 coverage, closes endgame_scale[1]
+    "1r2k3/N7/8/8/8/8/4K3/8 w - - 1 2",
+    "8/4k3/8/8/8/8/n7/1R2K3 b - - 1 2",
+    // S124 coverage, closes mopup_mg[2] mopup_eg[2]
+    "8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55",
+    "8/8/4K3/2b5/2n1k3/8/8/8 w - - 6 55",
+    // S124 coverage, closes endgame_scale[5]
+    "8/2p5/8/2P3K1/3P4/7r/8/5k2 w - - 0 70",
+    "5K2/8/7R/3p4/2p3k1/8/2P5/8 b - - 0 70",
+    // S124 coverage, closes endgame_scale[11]
+    "6k1/5p1p/pB4pP/4Pp2/PP6/8/2b2KP1/8 w - - 0 34",
+    "8/2B2kp1/8/pp6/4pP2/Pb4Pp/5P1P/6K1 b - - 0 34",
+    // S124 coverage, closes endgame_scale[4]
+    "8/2k5/5K2/4N3/8/2p5/2P5/8 b - - 0 68",
+    "8/2p5/2P5/8/4n3/5k2/2K5/8 w - - 0 68",
+    // S124 coverage, closes endgame_scale[9]
+    "5b2/8/2P5/3BK2k/8/8/8/8 b - - 0 49",
+    "8/8/8/8/3bk2K/2p5/8/5B2 w - - 0 49",
+    // S124 coverage, closes endgame_scale[12]
+    "8/4R1pk/8/4P3/5Bbp/P1K5/4r3/8 b - - 0 64",
+    "8/4R3/p1k5/5bBP/4p3/8/4r1PK/8 w - - 0 64",
+    // S124 coverage, closes endgame_scale[10]
+    "8/5pk1/B3p3/3pb1p1/1P6/6P1/5P2/6K1 w - - 0 50",
+    "6k1/5p2/6p1/1p6/3PB1P1/b3P3/5PK1/8 b - - 0 50",
 };
 
 }  // namespace test_eval_positions

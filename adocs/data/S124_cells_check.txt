@@ -1,0 +1,89 @@
+# S124 phase 1, 2026-11-04: adocs/data/S124_cell_check.cpp over S083's corpus and S082's three fixed views,
+# read in place on the landing (build/'s trace library, nice 10, under S122's corpus load). FEN column only.
+# 'picked' is the cell E1's sign at the shipped weights selects; White's and Black's the candidates.
+
+2e0e3de9a4beb0e42f13062b748c7dcb86111a74eb0ea7d7f051351f80872c53  .tuning/s083/curve/s0/cand_6226944_s1.tsv
+2b508067fb64693bb4b278a2455fb9d101eaa742975a4b53f4ff56e6fa16981e  .tuning/s082/pool.tsv.qs.validation
+58bcbb315fd82bd332372d0b2f1df7d7370693568bd27fa9ed6f17b8e74652d6  .tuning/s082/pool.tsv.root.validation
+24c4f671131c4a6f3f945ef0f5bb0d8cf85969b41d2e846e745539ef2d53ffdd  .tuning/s082/pool.tsv.pv.validation
+
+.tuning/s083/curve/s0/cand_6226944_s1.tsv
+rows 6226944; the walk differs on 0, the trace's cells on 0
+cell                 picked        %      White's      Black's
+P=0 d<=0               6925    0.111        63576        91097
+P=0 d=1               23751    0.381        16853        17420
+P=0 d>=2              14785    0.237         8273         7657
+P=1 d<=0              51142    0.821       127200       173248
+P=1 d=1               63076    1.013        43586        38504
+P=1 d>=2              26915    0.432        15782        12307
+P=2 d<=0             130294    2.092       217422       283485
+P=2 d=1              123510    1.983        84733        67446
+P=2 d>=2              39574    0.636        24188        16617
+OCB_PURE P<=2          7398    0.119        10878        12199
+OCB_PURE P=3-4        14011    0.225        12225        11421
+OCB_PURE P>=5          5997    0.096         4348         3831
+OCB_ROOK              58776    0.944        58874        58874
+none                5660790   90.908      5539006      5432838
+mop-up's domain 6997 rows (0.112 %), of them KBN 1380
+mop-up counts non-zero, White's then Black's: centre 3422 2551, kings 4018 2979, corner 844 471
+
+.tuning/s082/pool.tsv.qs.validation
+rows 1015332; the walk differs on 0, the trace's cells on 0
+cell                 picked        %      White's      Black's
+P=0 d<=0               1866    0.184        14360        20054
+P=0 d=1                6070    0.598         4206         4151
+P=0 d>=2               3308    0.326         1778         1771
+P=1 d<=0              11960    1.178        27067        34582
+P=1 d=1               13865    1.366         9306         8231
+P=1 d>=2               5068    0.499         3189         2100
+P=2 d<=0              26958    2.655        42150        52949
+P=2 d=1               24448    2.408        16161        13407
+P=2 d>=2               6609    0.651         4112         2754
+OCB_PURE P<=2          1594    0.157         2497         2434
+OCB_PURE P=3-4         2858    0.281         2216         2387
+OCB_PURE P>=5           987    0.097          742          634
+OCB_ROOK              11299    1.113        11322        11322
+none                 898442   88.488       876226       858556
+mop-up's domain 1875 rows (0.185 %), of them KBN 413
+mop-up counts non-zero, White's then Black's: centre 984 613, kings 1146 729, corner 307 98
+
+.tuning/s082/pool.tsv.root.validation
+rows 1015607; the walk differs on 0, the trace's cells on 0
+cell                 picked        %      White's      Black's
+P=0 d<=0               1693    0.167        13207        18417
+P=0 d=1                5619    0.553         3920         3904
+P=0 d>=2               3165    0.312         1723         1688
+P=1 d<=0              11039    1.087        25101        31996
+P=1 d=1               12857    1.266         8637         7638
+P=1 d>=2               4766    0.469         2951         2045
+P=2 d<=0              24904    2.452        39322        49077
+P=2 d=1               22887    2.254        15079        12510
+P=2 d>=2               6641    0.654         4035         2859
+OCB_PURE P<=2          1488    0.147         2338         2259
+OCB_PURE P=3-4         2680    0.264         2076         2255
+OCB_PURE P>=5           940    0.093          708          608
+OCB_ROOK              10700    1.054        10724        10724
+none                 906228   89.230       885786       869627
+mop-up's domain 1609 rows (0.158 %), of them KBN 383
+mop-up counts non-zero, White's then Black's: centre 849 522, kings 982 627, corner 284 91
+
+.tuning/s082/pool.tsv.pv.validation
+rows 988086; the walk differs on 0, the trace's cells on 0
+cell                 picked        %      White's      Black's
+P=0 d<=0               2407    0.244        22038        31363
+P=0 d=1                8783    0.889         5973         5977
+P=0 d>=2               5011    0.507         2769         2609
+P=1 d<=0              17121    1.733        38364        50487
+P=1 d=1               18852    1.908        12780        10905
+P=1 d>=2               8847    0.895         5478         3645
+P=2 d<=0              36807    3.725        55107        69262
+P=2 d=1               32289    3.268        21635        17403
+P=2 d>=2              10917    1.105         6819         4366
+OCB_PURE P<=2          2442    0.247         3628         3629
+OCB_PURE P=3-4         3839    0.389         2997         3125
+OCB_PURE P>=5          1238    0.125          908          779
+OCB_ROOK              13631    1.380        13652        13652
+none                 825902   83.586       795938       770884
+mop-up's domain 4993 rows (0.505 %), of them KBN 562
+mop-up counts non-zero, White's then Black's: centre 2632 1829, kings 2934 2059, corner 418 131
+S124-CELLS-OK

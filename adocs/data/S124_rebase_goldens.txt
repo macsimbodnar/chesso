@@ -1,0 +1,799 @@
+# S124 phase 1 rebased onto S122's landing, 2026-11-05: every golden phase 1 set or touched, re-derived by its
+# script at the new base (worktree ../chesso-s124p1b, the staged diff on bcc41f3, bench 4707943 in both builds).
+# Corpora read in place, never copied: S083's (sha256 2e0e3de9...) for the coverage, the census, the audit and the
+# scans; S082's three fixed views for the census. Each section names its command; outputs are verbatim, trimmed
+# where marked. The two reds at the end are not settled here (the S124 step file, "phase 1 rebased onto S122").
+
+== the gradient fixture: DEC-316's pair, build/S101_gradient_rows (exit 0: it reproduces S122's re-pick, candidate 5)
+tests/test_eval_positions.hpp: 124 rows, marker found, 104 rows before it
+base, 104 rows: parameter 984 analytic +2.824164e-05, the rule wants at least 8.472493e-05
+5 eligible pairs tried
+pick, for tests/test_eval_positions.hpp:
+    "1r2k2r/R3P2R/8/8/8/8/8/4K3 w k - 1 2",
+    "4k3/8/8/8/8/8/r3p2r/1R2K2R b K - 1 2",
+the case's relative error at parameter 984, h 0.01, no part of the rule:
+  base: 2.94971e-06, analytic +2.824164e-05, numeric +2.824173e-05, difference 8.330e-11
+  with the pair: 8.60564e-07, analytic +9.488194e-05, numeric +9.488202e-05, difference 8.165e-11
+reproduces the landed pair: yes
+
+== S124's coverage block, S124_COVERAGE_DATA=<S083's corpus> build/S124_coverage_rows (exit 0: the block reproduces unchanged)
+== its eligibility's stage two now carries S122's curve, as the four earlier tools' have since S122's phase 2 (DEC-354)
+tests/test_eval_positions.hpp: 124 rows, 106 before S124's block (marker found), the block ends at row 124
+landed block: 9 pairs, 0 not eligible
+the list, 106 rows: 13 of 19 needs open
+  open mopup_mg[0]
+  open mopup_mg[1]
+  open mopup_mg[2]
+  open mopup_eg[0]
+  open mopup_eg[1]
+  open mopup_eg[2]
+  open endgame_scale[1]
+  open endgame_scale[4]
+  open endgame_scale[5]
+  open endgame_scale[9]
+  open endgame_scale[10]
+  open endgame_scale[11]
+  open endgame_scale[12]
+all_test_fens(): 36 eligible candidates close an open need
+pick, phase 2, closes 4: mopup_mg[0] mopup_eg[0] mopup_mg[1] mopup_eg[1]
+  4k3/r7/8/8/8/8/4K3/8 w - - 0 2
+pick, phase 3, closes 1: endgame_scale[1]
+  1r2k3/N7/8/8/8/8/4K3/8 w - - 1 2
+/home/max/ws/chesso/.tuning/s083/curve/s0/cand_6226944_s1.tsv: 359421 read, 448 candidates kept
+pick, phase 2, closes 2: mopup_mg[2] mopup_eg[2]
+  8/8/8/2N1K3/2B5/4k3/8/8 b - - 6 55
+pick, phase 2, closes 1: endgame_scale[5]
+  8/2p5/8/2P3K1/3P4/7r/8/5k2 w - - 0 70
+pick, phase 2, closes 1: endgame_scale[11]
+  6k1/5p1p/pB4pP/4Pp2/PP6/8/2b2KP1/8 w - - 0 34
+pick, phase 1, closes 1: endgame_scale[4]
+  8/2k5/5K2/4N3/8/2p5/2P5/8 b - - 0 68
+pick, phase 2, closes 1: endgame_scale[9]
+  5b2/8/2P5/3BK2k/8/8/8/8 b - - 0 49
+pick, phase 6, closes 1: endgame_scale[12]
+  8/4R1pk/8/4P3/5Bbp/P1K5/4r3/8 b - - 0 64
+pick, phase 2, closes 1: endgame_scale[10]
+  8/5pk1/B3p3/3pb1p1/1P6/6P1/5P2/6K1 w - - 0 50
+check gradient: 124 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 3.117e-08, over S124's family 1.020e-06
+check both ways: 2944 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (18 picked rows, 18 landed)
+
+== the four earlier blocks, build/S121_ S123_ S125_ S101_coverage_rows, each with its *_COVERAGE_DATA = S083's corpus (exit 0 each)
+tests/test_eval_positions.hpp: 124 rows, 42 before S121's block (marker found), the block ends at row 80
+check gradient: 80 rows, 0 parameters at or under 1e-12, the smallest |gradient| over the mobility span 6.063e-08
+check both ways: 2856 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (38 picked rows, 38 landed)
+tests/test_eval_positions.hpp: 124 rows, 80 before S123's block (marker found), the block ends at row 88
+check gradient: 88 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.512e-08, over S123's family 1.261e-07
+check both ways: 2872 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (8 picked rows, 8 landed)
+tests/test_eval_positions.hpp: 124 rows, 88 before S125's block (marker found), the block ends at row 92
+check gradient: 92 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 5.272e-08, over S125's family 8.158e-08
+check both ways: 2880 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (4 picked rows, 4 landed)
+tests/test_eval_positions.hpp: 124 rows, 92 before S101's block (marker found), the block ends at row 104
+check gradient: 104 rows, 0 parameters at or under 1e-12, the smallest |gradient| from MOB_MG_BASE on 4.664e-08, over S101's family 1.098e-07
+check both ways: 2904 positions, 0 features not moved both ways
+reproduces the landed block: yes, pair for pair and in order (12 picked rows, 12 landed)
+
+== the gradient case, tests/test_tuner_gradient.cpp "gradient() is the derivative of the error it descends", both builds
+worst relative error 8.60521e-07 at parameter 984 (passed_king_own_mg[5]) over the 124 rows; under 1e-6 by x1.16
+  S122's landing alone (the 106 rows): 8.60564e-07 at 984; phase 1 on d83d6c0: 4.63e-7 at 992
+  stop (a), DEC-344 (9)'s third recurrence on this case: does not fire
+
+== CLAMP_PUSH, build/S083_tuner_preconditions clamp SCRATCH (exit 2 with the case at +50, exit 0 after it moved to +40)
+clamp: 124 fixture rows, LAZY_EVAL_MARGIN 275; at the built constants the largest |stage two| is 174.4 (the case "sits clear" needs < 274.0)
+ push  bound   bound at       next   kink dist   fd worst    clamped       rest  rule
+  +10      0        0.0      144.4      130.59   3.08e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +20      0        0.0      137.2      137.82   2.59e-07         -1         -1  binds on none or all; fd past 2e-7; 
+  +30      0        0.0      207.2       67.82   1.59e-07         -1         -1  binds on none or all; 
+  +40      4      280.4      253.3        2.18   1.12e-07          0    0.00278  ok  <- CHOSEN
+  +50      6      360.4      225.4       38.29   2.05e-07          0    0.00264  fd past 2e-7; 
+  +60      8      440.4      256.8        0.36   2.09e-07          0    0.00198  a row within 1 cp of the kink; fd past 2e-7; 
+  +70     12      520.4      258.2       13.98   2.18e-07          0    0.00132  fd past 2e-7; 
+  +80     16      600.4      268.1        6.79   4.13e-07          0   0.000988  fd past 2e-7; 
+  +90     22      680.4      269.0        0.79   2.05e-07          0   0.000719  a row within 1 cp of the kink; fd past 2e-7; 
+ +100     24      760.4      263.2       11.76   2.05e-07          0   0.000659  fd past 2e-7; 
+ +110     32      840.4      274.4        0.59   4.21e-07          0   0.000614  a row within 1 cp of the kink; fd past 2e-7; 
+ +120     39      920.4      267.7        7.28   2.05e-07          0   0.000482  fd past 2e-7; 
+ +130     40     1000.4      257.4       12.72   6.43e-06          0    0.00047  fd past 2e-7; 
+ +140     42     1080.4      263.7        2.42   1.13e-06          0   0.000447  fd past 2e-7; 
+ +150     47     1160.4      262.3        0.59   2.05e-07          0     0.0004  a row within 1 cp of the kink; fd past 2e-7; 
+ +160     48     1240.4      264.5        7.27   3.26e-07          0   0.000391  fd past 2e-7; 
+ +170     51     1320.4      268.7        6.33   6.51e-07          0   0.000368  fd past 2e-7; 
+ +180     54     1400.4      269.5        4.18   2.05e-07          0    0.00138  fd past 2e-7; 
+ +190     56     1480.4      274.0        0.95   4.13e-07          0    0.00133  a row within 1 cp of the kink; fd past 2e-7; 
+ +200     62     1560.4      264.8        4.32   2.05e-07          0     0.0012  fd past 2e-7; 
+clamp: the rule picks +40, every row 2.18 from the kink; the case carries +40
+  stop (b): does not fire. The case itself at +40, both builds: 4 rows bound, worst relative error 1.12234e-07 at 640
+  phase 1 on d83d6c0: no push from +10 to +200; S122's landing (106 rows): +50
+
+== ADAGRAD_HOLD_STEP, build/S310_adagrad_step SCRATCH (exit 2 with the case at 2, exit 0 after it moved to 3); trimmed to the family table and its verdict
+== the family, worst apart at any read through epoch 1200; a, the case's fixture; b, less DEC-316's pair
+  step   a ship    a +-1    a +-3   a +-10   b ship    b +-1    b +-3   b +-10     worst    >Q |   at 300     walk   travel      hold  min walk
+     1  4.4e-12  1.3e-11  9.8e-12  1.3e-11  2.0e-12  8.8e-12  7.0e-12  1.3e-11  1.32e-11     0 | 8.53e-13   1.1052   1129.9  6.88e-15    0.0424
+     2  1.6e-12  4.4e-12  4.5e-12  2.7e-11  3.9e-12  5.5e-12  5.3e-12  4.1e-12  2.72e-11     0 | 7.39e-13   1.6289   1422.7  7.33e-15    0.3851
+     3  3.0e-12  7.5e-12  2.3e-12  6.8e-12  1.6e-12  3.5e-12  2.8e-12  3.1e-12  7.50e-12     0 | 5.68e-13   1.3259   1505.7  1.04e-14    0.7702
+     4  2.0e-12  2.6e-12  4.4e-12  3.5e-12  1.7e-12  3.3e-12  1.8e-10  3.1e-12  1.77e-10     0 | 1.99e-12   1.1071   1544.9  8.77e-15    0.8132
+     5  2.7e-12  1.1e-11  7.9e-11  1.1e-10  2.2e-12  5.4e-12  4.0e-12  3.5e-12  1.13e-10     0 | 6.82e-13   1.0012   1578.9  1.04e-14    0.5315
+     6  1.3e-11  9.9e-08  2.0e-03  2.3e-06  8.9e-12  1.5e-11  1.1e-10  4.0e+00  3.96e+00    12 | 7.67e-13   1.0896   1601.3  1.07e-14    0.3270
+     7  1.6e-11  5.4e-11  2.0e-09  2.2e-07  1.5e-06  8.6e+00  3.1e+00  5.4e+00  8.64e+00    27 | 1.31e-12   1.0212   1630.6  2.89e-15    0.1672
+     8  1.5e-11  4.9e-10  2.0e-08  3.6e-10  1.4e-11  2.7e-10  4.7e-11  1.3e-08  2.02e-08     6 | 4.60e-12   0.8757   1655.5  9.55e-15    0.2062
+     9  1.6e-09  1.7e-08  8.9e-08  1.1e-08  2.5e-11  2.2e-09  1.6e-08  1.6e-08  8.95e-08    13 | 1.49e-11   0.7513   1677.1  8.66e-15    0.1275
+    10  2.3e-11  3.6e-08  9.0e-07  5.8e-08  1.6e-07  1.3e-04  1.0e-05  6.6e-06  1.30e-04    29 | 1.88e-12   0.5568   1692.7  7.33e-15    0.0074
+    12  4.1e-09  2.9e-03  3.0e-01  7.1e-02  1.2e-11  8.8e-01  1.1e-01  5.1e-01  8.84e-01    48 | 4.25e-11   0.4889   1715.8  4.66e-15    0.3032
+    15  1.1e-02  1.6e+01  1.8e+02  2.7e+02  5.2e-01  1.4e+02  1.8e+02  1.7e+02  2.68e+02    95 | 6.58e-05   1.1888   1755.0  7.99e-15    0.5871
+    20  1.2e+02  3.6e+02  4.8e+02  5.5e+02  2.8e+02  9.2e+02  9.2e+02  5.8e+02  9.24e+02    98 | 7.15e-01   0.7395   1795.0  1.91e-14    0.0178
+    30  1.8e-06  9.8e+02  1.7e+03  1.1e+03  7.8e+02  1.6e+03  1.3e+03  1.3e+03  1.70e+03    96 | 6.50e-08   0.0991   3157.9  7.33e-15    0.0042
+first step past QUIET, by member:        9 6 6 6 7 7 7 6
+
+onset 6; half 3; the rule picks 3, the case carries 3
+at 3 on the case's fixture: apart 5.68e-13 at epoch 300, worst 2.96e-12 through 1200; every read of the family at most 7.5e-12, 5.1 decades under the bound; smallest plain walk 1.3259, 133 times its floor; travelled 1505.7; holds at most 1.04e-14
+  phase 1 on d83d6c0: onset 6, 3; S122's landing: onset 5, 2
+
+== the gauge walk at the case's steps, build/S083_tuner_preconditions walk SCRATCH (exit 0)
+walk: 128 gauge-fixture rows, 300 epochs, K 1.0
+  adam at lr 1
+    material/table pawn    plain   -4.0263  held   +1.7e-15  
+    material/table knight  plain   -4.2282  held  +6.66e-16  
+    material/table bishop  plain   -3.0638  held  +2.98e-15  
+    material/table rook    plain   -0.6927  held  -4.44e-16  
+    material/table queen   plain   -2.5600  held  +4.88e-15  
+    psqt_mg[king]          plain   +2.6436  held  -2.22e-16  
+    psqt_eg[king]          plain   +3.0504  held  +3.33e-16  
+    smallest plain walk 0.6927 (material/table rook); runs apart 1.14e-12; plain travelled 1754.9
+  adagrad at lr 3
+    material/table pawn    plain   -2.4213  held   -7.4e-16  
+    material/table knight  plain   -3.9096  held  -3.72e-15  
+    material/table bishop  plain   -3.2144  held  -2.78e-16  
+    material/table rook    plain   -1.3259  held  +2.55e-15  
+    material/table queen   plain   -2.9746  held  +1.04e-14  
+    psqt_mg[king]          plain   +2.3425  held  -2.11e-15  
+    psqt_eg[king]          plain   +1.7278  held  +2.33e-15  
+    smallest plain walk 1.3259 (material/table rook); runs apart 5.68e-13; plain travelled 1505.7
+walk: every plain shift clears the case's floor 0.01
+  phase 1 on d83d6c0: 2.3017 (Adam, the bishop's) / 1.7570 (AdaGrad at 3, psqt_eg[king]); S122's landing: 1.2516 / 0.3832 at 2
+
+== the walked counts, build/tests/test_eval_model "the engine counts the endgame family the walk counts", "... by hand"
+179059 assertions, 0 failed: unchanged; the counts read no weight
+
+== the cell census as a check, build/S124_cell_check over S083's corpus and S082's three fixed views (S124-CELLS-OK)
+identical to adocs/data/S124_cells_check.txt line for line, every block 0 rows differing: the cells and E1's picks read stage one, which S122 did not move
+
+== tools/feature_audit --data <S083's corpus> --free endgame_scale --no-columns --no-collinearity (exit 0), the identity and S124's support lines
+trace: 6226944 rows, 247874746 entries; 0 differ from evaluate(), the clamp binds on 9282
+identities: not computed: the trace carries 41928814 per-side entries and their sides do not share one x at these weights, so the group's derivative has no integer column
+mop-up (S124) support: rows with a non-zero cell coefficient and a non-zero taper weight for the half, and the games they come from, 137978 games in all
+support mopup_mg[0] rows 5973 games 1789
+support mopup_mg[1] rows 6997 games 1837
+support mopup_mg[2] rows 1315 games 196
+support mopup_eg[0] rows 5973 games 1789
+support mopup_eg[1] rows 6997 games 1837
+support mopup_eg[2] rows 1315 games 196
+endgame scale (S124) support: rows whose E1 at the shipped weights picks the cell at a phase below 24, the games they come from, 137978 games in all, and the rows where either candidate is the cell
+support endgame_scale[0] rows 6925 games 1669 candidate_rows 148371
+support endgame_scale[1] rows 23751 games 3299 candidate_rows 34273
+support endgame_scale[2] rows 14785 games 3072 candidate_rows 15930
+support endgame_scale[3] rows 51142 games 9353 candidate_rows 280658
+support endgame_scale[4] rows 63076 games 10175 candidate_rows 82090
+support endgame_scale[5] rows 26915 games 5780 candidate_rows 28089
+support endgame_scale[6] rows 130290 games 23018 candidate_rows 462097
+support endgame_scale[7] rows 123510 games 20718 candidate_rows 152179
+support endgame_scale[8] rows 39574 games 8090 candidate_rows 40805
+support endgame_scale[9] rows 7398 games 905 candidate_rows 15814
+support endgame_scale[10] rows 14011 games 1657 candidate_rows 17356
+support endgame_scale[11] rows 5997 games 798 candidate_rows 6080
+support endgame_scale[12] rows 58776 games 5520 candidate_rows 58874
+  phase 1 on d83d6c0: rank exactly 1118 of 1190, nullity 72; at S122's landing the curve is off its seed, so the report
+  is not computed at the shipped constants and no rank is read; every support line is phase 1's
+
+== the engine-against-trace guard: adocs/data/S124_engine_eval.cpp against a forced build's libchesso_engine.a and
+== libchesso_engine_trace.a (src/, tools/, tests/ with adocs/data/S124_phase1_plants.patch, -DS124_FORCED), over S083's corpus
+0 rows of 6226944 differ
+
+== truncation_scan --data <S083's corpus> --min 2.875 on that forced build (exit 0), the summary and the head
+6226944 rows scanned, 219307 past 2.0, 7030 past 2.8750, worst 3.690165
+3.690165	phase 23	b	rnbqk2r/ppppb1pp/8/5p2/Q3P3/P1P5/1P1P1PP1/RNB1KBNR b KQkq - 0 7
+3.672323	phase 23	w	rnb1k2r/npp1q1p1/p3pp2/7p/2PQ4/1P3N1N/PB3PBP/R4RK1 w kq - 0 17
+3.619385	phase 22	w	r2q1rk1/1p2p1b1/p2p2p1/2p4p/2PnP1nP/2B2NP1/PP3PB1/R2QK2R w Q - 1 17
+3.590454	phase 23	w	r1b1k2r/1pp2ppp/p2p1n2/2P1n3/P7/2N2N1P/1PPKPqP1/R1BQ1B1R w kq - 0 10
+3.588989	phase 23	w	rn2kbnr/2p2ppp/4p3/5b2/PpPPq3/1P3N2/5PPP/RNBQ1K1R w kq - 0 10
+  phase 1 on d83d6c0: 102066 past 2.0, 7 past 2.875, worst 2.891927 (8/5k2/8/5K2/5NRP/8/8/5r2 b, a row in a cell)
+
+== adocs/data/S124_gradient_rows.cpp, ruling (a)'s program, never landed: build/S124_gradient_rows (exit 1 by its own clause)
+tests/test_eval_positions.hpp: 124 rows, marker absent
+base, 124 rows, +40 on the king safety weights: parameter 996 analytic +2.155830e-04, the rule wants at least 6.467491e-04
+adocs/data/S124_gradient_rows.cpp:310:
+TEST CASE:  S124: pick the fixture rows DEC-316 owes passed_king_enemy_mg[5] at +40
+adocs/data/S124_gradient_rows.cpp:413: FATAL ERROR: no eligible pair of all_test_fens() puts the gradient at its multiple
+784 eligible pairs tried, the largest |g| 5.117e-04: moot, DEC-354 withdrew the question and CLAMP_PUSH's rule answers +40 above
+
+== RED 1, not settled here: tests/test_tuner_gradient.cpp "the endgame factor's gradient is the derivative, chain rule in", both builds
+endgame factor: worst relative error 3.4757e-06 at parameter 726 (psqt_eg[king][b6]) of 482, over 5715 rows; CHECK( 3.4757e-06 < 1e-06 ) fails
+  phase 1 on d83d6c0: 3.02e-7 at the same parameter. The case's rows are S124's population (tests/test_endgame_positions.hpp,
+  seeded), which no rule picks and no weight moves; S122's constants moved the labels' error there, not the rows.
+  A scratch probe, the case's rows, labels, forced family, K and h as written, every reached parameter (482):
+rows 5715, reached max |analytic| 1.789177e-04
+p 726 analytic -1.983400989e-09 |a|/max 1.109e-05 rel@0.01 3.476e-06
+   h 0.0400 numeric -1.983406495e-09 rel 2.776e-06
+   h 0.0200 numeric -1.983405107e-09 rel 2.076e-06
+   h 0.0100 numeric -1.983407882e-09 rel 3.476e-06
+   h 0.0050 numeric -1.983396780e-09 rel 2.122e-06
+   h 0.0025 numeric -1.983391229e-09 rel 4.921e-06
+   richardson(0.01,0.005) -1.983393079e-09 rel 3.988e-06
+p 739 analytic -1.811926127e-08 |a|/max 1.013e-04 rel@0.01 5.918e-07
+   h 0.0400 numeric -1.811926026e-08 rel 5.564e-08
+   h 0.0200 numeric -1.811926026e-08 rel 5.564e-08
+   h 0.0100 numeric -1.811925054e-08 rel 5.918e-07
+   h 0.0050 numeric -1.811926720e-08 rel 3.273e-07
+   h 0.0025 numeric -1.811923944e-08 rel 1.205e-06
+   richardson(0.01,0.005) -1.811927275e-08 rel 6.337e-07
+  normwise at h 0.01, the same probe: max |num - ana| 1.008e-12 at 1175 over max |ana| 1.789e-04 = 5.632e-09;
+  parameters past 1e-6 relative: 1 of 482 (726); the next, 739, 5.9e-7
+  Reading: 726's analytic gradient is 1.1e-5 of the largest; its numeric difference sits on the summation's rounding at
+  every h (|num - ana| about 6e-15, the relative error 2.1e-6 to 4.9e-6 from h 0.04 to 0.0025, flat in h, and
+  Richardson's difference no better, 3.99e-6). DEC-316's class: a weight nearly stationary over the rows, the derivative right.
+  Under DEC-354's options' names: B, a smaller h, red (2.12e-6 at 0.005, 4.92e-6 at 0.0025); F, Richardson, red
+  (3.99e-6); C, normwise, green (5.63e-9); D, rows, has no rule to pick them for this case.
+
+== RED 2, not settled here: tests/test_eval_trace.cpp "the factor's integer arithmetic is reconstructed at cells that move it",
+== its precondition CHECK( worst_scaled > plain_bound ), both builds, and the golden cell_truncation_positions
+CHECK( 3.01941 > 3.875 ) fails; checked 8673, moved 4084, worst 3.67232, worst_scaled 3.01941
+  The merge: S122 made the truncation bound 3 x 23/24 + 1 while its curve is live; S124 made it per row, 2 x 23/24 + 3071/3072
+  on a row whose cell is off F. Rebased, both add (truncation_bound(), the precondition's plain_bound): 3.9163 on such a row,
+  3.875 on any other. The precondition asks for a cell row past a row at F's bound, now 3.875.
+  The golden's row, 8/5k2/8/5K2/5NRP/8/8/5r2 b - - 6 68, on the forced build (a scratch probe, the case's forced cells):
+  2.338053 with the curve live, 2.058594 with the curve held at its seed (constant 45, every other input 0).
+  Over S083's corpus on the forced build, the scan's 7030 rows past 2.875 sorted by the cell exact_parts() picks:
+  rows 7030, in a cell 347, cell rows past 2 x 23/24 + 3071/3072 265; worst cell row 3.544352 8/6k1/6p1/4P3/2B5/2P1b1P1/7K/8 b - - 0 42; worst other 3.690165
+  Over the whole corpus with the curve held at its seed, the same probe:
+rows 6226944, in a cell 566154, cell rows past 2 x 23/24 + 3071/3072 0; worst cell row 2.864258 5k2/5p1p/8/2P2R2/2n5/r6P/7K/5R2 b - - 2 41; worst other 2.875000
+  So no row of S083's corpus at the forced cells is a cell row past a row at F's bound, the curve live or at its seed:
+  truncation_scan --min 2.875 on that build, the golden's script, re-derives nothing. And plant 9 (truncation_bound()'s
+  old 3 x 23/24 on every row) now reads green on the forced build's identity and bound cases, 20939 assertions
+  (red on d83d6c0, 2 checks): while the curve is live its allowance of 1 covers the factor's 0.041.
+
+== the plants again, adocs/data/S124_phase1_plants.sh's runs on scratch builds of src/, tools/ and tests/ with the delivered
+== adocs/data/S124_phase1_plants.patch (regenerated: one hunk's context moved with truncation_bound()'s curve term),
+== the engine_eval outputs streamed and not stored; the tally, paths shortened
+plants test_eval_model plant 0 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 0, [doctest] assertions: 179059 | 179059 passed | 0 failed |
+plants test_eval_model plant 6 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 1, [doctest] assertions: 179059 | 162981 passed | 16078 failed |
+    first: tests/test_eval_model.cpp:2680: ERROR: CHECK( engine.cell[side] == walk.cell[side] ) is NOT correct!
+plants test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 55458 passed | 1 failed |
+    first: tests/test_eval_trace.cpp:637: ERROR: CHECK( worst_scaled > plain_bound ) is NOT correct!
+plants test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 53434 passed | 2025 failed |
+    first: tests/test_eval_trace.cpp:605: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+plants test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 40311 passed | 15148 failed |
+    first: tests/test_eval_trace.cpp:606: ERROR: CHECK( parts.e1 == e1 ) is NOT correct!
+plants test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 45215 passed | 10244 failed |
+    first: tests/test_eval_trace.cpp:378: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55459 | 55345 passed | 114 failed |
+    first: tests/test_eval_trace.cpp:605: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+forced test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+forced test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20572 passed | 367 failed |
+    first: tests/test_eval_trace.cpp:378: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 19647 passed | 1292 failed |
+    first: tests/test_eval_trace.cpp:378: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 18575 passed | 2364 failed |
+    first: tests/test_eval_trace.cpp:378: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+plants test_tuner_gradient plant 0 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12683 passed | 1 failed |
+    first: tests/test_tuner_gradient.cpp:849: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 5 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12680 passed | 4 failed |
+    first: tests/test_tuner_gradient.cpp:849: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 7 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12683 passed | 1 failed |
+    first: tests/test_tuner_gradient.cpp:849: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 8 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12684 | 12681 passed | 3 failed |
+    first: tests/test_tuner_gradient.cpp:849: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_eval_trace plant 0 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 10 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 9 [the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 43520 | 43519 passed | 1 failed |
+    first: tests/test_eval_trace.cpp:637: ERROR: CHECK( worst_scaled > plain_bound ) is NOT correct!
+forced test_eval_trace plant 9 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+forced test_eval_trace plant 11 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20141 passed | 798 failed |
+    first: tests/test_eval_trace.cpp:378: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_tuner_box.sh plant 0: exit 0, ok: every factor in [0, 128], cells 4 and 2 at 0 and 128: 128 128 128 128 0 128 128 128 128 128 128 128 128
+plants test_tuner_box.sh plant 13: exit 1, FAIL: header factor 2 is 411, outside [0, 128]
+plants test_tuner_box.sh plant 14: exit 1, FAIL: header factor 2 is 132, outside [0, 128]
+forced chesso_engine against chesso_engine_trace plant 0: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 11: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 12: 840136 rows of 6226944 differ
+forced truncation_scan plant 0: exit 0, 6226944 rows scanned, 219307 past 2.0, 7030 past 2.8750, worst 3.690165
+forced truncation_scan plant 1: exit 1, the trace disagrees with evaluate(): 113 against 90: 8/8/8/5p2/1k5K/8/6PP/8 b - - 0 49
+forced truncation_scan plant 2: exit 1, the trace disagrees with evaluate(): 63 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 3: exit 1, the trace disagrees with evaluate(): -5327 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 4: exit 1, the trace disagrees with evaluate(): -130 against -137: 6R1/6pp/4p3/4qpk1/8/R6P/6P1/6K1 w - - 0 49
+  Against adocs/data/S124_phase1_guards.txt, d83d6c0: every plant red there is red here, by its own check, but two plants, in three runs.
+  Every run that includes a red case carries its one failure as well (the forced-cell precondition, RED 2; the factor's
+  gradient, RED 1); plant 7 is red by its own value there, 1.99927 at 691 (1.99 at 476 on d83d6c0).
+  Blind at the new base: plant 9 in the forced-cell case (only the precondition fails) and on the forced build (green);
+  plant 10, the smooth score moved 0.03 on every row at F, green (red on d83d6c0, 4 checks): with S122's curve live the
+  bound at F is 3.875 and the worst row 3.67232, so a shift under 0.2 crosses nothing. RED 2's class.
+
+== RED 2 after the coordinator's ruling, option (i): the per-row curve allowance, read before any change (2026-11-05).
+== The rule as ruled: each row's bound gains 1 only where S122's curve is non-zero for that row at the constants under
+== test, either king, either half, x > 0. A scratch probe (source below) over S083's corpus, read in place, at the
+== shipped constants (build/'s trace library) and at the case's forced cells (a forced build of the plants patch):
+== L the rule as ruled; E for comparison, the curve's own residual on the row, |d_mg phase + d_eg (24 - phase)| / 24,
+== d_h the two kings' T(x) fractions, White's taken off, which is what the curve's truncations can add and no more.
+shipped constants:
+rows 6226944; L fires on 6226944; E allowance zero on 1703882
+bound violations: L 0, E 0; rows within 0.03 of the bound: L 0, E 16
+worst gap on rows L does not fire on 0.000000; worst gap - E bound 0.000000 at 1r3r1k/2q2pp1/pp2p2p/2n1P3/4QB2/P1N5/1P3PPP/2RR2K1 w - - 1 23
+rows off F 0; past a row at F's bound: L 0 (worst over -9.000000), E 0 (worst over -9.000000 at )
+forced cells:
+rows 6226944; L fires on 6226944; E allowance zero on 1703882
+bound violations: L 0, E 0; rows within 0.03 of the bound: L 0, E 13
+worst gap on rows L does not fire on 0.000000; worst gap - E bound 0.000000 at 1r3r1k/2q2pp1/pp2p2p/2n1P3/4QB2/P1N5/1P3PPP/2RR2K1 w - - 1 23
+rows off F 566154; past a row at F's bound: L 0 (worst over -0.330648), E 1 (worst over 0.007772 at 1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32)
+  Reading. L fires on every row of the corpus at both: the shipped curve's endgame constant is 229
+  (ks_curve_eg[0]), and on every row some king's x is positive in some half, so the rule gives every row its +1 and
+  nothing moves: the precondition stays 3.01941 against 3.875 and plants 9 and 10 stay green. Option (i) as ruled
+  cannot be made green with every plant red, so nothing was changed in the tree and (ii) was not tried.
+  E holds on every row at both (0 violations), and is reached exactly (worst gap - E bound 0): on the forced build one
+  cell row passes a row at F's bound under E, by 0.0078 (1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32), and 13 rows sit
+  within 0.03 of their bound (16 at the shipped constants), where S122's bound case at F had 0.185 of slack. E is the
+  coordinator's to rule on; it is not (i) as ruled.
+
+== the probe, as run (never delivered): g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE [-DS124_FORCED] -I src
+== -I tools -I tests -isystem tests/doctest/doctest curveprobe.cpp <trace library> -lpthread; CP_LIST=<corpus>
+// Scratch probe, never delivered: over a corpus (FEN column), each row's smooth-exact
+// gap against two per-row curve allowances at the library's weights: L, +1 where any
+// king's x is > 0 in either half; E, the curve's own residual |d_mg phase + d_eg (24 -
+// phase)| / 24, d_h the two kings' T fractions, White's taken off.
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
+#include <cmath>
+#include <cstdio>
+#include <fstream>
+#include <string>
+#include <vector>
+#include "bitboard.hpp"
+#include "tuner_layout.hpp"
+#include "tuner_trace.hpp"
+
+TEST_CASE("curveprobe")
+{
+  game_t game;
+  initialize_game_const_data(&game);
+  std::ifstream in(std::getenv("CP_LIST"));
+  std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  const std::vector<int64_t> w = tuner_trace::engine_weights();
+  std::string line;
+  size_t rows = 0, fires = 0, e_zero = 0, viol_e = 0, viol_l = 0, near_e = 0, near_l = 0;
+  size_t cell_past_l = 0, cell_past_e = 0, cells = 0;
+  double worst_quiet = 0, worst_slack_e = -9, worst_cell_over_e = -9, worst_cell_over_l = -9;
+  std::string fen_slack, fen_cell_e;
+  while (std::getline(in, line)) {
+    const std::string fen = line.substr(0, line.find('\t'));
+    if (!load_FEN(fen, &game)) { continue; }
+    tuner_trace::row_trace_t trace;
+    std::string error;
+    if (!tuner_trace::trace_board(&game.board, &trace, &error)) { continue; }
+    tuner_trace::dataset_t data;
+    tuner_trace::append_row(trace, 0.5f, 0, 0, &data);
+    const double gap = std::fabs(tuner_trace::score(data, 0, params.data()) -
+                                 static_cast<double>(tuner_trace::exact_score(data, 0, w.data())));
+    const tuner_trace::exact_parts_t parts = tuner_trace::exact_parts(data, 0, w.data());
+    int64_t x[2][2] = {{0, 0}, {0, 0}};
+    for (const tuner_trace::side_entry_t& e : data.side_entries) {
+      if (e.group != 0) { continue; }
+      x[e.side][0] += e.coef * w[tuner_layout::KSC_MG_BASE + e.input];
+      x[e.side][1] += e.coef * w[tuner_layout::KSC_EG_BASE + e.input];
+    }
+    bool fire = false;
+    double d[2] = {0, 0};
+    for (int s = 0; s < 2; ++s) {
+      for (int h = 0; h < 2; ++h) {
+        if (x[s][h] > 0) { fire = true; }
+        const int64_t p = std::max<int64_t>(x[s][h], 0);
+        const double frac = static_cast<double>((p * p) % KS_CURVE_DIVISOR) / KS_CURVE_DIVISOR;
+        d[h] += (s == 0 ? -1.0 : 1.0) * frac;
+      }
+    }
+    const int phase = data.phase[0];
+    const double a = std::fabs(d[0] * phase + d[1] * (24 - phase)) / 24.0;
+    const bool off_f = parts.cell != eval_trace::NO_CELL &&
+                       w[tuner_layout::EGS_BASE + parts.cell] != ENDGAME_SCALE_ONE;
+    const double base = off_f ? 2.0 * 23.0 / 24.0 + 3071.0 / 3072.0 : 69.0 / 24.0;
+    const double bl = base + (fire ? 1.0 : 0.0), be = base + a;
+    rows++;
+    fires += fire;
+    e_zero += (a == 0.0);
+    if (gap > bl + 1e-9) { viol_l++; }
+    if (gap > be + 1e-9) { viol_e++; }
+    if (gap > bl - 0.03) { near_l++; }
+    if (gap > be - 0.03) { near_e++; }
+    if (!fire) { worst_quiet = std::max(worst_quiet, gap); }
+    if (gap - be > worst_slack_e) { worst_slack_e = gap - be; fen_slack = fen; }
+    if (off_f) {
+      cells++;
+      const double at_f_l = 69.0 / 24.0 + (fire ? 1.0 : 0.0), at_f_e = 69.0 / 24.0 + a;
+      if (gap > at_f_l) { cell_past_l++; }
+      if (gap > at_f_e) { cell_past_e++; }
+      worst_cell_over_l = std::max(worst_cell_over_l, gap - at_f_l);
+      if (gap - at_f_e > worst_cell_over_e) { worst_cell_over_e = gap - at_f_e; fen_cell_e = fen; }
+    }
+  }
+  printf("rows %zu; L fires on %zu; E allowance zero on %zu\n", rows, fires, e_zero);
+  printf("bound violations: L %zu, E %zu; rows within 0.03 of the bound: L %zu, E %zu\n", viol_l, viol_e, near_l, near_e);
+  printf("worst gap on rows L does not fire on %.6f; worst gap - E bound %.6f at %s\n", worst_quiet, worst_slack_e, fen_slack.c_str());
+  printf("rows off F %zu; past a row at F's bound: L %zu (worst over %.6f), E %zu (worst over %.6f at %s)\n", cells,
+         cell_past_l, worst_cell_over_l, cell_past_e, worst_cell_over_e, fen_cell_e.c_str());
+}
+
+== DEC-355 implemented, 2026-11-06: the truncation bound per row, S122's curve's own residual in place of a flat 1.
+== tools/tuner_trace.hpp gains curve_residual() -- |d_mg phase + d_eg (24 - phase)| / 24, d_h the two kings'
+== remainders sign * ((max(x,0)^2) mod KS_CURVE_DIVISOR), White's taken off, over the divisor, from the row's side
+== entries at the integer weights read, one division of an integer numerator -- and truncation_bound(), the taperings'
+== bound (3 x 23/24 at F, 2 x 23/24 + 3071/3072 off F, 23/24 more for each with tempo's weights non-zero) plus that
+== residual; tests/test_eval_trace.cpp and tools/truncation_scan read the one definition. The probe of 2026-11-05 above
+== (its E) is the same arithmetic. Where a case reads how near a row comes to its bound it reads the difference less
+== the row's residual against the taperings' part; truncation_scan prints, counts and compares that, and holds every
+== row to truncation_bound().
+
+== the goldens as they stood, read under the per-row form before either script ran: build/tests/test_eval_trace
+CHECK( worst_scaled > plain_bound ) fails: 2.57812 > 2.875 (checked 8673, moved 4084, worst 3.67232)
+CHECK( worst > 2.8 ) fails in the bound case: 2.75 > 2.8
+CHECK( worst > top ) fails in the pinned case: worst pinned difference 2.750000, short of 2.800000
+  every row's CHECK( gap <= truncation_bound ) green: no row the cases read is past its own bound
+build/tools/truncation_scan --data <S122's four> --min -1 (each line the difference less the row's curve residual)
+2.666667	phase  1	b	8/8/2k5/4pBK1/4P3/5P2/8/8 b - - 8 66
+2.625000	phase  9	w	1r5b/p4k2/2b1p1p1/1p3n2/3P1P2/2PN2p1/PP2K3/R1B5 w - - 4 27
+2.625000	phase 15	b	b1k4r/2q2p2/3R1p2/1B6/1Q5N/2P4P/5PP1/7K b - - 0 27
+2.750000	phase 23	w	rnb1k2r/npp1q1p1/p3pp2/7p/2PQ4/1P3N1N/PB3PBP/R4RK1 w kq - 0 17
+  so S122's four stay past 2.0 and none is past 2.8: the rule, read per row, picks differently.
+
+== the two pick rules, amended 2026-11-06 before either script ran (the step file's "DEC-355 implemented", each golden's
+== site, adocs/data/S083_truncation_pick.py's docstring); their text is there.
+
+== condition 1, the bound on every corpus row the cases' scripts read, and the two golden scripts (25.5 s and 25.8 s, one
+== run each, not timings). The forced build: the plants script's recipe, a scratch copy of the tree with
+== adocs/data/S124_phase1_plants.patch, -DS124_FORCED, Release, target truncation_scan.
+<forced build>/tools/truncation_scan --data <S083's corpus> --min 2.875 (exit 0), the cell golden's script
+6226944 rows scanned, 90088 past 2.0, 5 past 2.8750, worst 2.882772, less each row's curve residual; the largest difference 3.690165, 0 past their own bound
+2.875000	phase 19	w	1r3r1k/2q2pp1/pp2p2p/2n1P3/4QB2/P1N5/1P3PPP/2RR2K1 w - - 1 23
+2.875000	phase  7	b	2k5/8/7R/3B1bB1/2P2K2/p7/P4P2/4r3 b - - 2 60
+2.882772	phase 13	w	1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32
+2.875000	phase  5	b	8/3R4/p1r5/5kpp/7P/P1B3K1/1P4P1/8 b - - 0 42
+2.875000	phase 23	b	r4rk1/1bq1bppp/2p1p3/p2p4/Np1PnP2/P1P1PN2/2Q1B1PP/R1B1R1K1 b - - 2 16
+  four of the five sit at 69/24 and pass 2.875 by an ulp; the rule's pick, the largest, is the third: cell_truncation_positions
+  8/5k2/8/5K2/5NRP/8/8/5r2 b - - 6 68 -> 1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32
+build/tools/truncation_scan --data <S083's corpus> --min 2.8 (exit 0), truncation_positions' script, at S122's constants
+6226944 rows scanned, 88743 past 2.0, 66 past 2.8000, worst 2.875000, less each row's curve residual; the largest difference 3.690165, 0 past their own bound
+python3 adocs/data/S083_truncation_pick.py <its stdout> (exit 0)
+66 hits, 16 distinct FENs at the maximum 2.875000, phases 5..23, targets 5.00, 11.00, 17.00, 23.00
+2.875000	phase  5	b	8/8/3K2k1/p2B2r1/5RP1/8/8/8 b - - 1 69
+2.875000	phase 11	w	8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38
+2.875000	phase 13	b	r4k1r/6p1/p1nN3p/5b1n/1P5P/PP4P1/4N3/R4RK1 b - - 0 25
+2.875000	phase 23	w	r1bqkb1r/ppp1pp1p/n5p1/3p4/6P1/P1N2N2/1PPPPPP1/R1BQKB1R w KQkq - 0 6
+  truncation_positions: S122's four (phases 1, 9, 15, 23) -> these four (phases 5, 11, 13, 23), each at 2.875
+  So 0 rows of 6226944 past their own bound, at the shipped constants and at the forced cells. Rows near it: at the
+  shipped constants, every row at F, the 66 past 2.8 are within 0.075 of their bound and 16 distinct positions sit
+  exactly on it; the probe above, the same arithmetic, read 16 rows within 0.03 of their bound there and 13 at the
+  forced cells.
+the cell golden's row on both builds, --min -1 (the difference less the residual; the raw difference in the summary)
+forced: 2.882772 (raw 2.894674, residual 0.011902): 0.0078 past a row at F's 2.875, 0.0336 under its own 2.916341 + 0.011902
+shipped: 2.184530 (raw 2.196431); the phase-1 row 8/5k2/8/5K2/5NRP/8/8/5r2 b reads 1.933594 forced, 0.875000 shipped
+
+== the cases after, build/tests/test_eval_trace -s (13 of 13 cases, 2012889 assertions, green)
+forced-cell: CHECK( worst_scaled > plain_bound ) 2.88277 > 2.875, the golden's row; checked 8673, moved 4082, worst 3.29171
+bound case: CHECK( worst > 2.8 ) 2.875 > 2.8; pinned case: CHECK( worst > top ) 2.875 > 2.8, each of the four past 2.0
+
+== condition 2, the plants: OUT=.tuning/s124/plants_dec355 adocs/data/S124_phase1_plants.sh (S124-PLANTS-DONE), the
+== patch regenerated (plant 9's hunk moved with truncation_bound() into tools/tuner_trace.hpp; applies with no offset
+== or fuzz) and plant 9 added to the forced scan; the lines DEC-355 bears on, paths shortened
+plants test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 0, [doctest] assertions: 55459 | 55459 passed | 0 failed |
+plants test_eval_trace plant 0 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 10 [the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 9000 | 8996 passed | 4 failed |
+    first: tests/test_eval_trace.cpp:1073: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+plants test_eval_trace plant 9 [the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 43520 | 43518 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:624: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 9 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20937 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:1073: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced truncation_scan plant 0: exit 0, 6226944 rows scanned, 90088 past 2.0, 5 past 2.8750, worst 2.882772, less each row's curve residual; the largest difference 3.690165, 0 past their own bound
+forced truncation_scan plant 9: exit 1, 6226944 rows scanned, 90088 past 2.0, 5 past 2.8750, worst 2.882772, less each row's curve residual; the largest difference 3.690165, 1 past their own bound
+  Plant 10 red on the four pinned rows, one of each mirror pair; plant 9 red by its own check on the golden's row and
+  its mirror in the forced-cell case and on the forced build, and on the one corpus row on the forced scan. Every
+  other plant red by its own check as before; plant 0 green but RED 1, then still open (test_tuner_gradient 1 failed).
+
+== DEC-356, the owner's option A, 2026-11-06: tests/test_endgame_positions.hpp's generator is placements(); population()
+== is it and then factor_gradient_rows, the pair, a golden. adocs/data/S124_factor_gradient_rows.cpp, the options file's
+== scratch program promoted, built by its header's line; from /tmp (exit 0)
+base: 5715 rows; the case's worst 3.4757e-06 at 726, next 5.91782e-07 at 739
+round 1: TARGET 726, base |g| 1.983401e-09, the rule wants 5.950203e-09
+  pick after 157 eligible pairs (candidate 233 of 11339): |g| 1.295079e-07
+    8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1
+    k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1
+  the case with 5717 rows: worst 6.27485e-07 at 739 (|g| 1.811e-08), next 4.15295e-07 at 676
+picked 2 rows
+PICK 8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1
+PICK k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1
+reproduces the landed pair (tests/test_endgame_positions.hpp's factor_gradient_rows): yes
+  The options file's output line for line. Its own check, planted: a scratch header with the pair's two rows swapped,
+  the program built with it first on the include path, reads "reproduces the landed pair: NO", CHECK( same ) fails,
+  exit 1.
+the readers of population(), build/tests
+test_tuner_gradient "the endgame factor's gradient is the derivative, chain rule in": worst relative error 6.27485e-07 at parameter 739 of 482, over 5717 rows (green)
+test_eval_model, the walk's two S124 cases: 179059 -> 179079 assertions, green
+test_eval_trace forced-cell: checked 8673 -> 8675, moved 4082 -> 4084, worst 3.29171 and worst_scaled 2.88277 unchanged
+  No other golden script reads population(); S124_factor_gradient_rows.cpp is the one.
+
+== the plants on the final tree: OUT=.tuning/s124/plants_dec356 adocs/data/S124_phase1_plants.sh (S124-PLANTS-DONE), the tally,
+== paths shortened
+plants test_eval_model plant 0 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 0, [doctest] assertions: 179079 | 179079 passed | 0 failed |
+plants test_eval_model plant 6 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 1, [doctest] assertions: 179079 | 163001 passed | 16078 failed |
+    first: tests/test_eval_model.cpp:2680: ERROR: CHECK( engine.cell[side] == walk.cell[side] ) is NOT correct!
+plants test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 0, [doctest] assertions: 55469 | 55469 passed | 0 failed |
+plants test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 53444 passed | 2025 failed |
+    first: tests/test_eval_trace.cpp:617: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+plants test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 40277 passed | 15192 failed |
+    first: tests/test_eval_trace.cpp:618: ERROR: CHECK( parts.e1 == e1 ) is NOT correct!
+plants test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 45219 passed | 10250 failed |
+    first: tests/test_eval_trace.cpp:387: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 55351 passed | 118 failed |
+    first: tests/test_eval_trace.cpp:617: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+forced test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+forced test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20572 passed | 367 failed |
+    first: tests/test_eval_trace.cpp:387: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 19645 passed | 1294 failed |
+    first: tests/test_eval_trace.cpp:387: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 18573 passed | 2366 failed |
+    first: tests/test_eval_trace.cpp:387: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+plants test_tuner_gradient plant 0 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 0, [doctest] assertions: 12688 | 12688 passed | 0 failed |
+plants test_tuner_gradient plant 5 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12685 passed | 3 failed |
+    first: tests/test_tuner_gradient.cpp:907: ERROR: CHECK( after.cell == data.cells[1] ) is NOT correct!
+plants test_tuner_gradient plant 7 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12687 passed | 1 failed |
+    first: tests/test_tuner_gradient.cpp:849: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 8 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12686 passed | 2 failed |
+    first: tests/test_tuner_gradient.cpp:956: ERROR: CHECK( params[EGS_BASE + 0] == ENDGAME_SCALE_ONE ) is NOT correct!
+plants test_eval_trace plant 0 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 10 [the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 9000 | 8996 passed | 4 failed |
+    first: tests/test_eval_trace.cpp:1074: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+plants test_eval_trace plant 9 [the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 43530 | 43528 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:625: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 9 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20937 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:1074: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 11 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20143 passed | 796 failed |
+    first: tests/test_eval_trace.cpp:387: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_tuner_box.sh plant 0: exit 0, ok: every factor in [0, 128], cells 4 and 2 at 0 and 128: 128 128 128 128 0 128 128 128 128 128 128 128 128
+plants test_tuner_box.sh plant 13: exit 1, FAIL: header factor 2 is 411, outside [0, 128]
+plants test_tuner_box.sh plant 14: exit 1, FAIL: header factor 2 is 132, outside [0, 128]
+forced chesso_engine against chesso_engine_trace plant 0: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 11: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 12: 840136 rows of 6226944 differ
+forced truncation_scan plant 0: exit 0, 6226944 rows scanned, 90088 past 2.0, 5 past 2.8750, worst 2.882772, less each row's curve residual; the largest difference 3.690165, 0 past their own bound
+forced truncation_scan plant 1: exit 1, the trace disagrees with evaluate(): 113 against 90: 8/8/8/5p2/1k5K/8/6PP/8 b - - 0 49
+forced truncation_scan plant 2: exit 1, the trace disagrees with evaluate(): 63 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 3: exit 1, the trace disagrees with evaluate(): -5327 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 4: exit 1, the trace disagrees with evaluate(): -130 against -137: 6R1/6pp/4p3/4qpk1/8/R6P/6P1/6K1 w - - 0 49
+forced truncation_scan plant 9: exit 1, 6226944 rows scanned, 90088 past 2.0, 5 past 2.8750, worst 2.882772, less each row's curve residual; the largest difference 3.690165, 1 past their own bound
+  Every plant red by its own check and plant 0 green in every run. Against the DEC-355 run: plant 5 is now red on the
+  stale-pick case (3 checks) and plant 8 on the box case (2), plant 7 on the factor case (1), each alone where RED 1's
+  failure sat beside it; the walk 179079.
+
+== gates on the final tree: both builds 59 of 59 (ctest -L fast -j10, CLANG_FORMAT_MAJOR=22), no warning;
+== chesso bench 4707943 in build/ and build-tune/; clang-format.sh --check clean; plan_prose_check.py's five modes exit 0.
+
+== The fast check's three findings, 2026-11-06. (1) a row exactly at 69/24 passes 2.875 by an ulp; (2) the abs form,
+== |smooth - exact| - |C|, is a lower bound on the taperings' loss only, off the 1/24 lattice on many rows; (3) the
+== factor case's comment. The signed form adopted: C = (d_mg phase + d_eg (24 - phase)) / 24 with its sign,
+== tuner_trace::curve_residual(); the reading |smooth - exact - C|, tuner_trace::taperings_loss(); the bound the
+== taperings' alone, tuner_trace::truncation_bound(); a margin of 1e-6, tuner_trace::LATTICE_MARGIN, on the scan's
+== --min and past-2.0 counts and on the forced-cell precondition.
+
+== the signed form proved before adoption: a scratch probe (source below) over S083's corpus, C computed from the side
+== entries apart from tuner_trace, against the taperings' bound alone; build/'s trace library and the DEC-355 forced
+== build's (.tuning/s124/dec355/build-forced, -DS124_FORCED)
+shipped constants:
+rows 6226944, C < 0 on 2198625; past the taperings' bound (signed): 0, worst over it 0.000000000; abs form past its bound 0
+within 1e-6 of the bound 30, within 0.03 30
+clamp binds on 9539 rows: 0 past the bound, worst reading 1.959798, worst over the bound -0.915201823
+rows at F 6226944: worst 2.875000000, past 69/24 + 1e-6 0; off the 1/24 lattice 9467, of them the clamp not binding 0 
+rows off F 0: worst 0.000000 at ; past 69/24 + 1e-6 0
+forced cells:
+rows 6226944, C < 0 on 2198625; past the taperings' bound (signed): 0, worst over it 0.000000000; abs form past its bound 0
+within 1e-6 of the bound 24, within 0.03 25
+clamp binds on 9539 rows: 0 past the bound, worst reading 1.959798, worst over the bound -0.915201823
+rows at F 5660790: worst 2.875000000, past 69/24 + 1e-6 0; off the 1/24 lattice 9098, of them the clamp not binding 0 
+rows off F 566154: worst 2.906576 at 1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32; past 69/24 + 1e-6 1
+  2.906576 1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32
+  0 rows past the taperings' bound at either, reached exactly; the 9539 rows where stage two's clamp binds, 0 past, the
+  worst 0.915 under. Every row at F off the 1/24 lattice is a clamp row (9467 and 9098), none else: the reading is the
+  taperings' loss exactly wherever the clamp does not bind. C is negative on 2198625 rows. At the forced cells one row
+  passes 69/24 + 1e-6, the cell golden's.
+  The clamp, by the arithmetic: the clamped sum's two sides differ by t + C; both bound, the reading is |t_pos - C|; one
+  bound, the clamp's step is an integer between 0 and t + C, so the reading less t_pos lies between -C and t; neither
+  passes 23/24 + 46/24 (off F, 3071/3072 + 46/24).
+
+== the two pick rules amended again before either script ran (the step file's "the fast check's three findings", each
+== golden's site, S083_truncation_pick.py's docstring); then, on the tree with the signed form (the forced build again
+== from a scratch copy with the regenerated plants patch, only its hunk headers moved):
+<forced build>/tools/truncation_scan --data <S083's corpus> --min 2.875 (exit 0)
+6226944 rows scanned, 111582 past 2.0, 1 past 2.8750, worst 2.906576, each row's taperings' loss; the largest difference 3.690165, 0 past their own bound
+2.906576	phase 13	w	1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32
+  one hit: cell_truncation_positions stands, 1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32, now 2.906576 (raw 2.894674,
+  C -0.011902), 0.0316 past 2.875 and 0.0098 under its own 2.916341; 2.208333 at F; the phase-1 row 1.933594 forced.
+build/tools/truncation_scan --data <S083's corpus> --min 2.8 (exit 0)
+6226944 rows scanned, 108768 past 2.0, 105 past 2.8000, worst 2.875000, each row's taperings' loss; the largest difference 3.690165, 0 past their own bound
+python3 adocs/data/S083_truncation_pick.py <its stdout> (exit 0)
+105 hits, 28 distinct FENs at the maximum 2.875000, phases 5..23, targets 5.00, 11.00, 17.00, 23.00
+2.875000	phase  5	b	5k2/pp3p2/5P2/7p/P6P/3Bb1P1/2PrN3/4K3 b - - 0 32
+2.875000	phase 11	w	8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38
+2.875000	phase 17	b	2r4k/4np1p/3q1n2/pB1p1P2/P2P4/5Q2/6PP/R4RK1 b - - 0 25
+2.875000	phase 23	w	r1b2rk1/ppp1ppbp/2nq2p1/8/N1B1P3/5N2/PPP2PPP/R1BQ1RK1 w - - 0 10
+    "5k2/pp3p2/5P2/7p/P6P/3Bb1P1/2PrN3/4K3 b - - 0 32",
+    "8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38",
+    "2r4k/4np1p/3q1n2/pB1p1P2/P2P4/5Q2/6PP/R4RK1 b - - 0 25",
+    "r1b2rk1/ppp1ppbp/2nq2p1/8/N1B1P3/5N2/PPP2PPP/R1BQ1RK1 w - - 0 10",
+  truncation_positions: the DEC-355 pick (phases 5, 11, 13, 23), each still at 2.875 under the signed form, -> phases 5,
+  11, 17 and 23 above, the phase 11 row kept: 28 distinct positions now sit at the maximum where the abs form showed 16.
+  S122's four read 2.667, 2.625, 2.625 and 2.750, as under the abs form.
+the cases, build/tests/test_eval_trace -s: 13 of 13 green; forced-cell CHECK( worst_scaled > plain_bound +
+tuner_trace::LATTICE_MARGIN ) reads 2.90658 > 2.875 (+1e-6) on the golden's row; the bound case's and the pinned case's
+top clauses 2.875 > 2.8, each pinned row past 2.0.
+
+== the probe, as run (never delivered): g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE [-DS124_FORCED] -I src
+== -I tools -I tests -isystem tests/doctest/doctest signedprobe.cpp <trace library> -lpthread; CP_LIST=<corpus>
+// Scratch probe, never delivered: over a corpus (FEN column), the signed form of S122's
+// curve residual, C = smooth's curve share less exact's through king safety's taper, and
+// the reading |smooth - exact - C| against the taperings' bound alone, at the linked
+// library's weights. Computed here from the side entries, independent of tuner_trace's
+// curve_residual(); the abs form beside it for comparison.
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
+#include <cmath>
+#include <cstdio>
+#include <fstream>
+#include <string>
+#include <vector>
+#include "bitboard.hpp"
+#include "tuner_layout.hpp"
+#include "tuner_trace.hpp"
+
+TEST_CASE("signedprobe")
+{
+  game_t game;
+  initialize_game_const_data(&game);
+  std::ifstream in(std::getenv("CP_LIST"));
+  std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+  const std::vector<int64_t> w = tuner_trace::engine_weights();
+  const double at_f = 69.0 / 24.0, off = 2.0 * 23.0 / 24.0 + 3071.0 / 3072.0;
+  size_t rows = 0, viol = 0, viol_abs = 0, at_bound = 0, near = 0, f_past = 0, cell_past = 0, cells = 0;
+  size_t clamp_rows = 0, clamp_viol = 0, offlat = 0, offlat_noclamp = 0, f_rows = 0, neg_c = 0;
+  double worst_slack = -9, worst_clamp = 0, worst_clamp_slack = -9, worst_f = 0, worst_cell = 0;
+  std::string fen_worst_cell, fen_offlat;
+  std::vector<std::pair<double, std::string>> hits;
+  std::string line;
+  while (std::getline(in, line)) {
+    const std::string fen = line.substr(0, line.find('\t'));
+    if (!load_FEN(fen, &game)) { continue; }
+    tuner_trace::row_trace_t trace;
+    std::string error;
+    if (!tuner_trace::trace_board(&game.board, &trace, &error)) { continue; }
+    tuner_trace::dataset_t data;
+    tuner_trace::append_row(trace, 0.5f, 0, 0, &data);
+    const tuner_trace::smooth_t s = tuner_trace::smooth(tuner_trace::engine_model(), data, 0, params.data());
+    const int64_t exact = tuner_trace::exact_score(data, 0, w.data());
+    const double d = s.score - static_cast<double>(exact);
+    const tuner_trace::exact_parts_t parts = tuner_trace::exact_parts(data, 0, w.data());
+    int64_t x[2][2] = {{0, 0}, {0, 0}};
+    for (const tuner_trace::side_entry_t& e : data.side_entries) {
+      if (e.group != 0) { continue; }
+      x[e.side][0] += e.coef * w[tuner_layout::KSC_MG_BASE + e.input];
+      x[e.side][1] += e.coef * w[tuner_layout::KSC_EG_BASE + e.input];
+    }
+    int64_t lost[2] = {0, 0};
+    for (int side = 0; side < 2; ++side) {
+      for (int h = 0; h < 2; ++h) {
+        const int64_t p = std::max<int64_t>(x[side][h], 0);
+        lost[h] += (side == 0 ? -1 : 1) * ((p * p) % KS_CURVE_DIVISOR);
+      }
+    }
+    const int phase = data.phase[0];
+    const double c = static_cast<double>(lost[0] * phase + lost[1] * (24 - phase)) / (24.0 * KS_CURVE_DIVISOR);
+    if (c < 0) { neg_c++; }
+    const double r = std::fabs(d - c);
+    const bool off_f = parts.cell != eval_trace::NO_CELL && w[tuner_layout::EGS_BASE + parts.cell] != ENDGAME_SCALE_ONE;
+    const double bound = off_f ? off : at_f;
+    const bool clamp = s.clamp_binds || std::llabs(parts.mobility + parts.safety) > LAZY_EVAL_MARGIN;
+    rows++;
+    if (r > bound + 1e-9) { viol++; }
+    if (std::fabs(d) > bound + std::fabs(c) + 1e-9) { viol_abs++; }
+    if (r > bound - 1e-6) { at_bound++; }
+    if (r > bound - 0.03) { near++; }
+    worst_slack = std::max(worst_slack, r - bound);
+    if (clamp) {
+      clamp_rows++;
+      if (r > bound + 1e-9) { clamp_viol++; }
+      worst_clamp = std::max(worst_clamp, r);
+      worst_clamp_slack = std::max(worst_clamp_slack, r - bound);
+    }
+    if (!off_f) {
+      f_rows++;
+      worst_f = std::max(worst_f, r);
+      if (r > at_f + 1e-6) { f_past++; }
+      const double k = 24.0 * r;
+      if (std::fabs(k - std::round(k)) > 1e-6) {
+        offlat++;
+        if (!clamp) { offlat_noclamp++; if (fen_offlat.empty()) { fen_offlat = fen; } }
+      }
+    } else {
+      cells++;
+      if (r > worst_cell) { worst_cell = r; fen_worst_cell = fen; }
+      if (r > at_f + 1e-6) { cell_past++; hits.push_back({r, fen}); }
+    }
+  }
+  printf("rows %zu, C < 0 on %zu; past the taperings' bound (signed): %zu, worst over it %.9f; abs form past its bound %zu\n",
+         rows, neg_c, viol, worst_slack, viol_abs);
+  printf("within 1e-6 of the bound %zu, within 0.03 %zu\n", at_bound, near);
+  printf("clamp binds on %zu rows: %zu past the bound, worst reading %.6f, worst over the bound %.9f\n", clamp_rows,
+         clamp_viol, worst_clamp, worst_clamp_slack);
+  printf("rows at F %zu: worst %.9f, past 69/24 + 1e-6 %zu; off the 1/24 lattice %zu, of them the clamp not binding %zu %s\n",
+         f_rows, worst_f, f_past, offlat, offlat_noclamp, fen_offlat.c_str());
+  printf("rows off F %zu: worst %.6f at %s; past 69/24 + 1e-6 %zu\n", cells, worst_cell, fen_worst_cell.c_str(), cell_past);
+  for (const auto& h : hits) { printf("  %.6f %s\n", h.first, h.second.c_str()); }
+}
+
+== the plants on the final tree: OUT=.tuning/s124/plants_fastcheck adocs/data/S124_phase1_plants.sh (S124-PLANTS-DONE), the
+== plants patch regenerated (its hunk headers alone moved), the tally, paths shortened
+plants test_eval_model plant 0 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 0, [doctest] assertions: 179079 | 179079 passed | 0 failed |
+plants test_eval_model plant 6 [the engine counts the endgame family the walk counts,the walk and the engine count the endgame family by hand]: exit 1, [doctest] assertions: 179079 | 163001 passed | 16078 failed |
+    first: tests/test_eval_model.cpp:2680: ERROR: CHECK( engine.cell[side] == walk.cell[side] ) is NOT correct!
+plants test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 0, [doctest] assertions: 55469 | 55469 passed | 0 failed |
+plants test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 53445 passed | 2024 failed |
+    first: tests/test_eval_trace.cpp:644: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+plants test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 40273 passed | 15196 failed |
+    first: tests/test_eval_trace.cpp:645: ERROR: CHECK( parts.e1 == e1 ) is NOT correct!
+plants test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 45225 passed | 10244 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 55469 | 55349 passed | 120 failed |
+    first: tests/test_eval_trace.cpp:644: ERROR: CHECK( parts.positional == expected ) is NOT correct!
+forced test_eval_trace plant 0 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+forced test_eval_trace plant 1 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20573 passed | 366 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 2 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 19649 passed | 1290 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 3 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 18577 passed | 2362 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+forced test_eval_trace plant 4 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 20939 | 20939 passed | 0 failed |
+plants test_tuner_gradient plant 0 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 0, [doctest] assertions: 12688 | 12688 passed | 0 failed |
+plants test_tuner_gradient plant 5 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12685 passed | 3 failed |
+    first: tests/test_tuner_gradient.cpp:912: ERROR: CHECK( after.cell == data.cells[1] ) is NOT correct!
+plants test_tuner_gradient plant 7 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12687 passed | 1 failed |
+    first: tests/test_tuner_gradient.cpp:854: ERROR: CHECK( check.worst < 1e-6 ) is NOT correct!
+plants test_tuner_gradient plant 8 [the endgame factor's gradient is the derivative*,the factor's cell follows E1's sign when a fit moves it,a step boxes the scale factors to*]: exit 1, [doctest] assertions: 12688 | 12686 passed | 2 failed |
+    first: tests/test_tuner_gradient.cpp:961: ERROR: CHECK( params[EGS_BASE + 0] == ENDGAME_SCALE_ONE ) is NOT correct!
+plants test_eval_trace plant 0 [the smooth score is within the truncation bound of the exact one]: exit 0, [doctest] assertions: 9000 | 9000 passed | 0 failed |
+plants test_eval_trace plant 10 [the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 9000 | 8996 passed | 4 failed |
+    first: tests/test_eval_trace.cpp:1102: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+plants test_eval_trace plant 9 [the factor's integer arithmetic is reconstructed at cells that move it]: exit 1, [doctest] assertions: 43530 | 43528 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:652: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 9 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20937 passed | 2 failed |
+    first: tests/test_eval_trace.cpp:1102: ERROR: CHECK( gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9 ) is NOT correct!
+forced test_eval_trace plant 11 [the trace reconstructs evaluate() exactly*,the smooth score is within the truncation bound of the exact one]: exit 1, [doctest] assertions: 20939 | 20145 passed | 794 failed |
+    first: tests/test_eval_trace.cpp:413: ERROR: CHECK( tuner_trace::exact_score(data, 0, weights.data()) == stm * engine ) is NOT correct!
+plants test_tuner_box.sh plant 0: exit 0, ok: every factor in [0, 128], cells 4 and 2 at 0 and 128: 128 128 128 128 0 128 128 128 128 128 128 128 128
+plants test_tuner_box.sh plant 13: exit 1, FAIL: header factor 2 is 411, outside [0, 128]
+plants test_tuner_box.sh plant 14: exit 1, FAIL: header factor 2 is 132, outside [0, 128]
+forced chesso_engine against chesso_engine_trace plant 0: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 11: 0 rows of 6226944 differ
+forced chesso_engine against chesso_engine_trace plant 12: 840136 rows of 6226944 differ
+forced truncation_scan plant 0: exit 0, 6226944 rows scanned, 111582 past 2.0, 1 past 2.8750, worst 2.906576, each row's taperings' loss; the largest difference 3.690165, 0 past their own bound
+forced truncation_scan plant 1: exit 1, the trace disagrees with evaluate(): 113 against 90: 8/8/8/5p2/1k5K/8/6PP/8 b - - 0 49
+forced truncation_scan plant 2: exit 1, the trace disagrees with evaluate(): 63 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 3: exit 1, the trace disagrees with evaluate(): -5327 against 49: 8/5p2/8/5K2/2k4p/P7/1Q4PP/4q3 w - - 4 45
+forced truncation_scan plant 4: exit 1, the trace disagrees with evaluate(): -130 against -137: 6R1/6pp/4p3/4qpk1/8/R6P/6P1/6K1 w - - 0 49
+forced truncation_scan plant 9: exit 1, 6226944 rows scanned, 111582 past 2.0, 1 past 2.8750, worst 2.906576, each row's taperings' loss; the largest difference 3.690165, 1 past their own bound
+  Plant 10 red in the bound case on the four pinned rows; plant 9 red by gap <= truncation_bound in the forced-cell case
+  (2) and on the forced build (2), and the forced scan exits 1 on one corpus row past its own bound, the golden's. Every
+  other plant red by its own check; plant 0 green in every run.
+
+== finding 3: tests/test_tuner_gradient.cpp's factor case comment names DEC-356's pair and its reading, 6.27485e-7 at 739
+== over 5717 rows, x1.59 under 1e-6; build/S124_factor_gradient_rows on the final tree: the pair reproduced, exit 0.
+
+== gates on the final tree: both builds 59 of 59 (ctest -L fast -j10, CLANG_FORMAT_MAJOR=22), no warning;
+== chesso bench 4707943 in build/ and build-tune/; clang-format.sh --check clean; plan_prose_check.py's five modes exit 0.

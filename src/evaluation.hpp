@@ -614,6 +614,126 @@ struct king_danger_t
 // Not on the hot path: the collecting instantiation of stage two.
 void king_danger_counts(const board_t* board, king_danger_t* out);
 
+// S124's endgame family (DEC-350): a scale factor on stage one's endgame half,
+// thirteen cells by counts, and mop-up's three linear pairs. Landed at its
+// identity, every cell's factor at ENDGAME_SCALE_ONE and mop-up's weights at
+// zero, `No functional change`; each part is screened offline and the family
+// shares one SPRT (DEC-259). Every definition is chesso's own and stated here
+// exactly, because the walk in tests/test_walked_counts.hpp is written from it
+// (DEC-221); mop-up's first two counts are CPW *Mop-up Evaluation*'s features,
+// read 2026-11-03, whose constants are a program's and seed nothing
+// (DEC-105). Nothing here reads who is winning: the cells are counts, and the
+// one sign they take is E1's.
+//
+//   E1        stage one's endgame half with the material in it, White
+//             relative: board->material plus the endgame value of stage
+//             one's positional pair -- the piece-square tables, the pawn
+//             families, piece placement and mop-up below -- as the engine
+//             sums it before the taper. Material is inside it so that the
+//             five material/table gauges stay null: c on a piece's value and
+//             c off its tables moves no E1 (DEC-350 (1)).
+//   strong    WHITE when E1 > 0, BLACK when E1 < 0, none at 0.
+//   npm[s]    a side's men in phase units, knight 1, bishop 1, rook 2, queen
+//             4 (phase_value), so no boundary below moves with a refit.
+//   P, d      the strong side's pawns, and npm[strong] - npm[weak].
+//
+// A position's cell, the first that holds:
+//
+//   LONE      a side has its king and nothing else: no cell. Every position
+//             is_insufficient_material() calls dead is one, and the search
+//             scores those DRAW_SCORE before it asks evaluate(), so the
+//             detector and the factor divide cleanly (the accepts' boundary):
+//             the detector draws, the factor scales, and LONE is all this
+//             reads of it.
+//   OCB       one bishop a side, on squares of opposite colours (one_colour):
+//             PURE, no knight, rook or queen on the board, cell by P <= 2, 3
+//             to 4, >= 5; ROOK, one rook a side and no knight or queen, one
+//             cell; any other: no cell (the record's removed general case).
+//   PAWNS     a strong side with P <= 2: cell by P, 0 to 2, and d <= 0, 1,
+//             >= 2; P >= 3, or no strong side: no cell.
+//
+// Thirteen cells, numbered ENDGAME_CELL_* below; ENDGAME_CELL_NONE is f = F.
+// The factor f_c, an integer in [0, F] with F = ENDGAME_SCALE_ONE = 128,
+// multiplies E1 inside stage one's one taper (reading A, stage two
+// untouched): stage one's integer is
+//
+//   material + (F X + (f_c - F) E1 (24 - phase)) / (24 F)
+//
+// X being the numerator taper() divides, truncating once as taper() does, so
+// at f_c = F it is taper()'s integer exactly. F is unscaled, and f >= 0 never
+// flips E1's sign. 0 removes E1's share and no more: what stage one keeps is
+// (material + the pair's middlegame half) phase / 24, which is 0, a draw, at
+// phase 0, a board of kings and pawns, and elsewhere only where the two
+// cancel. F is DEC-134 form (b): a unit of f moves the score by under E1 /
+// 128, under 8 cp up to E1 of 1000, and 24 F = 3072 is one constant divisor.
+// **The truncation bound moves once a cell leaves F**: 3072 loses up to
+// 3071/3072 where 24 lost 23/24 (DEC-350 (1); tests/test_eval_trace.cpp states
+// the arithmetic).
+//
+// **The cell is a function of the counts and of E1's sign**, and the sign
+// moves whenever a fit moves material or the tables, so the trace records
+// both candidates, the cell White's being strong would select and Black's,
+// and the tuner picks by the sign it computes (tools/tuner_trace.hpp).
+//
+// Mop-up, in stage one's positional pair, signed for the side with men. Its
+// domain is a lone king against a side with no pawn and men of two phase
+// units or more, knights alone excepted. Its three counts, the side with
+// men's own:
+//
+//   centre    the lone king's Manhattan distance to the four centre squares,
+//             0 to 6: its file's distance to the d or e file plus its rank's
+//             to the fourth or fifth rank.
+//   kings     14 less the Manhattan distance between the two kings, 0 to 12.
+//   corner    for king, bishop and knight alone, 7 less the lone king's
+//             Chebyshev distance to the nearer corner of the bishop's square
+//             colour, 0 to 7; 0 for any other material (chesso's own).
+inline constexpr int ENDGAME_SCALE_ONE = 128;
+
+enum endgame_cell_t
+{
+  ENDGAME_CELL_P0_D0,
+  ENDGAME_CELL_P0_D1,
+  ENDGAME_CELL_P0_D2,
+  ENDGAME_CELL_P1_D0,
+  ENDGAME_CELL_P1_D1,
+  ENDGAME_CELL_P1_D2,
+  ENDGAME_CELL_P2_D0,
+  ENDGAME_CELL_P2_D1,
+  ENDGAME_CELL_P2_D2,
+  ENDGAME_CELL_OCB_LOW,
+  ENDGAME_CELL_OCB_MID,
+  ENDGAME_CELL_OCB_HIGH,
+  ENDGAME_CELL_OCB_ROOK,
+  ENDGAME_CELL_COUNT,
+  ENDGAME_CELL_NONE = ENDGAME_CELL_COUNT
+};
+
+enum mopup_feature_t
+{
+  MOPUP_CENTRE,
+  MOPUP_KINGS,
+  MOPUP_CORNER,
+  MOPUP_FEATURE_COUNT
+};
+
+extern const int endgame_scale[ENDGAME_CELL_COUNT];
+extern const int mopup_mg[MOPUP_FEATURE_COUNT];
+extern const int mopup_eg[MOPUP_FEATURE_COUNT];
+
+// The family's counts. `cell` is the candidate pair, the cell if WHITE is the
+// strong side and if BLACK is, ENDGAME_CELL_NONE for none; which one the
+// engine applies is E1's sign at its own weights. `mopup` is per side, WHITE
+// first, the side with men's three counts and zeros for the other, all zero
+// outside the domain. tests/test_eval_model holds both to the walk.
+struct endgame_family_t
+{
+  int cell[2];
+  int mopup[2][MOPUP_FEATURE_COUNT];
+};
+
+// Not on the hot path: the functions stage one calls, collected.
+void endgame_family_counts(const board_t* board, endgame_family_t* out);
+
 // The piece placement weights, indexed by feature: 0 bishop pair, 1 rook on an
 // open file, 2 rook on a half-open file, 3 bad bishop, 4 bad bishop rammed, 5
 // trapped minor, 6 trapped rook. Exposed for the same reason as the weights
@@ -906,6 +1026,7 @@ extern const std::array<score_t, 3> backward_rank_score;
 extern const std::array<score_t, 6> phalanx_score;
 extern const std::array<score_t, 5> supported_score;
 extern const std::array<score_t, 1> weak_unopposed_score;
+extern const std::array<score_t, MOPUP_FEATURE_COUNT> mopup_score;
 int capture_score(const board_t* board, move_t move);
 
 // The raw signed history a quiet move carries -- the butterfly entry plus

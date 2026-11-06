@@ -141,6 +141,14 @@ add_test(NAME test_datagen_exit
                       $<TARGET_FILE:datagen>)
 set_tests_properties(test_datagen_exit PROPERTIES LABELS "fast" TIMEOUT 60)
 
+# S124: tools/tuner boxes every endgame scale factor to [0, F] after each step
+# and its ties. A 48-row fit whose step drives one cell to 0 and one to F, read
+# from the emitted header and vector (test_tuner_box.sh says what and why).
+add_test(NAME test_tuner_box
+         COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/test_tuner_box.sh
+                      $<TARGET_FILE:tuner>)
+set_tests_properties(test_tuner_box PROPERTIES LABELS "fast" TIMEOUT 60)
+
 # S331: datagen plays on past the second occurrence of a position, and its
 # closing `repetition:` line and `--games-out` file are the games and rows it
 # actually wrote -- the counts the rule before S331 is read by. Six games at
@@ -192,7 +200,7 @@ set_tests_properties(test_s331_measure PROPERTIES LABELS "fast" TIMEOUT 60)
 # zero" and "adagrad". Undeclared, -j12 ran the machine oversubscribed and
 # threats read 29.4 s against 18.8 s declared (S309). It changes nothing without
 # -j.
-set(CHESSO_PLANT_FAMILIES base pawns threats king_safety)
+set(CHESSO_PLANT_FAMILIES base pawns threats king_safety endgame)
 # S122's curve recovers from its seed only past 28000 and 76000 epochs on these
 # rows (test_tuner_gradient.cpp says what was measured), so it cannot meet
 # S309's 30 s at -j12 and runs under the `slow` label, an entry of its own, out

@@ -10,6 +10,7 @@
 #include "data_structures.hpp"
 #include "evaluation.hpp"
 #include "search.hpp"
+#include "test_endgame_positions.hpp"
 #include "test_eval_positions.hpp"
 #include "test_helpers.hpp"
 #include "test_walked_counts.hpp"
@@ -174,13 +175,35 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // 10411 rows past 2.8, the worst 3.690, past 69/24. The curve's four
 // truncating divisions, T per king and per half, lose under one unit between
 // them in each half and come off the 1/24 lattice, so the bound is 69/24 + 1
-// = 3.875 while the curve is live (curve_is_live(), below) and the scan's
-// maximum is one row; S083_truncation_pick.py's dated amendment, written
-// before it ran, then picks from the 3131 distinct positions past 72/24 = 3.0,
-// a residual two taperings and the curve cannot reach. Of S101's four, one
-// reads 3.252 and the others 1.891, 0.905 and under 2.8, and the pick took
-// four new rows at phases 1, 9, 15 and 23, from 3.006 to 3.672
-// (adocs/data/S122_goldens.txt).
+// = 3.875 while the curve is live (curve_is_live(), removed by DEC-355) and
+// the scan's maximum is one row; S083_truncation_pick.py's dated amendment,
+// written before it ran, then picks from the 3131 distinct positions past
+// 72/24 = 3.0, a residual two taperings and the curve cannot reach. Of S101's
+// four, one reads 3.252 and the others 1.891, 0.905 and under 2.8, and the
+// pick took four new rows at phases 1, 9, 15 and 23, from 3.006 to 3.672
+// (adocs/data/S122_goldens.txt). AMENDED 2026-11-06, DEC-355, written before
+// the script ran: the scan reads each row less its own curve residual,
+// tuner_trace::curve_residual() then |C| -- a lower bound on the taperings'
+// loss only, the next amendment says why -- and S083_truncation_pick.py keeps
+// the hits at the scan's
+// largest reading as S083's rule wrote it, S122's branch past 3.0 unable to
+// fire; the command is unchanged, and the clauses below read the same per-row
+// quantity. Re-derived so (2026-11-06) on the same corpus at S122's constants,
+// S124 at its identity: 6226944 rows, 88743 past 2.0, 66 past 2.8, 16 distinct
+// positions at 2.875 = 69/24, phases 5 to 23, none past its own bound, the
+// largest raw difference still 3.690. S122's four read 2.667, 2.625, 2.625 and
+// 2.750 that way, past 2.0 and none past 2.8, and the pick took four new rows
+// at phases 5, 11, 13 and 23, each at 2.875
+// (adocs/data/S124_rebase_goldens.txt). AMENDED again 2026-11-06, the fast
+// check's findings, written before the script ran: the residual is signed,
+// and the scan reads |smooth - exact - C|, exactly the taperings' loss and on
+// the 1/24 lattice wherever stage two's clamp does not bind, bounded by the
+// same where it does; the pick keeps the hits at the scan's largest reading as
+// above, the command unchanged. Re-derived so (2026-11-06) on the same corpus
+// at the same constants: 108768 past 2.0, 105 past 2.8, 28 distinct positions
+// at 2.875, phases 5 to 23, none past its own bound. The previous four still
+// read 2.875, and the pick kept the phase 11 row and took three new ones at
+// phases 5, 17 and 23, each at 2.875 (adocs/data/S124_rebase_goldens.txt).
 // Moves legitimately on: a refit, and a move of LAZY_EVAL_MARGIN -- the smooth
 // score and evaluate() both clamp the tapered mobility-plus-king-safety sum at
 // that margin, so while the clamp binds the two agree exactly and the residual
@@ -189,34 +212,22 @@ int coefficient(const dataset_t& data, eval_trace::term_t term, size_t index)
 // what S206 bisected. Margin: each of the four is asserted past 2.0 and the
 // worst of them past 2.8, against a maximum of 2.875 -- so the tightest of the
 // two clauses has 0.075 of room, which is the point, and re-choosing four from
-// a fresh scan is the re-derivation. While S122's curve is live the clauses
-// are 3.0 and 3.6 against 3.875: the four were picked past 3.0, and the worst
-// of them, 3.672, has 0.072 of room over 3.6.
+// a fresh scan is the re-derivation. Each row is read as its taperings' loss,
+// |smooth - exact - C|, since DEC-355, the clauses and the maximum as
+// written; from S122's
+// landing to 2026-11-06 they read the raw difference, 3.0 and 3.6 against a
+// flat 3.875, the four picked past 3.0.
 // Property beside it: "the smooth score is within the truncation bound of the
 // exact one", which holds over every position here rather than over four
 // chosen rows -- but not at any weights: its bound is a function of how many
 // taperings truncate, and a fitted tempo takes it from 3 x 23/24 to
 // 4 x 23/24 = 3.833, which this case's precondition reports.
 const std::vector<std::string> truncation_positions = {
-    "8/8/2k5/4pBK1/4P3/5P2/8/8 b - - 8 66",
-    "1r5b/p4k2/2b1p1p1/1p3n2/3P1P2/2PN2p1/PP2K3/R1B5 w - - 4 27",
-    "b1k4r/2q2p2/3R1p2/1B6/1Q5N/2P4P/5PP1/7K b - - 0 27",
-    "rnb1k2r/npp1q1p1/p3pp2/7p/2PQ4/1P3N1N/PB3PBP/R4RK1 w kq - 0 17",
+    "5k2/pp3p2/5P2/7p/P6P/3Bb1P1/2PrN3/4K3 b - - 0 32",
+    "8/6bk/1p2p1p1/4p2p/5r2/P6P/2R2BP1/1r1B1K1R w - - 6 38",
+    "2r4k/4np1p/3q1n2/pB1p1P2/P2P4/5Q2/6PP/R4RK1 b - - 0 25",
+    "r1b2rk1/ppp1ppbp/2nq2p1/8/N1B1P3/5N2/PPP2PPP/R1BQ1RK1 w - - 0 10",
 };
-
-
-// Whether S122's curve reads anything but its constant, the engine's
-// ks_curve_live. While it does, each king's T(x) truncates in each half
-// before king safety's taper, and the two kings' losses in one half differ
-// by under one unit, so the residual gains under 1 past the taperings' bound.
-// At the seed both kings' x is the constant and the two T are equal.
-bool curve_is_live()
-{
-  for (int input = KSC_KNIGHT_ATTACKERS; input <= KSC_DEFENDERS; ++input) {
-    if (ks_curve_mg[input] != 0 || ks_curve_eg[input] != 0) { return true; }
-  }
-  return false;
-}
 
 
 // all_positions() and the four pinned rows, each mirrored as that list's rows
@@ -235,6 +246,67 @@ std::vector<std::string> positions_with_truncation_rows()
 
   return out;
 }
+
+
+// The bound the cases here hold a row to is tuner_trace::truncation_bound(),
+// per row, the one definition tools/truncation_scan reads too, so the scan
+// and these cases cannot disagree on a row's bound. S124, DEC-350 (1): a row
+// whose cell is off F divides stage one once by 24 F = 3072, which loses up
+// to 3071/3072 where taper()'s 24 lost 23/24, so its smooth and exact scores
+// part by at most 2 x 23/24 + 3071/3072 = 2.9163 with tempo at zero; a row at
+// F, every row of a landing at the identity, keeps 3 x 23/24 = 2.875. Fitted
+// tempo adds 23/24 to either. DEC-355: S122's curve is read off the row's own
+// difference, tuner_trace::curve_residual() C, the two kings' rounding losses
+// in T(x) through king safety's taper with their sign -- under 1, and exactly
+// 0 at the curve's seed -- so every row is held as |smooth - exact - C|,
+// tuner_trace::taperings_loss(), to the taperings' bound alone. Until
+// 2026-11-06 the curve added a flat 1 to the bound on every row while it was
+// live, looser than the error it bounds on every row and blind to a residual
+// under it (plants 9 and 10, the S124 step file); for a few hours that day it
+// added |C|, a bound that held but left 2|C| unused where C and the
+// taperings' loss part in sign (the fast check's finding 2).
+//
+// That reading is exactly the taperings' loss, on the 1/24 lattice at F,
+// wherever stage two's clamp does not bind, and the difference itself at the
+// curve's seed.
+double taperings_loss(const dataset_t& data,
+                      const std::vector<int64_t>& weights,
+                      double smooth,
+                      double exact)
+{ return tuner_trace::taperings_loss(data, 0, weights.data(), smooth - exact); }
+
+
+// The row that shows the per-row bound is needed: S083's corpus at the forced
+// build's cells, S124_FORCED's and the forced-cell case's below, has one row
+// past 3 x 23/24 and none past DEC-350 (1)'s bound, this one, at 2.891927
+// (adocs/data/S124_phase1_guards.txt, `truncation_scan` on that build). At F
+// it is an ordinary row under 2.875. GOLDEN (DEC-142): re-derive by
+// `truncation_scan --data <corpus> --min 2.875` on a build whose cells are
+// those forced values, when they or the weights move.
+// AMENDED 2026-11-06, DEC-355, written before the script ran: the scan reads
+// each row less its own curve residual, so `--min 2.875` on the forced build
+// prints the rows past the bound a row at F would have in their place, which
+// only a row whose cell is off F can pass by more than an ulp (the next
+// amendment); the golden is the hit with the
+// largest reading, ties to the scan's first, and the cases add its mirror.
+// With no hit there is no golden and the forced-cell precondition is red.
+// AMENDED again 2026-11-06, the fast check's findings, written before the
+// script ran: the scan reads |smooth - exact - C|, C the curve's signed
+// residual, and prints a row only where that passes --min by more than 1e-6,
+// so a row exactly at 69/24 is not printed and `--min 2.875` on the forced
+// build prints only rows whose cell is off F; the golden is the hit with the
+// largest reading, ties to the scan's first; with no hit there is no golden
+// and the precondition, read past 2.875 + 1e-6, is red.
+// Re-derived so (2026-11-06) on S083's corpus at S122's constants: one hit,
+// this row, the same row the DEC-355 amendment's scan had picked (its first
+// reading, |C| off |smooth - exact|, gave it 2.882772 among four rows at 69/24
+// by an ulp). It reads 2.906576, 0.0316 past a row at F's 2.875 and 0.0098
+// under its own 2.9163, raw difference 2.894674 with its curve residual
+// -0.011902; 2.208333 at F. The phase-1 row, 8/5k2/8/5K2/5NRP/8/8/5r2 b,
+// reads 1.9336 so (adocs/data/S124_rebase_goldens.txt).
+const std::vector<std::string> cell_truncation_positions = {
+    "1k2r3/1pp5/p7/5q2/3Q4/2N3P1/5P2/3R2K1 w - - 0 32",
+};
 
 }  // namespace
 
@@ -283,6 +355,11 @@ TEST_CASE("the trace's features cover the parameter vector exactly once")
     }
   }
   CHECK(group_inputs == tuner_layout::KS_CURVE_COUNT);
+
+  // S124's factors: a product's, no feature's and no group's.
+  for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
+    owners[tuner_layout::EGS_BASE + c]++;
+  }
 
   for (const tuner_trace::feature_t& f : features) {
     REQUIRE(f.mg < tuner_layout::PARAM_COUNT);
@@ -460,6 +537,152 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   CHECK(each_sign[0] > 100);
   CHECK(each_sign[1] > 100);
   CHECK(flat_side > 0);
+}
+
+
+// S124's factor at cells that move it, which the identity case cannot reach:
+// at F every cell's term is zero, so exact_parts() could pick the wrong
+// candidate, leave the material out of E1 or divide by 24 and still equal
+// evaluate() on every row. Here every cell is forced off F, and the positional
+// part exact_parts() returns is held to src/evaluation.hpp's arithmetic
+// written again: the positional halves and the material summed from the
+// row's features, and the cell from the engine's own counts
+// (endgame_family_counts(), not the trace), picked by E1's sign. The engine's
+// instantiation at such cells is a build of its own, read in a scratch build
+// (the S124 step file, adocs/data/S124_phase1_plants.sh).
+//
+// Beside it, the smooth score against the exact one at those cells, inside
+// DEC-350 (1)'s bound: a row in a cell divides once by 24 F = 3072, losing up
+// to 3071/3072 where taper()'s 24 lost 23/24, so with tempo at zero the
+// arithmetic maximum is 2 x 23/24 + 3071/3072 = 2.9163 on such a row and 3 x
+// 23/24 = 2.875 on any other, each with the row's own curve residual on top
+// (DEC-355, tuner_trace::truncation_bound()).
+TEST_CASE_FIXTURE(trace_fixture_t,
+                  "the factor's integer arithmetic is reconstructed at cells "
+                  "that move it")
+{
+  std::vector<int64_t> weights = tuner_trace::engine_weights();
+  std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
+  tuner_layout::starting_params(params.data());
+
+  // Written here and derived from nothing outside this file: every cell off
+  // F and no two alike, 0 among them, so a cell read for another shows.
+  static const int64_t forced[ENDGAME_CELL_COUNT] = {
+      64, 0, 24, 28, 68, 116, 96, 127, 120, 4, 40, 76, 92};
+  for (int c = 0; c < ENDGAME_CELL_COUNT; ++c) {
+    weights[tuner_layout::EGS_BASE + static_cast<size_t>(c)] = forced[c];
+    params[tuner_layout::EGS_BASE + static_cast<size_t>(c)] =
+        static_cast<double>(forced[c]);
+  }
+
+  const std::vector<tuner_trace::feature_t>& features =
+      tuner_trace::feature_table().features;
+
+  // A row at F's bound, truncation_bound()'s other branch: read against
+  // worst_scaled, each cell row's taperings_loss(), so a cell row passes it
+  // exactly where it passes the bound a row at F would have in its place
+  // (DEC-355), and by more than tuner_trace::LATTICE_MARGIN, which a row
+  // exactly at 69/24 does not (the fast check's finding 1).
+  const bool tempo_unfitted = (tempo_mg == 0) && (tempo_eg == 0);
+  const double plain_bound =
+      3.0 * 23.0 / 24.0 + (tempo_unfitted ? 0.0 : 23.0 / 24.0);
+  double worst_scaled = 0.0;
+
+  size_t checked = 0;
+  size_t moved = 0;
+  size_t each_sign[2] = {0, 0};
+  size_t per_cell[ENDGAME_CELL_COUNT] = {};
+  double worst = 0.0;
+
+  std::vector<std::string> fens = positions_with_truncation_rows();
+  for (const std::string& fen : test_endgame_positions::population()) {
+    fens.push_back(fen);
+  }
+  for (const std::string& fen : cell_truncation_positions) {
+    fens.push_back(fen);
+    fens.push_back(mirror_fen(fen));
+  }
+
+  for (const std::string& fen : fens) {
+    CAPTURE(fen);
+
+    row_trace_t trace;
+    const dataset_t data = trace_of(fen, &trace);
+
+    endgame_family_t family;
+    endgame_family_counts(&game.board, &family);
+
+    int64_t material = 0;
+    int64_t mg = 0;
+    int64_t eg = 0;
+    for (uint32_t j = data.offsets[0]; j < data.offsets[1]; ++j) {
+      const tuner_trace::entry_t e = data.entries[j];
+      const tuner_trace::feature_t& f = features[e.feature];
+      if (f.site == tuner_trace::SITE_MATERIAL) {
+        material += e.coef * weights[f.mg];
+      } else if (f.site == tuner_trace::SITE_POSITIONAL) {
+        mg += e.coef * weights[f.mg];
+        eg += e.coef * weights[f.eg];
+      }
+    }
+
+    const int phase = game_phase(&game.board);
+    const int64_t e1 = material + eg;
+    const int cell = (e1 > 0)   ? family.cell[WHITE]
+                     : (e1 < 0) ? family.cell[BLACK]
+                                : ENDGAME_CELL_NONE;
+    const int64_t x = mg * phase + eg * (GAME_PHASE_MAX - phase);
+    const int64_t one = ENDGAME_SCALE_ONE;
+    const int64_t expected =
+        (cell == ENDGAME_CELL_NONE)
+            ? x / GAME_PHASE_MAX
+            : (one * x + (forced[cell] - one) * e1 * (GAME_PHASE_MAX - phase)) /
+                  (GAME_PHASE_MAX * one);
+
+    const tuner_trace::exact_parts_t parts =
+        tuner_trace::exact_parts(data, 0, weights.data());
+    CHECK(parts.positional == expected);
+    CHECK(parts.e1 == e1);
+
+    const double smooth = tuner_trace::score(data, 0, params.data());
+    const double exact =
+        static_cast<double>(tuner_trace::exact_score(data, 0, weights.data()));
+    const double gap = taperings_loss(data, weights, smooth, exact);
+    worst = std::max(worst, gap);
+    CHECK(gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9);
+    if (cell != ENDGAME_CELL_NONE) {
+      worst_scaled = std::max(worst_scaled, gap);
+    }
+
+    if (cell != ENDGAME_CELL_NONE) {
+      per_cell[cell]++;
+      if (expected != x / GAME_PHASE_MAX) {
+        moved++;
+        each_sign[(e1 > 0) ? 0 : 1]++;
+      }
+    }
+    checked++;
+  }
+
+  // The precondition: every cell is picked, and the factor moves the score
+  // with each sign of E1.
+  CAPTURE(checked);
+  CAPTURE(moved);
+  CAPTURE(worst);
+  CAPTURE(worst_scaled);
+  CHECK(checked > 8000);
+  // DEC-350 (1)'s bound is needed: a row in a cell off F passes the bound of a
+  // row at F, each read as its taperings' loss (DEC-355) and by more than
+  // the lattice margin, cell_truncation_positions' row at 2.906576 against
+  // 2.875.
+  CHECK(worst_scaled > plain_bound + tuner_trace::LATTICE_MARGIN);
+  CHECK(moved > 1000);
+  CHECK(each_sign[0] > 100);
+  CHECK(each_sign[1] > 100);
+  for (int c = 0; c < ENDGAME_CELL_COUNT; ++c) {
+    CAPTURE(c);
+    CHECK(per_cell[c] > 20);
+  }
 }
 
 
@@ -731,6 +954,21 @@ TEST_CASE_FIXTURE(trace_fixture_t,
       }
     }
 
+    // S124's family: mop-up's counts as the other linear terms are, and the
+    // two candidate cells the record carries beside its entries.
+    endgame_family_t endgame;
+    endgame_family_counts(&board, &endgame);
+    cells(eval_trace::TERM_MOPUP, endgame.mopup, MOPUP_FEATURE_COUNT);
+    for (int side = 0; side < 2; ++side) {
+      CAPTURE(side);
+      const int expected = (endgame.cell[side] == ENDGAME_CELL_NONE)
+                               ? eval_trace::NO_CELL
+                               : endgame.cell[side];
+      CHECK(static_cast<int>(trace.cells[side]) == expected);
+      CHECK(static_cast<int>(data.cells[static_cast<size_t>(side)]) ==
+            expected);
+    }
+
     CHECK(trace.phase == game_phase(&board));
   }
 }
@@ -816,20 +1054,21 @@ TEST_CASE_FIXTURE(trace_fixture_t, "the positions reach every curve input")
 // drops the four truncating divisions, each of which loses under one
 // centipawn, so the two can part by at most 23/24 per division that rounds:
 // three while tempo ships at zero, whose division then truncates 0 / 24
-// exactly. Clamping is 1-Lipschitz and only narrows the gap. S122's curve, when
-// live, adds under 1 more: each king's T truncates in each half, and the two
-// kings' losses in one half, one taken off and one added, differ by under one
-// unit before the taper. The bound is the
+// exactly. Clamping is 1-Lipschitz and only narrows the gap. S122's curve adds
+// what its own truncations lose: each king's T truncates in each half, and the
+// two kings' losses in one half, one taken off and one added, go through king
+// safety's taper as that row's curve residual, under 1. The bound is the
 // one tests/test_eval_model.cpp held the mirror to until S276 (DEC-053), which
 // is the point: the trace's smooth score is the function the mirror computed.
+// Since S124 it is taken per row: a row whose scale factor is off F trades
+// taper()'s 23/24 for 3071/3072, DEC-350 (1)'s arithmetic; and since DEC-355
+// (2026-11-06) the curve's share is the row's own residual, not a flat 1 on
+// every row while the curve is live -- tuner_trace::truncation_bound(), the
+// definition tools/truncation_scan reads.
 TEST_CASE_FIXTURE(trace_fixture_t,
                   "the smooth score is within the truncation bound of the "
                   "exact one")
 {
-  const bool tempo_unfitted = (tempo_mg == 0) && (tempo_eg == 0);
-  const double bound = (tempo_unfitted ? 3.0 : 4.0) * 23.0 / 24.0 +
-                       (curve_is_live() ? 1.0 : 0.0);
-
   std::vector<double> params(tuner_layout::PARAM_COUNT, 0.0);
   tuner_layout::starting_params(params.data());
   const std::vector<int64_t> weights = tuner_trace::engine_weights();
@@ -837,8 +1076,18 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   double worst = 0.0;
 
   // Every position of the shared list, and since S083 the four pinned rows and
-  // their mirrors, which no longer live in that list (below).
-  for (const std::string& fen : positions_with_truncation_rows()) {
+  // their mirrors, which no longer live in that list (below); since S124 the
+  // row that reaches past 3 x 23/24 when its cell is off F, and its mirror.
+  // The bound is per row since S124 (truncation_bound(), DEC-350 (1)): at the
+  // identity every row is at F and the bound is 3 x 23/24 throughout, with
+  // the row's curve residual on top since DEC-355.
+  std::vector<std::string> fens = positions_with_truncation_rows();
+  for (const std::string& fen : cell_truncation_positions) {
+    fens.push_back(fen);
+    fens.push_back(mirror_fen(fen));
+  }
+
+  for (const std::string& fen : fens) {
     CAPTURE(fen);
 
     row_trace_t trace;
@@ -847,14 +1096,16 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     const double smooth = tuner_trace::score(data, 0, params.data());
     const double exact =
         static_cast<double>(tuner_trace::exact_score(data, 0, weights.data()));
-    const double gap = std::fabs(smooth - exact);
+    const double gap = taperings_loss(data, weights, smooth, exact);
 
     worst = std::max(worst, gap);
-    CHECK(gap <= bound + 1e-9);
+    CHECK(gap <= tuner_trace::truncation_bound(data, 0, weights.data()) + 1e-9);
   }
 
   // The bound is reached, not merely respected: `truncation_positions` carries
-  // four rows pinned at 69/24 (DEC-057, DEC-169), and they reach it here.
+  // four rows pinned at 69/24 (DEC-057, DEC-169), and they reach it here --
+  // each row's taperings' loss, |smooth - exact - C|, since DEC-355, so the
+  // clause reads every row against its own bound.
   // Until S083 the pinned four were also rows of test_eval_positions, and this
   // loop reached them through all_positions(). S083's refit moved S076's four
   // off the bound, and its own four were kept out of that list, which is
@@ -871,10 +1122,11 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   // same re-derivation -- build/tools/truncation_scan --data <corpus> --min
   // 2.8, after a refit or a move of LAZY_EVAL_MARGIN; the scan has read this
   // smooth score from the trace since S276, the mirror's before, and the two
-  // are the same function. Margin: 2.8 against the maximum 2.875, and 3.6
-  // against 3.875 while S122's curve is live.
+  // are the same function. Margin: 2.8 against the maximum 2.875, each row
+  // read as its taperings' loss (DEC-355); 3.6 against a flat 3.875 while
+  // S122's curve was live, from S122's landing to 2026-11-06.
   CAPTURE(worst);
-  CHECK(worst > (curve_is_live() ? 3.6 : 2.8));
+  CHECK(worst > 2.8);
 }
 
 
@@ -899,13 +1151,16 @@ TEST_CASE_FIXTURE(trace_fixture_t,
 // 3.833, and the four pinned here have to be re-derived against it. S038; in
 // tests/test_eval_model.cpp against the mirror's score until S276.
 //
-// **S122's curve moves both numbers by 1.** While it is live (curve_is_live())
-// its four truncations add under 1 to the residual, so two taperings and the
-// curve reach at most 46/24 + 1 = 70/24, and the proof that all three
-// taperings truncated is a residual past 72/24 = 3.0; the bound is 69/24 + 1 =
-// 3.875 and the top clause 3.6, the four picked past 3.0 by
-// adocs/data/S083_truncation_pick.py's amendment and the worst at 3.672. With
-// the curve at its seed the numbers are 2.0, 2.8 and 2.875 as written above.
+// **S122's curve is read per row (DEC-355, 2026-11-06).** Its four
+// truncations add that row's own curve residual, tuner_trace::curve_residual(),
+// so the difference less it is what the three taperings lost, and the numbers
+// are 2.0, 2.8 and 2.875 as written above, read on that: two taperings reach
+// at most 46/24 past the row's residual, and a row past 48/24 has all three
+// truncated. At the curve's seed the residual is zero and nothing is read
+// differently. From S122's landing to 2026-11-06 the curve took a flat 1 on
+// every row while live, so the proof read past 72/24 = 3.0 and the top clause
+// 3.6 against 3.875, the four picked past 3.0 by
+// adocs/data/S083_truncation_pick.py's S122 amendment.
 TEST_CASE_FIXTURE(trace_fixture_t,
                   "the pinned positions reach the truncation bound")
 {
@@ -922,9 +1177,8 @@ TEST_CASE_FIXTURE(trace_fixture_t,
   tuner_layout::starting_params(params.data());
   const std::vector<int64_t> weights = tuner_trace::engine_weights();
 
-  const bool curve = curve_is_live();
-  const double past = curve ? 3.0 : 2.0;
-  const double top = curve ? 3.6 : 2.8;
+  const double past = 2.0;
+  const double top = 2.8;
 
   double worst = 0.0;
 
@@ -937,12 +1191,12 @@ TEST_CASE_FIXTURE(trace_fixture_t,
     const double smooth = tuner_trace::score(data, 0, params.data());
     const double exact =
         static_cast<double>(tuner_trace::exact_score(data, 0, weights.data()));
-    const double difference = std::fabs(smooth - exact);
+    const double difference = taperings_loss(data, weights, smooth, exact);
 
     worst = std::max(worst, difference);
 
     CHECK_MESSAGE(difference > past,
-                  (fen + ": difference " + std::to_string(difference) +
+                  (fen + ": taperings' loss " + std::to_string(difference) +
                    ", no longer past " + std::to_string(past)));
   }
 
@@ -1058,4 +1312,13 @@ TEST_CASE("a record the dataset cannot hold is refused and leaves nothing")
   // No phase recorded.
   record.clear();
   refused_then_clean("no phase");
+
+  // S124: a candidate cell past the factor's thirteen.
+  record.clear();
+  eval_trace::sink = &record;
+  eval_trace::set_phase(12);
+  eval_trace::add(eval_trace::TERM_MOBILITY, eval_trace::SIDE_BOTH, 3, 7);
+  eval_trace::set_cells(ENDGAME_CELL_COUNT, -1);
+  eval_trace::sink = nullptr;
+  refused_then_clean("a cell outside the factor's");
 }

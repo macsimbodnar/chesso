@@ -1,0 +1,194 @@
+#pragma once
+// S124's endgame population (DEC-350 (6)): seeded random placements of the
+// material signatures S124's cells and mop-up's domain are defined over, so
+// the engine's counts, the trace's factor and the tuner's product are each
+// read on every cell and every mop-up count, for each colour. A random
+// middlegame placement reaches almost none of them, which is why S101's
+// population is not enough here.
+//
+// The signatures are counts of men and nothing else, written from the
+// definitions in src/evaluation.hpp: each cell's P and d from both sides'
+// point of view, both bishop colourings, the gate's two sides, mop-up's
+// domain and its exclusions. No placement is judged; a placement load_FEN()
+// refuses -- a king in contact, the side not to move in check -- is skipped.
+// Each signature is placed as written and with the colours swapped, and every
+// kept placement is kept with White and with Black to move.
+#include <algorithm>
+#include <cstdint>
+#include <random>
+#include <string>
+#include <vector>
+#include "bitboard.hpp"
+#include "data_structures.hpp"
+
+namespace test_endgame_positions
+{
+
+// White's men, then Black's, beside the kings: P N B R Q.
+struct signature_t
+{
+  const char* white;
+  const char* black;
+};
+
+inline const signature_t signatures[] = {
+    // PAWNS, P 0 to 2 against d below 0 to past 2, either side strong.
+    {"R", "B"},
+    {"R", "R"},
+    {"Q", "B"},
+    {"Q", "R"},
+    {"RB", "R"},
+    {"RN", "B"},
+    {"BB", "N"},
+    {"RP", "B"},
+    {"RP", "R"},
+    {"RP", "N"},
+    {"QP", "R"},
+    {"RBP", "R"},
+    {"RPP", "B"},
+    {"RPP", "R"},
+    {"QPP", "R"},
+    {"RBPP", "R"},
+    {"BPP", "N"},
+    {"NP", "B"},
+    {"P", "P"},
+    {"PP", "P"},
+    {"RPP", "RP"},
+    {"RPPP", "RPP"},
+    {"QRPPP", "QRPPP"},
+    // OCB, with the colours random: PURE by P, ROOK, and the other.
+    {"BP", "B"},
+    {"BPP", "BP"},
+    {"BPPP", "B"},
+    {"BPPPP", "BPP"},
+    {"BPPPPP", "BP"},
+    {"BPPPPPP", "BPPPP"},
+    {"RBP", "RB"},
+    {"RBPPP", "RBPP"},
+    {"RBPPPPP", "RB"},
+    {"NBP", "B"},
+    {"RBP", "NB"},
+    {"QBPP", "QB"},
+    {"RRBP", "RB"},
+    // LONE, mop-up's domain and its exclusions.
+    {"R", ""},
+    {"Q", ""},
+    {"BN", ""},
+    {"BB", ""},
+    {"RB", ""},
+    {"RN", ""},
+    {"QR", ""},
+    {"NN", ""},
+    {"B", ""},
+    {"N", ""},
+    {"P", ""},
+    {"RP", ""},
+    {"", ""},
+};
+
+
+inline char piece_char(char c, bool white)
+{ return white ? c : static_cast<char>(c - 'A' + 'a'); }
+
+
+// `per_signature` placements a signature and colouring, each kept with both
+// sides to move where load_FEN() takes it: the generator, population() below
+// without DEC-356's pair. adocs/data/S124_factor_gradient_rows.cpp reads it
+// as the rule's base at 40 and as its candidates at 80.
+inline std::vector<std::string> placements(int per_signature = 40)
+{
+  std::vector<std::string> out;
+  std::mt19937 rng(20261104U);
+  game_t game;
+  initialize_game_const_data(&game);
+
+  for (const signature_t& sig : signatures) {
+    for (int swap = 0; swap < 2; ++swap) {
+      const std::string white = swap ? sig.black : sig.white;
+      const std::string black = swap ? sig.white : sig.black;
+
+      for (int trial = 0; trial < per_signature; ++trial) {
+        std::vector<int> order(64);
+        for (int square = 0; square < 64; ++square) {
+          order[static_cast<size_t>(square)] = square;
+        }
+        std::shuffle(order.begin(), order.end(), rng);
+
+        char squares[64] = {};
+        size_t next = 0;
+        squares[order[next++]] = 'K';
+        squares[order[next++]] = 'k';
+
+        for (int side = 0; side < 2; ++side) {
+          for (const char man : (side == 0) ? white : black) {
+            while (next < 64) {
+              const int square = order[next++];
+              const int row = square / 8;
+              if (man == 'P' && (row == 0 || row == 7)) { continue; }
+              squares[square] = piece_char(man, side == 0);
+              break;
+            }
+          }
+        }
+
+        std::string placement;
+        for (int row = 0; row < 8; ++row) {
+          int empty = 0;
+          for (int file = 0; file < 8; ++file) {
+            const char c = squares[row * 8 + file];
+            if (c == '\0') {
+              empty++;
+              continue;
+            }
+            if (empty > 0) { placement += static_cast<char>('0' + empty); }
+            empty = 0;
+            placement += c;
+          }
+          if (empty > 0) { placement += static_cast<char>('0' + empty); }
+          if (row < 7) { placement += '/'; }
+        }
+
+        for (const char* side : {" w - - 0 1", " b - - 0 1"}) {
+          const std::string fen = placement + side;
+          if (load_FEN(fen, &game)) { out.push_back(fen); }
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+
+// DEC-356 (2026-11-06), DEC-316's answer for tests/test_tuner_gradient.cpp's
+// "the endgame factor's gradient is the derivative, chain rule in": at S122's
+// constants the case read 3.4757e-6 at parameter 726, psqt_eg[king][b6],
+// against its 1e-6, the derivative right and the weight nearly stationary over
+// the generator's rows (|g| 1.98e-9, 1.1e-5 of the case's largest). One pair
+// appended after the generator's rows, the position and its colour-mirror,
+// takes 726's |g| x65, and the case reads 6.27485e-7 at 739.
+// GOLDEN (DEC-142): the pair, picked by the rule written before it first ran
+// (adocs/data/S124_factor_gradient_options.txt, "Option A, the rule"): the
+// first eligible pair of placements(80), in order, that puts |dE/d TARGET| at
+// three times the base's. Re-derive with
+// adocs/data/S124_factor_gradient_rows.cpp (its header has the build line),
+// which exits non-zero if its pick is not this pair, whenever the weights, the
+// generator or the case's setting move.
+inline const char* const factor_gradient_rows[] = {
+    "8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1",
+    "k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1",
+};
+
+
+// S124's population: the generator's rows at 40 a signature and colouring,
+// then DEC-356's pair.
+inline std::vector<std::string> population()
+{
+  std::vector<std::string> out = placements();
+  for (const char* fen : factor_gradient_rows) {
+    out.push_back(fen);
+  }
+  return out;
+}
+
+}  // namespace test_endgame_positions

@@ -26,6 +26,12 @@
 // tools/truncation_scan's check, and the tuner's load(). Neither sees a count
 // wrong in the engine itself: tests/test_walked_counts.hpp's walk does
 // (DEC-344 (5)).
+//
+// **It does not see S124's endgame family** (DEC-350 (6)): the factor scales
+// E1 inside stage one's taper and mop-up sits in stage one's pair, reading A,
+// so evaluate() less evaluate_cheap() is stage two as before and this stays
+// green, and blind to both, whatever their weights. tools/truncation_scan is
+// the factor's identity check.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>

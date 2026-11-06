@@ -1,0 +1,313 @@
+# S124 phase 1 rebased onto S122's landing, 2026-11-05: the owner's question on "the endgame factor's gradient is the
+# derivative, chain rule in" (tests/test_tuner_gradient.cpp), read and applied to nothing. The case, its metric, h = 0.01
+# and its 1e-6 are unchanged. The coordinator names it the third recurrence of DEC-316's class on test_tuner_gradient's
+# bound, after DEC-316 (S135) and DEC-343 (S101).
+#
+# The reading (adocs/data/S124_rebase_goldens.txt, RED 1): 3.4757e-6 at parameter 726, psqt_eg[king][b6], against
+# 1e-6, over the case's 5715 rows and 482 parameters; phase 1 on d83d6c0 read 3.02e-7 there. 726's analytic gradient,
+# -1.983e-9, is 1.1e-5 of the case's largest, and numeric and analytic agree to about 6e-15 at every h from 0.04 to
+# 0.0025: the summation's rounding over a nearly stationary weight, the derivative right. The rows are S124's
+# population, which no rule picks and no weight moves; S122's constants moved the error, not the rows.
+#
+# Scratch program at the bottom, built against build/src/libchesso_engine_trace.a from the repository root (its
+# build line there); its output, verbatim, under each option.
+
+== Option A, the rule, written 2026-11-05 before the program first ran
+
+DEC-316's answer in S101_gradient_rows.cpp's form, for "the endgame factor's gradient is the derivative, chain rule
+in". Nothing about the finite difference enters the pick; the case, its metric, h = 0.01 and its 1e-6 are unchanged.
+  base       the case's own rows: tests/test_endgame_positions.hpp's population(), traced, the rows whose E1 is zero at
+             the shipped weights dropped (the case's endgame_rows(true)); its labels, 1, 0.5, 0 cycling by row; K 1;
+             the shipped constants with the case's forced family (every cell off F, mop-up's six off zero).
+  TARGET     726, psqt_eg[king][b6], the case's worst; MULTIPLE 3, S101's.
+  candidates the case's own population source: population(80), the same generator and seed at twice the placements,
+             in its order; a position population() already holds, either way round, is skipped, and so is one already
+             tried.
+  eligible   S101_gradient_rows.cpp's, as written there: load_FEN accepts the position and its colour-mirror, its
+             phase is 1 to 23, each sits more than a centipawn inside the lazy clamp at the shipped constants (stage
+             two with S122's curve), each scores within 800 cp of level there, each loads with either side to move;
+             and the case's own filter, E1 non-zero at the shipped weights for both, since the case drops any other.
+  pick       for each eligible candidate in order, the pair (the position, then its mirror) appended after the base
+             with the labels continuing, gradient() at the case's setting over every row; the first pair putting
+             |dE/d TARGET| at or above MULTIPLE times the base's. None qualifying: the program says so and stops.
+  then       the case's own check over its 482 parameters with the pair appended, its worst and where. If the worst is
+             still past 1e-6 at another parameter, that parameter is the next TARGET over the extended rows, the
+             candidates continuing in order; at most three pairs in all.
+  reported   each pick, the case's worst before and after, and the readers of population() run on a scratch tree with
+             the picked rows appended to population(), to say what else they move. Applied to nothing delivered.
+
+== Option A, the program's output (exit 0; one pair, the worst then under 1e-6, so no second round)
+base: 5715 rows; the case's worst 3.4757e-06 at 726, next 5.91782e-07 at 739; normwise 5.632e-09
+round 1: TARGET 726, base |g| 1.983401e-09, the rule wants 5.950203e-09
+  pick after 157 eligible pairs (candidate 233 of 11339): |g| 1.295079e-07
+    8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1
+    k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1
+  the case with 5717 rows: worst 6.27485e-07 at 739 (|g| 1.811e-08), next 4.15295e-07 at 676; normwise 5.633e-09
+picked 2 rows
+PICK 8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1
+PICK k3r3/8/1K6/8/3R4/8/8/8 b - - 0 1
+  726, psqt_eg[king][b6]; 739, psqt_eg[king][g5]; 676, psqt_eg[queen][h5].
+  The pick, king and rook against king and rook, and its mirror, takes 726's |g| x65 (1.983e-9 to 1.295e-7) and the
+  case from 3.4757e-6 to 6.27485e-7 at 739, a factor of 1.59 under its bound; 739 is the next near-stationary weight
+  (|g| 1.811e-8, 1e-4 of the largest), the base's own second (5.918e-7), unmoved. One pair: the rule stops there.
+
+== Option A, the readers of population() with the pair appended to it (a scratch tree, Release, this tree's sources
+== with the two rows pushed after population()'s loop), against build/ as delivered
+| reader | as delivered | with the pair |
+|---|---|---|
+| test_eval_model, the walk's two S124 cases | 179059 assertions, green | 179079, green |
+| test_eval_trace, the forced-cell case | checked 8673, moved 4084, worst 3.67232, worst_scaled 3.01941; red on RED 2's precondition alone | checked 8675, moved 4086, the same worsts; the same one red |
+| test_tuner_gradient, the factor's case | 3.4757e-6 at 726, red | 6.27485e-7 at 739, green |
+| test_tuner_gradient, the endgame recovery | green, in_cells 3691, in_domain 853 | green, 3693, 853 |
+| test_tuner_gradient, the stale pick and the box | green | green |
+| the four test_tuner_gradient cases together | 26505 assertions, 1 failed | 26513, 0 failed |
+No golden reads the population: the walk's counts and the forced-cell case's counts are preconditions, the recovery's
+epochs budgets (each says so at its site), and none moves past its clause. The fixture of the main gradient case,
+tests/test_eval_positions.hpp, is not touched, so CLAMP_PUSH, ADAGRAD_HOLD_STEP, the walk and the coverage blocks are not
+read again. Where the pair would land is the owner's: appended to population() (what was read here), or in a list of the
+case's own, which no other reader sees.
+
+== Option B, the normwise metric, max_p |num - ana| / max_p |ana| over the case's 482 parameters at h 0.01
+the case as it stands: 5.632e-09 (the program's base line); with option A's pair: 5.633e-09.
+What it would have read on the two earlier recurrences (adocs/data/S122_gradient_options.txt, its section "Whether (C)
+would have caught the two originals"):
+  S101's, DEC-343: 2.066e-06 at 984 relative reads 2.63e-07 normwise on the parent's 104 rows (max |diff| 1.551e-10 at 984
+  over max |ana| 5.907e-04 at 1002), green under 1e-6.
+  S135's, DEC-316: 2.91e-06 at 774 relative, |diff| about 4e-12 over a max |ana| of at least 5e-4, at most 8e-9
+  normwise, green; not re-run there, S135's tree not built.
+So under B none of the three recurrences would have read red. The same file states what B gives up: it sees an
+absolute error past 1e-6 x max |ana|, so a wrong derivative of relative size e on a weight with gradient |g| shows only
+once e |g| > 1e-6 max |ana| (here about 1.8e-10), where the relative check sees any e > 1e-6 on a weight above 1e-12, S100's
+class. 726 itself, at |g| 1.98e-9, would then be checked to about a 9 % relative error.
+
+== the scratch program, option A and B's reading, as run (never delivered)
+//   g++ -O2 -std=gnu++20 -march=native -DCHESSO_TRACE -DCHESSO_SOURCE_DIR=\"$PWD\" -I src -I tools -I tests
+//       -isystem tests/doctest/doctest -isystem tests/third_party/nlohmann factor_rows.cpp
+//       build/src/libchesso_engine_trace.a -lpthread -o factor_rows
+// Scratch for adocs/data/S124_factor_gradient_options.txt, option A: DEC-316's
+// rows for the endgame factor's gradient case, the rule in that file's header.
+// Built against build/src/libchesso_engine_trace.a from the repository root.
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <set>
+#include <string>
+#include <vector>
+#include "bitboard.hpp"
+#include "search_params.hpp"
+#include "test_endgame_positions.hpp"
+#include "test_helpers.hpp"
+#include "tuner_layout.hpp"
+#include "tuner_trace.hpp"
+
+namespace
+{
+using namespace tuner_layout;
+using tuner_trace::dataset_t;
+game_t game;
+constexpr int SCORE_LIMIT = 800;
+
+double stage_two(const tuner_trace::row_trace_t& trace, const double* p)
+{
+  const auto& features = tuner_trace::feature_table().features;
+  const double mg_weight = trace.phase / static_cast<double>(GAME_PHASE_MAX);
+  const double eg_weight = 1.0 - mg_weight;
+  double sum = 0.0;
+  for (const tuner_trace::entry_t& e : trace.entries) {
+    const tuner_trace::feature_t& f = features[e.feature];
+    if (!tuner_trace::clamped_site(f.site)) { continue; }
+    sum += e.coef * (p[f.mg] * mg_weight + p[f.eg] * eg_weight);
+  }
+  double x[2][2] = {{0.0, 0.0}, {0.0, 0.0}};
+  for (const tuner_trace::side_entry_t& e : trace.side_entries) {
+    if (e.group != 0) { continue; }
+    x[e.side][0] += e.coef * p[KSC_MG_BASE + e.input];
+    x[e.side][1] += e.coef * p[KSC_EG_BASE + e.input];
+  }
+  for (int side = 0; side < 2; ++side) {
+    const double own = (side == 0) ? -1.0 : 1.0;
+    const double m = std::max(x[side][0], 0.0);
+    const double n = std::max(x[side][1], 0.0);
+    sum += own * (m * m * mg_weight + n * n * eg_weight) / KS_CURVE_DIVISOR;
+  }
+  return sum;
+}
+
+std::string with_side_to_move(const std::string& fen, char side)
+{
+  std::string flipped = fen;
+  flipped[fen.find(' ') + 1] = side;
+  return flipped;
+}
+
+bool loads_either_side(const std::string& fen)
+{
+  return load_FEN(with_side_to_move(fen, 'w'), &game) &&
+         load_FEN(with_side_to_move(fen, 'b'), &game);
+}
+
+bool trace_fen(const std::string& fen, tuner_trace::row_trace_t* trace)
+{
+  if (!load_FEN(fen, &game)) { return false; }
+  std::string error;
+  return tuner_trace::trace_board(&game.board, trace, &error);
+}
+
+double e1_at(const tuner_trace::row_trace_t& trace, const double* shipped)
+{
+  dataset_t one;
+  tuner_trace::append_row(trace, 0.5f, 0, 0, &one);
+  return tuner_trace::smooth(tuner_trace::engine_model(), one, 0, shipped).e1;
+}
+
+bool eligible(const std::string& fen, const std::string& mirror, const double* p,
+              tuner_trace::row_trace_t* a, tuner_trace::row_trace_t* b)
+{
+  if (!trace_fen(fen, a) || !trace_fen(mirror, b)) { return false; }
+  return a->phase >= 1 && a->phase <= GAME_PHASE_MAX - 1 &&
+         std::fabs(stage_two(*a, p)) < LAZY_EVAL_MARGIN - 1.0 &&
+         std::fabs(stage_two(*b, p)) < LAZY_EVAL_MARGIN - 1.0 &&
+         std::abs(a->engine_white) <= SCORE_LIMIT &&
+         std::abs(b->engine_white) <= SCORE_LIMIT && loads_either_side(fen) &&
+         loads_either_side(mirror) && e1_at(*a, p) != 0.0 && e1_at(*b, p) != 0.0;
+}
+
+void force(std::vector<double>* params)
+{
+  static const double cells[ENDGAME_SCALE_COUNT] = {64, 0, 24, 28, 68, 116, 96, 127, 120, 4, 40, 76, 92};
+  static const double mopup[2][MOPUP_COUNT] = {{7, 11, 5}, {13, 9, 17}};
+  for (size_t c = 0; c < ENDGAME_SCALE_COUNT; ++c) { (*params)[EGS_BASE + c] = cells[c]; }
+  for (size_t i = 0; i < MOPUP_COUNT; ++i) {
+    (*params)[MOP_MG_BASE + i] = mopup[0][i];
+    (*params)[MOP_EG_BASE + i] = mopup[1][i];
+  }
+}
+
+std::vector<double> labels(size_t n)
+{
+  std::vector<double> t(n);
+  for (size_t i = 0; i < n; ++i) { t[i] = (i % 3 == 0) ? 1.0 : ((i % 3 == 1) ? 0.5 : 0.0); }
+  return t;
+}
+
+std::vector<uint32_t> every(size_t n)
+{
+  std::vector<uint32_t> out(n);
+  for (size_t i = 0; i < n; ++i) { out[i] = static_cast<uint32_t>(i); }
+  return out;
+}
+
+// The case's check over its reached parameters, as the case writes it.
+double normwise = 0.0;  // max |num - ana| over max |ana|, the reached parameters, DEC-354's (C)
+
+void case_check(const dataset_t& data, std::vector<double> params, double* worst, size_t* at,
+                double* second, size_t* second_at, std::vector<double>* analytic)
+{
+  double max_diff = 0.0, max_ana = 0.0;
+  const std::vector<double> target = labels(data.size());
+  const std::vector<uint32_t> index = every(data.size());
+  tuner_trace::gradient(data, params.data(), 1.0, index, 0, data.size(), 1, target, analytic);
+  std::vector<uint8_t> reached(PARAM_COUNT, 0);
+  for (size_t p = 0; p < MATERIAL_COUNT; ++p) { reached[p] = 1; }
+  for (const auto& f : tuner_trace::feature_table().features) {
+    if (f.site == tuner_trace::SITE_POSITIONAL) { reached[f.eg] = 1; }
+  }
+  for (size_t p = MOP_MG_BASE; p < PARAM_COUNT; ++p) { reached[p] = 1; }
+  const auto& model = tuner_trace::engine_model();
+  *worst = 0; *second = 0; *at = 0; *second_at = 0;
+  for (size_t p = 0; p < PARAM_COUNT; ++p) {
+    if (!reached[p]) { continue; }
+    const double saved = params[p];
+    params[p] = saved + 0.01;
+    const double up = tuner_trace::error_range(model, data, params.data(), 1.0, index, 0, index.size(), 1, target);
+    params[p] = saved - 0.01;
+    const double down = tuner_trace::error_range(model, data, params.data(), 1.0, index, 0, index.size(), 1, target);
+    params[p] = saved;
+    const double n = (up - down) / 0.02;
+    max_diff = std::max(max_diff, std::fabs(n - (*analytic)[p]));
+    max_ana = std::max(max_ana, std::fabs((*analytic)[p]));
+    const double s = std::max(std::fabs(n), std::fabs((*analytic)[p]));
+    const double e = (s > 1e-12) ? std::fabs(n - (*analytic)[p]) / s : std::fabs(n - (*analytic)[p]);
+    if (e > *worst) { *second = *worst; *second_at = *at; *worst = e; *at = p; }
+    else if (e > *second) { *second = e; *second_at = p; }
+  }
+  normwise = max_diff / max_ana;
+}
+}  // namespace
+
+TEST_CASE("option A")
+{
+  initialize_game_const_data(&game);
+  std::vector<double> shipped(PARAM_COUNT, 0.0);
+  starting_params(shipped.data());
+  std::vector<double> params = shipped;
+  force(&params);
+
+  const std::vector<std::string> pop = test_endgame_positions::population();
+  std::set<std::string> held(pop.begin(), pop.end());
+  dataset_t data;
+  for (const std::string& fen : pop) {
+    tuner_trace::row_trace_t t;
+    REQUIRE(trace_fen(fen, &t));
+    if (e1_at(t, shipped.data()) == 0.0) { continue; }
+    tuner_trace::append_row(t, 0.5f, 0, 0, &data);
+  }
+  double worst, second;
+  size_t at, second_at;
+  std::vector<double> analytic;
+  case_check(data, params, &worst, &at, &second, &second_at, &analytic);
+  printf("base: %zu rows; the case's worst %.6g at %zu, next %.6g at %zu; normwise %.4g\n", data.size(), worst, at,
+         second, second_at, normwise);
+
+  const std::vector<std::string> candidates = test_endgame_positions::population(80);
+  size_t next = 0;
+  std::set<std::string> tried;
+  std::vector<std::string> picked;
+  for (int round = 0; round < 3 && worst >= 1e-6; ++round) {
+    const size_t target_param = at;
+    const double base_g = analytic[target_param];
+    printf("round %d: TARGET %zu, base |g| %.6e, the rule wants %.6e\n", round + 1, target_param,
+           std::fabs(base_g), 3.0 * std::fabs(base_g));
+    bool found = false;
+    size_t eligible_tried = 0;
+    for (; next < candidates.size(); ++next) {
+      const std::string& fen = candidates[next];
+      const std::string mirror = mirror_fen(fen);
+      if (held.count(fen) || held.count(mirror) || tried.count(fen) || tried.count(mirror)) { continue; }
+      tried.insert(fen);
+      tuner_trace::row_trace_t a, b;
+      if (!eligible(fen, mirror, shipped.data(), &a, &b)) { continue; }
+      eligible_tried++;
+      dataset_t with = data;
+      tuner_trace::append_row(a, 0.5f, 0, 0, &with);
+      tuner_trace::append_row(b, 0.5f, 0, 0, &with);
+      std::vector<double> g;
+      tuner_trace::gradient(with, params.data(), 1.0, every(with.size()), 0, with.size(), 1,
+                            labels(with.size()), &g);
+      if (std::fabs(g[target_param]) >= 3.0 * std::fabs(base_g)) {
+        printf("  pick after %zu eligible pairs (candidate %zu of %zu): |g| %.6e\n    %s\n    %s\n",
+               eligible_tried, next + 1, candidates.size(), std::fabs(g[target_param]), fen.c_str(),
+               mirror.c_str());
+        data = with;
+        picked.push_back(fen);
+        picked.push_back(mirror);
+        held.insert(fen);
+        held.insert(mirror);
+        found = true;
+        ++next;
+        break;
+      }
+    }
+    if (!found) {
+      printf("  no eligible pair qualifies (%zu eligible tried)\n", eligible_tried);
+      break;
+    }
+    case_check(data, params, &worst, &at, &second, &second_at, &analytic);
+    printf("  the case with %zu rows: worst %.6g at %zu (|g| %.3e), next %.6g at %zu; normwise %.4g\n", data.size(),
+           worst, at, std::fabs(analytic[at]), second, second_at, normwise);
+  }
+  printf("picked %zu rows\n", picked.size());
+  for (const std::string& f : picked) { printf("PICK %s\n", f.c_str()); }
+}
