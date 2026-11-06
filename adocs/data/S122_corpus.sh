@@ -13,7 +13,8 @@
 #   adocs/data/S122_corpus.sh k          # K on the new rows
 #   adocs/data/S122_corpus.sh record     # prepared.txt, the screen's input
 #   adocs/data/S122_corpus.sh all        # the six in order; resumable
-#   adocs/data/S122_corpus.sh smoke      # all six on a slice of under 20000 rows
+#   adocs/data/S122_corpus.sh adopt      # a preparation before S333 stamped with its pool
+#   adocs/data/S122_corpus.sh smoke      # all six on a slice of under 20000 rows, and the refusals
 #
 # Each stage prints S122-CORPUS-<STAGE>-DONE or -FAILED as its last line. POOL
 # defaults to .tuning/s122/corpus, OUT to .tuning/s122/prepared (DEC-235). Only
@@ -22,6 +23,14 @@
 # POOL/part1/ beside their originals.sha256, writes the merged pool.tsv.*, games.tsv
 # (S332) and generate.log by way of .merging files, and keeps a refused run's log as
 # merge.failed.log. No other stage writes there.
+#
+# Since S333 a preparation names the pool it was made from: verify.txt and each .done
+# marker in OUT carry a `pool` line, POOL/generate.log's sha256 when the file was
+# written, and filter, split, sample, k and record refuse OUT when any of them names
+# another pool or none (check_prepared), and each refuses when an earlier stage's record
+# is absent (needs); verify refuses such an OUT before it removes anything. `adopt`
+# stamps a preparation made before S333 after the checks above adopt(), which name
+# what they do not prove; ADOPT_DRY=1 checks and writes nothing.
 #
 # ============================================================================
 # PRE-REGISTRATION -- written 2026-11-02 in S122's phase 1, while the pool was
@@ -66,6 +75,8 @@
 # root rows stay under 20000, 20 games held out, under OUT=.tuning/s122/phase1/
 # corpus_smoke: the pipeline's shape, no reading taken. The main checkout's .tuning is read through TUNING, so a
 # worktree runs it with TUNING=/home/max/ws/chesso/.tuning.
+# (So until S333, 2026-11-06. That sample is a pool before S331, which `verify` now
+# refuses; the slice is S331's measured run's since, AMENDED 2026-11-06, below.)
 #
 # MACHINE TIME, inferred from S082's and S083's stages on pools of this size: verify
 # and filter about 10 min (three 13 M-row views read twice), split about 10 min, sample
@@ -98,12 +109,31 @@
 # The size, 150000 games, the settings, S083's recipe and its departures, the fixed
 # set's split seed 20261102, 46 qs rows a game and K stand as DEC-344 and DEC-345 have
 # them.
+#
+# AMENDED 2026-11-06, S333 -- the guards, not the recipe, written after the regenerated
+# pool was prepared; that preparation's data files stay as they are, and `adopt` adds
+# lines to its verify.txt and markers only. The pool DEC-349 voided was kept out of
+# the new preparation only by moving its directories aside (S122's step file, "What
+# still guards only by the move"). Since S333:
+#   - `verify` refuses a one-run pool whose log holds no `repetition:` line, a pool
+#     written before S331, as `merge` refuses such a top-up;
+#   - verify.txt and every .done marker name POOL's generate.log by sha256, and
+#     verify, filter, split, sample, k and record refuse a preparation that names
+#     another pool, or none, and each stage after verify one that lacks an earlier
+#     stage's record; verify refuses before it removes anything; `adopt` stamps a
+#     preparation made before S333, its checks and what they leave unproved below;
+#   - `smoke` slices S331's measured run, .tuning/s331/measure (2400 games at these
+#     settings by S331's datagen), not the research pass's sample, and then plays
+#     each refusal on a planted copy.
+# Nothing in the recipe, its seeds, its sizes or K changes.
 # ============================================================================
 
 set -uo pipefail
 
 stage="${1:-}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
+# This script, which `smoke` runs its cases by unless SMOKE_AGAINST names another.
+self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 # The main checkout's .tuning, which a worktree does not have (DEC-235).
 TUNING="${TUNING:-$root/.tuning}"
 POOL="${POOL:-$TUNING/s122/corpus}"
@@ -141,6 +171,14 @@ SAMPLE_DIR="${SAMPLE_DIR:-$TUNING/s122/sample}"
 # The first line of a merged pool's log. Such a log holds each run's own log
 # verbatim, indented four spaces; S122_screen.sh sample reads its runs from it.
 MERGED_HEADER="S122 corpus, merged from two datagen runs (DEC-296); not one run's log"
+# The stages' markers in OUT, each its file's sha256 and, since S333, its pool's.
+view_markers="pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done"
+markers="$view_markers corpus.tsv.done"
+# The recipe's band, |column 3| < BAND, to `keep` and the rest to `past`: filter's
+# program, which adopt runs again into sha256sum.
+band_filter='{ v = $3 + 0; if (v < band && v > -band) print > keep; else print > past }'
+# Set by check_pool_log.
+pool_merged=0
 
 say() { echo "$*"; }
 
@@ -254,32 +292,100 @@ seeds() {
   return "$failed"
 }
 
-# verify.txt is written only when every check below has passed, as a .tmp renamed
-# last, and a run's old one is removed first: `filter` reads its presence as verify's
-# pass, so a refusal leaves none.
-verify() {
-  local v rows games bad merged=0 record="$OUT/verify.txt"
-  rm -f "$record" "$record.tmp"
+# verify's checks of POOL's log, which `adopt` makes too: the pool finished; a merged
+# pool's files are the ones its merge wrote; and, since S333, a one-run pool's log holds
+# datagen's closing `repetition:` line, which only S331's datagen prints, as `merge`
+# asks of a top-up's (DEC-349). A merged pool's parts were held to that at its merge.
+check_pool_log() {
+  pool_merged=0
   [[ -f "$POOL/generate.log" ]] || { say "no $POOL/generate.log"; return 1; }
   grep -q '^S122-CORPUS-DONE$' "$POOL/generate.log" || {
     say "refused: $POOL/generate.log has no S122-CORPUS-DONE: the pool is still generating, or failed; a top-up is S082's merge (DEC-296), the coordinator's"
     return 1
   }
   if [[ "$(head -n 1 "$POOL/generate.log")" == "$MERGED_HEADER" ]]; then
-    merged=1
+    pool_merged=1
     check_merged "$POOL/generate.log" ||
       { say "refused: the merged pool is not the one its merge wrote"; return 1; }
+  else
+    grep -q '^repetition: ' "$POOL/generate.log" ||
+      { say "refused: $POOL/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids"; return 1; }
   fi
+}
+
+# The pool's own lines verify.txt records: a run's engine, datagen and command lines,
+# or for a merged pool both runs', from their verbatim logs, and the merge's.
+pool_lines() {
+  if (( pool_merged )); then
+    echo "$MERGED_HEADER"
+    grep -E '^(    )?(engine|datagen|command)' "$POOL/generate.log"
+    grep -E '^merged [a-z]+: ' "$POOL/generate.log"
+  else
+    grep -E '^(engine|datagen|command)' "$POOL/generate.log"
+  fi
+}
+
+# The pool FILE names on its `pool` line, by its log's sha256; empty when it names none.
+named_pool() { sed -n 's/^pool  *sha256 \([0-9a-f]\{64\}\)  .*/\1/p' "$1" | head -n 1; }
+
+# S333: OUT is POOL's preparation. verify.txt and every marker present must name, on
+# their `pool` line, the pool POOL/generate.log is now; none is skipped, so a stage
+# refuses a directory holding any file of another pool's preparation. One line a file
+# found; non-zero on any.
+check_prepared() {
+  local now name named failed=0
+  [[ -f "$POOL/generate.log" ]] || { say "refused: no $POOL/generate.log, so no pool to hold $OUT to"; return 1; }
+  now=$(sha256sum "$POOL/generate.log" | cut -d' ' -f1)
+  for name in verify.txt $markers; do
+    [[ -f "$OUT/$name" ]] || continue
+    named=$(named_pool "$OUT/$name")
+    if [[ -z "$named" ]]; then
+      say "refused: $OUT/$name names no pool: written before S333; \`adopt\` stamps a preparation whose files are this pool's"
+      failed=1
+    elif [[ "$named" != "$now" ]]; then
+      say "refused: $OUT/$name was prepared from the pool whose generate.log has sha256 $named, and $POOL/generate.log's is $now: another pool's preparation"
+      failed=1
+    fi
+  done
+  return "$failed"
+}
+
+# S333: the records a stage reads, each written by the stage before it -- verify.txt by
+# verify, the view markers by filter, split.txt by split, corpus.tsv.done by sample,
+# k.txt by k. A stage refuses when any it names is absent, then holds OUT to POOL
+# (check_prepared), so markers removed by hand do not let a stage run on another pool's
+# files. Only verify, the first, runs on an empty OUT.
+needs() {
+  local name by
+  for name in "$@"; do
+    [[ -f "$OUT/$name" ]] && continue
+    case "$name" in
+      verify.txt) by=verify ;;
+      pool.tsv.*.done) by=filter ;;
+      split.txt) by=split ;;
+      corpus.tsv.done) by=sample ;;
+      *) by=k ;;
+    esac
+    say "refused: no $OUT/$name: run $by first"
+    return 1
+  done
+  check_prepared
+}
+
+# verify.txt is written only when every check below has passed, as a .tmp renamed
+# last, and a run's old one is removed first: `filter` reads its presence as verify's
+# pass, so a refusal leaves none. Since S333 it names the pool it read, and OUT is held
+# to POOL before anything is removed, so verify never replaces the verify.txt of
+# another pool's preparation, or of one made before S333 that `adopt` must read.
+verify() {
+  local v rows games bad record="$OUT/verify.txt"
+  check_pool_log || return 1
+  check_prepared || return 1
+  rm -f "$record" "$record.tmp"
   {
     echo "S122 corpus verify, $(date -Iseconds)"
-    if (( merged )); then
-      # Both runs, from their verbatim logs.
-      echo "$MERGED_HEADER"
-      grep -E '^(    )?(engine|datagen|command)' "$POOL/generate.log"
-      grep -E '^merged [a-z]+: ' "$POOL/generate.log"
-    else
-      grep -E '^(engine|datagen|command)' "$POOL/generate.log"
-    fi
+    binary_line pool "$POOL/generate.log"
+    pool_lines
   } > "$record.tmp"
   for v in $VIEWS_ALL; do
     [[ -f "$POOL/pool.tsv.$v" ]] || { say "no $POOL/pool.tsv.$v"; return 1; }
@@ -293,26 +399,28 @@ verify() {
   mv "$record.tmp" "$record"
 }
 
+# OUT/NAME.done for OUT/NAME: the file's sha256, then, since S333, the pool's line.
+write_marker() {
+  { sha256sum "$OUT/$1" | cut -d' ' -f1; binary_line pool "$POOL/generate.log"; } > "$OUT/$1.done.tmp" &&
+    mv "$OUT/$1.done.tmp" "$OUT/$1.done"
+}
+
 filter() {
   local v kept past
-  [[ -f "$OUT/verify.txt" ]] || { say "refused: run verify first"; return 1; }
+  needs verify.txt || return 1
   for v in $VIEWS_ALL; do
     if [[ -f "$OUT/pool.tsv.$v.done" ]]; then say "$v filtered before"; continue; fi
-    awk -F'\t' -v band="$BAND" -v keep="$OUT/pool.tsv.$v" -v past="$OUT/pool_past.tsv.$v" '
-        { v = $3 + 0; if (v < band && v > -band) print > keep; else print > past }' \
+    awk -F'\t' -v band="$BAND" -v keep="$OUT/pool.tsv.$v" -v past="$OUT/pool_past.tsv.$v" "$band_filter" \
         "$POOL/pool.tsv.$v" || { say "the filter failed on $v"; return 1; }
     kept=$(wc -l < "$OUT/pool.tsv.$v")
     past=$(wc -l < "$OUT/pool_past.tsv.$v" 2>/dev/null || echo 0)
     echo "filter $v: |column 3| < $BAND keeps $kept rows, $past past it" | tee -a "$OUT/filter.txt"
-    sha256sum "$OUT/pool.tsv.$v" | cut -d' ' -f1 > "$OUT/pool.tsv.$v.done"
+    write_marker "pool.tsv.$v" || return 1
   done
 }
 
 split_stage() {
-  local v
-  for v in $VIEWS_ALL; do
-    [[ -f "$OUT/pool.tsv.$v.done" ]] || { say "refused: run filter first"; return 1; }
-  done
+  needs verify.txt $view_markers || return 1
   if [[ -f "$OUT/split.txt" ]] && [[ -f "$OUT/pool.tsv.qs.validation" ]]; then
     say "split before"; cat "$OUT/split.txt"; return 0
   fi
@@ -324,6 +432,7 @@ split_stage() {
 sample() {
   local rows
   [[ -f "$OUT/pool.tsv.qs.train" ]] || { say "refused: run split first"; return 1; }
+  needs verify.txt $view_markers split.txt || return 1
   if [[ -f "$OUT/corpus.tsv.done" ]]; then say "sampled before"; return 0; fi
   python3 "$capacity_helper" capacity --in "$OUT/pool.tsv.qs.train" \
       --validation "$OUT/pool.tsv.qs.validation" --validation "$OUT/pool.tsv.root.validation" \
@@ -337,11 +446,11 @@ sample() {
       --validation "$OUT/pool.tsv.pv.validation" --rows "$rows" --per-game "$PER_GAME" \
       --seed 1 --out "$OUT/corpus.tsv" | tee "$OUT/sample.txt"
   (( PIPESTATUS[0] == 0 )) || { say "the sample refused"; return 1; }
-  sha256sum "$OUT/corpus.tsv" | cut -d' ' -f1 > "$OUT/corpus.tsv.done"
+  write_marker corpus.tsv
 }
 
 k_stage() {
-  [[ -f "$OUT/corpus.tsv.done" ]] || { say "refused: run sample first"; return 1; }
+  needs verify.txt $view_markers split.txt corpus.tsv.done || return 1
   if [[ -s "$OUT/k.txt" ]]; then say "K before: $(cat "$OUT/k.txt")"; return 0; fi
   [[ -x "$tuner" ]] || { say "no tuner at $tuner"; return 1; }
   # A free set the tuner accepts, S122's groups: K is fitted at the shipped
@@ -358,6 +467,7 @@ k_stage() {
 
 record() {
   local v
+  needs verify.txt $view_markers split.txt corpus.tsv.done k.txt || return 1
   [[ -s "$OUT/k.txt" ]] || { say "refused: run k first"; return 1; }
   {
     echo "S122 prepared corpus, $(date -Iseconds)"
@@ -374,6 +484,145 @@ record() {
     echo "S122-PREPARED"
   } > "$OUT/prepared.txt"
   cat "$OUT/prepared.txt"
+}
+
+# adopt's checks of corpus.tsv.done's preparation beyond its own file (finding 3 of S333's
+# fast check): the records it rests on are present and agree with the files now.
+adopt_corpus() {
+  local p v recorded ok=1 prep="$OUT/prepared.txt"
+  for p in $view_markers split.txt prepared.txt k.txt; do
+    [[ -f "$OUT/$p" ]] || { say "refused: no $OUT/$p, so corpus.tsv's preparation cannot be read"; ok=0; }
+  done
+  (( ok )) || return 1
+  if [[ "$(sed -n 's/^pool //p' "$prep")" != "$POOL" ]] ||
+     [[ "$(sed -n 's/^sha256 //p' "$prep")" != "$(head -n 1 "$OUT/corpus.tsv.done")" ]]; then
+    say "refused: $prep does not name $POOL and corpus.tsv's sha256"
+    ok=0
+  fi
+  for v in $VIEWS_ALL; do
+    recorded=$(awk -v v="$v" '$1 == "view" && $2 == v { print $4 }' "$prep")
+    if [[ -z "$recorded" || "$recorded" != "$(sha256sum "$OUT/pool.tsv.$v.validation" 2>/dev/null | cut -d' ' -f1)" ]]; then
+      say "refused: $prep's $v view sha256 '${recorded:-none}' is not $OUT/pool.tsv.$v.validation's"
+      ok=0
+    elif [[ "$OUT/pool.tsv.$v.validation" -ot "$POOL/generate.log" ]]; then
+      say "refused: $OUT/pool.tsv.$v.validation is older than $POOL/generate.log, so it was not made from this pool"
+      ok=0
+    fi
+  done
+  if [[ "$(sed -n 's/^k //p' "$prep")" != "$(cat "$OUT/k.txt")" ]]; then
+    say "refused: $prep's k '$(sed -n 's/^k //p' "$prep")' is not $OUT/k.txt's '$(cat "$OUT/k.txt")'"
+    ok=0
+  fi
+  (( ok ))
+}
+
+# S333: a preparation made before S333, its verify.txt and markers naming no pool,
+# stamped with POOL's, so the stages read it again. Nothing is written until every
+# check has passed:
+#   - POOL's log passes verify's checks of it (check_pool_log);
+#   - verify.txt's pool lines are POOL's log's, and the sha256 it records of each view
+#     is POOL's view's now;
+#   - each marker's first line is its file's sha256, and the file is no older than
+#     POOL/generate.log;
+#   - each filter marker's file is the band filter of POOL's view now: the filter run
+#     again into sha256sum, written nowhere;
+#   - for corpus.tsv.done: the view markers, split.txt, prepared.txt and k.txt are
+#     present; prepared.txt names POOL and corpus.tsv's sha256; the sha256 of each held-out
+#     view it records is that .validation file's now, and the file is no older than
+#     POOL/generate.log; its `k` is k.txt's.
+# Not checked: the training views and split.txt's contents, and that the split and the
+# sample were drawn from these files, since recomputing them would be the preparation
+# run again. No stage after `sample` reads the training views; the screen reads
+# corpus.tsv, the held-out views and K, through prepared.txt.
+# Then each file named takes a `pool` line, as verify and the stages write it, and an
+# `adopted` line, so a stamp is told from a stage's; by way of a .tmp renamed. A file
+# already naming POOL's pool is left; one naming another is refused, never restamped.
+adopt() {
+  local now v name file named recorded failed=0 stamp="" when
+  check_pool_log || { say "refused: $POOL fails verify's checks of its log, so nothing is adopted by it"; return 1; }
+  now=$(sha256sum "$POOL/generate.log" | cut -d' ' -f1)
+  [[ -f "$OUT/verify.txt" ]] || { say "refused: no $OUT/verify.txt: no preparation to adopt"; return 1; }
+  for name in verify.txt $markers; do
+    [[ -f "$OUT/$name" ]] || continue
+    named=$(named_pool "$OUT/$name")
+    if [[ -z "$named" ]]; then
+      stamp+=" $name"
+    elif [[ "$named" == "$now" ]]; then
+      say "adopt     $name names this pool already"
+    else
+      say "refused: $OUT/$name names the pool whose generate.log has sha256 $named, not $POOL's $now: never restamped"
+      failed=1
+    fi
+  done
+  (( failed == 0 )) || return 1
+  [[ -n "$stamp" ]] || { say "adopt     nothing to stamp"; return 0; }
+
+  if [[ " $stamp " == *" verify.txt "* ]]; then
+    if diff <(sed 1d "$OUT/verify.txt" | grep -vE '^(pool|view|adopted) ') <(pool_lines) > /dev/null; then
+      say "adopt     verify.txt's pool lines are $POOL/generate.log's"
+    else
+      say "refused: $OUT/verify.txt's pool lines are not $POOL/generate.log's"
+      failed=1
+    fi
+    for v in $VIEWS_ALL; do
+      recorded=$(sed -n "s/^view $v: .*, sha256 \([0-9a-f]\{64\}\)$/\1/p" "$OUT/verify.txt")
+      if [[ -n "$recorded" && "$recorded" == "$(sha256sum "$POOL/pool.tsv.$v" | cut -d' ' -f1)" ]]; then
+        say "adopt     verify.txt's $v view is $POOL/pool.tsv.$v, by sha256"
+      else
+        say "refused: $OUT/verify.txt's $v view sha256 '${recorded:-none}' is not $POOL/pool.tsv.$v's"
+        failed=1
+      fi
+    done
+  fi
+  for name in $stamp; do
+    [[ "$name" != verify.txt ]] || continue
+    file="$OUT/${name%.done}"
+    if [[ ! -f "$file" || "$(head -n 1 "$OUT/$name")" != "$(sha256sum "$file" | cut -d' ' -f1)" ]]; then
+      say "refused: $file is not the file its marker $name records"
+      failed=1
+      continue
+    fi
+    if [[ "$file" -ot "$POOL/generate.log" ]]; then
+      say "refused: $file is older than $POOL/generate.log, so it was not made from this pool"
+      failed=1
+      continue
+    fi
+    case "$name" in
+      pool.tsv.*.done)
+        v=${name#pool.tsv.}
+        v=${v%.done}
+        recorded=$(awk -F'\t' -v band="$BAND" -v keep=/dev/stdout -v past=/dev/null "$band_filter" \
+                     "$POOL/pool.tsv.$v" | sha256sum | cut -d' ' -f1)
+        if [[ "$recorded" == "$(head -n 1 "$OUT/$name")" ]]; then
+          say "adopt     $file is the band filter of $POOL/pool.tsv.$v, recomputed"
+        else
+          say "refused: $file is not the band filter of $POOL/pool.tsv.$v, recomputed: sha256 $recorded"
+          failed=1
+        fi
+        ;;
+      corpus.tsv.done)
+        if ! adopt_corpus; then
+          failed=1
+        else
+          say "adopt     $file is its marker's and prepared.txt's, as are the three held-out views and K, each made after the pool's log; the split and the sample are not recomputed"
+        fi
+        ;;
+    esac
+  done
+  (( failed == 0 )) || return 1
+  if [[ "${ADOPT_DRY:-0}" == 1 ]]; then
+    say "adopt     ADOPT_DRY=1: every check passed; would stamp$stamp; nothing written"
+    return 0
+  fi
+  when=$(date -Iseconds)
+  for name in $stamp; do
+    {
+      if [[ "$name" == verify.txt ]]; then cat "$OUT/$name"; else head -n 1 "$OUT/$name"; fi
+      binary_line pool "$POOL/generate.log"
+      echo "adopted   $when by S122_corpus.sh adopt (S333), after its checks"
+    } > "$OUT/$name.tmp" && mv "$OUT/$name.tmp" "$OUT/$name" || return 1
+    say "adopt     stamped $OUT/$name"
+  done
 }
 
 # DEC-296's form, S082_recipe.sh's `merge` for this pool. The pool datagen was writing
@@ -621,22 +870,175 @@ all_stages() {
   verify && filter && split_stage && sample && k_stage && record
 }
 
-# The six stages on a slice of the 12000-game sample's pool, under 20000 rows a view.
-smoke() {
-  local src="$TUNING/s122/smoke" slice games
-  OUT="$TUNING/s122/phase1/corpus_smoke"
-  rm -rf "$OUT"; mkdir -p "$OUT/pool" || return 1
-  slice="$OUT/pool"
-  # The first games whose root rows stay under 20000; every view cut to them.
-  games=$(awk -F'\t' '{ if (!($5 in seen)) { if (NR > 19000) exit; seen[$5] = 1; print $5 } }' \
+# A slice of SRC into DIR: the games whose first root row is in rows (LO, HI] of
+# SRC/pool.tsv.root, every row of them in every view, and a log of SRC's own lines.
+smoke_slice() {
+  local src="$1" lo="$2" hi="$3" dir="$4" games v
+  mkdir -p "$dir" || return 1
+  games=$(awk -F'\t' -v lo="$lo" -v hi="$hi" \
+            '{ if (!($5 in seen)) { if (NR > hi) exit; seen[$5] = 1; if (NR > lo) print $5 } }' \
             "$src/pool.tsv.root" | sort -n | tr '\n' ' ')
+  [[ -n "${games// /}" ]] || { say "no game starts in rows ($lo, $hi] of $src/pool.tsv.root"; return 1; }
   for v in $VIEWS_ALL; do
     [[ -f "$src/pool.tsv.$v" ]] || { say "no $src/pool.tsv.$v"; return 1; }
-    awk -F'\t' -v keep=" $games" 'index(keep, " " $5 " ") > 0' "$src/pool.tsv.$v" > "$slice/pool.tsv.$v"
+    awk -F'\t' -v keep=" $games" 'index(keep, " " $5 " ") > 0' "$src/pool.tsv.$v" > "$dir/pool.tsv.$v"
   done
-  printf 'smoke slice of %s\nS122-CORPUS-DONE\n' "$src" > "$slice/generate.log"
-  POOL="$slice"; VALIDATION_GAMES=20; GAMES=12000
-  all_stages
+  {
+    echo "S122 corpus smoke: the games of $src whose first root row is in rows ($lo, $hi], every row of them; the lines below are $src/generate.log's, for its whole run"
+    grep -E '^(engine|datagen|command|repetition)' "$src/generate.log"
+    echo "S122-CORPUS-DONE"
+  } > "$dir/generate.log"
+}
+
+# Every file under DIR by sha256.
+smoke_manifest() { (cd "$1" && find . -type f -print0 | sort -z | xargs -0 -r sha256sum); }
+
+# The cases' setups, each given the case's directory C, writing C/prepared and, for a
+# pool of the case's own, C/pool. They are this script's functions, whatever
+# SMOKE_AGAINST is.
+smoke_copy() { find "$OUT" -maxdepth 1 -type f -exec cp -p -t "$1/prepared" {} +; }
+# verify.txt naming the swap and the markers A: the markers' refusal alone. A plant,
+# since verify no longer writes over another pool's preparation.
+smoke_verify_swap() {
+  smoke_copy "$1" && sed -i "s|^pool  *sha256 .*|$(binary_line pool "$smoke_b/generate.log")|" "$1/prepared/verify.txt" &&
+    [[ "$(named_pool "$1/prepared/verify.txt")" == "$(sha256sum "$smoke_b/generate.log" | cut -d' ' -f1)" ]]
+}
+# Every marker and verify.txt removed by hand, the split and the sample left.
+smoke_unmarked() { smoke_copy "$1" && (cd "$1/prepared" && rm verify.txt $markers); }
+smoke_verify_only() { cp -p "$OUT/verify.txt" "$1/prepared/"; }
+# A preparation as the stages wrote it before S333: markers of one line, no pool line.
+smoke_old_form() {
+  local name
+  smoke_copy "$1" || return 1
+  for name in $markers; do
+    head -n 1 "$1/prepared/$name" > "$1/prepared/$name.tmp" && mv "$1/prepared/$name.tmp" "$1/prepared/$name" || return 1
+  done
+  grep -v '^pool ' "$1/prepared/verify.txt" > "$1/prepared/verify.txt.tmp" &&
+    mv "$1/prepared/verify.txt.tmp" "$1/prepared/verify.txt"
+}
+smoke_old_tampered() { smoke_old_form "$1" && echo >> "$1/prepared/pool.tsv.qs"; }
+# The file and its marker agree, and the file is not the pool's filter.
+smoke_old_forged() {
+  smoke_old_form "$1" && sed -i '$d' "$1/prepared/pool.tsv.root" &&
+    sha256sum "$1/prepared/pool.tsv.root" | cut -d' ' -f1 > "$1/prepared/pool.tsv.root.done"
+}
+smoke_old_aged() { smoke_old_form "$1" && touch -d '2000-01-01T00:00:00' "$1/prepared/corpus.tsv"; }
+smoke_old_adopted() { smoke_old_form "$1" && ( POOL="$smoke_a"; OUT="$1/prepared"; adopt ); }
+smoke_old_prepared_sha() {
+  smoke_old_form "$1" && sed -i 's/^sha256 .*/sha256 0000000000000000000000000000000000000000000000000000000000000000/' "$1/prepared/prepared.txt"
+}
+smoke_old_validation() { smoke_old_form "$1" && echo >> "$1/prepared/pool.tsv.qs.validation"; }
+smoke_old_no_prepared() { smoke_old_form "$1" && rm "$1/prepared/prepared.txt"; }
+smoke_old_k() { smoke_old_form "$1" && echo 9.9999 > "$1/prepared/k.txt"; }
+# C/pool: A's views, its log edited by EDIT (a sed program) and given A's log's mtime, so
+# only the edit tells the two apart.
+smoke_own_pool() {
+  mkdir "$1/pool" && cp -p "$smoke_a"/pool.tsv.* "$1/pool/" &&
+    sed "$2" "$smoke_a/generate.log" > "$1/pool/generate.log" &&
+    ! cmp -s "$smoke_a/generate.log" "$1/pool/generate.log" &&
+    touch -r "$smoke_a/generate.log" "$1/pool/generate.log"
+}
+smoke_old_pool_lines() { smoke_old_form "$1" && smoke_own_pool "$1" 's/^command .*/& --edited/'; }
+smoke_old_pre_s331() { smoke_old_form "$1" && smoke_own_pool "$1" '/^repetition: /d'; }
+# A one-run pool written before S331: the slice's log without its `repetition:` line.
+smoke_pre_s331() {
+  mkdir "$1/pool" && cp -p "$smoke_a"/pool.tsv.* "$1/pool/" &&
+    grep -q '^repetition: ' "$smoke_a/generate.log" &&
+    grep -v '^repetition: ' "$smoke_a/generate.log" > "$1/pool/generate.log"
+}
+
+# One case, OUT/cases/NAME: SETUP builds it, then STAGE runs as a child of
+# smoke_against on POOL (A the slice, B the swap, own the case's) with EXTRA in its
+# environment. `refused` asks for -FAILED and prepared/ unchanged, `passes` for -DONE,
+# `unchanged` for both; and each REGEX printed. Counted in the caller's n and bad.
+smoke_case() {
+  local name="$1" expect="$2" pool="$3" setup="$4" stage="$5" extra="$6" c="$OUT/cases/$1"
+  local out last before after re ok=1
+  shift 6
+  n=$(( n + 1 ))
+  case "$pool" in
+    A) pool="$smoke_a" ;;
+    B) pool="$smoke_b" ;;
+    own) pool="$c/pool" ;;
+  esac
+  rm -rf "$c"; mkdir -p "$c/prepared" || { bad=$(( bad + 1 )); return 1; }
+  if ! ( "$setup" "$c" ) > "$c/setup.txt" 2>&1; then
+    say "smoke case $name: FAILED, its setup $setup failed: $(tail -n 1 "$c/setup.txt")"
+    bad=$(( bad + 1 ))
+    return 1
+  fi
+  before=$(smoke_manifest "$c/prepared" "$stage")
+  # shellcheck disable=SC2086
+  out=$(env $extra POOL="$pool" OUT="$c/prepared" TUNING="$TUNING" GAMES="$GAMES" \
+          VALIDATION_GAMES="$VALIDATION_GAMES" bash "$smoke_against" "$stage" 2>&1)
+  printf '%s\n' "$out" > "$c/console.txt"
+  last=$(tail -n 1 <<< "$out")
+  after=$(smoke_manifest "$c/prepared" "$stage")
+  case "$expect" in
+    refused) [[ "$last" == "S122-CORPUS-${stage^^}-FAILED" && "$before" == "$after" ]] || ok=0 ;;
+    passes) [[ "$last" == "S122-CORPUS-${stage^^}-DONE" ]] || ok=0 ;;
+    unchanged) [[ "$last" == "S122-CORPUS-${stage^^}-DONE" && "$before" == "$after" ]] || ok=0 ;;
+  esac
+  for re in "$@"; do grep -qE -- "$re" <<< "$out" || ok=0; done
+  if (( ok )); then
+    say "smoke case $name: $expect, as it must be: $(grep -m 1 -E -- "$1" <<< "$out")"
+  else
+    say "smoke case $name: FAILED: expected $expect, the stage ended '$last'$([[ "$before" == "$after" ]] || echo ', and prepared/ changed')"
+    bad=$(( bad + 1 ))
+    return 1
+  fi
+}
+
+# The six stages on a slice of S331's measured run (S333; until then the research
+# pass's sample, a pool before S331, which verify now refuses), under 20000 rows a
+# view; then S333's refusals, each on its own copy under OUT/cases, run as a child of
+# SMOKE_AGAINST, by default this script: given the script before S333, each refusal, and
+# adopt itself, is missing, the red. The two controls, control_all and adopted_reads, pass
+# under either.
+smoke() {
+  local src="$TUNING/s331/measure" played n=0 bad=0
+  local marker_swap='pool\.tsv\.(root|qs|pv)\.done was prepared from the pool'
+  local corpus_swap='corpus\.tsv\.done was prepared from the pool'
+  smoke_against="${SMOKE_AGAINST:-$self}"
+  OUT="$TUNING/s122/phase1/corpus_smoke"
+  rm -rf "$OUT"; mkdir -p "$OUT" || return 1
+  [[ -f "$src/generate.log" ]] || { say "no $src/generate.log"; return 1; }
+  played=$(sed -n 's/^datagen: \([0-9][0-9]*\) games, .*/\1/p' "$src/generate.log" | head -n 1)
+  [[ -n "$played" ]] || { say "no datagen settings line in $src/generate.log"; return 1; }
+  smoke_a="$OUT/pool"
+  smoke_b="$OUT/swap"
+  smoke_slice "$src" 0 19000 "$smoke_a" || return 1
+  smoke_slice "$src" 19000 38000 "$smoke_b" || return 1
+  POOL="$smoke_a"; VALIDATION_GAMES=20; GAMES="$played"
+  all_stages || return 1
+  say "smoke     the six stages passed on $smoke_a; the swap is $smoke_b; the cases are run by $smoke_against"
+  smoke_case control_all passes A smoke_copy all "" 'filtered before' 'split before' 'sampled before' 'K before'
+  smoke_case verify_no_repetition refused own smoke_pre_s331 verify "" "has no 'repetition:' line: its datagen predates S331"
+  smoke_case all_swapped refused B smoke_copy all "" "$marker_swap"
+  smoke_case filter_swapped refused B smoke_verify_swap filter "" "$marker_swap"
+  smoke_case split_swapped refused B smoke_verify_swap split "" "$marker_swap"
+  smoke_case sample_swapped refused B smoke_verify_swap sample "" "$corpus_swap"
+  smoke_case k_swapped refused B smoke_verify_swap k "" "$corpus_swap"
+  smoke_case record_swapped refused B smoke_verify_swap record "" "$corpus_swap"
+  smoke_case filter_unverified refused B smoke_verify_only filter "" 'verify\.txt was prepared from the pool'
+  smoke_case old_marker refused A smoke_old_form filter "" 'pool\.tsv\.root\.done names no pool: written before S333'
+  smoke_case adopt_dry unchanged A smoke_old_form adopt ADOPT_DRY=1 'every check passed; would stamp verify\.txt'
+  smoke_case adopt passes A smoke_old_form adopt "" 'stamped .*/corpus\.tsv\.done' 'is the band filter of .*/pool\.tsv\.pv, recomputed'
+  smoke_case adopted_reads passes A smoke_old_adopted k "" 'K before'
+  smoke_case adopt_swapped refused B smoke_old_form adopt "" "verify\.txt's root view sha256 .* is not"
+  smoke_case adopt_tampered refused A smoke_old_tampered adopt "" 'pool\.tsv\.qs is not the file its marker'
+  smoke_case adopt_forged refused A smoke_old_forged adopt "" 'pool\.tsv\.root is not the band filter'
+  smoke_case adopt_aged refused A smoke_old_aged adopt "" 'corpus\.tsv is older than'
+  smoke_case adopt_restamp refused B smoke_copy adopt "" 'names the pool whose generate\.log has sha256 .*never restamped'
+  smoke_case adopt_pool_lines refused own smoke_old_pool_lines adopt "" "verify\.txt's pool lines are not .*generate\.log's"
+  smoke_case adopt_prepared_sha refused A smoke_old_prepared_sha adopt "" "prepared\.txt does not name .* and corpus\.tsv's sha256"
+  smoke_case adopt_pre_s331 refused own smoke_old_pre_s331 adopt "" "has no 'repetition:' line: its datagen predates S331"
+  smoke_case adopt_validation refused A smoke_old_validation adopt "" "prepared\.txt's qs view sha256 .* is not .*/pool\.tsv\.qs\.validation's"
+  smoke_case adopt_no_prepared refused A smoke_old_no_prepared adopt "" "no .*/prepared\.txt, so corpus\.tsv's preparation cannot be read"
+  smoke_case adopt_k refused A smoke_old_k adopt "" "prepared\.txt's k '[0-9.]+' is not .*/k\.txt's '9\.9999'"
+  smoke_case sample_unmarked refused B smoke_unmarked sample "" 'no .*/verify\.txt: run verify first'
+  say "smoke     $n cases, $(( n - bad )) as they must be, $bad not"
+  (( bad == 0 ))
 }
 
 # `seeds` writes nothing, and runs before the void outputs are moved and after.
@@ -652,6 +1054,7 @@ case "$stage" in
   k) if k_stage; then echo "S122-CORPUS-K-DONE"; else echo "S122-CORPUS-K-FAILED"; exit 1; fi ;;
   record) if record; then echo "S122-CORPUS-RECORD-DONE"; else echo "S122-CORPUS-RECORD-FAILED"; exit 1; fi ;;
   all) if all_stages; then echo "S122-CORPUS-ALL-DONE"; else echo "S122-CORPUS-ALL-FAILED"; exit 1; fi ;;
+  adopt) if adopt; then echo "S122-CORPUS-ADOPT-DONE"; else echo "S122-CORPUS-ADOPT-FAILED"; exit 1; fi ;;
   smoke) if smoke; then echo "S122-CORPUS-SMOKE-DONE"; else echo "S122-CORPUS-SMOKE-FAILED"; exit 1; fi ;;
-  *) echo "usage: $0 seeds | merge | verify | filter | split | sample | k | record | all | smoke" >&2; exit 2 ;;
+  *) echo "usage: $0 seeds | merge | verify | filter | split | sample | k | record | all | adopt | smoke" >&2; exit 2 ;;
 esac

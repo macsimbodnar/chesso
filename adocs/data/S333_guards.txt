@@ -1,0 +1,232 @@
+S333's guards, 2026-11-06, after the coordinator's fast check: the main tree at 9daee21 with S333's working tree, the machine otherwise idle.
+adocs/data/S122_corpus.sh sha256 bde5e4857c10611e9a2533e9ece1cb65d7e17457864bb91b874baaea9b26d8da,
+adocs/data/S333_guards.sh sha256 adadcdd273571954e20603248f1f96c1a2eba732e3b8211251cc5b146ef14a86.
+Scratch S = /home/max/ws/chesso/.tuning/s333; the smoke's OUT is S/tuning/s122/phase1/corpus_smoke.
+The first delivery's readings (18 cases, S122_corpus.sh f0073953...) are replaced by these; the step file keeps their account.
+
+== adocs/data/S333_guards.sh red     (the smoke, its cases run by 9daee21's S122_corpus.sh: the red)
+script    adocs/data/S122_corpus.sh, sha256 bde5e4857c10611e9a2533e9ece1cb65d7e17457864bb91b874baaea9b26d8da
+red       the cases run by 9daee21's S122_corpus.sh, sha256 5a5faf7d99ef14d09df8ede915fa6c8fb722b8f2dc7724402137b7fa9a795617
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh
+smoke case control_all: passes, as it must be: root filtered before
+smoke case verify_no_repetition: FAILED: expected refused, the stage ended 'S122-CORPUS-VERIFY-DONE', and prepared/ changed
+smoke case all_swapped: FAILED: expected refused, the stage ended 'S122-CORPUS-ALL-DONE', and prepared/ changed
+smoke case filter_swapped: FAILED: expected refused, the stage ended 'S122-CORPUS-FILTER-DONE'
+smoke case split_swapped: FAILED: expected refused, the stage ended 'S122-CORPUS-SPLIT-DONE'
+smoke case sample_swapped: FAILED: expected refused, the stage ended 'S122-CORPUS-SAMPLE-DONE'
+smoke case k_swapped: FAILED: expected refused, the stage ended 'S122-CORPUS-K-DONE'
+smoke case record_swapped: FAILED: expected refused, the stage ended 'S122-CORPUS-RECORD-DONE', and prepared/ changed
+smoke case filter_unverified: FAILED: expected refused, the stage ended 'S122-CORPUS-FILTER-DONE', and prepared/ changed
+smoke case old_marker: FAILED: expected refused, the stage ended 'S122-CORPUS-FILTER-DONE'
+smoke case adopt_dry: FAILED: expected unchanged, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt: FAILED: expected passes, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopted_reads: passes, as it must be: K before: 1.2376
+smoke case adopt_swapped: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_tampered: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_forged: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_aged: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_restamp: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_pool_lines: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_prepared_sha: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_pre_s331: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_validation: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_no_prepared: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case adopt_k: FAILED: expected refused, the stage ended 'usage: /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh seeds | merge | verify | filter | split | sample | k | record | all | smoke'
+smoke case sample_unmarked: FAILED: expected refused, the stage ended 'S122-CORPUS-SAMPLE-DONE', and prepared/ changed
+smoke     25 cases, 2 as they must be, 23 not
+red       the smoke's last line: S122-CORPUS-SMOKE-FAILED
+S333-GUARDS-RED-DONE
+
+== adocs/data/S333_guards.sh green   (the smoke as it stands)
+script    adocs/data/S122_corpus.sh, sha256 bde5e4857c10611e9a2533e9ece1cb65d7e17457864bb91b874baaea9b26d8da
+rows 6323
+games 139
+k 1.2376
+S122-PREPARED
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/S122_corpus.sh
+smoke case control_all: passes, as it must be: root filtered before
+smoke case verify_no_repetition: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/verify_no_repetition/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case all_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/all_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case filter_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/filter_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case split_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/split_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case sample_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/sample_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case k_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/k_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case record_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/record_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case filter_unverified: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/filter_unverified/prepared/verify.txt was prepared from the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, and /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/generate.log's is ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: another pool's preparation
+smoke case old_marker: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/old_marker/prepared/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+smoke case adopt_dry: unchanged, as it must be: adopt     ADOPT_DRY=1: every check passed; would stamp verify.txt pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done corpus.tsv.done; nothing written
+smoke case adopt: passes, as it must be: adopt     stamped /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt/prepared/corpus.tsv.done
+smoke case adopted_reads: passes, as it must be: K before: 1.2376
+smoke case adopt_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_swapped/prepared/verify.txt's root view sha256 'ad938191093a6daf283be41611f812cd7c093df401088c071bc5cbb72813b3ed' is not /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap/pool.tsv.root's
+smoke case adopt_tampered: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_tampered/prepared/pool.tsv.qs is not the file its marker pool.tsv.qs.done records
+smoke case adopt_forged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_forged/prepared/pool.tsv.root is not the band filter of /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/pool/pool.tsv.root, recomputed: sha256 591df5dc022d2fe8d59187c226141eff1ae76fffa50fc468c79062907d0e6f36
+smoke case adopt_aged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_aged/prepared/corpus.tsv is older than /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/pool/generate.log, so it was not made from this pool
+smoke case adopt_restamp: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_restamp/prepared/verify.txt names the pool whose generate.log has sha256 90d1bbca053747e56ff8f63d2a5fd06f403fd556322e2e7aedff7657632b8269, not /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/swap's ee3b7c3e358e00018e0d4e13387f87e1311b015b5df2e24d9f01cbb26e3a89bf: never restamped
+smoke case adopt_pool_lines: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/prepared/verify.txt's pool lines are not /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/pool/generate.log's
+smoke case adopt_prepared_sha: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_prepared_sha/prepared/prepared.txt does not name /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/pool and corpus.tsv's sha256
+smoke case adopt_pre_s331: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_pre_s331/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case adopt_validation: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/prepared.txt's qs view sha256 '5fc7e77beb639b4ae171edc14e4460ecd0001d5e5111b9067d09231b32af90b4' is not /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/pool.tsv.qs.validation's
+smoke case adopt_no_prepared: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_no_prepared/prepared/prepared.txt, so corpus.tsv's preparation cannot be read
+smoke case adopt_k: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/prepared.txt's k '1.2376' is not /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/k.txt's '9.9999'
+smoke case sample_unmarked: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s333/tuning/s122/phase1/corpus_smoke/cases/sample_unmarked/prepared/verify.txt: run verify first
+smoke     25 cases, 25 as they must be, 0 not
+green     the smoke's last line: S122-CORPUS-SMOKE-DONE
+S333-GUARDS-GREEN-DONE
+
+== adocs/data/S333_guards.sh mutants (the smoke by copies with one check broken each)
+script    adocs/data/S122_corpus.sh, sha256 bde5e4857c10611e9a2533e9ece1cb65d7e17457864bb91b874baaea9b26d8da
+mutant    verify_stamp, sha256 284e43eb7a5704f3a4c56b34deabe34f729a54cadadaa77c620cf1d239d69581, must be killed by adopted_reads:
+  smoke case adopted_reads: FAILED: expected passes, the stage ended 'S122-CORPUS-K-FAILED'
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    verify_stamp killed by adopted_reads alone
+mutant    pool_lines, sha256 bd6cf46425583bd16d64cffa625b9b845248ec834e5153caa20839fce4e9d7a5, must be killed by adopt_pool_lines:
+  smoke case adopt_pool_lines: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-FAILED'
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    pool_lines killed by adopt_pool_lines alone
+mutant    prepared_sha, sha256 c35d2d2394c45330763a4d8bce6c787f855f0b5d206187816d3986e629655ee4, must be killed by adopt_prepared_sha:
+  smoke case adopt_prepared_sha: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-DONE', and prepared/ changed
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    prepared_sha killed by adopt_prepared_sha alone
+mutant    pool_log, sha256 a193e13267cd45930144b0fac856dc3fbf533b5ba381b6cd193f7a7ef28b351f, must be killed by adopt_pre_s331:
+  smoke case adopt_pre_s331: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-FAILED'
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    pool_log killed by adopt_pre_s331 alone
+mutant    prepared_view, sha256 2f6c51326808da04d925e8fec74de8aa80ae1b3861eae59826b4f8f538f3b471, must be killed by adopt_validation:
+  smoke case adopt_validation: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-DONE', and prepared/ changed
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    prepared_view killed by adopt_validation alone
+mutant    no_prepared, sha256 d1233567b509a442a2d1a3cb440a3092e9b77902d26aef08286d151e22c62e5b, must be killed by adopt_no_prepared:
+  smoke case adopt_no_prepared: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-FAILED'
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    no_prepared killed by adopt_no_prepared alone
+mutant    k, sha256 09c3ec4842fc5e7b03908774c28dce0eeb01a41d51ea90e7965516d26f9701fe, must be killed by adopt_k:
+  smoke case adopt_k: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-DONE', and prepared/ changed
+  smoke     25 cases, 24 as they must be, 1 not
+mutant    k killed by adopt_k alone
+S333-GUARDS-MUTANTS-DONE
+
+== adocs/data/S333_guards.sh real    (.tuning/s122/prepared mirrored, read and adopted in the mirror)
+script    adocs/data/S122_corpus.sh, sha256 bde5e4857c10611e9a2533e9ece1cb65d7e17457864bb91b874baaea9b26d8da
+real      /home/max/ws/chesso/.tuning/s122/prepared, prepared from /home/max/ws/chesso/.tuning/s122/corpus, mirrored; no stage runs on it
+real      the mirror /home/max/ws/chesso/.tuning/s333/real_mirror: copies of the files under 1 MB, links to the rest
+  verify  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  verify  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  verify  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  verify  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  verify  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  verify  S122-CORPUS-VERIFY-FAILED
+  filter  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  filter  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  filter  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  filter  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  filter  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  filter  S122-CORPUS-FILTER-FAILED
+  split  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  split  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  split  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  split  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  split  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  split  S122-CORPUS-SPLIT-FAILED
+  sample  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  sample  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  sample  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  sample  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  sample  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  sample  S122-CORPUS-SAMPLE-FAILED
+  k  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  k  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  k  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  k  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  k  refused: /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+  k  S122-CORPUS-K-FAILED
+real      the mirror is unchanged by the five refusals
+  adopt  adopt     verify.txt's pool lines are /home/max/ws/chesso/.tuning/s122/corpus/generate.log's
+  adopt  adopt     verify.txt's root view is /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.root, by sha256
+  adopt  adopt     verify.txt's qs view is /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.qs, by sha256
+  adopt  adopt     verify.txt's pv view is /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.pv, by sha256
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root is the band filter of /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.root, recomputed
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs is the band filter of /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.qs, recomputed
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv is the band filter of /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.pv, recomputed
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv is its marker's and prepared.txt's, as are the three held-out views and K, each made after the pool's log; the split and the sample are not recomputed
+  adopt  adopt     ADOPT_DRY=1: every check passed; would stamp verify.txt pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done corpus.tsv.done; nothing written
+  adopt  S122-CORPUS-ADOPT-DONE
+real      the mirror is unchanged by the dry run
+  adopt  adopt     verify.txt's pool lines are /home/max/ws/chesso/.tuning/s122/corpus/generate.log's
+  adopt  adopt     verify.txt's root view is /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.root, by sha256
+  adopt  adopt     verify.txt's qs view is /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.qs, by sha256
+  adopt  adopt     verify.txt's pv view is /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.pv, by sha256
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root is the band filter of /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.root, recomputed
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs is the band filter of /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.qs, recomputed
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv is the band filter of /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.pv, recomputed
+  adopt  adopt     /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv is its marker's and prepared.txt's, as are the three held-out views and K, each made after the pool's log; the split and the sample are not recomputed
+  adopt  adopt     stamped /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt
+  adopt  adopt     stamped /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.done
+  adopt  adopt     stamped /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.done
+  adopt  adopt     stamped /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.done
+  adopt  adopt     stamped /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv.done
+  adopt  S122-CORPUS-ADOPT-DONE
+  filter  root filtered before
+  filter  qs filtered before
+  filter  pv filtered before
+  filter  S122-CORPUS-FILTER-DONE
+  split  split before
+  split  split: seed 20261102, 150000 games, 12000 held out, game list sha256 50966110aa1700964c520d4280174bc5b89969c8fe4af3465376e720f32fb04d
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.validation: 1385493 rows, 12000 games, sha256 c2182a342c447b2b51310877fd981c96810a01c225335384ce753a5879aab28d
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.train: 15872237 rows, 138000 games, sha256 9c32436f6cdbf87de5c980e335b7b27d1fb3e413503c7f6b5b06856fa32e065a
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation: 1384182 rows, 12000 games, sha256 faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.train: 15857005 rows, 138000 games, sha256 d8107153e7bcf6637fabb3c1eaddc7fcfe153180ed55fe42c79272e8940ea760
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.validation: 1316166 rows, 12000 games, sha256 9d7d4df3657f2ab28a7e34cd536217e796a13d3adeece152bb3076575da86a36
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.train: 15077022 rows, 137994 games, sha256 5fd59034b0c674294bf130d16c810b66d8e580df41d969fe977b63c4380f90b2
+  split  S122-CORPUS-SPLIT-DONE
+  sample  sampled before
+  sample  S122-CORPUS-SAMPLE-DONE
+  k  K before: 1.2302
+  k  S122-CORPUS-K-DONE
+  record  S122 prepared corpus, 2026-11-06T13:08:25+01:00
+  record  corpus /home/max/ws/chesso/.tuning/s333/real_mirror/corpus.tsv
+  record  sha256 04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509
+  record  rows 6307294
+  record  games 137991
+  record  view qs /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.qs.validation faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb
+  record  view root /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.root.validation c2182a342c447b2b51310877fd981c96810a01c225335384ce753a5879aab28d
+  record  view pv /home/max/ws/chesso/.tuning/s333/real_mirror/pool.tsv.pv.validation 9d7d4df3657f2ab28a7e34cd536217e796a13d3adeece152bb3076575da86a36
+  record  k 1.2302
+  record  pool /home/max/ws/chesso/.tuning/s122/corpus
+  record  recipe filter |column 3| < 1000, split seed 20261102, 12000 games held out, 46 qs rows a game, sample seed 1
+  record  S122-PREPARED
+  record  S122-CORPUS-RECORD-DONE
+real      the mirror's verify.txt, its last lines:
+  view pv: 17909630 rows, 149994 games, 0 rows without seven fields, sha256 09a125c499d0c6a9e0eff6cbeb02899c0900052d38fd967bdb3c3fe2573afac9
+  pool      sha256 899cab6db82c99e613302b907b1b60828f8a02fbbabdd581eb1905992a6c802a  /home/max/ws/chesso/.tuning/s122/corpus/generate.log
+  adopted   2026-11-06T13:08:25+01:00 by S122_corpus.sh adopt (S333), after its checks
+real      the mirror's pool.tsv.root.done, its last lines:
+  2d69fd032138f9559b07cf84e2e73347a48a17439bd3ee0a1598d7e4ec14859c
+  pool      sha256 899cab6db82c99e613302b907b1b60828f8a02fbbabdd581eb1905992a6c802a  /home/max/ws/chesso/.tuning/s122/corpus/generate.log
+  adopted   2026-11-06T13:08:25+01:00 by S122_corpus.sh adopt (S333), after its checks
+real      the mirror's pool.tsv.qs.done, its last lines:
+  a9ddabd7322853747babc216ce920c45e263312fe33241d363de5d89e41e92c7
+  pool      sha256 899cab6db82c99e613302b907b1b60828f8a02fbbabdd581eb1905992a6c802a  /home/max/ws/chesso/.tuning/s122/corpus/generate.log
+  adopted   2026-11-06T13:08:25+01:00 by S122_corpus.sh adopt (S333), after its checks
+real      the mirror's pool.tsv.pv.done, its last lines:
+  1a56d2b3b5f57854079f7fcd9cf370f99850c7e5ef6d60da9703e1b0caac62e9
+  pool      sha256 899cab6db82c99e613302b907b1b60828f8a02fbbabdd581eb1905992a6c802a  /home/max/ws/chesso/.tuning/s122/corpus/generate.log
+  adopted   2026-11-06T13:08:25+01:00 by S122_corpus.sh adopt (S333), after its checks
+real      the mirror's corpus.tsv.done, its last lines:
+  04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509
+  pool      sha256 899cab6db82c99e613302b907b1b60828f8a02fbbabdd581eb1905992a6c802a  /home/max/ws/chesso/.tuning/s122/corpus/generate.log
+  adopted   2026-11-06T13:08:25+01:00 by S122_corpus.sh adopt (S333), after its checks
+real      record's prepared.txt in the mirror is the real one's but its date and its paths
+  verify  view root: 18786043 rows, 150000 games, 0 rows without seven fields, sha256 a0a36b5fae98c05f71ee6cf9d60b038ffffb8459ab259f844dbe716aba35e8f2
+  verify  view qs: 18768364 rows, 150000 games, 0 rows without seven fields, sha256 cdc26aeceeb2a27e0adeaa8ca082e598e27301ae8ea8b60c016629a94f9079fc
+  verify  view pv: 17909630 rows, 149994 games, 0 rows without seven fields, sha256 09a125c499d0c6a9e0eff6cbeb02899c0900052d38fd967bdb3c3fe2573afac9
+  verify  S122-CORPUS-VERIFY-DONE
+real      /home/max/ws/chesso/.tuning/s122/prepared's manifest is the same at the end as at the start, 39 lines
+real      92 s
+S333-GUARDS-REAL-DONE
+
+== adocs/data/S332_merge_smoke.sh runs|merge|cases, DIR in the session's scratchpad outside .tuning, against S122_corpus.sh bde5e485…
+runs: exit 0, S332-SMOKE-RUNS-DONE
+merge: exit 0, S332-SMOKE-MERGE-DONE
+cases: exit 0, S332-SMOKE-CASES-DONE
+case verify_games_changed: verify refused, check: pool/games.tsv's sha256 is not the one its merge wrote
+case verify_as_merged: verify passed, check: merged games, 60 lines of 60, sha256 the merge's, S122-CORPUS-VERIFY-DONE

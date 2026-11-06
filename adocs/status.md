@@ -7,6 +7,18 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06: S333 done; next S124 phase 2, the filler behind it
+
+**S333 is done (`plan_done/`), this commit.** Every record of S122's preparation names its pool; `verify` refuses a
+pool written before S331; `adopt` stamped `.tuning/s122/prepared/` in place after checking it, K 1.2302 as on record
+(old records in `.tuning/s333/prepared_backup/`). One fast check, its real finding fixed. Filed: S336, its two leftovers.
+
+**Order changed by the coordinator:** S124 phase 2 is first in Open, and S334, S335 and S336 run behind it as filler
+(DEC-171), one at a time, while its screen holds the machine.
+
+**Machine note:** plain `nohup setsid ... &` gives a dead `$!` under the harness's job control; `.moltke.local.md` and
+the watcher recipe now use `setsid -w`.
+
 ## 2026-11-06: S124 phase 1 landed at the identity; next S333
 
 **S124 phase 1 is in the tree** (this commit), `No functional change`, bench 4707943 in both builds.
