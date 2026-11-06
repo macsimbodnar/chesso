@@ -780,3 +780,15 @@ re-read on the landed tree, at its K and through its trace.
 - the search's distribution of the features;
 - cycles and nps: the cost rows are a sink's instructions;
 - every part's strength.
+
+## 2026-11-06: phase 1 starts, the coordinator
+
+Worktree `../chesso-s102p1`, branch `s102p1`, at `ef866de`. That tree has S124 phase 1 landed at its identity, and
+S124's screen is still running. One Opus 5.5 subagent builds the family at its identity under DEC-351:
+- seeds at zero, in no expression, INV-6 against the parent;
+- the trace and the tuner groups;
+- the pawnless-table test, red first;
+- the census, and each guard seen red on its plant.
+
+It runs no fit or match. If S124's candidate lands first, phase 1 rebases onto it, re-deriving its goldens, as S124 did
+onto S122.
