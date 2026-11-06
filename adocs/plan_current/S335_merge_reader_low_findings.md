@@ -7,7 +7,7 @@ decisions:  DEC-171, DEC-296, DEC-349
 closes:
 blocks:
 paused_by:
-author:
+author:     an Opus 5.5 subagent, briefed by the coordinator, 2026-11-06
 done:
 
 ## Why
