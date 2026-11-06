@@ -379,28 +379,27 @@ and rewriting `status.md` -- deliberately, in the completing commit.
 
 ## Done recently
 
+- S336  **a stage of S122's preparation drops every later stage's record when it makes its output, and `seeds` reads the corpus's own copied settings line as its own** -- `filter`, `split`, `sample`, `k` remove `split.txt`, `corpus.tsv.done`, `k.txt`, `prepared.txt` before writing; `split` refuses an unrecorded fixed set; `seeds` passes on the real tree (21 other runs) and refuses a planted range, a near copy and a copies-only listing; the stamped preparation reads clean in a mirror; smoke 35 of 35, 33 red at `9daee21`; one fast check, three lows fixed; filler (DEC-171)
 - S335  **S332's three low findings in the corpus merge and its reader are answered** -- a part-1 game with no row stays counted as the top-up books it (DEC-296), shown in no view and counted apart; `S331_measure.py read` refuses a non-number field on one line naming file and line; the interrupted-merge check tells a stop before the merger's rename from one after it, by real SIGKILL fixtures; S332's 15 cases, S333's 25 and S331's reading byte-equal; one fast check, two lows fixed; filler (DEC-171)
 - S334  **the ledger reads a verdict row's description from a recorded override where a closing commit's subject breaks its rule** -- `tools/ledger_overrides.tsv`, keyed by full sha, its one row `1ffc96e` -> "the king safety family"; refused when the sha closes no verdict, when the parser already reads the subject cleanly, or on a key that is not a full sha, each seen red; `--table` byte-equal but for the S122 row; 45 ledger tests; one fast check, three lows fixed; filler (DEC-171)
 - S333  **S122's corpus preparation names its pool in every record and refuses a pool written before S331** -- `verify` refuses a one-run pool with no `repetition:` line and an OUT holding another pool's preparation; every `.done` marker and `verify.txt` carry the pool's `generate.log` sha256, and `filter`, `split`, `sample`, `k` and `record` refuse a swap or a missing predecessor; `adopt` stamped the regenerated preparation in place after checking it (K 1.2302, as on record); smoke 25 of 25, 23 red on the parent's script, seven mutants killed; one fast check, its real finding fixed; filler (DEC-171), no `src/`
 - S332  **the `repetition:` check reads a full pool, one run or merged, without holding its rows** -- `S331_measure.py read` streams the three views keyed by game id: on S122's 150000-game pool read in place 75 s at 107628 kB peak resident (HEAD's reader hit `MemoryError` at 2 GiB), every figure equal to the log's `repetition:` line; `S122_corpus.sh merge` writes the merged games file and one combined line, or `repetition incomplete:` after a power loss with `read` refusing the partial check; 15 smoke cases, S331's 2400-game reading and a 324-game opening subset byte-equal to HEAD's reader; one fast check, its regression fixed; filler (DEC-171), no `src/`
-- S122  **king safety becomes a fitted family: safe checks, weak squares, the storm and a curve, at a margin re-sized from its own spread** -- fitted on S122's own corpus (137991 games, 6307294 rows, DEC-344 (1), DEC-349); the screen kept P1, P2, P4, P5 and dropped P3 and P6, the side sample stopped P7 and DEC-353 named `1245` at margin 275 (184 -> 275, the clamp binding 0.153 % against 1.0 %); DEC-352's re-read at K refit 1.2171 kept every part; its `{0, 5}` SPRT at 8+0.08 read H1, Elo +19.44 +/- 9.07 over 2916 games (an early stop, upward-biased), cost +5.28 %, nps -4.80 %; DEC-354 re-picked DEC-316's pair by its rule and CLAMP_PUSH +30 -> +50, no third recurrence; closes F16; Debug self-play and `gate_extra` green; bench 5482277 -> 4707943
 
 ## Open
 
 1. S124  the endgame half of the score is scaled toward a draw by what is on the board, and won lone-king and specialised endgames are scored so they convert
-2. S336  S122's corpus preparation drops a later stage's record when an earlier one runs, and `seeds` does not read the corpus's own preparation as a meeting
-3. S337  the ledger's four other rows whose closing subjects break the rule read out right: two by override rows, two by a run column
-4. S102  outpost and space terms in the evaluation, one family
-5. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
-6. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
-7. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
-8. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
-9. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
-10. S030  move_t drops the moving piece and becomes 16 bits
-11. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
-12. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
-13. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
-14. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
-15. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
-16. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
-17. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included
+2. S337  the ledger's four other rows whose closing subjects break the rule read out right: two by override rows, two by a run column
+3. S102  outpost and space terms in the evaluation, one family
+4. S266  a complexity term moves the endgame score toward or away from zero, never past it, by how likely the stronger side is to convert, never flipping its sign
+5. S133  the piece-square tables become king-relative -- indexed by a king bucket as well as piece and square -- and every entry is fitted
+6. S267  **the gate** -- a drift match against `1680439`, the build S240 rated, read against 232 self-play Elo; below it the order stops for the owner to re-plan
+7. S126  every constant in the evaluation is refitted once the search that consumes them has stopped moving
+8. S032  use _pext_u64 for sliding attacks where BMI2 exists, keeping magics as fallback
+9. S030  move_t drops the moving piece and becomes 16 bits
+10. S127  the last SPSA lane, over the whole search parameter set, and an independent SPRT of what it returns
+11. S129  three, four and five man tablebase probing, written from the format description, if an independent description exists
+12. S152  the rating, once, near the mark: both controls, the new anchors, the claim read as the point estimate at 10+0.2 (DEC-258)
+13. S029  **parked, DEC-054 and DEC-179** — a perspective network evaluation trained on chesso's own self-play
+14. S311  **parked, DEC-342** — a comment rule in `AGENTS.md` and `tools/comment_budget.py`, which reports what breaks it and proves a comment edit left the code identical
+15. S312  **parked, DEC-342** — the log-shaped comment blocks become what the code cannot say, with current values, read old against new
+16. S313  **parked, DEC-342** — five steps after S312, comment tokens per step are measured again and the cleanup's verdict recorded, zero included

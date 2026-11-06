@@ -29,7 +29,13 @@
 # runs with ADOPT_DRY=1, the mirror unchanged, then for real; and filter, split, sample,
 # k and record read it after. verify then reads the pool into S/real_verify. The real
 # directory's manifest (every file's name, size and mtime, and the sha256 of each under
-# 1 MB) is held equal from start to end. About 2 min, all of it reading.
+# 1 MB) is held equal from start to end. About 2 min, all of it reading. It reads the
+# preparation as it was before the coordinator stamped it, 2026-11-06; since then the
+# five stages pass where it asks for refusals, and adocs/data/S336_records.sh real reads
+# the stamped preparation instead.
+#
+# Since S336 the smoke has 35 cases, S336's ten after S333's 25; each is meant red under
+# the script before S333 too, so `red` and `mutants` count them with the rest.
 
 set -uo pipefail
 
@@ -42,7 +48,7 @@ before_sh="$root/adocs/data/.S333_before_corpus.sh"
 mutant_sh="$root/adocs/data/.S333_mutant_corpus.sh"
 POOL_REAL="$root/.tuning/s122/corpus"
 PREP_REAL="$root/.tuning/s122/prepared"
-CASES=25
+CASES=35
 CONTROLS="control_all adopted_reads"
 
 say() { echo "$*"; }

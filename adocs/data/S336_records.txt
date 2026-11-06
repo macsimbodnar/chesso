@@ -1,0 +1,541 @@
+S336's records and seeds, 2026-11-06: the main tree at 6444f6e with S336's working tree, beside S124's screen (its tuner at nice 10 on 12 threads).
+adocs/data/S122_corpus.sh sha256 c46e7f93c719b26cc794d2ff84e86002d23c929dc44d63ea66d3e09a2f7ee909,
+adocs/data/S333_guards.sh sha256 a196c9df1bbf2de49aba13bea2c94e7c46e1fc119a1f31991b21e38189658e7b,
+adocs/data/S336_records.sh sha256 21431a47ccb71c50bce658fa95279e5ba77237e8fc5808aa55fee7b5d2324d31.
+Scratch S = /home/max/ws/chesso/.tuning/s336; the smoke's OUT is S/tuning/s122/phase1/corpus_smoke, S333's regressions' S/s333/tuning/s122/phase1/corpus_smoke.
+
+== adocs/data/S336_records.sh red     (the smoke, its cases run by 6444f6e's S122_corpus.sh: the red)
+script    adocs/data/S122_corpus.sh, sha256 c46e7f93c719b26cc794d2ff84e86002d23c929dc44d63ea66d3e09a2f7ee909
+before    6444f6e's S122_corpus.sh, sha256 371a303580c80672b65f969aee45cc61a591b03dc63f1d80c3d65d0af6bf9d65
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/.S336_before_corpus.sh
+smoke case control_all: passes, as it must be: root filtered before
+smoke case verify_no_repetition: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/verify_no_repetition/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case all_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/all_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case filter_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/filter_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case split_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/split_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case sample_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/sample_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case k_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/k_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case record_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/record_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case filter_unverified: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/filter_unverified/prepared/verify.txt was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case old_marker: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/old_marker/prepared/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+smoke case adopt_dry: unchanged, as it must be: adopt     ADOPT_DRY=1: every check passed; would stamp verify.txt pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done corpus.tsv.done; nothing written
+smoke case adopt: passes, as it must be: adopt     stamped /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt/prepared/corpus.tsv.done
+smoke case adopted_reads: passes, as it must be: K before: 1.2376
+smoke case adopt_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_swapped/prepared/verify.txt's root view sha256 'ad938191093a6daf283be41611f812cd7c093df401088c071bc5cbb72813b3ed' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/pool.tsv.root's
+smoke case adopt_tampered: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_tampered/prepared/pool.tsv.qs is not the file its marker pool.tsv.qs.done records
+smoke case adopt_forged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_forged/prepared/pool.tsv.root is not the band filter of /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool/pool.tsv.root, recomputed: sha256 591df5dc022d2fe8d59187c226141eff1ae76fffa50fc468c79062907d0e6f36
+smoke case adopt_aged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_aged/prepared/corpus.tsv is older than /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool/generate.log, so it was not made from this pool
+smoke case adopt_restamp: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_restamp/prepared/verify.txt names the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap's b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: never restamped
+smoke case adopt_pool_lines: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/prepared/verify.txt's pool lines are not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/pool/generate.log's
+smoke case adopt_prepared_sha: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_prepared_sha/prepared/prepared.txt does not name /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool and corpus.tsv's sha256
+smoke case adopt_pre_s331: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pre_s331/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case adopt_validation: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/prepared.txt's qs view sha256 '5fc7e77beb639b4ae171edc14e4460ecd0001d5e5111b9067d09231b32af90b4' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/pool.tsv.qs.validation's
+smoke case adopt_no_prepared: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_no_prepared/prepared/prepared.txt, so corpus.tsv's preparation cannot be read
+smoke case adopt_k: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/prepared.txt's k '1.2376' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/k.txt's '9.9999'
+smoke case sample_unmarked: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/sample_unmarked/prepared/verify.txt: run verify first
+smoke case all_unmarked: FAILED: expected fails, the stage ended 'S122-CORPUS-ALL-DONE', and prepared/ changed; did not print 'filter runs: removed split\.txt k\.txt prepared\.txt'; did not print 'holds the split's files .* remove them by hand, then run split'; printed 'split before'; printed 'K before'; left split.txt; left corpus.tsv.done; left k.txt; left prepared.txt
+smoke case filter_again: FAILED: expected passes, the stage ended 'S122-CORPUS-FILTER-DONE', and prepared/ changed; did not print 'filter runs: removed split\.txt corpus\.tsv\.done k\.txt prepared\.txt'; left split.txt; left corpus.tsv.done; left k.txt; left prepared.txt
+smoke case split_again: FAILED: expected passes, the stage ended 'S122-CORPUS-SPLIT-DONE', and prepared/ changed; did not print 'split runs: removed corpus\.tsv\.done k\.txt prepared\.txt'; left corpus.tsv.done; left k.txt; left prepared.txt
+smoke case split_unrecorded: FAILED: expected refused, the stage ended 'S122-CORPUS-SPLIT-FAILED'; did not print 'holds the split's files .* remove them by hand, then run split'
+smoke case sample_again: FAILED: expected passes, the stage ended 'S122-CORPUS-SAMPLE-DONE', and prepared/ changed; did not print 'sample runs: removed k\.txt prepared\.txt'; left k.txt; left prepared.txt
+smoke case k_again: FAILED: expected passes, the stage ended 'S122-CORPUS-K-DONE', and prepared/ changed; did not print 'k runs: removed prepared\.txt'; left prepared.txt
+smoke case seeds_self: FAILED: expected unchanged, the stage ended 'S122-CORPUS-SEEDS-FAILED'; did not print 'corpus \[990336000, 990338400\), workers .*: meets none of the 1,'; did not print 'in .*/seeds_self/mirror/verify\.txt .*/seeds_self/prepared/verify\.txt: datagen: 2400 games, .* seed 990336000, quiet-limit 30000, leaf root,qs,pv$'
+smoke case seeds_planted: FAILED: expected refused, the stage ended 'S122-CORPUS-SEEDS-FAILED'; did not print 'refused: the corpus.s .* meet \[990337000, 990337010\)'; printed 'meet.*\[990336000, 990338400\)'
+smoke case seeds_near_copy: FAILED: expected refused, the stage ended 'S122-CORPUS-SEEDS-FAILED'; printed 'meet.*\[990336000, 990338400\)'
+smoke     34 cases, 25 as they must be, 9 not
+red       the smoke's last line: S122-CORPUS-SMOKE-FAILED
+S336-RECORDS-RED-DONE
+
+== adocs/data/S336_records.sh green   (the smoke as it stands)
+script    adocs/data/S122_corpus.sh, sha256 c46e7f93c719b26cc794d2ff84e86002d23c929dc44d63ea66d3e09a2f7ee909
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/S122_corpus.sh
+smoke case control_all: passes, as it must be: root filtered before
+smoke case verify_no_repetition: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/verify_no_repetition/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case all_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/all_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case filter_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/filter_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case split_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/split_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case sample_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/sample_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case k_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/k_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case record_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/record_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case filter_unverified: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/filter_unverified/prepared/verify.txt was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case old_marker: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/old_marker/prepared/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+smoke case adopt_dry: unchanged, as it must be: adopt     ADOPT_DRY=1: every check passed; would stamp verify.txt pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done corpus.tsv.done; nothing written
+smoke case adopt: passes, as it must be: adopt     stamped /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt/prepared/corpus.tsv.done
+smoke case adopted_reads: passes, as it must be: K before: 1.2376
+smoke case adopt_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_swapped/prepared/verify.txt's root view sha256 'ad938191093a6daf283be41611f812cd7c093df401088c071bc5cbb72813b3ed' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/pool.tsv.root's
+smoke case adopt_tampered: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_tampered/prepared/pool.tsv.qs is not the file its marker pool.tsv.qs.done records
+smoke case adopt_forged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_forged/prepared/pool.tsv.root is not the band filter of /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool/pool.tsv.root, recomputed: sha256 591df5dc022d2fe8d59187c226141eff1ae76fffa50fc468c79062907d0e6f36
+smoke case adopt_aged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_aged/prepared/corpus.tsv is older than /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool/generate.log, so it was not made from this pool
+smoke case adopt_restamp: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_restamp/prepared/verify.txt names the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap's b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: never restamped
+smoke case adopt_pool_lines: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/prepared/verify.txt's pool lines are not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/pool/generate.log's
+smoke case adopt_prepared_sha: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_prepared_sha/prepared/prepared.txt does not name /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool and corpus.tsv's sha256
+smoke case adopt_pre_s331: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pre_s331/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case adopt_validation: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/prepared.txt's qs view sha256 '5fc7e77beb639b4ae171edc14e4460ecd0001d5e5111b9067d09231b32af90b4' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/pool.tsv.qs.validation's
+smoke case adopt_no_prepared: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_no_prepared/prepared/prepared.txt, so corpus.tsv's preparation cannot be read
+smoke case adopt_k: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/prepared.txt's k '1.2376' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/k.txt's '9.9999'
+smoke case sample_unmarked: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/sample_unmarked/prepared/verify.txt: run verify first
+smoke case all_unmarked: fails, as it must be: filter runs: removed split.txt k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case filter_again: passes, as it must be: filter runs: removed split.txt corpus.tsv.done k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case split_again: passes, as it must be: split runs: removed corpus.tsv.done k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case split_unrecorded: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/split_unrecorded/prepared holds the split's files pool.tsv.root.train pool.tsv.root.validation pool.tsv.qs.train pool.tsv.qs.validation pool.tsv.pv.train pool.tsv.pv.validation, but not split.txt and pool.tsv.qs.validation both, which split reads as made before: a fixed set no record names, and corpus_split.py never writes over one; remove them by hand, then run split
+smoke case sample_again: passes, as it must be: sample runs: removed k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case k_again: passes, as it must be: k runs: removed prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case seeds_self: unchanged, as it must be: seeds     corpus [990336000, 990338400), workers [990336000, 990336012): meets none of the 1, nor the other two
+smoke case seeds_planted: refused, as it must be: seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990337000, 990337010)
+smoke case seeds_near_copy: refused, as it must be: seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990336000, 990338399) workers [990336000, 990336012)
+smoke     34 cases, 34 as they must be, 0 not
+green     the smoke's last line: S122-CORPUS-SMOKE-DONE
+S336-RECORDS-GREEN-DONE
+
+== adocs/data/S336_records.sh real    (the stamped .tuning/s122/prepared mirrored and read by every stage in the mirror)
+script    adocs/data/S122_corpus.sh, sha256 c46e7f93c719b26cc794d2ff84e86002d23c929dc44d63ea66d3e09a2f7ee909
+real      /home/max/ws/chesso/.tuning/s122/prepared, prepared from /home/max/ws/chesso/.tuning/s122/corpus and stamped, mirrored; no stage runs on it
+real      the mirror /home/max/ws/chesso/.tuning/s336/real_mirror: copies of the files under 1 MB, links to the rest
+real      13 copies, 13 links
+  verify  view root: 18786043 rows, 150000 games, 0 rows without seven fields, sha256 a0a36b5fae98c05f71ee6cf9d60b038ffffb8459ab259f844dbe716aba35e8f2
+  verify  view qs: 18768364 rows, 150000 games, 0 rows without seven fields, sha256 cdc26aeceeb2a27e0adeaa8ca082e598e27301ae8ea8b60c016629a94f9079fc
+  verify  view pv: 17909630 rows, 149994 games, 0 rows without seven fields, sha256 09a125c499d0c6a9e0eff6cbeb02899c0900052d38fd967bdb3c3fe2573afac9
+  verify  S122-CORPUS-VERIFY-DONE
+  filter  root filtered before
+  filter  qs filtered before
+  filter  pv filtered before
+  filter  S122-CORPUS-FILTER-DONE
+  split  split before
+  split  split: seed 20261102, 150000 games, 12000 held out, game list sha256 50966110aa1700964c520d4280174bc5b89969c8fe4af3465376e720f32fb04d
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.validation: 1385493 rows, 12000 games, sha256 c2182a342c447b2b51310877fd981c96810a01c225335384ce753a5879aab28d
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.train: 15872237 rows, 138000 games, sha256 9c32436f6cdbf87de5c980e335b7b27d1fb3e413503c7f6b5b06856fa32e065a
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation: 1384182 rows, 12000 games, sha256 faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.train: 15857005 rows, 138000 games, sha256 d8107153e7bcf6637fabb3c1eaddc7fcfe153180ed55fe42c79272e8940ea760
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.validation: 1316166 rows, 12000 games, sha256 9d7d4df3657f2ab28a7e34cd536217e796a13d3adeece152bb3076575da86a36
+  split    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.train: 15077022 rows, 137994 games, sha256 5fd59034b0c674294bf130d16c810b66d8e580df41d969fe977b63c4380f90b2
+  split  S122-CORPUS-SPLIT-DONE
+  sample  sampled before
+  sample  S122-CORPUS-SAMPLE-DONE
+  k  K before: 1.2302
+  k  S122-CORPUS-K-DONE
+  record  S122 prepared corpus, 2026-11-06T17:00:34+01:00
+  record  corpus /home/max/ws/chesso/.tuning/s336/real_mirror/corpus.tsv
+  record  sha256 04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509
+  record  rows 6307294
+  record  games 137991
+  record  view qs /home/max/ws/chesso/.tuning/s336/real_mirror/pool.tsv.qs.validation faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb
+  record  view root /home/max/ws/chesso/.tuning/s336/real_mirror/pool.tsv.root.validation c2182a342c447b2b51310877fd981c96810a01c225335384ce753a5879aab28d
+  record  view pv /home/max/ws/chesso/.tuning/s336/real_mirror/pool.tsv.pv.validation 9d7d4df3657f2ab28a7e34cd536217e796a13d3adeece152bb3076575da86a36
+  record  k 1.2302
+  record  pool /home/max/ws/chesso/.tuning/s122/corpus
+  record  recipe filter |column 3| < 1000, split seed 20261102, 12000 games held out, 46 qs rows a game, sample seed 1
+  record  S122-PREPARED
+  record  S122-CORPUS-RECORD-DONE
+  adopt  adopt     verify.txt names this pool already
+  adopt  adopt     pool.tsv.root.done names this pool already
+  adopt  adopt     pool.tsv.qs.done names this pool already
+  adopt  adopt     pool.tsv.pv.done names this pool already
+  adopt  adopt     corpus.tsv.done names this pool already
+  adopt  adopt     nothing to stamp
+  adopt  S122-CORPUS-ADOPT-DONE
+  all  view root: 18786043 rows, 150000 games, 0 rows without seven fields, sha256 a0a36b5fae98c05f71ee6cf9d60b038ffffb8459ab259f844dbe716aba35e8f2
+  all  view qs: 18768364 rows, 150000 games, 0 rows without seven fields, sha256 cdc26aeceeb2a27e0adeaa8ca082e598e27301ae8ea8b60c016629a94f9079fc
+  all  view pv: 17909630 rows, 149994 games, 0 rows without seven fields, sha256 09a125c499d0c6a9e0eff6cbeb02899c0900052d38fd967bdb3c3fe2573afac9
+  all  root filtered before
+  all  qs filtered before
+  all  pv filtered before
+  all  split before
+  all  split: seed 20261102, 150000 games, 12000 held out, game list sha256 50966110aa1700964c520d4280174bc5b89969c8fe4af3465376e720f32fb04d
+  all    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.validation: 1385493 rows, 12000 games, sha256 c2182a342c447b2b51310877fd981c96810a01c225335384ce753a5879aab28d
+  all    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.root.train: 15872237 rows, 138000 games, sha256 9c32436f6cdbf87de5c980e335b7b27d1fb3e413503c7f6b5b06856fa32e065a
+  all    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.validation: 1384182 rows, 12000 games, sha256 faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb
+  all    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.qs.train: 15857005 rows, 138000 games, sha256 d8107153e7bcf6637fabb3c1eaddc7fcfe153180ed55fe42c79272e8940ea760
+  all    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.validation: 1316166 rows, 12000 games, sha256 9d7d4df3657f2ab28a7e34cd536217e796a13d3adeece152bb3076575da86a36
+  all    /home/max/ws/chesso/.tuning/s122/prepared/pool.tsv.pv.train: 15077022 rows, 137994 games, sha256 5fd59034b0c674294bf130d16c810b66d8e580df41d969fe977b63c4380f90b2
+  all  sampled before
+  all  K before: 1.2302
+  all  S122 prepared corpus, 2026-11-06T17:01:07+01:00
+  all  corpus /home/max/ws/chesso/.tuning/s336/real_mirror/corpus.tsv
+  all  sha256 04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509
+  all  rows 6307294
+  all  games 137991
+  all  view qs /home/max/ws/chesso/.tuning/s336/real_mirror/pool.tsv.qs.validation faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb
+  all  view root /home/max/ws/chesso/.tuning/s336/real_mirror/pool.tsv.root.validation c2182a342c447b2b51310877fd981c96810a01c225335384ce753a5879aab28d
+  all  view pv /home/max/ws/chesso/.tuning/s336/real_mirror/pool.tsv.pv.validation 9d7d4df3657f2ab28a7e34cd536217e796a13d3adeece152bb3076575da86a36
+  all  k 1.2302
+  all  pool /home/max/ws/chesso/.tuning/s122/corpus
+  all  recipe filter |column 3| < 1000, split seed 20261102, 12000 games held out, 46 qs rows a game, sample seed 1
+  all  S122-PREPARED
+  all  S122-CORPUS-ALL-DONE
+real      the mirror's pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done split.txt corpus.tsv.done k.txt: the real ones' bytes after the eight stages
+real      verify's verify.txt in the mirror: its view and pool lines the real one's, as a set
+real      record's prepared.txt in the mirror is the real one's but its date and its paths
+real      /home/max/ws/chesso/.tuning/s122/prepared's manifest is the same at the end as at the start, 39 lines
+real      68 s
+S336-RECORDS-REAL-DONE
+
+== adocs/data/S336_records.sh seeds   (S122_corpus.sh seeds on the real tree, read only; the plants under TMPDIR, the session's scratchpad, removed at exit)
+script    adocs/data/S122_corpus.sh, sha256 c46e7f93c719b26cc794d2ff84e86002d23c929dc44d63ea66d3e09a2f7ee909
+before    6444f6e's S122_corpus.sh, sha256 371a303580c80672b65f969aee45cc61a591b03dc63f1d80c3d65d0af6bf9d65
+seeds     by 6444f6e's script, on the real tree: refused, the corpus meeting its own line
+  seeds     23 runs named by datagen's settings line under /home/max/ws/chesso/.tuning /home/max/ws/chesso/adocs/data, /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup and /home/max/ws/chesso/.tuning/s122/sample left out:
+  seeds       seed 3, 1 games, 1 threads: [3, 4), workers [3, 4)
+  seeds       seed 5, 10 games, 1 threads: [5, 15), workers [5, 6)
+  seeds       seed 20260814, 120000 games, 12 threads: [20260814, 20380814), workers [20260814, 20260826)
+  seeds       seed 20261013, 600 games, 12 threads: [20261013, 20261613), workers [20261013, 20261025)
+  seeds       seed 20261013, 150000 games, 12 threads: [20261013, 20411013), workers [20261013, 20261025)
+  seeds       seed 990110203, 48 games, 12 threads: [990110203, 990110251), workers [990110203, 990110215)
+  seeds       seed 990300203, 14 games, 12 threads: [990300203, 990300217), workers [990300203, 990300215)
+  seeds       seed 990332000, 60 games, 12 threads: [990332000, 990332060), workers [990332000, 990332012)
+  seeds       seed 990332100, 39 games, 12 threads: [990332100, 990332139), workers [990332100, 990332112)
+  seeds       seed 990335000, 10 games, 12 threads: [990335000, 990335010), workers [990335000, 990335012)
+  seeds       seed 990336000, 2399 games, 12 threads: [990336000, 990338399), workers [990336000, 990336012)
+  seeds       seed 990336000, 2400 games, 12 threads: [990336000, 990338400), workers [990336000, 990336012)
+  seeds       seed 990337000, 10 games, 12 threads: [990337000, 990337010), workers [990337000, 990337012)
+  seeds       seed 2026102000, 27252 games, 12 threads: [2026102000, 2026129252), workers [2026102000, 2026102012)
+  seeds       seed 2026102100, 600 games, 12 threads: [2026102100, 2026102700), workers [2026102100, 2026102112)
+  seeds       seed 2026110201, 3000 games, 12 threads: [2026110201, 2026113201), workers [2026110201, 2026110213)
+  seeds       seed 2026110202, 9000 games, 12 threads: [2026110202, 2026119202), workers [2026110202, 2026110214)
+  seeds       seed 2026110203, 150000 games, 12 threads: [2026110203, 2026260203), workers [2026110203, 2026110215)
+  seeds       seed 2026260203, 24 games, 12 threads: [2026260203, 2026260227), workers [2026260203, 2026260215)
+  seeds       seed 2026260203, 12000 games, 12 threads: [2026260203, 2026272203), workers [2026260203, 2026260215)
+  seeds       seed 2026300203, 47588 games, 12 threads: [2026300203, 2026347791), workers [2026300203, 2026300215)
+  seeds       seed 2026400331, 2400 games, 12 threads: [2026400331, 2026402731), workers [2026400331, 2026400343)
+  seeds       seed 2026500349, 150000 games, 12 threads: [2026500349, 2026650349), workers [2026500349, 2026500361)
+  seeds     refused: the corpus's [2026500349, 2026650349) or its workers [2026500349, 2026500361) meet [2026500349, 2026650349) workers [2026500349, 2026500361)
+  seeds     top-up [2026800349, 2026950349), workers [2026800349, 2026800361): meets none of the 23, nor the other two
+  seeds     sample [2026700349, 2026712349), workers [2026700349, 2026700361): meets none of the 23, nor the other two
+  S122-CORPUS-SEEDS-FAILED
+seeds     by the tree's, on the real tree: passes, prepared/verify.txt's line read as the corpus's own
+  seeds     22 runs named by datagen's settings line under /home/max/ws/chesso/.tuning /home/max/ws/chesso/adocs/data, /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup and /home/max/ws/chesso/.tuning/s122/sample left out:
+  seeds       seed 3, 1 games, 1 threads: [3, 4), workers [3, 4)
+  seeds       seed 5, 10 games, 1 threads: [5, 15), workers [5, 6)
+  seeds       seed 20260814, 120000 games, 12 threads: [20260814, 20380814), workers [20260814, 20260826)
+  seeds       seed 20261013, 600 games, 12 threads: [20261013, 20261613), workers [20261013, 20261025)
+  seeds       seed 20261013, 150000 games, 12 threads: [20261013, 20411013), workers [20261013, 20261025)
+  seeds       seed 990110203, 48 games, 12 threads: [990110203, 990110251), workers [990110203, 990110215)
+  seeds       seed 990300203, 14 games, 12 threads: [990300203, 990300217), workers [990300203, 990300215)
+  seeds       seed 990332000, 60 games, 12 threads: [990332000, 990332060), workers [990332000, 990332012)
+  seeds       seed 990332100, 39 games, 12 threads: [990332100, 990332139), workers [990332100, 990332112)
+  seeds       seed 990335000, 10 games, 12 threads: [990335000, 990335010), workers [990335000, 990335012)
+  seeds       seed 990336000, 2399 games, 12 threads: [990336000, 990338399), workers [990336000, 990336012)
+  seeds       seed 990336000, 2400 games, 12 threads: [990336000, 990338400), workers [990336000, 990336012)
+  seeds       seed 990337000, 10 games, 12 threads: [990337000, 990337010), workers [990337000, 990337012)
+  seeds       seed 2026102000, 27252 games, 12 threads: [2026102000, 2026129252), workers [2026102000, 2026102012)
+  seeds       seed 2026102100, 600 games, 12 threads: [2026102100, 2026102700), workers [2026102100, 2026102112)
+  seeds       seed 2026110201, 3000 games, 12 threads: [2026110201, 2026113201), workers [2026110201, 2026110213)
+  seeds       seed 2026110202, 9000 games, 12 threads: [2026110202, 2026119202), workers [2026110202, 2026110214)
+  seeds       seed 2026110203, 150000 games, 12 threads: [2026110203, 2026260203), workers [2026110203, 2026110215)
+  seeds       seed 2026260203, 24 games, 12 threads: [2026260203, 2026260227), workers [2026260203, 2026260215)
+  seeds       seed 2026260203, 12000 games, 12 threads: [2026260203, 2026272203), workers [2026260203, 2026260215)
+  seeds       seed 2026300203, 47588 games, 12 threads: [2026300203, 2026347791), workers [2026300203, 2026300215)
+  seeds       seed 2026400331, 2400 games, 12 threads: [2026400331, 2026402731), workers [2026400331, 2026400343)
+  seeds     settings lines found there that are, whole, one in /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup or /home/max/ws/chesso/.tuning/s122/sample: 1, each that run's own record and not another run (S336):
+  seeds       in /home/max/ws/chesso/.tuning/s122/prepared/verify.txt /home/max/ws/chesso/.tuning/s333/prepared_backup/verify.txt /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt /home/max/ws/chesso/.tuning/s333/real_verify/verify.txt /home/max/ws/chesso/.tuning/s336/real_mirror/verify.txt /home/max/ws/chesso/.tuning/s336/seeds.txt: datagen: 150000 games, 100000 nodes per move, 12 threads, seed 2026500349, quiet-limit 30000, leaf root,qs,pv
+  seeds     corpus [2026500349, 2026650349), workers [2026500349, 2026500361): meets none of the 22, nor the other two
+  seeds     top-up [2026800349, 2026950349), workers [2026800349, 2026800361): meets none of the 22, nor the other two
+  seeds     sample [2026700349, 2026712349), workers [2026700349, 2026700361): meets none of the 22, nor the other two
+  S122-CORPUS-SEEDS-DONE
+/tmp/claude-1000/-home-max-ws-chesso/0eee3725-73d2-45fc-a030-128b5ae3ccb2/scratchpad/s336_seeds.WQ8rBm
+seeds     by the tree's, a plant of 600 games at seed 2026600000 under SEED_LOGS: refused, naming the plant alone
+  seeds     23 runs named by datagen's settings line under /home/max/ws/chesso/.tuning /home/max/ws/chesso/adocs/data /tmp/claude-1000/-home-max-ws-chesso/0eee3725-73d2-45fc-a030-128b5ae3ccb2/scratchpad/s336_seeds.WQ8rBm, /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup and /home/max/ws/chesso/.tuning/s122/sample left out:
+  seeds       seed 3, 1 games, 1 threads: [3, 4), workers [3, 4)
+  seeds       seed 5, 10 games, 1 threads: [5, 15), workers [5, 6)
+  seeds       seed 20260814, 120000 games, 12 threads: [20260814, 20380814), workers [20260814, 20260826)
+  seeds       seed 20261013, 600 games, 12 threads: [20261013, 20261613), workers [20261013, 20261025)
+  seeds       seed 20261013, 150000 games, 12 threads: [20261013, 20411013), workers [20261013, 20261025)
+  seeds       seed 990110203, 48 games, 12 threads: [990110203, 990110251), workers [990110203, 990110215)
+  seeds       seed 990300203, 14 games, 12 threads: [990300203, 990300217), workers [990300203, 990300215)
+  seeds       seed 990332000, 60 games, 12 threads: [990332000, 990332060), workers [990332000, 990332012)
+  seeds       seed 990332100, 39 games, 12 threads: [990332100, 990332139), workers [990332100, 990332112)
+  seeds       seed 990335000, 10 games, 12 threads: [990335000, 990335010), workers [990335000, 990335012)
+  seeds       seed 990336000, 2399 games, 12 threads: [990336000, 990338399), workers [990336000, 990336012)
+  seeds       seed 990336000, 2400 games, 12 threads: [990336000, 990338400), workers [990336000, 990336012)
+  seeds       seed 990337000, 10 games, 12 threads: [990337000, 990337010), workers [990337000, 990337012)
+  seeds       seed 2026102000, 27252 games, 12 threads: [2026102000, 2026129252), workers [2026102000, 2026102012)
+  seeds       seed 2026102100, 600 games, 12 threads: [2026102100, 2026102700), workers [2026102100, 2026102112)
+  seeds       seed 2026110201, 3000 games, 12 threads: [2026110201, 2026113201), workers [2026110201, 2026110213)
+  seeds       seed 2026110202, 9000 games, 12 threads: [2026110202, 2026119202), workers [2026110202, 2026110214)
+  seeds       seed 2026110203, 150000 games, 12 threads: [2026110203, 2026260203), workers [2026110203, 2026110215)
+  seeds       seed 2026260203, 24 games, 12 threads: [2026260203, 2026260227), workers [2026260203, 2026260215)
+  seeds       seed 2026260203, 12000 games, 12 threads: [2026260203, 2026272203), workers [2026260203, 2026260215)
+  seeds       seed 2026300203, 47588 games, 12 threads: [2026300203, 2026347791), workers [2026300203, 2026300215)
+  seeds       seed 2026400331, 2400 games, 12 threads: [2026400331, 2026402731), workers [2026400331, 2026400343)
+  seeds       seed 2026600000, 600 games, 12 threads: [2026600000, 2026600600), workers [2026600000, 2026600012)
+  seeds     settings lines found there that are, whole, one in /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup or /home/max/ws/chesso/.tuning/s122/sample: 1, each that run's own record and not another run (S336):
+  seeds       in /home/max/ws/chesso/.tuning/s122/prepared/verify.txt /home/max/ws/chesso/.tuning/s333/prepared_backup/verify.txt /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt /home/max/ws/chesso/.tuning/s333/real_verify/verify.txt /home/max/ws/chesso/.tuning/s336/final_seeds.txt /home/max/ws/chesso/.tuning/s336/real_mirror/verify.txt /home/max/ws/chesso/.tuning/s336/seeds.txt: datagen: 150000 games, 100000 nodes per move, 12 threads, seed 2026500349, quiet-limit 30000, leaf root,qs,pv
+  seeds     refused: the corpus's [2026500349, 2026650349) or its workers [2026500349, 2026500361) meet [2026600000, 2026600600)
+  seeds     top-up [2026800349, 2026950349), workers [2026800349, 2026800361): meets none of the 23, nor the other two
+  seeds     sample [2026700349, 2026712349), workers [2026700349, 2026700361): meets none of the 23, nor the other two
+  S122-CORPUS-SEEDS-FAILED
+/tmp/claude-1000/-home-max-ws-chesso/0eee3725-73d2-45fc-a030-128b5ae3ccb2/scratchpad/s336_seeds.RJJVKj
+seeds     by the tree's, a plant of the corpus's own line with quiet-limit 1000: refused, another run
+  seeds     23 runs named by datagen's settings line under /home/max/ws/chesso/.tuning /home/max/ws/chesso/adocs/data /tmp/claude-1000/-home-max-ws-chesso/0eee3725-73d2-45fc-a030-128b5ae3ccb2/scratchpad/s336_seeds.RJJVKj, /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup and /home/max/ws/chesso/.tuning/s122/sample left out:
+  seeds       seed 3, 1 games, 1 threads: [3, 4), workers [3, 4)
+  seeds       seed 5, 10 games, 1 threads: [5, 15), workers [5, 6)
+  seeds       seed 20260814, 120000 games, 12 threads: [20260814, 20380814), workers [20260814, 20260826)
+  seeds       seed 20261013, 600 games, 12 threads: [20261013, 20261613), workers [20261013, 20261025)
+  seeds       seed 20261013, 150000 games, 12 threads: [20261013, 20411013), workers [20261013, 20261025)
+  seeds       seed 990110203, 48 games, 12 threads: [990110203, 990110251), workers [990110203, 990110215)
+  seeds       seed 990300203, 14 games, 12 threads: [990300203, 990300217), workers [990300203, 990300215)
+  seeds       seed 990332000, 60 games, 12 threads: [990332000, 990332060), workers [990332000, 990332012)
+  seeds       seed 990332100, 39 games, 12 threads: [990332100, 990332139), workers [990332100, 990332112)
+  seeds       seed 990335000, 10 games, 12 threads: [990335000, 990335010), workers [990335000, 990335012)
+  seeds       seed 990336000, 2399 games, 12 threads: [990336000, 990338399), workers [990336000, 990336012)
+  seeds       seed 990336000, 2400 games, 12 threads: [990336000, 990338400), workers [990336000, 990336012)
+  seeds       seed 990337000, 10 games, 12 threads: [990337000, 990337010), workers [990337000, 990337012)
+  seeds       seed 2026102000, 27252 games, 12 threads: [2026102000, 2026129252), workers [2026102000, 2026102012)
+  seeds       seed 2026102100, 600 games, 12 threads: [2026102100, 2026102700), workers [2026102100, 2026102112)
+  seeds       seed 2026110201, 3000 games, 12 threads: [2026110201, 2026113201), workers [2026110201, 2026110213)
+  seeds       seed 2026110202, 9000 games, 12 threads: [2026110202, 2026119202), workers [2026110202, 2026110214)
+  seeds       seed 2026110203, 150000 games, 12 threads: [2026110203, 2026260203), workers [2026110203, 2026110215)
+  seeds       seed 2026260203, 24 games, 12 threads: [2026260203, 2026260227), workers [2026260203, 2026260215)
+  seeds       seed 2026260203, 12000 games, 12 threads: [2026260203, 2026272203), workers [2026260203, 2026260215)
+  seeds       seed 2026300203, 47588 games, 12 threads: [2026300203, 2026347791), workers [2026300203, 2026300215)
+  seeds       seed 2026400331, 2400 games, 12 threads: [2026400331, 2026402731), workers [2026400331, 2026400343)
+  seeds       seed 2026500349, 150000 games, 12 threads: [2026500349, 2026650349), workers [2026500349, 2026500361)
+  seeds     settings lines found there that are, whole, one in /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup or /home/max/ws/chesso/.tuning/s122/sample: 1, each that run's own record and not another run (S336):
+  seeds       in /home/max/ws/chesso/.tuning/s122/prepared/verify.txt /home/max/ws/chesso/.tuning/s333/prepared_backup/verify.txt /home/max/ws/chesso/.tuning/s333/real_mirror/verify.txt /home/max/ws/chesso/.tuning/s333/real_verify/verify.txt /home/max/ws/chesso/.tuning/s336/final_seeds.txt /home/max/ws/chesso/.tuning/s336/real_mirror/verify.txt /home/max/ws/chesso/.tuning/s336/seeds.txt: datagen: 150000 games, 100000 nodes per move, 12 threads, seed 2026500349, quiet-limit 30000, leaf root,qs,pv
+  seeds     refused: the corpus's [2026500349, 2026650349) or its workers [2026500349, 2026500361) meet [2026500349, 2026650349) workers [2026500349, 2026500361)
+  seeds     top-up [2026800349, 2026950349), workers [2026800349, 2026800361): meets none of the 23, nor the other two
+  seeds     sample [2026700349, 2026712349), workers [2026700349, 2026700361): meets none of the 23, nor the other two
+  S122-CORPUS-SEEDS-FAILED
+seeds     nothing under /home/max/ws/chesso/.tuning (but /home/max/ws/chesso/.tuning/s336) or /home/max/ws/chesso/adocs/data is newer than the stamp taken before the first run
+S336-RECORDS-SEEDS-DONE
+
+== adocs/data/S333_guards.sh green, S=.tuning/s336/s333 (34 cases)
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/S122_corpus.sh
+smoke     34 cases, 34 as they must be, 0 not
+green     the smoke's last line: S122-CORPUS-SMOKE-DONE
+S333-GUARDS-GREEN-DONE
+
+== adocs/data/S333_guards.sh red, S=.tuning/s336/s333 (the cases run by 9daee21's script, S333's parent)
+red       the cases run by 9daee21's S122_corpus.sh, sha256 5a5faf7d99ef14d09df8ede915fa6c8fb722b8f2dc7724402137b7fa9a795617
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh
+smoke     34 cases, 2 as they must be, 32 not
+red       the smoke's last line: S122-CORPUS-SMOKE-FAILED
+S333-GUARDS-RED-DONE
+the cases, each by its verdict alone:
+  control_all: as it must be
+  verify_no_repetition: FAILED
+  all_swapped: FAILED
+  filter_swapped: FAILED
+  split_swapped: FAILED
+  sample_swapped: FAILED
+  k_swapped: FAILED
+  record_swapped: FAILED
+  filter_unverified: FAILED
+  old_marker: FAILED
+  adopt_dry: FAILED
+  adopt: FAILED
+  adopted_reads: as it must be
+  adopt_swapped: FAILED
+  adopt_tampered: FAILED
+  adopt_forged: FAILED
+  adopt_aged: FAILED
+  adopt_restamp: FAILED
+  adopt_pool_lines: FAILED
+  adopt_prepared_sha: FAILED
+  adopt_pre_s331: FAILED
+  adopt_validation: FAILED
+  adopt_no_prepared: FAILED
+  adopt_k: FAILED
+  sample_unmarked: FAILED
+  all_unmarked: FAILED
+  filter_again: FAILED
+  split_again: FAILED
+  split_unrecorded: FAILED
+  sample_again: FAILED
+  k_again: FAILED
+  seeds_self: FAILED
+  seeds_planted: FAILED
+  seeds_near_copy: FAILED
+
+== adocs/data/S333_guards.sh mutants, S=.tuning/s336/s333
+script    adocs/data/S122_corpus.sh, sha256 c46e7f93c719b26cc794d2ff84e86002d23c929dc44d63ea66d3e09a2f7ee909
+mutant    verify_stamp, sha256 b33ee8707c4f0f478c9f77824f1558538d18b453e5b273322dfe62965f08db69, must be killed by adopted_reads:
+  smoke case adopted_reads: FAILED: expected passes, the stage ended 'S122-CORPUS-K-FAILED'; did not print 'K before'
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    verify_stamp killed by adopted_reads alone
+mutant    pool_lines, sha256 784adc082baa30e1876ec9bcf6b9b01a18b1041c5cfb98378327d5ac4b18ff01, must be killed by adopt_pool_lines:
+  smoke case adopt_pool_lines: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-FAILED'; did not print 'verify\.txt's pool lines are not .*generate\.log's'
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    pool_lines killed by adopt_pool_lines alone
+mutant    prepared_sha, sha256 0c311f06fce7ccbb9fcc34e10bc86daafa912157b83f2293dd5f5b37541a6f35, must be killed by adopt_prepared_sha:
+  smoke case adopt_prepared_sha: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-DONE', and prepared/ changed; did not print 'prepared\.txt does not name .* and corpus\.tsv's sha256'
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    prepared_sha killed by adopt_prepared_sha alone
+mutant    pool_log, sha256 72adff3d8777870bd29262d15d0dc18e04a3193ef85b0fb060b4fc5b161be38e, must be killed by adopt_pre_s331:
+  smoke case adopt_pre_s331: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-FAILED'; did not print 'has no 'repetition:' line: its datagen predates S331'
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    pool_log killed by adopt_pre_s331 alone
+mutant    prepared_view, sha256 0821df4d49d74ace8c84474804972c0d5b2d9ec1c8fccb05d78bb43e8b6c72bd, must be killed by adopt_validation:
+  smoke case adopt_validation: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-DONE', and prepared/ changed; did not print 'prepared\.txt's qs view sha256 .* is not .*/pool\.tsv\.qs\.validation's'
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    prepared_view killed by adopt_validation alone
+mutant    no_prepared, sha256 7c2830b27c7f447b26aac6d4e4128a69f393cb17a69eb206d6991e7915aee55a, must be killed by adopt_no_prepared:
+  smoke case adopt_no_prepared: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-FAILED'; did not print 'no .*/prepared\.txt, so corpus\.tsv's preparation cannot be read'
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    no_prepared killed by adopt_no_prepared alone
+mutant    k, sha256 be685325b54d367d187493962e7929aa798d245053dbb102807fd38cf00b800a, must be killed by adopt_k:
+  smoke case adopt_k: FAILED: expected refused, the stage ended 'S122-CORPUS-ADOPT-DONE', and prepared/ changed; did not print 'prepared\.txt's k '[0-9.]+' is not .*/k\.txt's '9\.9999''
+  smoke     34 cases, 33 as they must be, 1 not
+mutant    k killed by adopt_k alone
+S333-GUARDS-MUTANTS-DONE
+
+== adocs/data/S335_findings.sh green, DIR=.tuning/s336/merge_smoke (a copy of .tuning/s335/smoke/pristine and its pristine.sha256, checked)
+case plain: passes, as it must
+case no_row_game: passes, as it must
+case read_games_id: passes, as it must
+case read_games_result: passes, as it must
+case read_games_ply: passes, as it must
+case read_view_score: passes, as it must
+case read_view_game: passes, as it must
+case run_view_ply: passes, as it must
+case stop_before: passes, as it must
+case stop_after: passes, as it must
+cases     10 cases, 10 as they must be, 0 not
+S335-FINDINGS-GREEN-DONE
+
+== adocs/data/S332_merge_smoke.sh merge, then cases, the same DIR
+  new rows the old rule never wrote: 2351 after a first recurrence and 0 from the openings, 29.726 % +/- 3.558 of the 7909 root rows
+pristine  unchanged, every file against /home/max/ws/chesso/.tuning/s336/merge_smoke/pristine.sha256
+S332-SMOKE-MERGE-DONE
+case as_merged: accepted, merged games: 60 games written to /home/max/ws/chesso/.tuning/s336/merge_smoke/cases/as_merged/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case as_merged: its games file byte-equal to the merge's, /home/max/ws/chesso/.tuning/s336/merge_smoke/merge/pool/games.tsv
+case nul_tail: accepted, merged games: 60 games written to /home/max/ws/chesso/.tuning/s336/merge_smoke/cases/nul_tail/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case no_row_game_kept: accepted, merged games: 61 games written to /home/max/ws/chesso/.tuning/s336/merge_smoke/cases/no_row_game_kept/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+case kept_game_missing: refused, refused: part 1: game 3 of its kept root rows has no games line and a later kept game has one: not a games file cut short, as a power loss cuts it
+case partial_line: refused, refused: part1/games.tsv: the bytes after its last newline are neither a line nor, where a power loss is allowed for, a tail of NUL bytes
+case result_differs: refused, refused: merged root: a row of game 3 carries 0.5, not its games line's 1.0
+case part2_short: refused, refused: part 2: 38 games lines, its log books 39
+case part2_line_off: refused, refused: part 2's files give [23, 12, 4, 8, 3624, 1961, 0], its log's repetition: line [923, 12, 4, 8, 3624, 1961, 0]
+case id_at_offset: refused, refused: part 1: game 100000000's games line is kept and its id is at or above the offset, 100
+case merge_no_row_game: merge passed, check: merged games, 61 lines of 61, sha256 the merge's, S122-CORPUS-MERGE-DONE
+case topup_no_games: merge refused, refused: no topup/games.tsv: the top-up ran without --games-out, and the merged pool would have no games file
+case part1_no_games: merge refused, refused: no pool/games.tsv: part 1 ran without --games-out, and the merged pool would have no games file
+case verify_games_changed: verify refused, check: pool/games.tsv's sha256 is not the one its merge wrote
+case verify_as_merged: verify passed, check: merged games, 60 lines of 60, sha256 the merge's, S122-CORPUS-VERIFY-DONE
+case power_loss: part 1's games.tsv without game 14's line, the dropped game's, and game 17's, the last kept
+case power_loss: merge passed, the three views byte-equal to the merge's without the loss, games.tsv 59 lines
+case power_loss: read refused, refused: pool/generate.log: the merged pool's repetition: check is partial and is not reported as complete: repetition incomplete: 1 of part 1's 21 kept games have no games line, its file ending before them as a power loss leaves it; no combined repetition: line is given and the merged pool's check is partial, its views merged as the merger wrote them
+S332-SMOKE-CASES-DONE
+
+== After the coordinator's fast check, 2026-11-06: adocs/data/S122_corpus.sh sha256 7e5a47a9d3286208096d76b03441719ebf5745fd0bee5d2e25dd54970ec3c70d, S333_guards.sh 33973becf4899697fe0d24db829bb11ff2177549f05da8b47260e1eae5ebb055, S336_records.sh 0b3b162d583aef5e3baa2b97f745bb377cb51ad1252e12df2dc87c8f47965d5f
+-- seeds on F=.tuning/s336/fc/copies_only (the case's pool log and prepared/verify.txt's copy, no other run), env SEED_LOGS=F POOL=F/pool OUT=F/prepared TUNING=F GAMES=2400 CORPUS_SEED=990336000 TOPUP_SEED=990339000
+   by the script before the fix (sha256 c46e7f93..., copied beside the tree's and removed): the red
+   seeds     0 runs named by datagen's settings line under /home/max/ws/chesso/.tuning/s336/fc/copies_only, /home/max/ws/chesso/.tuning/s336/fc/copies_only/pool, /home/max/ws/chesso/.tuning/s336/fc/copies_only/s122/topup and /home/max/ws/chesso/.tuning/s336/fc/copies_only/s122/sample left out:
+   seeds     corpus [990336000, 990338400), workers [990336000, 990336012): meets none of the 0, nor the other two
+   S122-CORPUS-SEEDS-DONE
+   by 6444f6e's script:
+   seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990336000, 990338400) workers [990336000, 990336012)
+   S122-CORPUS-SEEDS-FAILED
+   by the fixed script:
+   refused: every datagen settings line under /home/max/ws/chesso/.tuning/s336/fc/copies_only is one in /home/max/ws/chesso/.tuning/s336/fc/copies_only/pool, /home/max/ws/chesso/.tuning/s336/fc/copies_only/s122/topup or /home/max/ws/chesso/.tuning/s336/fc/copies_only/s122/sample, so no other run was checked
+   S122-CORPUS-SEEDS-FAILED
+-- seeds on F=.tuning/s336/fc/near (seeds_near_copy's: the corpus's line with quiet-limit 1000 under F/plant), the same env
+   by the mutant keyed on the settings line's prefix (the settings regex without its trailing .*, sha256 e94039d4...): the red
+   seeds     1 runs named by datagen's settings line under /home/max/ws/chesso/.tuning/s336/fc/near, /home/max/ws/chesso/.tuning/s336/fc/near/pool, /home/max/ws/chesso/.tuning/s336/fc/near/s122/topup and /home/max/ws/chesso/.tuning/s336/fc/near/s122/sample left out:
+   seeds     corpus [990336000, 990338400), workers [990336000, 990336012): meets none of the 1, nor the other two
+   S122-CORPUS-SEEDS-DONE
+   by 6444f6e's script (refused, no copies listed):
+   seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990336000, 990338400) workers [990336000, 990336012)
+   S122-CORPUS-SEEDS-FAILED
+   by the fixed script:
+   seeds     2 runs named by datagen's settings line under /home/max/ws/chesso/.tuning/s336/fc/near, /home/max/ws/chesso/.tuning/s336/fc/near/pool, /home/max/ws/chesso/.tuning/s336/fc/near/s122/topup and /home/max/ws/chesso/.tuning/s336/fc/near/s122/sample left out:
+   seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990336000, 990338400) workers [990336000, 990336012)
+   S122-CORPUS-SEEDS-FAILED
+
+== adocs/data/S336_records.sh green, after the fast check
+script    adocs/data/S122_corpus.sh, sha256 7e5a47a9d3286208096d76b03441719ebf5745fd0bee5d2e25dd54970ec3c70d
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/S122_corpus.sh
+smoke case control_all: passes, as it must be: root filtered before
+smoke case verify_no_repetition: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/verify_no_repetition/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case all_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/all_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case filter_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/filter_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case split_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/split_swapped/prepared/pool.tsv.root.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case sample_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/sample_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case k_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/k_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case record_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/record_swapped/prepared/corpus.tsv.done was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case filter_unverified: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/filter_unverified/prepared/verify.txt was prepared from the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, and /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/generate.log's is b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: another pool's preparation
+smoke case old_marker: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/old_marker/prepared/pool.tsv.root.done names no pool: written before S333; `adopt` stamps a preparation whose files are this pool's
+smoke case adopt_dry: unchanged, as it must be: adopt     ADOPT_DRY=1: every check passed; would stamp verify.txt pool.tsv.root.done pool.tsv.qs.done pool.tsv.pv.done corpus.tsv.done; nothing written
+smoke case adopt: passes, as it must be: adopt     stamped /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt/prepared/corpus.tsv.done
+smoke case adopted_reads: passes, as it must be: K before: 1.2376
+smoke case adopt_swapped: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_swapped/prepared/verify.txt's root view sha256 'ad938191093a6daf283be41611f812cd7c093df401088c071bc5cbb72813b3ed' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap/pool.tsv.root's
+smoke case adopt_tampered: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_tampered/prepared/pool.tsv.qs is not the file its marker pool.tsv.qs.done records
+smoke case adopt_forged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_forged/prepared/pool.tsv.root is not the band filter of /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool/pool.tsv.root, recomputed: sha256 591df5dc022d2fe8d59187c226141eff1ae76fffa50fc468c79062907d0e6f36
+smoke case adopt_aged: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_aged/prepared/corpus.tsv is older than /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool/generate.log, so it was not made from this pool
+smoke case adopt_restamp: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_restamp/prepared/verify.txt names the pool whose generate.log has sha256 2fbb24dd492e8692512149d8422a1a506fb4af56bda9a7aa51691995a795af8b, not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/swap's b3a942885b22abbca4915b5113d7461dd11d5655f5b7350179dc85e3e07f0f23: never restamped
+smoke case adopt_pool_lines: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/prepared/verify.txt's pool lines are not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pool_lines/pool/generate.log's
+smoke case adopt_prepared_sha: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_prepared_sha/prepared/prepared.txt does not name /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/pool and corpus.tsv's sha256
+smoke case adopt_pre_s331: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_pre_s331/pool/generate.log has no 'repetition:' line: its datagen predates S331, whose two-fold draws DEC-349 voids
+smoke case adopt_validation: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/prepared.txt's qs view sha256 '5fc7e77beb639b4ae171edc14e4460ecd0001d5e5111b9067d09231b32af90b4' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_validation/prepared/pool.tsv.qs.validation's
+smoke case adopt_no_prepared: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_no_prepared/prepared/prepared.txt, so corpus.tsv's preparation cannot be read
+smoke case adopt_k: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/prepared.txt's k '1.2376' is not /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/adopt_k/prepared/k.txt's '9.9999'
+smoke case sample_unmarked: refused, as it must be: refused: no /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/sample_unmarked/prepared/verify.txt: run verify first
+smoke case all_unmarked: fails, as it must be: filter runs: removed split.txt k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case filter_again: passes, as it must be: filter runs: removed split.txt corpus.tsv.done k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case split_again: passes, as it must be: split runs: removed corpus.tsv.done k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case split_unrecorded: refused, as it must be: refused: /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/split_unrecorded/prepared holds the split's files pool.tsv.root.train pool.tsv.root.validation pool.tsv.qs.train pool.tsv.qs.validation pool.tsv.pv.train pool.tsv.pv.validation, but not split.txt and pool.tsv.qs.validation both, which split reads as made before: a fixed set no record names, and corpus_split.py never writes over one; remove them by hand, then run split
+smoke case sample_again: passes, as it must be: sample runs: removed k.txt prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case k_again: passes, as it must be: k runs: removed prepared.txt, the records of the stages after it, made before this run (S336)
+smoke case seeds_self: unchanged, as it must be: seeds     corpus [990336000, 990338400), workers [990336000, 990336012): meets none of the 1, nor the other two
+smoke case seeds_planted: refused, as it must be: seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990337000, 990337010)
+smoke case seeds_near_copy: refused, as it must be: seeds     refused: the corpus's [990336000, 990338400) or its workers [990336000, 990336012) meet [990336000, 990338400) workers [990336000, 990336012)
+smoke case seeds_copies_only: refused, as it must be: refused: every datagen settings line under /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/seeds_copies_only is one in /home/max/ws/chesso/.tuning/s336/tuning/s122/phase1/corpus_smoke/cases/seeds_copies_only/pool, /home/max/ws/chesso/.tuning/s336/tuning/s122/topup or /home/max/ws/chesso/.tuning/s336/tuning/s122/sample, so no other run was checked
+smoke     35 cases, 35 as they must be, 0 not
+green     the smoke's last line: S122-CORPUS-SMOKE-DONE
+S336-RECORDS-GREEN-DONE
+
+== adocs/data/S333_guards.sh green, S=.tuning/s336/s333, after the fast check
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/S122_corpus.sh
+smoke     35 cases, 35 as they must be, 0 not
+green     the smoke's last line: S122-CORPUS-SMOKE-DONE
+S333-GUARDS-GREEN-DONE
+
+== adocs/data/S122_corpus.sh seeds on the real tree, after the fast check
+seeds     21 runs named by datagen's settings line under /home/max/ws/chesso/.tuning /home/max/ws/chesso/adocs/data, /home/max/ws/chesso/.tuning/s122/corpus, /home/max/ws/chesso/.tuning/s122/topup and /home/max/ws/chesso/.tuning/s122/sample left out:
+seeds     corpus [2026500349, 2026650349), workers [2026500349, 2026500361): meets none of the 21, nor the other two
+seeds     top-up [2026800349, 2026950349), workers [2026800349, 2026800361): meets none of the 21, nor the other two
+seeds     sample [2026700349, 2026712349), workers [2026700349, 2026700361): meets none of the 21, nor the other two
+S122-CORPUS-SEEDS-DONE
+
+== adocs/data/S333_guards.sh red, S=.tuning/s336/s333, after the fast check (35 cases, the cases run by 9daee21's script)
+red       the cases run by 9daee21's S122_corpus.sh, sha256 5a5faf7d99ef14d09df8ede915fa6c8fb722b8f2dc7724402137b7fa9a795617
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s336/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/.S333_before_corpus.sh
+smoke     35 cases, 2 as they must be, 33 not
+red       the smoke's last line: S122-CORPUS-SMOKE-FAILED
+S333-GUARDS-RED-DONE
+the cases, each by its verdict alone:
+  control_all: as it must be
+  verify_no_repetition: FAILED
+  all_swapped: FAILED
+  filter_swapped: FAILED
+  split_swapped: FAILED
+  sample_swapped: FAILED
+  k_swapped: FAILED
+  record_swapped: FAILED
+  filter_unverified: FAILED
+  old_marker: FAILED
+  adopt_dry: FAILED
+  adopt: FAILED
+  adopted_reads: as it must be
+  adopt_swapped: FAILED
+  adopt_tampered: FAILED
+  adopt_forged: FAILED
+  adopt_aged: FAILED
+  adopt_restamp: FAILED
+  adopt_pool_lines: FAILED
+  adopt_prepared_sha: FAILED
+  adopt_pre_s331: FAILED
+  adopt_validation: FAILED
+  adopt_no_prepared: FAILED
+  adopt_k: FAILED
+  sample_unmarked: FAILED
+  all_unmarked: FAILED
+  filter_again: FAILED
+  split_again: FAILED
+  split_unrecorded: FAILED
+  sample_again: FAILED
+  k_again: FAILED
+  seeds_self: FAILED
+  seeds_planted: FAILED
+  seeds_near_copy: FAILED
+  seeds_copies_only: FAILED
+smoke case seeds_copies_only: FAILED: expected refused, the stage ended 'S122-CORPUS-SEEDS-FAILED'; did not print 'refused: every datagen settings line under .* is one in .*, so no other run was checked'

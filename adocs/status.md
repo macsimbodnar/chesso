@@ -7,6 +7,17 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06 17:40: S336 done; S124's screen on F2; P1 waits for the screen
+
+**S336 is done (`plan_done/`), this commit.** Later stages' records drop when an earlier stage makes its output, and
+`seeds` passes on the real tree. A copy of the stamped preparation's 13 small records is in
+`.tuning/s336/prepared_stamped_backup/`, with SHA256SUMS.
+
+**P1's instrument is landed (`54c892d`).** Its run worktree is `../chesso-s124spsa`, reset to `54c892d` and built. It
+runs after the screen (about 4 h, ceiling 9 h): the command is in the step file's "The coordinator's run".
+
+**Next:** S337 (ledger rows), filler behind the screen.
+
 ## 2026-11-06 16:40: S335 done; S124's F1 kept, the screen on F2; P1's instrument landing
 
 **S335 is done (`plan_done/`), this commit.** The merge's count stands as booked (DEC-296). `read` refuses a bad field on

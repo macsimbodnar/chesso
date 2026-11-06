@@ -32,6 +32,12 @@
 # stamps a preparation made before S333 after the checks above adopt(), which name
 # what they do not prove; ADOPT_DRY=1 checks and writes nothing.
 #
+# Since S336 filter, split, sample and k, when they make their output rather than read
+# it as made before, first remove the records every later stage reads as made before,
+# and record's prepared.txt (drop_later), so none of them stands beside files it was not
+# made from; and `seeds` reads a settings line of POOL, TOPUP or SAMPLE_DIR found
+# elsewhere, whole, as that run's own record, not as another run (copies in seeds()).
+#
 # ============================================================================
 # PRE-REGISTRATION -- written 2026-11-02 in S122's phase 1, while the pool was
 # still generating, before any of it ran on the pool. Nothing below changes once
@@ -126,6 +132,13 @@
 #     settings by S331's datagen), not the research pass's sample, and then plays
 #     each refusal on a planted copy.
 # Nothing in the recipe, its seeds, its sizes or K changes.
+#
+# AMENDED 2026-11-06, S336 -- the guards again, not the recipe: a stage that makes its
+# output removes the later stages' records first, the split refuses files of a split no
+# split.txt records before it removes anything, and `seeds` no longer reads copies of
+# the corpus's own settings line, such as prepared/verify.txt's, as a run meeting it.
+# The stamped preparation is left as it stands. Nothing in the recipe, its seeds, its
+# sizes or K changes.
 # ============================================================================
 
 set -uo pipefail
@@ -250,25 +263,54 @@ check_merged() {
 # from seed + w (play_games()). The three runs' own directories, POOL, TOPUP and
 # SAMPLE_DIR, are left out of the search, so the check reads the same after their
 # runs have started; the void runs' logs, in .tuning/s122/void_twofold/, are in it,
-# more ranges to avoid. Refused when no run is read at all. Writes nothing.
+# more ranges to avoid. Since S336 a line found elsewhere that is, whole, a settings
+# line of a file in POOL, TOPUP or SAMPLE_DIR is that run's own record -- verify.txt
+# copies the pool's, and a mirror or a backup of OUT copies that -- and is listed apart,
+# not read as another run. A line naming the same seed with any other setting, its games
+# or its quiet limit say, is another run. Refused when no settings line is read at all,
+# and when every line read is such a copy: no other run was checked, so SEED_LOGS
+# likely misses the logs (the coordinator's fast check of S336). Writes nothing.
+seed_files() {
+  find "$@" \( -path "$POOL" -o -path "$TOPUP" -o -path "$SAMPLE_DIR" \) -prune \
+    -o -type f -size -20M ! -name '*.tsv*' -print0 2>/dev/null
+}
+
 seeds() {
-  local dirs logged n failed=0 ours name seed games threads met oname oseed ogames othreads screen_seed
+  local dirs found own copies logged n failed=0 ours name seed games threads met oname oseed ogames othreads screen_seed line
+  local settings='datagen: [0-9]+ games, [0-9]+ nodes per move, [0-9]+ threads, seed [0-9]+.*'
   read -ra dirs <<< "${SEED_LOGS:-$TUNING $root/adocs/data}"
-  logged=$(find "${dirs[@]}" \( -path "$POOL" -o -path "$TOPUP" -o -path "$SAMPLE_DIR" \) -prune \
-             -o -type f -size -20M ! -name '*.tsv*' -print0 2>/dev/null |
-           xargs -0 -r grep -IhoE 'datagen: [0-9]+ games, [0-9]+ nodes per move, [0-9]+ threads, seed [0-9]+' |
-           sed -E 's/^datagen: ([0-9]+) games, [0-9]+ nodes per move, ([0-9]+) threads, seed ([0-9]+)$/\3 \1 \2/' |
+  found=$(seed_files "${dirs[@]}" | xargs -0 -r grep -IhoE "$settings" | sed -E 's/[[:space:]]+$//' | LC_ALL=C sort -u)
+  [[ -n "$found" ]] || { say "refused: no datagen settings line under ${dirs[*]}, so no range was checked"; return 1; }
+  own=$(find "$POOL" "$TOPUP" "$SAMPLE_DIR" -type f -size -20M ! -name '*.tsv*' -print0 2>/dev/null |
+        xargs -0 -r grep -IhoE "$settings" | sed -E 's/[[:space:]]+$//' | LC_ALL=C sort -u)
+  copies=$(LC_ALL=C comm -12 <(printf '%s\n' "$found") <(printf '%s\n' "$own") | grep .)
+  logged=$(LC_ALL=C comm -23 <(printf '%s\n' "$found") <(printf '%s\n' "$own") | grep . |
+           sed -E 's/^datagen: ([0-9]+) games, [0-9]+ nodes per move, ([0-9]+) threads, seed ([0-9]+).*/\3 \1 \2/' |
            sort -u -k1,1n -k2,2n -k3,3n)
   n=$(grep -c . <<< "$logged")
-  (( n > 0 )) || { say "refused: no datagen settings line under ${dirs[*]}, so no range was checked"; return 1; }
+  (( n > 0 )) || {
+    say "refused: every datagen settings line under ${dirs[*]} is one in $POOL, $TOPUP or $SAMPLE_DIR, so no other run was checked"
+    return 1
+  }
   say "seeds     $n runs named by datagen's settings line under ${dirs[*]}, $POOL, $TOPUP and $SAMPLE_DIR left out:"
   while read -r oseed ogames othreads; do
+    [[ -n "$oseed" ]] || continue
     say "seeds       seed $oseed, $ogames games, $othreads threads: [$oseed, $(( oseed + ogames ))), workers [$oseed, $(( oseed + othreads )))"
   done <<< "$logged"
+  if [[ -n "$copies" ]]; then
+    say "seeds     settings lines found there that are, whole, one in $POOL, $TOPUP or $SAMPLE_DIR: $(grep -c . <<< "$copies"), each that run's own record and not another run (S336):"
+    while IFS= read -r line; do
+      # The files holding LINE as found: from its `datagen: ` to the end of a line. LINE
+      # is printed last, so a console holding this reads as one more copy of it.
+      say "seeds       in $(seed_files "${dirs[@]}" | sort -z |
+        xargs -0 -r grep -IlE -- "$(sed -E 's/[][\\.*^$+?(){}|]/\\&/g' <<< "$line")[[:space:]]*$" | paste -sd ' '): $line"
+    done <<< "$copies"
+  fi
   ours="corpus $CORPUS_SEED $GAMES $THREADS"$'\n'"top-up $TOPUP_SEED $GAMES $THREADS"$'\n'"sample $SAMPLE_SEED $SAMPLE_GAMES $THREADS"
   while read -r name seed games threads; do
     met=""
     while read -r oseed ogames othreads; do
+      [[ -n "$oseed" ]] || continue
       (( seed < oseed + ogames && oseed < seed + games )) && met+=" [$oseed, $(( oseed + ogames )))"
       (( seed < oseed + othreads && oseed < seed + threads )) && met+=" workers [$oseed, $(( oseed + othreads )))"
     done <<< "$logged"
@@ -372,6 +414,35 @@ needs() {
   check_prepared
 }
 
+# S336: the records a later stage reads as made before -- split.txt by split,
+# corpus.tsv.done by sample, k.txt by k -- and record's prepared.txt, which the screen
+# reads. split.txt, k.txt and prepared.txt name no pool, so they were held to it only by
+# the markers beside them: markers removed by hand and the stages run on another pool
+# would read the old split as split before (S333's finding). A stage that makes its
+# output, not one that reads it as made before, first removes those of every stage
+# after it, so none stands beside files it was not made from. verify removes none: no
+# later stage reads its output as made before but filter, whose markers name their pool,
+# and verify holds OUT to POOL before it writes. Only these records go; the files they
+# describe stay, and split refuses a fixed set split.txt does not record.
+later_records() {
+  case "$1" in
+    filter) echo "split.txt corpus.tsv.done k.txt prepared.txt" ;;
+    split) echo "corpus.tsv.done k.txt prepared.txt" ;;
+    sample) echo "k.txt prepared.txt" ;;
+    k) echo "prepared.txt" ;;
+  esac
+}
+
+drop_later() {
+  local name gone=""
+  for name in $(later_records "$1"); do
+    [[ -e "$OUT/$name" ]] || continue
+    rm -f "$OUT/$name" || { say "cannot remove $OUT/$name"; return 1; }
+    gone+=" $name"
+  done
+  [[ -z "$gone" ]] || say "$1 runs: removed$gone, the records of the stages after it, made before this run (S336)"
+}
+
 # verify.txt is written only when every check below has passed, as a .tmp renamed
 # last, and a run's old one is removed first: `filter` reads its presence as verify's
 # pass, so a refusal leaves none. Since S333 it names the pool it read, and OUT is held
@@ -406,10 +477,11 @@ write_marker() {
 }
 
 filter() {
-  local v kept past
+  local v kept past dropped=0
   needs verify.txt || return 1
   for v in $VIEWS_ALL; do
     if [[ -f "$OUT/pool.tsv.$v.done" ]]; then say "$v filtered before"; continue; fi
+    (( dropped )) || { drop_later filter || return 1; dropped=1; }
     awk -F'\t' -v band="$BAND" -v keep="$OUT/pool.tsv.$v" -v past="$OUT/pool_past.tsv.$v" "$band_filter" \
         "$POOL/pool.tsv.$v" || { say "the filter failed on $v"; return 1; }
     kept=$(wc -l < "$OUT/pool.tsv.$v")
@@ -420,10 +492,21 @@ filter() {
 }
 
 split_stage() {
+  local v f held=""
   needs verify.txt $view_markers || return 1
   if [[ -f "$OUT/split.txt" ]] && [[ -f "$OUT/pool.tsv.qs.validation" ]]; then
     say "split before"; cat "$OUT/split.txt"; return 0
   fi
+  # S336: corpus_split.py never writes over a fixed set, so a split's files without the
+  # record split reads would refuse it; said here, before any record is removed.
+  for v in $VIEWS_ALL; do
+    for f in "pool.tsv.$v.train" "pool.tsv.$v.validation"; do [[ -e "$OUT/$f" ]] && held+=" $f"; done
+  done
+  [[ -z "$held" ]] || {
+    say "refused: $OUT holds the split's files$held, but not split.txt and pool.tsv.qs.validation both, which split reads as made before: a fixed set no record names, and corpus_split.py never writes over one; remove them by hand, then run split"
+    return 1
+  }
+  drop_later split || return 1
   python3 "$split" split --seed "$SPLIT_SEED" --validation-games "$VALIDATION_GAMES" \
       "$OUT/pool.tsv.root" "$OUT/pool.tsv.qs" "$OUT/pool.tsv.pv" | tee "$OUT/split.txt"
   (( PIPESTATUS[0] == 0 )) || { rm -f "$OUT/split.txt"; say "the split refused"; return 1; }
@@ -434,6 +517,7 @@ sample() {
   [[ -f "$OUT/pool.tsv.qs.train" ]] || { say "refused: run split first"; return 1; }
   needs verify.txt $view_markers split.txt || return 1
   if [[ -f "$OUT/corpus.tsv.done" ]]; then say "sampled before"; return 0; fi
+  drop_later sample || return 1
   python3 "$capacity_helper" capacity --in "$OUT/pool.tsv.qs.train" \
       --validation "$OUT/pool.tsv.qs.validation" --validation "$OUT/pool.tsv.root.validation" \
       --validation "$OUT/pool.tsv.pv.validation" --per-game "$PER_GAME" | tee "$OUT/capacity.txt"
@@ -453,6 +537,7 @@ k_stage() {
   needs verify.txt $view_markers split.txt corpus.tsv.done || return 1
   if [[ -s "$OUT/k.txt" ]]; then say "K before: $(cat "$OUT/k.txt")"; return 0; fi
   [[ -x "$tuner" ]] || { say "no tuner at $tuner"; return 1; }
+  drop_later k || return 1
   # A free set the tuner accepts, S122's groups: K is fitted at the shipped
   # constants before any step, whatever the set (S101_screen.sh's K probes).
   "$tuner" --data "$OUT/corpus.tsv" --holdout "$OUT/pool.tsv.qs.validation" \
@@ -966,13 +1051,42 @@ smoke_pre_s331() {
     grep -v '^repetition: ' "$smoke_a/generate.log" > "$1/pool/generate.log"
 }
 
+# S336: a copy with the record FILE removed by hand, so the stage that writes it runs again.
+smoke_without() { smoke_copy "$1" && rm "$1/prepared/$2"; }
+smoke_qs_unmarked() { smoke_without "$1" pool.tsv.qs.done; }
+smoke_unsplit() { smoke_copy "$1" && (cd "$1/prepared" && rm split.txt pool.tsv.*.train pool.tsv.*.validation); }
+smoke_split_unrecorded() { smoke_without "$1" split.txt; }
+smoke_unsampled() { smoke_without "$1" corpus.tsv.done; }
+smoke_no_k() { smoke_without "$1" k.txt; }
+# S336: the logs `seeds` reads, under C: C/pool's log, the run's own; its settings line
+# copied as verify writes it into C/prepared/verify.txt and again into a mirror; another
+# run's log, apart. The corpus is CORPUS_SEED 990336000 at the smoke's GAMES, under
+# 12 threads; no range meets one of .tuning/s122's.
+smoke_settings() { printf 'datagen: %s games, 100000 nodes per move, 12 threads, seed %s, quiet-limit %s, leaf root,qs,pv\n' "$1" "$2" "${3:-30000}"; }
+smoke_seeds_logs() {
+  mkdir -p "$1/pool" "$1/mirror" "$1/other" &&
+    { echo "S122 corpus"; smoke_settings "$GAMES" 990336000; echo "S122-CORPUS-DONE"; } > "$1/pool/generate.log" &&
+    { echo "S122 corpus verify, smoke"; smoke_settings "$GAMES" 990336000; } > "$1/prepared/verify.txt" &&
+    cp -p "$1/prepared/verify.txt" "$1/mirror/verify.txt" &&
+    smoke_settings 10 990335000 > "$1/other/generate.log"
+}
+# The same, and another run's log under C/plant: 10 games inside the corpus's range.
+smoke_seeds_planted() { smoke_seeds_logs "$1" && mkdir "$1/plant" && smoke_settings 10 990337000 > "$1/plant/generate.log"; }
+# The corpus's seed, games and threads with another quiet limit: another run, not a copy,
+# which a `seeds` keyed on seed, games and threads would read as one.
+smoke_seeds_near() { smoke_seeds_logs "$1" && mkdir "$1/plant" && smoke_settings "$GAMES" 990336000 1000 > "$1/plant/generate.log"; }
+# The case's pool log and prepared/verify.txt's copy of it, and no other run.
+smoke_seeds_copies_only() { smoke_seeds_logs "$1" && rm -r "$1/other" "$1/mirror"; }
+
 # One case, OUT/cases/NAME: SETUP builds it, then STAGE runs as a child of
 # smoke_against on POOL (A the slice, B the swap, own the case's) with EXTRA in its
 # environment. `refused` asks for -FAILED and prepared/ unchanged, `passes` for -DONE,
-# `unchanged` for both; and each REGEX printed. Counted in the caller's n and bad.
+# `unchanged` for both, `fails` for -FAILED alone (S336); and each REGEX printed, the
+# first one plain: `!RE` asks for RE not printed and `gone:NAME` for no prepared/NAME
+# after the stage (S336). Counted in the caller's n and bad.
 smoke_case() {
   local name="$1" expect="$2" pool="$3" setup="$4" stage="$5" extra="$6" c="$OUT/cases/$1"
-  local out last before after re ok=1
+  local out last before after re ok=1 why=""
   shift 6
   n=$(( n + 1 ))
   case "$pool" in
@@ -997,12 +1111,19 @@ smoke_case() {
     refused) [[ "$last" == "S122-CORPUS-${stage^^}-FAILED" && "$before" == "$after" ]] || ok=0 ;;
     passes) [[ "$last" == "S122-CORPUS-${stage^^}-DONE" ]] || ok=0 ;;
     unchanged) [[ "$last" == "S122-CORPUS-${stage^^}-DONE" && "$before" == "$after" ]] || ok=0 ;;
+    fails) [[ "$last" == "S122-CORPUS-${stage^^}-FAILED" ]] || ok=0 ;;
   esac
-  for re in "$@"; do grep -qE -- "$re" <<< "$out" || ok=0; done
+  for re in "$@"; do
+    case "$re" in
+      '!'*) ! grep -qE -- "${re:1}" <<< "$out" || { ok=0; why+="; printed '${re:1}'"; } ;;
+      gone:*) [[ ! -e "$c/prepared/${re#gone:}" ]] || { ok=0; why+="; left ${re#gone:}"; } ;;
+      *) grep -qE -- "$re" <<< "$out" || { ok=0; why+="; did not print '$re'"; } ;;
+    esac
+  done
   if (( ok )); then
     say "smoke case $name: $expect, as it must be: $(grep -m 1 -E -- "$1" <<< "$out")"
   else
-    say "smoke case $name: FAILED: expected $expect, the stage ended '$last'$([[ "$before" == "$after" ]] || echo ', and prepared/ changed')"
+    say "smoke case $name: FAILED: expected $expect, the stage ended '$last'$([[ "$before" == "$after" ]] || echo ', and prepared/ changed')$why"
     bad=$(( bad + 1 ))
     return 1
   fi
@@ -1013,11 +1134,15 @@ smoke_case() {
 # view; then S333's refusals, each on its own copy under OUT/cases, run as a child of
 # SMOKE_AGAINST, by default this script: given the script before S333, each refusal, and
 # adopt itself, is missing, the red. The two controls, control_all and adopted_reads, pass
-# under either.
+# under either. Then S336's ten: each stage run again removing the later stages' records,
+# the accepts' mixed preparation, and `seeds` on logs copying the corpus's own line; given
+# the script before S336, each is red.
 smoke() {
   local src="$TUNING/s331/measure" played n=0 bad=0
   local marker_swap='pool\.tsv\.(root|qs|pv)\.done was prepared from the pool'
   local corpus_swap='corpus\.tsv\.done was prepared from the pool'
+  local unrecorded="holds the split's files .* remove them by hand, then run split"
+  local seeds_env own_range
   smoke_against="${SMOKE_AGAINST:-$self}"
   OUT="$TUNING/s122/phase1/corpus_smoke"
   rm -rf "$OUT"; mkdir -p "$OUT" || return 1
@@ -1029,6 +1154,9 @@ smoke() {
   smoke_slice "$src" 0 19000 "$smoke_a" || return 1
   smoke_slice "$src" 19000 38000 "$smoke_b" || return 1
   POOL="$smoke_a"; VALIDATION_GAMES=20; GAMES="$played"
+  # S336's seeds cases: each reads its own directory, its corpus at the smoke's GAMES.
+  seeds_env="SEED_LOGS=$OUT/cases/%s CORPUS_SEED=990336000 TOPUP_SEED=990339000"
+  own_range="meet.*\[990336000, $(( 990336000 + played ))\)"
   all_stages || return 1
   say "smoke     the six stages passed on $smoke_a; the swap is $smoke_b; the cases are run by $smoke_against"
   smoke_case control_all passes A smoke_copy all "" 'filtered before' 'split before' 'sampled before' 'K before'
@@ -1056,6 +1184,30 @@ smoke() {
   smoke_case adopt_no_prepared refused A smoke_old_no_prepared adopt "" "no .*/prepared\.txt, so corpus\.tsv's preparation cannot be read"
   smoke_case adopt_k refused A smoke_old_k adopt "" "prepared\.txt's k '[0-9.]+' is not .*/k\.txt's '9\.9999'"
   smoke_case sample_unmarked refused B smoke_unmarked sample "" 'no .*/verify\.txt: run verify first'
+  # corpus.tsv.done is removed by the setup: gone after it means sample drew no corpus, as 6444f6e's did.
+  smoke_case all_unmarked fails B smoke_unmarked all "" 'filter runs: removed split\.txt k\.txt prepared\.txt' "$unrecorded" \
+    '!split before' '!K before' gone:split.txt gone:corpus.tsv.done gone:k.txt gone:prepared.txt
+  smoke_case filter_again passes A smoke_qs_unmarked filter "" 'filter runs: removed split\.txt corpus\.tsv\.done k\.txt prepared\.txt' \
+    'root filtered before' gone:split.txt gone:corpus.tsv.done gone:k.txt gone:prepared.txt
+  smoke_case split_again passes A smoke_unsplit split "" 'split runs: removed corpus\.tsv\.done k\.txt prepared\.txt' \
+    gone:corpus.tsv.done gone:k.txt gone:prepared.txt
+  smoke_case split_unrecorded refused A smoke_split_unrecorded split "" "$unrecorded"
+  smoke_case sample_again passes A smoke_unsampled sample "" 'sample runs: removed k\.txt prepared\.txt' gone:k.txt gone:prepared.txt
+  smoke_case k_again passes A smoke_no_k k "" 'k runs: removed prepared\.txt' gone:prepared.txt
+  # shellcheck disable=SC2059
+  smoke_case seeds_self unchanged own smoke_seeds_logs seeds "$(printf "$seeds_env" seeds_self)" \
+    "corpus \[990336000, $(( 990336000 + played ))\), workers .*: meets none of the 1," \
+    "in .*/seeds_self/mirror/verify\.txt .*/seeds_self/prepared/verify\.txt: datagen: $played games, .* seed 990336000, quiet-limit 30000, leaf root,qs,pv$"
+  # shellcheck disable=SC2059
+  smoke_case seeds_planted refused own smoke_seeds_planted seeds "$(printf "$seeds_env" seeds_planted)" \
+    'refused: the corpus.s .* meet \[990337000, 990337010\)' "!$own_range"
+  # shellcheck disable=SC2059
+  smoke_case seeds_near_copy refused own smoke_seeds_near seeds "$(printf "$seeds_env" seeds_near_copy)" \
+    "refused: the corpus.s .* meet \[990336000, $(( 990336000 + played ))\)" \
+    "in .*/seeds_near_copy/mirror/verify\.txt .*/seeds_near_copy/prepared/verify\.txt: datagen: .* quiet-limit 30000, "
+  # shellcheck disable=SC2059
+  smoke_case seeds_copies_only refused own smoke_seeds_copies_only seeds "$(printf "$seeds_env" seeds_copies_only)" \
+    'refused: every datagen settings line under .* is one in .*, so no other run was checked'
   say "smoke     $n cases, $(( n - bad )) as they must be, $bad not"
   (( bad == 0 ))
 }
