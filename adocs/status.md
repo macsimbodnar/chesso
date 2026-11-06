@@ -16,7 +16,7 @@ Updated: 2026-11-06, by hand.
 **P1's instrument is landed (`54c892d`).** Its run worktree is `../chesso-s124spsa`, reset to `54c892d` and built. It
 runs after the screen (about 4 h, ceiling 9 h): the command is in the step file's "The coordinator's run".
 
-**Next:** S337 (ledger rows), filler behind the screen.
+**S337 done** (this commit). The filler queue is empty: S124 is the only open step ahead.
 
 ## 2026-11-06 16:40: S335 done; S124's F1 kept, the screen on F2; P1's instrument landing
 

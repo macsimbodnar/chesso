@@ -4802,11 +4802,19 @@ A subject written outside that form stays in `git log`, because history is
 never rewritten, so its row is corrected in `tools/ledger_overrides.tsv`
 instead (S334): one row per closing commit, keyed by its **full** sha, with
 the description the table prints and the step or decision that recorded it.
-It replaces the description and nothing else. The script refuses to print on
-a short or repeated sha, a sha that closes no verdict the ledger prints, and a
-sha whose subject already reads out cleanly -- in the form around exactly what
-the rule reads from it, and read back unchanged from every variant of the form,
-asked of the parser itself -- so the file holds only the commits that need it. Its first row is S122's `1ffc96e`. `--no-git` reads no commit
+It replaces the description and nothing else, unless the row carries the
+optional fourth cell, `run` (S337, under the header `sha what by run`), which
+replaces the run as well: "Record S022 verdict 1's H0: ..." reads run `S022`,
+because "verdict 1" is no qualifier the rule reads, and its row names `S022
+v1`. The script refuses to print on a short or repeated sha, a `run` that is
+not a run id the rule could read from a subject or that names another step
+than the subject's, a sha that closes no verdict
+the ledger prints, a sha whose subject already reads out cleanly -- in the
+form around exactly what the rule reads from it, and read back unchanged from
+every variant of the form, asked of the parser itself -- and a row whose run
+and description are both what the rule already reads, so the file holds only
+the commits that need it. It holds S122's `1ffc96e` (S334) and S112's, S022
+v1's, S023 v1's and S289's closing commits (S337). `--no-git` reads no commit
 and so no override.
 
 The class of a run is `classify`'s: the `Elo |` line's **nElo** estimate and

@@ -65,22 +65,30 @@ commit subjected outside that form keeps a garbled row at every regeneration
 -- 1ffc96e's "Ship S122's fitted king safety family on its H1 (S122, DEC-353)"
 read "Ship 's fitted king safety family on its H1 (S122, DEC-353)". Its
 correction is a row of `tools/ledger_overrides.tsv`, keyed by the commit's
-full sha, which replaces the description and nothing else: run, numbers and
-class still come from the block. Not read under `--no-git`, which reads no
-commit. Each of these refuses to print, so a correction cannot outlive its
-reason or pile up unseen:
+full sha. It replaces the description, and the run too when the row carries
+a fourth cell, `run`, under a header naming it (S337): 775dafd's "Record S022
+verdict 1's H0: ..." read run "S022", since "verdict 1" is no qualifier the
+rule reads. A row without that cell keeps the run the subject gives; the
+numbers and the class come from the block either way. Not read under
+`--no-git`, which reads no commit. Each of these refuses to print, so a
+correction cannot outlive its reason or pile up unseen:
 
   - a key that is not 40 lowercase hex -- an abbreviation is unique only in
     the history it was taken from -- or a key listed twice;
-  - a `what` that is empty or carries `|`, or a `by` that names no step or
-    decision (S<nnn>, DEC-<nnn>);
+  - a `what` that is empty or carries `|`, a `by` that names no step or
+    decision (S<nnn>, DEC-<nnn>), or a `run` that is not a run id the rule
+    could read from a subject (the whole cell matched by RUN_RE), or names
+    another step than the subject's -- it qualifies the step, so a typo
+    cannot move a verdict to another step's row;
   - a sha that closes no verdict the ledger prints: no block, or a later
     carrier of a verdict an earlier commit closed;
   - a sha whose subject already reads out cleanly: "Record <run>'s <verdict
     word>" and " for ", ": " or ", " around exactly what the rule reads from
     it, which the rule reads back from every such variant -- the parser's
     own answer, so a subject it garbles inside the form can still be
-    corrected. S334.
+    corrected. S334;
+  - a row that changes nothing: its run, or the subject's when it has none,
+    and its `what` are both what the rule already reads. S337.
 
 THE CLASS RULE decides what a future verdict is expected to cost, which is the
 only thing the split is for. plan.md states it as: an effect outside the
@@ -114,7 +122,9 @@ OVERRIDES = os.path.join(REPO, "tools", "ledger_overrides.tsv")
 
 COLUMNS = ("run", "what", "wall", "games", "bounds", "verdict", "elo", "nelo",
            "class", "source")
-OVERRIDE_COLUMNS = ("sha", "what", "by")
+# `run` is optional, as a column and in each row under it. S337.
+OVERRIDE_COLUMNS = ("sha", "what", "by", "run")
+OVERRIDE_REQUIRED = 3
 
 # The six lines of DEC-220's block, one tight pattern each. Anchored, because a
 # line that nearly matches is the failure this is written to catch.
@@ -266,9 +276,10 @@ def subject_reads_cleanly(subject):
 
 
 def read_overrides(path):
-    """{full sha: {"what", "by", "origin"}} from the override file, or a
-    LedgerError naming the line. S334; WHEN A SUBJECT BREAKS THE RULE above
-    says why each refusal is there."""
+    """{full sha: {"what", "by", "run", "origin"}} from the override file, or
+    a LedgerError naming the line; "run" is None where the row has no `run`
+    cell. S334, S337; WHEN A SUBJECT BREAKS THE RULE above says why each
+    refusal is there."""
     overrides = {}
     try:
         handle = open(path)
@@ -283,14 +294,24 @@ def read_overrides(path):
             cells = line.rstrip("\n").split("\t")
             if header is None:
                 header = cells
-                if tuple(header) != OVERRIDE_COLUMNS:
-                    raise LedgerError("%s: header is %s, expected %s"
-                                      % (where, header, list(OVERRIDE_COLUMNS)))
+                if tuple(header) not in (OVERRIDE_COLUMNS[:OVERRIDE_REQUIRED],
+                                         OVERRIDE_COLUMNS):
+                    raise LedgerError(
+                        "%s: header is %s, expected %s, or %s with the "
+                        "optional run column"
+                        % (where, header,
+                           list(OVERRIDE_COLUMNS[:OVERRIDE_REQUIRED]),
+                           list(OVERRIDE_COLUMNS)))
                 continue
-            if len(cells) != len(OVERRIDE_COLUMNS):
-                raise LedgerError("%s: %d columns, expected %d"
-                                  % (where, len(cells), len(OVERRIDE_COLUMNS)))
-            sha, what, by = cells
+            if not OVERRIDE_REQUIRED <= len(cells) <= len(header):
+                raise LedgerError(
+                    "%s: %d columns, expected %s" % (
+                        where, len(cells),
+                        OVERRIDE_REQUIRED if len(header) == OVERRIDE_REQUIRED
+                        else "%d or %d" % (OVERRIDE_REQUIRED, len(header))))
+            sha, what, by = cells[:OVERRIDE_REQUIRED]
+            run = (cells[OVERRIDE_REQUIRED] if len(cells) > OVERRIDE_REQUIRED
+                   else None)
             if not re.match(r"^[0-9a-f]{40}$", sha):
                 raise LedgerError(
                     "%s: [%s] is not a full sha; the key is the 40-hex sha "
@@ -309,15 +330,22 @@ def read_overrides(path):
                 raise LedgerError("%s: `by` is [%s], expected the step or "
                                   "decision that recorded the row, S<nnn> or "
                                   "DEC-<nnn>" % (where, by))
-            overrides[sha] = {"what": what, "by": by, "origin": where}
+            if run is not None and not RUN_RE.fullmatch(run):
+                raise LedgerError(
+                    "%s: `run` is [%s], not a run id the subject rule reads: "
+                    "S<nnn> and any ` v<n>`, ` leg <n>` or ` F<nn>` after it; "
+                    "leave the cell out to keep the subject's" % (where, run))
+            overrides[sha] = {"what": what, "by": by, "run": run,
+                              "origin": where}
     if header is None:
         raise LedgerError("%s: no header row" % os.path.relpath(path, REPO))
     return overrides
 
 
 def apply_overrides(rows, overrides):
-    """The rows with each overridden commit's description replaced, or a
-    LedgerError for an override that corrects nothing. S334."""
+    """The rows with each overridden commit's description, and its run where
+    the override names one, replaced, or a LedgerError for an override that
+    corrects nothing. S334, S337."""
     by_commit = {row.get("commit"): row for row in rows}
     replaced = {}
     for sha, override in overrides.items():
@@ -334,7 +362,21 @@ def apply_overrides(rows, overrides):
                 "rule, as [%s]; an override corrects only a subject outside "
                 "the rule's form, so drop the row"
                 % (override["origin"], sha, row["subject"], row["what"]))
-        replaced[sha] = dict(row, what=override["what"])
+        run = override.get("run") or row["run"]
+        if run.split()[0] != row["run"].split()[0]:
+            raise LedgerError(
+                "%s: commit %s's override names run [%s], another step than "
+                "the subject's %s; a `run` cell qualifies the subject's step, "
+                "never replaces it"
+                % (override["origin"], sha, run, row["run"].split()[0]))
+        if (run, override["what"]) == (row["run"], row["what"]):
+            raise LedgerError(
+                "%s: commit %s's override changes nothing: run [%s] and "
+                "description [%s] are what the rule already reads from [%s], "
+                "so drop the row"
+                % (override["origin"], sha, run, override["what"],
+                   row["subject"]))
+        replaced[sha] = dict(row, run=run, what=override["what"])
     return [replaced.get(row.get("commit"), row) for row in rows]
 
 

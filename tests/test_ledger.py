@@ -544,6 +544,162 @@ class OverrideFromGitLog(unittest.TestCase):
         self.assertIn(self.no_block, stderr.getvalue())
         self.assertIn("closes no verdict", stderr.getvalue())
 
+    def test_the_run_column_is_read_by_the_full_sha(self):
+        # S337. A third verdict, its own pair, closed on a "verdict 1" subject.
+        numbered = self.commit(VERDICT_ONE, body(bend=OTHER_PAIR))
+        path = os.path.join(self.repo, "overrides.tsv")
+        with open(path, "w") as handle:
+            handle.write(overrides_tsv(
+                (self.broken, "the deeper path", "S334"),
+                (numbered, "the deeper path stays", "S337", "S098 v1"),
+                header=RUN_HEADER))
+        rows = ledger.read_commits(self.repo, path)
+        self.assertEqual([(row["run"], row["what"]) for row in rows],
+                         [("S098 v3 leg 1", "the deeper path"),
+                          ("S231", "the null child's two-ply key"),
+                          ("S098 v1", "the deeper path stays")])
+
+
+# S337. 775dafd's and 7f46c0c's case: "verdict 1" is no run qualifier the rule
+# reads, so the run loses its " v1" and the description keeps "1's H0: ".
+VERDICT_ONE = "Record S098 verdict 1's H0: the deeper path stays"
+RUN_HEADER = "sha\twhat\tby\trun"
+OTHER_PAIR = ("SPRT | cand 3333333 vs ref 4444444, 8+0.08, Hash=16, "
+              "noob_3moves.epd, {0, 5} nElo")
+
+
+class OverrideRunFile(unittest.TestCase):
+    """The optional `run` column of the override file. S337."""
+
+    read = OverrideFile.read
+    refused = OverrideFile.refused
+
+    def test_the_run_column_reads_beside_the_three(self):
+        read = self.read(overrides_tsv((SHA_A, "the deeper path", "S337",
+                                        "S098 v1"),
+                                       (SHA_B, "the other path", "S337"),
+                                       header=RUN_HEADER))
+        self.assertEqual(read[SHA_A]["run"], "S098 v1")
+        self.assertEqual(read[SHA_A]["what"], "the deeper path")
+        self.assertIsNone(read[SHA_B]["run"])
+
+    def test_a_file_without_the_run_column_reads_no_run(self):
+        read = self.read(overrides_tsv((SHA_A, "the deeper path", "S334")))
+        self.assertIsNone(read[SHA_A]["run"])
+
+    def test_every_run_form_the_subject_rule_reads_is_accepted(self):
+        for run in ("S098", "S098 v1", "S098 v3 leg 1", "S210 F22"):
+            read = self.read(overrides_tsv((SHA_A, "the deeper path", "S337",
+                                            run), header=RUN_HEADER))
+            self.assertEqual(read[SHA_A]["run"], run)
+
+    def test_a_run_that_is_not_a_run_id_is_refused(self):
+        # What `split_run_and_what` could never have read from a subject.
+        for run in ("", " ", "S98", "S0981", "s098 v1", "S098v1", "S098 v",
+                    " S098 v1", "S098 v1 ", "S098 verdict 1", "S098 V1",
+                    "v1", "the deeper path"):
+            self.refused(overrides_tsv((SHA_A, "the deeper path", "S337", run),
+                                       header=RUN_HEADER),
+                         "[%s]" % run, "not a run id")
+
+    def test_a_run_cell_under_the_three_column_header_is_refused(self):
+        self.refused(overrides_tsv((SHA_A, "the deeper path", "S337",
+                                    "S098 v1")), "columns")
+
+    def test_a_bad_run_header_or_row_shape_is_refused(self):
+        for header in ("sha\twhat\trun\tby", "sha\twhat\tby\trun\tnote",
+                       "sha\twhat\tby\tRun"):
+            self.refused(overrides_tsv((SHA_A, "the deeper path", "S337"),
+                                       header=header), "header")
+        self.refused(overrides_tsv((SHA_A, "the deeper path", "S337",
+                                    "S098 v1", "x"), header=RUN_HEADER),
+                     "columns")
+        self.refused(overrides_tsv((SHA_A, "the deeper path"),
+                                   header=RUN_HEADER), "columns")
+
+
+class OverrideRunRule(unittest.TestCase):
+    """`apply_overrides` with a run: it corrects the row, or it is refused."""
+
+    def override(self, what, run=None):
+        return {"what": what, "by": "S337", "run": run,
+                "origin": "fixture.tsv:3"}
+
+    def test_the_rule_misreads_a_verdict_number_as_description(self):
+        # The precondition: what the rule makes of "verdict 1", fixture and
+        # real (775dafd's subject).
+        self.assertEqual(ledger.split_run_and_what(VERDICT_ONE),
+                         ("S098", "1's H0: the deeper path stays"))
+        self.assertEqual(
+            ledger.split_run_and_what(
+                "Record S022 verdict 1's H0: the exchange gate stays"),
+            ("S022", "1's H0: the exchange gate stays"))
+
+    def test_a_run_override_replaces_the_run_and_description_and_nothing_else(self):
+        row = commit_row(SHA_A, VERDICT_ONE)
+        [overridden] = ledger.apply_overrides(
+            [row], {SHA_A: self.override("the deeper path stays", "S098 v1")})
+        self.assertEqual((overridden["run"], overridden["what"]),
+                         ("S098 v1", "the deeper path stays"))
+        self.assertEqual(dict(overridden, run=row["run"], what=row["what"]),
+                         row)
+
+    def test_a_run_override_alone_keeps_the_description_it_names(self):
+        # A run that moves with the description the rule already reads: the
+        # row still changes, so it is accepted.
+        row = commit_row(SHA_A, VERDICT_ONE)
+        [overridden] = ledger.apply_overrides(
+            [row], {SHA_A: self.override(row["what"], "S098 v1")})
+        self.assertEqual((overridden["run"], overridden["what"]),
+                         ("S098 v1", row["what"]))
+
+    def test_a_run_equal_to_the_rule_is_accepted_when_the_description_moves(self):
+        row = commit_row(SHA_A, VERDICT_ONE)
+        [overridden] = ledger.apply_overrides(
+            [row], {SHA_A: self.override("the deeper path stays", "S098")})
+        self.assertEqual((overridden["run"], overridden["what"]),
+                         ("S098", "the deeper path stays"))
+
+    def test_an_override_that_changes_nothing_is_refused(self):
+        # The run the rule reads and the description it reads, written back:
+        # it corrects nothing, as an override on a clean subject would not.
+        # Without a run cell the same holds for the description alone.
+        row = commit_row(SHA_A, VERDICT_ONE)
+        for run in ("S098", None):
+            ledger.apply_overrides(
+                [row], {SHA_A: self.override("the deeper path stays", run)})
+            with self.assertRaises(ledger.LedgerError) as caught:
+                ledger.apply_overrides(
+                    [row], {SHA_A: self.override(row["what"], run)})
+            self.assertIn(SHA_A, str(caught.exception))
+            self.assertIn("changes nothing", str(caught.exception))
+
+    def test_a_run_naming_another_step_is_refused(self):
+        # A typo in the step id would move the verdict to another step's row;
+        # the cell may qualify the subject's step, never replace it.
+        row = commit_row(SHA_A, "Record S022 verdict 1's H0: the gate stays")
+        [overridden] = ledger.apply_overrides(
+            [row], {SHA_A: self.override("the gate stays", "S022 v1")})
+        self.assertEqual(overridden["run"], "S022 v1")
+        for run in ("S032 v1", "S023 v1", "S220"):
+            with self.assertRaises(ledger.LedgerError) as caught:
+                ledger.apply_overrides(
+                    [row], {SHA_A: self.override("the gate stays", run)})
+            self.assertIn("[%s]" % run, str(caught.exception))
+            self.assertIn("S022", str(caught.exception))
+            self.assertIn("another step", str(caught.exception))
+
+    def test_a_run_override_on_a_subject_that_reads_out_cleanly_is_refused(self):
+        # S334's refusal holds with a run cell: a clean subject takes none.
+        ledger.apply_overrides([commit_row(SHA_A, VERDICT_ONE)],
+                               {SHA_A: self.override("the deeper path",
+                                                     "S098 v3 leg 2")})
+        with self.assertRaises(ledger.LedgerError) as caught:
+            ledger.apply_overrides([commit_row(SHA_A, SUBJECT)],
+                                   {SHA_A: self.override("the deeper path",
+                                                         "S098 v3 leg 2")})
+        self.assertIn("already reads out", str(caught.exception))
+
 
 class WallParsing(unittest.TestCase):
     def test_every_shape_the_seed_carries(self):

@@ -5,22 +5,47 @@
 # The rule reads a row's run and description from the closing commit's
 # subject, and history is never rewritten, so a subject in the wrong form
 # reads out wrong at every regeneration. A row here replaces that commit's
-# description and nothing else; the run, the numbers and the class still come
-# from its result block. Written as the table's other rows read.
+# description, and its run when the row carries one, and nothing else; the
+# numbers and the class still come from its result block. Written as the
+# table's other rows read.
 #
 # Columns. `sha` is the closing commit's full sha, `git log --format=%H`: an
 # abbreviation is unique only in the history it was taken from. `what` is the
 # description the row prints. `by` is the step or decision that recorded it.
+# `run`, optional (S337), is the run id the row prints, in the form the rule
+# reads (S<nnn> and any ` v<n>`, ` leg <n>`, ` F<nn>`); a row without it keeps
+# the run the subject gives.
 #
 # `tools/ledger.py` refuses to print on a short or repeated sha, an empty
-# `what` or one carrying `|`, a `by` that is no S<nnn> or DEC-<nnn>, a sha that
-# closes no verdict the ledger prints, and a sha whose subject already reads
-# out cleanly under the rule -- so a row cannot restyle a clean subject, and
-# the file holds only commits that need it. Its header lists the same.
+# `what` or one carrying `|`, a `by` that is no S<nnn> or DEC-<nnn>, a `run`
+# that is no run id or names another step than the subject's, a sha that
+# closes no verdict the ledger prints, a sha
+# whose subject already reads out cleanly under the rule, and a row that
+# changes nothing the rule reads -- so a row cannot restyle a clean subject,
+# and the file holds only commits that need it. Its header lists the same.
 #
 # 1ffc96e, S122's H1, was subjected "Ship S122's fitted king safety family on
 # its H1 (S122, DEC-353)" and read "Ship 's fitted king safety family on its
 # H1 (S122, DEC-353)"; its neighbours read "the passed pawn family", "the pawn
 # structure family", "the threat family".
-sha	what	by
+#
+# S337, the four others. e47eb4a, S289's H0, "Revert S289's null-move table
+# guard on its H0 (DEC-309)", read "Revert 's null-move table guard on its H0
+# (DEC-309)"; S292's row beside it reads "the narrowed null-move guard".
+# b9f5b96, S112's no verdict, "Record S112's no-verdict at the cap: a zero, the
+# code kept for S022", read its outcome, "no-verdict at the cap: a zero, the
+# code kept for S022"; its body names what was measured, "per-move futility in
+# quiescence at its seeds", as S113's row reads "ProbCut stays at its seeds".
+# 775dafd and 7f46c0c, "Record S022 verdict 1's H0: the exchange gate stays"
+# and "Record S023 verdict 1's H0: capture history in the margins reverts",
+# read run S022 and S023 with "1's H0: " left on the description, since
+# "verdict 1" is no qualifier the rule reads. Their runs are each step's
+# verdict 1: S022's log is S022_v1_sprt.log, its candidate a97bc1a "(S022 v1)"
+# and its sibling row S022 v2; S023's candidate adb5d78 "(S023 v1)", its done
+# stamp "verdict 1 of two (DEC-273)", verdict 2 never run.
+sha	what	by	run
 1ffc96e95d0e7e56f580f84a9c6084ec0baadc82	the king safety family	S334
+b9f5b96093f1a17279b628c908c875e86ffe6071	per-move futility in quiescence at its seeds	S337
+775dafd5981b99ddaf1124a08bd8fed7c245fac3	the exchange gate stays	S337	S022 v1
+7f46c0c28c97c3cd3597d33ee97846a80e869b9f	capture history in the margins reverts	S337	S023 v1
+e47eb4aebac0164a74197cd205ff07a60ca40066	the null-move table guard	S337
