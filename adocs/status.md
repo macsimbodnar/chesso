@@ -7,6 +7,24 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06 14:45: S124's screen running; phase 2a landed (`c496403`)
+
+**Running: `S124_screen.sh all`**, started 14:44 from `../chesso-s124p2` (branch `s124p2` at `c496403`, clean). Corpus
+read from the main tree by path, so main-tree commits do not void it.
+- PID 499381, in its own session, nice 10. Log `../chesso-s124p2/.tuning/s124/screen/all.log`, OUT beside it.
+- Stages: locate, tools, identity, k, guard, p0, then parts F1, F2, F3. Typical 6 to 9 h, worst about 30 h a part.
+- Watchers armed: one to P0's marker (2 h ceiling), one to `S124-ALL-(DONE|FAILED)` (24 h ceiling). Each exits on
+  its marker, a failure marker, the PID's death, or its ceiling.
+- Taken while S334, S335 and S336 are open (DEC-171). None reaches the screen: it calls neither `ledger.py`, nor the
+  merge, nor `seeds`.
+- **Do not reset or commit in `../chesso-s124p2` until the marker**: its `tools` stage froze the binaries at `c496403`.
+
+**Landed: phase 2a** (`c496403`). `feature_audit` reads a local rank of exactly 1142 of 1190. The screen and P0 carry
+DEC-357's guard. Two fast checks were run: the first found a blocker, ruled by DEC-357; every finding is fixed.
+
+**Next:** S334 behind the screen, then S335 and S336. If P0 shows non-conversion, mop-up's SPSA instrument, option (b),
+is built behind the screen as well.
+
 ## 2026-11-06: S124 phase 2a built, its fast check's blocker ruled (DEC-357), fixes in progress
 
 - **Phase 2a delivered** in `../chesso-s124p2` (staged, `.tuning/coord/S124/S124_phase2a.diff`):
