@@ -4772,6 +4772,17 @@ child's two-ply key"** and the row reads `S231 | the null child's two-ply
 key`. A subject with no `S<nnn>` is a hard error, as is any malformed block:
 the script refuses to print rather than drop a verdict.
 
+A subject written outside that form stays in `git log`, because history is
+never rewritten, so its row is corrected in `tools/ledger_overrides.tsv`
+instead (S334): one row per closing commit, keyed by its **full** sha, with
+the description the table prints and the step or decision that recorded it.
+It replaces the description and nothing else. The script refuses to print on
+a short or repeated sha, a sha that closes no verdict the ledger prints, and a
+sha whose subject already reads out cleanly -- in the form around exactly what
+the rule reads from it, and read back unchanged from every variant of the form,
+asked of the parser itself -- so the file holds only the commits that need it. Its first row is S122's `1ffc96e`. `--no-git` reads no commit
+and so no override.
+
 The class of a run is `classify`'s: the `Elo |` line's **nElo** estimate and
 interval against the `SPRT |` line's bounds pair, which is also nElo under
 `model=normalized`. Disjoint is fast class, overlapping is slow -- "on a
@@ -4783,7 +4794,7 @@ S149 and S207, are recorded in the seed's header and in `plan.md`.
 Durations print truncated to the whole minute, hours to two decimals and games
 an hour to one. `tests/test_ledger.py` holds the four figures and the row count
 as goldens with the command that re-derives them (DEC-142) and covers every
-refusal the parser owes.
+refusal the parser and the override file owe.
 
 
 ### Detach the run, and arm a watcher that outlives the turn

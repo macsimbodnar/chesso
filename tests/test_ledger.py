@@ -11,16 +11,20 @@ only place that verdict then lives, and a parser that skips a line it does not
 recognise loses a run instead of refusing to print.
 
 So: the four figures and the row count over the seed file are goldens, and
-every refusal the parser owes is a case. No build, no engine, and one git
-call only -- the figures run with `--no-git` so they stay put as commits
-land, the parser cases feed `parse_block` synthetic messages directly, and
-the one case that has to read a commit's tree (S256's working-tree diff)
-builds a throwaway repository of its own. Under a second.
+every refusal the parser owes is a case. No build, no engine, and no git call
+on this repository -- the figures run with `--no-git` so they stay put as
+commits land, the parser cases feed `parse_block` synthetic messages
+directly, and the two cases that have to read commits (S256's working-tree
+diff, S334's override keyed by a full sha) build a throwaway repository each.
+Under a second.
 """
 
+import contextlib
+import io
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -305,6 +309,240 @@ class SubjectRule(unittest.TestCase):
         for subject, run, what in self.CASES:
             self.assertEqual(ledger.split_run_and_what(subject), (run, what),
                              subject)
+
+
+# S334. S122's closing commit 1ffc96e as `git log` holds it: a subject not in
+# the rule's form, which history keeps, so its row needs a recorded override.
+S122_SUBJECT = "Ship S122's fitted king safety family on its H1 (S122, DEC-353)"
+BROKEN = "Ship S098 v3 leg 1's deeper path on its H1 (S098, DEC-999)"
+SHA_A = "0123456789abcdef0123456789abcdef01234567"
+SHA_B = "89abcdef0123456789abcdef0123456789abcdef"
+
+
+def commit_row(full, subject, message=None):
+    """A row as `read_commits` builds one: `parse_block`'s, keyed by full sha."""
+    row = ledger.parse_block(full[:7], subject, message or body())
+    row["commit"] = full
+    return row
+
+
+def overrides_tsv(*rows, header="sha\twhat\tby"):
+    return ("# a fixture override file\n%s\n" % header
+            + "".join("\t".join(row) + "\n" for row in rows))
+
+
+class OverrideFile(unittest.TestCase):
+    """`read_overrides`: one description per full sha, or a loud refusal."""
+
+    def read(self, text):
+        handle = tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False)
+        handle.write(text)
+        handle.close()
+        self.addCleanup(os.unlink, handle.name)
+        return ledger.read_overrides(handle.name)
+
+    def refused(self, text, *needles):
+        with self.assertRaises(ledger.LedgerError) as caught:
+            self.read(text)
+        for needle in needles:
+            self.assertIn(needle, str(caught.exception))
+
+    def test_a_well_formed_file_reads_by_full_sha(self):
+        read = self.read(overrides_tsv((SHA_A, "the deeper path", "S334"),
+                                       (SHA_B, "the other path", "DEC-999")))
+        self.assertEqual(sorted(read), [SHA_A, SHA_B])
+        self.assertEqual(read[SHA_A]["what"], "the deeper path")
+        self.assertEqual(read[SHA_B]["by"], "DEC-999")
+
+    def test_a_short_sha_is_refused(self):
+        # An abbreviation is unique only for the history it was taken in, so
+        # the key is the whole sha. The 40-character one above reads.
+        for short in (SHA_A[:7], SHA_A[:12], SHA_A[:39]):
+            self.refused(overrides_tsv((short, "the deeper path", "S334")),
+                         short, "full")
+
+    def test_a_sha_that_is_not_forty_lowercase_hex_is_refused(self):
+        for bad in (SHA_A.upper(), "g" * 40, SHA_A + "8"):
+            self.refused(overrides_tsv((bad, "the deeper path", "S334")),
+                         bad, "full")
+
+    def test_a_sha_listed_twice_is_ambiguous_and_refused(self):
+        self.refused(overrides_tsv((SHA_A, "the deeper path", "S334"),
+                                   (SHA_A, "a second reading", "S334")),
+                     SHA_A, "twice")
+
+    def test_an_empty_or_table_breaking_description_is_refused(self):
+        for what in ("", "  ", "the deeper | path"):
+            self.refused(overrides_tsv((SHA_A, what, "S334")), "what")
+
+    def test_a_row_naming_no_step_or_decision_is_refused(self):
+        for by in ("", "the coordinator", "S12", "DEC-12"):
+            self.refused(overrides_tsv((SHA_A, "the deeper path", by)), "by")
+
+    def test_a_bad_header_or_row_shape_is_refused(self):
+        self.refused(overrides_tsv((SHA_A, "the deeper path", "S334"),
+                                   header="sha\twhat"), "header")
+        self.refused(overrides_tsv((SHA_A, "the deeper path")), "columns")
+
+    def test_a_file_of_comments_alone_is_refused(self):
+        # A header row with no override reads as no override; a file with no
+        # header at all is a file that lost its shape.
+        self.assertEqual(self.read(overrides_tsv()), {})
+        self.refused("# a fixture override file\n# and nothing else\n",
+                     "no header row")
+
+    def test_a_missing_file_is_refused(self):
+        missing = os.path.join(tempfile.mkdtemp(prefix="chesso-ledger-"),
+                               "absent.tsv")
+        self.addCleanup(os.rmdir, os.path.dirname(missing))
+        with self.assertRaises(ledger.LedgerError) as caught:
+            ledger.read_overrides(missing)
+        self.assertIn("cannot be read", str(caught.exception))
+        self.assertIn("absent.tsv", str(caught.exception))
+
+    def test_the_committed_file_reads(self):
+        self.assertTrue(ledger.read_overrides(ledger.OVERRIDES))
+
+
+class OverrideRule(unittest.TestCase):
+    """`apply_overrides`: only a verdict row whose subject breaks the rule."""
+
+    OVERRIDE = {"what": "the deeper path", "by": "S334",
+                "origin": "fixture.tsv:3"}
+
+    def test_the_rule_garbles_the_subject_s122_closed_on(self):
+        # The precondition every case below rests on: what the rule makes of
+        # a subject outside its form, and of the real one.
+        self.assertEqual(ledger.split_run_and_what(S122_SUBJECT),
+                         ("S122", "Ship 's fitted king safety family on its H1 "
+                                  "(S122, DEC-353)"))
+        self.assertEqual(commit_row(SHA_A, BROKEN)["what"],
+                         "Ship 's deeper path on its H1 (S098, DEC-999)")
+
+    def test_an_override_replaces_the_description_and_nothing_else(self):
+        row = commit_row(SHA_A, BROKEN)
+        [overridden] = ledger.apply_overrides([row], {SHA_A: self.OVERRIDE})
+        self.assertEqual(overridden["what"], "the deeper path")
+        self.assertEqual(dict(overridden, what=row["what"]), row)
+
+    def test_an_override_whose_sha_closes_no_verdict_is_refused(self):
+        rows = [commit_row(SHA_A, BROKEN)]
+        ledger.apply_overrides(rows, {SHA_A: self.OVERRIDE})
+        with self.assertRaises(ledger.LedgerError) as caught:
+            ledger.apply_overrides(rows, {SHA_B: self.OVERRIDE})
+        self.assertIn(SHA_B, str(caught.exception))
+        self.assertIn("closes no verdict", str(caught.exception))
+
+    def test_an_override_on_a_later_carrier_of_a_verdict_is_refused(self):
+        # db1b6fa's case (S235): a second commit carrying a verdict's block is
+        # dropped as the same verdict, so it closes nothing the ledger prints.
+        first = commit_row(SHA_A, BROKEN)
+        again = commit_row(SHA_B, "Remove S098 v3 leg 1's term, keep its record")
+        rows = ledger.drop_repeated_verdicts([first, again])
+        ledger.apply_overrides(rows, {SHA_A: self.OVERRIDE})
+        with self.assertRaises(ledger.LedgerError) as caught:
+            ledger.apply_overrides(rows, {SHA_B: self.OVERRIDE})
+        self.assertIn("closes no verdict", str(caught.exception))
+
+    def test_an_override_on_a_subject_that_reads_out_cleanly_is_refused(self):
+        # The same override the broken subject takes, on a subject in the
+        # rule's form: refused, so overrides cannot restyle clean rows.
+        ledger.apply_overrides([commit_row(SHA_A, BROKEN)],
+                               {SHA_A: self.OVERRIDE})
+        with self.assertRaises(ledger.LedgerError) as caught:
+            ledger.apply_overrides([commit_row(SHA_A, SUBJECT)],
+                                   {SHA_A: self.OVERRIDE})
+        self.assertIn(SUBJECT, str(caught.exception))
+        self.assertIn("already reads out", str(caught.exception))
+
+    # Subjects in the rule's outward form that the parser still garbles: a
+    # second verdict word or a second "for" at the head of the description is
+    # stripped too. The fast check over S334 found them; an override there
+    # must be accepted, or the row could never be fixed.
+    GARBLED_IN_FORM = [
+        ("Record S231's verdict: no verdict at the cap", "at the cap"),
+        ("Record S231's H1: verdict stands", "stands"),
+        ("Record S231's H1 for for x", "for x"),
+    ]
+
+    def test_a_subject_in_form_that_the_parser_garbles_takes_an_override(self):
+        for subject, garbled in self.GARBLED_IN_FORM:
+            row = commit_row(SHA_A, subject)
+            self.assertEqual(row["what"], garbled, subject)
+            [overridden] = ledger.apply_overrides([row], {SHA_A: self.OVERRIDE})
+            self.assertEqual(overridden["what"], "the deeper path", subject)
+
+    def test_which_subjects_read_out_cleanly(self):
+        for subject, _, what in SubjectRule.CASES:
+            self.assertEqual(ledger.subject_reads_cleanly(subject),
+                             what != subject, subject)
+        for subject in (S122_SUBJECT, BROKEN,
+                        "Revert S289's null-move table guard on its H0 (DEC-309)",
+                        "Record S022 verdict 1's H0: the exchange gate stays",
+                        "Record S112's no-verdict at the cap: a zero",
+                        "Remove S235's blended return, keep its record"):
+            self.assertFalse(ledger.subject_reads_cleanly(subject), subject)
+        for subject, _ in self.GARBLED_IN_FORM:
+            self.assertFalse(ledger.subject_reads_cleanly(subject), subject)
+
+
+class OverrideFromGitLog(unittest.TestCase):
+    """The override matched against the full sha `git log` prints. S334.
+
+    A throwaway repository: a commit without a block, one closing a verdict on
+    a subject the rule cannot read, and one closing another on a clean one.
+    """
+
+    def setUp(self):
+        self.repo = tempfile.mkdtemp(prefix="chesso-ledger-override-")
+        self.addCleanup(__import__("shutil").rmtree, self.repo)
+        self.git("init", "-q")
+        self.git("config", "user.email", "smoke@example.invalid")
+        self.git("config", "user.name", "smoke")
+        self.no_block = self.commit("Start S098 v3 leg 1", "no block here")
+        self.broken = self.commit(BROKEN, body())
+        self.clean = self.commit(
+            "Record S231's H1 for the null child's two-ply key",
+            body(bend="SPRT | cand 1111111 vs ref 2222222, 8+0.08, Hash=16, "
+                      "noob_3moves.epd, {0, 5} nElo"))
+
+    def git(self, *args):
+        return subprocess.run(["git", "-C", self.repo] + list(args),
+                              stdout=subprocess.PIPE, check=True,
+                              universal_newlines=True).stdout
+
+    def commit(self, subject, message):
+        self.git("commit", "-q", "--allow-empty", "-m", subject, "-m", message)
+        return self.git("rev-parse", "HEAD").strip()
+
+    def overrides(self, *rows):
+        path = os.path.join(self.repo, "overrides.tsv")
+        with open(path, "w") as handle:
+            handle.write(overrides_tsv(*rows))
+        return path
+
+    def test_without_an_override_the_row_reads_as_the_rule_has_it(self):
+        rows = ledger.read_commits(self.repo, self.overrides())
+        self.assertEqual([row["what"] for row in rows],
+                         ["Ship 's deeper path on its H1 (S098, DEC-999)",
+                          "the null child's two-ply key"])
+
+    def test_the_override_is_read_by_the_full_sha(self):
+        rows = ledger.read_commits(
+            self.repo, self.overrides((self.broken, "the deeper path", "S334")))
+        self.assertEqual([(row["run"], row["what"]) for row in rows],
+                         [("S098 v3 leg 1", "the deeper path"),
+                          ("S231", "the null child's two-ply key")])
+
+    def test_a_commit_carrying_no_block_is_refused_loudly(self):
+        path = self.overrides((self.no_block, "the deeper path", "S334"))
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), \
+                self.assertRaises(SystemExit) as caught:
+            ledger.read_commits(self.repo, path)
+        self.assertEqual(caught.exception.code, 2)
+        self.assertIn(self.no_block, stderr.getvalue())
+        self.assertIn("closes no verdict", stderr.getvalue())
 
 
 class WallParsing(unittest.TestCase):

@@ -1,0 +1,26 @@
+# tools/ledger_overrides.tsv -- a verdict row's description where the commit
+# that closed the verdict was subjected outside `tools/ledger.py`'s subject
+# rule. S334.
+#
+# The rule reads a row's run and description from the closing commit's
+# subject, and history is never rewritten, so a subject in the wrong form
+# reads out wrong at every regeneration. A row here replaces that commit's
+# description and nothing else; the run, the numbers and the class still come
+# from its result block. Written as the table's other rows read.
+#
+# Columns. `sha` is the closing commit's full sha, `git log --format=%H`: an
+# abbreviation is unique only in the history it was taken from. `what` is the
+# description the row prints. `by` is the step or decision that recorded it.
+#
+# `tools/ledger.py` refuses to print on a short or repeated sha, an empty
+# `what` or one carrying `|`, a `by` that is no S<nnn> or DEC-<nnn>, a sha that
+# closes no verdict the ledger prints, and a sha whose subject already reads
+# out cleanly under the rule -- so a row cannot restyle a clean subject, and
+# the file holds only commits that need it. Its header lists the same.
+#
+# 1ffc96e, S122's H1, was subjected "Ship S122's fitted king safety family on
+# its H1 (S122, DEC-353)" and read "Ship 's fitted king safety family on its
+# H1 (S122, DEC-353)"; its neighbours read "the passed pawn family", "the pawn
+# structure family", "the threat family".
+sha	what	by
+1ffc96e95d0e7e56f580f84a9c6084ec0baadc82	the king safety family	S334

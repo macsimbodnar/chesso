@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06 15:45: S334 done; S124's screen on F1; P1's instrument being built
+
+**S334 is done (`plan_done/`), this commit.** The ledger's S122 row reads "the king safety family" through
+`tools/ledger_overrides.tsv`. The gate ran 60 of 60 in both builds with the screen paused for 6 min (SIGSTOP/SIGCONT on
+its process group), because under its load `test_tuner_gradient_plants_threats` passes its 60 s clock only unloaded.
+Filed: S337 for the four other garbled rows.
+
+**P0 on head** (the screen's reading): 854 of 1126 starts converted, 0.758. KQvK 200/200, KRNvK 190/200, KRBvK 183/200,
+KBBvK 102/126, KRvK 158/200, **KBNvK 21/200** (fifty 171, stalemate 8). So P1 runs.
+- Its instrument, option (b), is being built by an Opus 5.5 agent in `../chesso-s124spsa` (branch `s124p1spsa`): SPSA
+  that rebuilds per point, no `src/` or UCI change.
+- The coordinator runs P1 after the screen.
+
 ## 2026-11-06 14:45: S124's screen running; phase 2a landed (`c496403`)
 
 **Running: `S124_screen.sh all`**, started 14:44 from `../chesso-s124p2` (branch `s124p2` at `c496403`, clean). Corpus

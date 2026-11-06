@@ -60,6 +60,28 @@ So the subject a verdict-closing commit wants is "Record S231's H1 for the
 null child's two-ply key" or "Record S231's verdict: the null child's two-ply
 key" -- either reads out as run "S231", what "the null child's two-ply key".
 
+WHEN A SUBJECT BREAKS THE RULE. History is never rewritten, so a closing
+commit subjected outside that form keeps a garbled row at every regeneration
+-- 1ffc96e's "Ship S122's fitted king safety family on its H1 (S122, DEC-353)"
+read "Ship 's fitted king safety family on its H1 (S122, DEC-353)". Its
+correction is a row of `tools/ledger_overrides.tsv`, keyed by the commit's
+full sha, which replaces the description and nothing else: run, numbers and
+class still come from the block. Not read under `--no-git`, which reads no
+commit. Each of these refuses to print, so a correction cannot outlive its
+reason or pile up unseen:
+
+  - a key that is not 40 lowercase hex -- an abbreviation is unique only in
+    the history it was taken from -- or a key listed twice;
+  - a `what` that is empty or carries `|`, or a `by` that names no step or
+    decision (S<nnn>, DEC-<nnn>);
+  - a sha that closes no verdict the ledger prints: no block, or a later
+    carrier of a verdict an earlier commit closed;
+  - a sha whose subject already reads out cleanly: "Record <run>'s <verdict
+    word>" and " for ", ": " or ", " around exactly what the rule reads from
+    it, which the rule reads back from every such variant -- the parser's
+    own answer, so a subject it garbles inside the form can still be
+    corrected. S334.
+
 THE CLASS RULE decides what a future verdict is expected to cost, which is the
 only thing the split is for. plan.md states it as: an effect outside the
 bounds interval is fast class; inside it, on a bound, or a true zero is slow.
@@ -88,9 +110,11 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SEED = os.path.join(REPO, "adocs", "data", "ledger_seed.tsv")
+OVERRIDES = os.path.join(REPO, "tools", "ledger_overrides.tsv")
 
 COLUMNS = ("run", "what", "wall", "games", "bounds", "verdict", "elo", "nelo",
            "class", "source")
+OVERRIDE_COLUMNS = ("sha", "what", "by")
 
 # The six lines of DEC-220's block, one tight pattern each. Anchored, because a
 # line that nearly matches is the failure this is written to catch.
@@ -117,6 +141,11 @@ BLOCK_RE = {
 }
 
 RUN_RE = re.compile(r"\bS\d{3}((?: v\d+| leg \d+| F\d+)*)")
+# The form the subject rule is written for: "Record <run>'s", a verdict word,
+# a separator and the description. Only a subject outside it, or one the rule
+# still garbles inside it, may take an override; see subject_reads_cleanly.
+VERDICT_WORDS = ("H1", "H0", "no verdict", "verdict")
+SUBJECT_SEPARATORS = (" for ", ": ", ", ")
 NUMBER_WORDS = (
     "zero one two three four five six seven eight nine ten eleven twelve "
     "thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty "
@@ -222,6 +251,93 @@ def split_run_and_what(subject):
     return run, what or subject.strip()
 
 
+def subject_reads_cleanly(subject):
+    """True when the subject is the rule's form wrapped around exactly the
+    description the rule reads from it, and the rule reads that description
+    back from every variant of the form. Asked of the parser itself, so the
+    two cannot disagree: "Record S231's H1: verdict stands" reads "stands" and
+    is not clean, nor is "Record S231's H1 for for x", whose "for x" another
+    variant would read as "x"."""
+    run, what = split_run_and_what(subject)
+    forms = ["Record %s's %s%s%s" % (run, word, separator, what)
+             for word in VERDICT_WORDS for separator in SUBJECT_SEPARATORS]
+    return subject in forms and all(
+        split_run_and_what(form) == (run, what) for form in forms)
+
+
+def read_overrides(path):
+    """{full sha: {"what", "by", "origin"}} from the override file, or a
+    LedgerError naming the line. S334; WHEN A SUBJECT BREAKS THE RULE above
+    says why each refusal is there."""
+    overrides = {}
+    try:
+        handle = open(path)
+    except OSError as error:
+        raise LedgerError("the override file cannot be read: %s" % error)
+    with handle:
+        header = None
+        for number, line in enumerate(handle, 1):
+            if line.startswith("#") or not line.strip():
+                continue
+            where = "%s:%d" % (os.path.relpath(path, REPO), number)
+            cells = line.rstrip("\n").split("\t")
+            if header is None:
+                header = cells
+                if tuple(header) != OVERRIDE_COLUMNS:
+                    raise LedgerError("%s: header is %s, expected %s"
+                                      % (where, header, list(OVERRIDE_COLUMNS)))
+                continue
+            if len(cells) != len(OVERRIDE_COLUMNS):
+                raise LedgerError("%s: %d columns, expected %d"
+                                  % (where, len(cells), len(OVERRIDE_COLUMNS)))
+            sha, what, by = cells
+            if not re.match(r"^[0-9a-f]{40}$", sha):
+                raise LedgerError(
+                    "%s: [%s] is not a full sha; the key is the 40-hex sha "
+                    "`git log --format=%%H` prints, since an abbreviation is "
+                    "unique only in the history it was taken from"
+                    % (where, sha))
+            if sha in overrides:
+                raise LedgerError("%s: %s is listed twice, first at %s; one "
+                                  "commit takes one description"
+                                  % (where, sha, overrides[sha]["origin"]))
+            if not what.strip() or "|" in what:
+                raise LedgerError("%s: `what` is [%s]; it is a table cell, "
+                                  "so it is not empty and carries no `|`"
+                                  % (where, what))
+            if not re.match(r"^(?:S\d{3}|DEC-\d{3})$", by):
+                raise LedgerError("%s: `by` is [%s], expected the step or "
+                                  "decision that recorded the row, S<nnn> or "
+                                  "DEC-<nnn>" % (where, by))
+            overrides[sha] = {"what": what, "by": by, "origin": where}
+    if header is None:
+        raise LedgerError("%s: no header row" % os.path.relpath(path, REPO))
+    return overrides
+
+
+def apply_overrides(rows, overrides):
+    """The rows with each overridden commit's description replaced, or a
+    LedgerError for an override that corrects nothing. S334."""
+    by_commit = {row.get("commit"): row for row in rows}
+    replaced = {}
+    for sha, override in overrides.items():
+        row = by_commit.get(sha)
+        if row is None:
+            raise LedgerError(
+                "%s: %s closes no verdict the ledger prints -- no commit of "
+                "that sha carries a result block, or it carries again a "
+                "verdict an earlier commit closed -- so its override corrects "
+                "nothing; drop the row" % (override["origin"], sha))
+        if subject_reads_cleanly(row["subject"]):
+            raise LedgerError(
+                "%s: commit %s's subject [%s] already reads out under the "
+                "rule, as [%s]; an override corrects only a subject outside "
+                "the rule's form, so drop the row"
+                % (override["origin"], sha, row["subject"], row["what"]))
+        replaced[sha] = dict(row, what=override["what"])
+    return [replaced.get(row.get("commit"), row) for row in rows]
+
+
 def parse_block(sha, subject, body):
     """One commit's six lines into a row, or a LedgerError naming what is wrong."""
     found = {}
@@ -267,6 +383,7 @@ def parse_block(sha, subject, body):
         "seconds": int(wall.group("h")) * 3600 + int(wall.group("m")) * 60,
         "games_n": int(games.group("n")),
         "origin": "commit %s" % sha,
+        "subject": subject,
         "verdict_key": (sprt.group("cand"), sprt.group("ref"),
                         found["Log"].group("path")),
         "diff_blob": sprt.group("diff"),
@@ -306,13 +423,14 @@ def drop_repeated_verdicts(rows):
     return kept
 
 
-def read_commits():
-    """Every commit carrying an `SPRT |` line, oldest first."""
+def read_commits(repo=REPO, overrides_path=OVERRIDES):
+    """Every commit carrying an `SPRT |` line, oldest first, with the
+    override file's descriptions applied."""
     separator = "\x1e"
     try:
         log = subprocess.check_output(
-            ["git", "-C", REPO, "log", "--reverse",
-             "--format=%s" % (separator + "%h%n%s%n%B")],
+            ["git", "-C", repo, "log", "--reverse",
+             "--format=%s" % (separator + "%H%n%h%n%s%n%B")],
             universal_newlines=True)
     except (subprocess.CalledProcessError, OSError) as error:
         die("git log failed: %s" % error)
@@ -321,17 +439,23 @@ def read_commits():
     for chunk in log.split(separator):
         if not chunk.strip():
             continue
-        sha, subject, body = (chunk.lstrip("\n").split("\n", 2) + ["", ""])[:3]
+        full, sha, subject, body = (chunk.lstrip("\n").split("\n", 3)
+                                    + ["", "", ""])[:4]
         if not re.search(r"^SPRT \|", body, re.M):
             continue
         try:
             row = parse_block(sha, subject, body)
             if row["diff_blob"]:
-                diff_in_commit(sha, row["diff_blob"])
+                diff_in_commit(sha, row["diff_blob"], repo)
+            row["commit"] = full
             rows.append(row)
         except LedgerError as error:
             die(str(error))
-    return drop_repeated_verdicts(rows)
+    try:
+        return apply_overrides(drop_repeated_verdicts(rows),
+                               read_overrides(overrides_path))
+    except LedgerError as error:
+        die(str(error))
 
 
 def figures(rows):
