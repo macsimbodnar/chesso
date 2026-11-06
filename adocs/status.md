@@ -18,9 +18,10 @@ Updated: 2026-11-06, by hand.
   `truncation_positions` (phases 5, 11, 17, 23 at 2.875).
 - Gate: 59 of 59 in `build/` and `build-tune/`, format clean.
 - S124 stays in `plan_current/`. Phase 2 needs `feature_audit`'s local rank first, then the screen at K refit (DEC-352).
-- `../chesso-s124p1` and `../chesso-s124p1b` are S124's own. They go once their blobs are verified in history.
+- Removed `../chesso-s124p1b` (every blob in history; README and the step file are the merged versions) and
+  `../chesso-s124p1` (its staged diff equals `.tuning/coord/S124/S124_phase1.diff`, `c3c8f2d2...`), branches too. Free 12 GB.
 
-**Next, in Open order:** S333, S334, S335 (filler, agent-only, one at a time), then S124 phase 2.
+**Running: S333**, one Opus 5.5 agent in the main tree, no `src/`. Then S334, S335, then S124 phase 2.
 
 ## 2026-11-05 15:00: HANDOVER for a fresh session (the owner shuts the machine down)
 
