@@ -1901,3 +1901,15 @@ line above `S124-P1-TEST-DONE`, `S124-P1-KEPT` or `-NOT-KEPT`. The candidate's t
   the run does not depend on it; only a resumed iteration's repeat would hit.
 - The main checkout moved to `d0cb418` while this was built, through S334's landing and DEC-358's ruling. The staged
   diff applies onto it cleanly (`git apply --check --3way`).
+
+## 2026-11-06: the screen, stopped for a shutdown, the coordinator
+
+The screen ran from `../chesso-s124p2` at `c496403` from 14:44 and was stopped at 18:09 for a shutdown, during F3's
+full round 2.
+- **P0:** 854 of 1126 converted.
+- **F1 kept:** d +0.00368, m 0.0000282, guard -0.0339 +/- 0.0005; cells 46 / 0 / 20.
+- **F2 kept:** d +0.001851, m 0.0000209, at K 1.3248; guard -0.00686 +/- 0.00027; fit
+  `endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128`.
+- Readings: `../chesso-s124p2/.tuning/s124/screen/read/`.
+- **The resume:** `all` reuses every decided fit and every round with `best:`. F3's round 2 re-runs. The command is in
+  `adocs/status.md`'s handover.

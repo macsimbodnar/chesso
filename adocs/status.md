@@ -7,6 +7,54 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06 18:15: HANDOVER for a fresh session (the owner shuts the machine down)
+
+Nothing runs. S124's screen was stopped by the coordinator (SIGTERM to its process group) during F3's round 2, and the
+S102 agent was stopped at a safe point. Everything below is on disk and survives the shutdown.
+
+**S124 phase 2: the screen, stopped mid-F3.** Worktree `../chesso-s124p2`, branch `s124p2` at `c496403`, clean.
+- **Never commit or reset in that worktree before the screen ends.** Its `tools` stage froze the binaries at
+  `c496403`, and a resume refuses another HEAD.
+- **F1 kept:** d +0.00368 against m 0.0000282. Guard -0.0339 +/- 0.0005. Cells 46 / 0 / 20.
+- **F2 kept:** d +0.001851 against m 0.0000209 at K 1.3248, quarters 0.001829 to 0.001859. Guard -0.00686 +/- 0.00027.
+  F2's fit: `endgame_scale 45 0 9 29 81 114 86 128 123 19 128 128 128`.
+- **F3:** its full fit's round 1 is done (K refit 1.3274). Round 2 was stopped, and its partial `fit.log` has no `best:`,
+  so a resume re-runs it. The five quarter fits have not started.
+- **Resume:**
+  ```
+  cd /home/max/ws/chesso-s124p2
+  nohup setsid -w nice -n 10 adocs/data/S124_screen.sh all >> .tuning/s124/screen/all.log 2>&1 & echo $!
+  ```
+  Leave the `cd` out of the backgrounded line, as written. `all` skips F1 and F2 (PART-OUTCOME read), reuses every
+  decided fit and every round with `best:`. Watch for `S124-ALL-(DONE|FAILED)` with the four-exit loop, PID check,
+  ceiling about 8 h. F3 needs 2 to 3 h.
+- **Then P1:** mop-up's SPSA, about 4 h, ceiling 9 h. It runs from `../chesso-s124spsa`, reset to `54c892d` and built.
+  The command is in the step file's "The coordinator's run". `--train-starts` is
+  `../chesso-s124p2/.tuning/s124/screen/p0/starts.tsv`.
+- **Then:** the cost (`S124_phase1_cost.sh` at the candidate), the candidate's paste, and one `{0, 5}` SPRT of the
+  survivors (F1, F2, F3's if kept, mop-up if P1 keeps it). Budget 12 to 20 h: a night.
+
+**S102 phase 1: paused** in `../chesso-s102p1`, branch `s102p1` at `42f2aa7`. Its work is staged, not committed.
+- State and next steps: the step file's "2026-11-06: phase 1 paused for a shutdown" section, inside that worktree.
+- WIP diff: `.tuning/coord/S102/S102_phase1_wip.diff`, with its sidecar.
+- Built so far: the engine side at zero weights, with objdiff identical and bench 4707943, and the tuner layout
+  1190 -> 1214. Still red: `test_eval_trace` (its coverage block is owed) and `test_tuner_gradient` (ten zero gradients).
+- **For the coordinator's review:** the agent proposes ending the endgame factor case's non-vacuity loop at
+  `ENDGAME_SCALE_END` rather than `PARAM_COUNT`, since S102's block now follows. It narrows a test's range: rule on
+  it before it lands.
+- A fresh agent resumes it from that section. It rebases if S124's candidate lands first.
+
+**Done today, committed:**
+- S124 phase 1 landed (`96b70fc`). DEC-355 and DEC-356 (the owner's) applied there; DEC-357 and DEC-358 (the
+  coordinator's) are the screen's guard and P1's kept rule.
+- S124 phase 2a (`c496403`) and P1's instrument (`54c892d`).
+- Filler closed: S333, S334, S335, S336, S337.
+
+**Machine notes:**
+- Take a run's PID with `setsid -w` (`.moltke.local.md`).
+- Disk was about 8 GB free at 18:10. The S102 worktree and the P1 scratch take more.
+- A copy of S122's stamped preparation records is in `.tuning/s336/prepared_stamped_backup/`.
+
 ## 2026-11-06 18:10: S337 done; S102 phase 1 started behind S124's screen
 
 - **S337 is done** (`ef866de`). The filler queue is empty.
