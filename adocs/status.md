@@ -5,7 +5,17 @@ state. The filesystem beats this file: on disagreement, `plan_current/` wins.
 Nothing generates it since moltke v1 (DEC-109), so a stale line here is a
 missed edit and not a tool's opinion.
 
-Updated: 2026-11-05 15:00, by hand.
+Updated: 2026-11-06, by hand.
+
+## 2026-11-06: resumed after the shutdown; RED 1 ruled by the owner (DEC-356); DEC-355 being implemented
+
+- **The owner answered RED 1: option A, DEC-356.** S124's factor gradient case keeps its relative metric and takes the
+  one pair DEC-316's rule picks, `8/8/8/3r4/8/1k6/8/K3R3 w` and its mirror; expected 6.27485e-7 at 739.
+- **Running: one Opus 5.5 agent in `../chesso-s124p1b`** implementing DEC-355 (the per-row curve residual in
+  `truncation_bound()`, both cases; plants 9 and 10 red; `cell_truncation_positions` re-derived by its script, rules
+  amended first), then DEC-356. Nothing is committed there. Deliverable `.tuning/coord/S124/S124_phase1_dec355.diff`.
+- Then: fast check over the delta, `specs.md` from the step file's draft, gate, land S124 phase 1 as `No functional
+  change`, bench 4707943. Then S333, S334, S335, S124 phase 2.
 
 ## 2026-11-05 15:00: HANDOVER for a fresh session (the owner shuts the machine down)
 

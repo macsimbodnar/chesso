@@ -17518,3 +17518,26 @@ Why:          The tightest bound that holds is the one that keeps a truncation g
 Rejected:     The flat +1 (blind, above). A per-row +1 where the curve fires (moot on this corpus). (iii), a weakening.
 Consequences: S122's landed bound case at F gets tighter, a strengthening of a landed test. The work is S124 phase 1's
               rebase, in `../chesso-s124p1b`.
+
+## DEC-356  2026-11-06  S124's endgame factor gradient case takes DEC-316's rows: one pair picked by a rule written before it ran
+Tags:         testing, tuner, gradient, s124, dec-316, dec-343, dec-344
+Context:      S124 phase 1 rebased onto S122 (`bcc41f3`): `test_tuner_gradient`'s "the endgame factor's gradient is the
+              derivative, chain rule in" reads 3.4757e-6 at parameter 726, `psqt_eg[king][b6]`, against 1e-6 (3.02e-7 on
+              `d83d6c0`). The derivative is right: numeric and analytic agree to about 6e-15 at every h from 0.04 to
+              0.0025, smaller h and Richardson stay red, normwise reads 5.63e-9. It is the summation's rounding over a
+              near-stationary weight (726's |g| 1.98e-9, 1.1e-5 of the case's largest), DEC-316's class, its third
+              recurrence on that file's bound after DEC-316 (S135) and DEC-343 (S101), which DEC-344 (9) reserves to the
+              owner. Readings: `adocs/data/S124_factor_gradient_options.txt` (S124's delivery).
+Decision:     By the owner, 2026-11-06, option A. The case keeps its relative metric, h 0.01 and its 1e-6. Its rows gain
+              the one pair the rule in `S124_factor_gradient_options.txt` ("Option A, the rule, written 2026-11-05 before
+              the program first ran") picks: `8/8/8/3r4/8/1k6/8/K3R3 w - - 0 1` and its mirror, 726's |g| x65; the case
+              then reads 6.27485e-7 at 739, x1.59 under its bound. The pair is a golden (DEC-142), named at its site with
+              the script that re-derives it. No other golden moves (the walk's two S124 cases 179059 -> 179079
+              assertions, the forced-cell case's worsts unchanged).
+Why:          The relative check is what caught S100's, S101's and S135's errors; a fixture that leaves a weight
+              stationary is the defect, not the metric.
+Rejected:     (B) the normwise metric (5.63e-9 here; it would have flagged neither S101's 2.63e-7 nor S135's case, and
+              is blind to a modest relative error on a small-gradient weight, S100's class). Smaller h, Richardson
+              (both red, the floor is rounding).
+Consequences: At x1.59 a later refit may bring the class back a fourth time; that recurrence is again the owner's
+              (DEC-344 (9)). The work is S124 phase 1's rebase, in `../chesso-s124p1b`, after DEC-355.
