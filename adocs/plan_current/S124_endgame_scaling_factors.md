@@ -1432,3 +1432,11 @@ also at its golden's site and, for `truncation_positions`, in `adocs/data/S083_t
   under 1e-6. `S124_factor_gradient_rows` still reproduces the pair.
 - Gates: both builds 59 of 59 with no warning, bench 4707943 in both, the format check clean, and `plan_prose_check.py`
   exits 0 in all five modes.
+
+## 2026-11-06: phase 2 starts, the coordinator
+
+Worktree `../chesso-s124p2`, branch `s124p2`, at `0bb182d`. Phase 2a, one Opus 5.5 subagent: `feature_audit`'s local
+rank at the shipped point and the identity rule restated; the draft's corpus figures re-read on S122's regenerated
+corpus; `S124_screen.sh` with the pre-registration as its header; P0's conversion test. No fit, SPSA or match is
+started by the agent; the coordinator runs P0 and the parts. Mop-up's SPSA instrument waits for P0's reading (if head
+converts every start, P1 is not run).
