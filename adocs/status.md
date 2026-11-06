@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06: S124 phase 2a built, its fast check's blocker ruled (DEC-357), fixes in progress
+
+- **Phase 2a delivered** in `../chesso-s124p2` (staged, `.tuning/coord/S124/S124_phase2a.diff`):
+  - `feature_audit`'s local rank reads rank exactly 1142 of 1190 at the shipped point, nullity 48, every one accounted for;
+  - the screen `S124_screen.sh` and P0's `S124_p0.py`;
+  - preconditions on S122's corpus: OCB_PURE P<=2 on 2438 games, so no stop before F1. K at the identity is 1.2171.
+- **The fast check's blocker:** the tablebase guard read each vector at its own K, so K alone refused an inert part.
+  DEC-357 rules one common K, the part's decided K, with K_0 printed beside. Five lows are being fixed with it.
+- **P0's smoke:** 3 and 5 of 12 starts failed to convert (KBNvK among them), so mop-up's SPSA instrument is likely
+  needed. Option (b), a driver that rebuilds per point, is recommended, not built.
+- **Then:** land phase 2a, run the screen from its own worktree (corpus read from the main tree by path), so main-tree
+  commits stay free and S334, S335 and S336 run behind it.
+
 ## 2026-11-06: S333 done; next S124 phase 2, the filler behind it
 
 **S333 is done (`plan_done/`), this commit.** Every record of S122's preparation names its pool; `verify` refuses a

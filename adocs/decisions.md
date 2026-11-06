@@ -17541,3 +17541,21 @@ Rejected:     (B) the normwise metric (5.63e-9 here; it would have flagged neith
               (both red, the floor is rounding).
 Consequences: At x1.59 a later refit may bring the class back a fourth time; that recurrence is again the owner's
               (DEC-344 (9)). The work is S124 phase 1's rebase, in `../chesso-s124p1b`, after DEC-355.
+
+## DEC-357  2026-11-06  S124's tablebase guard reads both vectors at one K, the part's decided K, with K at the identity beside it
+Tags:         screen, guard, tablebase, k, s124, dec-352, dec-350
+Context:      S124 phase 2a's screen read the guard's loss for each vector at its own decided K: the landed tree at K_0,
+              the part at its refit K. A fast check read the landed vector alone at two K on the 292418 guard rows: K
+              1.2171 -> 1.2671 moves the loss +0.0023092 +/- 0.0000174, and -> 1.3578 +0.0063058 +/- 0.0000468. Both
+              refuse. So a part that changes nothing but K is refused, and a falling K would blind the guard. The smoke
+              showed it: F3, whose cells touch no guard row, was refused. The engine never reads K.
+Decision:     By the coordinator under the owner's standing instruction, before F1 is fitted. The guard compares the part
+              with its predecessor at one common K, the part's decided K (DEC-352's reading K), and refuses on that
+              reading alone. The same comparison at K_0 for both sides is printed beside it and decides nothing. A
+              dated amendment in S124's pre-registration.
+Why:          A guard on what the factor does to tablebase-labelled rows has to hold the sigmoid's scale fixed, or it
+              measures K.
+Rejected:     Each vector at its own K (the defect). K refit on the guard rows per vector (it fits away part of what the
+              guard reads, and adds a fit per part to the guard). Refusing if either K refuses (doubles the guard's error
+              rate with no ruling asking for it).
+Consequences: The screen's smoke must show an inert part passing the guard.
