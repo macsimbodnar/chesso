@@ -1,0 +1,159 @@
+# S124 P1's instrument: adocs/data/S124_p1.py smoke on the delivered tree, 2026-11-06, under S124's screen
+# (PID 499381, load 10 to 14 on 12 threads), nice 10, at 4 games. The tree 8cc9a38 with the diff staged;
+# S124_p1.py sha256 02f4c4a930ca6efbfd42dbd815253a457abda4140b030c6b1cd3a6a1e6a41384, with DEC-358's kept rule and the fast check's iteration-0 resume. Training starts:
+# /home/max/ws/chesso-s124p2/.tuning/s124/screen/p0/starts.tsv, sha256 6974c6b5b69581a77a1ad416c9f19b5a0f67f70c95f18f1709dafdac1b439512.
+# A smoke and no reading: 4 starts a class, 2 a class an iteration, 3 iterations, 2 fresh a class.
+
+## the smoke, green
+$ ~/.venv/chess/bin/python adocs/data/S124_p1.py smoke --out .tuning/s124p1/smoke --train-starts STARTS
+setup: /home/max/ws/chesso-s124spsa at 8cc9a38, four scratch copies built in 1 s; bench 4707943 head's copy, 4707943 build/
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 1.167 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+room: stage_one_bound 27929, ROOM 4838; a half reaching 4838 compiles True, 4839 fires the assert True
+setup written to /home/max/ws/chesso-s124spsa/.tuning/s124p1/smoke/setup.json
+clamp: 400,400,0|800,800,800 clamped to 268,268,0|193,193,193, reaches 4824 and 4825 of ROOM 4838; compiles True
+identity: at 11,5,0|7,13,19 the plus copy benches 4637995, at the landed 0,0,0|0,0,0 4707943, head 4707943 (rebuilt in 0.3 s)
+sim: 150 iterations in 1 s this session; the candidate 66,-27,0|22,14,34
+sim_flip: 150 iterations in 1 s this session; the candidate -251,255,0|192,-60,-42
+synthetic: excess 29.00 plies at the seed, 0.49 after the registered run, 656.61 with the update negated
+rule-check b0c3: P1 not kept: p 0.125 is not under 0.05; the replaced rule, P1 kept
+rule-check kbn-gain-chaos: P1 kept; the replaced rule, P1 not kept: converts fewer in KRBvK
+rule-check class-loss: P1 not kept: converts fewer in KRvK (fresh); the replaced rule, P1 not kept: converts fewer in KRvK, KRBvK
+rule-check kbb-loss: P1 not kept: converts fewer in KBBvK (in-sample); the replaced rule, P1 not kept: converts fewer in KRBvK
+failed as planted: the smoke's planted failure inside iteration 0; checkpoint False
+resumed at iteration 0 of 3, no checkpoint written yet
+iteration 0: y -47.67 plies, converted 6 / 9 of 12, build 0.2 s, games 13 s, theta 29.90,29.90,3.74,3.74,3.74
+iteration 1: y +16.17 plies, converted 11 / 10 of 12, build 0.3 s, games 10 s, theta 37.61,37.61,4.70,2.77,2.77
+stopped before iteration 2 (--stop-after)
+resumed at iteration 2 of 3
+iteration 2: y -17.00 plies, converted 10 / 10 of 12, build 0.4 s, games 11 s, theta 44.41,44.41,3.85,3.62,3.62
+run: 1 iterations in 12 s this session; the candidate 44,44,0|4,4,4
+timing: two builds in parallel 0.3 s an iteration (0.2, 0.3, 0.4); 24 games an iteration at 4 workers, 1.92 core-seconds a start, 52.7 plies a game, 0.0365 core-seconds a ply
+determinism: head played 6 starts twice, 6 move lists identical
+test: head 0,0,0|0,0,0, the candidate 44,44,0|4,4,4 (7474101f880e), bench 4627760
+select: 18786043 root rows read, 12000 held-out games left out
+  KRvK   training games with a root row in it  7515; not won at a zeroed clock 3074; a position already kept  320; won and distinct  4121; taken    2
+  KQvK   training games with a root row in it  3869; not won at a zeroed clock    0; a position already kept  344; won and distinct  3525; taken    2
+  KRBvK  training games with a root row in it  1375; not won at a zeroed clock   17; a position already kept    4; won and distinct  1354; taken    2
+  KRNvK  training games with a root row in it  1175; not won at a zeroed clock   18; a position already kept    1; won and distinct  1156; taken    2
+  KBNvK  training games with a root row in it   407; not won at a zeroed clock   22; a position already kept    1; won and distinct   384; taken    2
+  KBBvK  training games with a root row in it   130; not won at a zeroed clock    4; a position already kept    0; won and distinct   126; taken    0
+  KBBvK  SHORT: 0 of the 2 asked
+starts written to /home/max/ws/chesso-s124spsa/.tuning/s124p1/smoke/test/fresh.tsv.tmp, sha256 e0c835bc5c15594bfc25a91af0a29869d3ccde598ec3611b8883dced2cb6af76
+S124-P0-SELECT-OK
+selected in 73 s
+fresh: 10 starts, KRvK 2, KQvK 2, KRBvK 2, KRNvK 2, KBNvK 2, KBBvK 0; disjoint from P0's 1126 by id and by position
+played head_fresh in 3 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124p1/smoke/test/head_fresh.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KRvK   starts    2 converted    2 (1.000)  plies 35.0 / 35 / 36  others none
+  KQvK   starts    2 converted    2 (1.000)  plies 24.5 / 24 / 32  others none
+  KRBvK  starts    2 converted    2 (1.000)  plies 31.5 / 32 / 43  others none
+  KRNvK  starts    2 converted    2 (1.000)  plies 38.0 / 38 / 42  others none
+  KBNvK  starts    2 converted    0 (0.000)  plies -  others fifty 2
+  all    starts   10 converted    8 (0.800)  plies 32.2 / 34 / 43  others fifty 2
+P0-FAILS-TO-CONVERT 2 of 10
+played cand_fresh in 4 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124p1/smoke/test/cand_fresh.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KRvK   starts    2 converted    1 (0.500)  plies 30.0 / 30 / 30  others material 1
+  KQvK   starts    2 converted    2 (1.000)  plies 15.5 / 16 / 20  others none
+  KRBvK  starts    2 converted    2 (1.000)  plies 25.5 / 26 / 31  others none
+  KRNvK  starts    2 converted    2 (1.000)  plies 30.0 / 30 / 40  others none
+  KBNvK  starts    2 converted    0 (0.000)  plies -  others fifty 2
+  all    starts   10 converted    7 (0.700)  plies 24.6 / 20 / 40  others fifty 2, material 1
+P0-FAILS-TO-CONVERT 3 of 10
+played head_kbb in 3 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124p1/smoke/test/head_kbb.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KBBvK  starts    4 converted    1 (0.250)  plies 50.0 / 50 / 50  others fifty 3
+  all    starts    4 converted    1 (0.250)  plies 50.0 / 50 / 50  others fifty 3
+P0-FAILS-TO-CONVERT 3 of 4
+played cand_kbb in 2 s
+P0 /home/max/ws/chesso-s124spsa/.tuning/s124p1/smoke/test/cand_kbb.tsv: class, starts, converted (mated within 100 plies), rate; plies to mate over the converted, mean / median / max; the other ends
+  KBBvK  starts    4 converted    4 (1.000)  plies 59.5 / 52 / 90  others none
+  all    starts    4 converted    4 (1.000)  plies 59.5 / 52 / 90  others none
+P0-CONVERTS-EVERY-START
+exact McNemar (DEC-358): 10 fresh starts; head alone converts 1, the candidate alone 0; one-sided p 1 that it converts more (kept below 0.05)
+  class  set       starts  head  cand  head-alone  cand-alone  p(fewer)
+  KRvK   fresh          2     2     1           1           0  0.5
+  KQvK   fresh          2     2     2           0           0  1
+  KRBvK  fresh          2     2     2           0           0  1
+  KRNvK  fresh          2     2     2           0           0  1
+  KBNvK  fresh          2     0     0           0           0  1
+  KBBvK  in-sample      4     1     4           0           3  1
+P1 not kept: p 1 is not under 0.05
+beside, deciding nothing: the rule DEC-358 replaced, S124_p0.py mcnemar
+  mcnemar: 10 starts; head alone converts 1, the candidate alone 0; z -1.000 one-sided
+    KRvK   starts    2 head    2 candidate    1
+    KQvK   starts    2 head    2 candidate    2
+    KRBvK  starts    2 head    2 candidate    2
+    KRNvK  starts    2 head    2 candidate    2
+    KBNvK  starts    2 head    0 candidate    0
+    KBBvK  starts    0 head    0 candidate    0
+  P1 not kept: converts fewer in KRvK
+S124-P1-NOT-KEPT
+smoke: 169 s
+S124-P1-SMOKE-DONE
+
+## each plant, the smoke red at its own guard (--plant NAME, its own OUT)
+### --plant swap
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 159.167 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+  8/6K1/8/8/8/B1k5/8/3B4 b - - 0 51 moved -56, expected -88.67
+  8/6K1/8/1b6/1b1k4/8/8/8 w - - 0 62 moved -87, expected -128.00
+  8/8/2b5/8/3b3K/8/4k3/8 w - - 0 89 moved -83, expected -133.00
+  8/8/8/5K2/2kb4/8/4b3/8 w - - 0 74 moved -67, expected -130.67
+  8/1B6/8/8/5N2/6K1/8/6k1 b - - 0 84 moved -130, expected -289.17
+  8/8/2K5/6bk/8/6n1/8/8 w - - 0 89 moved -70, expected -148.17
+  8/8/3nk3/8/1K6/8/8/7b w - - 0 49 moved -77, expected -177.92
+  8/8/8/2b5/8/8/5kn1/7K w - - 0 83 moved -127, expected -179.67
+  8/5K2/4R3/6k1/8/8/8/8 b - - 0 114 moved -83, expected -150.33
+  2R5/k7/8/8/8/8/4K3/8 b - - 0 95 moved -82, expected -98.33
+ERROR: Refused: the build does not evaluate the constants written: 24 rows
+S124-P1-SMOKE-FAILED
+### --plant order
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 61.333 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+  8/6K1/8/8/8/B1k5/8/3B4 b - - 0 51 moved -109, expected -88.67
+  8/6K1/8/1b6/1b1k4/8/8/8 w - - 0 62 moved -168, expected -128.00
+  8/8/2b5/8/3b3K/8/4k3/8 w - - 0 89 moved -164, expected -133.00
+  8/8/8/5K2/2kb4/8/4b3/8 w - - 0 74 moved -141, expected -130.67
+  8/1B6/8/8/5N2/6K1/8/6k1 b - - 0 84 moved -278, expected -289.17
+  8/8/3nk3/8/1K6/8/8/7b w - - 0 49 moved -167, expected -177.92
+  8/8/8/2b5/8/8/5kn1/7K w - - 0 83 moved -241, expected -179.67
+  8/5K2/4R3/6k1/8/8/8/8 b - - 0 114 moved -170, expected -150.33
+  2R5/k7/8/8/8/8/4K3/8 b - - 0 95 moved -149, expected -98.33
+  8/8/6K1/8/4R3/8/5k2/8 w - - 0 76 moved 163, expected 133.00
+ERROR: Refused: the build does not evaluate the constants written: 20 rows
+S124-P1-SMOKE-FAILED
+### --plant room
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 1.167 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+room: stage_one_bound 27929, ROOM 4839; a half reaching 4839 compiles False, 4840 fires the assert True
+ERROR: Refused: ROOM 4839 is not the assert's: {4839: (False, True), 4840: (False, True)}
+S124-P1-SMOKE-FAILED
+### --plant noclamp
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 1.167 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+room: stage_one_bound 27929, ROOM 4838; a half reaching 4838 compiles True, 4839 fires the assert True
+clamp: 400,400,0|800,800,800 clamped to 400,400,0|800,800,800, reaches 7200 and 20000 of ROOM 4838; compiles False
+ERROR: Refused: a clamped point fails the stage-one assert
+S124-P1-SMOKE-FAILED
+### --plant sign
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 1.167 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+room: stage_one_bound 27929, ROOM 4838; a half reaching 4838 compiles True, 4839 fires the assert True
+clamp: 400,400,0|800,800,800 clamped to 268,268,0|193,193,193, reaches 4824 and 4825 of ROOM 4838; compiles True
+synthetic: excess 29.00 plies at the seed, 656.61 after the registered run, 0.49 with the update negated
+ERROR: Refused: the update does not descend the synthetic objective
+S124-P1-SMOKE-FAILED
+### --plant raw
+eval check: 24 rows in the domain, 4 outside; |evaluate() moved - expected| worst 1.167 in the domain (bound 2), every outside row 0; rows with each count non-zero (centre, kings, corner): [21, 24, 3]
+room: stage_one_bound 27929, ROOM 4838; a half reaching 4838 compiles True, 4839 fires the assert True
+clamp: 400,400,0|800,800,800 clamped to 268,268,0|193,193,193, reaches 4824 and 4825 of ROOM 4838; compiles True
+synthetic: excess 29.00 plies at the seed, 0.49 after the registered run, 656.61 with the update negated
+rule-check b0c3: P1 not kept: p 0.125 is not under 0.05; the replaced rule, P1 kept
+rule-check kbn-gain-chaos: P1 not kept: converts fewer in KRBvK (fresh); the replaced rule, P1 not kept: converts fewer in KRBvK
+rule-check class-loss: P1 not kept: converts fewer in KRvK (fresh), KRBvK (fresh); the replaced rule, P1 not kept: converts fewer in KRvK, KRBvK
+rule-check kbb-loss: P1 not kept: converts fewer in KRBvK (fresh), KBBvK (in-sample); the replaced rule, P1 not kept: converts fewer in KRBvK
+ERROR: Refused: DEC-358's rule misreads kbn-gain-chaos
+S124-P1-SMOKE-FAILED
+
+## the build-time readings on a ccache miss, from the two earlier smokes of this task: smoke 1 ran the
+## script before r_end moved to 0.0125 and the synthetic check was added, smoke 2 the script before the
+## room plant, P0's frozen starts and DEC-358; the build, play and timing code is the same. This smoke's
+## points repeat smoke 2's, so its builds read ccache hits.
+smoke 1: timing: two builds in parallel 3.1 s an iteration (3.2, 3.1, 3.0); 24 games an iteration at 4 workers, 2.11 core-seconds a start, 44.7 plies a game, 0.0471 core-seconds a ply
+smoke 2: timing: two builds in parallel 1.7 s an iteration (0.4, 2.4, 2.3); 24 games an iteration at 4 workers, 1.90 core-seconds a start, 52.7 plies a game, 0.0361 core-seconds a ply

@@ -853,6 +853,32 @@ the budget is S085's, recorded there. And the returned vector is a hypothesis:
 no strength number is taken on the tune build, so S085 SPRTs the **shipping**
 build carrying it.
 
+### An evaluation constant: a rebuild per point
+
+An evaluation weight is a `constexpr` in `src/evaluation.cpp`, not a UCI
+option, so this driver cannot reach it. S124's P1 tunes mop-up's six weights
+with `adocs/data/S124_p1.py` instead, and that file is the form for the next
+evaluation SPSA. It imports this file's `Config`, `schedule()` and
+`Param.uci_value`. It writes each point into a scratch copy of HEAD's sources
+(`git archive HEAD` under its `OUT/scratch/`, never the tree) and rebuilds
+`chesso` there under ccache: one `evaluation.cpp` and the link, about 2 s a
+point here (2026-11-06). Its objective is not a match: theta+ and theta- play
+the same conversion starts, and the score is plies to mate. Before any game,
+`setup` checks three things:
+
+- the copy at the landed constants benches what `build/` benches;
+- the stage-one bound's room is read by the compiler and held to its
+  `static_assert`: a vector at the room compiles, and one unit past it fires
+  the assert;
+- `evaluate()`, through the scratch build's own `libchesso_engine.a`, moves by
+  the written weights times its own Python count of the features on every
+  training start.
+
+`smoke` adds the clamp, the identity at the landed zeros, a synthetic
+objective that the update must descend and that a negated update must not,
+and a resumed run. The pre-registration is the script's header, and S124's
+step file has the measurements.
+
 ## Test
 
 ```bash

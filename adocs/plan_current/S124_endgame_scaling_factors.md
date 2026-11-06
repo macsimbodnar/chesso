@@ -1690,3 +1690,214 @@ The coordinator's fast check found one blocker, ruled as DEC-357, and five low f
   (`adocs/data/S124_phase2_plants.txt`).
 - The smoke runs end to end, the guard probes included.
 - `feature_audit` on the corpus reads identically: rank 1142 of 1190, nullity 48.
+
+## 2026-11-06: P1's instrument, option (b)
+
+One Opus 5.5 subagent, coordinated; worktree `../chesso-s124spsa`, branch `s124p1spsa` at `8cc9a38`, the diff staged
+and not committed. The coordinator chose option (b) (above, "Mop-up's SPSA instrument: options, not built, task 5"): a
+driver that rebuilds per point, `adocs/data/S124_p1.py`. Nothing under `src/` changes and no UCI surface moves. P1 runs
+because P0 read head failing 272 of 1126 starts (the screen's reading, 2026-11-06: 854 converted, 0.758; KBNvK 21 of
+200, 171 of them by the fifty-move rule). Built and smoked only: no iteration was played on the registered batch and no
+fresh-starts test was run on the full set. Both are the coordinator's, after the screen ends.
+
+### The instrument
+
+- **Scratch copies.** `setup` exports HEAD's `CMakeLists.txt`, `cmake/`, `src/`, `tests/` and `tools/` four times
+  under `OUT/scratch/` with `git archive HEAD`: head, plus, minus and final. It configures each copy Release with
+  ccache. `GIT_CEILING_DIRECTORIES` keeps the build stamp from reading the enclosing checkout, so `id name` reads
+  `unknown`. A point is written as the two `mopup_mg` and `mopup_eg` lines of the copy's `src/evaluation.cpp`, each
+  matched exactly once, and read back. Only `chesso` is rebuilt: `evaluation.cpp` and the link.
+- **Setup's three checks**, before any game:
+  - the head copy at the landed constants benches what `build/` benches;
+  - ROOM is read by the compiler: `stage_one_bound` through a diagnostic, then held to the `static_assert` itself, so
+    a half reaching exactly ROOM compiles and one reaching ROOM + 1 fires it;
+  - **the build evaluates what was written**: `adocs/data/S124_engine_eval.cpp`, built against each copy's own
+    `libchesso_engine.a`, reads `evaluate()` at a check vector and at head on every training start and four rows
+    outside the domain. The difference is held to the file's own count of the three features times the vector,
+    tapered: within 2 in the domain (two truncations) and exactly 0 outside. The counts are computed in Python from
+    src/evaluation.hpp's definitions, not read from the engine.
+- **The run**, `tools/spsa_driver.py`'s `Config`, `schedule()` and `Param.uci_value` imported from a copy frozen at
+  setup, its form of the step.
+  - Per iteration: the Rademacher draw; both points clamped, rounded and held under ROOM; written and built in
+    parallel; the batch played by both builds through `S124_p0.play_one`, 12 games at a time.
+  - y is the batch's mean of score(theta-) - score(theta+), and theta steps by r(k) c_i(k) y delta_i, held to its box.
+  - Each iteration's records go to `OUT/run/iters/`, with both vectors and both binaries' sha256, and a row goes to
+    `trajectory.tsv`. The checkpoint holds theta, k and the generator; `--resume` replays nothing and redraws the
+    same deltas and batches. A run that failed inside iteration 0 has a `run.json` and no checkpoint, and `--resume`
+    restarts it at 0 (the fast check's finding 2, below).
+  - A digest of the config, the tree, the starts, ROOM, the frozen helpers and the script refuses a resume under any
+    of them changed. Setup refuses a script that differs from HEAD's, except in the smoke.
+- **The test.** `S124_p0.py select` with the training starts' own pool, held-out view and seed, `--skip 200`. Its pool
+  and view sha256 are held to P0's, and the fresh starts are held disjoint from P0's 1126 by id and by position. Head
+  and the candidate both play the fresh starts and KBBvK's 126 training starts. The verdict is DEC-358's exact
+  tests (below), with `S124_p0.py mcnemar`'s reading printed beside, deciding nothing. It prints `S124-P1-KEPT` or
+  `-NOT-KEPT`, then `S124-P1-TEST-DONE`. `rule-check` holds the rule on synthetic paired records.
+- **`all`** runs setup, run (resumed if a `run.json` exists) and test, and ends `S124-P1-DONE` or `S124-P1-FAILED`.
+  Every exception lands on the marker.
+
+### Pre-registered, the script's header; amended from the draft before any iteration
+
+The header carries every number. Where it departs from or makes exact the draft's P1 line ("Pre-registered: the
+screen, a draft"):
+
+1. **The corner's middlegame half is frozen** at its landed 0, the draft's "tied or frozen" read as the freeze, the
+   form `tools/feature_audit` holds the same direction by. The endgame half carries 2 mg + 22 eg. Five free:
+   centre and kings in both halves, the corner's endgame half.
+2. **A failure scores 200 plies, twice the bound**, not the draft's "the bound for a failure". At the bound a failure
+   scores what a mate on the last ply scores. Turning one failure into a mate at ply 80 then gains 20 plies, about
+   what one start's mate length moves between theta+ and theta-: 20.2 on average over the smoke's 25 pairs both
+   builds converted, at the smoke's larger perturbations. At 200 it gains 120, so the objective ranks conversion
+   first, the order the kept rule reads.
+3. **The batch**: 40 of each of the five classes and 21 of KBBvK, 221 of P0's 1126 an iteration. Each class has its
+   own seeded shuffle a cycle, so every start is played once every 5 iterations (KBBvK every 6). K = 150, fixed: no
+   early stop, the candidate theta after the 150th update. 442 games an iteration, 66300 in all.
+4. **c and a scaled to the taper.** A middlegame weight reaches the domain's score at phase / 24, the phases being 2
+   to 4 (mean 2.71), so c_end is 32 for the middlegame halves and 4 for the endgame halves. In Spall's form a_i =
+   2 r_end c_end,i^2 (K + A)^alpha, so each axis moves the score alike. Spall's c is 6.635 and 53.08; a is 8.649 and
+   553.6; A is 15; alpha 0.602, gamma 0.101.
+5. **r_end = 0.0125, read on a synthetic objective.** The first calibration, 0.025, was sized from a guessed first
+   gradient. It diverged on the smoke's synthetic quadratic at ten times the guessed steepness. The rule became "no
+   divergence from a quarter to ten times it, at a per-start noise of 50 or 150 plies", and 0.0125 meets it. Of the
+   seed's excess, 0.0125 leaves 28 to 30 % at a quarter, 2 to 3 % at one and 0 to 1 % at four and ten; 0.025 left 11
+   to 26 %, 0 to 4 % and 0 to 2 %, then 609 to 1054 % at ten. The steepness is a guess, so the grid calibrates
+   nothing beyond it.
+6. **The integers.** A point is clamped to its box (middlegame [-256, 256], endgame [-64, 192]) and rounded half to
+   even, as `spsa_driver` rounds. The frozen slot keeps its landed value. A half reaching past ROOM = 32767 -
+   `stage_one_bound` (27929 at `8cc9a38`, ROOM 4838) is scaled toward zero, w to trunc(w ROOM / reach), and flagged.
+   The boxes reach 4608 and 4800, so at this tree the clamp is a guard and binds nowhere.
+7. **The fresh starts**: KRvK, KQvK, KRBvK, KRNvK 200 each and **KBNvK 184**, not 200 (384 won and distinct, 200 taken
+   by P0), and **KBBvK none**. McNemar's z and the per-class rule read the five classes present. KBBvK is read on its
+   126 training starts, head and candidate both played there. In sample, it can only refuse: the candidate is not
+   kept if it converts fewer of them, and converting more helps nothing. *The rule is superseded by DEC-358, below.*
+8. **The start**: the landed zeros, read from the tree; setup refuses any other start. No other engine's or page's
+   number (DEC-105).
+
+### Amended 2026-11-06, DEC-358, before iteration 0: the kept rule's exact tests
+
+The fast check found that the kept rule compared raw per-class counts. Self-play is deterministic, so a class the
+candidate does not touch still moves by chaos and falls below head's count about 40 % of the time. A candidate that
+fixes KBNvK would mostly read NOT-KEPT on that alone. The uncorrected asymptotic z also keeps b = 0, c = 3 (z 1.73,
+exact p 0.125). DEC-358 rules the replacement, which is in the header and in `test`:
+
+- **Kept iff** the exact one-sided McNemar test over every fresh start reads p < 0.05: the binomial at 1/2 on the
+  discordant pairs, the candidate converting more.
+- **And no class** reads the exact one-sided test the other way, the candidate converting fewer, at p < 0.05.
+- **KBBvK**, in sample on its 126 training starts, is held to the same per-class refusal. It can refuse and never
+  helps keep.
+- `S124_p0.py mcnemar` is unchanged, and its reading is printed beside, deciding nothing. The screen freezes that
+  file, and P1 computes its own verdict.
+
+`rule-check` holds the rule on synthetic paired records at the fresh set's sizes and head's P0 rates. The smoke runs
+it, and `--plant raw` puts the raw count comparison back:
+
+| case | DEC-358's rule | the rule replaced |
+|---|---|---|
+| b = 0, c = 3 in KBNvK | not kept, p 0.125 | kept |
+| 120 KBNvK starts gained, one KRBvK start lost by chaos | kept | not kept: fewer in KRBvK |
+| as above, and eight KRvK starts lost | not kept: KRvK p 0.0039 | not kept |
+| as the second, and six KBBvK training starts lost | not kept: KBBvK p 0.0156 | not kept, on KRBvK |
+
+### Measured, and the wall estimate
+
+- **A point's build**, one `evaluation.cpp` and the link under ccache: 1.9 s alone at load 5, a cache miss. An
+  iteration's two, built in parallel under S124's screen, took 2.3 to 3.2 s on a miss and 0.4 s on a hit. A hit is a
+  point compiled before, as when a resumed run repeats one.
+- **A ply**, in core-seconds:
+  - 0.0420 on the idle machine at 12 games: P0, 1126 starts, 59111 plies, 207 s;
+  - 0.0361 and 0.0471 in the two full smokes, at 4 games under the screen.
+- **An iteration** at head's mix is 442 games and 23104 plies. That is 81 s of games at P0's figure and 91 s at the
+  smokes' higher one, so 84 to 94 s with the builds, and 3.5 to 3.9 h for K = 150. The draft guessed 3 h.
+- **The test**, about 9 min: the fresh select read the 1.4 GB pool in 71 s, then 2 x 984 fresh starts and 2 x 126
+  KBBvK.
+- **In all, 3.7 to 4.1 h**, at DEC-155's four-hour line, so where it runs is the coordinator's call. Conversions
+  shorten the games as theta improves, so head's mix is the high figure. At worst every game runs to the bound, 4.2
+  core-seconds a start, about 6.7 h. A watcher's ceiling: 8 h.
+- **Play is deterministic** at `go nodes`: head played six starts twice, and all six move lists were identical. Every
+  difference between theta+ and theta- on a start is the parameters', none of it the harness's.
+
+### The smoke and its reds
+
+`S124_p1.py smoke` runs the whole instrument on a slice: 4 training starts a class, 2 a class an iteration, 3
+iterations, 2 fresh starts a class, 4 games at a time, under the screen. Output and every plant's red line are in
+`adocs/data/S124_p1_smoke.txt`. It ran green in 169 s on the delivered script, checking these in order:
+
+- **setup**: the head copy benches 4707943, as `build/` does. `evaluate()` at the check vector `11,5,0|7,13,19` moved
+  within 1.167 of the Python counts' expectation on all 24 domain rows (bound 2), and by exactly 0 on the 4 rows
+  outside. ROOM 4838 (`stage_one_bound` 27929): a half reaching 4838 compiles and one reaching 4839 fires the assert.
+- **the clamp**: `400,400,0|800,800,800` (reaches 7200 and 20000) came back `268,268,0|193,193,193` (4824 and 4825)
+  and compiles.
+- **the identity**: the plus copy benches 4637995 at the check vector and 4707943 back at the zeros, head's.
+- **the synthetic objective**: the registered schedule and batch take the seed's excess from 29.00 plies to 0.49; the
+  same run with the update negated ends at 656.61.
+- **the rule check**: DEC-358's four synthetic cases read as written (the amendment above), the replaced rule beside.
+- **the run**: a planted failure inside iteration 0, before any checkpoint. `--resume` restarted it at 0 with the same
+  draw, and its iteration 0 read what an uninterrupted run reads (y -47.67). It was then stopped after two iterations
+  and resumed for the third, the trajectory holding k = 0, 1, 2.
+- **determinism**: six of six move lists identical.
+- **the test**: 10 fresh starts and KBBvK none, disjoint by id and by position; head, the candidate, the exact tests
+  and the KBBvK guard all ran. The smoke's candidate after three noisy iterations read `S124-P1-NOT-KEPT` (p 1): a
+  smoke, not a reading.
+
+Each plant (`--plant`, a test hook in the script, its own OUT) turns the smoke red at its own guard:
+
+| plant | break | caught by | red line |
+|---|---|---|---|
+| `swap` | each array's values written into the other array, read back through the same map | the eval check | worst 159.167 against 2, all 24 domain rows |
+| `order` | each array's features written in reverse, read back the same way | the eval check | worst 61.333, 20 rows |
+| `room` | ROOM read one too large, 4839 | the room check | 4839 does not compile |
+| `noclamp` | the stage-one clamp skipped | the clamp check | reaches 7200 and 20000, does not compile |
+| `sign` | the update negated | the synthetic check | 656.61 after the run, 0.49 negated |
+| `raw` | the per-class raw count comparison DEC-358 replaced | the rule check | misreads `kbn-gain-chaos` |
+
+The textual read-back cannot see `swap` or `order`, because the plant maps the writer and the reader alike. Only the
+engine's own evaluation can, which is the point of the check.
+
+### The coordinator's run
+
+After the screen ends, with this diff committed, from the checkout whose HEAD carries it and with `build/` built at
+that HEAD. Setup refuses a script that differs from HEAD's, and a `build/` that benches other than the head copy.
+P0's starts are copied into `OUT/bin` at setup, so the screen's directory need not outlive the run.
+
+    mkdir -p .tuning/s124/p1
+    nohup setsid -w ~/.venv/chess/bin/python adocs/data/S124_p1.py all --out .tuning/s124/p1 \
+        --train-starts /home/max/ws/chesso-s124p2/.tuning/s124/screen/p0/starts.tsv \
+        > .tuning/s124/p1.log 2>&1 & echo $!
+
+The watcher has four exits: `S124-P1-DONE`, `S124-P1-FAILED`, the PID gone, and a ceiling of 32400 s (9 h, twice
+the high estimate; the fast check's finding 3). After a
+failure, `S124_p1.py run --out .tuning/s124/p1 --resume`, then `test`, continues the same run. The verdict is the
+line above `S124-P1-TEST-DONE`, `S124-P1-KEPT` or `-NOT-KEPT`. The candidate's two C++ lines are in
+`.tuning/s124/p1/final.txt`.
+
+### Gates
+
+- Nothing under `src/` or `tools/` changed. `build/` (Release, ccache) builds without a warning, and `chesso bench`
+  reads 4707943.
+- `ctest -L fast -j6` in `build/`: 59 of 60 without the override. `test_clang_format_script` failed there because
+  `CLANG_FORMAT_MAJOR` was not exported (`.moltke.local.md`, DEC-146), and passes with it set (1.41 s).
+  `test_tuner_gradient_plants_threats` passed inside its timeout under the screen's load (44.95 s).
+- The format check is clean with `CLANG_FORMAT_MAJOR=22`, and `tools/plan_prose_check.py` exits 0 in all five modes.
+- After the fast check's three findings: the smoke and its six plants were re-run as above, `py_compile` passes,
+  `ctest -R plan_ -j6` reads 5 of 5, and the format check and the five prose modes are clean again. The diff holds no
+  shell file, so there is nothing for `bash -n`.
+- Tier 2 (DEC-141) does not bind: no `make_move`, `unmake_move`, generator or search change, and no pruning rule. The
+  build-tune gate is not run here: no source either build compiles moved.
+- Docs:
+  - `DEV_MANUAL.md` gains "An evaluation constant: a rebuild per point" at the end of its SPSA section;
+  - `MANUAL.md` was read and is unchanged, since no option, command or engine output moves;
+  - `specs.md` is unchanged, since the engine's behaviour does not move;
+  - `adocs/data/README.md` gains `S124_p1.py` and `S124_p1_smoke.txt`;
+  - `touches:` is not widened: the new files are S124's data files, as phase 2a's are, and `tools/spsa_driver.py` is
+    imported, not changed.
+
+### Findings beyond the task, not fixed
+
+- **The fresh KBNvK set is 184 starts**, not the 200 a class the draft's P1 line implies: P0 took 200 of 384. It is
+  recorded as amendment 7 above. KBNvK holds most of head's failures (171 of 272), so the test reads it on 184 pairs.
+- **Self-play at `go nodes` is deterministic**, six of six in the smoke. So head's own P0 records are reproducible
+  from its binary, and a pair's difference is the parameters' alone. It also means a start's outcome can move only
+  when theta moves: the per-start noise the synthetic grid assumed is chaos in the parameters, not in the harness.
+- **ccache is at its 5 GB cap here** (99.97 %, 1550 cleanups when read). A point is a miss either way, about 2 s, so
+  the run does not depend on it; only a resumed iteration's repeat would hit.
+- The main checkout moved to `d0cb418` while this was built, through S334's landing and DEC-358's ruling. The staged
+  diff applies onto it cleanly (`git apply --check --3way`).
