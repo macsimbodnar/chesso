@@ -7,6 +7,19 @@ missed edit and not a tool's opinion.
 
 Updated: 2026-11-06, by hand.
 
+## 2026-11-06 16:40: S335 done; S124's F1 kept, the screen on F2; P1's instrument landing
+
+**S335 is done (`plan_done/`), this commit.** The merge's count stands as booked (DEC-296). `read` refuses a bad field on
+one line, and the interrupted-merge check tells before the rename from after it.
+
+**S124's screen, F1 kept** (16:15): d +0.00368 against m 0.0000282 over five quarters, at K refit 1.2647.
+- The guard passes: the tablebase-labelled loss moves -0.0339 +/- 0.0005.
+- Fitted `endgame_scale` cells: P=0 d<=0 46, P=0 d=1 0, OCB_PURE P<=2 20 (128 the identity).
+- The screen runs on with F2, then F3.
+
+**P1's instrument** (mop-up SPSA, option (b)), one fast check, DEC-358 its kept rule. It lands next. It runs about 4 h
+after the screen, from a worktree at its commit.
+
 ## 2026-11-06 15:45: S334 done; S124's screen on F1; P1's instrument being built
 
 **S334 is done (`plan_done/`), this commit.** The ledger's S122 row reads "the king safety family" through

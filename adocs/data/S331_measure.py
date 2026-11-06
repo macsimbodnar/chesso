@@ -12,7 +12,10 @@ log counts. It refuses, exit 1, unless the files hold what the log counts: one g
 each game, the rows each `leaf <leaf>:` line counts, every row of every leaf carrying its
 game's result, and the `repetition:` line's figures recomputed from the files. Each view is
 streamed a row at a time and only the games and per-game counts are kept (S332): the first
-form held every row of the three views and on S122's 150000-game pool ran out of memory. A
+form held every row of the three views and on S122's 150000-game pool ran out of memory. In
+READ a field datagen writes as a number that is not one is refused on one line naming its
+file and line (S335), as is a row whose game or result is not its games line's; MERGE and
+PREMISE read a row's game as a number unchecked and can still end on a traceback there. A
 pool merged after a stop (adocs/data/S122_corpus.sh merge, DEC-296) is read the same way
 from the merge's log: the views' rows from its `merged <leaf>:` lines, the games from its
 `merged games:` line, the settings from the two runs' logs it holds verbatim, indented, and
@@ -111,6 +114,27 @@ class Refused(Exception):
     pass
 
 
+# The fields datagen writes as numbers (tools/datagen.cpp), by position: a games line's,
+# and those of a row that are read as numbers. A row's game and result are held to the
+# games file instead (check_run), so a row's that is not a number is refused there.
+GAMES_NUMBERS = ((0, "game", int), (1, "result", float), (2, "first ply", int),
+                 (3, "first recurrence ply", int), (4, "last ply", int))
+ROW_NUMBERS = ((2, "score", int), (3, "phase", int), (5, "ply", int), (6, "distance", int))
+
+
+def not_a_number(path, number, numbers, fields):
+    """The refusal of line NUMBER of PATH, which has a field of NUMBERS that is not a
+    number: one line naming the file, the line and the field (S335; a ValueError's
+    traceback before)."""
+    for index, name, kind in numbers:
+        try:
+            kind(fields[index])
+        except ValueError:
+            return (f"{path}:{number}: field {index + 1}, the {name}, is '{fields[index]}', "
+                    "not a number")
+    return f"{path}:{number}: a field that is not a number"
+
+
 def read_games(path):
     games = {}
     for number, line in enumerate(open(path, encoding="utf-8"), 1):
@@ -120,7 +144,11 @@ def read_games(path):
         game, result, first, recurred, end = fields
         if game in games:
             raise Refused(f"{path}:{number}: game {game} twice")
-        games[game] = (result, int(first), int(recurred), int(end))
+        try:
+            int(game), float(result)
+            games[game] = (result, int(first), int(recurred), int(end))
+        except ValueError:
+            raise Refused(not_a_number(path, number, GAMES_NUMBERS, fields)) from None
     return games
 
 
@@ -132,7 +160,11 @@ def stream_rows(path):
             if len(fields) != 7:
                 raise Refused(f"{path}:{number}: {len(fields)} fields, not 7")
             fen, result, score, phase, game, ply, distance = fields
-            yield fen, result, int(score), int(phase), game, int(ply), int(distance)
+            try:
+                row = fen, result, int(score), int(phase), game, int(ply), int(distance)
+            except ValueError:
+                raise Refused(not_a_number(path, number, ROW_NUMBERS, fields)) from None
+            yield row
 
 
 def read_rows(path):
@@ -295,17 +327,24 @@ def check_run(out, log_path):
     tally = Tally(games)
     for leaf, (count, _) in written.items():
         rows = wrong = 0
+        first = ""
         for r in stream_rows(f"{out}/pool.tsv.{leaf}"):
             rows += 1
             game = games.get(r[4])
             if game is None or game[0] != r[1]:
                 wrong += 1
+                # The first named by its line, ROWS counting the file's lines (S335).
+                if not first:
+                    first = f"{out}/pool.tsv.{leaf}:{rows}: " + (
+                        f"game '{r[4]}' has no games line" if game is None else
+                        f"result '{r[1]}', its game {r[4]}'s games line {game[0]}")
             elif leaf == "root":
                 tally.add(r, game)
         if rows != count:
             raise Refused(f"pool.tsv.{leaf} holds {rows} rows, the log {count}")
         if wrong:
-            raise Refused(f"{wrong} rows of pool.tsv.{leaf} carry a result not their game's")
+            raise Refused(f"{wrong} rows of pool.tsv.{leaf} carry a result not their game's; "
+                          f"the first, {first}")
     return run, [int(x) for x in repetition[0].groups()], games, tally
 
 

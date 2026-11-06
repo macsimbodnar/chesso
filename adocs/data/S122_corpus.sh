@@ -669,11 +669,23 @@ adopt() {
 # pool.tsv.*, games.tsv and generate.log.merging with no generate.log: the next run
 # names that state and refuses, deleting nothing; part 1 is intact in POOL/part1/, so
 # the recovery is by hand, removing pool.tsv.*, games.tsv and generate.log.merging and
-# re-running.
+# re-running. A run stopped before that rename leaves the .merging files alone beside
+# generate.log.merging, and the next run names that state apart (S335), refusing too:
+# the recovery is removing POOL/*.merging. A refusal cannot tell a stopped run from one
+# still running, so neither state is cleared by the script.
+#
+# GAMES, on the merger's lines, counts part 1's games by their rows: the games before
+# its cut that wrote a row, plus the games the top-up played. That is the count the
+# top-up was booked by (adocs/data/S122_generate.sh topup, GAMES less the games
+# S082_pool_merge.py part1 keeps) and DEC-296's. A part 1 game before the cut that wrote
+# no row is in the merged games file, so it holds that many lines more than GAMES, and
+# the `merged games:` line counts it apart; it is in no view, so no later stage reads it
+# (S335).
 merge() {
   local part1="$POOL/part1" log="$POOL/generate.log" topup_log="$TOPUP/topup.log"
   local originals="generate.log pool.tsv.root pool.tsv.qs pool.tsv.pv"
   local from name v command tseed tgames tthreads span reading checked report rc p1sha tsha offset
+  local renamed pending
 
   [[ -r "$merger" ]] || { say "no merger at $merger"; return 1; }
   [[ -r "$reader" ]] || { say "no reader at $reader"; return 1; }
@@ -719,9 +731,16 @@ merge() {
     from="$part1"
     (cd "$part1" && sha256sum --quiet -c originals.sha256) ||
       { say "refused: part 1's files in $part1 are not the ones whose sha256 was written before the move"; return 1; }
-    if [[ ! -e "$log" && -e "$log.merging" ]] &&
-       { compgen -G "$POOL/pool.tsv.*" > /dev/null || [[ -e "$POOL/games.tsv" ]]; }; then
+    # S335: a merged file under its own name is a stop after the rename began; the
+    # merger's .merging files alone, a stop before it.
+    renamed=$(cd "$POOL" && { compgen -G 'pool.tsv.*' | grep -v '\.merging$'; [[ -e games.tsv ]] && echo games.tsv; })
+    pending=$(cd "$POOL" && { compgen -G 'pool.tsv.*.merging' | sort; [[ -e games.tsv.merging ]] && echo games.tsv.merging; })
+    if [[ ! -e "$log" && -e "$log.merging" && -n "$renamed" ]]; then
       say "refused: an interrupted merge: $POOL/pool.tsv.* or $POOL/games.tsv, and $log.merging, exist and $log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in $part1 (checked against originals.sha256 just now). By hand: remove $POOL/pool.tsv.*, $POOL/games.tsv and $log.merging, then re-run"
+      return 1
+    fi
+    if [[ ! -e "$log" && -e "$log.merging" && -n "$pending" ]]; then
+      say "refused: an interrupted merge: $POOL holds $(tr '\n' ' ' <<< "$pending")and $log.merging, and no merged file under its own name nor $log, so a run stopped before renaming its merged files: nothing of the merged pool was renamed. Part 1 is intact in $part1 (checked against originals.sha256 just now). By hand, once no merge is running: remove $POOL/*.merging, then re-run"
       return 1
     fi
     for v in $VIEWS_ALL; do

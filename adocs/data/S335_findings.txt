@@ -1,0 +1,206 @@
+S335's fixtures, 2026-11-06: adocs/data/S335_findings.sh's stages and the regressions, verbatim, re-run after the
+coordinator's fast check (the read cases' exact FILE:LINE: match; the reader's docstring narrowed to READ).
+DIR=/home/max/ws/chesso/.tuning/s335/smoke, holding a copy of the two runs adocs/data/S332_merge_smoke.sh
+runs played on 2026-11-06 13:09 (part 1, 60 games under seed 990332000, SIGTERM 15 s in, 22 games
+written of which 21 kept; the top-up, 39 games under seed 990332100), checked against its pristine.sha256.
+Scripts: adocs/data/S122_corpus.sh sha256 371a303580c80672b65f969aee45cc61a591b03dc63f1d80c3d65d0af6bf9d65,
+adocs/data/S331_measure.py sha256 d8243326e6ff6b8ad3c34ee153ef9c4d7525aa6f440558f5f6f92fd0ecba94a8,
+adocs/data/S335_findings.sh sha256 1b2a2f5056abe5bfc4cfed9147cd0fb9038a08301db112e026af25e5cfb65afb.
+
+== red, at 65463ae's scripts (S332's landing), written beside the tree's and removed after
+== $ DIR=/home/max/ws/chesso/.tuning/s335/smoke adocs/data/S335_findings.sh red
+red       65463ae's scripts (65463ae Stream the repetition check over a full pool, merged or not (S332)); the cases RED names must fail: read_games_id read_games_result read_games_ply read_view_score read_view_game run_view_ply stop_before
+scripts   /home/max/ws/chesso/adocs/data/.S335_before_corpus.sh, sha256 5a5faf7d99ef14d09df8ede915fa6c8fb722b8f2dc7724402137b7fa9a795617
+scripts   /home/max/ws/chesso/adocs/data/.S335_before_measure.py, sha256 a58bd9f534254de5a6938464a4f4d9f0a5d8c006b68077ce328170693293dc7d
+case plain
+  merged games: 60 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case plain: passes, as it must
+case no_row_game
+  merge passed; pool.tsv.root, .qs and .pv byte-equal to the plain merge's
+  games.tsv 61 lines: the plain merge's 60 and game 99's, placed after game 17's
+  top-up booked 39 games, 60 less part 1's 21 kept by its rows (topup.log's kept and command lines)
+  merged root: 7909 rows from 60 games written to pool/pool.tsv.root; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a root row
+  merged games: 61 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+case no_row_game: passes, as it must
+case read_games_id
+  games.tsv line 1, field 1 set to x
+  exit 1, 1 lines, the last: refused: 66 rows of pool.tsv.root carry a result not their game's
+case read_games_id: red, as it must be
+case read_games_result
+  games.tsv line 1, field 2 set to x
+  exit 1, 1 lines, the last: refused: 66 rows of pool.tsv.root carry a result not their game's
+case read_games_result: red, as it must be
+case read_games_ply
+  games.tsv line 2, field 3 set to x
+  exit 1, 16 lines, the last: ValueError: invalid literal for int() with base 10: 'x'
+case read_games_ply: red, as it must be
+case read_view_score
+  pool.tsv.qs line 5, field 3 set to x
+  exit 1, 15 lines, the last: ValueError: invalid literal for int() with base 10: 'x'
+case read_view_score: red, as it must be
+case read_view_game
+  pool.tsv.root line 7, field 5 set to x
+  exit 1, 1 lines, the last: refused: 1 rows of pool.tsv.root carry a result not their game's
+case read_view_game: red, as it must be
+case run_view_ply
+  pool.tsv.pv line 3, field 6 set to x
+  exit 1, 15 lines, the last: ValueError: invalid literal for int() with base 10: 'x'
+case run_view_ply: red, as it must be
+case stop_before
+  stopped, exit 137, at its call of S331_measure.py merge: generate.log.merging pool.tsv.pv.merging pool.tsv.qs.merging pool.tsv.root.merging 
+  run again: refused: an interrupted merge: pool/pool.tsv.* or pool/games.tsv, and pool/generate.log.merging, exist and pool/generate.log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in pool/part1 (checked against originals.sha256 just now). By hand: remove pool/pool.tsv.*, pool/games.tsv and pool/generate.log.merging, then re-run
+  the refusal does not say 'stopped before renaming its merged files'
+case stop_before: red, as it must be
+case stop_after
+  stopped, exit 137, at its call of S331_measure.py read: games.tsv generate.log.merging pool.tsv.pv pool.tsv.qs pool.tsv.root 
+  run again: refused: an interrupted merge: pool/pool.tsv.* or pool/games.tsv, and pool/generate.log.merging, exist and pool/generate.log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in pool/part1 (checked against originals.sha256 just now). By hand: remove pool/pool.tsv.*, pool/games.tsv and pool/generate.log.merging, then re-run
+  nothing moved or written: pool/ and topup/ by name and sha256 as before the run
+  recovery, removing pool.tsv.root pool.tsv.qs pool.tsv.pv games.tsv generate.log.merging by hand: the merge passes, its views and games.tsv byte-equal to the plain merge's
+case stop_after: passes, as it must
+cases     10 cases, 10 as they must be, 0 not
+S335-FINDINGS-RED-DONE
+
+== red, at d0cb418's scripts (S335's parent, HEAD when the step started)
+== $ BEFORE=d0cb418 DIR=/home/max/ws/chesso/.tuning/s335/smoke adocs/data/S335_findings.sh red
+red       d0cb418's scripts (d0cb418 Start S335 behind S124's screen (S335)); the cases RED names must fail: read_games_id read_games_result read_games_ply read_view_score read_view_game run_view_ply stop_before
+scripts   /home/max/ws/chesso/adocs/data/.S335_before_corpus.sh, sha256 bde5e4857c10611e9a2533e9ece1cb65d7e17457864bb91b874baaea9b26d8da
+scripts   /home/max/ws/chesso/adocs/data/.S335_before_measure.py, sha256 a58bd9f534254de5a6938464a4f4d9f0a5d8c006b68077ce328170693293dc7d
+case plain
+  merged games: 60 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case plain: passes, as it must
+case no_row_game
+  merge passed; pool.tsv.root, .qs and .pv byte-equal to the plain merge's
+  games.tsv 61 lines: the plain merge's 60 and game 99's, placed after game 17's
+  top-up booked 39 games, 60 less part 1's 21 kept by its rows (topup.log's kept and command lines)
+  merged root: 7909 rows from 60 games written to pool/pool.tsv.root; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a root row
+  merged games: 61 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+case no_row_game: passes, as it must
+case read_games_id
+  games.tsv line 1, field 1 set to x
+  exit 1, 1 lines, the last: refused: 66 rows of pool.tsv.root carry a result not their game's
+case read_games_id: red, as it must be
+case read_games_result
+  games.tsv line 1, field 2 set to x
+  exit 1, 1 lines, the last: refused: 66 rows of pool.tsv.root carry a result not their game's
+case read_games_result: red, as it must be
+case read_games_ply
+  games.tsv line 2, field 3 set to x
+  exit 1, 16 lines, the last: ValueError: invalid literal for int() with base 10: 'x'
+case read_games_ply: red, as it must be
+case read_view_score
+  pool.tsv.qs line 5, field 3 set to x
+  exit 1, 15 lines, the last: ValueError: invalid literal for int() with base 10: 'x'
+case read_view_score: red, as it must be
+case read_view_game
+  pool.tsv.root line 7, field 5 set to x
+  exit 1, 1 lines, the last: refused: 1 rows of pool.tsv.root carry a result not their game's
+case read_view_game: red, as it must be
+case run_view_ply
+  pool.tsv.pv line 3, field 6 set to x
+  exit 1, 15 lines, the last: ValueError: invalid literal for int() with base 10: 'x'
+case run_view_ply: red, as it must be
+case stop_before
+  stopped, exit 137, at its call of S331_measure.py merge: generate.log.merging pool.tsv.pv.merging pool.tsv.qs.merging pool.tsv.root.merging 
+  run again: refused: an interrupted merge: pool/pool.tsv.* or pool/games.tsv, and pool/generate.log.merging, exist and pool/generate.log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in pool/part1 (checked against originals.sha256 just now). By hand: remove pool/pool.tsv.*, pool/games.tsv and pool/generate.log.merging, then re-run
+  the refusal does not say 'stopped before renaming its merged files'
+case stop_before: red, as it must be
+case stop_after
+  stopped, exit 137, at its call of S331_measure.py read: games.tsv generate.log.merging pool.tsv.pv pool.tsv.qs pool.tsv.root 
+  run again: refused: an interrupted merge: pool/pool.tsv.* or pool/games.tsv, and pool/generate.log.merging, exist and pool/generate.log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in pool/part1 (checked against originals.sha256 just now). By hand: remove pool/pool.tsv.*, pool/games.tsv and pool/generate.log.merging, then re-run
+  nothing moved or written: pool/ and topup/ by name and sha256 as before the run
+  recovery, removing pool.tsv.root pool.tsv.qs pool.tsv.pv games.tsv generate.log.merging by hand: the merge passes, its views and games.tsv byte-equal to the plain merge's
+case stop_after: passes, as it must
+cases     10 cases, 10 as they must be, 0 not
+S335-FINDINGS-RED-DONE
+
+== green, at the step's scripts
+== $ DIR=/home/max/ws/chesso/.tuning/s335/smoke adocs/data/S335_findings.sh green
+scripts   /home/max/ws/chesso/adocs/data/S122_corpus.sh, sha256 371a303580c80672b65f969aee45cc61a591b03dc63f1d80c3d65d0af6bf9d65
+scripts   /home/max/ws/chesso/adocs/data/S331_measure.py, sha256 d8243326e6ff6b8ad3c34ee153ef9c4d7525aa6f440558f5f6f92fd0ecba94a8
+case plain
+  merged games: 60 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case plain: passes, as it must
+case no_row_game
+  merge passed; pool.tsv.root, .qs and .pv byte-equal to the plain merge's
+  games.tsv 61 lines: the plain merge's 60 and game 99's, placed after game 17's
+  top-up booked 39 games, 60 less part 1's 21 kept by its rows (topup.log's kept and command lines)
+  merged root: 7909 rows from 60 games written to pool/pool.tsv.root; part 1's 21 games with a row before its cut and part 2's 39 games played, 60 games with a root row
+  merged games: 61 games written to pool/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+case no_row_game: passes, as it must
+case read_games_id
+  games.tsv line 1, field 1 set to x
+  exit 1, one line: refused: games.tsv:1: field 1, the game, is 'x', not a number
+case read_games_id: passes, as it must
+case read_games_result
+  games.tsv line 1, field 2 set to x
+  exit 1, one line: refused: games.tsv:1: field 2, the result, is 'x', not a number
+case read_games_result: passes, as it must
+case read_games_ply
+  games.tsv line 2, field 3 set to x
+  exit 1, one line: refused: games.tsv:2: field 3, the first ply, is 'x', not a number
+case read_games_ply: passes, as it must
+case read_view_score
+  pool.tsv.qs line 5, field 3 set to x
+  exit 1, one line: refused: pool.tsv.qs:5: field 3, the score, is 'x', not a number
+case read_view_score: passes, as it must
+case read_view_game
+  pool.tsv.root line 7, field 5 set to x
+  exit 1, one line: refused: 1 rows of pool.tsv.root carry a result not their game's; the first, pool.tsv.root:7: game 'x' has no games line
+case read_view_game: passes, as it must
+case run_view_ply
+  pool.tsv.pv line 3, field 6 set to x
+  exit 1, one line: refused: pool.tsv.pv:3: field 6, the ply, is 'x', not a number
+case run_view_ply: passes, as it must
+case stop_before
+  stopped, exit 137, at its call of S331_measure.py merge: generate.log.merging pool.tsv.pv.merging pool.tsv.qs.merging pool.tsv.root.merging 
+  run again: refused: an interrupted merge: pool holds pool.tsv.pv.merging pool.tsv.qs.merging pool.tsv.root.merging and pool/generate.log.merging, and no merged file under its own name nor pool/generate.log, so a run stopped before renaming its merged files: nothing of the merged pool was renamed. Part 1 is intact in pool/part1 (checked against originals.sha256 just now). By hand, once no merge is running: remove pool/*.merging, then re-run
+  nothing moved or written: pool/ and topup/ by name and sha256 as before the run
+  recovery, removing *.merging by hand: the merge passes, its views and games.tsv byte-equal to the plain merge's
+case stop_before: passes, as it must
+case stop_after
+  stopped, exit 137, at its call of S331_measure.py read: games.tsv generate.log.merging pool.tsv.pv pool.tsv.qs pool.tsv.root 
+  run again: refused: an interrupted merge: pool/pool.tsv.* or pool/games.tsv, and pool/generate.log.merging, exist and pool/generate.log does not, so a run stopped after renaming its merged files and before renaming its log. Part 1 is intact in pool/part1 (checked against originals.sha256 just now). By hand: remove pool/pool.tsv.*, pool/games.tsv and pool/generate.log.merging, then re-run
+  nothing moved or written: pool/ and topup/ by name and sha256 as before the run
+  recovery, removing pool.tsv.root pool.tsv.qs pool.tsv.pv games.tsv generate.log.merging by hand: the merge passes, its views and games.tsv byte-equal to the plain merge's
+case stop_after: passes, as it must
+cases     10 cases, 10 as they must be, 0 not
+S335-FINDINGS-GREEN-DONE
+
+== reading, S331's 2400-game run by the step's reader
+== $ adocs/data/S335_findings.sh reading
+reading   27ec3b79fb637a085685be7c811552d1cdc4a6f2453df9e81d37cfa4509fb2b1, the tree's reader on /home/max/ws/chesso/.tuning/s331/measure
+reading   27ec3b79fb637a085685be7c811552d1cdc4a6f2453df9e81d37cfa4509fb2b1, /home/max/ws/chesso/.tuning/s331/measure/reading.txt
+reading   27ec3b79fb637a085685be7c811552d1cdc4a6f2453df9e81d37cfa4509fb2b1, adocs/data/S331_reading.txt from its 'S331 reading of' line
+reading   byte-equal to both
+S335-FINDINGS-READING-DONE
+
+== regression: adocs/data/S332_merge_smoke.sh merge and cases at the step's scripts, DIR as above
+== $ DIR=/home/max/ws/chesso/.tuning/s335/smoke adocs/data/S332_merge_smoke.sh merge   (last line)
+S332-SMOKE-MERGE-DONE
+== $ DIR=/home/max/ws/chesso/.tuning/s335/smoke adocs/data/S332_merge_smoke.sh cases   (each case's verdict lines)
+case as_merged: accepted, merged games: 60 games written to DIR/cases/as_merged/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case as_merged: its games file byte-equal to the merge's, DIR/merge/pool/games.tsv
+case nul_tail: accepted, merged games: 60 games written to DIR/cases/nul_tail/games.tsv; part 1's 21 games with a row before its cut and 0 without, and part 2's 39 games played
+case no_row_game_kept: accepted, merged games: 61 games written to DIR/cases/no_row_game_kept/games.tsv; part 1's 21 games with a row before its cut and 1 without, and part 2's 39 games played
+case kept_game_missing: refused, refused: part 1: game 3 of its kept root rows has no games line and a later kept game has one: not a games file cut short, as a power loss cuts it
+case partial_line: refused, refused: part1/games.tsv: the bytes after its last newline are neither a line nor, where a power loss is allowed for, a tail of NUL bytes
+case result_differs: refused, refused: merged root: a row of game 3 carries 0.5, not its games line's 1.0
+case part2_short: refused, refused: part 2: 38 games lines, its log books 39
+case part2_line_off: refused, refused: part 2's files give [23, 12, 4, 8, 3624, 1961, 0], its log's repetition: line [923, 12, 4, 8, 3624, 1961, 0]
+case id_at_offset: refused, refused: part 1: game 100000000's games line is kept and its id is at or above the offset, 100
+case merge_no_row_game: merge passed, check: merged games, 61 lines of 61, sha256 the merge's, S122-CORPUS-MERGE-DONE
+case topup_no_games: merge refused, refused: no topup/games.tsv: the top-up ran without --games-out, and the merged pool would have no games file
+case part1_no_games: merge refused, refused: no pool/games.tsv: part 1 ran without --games-out, and the merged pool would have no games file
+case verify_games_changed: verify refused, check: pool/games.tsv's sha256 is not the one its merge wrote
+case verify_as_merged: verify passed, check: merged games, 60 lines of 60, sha256 the merge's, S122-CORPUS-VERIFY-DONE
+case power_loss: merge passed, the three views byte-equal to the merge's without the loss, games.tsv 59 lines
+case power_loss: read refused, refused: pool/generate.log: the merged pool's repetition: check is partial and is not reported as complete: repetition incomplete: 1 of part 1's 21 kept games have no games line, its file ending before them as a power loss leaves it; no combined repetition: line is given and the merged pool's check is partial, its views merged as the merger wrote them
+S332-SMOKE-CASES-DONE
+
+== regression: adocs/data/S333_guards.sh green, S122_corpus.sh smoke's 25 cases, S=.tuning/s335/s333
+== $ S=/home/max/ws/chesso/.tuning/s335/s333 adocs/data/S333_guards.sh green   (its summary lines)
+script    adocs/data/S122_corpus.sh, sha256 371a303580c80672b65f969aee45cc61a591b03dc63f1d80c3d65d0af6bf9d65
+smoke     the six stages passed on /home/max/ws/chesso/.tuning/s335/s333/tuning/s122/phase1/corpus_smoke/pool; the swap is /home/max/ws/chesso/.tuning/s335/s333/tuning/s122/phase1/corpus_smoke/swap; the cases are run by /home/max/ws/chesso/adocs/data/S122_corpus.sh
+smoke     25 cases, 25 as they must be, 0 not
+green     the smoke's last line: S122-CORPUS-SMOKE-DONE
+S333-GUARDS-GREEN-DONE
