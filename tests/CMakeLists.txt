@@ -92,6 +92,13 @@ add_doctest_target(test_engine)
 add_doctest_target(test_eval_model)
 target_include_directories(test_eval_model PRIVATE ../tools)
 
+# S124's phase 2a: tools/feature_audit's design, tools/audit_design.hpp, held
+# to the trace's smooth score at the shipped weights, where S122's curve is
+# linearised at each side's own x, and to the shared form at the curve's seed.
+# The positions only, no corpus, so it is a fast test like the rest.
+add_trace_doctest_target(test_audit_design)
+target_include_directories(test_audit_design PRIVATE ../tools)
+
 # S041: the tuner's --only groups have to partition its parameter vector, and
 # free_mask() has swallowed the term appended after it four times with nothing
 # in tests/ linking tuner.cpp at all. Needs no dataset, so it is a fast test

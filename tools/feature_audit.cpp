@@ -92,6 +92,7 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include "audit_design.hpp"
 #include "bitboard.hpp"
 #include "evaluation.hpp"
 #include "tuner_groups.hpp"
@@ -391,206 +392,14 @@ double r_squared(const std::vector<double>& y,
 }
 
 
-// ------------------------------------------------ the design and its rank
-//
-// S134. One row of the design: GAME_PHASE_MAX times the derivative of the
-// score with respect to every parameter, the stage-two clamp left out, so the
-// identities reported are the linear score's. The scale is what keeps every
-// entry an integer -- the taper weights are phase / 24 and (24 - phase) / 24
-// -- so the Gram matrix below is summed exactly.
-//
-// Since S276 the row is the trace's: each coefficient evaluate() recorded,
-// times 24 for a piece value, which is untapered, and times the phase and 24
-// minus the phase for a tapered pair's two halves. Until S276 it was the same
-// derivative taken from the mirror's features, with the clamp left out the
-// same way, which the mirror's gradient did too.
-struct design_row_t
-{
-  std::vector<uint32_t> index;  // ascending, no repeats
-  std::vector<int64_t> value;   // all non-zero
-};
-
-
-// S122: a nonlinear group's columns, where they can be integers. A group's
-// derivative in input i is sign * (T'(x_W) n_W,i - T'(x_B) n_B,i), each
-// side's slope at its own x, so it is linear in the counts only where every
-// side of every row sits at one x a half -- S122's curve at its seed, where x
-// is the constant on every side. There each half's column is that one slope
-// times the integer sign * (n_W,i - n_B,i), and a non-zero factor common to a
-// column changes no rank and no dependency, so the design takes the integer;
-// a slope of zero leaves the column zero. Anywhere else the derivative moves
-// row by row with the fit and this design has no exact column for it.
-struct group_slopes_t
-{
-  bool shared = false;            // every side of every row at one x a half
-  bool live[2] = {false, false};  // that x positive, mg and eg
-  double x[2] = {0.0, 0.0};
-};
-
-group_slopes_t group_slopes(const dataset_t& data, const double* params)
-{
-  group_slopes_t out;
-  const tuner_trace::model_t& model = tuner_trace::engine_model();
-
-  if (model.groups.empty()) { return out; }
-
-  bool first = true;
-  out.shared = true;
-
-  for (size_t g = 0; g < model.groups.size() && out.shared; ++g) {
-    for (size_t row = 0; row < data.size(); ++row) {
-      const tuner_trace::group_sums_t x =
-          tuner_trace::group_sums(model.groups[g], g, data, row, params);
-
-      for (int side = 0; side < 2; ++side) {
-        if (first) {
-          out.x[0] = x.mg[side];
-          out.x[1] = x.eg[side];
-          first = false;
-        }
-
-        if (x.mg[side] != out.x[0] || x.eg[side] != out.x[1]) {
-          out.shared = false;
-          return out;
-        }
-      }
-    }
-  }
-
-  out.live[0] = out.x[0] > 0.0;
-  out.live[1] = out.x[1] > 0.0;
-  return out;
-}
-
-
-// S124: whether every scale factor is at F in `params`. There the factor's
-// chain rule leaves every material and positional column as it was, and a
-// cell's own column is d(score)/d(f_c) = E1 w_eg / F: times 24, and the 1 / F
-// dropped as a factor common to the column, the integer E1 (24 - phase) on
-// the rows whose E1 picks that cell (E1 an integer at integer weights). Off F
-// the material and positional endgame columns carry f / F row by row, and
-// this design has no exact integer row for them.
-bool scales_at_identity(const double* params)
-{
-  for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
-    if (params[tuner_layout::EGS_BASE + c] != ENDGAME_SCALE_ONE) {
-      return false;
-    }
-  }
-  return true;
-}
-
-
-class design_builder_t
-{
-public:
-  design_builder_t() : dense_(PARAM_COUNT, 0), marked_(PARAM_COUNT, 0) {}
-
-  // `params`, when given, is where the cells' columns are read: E1 and the
-  // pick (scales_at_identity() above). Without it the cells have no column.
-  void build(const dataset_t& data,
-             size_t row,
-             design_row_t* out,
-             const group_slopes_t& slopes = group_slopes_t{},
-             const double* params = nullptr)
-  {
-    const std::vector<tuner_trace::feature_t>& features =
-        tuner_trace::feature_table().features;
-
-    const int64_t mg = data.phase[row];
-    const int64_t eg = GAME_PHASE_MAX - mg;
-
-    if (params != nullptr) {
-      double e1 = 0.0;
-
-      for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
-        const tuner_trace::entry_t e = data.entries[j];
-        const tuner_trace::feature_t& f = features[e.feature];
-
-        if (f.site == tuner_trace::SITE_MATERIAL) {
-          e1 += e.coef * params[f.mg];
-        } else if (f.site == tuner_trace::SITE_POSITIONAL) {
-          e1 += e.coef * params[f.eg];
-        }
-      }
-
-      const uint8_t cell = tuner_trace::picked_cell(data, row, e1);
-
-      if (cell != eval_trace::NO_CELL) {
-        add(tuner_layout::EGS_BASE + cell, std::llround(e1) * eg);
-      }
-    }
-
-    // The groups' integer columns, at the slope every side shares.
-    if (slopes.shared) {
-      const tuner_trace::model_t& model = tuner_trace::engine_model();
-
-      for (uint32_t j = data.side_offsets[row]; j < data.side_offsets[row + 1];
-           ++j) {
-        const tuner_trace::side_entry_t e = data.side_entries[j];
-        const tuner_trace::group_t& group = model.groups[e.group];
-        const int64_t sign =
-            static_cast<int64_t>(group.sign) * ((e.side == 0) ? 1 : -1);
-        const std::pair<uint32_t, uint32_t>& in = group.inputs[e.input];
-
-        if (slopes.live[0]) { add(in.first, sign * e.coef * mg); }
-        if (slopes.live[1]) { add(in.second, sign * e.coef * eg); }
-      }
-    }
-
-    // Accumulated rather than appended, as before S276, although the trace
-    // has already summed each feature once: two features never share a
-    // parameter (tests/test_eval_trace.cpp, "the trace's features cover the
-    // parameter vector exactly once"), so this costs nothing and assumes
-    // nothing.
-    for (uint32_t j = data.offsets[row]; j < data.offsets[row + 1]; ++j) {
-      const tuner_trace::entry_t e = data.entries[j];
-      const tuner_trace::feature_t& f = features[e.feature];
-      const int64_t coef = e.coef;
-
-      if (f.site == tuner_trace::SITE_MATERIAL) {
-        add(f.mg, coef * GAME_PHASE_MAX);
-        continue;
-      }
-
-      add(f.mg, coef * mg);
-      add(f.eg, coef * eg);
-    }
-
-    std::sort(touched_.begin(), touched_.end());
-    out->index.clear();
-    out->value.clear();
-
-    for (const uint32_t i : touched_) {
-      if (dense_[i] != 0) {
-        out->index.push_back(i);
-        out->value.push_back(dense_[i]);
-      }
-
-      dense_[i] = 0;
-      marked_[i] = 0;
-    }
-
-    touched_.clear();
-  }
-
-private:
-  void add(size_t index, int64_t value)
-  {
-    if (value == 0) { return; }
-
-    if (!marked_[index]) {
-      marked_[index] = 1;
-      touched_.push_back(static_cast<uint32_t>(index));
-    }
-
-    dense_[index] += value;
-  }
-
-  std::vector<int64_t> dense_;
-  std::vector<uint8_t> marked_;
-  std::vector<uint32_t> touched_;
-};
+// The design, its local form and the check of its columns against the score
+// are tools/audit_design.hpp, moved there in S124's phase 2a so
+// tests/test_audit_design.cpp can read them; the rank of it is read here.
+using audit_design::design_builder_t;
+using audit_design::design_row_t;
+using audit_design::group_slopes;
+using audit_design::group_slopes_t;
+using audit_design::scales_at_identity;
 
 
 // What each parameter is, for a dependency a reader has to be able to read.
@@ -957,18 +766,30 @@ void report_identities(const dataset_t& data,
   tuner_layout::starting_params(params.data());
 
   // A nonlinear group's per-side entries have a column in a linear design
-  // only where every side shares one slope (group_slopes() above): S122's
-  // curve at its seed. Anywhere else the rank of the linear part alone would
-  // be printed as the rank of the whole, so it is not computed.
-  const group_slopes_t slopes = group_slopes(data, params.data());
+  // where every side shares one slope (group_slopes()): S122's curve at its
+  // seed. Since S124's phase 2a, anywhere else the design is linearised at
+  // these weights, each side at its own slope (audit_design.hpp's local
+  // form), where every side's x is an integer; otherwise the rank of the
+  // linear part alone would be printed as the rank of the whole, so it is
+  // not computed.
+  group_slopes_t slopes = group_slopes(data, params.data());
 
   if (!data.side_entries.empty() && !slopes.shared) {
-    printf(
-        "identities: not computed: the trace carries %zu per-side entries "
-        "and their sides do not share one x at these weights, so the "
-        "group's derivative has no integer column\n",
-        data.side_entries.size());
-    return;
+    if (!audit_design::local_form_exact(data, params.data())) {
+      printf(
+          "identities: not computed: the trace carries %zu per-side entries, "
+          "their sides do not share one x at these weights and some side's x "
+          "is no integer, so the group's derivative has no integer column\n",
+          data.side_entries.size());
+      return;
+    }
+    const std::string refusal =
+        audit_design::local_form_refusal(tuner_trace::engine_model());
+    if (!refusal.empty()) {
+      printf("identities: not computed: %s\n", refusal.c_str());
+      return;
+    }
+    slopes.local = true;
   }
 
   if (!scales_at_identity(params.data())) {
@@ -984,7 +805,13 @@ void report_identities(const dataset_t& data,
       "identities: S124's factor columns at F: each cell's the integer E1 "
       "(24 - phase) on the rows whose E1 picks it, the 1/F a common factor\n");
 
-  if (!data.side_entries.empty()) {
+  if (slopes.local) {
+    printf(
+        "identities: the curve's columns linearised at the weights read, "
+        "each side at its own x: sign (max(x_W, 0) n_W - max(x_B, 0) n_B) a "
+        "half times the half's taper weight, integers, the divisor / 2 a "
+        "common factor; the design's local rank at these weights\n");
+  } else if (!data.side_entries.empty()) {
     printf(
         "identities: the curve's columns at its shared x, mg %.0f and eg "
         "%.0f on every side of every row: each its integer sign x (White's "
@@ -995,10 +822,19 @@ void report_identities(const dataset_t& data,
 
   const unsigned threads = std::max(1u, std::thread::hardware_concurrency());
 
-  // X'X, upper triangle per thread, summed exactly.
-  std::vector<std::vector<int64_t>> partial(threads);
+  // X'X, upper triangle per thread, summed exactly. Since S124's phase 2a
+  // modulo 2^64, which unsigned arithmetic defines, beside each column's
+  // diagonal in 128 bits: the local form's curve columns run to the 10^6s, so
+  // the int64 the sums used to be held in is no longer known to be enough.
+  // Every partial sum of an entry is bounded by the geometric mean of two
+  // final diagonals (Cauchy-Schwarz over the rows summed), so a diagonal
+  // under 2^63 is every entry's exact value read back from its residue, and
+  // one past it is refused below, not reported.
+  std::vector<std::vector<uint64_t>> partial(threads);
+  std::vector<std::vector<__int128>> diagonal(threads);
   std::vector<double> worst(threads, 0.0);
   std::vector<size_t> compared(threads, 0);
+  std::vector<audit_design::linearisation_t> linear(threads);
   std::vector<std::thread> workers;
 
   const size_t stride = (data.size() > sample) ? data.size() / sample : 1;
@@ -1026,14 +862,29 @@ void report_identities(const dataset_t& data,
 
   // And S124's cells, the same way: at F the factor's term is zero, while
   // its column times F would add E1 w_eg to the sum.
+  std::vector<uint8_t> cell_param(PARAM_COUNT, 0);
   for (size_t c = 0; c < tuner_layout::ENDGAME_SCALE_COUNT; ++c) {
-    group_param[tuner_layout::EGS_BASE + c] = 1;
+    cell_param[tuner_layout::EGS_BASE + c] = 1;
   }
+
+  // In the local form the group is in the sum, by its degree: T is
+  // homogeneous of degree 2 in its weights where x > 0 and zero elsewhere,
+  // so its columns, 24 divisor / 2 times d(score)/d(w), dotted with the
+  // weights are 24 divisor times its score. A column off its derivative
+  // where the weight is not zero moves this sum; the linearisation check
+  // below reads every column alone.
+  const double group_divisor =
+      tuner_trace::engine_model().groups.empty()
+          ? 1.0
+          : tuner_trace::engine_model().groups[0].divisor;
 
   for (unsigned t = 0; t < threads; ++t) {
     workers.emplace_back([&, t]() {
-      std::vector<int64_t>& gram = partial[t];
+      std::vector<uint64_t>& gram = partial[t];
       gram.assign(PARAM_COUNT * PARAM_COUNT, 0);
+      std::vector<__int128>& diag = diagonal[t];
+      diag.assign(PARAM_COUNT, 0);
+      std::vector<double> moved = params;
       design_builder_t builder;
       design_row_t x;
 
@@ -1042,11 +893,12 @@ void report_identities(const dataset_t& data,
 
         const size_t n = x.index.size();
         for (size_t a = 0; a < n; ++a) {
-          int64_t* line = &gram[x.index[a] * PARAM_COUNT];
-          const int64_t va = x.value[a];
+          uint64_t* line = &gram[x.index[a] * PARAM_COUNT];
+          const uint64_t va = static_cast<uint64_t>(x.value[a]);
+          diag[x.index[a]] += static_cast<__int128>(x.value[a]) * x.value[a];
 
           for (size_t b = a; b < n; ++b) {
-            line[x.index[b]] += va * x.value[b];
+            line[x.index[b]] += va * static_cast<uint64_t>(x.value[b]);
           }
         }
 
@@ -1055,13 +907,20 @@ void report_identities(const dataset_t& data,
         // sums the same entries by site rather than by parameter.
         if (row % stride != 0) { continue; }
 
+        audit_design::check_row(data, row, x, slopes, &moved, &linear[t]);
+
         double total = 0.0;
         double stage_two = 0.0;
         for (size_t a = 0; a < n; ++a) {
-          if (group_param[x.index[a]]) { continue; }
+          if (cell_param[x.index[a]]) { continue; }
 
-          const double term = static_cast<double>(x.value[a]) *
-                              params[x.index[a]] / GAME_PHASE_MAX;
+          double term = static_cast<double>(x.value[a]) * params[x.index[a]] /
+                        GAME_PHASE_MAX;
+          if (group_param[x.index[a]]) {
+            if (!slopes.local) { continue; }
+            term /= group_divisor;
+            stage_two += term;  // S122's curve is inside the clamp
+          }
           total += term;
           if (clamped_param[x.index[a]]) { stage_two += term; }
         }
@@ -1079,15 +938,55 @@ void report_identities(const dataset_t& data,
     worker.join();
   }
 
-  std::vector<int64_t> gram(PARAM_COUNT * PARAM_COUNT, 0);
-  for (const std::vector<int64_t>& part : partial) {
-    for (size_t i = 0; i < gram.size(); ++i) {
-      gram[i] += part[i];
+  // Every diagonal exact first: past 2^63 an entry may not be its residue.
+  __int128 largest = 0;
+  size_t largest_column = 0;
+  for (size_t i = 0; i < PARAM_COUNT; ++i) {
+    __int128 sum = 0;
+    for (unsigned t = 0; t < threads; ++t) {
+      sum += diagonal[t][i];
     }
+    if (sum > largest) {
+      largest = sum;
+      largest_column = i;
+    }
+  }
+
+  if (largest > static_cast<__int128>(INT64_MAX)) {
+    printf(
+        "identities: not computed: X'X's diagonal at %s passes 2^63 - 1, so "
+        "its entries are not known exactly in 64 bits\n",
+        column_name(largest_column).c_str());
+    return;
+  }
+
+  std::vector<uint64_t> residue(PARAM_COUNT * PARAM_COUNT, 0);
+  for (const std::vector<uint64_t>& part : partial) {
+    for (size_t i = 0; i < residue.size(); ++i) {
+      residue[i] += part[i];
+    }
+  }
+
+  // Modular in C++20: each residue read back as the integer it is.
+  std::vector<int64_t> gram(PARAM_COUNT * PARAM_COUNT, 0);
+  for (size_t i = 0; i < gram.size(); ++i) {
+    gram[i] = static_cast<int64_t>(residue[i]);
   }
   for (size_t i = 0; i < PARAM_COUNT; ++i) {
     for (size_t j = 0; j < i; ++j) {
       gram[i * PARAM_COUNT + j] = gram[j * PARAM_COUNT + i];
+    }
+  }
+
+  audit_design::linearisation_t checked;
+  for (const audit_design::linearisation_t& part : linear) {
+    checked.rows += part.rows;
+    checked.skipped += part.skipped;
+    checked.columns += part.columns;
+    if (part.worst > checked.worst) {
+      checked.worst = part.worst;
+      checked.worst_param = part.worst_param;
+      checked.worst_row = part.worst_row;
     }
   }
 
@@ -1106,16 +1005,35 @@ void report_identities(const dataset_t& data,
       "identities: method: each row is evaluate()'s trace, each coefficient "
       "times its taper weight times %d (%d for a piece value, the phase and "
       "%d minus it for a tapered pair's halves), which is %d x d(score)/"
-      "d(param) with the stage-two clamp left out; X'X summed exactly in "
-      "64-bit integers over every row; rank by Gauss-Jordan modulo 2^61-1, "
+      "d(param) with the stage-two clamp left out; X'X summed exactly over "
+      "every row, modulo 2^64 with every diagonal held under 2^63 in 128 "
+      "bits; rank by Gauss-Jordan modulo 2^61-1, "
       "which cannot exceed the rank over the rationals; each dependency "
       "checked exactly as v'X'Xv == 0, the sum over every row of (x.v)^2\n",
       GAME_PHASE_MAX, GAME_PHASE_MAX, GAME_PHASE_MAX, GAME_PHASE_MAX);
   printf(
       "identities: design check: x.params/%d against the trace's smooth "
       "score on %zu rows where the clamp does not bind, worst |difference| "
-      "%.3g\n",
-      GAME_PHASE_MAX, design_rows, design_worst);
+      "%.3g%s\n",
+      GAME_PHASE_MAX, design_rows, design_worst,
+      slopes.local ? "; the curve's columns in it at 1/divisor, its degree 2"
+                   : "");
+  printf(
+      "identities: X'X's largest diagonal %.4g, under 2^63 - 1 = %.4g, at "
+      "%s\n",
+      static_cast<double>(largest), static_cast<double>(INT64_MAX),
+      column_name(largest_column).c_str());
+  printf(
+      "identities: linearisation check: %zu rows (every %zuth; %zu skipped "
+      "within a centipawn of the clamp or with a side's x at 0), %zu columns, "
+      "each over its scale against the smooth score's central difference at "
+      "h %g: worst |difference| %.3g in d(score)/d(param)%s%s\n",
+      checked.rows, stride, checked.skipped, checked.columns,
+      audit_design::LINEARISATION_H, checked.worst,
+      (checked.worst_param < PARAM_COUNT) ? ", at " : "",
+      (checked.worst_param < PARAM_COUNT)
+          ? column_name(checked.worst_param).c_str()
+          : "");
 
   // Columns no row ever touches. A pawn cannot stand on either back rank, so
   // thirty-two of these are there by construction; any other is a gap in the

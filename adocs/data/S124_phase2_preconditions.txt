@@ -1,0 +1,150 @@
+S124 phase 2a, 2026-11-06: the draft pre-registration's corpus figures re-read on S122's regenerated corpus, at the
+landed tree (worktree ../chesso-s124p2, branch s124p2 at a4ef975, its build/ built with the phase 2a diff; bench 4707943
+in both builds). Every figure in the draft ("Pre-registered: the screen, a draft") was the void corpus's or S083's;
+these are the figures adocs/data/S124_screen.sh's header carries. Read in place, nothing written under the corpus:
+
+  corpus   /home/max/ws/chesso/.tuning/s122/prepared/corpus.tsv, sha256 04c596de726b5a2886df4e7e41c08fdd958529c669ba98ee69befd6a54676509,
+           6307294 rows, 137991 games (the record's), its pool /home/max/ws/chesso/.tuning/s122/corpus (S333's stamp)
+  held out pool.tsv.qs.validation, sha256 faef5cd415abfb999c77f9754d0d1fbcd81fa572d04680b2b73e1bb9508936eb, 1384182 rows, 12000 games
+  root     /home/max/ws/chesso/.tuning/s122/corpus/pool.tsv.root, 18786043 rows (P0's starts only)
+
+Every chess verdict is the Syzygy 3-4-5 tables' through python-chess (~/.venv/chess/bin/python, ~/syzygy/); every class
+and cell is a count. No fit, match or timing.
+
+== 1. The identity rule's reading: tools/feature_audit's local form (the step file's amendment of 2026-11-06, written
+==    before this ran)
+
+  build/tools/feature_audit --data CORPUS --free endgame_scale --no-columns --no-collinearity
+  (sha256 f3ffc8acbedef9c172f5ee6d319e31d982a1b26fd5b527bb4b70d0489eee31db, 1 m 02 s at 12 threads)
+
+trace: 6307294 rows, 241884663 entries; 0 differ from evaluate(), the clamp binds on 9619
+identities: the curve's columns linearised at the weights read, each side at its own x
+identities: design check: x.params/24 against the trace's smooth score on 203141 rows where the clamp does not bind, worst |difference| 9.09e-13; the curve's columns in it at 1/divisor, its degree 2
+identities: X'X's largest diagonal 2.596e+14, under 2^63 - 1 = 9.223e+18, at ks_curve_mg[5]
+identities: linearisation check: 203125 rows (every 31th; 337 skipped within a centipawn of the clamp or with a side's x at 0), 17206719 columns, ... worst |difference| 1.56e-10 in d(score)/d(param), at passed_king_own_eg[2]
+identities: 32 columns zero on every row: the 32 dead pawn squares, psqt_mg and psqt_eg [pawn] on ranks 1 and 8
+identities: by construction: S134's 7 (material/table x 5, the king's two sums), S121's 8 mobility levels, 11 mopup_mg[2] - mopup_eg[2] = 0 (S124): 16, each holds on every row
+identities: rank modulo 2^61-1: 1142 of 1190, nullity 48; 32 zero columns and 16 dependencies by construction account for 48 of it
+identities: the 1142 columns left once each of those drops one: rank 1142, 0 further exact dependencies
+identities: no exact dependency beyond the ones listed above
+identities: rank over the rationals exactly 1142 of 1190, nullity 48, every null direction listed above
+identities: 32 zero columns, 7 held gauges, 8 frozen mobility levels, 0 curve duplicates (0 held by the freeze, 0 null at the seed only) and 1 frozen mop-up corner pair span 48 of at most 48 null dimensions: every null direction is one Adam never moves, ...
+
+  python3 adocs/data/S124_screen.py identity-check REPORT   -> identity-check: pass
+
+So the rank is exactly 1142 of 1190, nullity 48: the 32 dead pawn columns, S134's 7, S121's 8 and the corner pair, the
+rule's figures. The draft's 1118 / 72 was the design at the curve's seed on S083's corpus; at the shipped point the
+curve's two constant columns are no longer zero and its 22 other columns no longer duplicate a linear cell, which is the
+whole of the 24 the rank gains. Every cell's column is non-zero (below).
+
+== 2. Per-cell supports (DEC-326 (5)'s 1000 games), the same report's support lines: rows whose E1 at the shipped
+==    weights picks the cell at a phase below 24, their games, and the rows where either candidate is the cell
+
+  cell              rows    games  candidate rows   draft: void corpus games, S083's games
+  P=0 d<=0         44278     8167      372674          1957, 1669
+  P=0 d=1          91624     6718      112813          3176, 3299
+  P=0 d>=2         38765     5614       41870          2840, 3072
+  P=1 d<=0        152910    21033      504418         10568, 9353
+  P=1 d=1          87154    13845      110641          9253, 10175
+  P=1 d>=2         30557     6854       32076          4649, 5780
+  P=2 d<=0        234021    37360      635832         24868, 23018
+  P=2 d=1         133651    23183      162553         18196, 20718
+  P=2 d>=2         37267     8020       38582          6400, 8090
+  OCB_PURE P<=2    38717     2438       57469          1047, 905
+  OCB_PURE P=3-4   31327     2616       36451          1747, 1657
+  OCB_PURE P>=5     8890     1131        9090           840, 798
+  OCB_ROOK         69089     6100       69237          5228, 5520
+
+  python3 adocs/data/S124_screen.py ties REPORT --out DIR   -> ties: none; OCB_PURE P>=5 on 1131 games, so F3 fits it free
+
+**OCB_PURE P<=2 stands on 2438 games, over the 1000: no stop before F1.** OCB_PURE P>=5 on 1131, over the 1000, so the
+draft's F3 tie (`endgame_scale 11 10`, "unless that cell's support reads 1000 games or more") does not bind and F3 fits
+it free. Every cell is over 1000 games. The regenerated corpus holds about twice the void corpus's endgame rows (S331's
+datagen plays on past a two-fold, so the games run longer): the whole family's support grew.
+
+The engine's own census over every row (adocs/data/S124_cell_check.cpp, built against build/'s trace library, the walk
+and the trace's cells against the engine's on every row):
+
+  .tuning/s124p2/S124_cell_check CORPUS
+  rows 6307294; the walk differs on 0, the trace's cells on 0
+  picked: P=0 d<=0 44278, P=0 d=1 91624, P=0 d>=2 38765, P=1 d<=0 152910, P=1 d=1 87154, P=1 d>=2 30557, P=2 d<=0 234034,
+  P=2 d=1 133651, P=2 d>=2 37267, OCB_PURE P<=2 38717, P=3-4 31327, P>=5 8890, OCB_ROOK 69089, none 5309031
+  mop-up's domain 30812 rows (0.489 %), of them KBN 6546
+  mop-up counts non-zero, White's then Black's: centre 15452 12050, kings 17560 13252, corner 3624 2581
+  S124-CELLS-OK
+
+(P=2 d<=0's 13 rows more than the support line's are its rows at phase 24, which the support line leaves out.)
+
+== 3. Mop-up's domain and its corner
+
+  feature_audit's support lines (the same report):
+  support mopup_mg[0] rows 27502 games 4887      (centre; eg the same)
+  support mopup_mg[1] rows 30812 games 4970      (kings; eg the same)
+  support mopup_mg[2] rows  6205 games  389      (corner, KBN alone; eg the same)
+
+  ~/.venv/chess/bin/python adocs/data/S124_guard.py CORPUS --out .tuning/s124p2/guard.tsv   (3 m 44 s, one core)
+  mop-up's domain by counts: 30812 rows (0.489 %) in 4970 games      (the engine's 30812 above: they agree)
+    KRvK       rows   22522 games  4331
+    KBNvK      rows    6546 games   389
+    KBBvK      rows    1306 games   129
+    KRBvK      rows     251 games    87
+    KRNvK      rows     178 games    63
+    KBNNvK     rows       5 games     2
+    KQvK       rows       4 games     4
+
+Draft, void corpus: 9742 rows in 2087 games, KBN 1954 rows in 212 games. The corner pair stands on 389 games. KQvK is
+almost absent from the training corpus because the recipe's |column 3| < 1000 filter drops it; P0 reads the raw root
+pool instead (5).
+
+== 4. The tablebase guard's rows: the training corpus's rows of five men or fewer, labelled at each row's own clock
+
+  (the same S124_guard.py run)
+  S124 guard, phase 2a: CORPUS, 6307294 rows, 137991 games, sha256 04c596de...76509
+  rows of five men or fewer: 292936 in 29986 games; 267157 distinct positions probed
+  verdicts White relative at each row's own clock (WON and LOST are White's): WON 46052 rows 8152 games, LOST 35108 rows
+  6211 games, DRAWN 197583 rows 18330 games, SPOILED 13675 rows 2886 games, EDGE 518 rows 435 games, unprobed 0 rows 0 games
+  guard rows written: 292418 in 29985 games (EDGE and unprobed left out)
+  guard.tsv sha256 9b1f05f2b1bc1b4de80621b2db263ec316d6c6a0c2ee8a1050712ebbe15cdc23 (scratch; the screen's `guard`
+  stage writes its own under OUT and the coordinator's run is the one read)
+
+  .tuning/s124p2/S124_cell_check .tuning/s124p2/guard.tsv    (the cell each guard row's E1 picks)
+  rows 292418; the walk differs on 0, the trace's cells on 0
+  F1: P=0 d<=0 38157, P=0 d=1 72749, OCB_PURE P<=2 10959 (its P=0 and P=1 rows: six men is the least at P=2)
+  F2: P=0 d>=2 28593, P=1 d<=0 81983, P=1 d=1 9960, P=1 d>=2 3511, P=2 d<=0 3996, P=2 d=1 0, P=2 d>=2 0
+  F3: OCB_PURE P=3-4 0, P>=5 0, OCB_ROOK 0 -- none can hold five men or fewer, so F3 alone moves no guard row
+  no cell 42510; mop-up's domain 30584 (KBN 6536)
+
+Draft, void corpus: mop-up's 9742 rows read 9546 won, 192 spoiled, 4 drawn; the PAWNS cells 6849 to 24469 rows a cell.
+
+== 5. P0's starts: the raw root pool's training games, by class
+
+  ~/.venv/chess/bin/python adocs/data/S124_p0.py select --pool .../corpus/pool.tsv.root \
+      --heldout .../prepared/pool.tsv.qs.validation --out .tuning/s124p2/p0smoke/starts.tsv      (49 s)
+  select: 18786043 root rows read, 12000 held-out games left out
+    KRvK   training games with a root row in it  7515; not won at a zeroed clock 3074; a position already kept  320; won and distinct  4121; taken  200
+    KQvK   training games with a root row in it  3869; not won at a zeroed clock    0; a position already kept  344; won and distinct  3525; taken  200
+    KRBvK  training games with a root row in it  1375; not won at a zeroed clock   17; a position already kept    4; won and distinct  1354; taken  200
+    KRNvK  training games with a root row in it  1175; not won at a zeroed clock   18; a position already kept    1; won and distinct  1156; taken  200
+    KBNvK  training games with a root row in it   407; not won at a zeroed clock   22; a position already kept    1; won and distinct   384; taken  200
+    KBBvK  training games with a root row in it   130; not won at a zeroed clock    4; a position already kept    0; won and distinct   126; taken  126
+  starts sha256 6974c6b5b69581a77a1ad416c9f19b5a0f67f70c95f18f1709dafdac1b439512, 1126 starts
+
+KRvK's 3074 not won are games whose first KRvK root row the lone king can capture from or the tables otherwise score
+drawn (the research pass's 506 such endings). Every class but KBBvK has 200 and more fresh starts behind its 200 for
+P1 (`--skip 200`); KBBvK's 126 are all taken, so P1 has no fresh KBBvK start.
+
+== 6. K at the identity
+
+  g++ -std=c++20 -O2 -march=native -DNDEBUG -DCHESSO_TRACE -I src -I tools adocs/data/S124_k_refit.cpp \
+      build/src/libchesso_engine_trace.a -lpthread -o .tuning/s124p2/S124_k_refit
+  .tuning/s124p2/S124_k_refit --data CORPUS --threads 12          (26 s)
+  S124 K refit: CORPUS, 6307294 rows, 0 differ from evaluate()
+  weights   the build's own, the identity
+  train     0.083756 at K
+  K 1.2171
+
+**K at the identity is 1.2171**, the tuner's fit_k() at the landed constants (S124_k_refit is that function, its
+search, rows and threads). The record's 1.2302 (prepared/k.txt) was read at 7fe9f89, S122 at its seed, before S122's
+fit landed; at that tree the training error was 0.084230. No tuner was run here: the screen's `k` stage reads the
+tuner's own zero-epoch K on each sample and refuses unless S124_k_refit agrees within 1e-4 (on the smoke's 40000-row
+slice the two read the same to the fourth place on all six samples).

@@ -6168,9 +6168,24 @@ before it were taken with the mirror's tool, at their own trees.
   report, is byte-identical to S275's mirror run**: the same rank, null
   directions and gauges, occurrence, tempo gap and R² figures
   (`adocs/data/S276_feature_audit.txt`). A trace carrying
-  per-side entries, which a linear design has no column for, is not ranked at
-  all: the report says so instead;
-  `X'X` is summed exactly in 64-bit integers; the rank is taken by Gauss-Jordan
+  per-side entries -- S122's curve -- has its group's columns where they are
+  integers: at a shared x, the curve's seed, each the one slope times sign (White's
+  count less Black's); **since S124's phase 2a**, anywhere else, the design
+  linearised at the weights read, the local form (`tools/audit_design.hpp`): each
+  side's own slope at its own x, sign (max(x_W, 0) n_W - max(x_B, 0) n_B) a half
+  times the half's taper weight, divisor / 2 = 1024 a factor common to the group's
+  columns, integers wherever every side's x is one; otherwise the report says
+  `not computed`. The local rank is the design's at that point, which directions
+  the loss sees there. In the local form the design check sums the curve's
+  columns at 1/divisor, T being of degree 2 in its weights, and a **linearisation
+  check** reads every column of the sampled rows, over its scale, against the
+  smooth score's central difference at h 1e-3 (rows within a centipawn of the
+  clamp, or with a side's x at 0, skipped); `tests/test_audit_design.cpp` holds the
+  same against the fixture positions, and the local form at the seed to the shared
+  form times x;
+  `X'X` is summed exactly, modulo 2^64 with every diagonal held under 2^63 in 128
+  bits since the local form's curve columns reach the 10^6s (a diagonal past it is
+  `not computed`, never reported); the rank is taken by Gauss-Jordan
   modulo 2^61-1, which can only understate the rank over the rationals; and a
   dependency `v` is checked exactly as `v'X'Xv == 0`, the sum over every row of
   `(x.v)^2`. It prints the columns no row touches, the dependencies the
@@ -6222,8 +6237,17 @@ before it were taken with the mirror's tool, at their own trees.
   E1 picks that cell, zero elsewhere. At F the factor's chain rule leaves every
   other column as it was; off F it moves the material and positional endgame
   columns row by row, and the report says `not computed` instead. The design check
-  leaves the cells out of its sum, as it leaves the curve's inputs, the factor's
-  term being zero at F.
+  leaves the cells out of its sum, the factor's term being zero at F, and at a
+  shared x the curve's inputs, whose group scores nothing there.
+  **At S124's phase 2a, 1190 parameters, over S122's regenerated corpus with
+  `--free endgame_scale`, in the local form: rank exactly 1142, nullity 48** -- the
+  32 dead pawn columns, S134's seven, S121's eight held by the freeze and the
+  mop-up corner pair -- and 0 further dependencies; design check 9.09e-13,
+  linearisation check 1.56e-10, largest diagonal 2.6e14 (1 m 02 s,
+  `adocs/data/S124_phase2_preconditions.txt`; `adocs/data/S124_screen.sh
+  identity` is the rule). At the seed the curve's two constant columns are zero
+  and its 22 others duplicate a linear cell; at the shipped point they do neither,
+  the 24 the rank gains.
 - **occurrence** reports the share of rows where each column is non-zero, whole
   corpus and by phase band. Split by band because a column can be well covered
   overall and empty in the band whose weight it is: phase 0 has `mg_weight`

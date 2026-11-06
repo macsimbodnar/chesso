@@ -1,0 +1,49 @@
+--- a/tools/audit_design.hpp
++++ b/tools/audit_design.hpp
+@@ -7,6 +7,7 @@
+ #include <cmath>
+ #include <cstdint>
+ #include <cstdio>
++#include <cstdlib>
+ #include <string>
+ #include <utility>
+ #include <vector>
+@@ -138,6 +139,10 @@
+ // the fast check's finding 6). Empty when the model is that form.
+ inline std::string local_form_refusal(const tuner_trace::model_t& model)
+ {
++  // S124's phase 2a plant 5: the refusal disabled.
++  if (std::getenv("S124_P2_PLANT") && std::atoi(std::getenv("S124_P2_PLANT")) == 5) {
++    return "";
++  }
+   if (model.groups.size() > 1) {
+     return "the model carries " + std::to_string(model.groups.size()) +
+            " groups, and the local form's design check reads one, S122's curve";
+@@ -242,6 +247,27 @@
+         for (int side = 0; side < 2; ++side) {
+           positive_[g].mg[side] = std::llround(std::max(x.mg[side], 0.0));
+           positive_[g].eg[side] = std::llround(std::max(x.eg[side], 0.0));
++          // S124's phase 2a plants (adocs/data/S124_phase2_plants.sh).
++          static const int plant = std::getenv("S124_P2_PLANT")
++                                       ? std::atoi(std::getenv("S124_P2_PLANT"))
++                                       : 0;
++          if (plant == 1) {  // x itself, the max dropped
++            positive_[g].mg[side] = std::llround(x.mg[side]);
++            positive_[g].eg[side] = std::llround(x.eg[side]);
++          }
++          if (plant == 3) {  // the endgame half at the middlegame's x
++            positive_[g].eg[side] = positive_[g].mg[side];
++          }
++          if (plant == 4) {  // the slope squared
++            positive_[g].mg[side] *= positive_[g].mg[side];
++            positive_[g].eg[side] *= positive_[g].eg[side];
++          }
++        }
++        if (std::getenv("S124_P2_PLANT") &&
++            std::atoi(std::getenv("S124_P2_PLANT")) == 2) {
++          // Black's side at White's x
++          positive_[g].mg[1] = positive_[g].mg[0];
++          positive_[g].eg[1] = positive_[g].eg[0];
+         }
+       }
+ 

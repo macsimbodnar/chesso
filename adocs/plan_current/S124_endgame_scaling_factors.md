@@ -1,7 +1,7 @@
 id:         S124
 goal:       the endgame half of the score is scaled toward a draw by what is actually on the board, and won lone-king and specialised endgames are scored so the stronger side converts them
 accepts:    an SPRT verdict, recorded whatever it is; the factor scales **only the endgame half** of the tapered score and not the whole score; each case -- strong-side pawn count, opposite-coloured bishops, and the mop-up and specialised-endgame cases this family gains (DEC-258) -- is screened separately before the family's one SPRT (DEC-259), and a case the corpus barely holds is screened on a tool-labelled position set instead (tablebase WDL or Stockfish through python-chess, never the agent's reading, CHESS rule), because the surveyed record shows several such cases measuring zero and being removed again; mop-up is shown to convert: won lone-king positions, labelled won by a tablebase, are mated by the engine in self-play at a fixed node budget within a move bound stated before the run; every constant is fitted (DEC-084); the existing insufficient-material draw detection is not duplicated by this and the step says how the two divide
-touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, src/eval_trace.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tools/tuner_layout.hpp, tools/tuner_optimiser.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tools/truncation_scan.cpp, tools/eval_spread.cpp, tests/CMakeLists.txt, tests/test_evaluation.cpp, tests/test_eval_positions.hpp, tests/test_endgame_positions.hpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_tuner_box.sh, tests/test_walked_counts.hpp, adocs/data/S101_gradient_rows.cpp, adocs/data/S310_adagrad_step.cpp, adocs/data/S122_screen.py, adocs/data/S083_truncation_pick.py, DEV_MANUAL.md
+touches:    src/evaluation.cpp, src/evaluation.hpp, src/eval_tables.hpp, src/eval_trace.hpp, tools/tuner_trace.hpp, tools/tuner_groups.hpp, tools/tuner_layout.hpp, tools/tuner_optimiser.hpp, tools/tuner.cpp, tools/feature_audit.cpp, tools/audit_design.hpp, tools/truncation_scan.cpp, tools/eval_spread.cpp, tests/CMakeLists.txt, tests/test_evaluation.cpp, tests/test_eval_positions.hpp, tests/test_endgame_positions.hpp, tests/test_eval_model.cpp, tests/test_eval_trace.cpp, tests/test_tuner_gradient.cpp, tests/test_tuner_groups.cpp, tests/test_tuner_box.sh, tests/test_audit_design.cpp, tests/test_walked_counts.hpp, adocs/data/S101_gradient_rows.cpp, adocs/data/S310_adagrad_step.cpp, adocs/data/S122_screen.py, adocs/data/S083_truncation_pick.py, DEV_MANUAL.md
 excludes:   tablebases, which are S129; the 50-move decay, which is a separate small term in the reserve; the complexity term, which is S266
 decisions:  DEC-071, DEC-084, DEC-258, DEC-259
 closes:
@@ -1440,3 +1440,253 @@ rank at the shipped point and the identity rule restated; the draft's corpus fig
 corpus; `S124_screen.sh` with the pre-registration as its header; P0's conversion test. No fit, SPSA or match is
 started by the agent; the coordinator runs P0 and the parts. Mop-up's SPSA instrument waits for P0's reading (if head
 converts every start, P1 is not run).
+
+## 2026-11-06: phase 2a
+
+One Opus 5.5 subagent, coordinated; worktree `../chesso-s124p2`, branch `s124p2` at `a4ef975`, the diff staged and not
+committed. Nothing fitted, played or timed by the agent: the corpus scans, the audit, the tablebase labelling and a smoke
+of the conversion script are readings; every fit, P0 and the SPRT are the coordinator's, from `adocs/data/S124_screen.sh`.
+
+### Amended 2026-11-06, before the number was read: the identity rule for a local rank
+
+Written before `feature_audit` first computed a rank on S122's regenerated corpus at the shipped constants. The draft's
+rule ("Pre-registered: the screen, a draft", its first item) read the design at S122's curve's seed: rank 1118 of 1190 on
+S083's corpus, nullity 72, the 34 zero columns being the 32 dead pawn squares and the curve constant's two, and 38
+dependencies by construction, S122's 37 (S134's 7, S121's 8, the curve's 22 duplicates of linear cells) and the corner
+pair. At the shipped constants each king has its own x, so the audit now reads the design linearised there (below,
+"feature_audit's local form"): the curve's 24 columns are each side's slope at its own x times its own counts, the
+constant's columns are no longer zero and the other 22 no longer duplicate a linear cell. So the rule is restated for
+that local rank, and the expected figures follow from the design's construction alone:
+
+- the trace's identity on every row (0 differ), and the report in its local form;
+- the design check and the new linearisation check each under 1e-6;
+- the zero columns the 32 dead pawn squares and nothing else;
+- the dependencies by construction S134's 7, S121's 8 and the mop-up corner pair, 16, each holding on every row; no
+  curve duplicate, and no exact dependency beyond the 16;
+- so the rank over the rationals exactly 1190 - 32 - 16 = **1142, nullity 48**;
+- under `--free endgame_scale`, the span 48 of at most 48: the 32 zero columns, the 7 held gauges, the 8 mobility
+  levels and the corner pair held by the freeze;
+- every cell's support line at rows > 0.
+
+Anything else stops the screen for the coordinator before any fit, S122's form. The local rank is the design's at one
+point: it says which directions the loss sees there, not that a direction stays seen once a fit moves the curve's x,
+which no S124 part frees.
+
+### feature_audit's local form, task 1
+
+- **What it reads.** `tools/audit_design.hpp` (new) holds the design `tools/feature_audit` ranks, moved verbatim from
+  `tools/feature_audit.cpp` so a test can read it, and adds the local form: where the curve's sides do not share one x,
+  each half's column for input i is `sign (max(x_W, 0) n_W,i - max(x_B, 0) n_B,i)` times the half's taper weight times
+  24, at the weights read, the divisor / 2 = 1024 dropped as a factor common to the group's columns; integers wherever
+  every side's x is one (`local_form_exact()`), otherwise `not computed`. At a shared x the old form is kept unchanged,
+  so the report at the seed reads as before. The rank is the design's local rank at that point.
+- **Two checks in the report.** The design check sums the curve's columns at 1/divisor (T is of degree 2 in its
+  weights, so its columns dotted with the weights are 24 divisor times its score), and the clamp's skip reads the curve
+  inside stage two. A **linearisation check** reads every column of the sampled rows, over its scale (24, 24 F for a cell
+  at F, 24 divisor / 2 for the curve), against the smooth score's central difference at h 1e-3, skipping rows within a
+  centipawn of the clamp or with a side's x at 0; `tuner_trace::smooth_t` gains `stage_two`, the sum before the clamp,
+  for that skip. `X'X` is now summed modulo 2^64 beside each diagonal in 128 bits and refused past 2^63: the curve's
+  columns reach the 10^6s (largest diagonal 2.6e14 on the corpus, under 9.2e18), and by Cauchy-Schwarz a diagonal under
+  2^63 bounds every partial sum, so each entry is read back exactly.
+- **The test**, `tests/test_audit_design.cpp` (new, fast, the trace build; 0.3 s), over the curated list both ways
+  round, the JSON suites and S124's population. (1) At the shipped weights the local form is the smooth score's
+  derivative: 8048 rows, 432310 columns compared, 62802 of them the curve's, 6471 rows with both kings' x positive and
+  apart; worst 5.68e-10 against 1e-6; the scales written in the test from the definitions, the difference its own code.
+  (2) At the curve's seed (45 in both halves, every other input 0), the old form defined: the local form is the shared
+  form times 45 column for column, 0 mismatches over 56270 curve entries; the rank over the curve's 24 columns and the
+  22 linear cells they duplicate reads 22 in both forms (the test's own Gauss-Jordan); at the shipped weights 46.
+- **Red on each plant** (`adocs/data/S124_phase2_plants.sh`, `.patch`, the tally in `adocs/data/S124_phase2_plants.txt`;
+  `feature_audit` over the corpus's first 300000 rows):
+
+  | plant | derivative case | seed case | design check | linearisation check | rank |
+  |---|---|---|---|---|---|
+  | 0 none | green, 5.68e-10 | green | 1.14e-12 | 1.56e-10 | 1142 |
+  | 1 x for max(x, 0) | red, 1.05 | green | 132 | 1.27 | 1140 |
+  | 2 Black's side at White's x | red, 2.54 | green | 207 | 4.05 | 1140 |
+  | 3 the endgame half at the middlegame's x | red, 5.57 | green | 65.6 | 5.06 | 1142 |
+  | 4 the slope squared | red, 2478 | red, mismatches | 510 | 2.82e3 | 1142 |
+
+  Plants 1 to 3 agree with the old form at the seed, where both kings share x and it is positive, so only the shipped
+  point sees them; plant 4 breaks the seed's proportionality too. The rank alone moved under two plants of four: it is
+  no guard of the linearisation, the checks are.
+- **Read on S122's regenerated corpus** (`adocs/data/S124_phase2_preconditions.txt`, section 1): rank exactly **1142 of
+  1190, nullity 48**, the rule's figures written before the run: the 32 dead pawn columns, S134's 7, S121's 8 and the
+  corner pair, 16 by construction each holding, 0 further dependencies, no curve duplicate; the span 48 of 48 under
+  `--free endgame_scale`; design check 9.09e-13, linearisation check 1.56e-10 over 203125 rows; every cell's column
+  non-zero. `S124_screen.py identity-check` passes it and refuses HEAD's report, whose identity read `not computed`.
+
+### The draft's corpus figures re-read, task 2
+
+Every figure, with its command, in `adocs/data/S124_phase2_preconditions.txt`. Amended 2026-11-06, before any fit, where
+the draft's void-corpus figures moved:
+
+- **Supports.** The thirteen cells on 1131 to 37360 games. **OCB_PURE P<=2 on 2438 games** (draft: 1047 void, 905
+  S083): over the 1000, so F1 does not stop. **OCB_PURE P>=5 on 1131** (840 void, 798 S083): over the 1000, so the
+  draft's F3 tie, `endgame_scale 11 10` "unless that cell's support reads 1000 games or more", does not bind and F3 fits
+  the cell free. The rule is the draft's; its outcome moved because S331's datagen plays on past a two-fold and the games
+  run longer.
+- **Mop-up's domain**: 30812 rows in 4970 games (draft: 9742 in 2087), the engine's count and the piece counts' agreeing;
+  KRvK 22522 rows in 4331 games, KBNvK 6546 in 389, KBBvK 1306 in 129, KRBvK 251, KRNvK 178, KQvK 4 (the |score| < 1000
+  filter). The corner pair on 6205 rows, 389 games (draft: 1954 rows, 212 games).
+- **The guard's rows**: 292936 of five men or fewer in 29986 games; at each row's own clock WON 46052, LOST 35108, DRAWN
+  197583, SPOILED 13675 (White relative), EDGE 518 left out, none unprobed. By cell: F1's 38157, 72749 and 10959
+  (OCB_PURE P<=2's P=0 and P=1 rows); F2's 28593, 81983, 9960, 3511, 3996, 0, 0; F3's none.
+- **K at the identity: 1.2171** at the landed tree (the record's 1.2302 is `7fe9f89`'s, S122 at its seed), read by
+  `adocs/data/S124_k_refit.cpp`, the tuner's `fit_k()` at the shipped constants; no tuner was run. The screen's `k` stage
+  reads the tuner's own beside it.
+- **P0's starts** from the raw root pool's training games: KRvK 7515 games with a root row (4121 won and distinct at a
+  zeroed clock), KQvK 3869 (3525), KRBvK 1375 (1354), KRNvK 1175 (1156), KBNvK 407 (384), KBBvK 130 (126): 200 of each
+  and KBBvK's 126, 1126 starts.
+
+### The screen, `adocs/data/S124_screen.sh`, task 3
+
+Stages `locate`, `tools`, `identity`, `k`, `guard`, `p0`, `part F1` to `F3`, `read`, `all`, `smoke`, each ending
+`S124-<STAGE>-DONE` or `-FAILED`; helpers `adocs/data/S124_screen.py`. Its header is the pre-registration, every figure
+from task 2. The tuner's groups `endgame_scale.f1`, `.f2`, `.f3` exist (phase 1); nothing was added to
+`tools/tuner_groups.hpp`. **Amended 2026-11-06, before any fit, where the script departs from or makes exact the draft:**
+
+1. **K, DEC-352** (the draft predates it): on each sample, round r fits the part at K_(r-1) from the landed constants and
+   K_r is K refit at that fit's emitted vector by `S124_k_refit`; decided when K_r is within 1e-4 of K_(r-1), at most six
+   rounds, else K-STOP. K_0 is the tuner's zero-epoch K at the identity, and `k` refuses unless `S124_k_refit` agrees
+   with it within 1e-4 on every sample. A fit is read at its own decided K: the landed tree at K_0 (round 1's `start:`),
+   an earlier survivor at its decided K, the part at its; round 1's d, every side at K_0, is printed beside and decides
+   nothing.
+2. **The tuner is build/'s**, not build-tune's: no part moves the margin, so the shipped 275 is every fit's.
+3. **The guard's statistic**: "1.645 whole-game errors" is the paired rise of the tablebase-labelled loss, part less
+   predecessor, over 1.645 of its error by game (the jackknife over games, `S122_screen.py side-read`'s), each vector at
+   its decided K through `tools/margin_census`'s integer score. The guard reads every part; F3's own cells move no guard
+   row, so F3 alone is screened on the loss, and earlier survivors refit with it are guarded.
+4. **No escalation**: DEC-345 (2)'s re-run at 80000 was the curve's; these parts are linear in f with the old constants
+   frozen, and a fit stopping on its 20000 cap is printed, a reading.
+5. **P0's start rule made exact**: a game's first root row in the class; the WDL filter at the zeroed clock before the
+   200 are taken; one start a position; one seeded shuffle a class, seed 20261106; `--skip 200` the next 200 for P1. P0
+   decides no part and stops nothing: `P0-CONVERTS-EVERY-START` records mop-up zero, `P0-FAILS-TO-CONVERT` sends P1's
+   instrument to the coordinator.
+6. **Paired against the predecessor**: the draft's "each paired against the landed tree" is read in DEC-326 (3)'s and
+   S122's form, the brief's: a part against the landed tree plus the survivors so far, which for F1, and for any part
+   with no survivor before it, is the landed tree itself; a later part's fit frees the earlier survivors' cells again
+   and is read against their decided fit set.
+7. **Machine hours re-estimated** in the header: a part 2 to 3 h at three to four rounds, 6 to 9 h for the three,
+   about 30 h a part at the worst; DEC-155's night.
+
+8. **Amended 2026-11-06, DEC-357, before any fit and before the change is made: the guard reads both vectors at one
+   K.** Amendment 3 read each vector at its own decided K, and K alone moves the guard's loss: the landed vector read
+   at K 1.2171 and at 1.2671 differs by +0.0023, and at 1.3578 by +0.0063, each a refusal, so a part changing nothing
+   but K is refused (the smoke refused F3's refit) and a falling K would blind the guard. Now the part's decided full
+   fit and its predecessor (the landed tree, or the last survivor's decided full fit) are both read at the part's
+   decided full-corpus K, DEC-352's reading K, and the guard refuses on that reading alone: a rise of the
+   tablebase-labelled loss past 1.645 of its error by game. The same comparison with both at K_0, the identity's K, is
+   printed beside it and decides nothing.
+9. **Amended 2026-11-06, the fast check's finding 5: a cell under 1000 games other than the two the draft names stops.**
+   The draft named OCB_PURE P<=2's stop and P>=5's tie; `S124_screen.py ties` also stops on any other cell under 1000
+   games, a case no tie is pre-registered for, DEC-326 (5)'s rule having no supported neighbour named for it. Recorded
+   here as the rule; it does not bind on this corpus, whose smallest cell stands on 1131 games.
+
+**The smoke** (`S124_screen.sh smoke`, 40000 rows and a quarter of each view, 300 epochs, two starts a class): every stage
+ran end to end on the working tree, the stamp `a4ef975-dirty`. The tuner's and `S124_k_refit`'s K agreed to the fourth
+place on all six samples; K iterated two to four rounds a sample and converged everywhere; the identity and support rules
+printed and did not bind on a slice (P<=2 on 14 games); F3's tie applied (P>=5 on 6 games, cells 10 and 11 fitted
+equal); the guard passed F1 and F2 and refused F3's refit. A smoke, not a reading.
+
+### P0's conversion script, task 4
+
+`adocs/data/S124_p0.py` (`S124_conversion.py` is the research pass's game classification and is not touched):
+`select`, `play`, `read`, `mcnemar`, the rules in its docstring and the screen's header. One record a start, `id class
+game ply fen wdl dtz converted plies end moves`, `id` `class:game` the key P1's McNemar pairs by. Smoke only, twice: 12
+starts, two a class, in 3 s at 100000 nodes; the records replay legally to their final positions. **The coordinator's
+run**, about 5 to 10 min: `adocs/data/S124_screen.sh p0` (after `locate` and `tools`), or alone:
+
+    ~/.venv/chess/bin/python adocs/data/S124_p0.py select --pool .tuning/s122/corpus/pool.tsv.root \
+        --heldout .tuning/s122/prepared/pool.tsv.qs.validation --out OUT/starts.tsv
+    ~/.venv/chess/bin/python adocs/data/S124_p0.py play --starts OUT/starts.tsv --engine build/src/chesso \
+        --out OUT/records.tsv --nodes 100000 --workers 12
+    ~/.venv/chess/bin/python adocs/data/S124_p0.py read OUT/records.tsv
+
+### Mop-up's SPSA instrument: options, not built, task 5
+
+Decided only if P0 reads a start head fails to convert. Whichever is built, the driver is new: `tools/spsa_driver.py`
+plays paired mini-matches, and P1's objective is plies to mate over a batch of starts, the bound for a failure; its
+`schedule()` and Rademacher step can be imported. The corner is one parameter (2 mg + 22 eg), five free.
+
+- **(a) Tune-build UCI options for the six weights.** `mopup_mg` and `mopup_eg` read from settable variables under
+  `CHESSO_TUNE`, `src/search_params.hpp`'s X-list form, `mopup_live` a runtime flag there; six options on the tune
+  build's UCI surface, so `test_uci_surface`'s golden, `MANUAL.md` and `specs.md` move first (SURFACE), and DEC-118's
+  class of divergence grows. Cost: one agent task under `src/` and the tune build's checks; at run time a point is a
+  `setoption`, the draft's 3 h. Risk: the release build must read INV-6 identical (constexpr there; bench, objdiff),
+  and the tune build pays the domain test at every stage-one call. Buys an instrument a later evaluation SPSA (S127)
+  could reuse.
+- **(b) A driver that rebuilds per point.** A scratch worktree, the six constants written into `src/evaluation.cpp`,
+  `chesso` rebuilt (evaluation.cpp and the link under ccache, about 30 to 60 s at -j12, unmeasured), the starts played.
+  No surface change and nothing under `src/` on the landed tree: S124's data files only. Cost: two builds an iteration,
+  about 200 to 400 over 100 to 200 iterations, 2 to 6 h of builds beside the games, inferred; the stage-one bound's
+  `static_assert` refuses a point past mop-up's reach at build time.
+- **(c) The tuner on conversion-labelled rows**, P0's self-play positions labelled by whether their start converted:
+  minutes and no instrument. But DEC-350 (4) rules SPSA; at |E1| w about 600 the sigmoid sits past 0.95 at K 1.2171, so
+  the loss barely sees where the lone king stands whatever the label (the research pass's inference); a label "converted
+  within the bound" is the engine's own outcome and not a game's result under the laws, a decision amending DEC-350 (4);
+  and a Syzygy DTZ target is a tool's number, the owner's (the research pass's question 5 (b)).
+- **Recommended (b)**: it changes nothing the engine ships or exposes, it is S124's alone, and its cost is machine hours
+  a night holds. (a) is worth its surface change once a second evaluation term wants SPSA, as its own step.
+
+### Gates, phase 2a
+
+- Both builds without a warning; `ctest -L fast -j10` **60 of 60** in `build/` and in `build-tune/`, `test_audit_design`
+  the new entry (0.5 s), with `CLANG_FORMAT_MAJOR=22`. `chesso bench` 4707943 in both: no `src/` change.
+- `CLANG_FORMAT_MAJOR=22 ./clang-format.sh --check` clean; `tools/plan_prose_check.py` exits 0 in all five modes.
+- Tier 2 (DEC-141) does not bind: no `make_move`, `unmake_move`, generator or search change, no pruning rule.
+- `feature_audit` re-read on the corpus with the final, formatted binary: its output identical line for line to the
+  reading above.
+- `DEV_MANUAL.md`: the identity report's local form, the linearisation check, the Gram's exact summation, and the
+  phase 2a reading; the stale "a trace carrying per-side entries is not ranked at all" (stale since S122's shared form)
+  replaced. `MANUAL.md` read and unchanged: no option, command or engine output moves. `specs.md`: nothing proposed, the
+  engine's behaviour does not move. `adocs/data/README.md` gains the nine new data files.
+
+### Findings beyond phase 2a, not fixed
+
+- **The record's K 1.2302 is not the landed tree's**: `.tuning/s122/prepared/k.txt` was read at `7fe9f89`, before S122's
+  fit; at `a4ef975` K at the identity is 1.2171. The screen reads its own.
+- **P0's two smokes failed to convert 3 of 12 and 5 of 12 starts**, every failure a fifty-move end at the bound, KBNvK's
+  four starts among them: two draws of two starts a class, not a reading, but they make task 5's decision likely.
+- KQvK stands on 4 rows of the training corpus, the |score| < 1000 filter dropping it: mop-up's corpus support is
+  KRvK's and KBNvK's. P0 reads the raw root pool, where KQvK has 3525 starts.
+
+### 2026-11-06: the fast check's findings on phase 2a
+
+The coordinator's fast check found one blocker, ruled as DEC-357, and five low findings. All six are fixed, staged.
+
+1. **The guard read each vector at its own K** (blocker, DEC-357; amendment 8 above, written before the change). Now
+   `part` reads the part's decided full fit and its predecessor at the part's decided K, refuses on that reading alone,
+   and prints the same comparison at K_0 for both beside it, `beside, deciding nothing: ...`, which carries no verdict.
+   A new stage, `guard-probe`, which the smoke runs after F3, shows it on F3's predecessor at F3's K:
+   - an inert probe, the predecessor with F3's own factors (cells no row of five men or fewer can stand in), moves the
+     guard's loss by exactly 0 and passes;
+   - a planted probe, every factor at 4 F = 512, moves it +0.0956 +/- 0.0101 by game and is refused.
+
+   The smoke's F3 refit is still refused at the common K, +0.0000167 +/- 0.0000078. That is a reading and not K: the
+   refit frees F1's and F2's cells again, and those cells move guard rows. F1 and F2 pass at their own K.
+2. **A failed `S124_cell_check` was taken as done.** The census now writes a temporary file, keeps it only when it ends
+   `S124-CELLS-OK`, and removes it on a failure.
+3. **A failed `chesso bench` was stamped anyway.** `tools` now refuses unless the bench exits 0 and prints a node count,
+   and writes no stamp otherwise.
+4. **Only `src/` and `tools/` were held at HEAD.** The clean-at-HEAD check now covers every file the screen builds or
+   runs:
+   - `src/`, `tools/` and `tests/`, which holds the header `S124_cell_check.cpp` includes;
+   - `S124_screen.sh`, `S124_screen.py`, `S135_screen.py` (imported), `S124_guard.py`, `S124_p0.py`,
+     `S124_k_refit.cpp` and `S124_cell_check.cpp`.
+
+   The Python helpers and `tools/corpus_split.py` run from copies frozen with their sha256 in `OUT/bin`, each checked
+   at every stage.
+5. **Any other cell under 1000 games stopping** was in no amendment. It is recorded as amendment 9 above; it does not
+   bind here.
+6. **The design check assumed one clamped group.** `audit_design::local_form_refusal()` now names a model with more than
+   one group, or a group outside the clamp, and `feature_audit` prints `not computed` for it rather than misreading.
+   `test_audit_design`'s third case checks the engine's model is accepted and both other forms are refused; it reads
+   red on plant 5, the refusal disabled, and nowhere else.
+
+**Re-run on the final tree:**
+- `ctest -L fast` reads 60 of 60 in both builds, and bench reads 4707943 in both.
+- The format check is clean, and all five prose modes exit 0.
+- The plants script reads plant 0 green, plants 1 to 4 red as before, and plant 5 red in the refusal case alone
+  (`adocs/data/S124_phase2_plants.txt`).
+- The smoke runs end to end, the guard probes included.
+- `feature_audit` on the corpus reads identically: rank 1142 of 1190, nullity 48.

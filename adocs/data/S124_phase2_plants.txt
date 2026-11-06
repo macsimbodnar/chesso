@@ -1,0 +1,85 @@
+# S124 phase 2a, 2026-11-06, after the fast check: adocs/data/S124_phase2_plants.sh's tally on the working tree at a4ef975
+# with the phase 2a diff, formatted, its patch applied without offset or fuzz on a scratch copy, one Release build;
+# feature_audit over the first 300000 rows of S122's regenerated corpus (sha256 04c596de...), --free endgame_scale.
+# Plant 0 is the delivered code; plant 5 (the refusal disabled) is the fast check's finding 6.
+
+== S124_P2_PLANT=0
+TEST CASE:  the audit's local form is the smooth score's derivative at the shipped weights
+tests/test_audit_design.cpp:370: MESSAGE: rows 8048, columns compared 432310, curve 62802, rows with both kings' x apart 6471, worst 5.67525e-10 at 996
+TEST CASE:  at the curve's seed the local form is the shared one times the shared x, and the rank does not move
+tests/test_audit_design.cpp:443: MESSAGE: rank over the 46 at the shipped weights, local form: 46
+[doctest] test cases:     3 |     3 passed | 0 failed | 0 skipped
+[doctest] assertions: 34937 | 34937 passed | 0 failed |
+[doctest] Status: SUCCESS!
+identities: design check: x.params/24 against the trace's smooth score on 299522 rows where the clamp does not bind, worst |difference| 1.14e-12; the curve's columns in it at 1/divisor, its degree 2
+identities: linearisation check: 299501 rows (every 1th; 499 skipped within a centipawn of the clamp or with a side's x at 0), 25471145 columns, each over its scale against the smooth score's central difference at h 0.001: worst |difference| 1.56e-10 in d(score)/d(param), at material[pawn]
+identities: rank modulo 2^61-1: 1142 of 1190, nullity 48; 32 zero columns and 16 dependencies by construction account for 48 of it
+identities: rank over the rationals exactly 1142 of 1190, nullity 48, every null direction listed above
+== S124_P2_PLANT=1
+TEST CASE:  the audit's local form is the smooth score's derivative at the shipped weights
+tests/test_audit_design.cpp:370: MESSAGE: rows 8048, columns compared 440243, curve 70735, rows with both kings' x apart 6471, worst 1.0459 at 1169
+tests/test_audit_design.cpp:377: ERROR: CHECK( worst < 1e-6 ) is NOT correct!
+TEST CASE:  at the curve's seed the local form is the shared one times the shared x, and the rank does not move
+tests/test_audit_design.cpp:443: MESSAGE: rank over the 46 at the shipped weights, local form: 44
+[doctest] test cases:     3 |     2 passed | 1 failed | 0 skipped
+[doctest] assertions: 34937 | 34936 passed | 1 failed |
+[doctest] Status: FAILURE!
+identities: design check: x.params/24 against the trace's smooth score on 299521 rows where the clamp does not bind, worst |difference| 132; the curve's columns in it at 1/divisor, its degree 2
+identities: linearisation check: 299501 rows (every 1th; 499 skipped within a centipawn of the clamp or with a side's x at 0), 25471145 columns, each over its scale against the smooth score's central difference at h 0.001: worst |difference| 1.27 in d(score)/d(param), at ks_curve_eg[5]
+identities: rank modulo 2^61-1: 1140 of 1190, nullity 50; 32 zero columns and 16 dependencies by construction account for 48 of it
+identities: rank over the rationals exactly 1140 of 1190, nullity 50, every null direction listed above
+== S124_P2_PLANT=2
+TEST CASE:  the audit's local form is the smooth score's derivative at the shipped weights
+tests/test_audit_design.cpp:370: MESSAGE: rows 8048, columns compared 434778, curve 65270, rows with both kings' x apart 6471, worst 2.54167 at 1156
+tests/test_audit_design.cpp:377: ERROR: CHECK( worst < 1e-6 ) is NOT correct!
+TEST CASE:  at the curve's seed the local form is the shared one times the shared x, and the rank does not move
+tests/test_audit_design.cpp:443: MESSAGE: rank over the 46 at the shipped weights, local form: 44
+[doctest] test cases:     3 |     2 passed | 1 failed | 0 skipped
+[doctest] assertions: 34937 | 34936 passed | 1 failed |
+[doctest] Status: FAILURE!
+identities: design check: x.params/24 against the trace's smooth score on 299720 rows where the clamp does not bind, worst |difference| 207; the curve's columns in it at 1/divisor, its degree 2
+identities: linearisation check: 299501 rows (every 1th; 499 skipped within a centipawn of the clamp or with a side's x at 0), 25471145 columns, each over its scale against the smooth score's central difference at h 0.001: worst |difference| 4.05 in d(score)/d(param), at ks_curve_mg[5]
+identities: rank modulo 2^61-1: 1140 of 1190, nullity 50; 34 zero columns and 16 dependencies by construction account for 50 of it
+identities: rank over the rationals exactly 1140 of 1190, nullity 50, every null direction listed above
+== S124_P2_PLANT=3
+TEST CASE:  the audit's local form is the smooth score's derivative at the shipped weights
+tests/test_audit_design.cpp:370: MESSAGE: rows 8048, columns compared 436009, curve 66501, rows with both kings' x apart 6471, worst 5.56641 at 1168
+tests/test_audit_design.cpp:377: ERROR: CHECK( worst < 1e-6 ) is NOT correct!
+TEST CASE:  at the curve's seed the local form is the shared one times the shared x, and the rank does not move
+tests/test_audit_design.cpp:443: MESSAGE: rank over the 46 at the shipped weights, local form: 46
+[doctest] test cases:     3 |     2 passed | 1 failed | 0 skipped
+[doctest] assertions: 34937 | 34936 passed | 1 failed |
+[doctest] Status: FAILURE!
+identities: design check: x.params/24 against the trace's smooth score on 299521 rows where the clamp does not bind, worst |difference| 65.6; the curve's columns in it at 1/divisor, its degree 2
+identities: linearisation check: 299501 rows (every 1th; 499 skipped within a centipawn of the clamp or with a side's x at 0), 25471145 columns, each over its scale against the smooth score's central difference at h 0.001: worst |difference| 5.06 in d(score)/d(param), at ks_curve_eg[9]
+identities: rank modulo 2^61-1: 1142 of 1190, nullity 48; 32 zero columns and 16 dependencies by construction account for 48 of it
+identities: rank over the rationals exactly 1142 of 1190, nullity 48, every null direction listed above
+== S124_P2_PLANT=4
+TEST CASE:  the audit's local form is the smooth score's derivative at the shipped weights
+tests/test_audit_design.cpp:370: MESSAGE: rows 8048, columns compared 432310, curve 62802, rows with both kings' x apart 6471, worst 2478.12 at 1156
+tests/test_audit_design.cpp:377: ERROR: CHECK( worst < 1e-6 ) is NOT correct!
+TEST CASE:  at the curve's seed the local form is the shared one times the shared x, and the rank does not move
+tests/test_audit_design.cpp:426: ERROR: CHECK( mismatches == 0 ) is NOT correct!
+tests/test_audit_design.cpp:443: MESSAGE: rank over the 46 at the shipped weights, local form: 46
+[doctest] test cases:     3 |     1 passed | 2 failed | 0 skipped
+[doctest] assertions: 34937 | 34935 passed | 2 failed |
+[doctest] Status: FAILURE!
+identities: design check: x.params/24 against the trace's smooth score on 125514 rows where the clamp does not bind, worst |difference| 510; the curve's columns in it at 1/divisor, its degree 2
+identities: linearisation check: 299501 rows (every 1th; 499 skipped within a centipawn of the clamp or with a side's x at 0), 25471145 columns, each over its scale against the smooth score's central difference at h 0.001: worst |difference| 2.82e+03 in d(score)/d(param), at ks_curve_mg[5]
+identities: rank modulo 2^61-1: 1142 of 1190, nullity 48; 32 zero columns and 16 dependencies by construction account for 48 of it
+identities: rank over the rationals exactly 1142 of 1190, nullity 48, every null direction listed above
+== S124_P2_PLANT=5
+TEST CASE:  the audit's local form is the smooth score's derivative at the shipped weights
+tests/test_audit_design.cpp:370: MESSAGE: rows 8048, columns compared 432310, curve 62802, rows with both kings' x apart 6471, worst 5.67525e-10 at 996
+TEST CASE:  at the curve's seed the local form is the shared one times the shared x, and the rank does not move
+tests/test_audit_design.cpp:443: MESSAGE: rank over the 46 at the shipped weights, local form: 46
+TEST CASE:  the local form refuses a model its design check would misread: more than one group, or one outside the clamp
+tests/test_audit_design.cpp:459: ERROR: CHECK_FALSE( audit_design::local_form_refusal(two).empty() ) is NOT correct!
+tests/test_audit_design.cpp:465: ERROR: CHECK( why.find("outside the clamp") != std::string::npos ) is NOT correct!
+[doctest] test cases:     3 |     2 passed | 1 failed | 0 skipped
+[doctest] assertions: 34937 | 34935 passed | 2 failed |
+[doctest] Status: FAILURE!
+identities: design check: x.params/24 against the trace's smooth score on 299522 rows where the clamp does not bind, worst |difference| 1.14e-12; the curve's columns in it at 1/divisor, its degree 2
+identities: linearisation check: 299501 rows (every 1th; 499 skipped within a centipawn of the clamp or with a side's x at 0), 25471145 columns, each over its scale against the smooth score's central difference at h 0.001: worst |difference| 1.56e-10 in d(score)/d(param), at material[pawn]
+identities: rank modulo 2^61-1: 1142 of 1190, nullity 48; 32 zero columns and 16 dependencies by construction account for 48 of it
+identities: rank over the rationals exactly 1142 of 1190, nullity 48, every null direction listed above

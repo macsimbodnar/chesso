@@ -1077,6 +1077,7 @@ struct smooth_t
   bool clamp_binds = false;            // stage two lies beyond the margin
   double e1 = 0.0;                     // S124's E1 at these weights
   uint8_t cell = eval_trace::NO_CELL;  // the cell its sign picked
+  double stage_two = 0.0;              // before the clamp, its groups in it
 };
 
 
@@ -1135,6 +1136,8 @@ inline smooth_t smooth(const model_t& model,
   for (size_t g = 0; g < model.groups.size(); ++g) {
     if (model.groups[g].clamped) { stage_two += group_score(g); }
   }
+
+  out.stage_two = stage_two;
 
   if (stage_two > margin) {
     stage_two = margin;
